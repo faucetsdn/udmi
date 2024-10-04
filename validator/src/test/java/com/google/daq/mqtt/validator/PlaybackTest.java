@@ -24,6 +24,7 @@ import udmi.schema.ValidationState;
 public class PlaybackTest extends TestBase {
 
   public static final String SIMPLE_TRACE_DIR = "../tests/traces/simple";
+  public static final String LENGTHY_TRACE_DIR = "../tests/traces/lengthy";
   private static final List<String> TRACE_DEVICES = List.of("--", "AHU-22", "SNS-4", "XXX", "YYY");
 
   @Test
@@ -70,6 +71,25 @@ public class PlaybackTest extends TestBase {
         .filter(bundle -> bundle.deviceId.equals(deviceId))
         .map(bundle -> asValidationEvents(bundle.message))
         .collect(Collectors.toList());
+  }
+
+  @Test
+  public void notMissingDevice() {
+    MessageReadingClient client = validateTrace(LENGTHY_TRACE_DIR);
+    assertEquals("trace message count", 3, client.messageCount);
+    List<OutputBundle> outputMessages = client.getOutputMessages();
+    OutputBundle lastBundle = outputMessages.get(outputMessages.size() - 1);
+    ValidationState finalReport = asValidationState(lastBundle.message);
+    try {
+      assertEquals("correct devices", 1, finalReport.summary.correct_devices.size());
+      assertEquals("extra devices", 0, finalReport.summary.extra_devices.size());
+      assertEquals("missing devices", 3, finalReport.summary.missing_devices.size());
+      assertEquals("error devices", 0, finalReport.summary.error_devices.size());
+      assertEquals("device summaries", 1, finalReport.devices.size());
+    } catch (Throwable e) {
+      outputMessages.forEach(message -> System.err.println(JsonUtil.stringify(message)));
+      throw e;
+    }
   }
 
   @Test

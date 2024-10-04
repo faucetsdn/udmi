@@ -46,6 +46,7 @@ if [ "$build" == y ]; then
 fi
 
 jarfile=$(realpath validator/build/libs/validator-1.0-SNAPSHOT-all.jar)
+javarun="java -cp $jarfile com.google.daq.mqtt.validator.SchemaTester"
 
 if [[ -z $subsets ]]; then
     subsets=$(cd $testdir; ls -d *)
@@ -68,7 +69,7 @@ for subset in $subsets; do
         reldir=$(realpath --relative-to $schemadir $testdir)
         reltest=$reldir:$subset
     fi
-    (cd $schemadir; java -jar -Dnashorn.args=--no-deprecation-warning $jarfile -a $schemaname $upgrade -f $reltest) || true
+    (cd $schemadir; $javarun -a $schemaname $upgrade -f $reltest) || true
 
     for testfile in $testfiles; do
         outfile=${testfile%.json}.out

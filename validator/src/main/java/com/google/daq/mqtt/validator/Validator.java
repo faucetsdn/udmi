@@ -1,5 +1,6 @@
 package com.google.daq.mqtt.validator;
 
+import static com.google.api.client.util.Preconditions.checkState;
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.collect.ImmutableList.toImmutableList;
 import static com.google.daq.mqtt.registrar.Registrar.BASE_DIR;
@@ -10,6 +11,7 @@ import static com.google.daq.mqtt.util.ConfigUtil.readExeConfig;
 import static com.google.daq.mqtt.validator.ReportingDevice.typeFolderPairKey;
 import static com.google.udmi.util.Common.ERROR_KEY;
 import static com.google.udmi.util.Common.EXCEPTION_KEY;
+import static com.google.udmi.util.Common.EXIT_CODE_ERROR;
 import static com.google.udmi.util.Common.GCP_REFLECT_KEY_PKCS8;
 import static com.google.udmi.util.Common.MESSAGE_KEY;
 import static com.google.udmi.util.Common.NO_SITE;
@@ -30,6 +32,7 @@ import static com.google.udmi.util.JsonUtil.convertTo;
 import static com.google.udmi.util.JsonUtil.getInstant;
 import static com.google.udmi.util.JsonUtil.isoConvert;
 import static com.google.udmi.util.JsonUtil.mapCast;
+import static com.google.udmi.util.JsonUtil.safeSleep;
 import static com.google.udmi.util.SiteModel.DEVICES_DIR;
 import static java.lang.String.format;
 import static java.util.Optional.ofNullable;
@@ -52,7 +55,6 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.daq.mqtt.util.CloudIotManager;
-import com.google.daq.mqtt.util.ConfigUtil;
 import com.google.daq.mqtt.util.ExceptionMap;
 import com.google.daq.mqtt.util.ExceptionMap.ErrorTree;
 import com.google.daq.mqtt.util.FileDataSink;
@@ -88,6 +90,7 @@ import java.util.Scanner;
 import java.util.Set;
 import java.util.TreeMap;
 import java.util.TreeSet;
+import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
@@ -99,6 +102,7 @@ import java.util.stream.StreamSupport;
 import org.apache.commons.io.FileUtils;
 import udmi.schema.Category;
 import udmi.schema.DeviceValidationEvents;
+import udmi.schema.Envelope;
 import udmi.schema.Envelope.SubFolder;
 import udmi.schema.Envelope.SubType;
 import udmi.schema.ExecutionConfiguration;
@@ -142,6 +146,8 @@ public class Validator {
   private static final Set<String> INTERESTING_TYPES = ImmutableSet.of(
       SubType.EVENTS.value(),
       SubType.STATE.value());
+  private static final Set<String> IGNORE_FOLDERS = ImmutableSet.of(
+      SubFolder.ERROR.value());
   private static final Map<String, Class<?>> CONTENT_VALIDATORS = ImmutableMap.of(
       STATE_UPDATE_SCHEMA, State.class,
       EVENTS_POINTSET_SCHEMA, PointsetEvents.class,
@@ -158,6 +164,8 @@ public class Validator {
   private static final Date START_TIME = new Date();
   private static final int TIMESTAMP_JITTER_SEC = 60;
   private static final String UDMI_CONFIG_JSON_FILE = "udmi_config.json";
+  private static final String TOOL_NAME = "validator";
+  private static final long THREAD_JOIN_MS = 1000;
   private final Map<String, ReportingDevice> reportingDevices = new TreeMap<>();
   private final Set<String> extraDevices = new TreeSet<>();
   private final Set<String> processedDevices = new TreeSet<>();
@@ -166,7 +174,8 @@ public class Validator {
   private final ScheduledExecutorService executor = Executors.newSingleThreadScheduledExecutor();
   private final Map<String, AtomicInteger> deviceMessageIndex = new HashMap<>();
   private final List<MessagePublisher> dataSinks = new ArrayList<>();
-  private final Set<String> targetDevices;
+  private final CountDownLatch messageLoopStarted = new CountDownLatch(1);
+  private Set<String> targetDevices;
   private final LoggingHandler outputLogger;
   private ImmutableSet<String> expectedDevices;
   private File outBaseDir;
@@ -179,6 +188,7 @@ public class Validator {
   private boolean simulatedMessages;
   private Instant mockNow = null;
   private boolean forceUpgrade;
+  private SiteModel siteModel;
 
   /**
    * Create a simplistic validator for encapsulated use.
@@ -200,32 +210,53 @@ public class Validator {
     outputLogger = new LoggingHandler();
     List<String> listCopy = new ArrayList<>(argList);
     parseArgs(listCopy);
-
-    if (schemaMap == null) {
-      setSchemaSpec("schema");
-    }
     if (client == null) {
       validateReflector();
     }
     targetDevices = Set.copyOf(listCopy);
   }
 
-  /**
-   * Let's go.
-   *
-   * @param args Arguments for program execution
-   */
-  public static void main(String[] args) {
-    try {
-      Validator validator = new Validator(Arrays.asList(args));
-      validator.messageLoop();
-    } catch (ExceptionMap processingException) {
-      System.exit(2);
-    } catch (Exception e) {
-      e.printStackTrace();
-      System.err.flush();
-      System.exit(-1);
+  public Validator() {
+    outputLogger = new LoggingHandler();
+  }
+
+  Validator processArgs(List<String> argListRaw) {
+    List<String> argList = new ArrayList<>(argListRaw);
+    siteModel = new SiteModel(TOOL_NAME, argList);
+    processProfile(siteModel.getExecutionConfiguration());
+    postProcessArgs(argList);
+    targetDevices = Set.copyOf(argList);
+    return this;
+  }
+
+  void execute() {
+    if (!Strings.isNullOrEmpty(config.feed_name)) {
+      validatePubSub(config.feed_name);
     }
+    if (client == null) {
+      validateReflector();
+    }
+    checkState(client != null, "no validator client specified");
+    messageLoop();
+  }
+
+  /**
+     * Let's go.
+     *
+     * @param args Arguments for program execution
+     */
+  public static void main(String[] args) {
+    ArrayList<String> argList = new ArrayList<>(List.of(args));
+    try {
+      new Validator().processArgs(argList).execute();
+    } catch (Exception e) {
+      System.err.println("Exception in main: " + friendlyStackTrace(e));
+      e.printStackTrace();
+      System.exit(EXIT_CODE_ERROR);
+    }
+
+    // Force exist because PubSub Subscriber in PubSubReflector does not shut down properly.
+    safeSleep(2000);
     System.exit(0);
   }
 
@@ -265,48 +296,40 @@ public class Validator {
     } else {
       config = new ExecutionConfiguration();
     }
-    while (!argList.isEmpty()) {
-      String option = removeNextArg(argList);
-      try {
-        switch (option) {
-          case "-p":
-            setProjectId(removeNextArg(argList));
-            break;
-          case "-s":
-            setSiteDir(removeNextArg(argList));
-            break;
-          case "-a":
-            setSchemaSpec(removeNextArg(argList));
-            break;
-          case "-t":
-            validatePubSub(removeNextArg(argList));
-            break;
-          case "-f":
-            validateFilesOutput(removeNextArg(argList));
-            break;
-          case "-u":
-            forceUpgrade = true;
-            break;
-          case "-r":
-            validateMessageTrace(removeNextArg(argList));
-            break;
-          case "-n":
-            client = new NullPublisher();
-            break;
-          case "-w":
-            setMessageTraceDir(removeNextArg(argList));
-            break;
-          case "--":
-            // All remaining arguments remain in the return list.
-            return argList;
-          default:
-            throw new RuntimeException("Unknown cmdline option " + option);
+    return postProcessArgs(argList);
+  }
+
+  private List<String> postProcessArgs(List<String> argList) {
+    try {
+      while (!argList.isEmpty()) {
+        String option = removeNextArg(argList);
+        try {
+          switch (option) {
+            case "-p" -> setProjectId(removeNextArg(argList));
+            case "-s" -> setSiteDir(removeNextArg(argList));
+            case "-a" -> setSchemaSpec(removeNextArg(argList));
+            case "-t" -> validatePubSub(removeNextArg(argList));
+            case "-f" -> validateFilesOutput(removeNextArg(argList));
+            case "-u" -> forceUpgrade = true;
+            case "-r" -> validateMessageTrace(removeNextArg(argList));
+            case "-n" -> client = new NullPublisher();
+            case "-w" -> setMessageTraceDir(removeNextArg(argList));
+            case "--" -> {
+              // All remaining arguments remain in the return list.
+              return argList;
+            }
+            default -> throw new RuntimeException("Unknown cmdline option " + option);
+          }
+        } catch (MissingFormatArgumentException e) {
+          throw new RuntimeException("For command line option " + option, e);
         }
-      } catch (MissingFormatArgumentException e) {
-        throw new RuntimeException("For command line option " + option, e);
+      }
+      return argList;
+    } finally {
+      if (schemaMap == null) {
+        setSchemaSpec("schema");
       }
     }
-    return argList;
   }
 
   private void setProjectId(String projectId) {
@@ -324,7 +347,7 @@ public class Validator {
     Preconditions.checkArgument(parts.length <= 2, "Too many parts in pubsub path " + pubSubCombo);
     String instName = parts[0];
     CloudIotManager cloudIotManager = new CloudIotManager(config.project_id,
-        new File(config.site_model), null, config.registry_suffix, IotProvider.GCP_NATIVE);
+        new File(config.site_model), null, config.registry_suffix, IotProvider.PUBSUB);
     String registryId = getRegistryId();
     String updateTopic = parts.length > 1 ? parts[1] : cloudIotManager.getUpdateTopic();
     client = new PubSubClient(config.project_id, registryId, instName, updateTopic);
@@ -336,16 +359,18 @@ public class Validator {
   }
 
   private void processProfile(File profilePath) {
-    config = ConfigUtil.readExeConfig(profilePath);
-    String siteModel = ofNullable(config.site_model).orElse(BASE_DIR.getName());
+    ExecutionConfiguration exeConfig = readExeConfig(profilePath);
+    String siteModel = ofNullable(exeConfig.site_model).orElse(BASE_DIR.getName());
     File model = new File(siteModel);
     File adjustedPath = model.isAbsolute() ? model :
         new File(profilePath.getParentFile(), siteModel);
-    config.site_model = adjustedPath.getAbsolutePath();
-    setSiteDir(adjustedPath.getAbsolutePath());
-    if (!Strings.isNullOrEmpty(config.feed_name)) {
-      validatePubSub(config.feed_name);
-    }
+    exeConfig.site_model = adjustedPath.getAbsolutePath();
+    processProfile(exeConfig);
+  }
+
+  private void processProfile(ExecutionConfiguration exeConfig) {
+    config = exeConfig;
+    setSiteDir(exeConfig.site_model);
   }
 
   MessageReadingClient getMessageReadingClient() {
@@ -477,8 +502,12 @@ public class Validator {
     String keyFile = new File(config.site_model, GCP_REFLECT_KEY_PKCS8).getAbsolutePath();
     outputLogger.info("Loading reflector key file from " + keyFile);
     config.key_file = keyFile;
-    client = new IotReflectorClient(config, TOOLS_FUNCTIONS_VERSION);
+    client = new IotReflectorClient(config, TOOLS_FUNCTIONS_VERSION, this::messageFilter);
     dataSinks.add(client);
+  }
+
+  private boolean messageFilter(Envelope envelope) {
+    return true;
   }
 
   void messageLoop() {
@@ -550,7 +579,7 @@ public class Validator {
       processedDevices.add(deviceId);
     }
 
-    if (!shouldConsiderMessage(attributes)) {
+    if (!shouldProcessMessage(attributes)) {
       return;
     }
 
@@ -589,7 +618,7 @@ public class Validator {
     return getInstant(attributes.get(PUBLISH_TIME_KEY));
   }
 
-  private ReportingDevice validateMessageCore(Object message, Map<String, String> attributes) {
+  private ReportingDevice validateMessageCore(Object messageObj, Map<String, String> attributes) {
 
     String deviceId = attributes.get("deviceId");
     if (deviceId == null) {
@@ -597,21 +626,52 @@ public class Validator {
     }
 
     ReportingDevice device = reportingDevices.computeIfAbsent(deviceId, ReportingDevice::new);
+    device.clearMessageEntries();
 
     try {
       String schemaName = messageSchema(attributes);
-      if (!device.markMessageType(schemaName, getNow())) {
+      boolean isString = messageObj instanceof String;
+
+      Map<String, Object> message = isString ? null : mapCast(messageObj);
+      validateTimestamp(device, message, attributes);
+
+      if (!device.processMessageSchema(schemaName, getMessageInstant(messageObj, attributes))) {
+        outputLogger.trace("Ignoring device %s/%s (too soon)", deviceId, schemaName);
         return null;
       }
 
-      outputLogger.info("Processing device #%d/%d: %s/%s", processedDevices.size(),
-          reportingDevices.size(), deviceId, schemaName);
+      writeDeviceOutDir(messageObj, attributes, deviceId, schemaName);
+
+      String subFolder = attributes.get(SUBFOLDER_PROPERTY_KEY);
+      boolean processSchema = !IGNORE_FOLDERS.contains(subFolder);
+
+      try {
+        if (processSchema && !schemaMap.containsKey(schemaName)) {
+          throw new IllegalArgumentException(format(SCHEMA_SKIP_FORMAT, schemaName, deviceId));
+        }
+      } catch (Exception e) {
+        outputLogger.error("Missing schema entry " + schemaName);
+        device.addError(e, attributes, Category.VALIDATION_DEVICE_RECEIVE);
+      }
+
+      if (isString) {
+        String detail = format("Raw string message for %s %s", deviceId, schemaName);
+        outputLogger.error(detail);
+        IllegalArgumentException exception = new IllegalArgumentException(detail);
+        device.addError(exception, attributes, Category.VALIDATION_DEVICE_RECEIVE);
+        return device;
+      }
+
+      outputLogger.info("Processing device %s/%s as #%d/%d", deviceId, schemaName,
+          processedDevices.size(), reportingDevices.size());
 
       if ("true".equals(attributes.get("wasBase64"))) {
         base64Devices.add(deviceId);
       }
 
-      writeDeviceOutDir(message, attributes, deviceId, schemaName);
+      if (processExceptions(attributes, deviceId, device, message)) {
+        return device;
+      }
       validateDeviceMessage(device, message, attributes);
 
       if (!device.hasErrors()) {
@@ -624,28 +684,12 @@ public class Validator {
     return device;
   }
 
-  /**
-   * Validate a device message against the core schema.
-   */
-  public void validateDeviceMessage(ReportingDevice device, Object baseMsg,
-      Map<String, String> attributes) {
-    String deviceId = attributes.get("deviceId");
-    device.clearMessageEntries();
-    String schemaName = messageSchema(attributes);
-
-    if (baseMsg instanceof String) {
-      String message = format("Raw string message for %s %s", deviceId, schemaName);
-      outputLogger.error(message);
-      IllegalArgumentException exception = new IllegalArgumentException(message);
-      device.addError(exception, attributes, Category.VALIDATION_DEVICE_RECEIVE);
-      return;
-    }
-
-    Map<String, Object> message = mapCast(baseMsg);
+  private boolean processExceptions(Map<String, String> attributes, String deviceId,
+      ReportingDevice device, Map<String, Object> message) {
     if (message.get(EXCEPTION_KEY) instanceof Exception exception) {
       outputLogger.error("Pipeline exception " + deviceId + ": " + getExceptionMessage(exception));
       device.addError(exception, attributes, Category.VALIDATION_DEVICE_RECEIVE);
-      return;
+      return true;
     }
 
     if (message.containsKey(ERROR_KEY)) {
@@ -654,55 +698,18 @@ public class Validator {
       IllegalArgumentException exception = new IllegalArgumentException(
           "Error in message pipeline: " + error);
       device.addError(exception, attributes, Category.VALIDATION_DEVICE_RECEIVE);
-      return;
+      return true;
     }
+    return false;
+  }
 
+  /**
+   * Validate a device message against the core schema.
+   */
+  public void validateDeviceMessage(ReportingDevice device, Map<String, Object> message,
+      Map<String, String> attributes) {
+    String schemaName = messageSchema(attributes);
     upgradeMessage(schemaName, message);
-
-    String timestampRaw = (String) message.get("timestamp");
-    Instant timestamp = ifNotNullGet(timestampRaw, JsonUtil::getInstant);
-    String publishRaw = attributes.get(PUBLISH_TIME_KEY);
-    Instant publishTime = ifNotNullGet(publishRaw, JsonUtil::getInstant);
-    try {
-      // TODO: Validate message contests to make sure state sub-blocks don't also have timestamp.
-
-      String subTypeRaw = ofNullable(attributes.get(SUBTYPE_PROPERTY_KEY))
-          .orElse(UNKNOWN_TYPE_DEFAULT);
-      boolean lastSeenValid = LAST_SEEN_SUBTYPES.contains(SubType.fromValue(subTypeRaw));
-      if (lastSeenValid) {
-        if (publishTime != null) {
-          device.updateLastSeen(Date.from(publishTime));
-        }
-        if (timestamp == null) {
-          throw new RuntimeException("Missing message timestamp");
-        }
-        if (publishTime != null) {
-          if (!timestampRaw.endsWith(TIMESTAMP_ZULU_SUFFIX)
-              && !timestampRaw.endsWith(TIMESTAMP_UTC_SUFFIX_1)
-              && !timestampRaw.endsWith(TIMESTAMP_UTC_SUFFIX_2)) {
-            throw new RuntimeException("Invalid timestamp timezone " + timestampRaw);
-          }
-          long between = Duration.between(publishTime, timestamp).getSeconds();
-          if (between > TIMESTAMP_JITTER_SEC || between < -TIMESTAMP_JITTER_SEC) {
-            throw new RuntimeException(format(
-                "Timestamp jitter %ds (%s to %s) exceeds %ds threshold",
-                between, publishRaw, timestampRaw, TIMESTAMP_JITTER_SEC));
-          }
-        }
-      }
-    } catch (Exception e) {
-      outputLogger.error("Timestamp validation error: " + friendlyStackTrace(e));
-      device.addError(e, attributes, Category.VALIDATION_DEVICE_CONTENT);
-    }
-
-    try {
-      if (!schemaMap.containsKey(schemaName)) {
-        throw new IllegalArgumentException(format(SCHEMA_SKIP_FORMAT, schemaName, deviceId));
-      }
-    } catch (Exception e) {
-      outputLogger.error("Missing schema entry " + schemaName);
-      device.addError(e, attributes, Category.VALIDATION_DEVICE_RECEIVE);
-    }
 
     try {
       validateMessage(schemaMap.get(ENVELOPE_SCHEMA_ID), (Object) attributes);
@@ -720,13 +727,14 @@ public class Validator {
       }
     }
 
+    String deviceId = attributes.get("deviceId");
     if (expectedDevices == null || expectedDevices.isEmpty()) {
       // No devices configured, so don't consider check metadata or consider extra.
     } else if (expectedDevices.contains(deviceId)) {
       try {
         ifNotNullThen(CONTENT_VALIDATORS.get(schemaName), targetClass -> {
           Object messageObject = OBJECT_MAPPER.convertValue(message, targetClass);
-          device.validateMessageType(messageObject, JsonUtil.getDate(publishRaw), attributes);
+          device.validateMessageType(messageObject, attributes);
         });
       } catch (Exception e) {
         outputLogger.error("Error validating contents: " + friendlyStackTrace(e));
@@ -734,6 +742,47 @@ public class Validator {
       }
     } else {
       extraDevices.add(deviceId);
+    }
+  }
+
+  private void validateTimestamp(ReportingDevice device, Map<String, Object> message,
+      Map<String, String> attributes) {
+    String timestampRaw = ifNotNullGet(message, m -> (String) m.get("timestamp"));
+    Instant timestamp = ifNotNullGet(timestampRaw, JsonUtil::getInstant);
+    String publishRaw = attributes.get(PUBLISH_TIME_KEY);
+    Instant publishTime = ifNotNullGet(publishRaw, JsonUtil::getInstant);
+    try {
+      // TODO: Validate message contests to make sure state sub-blocks don't also have timestamp.
+
+      String subTypeRaw = ofNullable(attributes.get(SUBTYPE_PROPERTY_KEY))
+          .orElse(UNKNOWN_TYPE_DEFAULT);
+      boolean lastSeenValid = LAST_SEEN_SUBTYPES.contains(SubType.fromValue(subTypeRaw));
+      if (lastSeenValid) {
+        if (publishTime != null) {
+          device.updateLastSeen(Date.from(publishTime));
+        }
+        if (message != null && timestamp == null) {
+          throw new RuntimeException("Missing message timestamp");
+        }
+        if (timestampRaw != null
+            && !timestampRaw.endsWith(TIMESTAMP_ZULU_SUFFIX)
+            && !timestampRaw.endsWith(TIMESTAMP_UTC_SUFFIX_1)
+            && !timestampRaw.endsWith(TIMESTAMP_UTC_SUFFIX_2)) {
+          throw new RuntimeException("Invalid timestamp timezone " + timestampRaw);
+        }
+        if (publishTime != null && timestamp != null) {
+          long between = Duration.between(publishTime, timestamp).getSeconds();
+          if (between > TIMESTAMP_JITTER_SEC || between < -TIMESTAMP_JITTER_SEC) {
+            throw new RuntimeException(format(
+                "Timestamp skew %ds (%s to %s) exceeds %ds threshold",
+                between, publishRaw, timestampRaw, TIMESTAMP_JITTER_SEC));
+          }
+        }
+      }
+    } catch (Exception e) {
+      outputLogger.error(format("Timestamp validation error for %s: %s", device.getDeviceId(),
+          friendlyStackTrace(e)));
+      device.addError(e, attributes, Category.VALIDATION_DEVICE_CONTENT);
     }
   }
 
@@ -747,9 +796,8 @@ public class Validator {
       event.sub_folder = subFolder;
       String subType = origAttributes.get(SUBTYPE_PROPERTY_KEY);
       event.sub_type = ofNullable(subType).orElse(UNKNOWN_TYPE_DEFAULT);
-      event.status = ReportingDevice.getSummaryEntry(reportingDevice.getMessageEntries());
-      String prefix = format("%s:", typeFolderPairKey(subType, subFolder));
-      event.errors = reportingDevice.getErrors(now, prefix);
+      event.errors = reportingDevice.getMessageEntries();
+      event.status = ReportingDevice.getSummaryEntry(event.errors);
       if (POINTSET_SUBFOLDER.equals(subFolder)) {
         PointsetSummary pointsSummary = new PointsetSummary();
         pointsSummary.missing = arrayIfNotNull(reportingDevice.getMissingPoints());
@@ -799,7 +847,7 @@ public class Validator {
     }
   }
 
-  private boolean shouldConsiderMessage(Map<String, String> attributes) {
+  private boolean shouldProcessMessage(Map<String, String> attributes) {
     String registryId = attributes.get(DEVICE_REGISTRY_ID_KEY);
 
     if (!registryId.equals(getRegistryId())) {
@@ -821,10 +869,10 @@ public class Validator {
     String subType = attributes.get(SUBTYPE_PROPERTY_KEY);
     String subFolder = attributes.get(SUBFOLDER_PROPERTY_KEY);
     String category = attributes.get("category");
-    boolean isInteresting = subType == null
+    boolean process = subType == null
         || INTERESTING_TYPES.contains(subType)
         || SubFolder.UPDATE.value().equals(subFolder);
-    return !CONFIG_CATEGORY.equals(category) && isInteresting;
+    return process && !CONFIG_CATEGORY.equals(category);
   }
 
   private void writeDeviceOutDir(Object message, Map<String, String> attributes, String deviceId,

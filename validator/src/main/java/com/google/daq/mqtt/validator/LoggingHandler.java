@@ -19,8 +19,10 @@ class LoggingHandler {
   }
 
   private static void systemLogger(Level level, String message) {
-    PrintStream printStream = level.value() >= Level.WARNING.value() ? System.err : System.out;
-    printStream.println(message);
+    if (level.value() >= Level.DEBUG.value()) {
+      PrintStream printStream = level.value() >= Level.WARNING.value() ? System.err : System.out;
+      printStream.println(message);
+    }
   }
 
   void debug(String message) {
@@ -49,5 +51,13 @@ class LoggingHandler {
 
   void error(String format, Object... args) {
     error(format(format, args));
+  }
+
+  void trace(String message) {
+    outputLogger.accept(Level.TRACE, message);
+  }
+
+  void trace(String format, Object... args) {
+    trace(format(format, args));
   }
 }

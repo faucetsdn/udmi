@@ -7,9 +7,10 @@ import static com.google.udmi.util.Common.DEVICE_ID_KEY;
 import static com.google.udmi.util.Common.PUBLISH_TIME_KEY;
 import static com.google.udmi.util.Common.SOURCE_KEY;
 import static com.google.udmi.util.Common.SOURCE_SEPARATOR;
+import static com.google.udmi.util.Common.SOURCE_SEPARATOR_REGEX;
 import static com.google.udmi.util.Common.SUBFOLDER_PROPERTY_KEY;
 import static com.google.udmi.util.Common.getNamespacePrefix;
-import static com.google.udmi.util.GeneralUtils.ifNullThen;
+import static com.google.udmi.util.GeneralUtils.ifNotNullThen;
 import static com.google.udmi.util.JsonUtil.isoConvert;
 import static com.google.udmi.util.JsonUtil.stringify;
 import static com.google.udmi.util.JsonUtil.stringifyTerse;
@@ -312,12 +313,20 @@ public class PubSubReflector implements MessagePublisher {
         String topic = format("/devices/%s/%s%s", attributes.get(DEVICE_ID_KEY),
             attributes.get(CATEGORY_PROPERTY_KEY),
             suffix);
-        String messageSource = attributes.get(SOURCE_KEY);
-        String userMatch = SOURCE_SEPARATOR + userName;
-        if (!userMatch.equals(messageSource)) {
-          ifNullThen(messageSource, () -> System.err.println(
-              "Discarding message with null source: " + stringifyTerse(attributes)));
+        String messageSource = attributes.remove(SOURCE_KEY);
+        if (messageSource == null) {
+          System.err.println("Discarding message with null source: " + stringifyTerse(attributes));
           return;
+        }
+        Object dstSource = messageBundle.message.remove(SOURCE_KEY);
+        String[] source = messageSource.split(SOURCE_SEPARATOR_REGEX, 3);
+        if (source.length == 1) {
+          attributes.put(SOURCE_KEY, source[0]);
+        } else if (source.length == 2 && source[0].isEmpty()) {
+          topic += messageSource;
+          ifNotNullThen(dstSource, () -> messageBundle.message.put(SOURCE_KEY, source[1]));
+        } else {
+          System.err.println("Discarding message with malformed source: " + messageSource);
         }
         messageHandler.accept(topic, stringify(messageBundle.message));
       } catch (Exception e) {

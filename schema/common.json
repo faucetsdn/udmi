@@ -39,12 +39,11 @@
         "dynamic",
         "implicit",
         "pubsub",
-        "etcd",
+        "pref",
         "mqtt",
-        "jwt",
-        "gcp_native",
         "gbos",
-        "clearblade_native",
+        "etcd",
+        "jwt",
         "clearblade"
       ]
     },

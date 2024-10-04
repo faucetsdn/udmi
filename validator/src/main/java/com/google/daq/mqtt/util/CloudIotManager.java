@@ -14,8 +14,8 @@ import static java.nio.file.Files.readAllBytes;
 import static java.util.Objects.requireNonNull;
 import static java.util.Optional.ofNullable;
 import static udmi.schema.IotAccess.IotProvider.GBOS;
-import static udmi.schema.IotAccess.IotProvider.GCP_NATIVE;
 import static udmi.schema.IotAccess.IotProvider.MQTT;
+import static udmi.schema.IotAccess.IotProvider.PUBSUB;
 
 import com.google.common.collect.ImmutableList;
 import com.google.udmi.util.GeneralUtils;
@@ -67,7 +67,7 @@ public class CloudIotManager {
     checkNotNull(projectId, "project id undefined");
     this.siteModel = checkNotNull(siteDir, "site directory undefined");
     checkState(siteDir.isDirectory(), "not a directory " + siteDir.getAbsolutePath());
-    this.useReflectClient = iotProvider != null && iotProvider != GCP_NATIVE;
+    this.useReflectClient = iotProvider != null && iotProvider != PUBSUB;
     this.projectId = projectId;
     File cloudConfig = new File(siteDir, CLOUD_IOT_CONFIG_JSON);
     try {
@@ -124,7 +124,7 @@ public class CloudIotManager {
 
   private static boolean shouldUseReflectorClient(ExecutionConfiguration config) {
     return (config.reflector_endpoint != null)
-        || ofNullable(config.iot_provider).orElse(GCP_NATIVE) != GCP_NATIVE;
+        || ofNullable(config.iot_provider).orElse(PUBSUB) != PUBSUB;
   }
 
   /**
@@ -192,7 +192,7 @@ public class CloudIotManager {
       return new IotReflectorClient(executionConfiguration);
     }
 
-    if (executionConfiguration.iot_provider == GCP_NATIVE) {
+    if (executionConfiguration.iot_provider == PUBSUB) {
       return null;
     }
 

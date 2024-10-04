@@ -60,7 +60,7 @@ sites/udmi_site_model/out/devices/AHU-1/events_pointset.out
   "sub_type" : "events",
   "status" : {
     "message" : "Multiple validation errors",
-    "detail" : "Timestamp jitter REDACTED_DURATION (REDACTED_TIMESTAMP to REDACTED_TIMESTAMP) exceeds REDACTED_DURATION threshold; While converting to json node: 1 schema violations found",
+    "detail" : "Timestamp skew REDACTED_DURATION (REDACTED_TIMESTAMP to REDACTED_TIMESTAMP) exceeds REDACTED_DURATION threshold; While converting to json node: 1 schema violations found",
     "category" : "validation.device.multiple",
     "timestamp" : "REDACTED_TIMESTAMP",
     "level" : 500
@@ -70,8 +70,8 @@ sites/udmi_site_model/out/devices/AHU-1/events_pointset.out
     "extra" : [ ]
   },
   "errors" : [ {
-    "message" : "Timestamp jitter REDACTED_DURATION (REDACTED_TIMESTAMP to REDACTED_TIMESTAMP) exceeds REDACTED_DURATION threshold",
-    "detail" : "events_pointset: Timestamp jitter REDACTED_DURATION (REDACTED_TIMESTAMP to REDACTED_TIMESTAMP) exceeds REDACTED_DURATION threshold REDACTED_ERROR",
+    "message" : "Timestamp skew REDACTED_DURATION (REDACTED_TIMESTAMP to REDACTED_TIMESTAMP) exceeds REDACTED_DURATION threshold",
+    "detail" : "events_pointset: Timestamp skew REDACTED_DURATION (REDACTED_TIMESTAMP to REDACTED_TIMESTAMP) exceeds REDACTED_DURATION threshold REDACTED_ERROR",
     "category" : "validation.device.schema",
     "timestamp" : "REDACTED_TIMESTAMP",
     "level" : 500
@@ -92,15 +92,15 @@ sites/udmi_site_model/out/devices/AHU-1/events_system.out
   "sub_folder" : "system",
   "sub_type" : "events",
   "status" : {
-    "message" : "Timestamp jitter REDACTED_DURATION (REDACTED_TIMESTAMP to REDACTED_TIMESTAMP) exceeds REDACTED_DURATION threshold",
-    "detail" : "events_system: Timestamp jitter REDACTED_DURATION (REDACTED_TIMESTAMP to REDACTED_TIMESTAMP) exceeds REDACTED_DURATION threshold REDACTED_ERROR",
+    "message" : "Timestamp skew REDACTED_DURATION (REDACTED_TIMESTAMP to REDACTED_TIMESTAMP) exceeds REDACTED_DURATION threshold",
+    "detail" : "events_system: Timestamp skew REDACTED_DURATION (REDACTED_TIMESTAMP to REDACTED_TIMESTAMP) exceeds REDACTED_DURATION threshold REDACTED_ERROR",
     "category" : "validation.device.schema",
     "timestamp" : "REDACTED_TIMESTAMP",
     "level" : 500
   },
   "errors" : [ {
-    "message" : "Timestamp jitter REDACTED_DURATION (REDACTED_TIMESTAMP to REDACTED_TIMESTAMP) exceeds REDACTED_DURATION threshold",
-    "detail" : "events_system: Timestamp jitter REDACTED_DURATION (REDACTED_TIMESTAMP to REDACTED_TIMESTAMP) exceeds REDACTED_DURATION threshold REDACTED_ERROR",
+    "message" : "Timestamp skew REDACTED_DURATION (REDACTED_TIMESTAMP to REDACTED_TIMESTAMP) exceeds REDACTED_DURATION threshold",
+    "detail" : "events_system: Timestamp skew REDACTED_DURATION (REDACTED_TIMESTAMP to REDACTED_TIMESTAMP) exceeds REDACTED_DURATION threshold REDACTED_ERROR",
     "category" : "validation.device.schema",
     "timestamp" : "REDACTED_TIMESTAMP",
     "level" : 500
@@ -115,15 +115,15 @@ sites/udmi_site_model/out/devices/AHU-1/state_localnet.out
   "sub_folder" : "localnet",
   "sub_type" : "state",
   "status" : {
-    "message" : "Timestamp jitter REDACTED_DURATION (REDACTED_TIMESTAMP to REDACTED_TIMESTAMP) exceeds REDACTED_DURATION threshold",
-    "detail" : "state_localnet: Timestamp jitter REDACTED_DURATION (REDACTED_TIMESTAMP to REDACTED_TIMESTAMP) exceeds REDACTED_DURATION threshold REDACTED_ERROR",
+    "message" : "Timestamp skew REDACTED_DURATION (REDACTED_TIMESTAMP to REDACTED_TIMESTAMP) exceeds REDACTED_DURATION threshold",
+    "detail" : "state_localnet: Timestamp skew REDACTED_DURATION (REDACTED_TIMESTAMP to REDACTED_TIMESTAMP) exceeds REDACTED_DURATION threshold REDACTED_ERROR",
     "category" : "validation.device.schema",
     "timestamp" : "REDACTED_TIMESTAMP",
     "level" : 500
   },
   "errors" : [ {
-    "message" : "Timestamp jitter REDACTED_DURATION (REDACTED_TIMESTAMP to REDACTED_TIMESTAMP) exceeds REDACTED_DURATION threshold",
-    "detail" : "state_localnet: Timestamp jitter REDACTED_DURATION (REDACTED_TIMESTAMP to REDACTED_TIMESTAMP) exceeds REDACTED_DURATION threshold REDACTED_ERROR",
+    "message" : "Timestamp skew REDACTED_DURATION (REDACTED_TIMESTAMP to REDACTED_TIMESTAMP) exceeds REDACTED_DURATION threshold",
+    "detail" : "state_localnet: Timestamp skew REDACTED_DURATION (REDACTED_TIMESTAMP to REDACTED_TIMESTAMP) exceeds REDACTED_DURATION threshold REDACTED_ERROR",
     "category" : "validation.device.schema",
     "timestamp" : "REDACTED_TIMESTAMP",
     "level" : 500
@@ -139,14 +139,14 @@ sites/udmi_site_model/out/devices/AHU-1/state.out
   "sub_type" : "state",
   "status" : {
     "message" : "Multiple validation errors",
-    "detail" : "Timestamp jitter REDACTED_DURATION (REDACTED_TIMESTAMP to REDACTED_TIMESTAMP) exceeds REDACTED_DURATION threshold; While converting to json node: 1 schema violations found",
+    "detail" : "Timestamp skew REDACTED_DURATION (REDACTED_TIMESTAMP to REDACTED_TIMESTAMP) exceeds REDACTED_DURATION threshold; While converting to json node: 1 schema violations found",
     "category" : "validation.device.multiple",
     "timestamp" : "REDACTED_TIMESTAMP",
     "level" : 500
   },
   "errors" : [ {
-    "message" : "Timestamp jitter REDACTED_DURATION (REDACTED_TIMESTAMP to REDACTED_TIMESTAMP) exceeds REDACTED_DURATION threshold",
-    "detail" : "state_update: Timestamp jitter REDACTED_DURATION (REDACTED_TIMESTAMP to REDACTED_TIMESTAMP) exceeds REDACTED_DURATION threshold REDACTED_ERROR",
+    "message" : "Timestamp skew REDACTED_DURATION (REDACTED_TIMESTAMP to REDACTED_TIMESTAMP) exceeds REDACTED_DURATION threshold",
+    "detail" : "state_update: Timestamp skew REDACTED_DURATION (REDACTED_TIMESTAMP to REDACTED_TIMESTAMP) exceeds REDACTED_DURATION threshold REDACTED_ERROR",
     "category" : "validation.device.schema",
     "timestamp" : "REDACTED_TIMESTAMP",
     "level" : 500
@@ -167,8 +167,8 @@ sites/udmi_site_model/out/devices/AHU-1/state_pointset.out
   "sub_folder" : "pointset",
   "sub_type" : "state",
   "status" : {
-    "message" : "Timestamp jitter REDACTED_DURATION (REDACTED_TIMESTAMP to REDACTED_TIMESTAMP) exceeds REDACTED_DURATION threshold",
-    "detail" : "state_pointset: Timestamp jitter REDACTED_DURATION (REDACTED_TIMESTAMP to REDACTED_TIMESTAMP) exceeds REDACTED_DURATION threshold REDACTED_ERROR",
+    "message" : "Timestamp skew REDACTED_DURATION (REDACTED_TIMESTAMP to REDACTED_TIMESTAMP) exceeds REDACTED_DURATION threshold",
+    "detail" : "state_pointset: Timestamp skew REDACTED_DURATION (REDACTED_TIMESTAMP to REDACTED_TIMESTAMP) exceeds REDACTED_DURATION threshold REDACTED_ERROR",
     "category" : "validation.device.schema",
     "timestamp" : "REDACTED_TIMESTAMP",
     "level" : 500
@@ -178,8 +178,8 @@ sites/udmi_site_model/out/devices/AHU-1/state_pointset.out
     "extra" : [ ]
   },
   "errors" : [ {
-    "message" : "Timestamp jitter REDACTED_DURATION (REDACTED_TIMESTAMP to REDACTED_TIMESTAMP) exceeds REDACTED_DURATION threshold",
-    "detail" : "state_pointset: Timestamp jitter REDACTED_DURATION (REDACTED_TIMESTAMP to REDACTED_TIMESTAMP) exceeds REDACTED_DURATION threshold REDACTED_ERROR",
+    "message" : "Timestamp skew REDACTED_DURATION (REDACTED_TIMESTAMP to REDACTED_TIMESTAMP) exceeds REDACTED_DURATION threshold",
+    "detail" : "state_pointset: Timestamp skew REDACTED_DURATION (REDACTED_TIMESTAMP to REDACTED_TIMESTAMP) exceeds REDACTED_DURATION threshold REDACTED_ERROR",
     "category" : "validation.device.schema",
     "timestamp" : "REDACTED_TIMESTAMP",
     "level" : 500
@@ -194,15 +194,15 @@ sites/udmi_site_model/out/devices/AHU-1/state_system.out
   "sub_folder" : "system",
   "sub_type" : "state",
   "status" : {
-    "message" : "Timestamp jitter REDACTED_DURATION (REDACTED_TIMESTAMP to REDACTED_TIMESTAMP) exceeds REDACTED_DURATION threshold",
-    "detail" : "state_system: Timestamp jitter REDACTED_DURATION (REDACTED_TIMESTAMP to REDACTED_TIMESTAMP) exceeds REDACTED_DURATION threshold REDACTED_ERROR",
+    "message" : "Timestamp skew REDACTED_DURATION (REDACTED_TIMESTAMP to REDACTED_TIMESTAMP) exceeds REDACTED_DURATION threshold",
+    "detail" : "state_system: Timestamp skew REDACTED_DURATION (REDACTED_TIMESTAMP to REDACTED_TIMESTAMP) exceeds REDACTED_DURATION threshold REDACTED_ERROR",
     "category" : "validation.device.schema",
     "timestamp" : "REDACTED_TIMESTAMP",
     "level" : 500
   },
   "errors" : [ {
-    "message" : "Timestamp jitter REDACTED_DURATION (REDACTED_TIMESTAMP to REDACTED_TIMESTAMP) exceeds REDACTED_DURATION threshold",
-    "detail" : "state_system: Timestamp jitter REDACTED_DURATION (REDACTED_TIMESTAMP to REDACTED_TIMESTAMP) exceeds REDACTED_DURATION threshold REDACTED_ERROR",
+    "message" : "Timestamp skew REDACTED_DURATION (REDACTED_TIMESTAMP to REDACTED_TIMESTAMP) exceeds REDACTED_DURATION threshold",
+    "detail" : "state_system: Timestamp skew REDACTED_DURATION (REDACTED_TIMESTAMP to REDACTED_TIMESTAMP) exceeds REDACTED_DURATION threshold REDACTED_ERROR",
     "category" : "validation.device.schema",
     "timestamp" : "REDACTED_TIMESTAMP",
     "level" : 500
@@ -376,13 +376,19 @@ sites/udmi_site_model/out/devices/GAT-123/events_blobset.out
   "sub_folder" : "blobset",
   "sub_type" : "events",
   "status" : {
-    "message" : "Raw string message for GAT-123 events_blobset",
-    "detail" : "events_blobset: Raw string message for GAT-123 events_blobset REDACTED_ERROR",
-    "category" : "validation.device.schema",
+    "message" : "Multiple validation errors",
+    "detail" : "Unknown schema subFolder 'events_blobset' for GAT-123; Raw string message for GAT-123 events_blobset",
+    "category" : "validation.device.multiple",
     "timestamp" : "REDACTED_TIMESTAMP",
     "level" : 500
   },
   "errors" : [ {
+    "message" : "Unknown schema subFolder 'events_blobset' for GAT-123",
+    "detail" : "events_blobset: Unknown schema subFolder 'events_blobset' for GAT-123 REDACTED_ERROR",
+    "category" : "validation.device.schema",
+    "timestamp" : "REDACTED_TIMESTAMP",
+    "level" : 500
+  }, {
     "message" : "Raw string message for GAT-123 events_blobset",
     "detail" : "events_blobset: Raw string message for GAT-123 events_blobset REDACTED_ERROR",
     "category" : "validation.device.schema",

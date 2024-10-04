@@ -4,8 +4,11 @@
 #
 
 tests=tests/combos/*.json
+echo Testing $tests
 
 validator/bin/build
+jarfile=$(realpath validator/build/libs/validator-1.0-SNAPSHOT-all.jar)
+javarun="java -cp $jarfile com.google.daq.mqtt.validator.SchemaTester"
 
 failures=
 for test in $tests; do
@@ -14,7 +17,10 @@ for test in $tests; do
     site_model=$(jq -r .site_model $test)
     validator_config=$(jq -r .validator $test)
     if [[ $validator_config != null ]]; then
-        validator/bin/validate -- schema trace $traces $site_model
+        cmd="$javarun -p -- -s $site_model -r $traces --"
+        echo $cmd
+        $cmd
+
         check=$(echo $validator_config | jq -r .check)
         echo $check
         code=0

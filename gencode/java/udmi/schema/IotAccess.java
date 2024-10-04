@@ -79,12 +79,11 @@ public class IotAccess {
         DYNAMIC("dynamic"),
         IMPLICIT("implicit"),
         PUBSUB("pubsub"),
-        ETCD("etcd"),
+        PREF("pref"),
         MQTT("mqtt"),
-        JWT("jwt"),
-        GCP_NATIVE("gcp_native"),
         GBOS("gbos"),
-        CLEARBLADE_NATIVE("clearblade_native"),
+        ETCD("etcd"),
+        JWT("jwt"),
         CLEARBLADE("clearblade");
         private final String value;
         private final static Map<String, IotAccess.IotProvider> CONSTANTS = new HashMap<String, IotAccess.IotProvider>();

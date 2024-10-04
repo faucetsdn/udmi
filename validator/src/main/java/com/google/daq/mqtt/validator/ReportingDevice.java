@@ -14,7 +14,6 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 import udmi.schema.Category;
@@ -172,10 +171,9 @@ public class ReportingDevice {
    * Validate a message against specific message-type expectations (outside of base schema).
    *
    * @param message    Message to validate
-   * @param timestamp  message timestamp string (rather than pull from typed object)
    * @param attributes message attributes
    */
-  public void validateMessageType(Object message, Date timestamp, Map<String, String> attributes) {
+  public void validateMessageType(Object message, Map<String, String> attributes) {
     if (reportingPointset == null) {
       return;
     }
@@ -321,9 +319,16 @@ public class ReportingDevice {
     return Date.from(now.minusSeconds(THRESHOLD_SEC));
   }
 
-  public boolean markMessageType(String schemaName, Instant now) {
-    Date previous = messageMarks.put(schemaName, getTimestamp());
-    return previous == null || previous.before(getThreshold(now));
+  /**
+   * Check if a message schema should be processed, to filter out too frequent processing.
+   */
+  public boolean processMessageSchema(String schemaName, Instant now) {
+    Date previous = messageMarks.get(schemaName);
+    if (previous == null || previous.before(getThreshold(now))) {
+      messageMarks.put(schemaName, Date.from(now));
+      return true;
+    }
+    return false;
   }
 
   public Date getLastSeen() {
