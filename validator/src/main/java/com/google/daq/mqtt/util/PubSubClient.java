@@ -1,12 +1,17 @@
 package com.google.daq.mqtt.util;
 
 import static com.google.api.client.util.Preconditions.checkNotNull;
+import static com.google.udmi.util.Common.NAMESPACE_SEPARATOR;
 import static com.google.udmi.util.Common.PUBLISH_TIME_KEY;
+import static com.google.udmi.util.Common.SOURCE_SEPARATOR;
 import static com.google.udmi.util.GeneralUtils.encodeBase64;
 import static com.google.udmi.util.GeneralUtils.getTimestamp;
 import static com.google.udmi.util.JsonUtil.isoConvert;
 import static com.google.udmi.util.JsonUtil.stringify;
+import static com.google.udmi.util.PubSubReflector.USER_NAME_DEFAULT;
+import static java.lang.String.format;
 import static java.time.Instant.ofEpochSecond;
+import static java.util.Optional.ofNullable;
 
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -66,6 +71,7 @@ public class PubSubClient implements MessagePublisher, MessageHandler {
 
   private static final long SUBSCRIPTION_RACE_DELAY_MS = 10000;
   private static final String WAS_BASE_64 = "wasBase64";
+  public static final String SUBSCRIPTION_ROOT = "udmi_target";
 
   private final AtomicBoolean active = new AtomicBoolean();
   private final BlockingQueue<PubsubMessage> messages = new LinkedBlockingDeque<>();
@@ -139,12 +145,22 @@ public class PubSubClient implements MessagePublisher, MessageHandler {
 
       active.set(true);
     } catch (Exception e) {
-      throw new RuntimeException(String.format(CONNECT_ERROR_FORMAT, projectId), e);
+      throw new RuntimeException(format(CONNECT_ERROR_FORMAT, projectId), e);
     }
   }
 
+  /**
+   * Factory method for a client from a configuration.
+   */
   public static MessagePublisher from(ExecutionConfiguration iotConfig,
       BiConsumer<String, String> messageHandler, Consumer<Throwable> errorHandler) {
+    String registryId = iotConfig.registry_id;
+    String namespace = ofNullable(iotConfig.udmi_namespace).map(p -> p + NAMESPACE_SEPARATOR)
+        .orElse("");
+    String topic = namespace + SUBSCRIPTION_ROOT;
+    String userName = SOURCE_SEPARATOR + ofNullable(iotConfig.user_name).orElse(USER_NAME_DEFAULT);
+    String subscription = topic + userName;
+    return new PubSubClient(iotConfig.project_id, registryId, subscription, topic);
   }
 
   private void initializeHandlerTypes() {
@@ -352,7 +368,7 @@ public class PubSubClient implements MessagePublisher, MessageHandler {
       throw new RuntimeException("Missing subscription for " + subscriptionName);
     } catch (Exception e) {
       throw new RuntimeException(
-          String.format(SUBSCRIPTION_ERROR_FORMAT, subscriptionName), e);
+          format(SUBSCRIPTION_ERROR_FORMAT, subscriptionName), e);
     }
   }
 
