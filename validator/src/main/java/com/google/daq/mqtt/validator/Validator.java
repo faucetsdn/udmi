@@ -67,7 +67,6 @@ import com.google.udmi.util.GeneralUtils;
 import com.google.udmi.util.JsonUtil;
 import com.google.udmi.util.MessageUpgrader;
 import com.google.udmi.util.SiteModel;
-import io.opencensus.stats.Aggregation.Count;
 import java.io.File;
 import java.io.FilenameFilter;
 import java.io.IOException;
@@ -95,11 +94,8 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
-import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.concurrent.locks.Lock;
-import java.util.concurrent.locks.ReentrantLock;
 import java.util.function.BiConsumer;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
@@ -261,23 +257,6 @@ public class Validator {
 
     // Force exist because PubSub Subscriber in PubSubReflector does not shut down properly.
     safeSleep(2000);
-    System.exit(0);
-  }
-
-  /**
-   * Legacy main.
-   */
-  public static void main_orig(String[] args) {
-    try {
-      Validator validator = new Validator(Arrays.asList(args));
-      validator.messageLoop();
-    } catch (ExceptionMap processingException) {
-      System.exit(2);
-    } catch (Exception e) {
-      e.printStackTrace();
-      System.err.flush();
-      System.exit(-1);
-    }
     System.exit(0);
   }
 
