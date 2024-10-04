@@ -10,6 +10,7 @@ jarfile=$(realpath validator/build/libs/validator-1.0-SNAPSHOT-all.jar)
 javarun="java -cp $jarfile com.google.daq.mqtt.validator.SchemaTester"
 
 failures=
+echo testing $tests
 for test in $tests; do
     echo '################' Running combo test $test
     traces=$(jq -r .traces $test)
