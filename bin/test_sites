@@ -69,10 +69,20 @@ for subset in $subsets; do
     # Test the direct config-file variant of registrar (no project spec)
     bin/registrar $site_dir/cloud_iot_config.json
 
+    reg_file=$site_dir/registration_summary.json
+    [[ -f $reg_file ]] || touch $reg_file
+    reg_files="$site_dir/out/registration_summary.json $reg_file"
+    redact_files $reg_files
+    diffs=$(diff -q $reg_files 2>&1) || true
+    if [[ -n $diffs ]]; then
+        cat <<< $diffs >> $FAILURES
+        diff $reg_files || true
+    fi
+
     for device in $devices; do
         device_dir=$devices_dir/$device
         if [[ -d $device_dir/out ]]; then
-            redact_files $device_dir/out/* $site_dir/registration_summary.json
+            redact_files $device_dir/out/*
             diffs=$(diff -rq $device_dir/out $device_dir/expected 2>&1) || true
             if [[ -n $diffs ]]; then
                 cat <<< $diffs >> $FAILURES
@@ -83,6 +93,7 @@ for subset in $subsets; do
             false
         fi
     done
+
 done
 
 if [[ -s $FAILURES ]]; then

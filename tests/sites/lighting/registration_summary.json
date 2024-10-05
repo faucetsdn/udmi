@@ -1,0 +1,17 @@
+{
+  "Clean" : {
+    "LGRP-725" : "2021-10-13T13:32:47Z",
+    "LGRP-825" : "2021-10-13T13:32:47Z",
+    "LKP-83" : "2021-10-13T13:32:47Z",
+    "LMS-1137" : "2021-10-13T13:32:47Z",
+    "LT-72" : "2021-10-13T13:32:46Z",
+    "LT-720" : "2021-10-13T13:32:46Z",
+    "LT-728" : "2021-10-13T13:32:46Z",
+    "LT-73" : "2021-10-13T13:32:46Z",
+    "LT-839" : "2021-10-13T13:32:46Z",
+    "LTGW-28" : "2021-10-13T13:32:47Z",
+    "LTMTS-83" : "2021-10-13T13:32:47Z"
+  },
+  "site_metadata" : [ "Required file not found: /home/peringknife/udmi/tests/sites/lighting/site_metadata.json" ],
+  "udmi_version" : "1.5.1-62-g7b11b73a-dirty"
+}
