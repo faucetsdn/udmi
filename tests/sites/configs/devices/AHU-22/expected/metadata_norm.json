@@ -1,7 +1,7 @@
 {
   "timestamp": "2020-05-01T13:39:07Z",
   "version": "1.5.1",
-  "hash": "530d6c90",
+  "hash": "dc58c1d4",
   "system": {
     "tags": [ ],
     "location": {
@@ -25,7 +25,8 @@
     "gateway_id": "GAT-123",
     "target": {
       "family": "bacnet"
-    }
+    },
+    "group_ids": [ ]
   },
   "localnet": {
     "families": {

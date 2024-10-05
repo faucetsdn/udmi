@@ -2,7 +2,7 @@
   "timestamp": "2020-05-01T13:39:07Z",
   "version": "1.5.1",
   "upgraded_from": "1",
-  "hash": "65701fef",
+  "hash": "6973f56b",
   "system": {
     "tags": [ ],
     "location": {
@@ -19,7 +19,8 @@
     "min_loglevel": 300
   },
   "gateway": {
-    "gateway_id": "GAT-123"
+    "gateway_id": "GAT-123",
+    "group_ids": [ ]
   },
   "pointset": {
     "points": {

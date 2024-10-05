@@ -1,7 +1,7 @@
 {
   "timestamp": "2020-05-01T13:39:07Z",
   "version": "1.5.1",
-  "hash": "eb96d1ca",
+  "hash": "0700d88e",
   "cloud": {
     "detail": "site default for unit tests"
   },
@@ -28,7 +28,8 @@
     "gateway_id": "GAT-123",
     "target": {
       "family": "bacnet"
-    }
+    },
+    "group_ids": [ ]
   },
   "localnet": {
     "families": {

@@ -1,35 +1,23 @@
 {
-  "Clean" : {
-    "SNS-4" : "2020-05-01T13:39:07Z"
-  },
-  "Config" : {
-    "AHU-1" : "While reading config file: non-existant.file"
-  },
   "Credential" : {
     "AHU-1" : "While loading credentials for local device AHU-1",
-    "GAT-123" : "While loading credentials for local device GAT-123"
-  },
-  "Envelope" : {
-    "AHU-1" : "While validating envelope"
+    "GAT-123" : "While loading credentials for local device GAT-123",
+    "GAT-456" : "While loading credentials for local device GAT-456"
   },
   "Files" : {
     "AHU-1" : "expected files",
-    "GAT-123" : "expected files"
+    "GAT-123" : "expected files",
+    "GAT-456" : "expected files"
   },
   "Initializing" : {
-    "AHU-22" : "While converting point filter_differential_pressure_sensor"
+    "AHU-1" : "While converting device config"
   },
   "Validating" : {
-    "AHU-1" : "1 schema violations found"
+    "AHU-1" : "1 schema violations found",
+    "AHU-22" : "1 schema violations found",
+    "GAT-123" : "1 schema violations found",
+    "GAT-456" : "1 schema violations found"
   },
-  "cloud_version" : {
-    "hostname" : "udmis-pods-5458f9cbf9-nvqs2",
-    "functions_min" : 11,
-    "functions_max" : 11,
-    "udmi_version" : "1.5.0-16-g48397c75b",
-    "udmi_ref" : "us-central1-docker.pkg.dev/bos-platform-artifacts/udmi/udmis",
-    "built_at" : "2024-02-13T17:43:00Z",
-    "built_by" : "peringknife@peringknife-glaptop4"
-  },
-  "udmi_version" : "unknown"
+  "site_metadata" : [ "Required file not found: /home/peringknife/udmi/tests/sites/configs/site_metadata.json" ],
+  udmi_version REDACTED
 }

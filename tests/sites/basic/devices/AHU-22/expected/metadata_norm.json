@@ -1,7 +1,7 @@
 {
   "timestamp": "2020-05-01T13:39:07Z",
   "version": "1.5.1",
-  "hash": "a7f3f349",
+  "hash": "46b0fd4d",
   "cloud": {
     "num_id": "1234567890"
   },
@@ -28,7 +28,8 @@
     "gateway_id": "GAT-123",
     "target": {
       "family": "vendor"
-    }
+    },
+    "group_ids": [ ]
   },
   "localnet": {
     "families": {

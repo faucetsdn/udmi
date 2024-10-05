@@ -2,7 +2,7 @@
   "timestamp": "2024-06-11T08:31:26Z",
   "version": "1.5.1",
   "upgraded_from": "1.4.0",
-  "hash": "8b6464c6",
+  "hash": "c9ea370a",
   "system": {
     "tags": [ ],
     "location": {
@@ -27,7 +27,8 @@
     "gateway_id": "CGW-1",
     "target": {
       "family": "bacnet"
-    }
+    },
+    "group_ids": [ ]
   },
   "localnet": {
     "families": {

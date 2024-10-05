@@ -8,5 +8,6 @@
   "Validating" : {
     "GAT-123" : "1 schema violations found"
   },
-  "udmi_version" : "1.5.0-62-ged4753125"
+  "site_metadata" : [ "Required file not found: /home/peringknife/udmi/tests/sites/mapping/site_metadata.json" ],
+  udmi_version REDACTED
 }

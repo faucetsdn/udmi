@@ -33,6 +33,7 @@ function redact_files {
             continue
         fi
         sed -E -i \
+            -e 's-"udmi_version" : ".*"$-udmi_version REDACTED-' \
             -e 's-oading .*udmi/tests/-REDACTED/-' \
             -e 's-^    .*udmi/tests/-    REDACTED/-' \
             $file
@@ -70,13 +71,13 @@ for subset in $subsets; do
     bin/registrar $site_dir/cloud_iot_config.json
 
     reg_file=$site_dir/registration_summary.json
+    reg_out=$site_dir/out/registration_summary.json
     [[ -f $reg_file ]] || touch $reg_file
-    reg_files="$site_dir/out/registration_summary.json $reg_file"
-    redact_files $reg_files
-    diffs=$(diff -q $reg_files 2>&1) || true
+    redact_files $reg_out
+    diffs=$(diff -q $reg_out $reg_file 2>&1) || true
     if [[ -n $diffs ]]; then
         cat <<< $diffs >> $FAILURES
-        diff $reg_files || true
+        diff $reg_out $reg_file || true
     fi
 
     for device in $devices; do

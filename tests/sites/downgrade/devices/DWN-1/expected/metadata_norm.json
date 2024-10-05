@@ -2,7 +2,7 @@
   "timestamp": "2020-05-01T13:39:07Z",
   "version": "1.5.1",
   "upgraded_from": "1",
-  "hash": "f5492890",
+  "hash": "8ec1f354",
   "cloud": {
     "auth_type": "RS256"
   },
@@ -28,7 +28,8 @@
   "gateway": {
     "target": {
       "family": "vendor"
-    }
+    },
+    "group_ids": [ ]
   },
   "localnet": {
     "families": {

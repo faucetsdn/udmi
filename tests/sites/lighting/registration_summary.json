@@ -13,5 +13,5 @@
     "LTMTS-83" : "2021-10-13T13:32:47Z"
   },
   "site_metadata" : [ "Required file not found: /home/peringknife/udmi/tests/sites/lighting/site_metadata.json" ],
-  "udmi_version" : "1.5.1-62-g7b11b73a-dirty"
+  udmi_version REDACTED
 }

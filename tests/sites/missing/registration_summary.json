@@ -1,6 +1,5 @@
 {
   "Clean" : {
-    "AHU-22" : "2020-05-01T13:39:07Z",
     "SNS-4" : "2020-05-01T13:39:07Z"
   },
   "Credential" : {
@@ -8,13 +7,15 @@
     "GAT-123" : "While loading credentials for local device GAT-123"
   },
   "Files" : {
-    "AHU-1" : "devices/AHU-1",
-    "GAT-123" : "devices/GAT-123"
+    "AHU-1" : "expected files",
+    "GAT-123" : "expected files"
+  },
+  "Initializing" : {
+    "AHU-22" : "While converting device config"
   },
   "Validating" : {
     "AHU-1" : "1 schema violations found"
   },
-  "Version" : {
-    "main" : "1.4.1-38-g46f2b644b"
-  }
+  "site_metadata" : [ "Required file not found: /home/peringknife/udmi/tests/sites/missing/site_metadata.json" ],
+  udmi_version REDACTED
 }

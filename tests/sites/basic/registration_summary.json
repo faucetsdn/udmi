@@ -8,22 +8,12 @@
     "GAT-123" : "While loading credentials for local device GAT-123"
   },
   "Files" : {
-    "AHU-0001" : "expected files",
     "AHU-1" : "expected files",
-    "BACnet.213214" : "expected files",
-    "GAT-123" : "expected files",
-    "bacnet-29138" : "expected files",
-    "bacnet_29314" : "expected files"
-  },
-  "Loading" : {
-    "AHU-0001" : "While loading device metadata for AHU-0001",
-    "BACnet.213214" : "While loading device metadata for BACnet.213214",
-    "bacnet-29138" : "While loading device metadata for bacnet-29138",
-    "bacnet_29314" : "While loading device metadata for bacnet_29314"
+    "GAT-123" : "expected files"
   },
   "Validating" : {
     "AHU-1" : "1 schema violations found"
   },
   "site_metadata" : [ "Required file not found: /home/peringknife/udmi/tests/sites/basic/site_metadata.json" ],
-  "udmi_version" : "1.5.1-16-g0842ec20-dirty"
+  udmi_version REDACTED
 }
