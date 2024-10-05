@@ -1,0 +1,45 @@
+{
+  "timestamp": "2021-10-13T13:32:47Z",
+  "version": "1.5.1",
+  "upgraded_from": "1",
+  "hash": "d86797d7",
+  "system": {
+    "tags": [ ],
+    "location": {
+      "site": "TW-NTC-TPKD",
+      "section": "NTC-TPKD",
+      "position": {
+        "x": 0.0,
+        "y": 0.0
+      }
+    },
+    "physical_tag": {
+      "asset": {
+        "guid": "uuid://cce7a344-78fe-4741-9df0-d0b344dfa556",
+        "site": "TW-NTC-TPKD",
+        "name": "LKP-83"
+      }
+    },
+    "min_loglevel": 300
+  },
+  "gateway": {
+    "gateway_id": "LTGW-16",
+    "group_ids": [ ]
+  },
+  "pointset": {
+    "points": {
+      "brightness_percentage_command": {
+        "units": "Percent",
+        "tags": [ ]
+      },
+      "scene_command": {
+        "units": "No-units",
+        "tags": [ ]
+      },
+      "zone_scene_command": {
+        "units": "No-units",
+        "tags": [ ]
+      }
+    }
+  }
+}

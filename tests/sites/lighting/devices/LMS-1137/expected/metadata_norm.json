@@ -1,0 +1,37 @@
+{
+  "timestamp": "2021-10-13T13:32:47Z",
+  "version": "1.5.1",
+  "upgraded_from": "1",
+  "hash": "79c9b125",
+  "system": {
+    "tags": [ ],
+    "location": {
+      "site": "TW-NTC-TPKD",
+      "section": "NTC-TPKD",
+      "position": {
+        "x": 0.0,
+        "y": 0.0
+      }
+    },
+    "physical_tag": {
+      "asset": {
+        "guid": "uuid://b25bc771-187a-4b99-9a88-311cae27d14e",
+        "site": "TW-NTC-TPKD",
+        "name": "LMS-1137"
+      }
+    },
+    "min_loglevel": 300
+  },
+  "gateway": {
+    "gateway_id": "LTGW-7",
+    "group_ids": [ ]
+  },
+  "pointset": {
+    "points": {
+      "zone_occupancy_status": {
+        "units": "No-units",
+        "tags": [ ]
+      }
+    }
+  }
+}

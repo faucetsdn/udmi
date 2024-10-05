@@ -1,0 +1,18 @@
+{
+  "timestamp": "2021-10-13T13:32:47Z",
+  "version": 1,
+  "system": {
+    "min_loglevel": 300,
+    "metrics_rate_sec": 10,
+    "operation": { }
+  },
+  "gateway": { },
+  "pointset": {
+    "points": {
+      "zone_occupancy_status": {
+        "units": "No-units"
+      }
+    }
+  },
+  "downgraded_from": "1.5.1"
+}
