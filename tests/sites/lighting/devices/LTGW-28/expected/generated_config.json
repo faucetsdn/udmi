@@ -1,0 +1,13 @@
+{
+  "timestamp": "2021-10-13T13:32:47Z",
+  "version": 1,
+  "system": {
+    "min_loglevel": 300,
+    "metrics_rate_sec": 10,
+    "operation": { }
+  },
+  "gateway": {
+    "proxy_ids": [ "LGRP-725", "LGRP-825", "LT-72", "LT-720", "LT-722", "LT-728", "LT-73", "LT-730", "LT-734", "LT-736", "LT-82", "LT-821", "LT-827", "LT-83", "LT-830", "LT-833", "LT-839" ]
+  },
+  "downgraded_from": "1.5.1"
+}

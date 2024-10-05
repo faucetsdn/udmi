@@ -19,7 +19,9 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 @JsonPropertyOrder({
     "gateway_id",
     "target",
-    "proxy_ids"
+    "proxy_ids",
+    "group_ids",
+    "parent"
 })
 public class GatewayModel {
 
@@ -46,10 +48,21 @@ public class GatewayModel {
     @JsonProperty("proxy_ids")
     @JsonPropertyDescription("An array of all the device IDs which are bound to the device")
     public List<String> proxy_ids = new ArrayList<String>();
+    @JsonProperty("group_ids")
+    public List<String> group_ids = new ArrayList<String>();
+    /**
+     * Parent device to which the device is physically connected
+     * 
+     */
+    @JsonProperty("parent")
+    @JsonPropertyDescription("Parent device to which the device is physically connected")
+    public Parent parent;
 
     @Override
     public int hashCode() {
         int result = 1;
+        result = ((result* 31)+((this.group_ids == null)? 0 :this.group_ids.hashCode()));
+        result = ((result* 31)+((this.parent == null)? 0 :this.parent.hashCode()));
         result = ((result* 31)+((this.proxy_ids == null)? 0 :this.proxy_ids.hashCode()));
         result = ((result* 31)+((this.gateway_id == null)? 0 :this.gateway_id.hashCode()));
         result = ((result* 31)+((this.target == null)? 0 :this.target.hashCode()));
@@ -65,7 +78,7 @@ public class GatewayModel {
             return false;
         }
         GatewayModel rhs = ((GatewayModel) other);
-        return ((((this.proxy_ids == rhs.proxy_ids)||((this.proxy_ids!= null)&&this.proxy_ids.equals(rhs.proxy_ids)))&&((this.gateway_id == rhs.gateway_id)||((this.gateway_id!= null)&&this.gateway_id.equals(rhs.gateway_id))))&&((this.target == rhs.target)||((this.target!= null)&&this.target.equals(rhs.target))));
+        return ((((((this.group_ids == rhs.group_ids)||((this.group_ids!= null)&&this.group_ids.equals(rhs.group_ids)))&&((this.parent == rhs.parent)||((this.parent!= null)&&this.parent.equals(rhs.parent))))&&((this.proxy_ids == rhs.proxy_ids)||((this.proxy_ids!= null)&&this.proxy_ids.equals(rhs.proxy_ids))))&&((this.gateway_id == rhs.gateway_id)||((this.gateway_id!= null)&&this.gateway_id.equals(rhs.gateway_id))))&&((this.target == rhs.target)||((this.target!= null)&&this.target.equals(rhs.target))));
     }
 
 }

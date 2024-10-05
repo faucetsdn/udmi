@@ -23,6 +23,32 @@
         "pattern": "^[A-Z]{2,6}-[1-9][0-9]*$"
       },
       "examples": [["AHU-22"]]
+    },
+    "group_ids": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "pattern": "^[A-Z]{2,6}-[1-9][0-9]*$"
+      },
+      "examples": [["LGRP-22", "LGRP-384"]]
+    },
+    "parent": {
+      "description": "Parent device to which the device is physically connected",
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "target": {
+            "description": "ID of the parent device to which the device is physically connected",
+            "type": "string",
+            "pattern": "^[A-Z]{2,6}-[1-9][0-9]*$",
+            "examples": ["DDC-1", "CGW-2"]
+        },
+        "family": {
+            "description": "Connection family/protocol of the parent device to which the device is physically connected",
+            "type": "string",
+            "examples": ["bacnet_mstp", "modbus_tcp", "mqtt"]
+        }
+      }
     }
   }
 }

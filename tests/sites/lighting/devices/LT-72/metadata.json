@@ -24,7 +24,8 @@
     }
   },
   "gateway": {
-    "gateway_id": "LTGW-28"
+    "gateway_id": "LTGW-28",
+    "group_ids": [ "LGRP-725", "LGRP-825" ]
   },
   "version": 1,
   "timestamp": "2021-10-13T14:32:46.8324833+01:00"

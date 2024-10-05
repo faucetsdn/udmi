@@ -41,43 +41,45 @@ function redact_files {
 
 if [[ $# == 0 ]]; then
     subsets=$(cd $sitesdir; ls -d *)
+    do_mock=y
 else
     subsets=$*
 fi
 
 echo Testing against: $subsets
 
-FAILURES=out/test_sites-fixes.sh
+FAILURES=out/test_sites-failures
 rm -f $FAILURES
 
 for subset in $subsets; do
     echo '##########################################' Testing site $subset
     site_dir=$sitesdir/$subset
-    devicesdir=$site_dir/devices
-    rm -rf $devicesdir/*/out
-    mkdir -p $devicesdir
-    devices=$(cd $devicesdir; ls -d *)
+    devices_dir=$site_dir/devices
+    rm -rf $devices_dir/*/out
+    mkdir -p $devices_dir
+    devices=$(cd $devices_dir; ls -d *)
 
     # Clean up some stuff that might be left over from unit testing.
     for device in $devices; do
-        if [[ ! -f $devicesdir/$device/metadata.json ]]; then
-            rm -rf $devicesdir/$device
+        if [[ ! -f $devices_dir/$device/metadata.json ]]; then
+            rm -rf $devices_dir/$device
         fi
     done
 
-    # Test the direct config-file variant of registrar.
+    # Test the direct config-file variant of registrar (no project spec)
     bin/registrar $site_dir/cloud_iot_config.json
 
     for device in $devices; do
-        if [[ -d $devicesdir/$device/out ]]; then
-            redact_files $devicesdir/$device/out/* $site_dir/registration_summary.json
-            diffs=$(diff -rq $devicesdir/$device/out $devicesdir/$device/expected 2>&1) || true
+        device_dir=$devices_dir/$device
+        if [[ -d $device_dir/out ]]; then
+            redact_files $device_dir/out/* $site_dir/registration_summary.json
+            diffs=$(diff -rq $device_dir/out $device_dir/expected 2>&1) || true
             if [[ -n $diffs ]]; then
                 cat <<< $diffs >> $FAILURES
-                diff -r $devicesdir/$device/out $devicesdir/$device/expected || true
+                diff -r $device_dir/out $device_dir/expected || true
             fi
-        elif [[ -d $devicesdir/$device/expected ]]; then
-            echo Missing output directory $devicesdir/$device/out
+        elif [[ -d $device_dir/expected ]]; then
+            echo Missing output directory $device_dir/out
             false
         fi
     done
@@ -90,17 +92,21 @@ if [[ -s $FAILURES ]]; then
         -e 's/^Files (.*) and (.*) differ$/cp \1 \2/' \
         -e 's-^Only in (.*)/out: (.*)$-touch \1/expected/\2-' \
         -e 's-^Only in (.*)/expected: (.*)$-rm \1/expected/\2-' \
+        -e 's-^diff: (.*)/expected: No such file or directory$-mkdir \1/expected-' \
         $FAILURES
     cat $FAILURES
+    chmod +x $FAILURES
     false
 fi
 
-echo '#########################################' Testing simple mock sequencer...
-bin/sequencer tests/sites/downgrade/ -- DWN-2 54321 system_mode_restart || true
+if [[ -n $do_mock ]]; then
+    echo '#########################################' Testing simple mock sequencer...
+    bin/sequencer tests/sites/downgrade/ -- DWN-2 54321 system_mode_restart || true
 
-RESULTLOG=tests/sites/downgrade/out/devices/DWN-2/RESULT.log
-fgrep "RESULT fail system.mode system_mode_restart ALPHA " $RESULTLOG ||
-    bin/fail unexpected output from $RESULTLOG
+    RESULTLOG=tests/sites/downgrade/out/devices/DWN-2/RESULT.log
+    fgrep "RESULT fail system.mode system_mode_restart ALPHA " $RESULTLOG ||
+        bin/fail unexpected output from $RESULTLOG
+fi
 
 echo
 echo '#########################################' Done with site tests

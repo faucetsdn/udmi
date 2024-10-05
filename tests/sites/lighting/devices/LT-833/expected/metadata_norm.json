@@ -1,0 +1,37 @@
+{
+  "timestamp": "2021-10-13T13:32:46Z",
+  "version": "1.5.1",
+  "upgraded_from": "1",
+  "hash": "826c612f",
+  "system": {
+    "tags": [ ],
+    "location": {
+      "site": "TW-NTC-TPKD",
+      "section": "NTC-TPKD",
+      "position": {
+        "x": 0.0,
+        "y": 0.0
+      }
+    },
+    "physical_tag": {
+      "asset": {
+        "guid": "uuid://cbce3d53-7dc5-419e-96e0-74215b6224f5",
+        "site": "TW-NTC-TPKD",
+        "name": "LT-833"
+      }
+    },
+    "min_loglevel": 300
+  },
+  "gateway": {
+    "gateway_id": "LTGW-28",
+    "group_ids": [ ]
+  },
+  "pointset": {
+    "points": {
+      "dimmer_percentage_command": {
+        "units": "Percent",
+        "tags": [ ]
+      }
+    }
+  }
+}
