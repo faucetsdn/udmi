@@ -4,42 +4,46 @@
 
 `//provider/project[/namespace][+user]`
 
-* `provider`
+* `provider`: Primary providers supported by the tools
   * `gbos`
-  * `pref`
+  * `gref`
   * `mqtt`
-  * `pubsub`
-* `project`
-  * GCP project
-  * IoT Core project
-* `namespace`
-  * default
-  * k8s namespace
-  * pubsub namespace
-* `user`
-  * canonical users
-  * individual users
+  * `pubsub` (only works with `validator`)
+* `project`: Meaning depends on the provider
+  * `gbos`: IoT Core project id
+  * `gref`, `pubsub`: GCP project id
+  * `mqtt`: Broker hostname (currently only `localhost` fully supported)
+* `namespace`: Allows multiple parallel instances for a given project
+  * Automatically prefixed to necessary resources
+  * Defaults to an _empty_ prefix
+* `user`: Allows multiple concurrent users on the same project
+  * `gbos`, `mqtt`: Not supported, will cause runtime error
+  * `gref`, `pubsub`: Defaults to `debug` if not speificed
 
 * Examples
 
-`//gbos/bos-platform-dev`
-`//gbos/bos-platform-dev/peringknife`
-`//mqtt/localhost`
-`//pubsub/bos-platform-dev/peringknife+debug`
-`//pref/bos-platform-dev`
-
-* Tool Support
-
-* registrar
-  * not `pubsub`
-* validator
-  * allows `pubsub`
-* sequencer
-  * 
-* pull_messages
-  * `mqtt`
-  * `pubsub`
-
-
-
-
+* `//gbos/bos-platform-dev`
+  * MQTT client: `projects/bos-platform-dev/locations/us-central1/registries/UDMI-REFLECT/devices/ZZ-TRI-FECTA`
+* `//gbos/bos-platform-dev+debug` (only one _client_ is currently allowed using `gbos`)
+  * Error: `user name not supported for provider gbos`
+* `//gbos/bos-platform-dev/faucetsdn`
+  * MQTT client: `projects/bos-platform-dev/locations/us-central1/registries/faucetsdn~UDMI-REFLECT/devices/faucetsdn~ZZ-TRI-FECTA`
+* `//gref/bos-platform-dev` (if no _user_ is supplied, it defaults to `debug`)
+  * PubSub topic: `projects/bos-platform-dev/topics/udmi_reflect`
+  * PubSub subscription: `projects/bos-platform-dev/subscriptions/udmi_reply+debug`
+* `//gref/bos-platform-dev+username`
+  * PubSub topic: `projects/bos-platform-dev/topics/udmi_reflect`
+  * PubSub subscription: `projects/bos-platform-dev/subscriptions/udmi_reply+username`
+* `//gref/bos-platform-dev/faucetsdn+username`
+  * PubSub topic: `projects/bos-platform-dev/topics/faucetsdn~udmi_reflect`
+  * PubSub subscription: `projects/bos-platform-dev/subscriptions/faucetsdn~udmi_reply+username`
+* `//mqtt/localhost`
+  * MQTT client: `/r/UDMI-REFLECT/d/ZZ-TRI-FECTA`
+* `//mqtt/localhost+debug` (only one _client_ is currently allowed using `mqtt`)
+  * Error: `user name not supported for provider mqtt`
+* `//pubsub/bos-platform-dev` (only works for `validator`)
+  * PubSub subscription: `projects/bos-platform-dev/subscriptions/udmi_target+debug`
+  * PubSub topic: `projects/bos-platform-dev/topics/udmi_target`
+* `//pubsub/bos-platform-dev/faucetsdn+username` (only works for `validator`)
+  * PubSub subscription: `projects/bos-platform-dev/subscriptions/faucetsdn~udmi_target+username`
+  * PubSub topic: `projects/bos-platform-dev/topics/faucetsdn~udmi_target`
