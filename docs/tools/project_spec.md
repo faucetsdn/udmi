@@ -7,7 +7,7 @@
 * `provider`: Primary providers supported by the tools
   * `gbos`: Uses reflector client through IoT Core
   * `gref`: Uses reflector client through GCP PubSub
-  * `mqtt`: Uses reflector client through mqtt broker
+  * `mqtt`: Uses reflector client through MQTT broker
   * `pubsub` Uses direct access through PubSub (only works with `validator`)
 * `project`: Meaning depends on the provider
   * `gbos`: IoT Core project id
