@@ -5,10 +5,10 @@
 `//provider/project[/namespace][+user]`
 
 * `provider`: Primary providers supported by the tools
-  * `gbos`
-  * `gref`
-  * `mqtt`
-  * `pubsub` (only works with `validator`)
+  * `gbos`: Uses reflector client through IoT Core
+  * `gref`: Uses reflector client through GCP PubSub
+  * `mqtt`: Uses reflector client through mqtt broker
+  * `pubsub` Uses direct access through PubSub (only works with `validator`)
 * `project`: Meaning depends on the provider
   * `gbos`: IoT Core project id
   * `gref`, `pubsub`: GCP project id
@@ -18,16 +18,16 @@
   * Defaults to an _empty_ prefix
 * `user`: Allows multiple concurrent users on the same project
   * `gbos`, `mqtt`: Not supported, will cause runtime error
-  * `gref`, `pubsub`: Defaults to `debug` if not speificed
+  * `gref`, `pubsub`: Defaults to `debug` if not specified
 
 * Examples
 
 * `//gbos/bos-platform-dev`
-  * MQTT client: `projects/bos-platform-dev/locations/us-central1/registries/UDMI-REFLECT/devices/ZZ-TRI-FECTA`
+  * IoT Core: _project_: `bos-platform-dev`, _registry_: `UDMI-REFLECT`, _device_: `ZZ-TRI-FECTA`
 * `//gbos/bos-platform-dev+debug` (only one _client_ is currently allowed using `gbos`)
   * Error: `user name not supported for provider gbos`
 * `//gbos/bos-platform-dev/faucetsdn`
-  * MQTT client: `projects/bos-platform-dev/locations/us-central1/registries/faucetsdn~UDMI-REFLECT/devices/faucetsdn~ZZ-TRI-FECTA`
+  * IoT Core: _project_: `bos-platform-dev`, _registry_: `faucetsdn~UDMI-REFLECT`, _device_: `faucetsdn~ZZ-TRI-FECTA`
 * `//gref/bos-platform-dev` (if no _user_ is supplied, it defaults to `debug`)
   * PubSub topic: `projects/bos-platform-dev/topics/udmi_reflect`
   * PubSub subscription: `projects/bos-platform-dev/subscriptions/udmi_reply+debug`
