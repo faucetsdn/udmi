@@ -249,7 +249,7 @@ public class SequenceBase {
   private static final long EVENT_WAIT_DELAY_MS = 1000;
   private static final Duration STATE_TIMESTAMP_ERROR_THRESHOLD = Duration.ofMinutes(20);
   private static final Set<IotAccess.IotProvider> SEQUENCER_PROVIDERS = ImmutableSet.of(
-      IotProvider.GBOS, IotProvider.MQTT, IotProvider.PREF);
+      IotProvider.GBOS, IotProvider.MQTT, IotProvider.GREF);
   protected static Metadata deviceMetadata;
   protected static String projectId;
   protected static String cloudRegion;

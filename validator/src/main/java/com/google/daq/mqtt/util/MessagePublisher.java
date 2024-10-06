@@ -38,7 +38,7 @@ public interface MessagePublisher {
       iotConfig.reflector_endpoint = null;
     }
     return switch (iotProvider) {
-      case PREF -> PubSubReflector.from(iotConfig, messageHandler, errorHandler);
+      case GREF -> PubSubReflector.from(iotConfig, messageHandler, errorHandler);
       case MQTT, JWT, GBOS -> MqttPublisher.from(iotConfig, messageHandler, errorHandler);
       case PUBSUB -> PubSubClient.from(iotConfig, messageHandler, errorHandler);
       default -> throw new RuntimeException("Unsupported iot provider " + iotProvider);

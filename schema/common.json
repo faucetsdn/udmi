@@ -39,9 +39,9 @@
         "dynamic",
         "implicit",
         "pubsub",
-        "pref",
         "mqtt",
         "gbos",
+        "gref",
         "etcd",
         "jwt",
         "clearblade"
