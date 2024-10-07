@@ -146,6 +146,8 @@ import udmi.schema.ExecutionConfiguration;
 import udmi.schema.FeatureDiscovery;
 import udmi.schema.FeatureDiscovery.FeatureStage;
 import udmi.schema.FeatureValidationState;
+import udmi.schema.IotAccess;
+import udmi.schema.IotAccess.IotProvider;
 import udmi.schema.Level;
 import udmi.schema.Metadata;
 import udmi.schema.Operation;
@@ -246,6 +248,8 @@ public class SequenceBase {
       "timestamp", "system.last_config", "system.status");
   private static final long EVENT_WAIT_DELAY_MS = 1000;
   private static final Duration STATE_TIMESTAMP_ERROR_THRESHOLD = Duration.ofMinutes(20);
+  private static final Set<IotAccess.IotProvider> SEQUENCER_PROVIDERS = ImmutableSet.of(
+      IotProvider.GBOS, IotProvider.MQTT, IotProvider.GREF);
   protected static Metadata deviceMetadata;
   protected static String projectId;
   protected static String cloudRegion;
@@ -313,7 +317,7 @@ public class SequenceBase {
   private Description testDescription;
   private SubFolder testSchema;
   private int lastStatusLevel;
-  private CaptureMap otherEvents = new CaptureMap();
+  private final CaptureMap otherEvents = new CaptureMap();
 
   private static void setupSequencer() {
     exeConfig = SequenceRunner.ensureExecutionConfig();
@@ -547,6 +551,11 @@ public class SequenceBase {
   }
 
   private static MessagePublisher getReflectorClient() {
+    if (!SEQUENCER_PROVIDERS.contains(exeConfig.iot_provider)) {
+      throw new IllegalArgumentException(
+          format("IoT Provider '%s' not supported, should be one of: %s", exeConfig.iot_provider,
+              CSV_JOINER.join(SEQUENCER_PROVIDERS)));
+    }
     return new IotReflectorClient(exeConfig, getRequiredFunctionsVersion());
   }
 
@@ -2402,6 +2411,10 @@ public class SequenceBase {
         notice("starting test " + testName + " " + START_END_MARKER);
 
         activeInstance = SequenceBase.this;
+      } catch (IllegalArgumentException e) {
+        putSequencerResult(description, ERRR);
+        recordCompletion(ERRR, description, friendlyStackTrace(e));
+        throw e;
       } catch (Exception e) {
         trace("Exception stack:", stackTraceString(e));
         putSequencerResult(description, ERRR);

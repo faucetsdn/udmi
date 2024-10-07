@@ -252,8 +252,13 @@ public class SequenceRunner {
       }
       for (Request request : requests) {
         Result result = new JUnitCore().run(request);
-        failures.addAll(summarizeFailures(result.getFailures()));
+        List<Failure> theseFailures = result.getFailures();
+        failures.addAll(summarizeFailures(theseFailures));
         runCount += result.getRunCount();
+        List<String> failures = theseFailures.stream().map(Failure::getException)
+            .filter(failure -> failure instanceof IllegalArgumentException)
+            .map(Throwable::getMessage).toList();
+        checkState(failures.isEmpty(), "Fatal system errors: " + CSV_JOINER.join(failures));
       }
     }
 

@@ -8,11 +8,11 @@ import static com.google.udmi.util.Common.DEFAULT_REGION;
 import static com.google.udmi.util.GeneralUtils.catchOrElse;
 import static com.google.udmi.util.GeneralUtils.catchToNull;
 import static com.google.udmi.util.GeneralUtils.ifNotNullThen;
+import static com.google.udmi.util.GeneralUtils.ifNotNullThrow;
 import static com.google.udmi.util.GeneralUtils.ifTrueGet;
 import static com.google.udmi.util.GeneralUtils.sha256;
 import static com.google.udmi.util.SiteModel.DEFAULT_CLEARBLADE_HOSTNAME;
 import static com.google.udmi.util.SiteModel.DEFAULT_GBOS_HOSTNAME;
-import static com.google.udmi.util.SiteModel.LOCALHOST_HOSTNAME;
 import static java.lang.String.format;
 import static java.util.Objects.requireNonNull;
 import static java.util.Optional.ofNullable;
@@ -181,6 +181,7 @@ public class MqttPublisher implements MessagePublisher {
       BiConsumer<String, String> messageHandler, Consumer<Throwable> errorHandler) {
     final byte[] keyBytes;
     checkNotNull(iotConfig.key_file, "missing key file in config");
+    ifNotNullThrow(iotConfig.user_name, "user name not supported for " + iotConfig.iot_provider);
     try {
       keyBytes = getFileBytes(iotConfig.key_file);
       LOG.info(format("Loaded key %s as sha256 %s", iotConfig.key_file,
