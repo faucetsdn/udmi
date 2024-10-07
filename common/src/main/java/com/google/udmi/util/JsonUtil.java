@@ -8,6 +8,7 @@ import static com.google.udmi.util.GeneralUtils.toJsonString;
 import static java.util.Objects.requireNonNull;
 
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
+import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.core.JsonParser.Feature;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.json.JsonReadFeature;
@@ -40,6 +41,7 @@ public abstract class JsonUtil {
       .registerModule(NanSerializer.TO_NULL) // NaN is not valid JSON, so squash it now.
       .setSerializationInclusion(Include.NON_NULL);
   public static final ObjectMapper OBJECT_MAPPER = STRICT_MAPPER.copy()
+      .enable(JsonParser.Feature.ALLOW_NON_NUMERIC_NUMBERS)
       .disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES);
   public static final ObjectMapper TERSE_MAPPER = OBJECT_MAPPER.copy()
       .disable(SerializationFeature.INDENT_OUTPUT);

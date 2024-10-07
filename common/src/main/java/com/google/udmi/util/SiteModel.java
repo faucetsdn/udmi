@@ -301,7 +301,7 @@ public class SiteModel {
 
   public Set<String> getDeviceIds() {
     checkState(sitePath != null, "sitePath not defined");
-    File devicesFile = new File(new File(sitePath), "devices");
+    File devicesFile = getDevicesDir();
     File[] files = Objects.requireNonNull(devicesFile.listFiles(),
         "no files in " + devicesFile.getAbsolutePath());
     return Arrays.stream(files).map(File::getName).filter(SiteModel::validDeviceDirectory)
@@ -389,7 +389,11 @@ public class SiteModel {
   }
 
   public File getDeviceDir(String deviceId) {
-    return new File(new File(new File(sitePath), "devices"), deviceId);
+    return new File(getDevicesDir(), deviceId);
+  }
+
+  public File getDevicesDir() {
+    return new File(new File(sitePath), "devices");
   }
 
   public File getDeviceFile(String deviceId, String path) {

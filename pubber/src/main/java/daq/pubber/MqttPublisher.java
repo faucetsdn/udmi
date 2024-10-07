@@ -197,7 +197,7 @@ public class MqttPublisher implements Publisher {
     try {
       String payload = getMessagePayload(data);
       String sendTopic = getSendTopic(deviceId, getMessageTopic(topicSuffix, data));
-      info("Sending message to " + sendTopic);
+      debug("Sending message to " + sendTopic);
       sendMessage(deviceId, sendTopic, payload.getBytes());
       if (callback != null) {
         callback.run();
@@ -661,10 +661,18 @@ public class MqttPublisher implements Publisher {
     public String version;
     public Date timestamp;
     public String field;
-    @SuppressWarnings({"MemberName", "AbbreviationAsWordInName"})
+    @SuppressWarnings({"MemberName"})
     public String REPLACE_MESSAGE_WITH;
-    @SuppressWarnings({"MemberName", "AbbreviationAsWordInName"})
+    @SuppressWarnings({"MemberName"})
     public String REPLACE_TOPIC_WITH;
+  }
+
+  /**
+   * Marker class for sending using a bad topic not defined by a SubType/SubFolder.
+   */
+  static class FakeTopic {
+    public String version;
+    public Date timestamp;
   }
 
   static class InjectedState extends InjectedMessage {

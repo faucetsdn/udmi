@@ -8,13 +8,13 @@ import static com.google.udmi.util.GeneralUtils.catchToNull;
 import static com.google.udmi.util.GeneralUtils.deepCopy;
 import static com.google.udmi.util.GeneralUtils.friendlyStackTrace;
 import static com.google.udmi.util.GeneralUtils.fromJsonFile;
+import static com.google.udmi.util.GeneralUtils.fromJsonFileStrict;
 import static com.google.udmi.util.GeneralUtils.fromJsonString;
 import static com.google.udmi.util.GeneralUtils.getFileBytes;
 import static com.google.udmi.util.GeneralUtils.getNow;
 import static com.google.udmi.util.GeneralUtils.getTimestamp;
 import static com.google.udmi.util.GeneralUtils.ifNotNullGet;
 import static com.google.udmi.util.GeneralUtils.ifNotNullThen;
-import static com.google.udmi.util.GeneralUtils.ifNullElse;
 import static com.google.udmi.util.GeneralUtils.ifTrueThen;
 import static com.google.udmi.util.GeneralUtils.isGetTrue;
 import static com.google.udmi.util.GeneralUtils.isTrue;
@@ -46,6 +46,7 @@ import com.google.udmi.util.MessageDowngrader;
 import com.google.udmi.util.SchemaVersion;
 import com.google.udmi.util.SiteModel;
 import com.google.udmi.util.SiteModel.MetadataException;
+import daq.pubber.MqttPublisher.FakeTopic;
 import daq.pubber.MqttPublisher.InjectedMessage;
 import daq.pubber.MqttPublisher.InjectedState;
 import daq.pubber.MqttPublisher.PublisherException;
@@ -69,7 +70,6 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.function.Function;
-import java.util.function.Supplier;
 import org.apache.http.ConnectionClosedException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -79,7 +79,6 @@ import udmi.schema.BlobBlobsetState;
 import udmi.schema.BlobsetConfig.SystemBlobsets;
 import udmi.schema.BlobsetState;
 import udmi.schema.Category;
-import udmi.schema.CloudModel.Auth_type;
 import udmi.schema.Config;
 import udmi.schema.DevicePersistent;
 import udmi.schema.DiscoveryEvents;
@@ -126,13 +125,15 @@ public class Pubber extends ManagerBase implements ManagerHost {
           .put(SystemEvents.class, getEventsSuffix("system"))
           .put(PointsetEvents.class, getEventsSuffix("pointset"))
           .put(ExtraPointsetEvent.class, getEventsSuffix("pointset"))
-          .put(InjectedMessage.class, getEventsSuffix("racoon"))
+          .put(InjectedMessage.class, getEventsSuffix("system"))
+          .put(FakeTopic.class, getEventsSuffix("racoon"))
           .put(InjectedState.class, STATE_TOPIC)
           .put(DiscoveryEvents.class, getEventsSuffix("discovery"))
           .build();
   private static final Map<String, String> INVALID_REPLACEMENTS = ImmutableMap.of(
       "events/blobset", "\"\"",
       "events/discovery", "{}",
+      "events/gateway", "{ \"testing\": \"This is prematurely terminated",
       "events/mapping", "{ NOT VALID JSON!"
   );
   public static final List<String> INVALID_KEYS = new ArrayList<>(INVALID_REPLACEMENTS.keySet());
@@ -204,7 +205,7 @@ public class Pubber extends ManagerBase implements ManagerHost {
   private static PubberConfiguration loadConfiguration(String configPath) {
     File configFile = new File(configPath);
     try {
-      return sanitizeConfiguration(fromJsonFile(configFile, PubberConfiguration.class));
+      return sanitizeConfiguration(fromJsonFileStrict(configFile, PubberConfiguration.class));
     } catch (Exception e) {
       throw new RuntimeException("While configuring from " + configFile.getAbsolutePath(), e);
     }
@@ -574,11 +575,15 @@ public class Pubber extends ManagerBase implements ManagerHost {
    * each message sent to stabilize the output order for testing purposes.
    */
   private void sendEmptyMissingBadEvents() {
-    int phase = deviceUpdateCount % MESSAGE_REPORT_INTERVAL;
-    if (!isTrue(config.options.emptyMissing)
-        || (phase >= INVALID_REPLACEMENTS.size() + 2)) {
+    if (!isTrue(config.options.emptyMissing)) {
       return;
     }
+
+    final int EXPLICIT_PHASES = 3;
+
+    checkState(MESSAGE_REPORT_INTERVAL > EXPLICIT_PHASES + INVALID_REPLACEMENTS.size() + 1,
+        "not enough space for hacky messages");
+    int phase = (deviceUpdateCount + MESSAGE_REPORT_INTERVAL / 2) % MESSAGE_REPORT_INTERVAL;
 
     safeSleep(INJECT_MESSAGE_DELAY_MS);
 
@@ -591,10 +596,14 @@ public class Pubber extends ManagerBase implements ManagerHost {
     } else if (phase == 1) {
       InjectedMessage invalidEvent = new InjectedMessage();
       invalidEvent.field = "bunny";
-      warn("Sending badly formatted message type");
+      warn("Sending badly formatted message with extra field");
       publishDeviceMessage(invalidEvent);
-    } else {
-      String key = INVALID_KEYS.get(phase - 2);
+    } else if (phase == 2) {
+      FakeTopic invalidTopic = new FakeTopic();
+      warn("Sending badly formatted message with fake topic");
+      publishDeviceMessage(invalidTopic);
+    } else if (phase < INVALID_REPLACEMENTS.size() + EXPLICIT_PHASES) {
+      String key = INVALID_KEYS.get(phase - EXPLICIT_PHASES);
       InjectedMessage replacedEvent = new InjectedMessage();
       replacedEvent.REPLACE_TOPIC_WITH = key;
       replacedEvent.REPLACE_MESSAGE_WITH = INVALID_REPLACEMENTS.get(key);

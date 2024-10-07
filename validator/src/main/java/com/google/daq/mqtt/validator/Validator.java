@@ -28,6 +28,7 @@ import static com.google.udmi.util.Common.removeNextArg;
 import static com.google.udmi.util.GeneralUtils.friendlyStackTrace;
 import static com.google.udmi.util.GeneralUtils.ifNotNullGet;
 import static com.google.udmi.util.GeneralUtils.ifNotNullThen;
+import static com.google.udmi.util.GeneralUtils.ifTrueThen;
 import static com.google.udmi.util.JsonUtil.JSON_SUFFIX;
 import static com.google.udmi.util.JsonUtil.OBJECT_MAPPER;
 import static com.google.udmi.util.JsonUtil.convertTo;
@@ -104,6 +105,7 @@ import java.util.function.BiConsumer;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 import org.apache.commons.io.FileUtils;
+import org.jetbrains.annotations.NotNull;
 import udmi.schema.Category;
 import udmi.schema.DeviceValidationEvents;
 import udmi.schema.Envelope;
@@ -193,6 +195,7 @@ public class Validator {
   private Instant mockNow = null;
   private boolean forceUpgrade;
   private SiteModel siteModel;
+  private boolean validateCurrent;
 
   /**
    * Create a simplistic validator for encapsulated use.
@@ -230,6 +233,7 @@ public class Validator {
     processProfile(siteModel.getExecutionConfiguration());
     postProcessArgs(argList);
     targetDevices = Set.copyOf(argList);
+    initializeExpectedDevices();
     return this;
   }
 
@@ -318,6 +322,7 @@ public class Validator {
             case "-a" -> setSchemaSpec(removeNextArg(argList));
             case "-t" -> validatePubSub(removeNextArg(argList), true);
             case "-f" -> validateFilesOutput(removeNextArg(argList));
+            case "-c" -> setValidateCurrent(true);
             case "-u" -> forceUpgrade = true;
             case "-r" -> validateMessageTrace(removeNextArg(argList));
             case "-n" -> client = new NullPublisher();
@@ -338,6 +343,10 @@ public class Validator {
         setSchemaSpec(new File(UDMI_ROOT, "schema").getAbsolutePath());
       }
     }
+  }
+
+  private void setValidateCurrent(boolean current) {
+    validateCurrent = current;
   }
 
   private void setProjectId(String projectId) {
@@ -409,7 +418,6 @@ public class Validator {
     } else {
       baseDir = new File(siteDir);
       config = CloudIotManager.validate(resolveSiteConfig(config, siteDir), config.project_id);
-      initializeExpectedDevices(siteDir);
     }
 
     outBaseDir = new File(baseDir, "out");
@@ -436,14 +444,12 @@ public class Validator {
     traceDir.mkdirs();
   }
 
-  private void initializeExpectedDevices(String siteDir) {
-    File devicesDir = new File(siteDir, DEVICES_DIR);
-    List<String> siteDevices = SiteModel.listDevices(devicesDir);
+  private void initializeExpectedDevices() {
+    Set<String> siteDevices = siteModel.getDeviceIds();
     try {
       expectedDevices = ImmutableSet.copyOf(siteDevices);
-      SiteModel siteModel = new SiteModel(siteDir);
       for (String device : siteDevices) {
-        ReportingDevice reportingDevice = new ReportingDevice(device);
+        ReportingDevice reportingDevice = newReportingDevice(device);
         try {
           Metadata metadata = siteModel.loadDeviceMetadata(device);
           reportingDevice.setMetadata(metadata);
@@ -456,8 +462,15 @@ public class Validator {
       outputLogger.info("Loaded " + reportingDevices.size() + " expected devices");
     } catch (Exception e) {
       throw new RuntimeException(
-          "While loading devices directory " + devicesDir.getAbsolutePath(), e);
+          "While loading devices directory " + siteModel.getDevicesDir().getAbsolutePath(), e);
     }
+  }
+
+  @NotNull
+  private ReportingDevice newReportingDevice(String device) {
+    ReportingDevice reportingDevice = new ReportingDevice(device);
+    ifTrueThen(validateCurrent, () -> reportingDevice.setThreshold(REPORT_INTERVAL_SEC));
+    return reportingDevice;
   }
 
   /**
@@ -633,7 +646,7 @@ public class Validator {
       return null;
     }
 
-    ReportingDevice device = reportingDevices.computeIfAbsent(deviceId, ReportingDevice::new);
+    ReportingDevice device = reportingDevices.computeIfAbsent(deviceId, this::newReportingDevice);
     device.clearMessageEntries();
 
     try {
