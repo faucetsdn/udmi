@@ -579,9 +579,9 @@ public class Pubber extends ManagerBase implements ManagerHost {
       return;
     }
 
-    final int EXPLICIT_PHASES = 3;
+    final int explicitPhases = 3;
 
-    checkState(MESSAGE_REPORT_INTERVAL > EXPLICIT_PHASES + INVALID_REPLACEMENTS.size() + 1,
+    checkState(MESSAGE_REPORT_INTERVAL > explicitPhases + INVALID_REPLACEMENTS.size() + 1,
         "not enough space for hacky messages");
     int phase = (deviceUpdateCount + MESSAGE_REPORT_INTERVAL / 2) % MESSAGE_REPORT_INTERVAL;
 
@@ -602,8 +602,8 @@ public class Pubber extends ManagerBase implements ManagerHost {
       FakeTopic invalidTopic = new FakeTopic();
       warn("Sending badly formatted message with fake topic");
       publishDeviceMessage(invalidTopic);
-    } else if (phase < INVALID_REPLACEMENTS.size() + EXPLICIT_PHASES) {
-      String key = INVALID_KEYS.get(phase - EXPLICIT_PHASES);
+    } else if (phase < INVALID_REPLACEMENTS.size() + explicitPhases) {
+      String key = INVALID_KEYS.get(phase - explicitPhases);
       InjectedMessage replacedEvent = new InjectedMessage();
       replacedEvent.REPLACE_TOPIC_WITH = key;
       replacedEvent.REPLACE_MESSAGE_WITH = INVALID_REPLACEMENTS.get(key);

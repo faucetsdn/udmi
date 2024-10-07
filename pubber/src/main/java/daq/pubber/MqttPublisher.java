@@ -661,9 +661,9 @@ public class MqttPublisher implements Publisher {
     public String version;
     public Date timestamp;
     public String field;
-    @SuppressWarnings({"MemberName"})
+    @SuppressWarnings({"MemberName", "AbbreviationAsWordInName"})
     public String REPLACE_MESSAGE_WITH;
-    @SuppressWarnings({"MemberName"})
+    @SuppressWarnings({"MemberName", "AbbreviationAsWordInName"})
     public String REPLACE_TOPIC_WITH;
   }
 
