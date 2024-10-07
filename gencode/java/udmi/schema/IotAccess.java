@@ -79,9 +79,9 @@ public class IotAccess {
         DYNAMIC("dynamic"),
         IMPLICIT("implicit"),
         PUBSUB("pubsub"),
-        PREF("pref"),
         MQTT("mqtt"),
         GBOS("gbos"),
+        GREF("gref"),
         ETCD("etcd"),
         JWT("jwt"),
         CLEARBLADE("clearblade");
