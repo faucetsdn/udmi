@@ -313,21 +313,24 @@ public class MessageDispatcherImpl extends ContainerBase implements MessageDispa
 
     Bundle bundle = new Bundle(deepCopy(envelope), message);
 
+    Envelope bundleEnvelope = bundle.envelope;
     if (message instanceof Exception || message instanceof String) {
-      bundle.envelope.subType = SubType.EVENTS;
-      bundle.envelope.subFolder = SubFolder.ERROR;
+      bundleEnvelope.subType = ofNullable(bundleEnvelope.subType).orElse(SubType.EVENTS);
+      bundleEnvelope.rawFolder =
+          ofNullable(bundleEnvelope.subFolder).orElse(SubFolder.INVALID).toString();
+      bundleEnvelope.subFolder = SubFolder.ERROR;
       return bundle;
     }
 
     if (message instanceof RawString rawString) {
-      requireNonNull(bundle.envelope.subType, "subType not defined for raw string");
+      requireNonNull(bundleEnvelope.subType, "subType not defined for raw string");
       bundle.payload = rawString.rawString;
       bundle.message = null;
     } else if (!(message instanceof Map)) {
       SimpleEntry<SubType, SubFolder> messageType = CLASS_TYPES.get(message.getClass());
       requireNonNull(messageType, "unknown message type for " + message.getClass());
-      bundle.envelope.subType = messageType.getKey();
-      bundle.envelope.subFolder = messageType.getValue();
+      bundleEnvelope.subType = messageType.getKey();
+      bundleEnvelope.subFolder = messageType.getValue();
     }
     return bundle;
   }

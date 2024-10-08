@@ -345,7 +345,7 @@ public abstract class MessageBase extends ContainerBase implements MessagePipe {
       messageObject = parseJson(messageString);
     } catch (Exception e) {
       receiveException(attributesMap, messageString, e, SubFolder.ERROR);
-      return;
+      // TODO: Don't make this an error!
     }
     final Envelope envelope;
 
@@ -360,7 +360,7 @@ public abstract class MessageBase extends ContainerBase implements MessagePipe {
 
     try {
       Bundle bundle = new Bundle(envelope, messageObject);
-      trace("Received %s %s/%s -> %s %s", bundle.envelope.deviceRegistryId,
+      debug("Received %s %s/%s -> %s %s", bundle.envelope.deviceRegistryId,
           bundle.envelope.subType, bundle.envelope.subFolder, queueIdentifier(),
           bundle.envelope.transactionId);
       receiveBundle(bundle);
