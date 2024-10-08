@@ -36,7 +36,6 @@ import static com.google.udmi.util.JsonUtil.getInstant;
 import static com.google.udmi.util.JsonUtil.isoConvert;
 import static com.google.udmi.util.JsonUtil.mapCast;
 import static com.google.udmi.util.JsonUtil.safeSleep;
-import static com.google.udmi.util.SiteModel.DEVICES_DIR;
 import static java.lang.String.format;
 import static java.util.Optional.ofNullable;
 import static udmi.schema.IotAccess.IotProvider.PUBSUB;
@@ -221,6 +220,8 @@ public class Validator {
       validateReflector();
     }
     targetDevices = Set.copyOf(listCopy);
+    siteModel = new SiteModel(config.site_model);
+    initializeExpectedDevices();
   }
 
   public Validator() {
@@ -253,10 +254,10 @@ public class Validator {
   }
 
   /**
-     * Let's go.
-     *
-     * @param args Arguments for program execution
-     */
+   * Let's go.
+   *
+   * @param args Arguments for program execution
+   */
   public static void main(String[] args) {
     ArrayList<String> argList = new ArrayList<>(List.of(args));
     try {
