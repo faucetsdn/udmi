@@ -428,15 +428,15 @@ sites/udmi_site_model/out/devices/GAT-123/events_error.out
   "sub_folder" : "error",
   "sub_type" : "events",
   "status" : {
-    "message" : "Error in message pipeline: While parsing json object, Unexpected character ('N' (code 78)): was expecting double-quote to start field name  at [Source: (String)\"{ NOT VALID JSON!\"; line: 1, column: 4]",
-    "detail" : "events_error: Error in message pipeline: While parsing json object, Unexpected character ('N' (code 78)): was expecting double-quote to start field name  at [Source: (String)\"{ NOT VALID JSON!\"; line: 1, column: 4] REDACTED_ERROR",
+    "message" : "Error in message pipeline: While parsing json object, Unexpected end-of-input: was expecting closing quote for a string value  at [Source: (String)\"{ \"testing\": \"This is prematurely terminated\"; line: 1, column: 45]",
+    "detail" : "events_error: Error in message pipeline: While parsing json object, Unexpected end-of-input: was expecting closing quote for a string value  at [Source: (String)\"{ \"testing\": \"This is prematurely terminated\"; line: 1, column: 45] REDACTED_ERROR",
     "category" : "validation.device.schema",
     "timestamp" : "REDACTED_TIMESTAMP",
     "level" : 500
   },
   "errors" : [ {
-    "message" : "Error in message pipeline: While parsing json object, Unexpected character ('N' (code 78)): was expecting double-quote to start field name  at [Source: (String)\"{ NOT VALID JSON!\"; line: 1, column: 4]",
-    "detail" : "events_error: Error in message pipeline: While parsing json object, Unexpected character ('N' (code 78)): was expecting double-quote to start field name  at [Source: (String)\"{ NOT VALID JSON!\"; line: 1, column: 4] REDACTED_ERROR",
+    "message" : "Error in message pipeline: While parsing json object, Unexpected end-of-input: was expecting closing quote for a string value  at [Source: (String)\"{ \"testing\": \"This is prematurely terminated\"; line: 1, column: 45]",
+    "detail" : "events_error: Error in message pipeline: While parsing json object, Unexpected end-of-input: was expecting closing quote for a string value  at [Source: (String)\"{ \"testing\": \"This is prematurely terminated\"; line: 1, column: 45] REDACTED_ERROR",
     "category" : "validation.device.schema",
     "timestamp" : "REDACTED_TIMESTAMP",
     "level" : 500
