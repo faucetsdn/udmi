@@ -142,7 +142,7 @@ public class Pubber extends ManagerBase implements ManagerHost {
   private static final AtomicInteger retriesRemaining = new AtomicInteger(CONNECT_RETRIES);
   private static final long RESTART_DELAY_MS = 1000;
   private static final String CORRUPT_STATE_MESSAGE = "!&*@(!*&@!";
-  private static final long INJECT_MESSAGE_DELAY_MS = 2000; // Delay to make sure testing is stable.
+  private static final long INJECT_MESSAGE_DELAY_MS = 1000; // Delay to make sure testing is stable.
   private static final int FORCED_STATE_TIME_MS = 10000;
   private static final Duration CLOCK_SKEW = Duration.ofMinutes(30);
   private static final Duration SMOKE_CHECK_TIME = Duration.ofMinutes(5);
