@@ -26,6 +26,7 @@ import static com.google.udmi.util.GeneralUtils.friendlyStackTrace;
 import static com.google.udmi.util.GeneralUtils.getTimestamp;
 import static com.google.udmi.util.GeneralUtils.ifNotNullGet;
 import static com.google.udmi.util.GeneralUtils.ifNotNullThen;
+import static com.google.udmi.util.GeneralUtils.ifNotTrueGet;
 import static com.google.udmi.util.GeneralUtils.ifNotTrueThen;
 import static com.google.udmi.util.GeneralUtils.ifNullThen;
 import static com.google.udmi.util.GeneralUtils.ifTrueGet;
@@ -114,6 +115,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentSkipListSet;
 import java.util.concurrent.LinkedBlockingDeque;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
@@ -242,6 +244,7 @@ public class SequenceBase {
   private static final String FAKE_DEVICE_ID = "TAP-1";
   private static final String NO_EXTRA_DETAIL = "no logs";
   private static final Duration DEFAULT_WAIT_TIME = Duration.ofSeconds(10);
+  private static final Duration CONFIG_WAIT_TIME = Duration.ofSeconds(30);
   private static final Duration LOG_WAIT_TIME = Duration.ofSeconds(30);
   private static final Duration DEFAULT_LOOP_TIMEOUT = Duration.ofHours(30);
   private static final Set<String> SYSTEM_STATE_CHANGES = ImmutableSet.of(
@@ -318,6 +321,7 @@ public class SequenceBase {
   private SubFolder testSchema;
   private int lastStatusLevel;
   private final CaptureMap otherEvents = new CaptureMap();
+  private final AtomicBoolean waitingForConfigSync = new AtomicBoolean();
 
   private static void setupSequencer() {
     exeConfig = SequenceRunner.ensureExecutionConfig();
@@ -839,11 +843,17 @@ public class SequenceBase {
   }
 
   private void waitForConfigSync() {
+    checkState(!waitingForConfigSync.getAndSet(true), "Config is already updating...");
     try {
+      waitFor("config sync", CONFIG_WAIT_TIME, () -> {
+        processNextMessage();
+        return configIsPending(false);
+      });
       whileDoing("config sync", () -> messageEvaluateLoop(this::configIsPending));
       Duration between = Duration.between(lastConfigUpdate, CleanDateFormat.clean(Instant.now()));
       debug(format("Configuration sync took %ss", between.getSeconds()));
     } finally {
+      waitingForConfigSync.set(false);
       debug("wait for config sync pending " + configIsPending(true));
     }
   }
@@ -1171,7 +1181,7 @@ public class SequenceBase {
   private void assertConfigIsNotPending() {
     if (!configTransactions.isEmpty()) {
       throw new RuntimeException(
-          "Unexpected config transactions: " + configTransactionsListString());
+          "Unexpected pending config transactions: " + configTransactionsListString());
     }
   }
 
@@ -1365,7 +1375,7 @@ public class SequenceBase {
   protected void waitFor(String description, Duration maxWait, Supplier<String> evaluator) {
     AtomicReference<String> detail = new AtomicReference<>();
     whileDoing(description, () -> {
-      updateConfig("Before " + description);
+      ifNotTrueThen(waitingForConfigSync.get(), () -> updateConfig("Before " + description));
       recordSequence("Wait for " + description);
       messageEvaluateLoop(maxWait, () -> {
         String result = evaluator.get();
@@ -1470,7 +1480,7 @@ public class SequenceBase {
         catcher.accept(e);
         String detail = ifNotNullGet(detailer, Supplier::get);
         ifNotNullThen(detail, this::waitingConditionDetail);
-        throw ifNotNullGet(detail, message -> new RuntimeException("Because " + message), e);
+        throw ifNotNullGet(detail, message -> new RuntimeException("Because " + message, e), e);
       }
     } catch (Exception e) {
       throw new RuntimeException("While " + description, e);
@@ -1914,10 +1924,10 @@ public class SequenceBase {
   }
 
   private boolean configIsPending() {
-    return configIsPending(false);
+    return configIsPending(false) != null;
   }
 
-  private boolean configIsPending(boolean debugOut) {
+  private String configIsPending(boolean debugOut) {
     Date stateLastStart = catchToNull(() -> deviceState.system.operation.last_start);
     Date configLastStart = catchToNull(() -> deviceConfig.system.operation.last_start);
     boolean lastStartSynced = stateLastStart == null || stateLastStart.equals(configLastStart);
@@ -1926,9 +1936,8 @@ public class SequenceBase {
     boolean lastConfigSynced = stateLastConfig == null || stateLastConfig.equals(lastConfig);
     boolean transactionsClean = configTransactions.isEmpty();
     boolean synced = lastStartSynced && transactionsClean && lastConfigSynced;
-    boolean pending = !synced;
     if (debugOut) {
-      if (pending) {
+      if (!synced) {
         notice(format("last_start synchronized %s: state/%s =? config/%s", lastStartSynced,
             isoConvert(stateLastStart), isoConvert(configLastStart)));
         notice(format("pending configTransactions: %s", configTransactionsListString()));
@@ -1938,7 +1947,9 @@ public class SequenceBase {
         debug("last_config synchronized check disabled due to missing state.system.last_config");
       }
     }
-    return !synced;
+    return ifNotTrueGet(synced,
+        () -> format("waiting for last_start %s, transactions %s, last_config %s", lastConfigSynced,
+            transactionsClean, lastConfigSynced));
   }
 
   @NotNull
