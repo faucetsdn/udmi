@@ -15,6 +15,7 @@ import static com.google.udmi.util.JsonUtil.isoConvert;
 import static com.google.udmi.util.JsonUtil.stringify;
 import static com.google.udmi.util.JsonUtil.stringifyTerse;
 import static com.google.udmi.util.JsonUtil.toStringMap;
+import static com.google.udmi.util.JsonUtil.writeFile;
 import static java.lang.String.format;
 import static java.time.Instant.ofEpochSecond;
 import static java.util.Objects.requireNonNull;
@@ -42,6 +43,7 @@ import com.google.pubsub.v1.ProjectSubscriptionName;
 import com.google.pubsub.v1.ProjectTopicName;
 import com.google.pubsub.v1.PubsubMessage;
 import com.google.pubsub.v1.SeekRequest;
+import java.io.File;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.TreeMap;
@@ -315,7 +317,6 @@ public class PubSubReflector implements MessagePublisher {
             suffix);
         String messageSource = attributes.remove(SOURCE_KEY);
         if (messageSource == null) {
-          System.err.println("Discarding message with null source: " + stringifyTerse(attributes));
           return;
         }
         Object dstSource = messageBundle.message.remove(SOURCE_KEY);
