@@ -330,7 +330,6 @@ public class SequenceBase {
       siteModel = new SiteModel(checkNotNull(exeConfig.site_model, "site_model not defined"));
       projectId = checkNotNull(exeConfig.project_id, "project_id not defined");
       checkNotNull(exeConfig.udmi_version, "udmi_version not defined");
-      //serialNo = serial.equals(SERIAL_NO_MISSING) ? null : serial;
       logLevel = Level.valueOf(checkNotNull(exeConfig.log_level, "log_level not defined"))
           .value();
       key_file = checkNotNull(exeConfig.key_file, "key_file not defined");
@@ -343,6 +342,8 @@ public class SequenceBase {
     registryId = SiteModel.getRegistryActual(exeConfig);
 
     deviceMetadata = readDeviceMetadata();
+
+    serialNo = GeneralUtils.catchToNull(() -> deviceMetadata.system.serial_no);
 
     File baseOutputDir = siteModel.getSubdirectory("out");
     deviceOutputDir = new File(baseOutputDir, "devices/" + getDeviceId());
