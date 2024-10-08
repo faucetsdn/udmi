@@ -126,15 +126,17 @@ if [[ $project_spec =~ ^// ]]; then
     no_provider=${no_prefix#*/}
     project_id=${no_provider%/*}
     udmi_namespace=${no_provider#$project_id}
+elif [[ $project_spec == -- ]]; then
+    echo Configuring for mock project use...
+    project_id=mock-project
+    alt_registry=null
+    user_name=
+    udmi_namespace=
 else
     fail Unrecognized project spec: $project_spec
 fi
 
-if [[ $project_id == -- ]]; then
-    echo Configuring for mock project use...
-    quoted_id=\"mock-project\"
-    alt_registry=null
-elif [[ -n $project_id ]]; then
+if [[ -n $project_id ]]; then
     quoted_id=\"${project_id##*/}\"
 else
     quoted_id=null
