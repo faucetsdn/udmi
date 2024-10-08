@@ -399,20 +399,6 @@ public class SequenceBase {
     return getReflectorClient(altConfiguration);
   }
 
-  private static IotReflectorClient getReflectorClient(ExecutionConfiguration altConfiguration) {
-    try {
-      return new IotReflectorClient(altConfiguration, getRequiredFunctionsVersion(),
-          SequenceBase::messageFilter);
-    } catch (Exception e) {
-      System.err.println(
-          "Could not connect to alternate registry, disabling: " + friendlyStackTrace(e));
-      if (traceLogLevel()) {
-        e.printStackTrace();
-      }
-      return null;
-    }
-  }
-
   private static boolean messageFilter(Envelope envelope) {
     return true;
   }
@@ -571,6 +557,20 @@ public class SequenceBase {
               CSV_JOINER.join(SEQUENCER_PROVIDERS)));
     }
     return getReflectorClient(exeConfig);
+  }
+
+  private static IotReflectorClient getReflectorClient(ExecutionConfiguration config) {
+    try {
+      return new IotReflectorClient(config, getRequiredFunctionsVersion(),
+          SequenceBase::messageFilter);
+    } catch (Exception e) {
+      System.err.println(
+          "Could not connect to alternate registry, disabling: " + friendlyStackTrace(e));
+      if (traceLogLevel()) {
+        e.printStackTrace();
+      }
+      return null;
+    }
   }
 
   private static MessagePublisher altReflector() {
