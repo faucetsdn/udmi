@@ -19,7 +19,7 @@ pubber_bg $device_id
 rm -rf $device_out
 
 # Run with trace enabled to capture all intermediate messages
-bin/sequencer -vv $site_path $project_spec $device_id $serial_no broken_config
+bin/sequencer -vv -s $serial_no $site_path $project_spec $device_id broken_config
 
 # Check that the message captures for broken_config contain the raw (extracted) message payload"
 echo
