@@ -396,8 +396,13 @@ public class SequenceBase {
     altConfiguration.udmi_namespace = exeConfig.udmi_namespace;
     altConfiguration.alt_registry = null;
 
+    return getReflectorClient(altConfiguration);
+  }
+
+  private static IotReflectorClient getReflectorClient(ExecutionConfiguration altConfiguration) {
     try {
-      return new IotReflectorClient(altConfiguration, getRequiredFunctionsVersion());
+      return new IotReflectorClient(altConfiguration, getRequiredFunctionsVersion(),
+          SequenceBase::messageFilter);
     } catch (Exception e) {
       System.err.println(
           "Could not connect to alternate registry, disabling: " + friendlyStackTrace(e));
@@ -406,6 +411,10 @@ public class SequenceBase {
       }
       return null;
     }
+  }
+
+  private static boolean messageFilter(Envelope envelope) {
+    return true;
   }
 
   private static int getRequiredFunctionsVersion() {
@@ -561,7 +570,7 @@ public class SequenceBase {
           format("IoT Provider '%s' not supported, should be one of: %s", exeConfig.iot_provider,
               CSV_JOINER.join(SEQUENCER_PROVIDERS)));
     }
-    return new IotReflectorClient(exeConfig, getRequiredFunctionsVersion());
+    return getReflectorClient(exeConfig);
   }
 
   private static MessagePublisher altReflector() {
@@ -1191,6 +1200,7 @@ public class SequenceBase {
 
   private void updateConfig(String reason, boolean force) {
     assertConfigIsNotPending();
+
     // Add a forced sleep to make sure second-quantized timestamps are unique.
     safeSleep(CONFIG_BARRIER_MS);
 
@@ -1774,11 +1784,8 @@ public class SequenceBase {
         }
         List<DiffEntry> changes = updateDeviceConfig(config);
         debug(format("Updated config %s %s", isoConvert(config.timestamp), txnId));
-        if (updateCount == 1) {
-          info(format("Initial config #%03d", updateCount), stringify(deviceConfig));
-        } else {
-          info(format("Updated config #%03d", updateCount), changedLines(changes));
-        }
+        String changeUpdate = updateCount == 1 ? stringify(deviceConfig) : changedLines(changes);
+        info(format("Updated config #%03d", updateCount), changeUpdate);
       } else if (converted instanceof State convertedState) {
         String timestamp = isoConvert(convertedState.timestamp);
         if (convertedState.timestamp == null) {
