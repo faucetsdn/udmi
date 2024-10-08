@@ -1940,7 +1940,8 @@ public class SequenceBase {
       if (!synced) {
         notice(format("last_start synchronized %s: state/%s =? config/%s", lastStartSynced,
             isoConvert(stateLastStart), isoConvert(configLastStart)));
-        notice(format("pending configTransactions: %s", configTransactionsListString()));
+        notice(format("configTransactions flushed %s: %s", transactionsClean,
+            configTransactionsListString()));
         notice(format("last_config synchronized %s: state/%s =? config/%s", lastConfigSynced,
             isoConvert(stateLastConfig), isoConvert(lastConfig)));
       } else if (stateLastConfig == null) {
@@ -1948,8 +1949,9 @@ public class SequenceBase {
       }
     }
     return ifNotTrueGet(synced,
-        () -> format("waiting for last_start %s, transactions %s, last_config %s", lastConfigSynced,
-            transactionsClean, lastConfigSynced));
+        () -> format("waiting for last_start %s, transactions %s, last_config %s",
+            !lastConfigSynced,
+            !transactionsClean, !lastConfigSynced));
   }
 
   @NotNull
