@@ -343,7 +343,8 @@ public class SequenceBase {
 
     deviceMetadata = readDeviceMetadata();
 
-    serialNo = GeneralUtils.catchToNull(() -> deviceMetadata.system.serial_no);
+    serialNo = ofNullable(exeConfig.serial_no)
+        .orElseGet(() -> GeneralUtils.catchToNull(() -> deviceMetadata.system.serial_no));
 
     File baseOutputDir = siteModel.getSubdirectory("out");
     deviceOutputDir = new File(baseOutputDir, "devices/" + getDeviceId());
