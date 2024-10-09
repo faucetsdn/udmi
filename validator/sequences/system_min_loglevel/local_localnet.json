@@ -1,8 +1,8 @@
 {
   "families" : {
-    "vendor" : { },
-    "ipv6" : { },
+    "ether" : { },
     "ipv4" : { },
-    "ether" : { }
+    "vendor" : { },
+    "ipv6" : { }
   }
 }

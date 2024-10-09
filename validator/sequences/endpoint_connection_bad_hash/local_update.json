@@ -1,11 +1,11 @@
 {
-  "timestamp" : "2023-12-18T11:45:23Z",
-  "version" : "@@@cloud udmi version###1.4.2-67-g3decfc99",
+  "timestamp" : "2024-10-09T00:18:01Z",
+  "version" : "@@@cloud udmi version###git-a719207",
   "system" : {
     "min_loglevel" : 200,
     "metrics_rate_sec" : 10,
     "operation" : {
-      "last_start" : "2023-12-18T11:45:02Z"
+      "last_start" : "2024-10-09T00:17:36Z"
     },
     "testing" : {
       "sequence_name" : "endpoint_connection_bad_hash"
@@ -13,33 +13,31 @@
   },
   "localnet" : {
     "families" : {
-      "ether" : {
-        "addr" : "00:50:b6:ed:5f:77"
-      },
-      "ipv4" : {
-        "addr" : "192.168.2.1"
-      }
+      "ether" : { },
+      "ipv4" : { },
+      "vendor" : { },
+      "ipv6" : { }
     }
   },
   "blobset" : {
     "blobs" : {
       "_iot_endpoint_config" : {
         "phase" : "final",
-        "url" : "@@@endpoint data###data:application/json;base64,ewogICJwcm90b2NvbCIgOiAibXF0dCIsCiAgImhvc3RuYW1lIiA6ICJtcXR0LmJvcy5nb29nIiwKICAicG9ydCIgOiA4ODgzLAogICJjbGllbnRfaWQiIDogInByb2plY3RzL2Jvcy1wbGF0Zm9ybS1kZXYvbG9jYXRpb25zL3VzLWNlbnRyYWwxL3JlZ2lzdHJpZXMvcGlzdWtlflpaLVRSSS1GRUNUQV8wL2RldmljZXMvQUhVLTEiCn0=",
-        "sha256" : "@@@invalid blob data hash###da2dc5ee99ce77debbb42829c2a7595c43861fc099ba952f56cd5a84a8b7227e",
-        "generation" : "2023-12-18T11:45:22Z"
+        "url" : "@@@endpoint data###data:application/json;base64,ewogICJwcm90b2NvbCIgOiAibXF0dCIsCiAgInRyYW5zcG9ydCIgOiAic3NsIiwKICAiaG9zdG5hbWUiIDogImxvY2FsaG9zdCIsCiAgImNsaWVudF9pZCIgOiAiL3IvWlotVFJJLUZFQ1RBXzAvZC9BSFUtMSIsCiAgInRvcGljX3ByZWZpeCIgOiAiL3IvWlotVFJJLUZFQ1RBXzAvZC9BSFUtMSIsCiAgImF1dGhfcHJvdmlkZXIiIDogewogICAgImJhc2ljIiA6IHsKICAgICAgInVzZXJuYW1lIiA6ICIvci9aWi1UUkktRkVDVEFfMC9kL0FIVS0xIiwKICAgICAgInBhc3N3b3JkIiA6ICIzODI2OWQxMSIKICAgIH0KICB9Cn0=",
+        "sha256" : "@@@invalid blob data hash###6aaf0fa3fdaa5936c973968a08fcea1e5e1fed003996d3ad9959c72c5e79ca49",
+        "generation" : "2024-10-09T00:17:56Z"
       }
     }
   },
   "pointset" : {
     "points" : {
-      "filter_alarm_pressure_status" : {
-        "ref" : "BV11.present_value",
-        "units" : "No-units"
-      },
       "filter_differential_pressure_setpoint" : {
         "units" : "Bars",
         "set_value" : 98
+      },
+      "filter_alarm_pressure_status" : {
+        "ref" : "BV11.present_value",
+        "units" : "No-units"
       },
       "filter_differential_pressure_sensor" : {
         "ref" : "AV12.present_value",

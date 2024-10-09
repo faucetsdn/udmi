@@ -27,12 +27,14 @@
     "metrics_rate_sec" : 10,
     "min_loglevel" : 200,
     "operation" : {
-      "last_start" : "2024-03-20T17:15:19Z"
+      "last_start" : "2024-10-09T00:14:01Z"
     },
     "testing" : {
-      "sequence_name" : "family_ipv4_addr"
+      "config_base" : 19,
+      "sequence_name" : "family_ipv4_addr",
+      "transaction_id" : "RC:711485.0020"
     }
   },
-  "timestamp" : "2024-03-20T17:16:56Z",
-  "version" : "1.5.0-55-g604ba10b1"
+  "timestamp" : "2024-10-09T00:14:56Z",
+  "version" : "git-a719207"
 }

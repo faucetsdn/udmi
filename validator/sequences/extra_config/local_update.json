@@ -1,11 +1,11 @@
 {
-  "timestamp" : "2024-03-21T16:39:14Z",
-  "version" : "@@@cloud udmi version###1.5.0-55-g604ba10b1",
+  "timestamp" : "2024-10-09T02:01:57Z",
+  "version" : "@@@cloud udmi version###git-a719207",
   "system" : {
     "min_loglevel" : 100,
     "metrics_rate_sec" : 10,
     "operation" : {
-      "last_start" : "2024-03-21T16:38:31Z"
+      "last_start" : "2024-10-09T02:01:17Z"
     },
     "testing" : {
       "sequence_name" : "extra_config"
@@ -13,10 +13,10 @@
   },
   "localnet" : {
     "families" : {
-      "vendor" : { },
-      "ipv6" : { },
+      "ether" : { },
       "ipv4" : { },
-      "ether" : { }
+      "vendor" : { },
+      "ipv6" : { }
     }
   },
   "pointset" : {

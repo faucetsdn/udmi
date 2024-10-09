@@ -1,12 +1,10 @@
 {
   "localnet" : {
     "families" : {
-      "ether" : {
-        "addr" : "00:50:b6:ed:5f:77"
-      },
-      "ipv4" : {
-        "addr" : "192.168.2.1"
-      }
+      "ether" : { },
+      "ipv4" : { },
+      "ipv6" : { },
+      "vendor" : { }
     }
   },
   "pointset" : {
@@ -26,15 +24,17 @@
     }
   },
   "system" : {
-    "metrics_rate_sec" : 600,
+    "metrics_rate_sec" : 10,
     "min_loglevel" : 200,
     "operation" : {
-      "last_start" : "2023-11-07T14:28:49Z"
+      "last_start" : "2024-10-09T02:01:17Z"
     },
     "testing" : {
-      "sequence_name" : "pointset_publish"
+      "config_base" : 20,
+      "sequence_name" : "pointset_publish",
+      "transaction_id" : "RC:853523.0021"
     }
   },
-  "timestamp" : "2023-11-07T14:29:06Z",
-  "version" : "1.4.2-40-gdeae740b"
+  "timestamp" : "2024-10-09T02:02:25Z",
+  "version" : "git-a719207"
 }

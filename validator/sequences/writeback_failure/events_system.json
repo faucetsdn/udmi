@@ -1,0 +1,66 @@
+{
+  "event_count" : 3,
+  "last_config" : "2024-10-09T00:16:13Z",
+  "logentries" : [ {
+    "message" : "Update state 2024-10-09T00:16:10Z last_config 2024-10-09T00:16:00Z",
+    "category" : "device.log",
+    "timestamp" : "2024-10-09T00:16:10Z",
+    "level" : 200
+  }, {
+    "message" : "Device AHU-1 config handler",
+    "category" : "device.log",
+    "timestamp" : "2024-10-09T00:16:10Z",
+    "level" : 200
+  }, {
+    "message" : "2024-10-09T00:16:10Z received config 2024-10-09T00:16:10Z",
+    "category" : "device.log",
+    "timestamp" : "2024-10-09T00:16:10Z",
+    "level" : 200
+  }, {
+    "message" : "success",
+    "category" : "system.config.apply",
+    "timestamp" : "2024-10-09T00:16:10Z",
+    "level" : 300
+  }, {
+    "message" : "Device AHU-1 config handler",
+    "category" : "device.log",
+    "timestamp" : "2024-10-09T00:16:10Z",
+    "level" : 200
+  }, {
+    "message" : "2024-10-09T00:16:10Z received config 2024-10-09T00:16:10Z",
+    "category" : "device.log",
+    "timestamp" : "2024-10-09T00:16:10Z",
+    "level" : 200
+  }, {
+    "message" : "success",
+    "category" : "system.config.apply",
+    "timestamp" : "2024-10-09T00:16:10Z",
+    "level" : 300
+  }, {
+    "message" : "Update state 2024-10-09T00:16:12Z last_config 2024-10-09T00:16:10Z",
+    "category" : "device.log",
+    "timestamp" : "2024-10-09T00:16:12Z",
+    "level" : 200
+  }, {
+    "message" : "Device AHU-1 config handler",
+    "category" : "device.log",
+    "timestamp" : "2024-10-09T00:16:13Z",
+    "level" : 200
+  }, {
+    "message" : "2024-10-09T00:16:13Z received config 2024-10-09T00:16:13Z",
+    "category" : "device.log",
+    "timestamp" : "2024-10-09T00:16:13Z",
+    "level" : 200
+  }, {
+    "message" : "success",
+    "category" : "system.config.apply",
+    "timestamp" : "2024-10-09T00:16:13Z",
+    "level" : 300
+  } ],
+  "metrics" : {
+    "mem_total_mb" : 254.0,
+    "mem_free_mb" : 215.96925354003906
+  },
+  "timestamp" : "2024-10-09T00:16:14Z",
+  "version" : "1.5.1"
+}

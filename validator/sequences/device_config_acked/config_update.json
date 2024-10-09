@@ -1,12 +1,10 @@
 {
   "localnet" : {
     "families" : {
-      "ether" : {
-        "addr" : "00:50:b6:ed:5f:77"
-      },
-      "ipv4" : {
-        "addr" : "192.168.2.1"
-      }
+      "ether" : { },
+      "ipv4" : { },
+      "ipv6" : { },
+      "vendor" : { }
     }
   },
   "pointset" : {
@@ -15,26 +13,28 @@
         "ref" : "BV11.present_value",
         "units" : "No-units"
       },
-      "filter_differential_pressure_setpoint" : {
-        "units" : "Bars",
-        "set_value" : 98
-      },
       "filter_differential_pressure_sensor" : {
         "ref" : "AV12.present_value",
         "units" : "Degrees-Celsius"
+      },
+      "filter_differential_pressure_setpoint" : {
+        "set_value" : 98,
+        "units" : "Bars"
       }
     }
   },
   "system" : {
-    "metrics_rate_sec" : 600,
+    "metrics_rate_sec" : 10,
     "min_loglevel" : 200,
     "operation" : {
-      "last_start" : "2023-07-28T20:23:12Z"
+      "last_start" : "2024-10-09T00:13:49Z"
     },
     "testing" : {
-      "sequence_name" : "device_config_acked"
+      "config_base" : 11,
+      "sequence_name" : "device_config_acked",
+      "transaction_id" : "RC:33ab79.0010"
     }
   },
-  "timestamp" : "2023-07-28T20:24:28Z",
-  "version" : "1.4.1"
+  "timestamp" : "2024-10-09T00:14:12Z",
+  "version" : "git-a719207"
 }

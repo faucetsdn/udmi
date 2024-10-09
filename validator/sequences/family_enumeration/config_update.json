@@ -1,7 +1,15 @@
 {
   "discovery" : {
-    "enumerate" : {
-      "families" : true
+    "depths" : {
+      "families" : "entries"
+    }
+  },
+  "localnet" : {
+    "families" : {
+      "ether" : { },
+      "ipv4" : { },
+      "ipv6" : { },
+      "vendor" : { }
     }
   },
   "pointset" : {
@@ -24,12 +32,14 @@
     "metrics_rate_sec" : 10,
     "min_loglevel" : 200,
     "operation" : {
-      "last_start" : "2024-03-21T16:40:24Z"
+      "last_start" : "2024-10-09T00:15:34Z"
     },
     "testing" : {
-      "sequence_name" : "family_enumeration"
+      "config_base" : 28,
+      "sequence_name" : "family_enumeration",
+      "transaction_id" : "RC:e9eb26.0013"
     }
   },
-  "timestamp" : "2024-03-21T16:40:51Z",
-  "version" : "1.5.0-55-g604ba10b1"
+  "timestamp" : "2024-10-09T00:16:03Z",
+  "version" : "git-a719207"
 }

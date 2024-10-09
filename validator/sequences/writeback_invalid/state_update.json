@@ -1,23 +1,25 @@
 {
   "localnet" : {
     "families" : {
+      "ether" : {
+        "addr" : "00:22:48:4e:8b:46"
+      },
       "ipv4" : {
-        "addr" : "10.1.0.184"
+        "addr" : "10.1.0.82"
+      },
+      "ipv6" : {
+        "addr" : "fe80::222:48ff:fe4e:8b46"
       },
       "vendor" : {
         "addr" : "28179023"
-      },
-      "ether" : {
-        "addr" : "60:45:bd:08:45:74"
-      },
-      "ipv6" : {
-        "addr" : "fe80::6245:bdff:fe08:4574"
       }
     }
   },
   "pointset" : {
     "points" : {
-      "filter_alarm_pressure_status" : { },
+      "filter_alarm_pressure_status" : {
+        "units" : "No-units"
+      },
       "filter_differential_pressure_setpoint" : {
         "units" : "Bars",
         "value_state" : "applied"
@@ -29,21 +31,21 @@
           "message" : "Written value is not valid",
           "detail" : "Point filter_differential_pressure_sensor (writable false)",
           "category" : "pointset.point.invalid",
-          "timestamp" : "2024-03-22T19:01:55Z",
+          "timestamp" : "2024-10-09T00:16:25Z",
           "level" : 500
         }
       }
     }
   },
   "system" : {
-    "last_config" : "2024-03-22T19:01:55Z",
+    "last_config" : "2024-10-09T00:16:25Z",
     "operation" : {
       "operational" : true,
-      "last_start" : "2024-03-22T19:01:05Z",
+      "last_start" : "2024-10-09T00:15:34Z",
       "restart_count" : 1,
       "mode" : "initial"
     },
-    "serial_no" : "sequencer-9164",
+    "serial_no" : "sequencer-31335",
     "hardware" : {
       "make" : "BOS",
       "model" : "pubber"
@@ -54,10 +56,10 @@
     "status" : {
       "message" : "success",
       "category" : "system.config.apply",
-      "timestamp" : "2024-03-22T19:01:55Z",
+      "timestamp" : "2024-10-09T00:16:25Z",
       "level" : 300
     }
   },
-  "timestamp" : "2024-03-22T19:01:57Z",
-  "version" : "1.5.0"
+  "timestamp" : "2024-10-09T00:16:26Z",
+  "version" : "1.5.1"
 }

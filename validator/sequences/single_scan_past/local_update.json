@@ -1,11 +1,11 @@
 {
-  "timestamp" : "2024-03-17T17:07:12Z",
-  "version" : "@@@cloud udmi version###1.5.0-53-g394a976f9",
+  "timestamp" : "2024-10-09T00:17:49Z",
+  "version" : "@@@cloud udmi version###git-a719207",
   "system" : {
     "min_loglevel" : 200,
     "metrics_rate_sec" : 10,
     "operation" : {
-      "last_start" : "2024-03-17T17:06:33Z"
+      "last_start" : "2024-10-09T00:17:11Z"
     },
     "testing" : {
       "sequence_name" : "single_scan_past"
@@ -17,6 +17,14 @@
         "generation" : "1970-01-01T03:34:57Z",
         "scan_duration_sec" : 10
       }
+    }
+  },
+  "localnet" : {
+    "families" : {
+      "ether" : { },
+      "ipv4" : { },
+      "vendor" : { },
+      "ipv6" : { }
     }
   },
   "pointset" : {

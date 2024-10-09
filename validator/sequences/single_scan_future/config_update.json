@@ -2,7 +2,7 @@
   "discovery" : {
     "families" : {
       "vendor" : {
-        "generation" : "2024-09-04T16:58:23Z",
+        "generation" : "2024-10-09T00:18:49Z",
         "scan_duration_sec" : 10
       }
     }
@@ -35,14 +35,14 @@
     "metrics_rate_sec" : 10,
     "min_loglevel" : 200,
     "operation" : {
-      "last_start" : "2024-09-04T16:56:49Z"
+      "last_start" : "2024-10-09T00:17:36Z"
     },
     "testing" : {
       "config_base" : 49,
       "sequence_name" : "single_scan_future",
-      "transaction_id" : "RC:e612f4.0024"
+      "transaction_id" : "RC:fccee2.0024"
     }
   },
-  "timestamp" : "2024-09-04T16:58:15Z",
-  "version" : "git-34706de"
+  "timestamp" : "2024-10-09T00:18:41Z",
+  "version" : "git-a719207"
 }
