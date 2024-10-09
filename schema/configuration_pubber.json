@@ -11,6 +11,9 @@
       "description": "IoT Core ingest project id",
       "type": "string"
     },
+    "projectId": {
+      "type": "string"
+    },
     "registryId": {
       "type": "string"
     },
