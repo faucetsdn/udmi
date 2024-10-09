@@ -1490,7 +1490,8 @@ public class SequenceBase {
         catcher.accept(e);
         String detail = ifNotNullGet(detailer, Supplier::get);
         ifNotNullThen(detail, this::waitingConditionDetail);
-        throw ifNotNullGet(detail, message -> new RuntimeException("Because " + message, e), e);
+        // Don't include the caught exception in order to preserve the detail as base cause.
+        throw ifNotNullGet(detail, message -> new RuntimeException("Because " + message), e);
       }
     } catch (Exception e) {
       throw new RuntimeException("While " + description, e);
