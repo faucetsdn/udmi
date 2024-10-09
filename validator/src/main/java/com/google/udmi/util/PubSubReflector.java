@@ -10,6 +10,7 @@ import static com.google.udmi.util.Common.SOURCE_SEPARATOR;
 import static com.google.udmi.util.Common.SOURCE_SEPARATOR_REGEX;
 import static com.google.udmi.util.Common.SUBFOLDER_PROPERTY_KEY;
 import static com.google.udmi.util.Common.getNamespacePrefix;
+import static com.google.udmi.util.GeneralUtils.friendlyStackTrace;
 import static com.google.udmi.util.GeneralUtils.ifNotNullThen;
 import static com.google.udmi.util.JsonUtil.isoConvert;
 import static com.google.udmi.util.JsonUtil.stringify;
@@ -266,8 +267,7 @@ public class PubSubReflector implements MessagePublisher {
         publisher.publishAllOutstanding();
         publisher.shutdown();
       } catch (Exception e) {
-        System.err.println("Error shutting down publisher");
-        e.printStackTrace();
+        System.err.println("Error shutting down publisher: " + friendlyStackTrace(e));
       }
     }
   }
