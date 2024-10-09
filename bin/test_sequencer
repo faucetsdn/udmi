@@ -134,9 +134,9 @@ fi
 bin/augment_metadata $site_path $device_id $pubber_opts
 
 # Run in debug mode for fail-fast when things go wrong!
-echo bin/sequencer $debug_opts $seq_opts $site_path $project_id $device_id $serial_no $targets
+echo bin/sequencer $debug_opts $seq_opts -s $serial_no $site_path $project_id $device_id $targets
 seq_fail=0
-bin/sequencer $debug_opts $seq_opts $site_path $project_id $device_id $serial_no $targets || seq_fail=$?
+bin/sequencer $debug_opts $seq_opts -s $serial_no $site_path $project_id $device_id $targets || seq_fail=$?
 echo Completed execution of sequencer test run, exit code $seq_fail
 
 echo Reported cloud version info: $(jq .cloud_version.udmi_ref $output_file)

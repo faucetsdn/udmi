@@ -1,26 +1,26 @@
 {
-  "timestamp" : "2024-03-21T16:40:15Z",
-  "version" : "@@@cloud udmi version###1.5.0-55-g604ba10b1",
+  "timestamp" : "2024-10-09T00:14:51Z",
+  "version" : "@@@cloud udmi version###git-a719207",
   "system" : {
     "min_loglevel" : 200,
     "metrics_rate_sec" : 10,
     "operation" : {
-      "last_start" : "2024-03-21T16:38:56Z"
+      "last_start" : "2024-10-09T00:13:48Z"
     },
     "testing" : {
       "sequence_name" : "feature_enumeration"
     }
   },
   "discovery" : {
-    "enumerate" : {
-      "features" : true
+    "depths" : {
+      "features" : "entries"
     }
   },
   "localnet" : {
     "families" : {
-      "vendor" : { },
-      "ipv4" : { },
       "ether" : { },
+      "ipv4" : { },
+      "vendor" : { },
       "ipv6" : { }
     }
   },

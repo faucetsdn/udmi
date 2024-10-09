@@ -3,11 +3,13 @@
 
 Check results of a single scan scheduled soon
 
+1. Wait for config sync
 1. Update config before discovery families defined:
     * Add `discovery` = { "families": {  } }
 1. Wait for discovery families defined
 1. Wait for discovery family keys match
 1. Wait for no scans active
+1. Wait for config sync
 1. Update config Before scheduled scan pending:
     * Add `discovery.families.vendor` = { "generation": `family generation`, "scan_duration_sec": `10` }
 1. Wait for scheduled scan pending

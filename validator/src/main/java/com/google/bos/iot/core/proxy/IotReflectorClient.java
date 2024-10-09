@@ -26,7 +26,6 @@ import static com.google.udmi.util.JsonUtil.getDate;
 import static com.google.udmi.util.JsonUtil.isoConvert;
 import static com.google.udmi.util.JsonUtil.mapCast;
 import static com.google.udmi.util.JsonUtil.stringify;
-import static com.google.udmi.util.JsonUtil.stringifyTerse;
 import static com.google.udmi.util.JsonUtil.toMap;
 import static com.google.udmi.util.JsonUtil.toObject;
 import static com.google.udmi.util.PubSubReflector.USER_NAME_DEFAULT;
@@ -275,6 +274,9 @@ public class IotReflectorClient implements MessagePublisher {
         new String(base64 ? Base64.decodeBase64(rawData) : rawData));
     try {
       Envelope envelope = parseMessageTopic(topic);
+      if (envelope == null) {
+        return;
+      }
       ifNotNullThen(envelope.source, source -> messageMap.put(SOURCE_KEY, source),
           () -> messageMap.remove(SOURCE_KEY));
       if (SubType.CONFIG == envelope.subType) {
@@ -430,8 +432,9 @@ public class IotReflectorClient implements MessagePublisher {
     if ("devices".equals(leader)) {
       // Next field is registry, not device, since the reflector device id is the site registry.
       String deviceId = parts.remove(0);
-      checkState(registryId.equals(deviceId),
-          format("device id %s does not match expected %s", deviceId, registryId));
+      if (!registryId.equals(deviceId)) {
+        return null;
+      }
     } else if ("r".equals(leader)) {
       // Next field is registry, not device, since the reflector device id is the site registry.
       String parsedReg = parts.remove(0);
@@ -440,8 +443,9 @@ public class IotReflectorClient implements MessagePublisher {
       String devSep = parts.remove(0);
       checkState("d".equals(devSep), format("unexpected dev separator %s", devSep));
       String deviceId = parts.remove(0);
-      checkState(registryId.equals(deviceId),
-          format("registry id %s does not match expected %s", deviceId, registryId));
+      if (!registryId.equals(deviceId)) {
+        return null;
+      }
     } else {
       throw new RuntimeException("Unknown topic string " + topic);
     }

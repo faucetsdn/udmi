@@ -1,7 +1,7 @@
 {
   "discovery" : {
-    "enumerate" : {
-      "features" : true
+    "depths" : {
+      "features" : "entries"
     }
   },
   "localnet" : {
@@ -32,12 +32,14 @@
     "metrics_rate_sec" : 10,
     "min_loglevel" : 200,
     "operation" : {
-      "last_start" : "2024-03-21T16:38:56Z"
+      "last_start" : "2024-10-09T00:13:48Z"
     },
     "testing" : {
-      "sequence_name" : "feature_enumeration"
+      "config_base" : 23,
+      "sequence_name" : "feature_enumeration",
+      "transaction_id" : "RC:0b1678.0025"
     }
   },
-  "timestamp" : "2024-03-21T16:40:15Z",
-  "version" : "1.5.0-55-g604ba10b1"
+  "timestamp" : "2024-10-09T00:14:51Z",
+  "version" : "git-a719207"
 }

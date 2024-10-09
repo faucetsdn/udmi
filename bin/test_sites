@@ -113,7 +113,7 @@ fi
 
 if [[ -n $do_mock ]]; then
     echo '#########################################' Testing simple mock sequencer...
-    bin/sequencer tests/sites/downgrade/ -- DWN-2 54321 system_mode_restart || true
+    bin/sequencer tests/sites/downgrade/ -- DWN-2 system_mode_restart || true
 
     RESULTLOG=tests/sites/downgrade/out/devices/DWN-2/RESULT.log
     fgrep "RESULT fail system.mode system_mode_restart ALPHA " $RESULTLOG ||

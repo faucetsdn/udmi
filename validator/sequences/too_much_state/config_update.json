@@ -1,17 +1,10 @@
 {
-  "discovery" : {
-    "enumerate" : {
-      "uniqs" : true
-    }
-  },
   "localnet" : {
     "families" : {
-      "ether" : {
-        "addr" : "00:50:b6:ed:5f:77"
-      },
-      "ipv4" : {
-        "addr" : "192.168.2.1"
-      }
+      "ether" : { },
+      "ipv4" : { },
+      "ipv6" : { },
+      "vendor" : { }
     }
   },
   "pointset" : {
@@ -34,12 +27,14 @@
     "metrics_rate_sec" : 10,
     "min_loglevel" : 200,
     "operation" : {
-      "last_start" : "2023-11-24T01:17:35Z"
+      "last_start" : "2024-10-09T00:15:09Z"
     },
     "testing" : {
-      "sequence_name" : "too_much_state"
+      "config_base" : 36,
+      "sequence_name" : "too_much_state",
+      "transaction_id" : "RC:88302b.0016"
     }
   },
-  "timestamp" : "2023-11-24T01:23:06Z",
-  "version" : "1.4.2-71-g4dac7976a"
+  "timestamp" : "2024-10-09T00:15:45Z",
+  "version" : "git-a719207"
 }

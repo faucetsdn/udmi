@@ -27,12 +27,14 @@
     "metrics_rate_sec" : 10,
     "min_loglevel" : 100,
     "operation" : {
-      "last_start" : "2024-03-21T16:38:31Z"
+      "last_start" : "2024-10-09T02:01:17Z"
     },
     "testing" : {
-      "sequence_name" : "extra_config"
+      "config_base" : 13,
+      "sequence_name" : "extra_config",
+      "transaction_id" : "RC:853523.0012"
     }
   },
-  "timestamp" : "2024-03-21T16:39:14Z",
-  "version" : "1.5.0-55-g604ba10b1"
+  "timestamp" : "2024-10-09T02:01:57Z",
+  "version" : "git-a719207"
 }

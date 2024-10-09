@@ -106,8 +106,8 @@ while read -u 7 action test_name pubber_opts; do
     echo bin/augment_metadata $SITE_PATH $DEVICE_ID $(< $AUGMENT_OPTS)
     bin/augment_metadata $SITE_PATH $DEVICE_ID $(< $AUGMENT_OPTS)
 
-    echo bin/sequencer $seq_opts $SITE_PATH $PROJECT_ID $DEVICE_ID $serial_no $test_name
-    bin/sequencer $seq_opts $SITE_PATH $PROJECT_ID $DEVICE_ID $serial_no $test_name
+    echo bin/sequencer $seq_opts -s $serial_no $SITE_PATH $PROJECT_ID $DEVICE_ID $test_name
+    bin/sequencer $seq_opts -s $serial_no $SITE_PATH $PROJECT_ID $DEVICE_ID $test_name
 
     echo Cleaning up pubber processes...
     (ps ax | fgrep pubber | fgrep java) || true

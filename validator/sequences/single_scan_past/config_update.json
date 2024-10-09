@@ -7,6 +7,14 @@
       }
     }
   },
+  "localnet" : {
+    "families" : {
+      "ether" : { },
+      "ipv4" : { },
+      "ipv6" : { },
+      "vendor" : { }
+    }
+  },
   "pointset" : {
     "points" : {
       "filter_alarm_pressure_status" : {
@@ -27,12 +35,14 @@
     "metrics_rate_sec" : 10,
     "min_loglevel" : 200,
     "operation" : {
-      "last_start" : "2024-03-17T17:06:33Z"
+      "last_start" : "2024-10-09T00:17:11Z"
     },
     "testing" : {
-      "sequence_name" : "single_scan_past"
+      "config_base" : 55,
+      "sequence_name" : "single_scan_past",
+      "transaction_id" : "RC:5faba7.0025"
     }
   },
-  "timestamp" : "2024-03-17T17:07:12Z",
-  "version" : "1.5.0-53-g394a976f9"
+  "timestamp" : "2024-10-09T00:17:49Z",
+  "version" : "git-a719207"
 }

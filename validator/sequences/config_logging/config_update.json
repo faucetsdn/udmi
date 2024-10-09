@@ -1,12 +1,10 @@
 {
   "localnet" : {
     "families" : {
-      "ether" : {
-        "addr" : "00:50:b6:ed:5f:77"
-      },
-      "ipv4" : {
-        "addr" : "192.168.2.1"
-      }
+      "ether" : { },
+      "ipv4" : { },
+      "ipv6" : { },
+      "vendor" : { }
     }
   },
   "pointset" : {
@@ -29,12 +27,14 @@
     "metrics_rate_sec" : 10,
     "min_loglevel" : 100,
     "operation" : {
-      "last_start" : "2023-11-29T20:07:39Z"
+      "last_start" : "2024-10-09T00:14:01Z"
     },
     "testing" : {
-      "sequence_name" : "config_logging"
+      "config_base" : 12,
+      "sequence_name" : "config_logging",
+      "transaction_id" : "RC:711485.0011"
     }
   },
-  "timestamp" : "2023-11-29T20:08:01Z",
-  "version" : "1.4.2-57-gbb3a0154e"
+  "timestamp" : "2024-10-09T00:14:24Z",
+  "version" : "git-a719207"
 }

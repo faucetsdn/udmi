@@ -1,0 +1,86 @@
+{
+  "event_count" : 4,
+  "last_config" : "2024-10-09T00:14:11Z",
+  "logentries" : [ {
+    "message" : "Starting new endpoint generation",
+    "category" : "device.log",
+    "timestamp" : "2024-10-09T00:14:19Z",
+    "level" : 300
+  }, {
+    "message" : "New config blob endpoint detected:\n{\n  \"protocol\" : \"mqtt\",\n  \"transport\" : \"ssl\",\n  \"hostname\" : \"localhost\",\n  \"client_id\" : \"/r/ZZ-TRI-FECTA_3/d/AHU-1\",\n  \"topic_prefix\" : \"/r/ZZ-TRI-FECTA_3/d/AHU-1\",\n  \"auth_provider\" : {\n    \"basic\" : {\n      \"username\" : \"/r/ZZ-TRI-FECTA_3/d/AHU-1\",\n      \"password\" : \"38269d11\"\n    }\n  },\n  \"generation\" : \"2024-10-09T00:14:08Z\"\n}",
+    "category" : "device.log",
+    "timestamp" : "2024-10-09T00:14:19Z",
+    "level" : 200
+  }, {
+    "message" : "Update state 2024-10-09T00:14:19Z last_config 2024-10-09T00:14:11Z",
+    "category" : "device.log",
+    "timestamp" : "2024-10-09T00:14:19Z",
+    "level" : 200
+  }, {
+    "message" : "CA cert file: /home/runner/work/udmi/udmi/sites/udmi_site_model/reflector/ca.crt",
+    "category" : "device.log",
+    "timestamp" : "2024-10-09T00:14:19Z",
+    "level" : 200
+  }, {
+    "message" : "Device cert file: /home/runner/work/udmi/udmi/sites/udmi_site_model/devices/AHU-1/rsa_private.crt",
+    "category" : "device.log",
+    "timestamp" : "2024-10-09T00:14:19Z",
+    "level" : 200
+  }, {
+    "message" : "Private key file: /home/runner/work/udmi/udmi/sites/udmi_site_model/devices/AHU-1/rsa_private.pem",
+    "category" : "device.log",
+    "timestamp" : "2024-10-09T00:14:19Z",
+    "level" : 200
+  }, {
+    "message" : "Password sha256 6b5344e1",
+    "category" : "device.log",
+    "timestamp" : "2024-10-09T00:14:19Z",
+    "level" : 200
+  }, {
+    "message" : "Starting connection 1728432859784 with 10",
+    "category" : "device.log",
+    "timestamp" : "2024-10-09T00:14:19Z",
+    "level" : 400
+  }, {
+    "message" : "Terminating AHU-1 PointsetManager sender",
+    "category" : "device.log",
+    "timestamp" : "2024-10-09T00:14:19Z",
+    "level" : 400
+  }, {
+    "message" : "Terminating AHU-1 SystemManager sender",
+    "category" : "device.log",
+    "timestamp" : "2024-10-09T00:14:19Z",
+    "level" : 400
+  }, {
+    "message" : "Creating new config latch for AHU-1",
+    "category" : "device.log",
+    "timestamp" : "2024-10-09T00:14:19Z",
+    "level" : 400
+  }, {
+    "message" : "Device AHU-1 config handler",
+    "category" : "device.log",
+    "timestamp" : "2024-10-09T00:14:20Z",
+    "level" : 200
+  }, {
+    "message" : "2024-10-09T00:14:20Z received config 2024-10-09T00:14:11Z",
+    "category" : "device.log",
+    "timestamp" : "2024-10-09T00:14:20Z",
+    "level" : 200
+  }, {
+    "message" : "Starting AHU-1 PointsetManager sender with delay 10s",
+    "category" : "device.log",
+    "timestamp" : "2024-10-09T00:14:20Z",
+    "level" : 400
+  }, {
+    "message" : "Starting AHU-1 SystemManager sender with delay 10s",
+    "category" : "device.log",
+    "timestamp" : "2024-10-09T00:14:20Z",
+    "level" : 400
+  } ],
+  "metrics" : {
+    "mem_total_mb" : 254.0,
+    "mem_free_mb" : 209.8332061767578
+  },
+  "timestamp" : "2024-10-09T00:14:20Z",
+  "version" : "1.5.1"
+}

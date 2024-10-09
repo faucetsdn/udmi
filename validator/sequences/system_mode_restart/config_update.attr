@@ -1,9 +1,10 @@
 {
   "deviceId" : "AHU-1",
   "deviceNumId" : "123456789101112",
-  "deviceRegistryId" : "ZZ-TRI-FECTA",
-  "projectId" : "bos-peringknife-dev",
+  "deviceRegistryId" : "ZZ-TRI-FECTA_1",
+  "projectId" : "localhost",
+  "transactionId" : "RC:5faba7.0014",
+  "publishTime" : "2024-10-09T00:17:23Z",
   "subFolder" : "update",
-  "subType" : "config",
-  "transactionId" : "RC:1690575805524"
+  "subType" : "config"
 }
