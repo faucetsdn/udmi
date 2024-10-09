@@ -2,11 +2,19 @@
   "blobset" : {
     "blobs" : {
       "_iot_endpoint_config" : {
-        "generation" : "2023-12-18T11:45:22Z",
+        "generation" : "2024-10-09T00:17:56Z",
         "phase" : "final",
-        "sha256" : "da2dc5ee99ce77debbb42829c2a7595c43861fc099ba952f56cd5a84a8b7227e",
-        "url" : "data:application/json;base64,ewogICJwcm90b2NvbCIgOiAibXF0dCIsCiAgImhvc3RuYW1lIiA6ICJtcXR0LmJvcy5nb29nIiwKICAicG9ydCIgOiA4ODgzLAogICJjbGllbnRfaWQiIDogInByb2plY3RzL2Jvcy1wbGF0Zm9ybS1kZXYvbG9jYXRpb25zL3VzLWNlbnRyYWwxL3JlZ2lzdHJpZXMvcGlzdWtlflpaLVRSSS1GRUNUQV8wL2RldmljZXMvQUhVLTEiCn0="
+        "sha256" : "6aaf0fa3fdaa5936c973968a08fcea1e5e1fed003996d3ad9959c72c5e79ca49",
+        "url" : "data:application/json;base64,ewogICJwcm90b2NvbCIgOiAibXF0dCIsCiAgInRyYW5zcG9ydCIgOiAic3NsIiwKICAiaG9zdG5hbWUiIDogImxvY2FsaG9zdCIsCiAgImNsaWVudF9pZCIgOiAiL3IvWlotVFJJLUZFQ1RBXzAvZC9BSFUtMSIsCiAgInRvcGljX3ByZWZpeCIgOiAiL3IvWlotVFJJLUZFQ1RBXzAvZC9BSFUtMSIsCiAgImF1dGhfcHJvdmlkZXIiIDogewogICAgImJhc2ljIiA6IHsKICAgICAgInVzZXJuYW1lIiA6ICIvci9aWi1UUkktRkVDVEFfMC9kL0FIVS0xIiwKICAgICAgInBhc3N3b3JkIiA6ICIzODI2OWQxMSIKICAgIH0KICB9Cn0="
       }
+    }
+  },
+  "localnet" : {
+    "families" : {
+      "ether" : { },
+      "ipv4" : { },
+      "ipv6" : { },
+      "vendor" : { }
     }
   },
   "pointset" : {
@@ -29,12 +37,14 @@
     "metrics_rate_sec" : 10,
     "min_loglevel" : 200,
     "operation" : {
-      "last_start" : "2023-12-18T11:45:02Z"
+      "last_start" : "2024-10-09T00:17:36Z"
     },
     "testing" : {
-      "sequence_name" : "endpoint_connection_bad_hash"
+      "config_base" : 40,
+      "sequence_name" : "endpoint_connection_bad_hash",
+      "transaction_id" : "RC:fccee2.0011"
     }
   },
-  "timestamp" : "2023-12-18T11:45:23Z",
-  "version" : "1.4.2-67-g3decfc99"
+  "timestamp" : "2024-10-09T00:18:01Z",
+  "version" : "git-a719207"
 }

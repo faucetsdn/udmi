@@ -1,7 +1,7 @@
 {
   "families" : {
     "vendor" : {
-      "generation" : "2024-09-04T16:56:01Z",
+      "generation" : "2024-10-09T00:15:53Z",
       "scan_interval_sec" : 10,
       "scan_duration_sec" : 10,
       "depth" : "entries"

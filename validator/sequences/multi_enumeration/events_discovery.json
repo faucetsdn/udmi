@@ -1,13 +1,13 @@
 {
   "families" : {
     "ether" : {
-      "addr" : "00:22:48:4f:66:c1"
+      "addr" : "7c:1e:52:02:24:f7"
     },
     "ipv4" : {
-      "addr" : "10.1.0.57"
+      "addr" : "10.1.0.194"
     },
     "ipv6" : {
-      "addr" : "fe80::222:48ff:fe4f:66c1"
+      "addr" : "fe80::7e1e:52ff:fe02:24f7"
     },
     "vendor" : {
       "addr" : "28179023"
@@ -36,25 +36,24 @@
       "stage" : "stable"
     }
   },
-  "generation" : "2024-09-04T16:55:30Z",
+  "generation" : "2024-10-09T00:16:04Z",
   "refs" : {
     "BV11.present_value" : {
       "point" : "filter_alarm_pressure_status",
       "possible_values" : [ ],
       "units" : "No-units"
     },
+    "filter_differential_pressure_setpoint" : {
+      "possible_values" : [ ],
+      "units" : "Bars",
+      "writable" : true
+    },
     "AV12.present_value" : {
       "point" : "filter_differential_pressure_sensor",
       "possible_values" : [ ],
       "units" : "Degrees-Celsius"
-    },
-    "7f4cc50b" : {
-      "point" : "filter_differential_pressure_setpoint",
-      "possible_values" : [ ],
-      "units" : "Bars",
-      "writable" : true
     }
   },
-  "timestamp" : "2024-09-04T16:55:31Z",
+  "timestamp" : "2024-10-09T00:16:05Z",
   "version" : "1.5.1"
 }

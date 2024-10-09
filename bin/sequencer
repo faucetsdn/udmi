@@ -16,9 +16,9 @@ JAVA_CMD="java -cp $JARFILE com.google.daq.mqtt.sequencer.SequenceRunner"
 SEQUENCER_LOG=$OUT_DIR/sequencer.log
 SEQUENCER_OUT=$OUT_DIR/sequencer.out
 SCHEMA_OUT=$OUT_DIR/schema.out
-DEFAULT_SERIAL=//
 log_level=INFO
 min_stage=PREVIEW
+serial_opt=
 
 rm -f $SEQUENCER_LOG $SEQUENCER_OUT $SCHEMA_OUT
 
@@ -39,6 +39,9 @@ while [[ ${1-} =~ ^- ]]; do
         log_level=DEBUG
     elif [[ $1 == '-vv' ]]; then
         log_level=TRACE
+    elif [[ $1 == '-s' ]]; then
+        shift
+        serial_opt=$1
     else
         echo Unknown option $1
         false
@@ -47,19 +50,18 @@ while [[ ${1-} =~ ^- ]]; do
 done
 
 if [[ $# == 0 ]]; then
-    usage [-v] [-vv] [-a] [-x] SITE_MODEL PROJECT_SPEC DEVICE_ID [SERIAL_NO] [TEST_NAMES...]
+    usage [-v] [-vv] [-a] [-x] [-s serial_no] SITE_MODEL PROJECT_SPEC DEVICE_ID [TEST_NAMES...]
 fi
 
 site_path=$(realpath $1)
 shift
 
 if [[ -d $site_path ]]; then
-    project_id=$1
+    project_spec=$1
     device_id=$2
     shift 2 || fail Missing configuration command line parameters.
-
-    serial_no=${1:-$DEFAULT_SERIAL}
-    shift || true
+elif [[ ! -f $site_path ]]; then
+    fail Neither file nor director: $site_path
 fi
 
 registry_suffix=null
@@ -87,6 +89,7 @@ source venv/bin/activate
 quoted_namespace=null
 quoted_bridge=null
 iot_provider=null
+serial_no=
 
 if [[ -d $site_path ]]; then
     echo Using site model directory $site_path
@@ -101,46 +104,69 @@ elif [[ -f $site_path ]]; then
     [[ $site_model =~ ^/ ]] || site_model=$(realpath $(dirname $site_path)/$site_model)
     project_id=`jq -r .project_id $site_path`
     [[ $project_id == null ]] && project_id=
+    user_name=`jq -r .user_name $site_path`
+    [[ $user_name == null ]] && user_name=
     device_id=`jq -r .device_id $site_path`
     [[ $device_id == null ]] && fail Parameter device_id not defined in config file.
     serial_no=`jq -r .serial_no $site_path`
-    [[ $serial_no != null ]] || serial_no=$DEFAULT_SERIAL
+    [[ $serial_no == null ]] && serial_no=
     iot_provider=`jq .iot_provider $site_path`
     endpoint=`jq .reflector_endpoint $site_path`
     alt_registry=`jq .alt_registry $site_path`
     registry_suffix=`jq .registry_suffix $site_path`
-    quoted_namespace=`jq .udmi_namespace $site_path`
+    udmi_namespace=`jq -r .udmi_namespace $site_path`
+    [[ $udmi_namespace == null ]] && udmi_namespace=
 else
     echo Site model $site_path not found.
     false
 fi
 
-if [[ $project_id == -- ]]; then
-    echo Configuring for mock project use...
-    project_id=mock-project
-    alt_registry=null
-fi
-
 # Format of cmdline project_id is {//PROVIDER/}PROJECT (optional PROVIDER)
 # e.g. bos-testing-dev or //gcp/bos-testing-dev
 
-if [[ $project_id =~ ^// ]]; then
-    no_prefix=${project_id#//}
+if [[ $project_spec =~ ^// ]]; then
+    no_prefix=${project_spec#//}
+    user_name=${no_prefix##*+}
+    [[ $user_name != $no_prefix ]] || user_name=
+    no_prefix=${no_prefix%+${user_name}}
     iot_provider=\"${no_prefix%%/*}\"
     no_provider=${no_prefix#*/}
     project_id=${no_provider%/*}
     udmi_namespace=${no_provider#$project_id}
-    [[ -n $udmi_namespace ]] && quoted_namespace=\"${udmi_namespace#/}\"
-elif [[ $project_id =~ @ ]]; then
-    iot_provider=\"jwt\"
-    quoted_bridge=\"${project_id#*@}\"
-    project_id=${project_id%@*}
+elif [[ $project_spec == -- ]]; then
+    echo Configuring for mock project use...
+    project_id=mock-project
+    alt_registry=null
+    user_name=
+    udmi_namespace=
+else
+    fail Unrecognized project spec: $project_spec
+fi
+
+if [[ -n $serial_opt ]]; then
+    quoted_serial=\"$serial_opt\"
+elif [[ -n $serial_no ]]; then
+    quoted_serial=\"$serial_no\"
+else
+    quoted_serial=null
 fi
 
 if [[ -n $project_id ]]; then
     quoted_id=\"${project_id##*/}\"
 else
     quoted_id=null
+fi
+
+if [[ -n $user_name ]]; then
+    quoted_user=\"${user_name#+}\"
+else
+    quoted_user=null
+fi
+
+if [[ -n $udmi_namespace ]]; then
+    quoted_namespace=\"${udmi_namespace#/}\"
+else
+    quoted_namespace=null
 fi
 
 export SEQUENCER_CONFIG=/tmp/sequencer_config.json
@@ -151,6 +177,7 @@ if [[ ! $site_path -ef $SEQUENCER_CONFIG ]]; then
 {
   "iot_provider": $iot_provider,
   "project_id": $quoted_id,
+  "user_name": $quoted_user,
   "bridge_host": $quoted_bridge,
   "udmi_namespace": $quoted_namespace,
   "site_model": "$site_model",
@@ -159,7 +186,7 @@ if [[ ! $site_path -ef $SEQUENCER_CONFIG ]]; then
   "registry_suffix": $registry_suffix,
   "shard_count": ${MATRIX_SHARD_COUNT:-null},
   "shard_index": ${MATRIX_SHARD_INDEX:-null},
-  "serial_no": "$serial_no",
+  "serial_no": $quoted_serial,
   "log_level": "$log_level",
   "min_stage": "$min_stage",
   "udmi_version": "$udmi_version",

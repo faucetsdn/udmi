@@ -1,11 +1,11 @@
 {
-  "timestamp" : "2024-03-20T17:31:47Z",
-  "version" : "@@@cloud udmi version###1.5.0-55-g604ba10b1",
+  "timestamp" : "2024-10-09T00:14:31Z",
+  "version" : "@@@cloud udmi version###git-a719207",
   "system" : {
     "min_loglevel" : 200,
     "metrics_rate_sec" : 10,
     "operation" : {
-      "last_start" : "2024-03-20T17:30:55Z"
+      "last_start" : "2024-10-09T00:13:49Z"
     },
     "testing" : {
       "sequence_name" : "family_ipv6_addr"
@@ -13,8 +13,8 @@
   },
   "localnet" : {
     "families" : {
-      "ipv4" : { },
       "ether" : { },
+      "ipv4" : { },
       "vendor" : { },
       "ipv6" : { }
     }

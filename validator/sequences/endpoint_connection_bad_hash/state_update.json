@@ -5,31 +5,36 @@
         "phase" : "final",
         "status" : {
           "message" : "java.lang.RuntimeException: Blob data hash mismatch",
-          "detail" : "java.lang.RuntimeException: java.lang.RuntimeException: Blob data hash mismatch\n\tat daq.pubber.Pubber.maybeRedirectEndpoint(Pubber.java:1019)\n\tat daq.pubber.Pubber.deferredConfigActions(Pubber.java:661)\n\tat daq.pubber.Pubber.periodicUpdate(Pubber.java:585)\n\tat java.base/java.util.concurrent.Executors$RunnableAdapter.call(Executors.java:539)\n\tat java.base/java.util.concurrent.FutureTask.runAndReset(FutureTask.java:305)\n\tat java.base/java.util.concurrent.ScheduledThreadPoolExecutor$ScheduledFutureTask.run(ScheduledThreadPoolExecutor.java:305)\n\tat java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1136)\n\tat java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:635)\n\tat java.base/java.lang.Thread.run(Thread.java:840)\n",
+          "detail" : "java.lang.RuntimeException: java.lang.RuntimeException: Blob data hash mismatch\n\tat daq.pubber.Pubber.maybeRedirectEndpoint(Pubber.java:1003)\n\tat daq.pubber.Pubber.deferredConfigActions(Pubber.java:628)\n\tat daq.pubber.Pubber.periodicUpdate(Pubber.java:552)\n\tat java.base/java.util.concurrent.Executors$RunnableAdapter.call(Executors.java:539)\n\tat java.base/java.util.concurrent.FutureTask.runAndReset(FutureTask.java:305)\n\tat java.base/java.util.concurrent.ScheduledThreadPoolExecutor$ScheduledFutureTask.run(ScheduledThreadPoolExecutor.java:305)\n\tat java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1136)\n\tat java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:635)\n\tat java.base/java.lang.Thread.run(Thread.java:840)\n",
           "category" : "blobset.blob.apply",
-          "timestamp" : "2023-12-18T11:45:33Z",
+          "timestamp" : "2024-10-09T00:18:07Z",
           "level" : 500
         },
-        "generation" : "2023-12-18T11:45:22Z"
+        "generation" : "2024-10-09T00:17:56Z"
       }
     }
   },
   "localnet" : {
     "families" : {
       "ether" : {
-        "addr" : "00:22:48:91:75:c1"
+        "addr" : "00:22:48:05:fa:4c"
       },
       "ipv4" : {
-        "addr" : "10.1.0.163"
+        "addr" : "10.1.0.142"
       },
       "ipv6" : {
-        "addr" : "fe80::222:48ff:fe91:75c1"
+        "addr" : "fe80::222:48ff:fe05:fa4c"
+      },
+      "vendor" : {
+        "addr" : "28179023"
       }
     }
   },
   "pointset" : {
     "points" : {
-      "filter_alarm_pressure_status" : { },
+      "filter_alarm_pressure_status" : {
+        "units" : "No-units"
+      },
       "filter_differential_pressure_setpoint" : {
         "units" : "Bars",
         "value_state" : "applied"
@@ -40,14 +45,14 @@
     }
   },
   "system" : {
-    "last_config" : "2023-12-18T11:45:23Z",
+    "last_config" : "2024-10-09T00:18:01Z",
     "operation" : {
       "operational" : true,
-      "last_start" : "2023-12-18T11:45:02Z",
+      "last_start" : "2024-10-09T00:17:36Z",
       "restart_count" : 1,
       "mode" : "initial"
     },
-    "serial_no" : "sequencer-3241",
+    "serial_no" : "sequencer-3394",
     "hardware" : {
       "make" : "BOS",
       "model" : "pubber"
@@ -58,10 +63,10 @@
     "status" : {
       "message" : "success",
       "category" : "system.config.apply",
-      "timestamp" : "2023-12-18T11:45:23Z",
+      "timestamp" : "2024-10-09T00:18:01Z",
       "level" : 300
     }
   },
-  "timestamp" : "2023-12-18T11:45:33Z",
-  "version" : "1.4.2"
+  "timestamp" : "2024-10-09T00:18:07Z",
+  "version" : "1.5.1"
 }

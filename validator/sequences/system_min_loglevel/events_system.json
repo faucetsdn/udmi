@@ -1,0 +1,21 @@
+{
+  "event_count" : 8,
+  "last_config" : "2024-10-09T00:17:44Z",
+  "logentries" : [ {
+    "message" : "success",
+    "category" : "system.config.apply",
+    "timestamp" : "2024-10-09T00:17:44Z",
+    "level" : 300
+  }, {
+    "message" : "Update state 2024-10-09T00:17:46Z last_config 2024-10-09T00:17:44Z",
+    "category" : "device.log",
+    "timestamp" : "2024-10-09T00:17:46Z",
+    "level" : 200
+  } ],
+  "metrics" : {
+    "mem_total_mb" : 254.0,
+    "mem_free_mb" : 215.587890625
+  },
+  "timestamp" : "2024-10-09T00:17:53Z",
+  "version" : "1.5.1"
+}

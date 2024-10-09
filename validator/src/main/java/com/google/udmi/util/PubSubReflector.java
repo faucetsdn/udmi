@@ -10,10 +10,10 @@ import static com.google.udmi.util.Common.SOURCE_SEPARATOR;
 import static com.google.udmi.util.Common.SOURCE_SEPARATOR_REGEX;
 import static com.google.udmi.util.Common.SUBFOLDER_PROPERTY_KEY;
 import static com.google.udmi.util.Common.getNamespacePrefix;
+import static com.google.udmi.util.GeneralUtils.friendlyStackTrace;
 import static com.google.udmi.util.GeneralUtils.ifNotNullThen;
 import static com.google.udmi.util.JsonUtil.isoConvert;
 import static com.google.udmi.util.JsonUtil.stringify;
-import static com.google.udmi.util.JsonUtil.stringifyTerse;
 import static com.google.udmi.util.JsonUtil.toStringMap;
 import static java.lang.String.format;
 import static java.time.Instant.ofEpochSecond;
@@ -267,8 +267,7 @@ public class PubSubReflector implements MessagePublisher {
         publisher.publishAllOutstanding();
         publisher.shutdown();
       } catch (Exception e) {
-        System.err.println("Error shutting down publisher");
-        e.printStackTrace();
+        System.err.println("Error shutting down publisher: " + friendlyStackTrace(e));
       }
     }
   }
@@ -315,7 +314,6 @@ public class PubSubReflector implements MessagePublisher {
             suffix);
         String messageSource = attributes.remove(SOURCE_KEY);
         if (messageSource == null) {
-          System.err.println("Discarding message with null source: " + stringifyTerse(attributes));
           return;
         }
         Object dstSource = messageBundle.message.remove(SOURCE_KEY);

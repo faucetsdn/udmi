@@ -36,7 +36,7 @@ echo Pulling from subscription $subscription
 pull_limit=100
 
 while true; do
-    date
+    date -u -Is
     gcloud --format=json --project=$project_id pubsub subscriptions pull $subscription --limit $pull_limit --auto-ack > $TMP_FILE || true
 
     for index in $(seq 0 $((pull_limit-1))); do
