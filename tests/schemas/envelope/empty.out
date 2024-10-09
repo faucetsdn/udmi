@@ -1,2 +1,2 @@
 1 schema violations found
-  object has missing required properties (["deviceId","deviceRegistryId","projectId","subFolder"])
+  object has missing required properties (["deviceRegistryId"])
