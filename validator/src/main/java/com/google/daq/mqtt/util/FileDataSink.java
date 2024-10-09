@@ -49,7 +49,7 @@ public class FileDataSink implements MessagePublisher {
     if (outFile == null) {
       return null;
     }
-    System.err.println("Updating " + outFile.getAbsolutePath());
+    System.err.println("Updating validated " + outFile.getAbsolutePath());
     try (PrintWriter out = new PrintWriter(Files.newOutputStream(outFile.toPath()))) {
       out.println(data);
     } catch (Exception e) {
@@ -75,7 +75,11 @@ public class FileDataSink implements MessagePublisher {
   }
 
   private File getDeviceDir(String deviceId) {
-    return new File(outBaseDir, String.format("devices/%s", deviceId));
+    if (deviceId == null || deviceId.isEmpty()) {
+      return new File(outBaseDir, "registry");
+    } else {
+      return new File(outBaseDir, String.format("devices/%s", deviceId));
+    }
   }
 
   @SuppressWarnings("unchecked")

@@ -35,11 +35,6 @@ import com.fasterxml.jackson.annotation.JsonValue;
 })
 public class Envelope {
 
-    /**
-     * 
-     * (Required)
-     * 
-     */
     @JsonProperty("deviceId")
     public String deviceId;
     @JsonProperty("deviceNumId")
@@ -53,11 +48,6 @@ public class Envelope {
     public String deviceRegistryId;
     @JsonProperty("deviceRegistryLocation")
     public String deviceRegistryLocation;
-    /**
-     * 
-     * (Required)
-     * 
-     */
     @JsonProperty("projectId")
     public String projectId;
     @JsonProperty("payload")
@@ -72,11 +62,6 @@ public class Envelope {
     public Date publishTime;
     @JsonProperty("rawFolder")
     public String rawFolder;
-    /**
-     * 
-     * (Required)
-     * 
-     */
     @JsonProperty("subFolder")
     public Envelope.SubFolder subFolder;
     @JsonProperty("subType")

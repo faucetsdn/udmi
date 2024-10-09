@@ -612,7 +612,7 @@ class LocalDevice {
     ErrorTree errorTree = getErrorTree(ignoreErrors);
     if (errorTree != null) {
       try (PrintStream printStream = new PrintStream(Files.newOutputStream(errorsFile.toPath()))) {
-        System.err.println("Updating " + errorsFile);
+        System.err.println("Updating errors " + errorsFile);
         errorTree.write(printStream);
       } catch (Exception e) {
         throw new RuntimeException("While writing " + errorsFile.getAbsolutePath(), e);

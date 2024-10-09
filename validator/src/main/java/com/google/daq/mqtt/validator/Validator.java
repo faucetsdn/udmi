@@ -638,7 +638,10 @@ public class Validator {
   private Instant getInstant(Object msgObject, Map<String, String> attributes) {
     if (msgObject instanceof Map) {
       Map<String, Object> mapped = mapCast(msgObject);
-      return JsonUtil.getInstant((String) mapped.get(TIMESTAMP_KEY));
+      String timestamp = (String) mapped.get(TIMESTAMP_KEY);
+      if (timestamp != null) {
+        return JsonUtil.getInstant(timestamp);
+      }
     }
     return JsonUtil.getInstant(attributes.get(PUBLISH_TIME_KEY));
   }
