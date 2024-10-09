@@ -224,12 +224,12 @@ public class IotReflectorClient implements IotProvider {
 
   private void processReplies() {
     while (messageClient.isActive()) {
-      try {
-        MessageBundle messageBundle = messageClient.takeNextMessage(QuerySpeed.QUICK);
-        if (messageBundle == null) {
-          continue;
-        }
+      MessageBundle messageBundle = messageClient.takeNextMessage(QuerySpeed.QUICK);
+      if (messageBundle == null) {
+        continue;
+      }
 
+      try {
         String transactionId = messageBundle.attributes.get(TRANSACTION_KEY);
         CompletableFuture<Map<String, Object>> future = ifNotNullGet(transactionId,
             futures::remove);
