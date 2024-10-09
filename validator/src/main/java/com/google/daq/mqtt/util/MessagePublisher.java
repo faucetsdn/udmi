@@ -72,6 +72,10 @@ public interface MessagePublisher {
     throw new RuntimeException("getCredential not implemented");
   }
 
+  default String getSessionPrefix() {
+    throw new RuntimeException("session prefix not implemented for " + getClass().getSimpleName());
+  }
+
   /**
    * Speed of a query -- how long to wait before a timeout.
    */

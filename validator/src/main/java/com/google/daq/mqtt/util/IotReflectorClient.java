@@ -49,7 +49,6 @@ public class IotReflectorClient implements IotProvider {
 
   public static final String CLOUD_QUERY_TOPIC = "cloud/query";
   public static final String CLOUD_MODEL_TOPIC = "cloud/model";
-  public static final String REFLECTOR_PREFIX = "RC:";
   // Requires functions that support cloud device manager support.
   private static final String CONFIG_TOPIC_FORMAT = "%s/config";
   private static final File ERROR_DIR = new File("out");
@@ -59,6 +58,7 @@ public class IotReflectorClient implements IotProvider {
       new ConcurrentHashMap<>();
   private final ExecutorService executor = Executors.newSingleThreadExecutor();
   private final boolean isSlow;
+  private String sessionPrefix;
 
   /**
    * Create a new client.
@@ -70,6 +70,7 @@ public class IotReflectorClient implements IotProvider {
     executionConfiguration.key_file = siteModel.validatorKey();
     messageClient = new com.google.bos.iot.core.proxy.IotReflectorClient(executionConfiguration,
         Validator.TOOLS_FUNCTIONS_VERSION);
+    sessionPrefix = messageClient.getSessionPrefix();
     executor.execute(this::processReplies);
     isSlow = siteModel.getDeviceIds().size() > SLOW_QUERY_THRESHOLD;
     if (isSlow) {
@@ -224,12 +225,12 @@ public class IotReflectorClient implements IotProvider {
 
   private void processReplies() {
     while (messageClient.isActive()) {
-      try {
-        MessageBundle messageBundle = messageClient.takeNextMessage(QuerySpeed.QUICK);
-        if (messageBundle == null) {
-          continue;
-        }
+      MessageBundle messageBundle = messageClient.takeNextMessage(QuerySpeed.QUICK);
+      if (messageBundle == null) {
+        continue;
+      }
 
+      try {
         String transactionId = messageBundle.attributes.get(TRANSACTION_KEY);
         CompletableFuture<Map<String, Object>> future = ifNotNullGet(transactionId,
             futures::remove);
@@ -244,12 +245,14 @@ public class IotReflectorClient implements IotProvider {
 
           String error = (String) messageBundle.message.get(ERROR_KEY);
           if (error != null) {
+            if (transactionId == null || !transactionId.startsWith(sessionPrefix)) {
+              continue;
+            }
             throw new RuntimeException(format("UDMIS pipeline error %s: %s", transactionId, error));
           }
         }
 
-        if (future == null && transactionId != null
-            && transactionId.startsWith(REFLECTOR_PREFIX)) {
+        if (future == null && transactionId != null && transactionId.startsWith(sessionPrefix)) {
           throw new RuntimeException(
               "Received unexpected reply message " + stringifyTerse(messageBundle.attributes));
         }

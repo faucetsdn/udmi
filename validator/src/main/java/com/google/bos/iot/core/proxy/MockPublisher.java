@@ -18,6 +18,7 @@ import java.util.concurrent.TimeUnit;
  */
 public class MockPublisher implements MessagePublisher {
 
+  private static final String MOCK_SESSION_PREFIX = "MOCK:";
   private final BlockingQueue<Validator.MessageBundle> messages = new LinkedBlockingQueue<>();
   private boolean active;
 
@@ -52,6 +53,11 @@ public class MockPublisher implements MessagePublisher {
   @Override
   public boolean isActive() {
     return active;
+  }
+
+  @Override
+  public String getSessionPrefix() {
+    return MOCK_SESSION_PREFIX;
   }
 
   @Override
