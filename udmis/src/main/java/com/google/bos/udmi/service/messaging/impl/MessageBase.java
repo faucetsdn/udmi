@@ -133,6 +133,8 @@ public abstract class MessageBase extends ContainerBase implements MessagePipe {
   protected Bundle makeExceptionBundle(Envelope envelope, Exception exception) {
     Bundle bundle = new Bundle(envelope, exception);
     bundle.envelope.subType = SubType.EVENTS;
+    bundle.envelope.rawFolder =
+        ofNullable(bundle.envelope.subFolder).orElse(SubFolder.INVALID).toString();
     bundle.envelope.subFolder = SubFolder.ERROR;
     return bundle;
   }

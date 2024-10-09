@@ -529,6 +529,10 @@ public class IotReflectorClient implements MessagePublisher {
     return publisher.getBridgeHost();
   }
 
+  public String getSessionPrefix() {
+    return sessionPrefix;
+  }
+
   static class MessageBundle {
 
     Map<String, Object> message;
