@@ -323,7 +323,7 @@ public class ReportingDevice {
   /**
    * Check if a message schema should be processed, to filter out too frequent processing.
    */
-  public boolean processMessageSchema(String schemaName, Instant now) {
+  public boolean shouldProcessMessageSchema(String schemaName, Instant now) {
     Date previous = messageMarks.get(schemaName);
     if (previous == null || previous.before(getThreshold(now))) {
       messageMarks.put(schemaName, Date.from(now));

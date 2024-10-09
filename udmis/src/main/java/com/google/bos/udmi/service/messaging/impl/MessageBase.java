@@ -340,12 +340,12 @@ public abstract class MessageBase extends ContainerBase implements MessagePipe {
   }
 
   private void receiveMessageRaw(Map<String, String> attributesMap, String messageString) {
-    final Object messageObject;
+    Object messageObject;
     try {
       messageObject = parseJson(messageString);
     } catch (Exception e) {
       receiveException(attributesMap, messageString, e, SubFolder.ERROR);
-      // TODO: Don't make this an error!
+      messageObject = messageString;
     }
     final Envelope envelope;
 

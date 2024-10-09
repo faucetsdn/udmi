@@ -32,7 +32,6 @@ import static com.google.udmi.util.GeneralUtils.ifTrueThen;
 import static com.google.udmi.util.JsonUtil.JSON_SUFFIX;
 import static com.google.udmi.util.JsonUtil.OBJECT_MAPPER;
 import static com.google.udmi.util.JsonUtil.convertTo;
-import static com.google.udmi.util.JsonUtil.getInstant;
 import static com.google.udmi.util.JsonUtil.isoConvert;
 import static com.google.udmi.util.JsonUtil.mapCast;
 import static com.google.udmi.util.JsonUtil.safeSleep;
@@ -610,7 +609,7 @@ public class Validator {
     }
 
     if (simulatedMessages) {
-      mockNow = getMessageInstant(msgObject, attributes);
+      mockNow = getInstant(msgObject, attributes);
       ReportingDevice.setMockNow(mockNow);
     }
 
@@ -632,12 +631,12 @@ public class Validator {
     }
   }
 
-  private Instant getMessageInstant(Object msgObject, Map<String, String> attributes) {
+  private Instant getInstant(Object msgObject, Map<String, String> attributes) {
     if (msgObject instanceof Map) {
       Map<String, Object> mapped = mapCast(msgObject);
-      return getInstant((String) mapped.get(TIMESTAMP_KEY));
+      return JsonUtil.getInstant((String) mapped.get(TIMESTAMP_KEY));
     }
-    return getInstant(attributes.get(PUBLISH_TIME_KEY));
+    return JsonUtil.getInstant(attributes.get(PUBLISH_TIME_KEY));
   }
 
   private ReportingDevice validateMessageCore(Object messageObj, Map<String, String> attributes) {
@@ -657,12 +656,12 @@ public class Validator {
       Map<String, Object> message = isString ? null : mapCast(messageObj);
       validateTimestamp(device, message, attributes);
 
-      if (!device.processMessageSchema(schemaName, getMessageInstant(messageObj, attributes))) {
+      if (!device.shouldProcessMessageSchema(schemaName, getInstant(messageObj, attributes))) {
         outputLogger.trace("Ignoring device %s/%s (too soon)", deviceId, schemaName);
         return null;
       }
 
-      writeDeviceOutDir(messageObj, attributes, deviceId, schemaName);
+      writeDeviceOutCapture(messageObj, attributes, deviceId, schemaName);
 
       String subFolder = attributes.get(SUBFOLDER_PROPERTY_KEY);
       boolean processSchema = !IGNORE_FOLDERS.contains(subFolder);
@@ -861,7 +860,7 @@ public class Validator {
     File messageFile = new File(deviceDir, filename);
     try {
       deviceDir.mkdir();
-      String timestamp = isoConvert(getMessageInstant(message, attributes));
+      String timestamp = isoConvert(getInstant(message, attributes));
       outputLogger.debug("Capture %s at %s for %s", filename, timestamp, deviceId);
       OBJECT_MAPPER.writeValue(messageFile, message);
     } catch (Exception e) {
@@ -897,7 +896,7 @@ public class Validator {
     return process && !CONFIG_CATEGORY.equals(category);
   }
 
-  private void writeDeviceOutDir(Object message, Map<String, String> attributes, String deviceId,
+  private void writeDeviceOutCapture(Object message, Map<String, String> attributes, String deviceId,
       String schemaName) throws IOException {
 
     File deviceDir = makeDeviceDir(deviceId);
