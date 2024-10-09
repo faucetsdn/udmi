@@ -20,6 +20,8 @@ import static java.util.Objects.isNull;
 import static java.util.Objects.requireNonNull;
 import static java.util.Optional.ofNullable;
 
+import com.google.bos.udmi.service.messaging.MessageDispatcher;
+import com.google.bos.udmi.service.messaging.MessageDispatcher.RawString;
 import com.google.bos.udmi.service.messaging.MessagePipe;
 import com.google.bos.udmi.service.pod.ContainerBase;
 import com.google.bos.udmi.service.pod.UdmiServicePod;
@@ -345,7 +347,7 @@ public abstract class MessageBase extends ContainerBase implements MessagePipe {
       messageObject = parseJson(messageString);
     } catch (Exception e) {
       receiveException(attributesMap, messageString, e, SubFolder.ERROR);
-      messageObject = messageString;
+      messageObject = MessageDispatcher.rawString(messageString);
     }
     final Envelope envelope;
 
@@ -514,18 +516,26 @@ public abstract class MessageBase extends ContainerBase implements MessagePipe {
     }
 
     public Bundle(Object message) {
-      this.message = message;
+      assignMessage(message);
       this.envelope = new Envelope();
     }
 
     public Bundle(Envelope envelope, Object message) {
       this.envelope = ofNullable(envelope).orElseGet(Envelope::new);
-      this.message = message;
+      assignMessage(message);
     }
 
     public Bundle(Map<String, String> attributes, Object message) {
       this.attributesMap = attributes;
-      this.message = message;
+      assignMessage(message);
+    }
+
+    private void assignMessage(Object checkMessage) {
+      if (checkMessage instanceof RawString rawString) {
+        payload = rawString.rawString;
+      } else {
+        message = checkMessage;
+      }
     }
 
     /**

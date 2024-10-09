@@ -27,7 +27,7 @@ sudo mosquitto_sub $SERVER_OPTS -R -F "%j" -t $topic_filter |
         topic=$(jq -r .topic <<< "$mqtt_message")
         payload=$(jq -r .payload $msg_file)
         timestamp=$(jq -r .tst $msg_file)
-        json=$(jq . <<< "$payload") || true
+        json=$(jq . <<< "$payload" 2> /dev/null) || json=$payload
 
         readarray -d '/' -t array <<< "${topic}/"
         registryId=${array[2]}

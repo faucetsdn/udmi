@@ -208,16 +208,25 @@ public class MessageDispatcherImpl extends ContainerBase implements MessageDispa
     Envelope envelope = Preconditions.checkNotNull(bundle.envelope, "bundle envelope is null");
     Object message = bundle.message;
     if (bundle.payload != null) {
-      message = new BundleException((String) message, bundle.attributesMap, bundle.payload);
+      if (message != null) {
+        message = new BundleException((String) message, bundle.attributesMap, bundle.payload);
+      } else {
+        message = MessageDispatcher.rawString(bundle.payload);
+      }
     }
     boolean isException = message instanceof Exception;
-    Class<?> handlerType = isException ? EXCEPTION_CLASS : getMessageClassFor(envelope, true);
+    boolean isRawString = message instanceof RawString;
+    Class<?> handlerType = isException ? EXCEPTION_CLASS
+        : isRawString ? RawString.class
+            : getMessageClassFor(envelope, true);
     try {
       handlers.computeIfAbsent(handlerType, key -> {
         notice("Defaulting messages of type/folder " + key.getName());
         return handlers.getOrDefault(DEFAULT_CLASS, this::devNullHandler);
       });
-      Object messageObject = isException ? message : convertStrictOrObject(handlerType, message);
+      Object messageObject = isException ? message :
+          isRawString ? ((RawString) message).rawString
+              : convertStrictOrObject(handlerType, message);
       if (messageObject instanceof Map) {
         handlerType = Object.class;
       }
