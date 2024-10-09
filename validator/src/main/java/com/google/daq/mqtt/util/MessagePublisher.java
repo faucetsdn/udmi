@@ -73,7 +73,7 @@ public interface MessagePublisher {
   }
 
   default String getSessionPrefix() {
-    throw new RuntimeException("session prefix not implemented");
+    throw new RuntimeException("session prefix not implemented for " + getClass().getSimpleName());
   }
 
   /**
