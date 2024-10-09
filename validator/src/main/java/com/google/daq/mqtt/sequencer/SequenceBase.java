@@ -9,7 +9,6 @@ import static com.google.daq.mqtt.sequencer.SequenceBase.Capabilities.LAST_CONFI
 import static com.google.daq.mqtt.sequencer.semantic.SemanticValue.actualize;
 import static com.google.daq.mqtt.util.CloudIotManager.EMPTY_CONFIG;
 import static com.google.daq.mqtt.util.ConfigManager.configFrom;
-import static com.google.daq.mqtt.util.IotReflectorClient.REFLECTOR_PREFIX;
 import static com.google.daq.mqtt.util.TimePeriodConstants.TWO_MINUTES_MS;
 import static com.google.daq.mqtt.validator.Validator.ATTRIBUTE_FILE_FORMAT;
 import static com.google.daq.mqtt.validator.Validator.MESSAGE_FILE_FORMAT;
@@ -322,6 +321,7 @@ public class SequenceBase {
   private int lastStatusLevel;
   private final CaptureMap otherEvents = new CaptureMap();
   private final AtomicBoolean waitingForConfigSync = new AtomicBoolean();
+  private static String sessionPrefix;
 
   private static void setupSequencer() {
     exeConfig = SequenceRunner.ensureExecutionConfig();
@@ -361,6 +361,7 @@ public class SequenceBase {
     System.err.printf("Loading reflector key file from %s%n", new File(key_file).getAbsolutePath());
     System.err.printf("Validating against device %s serial %s%n", getDeviceId(), serialNo);
     client = getPublisherClient();
+    sessionPrefix = client.getSessionPrefix();
     ifNotNullThen(validationState, state -> state.cloud_version = client.getVersionInformation());
 
     String udmiNamespace = exeConfig.udmi_namespace;
@@ -1756,7 +1757,7 @@ public class SequenceBase {
         if (CONFIG_SUBTYPE.equals(subTypeRaw)) {
           ifTrueThen(configTransactions.remove(txnId),
               () -> debug("Removed configTransaction " + txnId));
-        } else if (STATE_SUBTYPE.equals(subTypeRaw) && txnId.startsWith(REFLECTOR_PREFIX)) {
+        } else if (STATE_SUBTYPE.equals(subTypeRaw) && txnId.startsWith(sessionPrefix)) {
           String expected = stateTransaction.getAndSet(null);
           if (txnId.equals(expected)) {
             debug("Removed stateTransaction " + txnId);
