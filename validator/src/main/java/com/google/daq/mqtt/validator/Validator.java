@@ -892,8 +892,8 @@ public class Validator {
     return process && !CONFIG_CATEGORY.equals(category);
   }
 
-  private void writeDeviceOutCapture(Object message, Map<String, String> attributes, String deviceId,
-      String schemaName) throws IOException {
+  private void writeDeviceOutCapture(Object message, Map<String, String> attributes,
+      String deviceId, String schemaName) throws IOException {
 
     File deviceDir = makeDeviceDir(deviceId);
 
