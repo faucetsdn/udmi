@@ -1486,6 +1486,10 @@ public class SequenceBase {
     try {
       try {
         action.run();
+      } catch (AbortMessageLoop e) {
+        // This is some fundamental problem, so just pass it along without the waiting detail.
+        catcher.accept(e);
+        throw e;
       } catch (Exception e) {
         catcher.accept(e);
         String detail = ifNotNullGet(detailer, Supplier::get);
@@ -1692,7 +1696,7 @@ public class SequenceBase {
         handleDeviceMessage(message, subTypeRaw, subFolderRaw, transactionId);
       }
     } catch (Exception e) {
-      throw new RuntimeException(
+      throw new AbortMessageLoop(
           format("While processing message %s_%s %s", subTypeRaw, subFolderRaw, transactionId), e);
     }
   }
