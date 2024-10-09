@@ -858,7 +858,6 @@ public class SequenceBase {
         processNextMessage();
         return configIsPending(false);
       });
-      whileDoing("config sync", () -> messageEvaluateLoop(this::configIsPending));
       Duration between = Duration.between(lastConfigUpdate, CleanDateFormat.clean(Instant.now()));
       debug(format("Configuration sync took %ss", between.getSeconds()));
     } finally {
