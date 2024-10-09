@@ -15,6 +15,7 @@ import com.fasterxml.jackson.core.json.JsonReadFeature;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
+import com.google.gson.internal.bind.util.ISO8601Utils;
 import java.io.File;
 import java.nio.file.Files;
 import java.time.Instant;
@@ -205,6 +206,10 @@ public abstract class JsonUtil {
     } catch (Exception e) {
       throw new RuntimeException("Creating timestamp", e);
     }
+  }
+
+  public static String currentIsoMs() {
+    return ISO8601Utils.format(new Date(), true);
   }
 
   /**

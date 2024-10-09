@@ -1,46 +1,46 @@
 {
-  "event_count" : 5,
-  "last_config" : "2024-09-04T16:56:03Z",
+  "event_count" : 4,
+  "last_config" : "2024-10-09T00:15:55Z",
   "logentries" : [ {
-    "message" : "Discovery scan starting vendor as 2024-09-04T16:56:11Z",
+    "message" : "Discovery scan starting vendor as 2024-10-09T00:16:03Z",
     "category" : "device.log",
-    "timestamp" : "2024-09-04T16:56:11Z",
+    "timestamp" : "2024-10-09T00:16:03Z",
     "level" : 200
   }, {
-    "message" : "Update state 2024-09-04T16:56:11Z last_config 2024-09-04T16:56:03Z",
+    "message" : "Update state 2024-10-09T00:16:03Z last_config 2024-10-09T00:15:55Z",
     "category" : "device.log",
-    "timestamp" : "2024-09-04T16:56:11Z",
+    "timestamp" : "2024-10-09T00:16:03Z",
     "level" : 200
   }, {
-    "message" : "Discovered vendor device 20231 for gen 2024-09-04T16:56:11Z",
+    "message" : "Discovered vendor device 20231 for gen 2024-10-09T00:16:03Z",
     "category" : "device.log",
-    "timestamp" : "2024-09-04T16:56:11Z",
+    "timestamp" : "2024-10-09T00:16:03Z",
     "level" : 200
   }, {
-    "message" : "Discovered vendor device 0x65 for gen 2024-09-04T16:56:11Z",
+    "message" : "Discovered vendor device 28179023 for gen 2024-10-09T00:16:03Z",
     "category" : "device.log",
-    "timestamp" : "2024-09-04T16:56:11Z",
+    "timestamp" : "2024-10-09T00:16:03Z",
     "level" : 200
   }, {
-    "message" : "Discovered vendor device 28179023 for gen 2024-09-04T16:56:11Z",
+    "message" : "Discovered vendor device 0x65 for gen 2024-10-09T00:16:03Z",
     "category" : "device.log",
-    "timestamp" : "2024-09-04T16:56:11Z",
+    "timestamp" : "2024-10-09T00:16:03Z",
     "level" : 200
   }, {
     "message" : "Error while executing scheduled future: While checking for discovery scan start",
     "category" : "device.log",
-    "timestamp" : "2024-09-04T16:56:11Z",
+    "timestamp" : "2024-10-09T00:16:03Z",
     "level" : 500
   }, {
-    "message" : "Update state 2024-09-04T16:56:13Z last_config 2024-09-04T16:56:03Z",
+    "message" : "Update state 2024-10-09T00:16:05Z last_config 2024-10-09T00:15:55Z",
     "category" : "device.log",
-    "timestamp" : "2024-09-04T16:56:13Z",
+    "timestamp" : "2024-10-09T00:16:05Z",
     "level" : 200
   } ],
   "metrics" : {
     "mem_total_mb" : 254.0,
-    "mem_free_mb" : 211.94775390625
+    "mem_free_mb" : 213.98078155517578
   },
-  "timestamp" : "2024-09-04T16:56:19Z",
+  "timestamp" : "2024-10-09T00:16:08Z",
   "version" : "1.5.1"
 }

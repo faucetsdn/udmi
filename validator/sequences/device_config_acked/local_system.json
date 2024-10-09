@@ -1,8 +1,8 @@
 {
   "min_loglevel" : 200,
-  "metrics_rate_sec" : 600,
+  "metrics_rate_sec" : 10,
   "operation" : {
-    "last_start" : "2023-07-28T20:23:12Z"
+    "last_start" : "2024-10-09T00:13:49Z"
   },
   "testing" : {
     "sequence_name" : "device_config_acked"
