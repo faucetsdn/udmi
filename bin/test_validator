@@ -79,7 +79,7 @@ echo Checking reported cloud version info
 jq .cloud_version.udmi_ref $output_file
 
 pubber_bg AHU-1 extraField=prlagle skewClock
-pubber_bg GAT-123 emptyMissing extraPoint=llama
+pubber_bg GAT-123 emptyMissing extraPoint=llama fixedSampleRate=2
 
 echo Waiting for system to run for a bit...
 cat $VALIDATOR_LOG && timeout 60s tail -f $VALIDATOR_LOG || true

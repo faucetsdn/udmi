@@ -24,6 +24,7 @@ public abstract class MessagePipeTestBase extends MessageTestBase {
 
   private static final long RECEIVE_TIMEOUT_MS = 1000;
   private static final String EXCEPTION_PAYLOAD = "";
+  private static final String EXCEPTION_MESSAGE = "Exception expected for test";
   public static final String REFLECT_REGISTRY = "UDMI-REFLECT";
   public static boolean useReflectRegistry;
 
@@ -102,6 +103,7 @@ public abstract class MessagePipeTestBase extends MessageTestBase {
     bundle.envelope.subType = SubType.EVENTS;
     bundle.envelope.subFolder = SubFolder.ERROR;
     bundle.payload = EXCEPTION_PAYLOAD;
+    bundle.message = EXCEPTION_MESSAGE;
     return bundle;
   }
 

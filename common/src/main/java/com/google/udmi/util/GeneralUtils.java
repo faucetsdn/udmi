@@ -177,12 +177,20 @@ public class GeneralUtils {
     return messages;
   }
 
-  public static <T> T fromJsonFile(File path, Class<T> valueType) {
+  private static <T> T fromJsonFile(File path, Class<T> valueType, ObjectMapper objectMapper) {
     try {
-      return OBJECT_MAPPER.readValue(path, valueType);
+      return OBJECT_MAPPER_STRICT.readValue(path, valueType);
     } catch (Exception e) {
       throw new RuntimeException("While loading json file " + path.getAbsolutePath(), e);
     }
+  }
+
+  public static <T> T fromJsonFile(File path, Class<T> valueType) {
+    return fromJsonFile(path, valueType, OBJECT_MAPPER);
+  }
+
+  public static <T> T fromJsonFileStrict(File path, Class<T> valueType) {
+    return fromJsonFile(path, valueType, OBJECT_MAPPER_STRICT);
   }
 
   public static <T> T fromJsonString(String body, Class<T> valueType) {

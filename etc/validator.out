@@ -18,7 +18,9 @@ sites/udmi_site_model/out/devices/GAT-123/config.json
 sites/udmi_site_model/out/devices/GAT-123/events_blobset.json
 sites/udmi_site_model/out/devices/GAT-123/events_discovery.json
 sites/udmi_site_model/out/devices/GAT-123/events_error.json
+sites/udmi_site_model/out/devices/GAT-123/events_gateway.json
 sites/udmi_site_model/out/devices/GAT-123/events_invalid.json
+sites/udmi_site_model/out/devices/GAT-123/events_mapping.json
 sites/udmi_site_model/out/devices/GAT-123/events_pointset.json
 sites/udmi_site_model/out/devices/GAT-123/events_system.json
 sites/udmi_site_model/out/devices/GAT-123/persistent_data.json
@@ -428,15 +430,37 @@ sites/udmi_site_model/out/devices/GAT-123/events_error.out
   "sub_folder" : "error",
   "sub_type" : "events",
   "status" : {
-    "message" : "Error in message pipeline: While parsing json object, Unexpected character ('N' (code 78)): was expecting double-quote to start field name  at [Source: (String)\"{ NOT VALID JSON!\"; line: 1, column: 4]",
-    "detail" : "events_error: Error in message pipeline: While parsing json object, Unexpected character ('N' (code 78)): was expecting double-quote to start field name  at [Source: (String)\"{ NOT VALID JSON!\"; line: 1, column: 4] REDACTED_ERROR",
-    "category" : "validation.device.schema",
+    "message" : "Successful validation",
+    "category" : "validation.device.receive",
+    "timestamp" : "REDACTED_TIMESTAMP",
+    "level" : 200
+  },
+  "errors" : [ ]
+}
+::::::::::::::
+sites/udmi_site_model/out/devices/GAT-123/events_gateway.out
+::::::::::::::
+{
+  "timestamp" : "REDACTED_TIMESTAMP",
+  "version" : "1.5.1",
+  "sub_folder" : "gateway",
+  "sub_type" : "events",
+  "status" : {
+    "message" : "Multiple validation errors",
+    "detail" : "Unknown schema subFolder 'events_gateway' for GAT-123; Raw string message for GAT-123 events_gateway",
+    "category" : "validation.device.multiple",
     "timestamp" : "REDACTED_TIMESTAMP",
     "level" : 500
   },
   "errors" : [ {
-    "message" : "Error in message pipeline: While parsing json object, Unexpected character ('N' (code 78)): was expecting double-quote to start field name  at [Source: (String)\"{ NOT VALID JSON!\"; line: 1, column: 4]",
-    "detail" : "events_error: Error in message pipeline: While parsing json object, Unexpected character ('N' (code 78)): was expecting double-quote to start field name  at [Source: (String)\"{ NOT VALID JSON!\"; line: 1, column: 4] REDACTED_ERROR",
+    "message" : "Unknown schema subFolder 'events_gateway' for GAT-123",
+    "detail" : "events_gateway: Unknown schema subFolder 'events_gateway' for GAT-123 REDACTED_ERROR",
+    "category" : "validation.device.schema",
+    "timestamp" : "REDACTED_TIMESTAMP",
+    "level" : 500
+  }, {
+    "message" : "Raw string message for GAT-123 events_gateway",
+    "detail" : "events_gateway: Raw string message for GAT-123 events_gateway REDACTED_ERROR",
     "category" : "validation.device.schema",
     "timestamp" : "REDACTED_TIMESTAMP",
     "level" : 500
@@ -460,6 +484,29 @@ sites/udmi_site_model/out/devices/GAT-123/events_invalid.out
   "errors" : [ {
     "message" : "Unknown schema subFolder 'events_invalid' for GAT-123",
     "detail" : "events_invalid: Unknown schema subFolder 'events_invalid' for GAT-123 REDACTED_ERROR",
+    "category" : "validation.device.schema",
+    "timestamp" : "REDACTED_TIMESTAMP",
+    "level" : 500
+  } ]
+}
+::::::::::::::
+sites/udmi_site_model/out/devices/GAT-123/events_mapping.out
+::::::::::::::
+{
+  "timestamp" : "REDACTED_TIMESTAMP",
+  "version" : "1.5.1",
+  "sub_folder" : "mapping",
+  "sub_type" : "events",
+  "status" : {
+    "message" : "Raw string message for GAT-123 events_mapping",
+    "detail" : "events_mapping: Raw string message for GAT-123 events_mapping REDACTED_ERROR",
+    "category" : "validation.device.schema",
+    "timestamp" : "REDACTED_TIMESTAMP",
+    "level" : 500
+  },
+  "errors" : [ {
+    "message" : "Raw string message for GAT-123 events_mapping",
+    "detail" : "events_mapping: Raw string message for GAT-123 events_mapping REDACTED_ERROR",
     "category" : "validation.device.schema",
     "timestamp" : "REDACTED_TIMESTAMP",
     "level" : 500

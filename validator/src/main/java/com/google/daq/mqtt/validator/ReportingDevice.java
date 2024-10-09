@@ -31,7 +31,7 @@ import udmi.schema.State;
 public class ReportingDevice {
 
   private static final char DETAIL_REPLACE_CHAR = ',';
-  private static final long THRESHOLD_SEC = 60 * 60;
+  private static final int DEFAULT_THRESHOLD_SEC = 60 * 60;
   private static final String CATEGORY_MISSING_MESSAGE
       = "instance failed to match exactly one schema (matched 0 out of ";
   private static final String CATEGORY_MISSING_REPLACEMENT
@@ -46,6 +46,7 @@ public class ReportingDevice {
   private Metadata metadata;
   private Set<String> missingPoints;
   private Set<String> extraPoints;
+  private long thresholdSec = DEFAULT_THRESHOLD_SEC;
 
   /**
    * Create device with the given id.
@@ -199,11 +200,9 @@ public class ReportingDevice {
     } else if (!missingPoints.isEmpty()) {
       addError(pointValidationError("missing points", missingPoints), attributes,
           Category.VALIDATION_DEVICE_CONTENT);
-      System.err.println(
-          String.format(
-              "Device has missing points: %s",
-              Joiner.on(", ").join(missingPoints)
-          )
+      System.err.printf(
+          "Device has missing points: %s%n",
+          Joiner.on(", ").join(missingPoints)
       );
     }
 
@@ -211,11 +210,9 @@ public class ReportingDevice {
     if (extraPoints != null && !extraPoints.isEmpty()) {
       addError(pointValidationError("extra points", extraPoints), attributes,
           Category.VALIDATION_DEVICE_CONTENT);
-      System.err.println(
-          String.format(
-              "Device has extra points: %s",
-              Joiner.on(", ").join(extraPoints)
-          )
+      System.err.printf(
+          "Device has extra points: %s%n",
+          Joiner.on(", ").join(extraPoints)
       );
     }
   }
@@ -316,13 +313,17 @@ public class ReportingDevice {
   }
 
   private Date getThreshold(Instant now) {
-    return Date.from(now.minusSeconds(THRESHOLD_SEC));
+    return Date.from(now.minusSeconds(thresholdSec));
+  }
+
+  public void setThreshold(long sec) {
+    thresholdSec = sec;
   }
 
   /**
    * Check if a message schema should be processed, to filter out too frequent processing.
    */
-  public boolean processMessageSchema(String schemaName, Instant now) {
+  public boolean shouldProcessMessageSchema(String schemaName, Instant now) {
     Date previous = messageMarks.get(schemaName);
     if (previous == null || previous.before(getThreshold(now))) {
       messageMarks.put(schemaName, Date.from(now));

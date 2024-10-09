@@ -28,14 +28,13 @@ import static com.google.udmi.util.Common.removeNextArg;
 import static com.google.udmi.util.GeneralUtils.friendlyStackTrace;
 import static com.google.udmi.util.GeneralUtils.ifNotNullGet;
 import static com.google.udmi.util.GeneralUtils.ifNotNullThen;
+import static com.google.udmi.util.GeneralUtils.ifTrueThen;
 import static com.google.udmi.util.JsonUtil.JSON_SUFFIX;
 import static com.google.udmi.util.JsonUtil.OBJECT_MAPPER;
 import static com.google.udmi.util.JsonUtil.convertTo;
-import static com.google.udmi.util.JsonUtil.getInstant;
 import static com.google.udmi.util.JsonUtil.isoConvert;
 import static com.google.udmi.util.JsonUtil.mapCast;
 import static com.google.udmi.util.JsonUtil.safeSleep;
-import static com.google.udmi.util.SiteModel.DEVICES_DIR;
 import static java.lang.String.format;
 import static java.util.Optional.ofNullable;
 import static udmi.schema.IotAccess.IotProvider.PUBSUB;
@@ -104,6 +103,7 @@ import java.util.function.BiConsumer;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 import org.apache.commons.io.FileUtils;
+import org.jetbrains.annotations.NotNull;
 import udmi.schema.Category;
 import udmi.schema.DeviceValidationEvents;
 import udmi.schema.Envelope;
@@ -193,6 +193,7 @@ public class Validator {
   private Instant mockNow = null;
   private boolean forceUpgrade;
   private SiteModel siteModel;
+  private boolean validateCurrent;
 
   /**
    * Create a simplistic validator for encapsulated use.
@@ -218,6 +219,8 @@ public class Validator {
       validateReflector();
     }
     targetDevices = Set.copyOf(listCopy);
+    siteModel = new SiteModel(config.site_model);
+    initializeExpectedDevices();
   }
 
   public Validator() {
@@ -230,6 +233,7 @@ public class Validator {
     processProfile(siteModel.getExecutionConfiguration());
     postProcessArgs(argList);
     targetDevices = Set.copyOf(argList);
+    initializeExpectedDevices();
     return this;
   }
 
@@ -249,10 +253,10 @@ public class Validator {
   }
 
   /**
-     * Let's go.
-     *
-     * @param args Arguments for program execution
-     */
+   * Let's go.
+   *
+   * @param args Arguments for program execution
+   */
   public static void main(String[] args) {
     ArrayList<String> argList = new ArrayList<>(List.of(args));
     try {
@@ -318,6 +322,7 @@ public class Validator {
             case "-a" -> setSchemaSpec(removeNextArg(argList));
             case "-t" -> validatePubSub(removeNextArg(argList), true);
             case "-f" -> validateFilesOutput(removeNextArg(argList));
+            case "-c" -> setValidateCurrent(true);
             case "-u" -> forceUpgrade = true;
             case "-r" -> validateMessageTrace(removeNextArg(argList));
             case "-n" -> client = new NullPublisher();
@@ -338,6 +343,10 @@ public class Validator {
         setSchemaSpec(new File(UDMI_ROOT, "schema").getAbsolutePath());
       }
     }
+  }
+
+  private void setValidateCurrent(boolean current) {
+    validateCurrent = current;
   }
 
   private void setProjectId(String projectId) {
@@ -409,7 +418,6 @@ public class Validator {
     } else {
       baseDir = new File(siteDir);
       config = CloudIotManager.validate(resolveSiteConfig(config, siteDir), config.project_id);
-      initializeExpectedDevices(siteDir);
     }
 
     outBaseDir = new File(baseDir, "out");
@@ -436,14 +444,12 @@ public class Validator {
     traceDir.mkdirs();
   }
 
-  private void initializeExpectedDevices(String siteDir) {
-    File devicesDir = new File(siteDir, DEVICES_DIR);
-    List<String> siteDevices = SiteModel.listDevices(devicesDir);
+  private void initializeExpectedDevices() {
+    Set<String> siteDevices = siteModel.getDeviceIds();
     try {
       expectedDevices = ImmutableSet.copyOf(siteDevices);
-      SiteModel siteModel = new SiteModel(siteDir);
       for (String device : siteDevices) {
-        ReportingDevice reportingDevice = new ReportingDevice(device);
+        ReportingDevice reportingDevice = newReportingDevice(device);
         try {
           Metadata metadata = siteModel.loadDeviceMetadata(device);
           reportingDevice.setMetadata(metadata);
@@ -456,8 +462,15 @@ public class Validator {
       outputLogger.info("Loaded " + reportingDevices.size() + " expected devices");
     } catch (Exception e) {
       throw new RuntimeException(
-          "While loading devices directory " + devicesDir.getAbsolutePath(), e);
+          "While loading devices directory " + siteModel.getDevicesDir().getAbsolutePath(), e);
     }
+  }
+
+  @NotNull
+  private ReportingDevice newReportingDevice(String device) {
+    ReportingDevice reportingDevice = new ReportingDevice(device);
+    ifTrueThen(validateCurrent, () -> reportingDevice.setThreshold(REPORT_INTERVAL_SEC));
+    return reportingDevice;
   }
 
   /**
@@ -596,7 +609,7 @@ public class Validator {
     }
 
     if (simulatedMessages) {
-      mockNow = getMessageInstant(msgObject, attributes);
+      mockNow = getInstant(msgObject, attributes);
       ReportingDevice.setMockNow(mockNow);
     }
 
@@ -618,12 +631,12 @@ public class Validator {
     }
   }
 
-  private Instant getMessageInstant(Object msgObject, Map<String, String> attributes) {
+  private Instant getInstant(Object msgObject, Map<String, String> attributes) {
     if (msgObject instanceof Map) {
       Map<String, Object> mapped = mapCast(msgObject);
-      return getInstant((String) mapped.get(TIMESTAMP_KEY));
+      return JsonUtil.getInstant((String) mapped.get(TIMESTAMP_KEY));
     }
-    return getInstant(attributes.get(PUBLISH_TIME_KEY));
+    return JsonUtil.getInstant(attributes.get(PUBLISH_TIME_KEY));
   }
 
   private ReportingDevice validateMessageCore(Object messageObj, Map<String, String> attributes) {
@@ -633,7 +646,7 @@ public class Validator {
       return null;
     }
 
-    ReportingDevice device = reportingDevices.computeIfAbsent(deviceId, ReportingDevice::new);
+    ReportingDevice device = reportingDevices.computeIfAbsent(deviceId, this::newReportingDevice);
     device.clearMessageEntries();
 
     try {
@@ -643,12 +656,12 @@ public class Validator {
       Map<String, Object> message = isString ? null : mapCast(messageObj);
       validateTimestamp(device, message, attributes);
 
-      if (!device.processMessageSchema(schemaName, getMessageInstant(messageObj, attributes))) {
+      if (!device.shouldProcessMessageSchema(schemaName, getInstant(messageObj, attributes))) {
         outputLogger.trace("Ignoring device %s/%s (too soon)", deviceId, schemaName);
         return null;
       }
 
-      writeDeviceOutDir(messageObj, attributes, deviceId, schemaName);
+      writeDeviceOutCapture(messageObj, attributes, deviceId, schemaName);
 
       String subFolder = attributes.get(SUBFOLDER_PROPERTY_KEY);
       boolean processSchema = !IGNORE_FOLDERS.contains(subFolder);
@@ -701,11 +714,7 @@ public class Validator {
     }
 
     if (message.containsKey(ERROR_KEY)) {
-      String error = (String) message.get(ERROR_KEY);
-      outputLogger.error("Pipeline error " + deviceId + ": " + error);
-      IllegalArgumentException exception = new IllegalArgumentException(
-          "Error in message pipeline: " + error);
-      device.addError(exception, attributes, Category.VALIDATION_DEVICE_RECEIVE);
+      outputLogger.error("Ignoring pipeline error " + deviceId + ": " + message.get(ERROR_KEY));
       return true;
     }
     return false;
@@ -847,7 +856,7 @@ public class Validator {
     File messageFile = new File(deviceDir, filename);
     try {
       deviceDir.mkdir();
-      String timestamp = isoConvert(getMessageInstant(message, attributes));
+      String timestamp = isoConvert(getInstant(message, attributes));
       outputLogger.debug("Capture %s at %s for %s", filename, timestamp, deviceId);
       OBJECT_MAPPER.writeValue(messageFile, message);
     } catch (Exception e) {
@@ -883,8 +892,8 @@ public class Validator {
     return process && !CONFIG_CATEGORY.equals(category);
   }
 
-  private void writeDeviceOutDir(Object message, Map<String, String> attributes, String deviceId,
-      String schemaName) throws IOException {
+  private void writeDeviceOutCapture(Object message, Map<String, String> attributes,
+      String deviceId, String schemaName) throws IOException {
 
     File deviceDir = makeDeviceDir(deviceId);
 

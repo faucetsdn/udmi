@@ -20,6 +20,8 @@ import static java.util.Objects.isNull;
 import static java.util.Objects.requireNonNull;
 import static java.util.Optional.ofNullable;
 
+import com.google.bos.udmi.service.messaging.MessageDispatcher;
+import com.google.bos.udmi.service.messaging.MessageDispatcher.RawString;
 import com.google.bos.udmi.service.messaging.MessagePipe;
 import com.google.bos.udmi.service.pod.ContainerBase;
 import com.google.bos.udmi.service.pod.UdmiServicePod;
@@ -340,12 +342,12 @@ public abstract class MessageBase extends ContainerBase implements MessagePipe {
   }
 
   private void receiveMessageRaw(Map<String, String> attributesMap, String messageString) {
-    final Object messageObject;
+    Object messageObject;
     try {
       messageObject = parseJson(messageString);
     } catch (Exception e) {
       receiveException(attributesMap, messageString, e, SubFolder.ERROR);
-      return;
+      messageObject = MessageDispatcher.rawString(messageString);
     }
     final Envelope envelope;
 
@@ -360,7 +362,7 @@ public abstract class MessageBase extends ContainerBase implements MessagePipe {
 
     try {
       Bundle bundle = new Bundle(envelope, messageObject);
-      trace("Received %s %s/%s -> %s %s", bundle.envelope.deviceRegistryId,
+      debug("Received %s %s/%s -> %s %s", bundle.envelope.deviceRegistryId,
           bundle.envelope.subType, bundle.envelope.subFolder, queueIdentifier(),
           bundle.envelope.transactionId);
       receiveBundle(bundle);
@@ -514,18 +516,26 @@ public abstract class MessageBase extends ContainerBase implements MessagePipe {
     }
 
     public Bundle(Object message) {
-      this.message = message;
+      assignMessage(message);
       this.envelope = new Envelope();
     }
 
     public Bundle(Envelope envelope, Object message) {
       this.envelope = ofNullable(envelope).orElseGet(Envelope::new);
-      this.message = message;
+      assignMessage(message);
     }
 
     public Bundle(Map<String, String> attributes, Object message) {
       this.attributesMap = attributes;
-      this.message = message;
+      assignMessage(message);
+    }
+
+    private void assignMessage(Object checkMessage) {
+      if (checkMessage instanceof RawString rawString) {
+        payload = rawString.rawString;
+      } else {
+        message = checkMessage;
+      }
     }
 
     /**
