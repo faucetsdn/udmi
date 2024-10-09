@@ -507,6 +507,10 @@ public class Validator {
     if (!schemaMap.containsKey(ENVELOPE_SCHEMA_ID)) {
       throw new RuntimeException("Missing schema for attribute validation: " + ENVELOPE_SCHEMA_ID);
     }
+
+    // Rename the metadata schema to model, which is how it's handled programmatically.
+    schemaMap.put("model", schemaMap.remove("metadata"));
+
     return schemaMap;
   }
 
