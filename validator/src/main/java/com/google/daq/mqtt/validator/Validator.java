@@ -714,11 +714,7 @@ public class Validator {
     }
 
     if (message.containsKey(ERROR_KEY)) {
-      String error = (String) message.get(ERROR_KEY);
-      outputLogger.error("Ignoring pipeline error " + deviceId + ": " + error);
-      // IllegalArgumentException exception = new IllegalArgumentException(
-      //    "Error in message pipeline: " + error);
-      //device.addError(exception, attributes, Category.VALIDATION_DEVICE_RECEIVE);
+      outputLogger.error("Ignoring pipeline error " + deviceId + ": " + message.get(ERROR_KEY));
       return true;
     }
     return false;
