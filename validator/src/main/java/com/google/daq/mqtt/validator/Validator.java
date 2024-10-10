@@ -507,6 +507,10 @@ public class Validator {
     if (!schemaMap.containsKey(ENVELOPE_SCHEMA_ID)) {
       throw new RuntimeException("Missing schema for attribute validation: " + ENVELOPE_SCHEMA_ID);
     }
+
+    // Rename the metadata schema to model, which is how it's handled programmatically.
+    schemaMap.put("model", schemaMap.remove("metadata"));
+
     return schemaMap;
   }
 
@@ -634,7 +638,10 @@ public class Validator {
   private Instant getInstant(Object msgObject, Map<String, String> attributes) {
     if (msgObject instanceof Map) {
       Map<String, Object> mapped = mapCast(msgObject);
-      return JsonUtil.getInstant((String) mapped.get(TIMESTAMP_KEY));
+      String timestamp = (String) mapped.get(TIMESTAMP_KEY);
+      if (timestamp != null) {
+        return JsonUtil.getInstant(timestamp);
+      }
     }
     return JsonUtil.getInstant(attributes.get(PUBLISH_TIME_KEY));
   }

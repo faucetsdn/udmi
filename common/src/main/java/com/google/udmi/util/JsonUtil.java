@@ -20,10 +20,8 @@ import java.io.File;
 import java.nio.file.Files;
 import java.time.Instant;
 import java.util.Date;
-import java.util.HashMap;
 import java.util.Map;
 import java.util.TreeMap;
-import java.util.function.Function;
 
 /**
  * Collection of utilities for working with json things.
@@ -91,8 +89,8 @@ public abstract class JsonUtil {
    * Convert a generic object to a specific class.
    *
    * @param targetClass result class
-   * @param message object to convert
-   * @param <T> class parameter
+   * @param message     object to convert
+   * @param <T>         class parameter
    * @return converted object
    */
   public static <T> T convertTo(Class<T> targetClass, Object message) {
@@ -104,8 +102,8 @@ public abstract class JsonUtil {
    * Convert a generic object to a specific class with strict field mappings.
    *
    * @param targetClass result class
-   * @param message object to convert
-   * @param <T> class parameter
+   * @param message     object to convert
+   * @param <T>         class parameter
    * @return converted object
    */
   public static <T> T convertToStrict(Class<T> targetClass, Object message) {
@@ -153,7 +151,7 @@ public abstract class JsonUtil {
    * @return Instant object
    */
   public static Instant getInstant(String timestamp) {
-    String replaced = timestamp.replaceFirst("\\+0000$", "Z");
+    String replaced = ifNotNullGet(timestamp, raw -> raw.replaceFirst("\\+0000$", "Z"));
     return timestamp == null ? null : Instant.parse(replaced);
   }
 
@@ -216,8 +214,8 @@ public abstract class JsonUtil {
    * Load a file to given type.
    *
    * @param clazz class of result
-   * @param file file to load
-   * @param <T> type of result
+   * @param file  file to load
+   * @param <T>   type of result
    * @return loaded object
    */
   public static <T> T loadFile(Class<T> clazz, File file) {
@@ -232,8 +230,8 @@ public abstract class JsonUtil {
    * Load a file to given type, requiring that it exists.
    *
    * @param clazz class of result
-   * @param file path of file to load
-   * @param <T> type of result
+   * @param file  path of file to load
+   * @param <T>   type of result
    * @return loaded object
    */
   public static <T> T loadFileRequired(Class<T> clazz, String file) {
@@ -244,8 +242,8 @@ public abstract class JsonUtil {
    * Load a file to given type, requiring that it exists.
    *
    * @param clazz class of result
-   * @param file file to load
-   * @param <T> type of result
+   * @param file  file to load
+   * @param <T>   type of result
    * @return loaded object
    */
   public static <T> T loadFileRequired(Class<T> clazz, File file) {
@@ -263,8 +261,8 @@ public abstract class JsonUtil {
    * Load file with strict(er) error checking, and throw an exception if necessary.
    *
    * @param clazz class of result
-   * @param file file to load
-   * @param <T> type of result
+   * @param file  file to load
+   * @param <T>   type of result
    * @return converted object
    */
   public static <T> T loadFileStrict(Class<T> clazz, File file) {
@@ -283,8 +281,8 @@ public abstract class JsonUtil {
    * Load file with strict(er) error checking and required-to-exist file.
    *
    * @param clazz class of result
-   * @param file file to load
-   * @param <T> type of result
+   * @param file  file to load
+   * @param <T>   type of result
    * @return converted object
    */
   public static <T> T loadFileStrictRequired(Class<T> clazz, File file) {
@@ -475,7 +473,7 @@ public abstract class JsonUtil {
    * Write json representation to a file.
    *
    * @param theThing object to write
-   * @param file output file
+   * @param file     output file
    */
   public static void writeFile(Object theThing, File file) {
     try {

@@ -80,9 +80,6 @@
     }
   },
   "required": [
-    "projectId",
-    "deviceRegistryId",
-    "deviceId",
-    "subFolder"
+    "deviceRegistryId"
   ]
 }
