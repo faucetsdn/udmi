@@ -39,6 +39,10 @@
           "type": "string",
           "description": "User id of the person running the tool"
         },
+        "msg_source": {
+          "type": "string",
+          "description": "Source parameter to use for this connection stream"
+        },
         "update_to": {
           "type": "string",
           "description": "Optional version for a udmis update trigger"

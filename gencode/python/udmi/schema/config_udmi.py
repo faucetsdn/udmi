@@ -1,6 +1,47 @@
 """Generated class for config_udmi.json"""
 
 
+class ReplyUdmiConfig:
+  """Generated schema class"""
+
+  def __init__(self):
+    self.msg_source = None
+    self.transaction_id = None
+
+  @staticmethod
+  def from_dict(source):
+    if not source:
+      return None
+    result = ReplyUdmiConfig()
+    result.msg_source = source.get('msg_source')
+    result.transaction_id = source.get('transaction_id')
+    return result
+
+  @staticmethod
+  def map_from(source):
+    if not source:
+      return None
+    result = {}
+    for key in source:
+      result[key] = ReplyUdmiConfig.from_dict(source[key])
+    return result
+
+  @staticmethod
+  def expand_dict(input):
+    result = {}
+    for property in input:
+      result[property] = input[property].to_dict() if input[property] else {}
+    return result
+
+  def to_dict(self):
+    result = {}
+    if self.msg_source:
+      result['msg_source'] = self.msg_source # 5
+    if self.transaction_id:
+      result['transaction_id'] = self.transaction_id # 5
+    return result
+
+
 class SetupUdmiConfig:
   """Generated schema class"""
 
@@ -13,10 +54,8 @@ class SetupUdmiConfig:
     self.udmi_timever = None
     self.built_at = None
     self.built_by = None
-    self.msg_source = None
     self.deployed_at = None
     self.deployed_by = None
-    self.transaction_id = None
 
   @staticmethod
   def from_dict(source):
@@ -31,10 +70,8 @@ class SetupUdmiConfig:
     result.udmi_timever = source.get('udmi_timever')
     result.built_at = source.get('built_at')
     result.built_by = source.get('built_by')
-    result.msg_source = source.get('msg_source')
     result.deployed_at = source.get('deployed_at')
     result.deployed_by = source.get('deployed_by')
-    result.transaction_id = source.get('transaction_id')
     return result
 
   @staticmethod
@@ -71,14 +108,10 @@ class SetupUdmiConfig:
       result['built_at'] = self.built_at # 5
     if self.built_by:
       result['built_by'] = self.built_by # 5
-    if self.msg_source:
-      result['msg_source'] = self.msg_source # 5
     if self.deployed_at:
       result['deployed_at'] = self.deployed_at # 5
     if self.deployed_by:
       result['deployed_by'] = self.deployed_by # 5
-    if self.transaction_id:
-      result['transaction_id'] = self.transaction_id # 5
     return result
 
 
@@ -89,6 +122,7 @@ class UdmiConfig:
     self.timestamp = None
     self.version = None
     self.last_state = None
+    self.reply = None
     self.setup = None
 
   @staticmethod
@@ -99,6 +133,7 @@ class UdmiConfig:
     result.timestamp = source.get('timestamp')
     result.version = source.get('version')
     result.last_state = source.get('last_state')
+    result.reply = ReplyUdmiConfig.from_dict(source.get('reply'))
     result.setup = SetupUdmiConfig.from_dict(source.get('setup'))
     return result
 
@@ -126,6 +161,8 @@ class UdmiConfig:
       result['version'] = self.version # 5
     if self.last_state:
       result['last_state'] = self.last_state # 5
+    if self.reply:
+      result['reply'] = self.reply.to_dict() # 4
     if self.setup:
       result['setup'] = self.setup.to_dict() # 4
     return result
