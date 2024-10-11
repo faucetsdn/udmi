@@ -157,7 +157,7 @@ public class IotReflectorClient implements MessagePublisher {
       }
       retries = updateTo == null ? 1 : UPDATE_RETRIES;
       while (validConfigReceived.getCount() > 0) {
-        initializeReflectorState();
+        setReflectorState();
         initializedStateSent.countDown();
         if (!validConfigReceived.await(CONFIG_TIMEOUT_SEC, TimeUnit.SECONDS)) {
           retries--;
@@ -214,31 +214,28 @@ public class IotReflectorClient implements MessagePublisher {
     return format("%s%04d", sessionPrefix, sessionCounter.incrementAndGet());
   }
 
-  private void initializeReflectorState() {
+  private void setReflectorState() {
     UdmiState udmiState = new UdmiState();
     udmiState.setup = new SetupUdmiState();
     udmiState.setup.user = System.getenv("USER");
     udmiState.setup.transaction_id = getNextTransactionId();
     udmiState.setup.update_to = updateTo;
+    udmiState.setup.msg_source = userName;
     try {
       reflectorStateTimestamp = new Date();
       System.err.printf("Setting state version %s timestamp %s%n",
           udmiVersion, isoConvert(reflectorStateTimestamp));
-      setReflectorState(udmiState);
+      Map<String, Object> map = new HashMap<>();
+      map.put(TIMESTAMP_KEY, reflectorStateTimestamp);
+      map.put(VERSION_KEY, udmiVersion);
+      map.put(SubFolder.UDMI.value(), udmiState);
+
+      System.err.println("UDMI setting reflectorState: " + stringify(map));
+
+      publisher.publish(registryId, getReflectorTopic(), stringify(map));
     } catch (Exception e) {
       throw new RuntimeException("Could not set reflector state", e);
     }
-  }
-
-  private void setReflectorState(UdmiState udmiState) {
-    Map<String, Object> map = new HashMap<>();
-    map.put(TIMESTAMP_KEY, reflectorStateTimestamp);
-    map.put(VERSION_KEY, udmiVersion);
-    map.put(SubFolder.UDMI.value(), udmiState);
-
-    System.err.println("UDMI setting reflectorState: " + stringify(map));
-
-    publisher.publish(registryId, getReflectorTopic(), stringify(map));
   }
 
   private String getReflectorTopic() {
