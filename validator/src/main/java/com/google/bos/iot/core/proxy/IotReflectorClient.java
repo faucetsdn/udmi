@@ -114,6 +114,7 @@ public class IotReflectorClient implements MessagePublisher {
   private Exception syncFailure;
   private SetupUdmiConfig udmiInfo;
   private int retries;
+  private String expectedTxnId;
 
   /**
    * Create a new reflector instance.
@@ -219,22 +220,29 @@ public class IotReflectorClient implements MessagePublisher {
   }
 
   private void setReflectorState() {
+    if (isInstallValid && expectedTxnId != null) {
+      System.err.println("Expected transaction still on the books, likely duplicate channel use");
+      close();
+      throw new RuntimeException("Aborting due to missing transaction reply " + expectedTxnId);
+    }
+    expectedTxnId = getNextTransactionId();
+
     UdmiState udmiState = new UdmiState();
     udmiState.setup = new SetupUdmiState();
     udmiState.setup.user = System.getenv("USER");
-    udmiState.setup.transaction_id = getNextTransactionId();
+    udmiState.setup.transaction_id = expectedTxnId;
     udmiState.setup.update_to = updateVersion;
     udmiState.setup.msg_source = userName;
     try {
-      System.err.printf("Setting state version %s timestamp %s%n",
-          udmiVersion, isoConvert(SYSTEM_START_TIMESTAMP));
+      debug(format("Setting state version %s timestamp %s%n",
+          udmiVersion, isoConvert(SYSTEM_START_TIMESTAMP)));
       Map<String, Object> map = new HashMap<>();
       map.put(TIMESTAMP_KEY, SYSTEM_START_TIMESTAMP);
       map.put(VERSION_KEY, udmiVersion);
       map.put(SubFolder.UDMI.value(), udmiState);
 
       if (isInstallValid) {
-        System.err.println("Sending UDMI reflector state: " + stringifyTerse(map));
+        debug("Sending UDMI reflector state: " + stringifyTerse(udmiState.setup));
       } else {
         System.err.println("Sending UDMI reflector state: " + stringify(map));
       }
@@ -361,30 +369,42 @@ public class IotReflectorClient implements MessagePublisher {
         entry -> System.err.printf("%s %s%n", isoConvert(entry.timestamp), entry.message));
   }
 
-  private boolean ensureCloudSync(Map<String, Object> message) {
+  private void ensureCloudSync(Map<String, Object> message) {
     try {
       initialConfigReceived.countDown();
       if (initializedStateSent.getCount() > 0) {
-        return false;
+        return;
       }
 
       UdmiConfig reflectorConfig = convertTo(UdmiConfig.class,
           ofNullable(message.get(SubFolder.UDMI.value())).orElse(message));
 
-      if (isInstallValid) {
-        System.err.println("Received UDMI reflector config: " + stringifyTerse(reflectorConfig));
+      boolean shouldConsiderReply = reflectorConfig.reply.msg_source.equals(userName);
+      boolean doesReplyMatch = reflectorConfig.reply.transaction_id.equals(expectedTxnId);
+
+      if (!isInstallValid) {
+        System.err.println("Received UDMI reflector initial config: " + stringify(reflectorConfig));
+      } else if (!shouldConsiderReply) {
+        return;
+      } else if (doesReplyMatch) {
+        debug("Received UDMI reflector matching config reply.");
       } else {
-        System.err.println("Received UDMI reflector config: " + stringify(reflectorConfig));
+        System.err.println(
+            "Received UDMI reflector mismatched config: " + stringifyTerse(reflectorConfig));
+        close();
+        throw new IllegalStateException("There can (should) be only one instance on a channel");
       }
 
       Date lastState = reflectorConfig.last_state;
       boolean timestampMatch = dateEquals(lastState, SYSTEM_START_TIMESTAMP);
-      boolean updateMatch = ifNotNullGet(updateVersion, to -> to.equals(reflectorConfig.setup.udmi_ref),
+      boolean updateMatch = ifNotNullGet(updateVersion,
+          to -> to.equals(reflectorConfig.setup.udmi_ref),
           true);
-      if (timestampMatch && updateMatch) {
+      boolean userSourceMatch = userName.equals(reflectorConfig.reply.msg_source);
+      if (timestampMatch && updateMatch && userSourceMatch) {
         udmiInfo = reflectorConfig.setup;
         if (!udmiVersion.equals(udmiInfo.udmi_version)) {
-          if (enforceUdmiVersion || !udmiVersion.equals(UNKNOWN_UDMI_VERSION)) {
+          if (enforceUdmiVersion || !(udmiVersion.equals(UNKNOWN_UDMI_VERSION) || isInstallValid)) {
             System.err.printf("UDMI version mismatch: %s does not match %s%n",
                 udmiVersion, udmiInfo.udmi_version);
           }
@@ -404,19 +424,25 @@ public class IotReflectorClient implements MessagePublisher {
                   baseError, udmiInfo.functions_max));
         }
         isInstallValid = true;
+        expectedTxnId = null;
         validConfigReceived.countDown();
       } else if (!updateMatch) {
         System.err.println("UDMI update version mismatch... waiting for retry...");
-      } else {
+      } else if (!timestampMatch) {
         System.err.printf("UDMI last_state %s does not match expected %s%n",
             isoConvert(lastState), isoConvert(SYSTEM_START_TIMESTAMP));
+      } else if (!userSourceMatch) {
+        System.err.println("UDMI msg_source does not match local user, ignoring.");
+      } else {
+        throw new RuntimeException("Unexpected if condition");
       }
     } catch (Exception e) {
       syncFailure = e;
     }
+  }
 
-    // Even through setup might be valid, return false to not process this config message.
-    return false;
+  private void debug(String message) {
+    // TODO: Implement some kind of actual log-level control.
   }
 
   private Envelope parseMessageTopic(String topic) {
@@ -491,6 +517,10 @@ public class IotReflectorClient implements MessagePublisher {
 
   @Override
   public String publish(String deviceId, String topic, String data) {
+    if (!publisher.isActive()) {
+      System.err.println("Ignoring publish to closed publisher.");
+      return null;
+    }
     Envelope envelope = new Envelope();
     envelope.deviceRegistryId = registryId;
     envelope.deviceId = deviceId;

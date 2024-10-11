@@ -8,6 +8,7 @@ class SetupUdmiState:
     self.user = None
     self.msg_source = None
     self.update_to = None
+    self.tool_name = None
     self.transaction_id = None
 
   @staticmethod
@@ -18,6 +19,7 @@ class SetupUdmiState:
     result.user = source.get('user')
     result.msg_source = source.get('msg_source')
     result.update_to = source.get('update_to')
+    result.tool_name = source.get('tool_name')
     result.transaction_id = source.get('transaction_id')
     return result
 
@@ -45,6 +47,8 @@ class SetupUdmiState:
       result['msg_source'] = self.msg_source # 5
     if self.update_to:
       result['update_to'] = self.update_to # 5
+    if self.tool_name:
+      result['tool_name'] = self.tool_name # 5
     if self.transaction_id:
       result['transaction_id'] = self.transaction_id # 5
     return result
