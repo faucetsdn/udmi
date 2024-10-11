@@ -220,7 +220,8 @@ public class IotReflectorClient implements MessagePublisher {
     udmiState.setup.user = System.getenv("USER");
     udmiState.setup.transaction_id = getNextTransactionId();
     udmiState.setup.update_to = updateTo;
-    udmiState.setup.msg_source = userName;
+    // TODO: Restore this when it's needed (and UDMIS has been updated)
+    // udmiState.setup.msg_source = userName;
     try {
       reflectorStateTimestamp = new Date();
       System.err.printf("Setting state version %s timestamp %s%n",
@@ -361,23 +362,8 @@ public class IotReflectorClient implements MessagePublisher {
         return false;
       }
 
-      // Check for LEGACY UDMIS folder, and use that instead for backwards compatibility. Once
-      // UDMI version 1.4.2+ is firmly established, this can be simplified to just UDMI.
-      boolean legacyConfig = message.containsKey("udmis");
-      final UdmiConfig reflectorConfig;
-      if (legacyConfig) {
-        System.err.println("UDMI using LEGACY config format, function install upgrade required");
-        reflectorConfig = new UdmiConfig();
-        Map<String, Object> udmisMessage = toMap(message.get("udmis"));
-        SetupUdmiConfig udmis = ofNullable(
-            convertTo(SetupUdmiConfig.class, udmisMessage))
-            .orElseGet(SetupUdmiConfig::new);
-        reflectorConfig.last_state = getDate((String) udmisMessage.get("last_state"));
-        reflectorConfig.setup = udmis;
-      } else {
-        reflectorConfig = convertTo(UdmiConfig.class,
-            ofNullable(message.get(SubFolder.UDMI.value())).orElse(message));
-      }
+      UdmiConfig reflectorConfig = convertTo(UdmiConfig.class,
+          ofNullable(message.get(SubFolder.UDMI.value())).orElse(message));
       System.err.println("UDMI received reflectorConfig: " + stringify(reflectorConfig));
       Date lastState = reflectorConfig.last_state;
       System.err.printf("UDMI matching last_state %s against expected %s%n",
