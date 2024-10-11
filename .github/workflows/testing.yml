@@ -33,4 +33,4 @@ jobs:
           bin/clone_model
       - name: integration test
         run: |
-          misc/discoverynode/testing/e2e/test. $TARGET_PROJECT
+          misc/discoverynode/testing/e2e/test.sh $TARGET_PROJECT
