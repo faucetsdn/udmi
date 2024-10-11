@@ -18,6 +18,7 @@ import static com.google.udmi.util.GeneralUtils.firstNonNull;
 import static com.google.udmi.util.GeneralUtils.friendlyStackTrace;
 import static com.google.udmi.util.GeneralUtils.ifNotNullGet;
 import static com.google.udmi.util.GeneralUtils.ifNotNullThen;
+import static com.google.udmi.util.GeneralUtils.ifNullThen;
 import static com.google.udmi.util.GeneralUtils.multiTrim;
 import static com.google.udmi.util.GeneralUtils.requireNull;
 import static com.google.udmi.util.GeneralUtils.stackTraceString;
@@ -59,6 +60,7 @@ import udmi.schema.Envelope;
 import udmi.schema.Envelope.SubFolder;
 import udmi.schema.Envelope.SubType;
 import udmi.schema.Level;
+import udmi.schema.SetupUdmiState;
 import udmi.schema.SystemModel;
 import udmi.schema.UdmiConfig;
 import udmi.schema.UdmiEvents;
@@ -330,7 +332,8 @@ public class ReflectProcessor extends ProcessorBase {
     final String deviceId = envelope.deviceId;
 
     // Ensure source is encoded in the distribution (not always send in some mechanisms).
-    toolState.source = envelope.source;
+    ifNullThen(toolState.setup, () -> toolState.setup = new SetupUdmiState());
+    ifNullThen(toolState.setup.msg_source, () -> toolState.setup.msg_source = envelope.source);
 
     ifNotNullThen(distributor, d -> catchToElse(() -> d.publish(envelope, toolState, containerId),
         e -> error("Error handling update: %s %s", friendlyStackTrace(e), envelope.transactionId)));
@@ -384,7 +387,8 @@ public class ReflectProcessor extends ProcessorBase {
   void updateAwareness(Envelope envelope, UdmiState toolState) {
     debug("Processing UdmiState for %s/%s: %s", envelope.deviceRegistryId, envelope.deviceId,
         stringifyTerse(toolState));
-    ifNotNullThen(toolState.setup, setup -> updateProviderAffinity(envelope, toolState.source));
+    ifNotNullThen(toolState.setup,
+        setup -> updateProviderAffinity(envelope, toolState.setup.msg_source));
     ifNotNullThen(toolState.regions, this::updateRegistryRegions);
   }
 }

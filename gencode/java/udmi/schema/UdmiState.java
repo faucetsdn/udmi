@@ -19,7 +19,6 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 @JsonPropertyOrder({
     "timestamp",
     "version",
-    "source",
     "regions",
     "setup"
 })
@@ -39,13 +38,6 @@ public class UdmiState {
     @JsonProperty("version")
     @JsonPropertyDescription("Version of the UDMI schema")
     public java.lang.String version;
-    /**
-     * Indicator of where this source update came from
-     * 
-     */
-    @JsonProperty("source")
-    @JsonPropertyDescription("Indicator of where this source update came from")
-    public java.lang.String source;
     /**
      * Regions Udmi State
      * <p>
@@ -67,7 +59,6 @@ public class UdmiState {
     public int hashCode() {
         int result = 1;
         result = ((result* 31)+((this.setup == null)? 0 :this.setup.hashCode()));
-        result = ((result* 31)+((this.source == null)? 0 :this.source.hashCode()));
         result = ((result* 31)+((this.regions == null)? 0 :this.regions.hashCode()));
         result = ((result* 31)+((this.version == null)? 0 :this.version.hashCode()));
         result = ((result* 31)+((this.timestamp == null)? 0 :this.timestamp.hashCode()));
@@ -83,7 +74,7 @@ public class UdmiState {
             return false;
         }
         UdmiState rhs = ((UdmiState) other);
-        return ((((((this.setup == rhs.setup)||((this.setup!= null)&&this.setup.equals(rhs.setup)))&&((this.source == rhs.source)||((this.source!= null)&&this.source.equals(rhs.source))))&&((this.regions == rhs.regions)||((this.regions!= null)&&this.regions.equals(rhs.regions))))&&((this.version == rhs.version)||((this.version!= null)&&this.version.equals(rhs.version))))&&((this.timestamp == rhs.timestamp)||((this.timestamp!= null)&&this.timestamp.equals(rhs.timestamp))));
+        return (((((this.setup == rhs.setup)||((this.setup!= null)&&this.setup.equals(rhs.setup)))&&((this.regions == rhs.regions)||((this.regions!= null)&&this.regions.equals(rhs.regions))))&&((this.version == rhs.version)||((this.version!= null)&&this.version.equals(rhs.version))))&&((this.timestamp == rhs.timestamp)||((this.timestamp!= null)&&this.timestamp.equals(rhs.timestamp))));
     }
 
 }

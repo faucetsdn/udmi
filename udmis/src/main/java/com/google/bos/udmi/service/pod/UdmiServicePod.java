@@ -118,9 +118,11 @@ public class UdmiServicePod extends ContainerBase {
     udmiConfig.setup.udmi_version = UDMI_VERSION;
     udmiConfig.setup.functions_min = ContainerBase.FUNCTIONS_VERSION_MIN;
     udmiConfig.setup.functions_max = ContainerBase.FUNCTIONS_VERSION_MAX;
-    udmiConfig.reply = new ReplyUdmiConfig();
-    udmiConfig.reply.transaction_id = catchToNull(() -> toolState.setup.transaction_id);
-    udmiConfig.reply.msg_source = ifNotNullGet(toolState, t -> t.source);
+    if (toolState != null) {
+      udmiConfig.reply = new ReplyUdmiConfig();
+      udmiConfig.reply.transaction_id = toolState.setup.transaction_id;
+      udmiConfig.reply.msg_source = toolState.setup.msg_source;
+    }
     return udmiConfig;
   }
 
