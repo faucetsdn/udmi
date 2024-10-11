@@ -252,6 +252,7 @@ public class SequenceBase {
   private static final Duration STATE_TIMESTAMP_ERROR_THRESHOLD = Duration.ofMinutes(20);
   private static final Set<IotAccess.IotProvider> SEQUENCER_PROVIDERS = ImmutableSet.of(
       IotProvider.GBOS, IotProvider.MQTT, IotProvider.GREF);
+  public static final String SEQUENCER_TOOL_NAME = "sequencer";
   protected static Metadata deviceMetadata;
   protected static String projectId;
   protected static String cloudRegion;
@@ -563,7 +564,7 @@ public class SequenceBase {
   private static IotReflectorClient getReflectorClient(ExecutionConfiguration config) {
     try {
       return new IotReflectorClient(config, getRequiredFunctionsVersion(),
-          SequenceBase::messageFilter);
+          SEQUENCER_TOOL_NAME, SequenceBase::messageFilter);
     } catch (Exception e) {
       System.err.println(
           "Could not connect to alternate registry, disabling: " + friendlyStackTrace(e));

@@ -41,13 +41,13 @@ public class UdmiConfig {
     @JsonProperty("last_state")
     public Date last_state;
     /**
-     * Reply Udmi Config
+     * Setup Udmi State
      * <p>
      * 
      * 
      */
     @JsonProperty("reply")
-    public ReplyUdmiConfig reply;
+    public SetupUdmiState reply;
     /**
      * Setup Udmi Config
      * <p>

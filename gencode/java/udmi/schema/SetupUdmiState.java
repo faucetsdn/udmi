@@ -18,6 +18,7 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
     "user",
     "msg_source",
     "update_to",
+    "tool_name",
     "transaction_id"
 })
 public class SetupUdmiState {
@@ -43,6 +44,13 @@ public class SetupUdmiState {
     @JsonProperty("update_to")
     @JsonPropertyDescription("Optional version for a udmis update trigger")
     public String update_to;
+    /**
+     * Name of the tool being used
+     * 
+     */
+    @JsonProperty("tool_name")
+    @JsonPropertyDescription("Name of the tool being used")
+    public String tool_name;
     @JsonProperty("transaction_id")
     public String transaction_id;
 
@@ -50,6 +58,7 @@ public class SetupUdmiState {
     public int hashCode() {
         int result = 1;
         result = ((result* 31)+((this.update_to == null)? 0 :this.update_to.hashCode()));
+        result = ((result* 31)+((this.tool_name == null)? 0 :this.tool_name.hashCode()));
         result = ((result* 31)+((this.transaction_id == null)? 0 :this.transaction_id.hashCode()));
         result = ((result* 31)+((this.user == null)? 0 :this.user.hashCode()));
         result = ((result* 31)+((this.msg_source == null)? 0 :this.msg_source.hashCode()));
@@ -65,7 +74,7 @@ public class SetupUdmiState {
             return false;
         }
         SetupUdmiState rhs = ((SetupUdmiState) other);
-        return (((((this.update_to == rhs.update_to)||((this.update_to!= null)&&this.update_to.equals(rhs.update_to)))&&((this.transaction_id == rhs.transaction_id)||((this.transaction_id!= null)&&this.transaction_id.equals(rhs.transaction_id))))&&((this.user == rhs.user)||((this.user!= null)&&this.user.equals(rhs.user))))&&((this.msg_source == rhs.msg_source)||((this.msg_source!= null)&&this.msg_source.equals(rhs.msg_source))));
+        return ((((((this.update_to == rhs.update_to)||((this.update_to!= null)&&this.update_to.equals(rhs.update_to)))&&((this.tool_name == rhs.tool_name)||((this.tool_name!= null)&&this.tool_name.equals(rhs.tool_name))))&&((this.transaction_id == rhs.transaction_id)||((this.transaction_id!= null)&&this.transaction_id.equals(rhs.transaction_id))))&&((this.user == rhs.user)||((this.user!= null)&&this.user.equals(rhs.user))))&&((this.msg_source == rhs.msg_source)||((this.msg_source!= null)&&this.msg_source.equals(rhs.msg_source))));
     }
 
 }

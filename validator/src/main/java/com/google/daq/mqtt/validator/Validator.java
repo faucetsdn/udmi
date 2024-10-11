@@ -170,6 +170,7 @@ public class Validator {
   private static final String UDMI_CONFIG_JSON_FILE = "udmi_config.json";
   private static final String TOOL_NAME = "validator";
   private static final long THREAD_JOIN_MS = 1000;
+  public static final String VALIDATOR_TOOL_NAME = "validator";
   private final Map<String, ReportingDevice> reportingDevices = new TreeMap<>();
   private final Set<String> extraDevices = new TreeSet<>();
   private final Set<String> processedDevices = new TreeSet<>();
@@ -364,7 +365,7 @@ public class Validator {
     Preconditions.checkArgument(parts.length <= 2, "Too many parts in pubsub path " + pubSubCombo);
     String subscriptionId = parts[0];
     CloudIotManager cloudIotManager = new CloudIotManager(config.project_id,
-        new File(config.site_model), null, config.registry_suffix, PUBSUB);
+        new File(config.site_model), null, config.registry_suffix, PUBSUB, VALIDATOR_TOOL_NAME);
     String registryId = getRegistryId();
     String updateTopic = parts.length > 1 ? parts[1] : cloudIotManager.getUpdateTopic();
     client = new PubSubClient(config.project_id, registryId, subscriptionId, updateTopic, reflect);
@@ -527,7 +528,8 @@ public class Validator {
     String keyFile = new File(config.site_model, GCP_REFLECT_KEY_PKCS8).getAbsolutePath();
     outputLogger.info("Loading reflector key file from " + keyFile);
     config.key_file = keyFile;
-    client = new IotReflectorClient(config, TOOLS_FUNCTIONS_VERSION, this::messageFilter);
+    client = new IotReflectorClient(config, TOOLS_FUNCTIONS_VERSION, VALIDATOR_TOOL_NAME,
+        this::messageFilter);
     dataSinks.add(client);
   }
 
