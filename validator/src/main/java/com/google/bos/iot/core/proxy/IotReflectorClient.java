@@ -109,6 +109,7 @@ public class IotReflectorClient implements MessagePublisher {
   private final boolean enforceUdmiVersion;
   private final Function<Envelope, Boolean> messageFilter;
   private final String userName;
+  private final String toolName;
   private boolean isInstallValid;
   private boolean active;
   private Exception syncFailure;
@@ -121,16 +122,18 @@ public class IotReflectorClient implements MessagePublisher {
    *
    * @param iotConfig       configuration file
    * @param requiredVersion version of the functions that are required by the tools
+   * @param toolName        tool name using this reflector
    */
-  public IotReflectorClient(ExecutionConfiguration iotConfig, int requiredVersion) {
-    this(iotConfig, requiredVersion, null);
+  public IotReflectorClient(ExecutionConfiguration iotConfig, int requiredVersion,
+      String toolName) {
+    this(iotConfig, requiredVersion, toolName, null);
   }
 
   /**
    * Basic client that accepts a custom message filter.
    */
   public IotReflectorClient(ExecutionConfiguration iotConfig, int requiredVersion,
-      Function<Envelope, Boolean> messageFilter) {
+      String toolName, Function<Envelope, Boolean> messageFilter) {
     Preconditions.checkState(requiredVersion >= TOOLS_FUNCTIONS_VERSION,
         format("Min required version %s not satisfied by tools version %s", TOOLS_FUNCTIONS_VERSION,
             requiredVersion));
@@ -143,6 +146,7 @@ public class IotReflectorClient implements MessagePublisher {
     updateVersion = iotConfig.update_to;
     iotProvider = ofNullable(iotConfig.iot_provider).orElse(IotProvider.GBOS);
     userName = ofNullable(iotConfig.user_name).orElse(USER_NAME_DEFAULT);
+    this.toolName = toolName;
     iotConfig.iot_provider = iotProvider;
     String prefix = getNamespacePrefix(iotConfig.udmi_namespace);
     String clientId = format("//%s/%s/%s %s", iotProvider, projectId, prefix, registryId);
@@ -233,6 +237,7 @@ public class IotReflectorClient implements MessagePublisher {
     udmiState.setup.transaction_id = expectedTxnId;
     udmiState.setup.update_to = updateVersion;
     udmiState.setup.msg_source = userName;
+    udmiState.setup.tool_name = toolName;
     try {
       debug(format("Setting state version %s timestamp %s%n",
           udmiVersion, isoConvert(SYSTEM_START_TIMESTAMP)));
