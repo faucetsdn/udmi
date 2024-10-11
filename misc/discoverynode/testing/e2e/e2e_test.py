@@ -263,7 +263,7 @@ def test_sequencer(new_site_model, docker_devices, discovery_node):
       devices_with_localnet_block=range(1, 12),
       discovery_node_id="GAT-1",
       discovery_node_is_gateway=True,
-      discovery_node_key_path=".",
+      discovery_node_key_path=os.path.join(UDMI_DIR, "sites/udmi_site_model/devices/AHU-1"),
       discovery_node_families=["bacnet"],
   )
 
