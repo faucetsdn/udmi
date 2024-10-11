@@ -275,7 +275,7 @@ def test_sequencer(new_site_model, docker_devices, discovery_node):
   discovery_node(
       device_id="GAT-1",
       project_id="bos-platform-dev",
-      registry_id=MQTT_REGISTRY
+      registry_id=MQTT_REGISTRY,
       # local to the discovery node
       key_file="/usr/src/app/rsa_private.pem",
       algorithm="RS256",
