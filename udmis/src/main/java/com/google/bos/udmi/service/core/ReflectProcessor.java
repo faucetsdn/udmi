@@ -332,8 +332,7 @@ public class ReflectProcessor extends ProcessorBase {
     final String deviceId = envelope.deviceId;
 
     // Ensure source is encoded in the distribution (not always send in some mechanisms).
-    ifNullThen(toolState.setup, () -> toolState.setup = new SetupUdmiState());
-    ifNullThen(toolState.setup.msg_source, () -> toolState.setup.msg_source = envelope.source);
+    toolState.source = envelope.source;
 
     ifNotNullThen(distributor, d -> catchToElse(() -> d.publish(envelope, toolState, containerId),
         e -> error("Error handling update: %s %s", friendlyStackTrace(e), envelope.transactionId)));
@@ -387,8 +386,7 @@ public class ReflectProcessor extends ProcessorBase {
   void updateAwareness(Envelope envelope, UdmiState toolState) {
     debug("Processing UdmiState for %s/%s: %s", envelope.deviceRegistryId, envelope.deviceId,
         stringifyTerse(toolState));
-    ifNotNullThen(toolState.setup,
-        setup -> updateProviderAffinity(envelope, toolState.setup.msg_source));
+    ifNotNullThen(toolState.setup, setup -> updateProviderAffinity(envelope, toolState.source));
     ifNotNullThen(toolState.regions, this::updateRegistryRegions);
   }
 }
