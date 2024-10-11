@@ -99,8 +99,8 @@ def run(cmd: str) -> subprocess.CompletedProcess:
   result = subprocess.run(
       cmd,
       shell=True,
-      stdout=subprocess.PIPE,
-      stderr=subprocess.STDOUT,
+      stdout=subprocess.PIPE, #sys.stdout
+      stderr=subprocess.STDOUT, #sys.stderr
       cwd=UDMI_DIR,
   )
   print(result.stdout.decode("utf-8"))
@@ -275,7 +275,7 @@ def test_sequencer(new_site_model, docker_devices, discovery_node):
   discovery_node(
       device_id="GAT-1",
       project_id="bos-platform-dev",
-      registry_id="ZZ-TRI-FECTA",
+      registry_id=MQTT_REGISTRY
       # local to the discovery node
       key_file="/usr/src/app/rsa_private.pem",
       algorithm="RS256",

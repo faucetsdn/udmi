@@ -22,7 +22,7 @@ export DN_TARGET=$TARGET
 export DN_GCP_PROJECT=${bits[3]}
 export DN_REGISTRY=$REGISTRY
 
-if [[ -z ${bits[5]} ]]; then
+if [[ -n ${bits[5]} ]]; then
   export DN_MQTT_REGISTRY=$REGISTRY_NAME~${bits[5]}
 else
   export DN_MQTT_REGISTRY=$REGISTRY_NAME

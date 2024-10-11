@@ -169,7 +169,7 @@ class MQTT(udmi.publishers.publisher.Publisher):
       userdata: the private user data as set in Client() or user_data_set()
     """
     del userdata  # Unused, part of callback API.
-
+    self.logger.info("client ID is %s", self.client_id)
     client.username_pw_set(username="unused", password=self._create_jwt())
 
   def on_message(
