@@ -85,7 +85,7 @@ class State:
 
     # Hacky fix because UDMI doesn't like empty fields
     if purge_empty:
-      for _ in range(1):
+      for _ in range(2):
         as_dict = udmi.schema.util.deep_remove(
             copy.deepcopy(as_dict), None, [{}, None]
         )

@@ -26,7 +26,7 @@ class NumberDiscovery(discovery.DiscoveryController):
   @discovery.catch_exceptions_to_state
   @discovery.main_task
   def discoverer(self):
-    for i in itertools.count():
+    for i in itertools.count(1):
       if self.cancelled:
         return
       result = DiscoveryEvent(

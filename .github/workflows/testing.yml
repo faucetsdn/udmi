@@ -355,3 +355,25 @@ jobs:
       - name: Itemized validation
         if: ${{ !cancelled() }}
         run: bin/test_itemcheck
+
+  discoverynode:
+    name: Discovery Node
+    needs: [ baseline, sequencer, redirect, runlocal ]
+    if: ${{ !cancelled() && vars.TARGET_PROJECT != '' }}
+    env:
+      TARGET_PROJECT: ${{ vars.TARGET_PROJECT }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+      - name: base setup
+        run: |
+          bin/setup_base
+          bin/clone_model
+      - name: integration test
+        run: |
+          misc/discoverynode/testing/e2e/test. $TARGET_PROJECT

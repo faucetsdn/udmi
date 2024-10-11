@@ -118,7 +118,6 @@ class UDMI:
 
     self.components["number_discovery"] = number_discovery
     
-    return
     bacnet_discovery = udmi.discovery.bacnet.GlobalBacnetDiscovery(
         self.state,
         self.publish_discovery,
@@ -139,7 +138,6 @@ class UDMI:
     # THESE TWO USE THE SAME SCAN_FAMILY
     # THEIR `states` IN THE OVERALL STATE CLASHES
     # because both set state.discovery.families.SCAN_FAMILY = self.state
-
   
     self.add_config_route(
         lambda x: True,
@@ -156,12 +154,7 @@ class UDMI:
     )
 
     self.add_config_route(
-        lambda x: nmap_banner_scan.scan_family
-        in x.get("discovery", {}).get("families", {})
-        and x["discovery"]["families"][nmap_banner_scan.scan_family].get(
-            "depths"
-        )
-        == "banner",
+        lambda x: True,
         nmap_banner_scan,
     )
 
