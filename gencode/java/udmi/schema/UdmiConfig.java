@@ -19,6 +19,7 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
     "timestamp",
     "version",
     "last_state",
+    "reply",
     "setup"
 })
 public class UdmiConfig {
@@ -40,6 +41,14 @@ public class UdmiConfig {
     @JsonProperty("last_state")
     public Date last_state;
     /**
+     * Reply Udmi Config
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("reply")
+    public ReplyUdmiConfig reply;
+    /**
      * Setup Udmi Config
      * <p>
      * 
@@ -53,6 +62,7 @@ public class UdmiConfig {
         int result = 1;
         result = ((result* 31)+((this.setup == null)? 0 :this.setup.hashCode()));
         result = ((result* 31)+((this.last_state == null)? 0 :this.last_state.hashCode()));
+        result = ((result* 31)+((this.reply == null)? 0 :this.reply.hashCode()));
         result = ((result* 31)+((this.version == null)? 0 :this.version.hashCode()));
         result = ((result* 31)+((this.timestamp == null)? 0 :this.timestamp.hashCode()));
         return result;
@@ -67,7 +77,7 @@ public class UdmiConfig {
             return false;
         }
         UdmiConfig rhs = ((UdmiConfig) other);
-        return (((((this.setup == rhs.setup)||((this.setup!= null)&&this.setup.equals(rhs.setup)))&&((this.last_state == rhs.last_state)||((this.last_state!= null)&&this.last_state.equals(rhs.last_state))))&&((this.version == rhs.version)||((this.version!= null)&&this.version.equals(rhs.version))))&&((this.timestamp == rhs.timestamp)||((this.timestamp!= null)&&this.timestamp.equals(rhs.timestamp))));
+        return ((((((this.setup == rhs.setup)||((this.setup!= null)&&this.setup.equals(rhs.setup)))&&((this.last_state == rhs.last_state)||((this.last_state!= null)&&this.last_state.equals(rhs.last_state))))&&((this.reply == rhs.reply)||((this.reply!= null)&&this.reply.equals(rhs.reply))))&&((this.version == rhs.version)||((this.version!= null)&&this.version.equals(rhs.version))))&&((this.timestamp == rhs.timestamp)||((this.timestamp!= null)&&this.timestamp.equals(rhs.timestamp))));
     }
 
 }

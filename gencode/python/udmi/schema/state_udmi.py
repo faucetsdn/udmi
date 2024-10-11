@@ -6,6 +6,7 @@ class SetupUdmiState:
 
   def __init__(self):
     self.user = None
+    self.msg_source = None
     self.update_to = None
     self.transaction_id = None
 
@@ -15,6 +16,7 @@ class SetupUdmiState:
       return None
     result = SetupUdmiState()
     result.user = source.get('user')
+    result.msg_source = source.get('msg_source')
     result.update_to = source.get('update_to')
     result.transaction_id = source.get('transaction_id')
     return result
@@ -39,6 +41,8 @@ class SetupUdmiState:
     result = {}
     if self.user:
       result['user'] = self.user # 5
+    if self.msg_source:
+      result['msg_source'] = self.msg_source # 5
     if self.update_to:
       result['update_to'] = self.update_to # 5
     if self.transaction_id:

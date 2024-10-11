@@ -20,6 +20,18 @@
       "type": "string",
       "format": "date-time"
     },
+    "reply": {
+      "title": "Reply Udmi Config",
+      "type": "object",
+      "properties": {
+        "msg_source": {
+          "type": "string"
+        },
+        "transaction_id": {
+          "type": "string"
+        }
+      }
+    },
     "setup": {
       "title": "Setup Udmi Config",
       "type": "object",
@@ -52,17 +64,11 @@
         "built_by": {
           "type": "string"
         },
-        "msg_source": {
-          "type": "string"
-        },
         "deployed_at": {
           "type": "string",
           "format": "date-time"
         },
         "deployed_by": {
-          "type": "string"
-        },
-        "transaction_id": {
           "type": "string"
         }
       }

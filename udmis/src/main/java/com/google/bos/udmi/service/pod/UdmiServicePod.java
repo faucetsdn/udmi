@@ -41,6 +41,7 @@ import udmi.schema.EndpointConfiguration;
 import udmi.schema.IotAccess;
 import udmi.schema.Level;
 import udmi.schema.PodConfiguration;
+import udmi.schema.ReplyUdmiConfig;
 import udmi.schema.SetupUdmiConfig;
 import udmi.schema.UdmiConfig;
 import udmi.schema.UdmiState;
@@ -117,8 +118,9 @@ public class UdmiServicePod extends ContainerBase {
     udmiConfig.setup.udmi_version = UDMI_VERSION;
     udmiConfig.setup.functions_min = ContainerBase.FUNCTIONS_VERSION_MIN;
     udmiConfig.setup.functions_max = ContainerBase.FUNCTIONS_VERSION_MAX;
-    udmiConfig.setup.transaction_id = catchToNull(() -> toolState.setup.transaction_id);
-    udmiConfig.setup.msg_source = ifNotNullGet(toolState, t -> t.source);
+    udmiConfig.reply = new ReplyUdmiConfig();
+    udmiConfig.reply.transaction_id = catchToNull(() -> toolState.setup.transaction_id);
+    udmiConfig.reply.msg_source = ifNotNullGet(toolState, t -> t.source);
     return udmiConfig;
   }
 

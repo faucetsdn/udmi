@@ -220,6 +220,7 @@ public class IotReflectorClient implements MessagePublisher {
     udmiState.setup.user = System.getenv("USER");
     udmiState.setup.transaction_id = getNextTransactionId();
     udmiState.setup.update_to = updateTo;
+    udmiState.setup.msg_source = userName;
     try {
       reflectorStateTimestamp = new Date();
       System.err.printf("Setting state version %s timestamp %s%n",
