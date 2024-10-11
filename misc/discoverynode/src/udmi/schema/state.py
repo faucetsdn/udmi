@@ -82,10 +82,13 @@ class State:
   def to_json(self, purge_empty: bool = True) -> str:
     as_dict = dataclasses.asdict(self)
     as_dict['timestamp'] = datetime.datetime.now()
+
+    # Hacky fix because UDMI doesn't like empty fields
     if purge_empty:
-      as_dict = udmi.schema.util.deep_remove(
-          copy.deepcopy(as_dict), None, [{}, None]
-      )
+      for _ in range(1):
+        as_dict = udmi.schema.util.deep_remove(
+            copy.deepcopy(as_dict), None, [{}, None]
+        )
     return json.dumps(as_dict, default=udmi.schema.util.json_serializer)
 
   def get_hash(self) -> int:

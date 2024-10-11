@@ -17,6 +17,7 @@ class NmapBannerScan(discovery.DiscoveryController):
   def __init__(self, state, publisher, *, target_ips: list[str]):
     self.cancel_threads = threading.Event()
     self.target_ips = target_ips
+    self.generation="123"
     self.nmap_thread = None
     super().__init__(state, publisher)
 
@@ -68,7 +69,7 @@ class NmapBannerScan(discovery.DiscoveryController):
 
     for host in nmap.results_reader(OUTPUT_FILE):
       event = udmi.schema.discovery_event.DiscoveryEvent(
-          generation=self.config.generation,
+          generation=self.generation,
           scan_family=self.scan_family,
           scan_addr=host.ip,
           families={

@@ -2,6 +2,8 @@ import json
 import logging
 import threading
 import time
+import textwrap
+
 from typing import Any, Callable
 
 import udmi.discovery
@@ -19,10 +21,10 @@ import udmi.schema.util
 class UDMI:
   """UDMI Client."""
 
-  STATE_TOPIC_TEMPLATE = "%s/state"
-  EVENT_POINTSET_TOPIC_TEMPLATE = "%s/events/pointset"
-  EVENT_DISCOVERY_TOPIC_TEMPLATE = "%s/events/discovery"
-  EVENT_SYSTEM_TOPIC_TEMPLATE = "%s/events/system"
+  STATE_TOPIC_TEMPLATE = "{}/state"
+  EVENT_POINTSET_TOPIC_TEMPLATE = "{}/events/pointset"
+  EVENT_DISCOVERY_TOPIC_TEMPLATE = "{}/events/discovery"
+  EVENT_SYSTEM_TOPIC_TEMPLATE = "{}/events/system"
   _state_monitor_interval = 1  # [s]
 
   def __init__(
@@ -38,16 +40,16 @@ class UDMI:
     self.components = {}
     self.callbacks = {}  # lambda,
 
-    self.topic_state = self.EVENT_POINTSET_TOPIC_TEMPLATE.format(topic_prefix)
-    self.topic_pointset_event = self.EVENT_POINTSET_TOPIC_TEMPLATE.format(
+    self.topic_state = UDMI.STATE_TOPIC_TEMPLATE.format(topic_prefix)
+
+    self.topic_discovery_event = UDMI.EVENT_DISCOVERY_TOPIC_TEMPLATE.format(
         topic_prefix
     )
-    self.topic_discovery_event = self.EVENT_DISCOVERY_TOPIC_TEMPLATE.format(
+    self.topic_system_event = UDMI.EVENT_SYSTEM_TOPIC_TEMPLATE.format(
         topic_prefix
     )
-    self.topic_system_event = self.EVENT_SYSTEM_TOPIC_TEMPLATE.format(
-        topic_prefix
-    )
+
+    print(self.topic_state)
 
     threading.Thread(target=self.state_monitor, args=[], daemon=True).start()
 
@@ -65,7 +67,8 @@ class UDMI:
 
     try:
       config = json.loads(config_string)
-      logging.info("received config %s", config["timestamp"])
+      logging.info("received config %s: \n%s", config["timestamp"], textwrap.indent(config_string, "\t\t\t"))
+  
     except json.JSONDecodeError as err:
       self.status_from_exception(err)
       return
@@ -100,47 +103,58 @@ class UDMI:
 
   def publish_discovery(self, payload):
     logging.warning("published discovery: %s", payload.to_json())
-    self.publisher.publish_message(self.topic_discovery, payload.to_json())
+    self.publisher.publish_message(self.topic_discovery_event, payload.to_json())
 
   def enable_discovery(self):
 
-    passive_discovery = udmi.discovery.passive.PassiveNetworkDiscovery(
-        self.state, self.publish_discovery
-    )
     number_discovery = udmi.discovery.numbers.NumberDiscovery(
         self.state, self.publish_discovery
     )
 
+    self.add_config_route(
+        lambda x: True,
+        number_discovery,
+    )
+
+    self.components["number_discovery"] = number_discovery
+    
+    return
     bacnet_discovery = udmi.discovery.bacnet.GlobalBacnetDiscovery(
         self.state,
         self.publish_discovery,
-        bacnet_ip=self.config["bacnet"]["ip"],
+        bacnet_ip=self.config.get("bacnet", {}).get("ip"),
     )
+
+    self.add_config_route(
+        lambda x: True,
+        bacnet_discovery,
+    )
+
+    passive_discovery = udmi.discovery.passive.PassiveNetworkDiscovery(
+        self.state, self.publish_discovery
+    )
+
+    self.components["bacnet_discovery"] = passive_discovery
+
+    # THESE TWO USE THE SAME SCAN_FAMILY
+    # THEIR `states` IN THE OVERALL STATE CLASHES
+    # because both set state.discovery.families.SCAN_FAMILY = self.state
+
+  
+    self.add_config_route(
+        lambda x: True,
+        passive_discovery,
+    )
+
+    self.components["passive_discovery"] = passive_discovery
+    
+
     nmap_banner_scan = udmi.discovery.nmap.NmapBannerScan(
         self.state,
         self.publish_discovery,
         target_ips=self.config["nmap"]["targets"],
     )
 
-    self.add_config_route(
-        lambda x: number_discovery.scan_family
-        in x.get("discovery", {}).get("families", {}),
-        number_discovery,
-    )
-    self.add_config_route(
-        lambda x: bacnet_discovery.scan_family
-        in x.get("discovery", {}).get("families", {}),
-        bacnet_discovery,
-    )
-
-    # THESE TWO USE THE SAME SCAN_FAMILY
-    # THEIR `states` IN THE OVERALL STATE CLASHES
-    # because both set state.discovery.families.SCAN_FAMILY = self.state
-    self.add_config_route(
-        lambda x: passive_discovery.scan_family
-        in x.get("discovery", {}).get("families", {}),
-        passive_discovery,
-    )
     self.add_config_route(
         lambda x: nmap_banner_scan.scan_family
         in x.get("discovery", {}).get("families", {})
@@ -151,7 +165,5 @@ class UDMI:
         nmap_banner_scan,
     )
 
-    self.components["passive_discovery"] = passive_discovery
     self.components["nmap_banner_scan"] = nmap_banner_scan
-    self.components["bacnet_discovery"] = passive_discovery
-    self.components["number_discovery"] = number_discovery
+    

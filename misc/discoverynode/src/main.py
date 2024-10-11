@@ -4,7 +4,7 @@ import argparse
 import logging
 import sys
 import time
-import tomllib
+import json
 import warnings
 import os
 # filter deprecation notice from SCAPY import
@@ -34,17 +34,16 @@ def or_required_from_env(key: str) -> dict[str, str | int | bool]:
 def get_arguments():
   parser = argparse.ArgumentParser(description="Start UDMI Discovey Client")
   parser.add_argument(
-      "config_file",
+      "--config_file",
       type=str,
-      help="path to config file",
-      **or_required_from_env("CONFIG_FILE"),
+      help="path to config file"
   )
   return parser.parse_args()
 
 
 def load_config_from_file(file_name: str):
   with open(file_name, "rb") as f:
-    return tomllib.load(f)
+    return json.load(f)
 
 
 def main():
@@ -80,7 +79,7 @@ def main():
 
   udmi_client = udmi.core.UDMI(
       publisher=mclient,
-      topic_prefix=f'/devices/{config["mqtt"]["device_id"]}/',
+      topic_prefix=f'/devices/{config["mqtt"]["device_id"]}',
       config=config,
   )
 

@@ -1,0 +1,34 @@
+[mqtt]
+device_id = "GAT-123"
+host = "mqtt.bos.goog"
+port = 8883
+registry_id = "ZZ-TRI-FECTA"
+region = "us-central1"
+project_id = "bos-platform-dev"
+key_file = "/usr/src/app/ec_private.pem"
+algorithm = "ES256"
+
+[nmap]
+targets = ["127.0.0.1"]
+interface = "wlp0s20f3"
+
+[bacnet]
+
+config = {
+  "mqtt": {
+    "device_id": "GAT-123"
+    "host": "mqtt.bos.goog"
+    "port": 8883
+    "registry_id": "ZZ-TRI-FECTA"
+    "region": "us-central1"
+    "project_id": "bos-platform-dev"
+    "key_file": "/usr/src/app/rsa_private.pem"
+    "algorithm": "ES256"
+  },
+  "nmap":{
+    "targets": ["127.0.0.1"],
+    "interface": "eth0"
+  },
+  "bacnet": {}
+}
+

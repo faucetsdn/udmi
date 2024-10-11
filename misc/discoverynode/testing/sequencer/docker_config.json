@@ -1,0 +1,12 @@
+{
+  "device1": {
+      "image": "test-bacnet-device",
+      "ethmac": "00:00:aa:bb:cc:01",
+      "bacnet_id": 3001
+  },
+  "device2": {
+      "image": "test-bacnet-device",
+      "ethmac": "00:00:aa:bb:cc:02",
+      "bacnet_id": 3002
+  }
+}
