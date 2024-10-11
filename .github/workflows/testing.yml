@@ -27,6 +27,9 @@ jobs:
         with:
           distribution: 'temurin'
           java-version: '17'
+      - name: install pytest
+        run: |
+          pip install pytest
       - name: base setup
         run: |
           bin/setup_base
