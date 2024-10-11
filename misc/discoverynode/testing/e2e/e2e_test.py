@@ -84,7 +84,7 @@ def localnet_block_from_id(id: int):
     raise RuntimeError("more than 250 devices not supported")
 
   return {
-      "ipv4": {"addr": f"123.123.123.{id}"},
+      "ipv4": {"addr": f"192.168.11.{id}"},
       "ethmac": {"addr": f"00:00:aa:bb:cc:{id:02x}"},
       "bacnet": {"addr": str(3000 + id)},
       "vendor": {"addr": str(id)},
@@ -132,6 +132,7 @@ def docker_devices():
               "-d",
               f"--name=discoverynode-test-device{i}",
               f"--network=discoverynode-network",
+              f"--ip={localnet['ipv4']['addr']}",
               "-e",
               f"BACNET_ID={localnet['bacnet']['addr']}",
               "test-bacnet-device",
@@ -164,7 +165,7 @@ def discovery_node():
             "algorithm": algorithm,
         },
         "nmap": {"targets": ["127.0.0.1"], "interface": "eth0"},
-        "bacnet": {},
+        "bacnet": {"ip": "192.168.11.251"},
     }
 
     with open(
@@ -186,6 +187,7 @@ def discovery_node():
             f"type=bind,source={ROOT_DIR}/discovery_node_config.json,target=/usr/src/app/config.json",
             "--mount",
             f"type=bind,source={UDMI_DIR}/sites/udmi_site_model/devices/AHU-1/rsa_private.pem,target=/usr/src/app/rsa_private.pem",
+            "--ip=192.168.11.251",
             "test-discovery_node",
             "python3",
             "main.py",

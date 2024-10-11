@@ -31,6 +31,6 @@ fi
 bash $ROOT_DIR/../docker/bacnet_device/build.sh
 bash $ROOT_DIR/../docker/discovery_node/build.sh
 
-docker network create discoverynode-network || true
+docker network create --subnet=192.168.11.0/24 --ip-range=192.168.11.0/24 --gateway=192.168.11.254 discoverynode-network || true
 
-python3 -m pytest -v --capture=no --log-cli-level=INFO -k sequencer $ROOT_DIR/e2e_test.py
+python3 -m pytest -v --capture=no --log-cli-level=INFO $ROOT_DIR/e2e_test.py
