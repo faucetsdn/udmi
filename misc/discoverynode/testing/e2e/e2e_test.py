@@ -23,16 +23,27 @@ import time
 from typing import Any
 from typing import Any
 from typing import Iterator
-
+import re
 import pytest
 
 ROOT_DIR = os.path.dirname(__file__)
 UDMI_DIR = str(Path(__file__).parents[4])
 
-GCP_PROJECT = os.environ["DN_GCP_PROJECT"]
+GCP_PROJECT = None
 REGISTRY = os.environ["DN_REGISTRY"]
-MQTT_REGISTRY = os.environ["DN_MQTT_REGISTRY"]
+MQTT_REGISTRY = None
 TARGET = os.environ["DN_TARGET"]
+
+target_spec = r'\/\/gbos\/([a-z-]+)(\/([a-z0-9]+))?'
+
+if m := re.fullmatch(target_spec, TARGET):
+  GCP_PROJECT = m.group(1)
+  if m.group(3):
+    MQTT_REGISTRY = f"{REGISTRY}~{m.group(3)}"
+  else:
+    MQTT_REGISTRY = REGISTRY
+else:
+  raise RuntimeError(f"bad target {TARGET}, note must be //gbos/*")
 
 # Assume the UDMI Directory is the UDMI directory and has not moved
 assert UDMI_DIR.rsplit("/", 1)[1] == "udmi"

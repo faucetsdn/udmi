@@ -11,22 +11,9 @@ if [[ -z $1 ]]; then
 fi
 
 TARGET=$1
-IFS='/' read -ra bits <<< "$TARGET"
-
-if [[ ${bits[2]} != gbos ]]; then
-  echo only gbos supported
-  exit 1
-fi
 
 export DN_TARGET=$TARGET
-export DN_GCP_PROJECT=${bits[3]}
 export DN_REGISTRY=$REGISTRY
-
-if [[ -n ${bits[5]} ]]; then
-  export DN_MQTT_REGISTRY=$REGISTRY_NAME~${bits[5]}
-else
-  export DN_MQTT_REGISTRY=$REGISTRY_NAME
-fi
 
 bash $ROOT_DIR/../docker/bacnet_device/build.sh
 bash $ROOT_DIR/../docker/discovery_node/build.sh
