@@ -31,4 +31,6 @@ fi
 bash $ROOT_DIR/../docker/bacnet_device/build.sh
 bash $ROOT_DIR/../docker/discovery_node/build.sh
 
+docker network create discoverynode-network || true
+
 python3 -m pytest -v --log-cli-level=INFO $ROOT_DIR/e2e_test.py
