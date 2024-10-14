@@ -2,6 +2,7 @@ package com.google.udmi.util;
 
 import static com.google.api.client.util.Preconditions.checkNotNull;
 import static com.google.bos.iot.core.proxy.ProxyTarget.STATE_TOPIC;
+import static com.google.common.base.Preconditions.checkState;
 import static com.google.udmi.util.Common.CATEGORY_PROPERTY_KEY;
 import static com.google.udmi.util.Common.DEVICE_ID_KEY;
 import static com.google.udmi.util.Common.PUBLISH_TIME_KEY;
@@ -46,6 +47,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.TreeMap;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import org.jetbrains.annotations.Nullable;
@@ -71,6 +73,7 @@ public class PubSubReflector implements MessagePublisher {
   public static final String UDMI_REFLECT_TOPIC = "udmi_reflect";
   private static final String UDMI_REPLY_TOPIC = "udmi_reply";
   public static final String USER_NAME_DEFAULT = "debug";
+  private static final AtomicInteger sessionCount = new AtomicInteger();
 
   private final AtomicBoolean active = new AtomicBoolean();
   private final long startTimeSec = System.currentTimeMillis() / 1000;
@@ -112,6 +115,7 @@ public class PubSubReflector implements MessagePublisher {
   public PubSubReflector(String projectId, String registryId, String updateTopic,
       String userName, String subscriptionId, boolean reset) {
     try {
+      checkState(sessionCount.incrementAndGet() == 1, "multiple internal sessions not supported");
       this.projectId = checkNotNull(projectId, "project id not defined");
       this.registryId = registryId;
       ProjectSubscriptionName subscriptionName = ProjectSubscriptionName.of(projectId,

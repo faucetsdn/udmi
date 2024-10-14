@@ -92,7 +92,6 @@ public class IotReflectorClient implements MessagePublisher {
   private static final String TRANSACTION_ID_PREFIX = "RC:";
   private static final String sessionPrefix = TRANSACTION_ID_PREFIX + sessionId + ".";
   private static final AtomicInteger sessionCounter = new AtomicInteger();
-  private static final AtomicInteger sessionCount = new AtomicInteger();
   private static final long RESYNC_INTERVAL_SEC = 30;
   private final String udmiVersion;
   private final CountDownLatch initialConfigReceived = new CountDownLatch(1);
@@ -141,7 +140,6 @@ public class IotReflectorClient implements MessagePublisher {
     this.requiredVersion = requiredVersion;
     this.enforceUdmiVersion = isTrue(iotConfig.enforce_version);
     this.messageFilter = ofNullable(messageFilter).orElse(this::userMessageFilter);
-    checkState(sessionCount.incrementAndGet() == 1, "multiple internal sessions not supported");
     registryId = SiteModel.getRegistryActual(iotConfig);
     projectId = iotConfig.project_id;
     udmiVersion = ofNullable(iotConfig.udmi_version).orElseGet(Common::getUdmiVersion);
