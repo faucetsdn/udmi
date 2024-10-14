@@ -1626,12 +1626,14 @@ public class SequenceBase {
         stashedBundle = null;
         return bundle;
       }
-      if (!reflector().isActive()) {
-        throw new RuntimeException("Trying to receive message from inactive client");
+      MessagePublisher reflector = reflector();
+      if (!reflector.isActive()) {
+        throw new RuntimeException(
+            "Trying to receive message from inactive client " + reflector.getSubscriptionId());
       }
       final MessageBundle bundle;
       try {
-        bundle = reflector().takeNextMessage(QuerySpeed.SHORT);
+        bundle = reflector.takeNextMessage(QuerySpeed.SHORT);
       } catch (Exception e) {
         throw new AbortMessageLoop("Exception receiving message", e);
       }

@@ -20,6 +20,7 @@ import static com.google.udmi.util.GeneralUtils.decodeBase64;
 import static com.google.udmi.util.GeneralUtils.getTimestamp;
 import static com.google.udmi.util.GeneralUtils.ifNotNullGet;
 import static com.google.udmi.util.GeneralUtils.ifNotNullThen;
+import static com.google.udmi.util.GeneralUtils.ifTrueThen;
 import static com.google.udmi.util.GeneralUtils.isTrue;
 import static com.google.udmi.util.JsonUtil.asMap;
 import static com.google.udmi.util.JsonUtil.convertTo;
@@ -95,7 +96,7 @@ public class IotReflectorClient implements MessagePublisher {
   private static final AtomicInteger sessionCounter = new AtomicInteger();
   private static final long RESYNC_INTERVAL_SEC = 30;
   private static final CountDownLatch validConfigReceived = new CountDownLatch(1);
-  private static final AtomicBoolean activationInitiated = new AtomicBoolean();
+  private static final AtomicInteger activeCount = new AtomicInteger();
   private final String udmiVersion;
   private final CountDownLatch initialConfigReceived = new CountDownLatch(1);
   private final CountDownLatch initializedStateSent = new CountDownLatch(1);
@@ -488,8 +489,9 @@ public class IotReflectorClient implements MessagePublisher {
   public void activate() {
 
     try {
-      if (activationInitiated.getAndSet(true)) {
-        System.err.println("Waiting for the other shoe to drop...");
+      if (activeCount.getAndIncrement() > 0) {
+        ifTrueThen(validConfigReceived.getCount() > 0,
+            () -> System.err.println("Waiting for the other shoe to drop..."));
         validConfigReceived.await(CONFIG_TIMEOUT_SEC, TimeUnit.SECONDS);
         return;
       }
@@ -518,7 +520,7 @@ public class IotReflectorClient implements MessagePublisher {
 
       active = true;
     } catch (Exception e) {
-      publisher.close();
+      ifTrueThen(activeCount.decrementAndGet() == 0, publisher::close);
       throw new RuntimeException("Waiting for initial config", e);
     }
   }
@@ -564,7 +566,7 @@ public class IotReflectorClient implements MessagePublisher {
   public void close() {
     active = false;
     syncThread.shutdown();
-    if (publisher != null) {
+    if (activeCount.decrementAndGet() == 0 && publisher != null) {
       publisher.close();
     }
   }
