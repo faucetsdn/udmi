@@ -78,7 +78,8 @@ public class PubSubReflector implements MessagePublisher {
   private static final AtomicInteger sessionCount = new AtomicInteger();
   private static String subscriptionId;
   private static PubSubReflector reflectorClient;
-  private static final Map<String, BiConsumer<String, String>> messageHandlers = new ConcurrentHashMap<>();
+  private static final Map<String, BiConsumer<String, String>> messageHandlers
+      = new ConcurrentHashMap<>();
   private static final Map<String, Consumer<Throwable>> errorHandlers = new ConcurrentHashMap<>();
   private static BiConsumer<String, String> defaultMessageHandler;
   private static Consumer<Throwable> defaultErrorHandler;
@@ -155,13 +156,8 @@ public class PubSubReflector implements MessagePublisher {
    */
   public static MessagePublisher from(ExecutionConfiguration iotConfig,
       BiConsumer<String, String> messageHandler, Consumer<Throwable> errorHandler) {
-    String projectId = requireNonNull(iotConfig.project_id, "missing project id");
     String registryActual = SiteModel.getRegistryActual(iotConfig);
-    ExecutionConfiguration reflectorConfig = IotReflectorClient.makeReflectConfiguration(iotConfig,
-        registryActual);
-    String registryId = MessagePublisher.getRegistryId(reflectorConfig);
     String namespacePrefix = getNamespacePrefix(iotConfig.udmi_namespace);
-    String topicId = namespacePrefix + UDMI_REFLECT_TOPIC;
     String userName = ofNullable(iotConfig.user_name).orElse(USER_NAME_DEFAULT);
     String newId = namespacePrefix + UDMI_REPLY_TOPIC + SOURCE_SEPARATOR + userName;
     checkState(subscriptionId == null || subscriptionId.equals(newId),
@@ -173,6 +169,11 @@ public class PubSubReflector implements MessagePublisher {
     ifNullThen(reflectorClient, () -> {
       defaultMessageHandler = messageHandler;
       defaultErrorHandler = errorHandler;
+      ExecutionConfiguration reflectorConfig = IotReflectorClient.makeReflectConfiguration(
+          iotConfig, registryActual);
+      String registryId = MessagePublisher.getRegistryId(reflectorConfig);
+      String projectId = requireNonNull(iotConfig.project_id, "missing project id");
+      String topicId = namespacePrefix + UDMI_REFLECT_TOPIC;
       reflectorClient = new PubSubReflector(projectId, registryId, topicId, userName,
           subscriptionId);
     });
@@ -180,6 +181,9 @@ public class PubSubReflector implements MessagePublisher {
     return reflectorClient;
   }
 
+  /**
+   * Activate this instance if it hasn't already been activated.
+   */
   public void activate() {
     if (!activated.getAndSet(true)) {
       subscriber.startAsync().awaitRunning();
