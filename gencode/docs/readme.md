@@ -36,5 +36,4 @@
 * [**properties**](properties.html)
 * [**query_cloud**](query_cloud.html) - Information specific to how the device communicates with the cloud.
 * [**state_mapping**](state_mapping.html) - State for [mapping](../../docs/specs/mapping.md)
-* [**state_udmi**](state_udmi.html) - State of a UDMI reflector client
 * [**state_validation**](state_validation.html) - Validation state summary

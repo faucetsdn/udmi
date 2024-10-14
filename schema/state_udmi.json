@@ -47,6 +47,10 @@
           "type": "string",
           "description": "Optional version for a udmis update trigger"
         },
+        "tool_name": {
+          "type": "string",
+          "description": "Name of the tool being used" 
+        },
         "transaction_id": {
           "type": "string"
         }

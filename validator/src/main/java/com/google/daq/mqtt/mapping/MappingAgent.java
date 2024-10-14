@@ -51,6 +51,7 @@ import udmi.schema.SystemModel;
 public class MappingAgent {
 
   private static final String NO_DISCOVERY = "not_discovered";
+  public static final String MAPPER_TOOL_NAME = "mapper";
   private final ExecutionConfiguration executionConfiguration;
   private final String deviceId;
   private CloudIotManager cloudIotManager;
@@ -178,7 +179,7 @@ public class MappingAgent {
   }
 
   private void initialize() {
-    cloudIotManager = new CloudIotManager(executionConfiguration);
+    cloudIotManager = new CloudIotManager(executionConfiguration, MAPPER_TOOL_NAME);
     siteModel = new SiteModel(cloudIotManager.getSiteDir(), executionConfiguration);
     siteModel.initialize();
   }

@@ -21,16 +21,7 @@
       "format": "date-time"
     },
     "reply": {
-      "title": "Reply Udmi Config",
-      "type": "object",
-      "properties": {
-        "msg_source": {
-          "type": "string"
-        },
-        "transaction_id": {
-          "type": "string"
-        }
-      }
+      "$ref": "file:state_udmi.json#/properties/setup"
     },
     "setup": {
       "title": "Setup Udmi Config",

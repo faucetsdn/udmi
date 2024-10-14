@@ -31,6 +31,7 @@ import udmi.schema.ExecutionConfiguration;
 public class Reflector {
 
   private static final int RETRY_COUNT = 2;
+  public static final String REFLECTOR_TOOL_NAME = "reflector";
   private final List<String> reflectCommands;
   private String siteDir;
   private ExecutionConfiguration executionConfiguration;
@@ -133,7 +134,8 @@ public class Reflector {
       executionConfiguration.key_file = keyFile;
     }
     executionConfiguration.udmi_version = Common.getUdmiVersion();
-    client = new IotReflectorClient(executionConfiguration, TOOLS_FUNCTIONS_VERSION);
+    client = new IotReflectorClient(executionConfiguration, TOOLS_FUNCTIONS_VERSION,
+        REFLECTOR_TOOL_NAME);
   }
 
   private List<String> parseArgs(List<String> argsList) {

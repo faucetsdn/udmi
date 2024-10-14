@@ -3,7 +3,6 @@ package com.google.bos.udmi.service.pod;
 import static com.google.bos.udmi.service.messaging.impl.MessageBase.combineConfig;
 import static com.google.common.base.Preconditions.checkState;
 import static com.google.udmi.util.GeneralUtils.CSV_JOINER;
-import static com.google.udmi.util.GeneralUtils.catchToNull;
 import static com.google.udmi.util.GeneralUtils.copyFields;
 import static com.google.udmi.util.GeneralUtils.friendlyStackTrace;
 import static com.google.udmi.util.GeneralUtils.ifNotNullGet;
@@ -41,7 +40,6 @@ import udmi.schema.EndpointConfiguration;
 import udmi.schema.IotAccess;
 import udmi.schema.Level;
 import udmi.schema.PodConfiguration;
-import udmi.schema.ReplyUdmiConfig;
 import udmi.schema.SetupUdmiConfig;
 import udmi.schema.UdmiConfig;
 import udmi.schema.UdmiState;
@@ -118,11 +116,7 @@ public class UdmiServicePod extends ContainerBase {
     udmiConfig.setup.udmi_version = UDMI_VERSION;
     udmiConfig.setup.functions_min = ContainerBase.FUNCTIONS_VERSION_MIN;
     udmiConfig.setup.functions_max = ContainerBase.FUNCTIONS_VERSION_MAX;
-    if (toolState != null && toolState.setup != null) {
-      udmiConfig.reply = new ReplyUdmiConfig();
-      udmiConfig.reply.transaction_id = toolState.setup.transaction_id;
-      udmiConfig.reply.msg_source = toolState.setup.msg_source;
-    }
+    udmiConfig.reply = ifNotNullGet(toolState, state -> state.setup);
     return udmiConfig;
   }
 

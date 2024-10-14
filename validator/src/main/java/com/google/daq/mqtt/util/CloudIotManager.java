@@ -54,6 +54,7 @@ public class CloudIotManager {
   private final String registryId;
   private final String projectId;
   private final String cloudRegion;
+  private final String toolName;
   private final Map<String, CloudModel> deviceMap = new ConcurrentHashMap<>();
   private final File siteModel;
   private final boolean useReflectClient;
@@ -64,7 +65,8 @@ public class CloudIotManager {
    * Create a new CloudIoTManager.
    */
   public CloudIotManager(String projectId, File siteDir, String altRegistry,
-      String registrySuffix, IotAccess.IotProvider iotProvider) {
+      String registrySuffix, IotAccess.IotProvider iotProvider, String toolName) {
+    this.toolName = toolName;
     checkNotNull(projectId, "project id undefined");
     this.siteModel = checkNotNull(siteDir, "site directory undefined");
     checkState(siteDir.isDirectory(), "not a directory " + siteDir.getAbsolutePath());
@@ -89,19 +91,13 @@ public class CloudIotManager {
   }
 
   /**
-   * Create a new iot manager using a full configuration file.
-   */
-  public CloudIotManager(File siteConfig) {
-    this(readExeConfig(siteConfig));
-  }
-
-  /**
    * New instance from a configuration profile.
    */
-  public CloudIotManager(ExecutionConfiguration config) {
+  public CloudIotManager(ExecutionConfiguration config, String toolName) {
     try {
       this.projectId = requireNonNull(config.project_id, "no project_id defined");
       this.useReflectClient = shouldUseReflectorClient(config);
+      this.toolName = toolName;
       File model = new File(config.site_model != null ? config.site_model : ".");
       siteModel = model.isAbsolute() ? model
           : new File(new File(config.src_file).getParentFile(), model.getPath());
@@ -192,7 +188,7 @@ public class CloudIotManager {
 
     if (useReflectClient) {
       System.err.println("Using reflector iot client");
-      return new IotReflectorClient(executionConfiguration);
+      return new IotReflectorClient(executionConfiguration, toolName);
     }
 
     if (executionConfiguration.iot_provider == PUBSUB) {
