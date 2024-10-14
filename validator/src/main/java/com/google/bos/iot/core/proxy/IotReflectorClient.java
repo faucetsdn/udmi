@@ -94,10 +94,11 @@ public class IotReflectorClient implements MessagePublisher {
   private static final String sessionPrefix = TRANSACTION_ID_PREFIX + sessionId + ".";
   private static final AtomicInteger sessionCounter = new AtomicInteger();
   private static final long RESYNC_INTERVAL_SEC = 30;
+  private static final CountDownLatch validConfigReceived = new CountDownLatch(1);
+  private static final AtomicBoolean activationInitiated = new AtomicBoolean();
   private final String udmiVersion;
   private final CountDownLatch initialConfigReceived = new CountDownLatch(1);
   private final CountDownLatch initializedStateSent = new CountDownLatch(1);
-  private final CountDownLatch validConfigReceived = new CountDownLatch(1);
   private final ScheduledExecutorService syncThread = Executors.newSingleThreadScheduledExecutor();
   private final int requiredVersion;
   private final BlockingQueue<Validator.MessageBundle> messages = new LinkedBlockingQueue<>();
@@ -111,7 +112,6 @@ public class IotReflectorClient implements MessagePublisher {
   private final Function<Envelope, Boolean> messageFilter;
   private final String userName;
   private final String toolName;
-  private final AtomicBoolean activated = new AtomicBoolean();
   private boolean isInstallValid;
   private boolean active;
   private Exception syncFailure;
@@ -159,7 +159,6 @@ public class IotReflectorClient implements MessagePublisher {
       throw new RuntimeException("While creating reflector client " + clientId, e);
     }
     subscriptionId = publisher.getSubscriptionId();
-    System.err.println("Subscribed to " + subscriptionId);
   }
 
   private boolean userMessageFilter(Envelope envelope) {
@@ -225,7 +224,7 @@ public class IotReflectorClient implements MessagePublisher {
       map.put(SubFolder.UDMI.value(), udmiState);
 
       if (isInstallValid) {
-        info("Sending UDMI reflector state: " + stringifyTerse(udmiState.setup));
+        debug("Sending UDMI reflector state: " + stringifyTerse(udmiState.setup));
       } else {
         info("Sending UDMI reflector state: " + stringify(map));
       }
@@ -370,7 +369,7 @@ public class IotReflectorClient implements MessagePublisher {
       } else if (!shouldConsiderReply) {
         return;
       } else if (doesReplyMatch) {
-        info("Received UDMI reflector matching config reply " + expectedTxnId);
+        debug("Received UDMI reflector matching config reply " + expectedTxnId);
       } else {
         info("Received UDMI reflector mismatched config: " + stringifyTerse(reflectorConfig));
         close();
@@ -488,11 +487,13 @@ public class IotReflectorClient implements MessagePublisher {
   @Override
   public void activate() {
 
-    if (activated.getAndSet(true)) {
-      return;
-    }
-
     try {
+      if (activationInitiated.getAndSet(true)) {
+        System.err.println("Waiting for the other shoe to drop...");
+        validConfigReceived.await(CONFIG_TIMEOUT_SEC, TimeUnit.SECONDS);
+        return;
+      }
+
       publisher.activate();
 
       System.err.println("Starting initial UDMI setup process");
@@ -512,6 +513,8 @@ public class IotReflectorClient implements MessagePublisher {
 
       syncThread.scheduleAtFixedRate(this::setReflectorState, RESYNC_INTERVAL_SEC,
           RESYNC_INTERVAL_SEC, TimeUnit.SECONDS);
+
+      System.err.println("Subscribed to " + subscriptionId);
 
       active = true;
     } catch (Exception e) {
