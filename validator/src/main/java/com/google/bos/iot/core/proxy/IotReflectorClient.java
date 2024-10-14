@@ -92,6 +92,7 @@ public class IotReflectorClient implements MessagePublisher {
   private static final String TRANSACTION_ID_PREFIX = "RC:";
   private static final String sessionPrefix = TRANSACTION_ID_PREFIX + sessionId + ".";
   private static final AtomicInteger sessionCounter = new AtomicInteger();
+  private static final AtomicInteger sessionCount = new AtomicInteger();
   private static final long RESYNC_INTERVAL_SEC = 30;
   private final String udmiVersion;
   private final CountDownLatch initialConfigReceived = new CountDownLatch(1);
@@ -140,6 +141,7 @@ public class IotReflectorClient implements MessagePublisher {
     this.requiredVersion = requiredVersion;
     this.enforceUdmiVersion = isTrue(iotConfig.enforce_version);
     this.messageFilter = ofNullable(messageFilter).orElse(this::userMessageFilter);
+    checkState(sessionCount.incrementAndGet() == 1, "multiple internal sessions not supported");
     registryId = SiteModel.getRegistryActual(iotConfig);
     projectId = iotConfig.project_id;
     udmiVersion = ofNullable(iotConfig.udmi_version).orElseGet(Common::getUdmiVersion);
@@ -219,13 +221,14 @@ public class IotReflectorClient implements MessagePublisher {
    *
    * @return new unique transaction id
    */
-  public static synchronized String getNextTransactionId() {
+  public static String getNextTransactionId() {
     return format("%s%04d", sessionPrefix, sessionCounter.incrementAndGet());
   }
 
   private void setReflectorState() {
     if (isInstallValid && expectedTxnId != null) {
-      System.err.println("Expected transaction still on the books, likely duplicate channel use");
+      System.err.printf("Unexpected reflector transaction %s, likely duplicate channel use%n",
+          expectedTxnId);
       close();
       throw new RuntimeException("Aborting due to missing transaction reply " + expectedTxnId);
     }
@@ -247,9 +250,9 @@ public class IotReflectorClient implements MessagePublisher {
       map.put(SubFolder.UDMI.value(), udmiState);
 
       if (isInstallValid) {
-        debug("Sending UDMI reflector state: " + stringifyTerse(udmiState.setup));
+        info("Sending UDMI reflector state: " + stringifyTerse(udmiState.setup));
       } else {
-        System.err.println("Sending UDMI reflector state: " + stringify(map));
+        info("Sending UDMI reflector state: " + stringify(map));
       }
 
       publisher.publish(registryId, getReflectorTopic(), stringify(map));
@@ -388,14 +391,13 @@ public class IotReflectorClient implements MessagePublisher {
       boolean doesReplyMatch = reflectorConfig.reply.transaction_id.equals(expectedTxnId);
 
       if (!isInstallValid) {
-        System.err.println("Received UDMI reflector initial config: " + stringify(reflectorConfig));
+        info("Received UDMI reflector initial config: " + stringify(reflectorConfig));
       } else if (!shouldConsiderReply) {
         return;
       } else if (doesReplyMatch) {
-        debug("Received UDMI reflector matching config reply.");
+        info("Received UDMI reflector matching config reply " + expectedTxnId);
       } else {
-        System.err.println(
-            "Received UDMI reflector mismatched config: " + stringifyTerse(reflectorConfig));
+        info("Received UDMI reflector mismatched config: " + stringifyTerse(reflectorConfig));
         close();
         throw new IllegalStateException("There can (should) be only one instance on a channel");
       }
@@ -448,6 +450,11 @@ public class IotReflectorClient implements MessagePublisher {
 
   private void debug(String message) {
     // TODO: Implement some kind of actual log-level control.
+  }
+
+  private void info(String message) {
+    // TODO: Implement some kind of actual log-level control.
+    System.err.println(message);
   }
 
   private Envelope parseMessageTopic(String topic) {
