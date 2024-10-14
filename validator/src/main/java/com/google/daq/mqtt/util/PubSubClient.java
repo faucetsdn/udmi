@@ -210,6 +210,10 @@ public class PubSubClient implements MessagePublisher, MessageHandler {
     return SeekRequest.newBuilder().setSubscription(subscription).setTime(timestamp).build();
   }
 
+  @Override
+  public void activate() {
+  }
+
   /**
    * Check if the client is active.
    *

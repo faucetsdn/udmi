@@ -171,6 +171,10 @@ public class MessageReadingClient implements MessagePublisher {
   }
 
   @Override
+  public void activate() {
+  }
+
+  @Override
   public boolean isActive() {
     return isActive;
   }

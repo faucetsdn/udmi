@@ -51,6 +51,8 @@ public interface MessagePublisher {
 
   String getSubscriptionId();
 
+  void activate();
+
   boolean isActive();
 
   MessageBundle takeNextMessage(QuerySpeed querySpeed);

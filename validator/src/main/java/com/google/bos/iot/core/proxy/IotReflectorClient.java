@@ -88,8 +88,8 @@ public class IotReflectorClient implements MessagePublisher {
   private static final int UPDATE_RETRIES = 6;
   private static final Collection<String> COPY_IDS = ImmutableSet.of(DEVICE_ID_KEY, GATEWAY_ID_KEY,
       SUBTYPE_PROPERTY_KEY, SUBFOLDER_PROPERTY_KEY, TRANSACTION_KEY, PUBLISH_TIME_KEY);
+  public static final String TRANSACTION_ID_PREFIX = "RC:";
   private static final String sessionId = format("%06x", (int) (Math.random() * 0x1000000L));
-  private static final String TRANSACTION_ID_PREFIX = "RC:";
   private static final String sessionPrefix = TRANSACTION_ID_PREFIX + sessionId + ".";
   private static final AtomicInteger sessionCounter = new AtomicInteger();
   private static final long RESYNC_INTERVAL_SEC = 30;
@@ -148,6 +148,7 @@ public class IotReflectorClient implements MessagePublisher {
     userName = ofNullable(iotConfig.user_name).orElse(USER_NAME_DEFAULT);
     this.toolName = toolName;
     iotConfig.iot_provider = iotProvider;
+    iotConfig.session_id = sessionId;
     String prefix = getNamespacePrefix(iotConfig.udmi_namespace);
     String clientId = format("//%s/%s/%s %s", iotProvider, projectId, prefix, registryId);
     try {
@@ -158,31 +159,6 @@ public class IotReflectorClient implements MessagePublisher {
     }
     subscriptionId = publisher.getSubscriptionId();
     System.err.println("Subscribed to " + subscriptionId);
-
-    try {
-      System.err.println("Starting initial UDMI setup process");
-      retries = updateVersion == null ? 1 : UPDATE_RETRIES;
-      while (validConfigReceived.getCount() > 0) {
-        setReflectorState();
-        initializedStateSent.countDown();
-        if (!validConfigReceived.await(CONFIG_TIMEOUT_SEC, TimeUnit.SECONDS)) {
-          retries--;
-          if (retries <= 0) {
-            throw new RuntimeException(
-                "Config sync timeout expired. Investigate UDMI cloud functions install.",
-                syncFailure);
-          }
-        }
-      }
-
-      syncThread.scheduleAtFixedRate(this::setReflectorState, RESYNC_INTERVAL_SEC,
-          RESYNC_INTERVAL_SEC, TimeUnit.SECONDS);
-
-      active = true;
-    } catch (Exception e) {
-      publisher.close();
-      throw new RuntimeException("Waiting for initial config", e);
-    }
   }
 
   private boolean userMessageFilter(Envelope envelope) {
@@ -506,6 +482,36 @@ public class IotReflectorClient implements MessagePublisher {
   @Override
   public String getSubscriptionId() {
     return subscriptionId;
+  }
+
+  @Override
+  public void activate() {
+    try {
+      publisher.activate();
+
+      System.err.println("Starting initial UDMI setup process");
+      retries = updateVersion == null ? 1 : UPDATE_RETRIES;
+      while (validConfigReceived.getCount() > 0) {
+        setReflectorState();
+        initializedStateSent.countDown();
+        if (!validConfigReceived.await(CONFIG_TIMEOUT_SEC, TimeUnit.SECONDS)) {
+          retries--;
+          if (retries <= 0) {
+            throw new RuntimeException(
+                "Config sync timeout expired. Investigate UDMI cloud functions install.",
+                syncFailure);
+          }
+        }
+      }
+
+      syncThread.scheduleAtFixedRate(this::setReflectorState, RESYNC_INTERVAL_SEC,
+          RESYNC_INTERVAL_SEC, TimeUnit.SECONDS);
+
+      active = true;
+    } catch (Exception e) {
+      publisher.close();
+      throw new RuntimeException("Waiting for initial config", e);
+    }
   }
 
   @Override
