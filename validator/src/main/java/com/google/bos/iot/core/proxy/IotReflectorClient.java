@@ -493,6 +493,7 @@ public class IotReflectorClient implements MessagePublisher {
         ifTrueThen(validConfigReceived.getCount() > 0,
             () -> System.err.println("Waiting for the other shoe to drop..."));
         validConfigReceived.await(CONFIG_TIMEOUT_SEC, TimeUnit.SECONDS);
+        active = true;
         return;
       }
 
