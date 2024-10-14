@@ -1,12 +1,12 @@
 package com.google.udmi.util;
 
 import static com.google.api.client.util.Preconditions.checkNotNull;
-import static com.google.bos.iot.core.proxy.IotReflectorClient.TRANSACTION_ID_PREFIX;
 import static com.google.bos.iot.core.proxy.ProxyTarget.STATE_TOPIC;
 import static com.google.common.base.Preconditions.checkState;
 import static com.google.udmi.util.Common.CATEGORY_PROPERTY_KEY;
 import static com.google.udmi.util.Common.DEVICE_ID_KEY;
 import static com.google.udmi.util.Common.PUBLISH_TIME_KEY;
+import static com.google.udmi.util.Common.REGISTRY_ID_PROPERTY_KEY;
 import static com.google.udmi.util.Common.SOURCE_KEY;
 import static com.google.udmi.util.Common.SOURCE_SEPARATOR;
 import static com.google.udmi.util.Common.SOURCE_SEPARATOR_REGEX;
@@ -76,7 +76,6 @@ public class PubSubReflector implements MessagePublisher {
   private static final String UDMI_REPLY_TOPIC = "udmi_reply";
   public static final String USER_NAME_DEFAULT = "debug";
   private static final AtomicInteger sessionCount = new AtomicInteger();
-  private static final String NO_SESSION = "unknown";
   private static String subscriptionId;
   private static PubSubReflector reflectorClient;
   private static final Map<String, BiConsumer<String, String>> messageHandlers = new ConcurrentHashMap<>();
@@ -84,6 +83,7 @@ public class PubSubReflector implements MessagePublisher {
   private static BiConsumer<String, String> defaultMessageHandler;
   private static Consumer<Throwable> defaultErrorHandler;
 
+  private final AtomicBoolean activated = new AtomicBoolean();
   private final AtomicBoolean active = new AtomicBoolean();
   private final long startTimeSec = System.currentTimeMillis() / 1000;
 
@@ -167,10 +167,8 @@ public class PubSubReflector implements MessagePublisher {
     checkState(subscriptionId == null || subscriptionId.equals(newId),
         "unsupported difference in subscription id");
     subscriptionId = newId;
-    String sessionId = iotConfig.session_id;
-    checkState(sessionId != null, "Missing session state configuration");
-    checkState(messageHandlers.put(sessionId, messageHandler) == null, "duplicate handler");
-    checkState(errorHandlers.put(sessionId, errorHandler) == null, "duplicate handler");
+    checkState(messageHandlers.put(registryActual, messageHandler) == null, "duplicate handler");
+    checkState(errorHandlers.put(registryActual, errorHandler) == null, "duplicate handler");
 
     ifNullThen(reflectorClient, () -> {
       defaultMessageHandler = messageHandler;
@@ -183,11 +181,13 @@ public class PubSubReflector implements MessagePublisher {
   }
 
   public void activate() {
-    subscriber.startAsync().awaitRunning();
-    active.set(true);
+    if (!activated.getAndSet(true)) {
+      subscriber.startAsync().awaitRunning();
+      active.set(true);
 
-    // TODO: Make this trigger both the config & state to be queried.
-    // publish(UDMI_REFLECT, UPDATE_QUERY_TOPIC, EMPTY_JSON);
+      // TODO: Make this trigger both the config & state to be queried.
+      // publish(UDMI_REFLECT, UPDATE_QUERY_TOPIC, EMPTY_JSON);
+    }
   }
 
   private SeekRequest getCurrentTimeSeekRequest(String subscription) {
@@ -316,22 +316,16 @@ public class PubSubReflector implements MessagePublisher {
     @Override
     public void receiveMessage(PubsubMessage message, AckReplyConsumer consumer) {
       final MessageBundle messageBundle;
-      final String sessionId;
+      String deviceRegistryId;
       try {
         consumer.ack();
         messageBundle = processMessage(message);
         if (messageBundle == null) {
           return;
         }
-        String transactionId = (String) messageBundle.message.get("transactionId");
-        if (transactionId != null && transactionId.startsWith(TRANSACTION_ID_PREFIX)) {
-          sessionId = transactionId.substring(0, transactionId.indexOf('.'))
-              .substring(TRANSACTION_ID_PREFIX.length());
-        } else {
-          sessionId = NO_SESSION;
-        }
+        deviceRegistryId = requireNonNull(messageBundle.attributes.get(REGISTRY_ID_PROPERTY_KEY));
       } catch (Exception e) {
-        errorHandlers.get(NO_SESSION).accept(e);
+        defaultErrorHandler.accept(e);
         return;
       }
 
@@ -356,10 +350,10 @@ public class PubSubReflector implements MessagePublisher {
         } else {
           System.err.println("Discarding message with malformed source: " + messageSource);
         }
-        ofNullable(messageHandlers.get(sessionId)).orElse(defaultMessageHandler)
+        ofNullable(messageHandlers.get(deviceRegistryId)).orElse(defaultMessageHandler)
             .accept(topic, stringify(messageBundle.message));
       } catch (Exception e) {
-        ofNullable(errorHandlers.get(sessionId)).orElse(defaultErrorHandler).accept(e);
+        ofNullable(errorHandlers.get(deviceRegistryId)).orElse(defaultErrorHandler).accept(e);
       }
     }
   }

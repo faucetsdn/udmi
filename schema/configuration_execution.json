@@ -55,9 +55,6 @@
     "project_id": {
       "type": "string"
     },
-    "session_id": {
-      "type": "string"
-    },
     "user_name": {
       "type": "string"
     },

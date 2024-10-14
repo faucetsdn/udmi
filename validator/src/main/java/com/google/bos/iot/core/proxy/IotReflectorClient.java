@@ -148,7 +148,6 @@ public class IotReflectorClient implements MessagePublisher {
     userName = ofNullable(iotConfig.user_name).orElse(USER_NAME_DEFAULT);
     this.toolName = toolName;
     iotConfig.iot_provider = iotProvider;
-    iotConfig.session_id = sessionId;
     String prefix = getNamespacePrefix(iotConfig.udmi_namespace);
     String clientId = format("//%s/%s/%s %s", iotProvider, projectId, prefix, registryId);
     try {
@@ -486,6 +485,10 @@ public class IotReflectorClient implements MessagePublisher {
 
   @Override
   public void activate() {
+    if (publisher.isActive()) {
+      return;
+    }
+
     try {
       publisher.activate();
 
