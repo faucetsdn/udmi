@@ -52,12 +52,12 @@ import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
 import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.Executors;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Function;
 import org.jetbrains.annotations.NotNull;
@@ -95,8 +95,8 @@ public class IotReflectorClient implements MessagePublisher {
   private static final String sessionPrefix = TRANSACTION_ID_PREFIX + sessionId + ".";
   private static final AtomicInteger sessionCounter = new AtomicInteger();
   private static final long RESYNC_INTERVAL_SEC = 30;
-  private static final CountDownLatch validConfigReceived = new CountDownLatch(1);
-  private static final AtomicInteger activeCount = new AtomicInteger();
+  private static final Map<MessagePublisher, CountDownLatch> pubLatches = new ConcurrentHashMap<>();
+  private static final Map<MessagePublisher, AtomicInteger> pubCounts = new ConcurrentHashMap<>();
   private final String udmiVersion;
   private final CountDownLatch initialConfigReceived = new CountDownLatch(1);
   private final CountDownLatch initializedStateSent = new CountDownLatch(1);
@@ -156,6 +156,8 @@ public class IotReflectorClient implements MessagePublisher {
     try {
       System.err.println("Instantiating reflector client " + clientId);
       publisher = MessagePublisher.from(iotConfig, this::messageHandler, this::errorHandler);
+      pubCounts.computeIfAbsent(publisher, key -> new AtomicInteger());
+      pubLatches.computeIfAbsent(publisher, key -> new CountDownLatch(1));
     } catch (Exception e) {
       throw new RuntimeException("While creating reflector client " + clientId, e);
     }
@@ -407,7 +409,7 @@ public class IotReflectorClient implements MessagePublisher {
         }
         isInstallValid = true;
         expectedTxnId = null;
-        validConfigReceived.countDown();
+        pubLatches.get(publisher).countDown();
       } else if (!updateMatch) {
         System.err.println("UDMI update version mismatch... waiting for retry...");
       } else if (!timestampMatch) {
@@ -489,10 +491,11 @@ public class IotReflectorClient implements MessagePublisher {
   public void activate() {
 
     try {
-      if (activeCount.getAndIncrement() > 0) {
-        ifTrueThen(validConfigReceived.getCount() > 0,
+      // Some publishers are shared, while others are unique, so handle accordingly.
+      if (pubCounts.get(publisher).getAndIncrement() > 0) {
+        ifTrueThen(pubLatches.get(publisher).getCount() > 0,
             () -> System.err.println("Waiting for the other shoe to drop..."));
-        validConfigReceived.await(CONFIG_TIMEOUT_SEC, TimeUnit.SECONDS);
+        pubLatches.get(publisher).await(CONFIG_TIMEOUT_SEC, TimeUnit.SECONDS);
         active = true;
         return;
       }
@@ -501,10 +504,10 @@ public class IotReflectorClient implements MessagePublisher {
 
       System.err.println("Starting initial UDMI setup process");
       retries = updateVersion == null ? 1 : UPDATE_RETRIES;
-      while (validConfigReceived.getCount() > 0) {
+      while (pubLatches.get(publisher).getCount() > 0) {
         setReflectorState();
         initializedStateSent.countDown();
-        if (!validConfigReceived.await(CONFIG_TIMEOUT_SEC, TimeUnit.SECONDS)) {
+        if (!pubLatches.get(publisher).await(CONFIG_TIMEOUT_SEC, TimeUnit.SECONDS)) {
           retries--;
           if (retries <= 0) {
             throw new RuntimeException(
@@ -521,7 +524,7 @@ public class IotReflectorClient implements MessagePublisher {
 
       active = true;
     } catch (Exception e) {
-      ifTrueThen(activeCount.decrementAndGet() == 0, publisher::close);
+      close();
       throw new RuntimeException("Waiting for initial config", e);
     }
   }
@@ -567,9 +570,7 @@ public class IotReflectorClient implements MessagePublisher {
   public void close() {
     active = false;
     syncThread.shutdown();
-    if (activeCount.decrementAndGet() == 0 && publisher != null) {
-      publisher.close();
-    }
+    ifTrueThen(pubCounts.get(publisher).decrementAndGet() == 0, publisher::close);
   }
 
   @Override

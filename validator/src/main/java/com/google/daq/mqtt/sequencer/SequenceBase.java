@@ -2071,6 +2071,7 @@ public class SequenceBase {
       whileDoing("using alternate client", evaluator);
     } finally {
       useAlternateClient = false;
+      checkState(!configIsPending(), "Config is pending, client device might be borked!");
       catchToNull(() -> deviceConfig.system.testing.endpoint_type = null);
     }
   }
