@@ -531,6 +531,7 @@ public class Validator {
     client = new IotReflectorClient(config, TOOLS_FUNCTIONS_VERSION, VALIDATOR_TOOL_NAME,
         this::messageFilter);
     dataSinks.add(client);
+    client.activate();
   }
 
   private boolean messageFilter(Envelope envelope) {

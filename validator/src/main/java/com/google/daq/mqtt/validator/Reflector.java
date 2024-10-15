@@ -136,6 +136,7 @@ public class Reflector {
     executionConfiguration.udmi_version = Common.getUdmiVersion();
     client = new IotReflectorClient(executionConfiguration, TOOLS_FUNCTIONS_VERSION,
         REFLECTOR_TOOL_NAME);
+    client.activate();
   }
 
   private List<String> parseArgs(List<String> argsList) {

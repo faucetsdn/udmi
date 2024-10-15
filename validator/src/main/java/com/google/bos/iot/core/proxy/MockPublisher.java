@@ -51,6 +51,10 @@ public class MockPublisher implements MessagePublisher {
   }
 
   @Override
+  public void activate() {
+  }
+
+  @Override
   public boolean isActive() {
     return active;
   }

@@ -361,9 +361,8 @@ public class SequenceBase {
 
     System.err.printf("Loading reflector key file from %s%n", new File(key_file).getAbsolutePath());
     System.err.printf("Validating against device %s serial %s%n", getDeviceId(), serialNo);
-    client = getPublisherClient();
+    client = checkNotNull(getPublisherClient(), "primary client not created");
     sessionPrefix = client.getSessionPrefix();
-    ifNotNullThen(validationState, state -> state.cloud_version = client.getVersionInformation());
 
     String udmiNamespace = exeConfig.udmi_namespace;
     String altRegistryId = exeConfig.alt_registry;
@@ -743,9 +742,7 @@ public class SequenceBase {
    */
   @Before
   public void setUp() {
-    if (activeInstance == null) {
-      throw new IllegalStateException("Active sequencer instance not setup, aborting");
-    }
+    checkNotNull(activeInstance, "Active sequencer instance not setup, aborting");
 
     assumeTrue(format("Feature bucket %s not enabled", testBucket.key()),
         isBucketEnabled(testBucket));
@@ -1629,12 +1626,14 @@ public class SequenceBase {
         stashedBundle = null;
         return bundle;
       }
-      if (!reflector().isActive()) {
-        throw new RuntimeException("Trying to receive message from inactive client");
+      MessagePublisher reflector = reflector();
+      if (!reflector.isActive()) {
+        throw new RuntimeException(
+            "Trying to receive message from inactive client " + reflector.getSubscriptionId());
       }
       final MessageBundle bundle;
       try {
-        bundle = reflector().takeNextMessage(QuerySpeed.SHORT);
+        bundle = reflector.takeNextMessage(QuerySpeed.SHORT);
       } catch (Exception e) {
         throw new AbortMessageLoop("Exception receiving message", e);
       }
@@ -1963,7 +1962,7 @@ public class SequenceBase {
     }
     return ifNotTrueGet(synced,
         () -> format("waiting for last_start %s, transactions %s, last_config %s",
-            !lastConfigSynced,
+            !lastStartSynced,
             !transactionsClean, !lastConfigSynced));
   }
 
@@ -2068,10 +2067,12 @@ public class SequenceBase {
     checkState(deviceConfig.system.testing.endpoint_type == null, "endpoint type not null");
     try {
       useAlternateClient = true;
+      warning("Now using alternate connection client!");
       deviceConfig.system.testing.endpoint_type = "alternate";
       whileDoing("using alternate client", evaluator);
     } finally {
       useAlternateClient = false;
+      warning("Done with alternate connection client!");
       catchToNull(() -> deviceConfig.system.testing.endpoint_type = null);
     }
   }
@@ -2424,7 +2425,15 @@ public class SequenceBase {
         sequenceMd = new PrintWriter(newOutputStream(new File(testDir, SEQUENCE_MD).toPath()));
 
         putSequencerResult(description, SequenceResult.START);
+
+        client.activate();
+        ifNotNullThen(validationState,
+            state -> state.cloud_version = client.getVersionInformation());
+
+        ifNotNullThen(altClient, IotReflectorClient::activate);
         checkState(reflector().isActive(), "Reflector is not currently active");
+
+        activeInstance = SequenceBase.this;
 
         validateTestSpecification(description);
 
@@ -2437,7 +2446,6 @@ public class SequenceBase {
         startTestTimeMs = System.currentTimeMillis();
         notice("starting test " + testName + " " + START_END_MARKER);
 
-        activeInstance = SequenceBase.this;
       } catch (IllegalArgumentException e) {
         putSequencerResult(description, ERRR);
         recordCompletion(ERRR, description, friendlyStackTrace(e));
