@@ -71,6 +71,7 @@ public class IotReflectorClient implements IotProvider {
     executionConfiguration.key_file = siteModel.validatorKey();
     messageClient = new com.google.bos.iot.core.proxy.IotReflectorClient(executionConfiguration,
         Validator.TOOLS_FUNCTIONS_VERSION, toolName);
+    messageClient.activate();
     sessionPrefix = messageClient.getSessionPrefix();
     executor.execute(this::processReplies);
     isSlow = siteModel.getDeviceIds().size() > SLOW_QUERY_THRESHOLD;
