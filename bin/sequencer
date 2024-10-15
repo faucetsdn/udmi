@@ -116,6 +116,7 @@ elif [[ -f $site_path ]]; then
     registry_suffix=`jq .registry_suffix $site_path`
     udmi_namespace=`jq -r .udmi_namespace $site_path`
     [[ $udmi_namespace == null ]] && udmi_namespace=
+    project_spec=N/A
 else
     echo Site model $site_path not found.
     false
@@ -139,7 +140,7 @@ elif [[ $project_spec == -- ]]; then
     alt_registry=null
     user_name=
     udmi_namespace=
-else
+elif [[ $project_spec != N/A ]]; then
     fail Unrecognized project spec: $project_spec
 fi
 
