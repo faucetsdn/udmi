@@ -18,6 +18,7 @@ import static com.google.udmi.util.GeneralUtils.ifNullThen;
 import static com.google.udmi.util.JsonUtil.isoConvert;
 import static com.google.udmi.util.JsonUtil.stringify;
 import static com.google.udmi.util.JsonUtil.toStringMap;
+import static com.google.udmi.util.SiteModel.DEFAULT_GBOS_HOSTNAME;
 import static java.lang.String.format;
 import static java.time.Instant.ofEpochSecond;
 import static java.util.Objects.requireNonNull;
@@ -315,6 +316,12 @@ public class PubSubReflector implements MessagePublisher {
     return setupUdmiConfig;
   }
 
+  @Override
+  public String getBridgeHost() {
+    // TODO: Figure out how to properly determine the endpoint connection host.
+    return DEFAULT_GBOS_HOSTNAME;
+  }
+
   private class MessageProcessor implements MessageReceiver {
 
     @Override
@@ -327,7 +334,8 @@ public class PubSubReflector implements MessagePublisher {
         if (messageBundle == null) {
           return;
         }
-        deviceRegistryId = requireNonNull(messageBundle.attributes.get(REGISTRY_ID_PROPERTY_KEY));
+        // Since this is a reflector, pull the registry id from the device id field.
+        deviceRegistryId = requireNonNull(messageBundle.attributes.get(DEVICE_ID_KEY));
       } catch (Exception e) {
         defaultErrorHandler.accept(e);
         return;

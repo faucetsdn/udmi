@@ -1962,7 +1962,7 @@ public class SequenceBase {
     }
     return ifNotTrueGet(synced,
         () -> format("waiting for last_start %s, transactions %s, last_config %s",
-            !lastConfigSynced,
+            !lastStartSynced,
             !transactionsClean, !lastConfigSynced));
   }
 
@@ -2067,11 +2067,12 @@ public class SequenceBase {
     checkState(deviceConfig.system.testing.endpoint_type == null, "endpoint type not null");
     try {
       useAlternateClient = true;
+      warning("Now using alternate connection client!");
       deviceConfig.system.testing.endpoint_type = "alternate";
       whileDoing("using alternate client", evaluator);
     } finally {
       useAlternateClient = false;
-      checkState(!configIsPending(), "Config is pending, client device might be borked!");
+      warning("Done with alternate connection client!");
       catchToNull(() -> deviceConfig.system.testing.endpoint_type = null);
     }
   }

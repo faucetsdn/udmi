@@ -497,6 +497,7 @@ public class IotReflectorClient implements MessagePublisher {
             () -> System.err.println("Waiting for the other shoe to drop..."));
         pubLatches.get(publisher).await(CONFIG_TIMEOUT_SEC, TimeUnit.SECONDS);
         active = true;
+        isInstallValid = true;
         return;
       }
 
