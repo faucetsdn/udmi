@@ -5,7 +5,7 @@ import json
 import udmi.schema.util
 
 
-@dataclasses.dataclass
+@dataclasses.dataclass(frozen=True, eq=True)
 class DiscoveryFamily:
   generation: str
   scan_interval_sec: int | None = None
