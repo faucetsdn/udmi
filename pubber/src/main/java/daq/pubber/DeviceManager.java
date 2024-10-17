@@ -1,27 +1,24 @@
 package daq.pubber;
 
 import com.google.udmi.util.SiteModel;
-import java.util.Map;
-import udmi.schema.Config;
-import udmi.schema.DevicePersistent;
-import udmi.schema.Entry;
-import udmi.schema.FamilyDiscovery;
-import udmi.schema.Level;
-import udmi.schema.Metadata;
-import udmi.schema.Operation.SystemMode;
+import daq.pubber.client.DeviceManagerProvider;
+import daq.pubber.client.DiscoveryManagerProvider;
+import daq.pubber.client.GatewayManagerProvider;
+import daq.pubber.client.LocalnetManagerProvider;
+import daq.pubber.client.PointsetManagerProvider;
+import daq.pubber.client.SystemManagerProvider;
 import udmi.schema.PubberConfiguration;
 
 /**
  * Uber-manager for a complete device.
  */
-public class DeviceManager extends ManagerBase {
+public class DeviceManager extends ManagerBase implements DeviceManagerProvider {
 
-  private final PointsetManager pointsetManager;
-  private final SystemManager systemManager;
-  private final LocalnetManager localnetManager;
-  private final GatewayManager gatewayManager;
-  private final DiscoveryManager discoveryManager;
-
+  private final PointsetManagerProvider pointsetManager;
+  private final SystemManagerProvider systemManager;
+  private final LocalnetManagerProvider localnetManager;
+  private final GatewayManagerProvider gatewayManager;
+  private final DiscoveryManagerProvider discoveryManager;
 
   /**
    * Create a new instance.
@@ -35,67 +32,29 @@ public class DeviceManager extends ManagerBase {
     discoveryManager = new DiscoveryManager(host, configuration, this);
   }
 
-  public void setPersistentData(DevicePersistent persistentData) {
-    systemManager.setPersistentData(persistentData);
+  @Override
+  public PointsetManagerProvider getPointsetManager() {
+    return pointsetManager;
   }
 
-  /**
-   * Set the metadata for this device.
-   */
-  public void setMetadata(Metadata metadata) {
-    pointsetManager.setPointsetModel(metadata.pointset);
-    systemManager.setMetadata(metadata);
-    gatewayManager.setMetadata(metadata);
+  @Override
+  public SystemManagerProvider getSystemManager() {
+    return systemManager;
   }
 
-  public void activate() {
-    gatewayManager.activate();
+  @Override
+  public LocalnetManagerProvider getLocalnetManager() {
+    return localnetManager;
   }
 
-  public void systemLifecycle(SystemMode mode) {
-    systemManager.systemLifecycle(mode);
+  @Override
+  public GatewayManagerProvider getGatewayManager() {
+    return gatewayManager;
   }
 
-  public void maybeRestartSystem() {
-    systemManager.maybeRestartSystem();
-  }
-
-  public void localLog(Entry report) {
-    systemManager.localLog(report);
-  }
-
-  public void localLog(String message, Level trace, String timestamp, String detail) {
-    systemManager.localLog(message, trace, timestamp, detail);
-  }
-
-  public String getTestingTag() {
-    return systemManager.getTestingTag();
-  }
-
-  /**
-   * Update the config of this device.
-   */
-  public void updateConfig(Config config) {
-    pointsetManager.updateConfig(config.pointset);
-    systemManager.updateConfig(config.system, config.timestamp);
-    gatewayManager.updateConfig(config.gateway);
-    discoveryManager.updateConfig(config.discovery);
-    localnetManager.updateConfig(config.localnet);
-  }
-
-  /**
-   * Publish log message for target device.
-   */
-  public void publishLogMessage(Entry logEntry, String targetId) {
-    if (deviceId.equals(targetId)) {
-      systemManager.publishLogMessage(logEntry);
-    } else {
-      gatewayManager.publishLogMessage(logEntry, targetId);
-    }
-  }
-
-  public void cloudLog(String message, Level level, String detail) {
-    systemManager.cloudLog(message, level, detail);
+  @Override
+  public DiscoveryManagerProvider getDiscoveryManager() {
+    return discoveryManager;
   }
 
   /**
@@ -103,37 +62,31 @@ public class DeviceManager extends ManagerBase {
    */
   @Override
   public void shutdown() {
-    systemManager.shutdown();
-    pointsetManager.shutdown();
-    localnetManager.shutdown();
-    gatewayManager.shutdown();
+    getGatewayManager().shutdown();
+    getLocalnetManager().shutdown();
+    getPointsetManager().shutdown();
+    getSystemManager().shutdown();
   }
+
 
   /**
    * Stop periodic senders.
    */
   @Override
   public void stop() {
-    pointsetManager.stop();
-    localnetManager.stop();
-    gatewayManager.stop();
-    systemManager.stop();
-  }
-
-  public Map<String, FamilyDiscovery> enumerateFamilies() {
-    return localnetManager.enumerateFamilies();
+    getGatewayManager().stop();
+    getLocalnetManager().stop();
+    getPointsetManager().stop();
+    getSystemManager().stop();
   }
 
   /**
    * Set the site model.
    */
-  public void setSiteModel(SiteModel siteModel) {
-    discoveryManager.setSiteModel(siteModel);
-    gatewayManager.setSiteModel(siteModel);
-    localnetManager.setSiteModel(siteModel);
+  protected void setSiteModel(SiteModel siteModel) {
+    getDiscoveryManager().setSiteModel(siteModel);
+    getGatewayManager().setSiteModel(siteModel);
+    getLocalnetManager().setSiteModel(siteModel);
   }
 
-  public FamilyProvider getLocalnetProvider(String family) {
-    return localnetManager.getLocalnetProvider(family);
-  }
 }

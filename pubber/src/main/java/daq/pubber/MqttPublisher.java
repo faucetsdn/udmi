@@ -22,6 +22,7 @@ import com.google.udmi.util.CertManager;
 import com.google.udmi.util.NanSerializer;
 import com.google.udmi.util.SiteModel;
 import com.google.udmi.util.SiteModel.ClientInfo;
+import daq.pubber.client.PubberHostProvider;
 import io.jsonwebtoken.JwtBuilder;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
@@ -68,7 +69,7 @@ import udmi.schema.PubberConfiguration;
 public class MqttPublisher implements Publisher {
 
   public static final String EMPTY_STRING = "";
-  static final int DEFAULT_CONFIG_WAIT_SEC = 10;
+  public static final int DEFAULT_CONFIG_WAIT_SEC = 10;
   private static final String DEFAULT_TOPIC_PREFIX = "/devices/";
   private static final Logger LOG = LoggerFactory.getLogger(MqttPublisher.class);
   private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper()
@@ -611,7 +612,7 @@ public class MqttPublisher implements Publisher {
   }
 
   private String getGatewayId(String targetId) {
-    return Pubber.getGatewayId(targetId, configuration);
+    return PubberHostProvider.getGatewayId(targetId, configuration);
   }
 
   /**
@@ -654,7 +655,10 @@ public class MqttPublisher implements Publisher {
     }
   }
 
-  static class InjectedMessage {
+  /**
+   * Represents a message with placeholders that need to be replaced.
+   */
+  public static class InjectedMessage {
 
     private static final String REPLACE_MESSAGE_KEY = "REPLACE_MESSAGE_WITH";
     private static final String REPLACE_TOPIC_KEY = "REPLACE_TOPIC_WITH";
@@ -670,12 +674,15 @@ public class MqttPublisher implements Publisher {
   /**
    * Marker class for sending using a bad topic not defined by a SubType/SubFolder.
    */
-  static class FakeTopic {
+  public static class FakeTopic {
     public String version;
     public Date timestamp;
   }
 
-  static class InjectedState extends InjectedMessage {
+  /**
+   * Injected state.
+   */
+  public static class InjectedState extends InjectedMessage {
 
   }
 

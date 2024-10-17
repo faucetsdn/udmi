@@ -13,10 +13,10 @@ public class MqttDevice {
 
   public static final String TEST_PROJECT = "test-project";
   static final String ATTACH_TOPIC = "attach";
-  static final String CONFIG_TOPIC = "config";
-  static final String ERRORS_TOPIC = "errors";
-  static final String EVENTS_TOPIC = "events";
-  static final String STATE_TOPIC = "state";
+  public static final String CONFIG_TOPIC = "config";
+  public static final String ERRORS_TOPIC = "errors";
+  public static final String EVENTS_TOPIC = "events";
+  public static final String STATE_TOPIC = "state";
 
   private final String deviceId;
   private final Publisher publisher;
@@ -31,7 +31,15 @@ public class MqttDevice {
         prefix -> publisher.setDeviceTopicPrefix(deviceId, prefix));
   }
 
-  MqttDevice(String deviceId, MqttDevice target) {
+  /**
+   * Constructs a new MqttDevice with the specified device ID and copies the publisher from the
+   * given target device.
+   * The certificate manager is set to null for this device.
+   *
+   * @param deviceId the unique identifier for the device
+   * @param target   the MqttDevice to copy the publisher from
+   */
+  public MqttDevice(String deviceId, MqttDevice target) {
     this.deviceId = deviceId;
     publisher = target.publisher;
     certManager = null;

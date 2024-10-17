@@ -7,6 +7,7 @@ import static java.util.Optional.ofNullable;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import daq.pubber.client.LocalnetManagerProvider;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -36,7 +37,7 @@ public class IpProvider extends ManagerBase implements FamilyProvider {
       "inet6", "ipv6"
   );
 
-  private final LocalnetManager localnetHost;
+  private final LocalnetManagerProvider localnetHost;
 
   /**
    * Create a basic provider instance.
@@ -44,7 +45,7 @@ public class IpProvider extends ManagerBase implements FamilyProvider {
   public IpProvider(ManagerHost host, String family,
       PubberConfiguration pubberConfiguration) {
     super(host, pubberConfiguration);
-    localnetHost = (LocalnetManager) host;
+    localnetHost = (LocalnetManagerProvider) host;
     populateInterfaceAddresses();
   }
 

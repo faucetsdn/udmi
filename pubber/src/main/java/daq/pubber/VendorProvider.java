@@ -9,6 +9,7 @@ import static java.util.Objects.requireNonNull;
 import static java.util.stream.Collectors.toMap;
 
 import com.google.udmi.util.SiteModel;
+import daq.pubber.client.LocalnetManagerProvider;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.function.BiConsumer;
@@ -23,14 +24,14 @@ import udmi.schema.RefDiscovery;
  */
 public class VendorProvider extends ManagerBase implements FamilyProvider {
 
-  private final LocalnetManager localnetHost;
+  private final LocalnetManagerProvider localnetHost;
   private SiteModel siteModel;
   private String selfAddr;
 
   public VendorProvider(ManagerHost host, String family,
       PubberConfiguration pubberConfiguration) {
     super(host, pubberConfiguration);
-    localnetHost = (LocalnetManager) host;
+    localnetHost = (LocalnetManagerProvider) host;
   }
 
   private DiscoveryEvents augmentSend(Entry<String, Metadata> entry, boolean enumerate) {
@@ -56,7 +57,7 @@ public class VendorProvider extends ManagerBase implements FamilyProvider {
     });
   }
 
-  void setSiteModel(SiteModel siteModel) {
+  public void setSiteModel(SiteModel siteModel) {
     this.siteModel = siteModel;
     updateStateAddress();
   }

@@ -5,6 +5,9 @@ import static com.google.udmi.util.GeneralUtils.deepCopy;
 import static com.google.udmi.util.GeneralUtils.friendlyStackTrace;
 import static java.lang.String.format;
 
+import daq.pubber.client.DeviceManagerProvider;
+import daq.pubber.client.ProxyDeviceHostProvider;
+import daq.pubber.client.PubberHostProvider;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import udmi.schema.Config;
@@ -14,7 +17,7 @@ import udmi.schema.PubberConfiguration;
 /**
  * Wrapper for a complete device construct.
  */
-public class ProxyDevice extends ManagerBase implements ManagerHost {
+public class ProxyDevice extends ManagerBase implements ProxyDeviceHostProvider {
 
   private static final long STATE_INTERVAL_MS = 1000;
   final DeviceManager deviceManager;
@@ -42,7 +45,8 @@ public class ProxyDevice extends ManagerBase implements ManagerHost {
     return proxyConfiguration;
   }
 
-  protected void activate() {
+  @Override
+  public void activate() {
     try {
       active.set(false);
       info("Activating proxy device " + deviceId);
@@ -56,33 +60,21 @@ public class ProxyDevice extends ManagerBase implements ManagerHost {
     }
   }
 
-  void configHandler(Config config) {
+  @Override
+  public void configHandler(Config config) {
     pubberHost.configPreprocess(deviceId, config);
     deviceManager.updateConfig(config);
     pubberHost.publisherConfigLog("apply", null, deviceId);
   }
 
   @Override
-  protected void shutdown() {
+  public void shutdown() {
     deviceManager.shutdown();
   }
 
   @Override
-  protected void stop() {
+  public void stop() {
     deviceManager.stop();
-  }
-
-  @Override
-  public void publish(Object message) {
-    if (active.get()) {
-      pubberHost.publish(deviceId, message);
-    }
-  }
-
-  @Override
-  public void update(Object update) {
-    updateStateHolder(deviceState, update);
-    stateDirty.set(true);
   }
 
   private void publishDirtyState() {
@@ -92,11 +84,28 @@ public class ProxyDevice extends ManagerBase implements ManagerHost {
   }
 
   @Override
-  public FamilyProvider getLocalnetProvider(String family) {
-    return host.getLocalnetProvider(family);
-  }
-
   public void setMetadata(Metadata metadata) {
     deviceManager.setMetadata(metadata);
   }
+
+  @Override
+  public DeviceManagerProvider getDeviceManager() {
+    return deviceManager;
+  }
+
+  @Override
+  public PubberHostProvider getPubberHost() {
+    return pubberHost;
+  }
+
+  @Override
+  public ManagerHost getManagerHost() {
+    return host;
+  }
+
+  @Override
+  public AtomicBoolean isActive() {
+    return active;
+  }
+
 }

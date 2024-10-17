@@ -5,36 +5,28 @@ import static com.google.udmi.util.GeneralUtils.getNow;
 import static com.google.udmi.util.GeneralUtils.ifNotNullGet;
 import static com.google.udmi.util.GeneralUtils.ifNotNullThen;
 import static com.google.udmi.util.GeneralUtils.ifNullThen;
-import static com.google.udmi.util.GeneralUtils.ifTrueGet;
 import static com.google.udmi.util.GeneralUtils.ifTrueThen;
-import static com.google.udmi.util.GeneralUtils.isTrue;
 import static java.lang.String.format;
 import static java.util.Optional.ofNullable;
-import static java.util.function.Predicate.not;
 import static udmi.schema.Category.GATEWAY_PROXY_TARGET;
 
 import com.google.udmi.util.SiteModel;
-import java.util.HashMap;
-import java.util.List;
+import daq.pubber.client.GatewayManagerProvider;
+import daq.pubber.client.ProxyDeviceHostProvider;
 import java.util.Map;
-import udmi.schema.Config;
 import udmi.schema.Entry;
 import udmi.schema.GatewayConfig;
 import udmi.schema.GatewayState;
 import udmi.schema.Level;
 import udmi.schema.Metadata;
-import udmi.schema.PointPointsetConfig;
-import udmi.schema.PointsetConfig;
 import udmi.schema.PubberConfiguration;
 
 /**
  * Manager for UDMI gateway functionality.
  */
-public class GatewayManager extends ManagerBase {
+public class GatewayManager extends ManagerBase implements GatewayManagerProvider {
 
-  private static final String EXTRA_PROXY_DEVICE = "XXX-1";
-  private static final String EXTRA_PROXY_POINT = "xxx_conflagration";
-  private Map<String, ProxyDevice> proxyDevices;
+  private Map<String, ProxyDeviceHostProvider> proxyDevices;
   private SiteModel siteModel;
   private Metadata metadata;
   private GatewayState gatewayState;
@@ -43,31 +35,14 @@ public class GatewayManager extends ManagerBase {
     super(host, configuration);
   }
 
-  private Map<String, ProxyDevice> createProxyDevices(List<String> proxyIds) {
-    if (proxyIds == null) {
-      return Map.of();
-    }
-
-    Map<String, ProxyDevice> devices = new HashMap<>();
-
-    String firstId = proxyIds.stream().sorted().findFirst().orElse(null);
-    String noProxyId = ifTrueGet(isTrue(options.noProxy), () -> firstId);
-    ifNotNullThen(noProxyId, id -> warn(format("Not proxying device %s", noProxyId)));
-    proxyIds.stream().filter(not(id -> id.equals(noProxyId)))
-        .forEach(id -> devices.put(id, new ProxyDevice(host, id, config)));
-
-    ifTrueThen(options.extraDevice, () -> devices.put(EXTRA_PROXY_DEVICE, makeExtraDevice()));
-
-    return devices;
-  }
-
   /**
    * Publish log message for target device.
    */
+  @Override
   public void publishLogMessage(Entry logEntry, String targetId) {
     ifNotNullThen(proxyDevices, p -> p.values().forEach(pd -> {
-      if (pd.deviceId.equals(targetId)) {
-        pd.deviceManager.publishLogMessage(logEntry, targetId);
+      if (pd.getDeviceId().equals(targetId)) {
+        pd.getDeviceManager().publishLogMessage(logEntry, targetId);
       }
     }));
   }
@@ -77,12 +52,14 @@ public class GatewayManager extends ManagerBase {
     proxyDevices = ifNotNullGet(metadata.gateway, g -> createProxyDevices(g.proxy_ids));
   }
 
+  @Override
   public void activate() {
-    ifNotNullThen(proxyDevices, p -> p.values().forEach(ProxyDevice::activate));
+    ifNotNullThen(proxyDevices, p -> p.values().forEach(ProxyDeviceHostProvider::activate));
   }
 
-  ProxyDevice makeExtraDevice() {
-    return new ProxyDevice(host, EXTRA_PROXY_DEVICE, config);
+  @Override
+  public ProxyDeviceHostProvider makeExtraDevice() {
+    return new ProxyDevice(getHost(), EXTRA_PROXY_DEVICE, getConfig());
   }
 
   /**
@@ -90,6 +67,7 @@ public class GatewayManager extends ManagerBase {
    * slightly different forms, one for the gateway proper (primarily indicating what devices
    * should be proxy targets), and the other for the proxy devices themselves.
    */
+  @Override
   public void updateConfig(GatewayConfig gateway) {
     if (gateway == null) {
       gatewayState = null;
@@ -115,7 +93,11 @@ public class GatewayManager extends ManagerBase {
     updateState();
   }
 
-  private void setGatewayStatus(String category, Level level, String message) {
+  /**
+   * Sets the status of the gateway.
+   */
+  @Override
+  public void setGatewayStatus(String category, Level level, String message) {
     // TODO: Implement a map or tree or something to properly handle different error sources.
     gatewayState.status = new Entry();
     gatewayState.status.category = category;
@@ -124,42 +106,16 @@ public class GatewayManager extends ManagerBase {
     gatewayState.status.timestamp = getNow();
   }
 
-  private void updateState() {
-    updateState(ofNullable((Object) gatewayState).orElse(GatewayState.class));
-  }
-
-  private void validateGatewayFamily(String family, String addr) {
-    if (!ProtocolFamily.FAMILIES.contains(family)) {
-      throw new IllegalArgumentException("Unrecognized address family " + family);
-    }
-
-    String expectedAddr = catchToNull(() -> metadata.localnet.families.get(family).addr);
-
-    if (expectedAddr != null && !expectedAddr.equals(addr)) {
-      throw new IllegalStateException(
-          format("Family address was %s, expected %s", addr, expectedAddr));
-    }
-  }
-
-  private void configExtraDevice() {
-    Config config = new Config();
-    config.pointset = new PointsetConfig();
-    config.pointset.points = new HashMap<>();
-    PointPointsetConfig pointPointsetConfig = new PointPointsetConfig();
-    config.pointset.points.put(EXTRA_PROXY_POINT, pointPointsetConfig);
-    proxyDevices.get(EXTRA_PROXY_DEVICE).configHandler(config);
-  }
-
   @Override
   public void shutdown() {
     super.shutdown();
-    ifNotNullThen(proxyDevices, p -> p.values().forEach(ProxyDevice::shutdown));
+    ifNotNullThen(proxyDevices, p -> p.values().forEach(ProxyDeviceHostProvider::shutdown));
   }
 
   @Override
   public void stop() {
     super.stop();
-    ifNotNullThen(proxyDevices, p -> p.values().forEach(ProxyDevice::stop));
+    ifNotNullThen(proxyDevices, p -> p.values().forEach(ProxyDeviceHostProvider::stop));
   }
 
   public void setSiteModel(SiteModel siteModel) {
@@ -167,11 +123,32 @@ public class GatewayManager extends ManagerBase {
     processMetadata();
   }
 
-  private void processMetadata() {
+  void processMetadata() {
     ifNotNullThen(proxyDevices, p -> p.values().forEach(proxy -> {
-      Metadata metadata = ifNotNullGet(siteModel, s -> s.getMetadata(proxy.deviceId));
-      metadata = ofNullable(metadata).orElse(new Metadata());
-      proxy.setMetadata(metadata);
+      Metadata localMetadata = ifNotNullGet(siteModel, s -> s.getMetadata(proxy.getDeviceId()));
+      localMetadata = ofNullable(localMetadata).orElse(new Metadata());
+      proxy.setMetadata(localMetadata);
     }));
+  }
+
+  @Override
+  public Metadata getMetadata() {
+    return metadata;
+  }
+
+  @Override
+  public GatewayState getGatewayState() {
+    return gatewayState;
+  }
+
+  @Override
+  public Map<String, ProxyDeviceHostProvider> getProxyDevices() {
+    return proxyDevices;
+  }
+
+  @Override
+  public ProxyDeviceHostProvider createProxyDevice(ManagerHost host, String id,
+      PubberConfiguration config) {
+    return new ProxyDevice(host, id, config);
   }
 }
