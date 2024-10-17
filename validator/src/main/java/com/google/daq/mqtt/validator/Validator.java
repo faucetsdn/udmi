@@ -171,6 +171,7 @@ public class Validator {
   private static final String TOOL_NAME = "validator";
   private static final long THREAD_JOIN_MS = 1000;
   public static final String VALIDATOR_TOOL_NAME = "validator";
+  public static final String REGISTRY_DEVICE_DEFAULT = "_regsitry";
   private final Map<String, ReportingDevice> reportingDevices = new TreeMap<>();
   private final Set<String> extraDevices = new TreeSet<>();
   private final Set<String> processedDevices = new TreeSet<>();
@@ -863,7 +864,7 @@ public class Validator {
     int index = messageIndex.incrementAndGet();
     String filename = format("%03d_%s.json", index, typeFolderPairKey(type, folder));
     System.err.printf("Trace %s, device %s%n", traceDir, deviceId);
-    File deviceDir = new File(traceDir, deviceId);
+    File deviceDir = new File(traceDir, ofNullable(deviceId).orElse(REGISTRY_DEVICE_DEFAULT));
     File messageFile = new File(deviceDir, filename);
     try {
       deviceDir.mkdir();
