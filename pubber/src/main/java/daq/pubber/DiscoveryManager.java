@@ -49,6 +49,7 @@ import udmi.schema.SystemDiscoveryData;
 public class DiscoveryManager extends ManagerBase {
 
   public static final int SCAN_DURATION_SEC = 10;
+  public static final String ENUMERATION_SCAN_FAMILY = "enumeration";
 
   private final DeviceManager deviceManager;
   private DiscoveryState discoveryState;
@@ -97,6 +98,7 @@ public class DiscoveryManager extends ManagerBase {
     DiscoveryEvents discoveryEvent = new DiscoveryEvents();
     discoveryEvent.generation = enumerationGeneration;
     Depths depths = config.depths;
+    discoveryEvent.scan_family = ENUMERATION_SCAN_FAMILY;
     discoveryEvent.refs = maybeEnumerate(depths.refs, () -> enumerateRefs(deviceId));
     discoveryEvent.features = maybeEnumerate(depths.features, SupportedFeatures::getFeatures);
     discoveryEvent.families = maybeEnumerate(depths.families, deviceManager::enumerateFamilies);
