@@ -8,7 +8,7 @@ class FamilyDiscoveryConfig:
     self.generation = None
     self.scan_interval_sec = None
     self.scan_duration_sec = None
-    self.passive_holdoff_sec = None
+    self.holdoff_sec = None
     self.depth = None
 
   @staticmethod
@@ -19,7 +19,7 @@ class FamilyDiscoveryConfig:
     result.generation = source.get('generation')
     result.scan_interval_sec = source.get('scan_interval_sec')
     result.scan_duration_sec = source.get('scan_duration_sec')
-    result.passive_holdoff_sec = source.get('passive_holdoff_sec')
+    result.holdoff_sec = source.get('holdoff_sec')
     result.depth = source.get('depth')
     return result
 
@@ -47,8 +47,8 @@ class FamilyDiscoveryConfig:
       result['scan_interval_sec'] = self.scan_interval_sec # 5
     if self.scan_duration_sec:
       result['scan_duration_sec'] = self.scan_duration_sec # 5
-    if self.passive_holdoff_sec:
-      result['passive_holdoff_sec'] = self.passive_holdoff_sec # 5
+    if self.holdoff_sec:
+      result['holdoff_sec'] = self.holdoff_sec # 5
     if self.depth:
       result['depth'] = self.depth # 5
     return result
