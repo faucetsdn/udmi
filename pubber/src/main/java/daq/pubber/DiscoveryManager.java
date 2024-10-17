@@ -16,7 +16,6 @@ import static java.util.Optional.ofNullable;
 import static java.util.function.Predicate.not;
 import static java.util.stream.Collectors.toMap;
 import static udmi.schema.FamilyDiscoveryState.Phase.ACTIVE;
-import static udmi.schema.FamilyDiscoveryState.Phase.DONE;
 import static udmi.schema.FamilyDiscoveryState.Phase.PENDING;
 import static udmi.schema.FamilyDiscoveryState.Phase.STOPPED;
 
@@ -206,7 +205,7 @@ public class DiscoveryManager extends ManagerBase {
     familyDiscoveryState.generation = scanGeneration;
     familyDiscoveryState.phase = ACTIVE;
     AtomicInteger sendCount = new AtomicInteger();
-    familyDiscoveryState.record_count = sendCount.get();
+    familyDiscoveryState.active_count = sendCount.get();
     updateState();
     discoveryProvider(family).startScan(shouldEnumerate(family),
         (deviceId, discoveryEvent) -> ifNotNullThen(discoveryEvent.scan_addr, addr -> {
@@ -217,7 +216,7 @@ public class DiscoveryManager extends ManagerBase {
           discoveryEvent.system = new SystemDiscoveryData();
           discoveryEvent.system.ancillary = new HashMap<>();
           discoveryEvent.system.ancillary.put("device-name", deviceId);
-          familyDiscoveryState.record_count = sendCount.incrementAndGet();
+          familyDiscoveryState.active_count = sendCount.incrementAndGet();
           updateState();
           host.publish(discoveryEvent);
         }));
@@ -252,7 +251,7 @@ public class DiscoveryManager extends ManagerBase {
       ifTrueThen(scanGeneration.equals(familyDiscoveryState.generation),
           () -> {
             discoveryProvider(family).stopScan();
-            familyDiscoveryState.phase = DONE;
+            familyDiscoveryState.phase = STOPPED;
             updateState();
             scheduleDiscoveryScan(family);
           });
