@@ -1,2 +1,2 @@
 1 schema violations found
-  object has missing required properties (["timestamp","version"])
+  object has missing required properties (["scan_family","timestamp","version"])

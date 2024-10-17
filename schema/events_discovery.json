@@ -114,7 +114,6 @@
   "required": [
     "timestamp",
     "version",
-    "event_no",
     "scan_family"
   ]
 }

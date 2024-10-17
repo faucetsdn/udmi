@@ -81,7 +81,6 @@ public class DiscoveryEvents {
     public java.lang.String scan_addr;
     /**
      * The active or passive series number of this result (matches reported state values)
-     * (Required)
      * 
      */
     @JsonProperty("event_no")
