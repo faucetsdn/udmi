@@ -1,7 +1,6 @@
 package daq.pubber;
 
 import static com.google.udmi.util.GeneralUtils.catchToNull;
-import static com.google.udmi.util.GeneralUtils.ifNotNullGet;
 import static com.google.udmi.util.GeneralUtils.ifNotNullThen;
 import static com.google.udmi.util.GeneralUtils.ifTrueGet;
 import static daq.pubber.ProtocolFamily.VENDOR;

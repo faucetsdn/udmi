@@ -863,7 +863,6 @@ public class Validator {
         key -> new AtomicInteger());
     int index = messageIndex.incrementAndGet();
     String filename = format("%03d_%s.json", index, typeFolderPairKey(type, folder));
-    System.err.printf("Trace %s, device %s%n", traceDir, deviceId);
     File deviceDir = new File(traceDir, ofNullable(deviceId).orElse(REGISTRY_DEVICE_DEFAULT));
     File messageFile = new File(deviceDir, filename);
     try {
