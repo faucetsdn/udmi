@@ -25,7 +25,6 @@ import static udmi.schema.Bucket.ENUMERATION_FEATURES;
 import static udmi.schema.Bucket.ENUMERATION_POINTSET;
 import static udmi.schema.Depths.Depth.ENTRIES;
 import static udmi.schema.FamilyDiscoveryState.Phase.ACTIVE;
-import static udmi.schema.FamilyDiscoveryState.Phase.DONE;
 import static udmi.schema.FamilyDiscoveryState.Phase.PENDING;
 import static udmi.schema.FamilyDiscoveryState.Phase.STOPPED;
 import static udmi.schema.FeatureDiscovery.FeatureStage.ALPHA;
@@ -450,7 +449,7 @@ public class DiscoverySequences extends SequenceBase {
       FamilyDiscoveryState stateFamily = getStateFamily(family);
       return stateFamily != null
           && dateEquals(stateFamily.generation, startTime)
-          && (stateFamily.phase == DONE || stateFamily.phase == STOPPED)
+          && stateFamily.phase == STOPPED
           && deviceState.timestamp.after(startTime);
     };
   }
