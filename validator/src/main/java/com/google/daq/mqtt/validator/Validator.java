@@ -220,8 +220,8 @@ public class Validator {
       validateReflector();
     }
     targetDevices = Set.copyOf(listCopy);
-    siteModel = new SiteModel(config.site_model);
-    initializeExpectedDevices();
+    siteModel = ifNotNullGet(config.site_model, SiteModel::new);
+    ifNotNullThen(siteModel, this::initializeExpectedDevices);
   }
 
   public Validator() {
