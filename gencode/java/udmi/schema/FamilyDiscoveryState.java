@@ -22,7 +22,8 @@ import com.fasterxml.jackson.annotation.JsonValue;
 @JsonPropertyOrder({
     "generation",
     "phase",
-    "record_count",
+    "active_count",
+    "passive_count",
     "status"
 })
 public class FamilyDiscoveryState {
@@ -35,19 +36,26 @@ public class FamilyDiscoveryState {
     @JsonPropertyDescription("Generational marker for reporting discovery")
     public Date generation;
     /**
-     * Current phase of the discovery process
+     * Current phase of an active discovery process
      * 
      */
     @JsonProperty("phase")
-    @JsonPropertyDescription("Current phase of the discovery process")
+    @JsonPropertyDescription("Current phase of an active discovery process")
     public FamilyDiscoveryState.Phase phase;
     /**
-     * Number of records produced so far for this scan generation
+     * Number of records produced so far for this active scan generation
      * 
      */
-    @JsonProperty("record_count")
-    @JsonPropertyDescription("Number of records produced so far for this scan generation")
-    public Integer record_count;
+    @JsonProperty("active_count")
+    @JsonPropertyDescription("Number of records produced so far for this active scan generation")
+    public Integer active_count;
+    /**
+     * Number of passive scan results reported since enabling
+     * 
+     */
+    @JsonProperty("passive_count")
+    @JsonPropertyDescription("Number of passive scan results reported since enabling")
+    public Integer passive_count;
     /**
      * Entry
      * <p>
@@ -62,7 +70,8 @@ public class FamilyDiscoveryState {
         int result = 1;
         result = ((result* 31)+((this.generation == null)? 0 :this.generation.hashCode()));
         result = ((result* 31)+((this.phase == null)? 0 :this.phase.hashCode()));
-        result = ((result* 31)+((this.record_count == null)? 0 :this.record_count.hashCode()));
+        result = ((result* 31)+((this.active_count == null)? 0 :this.active_count.hashCode()));
+        result = ((result* 31)+((this.passive_count == null)? 0 :this.passive_count.hashCode()));
         result = ((result* 31)+((this.status == null)? 0 :this.status.hashCode()));
         return result;
     }
@@ -76,18 +85,17 @@ public class FamilyDiscoveryState {
             return false;
         }
         FamilyDiscoveryState rhs = ((FamilyDiscoveryState) other);
-        return (((((this.generation == rhs.generation)||((this.generation!= null)&&this.generation.equals(rhs.generation)))&&((this.phase == rhs.phase)||((this.phase!= null)&&this.phase.equals(rhs.phase))))&&((this.record_count == rhs.record_count)||((this.record_count!= null)&&this.record_count.equals(rhs.record_count))))&&((this.status == rhs.status)||((this.status!= null)&&this.status.equals(rhs.status))));
+        return ((((((this.generation == rhs.generation)||((this.generation!= null)&&this.generation.equals(rhs.generation)))&&((this.phase == rhs.phase)||((this.phase!= null)&&this.phase.equals(rhs.phase))))&&((this.active_count == rhs.active_count)||((this.active_count!= null)&&this.active_count.equals(rhs.active_count))))&&((this.passive_count == rhs.passive_count)||((this.passive_count!= null)&&this.passive_count.equals(rhs.passive_count))))&&((this.status == rhs.status)||((this.status!= null)&&this.status.equals(rhs.status))));
     }
 
 
     /**
-     * Current phase of the discovery process
+     * Current phase of an active discovery process
      * 
      */
     public enum Phase {
 
         STOPPED("stopped"),
-        PASSIVE("passive"),
         PENDING("pending"),
         ACTIVE("active");
         private final String value;
