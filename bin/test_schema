@@ -69,7 +69,9 @@ for subset in $subsets; do
         reldir=$(realpath --relative-to $schemadir $testdir)
         reltest=$reldir:$subset
     fi
-    (cd $schemadir; $javarun -a $schemaname $upgrade -f $reltest) || true
+    cmd="$javarun -a $schemaname $upgrade -f $reltest"
+    echo $cmd
+    (cd $schemadir; $cmd) || true
 
     for testfile in $testfiles; do
         outfile=${testfile%.json}.out

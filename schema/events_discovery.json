@@ -33,6 +33,10 @@
       "description": "The primary address of the device (for scan_family)",
       "type": "string"
     },
+    "event_no": {
+      "description": "The active or passive series number of this result (matches reported state values)",
+      "type": "integer"
+    },
     "families": {
       "description": "Address family discovery discovery results.",
       "type": "object",
@@ -110,6 +114,6 @@
   "required": [
     "timestamp",
     "version",
-    "generation"
+    "scan_family"
   ]
 }

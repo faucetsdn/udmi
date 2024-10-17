@@ -408,14 +408,14 @@ sites/udmi_site_model/out/devices/GAT-123/events_discovery.out
   "sub_type" : "events",
   "status" : {
     "message" : "While converting to json node: 1 schema violations found",
-    "detail" : "events_discovery: While converting to json node: 1 schema violations found REDACTED_ERROR; 1 schema violations found; object has missing required properties ([\"generation\"])",
+    "detail" : "events_discovery: While converting to json node: 1 schema violations found REDACTED_ERROR; 1 schema violations found; object has missing required properties ([\"scan_family\"])",
     "category" : "validation.device.schema",
     "timestamp" : "REDACTED_TIMESTAMP",
     "level" : 500
   },
   "errors" : [ {
     "message" : "While converting to json node: 1 schema violations found",
-    "detail" : "events_discovery: While converting to json node: 1 schema violations found REDACTED_ERROR; 1 schema violations found; object has missing required properties ([\"generation\"])",
+    "detail" : "events_discovery: While converting to json node: 1 schema violations found REDACTED_ERROR; 1 schema violations found; object has missing required properties ([\"scan_family\"])",
     "category" : "validation.device.schema",
     "timestamp" : "REDACTED_TIMESTAMP",
     "level" : 500

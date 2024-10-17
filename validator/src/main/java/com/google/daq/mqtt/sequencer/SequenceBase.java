@@ -1447,7 +1447,7 @@ public class SequenceBase {
   private void processLogMessages() {
     List<SystemEvents> receivedEvents = popReceivedEvents(SystemEvents.class);
     receivedEvents.forEach(systemEvent -> {
-      int eventCount = ofNullable(systemEvent.event_count).orElse(previousEventCount + 1);
+      int eventCount = ofNullable(systemEvent.event_no).orElse(previousEventCount + 1);
       if (eventCount != previousEventCount + 1) {
         debug("Missing system events " + previousEventCount + " -> " + eventCount);
       }

@@ -16,7 +16,6 @@ import static java.util.Optional.ofNullable;
 import static java.util.function.Predicate.not;
 import static java.util.stream.Collectors.toMap;
 import static udmi.schema.FamilyDiscoveryState.Phase.ACTIVE;
-import static udmi.schema.FamilyDiscoveryState.Phase.DONE;
 import static udmi.schema.FamilyDiscoveryState.Phase.PENDING;
 import static udmi.schema.FamilyDiscoveryState.Phase.STOPPED;
 
@@ -50,6 +49,7 @@ import udmi.schema.SystemDiscoveryData;
 public class DiscoveryManager extends ManagerBase {
 
   public static final int SCAN_DURATION_SEC = 10;
+  public static final String ENUMERATION_SCAN_FAMILY = "enumeration";
 
   private final DeviceManager deviceManager;
   private DiscoveryState discoveryState;
@@ -98,6 +98,7 @@ public class DiscoveryManager extends ManagerBase {
     DiscoveryEvents discoveryEvent = new DiscoveryEvents();
     discoveryEvent.generation = enumerationGeneration;
     Depths depths = config.depths;
+    discoveryEvent.scan_family = ENUMERATION_SCAN_FAMILY;
     discoveryEvent.refs = maybeEnumerate(depths.refs, () -> enumerateRefs(deviceId));
     discoveryEvent.features = maybeEnumerate(depths.features, SupportedFeatures::getFeatures);
     discoveryEvent.families = maybeEnumerate(depths.families, deviceManager::enumerateFamilies);
@@ -206,7 +207,7 @@ public class DiscoveryManager extends ManagerBase {
     familyDiscoveryState.generation = scanGeneration;
     familyDiscoveryState.phase = ACTIVE;
     AtomicInteger sendCount = new AtomicInteger();
-    familyDiscoveryState.record_count = sendCount.get();
+    familyDiscoveryState.active_count = sendCount.get();
     updateState();
     discoveryProvider(family).startScan(shouldEnumerate(family),
         (deviceId, discoveryEvent) -> ifNotNullThen(discoveryEvent.scan_addr, addr -> {
@@ -217,7 +218,7 @@ public class DiscoveryManager extends ManagerBase {
           discoveryEvent.system = new SystemDiscoveryData();
           discoveryEvent.system.ancillary = new HashMap<>();
           discoveryEvent.system.ancillary.put("device-name", deviceId);
-          familyDiscoveryState.record_count = sendCount.incrementAndGet();
+          familyDiscoveryState.active_count = sendCount.incrementAndGet();
           updateState();
           host.publish(discoveryEvent);
         }));
@@ -252,7 +253,7 @@ public class DiscoveryManager extends ManagerBase {
       ifTrueThen(scanGeneration.equals(familyDiscoveryState.generation),
           () -> {
             discoveryProvider(family).stopScan();
-            familyDiscoveryState.phase = DONE;
+            familyDiscoveryState.phase = STOPPED;
             updateState();
             scheduleDiscoveryScan(family);
           });
