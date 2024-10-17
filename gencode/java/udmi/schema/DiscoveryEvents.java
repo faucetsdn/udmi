@@ -65,11 +65,6 @@ public class DiscoveryEvents {
      */
     @JsonProperty("status")
     public Entry status;
-    /**
-     * 
-     * (Required)
-     * 
-     */
     @JsonProperty("scan_family")
     public String scan_family;
     /**

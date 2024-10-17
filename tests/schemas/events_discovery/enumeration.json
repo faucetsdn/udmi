@@ -6,7 +6,7 @@
 {
   "version": "1.5.1",
   "timestamp": "2018-08-26T21:42:12.237Z",
-  "generation": "2018-08-26T21:37:12Z",
+  "scan_family": "vendor",
   "refs": {
     // Numerical value with an articulated unit
     "analog-value_29": {  // Internal reference used on-prem (e.g. reference to bacnet property)

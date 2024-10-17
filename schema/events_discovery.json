@@ -113,7 +113,6 @@
   },
   "required": [
     "timestamp",
-    "version",
-    "scan_family"
+    "version"
   ]
 }
