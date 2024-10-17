@@ -26,7 +26,7 @@ Likewise, a few different ways discovery _enumeration_ can happen:
 There are four phases that a discovery system can be in, as reported by the appropriate _state_ block.
 
 * `stopped`: There is no scan activity, either passive, active, or scheduled.
-* `passive`: The system is passively monitoring for devics on the network.
+* `passive`: The system is passively monitoring for devices on the network.
 * `pending`: The system has a future active scan scheduled.
 * `active`: There is currently an active scan in progress.
 
