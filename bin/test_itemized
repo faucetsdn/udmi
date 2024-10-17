@@ -112,7 +112,8 @@ while read -u 7 action test_name pubber_opts; do
     echo Cleaning up pubber processes...
     (ps ax | fgrep pubber | fgrep java) || true
     kill $(ps ax | fgrep pubber | fgrep java | awk '{print $1}') || true
-    sleep 4
+    sleep 1
+    ! (ps ax | fgrep pubber | fgrep java) || (echo Still have instances, wait again... && sleep 2)
     ! (ps ax | fgrep pubber | fgrep java) || fail Unexpected lingering pubber processes
 
     egrep "(RESULT|CPBLTY) [a-z]+ [a-z.]+ $test_name[^ ]* " $SEQUENCER_OUT | while read result; do
