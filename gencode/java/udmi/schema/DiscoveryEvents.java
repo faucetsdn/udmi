@@ -65,6 +65,11 @@ public class DiscoveryEvents {
      */
     @JsonProperty("status")
     public Entry status;
+    /**
+     * 
+     * (Required)
+     * 
+     */
     @JsonProperty("scan_family")
     public String scan_family;
     /**
@@ -76,6 +81,7 @@ public class DiscoveryEvents {
     public java.lang.String scan_addr;
     /**
      * The active or passive series number of this result (matches reported state values)
+     * (Required)
      * 
      */
     @JsonProperty("event_no")

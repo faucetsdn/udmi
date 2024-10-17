@@ -113,6 +113,8 @@
   },
   "required": [
     "timestamp",
-    "version"
+    "version",
+    "event_no",
+    "scan_family"
   ]
 }
