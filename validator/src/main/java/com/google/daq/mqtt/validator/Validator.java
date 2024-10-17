@@ -161,8 +161,12 @@ public class Validator {
   );
   private static final Set<SubType> LAST_SEEN_SUBTYPES = ImmutableSet.of(SubType.EVENTS,
       SubType.STATE);
-  private static List<String> IGNORE_LIST = ImmutableList.of("instance type \\(string\\) does not match any allowed primitive type \\(allowed: \\[.*\"number\"\\]\\)");
-  private static List<Pattern> IGNORE_PATTERNS = IGNORE_LIST.stream().map(Pattern::compile).toList();
+
+  @SuppressWarnings("checkstyle:linelength")
+  private static final List<String> IGNORE_LIST = ImmutableList.of(
+      "instance type \\(string\\) does not match any allowed primitive type \\(allowed: \\[.*\"number\"\\]\\)");
+  private static final List<Pattern> IGNORE_PATTERNS = IGNORE_LIST.stream().map(Pattern::compile)
+      .toList();
 
   private static final long REPORT_INTERVAL_SEC = 15;
   private static final String EXCLUDE_DEVICE_PREFIX = "_";
@@ -303,7 +307,8 @@ public class Validator {
   }
 
   private static boolean notOnIgnoreList(ProcessingMessage processingMessage) {
-    return IGNORE_PATTERNS.stream().noneMatch(p -> p.matcher(processingMessage.getMessage()).matches());
+    return IGNORE_PATTERNS.stream()
+        .noneMatch(p -> p.matcher(processingMessage.getMessage()).matches());
   }
 
   private static boolean errorOrWorse(ProcessingMessage processingMessage) {
