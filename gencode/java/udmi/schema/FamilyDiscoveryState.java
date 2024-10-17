@@ -86,10 +86,10 @@ public class FamilyDiscoveryState {
      */
     public enum Phase {
 
-        PENDING("pending"),
-        ACTIVE("active"),
         STOPPED("stopped"),
-        DONE("done");
+        PASSIVE("passive"),
+        PENDING("pending"),
+        ACTIVE("active");
         private final String value;
         private final static Map<String, FamilyDiscoveryState.Phase> CONSTANTS = new HashMap<String, FamilyDiscoveryState.Phase>();
 

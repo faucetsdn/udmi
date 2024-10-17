@@ -14,10 +14,10 @@
     "phase": {
       "description": "Current phase of the discovery process",
       "enum": [
-        "pending",
-        "active",
         "stopped",
-        "done"
+        "passive",
+        "pending",
+        "active"
       ]
     },
     "record_count": {
