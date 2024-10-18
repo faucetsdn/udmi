@@ -1,4 +1,4 @@
-package daq.pubber;
+package udmi.lib;
 
 /**
  * Collection of methods for how a manager can/should interface with it's host class.

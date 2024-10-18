@@ -1,9 +1,9 @@
 package udmi.lib.client;
 
-import daq.pubber.ManagerHost;
-import daq.pubber.ManagerLog;
 import java.util.Date;
 import java.util.concurrent.ScheduledFuture;
+import udmi.lib.ManagerHost;
+import udmi.lib.ManagerLog;
 import udmi.schema.PubberConfiguration;
 import udmi.schema.PubberOptions;
 

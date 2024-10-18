@@ -21,7 +21,6 @@ import static com.google.udmi.util.GeneralUtils.stackTraceString;
 import static com.google.udmi.util.GeneralUtils.toJsonFile;
 import static com.google.udmi.util.JsonUtil.safeSleep;
 import static com.google.udmi.util.JsonUtil.stringify;
-import static daq.pubber.SystemManager.LOG_MAP;
 import static java.lang.String.format;
 import static java.util.Objects.requireNonNullElse;
 import static java.util.Optional.ofNullable;
@@ -31,7 +30,6 @@ import com.google.udmi.util.CertManager;
 import com.google.udmi.util.SchemaVersion;
 import com.google.udmi.util.SiteModel;
 import com.google.udmi.util.SiteModel.MetadataException;
-import daq.pubber.MqttPublisher.PublisherException;
 import daq.pubber.PubSubClient.Bundle;
 import java.io.File;
 import java.io.PrintStream;
@@ -50,8 +48,13 @@ import java.util.function.Function;
 import org.apache.http.ConnectionClosedException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import udmi.lib.FamilyProvider;
+import udmi.lib.ManagerBase;
+import udmi.lib.MqttDevice;
+import udmi.lib.MqttPublisher.PublisherException;
 import udmi.lib.client.DeviceManagerProvider;
 import udmi.lib.client.PubberHostProvider;
+import udmi.lib.client.SystemManagerProvider;
 import udmi.schema.Config;
 import udmi.schema.DevicePersistent;
 import udmi.schema.EndpointConfiguration;
@@ -508,7 +511,8 @@ public class Pubber extends ManagerBase implements PubberHostProvider {
   @Override
   public void publisherException(Exception toReport) {
     if (toReport instanceof PublisherException report) {
-      publisherHandler(report.type, report.phase, report.getCause(), report.deviceId);
+      publisherHandler(report.getType(), report.getPhase(), report.getCause(),
+          report.getDeviceId());
     } else if (toReport instanceof ConnectionClosedException) {
       error("Connection closed, attempting reconnect...");
       while (retriesRemaining.getAndDecrement() > 0) {
@@ -697,7 +701,7 @@ public class Pubber extends ManagerBase implements PubberHostProvider {
 
   @Override
   public Map<Level, Consumer<String>> getLogMap() {
-    return LOG_MAP;
+    return SystemManagerProvider.getLogMap().apply(LOG);
   }
 
   public Metadata getMetadata(String id) {

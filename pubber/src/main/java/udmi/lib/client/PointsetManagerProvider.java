@@ -11,12 +11,12 @@ import static java.util.Optional.ofNullable;
 import static udmi.schema.Category.POINTSET_POINT_INVALID;
 import static udmi.schema.Category.POINTSET_POINT_INVALID_VALUE;
 
-import daq.pubber.AbstractPoint;
-import daq.pubber.ManagerHost;
-import daq.pubber.ManagerLog;
 import java.util.Map;
 import java.util.Objects;
 import java.util.stream.Stream;
+import udmi.lib.AbstractPoint;
+import udmi.lib.ManagerHost;
+import udmi.lib.ManagerLog;
 import udmi.schema.Entry;
 import udmi.schema.PointPointsetEvents;
 import udmi.schema.PointPointsetState;

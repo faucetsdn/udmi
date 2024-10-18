@@ -5,7 +5,6 @@ import static com.google.udmi.util.GeneralUtils.ifNotNullThen;
 import static com.google.udmi.util.GeneralUtils.ifTrueThen;
 import static com.google.udmi.util.JsonUtil.isoConvert;
 import static java.lang.String.format;
-import static java.util.Optional.ofNullable;
 import static java.util.stream.Collectors.toMap;
 import static udmi.lib.client.PubberHostProvider.DEVICE_START_TIME;
 import static udmi.schema.FamilyDiscoveryState.Phase.ACTIVE;
@@ -16,13 +15,15 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
+import udmi.lib.FamilyProvider;
+import udmi.lib.ManagerBase;
+import udmi.lib.ManagerHost;
 import udmi.lib.client.DiscoveryManagerProvider;
 import udmi.schema.Depths;
 import udmi.schema.DiscoveryConfig;
 import udmi.schema.DiscoveryEvents;
 import udmi.schema.DiscoveryState;
 import udmi.schema.FamilyDiscoveryState;
-import udmi.schema.PointPointsetModel;
 import udmi.schema.PubberConfiguration;
 import udmi.schema.RefDiscovery;
 import udmi.schema.SystemDiscoveryData;
@@ -45,19 +46,6 @@ public class DiscoveryManager extends ManagerBase implements DiscoveryManagerPro
     this.deviceManager = deviceManager;
   }
 
-  static String getVendorRefKey(Map.Entry<String, PointPointsetModel> entry) {
-    return ofNullable(entry.getValue().ref).orElse(entry.getKey());
-  }
-
-  static RefDiscovery getVendorRefValue(Map.Entry<String, PointPointsetModel> entry) {
-    RefDiscovery refDiscovery = new RefDiscovery();
-    refDiscovery.possible_values = null;
-    PointPointsetModel model = entry.getValue();
-    refDiscovery.writable = model.writable;
-    refDiscovery.units = model.units;
-    refDiscovery.point = ifNotNullGet(model.ref, entry::getKey);
-    return refDiscovery;
-  }
 
   /**
    * Updates discovery enumeration.
@@ -142,7 +130,8 @@ public class DiscoveryManager extends ManagerBase implements DiscoveryManagerPro
 
   private Map<String, RefDiscovery> enumerateRefs(String deviceId) {
     return siteModel.getMetadata(deviceId).pointset.points.entrySet().stream()
-        .collect(toMap(DiscoveryManager::getVendorRefKey, DiscoveryManager::getVendorRefValue));
+        .collect(toMap(DiscoveryManagerProvider::getVendorRefKey,
+            DiscoveryManagerProvider::getVendorRefValue));
   }
 
   /**

@@ -1,6 +1,8 @@
 package daq.pubber;
 
 import com.google.udmi.util.SiteModel;
+import udmi.lib.ManagerBase;
+import udmi.lib.ManagerHost;
 import udmi.lib.client.DeviceManagerProvider;
 import udmi.lib.client.DiscoveryManagerProvider;
 import udmi.lib.client.GatewayManagerProvider;

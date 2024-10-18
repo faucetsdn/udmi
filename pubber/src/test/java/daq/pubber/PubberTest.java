@@ -118,9 +118,9 @@ public class PubberTest extends TestBase {
     blobBlobsetConfig.sha256 = sha256(ENDPOINT_BLOB);
     blobBlobsetConfig.phase = BlobPhase.FINAL;
     blobBlobsetConfig.generation = new Date();
-    pubber.deviceConfig.blobset = new BlobsetConfig();
-    pubber.deviceConfig.blobset.blobs = new HashMap<>();
-    pubber.deviceConfig.blobset.blobs.put(IOT_ENDPOINT_CONFIG.value(), blobBlobsetConfig);
+    pubber.getDeviceConfig().blobset = new BlobsetConfig();
+    pubber.getDeviceConfig().blobset.blobs = new HashMap<>();
+    pubber.getDeviceConfig().blobset.blobs.put(IOT_ENDPOINT_CONFIG.value(), blobBlobsetConfig);
 
     return pubber.extractEndpointBlobConfig();
   }
@@ -131,9 +131,9 @@ public class PubberTest extends TestBase {
     blobBlobsetConfig.sha256 = sha256(ENDPOINT_REDIRECT_BLOB);
     blobBlobsetConfig.phase = BlobPhase.FINAL;
     blobBlobsetConfig.generation = new Date();
-    pubber.deviceConfig.blobset = new BlobsetConfig();
-    pubber.deviceConfig.blobset.blobs = new HashMap<>();
-    pubber.deviceConfig.blobset.blobs.put(IOT_ENDPOINT_CONFIG.value(), blobBlobsetConfig);
+    pubber.getDeviceConfig().blobset = new BlobsetConfig();
+    pubber.getDeviceConfig().blobset.blobs = new HashMap<>();
+    pubber.getDeviceConfig().blobset.blobs.put(IOT_ENDPOINT_CONFIG.value(), blobBlobsetConfig);
 
     return pubber.extractEndpointBlobConfig();
   }
@@ -191,16 +191,16 @@ public class PubberTest extends TestBase {
     configurePubberEndpoint();
     pubber.maybeRedirectEndpoint();
     assertEquals(BlobPhase.FINAL,
-        pubber.deviceState.blobset.blobs.get(IOT_ENDPOINT_CONFIG.value()).phase);
-    Date initialGeneration = pubber.deviceState.blobset.blobs.get(
+        pubber.getDeviceState().blobset.blobs.get(IOT_ENDPOINT_CONFIG.value()).phase);
+    Date initialGeneration = pubber.getDeviceState().blobset.blobs.get(
         IOT_ENDPOINT_CONFIG.value()).generation;
     assertNotEquals(null, initialGeneration);
 
     configurePubberRedirect();
     pubber.maybeRedirectEndpoint();
     assertEquals(BlobPhase.FINAL,
-        pubber.deviceState.blobset.blobs.get(IOT_ENDPOINT_CONFIG.value()).phase);
-    Date redirectGeneration = pubber.deviceState.blobset.blobs.get(
+        pubber.getDeviceState().blobset.blobs.get(IOT_ENDPOINT_CONFIG.value()).phase);
+    Date redirectGeneration = pubber.getDeviceState().blobset.blobs.get(
         IOT_ENDPOINT_CONFIG.value()).generation;
     assertNotEquals(null, redirectGeneration);
 
@@ -236,7 +236,7 @@ public class PubberTest extends TestBase {
 
     // Prepare test.
     testPersistentData.endpoint = null;
-    pubber.config.endpoint = null;
+    pubber.getConfig().endpoint = null;
 
     // Now test.
     testFeatures.put(PubberUnderTestFeatures.noInitializePersistentStore, false);
@@ -256,7 +256,7 @@ public class PubberTest extends TestBase {
 
     // Prepare test.
     testPersistentData.endpoint = null;
-    pubber.config.endpoint = getEndpointConfiguration("from_config");
+    pubber.getConfig().endpoint = getEndpointConfiguration("from_config");
 
     // Now test.
     testFeatures.put(PubberUnderTestFeatures.noInitializePersistentStore, false);
@@ -276,12 +276,12 @@ public class PubberTest extends TestBase {
 
     // Prepare test.
     testPersistentData.endpoint = getEndpointConfiguration("persistent");
-    pubber.config.endpoint = null;
+    pubber.getConfig().endpoint = null;
 
     // Now test.
     testFeatures.put(PubberUnderTestFeatures.noInitializePersistentStore, false);
     pubber.initializePersistentStore();
     assertEquals(pubber.persistentData.endpoint.hostname, "persistent");
-    assertEquals(pubber.config.endpoint.hostname, "persistent");
+    assertEquals(pubber.getConfig().endpoint.hostname, "persistent");
   }
 }

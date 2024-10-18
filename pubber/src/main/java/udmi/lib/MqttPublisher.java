@@ -1,4 +1,4 @@
-package daq.pubber;
+package udmi.lib;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
@@ -652,6 +652,18 @@ public class MqttPublisher implements Publisher {
       this.deviceId = deviceId;
       this.type = type;
       this.phase = phase;
+    }
+
+    public String getDeviceId() {
+      return deviceId;
+    }
+
+    public String getType() {
+      return type;
+    }
+
+    public String getPhase() {
+      return phase;
     }
   }
 

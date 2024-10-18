@@ -10,12 +10,12 @@ import static java.util.Optional.ofNullable;
 import static java.util.function.Predicate.not;
 
 import com.google.udmi.util.SiteModel;
-import daq.pubber.ManagerHost;
-import daq.pubber.ProtocolFamily;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.NoSuchElementException;
+import udmi.lib.ManagerHost;
+import udmi.lib.ProtocolFamily;
 import udmi.schema.Config;
 import udmi.schema.Entry;
 import udmi.schema.GatewayConfig;

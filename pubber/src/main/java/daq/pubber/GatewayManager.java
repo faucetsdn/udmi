@@ -11,6 +11,9 @@ import static udmi.schema.Category.GATEWAY_PROXY_TARGET;
 
 import com.google.udmi.util.SiteModel;
 import java.util.Map;
+import udmi.lib.ManagerBase;
+import udmi.lib.ManagerHost;
+import udmi.lib.ProtocolFamily;
 import udmi.lib.client.GatewayManagerProvider;
 import udmi.lib.client.ProxyDeviceHostProvider;
 import udmi.schema.Entry;

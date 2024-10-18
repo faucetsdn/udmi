@@ -17,13 +17,13 @@ import static java.util.Optional.ofNullable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.udmi.util.CleanDateFormat;
-import daq.pubber.Pubber;
 import java.time.Instant;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Consumer;
+import java.util.function.Function;
 import org.slf4j.Logger;
 import udmi.schema.DevicePersistent;
 import udmi.schema.Entry;
@@ -56,16 +56,19 @@ public interface SystemManagerProvider extends ManagerProvider {
       SystemMode.TERMINATE, 193); // Indicates expected shutdown (failure code).
   Integer UNKNOWN_MODE_EXIT_CODE = -1;
 
-  Logger LOG = Pubber.LOG;
-  Map<Level, Consumer<String>> LOG_MAP =
-      ImmutableMap.<Level, Consumer<String>>builder()
-          .put(Level.TRACE, LOG::info) // TODO: Make debug/trace programmatically visible.
-          .put(Level.DEBUG, LOG::info)
-          .put(Level.INFO, LOG::info)
-          .put(Level.NOTICE, LOG::info)
-          .put(Level.WARNING, LOG::warn)
-          .put(Level.ERROR, LOG::error)
-          .build();
+  /**
+   * Builds a map of logger consumers.
+   */
+  static Function<Logger, Map<Level, Consumer<String>>> getLogMap() {
+    return (logger) -> ImmutableMap.<Level, Consumer<String>>builder()
+        .put(Level.TRACE, logger::info) // TODO: Make debug/trace programmatically visible.
+        .put(Level.DEBUG, logger::info)
+        .put(Level.INFO, logger::info)
+        .put(Level.NOTICE, logger::info)
+        .put(Level.WARNING, logger::warn)
+        .put(Level.ERROR, logger::error)
+        .build();
+  }
 
   List<Entry> getLogentries();
 

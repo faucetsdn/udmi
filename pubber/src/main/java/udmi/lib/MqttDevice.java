@@ -1,4 +1,4 @@
-package daq.pubber;
+package udmi.lib;
 
 import static com.google.udmi.util.GeneralUtils.ifNotNullThen;
 
@@ -22,7 +22,10 @@ public class MqttDevice {
   private final Publisher publisher;
   private final CertManager certManager;
 
-  MqttDevice(PubberConfiguration configuration, Consumer<Exception> onError,
+  /**
+   * Builds a MQTT device.
+   */
+  public MqttDevice(PubberConfiguration configuration, Consumer<Exception> onError,
       CertManager certManager) {
     this.certManager = certManager;
     deviceId = configuration.deviceId;

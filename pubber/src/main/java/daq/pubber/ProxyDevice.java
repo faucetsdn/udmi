@@ -7,6 +7,9 @@ import static java.lang.String.format;
 
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
+import udmi.lib.ManagerBase;
+import udmi.lib.ManagerHost;
+import udmi.lib.MqttDevice;
 import udmi.lib.client.DeviceManagerProvider;
 import udmi.lib.client.ProxyDeviceHostProvider;
 import udmi.lib.client.PubberHostProvider;

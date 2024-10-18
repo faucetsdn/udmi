@@ -1,4 +1,4 @@
-package daq.pubber;
+package udmi.lib;
 
 import java.util.function.Consumer;
 

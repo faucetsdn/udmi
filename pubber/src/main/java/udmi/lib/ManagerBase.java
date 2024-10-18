@@ -1,4 +1,4 @@
-package daq.pubber;
+package udmi.lib;
 
 import static com.google.common.base.Preconditions.checkState;
 import static com.google.udmi.util.GeneralUtils.getNow;
@@ -37,11 +37,11 @@ public abstract class ManagerBase implements ManagerProvider {
   protected final AtomicInteger sendRateSec = new AtomicInteger(DEFAULT_REPORT_SEC);
   protected final PubberOptions options;
   protected final ManagerHost host;
-  final Config deviceConfig = new Config();
-  final State deviceState = new State();
+  protected final Config deviceConfig = new Config();
+  protected final State deviceState = new State();
   protected final ScheduledExecutorService executor = new CatchingScheduledThreadPoolExecutor(1);
   protected final AtomicBoolean stateDirty = new AtomicBoolean();
-  final String deviceId;
+  protected final String deviceId;
   protected final PubberConfiguration config;
   protected ScheduledFuture<?> periodicSender;
 
@@ -111,7 +111,7 @@ public abstract class ManagerBase implements ManagerProvider {
     }
   }
 
-  ScheduledFuture<?> schedulePeriodic(int sec, Runnable periodicUpdate) {
+  public ScheduledFuture<?> schedulePeriodic(int sec, Runnable periodicUpdate) {
     return executor.scheduleAtFixedRate(periodicUpdate, sec, sec, SECONDS);
   }
 

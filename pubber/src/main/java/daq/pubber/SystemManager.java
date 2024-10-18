@@ -11,6 +11,9 @@ import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import org.slf4j.Logger;
+import udmi.lib.ManagerBase;
+import udmi.lib.ManagerHost;
 import udmi.lib.client.PubberHostProvider;
 import udmi.lib.client.SystemManagerProvider;
 import udmi.schema.Entry;
@@ -36,6 +39,7 @@ public class SystemManager extends ManagerBase implements SystemManagerProvider 
   private int systemEventCount;
   private SystemConfig systemConfig;
   private boolean publishingLog;
+  private static final Logger LOG = Pubber.LOG;
 
   /**
    * New instance.
@@ -120,7 +124,7 @@ public class SystemManager extends ManagerBase implements SystemManagerProvider 
   public void localLog(String message, Level level, String timestamp, String detail) {
     String detailPostfix = detail == null ? "" : ":\n" + detail;
     String logMessage = format("%s %s%s", timestamp, message, detailPostfix);
-    LOG_MAP.get(level).accept(logMessage);
+    SystemManagerProvider.getLogMap().apply(LOG).get(level).accept(logMessage);
     try {
       PrintStream stream;
       if (host instanceof Pubber pubberHost) {

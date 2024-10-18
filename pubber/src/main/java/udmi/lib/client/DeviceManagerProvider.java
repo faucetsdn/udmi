@@ -1,7 +1,7 @@
 package udmi.lib.client;
 
-import daq.pubber.FamilyProvider;
 import java.util.Map;
+import udmi.lib.FamilyProvider;
 import udmi.schema.Config;
 import udmi.schema.DevicePersistent;
 import udmi.schema.Entry;

@@ -1,14 +1,14 @@
 package udmi.lib.client;
 
 import static com.google.udmi.util.GeneralUtils.friendlyStackTrace;
-import static daq.pubber.ManagerBase.updateStateHolder;
 import static java.lang.String.format;
+import static udmi.lib.ManagerBase.updateStateHolder;
 
-import daq.pubber.FamilyProvider;
-import daq.pubber.ManagerHost;
-import daq.pubber.ManagerLog;
-import daq.pubber.MqttDevice;
 import java.util.concurrent.atomic.AtomicBoolean;
+import udmi.lib.FamilyProvider;
+import udmi.lib.ManagerHost;
+import udmi.lib.ManagerLog;
+import udmi.lib.MqttDevice;
 import udmi.schema.Config;
 import udmi.schema.Metadata;
 import udmi.schema.State;
