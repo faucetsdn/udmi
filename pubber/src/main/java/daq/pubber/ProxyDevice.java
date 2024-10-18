@@ -10,9 +10,9 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import udmi.lib.ManagerBase;
 import udmi.lib.ManagerHost;
 import udmi.lib.MqttDevice;
-import udmi.lib.client.DeviceManagerProvider;
-import udmi.lib.client.ProxyDeviceHostProvider;
-import udmi.lib.client.PubberHostProvider;
+import udmi.lib.client.DeviceManagerClient;
+import udmi.lib.client.ProxyDeviceHostClient;
+import udmi.lib.client.UdmiPublisherClient;
 import udmi.schema.Config;
 import udmi.schema.Metadata;
 import udmi.schema.PubberConfiguration;
@@ -20,7 +20,7 @@ import udmi.schema.PubberConfiguration;
 /**
  * Wrapper for a complete device construct.
  */
-public class ProxyDevice extends ManagerBase implements ProxyDeviceHostProvider {
+public class ProxyDevice extends ManagerBase implements ProxyDeviceHostClient {
 
   private static final long STATE_INTERVAL_MS = 1000;
   final DeviceManager deviceManager;
@@ -92,12 +92,12 @@ public class ProxyDevice extends ManagerBase implements ProxyDeviceHostProvider 
   }
 
   @Override
-  public DeviceManagerProvider getDeviceManager() {
+  public DeviceManagerClient getDeviceManager() {
     return deviceManager;
   }
 
   @Override
-  public PubberHostProvider getPubberHost() {
+  public UdmiPublisherClient getUdmiPublisherHost() {
     return pubberHost;
   }
 

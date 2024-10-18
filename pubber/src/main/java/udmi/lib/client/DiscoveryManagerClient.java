@@ -34,7 +34,7 @@ import udmi.schema.RefDiscovery;
 /**
  * Discovery client.
  */
-public interface DiscoveryManagerProvider extends ManagerProvider {
+public interface DiscoveryManagerClient extends ManagerClient {
 
 
   static String getVendorRefKey(Map.Entry<String, PointPointsetModel> entry) {

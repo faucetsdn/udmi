@@ -29,7 +29,7 @@ import udmi.schema.PubberConfiguration;
 /**
  * Gateway client.
  */
-public interface GatewayManagerProvider extends ManagerProvider {
+public interface GatewayManagerClient extends ManagerClient {
 
   String EXTRA_PROXY_DEVICE = "XXX-1";
   String EXTRA_PROXY_POINT = "xxx_conflagration";
@@ -39,7 +39,7 @@ public interface GatewayManagerProvider extends ManagerProvider {
 
   GatewayState getGatewayState();
 
-  Map<String, ProxyDeviceHostProvider> getProxyDevices();
+  Map<String, ProxyDeviceHostClient> getProxyDevices();
 
   /**
    * Creates a map of proxy devices.
@@ -48,12 +48,12 @@ public interface GatewayManagerProvider extends ManagerProvider {
    * @return A map where each key-value pair represents a device ID and its corresponding proxy
    * @throws NoSuchElementException if no first element exists in the stream
    */
-  default Map<String, ProxyDeviceHostProvider> createProxyDevices(List<String> proxyIds) {
+  default Map<String, ProxyDeviceHostClient> createProxyDevices(List<String> proxyIds) {
     if (proxyIds == null) {
       return Map.of();
     }
 
-    Map<String, ProxyDeviceHostProvider> devices = new HashMap<>();
+    Map<String, ProxyDeviceHostClient> devices = new HashMap<>();
 
     String firstId = proxyIds.stream().sorted().findFirst().orElse(null);
     String noProxyId = ifTrueGet(isTrue(getOptions().noProxy), () -> firstId);
@@ -66,10 +66,10 @@ public interface GatewayManagerProvider extends ManagerProvider {
     return devices;
   }
 
-  ProxyDeviceHostProvider createProxyDevice(ManagerHost host, String id,
+  ProxyDeviceHostClient createProxyDevice(ManagerHost host, String id,
       PubberConfiguration config);
 
-  ProxyDeviceHostProvider makeExtraDevice();
+  ProxyDeviceHostClient makeExtraDevice();
 
   default void activate() {
     throw new UnsupportedOperationException("Not supported yet.");

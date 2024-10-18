@@ -14,8 +14,8 @@ import java.util.Map;
 import udmi.lib.ManagerBase;
 import udmi.lib.ManagerHost;
 import udmi.lib.ProtocolFamily;
-import udmi.lib.client.GatewayManagerProvider;
-import udmi.lib.client.ProxyDeviceHostProvider;
+import udmi.lib.client.GatewayManagerClient;
+import udmi.lib.client.ProxyDeviceHostClient;
 import udmi.schema.Entry;
 import udmi.schema.GatewayConfig;
 import udmi.schema.GatewayState;
@@ -26,9 +26,9 @@ import udmi.schema.PubberConfiguration;
 /**
  * Manager for UDMI gateway functionality.
  */
-public class GatewayManager extends ManagerBase implements GatewayManagerProvider {
+public class GatewayManager extends ManagerBase implements GatewayManagerClient {
 
-  private Map<String, ProxyDeviceHostProvider> proxyDevices;
+  private Map<String, ProxyDeviceHostClient> proxyDevices;
   private SiteModel siteModel;
   private Metadata metadata;
   private GatewayState gatewayState;
@@ -56,11 +56,11 @@ public class GatewayManager extends ManagerBase implements GatewayManagerProvide
 
   @Override
   public void activate() {
-    ifNotNullThen(proxyDevices, p -> p.values().forEach(ProxyDeviceHostProvider::activate));
+    ifNotNullThen(proxyDevices, p -> p.values().forEach(ProxyDeviceHostClient::activate));
   }
 
   @Override
-  public ProxyDeviceHostProvider makeExtraDevice() {
+  public ProxyDeviceHostClient makeExtraDevice() {
     return new ProxyDevice(getHost(), EXTRA_PROXY_DEVICE, getConfig());
   }
 
@@ -111,13 +111,13 @@ public class GatewayManager extends ManagerBase implements GatewayManagerProvide
   @Override
   public void shutdown() {
     super.shutdown();
-    ifNotNullThen(proxyDevices, p -> p.values().forEach(ProxyDeviceHostProvider::shutdown));
+    ifNotNullThen(proxyDevices, p -> p.values().forEach(ProxyDeviceHostClient::shutdown));
   }
 
   @Override
   public void stop() {
     super.stop();
-    ifNotNullThen(proxyDevices, p -> p.values().forEach(ProxyDeviceHostProvider::stop));
+    ifNotNullThen(proxyDevices, p -> p.values().forEach(ProxyDeviceHostClient::stop));
   }
 
   public void setSiteModel(SiteModel siteModel) {
@@ -144,12 +144,12 @@ public class GatewayManager extends ManagerBase implements GatewayManagerProvide
   }
 
   @Override
-  public Map<String, ProxyDeviceHostProvider> getProxyDevices() {
+  public Map<String, ProxyDeviceHostClient> getProxyDevices() {
     return proxyDevices;
   }
 
   @Override
-  public ProxyDeviceHostProvider createProxyDevice(ManagerHost host, String id,
+  public ProxyDeviceHostClient createProxyDevice(ManagerHost host, String id,
       PubberConfiguration config) {
     return new ProxyDevice(host, id, config);
   }

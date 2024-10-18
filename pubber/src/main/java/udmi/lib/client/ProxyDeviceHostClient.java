@@ -16,11 +16,11 @@ import udmi.schema.State;
 /**
  * Proxy Device host provider.
  */
-public interface ProxyDeviceHostProvider extends ManagerHost, ManagerLog {
+public interface ProxyDeviceHostClient extends ManagerHost, ManagerLog {
 
-  DeviceManagerProvider getDeviceManager();
+  DeviceManagerClient getDeviceManager();
 
-  PubberHostProvider getPubberHost();
+  UdmiPublisherClient getUdmiPublisherHost();
 
   ManagerHost getManagerHost();
 
@@ -37,7 +37,7 @@ public interface ProxyDeviceHostProvider extends ManagerHost, ManagerLog {
   default void activate() {
     try {
       isActive().set(false);
-      MqttDevice mqttDevice = getPubberHost().getMqttDevice(getDeviceId());
+      MqttDevice mqttDevice = getUdmiPublisherHost().getMqttDevice(getDeviceId());
       mqttDevice.registerHandler(MqttDevice.CONFIG_TOPIC, this::configHandler, Config.class);
       mqttDevice.connect();
       getDeviceManager().activate();
@@ -54,9 +54,9 @@ public interface ProxyDeviceHostProvider extends ManagerHost, ManagerLog {
    * @param config The configuration to be applied.
    */
   default void configHandler(Config config) {
-    getPubberHost().configPreprocess(getDeviceId(), config);
+    getUdmiPublisherHost().configPreprocess(getDeviceId(), config);
     getDeviceManager().updateConfig(config);
-    getPubberHost().publisherConfigLog("apply", null, getDeviceId());
+    getUdmiPublisherHost().publisherConfigLog("apply", null, getDeviceId());
   }
 
   void shutdown();
@@ -66,7 +66,7 @@ public interface ProxyDeviceHostProvider extends ManagerHost, ManagerLog {
   @Override
   default void publish(Object message) {
     if (isActive().get()) {
-      getPubberHost().publish(getDeviceId(), message);
+      getUdmiPublisherHost().publish(getDeviceId(), message);
     }
   }
 

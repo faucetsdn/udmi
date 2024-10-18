@@ -30,7 +30,7 @@ import udmi.schema.PubberOptions;
 /**
  * Pointset client.
  */
-public interface PointsetManagerProvider extends ManagerLog {
+public interface PointsetManagerClient extends ManagerLog {
 
   /**
    * Generates a {@code PointPointsetEvents} object with a present value set to 100.
@@ -164,7 +164,7 @@ public interface PointsetManagerProvider extends ManagerLog {
    * Sends device points to the host.
    */
   default void sendDevicePoints() {
-    if (getPointsetUpdateCount() % PubberHostProvider.MESSAGE_REPORT_INTERVAL == 0) {
+    if (getPointsetUpdateCount() % UdmiPublisherClient.MESSAGE_REPORT_INTERVAL == 0) {
       info(format("%s sending %s message #%d with %d points",
           getTimestamp(), getDeviceId(), getPointsetUpdateCount(),
           getPointsetEvent().points.size()));

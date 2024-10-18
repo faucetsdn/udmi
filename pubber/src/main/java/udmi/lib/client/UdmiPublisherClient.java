@@ -57,8 +57,8 @@ import udmi.lib.MqttDevice;
 import udmi.lib.MqttPublisher.FakeTopic;
 import udmi.lib.MqttPublisher.InjectedMessage;
 import udmi.lib.MqttPublisher.InjectedState;
-import udmi.lib.client.PointsetManagerProvider.ExtraPointsetEvent;
-import udmi.lib.client.SystemManagerProvider.ExtraSystemState;
+import udmi.lib.client.PointsetManagerClient.ExtraPointsetEvent;
+import udmi.lib.client.SystemManagerClient.ExtraSystemState;
 import udmi.schema.BlobBlobsetConfig;
 import udmi.schema.BlobBlobsetConfig.BlobPhase;
 import udmi.schema.BlobBlobsetState;
@@ -81,9 +81,9 @@ import udmi.schema.SystemEvents;
 import udmi.schema.SystemState;
 
 /**
- * Pubber client.
+ * UDMI publisher client.
  */
-public interface PubberHostProvider extends ManagerHost {
+public interface UdmiPublisherClient extends ManagerHost {
 
   String DATA_URL_JSON_BASE64 = "data:application/json;base64,";
 
@@ -124,7 +124,7 @@ public interface PubberHostProvider extends ManagerHost {
 
   Config getDeviceConfig();
 
-  DeviceManagerProvider getDeviceManager();
+  DeviceManagerClient getDeviceManager();
 
   MqttDevice getDeviceTarget();
 
@@ -968,7 +968,7 @@ public interface PubberHostProvider extends ManagerHost {
       initializeMqtt();
     } catch (Exception e) {
       shutdown();
-      throw new RuntimeException("While initializing main pubber class", e);
+      throw new RuntimeException("While initializing main UDMI publisher class", e);
     }
   }
 

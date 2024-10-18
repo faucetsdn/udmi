@@ -14,8 +14,8 @@ import java.util.List;
 import org.slf4j.Logger;
 import udmi.lib.ManagerBase;
 import udmi.lib.ManagerHost;
-import udmi.lib.client.PubberHostProvider;
-import udmi.lib.client.SystemManagerProvider;
+import udmi.lib.client.SystemManagerClient;
+import udmi.lib.client.UdmiPublisherClient;
 import udmi.schema.Entry;
 import udmi.schema.Level;
 import udmi.schema.Operation.SystemMode;
@@ -27,11 +27,11 @@ import udmi.schema.SystemConfig;
 /**
  * Support manager for system stuff.
  */
-public class SystemManager extends ManagerBase implements SystemManagerProvider {
+public class SystemManager extends ManagerBase implements SystemManagerClient {
 
   public static final String PUBBER_LOG_CATEGORY = "device.log";
   public static final String PUBBER_LOG = "pubber.log";
-  private static final Date DEVICE_START_TIME = PubberHostProvider.DEVICE_START_TIME;
+  private static final Date DEVICE_START_TIME = UdmiPublisherClient.DEVICE_START_TIME;
 
   private final List<Entry> logentries = new ArrayList<>();
   private final ExtraSystemState systemState;
@@ -93,7 +93,7 @@ public class SystemManager extends ManagerBase implements SystemManagerProvider 
   }
 
   @Override
-  public SystemManagerProvider.ExtraSystemState getSystemState() {
+  public SystemManagerClient.ExtraSystemState getSystemState() {
     return this.systemState;
   }
 
@@ -124,7 +124,7 @@ public class SystemManager extends ManagerBase implements SystemManagerProvider 
   public void localLog(String message, Level level, String timestamp, String detail) {
     String detailPostfix = detail == null ? "" : ":\n" + detail;
     String logMessage = format("%s %s%s", timestamp, message, detailPostfix);
-    SystemManagerProvider.getLogMap().apply(LOG).get(level).accept(logMessage);
+    SystemManagerClient.getLogMap().apply(LOG).get(level).accept(logMessage);
     try {
       PrintStream stream;
       if (host instanceof Pubber pubberHost) {

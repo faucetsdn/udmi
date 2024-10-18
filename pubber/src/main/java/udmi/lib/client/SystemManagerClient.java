@@ -40,9 +40,9 @@ import udmi.schema.SystemState;
 /**
  * System client.
  */
-public interface SystemManagerProvider extends ManagerProvider {
+public interface SystemManagerClient extends ManagerClient {
 
-  String PUBBER_LOG_CATEGORY = "device.log";
+  String UDMI_PUBLISHER_LOG_CATEGORY = "device.log";
 
   long BYTES_PER_MEGABYTE = 1024 * 1024;
   String DEFAULT_MAKE = "bos";
@@ -248,7 +248,7 @@ public interface SystemManagerProvider extends ManagerProvider {
 
   /**
    * Logs a message with specified level and detail. If publishing is enabled,
-   * it will publish the log message using the `pubberLogMessage` method.
+   * it will publish the log message using the `udmiPublisherLogMessage` method.
    *
    */
   default void cloudLog(String message, Level level, String detail) {
@@ -261,7 +261,7 @@ public interface SystemManagerProvider extends ManagerProvider {
 
     try {
       setPublishingLog(true);
-      pubberLogMessage(message, level, timestamp, detail);
+      udmiPublisherLogMessage(message, level, timestamp, detail);
     } catch (Exception e) {
       localLog("Error publishing log message: " + e, Level.ERROR, timestamp, null);
     } finally {
@@ -284,9 +284,10 @@ public interface SystemManagerProvider extends ManagerProvider {
   /**
    * Log a message.
    */
-  default void pubberLogMessage(String logMessage, Level level, String timestamp, String detail) {
+  default void udmiPublisherLogMessage(String logMessage, Level level, String timestamp,
+      String detail) {
     Entry logEntry = new Entry();
-    logEntry.category = PUBBER_LOG_CATEGORY;
+    logEntry.category = UDMI_PUBLISHER_LOG_CATEGORY;
     logEntry.level = level.value();
     logEntry.timestamp = Date.from(Instant.parse(timestamp));
     logEntry.message = logMessage;

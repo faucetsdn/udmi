@@ -52,9 +52,9 @@ import udmi.lib.FamilyProvider;
 import udmi.lib.ManagerBase;
 import udmi.lib.MqttDevice;
 import udmi.lib.MqttPublisher.PublisherException;
-import udmi.lib.client.DeviceManagerProvider;
-import udmi.lib.client.PubberHostProvider;
-import udmi.lib.client.SystemManagerProvider;
+import udmi.lib.client.DeviceManagerClient;
+import udmi.lib.client.SystemManagerClient;
+import udmi.lib.client.UdmiPublisherClient;
 import udmi.schema.Config;
 import udmi.schema.DevicePersistent;
 import udmi.schema.EndpointConfiguration;
@@ -70,7 +70,7 @@ import udmi.schema.PubberOptions;
 /**
  * IoT Core UDMI Device Emulator.
  */
-public class Pubber extends ManagerBase implements PubberHostProvider {
+public class Pubber extends ManagerBase implements UdmiPublisherClient {
 
   public static final String PUBBER_OUT = "pubber/out";
   public static final String PERSISTENT_STORE_FILE = "persistent_data.json";
@@ -660,7 +660,7 @@ public class Pubber extends ManagerBase implements PubberHostProvider {
   }
 
   @Override
-  public DeviceManagerProvider getDeviceManager() {
+  public DeviceManagerClient getDeviceManager() {
     return deviceManager;
   }
 
@@ -701,7 +701,7 @@ public class Pubber extends ManagerBase implements PubberHostProvider {
 
   @Override
   public Map<Level, Consumer<String>> getLogMap() {
-    return SystemManagerProvider.getLogMap().apply(LOG);
+    return SystemManagerClient.getLogMap().apply(LOG);
   }
 
   public Metadata getMetadata(String id) {
