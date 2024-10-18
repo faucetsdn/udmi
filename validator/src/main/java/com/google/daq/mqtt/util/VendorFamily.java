@@ -1,9 +1,8 @@
 package com.google.daq.mqtt.util;
 
 
-import daq.pubber.ProtocolFamily;
+import udmi.lib.ProtocolFamily;
 
-;
 
 /**
  * No-validation family with no semantics, available for open use.
