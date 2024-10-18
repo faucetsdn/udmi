@@ -1,4 +1,4 @@
-package daq.pubber;
+package udmi.lib;
 
 import static com.google.common.base.Preconditions.checkState;
 import static com.google.udmi.util.GeneralUtils.ifNotNullThen;
@@ -32,7 +32,7 @@ public class ListPublisher implements Publisher {
     usePrefix = configuration.endpoint.topic_prefix;
   }
 
-  static String getMessageString(String deviceId, String topic, Object message) {
+  public static String getMessageString(String deviceId, String topic, Object message) {
     return String.format("%s/%s/%s", deviceId, topic, JsonUtil.stringify(message));
   }
 

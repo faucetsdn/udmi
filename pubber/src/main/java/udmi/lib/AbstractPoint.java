@@ -1,4 +1,4 @@
-package daq.pubber;
+package udmi.lib;
 
 import udmi.schema.PointPointsetConfig;
 import udmi.schema.PointPointsetEvents;

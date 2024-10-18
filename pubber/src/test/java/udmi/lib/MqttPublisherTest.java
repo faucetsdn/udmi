@@ -1,7 +1,8 @@
-package daq.pubber;
+package udmi.lib;
 
 import static org.junit.Assert.assertEquals;
 
+import daq.pubber.TestBase;
 import java.util.concurrent.CountDownLatch;
 import java.util.function.Consumer;
 import org.eclipse.paho.client.mqttv3.MqttClient;

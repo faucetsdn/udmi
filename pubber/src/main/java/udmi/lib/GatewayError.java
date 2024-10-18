@@ -1,4 +1,4 @@
-package daq.pubber;
+package udmi.lib;
 
 /**
  * Handler class for a received error when binding a gateway.

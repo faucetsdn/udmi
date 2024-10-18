@@ -5,6 +5,8 @@ import static org.junit.Assert.assertEquals;
 import java.util.List;
 import java.util.concurrent.CountDownLatch;
 import org.junit.Test;
+import udmi.lib.ListPublisher;
+import udmi.lib.MqttDevice;
 
 /**
  * Unit tests for a mqtt device abstraction.

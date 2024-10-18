@@ -1,4 +1,4 @@
-package daq.pubber;
+package udmi.lib;
 
 import static org.junit.Assert.assertEquals;
 

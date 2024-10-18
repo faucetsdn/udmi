@@ -8,9 +8,9 @@ import static udmi.schema.FeatureDiscovery.FeatureStage.PREVIEW;
 
 import com.google.daq.mqtt.sequencer.Feature;
 import com.google.daq.mqtt.sequencer.SequenceBase;
-import daq.pubber.ProtocolFamily;
 import java.util.HashMap;
 import org.junit.Test;
+import udmi.lib.ProtocolFamily;
 import udmi.schema.FamilyLocalnetState;
 
 /**

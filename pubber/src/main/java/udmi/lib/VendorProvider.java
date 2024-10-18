@@ -1,17 +1,18 @@
-package daq.pubber;
+package udmi.lib;
 
 import static com.google.udmi.util.GeneralUtils.catchToNull;
-import static com.google.udmi.util.GeneralUtils.ifNotNullGet;
 import static com.google.udmi.util.GeneralUtils.ifNotNullThen;
 import static com.google.udmi.util.GeneralUtils.ifTrueGet;
-import static daq.pubber.ProtocolFamily.VENDOR;
 import static java.util.Objects.requireNonNull;
 import static java.util.stream.Collectors.toMap;
+import static udmi.lib.ProtocolFamily.VENDOR;
 
 import com.google.udmi.util.SiteModel;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.function.BiConsumer;
+import udmi.lib.client.DiscoveryManagerClient;
+import udmi.lib.client.LocalnetManagerClient;
 import udmi.schema.DiscoveryEvents;
 import udmi.schema.FamilyLocalnetState;
 import udmi.schema.Metadata;
@@ -23,14 +24,14 @@ import udmi.schema.RefDiscovery;
  */
 public class VendorProvider extends ManagerBase implements FamilyProvider {
 
-  private final LocalnetManager localnetHost;
+  private final LocalnetManagerClient localnetHost;
   private SiteModel siteModel;
   private String selfAddr;
 
   public VendorProvider(ManagerHost host, String family,
       PubberConfiguration pubberConfiguration) {
     super(host, pubberConfiguration);
-    localnetHost = (LocalnetManager) host;
+    localnetHost = (LocalnetManagerClient) host;
   }
 
   private DiscoveryEvents augmentSend(Entry<String, Metadata> entry, boolean enumerate) {
@@ -43,7 +44,8 @@ public class VendorProvider extends ManagerBase implements FamilyProvider {
 
   private Map<String, RefDiscovery> getDiscoveredRefs(Metadata entry) {
     return entry.pointset.points.entrySet().stream()
-        .collect(toMap(DiscoveryManager::getVendorRefKey, DiscoveryManager::getVendorRefValue));
+        .collect(toMap(DiscoveryManagerClient::getVendorRefKey,
+            DiscoveryManagerClient::getVendorRefValue));
   }
 
   private void updateStateAddress() {
@@ -56,7 +58,7 @@ public class VendorProvider extends ManagerBase implements FamilyProvider {
     });
   }
 
-  void setSiteModel(SiteModel siteModel) {
+  public void setSiteModel(SiteModel siteModel) {
     this.siteModel = siteModel;
     updateStateAddress();
   }
