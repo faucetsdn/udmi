@@ -1,4 +1,4 @@
-package udmi.lib;
+package udmi.lib.client;
 
 import daq.pubber.FamilyProvider;
 import java.util.Map;

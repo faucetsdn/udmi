@@ -7,7 +7,7 @@ import static com.google.udmi.util.JsonUtil.isoConvert;
 import static java.lang.String.format;
 import static java.util.Optional.ofNullable;
 import static java.util.stream.Collectors.toMap;
-import static udmi.lib.PubberHostProvider.DEVICE_START_TIME;
+import static udmi.lib.client.PubberHostProvider.DEVICE_START_TIME;
 import static udmi.schema.FamilyDiscoveryState.Phase.ACTIVE;
 import static udmi.schema.FamilyDiscoveryState.Phase.DONE;
 
@@ -16,7 +16,7 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
-import udmi.lib.DiscoveryManagerProvider;
+import udmi.lib.client.DiscoveryManagerProvider;
 import udmi.schema.Depths;
 import udmi.schema.DiscoveryConfig;
 import udmi.schema.DiscoveryEvents;

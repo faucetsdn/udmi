@@ -15,7 +15,7 @@ import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
-import udmi.lib.ManagerProvider;
+import udmi.lib.client.ManagerProvider;
 import udmi.schema.Config;
 import udmi.schema.DiscoveryState;
 import udmi.schema.GatewayState;

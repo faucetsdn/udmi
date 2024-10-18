@@ -1,4 +1,4 @@
-package udmi.lib;
+package udmi.lib.client;
 
 import daq.pubber.ManagerHost;
 import daq.pubber.ManagerLog;

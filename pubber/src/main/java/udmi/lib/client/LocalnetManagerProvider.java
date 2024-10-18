@@ -1,4 +1,4 @@
-package udmi.lib;
+package udmi.lib.client;
 
 import static com.google.udmi.util.GeneralUtils.ifNotNullGet;
 import static java.util.stream.Collectors.toMap;

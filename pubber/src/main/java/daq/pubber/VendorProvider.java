@@ -11,7 +11,7 @@ import com.google.udmi.util.SiteModel;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.function.BiConsumer;
-import udmi.lib.LocalnetManagerProvider;
+import udmi.lib.client.LocalnetManagerProvider;
 import udmi.schema.DiscoveryEvents;
 import udmi.schema.FamilyLocalnetState;
 import udmi.schema.Metadata;

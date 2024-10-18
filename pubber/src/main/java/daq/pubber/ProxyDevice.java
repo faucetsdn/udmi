@@ -7,9 +7,9 @@ import static java.lang.String.format;
 
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
-import udmi.lib.DeviceManagerProvider;
-import udmi.lib.ProxyDeviceHostProvider;
-import udmi.lib.PubberHostProvider;
+import udmi.lib.client.DeviceManagerProvider;
+import udmi.lib.client.ProxyDeviceHostProvider;
+import udmi.lib.client.PubberHostProvider;
 import udmi.schema.Config;
 import udmi.schema.Metadata;
 import udmi.schema.PubberConfiguration;

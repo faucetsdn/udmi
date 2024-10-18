@@ -1,4 +1,4 @@
-package udmi.lib;
+package udmi.lib.client;
 
 import static com.google.udmi.util.GeneralUtils.catchOrElse;
 import static com.google.udmi.util.GeneralUtils.catchToNull;

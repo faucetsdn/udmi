@@ -1,12 +1,12 @@
 package daq.pubber;
 
 import com.google.udmi.util.SiteModel;
-import udmi.lib.DeviceManagerProvider;
-import udmi.lib.DiscoveryManagerProvider;
-import udmi.lib.GatewayManagerProvider;
-import udmi.lib.LocalnetManagerProvider;
-import udmi.lib.PointsetManagerProvider;
-import udmi.lib.SystemManagerProvider;
+import udmi.lib.client.DeviceManagerProvider;
+import udmi.lib.client.DiscoveryManagerProvider;
+import udmi.lib.client.GatewayManagerProvider;
+import udmi.lib.client.LocalnetManagerProvider;
+import udmi.lib.client.PointsetManagerProvider;
+import udmi.lib.client.SystemManagerProvider;
 import udmi.schema.PubberConfiguration;
 
 /**

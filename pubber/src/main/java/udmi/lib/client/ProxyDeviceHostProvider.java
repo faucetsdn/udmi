@@ -1,4 +1,4 @@
-package udmi.lib;
+package udmi.lib.client;
 
 import static com.google.udmi.util.GeneralUtils.friendlyStackTrace;
 import static daq.pubber.ManagerBase.updateStateHolder;

@@ -15,7 +15,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicReference;
-import udmi.lib.PointsetManagerProvider;
+import udmi.lib.client.PointsetManagerProvider;
 import udmi.schema.Entry;
 import udmi.schema.PointPointsetConfig;
 import udmi.schema.PointPointsetModel;

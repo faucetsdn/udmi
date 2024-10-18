@@ -3,7 +3,7 @@ package daq.pubber;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.stream.Collectors;
-import udmi.lib.LocalnetManagerProvider;
+import udmi.lib.client.LocalnetManagerProvider;
 import udmi.schema.LocalnetConfig;
 import udmi.schema.LocalnetState;
 import udmi.schema.PubberConfiguration;

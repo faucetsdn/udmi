@@ -1,4 +1,4 @@
-package udmi.lib;
+package udmi.lib.client;
 
 import static com.google.common.base.Preconditions.checkState;
 import static com.google.udmi.util.GeneralUtils.catchToNull;
@@ -57,8 +57,8 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.locks.Lock;
 import java.util.function.Consumer;
 import java.util.function.Function;
-import udmi.lib.PointsetManagerProvider.ExtraPointsetEvent;
-import udmi.lib.SystemManagerProvider.ExtraSystemState;
+import udmi.lib.client.PointsetManagerProvider.ExtraPointsetEvent;
+import udmi.lib.client.SystemManagerProvider.ExtraSystemState;
 import udmi.schema.BlobBlobsetConfig;
 import udmi.schema.BlobBlobsetConfig.BlobPhase;
 import udmi.schema.BlobBlobsetState;
