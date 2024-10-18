@@ -50,11 +50,11 @@ public class FamilyDiscoveryState {
     @JsonPropertyDescription("Number of records produced so far for this active scan generation")
     public Integer active_count;
     /**
-     * Number of passive scan results reported since enabling
+     * Number of passive scan results currently 'on hold'
      * 
      */
     @JsonProperty("passive_count")
-    @JsonPropertyDescription("Number of passive scan results reported since enabling")
+    @JsonPropertyDescription("Number of passive scan results currently 'on hold'")
     public Integer passive_count;
     /**
      * Entry

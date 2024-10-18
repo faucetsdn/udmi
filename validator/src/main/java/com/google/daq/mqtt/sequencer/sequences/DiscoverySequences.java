@@ -51,7 +51,6 @@ import java.util.Set;
 import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
-import org.jetbrains.annotations.Nullable;
 import org.junit.Before;
 import org.junit.Test;
 import udmi.schema.Bucket;
@@ -73,7 +72,7 @@ public class DiscoverySequences extends SequenceBase {
   public static final int SCAN_START_JITTER_SEC = 3;
   private static final int SCAN_ITERATIONS = 2;
   private static final String scanFamily = ProtocolFamily.VENDOR;
-  private static final Date LONG_TIME_AGO = new Date(12897321);
+  private static final Date LONG_TIME_AGO = Date.from(Instant.parse("2020-10-18T12:02:01Z"));
   private Set<String> metaFamilies;
   private Date scanStartTime;
 
@@ -81,7 +80,6 @@ public class DiscoverySequences extends SequenceBase {
     return ofNullable(entry.getValue().stage).orElse(STABLE).compareTo(BETA) >= 0;
   }
 
-  @Nullable
   private static Depth enumerationDepthIf(boolean shouldEnumerate) {
     return shouldEnumerate ? ENTRIES : null;
   }
@@ -413,16 +411,8 @@ public class DiscoverySequences extends SequenceBase {
         adding -> new FamilyDiscoveryConfig());
   }
 
-  private Date getStateFamilyGeneration(String family) {
-    return catchToNull(() -> getStateFamily(family).generation);
-  }
-
   private FamilyDiscoveryState getStateFamily(String family) {
     return deviceState.discovery.families.get(family);
-  }
-
-  private Predicate<String> scanAbsent() {
-    return family -> getStateFamily(family) == null;
   }
 
   private Predicate<String> scanPending(Date startTime) {

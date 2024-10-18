@@ -19,7 +19,7 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
     "generation",
     "scan_interval_sec",
     "scan_duration_sec",
-    "holdoff_sec",
+    "passive_sec",
     "depth"
 })
 public class FamilyDiscoveryConfig {
@@ -50,9 +50,9 @@ public class FamilyDiscoveryConfig {
      * Holdoff time for passively discovered devices
      * 
      */
-    @JsonProperty("holdoff_sec")
+    @JsonProperty("passive_sec")
     @JsonPropertyDescription("Holdoff time for passively discovered devices")
-    public Integer holdoff_sec;
+    public Integer passive_sec;
     @JsonProperty("depth")
     public udmi.schema.Depths.Depth depth;
 
@@ -61,8 +61,8 @@ public class FamilyDiscoveryConfig {
         int result = 1;
         result = ((result* 31)+((this.generation == null)? 0 :this.generation.hashCode()));
         result = ((result* 31)+((this.scan_interval_sec == null)? 0 :this.scan_interval_sec.hashCode()));
-        result = ((result* 31)+((this.holdoff_sec == null)? 0 :this.holdoff_sec.hashCode()));
         result = ((result* 31)+((this.depth == null)? 0 :this.depth.hashCode()));
+        result = ((result* 31)+((this.passive_sec == null)? 0 :this.passive_sec.hashCode()));
         result = ((result* 31)+((this.scan_duration_sec == null)? 0 :this.scan_duration_sec.hashCode()));
         return result;
     }
@@ -76,7 +76,7 @@ public class FamilyDiscoveryConfig {
             return false;
         }
         FamilyDiscoveryConfig rhs = ((FamilyDiscoveryConfig) other);
-        return ((((((this.generation == rhs.generation)||((this.generation!= null)&&this.generation.equals(rhs.generation)))&&((this.scan_interval_sec == rhs.scan_interval_sec)||((this.scan_interval_sec!= null)&&this.scan_interval_sec.equals(rhs.scan_interval_sec))))&&((this.holdoff_sec == rhs.holdoff_sec)||((this.holdoff_sec!= null)&&this.holdoff_sec.equals(rhs.holdoff_sec))))&&((this.depth == rhs.depth)||((this.depth!= null)&&this.depth.equals(rhs.depth))))&&((this.scan_duration_sec == rhs.scan_duration_sec)||((this.scan_duration_sec!= null)&&this.scan_duration_sec.equals(rhs.scan_duration_sec))));
+        return ((((((this.generation == rhs.generation)||((this.generation!= null)&&this.generation.equals(rhs.generation)))&&((this.scan_interval_sec == rhs.scan_interval_sec)||((this.scan_interval_sec!= null)&&this.scan_interval_sec.equals(rhs.scan_interval_sec))))&&((this.depth == rhs.depth)||((this.depth!= null)&&this.depth.equals(rhs.depth))))&&((this.passive_sec == rhs.passive_sec)||((this.passive_sec!= null)&&this.passive_sec.equals(rhs.passive_sec))))&&((this.scan_duration_sec == rhs.scan_duration_sec)||((this.scan_duration_sec!= null)&&this.scan_duration_sec.equals(rhs.scan_duration_sec))));
     }
 
 }

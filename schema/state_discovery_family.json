@@ -25,7 +25,7 @@
       "type": "integer"
     },
     "passive_count": {
-      "description": "Number of passive scan results reported since enabling",
+      "description": "Number of passive scan results currently 'on hold'",
       "minimum": 0,
       "type": "integer"
     },
