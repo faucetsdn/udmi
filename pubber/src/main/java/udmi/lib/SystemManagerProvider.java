@@ -1,4 +1,4 @@
-package daq.pubber.client;
+package udmi.lib;
 
 import static com.google.udmi.util.GeneralUtils.catchOrElse;
 import static com.google.udmi.util.GeneralUtils.catchToNull;

@@ -10,12 +10,12 @@ import static udmi.schema.BlobsetConfig.SystemBlobsets.IOT_ENDPOINT_CONFIG;
 
 import com.google.common.collect.ImmutableList;
 import com.google.udmi.util.JsonUtil;
-import daq.pubber.client.PubberHostProvider;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import org.junit.After;
 import org.junit.Test;
+import udmi.lib.PubberHostProvider;
 import udmi.schema.BlobBlobsetConfig;
 import udmi.schema.BlobBlobsetConfig.BlobPhase;
 import udmi.schema.BlobsetConfig;

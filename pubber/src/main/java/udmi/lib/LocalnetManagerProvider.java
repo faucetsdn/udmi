@@ -1,4 +1,4 @@
-package daq.pubber.client;
+package udmi.lib;
 
 import static com.google.udmi.util.GeneralUtils.ifNotNullGet;
 import static java.util.stream.Collectors.toMap;

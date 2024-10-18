@@ -1,4 +1,4 @@
-package daq.pubber.client;
+package udmi.lib;
 
 import static com.google.udmi.util.GeneralUtils.catchToNull;
 import static com.google.udmi.util.GeneralUtils.ifNotNullThen;
@@ -16,7 +16,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.NoSuchElementException;
-import java.util.Objects;
 import udmi.schema.Config;
 import udmi.schema.Entry;
 import udmi.schema.GatewayConfig;

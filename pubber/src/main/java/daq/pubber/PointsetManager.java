@@ -1,7 +1,5 @@
 package daq.pubber;
 
-import static com.google.udmi.util.GeneralUtils.getNow;
-import static com.google.udmi.util.GeneralUtils.getTimestamp;
 import static com.google.udmi.util.GeneralUtils.ifNotNullGet;
 import static com.google.udmi.util.GeneralUtils.ifNotNullThen;
 import static com.google.udmi.util.GeneralUtils.ifNotTrueThen;
@@ -13,11 +11,11 @@ import static java.util.Optional.ofNullable;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
-import daq.pubber.client.PointsetManagerProvider;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicReference;
+import udmi.lib.PointsetManagerProvider;
 import udmi.schema.Entry;
 import udmi.schema.PointPointsetConfig;
 import udmi.schema.PointPointsetModel;

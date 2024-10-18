@@ -7,16 +7,15 @@ import static java.util.Optional.ofNullable;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import daq.pubber.client.LocalnetManagerProvider;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import udmi.lib.LocalnetManagerProvider;
 import udmi.schema.FamilyLocalnetState;
 import udmi.schema.PubberConfiguration;
 

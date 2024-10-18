@@ -1,4 +1,4 @@
-package daq.pubber.client;
+package udmi.lib;
 
 import static com.google.udmi.util.GeneralUtils.getNow;
 import static com.google.udmi.util.GeneralUtils.getTimestamp;
@@ -14,7 +14,6 @@ import static udmi.schema.Category.POINTSET_POINT_INVALID_VALUE;
 import daq.pubber.AbstractPoint;
 import daq.pubber.ManagerHost;
 import daq.pubber.ManagerLog;
-import daq.pubber.Pubber;
 import java.util.Map;
 import java.util.Objects;
 import java.util.stream.Stream;

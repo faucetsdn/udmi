@@ -5,11 +5,11 @@ import static com.google.udmi.util.GeneralUtils.deepCopy;
 import static com.google.udmi.util.GeneralUtils.friendlyStackTrace;
 import static java.lang.String.format;
 
-import daq.pubber.client.DeviceManagerProvider;
-import daq.pubber.client.ProxyDeviceHostProvider;
-import daq.pubber.client.PubberHostProvider;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
+import udmi.lib.DeviceManagerProvider;
+import udmi.lib.ProxyDeviceHostProvider;
+import udmi.lib.PubberHostProvider;
 import udmi.schema.Config;
 import udmi.schema.Metadata;
 import udmi.schema.PubberConfiguration;

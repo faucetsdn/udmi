@@ -9,13 +9,13 @@ import static java.util.concurrent.TimeUnit.SECONDS;
 
 import com.google.daq.mqtt.util.CatchingScheduledThreadPoolExecutor;
 import com.google.udmi.util.SchemaVersion;
-import daq.pubber.client.ManagerProvider;
 import java.util.Date;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
+import udmi.lib.ManagerProvider;
 import udmi.schema.Config;
 import udmi.schema.DiscoveryState;
 import udmi.schema.GatewayState;

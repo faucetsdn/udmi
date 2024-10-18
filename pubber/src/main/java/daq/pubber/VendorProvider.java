@@ -1,7 +1,6 @@
 package daq.pubber;
 
 import static com.google.udmi.util.GeneralUtils.catchToNull;
-import static com.google.udmi.util.GeneralUtils.ifNotNullGet;
 import static com.google.udmi.util.GeneralUtils.ifNotNullThen;
 import static com.google.udmi.util.GeneralUtils.ifTrueGet;
 import static daq.pubber.ProtocolFamily.VENDOR;
@@ -9,10 +8,10 @@ import static java.util.Objects.requireNonNull;
 import static java.util.stream.Collectors.toMap;
 
 import com.google.udmi.util.SiteModel;
-import daq.pubber.client.LocalnetManagerProvider;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.function.BiConsumer;
+import udmi.lib.LocalnetManagerProvider;
 import udmi.schema.DiscoveryEvents;
 import udmi.schema.FamilyLocalnetState;
 import udmi.schema.Metadata;
