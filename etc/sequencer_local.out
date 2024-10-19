@@ -4,8 +4,8 @@ RESULT skip endpoint.config endpoint_connection_success_alternate PREVIEW 0/0 No
 RESULT skip endpoint.config endpoint_connection_success_reconnect PREVIEW 0/0 No functional alternate registry defined
 RESULT pass endpoint.config endpoint_failure_and_restart PREVIEW 5/5 Sequence complete
 RESULT skip endpoint.config endpoint_redirect_and_restart PREVIEW 0/0 No functional alternate registry defined
-RESULT pass enumeration empty_enumeration PREVIEW 5/5 Sequence complete
-RESULT pass enumeration.features feature_enumeration PREVIEW 5/5 Sequence complete
+RESULT pass enumeration enumerate_nothing PREVIEW 5/5 Sequence complete
+RESULT pass enumeration.features enumerate_features PREVIEW 5/5 Sequence complete
 RESULT skip gateway bad_target_family PREVIEW 0/0 Not a proxied device
 RESULT skip gateway gateway_proxy_events BETA 0/0 Not a gateway
 RESULT pass pointset pointset_publish STABLE 5/5 Sequence complete

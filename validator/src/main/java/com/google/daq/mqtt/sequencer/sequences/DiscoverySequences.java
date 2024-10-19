@@ -172,7 +172,7 @@ public class DiscoverySequences extends SequenceBase {
   @Test(timeout = TWO_MINUTES_MS)
   @Feature(bucket = ENUMERATION, stage = PREVIEW)
   @Summary("Check enumeration of nothing at all")
-  public void empty_enumeration() {
+  public void enumerate_nothing() {
     Depths enumerate = new Depths();
     DiscoveryEvents event = runEnumeration(enumerate);
     checkSelfEnumeration(event, enumerate);
@@ -181,7 +181,7 @@ public class DiscoverySequences extends SequenceBase {
   @Test(timeout = TWO_MINUTES_MS)
   @Feature(bucket = ENUMERATION_POINTSET, stage = ALPHA)
   @Summary("Check enumeration of device points")
-  public void pointset_enumeration() {
+  public void enumerate_pointset() {
     if (!catchToFalse(() -> deviceMetadata.pointset.points != null)) {
       skipTest("No metadata pointset points defined");
     }
@@ -194,7 +194,7 @@ public class DiscoverySequences extends SequenceBase {
   @Test(timeout = TWO_MINUTES_MS)
   @Feature(bucket = ENUMERATION_FEATURES, stage = PREVIEW)
   @Summary("Check enumeration of device features")
-  public void feature_enumeration() {
+  public void enumerate_features() {
     Depths enumerate = new Depths();
     enumerate.features = ENTRIES;
     DiscoveryEvents event = runEnumeration(enumerate);
@@ -204,7 +204,7 @@ public class DiscoverySequences extends SequenceBase {
   @Test
   @Summary("Check enumeration of network families")
   @Feature(bucket = ENUMERATION_FAMILIES, stage = ALPHA)
-  public void family_enumeration() {
+  public void enumerate_families() {
     Depths enumerate = new Depths();
     enumerate.families = ENTRIES;
     DiscoveryEvents event = runEnumeration(enumerate);
@@ -214,7 +214,7 @@ public class DiscoverySequences extends SequenceBase {
   @Test
   @Feature(bucket = ENUMERATION, stage = ALPHA)
   @Summary("Check enumeration of multiple categories")
-  public void multi_enumeration() {
+  public void enumerate_multi() {
     Depths enumerate = new Depths();
     enumerate.families = enumerateIfBucketEnabled(ENUMERATION_FAMILIES);
     enumerate.features = enumerateIfBucketEnabled(ENUMERATION_FEATURES);
@@ -230,7 +230,7 @@ public class DiscoverySequences extends SequenceBase {
   @Test(timeout = TWO_MINUTES_MS)
   @Feature(bucket = DISCOVERY_SCAN, stage = ALPHA)
   @Summary("Check that a scan scheduled in the past never starts")
-  public void single_scan_past() {
+  public void scan_single_past() {
     initializeDiscovery();
     scanStartTime = LONG_TIME_AGO;
     boolean shouldEnumerate = false;
@@ -245,7 +245,7 @@ public class DiscoverySequences extends SequenceBase {
   @Test(timeout = TWO_MINUTES_MS)
   @Feature(bucket = DISCOVERY_SCAN, stage = ALPHA)
   @Summary("Check results of a single scan scheduled soon")
-  public void single_scan_future() {
+  public void scan_single_future() {
     initializeDiscovery();
     checkState(scanStartTime == null, "scanStartTime not null");
     scanStartTime = cleanInstantDate(Instant.now().plus(SCAN_START_DELAY));
@@ -338,7 +338,7 @@ public class DiscoverySequences extends SequenceBase {
   @Test(timeout = TWO_MINUTES_MS)
   @Feature(bucket = DISCOVERY_SCAN, stage = ALPHA)
   @Summary("Check periodic scan on a fixed schedule amd enumeration")
-  public void periodic_scan_fixed_enumerate() {
+  public void scan_periodic_now_enumerate() {
     initializeDiscovery();
     checkState(scanStartTime == null, "scanStartTime not null");
     scanStartTime = cleanDate();
@@ -352,27 +352,6 @@ public class DiscoverySequences extends SequenceBase {
         metaFamilies.stream().noneMatch(scanComplete(finishTime)));
     List<DiscoveryEvents> receivedEvents = popReceivedEvents(DiscoveryEvents.class);
     checkEnumeration(receivedEvents, shouldEnumerate);
-  }
-
-  @Test(timeout = TWO_MINUTES_MS)
-  @Feature(bucket = DISCOVERY_SCAN, stage = ALPHA)
-  @Summary("Check periodic scan on a floating schedule")
-  public void periodic_scan_floating() {
-    ifTrueSkipTest(true, "Not yet implemented");
-  }
-
-  @Test(timeout = TWO_MINUTES_MS)
-  @Feature(bucket = DISCOVERY_SCAN, stage = ALPHA)
-  @Summary("Check results of cancelling a pending scan")
-  public void cancel_before_start() {
-    ifTrueSkipTest(true, "Not yet implemented");
-  }
-
-  @Test(timeout = TWO_MINUTES_MS)
-  @Feature(bucket = DISCOVERY_SCAN, stage = ALPHA)
-  @Summary("Check results of cancelling a periodic scan")
-  public void cancel_periodic() {
-    ifTrueSkipTest(true, "Not yet implemented");
   }
 
   private void initializeDiscovery() {

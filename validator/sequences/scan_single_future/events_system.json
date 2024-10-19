@@ -1,0 +1,41 @@
+{
+  "event_count" : 4,
+  "last_config" : "2024-10-19T12:07:45Z",
+  "logentries" : [ {
+    "message" : "Discovery scan starting vendor as 2024-10-19T12:07:53Z",
+    "category" : "device.log",
+    "timestamp" : "2024-10-19T12:07:53Z",
+    "level" : 200
+  }, {
+    "message" : "Update state 2024-10-19T12:07:53Z last_config 2024-10-19T12:07:45Z",
+    "category" : "device.log",
+    "timestamp" : "2024-10-19T12:07:53Z",
+    "level" : 200
+  }, {
+    "message" : "Discovered vendor device 20231 for gen 2024-10-19T12:07:53Z",
+    "category" : "device.log",
+    "timestamp" : "2024-10-19T12:07:53Z",
+    "level" : 200
+  }, {
+    "message" : "Discovered vendor device 28179023 for gen 2024-10-19T12:07:53Z",
+    "category" : "device.log",
+    "timestamp" : "2024-10-19T12:07:53Z",
+    "level" : 200
+  }, {
+    "message" : "Discovered vendor device 0x65 for gen 2024-10-19T12:07:53Z",
+    "category" : "device.log",
+    "timestamp" : "2024-10-19T12:07:53Z",
+    "level" : 200
+  }, {
+    "message" : "Update state 2024-10-19T12:07:55Z last_config 2024-10-19T12:07:45Z",
+    "category" : "device.log",
+    "timestamp" : "2024-10-19T12:07:55Z",
+    "level" : 200
+  } ],
+  "metrics" : {
+    "mem_total_mb" : 254.0,
+    "mem_free_mb" : 212.43093872070312
+  },
+  "timestamp" : "2024-10-19T12:07:59Z",
+  "version" : "1.5.1"
+}

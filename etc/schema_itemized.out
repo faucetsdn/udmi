@@ -3,7 +3,7 @@
 1 pointset_remove_point
 1 pointset_remove_point
 1 too_much_state
-1 feature_enumeration
+1 enumerate_features
 1 valid_serial_no RESULT pass schemas device_state_stable STABLE 5/5 Schema validation passed
 0 valid_serial_no RESULT pass schemas events_system_stable STABLE 5/5 Schema validation passed
 0 valid_serial_no RESULT pass schemas state_update_stable STABLE 5/5 Schema validation passed
