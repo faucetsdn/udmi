@@ -5,7 +5,7 @@ import static com.google.udmi.util.GeneralUtils.ifTrueThen;
 import static com.google.udmi.util.JsonUtil.isoConvert;
 import static java.lang.String.format;
 import static java.util.stream.Collectors.toMap;
-import static udmi.lib.client.UdmiPublisherClient.DEVICE_START_TIME;
+import static udmi.lib.client.UdmiPublisher.DEVICE_START_TIME;
 import static udmi.schema.FamilyDiscoveryState.Phase.ACTIVE;
 import static udmi.schema.FamilyDiscoveryState.Phase.DONE;
 
@@ -18,7 +18,6 @@ import udmi.lib.FamilyProvider;
 import udmi.lib.ManagerBase;
 import udmi.lib.ManagerHost;
 import udmi.lib.SupportedFeatures;
-import udmi.lib.client.DiscoveryManagerClient;
 import udmi.schema.Depths;
 import udmi.schema.DiscoveryConfig;
 import udmi.schema.DiscoveryEvents;
@@ -31,7 +30,7 @@ import udmi.schema.SystemDiscoveryData;
 /**
  * Manager wrapper for discovery functionality in pubber.
  */
-public class DiscoveryManager extends ManagerBase implements DiscoveryManagerClient {
+public class DiscoveryManager extends ManagerBase implements udmi.lib.client.DiscoveryManager {
 
   public static final int SCAN_DURATION_SEC = 10;
 
@@ -130,8 +129,8 @@ public class DiscoveryManager extends ManagerBase implements DiscoveryManagerCli
 
   private Map<String, RefDiscovery> enumerateRefs(String deviceId) {
     return siteModel.getMetadata(deviceId).pointset.points.entrySet().stream()
-        .collect(toMap(DiscoveryManagerClient::getVendorRefKey,
-            DiscoveryManagerClient::getVendorRefValue));
+        .collect(toMap(udmi.lib.client.DiscoveryManager::getVendorRefKey,
+            udmi.lib.client.DiscoveryManager::getVendorRefValue));
   }
 
   /**

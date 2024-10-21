@@ -10,9 +10,9 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import udmi.lib.ManagerBase;
 import udmi.lib.ManagerHost;
 import udmi.lib.MqttDevice;
-import udmi.lib.client.DeviceManagerClient;
-import udmi.lib.client.ProxyDeviceHostClient;
-import udmi.lib.client.UdmiPublisherClient;
+import udmi.lib.client.DeviceManager;
+import udmi.lib.client.ProxyDeviceHost;
+import udmi.lib.client.UdmiPublisher;
 import udmi.schema.Config;
 import udmi.schema.Metadata;
 import udmi.schema.PubberConfiguration;
@@ -20,10 +20,10 @@ import udmi.schema.PubberConfiguration;
 /**
  * Wrapper for a complete device construct.
  */
-public class ProxyDevice extends ManagerBase implements ProxyDeviceHostClient {
+public class ProxyDevice extends ManagerBase implements ProxyDeviceHost {
 
   private static final long STATE_INTERVAL_MS = 1000;
-  final DeviceManager deviceManager;
+  final daq.pubber.DeviceManager deviceManager;
   final Pubber pubberHost;
   private final AtomicBoolean active = new AtomicBoolean();
 
@@ -34,7 +34,8 @@ public class ProxyDevice extends ManagerBase implements ProxyDeviceHostClient {
     super(host, makeProxyConfiguration(host, id, pubberConfig));
     // Simple shortcut to get access to some foundational mechanisms inside of Pubber.
     pubberHost = (Pubber) host;
-    deviceManager = new DeviceManager(this, makeProxyConfiguration(host, id, pubberConfig));
+    deviceManager = new daq.pubber.DeviceManager(this, makeProxyConfiguration(host, id,
+        pubberConfig));
     executor.scheduleAtFixedRate(this::publishDirtyState, STATE_INTERVAL_MS, STATE_INTERVAL_MS,
         TimeUnit.MILLISECONDS);
   }
@@ -92,12 +93,12 @@ public class ProxyDevice extends ManagerBase implements ProxyDeviceHostClient {
   }
 
   @Override
-  public DeviceManagerClient getDeviceManager() {
+  public DeviceManager getDeviceManager() {
     return deviceManager;
   }
 
   @Override
-  public UdmiPublisherClient getUdmiPublisherHost() {
+  public UdmiPublisher getUdmiPublisherHost() {
     return pubberHost;
   }
 

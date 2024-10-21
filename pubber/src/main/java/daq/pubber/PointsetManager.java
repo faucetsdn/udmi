@@ -18,7 +18,6 @@ import java.util.concurrent.atomic.AtomicReference;
 import udmi.lib.AbstractPoint;
 import udmi.lib.ManagerBase;
 import udmi.lib.ManagerHost;
-import udmi.lib.client.PointsetManagerClient;
 import udmi.schema.Entry;
 import udmi.schema.PointPointsetConfig;
 import udmi.schema.PointPointsetModel;
@@ -30,7 +29,7 @@ import udmi.schema.PubberConfiguration;
 /**
  * Helper class to manage the operation of a pointset block.
  */
-public class PointsetManager extends ManagerBase implements PointsetManagerClient {
+public class PointsetManager extends ManagerBase implements udmi.lib.client.PointsetManager {
 
   private static final Set<String> BOOLEAN_UNITS = ImmutableSet.of("No-units");
 
@@ -165,7 +164,7 @@ public class PointsetManager extends ManagerBase implements PointsetManagerClien
 
     ifNotNullThen(options.extraPoint,
         extraPoint -> pointsetEvent.points.put(extraPoint,
-            PointsetManagerClient.extraPointsetEvent()));
+            udmi.lib.client.PointsetManager.extraPointsetEvent()));
 
     AtomicReference<Entry> maxStatus = new AtomicReference<>();
     statePoints.forEach(
@@ -197,7 +196,7 @@ public class PointsetManager extends ManagerBase implements PointsetManagerClien
   }
 
   @Override
-  public PointsetManagerClient.ExtraPointsetEvent getPointsetEvent() {
+  public udmi.lib.client.PointsetManager.ExtraPointsetEvent getPointsetEvent() {
     return pointsetEvent;
   }
 

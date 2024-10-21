@@ -53,9 +53,9 @@ import udmi.lib.ManagerBase;
 import udmi.lib.MqttDevice;
 import udmi.lib.MqttPublisher.PublisherException;
 import udmi.lib.SupportedFeatures;
-import udmi.lib.client.DeviceManagerClient;
-import udmi.lib.client.SystemManagerClient;
-import udmi.lib.client.UdmiPublisherClient;
+import udmi.lib.client.DeviceManager;
+import udmi.lib.client.SystemManager;
+import udmi.lib.client.UdmiPublisher;
 import udmi.schema.Config;
 import udmi.schema.DevicePersistent;
 import udmi.schema.EndpointConfiguration;
@@ -71,7 +71,7 @@ import udmi.schema.PubberOptions;
 /**
  * IoT Core UDMI Device Emulator.
  */
-public class Pubber extends ManagerBase implements UdmiPublisherClient {
+public class Pubber extends ManagerBase implements UdmiPublisher {
 
   public static final String PUBBER_OUT = "pubber/out";
   public static final String PERSISTENT_STORE_FILE = "persistent_data.json";
@@ -107,7 +107,7 @@ public class Pubber extends ManagerBase implements UdmiPublisherClient {
   private SiteModel siteModel;
   private SchemaVersion targetSchema;
   private int deviceUpdateCount = -1;
-  private DeviceManager deviceManager;
+  private daq.pubber.DeviceManager deviceManager;
   private boolean isConnected;
   private boolean isGatewayDevice;
 
@@ -260,7 +260,7 @@ public class Pubber extends ManagerBase implements UdmiPublisherClient {
 
   @Override
   public void initializeDevice() {
-    deviceManager = new DeviceManager(this, config);
+    deviceManager = new daq.pubber.DeviceManager(this, config);
 
     if (config.sitePath != null) {
       SupportedFeatures.writeFeatureFile(config.sitePath, deviceManager);
@@ -661,7 +661,7 @@ public class Pubber extends ManagerBase implements UdmiPublisherClient {
   }
 
   @Override
-  public DeviceManagerClient getDeviceManager() {
+  public DeviceManager getDeviceManager() {
     return deviceManager;
   }
 
@@ -702,7 +702,7 @@ public class Pubber extends ManagerBase implements UdmiPublisherClient {
 
   @Override
   public Map<Level, Consumer<String>> getLogMap() {
-    return SystemManagerClient.getLogMap().apply(LOG);
+    return SystemManager.getLogMap().apply(LOG);
   }
 
   public Metadata getMetadata(String id) {

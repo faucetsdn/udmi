@@ -3,59 +3,58 @@ package daq.pubber;
 import com.google.udmi.util.SiteModel;
 import udmi.lib.ManagerBase;
 import udmi.lib.ManagerHost;
-import udmi.lib.client.DeviceManagerClient;
-import udmi.lib.client.DiscoveryManagerClient;
-import udmi.lib.client.GatewayManagerClient;
-import udmi.lib.client.LocalnetManagerClient;
-import udmi.lib.client.PointsetManagerClient;
-import udmi.lib.client.SystemManagerClient;
+import udmi.lib.client.DiscoveryManager;
+import udmi.lib.client.GatewayManager;
+import udmi.lib.client.LocalnetManager;
+import udmi.lib.client.PointsetManager;
+import udmi.lib.client.SystemManager;
 import udmi.schema.PubberConfiguration;
 
 /**
  * Uber-manager for a complete device.
  */
-public class DeviceManager extends ManagerBase implements DeviceManagerClient {
+public class DeviceManager extends ManagerBase implements udmi.lib.client.DeviceManager {
 
-  private final PointsetManagerClient pointsetManager;
-  private final SystemManagerClient systemManager;
-  private final LocalnetManagerClient localnetManager;
-  private final GatewayManagerClient gatewayManager;
-  private final DiscoveryManagerClient discoveryManager;
+  private final PointsetManager pointsetManager;
+  private final SystemManager systemManager;
+  private final LocalnetManager localnetManager;
+  private final GatewayManager gatewayManager;
+  private final DiscoveryManager discoveryManager;
 
   /**
    * Create a new instance.
    */
   public DeviceManager(ManagerHost host, PubberConfiguration configuration) {
     super(host, configuration);
-    systemManager = new SystemManager(host, configuration);
-    pointsetManager = new PointsetManager(host, configuration);
-    localnetManager = new LocalnetManager(host, configuration);
-    gatewayManager = new GatewayManager(host, configuration);
-    discoveryManager = new DiscoveryManager(host, configuration, this);
+    systemManager = new daq.pubber.SystemManager(host, configuration);
+    pointsetManager = new daq.pubber.PointsetManager(host, configuration);
+    localnetManager = new daq.pubber.LocalnetManager(host, configuration);
+    gatewayManager = new daq.pubber.GatewayManager(host, configuration);
+    discoveryManager = new daq.pubber.DiscoveryManager(host, configuration, this);
   }
 
   @Override
-  public PointsetManagerClient getPointsetManager() {
+  public PointsetManager getPointsetManager() {
     return pointsetManager;
   }
 
   @Override
-  public SystemManagerClient getSystemManager() {
+  public SystemManager getSystemManager() {
     return systemManager;
   }
 
   @Override
-  public LocalnetManagerClient getLocalnetManager() {
+  public LocalnetManager getLocalnetManager() {
     return localnetManager;
   }
 
   @Override
-  public GatewayManagerClient getGatewayManager() {
+  public GatewayManager getGatewayManager() {
     return gatewayManager;
   }
 
   @Override
-  public DiscoveryManagerClient getDiscoveryManager() {
+  public DiscoveryManager getDiscoveryManager() {
     return discoveryManager;
   }
 

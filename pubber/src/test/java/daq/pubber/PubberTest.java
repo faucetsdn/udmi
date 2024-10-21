@@ -15,7 +15,7 @@ import java.util.HashMap;
 import java.util.List;
 import org.junit.After;
 import org.junit.Test;
-import udmi.lib.client.UdmiPublisherClient;
+import udmi.lib.client.UdmiPublisher;
 import udmi.schema.BlobBlobsetConfig;
 import udmi.schema.BlobBlobsetConfig.BlobPhase;
 import udmi.schema.BlobsetConfig;
@@ -169,14 +169,14 @@ public class PubberTest extends TestBase {
   @Test
   public void parseDataUrl() {
     String testBlobDataUrl = DATA_URL_PREFIX + encodeBase64(TEST_BLOB_DATA);
-    String blobData = UdmiPublisherClient.acquireBlobData(testBlobDataUrl, sha256(TEST_BLOB_DATA));
+    String blobData = UdmiPublisher.acquireBlobData(testBlobDataUrl, sha256(TEST_BLOB_DATA));
     assertEquals("extracted blob data", blobData, TEST_BLOB_DATA);
   }
 
   @Test(expected = RuntimeException.class)
   public void badDataUrl() {
     String testBlobDataUrl = DATA_URL_PREFIX + encodeBase64(TEST_BLOB_DATA + "XXXX");
-    UdmiPublisherClient.acquireBlobData(testBlobDataUrl, sha256(TEST_BLOB_DATA));
+    UdmiPublisher.acquireBlobData(testBlobDataUrl, sha256(TEST_BLOB_DATA));
   }
 
   @Test
@@ -212,12 +212,12 @@ public class PubberTest extends TestBase {
     State testMessage = new State();
 
     assertNull(testMessage.timestamp);
-    UdmiPublisherClient.augmentDeviceMessage(testMessage, new Date(), false);
+    UdmiPublisher.augmentDeviceMessage(testMessage, new Date(), false);
     assertEquals(testMessage.version, Pubber.UDMI_VERSION);
     assertNotEquals(testMessage.timestamp, null);
 
     testMessage.timestamp = new Date(1241);
-    UdmiPublisherClient.augmentDeviceMessage(testMessage, new Date(), false);
+    UdmiPublisher.augmentDeviceMessage(testMessage, new Date(), false);
     assertEquals(testMessage.version, Pubber.UDMI_VERSION);
     assertNotEquals(testMessage.timestamp, new Date(1241));
   }

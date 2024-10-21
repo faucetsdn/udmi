@@ -11,7 +11,7 @@ import udmi.schema.PubberOptions;
  * Interface for providing main manager functionalities.
  *
  */
-public interface ManagerClient extends ManagerLog {
+public interface Manager extends ManagerLog {
 
   void updateState(Object state);
 

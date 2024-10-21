@@ -15,7 +15,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import udmi.lib.client.LocalnetManagerClient;
+import udmi.lib.client.LocalnetManager;
 import udmi.schema.FamilyLocalnetState;
 import udmi.schema.PubberConfiguration;
 
@@ -36,7 +36,7 @@ public class IpProvider extends ManagerBase implements FamilyProvider {
       "inet6", "ipv6"
   );
 
-  private final LocalnetManagerClient localnetHost;
+  private final LocalnetManager localnetHost;
 
   /**
    * Create a basic provider instance.
@@ -44,7 +44,7 @@ public class IpProvider extends ManagerBase implements FamilyProvider {
   public IpProvider(ManagerHost host, String family,
       PubberConfiguration pubberConfiguration) {
     super(host, pubberConfiguration);
-    localnetHost = (LocalnetManagerClient) host;
+    localnetHost = (LocalnetManager) host;
     populateInterfaceAddresses();
   }
 

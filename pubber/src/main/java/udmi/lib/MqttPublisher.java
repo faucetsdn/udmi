@@ -56,7 +56,7 @@ import org.eclipse.paho.client.mqttv3.persist.MemoryPersistence;
 import org.joda.time.DateTime;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import udmi.lib.client.UdmiPublisherClient;
+import udmi.lib.client.UdmiPublisher;
 import udmi.schema.Basic;
 import udmi.schema.Config;
 import udmi.schema.EndpointConfiguration.Transport;
@@ -612,7 +612,7 @@ public class MqttPublisher implements Publisher {
   }
 
   private String getGatewayId(String targetId) {
-    return UdmiPublisherClient.getGatewayId(targetId, configuration);
+    return UdmiPublisher.getGatewayId(targetId, configuration);
   }
 
   /**

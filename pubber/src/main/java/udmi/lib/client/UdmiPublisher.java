@@ -57,8 +57,8 @@ import udmi.lib.MqttDevice;
 import udmi.lib.MqttPublisher.FakeTopic;
 import udmi.lib.MqttPublisher.InjectedMessage;
 import udmi.lib.MqttPublisher.InjectedState;
-import udmi.lib.client.PointsetManagerClient.ExtraPointsetEvent;
-import udmi.lib.client.SystemManagerClient.ExtraSystemState;
+import udmi.lib.client.PointsetManager.ExtraPointsetEvent;
+import udmi.lib.client.SystemManager.ExtraSystemState;
 import udmi.schema.BlobBlobsetConfig;
 import udmi.schema.BlobBlobsetConfig.BlobPhase;
 import udmi.schema.BlobBlobsetState;
@@ -83,7 +83,7 @@ import udmi.schema.SystemState;
 /**
  * UDMI publisher client.
  */
-public interface UdmiPublisherClient extends ManagerHost {
+public interface UdmiPublisher extends ManagerHost {
 
   String DATA_URL_JSON_BASE64 = "data:application/json;base64,";
 
@@ -124,7 +124,7 @@ public interface UdmiPublisherClient extends ManagerHost {
 
   Config getDeviceConfig();
 
-  DeviceManagerClient getDeviceManager();
+  DeviceManager getDeviceManager();
 
   MqttDevice getDeviceTarget();
 

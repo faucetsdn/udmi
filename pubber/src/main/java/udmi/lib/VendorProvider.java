@@ -11,8 +11,8 @@ import com.google.udmi.util.SiteModel;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.function.BiConsumer;
-import udmi.lib.client.DiscoveryManagerClient;
-import udmi.lib.client.LocalnetManagerClient;
+import udmi.lib.client.DiscoveryManager;
+import udmi.lib.client.LocalnetManager;
 import udmi.schema.DiscoveryEvents;
 import udmi.schema.FamilyLocalnetState;
 import udmi.schema.Metadata;
@@ -24,14 +24,14 @@ import udmi.schema.RefDiscovery;
  */
 public class VendorProvider extends ManagerBase implements FamilyProvider {
 
-  private final LocalnetManagerClient localnetHost;
+  private final LocalnetManager localnetHost;
   private SiteModel siteModel;
   private String selfAddr;
 
   public VendorProvider(ManagerHost host, String family,
       PubberConfiguration pubberConfiguration) {
     super(host, pubberConfiguration);
-    localnetHost = (LocalnetManagerClient) host;
+    localnetHost = (LocalnetManager) host;
   }
 
   private DiscoveryEvents augmentSend(Entry<String, Metadata> entry, boolean enumerate) {
@@ -44,8 +44,8 @@ public class VendorProvider extends ManagerBase implements FamilyProvider {
 
   private Map<String, RefDiscovery> getDiscoveredRefs(Metadata entry) {
     return entry.pointset.points.entrySet().stream()
-        .collect(toMap(DiscoveryManagerClient::getVendorRefKey,
-            DiscoveryManagerClient::getVendorRefValue));
+        .collect(toMap(DiscoveryManager::getVendorRefKey,
+            DiscoveryManager::getVendorRefValue));
   }
 
   private void updateStateAddress() {

@@ -14,7 +14,7 @@ import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
-import udmi.lib.client.ManagerClient;
+import udmi.lib.client.Manager;
 import udmi.schema.Config;
 import udmi.schema.DiscoveryState;
 import udmi.schema.GatewayState;
@@ -29,7 +29,7 @@ import udmi.util.CatchingScheduledThreadPoolExecutor;
 /**
  * Base class for UDMI Publisher subsystem managers.
  */
-public abstract class ManagerBase implements ManagerClient {
+public abstract class ManagerBase implements Manager {
 
   public static final int DISABLED_INTERVAL = 0;
   protected static final int DEFAULT_REPORT_SEC = 10;

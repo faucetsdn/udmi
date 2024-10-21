@@ -6,7 +6,6 @@ import java.util.stream.Collectors;
 import udmi.lib.FamilyProvider;
 import udmi.lib.ManagerBase;
 import udmi.lib.ManagerHost;
-import udmi.lib.client.LocalnetManagerClient;
 import udmi.schema.LocalnetConfig;
 import udmi.schema.LocalnetState;
 import udmi.schema.PubberConfiguration;
@@ -14,7 +13,7 @@ import udmi.schema.PubberConfiguration;
 /**
  * Container class for dealing with the localnet subblock of UDMI.
  */
-public class LocalnetManager extends ManagerBase implements LocalnetManagerClient {
+public class LocalnetManager extends ManagerBase implements udmi.lib.client.LocalnetManager {
 
   private final LocalnetState localnetState;
   private final Map<String, FamilyProvider> localnetProviders;

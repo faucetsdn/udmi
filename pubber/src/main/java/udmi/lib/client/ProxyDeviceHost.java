@@ -16,11 +16,11 @@ import udmi.schema.State;
 /**
  * Proxy Device host provider.
  */
-public interface ProxyDeviceHostClient extends ManagerHost, ManagerLog {
+public interface ProxyDeviceHost extends ManagerHost, ManagerLog {
 
-  DeviceManagerClient getDeviceManager();
+  DeviceManager getDeviceManager();
 
-  UdmiPublisherClient getUdmiPublisherHost();
+  UdmiPublisher getUdmiPublisherHost();
 
   ManagerHost getManagerHost();
 

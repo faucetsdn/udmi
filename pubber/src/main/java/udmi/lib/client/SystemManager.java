@@ -40,7 +40,7 @@ import udmi.schema.SystemState;
 /**
  * System client.
  */
-public interface SystemManagerClient extends ManagerClient {
+public interface SystemManager extends Manager {
 
   String UDMI_PUBLISHER_LOG_CATEGORY = "device.log";
 

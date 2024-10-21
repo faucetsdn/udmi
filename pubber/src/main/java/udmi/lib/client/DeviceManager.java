@@ -13,17 +13,17 @@ import udmi.schema.Operation.SystemMode;
 /**
  * Device client.
  */
-public interface DeviceManagerClient extends ManagerClient {
+public interface DeviceManager extends Manager {
   
-  PointsetManagerClient getPointsetManager();
+  PointsetManager getPointsetManager();
 
-  SystemManagerClient getSystemManager();
+  SystemManager getSystemManager();
 
-  LocalnetManagerClient getLocalnetManager();
+  LocalnetManager getLocalnetManager();
 
-  GatewayManagerClient getGatewayManager();
+  GatewayManager getGatewayManager();
 
-  DiscoveryManagerClient getDiscoveryManager();
+  DiscoveryManager getDiscoveryManager();
 
   default Map<String, FamilyDiscovery> enumerateFamilies() {
     return getLocalnetManager().enumerateFamilies();
