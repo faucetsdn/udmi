@@ -7,6 +7,12 @@ import static java.lang.String.format;
 
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
+import udmi.lib.ManagerBase;
+import udmi.lib.ManagerHost;
+import udmi.lib.MqttDevice;
+import udmi.lib.client.DeviceManager;
+import udmi.lib.client.ProxyDeviceHost;
+import udmi.lib.client.UdmiPublisher;
 import udmi.schema.Config;
 import udmi.schema.Metadata;
 import udmi.schema.PubberConfiguration;
@@ -14,10 +20,10 @@ import udmi.schema.PubberConfiguration;
 /**
  * Wrapper for a complete device construct.
  */
-public class ProxyDevice extends ManagerBase implements ManagerHost {
+public class ProxyDevice extends ManagerBase implements ProxyDeviceHost {
 
   private static final long STATE_INTERVAL_MS = 1000;
-  final DeviceManager deviceManager;
+  final daq.pubber.DeviceManager deviceManager;
   final Pubber pubberHost;
   private final AtomicBoolean active = new AtomicBoolean();
 
@@ -28,7 +34,8 @@ public class ProxyDevice extends ManagerBase implements ManagerHost {
     super(host, makeProxyConfiguration(host, id, pubberConfig));
     // Simple shortcut to get access to some foundational mechanisms inside of Pubber.
     pubberHost = (Pubber) host;
-    deviceManager = new DeviceManager(this, makeProxyConfiguration(host, id, pubberConfig));
+    deviceManager = new daq.pubber.DeviceManager(this, makeProxyConfiguration(host, id,
+        pubberConfig));
     executor.scheduleAtFixedRate(this::publishDirtyState, STATE_INTERVAL_MS, STATE_INTERVAL_MS,
         TimeUnit.MILLISECONDS);
   }
@@ -42,7 +49,8 @@ public class ProxyDevice extends ManagerBase implements ManagerHost {
     return proxyConfiguration;
   }
 
-  protected void activate() {
+  @Override
+  public void activate() {
     try {
       active.set(false);
       info("Activating proxy device " + deviceId);
@@ -56,33 +64,21 @@ public class ProxyDevice extends ManagerBase implements ManagerHost {
     }
   }
 
-  void configHandler(Config config) {
+  @Override
+  public void configHandler(Config config) {
     pubberHost.configPreprocess(deviceId, config);
     deviceManager.updateConfig(config);
     pubberHost.publisherConfigLog("apply", null, deviceId);
   }
 
   @Override
-  protected void shutdown() {
+  public void shutdown() {
     deviceManager.shutdown();
   }
 
   @Override
-  protected void stop() {
+  public void stop() {
     deviceManager.stop();
-  }
-
-  @Override
-  public void publish(Object message) {
-    if (active.get()) {
-      pubberHost.publish(deviceId, message);
-    }
-  }
-
-  @Override
-  public void update(Object update) {
-    updateStateHolder(deviceState, update);
-    stateDirty.set(true);
   }
 
   private void publishDirtyState() {
@@ -92,11 +88,28 @@ public class ProxyDevice extends ManagerBase implements ManagerHost {
   }
 
   @Override
-  public FamilyProvider getLocalnetProvider(String family) {
-    return host.getLocalnetProvider(family);
-  }
-
   public void setMetadata(Metadata metadata) {
     deviceManager.setMetadata(metadata);
   }
+
+  @Override
+  public DeviceManager getDeviceManager() {
+    return deviceManager;
+  }
+
+  @Override
+  public UdmiPublisher getUdmiPublisherHost() {
+    return pubberHost;
+  }
+
+  @Override
+  public ManagerHost getManagerHost() {
+    return host;
+  }
+
+  @Override
+  public AtomicBoolean isActive() {
+    return active;
+  }
+
 }

@@ -1,4 +1,4 @@
-package daq.pubber;
+package udmi.lib;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
@@ -56,6 +56,7 @@ import org.eclipse.paho.client.mqttv3.persist.MemoryPersistence;
 import org.joda.time.DateTime;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import udmi.lib.client.UdmiPublisher;
 import udmi.schema.Basic;
 import udmi.schema.Config;
 import udmi.schema.EndpointConfiguration.Transport;
@@ -68,7 +69,7 @@ import udmi.schema.PubberConfiguration;
 public class MqttPublisher implements Publisher {
 
   public static final String EMPTY_STRING = "";
-  static final int DEFAULT_CONFIG_WAIT_SEC = 10;
+  public static final int DEFAULT_CONFIG_WAIT_SEC = 10;
   private static final String DEFAULT_TOPIC_PREFIX = "/devices/";
   private static final Logger LOG = LoggerFactory.getLogger(MqttPublisher.class);
   private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper()
@@ -611,7 +612,7 @@ public class MqttPublisher implements Publisher {
   }
 
   private String getGatewayId(String targetId) {
-    return Pubber.getGatewayId(targetId, configuration);
+    return UdmiPublisher.getGatewayId(targetId, configuration);
   }
 
   /**
@@ -652,9 +653,24 @@ public class MqttPublisher implements Publisher {
       this.type = type;
       this.phase = phase;
     }
+
+    public String getDeviceId() {
+      return deviceId;
+    }
+
+    public String getType() {
+      return type;
+    }
+
+    public String getPhase() {
+      return phase;
+    }
   }
 
-  static class InjectedMessage {
+  /**
+   * Represents a message with placeholders that need to be replaced.
+   */
+  public static class InjectedMessage {
 
     private static final String REPLACE_MESSAGE_KEY = "REPLACE_MESSAGE_WITH";
     private static final String REPLACE_TOPIC_KEY = "REPLACE_TOPIC_WITH";
@@ -670,12 +686,15 @@ public class MqttPublisher implements Publisher {
   /**
    * Marker class for sending using a bad topic not defined by a SubType/SubFolder.
    */
-  static class FakeTopic {
+  public static class FakeTopic {
     public String version;
     public Date timestamp;
   }
 
-  static class InjectedState extends InjectedMessage {
+  /**
+   * Injected state.
+   */
+  public static class InjectedState extends InjectedMessage {
 
   }
 

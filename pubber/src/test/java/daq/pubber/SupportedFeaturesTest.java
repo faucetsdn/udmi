@@ -4,11 +4,11 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertTrue;
-import static udmi.schema.Bucket.ENUMERATION;
 import static udmi.schema.Bucket.ENUMERATION_FEATURES;
 
 import java.util.Map;
 import org.junit.Test;
+import udmi.lib.SupportedFeatures;
 import udmi.schema.Bucket;
 import udmi.schema.FeatureDiscovery;
 import udmi.schema.FeatureDiscovery.FeatureStage;
