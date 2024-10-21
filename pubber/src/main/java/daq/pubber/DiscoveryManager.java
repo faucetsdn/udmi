@@ -1,6 +1,5 @@
 package daq.pubber;
 
-import static com.google.udmi.util.GeneralUtils.ifNotNullGet;
 import static com.google.udmi.util.GeneralUtils.ifNotNullThen;
 import static com.google.udmi.util.GeneralUtils.ifTrueThen;
 import static com.google.udmi.util.JsonUtil.isoConvert;
@@ -18,6 +17,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import udmi.lib.FamilyProvider;
 import udmi.lib.ManagerBase;
 import udmi.lib.ManagerHost;
+import udmi.lib.SupportedFeatures;
 import udmi.lib.client.DiscoveryManagerClient;
 import udmi.schema.Depths;
 import udmi.schema.DiscoveryConfig;

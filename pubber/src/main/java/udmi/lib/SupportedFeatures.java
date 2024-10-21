@@ -1,4 +1,4 @@
-package daq.pubber;
+package udmi.lib;
 
 import static com.google.udmi.util.GeneralUtils.getTimestamp;
 import static com.google.udmi.util.GeneralUtils.isTrue;
@@ -16,6 +16,7 @@ import static udmi.schema.FeatureDiscovery.FeatureStage.BETA;
 import static udmi.schema.FeatureDiscovery.FeatureStage.PREVIEW;
 import static udmi.schema.FeatureDiscovery.FeatureStage.STABLE;
 
+import daq.pubber.DeviceManager;
 import java.io.File;
 import java.util.HashMap;
 import java.util.Map;
@@ -68,7 +69,10 @@ public abstract class SupportedFeatures {
     return FEATURES_MAP;
   }
 
-  static void setFeatureSwap(Boolean option) {
+  /**
+   * Set feature swap.
+   */
+  public static void setFeatureSwap(Boolean option) {
     if (isTrue(option)) {
       add(UNKNOWN_DEFAULT, BETA);
       FEATURES_MAP.remove(ENUMERATION.value());

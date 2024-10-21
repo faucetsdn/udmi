@@ -7,7 +7,6 @@ import static java.util.Objects.requireNonNull;
 import static java.util.Optional.ofNullable;
 import static java.util.concurrent.TimeUnit.SECONDS;
 
-import com.google.daq.mqtt.util.CatchingScheduledThreadPoolExecutor;
 import com.google.udmi.util.SchemaVersion;
 import java.util.Date;
 import java.util.concurrent.ScheduledExecutorService;
@@ -25,6 +24,7 @@ import udmi.schema.PubberConfiguration;
 import udmi.schema.PubberOptions;
 import udmi.schema.State;
 import udmi.schema.SystemState;
+import udmi.util.CatchingScheduledThreadPoolExecutor;
 
 /**
  * Base class for UDMI Publisher subsystem managers.

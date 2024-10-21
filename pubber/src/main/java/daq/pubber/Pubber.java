@@ -52,6 +52,7 @@ import udmi.lib.FamilyProvider;
 import udmi.lib.ManagerBase;
 import udmi.lib.MqttDevice;
 import udmi.lib.MqttPublisher.PublisherException;
+import udmi.lib.SupportedFeatures;
 import udmi.lib.client.DeviceManagerClient;
 import udmi.lib.client.SystemManagerClient;
 import udmi.lib.client.UdmiPublisherClient;
