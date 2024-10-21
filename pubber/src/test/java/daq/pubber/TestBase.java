@@ -1,7 +1,8 @@
 package daq.pubber;
 
-import static daq.pubber.ListPublisher.getMessageString;
+import static udmi.lib.ListPublisher.getMessageString;
 
+import udmi.lib.MqttDevice;
 import udmi.schema.DiscoveryCommand;
 import udmi.schema.EndpointConfiguration;
 import udmi.schema.PubberConfiguration;

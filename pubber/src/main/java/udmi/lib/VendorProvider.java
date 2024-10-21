@@ -1,17 +1,18 @@
-package daq.pubber;
+package udmi.lib;
 
 import static com.google.udmi.util.GeneralUtils.catchToNull;
-import static com.google.udmi.util.GeneralUtils.ifNotNullGet;
 import static com.google.udmi.util.GeneralUtils.ifNotNullThen;
 import static com.google.udmi.util.GeneralUtils.ifTrueGet;
-import static daq.pubber.ProtocolFamily.VENDOR;
 import static java.util.Objects.requireNonNull;
 import static java.util.stream.Collectors.toMap;
+import static udmi.lib.ProtocolFamily.VENDOR;
 
 import com.google.udmi.util.SiteModel;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.function.BiConsumer;
+import udmi.lib.client.DiscoveryManager;
+import udmi.lib.client.LocalnetManager;
 import udmi.schema.DiscoveryEvents;
 import udmi.schema.FamilyLocalnetState;
 import udmi.schema.Metadata;
@@ -43,7 +44,8 @@ public class VendorProvider extends ManagerBase implements FamilyProvider {
 
   private Map<String, RefDiscovery> getDiscoveredRefs(Metadata entry) {
     return entry.pointset.points.entrySet().stream()
-        .collect(toMap(DiscoveryManager::getVendorRefKey, DiscoveryManager::getVendorRefValue));
+        .collect(toMap(DiscoveryManager::getVendorRefKey,
+            DiscoveryManager::getVendorRefValue));
   }
 
   private void updateStateAddress() {
@@ -56,7 +58,7 @@ public class VendorProvider extends ManagerBase implements FamilyProvider {
     });
   }
 
-  void setSiteModel(SiteModel siteModel) {
+  public void setSiteModel(SiteModel siteModel) {
     this.siteModel = siteModel;
     updateStateAddress();
   }

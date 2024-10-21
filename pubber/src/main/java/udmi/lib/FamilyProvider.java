@@ -1,4 +1,4 @@
-package daq.pubber;
+package udmi.lib;
 
 import java.util.Map;
 import java.util.function.BiConsumer;
