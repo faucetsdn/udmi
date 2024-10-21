@@ -34,7 +34,6 @@ import daq.pubber.PubSubClient.Bundle;
 import java.io.File;
 import java.io.PrintStream;
 import java.time.Duration;
-import java.util.Base64;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.CountDownLatch;
@@ -79,7 +78,6 @@ public class Pubber extends ManagerBase implements UdmiPublisher {
   public static final String CA_CRT = "ca.crt";
 
   public static final Logger LOG = LoggerFactory.getLogger(Pubber.class);
-  static final int MESSAGE_REPORT_INTERVAL = 10;
   private static final String HOSTNAME = System.getenv("HOSTNAME");
 
   private static final String PUBSUB_SITE = "PubSub";
@@ -367,22 +365,13 @@ public class Pubber extends ManagerBase implements UdmiPublisher {
         attributes.deviceId = pull.attributes.get("deviceId");
         attributes.deviceRegistryId = pull.attributes.get("deviceRegistryId");
         attributes.deviceRegistryLocation = pull.attributes.get("deviceRegistryLocation");
-        SwarmMessage swarm = fromJsonString(pull.body, SwarmMessage.class);
-        processSwarmConfig(swarm, attributes);
+
         return;
       } catch (Exception e) {
         error("Error pulling swarm message", e);
         safeSleep(WAIT_TIME_SEC);
       }
     }
-  }
-
-  private void processSwarmConfig(SwarmMessage swarm, Envelope attributes) {
-    config.deviceId = checkNotNull(attributes.deviceId, "deviceId");
-    config.keyBytes = Base64.getDecoder()
-        .decode(checkNotNull(swarm.key_base64, "key_base64"));
-    config.endpoint = SiteModel.makeEndpointConfig(attributes);
-    processDeviceMetadata(checkNotNull(swarm.device_metadata, "device_metadata"));
   }
 
   private void processDeviceMetadata(Metadata metadata) {
