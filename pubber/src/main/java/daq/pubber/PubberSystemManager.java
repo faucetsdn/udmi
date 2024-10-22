@@ -38,8 +38,11 @@ import udmi.schema.SystemConfig;
  */
 public class PubberSystemManager extends PubberManager implements SystemManager {
 
-  public static final String PUBBER_LOG_CATEGORY = "device.log";
-  public static final String PUBBER_LOG = "pubber.log";
+  private static final String PUBBER_LOG = "device.log";
+  private static final String DEFAULT_MAKE = "bos";
+  private static final String DEFAULT_MODEL = "pubber";
+  private static final String DEFAULT_SOFTWARE_KEY = "firmware";
+  private static final String DEFAULT_SOFTWARE_VALUE = "v1";
   private static final Date DEVICE_START_TIME = UdmiPublisher.DEVICE_START_TIME;
 
   private final List<Entry> logentries = new ArrayList<>();

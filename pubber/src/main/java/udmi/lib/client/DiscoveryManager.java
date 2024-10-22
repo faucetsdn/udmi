@@ -227,8 +227,6 @@ public interface DiscoveryManager extends SubblockManager {
 
   Date getDeviceStartTime();
 
-  void setSiteModel(SiteModel siteModel);
-
   DiscoveryState getDiscoveryState();
 
   void setDiscoveryState(DiscoveryState discoveryState);

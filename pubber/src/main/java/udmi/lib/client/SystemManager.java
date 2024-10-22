@@ -36,10 +36,6 @@ public interface SystemManager extends SubblockManager {
   String UDMI_PUBLISHER_LOG_CATEGORY = "device.log";
 
   long BYTES_PER_MEGABYTE = 1024 * 1024;
-  String DEFAULT_MAKE = "bos";
-  String DEFAULT_MODEL = "pubber";
-  String DEFAULT_SOFTWARE_KEY = "firmware";
-  String DEFAULT_SOFTWARE_VALUE = "v1";
 
   Map<SystemMode, Integer> EXIT_CODE_MAP = ImmutableMap.of(
       SystemMode.SHUTDOWN, 0, // Indicates expected clean shutdown (success).

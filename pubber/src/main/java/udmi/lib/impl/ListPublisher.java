@@ -15,7 +15,6 @@ import java.util.concurrent.Executors;
 import java.util.function.Consumer;
 import udmi.lib.intf.Publisher;
 import udmi.schema.Config;
-import udmi.schema.PubberConfiguration;
 
 /**
  * Publishes message to an in-memory list.
@@ -23,14 +22,12 @@ import udmi.schema.PubberConfiguration;
 public class ListPublisher implements Publisher {
 
   private final ExecutorService publisherExecutor = Executors.newFixedThreadPool(1);
-  private final PubberConfiguration configuration;
   private List<String> messages = new ArrayList<>();
   private String usePrefix;
   private final Map<String, Entry<Consumer<Object>, Class<Object>>> handlers = new HashMap<>();
 
-  public ListPublisher(PubberConfiguration configuration, Consumer<Exception> onError) {
-    this.configuration = configuration;
-    usePrefix = configuration.endpoint.topic_prefix;
+  public ListPublisher(String topicPrefix, Consumer<Exception> onError) {
+    usePrefix = topicPrefix;
   }
 
   public static String getMessageString(String deviceId, String topic, Object message) {

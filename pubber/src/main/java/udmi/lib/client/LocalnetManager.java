@@ -3,10 +3,7 @@ package udmi.lib.client;
 import static com.google.udmi.util.GeneralUtils.ifNotNullGet;
 import static java.util.stream.Collectors.toMap;
 
-import com.google.udmi.util.SiteModel;
-import daq.pubber.VendorProvider;
 import java.util.Map;
-import udmi.lib.ProtocolFamily;
 import udmi.lib.intf.FamilyProvider;
 import udmi.lib.intf.ManagerHost;
 import udmi.schema.FamilyDiscovery;
@@ -77,10 +74,6 @@ public interface LocalnetManager extends ManagerHost, SubblockManager {
   Map<String, FamilyProvider> getLocalnetProviders();
 
   LocalnetState getLocalnetState();
-
-  default void setSiteModel(SiteModel siteModel) {
-    ((VendorProvider) getLocalnetProviders().get(ProtocolFamily.VENDOR)).setSiteModel(siteModel);
-  }
 
   default void publish(Object message) {
     getHost().publish(message);

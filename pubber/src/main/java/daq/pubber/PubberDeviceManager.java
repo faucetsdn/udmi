@@ -17,11 +17,11 @@ import udmi.schema.PubberConfiguration;
  */
 public class PubberDeviceManager extends PubberManager implements DeviceManager {
 
-  private final PointsetManager pointsetManager;
-  private final SystemManager systemManager;
-  private final LocalnetManager localnetManager;
-  private final GatewayManager gatewayManager;
-  private final DiscoveryManager discoveryManager;
+  private final PubberPointsetManager pointsetManager;
+  private final PubberSystemManager systemManager;
+  private final PubberLocalnetManager localnetManager;
+  private final PubberGatewayManager gatewayManager;
+  private final PubberDiscoveryManager discoveryManager;
   private Date lastConfigTimestamp;
 
   /**
@@ -94,9 +94,9 @@ public class PubberDeviceManager extends PubberManager implements DeviceManager 
    * Set the site model.
    */
   protected void setSiteModel(SiteModel siteModel) {
-    getDiscoveryManager().setSiteModel(siteModel);
-    getGatewayManager().setSiteModel(siteModel);
-    getLocalnetManager().setSiteModel(siteModel);
+    discoveryManager.setSiteModel(siteModel);
+    gatewayManager.setSiteModel(siteModel);
+    localnetManager.setSiteModel(siteModel);
   }
 
 }

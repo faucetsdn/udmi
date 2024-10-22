@@ -126,6 +126,4 @@ public interface GatewayManager extends SubblockManager {
 
   void updateConfig(GatewayConfig gateway);
 
-  void setSiteModel(SiteModel siteModel);
-
 }

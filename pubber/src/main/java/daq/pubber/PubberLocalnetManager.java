@@ -1,5 +1,6 @@
 package daq.pubber;
 
+import com.google.udmi.util.SiteModel;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -49,6 +50,10 @@ public class PubberLocalnetManager extends PubberManager implements LocalnetMana
     } catch (Exception e) {
       throw new RuntimeException("While creating instance of " + LOCALNET_PROVIDERS.get(family), e);
     }
+  }
+
+  public void setSiteModel(SiteModel siteModel) {
+    ((VendorProvider) getLocalnetProviders().get(ProtocolFamily.VENDOR)).setSiteModel(siteModel);
   }
 
 
