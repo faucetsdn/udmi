@@ -1,5 +1,5 @@
 {
-  "$udmi_version": "1.5.1",
+  "$udmi_version": "1.5.2",
   "title": "Ancillary Properties",
   "description": "Arbitrary blob of json associated with this point",
   "existingJavaType": "java.util.Map<String, Object>",

@@ -6,7 +6,7 @@
     <option name="VM_PARAMETERS" value="-Xmx64m" />
     <extension name="coverage">
       <pattern>
-        <option name="PATTERN" value="com.google.udmi.util.*" />
+        <option name="PATTERN" value="udmi.util.*" />
         <option name="ENABLED" value="true" />
       </pattern>
     </extension>

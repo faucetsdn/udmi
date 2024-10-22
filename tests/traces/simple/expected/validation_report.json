@@ -1,6 +1,6 @@
 {
   "timestamp" : "1999-10-20T01:02:03Z",
-  "version" : "1.5.1",
+  "version" : "1.5.2",
   "cloud_version" : {
     "deployed_by" : "Default implementation for class com.google.daq.mqtt.validator.MessageReadingClient"
   },

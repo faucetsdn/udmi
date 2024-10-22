@@ -2,6 +2,7 @@ package daq.pubber;
 
 import static com.google.udmi.util.GeneralUtils.encodeBase64;
 import static com.google.udmi.util.GeneralUtils.sha256;
+import static java.util.Optional.ofNullable;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertNull;
@@ -57,20 +58,27 @@ public class PubberTest extends TestBase {
     }
 
     @Override
-    protected DevicePersistent newDevicePersistent() {
+    public DevicePersistent newDevicePersistent() {
       return testPersistentData;
     }
 
     @Override
-    protected void initializePersistentStore() {
+    public void initializePersistentStore() {
       if (!testFeatures.getOrDefault(PubberUnderTestFeatures.noInitializePersistentStore, false)) {
         super.initializePersistentStore();
       }
     }
 
+    @Override
+    protected void augmentEndpoint(EndpointConfiguration endpoint) {
+      endpoint.topic_prefix = TEST_PREFIX;
+    }
+
     PubberUnderTest(String iotProject, String sitePath, String deviceId, String serialNo) {
       super(iotProject, sitePath, deviceId, serialNo);
       setOptionsNoPersist(true);
+      config.endpoint = ofNullable(config.endpoint).orElseGet(EndpointConfiguration::new);
+      config.endpoint.topic_prefix = TEST_PREFIX;
     }
 
     PubberUnderTest(String projectId, String sitePath, String deviceId, String serialNo,
@@ -79,6 +87,8 @@ public class PubberTest extends TestBase {
       testFeatures = features;
       setOptionsNoPersist(
           testFeatures.getOrDefault(PubberUnderTestFeatures.OptionsNoPersist, true));
+      config.endpoint = ofNullable(config.endpoint).orElseGet(EndpointConfiguration::new);
+      config.endpoint.topic_prefix = TEST_PREFIX;
     }
   }
 
@@ -117,9 +127,9 @@ public class PubberTest extends TestBase {
     blobBlobsetConfig.sha256 = sha256(ENDPOINT_BLOB);
     blobBlobsetConfig.phase = BlobPhase.FINAL;
     blobBlobsetConfig.generation = new Date();
-    pubber.deviceConfig.blobset = new BlobsetConfig();
-    pubber.deviceConfig.blobset.blobs = new HashMap<>();
-    pubber.deviceConfig.blobset.blobs.put(IOT_ENDPOINT_CONFIG.value(), blobBlobsetConfig);
+    pubber.getDeviceConfig().blobset = new BlobsetConfig();
+    pubber.getDeviceConfig().blobset.blobs = new HashMap<>();
+    pubber.getDeviceConfig().blobset.blobs.put(IOT_ENDPOINT_CONFIG.value(), blobBlobsetConfig);
 
     return pubber.extractEndpointBlobConfig();
   }
@@ -130,9 +140,9 @@ public class PubberTest extends TestBase {
     blobBlobsetConfig.sha256 = sha256(ENDPOINT_REDIRECT_BLOB);
     blobBlobsetConfig.phase = BlobPhase.FINAL;
     blobBlobsetConfig.generation = new Date();
-    pubber.deviceConfig.blobset = new BlobsetConfig();
-    pubber.deviceConfig.blobset.blobs = new HashMap<>();
-    pubber.deviceConfig.blobset.blobs.put(IOT_ENDPOINT_CONFIG.value(), blobBlobsetConfig);
+    pubber.getDeviceConfig().blobset = new BlobsetConfig();
+    pubber.getDeviceConfig().blobset.blobs = new HashMap<>();
+    pubber.getDeviceConfig().blobset.blobs.put(IOT_ENDPOINT_CONFIG.value(), blobBlobsetConfig);
 
     return pubber.extractEndpointBlobConfig();
   }
@@ -168,14 +178,14 @@ public class PubberTest extends TestBase {
   @Test
   public void parseDataUrl() {
     String testBlobDataUrl = DATA_URL_PREFIX + encodeBase64(TEST_BLOB_DATA);
-    String blobData = Pubber.acquireBlobData(testBlobDataUrl, sha256(TEST_BLOB_DATA));
+    String blobData = PubberUdmiPublisher.acquireBlobData(testBlobDataUrl, sha256(TEST_BLOB_DATA));
     assertEquals("extracted blob data", blobData, TEST_BLOB_DATA);
   }
 
   @Test(expected = RuntimeException.class)
   public void badDataUrl() {
     String testBlobDataUrl = DATA_URL_PREFIX + encodeBase64(TEST_BLOB_DATA + "XXXX");
-    Pubber.acquireBlobData(testBlobDataUrl, sha256(TEST_BLOB_DATA));
+    PubberUdmiPublisher.acquireBlobData(testBlobDataUrl, sha256(TEST_BLOB_DATA));
   }
 
   @Test
@@ -190,16 +200,16 @@ public class PubberTest extends TestBase {
     configurePubberEndpoint();
     pubber.maybeRedirectEndpoint();
     assertEquals(BlobPhase.FINAL,
-        pubber.deviceState.blobset.blobs.get(IOT_ENDPOINT_CONFIG.value()).phase);
-    Date initialGeneration = pubber.deviceState.blobset.blobs.get(
+        pubber.getDeviceState().blobset.blobs.get(IOT_ENDPOINT_CONFIG.value()).phase);
+    Date initialGeneration = pubber.getDeviceState().blobset.blobs.get(
         IOT_ENDPOINT_CONFIG.value()).generation;
     assertNotEquals(null, initialGeneration);
 
     configurePubberRedirect();
     pubber.maybeRedirectEndpoint();
     assertEquals(BlobPhase.FINAL,
-        pubber.deviceState.blobset.blobs.get(IOT_ENDPOINT_CONFIG.value()).phase);
-    Date redirectGeneration = pubber.deviceState.blobset.blobs.get(
+        pubber.getDeviceState().blobset.blobs.get(IOT_ENDPOINT_CONFIG.value()).phase);
+    Date redirectGeneration = pubber.getDeviceState().blobset.blobs.get(
         IOT_ENDPOINT_CONFIG.value()).generation;
     assertNotEquals(null, redirectGeneration);
 
@@ -211,12 +221,12 @@ public class PubberTest extends TestBase {
     State testMessage = new State();
 
     assertNull(testMessage.timestamp);
-    Pubber.augmentDeviceMessage(testMessage, new Date(), false);
+    PubberUdmiPublisher.augmentDeviceMessage(testMessage, new Date(), false);
     assertEquals(testMessage.version, Pubber.UDMI_VERSION);
     assertNotEquals(testMessage.timestamp, null);
 
     testMessage.timestamp = new Date(1241);
-    Pubber.augmentDeviceMessage(testMessage, new Date(), false);
+    PubberUdmiPublisher.augmentDeviceMessage(testMessage, new Date(), false);
     assertEquals(testMessage.version, Pubber.UDMI_VERSION);
     assertNotEquals(testMessage.timestamp, new Date(1241));
   }
@@ -235,7 +245,7 @@ public class PubberTest extends TestBase {
 
     // Prepare test.
     testPersistentData.endpoint = null;
-    pubber.config.endpoint = null;
+    pubber.getConfig().endpoint = null;
 
     // Now test.
     testFeatures.put(PubberUnderTestFeatures.noInitializePersistentStore, false);
@@ -255,7 +265,7 @@ public class PubberTest extends TestBase {
 
     // Prepare test.
     testPersistentData.endpoint = null;
-    pubber.config.endpoint = getEndpointConfiguration("from_config");
+    pubber.getConfig().endpoint = getEndpointConfiguration("from_config");
 
     // Now test.
     testFeatures.put(PubberUnderTestFeatures.noInitializePersistentStore, false);
@@ -275,12 +285,12 @@ public class PubberTest extends TestBase {
 
     // Prepare test.
     testPersistentData.endpoint = getEndpointConfiguration("persistent");
-    pubber.config.endpoint = null;
+    pubber.getConfig().endpoint = null;
 
     // Now test.
     testFeatures.put(PubberUnderTestFeatures.noInitializePersistentStore, false);
     pubber.initializePersistentStore();
     assertEquals(pubber.persistentData.endpoint.hostname, "persistent");
-    assertEquals(pubber.config.endpoint.hostname, "persistent");
+    assertEquals(pubber.getConfig().endpoint.hostname, "persistent");
   }
 }

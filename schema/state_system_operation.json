@@ -1,5 +1,5 @@
 {
-  "$udmi_version": "1.5.1",
+  "$udmi_version": "1.5.2",
   "title": "StateSystemOperation",
   "description": "A collection of state fields that describes the system operation",
   "type": "object",

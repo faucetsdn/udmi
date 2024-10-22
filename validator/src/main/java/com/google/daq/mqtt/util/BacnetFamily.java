@@ -3,8 +3,8 @@ package com.google.daq.mqtt.util;
 import static java.lang.String.format;
 import static java.util.Objects.requireNonNull;
 
-import daq.pubber.ProtocolFamily;
 import java.util.regex.Pattern;
+import udmi.lib.ProtocolFamily;
 
 /**
  * General family of bacnet addresses.

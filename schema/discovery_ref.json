@@ -1,5 +1,5 @@
 {
-  "$udmi_version": "1.5.1",
+  "$udmi_version": "1.5.2",
   "title": "Ref Discovery",
   "description": "Object representation for for a single point reference discovery",
   "type": "object",

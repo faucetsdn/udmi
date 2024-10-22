@@ -5,6 +5,7 @@ import static com.google.udmi.util.GeneralUtils.getNow;
 import static com.google.udmi.util.GeneralUtils.isTrue;
 
 import java.util.Objects;
+import udmi.lib.intf.AbstractPoint;
 import udmi.schema.Category;
 import udmi.schema.Entry;
 import udmi.schema.PointPointsetConfig;

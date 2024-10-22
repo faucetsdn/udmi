@@ -78,7 +78,7 @@ Config message to initiate Reconfiguration (sequence #1 in diagrams above)
 <!--example:config/endpoint_reconfiguration.json-->
 ```json
 {
-  "version": "1.5.1",
+  "version": "1.5.2",
   "blobset": {
     "blobs": {
       "_iot_endpoint_config": {
@@ -108,7 +108,7 @@ a successful reconfiguration
 <!--example:state/endpoint_reconfiguration.json-->
 ```json
 {
-  "version": "1.5.1",
+  "version": "1.5.2",
   "timestamp": "2022-07-13T12:00:10.000Z",
   "system": {
     "hardware": {
@@ -138,7 +138,7 @@ This is an example of the state message sent to the original endpoint after a fa
 <!--example:state/endpoint_reconfiguration_failed.json-->
 ```json
 {
-  "version": "1.5.1",
+  "version": "1.5.2",
   "timestamp": "2022-07-13T12:00:11.000Z",
   "system": {
     "hardware": {

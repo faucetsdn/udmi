@@ -1,5 +1,5 @@
 {
-  "$udmi_version": "1.5.1",
+  "$udmi_version": "1.5.2",
     "title": "SystemHardware",
     "description": "A collection of fields which describe the physical hardware of the device.",
     "type": "object",
