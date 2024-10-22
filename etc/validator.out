@@ -41,7 +41,7 @@ sites/udmi_site_model/out/devices/AHU-1/config.out
 ::::::::::::::
 {
   "timestamp" : "REDACTED_TIMESTAMP",
-  "version" : "1.5.1",
+  "version" : "1.5.2",
   "sub_folder" : "update",
   "sub_type" : "config",
   "status" : {
@@ -57,7 +57,7 @@ sites/udmi_site_model/out/devices/AHU-1/events_pointset.out
 ::::::::::::::
 {
   "timestamp" : "REDACTED_TIMESTAMP",
-  "version" : "1.5.1",
+  "version" : "1.5.2",
   "sub_folder" : "pointset",
   "sub_type" : "events",
   "status" : {
@@ -90,7 +90,7 @@ sites/udmi_site_model/out/devices/AHU-1/events_system.out
 ::::::::::::::
 {
   "timestamp" : "REDACTED_TIMESTAMP",
-  "version" : "1.5.1",
+  "version" : "1.5.2",
   "sub_folder" : "system",
   "sub_type" : "events",
   "status" : {
@@ -113,7 +113,7 @@ sites/udmi_site_model/out/devices/AHU-1/state_localnet.out
 ::::::::::::::
 {
   "timestamp" : "REDACTED_TIMESTAMP",
-  "version" : "1.5.1",
+  "version" : "1.5.2",
   "sub_folder" : "localnet",
   "sub_type" : "state",
   "status" : {
@@ -136,7 +136,7 @@ sites/udmi_site_model/out/devices/AHU-1/state.out
 ::::::::::::::
 {
   "timestamp" : "REDACTED_TIMESTAMP",
-  "version" : "1.5.1",
+  "version" : "1.5.2",
   "sub_folder" : "update",
   "sub_type" : "state",
   "status" : {
@@ -165,7 +165,7 @@ sites/udmi_site_model/out/devices/AHU-1/state_pointset.out
 ::::::::::::::
 {
   "timestamp" : "REDACTED_TIMESTAMP",
-  "version" : "1.5.1",
+  "version" : "1.5.2",
   "sub_folder" : "pointset",
   "sub_type" : "state",
   "status" : {
@@ -192,7 +192,7 @@ sites/udmi_site_model/out/devices/AHU-1/state_system.out
 ::::::::::::::
 {
   "timestamp" : "REDACTED_TIMESTAMP",
-  "version" : "1.5.1",
+  "version" : "1.5.2",
   "sub_folder" : "system",
   "sub_type" : "state",
   "status" : {
@@ -215,7 +215,7 @@ sites/udmi_site_model/out/devices/AHU-22/config.out
 ::::::::::::::
 {
   "timestamp" : "REDACTED_TIMESTAMP",
-  "version" : "1.5.1",
+  "version" : "1.5.2",
   "sub_folder" : "update",
   "sub_type" : "config",
   "status" : {
@@ -231,7 +231,7 @@ sites/udmi_site_model/out/devices/AHU-22/events_pointset.out
 ::::::::::::::
 {
   "timestamp" : "REDACTED_TIMESTAMP",
-  "version" : "1.5.1",
+  "version" : "1.5.2",
   "sub_folder" : "pointset",
   "sub_type" : "events",
   "status" : {
@@ -258,7 +258,7 @@ sites/udmi_site_model/out/devices/AHU-22/events_system.out
 ::::::::::::::
 {
   "timestamp" : "REDACTED_TIMESTAMP",
-  "version" : "1.5.1",
+  "version" : "1.5.2",
   "sub_folder" : "system",
   "sub_type" : "events",
   "status" : {
@@ -274,7 +274,7 @@ sites/udmi_site_model/out/devices/AHU-22/state_gateway.out
 ::::::::::::::
 {
   "timestamp" : "REDACTED_TIMESTAMP",
-  "version" : "1.5.1",
+  "version" : "1.5.2",
   "sub_folder" : "gateway",
   "sub_type" : "state",
   "status" : {
@@ -290,7 +290,7 @@ sites/udmi_site_model/out/devices/AHU-22/state_localnet.out
 ::::::::::::::
 {
   "timestamp" : "REDACTED_TIMESTAMP",
-  "version" : "1.5.1",
+  "version" : "1.5.2",
   "sub_folder" : "localnet",
   "sub_type" : "state",
   "status" : {
@@ -306,7 +306,7 @@ sites/udmi_site_model/out/devices/AHU-22/state.out
 ::::::::::::::
 {
   "timestamp" : "REDACTED_TIMESTAMP",
-  "version" : "1.5.1",
+  "version" : "1.5.2",
   "sub_folder" : "update",
   "sub_type" : "state",
   "status" : {
@@ -322,7 +322,7 @@ sites/udmi_site_model/out/devices/AHU-22/state_pointset.out
 ::::::::::::::
 {
   "timestamp" : "REDACTED_TIMESTAMP",
-  "version" : "1.5.1",
+  "version" : "1.5.2",
   "sub_folder" : "pointset",
   "sub_type" : "state",
   "status" : {
@@ -342,7 +342,7 @@ sites/udmi_site_model/out/devices/AHU-22/state_system.out
 ::::::::::::::
 {
   "timestamp" : "REDACTED_TIMESTAMP",
-  "version" : "1.5.1",
+  "version" : "1.5.2",
   "sub_folder" : "system",
   "sub_type" : "state",
   "status" : {
@@ -358,7 +358,7 @@ sites/udmi_site_model/out/devices/GAT-123/config.out
 ::::::::::::::
 {
   "timestamp" : "REDACTED_TIMESTAMP",
-  "version" : "1.5.1",
+  "version" : "1.5.2",
   "sub_folder" : "update",
   "sub_type" : "config",
   "status" : {
@@ -374,7 +374,7 @@ sites/udmi_site_model/out/devices/GAT-123/events_blobset.out
 ::::::::::::::
 {
   "timestamp" : "REDACTED_TIMESTAMP",
-  "version" : "1.5.1",
+  "version" : "1.5.2",
   "sub_folder" : "blobset",
   "sub_type" : "events",
   "status" : {
@@ -403,7 +403,7 @@ sites/udmi_site_model/out/devices/GAT-123/events_discovery.out
 ::::::::::::::
 {
   "timestamp" : "REDACTED_TIMESTAMP",
-  "version" : "1.5.1",
+  "version" : "1.5.2",
   "sub_folder" : "discovery",
   "sub_type" : "events",
   "status" : {
@@ -426,7 +426,7 @@ sites/udmi_site_model/out/devices/GAT-123/events_error.out
 ::::::::::::::
 {
   "timestamp" : "REDACTED_TIMESTAMP",
-  "version" : "1.5.1",
+  "version" : "1.5.2",
   "sub_folder" : "error",
   "sub_type" : "events",
   "status" : {
@@ -442,7 +442,7 @@ sites/udmi_site_model/out/devices/GAT-123/events_gateway.out
 ::::::::::::::
 {
   "timestamp" : "REDACTED_TIMESTAMP",
-  "version" : "1.5.1",
+  "version" : "1.5.2",
   "sub_folder" : "gateway",
   "sub_type" : "events",
   "status" : {
@@ -471,7 +471,7 @@ sites/udmi_site_model/out/devices/GAT-123/events_invalid.out
 ::::::::::::::
 {
   "timestamp" : "REDACTED_TIMESTAMP",
-  "version" : "1.5.1",
+  "version" : "1.5.2",
   "sub_folder" : "invalid",
   "sub_type" : "events",
   "status" : {
@@ -494,7 +494,7 @@ sites/udmi_site_model/out/devices/GAT-123/events_mapping.out
 ::::::::::::::
 {
   "timestamp" : "REDACTED_TIMESTAMP",
-  "version" : "1.5.1",
+  "version" : "1.5.2",
   "sub_folder" : "mapping",
   "sub_type" : "events",
   "status" : {
@@ -517,7 +517,7 @@ sites/udmi_site_model/out/devices/GAT-123/events_pointset.out
 ::::::::::::::
 {
   "timestamp" : "REDACTED_TIMESTAMP",
-  "version" : "1.5.1",
+  "version" : "1.5.2",
   "sub_folder" : "pointset",
   "sub_type" : "events",
   "status" : {
@@ -544,7 +544,7 @@ sites/udmi_site_model/out/devices/GAT-123/events_system.out
 ::::::::::::::
 {
   "timestamp" : "REDACTED_TIMESTAMP",
-  "version" : "1.5.1",
+  "version" : "1.5.2",
   "sub_folder" : "system",
   "sub_type" : "events",
   "status" : {
@@ -560,7 +560,7 @@ sites/udmi_site_model/out/devices/GAT-123/state_gateway.out
 ::::::::::::::
 {
   "timestamp" : "REDACTED_TIMESTAMP",
-  "version" : "1.5.1",
+  "version" : "1.5.2",
   "sub_folder" : "gateway",
   "sub_type" : "state",
   "status" : {
@@ -576,7 +576,7 @@ sites/udmi_site_model/out/devices/GAT-123/state_localnet.out
 ::::::::::::::
 {
   "timestamp" : "REDACTED_TIMESTAMP",
-  "version" : "1.5.1",
+  "version" : "1.5.2",
   "sub_folder" : "localnet",
   "sub_type" : "state",
   "status" : {
@@ -592,7 +592,7 @@ sites/udmi_site_model/out/devices/GAT-123/state.out
 ::::::::::::::
 {
   "timestamp" : "REDACTED_TIMESTAMP",
-  "version" : "1.5.1",
+  "version" : "1.5.2",
   "sub_folder" : "update",
   "sub_type" : "state",
   "status" : {
@@ -608,7 +608,7 @@ sites/udmi_site_model/out/devices/GAT-123/state_pointset.out
 ::::::::::::::
 {
   "timestamp" : "REDACTED_TIMESTAMP",
-  "version" : "1.5.1",
+  "version" : "1.5.2",
   "sub_folder" : "pointset",
   "sub_type" : "state",
   "status" : {
@@ -628,7 +628,7 @@ sites/udmi_site_model/out/devices/GAT-123/state_system.out
 ::::::::::::::
 {
   "timestamp" : "REDACTED_TIMESTAMP",
-  "version" : "1.5.1",
+  "version" : "1.5.2",
   "sub_folder" : "system",
   "sub_type" : "state",
   "status" : {
@@ -644,7 +644,7 @@ sites/udmi_site_model/out/devices/SNS-4/config.out
 ::::::::::::::
 {
   "timestamp" : "REDACTED_TIMESTAMP",
-  "version" : "1.5.1",
+  "version" : "1.5.2",
   "sub_folder" : "update",
   "sub_type" : "config",
   "status" : {
@@ -660,7 +660,7 @@ sites/udmi_site_model/out/devices/SNS-4/events_pointset.out
 ::::::::::::::
 {
   "timestamp" : "REDACTED_TIMESTAMP",
-  "version" : "1.5.1",
+  "version" : "1.5.2",
   "sub_folder" : "pointset",
   "sub_type" : "events",
   "status" : {
@@ -693,7 +693,7 @@ sites/udmi_site_model/out/devices/SNS-4/events_system.out
 ::::::::::::::
 {
   "timestamp" : "REDACTED_TIMESTAMP",
-  "version" : "1.5.1",
+  "version" : "1.5.2",
   "sub_folder" : "system",
   "sub_type" : "events",
   "status" : {
@@ -709,7 +709,7 @@ sites/udmi_site_model/out/devices/SNS-4/state_gateway.out
 ::::::::::::::
 {
   "timestamp" : "REDACTED_TIMESTAMP",
-  "version" : "1.5.1",
+  "version" : "1.5.2",
   "sub_folder" : "gateway",
   "sub_type" : "state",
   "status" : {
@@ -725,7 +725,7 @@ sites/udmi_site_model/out/devices/SNS-4/state.out
 ::::::::::::::
 {
   "timestamp" : "REDACTED_TIMESTAMP",
-  "version" : "1.5.1",
+  "version" : "1.5.2",
   "sub_folder" : "update",
   "sub_type" : "state",
   "status" : {
@@ -748,7 +748,7 @@ sites/udmi_site_model/out/devices/SNS-4/state_pointset.out
 ::::::::::::::
 {
   "timestamp" : "REDACTED_TIMESTAMP",
-  "version" : "1.5.1",
+  "version" : "1.5.2",
   "sub_folder" : "pointset",
   "sub_type" : "state",
   "status" : {
@@ -775,7 +775,7 @@ sites/udmi_site_model/out/devices/SNS-4/state_system.out
 ::::::::::::::
 {
   "timestamp" : "REDACTED_TIMESTAMP",
-  "version" : "1.5.1",
+  "version" : "1.5.2",
   "sub_folder" : "system",
   "sub_type" : "state",
   "status" : {
