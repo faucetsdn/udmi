@@ -32,7 +32,6 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableMap.Builder;
 import com.google.udmi.util.GeneralUtils;
 import com.google.udmi.util.MessageDowngrader;
-import udmi.util.SchemaVersion;
 import com.google.udmi.util.SiteModel;
 import java.io.File;
 import java.lang.reflect.Field;
@@ -52,12 +51,12 @@ import java.util.concurrent.locks.Lock;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import udmi.lib.base.MqttDevice;
-import udmi.lib.impl.MqttPublisher.FakeTopic;
-import udmi.lib.impl.MqttPublisher.InjectedMessage;
-import udmi.lib.impl.MqttPublisher.InjectedState;
 import udmi.lib.client.DeviceManager;
 import udmi.lib.client.PointsetManager.ExtraPointsetEvent;
 import udmi.lib.client.SystemManager.ExtraSystemState;
+import udmi.lib.impl.MqttPublisher.FakeTopic;
+import udmi.lib.impl.MqttPublisher.InjectedMessage;
+import udmi.lib.impl.MqttPublisher.InjectedState;
 import udmi.lib.intf.GatewayError;
 import udmi.lib.intf.ManagerHost;
 import udmi.schema.BlobBlobsetConfig;
@@ -80,6 +79,7 @@ import udmi.schema.PubberOptions;
 import udmi.schema.State;
 import udmi.schema.SystemEvents;
 import udmi.schema.SystemState;
+import udmi.util.SchemaVersion;
 
 /**
  * UDMI publisher client.

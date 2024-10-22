@@ -20,7 +20,7 @@ public class PubberLocalnetManager extends PubberManager implements LocalnetMana
   private final Map<String, FamilyProvider> localnetProviders;
   private LocalnetConfig localnetConfig;
 
-  Map<String, Class<? extends FamilyProvider>> LOCALNET_PROVIDERS =
+  static Map<String, Class<? extends FamilyProvider>> LOCALNET_PROVIDERS =
       Map.of(
           ProtocolFamily.VENDOR, VendorProvider.class,
           ProtocolFamily.IPV_4, IpProvider.class,

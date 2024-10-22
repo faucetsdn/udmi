@@ -4,11 +4,14 @@ import static com.google.udmi.util.GeneralUtils.catchOrElse;
 import static com.google.udmi.util.GeneralUtils.catchToNull;
 import static com.google.udmi.util.GeneralUtils.getTimestamp;
 import static com.google.udmi.util.GeneralUtils.ifNotNullThen;
+import static com.google.udmi.util.GeneralUtils.ifNotTrueGet;
+import static com.google.udmi.util.GeneralUtils.ifTrueThen;
 import static com.google.udmi.util.GeneralUtils.isTrue;
 import static com.google.udmi.util.JsonUtil.isoConvert;
 import static java.lang.String.format;
 import static java.util.Optional.ofNullable;
 
+import com.google.common.collect.ImmutableList;
 import com.google.udmi.util.CleanDateFormat;
 import java.io.File;
 import java.io.PrintStream;
@@ -18,7 +21,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import org.slf4j.Logger;
-import udmi.lib.base.ManagerBase;
 import udmi.lib.client.SystemManager;
 import udmi.lib.intf.ManagerHost;
 import udmi.schema.Entry;
@@ -115,6 +117,11 @@ public class PubberSystemManager extends PubberManager implements SystemManager 
   }
 
   @Override
+  public void updateConfig(SystemConfig system, Date timestamp) {
+    SystemManager.super.updateConfig(system, ifNotTrueGet(options.noLastConfig, () -> timestamp));
+  }
+
+  @Override
   public void systemLifecycle(SystemMode mode) {
     systemState.operation.mode = mode;
     try {
@@ -184,8 +191,29 @@ public class PubberSystemManager extends PubberManager implements SystemManager 
   }
 
   @Override
+  public boolean shouldLogLevel(int level) {
+    if (options.fixedLogLevel != null) {
+      return level >= options.fixedLogLevel;
+    }
+    return SystemManager.super.shouldLogLevel(level);
+  }
+
+  @Override
+  public void publishLogMessage(Entry report) {
+    if (shouldLogLevel(report.level)) {
+      ifTrueThen(options.badLevel, () -> report.level = 0);
+      getLogentries().add(report);
+    }
+  }
+
+  @Override
   public List<Entry> getLogentries() {
-    return logentries;
+    if (options.noLog) {
+      return null;
+    }
+    List<Entry> entries = ImmutableList.copyOf(logentries);
+    logentries.clear();
+    return entries;
   }
 
   @Override

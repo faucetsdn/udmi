@@ -3,18 +3,13 @@ package udmi.lib.client;
 import static com.google.udmi.util.GeneralUtils.catchToNull;
 import static com.google.udmi.util.GeneralUtils.getTimestamp;
 import static com.google.udmi.util.GeneralUtils.ifNotNullGet;
-import static com.google.udmi.util.GeneralUtils.ifNotTrueThen;
-import static com.google.udmi.util.GeneralUtils.ifTrueThen;
-import static com.google.udmi.util.GeneralUtils.isTrue;
 import static com.google.udmi.util.JsonUtil.isoConvert;
 import static com.google.udmi.util.JsonUtil.stringify;
 import static java.lang.String.format;
 import static java.util.Objects.requireNonNullElse;
 import static java.util.Optional.ofNullable;
 
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import com.google.udmi.util.CleanDateFormat;
 import java.time.Instant;
 import java.util.Date;
 import java.util.List;
@@ -160,9 +155,7 @@ public interface SystemManager extends SubblockManager {
     systemEvent.metrics.mem_total_mb = (double) runtime.totalMemory() / BYTES_PER_MEGABYTE;
     systemEvent.metrics.store_total_mb = Double.NaN;
     systemEvent.event_count = incrementSystemEventCount();
-    ifNotTrueThen(getOptions().noLog,
-        () -> systemEvent.logentries = ImmutableList.copyOf(getLogentries()));
-    getLogentries().clear();
+    systemEvent.logentries = getLogentries();
     getHost().publish(systemEvent);
   }
 
@@ -186,10 +179,9 @@ public interface SystemManager extends SubblockManager {
       error("Panic! Duplicate config_base detected: " + oldBase);
       System.exit(-22);
     }
-
     setSystemConfig(system);
-    getSystemState().last_config = ifNotTrueGet(getOptions().noLastConfig, () -> timestamp);
     updateInterval(ifNotNullGet(system, config -> config.metrics_rate_sec));
+    getSystemState().last_config = timestamp;
     updateState();
   }
 
@@ -199,21 +191,12 @@ public interface SystemManager extends SubblockManager {
    * Publish log message.
    *
    */
-  default void publishLogMessage(Entry report) {
-    if (shouldLogLevel(report.level)) {
-      ifTrueThen(getOptions().badLevel, () -> report.level = 0);
-      getLogentries().add(report);
-    }
-  }
+  void publishLogMessage(Entry report);
 
   /**
    * Check if we should log at the level provided.
    */
   default boolean shouldLogLevel(int level) {
-    if (getOptions().fixedLogLevel != null) {
-      return level >= getOptions().fixedLogLevel;
-    }
-
     Integer minLoglevel = ifNotNullGet(getSystemConfig(), config -> getSystemConfig().min_loglevel);
     return level >= requireNonNullElse(minLoglevel, Level.INFO.value());
   }

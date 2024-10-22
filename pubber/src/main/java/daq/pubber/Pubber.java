@@ -27,7 +27,6 @@ import static java.util.Optional.ofNullable;
 import static udmi.schema.EndpointConfiguration.Protocol.MQTT;
 
 import com.google.udmi.util.CertManager;
-import udmi.util.SchemaVersion;
 import com.google.udmi.util.SiteModel;
 import com.google.udmi.util.SiteModel.MetadataException;
 import daq.pubber.PubSubClient.Bundle;
@@ -47,11 +46,10 @@ import java.util.function.Function;
 import org.apache.http.ConnectionClosedException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import udmi.lib.base.ManagerBase;
 import udmi.lib.base.MqttDevice;
-import udmi.lib.impl.MqttPublisher.PublisherException;
 import udmi.lib.client.DeviceManager;
 import udmi.lib.client.SystemManager;
+import udmi.lib.impl.MqttPublisher.PublisherException;
 import udmi.lib.intf.FamilyProvider;
 import udmi.schema.Config;
 import udmi.schema.DevicePersistent;
@@ -64,6 +62,7 @@ import udmi.schema.Metadata;
 import udmi.schema.Operation.SystemMode;
 import udmi.schema.PubberConfiguration;
 import udmi.schema.PubberOptions;
+import udmi.util.SchemaVersion;
 
 /**
  * IoT Core UDMI Device Emulator.

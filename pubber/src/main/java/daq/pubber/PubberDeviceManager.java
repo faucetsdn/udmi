@@ -1,7 +1,7 @@
 package daq.pubber;
 
 import com.google.udmi.util.SiteModel;
-import udmi.lib.base.ManagerBase;
+import java.util.Date;
 import udmi.lib.client.DeviceManager;
 import udmi.lib.client.DiscoveryManager;
 import udmi.lib.client.GatewayManager;
@@ -9,6 +9,7 @@ import udmi.lib.client.LocalnetManager;
 import udmi.lib.client.PointsetManager;
 import udmi.lib.client.SystemManager;
 import udmi.lib.intf.ManagerHost;
+import udmi.schema.Config;
 import udmi.schema.PubberConfiguration;
 
 /**
@@ -21,6 +22,7 @@ public class PubberDeviceManager extends PubberManager implements DeviceManager 
   private final LocalnetManager localnetManager;
   private final GatewayManager gatewayManager;
   private final DiscoveryManager discoveryManager;
+  private Date lastConfigTimestamp;
 
   /**
    * Create a new instance.
@@ -32,6 +34,12 @@ public class PubberDeviceManager extends PubberManager implements DeviceManager 
     localnetManager = new PubberLocalnetManager(host, configuration);
     gatewayManager = new PubberGatewayManager(host, configuration);
     discoveryManager = new PubberDiscoveryManager(host, configuration, this);
+  }
+
+  @Override
+  public void updateConfig(Config config) {
+    lastConfigTimestamp = config.timestamp;
+    DeviceManager.super.updateConfig(config);
   }
 
   @Override

@@ -19,7 +19,6 @@ import udmi.lib.intf.ManagerHost;
 import udmi.schema.DiscoveryEvents;
 import udmi.schema.FamilyLocalnetState;
 import udmi.schema.Metadata;
-import udmi.schema.PubberConfiguration;
 import udmi.schema.RefDiscovery;
 
 /**

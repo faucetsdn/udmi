@@ -20,7 +20,6 @@ import udmi.lib.client.LocalnetManager;
 import udmi.lib.intf.FamilyProvider;
 import udmi.lib.intf.ManagerHost;
 import udmi.schema.FamilyLocalnetState;
-import udmi.schema.PubberConfiguration;
 
 /**
  * Wrapper for family of IP-based protocols.

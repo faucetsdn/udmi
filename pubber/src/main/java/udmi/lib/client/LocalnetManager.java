@@ -4,10 +4,9 @@ import static com.google.udmi.util.GeneralUtils.ifNotNullGet;
 import static java.util.stream.Collectors.toMap;
 
 import com.google.udmi.util.SiteModel;
+import daq.pubber.VendorProvider;
 import java.util.Map;
 import udmi.lib.ProtocolFamily;
-import daq.pubber.IpProvider;
-import daq.pubber.VendorProvider;
 import udmi.lib.intf.FamilyProvider;
 import udmi.lib.intf.ManagerHost;
 import udmi.schema.FamilyDiscovery;

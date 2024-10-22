@@ -1,4 +1,4 @@
-package udmi.lib.impl;
+package daq.pubber;
 
 import static org.junit.Assert.assertEquals;
 
@@ -8,7 +8,6 @@ import java.util.List;
 import java.util.Map;
 import org.junit.Test;
 import udmi.lib.ProtocolFamily;
-import daq.pubber.IpProvider;
 
 /**
  * Basic interface parsing tests for pubber.

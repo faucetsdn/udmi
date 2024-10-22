@@ -2,12 +2,8 @@ package udmi.lib.client;
 
 import static com.google.udmi.util.GeneralUtils.catchToNull;
 import static com.google.udmi.util.GeneralUtils.ifNotNullThen;
-import static com.google.udmi.util.GeneralUtils.ifTrueGet;
-import static com.google.udmi.util.GeneralUtils.ifTrueThen;
-import static com.google.udmi.util.GeneralUtils.isTrue;
 import static java.lang.String.format;
 import static java.util.Optional.ofNullable;
-import static java.util.function.Predicate.not;
 
 import com.google.udmi.util.SiteModel;
 import java.util.HashMap;
