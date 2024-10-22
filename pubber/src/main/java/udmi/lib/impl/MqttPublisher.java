@@ -355,7 +355,7 @@ public class MqttPublisher implements Publisher {
     }
   }
 
-  MqttClient getMqttClient(String clientId, String brokerUrl) throws MqttException {
+  protected MqttClient getMqttClient(String clientId, String brokerUrl) throws MqttException {
     return new MqttClient(brokerUrl, clientId, new MemoryPersistence());
   }
 
