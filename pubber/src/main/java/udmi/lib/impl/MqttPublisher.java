@@ -616,7 +616,7 @@ public class MqttPublisher implements Publisher {
   }
 
   private String getGatewayId(String targetId) {
-    return udmi.intf.UdmiPublisher.getGatewayId(targetId, configuration);
+    return udmi.lib.intf.UdmiPublisher.getGatewayId(targetId, configuration);
   }
 
   /**

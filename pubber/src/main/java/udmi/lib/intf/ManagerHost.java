@@ -6,7 +6,11 @@ package udmi.lib.intf;
 public interface ManagerHost extends ManagerLog {
   void update(Object update);
 
-  void publish(Object message);
+  default void publish(Object message) {
+    publish(null, message);
+  }
+
+  void publish(String targetId, Object message);
 
   FamilyProvider getLocalnetProvider(String family);
 }

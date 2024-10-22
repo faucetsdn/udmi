@@ -96,7 +96,7 @@ public class ProxyDevice extends PubberManager implements ProxyDeviceHost {
   }
 
   @Override
-  public PubberUdmiPublisher getUdmiPublisherHost() {
+  public PubberUdmiPublisher getUdmiPublisher() {
     return pubberHost;
   }
 

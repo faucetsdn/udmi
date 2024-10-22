@@ -75,8 +75,8 @@ public interface LocalnetManager extends ManagerHost, SubblockManager {
 
   LocalnetState getLocalnetState();
 
-  default void publish(Object message) {
-    getHost().publish(message);
+  default void publish(String targetId, Object message) {
+    getHost().publish(targetId, message);
   }
 
 }

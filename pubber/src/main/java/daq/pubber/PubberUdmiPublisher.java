@@ -234,10 +234,6 @@ public interface PubberUdmiPublisher extends UdmiPublisher {
   }
 
   @Override
-  default void publish(Object message) {
-    publishDeviceMessage(message);
-  }
-
   default void publish(String targetId, Object message) {
     publishDeviceMessage(targetId, message);
   }
@@ -884,7 +880,7 @@ public interface PubberUdmiPublisher extends UdmiPublisher {
   }
 
   default void publishDeviceMessage(Object message) {
-    publishDeviceMessage(getDeviceId(), message);
+    publishDeviceMessage(null, message);
   }
 
   private void publishDeviceMessage(String targetId, Object message) {
@@ -921,12 +917,13 @@ public interface PubberUdmiPublisher extends UdmiPublisher {
       topicSuffix = RAW_EVENT_TOPIC;
     }
 
+    String useId = ofNullable(targetId).orElseGet(this::getDeviceId);
     augmentDeviceMessage(message, getNow(), isTrue(getOptions().badVersion));
     Object downgraded = downgradeMessage(message);
-    getDeviceTarget().publish(targetId, topicSuffix, downgraded, callback);
+    getDeviceTarget().publish(useId, topicSuffix, downgraded, callback);
     String messageBase = topicSuffix.replace("/", "_");
-    String gatewayId = getGatewayId(targetId, getConfig());
-    String suffix = ifNotNullGet(gatewayId, x -> "_" + targetId, "");
+    String gatewayId = getGatewayId(useId, getConfig());
+    String suffix = ifNotNullGet(gatewayId, x -> "_" + useId, "");
     File messageOut = new File(getOutDir(), format("%s.json",
         traceTimestamp(messageBase + suffix)));
 
