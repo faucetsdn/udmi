@@ -1,4 +1,4 @@
-package udmi.lib;
+package udmi.lib.impl;
 
 import static com.google.udmi.util.GeneralUtils.catchToNull;
 import static com.google.udmi.util.GeneralUtils.ifNotNullThen;
@@ -11,8 +11,11 @@ import com.google.udmi.util.SiteModel;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.function.BiConsumer;
+import udmi.lib.base.ManagerBase;
 import udmi.lib.client.DiscoveryManager;
 import udmi.lib.client.LocalnetManager;
+import udmi.lib.intf.FamilyProvider;
+import udmi.lib.intf.ManagerHost;
 import udmi.schema.DiscoveryEvents;
 import udmi.schema.FamilyLocalnetState;
 import udmi.schema.Metadata;

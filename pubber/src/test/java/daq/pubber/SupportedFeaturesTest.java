@@ -8,7 +8,7 @@ import static udmi.schema.Bucket.ENUMERATION_FEATURES;
 
 import java.util.Map;
 import org.junit.Test;
-import udmi.lib.SupportedFeatures;
+import udmi.lib.intf.SupportedFeatures;
 import udmi.schema.Bucket;
 import udmi.schema.FeatureDiscovery;
 import udmi.schema.FeatureDiscovery.FeatureStage;

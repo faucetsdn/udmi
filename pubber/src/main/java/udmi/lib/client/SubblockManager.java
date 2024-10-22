@@ -2,8 +2,8 @@ package udmi.lib.client;
 
 import java.util.Date;
 import java.util.concurrent.ScheduledFuture;
-import udmi.lib.ManagerHost;
-import udmi.lib.ManagerLog;
+import udmi.lib.intf.ManagerHost;
+import udmi.lib.intf.ManagerLog;
 import udmi.schema.PubberConfiguration;
 import udmi.schema.PubberOptions;
 

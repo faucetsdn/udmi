@@ -1,4 +1,4 @@
-package udmi.lib;
+package udmi.lib.intf;
 
 import static com.google.udmi.util.GeneralUtils.getTimestamp;
 import static com.google.udmi.util.GeneralUtils.isTrue;

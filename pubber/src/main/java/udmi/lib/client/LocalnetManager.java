@@ -5,11 +5,11 @@ import static java.util.stream.Collectors.toMap;
 
 import com.google.udmi.util.SiteModel;
 import java.util.Map;
-import udmi.lib.FamilyProvider;
-import udmi.lib.IpProvider;
-import udmi.lib.ManagerHost;
+import udmi.lib.intf.FamilyProvider;
+import udmi.lib.impl.IpProvider;
+import udmi.lib.intf.ManagerHost;
 import udmi.lib.ProtocolFamily;
-import udmi.lib.VendorProvider;
+import udmi.lib.impl.VendorProvider;
 import udmi.schema.FamilyDiscovery;
 import udmi.schema.FamilyLocalnetState;
 import udmi.schema.LocalnetConfig;

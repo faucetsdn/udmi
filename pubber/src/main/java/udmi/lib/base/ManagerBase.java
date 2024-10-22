@@ -1,4 +1,4 @@
-package udmi.lib;
+package udmi.lib.base;
 
 import static com.google.common.base.Preconditions.checkState;
 import static com.google.udmi.util.GeneralUtils.getNow;
@@ -14,6 +14,7 @@ import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
+import udmi.lib.intf.ManagerHost;
 import udmi.lib.client.SubblockManager;
 import udmi.schema.Config;
 import udmi.schema.DiscoveryState;

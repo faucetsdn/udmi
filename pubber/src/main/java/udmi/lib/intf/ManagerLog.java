@@ -1,4 +1,4 @@
-package udmi.lib;
+package udmi.lib.intf;
 
 /**
  * Abstract common logging operations.

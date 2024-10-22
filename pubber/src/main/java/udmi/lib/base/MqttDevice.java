@@ -1,9 +1,10 @@
-package udmi.lib;
+package udmi.lib.base;
 
 import static com.google.udmi.util.GeneralUtils.ifNotNullThen;
 
 import com.google.udmi.util.CertManager;
 import java.util.function.Consumer;
+import udmi.lib.intf.Publisher;
 import udmi.schema.PubberConfiguration;
 
 /**

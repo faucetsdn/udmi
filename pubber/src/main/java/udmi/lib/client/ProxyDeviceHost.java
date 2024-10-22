@@ -2,13 +2,13 @@ package udmi.lib.client;
 
 import static com.google.udmi.util.GeneralUtils.friendlyStackTrace;
 import static java.lang.String.format;
-import static udmi.lib.ManagerBase.updateStateHolder;
+import static udmi.lib.base.ManagerBase.updateStateHolder;
 
 import java.util.concurrent.atomic.AtomicBoolean;
-import udmi.lib.FamilyProvider;
-import udmi.lib.ManagerHost;
-import udmi.lib.ManagerLog;
-import udmi.lib.MqttDevice;
+import udmi.lib.intf.FamilyProvider;
+import udmi.lib.intf.ManagerHost;
+import udmi.lib.intf.ManagerLog;
+import udmi.lib.base.MqttDevice;
 import udmi.schema.Config;
 import udmi.schema.Metadata;
 import udmi.schema.State;

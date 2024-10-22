@@ -1,4 +1,4 @@
-package udmi.lib;
+package udmi.lib.impl;
 
 import static com.google.udmi.util.GeneralUtils.friendlyStackTrace;
 import static com.google.udmi.util.GeneralUtils.runtimeExec;
@@ -15,7 +15,10 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import udmi.lib.base.ManagerBase;
 import udmi.lib.client.LocalnetManager;
+import udmi.lib.intf.FamilyProvider;
+import udmi.lib.intf.ManagerHost;
 import udmi.schema.FamilyLocalnetState;
 import udmi.schema.PubberConfiguration;
 

@@ -1,4 +1,4 @@
-package udmi.lib;
+package udmi.lib.intf;
 
 /**
  * Collection of methods for how a manager can/should interface with it's host class.

@@ -1,4 +1,4 @@
-package udmi.lib;
+package udmi.lib.base;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
@@ -57,6 +57,7 @@ import org.joda.time.DateTime;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import udmi.lib.client.UdmiPublisher;
+import udmi.lib.intf.Publisher;
 import udmi.schema.Basic;
 import udmi.schema.Config;
 import udmi.schema.EndpointConfiguration.Transport;

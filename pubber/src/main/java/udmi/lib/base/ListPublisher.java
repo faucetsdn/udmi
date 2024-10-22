@@ -1,4 +1,4 @@
-package udmi.lib;
+package udmi.lib.base;
 
 import static com.google.common.base.Preconditions.checkState;
 import static com.google.udmi.util.GeneralUtils.ifNotNullThen;
@@ -13,6 +13,7 @@ import java.util.Map.Entry;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.function.Consumer;
+import udmi.lib.intf.Publisher;
 import udmi.schema.Config;
 import udmi.schema.PubberConfiguration;
 

@@ -1,7 +1,7 @@
 package udmi.lib.client;
 
 import java.util.Map;
-import udmi.lib.FamilyProvider;
+import udmi.lib.intf.FamilyProvider;
 import udmi.schema.Config;
 import udmi.schema.DevicePersistent;
 import udmi.schema.Entry;
