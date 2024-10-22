@@ -1,5 +1,5 @@
 {
-  "$udmi_version": "1.5.1",
+  "$udmi_version": "1.5.2",
   "title": "Testing System Config",
   "description": "Configuration parameters for device-under-test",
   "type": "object",

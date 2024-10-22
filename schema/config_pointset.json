@@ -1,5 +1,5 @@
 {
-  "$udmi_version": "1.5.1",
+  "$udmi_version": "1.5.2",
   "title": "Pointset Config",
   "description": "[Pointset Config Documentation](../docs/messages/pointset.md#config)",
   "type": "object",

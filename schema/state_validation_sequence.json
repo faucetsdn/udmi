@@ -1,5 +1,5 @@
 {
-  "$udmi_version": "1.5.1",
+  "$udmi_version": "1.5.2",
   "title": "Sequence Validation State",
   "description": "Sequence Validation State",
   "type": "object",

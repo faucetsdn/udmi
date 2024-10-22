@@ -1,5 +1,5 @@
 {
-  "$udmi_version": "1.5.1",
+  "$udmi_version": "1.5.2",
   "title": "System State",
   "description": "[System State Documentation](../docs/messages/system.md#state)",
   "type": "object",
