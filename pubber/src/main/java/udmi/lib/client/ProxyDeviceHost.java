@@ -2,13 +2,14 @@ package udmi.lib.client;
 
 import static com.google.udmi.util.GeneralUtils.friendlyStackTrace;
 import static java.lang.String.format;
-import static udmi.lib.ManagerBase.updateStateHolder;
+import static udmi.lib.base.ManagerBase.updateStateHolder;
 
 import java.util.concurrent.atomic.AtomicBoolean;
-import udmi.lib.FamilyProvider;
-import udmi.lib.ManagerHost;
-import udmi.lib.ManagerLog;
-import udmi.lib.MqttDevice;
+import udmi.lib.base.MqttDevice;
+import udmi.lib.intf.FamilyProvider;
+import udmi.lib.intf.ManagerHost;
+import udmi.lib.intf.ManagerLog;
+import udmi.lib.intf.UdmiPublisher;
 import udmi.schema.Config;
 import udmi.schema.Metadata;
 import udmi.schema.State;
@@ -20,7 +21,7 @@ public interface ProxyDeviceHost extends ManagerHost, ManagerLog {
 
   DeviceManager getDeviceManager();
 
-  UdmiPublisher getUdmiPublisherHost();
+  UdmiPublisher getUdmiPublisher();
 
   ManagerHost getManagerHost();
 
@@ -37,7 +38,7 @@ public interface ProxyDeviceHost extends ManagerHost, ManagerLog {
   default void activate() {
     try {
       isActive().set(false);
-      MqttDevice mqttDevice = getUdmiPublisherHost().getMqttDevice(getDeviceId());
+      MqttDevice mqttDevice = getUdmiPublisher().getMqttDevice(getDeviceId());
       mqttDevice.registerHandler(MqttDevice.CONFIG_TOPIC, this::configHandler, Config.class);
       mqttDevice.connect();
       getDeviceManager().activate();
@@ -54,9 +55,9 @@ public interface ProxyDeviceHost extends ManagerHost, ManagerLog {
    * @param config The configuration to be applied.
    */
   default void configHandler(Config config) {
-    getUdmiPublisherHost().configPreprocess(getDeviceId(), config);
+    getUdmiPublisher().configPreprocess(getDeviceId(), config);
     getDeviceManager().updateConfig(config);
-    getUdmiPublisherHost().publisherConfigLog("apply", null, getDeviceId());
+    getUdmiPublisher().publisherConfigLog("apply", null, getDeviceId());
   }
 
   void shutdown();
@@ -66,7 +67,7 @@ public interface ProxyDeviceHost extends ManagerHost, ManagerLog {
   @Override
   default void publish(Object message) {
     if (isActive().get()) {
-      getUdmiPublisherHost().publish(getDeviceId(), message);
+      getUdmiPublisher().publish(getDeviceId(), message);
     }
   }
 

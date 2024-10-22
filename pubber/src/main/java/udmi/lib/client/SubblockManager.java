@@ -2,16 +2,14 @@ package udmi.lib.client;
 
 import java.util.Date;
 import java.util.concurrent.ScheduledFuture;
-import udmi.lib.ManagerHost;
-import udmi.lib.ManagerLog;
-import udmi.schema.PubberConfiguration;
-import udmi.schema.PubberOptions;
+import udmi.lib.intf.ManagerHost;
+import udmi.lib.intf.ManagerLog;
 
 /**
  * Interface for providing main manager functionalities.
  *
  */
-public interface Manager extends ManagerLog {
+public interface SubblockManager extends ManagerLog {
 
   void updateState(Object state);
 
@@ -28,10 +26,6 @@ public interface Manager extends ManagerLog {
   void shutdown();
 
   String getDeviceId();
-
-  PubberOptions getOptions();
-
-  PubberConfiguration getConfig();
 
   ManagerHost getHost();
 }

@@ -1,4 +1,4 @@
-package udmi.lib;
+package udmi.lib.intf;
 
 import udmi.schema.PointPointsetConfig;
 import udmi.schema.PointPointsetEvents;

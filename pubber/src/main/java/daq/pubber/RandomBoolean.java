@@ -1,7 +1,6 @@
 package daq.pubber;
 
-import udmi.lib.AbstractPoint;
-import udmi.lib.BasicPoint;
+import udmi.lib.intf.AbstractPoint;
 import udmi.schema.PointPointsetModel;
 import udmi.schema.RefDiscovery;
 

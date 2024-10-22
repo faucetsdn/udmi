@@ -1,5 +1,5 @@
 {
-  "$udmi_version": "1.5.1",
+  "$udmi_version": "1.5.2",
   "title": "Cloud Query",
   "description": "Information specific to how the device communicates with the cloud.",
   "type": "object",

@@ -25,6 +25,6 @@
   "gateway": {
     "gateway_id": "GAT-123"
   },
-  "version": 1,
+  "version": "1.5.2",
   "timestamp": "2020-05-01T13:39:07Z"
 }

@@ -1,5 +1,5 @@
 {
-  "$udmi_version": "1.5.1",
+  "$udmi_version": "1.5.2",
   "title": "Config",
   "description": "The config block controls a device's intended behavior. [Config Documentation](../docs/messages/config.md)",
   "$section": "Messages",

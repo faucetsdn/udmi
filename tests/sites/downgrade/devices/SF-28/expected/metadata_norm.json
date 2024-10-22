@@ -1,8 +1,8 @@
 {
   "timestamp": "2021-02-25T09:56:39Z",
-  "version": "1.5.1",
+  "version": "1.5.2",
   "upgraded_from": "1.3.14",
-  "hash": "1079515a",
+  "hash": "eecc8e1f",
   "system": {
     "tags": [ ],
     "location": {
@@ -26,8 +26,7 @@
     "gateway_id": "DDC-54",
     "target": {
       "family": "bacnet"
-    },
-    "group_ids": [ ]
+    }
   },
   "localnet": {
     "families": {

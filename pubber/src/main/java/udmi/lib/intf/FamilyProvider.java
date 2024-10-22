@@ -1,4 +1,4 @@
-package udmi.lib;
+package udmi.lib.intf;
 
 import java.util.Map;
 import java.util.function.BiConsumer;

@@ -7,12 +7,10 @@ import static java.lang.String.format;
 
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
-import udmi.lib.ManagerBase;
-import udmi.lib.ManagerHost;
-import udmi.lib.MqttDevice;
+import udmi.lib.base.MqttDevice;
 import udmi.lib.client.DeviceManager;
 import udmi.lib.client.ProxyDeviceHost;
-import udmi.lib.client.UdmiPublisher;
+import udmi.lib.intf.ManagerHost;
 import udmi.schema.Config;
 import udmi.schema.Metadata;
 import udmi.schema.PubberConfiguration;
@@ -20,10 +18,10 @@ import udmi.schema.PubberConfiguration;
 /**
  * Wrapper for a complete device construct.
  */
-public class ProxyDevice extends ManagerBase implements ProxyDeviceHost {
+public class ProxyDevice extends PubberManager implements ProxyDeviceHost {
 
   private static final long STATE_INTERVAL_MS = 1000;
-  final daq.pubber.DeviceManager deviceManager;
+  final PubberDeviceManager deviceManager;
   final Pubber pubberHost;
   private final AtomicBoolean active = new AtomicBoolean();
 
@@ -34,7 +32,7 @@ public class ProxyDevice extends ManagerBase implements ProxyDeviceHost {
     super(host, makeProxyConfiguration(host, id, pubberConfig));
     // Simple shortcut to get access to some foundational mechanisms inside of Pubber.
     pubberHost = (Pubber) host;
-    deviceManager = new daq.pubber.DeviceManager(this, makeProxyConfiguration(host, id,
+    deviceManager = new PubberDeviceManager(this, makeProxyConfiguration(host, id,
         pubberConfig));
     executor.scheduleAtFixedRate(this::publishDirtyState, STATE_INTERVAL_MS, STATE_INTERVAL_MS,
         TimeUnit.MILLISECONDS);
@@ -88,6 +86,11 @@ public class ProxyDevice extends ManagerBase implements ProxyDeviceHost {
   }
 
   @Override
+  public void publish(String targetId, Object message) {
+    pubberHost.publish(targetId, message);
+  }
+
+  @Override
   public void setMetadata(Metadata metadata) {
     deviceManager.setMetadata(metadata);
   }
@@ -98,7 +101,7 @@ public class ProxyDevice extends ManagerBase implements ProxyDeviceHost {
   }
 
   @Override
-  public UdmiPublisher getUdmiPublisherHost() {
+  public PubberUdmiPublisher getUdmiPublisher() {
     return pubberHost;
   }
 

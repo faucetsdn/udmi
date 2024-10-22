@@ -1,10 +1,13 @@
-package udmi.lib;
+package udmi.lib.base;
 
 import static com.google.udmi.util.GeneralUtils.ifNotNullThen;
+import static java.util.Objects.requireNonNull;
+import static udmi.lib.base.MqttPublisher.TEST_PREFIX;
 
 import com.google.udmi.util.CertManager;
 import java.util.function.Consumer;
-import udmi.schema.PubberConfiguration;
+import udmi.lib.intf.Publisher;
+import udmi.schema.EndpointConfiguration;
 
 /**
  * Encapsulation of a device connection.
@@ -12,7 +15,7 @@ import udmi.schema.PubberConfiguration;
 public class MqttDevice {
 
   public static final String TEST_PROJECT = "test-project";
-  static final String ATTACH_TOPIC = "attach";
+  public static final String ATTACH_TOPIC = "attach";
   public static final String CONFIG_TOPIC = "config";
   public static final String ERRORS_TOPIC = "errors";
   public static final String EVENTS_TOPIC = "events";
@@ -25,12 +28,12 @@ public class MqttDevice {
   /**
    * Builds a MQTT device.
    */
-  public MqttDevice(PubberConfiguration configuration, Consumer<Exception> onError,
+  public MqttDevice(EndpointConfiguration configuration, Consumer<Exception> onError,
       CertManager certManager) {
     this.certManager = certManager;
-    deviceId = configuration.deviceId;
+    deviceId = requireNonNull(configuration.deviceId, "deviceId not specified");
     publisher = getPublisher(configuration, onError);
-    ifNotNullThen(configuration.endpoint.topic_prefix,
+    ifNotNullThen(configuration.topic_prefix,
         prefix -> publisher.setDeviceTopicPrefix(deviceId, prefix));
   }
 
@@ -48,9 +51,10 @@ public class MqttDevice {
     certManager = null;
   }
 
-  Publisher getPublisher(PubberConfiguration configuration,
+  Publisher getPublisher(EndpointConfiguration configuration,
       Consumer<Exception> onError) {
-    return TEST_PROJECT.equals(configuration.iotProject) ? new ListPublisher(configuration, onError)
+    return TEST_PREFIX.equals(configuration.topic_prefix)
+        ? new ListPublisher(onError)
         : new MqttPublisher(configuration, onError, certManager);
   }
 

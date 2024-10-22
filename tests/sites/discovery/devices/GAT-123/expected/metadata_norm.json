@@ -1,7 +1,7 @@
 {
   "timestamp": "2020-05-01T13:39:07Z",
-  "version": "1.5.1",
-  "hash": "64daf009",
+  "version": "1.5.2",
+  "hash": "0ec89412",
   "cloud": {
     "auth_type": "ES256"
   },
@@ -20,9 +20,7 @@
     },
     "min_loglevel": 300
   },
-  "gateway": {
-    "group_ids": [ ]
-  },
+  "gateway": { },
   "pointset": {
     "points": {
       "globulating_globar": {

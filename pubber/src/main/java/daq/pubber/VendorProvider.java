@@ -1,4 +1,4 @@
-package udmi.lib;
+package daq.pubber;
 
 import static com.google.udmi.util.GeneralUtils.catchToNull;
 import static com.google.udmi.util.GeneralUtils.ifNotNullThen;
@@ -11,12 +11,14 @@ import com.google.udmi.util.SiteModel;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.function.BiConsumer;
+import udmi.lib.base.ManagerBase;
 import udmi.lib.client.DiscoveryManager;
 import udmi.lib.client.LocalnetManager;
+import udmi.lib.intf.FamilyProvider;
+import udmi.lib.intf.ManagerHost;
 import udmi.schema.DiscoveryEvents;
 import udmi.schema.FamilyLocalnetState;
 import udmi.schema.Metadata;
-import udmi.schema.PubberConfiguration;
 import udmi.schema.RefDiscovery;
 
 /**
@@ -28,9 +30,8 @@ public class VendorProvider extends ManagerBase implements FamilyProvider {
   private SiteModel siteModel;
   private String selfAddr;
 
-  public VendorProvider(ManagerHost host, String family,
-      PubberConfiguration pubberConfiguration) {
-    super(host, pubberConfiguration);
+  public VendorProvider(ManagerHost host, String family, String deviceId) {
+    super(host, deviceId);
     localnetHost = (LocalnetManager) host;
   }
 
@@ -50,7 +51,7 @@ public class VendorProvider extends ManagerBase implements FamilyProvider {
 
   private void updateStateAddress() {
     selfAddr = catchToNull(
-        () -> siteModel.getMetadata(config.deviceId).localnet.families.get(VENDOR).addr);
+        () -> siteModel.getMetadata(deviceId).localnet.families.get(VENDOR).addr);
     ifNotNullThen(selfAddr, x -> {
       FamilyLocalnetState stateEntry = new FamilyLocalnetState();
       stateEntry.addr = selfAddr;

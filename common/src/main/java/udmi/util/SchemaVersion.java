@@ -1,4 +1,4 @@
-package com.google.udmi.util;
+package udmi.util;
 
 import static com.google.common.base.Preconditions.checkState;
 
@@ -10,13 +10,14 @@ import java.util.Map;
  * Formalized enums of the UDMI schema version.
  */
 public enum SchemaVersion {
-  VERSION_1_5_1("1.5.1", 15010),
-  VERSION_1_5_0("1.5.0", 15000),
-  VERSION_1_4_2("1.4.2", 14020),
-  VERSION_1_4_1("1.4.1", 14010),
-  VERSION_1_4_0("1.4.0", 14000),
-  VERSION_1_3_14("1.3.14", 13014),
-  VERSION_1_3_13("1.3.13", 13013),
+  VERSION_1_5_2("1.5.2", 10502),
+  VERSION_1_5_1("1.5.1", 10501),
+  VERSION_1_5_0("1.5.0", 10500),
+  VERSION_1_4_2("1.4.2", 10402),
+  VERSION_1_4_1("1.4.1", 10401),
+  VERSION_1_4_0("1.4.0", 10400),
+  VERSION_1_3_14("1.3.14", 10314),
+  VERSION_1_3_13("1.3.13", 10313),
   VERSION_1("1", 10000);
 
   public static final SchemaVersion CURRENT;

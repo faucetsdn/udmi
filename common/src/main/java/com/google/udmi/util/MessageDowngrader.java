@@ -5,16 +5,17 @@ import static com.google.udmi.util.Common.VERSION_KEY;
 import static com.google.udmi.util.GeneralUtils.OBJECT_MAPPER_RAW;
 import static com.google.udmi.util.GeneralUtils.ifNotNullThen;
 import static com.google.udmi.util.MessageUpgrader.NODE_FACTORY;
-import static com.google.udmi.util.SchemaVersion.LEGACY_REPLACEMENT;
-import static com.google.udmi.util.SchemaVersion.VERSION_1;
-import static com.google.udmi.util.SchemaVersion.VERSION_1_3_13;
-import static com.google.udmi.util.SchemaVersion.VERSION_1_4_0;
-import static com.google.udmi.util.SchemaVersion.VERSION_1_4_1;
+import static udmi.util.SchemaVersion.LEGACY_REPLACEMENT;
+import static udmi.util.SchemaVersion.VERSION_1;
+import static udmi.util.SchemaVersion.VERSION_1_3_13;
+import static udmi.util.SchemaVersion.VERSION_1_4_0;
+import static udmi.util.SchemaVersion.VERSION_1_4_1;
 import static java.lang.Integer.parseInt;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import java.util.Map;
+import udmi.util.SchemaVersion;
 
 /**
  * Downgrade a message to a previous UDMI schema version.

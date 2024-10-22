@@ -4,8 +4,6 @@ import static com.google.udmi.util.GeneralUtils.getNow;
 import static com.google.udmi.util.GeneralUtils.getTimestamp;
 import static com.google.udmi.util.GeneralUtils.ifNotNullGet;
 import static com.google.udmi.util.GeneralUtils.ifNotNullThen;
-import static com.google.udmi.util.GeneralUtils.ifTrueGet;
-import static com.google.udmi.util.GeneralUtils.ifTrueThen;
 import static java.lang.String.format;
 import static java.util.Optional.ofNullable;
 import static udmi.schema.Category.POINTSET_POINT_INVALID;
@@ -14,23 +12,23 @@ import static udmi.schema.Category.POINTSET_POINT_INVALID_VALUE;
 import java.util.Map;
 import java.util.Objects;
 import java.util.stream.Stream;
-import udmi.lib.AbstractPoint;
-import udmi.lib.ManagerHost;
-import udmi.lib.ManagerLog;
+import udmi.lib.intf.AbstractPoint;
+import udmi.lib.intf.ManagerHost;
+import udmi.lib.intf.ManagerLog;
 import udmi.schema.Entry;
 import udmi.schema.PointPointsetEvents;
 import udmi.schema.PointPointsetState;
-import udmi.schema.PointPointsetState.Value_state;
 import udmi.schema.PointsetConfig;
 import udmi.schema.PointsetEvents;
 import udmi.schema.PointsetModel;
 import udmi.schema.PointsetState;
-import udmi.schema.PubberOptions;
 
 /**
  * Pointset client.
  */
 public interface PointsetManager extends ManagerLog {
+
+  int MESSAGE_REPORT_INTERVAL = 10;
 
   /**
    * Generates a {@code PointPointsetEvents} object with a present value set to 100.
@@ -72,12 +70,12 @@ public interface PointsetManager extends ManagerLog {
    * @param pointName the point name.
    */
   default void restorePoint(String pointName) {
-    if (getPointsetState() == null || pointName.equals(getOptions().missingPoint)) {
+    if (getPointsetState() == null) {
       return;
     }
 
     getPointsetState().points.put(pointName, ifNotNullGet(getManagedPoints().get(pointName),
-        this::getTweakedPointState, invalidPoint(pointName)));
+        this::getPointState, invalidPoint(pointName)));
     getPointsetEvent().points.put(pointName, ifNotNullGet(getManagedPoints().get(pointName),
         AbstractPoint::getData, new PointPointsetEvents()));
   }
@@ -88,12 +86,8 @@ public interface PointsetManager extends ManagerLog {
    * @param point the point.
    * @return tweaked point state.
    */
-  default PointPointsetState getTweakedPointState(AbstractPoint point) {
-    PointPointsetState state = point.getState();
-    // Tweak for testing: erroneously apply an applied state here.
-    ifTrueThen(point.getName().equals(getOptions().extraPoint),
-        () -> state.value_state = ofNullable(state.value_state).orElse(Value_state.APPLIED));
-    return state;
+  default PointPointsetState getPointState(AbstractPoint point) {
+    return point.getState();
   }
 
   default void suspendPoint(String pointName) {
@@ -123,10 +117,8 @@ public interface PointsetManager extends ManagerLog {
     }
 
     if (point.isDirty()) {
-      PointPointsetState state = getTweakedPointState(point); // Always call to clear the dirty bit
-      PointPointsetState useState = ifTrueGet(getOptions().noPointState,
-          PointPointsetState::new, state);
-      getPointsetState().points.put(pointName, useState);
+      // Always call to clear the dirty bit
+      getPointsetState().points.put(pointName, getPointState(point));
       updateState();
     }
   }
@@ -164,7 +156,7 @@ public interface PointsetManager extends ManagerLog {
    * Sends device points to the host.
    */
   default void sendDevicePoints() {
-    if (getPointsetUpdateCount() % UdmiPublisher.MESSAGE_REPORT_INTERVAL == 0) {
+    if (getPointsetUpdateCount() % MESSAGE_REPORT_INTERVAL == 0) {
       info(format("%s sending %s message #%d with %d points",
           getTimestamp(), getDeviceId(), getPointsetUpdateCount(),
           getPointsetEvent().points.size()));
@@ -175,8 +167,6 @@ public interface PointsetManager extends ManagerLog {
   void stop();
 
   void shutdown();
-
-  PubberOptions getOptions();
 
   /**
    * PointsetEvents with extraField.
