@@ -480,6 +480,7 @@ public class Pubber extends PubberManager implements PubberUdmiPublisher {
     endpoint.noConfigAck = options.noConfigAck;
     endpoint.keyBytes = config.keyBytes;
     endpoint.algorithm = config.algorithm;
+    augmentEndpoint(endpoint);
     String keyPassword = siteModel.getDevicePassword(config.deviceId);
     String targetDeviceId = getTargetDeviceId(siteModel, config.deviceId);
     CertManager certManager = new CertManager(new File(siteModel.getReflectorDir(), CA_CRT),
@@ -488,6 +489,9 @@ public class Pubber extends PubberManager implements PubberUdmiPublisher {
     deviceTarget = new MqttDevice(endpoint, this::publisherException, certManager);
     registerMessageHandlers();
     publishDirtyState();
+  }
+
+  protected void augmentEndpoint(EndpointConfiguration endpoint) {
   }
 
   private String getTargetDeviceId(SiteModel siteModel, String deviceId) {

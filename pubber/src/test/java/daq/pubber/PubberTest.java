@@ -69,6 +69,11 @@ public class PubberTest extends TestBase {
       }
     }
 
+    @Override
+    protected void augmentEndpoint(EndpointConfiguration endpoint) {
+      endpoint.topic_prefix = TEST_PREFIX;
+    }
+
     PubberUnderTest(String iotProject, String sitePath, String deviceId, String serialNo) {
       super(iotProject, sitePath, deviceId, serialNo);
       setOptionsNoPersist(true);
