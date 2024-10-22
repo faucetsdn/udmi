@@ -6,10 +6,10 @@ import static udmi.lib.base.ManagerBase.updateStateHolder;
 
 import daq.pubber.UdmiPublisher;
 import java.util.concurrent.atomic.AtomicBoolean;
+import udmi.lib.base.MqttDevice;
 import udmi.lib.intf.FamilyProvider;
 import udmi.lib.intf.ManagerHost;
 import udmi.lib.intf.ManagerLog;
-import udmi.lib.base.MqttDevice;
 import udmi.schema.Config;
 import udmi.schema.Metadata;
 import udmi.schema.State;

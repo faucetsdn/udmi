@@ -2,6 +2,9 @@ package udmi.lib.intf;
 
 import java.util.function.Consumer;
 
+/**
+ * Basic interface for publishing/receiving messages.
+ */
 public interface Publisher {
 
   /**

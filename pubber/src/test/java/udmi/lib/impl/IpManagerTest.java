@@ -1,4 +1,4 @@
-package udmi.lib;
+package udmi.lib.impl;
 
 import static org.junit.Assert.assertEquals;
 
@@ -7,6 +7,7 @@ import com.google.common.collect.ImmutableMap;
 import java.util.List;
 import java.util.Map;
 import org.junit.Test;
+import udmi.lib.ProtocolFamily;
 import udmi.lib.impl.IpProvider;
 
 /**

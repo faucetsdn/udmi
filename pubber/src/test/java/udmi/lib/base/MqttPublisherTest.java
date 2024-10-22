@@ -1,4 +1,4 @@
-package udmi.lib;
+package udmi.lib.base;
 
 import static org.junit.Assert.assertEquals;
 
