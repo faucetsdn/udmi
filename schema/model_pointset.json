@@ -1,5 +1,5 @@
 {
-  "$udmi_version": "1.5.1",
+  "$udmi_version": "1.5.2",
   "title": "Pointset Model",
   "description": "Pointset representing the abstract system expectation for what the device should be doing, and how it should be configured and operated. This block specifies the expected points that a device holds",
   "type": "object",

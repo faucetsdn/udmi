@@ -1,5 +1,5 @@
 {
-  "$udmi_version": "1.5.1",
+  "$udmi_version": "1.5.2",
   "title": "Family Discovery Config",
   "description": "Configuration for [discovery](../docs/specs/discovery.md)",
   "type": "object",

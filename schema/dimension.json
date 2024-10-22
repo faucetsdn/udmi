@@ -1,5 +1,5 @@
 {
-    "$udmi_version": "1.5.1",
+    "$udmi_version": "1.5.2",
     "title": "Dimension",
     "description": "Dimensions with a value and a unit",
     "type": "object",

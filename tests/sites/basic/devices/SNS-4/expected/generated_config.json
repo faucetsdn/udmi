@@ -1,6 +1,6 @@
 {
   "timestamp": "2020-05-01T13:39:07Z",
-  "version": 1,
+  "version": "1.5.2",
   "system": {
     "min_loglevel": 300,
     "metrics_rate_sec": 10,

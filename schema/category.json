@@ -1,5 +1,5 @@
 {
-  "$udmi_version": "1.5.1",
+  "$udmi_version": "1.5.2",
   "title": "Category",
   "$comment": "Auto-generated category mappings from bin/gencode_categories.",
   "type": "string",

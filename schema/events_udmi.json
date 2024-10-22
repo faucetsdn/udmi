@@ -1,5 +1,5 @@
 {
-  "$udmi_version": "1.5.1",
+  "$udmi_version": "1.5.2",
   "title": "Udmi Events",
   "description": "Used for udmi events such as logging.",
   "$section": "Messages",
