@@ -26,8 +26,7 @@ public class ListPublisher implements Publisher {
   private String usePrefix;
   private final Map<String, Entry<Consumer<Object>, Class<Object>>> handlers = new HashMap<>();
 
-  public ListPublisher(String topicPrefix, Consumer<Exception> onError) {
-    usePrefix = topicPrefix;
+  public ListPublisher(Consumer<Exception> onError) {
   }
 
   public static String getMessageString(String deviceId, String topic, Object message) {

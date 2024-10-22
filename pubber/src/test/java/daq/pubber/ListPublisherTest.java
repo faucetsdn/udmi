@@ -16,7 +16,7 @@ public class ListPublisherTest extends TestBase {
 
   @Test
   public void testPublish() throws InterruptedException {
-    ListPublisher listPublisher = new ListPublisher(TEST_PREFIX, null);
+    ListPublisher listPublisher = new ListPublisher(null);
     listPublisher.setDeviceTopicPrefix(TEST_DEVICE, TEST_PREFIX);
     final CountDownLatch sent = new CountDownLatch(1);
     listPublisher.publish(TEST_DEVICE, TEST_TOPIC, TEST_MESSAGE, sent::countDown);
