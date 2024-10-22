@@ -52,6 +52,7 @@ import java.util.function.Consumer;
 import java.util.function.Function;
 import udmi.lib.base.MqttDevice;
 import udmi.lib.client.DeviceManager;
+import udmi.lib.client.PointsetManager;
 import udmi.lib.client.PointsetManager.ExtraPointsetEvent;
 import udmi.lib.client.SystemManager.ExtraSystemState;
 import udmi.lib.impl.MqttPublisher.FakeTopic;
@@ -119,7 +120,6 @@ public interface UdmiPublisher extends ManagerHost {
   Duration SMOKE_CHECK_TIME = Duration.ofMinutes(5);
   String RAW_EVENT_TOPIC = "events";
   String SYSTEM_EVENT_TOPIC = "events/system";
-  int MESSAGE_REPORT_INTERVAL = 10;
 
   State getDeviceState();
 
@@ -515,9 +515,10 @@ public interface UdmiPublisher extends ManagerHost {
 
     final int explicitPhases = 3;
 
-    checkState(MESSAGE_REPORT_INTERVAL > explicitPhases + INVALID_REPLACEMENTS.size() + 1,
+    checkState(
+        PointsetManager.MESSAGE_REPORT_INTERVAL > explicitPhases + INVALID_REPLACEMENTS.size() + 1,
         "not enough space for hacky messages");
-    int phase = (getDeviceUpdateCount() + MESSAGE_REPORT_INTERVAL / 2) % MESSAGE_REPORT_INTERVAL;
+    int phase = (getDeviceUpdateCount() + PointsetManager.MESSAGE_REPORT_INTERVAL / 2) % PointsetManager.MESSAGE_REPORT_INTERVAL;
 
     safeSleep(INJECT_MESSAGE_DELAY_MS);
 

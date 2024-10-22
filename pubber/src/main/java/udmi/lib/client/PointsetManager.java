@@ -9,7 +9,6 @@ import static java.util.Optional.ofNullable;
 import static udmi.schema.Category.POINTSET_POINT_INVALID;
 import static udmi.schema.Category.POINTSET_POINT_INVALID_VALUE;
 
-import daq.pubber.UdmiPublisher;
 import java.util.Map;
 import java.util.Objects;
 import java.util.stream.Stream;
@@ -28,6 +27,8 @@ import udmi.schema.PointsetState;
  * Pointset client.
  */
 public interface PointsetManager extends ManagerLog {
+
+  int MESSAGE_REPORT_INTERVAL = 10;
 
   /**
    * Generates a {@code PointPointsetEvents} object with a present value set to 100.
@@ -155,7 +156,7 @@ public interface PointsetManager extends ManagerLog {
    * Sends device points to the host.
    */
   default void sendDevicePoints() {
-    if (getPointsetUpdateCount() % UdmiPublisher.MESSAGE_REPORT_INTERVAL == 0) {
+    if (getPointsetUpdateCount() % MESSAGE_REPORT_INTERVAL == 0) {
       info(format("%s sending %s message #%d with %d points",
           getTimestamp(), getDeviceId(), getPointsetUpdateCount(),
           getPointsetEvent().points.size()));
