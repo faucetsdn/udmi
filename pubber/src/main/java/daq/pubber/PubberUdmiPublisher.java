@@ -26,6 +26,7 @@ import static udmi.lib.base.MqttDevice.CONFIG_TOPIC;
 import static udmi.lib.base.MqttDevice.ERRORS_TOPIC;
 import static udmi.lib.base.MqttDevice.STATE_TOPIC;
 import static udmi.lib.impl.MqttPublisher.DEFAULT_CONFIG_WAIT_SEC;
+import static udmi.lib.intf.UdmiPublisher.getGatewayId;
 import static udmi.schema.BlobsetConfig.SystemBlobsets.IOT_ENDPOINT_CONFIG;
 
 import com.google.common.collect.ImmutableMap;
@@ -59,7 +60,6 @@ import udmi.lib.impl.MqttPublisher.FakeTopic;
 import udmi.lib.impl.MqttPublisher.InjectedMessage;
 import udmi.lib.impl.MqttPublisher.InjectedState;
 import udmi.lib.intf.GatewayError;
-import udmi.lib.intf.ManagerHost;
 import udmi.lib.intf.UdmiPublisher;
 import udmi.schema.BlobBlobsetConfig;
 import udmi.schema.BlobBlobsetConfig.BlobPhase;
@@ -133,14 +133,14 @@ public interface PubberUdmiPublisher extends UdmiPublisher {
   void setDeviceTarget(MqttDevice deviceTarget);
 
   boolean isGatewayDevice();
-  
+
   static String getEventsSuffix(String suffixSuffix) {
     return MqttDevice.EVENTS_TOPIC + "/" + suffixSuffix;
   }
 
   /**
-   * Retrieves the start time of the current second,
-   * with milliseconds removed for precise comparison.
+   * Retrieves the start time of the current second, with milliseconds removed for precise
+   * comparison.
    */
   static Date getRoundedStartTime() {
     long timestamp = getNow().getTime();
@@ -165,7 +165,6 @@ public interface PubberUdmiPublisher extends UdmiPublisher {
 
   /**
    * Augments a given {@code message} object with the current timestamp and version information.
-   *
    */
   static void augmentDeviceMessage(Object message, Date now, boolean useBadVersion) {
     try {
@@ -176,11 +175,6 @@ public interface PubberUdmiPublisher extends UdmiPublisher {
     } catch (Throwable e) {
       throw new RuntimeException("While augmenting device message", e);
     }
-  }
-
-  static String getGatewayId(String targetId, PubberConfiguration configuration) {
-    return ofNullable(configuration.gatewayId).orElse(
-        targetId.equals(configuration.deviceId) ? null : configuration.deviceId);
   }
 
   default DevicePersistent newDevicePersistent() {
@@ -195,7 +189,6 @@ public interface PubberUdmiPublisher extends UdmiPublisher {
 
   /**
    * Publishes a dirty state by resetting the internal state flag to clean.
-   *
    */
   default void publishDirtyState() {
     if (getStateDirty().get()) {
@@ -239,9 +232,8 @@ public interface PubberUdmiPublisher extends UdmiPublisher {
   }
 
   /**
-   * Executes the provided {@code Runnable} and captures any exceptions that occur by
-   * calling {@link #error(String, Throwable)} with the action name and the caught exception.
-   *
+   * Executes the provided {@code Runnable} and captures any exceptions that occur by calling
+   * {@link #error(String, Throwable)} with the action name and the caught exception.
    */
   default void captureExceptions(String action, Runnable runnable) {
     try {
@@ -313,10 +305,10 @@ public interface PubberUdmiPublisher extends UdmiPublisher {
   /**
    * Handles the reception of a message with an optional error.
    *
-   * @param type The type of the message being received.
-   * @param phase A string representing the current processing phase of the message.
-   * @param cause An optional Throwable that represents the error causing the failure,
-   *             or null if there is no error.
+   * @param type     The type of the message being received.
+   * @param phase    A string representing the current processing phase of the message.
+   * @param cause    An optional Throwable that represents the error causing the failure, or null if
+   *                 there is no error.
    * @param targetId The ID of the target to which the log message should be published.
    */
   default void publisherHandler(String type, String phase, Throwable cause, String targetId) {
@@ -355,8 +347,8 @@ public interface PubberUdmiPublisher extends UdmiPublisher {
   }
 
   /**
-   * Delays updating the next state by calculating a synthetic last state time that includes
-   * an optional delay.
+   * Delays updating the next state by calculating a synthetic last state time that includes an
+   * optional delay.
    */
   default void delayNextStateUpdate() {
     // Calculate a synthetic last state time that factors in the optional delay.
@@ -373,7 +365,7 @@ public interface PubberUdmiPublisher extends UdmiPublisher {
    * Creates an {@link Entry} object from a given exception and category.
    *
    * @param category the category for the log entry
-   * @param e the exception from which to create the log entry; can be null
+   * @param e        the exception from which to create the log entry; can be null
    * @return a new {@link Entry} object based on the provided parameters
    */
   default Entry entryFromException(String category, Throwable e) {
@@ -428,7 +420,7 @@ public interface PubberUdmiPublisher extends UdmiPublisher {
   /**
    * Configures the preprocessing for a given target ID using the provided configuration message.
    *
-   * @param targetId The unique identifier of the target to be configured.
+   * @param targetId  The unique identifier of the target to be configured.
    * @param configMsg The configuration message to be processed.
    */
   default void configPreprocess(String targetId, Config configMsg) {
@@ -515,7 +507,8 @@ public interface PubberUdmiPublisher extends UdmiPublisher {
     checkState(
         PointsetManager.MESSAGE_REPORT_INTERVAL > explicitPhases + INVALID_REPLACEMENTS.size() + 1,
         "not enough space for hacky messages");
-    int phase = (getDeviceUpdateCount() + PointsetManager.MESSAGE_REPORT_INTERVAL / 2) % PointsetManager.MESSAGE_REPORT_INTERVAL;
+    int phase = (getDeviceUpdateCount() + PointsetManager.MESSAGE_REPORT_INTERVAL / 2)
+        % PointsetManager.MESSAGE_REPORT_INTERVAL;
 
     safeSleep(INJECT_MESSAGE_DELAY_MS);
 
@@ -566,6 +559,7 @@ public interface PubberUdmiPublisher extends UdmiPublisher {
   Lock getStateLock();
 
   // TODO: Consider refactoring this to either return or change an instance variable, not both.
+
   /**
    * Extracts the endpoint configuration blob from the device configuration.
    *
@@ -702,7 +696,6 @@ public interface PubberUdmiPublisher extends UdmiPublisher {
 
   /**
    * Creates an {@link Entry} object with error details from the given exception and category.
-   *
    */
   default Entry exceptionStatus(Exception e, String category) {
     Entry entry = new Entry();
@@ -716,7 +709,6 @@ public interface PubberUdmiPublisher extends UdmiPublisher {
 
   /**
    * Ensures the {@code blobset} and its {@code blobs} map are initialized in the device state.
-   *
    */
   default BlobBlobsetState ensureBlobsetState(SystemBlobsets iotEndpointConfig) {
     getDeviceState().blobset = ofNullable(getDeviceState().blobset).orElseGet(BlobsetState::new);
@@ -734,7 +726,6 @@ public interface PubberUdmiPublisher extends UdmiPublisher {
   /**
    * Extracts the configuration blob with the specified name, if it exists and is in the final
    * phase.
-   *
    */
   default String extractConfigBlob(String blobName) {
     // TODO: Refactor to get any blob meta parameters.
@@ -762,7 +753,6 @@ public interface PubberUdmiPublisher extends UdmiPublisher {
   /**
    * Publishes the current state asynchronously, deferring if necessary to ensure that the state
    * update does not occur too frequently.
-   *
    */
   default void publishAsynchronousState() {
     if (getStateLock().tryLock()) {
@@ -784,9 +774,8 @@ public interface PubberUdmiPublisher extends UdmiPublisher {
   }
 
   /**
-   * Publishes the current state synchronously.
-   * This method locks the state before publishing it to ensure thread safety,
-   * and handles exceptions by wrapping them in a RuntimeException.
+   * Publishes the current state synchronously. This method locks the state before publishing it to
+   * ensure thread safety, and handles exceptions by wrapping them in a RuntimeException.
    */
   default void publishSynchronousState() {
     try {
@@ -804,8 +793,8 @@ public interface PubberUdmiPublisher extends UdmiPublisher {
   }
 
   /**
-   * Publishes the current device state as a message to the publisher if the publisher is active.
-   * If the publisher is not active, it marks the state as dirty and returns without publishing.
+   * Publishes the current device state as a message to the publisher if the publisher is active. If
+   * the publisher is not active, it marks the state as dirty and returns without publishing.
    */
   default void publishStateMessage() {
     if (!publisherActive()) {
@@ -821,7 +810,7 @@ public interface PubberUdmiPublisher extends UdmiPublisher {
 
   /**
    * Publishes the given state message to a designated location.
-  *
+   *
    * @param stateToSend The state object to be published.
    */
   default void publishStateMessage(Object stateToSend) {
@@ -888,8 +877,8 @@ public interface PubberUdmiPublisher extends UdmiPublisher {
   }
 
   /**
-   * Publishes a device message to the appropriate topic and handles squelching of state updates
-   * if configured.
+   * Publishes a device message to the appropriate topic and handles squelching of state updates if
+   * configured.
    */
   default void publishDeviceMessage(String targetId, Object message, Runnable callback) {
     if (getDeviceTarget() == null) {
@@ -1011,8 +1000,8 @@ public interface PubberUdmiPublisher extends UdmiPublisher {
   /**
    * Configures a wait time for the configuration latch and waits until it is acquired.
    *
-   * @throws RuntimeException if the configuration latch is not acquired within the
-   *         specified or default wait time.
+   * @throws RuntimeException if the configuration latch is not acquired within the specified or
+   *                          default wait time.
    */
   default void configLatchWait() {
     try {

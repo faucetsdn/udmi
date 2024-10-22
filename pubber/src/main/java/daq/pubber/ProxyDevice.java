@@ -86,6 +86,11 @@ public class ProxyDevice extends PubberManager implements ProxyDeviceHost {
   }
 
   @Override
+  public void publish(String targetId, Object message) {
+    pubberHost.publish(targetId, message);
+  }
+
+  @Override
   public void setMetadata(Metadata metadata) {
     deviceManager.setMetadata(metadata);
   }
