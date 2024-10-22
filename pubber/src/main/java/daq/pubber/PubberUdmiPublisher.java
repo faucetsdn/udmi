@@ -60,6 +60,7 @@ import udmi.lib.impl.MqttPublisher.InjectedMessage;
 import udmi.lib.impl.MqttPublisher.InjectedState;
 import udmi.lib.intf.GatewayError;
 import udmi.lib.intf.ManagerHost;
+import udmi.lib.intf.UdmiPublisher;
 import udmi.schema.BlobBlobsetConfig;
 import udmi.schema.BlobBlobsetConfig.BlobPhase;
 import udmi.schema.BlobBlobsetState;
@@ -85,7 +86,7 @@ import udmi.util.SchemaVersion;
 /**
  * UDMI publisher client.
  */
-public interface UdmiPublisher extends ManagerHost {
+public interface PubberUdmiPublisher extends UdmiPublisher {
 
   String DATA_URL_JSON_BASE64 = "data:application/json;base64,";
 

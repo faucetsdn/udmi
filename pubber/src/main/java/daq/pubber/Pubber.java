@@ -67,7 +67,7 @@ import udmi.util.SchemaVersion;
 /**
  * IoT Core UDMI Device Emulator.
  */
-public class Pubber extends PubberManager implements UdmiPublisher {
+public class Pubber extends PubberManager implements PubberUdmiPublisher {
 
   public static final String PUBBER_OUT = "pubber/out";
   public static final String PERSISTENT_STORE_FILE = "persistent_data.json";

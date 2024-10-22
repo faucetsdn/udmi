@@ -43,7 +43,7 @@ public class PubberSystemManager extends PubberManager implements SystemManager 
   private static final String DEFAULT_MODEL = "pubber";
   private static final String DEFAULT_SOFTWARE_KEY = "firmware";
   private static final String DEFAULT_SOFTWARE_VALUE = "v1";
-  private static final Date DEVICE_START_TIME = UdmiPublisher.DEVICE_START_TIME;
+  private static final Date DEVICE_START_TIME = PubberUdmiPublisher.DEVICE_START_TIME;
 
   private final List<Entry> logentries = new ArrayList<>();
   private final ExtraSystemState systemState;
