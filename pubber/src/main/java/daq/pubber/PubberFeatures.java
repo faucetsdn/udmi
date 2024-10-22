@@ -1,4 +1,4 @@
-package udmi.lib.intf;
+package daq.pubber;
 
 import static com.google.udmi.util.GeneralUtils.getTimestamp;
 import static com.google.udmi.util.GeneralUtils.isTrue;
@@ -16,7 +16,6 @@ import static udmi.schema.FeatureDiscovery.FeatureStage.BETA;
 import static udmi.schema.FeatureDiscovery.FeatureStage.PREVIEW;
 import static udmi.schema.FeatureDiscovery.FeatureStage.STABLE;
 
-import daq.pubber.PubberDeviceManager;
 import java.io.File;
 import java.util.HashMap;
 import java.util.Map;
@@ -28,7 +27,7 @@ import udmi.schema.Level;
 /**
  * Static class to represent the features supported by this implementation.
  */
-public abstract class SupportedFeatures {
+public abstract class PubberFeatures {
 
   private static final String PUBBER_FEATURES_JSON = "out/pubber_features.json";
 

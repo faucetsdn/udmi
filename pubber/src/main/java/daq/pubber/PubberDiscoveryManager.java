@@ -5,7 +5,7 @@ import static com.google.udmi.util.GeneralUtils.ifTrueThen;
 import static com.google.udmi.util.JsonUtil.isoConvert;
 import static java.lang.String.format;
 import static java.util.stream.Collectors.toMap;
-import static udmi.lib.client.UdmiPublisher.DEVICE_START_TIME;
+import static daq.pubber.UdmiPublisher.DEVICE_START_TIME;
 import static udmi.schema.FamilyDiscoveryState.Phase.ACTIVE;
 import static udmi.schema.FamilyDiscoveryState.Phase.DONE;
 
@@ -17,7 +17,6 @@ import java.util.concurrent.atomic.AtomicInteger;
 import udmi.lib.intf.FamilyProvider;
 import udmi.lib.base.ManagerBase;
 import udmi.lib.intf.ManagerHost;
-import udmi.lib.intf.SupportedFeatures;
 import udmi.lib.client.DiscoveryManager;
 import udmi.schema.Depths;
 import udmi.schema.DiscoveryConfig;
@@ -68,7 +67,7 @@ public class PubberDiscoveryManager extends ManagerBase implements DiscoveryMana
     discoveryEvent.generation = enumerationGeneration;
     Depths depths = config.depths;
     discoveryEvent.refs = maybeEnumerate(depths.refs, () -> enumerateRefs(deviceId));
-    discoveryEvent.features = maybeEnumerate(depths.features, SupportedFeatures::getFeatures);
+    discoveryEvent.features = maybeEnumerate(depths.features, PubberFeatures::getFeatures);
     discoveryEvent.families = maybeEnumerate(depths.families, deviceManager::enumerateFamilies);
     host.publish(discoveryEvent);
   }

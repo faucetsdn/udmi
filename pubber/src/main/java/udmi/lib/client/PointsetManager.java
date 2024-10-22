@@ -11,6 +11,7 @@ import static java.util.Optional.ofNullable;
 import static udmi.schema.Category.POINTSET_POINT_INVALID;
 import static udmi.schema.Category.POINTSET_POINT_INVALID_VALUE;
 
+import daq.pubber.UdmiPublisher;
 import java.util.Map;
 import java.util.Objects;
 import java.util.stream.Stream;

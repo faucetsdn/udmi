@@ -15,7 +15,6 @@ import java.util.HashMap;
 import java.util.List;
 import org.junit.After;
 import org.junit.Test;
-import udmi.lib.client.UdmiPublisher;
 import udmi.schema.BlobBlobsetConfig;
 import udmi.schema.BlobBlobsetConfig.BlobPhase;
 import udmi.schema.BlobsetConfig;

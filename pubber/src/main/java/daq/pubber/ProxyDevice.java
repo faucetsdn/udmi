@@ -12,7 +12,6 @@ import udmi.lib.intf.ManagerHost;
 import udmi.lib.base.MqttDevice;
 import udmi.lib.client.DeviceManager;
 import udmi.lib.client.ProxyDeviceHost;
-import udmi.lib.client.UdmiPublisher;
 import udmi.schema.Config;
 import udmi.schema.Metadata;
 import udmi.schema.PubberConfiguration;

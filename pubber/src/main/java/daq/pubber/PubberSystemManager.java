@@ -15,7 +15,6 @@ import org.slf4j.Logger;
 import udmi.lib.base.ManagerBase;
 import udmi.lib.intf.ManagerHost;
 import udmi.lib.client.SystemManager;
-import udmi.lib.client.UdmiPublisher;
 import udmi.schema.Entry;
 import udmi.schema.Level;
 import udmi.schema.Operation.SystemMode;

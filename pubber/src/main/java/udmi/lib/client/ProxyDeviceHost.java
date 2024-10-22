@@ -4,6 +4,7 @@ import static com.google.udmi.util.GeneralUtils.friendlyStackTrace;
 import static java.lang.String.format;
 import static udmi.lib.base.ManagerBase.updateStateHolder;
 
+import daq.pubber.UdmiPublisher;
 import java.util.concurrent.atomic.AtomicBoolean;
 import udmi.lib.intf.FamilyProvider;
 import udmi.lib.intf.ManagerHost;

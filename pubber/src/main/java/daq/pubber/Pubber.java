@@ -51,10 +51,8 @@ import udmi.lib.intf.FamilyProvider;
 import udmi.lib.base.ManagerBase;
 import udmi.lib.base.MqttDevice;
 import udmi.lib.base.MqttPublisher.PublisherException;
-import udmi.lib.intf.SupportedFeatures;
 import udmi.lib.client.DeviceManager;
 import udmi.lib.client.SystemManager;
-import udmi.lib.client.UdmiPublisher;
 import udmi.schema.Config;
 import udmi.schema.DevicePersistent;
 import udmi.schema.EndpointConfiguration;
@@ -261,7 +259,7 @@ public class Pubber extends ManagerBase implements UdmiPublisher {
     deviceManager = new PubberDeviceManager(this, config);
 
     if (config.sitePath != null) {
-      SupportedFeatures.writeFeatureFile(config.sitePath, deviceManager);
+      PubberFeatures.writeFeatureFile(config.sitePath, deviceManager);
       siteModel = new SiteModel(config.sitePath);
       siteModel.initialize();
       if (config.endpoint == null) {
@@ -278,7 +276,7 @@ public class Pubber extends ManagerBase implements UdmiPublisher {
       pullDeviceMessage();
     }
 
-    SupportedFeatures.setFeatureSwap(config.options.featureEnableSwap);
+    PubberFeatures.setFeatureSwap(config.options.featureEnableSwap);
     initializePersistentStore();
 
     info(format("Starting pubber %s, serial %s, mac %s, gateway %s, options %s",

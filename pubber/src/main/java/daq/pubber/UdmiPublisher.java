@@ -1,4 +1,4 @@
-package udmi.lib.client;
+package daq.pubber;
 
 import static com.google.common.base.Preconditions.checkState;
 import static com.google.udmi.util.GeneralUtils.catchToNull;
@@ -51,6 +51,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.locks.Lock;
 import java.util.function.Consumer;
 import java.util.function.Function;
+import udmi.lib.client.DeviceManager;
 import udmi.lib.intf.GatewayError;
 import udmi.lib.intf.ManagerHost;
 import udmi.lib.base.MqttDevice;
