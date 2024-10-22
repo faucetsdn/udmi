@@ -60,9 +60,9 @@ import udmi.lib.base.MqttDevice;
 import udmi.lib.intf.Publisher;
 import udmi.schema.Basic;
 import udmi.schema.Config;
+import udmi.schema.EndpointConfiguration;
 import udmi.schema.EndpointConfiguration.Transport;
 import udmi.schema.Jwt;
-import udmi.schema.PubberConfiguration;
 
 /**
  * Handle publishing sensor data to a Cloud IoT MQTT endpoint.
@@ -71,6 +71,7 @@ public class MqttPublisher implements Publisher {
 
   public static final String EMPTY_STRING = "";
   public static final int DEFAULT_CONFIG_WAIT_SEC = 10;
+  public static final String TEST_PREFIX = "test_prefix/AHU-1";
   private static final String DEFAULT_TOPIC_PREFIX = "/devices/";
   private static final Logger LOG = LoggerFactory.getLogger(MqttPublisher.class);
   private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper()
@@ -104,7 +105,6 @@ public class MqttPublisher implements Publisher {
   private final ExecutorService publisherExecutor =
       Executors.newFixedThreadPool(PUBLISH_THREAD_COUNT);
 
-  private final PubberConfiguration configuration;
   private final String registryId;
   private final String projectId;
   private final String cloudRegion;
@@ -116,18 +116,19 @@ public class MqttPublisher implements Publisher {
   private final Consumer<Exception> onError;
   private final String deviceId;
   private final CertManager certManager;
+  private final EndpointConfiguration configuration;
   private CountDownLatch connectionLatch;
   private String topicPrefixPrefix;
 
   /**
    * Create a mqtt publisher for this client.
    */
-  public MqttPublisher(PubberConfiguration configuration, Consumer<Exception> onError,
+  public MqttPublisher(EndpointConfiguration configuration, Consumer<Exception> onError,
       CertManager certManager) {
     this.configuration = configuration;
     this.certManager = certManager;
     if (isGcpIotCore(configuration)) {
-      ClientInfo clientIdParts = SiteModel.parseClientId(configuration.endpoint.client_id);
+      ClientInfo clientIdParts = SiteModel.parseClientId(configuration.client_id);
       this.projectId = clientIdParts.iotProject;
       this.cloudRegion = clientIdParts.cloudRegion;
       this.registryId = clientIdParts.registryId;
@@ -142,8 +143,8 @@ public class MqttPublisher implements Publisher {
     validateCloudIotOptions();
   }
 
-  private boolean isGcpIotCore(PubberConfiguration configuration) {
-    return configuration.endpoint.client_id != null && configuration.endpoint.client_id.startsWith(
+  private boolean isGcpIotCore(EndpointConfiguration configuration) {
+    return configuration.client_id != null && configuration.client_id.startsWith(
         GCP_CLIENT_PREFIX);
   }
 
@@ -151,11 +152,11 @@ public class MqttPublisher implements Publisher {
     // Create our MQTT client. The mqttClientId is a unique string that identifies this device. For
     // Google Cloud IoT, it must be in the format below.
     if (isGcpIotCore(configuration)) {
-      ClientInfo clientInfo = SiteModel.parseClientId(configuration.endpoint.client_id);
+      ClientInfo clientInfo = SiteModel.parseClientId(configuration.client_id);
       return SiteModel.getClientId(clientInfo.iotProject, clientInfo.cloudRegion,
           clientInfo.registryId, targetId);
-    } else if (configuration.endpoint.client_id != null) {
-      return configuration.endpoint.client_id;
+    } else if (configuration.client_id != null) {
+      return configuration.client_id;
     }
     return SiteModel.getClientId(projectId, cloudRegion, registryId, targetId);
   }
@@ -210,7 +211,7 @@ public class MqttPublisher implements Publisher {
     } catch (Exception e) {
       errorCounter.incrementAndGet();
       warn(format("Publish %s failed for %s: %s", topicSuffix, deviceId, e));
-      if (getGatewayId(deviceId) == null) {
+      if (getGatewayId() == null) {
         closeMqttClient(deviceId);
         if (mqttClients.isEmpty()) {
           warn("Last client closed, shutting down connection.");
@@ -245,7 +246,7 @@ public class MqttPublisher implements Publisher {
   }
 
   private String getSendTopic(String deviceId, String topicSuffix) {
-    return Objects.requireNonNullElseGet(configuration.endpoint.send_id,
+    return Objects.requireNonNullElseGet(configuration.send_id,
         () -> getMessageTopic(deviceId, topicSuffix));
   }
 
@@ -291,8 +292,8 @@ public class MqttPublisher implements Publisher {
 
   private void validateCloudIotOptions() {
     try {
-      checkNotNull(configuration.endpoint.hostname, "endpoint hostname");
-      checkNotNull(configuration.endpoint.client_id, "endpoint client_id");
+      checkNotNull(configuration.hostname, "endpoint hostname");
+      checkNotNull(configuration.client_id, "endpoint client_id");
       checkNotNull(configuration.keyBytes, "keyBytes");
       checkNotNull(configuration.algorithm, "algorithm");
     } catch (Exception e) {
@@ -301,7 +302,7 @@ public class MqttPublisher implements Publisher {
   }
 
   private MqttClient newProxyClient(String deviceId) {
-    String gatewayId = getGatewayId(deviceId);
+    String gatewayId = getGatewayId();
     info(format("Connecting device %s through gateway %s", deviceId, gatewayId));
     final MqttClient mqttClient = getConnectedClient(gatewayId, true);
     long timeToWait = mqttClient.getTimeToWait();
@@ -329,7 +330,7 @@ public class MqttPublisher implements Publisher {
 
   private void startupLatchWait(CountDownLatch gatewayLatch, String designator) {
     try {
-      int waitTimeSec = ofNullable(configuration.endpoint.config_sync_sec)
+      int waitTimeSec = ofNullable(configuration.config_sync_sec)
           .orElse(DEFAULT_CONFIG_WAIT_SEC);
       int useWaitTime = waitTimeSec == 0 ? DEFAULT_CONFIG_WAIT_SEC : waitTimeSec;
       if (useWaitTime > 0 && !gatewayLatch.await(useWaitTime, TimeUnit.SECONDS)) {
@@ -396,13 +397,13 @@ public class MqttPublisher implements Publisher {
 
   private void configureAuth(MqttConnectOptions options) throws Exception {
     options.setSocketFactory(getSocketFactory());
-    if (configuration.endpoint.auth_provider == null) {
+    if (configuration.auth_provider == null) {
       info("No endpoint auth_provider found, using gcp defaults");
       configureAuth(options, (Jwt) null);
-    } else if (configuration.endpoint.auth_provider.jwt != null) {
-      configureAuth(options, configuration.endpoint.auth_provider.jwt);
-    } else if (configuration.endpoint.auth_provider.basic != null) {
-      configureAuth(options, configuration.endpoint.auth_provider.basic);
+    } else if (configuration.auth_provider.jwt != null) {
+      configureAuth(options, configuration.auth_provider.jwt);
+    } else if (configuration.auth_provider.basic != null) {
+      configureAuth(options, configuration.auth_provider.basic);
     } else {
       throw new IllegalArgumentException("Unknown auth provider");
     }
@@ -453,19 +454,19 @@ public class MqttPublisher implements Publisher {
   private String getBrokerUrl() {
     // Build the connection string for Google's Cloud IoT MQTT server. Only SSL connections are
     // accepted. For server authentication, the JVM's root certificates are used.
-    Transport trans = ofNullable(configuration.endpoint.transport).orElse(Transport.SSL);
-    return format(BROKER_URL_FORMAT, trans, configuration.endpoint.hostname,
-        ofNullable(configuration.endpoint.port).orElse(DEFAULT_MQTT_PORT));
+    Transport trans = ofNullable(configuration.transport).orElse(Transport.SSL);
+    return format(BROKER_URL_FORMAT, trans, configuration.hostname,
+        ofNullable(configuration.port).orElse(DEFAULT_MQTT_PORT));
   }
 
   private void subscribeToUpdates(MqttClient client, String deviceId) {
     int configQos =
-        isTrue(configuration.options.noConfigAck) ? QOS_AT_MOST_ONCE : QOS_AT_LEAST_ONCE;
-    if (configuration.endpoint.recv_id == null) {
+        isTrue(configuration.noConfigAck) ? QOS_AT_MOST_ONCE : QOS_AT_LEAST_ONCE;
+    if (configuration.recv_id == null) {
       subscribeTopic(client, getMessageTopic(deviceId, MqttDevice.CONFIG_TOPIC), configQos);
       subscribeTopic(client, getMessageTopic(deviceId, MqttDevice.ERRORS_TOPIC), QOS_AT_MOST_ONCE);
     } else {
-      subscribeTopic(client, configuration.endpoint.recv_id, configQos);
+      subscribeTopic(client, configuration.recv_id, configQos);
     }
   }
 
@@ -576,7 +577,7 @@ public class MqttPublisher implements Publisher {
   }
 
   private void checkAuthentication(String targetId) {
-    String authId = ofNullable(getGatewayId(targetId)).orElse(targetId);
+    String authId = ofNullable(getGatewayId()).orElse(targetId);
     Instant reAuthTime = reauthTimes.get(authId);
     if (reAuthTime == null || Instant.now().isBefore(reAuthTime)) {
       return;
@@ -611,17 +612,12 @@ public class MqttPublisher implements Publisher {
   }
 
   private boolean isProxyDevice(String targetId) {
-    String gatewayId = getGatewayId(targetId);
+    String gatewayId = getGatewayId();
     return gatewayId != null && !gatewayId.equals(targetId);
   }
 
-  static String getGatewayId(String targetId, PubberConfiguration configuration) {
-    return ofNullable(configuration.gatewayId).orElse(
-        targetId.equals(configuration.deviceId) ? null : configuration.deviceId);
-  }
-
-  private String getGatewayId(String targetId) {
-    return getGatewayId(targetId, configuration);
+  private String getGatewayId() {
+    return configuration.gatewayId;
   }
 
   /**

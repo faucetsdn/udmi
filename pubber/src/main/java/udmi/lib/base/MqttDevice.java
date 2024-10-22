@@ -1,12 +1,15 @@
 package udmi.lib.base;
 
 import static com.google.udmi.util.GeneralUtils.ifNotNullThen;
+import static java.util.Objects.requireNonNull;
+import static udmi.lib.impl.MqttPublisher.TEST_PREFIX;
 
 import com.google.udmi.util.CertManager;
 import java.util.function.Consumer;
 import udmi.lib.impl.ListPublisher;
 import udmi.lib.impl.MqttPublisher;
 import udmi.lib.intf.Publisher;
+import udmi.schema.EndpointConfiguration;
 import udmi.schema.PubberConfiguration;
 
 /**
@@ -28,12 +31,12 @@ public class MqttDevice {
   /**
    * Builds a MQTT device.
    */
-  public MqttDevice(PubberConfiguration configuration, Consumer<Exception> onError,
+  public MqttDevice(EndpointConfiguration configuration, Consumer<Exception> onError,
       CertManager certManager) {
     this.certManager = certManager;
-    deviceId = configuration.deviceId;
+    deviceId = requireNonNull(configuration.deviceId, "deviceId not specified");
     publisher = getPublisher(configuration, onError);
-    ifNotNullThen(configuration.endpoint.topic_prefix,
+    ifNotNullThen(configuration.topic_prefix,
         prefix -> publisher.setDeviceTopicPrefix(deviceId, prefix));
   }
 
@@ -51,9 +54,9 @@ public class MqttDevice {
     certManager = null;
   }
 
-  Publisher getPublisher(PubberConfiguration configuration,
+  Publisher getPublisher(EndpointConfiguration configuration,
       Consumer<Exception> onError) {
-    return TEST_PROJECT.equals(configuration.iotProject)
+    return TEST_PREFIX.equals(configuration.topic_prefix)
         ? new ListPublisher(onError)
         : new MqttPublisher(configuration, onError, certManager);
   }

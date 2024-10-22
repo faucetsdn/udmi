@@ -15,7 +15,7 @@ public class TestBase {
 
   protected static final String TEST_TOPIC = "test_topic";
   protected static final Object TEST_MESSAGE = new DiscoveryCommand();
-  protected static final String TEST_DEVICE = "test_device";
+  protected static final String TEST_DEVICE = "AHU-1";
   protected static final String TEST_PREFIX = "test_prefix/" + TEST_DEVICE;
   protected static final String EXPECTED_TOPIC = String.format("%s/%s", TEST_PREFIX, TEST_TOPIC);
 

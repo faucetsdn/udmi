@@ -12,6 +12,7 @@ import org.mockito.Mockito;
 import udmi.lib.impl.MqttPublisher;
 import udmi.schema.Auth_provider;
 import udmi.schema.Basic;
+import udmi.schema.EndpointConfiguration;
 import udmi.schema.PubberConfiguration;
 
 /**
@@ -26,7 +27,7 @@ public class MqttPublisherTest extends TestBase {
 
   @Test
   public void testPublish() throws InterruptedException {
-    PubberConfiguration configuration = getEndpointConfiguration();
+    EndpointConfiguration configuration = getEndpointConfiguration();
     MqttPublisher mqttPublisher = new MockPublisher(configuration, null);
     mqttPublisher.setDeviceTopicPrefix(TEST_DEVICE, TEST_PREFIX);
     final CountDownLatch sent = new CountDownLatch(1);
@@ -36,15 +37,15 @@ public class MqttPublisherTest extends TestBase {
     assertEquals("published message", EXPECTED_MESSAGE, publishedData);
   }
 
-  private PubberConfiguration getEndpointConfiguration() {
-    PubberConfiguration configuration = getTestConfiguration();
-    configuration.endpoint.auth_provider = new Auth_provider();
-    configuration.endpoint.auth_provider.basic = new Basic();
-    configuration.endpoint.auth_provider.basic.username = "username";
-    configuration.endpoint.auth_provider.basic.password = "username";
-    configuration.endpoint.hostname = "endpoint hostname";
-    configuration.endpoint.port = 9217312;
-    configuration.endpoint.client_id = "endpoint client_id";
+  private EndpointConfiguration getEndpointConfiguration() {
+    EndpointConfiguration configuration = getTestConfiguration().endpoint;
+    configuration.auth_provider = new Auth_provider();
+    configuration.auth_provider.basic = new Basic();
+    configuration.auth_provider.basic.username = "username";
+    configuration.auth_provider.basic.password = "username";
+    configuration.hostname = "endpoint hostname";
+    configuration.port = 9217312;
+    configuration.client_id = "endpoint client_id";
     configuration.keyBytes = new byte[10];
     configuration.algorithm = "algorithm";
     return configuration;
@@ -52,7 +53,7 @@ public class MqttPublisherTest extends TestBase {
 
   class MockPublisher extends MqttPublisher {
 
-    public MockPublisher(PubberConfiguration configuration,
+    public MockPublisher(EndpointConfiguration configuration,
         Consumer<Exception> onError) {
       super(configuration, onError, null);
     }

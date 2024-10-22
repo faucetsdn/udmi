@@ -67,9 +67,19 @@
       "type": "string",
       "pattern": "^[-_/a-zA-Z0-9#]+$"
     },
+    "gatewayId": {
+      "type": "string"
+    },
+    "deviceId": {
+      "type": "string"
+    },
     "enabled": {
       "description": "Indicator if this endpoint should be active (null or non-empty)",
       "type": "string"
+    },
+    "noConfigAck": {
+      "description": "True if config messages should not be acked (lower QOS)",
+      "type": "boolean"
     },
     "capacity": {
       "description": "Queue capacity for limiting pipes",
@@ -82,6 +92,12 @@
     "periodic_sec": {
       "description": "Rate for periodic task execution",
       "type": "integer"
+    },
+    "keyBytes": {
+      "note": "Should be type byte[], which is not supported, so fall-back to generic default object"
+    },
+    "algorithm": {
+      "type": "string"
     },
     "auth_provider": {
       "type": "object",

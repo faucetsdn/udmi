@@ -2,6 +2,7 @@ package daq.pubber;
 
 import static com.google.udmi.util.GeneralUtils.encodeBase64;
 import static com.google.udmi.util.GeneralUtils.sha256;
+import static java.util.Optional.ofNullable;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertNull;
@@ -71,6 +72,8 @@ public class PubberTest extends TestBase {
     PubberUnderTest(String iotProject, String sitePath, String deviceId, String serialNo) {
       super(iotProject, sitePath, deviceId, serialNo);
       setOptionsNoPersist(true);
+      config.endpoint = ofNullable(config.endpoint).orElseGet(EndpointConfiguration::new);
+      config.endpoint.topic_prefix = TEST_PREFIX;
     }
 
     PubberUnderTest(String projectId, String sitePath, String deviceId, String serialNo,
@@ -79,6 +82,8 @@ public class PubberTest extends TestBase {
       testFeatures = features;
       setOptionsNoPersist(
           testFeatures.getOrDefault(PubberUnderTestFeatures.OptionsNoPersist, true));
+      config.endpoint = ofNullable(config.endpoint).orElseGet(EndpointConfiguration::new);
+      config.endpoint.topic_prefix = TEST_PREFIX;
     }
   }
 

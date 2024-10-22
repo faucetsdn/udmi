@@ -6,18 +6,17 @@ import java.util.List;
 import java.util.concurrent.CountDownLatch;
 import org.junit.Test;
 import udmi.lib.impl.ListPublisher;
+import udmi.lib.impl.MqttPublisher;
 
 /**
  * Tests for simple string list publisher.
  */
 public class ListPublisherTest extends TestBase {
 
-  private static final String TEST_PREFIX = "test_prefix/test_device";
-
   @Test
   public void testPublish() throws InterruptedException {
     ListPublisher listPublisher = new ListPublisher(null);
-    listPublisher.setDeviceTopicPrefix(TEST_DEVICE, TEST_PREFIX);
+    listPublisher.setDeviceTopicPrefix(TEST_DEVICE, MqttPublisher.TEST_PREFIX);
     final CountDownLatch sent = new CountDownLatch(1);
     listPublisher.publish(TEST_DEVICE, TEST_TOPIC, TEST_MESSAGE, sent::countDown);
     sent.await();

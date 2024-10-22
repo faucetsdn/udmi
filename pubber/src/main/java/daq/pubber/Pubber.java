@@ -474,12 +474,18 @@ public class Pubber extends PubberManager implements PubberUdmiPublisher {
     }
     ensureKeyBytes();
     checkState(deviceTarget == null, "mqttPublisher already defined");
+    EndpointConfiguration endpoint = config.endpoint;
+    endpoint.gatewayId = config.gatewayId;
+    endpoint.deviceId = config.deviceId;
+    endpoint.noConfigAck = options.noConfigAck;
+    endpoint.keyBytes = config.keyBytes;
+    endpoint.algorithm = config.algorithm;
     String keyPassword = siteModel.getDevicePassword(config.deviceId);
     String targetDeviceId = getTargetDeviceId(siteModel, config.deviceId);
     CertManager certManager = new CertManager(new File(siteModel.getReflectorDir(), CA_CRT),
-        siteModel.getDeviceDir(targetDeviceId), config.endpoint.transport, keyPassword,
+        siteModel.getDeviceDir(targetDeviceId), endpoint.transport, keyPassword,
         this::info);
-    deviceTarget = new MqttDevice(config, this::publisherException, certManager);
+    deviceTarget = new MqttDevice(endpoint, this::publisherException, certManager);
     registerMessageHandlers();
     publishDirtyState();
   }
