@@ -1,5 +1,5 @@
 {
-  "$udmi_version": "1.5.1",
+  "$udmi_version": "1.5.2",
   "title": "Gateway Config",
   "description": "Configuration for gateways. Only required for devices which are acting as [gateways](../docs/specs/gateway.md)",
   "type": "object",

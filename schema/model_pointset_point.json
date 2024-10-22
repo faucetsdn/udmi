@@ -1,5 +1,5 @@
 {
-  "$udmi_version": "1.5.1",
+  "$udmi_version": "1.5.2",
   "title": "Point Pointset Model",
   "description": "Information about a specific point name of the device.",
   "type": "object",

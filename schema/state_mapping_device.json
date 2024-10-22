@@ -1,5 +1,5 @@
 {
-  "$udmi_version": "1.5.1",
+  "$udmi_version": "1.5.2",
   "title": "Device Mapping State",
   "description": "State for [mapping](../docs/specs/mapping.md)",
   "type": "object",

@@ -1,5 +1,5 @@
 {
-  "$udmi_version": "1.5.1",
+  "$udmi_version": "1.5.2",
   "title": "Discovery Command",
   "description": "[Discovery command](../docs/specs/discovery.md) for provisioning",
   "type": "object",

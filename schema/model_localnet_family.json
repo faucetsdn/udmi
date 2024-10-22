@@ -1,5 +1,5 @@
 {
-  "$udmi_version": "1.5.1",
+  "$udmi_version": "1.5.2",
   "title": "Family Localnet Model",
   "type": "object",
   "description": "The type of network",

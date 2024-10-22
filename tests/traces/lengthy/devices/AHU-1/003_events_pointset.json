@@ -11,5 +11,5 @@
     }
   },
   "timestamp" : "2022-07-17T06:07:36Z", // Over threshold from _initial_ event
-  "version" : "1.5.1"
+  "version" : "1.5.2"
 }
