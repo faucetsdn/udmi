@@ -4,6 +4,8 @@ import static com.google.udmi.util.GeneralUtils.ifNotNullThen;
 
 import com.google.udmi.util.CertManager;
 import java.util.function.Consumer;
+import udmi.lib.impl.ListPublisher;
+import udmi.lib.impl.MqttPublisher;
 import udmi.lib.intf.Publisher;
 import udmi.schema.PubberConfiguration;
 

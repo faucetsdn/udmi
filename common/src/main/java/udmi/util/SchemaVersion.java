@@ -1,4 +1,4 @@
-package com.google.udmi.util;
+package udmi.util;
 
 import static com.google.common.base.Preconditions.checkState;
 

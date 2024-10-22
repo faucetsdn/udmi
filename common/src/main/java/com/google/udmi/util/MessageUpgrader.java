@@ -14,6 +14,7 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.stream.Collectors;
+import udmi.util.SchemaVersion;
 
 /**
  * Container class for upgrading UDMI messages from older versions.

@@ -9,7 +9,7 @@ import org.eclipse.paho.client.mqttv3.MqttClient;
 import org.eclipse.paho.client.mqttv3.MqttException;
 import org.junit.Test;
 import org.mockito.Mockito;
-import udmi.lib.base.MqttPublisher;
+import udmi.lib.impl.MqttPublisher;
 import udmi.schema.Auth_provider;
 import udmi.schema.Basic;
 import udmi.schema.PubberConfiguration;

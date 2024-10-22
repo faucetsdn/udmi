@@ -7,7 +7,7 @@ import static java.util.Objects.requireNonNull;
 import static java.util.Optional.ofNullable;
 import static java.util.concurrent.TimeUnit.SECONDS;
 
-import com.google.udmi.util.SchemaVersion;
+import udmi.util.SchemaVersion;
 import java.util.Date;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;

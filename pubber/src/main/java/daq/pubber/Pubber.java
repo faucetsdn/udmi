@@ -27,7 +27,7 @@ import static java.util.Optional.ofNullable;
 import static udmi.schema.EndpointConfiguration.Protocol.MQTT;
 
 import com.google.udmi.util.CertManager;
-import com.google.udmi.util.SchemaVersion;
+import udmi.util.SchemaVersion;
 import com.google.udmi.util.SiteModel;
 import com.google.udmi.util.SiteModel.MetadataException;
 import daq.pubber.PubSubClient.Bundle;
@@ -49,7 +49,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import udmi.lib.base.ManagerBase;
 import udmi.lib.base.MqttDevice;
-import udmi.lib.base.MqttPublisher.PublisherException;
+import udmi.lib.impl.MqttPublisher.PublisherException;
 import udmi.lib.client.DeviceManager;
 import udmi.lib.client.SystemManager;
 import udmi.lib.intf.FamilyProvider;
