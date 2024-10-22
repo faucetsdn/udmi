@@ -475,7 +475,7 @@ public class Pubber extends PubberManager implements PubberUdmiPublisher {
     ensureKeyBytes();
     checkState(deviceTarget == null, "mqttPublisher already defined");
     EndpointConfiguration endpoint = config.endpoint;
-    endpoint.gatewayId = config.gatewayId;
+    endpoint.gatewayId = ofNullable(config.gatewayId).orElse(config.deviceId);
     endpoint.deviceId = config.deviceId;
     endpoint.noConfigAck = options.noConfigAck;
     endpoint.keyBytes = config.keyBytes;
