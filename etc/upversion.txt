@@ -237,6 +237,6 @@ y tests/sites/basic/devices/GAT-123/metadata.json
 y tests/sites/basic/devices/SNS-4/expected/generated_config.json
 y tests/sites/basic/devices/SNS-4/expected/metadata_norm.json
 y tests/sites/basic/devices/SNS-4/metadata.json
-y tests/sites/basic/site_defaults.json
+n tests/sites/basic/site_defaults.json
 n tests/sites/basic/registration_summary.json
 n tests/sites/basic/cloud_iot_config.json
