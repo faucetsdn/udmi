@@ -14,6 +14,7 @@ import static java.util.function.Predicate.not;
 import static udmi.schema.Category.GATEWAY_PROXY_TARGET;
 
 import com.google.udmi.util.SiteModel;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import udmi.lib.ProtocolFamily;
@@ -154,10 +155,11 @@ public class PubberGatewayManager extends PubberManager implements GatewayManage
 
   @Override
   public Map<String, ProxyDeviceHost> createProxyDevices(List<String> proxyIds) {
-    String firstId = proxyIds.stream().sorted().findFirst().orElse(null);
+    List<String> deviceIds = ofNullable(proxyIds).orElseGet(ArrayList::new);
+    String firstId = deviceIds.stream().sorted().findFirst().orElse(null);
     String noProxyId = ifTrueGet(isTrue(options.noProxy), () -> firstId);
     ifNotNullThen(noProxyId, id -> warn(format("Not proxying device %s", noProxyId)));
-    List<String> filteredList = proxyIds.stream().filter(not(id -> id.equals(noProxyId))).toList();
+    List<String> filteredList = deviceIds.stream().filter(not(id -> id.equals(noProxyId))).toList();
     Map<String, ProxyDeviceHost> devices = GatewayManager.super.createProxyDevices(filteredList);
     ifTrueThen(options.extraDevice, () -> devices.put(EXTRA_PROXY_DEVICE, makeExtraDevice()));
     return devices;
