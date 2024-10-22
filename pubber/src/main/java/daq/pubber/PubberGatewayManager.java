@@ -14,6 +14,7 @@ import java.util.Map;
 import udmi.lib.ManagerBase;
 import udmi.lib.ManagerHost;
 import udmi.lib.ProtocolFamily;
+import udmi.lib.client.GatewayManager;
 import udmi.lib.client.ProxyDeviceHost;
 import udmi.schema.Entry;
 import udmi.schema.GatewayConfig;
@@ -25,14 +26,14 @@ import udmi.schema.PubberConfiguration;
 /**
  * Manager for UDMI gateway functionality.
  */
-public class GatewayManager extends ManagerBase implements udmi.lib.client.GatewayManager {
+public class PubberGatewayManager extends ManagerBase implements GatewayManager {
 
   private Map<String, ProxyDeviceHost> proxyDevices;
   private SiteModel siteModel;
   private Metadata metadata;
   private GatewayState gatewayState;
 
-  public GatewayManager(ManagerHost host, PubberConfiguration configuration) {
+  public PubberGatewayManager(ManagerHost host, PubberConfiguration configuration) {
     super(host, configuration);
   }
 

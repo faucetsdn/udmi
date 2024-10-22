@@ -18,6 +18,7 @@ import java.util.concurrent.atomic.AtomicReference;
 import udmi.lib.AbstractPoint;
 import udmi.lib.ManagerBase;
 import udmi.lib.ManagerHost;
+import udmi.lib.client.PointsetManager;
 import udmi.schema.Entry;
 import udmi.schema.PointPointsetConfig;
 import udmi.schema.PointPointsetModel;
@@ -29,7 +30,7 @@ import udmi.schema.PubberConfiguration;
 /**
  * Helper class to manage the operation of a pointset block.
  */
-public class PointsetManager extends ManagerBase implements udmi.lib.client.PointsetManager {
+public class PubberPointsetManager extends ManagerBase implements PointsetManager {
 
   private static final Set<String> BOOLEAN_UNITS = ImmutableSet.of("No-units");
 
@@ -46,7 +47,7 @@ public class PointsetManager extends ManagerBase implements udmi.lib.client.Poin
   /**
    * Create a new instance attached to the given host.
    */
-  public PointsetManager(ManagerHost host, PubberConfiguration configuration) {
+  public PubberPointsetManager(ManagerHost host, PubberConfiguration configuration) {
     super(host, configuration);
     setExtraField(options.extraField);
     updateState();

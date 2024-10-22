@@ -105,7 +105,7 @@ public class Pubber extends ManagerBase implements UdmiPublisher {
   private SiteModel siteModel;
   private SchemaVersion targetSchema;
   private int deviceUpdateCount = -1;
-  private daq.pubber.DeviceManager deviceManager;
+  private PubberDeviceManager deviceManager;
   private boolean isConnected;
   private boolean isGatewayDevice;
 
@@ -258,7 +258,7 @@ public class Pubber extends ManagerBase implements UdmiPublisher {
 
   @Override
   public void initializeDevice() {
-    deviceManager = new daq.pubber.DeviceManager(this, config);
+    deviceManager = new PubberDeviceManager(this, config);
 
     if (config.sitePath != null) {
       SupportedFeatures.writeFeatureFile(config.sitePath, deviceManager);

@@ -13,7 +13,7 @@ import udmi.schema.Operation.SystemMode;
 /**
  * Device client.
  */
-public interface DeviceManager extends Manager {
+public interface DeviceManager extends SubblockManager {
   
   PointsetManager getPointsetManager();
 

@@ -13,7 +13,7 @@ import udmi.schema.PubberConfiguration;
 /**
  * Uber-manager for a complete device.
  */
-public class DeviceManager extends ManagerBase implements udmi.lib.client.DeviceManager {
+public class PubberDeviceManager extends ManagerBase implements DeviceManager {
 
   private final PointsetManager pointsetManager;
   private final SystemManager systemManager;
@@ -24,13 +24,13 @@ public class DeviceManager extends ManagerBase implements udmi.lib.client.Device
   /**
    * Create a new instance.
    */
-  public DeviceManager(ManagerHost host, PubberConfiguration configuration) {
+  public PubberDeviceManager(ManagerHost host, PubberConfiguration configuration) {
     super(host, configuration);
-    systemManager = new daq.pubber.SystemManager(host, configuration);
-    pointsetManager = new daq.pubber.PointsetManager(host, configuration);
-    localnetManager = new daq.pubber.LocalnetManager(host, configuration);
-    gatewayManager = new daq.pubber.GatewayManager(host, configuration);
-    discoveryManager = new daq.pubber.DiscoveryManager(host, configuration, this);
+    systemManager = new PubberSystemManager(host, configuration);
+    pointsetManager = new PubberPointsetManager(host, configuration);
+    localnetManager = new PubberLocalnetManager(host, configuration);
+    gatewayManager = new PubberGatewayManager(host, configuration);
+    discoveryManager = new PubberDiscoveryManager(host, configuration, this);
   }
 
   @Override

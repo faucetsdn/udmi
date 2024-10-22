@@ -18,6 +18,7 @@ import udmi.lib.FamilyProvider;
 import udmi.lib.ManagerBase;
 import udmi.lib.ManagerHost;
 import udmi.lib.SupportedFeatures;
+import udmi.lib.client.DiscoveryManager;
 import udmi.schema.Depths;
 import udmi.schema.DiscoveryConfig;
 import udmi.schema.DiscoveryEvents;
@@ -30,17 +31,17 @@ import udmi.schema.SystemDiscoveryData;
 /**
  * Manager wrapper for discovery functionality in pubber.
  */
-public class DiscoveryManager extends ManagerBase implements udmi.lib.client.DiscoveryManager {
+public class PubberDiscoveryManager extends ManagerBase implements DiscoveryManager {
 
   public static final int SCAN_DURATION_SEC = 10;
 
-  private final DeviceManager deviceManager;
+  private final PubberDeviceManager deviceManager;
   private DiscoveryState discoveryState;
   private DiscoveryConfig discoveryConfig;
   private SiteModel siteModel;
 
-  public DiscoveryManager(ManagerHost host, PubberConfiguration configuration,
-      DeviceManager deviceManager) {
+  public PubberDiscoveryManager(ManagerHost host, PubberConfiguration configuration,
+      PubberDeviceManager deviceManager) {
     super(host, configuration);
     this.deviceManager = deviceManager;
   }

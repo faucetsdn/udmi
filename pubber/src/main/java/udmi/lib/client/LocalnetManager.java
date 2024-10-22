@@ -19,7 +19,7 @@ import udmi.schema.PubberConfiguration;
 /**
  * Localnet client.
  */
-public interface LocalnetManager extends ManagerHost, Manager {
+public interface LocalnetManager extends ManagerHost, SubblockManager {
 
   Map<String, Class<? extends FamilyProvider>> LOCALNET_PROVIDERS =
       Map.of(

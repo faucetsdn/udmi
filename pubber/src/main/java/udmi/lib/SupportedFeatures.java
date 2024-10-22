@@ -16,7 +16,7 @@ import static udmi.schema.FeatureDiscovery.FeatureStage.BETA;
 import static udmi.schema.FeatureDiscovery.FeatureStage.PREVIEW;
 import static udmi.schema.FeatureDiscovery.FeatureStage.STABLE;
 
-import daq.pubber.DeviceManager;
+import daq.pubber.PubberDeviceManager;
 import java.io.File;
 import java.util.HashMap;
 import java.util.Map;
@@ -53,7 +53,7 @@ public abstract class SupportedFeatures {
   /**
    * Write out the current set of supported features for testability.
    */
-  public static void writeFeatureFile(String sitePath, DeviceManager deviceManager) {
+  public static void writeFeatureFile(String sitePath, PubberDeviceManager deviceManager) {
     File path = new File(sitePath, PUBBER_FEATURES_JSON);
     try {
       String message = "Writing pubber feature file to " + path.getAbsolutePath();

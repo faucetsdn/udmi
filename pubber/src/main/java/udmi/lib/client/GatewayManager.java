@@ -29,7 +29,7 @@ import udmi.schema.PubberConfiguration;
 /**
  * Gateway client.
  */
-public interface GatewayManager extends Manager {
+public interface GatewayManager extends SubblockManager {
 
   String EXTRA_PROXY_DEVICE = "XXX-1";
   String EXTRA_PROXY_POINT = "xxx_conflagration";

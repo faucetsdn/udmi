@@ -23,7 +23,7 @@ import udmi.schema.PubberConfiguration;
 public class ProxyDevice extends ManagerBase implements ProxyDeviceHost {
 
   private static final long STATE_INTERVAL_MS = 1000;
-  final daq.pubber.DeviceManager deviceManager;
+  final PubberDeviceManager deviceManager;
   final Pubber pubberHost;
   private final AtomicBoolean active = new AtomicBoolean();
 
@@ -34,7 +34,7 @@ public class ProxyDevice extends ManagerBase implements ProxyDeviceHost {
     super(host, makeProxyConfiguration(host, id, pubberConfig));
     // Simple shortcut to get access to some foundational mechanisms inside of Pubber.
     pubberHost = (Pubber) host;
-    deviceManager = new daq.pubber.DeviceManager(this, makeProxyConfiguration(host, id,
+    deviceManager = new PubberDeviceManager(this, makeProxyConfiguration(host, id,
         pubberConfig));
     executor.scheduleAtFixedRate(this::publishDirtyState, STATE_INTERVAL_MS, STATE_INTERVAL_MS,
         TimeUnit.MILLISECONDS);

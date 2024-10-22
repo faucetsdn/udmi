@@ -14,6 +14,7 @@ import java.util.List;
 import org.slf4j.Logger;
 import udmi.lib.ManagerBase;
 import udmi.lib.ManagerHost;
+import udmi.lib.client.SystemManager;
 import udmi.lib.client.UdmiPublisher;
 import udmi.schema.Entry;
 import udmi.schema.Level;
@@ -26,7 +27,7 @@ import udmi.schema.SystemConfig;
 /**
  * Support manager for system stuff.
  */
-public class SystemManager extends ManagerBase implements udmi.lib.client.SystemManager {
+public class PubberSystemManager extends ManagerBase implements SystemManager {
 
   public static final String PUBBER_LOG_CATEGORY = "device.log";
   public static final String PUBBER_LOG = "pubber.log";
@@ -43,7 +44,7 @@ public class SystemManager extends ManagerBase implements udmi.lib.client.System
   /**
    * New instance.
    */
-  public SystemManager(ManagerHost host, PubberConfiguration configuration) {
+  public PubberSystemManager(ManagerHost host, PubberConfiguration configuration) {
     super(host, configuration);
     this.host = host;
 
