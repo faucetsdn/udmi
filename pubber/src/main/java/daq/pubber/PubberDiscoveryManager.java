@@ -3,9 +3,9 @@ package daq.pubber;
 import static com.google.udmi.util.GeneralUtils.ifNotNullThen;
 import static com.google.udmi.util.GeneralUtils.ifTrueThen;
 import static com.google.udmi.util.JsonUtil.isoConvert;
+import static daq.pubber.PubberUdmiPublisher.DEVICE_START_TIME;
 import static java.lang.String.format;
 import static java.util.stream.Collectors.toMap;
-import static udmi.lib.client.UdmiPublisher.DEVICE_START_TIME;
 import static udmi.schema.FamilyDiscoveryState.Phase.ACTIVE;
 import static udmi.schema.FamilyDiscoveryState.Phase.DONE;
 
@@ -14,10 +14,9 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
-import udmi.lib.FamilyProvider;
-import udmi.lib.ManagerBase;
-import udmi.lib.ManagerHost;
-import udmi.lib.SupportedFeatures;
+import udmi.lib.client.DiscoveryManager;
+import udmi.lib.intf.FamilyProvider;
+import udmi.lib.intf.ManagerHost;
 import udmi.schema.Depths;
 import udmi.schema.DiscoveryConfig;
 import udmi.schema.DiscoveryEvents;
@@ -30,17 +29,17 @@ import udmi.schema.SystemDiscoveryData;
 /**
  * Manager wrapper for discovery functionality in pubber.
  */
-public class DiscoveryManager extends ManagerBase implements udmi.lib.client.DiscoveryManager {
+public class PubberDiscoveryManager extends PubberManager implements DiscoveryManager {
 
   public static final int SCAN_DURATION_SEC = 10;
 
-  private final DeviceManager deviceManager;
+  private final PubberDeviceManager deviceManager;
   private DiscoveryState discoveryState;
   private DiscoveryConfig discoveryConfig;
   private SiteModel siteModel;
 
-  public DiscoveryManager(ManagerHost host, PubberConfiguration configuration,
-      DeviceManager deviceManager) {
+  public PubberDiscoveryManager(ManagerHost host, PubberConfiguration configuration,
+      PubberDeviceManager deviceManager) {
     super(host, configuration);
     this.deviceManager = deviceManager;
   }
@@ -67,7 +66,7 @@ public class DiscoveryManager extends ManagerBase implements udmi.lib.client.Dis
     discoveryEvent.generation = enumerationGeneration;
     Depths depths = config.depths;
     discoveryEvent.refs = maybeEnumerate(depths.refs, () -> enumerateRefs(deviceId));
-    discoveryEvent.features = maybeEnumerate(depths.features, SupportedFeatures::getFeatures);
+    discoveryEvent.features = maybeEnumerate(depths.features, PubberFeatures::getFeatures);
     discoveryEvent.families = maybeEnumerate(depths.families, deviceManager::enumerateFamilies);
     host.publish(discoveryEvent);
   }

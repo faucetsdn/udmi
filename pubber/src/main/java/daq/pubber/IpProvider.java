@@ -1,4 +1,4 @@
-package udmi.lib;
+package daq.pubber;
 
 import static com.google.udmi.util.GeneralUtils.friendlyStackTrace;
 import static com.google.udmi.util.GeneralUtils.runtimeExec;
@@ -15,9 +15,11 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import udmi.lib.base.ManagerBase;
 import udmi.lib.client.LocalnetManager;
+import udmi.lib.intf.FamilyProvider;
+import udmi.lib.intf.ManagerHost;
 import udmi.schema.FamilyLocalnetState;
-import udmi.schema.PubberConfiguration;
 
 /**
  * Wrapper for family of IP-based protocols.
@@ -41,9 +43,8 @@ public class IpProvider extends ManagerBase implements FamilyProvider {
   /**
    * Create a basic provider instance.
    */
-  public IpProvider(ManagerHost host, String family,
-      PubberConfiguration pubberConfiguration) {
-    super(host, pubberConfiguration);
+  public IpProvider(ManagerHost host, String family, String deviceId) {
+    super(host, deviceId);
     localnetHost = (LocalnetManager) host;
     populateInterfaceAddresses();
   }

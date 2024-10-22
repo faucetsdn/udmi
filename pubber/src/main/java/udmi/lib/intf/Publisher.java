@@ -1,8 +1,11 @@
-package udmi.lib;
+package udmi.lib.intf;
 
 import java.util.function.Consumer;
 
-interface Publisher {
+/**
+ * Basic interface for publishing/receiving messages.
+ */
+public interface Publisher {
 
   /**
    * Sets the device and prefix for published messages.

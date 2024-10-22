@@ -2,6 +2,7 @@ package daq.pubber;
 
 import static com.google.udmi.util.GeneralUtils.encodeBase64;
 import static com.google.udmi.util.GeneralUtils.sha256;
+import static java.util.Optional.ofNullable;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertNull;
@@ -15,7 +16,6 @@ import java.util.HashMap;
 import java.util.List;
 import org.junit.After;
 import org.junit.Test;
-import udmi.lib.client.UdmiPublisher;
 import udmi.schema.BlobBlobsetConfig;
 import udmi.schema.BlobBlobsetConfig.BlobPhase;
 import udmi.schema.BlobsetConfig;
@@ -69,9 +69,16 @@ public class PubberTest extends TestBase {
       }
     }
 
+    @Override
+    protected void augmentEndpoint(EndpointConfiguration endpoint) {
+      endpoint.topic_prefix = TEST_PREFIX;
+    }
+
     PubberUnderTest(String iotProject, String sitePath, String deviceId, String serialNo) {
       super(iotProject, sitePath, deviceId, serialNo);
       setOptionsNoPersist(true);
+      config.endpoint = ofNullable(config.endpoint).orElseGet(EndpointConfiguration::new);
+      config.endpoint.topic_prefix = TEST_PREFIX;
     }
 
     PubberUnderTest(String projectId, String sitePath, String deviceId, String serialNo,
@@ -80,6 +87,8 @@ public class PubberTest extends TestBase {
       testFeatures = features;
       setOptionsNoPersist(
           testFeatures.getOrDefault(PubberUnderTestFeatures.OptionsNoPersist, true));
+      config.endpoint = ofNullable(config.endpoint).orElseGet(EndpointConfiguration::new);
+      config.endpoint.topic_prefix = TEST_PREFIX;
     }
   }
 
@@ -169,14 +178,14 @@ public class PubberTest extends TestBase {
   @Test
   public void parseDataUrl() {
     String testBlobDataUrl = DATA_URL_PREFIX + encodeBase64(TEST_BLOB_DATA);
-    String blobData = UdmiPublisher.acquireBlobData(testBlobDataUrl, sha256(TEST_BLOB_DATA));
+    String blobData = PubberUdmiPublisher.acquireBlobData(testBlobDataUrl, sha256(TEST_BLOB_DATA));
     assertEquals("extracted blob data", blobData, TEST_BLOB_DATA);
   }
 
   @Test(expected = RuntimeException.class)
   public void badDataUrl() {
     String testBlobDataUrl = DATA_URL_PREFIX + encodeBase64(TEST_BLOB_DATA + "XXXX");
-    UdmiPublisher.acquireBlobData(testBlobDataUrl, sha256(TEST_BLOB_DATA));
+    PubberUdmiPublisher.acquireBlobData(testBlobDataUrl, sha256(TEST_BLOB_DATA));
   }
 
   @Test
@@ -212,12 +221,12 @@ public class PubberTest extends TestBase {
     State testMessage = new State();
 
     assertNull(testMessage.timestamp);
-    UdmiPublisher.augmentDeviceMessage(testMessage, new Date(), false);
+    PubberUdmiPublisher.augmentDeviceMessage(testMessage, new Date(), false);
     assertEquals(testMessage.version, Pubber.UDMI_VERSION);
     assertNotEquals(testMessage.timestamp, null);
 
     testMessage.timestamp = new Date(1241);
-    UdmiPublisher.augmentDeviceMessage(testMessage, new Date(), false);
+    PubberUdmiPublisher.augmentDeviceMessage(testMessage, new Date(), false);
     assertEquals(testMessage.version, Pubber.UDMI_VERSION);
     assertNotEquals(testMessage.timestamp, new Date(1241));
   }

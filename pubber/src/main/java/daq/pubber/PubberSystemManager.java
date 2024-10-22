@@ -1,22 +1,32 @@
 package daq.pubber;
 
+import static com.google.udmi.util.GeneralUtils.catchOrElse;
+import static com.google.udmi.util.GeneralUtils.catchToNull;
 import static com.google.udmi.util.GeneralUtils.getTimestamp;
 import static com.google.udmi.util.GeneralUtils.ifNotNullThen;
+import static com.google.udmi.util.GeneralUtils.ifNotTrueGet;
+import static com.google.udmi.util.GeneralUtils.ifTrueThen;
 import static com.google.udmi.util.GeneralUtils.isTrue;
 import static com.google.udmi.util.JsonUtil.isoConvert;
 import static java.lang.String.format;
+import static java.util.Optional.ofNullable;
 
+import com.google.common.collect.ImmutableList;
+import com.google.udmi.util.CleanDateFormat;
 import java.io.File;
 import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import org.slf4j.Logger;
-import udmi.lib.ManagerBase;
-import udmi.lib.ManagerHost;
-import udmi.lib.client.UdmiPublisher;
+import udmi.lib.client.SystemManager;
+import udmi.lib.intf.ManagerHost;
 import udmi.schema.Entry;
 import udmi.schema.Level;
+import udmi.schema.Metadata;
+import udmi.schema.Operation;
 import udmi.schema.Operation.SystemMode;
 import udmi.schema.PubberConfiguration;
 import udmi.schema.StateSystemHardware;
@@ -26,11 +36,14 @@ import udmi.schema.SystemConfig;
 /**
  * Support manager for system stuff.
  */
-public class SystemManager extends ManagerBase implements udmi.lib.client.SystemManager {
+public class PubberSystemManager extends PubberManager implements SystemManager {
 
-  public static final String PUBBER_LOG_CATEGORY = "device.log";
-  public static final String PUBBER_LOG = "pubber.log";
-  private static final Date DEVICE_START_TIME = UdmiPublisher.DEVICE_START_TIME;
+  private static final String PUBBER_LOG = "device.log";
+  private static final String DEFAULT_MAKE = "bos";
+  private static final String DEFAULT_MODEL = "pubber";
+  private static final String DEFAULT_SOFTWARE_KEY = "firmware";
+  private static final String DEFAULT_SOFTWARE_VALUE = "v1";
+  private static final Date DEVICE_START_TIME = PubberUdmiPublisher.DEVICE_START_TIME;
 
   private final List<Entry> logentries = new ArrayList<>();
   private final ExtraSystemState systemState;
@@ -43,7 +56,7 @@ public class SystemManager extends ManagerBase implements udmi.lib.client.System
   /**
    * New instance.
    */
-  public SystemManager(ManagerHost host, PubberConfiguration configuration) {
+  public PubberSystemManager(ManagerHost host, PubberConfiguration configuration) {
     super(host, configuration);
     this.host = host;
 
@@ -107,6 +120,11 @@ public class SystemManager extends ManagerBase implements udmi.lib.client.System
   }
 
   @Override
+  public void updateConfig(SystemConfig system, Date timestamp) {
+    SystemManager.super.updateConfig(system, ifNotTrueGet(options.noLastConfig, () -> timestamp));
+  }
+
+  @Override
   public void systemLifecycle(SystemMode mode) {
     systemState.operation.mode = mode;
     try {
@@ -141,8 +159,64 @@ public class SystemManager extends ManagerBase implements udmi.lib.client.System
   }
 
   @Override
-  public List<Entry> getLogentries() {
-    return logentries;
+  public void setHardwareSoftware(Metadata metadata) {
+    getSystemState().hardware.make = catchOrElse(
+        () -> metadata.system.hardware.make, () -> DEFAULT_MAKE);
+
+    getSystemState().hardware.model = catchOrElse(
+        () -> metadata.system.hardware.model, () -> DEFAULT_MODEL);
+
+    getSystemState().software = new HashMap<>();
+    Map<String, String> metadataSoftware = catchToNull(() -> metadata.system.software);
+    if (metadataSoftware == null) {
+      getSystemState().software.put(DEFAULT_SOFTWARE_KEY, DEFAULT_SOFTWARE_VALUE);
+    } else {
+      getSystemState().software = metadataSoftware;
+    }
+
+    if (options.softwareFirmwareValue != null) {
+      getSystemState().software.put("firmware", options.softwareFirmwareValue);
+    }
+  }
+
+  @Override
+  public void maybeRestartSystem() {
+    SystemManager.super.maybeRestartSystem();
+    SystemConfig system = ofNullable(getSystemConfig()).orElseGet(SystemConfig::new);
+    Operation operation = ofNullable(system.operation).orElseGet(Operation::new);
+    Date configLastStart = operation.last_start;
+    if (configLastStart != null && isTrue(options.smokeCheck)
+        && CleanDateFormat.dateEquals(getDeviceStartTime(), configLastStart)) {
+      error(format("Device start time %s matches, smoke check indicating success!",
+          isoConvert(configLastStart)));
+      systemLifecycle(SystemMode.SHUTDOWN);
+    }
+  }
+
+  @Override
+  public boolean shouldLogLevel(int level) {
+    if (options.fixedLogLevel != null) {
+      return level >= options.fixedLogLevel;
+    }
+    return SystemManager.super.shouldLogLevel(level);
+  }
+
+  @Override
+  public synchronized void publishLogMessage(Entry report) {
+    if (shouldLogLevel(report.level)) {
+      ifTrueThen(options.badLevel, () -> report.level = 0);
+      logentries.add(report);
+    }
+  }
+
+  @Override
+  public synchronized List<Entry> getLogentries() {
+    if (isTrue(options.noLog)) {
+      return null;
+    }
+    List<Entry> entries = ImmutableList.copyOf(logentries);
+    logentries.clear();
+    return entries;
   }
 
   @Override

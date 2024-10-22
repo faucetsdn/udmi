@@ -59,10 +59,15 @@ class EndpointConfiguration:
     self.recv_id = None
     self.send_id = None
     self.side_id = None
+    self.gatewayId = None
+    self.deviceId = None
     self.enabled = None
+    self.noConfigAck = None
     self.capacity = None
     self.publish_delay_sec = None
     self.periodic_sec = None
+    self.keyBytes = None
+    self.algorithm = None
     self.auth_provider = None
     self.generation = None
 
@@ -84,10 +89,15 @@ class EndpointConfiguration:
     result.recv_id = source.get('recv_id')
     result.send_id = source.get('send_id')
     result.side_id = source.get('side_id')
+    result.gatewayId = source.get('gatewayId')
+    result.deviceId = source.get('deviceId')
     result.enabled = source.get('enabled')
+    result.noConfigAck = source.get('noConfigAck')
     result.capacity = source.get('capacity')
     result.publish_delay_sec = source.get('publish_delay_sec')
     result.periodic_sec = source.get('periodic_sec')
+    result.keyBytes = source.get('keyBytes')
+    result.algorithm = source.get('algorithm')
     result.auth_provider = ObjectA90DCC28.from_dict(source.get('auth_provider'))
     result.generation = source.get('generation')
     return result
@@ -136,14 +146,24 @@ class EndpointConfiguration:
       result['send_id'] = self.send_id # 5
     if self.side_id:
       result['side_id'] = self.side_id # 5
+    if self.gatewayId:
+      result['gatewayId'] = self.gatewayId # 5
+    if self.deviceId:
+      result['deviceId'] = self.deviceId # 5
     if self.enabled:
       result['enabled'] = self.enabled # 5
+    if self.noConfigAck:
+      result['noConfigAck'] = self.noConfigAck # 5
     if self.capacity:
       result['capacity'] = self.capacity # 5
     if self.publish_delay_sec:
       result['publish_delay_sec'] = self.publish_delay_sec # 5
     if self.periodic_sec:
       result['periodic_sec'] = self.periodic_sec # 5
+    if self.keyBytes:
+      result['keyBytes'] = self.keyBytes # 5
+    if self.algorithm:
+      result['algorithm'] = self.algorithm # 5
     if self.auth_provider:
       result['auth_provider'] = self.auth_provider.to_dict() # 4
     if self.generation:

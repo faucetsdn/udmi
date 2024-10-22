@@ -1,25 +1,17 @@
 package udmi.lib.client;
 
-import static com.google.udmi.util.GeneralUtils.catchOrElse;
 import static com.google.udmi.util.GeneralUtils.catchToNull;
 import static com.google.udmi.util.GeneralUtils.getTimestamp;
 import static com.google.udmi.util.GeneralUtils.ifNotNullGet;
-import static com.google.udmi.util.GeneralUtils.ifNotTrueGet;
-import static com.google.udmi.util.GeneralUtils.ifNotTrueThen;
-import static com.google.udmi.util.GeneralUtils.ifTrueThen;
-import static com.google.udmi.util.GeneralUtils.isTrue;
 import static com.google.udmi.util.JsonUtil.isoConvert;
 import static com.google.udmi.util.JsonUtil.stringify;
 import static java.lang.String.format;
 import static java.util.Objects.requireNonNullElse;
 import static java.util.Optional.ofNullable;
 
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import com.google.udmi.util.CleanDateFormat;
 import java.time.Instant;
 import java.util.Date;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Consumer;
@@ -32,7 +24,6 @@ import udmi.schema.Metadata;
 import udmi.schema.Metrics;
 import udmi.schema.Operation;
 import udmi.schema.Operation.SystemMode;
-import udmi.schema.PubberOptions;
 import udmi.schema.SystemConfig;
 import udmi.schema.SystemEvents;
 import udmi.schema.SystemState;
@@ -40,15 +31,11 @@ import udmi.schema.SystemState;
 /**
  * System client.
  */
-public interface SystemManager extends Manager {
+public interface SystemManager extends SubblockManager {
 
   String UDMI_PUBLISHER_LOG_CATEGORY = "device.log";
 
   long BYTES_PER_MEGABYTE = 1024 * 1024;
-  String DEFAULT_MAKE = "bos";
-  String DEFAULT_MODEL = "pubber";
-  String DEFAULT_SOFTWARE_KEY = "firmware";
-  String DEFAULT_SOFTWARE_VALUE = "v1";
 
   Map<SystemMode, Integer> EXIT_CODE_MAP = ImmutableMap.of(
       SystemMode.SHUTDOWN, 0, // Indicates expected clean shutdown (success).
@@ -99,26 +86,7 @@ public interface SystemManager extends Manager {
    * Retrieves the hardware and software from metadata.
    *
    */
-  default void setHardwareSoftware(Metadata metadata) {
-
-    getSystemState().hardware.make = catchOrElse(
-        () -> metadata.system.hardware.make, () -> DEFAULT_MAKE);
-
-    getSystemState().hardware.model = catchOrElse(
-        () -> metadata.system.hardware.model, () -> DEFAULT_MODEL);
-
-    getSystemState().software = new HashMap<>();
-    Map<String, String> metadataSoftware = catchToNull(() -> metadata.system.software);
-    if (metadataSoftware == null) {
-      getSystemState().software.put(DEFAULT_SOFTWARE_KEY, DEFAULT_SOFTWARE_VALUE);
-    } else {
-      getSystemState().software = metadataSoftware;
-    }
-
-    if (getOptions().softwareFirmwareValue != null) {
-      getSystemState().software.put("firmware", getOptions().softwareFirmwareValue);
-    }
-  }
+  void setHardwareSoftware(Metadata metadata);
 
   ExtraSystemState getSystemState();
 
@@ -160,11 +128,6 @@ public interface SystemManager extends Manager {
         error(format("Device start time %s before last config start %s, terminating.",
             isoConvert(getDeviceStartTime()), isoConvert(configLastStart)));
         systemLifecycle(SystemMode.TERMINATE);
-      } else if (isTrue(getOptions().smokeCheck)
-          && CleanDateFormat.dateEquals(getDeviceStartTime(), configLastStart)) {
-        error(format("Device start time %s matches, smoke check indicating success!",
-            isoConvert(configLastStart)));
-        systemLifecycle(SystemMode.SHUTDOWN);
       }
     }
   }
@@ -188,9 +151,7 @@ public interface SystemManager extends Manager {
     systemEvent.metrics.mem_total_mb = (double) runtime.totalMemory() / BYTES_PER_MEGABYTE;
     systemEvent.metrics.store_total_mb = Double.NaN;
     systemEvent.event_count = incrementSystemEventCount();
-    ifNotTrueThen(getOptions().noLog,
-        () -> systemEvent.logentries = ImmutableList.copyOf(getLogentries()));
-    getLogentries().clear();
+    systemEvent.logentries = getLogentries();
     getHost().publish(systemEvent);
   }
 
@@ -214,10 +175,9 @@ public interface SystemManager extends Manager {
       error("Panic! Duplicate config_base detected: " + oldBase);
       System.exit(-22);
     }
-
     setSystemConfig(system);
-    getSystemState().last_config = ifNotTrueGet(getOptions().noLastConfig, () -> timestamp);
     updateInterval(ifNotNullGet(system, config -> config.metrics_rate_sec));
+    getSystemState().last_config = timestamp;
     updateState();
   }
 
@@ -227,21 +187,12 @@ public interface SystemManager extends Manager {
    * Publish log message.
    *
    */
-  default void publishLogMessage(Entry report) {
-    if (shouldLogLevel(report.level)) {
-      ifTrueThen(getOptions().badLevel, () -> report.level = 0);
-      getLogentries().add(report);
-    }
-  }
+  void publishLogMessage(Entry report);
 
   /**
    * Check if we should log at the level provided.
    */
   default boolean shouldLogLevel(int level) {
-    if (getOptions().fixedLogLevel != null) {
-      return level >= getOptions().fixedLogLevel;
-    }
-
     Integer minLoglevel = ifNotNullGet(getSystemConfig(), config -> getSystemConfig().min_loglevel);
     return level >= requireNonNullElse(minLoglevel, Level.INFO.value());
   }
@@ -308,7 +259,4 @@ public interface SystemManager extends Manager {
   void shutdown();
 
   void error(String message);
-
-  PubberOptions getOptions();
-
 }

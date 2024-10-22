@@ -1,36 +1,45 @@
 package daq.pubber;
 
 import com.google.udmi.util.SiteModel;
-import udmi.lib.ManagerBase;
-import udmi.lib.ManagerHost;
+import java.util.Date;
+import udmi.lib.client.DeviceManager;
 import udmi.lib.client.DiscoveryManager;
 import udmi.lib.client.GatewayManager;
 import udmi.lib.client.LocalnetManager;
 import udmi.lib.client.PointsetManager;
 import udmi.lib.client.SystemManager;
+import udmi.lib.intf.ManagerHost;
+import udmi.schema.Config;
 import udmi.schema.PubberConfiguration;
 
 /**
  * Uber-manager for a complete device.
  */
-public class DeviceManager extends ManagerBase implements udmi.lib.client.DeviceManager {
+public class PubberDeviceManager extends PubberManager implements DeviceManager {
 
-  private final PointsetManager pointsetManager;
-  private final SystemManager systemManager;
-  private final LocalnetManager localnetManager;
-  private final GatewayManager gatewayManager;
-  private final DiscoveryManager discoveryManager;
+  private final PubberPointsetManager pointsetManager;
+  private final PubberSystemManager systemManager;
+  private final PubberLocalnetManager localnetManager;
+  private final PubberGatewayManager gatewayManager;
+  private final PubberDiscoveryManager discoveryManager;
+  private Date lastConfigTimestamp;
 
   /**
    * Create a new instance.
    */
-  public DeviceManager(ManagerHost host, PubberConfiguration configuration) {
+  public PubberDeviceManager(ManagerHost host, PubberConfiguration configuration) {
     super(host, configuration);
-    systemManager = new daq.pubber.SystemManager(host, configuration);
-    pointsetManager = new daq.pubber.PointsetManager(host, configuration);
-    localnetManager = new daq.pubber.LocalnetManager(host, configuration);
-    gatewayManager = new daq.pubber.GatewayManager(host, configuration);
-    discoveryManager = new daq.pubber.DiscoveryManager(host, configuration, this);
+    systemManager = new PubberSystemManager(host, configuration);
+    pointsetManager = new PubberPointsetManager(host, configuration);
+    localnetManager = new PubberLocalnetManager(host, configuration);
+    gatewayManager = new PubberGatewayManager(host, configuration);
+    discoveryManager = new PubberDiscoveryManager(host, configuration, this);
+  }
+
+  @Override
+  public void updateConfig(Config config) {
+    lastConfigTimestamp = config.timestamp;
+    DeviceManager.super.updateConfig(config);
   }
 
   @Override
@@ -85,9 +94,9 @@ public class DeviceManager extends ManagerBase implements udmi.lib.client.Device
    * Set the site model.
    */
   protected void setSiteModel(SiteModel siteModel) {
-    getDiscoveryManager().setSiteModel(siteModel);
-    getGatewayManager().setSiteModel(siteModel);
-    getLocalnetManager().setSiteModel(siteModel);
+    discoveryManager.setSiteModel(siteModel);
+    gatewayManager.setSiteModel(siteModel);
+    localnetManager.setSiteModel(siteModel);
   }
 
 }
