@@ -57,7 +57,7 @@ public class MqttPublisherTest extends TestBase {
       super(configuration, onError, null);
     }
 
-    MqttClient getMqttClient(String clientId, String brokerUrl) throws MqttException {
+    MqttClient getMqttClient(String clientId) throws MqttException {
       MqttClient mocked = Mockito.mock(MqttClient.class);
       Mockito.when(mocked.isConnected()).thenReturn(true);
       Mockito.doAnswer(invocation -> {
