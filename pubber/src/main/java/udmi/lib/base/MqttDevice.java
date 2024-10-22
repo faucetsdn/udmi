@@ -10,7 +10,6 @@ import udmi.lib.impl.ListPublisher;
 import udmi.lib.impl.MqttPublisher;
 import udmi.lib.intf.Publisher;
 import udmi.schema.EndpointConfiguration;
-import udmi.schema.PubberConfiguration;
 
 /**
  * Encapsulation of a device connection.
