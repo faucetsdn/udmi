@@ -41,11 +41,11 @@ which are preceded by a `y` in `upversion.txt` will have their version upgraded.
 
 `bin/upgrade_version` carries out several checks on files which must be cleared before an update.
 
-`bin/upgrade_version` does not update any generated files (e.g. for CI testing) (see ebelow)
+`bin/upgrade_version` does not update any generated files (e.g. for CI testing, refer to below list.)
 
 An entry for the new version must be added manually in `common/src/main/java/com/google/udmi/util/SchemaVersion.java`
 
-Update entry in `validator/src/main/java/com/google/daq/mqtt/util/ConfigUtil.java`
+The entry in `validator/src/main/java/com/google/daq/mqtt/util/ConfigUtil.java` must be updated.
 
 The below files need to be updated. Do not blindly copy! Inspect all diffs and confirm they are expected
 * After `bin/test_trace simple`, contents of `sites/udmi_site_model/sites/out`
