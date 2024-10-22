@@ -199,16 +199,16 @@ public class PubberSystemManager extends PubberManager implements SystemManager 
   }
 
   @Override
-  public void publishLogMessage(Entry report) {
+  public synchronized void publishLogMessage(Entry report) {
     if (shouldLogLevel(report.level)) {
       ifTrueThen(options.badLevel, () -> report.level = 0);
-      getLogentries().add(report);
+      logentries.add(report);
     }
   }
 
   @Override
-  public List<Entry> getLogentries() {
-    if (options.noLog) {
+  public synchronized List<Entry> getLogentries() {
+    if (isTrue(options.noLog)) {
       return null;
     }
     List<Entry> entries = ImmutableList.copyOf(logentries);
