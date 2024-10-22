@@ -1,4 +1,4 @@
-package udmi.lib.impl;
+package udmi.lib.base;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
@@ -56,7 +56,6 @@ import org.eclipse.paho.client.mqttv3.persist.MemoryPersistence;
 import org.joda.time.DateTime;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import udmi.lib.base.MqttDevice;
 import udmi.lib.intf.Publisher;
 import udmi.schema.Basic;
 import udmi.schema.Config;

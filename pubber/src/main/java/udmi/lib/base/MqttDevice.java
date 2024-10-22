@@ -2,12 +2,10 @@ package udmi.lib.base;
 
 import static com.google.udmi.util.GeneralUtils.ifNotNullThen;
 import static java.util.Objects.requireNonNull;
-import static udmi.lib.impl.MqttPublisher.TEST_PREFIX;
+import static udmi.lib.base.MqttPublisher.TEST_PREFIX;
 
 import com.google.udmi.util.CertManager;
 import java.util.function.Consumer;
-import udmi.lib.impl.ListPublisher;
-import udmi.lib.impl.MqttPublisher;
 import udmi.lib.intf.Publisher;
 import udmi.schema.EndpointConfiguration;
 

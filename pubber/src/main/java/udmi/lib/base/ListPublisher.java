@@ -1,4 +1,4 @@
-package udmi.lib.impl;
+package udmi.lib.base;
 
 import static com.google.common.base.Preconditions.checkState;
 import static com.google.udmi.util.GeneralUtils.ifNotNullThen;

@@ -5,8 +5,8 @@ import static org.junit.Assert.assertEquals;
 import java.util.List;
 import java.util.concurrent.CountDownLatch;
 import org.junit.Test;
-import udmi.lib.impl.ListPublisher;
-import udmi.lib.impl.MqttPublisher;
+import udmi.lib.base.ListPublisher;
+import udmi.lib.base.MqttPublisher;
 
 /**
  * Tests for simple string list publisher.

@@ -1,4 +1,4 @@
-package udmi.lib.intf;
+package udmi.lib.base;
 
 /**
  * Handler class for a received error when binding a gateway.
