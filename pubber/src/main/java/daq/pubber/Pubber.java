@@ -542,11 +542,6 @@ public class Pubber extends PubberManager implements PubberUdmiPublisher {
   }
 
   @Override
-  public void publisherConfigLog(String apply, Exception e, String deviceId) {
-
-  }
-
-  @Override
   public String traceTimestamp(String messageBase) {
     int serial = MESSAGE_COUNTS.computeIfAbsent(messageBase, key -> new AtomicInteger())
         .incrementAndGet();

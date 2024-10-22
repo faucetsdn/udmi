@@ -615,8 +615,13 @@ public class MqttPublisher implements Publisher {
     return gatewayId != null && !gatewayId.equals(targetId);
   }
 
+  static String getGatewayId(String targetId, PubberConfiguration configuration) {
+    return ofNullable(configuration.gatewayId).orElse(
+        targetId.equals(configuration.deviceId) ? null : configuration.deviceId);
+  }
+
   private String getGatewayId(String targetId) {
-    return udmi.lib.intf.UdmiPublisher.getGatewayId(targetId, configuration);
+    return getGatewayId(targetId, configuration);
   }
 
   /**

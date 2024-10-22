@@ -26,7 +26,6 @@ import static udmi.lib.base.MqttDevice.CONFIG_TOPIC;
 import static udmi.lib.base.MqttDevice.ERRORS_TOPIC;
 import static udmi.lib.base.MqttDevice.STATE_TOPIC;
 import static udmi.lib.impl.MqttPublisher.DEFAULT_CONFIG_WAIT_SEC;
-import static udmi.lib.intf.UdmiPublisher.getGatewayId;
 import static udmi.schema.BlobsetConfig.SystemBlobsets.IOT_ENDPOINT_CONFIG;
 
 import com.google.common.collect.ImmutableMap;
@@ -256,6 +255,11 @@ public interface PubberUdmiPublisher extends UdmiPublisher {
     }
   }
 
+  static String getGatewayId(String targetId, PubberConfiguration configuration) {
+    return ofNullable(configuration.gatewayId).orElse(
+        targetId.equals(configuration.deviceId) ? null : configuration.deviceId);
+  }
+
   /**
    * Registers the necessary message handlers for device configuration and error handling based on
    * whether the device is a gateway or a proxy device.
@@ -298,8 +302,8 @@ public interface PubberUdmiPublisher extends UdmiPublisher {
 
   void setConfigLatch(CountDownLatch countDownLatch);
 
-  default void publisherConfigLog(String phase, Exception e, String targetId) {
-    publisherHandler("config", phase, e, targetId);
+  default void publisherConfigLog(String phase, Exception e, String deviceId) {
+    publisherHandler("config", phase, e, deviceId);
   }
 
   /**
