@@ -1,4 +1,4 @@
-package udmi.lib.impl;
+package daq.pubber;
 
 import static com.google.udmi.util.GeneralUtils.catchToNull;
 import static com.google.udmi.util.GeneralUtils.ifNotNullThen;
@@ -31,9 +31,8 @@ public class VendorProvider extends ManagerBase implements FamilyProvider {
   private SiteModel siteModel;
   private String selfAddr;
 
-  public VendorProvider(ManagerHost host, String family,
-      PubberConfiguration pubberConfiguration) {
-    super(host, pubberConfiguration);
+  public VendorProvider(ManagerHost host, String family, String deviceId) {
+    super(host, deviceId);
     localnetHost = (LocalnetManager) host;
   }
 
@@ -53,7 +52,7 @@ public class VendorProvider extends ManagerBase implements FamilyProvider {
 
   private void updateStateAddress() {
     selfAddr = catchToNull(
-        () -> siteModel.getMetadata(config.deviceId).localnet.families.get(VENDOR).addr);
+        () -> siteModel.getMetadata(deviceId).localnet.families.get(VENDOR).addr);
     ifNotNullThen(selfAddr, x -> {
       FamilyLocalnetState stateEntry = new FamilyLocalnetState();
       stateEntry.addr = selfAddr;

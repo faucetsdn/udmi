@@ -68,7 +68,7 @@ import udmi.schema.PubberOptions;
 /**
  * IoT Core UDMI Device Emulator.
  */
-public class Pubber extends ManagerBase implements UdmiPublisher {
+public class Pubber extends PubberManager implements UdmiPublisher {
 
   public static final String PUBBER_OUT = "pubber/out";
   public static final String PERSISTENT_STORE_FILE = "persistent_data.json";
@@ -463,6 +463,11 @@ public class Pubber extends ManagerBase implements UdmiPublisher {
   }
 
   @Override
+  public PubberConfiguration getConfig() {
+    return config;
+  }
+
+  @Override
   public void initializeMqtt() {
     checkNotNull(config.deviceId, "configuration deviceId not defined");
     if (siteModel != null && config.keyFile != null) {
@@ -610,6 +615,11 @@ public class Pubber extends ManagerBase implements UdmiPublisher {
   @Override
   public File getOutDir() {
     return this.outDir;
+  }
+
+  @Override
+  public PubberOptions getOptions() {
+    return options;
   }
 
   @Override

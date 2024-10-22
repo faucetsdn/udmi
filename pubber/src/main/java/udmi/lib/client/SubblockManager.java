@@ -29,9 +29,5 @@ public interface SubblockManager extends ManagerLog {
 
   String getDeviceId();
 
-  PubberOptions getOptions();
-
-  PubberConfiguration getConfig();
-
   ManagerHost getHost();
 }

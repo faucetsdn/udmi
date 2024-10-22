@@ -8,7 +8,7 @@ import java.util.List;
 import java.util.Map;
 import org.junit.Test;
 import udmi.lib.ProtocolFamily;
-import udmi.lib.impl.IpProvider;
+import daq.pubber.IpProvider;
 
 /**
  * Basic interface parsing tests for pubber.

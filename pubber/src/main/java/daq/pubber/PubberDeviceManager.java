@@ -14,7 +14,7 @@ import udmi.schema.PubberConfiguration;
 /**
  * Uber-manager for a complete device.
  */
-public class PubberDeviceManager extends ManagerBase implements DeviceManager {
+public class PubberDeviceManager extends PubberManager implements DeviceManager {
 
   private final PointsetManager pointsetManager;
   private final SystemManager systemManager;

@@ -120,7 +120,7 @@ public class MqttPublisher implements Publisher {
   private CountDownLatch connectionLatch;
   private String topicPrefixPrefix;
 
-  MqttPublisher(PubberConfiguration configuration, Consumer<Exception> onError,
+  public MqttPublisher(PubberConfiguration configuration, Consumer<Exception> onError,
       CertManager certManager) {
     this.configuration = configuration;
     this.certManager = certManager;

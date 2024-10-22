@@ -15,7 +15,7 @@ import udmi.schema.PubberConfiguration;
 public class MqttDevice {
 
   public static final String TEST_PROJECT = "test-project";
-  static final String ATTACH_TOPIC = "attach";
+  public static final String ATTACH_TOPIC = "attach";
   public static final String CONFIG_TOPIC = "config";
   public static final String ERRORS_TOPIC = "errors";
   public static final String EVENTS_TOPIC = "events";
@@ -53,7 +53,8 @@ public class MqttDevice {
 
   Publisher getPublisher(PubberConfiguration configuration,
       Consumer<Exception> onError) {
-    return TEST_PROJECT.equals(configuration.iotProject) ? new ListPublisher(configuration, onError)
+    return TEST_PROJECT.equals(configuration.iotProject)
+        ? new ListPublisher(configuration, onError)
         : new MqttPublisher(configuration, onError, certManager);
   }
 

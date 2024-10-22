@@ -1,4 +1,4 @@
-package udmi.lib.impl;
+package daq.pubber;
 
 import static com.google.udmi.util.GeneralUtils.friendlyStackTrace;
 import static com.google.udmi.util.GeneralUtils.runtimeExec;
@@ -44,9 +44,8 @@ public class IpProvider extends ManagerBase implements FamilyProvider {
   /**
    * Create a basic provider instance.
    */
-  public IpProvider(ManagerHost host, String family,
-      PubberConfiguration pubberConfiguration) {
-    super(host, pubberConfiguration);
+  public IpProvider(ManagerHost host, String family, String deviceId) {
+    super(host, deviceId);
     localnetHost = (LocalnetManager) host;
     populateInterfaceAddresses();
   }

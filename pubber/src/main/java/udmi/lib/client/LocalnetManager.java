@@ -6,27 +6,20 @@ import static java.util.stream.Collectors.toMap;
 import com.google.udmi.util.SiteModel;
 import java.util.Map;
 import udmi.lib.ProtocolFamily;
-import udmi.lib.impl.IpProvider;
-import udmi.lib.impl.VendorProvider;
+import daq.pubber.IpProvider;
+import daq.pubber.VendorProvider;
 import udmi.lib.intf.FamilyProvider;
 import udmi.lib.intf.ManagerHost;
 import udmi.schema.FamilyDiscovery;
 import udmi.schema.FamilyLocalnetState;
 import udmi.schema.LocalnetConfig;
 import udmi.schema.LocalnetState;
-import udmi.schema.PubberConfiguration;
 
 /**
  * Localnet client.
  */
 public interface LocalnetManager extends ManagerHost, SubblockManager {
 
-  Map<String, Class<? extends FamilyProvider>> LOCALNET_PROVIDERS =
-      Map.of(
-          ProtocolFamily.VENDOR, VendorProvider.class,
-          ProtocolFamily.IPV_4, IpProvider.class,
-          ProtocolFamily.IPV_6, IpProvider.class,
-          ProtocolFamily.ETHER, IpProvider.class);
 
   LocalnetConfig getLocalnetConfig();
 
@@ -80,19 +73,6 @@ public interface LocalnetManager extends ManagerHost, SubblockManager {
 
   default FamilyProvider getLocalnetProvider(String family) {
     return getLocalnetProviders().get(family);
-  }
-
-  /**
-   * Instantiate a family provider.
-   */
-  default FamilyProvider instantiateProvider(String family) {
-    try {
-      return LOCALNET_PROVIDERS.get(family).getDeclaredConstructor(
-              ManagerHost.class, String.class, PubberConfiguration.class)
-          .newInstance(this, family, getConfig());
-    } catch (Exception e) {
-      throw new RuntimeException("While creating instance of " + LOCALNET_PROVIDERS.get(family), e);
-    }
   }
 
   Map<String, FamilyProvider> getLocalnetProviders();

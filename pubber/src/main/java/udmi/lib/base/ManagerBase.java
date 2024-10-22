@@ -7,7 +7,6 @@ import static java.util.Objects.requireNonNull;
 import static java.util.Optional.ofNullable;
 import static java.util.concurrent.TimeUnit.SECONDS;
 
-import udmi.util.SchemaVersion;
 import java.util.Date;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
@@ -21,11 +20,10 @@ import udmi.schema.DiscoveryState;
 import udmi.schema.GatewayState;
 import udmi.schema.LocalnetState;
 import udmi.schema.PointsetState;
-import udmi.schema.PubberConfiguration;
-import udmi.schema.PubberOptions;
 import udmi.schema.State;
 import udmi.schema.SystemState;
 import udmi.util.CatchingScheduledThreadPoolExecutor;
+import udmi.util.SchemaVersion;
 
 /**
  * Base class for UDMI Publisher subsystem managers.
@@ -36,24 +34,20 @@ public abstract class ManagerBase implements SubblockManager {
   protected static final int DEFAULT_REPORT_SEC = 10;
   public static final int WAIT_TIME_SEC = 10;
   protected final AtomicInteger sendRateSec = new AtomicInteger(DEFAULT_REPORT_SEC);
-  protected final PubberOptions options;
   protected final ManagerHost host;
   protected final Config deviceConfig = new Config();
   protected final State deviceState = new State();
   protected final ScheduledExecutorService executor = new CatchingScheduledThreadPoolExecutor(1);
   protected final AtomicBoolean stateDirty = new AtomicBoolean();
   protected final String deviceId;
-  protected final PubberConfiguration config;
   protected ScheduledFuture<?> periodicSender;
 
   /**
    * New instance.
    */
-  protected ManagerBase(ManagerHost host, PubberConfiguration configuration) {
-    config = configuration;
-    options = configuration.options;
-    deviceId = requireNonNull(configuration.deviceId, "device id not defined");
+  protected ManagerBase(ManagerHost host, String deviceId) {
     this.host = host;
+    this.deviceId = requireNonNull(deviceId, "device id not defined");
   }
 
   /**
@@ -141,8 +135,7 @@ public abstract class ManagerBase implements SubblockManager {
    */
   @Override
   public void updateInterval(Integer sampleRateSec) {
-    int reportInterval = ofNullable(sampleRateSec).orElse(DEFAULT_REPORT_SEC);
-    int intervalSec = ofNullable(options.fixedSampleRate).orElse(reportInterval);
+    int intervalSec = getIntervalSec(sampleRateSec);
     if (intervalSec < DISABLED_INTERVAL) {
       error(format("Dropping update interval, sample rate %ds is less then DISABLED_INTERVAL",
           intervalSec));
@@ -155,6 +148,10 @@ public abstract class ManagerBase implements SubblockManager {
         startPeriodicSend();
       }
     }
+  }
+
+  protected int getIntervalSec(Integer sampleRateSec) {
+    return ofNullable(sampleRateSec).orElse(DEFAULT_REPORT_SEC);
   }
 
   @Override
@@ -208,14 +205,6 @@ public abstract class ManagerBase implements SubblockManager {
 
   public String getDeviceId() {
     return deviceId;
-  }
-
-  public PubberOptions getOptions() {
-    return options;
-  }
-
-  public PubberConfiguration getConfig() {
-    return config;
   }
 
   public ManagerHost getHost() {

@@ -1,10 +1,8 @@
 package udmi.lib.client;
 
-import static com.google.udmi.util.GeneralUtils.catchOrElse;
 import static com.google.udmi.util.GeneralUtils.catchToNull;
 import static com.google.udmi.util.GeneralUtils.getTimestamp;
 import static com.google.udmi.util.GeneralUtils.ifNotNullGet;
-import static com.google.udmi.util.GeneralUtils.ifNotTrueGet;
 import static com.google.udmi.util.GeneralUtils.ifNotTrueThen;
 import static com.google.udmi.util.GeneralUtils.ifTrueThen;
 import static com.google.udmi.util.GeneralUtils.isTrue;
@@ -19,7 +17,6 @@ import com.google.common.collect.ImmutableMap;
 import com.google.udmi.util.CleanDateFormat;
 import java.time.Instant;
 import java.util.Date;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Consumer;
@@ -32,7 +29,6 @@ import udmi.schema.Metadata;
 import udmi.schema.Metrics;
 import udmi.schema.Operation;
 import udmi.schema.Operation.SystemMode;
-import udmi.schema.PubberOptions;
 import udmi.schema.SystemConfig;
 import udmi.schema.SystemEvents;
 import udmi.schema.SystemState;
@@ -99,26 +95,7 @@ public interface SystemManager extends SubblockManager {
    * Retrieves the hardware and software from metadata.
    *
    */
-  default void setHardwareSoftware(Metadata metadata) {
-
-    getSystemState().hardware.make = catchOrElse(
-        () -> metadata.system.hardware.make, () -> DEFAULT_MAKE);
-
-    getSystemState().hardware.model = catchOrElse(
-        () -> metadata.system.hardware.model, () -> DEFAULT_MODEL);
-
-    getSystemState().software = new HashMap<>();
-    Map<String, String> metadataSoftware = catchToNull(() -> metadata.system.software);
-    if (metadataSoftware == null) {
-      getSystemState().software.put(DEFAULT_SOFTWARE_KEY, DEFAULT_SOFTWARE_VALUE);
-    } else {
-      getSystemState().software = metadataSoftware;
-    }
-
-    if (getOptions().softwareFirmwareValue != null) {
-      getSystemState().software.put("firmware", getOptions().softwareFirmwareValue);
-    }
-  }
+  void setHardwareSoftware(Metadata metadata);
 
   ExtraSystemState getSystemState();
 
@@ -160,11 +137,6 @@ public interface SystemManager extends SubblockManager {
         error(format("Device start time %s before last config start %s, terminating.",
             isoConvert(getDeviceStartTime()), isoConvert(configLastStart)));
         systemLifecycle(SystemMode.TERMINATE);
-      } else if (isTrue(getOptions().smokeCheck)
-          && CleanDateFormat.dateEquals(getDeviceStartTime(), configLastStart)) {
-        error(format("Device start time %s matches, smoke check indicating success!",
-            isoConvert(configLastStart)));
-        systemLifecycle(SystemMode.SHUTDOWN);
       }
     }
   }
@@ -308,7 +280,4 @@ public interface SystemManager extends SubblockManager {
   void shutdown();
 
   void error(String message);
-
-  PubberOptions getOptions();
-
 }

@@ -1,22 +1,30 @@
 package daq.pubber;
 
+import static com.google.udmi.util.GeneralUtils.catchOrElse;
+import static com.google.udmi.util.GeneralUtils.catchToNull;
 import static com.google.udmi.util.GeneralUtils.getTimestamp;
 import static com.google.udmi.util.GeneralUtils.ifNotNullThen;
 import static com.google.udmi.util.GeneralUtils.isTrue;
 import static com.google.udmi.util.JsonUtil.isoConvert;
 import static java.lang.String.format;
+import static java.util.Optional.ofNullable;
 
+import com.google.udmi.util.CleanDateFormat;
 import java.io.File;
 import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import org.slf4j.Logger;
 import udmi.lib.base.ManagerBase;
 import udmi.lib.client.SystemManager;
 import udmi.lib.intf.ManagerHost;
 import udmi.schema.Entry;
 import udmi.schema.Level;
+import udmi.schema.Metadata;
+import udmi.schema.Operation;
 import udmi.schema.Operation.SystemMode;
 import udmi.schema.PubberConfiguration;
 import udmi.schema.StateSystemHardware;
@@ -26,7 +34,7 @@ import udmi.schema.SystemConfig;
 /**
  * Support manager for system stuff.
  */
-public class PubberSystemManager extends ManagerBase implements SystemManager {
+public class PubberSystemManager extends PubberManager implements SystemManager {
 
   public static final String PUBBER_LOG_CATEGORY = "device.log";
   public static final String PUBBER_LOG = "pubber.log";
@@ -137,6 +145,41 @@ public class PubberSystemManager extends ManagerBase implements SystemManager {
       stream.flush();
     } catch (Exception e) {
       throw new RuntimeException("While writing log output file", e);
+    }
+  }
+
+  @Override
+  public void setHardwareSoftware(Metadata metadata) {
+    getSystemState().hardware.make = catchOrElse(
+        () -> metadata.system.hardware.make, () -> DEFAULT_MAKE);
+
+    getSystemState().hardware.model = catchOrElse(
+        () -> metadata.system.hardware.model, () -> DEFAULT_MODEL);
+
+    getSystemState().software = new HashMap<>();
+    Map<String, String> metadataSoftware = catchToNull(() -> metadata.system.software);
+    if (metadataSoftware == null) {
+      getSystemState().software.put(DEFAULT_SOFTWARE_KEY, DEFAULT_SOFTWARE_VALUE);
+    } else {
+      getSystemState().software = metadataSoftware;
+    }
+
+    if (options.softwareFirmwareValue != null) {
+      getSystemState().software.put("firmware", options.softwareFirmwareValue);
+    }
+  }
+
+  @Override
+  public void maybeRestartSystem() {
+    SystemManager.super.maybeRestartSystem();
+    SystemConfig system = ofNullable(getSystemConfig()).orElseGet(SystemConfig::new);
+    Operation operation = ofNullable(system.operation).orElseGet(Operation::new);
+    Date configLastStart = operation.last_start;
+    if (configLastStart != null && isTrue(options.smokeCheck)
+        && CleanDateFormat.dateEquals(getDeviceStartTime(), configLastStart)) {
+      error(format("Device start time %s matches, smoke check indicating success!",
+          isoConvert(configLastStart)));
+      systemLifecycle(SystemMode.SHUTDOWN);
     }
   }
 

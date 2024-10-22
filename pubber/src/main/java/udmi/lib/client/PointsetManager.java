@@ -26,7 +26,6 @@ import udmi.schema.PointsetConfig;
 import udmi.schema.PointsetEvents;
 import udmi.schema.PointsetModel;
 import udmi.schema.PointsetState;
-import udmi.schema.PubberOptions;
 
 /**
  * Pointset client.
@@ -73,12 +72,12 @@ public interface PointsetManager extends ManagerLog {
    * @param pointName the point name.
    */
   default void restorePoint(String pointName) {
-    if (getPointsetState() == null || pointName.equals(getOptions().missingPoint)) {
+    if (getPointsetState() == null) {
       return;
     }
 
     getPointsetState().points.put(pointName, ifNotNullGet(getManagedPoints().get(pointName),
-        this::getTweakedPointState, invalidPoint(pointName)));
+        this::getPointState, invalidPoint(pointName)));
     getPointsetEvent().points.put(pointName, ifNotNullGet(getManagedPoints().get(pointName),
         AbstractPoint::getData, new PointPointsetEvents()));
   }
@@ -89,12 +88,8 @@ public interface PointsetManager extends ManagerLog {
    * @param point the point.
    * @return tweaked point state.
    */
-  default PointPointsetState getTweakedPointState(AbstractPoint point) {
-    PointPointsetState state = point.getState();
-    // Tweak for testing: erroneously apply an applied state here.
-    ifTrueThen(point.getName().equals(getOptions().extraPoint),
-        () -> state.value_state = ofNullable(state.value_state).orElse(Value_state.APPLIED));
-    return state;
+  default PointPointsetState getPointState(AbstractPoint point) {
+    return point.getState();
   }
 
   default void suspendPoint(String pointName) {
@@ -124,10 +119,8 @@ public interface PointsetManager extends ManagerLog {
     }
 
     if (point.isDirty()) {
-      PointPointsetState state = getTweakedPointState(point); // Always call to clear the dirty bit
-      PointPointsetState useState = ifTrueGet(getOptions().noPointState,
-          PointPointsetState::new, state);
-      getPointsetState().points.put(pointName, useState);
+      // Always call to clear the dirty bit
+      getPointsetState().points.put(pointName, getPointState(point));
       updateState();
     }
   }
@@ -176,8 +169,6 @@ public interface PointsetManager extends ManagerLog {
   void stop();
 
   void shutdown();
-
-  PubberOptions getOptions();
 
   /**
    * PointsetEvents with extraField.

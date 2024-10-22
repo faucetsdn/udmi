@@ -24,7 +24,6 @@ import udmi.schema.Level;
 import udmi.schema.Metadata;
 import udmi.schema.PointPointsetConfig;
 import udmi.schema.PointsetConfig;
-import udmi.schema.PubberConfiguration;
 
 /**
  * Gateway client.
@@ -54,20 +53,12 @@ public interface GatewayManager extends SubblockManager {
     }
 
     Map<String, ProxyDeviceHost> devices = new HashMap<>();
-
-    String firstId = proxyIds.stream().sorted().findFirst().orElse(null);
-    String noProxyId = ifTrueGet(isTrue(getOptions().noProxy), () -> firstId);
-    ifNotNullThen(noProxyId, id -> warn(format("Not proxying device %s", noProxyId)));
-    proxyIds.stream().filter(not(id -> id.equals(noProxyId)))
-        .forEach(id -> devices.put(id, createProxyDevice(getHost(), id, getConfig())));
-
-    ifTrueThen(getOptions().extraDevice, () -> devices.put(EXTRA_PROXY_DEVICE, makeExtraDevice()));
+    proxyIds.forEach(id -> devices.put(id, createProxyDevice(getHost(), id)));
 
     return devices;
   }
 
-  ProxyDeviceHost createProxyDevice(ManagerHost host, String id,
-      PubberConfiguration config);
+  ProxyDeviceHost createProxyDevice(ManagerHost host, String id);
 
   ProxyDeviceHost makeExtraDevice();
 

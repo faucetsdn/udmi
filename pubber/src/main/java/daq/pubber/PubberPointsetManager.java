@@ -4,6 +4,8 @@ import static com.google.udmi.util.GeneralUtils.ifNotNullGet;
 import static com.google.udmi.util.GeneralUtils.ifNotNullThen;
 import static com.google.udmi.util.GeneralUtils.ifNotTrueThen;
 import static com.google.udmi.util.GeneralUtils.ifNullThen;
+import static com.google.udmi.util.GeneralUtils.ifTrueGet;
+import static com.google.udmi.util.GeneralUtils.ifTrueThen;
 import static java.util.Objects.requireNonNull;
 import static java.util.Objects.requireNonNullElseGet;
 import static java.util.Optional.ofNullable;
@@ -15,13 +17,14 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicReference;
-import udmi.lib.base.ManagerBase;
 import udmi.lib.client.PointsetManager;
 import udmi.lib.intf.AbstractPoint;
 import udmi.lib.intf.ManagerHost;
 import udmi.schema.Entry;
 import udmi.schema.PointPointsetConfig;
 import udmi.schema.PointPointsetModel;
+import udmi.schema.PointPointsetState;
+import udmi.schema.PointPointsetState.Value_state;
 import udmi.schema.PointsetConfig;
 import udmi.schema.PointsetModel;
 import udmi.schema.PointsetState;
@@ -30,7 +33,7 @@ import udmi.schema.PubberConfiguration;
 /**
  * Helper class to manage the operation of a pointset block.
  */
-public class PubberPointsetManager extends ManagerBase implements PointsetManager {
+public class PubberPointsetManager extends PubberManager implements PointsetManager {
 
   private static final Set<String> BOOLEAN_UNITS = ImmutableSet.of("No-units");
 
@@ -74,6 +77,24 @@ public class PubberPointsetManager extends ManagerBase implements PointsetManage
     } else {
       return new RandomPoint(name, point);
     }
+  }
+
+  @Override
+  public PointPointsetState getPointState(AbstractPoint point) {
+    PointPointsetState pointState = PointsetManager.super.getPointState(point);
+    // Tweak for testing: erroneously apply an applied state here.
+    ifTrueThen(point.getName().equals(options.extraPoint),
+        () -> pointState.value_state = ofNullable(pointState.value_state).orElse(
+            Value_state.APPLIED));
+    return ifTrueGet(options.noPointState, PointPointsetState::new, pointState);
+  }
+
+  @Override
+  public void restorePoint(String pointName) {
+    if (pointName.equals(options.missingPoint)) {
+      return;
+    }
+    PointsetManager.super.restorePoint(pointName);
   }
 
   @Override
@@ -128,7 +149,6 @@ public class PubberPointsetManager extends ManagerBase implements PointsetManage
 
   /**
    * Updates the configuration of pointset points.
-   *
    */
   @Override
   public void updatePointsetPointsConfig(PointsetConfig config) {

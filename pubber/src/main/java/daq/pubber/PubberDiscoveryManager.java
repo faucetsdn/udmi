@@ -30,7 +30,7 @@ import udmi.schema.SystemDiscoveryData;
 /**
  * Manager wrapper for discovery functionality in pubber.
  */
-public class PubberDiscoveryManager extends ManagerBase implements DiscoveryManager {
+public class PubberDiscoveryManager extends PubberManager implements DiscoveryManager {
 
   public static final int SCAN_DURATION_SEC = 10;
 

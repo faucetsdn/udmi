@@ -19,7 +19,7 @@ import udmi.schema.PubberConfiguration;
 /**
  * Wrapper for a complete device construct.
  */
-public class ProxyDevice extends ManagerBase implements ProxyDeviceHost {
+public class ProxyDevice extends PubberManager implements ProxyDeviceHost {
 
   private static final long STATE_INTERVAL_MS = 1000;
   final PubberDeviceManager deviceManager;

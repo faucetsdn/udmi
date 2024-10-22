@@ -563,6 +563,8 @@ public interface UdmiPublisher extends ManagerHost {
     }
   }
 
+  PubberOptions getOptions();
+
   Lock getStateLock();
 
   // TODO: Consider refactoring this to either return or change an instance variable, not both.
@@ -680,6 +682,7 @@ public interface UdmiPublisher extends ManagerHost {
   }
 
   String getWorkingEndpoint();
+
 
   void setAttemptedEndpoint(String s);
 
@@ -1026,11 +1029,9 @@ public interface UdmiPublisher extends ManagerHost {
     }
   }
 
-  void shutdown();
-
-  PubberOptions getOptions();
-
   PubberConfiguration getConfig();
+
+  void shutdown();
 
   String getDeviceId();
 
