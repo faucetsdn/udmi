@@ -1,6 +1,7 @@
 package udmi.lib.client;
 
 import static com.google.udmi.util.GeneralUtils.catchToNull;
+import static com.google.udmi.util.GeneralUtils.getNow;
 import static com.google.udmi.util.GeneralUtils.ifNotNullThen;
 import static java.lang.String.format;
 import static java.util.Optional.ofNullable;
@@ -76,9 +77,6 @@ public interface GatewayManager extends SubblockManager {
   /**
    * Sets gateway status.
    *
-   * @param category Category.
-   * @param level Level.
-   * @param message Message.
    */
   default void setGatewayStatus(String category, Level level, String message) {
     // TODO: Implement a map or tree or something to properly handle different error sources.
@@ -86,6 +84,7 @@ public interface GatewayManager extends SubblockManager {
     getGatewayState().status.category = category;
     getGatewayState().status.level = level.value();
     getGatewayState().status.message = message;
+    getGatewayState().status.timestamp = getNow();
   }
 
   /**

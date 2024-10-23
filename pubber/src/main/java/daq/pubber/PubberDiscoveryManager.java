@@ -133,25 +133,6 @@ public class PubberDiscoveryManager extends PubberManager implements DiscoveryMa
             udmi.lib.client.DiscoveryManager::getVendorRefValue));
   }
 
-  /**
-   * Update the discovery config.
-   */
-  @Override
-  public void updateConfig(DiscoveryConfig discovery) {
-    discoveryConfig = discovery;
-    if (discovery == null) {
-      discoveryState = null;
-      updateState();
-      return;
-    }
-    if (discoveryState == null) {
-      discoveryState = new DiscoveryState();
-    }
-    updateDiscoveryEnumeration(discovery);
-    updateDiscoveryScan(discovery.families);
-    updateState();
-  }
-
   public void setSiteModel(SiteModel siteModel) {
     this.siteModel = siteModel;
   }

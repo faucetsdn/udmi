@@ -97,11 +97,6 @@ public class PubberPointsetManager extends PubberManager implements PointsetMana
     PointsetManager.super.restorePoint(pointName);
   }
 
-  @Override
-  public void setExtraField(String extraField) {
-    ifNotNullThen(extraField, field -> pointsetEvent.extraField = field);
-  }
-
   /**
    * Set the underlying static model for this pointset. This is information that would NOT be
    * normally available for a device, but would, e.g. be programmed directly into a device. It's
@@ -118,11 +113,6 @@ public class PubberPointsetManager extends PubberManager implements PointsetMana
         x -> requireNonNull(points.remove(x), "missing point not in pointset metadata"));
 
     points.forEach((name, point) -> addPoint(makePoint(name, point)));
-  }
-
-  @Override
-  public void addPoint(AbstractPoint point) {
-    managedPoints.put(point.getName(), point);
   }
 
   /**

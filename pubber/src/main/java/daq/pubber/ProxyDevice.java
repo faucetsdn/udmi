@@ -48,28 +48,6 @@ public class ProxyDevice extends PubberManager implements ProxyDeviceHost {
   }
 
   @Override
-  public void activate() {
-    try {
-      active.set(false);
-      info("Activating proxy device " + deviceId);
-      MqttDevice mqttDevice = pubberHost.getMqttDevice(deviceId);
-      mqttDevice.registerHandler(MqttDevice.CONFIG_TOPIC, this::configHandler, Config.class);
-      mqttDevice.connect(deviceId);
-      deviceManager.activate();
-      active.set(true);
-    } catch (Exception e) {
-      error(format("Could not connect proxy device %s: %s", deviceId, friendlyStackTrace(e)));
-    }
-  }
-
-  @Override
-  public void configHandler(Config config) {
-    pubberHost.configPreprocess(deviceId, config);
-    deviceManager.updateConfig(config);
-    pubberHost.publisherConfigLog("apply", null, deviceId);
-  }
-
-  @Override
   public void shutdown() {
     deviceManager.shutdown();
   }
@@ -88,11 +66,6 @@ public class ProxyDevice extends PubberManager implements ProxyDeviceHost {
   @Override
   public void publish(String targetId, Object message) {
     pubberHost.publish(targetId, message);
-  }
-
-  @Override
-  public void setMetadata(Metadata metadata) {
-    deviceManager.setMetadata(metadata);
   }
 
   @Override
