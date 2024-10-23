@@ -154,6 +154,7 @@ import udmi.schema.Metadata;
 import udmi.schema.Operation;
 import udmi.schema.PointsetEvents;
 import udmi.schema.SchemaValidationState;
+import udmi.schema.Score;
 import udmi.schema.SequenceValidationState;
 import udmi.schema.SequenceValidationState.SequenceResult;
 import udmi.schema.State;
@@ -178,7 +179,7 @@ public class SequenceBase {
   public static final String NOT_STATUS_PREFIX = "no ";
   public static final String STATUS_CHECK_SUFFIX = " exists";
   public static final String SCHEMA_BUCKET = "schemas";
-  public static final int SCHEMA_SCORE = 5;
+  public static final int SCHEMA_SCORE = 10;
   public static final int CAPABILITY_SCORE = 1;
   public static final String STATUS_LEVEL_VIOLATION = "STATUS_LEVEL";
   public static final String DEVICE_STATE_SCHEMA = "device_state";
@@ -222,8 +223,8 @@ public class SequenceBase {
   private static final String SYSTEM_TESTING_MARKER = "system.testing";
   private static final BiMap<SequenceResult, Level> RESULT_LEVEL_MAP = ImmutableBiMap.of(
       START, Level.INFO,
-      SKIP, Level.WARNING,
       PASS, Level.NOTICE,
+      SKIP, Level.WARNING,
       FAIL, Level.ERROR,
       ERRR, Level.CRITIAL
   );
@@ -2227,6 +2228,9 @@ public class SequenceBase {
     sequenceValidationState.stage = getTestStage(description);
     sequenceValidationState.capabilities = capabilityExceptions.keySet().stream()
         .collect(Collectors.toMap(Capabilities::value, this::collectCapabilityResult));
+    sequenceValidationState.score = new Score();
+    sequenceValidationState.score.value = 1;
+    sequenceValidationState.score.total = 2;
     updateValidationState();
   }
 

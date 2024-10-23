@@ -3,6 +3,47 @@ from .state_validation_capability import CapabilityValidationState
 from .entry import Entry
 
 
+class ObjectB831B99F:
+  """Generated schema class"""
+
+  def __init__(self):
+    self.value = None
+    self.total = None
+
+  @staticmethod
+  def from_dict(source):
+    if not source:
+      return None
+    result = ObjectB831B99F()
+    result.value = source.get('value')
+    result.total = source.get('total')
+    return result
+
+  @staticmethod
+  def map_from(source):
+    if not source:
+      return None
+    result = {}
+    for key in source:
+      result[key] = ObjectB831B99F.from_dict(source[key])
+    return result
+
+  @staticmethod
+  def expand_dict(input):
+    result = {}
+    for property in input:
+      result[property] = input[property].to_dict() if input[property] else {}
+    return result
+
+  def to_dict(self):
+    result = {}
+    if self.value:
+      result['value'] = self.value # 5
+    if self.total:
+      result['total'] = self.total # 5
+    return result
+
+
 class SequenceValidationState:
   """Generated schema class"""
 
@@ -13,7 +54,6 @@ class SequenceValidationState:
     self.result = None
     self.status = None
     self.score = None
-    self.total = None
 
   @staticmethod
   def from_dict(source):
@@ -25,8 +65,7 @@ class SequenceValidationState:
     result.capabilities = CapabilityValidationState.map_from(source.get('capabilities'))
     result.result = source.get('result')
     result.status = Entry.from_dict(source.get('status'))
-    result.score = source.get('score')
-    result.total = source.get('total')
+    result.score = ObjectB831B99F.from_dict(source.get('score'))
     return result
 
   @staticmethod
@@ -58,7 +97,5 @@ class SequenceValidationState:
     if self.status:
       result['status'] = self.status.to_dict() # 4
     if self.score:
-      result['score'] = self.score # 5
-    if self.total:
-      result['total'] = self.total # 5
+      result['score'] = self.score.to_dict() # 4
     return result

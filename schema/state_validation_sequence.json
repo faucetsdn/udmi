@@ -36,10 +36,16 @@
       "$ref": "file:entry.json"
     },
     "score": {
-      "type": "integer"
-    },
-    "total": {
-      "type": "integer"
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "value": {
+          "type": "integer"
+        },
+        "total": {
+          "type": "integer"
+        }
+      }
     }
   }
 }
