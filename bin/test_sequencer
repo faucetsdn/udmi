@@ -180,6 +180,9 @@ else
     fail No pubber pids found, likely due to premature termination: failing test run.
 fi
 
+echo Generated $output_file
+more $output_file | cat
+
 echo Sanity check for completed tests...
 target_count=$(fgrep "Running target" out/sequencer$suffix.log.save | wc -l)
 result_count=$(fgrep RESULT out/sequencer$suffix.out.save | wc -l)

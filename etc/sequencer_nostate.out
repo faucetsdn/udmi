@@ -11,8 +11,8 @@ RESULT skip gateway bad_target_address PREVIEW 0/0 Not a proxied device
 RESULT skip gateway bad_target_family PREVIEW 0/0 Not a proxied device
 RESULT skip gateway gateway_proxy_events BETA 0/0 Not a gateway
 RESULT skip gateway gateway_proxy_state PREVIEW 0/0 Not a gateway
-RESULT pass pointset pointset_publish STABLE 5/5 Sequence complete
-RESULT pass pointset pointset_publish_interval STABLE 5/5 Sequence complete
+RESULT pass pointset pointset_publish STABLE 10/10 Sequence complete
+RESULT pass pointset pointset_publish_interval STABLE 10/10 Sequence complete
 RESULT skip pointset pointset_remove_point STABLE 0/0 State testing disabled
 RESULT skip pointset pointset_request_extraneous STABLE 0/0 State testing disabled
 RESULT skip system broken_config STABLE 0/0 State testing disabled
