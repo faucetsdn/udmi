@@ -53,7 +53,7 @@ class SequenceValidationState:
     self.capabilities = None
     self.result = None
     self.status = None
-    self.score = None
+    self.scoring = None
 
   @staticmethod
   def from_dict(source):
@@ -65,7 +65,7 @@ class SequenceValidationState:
     result.capabilities = CapabilityValidationState.map_from(source.get('capabilities'))
     result.result = source.get('result')
     result.status = Entry.from_dict(source.get('status'))
-    result.score = ObjectB831B99F.from_dict(source.get('score'))
+    result.scoring = ObjectB831B99F.from_dict(source.get('scoring'))
     return result
 
   @staticmethod
@@ -96,6 +96,6 @@ class SequenceValidationState:
       result['result'] = self.result # 5
     if self.status:
       result['status'] = self.status.to_dict() # 4
-    if self.score:
-      result['score'] = self.score.to_dict() # 4
+    if self.scoring:
+      result['scoring'] = self.scoring.to_dict() # 4
     return result

@@ -35,7 +35,7 @@
     "status": {
       "$ref": "file:entry.json"
     },
-    "score": {
+    "scoring": {
       "type": "object",
       "additionalProperties": false,
       "properties": {

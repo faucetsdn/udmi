@@ -24,7 +24,7 @@ import com.fasterxml.jackson.annotation.JsonValue;
     "capabilities",
     "result",
     "status",
-    "score"
+    "scoring"
 })
 public class SequenceValidationState {
 
@@ -57,15 +57,15 @@ public class SequenceValidationState {
      */
     @JsonProperty("status")
     public Entry status;
-    @JsonProperty("score")
-    public Score score;
+    @JsonProperty("scoring")
+    public Scoring scoring;
 
     @Override
     public int hashCode() {
         int result = 1;
         result = ((result* 31)+((this.summary == null)? 0 :this.summary.hashCode()));
         result = ((result* 31)+((this.result == null)? 0 :this.result.hashCode()));
-        result = ((result* 31)+((this.score == null)? 0 :this.score.hashCode()));
+        result = ((result* 31)+((this.scoring == null)? 0 :this.scoring.hashCode()));
         result = ((result* 31)+((this.capabilities == null)? 0 :this.capabilities.hashCode()));
         result = ((result* 31)+((this.stage == null)? 0 :this.stage.hashCode()));
         result = ((result* 31)+((this.status == null)? 0 :this.status.hashCode()));
@@ -81,7 +81,7 @@ public class SequenceValidationState {
             return false;
         }
         SequenceValidationState rhs = ((SequenceValidationState) other);
-        return (((((((this.summary == rhs.summary)||((this.summary!= null)&&this.summary.equals(rhs.summary)))&&((this.result == rhs.result)||((this.result!= null)&&this.result.equals(rhs.result))))&&((this.score == rhs.score)||((this.score!= null)&&this.score.equals(rhs.score))))&&((this.capabilities == rhs.capabilities)||((this.capabilities!= null)&&this.capabilities.equals(rhs.capabilities))))&&((this.stage == rhs.stage)||((this.stage!= null)&&this.stage.equals(rhs.stage))))&&((this.status == rhs.status)||((this.status!= null)&&this.status.equals(rhs.status))));
+        return (((((((this.summary == rhs.summary)||((this.summary!= null)&&this.summary.equals(rhs.summary)))&&((this.result == rhs.result)||((this.result!= null)&&this.result.equals(rhs.result))))&&((this.scoring == rhs.scoring)||((this.scoring!= null)&&this.scoring.equals(rhs.scoring))))&&((this.capabilities == rhs.capabilities)||((this.capabilities!= null)&&this.capabilities.equals(rhs.capabilities))))&&((this.stage == rhs.stage)||((this.stage!= null)&&this.stage.equals(rhs.stage))))&&((this.status == rhs.status)||((this.status!= null)&&this.status.equals(rhs.status))));
     }
 
 

@@ -154,7 +154,7 @@ import udmi.schema.Metadata;
 import udmi.schema.Operation;
 import udmi.schema.PointsetEvents;
 import udmi.schema.SchemaValidationState;
-import udmi.schema.Score;
+import udmi.schema.Scoring;
 import udmi.schema.SequenceValidationState;
 import udmi.schema.SequenceValidationState.SequenceResult;
 import udmi.schema.State;
@@ -324,6 +324,7 @@ public class SequenceBase {
   private final CaptureMap otherEvents = new CaptureMap();
   private final AtomicBoolean waitingForConfigSync = new AtomicBoolean();
   private static String sessionPrefix;
+  private static Scoring scoringResult;
 
   private static void setupSequencer() {
     exeConfig = SequenceRunner.ensureExecutionConfig();
@@ -483,6 +484,10 @@ public class SequenceBase {
 
   private static void emitSequenceResult(SequenceResult result, String bucket, String name,
       String stage, int score, int total, String message) {
+    // TODO: Clean up this hack of using a class-wide static variable to store this information.
+    scoringResult = new Scoring();
+    scoringResult.value = score;
+    scoringResult.total = total;
     emitSequencerOut(format(RESULT_FORMAT, result, bucket, name, stage, score, total, message));
   }
 
@@ -2213,6 +2218,7 @@ public class SequenceBase {
     SequenceResult startResult = SequenceResult.START;
     entry.level = RESULT_LEVEL_MAP.get(startResult).value();
     entry.timestamp = new Date();
+    scoringResult = null;
     setSequenceStatus(description, startResult, entry);
   }
 
@@ -2228,9 +2234,7 @@ public class SequenceBase {
     sequenceValidationState.stage = getTestStage(description);
     sequenceValidationState.capabilities = capabilityExceptions.keySet().stream()
         .collect(Collectors.toMap(Capabilities::value, this::collectCapabilityResult));
-    sequenceValidationState.score = new Score();
-    sequenceValidationState.score.value = 1;
-    sequenceValidationState.score.total = 2;
+    sequenceValidationState.scoring = scoringResult;
     updateValidationState();
   }
 
