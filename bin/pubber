@@ -39,6 +39,8 @@ elif [[ ! -f $config_file ]]; then
 elif [[ $(jq -r .deviceId $config_file) != null ]]; then
     echo Using pubber configuration file direct.
     jq -r .endpoint $config_file > $ENDPOINT_TMP
+    device_id=$(jq -r .deviceId $config_file)
+    registry_id=$(jq -r .registryId $config_file)
 elif [[ $(jq -r .device_id $config_file) == null ]]; then
     fail Neither deviceId nor device_id defined in config file.
 else
@@ -111,8 +113,9 @@ elif [[ $project_id =~ @ ]]; then
     iot_provider=jwt
     broker_hostname=${project_id#*@}
     project_target=${project_id%@*}
-elif [[ -z $iot_provider ]]; then
-    false no iot_provider provided.
+elif [[ -z ${iot_provider:-} ]]; then
+    warn no iot_provider provided.
+    iot_provider=gbos
 fi
 
 [[ ${registry_id:-null} == null ]] && fail registry_id not defined

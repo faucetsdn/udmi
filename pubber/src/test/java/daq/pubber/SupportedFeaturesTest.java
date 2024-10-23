@@ -8,7 +8,6 @@ import static udmi.schema.Bucket.ENUMERATION_FEATURES;
 
 import java.util.Map;
 import org.junit.Test;
-import udmi.lib.SupportedFeatures;
 import udmi.schema.Bucket;
 import udmi.schema.FeatureDiscovery;
 import udmi.schema.FeatureDiscovery.FeatureStage;
@@ -20,7 +19,7 @@ public class SupportedFeaturesTest {
 
   @Test
   public void basicFeatureDiscovery() {
-    Map<String, FeatureDiscovery> featureMap = SupportedFeatures.getFeatures();
+    Map<String, FeatureDiscovery> featureMap = PubberFeatures.getFeatures();
     featureMap.forEach((key, value) -> {
       assertNotEquals("Feature " + key, FeatureStage.DISABLED, value.stage);
       assertTrue("Invalid feature name: " + key, Bucket.contains(key));

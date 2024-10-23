@@ -9,7 +9,6 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.databind.node.IntNode;
-import com.fasterxml.jackson.databind.node.TextNode;
 import com.fasterxml.jackson.databind.util.ISO8601DateFormat;
 import java.io.File;
 import java.util.Map;
@@ -17,6 +16,7 @@ import org.junit.Test;
 import udmi.schema.State;
 import udmi.schema.StateSystemOperation;
 import udmi.schema.SystemState;
+import udmi.util.SchemaVersion;
 
 /**
  * Unit tests for MessageDowngrader.

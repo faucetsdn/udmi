@@ -27,7 +27,6 @@ import static java.util.Optional.ofNullable;
 import static udmi.schema.EndpointConfiguration.Protocol.MQTT;
 
 import com.google.udmi.util.CertManager;
-import com.google.udmi.util.SchemaVersion;
 import com.google.udmi.util.SiteModel;
 import com.google.udmi.util.SiteModel.MetadataException;
 import daq.pubber.PubSubClient.Bundle;
@@ -47,14 +46,11 @@ import java.util.function.Function;
 import org.apache.http.ConnectionClosedException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import udmi.lib.FamilyProvider;
-import udmi.lib.ManagerBase;
-import udmi.lib.MqttDevice;
-import udmi.lib.MqttPublisher.PublisherException;
-import udmi.lib.SupportedFeatures;
+import udmi.lib.base.MqttDevice;
+import udmi.lib.base.MqttPublisher.PublisherException;
 import udmi.lib.client.DeviceManager;
 import udmi.lib.client.SystemManager;
-import udmi.lib.client.UdmiPublisher;
+import udmi.lib.intf.FamilyProvider;
 import udmi.schema.Config;
 import udmi.schema.DevicePersistent;
 import udmi.schema.EndpointConfiguration;
@@ -66,11 +62,12 @@ import udmi.schema.Metadata;
 import udmi.schema.Operation.SystemMode;
 import udmi.schema.PubberConfiguration;
 import udmi.schema.PubberOptions;
+import udmi.util.SchemaVersion;
 
 /**
  * IoT Core UDMI Device Emulator.
  */
-public class Pubber extends ManagerBase implements UdmiPublisher {
+public class Pubber extends PubberManager implements PubberUdmiPublisher {
 
   public static final String PUBBER_OUT = "pubber/out";
   public static final String PERSISTENT_STORE_FILE = "persistent_data.json";
@@ -105,7 +102,7 @@ public class Pubber extends ManagerBase implements UdmiPublisher {
   private SiteModel siteModel;
   private SchemaVersion targetSchema;
   private int deviceUpdateCount = -1;
-  private daq.pubber.DeviceManager deviceManager;
+  private PubberDeviceManager deviceManager;
   private boolean isConnected;
   private boolean isGatewayDevice;
 
@@ -258,10 +255,10 @@ public class Pubber extends ManagerBase implements UdmiPublisher {
 
   @Override
   public void initializeDevice() {
-    deviceManager = new daq.pubber.DeviceManager(this, config);
+    deviceManager = new PubberDeviceManager(this, config);
 
     if (config.sitePath != null) {
-      SupportedFeatures.writeFeatureFile(config.sitePath, deviceManager);
+      PubberFeatures.writeFeatureFile(config.sitePath, deviceManager);
       siteModel = new SiteModel(config.sitePath);
       siteModel.initialize();
       if (config.endpoint == null) {
@@ -278,7 +275,7 @@ public class Pubber extends ManagerBase implements UdmiPublisher {
       pullDeviceMessage();
     }
 
-    SupportedFeatures.setFeatureSwap(config.options.featureEnableSwap);
+    PubberFeatures.setFeatureSwap(config.options.featureEnableSwap);
     initializePersistentStore();
 
     info(format("Starting pubber %s, serial %s, mac %s, gateway %s, options %s",
@@ -465,6 +462,11 @@ public class Pubber extends ManagerBase implements UdmiPublisher {
   }
 
   @Override
+  public PubberConfiguration getConfig() {
+    return config;
+  }
+
+  @Override
   public void initializeMqtt() {
     checkNotNull(config.deviceId, "configuration deviceId not defined");
     if (siteModel != null && config.keyFile != null) {
@@ -472,14 +474,24 @@ public class Pubber extends ManagerBase implements UdmiPublisher {
     }
     ensureKeyBytes();
     checkState(deviceTarget == null, "mqttPublisher already defined");
+    EndpointConfiguration endpoint = config.endpoint;
+    endpoint.gatewayId = ofNullable(config.gatewayId).orElse(config.deviceId);
+    endpoint.deviceId = config.deviceId;
+    endpoint.noConfigAck = options.noConfigAck;
+    endpoint.keyBytes = config.keyBytes;
+    endpoint.algorithm = config.algorithm;
+    augmentEndpoint(endpoint);
     String keyPassword = siteModel.getDevicePassword(config.deviceId);
     String targetDeviceId = getTargetDeviceId(siteModel, config.deviceId);
     CertManager certManager = new CertManager(new File(siteModel.getReflectorDir(), CA_CRT),
-        siteModel.getDeviceDir(targetDeviceId), config.endpoint.transport, keyPassword,
+        siteModel.getDeviceDir(targetDeviceId), endpoint.transport, keyPassword,
         this::info);
-    deviceTarget = new MqttDevice(config, this::publisherException, certManager);
+    deviceTarget = new MqttDevice(endpoint, this::publisherException, certManager);
     registerMessageHandlers();
     publishDirtyState();
+  }
+
+  protected void augmentEndpoint(EndpointConfiguration endpoint) {
   }
 
   private String getTargetDeviceId(SiteModel siteModel, String deviceId) {
@@ -612,6 +624,11 @@ public class Pubber extends ManagerBase implements UdmiPublisher {
   @Override
   public File getOutDir() {
     return this.outDir;
+  }
+
+  @Override
+  public PubberOptions getOptions() {
+    return options;
   }
 
   @Override

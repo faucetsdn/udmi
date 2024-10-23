@@ -1,11 +1,11 @@
 {
-  "timestamp" : "2024-10-09T00:14:39Z",
-  "version" : "@@@cloud udmi version###git-a719207",
+  "timestamp" : "2024-10-23T16:20:57Z",
+  "version" : "@@@cloud udmi version###1.5.1-72-ga5126fa2-dirty",
   "system" : {
     "min_loglevel" : 100,
     "metrics_rate_sec" : 10,
     "operation" : {
-      "last_start" : "2024-10-09T00:13:40Z"
+      "last_start" : "2024-10-23T16:19:51Z"
     },
     "testing" : {
       "sequence_name" : "broken_config"
