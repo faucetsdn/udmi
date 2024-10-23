@@ -1,7 +1,7 @@
-RESULT pass schemas device_state_beta BETA 5/5 Schema validation passed
-RESULT pass schemas device_state_stable STABLE 5/5 Schema validation passed
-RESULT pass schemas events_pointset_beta BETA 5/5 Schema validation passed
-RESULT pass schemas events_system_beta BETA 5/5 Schema validation passed
-RESULT pass schemas events_system_stable STABLE 5/5 Schema validation passed
-RESULT pass schemas state_update_beta BETA 5/5 Schema validation passed
-RESULT pass schemas state_update_stable STABLE 5/5 Schema validation passed
+RESULT pass schemas device_state_beta BETA 10/10 Schema validation passed
+RESULT pass schemas device_state_stable STABLE 10/10 Schema validation passed
+RESULT pass schemas events_pointset_beta BETA 10/10 Schema validation passed
+RESULT pass schemas events_system_beta BETA 10/10 Schema validation passed
+RESULT pass schemas events_system_stable STABLE 10/10 Schema validation passed
+RESULT pass schemas state_update_beta BETA 10/10 Schema validation passed
+RESULT pass schemas state_update_stable STABLE 10/10 Schema validation passed

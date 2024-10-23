@@ -1,27 +1,27 @@
-RESULT pass endpoint.config endpoint_connection_error PREVIEW 5/5 Sequence complete
-RESULT pass endpoint.config endpoint_connection_retry PREVIEW 5/5 Sequence complete
+RESULT pass endpoint.config endpoint_connection_error PREVIEW 10/10 Sequence complete
+RESULT pass endpoint.config endpoint_connection_retry PREVIEW 10/10 Sequence complete
 RESULT skip endpoint.config endpoint_connection_success_alternate PREVIEW 0/0 No functional alternate registry defined
 RESULT skip endpoint.config endpoint_connection_success_reconnect PREVIEW 0/0 No functional alternate registry defined
-RESULT pass endpoint.config endpoint_failure_and_restart PREVIEW 5/5 Sequence complete
+RESULT pass endpoint.config endpoint_failure_and_restart PREVIEW 10/10 Sequence complete
 RESULT skip endpoint.config endpoint_redirect_and_restart PREVIEW 0/0 No functional alternate registry defined
-RESULT pass enumeration empty_enumeration PREVIEW 5/5 Sequence complete
-RESULT pass enumeration.features feature_enumeration PREVIEW 5/5 Sequence complete
+RESULT pass enumeration empty_enumeration PREVIEW 10/10 Sequence complete
+RESULT pass enumeration.features feature_enumeration PREVIEW 10/10 Sequence complete
 RESULT skip gateway bad_target_family PREVIEW 0/0 Not a proxied device
 RESULT skip gateway gateway_proxy_events BETA 0/0 Not a gateway
-RESULT pass pointset pointset_publish STABLE 5/5 Sequence complete
-RESULT pass pointset pointset_publish_interval STABLE 5/5 Sequence complete
-RESULT pass pointset pointset_remove_point STABLE 5/5 Sequence complete
-RESULT pass pointset pointset_request_extraneous STABLE 5/5 Sequence complete
-RESULT pass system broken_config STABLE 5/5 Sequence complete
+RESULT pass pointset pointset_publish STABLE 10/10 Sequence complete
+RESULT pass pointset pointset_publish_interval STABLE 10/10 Sequence complete
+RESULT pass pointset pointset_remove_point STABLE 10/10 Sequence complete
+RESULT pass pointset pointset_request_extraneous STABLE 10/10 Sequence complete
+RESULT pass system broken_config STABLE 10/10 Sequence complete
 CPBLTY pass system broken_config.logging ALPHA 1/1 Capability supported
-RESULT pass system config_logging STABLE 5/5 Sequence complete
-RESULT fail system device_config_acked STABLE 0/5 Timeout waiting for config acked
-RESULT pass system extra_config STABLE 5/5 Sequence complete
-RESULT pass system family_ether_addr PREVIEW 5/5 Sequence complete
-RESULT pass system family_ipv4_addr PREVIEW 5/5 Sequence complete
-RESULT pass system family_ipv6_addr PREVIEW 5/5 Sequence complete
-RESULT pass system state_make_model STABLE 5/5 Sequence complete
-RESULT pass system state_software BETA 5/5 Sequence complete
-RESULT pass system system_last_update STABLE 6/6 Sequence complete
+RESULT pass system config_logging STABLE 10/10 Sequence complete
+RESULT fail system device_config_acked STABLE 0/10 Timeout waiting for config acked
+RESULT pass system extra_config STABLE 10/10 Sequence complete
+RESULT pass system family_ether_addr PREVIEW 10/10 Sequence complete
+RESULT pass system family_ipv4_addr PREVIEW 10/10 Sequence complete
+RESULT pass system family_ipv6_addr PREVIEW 10/10 Sequence complete
+RESULT pass system state_make_model STABLE 10/10 Sequence complete
+RESULT pass system state_software BETA 10/10 Sequence complete
+RESULT pass system system_last_update STABLE 11/11 Sequence complete
 CPBLTY pass system system_last_update.subblocks ALPHA 1/1 Capability supported
-RESULT pass system valid_serial_no STABLE 5/5 Sequence complete
+RESULT pass system valid_serial_no STABLE 10/10 Sequence complete

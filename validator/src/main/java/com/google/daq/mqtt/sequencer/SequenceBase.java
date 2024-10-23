@@ -154,6 +154,7 @@ import udmi.schema.Metadata;
 import udmi.schema.Operation;
 import udmi.schema.PointsetEvents;
 import udmi.schema.SchemaValidationState;
+import udmi.schema.Scoring;
 import udmi.schema.SequenceValidationState;
 import udmi.schema.SequenceValidationState.SequenceResult;
 import udmi.schema.State;
@@ -178,7 +179,7 @@ public class SequenceBase {
   public static final String NOT_STATUS_PREFIX = "no ";
   public static final String STATUS_CHECK_SUFFIX = " exists";
   public static final String SCHEMA_BUCKET = "schemas";
-  public static final int SCHEMA_SCORE = 5;
+  public static final int SCHEMA_SCORE_TOTAL = 10;
   public static final int CAPABILITY_SCORE = 1;
   public static final String STATUS_LEVEL_VIOLATION = "STATUS_LEVEL";
   public static final String DEVICE_STATE_SCHEMA = "device_state";
@@ -222,8 +223,8 @@ public class SequenceBase {
   private static final String SYSTEM_TESTING_MARKER = "system.testing";
   private static final BiMap<SequenceResult, Level> RESULT_LEVEL_MAP = ImmutableBiMap.of(
       START, Level.INFO,
-      SKIP, Level.WARNING,
       PASS, Level.NOTICE,
+      SKIP, Level.WARNING,
       FAIL, Level.ERROR,
       ERRR, Level.CRITIAL
   );
@@ -323,6 +324,7 @@ public class SequenceBase {
   private final CaptureMap otherEvents = new CaptureMap();
   private final AtomicBoolean waitingForConfigSync = new AtomicBoolean();
   private static String sessionPrefix;
+  private static Scoring scoringResult;
 
   private static void setupSequencer() {
     exeConfig = SequenceRunner.ensureExecutionConfig();
@@ -482,6 +484,10 @@ public class SequenceBase {
 
   private static void emitSequenceResult(SequenceResult result, String bucket, String name,
       String stage, int score, int total, String message) {
+    // TODO: Clean up this hack of using a class-wide static variable to store this information.
+    scoringResult = new Scoring();
+    scoringResult.value = score;
+    scoringResult.total = total;
     emitSequencerOut(format(RESULT_FORMAT, result, bucket, name, stage, score, total, message));
   }
 
@@ -515,7 +521,7 @@ public class SequenceBase {
         String stageValue = stage.value();
         String schemaStage = schema + "_" + stageValue;
         emitSequenceResult(result, SCHEMA_BUCKET, schemaStage, stageValue.toUpperCase(),
-            SCHEMA_SCORE, SCHEMA_SCORE, entry.message);
+            SCHEMA_SCORE_TOTAL, SCHEMA_SCORE_TOTAL, entry.message);
       });
     });
   }
@@ -2212,6 +2218,7 @@ public class SequenceBase {
     SequenceResult startResult = SequenceResult.START;
     entry.level = RESULT_LEVEL_MAP.get(startResult).value();
     entry.timestamp = new Date();
+    scoringResult = null;
     setSequenceStatus(description, startResult, entry);
   }
 
@@ -2227,6 +2234,7 @@ public class SequenceBase {
     sequenceValidationState.stage = getTestStage(description);
     sequenceValidationState.capabilities = capabilityExceptions.keySet().stream()
         .collect(Collectors.toMap(Capabilities::value, this::collectCapabilityResult));
+    sequenceValidationState.scoring = scoringResult;
     updateValidationState();
   }
 

@@ -16,7 +16,7 @@ import udmi.schema.FeatureDiscovery.FeatureStage;
 @Target({ElementType.METHOD})
 public @interface Feature {
   FeatureStage DEFAULT_STAGE = FeatureStage.ALPHA;
-  int DEFAULT_SCORE = 5;
+  int DEFAULT_SCORE = 10;
 
   /**
    * Defines the bucket for this feature, as defined by a named attribute.

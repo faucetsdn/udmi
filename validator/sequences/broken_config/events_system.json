@@ -1,82 +1,52 @@
 {
-  "event_count" : 6,
-  "last_config" : "2024-10-09T00:14:39Z",
+  "event_count" : 7,
+  "last_config" : "2024-10-23T16:20:57Z",
   "logentries" : [ {
-    "message" : "Update state 2024-10-09T00:14:39Z last_config 2024-10-09T00:14:30Z",
+    "message" : "Update state 2024-10-23T16:20:57Z last_config 2024-10-23T16:20:47Z",
     "category" : "device.log",
-    "timestamp" : "2024-10-09T00:14:39Z",
+    "timestamp" : "2024-10-23T16:20:57Z",
     "level" : 200
   }, {
-    "message" : "Device AHU-1 config handler",
+    "message" : "2024-10-23T16:20:57Z received config 2024-10-23T16:20:57Z",
     "category" : "device.log",
-    "timestamp" : "2024-10-09T00:14:39Z",
-    "level" : 200
-  }, {
-    "message" : "2024-10-09T00:14:39Z received config 2024-10-09T00:14:39Z",
-    "category" : "device.log",
-    "timestamp" : "2024-10-09T00:14:39Z",
+    "timestamp" : "2024-10-23T16:20:57Z",
     "level" : 200
   }, {
     "message" : "success",
     "category" : "system.config.apply",
-    "timestamp" : "2024-10-09T00:14:39Z",
+    "timestamp" : "2024-10-23T16:20:57Z",
     "level" : 300
   }, {
     "message" : "State update defer 2000ms",
     "category" : "device.log",
-    "timestamp" : "2024-10-09T00:14:39Z",
+    "timestamp" : "2024-10-23T16:20:57Z",
     "level" : 100
   }, {
     "message" : "State update defer 1999ms",
     "category" : "device.log",
-    "timestamp" : "2024-10-09T00:14:39Z",
-    "level" : 100
-  }, {
-    "message" : "State update defer 1999ms",
-    "category" : "device.log",
-    "timestamp" : "2024-10-09T00:14:39Z",
-    "level" : 100
-  }, {
-    "message" : "State update defer 1999ms",
-    "category" : "device.log",
-    "timestamp" : "2024-10-09T00:14:39Z",
-    "level" : 100
-  }, {
-    "message" : "State update defer 1999ms",
-    "category" : "device.log",
-    "timestamp" : "2024-10-09T00:14:39Z",
-    "level" : 100
-  }, {
-    "message" : "State update defer 1999ms",
-    "category" : "device.log",
-    "timestamp" : "2024-10-09T00:14:39Z",
-    "level" : 100
-  }, {
-    "message" : "State update defer 1999ms",
-    "category" : "device.log",
-    "timestamp" : "2024-10-09T00:14:39Z",
+    "timestamp" : "2024-10-23T16:20:57Z",
     "level" : 100
   }, {
     "message" : "State update defer 0ms",
     "category" : "device.log",
-    "timestamp" : "2024-10-09T00:14:41Z",
+    "timestamp" : "2024-10-23T16:20:59Z",
     "level" : 100
   }, {
-    "message" : "Update state 2024-10-09T00:14:41Z last_config 2024-10-09T00:14:39Z",
+    "message" : "Update state 2024-10-23T16:20:59Z last_config 2024-10-23T16:20:57Z",
     "category" : "device.log",
-    "timestamp" : "2024-10-09T00:14:41Z",
+    "timestamp" : "2024-10-23T16:20:59Z",
     "level" : 200
   }, {
     "message" : "State update AHU-1 (broken_config)",
-    "detail" : "{\n  \"timestamp\" : \"2024-10-09T00:14:41Z\",\n  \"version\" : \"1.5.1\",\n  \"system\" : {\n    \"last_config\" : \"2024-10-09T00:14:39Z\",\n    \"operation\" : {\n      \"operational\" : true,\n      \"last_start\" : \"2024-10-09T00:13:40Z\",\n      \"restart_count\" : 1,\n      \"mode\" : \"initial\"\n    },\n    \"serial_no\" : \"sequencer-22986\",\n    \"hardware\" : {\n      \"make\" : \"BOS\",\n      \"model\" : \"pubber\"\n    },\n    \"software\" : {\n      \"firmware\" : \"v1\"\n    },\n    \"status\" : {\n      \"message\" : \"success\",\n      \"category\" : \"system.config.apply\",\n      \"timestamp\" : \"2024-10-09T00:14:39Z\",\n      \"level\" : 300\n    }\n  },\n  \"localnet\" : {\n    \"families\" : {\n      \"ether\" : {\n        \"addr\" : \"7c:1e:52:02:24:f7\"\n      },\n      \"ipv4\" : {\n        \"addr\" : \"10.1.0.194\"\n      },\n      \"ipv6\" : {\n        \"addr\" : \"fe80::7e1e:52ff:fe02:24f7\"\n      },\n      \"vendor\" : {\n        \"addr\" : \"28179023\"\n      }\n    }\n  },\n  \"pointset\" : {\n    \"points\" : {\n      \"filter_alarm_pressure_status\" : {\n        \"units\" : \"No-units\"\n      },\n      \"filter_differential_pressure_setpoint\" : {\n        \"units\" : \"Bars\",\n        \"value_state\" : \"applied\"\n      },\n      \"filter_differential_pressure_sensor\" : {\n        \"units\" : \"Degrees-Celsius\"\n      }\n    }\n  }\n}",
+    "detail" : "{\n  \"timestamp\" : \"2024-10-23T16:20:59Z\",\n  \"version\" : \"1.5.2\",\n  \"system\" : {\n    \"last_config\" : \"2024-10-23T16:20:57Z\",\n    \"operation\" : {\n      \"operational\" : true,\n      \"last_start\" : \"2024-10-23T16:19:51Z\",\n      \"restart_count\" : 1,\n      \"mode\" : \"initial\"\n    },\n    \"serial_no\" : \"sequencer-23439\",\n    \"hardware\" : {\n      \"make\" : \"BOS\",\n      \"model\" : \"pubber\"\n    },\n    \"software\" : {\n      \"firmware\" : \"v1\"\n    },\n    \"status\" : {\n      \"message\" : \"success\",\n      \"category\" : \"system.config.apply\",\n      \"timestamp\" : \"2024-10-23T16:20:57Z\",\n      \"level\" : 300\n    }\n  },\n  \"localnet\" : {\n    \"families\" : {\n      \"ether\" : {\n        \"addr\" : \"00:e0:4c:68:02:53\"\n      },\n      \"ipv4\" : {\n        \"addr\" : \"192.168.8.3\"\n      },\n      \"ipv6\" : {\n        \"addr\" : \"fe80::34b4:e225:f590:7334\"\n      },\n      \"vendor\" : {\n        \"addr\" : \"28179023\"\n      }\n    }\n  },\n  \"pointset\" : {\n    \"points\" : {\n      \"filter_alarm_pressure_status\" : {\n        \"units\" : \"No-units\"\n      },\n      \"filter_differential_pressure_setpoint\" : {\n        \"units\" : \"Bars\",\n        \"value_state\" : \"applied\"\n      },\n      \"filter_differential_pressure_sensor\" : {\n        \"units\" : \"Degrees-Celsius\"\n      }\n    }\n  }\n}",
     "category" : "device.log",
-    "timestamp" : "2024-10-09T00:14:41Z",
+    "timestamp" : "2024-10-23T16:20:59Z",
     "level" : 100
   } ],
   "metrics" : {
-    "mem_total_mb" : 254.0,
-    "mem_free_mb" : 213.59130859375
+    "mem_total_mb" : 508.0,
+    "mem_free_mb" : 460.75390625
   },
-  "timestamp" : "2024-10-09T00:14:41Z",
-  "version" : "1.5.1"
+  "timestamp" : "2024-10-23T16:21:02Z",
+  "version" : "1.5.2"
 }
