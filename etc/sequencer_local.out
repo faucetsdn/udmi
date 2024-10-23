@@ -22,6 +22,6 @@ RESULT pass system family_ipv4_addr PREVIEW 10/10 Sequence complete
 RESULT pass system family_ipv6_addr PREVIEW 10/10 Sequence complete
 RESULT pass system state_make_model STABLE 10/10 Sequence complete
 RESULT pass system state_software BETA 10/10 Sequence complete
-RESULT pass system system_last_update STABLE 6/6 Sequence complete
+RESULT pass system system_last_update STABLE 11/11 Sequence complete
 CPBLTY pass system system_last_update.subblocks ALPHA 1/1 Capability supported
 RESULT pass system valid_serial_no STABLE 10/10 Sequence complete
