@@ -179,7 +179,7 @@ public class SequenceBase {
   public static final String NOT_STATUS_PREFIX = "no ";
   public static final String STATUS_CHECK_SUFFIX = " exists";
   public static final String SCHEMA_BUCKET = "schemas";
-  public static final int SCHEMA_SCORE = 10;
+  public static final int SCHEMA_SCORE_TOTAL = 10;
   public static final int CAPABILITY_SCORE = 1;
   public static final String STATUS_LEVEL_VIOLATION = "STATUS_LEVEL";
   public static final String DEVICE_STATE_SCHEMA = "device_state";
@@ -521,7 +521,7 @@ public class SequenceBase {
         String stageValue = stage.value();
         String schemaStage = schema + "_" + stageValue;
         emitSequenceResult(result, SCHEMA_BUCKET, schemaStage, stageValue.toUpperCase(),
-            SCHEMA_SCORE, SCHEMA_SCORE, entry.message);
+            SCHEMA_SCORE_TOTAL, SCHEMA_SCORE_TOTAL, entry.message);
       });
     });
   }
