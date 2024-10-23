@@ -42,18 +42,6 @@ public class PubberGatewayManager extends PubberManager implements GatewayManage
     super(host, configuration);
   }
 
-  /**
-   * Publish log message for target device.
-   */
-  @Override
-  public void publishLogMessage(Entry logEntry, String targetId) {
-    ifNotNullThen(proxyDevices, p -> p.values().forEach(pd -> {
-      if (pd.getDeviceId().equals(targetId)) {
-        pd.getDeviceManager().publishLogMessage(logEntry, targetId);
-      }
-    }));
-  }
-
   public void setMetadata(Metadata metadata) {
     this.metadata = metadata;
     proxyDevices = ifNotNullGet(metadata.gateway, g -> createProxyDevices(g.proxy_ids));
@@ -98,19 +86,6 @@ public class PubberGatewayManager extends PubberManager implements GatewayManage
       }
     }
     updateState();
-  }
-
-  /**
-   * Sets the status of the gateway.
-   */
-  @Override
-  public void setGatewayStatus(String category, Level level, String message) {
-    // TODO: Implement a map or tree or something to properly handle different error sources.
-    gatewayState.status = new Entry();
-    gatewayState.status.category = category;
-    gatewayState.status.level = level.value();
-    gatewayState.status.message = message;
-    gatewayState.status.timestamp = getNow();
   }
 
   @Override
