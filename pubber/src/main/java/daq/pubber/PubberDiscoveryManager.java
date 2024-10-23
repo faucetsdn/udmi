@@ -7,7 +7,7 @@ import static daq.pubber.PubberUdmiPublisher.DEVICE_START_TIME;
 import static java.lang.String.format;
 import static java.util.stream.Collectors.toMap;
 import static udmi.schema.FamilyDiscoveryState.Phase.ACTIVE;
-import static udmi.schema.FamilyDiscoveryState.Phase.DONE;
+import static udmi.schema.FamilyDiscoveryState.Phase.STOPPED;
 
 import com.google.udmi.util.SiteModel;
 import java.util.Date;
@@ -85,7 +85,7 @@ public class PubberDiscoveryManager extends PubberManager implements DiscoveryMa
     familyDiscoveryState.generation = scanGeneration;
     familyDiscoveryState.phase = ACTIVE;
     AtomicInteger sendCount = new AtomicInteger();
-    familyDiscoveryState.record_count = sendCount.get();
+    familyDiscoveryState.active_count = sendCount.get();
     updateState();
     discoveryProvider(family).startScan(shouldEnumerate(family),
         (deviceId, discoveryEvent) -> ifNotNullThen(discoveryEvent.scan_addr, addr -> {
@@ -96,7 +96,7 @@ public class PubberDiscoveryManager extends PubberManager implements DiscoveryMa
           discoveryEvent.system = new SystemDiscoveryData();
           discoveryEvent.system.ancillary = new HashMap<>();
           discoveryEvent.system.ancillary.put("device-name", deviceId);
-          familyDiscoveryState.record_count = sendCount.incrementAndGet();
+          familyDiscoveryState.active_count = sendCount.incrementAndGet();
           updateState();
           host.publish(discoveryEvent);
         }));
@@ -112,7 +112,7 @@ public class PubberDiscoveryManager extends PubberManager implements DiscoveryMa
       ifTrueThen(scanGeneration.equals(familyDiscoveryState.generation),
           () -> {
             discoveryProvider(family).stopScan();
-            familyDiscoveryState.phase = DONE;
+            familyDiscoveryState.phase = STOPPED;
             updateState();
             scheduleDiscoveryScan(family);
           });

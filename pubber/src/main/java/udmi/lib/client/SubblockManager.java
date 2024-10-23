@@ -28,4 +28,6 @@ public interface SubblockManager extends ManagerLog {
   String getDeviceId();
 
   ManagerHost getHost();
+
+  int incrementEventCount();
 }
