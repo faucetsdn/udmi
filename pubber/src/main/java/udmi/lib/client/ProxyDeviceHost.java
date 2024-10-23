@@ -38,12 +38,12 @@ public interface ProxyDeviceHost extends ManagerHost, ManagerLog {
   default void activate() {
     try {
       isActive().set(false);
+      info("Activating proxy device " + getDeviceId());
       MqttDevice mqttDevice = getUdmiPublisher().getMqttDevice(getDeviceId());
       mqttDevice.registerHandler(MqttDevice.CONFIG_TOPIC, this::configHandler, Config.class);
-      mqttDevice.connect();
+      mqttDevice.connect(getDeviceId());
       getDeviceManager().activate();
       isActive().set(true);
-      info("Activated proxy device " + getDeviceId());
     } catch (Exception e) {
       error(format("Could not connect proxy device %s: %s", getDeviceId(), friendlyStackTrace(e)));
     }
