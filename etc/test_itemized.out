@@ -1,50 +1,50 @@
-1 RESULT fail system device_config_acked STABLE 0/5 Timeout waiting for config acked
-1 RESULT fail pointset pointset_request_extraneous STABLE 0/5 Because config TIMESTAMP event TIMESTAMP differences: llama
-1 RESULT fail pointset pointset_remove_point STABLE 0/5 Because config TIMESTAMP state TIMESTAMP differences: filter_alarm_pressure_status
-1 RESULT fail pointset pointset_remove_point STABLE 0/5 Timeout waiting for initial device state
-1 RESULT fail system too_much_state ALPHA 0/5 Failed check that No more than 6 state updates in 60s
-1 RESULT fail enumeration.features feature_enumeration PREVIEW 0/5 Failed check that feature enumeration matches metadata; missing { enumeration }, extra { unknown }
-1 RESULT pass system valid_serial_no STABLE 5/5 Sequence complete
-1 RESULT fail system valid_serial_no STABLE 0/5 missing subFolder
-1 RESULT fail writeback writeback_success ALPHA 0/5 Because point filter_differential_pressure_setpoint is applied, expected null
-1 RESULT fail writeback writeback_success ALPHA 0/5 Because point filter_differential_pressure_setpoint is null, expected applied
-1 RESULT fail writeback writeback_success ALPHA 0/5 Because point filter_differential_pressure_setpoint is null, expected applied
-1 RESULT fail pointset pointset_publish_interval STABLE 0/5 Failed check that time period between successive pointset events is between 5 and 8 seconds
-1 RESULT fail system.mode system_mode_restart ALPHA 0/5 Failed check that restart count increased by one
-1 RESULT fail system config_logging STABLE 0/5 Bad message version string 1.4.
+1 RESULT fail system device_config_acked STABLE 0/10 Timeout waiting for config acked
+1 RESULT fail pointset pointset_request_extraneous STABLE 0/10 Because config TIMESTAMP event TIMESTAMP differences: llama
+1 RESULT fail pointset pointset_remove_point STABLE 0/10 Because config TIMESTAMP state TIMESTAMP differences: filter_alarm_pressure_status
+1 RESULT fail pointset pointset_remove_point STABLE 0/10 Timeout waiting for initial device state
+1 RESULT fail system too_much_state ALPHA 0/10 Failed check that No more than 6 state updates in 60s
+1 RESULT fail enumeration.features feature_enumeration PREVIEW 0/10 Failed check that feature enumeration matches metadata; missing { enumeration }, extra { unknown }
+1 RESULT pass system valid_serial_no STABLE 10/10 Sequence complete
+1 RESULT fail system valid_serial_no STABLE 0/10 missing subFolder
+1 RESULT fail writeback writeback_success ALPHA 0/10 Because point filter_differential_pressure_setpoint is applied, expected null
+1 RESULT fail writeback writeback_success ALPHA 0/10 Because point filter_differential_pressure_setpoint is null, expected applied
+1 RESULT fail writeback writeback_success ALPHA 0/10 Because point filter_differential_pressure_setpoint is null, expected applied
+1 RESULT fail pointset pointset_publish_interval STABLE 0/10 Failed check that time period between successive pointset events is between 5 and 8 seconds
+1 RESULT fail system.mode system_mode_restart ALPHA 0/10 Failed check that restart count increased by one
+1 RESULT fail system config_logging STABLE 0/10 Bad message version string 1.4.
 1 CPBLTY pass system broken_config.logging ALPHA 1/1 Capability supported
-0 RESULT fail system broken_config STABLE 0/5 Because no status to report
+0 RESULT fail system broken_config STABLE 0/10 Because no status to report
 1 CPBLTY pass system broken_config.logging ALPHA 1/1 Capability supported
-0 RESULT pass system broken_config STABLE 5/5 Sequence complete
+0 RESULT pass system broken_config STABLE 10/10 Sequence complete
 1 CPBLTY skip system broken_config.logging ALPHA 0/0 Never executed
-0 RESULT fail system broken_config STABLE 0/4 Timeout waiting for initial device state
+0 RESULT fail system broken_config STABLE 0/9 Timeout waiting for initial device state
 1 CPBLTY fail system broken_config.logging ALPHA 0/1 While log category `system.config.apply` level `NOTICE` to be logged
-0 RESULT pass system broken_config STABLE 4/5 Sequence complete
+0 RESULT pass system broken_config STABLE 9/10 Sequence complete
 1 CPBLTY fail system broken_config.logging ALPHA 0/1 While log category `system.config.receive` level `DEBUG` to be logged
-0 RESULT fail system broken_config STABLE 0/5 expected:<system.config.[parse]> but was:<system.config.[apply]>
+0 RESULT fail system broken_config STABLE 0/10 expected:<system.config.[parse]> but was:<system.config.[apply]>
 1 CPBLTY fail system broken_config.logging ALPHA 0/1 While log category `system.config.apply` level `NOTICE` to be logged
-0 RESULT fail system broken_config STABLE 0/5 Because no status to report
+0 RESULT fail system broken_config STABLE 0/10 Because no status to report
 1 CPBLTY pass system system_last_update.subblocks ALPHA 1/1 Capability supported
-0 RESULT pass system system_last_update STABLE 6/6 Sequence complete
+0 RESULT pass system system_last_update STABLE 11/11 Sequence complete
 1 CPBLTY pass system system_last_update.subblocks ALPHA 1/1 Capability supported
-0 RESULT pass system system_last_update STABLE 6/6 Sequence complete
+0 RESULT pass system system_last_update STABLE 11/11 Sequence complete
 1 CPBLTY pass system system_last_update.subblocks ALPHA 1/1 Capability supported
-0 RESULT pass system system_last_update STABLE 6/6 Sequence complete
-1 RESULT fail system state_make_model STABLE 0/5 Failed check that no significant system status exists; deviceState.system not defined
+0 RESULT pass system system_last_update STABLE 11/11 Sequence complete
+1 RESULT fail system state_make_model STABLE 0/10 Failed check that no significant system status exists; deviceState.system not defined
 4 RESULT skip system valid_serial_no STABLE 0/0 State testing disabled
 1 CPBLTY skip system system_last_update.subblocks ALPHA 0/0 Never executed
 0 RESULT skip system system_last_update STABLE 0/0 State testing disabled
-1 RESULT fail system system_min_loglevel ALPHA 0/5 Received state update with no-state device
-1 RESULT pass system system_min_loglevel ALPHA 5/5 Sequence complete
-4 RESULT pass gateway gateway_proxy_events BETA 5/5 Sequence complete
-1 RESULT fail gateway gateway_proxy_events BETA 0/5 Because Missing pointset from AHU-22
-1 RESULT pass gateway gateway_proxy_state PREVIEW 5/5 Sequence complete
-1 RESULT pass gateway gateway_proxy_state PREVIEW 5/5 Sequence complete
-4 RESULT pass gateway gateway_proxy_events BETA 5/5 Sequence complete
-1 RESULT fail gateway gateway_proxy_events BETA 0/5 Received state update with no-state device
-1 RESULT pass gateway gateway_proxy_state PREVIEW 5/5 Sequence complete
+1 RESULT fail system system_min_loglevel ALPHA 0/10 Received state update with no-state device
+1 RESULT pass system system_min_loglevel ALPHA 10/10 Sequence complete
+4 RESULT pass gateway gateway_proxy_events BETA 10/10 Sequence complete
+1 RESULT fail gateway gateway_proxy_events BETA 0/10 Because Missing pointset from AHU-22
+1 RESULT pass gateway gateway_proxy_state PREVIEW 10/10 Sequence complete
+1 RESULT pass gateway gateway_proxy_state PREVIEW 10/10 Sequence complete
+4 RESULT pass gateway gateway_proxy_events BETA 10/10 Sequence complete
+1 RESULT fail gateway gateway_proxy_events BETA 0/10 Received state update with no-state device
+1 RESULT pass gateway gateway_proxy_state PREVIEW 10/10 Sequence complete
 4 RESULT skip system device_config_acked STABLE 0/0 No config check for proxy device
-1 RESULT pass gateway bad_target_family PREVIEW 5/5 Sequence complete
-1 RESULT pass gateway bad_target_address PREVIEW 5/5 Sequence complete
-1 RESULT pass gateway bad_point_ref PREVIEW 5/5 Sequence complete
+1 RESULT pass gateway bad_target_family PREVIEW 10/10 Sequence complete
+1 RESULT pass gateway bad_target_address PREVIEW 10/10 Sequence complete
+1 RESULT pass gateway bad_point_ref PREVIEW 10/10 Sequence complete
 4 RESULT skip gateway bad_point_ref PREVIEW 0/0 No testing target defined for 'tweaked_ref'

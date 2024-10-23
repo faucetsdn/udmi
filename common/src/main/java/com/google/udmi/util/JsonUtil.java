@@ -40,7 +40,6 @@ public abstract class JsonUtil {
       .registerModule(NanSerializer.TO_NULL) // NaN is not valid JSON, so squash it now.
       .setSerializationInclusion(Include.NON_NULL);
   public static final ObjectMapper OBJECT_MAPPER = STRICT_MAPPER.copy()
-      .enable(JsonParser.Feature.ALLOW_NON_NUMERIC_NUMBERS)
       .disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES);
   public static final ObjectMapper TERSE_MAPPER = OBJECT_MAPPER.copy()
       .disable(SerializationFeature.INDENT_OUTPUT);
