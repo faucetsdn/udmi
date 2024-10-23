@@ -130,7 +130,7 @@ public class ConfigSequences extends SequenceBase {
   }
 
   @Test(timeout = TWO_MINUTES_MS)
-  @Feature(stage = STABLE, bucket = SYSTEM, score = 4)
+  @Feature(stage = STABLE, bucket = SYSTEM, score = 9)
   @Capability(value = LOGGING, stage = ALPHA)
   @Summary("Check that the device correctly handles a broken (non-json) config message.")
   @ValidateSchema(SubFolder.SYSTEM)

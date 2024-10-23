@@ -18,7 +18,7 @@ import udmi.schema.ExecutionConfiguration;
 public abstract class ConfigUtil {
 
   public static final String EXCEPTIONS_JSON = "exceptions.json";
-  public static final String UDMI_VERSION = "1.5.1";
+  public static final String UDMI_VERSION = "1.5.2";
   // public static final String UDMI_VERSION = SchemaVersion.CURRENT.key();
   public static final String UDMI_TOOLS = System.getenv("UDMI_TOOLS");
   public static final File UDMI_ROOT = new File(ofNullable(System.getenv("UDMI_ROOT")).orElse("."));

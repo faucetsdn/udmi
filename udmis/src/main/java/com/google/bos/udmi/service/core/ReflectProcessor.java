@@ -187,8 +187,7 @@ public class ReflectProcessor extends ProcessorBase {
 
   private UdmiState extractUdmiState(Object message) {
     Map<String, Object> stringObjectMap = asMap(message);
-    UdmiState udmiState =
-        convertToStrict(UdmiState.class, stringObjectMap.get(SubFolder.UDMI.value()));
+    UdmiState udmiState = convertTo(UdmiState.class, stringObjectMap.get(SubFolder.UDMI.value()));
     requireNonNull(udmiState, "reflector state update missing udmi subfolder");
     udmiState.timestamp = JsonUtil.getDate((String) stringObjectMap.get(TIMESTAMP_KEY));
     return udmiState;

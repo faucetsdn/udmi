@@ -30,6 +30,10 @@ public class NullPublisher implements MessagePublisher {
   }
 
   @Override
+  public void activate() {
+  }
+
+  @Override
   public boolean isActive() {
     return false;
   }

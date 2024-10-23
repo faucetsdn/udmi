@@ -1,5 +1,5 @@
 {
-  "$udmi_version": "1.5.1",
+  "$udmi_version": "1.5.2",
   "title": "Localnet Config",
   "description": "Currently unused: request local network configuration",
   "type": "object",

@@ -122,6 +122,7 @@ public class Registrar {
       ".csv", Summarizer.CsvSummarizer.class);
   private static final String TOOL_NAME = "registrar";
   private static final long DELETE_FLUSH_DELAY_MS = 10 * SEC_TO_MS;
+  public static final String REGISTRAR_TOOL_NAME = "registrar";
   private final Map<String, JsonSchema> schemas = new HashMap<>();
   private final String generation = getGenerationString();
   private final Set<Summarizer> summarizers = new HashSet<>();
@@ -463,7 +464,8 @@ public class Registrar {
   }
 
   private void initializeCloudProject() {
-    cloudIotManager = new CloudIotManager(siteModel.getExecutionConfiguration());
+    cloudIotManager = new CloudIotManager(siteModel.getExecutionConfiguration(),
+        REGISTRAR_TOOL_NAME);
     System.err.printf(
         "Working with project %s registry %s/%s%n",
         cloudIotManager.getProjectId(),

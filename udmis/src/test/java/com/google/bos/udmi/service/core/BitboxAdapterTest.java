@@ -9,11 +9,11 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.udmi.util.JsonUtil;
-import daq.pubber.ProtocolFamily;
 import java.time.Instant;
 import java.util.Date;
 import java.util.Map;
 import org.junit.jupiter.api.Test;
+import udmi.lib.ProtocolFamily;
 import udmi.schema.DiscoveryEvents;
 import udmi.schema.Envelope;
 import udmi.schema.RefDiscovery;

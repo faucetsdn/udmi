@@ -4,7 +4,6 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertTrue;
-import static udmi.schema.Bucket.ENUMERATION;
 import static udmi.schema.Bucket.ENUMERATION_FEATURES;
 
 import java.util.Map;
@@ -20,7 +19,7 @@ public class SupportedFeaturesTest {
 
   @Test
   public void basicFeatureDiscovery() {
-    Map<String, FeatureDiscovery> featureMap = SupportedFeatures.getFeatures();
+    Map<String, FeatureDiscovery> featureMap = PubberFeatures.getFeatures();
     featureMap.forEach((key, value) -> {
       assertNotEquals("Feature " + key, FeatureStage.DISABLED, value.stage);
       assertTrue("Invalid feature name: " + key, Bucket.contains(key));

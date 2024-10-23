@@ -1,5 +1,5 @@
 {
-  "$udmi_version": "1.5.1",
+  "$udmi_version": "1.5.2",
   "title": "Pointset State",
   "description": "A set of points reporting telemetry data.",
   "type": "object",

@@ -154,6 +154,7 @@ import udmi.schema.Metadata;
 import udmi.schema.Operation;
 import udmi.schema.PointsetEvents;
 import udmi.schema.SchemaValidationState;
+import udmi.schema.Scoring;
 import udmi.schema.SequenceValidationState;
 import udmi.schema.SequenceValidationState.SequenceResult;
 import udmi.schema.State;
@@ -178,7 +179,7 @@ public class SequenceBase {
   public static final String NOT_STATUS_PREFIX = "no ";
   public static final String STATUS_CHECK_SUFFIX = " exists";
   public static final String SCHEMA_BUCKET = "schemas";
-  public static final int SCHEMA_SCORE = 5;
+  public static final int SCHEMA_SCORE_TOTAL = 10;
   public static final int CAPABILITY_SCORE = 1;
   public static final String STATUS_LEVEL_VIOLATION = "STATUS_LEVEL";
   public static final String DEVICE_STATE_SCHEMA = "device_state";
@@ -222,8 +223,8 @@ public class SequenceBase {
   private static final String SYSTEM_TESTING_MARKER = "system.testing";
   private static final BiMap<SequenceResult, Level> RESULT_LEVEL_MAP = ImmutableBiMap.of(
       START, Level.INFO,
-      SKIP, Level.WARNING,
       PASS, Level.NOTICE,
+      SKIP, Level.WARNING,
       FAIL, Level.ERROR,
       ERRR, Level.CRITIAL
   );
@@ -252,6 +253,7 @@ public class SequenceBase {
   private static final Duration STATE_TIMESTAMP_ERROR_THRESHOLD = Duration.ofMinutes(20);
   private static final Set<IotAccess.IotProvider> SEQUENCER_PROVIDERS = ImmutableSet.of(
       IotProvider.GBOS, IotProvider.MQTT, IotProvider.GREF);
+  public static final String SEQUENCER_TOOL_NAME = "sequencer";
   protected static Metadata deviceMetadata;
   protected static String projectId;
   protected static String cloudRegion;
@@ -322,6 +324,7 @@ public class SequenceBase {
   private final CaptureMap otherEvents = new CaptureMap();
   private final AtomicBoolean waitingForConfigSync = new AtomicBoolean();
   private static String sessionPrefix;
+  private static Scoring scoringResult;
 
   private static void setupSequencer() {
     exeConfig = SequenceRunner.ensureExecutionConfig();
@@ -360,9 +363,8 @@ public class SequenceBase {
 
     System.err.printf("Loading reflector key file from %s%n", new File(key_file).getAbsolutePath());
     System.err.printf("Validating against device %s serial %s%n", getDeviceId(), serialNo);
-    client = getPublisherClient();
+    client = checkNotNull(getPublisherClient(), "primary client not created");
     sessionPrefix = client.getSessionPrefix();
-    ifNotNullThen(validationState, state -> state.cloud_version = client.getVersionInformation());
 
     String udmiNamespace = exeConfig.udmi_namespace;
     String altRegistryId = exeConfig.alt_registry;
@@ -482,6 +484,10 @@ public class SequenceBase {
 
   private static void emitSequenceResult(SequenceResult result, String bucket, String name,
       String stage, int score, int total, String message) {
+    // TODO: Clean up this hack of using a class-wide static variable to store this information.
+    scoringResult = new Scoring();
+    scoringResult.value = score;
+    scoringResult.total = total;
     emitSequencerOut(format(RESULT_FORMAT, result, bucket, name, stage, score, total, message));
   }
 
@@ -515,7 +521,7 @@ public class SequenceBase {
         String stageValue = stage.value();
         String schemaStage = schema + "_" + stageValue;
         emitSequenceResult(result, SCHEMA_BUCKET, schemaStage, stageValue.toUpperCase(),
-            SCHEMA_SCORE, SCHEMA_SCORE, entry.message);
+            SCHEMA_SCORE_TOTAL, SCHEMA_SCORE_TOTAL, entry.message);
       });
     });
   }
@@ -563,7 +569,7 @@ public class SequenceBase {
   private static IotReflectorClient getReflectorClient(ExecutionConfiguration config) {
     try {
       return new IotReflectorClient(config, getRequiredFunctionsVersion(),
-          SequenceBase::messageFilter);
+          SEQUENCER_TOOL_NAME, SequenceBase::messageFilter);
     } catch (Exception e) {
       System.err.println(
           "Could not connect to alternate registry, disabling: " + friendlyStackTrace(e));
@@ -742,9 +748,7 @@ public class SequenceBase {
    */
   @Before
   public void setUp() {
-    if (activeInstance == null) {
-      throw new IllegalStateException("Active sequencer instance not setup, aborting");
-    }
+    checkNotNull(activeInstance, "Active sequencer instance not setup, aborting");
 
     assumeTrue(format("Feature bucket %s not enabled", testBucket.key()),
         isBucketEnabled(testBucket));
@@ -1628,12 +1632,14 @@ public class SequenceBase {
         stashedBundle = null;
         return bundle;
       }
-      if (!reflector().isActive()) {
-        throw new RuntimeException("Trying to receive message from inactive client");
+      MessagePublisher reflector = reflector();
+      if (!reflector.isActive()) {
+        throw new RuntimeException(
+            "Trying to receive message from inactive client " + reflector.getSubscriptionId());
       }
       final MessageBundle bundle;
       try {
-        bundle = reflector().takeNextMessage(QuerySpeed.SHORT);
+        bundle = reflector.takeNextMessage(QuerySpeed.SHORT);
       } catch (Exception e) {
         throw new AbortMessageLoop("Exception receiving message", e);
       }
@@ -1962,7 +1968,7 @@ public class SequenceBase {
     }
     return ifNotTrueGet(synced,
         () -> format("waiting for last_start %s, transactions %s, last_config %s",
-            !lastConfigSynced,
+            !lastStartSynced,
             !transactionsClean, !lastConfigSynced));
   }
 
@@ -2067,10 +2073,12 @@ public class SequenceBase {
     checkState(deviceConfig.system.testing.endpoint_type == null, "endpoint type not null");
     try {
       useAlternateClient = true;
+      warning("Now using alternate connection client!");
       deviceConfig.system.testing.endpoint_type = "alternate";
       whileDoing("using alternate client", evaluator);
     } finally {
       useAlternateClient = false;
+      warning("Done with alternate connection client!");
       catchToNull(() -> deviceConfig.system.testing.endpoint_type = null);
     }
   }
@@ -2210,6 +2218,7 @@ public class SequenceBase {
     SequenceResult startResult = SequenceResult.START;
     entry.level = RESULT_LEVEL_MAP.get(startResult).value();
     entry.timestamp = new Date();
+    scoringResult = null;
     setSequenceStatus(description, startResult, entry);
   }
 
@@ -2225,6 +2234,7 @@ public class SequenceBase {
     sequenceValidationState.stage = getTestStage(description);
     sequenceValidationState.capabilities = capabilityExceptions.keySet().stream()
         .collect(Collectors.toMap(Capabilities::value, this::collectCapabilityResult));
+    sequenceValidationState.scoring = scoringResult;
     updateValidationState();
   }
 
@@ -2423,7 +2433,15 @@ public class SequenceBase {
         sequenceMd = new PrintWriter(newOutputStream(new File(testDir, SEQUENCE_MD).toPath()));
 
         putSequencerResult(description, SequenceResult.START);
+
+        client.activate();
+        ifNotNullThen(validationState,
+            state -> state.cloud_version = client.getVersionInformation());
+
+        ifNotNullThen(altClient, IotReflectorClient::activate);
         checkState(reflector().isActive(), "Reflector is not currently active");
+
+        activeInstance = SequenceBase.this;
 
         validateTestSpecification(description);
 
@@ -2436,7 +2454,6 @@ public class SequenceBase {
         startTestTimeMs = System.currentTimeMillis();
         notice("starting test " + testName + " " + START_END_MARKER);
 
-        activeInstance = SequenceBase.this;
       } catch (IllegalArgumentException e) {
         putSequencerResult(description, ERRR);
         recordCompletion(ERRR, description, friendlyStackTrace(e));

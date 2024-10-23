@@ -5,6 +5,9 @@ import static org.junit.Assert.assertEquals;
 import java.util.List;
 import java.util.concurrent.CountDownLatch;
 import org.junit.Test;
+import udmi.lib.base.ListPublisher;
+import udmi.lib.base.MqttDevice;
+import udmi.schema.EndpointConfiguration;
 
 /**
  * Unit tests for a mqtt device abstraction.
@@ -14,8 +17,10 @@ public class MqttDeviceTest extends TestBase {
   @Test
   public void publishTopicPrefix() throws InterruptedException {
     final CountDownLatch sent = new CountDownLatch(1);
-    MqttDevice mqttDevice = new MqttDevice(getTestConfiguration(), exception -> sent.countDown(),
-        null);
+    EndpointConfiguration endpoint = getTestConfiguration().endpoint;
+    endpoint.deviceId = TEST_DEVICE;
+    MqttDevice mqttDevice = new MqttDevice(endpoint,
+        exception -> sent.countDown(), null);
 
     mqttDevice.publish(TEST_DEVICE, TEST_TOPIC, TEST_MESSAGE, sent::countDown);
     sent.await();

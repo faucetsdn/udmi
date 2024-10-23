@@ -1,45 +1,5 @@
 """Generated class for config_udmi.json"""
-
-
-class ReplyUdmiConfig:
-  """Generated schema class"""
-
-  def __init__(self):
-    self.msg_source = None
-    self.transaction_id = None
-
-  @staticmethod
-  def from_dict(source):
-    if not source:
-      return None
-    result = ReplyUdmiConfig()
-    result.msg_source = source.get('msg_source')
-    result.transaction_id = source.get('transaction_id')
-    return result
-
-  @staticmethod
-  def map_from(source):
-    if not source:
-      return None
-    result = {}
-    for key in source:
-      result[key] = ReplyUdmiConfig.from_dict(source[key])
-    return result
-
-  @staticmethod
-  def expand_dict(input):
-    result = {}
-    for property in input:
-      result[property] = input[property].to_dict() if input[property] else {}
-    return result
-
-  def to_dict(self):
-    result = {}
-    if self.msg_source:
-      result['msg_source'] = self.msg_source # 5
-    if self.transaction_id:
-      result['transaction_id'] = self.transaction_id # 5
-    return result
+from .state_udmi import SetupUdmiState
 
 
 class SetupUdmiConfig:
@@ -133,7 +93,7 @@ class UdmiConfig:
     result.timestamp = source.get('timestamp')
     result.version = source.get('version')
     result.last_state = source.get('last_state')
-    result.reply = ReplyUdmiConfig.from_dict(source.get('reply'))
+    result.reply = SetupUdmiState.from_dict(source.get('reply'))
     result.setup = SetupUdmiConfig.from_dict(source.get('setup'))
     return result
 

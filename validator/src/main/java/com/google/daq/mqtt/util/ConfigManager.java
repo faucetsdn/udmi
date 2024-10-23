@@ -15,13 +15,12 @@ import static java.util.Objects.requireNonNull;
 import static java.util.Optional.ofNullable;
 
 import com.google.common.collect.ImmutableList;
-import com.google.udmi.util.SchemaVersion;
 import com.google.udmi.util.SiteModel;
-import daq.pubber.ProtocolFamily;
 import java.io.File;
 import java.util.HashMap;
 import java.util.List;
 import org.jetbrains.annotations.NotNull;
+import udmi.lib.ProtocolFamily;
 import udmi.schema.Config;
 import udmi.schema.FamilyLocalnetConfig;
 import udmi.schema.GatewayConfig;
@@ -32,6 +31,7 @@ import udmi.schema.PointPointsetConfig;
 import udmi.schema.PointPointsetModel;
 import udmi.schema.PointsetConfig;
 import udmi.schema.SystemConfig;
+import udmi.util.SchemaVersion;
 
 /**
  * Container class for working with generated UDMI configs (from device metadata).

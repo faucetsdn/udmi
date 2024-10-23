@@ -217,3 +217,26 @@ n tests/sites/mapping/cloud_iot_config.json
 n tests/sites/mapping/devices/GAT-123/expected/metadata_norm.json
 n tests/sites/mapping/devices/GAT-123/metadata.json
 n tests/sites/mapping/registration_summary.json
+
+
+y tests/traces/lengthy/devices/AHU-1/001_events_pointset.json
+y tests/traces/lengthy/devices/AHU-1/002_events_pointset.json
+y tests/traces/lengthy/devices/AHU-1/003_events_pointset.json
+y tests/traces/lengthy/expected/devices/AHU-1/events_pointset.json
+y tests/traces/lengthy/expected/devices/AHU-1/events_system.json
+y tests/traces/lengthy/expected/validation_report.json
+y tests/sites/basic/devices/AHU-1/expected/generated_config.json
+y tests/sites/basic/devices/AHU-1/expected/metadata_norm.json
+y tests/sites/basic/devices/AHU-1/metadata.json
+y tests/sites/basic/devices/AHU-22/expected/generated_config.json
+y tests/sites/basic/devices/AHU-22/expected/metadata_norm.json
+y tests/sites/basic/devices/AHU-22/metadata.json
+y tests/sites/basic/devices/GAT-123/expected/generated_config.json
+y tests/sites/basic/devices/GAT-123/expected/metadata_norm.json
+y tests/sites/basic/devices/GAT-123/metadata.json
+y tests/sites/basic/devices/SNS-4/expected/generated_config.json
+y tests/sites/basic/devices/SNS-4/expected/metadata_norm.json
+y tests/sites/basic/devices/SNS-4/metadata.json
+n tests/sites/basic/site_defaults.json
+n tests/sites/basic/registration_summary.json
+n tests/sites/basic/cloud_iot_config.json

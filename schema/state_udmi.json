@@ -1,5 +1,5 @@
 {
-  "$udmi_version": "1.5.1",
+  "$udmi_version": "1.5.2",
   "title": "Udmi State",
   "description": "State of a UDMI reflector client",
   "type": "object",
@@ -46,6 +46,10 @@
         "update_to": {
           "type": "string",
           "description": "Optional version for a udmis update trigger"
+        },
+        "tool_name": {
+          "type": "string",
+          "description": "Name of the tool being used" 
         },
         "transaction_id": {
           "type": "string"

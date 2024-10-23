@@ -13,20 +13,21 @@ import static com.google.udmi.util.Common.SUBFOLDER_PROPERTY_KEY;
 import static com.google.udmi.util.Common.SUBTYPE_PROPERTY_KEY;
 import static com.google.udmi.util.Common.TIMESTAMP_KEY;
 import static com.google.udmi.util.Common.TRANSACTION_KEY;
+import static com.google.udmi.util.Common.UNKNOWN_UDMI_VERSION;
 import static com.google.udmi.util.Common.VERSION_KEY;
 import static com.google.udmi.util.Common.getNamespacePrefix;
 import static com.google.udmi.util.GeneralUtils.decodeBase64;
 import static com.google.udmi.util.GeneralUtils.getTimestamp;
 import static com.google.udmi.util.GeneralUtils.ifNotNullGet;
 import static com.google.udmi.util.GeneralUtils.ifNotNullThen;
+import static com.google.udmi.util.GeneralUtils.ifTrueThen;
 import static com.google.udmi.util.GeneralUtils.isTrue;
 import static com.google.udmi.util.JsonUtil.asMap;
 import static com.google.udmi.util.JsonUtil.convertTo;
-import static com.google.udmi.util.JsonUtil.getDate;
 import static com.google.udmi.util.JsonUtil.isoConvert;
 import static com.google.udmi.util.JsonUtil.mapCast;
 import static com.google.udmi.util.JsonUtil.stringify;
-import static com.google.udmi.util.JsonUtil.toMap;
+import static com.google.udmi.util.JsonUtil.stringifyTerse;
 import static com.google.udmi.util.JsonUtil.toObject;
 import static com.google.udmi.util.PubSubReflector.USER_NAME_DEFAULT;
 import static java.lang.String.format;
@@ -51,8 +52,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
 import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.Executors;
 import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Function;
@@ -75,7 +79,8 @@ import udmi.schema.UdmiState;
 public class IotReflectorClient implements MessagePublisher {
 
   public static final String UDMI_REFLECT = "UDMI-REFLECT";
-  static final String REFLECTOR_KEY_ALGORITHM = "RS256";
+  public static final String REFLECTOR_KEY_ALGORITHM = "RS256";
+  private static final Date SYSTEM_START_TIMESTAMP = new Date();
   private static final String SYSTEM_SUBFOLDER = "system";
   private static final String UDMIS_SOURCE = "udmis";
   private static final String EVENTS_TYPE = "events";
@@ -85,47 +90,53 @@ public class IotReflectorClient implements MessagePublisher {
   private static final int UPDATE_RETRIES = 6;
   private static final Collection<String> COPY_IDS = ImmutableSet.of(DEVICE_ID_KEY, GATEWAY_ID_KEY,
       SUBTYPE_PROPERTY_KEY, SUBFOLDER_PROPERTY_KEY, TRANSACTION_KEY, PUBLISH_TIME_KEY);
+  public static final String TRANSACTION_ID_PREFIX = "RC:";
   private static final String sessionId = format("%06x", (int) (Math.random() * 0x1000000L));
-  private static final String TRANSACTION_ID_PREFIX = "RC:";
   private static final String sessionPrefix = TRANSACTION_ID_PREFIX + sessionId + ".";
   private static final AtomicInteger sessionCounter = new AtomicInteger();
+  private static final long RESYNC_INTERVAL_SEC = 30;
+  private static final Map<MessagePublisher, CountDownLatch> pubLatches = new ConcurrentHashMap<>();
+  private static final Map<MessagePublisher, AtomicInteger> pubCounts = new ConcurrentHashMap<>();
   private final String udmiVersion;
   private final CountDownLatch initialConfigReceived = new CountDownLatch(1);
   private final CountDownLatch initializedStateSent = new CountDownLatch(1);
-  private final CountDownLatch validConfigReceived = new CountDownLatch(1);
+  private final ScheduledExecutorService syncThread = Executors.newSingleThreadScheduledExecutor();
   private final int requiredVersion;
   private final BlockingQueue<Validator.MessageBundle> messages = new LinkedBlockingQueue<>();
   private final MessagePublisher publisher;
   private final String subscriptionId;
   private final String registryId;
   private final String projectId;
-  private final String updateTo;
+  private final String updateVersion;
   private final IotProvider iotProvider;
   private final boolean enforceUdmiVersion;
   private final Function<Envelope, Boolean> messageFilter;
   private final String userName;
-  private Date reflectorStateTimestamp;
+  private final String toolName;
   private boolean isInstallValid;
   private boolean active;
   private Exception syncFailure;
   private SetupUdmiConfig udmiInfo;
   private int retries;
+  private String expectedTxnId;
 
   /**
    * Create a new reflector instance.
    *
    * @param iotConfig       configuration file
    * @param requiredVersion version of the functions that are required by the tools
+   * @param toolName        tool name using this reflector
    */
-  public IotReflectorClient(ExecutionConfiguration iotConfig, int requiredVersion) {
-    this(iotConfig, requiredVersion, null);
+  public IotReflectorClient(ExecutionConfiguration iotConfig, int requiredVersion,
+      String toolName) {
+    this(iotConfig, requiredVersion, toolName, null);
   }
 
   /**
    * Basic client that accepts a custom message filter.
    */
   public IotReflectorClient(ExecutionConfiguration iotConfig, int requiredVersion,
-      Function<Envelope, Boolean> messageFilter) {
+      String toolName, Function<Envelope, Boolean> messageFilter) {
     Preconditions.checkState(requiredVersion >= TOOLS_FUNCTIONS_VERSION,
         format("Min required version %s not satisfied by tools version %s", TOOLS_FUNCTIONS_VERSION,
             requiredVersion));
@@ -135,45 +146,22 @@ public class IotReflectorClient implements MessagePublisher {
     registryId = SiteModel.getRegistryActual(iotConfig);
     projectId = iotConfig.project_id;
     udmiVersion = ofNullable(iotConfig.udmi_version).orElseGet(Common::getUdmiVersion);
-    updateTo = iotConfig.update_to;
+    updateVersion = iotConfig.update_to;
     iotProvider = ofNullable(iotConfig.iot_provider).orElse(IotProvider.GBOS);
     userName = ofNullable(iotConfig.user_name).orElse(USER_NAME_DEFAULT);
+    this.toolName = toolName;
     iotConfig.iot_provider = iotProvider;
     String prefix = getNamespacePrefix(iotConfig.udmi_namespace);
     String clientId = format("//%s/%s/%s %s", iotProvider, projectId, prefix, registryId);
     try {
       System.err.println("Instantiating reflector client " + clientId);
       publisher = MessagePublisher.from(iotConfig, this::messageHandler, this::errorHandler);
+      pubCounts.computeIfAbsent(publisher, key -> new AtomicInteger());
+      pubLatches.computeIfAbsent(publisher, key -> new CountDownLatch(1));
     } catch (Exception e) {
       throw new RuntimeException("While creating reflector client " + clientId, e);
     }
     subscriptionId = publisher.getSubscriptionId();
-    System.err.println("Subscribed to " + subscriptionId);
-
-    try {
-      System.err.println("Starting initial UDMI setup process");
-      if (!initialConfigReceived.await(CONFIG_TIMEOUT_SEC, TimeUnit.SECONDS)) {
-        System.err.println("Ignoring initial config received timeout (config likely empty)");
-      }
-      retries = updateTo == null ? 1 : UPDATE_RETRIES;
-      while (validConfigReceived.getCount() > 0) {
-        setReflectorState();
-        initializedStateSent.countDown();
-        if (!validConfigReceived.await(CONFIG_TIMEOUT_SEC, TimeUnit.SECONDS)) {
-          retries--;
-          if (retries <= 0) {
-            throw new RuntimeException(
-                "Config sync timeout expired. Investigate UDMI cloud functions install.",
-                syncFailure);
-          }
-        }
-      }
-
-      active = true;
-    } catch (Exception e) {
-      publisher.close();
-      throw new RuntimeException("Waiting for initial config", e);
-    }
   }
 
   private boolean userMessageFilter(Envelope envelope) {
@@ -210,28 +198,39 @@ public class IotReflectorClient implements MessagePublisher {
    *
    * @return new unique transaction id
    */
-  public static synchronized String getNextTransactionId() {
+  public static String getNextTransactionId() {
     return format("%s%04d", sessionPrefix, sessionCounter.incrementAndGet());
   }
 
   private void setReflectorState() {
+    if (isInstallValid && expectedTxnId != null) {
+      System.err.printf("Unexpected reflector transaction %s, likely duplicate channel use%n",
+          expectedTxnId);
+      close();
+      throw new RuntimeException("Aborting due to missing transaction reply " + expectedTxnId);
+    }
+    expectedTxnId = getNextTransactionId();
+
     UdmiState udmiState = new UdmiState();
     udmiState.setup = new SetupUdmiState();
     udmiState.setup.user = System.getenv("USER");
-    udmiState.setup.transaction_id = getNextTransactionId();
-    udmiState.setup.update_to = updateTo;
-    // TODO: Restore this when it's needed (and UDMIS has been updated)
-    // udmiState.setup.msg_source = userName;
+    udmiState.setup.transaction_id = expectedTxnId;
+    udmiState.setup.update_to = updateVersion;
+    udmiState.setup.msg_source = userName;
+    udmiState.setup.tool_name = toolName;
     try {
-      reflectorStateTimestamp = new Date();
-      System.err.printf("Setting state version %s timestamp %s%n",
-          udmiVersion, isoConvert(reflectorStateTimestamp));
+      debug(format("Setting state version %s timestamp %s%n",
+          udmiVersion, isoConvert(SYSTEM_START_TIMESTAMP)));
       Map<String, Object> map = new HashMap<>();
-      map.put(TIMESTAMP_KEY, reflectorStateTimestamp);
+      map.put(TIMESTAMP_KEY, SYSTEM_START_TIMESTAMP);
       map.put(VERSION_KEY, udmiVersion);
       map.put(SubFolder.UDMI.value(), udmiState);
 
-      System.err.println("UDMI setting reflectorState: " + stringify(map));
+      if (isInstallValid) {
+        debug("Sending UDMI reflector state: " + stringifyTerse(udmiState.setup));
+      } else {
+        info("Sending UDMI reflector state: " + stringify(map));
+      }
 
       publisher.publish(registryId, getReflectorTopic(), stringify(map));
     } catch (Exception e) {
@@ -355,33 +354,47 @@ public class IotReflectorClient implements MessagePublisher {
         entry -> System.err.printf("%s %s%n", isoConvert(entry.timestamp), entry.message));
   }
 
-  private boolean ensureCloudSync(Map<String, Object> message) {
+  private void ensureCloudSync(Map<String, Object> message) {
     try {
       initialConfigReceived.countDown();
       if (initializedStateSent.getCount() > 0) {
-        return false;
+        return;
       }
 
       UdmiConfig reflectorConfig = convertTo(UdmiConfig.class,
           ofNullable(message.get(SubFolder.UDMI.value())).orElse(message));
-      System.err.println("UDMI received reflectorConfig: " + stringify(reflectorConfig));
+
+      boolean shouldConsiderReply = reflectorConfig.reply.msg_source.equals(userName);
+      boolean doesReplyMatch = reflectorConfig.reply.transaction_id.equals(expectedTxnId);
+
+      if (!isInstallValid) {
+        info("Received UDMI reflector initial config: " + stringify(reflectorConfig));
+      } else if (!shouldConsiderReply) {
+        return;
+      } else if (doesReplyMatch) {
+        debug("Received UDMI reflector matching config reply " + expectedTxnId);
+      } else {
+        info("Received UDMI reflector mismatched config: " + stringifyTerse(reflectorConfig));
+        close();
+        throw new IllegalStateException("There can (should) be only one instance on a channel");
+      }
+
       Date lastState = reflectorConfig.last_state;
-      System.err.printf("UDMI matching last_state %s against expected %s%n",
-          isoConvert(lastState), isoConvert(reflectorStateTimestamp));
-
-      boolean timestampMatch = dateEquals(lastState, reflectorStateTimestamp);
-      boolean versionMatch = ifNotNullGet(updateTo, to -> to.equals(reflectorConfig.setup.udmi_ref),
+      boolean timestampMatch = dateEquals(lastState, SYSTEM_START_TIMESTAMP);
+      boolean updateMatch = ifNotNullGet(updateVersion,
+          to -> to.equals(reflectorConfig.setup.udmi_ref),
           true);
-
-      if (timestampMatch && versionMatch) {
+      boolean userSourceMatch = userName.equals(reflectorConfig.reply.msg_source);
+      if (timestampMatch && updateMatch && userSourceMatch) {
         udmiInfo = reflectorConfig.setup;
         if (!udmiVersion.equals(udmiInfo.udmi_version)) {
-          System.err.println("UDMI version mismatch: " + udmiVersion);
+          if (enforceUdmiVersion || !(udmiVersion.equals(UNKNOWN_UDMI_VERSION) || isInstallValid)) {
+            System.err.printf("UDMI version mismatch: %s does not match %s%n",
+                udmiVersion, udmiInfo.udmi_version);
+          }
           checkState(!enforceUdmiVersion, "Strict UDMI version matching enabled");
         }
 
-        System.err.printf("UDMI functions support versions %s:%s (required %s)%n",
-            udmiInfo.functions_min, udmiInfo.functions_max, requiredVersion);
         String baseError = format("UDMI required functions version %d not allowed",
             requiredVersion);
         if (requiredVersion < udmiInfo.functions_min) {
@@ -395,18 +408,30 @@ public class IotReflectorClient implements MessagePublisher {
                   baseError, udmiInfo.functions_max));
         }
         isInstallValid = true;
-        validConfigReceived.countDown();
-      } else if (!versionMatch) {
+        expectedTxnId = null;
+        pubLatches.get(publisher).countDown();
+      } else if (!updateMatch) {
         System.err.println("UDMI update version mismatch... waiting for retry...");
+      } else if (!timestampMatch) {
+        System.err.printf("UDMI last_state %s does not match expected %s%n",
+            isoConvert(lastState), isoConvert(SYSTEM_START_TIMESTAMP));
+      } else if (!userSourceMatch) {
+        System.err.println("UDMI msg_source does not match local user, ignoring.");
       } else {
-        System.err.println("UDMI ignoring mismatching timestamp " + isoConvert(lastState));
+        throw new RuntimeException("Unexpected if condition");
       }
     } catch (Exception e) {
       syncFailure = e;
     }
+  }
 
-    // Even through setup might be valid, return false to not process this config message.
-    return false;
+  private void debug(String message) {
+    // TODO: Implement some kind of actual log-level control.
+  }
+
+  private void info(String message) {
+    // TODO: Implement some kind of actual log-level control.
+    System.err.println(message);
   }
 
   private Envelope parseMessageTopic(String topic) {
@@ -463,6 +488,49 @@ public class IotReflectorClient implements MessagePublisher {
   }
 
   @Override
+  public void activate() {
+
+    try {
+      // Some publishers are shared, while others are unique, so handle accordingly.
+      if (pubCounts.get(publisher).getAndIncrement() > 0) {
+        ifTrueThen(pubLatches.get(publisher).getCount() > 0,
+            () -> System.err.println("Waiting for the other shoe to drop..."));
+        pubLatches.get(publisher).await(CONFIG_TIMEOUT_SEC, TimeUnit.SECONDS);
+        active = true;
+        isInstallValid = true;
+        return;
+      }
+
+      publisher.activate();
+
+      System.err.println("Starting initial UDMI setup process");
+      retries = updateVersion == null ? 1 : UPDATE_RETRIES;
+      while (pubLatches.get(publisher).getCount() > 0) {
+        setReflectorState();
+        initializedStateSent.countDown();
+        if (!pubLatches.get(publisher).await(CONFIG_TIMEOUT_SEC, TimeUnit.SECONDS)) {
+          retries--;
+          if (retries <= 0) {
+            throw new RuntimeException(
+                "Config sync timeout expired. Investigate UDMI cloud functions install.",
+                syncFailure);
+          }
+        }
+      }
+
+      syncThread.scheduleAtFixedRate(this::setReflectorState, RESYNC_INTERVAL_SEC,
+          RESYNC_INTERVAL_SEC, TimeUnit.SECONDS);
+
+      System.err.println("Subscribed to " + subscriptionId);
+
+      active = true;
+    } catch (Exception e) {
+      close();
+      throw new RuntimeException("Waiting for initial config", e);
+    }
+  }
+
+  @Override
   public boolean isActive() {
     return active;
   }
@@ -481,6 +549,10 @@ public class IotReflectorClient implements MessagePublisher {
 
   @Override
   public String publish(String deviceId, String topic, String data) {
+    if (!publisher.isActive()) {
+      System.err.println("Ignoring publish to closed publisher.");
+      return null;
+    }
     Envelope envelope = new Envelope();
     envelope.deviceRegistryId = registryId;
     envelope.deviceId = deviceId;
@@ -498,9 +570,8 @@ public class IotReflectorClient implements MessagePublisher {
   @Override
   public void close() {
     active = false;
-    if (publisher != null) {
-      publisher.close();
-    }
+    syncThread.shutdown();
+    ifTrueThen(pubCounts.get(publisher).decrementAndGet() == 0, publisher::close);
   }
 
   @Override

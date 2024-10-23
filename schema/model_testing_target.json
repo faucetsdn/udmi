@@ -1,5 +1,5 @@
 {
-  "$udmi_version": "1.5.1",
+  "$udmi_version": "1.5.2",
   "title": "Target Testing Model",
   "type": "object",
   "$schema": "http://json-schema.org/draft-04/schema#",

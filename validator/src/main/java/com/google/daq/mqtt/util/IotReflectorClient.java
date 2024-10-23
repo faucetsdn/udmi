@@ -58,18 +58,20 @@ public class IotReflectorClient implements IotProvider {
       new ConcurrentHashMap<>();
   private final ExecutorService executor = Executors.newSingleThreadExecutor();
   private final boolean isSlow;
-  private String sessionPrefix;
+  private final String sessionPrefix;
 
   /**
    * Create a new client.
    *
    * @param executionConfiguration configuration to use for connection
+   * @param toolName               name of tool using this reflector
    */
-  public IotReflectorClient(ExecutionConfiguration executionConfiguration) {
+  public IotReflectorClient(ExecutionConfiguration executionConfiguration, String toolName) {
     SiteModel siteModel = new SiteModel(executionConfiguration.site_model);
     executionConfiguration.key_file = siteModel.validatorKey();
     messageClient = new com.google.bos.iot.core.proxy.IotReflectorClient(executionConfiguration,
-        Validator.TOOLS_FUNCTIONS_VERSION);
+        Validator.TOOLS_FUNCTIONS_VERSION, toolName);
+    messageClient.activate();
     sessionPrefix = messageClient.getSessionPrefix();
     executor.execute(this::processReplies);
     isSlow = siteModel.getDeviceIds().size() > SLOW_QUERY_THRESHOLD;

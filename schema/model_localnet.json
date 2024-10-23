@@ -1,5 +1,5 @@
 {
-  "$udmi_version": "1.5.1",
+  "$udmi_version": "1.5.2",
   "title": "Localnet Model",
   "description": "Used to describe device local network parameters",
   "type": "object",

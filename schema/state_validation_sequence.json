@@ -1,5 +1,5 @@
 {
-  "$udmi_version": "1.5.1",
+  "$udmi_version": "1.5.2",
   "title": "Sequence Validation State",
   "description": "Sequence Validation State",
   "type": "object",
@@ -35,11 +35,17 @@
     "status": {
       "$ref": "file:entry.json"
     },
-    "score": {
-      "type": "integer"
-    },
-    "total": {
-      "type": "integer"
+    "scoring": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "value": {
+          "type": "integer"
+        },
+        "total": {
+          "type": "integer"
+        }
+      }
     }
   }
 }
