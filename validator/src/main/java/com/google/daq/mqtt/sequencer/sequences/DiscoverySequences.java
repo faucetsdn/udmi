@@ -315,12 +315,12 @@ public class DiscoverySequences extends SequenceBase {
 
   private String detailScanPending() {
     return ifNotTrueGet(scanPending(scanStartTime).test(scanFamily),
-        format("Expected pending %s but %s", scanStartTime, describedFamilyState()));
+        format("Expected pending %s but %s", isoConvert(scanStartTime), describedFamilyState()));
   }
 
   private String detailScanActive() {
     return ifNotTrueGet(scanActive(scanStartTime).test(scanFamily),
-        format("Expected active %s but %s", scanStartTime, describedFamilyState()));
+        format("Expected active %s but %s", isoConvert(scanStartTime), describedFamilyState()));
   }
 
   private String detailScanComplete() {
