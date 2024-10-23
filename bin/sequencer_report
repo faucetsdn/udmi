@@ -292,9 +292,9 @@ class FeatureStage:
   stage: str = ""
   tests: list = field(default_factory=list)
 
-  def add(self, *, score:int, total:int):
-    self.total += total
-    self.scored += score
+  def add(self, *, test_score:int, test_total:int):
+    self.total += test_total
+    self.scored += test_score
 
   def has(self):
     """Did the sequencer results have this feature & stage combination?."""
@@ -434,7 +434,7 @@ class SequencerReport:
             total=result["scoring"]["total"],
         )
         
-        features[feature][result["stage"]].add(scored=result["scoring"]["value"], total=result["scoring"]["total"])
+        features[feature][result["stage"]].add(test_score=result["scoring"]["value"], test_total=result["scoring"]["total"])
         features[feature][result["stage"]].tests.append(result)
 
     self.results = {
