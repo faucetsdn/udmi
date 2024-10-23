@@ -2,6 +2,9 @@ package com.google.daq.mqtt.sequencer.sequences;
 
 import static com.google.common.base.Preconditions.checkState;
 import static com.google.common.collect.Sets.symmetricDifference;
+import static com.google.daq.mqtt.sequencer.sequences.DiscoverySequences.ScanMode.NO_ENUMERATION;
+import static com.google.daq.mqtt.sequencer.sequences.DiscoverySequences.ScanMode.NO_SCAN;
+import static com.google.daq.mqtt.sequencer.sequences.DiscoverySequences.ScanMode.PLEASE_ENUMERATE;
 import static com.google.daq.mqtt.util.TimePeriodConstants.TWO_MINUTES_MS;
 import static com.google.udmi.util.CleanDateFormat.cleanDate;
 import static com.google.udmi.util.CleanDateFormat.cleanInstantDate;
@@ -50,6 +53,7 @@ import java.util.Set;
 import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
+import org.jetbrains.annotations.NotNull;
 import org.junit.Before;
 import org.junit.Test;
 import udmi.lib.ProtocolFamily;
@@ -80,8 +84,8 @@ public class DiscoverySequences extends SequenceBase {
     return ofNullable(entry.getValue().stage).orElse(STABLE).compareTo(BETA) >= 0;
   }
 
-  private static Depth enumerationDepthIf(boolean shouldEnumerate) {
-    return shouldEnumerate ? ENTRIES : null;
+  private static Depth enumerationDepthIf(ScanMode shouldEnumerate) {
+    return shouldEnumerate == PLEASE_ENUMERATE ? ENTRIES : null;
   }
 
   @Before
@@ -224,36 +228,54 @@ public class DiscoverySequences extends SequenceBase {
   }
 
   private Depth enumerateIfBucketEnabled(Bucket bucket) {
-    return enumerationDepthIf(isBucketEnabled(bucket));
+    return enumerationDepthIf(isBucketEnabled(bucket) ? PLEASE_ENUMERATE : NO_ENUMERATION);
   }
 
   @Test(timeout = TWO_MINUTES_MS)
   @Feature(bucket = DISCOVERY_SCAN, stage = ALPHA)
   @Summary("Check that a scan scheduled in the past never starts")
   public void scan_single_past() {
-    initializeDiscovery();
-    scanStartTime = LONG_TIME_AGO;
-    boolean shouldEnumerate = false;
-    configureScan(scanStartTime, null, shouldEnumerate);
-    waitFor("scan schedule initially complete", this::detailScanComplete);
-    sleepFor("false start check delay", SCAN_START_DELAY);
-    waitFor("scan schedule still complete", this::detailScanComplete);
-    List<DiscoveryEvents> receivedEvents = popReceivedEvents(DiscoveryEvents.class);
-    checkThat("there were no received discovery events", receivedEvents.isEmpty());
+    scanAndVerify(LONG_TIME_AGO, NO_SCAN);
+  }
+
+  @Test
+  @Feature(bucket = DISCOVERY_SCAN, stage = ALPHA)
+  @Summary("Check results of a single scan scheduled in the recent past")
+  public void scan_single_now() {
+    scanAndVerify(cleanInstantDate(Instant.now().minus(SCAN_START_DELAY)), NO_ENUMERATION);
   }
 
   @Test(timeout = TWO_MINUTES_MS)
   @Feature(bucket = DISCOVERY_SCAN, stage = ALPHA)
   @Summary("Check results of a single scan scheduled soon")
   public void scan_single_future() {
+    scanAndVerify(cleanInstantDate(Instant.now().plus(SCAN_START_DELAY)), NO_ENUMERATION);
+  }
+
+  private void scanAndVerify(Date scanStart, ScanMode shouldEnumerate) {
+    final boolean checkPending = scanStart.after(new Date());
+
     initializeDiscovery();
     checkState(scanStartTime == null, "scanStartTime not null");
-    scanStartTime = cleanInstantDate(Instant.now().plus(SCAN_START_DELAY));
-    boolean shouldEnumerate = false;
+
+    scanStartTime = scanStart;
+
     configureScan(scanStartTime, null, shouldEnumerate);
+
+    if (shouldEnumerate == NO_SCAN) {
+      waitFor("scan schedule initially not active", this::detailScanComplete);
+      sleepFor("false start check delay", SCAN_START_DELAY);
+      waitFor("scan schedule still not active", this::detailScanComplete);
+      List<DiscoveryEvents> receivedEvents = popReceivedEvents(DiscoveryEvents.class);
+      checkThat("there were no received discovery events", receivedEvents.isEmpty());
+      return;
+    }
+
     Duration waitingPeriod = SCAN_START_DELAY.plus(SCAN_START_DELAY);
 
-    waitFor("scheduled scan pending", waitingPeriod, this::detailScanPending);
+    if (checkPending) {
+      waitFor("scheduled scan pending", waitingPeriod, this::detailScanPending);
+    }
 
     waitFor("scheduled scan active", waitingPeriod, this::detailScanActive);
 
@@ -275,7 +297,7 @@ public class DiscoverySequences extends SequenceBase {
 
     Set<String> duplicates = events.stream().map(x -> x.scan_addr)
         .collect(Collectors.groupingBy(Function.identity(), Collectors.counting()))
-        .entrySet().stream().filter(p -> p.getValue() > 1).map(Map.Entry::getKey)
+        .entrySet().stream().filter(p -> p.getValue() > 1).map(Entry::getKey)
         .collect(Collectors.toSet());
     checkThat("all scan addresses are unique", duplicates.isEmpty(),
         "duplicates: " + CSV_JOINER.join(duplicates));
@@ -288,7 +310,6 @@ public class DiscoverySequences extends SequenceBase {
     SetView<String> differences = symmetricDifference(discoveredAddresses, expectedAddresses);
     checkThat("all expected addresses were found", differences.isEmpty(),
         CSV_JOINER.join(differences));
-
     checkEnumeration(events, shouldEnumerate);
   }
 
@@ -326,9 +347,9 @@ public class DiscoverySequences extends SequenceBase {
     return ifNotNullGet(deviceState.discovery.families, map -> map.get(scanFamily));
   }
 
-  private void checkEnumeration(List<DiscoveryEvents> receivedEvents, boolean shouldEnumerate) {
+  private void checkEnumeration(List<DiscoveryEvents> receivedEvents, ScanMode shouldEnumerate) {
     Predicate<DiscoveryEvents> hasRefs = event -> event.refs != null && !event.refs.isEmpty();
-    if (shouldEnumerate) {
+    if (shouldEnumerate == PLEASE_ENUMERATE) {
       checkThat("all events have discovered refs", receivedEvents.stream().allMatch(hasRefs));
     } else {
       checkThat("no events have discovered refs", receivedEvents.stream().noneMatch(hasRefs));
@@ -342,8 +363,7 @@ public class DiscoverySequences extends SequenceBase {
     initializeDiscovery();
     checkState(scanStartTime == null, "scanStartTime not null");
     scanStartTime = cleanDate();
-    boolean shouldEnumerate = true;
-    configureScan(scanStartTime, SCAN_START_DELAY, shouldEnumerate);
+    configureScan(scanStartTime, SCAN_START_DELAY, PLEASE_ENUMERATE);
     Instant endTime = Instant.now().plusSeconds(SCAN_START_DELAY.getSeconds() * SCAN_ITERATIONS);
     untilUntrue("scan iterations", () -> Instant.now().isBefore(endTime));
     String oneFamily = metaFamilies.iterator().next();
@@ -351,7 +371,7 @@ public class DiscoverySequences extends SequenceBase {
     checkThat("scan did not terminate prematurely",
         metaFamilies.stream().noneMatch(scanComplete(finishTime)));
     List<DiscoveryEvents> receivedEvents = popReceivedEvents(DiscoveryEvents.class);
-    checkEnumeration(receivedEvents, shouldEnumerate);
+    checkEnumeration(receivedEvents, PLEASE_ENUMERATE);
   }
 
   private void initializeDiscovery() {
@@ -371,11 +391,11 @@ public class DiscoverySequences extends SequenceBase {
         () -> stateFamilies.keySet().stream().noneMatch(scanActive()));
   }
 
-  private void configureScan(Date startTime, Duration scanInterval, boolean shouldEnumerate) {
+  private void configureScan(Date startTime, Duration scanInterval, ScanMode shouldEnumerate) {
     Integer intervalSec = ofNullable(scanInterval).map(Duration::getSeconds).map(Long::intValue)
         .orElse(null);
     info(format("%s configured for family %s starting at %s evey %ss",
-        isTrue(shouldEnumerate) ? "Enumeration" : "Scan", scanFamily, startTime,
+        shouldEnumerate == PLEASE_ENUMERATE ? "Enumeration" : "Scan", scanFamily, startTime,
         intervalSec));
     FamilyDiscoveryConfig configFamily = getConfigFamily(scanFamily);
     configFamily.generation = SemanticDate.describe("family generation", startTime);
@@ -421,5 +441,12 @@ public class DiscoverySequences extends SequenceBase {
           && stateFamily.phase == STOPPED
           && deviceState.timestamp.after(startTime);
     };
+  }
+
+  /**
+   * Basic enumeration to capture some of the kinds of scans to be tested.
+   */
+  enum ScanMode {
+    NO_SCAN, NO_ENUMERATION, PLEASE_ENUMERATE
   }
 }
