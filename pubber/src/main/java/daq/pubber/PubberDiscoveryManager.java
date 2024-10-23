@@ -2,6 +2,7 @@ package daq.pubber;
 
 import static com.google.udmi.util.GeneralUtils.ifNotNullThen;
 import static com.google.udmi.util.GeneralUtils.ifTrueThen;
+import static com.google.udmi.util.JsonUtil.getNowInstant;
 import static com.google.udmi.util.JsonUtil.isoConvert;
 import static daq.pubber.PubberUdmiPublisher.DEVICE_START_TIME;
 import static java.lang.String.format;
@@ -78,8 +79,8 @@ public class PubberDiscoveryManager extends PubberManager implements DiscoveryMa
    * @param scanGeneration Scan generation.
    */
   public void startDiscoveryScan(String family, Date scanGeneration) {
-    info("Discovery scan starting " + family + " as " + isoConvert(scanGeneration));
-    Date stopTime = Date.from(scanGeneration.toInstant().plusSeconds(SCAN_DURATION_SEC));
+    info("Discovery scan starting " + family + " generation " + isoConvert(scanGeneration));
+    Date stopTime = Date.from(getNowInstant().plusSeconds(SCAN_DURATION_SEC));
     final FamilyDiscoveryState familyDiscoveryState = ensureFamilyDiscoveryState(family);
     scheduleFuture(stopTime, () -> discoveryScanComplete(family, scanGeneration));
     familyDiscoveryState.generation = scanGeneration;
