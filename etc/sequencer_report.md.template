@@ -8,10 +8,10 @@
 
 | Device | {{report.device_id}} |
 |---|---|
-| Site |  |
 | Make | {{report.device_make}} |
 | Model | {{report.device_model}} |
 | Software | {{report.device_software|pretty_dict}} |
+{% if report.gateway is not none %}| Gateway | {{report.gateway}} |{%- endif %}
 
 ## Summary
 
@@ -23,10 +23,10 @@
 
 ## Results
 
-| Bucket | Feature | Stage | Result | Description |
-| --- | --- | --- | --- | --- |
+| Bucket | Feature | Stage | Score | Result | Description |
+| --- | --- | --- | --- | --- | --- |
 {% for test in report.results.values() -%}
-| {{test.bucket}} | {{test.name}} | {{test.stage}} | {{test.result}} | {{test.message}} |
+| {{test.bucket}} | {{test.name}} | {{test.stage}} | {{test.score}} | {{test.result}} | {{test.message}} |
 {% endfor %}
 
 ## Schema
