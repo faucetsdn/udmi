@@ -14,6 +14,7 @@ import static com.google.udmi.util.GeneralUtils.ifNotNullGet;
 import static com.google.udmi.util.GeneralUtils.ifNotTrueGet;
 import static com.google.udmi.util.GeneralUtils.ifNullElse;
 import static com.google.udmi.util.GeneralUtils.joinOrNull;
+import static com.google.udmi.util.JsonUtil.getNowInstant;
 import static com.google.udmi.util.JsonUtil.isoConvert;
 import static com.google.udmi.util.JsonUtil.stringifyTerse;
 import static java.lang.String.format;
@@ -53,7 +54,6 @@ import java.util.Set;
 import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
-import org.jetbrains.annotations.NotNull;
 import org.junit.Before;
 import org.junit.Test;
 import udmi.lib.ProtocolFamily;
@@ -78,7 +78,7 @@ public class DiscoverySequences extends SequenceBase {
   private static final String scanFamily = ProtocolFamily.VENDOR;
   private static final Date LONG_TIME_AGO = Date.from(Instant.parse("2020-10-18T12:02:01Z"));
   private Set<String> metaFamilies;
-  private Date scanStartTime;
+  private Instant scanGeneration;
 
   private static boolean isActive(Entry<String, FeatureDiscovery> entry) {
     return ofNullable(entry.getValue().stage).orElse(STABLE).compareTo(BETA) >= 0;
@@ -256,11 +256,11 @@ public class DiscoverySequences extends SequenceBase {
     final boolean checkPending = scanStart.after(new Date());
 
     initializeDiscovery();
-    checkState(scanStartTime == null, "scanStartTime not null");
+    checkState(scanGeneration == null, "scanStartTime not null");
 
-    scanStartTime = scanStart;
+    scanGeneration = scanStart.toInstant();
 
-    configureScan(scanStartTime, null, shouldEnumerate);
+    configureScan(scanGeneration, null, shouldEnumerate);
 
     if (shouldEnumerate == NO_SCAN) {
       waitFor("scan schedule initially not active", this::detailScanComplete);
@@ -272,6 +272,7 @@ public class DiscoverySequences extends SequenceBase {
     }
 
     Duration waitingPeriod = SCAN_START_DELAY.plus(SCAN_START_DELAY);
+    Instant sequenceStarted = getNowInstant();
 
     if (checkPending) {
       waitFor("scheduled scan pending", waitingPeriod, this::detailScanPending);
@@ -279,10 +280,11 @@ public class DiscoverySequences extends SequenceBase {
 
     waitFor("scheduled scan active", waitingPeriod, this::detailScanActive);
 
-    long delta = Math.abs(
-        Duration.between(deviceState.timestamp.toInstant(), scanStartTime.toInstant()).toSeconds());
+    Instant deviceStateTime = deviceState.timestamp.toInstant();
+    Instant startBase = sequenceStarted.isAfter(scanGeneration) ? sequenceStarted : scanGeneration;
+    long delta = Math.abs(Duration.between(deviceStateTime, startBase).toSeconds());
     checkThat("scan start near expected generation time", delta <= SCAN_START_JITTER_SEC,
-        format("scan start %ss different from expected %s", delta, isoConvert(scanStartTime)));
+        format("scan start %ss different from expected %s", delta, isoConvert(scanGeneration)));
 
     waitFor("scheduled scan complete", waitingPeriod, this::detailScanComplete);
 
@@ -314,18 +316,18 @@ public class DiscoverySequences extends SequenceBase {
   }
 
   private String detailScanPending() {
-    return ifNotTrueGet(scanPending(scanStartTime).test(scanFamily),
-        format("Expected pending %s but %s", isoConvert(scanStartTime), describedFamilyState()));
+    return ifNotTrueGet(scanPending(Date.from(scanGeneration)).test(scanFamily),
+        format("Expected pending %s but %s", isoConvert(scanGeneration), describedFamilyState()));
   }
 
   private String detailScanActive() {
-    return ifNotTrueGet(scanActive(scanStartTime).test(scanFamily),
-        format("Expected active %s but %s", isoConvert(scanStartTime), describedFamilyState()));
+    return ifNotTrueGet(scanActive(Date.from(scanGeneration)).test(scanFamily),
+        format("Expected active %s but %s", isoConvert(scanGeneration), describedFamilyState()));
   }
 
   private String detailScanComplete() {
-    return ifNotTrueGet(scanComplete(scanStartTime).test(scanFamily),
-        format("Expected complete %s but %s", isoConvert(scanStartTime), describedFamilyState()));
+    return ifNotTrueGet(scanComplete(Date.from(scanGeneration)).test(scanFamily),
+        format("Expected complete %s but %s", isoConvert(scanGeneration), describedFamilyState()));
   }
 
   private String invalidReasons(DiscoveryEvents discoveryEvent, Date scanGeneration) {
@@ -361,15 +363,15 @@ public class DiscoverySequences extends SequenceBase {
   @Summary("Check periodic scan on a fixed schedule amd enumeration")
   public void scan_periodic_now_enumerate() {
     initializeDiscovery();
-    checkState(scanStartTime == null, "scanStartTime not null");
-    scanStartTime = cleanDate();
-    configureScan(scanStartTime, SCAN_START_DELAY, PLEASE_ENUMERATE);
+    checkState(scanGeneration == null, "scanStartTime not null");
+    scanGeneration = cleanDate().toInstant();
+    configureScan(scanGeneration, SCAN_START_DELAY, PLEASE_ENUMERATE);
     Instant endTime = Instant.now().plusSeconds(SCAN_START_DELAY.getSeconds() * SCAN_ITERATIONS);
     untilUntrue("scan iterations", () -> Instant.now().isBefore(endTime));
     String oneFamily = metaFamilies.iterator().next();
-    Date finishTime = deviceState.discovery.families.get(oneFamily).generation;
+    Instant finishTime = deviceState.discovery.families.get(oneFamily).generation.toInstant();
     checkThat("scan did not terminate prematurely",
-        metaFamilies.stream().noneMatch(scanComplete(finishTime)));
+        metaFamilies.stream().noneMatch(scanComplete(Date.from(finishTime))));
     List<DiscoveryEvents> receivedEvents = popReceivedEvents(DiscoveryEvents.class);
     checkEnumeration(receivedEvents, PLEASE_ENUMERATE);
   }
@@ -391,12 +393,12 @@ public class DiscoverySequences extends SequenceBase {
         () -> stateFamilies.keySet().stream().noneMatch(scanActive()));
   }
 
-  private void configureScan(Date startTime, Duration scanInterval, ScanMode shouldEnumerate) {
+  private void configureScan(Instant startTime, Duration scanInterval, ScanMode shouldEnumerate) {
     Integer intervalSec = ofNullable(scanInterval).map(Duration::getSeconds).map(Long::intValue)
         .orElse(null);
     info(format("%s configured for family %s starting at %s evey %ss",
-        shouldEnumerate == PLEASE_ENUMERATE ? "Enumeration" : "Scan", scanFamily, startTime,
-        intervalSec));
+        shouldEnumerate == PLEASE_ENUMERATE ? "Enumeration" : "Scan", scanFamily,
+        isoConvert(startTime), intervalSec));
     FamilyDiscoveryConfig configFamily = getConfigFamily(scanFamily);
     configFamily.generation = SemanticDate.describe("family generation", startTime);
     configFamily.depth = enumerationDepthIf(shouldEnumerate);
