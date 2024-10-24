@@ -216,7 +216,7 @@ def discovery_node():
 
   run("docker stop discoverynode-test-node")
   logs = run("docker logs discoverynode-test-node")
-  info(logs.stdout)
+  print(logs.stdout.decode("utf-8"))
   run("docker rm discoverynode-test-node")
 
 
