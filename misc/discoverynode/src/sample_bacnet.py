@@ -28,7 +28,6 @@ def main():
   )
   logging.root.setLevel(logging.INFO)
   state = mock.MagicMock()
-<<<<<<< HEAD
   a = udmi.discovery.bacnet.GlobalBacnetDiscovery(
       state, print, bacnet_ip=None
   )
@@ -36,7 +35,6 @@ def main():
   while True:
     time.sleep(1)
 
-=======
 
   def pp(obj):
     print(obj.to_json())
@@ -44,7 +42,6 @@ def main():
   a = udmi.discovery.nmap.NmapBannerScan(state, print, target_ips=["127.0.0.1"])
   a._start()
   time.sleep(30)
->>>>>>> 82d5a00d (wip)
 
 if __name__ == "__main__":
   multiprocessing.freeze_support()

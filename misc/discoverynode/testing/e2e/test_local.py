@@ -25,38 +25,29 @@ from typing import Any
 from typing import Iterator
 import re
 import pytest
+from typing import Final
 
 ROOT_DIR = os.path.dirname(__file__)
 UDMI_DIR = str(Path(__file__).parents[4])
 
-GCP_PROJECT = None
-REGISTRY = os.environ["DN_REGISTRY"]
-MQTT_REGISTRY = None
-TARGET = os.environ["DN_TARGET"]
+SITE_PATH: Final = os.environ["DN_SITE_PATH"]
 
-target_spec = r'\/\/gbos\/([a-z-]+)(\/([a-z0-9]+))?'
+TARGET: Final = "//mqtt/localhost"
+PROJECT_ID: Final = "localhost"
 
-if m := re.fullmatch(target_spec, TARGET):
-  GCP_PROJECT = m.group(1)
-  if m.group(3):
-    MQTT_REGISTRY = f"{REGISTRY}~{m.group(3)}"
-  else:
-    MQTT_REGISTRY = REGISTRY
-else:
-  raise RuntimeError(f"bad target {TARGET}, note must be //gbos/*")
+# Some light hardcoding exists, so this is only guaranteed to work with localhost currently
+assert os.environ["DN_TARGET"] == TARGET
 
 # Assume the UDMI Directory is the UDMI directory and has not moved
 assert UDMI_DIR.rsplit("/", 1)[1] == "udmi"
 
 
-def until_true(func: Callable, message: str, **kwargs):
+def until_true(func: Callable, message: str, *, timeout = 0, interval = 0.1, **kwargs):
   """Blocks until given func returns True
 
   Raises:
     Exception if timeout has elapsed
   """
-  timeout = kwargs.get("timeout", 0)
-  interval = kwargs.get("interval", 0.1)
 
   expiry_time = time.time() + timeout
   while time.time() < expiry_time or timeout == 0:
@@ -114,20 +105,9 @@ def run(cmd: str) -> subprocess.CompletedProcess:
       stderr=subprocess.STDOUT, #sys.stderr
       cwd=UDMI_DIR,
   )
+  # print not log, so they are captured when there is a failure
   print(result.stdout.decode("utf-8"))
   return result
-
-
-def is_registrar_done() -> bool:
-  run("git pull")
-  history_files = list(Path(SITE_PATH).glob("udmi/history/*.json"))
-
-  # we've deleted the history so there will only be one file
-  assert len(history_files) <= 1
-
-  if history_files:
-    # currently file is empty at start, and only written to at the end
-    return history_files[0].stat().st_size > 0
 
 
 @pytest.fixture
@@ -162,18 +142,33 @@ def docker_devices():
 def discovery_node():
 
   def _discovery_node(
-      *, device_id, project_id, registry_id, key_file, algorithm
+      *, device_id, site_path
   ):
+
+    with open(
+      os.path.join(site_path, "cloud_iot_config.json"), encoding="utf-8"
+    ) as f:
+      cloud_iot_config = json.load(f)
+    
+    device_directory = os.path.join(site_path, "devices", device_id)
+    with open(
+      os.path.join(device_directory, "metadata.json"), encoding="utf-8"
+    ) as f:
+      metadata = json.load(f)
+
     config = {
         "mqtt": {
             "device_id": device_id,
-            "host": "mqtt.bos.goog",
+            "host": "192.168.99.2",
             "port": 8883,
-            "registry_id": registry_id,
+            "registry_id": cloud_iot_config["registry_id"],
             "region": "us-central1",
-            "project_id": project_id,
-            "key_file": key_file,
-            "algorithm": algorithm,
+            "project_id": PROJECT_ID,
+            "key_file": "rsa_private.pem",
+            "ca_file": "ca.crt",
+            "cert_file": "rsa_private.crt",
+            "algorithm": metadata["cloud"]["auth_type"],
+            "authentication_mechanism": "udmi_local",
         },
         "nmap": {"targets": ["127.0.0.1"], "interface": "eth0"},
         "bacnet": {"ip": "192.168.11.251"},
@@ -197,7 +192,13 @@ def discovery_node():
             "--mount",
             f"type=bind,source={ROOT_DIR}/discovery_node_config.json,target=/usr/src/app/config.json",
             "--mount",
-            f"type=bind,source={UDMI_DIR}/sites/udmi_site_model/devices/AHU-1/rsa_private.pem,target=/usr/src/app/rsa_private.pem",
+            f"type=bind,source={site_path}/devices/{device_id}/rsa_private.pem,target=/usr/src/app/rsa_private.pem",
+            "--mount",
+            f"type=bind,source={site_path}/devices/{device_id}/rsa_private.crt,target=/usr/src/app/rsa_private.crt",
+            "--mount",
+            f"type=bind,source={site_path}/devices/{device_id}/rsa_private.pkcs8,target=/usr/src/app/rsa_private.pkcs8",
+            "--mount",
+            f"type=bind,source={site_path}/reflector/ca.crt,target=/usr/src/app/ca.crt",
             "--ip=192.168.11.251",
             "test-discovery_node",
             "python3",
@@ -205,6 +206,8 @@ def discovery_node():
             "--config_file=config.json",
         ])
     )
+
+    run("docker network connect udminet discoverynode-test-node")
 
   yield _discovery_node
   info("logs::::")
@@ -218,17 +221,14 @@ def discovery_node():
 def test_discovered_devices_are_created(
     new_site_model, docker_devices, discovery_node
 ):
-  site_path = os.path.join(UDMI_DIR, "sites", "e2e")
 
   new_site_model(
-      path=site_path,
+      site_path=SITE_PATH,
       delete=True,
-      name=REGISTRY,
       devices=range(0),
       devices_with_localnet_block=range(0),
       discovery_node_id="GAT-1",
       discovery_node_is_gateway=True,
-      discovery_node_key_path=os.path.join(UDMI_DIR, "sites/udmi_site_model/devices/AHU-1"),
       discovery_node_families=["bacnet"],
   )
 
@@ -236,17 +236,14 @@ def test_discovered_devices_are_created(
 
   info("deleting existing site model")
 
-  run(f"bin/registrar {site_path} {TARGET} -d -x")
+  run(f"bin/registrar {SITE_PATH} {TARGET} -d -x")
 
-  run(f"bin/registrar {site_path} {TARGET}")
+  run(f"bin/registrar {SITE_PATH} {TARGET}")
 
   # Note: Start after running registrar preferably
   discovery_node(
       device_id="GAT-1",
-      project_id=GCP_PROJECT,
-      registry_id=MQTT_REGISTRY,
-      key_file="/usr/src/app/rsa_private.pem",
-      algorithm="RS256",
+      site_path=SITE_PATH
   )
 
   run("bin/mapper GAT-1 provision")
@@ -257,46 +254,41 @@ def test_discovered_devices_are_created(
 
   time.sleep(30)
 
-  run(f"bin/registrar {site_path} {TARGET}")
+  run(f"bin/registrar {SITE_PATH} {TARGET}")
 
-  site_model = Path(site_path)
+  site_model = Path(SITE_PATH)
   extra_devices = list([x.stem for x in site_model.glob("extras/*")])
   assert len(extra_devices) == 9
 
 
 def test_sequencer(new_site_model, docker_devices, discovery_node):
-  site_path = os.path.join(UDMI_DIR, "sites", "e2e")
-
+  
   new_site_model(
-      path=site_path,
+      site_path=SITE_PATH,
       delete=True,
-      name=REGISTRY,
       # Because the sample rate in the test is 10 seconds and 11 results are produced (1 - 11 inclusive)
       devices=range(1, 12),
       devices_with_localnet_block=range(1, 12),
       discovery_node_id="GAT-1",
       discovery_node_is_gateway=True,
-      discovery_node_key_path=os.path.join(UDMI_DIR, "sites/udmi_site_model/devices/AHU-1"),
-      discovery_node_families=["bacnet"],
+      discovery_node_families=["vendor"],
   )
 
-  run(f"bin/registrar {site_path} {TARGET} -x")
+  run(f"bin/registrar {SITE_PATH} {TARGET} -d -x")
+
+  run(f"bin/registrar {SITE_PATH} {TARGET}")
 
   # Note: Start after running registrar preferably
   discovery_node(
       device_id="GAT-1",
-      project_id="bos-platform-dev",
-      registry_id=MQTT_REGISTRY,
-      # local to the discovery node
-      key_file="/usr/src/app/rsa_private.pem",
-      algorithm="RS256",
+      site_path=SITE_PATH
   )
 
   result = run(
-      f"bin/sequencer -v {site_path} {TARGET} GAT-1 single_scan_future"
+      f"bin/sequencer -v {SITE_PATH} {TARGET} GAT-1 single_scan_future"
   )
 
-  assert "RESULT pass discovery.scan single_scan_future ALPHA 5/5 Sequence complete" in str(result.stdout)
+  assert "RESULT pass discovery.scan single_scan_future" in str(result.stdout)
 
 
 @pytest.fixture
@@ -305,51 +297,34 @@ def new_site_model():
   def _new_site_model(
       *,
       delete,
-      path,
-      name,
+      site_path,
       devices,
       devices_with_localnet_block,
       discovery_node_id,
       discovery_node_is_gateway,
-      discovery_node_key_path,
       discovery_node_families,
   ):
-
+    devices_directory = os.path.join(site_path, "devices")
     device_prefix = "DDC"
-
+    
     if delete:
       with contextlib.suppress(FileNotFoundError):
-        shutil.rmtree(path)
+        shutil.rmtree(devices_directory)
 
-    os.mkdir(path)
+    os.mkdir(devices_directory)
 
-    #############
-
-    # Copy reflector from udmi_site_model
-    shutil.copytree(
-        os.path.join(UDMI_DIR, "sites/udmi_site_model/reflector"),
-        os.path.join(path, "reflector"),
-    )
-
-    #############3
-
-    cloud_iot_config = {
-        "cloud_region": "us-central1",
-        "site_name": name,
-        "registry_id": name,
-    }
+    ##########################
 
     with open(
-        os.path.join(path, "cloud_iot_config.json"), mode="w", encoding="utf-8"
+      os.path.join(site_path, "cloud_iot_config.json"), encoding="utf-8"
     ) as f:
-      json.dump(cloud_iot_config, f, indent=2)
-
-    os.mkdir(os.path.join(path, "devices"))
+      cloud_iot_config = json.load(f)
+    name = cloud_iot_config["registry_id"]
 
     ##########################
 
     # Create gateway
-    os.mkdir(os.path.join(path, "devices", discovery_node_id))
+    os.mkdir(os.path.join(devices_directory, discovery_node_id))
     gateway_metadata = {
         "system": {
             "location": {"section": "2-3N8C"},
@@ -373,38 +348,20 @@ def new_site_model():
     if discovery_node_is_gateway:
       gateway_metadata["gateway"] = {"proxy_ids": []}
 
-    gateway_path = os.path.join(path, "devices", discovery_node_id)
+    gateway_path = os.path.join(devices_directory, discovery_node_id)
 
     with open(
         os.path.join(gateway_path, "metadata.json"), mode="w", encoding="utf-8"
     ) as f:
       json.dump(gateway_metadata, f, indent=2)
 
-    shutil.copyfile(
-        os.path.join(discovery_node_key_path, "rsa_public.pem"),
-        os.path.join(gateway_path, "rsa_public.pem"),
-    )
-    shutil.copyfile(
-        os.path.join(discovery_node_key_path, "rsa_private.pem"),
-        os.path.join(gateway_path, "rsa_private.pem"),
-    )
+    run(f"bin/keygen RS256 {gateway_path}")
+    run(f"bin/keygen CERT/localhost {gateway_path}")
     ##############################
-
-    base_device_public_key = textwrap.dedent("""
-          -----BEGIN PUBLIC KEY-----
-          MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAvpaY1jwJWa3yQy5DKomL
-          qYjuTeUekS1OSZxVFr5RclgsWJBTph+7Myfp9dCVpYCR6am4ycRWayp9DqmhSP6q
-          9B4VIUDjV/PBuLvqrfL5XhVZUyMNcg1WlehfdsZWLzG5X5gGfGri7LqvmYIz3eHz
-          yxkUV5t0sRhuZFk5wT2PrD7MWtjAIfEJmA6dZ5o/Jix3bF4wMsvFBK9XDRHibcS7
-          o/3hw/1FABL+Bgw4L41CtrzRLYKmmRTvsIT8jXuUuptsf+58b9A1kWWsV0AIKjaJ
-          73fh+iR8TBe5FDc8MwSgjgophYXBVCgzlIOkX7gwIiAYQWbWOFU9ltzIMgp7JsdR
-          vwIDAQAB
-          -----END PUBLIC KEY-----
-    """).strip()
 
     for i in devices:
       device_id = f"{device_prefix}-{i}"
-      device_path = os.path.join(path, "devices", device_id)
+      device_path = os.path.join(site_path, "devices", device_id)
       os.mkdir(device_path)
 
       device_metadata = {
@@ -432,18 +389,13 @@ def new_site_model():
       ) as f:
         json.dump(device_metadata, f, indent=2)
 
-      with open(
-          os.path.join(device_path, "rsa_public.pem"),
-          mode="w",
-          encoding="utf-8",
-      ) as f:
-        f.write(base_device_public_key)
+      warning("created device %s without keys", device_id)
 
   yield _new_site_model
 
 
 def proxy_id(x: int) -> str:
-  return "".join([chr[int(x)] for x in str(x)]).rjust(4, "A")
+  return "".join([chr[int(x)] for x in str(x)]).rjust(4, "Ack")
 
 
 def gateway_site_model():

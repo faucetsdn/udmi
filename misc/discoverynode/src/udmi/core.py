@@ -53,13 +53,11 @@ class UDMI:
 
     threading.Thread(target=self.state_monitor, args=[], daemon=True).start()
 
-    self.enable_discovery()
+    self.enable_discovery(**config.get("udmi",{}).get("discovery", {}))
 
   def process_config(self, config: str):
     logging.error(f"config callback {config[:24]}")
 
-  # NOTE: This is flawed, because if the predicate starts to fail, for example if the block was removed, then
-  # the new config is never pased to the the config. Rather, functions should always receive configs and the predicate could match false
   def add_config_route(self, filter: Callable, destination: Callable):
     self.callbacks[filter] = destination
 
@@ -105,58 +103,57 @@ class UDMI:
     logging.warning("published discovery: %s", payload.to_json())
     self.publisher.publish_message(self.topic_discovery_event, payload.to_json())
 
-  def enable_discovery(self):
+  def enable_discovery(self,*,bacnet=True,vendor=True,ipv4=True,ethmac=True):
 
-    number_discovery = udmi.discovery.numbers.NumberDiscovery(
-        self.state, self.publish_discovery
-    )
+    if vendor:
+      number_discovery = udmi.discovery.numbers.NumberDiscovery(
+          self.state, self.publish_discovery
+      )
 
-    self.add_config_route(
-        lambda x: True,
-        number_discovery,
-    )
+      self.add_config_route(
+          lambda x: True,
+          number_discovery,
+      )
 
-    self.components["number_discovery"] = number_discovery
+      self.components["number_discovery"] = number_discovery
     
-    bacnet_discovery = udmi.discovery.bacnet.GlobalBacnetDiscovery(
-        self.state,
-        self.publish_discovery,
-        bacnet_ip=self.config.get("bacnet", {}).get("ip"),
-    )
+    if bacnet:
+      bacnet_discovery = udmi.discovery.bacnet.GlobalBacnetDiscovery(
+          self.state,
+          self.publish_discovery,
+          bacnet_ip=self.config.get("bacnet", {}).get("ip"),
+      )
 
-    self.add_config_route(
-        lambda x: True,
-        bacnet_discovery,
-    )
+      self.add_config_route(
+          lambda x: True,
+          bacnet_discovery,
+      )
 
-    passive_discovery = udmi.discovery.passive.PassiveNetworkDiscovery(
-        self.state, self.publish_discovery
-    )
-
-    self.components["bacnet_discovery"] = passive_discovery
-
-    # THESE TWO USE THE SAME SCAN_FAMILY
-    # THEIR `states` IN THE OVERALL STATE CLASHES
-    # because both set state.discovery.families.SCAN_FAMILY = self.state
-  
-    self.add_config_route(
-        lambda x: True,
-        passive_discovery,
-    )
-
-    self.components["passive_discovery"] = passive_discovery
+      self.components["bacnet_discovery"] = bacnet_discovery
     
+    if ipv4:
+      passive_discovery = udmi.discovery.passive.PassiveNetworkDiscovery(
+          self.state, self.publish_discovery
+      )
 
-    nmap_banner_scan = udmi.discovery.nmap.NmapBannerScan(
-        self.state,
-        self.publish_discovery,
-        target_ips=self.config["nmap"]["targets"],
-    )
+      self.add_config_route(
+          lambda x: True,
+          passive_discovery,
+      )
 
-    self.add_config_route(
-        lambda x: True,
-        nmap_banner_scan,
-    )
+      self.components["passive_discovery"] = passive_discovery
+    
+    if ethmac:
+      nmap_banner_scan = udmi.discovery.nmap.NmapBannerScan(
+          self.state,
+          self.publish_discovery,
+          target_ips=self.config["nmap"]["targets"],
+      )
 
-    self.components["nmap_banner_scan"] = nmap_banner_scan
+      self.add_config_route(
+          lambda x: True,
+          nmap_banner_scan,
+      )
+
+      self.components["nmap_banner_scan"] = nmap_banner_scan
     

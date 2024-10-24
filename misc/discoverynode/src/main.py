@@ -65,6 +65,12 @@ def main():
   logging.info("Loading config from %s", args.config_file)
   config = load_config_from_file(args.config_file)
 
+  # TODO: Should probably set this in the config
+  if config["mqtt"].get("authentication_mechanism", "jwt-gcp") == "jwt-gcp":
+    topic_prefix = f'/devices/{config["mqtt"]["device_id"]}'
+  else:
+    topic_prefix = f'/r/{config["mqtt"]["registry_id"]}/d/{config["mqtt"]["device_id"]}'
+
   # Initialise (but not start) the MQTT Client
   mclient = udmi.publishers.mqtt.MQTT(
       device_id=config["mqtt"]["device_id"],
@@ -73,13 +79,18 @@ def main():
       project_id=config["mqtt"]["project_id"],
       hostname=config["mqtt"]["host"],
       port=config["mqtt"]["port"],
+      topic_prefix=topic_prefix,
       key_file=config["mqtt"]["key_file"],
       algorithm=config["mqtt"]["algorithm"],
+      autentication_mechanism=config["mqtt"].get("authentication_mechanism", "jwt-gcp"),
+      ca_file=config["mqtt"].get("ca_file"),
+      cert_file=config["mqtt"].get("cert_file"),
+
   )
 
   udmi_client = udmi.core.UDMI(
       publisher=mclient,
-      topic_prefix=f'/devices/{config["mqtt"]["device_id"]}',
+      topic_prefix=topic_prefix,
       config=config,
   )
 
