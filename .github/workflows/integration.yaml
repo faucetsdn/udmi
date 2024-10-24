@@ -99,11 +99,12 @@ jobs:
             (docker ps | fgrep -q udmis) || break
             sleep 1
           done
-          ls -l var/tmp/pod_ready.txt 2>&
+          ls -l var/tmp/pod_ready.txt 2>&1
       - name: Checkout source
         uses: actions/checkout@v4
       - name: start and test local servers
         run: |
           bin/setup_base
       - name: run test suite
-        run: misc/discoverynode/testing/e2e/test_local.sh udmi_site_model
+        run: |
+          misc/discoverynode/testing/e2e/test_local.sh udmi_site_model
