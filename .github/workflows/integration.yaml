@@ -2,7 +2,7 @@ name: UDMI Integration Suite
 
 on:
   push:
-    tags:
+    branches:
       - '**'
   workflow_dispatch:
 
@@ -63,19 +63,16 @@ jobs:
           docker images
           echo
           docker history $PUSH_TAG
-  simple:
-    name: Simple sequence test
+  mapper:
+    name: Simple mapper test
     runs-on: ubuntu-latest
-    timeout-minutes: 5
+    timeout-minutes: 15
     needs: images
     strategy:
       fail-fast: false
-      matrix:
-        device_id: [ "AHU-1", "AHU-22", "GAT-123" ]
     env:
       IMAGE_NAME: ${{ github.repository }}
       REF_NAME: ${{ github.ref_name }}
-      DEVICE_ID: ${{ matrix.device_id }}
     steps:
       - name: Setup Environment
         run: |
@@ -90,11 +87,11 @@ jobs:
         run: |
           cat udmi_site_model/cloud_iot_config.json
           docker run -d --net udminet --name udmis -p 8883:8883 \
-            -v $(realpath site_model):/root/site_model \
+            -v $(realpath sites/udmi_site_model):/root/site_model \
             -v $PWD/var/tmp:/tmp \
             -v $PWD/var/etcd:/root/udmi/var/etcd \
             -v $PWD/var/mosquitto:/etc/mosquitto \
-            ghcr.io/$IMAGE_NAME:udmis-$REF_NAME udmi/bin/start_local block site_model/cloud_iot_config.json
+            ghcr.io/faucetsdn/udmi:udmis-latest udmi/bin/start_local block site_model/cloud_iot_config.json
           for count in `seq 0 30`; do
             echo Waiting for UDMIS startup $((30 - count))
             [[ ! -f var/tmp/pod_ready.txt ]] || break
@@ -102,66 +99,5 @@ jobs:
             sleep 1
           done
           ls -l var/tmp/pod_ready.txt 2>&1
-      - name: Registrar run
-        run: |
-          docker run --net udminet --name registrar -v $(realpath site_model):/root/site_model \
-            ghcr.io/$IMAGE_NAME:validator-$REF_NAME bin/registrar site_model/cloud_iot_config.json
-      - name: Pubber background run
-        run: |
-          echo docker run -d --net udminet --name pubber -v $(realpath site_model):/root/site_model \
-            ghcr.io/$IMAGE_NAME:pubber-$REF_NAME bin/pubber site_model/cloud_iot_config.json
-          docker run -d --net udminet --name pubber -v $(realpath site_model):/root/site_model \
-            ghcr.io/$IMAGE_NAME:pubber-$REF_NAME bin/pubber site_model/cloud_iot_config.json
-          for count in `seq 0 30`; do
-            (docker ps | fgrep -q pubber) || break
-            (docker logs pubber 2>&1 | fgrep -q -v "Connection complete") || break
-            echo Waiting for pubber startup $((30 - count))...
-            sleep 1
-          done
-          docker logs pubber 2>&1 | fgrep "Connection complete"
-      - name: Sequencer run
-        run: |
-          SEQUENCER_TESTS="broken_config extra_config device_config_acked"
-          [[ $REF_NAME =~ test- ]] && SEQUENCER_TESTS=${REF_NAME#test-}
-          docker run --net udminet --name sequencer -v $(realpath site_model):/root/site_model \
-            ghcr.io/$IMAGE_NAME:validator-$REF_NAME bin/sequencer site_model/cloud_iot_config.json \
-            $SEQUENCER_TESTS
-      - name: Sequencer results
-        run: |
-          cat site_model/out/devices/$DEVICE_ID/results.md
-          if [[ $REF_NAME =~ test- ]]; then
-            SPECIFIC_TEST=${REF_NAME#test-}
-            more site_model/out/devices/$DEVICE_ID/tests/$SPECIFIC_TEST/*
-          else
-            [[ $(cat site_model/out/devices/$DEVICE_ID/results.md | egrep 'stable \| (pass|skip)' | wc -l) == 3 ]]
-          fi
-      - name: UDMIS logs
-        if: ${{ !cancelled() }}
-        run: |
-          docker logs udmis
-          more var/tmp/udmis.log
-      - name: Registrar logs
-        if: ${{ !cancelled() }}
-        run: docker logs registrar
-      - name: Pubber logs
-        if: ${{ !cancelled() }}
-        run: docker logs pubber
-      - name: Sequencer logs
-        if: ${{ !cancelled() }}
-        run: docker logs sequencer
-
-  udmif:
-    name: UDMIF unit tests
-    runs-on: ubuntu-latest
-    timeout-minutes: 5
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 20.9.0
-      - name: Install Angular CLI
-        run: npm install -g @angular/cli
-      - name: web tests
-        run: echo Disabled udmif/web/runTests due to dependency integration problems
-      - name: api tests
-        run: echo Disabled udmif/api/runTests due to dependency integration problems
+      - name: run test suite
+        run: misc/discoverynode/testing/e2e/test_local.sh
