@@ -75,6 +75,8 @@ jobs:
       IMAGE_NAME: ${{ github.repository }}
       REF_NAME: ${{ github.ref_name }}
     steps:
+      - name: Checkout source
+        uses: actions/checkout@v4
       - name: Setup Environment
         run: |
           sudo apt-get install moreutils
@@ -100,8 +102,6 @@ jobs:
             sleep 1
           done
           ls -l var/tmp/pod_ready.txt 2>&1
-      - name: Checkout source
-        uses: actions/checkout@v4
       - name: start and test local servers
         run: |
           bin/setup_base
