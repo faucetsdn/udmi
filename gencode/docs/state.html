@@ -5662,10 +5662,10 @@
             />
         </svg>
     <a href="#discovery_families_pattern1_phase" onclick="anchorLink('discovery_families_pattern1_phase')">phase</a></div><span class="badge badge-dark value-type">Type: enum (of string)</span><br/>
-<span class="description"><p>Current phase of the discovery process</p>
+<span class="description"><p>Current phase of an active discovery process</p>
 </span><div class="enum-value" id="discovery_families_pattern1_phase_enum">
                 <h4>Must be one of:</h4>
-                <ul class="list-group"><li class="list-group-item enum-item">"pending"</li><li class="list-group-item enum-item">"active"</li><li class="list-group-item enum-item">"stopped"</li><li class="list-group-item enum-item">"done"</li></ul>
+                <ul class="list-group"><li class="list-group-item enum-item">"stopped"</li><li class="list-group-item enum-item">"pending"</li><li class="list-group-item enum-item">"active"</li></ul>
                 </div>
             
 
@@ -5677,18 +5677,18 @@
         </div>
     </div>
 </div>
-<div class="accordion" id="accordiondiscovery_families_pattern1_record_count">
+<div class="accordion" id="accordiondiscovery_families_pattern1_active_count">
     <div class="card">
-        <div class="card-header" id="headingdiscovery_families_pattern1_record_count">
+        <div class="card-header" id="headingdiscovery_families_pattern1_active_count">
             <h2 class="mb-0">
-                <button class="btn btn-link property-name-button" type="button" data-toggle="collapse" data-target="#discovery_families_pattern1_record_count"
-                        aria-expanded="" aria-controls="discovery_families_pattern1_record_count" onclick="setAnchor('#discovery_families_pattern1_record_count')"><span class="property-name">record_count</span></button>
+                <button class="btn btn-link property-name-button" type="button" data-toggle="collapse" data-target="#discovery_families_pattern1_active_count"
+                        aria-expanded="" aria-controls="discovery_families_pattern1_active_count" onclick="setAnchor('#discovery_families_pattern1_active_count')"><span class="property-name">active_count</span></button>
             </h2>
         </div>
 
-        <div id="discovery_families_pattern1_record_count"
-             class="collapse property-definition-div" aria-labelledby="headingdiscovery_families_pattern1_record_count"
-             data-parent="#accordiondiscovery_families_pattern1_record_count">
+        <div id="discovery_families_pattern1_active_count"
+             class="collapse property-definition-div" aria-labelledby="headingdiscovery_families_pattern1_active_count"
+             data-parent="#accordiondiscovery_families_pattern1_active_count">
             <div class="card-body pl-5">
 
     <div class="breadcrumbs">root
@@ -5719,13 +5719,68 @@
                 d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
             />
         </svg>
-    <a href="#discovery_families_pattern1_record_count" onclick="anchorLink('discovery_families_pattern1_record_count')">record_count</a></div><span class="badge badge-dark value-type">Type: integer</span><br/>
-<span class="description"><p>Number of records produced so far for this scan generation</p>
+    <a href="#discovery_families_pattern1_active_count" onclick="anchorLink('discovery_families_pattern1_active_count')">active_count</a></div><span class="badge badge-dark value-type">Type: integer</span><br/>
+<span class="description"><p>Number of records produced so far for this active scan generation</p>
 </span>
             
 
             
+            <p><span class="badge badge-light restriction numeric-restriction" id="discovery_families_pattern1_active_count_number">Value must be greater or equal to <code>0</code></span></p>
+
             
+            </div>
+        </div>
+    </div>
+</div>
+<div class="accordion" id="accordiondiscovery_families_pattern1_passive_count">
+    <div class="card">
+        <div class="card-header" id="headingdiscovery_families_pattern1_passive_count">
+            <h2 class="mb-0">
+                <button class="btn btn-link property-name-button" type="button" data-toggle="collapse" data-target="#discovery_families_pattern1_passive_count"
+                        aria-expanded="" aria-controls="discovery_families_pattern1_passive_count" onclick="setAnchor('#discovery_families_pattern1_passive_count')"><span class="property-name">passive_count</span></button>
+            </h2>
+        </div>
+
+        <div id="discovery_families_pattern1_passive_count"
+             class="collapse property-definition-div" aria-labelledby="headingdiscovery_families_pattern1_passive_count"
+             data-parent="#accordiondiscovery_families_pattern1_passive_count">
+            <div class="card-body pl-5">
+
+    <div class="breadcrumbs">root
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#discovery" onclick="anchorLink('discovery')">discovery</a>
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#discovery_families" onclick="anchorLink('discovery_families')">families</a>
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#discovery_families_pattern1" onclick="anchorLink('discovery_families_pattern1')">Family Discovery State</a>
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#discovery_families_pattern1_passive_count" onclick="anchorLink('discovery_families_pattern1_passive_count')">passive_count</a></div><span class="badge badge-dark value-type">Type: integer</span><br/>
+<span class="description"><p>Number of passive scan results currently 'on hold'</p>
+</span>
+            
+
+            
+            <p><span class="badge badge-light restriction numeric-restriction" id="discovery_families_pattern1_passive_count_number">Value must be greater or equal to <code>0</code></span></p>
 
             
             </div>

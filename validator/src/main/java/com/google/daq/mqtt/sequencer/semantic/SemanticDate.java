@@ -1,6 +1,7 @@
 package com.google.daq.mqtt.sequencer.semantic;
 
 import com.google.udmi.util.CleanDateFormat;
+import java.time.Instant;
 import java.util.Date;
 
 /**
@@ -31,6 +32,10 @@ public class SemanticDate extends Date implements SemanticValue {
    */
   public static Date describe(String description, Date date) {
     return date == null ? null : new SemanticDate(description, date);
+  }
+
+  public static Date describe(String description, Instant date) {
+    return SemanticDate.describe(description, Date.from(date));
   }
 
   public String getDescription() {

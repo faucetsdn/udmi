@@ -9,6 +9,7 @@
   "generation": "2018-08-26T22:00:13Z",
   "scan_family": "ipv6",
   "scan_addr": "FE80::D05C:1A90:DD9E:A582",
+  "event_no": 1,
   "families": {
     "ipv4": {
       "addr": "192.168.1.2"

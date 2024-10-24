@@ -9,6 +9,7 @@
   "generation": "2018-08-26T21:00:13Z",
   "scan_family": "ipv4",
   "scan_addr": "192.168.1.2",
+  "event_no": 2,
   "families": {
     "ipv4": {
       "addr": "192.168.1.2"

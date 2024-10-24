@@ -37,18 +37,18 @@ Some caveats:
 * [broken_config](#broken_config-stable): Check that the device correctly handles a broken (non-json) config message.
 * [config_logging](#config_logging-stable): Check that the device publishes minimum required log entries when receiving config
 * [device_config_acked](#device_config_acked-stable): Check that the device MQTT-acknowledges a sent config.
-* [empty_enumeration](#empty_enumeration-preview): Check enumeration of nothing at all
 * [endpoint_connection_error](#endpoint_connection_error-preview): Push endpoint config message to device that results in a connection error.
 * [endpoint_connection_retry](#endpoint_connection_retry-preview): Check repeated endpoint with same information gets retried.
 * [endpoint_connection_success_alternate](#endpoint_connection_success_alternate-preview): Check connection to an alternate project.
 * [endpoint_connection_success_reconnect](#endpoint_connection_success_reconnect-preview): Check a successful reconnect to the same endpoint.
 * [endpoint_failure_and_restart](#endpoint_failure_and_restart-preview)
 * [endpoint_redirect_and_restart](#endpoint_redirect_and_restart-preview)
+* [enumerate_features](#enumerate_features-preview): Check enumeration of device features
+* [enumerate_nothing](#enumerate_nothing-preview): Check enumeration of nothing at all
 * [extra_config](#extra_config-stable): Check that the device correctly handles an extra out-of-schema field
 * [family_ether_addr](#family_ether_addr-preview)
 * [family_ipv4_addr](#family_ipv4_addr-preview)
 * [family_ipv6_addr](#family_ipv6_addr-preview)
-* [feature_enumeration](#feature_enumeration-preview): Check enumeration of device features
 * [gateway_proxy_events](#gateway_proxy_events-beta): Check that a gateway proxies pointset events for indicated devices
 * [gateway_proxy_state](#gateway_proxy_state-preview): Check that a gateway proxies state updates for indicated devices
 * [pointset_publish](#pointset_publish-stable): Check that a device publishes pointset events
@@ -125,26 +125,6 @@ Check that the device MQTT-acknowledges a sent config.
 
 1. Wait for config sync
 1. Wait for config acked
-
-## empty_enumeration (PREVIEW)
-
-Check enumeration of nothing at all
-
-1. Wait for config sync
-1. Update config before enumeration not active:
-    * Add `discovery` = { "depths": {  } }
-1. Wait for enumeration not active
-1. Wait for config sync
-1. Update config before matching enumeration generation:
-    * Add `discovery.generation` = `generation start time`
-1. Wait for matching enumeration generation
-1. Wait for config sync
-1. Update config before cleared enumeration generation:
-    * Remove `discovery.generation`
-1. Wait for cleared enumeration generation
-1. Check that no family enumeration exists
-1. Check that no feature enumeration exists
-1. Check that no point enumeration exists
 
 ## endpoint_connection_error (PREVIEW)
 
@@ -294,6 +274,47 @@ Check a successful reconnect to the same endpoint.
     * Remove `blobset.blobs._iot_endpoint_config`
 1. Wait for endpoint config blobset state not defined
 
+## enumerate_features (PREVIEW)
+
+Check enumeration of device features
+
+1. Wait for config sync
+1. Update config before enumeration not active:
+    * Add `discovery` = { "depths": { "features": `entries` } }
+1. Wait for enumeration not active
+1. Wait for config sync
+1. Update config before matching enumeration generation:
+    * Add `discovery.generation` = `generation start time`
+1. Wait for matching enumeration generation
+1. Wait for config sync
+1. Update config before cleared enumeration generation:
+    * Remove `discovery.generation`
+1. Wait for cleared enumeration generation
+1. Check that no family enumeration exists
+1. Check that feature enumeration matches metadata
+1. Check that all enumerated features are official buckets
+1. Check that no point enumeration exists
+
+## enumerate_nothing (PREVIEW)
+
+Check enumeration of nothing at all
+
+1. Wait for config sync
+1. Update config before enumeration not active:
+    * Add `discovery` = { "depths": {  } }
+1. Wait for enumeration not active
+1. Wait for config sync
+1. Update config before matching enumeration generation:
+    * Add `discovery.generation` = `generation start time`
+1. Wait for matching enumeration generation
+1. Wait for config sync
+1. Update config before cleared enumeration generation:
+    * Remove `discovery.generation`
+1. Wait for cleared enumeration generation
+1. Check that no family enumeration exists
+1. Check that no feature enumeration exists
+1. Check that no point enumeration exists
+
 ## extra_config (STABLE)
 
 Check that the device correctly handles an extra out-of-schema field
@@ -335,27 +356,6 @@ Check that the device correctly handles an extra out-of-schema field
 1. Wait for config sync
 1. Wait for localnet family state ipv6 available
 1. Check that family ipv6 address matches
-
-## feature_enumeration (PREVIEW)
-
-Check enumeration of device features
-
-1. Wait for config sync
-1. Update config before enumeration not active:
-    * Add `discovery` = { "depths": { "features": `entries` } }
-1. Wait for enumeration not active
-1. Wait for config sync
-1. Update config before matching enumeration generation:
-    * Add `discovery.generation` = `generation start time`
-1. Wait for matching enumeration generation
-1. Wait for config sync
-1. Update config before cleared enumeration generation:
-    * Remove `discovery.generation`
-1. Wait for cleared enumeration generation
-1. Check that no family enumeration exists
-1. Check that feature enumeration matches metadata
-1. Check that all enumerated features are official buckets
-1. Check that no point enumeration exists
 
 ## gateway_proxy_events (BETA)
 

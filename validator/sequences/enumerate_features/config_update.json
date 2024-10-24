@@ -1,0 +1,45 @@
+{
+  "discovery" : {
+    "depths" : {
+      "features" : "entries"
+    }
+  },
+  "localnet" : {
+    "families" : {
+      "ether" : { },
+      "ipv4" : { },
+      "ipv6" : { },
+      "vendor" : { }
+    }
+  },
+  "pointset" : {
+    "points" : {
+      "filter_alarm_pressure_status" : {
+        "ref" : "BV11.present_value",
+        "units" : "No-units"
+      },
+      "filter_differential_pressure_sensor" : {
+        "ref" : "AV12.present_value",
+        "units" : "Degrees-Celsius"
+      },
+      "filter_differential_pressure_setpoint" : {
+        "set_value" : 98,
+        "units" : "Bars"
+      }
+    }
+  },
+  "system" : {
+    "metrics_rate_sec" : 10,
+    "min_loglevel" : 200,
+    "operation" : {
+      "last_start" : "2024-10-19T12:05:40Z"
+    },
+    "testing" : {
+      "config_base" : 26,
+      "sequence_name" : "enumerate_features",
+      "transaction_id" : "RC:58f746.0036"
+    }
+  },
+  "timestamp" : "2024-10-19T12:07:05Z",
+  "version" : "git-2a03574"
+}

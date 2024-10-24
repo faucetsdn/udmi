@@ -1,0 +1,28 @@
+{
+  "features" : {
+    "endpoint.config" : {
+      "stage" : "beta"
+    },
+    "enumeration.families" : {
+      "stage" : "preview"
+    },
+    "enumeration.features" : {
+      "stage" : "beta"
+    },
+    "system" : {
+      "stage" : "beta"
+    },
+    "enumeration.pointset" : {
+      "stage" : "alpha"
+    },
+    "pointset" : {
+      "stage" : "beta"
+    },
+    "enumeration" : {
+      "stage" : "stable"
+    }
+  },
+  "generation" : "2024-10-19T12:07:02Z",
+  "timestamp" : "2024-10-19T12:07:03Z",
+  "version" : "1.5.1"
+}

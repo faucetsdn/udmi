@@ -21,6 +21,11 @@
       "type": "integer",
       "minimum": 0
     },
+    "passive_sec": {
+      "description": "Holdoff time for passively discovered devices",
+      "type": "integer",
+      "minimum": 0
+    },
     "depth": {
       "description": "Indicates implicit enumeration of discovered devices",
       "$ref": "file:common.json#/definitions/depth"

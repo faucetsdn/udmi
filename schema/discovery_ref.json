@@ -12,7 +12,7 @@
       "pattern": "^[a-z][a-z0-9]*(_[a-z0-9]+)*$"
     },
     "name": {
-      "description": "Friendly name for the point, if known",
+      "description": "Friendly name for the reference, if known",
       "type": "string"
     },
     "possible_values": {

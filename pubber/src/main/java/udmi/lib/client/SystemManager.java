@@ -61,12 +61,7 @@ public interface SystemManager extends SubblockManager {
 
   boolean getPublishingLog();
 
-  int getSystemEventCount();
-
-  int incrementSystemEventCount();
-
   SystemConfig getSystemConfig();
-
 
   void systemLifecycle(SystemMode mode);
 
@@ -150,7 +145,7 @@ public interface SystemManager extends SubblockManager {
     systemEvent.metrics.mem_free_mb = (double) runtime.freeMemory() / BYTES_PER_MEGABYTE;
     systemEvent.metrics.mem_total_mb = (double) runtime.totalMemory() / BYTES_PER_MEGABYTE;
     systemEvent.metrics.store_total_mb = Double.NaN;
-    systemEvent.event_count = incrementSystemEventCount();
+    systemEvent.event_no = incrementEventCount();
     systemEvent.logentries = getLogentries();
     getHost().publish(systemEvent);
   }

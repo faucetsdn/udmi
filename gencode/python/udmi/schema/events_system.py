@@ -63,7 +63,7 @@ class SystemEvents:
     self.upgraded_from = None
     self.last_config = None
     self.logentries = None
-    self.event_count = None
+    self.event_no = None
     self.metrics = None
 
   @staticmethod
@@ -76,7 +76,7 @@ class SystemEvents:
     result.upgraded_from = source.get('upgraded_from')
     result.last_config = source.get('last_config')
     result.logentries = Entry.array_from(source.get('logentries'))
-    result.event_count = source.get('event_count')
+    result.event_no = source.get('event_no')
     result.metrics = Object9B20A16A.from_dict(source.get('metrics'))
     return result
 
@@ -108,8 +108,8 @@ class SystemEvents:
       result['last_config'] = self.last_config # 5
     if self.logentries:
       result['logentries'] = self.logentries.to_dict() # 3
-    if self.event_count:
-      result['event_count'] = self.event_count # 5
+    if self.event_no:
+      result['event_no'] = self.event_no # 5
     if self.metrics:
       result['metrics'] = self.metrics.to_dict() # 4
     return result

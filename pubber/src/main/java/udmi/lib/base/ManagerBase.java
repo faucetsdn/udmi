@@ -41,6 +41,7 @@ public abstract class ManagerBase implements SubblockManager {
   protected final AtomicBoolean stateDirty = new AtomicBoolean();
   protected final String deviceId;
   protected ScheduledFuture<?> periodicSender;
+  private AtomicInteger eventCount = new AtomicInteger();
 
   /**
    * New instance.
@@ -110,22 +111,27 @@ public abstract class ManagerBase implements SubblockManager {
     return executor.scheduleAtFixedRate(periodicUpdate, sec, sec, SECONDS);
   }
 
+  @Override
   public void debug(String message) {
     host.debug(message);
   }
 
+  @Override
   public void info(String message) {
     host.info(message);
   }
 
+  @Override
   public void warn(String message) {
     host.warn(message);
   }
 
+  @Override
   public void error(String message, Throwable e) {
     host.error(message, e);
   }
 
+  @Override
   public void error(String message) {
     host.error(message, null);
   }
@@ -194,19 +200,23 @@ public abstract class ManagerBase implements SubblockManager {
     }
   }
 
+  @Override
   public void stop() {
     cancelPeriodicSend();
   }
 
+  @Override
   public void shutdown() {
     cancelPeriodicSend();
     stopExecutor();
   }
 
+  @Override
   public String getDeviceId() {
     return deviceId;
   }
 
+  @Override
   public ManagerHost getHost() {
     return host;
   }
@@ -217,5 +227,10 @@ public abstract class ManagerBase implements SubblockManager {
 
   public AtomicBoolean getStateDirty() {
     return stateDirty;
+  }
+
+  @Override
+  public int incrementEventCount() {
+    return eventCount.incrementAndGet();
   }
 }

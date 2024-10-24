@@ -225,11 +225,6 @@ public class PubberSystemManager extends PubberManager implements SystemManager 
   }
 
   @Override
-  public int getSystemEventCount() {
-    return systemEventCount;
-  }
-
-  @Override
   public SystemConfig getSystemConfig() {
     return systemConfig;
   }
@@ -237,11 +232,6 @@ public class PubberSystemManager extends PubberManager implements SystemManager 
   @Override
   public void setSystemConfig(SystemConfig systemConfig) {
     this.systemConfig = systemConfig;
-  }
-
-  @Override
-  public int incrementSystemEventCount() {
-    return systemEventCount++;
   }
 
   @Override
