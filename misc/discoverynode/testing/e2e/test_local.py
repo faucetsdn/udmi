@@ -106,7 +106,7 @@ def run(cmd: str) -> subprocess.CompletedProcess:
       cwd=UDMI_DIR,
   )
   # print not log, so they are captured when there is a failure
-  print(result.stdout.decode("utf-8"))
+  info(result.stdout.decode("utf-8"))
   return result
 
 
@@ -186,7 +186,7 @@ def discovery_node():
             "docker",
             "run",
             # "--rm",
-            # "-d",
+            "-d",
             f"--name=discoverynode-test-node",
             f"--network=discoverynode-network",
             "--mount",

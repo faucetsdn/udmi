@@ -111,4 +111,4 @@ jobs:
           bin/setup_base
       - name: run test suite
         run: |
-          misc/discoverynode/testing/e2e/test_local.sh udmi_site_model
+          misc/discoverynode/testing/e2e/test_local.sh $(realpath udmi_site_model)
