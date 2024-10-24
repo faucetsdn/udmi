@@ -87,7 +87,7 @@ jobs:
         run: |
           cat udmi_site_model/cloud_iot_config.json
           docker run -d --net udminet --name udmis -p 8883:8883 \
-            -v $(realpath sites/udmi_site_model):/root/site_model \
+            -v $(realpath udmi_site_model):/root/site_model \
             -v $PWD/var/tmp:/tmp \
             -v $PWD/var/etcd:/root/udmi/var/etcd \
             -v $PWD/var/mosquitto:/etc/mosquitto \
@@ -100,4 +100,4 @@ jobs:
           done
           ls -l var/tmp/pod_ready.txt 2>&1
       - name: run test suite
-        run: misc/discoverynode/testing/e2e/test_local.sh site_model
+        run: misc/discoverynode/testing/e2e/test_local.sh udmi_site_model
