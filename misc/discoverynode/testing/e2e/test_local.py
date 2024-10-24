@@ -98,6 +98,7 @@ def run(cmd: str) -> subprocess.CompletedProcess:
   #
   # stdout=sys.stdout, stderr=sys.stderr
   info("executing: %s", cmd)
+  start = time.monotonic()
   result = subprocess.run(
       cmd,
       shell=True,
@@ -105,8 +106,10 @@ def run(cmd: str) -> subprocess.CompletedProcess:
       stderr=subprocess.STDOUT, #sys.stderr
       cwd=UDMI_DIR,
   )
+  execution_time_seconds = time.monotonic() - start
+  info("completed with result code %s in %s seconds", str(result.returncode), str(execution_time_seconds))
   # print not log, so they are captured when there is a failure
-  info(result.stdout.decode("utf-8"))
+  print(result.stdout.decode("utf-8"))
   return result
 
 
