@@ -186,7 +186,7 @@ def discovery_node():
             "docker",
             "run",
             # "--rm",
-            "-d",
+            # "-d",
             f"--name=discoverynode-test-node",
             f"--network=discoverynode-network",
             "--mount",
