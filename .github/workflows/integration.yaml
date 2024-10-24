@@ -100,4 +100,4 @@ jobs:
           done
           ls -l var/tmp/pod_ready.txt 2>&1
       - name: run test suite
-        run: misc/discoverynode/testing/e2e/test_local.sh
+        run: misc/discoverynode/testing/e2e/test_local.sh site_model
