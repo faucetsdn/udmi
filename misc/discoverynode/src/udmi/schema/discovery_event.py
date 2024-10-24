@@ -14,8 +14,8 @@ class DiscoverySystemSoftware:
 
 @dataclasses.dataclass
 class DiscoverySystemHardware:
-  make: str = None
-  model: str = None
+  make: str | None = None
+  model: str | None = None
 
 
 @dataclasses.dataclass
@@ -26,6 +26,7 @@ class DiscoverySystem:
   software: DiscoverySystemSoftware = dataclasses.field(
       default_factory=DiscoverySystemSoftware
   )
+  serial_no: str | None = None
 
 
 @dataclasses.dataclass
@@ -50,7 +51,9 @@ class DiscoveryEvent:
   def to_json(self) -> str:
     as_dict = dataclasses.asdict(self)
     as_dict["timestamp"] = datetime.datetime.now()
-    as_dict = udmi.schema.util.deep_remove(
+    
+    for _ in range(3):
+      as_dict = udmi.schema.util.deep_remove(
         copy.deepcopy(as_dict), None, [{}, None]
     )
     return json.dumps(

@@ -5,7 +5,11 @@ import time
 from unittest import mock
 import pytest
 import udmi.core
+import udmi.schema.util
+import udmi.discovery.discovery
 
+def timestamp_now():
+  return udmi.schema.util.datetime_serializer(udmi.schema.util.current_time_utc())
 
 def test_bacnet_integration():
   try:
@@ -29,30 +33,36 @@ def test_bacnet_integration():
   ):
     mock_mqtt_client = mock.MagicMock()
     udmi_client = udmi.core.UDMI(publisher=mock_mqtt_client, topic_prefix="notneeded", config=test_config)
-
+    
+    # Start discovery
     udmi_client.config_handler(
         json.dumps({
-            "timestamp": 123,
+            "timestamp": timestamp_now(),
             "discovery": {
                 "families": {
-                    "bacnet": {"generation": "123"},
-                    "ipv4": {"generation": "123"},
+                    "bacnet": {"generation": timestamp_now(), "scan_duration_sec": 20},
+                    "ipv4": {"generation": timestamp_now(), "scan_duration_sec": 20}
                 }
             },
         })
     )
 
-    time.sleep(15)
+    time.sleep(30)
+
+    # check has stopped
+    assert udmi_client.state.discovery.families["bacnet"].phase == udmi.discovery.discovery.states.CANCELLED
+    assert udmi_client.state.discovery.families["ipv4"].phase == udmi.discovery.discovery.states.CANCELLED
 
     for message in messages:
       print(message.to_json())
       print("----")
+    
+    expected_ethmacs = set(d["ethmac"] for d in docker_config.values())
+    seen_ethmac_toplevel = set(m.families["ethmac"].addr for m in messages if "ethmac" in m.families)
+
+    expected_bacnet_ids = set(str(d["bacnet_id"]) for d in docker_config.values())
+    seen_bacnet_ids_toplevel = set(m.scan_addr for m in messages if m.scan_family == "bacnet")
 
     # subset because passive scan will find the gateway and device itself
-    assert set(
-        m.families["ethmac"].addr for m in messages if "ethmac" in m.families
-    ) >= set(d["ethmac"] for d in docker_config.values())
-
-    assert set(
-        m.scan_addr for m in messages if m.scan_family == "bacnet"
-    ) == set(d["bacnet_id"] for d in docker_config.values())
+    assert seen_ethmac_toplevel >= expected_ethmacs
+    assert expected_bacnet_ids == seen_bacnet_ids_toplevel 

@@ -60,44 +60,46 @@ class GlobalBacnetDiscovery(discovery.DiscoveryController):
   @discovery.catch_exceptions_to_state
   @discovery.main_task
   def result_producer(self):
-    while True:
+    while not self.cancelled:
       try:
         # discoveredDevices is "None" before initialised
-        new_devices = (
-            set(self.bacnet.discoveredDevices.keys()) - self.devices_published
-        )
-
-        # defaultdict(<class 'int'>, {('192.168.8.2', 184): 1, ('192.168.8.3', 131): 1})
-        for device in new_devices:
-          (address, id) = device
-
-          # if depths ...
-          # Get make and model
-          object_name, vendor_name, firmware_version, model_name = (
-              self.bacnet.readMultiple(
-                  f"{address} device {id} objectName vendorName"
-                  " firmwareRevision modelName"
-              )
+        if self.bacnet.discoveredDevices is not None:
+          new_devices = (
+              set(self.bacnet.discoveredDevices.keys()) - self.devices_published
           )
 
-          event = udmi.schema.discovery_event.DiscoveryEvent(
-              generation=self.config.generation,
-              scan_family=self.scan_family,
-              scan_addr=str(id),
-          )
+          # defaultdict(<class 'int'>, {('192.168.8.2', 184): 1, ('192.168.8.3', 131): 1})
+          for device in new_devices:
+            (address, id) = device
 
-          event.families["ipv4"] = udmi.schema.discovery_event.DiscoveryFamily(
-              addr=address
-          )
-          event.system.hardware.make = vendor_name
-          event.system.hardware.model = model_name
-          event.system.software.firmware = firmware_version
+            # if depths ...
+            # Get make and model
+            object_name, vendor_name, firmware_version, model_name, serial_number = (
+                self.bacnet.readMultiple(
+                    f"{address} device {id} objectName vendorName"
+                    " firmwareRevision modelName serialNumber"
+                )
+            )
 
-          self.publisher(event)
-          self.devices_published.add(device)
+            event = udmi.schema.discovery_event.DiscoveryEvent(
+                generation=self.config.generation,
+                scan_family=self.scan_family,
+                scan_addr=str(id),
+            )
 
-        if self.cancelled:
-          return
+            event.families["ipv4"] = udmi.schema.discovery_event.DiscoveryFamily(
+                addr=address
+            ) 
+            event.system.serial_no = serial_number
+            event.system.hardware.make = vendor_name
+            event.system.hardware.model = model_name
+            #event.system.software.firmware = firmware_version
+
+            self.publisher(event)
+            self.devices_published.add(device)
+
+          if self.cancelled:
+            return
       except AttributeError as err:
         logging.exception(err)
       finally:

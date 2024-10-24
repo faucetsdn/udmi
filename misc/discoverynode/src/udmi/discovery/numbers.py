@@ -9,7 +9,7 @@ from udmi.schema.discovery_event import DiscoveryEvent, DiscoveryFamily
 
 class NumberDiscovery(discovery.DiscoveryController):
 
-  scan_family = "number"
+  scan_family = "vendor"
 
   def __init__(self, state, publisher):
     self.cancelled = None
@@ -26,11 +26,11 @@ class NumberDiscovery(discovery.DiscoveryController):
   @discovery.catch_exceptions_to_state
   @discovery.main_task
   def discoverer(self):
-    for i in itertools.count():
+    for i in itertools.count(1):
       if self.cancelled:
         return
       result = DiscoveryEvent(
-          generation="generation", scan_family=self.scan_family, scan_addr=i
+          generation=self.generation, scan_family=self.scan_family, scan_addr=i
       )
       self.publisher(result)
       time.sleep(1)
