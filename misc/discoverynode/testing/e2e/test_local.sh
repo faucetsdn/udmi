@@ -17,4 +17,6 @@ bash $ROOT_DIR/../docker/discovery_node/build.sh
 
 docker network create --subnet=192.168.11.0/24 --ip-range=192.168.11.0/24 --gateway=192.168.11.254 discoverynode-network || true
 
+source $ROOT_DIR/../../../../venv/bin/activate
+
 python3 -m pytest --log-cli-level=INFO $TEST_CASES $ROOT_DIR/test_local.py
