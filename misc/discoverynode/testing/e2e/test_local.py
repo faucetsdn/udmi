@@ -185,7 +185,7 @@ def discovery_node():
         shlex.join([
             "docker",
             "run",
-            "--rm",
+            # "--rm",
             "-d",
             f"--name=discoverynode-test-node",
             f"--network=discoverynode-network",
@@ -210,12 +210,11 @@ def discovery_node():
     run("docker network connect udminet discoverynode-test-node")
 
   yield _discovery_node
-  info("logs::::")
-  run("docker logs discoverynode-test-node")
-  run(
-      "docker ps -a | grep 'discoverynode-test-node' | awk '{print $1}' | xargs"
-      " docker stop"
-  )
+
+  run("docker stop discoverynode-test-node")
+  logs = run("docker logs discoverynode-test-node")
+  info(logs.stdout)
+  run("docker rm discoverynode-test-node")
 
 
 def test_discovered_devices_are_created(

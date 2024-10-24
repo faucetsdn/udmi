@@ -75,6 +75,10 @@ jobs:
       IMAGE_NAME: ${{ github.repository }}
       REF_NAME: ${{ github.ref_name }}
     steps:
+      - uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
       - name: Checkout source
         uses: actions/checkout@v4
       - name: Setup Environment
