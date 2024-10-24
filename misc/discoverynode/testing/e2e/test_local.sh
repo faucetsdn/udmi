@@ -1,16 +1,15 @@
 #!/bin/bash -e
+set -x
 ROOT_DIR=$(dirname $(realpath $0))
 
 export DN_SITE_PATH=$1
+export DN_TARGET=//mqtt/localhost
 
 if [[ -z $DN_SITE_PATH ]]; then
-  echo "Usage $0 SITE_PATH [TEST_CASES]"
+  echo "Usage $0 SITE_PATH"
   exit 1
 fi
 
-if [[ -z $2 ]]; then
-  TEST_CASES=-k $2
-fi
 
 bash $ROOT_DIR/../docker/bacnet_device/build.sh
 bash $ROOT_DIR/../docker/discovery_node/build.sh
