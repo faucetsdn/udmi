@@ -1,0 +1,55 @@
+name: UDMI Integration Suite
+
+on:
+  push:
+    branches:
+      - '**'
+  workflow_dispatch:
+
+jobs:
+  images:
+    name: Build Docker Images
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          fetch-tags: true
+      - uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+      - name: Build UDMIS
+        run: |
+          udmis/bin/build check
+          bin/container udmis build --no-check
+          echo Built local UDMIS
+      - name: Docker images summary
+        run: docker images
+      - name: Setup UDMIS requisites
+        run: |
+          git clone https://github.com/faucetsdn/udmi_site_model.git
+          ln -s udmi_site_model/ site_model
+          (cd site_model; git log -n 1)
+          docker network create udminet --subnet 192.168.99.0/24
+      - name: Start UDMIS container
+        run: |
+          cat udmi_site_model/cloud_iot_config.json
+          docker run -d --net udminet --name udmis -p 8883:8883 \
+            -v $(realpath udmi_site_model):/root/site_model \
+            -v $PWD/var/tmp:/tmp \
+            -v $PWD/var/etcd:/root/udmi/var/etcd \
+            -v $PWD/var/mosquitto:/etc/mosquitto \
+            udmis udmi/bin/start_local block site_model/cloud_iot_config.json
+          for count in `seq 0 30`; do
+            echo Waiting for UDMIS startup $((30 - count))
+            [[ ! -f var/tmp/pod_ready.txt ]] || break
+            (docker ps | fgrep -q udmis) || break
+            sleep 1
+          done
+          ls -l var/tmp/pod_ready.txt 2>&1
+      - name: run test suite
+        run: misc/discoverynode/testing/e2e/test_local.sh $(realpath udmi_site_model)
