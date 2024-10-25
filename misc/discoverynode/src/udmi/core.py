@@ -40,12 +40,12 @@ class UDMICore:
     self.components = {}
     self.callbacks = {}  # lambda,
 
-    self.topic_state = UDMI.STATE_TOPIC_TEMPLATE.format(topic_prefix)
+    self.topic_state = UDMICore.STATE_TOPIC_TEMPLATE.format(topic_prefix)
 
-    self.topic_discovery_event = UDMI.EVENT_DISCOVERY_TOPIC_TEMPLATE.format(
+    self.topic_discovery_event = UDMICore.EVENT_DISCOVERY_TOPIC_TEMPLATE.format(
         topic_prefix
     )
-    self.topic_system_event = UDMI.EVENT_SYSTEM_TOPIC_TEMPLATE.format(
+    self.topic_system_event = UDMICore.EVENT_SYSTEM_TOPIC_TEMPLATE.format(
         topic_prefix
     )
 

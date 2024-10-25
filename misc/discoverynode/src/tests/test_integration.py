@@ -28,7 +28,7 @@ def test_bacnet_integration():
 
   with (
       mock.patch.object(
-          udmi.core.UDMI, "publish_discovery", new=messages.append
+          udmi.core.UDMICore, "publish_discovery", new=messages.append
       ) as published_discovery,
   ):
     mock_mqtt_client = mock.MagicMock()
