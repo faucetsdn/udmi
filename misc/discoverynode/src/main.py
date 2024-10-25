@@ -88,7 +88,7 @@ def main():
 
   )
 
-  udmi_client = udmi.core.UDMI(
+  udmi_client = udmi.core.UDMICore(
       publisher=mclient,
       topic_prefix=topic_prefix,
       config=config,

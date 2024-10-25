@@ -32,7 +32,7 @@ def test_bacnet_integration():
       ) as published_discovery,
   ):
     mock_mqtt_client = mock.MagicMock()
-    udmi_client = udmi.core.UDMI(publisher=mock_mqtt_client, topic_prefix="notneeded", config=test_config)
+    udmi_client = udmi.core.UDMICore(publisher=mock_mqtt_client, topic_prefix="notneeded", config=test_config)
     
     # Start discovery
     udmi_client.config_handler(
