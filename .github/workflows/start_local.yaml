@@ -1,0 +1,56 @@
+name: UDMI Integration Suite
+
+on:
+  push:
+    branches:
+      - '**'
+  workflow_dispatch:
+
+jobs:
+  automapping:
+    name: Automapping capability
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    if: ${{ vars.TARGET_PROJECT != '' && !cancelled() }}
+    env:
+      TARGET_PROJECT: ${{ vars.TARGET_PROJECT }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+      - name: base setup
+        run: |
+          bin/setup_base
+          bin/clone_model
+      - name: local setup
+        run: |
+          bin/start_local sites/udmi_site_model $TARGET_PROJECT 
+      - name: bin/test_automapper
+        run: bin/test_automapper $TARGET_PROJECT
+      - name: extra devices
+        run: |
+          find sites/udmi_site_model/extras/ -type f | xargs sed -i '$a\'
+          find sites/udmi_site_model/extras/ -type f | xargs more
+      - name: udmis log
+        if: ${{ !cancelled() }}
+        run: cat /tmp/udmis.log
+      - name: pubber log
+        if: ${{ !cancelled() }}
+        run: cat out/pubber.log.GAT-123
+      - name: captured messages
+        if: ${{ !cancelled() }}
+        run: |
+          cat /tmp/message_capture.log
+          mkdir -p out/registries && cd out/registries/
+          find . -type f | sort | xargs more
+      - name: support bundle
+        if: ${{ !cancelled() }}
+        run: bin/support ${{ github.repository_owner }}_${{ github.job }}_
+      - uses: actions/upload-artifact@v4
+        if: ${{ !cancelled() }}
+        with:
+          if-no-files-found: error
+          name: udmi-support_${{ github.run_id }}-m
+          path: '*_udmi-support_*.tgz'

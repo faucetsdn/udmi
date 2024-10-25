@@ -31,7 +31,7 @@ ROOT_DIR = os.path.dirname(__file__)
 UDMI_DIR = str(Path(__file__).parents[4])
 
 SITE_PATH: Final = os.environ["DN_SITE_PATH"]
-
+error(SITE_PATH)
 TARGET: Final = "//mqtt/localhost"
 PROJECT_ID: Final = "localhost"
 
@@ -134,7 +134,8 @@ def docker_devices():
       )
 
   yield _docker_devices
-
+  result = run("docker logs discoverynode-test-device1")
+  print(result.stdout.decode("utf-8"))
   run(
       "docker ps -a | grep 'discoverynode-test-device' | awk '{print $1}' |"
       " xargs docker stop"
@@ -188,24 +189,21 @@ def discovery_node():
         shlex.join([
             "docker",
             "run",
-            # "--rm",
             "-d",
             f"--name=discoverynode-test-node",
             f"--network=discoverynode-network",
             "--mount",
-            f"type=bind,source={ROOT_DIR}/discovery_node_config.json,target=/usr/src/app/config.json",
+            f"type=bind,source={ROOT_DIR}/discovery_node_config.json,target=/app/config.json",
             "--mount",
-            f"type=bind,source={site_path}/devices/{device_id}/rsa_private.pem,target=/usr/src/app/rsa_private.pem",
+            f"type=bind,source={site_path}/devices/{device_id}/rsa_private.pem,target=/app/rsa_private.pem",
             "--mount",
-            f"type=bind,source={site_path}/devices/{device_id}/rsa_private.crt,target=/usr/src/app/rsa_private.crt",
+            f"type=bind,source={site_path}/devices/{device_id}/rsa_private.crt,target=/app/rsa_private.crt",
             "--mount",
-            f"type=bind,source={site_path}/devices/{device_id}/rsa_private.pkcs8,target=/usr/src/app/rsa_private.pkcs8",
+            f"type=bind,source={site_path}/devices/{device_id}/rsa_private.pkcs8,target=/app/rsa_private.pkcs8",
             "--mount",
-            f"type=bind,source={site_path}/reflector/ca.crt,target=/usr/src/app/ca.crt",
+            f"type=bind,source={site_path}/reflector/ca.crt,target=/app/ca.crt",
             "--ip=192.168.11.251",
             "test-discovery_node",
-            "python3",
-            "main.py",
             "--config_file=config.json",
         ])
     )
@@ -236,7 +234,7 @@ def test_discovered_devices_are_created(
 
   docker_devices(devices=range(1, 10))
 
-  info("deleting existing site model")
+  info("deleting all devices")
 
   run(f"bin/registrar {SITE_PATH} {TARGET} -d -x")
 
@@ -260,7 +258,7 @@ def test_discovered_devices_are_created(
 
   site_model = Path(SITE_PATH)
   extra_devices = list([x.stem for x in site_model.glob("extras/*")])
-  assert len(extra_devices) == 9
+  assert len(extra_devices) == 9, "found exactly 9 devices"
 
 
 def test_sequencer(new_site_model, docker_devices, discovery_node):
@@ -290,7 +288,7 @@ def test_sequencer(new_site_model, docker_devices, discovery_node):
       f"bin/sequencer -v {SITE_PATH} {TARGET} GAT-1 single_scan_future"
   )
 
-  assert "RESULT pass discovery.scan single_scan_future" in str(result.stdout)
+  assert "RESULT pass discovery.scan single_scan_future" in str(result.stdout), "result is pass (note this test can be flakey)"
 
 
 @pytest.fixture

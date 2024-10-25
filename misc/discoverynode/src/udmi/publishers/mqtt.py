@@ -80,7 +80,7 @@ class MQTT(udmi.publishers.publisher.Publisher):
             case "udmi_local":
                 self.username = f"/r/{registry_id}/d/{device_id}"
                 self.client_id = self.username
-                pkcs_file = f"{key_file.rpartition(".")[0]}.pkcs8"
+                pkcs_file = f"{key_file.rpartition('.')[0]}.pkcs8"
                 with open(pkcs_file, 'rb') as f:
                     key_bytes = f.read()
                     hash = hashlib.sha256(key_bytes).hexdigest()
