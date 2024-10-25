@@ -460,12 +460,12 @@ public class SequenceBase {
     return siteModel.getSubdirectory(format(SUMMARY_OUTPUT_FORMAT, getDeviceId()));
   }
 
-  static void processComplete(Exception e) {
+  static void processComplete(Throwable e) {
     boolean wasError = e != null;
     Entry statusEntry = new Entry();
     statusEntry.level = wasError ? ERROR.value() : Level.NOTICE.value();
     statusEntry.timestamp = cleanDate();
-    statusEntry.message = wasError ? Common.getExceptionMessage(e) : "Run completed";
+    statusEntry.message = wasError ? ("Error: " + Common.getExceptionMessage(e)) : "Run completed";
     statusEntry.category = VALIDATION_FEATURE_SEQUENCE;
     getValidationState().status = statusEntry;
     summarizeSchemaStages();
@@ -632,21 +632,6 @@ public class SequenceBase {
     statusEntry.timestamp = new Date();
     validationState.status = statusEntry;
     ifNotTrueThen(startupError, SequenceBase::updateValidationState);
-  }
-
-  static void finalizeValidationState() {
-    boolean startupError = exeConfig == null || siteModel == null;
-    if (startupError) {
-      return;
-    }
-
-    Entry statusEntry = new Entry();
-    statusEntry.level = NOTICE.value();
-    statusEntry.message = "Completed sequence run for device " + getDeviceId();
-    statusEntry.category = VALIDATION_FEATURE_SEQUENCE;
-    statusEntry.timestamp = new Date();
-    validationState.status = statusEntry;
-    updateValidationState();
   }
 
   public static void initialize() {
@@ -2556,6 +2541,7 @@ public class SequenceBase {
       if (failureType != SKIP) {
         resetRequired = true;
         if (debugLogLevel()) {
+          processComplete(e);
           trace("Stack trace:", stackTraceString(e));
           error("terminating test " + testName + " after " + timeSinceStart() + " "
               + START_END_MARKER);
