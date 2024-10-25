@@ -450,7 +450,9 @@ public class SequenceBase {
 
   private static void updateValidationState() {
     validationState.timestamp = cleanDate();
-    JsonUtil.writeFile(validationState, getSequencerStateFile());
+    File sequencerStateFile = getSequencerStateFile();
+    System.err.println("Writing sequencer state file " + sequencerStateFile.getAbsolutePath());
+    JsonUtil.writeFile(validationState, sequencerStateFile);
     String validationString = stringify(validationState);
     ifNotNullThen(client,
         () -> client.publish(getDeviceId(), VALIDATION_STATE_TOPIC, validationString));
