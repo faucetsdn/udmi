@@ -72,7 +72,7 @@ import udmi.schema.FeatureDiscovery;
  */
 public class DiscoverySequences extends SequenceBase {
 
-  public static final Duration SCAN_START_DELAY = Duration.ofSeconds(10);
+  public static final Duration SCAN_START_DELAY = Duration.ofSeconds(20);
   public static final Duration WAITING_PERIOD = SCAN_START_DELAY.plus(SCAN_START_DELAY);
   public static final int SCAN_START_DELAY_SEC = (int) SCAN_START_DELAY.getSeconds();
   public static final int SCAN_START_JITTER_SEC = 5;
@@ -247,7 +247,7 @@ public class DiscoverySequences extends SequenceBase {
   @Feature(bucket = DISCOVERY_SCAN, stage = ALPHA)
   @Summary("Check results of a single scan scheduled in the recent past")
   public void scan_single_now() {
-    scanAndVerify(cleanInstantDate(Instant.now().minus(SCAN_START_DELAY)), NO_ENUMERATION);
+    scanAndVerify(cleanInstantDate(Instant.now().minusSeconds(1)), NO_ENUMERATION);
   }
 
   @Test(timeout = TWO_MINUTES_MS)
