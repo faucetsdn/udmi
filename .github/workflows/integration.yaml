@@ -22,14 +22,14 @@ jobs:
         with:
           distribution: 'temurin'
           java-version: '17'
+      - name: prerequisites
+        run: bin/setup_base
       - name: Build UDMIS
         run: |
           udmis/bin/build check
           bin/container udmis build --no-check latest
           echo Built local UDMIS
-      - name: Docker images summary
-        run: docker images
-      - name: Setup UDMIS requisites
+      - name: Setup UDMIS prerequisites
         run: |
           git clone https://github.com/faucetsdn/udmi_site_model.git
           ln -s udmi_site_model/ site_model
