@@ -4,7 +4,7 @@ import argparse
 import logging
 import sys
 import time
-import tomllib
+import json
 import warnings
 import os
 # filter deprecation notice from SCAPY import
@@ -34,17 +34,16 @@ def or_required_from_env(key: str) -> dict[str, str | int | bool]:
 def get_arguments():
   parser = argparse.ArgumentParser(description="Start UDMI Discovey Client")
   parser.add_argument(
-      "config_file",
+      "--config_file",
       type=str,
-      help="path to config file",
-      **or_required_from_env("CONFIG_FILE"),
+      help="path to config file"
   )
   return parser.parse_args()
 
 
 def load_config_from_file(file_name: str):
   with open(file_name, "rb") as f:
-    return tomllib.load(f)
+    return json.load(f)
 
 
 def main():
@@ -66,6 +65,12 @@ def main():
   logging.info("Loading config from %s", args.config_file)
   config = load_config_from_file(args.config_file)
 
+  # TODO: Should probably set this in the config
+  if config["mqtt"].get("authentication_mechanism", "jwt-gcp") == "jwt-gcp":
+    topic_prefix = f'/devices/{config["mqtt"]["device_id"]}'
+  else:
+    topic_prefix = f'/r/{config["mqtt"]["registry_id"]}/d/{config["mqtt"]["device_id"]}'
+
   # Initialise (but not start) the MQTT Client
   mclient = udmi.publishers.mqtt.MQTT(
       device_id=config["mqtt"]["device_id"],
@@ -74,13 +79,18 @@ def main():
       project_id=config["mqtt"]["project_id"],
       hostname=config["mqtt"]["host"],
       port=config["mqtt"]["port"],
+      topic_prefix=topic_prefix,
       key_file=config["mqtt"]["key_file"],
       algorithm=config["mqtt"]["algorithm"],
+      autentication_mechanism=config["mqtt"].get("authentication_mechanism", "jwt-gcp"),
+      ca_file=config["mqtt"].get("ca_file"),
+      cert_file=config["mqtt"].get("cert_file"),
+
   )
 
-  udmi_client = udmi.core.UDMI(
+  udmi_client = udmi.core.UDMICore(
       publisher=mclient,
-      topic_prefix=f'/devices/{config["mqtt"]["device_id"]}/',
+      topic_prefix=topic_prefix,
       config=config,
   )
 

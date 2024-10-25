@@ -6,7 +6,3 @@
 
 ## Unit Tests
 `~/venv/bin/python3 -m pytest tests/`
-
-## Integration test (no MQTT)
-`sudo testing/integration/integration_test.sh`
-

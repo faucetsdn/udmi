@@ -6,7 +6,7 @@ import time
 
 def test_state_monitor():
   mock_publisher = mock.MagicMock()
-  udmi_client = udmi.core.UDMI(publisher = mock_publisher, topic_prefix = "prefix", config = mock.MagicMock())
+  udmi_client = udmi.core.UDMICore(publisher = mock_publisher, topic_prefix = "prefix", config = mock.MagicMock())
   udmi_client.state.system = "forcechange"
   time.sleep(1)
   udmi_client.state.discovery =  "blah"
