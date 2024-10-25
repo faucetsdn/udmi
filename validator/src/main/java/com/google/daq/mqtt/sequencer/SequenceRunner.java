@@ -278,6 +278,7 @@ public class SequenceRunner {
         (key, value) -> System.err.println("Sequencer result count " + key.name() + " = " + value));
     String stateAbsolutePath = getSequencerStateFile().getAbsolutePath();
     System.err.println("Sequencer state summary in " + stateAbsolutePath);
+    SequenceBase.finalizeValidationState();
   }
 
   private Collection<String> summarizeFailures(List<Failure> failures) {

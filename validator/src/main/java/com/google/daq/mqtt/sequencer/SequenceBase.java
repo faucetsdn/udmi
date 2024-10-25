@@ -450,9 +450,7 @@ public class SequenceBase {
 
   private static void updateValidationState() {
     validationState.timestamp = cleanDate();
-    File sequencerStateFile = getSequencerStateFile();
-    System.err.println("Writing sequencer state file " + sequencerStateFile.getAbsolutePath());
-    JsonUtil.writeFile(validationState, sequencerStateFile);
+    JsonUtil.writeFile(validationState, getSequencerStateFile());
     String validationString = stringify(validationState);
     ifNotNullThen(client,
         () -> client.publish(getDeviceId(), VALIDATION_STATE_TOPIC, validationString));
@@ -634,6 +632,21 @@ public class SequenceBase {
     statusEntry.timestamp = new Date();
     validationState.status = statusEntry;
     ifNotTrueThen(startupError, SequenceBase::updateValidationState);
+  }
+
+  static void finalizeValidationState() {
+    boolean startupError = exeConfig == null || siteModel == null;
+    if (startupError) {
+      return;
+    }
+
+    Entry statusEntry = new Entry();
+    statusEntry.level = NOTICE.value();
+    statusEntry.message = "Completed sequence run for device " + getDeviceId();
+    statusEntry.category = VALIDATION_FEATURE_SEQUENCE;
+    statusEntry.timestamp = new Date();
+    validationState.status = statusEntry;
+    updateValidationState();
   }
 
   public static void initialize() {
