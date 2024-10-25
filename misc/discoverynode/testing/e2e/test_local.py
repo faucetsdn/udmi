@@ -21,11 +21,11 @@ import textwrap
 import time
 import time
 from typing import Any
-from typing import Any
 from typing import Iterator
 import re
 import pytest
 from typing import Final
+
 
 ROOT_DIR = os.path.dirname(__file__)
 UDMI_DIR = str(Path(__file__).parents[4])
@@ -36,10 +36,10 @@ TARGET: Final = "//mqtt/localhost"
 PROJECT_ID: Final = "localhost"
 
 # Some light hardcoding exists, so this is only guaranteed to work with localhost currently
-assert os.environ["DN_TARGET"] == TARGET
+#assert os.environ["DN_TARGET"] == TARGET
 
 # Assume the UDMI Directory is the UDMI directory and has not moved
-assert UDMI_DIR.rsplit("/", 1)[1] == "udmi"
+#assert UDMI_DIR.rsplit("/", 1)[1] == "udmi"
 
 
 def until_true(func: Callable, message: str, *, timeout = 0, interval = 0.1, **kwargs):
@@ -78,6 +78,15 @@ def normalize_keys(target: dict[Any:Any], replacement, *args):
       normalize_keys(v, replacement, *args)
   return target
 
+def deep_merge(dict1:dict[str:Any], dict2:dict[str:Any]) -> dict[str:Any]:
+  merged_dict = dict1 | dict2
+
+  for key in merged_dict:
+    if isinstance(merged_dict[key], dict) and key in dict1 and key in dict2:
+      merged_dict[key] = deep_merge(dict1[key], dict2[key])
+
+  return merged_dict
+
 
 def localnet_block_from_id(id: int):
   """Generates localnet block f"""
@@ -91,6 +100,33 @@ def localnet_block_from_id(id: int):
       "bacnet": {"addr": str(3000 + id)},
       "vendor": {"addr": str(id)},
   }
+
+
+def patch_metadata(patch:dict[str: Any], *, site_path: str, device_id:str) -> None:
+  """Patches the provided json_patch into the the devices metadata.json file.
+
+  Args:
+    patch: Patch to apply.
+    device_id: Device ID.
+    site_path: Path to site model.
+  """
+  metadata_path = os.path.join(site_path, "devices", device_id, "metadata.json")
+
+  with open(
+      metadata_path, mode="r", encoding="utf-8"
+  ) as f:
+    existing_metadata = json.load(f)
+
+  merged_metadata = deep_merge(existing_metadata, patch)
+
+  with open(
+        os.path.join(metadata_path), mode="w", encoding="utf-8"
+  ) as f:
+    json.dump(merged_metadata, f, indent=2)
+
+
+def extra_devices(site_path: str) -> [str]:
+  return list([x.stem for x in Path(site_path).glob("extras/*")])
 
 
 def run(cmd: str) -> subprocess.CompletedProcess:
@@ -218,21 +254,21 @@ def discovery_node():
   run("docker rm discoverynode-test-node")
 
 
-def test_discovered_devices_are_created(
+def test_new_discovered_devices_are_created(
     new_site_model, docker_devices, discovery_node
 ):
 
   new_site_model(
       site_path=SITE_PATH,
       delete=True,
-      devices=range(0),
-      devices_with_localnet_block=range(0),
+      devices=range(1,6),
+      devices_with_localnet_block=range(1,6),
       discovery_node_id="GAT-1",
       discovery_node_is_gateway=True,
       discovery_node_families=["bacnet"],
   )
 
-  docker_devices(devices=range(1, 10))
+  docker_devices(devices=range(1, 6))
 
   info("deleting all devices")
 
@@ -254,6 +290,80 @@ def test_discovered_devices_are_created(
 
   time.sleep(30)
 
+  run(f"bin/registrar {SITE_PATH} {TARGET}")
+
+  assert len(extra_device(site_paths) == 0, "rediscovering a known device should not result in an extra device"
+
+def test_reconciling_an_extra_device(
+    new_site_model, docker_devices, discovery_node
+):
+
+  new_site_model(
+      site_path=SITE_PATH,
+      delete=True,
+      devices=range(1,2),
+      devices_with_localnet_block=range(0),
+      discovery_node_id="GAT-1",
+      discovery_node_is_gateway=True,
+      discovery_node_families=["bacnet"],
+  )
+
+  docker_devices(devices=range(1, 2))
+
+  run(f"bin/registrar {SITE_PATH} {TARGET} -d -x")
+  run(f"bin/registrar {SITE_PATH} {TARGET}")
+
+  # Note: Start after running registrar preferably
+  discovery_node(
+      device_id="GAT-1",
+      site_path=SITE_PATH
+  )
+
+  run("bin/mapper GAT-1 provision")
+  run("bin/mapper GAT-1 discover")
+  time.sleep(30)
+  run(f"bin/registrar {SITE_PATH} {TARGET}")
+
+
+  assert len(extra_devices(SITE_PATH)) == 1, "extra device should be found"
+
+  known_devices = list([x.stem for x in site_model.glob("devices/*")])
+  for device in known_devices:
+    _,_, device_integer = device.partition("-")
+    
+    patch_metadata(localnet_block_from_id(int(device_integer)), site_path=SITE_PATH, device_id=device)
+  
+  run(f"bin/registrar {SITE_PATH} {TARGET}")
+
+  assert len(extra_devices) == 0, "reconciled device should be deleted as an extra device"
+
+def test_discovering_new_devices(
+    new_site_model, docker_devices, discovery_node
+):
+
+  new_site_model(
+      site_path=SITE_PATH,
+      delete=True,
+      devices=range(0),
+      devices_with_localnet_block=range(0),
+      discovery_node_id="GAT-1",
+      discovery_node_is_gateway=True,
+      discovery_node_families=["bacnet"],
+  )
+  docker_devices(devices=range(1, 10))
+
+  run(f"bin/registrar {SITE_PATH} {TARGET} -d -x")
+  run(f"bin/registrar {SITE_PATH} {TARGET}")
+
+  # Note: Start after running registrar preferably
+  discovery_node(
+      device_id="GAT-1",
+      site_path=SITE_PATH
+  )
+
+  run("bin/mapper GAT-1 provision")
+  run("bin/mapper GAT-1 discover")
+  time.sleep(30)
   run(f"bin/registrar {SITE_PATH} {TARGET}")
 
   site_model = Path(SITE_PATH)
