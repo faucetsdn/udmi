@@ -6,6 +6,7 @@ import static com.google.common.base.Preconditions.checkState;
 import static com.google.common.base.Predicates.not;
 import static com.google.common.base.Strings.emptyToNull;
 import static com.google.daq.mqtt.sequencer.SequenceBase.Capabilities.LAST_CONFIG;
+import static com.google.daq.mqtt.sequencer.SequenceRunner.ensureExecutionConfig;
 import static com.google.daq.mqtt.sequencer.semantic.SemanticValue.actualize;
 import static com.google.daq.mqtt.util.CloudIotManager.EMPTY_CONFIG;
 import static com.google.daq.mqtt.util.ConfigManager.configFrom;
@@ -327,7 +328,7 @@ public class SequenceBase {
   private static Scoring scoringResult;
 
   private static void setupSequencer() {
-    exeConfig = SequenceRunner.ensureExecutionConfig();
+    exeConfig = ofNullable(exeConfig).orElseGet(SequenceRunner::ensureExecutionConfig);
     if (client != null) {
       return;
     }
@@ -364,6 +365,7 @@ public class SequenceBase {
     System.err.printf("Loading reflector key file from %s%n", new File(key_file).getAbsolutePath());
     System.err.printf("Validating against device %s serial %s%n", getDeviceId(), serialNo);
     client = checkNotNull(getPublisherClient(), "primary client not created");
+    client.activate();
     sessionPrefix = client.getSessionPrefix();
 
     String udmiNamespace = exeConfig.udmi_namespace;
@@ -630,6 +632,11 @@ public class SequenceBase {
     statusEntry.timestamp = new Date();
     validationState.status = statusEntry;
     ifNotTrueThen(startupError, SequenceBase::updateValidationState);
+  }
+
+  public static void initialize() {
+    setupSequencer();
+    initializeValidationState();
   }
 
   @NotNull
@@ -2434,7 +2441,6 @@ public class SequenceBase {
 
         putSequencerResult(description, SequenceResult.START);
 
-        client.activate();
         ifNotNullThen(validationState,
             state -> state.cloud_version = client.getVersionInformation());
 

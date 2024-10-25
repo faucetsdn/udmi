@@ -2,9 +2,9 @@ package com.google.daq.mqtt.sequencer.sequences;
 
 import static com.google.common.base.Preconditions.checkState;
 import static com.google.common.collect.Sets.symmetricDifference;
-import static com.google.daq.mqtt.sequencer.sequences.DiscoverySequences.ScanMode.NO_ENUMERATION;
-import static com.google.daq.mqtt.sequencer.sequences.DiscoverySequences.ScanMode.NO_SCAN;
-import static com.google.daq.mqtt.sequencer.sequences.DiscoverySequences.ScanMode.PLEASE_ENUMERATE;
+import static com.google.daq.mqtt.sequencer.DiscoveryScanMode.NO_ENUMERATION;
+import static com.google.daq.mqtt.sequencer.DiscoveryScanMode.NO_SCAN;
+import static com.google.daq.mqtt.sequencer.DiscoveryScanMode.PLEASE_ENUMERATE;
 import static com.google.daq.mqtt.util.TimePeriodConstants.TWO_MINUTES_MS;
 import static com.google.udmi.util.CleanDateFormat.cleanDate;
 import static com.google.udmi.util.CleanDateFormat.cleanInstantDate;
@@ -38,6 +38,7 @@ import static udmi.schema.FeatureDiscovery.FeatureStage.STABLE;
 
 import com.google.common.collect.Sets;
 import com.google.common.collect.Sets.SetView;
+import com.google.daq.mqtt.sequencer.DiscoveryScanMode;
 import com.google.daq.mqtt.sequencer.Feature;
 import com.google.daq.mqtt.sequencer.SequenceBase;
 import com.google.daq.mqtt.sequencer.Summary;
@@ -84,7 +85,7 @@ public class DiscoverySequences extends SequenceBase {
     return ofNullable(entry.getValue().stage).orElse(STABLE).compareTo(BETA) >= 0;
   }
 
-  private static Depth enumerationDepthIf(ScanMode shouldEnumerate) {
+  private static Depth enumerationDepthIf(DiscoveryScanMode shouldEnumerate) {
     return shouldEnumerate == PLEASE_ENUMERATE ? ENTRIES : null;
   }
 
@@ -252,7 +253,7 @@ public class DiscoverySequences extends SequenceBase {
     scanAndVerify(cleanInstantDate(Instant.now().plus(SCAN_START_DELAY)), NO_ENUMERATION);
   }
 
-  private void scanAndVerify(Date scanStart, ScanMode shouldEnumerate) {
+  private void scanAndVerify(Date scanStart, DiscoveryScanMode shouldEnumerate) {
     final boolean checkPending = scanStart.after(new Date());
 
     initializeDiscovery();
@@ -349,7 +350,8 @@ public class DiscoverySequences extends SequenceBase {
     return ifNotNullGet(deviceState.discovery.families, map -> map.get(scanFamily));
   }
 
-  private void checkEnumeration(List<DiscoveryEvents> receivedEvents, ScanMode shouldEnumerate) {
+  private void checkEnumeration(List<DiscoveryEvents> receivedEvents,
+      DiscoveryScanMode shouldEnumerate) {
     Predicate<DiscoveryEvents> hasRefs = event -> event.refs != null && !event.refs.isEmpty();
     if (shouldEnumerate == PLEASE_ENUMERATE) {
       checkThat("all events have discovered refs", receivedEvents.stream().allMatch(hasRefs));
@@ -393,7 +395,8 @@ public class DiscoverySequences extends SequenceBase {
         () -> stateFamilies.keySet().stream().noneMatch(scanActive()));
   }
 
-  private void configureScan(Instant startTime, Duration scanInterval, ScanMode shouldEnumerate) {
+  private void configureScan(Instant startTime, Duration scanInterval,
+      DiscoveryScanMode shouldEnumerate) {
     Integer intervalSec = ofNullable(scanInterval).map(Duration::getSeconds).map(Long::intValue)
         .orElse(null);
     info(format("%s configured for family %s starting at %s evey %ss",
@@ -443,12 +446,5 @@ public class DiscoverySequences extends SequenceBase {
           && stateFamily.phase == STOPPED
           && deviceState.timestamp.after(startTime);
     };
-  }
-
-  /**
-   * Basic enumeration to capture some of the kinds of scans to be tested.
-   */
-  enum ScanMode {
-    NO_SCAN, NO_ENUMERATION, PLEASE_ENUMERATE
   }
 }
