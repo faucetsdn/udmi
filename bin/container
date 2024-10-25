@@ -62,8 +62,10 @@ current_user=$USER@$HOSTNAME
 
 revparse=`git rev-parse HEAD`
 
-udmi_ver=g${revparse:0:9}
+udmi_commit=${revparse:0:9}
+udmi_ver=g${udmi_commit}
 udmi_tag=$target-$udmi_ver
+udmi_timever=$(TZ=UTC git log --date=iso-strict-local -1 --pretty=format:"%cd" ${udmi_commit})
 
 if [[ -n $PUSH_TAG ]]; then
     udmi_ref=$PUSH_TAG
@@ -102,11 +104,13 @@ if [[ -n $prep ]]; then
 {
   "udmi_version": "$udmi_version",
   "udmi_ref": "$udmi_ref",
+  "udmi_commit": "$udmi_commit",
+  "udmi_timever": "$udmi_timever",
   "built_at": "$build_time",
   "built_by": "$current_user"
 }
 EOF
-    more var/deployed_version.json | cat
+    jq . var/deployed_version.json
 fi
 
 if [[ -n $build ]]; then
