@@ -156,6 +156,9 @@ echo Combining partial-run output files...
     done
 )
 
+echo Generated $output_file:
+jq . $output_file
+
 if [[ -n $out_check && -z $targets ]]; then
     if [[ -n $clean_cache ]]; then
         echo Cleaning sequencer result cache...
@@ -179,11 +182,6 @@ if [[ -n $pids ]]; then
 else
     fail No pubber pids found, likely due to premature termination: failing test run.
 fi
-
-find $site_out -type f
-
-echo Generated $output_file:
-jq . $output_file
 
 echo Sanity check for completed tests...
 target_count=$(fgrep "Running target" out/sequencer$suffix.log.save | wc -l)
