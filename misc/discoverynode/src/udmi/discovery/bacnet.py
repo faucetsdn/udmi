@@ -67,8 +67,6 @@ class GlobalBacnetDiscovery(discovery.DiscoveryController):
           new_devices = (
               set(self.bacnet.discoveredDevices.keys()) - self.devices_published
           )
-
-          # defaultdict(<class 'int'>, {('192.168.8.2', 184): 1, ('192.168.8.3', 131): 1})
           for device in new_devices:
             (address, id) = device
 

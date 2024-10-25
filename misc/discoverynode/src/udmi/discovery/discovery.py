@@ -77,7 +77,6 @@ class states(enum.StrEnum):
   # Discovery has finished the scan
   FINISHED = "finished"
   
-  # Discovery has finished because the interval is over
   SCHEDULED = "scheduled"
 
   # Some error occured during processing

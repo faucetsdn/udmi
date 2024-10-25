@@ -64,5 +64,5 @@ def test_bacnet_integration():
     seen_bacnet_ids_toplevel = set(m.scan_addr for m in messages if m.scan_family == "bacnet")
 
     # subset because passive scan will find the gateway and device itself
-    assert seen_ethmac_toplevel >= expected_ethmacs
+    assert seen_ethmac_toplevel == expected_ethmacs + 2
     assert expected_bacnet_ids == seen_bacnet_ids_toplevel 
