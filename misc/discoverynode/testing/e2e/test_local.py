@@ -292,7 +292,7 @@ def test_new_discovered_devices_are_created(
 
   run(f"bin/registrar {SITE_PATH} {TARGET}")
 
-  assert len(extra_device(site_paths) == 0, "rediscovering a known device should not result in an extra device"
+  assert len(extra_device(site_paths)) == 0, "rediscovering a known device should not result in an extra device"
 
 def test_reconciling_an_extra_device(
     new_site_model, docker_devices, discovery_node
@@ -323,7 +323,6 @@ def test_reconciling_an_extra_device(
   run("bin/mapper GAT-1 discover")
   time.sleep(30)
   run(f"bin/registrar {SITE_PATH} {TARGET}")
-
 
   assert len(extra_devices(SITE_PATH)) == 1, "extra device should be found"
 
