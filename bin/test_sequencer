@@ -68,7 +68,7 @@ site_path=sites/udmi_site_model
 iot_config=$site_path/cloud_iot_config.json
 device_id=AHU-1
 site_out=$site_path/out
-output_file=$site_out/sequencer_$device_id.json
+output_file=$site_out/sequencer_${device_id}.json
 device_out_base=$site_out/devices/$device_id
 tests_out_base=$device_out_base/tests
 
@@ -180,7 +180,9 @@ else
     fail No pubber pids found, likely due to premature termination: failing test run.
 fi
 
-echo Generated $output_file
+find $site_out -type f
+
+echo Generated $output_file:
 jq . $output_file
 
 echo Sanity check for completed tests...
