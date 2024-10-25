@@ -25,7 +25,7 @@ jobs:
       - name: Build UDMIS
         run: |
           udmis/bin/build check
-          bin/container udmis build --no-check
+          bin/container udmis build --no-check latest
           echo Built local UDMIS
       - name: Docker images summary
         run: docker images
