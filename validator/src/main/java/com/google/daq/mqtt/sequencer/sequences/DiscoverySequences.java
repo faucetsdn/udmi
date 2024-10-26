@@ -282,23 +282,19 @@ public class DiscoverySequences extends SequenceBase {
     }
 
     Instant expectedStart = scheduledStart ? scanGeneration : scanConfigured;
-    Instant expectedFinish = expectedStart.plusSeconds(SCAN_DURATION);
-    {
-      waitFor("scheduled scan active", WAITING_PERIOD, this::detailScanActive);
-      Instant scanStarted = getNowInstant();
-      long delta = Math.abs(Duration.between(scanStarted, expectedStart).toSeconds());
-      checkThat("scan started at time", delta <= SCAN_START_JITTER_SEC,
-          format("scan start %ss different from expected %s", delta, isoConvert(expectedStart)));
-    }
+    waitFor("scheduled scan active", WAITING_PERIOD, this::detailScanActive);
+    Instant scanStarted = getNowInstant();
+    long deltaStart = Math.abs(Duration.between(scanStarted, expectedStart).toSeconds());
+    checkThat("scan started at time", deltaStart <= SCAN_START_JITTER_SEC,
+        format("scan start %ss different from expected %s", deltaStart, isoConvert(expectedStart)));
 
-    {
-      waitFor("scheduled scan complete", WAITING_PERIOD, this::detailScanStopped);
-      Instant scanFinished = getNowInstant();
-      long delta = Math.abs(Duration.between(scanFinished, expectedFinish).toSeconds());
-      checkThat("scan completed at time", delta <= SCAN_START_JITTER_SEC,
-          format("scan completed %ss different from expected %s", delta,
-              isoConvert(expectedStart)));
-    }
+    Instant expectedFinish = expectedStart.plusSeconds(SCAN_DURATION);
+    waitFor("scheduled scan complete", WAITING_PERIOD, this::detailScanStopped);
+    Instant scanFinished = getNowInstant();
+    long deltaFinish = Math.abs(Duration.between(scanFinished, expectedFinish).toSeconds());
+    checkThat("scan completed at time", deltaFinish <= SCAN_START_JITTER_SEC,
+        format("scan completed %ss different from expected %s", deltaFinish,
+            isoConvert(expectedStart)));
 
     Integer stateEvents = deviceState.discovery.families.get(scanFamily).active_count;
     List<DiscoveryEvents> events = popReceivedEvents(DiscoveryEvents.class);
