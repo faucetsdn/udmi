@@ -20,6 +20,7 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
     "functions_min",
     "functions_max",
     "udmi_version",
+    "udmi_commit",
     "udmi_ref",
     "udmi_timever",
     "built_at",
@@ -43,11 +44,18 @@ public class SetupUdmiConfig {
     @JsonPropertyDescription("Semantic tagged version of udmis install")
     public String udmi_version;
     /**
-     * Exact reference hash of udmis install
+     * Commit hash of this udmis install
+     * 
+     */
+    @JsonProperty("udmi_commit")
+    @JsonPropertyDescription("Commit hash of this udmis install")
+    public String udmi_commit;
+    /**
+     * Complete reference of udmis install
      * 
      */
     @JsonProperty("udmi_ref")
-    @JsonPropertyDescription("Exact reference hash of udmis install")
+    @JsonPropertyDescription("Complete reference of udmis install")
     public String udmi_ref;
     /**
      * Timestamp version id of udmis install
@@ -75,6 +83,7 @@ public class SetupUdmiConfig {
         result = ((result* 31)+((this.functions_min == null)? 0 :this.functions_min.hashCode()));
         result = ((result* 31)+((this.deployed_at == null)? 0 :this.deployed_at.hashCode()));
         result = ((result* 31)+((this.functions_max == null)? 0 :this.functions_max.hashCode()));
+        result = ((result* 31)+((this.udmi_commit == null)? 0 :this.udmi_commit.hashCode()));
         result = ((result* 31)+((this.built_by == null)? 0 :this.built_by.hashCode()));
         result = ((result* 31)+((this.deployed_by == null)? 0 :this.deployed_by.hashCode()));
         result = ((result* 31)+((this.udmi_timever == null)? 0 :this.udmi_timever.hashCode()));
@@ -90,7 +99,7 @@ public class SetupUdmiConfig {
             return false;
         }
         SetupUdmiConfig rhs = ((SetupUdmiConfig) other);
-        return (((((((((((this.hostname == rhs.hostname)||((this.hostname!= null)&&this.hostname.equals(rhs.hostname)))&&((this.udmi_ref == rhs.udmi_ref)||((this.udmi_ref!= null)&&this.udmi_ref.equals(rhs.udmi_ref))))&&((this.udmi_version == rhs.udmi_version)||((this.udmi_version!= null)&&this.udmi_version.equals(rhs.udmi_version))))&&((this.built_at == rhs.built_at)||((this.built_at!= null)&&this.built_at.equals(rhs.built_at))))&&((this.functions_min == rhs.functions_min)||((this.functions_min!= null)&&this.functions_min.equals(rhs.functions_min))))&&((this.deployed_at == rhs.deployed_at)||((this.deployed_at!= null)&&this.deployed_at.equals(rhs.deployed_at))))&&((this.functions_max == rhs.functions_max)||((this.functions_max!= null)&&this.functions_max.equals(rhs.functions_max))))&&((this.built_by == rhs.built_by)||((this.built_by!= null)&&this.built_by.equals(rhs.built_by))))&&((this.deployed_by == rhs.deployed_by)||((this.deployed_by!= null)&&this.deployed_by.equals(rhs.deployed_by))))&&((this.udmi_timever == rhs.udmi_timever)||((this.udmi_timever!= null)&&this.udmi_timever.equals(rhs.udmi_timever))));
+        return ((((((((((((this.hostname == rhs.hostname)||((this.hostname!= null)&&this.hostname.equals(rhs.hostname)))&&((this.udmi_ref == rhs.udmi_ref)||((this.udmi_ref!= null)&&this.udmi_ref.equals(rhs.udmi_ref))))&&((this.udmi_version == rhs.udmi_version)||((this.udmi_version!= null)&&this.udmi_version.equals(rhs.udmi_version))))&&((this.built_at == rhs.built_at)||((this.built_at!= null)&&this.built_at.equals(rhs.built_at))))&&((this.functions_min == rhs.functions_min)||((this.functions_min!= null)&&this.functions_min.equals(rhs.functions_min))))&&((this.deployed_at == rhs.deployed_at)||((this.deployed_at!= null)&&this.deployed_at.equals(rhs.deployed_at))))&&((this.functions_max == rhs.functions_max)||((this.functions_max!= null)&&this.functions_max.equals(rhs.functions_max))))&&((this.udmi_commit == rhs.udmi_commit)||((this.udmi_commit!= null)&&this.udmi_commit.equals(rhs.udmi_commit))))&&((this.built_by == rhs.built_by)||((this.built_by!= null)&&this.built_by.equals(rhs.built_by))))&&((this.deployed_by == rhs.deployed_by)||((this.deployed_by!= null)&&this.deployed_by.equals(rhs.deployed_by))))&&((this.udmi_timever == rhs.udmi_timever)||((this.udmi_timever!= null)&&this.udmi_timever.equals(rhs.udmi_timever))));
     }
 
 }

@@ -31,6 +31,9 @@ class ExecutionConfiguration:
     self.log_level = None
     self.min_stage = None
     self.udmi_version = None
+    self.udmi_commit = None
+    self.udmi_ref = None
+    self.udmi_timever = None
     self.enforce_version = None
     self.udmi_root = None
     self.update_to = None
@@ -68,6 +71,9 @@ class ExecutionConfiguration:
     result.log_level = source.get('log_level')
     result.min_stage = source.get('min_stage')
     result.udmi_version = source.get('udmi_version')
+    result.udmi_commit = source.get('udmi_commit')
+    result.udmi_ref = source.get('udmi_ref')
+    result.udmi_timever = source.get('udmi_timever')
     result.enforce_version = source.get('enforce_version')
     result.udmi_root = source.get('udmi_root')
     result.update_to = source.get('update_to')
@@ -143,6 +149,12 @@ class ExecutionConfiguration:
       result['min_stage'] = self.min_stage # 5
     if self.udmi_version:
       result['udmi_version'] = self.udmi_version # 5
+    if self.udmi_commit:
+      result['udmi_commit'] = self.udmi_commit # 5
+    if self.udmi_ref:
+      result['udmi_ref'] = self.udmi_ref # 5
+    if self.udmi_timever:
+      result['udmi_timever'] = self.udmi_timever # 5
     if self.enforce_version:
       result['enforce_version'] = self.enforce_version # 5
     if self.udmi_root:

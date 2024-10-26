@@ -40,9 +40,13 @@
           "type": "string",
           "description": "Semantic tagged version of udmis install"
         },
+        "udmi_commit": {
+          "type": "string",
+          "description": "Commit hash of this udmis install"
+        },
         "udmi_ref": {
           "type": "string",
-          "description": "Exact reference hash of udmis install"
+          "description": "Complete reference of udmis install"
         },
         "udmi_timever": {
           "type": "string",
