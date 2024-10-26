@@ -1,0 +1,24 @@
+{
+  "mqtt": {
+    "device_id": "GAT-1",
+    "host": "192.168.99.2",
+    "port": 8883,
+    "registry_id": "ZZ-TRI-FECTA",
+    "region": "us-central1",
+    "project_id": "localhost",
+    "key_file": "rsa_private.pem",
+    "ca_file": "ca.crt",
+    "cert_file": "rsa_private.crt",
+    "algorithm": "RS256",
+    "authentication_mechanism": "udmi_local"
+  },
+  "nmap": {
+    "targets": [
+      "127.0.0.1"
+    ],
+    "interface": "eth0"
+  },
+  "bacnet": {
+    "ip": "192.168.11.251"
+  }
+}

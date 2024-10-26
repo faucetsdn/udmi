@@ -2,11 +2,12 @@
 set -x
 ROOT_DIR=$(dirname $(realpath $0))
 
-export DN_SITE_PATH=$1
-export DN_TARGET=//mqtt/localhost
+export DN_SITE_PATH=$(realpath site_model)
+export DN_TARGET=$1
+shift
 
-if [[ -z $DN_SITE_PATH ]]; then
-  echo "Usage $0 SITE_PATH [TEST_REGEX]"
+if [[ -z $DN_TARGET ]]; then
+  echo "Usage $0 PROJECT_SPEC [TEST_REGEX]"
   exit 1
 fi
 
