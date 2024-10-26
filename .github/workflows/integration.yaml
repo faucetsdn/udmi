@@ -133,7 +133,7 @@ jobs:
             SPECIFIC_TEST=${REF_NAME#test-}
             more site_model/out/devices/$DEVICE_ID/tests/$SPECIFIC_TEST/*
           else
-            [[ $(cat site_model/out/devices/$DEVICE_ID/results.md | egrep 'stable \| [0-0]+ \| (pass|skip)' | wc -l) == 3 ]]
+            [[ $(cat site_model/out/devices/$DEVICE_ID/results.md | egrep 'stable \| [0-9]+ \| (pass|skip)' | wc -l) == 3 ]]
           fi
       - name: UDMIS logs
         if: ${{ !cancelled() }}
