@@ -44,9 +44,10 @@ diff -u out/generated${suffix}.out $UDMI_ROOT/docs/specs/sequences/generated.md 
 echo '####################' Finished gencode_seq tests: $failures
 
 echo '####################' Starting expected tests
-SAMPLE_TEST_ROW="| writeback | writeback_failure | alpha | pass | Sequence complete |"
 targets=sites/udmi_site_model*/out*/devices/AHU-1/results.md
-echo "Searching results.md files for: $SAMPLE_TEST_ROW"
+cat $targets > out/all_results.md
+SAMPLE_TEST_ROW="| writeback | writeback_failure | alpha | 10 | pass | Sequence complete |"
+echo "Searching out/all_results.md for: $SAMPLE_TEST_ROW"
 fgrep "$SAMPLE_TEST_ROW" $targets || failures+="expected "
 echo '####################' Finished expected tests: $failures
 
