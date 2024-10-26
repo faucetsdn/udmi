@@ -13,6 +13,7 @@ import static com.google.udmi.util.Common.SUBFOLDER_PROPERTY_KEY;
 import static com.google.udmi.util.Common.SUBTYPE_PROPERTY_KEY;
 import static com.google.udmi.util.Common.TIMESTAMP_KEY;
 import static com.google.udmi.util.Common.TRANSACTION_KEY;
+import static com.google.udmi.util.Common.UDMI_VERSION_KEY;
 import static com.google.udmi.util.Common.UNKNOWN_UDMI_VERSION;
 import static com.google.udmi.util.Common.VERSION_KEY;
 import static com.google.udmi.util.Common.getNamespacePrefix;
@@ -218,6 +219,8 @@ public class IotReflectorClient implements MessagePublisher {
     udmiState.setup.update_to = updateVersion;
     udmiState.setup.msg_source = userName;
     udmiState.setup.tool_name = toolName;
+    udmiState.setup.udmi_version = System.getenv(UDMI_VERSION_KEY);
+    udmiState.setup.udmi_commit = "0x9127832";
     try {
       debug(format("Setting state version %s timestamp %s%n",
           udmiVersion, isoConvert(SYSTEM_START_TIMESTAMP)));

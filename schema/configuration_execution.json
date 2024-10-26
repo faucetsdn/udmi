@@ -77,7 +77,20 @@
       "type": "string"
     },
     "udmi_version": {
-      "type": "string"
+      "type": "string",
+      "description": "Semantic tagged version of udmis install"
+    },
+    "udmi_commit": {
+      "type": "string",
+      "description": "Commit hash of this udmis install"
+    },
+    "udmi_ref": {
+      "type": "string",
+      "description": "Complete reference of udmis install"
+    },
+    "udmi_timever": {
+      "type": "string",
+      "description": "Timestamp version id of udmis install"
     },
     "enforce_version": {
       "type": "boolean"
