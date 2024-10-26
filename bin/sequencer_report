@@ -23,7 +23,6 @@ STAGES = ["stable", "beta", "preview", "alpha"]
 # stages to consider for a pass
 
 STAGES_FOR_PASS = ["stable", "beta"]
-DEFAULT_SCORE = 1
 REFERENCE_SEQUENCES_DIR = "validator/sequences"
 CHECKMARK = "✓"
 CROSS = "✕"
@@ -41,7 +40,13 @@ def first_occurence(iteratable: Iterable, predicate: Callable) -> int:
   raise ValueError()
 
 
-@dataclass(unsafe_hash=True, eq=True, order=True)
+def sanitize(string: str):
+  """Sanitize string for safe displaying"""
+  sanitized = string.replace("\n", "; ")
+  return sanitized
+
+
+@dataclass(kw_only=True,unsafe_hash=True, eq=True, order=True)
 class TestResult:
   """Container for test result."""
 
@@ -51,7 +56,8 @@ class TestResult:
   result: str = ""
   stage: str = ""
   message: str = ""
-  score: int = DEFAULT_SCORE
+  score: int = 0
+  total: int = 0
 
   def passed(self):
     if self.result == "pass":
@@ -272,17 +278,23 @@ class TemplateHelper:
 
 @dataclass
 class FeatureStage:
-  """Container for scored points and total points for a feature and stage."""
+  """Container for scored points and total points for a feature and stage.
+  
+  Arguments:
+    scored: Number of points scored for a given feature at a given stage.
+    total: Total points which could possibly have attained.
+    stage: The stage e.g. BETA, STABLE, etc.
+    tests: List of tests for this feature at the given stage.
+  """
 
   scored: int = 0
   total: int = 0
   stage: str = ""
   tests: list = field(default_factory=list)
 
-  def add(self, result, score):
-    self.total += score
-    if result == "pass":
-      self.scored += score
+  def add(self, *, test_score:int, test_total:int):
+    self.total += test_total
+    self.scored += test_score
 
   def has(self):
     """Did the sequencer results have this feature & stage combination?."""
@@ -394,6 +406,10 @@ class SequencerReport:
         self.site_path, "cloud_iot_config.json"
     )
 
+    self.gateway = (
+        self.metadata.get("gateway", {}).get("gateway_id")
+    )
+
   def has_stage(self, stage: str):
     """Checks if sequencer report has any tests at given stage."""
     all_features = [x[stage] for x in self.features.values()]
@@ -408,14 +424,17 @@ class SequencerReport:
       features[feature] = copy.deepcopy(stages_template)
       for name, result in sequences["sequences"].items():
         results[name] = TestResult(
-            feature,
-            name,
-            result.get("summary", ""),
-            result["result"],
-            result["stage"],
-            self.sanitize(result["status"]["message"]),
+            bucket=feature,
+            name=name,
+            description=result.get("summary", ""),
+            result=result["result"],
+            stage=result["stage"],
+            message=sanitize(result["status"]["message"]),
+            score=result["scoring"]["value"],
+            total=result["scoring"]["total"],
         )
-        features[feature][result["stage"]].add(result["result"], DEFAULT_SCORE)
+        
+        features[feature][result["stage"]].add(test_score=result["scoring"]["value"], test_total=result["scoring"]["total"])
         features[feature][result["stage"]].tests.append(result)
 
     self.results = {
@@ -443,11 +462,6 @@ class SequencerReport:
         f: [x for x in self.results.values() if x.bucket == f]
         for f in self.features
     }
-
-  def sanitize(self, string: str):
-    """Sanitize string for safe displaying"""
-    sanitized = string.replace("\n", ";")
-    return sanitized
 
   def __repr__(self):
     return str(self.results)
