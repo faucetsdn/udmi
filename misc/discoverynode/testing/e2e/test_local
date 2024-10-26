@@ -2,7 +2,7 @@
 set -x
 ROOT_DIR=$(dirname $(realpath $0))
 
-export DN_SITE_PATH=$1
+export DN_SITE_PATH=$(realpath $1)
 export DN_TARGET=//mqtt/localhost
 
 if [[ -z $DN_SITE_PATH ]]; then

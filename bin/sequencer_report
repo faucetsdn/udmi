@@ -279,7 +279,7 @@ class TemplateHelper:
 @dataclass
 class FeatureStage:
   """Container for scored points and total points for a feature and stage.
-  
+
   Arguments:
     scored: Number of points scored for a given feature at a given stage.
     total: Total points which could possibly have attained.
@@ -433,8 +433,10 @@ class SequencerReport:
             score=result["scoring"]["value"],
             total=result["scoring"]["total"],
         )
-        
-        features[feature][result["stage"]].add(test_score=result["scoring"]["value"], test_total=result["scoring"]["total"])
+
+        features[feature][result["stage"]].add(
+          test_score=result["scoring"]["value"],
+          test_total=result["scoring"]["total"])
         features[feature][result["stage"]].tests.append(result)
 
     self.results = {

@@ -39,6 +39,22 @@
           "type": "string",
           "description": "User id of the person running the tool"
         },
+        "udmi_version": {
+          "type": "string",
+          "description": "Semantic tagged version of udmis install"
+        },
+        "udmi_commit": {
+          "type": "string",
+          "description": "Commit hash of this udmis install"
+        },
+        "udmi_ref": {
+          "type": "string",
+          "description": "Complete reference of udmis install"
+        },
+        "udmi_timever": {
+          "type": "string",
+          "description": "Timestamp version id of udmis install"
+        },
         "msg_source": {
           "type": "string",
           "description": "Source parameter to use for this connection stream"
