@@ -372,7 +372,7 @@ jobs:
       - name: Setup prerequisites
         run: |
           bin/setup_base
-          git clone https://github.com/faucetsdn/udmi_site_model.git
+          bin/clone_model
           ln -s udmi_site_model/ site_model
           (cd site_model; git log -n 1)
           docker network create udminet --subnet 192.168.99.0/24
@@ -384,7 +384,7 @@ jobs:
       - name: Start UDMIS container
         run: |
           docker run -d --net udminet --name udmis -p 8883:8883 \
-            -v $(realpath udmi_site_model):/root/site_model \
+            -v $PWD/site_model:/root/site_model \
             -v $PWD/var/tmp:/tmp \
             -v $PWD/var/etcd:/root/udmi/var/etcd \
             -v $PWD/var/mosquitto:/etc/mosquitto \
@@ -397,4 +397,4 @@ jobs:
           done
           ls -l var/tmp/pod_ready.txt 2>&1
       - name: Run Tests
-        run: misc/discoverynode/testing/e2e/test_local $(realpath udmi_site_model)
+        run: misc/discoverynode/testing/e2e/test_local site_model/
