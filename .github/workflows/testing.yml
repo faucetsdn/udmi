@@ -373,7 +373,7 @@ jobs:
         run: |
           bin/setup_base
           bin/clone_model
-          ln -s sites/udmi_site_model/ site_model/
+          ln -s sites/udmi_site_model/ site_model
           (cd site_model; git log -n 1)
           docker network create udminet --subnet 192.168.99.0/24
       - name: Build UDMIS
