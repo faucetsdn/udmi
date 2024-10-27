@@ -1,5 +1,6 @@
 RESULT pass discovery.scan scan_periodic_now_enumerate ALPHA 10/10 Sequence complete
 RESULT pass discovery.scan scan_single_future ALPHA 10/10 Sequence complete
+RESULT pass discovery.scan scan_single_now ALPHA 10/10 Sequence complete
 RESULT pass discovery.scan scan_single_past ALPHA 10/10 Sequence complete
 RESULT pass endpoint.config endpoint_connection_bad_hash ALPHA 10/10 Sequence complete
 RESULT pass endpoint.config endpoint_connection_error PREVIEW 10/10 Sequence complete

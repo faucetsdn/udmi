@@ -1,51 +1,16 @@
 {
-  "event_count" : 4,
-  "last_config" : "2024-10-19T12:08:08Z",
+  "event_no" : 7,
+  "last_config" : "2024-10-27T14:09:50Z",
   "logentries" : [ {
-    "message" : "Update state 2024-10-19T12:08:10Z last_config 2024-10-19T12:08:08Z",
+    "message" : "Update state 2024-10-27T14:10:18Z last_config 2024-10-27T14:09:50Z",
     "category" : "device.log",
-    "timestamp" : "2024-10-19T12:08:10Z",
-    "level" : 200
-  }, {
-    "message" : "Discovery scan starting vendor as 2024-10-19T12:08:16Z",
-    "category" : "device.log",
-    "timestamp" : "2024-10-19T12:08:16Z",
-    "level" : 200
-  }, {
-    "message" : "Update state 2024-10-19T12:08:16Z last_config 2024-10-19T12:08:08Z",
-    "category" : "device.log",
-    "timestamp" : "2024-10-19T12:08:16Z",
-    "level" : 200
-  }, {
-    "message" : "Discovered vendor device 20231 for gen 2024-10-19T12:08:16Z",
-    "category" : "device.log",
-    "timestamp" : "2024-10-19T12:08:16Z",
-    "level" : 200
-  }, {
-    "message" : "Discovered vendor device 28179023 for gen 2024-10-19T12:08:16Z",
-    "category" : "device.log",
-    "timestamp" : "2024-10-19T12:08:16Z",
-    "level" : 200
-  }, {
-    "message" : "Discovered vendor device 0x65 for gen 2024-10-19T12:08:16Z",
-    "category" : "device.log",
-    "timestamp" : "2024-10-19T12:08:16Z",
-    "level" : 200
-  }, {
-    "message" : "Error while executing scheduled future: While checking for discovery scan start",
-    "category" : "device.log",
-    "timestamp" : "2024-10-19T12:08:16Z",
-    "level" : 500
-  }, {
-    "message" : "Update state 2024-10-19T12:08:18Z last_config 2024-10-19T12:08:08Z",
-    "category" : "device.log",
-    "timestamp" : "2024-10-19T12:08:18Z",
+    "timestamp" : "2024-10-27T14:10:18Z",
     "level" : 200
   } ],
   "metrics" : {
     "mem_total_mb" : 254.0,
-    "mem_free_mb" : 213.623046875
+    "mem_free_mb" : 210.3086700439453
   },
-  "timestamp" : "2024-10-19T12:08:20Z",
-  "version" : "1.5.1"
+  "timestamp" : "2024-10-27T14:10:21Z",
+  "version" : "1.5.2"
 }

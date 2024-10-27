@@ -3,9 +3,9 @@
     "families" : {
       "vendor" : {
         "depth" : "entries",
-        "generation" : "2024-10-19T12:08:06Z",
-        "scan_duration_sec" : 10,
-        "scan_interval_sec" : 10
+        "generation" : "2024-10-27T14:09:48Z",
+        "scan_duration_sec" : 20,
+        "scan_interval_sec" : 20
       }
     }
   },
@@ -37,14 +37,14 @@
     "metrics_rate_sec" : 10,
     "min_loglevel" : 200,
     "operation" : {
-      "last_start" : "2024-10-19T12:07:39Z"
+      "last_start" : "2024-10-27T14:09:20Z"
     },
     "testing" : {
       "config_base" : 40,
       "sequence_name" : "scan_periodic_now_enumerate",
-      "transaction_id" : "RC:d4714d.0012"
+      "transaction_id" : "RC:6a7f3f.0013"
     }
   },
-  "timestamp" : "2024-10-19T12:08:08Z",
-  "version" : "git-2a03574"
+  "timestamp" : "2024-10-27T14:09:50Z",
+  "version" : "git-68f30a8"
 }
