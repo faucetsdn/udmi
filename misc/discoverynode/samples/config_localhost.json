@@ -13,5 +13,5 @@
         "authentication_mechanism": "udmi_local"
     },
     "udmi":{"discovery": {"ipv4":"false", "ethmac": false, "bacnet":false}},
-    "bacnet": {"ip": "192.168.9.251"}
+    "bacnet": {"ip": "192.168.11.251"}
 }

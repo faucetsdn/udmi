@@ -375,11 +375,6 @@ jobs:
           bin/clone_model
           ln -s sites/udmi_site_model/ site_model
           (cd site_model; git log -n 1)
-          docker network create udminet --subnet 192.168.99.0/24
-      - name: Start UDMIS
-        run: |
-          udmis/bin/build check
-          bin/container udmis build --no-check latest
           bin/start_local site_model //mqtt/localhost
       - name: Run Tests
         run: misc/discoverynode/testing/e2e/test_local //mqtt/localhost

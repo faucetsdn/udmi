@@ -86,7 +86,7 @@ def localnet_block_from_id(id: int):
     raise RuntimeError("more than 100 devices not supported")
 
   return {
-      "ipv4": {"addr": f"192.168.9.1{id:02d}"},
+      "ipv4": {"addr": f"192.168.11.1{id:02d}"},
       "ethmac": {"addr": f"00:00:aa:bb:cc:{id:02x}"},
       "bacnet": {"addr": str(3000 + id)},
       "vendor": {"addr": str(id)},
@@ -175,7 +175,7 @@ def discovery_node():
             "authentication_mechanism": "udmi_local",
         },
         "nmap": {"targets": ["127.0.0.1"], "interface": "eth0"},
-        "bacnet": {"ip": "192.168.9.251"},
+        "bacnet": {"ip": "192.168.11.251"},
     }
 
     with open(
@@ -202,7 +202,7 @@ def discovery_node():
             f"type=bind,source={site_path}/devices/{device_id}/rsa_private.pkcs8,target=/app/rsa_private.pkcs8",
             "--mount",
             f"type=bind,source={site_path}/reflector/ca.crt,target=/app/ca.crt",
-            "--ip=192.168.9.251",
+            "--ip=192.168.11.251",
             "test-discovery_node",
             "--config_file=config.json",
         ])
