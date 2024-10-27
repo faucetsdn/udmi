@@ -1,19 +1,20 @@
 #!/bin/bash -e
-set -x
+
 ROOT_DIR=$(dirname $(realpath $0))
 
-export DN_SITE_PATH=$(realpath $1)
-export DN_TARGET=//mqtt/localhost
+export DN_SITE_PATH=$(realpath site_model)
+export DN_TARGET=$1
 
-if [[ -z $DN_SITE_PATH ]]; then
-  echo "Usage $0 SITE_PATH [TEST_REGEX]"
+if [[ -z $DN_TARGET ]]; then
+  echo "Usage $0 PROJECT_SPEC [TEST_REGEX]"
   exit 1
 fi
 
-if [[ $2 -ne "" ]]; then
+if [[ -n $2 ]]; then
   PYTEST_TARGET="-k $2"
 fi
 
+echo Building device and node containers...
 bash $ROOT_DIR/../docker/bacnet_device/build.sh
 bash $ROOT_DIR/../docker/discovery_node/build.sh
 
