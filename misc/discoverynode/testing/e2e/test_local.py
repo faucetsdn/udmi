@@ -81,12 +81,12 @@ def normalize_keys(target: dict[Any:Any], replacement, *args):
 
 def localnet_block_from_id(id: int):
   """Generates localnet block f"""
-  if id >= 100:
+  if id > 250:
     # because IP allocation and mac address assignment
-    raise RuntimeError("more than 100 devices not supported")
+    raise RuntimeError("more than 250 devices not supported")
 
   return {
-      "ipv4": {"addr": f"192.168.11.1{id:02d}"},
+      "ipv4": {"addr": f"192.168.11.{id}"},
       "ethmac": {"addr": f"00:00:aa:bb:cc:{id:02x}"},
       "bacnet": {"addr": str(3000 + id)},
       "vendor": {"addr": str(id)},
