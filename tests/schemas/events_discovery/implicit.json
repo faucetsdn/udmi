@@ -12,6 +12,7 @@
   "generation": "2018-08-26T21:37:12Z",
   "scan_family": "bacnet",
   "scan_addr": "92EA09",
+  "event_no": 2,
   "families": {
     "iot": {
       "addr": "AHU-1"

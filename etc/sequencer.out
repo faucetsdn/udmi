@@ -1,9 +1,7 @@
-RESULT skip discovery.scan cancel_before_start ALPHA 0/0 Not yet implemented
-RESULT skip discovery.scan cancel_periodic ALPHA 0/0 Not yet implemented
-RESULT pass discovery.scan periodic_scan_fixed_enumerate ALPHA 10/10 Sequence complete
-RESULT skip discovery.scan periodic_scan_floating ALPHA 0/0 Not yet implemented
-RESULT pass discovery.scan single_scan_future ALPHA 10/10 Sequence complete
-RESULT pass discovery.scan single_scan_past ALPHA 10/10 Sequence complete
+RESULT pass discovery.scan scan_periodic_now_enumerate ALPHA 10/10 Sequence complete
+RESULT pass discovery.scan scan_single_future ALPHA 10/10 Sequence complete
+RESULT pass discovery.scan scan_single_now ALPHA 10/10 Sequence complete
+RESULT pass discovery.scan scan_single_past ALPHA 10/10 Sequence complete
 RESULT pass endpoint.config endpoint_connection_bad_hash ALPHA 10/10 Sequence complete
 RESULT pass endpoint.config endpoint_connection_error PREVIEW 10/10 Sequence complete
 RESULT pass endpoint.config endpoint_connection_retry PREVIEW 10/10 Sequence complete
@@ -11,11 +9,11 @@ RESULT pass endpoint.config endpoint_connection_success_alternate PREVIEW 10/10 
 RESULT pass endpoint.config endpoint_connection_success_reconnect PREVIEW 10/10 Sequence complete
 RESULT pass endpoint.config endpoint_failure_and_restart PREVIEW 10/10 Sequence complete
 RESULT pass endpoint.config endpoint_redirect_and_restart PREVIEW 10/10 Sequence complete
-RESULT pass enumeration empty_enumeration PREVIEW 10/10 Sequence complete
-RESULT pass enumeration.families family_enumeration ALPHA 10/10 Sequence complete
-RESULT pass enumeration.features feature_enumeration PREVIEW 10/10 Sequence complete
-RESULT pass enumeration multi_enumeration ALPHA 10/10 Sequence complete
-RESULT pass enumeration.pointset pointset_enumeration ALPHA 10/10 Sequence complete
+RESULT pass enumeration enumerate_multi ALPHA 10/10 Sequence complete
+RESULT pass enumeration enumerate_nothing PREVIEW 10/10 Sequence complete
+RESULT pass enumeration.families enumerate_families ALPHA 10/10 Sequence complete
+RESULT pass enumeration.features enumerate_features PREVIEW 10/10 Sequence complete
+RESULT pass enumeration.pointset enumerate_pointset ALPHA 10/10 Sequence complete
 RESULT skip gateway bad_point_ref PREVIEW 0/0 Not a proxied device
 RESULT skip gateway bad_target_address PREVIEW 0/0 Not a proxied device
 RESULT skip gateway bad_target_family PREVIEW 0/0 Not a proxied device

@@ -83,9 +83,9 @@ scan (_scan_ enumeration). Both report the same kind of content, but the mechani
 
 Within an enumeration message, there's a number of different kinds of information that can
 be reported:
-  * `points`: A listing of all the data points that a device has to offer. The normal
-  `pointset` _config_/_state_/_events_ messages only operate on a curated subset of all
-  the available points, while this enumeration lists _all_ of them.
+  * `refs`: A listing of all the data points that a device has to offer, indexed by their
+  protocol-specific reference. References are curated into named `points`, which forms
+  the foundation of the `pointset` messages.
   * `blobs`: A listing of all the data blobs that a device knows how to handle. This could
   be components like firmware updates, key rotation, etc... Some blobs will be standardized
   across the system, while others will be device-specific.
