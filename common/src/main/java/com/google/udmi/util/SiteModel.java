@@ -5,6 +5,11 @@ import static com.google.common.base.Preconditions.checkState;
 import static com.google.udmi.util.Common.DEFAULT_REGION;
 import static com.google.udmi.util.Common.NO_SITE;
 import static com.google.udmi.util.Common.SITE_METADATA_KEY;
+import static com.google.udmi.util.Common.UDMI_COMMIT_ENV;
+import static com.google.udmi.util.Common.UDMI_REF_ENV;
+import static com.google.udmi.util.Common.UDMI_TIMEVER_ENV;
+import static com.google.udmi.util.Common.UDMI_VERSION_ENV;
+import static com.google.udmi.util.Common.UDMI_VERSION_KEY;
 import static com.google.udmi.util.Common.getNamespacePrefix;
 import static com.google.udmi.util.GeneralUtils.OBJECT_MAPPER_RAW;
 import static com.google.udmi.util.GeneralUtils.catchToNull;
@@ -127,6 +132,7 @@ public class SiteModel {
     sitePath = ofNullable(exeConfig.site_model).map(f -> maybeRelativeTo(f, exeConfig.src_file))
         .orElse(siteConf.getParent());
     exeConfig.site_model = new File(sitePath).getAbsolutePath();
+    loadVersionInfo(exeConfig);
     siteDefaults = ofNullable(
         asMap(loadFileStrict(Metadata.class, getSubdirectory(SITE_DEFAULTS_FILE))))
         .orElseGet(HashMap::new);
@@ -135,6 +141,13 @@ public class SiteModel {
       exeConfig.project_id = overrides.project_id;
       exeConfig.udmi_namespace = overrides.udmi_namespace;
     }
+  }
+
+  private static void loadVersionInfo(ExecutionConfiguration exeConfig) {
+    exeConfig.udmi_version = System.getenv(UDMI_VERSION_ENV);
+    exeConfig.udmi_commit = System.getenv(UDMI_COMMIT_ENV);
+    exeConfig.udmi_ref = System.getenv(UDMI_REF_ENV);
+    exeConfig.udmi_timever = System.getenv(UDMI_TIMEVER_ENV);
   }
 
   public SiteModel(String toolName, List<String> argList) {

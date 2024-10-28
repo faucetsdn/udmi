@@ -1,5 +1,6 @@
 package com.google.daq.mqtt.util;
 
+import static com.google.udmi.util.Common.UDMI_VERSION_KEY;
 import static java.util.Optional.ofNullable;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -19,8 +20,7 @@ public abstract class ConfigUtil {
 
   public static final String EXCEPTIONS_JSON = "exceptions.json";
   public static final String UDMI_VERSION = "1.5.2";
-  // public static final String UDMI_VERSION = SchemaVersion.CURRENT.key();
-  public static final String UDMI_TOOLS = System.getenv("UDMI_TOOLS");
+  public static final String UDMI_TOOLS = System.getenv(UDMI_VERSION_KEY);
   public static final File UDMI_ROOT = new File(ofNullable(System.getenv("UDMI_ROOT")).orElse("."));
 
   private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper()
