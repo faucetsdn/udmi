@@ -1,0 +1,10 @@
+{
+  "families" : {
+    "vendor" : {
+      "generation" : "2024-10-27T14:09:48Z",
+      "scan_interval_sec" : 20,
+      "scan_duration_sec" : 20,
+      "depth" : "entries"
+    }
+  }
+}

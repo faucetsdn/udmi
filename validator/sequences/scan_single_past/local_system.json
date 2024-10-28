@@ -1,0 +1,10 @@
+{
+  "min_loglevel" : 200,
+  "metrics_rate_sec" : 10,
+  "operation" : {
+    "last_start" : "2024-10-27T14:08:38Z"
+  },
+  "testing" : {
+    "sequence_name" : "scan_single_past"
+  }
+}

@@ -1,0 +1,50 @@
+{
+  "discovery" : {
+    "families" : {
+      "vendor" : {
+        "depth" : "entries",
+        "generation" : "2024-10-27T14:09:48Z",
+        "scan_duration_sec" : 20,
+        "scan_interval_sec" : 20
+      }
+    }
+  },
+  "localnet" : {
+    "families" : {
+      "ether" : { },
+      "ipv4" : { },
+      "ipv6" : { },
+      "vendor" : { }
+    }
+  },
+  "pointset" : {
+    "points" : {
+      "filter_alarm_pressure_status" : {
+        "ref" : "BV11.present_value",
+        "units" : "No-units"
+      },
+      "filter_differential_pressure_sensor" : {
+        "ref" : "AV12.present_value",
+        "units" : "Degrees-Celsius"
+      },
+      "filter_differential_pressure_setpoint" : {
+        "set_value" : 98,
+        "units" : "Bars"
+      }
+    }
+  },
+  "system" : {
+    "metrics_rate_sec" : 10,
+    "min_loglevel" : 200,
+    "operation" : {
+      "last_start" : "2024-10-27T14:09:20Z"
+    },
+    "testing" : {
+      "config_base" : 40,
+      "sequence_name" : "scan_periodic_now_enumerate",
+      "transaction_id" : "RC:6a7f3f.0013"
+    }
+  },
+  "timestamp" : "2024-10-27T14:09:50Z",
+  "version" : "git-68f30a8"
+}

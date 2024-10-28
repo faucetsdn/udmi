@@ -1,0 +1,11 @@
+{
+  "families" : {
+    "vendor" : {
+      "generation" : "2024-10-27T14:08:47Z",
+      "phase" : "active",
+      "active_count" : 3
+    }
+  },
+  "timestamp" : "2024-10-27T14:09:00Z",
+  "version" : "1.5.2"
+}

@@ -1,0 +1,59 @@
+{
+  "families" : {
+    "ether" : {
+      "addr" : "60:45:bd:01:e2:ee"
+    },
+    "ipv4" : {
+      "addr" : "10.1.0.64"
+    },
+    "ipv6" : {
+      "addr" : "fe80::6245:bdff:fe01:e2ee"
+    },
+    "vendor" : {
+      "addr" : "28179023"
+    }
+  },
+  "features" : {
+    "endpoint.config" : {
+      "stage" : "beta"
+    },
+    "enumeration.families" : {
+      "stage" : "preview"
+    },
+    "enumeration.features" : {
+      "stage" : "beta"
+    },
+    "system" : {
+      "stage" : "beta"
+    },
+    "enumeration.pointset" : {
+      "stage" : "alpha"
+    },
+    "pointset" : {
+      "stage" : "beta"
+    },
+    "enumeration" : {
+      "stage" : "stable"
+    }
+  },
+  "generation" : "2024-10-19T12:08:10Z",
+  "refs" : {
+    "BV11.present_value" : {
+      "point" : "filter_alarm_pressure_status",
+      "possible_values" : [ ],
+      "units" : "No-units"
+    },
+    "filter_differential_pressure_setpoint" : {
+      "possible_values" : [ ],
+      "units" : "Bars",
+      "writable" : true
+    },
+    "AV12.present_value" : {
+      "point" : "filter_differential_pressure_sensor",
+      "possible_values" : [ ],
+      "units" : "Degrees-Celsius"
+    }
+  },
+  "timestamp" : "2024-10-19T12:08:11Z",
+  "version" : "1.5.1"
+}
