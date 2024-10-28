@@ -13,7 +13,6 @@ import static com.google.udmi.util.Common.SUBFOLDER_PROPERTY_KEY;
 import static com.google.udmi.util.Common.SUBTYPE_PROPERTY_KEY;
 import static com.google.udmi.util.Common.TIMESTAMP_KEY;
 import static com.google.udmi.util.Common.TRANSACTION_KEY;
-import static com.google.udmi.util.Common.UDMI_VERSION_KEY;
 import static com.google.udmi.util.Common.UNKNOWN_UDMI_VERSION;
 import static com.google.udmi.util.Common.VERSION_KEY;
 import static com.google.udmi.util.Common.getNamespacePrefix;
@@ -114,6 +113,7 @@ public class IotReflectorClient implements MessagePublisher {
   private final Function<Envelope, Boolean> messageFilter;
   private final String userName;
   private final String toolName;
+  private final ExecutionConfiguration executionConfig;
   private boolean isInstallValid;
   private boolean active;
   private Exception syncFailure;
@@ -141,6 +141,7 @@ public class IotReflectorClient implements MessagePublisher {
     Preconditions.checkState(requiredVersion >= TOOLS_FUNCTIONS_VERSION,
         format("Min required version %s not satisfied by tools version %s", TOOLS_FUNCTIONS_VERSION,
             requiredVersion));
+    this.executionConfig = iotConfig;
     this.requiredVersion = requiredVersion;
     this.enforceUdmiVersion = isTrue(iotConfig.enforce_version);
     this.messageFilter = ofNullable(messageFilter).orElse(this::userMessageFilter);
@@ -219,8 +220,10 @@ public class IotReflectorClient implements MessagePublisher {
     udmiState.setup.update_to = updateVersion;
     udmiState.setup.msg_source = userName;
     udmiState.setup.tool_name = toolName;
-    udmiState.setup.udmi_version = System.getenv(UDMI_VERSION_KEY);
-    udmiState.setup.udmi_commit = "0x9127832";
+    udmiState.setup.udmi_version = executionConfig.udmi_version;
+    udmiState.setup.udmi_commit = executionConfig.udmi_commit;
+    udmiState.setup.udmi_ref = executionConfig.udmi_ref;
+    udmiState.setup.udmi_timever = executionConfig.udmi_timever;
     try {
       debug(format("Setting state version %s timestamp %s%n",
           udmiVersion, isoConvert(SYSTEM_START_TIMESTAMP)));
