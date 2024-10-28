@@ -1,0 +1,12 @@
+{
+  "generation" : "2024-10-27T14:09:37Z",
+  "scan_addr" : "20231",
+  "scan_family" : "vendor",
+  "system" : {
+    "ancillary" : {
+      "device-name" : "GAT-123"
+    }
+  },
+  "timestamp" : "2024-10-27T14:09:37Z",
+  "version" : "1.5.2"
+}

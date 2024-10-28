@@ -65,6 +65,7 @@ class DiscoveryEvents:
     self.status = None
     self.scan_family = None
     self.scan_addr = None
+    self.event_no = None
     self.families = None
     self.registries = None
     self.devices = None
@@ -84,6 +85,7 @@ class DiscoveryEvents:
     result.status = Entry.from_dict(source.get('status'))
     result.scan_family = source.get('scan_family')
     result.scan_addr = source.get('scan_addr')
+    result.event_no = source.get('event_no')
     result.families = FamilyDiscovery.map_from(source.get('families'))
     result.registries = CloudModel.map_from(source.get('registries'))
     result.devices = CloudModel.map_from(source.get('devices'))
@@ -123,6 +125,8 @@ class DiscoveryEvents:
       result['scan_family'] = self.scan_family # 5
     if self.scan_addr:
       result['scan_addr'] = self.scan_addr # 5
+    if self.event_no:
+      result['event_no'] = self.event_no # 5
     if self.families:
       result['families'] = FamilyDiscovery.expand_dict(self.families) # 2
     if self.registries:

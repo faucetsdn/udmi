@@ -38,11 +38,11 @@ public class RefDiscovery {
     @JsonPropertyDescription("Point descriptor for this point")
     public java.lang.String point;
     /**
-     * Friendly name for the point, if known
+     * Friendly name for the reference, if known
      * 
      */
     @JsonProperty("name")
-    @JsonPropertyDescription("Friendly name for the point, if known")
+    @JsonPropertyDescription("Friendly name for the reference, if known")
     public java.lang.String name;
     /**
      * List of possible enumerated values for the point

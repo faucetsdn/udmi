@@ -15,7 +15,6 @@ import static java.util.function.Predicate.not;
 import static udmi.schema.FamilyDiscoveryState.Phase.PENDING;
 import static udmi.schema.FamilyDiscoveryState.Phase.STOPPED;
 
-import com.google.udmi.util.SiteModel;
 import java.time.Instant;
 import java.util.Date;
 import java.util.HashMap;

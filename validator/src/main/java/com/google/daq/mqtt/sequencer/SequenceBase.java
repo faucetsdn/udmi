@@ -6,6 +6,7 @@ import static com.google.common.base.Preconditions.checkState;
 import static com.google.common.base.Predicates.not;
 import static com.google.common.base.Strings.emptyToNull;
 import static com.google.daq.mqtt.sequencer.SequenceBase.Capabilities.LAST_CONFIG;
+import static com.google.daq.mqtt.sequencer.SequenceRunner.ensureExecutionConfig;
 import static com.google.daq.mqtt.sequencer.semantic.SemanticValue.actualize;
 import static com.google.daq.mqtt.util.CloudIotManager.EMPTY_CONFIG;
 import static com.google.daq.mqtt.util.ConfigManager.configFrom;
@@ -327,7 +328,7 @@ public class SequenceBase {
   private static Scoring scoringResult;
 
   private static void setupSequencer() {
-    exeConfig = SequenceRunner.ensureExecutionConfig();
+    exeConfig = ofNullable(exeConfig).orElseGet(SequenceRunner::ensureExecutionConfig);
     if (client != null) {
       return;
     }
@@ -364,6 +365,7 @@ public class SequenceBase {
     System.err.printf("Loading reflector key file from %s%n", new File(key_file).getAbsolutePath());
     System.err.printf("Validating against device %s serial %s%n", getDeviceId(), serialNo);
     client = checkNotNull(getPublisherClient(), "primary client not created");
+    client.activate();
     sessionPrefix = client.getSessionPrefix();
 
     String udmiNamespace = exeConfig.udmi_namespace;
@@ -458,12 +460,12 @@ public class SequenceBase {
     return siteModel.getSubdirectory(format(SUMMARY_OUTPUT_FORMAT, getDeviceId()));
   }
 
-  static void processComplete(Exception e) {
+  static void processComplete(Throwable e) {
     boolean wasError = e != null;
     Entry statusEntry = new Entry();
     statusEntry.level = wasError ? ERROR.value() : Level.NOTICE.value();
     statusEntry.timestamp = cleanDate();
-    statusEntry.message = wasError ? Common.getExceptionMessage(e) : "Run completed";
+    statusEntry.message = wasError ? ("Error: " + Common.getExceptionMessage(e)) : "Run completed";
     statusEntry.category = VALIDATION_FEATURE_SEQUENCE;
     getValidationState().status = statusEntry;
     summarizeSchemaStages();
@@ -630,6 +632,11 @@ public class SequenceBase {
     statusEntry.timestamp = new Date();
     validationState.status = statusEntry;
     ifNotTrueThen(startupError, SequenceBase::updateValidationState);
+  }
+
+  public static void initialize() {
+    setupSequencer();
+    initializeValidationState();
   }
 
   @NotNull
@@ -1335,11 +1342,7 @@ public class SequenceBase {
               + e.getMessage());
       throw e;
     } catch (Exception e) {
-      if (traceLogLevel()) {
-        trace("Suppressed " + e + " from " + getExceptionLine(e));
-      } else {
-        debug("Suppressing exception: " + e);
-      }
+      trace("Suppressing exception: " + friendlyStackTrace(e));
       return null;
     }
   }
@@ -1453,7 +1456,7 @@ public class SequenceBase {
   private void processLogMessages() {
     List<SystemEvents> receivedEvents = popReceivedEvents(SystemEvents.class);
     receivedEvents.forEach(systemEvent -> {
-      int eventCount = ofNullable(systemEvent.event_count).orElse(previousEventCount + 1);
+      int eventCount = ofNullable(systemEvent.event_no).orElse(previousEventCount + 1);
       if (eventCount != previousEventCount + 1) {
         debug("Missing system events " + previousEventCount + " -> " + eventCount);
       }
@@ -2434,7 +2437,6 @@ public class SequenceBase {
 
         putSequencerResult(description, SequenceResult.START);
 
-        client.activate();
         ifNotNullThen(validationState,
             state -> state.cloud_version = client.getVersionInformation());
 
@@ -2535,6 +2537,7 @@ public class SequenceBase {
       if (failureType != SKIP) {
         resetRequired = true;
         if (debugLogLevel()) {
+          processComplete(e);
           trace("Stack trace:", stackTraceString(e));
           error("terminating test " + testName + " after " + timeSinceStart() + " "
               + START_END_MARKER);

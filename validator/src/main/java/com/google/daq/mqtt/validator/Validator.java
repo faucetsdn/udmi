@@ -28,6 +28,7 @@ import static com.google.udmi.util.Common.removeNextArg;
 import static com.google.udmi.util.GeneralUtils.friendlyStackTrace;
 import static com.google.udmi.util.GeneralUtils.ifNotNullGet;
 import static com.google.udmi.util.GeneralUtils.ifNotNullThen;
+import static com.google.udmi.util.GeneralUtils.ifNotNullThrow;
 import static com.google.udmi.util.GeneralUtils.ifTrueThen;
 import static com.google.udmi.util.JsonUtil.JSON_SUFFIX;
 import static com.google.udmi.util.JsonUtil.OBJECT_MAPPER;
@@ -100,6 +101,7 @@ import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.BiConsumer;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 import org.apache.commons.io.FileUtils;
@@ -159,6 +161,13 @@ public class Validator {
   );
   private static final Set<SubType> LAST_SEEN_SUBTYPES = ImmutableSet.of(SubType.EVENTS,
       SubType.STATE);
+
+  @SuppressWarnings("checkstyle:linelength")
+  private static final List<String> IGNORE_LIST = ImmutableList.of(
+      "instance type \\(string\\) does not match any allowed primitive type \\(allowed: \\[.*\"number\"\\]\\)");
+  private static final List<Pattern> IGNORE_PATTERNS = IGNORE_LIST.stream().map(Pattern::compile)
+      .toList();
+
   private static final long REPORT_INTERVAL_SEC = 15;
   private static final String EXCLUDE_DEVICE_PREFIX = "_";
   private static final String VALIDATION_REPORT_DEVICE = "_validator";
@@ -171,6 +180,7 @@ public class Validator {
   private static final String TOOL_NAME = "validator";
   private static final long THREAD_JOIN_MS = 1000;
   public static final String VALIDATOR_TOOL_NAME = "validator";
+  public static final String REGISTRY_DEVICE_DEFAULT = "_regsitry";
   private final Map<String, ReportingDevice> reportingDevices = new TreeMap<>();
   private final Set<String> extraDevices = new TreeSet<>();
   private final Set<String> processedDevices = new TreeSet<>();
@@ -220,8 +230,8 @@ public class Validator {
       validateReflector();
     }
     targetDevices = Set.copyOf(listCopy);
-    siteModel = new SiteModel(config.site_model);
-    initializeExpectedDevices();
+    siteModel = ifNotNullGet(config.site_model, SiteModel::new);
+    ifNotNullThen(siteModel, this::initializeExpectedDevices);
   }
 
   public Validator() {
@@ -289,11 +299,20 @@ public class Validator {
     checkArgument(!report.isSuccess(), "Report must not be successful");
     ImmutableList<ValidationException> causingExceptions =
         StreamSupport.stream(report.spliterator(), false)
-            .filter(
-                processingMessage -> processingMessage.getLogLevel().compareTo(LogLevel.ERROR) >= 0)
+            .filter(Validator::errorOrWorse)
+            .filter(Validator::notOnIgnoreList)
             .map(Validator::convertMessage).collect(toImmutableList());
-    return new ValidationException(
+    return causingExceptions.isEmpty() ? null : new ValidationException(
         format("%d schema violations found", causingExceptions.size()), causingExceptions);
+  }
+
+  private static boolean notOnIgnoreList(ProcessingMessage processingMessage) {
+    return IGNORE_PATTERNS.stream()
+        .noneMatch(p -> p.matcher(processingMessage.getMessage()).matches());
+  }
+
+  private static boolean errorOrWorse(ProcessingMessage processingMessage) {
+    return processingMessage.getLogLevel().compareTo(LogLevel.ERROR) >= 0;
   }
 
   private static ValidationException convertMessage(ProcessingMessage processingMessage) {
@@ -862,7 +881,7 @@ public class Validator {
         key -> new AtomicInteger());
     int index = messageIndex.incrementAndGet();
     String filename = format("%03d_%s.json", index, typeFolderPairKey(type, folder));
-    File deviceDir = new File(traceDir, deviceId);
+    File deviceDir = new File(traceDir, ofNullable(deviceId).orElse(REGISTRY_DEVICE_DEFAULT));
     File messageFile = new File(deviceDir, filename);
     try {
       deviceDir.mkdir();
@@ -1190,9 +1209,7 @@ public class Validator {
 
   private void validateJsonNode(JsonSchema schema, JsonNode jsonNode) throws ProcessingException {
     ProcessingReport report = schema.validate(jsonNode, true);
-    if (!report.isSuccess()) {
-      throw fromProcessingReport(report);
-    }
+    ifTrueThen(!report.isSuccess(), () -> ifNotNullThrow(fromProcessingReport(report)));
   }
 
   private File getFullPath(String prefix, File targetFile) {

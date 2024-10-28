@@ -12,16 +12,21 @@
       "format": "date-time"
     },
     "phase": {
-      "description": "Current phase of the discovery process",
+      "description": "Current phase of an active discovery process",
       "enum": [
-        "pending",
-        "active",
         "stopped",
-        "done"
+        "pending",
+        "active"
       ]
     },
-    "record_count": {
-      "description": "Number of records produced so far for this scan generation",
+    "active_count": {
+      "description": "Number of records produced so far for this active scan generation",
+      "minimum": 0,
+      "type": "integer"
+    },
+    "passive_count": {
+      "description": "Number of passive scan results currently 'on hold'",
+      "minimum": 0,
       "type": "integer"
     },
     "status": {
