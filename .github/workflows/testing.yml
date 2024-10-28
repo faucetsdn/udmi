@@ -275,16 +275,13 @@ jobs:
           name: udmi-support_${{ github.run_id }}-m
           path: '*_udmi-support_*.tgz'
 
-  redirect:
+  endpoint:
     name: Endpoint Redirection
     runs-on: ubuntu-latest
-    needs: baseline
     timeout-minutes: 15
-    if: ${{ vars.TARGET_PROJECT != '' && !cancelled() }}
     env:
-      TARGET_PROJECT: ${{ vars.TARGET_PROJECT }}
       UDMI_ALT_REGISTRY: ZZ-REDIRECT-NA
-      MQTT_PROXY_HOST: ${{ vars.MQTT_PROXY_HOST }}
+      TARGET_PROJECT: //mqtt/localhost
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-java@v4
@@ -319,7 +316,7 @@ jobs:
     name: Post-test Summarization
     runs-on: ubuntu-latest
     timeout-minutes: 5
-    needs: [ baseline, sequencer, redirect, runlocal ]
+    needs: [ baseline, sequencer, endpoint, runlocal ]
     if: ${{ !cancelled() && vars.TARGET_PROJECT != '' }}
     env:
       TARGET_PROJECT: ${{ vars.TARGET_PROJECT }}
