@@ -20,16 +20,25 @@ ROOT=$(dirname $0)/..
 BASE=..
 cd $ROOT
 
+jarbase=udmis-1.0-SNAPSHOT-all.jar
+jartmp=/tmp/$jarbase
+jardir=build/libs
+jarfile=$jardir/$jarbase
+
+rm -f $jartmp
+echo Stashing $jartmp
+[[ ! -f $jarfile ]] || cp -a $jarfile $jartmp
+
 echo Cleaning $ROOT/build/
 rm -rf build
-mkdir build
+mkdir -p $jardir
+
+[[ ! -f $jartmp ]] || cp -a $jartmp $jarfile
 
 echo Mirroring udmi files...
 cp -a ../bin/ build/udmi_bin/
 cp -a ../etc/ build/udmi_etc/
 cp -a ../schema build/schema/
-
-jarfile=build/libs/udmis-1.0-SNAPSHOT-all.jar
 
 newer_files=$([[ -f $jarfile ]] && find src/ $BASE/gencode/java -type f -newer $jarfile || echo missing)
 if [[ -z $check && -z $covg && -z $newer_files ]]; then
@@ -37,6 +46,8 @@ if [[ -z $check && -z $covg && -z $newer_files ]]; then
     echo $jarfile up-to-date, skipping build.
     exit 0
 fi
+
+echo Newer files: $newer_files
 
 export JAVA_HOME=$JAVA_HOME_11_X64
 
