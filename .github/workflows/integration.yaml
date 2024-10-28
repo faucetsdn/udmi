@@ -88,7 +88,8 @@ jobs:
           docker network create udminet --subnet 192.168.99.0/24
       - name: Start UDMIS container
         run: |
-          docker run udmis:latest cat bin/actualize > /tmp/actualize.sh
+          IMAGE_TAG=ghcr.io/$IMAGE_NAME:udmis-$REF_NAME
+          docker run $IMAGE_TAG cat bin/actualize > /tmp/actualize.sh
           cat /tmp/actualize.sh && bash -ex /tmp/actualize.sh
       - name: Registrar run
         run: |

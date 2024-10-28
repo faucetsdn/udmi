@@ -1,14 +1,23 @@
-          cat udmi_site_model/cloud_iot_config.json
-          docker run -d --net udminet --name udmis -p 8883:8883 \
-            -v $(realpath site_model):/root/site_model \
-            -v $PWD/var/tmp:/tmp \
-            -v $PWD/var/etcd:/root/udmi/var/etcd \
-            -v $PWD/var/mosquitto:/etc/mosquitto \
-            ghcr.io/$IMAGE_NAME:udmis-$REF_NAME udmi/bin/start_local block site_model/cloud_iot_config.json
-          for count in `seq 0 30`; do
-            echo Waiting for UDMIS startup $((30 - count))
-            [[ ! -f var/tmp/pod_ready.txt ]] || break
-            (docker ps | fgrep -q udmis) || break
-            sleep 1
-          done
-          ls -l var/tmp/pod_ready.txt 2>&1
+# Simple script to bootstrap a udmis docker container.
+
+set -e
+
+cat udmi_site_model/cloud_iot_config.json
+
+[[ -n $IMAGE_TAG ]] || (echo IMAGE_TAG env not defined && false)
+
+docker run -d --net udminet --name udmis -p 8883:8883 \
+    -v $(realpath site_model):/root/site_model \
+    -v $PWD/var/tmp:/tmp \
+    -v $PWD/var/etcd:/root/udmi/var/etcd \
+    -v $PWD/var/mosquitto:/etc/mosquitto \
+    $IMAGE_TAG udmi/bin/start_local block site_model/cloud_iot_config.json
+
+for count in `seq 0 30`; do
+    echo Waiting for UDMIS startup $((30 - count))
+    [[ ! -f var/tmp/pod_ready.txt ]] || break
+    (docker ps | fgrep -q udmis) || break
+    sleep 1
+done
+
+ls -l var/tmp/pod_ready.txt 2>&1
