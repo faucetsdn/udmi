@@ -1342,11 +1342,7 @@ public class SequenceBase {
               + e.getMessage());
       throw e;
     } catch (Exception e) {
-      if (traceLogLevel()) {
-        trace("Suppressed " + e + " from " + getExceptionLine(e));
-      } else {
-        debug("Suppressing exception: " + e);
-      }
+      trace("Suppressing exception: " + friendlyStackTrace(e));
       return null;
     }
   }
