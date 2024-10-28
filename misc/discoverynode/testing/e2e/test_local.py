@@ -285,10 +285,10 @@ def test_sequencer(new_site_model, docker_devices, discovery_node):
   )
 
   result = run(
-      f"bin/sequencer -v {SITE_PATH} {TARGET} GAT-1 single_scan_future"
+      f"bin/sequencer -v {SITE_PATH} {TARGET} GAT-1 scan_single_future"
   )
 
-  assert "RESULT pass discovery.scan single_scan_future" in str(result.stdout), "result is pass (note this test can be flakey)"
+  assert "RESULT pass discovery.scan scan_single_future" in str(result.stdout), "result is pass (note this test can be flakey)"
 
 
 @pytest.fixture
