@@ -81,7 +81,7 @@ public class DiscoverySequences extends SequenceBase {
   private static final long RANDOM_YEAR_SEC = (long) (Math.random() * 60 * 60 * 24 * 365);
   private static final Instant BASE_OLD_TIME = Instant.parse("2020-10-18T12:02:01Z");
   private static final Date LONG_TIME_AGO = Date.from(BASE_OLD_TIME.plusSeconds(RANDOM_YEAR_SEC));
-  private static final int SCAN_DURATION = 10;
+  private static final int SCAN_DURATION_SEC = 10;
   private Set<String> metaFamilies;
   private Instant scanGeneration;
 
@@ -288,7 +288,7 @@ public class DiscoverySequences extends SequenceBase {
     checkThat("scan started at time", deltaStart <= SCAN_START_JITTER_SEC,
         format("scan start %ss different from expected %s", deltaStart, isoConvert(expectedStart)));
 
-    Instant expectedFinish = scanStarted.plusSeconds(SCAN_DURATION);
+    Instant expectedFinish = scanStarted.plusSeconds(SCAN_DURATION_SEC);
     waitFor("scheduled scan complete", WAITING_PERIOD, this::detailScanStopped);
     Instant scanFinished = getNowInstant();
     long deltaFinish = Math.abs(Duration.between(scanFinished, expectedFinish).toSeconds());
@@ -414,7 +414,7 @@ public class DiscoverySequences extends SequenceBase {
     configFamily.generation = SemanticDate.describe("family generation", startTime);
     configFamily.depth = enumerationDepthIf(shouldEnumerate);
     configFamily.scan_interval_sec = intervalSec;
-    configFamily.scan_duration_sec = ofNullable(intervalSec).orElse(SCAN_DURATION);
+    configFamily.scan_duration_sec = ofNullable(intervalSec).orElse(SCAN_DURATION_SEC);
     popReceivedEvents(DiscoveryEvents.class);
   }
 
