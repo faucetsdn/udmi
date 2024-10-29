@@ -288,13 +288,13 @@ public class DiscoverySequences extends SequenceBase {
     checkThat("scan started at time", deltaStart <= SCAN_START_JITTER_SEC,
         format("scan start %ss different from expected %s", deltaStart, isoConvert(expectedStart)));
 
-    Instant expectedFinish = expectedStart.plusSeconds(SCAN_DURATION);
+    Instant expectedFinish = scanStarted.plusSeconds(SCAN_DURATION);
     waitFor("scheduled scan complete", WAITING_PERIOD, this::detailScanStopped);
     Instant scanFinished = getNowInstant();
     long deltaFinish = Math.abs(Duration.between(scanFinished, expectedFinish).toSeconds());
     checkThat("scan completed at time", deltaFinish <= SCAN_START_JITTER_SEC,
         format("scan completed %ss different from expected %s", deltaFinish,
-            isoConvert(expectedStart)));
+            isoConvert(expectedFinish)));
 
     Integer stateEvents = deviceState.discovery.families.get(scanFamily).active_count;
     List<DiscoveryEvents> events = popReceivedEvents(DiscoveryEvents.class);
