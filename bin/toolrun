@@ -19,12 +19,5 @@ JAVA_CLASS=com.google.daq.mqtt.util.Dispatcher
 
 echo starting run at $(date --utc --iso=s)
 
-echo TAP1
-env | fgrep UDMI_ || true
-env | fgrep udmi_ || true
-set | fgrep UDMI_ || true
-set | fgrep udmi_ || true
-echo TAP2
-
 echo java -cp $UDMI_JAR $JAVA_CLASS $util_name "$@"
 java -cp $UDMI_JAR $JAVA_CLASS $util_name "$@" 2>&1 | tee $OUT_DIR/$util_name.log
