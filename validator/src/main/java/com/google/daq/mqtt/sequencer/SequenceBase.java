@@ -1982,7 +1982,7 @@ public class SequenceBase {
         debug("last_config synchronized check disabled due to missing state.system.last_config");
       }
     }
-    return ifNotTrueGet(failures.isEmpty(), () -> format("because: " + CSV_JOINER.join(failures)));
+    return ifNotTrueGet(failures.isEmpty(), () -> CSV_JOINER.join(failures));
   }
 
   @NotNull
