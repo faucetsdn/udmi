@@ -151,7 +151,7 @@ jobs:
     steps:
       - name: Setup Environment
         run: |
-          export IMAGE_TAG=ghcr.io/$IMAGE_NAME:udmis-$REF_NAME
+          export IMAGE_TAG=ghcr.io/$IMAGE_NAME:misc-$REF_NAME
           docker run $IMAGE_TAG discoverynode/bin/run | fgrep "Loading config"
 
   udmif:
