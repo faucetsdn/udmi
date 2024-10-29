@@ -867,7 +867,6 @@ public class SequenceBase {
   private void waitForConfigSync() {
     checkState(!waitingForConfigSync.getAndSet(true), "Config is already updating...");
     try {
-      configStateStart = catchToNull(() -> deviceState.timestamp);
       waitFor("config sync", CONFIG_WAIT_TIME, () -> {
         processNextMessage();
         return configIsPending(false);
@@ -1233,6 +1232,8 @@ public class SequenceBase {
     }
 
     if (configIsPending()) {
+      configStateStart = catchToNull(() -> deviceState.timestamp);
+      debug(format("Saving last state as " + isoConvert(configStateStart)));
       lastConfigUpdate = CleanDateFormat.clean(Instant.now());
       String debugReason = reason == null ? "" : (", because " + reason);
       debug(format("Update lastConfigUpdate %s%s", lastConfigUpdate, debugReason));
