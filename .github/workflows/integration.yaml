@@ -17,7 +17,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        container: [ "udmis", "validator", "pubber" ]
+        container: [ "udmis", "validator", "pubber", "misc" ]
     env:
       PUSH_REGISTRY: ghcr.io
       IMAGE_NAME: ${{ github.repository }}

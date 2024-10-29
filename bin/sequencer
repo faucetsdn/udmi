@@ -205,13 +205,6 @@ cat $SEQUENCER_CONFIG
 
 [[ ! -d $UDMI_ROOT/validator/src ]] || $UDMI_ROOT/validator/bin/build
 
-echo TAP1
-env | fgrep UDMI_ || true
-env | fgrep udmi_ || true
-set | fgrep UDMI_ || true
-set | fgrep udmi_ || true
-echo TAP2
-
 echo $JAVA_CMD
 result=0
 $JAVA_CMD 2>&1 | tee $SEQUENCER_LOG || true

@@ -75,11 +75,4 @@ cat <<EOF > $REFLECTOR_CONFIG
 }
 EOF
 
-echo TAP1
-env | fgrep UDMI_ || true
-env | fgrep udmi_ || true
-set | fgrep UDMI_ || true
-set | fgrep udmi_ || true
-echo TAP2
-
 validator/bin/reflector $REFLECTOR_CONFIG update/config:${dst_config}
