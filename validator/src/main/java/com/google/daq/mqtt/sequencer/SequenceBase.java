@@ -1957,11 +1957,11 @@ public class SequenceBase {
     Date currentStateTime = catchToNull(() -> deviceState.timestamp);
     Date stateLastConfig = catchToNull(() -> deviceState.system.last_config);
     Date lastConfig = catchToNull(() -> deviceConfig.timestamp);
-    boolean stateWasUpdated =
+    final boolean stateWasUpdated =
         currentStateTime != null && !currentStateTime.equals(configStateStart);
-    boolean lastConfigSynced = stateLastConfig == null || stateLastConfig.equals(lastConfig);
+    final boolean lastConfigSynced = stateLastConfig == null || stateLastConfig.equals(lastConfig);
+    final boolean transactionsClean = configTransactions.isEmpty();
 
-    boolean transactionsClean = configTransactions.isEmpty();
     List<String> failures = new ArrayList<>();
     ifNotTrueThen(stateWasUpdated, () -> failures.add("device state not updated since start"));
     ifNotTrueThen(lastStartSynced, () -> failures.add("last_start not synchronized in config"));
