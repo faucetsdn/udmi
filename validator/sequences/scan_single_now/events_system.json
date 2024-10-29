@@ -1,111 +1,116 @@
 {
   "event_no" : 4,
-  "last_config" : "2024-10-29T17:52:30Z",
+  "last_config" : "2024-10-29T21:23:18Z",
   "logentries" : [ {
-    "message" : "Update state 2024-10-29T17:52:22Z last_config 2024-10-29T17:52:21Z",
+    "message" : "Update state 2024-10-29T21:23:09Z last_config 2024-10-29T21:23:09Z",
     "category" : "device.log",
-    "timestamp" : "2024-10-29T17:52:22Z",
+    "timestamp" : "2024-10-29T21:23:09Z",
     "level" : 200
   }, {
     "message" : "Device AHU-1 config handler",
     "category" : "device.log",
-    "timestamp" : "2024-10-29T17:52:23Z",
+    "timestamp" : "2024-10-29T21:23:10Z",
     "level" : 200
   }, {
-    "message" : "2024-10-29T17:52:23Z received config 2024-10-29T17:52:22Z",
+    "message" : "2024-10-29T21:23:10Z received config 2024-10-29T21:23:10Z",
     "category" : "device.log",
-    "timestamp" : "2024-10-29T17:52:23Z",
+    "timestamp" : "2024-10-29T21:23:10Z",
     "level" : 200
   }, {
     "message" : "success",
     "category" : "system.config.apply",
-    "timestamp" : "2024-10-29T17:52:23Z",
+    "timestamp" : "2024-10-29T21:23:10Z",
     "level" : 300
   }, {
     "message" : "Device AHU-1 config handler",
     "category" : "device.log",
-    "timestamp" : "2024-10-29T17:52:24Z",
+    "timestamp" : "2024-10-29T21:23:11Z",
     "level" : 200
   }, {
-    "message" : "2024-10-29T17:52:24Z received config 2024-10-29T17:52:24Z",
+    "message" : "2024-10-29T21:23:11Z received config 2024-10-29T21:23:11Z",
     "category" : "device.log",
-    "timestamp" : "2024-10-29T17:52:24Z",
+    "timestamp" : "2024-10-29T21:23:11Z",
     "level" : 200
   }, {
     "message" : "success",
     "category" : "system.config.apply",
-    "timestamp" : "2024-10-29T17:52:24Z",
+    "timestamp" : "2024-10-29T21:23:11Z",
     "level" : 300
   }, {
-    "message" : "Update state 2024-10-29T17:52:24Z last_config 2024-10-29T17:52:24Z",
+    "message" : "Update state 2024-10-29T21:23:11Z last_config 2024-10-29T21:23:11Z",
     "category" : "device.log",
-    "timestamp" : "2024-10-29T17:52:24Z",
+    "timestamp" : "2024-10-29T21:23:11Z",
     "level" : 200
   }, {
     "message" : "Device AHU-1 config handler",
     "category" : "device.log",
-    "timestamp" : "2024-10-29T17:52:25Z",
+    "timestamp" : "2024-10-29T21:23:12Z",
     "level" : 200
   }, {
-    "message" : "2024-10-29T17:52:25Z received config 2024-10-29T17:52:25Z",
+    "message" : "2024-10-29T21:23:12Z received config 2024-10-29T21:23:12Z",
     "category" : "device.log",
-    "timestamp" : "2024-10-29T17:52:25Z",
-    "level" : 200
-  }, {
-    "message" : "success",
-    "category" : "system.config.apply",
-    "timestamp" : "2024-10-29T17:52:25Z",
-    "level" : 300
-  }, {
-    "message" : "Update state 2024-10-29T17:52:26Z last_config 2024-10-29T17:52:25Z",
-    "category" : "device.log",
-    "timestamp" : "2024-10-29T17:52:26Z",
-    "level" : 200
-  }, {
-    "message" : "Update state 2024-10-29T17:52:30Z last_config 2024-10-29T17:52:25Z",
-    "category" : "device.log",
-    "timestamp" : "2024-10-29T17:52:30Z",
-    "level" : 200
-  }, {
-    "message" : "2024-10-29T17:52:30Z received config 2024-10-29T17:52:30Z",
-    "category" : "device.log",
-    "timestamp" : "2024-10-29T17:52:30Z",
-    "level" : 200
-  }, {
-    "message" : "Discovery scan generation vendor pending at 2024-10-29T17:52:19Z",
-    "category" : "device.log",
-    "timestamp" : "2024-10-29T17:52:30Z",
+    "timestamp" : "2024-10-29T21:23:12Z",
     "level" : 200
   }, {
     "message" : "success",
     "category" : "system.config.apply",
-    "timestamp" : "2024-10-29T17:52:30Z",
+    "timestamp" : "2024-10-29T21:23:12Z",
     "level" : 300
   }, {
-    "message" : "Discovery scan starting vendor generation 2024-10-29T17:52:19Z",
+    "message" : "Update state 2024-10-29T21:23:14Z last_config 2024-10-29T21:23:12Z",
     "category" : "device.log",
-    "timestamp" : "2024-10-29T17:52:30Z",
+    "timestamp" : "2024-10-29T21:23:14Z",
     "level" : 200
   }, {
-    "message" : "Discovered vendor device 20231 for gen 2024-10-29T17:52:19Z",
+    "message" : "Update state 2024-10-29T21:23:18Z last_config 2024-10-29T21:23:12Z",
     "category" : "device.log",
-    "timestamp" : "2024-10-29T17:52:30Z",
+    "timestamp" : "2024-10-29T21:23:18Z",
     "level" : 200
   }, {
-    "message" : "Discovered vendor device 28179023 for gen 2024-10-29T17:52:19Z",
+    "message" : "Device AHU-1 config handler",
     "category" : "device.log",
-    "timestamp" : "2024-10-29T17:52:30Z",
+    "timestamp" : "2024-10-29T21:23:18Z",
     "level" : 200
   }, {
-    "message" : "Discovered vendor device 0x65 for gen 2024-10-29T17:52:19Z",
+    "message" : "2024-10-29T21:23:18Z received config 2024-10-29T21:23:18Z",
     "category" : "device.log",
-    "timestamp" : "2024-10-29T17:52:30Z",
+    "timestamp" : "2024-10-29T21:23:18Z",
+    "level" : 200
+  }, {
+    "message" : "Discovery scan generation vendor pending at 2024-10-29T21:23:07Z",
+    "category" : "device.log",
+    "timestamp" : "2024-10-29T21:23:18Z",
+    "level" : 200
+  }, {
+    "message" : "success",
+    "category" : "system.config.apply",
+    "timestamp" : "2024-10-29T21:23:18Z",
+    "level" : 300
+  }, {
+    "message" : "Discovery scan starting vendor generation 2024-10-29T21:23:07Z",
+    "category" : "device.log",
+    "timestamp" : "2024-10-29T21:23:18Z",
+    "level" : 200
+  }, {
+    "message" : "Discovered vendor device 20231 for gen 2024-10-29T21:23:07Z",
+    "category" : "device.log",
+    "timestamp" : "2024-10-29T21:23:18Z",
+    "level" : 200
+  }, {
+    "message" : "Discovered vendor device 28179023 for gen 2024-10-29T21:23:07Z",
+    "category" : "device.log",
+    "timestamp" : "2024-10-29T21:23:18Z",
+    "level" : 200
+  }, {
+    "message" : "Discovered vendor device 0x65 for gen 2024-10-29T21:23:07Z",
+    "category" : "device.log",
+    "timestamp" : "2024-10-29T21:23:18Z",
     "level" : 200
   } ],
   "metrics" : {
     "mem_total_mb" : 254.0,
-    "mem_free_mb" : 212.9241180419922
+    "mem_free_mb" : 212.3294906616211
   },
-  "timestamp" : "2024-10-29T17:52:32Z",
+  "timestamp" : "2024-10-29T21:23:19Z",
   "version" : "1.5.2"
 }

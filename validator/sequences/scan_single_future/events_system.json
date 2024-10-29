@@ -1,41 +1,36 @@
 {
   "event_no" : 5,
-  "last_config" : "2024-10-29T17:53:47Z",
+  "last_config" : "2024-10-29T19:50:08Z",
   "logentries" : [ {
-    "message" : "Update state 2024-10-29T17:53:49Z last_config 2024-10-29T17:53:47Z",
+    "message" : "Discovery scan starting vendor generation 2024-10-29T19:50:20Z",
     "category" : "device.log",
-    "timestamp" : "2024-10-29T17:53:49Z",
+    "timestamp" : "2024-10-29T19:50:20Z",
     "level" : 200
   }, {
-    "message" : "Discovery scan starting vendor generation 2024-10-29T17:53:57Z",
+    "message" : "Update state 2024-10-29T19:50:20Z last_config 2024-10-29T19:50:08Z",
     "category" : "device.log",
-    "timestamp" : "2024-10-29T17:53:57Z",
+    "timestamp" : "2024-10-29T19:50:20Z",
     "level" : 200
   }, {
-    "message" : "Update state 2024-10-29T17:53:57Z last_config 2024-10-29T17:53:47Z",
+    "message" : "Discovered vendor device 20231 for gen 2024-10-29T19:50:20Z",
     "category" : "device.log",
-    "timestamp" : "2024-10-29T17:53:57Z",
+    "timestamp" : "2024-10-29T19:50:20Z",
     "level" : 200
   }, {
-    "message" : "Discovered vendor device 20231 for gen 2024-10-29T17:53:57Z",
+    "message" : "Discovered vendor device 28179023 for gen 2024-10-29T19:50:20Z",
     "category" : "device.log",
-    "timestamp" : "2024-10-29T17:53:57Z",
+    "timestamp" : "2024-10-29T19:50:20Z",
     "level" : 200
   }, {
-    "message" : "Discovered vendor device 28179023 for gen 2024-10-29T17:53:57Z",
+    "message" : "Discovered vendor device 0x65 for gen 2024-10-29T19:50:20Z",
     "category" : "device.log",
-    "timestamp" : "2024-10-29T17:53:57Z",
-    "level" : 200
-  }, {
-    "message" : "Discovered vendor device 0x65 for gen 2024-10-29T17:53:57Z",
-    "category" : "device.log",
-    "timestamp" : "2024-10-29T17:53:57Z",
+    "timestamp" : "2024-10-29T19:50:20Z",
     "level" : 200
   } ],
   "metrics" : {
     "mem_total_mb" : 254.0,
-    "mem_free_mb" : 212.47532653808594
+    "mem_free_mb" : 211.6435546875
   },
-  "timestamp" : "2024-10-29T17:53:58Z",
+  "timestamp" : "2024-10-29T19:50:21Z",
   "version" : "1.5.2"
 }

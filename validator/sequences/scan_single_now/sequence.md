@@ -11,7 +11,7 @@ Check results of a single scan scheduled in the recent past
 1. Wait for no scans active
 1. Wait for config sync
 1. Update config Before scheduled scan active:
-    * Add `discovery.families.vendor` = { "generation": `family generation`, "scan_duration_sec": `10` }
+    * Add `discovery.families.vendor` = { "generation": `family generation`, "scan_duration_sec": `20` }
 1. Wait for scheduled scan active
 1. Check that scan started at time
 1. Wait for scheduled scan complete
