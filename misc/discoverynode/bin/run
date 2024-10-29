@@ -1,0 +1,7 @@
+#!/bin/bash -e
+
+ROOT_DIR=$(realpath $(dirname $0)/../..)
+
+cd $ROOT_DIR
+
+sudo venv/bin/python3 discoverynode/src/main.py
