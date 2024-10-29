@@ -1,111 +1,96 @@
 {
   "event_no" : 3,
-  "last_config" : "2024-10-27T14:08:58Z",
+  "last_config" : "2024-10-29T17:54:15Z",
   "logentries" : [ {
     "message" : "success",
     "category" : "system.config.apply",
-    "timestamp" : "2024-10-27T14:08:50Z",
+    "timestamp" : "2024-10-29T17:54:07Z",
     "level" : 300
   }, {
     "message" : "Device AHU-1 config handler",
     "category" : "device.log",
-    "timestamp" : "2024-10-27T14:08:50Z",
+    "timestamp" : "2024-10-29T17:54:08Z",
     "level" : 200
   }, {
-    "message" : "2024-10-27T14:08:50Z received config 2024-10-27T14:08:50Z",
+    "message" : "2024-10-29T17:54:08Z received config 2024-10-29T17:54:07Z",
     "category" : "device.log",
-    "timestamp" : "2024-10-27T14:08:50Z",
+    "timestamp" : "2024-10-29T17:54:08Z",
     "level" : 200
   }, {
     "message" : "success",
     "category" : "system.config.apply",
-    "timestamp" : "2024-10-27T14:08:50Z",
+    "timestamp" : "2024-10-29T17:54:08Z",
     "level" : 300
   }, {
-    "message" : "Update state 2024-10-27T14:08:52Z last_config 2024-10-27T14:08:50Z",
+    "message" : "Update state 2024-10-29T17:54:09Z last_config 2024-10-29T17:54:07Z",
     "category" : "device.log",
-    "timestamp" : "2024-10-27T14:08:52Z",
+    "timestamp" : "2024-10-29T17:54:09Z",
     "level" : 200
   }, {
     "message" : "Device AHU-1 config handler",
     "category" : "device.log",
-    "timestamp" : "2024-10-27T14:08:53Z",
+    "timestamp" : "2024-10-29T17:54:11Z",
     "level" : 200
   }, {
-    "message" : "2024-10-27T14:08:53Z received config 2024-10-27T14:08:53Z",
+    "message" : "2024-10-29T17:54:11Z received config 2024-10-29T17:54:11Z",
     "category" : "device.log",
-    "timestamp" : "2024-10-27T14:08:53Z",
+    "timestamp" : "2024-10-29T17:54:11Z",
     "level" : 200
   }, {
     "message" : "success",
     "category" : "system.config.apply",
-    "timestamp" : "2024-10-27T14:08:53Z",
+    "timestamp" : "2024-10-29T17:54:11Z",
     "level" : 300
   }, {
-    "message" : "Update state 2024-10-27T14:08:54Z last_config 2024-10-27T14:08:53Z",
+    "message" : "Update state 2024-10-29T17:54:11Z last_config 2024-10-29T17:54:11Z",
     "category" : "device.log",
-    "timestamp" : "2024-10-27T14:08:54Z",
+    "timestamp" : "2024-10-29T17:54:11Z",
     "level" : 200
   }, {
     "message" : "Device AHU-1 config handler",
     "category" : "device.log",
-    "timestamp" : "2024-10-27T14:08:55Z",
+    "timestamp" : "2024-10-29T17:54:13Z",
     "level" : 200
   }, {
-    "message" : "2024-10-27T14:08:55Z received config 2024-10-27T14:08:55Z",
+    "message" : "2024-10-29T17:54:13Z received config 2024-10-29T17:54:13Z",
     "category" : "device.log",
-    "timestamp" : "2024-10-27T14:08:55Z",
+    "timestamp" : "2024-10-29T17:54:13Z",
     "level" : 200
   }, {
     "message" : "success",
     "category" : "system.config.apply",
-    "timestamp" : "2024-10-27T14:08:55Z",
+    "timestamp" : "2024-10-29T17:54:13Z",
     "level" : 300
   }, {
-    "message" : "Update state 2024-10-27T14:08:56Z last_config 2024-10-27T14:08:55Z",
+    "message" : "Update state 2024-10-29T17:54:13Z last_config 2024-10-29T17:54:13Z",
     "category" : "device.log",
-    "timestamp" : "2024-10-27T14:08:56Z",
+    "timestamp" : "2024-10-29T17:54:13Z",
     "level" : 200
   }, {
     "message" : "Device AHU-1 config handler",
     "category" : "device.log",
-    "timestamp" : "2024-10-27T14:08:57Z",
+    "timestamp" : "2024-10-29T17:54:15Z",
     "level" : 200
   }, {
-    "message" : "2024-10-27T14:08:57Z received config 2024-10-27T14:08:57Z",
+    "message" : "2024-10-29T17:54:15Z received config 2024-10-29T17:54:15Z",
     "category" : "device.log",
-    "timestamp" : "2024-10-27T14:08:57Z",
+    "timestamp" : "2024-10-29T17:54:15Z",
     "level" : 200
   }, {
     "message" : "success",
     "category" : "system.config.apply",
-    "timestamp" : "2024-10-27T14:08:57Z",
+    "timestamp" : "2024-10-29T17:54:15Z",
     "level" : 300
   }, {
-    "message" : "Update state 2024-10-27T14:08:58Z last_config 2024-10-27T14:08:57Z",
+    "message" : "Update state 2024-10-29T17:54:15Z last_config 2024-10-29T17:54:15Z",
     "category" : "device.log",
-    "timestamp" : "2024-10-27T14:08:58Z",
+    "timestamp" : "2024-10-29T17:54:15Z",
     "level" : 200
-  }, {
-    "message" : "Device AHU-1 config handler",
-    "category" : "device.log",
-    "timestamp" : "2024-10-27T14:08:58Z",
-    "level" : 200
-  }, {
-    "message" : "2024-10-27T14:08:58Z received config 2024-10-27T14:08:58Z",
-    "category" : "device.log",
-    "timestamp" : "2024-10-27T14:08:58Z",
-    "level" : 200
-  }, {
-    "message" : "success",
-    "category" : "system.config.apply",
-    "timestamp" : "2024-10-27T14:08:58Z",
-    "level" : 300
   } ],
   "metrics" : {
     "mem_total_mb" : 254.0,
-    "mem_free_mb" : 214.29376983642578
+    "mem_free_mb" : 216.32727813720703
   },
-  "timestamp" : "2024-10-27T14:08:59Z",
+  "timestamp" : "2024-10-29T17:54:16Z",
   "version" : "1.5.2"
 }
