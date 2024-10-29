@@ -63,6 +63,7 @@ jobs:
           docker images
           echo
           docker history $PUSH_TAG
+
   simple:
     name: Simple sequence test
     runs-on: ubuntu-latest
@@ -138,6 +139,20 @@ jobs:
       - name: Sequencer logs
         if: ${{ !cancelled() }}
         run: docker logs sequencer
+
+  discovery:
+    name: Simple discovery test
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    needs: images
+    env:
+      IMAGE_NAME: ${{ github.repository }}
+      REF_NAME: ${{ github.ref_name }}
+    steps:
+      - name: Setup Environment
+        run: |
+          export IMAGE_TAG=ghcr.io/$IMAGE_NAME:udmis-$REF_NAME
+          docker run $IMAGE_TAG discoverynode/bin/run | fgrep "Loading config"
 
   udmif:
     name: UDMIF unit tests
