@@ -37,7 +37,8 @@
 4 valid_serial_no
 1 system_last_update
 1 system_min_loglevel
-1 system_min_loglevel
+1 system_min_loglevel RESULT pass schemas device_state_alpha ALPHA 10/10 Schema validation passed
+0 system_min_loglevel RESULT pass schemas events_system_alpha ALPHA 10/10 Schema validation passed
 4 gateway_proxy_events
 1 gateway_proxy_events
 1 gateway_proxy_state

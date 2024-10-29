@@ -1,7 +1,7 @@
 1 RESULT fail system device_config_acked STABLE 0/10 Timeout waiting for config acked
 1 RESULT fail pointset pointset_request_extraneous STABLE 0/10 Because config TIMESTAMP event TIMESTAMP differences: llama
 1 RESULT fail pointset pointset_remove_point STABLE 0/10 Because config TIMESTAMP state TIMESTAMP differences: filter_alarm_pressure_status
-1 RESULT fail pointset pointset_remove_point STABLE 0/10 Because device state not updated since start
+1 RESULT fail pointset pointset_remove_point STABLE 0/10 Timeout waiting for initial device state
 1 RESULT fail system too_much_state ALPHA 0/10 Failed check that No more than 6 state updates in 60s
 1 RESULT fail enumeration.features enumerate_features PREVIEW 0/10 Failed check that feature enumeration matches metadata; missing { enumeration }, extra { unknown }
 1 RESULT pass system valid_serial_no STABLE 10/10 Sequence complete
@@ -17,7 +17,7 @@
 1 CPBLTY pass system broken_config.logging ALPHA 1/1 Capability supported
 0 RESULT pass system broken_config STABLE 10/10 Sequence complete
 1 CPBLTY skip system broken_config.logging ALPHA 0/0 Never executed
-0 RESULT fail system broken_config STABLE 0/9 Because device state not updated since start
+0 RESULT fail system broken_config STABLE 0/9 Timeout waiting for initial device state
 1 CPBLTY fail system broken_config.logging ALPHA 0/1 While log category `system.config.apply` level `NOTICE` to be logged
 0 RESULT pass system broken_config STABLE 9/10 Sequence complete
 1 CPBLTY fail system broken_config.logging ALPHA 0/1 While log category `system.config.receive` level `DEBUG` to be logged
@@ -35,14 +35,14 @@
 1 CPBLTY skip system system_last_update.subblocks ALPHA 0/0 Never executed
 0 RESULT skip system system_last_update STABLE 0/0 State testing disabled
 1 RESULT fail system system_min_loglevel ALPHA 0/10 Received state update with no-state device
-1 RESULT fail system system_min_loglevel ALPHA 0/10 Because device state not updated since start
+1 RESULT pass system system_min_loglevel ALPHA 10/10 Sequence complete
 4 RESULT pass gateway gateway_proxy_events BETA 10/10 Sequence complete
 1 RESULT fail gateway gateway_proxy_events BETA 0/10 Because Missing pointset from AHU-22
 1 RESULT pass gateway gateway_proxy_state PREVIEW 10/10 Sequence complete
 1 RESULT pass gateway gateway_proxy_state PREVIEW 10/10 Sequence complete
-4 RESULT fail gateway gateway_proxy_events BETA 0/10 Because device state not updated since start
+4 RESULT pass gateway gateway_proxy_events BETA 10/10 Sequence complete
 1 RESULT fail gateway gateway_proxy_events BETA 0/10 Received state update with no-state device
-1 RESULT fail gateway gateway_proxy_state PREVIEW 0/10 Because device state not updated since start
+1 RESULT pass gateway gateway_proxy_state PREVIEW 10/10 Sequence complete
 4 RESULT skip system device_config_acked STABLE 0/0 No config check for proxy device
 1 RESULT pass gateway bad_target_family PREVIEW 10/10 Sequence complete
 1 RESULT pass gateway bad_target_address PREVIEW 10/10 Sequence complete
