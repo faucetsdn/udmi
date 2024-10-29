@@ -149,9 +149,10 @@ jobs:
       IMAGE_NAME: ${{ github.repository }}
       REF_NAME: ${{ github.ref_name }}
     steps:
-      - name: Setup Environment
+      - name: Execute discovery node
         run: |
           export IMAGE_TAG=ghcr.io/$IMAGE_NAME:misc-$REF_NAME
+          # This currently fails (no config), but just check that it actually runs.
           docker run $IMAGE_TAG discoverynode/bin/run | fgrep "Loading config"
 
   udmif:
