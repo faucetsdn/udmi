@@ -6,7 +6,6 @@ import static com.google.common.base.Preconditions.checkState;
 import static com.google.common.base.Predicates.not;
 import static com.google.common.base.Strings.emptyToNull;
 import static com.google.daq.mqtt.sequencer.SequenceBase.Capabilities.LAST_CONFIG;
-import static com.google.daq.mqtt.sequencer.SequenceRunner.ensureExecutionConfig;
 import static com.google.daq.mqtt.sequencer.semantic.SemanticValue.actualize;
 import static com.google.daq.mqtt.util.CloudIotManager.EMPTY_CONFIG;
 import static com.google.daq.mqtt.util.ConfigManager.configFrom;
@@ -49,6 +48,7 @@ import static java.util.Optional.ofNullable;
 import static java.util.stream.Collectors.toSet;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 import static org.junit.Assume.assumeTrue;
 import static udmi.schema.Bucket.SYSTEM;
 import static udmi.schema.Bucket.UNKNOWN_DEFAULT;
@@ -326,6 +326,7 @@ public class SequenceBase {
   private final AtomicBoolean waitingForConfigSync = new AtomicBoolean();
   private static String sessionPrefix;
   private static Scoring scoringResult;
+  private Date configStateStart;
 
   private static void setupSequencer() {
     exeConfig = ofNullable(exeConfig).orElseGet(SequenceRunner::ensureExecutionConfig);
@@ -866,6 +867,7 @@ public class SequenceBase {
   private void waitForConfigSync() {
     checkState(!waitingForConfigSync.getAndSet(true), "Config is already updating...");
     try {
+      configStateStart = catchToNull(() -> deviceState.timestamp);
       waitFor("config sync", CONFIG_WAIT_TIME, () -> {
         processNextMessage();
         return configIsPending(false);
@@ -1952,13 +1954,24 @@ public class SequenceBase {
     Date stateLastStart = catchToNull(() -> deviceState.system.operation.last_start);
     Date configLastStart = catchToNull(() -> deviceConfig.system.operation.last_start);
     boolean lastStartSynced = stateLastStart == null || stateLastStart.equals(configLastStart);
+    Date currentStateTime = catchToNull(() -> deviceState.timestamp);
     Date stateLastConfig = catchToNull(() -> deviceState.system.last_config);
     Date lastConfig = catchToNull(() -> deviceConfig.timestamp);
+    boolean stateWasUpdated =
+        currentStateTime != null && !currentStateTime.equals(configStateStart);
     boolean lastConfigSynced = stateLastConfig == null || stateLastConfig.equals(lastConfig);
+
     boolean transactionsClean = configTransactions.isEmpty();
-    boolean synced = lastStartSynced && transactionsClean && lastConfigSynced;
+    List<String> failures = new ArrayList<>();
+    ifNotTrueThen(stateWasUpdated, () -> failures.add("device state not updated since start"));
+    ifNotTrueThen(lastStartSynced, () -> failures.add("last_start not synchronized in config"));
+    ifNotTrueThen(transactionsClean, () -> failures.add("config transactions not cleared"));
+    ifNotTrueThen(lastConfigSynced, () -> failures.add("last_config not synced in state"));
+
     if (debugOut) {
-      if (!synced) {
+      if (!failures.isEmpty()) {
+        notice(format("state updated at %s then %s", isoConvert(configStateStart),
+            isoConvert(currentStateTime)));
         notice(format("last_start synchronized %s: state/%s =? config/%s", lastStartSynced,
             isoConvert(stateLastStart), isoConvert(configLastStart)));
         notice(format("configTransactions flushed %s: %s", transactionsClean,
@@ -1969,10 +1982,7 @@ public class SequenceBase {
         debug("last_config synchronized check disabled due to missing state.system.last_config");
       }
     }
-    return ifNotTrueGet(synced,
-        () -> format("waiting for last_start %s, transactions %s, last_config %s",
-            !lastStartSynced,
-            !transactionsClean, !lastConfigSynced));
+    return ifNotTrueGet(failures.isEmpty(), () -> format("because: " + CSV_JOINER.join(failures)));
   }
 
   @NotNull
