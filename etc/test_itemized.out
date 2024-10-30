@@ -17,7 +17,7 @@
 1 CPBLTY pass system broken_config.logging ALPHA 1/1 Capability supported
 0 RESULT pass system broken_config STABLE 10/10 Sequence complete
 1 CPBLTY skip system broken_config.logging ALPHA 0/0 Never executed
-0 RESULT fail system broken_config STABLE 0/9 Because last_start not synchronized in config
+0 RESULT fail system broken_config STABLE 0/9 Because device state not updated since test start
 1 CPBLTY fail system broken_config.logging ALPHA 0/1 While log category `system.config.apply` level `NOTICE` to be logged
 0 RESULT pass system broken_config STABLE 9/10 Sequence complete
 1 CPBLTY fail system broken_config.logging ALPHA 0/1 While log category `system.config.receive` level `DEBUG` to be logged
@@ -30,7 +30,7 @@
 0 RESULT pass system system_last_update STABLE 11/11 Sequence complete
 1 CPBLTY pass system system_last_update.subblocks ALPHA 1/1 Capability supported
 0 RESULT pass system system_last_update STABLE 11/11 Sequence complete
-1 RESULT fail system state_make_model STABLE 0/10 Because last_start not synchronized in config
+1 RESULT fail system state_make_model STABLE 0/10 Failed check that no significant system status exists; deviceState.system not defined
 4 RESULT skip system valid_serial_no STABLE 0/0 State testing disabled
 1 CPBLTY skip system system_last_update.subblocks ALPHA 0/0 Never executed
 0 RESULT skip system system_last_update STABLE 0/0 State testing disabled
