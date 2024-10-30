@@ -2174,21 +2174,11 @@ public class SequenceBase {
   }
 
   private String notSignificantStatusDetail() {
-    if (deviceState == null || deviceState.system == null) {
-      lastStatusLevel = 0;
-      return "deviceState.system not defined";
-    }
-    String interesting = significantStatusDetail();
-    return interesting == null ? "no status to report" : null;
+    return significantStatusDetail() == null ? "no status to report" : null;
   }
 
   private String significantStatusDetail() {
-    if (deviceState == null || deviceState.system == null) {
-      lastStatusLevel = 0;
-      return "deviceState.system not defined";
-    }
-
-    int statusLevel = GeneralUtils.catchToElse(() -> deviceState.system.status.level, 0);
+    int statusLevel = catchToElse(() -> deviceState.system.status.level, 0);
 
     if (statusLevel != lastStatusLevel) {
       debug("State system Status level: " + statusLevel);
