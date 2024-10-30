@@ -86,13 +86,21 @@ UDMI_JAR=$UDMI_ROOT/validator/build/libs/validator-1.0-SNAPSHOT-all.jar
 
 VERSION_BASE='1.*'
 
-# Ignore non-version branches (e.g. something like 'develop')
+# Ignore non-version branches (e.g. something like 'develop'), but include dirty info.
 udmi_version=$(cd $UDMI_ROOT; git describe --dirty --match $VERSION_BASE) || true
-
 # No luck... just generate any viable version.
 [[ -n $udmi_version ]] || udmi_version=git-$(cd $UDMI_ROOT; git describe --dirty --match $VERSION_BASE --always) || true
-
 [[ $udmi_version == git- ]] && udmi_version=unknown
 
+# No dirty so it always will match. No shenanigans.
+udmi_rev=$(cd $UDMI_ROOT; git describe --match $VERSION_BASE) || udmi_rev=unknown
+revparse=`git rev-parse $udmi_rev` || revparse=unknown
+
+udmi_commit=${revparse:0:9}
+udmi_timever=$(TZ=UTC git log --date=iso-strict-local -1 --pretty=format:"%cd" ${udmi_commit}) || udmi_timever=unknown
+
 export UDMI_ROOT
-export UDMI_TOOLS=$udmi_version
+export UDMI_VERSION=$udmi_version
+export UDMI_COMMIT=$udmi_commit
+export UDMI_TIMEVER=$udmi_timever
+export UDMI_REV=$udmi_rev

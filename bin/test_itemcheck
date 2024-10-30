@@ -5,29 +5,42 @@ UDMI_ROOT=$(dirname $0)/..
 source $UDMI_ROOT/etc/shell_common.sh
 
 RESULTS_OUT=out/test_itemized.out
-RESULTS_RAW=$UDMI_ROOT/etc/test_itemized.out
-RESULTS_GLD=out/test_itemized.raw
+RESULTS_TMP=out/test_itemized.tmp
+RESULTS_ETC=$UDMI_ROOT/etc/test_itemized.out
+RESULTS_GLD=out/test_itemized.gld
 
 SCHEMA_OUT=out/schema_itemized.out
-SCHEMA_RAW=$UDMI_ROOT/etc/schema_itemized.out
-SCHEMA_GLD=out/schema_itemized.raw
+SCHEMA_TMP=out/schema_itemized.tmp
+SCHEMA_ETC=$UDMI_ROOT/etc/schema_itemized.out
+SCHEMA_GLD=out/schema_itemized.gld
 
-failures=
+ffile=/tmp/failures
+rm -f $ffile
 
-echo Converting $RESULTS_RAW to $RESULTS_GLD
+echo Converting $RESULTS_ETC to $RESULTS_GLD
 awk 'NR == 1 { prev = 0 }
-     NR >= 1 { prev = $1 + prev; printf "%02d", prev; for (i=2; i<=NF; i++) printf " "$i; print "" }' $RESULTS_RAW > $RESULTS_GLD
+     NR >= 1 { prev = $1 + prev; printf "%02d", prev; for (i=2; i<=NF; i++) printf " "$i; print "" }' $RESULTS_ETC > $RESULTS_GLD
+awk 'NR == 1 { prev = 0 }
+     NR >= 1 { printf "%d", $1-prev; prev=$1; for (i=2; i<=NF; i++) printf " "$i; print "" }' $RESULTS_OUT > $RESULTS_TMP
 
 echo Comparing diff $RESULTS_OUT $RESULTS_GLD
-diff -bu $RESULTS_OUT $RESULTS_GLD || failures+="results "
+diff -bu $RESULTS_OUT $RESULTS_GLD || (
+    echo results >> $ffile
+    echo Fix with: cp $RESULTS_TMP $RESULTS_ETC
+)
 
-echo Converting $SCHEMA_RAW to $SCHEMA_GLD
+echo Converting $SCHEMA_ETC to $SCHEMA_GLD
 awk 'NR == 1 { prev = 0 }
-     NR >= 1 { prev = $1 + prev; printf "%02d", prev; for (i=2; i<=NF; i++) printf " "$i; print "" }' $SCHEMA_RAW > $SCHEMA_GLD
+     NR >= 1 { prev = $1 + prev; printf "%02d", prev; for (i=2; i<=NF; i++) printf " "$i; print "" }' $SCHEMA_ETC > $SCHEMA_GLD
+awk 'NR == 1 { prev = 0 }
+     NR >= 1 { printf "%d", $1-prev; prev=$1; for (i=2; i<=NF; i++) printf " "$i; print "" }' $SCHEMA_OUT > $SCHEMA_TMP
 
 echo Comparing diff $SCHEMA_OUT $SCHEMA_GLD
-diff -bu $SCHEMA_OUT $SCHEMA_GLD || failures+="schema "
+diff -bu $SCHEMA_OUT $SCHEMA_GLD || (
+    echo schema >> $ffile
+    echo Fix with: cp $SCHEMA_TMP $SCHEMA_ETC
+)
 
-[[ -z $failures ]] || fail itemized checks failied because of $failures
+[[ ! -s $ffile ]] || fail itemized checks failied because of: $(cat $ffile)
 
 echo Done with itemized checks.
