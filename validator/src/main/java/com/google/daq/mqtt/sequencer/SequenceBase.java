@@ -48,7 +48,6 @@ import static java.util.Optional.ofNullable;
 import static java.util.stream.Collectors.toSet;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
 import static org.junit.Assume.assumeTrue;
 import static udmi.schema.Bucket.SYSTEM;
 import static udmi.schema.Bucket.UNKNOWN_DEFAULT;
@@ -189,6 +188,7 @@ public class SequenceBase {
   private static final int SEQUENCER_FUNCTIONS_ALPHA = SEQUENCER_FUNCTIONS_VERSION;
   private static final long CONFIG_BARRIER_MS = 1000;
   private static final String START_END_MARKER = "################################";
+  private static final Date LONG_TIME_AGO = new Date(9217321);
   private static final String RESULT_FORMAT = "RESULT %s %s %s %s %s/%s %s";
   private static final String CAPABILITY_FORMAT = "CPBLTY %s %s %s %s %s/%s %s";
   private static final String SCHEMA_FORMAT = "SCHEMA %s %s %s %s %s %s";
@@ -1952,19 +1952,21 @@ public class SequenceBase {
   }
 
   private String configIsPending(boolean debugOut) {
-    Date stateLastStart = catchToNull(() -> deviceState.system.operation.last_start);
+    Date stateLastStart = catchToElse(() -> deviceState.system.operation.last_start, LONG_TIME_AGO);
     Date configLastStart = catchToNull(() -> deviceConfig.system.operation.last_start);
-    boolean lastStartSynced = stateLastStart == null || stateLastStart.equals(configLastStart);
-    Date currentStateTime = catchToNull(() -> deviceState.timestamp);
+    boolean lastStartSynced = !deviceSupportsState() || stateLastStart.equals(configLastStart);
+
+    Date currentState = catchToElse(() -> deviceState.timestamp, LONG_TIME_AGO);
+    final boolean stateUpdated = !deviceSupportsState() && !currentState.equals(configStateStart);
+
     Date stateLastConfig = catchToNull(() -> deviceState.system.last_config);
+
     Date lastConfig = catchToNull(() -> deviceConfig.timestamp);
-    final boolean stateWasUpdated =
-        currentStateTime != null && !currentStateTime.equals(configStateStart);
     final boolean lastConfigSynced = stateLastConfig == null || stateLastConfig.equals(lastConfig);
     final boolean transactionsClean = configTransactions.isEmpty();
 
     List<String> failures = new ArrayList<>();
-    ifNotTrueThen(stateWasUpdated, () -> failures.add("device state not updated since start"));
+    ifNotTrueThen(stateUpdated, () -> failures.add("device state not updated since test start"));
     ifNotTrueThen(lastStartSynced, () -> failures.add("last_start not synchronized in config"));
     ifNotTrueThen(transactionsClean, () -> failures.add("config transactions not cleared"));
     ifNotTrueThen(lastConfigSynced, () -> failures.add("last_config not synced in state"));
@@ -1972,7 +1974,7 @@ public class SequenceBase {
     if (debugOut) {
       if (!failures.isEmpty()) {
         notice(format("state updated at %s then %s", isoConvert(configStateStart),
-            isoConvert(currentStateTime)));
+            isoConvert(currentState)));
         notice(format("last_start synchronized %s: state/%s =? config/%s", lastStartSynced,
             isoConvert(stateLastStart), isoConvert(configLastStart)));
         notice(format("configTransactions flushed %s: %s", transactionsClean,
