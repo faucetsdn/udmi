@@ -4,9 +4,7 @@
 1 pointset_remove_point
 1 too_much_state
 1 enumerate_features
-1 valid_serial_no RESULT pass schemas device_state_stable STABLE 10/10 Schema validation passed
-0 valid_serial_no RESULT pass schemas events_system_stable STABLE 10/10 Schema validation passed
-0 valid_serial_no RESULT pass schemas state_update_stable STABLE 10/10 Schema validation passed
+1 valid_serial_no
 1 valid_serial_no
 1 writeback_success
 1 writeback_success
@@ -37,7 +35,8 @@
 4 valid_serial_no
 1 system_last_update
 1 system_min_loglevel
-1 system_min_loglevel
+1 system_min_loglevel RESULT pass schemas device_state_alpha ALPHA 10/10 Schema validation passed
+0 system_min_loglevel RESULT pass schemas events_system_alpha ALPHA 10/10 Schema validation passed
 4 gateway_proxy_events
 1 gateway_proxy_events
 1 gateway_proxy_state
