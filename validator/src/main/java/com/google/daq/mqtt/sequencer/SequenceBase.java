@@ -1957,7 +1957,7 @@ public class SequenceBase {
     boolean lastStartSynced = !deviceSupportsState() || stateLastStart.equals(configLastStart);
 
     Date currentState = catchToElse(() -> deviceState.timestamp, LONG_TIME_AGO);
-    final boolean stateUpdated = !deviceSupportsState() && !currentState.equals(configStateStart);
+    final boolean stateUpdated = !deviceSupportsState() || !currentState.equals(configStateStart);
 
     Date stateLastConfig = catchToNull(() -> deviceState.system.last_config);
 
