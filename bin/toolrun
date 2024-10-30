@@ -17,7 +17,6 @@ rm -f $OUT_DIR/$util_name.log
 
 JAVA_CLASS=com.google.daq.mqtt.util.Dispatcher
 
-echo udmi version $UDMI_TOOLS
 echo starting run at $(date --utc --iso=s)
 
 echo java -cp $UDMI_JAR $JAVA_CLASS $util_name "$@"

@@ -191,6 +191,8 @@ if [[ ! $site_path -ef $SEQUENCER_CONFIG ]]; then
   "log_level": "$log_level",
   "min_stage": "$min_stage",
   "udmi_version": "$udmi_version",
+  "udmi_commit": "$udmi_commit",
+  "udmi_timever": "$udmi_timever",
   "udmi_root": "$UDMI_ROOT",
   "reflector_endpoint": $endpoint,
   "sequences": $sequences,
