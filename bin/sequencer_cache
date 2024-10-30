@@ -94,7 +94,7 @@ if [[ -n $update ]]; then
             ls -l $src_dir/sequence.md $cache_dir/sequence.md
         fi
 
-        fgrep RESULT $cache_dir/sequencer.log | sed -e 's/.*NOTICE RESULT/RESULT/' >> $RESULT_OUT
+        fgrep RESULT $src_dir/sequencer.log | sed -e 's/.*NOTICE RESULT/RESULT/' >> $RESULT_OUT
     done
 
     sort -k 3 < $RESULT_OUT | fgrep -v " DISABLED " | sponge $RESULT_OUT
