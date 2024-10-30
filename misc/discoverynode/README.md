@@ -80,12 +80,12 @@ TBC
 
 ## Daemon
 
-The discovery node can be installed as an always running systemd daemon `udmi_discovery`
+The discovery node can be installed as an always running systemd daemon `udmi_discovery`. This will isntall any requirements
 
 1.  Run the install script and follow the instructions
 
     ```
-    bin/install_daemon install
+    sudo bin/install_daemon install
     ```
 
 2.  Create a gateway device in the site model, using the public key which is printed to the terminal at the end of the script. Use the `discovery` block to configure which dsicovery families are supported when using the UDMI tooling to intiaite discovery and run registrar
