@@ -91,15 +91,17 @@ fi
 
 if [[ -n $prep ]]; then
     rm -rf var tmp && mkdir -p var tmp
+    mkdir -p build/schema
 
     cp -f etc/*.json var/ || true
-    cp -a ../schema build/
+    cp -a ../schema build/schema
 
     bin/build
 
     LIBFILE=build/libs/*-1.0-SNAPSHOT-all.jar
+    build_time=`date --utc -Imin -r $LIBFILE` || true
+    [[ -n $build_time ]] || build_time=unknown
 
-    build_time=`date --utc -Imin -r $LIBFILE`
     cat <<EOF > var/deployed_version.json
 {
   "udmi_version": "$udmi_version",
@@ -119,6 +121,7 @@ if [[ -n $build ]]; then
     [[ -n $images ]] && docker rmi $images
 
     echo Building Dockerfile.$target
+    echo docker build -f Dockerfile.$target -t $target .
     docker build -f Dockerfile.$target -t $target .
     docker tag $target $udmi_ref
 fi

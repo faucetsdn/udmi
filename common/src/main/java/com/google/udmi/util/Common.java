@@ -36,6 +36,10 @@ public abstract class Common {
   public static final String CLOUD_VERSION_KEY = "cloud_version";
   public static final String SITE_METADATA_KEY = "site_metadata";
   public static final String UDMI_VERSION_KEY = "udmi_version";
+  public static final String UDMI_VERSION_ENV = "UDMI_VERSION";
+  public static final String UDMI_COMMIT_ENV = "UDMI_COMMIT";
+  public static final String UDMI_REF_ENV = "UDMI_REF";
+  public static final String UDMI_TIMEVER_ENV = "UDMI_TIMEVER";
   public static final String SUBTYPE_PROPERTY_KEY = "subType";
   public static final String RAWFOLDER_PROPERTY_KEY = "rawFolder";
   public static final String SUBFOLDER_PROPERTY_KEY = "subFolder";
@@ -59,7 +63,6 @@ public abstract class Common {
   public static final String SOURCE_SEPARATOR_REGEX = "\\" + SOURCE_SEPARATOR;
 
   public static final String NAMESPACE_SEPARATOR = "~";
-  private static final String UDMI_VERSION_ENV = "UDMI_TOOLS";
   public static final int EXIT_CODE_ERROR = 1;
   public static final String UNKNOWN_UDMI_VERSION = "unknown";
 
