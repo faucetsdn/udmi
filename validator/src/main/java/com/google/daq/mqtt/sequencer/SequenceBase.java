@@ -1233,7 +1233,7 @@ public class SequenceBase {
 
     if (configIsPending()) {
       configStateStart = catchToNull(() -> deviceState.timestamp);
-      debug(format("Saving last state as " + isoConvert(configStateStart)));
+      debug(format("Saving pre-config state timestamp " + isoConvert(configStateStart)));
       lastConfigUpdate = CleanDateFormat.clean(Instant.now());
       String debugReason = reason == null ? "" : (", because " + reason);
       debug(format("Update lastConfigUpdate %s%s", lastConfigUpdate, debugReason));
@@ -1968,7 +1968,7 @@ public class SequenceBase {
 
     List<String> failures = new ArrayList<>();
     ifNotTrueThen(stateUpdated, () -> failures.add("device state not updated since test start"));
-    ifNotTrueThen(lastStartSynced, () -> failures.add("last_start not synchronized in config"));
+    ifNotTrueThen(lastStartSynced, () -> failures.add("last_start not synced in config"));
     ifNotTrueThen(transactionsClean, () -> failures.add("config transactions not cleared"));
     ifNotTrueThen(lastConfigSynced, () -> failures.add("last_config not synced in state"));
 

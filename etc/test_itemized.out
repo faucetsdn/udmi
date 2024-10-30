@@ -1,10 +1,10 @@
 1 RESULT fail system device_config_acked STABLE 0/10 Timeout waiting for config acked
 1 RESULT fail pointset pointset_request_extraneous STABLE 0/10 Because config TIMESTAMP event TIMESTAMP differences: llama
 1 RESULT fail pointset pointset_remove_point STABLE 0/10 Because config TIMESTAMP state TIMESTAMP differences: filter_alarm_pressure_status
-1 RESULT fail pointset pointset_remove_point STABLE 0/10 Because last_start not synchronized in config
+1 RESULT fail pointset pointset_remove_point STABLE 0/10 Because device state not updated since test start
 1 RESULT fail system too_much_state ALPHA 0/10 Failed check that No more than 6 state updates in 60s
 1 RESULT fail enumeration.features enumerate_features PREVIEW 0/10 Failed check that feature enumeration matches metadata; missing { enumeration }, extra { unknown }
-1 RESULT fail system valid_serial_no STABLE 0/10 Because last_start not synchronized in config
+1 RESULT pass system valid_serial_no STABLE 10/10 Sequence complete
 1 RESULT fail system valid_serial_no STABLE 0/10 missing subFolder
 1 RESULT fail writeback writeback_success ALPHA 0/10 Because point filter_differential_pressure_setpoint is applied, expected null
 1 RESULT fail writeback writeback_success ALPHA 0/10 Because point filter_differential_pressure_setpoint is null, expected applied
