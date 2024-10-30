@@ -10,7 +10,7 @@ if [[ -z $DN_SITE_PATH ]]; then
   exit 1
 fi
 
-if [[ $2 -ne "" ]]; then
+if [[ $2 != "" ]]; then
   PYTEST_TARGET="-k $2"
 fi
 
