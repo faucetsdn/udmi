@@ -1952,13 +1952,13 @@ public class SequenceBase {
   }
 
   private String configIsPending(boolean debugOut) {
-    Date stateLastStart = ofNullable(
-        catchToNull(() -> deviceState.system.operation.last_start)).orElse(LONG_TIME_AGO);
+    Date stateLastStart = catchToNull(() -> deviceState.system.operation.last_start);
     Date configLastStart = catchToNull(() -> deviceConfig.system.operation.last_start);
-    boolean lastStartSynced = !deviceSupportsState() || stateLastStart.equals(configLastStart);
+    boolean lastStartSynced = stateLastStart == null || stateLastStart.equals(configLastStart);
 
-    Date currentState = ofNullable(catchToNull(() -> deviceState.timestamp)).orElse(LONG_TIME_AGO);
-    final boolean stateUpdated = !deviceSupportsState() || !currentState.equals(configStateStart);
+    Date currentState = catchToNull(() -> deviceState.timestamp);
+    final boolean stateUpdated =
+        !deviceSupportsState() || !Objects.equals(configStateStart, currentState);
 
     Date stateLastConfig = catchToNull(() -> deviceState.system.last_config);
 
