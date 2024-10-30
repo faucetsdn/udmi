@@ -2174,14 +2174,14 @@ public class SequenceBase {
   }
 
   private String notSignificantStatusDetail() {
-    return significantStatusDetail() == null ? "no status to report" : null;
+    return significantStatusDetail() == null ? "no significant device system status" : null;
   }
 
   private String significantStatusDetail() {
     int statusLevel = catchToElse(() -> deviceState.system.status.level, 0);
 
     if (statusLevel != lastStatusLevel) {
-      debug("State system Status level: " + statusLevel);
+      debug("Device state system status level is now " + statusLevel);
       lastStatusLevel = statusLevel;
     }
 
