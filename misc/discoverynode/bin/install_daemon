@@ -10,7 +10,7 @@ function usage {
 
 
 ROOT_DIR=$(realpath $(dirname $(realpath $0))/../)
-UDMI_DIR=$(realpath $ROOT_DIR/../../../)
+UDMI_DIR=$(realpath $ROOT_DIR/../../)
 
 [[ $1 == install ]] && install=1
 [[ $1 == upgrade ]] && upgrade=1
