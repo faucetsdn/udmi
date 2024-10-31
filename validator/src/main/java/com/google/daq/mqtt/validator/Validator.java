@@ -94,7 +94,6 @@ import java.util.Scanner;
 import java.util.Set;
 import java.util.TreeMap;
 import java.util.TreeSet;
-import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
@@ -168,7 +167,8 @@ public class Validator {
   private static final List<Pattern> IGNORE_PATTERNS = IGNORE_LIST.stream().map(Pattern::compile)
       .toList();
 
-  private static final long REPORT_INTERVAL_SEC = 15;
+  private static final long REPORT_INTERVAL_SEC = 60;
+  private static final long MAX_REPORT_BATCH_SIZE = 25;
   private static final String EXCLUDE_DEVICE_PREFIX = "_";
   private static final String VALIDATION_SITE_REPORT_DEVICE_ID = null;
   private static final String VALIDATION_EVENT_TOPIC = "validation/events";
@@ -178,18 +178,17 @@ public class Validator {
   private static final int TIMESTAMP_JITTER_SEC = 60;
   private static final String UDMI_CONFIG_JSON_FILE = "udmi_config.json";
   private static final String TOOL_NAME = "validator";
-  private static final long THREAD_JOIN_MS = 1000;
   public static final String VALIDATOR_TOOL_NAME = "validator";
   public static final String REGISTRY_DEVICE_DEFAULT = "_regsitry";
   private final Map<String, ReportingDevice> reportingDevices = new TreeMap<>();
   private final Set<String> extraDevices = new TreeSet<>();
   private final Set<String> processedDevices = new TreeSet<>();
   private final Set<String> base64Devices = new TreeSet<>();
-  private final Set<String> ignoredRegistries = new HashSet();
+  private final Set<String> ignoredRegistries = new HashSet<>();
   private final ScheduledExecutorService executor = Executors.newSingleThreadScheduledExecutor();
   private final Map<String, AtomicInteger> deviceMessageIndex = new HashMap<>();
   private final List<MessagePublisher> dataSinks = new ArrayList<>();
-  private final CountDownLatch messageLoopStarted = new CountDownLatch(1);
+  private final Set<String> summaryDevices = new HashSet<>();
   private Set<String> targetDevices;
   private final LoggingHandler outputLogger;
   private ImmutableSet<String> expectedDevices;
@@ -205,6 +204,7 @@ public class Validator {
   private boolean forceUpgrade;
   private SiteModel siteModel;
   private boolean validateCurrent;
+  private Date reportLowWaterMark;
 
   /**
    * Create a simplistic validator for encapsulated use.
@@ -994,7 +994,7 @@ public class Validator {
     for (String deviceId : reportingDevices.keySet()) {
       ReportingDevice deviceInfo = reportingDevices.get(deviceId);
       ValidationState deviceState = summaries.computeIfAbsent(deviceId,
-          Validator::makeDeviceValidationState);
+          id -> makeDeviceValidationState(deviceInfo));
       deviceInfo.expireEntries(getNow());
       boolean expected = targets.contains(deviceId);
       if (deviceInfo.hasErrors()) {
@@ -1028,14 +1028,25 @@ public class Validator {
     sendDeviceValidationReports(summaries);
   }
 
-  private void sendDeviceValidationReports(Map<String, ValidationState> summaries) {
-    summaries.forEach(this::sendValidationReport);
+  private synchronized void sendDeviceValidationReports(Map<String, ValidationState> summaries) {
+    if (summaryDevices.isEmpty()) {
+      summaryDevices.addAll(summaries.keySet());
+    }
+    List<String> batchDevices = summaryDevices.stream()
+        .filter(id -> summaries.get(id).last_updated.after(START_TIME)).toList();
+    System.err.printf("Sending max %d device validation state updates out of an available %d%n",
+        MAX_REPORT_BATCH_SIZE, batchDevices.size());
+    batchDevices.stream().limit(MAX_REPORT_BATCH_SIZE).forEach(id -> {
+      sendValidationReport(summaries.get(id));
+      summaryDevices.remove(id);
+    });
   }
 
-  private static ValidationState makeDeviceValidationState(String id) {
+  private static ValidationState makeDeviceValidationState(ReportingDevice deviceInfo) {
     ValidationState validationState = new ValidationState();
     validationState.version = UDMI_VERSION;
     validationState.timestamp = GeneralUtils.getNow();
+    validationState.last_updated = deviceInfo.getLastSeen();
     return validationState;
   }
 

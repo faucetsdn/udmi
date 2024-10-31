@@ -125,6 +125,7 @@ public class MqttPublisher implements MessagePublisher {
   private long mqttTokenSetTimeMs;
   private MqttConnectOptions mqttConnectOptions;
   private boolean shutdown;
+  private AtomicInteger publisherQueueSize;
 
   MqttPublisher(ExecutionConfiguration config, byte[] actualKeyBytes, String keyAlgorithm,
       BiConsumer<String, String> onMessageCallback, Consumer<Throwable> onErrorCallback) {
@@ -265,6 +266,7 @@ public class MqttPublisher implements MessagePublisher {
       }
       Instant now = Instant.now();
       publisherExecutor.submit(() -> publishCore(deviceId, topic, data, now));
+      LOG.info("Publisher queue size now " + publisherQueueSize.incrementAndGet());
     } catch (Exception e) {
       throw new RuntimeException("While publishing message", e);
     }
@@ -274,6 +276,7 @@ public class MqttPublisher implements MessagePublisher {
   private synchronized void publishCore(String deviceId, String topic, String payload,
       Instant start) {
     try {
+      publisherQueueSize.decrementAndGet();
       if (!connectWait.tryAcquire(INITIALIZE_TIME_MS, TimeUnit.MILLISECONDS)) {
         throw new RuntimeException("Timeout waiting for connection");
       }
