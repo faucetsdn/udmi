@@ -47,7 +47,7 @@ if [[ -n $install ]]; then
     apt install -yq python3-venv moreutils jq
     mkdir -p $LIB_DIR
     mkdir -p $ETC_DIR
-    mkdir $ETC_DIR/certs
+    mkdir -p $ETC_DIR/certs
     useradd -r -s /bin/false $USERNAME
 
 fi
