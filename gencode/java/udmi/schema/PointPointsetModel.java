@@ -76,14 +76,14 @@ public class PointPointsetModel {
      */
     @JsonProperty("range_min")
     @JsonPropertyDescription("Represents the lower bound of the error threshold for a point")
-    public Object range_min;
+    public Double range_min;
     /**
      * Represents the upper bound of the error threshold for a point
      * 
      */
     @JsonProperty("range_max")
     @JsonPropertyDescription("Represents the upper bound of the error threshold for a point")
-    public Object range_max;
+    public Double range_max;
     /**
      * Triggering threshold for partial cov update publishing
      * 
