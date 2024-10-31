@@ -6,7 +6,6 @@ import static com.google.common.base.Preconditions.checkState;
 import static com.google.common.base.Predicates.not;
 import static com.google.common.base.Strings.emptyToNull;
 import static com.google.daq.mqtt.sequencer.SequenceBase.Capabilities.LAST_CONFIG;
-import static com.google.daq.mqtt.sequencer.SequenceRunner.ensureExecutionConfig;
 import static com.google.daq.mqtt.sequencer.semantic.SemanticValue.actualize;
 import static com.google.daq.mqtt.util.CloudIotManager.EMPTY_CONFIG;
 import static com.google.daq.mqtt.util.ConfigManager.configFrom;
@@ -189,6 +188,7 @@ public class SequenceBase {
   private static final int SEQUENCER_FUNCTIONS_ALPHA = SEQUENCER_FUNCTIONS_VERSION;
   private static final long CONFIG_BARRIER_MS = 1000;
   private static final String START_END_MARKER = "################################";
+  private static final Date LONG_TIME_AGO = new Date(9217321);
   private static final String RESULT_FORMAT = "RESULT %s %s %s %s %s/%s %s";
   private static final String CAPABILITY_FORMAT = "CPBLTY %s %s %s %s %s/%s %s";
   private static final String SCHEMA_FORMAT = "SCHEMA %s %s %s %s %s %s";
@@ -326,6 +326,7 @@ public class SequenceBase {
   private final AtomicBoolean waitingForConfigSync = new AtomicBoolean();
   private static String sessionPrefix;
   private static Scoring scoringResult;
+  private Date configStateStart;
 
   private static void setupSequencer() {
     exeConfig = ofNullable(exeConfig).orElseGet(SequenceRunner::ensureExecutionConfig);
@@ -1231,6 +1232,8 @@ public class SequenceBase {
     }
 
     if (configIsPending()) {
+      configStateStart = catchToNull(() -> deviceState.timestamp);
+      debug(format("Saving pre-config state timestamp " + isoConvert(configStateStart)));
       lastConfigUpdate = CleanDateFormat.clean(Instant.now());
       String debugReason = reason == null ? "" : (", because " + reason);
       debug(format("Update lastConfigUpdate %s%s", lastConfigUpdate, debugReason));
@@ -1952,13 +1955,27 @@ public class SequenceBase {
     Date stateLastStart = catchToNull(() -> deviceState.system.operation.last_start);
     Date configLastStart = catchToNull(() -> deviceConfig.system.operation.last_start);
     boolean lastStartSynced = stateLastStart == null || stateLastStart.equals(configLastStart);
+
+    Date currentState = catchToNull(() -> deviceState.timestamp);
+    final boolean stateUpdated =
+        !deviceSupportsState() || !Objects.equals(configStateStart, currentState);
+
     Date stateLastConfig = catchToNull(() -> deviceState.system.last_config);
+
     Date lastConfig = catchToNull(() -> deviceConfig.timestamp);
-    boolean lastConfigSynced = stateLastConfig == null || stateLastConfig.equals(lastConfig);
-    boolean transactionsClean = configTransactions.isEmpty();
-    boolean synced = lastStartSynced && transactionsClean && lastConfigSynced;
+    final boolean lastConfigSynced = stateLastConfig == null || stateLastConfig.equals(lastConfig);
+    final boolean transactionsClean = configTransactions.isEmpty();
+
+    List<String> failures = new ArrayList<>();
+    ifNotTrueThen(stateUpdated, () -> failures.add("device state not updated since test start"));
+    ifNotTrueThen(lastStartSynced, () -> failures.add("last_start not synced in config"));
+    ifNotTrueThen(transactionsClean, () -> failures.add("config transactions not cleared"));
+    ifNotTrueThen(lastConfigSynced, () -> failures.add("last_config not synced in state"));
+
     if (debugOut) {
-      if (!synced) {
+      if (!failures.isEmpty()) {
+        notice(format("state updated at %s then %s", isoConvert(configStateStart),
+            isoConvert(currentState)));
         notice(format("last_start synchronized %s: state/%s =? config/%s", lastStartSynced,
             isoConvert(stateLastStart), isoConvert(configLastStart)));
         notice(format("configTransactions flushed %s: %s", transactionsClean,
@@ -1969,10 +1986,7 @@ public class SequenceBase {
         debug("last_config synchronized check disabled due to missing state.system.last_config");
       }
     }
-    return ifNotTrueGet(synced,
-        () -> format("waiting for last_start %s, transactions %s, last_config %s",
-            !lastStartSynced,
-            !transactionsClean, !lastConfigSynced));
+    return ifNotTrueGet(failures.isEmpty(), () -> CSV_JOINER.join(failures));
   }
 
   @NotNull
@@ -2160,24 +2174,14 @@ public class SequenceBase {
   }
 
   private String notSignificantStatusDetail() {
-    if (deviceState == null || deviceState.system == null) {
-      lastStatusLevel = 0;
-      return "deviceState.system not defined";
-    }
-    String interesting = significantStatusDetail();
-    return interesting == null ? "no status to report" : null;
+    return significantStatusDetail() == null ? "no significant device system status" : null;
   }
 
   private String significantStatusDetail() {
-    if (deviceState == null || deviceState.system == null) {
-      lastStatusLevel = 0;
-      return "deviceState.system not defined";
-    }
-
-    int statusLevel = GeneralUtils.catchToElse(() -> deviceState.system.status.level, 0);
+    int statusLevel = catchToElse(() -> deviceState.system.status.level, 0);
 
     if (statusLevel != lastStatusLevel) {
-      debug("State system Status level: " + statusLevel);
+      debug("Device state system status level is now " + statusLevel);
       lastStatusLevel = statusLevel;
     }
 

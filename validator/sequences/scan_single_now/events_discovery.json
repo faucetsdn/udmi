@@ -1,5 +1,5 @@
 {
-  "generation" : "2024-10-29T21:23:07Z",
+  "generation" : "2024-10-30T02:26:23Z",
   "scan_addr" : "20231",
   "scan_family" : "vendor",
   "system" : {
@@ -7,6 +7,6 @@
       "device-name" : "GAT-123"
     }
   },
-  "timestamp" : "2024-10-29T21:23:18Z",
+  "timestamp" : "2024-10-30T02:26:32Z",
   "version" : "1.5.2"
 }
