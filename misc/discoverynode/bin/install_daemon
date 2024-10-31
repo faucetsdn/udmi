@@ -48,8 +48,12 @@ if [[ -n $install ]]; then
     mkdir -p $LIB_DIR
     mkdir -p $ETC_DIR
     mkdir -p $ETC_DIR/certs
-    useradd -r -s /bin/false $USERNAME
 
+    if ! id $USERNAME  >/dev/null 2>&1; then
+        useradd -r -s /bin/false $USERNAME
+    else
+        echo "Not creating username because it exists"
+    fi
 fi
 
 if [[ -n $install || -n $upgrade ]]; then
