@@ -9,7 +9,7 @@ function usage {
 }
 
 
-ROOT_DIR=$(dirname $(dirname $(realpath $0))/..)
+ROOT_DIR=$(dirname $(dirname $(realpath $0))/../)
 UDMI_DIR=$(realpath $ROOT_DIR/../../../)
 
 [[ $1 == install ]] && install=1
