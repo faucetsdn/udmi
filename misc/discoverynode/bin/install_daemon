@@ -17,8 +17,6 @@ UDMI_DIR=$(realpath $ROOT_DIR/../../)
 [[ $1 == reconfigure ]] && reconfigure=1
 [[ -z $upgrade && -z $install && -z $reconfigure ]] && usage
 
-# Constants
-########
 SYSTEMD_UNIT_FILE=/etc/systemd/system/udmi_discovery.service
 LIB_DIR=/usr/local/lib/udmi_discovery
 ETC_DIR=/etc/udmi_discovery
@@ -36,12 +34,6 @@ if [[ -n $reconfigure || -n $install ]]; then
 
     [[ $BACNET =~ [yY] ]] && read -p "BACnet IP address (leave blank for automatic allocation): " BACNET_IP
 fi
-
-#MQTT_HOST=mqtt.bos.goog
-#MQTT_PORT=8883
-#PROJECT_ID=bos-platform-dev
-#REGISTRY_ID=discovery
-#DEVICE_ID=GW-1
 
 if [[ -n $install ]]; then
     apt install -yq python3-venv moreutils jq
@@ -93,7 +85,7 @@ EOF
     fi
 
     if [[ -f $ETC_DIR/certs/rsa_private.pem ]]; then
-        echo not generating certificates because exist
+        echo not generating certificates because they exist
     else
         $UDMI_DIR/bin/keygen RS256 $ETC_DIR/certs/
     fi
@@ -134,7 +126,7 @@ EOF
     systemctl start udmi_discovery
 fi 
 
-if [[ -n $upgrade ]]; then
+if [[ -n $upgrade || -n $reconfigure ]]; then
     systemctl restart udmi_discovery
 fi
 

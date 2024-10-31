@@ -109,7 +109,13 @@ The discovery node can be installed as an always running systemd daemon `udmi_di
 
     ```
 
-3. 
+### Useful Commands
+
+```
+# sudo if necesary:
+journalctl -f -xeu udmi_discovery
+
+```
 
 ## E2E Test
 
