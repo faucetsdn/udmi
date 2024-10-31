@@ -170,7 +170,7 @@ public class Validator {
 
   private static final long REPORT_INTERVAL_SEC = 15;
   private static final String EXCLUDE_DEVICE_PREFIX = "_";
-  private static final String VALIDATION_REPORT_DEVICE = "_validator";
+  private static final String VALIDATION_SITE_REPORT_DEVICE_ID = null;
   private static final String VALIDATION_EVENT_TOPIC = "validation/events";
   private static final String VALIDATION_STATE_TOPIC = "validation/state";
   private static final String POINTSET_SUBFOLDER = "pointset";
@@ -857,8 +857,12 @@ public class Validator {
   }
 
   private void sendValidationReport(ValidationState report) {
+    sendValidationReport(VALIDATION_SITE_REPORT_DEVICE_ID, report);
+  }
+
+  private void sendValidationReport(String deviceId, ValidationState report) {
     try {
-      sendValidationMessage(VALIDATION_REPORT_DEVICE, report, VALIDATION_STATE_TOPIC);
+      sendValidationMessage(deviceId, report, VALIDATION_STATE_TOPIC);
     } catch (Exception e) {
       throw new RuntimeException("While sending validation report", e);
     }
@@ -978,6 +982,8 @@ public class Validator {
 
   private void processValidationReportRaw() {
     ValidationSummary summary = new ValidationSummary();
+    Map<String, ValidationState> summaries = new HashMap<>();
+
     summary.extra_devices = new ArrayList<>(extraDevices);
 
     summary.correct_devices = new ArrayList<>();
@@ -987,10 +993,12 @@ public class Validator {
     Collection<String> targets = targetDevices.isEmpty() ? expectedDevices : targetDevices;
     for (String deviceId : reportingDevices.keySet()) {
       ReportingDevice deviceInfo = reportingDevices.get(deviceId);
+      ValidationState deviceState = summaries.computeIfAbsent(deviceId, Validator::makeDeviceValidationState);
       deviceInfo.expireEntries(getNow());
       boolean expected = targets.contains(deviceId);
       if (deviceInfo.hasErrors()) {
         DeviceValidationEvents event = getValidationEvents(devices, deviceInfo);
+        deviceState.last_updated = event.last_seen;
         event.status = ReportingDevice.getSummaryEntry(deviceInfo.getErrors(null, null));
         if (expected) {
           summary.error_devices.add(deviceId);
@@ -1015,6 +1023,14 @@ public class Validator {
     summary.missing_devices.removeAll(summary.correct_devices);
 
     sendValidationReport(makeValidationReport(summary, devices));
+    summaries.forEach(this::sendValidationReport);
+  }
+
+  private static ValidationState makeDeviceValidationState(String id) {
+    ValidationState validationState = new ValidationState();
+    validationState.version = UDMI_VERSION;
+    validationState.timestamp = GeneralUtils.getNow();
+    return validationState;
   }
 
   private DeviceValidationEvents getValidationEvents(Map<String, DeviceValidationEvents> devices,
