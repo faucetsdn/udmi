@@ -53,7 +53,6 @@ public class FileDataSink implements MessagePublisher {
     if (outFile == null) {
       return null;
     }
-    System.err.println("Updating validated " + outFile.getAbsolutePath());
     try (PrintWriter out = new PrintWriter(Files.newOutputStream(outFile.toPath()))) {
       out.println(data);
     } catch (Exception e) {

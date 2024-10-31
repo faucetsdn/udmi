@@ -868,7 +868,7 @@ public class Validator {
     }
   }
 
-  private void sendValidationMessage(String deviceId, Object message, String topic) {
+  private synchronized void sendValidationMessage(String deviceId, Object message, String topic) {
     try {
       String messageString = OBJECT_MAPPER.writeValueAsString(message);
       dataSinks.forEach(sink -> sink.publish(deviceId, topic, messageString));
@@ -993,7 +993,8 @@ public class Validator {
     Collection<String> targets = targetDevices.isEmpty() ? expectedDevices : targetDevices;
     for (String deviceId : reportingDevices.keySet()) {
       ReportingDevice deviceInfo = reportingDevices.get(deviceId);
-      ValidationState deviceState = summaries.computeIfAbsent(deviceId, Validator::makeDeviceValidationState);
+      ValidationState deviceState = summaries.computeIfAbsent(deviceId,
+          Validator::makeDeviceValidationState);
       deviceInfo.expireEntries(getNow());
       boolean expected = targets.contains(deviceId);
       if (deviceInfo.hasErrors()) {
@@ -1022,7 +1023,12 @@ public class Validator {
     summary.missing_devices.removeAll(summary.error_devices);
     summary.missing_devices.removeAll(summary.correct_devices);
 
+    System.err.println("Updating validation reports to " + outBaseDir.getAbsolutePath());
     sendValidationReport(makeValidationReport(summary, devices));
+    sendDeviceValidationReports(summaries);
+  }
+
+  private void sendDeviceValidationReports(Map<String, ValidationState> summaries) {
     summaries.forEach(this::sendValidationReport);
   }
 

@@ -24,6 +24,7 @@ import static com.google.udmi.util.GeneralUtils.ifTrueThen;
 import static com.google.udmi.util.GeneralUtils.isTrue;
 import static com.google.udmi.util.JsonUtil.asMap;
 import static com.google.udmi.util.JsonUtil.convertTo;
+import static com.google.udmi.util.JsonUtil.getNowInstant;
 import static com.google.udmi.util.JsonUtil.isoConvert;
 import static com.google.udmi.util.JsonUtil.mapCast;
 import static com.google.udmi.util.JsonUtil.stringify;
@@ -43,6 +44,8 @@ import com.google.daq.mqtt.validator.Validator.ErrorContainer;
 import com.google.udmi.util.Common;
 import com.google.udmi.util.GeneralUtils;
 import com.google.udmi.util.SiteModel;
+import java.time.Duration;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -120,6 +123,7 @@ public class IotReflectorClient implements MessagePublisher {
   private SetupUdmiConfig udmiInfo;
   private int retries;
   private String expectedTxnId;
+  private Instant txnStartTime;
 
   /**
    * Create a new reflector instance.
@@ -201,17 +205,18 @@ public class IotReflectorClient implements MessagePublisher {
    * @return new unique transaction id
    */
   public static String getNextTransactionId() {
-    return format("%s%04d", sessionPrefix, sessionCounter.incrementAndGet());
+    return format("%s%08x", sessionPrefix, sessionCounter.incrementAndGet());
   }
 
-  private void setReflectorState() {
+  private synchronized void setReflectorState() {
     if (isInstallValid && expectedTxnId != null) {
-      System.err.printf("Unexpected reflector transaction %s, likely duplicate channel use%n",
-          expectedTxnId);
+      error(format("Missing UDMI reflector state reply for %s after %ss", expectedTxnId,
+          Duration.between(txnStartTime, getNowInstant()).toSeconds()));
       close();
-      throw new RuntimeException("Aborting due to missing transaction reply " + expectedTxnId);
+      throw new IllegalStateException("Aborting due to missing transaction reply " + expectedTxnId);
     }
     expectedTxnId = getNextTransactionId();
+    txnStartTime = getNowInstant();
 
     UdmiState udmiState = new UdmiState();
     udmiState.setup = new SetupUdmiState();
@@ -360,7 +365,7 @@ public class IotReflectorClient implements MessagePublisher {
         entry -> System.err.printf("%s %s%n", isoConvert(entry.timestamp), entry.message));
   }
 
-  private void ensureCloudSync(Map<String, Object> message) {
+  private synchronized void ensureCloudSync(Map<String, Object> message) {
     try {
       initialConfigReceived.countDown();
       if (initializedStateSent.getCount() > 0) {
@@ -415,6 +420,8 @@ public class IotReflectorClient implements MessagePublisher {
         }
         isInstallValid = true;
         expectedTxnId = null;
+        debug(format("UDMI reflector state transaction took %ss",
+            Duration.between(txnStartTime, getNowInstant()).toSeconds()));
         pubLatches.get(publisher).countDown();
       } else if (!updateMatch) {
         System.err.println("UDMI update version mismatch... waiting for retry...");
@@ -436,6 +443,11 @@ public class IotReflectorClient implements MessagePublisher {
   }
 
   private void info(String message) {
+    // TODO: Implement some kind of actual log-level control.
+    System.err.println(message);
+  }
+
+  private void error(String message) {
     // TODO: Implement some kind of actual log-level control.
     System.err.println(message);
   }
@@ -556,8 +568,7 @@ public class IotReflectorClient implements MessagePublisher {
   @Override
   public String publish(String deviceId, String topic, String data) {
     if (!publisher.isActive()) {
-      System.err.println("Ignoring publish to closed publisher.");
-      return null;
+      throw new IllegalStateException("Attempted publish to closed publisher.");
     }
     Envelope envelope = new Envelope();
     envelope.deviceRegistryId = registryId;
