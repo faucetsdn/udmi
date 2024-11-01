@@ -2,6 +2,7 @@ package com.google.bos.iot.core.proxy;
 
 import static com.google.bos.iot.core.proxy.ProxyTarget.STATE_TOPIC;
 import static com.google.common.base.Preconditions.checkState;
+import static com.google.daq.mqtt.util.PublishPriority.HIGH;
 import static com.google.daq.mqtt.validator.Validator.TOOLS_FUNCTIONS_VERSION;
 import static com.google.udmi.util.CleanDateFormat.dateEquals;
 import static com.google.udmi.util.Common.DEVICE_ID_KEY;
@@ -243,7 +244,7 @@ public class IotReflectorClient implements MessagePublisher {
         info("Sending UDMI reflector state: " + stringify(map));
       }
 
-      publisher.publish(registryId, getReflectorTopic(), stringify(map));
+      publisher.publish(registryId, getReflectorTopic(), stringify(map), HIGH);
     } catch (Exception e) {
       throw new RuntimeException("Could not set reflector state", e);
     }

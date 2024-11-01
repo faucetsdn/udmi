@@ -47,6 +47,10 @@ public interface MessagePublisher {
 
   String publish(String deviceId, String topic, String data);
 
+  default String publish(String deviceId, String topic, String data, PublishPriority priority) {
+    return publish(deviceId, topic, data);
+  }
+
   void close();
 
   String getSubscriptionId();

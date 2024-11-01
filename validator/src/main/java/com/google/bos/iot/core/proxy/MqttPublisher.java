@@ -20,6 +20,7 @@ import static java.util.Optional.ofNullable;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Maps;
 import com.google.daq.mqtt.util.MessagePublisher;
+import com.google.daq.mqtt.util.PublishPriority;
 import com.google.daq.mqtt.validator.Validator;
 import com.google.udmi.util.CertManager;
 import com.google.udmi.util.SiteModel;
@@ -36,10 +37,12 @@ import java.security.spec.PKCS8EncodedKeySpec;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.Map;
+import java.util.Queue;
 import java.util.Set;
 import java.util.concurrent.ConcurrentSkipListSet;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.ThreadFactory;
@@ -98,8 +101,10 @@ public class MqttPublisher implements MessagePublisher {
   private static final int HASH_PASSWORD_LENGTH = 8;
   private static final String UNUSED_ACCOUNT_NAME = "unused";
   private static final String MQTT_USER_NAME_FMT = "/r/%s/d/%s";
+  private static final int PUBLISH_LOG_MOD = 100;
   private final ExecutorService publisherExecutor =
       Executors.newFixedThreadPool(PUBLISH_THREAD_COUNT);
+  private final Queue<Runnable> priorityQueue = new LinkedBlockingQueue<>();
   private final Semaphore connectWait = new Semaphore(0);
   private final AtomicInteger publishCounter = new AtomicInteger(0);
   private final AtomicInteger errorCounter = new AtomicInteger(0);
@@ -123,6 +128,7 @@ public class MqttPublisher implements MessagePublisher {
   private final CertManager certManager;
   private final Envelope savedState = new Envelope();
   private final AtomicInteger publisherQueueSize = new AtomicInteger();
+  private final AtomicInteger publishCount = new AtomicInteger();
   private long mqttTokenSetTimeMs;
   private MqttConnectOptions mqttConnectOptions;
   private boolean shutdown;
@@ -258,6 +264,11 @@ public class MqttPublisher implements MessagePublisher {
 
   @Override
   public String publish(String deviceId, String topic, String data) {
+    return publish(deviceId, topic, data, PublishPriority.NORMAL);
+  }
+
+  @Override
+  public String publish(String deviceId, String topic, String data, PublishPriority priority) {
     Preconditions.checkNotNull(deviceId, "publish deviceId");
     LOG.debug(this.deviceId + " publishing in background " + registryId + "/" + deviceId);
     try {
@@ -265,8 +276,16 @@ public class MqttPublisher implements MessagePublisher {
         LOG.error("Publishing to shutdown connection");
       }
       Instant now = Instant.now();
-      publisherExecutor.submit(() -> publishCore(deviceId, topic, data, now));
-      LOG.info("Publisher queue size now " + publisherQueueSize.incrementAndGet());
+      Runnable runnable = () -> publishCore(deviceId, topic, data, now, priority);
+      int queueSize = publisherQueueSize.incrementAndGet();
+      if (priority == PublishPriority.HIGH && queueSize > 1) {
+        priorityQueue.add(runnable);
+      } else {
+        publisherExecutor.submit(runnable);
+      }
+      if (publishCount.incrementAndGet() % PUBLISH_LOG_MOD == 0) {
+        LOG.info("Publisher queue size now " + queueSize);
+      }
     } catch (Exception e) {
       throw new RuntimeException("While publishing message", e);
     }
@@ -274,7 +293,18 @@ public class MqttPublisher implements MessagePublisher {
   }
 
   private synchronized void publishCore(String deviceId, String topic, String payload,
-      Instant start) {
+      Instant start, PublishPriority priority) {
+    if (priority != PublishPriority.HIGH) {
+      Runnable queued = priorityQueue.poll();
+      if (queued != null) {
+        LOG.info("Publishing HIGH priority override");
+        queued.run();
+      }
+    }
+    publishRaw(deviceId, topic, payload, start);
+  }
+
+  private void publishRaw(String deviceId, String topic, String payload, Instant start) {
     try {
       publisherQueueSize.decrementAndGet();
       if (!connectWait.tryAcquire(INITIALIZE_TIME_MS, TimeUnit.MILLISECONDS)) {
