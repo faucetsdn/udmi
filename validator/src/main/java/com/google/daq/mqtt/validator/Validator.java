@@ -89,12 +89,12 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.MissingFormatArgumentException;
 import java.util.Scanner;
 import java.util.Set;
 import java.util.TreeMap;
 import java.util.TreeSet;
-import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
@@ -168,9 +168,11 @@ public class Validator {
   private static final List<Pattern> IGNORE_PATTERNS = IGNORE_LIST.stream().map(Pattern::compile)
       .toList();
 
-  private static final long REPORT_INTERVAL_SEC = 15;
+  private static final long REPORT_INTERVAL_SEC = 60;
+  private static final long REPORTS_PER_SEC = 2;
+  private static final long MAX_REPORT_BATCH_SIZE = REPORT_INTERVAL_SEC * REPORTS_PER_SEC;
   private static final String EXCLUDE_DEVICE_PREFIX = "_";
-  private static final String VALIDATION_REPORT_DEVICE = "_validator";
+  private static final String VALIDATION_SITE_REPORT_DEVICE_ID = null;
   private static final String VALIDATION_EVENT_TOPIC = "validation/events";
   private static final String VALIDATION_STATE_TOPIC = "validation/state";
   private static final String POINTSET_SUBFOLDER = "pointset";
@@ -178,18 +180,17 @@ public class Validator {
   private static final int TIMESTAMP_JITTER_SEC = 60;
   private static final String UDMI_CONFIG_JSON_FILE = "udmi_config.json";
   private static final String TOOL_NAME = "validator";
-  private static final long THREAD_JOIN_MS = 1000;
   public static final String VALIDATOR_TOOL_NAME = "validator";
   public static final String REGISTRY_DEVICE_DEFAULT = "_regsitry";
   private final Map<String, ReportingDevice> reportingDevices = new TreeMap<>();
   private final Set<String> extraDevices = new TreeSet<>();
   private final Set<String> processedDevices = new TreeSet<>();
   private final Set<String> base64Devices = new TreeSet<>();
-  private final Set<String> ignoredRegistries = new HashSet();
+  private final Set<String> ignoredRegistries = new HashSet<>();
   private final ScheduledExecutorService executor = Executors.newSingleThreadScheduledExecutor();
   private final Map<String, AtomicInteger> deviceMessageIndex = new HashMap<>();
   private final List<MessagePublisher> dataSinks = new ArrayList<>();
-  private final CountDownLatch messageLoopStarted = new CountDownLatch(1);
+  private final Set<String> summaryDevices = new HashSet<>();
   private Set<String> targetDevices;
   private final LoggingHandler outputLogger;
   private ImmutableSet<String> expectedDevices;
@@ -685,7 +686,7 @@ public class Validator {
       Map<String, Object> message = isString ? null : mapCast(messageObj);
       validateTimestamp(device, message, attributes);
 
-      if (!device.shouldProcessMessageSchema(schemaName, getInstant(messageObj, attributes))) {
+      if (!device.shouldProcessMessage(schemaName, getInstant(messageObj, attributes))) {
         outputLogger.trace("Ignoring device %s/%s (too soon)", deviceId, schemaName);
         return null;
       }
@@ -857,14 +858,18 @@ public class Validator {
   }
 
   private void sendValidationReport(ValidationState report) {
+    sendValidationReport(VALIDATION_SITE_REPORT_DEVICE_ID, report);
+  }
+
+  private void sendValidationReport(String deviceId, ValidationState report) {
     try {
-      sendValidationMessage(VALIDATION_REPORT_DEVICE, report, VALIDATION_STATE_TOPIC);
+      sendValidationMessage(deviceId, report, VALIDATION_STATE_TOPIC);
     } catch (Exception e) {
       throw new RuntimeException("While sending validation report", e);
     }
   }
 
-  private void sendValidationMessage(String deviceId, Object message, String topic) {
+  private synchronized void sendValidationMessage(String deviceId, Object message, String topic) {
     try {
       String messageString = OBJECT_MAPPER.writeValueAsString(message);
       dataSinks.forEach(sink -> sink.publish(deviceId, topic, messageString));
@@ -978,6 +983,8 @@ public class Validator {
 
   private void processValidationReportRaw() {
     ValidationSummary summary = new ValidationSummary();
+    Map<String, ValidationState> summaries = new HashMap<>();
+
     summary.extra_devices = new ArrayList<>(extraDevices);
 
     summary.correct_devices = new ArrayList<>();
@@ -987,10 +994,13 @@ public class Validator {
     Collection<String> targets = targetDevices.isEmpty() ? expectedDevices : targetDevices;
     for (String deviceId : reportingDevices.keySet()) {
       ReportingDevice deviceInfo = reportingDevices.get(deviceId);
+      ValidationState deviceState = summaries.computeIfAbsent(deviceId,
+          id -> makeDeviceValidationState(deviceInfo));
       deviceInfo.expireEntries(getNow());
       boolean expected = targets.contains(deviceId);
       if (deviceInfo.hasErrors()) {
         DeviceValidationEvents event = getValidationEvents(devices, deviceInfo);
+        deviceState.last_updated = event.last_seen;
         event.status = ReportingDevice.getSummaryEntry(deviceInfo.getErrors(null, null));
         if (expected) {
           summary.error_devices.add(deviceId);
@@ -1014,7 +1024,33 @@ public class Validator {
     summary.missing_devices.removeAll(summary.error_devices);
     summary.missing_devices.removeAll(summary.correct_devices);
 
+    System.err.println("Updating validation reports to " + outBaseDir.getAbsolutePath());
     sendValidationReport(makeValidationReport(summary, devices));
+    sendDeviceValidationReports(summaries);
+  }
+
+  private synchronized void sendDeviceValidationReports(Map<String, ValidationState> summaries) {
+    if (summaryDevices.isEmpty()) {
+      List<String> keys = summaries.entrySet().stream()
+          .filter(entry -> entry.getValue().last_updated.after(START_TIME))
+          .map(Entry::getKey).toList();
+      summaryDevices.addAll(keys);
+    }
+    List<String> sendList = summaryDevices.stream().limit(MAX_REPORT_BATCH_SIZE).toList();
+    System.err.printf("Sending %d device validation state updates out of an available %d%n",
+        sendList.size(), summaryDevices.size());
+    sendList.forEach(id -> {
+      sendValidationReport(summaries.get(id));
+      summaryDevices.remove(id);
+    });
+  }
+
+  private static ValidationState makeDeviceValidationState(ReportingDevice deviceInfo) {
+    ValidationState validationState = new ValidationState();
+    validationState.version = UDMI_VERSION;
+    validationState.timestamp = GeneralUtils.getNow();
+    validationState.last_updated = deviceInfo.getLastSeen();
+    return validationState;
   }
 
   private DeviceValidationEvents getValidationEvents(Map<String, DeviceValidationEvents> devices,

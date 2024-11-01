@@ -269,8 +269,7 @@ public class PubSubReflector implements MessagePublisher {
       Map<String, String> map = toStringMap(envelope);
       PubsubMessage message = PubsubMessage.newBuilder().setData(ByteString.copyFromUtf8(data))
           .putAllAttributes(map).build();
-      ApiFuture<String> publish = publisher.publish(message);
-      publish.get(); // Wait for publish to complete.
+      publisher.publish(message);
     } catch (Exception e) {
       throw new RuntimeException("While publishing message", e);
     }
