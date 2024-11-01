@@ -168,9 +168,8 @@ public class Validator {
   private static final List<Pattern> IGNORE_PATTERNS = IGNORE_LIST.stream().map(Pattern::compile)
       .toList();
 
-  private static final long REPORT_INTERVAL_SEC = 60;
+  private static final long DEFAULT_INTERVAL_SEC = 60;
   private static final long REPORTS_PER_SEC = 2;
-  private static final long MAX_REPORT_BATCH_SIZE = REPORT_INTERVAL_SEC * REPORTS_PER_SEC;
   private static final String EXCLUDE_DEVICE_PREFIX = "_";
   private static final String VALIDATION_SITE_REPORT_DEVICE_ID = null;
   private static final String VALIDATION_EVENT_TOPIC = "validation/events";
@@ -182,6 +181,7 @@ public class Validator {
   private static final String TOOL_NAME = "validator";
   public static final String VALIDATOR_TOOL_NAME = "validator";
   public static final String REGISTRY_DEVICE_DEFAULT = "_regsitry";
+  private long reportingDelay = DEFAULT_INTERVAL_SEC;
   private final Map<String, ReportingDevice> reportingDevices = new TreeMap<>();
   private final Set<String> extraDevices = new TreeSet<>();
   private final Set<String> processedDevices = new TreeSet<>();
@@ -344,6 +344,7 @@ public class Validator {
             case "-t" -> validatePubSub(removeNextArg(argList), true);
             case "-f" -> validateFilesOutput(removeNextArg(argList));
             case "-c" -> setValidateCurrent(true);
+            case "-d" -> setReportDelay(removeNextArg(argList));
             case "-u" -> forceUpgrade = true;
             case "-r" -> validateMessageTrace(removeNextArg(argList));
             case "-n" -> client = new NullPublisher();
@@ -364,6 +365,10 @@ public class Validator {
         setSchemaSpec(new File(UDMI_ROOT, "schema").getAbsolutePath());
       }
     }
+  }
+
+  private void setReportDelay(String arg) {
+    reportingDelay = Integer.parseInt(arg);
   }
 
   private void setValidateCurrent(boolean current) {
@@ -490,7 +495,7 @@ public class Validator {
   @NotNull
   private ReportingDevice newReportingDevice(String device) {
     ReportingDevice reportingDevice = new ReportingDevice(device);
-    ifTrueThen(validateCurrent, () -> reportingDevice.setThreshold(REPORT_INTERVAL_SEC));
+    ifTrueThen(validateCurrent, () -> reportingDevice.setThreshold(reportingDelay));
     return reportingDevice;
   }
 
@@ -568,7 +573,7 @@ public class Validator {
     processValidationReport();
     ScheduledFuture<?> reportSender =
         simulatedMessages ? null : executor.scheduleAtFixedRate(this::processValidationReport,
-            REPORT_INTERVAL_SEC, REPORT_INTERVAL_SEC, TimeUnit.SECONDS);
+            reportingDelay, reportingDelay, TimeUnit.SECONDS);
     try {
       while (client.isActive()) {
         try {
@@ -1036,11 +1041,12 @@ public class Validator {
           .map(Entry::getKey).toList();
       summaryDevices.addAll(keys);
     }
-    List<String> sendList = summaryDevices.stream().limit(MAX_REPORT_BATCH_SIZE).toList();
+    long batchSize = reportingDelay * REPORTS_PER_SEC;
+    List<String> sendList = summaryDevices.stream().limit(batchSize).toList();
     System.err.printf("Sending %d device validation state updates out of an available %d%n",
         sendList.size(), summaryDevices.size());
     sendList.forEach(id -> {
-      sendValidationReport(summaries.get(id));
+      sendValidationReport(id, summaries.get(id));
       summaryDevices.remove(id);
     });
   }
