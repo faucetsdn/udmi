@@ -334,6 +334,9 @@ public interface PubberUdmiPublisher extends UdmiPublisher {
 
   void error(String s);
 
+  /**
+   * Register a system status entry.
+   */
   default void registerSystemStatus(Entry report) {
     if (isNotTrue(getOptions().noStatus)) {
       getDeviceState().system.status = report;
