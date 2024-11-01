@@ -154,8 +154,10 @@ public class ConfigSequences extends SequenceBase {
       Entry stateStatus = deviceState.system.status;
       info("Error message: " + stateStatus.message);
       debug("Error detail: " + stateStatus.detail);
-      checkThat("category matches", SYSTEM_CONFIG_PARSE.equals(stateStatus.category));
-      checkThat("status level is error", Objects.equals(Level.ERROR.value(), stateStatus.level));
+      checkThat("status level is error (500)",
+          Objects.equals(Level.ERROR.value(), stateStatus.level));
+      checkThat("category matches " + SYSTEM_CONFIG_PARSE,
+          SYSTEM_CONFIG_PARSE.equals(stateStatus.category));
     });
     info("following stable_config " + isoConvert(stableConfig));
     info("following last_config " + isoConvert(deviceState.system.last_config));
