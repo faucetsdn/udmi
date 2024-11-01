@@ -795,7 +795,7 @@ public class SequenceBase {
 
     ifTrueThen(deviceSupportsState(),
         () -> untilTrue("initial device state", () -> deviceState != null));
-    checkThatHasInterestingSystemStatus(false);
+    checkThatHasNoInterestingSystemStatus();
 
     // Do this late in the sequence to make sure any state is cleared out from previous test.
     startStateCount = getStateUpdateCount();
@@ -845,7 +845,7 @@ public class SequenceBase {
         SENT_CONFIG_DIFFERNATOR.resetState(deviceConfig);
         if (doPartialUpdates) {
           updateConfig("full reset");
-          untilHasInterestingSystemStatus(false);
+          untilHasNoInterestingSystemStatus();
         }
       }
       resetDeviceConfig(false);
@@ -1193,7 +1193,7 @@ public class SequenceBase {
     recordSequence = false;
 
     if (testResult == PASS) {
-      checkThatHasInterestingSystemStatus(false);
+      checkThatHasNoInterestingSystemStatus();
     }
 
     recordMessages = false;
@@ -2189,6 +2189,10 @@ public class SequenceBase {
     return statusLevel >= Level.WARNING.value() ? ("system status is level " + statusLevel) : null;
   }
 
+  protected void checkThatHasNoInterestingSystemStatus() {
+    checkThatHasInterestingSystemStatus(false);
+  }
+
   protected void checkThatHasInterestingSystemStatus(boolean isInteresting) {
     if (!deviceSupportsState()) {
       return;
@@ -2203,6 +2207,10 @@ public class SequenceBase {
 
   protected void untilHasInterestingSystemStatus() {
     untilHasInterestingSystemStatus(true);
+  }
+
+  protected void untilHasNoInterestingSystemStatus() {
+    untilHasInterestingSystemStatus(false);
   }
 
   protected void untilHasInterestingSystemStatus(boolean interesting) {
