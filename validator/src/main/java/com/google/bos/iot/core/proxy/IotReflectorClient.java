@@ -244,7 +244,7 @@ public class IotReflectorClient implements MessagePublisher {
         info("Sending UDMI reflector state: " + stringify(map));
       }
 
-      publisher.publish(registryId, getReflectorTopic(), stringify(map), HIGH);
+      publisher.publish(registryId, getReflectorTopic(), stringifyTerse(map), HIGH);
     } catch (Exception e) {
       throw new RuntimeException("Could not set reflector state", e);
     }
@@ -388,8 +388,8 @@ public class IotReflectorClient implements MessagePublisher {
       } else {
         info("Received UDMI reflector mismatched " + expectedTxnId + " != " + stringifyTerse(
             reflectorConfig));
-        //close();
-        //throw new IllegalStateException("There can (should) be only one instance on a channel");
+        close();
+        throw new IllegalStateException("There can (should) be only one instance on a channel");
       }
 
       Date lastState = reflectorConfig.last_state;

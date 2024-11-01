@@ -23,6 +23,7 @@ import com.google.daq.mqtt.util.MessagePublisher;
 import com.google.daq.mqtt.util.PublishPriority;
 import com.google.daq.mqtt.validator.Validator;
 import com.google.udmi.util.CertManager;
+import com.google.udmi.util.GeneralUtils;
 import com.google.udmi.util.SiteModel;
 import io.jsonwebtoken.JwtBuilder;
 import io.jsonwebtoken.Jwts;
@@ -39,6 +40,7 @@ import java.time.Instant;
 import java.util.Map;
 import java.util.Queue;
 import java.util.Set;
+import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.ConcurrentSkipListSet;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -104,7 +106,7 @@ public class MqttPublisher implements MessagePublisher {
   private static final int PUBLISH_LOG_MOD = 100;
   private final ExecutorService publisherExecutor =
       Executors.newFixedThreadPool(PUBLISH_THREAD_COUNT);
-  private final Queue<Runnable> priorityQueue = new LinkedBlockingQueue<>();
+  private final Queue<Runnable> priorityQueue = new ConcurrentLinkedQueue<>();
   private final Semaphore connectWait = new Semaphore(0);
   private final AtomicInteger publishCounter = new AtomicInteger(0);
   private final AtomicInteger errorCounter = new AtomicInteger(0);
@@ -294,10 +296,12 @@ public class MqttPublisher implements MessagePublisher {
 
   private synchronized void publishCore(String deviceId, String topic, String payload,
       Instant start, PublishPriority priority) {
-    if (priority != PublishPriority.HIGH) {
+    if (priority == PublishPriority.HIGH) {
+      LOG.info(format("Publishing HIGH priority override after %ss: %s%n", Duration.between(start,
+          GeneralUtils.instantNow()).toSeconds(), payload));
+    } else {
       Runnable queued = priorityQueue.poll();
       if (queued != null) {
-        LOG.info("Publishing HIGH priority override");
         queued.run();
       }
     }
