@@ -129,7 +129,7 @@ public class ConfigSequences extends SequenceBase {
 
   @Test(timeout = TWO_MINUTES_MS)
   @Feature(stage = STABLE, bucket = SYSTEM, score = 8)
-  @WithCapability(value = SystemStatus.class, stage = ALPHA)
+  @WithCapability(value = Status.class, stage = ALPHA)
   @WithCapability(value = Logging.class, stage = ALPHA)
   @Summary("Check that the device correctly handles a broken (non-json) config message.")
   @ValidateSchema(SubFolder.SYSTEM)
@@ -150,14 +150,14 @@ public class ConfigSequences extends SequenceBase {
         () -> waitForLog(SYSTEM_CONFIG_APPLY, SYSTEM_CONFIG_APPLY_LEVEL));
 
     setExtraField("break_json");
-    forCapability(SystemStatus.class, this::untilHasInterestingSystemStatus);
-    forCapability(Logging.class,
-        () -> waitForLog(SYSTEM_CONFIG_RECEIVE, SYSTEM_CONFIG_RECEIVE_LEVEL));
-    Entry stateStatus = deviceState.system.status;
-    info("Error message: " + stateStatus.message);
-    debug("Error detail: " + stateStatus.detail);
-    assertEquals(SYSTEM_CONFIG_PARSE, stateStatus.category);
-    assertEquals(Level.ERROR.value(), (int) stateStatus.level);
+    forCapability(Status.class, () -> {
+          untilHasInterestingSystemStatus();
+          Entry stateStatus = deviceState.system.status;
+          info("Error message: " + stateStatus.message);
+          debug("Error detail: " + stateStatus.detail);
+          assertEquals(SYSTEM_CONFIG_PARSE, stateStatus.category);
+          assertEquals(Level.ERROR.value(), (int) stateStatus.level);
+        });
     info("following stable_config " + isoConvert(stableConfig));
     info("following last_config " + isoConvert(deviceState.system.last_config));
     // The last_config should not be updated to not reflect the broken config.
@@ -165,16 +165,19 @@ public class ConfigSequences extends SequenceBase {
         dateEquals(stableConfig, deviceState.system.last_config));
     assertTrue("system operational", deviceState.system.operation.operational);
     forCapability(Logging.class, () -> {
-      untilLogged(SYSTEM_CONFIG_PARSE, Level.ERROR);
-      safeSleep(LOG_APPLY_DELAY_MS);
-      checkNotLogged(SYSTEM_CONFIG_APPLY, SYSTEM_CONFIG_APPLY_LEVEL);
-    });
+          waitForLog(SYSTEM_CONFIG_RECEIVE, SYSTEM_CONFIG_RECEIVE_LEVEL);
+          waitForLog(SYSTEM_CONFIG_PARSE, Level.ERROR);
+        });
+    forCapability(Logging.class, () -> {
+          safeSleep(LOG_APPLY_DELAY_MS);
+          checkNotLogged(SYSTEM_CONFIG_APPLY, SYSTEM_CONFIG_APPLY_LEVEL);
+        });
 
     // Will restore min_loglevel to the default of INFO.
     resetConfig(); // clears extra_field and interesting status checks
 
     forCapability(Logging.class, () -> {
-      untilLogged(SYSTEM_CONFIG_APPLY, SYSTEM_CONFIG_APPLY_LEVEL);
+      waitForLog(SYSTEM_CONFIG_APPLY, SYSTEM_CONFIG_APPLY_LEVEL);
       untilTrue("restored state synchronized",
           () -> dateEquals(deviceConfig.timestamp, deviceState.system.last_config));
     });
@@ -185,7 +188,7 @@ public class ConfigSequences extends SequenceBase {
     );
     assertTrue("system operational", deviceState.system.operation.operational);
     forCapability(Logging.class, () -> {
-      untilLogged(SYSTEM_CONFIG_APPLY, SYSTEM_CONFIG_APPLY_LEVEL);
+      waitForLog(SYSTEM_CONFIG_APPLY, SYSTEM_CONFIG_APPLY_LEVEL);
       // These should not be logged since the level was at INFO until the new config is applied.
       checkNotLogged(SYSTEM_CONFIG_RECEIVE, SYSTEM_CONFIG_RECEIVE_LEVEL);
       checkNotLogged(SYSTEM_CONFIG_PARSE, SYSTEM_CONFIG_PARSE_LEVEL);
@@ -235,7 +238,7 @@ public class ConfigSequences extends SequenceBase {
 
   }
 
-  static class SystemStatus implements Capability {
+  static class Status implements Capability {
 
   }
 
