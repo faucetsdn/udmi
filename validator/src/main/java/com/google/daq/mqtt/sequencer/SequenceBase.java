@@ -327,7 +327,6 @@ public class SequenceBase {
   private static String sessionPrefix;
   private static Scoring scoringResult;
   private Date configStateStart;
-  private boolean keepLoopin;
 
   private static void setupSequencer() {
     exeConfig = ofNullable(exeConfig).orElseGet(SequenceRunner::ensureExecutionConfig);
@@ -1568,8 +1567,7 @@ public class SequenceBase {
 
   private void messageEvaluateLoop(Duration maxWait, Supplier<Boolean> whileTrue) {
     Instant end = Instant.now().plus(maxWait);
-    keepLoopin = true;
-    while (whileTrue.get() && keepLoopin) {
+    while (whileTrue.get()) {
       if (Instant.now().isAfter(end)) {
         throw new RuntimeException(
             format("Timeout after %ss %s", maxWait.getSeconds(), currentWaitingCondition()));
