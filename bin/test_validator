@@ -22,8 +22,8 @@ echo "export UDMI_ALT_REGISTRY=${UDMI_ALT_REGISTRY:-}"
 
 site_path=sites/udmi_site_model
 iot_config=$site_path/cloud_iot_config.json
-output_file=$site_path/out/validation_report.json
-mkdir -p out
+report_file=$site_path/out/validation_report.json
+mkdir -p out $site_path/out
 
 VALIDATOR_LOG=out/validator.log
 VALIDATOR_OUT=out/validator.out
@@ -54,8 +54,9 @@ touch $site_path/out/validator_start.nop
 
 echo Starting validator, output in $VALIDATOR_LOG, trace in $TRACE_DIR
 rm -rf $TRACE_DIR
-echo bin/validator $site_path $project_spec -w $TRACE_DIR
-bin/validator $site_path $project_spec -w $TRACE_DIR > $VALIDATOR_LOG 2>&1 &
+cmd="bin/validator $site_path $project_spec -d 10 -w $TRACE_DIR"
+echo $cmd
+$cmd > $VALIDATOR_LOG 2>&1 &
 vpid=$!
 echo Started validator pid $vpid
 
@@ -75,8 +76,7 @@ if [[ $i -eq $VALIDATOR_WAIT ]]; then
     false
 fi
 
-echo Checking reported cloud version info
-jq .cloud_version.udmi_ref $output_file
+echo Reported cloud version: $(jq .cloud_version.udmi_ref $report_file)
 
 pubber_bg AHU-1 extraField=prlagle skewClock
 pubber_bg GAT-123 emptyMissing extraPoint=llama fixedSampleRate=2
@@ -87,6 +87,14 @@ cat $VALIDATOR_LOG && timeout 60s tail -f $VALIDATOR_LOG || true
 echo Killing running pubber/validator instances...
 ps ax | fgrep pubber | fgrep java | awk '{print $1}' | xargs kill || true
 ps ax | fgrep validator | fgrep java | awk '{print $1}' | xargs kill || true
+
+correct_devices=$(jq .summary.correct_devices $report_file)
+expected_devices="[]"
+[[ $correct_devices == $expected_devices ]] || fail Unexpected report correct devices: $correct_devices != $expected_devices
+
+error_devices=$(jq .summary.error_devices $report_file)
+expected_devices="foo"
+[[ $error_devices == $expected_devices ]] || fail Unexpected report error devices: $error_devices != $expected_devices
 
 find $site_path/out/devices -name \*.json | sort > $VALIDATOR_OUT
 echo Found `wc -l $VALIDATOR_OUT` json output files.
