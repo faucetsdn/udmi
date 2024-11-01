@@ -213,7 +213,8 @@ public class IotReflectorClient implements MessagePublisher {
     if (isInstallValid) { // && expectedTxnId != null) {
       error(format("Missing UDMI reflector state reply for %s after %ss", expectedTxnId,
           Duration.between(txnStartTime, getNowInstant()).toSeconds()));
-      errorHandler(new IllegalStateException("Aborting due to missing transaction reply " + expectedTxnId));
+      errorHandler(
+          new IllegalStateException("Aborting due to missing transaction reply " + expectedTxnId));
       return;
     }
     expectedTxnId = getNextTransactionId();
