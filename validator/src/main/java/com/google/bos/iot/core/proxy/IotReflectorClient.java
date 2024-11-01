@@ -377,20 +377,25 @@ public class IotReflectorClient implements MessagePublisher {
           ofNullable(message.get(SubFolder.UDMI.value())).orElse(message));
 
       boolean shouldConsiderReply = reflectorConfig.reply.msg_source.equals(userName);
-      boolean matchingTxnId = reflectorConfig.reply.transaction_id.equals(expectedTxnId);
+      String transactionId = reflectorConfig.reply.transaction_id;
+      boolean matchingTxnId = transactionId.equals(expectedTxnId);
+      boolean matchingSession = transactionId.startsWith(sessionPrefix);
 
       if (!isInstallValid) {
         info("Received UDMI reflector initial config: " + stringify(reflectorConfig));
-      } else if (!shouldConsiderReply) {
+      }
+
+      if (!shouldConsiderReply) {
         return;
-      } else if (matchingTxnId) {
-        debug("Received UDMI reflector matching config reply " + expectedTxnId);
-      } else {
-        info("Received UDMI reflector mismatched " + expectedTxnId + " != " + stringifyTerse(
-            reflectorConfig));
-        close();
+      } else if (!matchingSession) {
+        debug("Ignoring reply from otherly session " + transactionId);
+        return;
+      } else if (!matchingTxnId) {
+        info(format("Received UDMI reflector mismatched %s != %s", transactionId, expectedTxnId));
         throw new IllegalStateException("There can (should) be only one instance on a channel");
       }
+
+      debug("Received UDMI reflector matching config reply " + expectedTxnId);
 
       Date lastState = reflectorConfig.last_state;
       boolean timestampMatch = dateEquals(lastState, SYSTEM_START_TIMESTAMP);
