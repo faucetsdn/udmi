@@ -28,6 +28,14 @@ public class SequenceBaseTest {
     SequenceBase.exeConfig.device_id = TestCommon.DEVICE_ID;
   }
 
+  static class TestCapability implements Capability { }
+
+  @Test
+  public void capabilityConversion() {
+    String capabilityName = SequenceBase.capabilityName(TestCapability.class);
+    assertEquals("class name conversion", "test_capability", capabilityName);
+  }
+
   @Test
   public void messageInterrupted() {
     final SequenceBase baseOne = new SequenceBase();

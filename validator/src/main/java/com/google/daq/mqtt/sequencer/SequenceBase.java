@@ -656,7 +656,7 @@ public class SequenceBase {
     boolean pass = state instanceof CapabilitySuccess;
     SequenceResult result = state == null ? SKIP : (pass ? PASS : FAIL);
     String message = ifNotNullGet(state, Throwable::getMessage, "Never executed");
-    String capabilityName = methodName + "." + capability.getSimpleName();
+    String capabilityName = methodName + "." + capabilityName(capability);
     int total = result != SKIP ? CAPABILITY_SCORE : 0;
     int score = result == PASS ? total : 0;
     emitSequencerOut(format(CAPABILITY_FORMAT,
@@ -2350,10 +2350,19 @@ public class SequenceBase {
     try {
       ifTrueThen(isCapableOf(capability), action);
     } catch (Exception e) {
-      info("Failed capability check " + capability.getSimpleName() + " because "
+      info("Failed capability check " + capabilityName(capability) + " because "
           + friendlyStackTrace(e));
       capExcept.put(capability, e);
     }
+  }
+
+  @NotNull
+  static String capabilityName(Class<? extends Capability> capability) {
+    return convertToSnakeCase(capability.getSimpleName());
+  }
+
+  private static String convertToSnakeCase(String camelCase) {
+    return camelCase.replaceAll("(?<=[a-z])([A-Z])", "_$1").toLowerCase();
   }
 
   private boolean isCapableOf(Class<? extends Capability> capability) {

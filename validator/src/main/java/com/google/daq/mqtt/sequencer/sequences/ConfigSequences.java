@@ -52,16 +52,16 @@ public class ConfigSequences extends SequenceBase {
   @Feature(stage = STABLE, bucket = SYSTEM)
   @Summary("Check that last_update state is correctly set in response to a config update.")
   @ValidateSchema(SubFolder.SYSTEM)
-  @WithCapability(value = MatchingSubblocks.class, stage = ALPHA)
+  @WithCapability(value = Subblocks.class, stage = ALPHA)
   public void system_last_update() {
     waitFor("state last_config matches config timestamp", this::lastConfigUpdated);
-    waitForCapability(MatchingSubblocks.class, "state update complete", this::stateMatchesConfig);
+    waitForCapability(Subblocks.class, "state update complete", this::stateMatchesConfig);
     forceConfigUpdate("trigger another config update");
     waitFor("state last_config matches config timestamp", this::lastConfigUpdated);
-    waitForCapability(MatchingSubblocks.class, "state update complete", this::stateMatchesConfig);
+    waitForCapability(Subblocks.class, "state update complete", this::stateMatchesConfig);
     forceConfigUpdate("trigger another config update");
     waitFor("state last_config matches config timestamp", this::lastConfigUpdated);
-    waitForCapability(MatchingSubblocks.class, "state update complete", this::stateMatchesConfig);
+    waitForCapability(Subblocks.class, "state update complete", this::stateMatchesConfig);
   }
 
   @Test(timeout = TWO_MINUTES_MS)
@@ -129,8 +129,8 @@ public class ConfigSequences extends SequenceBase {
 
   @Test(timeout = TWO_MINUTES_MS)
   @Feature(stage = STABLE, bucket = SYSTEM, score = 8)
-  @WithCapability(value = BrokenStateStatus.class, stage = ALPHA)
-  @WithCapability(value = ConfigLogging.class, stage = ALPHA)
+  @WithCapability(value = SystemStatus.class, stage = ALPHA)
+  @WithCapability(value = Logging.class, stage = ALPHA)
   @Summary("Check that the device correctly handles a broken (non-json) config message.")
   @ValidateSchema(SubFolder.SYSTEM)
   public void broken_config() {
@@ -146,12 +146,12 @@ public class ConfigSequences extends SequenceBase {
     checkThat("initial stable_config matches last_config",
         () -> dateEquals(stableConfig, deviceState.system.last_config));
 
-    forCapability(ConfigLogging.class,
+    forCapability(Logging.class,
         () -> waitForLog(SYSTEM_CONFIG_APPLY, SYSTEM_CONFIG_APPLY_LEVEL));
 
     setExtraField("break_json");
-    forCapability(BrokenStateStatus.class, this::untilHasInterestingSystemStatus);
-    forCapability(ConfigLogging.class,
+    forCapability(SystemStatus.class, this::untilHasInterestingSystemStatus);
+    forCapability(Logging.class,
         () -> waitForLog(SYSTEM_CONFIG_RECEIVE, SYSTEM_CONFIG_RECEIVE_LEVEL));
     Entry stateStatus = deviceState.system.status;
     info("Error message: " + stateStatus.message);
@@ -164,7 +164,7 @@ public class ConfigSequences extends SequenceBase {
     assertTrue("following stable_config matches last_config",
         dateEquals(stableConfig, deviceState.system.last_config));
     assertTrue("system operational", deviceState.system.operation.operational);
-    forCapability(ConfigLogging.class, () -> {
+    forCapability(Logging.class, () -> {
       untilLogged(SYSTEM_CONFIG_PARSE, Level.ERROR);
       safeSleep(LOG_APPLY_DELAY_MS);
       checkNotLogged(SYSTEM_CONFIG_APPLY, SYSTEM_CONFIG_APPLY_LEVEL);
@@ -173,7 +173,7 @@ public class ConfigSequences extends SequenceBase {
     // Will restore min_loglevel to the default of INFO.
     resetConfig(); // clears extra_field and interesting status checks
 
-    forCapability(ConfigLogging.class, () -> {
+    forCapability(Logging.class, () -> {
       untilLogged(SYSTEM_CONFIG_APPLY, SYSTEM_CONFIG_APPLY_LEVEL);
       untilTrue("restored state synchronized",
           () -> dateEquals(deviceConfig.timestamp, deviceState.system.last_config));
@@ -184,7 +184,7 @@ public class ConfigSequences extends SequenceBase {
         () -> !dateEquals(stableConfig, deviceState.system.last_config)
     );
     assertTrue("system operational", deviceState.system.operation.operational);
-    forCapability(ConfigLogging.class, () -> {
+    forCapability(Logging.class, () -> {
       untilLogged(SYSTEM_CONFIG_APPLY, SYSTEM_CONFIG_APPLY_LEVEL);
       // These should not be logged since the level was at INFO until the new config is applied.
       checkNotLogged(SYSTEM_CONFIG_RECEIVE, SYSTEM_CONFIG_RECEIVE_LEVEL);
@@ -231,15 +231,15 @@ public class ConfigSequences extends SequenceBase {
     untilLogged(SYSTEM_CONFIG_APPLY, SYSTEM_CONFIG_APPLY_LEVEL);
   }
 
-  static class MatchingSubblocks implements Capability {
+  static class Subblocks implements Capability {
 
   }
 
-  static class BrokenStateStatus implements Capability {
+  static class SystemStatus implements Capability {
 
   }
 
-  static class ConfigLogging implements Capability {
+  static class Logging implements Capability {
 
   }
 
