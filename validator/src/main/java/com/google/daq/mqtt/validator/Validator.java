@@ -495,7 +495,7 @@ public class Validator {
   @NotNull
   private ReportingDevice newReportingDevice(String device) {
     ReportingDevice reportingDevice = new ReportingDevice(device);
-    ifTrueThen(validateCurrent, () -> reportingDevice.setThreshold(DEFAULT_INTERVAL_SEC));
+    ifTrueThen(validateCurrent, () -> reportingDevice.setThreshold(reportingDelay));
     return reportingDevice;
   }
 

@@ -92,9 +92,9 @@ correct_devices=$(jq .summary.correct_devices $report_file)
 expected_devices="[]"
 [[ $correct_devices == $expected_devices ]] || fail Unexpected report correct devices: $correct_devices != $expected_devices
 
-error_devices=$(jq .summary.error_devices $report_file)
-expected_devices="foo"
-[[ $error_devices == $expected_devices ]] || fail Unexpected report error devices: $error_devices != $expected_devices
+error_devices=$(echo $(jq .summary.error_devices $report_file))
+expected_devices='[ "AHU-1", "AHU-22", "GAT-123", "SNS-4" ]'
+[[ "$error_devices" == "$expected_devices" ]] || fail Unexpected report error devices: $error_devices != $expected_devices
 
 find $site_path/out/devices -name \*.json | sort > $VALIDATOR_OUT
 echo Found `wc -l $VALIDATOR_OUT` json output files.
