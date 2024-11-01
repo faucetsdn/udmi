@@ -89,6 +89,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.MissingFormatArgumentException;
 import java.util.Scanner;
 import java.util.Set;
@@ -168,7 +169,8 @@ public class Validator {
       .toList();
 
   private static final long REPORT_INTERVAL_SEC = 60;
-  private static final long MAX_REPORT_BATCH_SIZE = 25;
+  private static final long REPORTS_PER_SEC = 2;
+  private static final long MAX_REPORT_BATCH_SIZE = REPORT_INTERVAL_SEC * REPORTS_PER_SEC;
   private static final String EXCLUDE_DEVICE_PREFIX = "_";
   private static final String VALIDATION_SITE_REPORT_DEVICE_ID = null;
   private static final String VALIDATION_EVENT_TOPIC = "validation/events";
@@ -204,7 +206,6 @@ public class Validator {
   private boolean forceUpgrade;
   private SiteModel siteModel;
   private boolean validateCurrent;
-  private Date reportLowWaterMark;
 
   /**
    * Create a simplistic validator for encapsulated use.
@@ -685,7 +686,7 @@ public class Validator {
       Map<String, Object> message = isString ? null : mapCast(messageObj);
       validateTimestamp(device, message, attributes);
 
-      if (!device.shouldProcessMessageSchema(schemaName, getInstant(messageObj, attributes))) {
+      if (!device.shouldProcessMessage(schemaName, getInstant(messageObj, attributes))) {
         outputLogger.trace("Ignoring device %s/%s (too soon)", deviceId, schemaName);
         return null;
       }
@@ -1030,13 +1031,15 @@ public class Validator {
 
   private synchronized void sendDeviceValidationReports(Map<String, ValidationState> summaries) {
     if (summaryDevices.isEmpty()) {
-      summaryDevices.addAll(summaries.keySet());
+      List<String> keys = summaries.entrySet().stream()
+          .filter(entry -> entry.getValue().last_updated.after(START_TIME))
+          .map(Entry::getKey).toList();
+      summaryDevices.addAll(keys);
     }
-    List<String> batchDevices = summaryDevices.stream()
-        .filter(id -> summaries.get(id).last_updated.after(START_TIME)).toList();
-    System.err.printf("Sending max %d device validation state updates out of an available %d%n",
-        MAX_REPORT_BATCH_SIZE, batchDevices.size());
-    batchDevices.stream().limit(MAX_REPORT_BATCH_SIZE).forEach(id -> {
+    List<String> sendList = summaryDevices.stream().limit(MAX_REPORT_BATCH_SIZE).toList();
+    System.err.printf("Sending %d device validation state updates out of an available %d%n",
+        sendList.size(), summaryDevices.size());
+    sendList.forEach(id -> {
       sendValidationReport(summaries.get(id));
       summaryDevices.remove(id);
     });

@@ -122,10 +122,10 @@ public class MqttPublisher implements MessagePublisher {
   private final String topicBase;
   private final CertManager certManager;
   private final Envelope savedState = new Envelope();
+  private final AtomicInteger publisherQueueSize = new AtomicInteger();
   private long mqttTokenSetTimeMs;
   private MqttConnectOptions mqttConnectOptions;
   private boolean shutdown;
-  private AtomicInteger publisherQueueSize;
 
   MqttPublisher(ExecutionConfiguration config, byte[] actualKeyBytes, String keyAlgorithm,
       BiConsumer<String, String> onMessageCallback, Consumer<Throwable> onErrorCallback) {
