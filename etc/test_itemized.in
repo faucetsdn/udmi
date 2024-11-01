@@ -15,6 +15,7 @@ TEST config_logging badVersion
 TEST broken_config barfConfig
 TEST broken_config configStateDelay
 TEST broken_config noState
+TEST broken_config noStatus
 TEST broken_config noLog
 TEST broken_config badCategory
 TEST broken_config badLevel

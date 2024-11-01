@@ -73,6 +73,9 @@
     "noState": {
       "type": "boolean"
     },
+    "noStatus": {
+      "type": "boolean"
+    },
     "noFolder": {
       "type": "boolean"
     },

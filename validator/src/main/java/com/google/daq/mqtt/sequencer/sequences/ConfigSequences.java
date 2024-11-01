@@ -25,8 +25,8 @@ import com.google.daq.mqtt.sequencer.Capability;
 import com.google.daq.mqtt.sequencer.Feature;
 import com.google.daq.mqtt.sequencer.SequenceBase;
 import com.google.daq.mqtt.sequencer.Summary;
-import com.google.daq.mqtt.sequencer.UsesCapability;
 import com.google.daq.mqtt.sequencer.ValidateSchema;
+import com.google.daq.mqtt.sequencer.WithCapability;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.Date;
@@ -48,15 +48,11 @@ public class ConfigSequences extends SequenceBase {
   // How frequently to send out confg queries for device config acked check.
   private static final Duration CONFIG_QUERY_INTERVAL = Duration.ofSeconds(30);
 
-  class MatchingSubblocks implements Capability {
-
-  }
-
   @Test(timeout = TWO_MINUTES_MS)
   @Feature(stage = STABLE, bucket = SYSTEM)
   @Summary("Check that last_update state is correctly set in response to a config update.")
   @ValidateSchema(SubFolder.SYSTEM)
-  @UsesCapability(value = MatchingSubblocks.class, stage = ALPHA)
+  @WithCapability(value = MatchingSubblocks.class, stage = ALPHA)
   public void system_last_update() {
     waitFor("state last_config matches config timestamp", this::lastConfigUpdated);
     waitForCapability(MatchingSubblocks.class, "state update complete", this::stateMatchesConfig);
@@ -131,18 +127,10 @@ public class ConfigSequences extends SequenceBase {
     });
   }
 
-  class BrokenStateStatus implements Capability {
-
-  }
-
-  class ConfigLogging implements Capability {
-
-  }
-
   @Test(timeout = TWO_MINUTES_MS)
-  @Feature(stage = STABLE, bucket = SYSTEM, score = 9)
-  @UsesCapability(value = BrokenStateStatus.class, stage = ALPHA)
-  @UsesCapability(value = ConfigLogging.class, stage = ALPHA)
+  @Feature(stage = STABLE, bucket = SYSTEM, score = 8)
+  @WithCapability(value = BrokenStateStatus.class, stage = ALPHA)
+  @WithCapability(value = ConfigLogging.class, stage = ALPHA)
   @Summary("Check that the device correctly handles a broken (non-json) config message.")
   @ValidateSchema(SubFolder.SYSTEM)
   public void broken_config() {
@@ -162,7 +150,7 @@ public class ConfigSequences extends SequenceBase {
         () -> waitForLog(SYSTEM_CONFIG_APPLY, SYSTEM_CONFIG_APPLY_LEVEL));
 
     setExtraField("break_json");
-    untilHasInterestingSystemStatus(true);
+    forCapability(BrokenStateStatus.class, this::untilHasInterestingSystemStatus);
     forCapability(ConfigLogging.class,
         () -> waitForLog(SYSTEM_CONFIG_RECEIVE, SYSTEM_CONFIG_RECEIVE_LEVEL));
     Entry stateStatus = deviceState.system.status;
@@ -241,6 +229,18 @@ public class ConfigSequences extends SequenceBase {
     untilLogged(SYSTEM_CONFIG_RECEIVE, SYSTEM_CONFIG_RECEIVE_LEVEL);
     untilLogged(SYSTEM_CONFIG_PARSE, SYSTEM_CONFIG_PARSE_LEVEL);
     untilLogged(SYSTEM_CONFIG_APPLY, SYSTEM_CONFIG_APPLY_LEVEL);
+  }
+
+  static class MatchingSubblocks implements Capability {
+
+  }
+
+  static class BrokenStateStatus implements Capability {
+
+  }
+
+  static class ConfigLogging implements Capability {
+
   }
 
 }

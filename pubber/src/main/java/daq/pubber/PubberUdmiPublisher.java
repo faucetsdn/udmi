@@ -10,6 +10,7 @@ import static com.google.udmi.util.GeneralUtils.ifNotNullGet;
 import static com.google.udmi.util.GeneralUtils.ifNotNullThen;
 import static com.google.udmi.util.GeneralUtils.ifTrueThen;
 import static com.google.udmi.util.GeneralUtils.isGetTrue;
+import static com.google.udmi.util.GeneralUtils.isNotTrue;
 import static com.google.udmi.util.GeneralUtils.isTrue;
 import static com.google.udmi.util.GeneralUtils.stackTraceString;
 import static com.google.udmi.util.GeneralUtils.toJsonFile;
@@ -334,8 +335,10 @@ public interface PubberUdmiPublisher extends UdmiPublisher {
   void error(String s);
 
   default void registerSystemStatus(Entry report) {
-    getDeviceState().system.status = report;
-    markStateDirty();
+    if (isNotTrue(getOptions().noStatus)) {
+      getDeviceState().system.status = report;
+      markStateDirty();
+    }
   }
 
   /**

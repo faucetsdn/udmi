@@ -13,7 +13,7 @@ import udmi.schema.FeatureDiscovery.FeatureStage;
 @Retention(RetentionPolicy.RUNTIME)
 @Target({ElementType.METHOD})
 @Repeatable(AllCapabilities.class)
-public @interface UsesCapability {
+public @interface WithCapability {
 
   /**
    * Default value is ALPHA for initial test development.

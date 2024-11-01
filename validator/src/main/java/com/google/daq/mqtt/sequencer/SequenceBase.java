@@ -598,15 +598,15 @@ public class SequenceBase {
     return category.equals(entry.category) && entry.level == exactLevel.value();
   }
 
-  private static Map<Class<? extends Capability>, UsesCapability> getCapabilities(
+  private static Map<Class<? extends Capability>, WithCapability> getCapabilities(
       Description desc) {
     try {
       AllCapabilities all = desc.getAnnotation(AllCapabilities.class);
-      List<UsesCapability> list = ofNullable(all).map(array -> Arrays.asList(all.value()))
+      List<WithCapability> list = ofNullable(all).map(array -> Arrays.asList(all.value()))
           .orElseGet(ArrayList::new);
-      ifNotNullThen(desc.getAnnotation(UsesCapability.class), list::add);
+      ifNotNullThen(desc.getAnnotation(WithCapability.class), list::add);
       return list.stream()
-          .collect(Collectors.toMap(UsesCapability::value, cap -> cap));
+          .collect(Collectors.toMap(WithCapability::value, cap -> cap));
     } catch (Exception e) {
       throw new RuntimeException("While extracting capabilities for " + desc.getMethodName(), e);
     }
@@ -652,7 +652,7 @@ public class SequenceBase {
 
   private Map.Entry<Integer, Integer> emitCapabilityResult(Class<? extends Capability> capability,
       Exception state,
-      UsesCapability cap, Bucket bucket, String methodName) {
+      WithCapability cap, Bucket bucket, String methodName) {
     boolean pass = state instanceof CapabilitySuccess;
     SequenceResult result = state == null ? SKIP : (pass ? PASS : FAIL);
     String message = ifNotNullGet(state, Throwable::getMessage, "Never executed");
@@ -884,7 +884,7 @@ public class SequenceBase {
     putSequencerResult(description, result);
 
     Feature feature = description.getAnnotation(Feature.class);
-    Map<Class<? extends Capability>, UsesCapability> capabilities = getCapabilities(description);
+    Map<Class<? extends Capability>, WithCapability> capabilities = getCapabilities(description);
     Bucket bucket = getBucket(feature);
     final String stage = (feature == null ? Feature.DEFAULT_STAGE : feature.stage()).name();
     final int base = (feature == null ? Feature.DEFAULT_SCORE : feature.score());
@@ -2199,6 +2199,10 @@ public class SequenceBase {
     } else {
       checkThat(NOT_STATUS_PREFIX + systemStatusMessage, significantStatusDetail());
     }
+  }
+
+  protected void untilHasInterestingSystemStatus() {
+    untilHasInterestingSystemStatus(true);
   }
 
   protected void untilHasInterestingSystemStatus(boolean interesting) {
