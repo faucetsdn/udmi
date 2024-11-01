@@ -44,6 +44,9 @@ jq 'del(.udmi_namespace)' $iot_config | sponge $iot_config
 validator/bin/build
 pubber/bin/build
 
+# Clear out some old cruft that might be left over from other tests...
+rm -rf $site_path/devices/XXX*
+
 # Have to reset pubber configs before running validator to avoid reflector registry conflict
 for device in AHU-1 AHU-22 GAT-123; do
     echo bin/reset_config $site_path $project_spec $device
