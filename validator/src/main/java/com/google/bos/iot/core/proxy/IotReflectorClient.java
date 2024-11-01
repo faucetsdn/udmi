@@ -388,11 +388,13 @@ public class IotReflectorClient implements MessagePublisher {
       if (!shouldConsiderReply) {
         return;
       } else if (!matchingSession) {
-        debug("Ignoring reply from otherly session " + transactionId);
-        return;
-      } else if (!matchingTxnId) {
-        info(format("Received UDMI reflector mismatched %s != %s", transactionId, expectedTxnId));
+        info(
+            format("Received UDMI reflector other session %s != %s", transactionId, sessionPrefix));
         throw new IllegalStateException("There can (should) be only one instance on a channel");
+      } else if (!matchingTxnId) {
+        debug(format("Ignoring unexpected reply from this session %s != %s", transactionId,
+            expectedTxnId));
+        return;
       }
 
       debug("Received UDMI reflector matching config reply " + expectedTxnId);
