@@ -210,11 +210,11 @@ public class IotReflectorClient implements MessagePublisher {
   }
 
   private synchronized void setReflectorState() {
-    if (isInstallValid && expectedTxnId != null) {
+    if (isInstallValid) { // && expectedTxnId != null) {
       error(format("Missing UDMI reflector state reply for %s after %ss", expectedTxnId,
           Duration.between(txnStartTime, getNowInstant()).toSeconds()));
-      close();
-      throw new IllegalStateException("Aborting due to missing transaction reply " + expectedTxnId);
+      errorHandler(new IllegalStateException("Aborting due to missing transaction reply " + expectedTxnId));
+      return;
     }
     expectedTxnId = getNextTransactionId();
     txnStartTime = getNowInstant();
@@ -295,6 +295,8 @@ public class IotReflectorClient implements MessagePublisher {
       } else {
         throw new RuntimeException("Unknown message category " + envelope.subType);
       }
+    } catch (IllegalStateException e) {
+      throw e;
     } catch (Exception e) {
       if (isInstallValid) {
         handleReceivedMessage(extractAttributes(messageMap),
@@ -442,6 +444,8 @@ public class IotReflectorClient implements MessagePublisher {
       } else {
         throw new RuntimeException("Unexpected if condition");
       }
+    } catch (IllegalStateException e) {
+      throw e;
     } catch (Exception e) {
       syncFailure = e;
     }
