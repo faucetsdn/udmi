@@ -2193,6 +2193,10 @@ public class SequenceBase {
     checkThatHasInterestingSystemStatus(false);
   }
 
+  protected void checkThatHasInterestingSystemStatus() {
+    checkThatHasInterestingSystemStatus(true);
+  }
+
   protected void checkThatHasInterestingSystemStatus(boolean isInteresting) {
     if (!deviceSupportsState()) {
       return;
@@ -2205,12 +2209,12 @@ public class SequenceBase {
     }
   }
 
-  protected void untilHasInterestingSystemStatus() {
-    untilHasInterestingSystemStatus(true);
-  }
-
   protected void untilHasNoInterestingSystemStatus() {
     untilHasInterestingSystemStatus(false);
+  }
+
+  protected void untilHasInterestingSystemStatus() {
+    untilHasInterestingSystemStatus(true);
   }
 
   protected void untilHasInterestingSystemStatus(boolean interesting) {
