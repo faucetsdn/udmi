@@ -27,9 +27,9 @@
 1 CPBLTY fail system broken_config.logging ALPHA 0/1 While log category `system.config.apply` level `NOTICE` to be logged
 0 CPBLTY pass system broken_config.status ALPHA 1/1 Capability supported
 0 RESULT pass system broken_config STABLE 9/10 Sequence complete
-1 CPBLTY pass system broken_config.logging ALPHA 1/1 Capability supported
-0 CPBLTY pass system broken_config.status ALPHA 1/1 Capability supported
-0 RESULT fail system broken_config STABLE 0/10 expected:<system.config.[parse]> but was:<system.config.[apply]>
+1 CPBLTY fail system broken_config.logging ALPHA 0/1 While log category `system.config.receive` level `DEBUG` to be logged
+0 CPBLTY fail system broken_config.status ALPHA 0/1 Failed check that category matches system.config.parse
+0 RESULT pass system broken_config STABLE 8/10 Sequence complete
 1 CPBLTY fail system broken_config.logging ALPHA 0/1 While log category `system.config.apply` level `NOTICE` to be logged
 0 CPBLTY fail system broken_config.status ALPHA 0/1 While has significant system status
 0 RESULT pass system broken_config STABLE 8/10 Sequence complete
