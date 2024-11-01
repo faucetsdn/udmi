@@ -2,8 +2,6 @@ package com.google.daq.mqtt.sequencer.sequences;
 
 import static com.google.common.base.Preconditions.checkState;
 import static com.google.common.base.Strings.isNullOrEmpty;
-import static com.google.daq.mqtt.sequencer.SequenceBase.Capabilities.LOGGING;
-import static com.google.daq.mqtt.sequencer.SequenceBase.Capabilities.MATCHING_SUBBLOCKS;
 import static com.google.daq.mqtt.util.TimePeriodConstants.THREE_MINUTES_MS;
 import static com.google.daq.mqtt.util.TimePeriodConstants.TWO_MINUTES_MS;
 import static com.google.udmi.util.CleanDateFormat.dateEquals;
@@ -21,10 +19,10 @@ import static udmi.schema.Category.SYSTEM_CONFIG_PARSE_LEVEL;
 import static udmi.schema.Category.SYSTEM_CONFIG_RECEIVE;
 import static udmi.schema.Category.SYSTEM_CONFIG_RECEIVE_LEVEL;
 import static udmi.schema.FeatureDiscovery.FeatureStage.ALPHA;
-import static udmi.schema.FeatureDiscovery.FeatureStage.BETA;
 import static udmi.schema.FeatureDiscovery.FeatureStage.STABLE;
 
 import com.google.daq.mqtt.sequencer.Capability;
+import com.google.daq.mqtt.sequencer.UsesCapability;
 import com.google.daq.mqtt.sequencer.Feature;
 import com.google.daq.mqtt.sequencer.SequenceBase;
 import com.google.daq.mqtt.sequencer.Summary;
@@ -50,20 +48,24 @@ public class ConfigSequences extends SequenceBase {
   // How frequently to send out confg queries for device config acked check.
   private static final Duration CONFIG_QUERY_INTERVAL = Duration.ofSeconds(30);
 
+  class MatchingSubblocks implements Capability {
+
+  }
+
   @Test(timeout = TWO_MINUTES_MS)
   @Feature(stage = STABLE, bucket = SYSTEM)
   @Summary("Check that last_update state is correctly set in response to a config update.")
   @ValidateSchema(SubFolder.SYSTEM)
-  @Capability(value = MATCHING_SUBBLOCKS, stage = ALPHA)
+  @UsesCapability(value = MatchingSubblocks.class, stage = ALPHA)
   public void system_last_update() {
     waitFor("state last_config matches config timestamp", this::lastConfigUpdated);
-    waitForCapability(MATCHING_SUBBLOCKS, "state update complete", this::stateMatchesConfig);
+    waitForCapability(MatchingSubblocks.class, "state update complete", this::stateMatchesConfig);
     forceConfigUpdate("trigger another config update");
     waitFor("state last_config matches config timestamp", this::lastConfigUpdated);
-    waitForCapability(MATCHING_SUBBLOCKS, "state update complete", this::stateMatchesConfig);
+    waitForCapability(MatchingSubblocks.class, "state update complete", this::stateMatchesConfig);
     forceConfigUpdate("trigger another config update");
     waitFor("state last_config matches config timestamp", this::lastConfigUpdated);
-    waitForCapability(MATCHING_SUBBLOCKS, "state update complete", this::stateMatchesConfig);
+    waitForCapability(MatchingSubblocks.class, "state update complete", this::stateMatchesConfig);
   }
 
   @Test(timeout = TWO_MINUTES_MS)
@@ -129,9 +131,18 @@ public class ConfigSequences extends SequenceBase {
     });
   }
 
+  class BrokenStateStatus implements Capability {
+
+  }
+
+  class ConfigLogging implements Capability {
+
+  }
+
   @Test(timeout = TWO_MINUTES_MS)
   @Feature(stage = STABLE, bucket = SYSTEM, score = 9)
-  @Capability(value = LOGGING, stage = ALPHA)
+  @UsesCapability(value = BrokenStateStatus.class, stage = ALPHA)
+  @UsesCapability(value = ConfigLogging.class, stage = ALPHA)
   @Summary("Check that the device correctly handles a broken (non-json) config message.")
   @ValidateSchema(SubFolder.SYSTEM)
   public void broken_config() {
@@ -147,11 +158,13 @@ public class ConfigSequences extends SequenceBase {
     checkThat("initial stable_config matches last_config",
         () -> dateEquals(stableConfig, deviceState.system.last_config));
 
-    forCapability(LOGGING, () -> waitForLog(SYSTEM_CONFIG_APPLY, SYSTEM_CONFIG_APPLY_LEVEL));
+    forCapability(ConfigLogging.class,
+        () -> waitForLog(SYSTEM_CONFIG_APPLY, SYSTEM_CONFIG_APPLY_LEVEL));
 
     setExtraField("break_json");
     untilHasInterestingSystemStatus(true);
-    forCapability(LOGGING, () -> waitForLog(SYSTEM_CONFIG_RECEIVE, SYSTEM_CONFIG_RECEIVE_LEVEL));
+    forCapability(ConfigLogging.class,
+        () -> waitForLog(SYSTEM_CONFIG_RECEIVE, SYSTEM_CONFIG_RECEIVE_LEVEL));
     Entry stateStatus = deviceState.system.status;
     info("Error message: " + stateStatus.message);
     debug("Error detail: " + stateStatus.detail);
@@ -163,7 +176,7 @@ public class ConfigSequences extends SequenceBase {
     assertTrue("following stable_config matches last_config",
         dateEquals(stableConfig, deviceState.system.last_config));
     assertTrue("system operational", deviceState.system.operation.operational);
-    forCapability(LOGGING, () -> {
+    forCapability(ConfigLogging.class, () -> {
       untilLogged(SYSTEM_CONFIG_PARSE, Level.ERROR);
       safeSleep(LOG_APPLY_DELAY_MS);
       checkNotLogged(SYSTEM_CONFIG_APPLY, SYSTEM_CONFIG_APPLY_LEVEL);
@@ -172,7 +185,7 @@ public class ConfigSequences extends SequenceBase {
     // Will restore min_loglevel to the default of INFO.
     resetConfig(); // clears extra_field and interesting status checks
 
-    forCapability(LOGGING, () -> {
+    forCapability(ConfigLogging.class, () -> {
       untilLogged(SYSTEM_CONFIG_APPLY, SYSTEM_CONFIG_APPLY_LEVEL);
       untilTrue("restored state synchronized",
           () -> dateEquals(deviceConfig.timestamp, deviceState.system.last_config));
@@ -183,7 +196,7 @@ public class ConfigSequences extends SequenceBase {
         () -> !dateEquals(stableConfig, deviceState.system.last_config)
     );
     assertTrue("system operational", deviceState.system.operation.operational);
-    forCapability(LOGGING, () -> {
+    forCapability(ConfigLogging.class, () -> {
       untilLogged(SYSTEM_CONFIG_APPLY, SYSTEM_CONFIG_APPLY_LEVEL);
       // These should not be logged since the level was at INFO until the new config is applied.
       checkNotLogged(SYSTEM_CONFIG_RECEIVE, SYSTEM_CONFIG_RECEIVE_LEVEL);

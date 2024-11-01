@@ -5,7 +5,6 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
 import static com.google.common.base.Predicates.not;
 import static com.google.common.base.Strings.emptyToNull;
-import static com.google.daq.mqtt.sequencer.SequenceBase.Capabilities.LAST_CONFIG;
 import static com.google.daq.mqtt.sequencer.semantic.SemanticValue.actualize;
 import static com.google.daq.mqtt.util.CloudIotManager.EMPTY_CONFIG;
 import static com.google.daq.mqtt.util.ConfigManager.configFrom;
@@ -287,7 +286,7 @@ public class SequenceBase {
   private final Stack<String> waitingCondition = new Stack<>();
   private final SortedMap<String, List<Entry>> validationResults = new TreeMap<>();
   private final Map<String, String> deviceStateViolations = new ConcurrentHashMap<>();
-  private final Map<Capabilities, Exception> capabilityExceptions = new ConcurrentHashMap<>();
+  private final Map<Class<? extends Capability>, Exception> capExcept = new ConcurrentHashMap<>();
   private final Set<String> allowedDeviceStateChanges = new HashSet<>();
   @Rule
   public Timeout globalTimeout = new Timeout(NORM_TIMEOUT_MS, TimeUnit.MILLISECONDS);
@@ -599,14 +598,14 @@ public class SequenceBase {
     return category.equals(entry.category) && entry.level == exactLevel.value();
   }
 
-  private static Map<Capabilities, Capability> getCapabilities(Description desc) {
+  private static Map<Class<? extends Capability>, UsesCapability> getCapabilities(Description desc) {
     try {
       AllCapabilities all = desc.getAnnotation(AllCapabilities.class);
-      List<Capability> list = ofNullable(all).map(array -> Arrays.asList(all.value()))
+      List<UsesCapability> list = ofNullable(all).map(array -> Arrays.asList(all.value()))
           .orElseGet(ArrayList::new);
-      ifNotNullThen(desc.getAnnotation(Capability.class), list::add);
+      ifNotNullThen(desc.getAnnotation(UsesCapability.class), list::add);
       return list.stream()
-          .collect(Collectors.toMap(Capability::value, cap -> cap));
+          .collect(Collectors.toMap(UsesCapability::value, cap -> cap));
     } catch (Exception e) {
       throw new RuntimeException("While extracting capabilities for " + desc.getMethodName(), e);
     }
@@ -650,12 +649,13 @@ public class SequenceBase {
     return schemaName.equals(eventsSchema) || schemaName.equals(STATE_UPDATE_MESSAGE_TYPE);
   }
 
-  private Map.Entry<Integer, Integer> emitCapabilityResult(Capabilities capability, Exception state,
-      Capability cap, Bucket bucket, String methodName) {
+  private Map.Entry<Integer, Integer> emitCapabilityResult(Class<? extends Capability> capability,
+      Exception state,
+      UsesCapability cap, Bucket bucket, String methodName) {
     boolean pass = state instanceof CapabilitySuccess;
     SequenceResult result = state == null ? SKIP : (pass ? PASS : FAIL);
     String message = ifNotNullGet(state, Throwable::getMessage, "Never executed");
-    String capabilityName = methodName + "." + capability.value();
+    String capabilityName = methodName + "." + capability.getSimpleName();
     int total = result != SKIP ? CAPABILITY_SCORE : 0;
     int score = result == PASS ? total : 0;
     emitSequencerOut(format(CAPABILITY_FORMAT,
@@ -761,7 +761,7 @@ public class SequenceBase {
     assumeTrue(format("Feature bucket %s not enabled", testBucket.key()),
         isBucketEnabled(testBucket));
 
-    assertTrue("exceptions map should be empty", capabilityExceptions.isEmpty());
+    assertTrue("exceptions map should be empty", capExcept.isEmpty());
     assertTrue("allowed changes map should be empty", allowedDeviceStateChanges.isEmpty());
 
     if (!deviceSupportsState()) {
@@ -883,7 +883,7 @@ public class SequenceBase {
     putSequencerResult(description, result);
 
     Feature feature = description.getAnnotation(Feature.class);
-    Map<Capabilities, Capability> capabilities = getCapabilities(description);
+    Map<Class<? extends Capability>, UsesCapability> capabilities = getCapabilities(description);
     Bucket bucket = getBucket(feature);
     final String stage = (feature == null ? Feature.DEFAULT_STAGE : feature.stage()).name();
     final int base = (feature == null ? Feature.DEFAULT_SCORE : feature.score());
@@ -894,17 +894,17 @@ public class SequenceBase {
     AtomicInteger total = new AtomicInteger(isSkip ? 0 : base);
     AtomicInteger score = new AtomicInteger(isPass ? base : 0);
 
-    if (!capabilities.containsKey(LAST_CONFIG)) {
+    if (!capabilities.containsKey(LastConfig.class)) {
       debug("Removing implicit system capability LAST_CONFIG");
-      capabilityExceptions.remove(LAST_CONFIG);
+      capExcept.remove(LastConfig.class);
     }
 
     ifTrueThen(isPass, () -> assertEquals("executed test capabilities",
-        capabilities.keySet(), capabilityExceptions.keySet()));
+        capabilities.keySet(), capExcept.keySet()));
 
     String method = description.getMethodName();
     capabilities.keySet().stream()
-        .map(key -> emitCapabilityResult(key, capabilityExceptions.get(key),
+        .map(key -> emitCapabilityResult(key, capExcept.get(key),
             capabilities.get(key), bucket, method))
         .forEach(scoreAndTotal -> {
           ifTrueThen(isPass, () -> score.addAndGet(scoreAndTotal.getKey()));
@@ -944,9 +944,9 @@ public class SequenceBase {
     return format("%s_%s_%s", entry.category, entry.message, entry.detail);
   }
 
-  private CapabilityValidationState collectCapabilityResult(Capabilities key) {
+  private CapabilityValidationState collectCapabilityResult(Class<? extends Capability> key) {
     CapabilityValidationState capabilityValidationState = new CapabilityValidationState();
-    Exception exception = capabilityExceptions.get(key);
+    Exception exception = capExcept.get(key);
     boolean isPass = exception instanceof CapabilitySuccess;
     capabilityValidationState.result = isPass ? CapabilityResult.PASS : CapabilityResult.FAIL;
     if (!isPass) {
@@ -2239,8 +2239,8 @@ public class SequenceBase {
     sequenceValidationState.result = result;
     sequenceValidationState.summary = getTestSummary(description);
     sequenceValidationState.stage = getTestStage(description);
-    sequenceValidationState.capabilities = capabilityExceptions.keySet().stream()
-        .collect(Collectors.toMap(Capabilities::value, this::collectCapabilityResult));
+    sequenceValidationState.capabilities = capExcept.keySet().stream()
+        .collect(Collectors.toMap(Class::getSimpleName, this::collectCapabilityResult));
     sequenceValidationState.scoring = scoringResult;
     updateValidationState();
   }
@@ -2328,22 +2328,23 @@ public class SequenceBase {
     return receivedUpdates;
   }
 
-  protected void waitForCapability(Capabilities cap, String description, Supplier<String> action) {
+  protected void waitForCapability(Class<? extends Capability> cap, String description,
+      Supplier<String> action) {
     forCapability(cap, () -> waitFor(description, action));
   }
 
-  protected void forCapability(Capabilities capability, Runnable action) {
+  protected void forCapability(Class<? extends Capability> capability, Runnable action) {
     try {
       ifTrueThen(isCapableOf(capability), action);
     } catch (Exception e) {
-      info("Failed capability check " + capability.value() + " because "
+      info("Failed capability check " + capability.getSimpleName() + " because "
           + friendlyStackTrace(e));
-      capabilityExceptions.put(capability, e);
+      capExcept.put(capability, e);
     }
   }
 
-  private boolean isCapableOf(Capabilities capability) {
-    Exception previous = capabilityExceptions.computeIfAbsent(capability, CapabilitySuccess::new);
+  private boolean isCapableOf(Class<? extends Capability> capability) {
+    Exception previous = capExcept.computeIfAbsent(capability, CapabilitySuccess::new);
     return previous instanceof CapabilitySuccess;
   }
 
@@ -2367,23 +2368,10 @@ public class SequenceBase {
   }
 
   /**
-   * Master list of test capabilities.
+   * Capability indicating if the target implements last_config state reporting.
    */
-  public enum Capabilities {
-    DEVICE_STATE("device_state"),
-    LOGGING("logging"),
-    LAST_CONFIG("last_config"),
-    MATCHING_SUBBLOCKS("subblocks");
+  class LastConfig implements Capability {
 
-    private final String value;
-
-    Capabilities(String value) {
-      this.value = value;
-    }
-
-    public String value() {
-      return this.value;
-    }
   }
 
   /**
@@ -2409,7 +2397,7 @@ public class SequenceBase {
 
   private static class CapabilitySuccess extends RuntimeException {
 
-    public CapabilitySuccess(Capabilities capability) {
+    public CapabilitySuccess(Class<? extends Capability> capability) {
       super("Capability supported");
     }
   }

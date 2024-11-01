@@ -210,7 +210,7 @@ public class IotReflectorClient implements MessagePublisher {
   }
 
   private synchronized void setReflectorState() {
-    if (isInstallValid) { // && expectedTxnId != null) {
+    if (isInstallValid && expectedTxnId != null) {
       error(format("Missing UDMI reflector state reply for %s after %ss", expectedTxnId,
           Duration.between(txnStartTime, getNowInstant()).toSeconds()));
       errorHandler(
