@@ -17,6 +17,7 @@ RESULT skip pointset pointset_remove_point STABLE 0/0 State testing disabled
 RESULT skip pointset pointset_request_extraneous STABLE 0/0 State testing disabled
 RESULT skip system broken_config STABLE 0/0 State testing disabled
 CPBLTY skip system broken_config.logging ALPHA 0/0 Never executed
+CPBLTY skip system broken_config.status ALPHA 0/0 Never executed
 RESULT skip system config_logging STABLE 0/0 State testing disabled
 RESULT skip system device_config_acked STABLE 0/0 State testing disabled
 RESULT skip system extra_config STABLE 0/0 State testing disabled
