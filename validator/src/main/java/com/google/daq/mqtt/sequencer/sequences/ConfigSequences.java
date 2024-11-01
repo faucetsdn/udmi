@@ -151,13 +151,13 @@ public class ConfigSequences extends SequenceBase {
 
     setExtraField("break_json");
     forCapability(Status.class, () -> {
-          untilHasInterestingSystemStatus();
-          Entry stateStatus = deviceState.system.status;
-          info("Error message: " + stateStatus.message);
-          debug("Error detail: " + stateStatus.detail);
-          assertEquals(SYSTEM_CONFIG_PARSE, stateStatus.category);
-          assertEquals(Level.ERROR.value(), (int) stateStatus.level);
-        });
+      untilHasInterestingSystemStatus();
+      Entry stateStatus = deviceState.system.status;
+      info("Error message: " + stateStatus.message);
+      debug("Error detail: " + stateStatus.detail);
+      assertEquals(SYSTEM_CONFIG_PARSE, stateStatus.category);
+      assertEquals(Level.ERROR.value(), (int) stateStatus.level);
+    });
     info("following stable_config " + isoConvert(stableConfig));
     info("following last_config " + isoConvert(deviceState.system.last_config));
     // The last_config should not be updated to not reflect the broken config.
@@ -165,13 +165,11 @@ public class ConfigSequences extends SequenceBase {
         dateEquals(stableConfig, deviceState.system.last_config));
     assertTrue("system operational", deviceState.system.operation.operational);
     forCapability(Logging.class, () -> {
-          waitForLog(SYSTEM_CONFIG_RECEIVE, SYSTEM_CONFIG_RECEIVE_LEVEL);
-          waitForLog(SYSTEM_CONFIG_PARSE, Level.ERROR);
-        });
-    forCapability(Logging.class, () -> {
-          safeSleep(LOG_APPLY_DELAY_MS);
-          checkNotLogged(SYSTEM_CONFIG_APPLY, SYSTEM_CONFIG_APPLY_LEVEL);
-        });
+      waitForLog(SYSTEM_CONFIG_RECEIVE, SYSTEM_CONFIG_RECEIVE_LEVEL);
+      waitForLog(SYSTEM_CONFIG_PARSE, Level.ERROR);
+      safeSleep(LOG_APPLY_DELAY_MS);
+      checkNotLogged(SYSTEM_CONFIG_APPLY, SYSTEM_CONFIG_APPLY_LEVEL);
+    });
 
     // Will restore min_loglevel to the default of INFO.
     resetConfig(); // clears extra_field and interesting status checks
