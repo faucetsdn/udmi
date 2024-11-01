@@ -598,7 +598,8 @@ public class SequenceBase {
     return category.equals(entry.category) && entry.level == exactLevel.value();
   }
 
-  private static Map<Class<? extends Capability>, UsesCapability> getCapabilities(Description desc) {
+  private static Map<Class<? extends Capability>, UsesCapability> getCapabilities(
+      Description desc) {
     try {
       AllCapabilities all = desc.getAnnotation(AllCapabilities.class);
       List<UsesCapability> list = ofNullable(all).map(array -> Arrays.asList(all.value()))

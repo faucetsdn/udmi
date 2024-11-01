@@ -22,10 +22,10 @@ import static udmi.schema.FeatureDiscovery.FeatureStage.ALPHA;
 import static udmi.schema.FeatureDiscovery.FeatureStage.STABLE;
 
 import com.google.daq.mqtt.sequencer.Capability;
-import com.google.daq.mqtt.sequencer.UsesCapability;
 import com.google.daq.mqtt.sequencer.Feature;
 import com.google.daq.mqtt.sequencer.SequenceBase;
 import com.google.daq.mqtt.sequencer.Summary;
+import com.google.daq.mqtt.sequencer.UsesCapability;
 import com.google.daq.mqtt.sequencer.ValidateSchema;
 import java.time.Duration;
 import java.time.Instant;
