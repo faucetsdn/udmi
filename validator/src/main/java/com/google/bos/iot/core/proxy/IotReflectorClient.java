@@ -213,8 +213,9 @@ public class IotReflectorClient implements MessagePublisher {
     if (isInstallValid && expectedTxnId != null) {
       error(format("Missing UDMI reflector state reply for %s after %ss", expectedTxnId,
           Duration.between(txnStartTime, getNowInstant()).toSeconds()));
-      close();
-      throw new IllegalStateException("Aborting due to missing transaction reply " + expectedTxnId);
+      errorHandler(
+          new IllegalStateException("Aborting due to missing transaction reply " + expectedTxnId));
+      return;
     }
     expectedTxnId = getNextTransactionId();
     txnStartTime = getNowInstant();
@@ -295,6 +296,8 @@ public class IotReflectorClient implements MessagePublisher {
       } else {
         throw new RuntimeException("Unknown message category " + envelope.subType);
       }
+    } catch (IllegalStateException e) {
+      throw e;
     } catch (Exception e) {
       if (isInstallValid) {
         handleReceivedMessage(extractAttributes(messageMap),
@@ -377,20 +380,27 @@ public class IotReflectorClient implements MessagePublisher {
           ofNullable(message.get(SubFolder.UDMI.value())).orElse(message));
 
       boolean shouldConsiderReply = reflectorConfig.reply.msg_source.equals(userName);
-      boolean matchingTxnId = reflectorConfig.reply.transaction_id.equals(expectedTxnId);
+      String transactionId = reflectorConfig.reply.transaction_id;
+      boolean matchingTxnId = transactionId.equals(expectedTxnId);
+      boolean matchingSession = transactionId.startsWith(sessionPrefix);
 
       if (!isInstallValid) {
         info("Received UDMI reflector initial config: " + stringify(reflectorConfig));
-      } else if (!shouldConsiderReply) {
-        return;
-      } else if (matchingTxnId) {
-        debug("Received UDMI reflector matching config reply " + expectedTxnId);
-      } else {
-        info("Received UDMI reflector mismatched " + expectedTxnId + " != " + stringifyTerse(
-            reflectorConfig));
-        close();
-        throw new IllegalStateException("There can (should) be only one instance on a channel");
       }
+
+      if (!shouldConsiderReply) {
+        return;
+      } else if (!matchingSession) {
+        info(
+            format("Received UDMI reflector other session %s != %s", transactionId, sessionPrefix));
+        throw new IllegalStateException("There can (should) be only one instance on a channel");
+      } else if (!matchingTxnId) {
+        debug(format("Ignoring unexpected reply from this session %s != %s", transactionId,
+            expectedTxnId));
+        return;
+      }
+
+      debug("Received UDMI reflector matching config reply " + expectedTxnId);
 
       Date lastState = reflectorConfig.last_state;
       boolean timestampMatch = dateEquals(lastState, SYSTEM_START_TIMESTAMP);
@@ -435,6 +445,8 @@ public class IotReflectorClient implements MessagePublisher {
       } else {
         throw new RuntimeException("Unexpected if condition");
       }
+    } catch (IllegalStateException e) {
+      throw e;
     } catch (Exception e) {
       syncFailure = e;
     }

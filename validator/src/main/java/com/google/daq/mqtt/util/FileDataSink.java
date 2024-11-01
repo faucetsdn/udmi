@@ -23,7 +23,7 @@ public class FileDataSink implements MessagePublisher {
   public static final String VALIDATION_SUFFIX = "out";
   public static final String JSON_SUFFIX = "json";
   public static final String REPORT_JSON_FILENAME = "validation_report.json";
-  public static final String REPORT_DEVICE_FMT = "validation_report_%s.json";
+  public static final String REPORT_DEVICE_FMT = "devices/%s/validation_report.json";
   private static final ObjectMapper OBJECT_MAPPER =
       new ObjectMapper()
           .enable(Feature.ALLOW_COMMENTS)
