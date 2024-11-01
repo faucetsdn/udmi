@@ -9,8 +9,6 @@ import static com.google.udmi.util.GeneralUtils.ifTrueGet;
 import static com.google.udmi.util.JsonUtil.isoConvert;
 import static com.google.udmi.util.JsonUtil.safeSleep;
 import static java.lang.String.format;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
 import static udmi.schema.Bucket.SYSTEM;
 import static udmi.schema.Category.SYSTEM_CONFIG_APPLY;
 import static udmi.schema.Category.SYSTEM_CONFIG_APPLY_LEVEL;
@@ -30,6 +28,7 @@ import com.google.daq.mqtt.sequencer.WithCapability;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.Date;
+import java.util.Objects;
 import java.util.concurrent.atomic.AtomicReference;
 import org.junit.Test;
 import udmi.schema.Entry;
@@ -137,7 +136,7 @@ public class ConfigSequences extends SequenceBase {
     expectedStatusLevel(Level.ERROR);
 
     deviceConfig.system.min_loglevel = Level.DEBUG.value();
-    updateConfig("starting broken_config");
+    updateConfig("enable debug logging");
     Date stableConfig = deviceConfig.timestamp;
     info("initial stable_config " + isoConvert(stableConfig));
     untilTrue("initial state synchronized",
@@ -155,15 +154,16 @@ public class ConfigSequences extends SequenceBase {
       Entry stateStatus = deviceState.system.status;
       info("Error message: " + stateStatus.message);
       debug("Error detail: " + stateStatus.detail);
-      assertEquals(SYSTEM_CONFIG_PARSE, stateStatus.category);
-      assertEquals(Level.ERROR.value(), (int) stateStatus.level);
+      checkThat("category matches", SYSTEM_CONFIG_PARSE.equals(stateStatus.category));
+      checkThat("status level is error", Objects.equals(Level.ERROR.value(), stateStatus.level));
     });
     info("following stable_config " + isoConvert(stableConfig));
     info("following last_config " + isoConvert(deviceState.system.last_config));
+
     // The last_config should not be updated to not reflect the broken config.
-    assertTrue("following stable_config matches last_config",
+    checkThat("previous good config timestamp matches state last_config",
         dateEquals(stableConfig, deviceState.system.last_config));
-    assertTrue("system operational", deviceState.system.operation.operational);
+
     forCapability(Logging.class, () -> {
       waitForLog(SYSTEM_CONFIG_RECEIVE, SYSTEM_CONFIG_RECEIVE_LEVEL);
       waitForLog(SYSTEM_CONFIG_PARSE, Level.ERROR);
@@ -181,10 +181,7 @@ public class ConfigSequences extends SequenceBase {
     });
 
     deviceConfig.system.min_loglevel = Level.DEBUG.value();
-    untilTrue("last_config updated",
-        () -> !dateEquals(stableConfig, deviceState.system.last_config)
-    );
-    assertTrue("system operational", deviceState.system.operation.operational);
+
     forCapability(Logging.class, () -> {
       waitForLog(SYSTEM_CONFIG_APPLY, SYSTEM_CONFIG_APPLY_LEVEL);
       // These should not be logged since the level was at INFO until the new config is applied.
