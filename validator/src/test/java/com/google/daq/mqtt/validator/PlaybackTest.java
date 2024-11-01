@@ -68,7 +68,7 @@ public class PlaybackTest extends TestBase {
 
   private List<ValidationEvents> reports(List<OutputBundle> outputMessages, String deviceId) {
     return outputMessages.stream()
-        .filter(bundle -> bundle.deviceId.equals(deviceId))
+        .filter(bundle -> deviceId.equals(bundle.deviceId))
         .map(bundle -> asValidationEvents(bundle.message))
         .collect(Collectors.toList());
   }
