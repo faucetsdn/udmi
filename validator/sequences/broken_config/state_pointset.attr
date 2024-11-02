@@ -1,10 +1,10 @@
 {
   "deviceId" : "AHU-1",
   "deviceNumId" : "123456789101112",
-  "deviceRegistryId" : "peringknife~ZZ-TRI-FECTA",
-  "projectId" : "bos-platform-dev",
-  "transactionId" : "PS:12724088135951844-2",
-  "publishTime" : "2024-10-23T16:20:59Z",
+  "deviceRegistryId" : "ZZ-TRI-FECTA_6",
+  "projectId" : "localhost",
+  "transactionId" : "MP:198f81c0-2",
+  "publishTime" : "2024-11-01T19:58:31Z",
   "subFolder" : "pointset",
   "subType" : "state"
 }

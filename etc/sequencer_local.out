@@ -14,6 +14,7 @@ RESULT pass pointset pointset_remove_point STABLE 10/10 Sequence complete
 RESULT pass pointset pointset_request_extraneous STABLE 10/10 Sequence complete
 RESULT pass system broken_config STABLE 10/10 Sequence complete
 CPBLTY pass system broken_config.logging ALPHA 1/1 Capability supported
+CPBLTY pass system broken_config.status ALPHA 1/1 Capability supported
 RESULT pass system config_logging STABLE 10/10 Sequence complete
 RESULT fail system device_config_acked STABLE 0/10 Timeout waiting for config acked
 RESULT pass system extra_config STABLE 10/10 Sequence complete

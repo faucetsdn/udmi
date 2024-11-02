@@ -1,7 +1,6 @@
 package daq.pubber;
 
 import static com.google.udmi.util.GeneralUtils.catchToNull;
-import static com.google.udmi.util.GeneralUtils.getNow;
 import static com.google.udmi.util.GeneralUtils.ifNotNullGet;
 import static com.google.udmi.util.GeneralUtils.ifNotNullThen;
 import static com.google.udmi.util.GeneralUtils.ifNullThen;
@@ -21,7 +20,6 @@ import udmi.lib.ProtocolFamily;
 import udmi.lib.client.GatewayManager;
 import udmi.lib.client.ProxyDeviceHost;
 import udmi.lib.intf.ManagerHost;
-import udmi.schema.Entry;
 import udmi.schema.GatewayConfig;
 import udmi.schema.GatewayState;
 import udmi.schema.Level;

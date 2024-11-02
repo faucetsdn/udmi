@@ -18,13 +18,14 @@ if [[ -z $suffix ]]; then
     echo '####################' Finished sequencer cache test: $failures
 fi
 
-echo '####################' Starting schema.out tests
+echo '####################' Starting sequencer.out tests
 cat out/sequencer${suffix}.out | sort -k 3,4 | sponge out/sequencer${suffix}.out
-
-echo Comparing diff out/sequencer${suffix}.out etc/sequencer${suffix}.out
+echo diff -u out/sequencer${suffix}.out $UDMI_ROOT/etc/sequencer${suffix}.out
 diff -u out/sequencer${suffix}.out $UDMI_ROOT/etc/sequencer${suffix}.out || failures+="sequencer "
+echo '####################' Finished sequencer.out tests: $failures
 
-echo Comparing diff out/schema${suffix}.out etc/schema${suffix}.out
+echo '####################' Starting schema.out tests
+echo diff -u out/schema${suffix}.out $UDMI_ROOT/etc/schema${suffix}.out || failures+="schema "
 diff -u out/schema${suffix}.out $UDMI_ROOT/etc/schema${suffix}.out || failures+="schema "
 echo '####################' Finished schema.out tests: $failures
 

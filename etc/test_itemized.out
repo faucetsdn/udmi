@@ -12,18 +12,27 @@
 1 RESULT fail pointset pointset_publish_interval STABLE 0/10 Failed check that time period between successive pointset events is between 5 and 8 seconds
 1 RESULT fail system.mode system_mode_restart ALPHA 0/10 Failed check that restart count increased by one
 1 RESULT fail system config_logging STABLE 0/10 Bad message version string 1.4.
+1 CPBLTY fail system broken_config.logging ALPHA 0/1 While log category `system.config.receive` level `DEBUG` to be logged
+0 CPBLTY fail system broken_config.status ALPHA 0/1 While has significant system status
+0 RESULT pass system broken_config STABLE 8/10 Sequence complete
 1 CPBLTY pass system broken_config.logging ALPHA 1/1 Capability supported
-0 RESULT fail system broken_config STABLE 0/10 Because no significant device system status
-1 CPBLTY pass system broken_config.logging ALPHA 1/1 Capability supported
+0 CPBLTY pass system broken_config.status ALPHA 1/1 Capability supported
 0 RESULT pass system broken_config STABLE 10/10 Sequence complete
 1 CPBLTY skip system broken_config.logging ALPHA 0/0 Never executed
-0 RESULT fail system broken_config STABLE 0/9 Because device state not updated since test start
+0 CPBLTY skip system broken_config.status ALPHA 0/0 Never executed
+0 RESULT fail system broken_config STABLE 0/8 Because device state not updated since test start
+1 CPBLTY fail system broken_config.logging ALPHA 0/1 While log category `system.config.receive` level `DEBUG` to be logged
+0 CPBLTY fail system broken_config.status ALPHA 0/1 While has significant system status
+0 RESULT pass system broken_config STABLE 8/10 Sequence complete
 1 CPBLTY fail system broken_config.logging ALPHA 0/1 While log category `system.config.apply` level `NOTICE` to be logged
+0 CPBLTY pass system broken_config.status ALPHA 1/1 Capability supported
 0 RESULT pass system broken_config STABLE 9/10 Sequence complete
 1 CPBLTY fail system broken_config.logging ALPHA 0/1 While log category `system.config.receive` level `DEBUG` to be logged
-0 RESULT fail system broken_config STABLE 0/10 expected:<system.config.[parse]> but was:<system.config.[apply]>
+0 CPBLTY fail system broken_config.status ALPHA 0/1 Failed check that category matches system.config.parse
+0 RESULT pass system broken_config STABLE 8/10 Sequence complete
 1 CPBLTY fail system broken_config.logging ALPHA 0/1 While log category `system.config.apply` level `NOTICE` to be logged
-0 RESULT fail system broken_config STABLE 0/10 Because no significant device system status
+0 CPBLTY fail system broken_config.status ALPHA 0/1 While has significant system status
+0 RESULT pass system broken_config STABLE 8/10 Sequence complete
 1 CPBLTY pass system system_last_update.subblocks ALPHA 1/1 Capability supported
 0 RESULT pass system system_last_update STABLE 11/11 Sequence complete
 1 CPBLTY pass system system_last_update.subblocks ALPHA 1/1 Capability supported
