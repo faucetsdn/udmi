@@ -105,7 +105,7 @@ public class PubberSystemManager extends PubberManager implements SystemManager 
   }
 
   @Override
-  public udmi.lib.client.SystemManager.ExtraSystemState getSystemState() {
+  public ExtraSystemState getSystemState() {
     return this.systemState;
   }
 
@@ -160,22 +160,21 @@ public class PubberSystemManager extends PubberManager implements SystemManager 
 
   @Override
   public void setHardwareSoftware(Metadata metadata) {
-    getSystemState().hardware.make = catchOrElse(
-        () -> metadata.system.hardware.make, () -> DEFAULT_MAKE);
+    ExtraSystemState state = getSystemState();
+    state.hardware.make = catchOrElse(() -> metadata.system.hardware.make, () -> DEFAULT_MAKE);
 
-    getSystemState().hardware.model = catchOrElse(
-        () -> metadata.system.hardware.model, () -> DEFAULT_MODEL);
+    state.hardware.model = catchOrElse(() -> metadata.system.hardware.model, () -> DEFAULT_MODEL);
 
-    getSystemState().software = new HashMap<>();
+    state.software = new HashMap<>();
     Map<String, String> metadataSoftware = catchToNull(() -> metadata.system.software);
     if (metadataSoftware == null) {
-      getSystemState().software.put(DEFAULT_SOFTWARE_KEY, DEFAULT_SOFTWARE_VALUE);
+      state.software.put(DEFAULT_SOFTWARE_KEY, DEFAULT_SOFTWARE_VALUE);
     } else {
-      getSystemState().software = metadataSoftware;
+      state.software = metadataSoftware;
     }
 
     if (options.softwareFirmwareValue != null) {
-      getSystemState().software.put("firmware", options.softwareFirmwareValue);
+      state.software.put("firmware", options.softwareFirmwareValue);
     }
   }
 

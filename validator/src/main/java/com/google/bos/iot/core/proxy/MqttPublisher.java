@@ -297,8 +297,8 @@ public class MqttPublisher implements MessagePublisher {
   private synchronized void publishCore(String deviceId, String topic, String payload,
       Instant start, PublishPriority priority) {
     if (priority == PublishPriority.HIGH) {
-      LOG.info(format("Publishing HIGH priority override after %ss: %s", Duration.between(start,
-          GeneralUtils.instantNow()).toSeconds(), payload));
+      LOG.debug(format("Publishing HIGH priority override after %ss", Duration.between(start,
+          GeneralUtils.instantNow()).toSeconds()));
     } else {
       Runnable queued = priorityQueue.poll();
       if (queued != null) {

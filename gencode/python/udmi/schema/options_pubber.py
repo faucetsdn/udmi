@@ -28,6 +28,7 @@ class PubberOptions:
     self.skewClock = None
     self.noPointState = None
     self.noState = None
+    self.noStatus = None
     self.noFolder = None
     self.badLevel = None
     self.spamState = None
@@ -70,6 +71,7 @@ class PubberOptions:
     result.skewClock = source.get('skewClock')
     result.noPointState = source.get('noPointState')
     result.noState = source.get('noState')
+    result.noStatus = source.get('noStatus')
     result.noFolder = source.get('noFolder')
     result.badLevel = source.get('badLevel')
     result.spamState = source.get('spamState')
@@ -149,6 +151,8 @@ class PubberOptions:
       result['noPointState'] = self.noPointState # 5
     if self.noState:
       result['noState'] = self.noState # 5
+    if self.noStatus:
+      result['noStatus'] = self.noStatus # 5
     if self.noFolder:
       result['noFolder'] = self.noFolder # 5
     if self.badLevel:

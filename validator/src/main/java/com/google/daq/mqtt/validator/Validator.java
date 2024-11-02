@@ -170,7 +170,6 @@ public class Validator {
 
   private static final long DEFAULT_INTERVAL_SEC = 60;
   private static final long REPORTS_PER_SEC = 2;
-  private static final String EXCLUDE_DEVICE_PREFIX = "_";
   private static final String VALIDATION_SITE_REPORT_DEVICE_ID = null;
   private static final String VALIDATION_EVENT_TOPIC = "validation/events";
   private static final String VALIDATION_STATE_TOPIC = "validation/state";
@@ -914,10 +913,6 @@ public class Validator {
     }
 
     String deviceId = attributes.get("deviceId");
-    if (deviceId != null && deviceId.startsWith(EXCLUDE_DEVICE_PREFIX)) {
-      return false;
-    }
-
     if (!targetDevices.isEmpty() && !targetDevices.contains(deviceId)) {
       return false;
     }
@@ -925,10 +920,11 @@ public class Validator {
     String subType = attributes.get(SUBTYPE_PROPERTY_KEY);
     String subFolder = attributes.get(SUBFOLDER_PROPERTY_KEY);
     String category = attributes.get("category");
+    boolean ignore = CONFIG_CATEGORY.equals(category);
     boolean process = subType == null
         || INTERESTING_TYPES.contains(subType)
         || SubFolder.UPDATE.value().equals(subFolder);
-    return process && !CONFIG_CATEGORY.equals(category);
+    return process && !ignore;
   }
 
   private void writeDeviceOutCapture(Object message, Map<String, String> attributes,

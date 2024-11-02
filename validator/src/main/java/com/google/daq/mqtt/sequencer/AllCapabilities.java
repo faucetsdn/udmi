@@ -15,5 +15,5 @@ public @interface AllCapabilities {
   /**
    * Array of capability annotations.
    */
-  Capability[] value();
+  WithCapability[] value();
 }
