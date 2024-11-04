@@ -24,6 +24,7 @@ import static com.google.udmi.util.GeneralUtils.friendlyStackTrace;
 import static com.google.udmi.util.GeneralUtils.getTimestamp;
 import static com.google.udmi.util.GeneralUtils.ifNotNullGet;
 import static com.google.udmi.util.GeneralUtils.ifNotNullThen;
+import static com.google.udmi.util.GeneralUtils.ifNotNullThrow;
 import static com.google.udmi.util.GeneralUtils.ifNotTrueGet;
 import static com.google.udmi.util.GeneralUtils.ifNotTrueThen;
 import static com.google.udmi.util.GeneralUtils.ifNullThen;
@@ -286,6 +287,7 @@ public class SequenceBase {
   private final SortedMap<String, List<Entry>> validationResults = new TreeMap<>();
   private final Map<String, String> deviceStateViolations = new ConcurrentHashMap<>();
   private final Map<Class<? extends Capability>, Exception> capExcept = new ConcurrentHashMap<>();
+  private final AtomicReference<Class<? extends Capability>> activeCap = new AtomicReference<>();
   private final Set<String> allowedDeviceStateChanges = new HashSet<>();
   @Rule
   public Timeout globalTimeout = new Timeout(NORM_TIMEOUT_MS, TimeUnit.MILLISECONDS);
@@ -1616,7 +1618,9 @@ public class SequenceBase {
 
   protected void recordSequence(String message) {
     if (recordSequence) {
-      sequenceMd.println("1. " + message.trim());
+      String capability = ifNotNullGet(activeCap.get(), SequenceBase::capabilityName);
+      String wrapped = ifNotNullGet(capability, c -> format("[%s] ", capability), "");
+      sequenceMd.printf("1. %s%s%n", wrapped, message.trim());
       sequenceMd.flush();
     }
   }
@@ -2383,12 +2387,15 @@ public class SequenceBase {
   }
 
   protected void forCapability(Class<? extends Capability> capability, Runnable action) {
+    ifNotNullThrow(activeCap.getAndSet(capability), "duplicate capability set");
     try {
       ifTrueThen(isCapableOf(capability), action);
     } catch (Exception e) {
       info("Failed capability check " + capabilityName(capability) + " because "
           + friendlyStackTrace(e));
       capExcept.put(capability, e);
+    } finally {
+      activeCap.set(null);
     }
   }
 
