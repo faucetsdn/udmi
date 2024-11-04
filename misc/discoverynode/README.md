@@ -18,7 +18,7 @@
 
 2. Create a JSON configuration file
 
-    Sample clearblade configuration file
+    Sample ClearBlade configuration file
 
     ```json
     {
@@ -80,7 +80,7 @@ TODO
 
 ## Daemon
 
-The discovery node can be installed as an always running systemd daemon `udmi_discovery`. This will isntall any requirements
+The discovery node can be installed as an always running systemd daemon `udmi_discovery`. This will install any requirements
 
 1.  Run the install script and follow the instructions
 
@@ -119,9 +119,9 @@ journalctl -f -xeu udmi_discovery
 
 ## E2E Test
 
-TBC
+TODO
 
 ## Test Suite
 
 - Unit tests - `~/venv/bin/python3 -m pytest tests/`
-- Integration tests - TBC
+- Integration tests - TODO
