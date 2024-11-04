@@ -320,7 +320,7 @@ public class SequenceBase {
   private int previousEventCount;
   private SequenceResult testResult;
   private int startStateCount;
-  private Boolean e`xpectedInterestingStatus;
+  private Boolean expectedInterestingStatus;
   private Description testDescription;
   private SubFolder testSchema;
   private int lastStatusLevel;
@@ -496,7 +496,7 @@ public class SequenceBase {
     emitSequencerOut(format(RESULT_FORMAT, result, bucket, name, stage, score, total, message));
   }
 
-  private static void emitSequenc`erOut(String resultString) {
+  private static void emitSequencerOut(String resultString) {
     if (activeInstance != null) {
       activeInstance.notice(resultString);
     } else {
