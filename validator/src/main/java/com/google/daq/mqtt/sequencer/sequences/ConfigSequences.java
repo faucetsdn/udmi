@@ -180,6 +180,8 @@ public class ConfigSequences extends SequenceBase {
     resetConfig(); // clears extra_field and interesting status checks
     recordSequence("(Log level is implicitly set to `INFO` through config reset)");
 
+    forCapability(Status.class, this::waitUntilNoSystemStatus);
+
     forCapability(Logging.class, () -> {
       waitForLog(SYSTEM_CONFIG_APPLY, SYSTEM_CONFIG_APPLY_LEVEL);
       // These should not have been logged since the level was at INFO before APPLY.
