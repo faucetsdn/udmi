@@ -269,27 +269,27 @@ public class DiscoverySequences extends SequenceBase {
     Instant scanConfigured = getNowInstant();
 
     if (shouldEnumerate == NO_SCAN) {
-      waitFor("scan schedule initially not active", this::detailScanStopped);
+      waitUntil("scan schedule initially not active", this::detailScanStopped);
       sleepFor("false start check delay", SCAN_START_DELAY);
-      waitFor("scan schedule still not active", this::detailScanStopped);
+      waitUntil("scan schedule still not active", this::detailScanStopped);
       List<DiscoveryEvents> receivedEvents = popReceivedEvents(DiscoveryEvents.class);
       checkThat("there were no received discovery events", receivedEvents.isEmpty());
       return;
     }
 
     if (scheduledStart) {
-      waitFor("scheduled scan pending", WAITING_PERIOD, this::detailScanPending);
+      waitUntil("scheduled scan pending", WAITING_PERIOD, this::detailScanPending);
     }
 
     Instant expectedStart = scheduledStart ? scanGeneration : scanConfigured;
-    waitFor("scheduled scan active", WAITING_PERIOD, this::detailScanActive);
+    waitUntil("scheduled scan active", WAITING_PERIOD, this::detailScanActive);
     Instant scanStarted = getNowInstant();
     long deltaStart = Math.abs(Duration.between(scanStarted, expectedStart).toSeconds());
     checkThat("scan started at time", deltaStart <= SCAN_START_JITTER_SEC,
         format("scan start %ss different from expected %s", deltaStart, isoConvert(expectedStart)));
 
     Instant expectedFinish = scanStarted.plusSeconds(SCAN_DURATION_SEC);
-    waitFor("scheduled scan complete", WAITING_PERIOD, this::detailScanStopped);
+    waitUntil("scheduled scan complete", WAITING_PERIOD, this::detailScanStopped);
     Instant scanFinished = getNowInstant();
     long deltaFinish = Math.abs(Duration.between(scanFinished, expectedFinish).toSeconds());
     checkThat("scan completed at time", deltaFinish <= SCAN_START_JITTER_SEC,
@@ -396,7 +396,7 @@ public class DiscoverySequences extends SequenceBase {
     untilTrue("discovery families defined", () -> deviceState.discovery.families != null);
     HashMap<String, FamilyDiscoveryConfig> configFamilies = deviceConfig.discovery.families;
     HashMap<String, FamilyDiscoveryState> stateFamilies = deviceState.discovery.families;
-    waitFor("discovery family keys match", () -> joinOrNull("mismatch: ",
+    waitUntil("discovery family keys match", () -> joinOrNull("mismatch: ",
         symmetricDifference(configFamilies.keySet(), stateFamilies.keySet())
     ));
     untilTrue("no scans active",

@@ -53,13 +53,13 @@ public class ConfigSequences extends SequenceBase {
   @ValidateSchema(SubFolder.SYSTEM)
   @WithCapability(value = Subblocks.class, stage = ALPHA)
   public void system_last_update() {
-    waitFor("state last_config matches config timestamp", this::lastConfigUpdated);
+    waitUntil("state last_config matches config timestamp", this::lastConfigUpdated);
     waitForCapability(Subblocks.class, "state update complete", this::stateMatchesConfig);
     forceConfigUpdate("trigger another config update");
-    waitFor("state last_config matches config timestamp", this::lastConfigUpdated);
+    waitUntil("state last_config matches config timestamp", this::lastConfigUpdated);
     waitForCapability(Subblocks.class, "state update complete", this::stateMatchesConfig);
     forceConfigUpdate("trigger another config update");
-    waitFor("state last_config matches config timestamp", this::lastConfigUpdated);
+    waitUntil("state last_config matches config timestamp", this::lastConfigUpdated);
     waitForCapability(Subblocks.class, "state update complete", this::stateMatchesConfig);
   }
 
@@ -136,13 +136,13 @@ public class ConfigSequences extends SequenceBase {
     expectedStatusLevel(Level.ERROR);
 
     deviceConfig.system.min_loglevel = Level.DEBUG.value();
-    updateConfig("enable debug logging");
+    updateConfig("to enable debug logging");
     Date stableConfig = deviceConfig.timestamp;
+
     info("initial stable_config " + isoConvert(stableConfig));
-    untilTrue("initial state synchronized",
-        () -> dateEquals(stableConfig, deviceState.system.last_config));
     info("initial last_config " + isoConvert(deviceState.system.last_config));
-    checkThat("initial stable_config matches last_config",
+
+    checkThat(OPTIONAL_PREFIX + "starting config timestamp matches device state last_config",
         () -> dateEquals(stableConfig, deviceState.system.last_config));
 
     forCapability(Logging.class,

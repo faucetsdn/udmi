@@ -175,7 +175,7 @@ public class SequenceBase {
   public static final String RESET_CONFIG_MARKER = "reset_config";
   public static final String SYSTEM_STATUS_MESSAGE = "significant system status";
   public static final String HAS_STATUS_PREFIX = "has ";
-  public static final String NOT_STATUS_PREFIX = "no ";
+  public static final String NOT_STATUS_PREFIX = "not ";
   public static final String STATUS_CHECK_SUFFIX = " exists";
   public static final String SCHEMA_BUCKET = "schemas";
   public static final int SCHEMA_SCORE_TOTAL = 10;
@@ -253,7 +253,8 @@ public class SequenceBase {
   private static final Duration STATE_TIMESTAMP_ERROR_THRESHOLD = Duration.ofMinutes(20);
   private static final Set<IotAccess.IotProvider> SEQUENCER_PROVIDERS = ImmutableSet.of(
       IotProvider.GBOS, IotProvider.MQTT, IotProvider.GREF);
-  public static final String SEQUENCER_TOOL_NAME = "sequencer";
+  private static final String SEQUENCER_TOOL_NAME = "sequencer";
+  protected static final String OPTIONAL_PREFIX = "?";
   protected static Metadata deviceMetadata;
   protected static String projectId;
   protected static String cloudRegion;
@@ -868,7 +869,7 @@ public class SequenceBase {
   private void waitForConfigSync() {
     checkState(!waitingForConfigSync.getAndSet(true), "Config is already updating...");
     try {
-      waitFor("config sync", CONFIG_WAIT_TIME, () -> {
+      waitUntil(OPTIONAL_PREFIX + "config update synchronized", CONFIG_WAIT_TIME, () -> {
         processNextMessage();
         return configIsPending(false);
       });
@@ -1373,39 +1374,61 @@ public class SequenceBase {
 
   protected void checkThat(String description, Supplier<Boolean> condition, String details) {
     if (!catchToFalse(condition)) {
-      warning("Failed check that " + description);
-      String suffix = ifNotNullGet(details, base -> "; " + base, "");
-      throw new IllegalStateException("Failed check that " + description + suffix);
+      String message = "Failed check that " + sanitizedDescription(description)
+          + ifNotNullGet(details, base -> "; " + base, "");
+      warning(message);
+      throw new IllegalStateException(message);
     }
-    recordSequence("Check that " + description);
+
+    ifNotTrueThen(isOptionalDescription(description),
+        () -> recordSequence("Check that", description));
   }
 
   protected void checkNotThat(String description, Supplier<Boolean> condition) {
-    String notDescription = NOT_STATUS_PREFIX + description;
+    checkNotThat(description, condition, null);
+  }
+
+  protected void checkNotThat(String description, Supplier<Boolean> condition, String details) {
+    String notDescription = NOT_STATUS_PREFIX + sanitizedDescription(description);
     if (catchToTrue(condition)) {
-      warning("Failed check that " + notDescription);
-      throw new IllegalStateException("Failed check that " + notDescription);
+      String message = "Failed check that " + notDescription
+          + ifNotNullGet(details, base -> "; " + base, "");
+      warning(message);
+      throw new IllegalStateException(message);
     }
-    recordSequence("Check that " + notDescription);
+
+    ifNotTrueThen(isOptionalDescription(description),
+        () -> recordSequence("Check that " + notDescription));
   }
 
-  protected void waitFor(String description, Supplier<String> evaluator) {
-    waitFor(description, DEFAULT_WAIT_TIME, evaluator);
+  protected void waitUntil(String description, Supplier<String> evaluator) {
+    waitUntil(description, DEFAULT_WAIT_TIME, evaluator);
   }
 
-  protected void waitFor(String description, Duration maxWait, Supplier<String> evaluator) {
+  protected void waitUntil(String description, Duration maxWait, Supplier<String> evaluator) {
     AtomicReference<String> detail = new AtomicReference<>();
-    whileDoing(description, () -> {
-      ifNotTrueThen(waitingForConfigSync.get(), () -> updateConfig("Before " + description));
-      recordSequence("Wait for " + description);
+    String sanitizedDescription = sanitizedDescription(description);
+    whileDoing(sanitizedDescription, () -> {
+      ifNotTrueThen(waitingForConfigSync.get(),
+          () -> updateConfig("Before " + sanitizedDescription));
+      recordSequence("Wait until", description);
       messageEvaluateLoop(maxWait, () -> {
         String result = evaluator.get();
         String previous = detail.getAndSet(emptyToNull(result));
         ifTrueThen(!Objects.equals(previous, result),
-            () -> debug(format("Detail %s is now: %s", description, result)));
+            () -> debug(format("Detail %s is now: %s", sanitizedDescription, result)));
         return result != null;
       });
     }, detail::get);
+  }
+
+  private String sanitizedDescription(String description) {
+    return isOptionalDescription(description) ? description.substring(OPTIONAL_PREFIX.length())
+        : description;
+  }
+
+  private static boolean isOptionalDescription(String description) {
+    return description.startsWith(OPTIONAL_PREFIX);
   }
 
   protected void sleepFor(String delayReason, Duration sleepTime) {
@@ -1419,7 +1442,7 @@ public class SequenceBase {
   }
 
   protected void waitForLog(String category, Level exactLevel) {
-    waitFor(format("log category `%s` level `%s` to be logged", category, exactLevel.name()),
+    waitUntil(format("log category `%s` level `%s` to be logged", category, exactLevel.name()),
         LOG_WAIT_TIME, () -> checkLogged(category, exactLevel));
   }
 
@@ -1437,7 +1460,7 @@ public class SequenceBase {
   protected void checkNotLogged(String category, Level minLevel) {
     withRecordSequence(false, () -> {
       ifTrueThen(deviceSupportsState(), () ->
-          waitFor("last_config synchronized", this::lastConfigUpdated));
+          waitUntil("last_config synchronized", this::lastConfigUpdated));
       processLogMessages();
     });
     final Instant endTime = lastConfigUpdate.plusSeconds(LOG_TIMEOUT_SEC);
@@ -1580,9 +1603,15 @@ public class SequenceBase {
     }
   }
 
-  private void recordSequence(String step) {
+  private void recordSequence(String step, String description) {
+    if (!isOptionalDescription(description)) {
+      recordSequence(step + " " + description.substring(OPTIONAL_PREFIX.length()));
+    }
+  }
+
+  private void recordSequence(String message) {
     if (recordSequence) {
-      sequenceMd.println("1. " + step.trim());
+      sequenceMd.println("1. " + message.trim());
       sequenceMd.flush();
     }
   }
@@ -2225,7 +2254,7 @@ public class SequenceBase {
     String message = (interesting ? HAS_STATUS_PREFIX : NOT_STATUS_PREFIX) + SYSTEM_STATUS_MESSAGE;
     Supplier<String> detailer =
         interesting ? this::notSignificantStatusDetail : this::significantStatusDetail;
-    waitFor(message, detailer);
+    waitUntil(message, detailer);
     expectedSystemStatus = interesting;
     checkThatHasInterestingSystemStatus(interesting);
   }
@@ -2347,7 +2376,7 @@ public class SequenceBase {
 
   protected void waitForCapability(Class<? extends Capability> cap, String description,
       Supplier<String> action) {
-    forCapability(cap, () -> waitFor(description, action));
+    forCapability(cap, () -> waitUntil(description, action));
   }
 
   protected void forCapability(Class<? extends Capability> capability, Runnable action) {

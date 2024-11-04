@@ -224,14 +224,14 @@ public class BlobsetSequences extends SequenceBase {
 
   private void check_endpoint_connection_success(boolean doRestart) {
     // Phase one: initiate connection to alternate registry.
-    waitFor("initial last_config matches config timestamp", this::lastConfigUpdated);
+    waitUntil("initial last_config matches config timestamp", this::lastConfigUpdated);
     setDeviceConfigEndpointBlob(getAlternateEndpointHostname(), altRegistry, false);
     untilSuccessfulRedirect(BlobPhase.APPLY);
 
     withAlternateClient(() -> {
       // Phase two: verify connection to alternate registry.
       untilSuccessfulRedirect(BlobPhase.FINAL);
-      waitFor("alternate last_config matches config timestamp",
+      waitUntil("alternate last_config matches config timestamp",
           this::lastConfigUpdated);
       untilClearedRedirect();
 
@@ -249,7 +249,7 @@ public class BlobsetSequences extends SequenceBase {
     // Phase four: verify restoration of initial registry connection.
     whileDoing("restoring main connection", () -> {
       untilSuccessfulRedirect(BlobPhase.FINAL);
-      waitFor("restored last_config matches config timestamp", this::lastConfigUpdated);
+      waitUntil("restored last_config matches config timestamp", this::lastConfigUpdated);
       untilClearedRedirect();
     });
   }

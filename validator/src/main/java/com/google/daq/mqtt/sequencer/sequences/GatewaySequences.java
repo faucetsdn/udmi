@@ -88,7 +88,7 @@ public class GatewaySequences extends SequenceBase {
     proxyIds.forEach(this::updateProxyConfig);
 
     String description = format("All proxy devices received %s", subFolder.value());
-    waitFor(description, MESSAGE_WAIT_DURATION, () -> {
+    waitUntil(description, MESSAGE_WAIT_DURATION, () -> {
       Set<String> remainingTargets = difference(proxyIds, receivedDevices(proxyIds, subFolder));
       return remainingTargets.isEmpty() ? null
           : format("Missing %s from %s", subFolder.value(), CSV_JOINER.join(remainingTargets));
