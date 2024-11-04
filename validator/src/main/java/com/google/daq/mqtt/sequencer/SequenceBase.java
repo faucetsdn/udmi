@@ -174,9 +174,7 @@ public class SequenceBase {
   public static final String SCHEMA_PASS_DETAIL = "No schema violations found";
   public static final String STATE_UPDATE_MESSAGE_TYPE = "state_update";
   public static final String RESET_CONFIG_MARKER = "reset_config";
-  public static final String SYSTEM_STATUS_MESSAGE = "system status level is >= WARNING (400)";
-  public static final String HAS_STATUS_PREFIX = "has ";
-  public static final String NOT_STATUS_PREFIX = "not ";
+  public static final String SYSTEM_STATUS_MESSAGE = "system status level is n0t >= WARNING (400)";
   public static final String SCHEMA_BUCKET = "schemas";
   public static final int SCHEMA_SCORE_TOTAL = 10;
   public static final int CAPABILITY_SCORE = 1;
@@ -254,6 +252,9 @@ public class SequenceBase {
       IotProvider.GBOS, IotProvider.MQTT, IotProvider.GREF);
   private static final String SEQUENCER_TOOL_NAME = "sequencer";
   private static final String OPTIONAL_PREFIX = "?";
+  private static final String NOT_MARKER = " n0t ";
+  private static final String NOT_REPLACEMENT = " not ";
+  private static final String NOT_MISSING = " ";
   protected static Metadata deviceMetadata;
   protected static String projectId;
   protected static String cloudRegion;
@@ -319,7 +320,7 @@ public class SequenceBase {
   private int previousEventCount;
   private SequenceResult testResult;
   private int startStateCount;
-  private Boolean expectedSystemStatus;
+  private Boolean e`xpectedInterestingStatus;
   private Description testDescription;
   private SubFolder testSchema;
   private int lastStatusLevel;
@@ -495,7 +496,7 @@ public class SequenceBase {
     emitSequencerOut(format(RESULT_FORMAT, result, bucket, name, stage, score, total, message));
   }
 
-  private static void emitSequencerOut(String resultString) {
+  private static void emitSequenc`erOut(String resultString) {
     if (activeInstance != null) {
       activeInstance.notice(resultString);
     } else {
@@ -840,7 +841,7 @@ public class SequenceBase {
     withRecordSequence(false, () -> {
       debug("Starting reset_config full reset " + fullReset);
       if (fullReset) {
-        expectedSystemStatus = null;
+        expectedInterestingStatus = null;
         resetDeviceConfig(true);
         setExtraField(RESET_CONFIG_MARKER);
         deviceConfig.system.testing.sequence_name = RESET_CONFIG_MARKER;
@@ -1390,12 +1391,20 @@ public class SequenceBase {
     checkThat(OPTIONAL_PREFIX + description, condition);
   }
 
+  protected void checkThatNot(String description, String detail) {
+    checkThatNot(description, detail == null, detail);
+  }
+
+  protected void checkThatNot(String description, Boolean condition, String detail) {
+    checkThatNot(description, () -> condition, detail);
+  }
+
   protected void checkThatNot(String description, Supplier<Boolean> condition) {
     checkThatNot(description, condition, null);
   }
 
   protected void checkThatNot(String description, Supplier<Boolean> condition, String details) {
-    String notDescription = NOT_STATUS_PREFIX + sanitizedDescription(description);
+    String notDescription = convertN0t(false, sanitizedDescription(description));
     if (catchToTrue(condition)) {
       String message = "Failed check that " + notDescription
           + ifNotNullGet(details, base -> "; " + base, "");
@@ -1405,6 +1414,10 @@ public class SequenceBase {
 
     ifNotTrueThen(isOptionalDescription(description),
         () -> recordSequence("Check that " + notDescription));
+  }
+
+  private String convertN0t(boolean positiveStatement, String description) {
+    return description.replaceAll(NOT_MARKER, positiveStatement ? NOT_MISSING : NOT_REPLACEMENT);
   }
 
   protected void waitUntil(String description, Supplier<String> evaluator) {
@@ -1606,8 +1619,8 @@ public class SequenceBase {
       }
       processNextMessage();
     }
-    if (expectedSystemStatus != null) {
-      withRecordSequence(false, () -> checkThatHasInterestingSystemStatus(expectedSystemStatus));
+    if (expectedInterestingStatus != null) {
+      withRecordSequence(false, () -> checkThatHasInterestingSystemStatus(expectedInterestingStatus));
     }
   }
 
@@ -2227,23 +2240,24 @@ public class SequenceBase {
     return statusLevel >= Level.WARNING.value() ? ("system status is level " + statusLevel) : null;
   }
 
+  protected Runnable checkThatHasInterestingSystemStatus(boolean positiveStatement) {
+    return positiveStatement ?
+        this::checkThatHasInterestingSystemStatus : this::checkThatHasNoInterestingSystemStatus;
+
+  }
+
   protected void checkThatHasNoInterestingSystemStatus() {
-    checkThatHasInterestingSystemStatus(false);
-  }
-
-  protected void checkThatHasInterestingSystemStatus() {
-    checkThatHasInterestingSystemStatus(true);
-  }
-
-  protected void checkThatHasInterestingSystemStatus(boolean isInteresting) {
     if (!deviceSupportsState()) {
       return;
     }
-    if (isInteresting) {
-      checkThat(SYSTEM_STATUS_MESSAGE, notSignificantStatusDetail());
-    } else {
-      checkThat(NOT_STATUS_PREFIX + SYSTEM_STATUS_MESSAGE, significantStatusDetail());
+    checkThatNot(SYSTEM_STATUS_MESSAGE, notSignificantStatusDetail());
+  }
+
+  protected void checkThatHasInterestingSystemStatus() {
+    if (!deviceSupportsState()) {
+      return;
     }
+    checkThat(SYSTEM_STATUS_MESSAGE, significantStatusDetail());
   }
 
   protected void waitUntilNoSystemStatus() {
@@ -2258,12 +2272,12 @@ public class SequenceBase {
     if (!deviceSupportsState()) {
       return;
     }
-    expectedSystemStatus = null;
-    String message = (interesting ? HAS_STATUS_PREFIX : NOT_STATUS_PREFIX) + SYSTEM_STATUS_MESSAGE;
+    expectedInterestingStatus = null;
+    String message = convertN0t(interesting, SYSTEM_STATUS_MESSAGE);
     Supplier<String> detailer =
         interesting ? this::notSignificantStatusDetail : this::significantStatusDetail;
     waitUntil(message, detailer);
-    expectedSystemStatus = interesting;
+    expectedInterestingStatus = interesting;
   }
 
   private void putSequencerResult(Description description, SequenceResult result) {
