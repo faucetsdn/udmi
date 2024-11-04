@@ -142,7 +142,7 @@ public class ConfigSequences extends SequenceBase {
     info("initial stable_config " + isoConvert(stableConfig));
     info("initial last_config " + isoConvert(deviceState.system.last_config));
 
-    checkQuietlyThat("device state `last_config` matches starting config `timestamp`",
+    quietlyCheckThat("device state `last_config` matches starting config `timestamp`",
         () -> dateEquals(stableConfig, deviceState.system.last_config));
 
     forCapability(Logging.class,
@@ -180,7 +180,7 @@ public class ConfigSequences extends SequenceBase {
     resetConfig(); // clears extra_field and interesting status checks
     recordSequence("(Log level is implicitly set to `INFO` through config reset)");
 
-    checkQuietlyThat("device state `last_config` has been updated",
+    quietlyCheckThat("device state `last_config` has been updated",
         () -> !dateEquals(stableConfig, deviceState.system.last_config));
 
     forCapability(Logging.class, () -> {

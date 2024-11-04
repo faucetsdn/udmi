@@ -78,9 +78,9 @@ public class ProxiedSequences extends PointsetBase {
   }
 
   private void cleanStatusCheck(String targetPoint) {
-    checkNotThat("gateway state with significant status", this::hasGatewayStatusDirty);
+    checkThatNot("gateway state with significant status", this::hasGatewayStatusDirty);
     if (targetPoint != null) {
-      checkNotThat("pointset state with significant status", this::hasPointStatusDirty);
+      checkThatNot("pointset state with significant status", this::hasPointStatusDirty);
     }
   }
 

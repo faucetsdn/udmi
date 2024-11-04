@@ -1365,11 +1365,6 @@ public class SequenceBase {
     checkThat(description, condition, null);
   }
 
-  protected void checkQuietlyThat(String description, Supplier<Boolean> condition) {
-    checkThat(OPTIONAL_PREFIX + description, condition);
-
-  }
-
   protected void checkThat(String description, Supplier<Boolean> condition) {
     checkThat(description, condition, null);
   }
@@ -1390,11 +1385,15 @@ public class SequenceBase {
         () -> recordSequence("Check that", description));
   }
 
-  protected void checkNotThat(String description, Supplier<Boolean> condition) {
-    checkNotThat(description, condition, null);
+  protected void quietlyCheckThat(String description, Supplier<Boolean> condition) {
+    checkThat(OPTIONAL_PREFIX + description, condition);
   }
 
-  protected void checkNotThat(String description, Supplier<Boolean> condition, String details) {
+  protected void checkThatNot(String description, Supplier<Boolean> condition) {
+    checkThatNot(description, condition, null);
+  }
+
+  protected void checkThatNot(String description, Supplier<Boolean> condition, String details) {
     String notDescription = NOT_STATUS_PREFIX + sanitizedDescription(description);
     if (catchToTrue(condition)) {
       String message = "Failed check that " + notDescription
