@@ -173,10 +173,9 @@ public class SequenceBase {
   public static final String SCHEMA_PASS_DETAIL = "No schema violations found";
   public static final String STATE_UPDATE_MESSAGE_TYPE = "state_update";
   public static final String RESET_CONFIG_MARKER = "reset_config";
-  public static final String SYSTEM_STATUS_MESSAGE = "significant system status";
+  public static final String SYSTEM_STATUS_MESSAGE = "system status level is >= WARNING (400)";
   public static final String HAS_STATUS_PREFIX = "has ";
   public static final String NOT_STATUS_PREFIX = "not ";
-  public static final String STATUS_CHECK_SUFFIX = " exists";
   public static final String SCHEMA_BUCKET = "schemas";
   public static final int SCHEMA_SCORE_TOTAL = 10;
   public static final int CAPABILITY_SCORE = 1;
@@ -254,7 +253,7 @@ public class SequenceBase {
   private static final Set<IotAccess.IotProvider> SEQUENCER_PROVIDERS = ImmutableSet.of(
       IotProvider.GBOS, IotProvider.MQTT, IotProvider.GREF);
   private static final String SEQUENCER_TOOL_NAME = "sequencer";
-  protected static final String OPTIONAL_PREFIX = "?";
+  private static final String OPTIONAL_PREFIX = "?";
   protected static Metadata deviceMetadata;
   protected static String projectId;
   protected static String cloudRegion;
@@ -836,7 +835,7 @@ public class SequenceBase {
   protected void resetConfig(boolean fullReset) {
     allowDeviceStateChange(ALL_CHANGES);
 
-    recordSequence("Force reset config");
+    recordSequence("Reset config to clean version");
     withRecordSequence(false, () -> {
       debug("Starting reset_config full reset " + fullReset);
       if (fullReset) {
@@ -847,7 +846,7 @@ public class SequenceBase {
         SENT_CONFIG_DIFFERNATOR.resetState(deviceConfig);
         if (doPartialUpdates) {
           updateConfig("full reset");
-          untilHasNoInterestingSystemStatus();
+          waitUntilNoSystemStatus();
         }
       }
       resetDeviceConfig(false);
@@ -1366,6 +1365,11 @@ public class SequenceBase {
     checkThat(description, condition, null);
   }
 
+  protected void checkQuietlyThat(String description, Supplier<Boolean> condition) {
+    checkThat(OPTIONAL_PREFIX + description, condition);
+
+  }
+
   protected void checkThat(String description, Supplier<Boolean> condition) {
     checkThat(description, condition, null);
   }
@@ -1444,7 +1448,7 @@ public class SequenceBase {
   }
 
   protected void waitForLog(String category, Level exactLevel) {
-    waitUntil(format("system logs `%s` category `%s`", exactLevel.name(), category),
+    waitUntil(format("system logs level `%s` category `%s`", exactLevel.name(), category),
         LOG_WAIT_TIME, () -> checkLogged(category, exactLevel));
   }
 
@@ -1459,7 +1463,7 @@ public class SequenceBase {
     return ifTrueGet(entries.isEmpty(), NO_EXTRA_DETAIL);
   }
 
-  protected void checkNotLogged(String category, Level minLevel) {
+  protected void checkWasNotLogged(String category, Level minLevel) {
     withRecordSequence(false, () -> {
       ifTrueThen(deviceSupportsState(), () ->
           waitUntil("last_config synchronized", this::lastConfigUpdated));
@@ -1468,14 +1472,16 @@ public class SequenceBase {
     final Instant endTime = lastConfigUpdate.plusSeconds(LOG_TIMEOUT_SEC);
     List<Entry> entries = matchingLogQueue(
         entry -> category.equals(entry.category) && entry.level >= minLevel.value());
-    checkThat(format("log category `%s` level `%s` not logged", category, minLevel), () -> {
-      if (!entries.isEmpty()) {
-        warning(format("Filtered config between %s and %s", isoConvert(lastConfigUpdate),
-            isoConvert(endTime)));
-        entries.forEach(entry -> error("undesirable " + entryMessage(entry)));
-      }
-      return entries.isEmpty();
-    });
+    checkThat(
+        format("log level `%s` (or greater) category `%s` was not logged", minLevel, category),
+        () -> {
+          if (!entries.isEmpty()) {
+            warning(format("Filtered config between %s and %s", isoConvert(lastConfigUpdate),
+                isoConvert(endTime)));
+            entries.forEach(entry -> error("undesirable " + entryMessage(entry)));
+          }
+          return entries.isEmpty();
+        });
   }
 
   private List<Entry> matchingLogQueue(Function<Entry, Boolean> predicate) {
@@ -1610,7 +1616,7 @@ public class SequenceBase {
         () -> recordSequence(step + " " + description));
   }
 
-  private void recordSequence(String message) {
+  protected void recordSequence(String message) {
     if (recordSequence) {
       sequenceMd.println("1. " + message.trim());
       sequenceMd.flush();
@@ -2231,23 +2237,22 @@ public class SequenceBase {
     if (!deviceSupportsState()) {
       return;
     }
-    String systemStatusMessage = SYSTEM_STATUS_MESSAGE + STATUS_CHECK_SUFFIX;
     if (isInteresting) {
-      checkThat(systemStatusMessage, notSignificantStatusDetail());
+      checkThat(SYSTEM_STATUS_MESSAGE, notSignificantStatusDetail());
     } else {
-      checkThat(NOT_STATUS_PREFIX + systemStatusMessage, significantStatusDetail());
+      checkThat(NOT_STATUS_PREFIX + SYSTEM_STATUS_MESSAGE, significantStatusDetail());
     }
   }
 
-  protected void untilHasNoInterestingSystemStatus() {
-    untilHasInterestingSystemStatus(false);
+  protected void waitUntilNoSystemStatus() {
+    waitUntilSystemStatus(false);
   }
 
-  protected void untilHasInterestingSystemStatus() {
-    untilHasInterestingSystemStatus(true);
+  protected void waitUntilHasSystemStatus() {
+    waitUntilSystemStatus(true);
   }
 
-  protected void untilHasInterestingSystemStatus(boolean interesting) {
+  private void waitUntilSystemStatus(boolean interesting) {
     if (!deviceSupportsState()) {
       return;
     }
@@ -2257,7 +2262,6 @@ public class SequenceBase {
         interesting ? this::notSignificantStatusDetail : this::significantStatusDetail;
     waitUntil(message, detailer);
     expectedSystemStatus = interesting;
-    checkThatHasInterestingSystemStatus(interesting);
   }
 
   private void putSequencerResult(Description description, SequenceResult result) {
