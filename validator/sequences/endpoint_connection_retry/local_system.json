@@ -2,7 +2,7 @@
   "min_loglevel" : 200,
   "metrics_rate_sec" : 10,
   "operation" : {
-    "last_start" : "2024-10-09T00:13:48Z"
+    "last_start" : "2024-11-04T19:27:03Z"
   },
   "testing" : {
     "sequence_name" : "endpoint_connection_retry"

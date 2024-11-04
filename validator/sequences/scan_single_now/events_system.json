@@ -1,116 +1,81 @@
 {
   "event_no" : 4,
-  "last_config" : "2024-10-30T02:26:32Z",
+  "last_config" : "2024-11-04T19:27:42Z",
   "logentries" : [ {
-    "message" : "Update state 2024-10-30T02:26:26Z last_config 2024-10-30T02:26:25Z",
-    "category" : "device.log",
-    "timestamp" : "2024-10-30T02:26:26Z",
-    "level" : 200
-  }, {
     "message" : "Device AHU-1 config handler",
     "category" : "device.log",
-    "timestamp" : "2024-10-30T02:26:26Z",
+    "timestamp" : "2024-11-04T19:27:38Z",
     "level" : 200
   }, {
-    "message" : "2024-10-30T02:26:26Z received config 2024-10-30T02:26:26Z",
+    "message" : "2024-11-04T19:27:38Z received config 2024-11-04T19:27:38Z",
     "category" : "device.log",
-    "timestamp" : "2024-10-30T02:26:26Z",
+    "timestamp" : "2024-11-04T19:27:38Z",
     "level" : 200
   }, {
     "message" : "success",
     "category" : "system.config.apply",
-    "timestamp" : "2024-10-30T02:26:26Z",
+    "timestamp" : "2024-11-04T19:27:38Z",
     "level" : 300
   }, {
-    "message" : "Device AHU-1 config handler",
+    "message" : "Update state 2024-11-04T19:27:38Z last_config 2024-11-04T19:27:38Z",
     "category" : "device.log",
-    "timestamp" : "2024-10-30T02:26:26Z",
+    "timestamp" : "2024-11-04T19:27:38Z",
     "level" : 200
   }, {
-    "message" : "2024-10-30T02:26:26Z received config 2024-10-30T02:26:26Z",
+    "message" : "Update state 2024-11-04T19:27:42Z last_config 2024-11-04T19:27:38Z",
     "category" : "device.log",
-    "timestamp" : "2024-10-30T02:26:26Z",
-    "level" : 200
-  }, {
-    "message" : "success",
-    "category" : "system.config.apply",
-    "timestamp" : "2024-10-30T02:26:26Z",
-    "level" : 300
-  }, {
-    "message" : "Device AHU-1 config handler",
-    "category" : "device.log",
-    "timestamp" : "2024-10-30T02:26:27Z",
-    "level" : 200
-  }, {
-    "message" : "2024-10-30T02:26:27Z received config 2024-10-30T02:26:27Z",
-    "category" : "device.log",
-    "timestamp" : "2024-10-30T02:26:27Z",
-    "level" : 200
-  }, {
-    "message" : "success",
-    "category" : "system.config.apply",
-    "timestamp" : "2024-10-30T02:26:27Z",
-    "level" : 300
-  }, {
-    "message" : "Update state 2024-10-30T02:26:28Z last_config 2024-10-30T02:26:27Z",
-    "category" : "device.log",
-    "timestamp" : "2024-10-30T02:26:28Z",
-    "level" : 200
-  }, {
-    "message" : "Update state 2024-10-30T02:26:32Z last_config 2024-10-30T02:26:27Z",
-    "category" : "device.log",
-    "timestamp" : "2024-10-30T02:26:32Z",
+    "timestamp" : "2024-11-04T19:27:42Z",
     "level" : 200
   }, {
     "message" : "Device AHU-1 config handler",
     "category" : "device.log",
-    "timestamp" : "2024-10-30T02:26:32Z",
+    "timestamp" : "2024-11-04T19:27:42Z",
     "level" : 200
   }, {
-    "message" : "2024-10-30T02:26:32Z received config 2024-10-30T02:26:32Z",
+    "message" : "2024-11-04T19:27:42Z received config 2024-11-04T19:27:42Z",
     "category" : "device.log",
-    "timestamp" : "2024-10-30T02:26:32Z",
+    "timestamp" : "2024-11-04T19:27:42Z",
     "level" : 200
   }, {
-    "message" : "Discovery scan generation vendor pending at 2024-10-30T02:26:23Z",
+    "message" : "Discovery scan generation vendor pending at 2024-11-04T19:27:33Z",
     "category" : "device.log",
-    "timestamp" : "2024-10-30T02:26:32Z",
+    "timestamp" : "2024-11-04T19:27:43Z",
     "level" : 200
   }, {
     "message" : "success",
     "category" : "system.config.apply",
-    "timestamp" : "2024-10-30T02:26:32Z",
+    "timestamp" : "2024-11-04T19:27:43Z",
     "level" : 300
   }, {
-    "message" : "Discovery scan starting vendor generation 2024-10-30T02:26:23Z",
+    "message" : "Discovery scan starting vendor generation 2024-11-04T19:27:33Z",
     "category" : "device.log",
-    "timestamp" : "2024-10-30T02:26:32Z",
+    "timestamp" : "2024-11-04T19:27:43Z",
     "level" : 200
   }, {
-    "message" : "Discovered vendor device 20231 for gen 2024-10-30T02:26:23Z",
+    "message" : "Discovered vendor device 20231 for gen 2024-11-04T19:27:33Z",
     "category" : "device.log",
-    "timestamp" : "2024-10-30T02:26:32Z",
+    "timestamp" : "2024-11-04T19:27:43Z",
     "level" : 200
   }, {
-    "message" : "Discovered vendor device 28179023 for gen 2024-10-30T02:26:23Z",
+    "message" : "Discovered vendor device 28179023 for gen 2024-11-04T19:27:33Z",
     "category" : "device.log",
-    "timestamp" : "2024-10-30T02:26:32Z",
+    "timestamp" : "2024-11-04T19:27:43Z",
     "level" : 200
   }, {
-    "message" : "Discovered vendor device 0x65 for gen 2024-10-30T02:26:23Z",
+    "message" : "Discovered vendor device 0x65 for gen 2024-11-04T19:27:33Z",
     "category" : "device.log",
-    "timestamp" : "2024-10-30T02:26:32Z",
+    "timestamp" : "2024-11-04T19:27:43Z",
     "level" : 200
   }, {
-    "message" : "Update state 2024-10-30T02:26:34Z last_config 2024-10-30T02:26:32Z",
+    "message" : "Update state 2024-11-04T19:27:44Z last_config 2024-11-04T19:27:42Z",
     "category" : "device.log",
-    "timestamp" : "2024-10-30T02:26:34Z",
+    "timestamp" : "2024-11-04T19:27:44Z",
     "level" : 200
   } ],
   "metrics" : {
     "mem_total_mb" : 254.0,
-    "mem_free_mb" : 212.93878173828125
+    "mem_free_mb" : 212.9284896850586
   },
-  "timestamp" : "2024-10-30T02:26:35Z",
+  "timestamp" : "2024-11-04T19:27:47Z",
   "version" : "1.5.2"
 }

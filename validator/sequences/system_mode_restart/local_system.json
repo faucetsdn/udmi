@@ -3,7 +3,7 @@
   "metrics_rate_sec" : 10,
   "operation" : {
     "mode" : "active",
-    "last_start" : "2024-10-09T00:17:11Z"
+    "last_start" : "2024-11-04T19:30:27Z"
   },
   "testing" : {
     "sequence_name" : "system_mode_restart"

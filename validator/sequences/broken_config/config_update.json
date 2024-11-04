@@ -25,16 +25,16 @@
   },
   "system" : {
     "metrics_rate_sec" : 10,
-    "min_loglevel" : 100,
+    "min_loglevel" : 200,
     "operation" : {
-      "last_start" : "2024-11-01T19:57:31Z"
+      "last_start" : "2024-11-04T19:26:26Z"
     },
     "testing" : {
-      "config_base" : 18,
+      "config_base" : 17,
       "sequence_name" : "broken_config",
-      "transaction_id" : "RC:1483f6.00000014"
+      "transaction_id" : "RC:3ea000.00000012"
     }
   },
-  "timestamp" : "2024-11-01T19:58:29Z",
-  "version" : "git-fbc7dcc"
+  "timestamp" : "2024-11-04T19:27:16Z",
+  "version" : "git-61dd570"
 }

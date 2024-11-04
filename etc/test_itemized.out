@@ -12,8 +12,8 @@
 1 RESULT fail pointset pointset_publish_interval STABLE 0/10 Failed check that time period between successive pointset events is between 5 and 8 seconds
 1 RESULT fail system.mode system_mode_restart ALPHA 0/10 Failed check that restart count increased by one
 1 RESULT fail system config_logging STABLE 0/10 Bad message version string 1.4.
-1 CPBLTY fail system broken_config.logging ALPHA 0/1 While log category `system.config.receive` level `DEBUG` to be logged
-0 CPBLTY fail system broken_config.status ALPHA 0/1 While has significant system status
+1 CPBLTY fail system broken_config.logging ALPHA 0/1 While system logs level `DEBUG` category `system.config.receive`
+0 CPBLTY fail system broken_config.status ALPHA 0/1 While has system status level is >= WARNING (400)
 0 RESULT pass system broken_config STABLE 8/10 Sequence complete
 1 CPBLTY pass system broken_config.logging ALPHA 1/1 Capability supported
 0 CPBLTY pass system broken_config.status ALPHA 1/1 Capability supported
@@ -21,17 +21,17 @@
 1 CPBLTY skip system broken_config.logging ALPHA 0/0 Never executed
 0 CPBLTY skip system broken_config.status ALPHA 0/0 Never executed
 0 RESULT fail system broken_config STABLE 0/8 Because device state not updated since test start
-1 CPBLTY fail system broken_config.logging ALPHA 0/1 While log category `system.config.receive` level `DEBUG` to be logged
-0 CPBLTY fail system broken_config.status ALPHA 0/1 While has significant system status
-0 RESULT pass system broken_config STABLE 8/10 Sequence complete
-1 CPBLTY fail system broken_config.logging ALPHA 0/1 While log category `system.config.apply` level `NOTICE` to be logged
+1 CPBLTY pass system broken_config.logging ALPHA 1/1 Capability supported
+0 CPBLTY skip system broken_config.status ALPHA 0/0 Never executed
+0 RESULT fail system broken_config STABLE 0/9 Because device state not updated since test start
+1 CPBLTY fail system broken_config.logging ALPHA 0/1 While system logs level `NOTICE` category `system.config.apply`
 0 CPBLTY pass system broken_config.status ALPHA 1/1 Capability supported
 0 RESULT pass system broken_config STABLE 9/10 Sequence complete
-1 CPBLTY fail system broken_config.logging ALPHA 0/1 While log category `system.config.receive` level `DEBUG` to be logged
-0 CPBLTY fail system broken_config.status ALPHA 0/1 Failed check that category matches system.config.parse
+1 CPBLTY fail system broken_config.logging ALPHA 0/1 While system logs level `DEBUG` category `system.config.receive`
+0 CPBLTY fail system broken_config.status ALPHA 0/1 Failed check that category matches `system.config.parse`
 0 RESULT pass system broken_config STABLE 8/10 Sequence complete
-1 CPBLTY fail system broken_config.logging ALPHA 0/1 While log category `system.config.apply` level `NOTICE` to be logged
-0 CPBLTY fail system broken_config.status ALPHA 0/1 While has significant system status
+1 CPBLTY fail system broken_config.logging ALPHA 0/1 While system logs level `NOTICE` category `system.config.apply`
+0 CPBLTY fail system broken_config.status ALPHA 0/1 While has system status level is >= WARNING (400)
 0 RESULT pass system broken_config STABLE 8/10 Sequence complete
 1 CPBLTY pass system system_last_update.subblocks ALPHA 1/1 Capability supported
 0 RESULT pass system system_last_update STABLE 11/11 Sequence complete

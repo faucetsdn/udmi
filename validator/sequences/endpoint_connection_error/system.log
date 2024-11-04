@@ -1,40 +1,41 @@
-2024-10-09T00:13:55Z WARNING Start waiting 10s for config latch for AHU-1
-2024-10-09T00:13:55Z WARNING Starting AHU-1 Pubber sender with delay 10s
-2024-10-09T00:13:55Z WARNING Dropping state update until config received...
-2024-10-09T00:13:55Z WARNING Received config for config latch AHU-1
-2024-10-09T00:13:55Z NOTICE success
-2024-10-09T00:13:55Z WARNING Ending connection 1728432834730 with 9
-2024-10-09T00:13:55Z NOTICE success
-2024-10-09T00:14:07Z NOTICE success
-2024-10-09T00:14:08Z INFO Device AHU-1 config handler
-2024-10-09T00:14:08Z INFO 2024-10-09T00:14:08Z received config 2024-10-09T00:14:07Z
-2024-10-09T00:14:08Z NOTICE success
-2024-10-09T00:14:09Z INFO Update state 2024-10-09T00:14:09Z last_config 2024-10-09T00:14:07Z
-2024-10-09T00:14:11Z INFO Device AHU-1 config handler
-2024-10-09T00:14:11Z INFO 2024-10-09T00:14:11Z received config 2024-10-09T00:14:11Z
-2024-10-09T00:14:11Z NOTICE success
-2024-10-09T00:14:11Z INFO Update state 2024-10-09T00:14:11Z last_config 2024-10-09T00:14:11Z
-2024-10-09T00:14:13Z INFO Device AHU-1 config handler
-2024-10-09T00:14:13Z INFO 2024-10-09T00:14:13Z received config 2024-10-09T00:14:13Z
-2024-10-09T00:14:13Z NOTICE success
-2024-10-09T00:14:13Z INFO Update state 2024-10-09T00:14:13Z last_config 2024-10-09T00:14:13Z
-2024-10-09T00:14:15Z INFO Device AHU-1 config handler
-2024-10-09T00:14:15Z INFO 2024-10-09T00:14:15Z received config 2024-10-09T00:14:15Z
-2024-10-09T00:14:15Z NOTICE success
-2024-10-09T00:14:15Z INFO Update state 2024-10-09T00:14:15Z last_config 2024-10-09T00:14:15Z
-2024-10-09T00:14:16Z INFO Device AHU-1 config handler
-2024-10-09T00:14:16Z INFO 2024-10-09T00:14:16Z received config 2024-10-09T00:14:16Z
-2024-10-09T00:14:16Z NOTICE success
-2024-10-09T00:14:17Z INFO Device AHU-1 config handler
-2024-10-09T00:14:17Z INFO 2024-10-09T00:14:17Z received config 2024-10-09T00:14:17Z
-2024-10-09T00:14:17Z NOTICE success
-2024-10-09T00:14:17Z INFO Update state 2024-10-09T00:14:17Z last_config 2024-10-09T00:14:17Z
-2024-10-09T00:14:18Z INFO Device AHU-1 config handler
-2024-10-09T00:14:18Z INFO 2024-10-09T00:14:18Z received config 2024-10-09T00:14:18Z
-2024-10-09T00:14:18Z NOTICE success
-2024-10-09T00:14:19Z INFO Update state 2024-10-09T00:14:19Z last_config 2024-10-09T00:14:18Z
-2024-10-09T00:14:25Z NOTICE Starting new endpoint generation
-2024-10-09T00:14:25Z INFO New config blob endpoint detected:
+2024-11-04T19:26:27Z WARNING Starting AHU-1 Pubber sender with delay 10s
+2024-11-04T19:26:27Z WARNING Dropping state update until config received...
+2024-11-04T19:26:27Z WARNING Received config for config latch AHU-1
+2024-11-04T19:26:27Z NOTICE success
+2024-11-04T19:26:27Z WARNING Start waiting 10s for config latch for AHU-1
+2024-11-04T19:26:27Z WARNING Ending connection 1730748386799 with 9
+2024-11-04T19:26:27Z NOTICE success
+2024-11-04T19:26:38Z NOTICE success
+2024-11-04T19:26:38Z INFO Update state 2024-11-04T19:26:38Z last_config 2024-11-04T19:26:38Z
+2024-11-04T19:26:38Z INFO Device AHU-1 config handler
+2024-11-04T19:26:38Z INFO 2024-11-04T19:26:38Z received config 2024-11-04T19:26:38Z
+2024-11-04T19:26:38Z NOTICE success
+2024-11-04T19:26:40Z INFO Update state 2024-11-04T19:26:40Z last_config 2024-11-04T19:26:38Z
+2024-11-04T19:26:41Z INFO Device AHU-1 config handler
+2024-11-04T19:26:41Z INFO 2024-11-04T19:26:41Z received config 2024-11-04T19:26:41Z
+2024-11-04T19:26:41Z NOTICE success
+2024-11-04T19:26:42Z INFO Update state 2024-11-04T19:26:42Z last_config 2024-11-04T19:26:41Z
+2024-11-04T19:26:43Z INFO Device AHU-1 config handler
+2024-11-04T19:26:43Z INFO 2024-11-04T19:26:43Z received config 2024-11-04T19:26:43Z
+2024-11-04T19:26:43Z NOTICE success
+2024-11-04T19:26:44Z INFO Update state 2024-11-04T19:26:44Z last_config 2024-11-04T19:26:43Z
+2024-11-04T19:26:45Z INFO Device AHU-1 config handler
+2024-11-04T19:26:45Z INFO 2024-11-04T19:26:45Z received config 2024-11-04T19:26:45Z
+2024-11-04T19:26:45Z NOTICE success
+2024-11-04T19:26:46Z INFO Update state 2024-11-04T19:26:46Z last_config 2024-11-04T19:26:45Z
+2024-11-04T19:26:47Z INFO Device AHU-1 config handler
+2024-11-04T19:26:47Z INFO 2024-11-04T19:26:47Z received config 2024-11-04T19:26:47Z
+2024-11-04T19:26:47Z NOTICE success
+2024-11-04T19:26:48Z INFO Device AHU-1 config handler
+2024-11-04T19:26:48Z INFO 2024-11-04T19:26:48Z received config 2024-11-04T19:26:48Z
+2024-11-04T19:26:48Z NOTICE success
+2024-11-04T19:26:48Z INFO Update state 2024-11-04T19:26:48Z last_config 2024-11-04T19:26:48Z
+2024-11-04T19:26:49Z INFO Device AHU-1 config handler
+2024-11-04T19:26:49Z INFO 2024-11-04T19:26:49Z received config 2024-11-04T19:26:49Z
+2024-11-04T19:26:49Z NOTICE success
+2024-11-04T19:26:50Z INFO Update state 2024-11-04T19:26:50Z last_config 2024-11-04T19:26:49Z
+2024-11-04T19:26:57Z NOTICE Starting new endpoint generation
+2024-11-04T19:26:57Z INFO New config blob endpoint detected:
 {
   "protocol" : "mqtt",
   "transport" : "ssl",
@@ -47,56 +48,56 @@
       "password" : "38269d11"
     }
   },
-  "generation" : "2024-10-09T00:14:14Z"
+  "generation" : "2024-11-04T19:26:44Z"
 }
-2024-10-09T00:14:25Z INFO Update state 2024-10-09T00:14:25Z last_config 2024-10-09T00:14:18Z
-2024-10-09T00:14:25Z INFO CA cert file: /home/runner/work/udmi/udmi/sites/udmi_site_model/reflector/ca.crt
-2024-10-09T00:14:25Z INFO Device cert file: /home/runner/work/udmi/udmi/sites/udmi_site_model/devices/AHU-1/rsa_private.crt
-2024-10-09T00:14:25Z INFO Private key file: /home/runner/work/udmi/udmi/sites/udmi_site_model/devices/AHU-1/rsa_private.pem
-2024-10-09T00:14:25Z INFO Password sha256 6b5344e1
-2024-10-09T00:14:25Z WARNING Starting connection 1728432865546 with 10
-2024-10-09T00:14:25Z WARNING Terminating AHU-1 PointsetManager sender
-2024-10-09T00:14:25Z WARNING Terminating AHU-1 SystemManager sender
-2024-10-09T00:14:25Z WARNING Creating new config latch for AHU-1
-2024-10-09T00:14:25Z ERROR While waiting for connection start: Connection error
-2024-10-09T00:14:25Z ERROR Attempt failed, retries remaining: 9
-2024-10-09T00:14:26Z WARNING Creating new config latch for AHU-1
-2024-10-09T00:14:26Z ERROR While waiting for connection start: Connection error
-2024-10-09T00:14:26Z ERROR Attempt failed, retries remaining: 8
-2024-10-09T00:14:27Z WARNING Creating new config latch for AHU-1
-2024-10-09T00:14:27Z ERROR While waiting for connection start: Connection error
-2024-10-09T00:14:27Z ERROR Attempt failed, retries remaining: 7
-2024-10-09T00:14:28Z WARNING Creating new config latch for AHU-1
-2024-10-09T00:14:28Z ERROR While waiting for connection start: Connection error
-2024-10-09T00:14:28Z ERROR Attempt failed, retries remaining: 6
-2024-10-09T00:14:29Z WARNING Creating new config latch for AHU-1
-2024-10-09T00:14:29Z ERROR While waiting for connection start: Connection error
-2024-10-09T00:14:29Z ERROR Attempt failed, retries remaining: 5
-2024-10-09T00:14:30Z WARNING Creating new config latch for AHU-1
-2024-10-09T00:14:30Z ERROR While waiting for connection start: Connection error
-2024-10-09T00:14:30Z ERROR Attempt failed, retries remaining: 4
-2024-10-09T00:14:31Z WARNING Creating new config latch for AHU-1
-2024-10-09T00:14:31Z ERROR While waiting for connection start: Connection error
-2024-10-09T00:14:31Z ERROR Attempt failed, retries remaining: 3
-2024-10-09T00:14:32Z WARNING Creating new config latch for AHU-1
-2024-10-09T00:14:32Z ERROR While waiting for connection start: Connection error
-2024-10-09T00:14:32Z ERROR Attempt failed, retries remaining: 2
-2024-10-09T00:14:33Z WARNING Creating new config latch for AHU-1
-2024-10-09T00:14:33Z ERROR While waiting for connection start: Connection error
-2024-10-09T00:14:33Z ERROR Attempt failed, retries remaining: 1
-2024-10-09T00:14:34Z WARNING Creating new config latch for AHU-1
-2024-10-09T00:14:34Z ERROR While waiting for connection start: Connection error
-2024-10-09T00:14:34Z ERROR Attempt failed, retries remaining: 0
-2024-10-09T00:14:35Z WARNING Ending connection 1728432865546 with -1
-2024-10-09T00:14:35Z ERROR Reconfigure failed, attempting connection to last working endpoint: While resetting connection
-2024-10-09T00:14:35Z INFO CA cert file: /home/runner/work/udmi/udmi/sites/udmi_site_model/reflector/ca.crt
-2024-10-09T00:14:35Z INFO Device cert file: /home/runner/work/udmi/udmi/sites/udmi_site_model/devices/AHU-1/rsa_private.crt
-2024-10-09T00:14:35Z INFO Private key file: /home/runner/work/udmi/udmi/sites/udmi_site_model/devices/AHU-1/rsa_private.pem
-2024-10-09T00:14:35Z INFO Password sha256 6b5344e1
-2024-10-09T00:14:35Z WARNING Starting connection 1728432875808 with 10
-2024-10-09T00:14:35Z WARNING Creating new config latch for AHU-1
-2024-10-09T00:14:36Z INFO Device AHU-1 config handler
-2024-10-09T00:14:36Z INFO 2024-10-09T00:14:36Z received config 2024-10-09T00:14:18Z
-2024-10-09T00:14:36Z WARNING Starting AHU-1 PointsetManager sender with delay 10s
-2024-10-09T00:14:36Z WARNING Starting AHU-1 SystemManager sender with delay 10s
-2024-10-09T00:14:45Z NOTICE Sequence complete
+2024-11-04T19:26:57Z INFO Update state 2024-11-04T19:26:57Z last_config 2024-11-04T19:26:49Z
+2024-11-04T19:26:57Z INFO CA cert file: /home/runner/work/udmi/udmi/sites/udmi_site_model/reflector/ca.crt
+2024-11-04T19:26:57Z INFO Device cert file: /home/runner/work/udmi/udmi/sites/udmi_site_model/devices/AHU-1/rsa_private.crt
+2024-11-04T19:26:57Z INFO Private key file: /home/runner/work/udmi/udmi/sites/udmi_site_model/devices/AHU-1/rsa_private.pem
+2024-11-04T19:26:57Z INFO Password sha256 6b5344e1
+2024-11-04T19:26:57Z WARNING Starting connection 1730748417625 with 10
+2024-11-04T19:26:57Z WARNING Terminating AHU-1 PubberPointsetManager sender
+2024-11-04T19:26:57Z WARNING Terminating AHU-1 PubberSystemManager sender
+2024-11-04T19:26:57Z WARNING Creating new config latch for AHU-1
+2024-11-04T19:26:57Z ERROR While waiting for connection start: Connection error
+2024-11-04T19:26:57Z ERROR Attempt failed, retries remaining: 9
+2024-11-04T19:26:58Z WARNING Creating new config latch for AHU-1
+2024-11-04T19:26:58Z ERROR While waiting for connection start: Connection error
+2024-11-04T19:26:58Z ERROR Attempt failed, retries remaining: 8
+2024-11-04T19:26:59Z WARNING Creating new config latch for AHU-1
+2024-11-04T19:26:59Z ERROR While waiting for connection start: Connection error
+2024-11-04T19:26:59Z ERROR Attempt failed, retries remaining: 7
+2024-11-04T19:27:00Z WARNING Creating new config latch for AHU-1
+2024-11-04T19:27:00Z ERROR While waiting for connection start: Connection error
+2024-11-04T19:27:00Z ERROR Attempt failed, retries remaining: 6
+2024-11-04T19:27:01Z WARNING Creating new config latch for AHU-1
+2024-11-04T19:27:01Z ERROR While waiting for connection start: Connection error
+2024-11-04T19:27:01Z ERROR Attempt failed, retries remaining: 5
+2024-11-04T19:27:02Z WARNING Creating new config latch for AHU-1
+2024-11-04T19:27:02Z ERROR While waiting for connection start: Connection error
+2024-11-04T19:27:02Z ERROR Attempt failed, retries remaining: 4
+2024-11-04T19:27:03Z WARNING Creating new config latch for AHU-1
+2024-11-04T19:27:03Z ERROR While waiting for connection start: Connection error
+2024-11-04T19:27:03Z ERROR Attempt failed, retries remaining: 3
+2024-11-04T19:27:04Z WARNING Creating new config latch for AHU-1
+2024-11-04T19:27:04Z ERROR While waiting for connection start: Connection error
+2024-11-04T19:27:04Z ERROR Attempt failed, retries remaining: 2
+2024-11-04T19:27:05Z WARNING Creating new config latch for AHU-1
+2024-11-04T19:27:05Z ERROR While waiting for connection start: Connection error
+2024-11-04T19:27:05Z ERROR Attempt failed, retries remaining: 1
+2024-11-04T19:27:06Z WARNING Creating new config latch for AHU-1
+2024-11-04T19:27:06Z ERROR While waiting for connection start: Connection error
+2024-11-04T19:27:06Z ERROR Attempt failed, retries remaining: 0
+2024-11-04T19:27:07Z WARNING Ending connection 1730748417625 with -1
+2024-11-04T19:27:07Z ERROR Reconfigure failed, attempting connection to last working endpoint: While resetting connection
+2024-11-04T19:27:07Z INFO CA cert file: /home/runner/work/udmi/udmi/sites/udmi_site_model/reflector/ca.crt
+2024-11-04T19:27:07Z INFO Device cert file: /home/runner/work/udmi/udmi/sites/udmi_site_model/devices/AHU-1/rsa_private.crt
+2024-11-04T19:27:07Z INFO Private key file: /home/runner/work/udmi/udmi/sites/udmi_site_model/devices/AHU-1/rsa_private.pem
+2024-11-04T19:27:07Z INFO Password sha256 6b5344e1
+2024-11-04T19:27:07Z WARNING Starting connection 1730748427917 with 10
+2024-11-04T19:27:07Z WARNING Creating new config latch for AHU-1
+2024-11-04T19:27:08Z INFO Device AHU-1 config handler
+2024-11-04T19:27:08Z INFO 2024-11-04T19:27:08Z received config 2024-11-04T19:26:49Z
+2024-11-04T19:27:08Z WARNING Starting AHU-1 PubberPointsetManager sender with delay 10s
+2024-11-04T19:27:08Z WARNING Starting AHU-1 PubberSystemManager sender with delay 10s
+2024-11-04T19:27:17Z NOTICE Sequence complete

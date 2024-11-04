@@ -82,62 +82,48 @@ Error handling for badly formed gateway target family
 
 Check that the device correctly handles a broken (non-json) config message.
 
-1. Wait for config sync
-1. Update config enable debug logging:
+1. Update config to enable debug logging
     * Set `system.min_loglevel` = `100`
-1. Wait for initial state synchronized
-1. Check that initial stable_config matches last_config
-1. Wait for log category `system.config.apply` level `NOTICE` to be logged
-1. Wait for config sync
-1. Wait for has significant system status
-1. Check that significant system status exists
-1. Check that status level is error (500)
-1. Check that category matches system.config.parse
-1. Check that previous good config timestamp matches state last_config
-1. Wait for log category `system.config.receive` level `DEBUG` to be logged
-1. Wait for log category `system.config.parse` level `ERROR` to be logged
-1. Check that log category `system.config.apply` level `NOTICE` not logged
-1. Force reset config
-1. Wait for config sync
-1. Wait for log category `system.config.apply` level `NOTICE` to be logged
-1. Wait for restored state synchronized
-1. Wait for config sync
-1. Update config Before log category `system.config.apply` level `NOTICE` to be logged:
-    * Set `system.min_loglevel` = `100`
-1. Wait for log category `system.config.apply` level `NOTICE` to be logged
-1. Check that log category `system.config.receive` level `DEBUG` not logged
-1. Check that log category `system.config.parse` level `DEBUG` not logged
+1. Wait until system logs level `NOTICE` category `system.config.apply`
+1. Update config to force broken (invalid JSON) configuration
+1. Wait until has system status level is >= WARNING (400)
+1. Check that status level is exactly `ERROR` (500)
+1. Check that category matches `system.config.parse`
+1. Check that device state `last_config` has not been updated
+1. Wait until system logs level `DEBUG` category `system.config.receive`
+1. Wait until system logs level `ERROR` category `system.config.parse`
+1. Check that log level `NOTICE` (or greater) category `system.config.apply` was not logged
+1. Reset config to clean version
+1. (Log level is implicitly set to `INFO` through config reset)
+1. Wait until system logs level `NOTICE` category `system.config.apply`
+1. Check that log level `DEBUG` (or greater) category `system.config.receive` was not logged
+1. Check that log level `DEBUG` (or greater) category `system.config.parse` was not logged
 
 ## config_logging (STABLE)
 
 Check that the device publishes minimum required log entries when receiving config
 
-1. Wait for config sync
-1. Update config set min_loglevel to debug:
+1. Update config set min_loglevel to debug
     * Set `system.min_loglevel` = `100`
-1. Wait for config sync
 1. Force config update to resend config to device
-1. Wait for log category `system.config.receive` level `DEBUG` to be logged
-1. Wait for log category `system.config.parse` level `DEBUG` to be logged
-1. Wait for log category `system.config.apply` level `NOTICE` to be logged
+1. Wait until system logs level `DEBUG` category `system.config.receive`
+1. Wait until system logs level `DEBUG` category `system.config.parse`
+1. Wait until system logs level `NOTICE` category `system.config.apply`
 
 ## device_config_acked (STABLE)
 
 Check that the device MQTT-acknowledges a sent config.
 
-1. Wait for config sync
 1. Wait for config acked
 
 ## endpoint_connection_error (PREVIEW)
 
 Push endpoint config message to device that results in a connection error.
 
-1. Wait for config sync
-1. Update config before blobset entry config status is error:
+1. Update config before blobset entry config status is error
     * Add `blobset` = { "blobs": { "_iot_endpoint_config": { "phase": `final`, "generation": `blob generation`, "sha256": `blob data hash`, "url": `endpoint data` } } }
 1. Wait for blobset entry config status is error
-1. Wait for config sync
-1. Update config before endpoint config blobset state not defined:
+1. Update config before endpoint config blobset state not defined
     * Remove `blobset.blobs._iot_endpoint_config`
 1. Wait for endpoint config blobset state not defined
 
@@ -145,16 +131,13 @@ Push endpoint config message to device that results in a connection error.
 
 Check repeated endpoint with same information gets retried.
 
-1. Wait for config sync
-1. Update config before blobset entry config status is error:
+1. Update config before blobset entry config status is error
     * Add `blobset` = { "blobs": { "_iot_endpoint_config": { "phase": `final`, "generation": `blob generation`, "sha256": `blob data hash`, "url": `endpoint data` } } }
 1. Wait for blobset entry config status is error
-1. Wait for config sync
-1. Update config before blobset entry config status is error:
+1. Update config before blobset entry config status is error
     * Set `blobset.blobs._iot_endpoint_config.generation` = `new generation`
 1. Wait for blobset entry config status is error
-1. Wait for config sync
-1. Update config before endpoint config blobset state not defined:
+1. Update config before endpoint config blobset state not defined
     * Remove `blobset.blobs._iot_endpoint_config`
 1. Wait for endpoint config blobset state not defined
 
@@ -162,28 +145,21 @@ Check repeated endpoint with same information gets retried.
 
 Check connection to an alternate project.
 
-1. Wait for config sync
-1. Wait for initial last_config matches config timestamp
-1. Wait for config sync
-1. Update config mirroring config false:
+1. Wait until initial last_config matches config timestamp
+1. Update config mirroring config false
     * Add `blobset` = { "blobs": { "_iot_endpoint_config": { "phase": `final`, "generation": `blob generation`, "sha256": `blob data hash`, "url": `endpoint data` } } }
 1. Wait for blobset phase is apply and stateStatus is null
-1. Wait for config sync
 1. Wait for blobset phase is final and stateStatus is null
-1. Wait for alternate last_config matches config timestamp
-1. Wait for config sync
-1. Update config before endpoint config blobset state not defined:
+1. Wait until alternate last_config matches config timestamp
+1. Update config before endpoint config blobset state not defined
     * Remove `blobset.blobs._iot_endpoint_config`
 1. Wait for endpoint config blobset state not defined
-1. Wait for config sync
-1. Update config mirroring config true:
+1. Update config mirroring config true
     * Add `blobset.blobs._iot_endpoint_config` = { "phase": `final`, "generation": `blob generation`, "sha256": `blob data hash`, "url": `endpoint data` }
 1. Wait for blobset phase is apply and stateStatus is null
-1. Wait for config sync
 1. Wait for blobset phase is final and stateStatus is null
-1. Wait for restored last_config matches config timestamp
-1. Wait for config sync
-1. Update config before endpoint config blobset state not defined:
+1. Wait until restored last_config matches config timestamp
+1. Update config before endpoint config blobset state not defined
     * Remove `blobset.blobs._iot_endpoint_config`
 1. Wait for endpoint config blobset state not defined
 
@@ -191,88 +167,69 @@ Check connection to an alternate project.
 
 Check a successful reconnect to the same endpoint.
 
-1. Wait for config sync
-1. Update config before blobset phase is final and stateStatus is null:
+1. Update config before blobset phase is final and stateStatus is null
     * Add `blobset` = { "blobs": { "_iot_endpoint_config": { "phase": `final`, "generation": `blob generation`, "sha256": `blob data hash`, "url": `endpoint data` } } }
 1. Wait for blobset phase is final and stateStatus is null
-1. Wait for config sync
-1. Update config before endpoint config blobset state not defined:
+1. Update config before endpoint config blobset state not defined
     * Remove `blobset.blobs._iot_endpoint_config`
 1. Wait for endpoint config blobset state not defined
 
 ## endpoint_failure_and_restart (PREVIEW)
 
-1. Wait for config sync
-1. Update config before blobset entry config status is error:
+1. Update config before blobset entry config status is error
     * Add `blobset` = { "blobs": { "_iot_endpoint_config": { "phase": `final`, "generation": `blob generation`, "sha256": `blob data hash`, "url": `endpoint data` } } }
 1. Wait for blobset entry config status is error
 1. Wait for last_start is not zero
 1. Check that initial count is greater than 0
-1. Wait for config sync
-1. Update config before system mode is ACTIVE:
+1. Update config before system mode is ACTIVE
     * Add `system.operation.mode` = `active`
 1. Wait for system mode is ACTIVE
-1. Wait for config sync
-1. Update config before system mode is INITIAL:
+1. Update config before system mode is INITIAL
     * Set `system.operation.mode` = `restart`
 1. Wait for system mode is INITIAL
 1. Check that restart count increased by one
-1. Wait for config sync
-1. Update config before system mode is ACTIVE:
+1. Update config before system mode is ACTIVE
     * Set `system.operation.mode` = `active`
 1. Wait for system mode is ACTIVE
-1. Wait for config sync
 1. Wait for last_config is newer than previous last_config before abort
 1. Wait for last_config is newer than previous last_config after abort
 1. Wait for last_start is newer than previous last_start
-1. Wait for config sync
-1. Update config before endpoint config blobset state not defined:
+1. Update config before endpoint config blobset state not defined
     * Remove `blobset.blobs._iot_endpoint_config`
 1. Wait for endpoint config blobset state not defined
 
 ## endpoint_redirect_and_restart (PREVIEW)
 
-1. Wait for config sync
-1. Wait for initial last_config matches config timestamp
-1. Wait for config sync
-1. Update config mirroring config false:
+1. Wait until initial last_config matches config timestamp
+1. Update config mirroring config false
     * Add `blobset` = { "blobs": { "_iot_endpoint_config": { "phase": `final`, "generation": `blob generation`, "sha256": `blob data hash`, "url": `endpoint data` } } }
 1. Wait for blobset phase is apply and stateStatus is null
-1. Wait for config sync
 1. Wait for blobset phase is final and stateStatus is null
-1. Wait for alternate last_config matches config timestamp
-1. Wait for config sync
-1. Update config before endpoint config blobset state not defined:
+1. Wait until alternate last_config matches config timestamp
+1. Update config before endpoint config blobset state not defined
     * Remove `blobset.blobs._iot_endpoint_config`
 1. Wait for endpoint config blobset state not defined
 1. Wait for last_start is not zero
 1. Check that initial count is greater than 0
-1. Wait for config sync
-1. Update config before system mode is ACTIVE:
+1. Update config before system mode is ACTIVE
     * Add `system.operation.mode` = `active`
 1. Wait for system mode is ACTIVE
-1. Wait for config sync
-1. Update config before system mode is INITIAL:
+1. Update config before system mode is INITIAL
     * Set `system.operation.mode` = `restart`
 1. Wait for system mode is INITIAL
 1. Check that restart count increased by one
-1. Wait for config sync
-1. Update config before system mode is ACTIVE:
+1. Update config before system mode is ACTIVE
     * Set `system.operation.mode` = `active`
 1. Wait for system mode is ACTIVE
-1. Wait for config sync
 1. Wait for last_config is newer than previous last_config before abort
 1. Wait for last_config is newer than previous last_config after abort
 1. Wait for last_start is newer than previous last_start
-1. Wait for config sync
-1. Update config mirroring config true:
+1. Update config mirroring config true
     * Add `blobset.blobs._iot_endpoint_config` = { "phase": `final`, "generation": `blob generation`, "sha256": `blob data hash`, "url": `endpoint data` }
 1. Wait for blobset phase is apply and stateStatus is null
-1. Wait for config sync
 1. Wait for blobset phase is final and stateStatus is null
-1. Wait for restored last_config matches config timestamp
-1. Wait for config sync
-1. Update config before endpoint config blobset state not defined:
+1. Wait until restored last_config matches config timestamp
+1. Update config before endpoint config blobset state not defined
     * Remove `blobset.blobs._iot_endpoint_config`
 1. Wait for endpoint config blobset state not defined
 
@@ -280,16 +237,13 @@ Check a successful reconnect to the same endpoint.
 
 Check enumeration of device features
 
-1. Wait for config sync
-1. Update config before enumeration not active:
+1. Update config before enumeration not active
     * Add `discovery` = { "depths": { "features": `entries` } }
 1. Wait for enumeration not active
-1. Wait for config sync
-1. Update config before matching enumeration generation:
+1. Update config before matching enumeration generation
     * Add `discovery.generation` = `generation start time`
 1. Wait for matching enumeration generation
-1. Wait for config sync
-1. Update config before cleared enumeration generation:
+1. Update config before cleared enumeration generation
     * Remove `discovery.generation`
 1. Wait for cleared enumeration generation
 1. Check that no family enumeration exists
@@ -301,16 +255,13 @@ Check enumeration of device features
 
 Check enumeration of nothing at all
 
-1. Wait for config sync
-1. Update config before enumeration not active:
+1. Update config before enumeration not active
     * Add `discovery` = { "depths": {  } }
 1. Wait for enumeration not active
-1. Wait for config sync
-1. Update config before matching enumeration generation:
+1. Update config before matching enumeration generation
     * Add `discovery.generation` = `generation start time`
 1. Wait for matching enumeration generation
-1. Wait for config sync
-1. Update config before cleared enumeration generation:
+1. Update config before cleared enumeration generation
     * Remove `discovery.generation`
 1. Wait for cleared enumeration generation
 1. Check that no family enumeration exists
@@ -321,42 +272,38 @@ Check enumeration of nothing at all
 
 Check that the device correctly handles an extra out-of-schema field
 
-1. Wait for config sync
-1. Update config before last_config not null:
+1. Update config before last_config not null
     * Set `system.min_loglevel` = `100`
 1. Wait for last_config not null
 1. Wait for system operational
-1. Check that no significant system status exists
-1. Wait for config sync
-1. Wait for log category `system.config.receive` level `DEBUG` to be logged
+1. Check that not system status level is >= WARNING (400)
+1. Update config Before system logs level `DEBUG` category `system.config.receive`
+1. Wait until system logs level `DEBUG` category `system.config.receive`
 1. Wait for last_config updated
 1. Wait for system operational
-1. Check that no significant system status exists
-1. Wait for log category `system.config.parse` level `DEBUG` to be logged
-1. Wait for log category `system.config.apply` level `NOTICE` to be logged
-1. Wait for config sync
-1. Wait for log category `system.config.receive` level `DEBUG` to be logged
+1. Check that not system status level is >= WARNING (400)
+1. Wait until system logs level `DEBUG` category `system.config.parse`
+1. Wait until system logs level `NOTICE` category `system.config.apply`
+1. Update config Before system logs level `DEBUG` category `system.config.receive`
+1. Wait until system logs level `DEBUG` category `system.config.receive`
 1. Wait for last_config updated again
 1. Wait for system operational
-1. Wait for log category `system.config.parse` level `DEBUG` to be logged
-1. Wait for log category `system.config.apply` level `NOTICE` to be logged
+1. Wait until system logs level `DEBUG` category `system.config.parse`
+1. Wait until system logs level `NOTICE` category `system.config.apply`
 
 ## family_ether_addr (PREVIEW)
 
-1. Wait for config sync
-1. Wait for localnet family state ether available
+1. Wait until localnet family state ether available
 1. Check that family ether address matches
 
 ## family_ipv4_addr (PREVIEW)
 
-1. Wait for config sync
-1. Wait for localnet family state ipv4 available
+1. Wait until localnet family state ipv4 available
 1. Check that family ipv4 address matches
 
 ## family_ipv6_addr (PREVIEW)
 
-1. Wait for config sync
-1. Wait for localnet family state ipv6 available
+1. Wait until localnet family state ipv6 available
 1. Check that family ipv6 address matches
 
 ## gateway_proxy_events (BETA)
@@ -375,21 +322,18 @@ Check that a gateway proxies state updates for indicated devices
 
 Check that a device publishes pointset events
 
-1. Wait for config sync
 1. Wait for receive a pointset event
 
 ## pointset_publish_interval (STABLE)
 
 Check handling of sample_rate_sec and sample_limit_sec
 
-1. Wait for config sync
-1. Update config before receive at least 4 pointset events:
+1. Update config before receive at least 4 pointset events
     * Add `pointset.sample_rate_sec` = `8`
     * Add `pointset.sample_limit_sec` = `5`
 1. Wait for receive at least 4 pointset events
 1. Check that time period between successive pointset events is between 5 and 8 seconds
-1. Wait for config sync
-1. Update config before receive at least 4 pointset events:
+1. Update config before receive at least 4 pointset events
     * Set `pointset.sample_rate_sec` = `18`
     * Set `pointset.sample_limit_sec` = `15`
 1. Wait for receive at least 4 pointset events
@@ -399,43 +343,37 @@ Check handling of sample_rate_sec and sample_limit_sec
 
 Check that pointset state does not report an unconfigured point
 
-1. Wait for config sync
-1. Wait for pointset state matches config
-1. Wait for pointset event contains correct points
-1. Wait for config sync
-1. Update config before pointset state does not contain removed point:
+1. Wait until pointset state matches config
+1. Wait until pointset event contains correct points
+1. Update config before pointset state does not contain removed point
     * Remove `pointset.points[random_point]`
 1. Wait for pointset state does not contain removed point
-1. Wait for pointset state matches config
-1. Wait for pointset event contains correct points
-1. Wait for config sync
-1. Update config before pointset state contains restored point:
+1. Wait until pointset state matches config
+1. Wait until pointset event contains correct points
+1. Update config before pointset state contains restored point
     * Add `pointset.points[random_point]` = point configuration
 1. Wait for pointset state contains restored point
-1. Wait for pointset state matches config
-1. Wait for pointset event contains correct points
+1. Wait until pointset state matches config
+1. Wait until pointset event contains correct points
 
 ## pointset_request_extraneous (STABLE)
 
 Check error when pointset configuration contains extraneous point
 
-1. Wait for config sync
-1. Update config Before pointset state matches config:
+1. Update config Before pointset state matches config
     * Add `pointset.sample_rate_sec` = `10`
-1. Wait for pointset state matches config
-1. Wait for pointset event contains correct points
-1. Wait for config sync
-1. Update config before pointset state contains extraneous point error:
+1. Wait until pointset state matches config
+1. Wait until pointset event contains correct points
+1. Update config before pointset state contains extraneous point error
     * Add `pointset.points[extraneous_point]` = point configuration
 1. Wait for pointset state contains extraneous point error
-1. Wait for pointset state matches config
-1. Wait for pointset event contains correct points
-1. Wait for config sync
-1. Update config before pointset state removes extraneous point error:
+1. Wait until pointset state matches config
+1. Wait until pointset event contains correct points
+1. Update config before pointset state removes extraneous point error
     * Remove `pointset.points[extraneous_point]`
 1. Wait for pointset state removes extraneous point error
-1. Wait for pointset state matches config
-1. Wait for pointset event contains correct points
+1. Wait until pointset state matches config
+1. Wait until pointset event contains correct points
 
 ## state_make_model (STABLE)
 
@@ -453,19 +391,15 @@ Check that a device publishes correct software information in state messages
 
 Check that last_update state is correctly set in response to a config update.
 
-1. Wait for config sync
-1. Wait for state last_config matches config timestamp
-1. Wait for state update complete
-1. Wait for config sync
+1. Wait until state last_config matches config timestamp
+1. Wait until state update complete
 1. Force config update to trigger another config update
-1. Wait for state last_config matches config timestamp
-1. Wait for state update complete
-1. Wait for config sync
+1. Wait until state last_config matches config timestamp
+1. Wait until state update complete
 1. Force config update to trigger another config update
-1. Wait for state last_config matches config timestamp
-1. Wait for state update complete
+1. Wait until state last_config matches config timestamp
+1. Wait until state update complete
 
 ## valid_serial_no (STABLE)
 
-1. Wait for config sync
 1. Wait for received serial number matches

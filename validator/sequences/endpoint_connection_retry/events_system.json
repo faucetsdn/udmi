@@ -1,326 +1,331 @@
 {
-  "event_count" : 5,
-  "last_config" : "2024-10-09T00:14:31Z",
+  "event_no" : 6,
+  "last_config" : "2024-11-04T19:27:45Z",
   "logentries" : [ {
     "message" : "Received config for config latch AHU-1",
     "category" : "device.log",
-    "timestamp" : "2024-10-09T00:14:29Z",
+    "timestamp" : "2024-11-04T19:27:44Z",
     "level" : 400
   }, {
     "message" : "success",
     "category" : "system.config.apply",
-    "timestamp" : "2024-10-09T00:14:29Z",
+    "timestamp" : "2024-11-04T19:27:44Z",
     "level" : 300
   }, {
-    "message" : "Update state 2024-10-09T00:14:29Z last_config 2024-10-09T00:14:12Z",
+    "message" : "Update state 2024-11-04T19:27:44Z last_config 2024-11-04T19:27:26Z",
     "category" : "device.log",
-    "timestamp" : "2024-10-09T00:14:29Z",
+    "timestamp" : "2024-11-04T19:27:44Z",
     "level" : 200
   }, {
     "message" : "Connection complete.",
     "category" : "device.log",
-    "timestamp" : "2024-10-09T00:14:29Z",
+    "timestamp" : "2024-11-04T19:27:44Z",
     "level" : 200
   }, {
     "message" : "Start waiting 10s for config latch for AHU-1",
     "category" : "device.log",
-    "timestamp" : "2024-10-09T00:14:29Z",
+    "timestamp" : "2024-11-04T19:27:44Z",
     "level" : 400
   }, {
-    "message" : "Ending connection 1728432869566 with 9",
+    "message" : "Ending connection 1730748464383 with 9",
     "category" : "device.log",
-    "timestamp" : "2024-10-09T00:14:29Z",
+    "timestamp" : "2024-11-04T19:27:44Z",
     "level" : 400
   }, {
     "message" : "Endpoint connection restored to last working endpoint",
     "category" : "device.log",
-    "timestamp" : "2024-10-09T00:14:29Z",
+    "timestamp" : "2024-11-04T19:27:44Z",
     "level" : 300
   }, {
     "message" : "While redirecting connection endpoint: While resetting connection",
     "category" : "device.log",
-    "timestamp" : "2024-10-09T00:14:29Z",
+    "timestamp" : "2024-11-04T19:27:44Z",
     "level" : 500
   }, {
-    "message" : "2024-10-09T00:14:31Z received config 2024-10-09T00:14:31Z",
+    "message" : "Device AHU-1 config handler",
     "category" : "device.log",
-    "timestamp" : "2024-10-09T00:14:31Z",
+    "timestamp" : "2024-11-04T19:27:45Z",
+    "level" : 200
+  }, {
+    "message" : "2024-11-04T19:27:45Z received config 2024-11-04T19:27:45Z",
+    "category" : "device.log",
+    "timestamp" : "2024-11-04T19:27:45Z",
     "level" : 200
   }, {
     "message" : "success",
     "category" : "system.config.apply",
-    "timestamp" : "2024-10-09T00:14:31Z",
+    "timestamp" : "2024-11-04T19:27:45Z",
     "level" : 300
   }, {
-    "message" : "Update state 2024-10-09T00:14:31Z last_config 2024-10-09T00:14:31Z",
+    "message" : "Update state 2024-11-04T19:27:46Z last_config 2024-11-04T19:27:45Z",
     "category" : "device.log",
-    "timestamp" : "2024-10-09T00:14:31Z",
+    "timestamp" : "2024-11-04T19:27:46Z",
     "level" : 200
   }, {
     "message" : "Starting new endpoint generation",
     "category" : "device.log",
-    "timestamp" : "2024-10-09T00:14:39Z",
+    "timestamp" : "2024-11-04T19:27:54Z",
     "level" : 300
   }, {
-    "message" : "New config blob endpoint detected:\n{\n  \"protocol\" : \"mqtt\",\n  \"transport\" : \"ssl\",\n  \"hostname\" : \"twiddily.fiddily.fog\",\n  \"client_id\" : \"/r/ZZ-TRI-FECTA_1/d/AHU-1\",\n  \"topic_prefix\" : \"/r/ZZ-TRI-FECTA_1/d/AHU-1\",\n  \"auth_provider\" : {\n    \"basic\" : {\n      \"username\" : \"/r/ZZ-TRI-FECTA_1/d/AHU-1\",\n      \"password\" : \"38269d11\"\n    }\n  },\n  \"generation\" : \"2024-10-09T00:14:29Z\"\n}",
+    "message" : "New config blob endpoint detected:\n{\n  \"protocol\" : \"mqtt\",\n  \"transport\" : \"ssl\",\n  \"hostname\" : \"twiddily.fiddily.fog\",\n  \"client_id\" : \"/r/ZZ-TRI-FECTA_1/d/AHU-1\",\n  \"topic_prefix\" : \"/r/ZZ-TRI-FECTA_1/d/AHU-1\",\n  \"auth_provider\" : {\n    \"basic\" : {\n      \"username\" : \"/r/ZZ-TRI-FECTA_1/d/AHU-1\",\n      \"password\" : \"38269d11\"\n    }\n  },\n  \"generation\" : \"2024-11-04T19:27:44Z\"\n}",
     "category" : "device.log",
-    "timestamp" : "2024-10-09T00:14:39Z",
+    "timestamp" : "2024-11-04T19:27:54Z",
     "level" : 200
   }, {
-    "message" : "Update state 2024-10-09T00:14:39Z last_config 2024-10-09T00:14:31Z",
+    "message" : "Update state 2024-11-04T19:27:54Z last_config 2024-11-04T19:27:45Z",
     "category" : "device.log",
-    "timestamp" : "2024-10-09T00:14:39Z",
+    "timestamp" : "2024-11-04T19:27:54Z",
     "level" : 200
   }, {
     "message" : "CA cert file: /home/runner/work/udmi/udmi/sites/udmi_site_model/reflector/ca.crt",
     "category" : "device.log",
-    "timestamp" : "2024-10-09T00:14:39Z",
+    "timestamp" : "2024-11-04T19:27:54Z",
     "level" : 200
   }, {
     "message" : "Device cert file: /home/runner/work/udmi/udmi/sites/udmi_site_model/devices/AHU-1/rsa_private.crt",
     "category" : "device.log",
-    "timestamp" : "2024-10-09T00:14:39Z",
+    "timestamp" : "2024-11-04T19:27:54Z",
     "level" : 200
   }, {
     "message" : "Private key file: /home/runner/work/udmi/udmi/sites/udmi_site_model/devices/AHU-1/rsa_private.pem",
     "category" : "device.log",
-    "timestamp" : "2024-10-09T00:14:39Z",
+    "timestamp" : "2024-11-04T19:27:54Z",
     "level" : 200
   }, {
     "message" : "Password sha256 6b5344e1",
     "category" : "device.log",
-    "timestamp" : "2024-10-09T00:14:39Z",
+    "timestamp" : "2024-11-04T19:27:54Z",
     "level" : 200
   }, {
-    "message" : "Starting connection 1728432879401 with 10",
+    "message" : "Starting connection 1730748474200 with 10",
     "category" : "device.log",
-    "timestamp" : "2024-10-09T00:14:39Z",
+    "timestamp" : "2024-11-04T19:27:54Z",
     "level" : 400
   }, {
-    "message" : "Terminating AHU-1 PointsetManager sender",
+    "message" : "Terminating AHU-1 PubberPointsetManager sender",
     "category" : "device.log",
-    "timestamp" : "2024-10-09T00:14:39Z",
+    "timestamp" : "2024-11-04T19:27:54Z",
     "level" : 400
   }, {
-    "message" : "Terminating AHU-1 SystemManager sender",
+    "message" : "Terminating AHU-1 PubberSystemManager sender",
     "category" : "device.log",
-    "timestamp" : "2024-10-09T00:14:39Z",
+    "timestamp" : "2024-11-04T19:27:54Z",
     "level" : 400
   }, {
     "message" : "Creating new config latch for AHU-1",
     "category" : "device.log",
-    "timestamp" : "2024-10-09T00:14:39Z",
+    "timestamp" : "2024-11-04T19:27:54Z",
     "level" : 400
   }, {
     "message" : "While waiting for connection start: Connection error",
     "category" : "device.log",
-    "timestamp" : "2024-10-09T00:14:39Z",
+    "timestamp" : "2024-11-04T19:27:54Z",
     "level" : 500
   }, {
     "message" : "Attempt failed, retries remaining: 9",
     "category" : "device.log",
-    "timestamp" : "2024-10-09T00:14:39Z",
+    "timestamp" : "2024-11-04T19:27:54Z",
     "level" : 500
   }, {
     "message" : "Creating new config latch for AHU-1",
     "category" : "device.log",
-    "timestamp" : "2024-10-09T00:14:40Z",
+    "timestamp" : "2024-11-04T19:27:55Z",
     "level" : 400
   }, {
     "message" : "While waiting for connection start: Connection error",
     "category" : "device.log",
-    "timestamp" : "2024-10-09T00:14:40Z",
+    "timestamp" : "2024-11-04T19:27:55Z",
     "level" : 500
   }, {
     "message" : "Attempt failed, retries remaining: 8",
     "category" : "device.log",
-    "timestamp" : "2024-10-09T00:14:40Z",
+    "timestamp" : "2024-11-04T19:27:55Z",
     "level" : 500
   }, {
     "message" : "Creating new config latch for AHU-1",
     "category" : "device.log",
-    "timestamp" : "2024-10-09T00:14:41Z",
+    "timestamp" : "2024-11-04T19:27:56Z",
     "level" : 400
   }, {
     "message" : "While waiting for connection start: Connection error",
     "category" : "device.log",
-    "timestamp" : "2024-10-09T00:14:41Z",
+    "timestamp" : "2024-11-04T19:27:56Z",
     "level" : 500
   }, {
     "message" : "Attempt failed, retries remaining: 7",
     "category" : "device.log",
-    "timestamp" : "2024-10-09T00:14:41Z",
+    "timestamp" : "2024-11-04T19:27:56Z",
     "level" : 500
   }, {
     "message" : "Creating new config latch for AHU-1",
     "category" : "device.log",
-    "timestamp" : "2024-10-09T00:14:42Z",
+    "timestamp" : "2024-11-04T19:27:57Z",
     "level" : 400
   }, {
     "message" : "While waiting for connection start: Connection error",
     "category" : "device.log",
-    "timestamp" : "2024-10-09T00:14:42Z",
+    "timestamp" : "2024-11-04T19:27:57Z",
     "level" : 500
   }, {
     "message" : "Attempt failed, retries remaining: 6",
     "category" : "device.log",
-    "timestamp" : "2024-10-09T00:14:42Z",
+    "timestamp" : "2024-11-04T19:27:57Z",
     "level" : 500
   }, {
     "message" : "Creating new config latch for AHU-1",
     "category" : "device.log",
-    "timestamp" : "2024-10-09T00:14:43Z",
+    "timestamp" : "2024-11-04T19:27:58Z",
     "level" : 400
   }, {
     "message" : "While waiting for connection start: Connection error",
     "category" : "device.log",
-    "timestamp" : "2024-10-09T00:14:43Z",
+    "timestamp" : "2024-11-04T19:27:58Z",
     "level" : 500
   }, {
     "message" : "Attempt failed, retries remaining: 5",
     "category" : "device.log",
-    "timestamp" : "2024-10-09T00:14:43Z",
+    "timestamp" : "2024-11-04T19:27:58Z",
     "level" : 500
   }, {
     "message" : "Creating new config latch for AHU-1",
     "category" : "device.log",
-    "timestamp" : "2024-10-09T00:14:44Z",
+    "timestamp" : "2024-11-04T19:27:59Z",
     "level" : 400
   }, {
     "message" : "While waiting for connection start: Connection error",
     "category" : "device.log",
-    "timestamp" : "2024-10-09T00:14:44Z",
+    "timestamp" : "2024-11-04T19:27:59Z",
     "level" : 500
   }, {
     "message" : "Attempt failed, retries remaining: 4",
     "category" : "device.log",
-    "timestamp" : "2024-10-09T00:14:44Z",
+    "timestamp" : "2024-11-04T19:27:59Z",
     "level" : 500
   }, {
     "message" : "Creating new config latch for AHU-1",
     "category" : "device.log",
-    "timestamp" : "2024-10-09T00:14:45Z",
+    "timestamp" : "2024-11-04T19:28:00Z",
     "level" : 400
   }, {
     "message" : "While waiting for connection start: Connection error",
     "category" : "device.log",
-    "timestamp" : "2024-10-09T00:14:45Z",
+    "timestamp" : "2024-11-04T19:28:00Z",
     "level" : 500
   }, {
     "message" : "Attempt failed, retries remaining: 3",
     "category" : "device.log",
-    "timestamp" : "2024-10-09T00:14:45Z",
+    "timestamp" : "2024-11-04T19:28:00Z",
     "level" : 500
   }, {
     "message" : "Creating new config latch for AHU-1",
     "category" : "device.log",
-    "timestamp" : "2024-10-09T00:14:46Z",
+    "timestamp" : "2024-11-04T19:28:01Z",
     "level" : 400
   }, {
     "message" : "While waiting for connection start: Connection error",
     "category" : "device.log",
-    "timestamp" : "2024-10-09T00:14:46Z",
+    "timestamp" : "2024-11-04T19:28:01Z",
     "level" : 500
   }, {
     "message" : "Attempt failed, retries remaining: 2",
     "category" : "device.log",
-    "timestamp" : "2024-10-09T00:14:46Z",
+    "timestamp" : "2024-11-04T19:28:01Z",
     "level" : 500
   }, {
     "message" : "Creating new config latch for AHU-1",
     "category" : "device.log",
-    "timestamp" : "2024-10-09T00:14:47Z",
+    "timestamp" : "2024-11-04T19:28:02Z",
     "level" : 400
   }, {
     "message" : "While waiting for connection start: Connection error",
     "category" : "device.log",
-    "timestamp" : "2024-10-09T00:14:47Z",
+    "timestamp" : "2024-11-04T19:28:02Z",
     "level" : 500
   }, {
     "message" : "Attempt failed, retries remaining: 1",
     "category" : "device.log",
-    "timestamp" : "2024-10-09T00:14:47Z",
+    "timestamp" : "2024-11-04T19:28:02Z",
     "level" : 500
   }, {
     "message" : "Creating new config latch for AHU-1",
     "category" : "device.log",
-    "timestamp" : "2024-10-09T00:14:48Z",
+    "timestamp" : "2024-11-04T19:28:03Z",
     "level" : 400
   }, {
     "message" : "While waiting for connection start: Connection error",
     "category" : "device.log",
-    "timestamp" : "2024-10-09T00:14:48Z",
+    "timestamp" : "2024-11-04T19:28:03Z",
     "level" : 500
   }, {
     "message" : "Attempt failed, retries remaining: 0",
     "category" : "device.log",
-    "timestamp" : "2024-10-09T00:14:48Z",
+    "timestamp" : "2024-11-04T19:28:03Z",
     "level" : 500
   }, {
-    "message" : "Ending connection 1728432879401 with -1",
+    "message" : "Ending connection 1730748474200 with -1",
     "category" : "device.log",
-    "timestamp" : "2024-10-09T00:14:49Z",
+    "timestamp" : "2024-11-04T19:28:04Z",
     "level" : 400
   }, {
     "message" : "Reconfigure failed, attempting connection to last working endpoint: While resetting connection",
     "category" : "device.log",
-    "timestamp" : "2024-10-09T00:14:49Z",
+    "timestamp" : "2024-11-04T19:28:04Z",
     "level" : 500
   }, {
     "message" : "CA cert file: /home/runner/work/udmi/udmi/sites/udmi_site_model/reflector/ca.crt",
     "category" : "device.log",
-    "timestamp" : "2024-10-09T00:14:49Z",
+    "timestamp" : "2024-11-04T19:28:04Z",
     "level" : 200
   }, {
     "message" : "Device cert file: /home/runner/work/udmi/udmi/sites/udmi_site_model/devices/AHU-1/rsa_private.crt",
     "category" : "device.log",
-    "timestamp" : "2024-10-09T00:14:49Z",
+    "timestamp" : "2024-11-04T19:28:04Z",
     "level" : 200
   }, {
     "message" : "Private key file: /home/runner/work/udmi/udmi/sites/udmi_site_model/devices/AHU-1/rsa_private.pem",
     "category" : "device.log",
-    "timestamp" : "2024-10-09T00:14:49Z",
+    "timestamp" : "2024-11-04T19:28:04Z",
     "level" : 200
   }, {
     "message" : "Password sha256 6b5344e1",
     "category" : "device.log",
-    "timestamp" : "2024-10-09T00:14:49Z",
+    "timestamp" : "2024-11-04T19:28:04Z",
     "level" : 200
   }, {
-    "message" : "Starting connection 1728432889618 with 10",
+    "message" : "Starting connection 1730748484349 with 10",
     "category" : "device.log",
-    "timestamp" : "2024-10-09T00:14:49Z",
+    "timestamp" : "2024-11-04T19:28:04Z",
     "level" : 400
   }, {
     "message" : "Creating new config latch for AHU-1",
     "category" : "device.log",
-    "timestamp" : "2024-10-09T00:14:49Z",
+    "timestamp" : "2024-11-04T19:28:04Z",
     "level" : 400
   }, {
     "message" : "Device AHU-1 config handler",
     "category" : "device.log",
-    "timestamp" : "2024-10-09T00:14:49Z",
+    "timestamp" : "2024-11-04T19:28:04Z",
     "level" : 200
   }, {
-    "message" : "2024-10-09T00:14:49Z received config 2024-10-09T00:14:31Z",
+    "message" : "2024-11-04T19:28:04Z received config 2024-11-04T19:27:45Z",
     "category" : "device.log",
-    "timestamp" : "2024-10-09T00:14:49Z",
+    "timestamp" : "2024-11-04T19:28:04Z",
     "level" : 200
   }, {
-    "message" : "Starting AHU-1 PointsetManager sender with delay 10s",
+    "message" : "Starting AHU-1 PubberPointsetManager sender with delay 10s",
     "category" : "device.log",
-    "timestamp" : "2024-10-09T00:14:49Z",
+    "timestamp" : "2024-11-04T19:28:04Z",
     "level" : 400
   }, {
-    "message" : "Starting AHU-1 SystemManager sender with delay 10s",
+    "message" : "Starting AHU-1 PubberSystemManager sender with delay 10s",
     "category" : "device.log",
-    "timestamp" : "2024-10-09T00:14:49Z",
+    "timestamp" : "2024-11-04T19:28:04Z",
     "level" : 400
   } ],
   "metrics" : {
     "mem_total_mb" : 254.0,
-    "mem_free_mb" : 164.4101104736328
+    "mem_free_mb" : 158.30577087402344
   },
-  "timestamp" : "2024-10-09T00:14:49Z",
-  "version" : "1.5.1"
+  "timestamp" : "2024-11-04T19:28:04Z",
+  "version" : "1.5.2"
 }

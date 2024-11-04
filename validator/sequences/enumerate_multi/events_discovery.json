@@ -1,13 +1,13 @@
 {
   "families" : {
     "ether" : {
-      "addr" : "60:45:bd:01:e2:ee"
+      "addr" : "60:45:bd:49:eb:85"
     },
     "ipv4" : {
-      "addr" : "10.1.0.64"
+      "addr" : "10.1.0.88"
     },
     "ipv6" : {
-      "addr" : "fe80::6245:bdff:fe01:e2ee"
+      "addr" : "fe80::6245:bdff:fe49:eb85"
     },
     "vendor" : {
       "addr" : "28179023"
@@ -36,7 +36,7 @@
       "stage" : "stable"
     }
   },
-  "generation" : "2024-10-19T12:08:10Z",
+  "generation" : "2024-11-04T19:28:37Z",
   "refs" : {
     "BV11.present_value" : {
       "point" : "filter_alarm_pressure_status",
@@ -54,6 +54,6 @@
       "units" : "Degrees-Celsius"
     }
   },
-  "timestamp" : "2024-10-19T12:08:11Z",
-  "version" : "1.5.1"
+  "timestamp" : "2024-11-04T19:28:38Z",
+  "version" : "1.5.2"
 }

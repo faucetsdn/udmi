@@ -30,14 +30,14 @@
     "metrics_rate_sec" : 10,
     "min_loglevel" : 200,
     "operation" : {
-      "last_start" : "2024-10-09T00:13:48Z"
+      "last_start" : "2024-11-04T19:26:25Z"
     },
     "testing" : {
       "config_base" : 13,
       "sequence_name" : "endpoint_connection_success_reconnect",
-      "transaction_id" : "RC:0b1678.0013"
+      "transaction_id" : "RC:278252.00000010"
     }
   },
-  "timestamp" : "2024-10-09T00:14:23Z",
-  "version" : "git-a719207"
+  "timestamp" : "2024-11-04T19:27:01Z",
+  "version" : "git-61dd570"
 }

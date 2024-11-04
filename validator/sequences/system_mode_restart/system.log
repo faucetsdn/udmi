@@ -1,47 +1,46 @@
-2024-10-09T00:16:30Z WARNING Start waiting 10s for config latch for AHU-1
-2024-10-09T00:16:30Z WARNING Starting AHU-1 Pubber sender with delay 10s
-2024-10-09T00:16:30Z WARNING Dropping state update until config received...
-2024-10-09T00:16:30Z WARNING Received config for config latch AHU-1
-2024-10-09T00:16:30Z NOTICE success
-2024-10-09T00:16:30Z WARNING Ending connection 1728432989991 with 9
-2024-10-09T00:16:30Z NOTICE success
-2024-10-09T00:16:41Z NOTICE success
-2024-10-09T00:16:41Z INFO Device AHU-1 config handler
-2024-10-09T00:16:41Z INFO 2024-10-09T00:16:41Z received config 2024-10-09T00:16:41Z
-2024-10-09T00:16:41Z NOTICE success
-2024-10-09T00:16:43Z INFO Update state 2024-10-09T00:16:43Z last_config 2024-10-09T00:16:41Z
-2024-10-09T00:16:44Z INFO Device AHU-1 config handler
-2024-10-09T00:16:44Z INFO 2024-10-09T00:16:44Z received config 2024-10-09T00:16:44Z
-2024-10-09T00:16:44Z NOTICE success
-2024-10-09T00:16:45Z INFO Update state 2024-10-09T00:16:45Z last_config 2024-10-09T00:16:44Z
-2024-10-09T00:16:46Z INFO Device AHU-1 config handler
-2024-10-09T00:16:46Z INFO 2024-10-09T00:16:46Z received config 2024-10-09T00:16:46Z
-2024-10-09T00:16:46Z NOTICE success
-2024-10-09T00:16:47Z INFO Update state 2024-10-09T00:16:47Z last_config 2024-10-09T00:16:46Z
-2024-10-09T00:16:48Z INFO Device AHU-1 config handler
-2024-10-09T00:16:48Z INFO 2024-10-09T00:16:48Z received config 2024-10-09T00:16:48Z
-2024-10-09T00:16:48Z NOTICE success
-2024-10-09T00:16:49Z INFO Update state 2024-10-09T00:16:49Z last_config 2024-10-09T00:16:48Z
-2024-10-09T00:16:49Z INFO Device AHU-1 config handler
-2024-10-09T00:16:49Z INFO 2024-10-09T00:16:49Z received config 2024-10-09T00:16:49Z
-2024-10-09T00:16:49Z NOTICE success
-2024-10-09T00:16:50Z INFO Device AHU-1 config handler
-2024-10-09T00:16:50Z INFO 2024-10-09T00:16:50Z received config 2024-10-09T00:16:50Z
-2024-10-09T00:16:50Z NOTICE success
-2024-10-09T00:16:51Z INFO Update state 2024-10-09T00:16:51Z last_config 2024-10-09T00:16:50Z
-2024-10-09T00:16:52Z INFO Device AHU-1 config handler
-2024-10-09T00:16:52Z INFO 2024-10-09T00:16:52Z received config 2024-10-09T00:16:52Z
-2024-10-09T00:16:52Z NOTICE success
-2024-10-09T00:16:53Z INFO Update state 2024-10-09T00:16:53Z last_config 2024-10-09T00:16:52Z
-2024-10-09T00:17:00Z INFO Update state 2024-10-09T00:17:00Z last_config 2024-10-09T00:16:52Z
-2024-10-09T00:17:01Z INFO Device AHU-1 config handler
-2024-10-09T00:17:01Z INFO 2024-10-09T00:17:01Z received config 2024-10-09T00:17:01Z
-2024-10-09T00:17:01Z NOTICE success
-2024-10-09T00:17:02Z INFO Update state 2024-10-09T00:17:02Z last_config 2024-10-09T00:17:01Z
-2024-10-09T00:17:11Z INFO Configured with auth_type RS256
-2024-10-09T00:17:11Z INFO Initializing from persistent store /home/runner/work/udmi/udmi/sites/udmi_site_model/out/devices/AHU-1/persistent_data.json
-2024-10-09T00:17:11Z INFO Loading endpoint from persistent data
-2024-10-09T00:17:11Z WARNING Updating persistent store:
+2024-11-04T19:29:47Z WARNING Starting AHU-1 Pubber sender with delay 10s
+2024-11-04T19:29:47Z WARNING Dropping state update until config received...
+2024-11-04T19:29:47Z WARNING Received config for config latch AHU-1
+2024-11-04T19:29:47Z WARNING Ending connection 1730748586421 with 9
+2024-11-04T19:29:47Z NOTICE success
+2024-11-04T19:29:47Z NOTICE success
+2024-11-04T19:29:58Z NOTICE success
+2024-11-04T19:29:58Z INFO Device AHU-1 config handler
+2024-11-04T19:29:58Z INFO 2024-11-04T19:29:58Z received config 2024-11-04T19:29:58Z
+2024-11-04T19:29:58Z NOTICE success
+2024-11-04T19:30:00Z INFO Update state 2024-11-04T19:30:00Z last_config 2024-11-04T19:29:58Z
+2024-11-04T19:30:01Z INFO Device AHU-1 config handler
+2024-11-04T19:30:01Z INFO 2024-11-04T19:30:01Z received config 2024-11-04T19:30:01Z
+2024-11-04T19:30:01Z NOTICE success
+2024-11-04T19:30:02Z INFO Update state 2024-11-04T19:30:02Z last_config 2024-11-04T19:30:01Z
+2024-11-04T19:30:03Z INFO Device AHU-1 config handler
+2024-11-04T19:30:03Z INFO 2024-11-04T19:30:03Z received config 2024-11-04T19:30:03Z
+2024-11-04T19:30:03Z NOTICE success
+2024-11-04T19:30:04Z INFO Update state 2024-11-04T19:30:04Z last_config 2024-11-04T19:30:03Z
+2024-11-04T19:30:05Z INFO Device AHU-1 config handler
+2024-11-04T19:30:05Z INFO 2024-11-04T19:30:05Z received config 2024-11-04T19:30:05Z
+2024-11-04T19:30:05Z NOTICE success
+2024-11-04T19:30:06Z INFO Update state 2024-11-04T19:30:06Z last_config 2024-11-04T19:30:05Z
+2024-11-04T19:30:06Z INFO Device AHU-1 config handler
+2024-11-04T19:30:06Z INFO 2024-11-04T19:30:06Z received config 2024-11-04T19:30:06Z
+2024-11-04T19:30:06Z NOTICE success
+2024-11-04T19:30:08Z INFO Device AHU-1 config handler
+2024-11-04T19:30:08Z INFO 2024-11-04T19:30:08Z received config 2024-11-04T19:30:08Z
+2024-11-04T19:30:08Z NOTICE success
+2024-11-04T19:30:08Z INFO Update state 2024-11-04T19:30:08Z last_config 2024-11-04T19:30:08Z
+2024-11-04T19:30:09Z INFO Device AHU-1 config handler
+2024-11-04T19:30:09Z INFO 2024-11-04T19:30:09Z received config 2024-11-04T19:30:09Z
+2024-11-04T19:30:09Z NOTICE success
+2024-11-04T19:30:10Z INFO Update state 2024-11-04T19:30:10Z last_config 2024-11-04T19:30:09Z
+2024-11-04T19:30:17Z INFO Update state 2024-11-04T19:30:17Z last_config 2024-11-04T19:30:09Z
+2024-11-04T19:30:18Z INFO Device AHU-1 config handler
+2024-11-04T19:30:18Z INFO 2024-11-04T19:30:18Z received config 2024-11-04T19:30:18Z
+2024-11-04T19:30:18Z NOTICE success
+2024-11-04T19:30:19Z INFO Update state 2024-11-04T19:30:19Z last_config 2024-11-04T19:30:18Z
+2024-11-04T19:30:28Z INFO Configured with auth_type RS256
+2024-11-04T19:30:28Z INFO Initializing from persistent store /home/runner/work/udmi/udmi/sites/udmi_site_model/out/devices/AHU-1/persistent_data.json
+2024-11-04T19:30:28Z INFO Loading endpoint from persistent data
+2024-11-04T19:30:28Z WARNING Updating persistent store:
 {
   "endpoint" : {
     "protocol" : "mqtt",
@@ -58,41 +57,40 @@
   },
   "restart_count" : 2
 }
-2024-10-09T00:17:11Z INFO Starting pubber AHU-1, serial null, mac null, gateway null, options 
-2024-10-09T00:17:11Z INFO CA cert file: /home/runner/work/udmi/udmi/sites/udmi_site_model/reflector/ca.crt
-2024-10-09T00:17:11Z INFO Device cert file: /home/runner/work/udmi/udmi/sites/udmi_site_model/devices/AHU-1/rsa_private.crt
-2024-10-09T00:17:11Z INFO Private key file: /home/runner/work/udmi/udmi/sites/udmi_site_model/devices/AHU-1/rsa_private.pem
-2024-10-09T00:17:11Z INFO Password sha256 6b5344e1
-2024-10-09T00:17:11Z WARNING Starting connection 1728433031651 with 10
-2024-10-09T00:17:11Z INFO Update state 2024-10-09T00:17:11Z last_config 1970-01-01T00:00:00Z
-2024-10-09T00:17:11Z WARNING Creating new config latch for AHU-1
-2024-10-09T00:17:11Z WARNING Dropping state update until config received...
-2024-10-09T00:17:12Z INFO Update state 2024-10-09T00:17:12Z last_config 1970-01-01T00:00:00Z
-2024-10-09T00:17:12Z WARNING Dropping state update until config received...
-2024-10-09T00:17:12Z INFO Update state 2024-10-09T00:17:12Z last_config 1970-01-01T00:00:00Z
-2024-10-09T00:17:12Z WARNING Dropping state update until config received...
-2024-10-09T00:17:12Z INFO Device AHU-1 config handler
-2024-10-09T00:17:12Z INFO 2024-10-09T00:17:12Z received config 2024-10-09T00:17:01Z
-2024-10-09T00:17:12Z WARNING Starting AHU-1 PointsetManager sender with delay 10s
-2024-10-09T00:17:12Z INFO Connection complete.
-2024-10-09T00:17:12Z WARNING Start waiting 10s for config latch for AHU-1
-2024-10-09T00:17:12Z WARNING Starting AHU-1 SystemManager sender with delay 10s
-2024-10-09T00:17:12Z WARNING Starting AHU-1 Pubber sender with delay 10s
-2024-10-09T00:17:12Z INFO Update state 2024-10-09T00:17:12Z last_config 2024-10-09T00:17:01Z
-2024-10-09T00:17:12Z WARNING Dropping state update until config received...
-2024-10-09T00:17:12Z WARNING Received config for config latch AHU-1
-2024-10-09T00:17:12Z NOTICE success
-2024-10-09T00:17:12Z WARNING Ending connection 1728433031651 with 9
-2024-10-09T00:17:12Z INFO Update state 2024-10-09T00:17:12Z last_config 2024-10-09T00:17:01Z
-2024-10-09T00:17:12Z INFO Device AHU-1 config handler
-2024-10-09T00:17:12Z INFO 2024-10-09T00:17:12Z received config 2024-10-09T00:17:01Z
-2024-10-09T00:17:12Z NOTICE success
-2024-10-09T00:17:13Z INFO 2024-10-09T00:17:13Z received config 2024-10-09T00:17:13Z
-2024-10-09T00:17:13Z NOTICE success
-2024-10-09T00:17:14Z INFO Update state 2024-10-09T00:17:14Z last_config 2024-10-09T00:17:13Z
-2024-10-09T00:17:14Z INFO Device AHU-1 config handler
-2024-10-09T00:17:14Z INFO 2024-10-09T00:17:14Z received config 2024-10-09T00:17:13Z
-2024-10-09T00:17:14Z NOTICE success
-2024-10-09T00:17:16Z INFO Update state 2024-10-09T00:17:16Z last_config 2024-10-09T00:17:13Z
-2024-10-09T00:17:22Z INFO 2024-10-09T00:17:22Z sending AHU-1 message #0 with 3 points
-2024-10-09T00:17:26Z NOTICE Sequence complete
+2024-11-04T19:30:28Z INFO Starting pubber AHU-1, serial null, mac null, gateway null, options 
+2024-11-04T19:30:28Z INFO CA cert file: /home/runner/work/udmi/udmi/sites/udmi_site_model/reflector/ca.crt
+2024-11-04T19:30:28Z INFO Device cert file: /home/runner/work/udmi/udmi/sites/udmi_site_model/devices/AHU-1/rsa_private.crt
+2024-11-04T19:30:28Z INFO Private key file: /home/runner/work/udmi/udmi/sites/udmi_site_model/devices/AHU-1/rsa_private.pem
+2024-11-04T19:30:28Z INFO Password sha256 6b5344e1
+2024-11-04T19:30:28Z WARNING Starting connection 1730748628146 with 10
+2024-11-04T19:30:28Z INFO Update state 2024-11-04T19:30:28Z last_config 1970-01-01T00:00:00Z
+2024-11-04T19:30:28Z WARNING Dropping state update until config received...
+2024-11-04T19:30:28Z INFO Update state 2024-11-04T19:30:28Z last_config 1970-01-01T00:00:00Z
+2024-11-04T19:30:28Z WARNING Dropping state update until config received...
+2024-11-04T19:30:28Z INFO Device AHU-1 config handler
+2024-11-04T19:30:28Z INFO Update state 2024-11-04T19:30:28Z last_config 1970-01-01T00:00:00Z
+2024-11-04T19:30:28Z WARNING Dropping state update until config received...
+2024-11-04T19:30:28Z INFO 2024-11-04T19:30:28Z received config 2024-11-04T19:30:18Z
+2024-11-04T19:30:28Z WARNING Starting AHU-1 PubberPointsetManager sender with delay 10s
+2024-11-04T19:30:28Z INFO Connection complete.
+2024-11-04T19:30:28Z WARNING Start waiting 10s for config latch for AHU-1
+2024-11-04T19:30:28Z WARNING Starting AHU-1 PubberSystemManager sender with delay 10s
+2024-11-04T19:30:28Z WARNING Starting AHU-1 Pubber sender with delay 10s
+2024-11-04T19:30:28Z INFO Update state 2024-11-04T19:30:28Z last_config 2024-11-04T19:30:18Z
+2024-11-04T19:30:28Z WARNING Dropping state update until config received...
+2024-11-04T19:30:28Z WARNING Received config for config latch AHU-1
+2024-11-04T19:30:28Z NOTICE success
+2024-11-04T19:30:28Z WARNING Ending connection 1730748628146 with 9
+2024-11-04T19:30:28Z INFO Update state 2024-11-04T19:30:28Z last_config 2024-11-04T19:30:18Z
+2024-11-04T19:30:29Z INFO Device AHU-1 config handler
+2024-11-04T19:30:29Z INFO 2024-11-04T19:30:29Z received config 2024-11-04T19:30:18Z
+2024-11-04T19:30:29Z NOTICE success
+2024-11-04T19:30:30Z INFO 2024-11-04T19:30:30Z received config 2024-11-04T19:30:30Z
+2024-11-04T19:30:30Z NOTICE success
+2024-11-04T19:30:30Z INFO Update state 2024-11-04T19:30:30Z last_config 2024-11-04T19:30:30Z
+2024-11-04T19:30:31Z INFO Device AHU-1 config handler
+2024-11-04T19:30:31Z INFO 2024-11-04T19:30:31Z received config 2024-11-04T19:30:30Z
+2024-11-04T19:30:31Z NOTICE success
+2024-11-04T19:30:32Z INFO Update state 2024-11-04T19:30:32Z last_config 2024-11-04T19:30:30Z
+2024-11-04T19:30:38Z INFO 2024-11-04T19:30:38Z sending AHU-1 message #0 with 3 points
+2024-11-04T19:30:43Z NOTICE Sequence complete

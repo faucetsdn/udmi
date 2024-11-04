@@ -1,16 +1,26 @@
 {
   "event_no" : 7,
-  "last_config" : "2024-10-27T14:09:50Z",
+  "last_config" : "2024-11-04T19:28:40Z",
   "logentries" : [ {
-    "message" : "Update state 2024-10-27T14:10:18Z last_config 2024-10-27T14:09:50Z",
+    "message" : "Discovery scan generation vendor pending at 2024-11-04T19:29:18Z",
     "category" : "device.log",
-    "timestamp" : "2024-10-27T14:10:18Z",
+    "timestamp" : "2024-11-04T19:29:08Z",
+    "level" : 200
+  }, {
+    "message" : "Update state 2024-11-04T19:29:08Z last_config 2024-11-04T19:28:40Z",
+    "category" : "device.log",
+    "timestamp" : "2024-11-04T19:29:08Z",
+    "level" : 200
+  }, {
+    "message" : "Update state 2024-11-04T19:29:10Z last_config 2024-11-04T19:28:40Z",
+    "category" : "device.log",
+    "timestamp" : "2024-11-04T19:29:10Z",
     "level" : 200
   } ],
   "metrics" : {
     "mem_total_mb" : 254.0,
-    "mem_free_mb" : 210.3086700439453
+    "mem_free_mb" : 211.6064453125
   },
-  "timestamp" : "2024-10-27T14:10:21Z",
+  "timestamp" : "2024-11-04T19:29:14Z",
   "version" : "1.5.2"
 }
