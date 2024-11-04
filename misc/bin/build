@@ -1,5 +1,0 @@
-FROM gcr.io/distroless/java17-debian12
-COPY validator/build/libs/ /app/
-COPY schema /app/schema
-WORKDIR /app
-CMD ["validator-1.0-SNAPSHOT-all.jar"]
