@@ -301,6 +301,7 @@ public class SequenceBase {
   private boolean resetRequired = true;
   private int maxAllowedStatusLevel;
   private String extraField;
+  private String updatedExtraField;
   private Instant lastConfigUpdate;
   private boolean enforceSerial;
   private String testName;
@@ -1277,16 +1278,17 @@ public class SequenceBase {
 
   private void captureConfigChange(String reason) {
     try {
-      String suffix = reason == null ? "" : (" " + reason);
-      String header = format("Update config%s: ", suffix);
-      debug(header + isoConvert(deviceConfig.timestamp));
+      String header = format("Update config %s", ofNullable(reason).orElse("")).trim();
+      debug(header + " timestamp " + isoConvert(deviceConfig.timestamp));
       recordRawMessage(deviceConfig, LOCAL_CONFIG_UPDATE);
       List<DiffEntry> allDiffs = SENT_CONFIG_DIFFERNATOR.computeChanges(deviceConfig);
       List<DiffEntry> filteredDiffs = filterTesting(allDiffs);
-      if (!filteredDiffs.isEmpty()) {
+      boolean extraFieldChanged = !Objects.equals(extraField, updatedExtraField);
+      if (!filteredDiffs.isEmpty() || extraFieldChanged) {
+        updatedExtraField = extraField;
         recordSequence(header);
         filteredDiffs.forEach(this::recordBullet);
-        filteredDiffs.forEach(change -> trace(header + change));
+        filteredDiffs.forEach(change -> trace(header + ": " + change));
         sequenceMd.flush();
       }
     } catch (Exception e) {

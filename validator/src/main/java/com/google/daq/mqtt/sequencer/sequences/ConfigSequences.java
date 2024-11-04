@@ -149,6 +149,8 @@ public class ConfigSequences extends SequenceBase {
         () -> waitForLog(SYSTEM_CONFIG_APPLY, SYSTEM_CONFIG_APPLY_LEVEL));
 
     setExtraField("break_json");
+    updateConfig("to force broken (invalid JSON) configuration");
+
     forCapability(Status.class, () -> {
       untilHasInterestingSystemStatus();
       Entry stateStatus = deviceState.system.status;
