@@ -186,7 +186,6 @@ public class SequenceBase {
   private static final int SEQUENCER_FUNCTIONS_ALPHA = SEQUENCER_FUNCTIONS_VERSION;
   private static final long CONFIG_BARRIER_MS = 1000;
   private static final String START_END_MARKER = "################################";
-  private static final Date LONG_TIME_AGO = new Date(9217321);
   private static final String RESULT_FORMAT = "RESULT %s %s %s %s %s/%s %s";
   private static final String CAPABILITY_FORMAT = "CPBLTY %s %s %s %s %s/%s %s";
   private static final String SCHEMA_FORMAT = "SCHEMA %s %s %s %s %s %s";
