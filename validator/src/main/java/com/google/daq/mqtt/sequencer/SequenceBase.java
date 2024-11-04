@@ -1442,7 +1442,7 @@ public class SequenceBase {
   }
 
   protected void waitForLog(String category, Level exactLevel) {
-    waitUntil(format("log category `%s` level `%s` to be logged", category, exactLevel.name()),
+    waitUntil(format("system log `%s` category `%s`", exactLevel.name(), category),
         LOG_WAIT_TIME, () -> checkLogged(category, exactLevel));
   }
 
@@ -1604,9 +1604,8 @@ public class SequenceBase {
   }
 
   private void recordSequence(String step, String description) {
-    if (!isOptionalDescription(description)) {
-      recordSequence(step + " " + description.substring(OPTIONAL_PREFIX.length()));
-    }
+    ifNotTrueThen(isOptionalDescription(description),
+        () -> recordSequence(step + " " + description));
   }
 
   private void recordSequence(String message) {
