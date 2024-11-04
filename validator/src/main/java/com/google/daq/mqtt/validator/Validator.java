@@ -913,7 +913,7 @@ public class Validator {
     }
 
     String deviceId = attributes.get("deviceId");
-    if (!targetDevices.isEmpty() && !targetDevices.contains(deviceId)) {
+    if (!targetDevices.isEmpty() && deviceId != null && !targetDevices.contains(deviceId)) {
       return false;
     }
 
