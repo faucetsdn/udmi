@@ -8,7 +8,7 @@
 
 **TODO** - Create `bin/setup` script
 
-1.  Setup a python virtual environment and install the required dependancies
+1.  Setup a python virtual environment and install the required dependencies
 
     ```shell
     cd PATH_TO_UDMI/misc/discoverynode/
@@ -18,7 +18,7 @@
 
 2. Create a JSON configuration file
 
-    Sample Clearblade configuration file
+    Sample clearblade configuration file
 
     ```json
     {
@@ -74,9 +74,9 @@
     ```
 
 
-## Dockerised
+## Dockerized
 
-TBC
+TODO
 
 ## Daemon
 
@@ -88,7 +88,7 @@ The discovery node can be installed as an always running systemd daemon `udmi_di
     sudo bin/install_daemon install
     ```
 
-2.  Create a gateway device in the site model, using the public key which is printed to the terminal at the end of the script. Use the `discovery` block to configure which dsicovery families are supported when using the UDMI tooling to intiaite discovery and run registrar
+2.  Create a gateway device in the site model, using the public key which is printed to the terminal at the end of the script. Use the `discovery` block to configure which discovery families are supported when using the UDMI tooling to initiate discovery and run registrar
 
     ```json
     {
@@ -106,7 +106,7 @@ The discovery node can be installed as an always running systemd daemon `udmi_di
         },
         "version": "1.5.1",
         "timestamp": "2020-05-01T13:39:07Z"
-
+    }
     ```
 
 ### Useful Commands
