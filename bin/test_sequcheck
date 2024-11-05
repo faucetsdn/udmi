@@ -40,7 +40,7 @@ echo '####################' Starting gencode_seq tests
 mv $UDMI_ROOT/docs/specs/sequences/generated.md out/generated${suffix}.out
 mv out/generated.tmp $UDMI_ROOT/docs/specs/sequences/generated.md
 
-echo Comparing diff out/generated${suffix}.out docs/specs/sequences/generated.md
+echo Comparing diff out/generated${suffix}.out $UDMI_ROOT/docs/specs/sequences/generated.md
 diff -u out/generated${suffix}.out $UDMI_ROOT/docs/specs/sequences/generated.md || failures+="gencode_seq "
 echo '####################' Finished gencode_seq tests: $failures
 
