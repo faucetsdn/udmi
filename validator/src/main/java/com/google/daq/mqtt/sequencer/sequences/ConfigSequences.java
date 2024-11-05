@@ -148,6 +148,9 @@ public class ConfigSequences extends SequenceBase {
     forCapability(Logging.class,
         () -> waitForLog(SYSTEM_CONFIG_APPLY, SYSTEM_CONFIG_APPLY_LEVEL));
 
+    // Special override because there might not be a state update with a broken config.
+    pretendStateUpdated = true;
+
     setExtraField("break_json");
     updateConfig("to force broken (invalid JSON) configuration");
 
@@ -179,6 +182,9 @@ public class ConfigSequences extends SequenceBase {
     // Will restore min_loglevel to the default of INFO.
     resetConfig(); // clears extra_field and interesting status checks
     recordSequence("(Log level is implicitly set to `INFO` through config reset)");
+
+    // Revert override now that config has been reset so is not broken anymore.
+    pretendStateUpdated = false;
 
     forCapability(Status.class, this::waitUntilNoSystemStatus);
 

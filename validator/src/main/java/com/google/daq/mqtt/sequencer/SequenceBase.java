@@ -329,6 +329,7 @@ public class SequenceBase {
   private static String sessionPrefix;
   private static Scoring scoringResult;
   private Date configStateStart;
+  protected boolean pretendStateUpdated;
 
   private static void setupSequencer() {
     exeConfig = ofNullable(exeConfig).orElseGet(SequenceRunner::ensureExecutionConfig);
@@ -2008,9 +2009,9 @@ public class SequenceBase {
     Date configLastStart = catchToNull(() -> deviceConfig.system.operation.last_start);
     boolean lastStartSynced = stateLastStart == null || stateLastStart.equals(configLastStart);
 
-    Date currentState = catchToNull(() -> deviceState.timestamp);
+    Date current = catchToNull(() -> deviceState.timestamp);
     final boolean stateUpdated =
-        !deviceSupportsState() || !Objects.equals(configStateStart, currentState);
+        !deviceSupportsState() || !dateEquals(configStateStart, current) || pretendStateUpdated;
 
     Date stateLastConfig = catchToNull(() -> deviceState.system.last_config);
 
@@ -2019,7 +2020,7 @@ public class SequenceBase {
     final boolean transactionsClean = configTransactions.isEmpty();
 
     List<String> failures = new ArrayList<>();
-    ifNotTrueThen(stateUpdated, () -> failures.add("device state not updated since test start"));
+    ifNotTrueThen(stateUpdated, () -> failures.add("device state not updated since config issued"));
     ifNotTrueThen(lastStartSynced, () -> failures.add("last_start not synced in config"));
     ifNotTrueThen(transactionsClean, () -> failures.add("config transactions not cleared"));
     ifNotTrueThen(lastConfigSynced, () -> failures.add("last_config not synced in state"));
@@ -2027,7 +2028,7 @@ public class SequenceBase {
     if (debugOut) {
       if (!failures.isEmpty()) {
         notice(format("state updated at %s then %s", isoConvert(configStateStart),
-            isoConvert(currentState)));
+            isoConvert(current)));
         notice(format("last_start synchronized %s: state/%s =? config/%s", lastStartSynced,
             isoConvert(stateLastStart), isoConvert(configLastStart)));
         notice(format("configTransactions flushed %s: %s", transactionsClean,
