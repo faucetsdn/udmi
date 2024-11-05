@@ -21,7 +21,6 @@ import static com.google.udmi.util.GeneralUtils.catchToElse;
 import static com.google.udmi.util.GeneralUtils.changedLines;
 import static com.google.udmi.util.GeneralUtils.decodeBase64;
 import static com.google.udmi.util.GeneralUtils.friendlyStackTrace;
-import static com.google.udmi.util.GeneralUtils.getRootCause;
 import static com.google.udmi.util.GeneralUtils.getTimestamp;
 import static com.google.udmi.util.GeneralUtils.ifNotNullGet;
 import static com.google.udmi.util.GeneralUtils.ifNotNullThen;
@@ -800,7 +799,7 @@ public class SequenceBase {
 
     ifTrueThen(deviceSupportsState(),
         () -> untilTrue("initial device state", () -> deviceState != null));
-    checkThatHasNoInterestingSystemStatus();
+    checkThatHasNoInterestingStatus();
 
     // Do this late in the sequence to make sure any state is cleared out from previous test.
     startStateCount = getStateUpdateCount();
@@ -1198,7 +1197,7 @@ public class SequenceBase {
     recordSequence = false;
 
     if (testResult == PASS) {
-      checkThatHasNoInterestingSystemStatus();
+      checkThatHasNoInterestingStatus();
     }
 
     recordMessages = false;
@@ -1626,8 +1625,7 @@ public class SequenceBase {
       processNextMessage();
     }
     if (expectedInterestingStatus != null) {
-      withRecordSequence(false,
-          () -> checkThatHasInterestingSystemStatus(expectedInterestingStatus));
+      withRecordSequence(false, () -> checkThatHasInterestingStatus(expectedInterestingStatus));
     }
   }
 
@@ -2249,24 +2247,24 @@ public class SequenceBase {
     return statusLevel >= Level.WARNING.value() ? ("system status is level " + statusLevel) : null;
   }
 
-  protected Runnable checkThatHasInterestingSystemStatus(boolean positiveStatement) {
-    return positiveStatement ?
-        this::checkThatHasInterestingSystemStatus : this::checkThatHasNoInterestingSystemStatus;
+  protected Runnable checkThatHasInterestingStatus(boolean positiveStatement) {
+    return positiveStatement
+        ? this::checkThatHasInterestingStatus : this::checkThatHasNoInterestingStatus;
 
   }
 
-  protected void checkThatHasNoInterestingSystemStatus() {
-    if (!deviceSupportsState()) {
-      return;
-    }
-    checkThatNot(SYSTEM_STATUS_MESSAGE, notSignificantStatusDetail());
-  }
-
-  protected void checkThatHasInterestingSystemStatus() {
+  protected void checkThatHasInterestingStatus() {
     if (!deviceSupportsState()) {
       return;
     }
     checkThat(SYSTEM_STATUS_MESSAGE, significantStatusDetail());
+  }
+
+  protected void checkThatHasNoInterestingStatus() {
+    if (!deviceSupportsState()) {
+      return;
+    }
+    checkThatNot(SYSTEM_STATUS_MESSAGE, notSignificantStatusDetail());
   }
 
   protected void waitUntilNoSystemStatus() {
