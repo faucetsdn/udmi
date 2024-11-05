@@ -50,6 +50,7 @@ fi
 
 if [[ -n $install || -n $upgrade ]]; then
     cp -r $ROOT_DIR/src $LIB_DIR
+    git describe | tr -d '\n' > $LIB_DIR/src/installed_version.txt
     python3 -m venv $LIB_DIR/venv
     VENV_PYTHON=$LIB_DIR/venv/bin/python3
     $VENV_PYTHON -m pip install -r $LIB_DIR/src/requirements.txt
@@ -72,7 +73,7 @@ if [[ -n $install || -n $reconfigure ]]; then
     },
     "udmi": {
         "discovery": {
-            "ethmac": false,
+            "ether": false,
             "bacnet": false
         }
     }

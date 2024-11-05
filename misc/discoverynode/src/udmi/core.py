@@ -1,5 +1,7 @@
+import contextlib
 import json
 import logging
+import pathlib
 import threading
 import time
 import textwrap
@@ -25,7 +27,9 @@ class UDMICore:
   EVENT_POINTSET_TOPIC_TEMPLATE = "{}/events/pointset"
   EVENT_DISCOVERY_TOPIC_TEMPLATE = "{}/events/discovery"
   EVENT_SYSTEM_TOPIC_TEMPLATE = "{}/events/system"
-  _state_monitor_interval = 1  # [s]
+  _STATE_MONITOR_INTERVAL = 1  # [s]
+  
+  INSTALLED_VERSION_FILE = "installed_version.txt"
 
   def __init__(
       self,
@@ -36,10 +40,17 @@ class UDMICore:
   ):
     self.publisher = publisher
     self.config = config
-    self.state = udmi.schema.state.State()
     self.components = {}
     self.callbacks = {}  # lambda,
 
+    self.state = udmi.schema.state.State()
+
+    with contextlib.suppress(FileNotFoundError):
+      installed_version_file =  pathlib.Path(__file__).with_name(UDMICore.INSTALLED_VERSION_FILE)
+      with open(installed_version_file, encoding="utf-8") as f:
+        if (installed_version := f.read()) != "":
+          self.state.system.software.version = installed_version
+        
     self.topic_state = UDMICore.STATE_TOPIC_TEMPLATE.format(topic_prefix)
 
     self.topic_discovery_event = UDMICore.EVENT_DISCOVERY_TOPIC_TEMPLATE.format(
@@ -48,8 +59,6 @@ class UDMICore:
     self.topic_system_event = UDMICore.EVENT_SYSTEM_TOPIC_TEMPLATE.format(
         topic_prefix
     )
-
-    print(self.topic_state)
 
     threading.Thread(target=self.state_monitor, args=[], daemon=True).start()
 
@@ -92,7 +101,7 @@ class UDMICore:
       if self._last_state_hash != current_hash:
         self.publish_state()
         self._last_state_hash = current_hash
-      time.sleep(self._state_monitor_interval)
+      time.sleep(self._STATE_MONITOR_INTERVAL)
 
   def publish_state(self):
     state = self.state.to_json()
@@ -100,10 +109,10 @@ class UDMICore:
     self.publisher.publish_message(self.topic_state, state)
 
   def publish_discovery(self, payload):
-    logging.warning("published discovery: %s", payload.to_json())
+    logging.warning("published discovery for %s:%s", payload["scan_family"], payload["scan_addr"])
     self.publisher.publish_message(self.topic_discovery_event, payload.to_json())
 
-  def enable_discovery(self,*,bacnet=True,vendor=True,ipv4=True,ethmac=True):
+  def enable_discovery(self,*,bacnet=True,vendor=True,ipv4=True,ether=True):
 
     if vendor:
       number_discovery = udmi.discovery.numbers.NumberDiscovery(
@@ -143,7 +152,7 @@ class UDMICore:
 
       self.components["passive_discovery"] = passive_discovery
     
-    if ethmac:
+    if ether:
       nmap_banner_scan = udmi.discovery.nmap.NmapBannerScan(
           self.state,
           self.publish_discovery,
