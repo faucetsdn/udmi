@@ -66,7 +66,7 @@ def main():
   config = load_config_from_file(args.config_file)
 
   # TODO: Should probably set this in the config
-  if config["mqtt"].get("authentication_mechanism", "jwt-gcp") == "jwt-gcp":
+  if config["mqtt"].get("authentication_mechanism", "jwt_gcp") == "jwt_gcp":
     topic_prefix = f'/devices/{config["mqtt"]["device_id"]}'
   else:
     topic_prefix = f'/r/{config["mqtt"]["registry_id"]}/d/{config["mqtt"]["device_id"]}'
