@@ -1,0 +1,136 @@
+#!/bin/bash -e
+
+function usage {
+    echo Usage: $0 install\|upgrade\|reconfigure
+    echo -e '\tinstall - Initial install or reinstall'
+    echo -e '\tupgrade - Upgrade to latest version'
+    echo -e '\treconfigure - update discovery node configuration'
+    exit 1
+}
+
+
+ROOT_DIR=$(realpath $(dirname $(realpath $0))/../)
+UDMI_DIR=$(realpath $ROOT_DIR/../../)
+
+[[ $1 == install ]] && install=1
+[[ $1 == upgrade ]] && upgrade=1
+[[ $1 == reconfigure ]] && reconfigure=1
+[[ -z $upgrade && -z $install && -z $reconfigure ]] && usage
+
+SYSTEMD_UNIT_FILE=/etc/systemd/system/udmi_discovery.service
+LIB_DIR=/usr/local/lib/udmi_discovery
+ETC_DIR=/etc/udmi_discovery
+USERNAME=udmi_discovery
+
+# Conf vars
+if [[ -n $reconfigure || -n $install ]]; then
+    read -p "MQTT Hostname: " MQTT_HOST
+    read -p "MQTT Port: " MQTT_PORT
+    read -p "Project: " PROJECT_ID
+    read -p "Registry: " REGISTRY_ID
+    read -p "Device ID: " DEVICE_ID
+    
+    read -p "Enable BACnet Discovery y/Y?" BACNET
+
+    [[ $BACNET =~ [yY] ]] && read -p "BACnet IP address (leave blank for automatic allocation): " BACNET_IP
+fi
+
+if [[ -n $install ]]; then
+    apt install -yq python3-venv moreutils jq
+    mkdir -p $LIB_DIR
+    mkdir -p $ETC_DIR
+    mkdir -p $ETC_DIR/certs
+
+    if ! id $USERNAME  >/dev/null 2>&1; then
+        useradd -r -s /bin/false $USERNAME
+    else
+        echo "Not creating username because it exists"
+    fi
+fi
+
+if [[ -n $install || -n $upgrade ]]; then
+    cp -r $ROOT_DIR/src $LIB_DIR
+    python3 -m venv $LIB_DIR/venv
+    VENV_PYTHON=$LIB_DIR/venv/bin/python3
+    $VENV_PYTHON -m pip install -r $LIB_DIR/src/requirements.txt
+fi
+
+if [[ -n $install || -n $reconfigure ]]; then
+    # Generate certificates into etc dir and public key to screen
+    cat << EOF > $ETC_DIR/config.json
+{
+    "mqtt": {
+        "device_id": "$DEVICE_ID",
+        "host": "$MQTT_HOST",
+        "port": $MQTT_PORT,
+        "registry_id": "$REGISTRY_ID",
+        "region": "us-central1",
+        "project_id": "$PROJECT_ID",
+        "key_file": "$ETC_DIR/certs/rsa_private.pem",
+        "algorithm": "RS256",
+        "authentication_mechanism": "jwt_gcp"
+    },
+    "udmi": {
+        "discovery": {
+            "ethmac": false,
+            "bacnet": false
+        }
+    }
+}
+EOF
+
+    if [[ $BACNET =~ [yY] ]]; then
+        cat $ETC_DIR/config.json | jq -r '.udmi.discovery.bacnet|=true' | sponge $ETC_DIR/config.json
+        [[ -n $BACNET_IP ]] &&  cat $ETC_DIR/config.json | jq -r ".bacnet.ip|=\"$BACNET_IP\"" | sponge $ETC_DIR/config.json
+    fi
+
+    if [[ -f $ETC_DIR/certs/rsa_private.pem ]]; then
+        echo not generating certificates because they exist
+    else
+        $UDMI_DIR/bin/keygen RS256 $ETC_DIR/certs/
+    fi
+fi
+
+cat $ETC_DIR/config.json
+
+if [[ -n $install || -n $upgrade ]]; then
+chown -R $USERNAME:$USERNAME $ETC_DIR/certs
+chmod -R 600 $ETC_DIR/certs
+chmod +x $ETC_DIR/certs
+chmod +x $ETC_DIR/certs/rsa_private.pem
+fi
+
+if [[ -n $install ]]; then
+
+    cat << EOF > $SYSTEMD_UNIT_FILE
+[Unit]
+Description=UDMI Discovey Service
+After=nettwork.target
+
+[Service]
+ExecStart=$VENV_PYTHON $LIB_DIR/src/main.py --config_file=$ETC_DIR/config.json
+#ExecReload=/bin/kill -HUP \$MAINPID
+KillMode=process
+Restart=always
+RestartSec=30s
+Environment=PYTHONUNBUFFERED=1
+User=$USERNAME
+CapabilityBoundingSet=CAP_NET_RAW CAP_NET_ADMIN
+AmbientCapabilities=CAP_NET_RAW CAP_NET_ADMIN
+
+[Install]
+WantedBy=multi-user.target
+EOF
+
+    systemctl daemon-reload
+    systemctl start udmi_discovery
+fi 
+
+if [[ -n $upgrade || -n $reconfigure ]]; then
+    systemctl restart udmi_discovery
+fi
+
+echo Public Key:
+cat $ETC_DIR/certs/rsa_public.pem
+echo
+echo Done.

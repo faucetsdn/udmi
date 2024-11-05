@@ -35,7 +35,10 @@ deterministically
 dev
 Dev
 directionality
+distroless
 DNS
+Dockerized
+dockerized
 downlink
 enablement
 encoding
@@ -145,6 +148,7 @@ subflows
 subFolder
 subType
 subTypes
+systemd
 terraform
 terraformed
 testability

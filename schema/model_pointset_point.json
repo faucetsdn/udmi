@@ -33,6 +33,16 @@
         "failure"
       ]
     },
+    "range_min": {
+      "description": "Represents the lower bound of the error threshold for a point",
+      "type": "number",
+      "examples": [0]
+    },
+    "range_max": {
+      "description": "Represents the upper bound of the error threshold for a point",
+      "type": "number",
+      "examples": [100]
+    },
     "cov_increment": {
       "description": "Triggering threshold for partial cov update publishing",
       "examples": [1],  

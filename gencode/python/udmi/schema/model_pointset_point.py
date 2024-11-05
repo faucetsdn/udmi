@@ -10,6 +10,8 @@ class PointPointsetModel:
     self.baseline_value = None
     self.baseline_tolerance = None
     self.baseline_state = None
+    self.range_min = None
+    self.range_max = None
     self.cov_increment = None
     self.ref = None
     self.tags = None
@@ -24,6 +26,8 @@ class PointPointsetModel:
     result.baseline_value = source.get('baseline_value')
     result.baseline_tolerance = source.get('baseline_tolerance')
     result.baseline_state = source.get('baseline_state')
+    result.range_min = source.get('range_min')
+    result.range_max = source.get('range_max')
     result.cov_increment = source.get('cov_increment')
     result.ref = source.get('ref')
     result.tags = source.get('tags')
@@ -57,6 +61,10 @@ class PointPointsetModel:
       result['baseline_tolerance'] = self.baseline_tolerance # 5
     if self.baseline_state:
       result['baseline_state'] = self.baseline_state # 5
+    if self.range_min:
+      result['range_min'] = self.range_min # 5
+    if self.range_max:
+      result['range_max'] = self.range_max # 5
     if self.cov_increment:
       result['cov_increment'] = self.cov_increment # 5
     if self.ref:
