@@ -21,6 +21,7 @@ import static com.google.udmi.util.GeneralUtils.catchToElse;
 import static com.google.udmi.util.GeneralUtils.changedLines;
 import static com.google.udmi.util.GeneralUtils.decodeBase64;
 import static com.google.udmi.util.GeneralUtils.friendlyStackTrace;
+import static com.google.udmi.util.GeneralUtils.getRootCause;
 import static com.google.udmi.util.GeneralUtils.getTimestamp;
 import static com.google.udmi.util.GeneralUtils.ifNotNullGet;
 import static com.google.udmi.util.GeneralUtils.ifNotNullThen;
@@ -1428,18 +1429,22 @@ public class SequenceBase {
   protected void waitUntil(String description, Duration maxWait, Supplier<String> evaluator) {
     AtomicReference<String> detail = new AtomicReference<>();
     String sanitizedDescription = sanitizedDescription(description);
-    whileDoing(sanitizedDescription, () -> {
-      ifNotTrueThen(waitingForConfigSync.get(),
-          () -> updateConfig("Before " + sanitizedDescription));
-      recordSequence("Wait until", description);
-      messageEvaluateLoop(maxWait, () -> {
-        String result = evaluator.get();
-        String previous = detail.getAndSet(emptyToNull(result));
-        ifTrueThen(!Objects.equals(previous, result),
-            () -> debug(format("Detail %s is now: %s", sanitizedDescription, result)));
-        return result != null;
-      });
-    }, detail::get);
+    try {
+      whileDoing(sanitizedDescription, () -> {
+        ifNotTrueThen(waitingForConfigSync.get(),
+            () -> updateConfig("Before " + sanitizedDescription));
+        messageEvaluateLoop(maxWait, () -> {
+          String result = evaluator.get();
+          String previous = detail.getAndSet(emptyToNull(result));
+          ifTrueThen(!Objects.equals(previous, result),
+              () -> debug(format("Detail %s is now: %s", sanitizedDescription, result)));
+          return result != null;
+        });
+        recordSequence("Wait until", description);
+      }, detail::get);
+    } catch (Exception e) {
+      recordSequence("Failed waiting until", sanitizedDescription);
+    }
   }
 
   private String sanitizedDescription(String description) {
@@ -1621,7 +1626,8 @@ public class SequenceBase {
       processNextMessage();
     }
     if (expectedInterestingStatus != null) {
-      withRecordSequence(false, () -> checkThatHasInterestingSystemStatus(expectedInterestingStatus));
+      withRecordSequence(false,
+          () -> checkThatHasInterestingSystemStatus(expectedInterestingStatus));
     }
   }
 
@@ -1634,8 +1640,10 @@ public class SequenceBase {
     if (recordSequence) {
       String capability = ifNotNullGet(activeCap.get(), SequenceBase::capabilityName);
       String wrapped = ifNotNullGet(capability, c -> format("[%s] ", capability), "");
-      sequenceMd.printf("1. %s%s%n", wrapped, message.trim());
+      String line = format("1. %s%s", wrapped, message.trim());
+      sequenceMd.println(line);
       sequenceMd.flush();
+      debug("Recorded sequence: " + line);
     }
   }
 
