@@ -44,7 +44,6 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.ConcurrentSkipListSet;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.ThreadFactory;
@@ -95,8 +94,7 @@ public class MqttPublisher implements MessagePublisher {
   private static final int INITIALIZE_TIME_MS = 20000;
   private static final String BROKER_URL_FORMAT = "%s://%s:%s";
   private static final int PUBLISH_THREAD_COUNT = 10;
-  private static final int TOKEN_EXPIRATION_SEC = 60 * 60;
-  private static final int TOKEN_EXPIRATION_MS = TOKEN_EXPIRATION_SEC * 1000;
+  private static final Duration TOKEN_EXPIRATION = Duration.ofHours(1);
   private static final String TICKLE_TOPIC = "events/udmi";
   private static final long TICKLE_PERIOD_SEC = 10;
   private static final String REFLECTOR_PUBLIC_KEY = "reflector/rsa_public.pem";
@@ -131,6 +129,7 @@ public class MqttPublisher implements MessagePublisher {
   private final Envelope savedState = new Envelope();
   private final AtomicInteger publisherQueueSize = new AtomicInteger();
   private final AtomicInteger publishCount = new AtomicInteger();
+  private final String mqttClientId;
   private long mqttTokenSetTimeMs;
   private MqttConnectOptions mqttConnectOptions;
   private boolean shutdown;
@@ -150,9 +149,10 @@ public class MqttPublisher implements MessagePublisher {
     providerHostname = getProviderHostname(config);
     topicBase = getTopicBase();
     clientId = catchToNull(() -> config.reflector_endpoint.client_id);
-    LOG.info(deviceId + " token expiration sec " + TOKEN_EXPIRATION_SEC);
+    LOG.info(deviceId + " token expiration sec " + TOKEN_EXPIRATION.getSeconds());
     certManager = getCertManager();
     mqttClient = newMqttClient(deviceId);
+    mqttClientId = mqttClient.getClientId();
     connectMqttClient(deviceId);
     tickler = scheduleTickler();
   }
@@ -251,7 +251,7 @@ public class MqttPublisher implements MessagePublisher {
   }
 
   private void tickleConnection() {
-    LOG.debug("Tickle " + mqttClient.getClientId());
+    LOG.debug("Tickle " + mqttClientId);
     if (shutdown) {
       try {
         LOG.info("Tickler closing connection due to shutdown request");
@@ -308,7 +308,8 @@ public class MqttPublisher implements MessagePublisher {
     publishRaw(deviceId, topic, payload, start);
   }
 
-  private void publishRaw(String deviceId, String topic, String payload, Instant start) {
+  private synchronized void publishRaw(String deviceId, String topic, String payload,
+      Instant start) {
     try {
       publisherQueueSize.decrementAndGet();
       if (!connectWait.tryAcquire(INITIALIZE_TIME_MS, TimeUnit.MILLISECONDS)) {
@@ -362,14 +363,14 @@ public class MqttPublisher implements MessagePublisher {
     lastStateTime.put(deviceId, now);
   }
 
-  private void sendMessage(String mqttTopic, byte[] mqttMessage) throws Exception {
+  private synchronized void sendMessage(String mqttTopic, byte[] mqttMessage) throws Exception {
     LOG.debug(deviceId + " sending message to " + mqttTopic);
     mqttClient.publish(mqttTopic, mqttMessage, QOS_AT_LEAST_ONCE, MQTT_NO_RETAIN);
     publishCounter.incrementAndGet();
   }
 
   @Override
-  public void close() {
+  public synchronized void close() {
     try {
       LOG.debug(format("Shutting down executor %x", publisherExecutor.hashCode()));
       ifNotNullThen(tickler, () -> tickler.cancel(false));
@@ -388,7 +389,7 @@ public class MqttPublisher implements MessagePublisher {
 
   @Override
   public String getSubscriptionId() {
-    return mqttClient.getClientId();
+    return mqttClientId;
   }
 
   @Override
@@ -396,7 +397,7 @@ public class MqttPublisher implements MessagePublisher {
   }
 
   @Override
-  public boolean isActive() {
+  public synchronized boolean isActive() {
     return mqttClient.isConnected();
   }
 
@@ -430,7 +431,7 @@ public class MqttPublisher implements MessagePublisher {
     }
   }
 
-  private void connectMqttClient(String deviceId) {
+  private synchronized void connectMqttClient(String deviceId) {
     try {
       if (mqttClient.isConnected()) {
         return;
@@ -465,7 +466,7 @@ public class MqttPublisher implements MessagePublisher {
     };
   }
 
-  private void connectAndSetupMqtt() {
+  private synchronized void connectAndSetupMqtt() {
     try {
       LOG.info(deviceId + " creating new auth token for audience " + projectId);
       mqttConnectOptions.setPassword(getAuthToken(projectId));
@@ -497,8 +498,8 @@ public class MqttPublisher implements MessagePublisher {
     return hashKeyPassword.toCharArray();
   }
 
-  private void maybeRefreshJwt() {
-    long refreshTime = mqttTokenSetTimeMs + TOKEN_EXPIRATION_MS / 2;
+  private synchronized void maybeRefreshJwt() {
+    long refreshTime = mqttTokenSetTimeMs + TOKEN_EXPIRATION.toMillis() / 2;
     long currentTimeMillis = System.currentTimeMillis();
     long remaining = refreshTime - currentTimeMillis;
     LOG.debug(deviceId + " remaining until refresh " + remaining);
@@ -552,7 +553,7 @@ public class MqttPublisher implements MessagePublisher {
     clientSubscribe(CONFIG_TOPIC, QOS_AT_LEAST_ONCE);
   }
 
-  private void clientSubscribe(String topicSuffix, int qos) {
+  private synchronized void clientSubscribe(String topicSuffix, int qos) {
     String topic = topicBase + topicSuffix;
     try {
       LOG.info(format("Subscribing with qos %d to topic %s", qos, topic));
@@ -605,7 +606,7 @@ public class MqttPublisher implements MessagePublisher {
     JwtBuilder jwtBuilder =
         Jwts.builder()
             .setIssuedAt(now.toDate())
-            .setExpiration(now.plusMillis(TOKEN_EXPIRATION_MS).toDate())
+            .setExpiration(now.plusMillis((int) TOKEN_EXPIRATION.toMillis()).toDate())
             .setAudience(projectId);
 
     LOG.info(format("Creating jwt %s key with audience %s", algorithm, projectId));
