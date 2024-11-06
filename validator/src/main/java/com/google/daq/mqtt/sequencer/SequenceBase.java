@@ -877,10 +877,10 @@ public class SequenceBase {
         return configIsPending(false);
       });
       Duration between = Duration.between(lastConfigUpdate, CleanDateFormat.clean(Instant.now()));
-      debug(format("Configuration sync took %ss", between.getSeconds()));
+      debug(format("Config sync took %ss", between.getSeconds()));
     } finally {
       waitingForConfigSync.set(false);
-      debug("wait for config sync pending " + configIsPending(true));
+      debug("Finished wait for config sync pending: " + configIsPending(true));
     }
   }
 
@@ -1807,7 +1807,8 @@ public class SequenceBase {
       String subFolderRaw, String transactionId) {
     debug(format("Handling device message %s_%s %s", subTypeRaw, subFolderRaw, transactionId));
     SubType subType = SubType.fromValue(requireNonNull(subTypeRaw, "missing subType"));
-    SubFolder subFolder = SubFolder.fromValue(requireNonNull(subFolderRaw, "missing subFolder"));
+    SubFolder subFolder = ifNotNullGet(subFolderRaw,
+        rawFolder -> SubFolder.fromValue(requireNonNull(rawFolder, "missing subFolder")));
     switch (subType) {
       // These are echos of sent partial config messages, so do nothing.
       case CONFIG -> trace("Ignoring echo configTransaction " + transactionId);
@@ -2000,7 +2001,7 @@ public class SequenceBase {
   }
 
   private void handleEventMessage(SubFolder subFolder, Map<String, Object> message) {
-    getReceivedEvents(subFolder).add(message);
+    getReceivedEvents(ofNullable(subFolder).orElse(SubFolder.INVALID)).add(message);
     if (SubFolder.SYSTEM.equals(subFolder)) {
       writeSystemLogs(convertTo(SystemEvents.class, message));
     }
