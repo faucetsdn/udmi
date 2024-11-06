@@ -174,7 +174,7 @@ public class SequenceBase {
   public static final String SCHEMA_PASS_DETAIL = "No schema violations found";
   public static final String STATE_UPDATE_MESSAGE_TYPE = "state_update";
   public static final String RESET_CONFIG_MARKER = "reset_config";
-  public static final String SYSTEM_STATUS_MESSAGE = "system status level is n0t >= WARNING (400)";
+  public static final String SYSTEM_STATUS_MESSAGE = "system status level is n0t >= `WARNING` (400)";
   public static final String SCHEMA_BUCKET = "schemas";
   public static final int SCHEMA_SCORE_TOTAL = 10;
   public static final int CAPABILITY_SCORE = 1;
@@ -213,7 +213,7 @@ public class SequenceBase {
   private static final String CONFIG_SUBTYPE = SubType.CONFIG.value();
   private static final String LOCAL_CONFIG_UPDATE = LOCAL_PREFIX + UPDATE_SUBFOLDER;
   private static final String SEQUENCER_LOG = "sequencer.log";
-  private static final String SYSTEM_LOG = "system.log";
+  private static final String DEVICE_SYSTEM_LOG = "device_system.log";
   private static final String SEQUENCE_MD = "sequence.md";
   private static final int LOG_TIMEOUT_SEC = 10;
   private static final long ONE_SECOND_MS = 1000;
@@ -315,7 +315,7 @@ public class SequenceBase {
   private File testDir;
   private PrintWriter sequencerLog;
   private PrintWriter sequenceMd;
-  private PrintWriter systemLog;
+  private PrintWriter deviceSystemLog;
   private boolean recordMessages;
   private boolean recordSequence;
   private int previousEventCount;
@@ -331,6 +331,7 @@ public class SequenceBase {
   private static Scoring scoringResult;
   private Date configStateStart;
   protected boolean pretendStateUpdated;
+  private Boolean stateSupported;
 
   private static void setupSequencer() {
     exeConfig = ofNullable(exeConfig).orElseGet(SequenceRunner::ensureExecutionConfig);
@@ -818,7 +819,9 @@ public class SequenceBase {
   }
 
   private boolean deviceSupportsState() {
-    return !isTrue(catchToNull(() -> deviceMetadata.testing.nostate));
+    ifNullThen(stateSupported,
+        () -> stateSupported = !isTrue(catchToNull(() -> deviceMetadata.testing.nostate)));
+    return stateSupported;
   }
 
   protected boolean isBucketEnabled(Bucket bucket) {
@@ -1143,20 +1146,21 @@ public class SequenceBase {
       return;
     }
     for (Entry logEntry : message.logentries) {
-      writeSystemLog(logEntry);
+      writeDeviceSystemLog(logEntry);
     }
   }
 
-  private String writeSystemLog(Entry logEntry) {
-    return writeLogEntry(logEntry, systemLog);
+  private String writeDeviceSystemLog(Entry logEntry) {
+    return writeLogEntry(logEntry, deviceSystemLog, logEntry.category);
   }
 
-  private String writeLogEntry(Entry logEntry, PrintWriter printWriter) {
+  private String writeLogEntry(Entry logEntry, PrintWriter printWriter, String category) {
     if (logEntry.timestamp == null) {
       throw new RuntimeException("log entry timestamp is null");
     }
-    String messageStr = format("%s %s %s", isoConvert(logEntry.timestamp),
-        levelFromValue(logEntry.level).name(), logEntry.message);
+    String categoryStr = ifNotNullGet(category, c -> format("%-22s ", c), "");
+    String messageStr = format("%s %-7s %s%s", isoConvert(logEntry.timestamp),
+        levelFromValue(logEntry.level).name(), categoryStr, logEntry.message);
 
     PrintWriter output = ofNullable(printWriter).orElse(new PrintWriter(System.err));
     output.println(messageStr);
@@ -1443,7 +1447,9 @@ public class SequenceBase {
         recordSequence("Wait until", description);
       }, detail::get);
     } catch (Exception e) {
-      recordSequence("Failed waiting until", sanitizedDescription);
+      String message = "Failed waiting until " + sanitizedDescription;
+      recordSequence(message);
+      throw new RuntimeException(message);
     }
   }
 
@@ -1554,7 +1560,6 @@ public class SequenceBase {
       } catch (Exception e) {
         catcher.accept(e);
         String detail = ifNotNullGet(detailer, Supplier::get);
-        ifNotNullThen(detail, this::waitingConditionDetail);
         // Don't include the caught exception in order to preserve the detail as base cause.
         throw ifNotNullGet(detail, message -> new RuntimeException("Because " + message), e);
       }
@@ -1576,18 +1581,9 @@ public class SequenceBase {
 
   private void waitingConditionStart(String condition) {
     ifTrueThen(!waitingCondition.isEmpty(),
-        () -> trace(format("stage suspend %s at %s", currentWaitingCondition(), timeSinceStart())));
-    waitingConditionPush(condition);
-    info(format("Stage start %s at %s", currentWaitingCondition(), timeSinceStart()));
-  }
-
-  private void waitingConditionDetail(String detail) {
-    notice("Adding waiting condition detail: " + detail);
-    waitingConditionPush(detail);
-  }
-
-  private void waitingConditionPush(String condition) {
+        () -> trace(format("Stage suspend %s at %s", currentWaitingCondition(), timeSinceStart())));
     waitingCondition.push("waiting for " + condition);
+    info(format("Stage start %s at %s", currentWaitingCondition(), timeSinceStart()));
   }
 
   private String currentWaitingCondition() {
@@ -2118,7 +2114,7 @@ public class SequenceBase {
   }
 
   private void writeSequencerLog(Entry logEntry) {
-    String entry = writeLogEntry(logEntry, sequencerLog);
+    String entry = writeLogEntry(logEntry, sequencerLog, null);
     if (logEntry.level >= logLevel) {
       System.err.println(entry);
     }
@@ -2516,7 +2512,7 @@ public class SequenceBase {
         info("Cleaning test output dir " + testDir.getAbsolutePath());
         FileUtils.deleteDirectory(testDir);
         testDir.mkdirs();
-        systemLog = new PrintWriter(newOutputStream(new File(testDir, SYSTEM_LOG).toPath()));
+        deviceSystemLog = new PrintWriter(newOutputStream(new File(testDir, DEVICE_SYSTEM_LOG).toPath()));
         sequencerLog = new PrintWriter(newOutputStream(new File(testDir, SEQUENCER_LOG).toPath()));
         sequenceMd = new PrintWriter(newOutputStream(new File(testDir, SEQUENCE_MD).toPath()));
 
@@ -2571,7 +2567,7 @@ public class SequenceBase {
       if (deviceConfig != null) {
         deviceConfig.system.testing = null;
       }
-      systemLog.close();
+      deviceSystemLog.close();
       sequencerLog.close();
       sequenceMd.close();
 
@@ -2641,7 +2637,7 @@ public class SequenceBase {
         logEntry.level = RESULT_LEVEL_MAP.get(result).value();
         logEntry.timestamp = cleanDate();
         writeSequencerLog(logEntry);
-        writeSystemLog(logEntry);
+        writeDeviceSystemLog(logEntry);
         setSequenceStatus(description, result, logEntry);
       } catch (Exception e) {
         error("Error while recording completion: " + friendlyStackTrace(e));
