@@ -1560,7 +1560,7 @@ public class SequenceBase {
       } catch (Exception e) {
         catcher.accept(e);
         String detail = ifNotNullGet(detailer, Supplier::get);
-        // Don't include the caught exception in order to preserve the detail as base cause.
+        // Don't include e in the new exception in order to preserve the detail as base cause.
         throw ifNotNullGet(detail, message -> new RuntimeException("Because " + message), e);
       }
     } catch (Exception e) {
