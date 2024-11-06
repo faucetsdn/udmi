@@ -174,13 +174,13 @@ public class SequenceBase {
   public static final String SCHEMA_PASS_DETAIL = "No schema violations found";
   public static final String STATE_UPDATE_MESSAGE_TYPE = "state_update";
   public static final String RESET_CONFIG_MARKER = "reset_config";
-  public static final String SYSTEM_STATUS_MESSAGE = "system status level is n0t >= `WARNING` (400)";
   public static final String SCHEMA_BUCKET = "schemas";
   public static final int SCHEMA_SCORE_TOTAL = 10;
   public static final int CAPABILITY_SCORE = 1;
   public static final String STATUS_LEVEL_VIOLATION = "STATUS_LEVEL";
   public static final String RECEIVED_STATE_VIOLATION = "RECEIVED_STATE";
   public static final String DEVICE_STATE_SCHEMA = "device_state";
+  private static final String STATUS_MESSAGE = "system status level is n0t >= `WARNING` (400)";
   private static final String ALL_CHANGES = "";
   private static final int SEQUENCER_FUNCTIONS_VERSION = Validator.TOOLS_FUNCTIONS_VERSION;
   private static final int SEQUENCER_FUNCTIONS_ALPHA = SEQUENCER_FUNCTIONS_VERSION;
@@ -2261,14 +2261,14 @@ public class SequenceBase {
     if (!deviceSupportsState()) {
       return;
     }
-    checkThat(SYSTEM_STATUS_MESSAGE, significantStatusDetail());
+    checkThat(STATUS_MESSAGE, significantStatusDetail());
   }
 
   protected void checkThatHasNoInterestingStatus() {
     if (!deviceSupportsState()) {
       return;
     }
-    checkThatNot(SYSTEM_STATUS_MESSAGE, notSignificantStatusDetail());
+    checkThatNot(STATUS_MESSAGE, notSignificantStatusDetail());
   }
 
   protected void waitUntilNoSystemStatus() {
@@ -2284,7 +2284,7 @@ public class SequenceBase {
       return;
     }
     expectedInterestingStatus = null;
-    String message = convertN0t(interesting, SYSTEM_STATUS_MESSAGE);
+    String message = convertN0t(interesting, STATUS_MESSAGE);
     Supplier<String> detailer =
         interesting ? this::notSignificantStatusDetail : this::significantStatusDetail;
     waitUntil(message, detailer);
