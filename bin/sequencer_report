@@ -147,6 +147,7 @@ class Sequence:
         if re.match(cls.STEP_PREFIX, line):
           steps.insert(0, SequenceStep(buffer.copy()))
           buffer.clear()
+    # pylint: disable-next=bare-except
     except:
       pass
     return steps
