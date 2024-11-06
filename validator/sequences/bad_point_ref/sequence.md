@@ -3,4 +3,5 @@
 
 Error handling for badly formed gateway point ref
 
-1. Test skipped: Not a proxied device
+
+Test skipped: Not a proxied device

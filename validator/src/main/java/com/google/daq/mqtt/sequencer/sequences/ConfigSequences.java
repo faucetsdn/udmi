@@ -53,13 +53,13 @@ public class ConfigSequences extends SequenceBase {
   @ValidateSchema(SubFolder.SYSTEM)
   @WithCapability(value = Subblocks.class, stage = ALPHA)
   public void system_last_update() {
-    waitFor("state last_config matches config timestamp", this::lastConfigUpdated);
+    waitUntil("state last_config matches config timestamp", this::lastConfigUpdated);
     waitForCapability(Subblocks.class, "state update complete", this::stateMatchesConfig);
     forceConfigUpdate("trigger another config update");
-    waitFor("state last_config matches config timestamp", this::lastConfigUpdated);
+    waitUntil("state last_config matches config timestamp", this::lastConfigUpdated);
     waitForCapability(Subblocks.class, "state update complete", this::stateMatchesConfig);
     forceConfigUpdate("trigger another config update");
-    waitFor("state last_config matches config timestamp", this::lastConfigUpdated);
+    waitUntil("state last_config matches config timestamp", this::lastConfigUpdated);
     waitForCapability(Subblocks.class, "state update complete", this::stateMatchesConfig);
   }
 
@@ -85,7 +85,7 @@ public class ConfigSequences extends SequenceBase {
     final Instant startTime = Instant.now();
     deviceConfig.system.min_loglevel = Level.INFO.value();
     untilLogged(SYSTEM_CONFIG_APPLY, SYSTEM_CONFIG_APPLY_LEVEL);
-    checkNotLogged(SYSTEM_CONFIG_APPLY, Level.WARNING);
+    checkWasNotLogged(SYSTEM_CONFIG_APPLY, Level.WARNING);
     Instant expectedFinish = startTime.plusSeconds(CONFIG_THRESHOLD_SEC);
     Instant logFinished = Instant.now();
     checkThat(format("device config resolved within %ss", CONFIG_THRESHOLD_SEC),
@@ -97,7 +97,7 @@ public class ConfigSequences extends SequenceBase {
     updateConfig("warning loglevel");
     // Nothing to actively wait for, so wait for some amount of time instead.
     safeSleep(CONFIG_THRESHOLD_SEC * 2000);
-    checkNotLogged(SYSTEM_CONFIG_APPLY, SYSTEM_CONFIG_APPLY_LEVEL);
+    checkWasNotLogged(SYSTEM_CONFIG_APPLY, SYSTEM_CONFIG_APPLY_LEVEL);
 
     deviceConfig.system.min_loglevel = savedLevel;
     untilLogged(SYSTEM_CONFIG_APPLY, SYSTEM_CONFIG_APPLY_LEVEL);
@@ -136,60 +136,68 @@ public class ConfigSequences extends SequenceBase {
     expectedStatusLevel(Level.ERROR);
 
     deviceConfig.system.min_loglevel = Level.DEBUG.value();
-    updateConfig("enable debug logging");
+    updateConfig("to enable debug logging");
     Date stableConfig = deviceConfig.timestamp;
+
     info("initial stable_config " + isoConvert(stableConfig));
-    untilTrue("initial state synchronized",
-        () -> dateEquals(stableConfig, deviceState.system.last_config));
     info("initial last_config " + isoConvert(deviceState.system.last_config));
-    checkThat("initial stable_config matches last_config",
+
+    quietlyCheckThat("device state `last_config` matches starting config `timestamp`",
         () -> dateEquals(stableConfig, deviceState.system.last_config));
 
     forCapability(Logging.class,
         () -> waitForLog(SYSTEM_CONFIG_APPLY, SYSTEM_CONFIG_APPLY_LEVEL));
 
+    // Special override because there might not be a state update with a broken config.
+    pretendStateUpdated = true;
+
     setExtraField("break_json");
+    updateConfig("to force broken (invalid JSON) configuration");
+
     forCapability(Status.class, () -> {
-      untilHasInterestingSystemStatus();
+      waitUntilHasSystemStatus();
       Entry stateStatus = deviceState.system.status;
       info("Error message: " + stateStatus.message);
       debug("Error detail: " + stateStatus.detail);
-      checkThat("status level is error (500)",
+      checkThat("status level is exactly `ERROR` (500)",
           Objects.equals(Level.ERROR.value(), stateStatus.level));
-      checkThat("category matches " + SYSTEM_CONFIG_PARSE,
+      checkThat("category matches `" + SYSTEM_CONFIG_PARSE + "`",
           SYSTEM_CONFIG_PARSE.equals(stateStatus.category));
     });
+
     info("following stable_config " + isoConvert(stableConfig));
     info("following last_config " + isoConvert(deviceState.system.last_config));
 
     // The last_config should not be updated to not reflect the broken config.
-    checkThat("previous good config timestamp matches state last_config",
+    checkThat("device state `last_config` has not been updated",
         dateEquals(stableConfig, deviceState.system.last_config));
 
     forCapability(Logging.class, () -> {
       waitForLog(SYSTEM_CONFIG_RECEIVE, SYSTEM_CONFIG_RECEIVE_LEVEL);
       waitForLog(SYSTEM_CONFIG_PARSE, Level.ERROR);
       safeSleep(LOG_APPLY_DELAY_MS);
-      checkNotLogged(SYSTEM_CONFIG_APPLY, SYSTEM_CONFIG_APPLY_LEVEL);
+      checkWasNotLogged(SYSTEM_CONFIG_APPLY, SYSTEM_CONFIG_APPLY_LEVEL);
     });
 
     // Will restore min_loglevel to the default of INFO.
     resetConfig(); // clears extra_field and interesting status checks
+    recordSequence("(Log level is implicitly set to `INFO` through config reset)");
+
+    // Revert override now that config has been reset so is not broken anymore.
+    pretendStateUpdated = false;
+
+    forCapability(Status.class, this::waitUntilNoSystemStatus);
 
     forCapability(Logging.class, () -> {
       waitForLog(SYSTEM_CONFIG_APPLY, SYSTEM_CONFIG_APPLY_LEVEL);
-      untilTrue("restored state synchronized",
-          () -> dateEquals(deviceConfig.timestamp, deviceState.system.last_config));
+      // These should not have been logged since the level was at INFO before APPLY.
+      checkWasNotLogged(SYSTEM_CONFIG_RECEIVE, SYSTEM_CONFIG_RECEIVE_LEVEL);
+      checkWasNotLogged(SYSTEM_CONFIG_PARSE, SYSTEM_CONFIG_PARSE_LEVEL);
     });
 
-    deviceConfig.system.min_loglevel = Level.DEBUG.value();
-
-    forCapability(Logging.class, () -> {
-      waitForLog(SYSTEM_CONFIG_APPLY, SYSTEM_CONFIG_APPLY_LEVEL);
-      // These should not be logged since the level was at INFO until the new config is applied.
-      checkNotLogged(SYSTEM_CONFIG_RECEIVE, SYSTEM_CONFIG_RECEIVE_LEVEL);
-      checkNotLogged(SYSTEM_CONFIG_PARSE, SYSTEM_CONFIG_PARSE_LEVEL);
-    });
+    // This is technically already done by resetConfig(), but doing now to generate message.
+    checkThat("device state `last_config` has been updated",
+        () -> dateEquals(deviceConfig.timestamp, deviceState.system.last_config));
   }
 
   @Test(timeout = TWO_MINUTES_MS)
@@ -199,13 +207,13 @@ public class ConfigSequences extends SequenceBase {
     deviceConfig.system.min_loglevel = Level.DEBUG.value();
     untilTrue("last_config not null", () -> deviceState.system.last_config != null);
     untilTrue("system operational", () -> deviceState.system.operation.operational);
-    checkThatHasNoInterestingSystemStatus();
+    checkThatHasNoInterestingStatus();
     final Date prevConfig = deviceState.system.last_config;
     setExtraField("Flabberguilstadt");
     untilLogged(SYSTEM_CONFIG_RECEIVE, SYSTEM_CONFIG_RECEIVE_LEVEL);
     untilTrue("last_config updated", () -> !deviceState.system.last_config.equals(prevConfig));
     untilTrue("system operational", () -> deviceState.system.operation.operational);
-    checkThatHasNoInterestingSystemStatus();
+    checkThatHasNoInterestingStatus();
     untilLogged(SYSTEM_CONFIG_PARSE, SYSTEM_CONFIG_PARSE_LEVEL);
     untilLogged(SYSTEM_CONFIG_APPLY, SYSTEM_CONFIG_APPLY_LEVEL);
     final Date updatedConfig = deviceState.system.last_config;

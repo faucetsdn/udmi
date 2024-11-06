@@ -16,7 +16,6 @@ import static java.util.Optional.ofNullable;
 import static udmi.schema.Bucket.POINTSET;
 import static udmi.schema.Category.POINTSET_POINT_INVALID;
 import static udmi.schema.Category.POINTSET_POINT_INVALID_VALUE;
-import static udmi.schema.FeatureDiscovery.FeatureStage.BETA;
 import static udmi.schema.FeatureDiscovery.FeatureStage.STABLE;
 
 import com.google.common.collect.Sets;
@@ -66,7 +65,7 @@ public class PointsetSequences extends PointsetBase {
   private void untilPointsetSanity() {
     whileDoing("checking pointset sanity", () -> {
 
-      waitFor("pointset state matches config", EVENT_WAIT_DURATION, () -> {
+      waitUntil("pointset state matches config", EVENT_WAIT_DURATION, () -> {
         Set<String> configPoints = deviceConfig.pointset.points.keySet();
         Set<String> statePoints = deviceState.pointset.points.keySet();
         String prefix = format("config %s state %s differences: ",
@@ -75,7 +74,7 @@ public class PointsetSequences extends PointsetBase {
       });
 
       final AtomicReference<String> message = new AtomicReference<>("any received pointset event");
-      waitFor("pointset event contains correct points", EVENT_WAIT_DURATION, () -> {
+      waitUntil("pointset event contains correct points", EVENT_WAIT_DURATION, () -> {
         List<PointsetEvents> events = popReceivedEvents(PointsetEvents.class);
         ifNotNullThen(ifNotTrueGet(events.isEmpty(), () -> events.get(events.size() - 1)),
             lastEvent -> {

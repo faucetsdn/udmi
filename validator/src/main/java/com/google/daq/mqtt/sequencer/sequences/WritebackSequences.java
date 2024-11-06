@@ -79,7 +79,7 @@ public class WritebackSequences extends PointsetBase {
   @Summary("Implements UDMI writeback and can successfully writeback to a point")
   public void writeback_success() {
     TargetTestingModel targetModel = testTargetState(APPLIED_STATE);
-    waitFor("target point to have target expected value", () -> presentValueIs(targetModel));
+    waitUntil("target point to have target expected value", () -> presentValueIs(targetModel));
   }
 
   private TargetTestingModel testTargetState(String targetState) {
@@ -89,11 +89,11 @@ public class WritebackSequences extends PointsetBase {
 
     deviceConfig.pointset.points.get(targetPoint).set_value = null;
 
-    waitFor(expectedValueState(DEFAULT_STATE), () -> valueStateIs(targetPoint, DEFAULT_STATE));
+    waitUntil(expectedValueState(DEFAULT_STATE), () -> valueStateIs(targetPoint, DEFAULT_STATE));
 
     deviceConfig.pointset.points.get(targetPoint).set_value = targetValue;
 
-    waitFor(expectedValueState(targetState), () -> valueStateIs(targetPoint, targetState));
+    waitUntil(expectedValueState(targetState), () -> valueStateIs(targetPoint, targetState));
 
     return targetModel;
   }

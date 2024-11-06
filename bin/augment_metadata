@@ -6,17 +6,17 @@
 #
 
 if [[ $# -lt 2 ]]; then
-    echo Usage: $0 SITE_DIR DEVICE_ID [PUBBER_OPTS...]
+    echo Usage: $0 SITE_DIR DEVICE_ID [METADATA_OPTS...]
     false
 fi
 
 site_dir=$(realpath $1)
 device_id=$2
 shift 2
-pubber_opts=$*
+metadata_opts=$*
 
 nostate=false
-if [[ $pubber_opts =~ noState ]]; then
+if [[ $metadata_opts =~ noState ]]; then
     nostate=true
 fi
 

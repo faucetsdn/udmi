@@ -353,7 +353,7 @@ public abstract class JsonUtil {
     try {
       Thread.sleep(sleepTimeMs);
     } catch (Exception e) {
-      throw new RuntimeException("Interrupted sleep", e);
+      throw new RuntimeException("Interrupted safe sleep", e);
     }
   }
 

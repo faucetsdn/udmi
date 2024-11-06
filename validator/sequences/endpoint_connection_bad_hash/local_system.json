@@ -2,7 +2,7 @@
   "min_loglevel" : 200,
   "metrics_rate_sec" : 10,
   "operation" : {
-    "last_start" : "2024-10-09T00:17:36Z"
+    "last_start" : "2024-11-06T17:35:31Z"
   },
   "testing" : {
     "sequence_name" : "endpoint_connection_bad_hash"
