@@ -179,6 +179,7 @@ public class SequenceBase {
   public static final int SCHEMA_SCORE_TOTAL = 10;
   public static final int CAPABILITY_SCORE = 1;
   public static final String STATUS_LEVEL_VIOLATION = "STATUS_LEVEL";
+  public static final String RECEIVED_STATE_VIOLATION = "RECEIVED_STATE";
   public static final String DEVICE_STATE_SCHEMA = "device_state";
   private static final String ALL_CHANGES = "";
   private static final int SEQUENCER_FUNCTIONS_VERSION = Validator.TOOLS_FUNCTIONS_VERSION;
@@ -1880,7 +1881,12 @@ public class SequenceBase {
               isoConvert(stateCutoffThreshold), lastStart, txnId));
           return;
         }
-        checkState(deviceSupportsState(), "Received state update with no-state device");
+        if (!deviceSupportsState()) {
+          String violation = "Received state update with no-state device";
+          warning(violation);
+          deviceStateViolations.put(RECEIVED_STATE_VIOLATION, violation);
+          return;
+        }
         boolean deltaState = RECV_STATE_DIFFERNATOR.isInitialized();
         List<DiffEntry> stateChanges = RECV_STATE_DIFFERNATOR.computeChanges(converted);
         Instant start = ofNullable(convertedState.timestamp).orElseGet(Date::new).toInstant();
