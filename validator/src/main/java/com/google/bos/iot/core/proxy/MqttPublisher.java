@@ -353,7 +353,7 @@ public class MqttPublisher implements MessagePublisher {
       try {
         Thread.sleep(delay);
       } catch (InterruptedException e) {
-        LOG.warn("Interrupted sleep", e);
+        LOG.warn("Interrupted delay sleep", e);
       }
       now += delay;
     } else {

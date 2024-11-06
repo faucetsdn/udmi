@@ -1,29 +1,29 @@
-2024-08-02T08:19:05Z NOTICE starting test gateway_proxy_state ################################
-2024-08-02T08:19:05Z DEBUG Suppressing exception: java.lang.NullPointerException: Cannot read field "proxy_ids" because "com.google.daq.mqtt.sequencer.sequences.GatewaySequences.deviceMetadata.gateway" is null
-2024-08-02T08:19:05Z DEBUG stage done initialize at 0s
-2024-08-02T08:19:05Z DEBUG exception message: Not a gateway
-2024-08-02T08:19:05Z TRACE ending stack trace: org.junit.AssumptionViolatedException: Not a gateway
-2024-08-02T08:19:05Z TRACE ending stack trace: 	at com.google.daq.mqtt.sequencer.SequenceBase.skipTest(SequenceBase.java:2218)
-2024-08-02T08:19:05Z TRACE ending stack trace: 	at com.google.daq.mqtt.sequencer.SequenceBase.lambda$ifTrueSkipTest$87(SequenceBase.java:2222)
-2024-08-02T08:19:05Z TRACE ending stack trace: 	at com.google.udmi.util.GeneralUtils.ifTrueThen(GeneralUtils.java:372)
-2024-08-02T08:19:05Z TRACE ending stack trace: 	at com.google.udmi.util.GeneralUtils.ifTrueThen(GeneralUtils.java:367)
-2024-08-02T08:19:05Z TRACE ending stack trace: 	at com.google.daq.mqtt.sequencer.SequenceBase.ifTrueSkipTest(SequenceBase.java:2222)
-2024-08-02T08:19:05Z TRACE ending stack trace: 	at com.google.daq.mqtt.sequencer.sequences.GatewaySequences.setUp(GatewaySequences.java:50)
-2024-08-02T08:19:05Z TRACE ending stack trace: 	at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke0(Native Method)
-2024-08-02T08:19:05Z TRACE ending stack trace: 	at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:77)
-2024-08-02T08:19:05Z TRACE ending stack trace: 	at java.base/jdk.internal.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)
-2024-08-02T08:19:05Z TRACE ending stack trace: 	at java.base/java.lang.reflect.Method.invoke(Method.java:568)
-2024-08-02T08:19:05Z TRACE ending stack trace: 	at org.junit.runners.model.FrameworkMethod$1.runReflectiveCall(FrameworkMethod.java:59)
-2024-08-02T08:19:05Z TRACE ending stack trace: 	at org.junit.internal.runners.model.ReflectiveCallable.run(ReflectiveCallable.java:12)
-2024-08-02T08:19:05Z TRACE ending stack trace: 	at org.junit.runners.model.FrameworkMethod.invokeExplosively(FrameworkMethod.java:56)
-2024-08-02T08:19:05Z TRACE ending stack trace: 	at org.junit.internal.runners.statements.RunBefores.invokeMethod(RunBefores.java:33)
-2024-08-02T08:19:05Z TRACE ending stack trace: 	at org.junit.internal.runners.statements.RunBefores.evaluate(RunBefores.java:24)
-2024-08-02T08:19:05Z TRACE ending stack trace: 	at org.junit.internal.runners.statements.RunAfters.evaluate(RunAfters.java:27)
-2024-08-02T08:19:05Z TRACE ending stack trace: 	at org.junit.internal.runners.statements.FailOnTimeout$CallableStatement.call(FailOnTimeout.java:299)
-2024-08-02T08:19:05Z TRACE ending stack trace: 	at org.junit.internal.runners.statements.FailOnTimeout$CallableStatement.call(FailOnTimeout.java:293)
-2024-08-02T08:19:05Z TRACE ending stack trace: 	at java.base/java.util.concurrent.FutureTask.run(FutureTask.java:264)
-2024-08-02T08:19:05Z TRACE ending stack trace: 	at java.base/java.lang.Thread.run(Thread.java:840)
-2024-08-02T08:19:05Z DEBUG Removing implicit system capability LAST_CONFIG
-2024-08-02T08:19:05Z NOTICE RESULT skip gateway gateway_proxy_state PREVIEW 0/0 Not a gateway
-2024-08-02T08:19:05Z WARNING Not a gateway
-2024-08-02T08:19:05Z NOTICE ending test gateway_proxy_state after 0s ################################
+2024-11-06T17:33:17Z NOTICE  starting test gateway_proxy_state ################################
+2024-11-06T17:33:17Z TRACE   Suppressing exception: Cannot read field "proxy_ids" because "com.google.daq.mqtt.sequencer.sequences.GatewaySequences.deviceMetadata.gateway" is null
+2024-11-06T17:33:17Z DEBUG   stage done initialize at 0s
+2024-11-06T17:33:17Z DEBUG   exception message: Not a gateway
+2024-11-06T17:33:17Z TRACE   ending stack trace: org.junit.AssumptionViolatedException: Not a gateway
+2024-11-06T17:33:17Z TRACE   ending stack trace: 	at com.google.daq.mqtt.sequencer.SequenceBase.skipTest(SequenceBase.java:2359)
+2024-11-06T17:33:17Z TRACE   ending stack trace: 	at com.google.daq.mqtt.sequencer.SequenceBase.lambda$ifTrueSkipTest$107(SequenceBase.java:2363)
+2024-11-06T17:33:17Z TRACE   ending stack trace: 	at com.google.udmi.util.GeneralUtils.ifTrueThen(GeneralUtils.java:397)
+2024-11-06T17:33:17Z TRACE   ending stack trace: 	at com.google.udmi.util.GeneralUtils.ifTrueThen(GeneralUtils.java:392)
+2024-11-06T17:33:17Z TRACE   ending stack trace: 	at com.google.daq.mqtt.sequencer.SequenceBase.ifTrueSkipTest(SequenceBase.java:2363)
+2024-11-06T17:33:17Z TRACE   ending stack trace: 	at com.google.daq.mqtt.sequencer.sequences.GatewaySequences.setUp(GatewaySequences.java:50)
+2024-11-06T17:33:17Z TRACE   ending stack trace: 	at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke0(Native Method)
+2024-11-06T17:33:17Z TRACE   ending stack trace: 	at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:77)
+2024-11-06T17:33:17Z TRACE   ending stack trace: 	at java.base/jdk.internal.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)
+2024-11-06T17:33:17Z TRACE   ending stack trace: 	at java.base/java.lang.reflect.Method.invoke(Method.java:569)
+2024-11-06T17:33:17Z TRACE   ending stack trace: 	at org.junit.runners.model.FrameworkMethod$1.runReflectiveCall(FrameworkMethod.java:59)
+2024-11-06T17:33:17Z TRACE   ending stack trace: 	at org.junit.internal.runners.model.ReflectiveCallable.run(ReflectiveCallable.java:12)
+2024-11-06T17:33:17Z TRACE   ending stack trace: 	at org.junit.runners.model.FrameworkMethod.invokeExplosively(FrameworkMethod.java:56)
+2024-11-06T17:33:17Z TRACE   ending stack trace: 	at org.junit.internal.runners.statements.RunBefores.invokeMethod(RunBefores.java:33)
+2024-11-06T17:33:17Z TRACE   ending stack trace: 	at org.junit.internal.runners.statements.RunBefores.evaluate(RunBefores.java:24)
+2024-11-06T17:33:17Z TRACE   ending stack trace: 	at org.junit.internal.runners.statements.RunAfters.evaluate(RunAfters.java:27)
+2024-11-06T17:33:17Z TRACE   ending stack trace: 	at org.junit.internal.runners.statements.FailOnTimeout$CallableStatement.call(FailOnTimeout.java:299)
+2024-11-06T17:33:17Z TRACE   ending stack trace: 	at org.junit.internal.runners.statements.FailOnTimeout$CallableStatement.call(FailOnTimeout.java:293)
+2024-11-06T17:33:17Z TRACE   ending stack trace: 	at java.base/java.util.concurrent.FutureTask.run(FutureTask.java:264)
+2024-11-06T17:33:17Z TRACE   ending stack trace: 	at java.base/java.lang.Thread.run(Thread.java:840)
+2024-11-06T17:33:17Z DEBUG   Removing implicit system capability LAST_CONFIG
+2024-11-06T17:33:17Z NOTICE  RESULT skip gateway gateway_proxy_state PREVIEW 0/0 Not a gateway
+2024-11-06T17:33:17Z WARNING Not a gateway
+2024-11-06T17:33:17Z NOTICE  ending test gateway_proxy_state after 0s ################################

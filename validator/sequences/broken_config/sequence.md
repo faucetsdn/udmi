@@ -3,28 +3,23 @@
 
 Check that the device correctly handles a broken (non-json) config message.
 
-1. Wait for config sync
-1. Update config enable debug logging:
+1. Update config to enable debug logging
     * Set `system.min_loglevel` = `100`
-1. Wait for initial state synchronized
-1. Check that initial stable_config matches last_config
-1. Wait for log category `system.config.apply` level `NOTICE` to be logged
-1. Wait for config sync
-1. Wait for has significant system status
-1. Check that significant system status exists
-1. Check that status level is error (500)
-1. Check that category matches system.config.parse
-1. Check that previous good config timestamp matches state last_config
-1. Wait for log category `system.config.receive` level `DEBUG` to be logged
-1. Wait for log category `system.config.parse` level `ERROR` to be logged
-1. Check that log category `system.config.apply` level `NOTICE` not logged
-1. Force reset config
-1. Wait for config sync
-1. Wait for log category `system.config.apply` level `NOTICE` to be logged
-1. Wait for restored state synchronized
-1. Wait for config sync
-1. Update config Before log category `system.config.apply` level `NOTICE` to be logged:
-    * Set `system.min_loglevel` = `100`
-1. Wait for log category `system.config.apply` level `NOTICE` to be logged
-1. Check that log category `system.config.receive` level `DEBUG` not logged
-1. Check that log category `system.config.parse` level `DEBUG` not logged
+1. _logging_ Wait until system logs level `NOTICE` category `system.config.apply`
+1. Update config to force broken (invalid JSON) configuration
+1. _status_ Wait until system status level is >= `WARNING` (400)
+1. _status_ Check that status level is exactly `ERROR` (500)
+1. _status_ Check that category matches `system.config.parse`
+1. Check that device state `last_config` has not been updated
+1. _logging_ Wait until system logs level `DEBUG` category `system.config.receive`
+1. _logging_ Wait until system logs level `ERROR` category `system.config.parse`
+1. _logging_ Check that log level `NOTICE` (or greater) category `system.config.apply` was not logged
+1. Reset config to clean version
+1. (Log level is implicitly set to `INFO` through config reset)
+1. _status_ Wait until system status level is not >= `WARNING` (400)
+1. _logging_ Wait until system logs level `NOTICE` category `system.config.apply`
+1. _logging_ Check that log level `DEBUG` (or greater) category `system.config.receive` was not logged
+1. _logging_ Check that log level `DEBUG` (or greater) category `system.config.parse` was not logged
+1. Check that device state `last_config` has been updated
+
+Test passed.

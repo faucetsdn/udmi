@@ -137,15 +137,19 @@ class Sequence:
     buffer = []
     steps = []
 
-    file_lines = text.splitlines()
-    start_index = first_occurence(file_lines, lambda x: x[:2] == "1.")
-    sequence_lines = file_lines[start_index:]
+    try:
+      file_lines = text.splitlines()
+      start_index = first_occurence(file_lines, lambda x: x[:2] == "1.")
+      sequence_lines = file_lines[start_index:]
 
-    for line in reversed(sequence_lines):
-      buffer.insert(0, line)
-      if re.match(cls.STEP_PREFIX, line):
-        steps.insert(0, SequenceStep(buffer.copy()))
-        buffer.clear()
+      for line in reversed(sequence_lines):
+        buffer.insert(0, line)
+        if re.match(cls.STEP_PREFIX, line):
+          steps.insert(0, SequenceStep(buffer.copy()))
+          buffer.clear()
+    # pylint: disable-next=bare-except
+    except:
+      pass
     return steps
 
   @staticmethod

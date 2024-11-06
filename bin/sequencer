@@ -213,7 +213,7 @@ echo
 echo Extracting sequence results:
 # Sort by test name (6th field)
 egrep 'RESULT |CPBLTY ' $SEQUENCER_LOG | fgrep NOTICE | sort -k 6 | \
-    sed -e 's/.* NOTICE //' | tee $SEQUENCER_OUT
+    sed -E -e 's/.* NOTICE +//' | tee $SEQUENCER_OUT
 
 [[ -s $SEQUENCER_OUT ]] || fail No test results found.
 

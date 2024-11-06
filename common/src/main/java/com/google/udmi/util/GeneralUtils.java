@@ -177,6 +177,13 @@ public class GeneralUtils {
     return messages;
   }
 
+  public static String getRootCause(Throwable e) {
+    while (e.getCause() != null) {
+      e = e.getCause();
+    }
+    return e.getMessage();
+  }
+
   private static <T> T fromJsonFile(File path, Class<T> valueType, ObjectMapper objectMapper) {
     try {
       return OBJECT_MAPPER_STRICT.readValue(path, valueType);
