@@ -28,14 +28,14 @@
     "metrics_rate_sec" : 10,
     "min_loglevel" : 200,
     "operation" : {
-      "last_start" : "2024-10-09T00:14:03Z"
+      "last_start" : "2024-11-06T17:31:49Z"
     },
     "testing" : {
       "config_base" : 35,
       "sequence_name" : "pointset_request_extraneous",
-      "transaction_id" : "RC:d4b295.0043"
+      "transaction_id" : "RC:eea582.00000034"
     }
   },
-  "timestamp" : "2024-10-09T00:16:07Z",
-  "version" : "git-a719207"
+  "timestamp" : "2024-11-06T17:33:54Z",
+  "version" : "git-b2a557d"
 }

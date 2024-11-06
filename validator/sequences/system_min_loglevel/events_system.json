@@ -1,21 +1,21 @@
 {
-  "event_count" : 8,
-  "last_config" : "2024-10-09T00:17:44Z",
+  "event_no" : 9,
+  "last_config" : "2024-11-06T17:35:31Z",
   "logentries" : [ {
     "message" : "success",
     "category" : "system.config.apply",
-    "timestamp" : "2024-10-09T00:17:44Z",
+    "timestamp" : "2024-11-06T17:35:31Z",
     "level" : 300
   }, {
-    "message" : "Update state 2024-10-09T00:17:46Z last_config 2024-10-09T00:17:44Z",
+    "message" : "Update state 2024-11-06T17:35:33Z last_config 2024-11-06T17:35:31Z",
     "category" : "device.log",
-    "timestamp" : "2024-10-09T00:17:46Z",
+    "timestamp" : "2024-11-06T17:35:33Z",
     "level" : 200
   } ],
   "metrics" : {
     "mem_total_mb" : 254.0,
-    "mem_free_mb" : 215.587890625
+    "mem_free_mb" : 213.79907989501953
   },
-  "timestamp" : "2024-10-09T00:17:53Z",
-  "version" : "1.5.1"
+  "timestamp" : "2024-11-06T17:35:40Z",
+  "version" : "1.5.2"
 }

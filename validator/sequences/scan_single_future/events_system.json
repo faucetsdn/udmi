@@ -1,46 +1,41 @@
 {
   "event_no" : 5,
-  "last_config" : "2024-10-30T01:51:01Z",
+  "last_config" : "2024-11-06T17:33:50Z",
   "logentries" : [ {
-    "message" : "Update state 2024-10-30T01:51:03Z last_config 2024-10-30T01:51:01Z",
+    "message" : "Discovery scan starting vendor generation 2024-11-06T17:34:00Z",
     "category" : "device.log",
-    "timestamp" : "2024-10-30T01:51:03Z",
+    "timestamp" : "2024-11-06T17:34:00Z",
     "level" : 200
   }, {
-    "message" : "Discovery scan starting vendor generation 2024-10-30T01:51:11Z",
+    "message" : "Update state 2024-11-06T17:34:00Z last_config 2024-11-06T17:33:50Z",
     "category" : "device.log",
-    "timestamp" : "2024-10-30T01:51:11Z",
+    "timestamp" : "2024-11-06T17:34:00Z",
     "level" : 200
   }, {
-    "message" : "Update state 2024-10-30T01:51:11Z last_config 2024-10-30T01:51:01Z",
+    "message" : "Discovered vendor device 20231 for gen 2024-11-06T17:34:00Z",
     "category" : "device.log",
-    "timestamp" : "2024-10-30T01:51:11Z",
+    "timestamp" : "2024-11-06T17:34:00Z",
     "level" : 200
   }, {
-    "message" : "Discovered vendor device 20231 for gen 2024-10-30T01:51:11Z",
+    "message" : "Discovered vendor device 28179023 for gen 2024-11-06T17:34:00Z",
     "category" : "device.log",
-    "timestamp" : "2024-10-30T01:51:11Z",
+    "timestamp" : "2024-11-06T17:34:00Z",
     "level" : 200
   }, {
-    "message" : "Discovered vendor device 28179023 for gen 2024-10-30T01:51:11Z",
+    "message" : "Discovered vendor device 0x65 for gen 2024-11-06T17:34:00Z",
     "category" : "device.log",
-    "timestamp" : "2024-10-30T01:51:11Z",
+    "timestamp" : "2024-11-06T17:34:00Z",
     "level" : 200
   }, {
-    "message" : "Discovered vendor device 0x65 for gen 2024-10-30T01:51:11Z",
+    "message" : "Update state 2024-11-06T17:34:02Z last_config 2024-11-06T17:33:50Z",
     "category" : "device.log",
-    "timestamp" : "2024-10-30T01:51:11Z",
-    "level" : 200
-  }, {
-    "message" : "Update state 2024-10-30T01:51:13Z last_config 2024-10-30T01:51:01Z",
-    "category" : "device.log",
-    "timestamp" : "2024-10-30T01:51:13Z",
+    "timestamp" : "2024-11-06T17:34:02Z",
     "level" : 200
   } ],
   "metrics" : {
     "mem_total_mb" : 254.0,
-    "mem_free_mb" : 212.4621810913086
+    "mem_free_mb" : 212.35082244873047
   },
-  "timestamp" : "2024-10-30T01:51:13Z",
+  "timestamp" : "2024-11-06T17:34:03Z",
   "version" : "1.5.2"
 }

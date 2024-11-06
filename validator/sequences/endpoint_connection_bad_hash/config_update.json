@@ -2,7 +2,7 @@
   "blobset" : {
     "blobs" : {
       "_iot_endpoint_config" : {
-        "generation" : "2024-10-09T00:17:56Z",
+        "generation" : "2024-11-06T17:35:50Z",
         "phase" : "final",
         "sha256" : "6aaf0fa3fdaa5936c973968a08fcea1e5e1fed003996d3ad9959c72c5e79ca49",
         "url" : "data:application/json;base64,ewogICJwcm90b2NvbCIgOiAibXF0dCIsCiAgInRyYW5zcG9ydCIgOiAic3NsIiwKICAiaG9zdG5hbWUiIDogImxvY2FsaG9zdCIsCiAgImNsaWVudF9pZCIgOiAiL3IvWlotVFJJLUZFQ1RBXzAvZC9BSFUtMSIsCiAgInRvcGljX3ByZWZpeCIgOiAiL3IvWlotVFJJLUZFQ1RBXzAvZC9BSFUtMSIsCiAgImF1dGhfcHJvdmlkZXIiIDogewogICAgImJhc2ljIiA6IHsKICAgICAgInVzZXJuYW1lIiA6ICIvci9aWi1UUkktRkVDVEFfMC9kL0FIVS0xIiwKICAgICAgInBhc3N3b3JkIiA6ICIzODI2OWQxMSIKICAgIH0KICB9Cn0="
@@ -37,14 +37,14 @@
     "metrics_rate_sec" : 10,
     "min_loglevel" : 200,
     "operation" : {
-      "last_start" : "2024-10-09T00:17:36Z"
+      "last_start" : "2024-11-06T17:35:31Z"
     },
     "testing" : {
       "config_base" : 40,
       "sequence_name" : "endpoint_connection_bad_hash",
-      "transaction_id" : "RC:fccee2.0011"
+      "transaction_id" : "RC:f725ec.0000000c"
     }
   },
-  "timestamp" : "2024-10-09T00:18:01Z",
-  "version" : "git-a719207"
+  "timestamp" : "2024-11-06T17:35:54Z",
+  "version" : "git-b2a557d"
 }
