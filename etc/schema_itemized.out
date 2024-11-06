@@ -7,14 +7,17 @@
 1 valid_serial_no RESULT pass schemas device_state_stable STABLE 10/10 Schema validation passed
 0 valid_serial_no RESULT pass schemas events_system_stable STABLE 10/10 Schema validation passed
 0 valid_serial_no RESULT pass schemas state_update_stable STABLE 10/10 Schema validation passed
-1 valid_serial_no
+1 valid_serial_no RESULT pass schemas device_state_stable STABLE 10/10 Schema validation passed
+0 valid_serial_no RESULT pass schemas state_update_stable STABLE 10/10 Schema validation passed
 1 writeback_success
 1 writeback_success
 1 writeback_success
 1 pointset_publish_interval
 1 system_mode_restart
 1 config_logging
-1 broken_config
+1 broken_config RESULT fail schemas device_state_stable STABLE 10/10 Schema violations found
+0 broken_config RESULT pass schemas events_system_stable STABLE 10/10 Schema validation passed
+0 broken_config RESULT pass schemas state_update_stable STABLE 10/10 Schema validation passed
 1 broken_config RESULT pass schemas device_state_stable STABLE 10/10 Schema validation passed
 0 broken_config RESULT pass schemas events_system_stable STABLE 10/10 Schema validation passed
 0 broken_config RESULT pass schemas state_update_stable STABLE 10/10 Schema validation passed

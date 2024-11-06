@@ -5,13 +5,13 @@
 1 RESULT fail system too_much_state ALPHA 0/10 Failed check that No more than 6 state updates in 60s
 1 RESULT fail enumeration.features enumerate_features PREVIEW 0/10 Failed check that feature enumeration matches metadata; missing { enumeration }, extra { unknown }
 1 RESULT pass system valid_serial_no STABLE 10/10 Sequence complete
-1 RESULT fail system valid_serial_no STABLE 0/10 Unexpected pending config transactions: RC:3439e5.00000005
+1 RESULT pass system valid_serial_no STABLE 10/10 Sequence complete
 1 RESULT pass writeback writeback_success ALPHA 10/10 Sequence complete
 1 RESULT pass writeback writeback_success ALPHA 10/10 Sequence complete
 1 RESULT pass writeback writeback_success ALPHA 10/10 Sequence complete
 1 RESULT fail pointset pointset_publish_interval STABLE 0/10 Failed check that time period between successive pointset events is between 5 and 8 seconds
 1 RESULT fail system.mode system_mode_restart ALPHA 0/10 Failed check that restart count increased by one
-1 RESULT fail system config_logging STABLE 0/10 Unexpected pending config transactions: RC:c4c249.00000005
+1 RESULT fail system config_logging STABLE 0/10 Unexpected pending config transactions: RC:91cf90.00000005
 1 CPBLTY fail system broken_config.status ALPHA 0/1 Failed check that status level is exactly `ERROR` (500)
 0 CPBLTY pass system broken_config.logging ALPHA 1/1 Capability supported
 0 RESULT pass system broken_config STABLE 9/10 Sequence complete
@@ -26,13 +26,13 @@
 0 RESULT pass system broken_config STABLE 9/10 Sequence complete
 1 CPBLTY pass system broken_config.logging ALPHA 1/1 Capability supported
 0 CPBLTY pass system broken_config.status ALPHA 1/1 Capability supported
-0 RESULT fail system broken_config STABLE 0/10 Timeout waiting for config update synchronized
+0 RESULT fail system broken_config STABLE 0/10 Timeout waiting for last_config synchronized
 1 CPBLTY fail system broken_config.logging ALPHA 0/1 Failed check that log level `NOTICE` (or greater) category `system.config.apply` was not logged
 0 CPBLTY fail system broken_config.status ALPHA 0/1 Failed check that category matches `system.config.parse`
 0 RESULT pass system broken_config STABLE 8/10 Sequence complete
 1 CPBLTY fail system broken_config.status ALPHA 0/1 Failed check that status level is exactly `ERROR` (500)
 0 CPBLTY pass system broken_config.logging ALPHA 1/1 Capability supported
-0 RESULT fail system broken_config STABLE 0/10 Timeout waiting for system logs level `ERROR` category `system.config.parse`
+0 RESULT fail system broken_config STABLE 0/10 Timeout waiting for system status level is not >= WARNING (400)
 1 CPBLTY pass system system_last_update.subblocks ALPHA 1/1 Capability supported
 0 RESULT pass system system_last_update STABLE 11/11 Sequence complete
 1 CPBLTY pass system system_last_update.subblocks ALPHA 1/1 Capability supported
@@ -43,14 +43,14 @@
 4 RESULT skip system valid_serial_no STABLE 0/0 State testing disabled
 1 CPBLTY skip system system_last_update.subblocks ALPHA 0/0 Never executed
 0 RESULT skip system system_last_update STABLE 0/0 State testing disabled
-1 RESULT fail system system_min_loglevel ALPHA 0/10 Unexpected pending config transactions: RC:66f48e.00000005
+1 RESULT fail system system_min_loglevel ALPHA 0/10 Unexpected pending config transactions: RC:705c59.00000005
 1 RESULT pass system system_min_loglevel ALPHA 10/10 Sequence complete
 4 RESULT pass gateway gateway_proxy_events BETA 10/10 Sequence complete
 1 RESULT pass gateway gateway_proxy_events BETA 10/10 Sequence complete
 1 RESULT pass gateway gateway_proxy_state PREVIEW 10/10 Sequence complete
 1 RESULT pass gateway gateway_proxy_state PREVIEW 10/10 Sequence complete
 4 RESULT pass gateway gateway_proxy_events BETA 10/10 Sequence complete
-1 RESULT pass gateway gateway_proxy_events BETA 10/10 Sequence complete
+1 RESULT fail gateway gateway_proxy_events BETA 0/10 Unexpected pending config transactions: RC:07bf17.00000005
 1 RESULT pass gateway gateway_proxy_state PREVIEW 10/10 Sequence complete
 4 RESULT skip system device_config_acked STABLE 0/0 No config check for proxy device
 1 RESULT pass gateway bad_target_family PREVIEW 10/10 Sequence complete
