@@ -193,7 +193,8 @@ fi
 GOLDEN_FILE=etc/sequencer${suffix}.out
 echo Checking for correctness of completed tests in $GOLDEN_FILE...
 while read result; do
-    fgrep "$result" $GOLDEN_FILE || fail Expected result not found for $result
+    echo Checking $GOLDEN_FILE for expected result: $result
+    fgrep "$result" $GOLDEN_FILE || fail Expected result not found: $result
 done < out/sequencer${suffix}.out.save
 
 echo Done with $suffix test_sequencer run.

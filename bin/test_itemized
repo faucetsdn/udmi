@@ -147,6 +147,7 @@ else
     while read result; do
         # Two ?s matches the printf %02d above.
         expected=${result/#?? /}
+        echo Checking $GOLDEN_FILE for result: $expected
         fgrep "$expected" $GOLDEN_FILE || fail Expected result not found: $result
     done < $RESULTS_OUT
 fi
