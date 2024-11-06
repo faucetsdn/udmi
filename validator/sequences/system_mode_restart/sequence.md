@@ -18,3 +18,5 @@ Restart and connect to same endpoint and expect it returns.
 1. Wait for last_config is newer than previous last_config before abort
 1. Wait for last_config is newer than previous last_config after abort
 1. Wait for last_start is newer than previous last_start
+
+Test passed.

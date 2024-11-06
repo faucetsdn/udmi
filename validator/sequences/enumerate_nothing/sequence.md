@@ -15,3 +15,5 @@ Check enumeration of nothing at all
 1. Check that no family enumeration exists
 1. Check that no feature enumeration exists
 1. Check that no point enumeration exists
+
+Test passed.

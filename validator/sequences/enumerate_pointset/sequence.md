@@ -15,3 +15,5 @@ Check enumeration of device points
 1. Check that no family enumeration exists
 1. Check that no feature enumeration exists
 1. Check that enumerated point count matches
+
+Test passed.

@@ -5,3 +5,5 @@
 1. Update config Before target point to have value_state failure
     * Add `pointset.points.filter_alarm_pressure_status.set_value` = `false`
 1. Wait until target point to have value_state failure
+
+Test passed.

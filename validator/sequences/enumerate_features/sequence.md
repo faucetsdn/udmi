@@ -16,3 +16,5 @@ Check enumeration of device features
 1. Check that feature enumeration matches metadata
 1. Check that all enumerated features are official buckets
 1. Check that no point enumeration exists
+
+Test passed.

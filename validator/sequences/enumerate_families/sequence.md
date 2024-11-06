@@ -15,3 +15,5 @@ Check enumeration of network families
 1. Check that family enumeration matches
 1. Check that no feature enumeration exists
 1. Check that no point enumeration exists
+
+Test passed.

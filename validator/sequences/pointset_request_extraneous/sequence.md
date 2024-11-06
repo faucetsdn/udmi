@@ -17,3 +17,5 @@ Check error when pointset configuration contains extraneous point
 1. Wait for pointset state removes extraneous point error
 1. Wait until pointset state matches config
 1. Wait until pointset event contains correct points
+
+Test passed.

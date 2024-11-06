@@ -9,3 +9,5 @@ Check that the device publishes minimum required log entries when receiving conf
 1. Wait until system logs level `DEBUG` category `system.config.receive`
 1. Wait until system logs level `DEBUG` category `system.config.parse`
 1. Wait until system logs level `NOTICE` category `system.config.apply`
+
+Test passed.

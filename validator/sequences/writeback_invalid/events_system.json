@@ -1,51 +1,51 @@
 {
   "event_no" : 5,
-  "last_config" : "2024-11-04T19:28:26Z",
+  "last_config" : "2024-11-06T17:33:49Z",
   "logentries" : [ {
-    "message" : "Update state 2024-11-04T19:28:26Z last_config 2024-11-04T19:28:14Z",
+    "message" : "Update state 2024-11-06T17:33:49Z last_config 2024-11-06T17:33:38Z",
     "category" : "device.log",
-    "timestamp" : "2024-11-04T19:28:26Z",
+    "timestamp" : "2024-11-06T17:33:49Z",
     "level" : 200
   }, {
     "message" : "Device AHU-1 config handler",
     "category" : "device.log",
-    "timestamp" : "2024-11-04T19:28:26Z",
+    "timestamp" : "2024-11-06T17:33:49Z",
     "level" : 200
   }, {
-    "message" : "2024-11-04T19:28:26Z received config 2024-11-04T19:28:26Z",
+    "message" : "2024-11-06T17:33:49Z received config 2024-11-06T17:33:49Z",
     "category" : "device.log",
-    "timestamp" : "2024-11-04T19:28:26Z",
+    "timestamp" : "2024-11-06T17:33:49Z",
     "level" : 200
   }, {
     "message" : "success",
     "category" : "system.config.apply",
-    "timestamp" : "2024-11-04T19:28:26Z",
+    "timestamp" : "2024-11-06T17:33:49Z",
     "level" : 300
   }, {
     "message" : "Device AHU-1 config handler",
     "category" : "device.log",
-    "timestamp" : "2024-11-04T19:28:26Z",
+    "timestamp" : "2024-11-06T17:33:49Z",
     "level" : 200
   }, {
-    "message" : "2024-11-04T19:28:26Z received config 2024-11-04T19:28:26Z",
+    "message" : "2024-11-06T17:33:49Z received config 2024-11-06T17:33:49Z",
     "category" : "device.log",
-    "timestamp" : "2024-11-04T19:28:26Z",
+    "timestamp" : "2024-11-06T17:33:49Z",
     "level" : 200
   }, {
     "message" : "success",
     "category" : "system.config.apply",
-    "timestamp" : "2024-11-04T19:28:26Z",
+    "timestamp" : "2024-11-06T17:33:49Z",
     "level" : 300
   }, {
-    "message" : "Update state 2024-11-04T19:28:28Z last_config 2024-11-04T19:28:26Z",
+    "message" : "Update state 2024-11-06T17:33:51Z last_config 2024-11-06T17:33:49Z",
     "category" : "device.log",
-    "timestamp" : "2024-11-04T19:28:28Z",
+    "timestamp" : "2024-11-06T17:33:51Z",
     "level" : 200
   } ],
   "metrics" : {
     "mem_total_mb" : 254.0,
-    "mem_free_mb" : 212.473876953125
+    "mem_free_mb" : 212.39669799804688
   },
-  "timestamp" : "2024-11-04T19:28:28Z",
+  "timestamp" : "2024-11-06T17:33:51Z",
   "version" : "1.5.2"
 }

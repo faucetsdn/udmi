@@ -13,3 +13,5 @@ Check that a scan scheduled in the past never starts
 1. Wait until scan schedule initially not active
 1. Wait until scan schedule still not active
 1. Check that there were no received discovery events
+
+Test passed.

@@ -9,3 +9,5 @@ Push endpoint config message to device that results in a connection error.
 1. Update config before endpoint config blobset state not defined
     * Remove `blobset.blobs._iot_endpoint_config`
 1. Wait for endpoint config blobset state not defined
+
+Test passed.

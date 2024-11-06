@@ -21,3 +21,5 @@ Check that the device correctly handles an extra out-of-schema field
 1. Wait for system operational
 1. Wait until system logs level `DEBUG` category `system.config.parse`
 1. Wait until system logs level `NOTICE` category `system.config.apply`
+
+Test passed.

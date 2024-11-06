@@ -15,3 +15,5 @@ Check that pointset state does not report an unconfigured point
 1. Wait for pointset state contains restored point
 1. Wait until pointset state matches config
 1. Wait until pointset event contains correct points
+
+Test passed.

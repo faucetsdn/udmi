@@ -3,23 +3,23 @@
     "make" : "BOS",
     "model" : "pubber"
   },
-  "last_config" : "2024-11-04T19:30:00Z",
+  "last_config" : "2024-11-06T17:35:31Z",
   "operation" : {
     "operational" : true,
-    "last_start" : "2024-11-04T19:28:49Z",
+    "last_start" : "2024-11-06T17:34:19Z",
     "restart_count" : 1,
     "mode" : "initial"
   },
-  "serial_no" : "sequencer-3416",
+  "serial_no" : "sequencer-28991",
   "software" : {
     "firmware" : "v1"
   },
   "status" : {
     "message" : "success",
     "category" : "system.config.apply",
-    "timestamp" : "2024-11-04T19:30:00Z",
+    "timestamp" : "2024-11-06T17:35:31Z",
     "level" : 300
   },
-  "timestamp" : "2024-11-04T19:30:02Z",
+  "timestamp" : "2024-11-06T17:35:33Z",
   "version" : "1.5.2"
 }

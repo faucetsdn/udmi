@@ -13,3 +13,5 @@ Check handling of sample_rate_sec and sample_limit_sec
     * Set `pointset.sample_limit_sec` = `15`
 1. Wait for receive at least 4 pointset events
 1. Check that time period between successive pointset events is between 15 and 18 seconds
+
+Test passed.

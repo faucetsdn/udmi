@@ -13,3 +13,5 @@ Check periodic scan on a fixed schedule amd enumeration
 1. Wait for scan iterations
 1. Check that scan did not terminate prematurely
 1. Check that all events have discovered refs
+
+Test passed.

@@ -1,11 +1,11 @@
 {
-  "timestamp" : "2024-11-06T14:16:04Z",
-  "version" : "@@@cloud udmi version###1.5.2",
+  "timestamp" : "2024-11-06T17:32:33Z",
+  "version" : "@@@cloud udmi version###git-b2a557d",
   "system" : {
     "min_loglevel" : 100,
     "metrics_rate_sec" : 10,
     "operation" : {
-      "last_start" : "2024-11-06T14:15:23Z"
+      "last_start" : "2024-11-06T17:31:53Z"
     },
     "testing" : {
       "sequence_name" : "extra_config"

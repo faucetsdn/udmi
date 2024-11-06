@@ -27,14 +27,14 @@
     "metrics_rate_sec" : 10,
     "min_loglevel" : 200,
     "operation" : {
-      "last_start" : "2024-11-04T19:26:26Z"
+      "last_start" : "2024-11-06T17:31:47Z"
     },
     "testing" : {
       "config_base" : 24,
       "sequence_name" : "family_ether_addr",
-      "transaction_id" : "RC:3ea000.00000021"
+      "transaction_id" : "RC:79ded3.00000021"
     }
   },
-  "timestamp" : "2024-11-04T19:27:41Z",
-  "version" : "git-61dd570"
+  "timestamp" : "2024-11-06T17:33:04Z",
+  "version" : "git-b2a557d"
 }

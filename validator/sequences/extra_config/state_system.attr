@@ -1,10 +1,10 @@
 {
   "deviceId" : "AHU-1",
   "deviceNumId" : "123456789101112",
-  "deviceRegistryId" : "faucetsdn~ZZ-TRI-FECTA_9",
-  "projectId" : "bos-platform-dev",
-  "transactionId" : "PS:12884897579254020-0",
-  "publishTime" : "2024-11-06T14:16:05Z",
+  "deviceRegistryId" : "ZZ-TRI-FECTA_9",
+  "projectId" : "localhost",
+  "transactionId" : "MP:4eb57ecb-0",
+  "publishTime" : "2024-11-06T17:32:35Z",
   "subFolder" : "system",
   "subType" : "state"
 }

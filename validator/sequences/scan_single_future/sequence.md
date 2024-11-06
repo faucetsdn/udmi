@@ -20,3 +20,5 @@ Check results of a single scan scheduled soon
 1. Check that all scan addresses are unique
 1. Check that all expected addresses were found
 1. Check that no events have discovered refs
+
+Test passed.
