@@ -94,8 +94,7 @@ public class MqttPublisher implements MessagePublisher {
   private static final int INITIALIZE_TIME_MS = 20000;
   private static final String BROKER_URL_FORMAT = "%s://%s:%s";
   private static final int PUBLISH_THREAD_COUNT = 10;
-  private static final int TOKEN_EXPIRATION_SEC = 60;
-  private static final int TOKEN_EXPIRATION_MS = TOKEN_EXPIRATION_SEC * 1000;
+  private static final Duration TOKEN_EXPIRATION = Duration.ofHours(1);
   private static final String TICKLE_TOPIC = "events/udmi";
   private static final long TICKLE_PERIOD_SEC = 10;
   private static final String REFLECTOR_PUBLIC_KEY = "reflector/rsa_public.pem";
@@ -150,7 +149,7 @@ public class MqttPublisher implements MessagePublisher {
     providerHostname = getProviderHostname(config);
     topicBase = getTopicBase();
     clientId = catchToNull(() -> config.reflector_endpoint.client_id);
-    LOG.info(deviceId + " token expiration sec " + TOKEN_EXPIRATION_SEC);
+    LOG.info(deviceId + " token expiration sec " + TOKEN_EXPIRATION.getSeconds());
     certManager = getCertManager();
     mqttClient = newMqttClient(deviceId);
     mqttClientId = mqttClient.getClientId();
@@ -309,7 +308,8 @@ public class MqttPublisher implements MessagePublisher {
     publishRaw(deviceId, topic, payload, start);
   }
 
-  private synchronized void publishRaw(String deviceId, String topic, String payload, Instant start) {
+  private synchronized void publishRaw(String deviceId, String topic, String payload,
+      Instant start) {
     try {
       publisherQueueSize.decrementAndGet();
       if (!connectWait.tryAcquire(INITIALIZE_TIME_MS, TimeUnit.MILLISECONDS)) {
@@ -499,7 +499,7 @@ public class MqttPublisher implements MessagePublisher {
   }
 
   private synchronized void maybeRefreshJwt() {
-    long refreshTime = mqttTokenSetTimeMs + TOKEN_EXPIRATION_MS / 2;
+    long refreshTime = mqttTokenSetTimeMs + TOKEN_EXPIRATION.toMillis() / 2;
     long currentTimeMillis = System.currentTimeMillis();
     long remaining = refreshTime - currentTimeMillis;
     LOG.debug(deviceId + " remaining until refresh " + remaining);
@@ -606,7 +606,7 @@ public class MqttPublisher implements MessagePublisher {
     JwtBuilder jwtBuilder =
         Jwts.builder()
             .setIssuedAt(now.toDate())
-            .setExpiration(now.plusMillis(TOKEN_EXPIRATION_MS).toDate())
+            .setExpiration(now.plusMillis((int) TOKEN_EXPIRATION.toMillis()).toDate())
             .setAudience(projectId);
 
     LOG.info(format("Creating jwt %s key with audience %s", algorithm, projectId));
