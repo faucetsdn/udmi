@@ -1561,7 +1561,8 @@ public class SequenceBase {
         catcher.accept(e);
         String detail = ifNotNullGet(detailer, Supplier::get);
         // Don't include e in the new exception in order to preserve the detail as base cause.
-        throw ifNotNullGet(detail, message -> new RuntimeException("Because " + message), e);
+        throw ifNotNullGet(detail,
+            message -> new RuntimeException(e.getMessage() + " because " + message), e);
       }
     } catch (Exception e) {
       throw new RuntimeException("While " + description, e);
@@ -2512,7 +2513,8 @@ public class SequenceBase {
         info("Cleaning test output dir " + testDir.getAbsolutePath());
         FileUtils.deleteDirectory(testDir);
         testDir.mkdirs();
-        deviceSystemLog = new PrintWriter(newOutputStream(new File(testDir, DEVICE_SYSTEM_LOG).toPath()));
+        deviceSystemLog = new PrintWriter(
+            newOutputStream(new File(testDir, DEVICE_SYSTEM_LOG).toPath()));
         sequencerLog = new PrintWriter(newOutputStream(new File(testDir, SEQUENCER_LOG).toPath()));
         sequenceMd = new PrintWriter(newOutputStream(new File(testDir, SEQUENCE_MD).toPath()));
 
