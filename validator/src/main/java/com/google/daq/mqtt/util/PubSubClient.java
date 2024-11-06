@@ -338,17 +338,12 @@ public class PubSubClient implements MessagePublisher, MessageHandler {
 
   private String publishDirect(String deviceId, String topic, String data) {
     try {
-      if (deviceId == null) {
-        System.err.printf("Refusing to publish to %s due to unspecified device%n", topic);
-        return null;
-      }
       Envelope envelopedData = makeReflectorMessage(deviceId, topic, null);
       PubsubMessage message = PubsubMessage.newBuilder()
           .setData(ByteString.copyFromUtf8(data))
           .putAllAttributes(toStringMap(envelopedData))
           .build();
-      ApiFuture<String> publish = publisher.publish(message);
-      publish.get(); // Wait for publish to complete.
+      publisher.publish(message);
       System.err.printf("Published to %s/%s/%s%n", registryId, deviceId, topic);
       return null;
     } catch (Exception e) {
@@ -358,10 +353,6 @@ public class PubSubClient implements MessagePublisher, MessageHandler {
 
   private String publishReflector(String deviceId, String topic, String data) {
     try {
-      if (deviceId == null) {
-        System.err.printf("Refusing to publish to %s due to unspecified device%n", topic);
-        return null;
-      }
       Map<String, String> attributesMap = Map.of(
           "projectId", projectId,
           "subFolder", SubFolder.UDMI.toString()
@@ -371,8 +362,7 @@ public class PubSubClient implements MessagePublisher, MessageHandler {
           .setData(ByteString.copyFromUtf8(stringify(envelopedData)))
           .putAllAttributes(attributesMap)
           .build();
-      ApiFuture<String> publish = publisher.publish(message);
-      publish.get(); // Wait for publish to complete.
+      publisher.publish(message);
       System.err.printf("Published to %s/%s/%s%n", registryId, deviceId, topic);
       return null;
     } catch (Exception e) {
