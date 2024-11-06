@@ -713,6 +713,11 @@ public class SequenceBase {
     sequenceMd.flush();
   }
 
+  private void writeSequenceMdFooter(String message) {
+    sequenceMd.printf("%n%s%n", message);
+    sequenceMd.flush();
+  }
+
   private String getTestSummary(Description summary) {
     Summary annotation = summary.getAnnotation(Summary.class);
     return annotation == null ? null : annotation.value();
@@ -1548,7 +1553,9 @@ public class SequenceBase {
       Supplier<String> detailer) {
     final Instant startTime = Instant.now();
 
-    waitingConditionStart(description);
+    String suffix = ofNullable(capabilityName(activeCap.get()))
+        .map(x -> " for capability " + x).orElse("");
+    waitingConditionStart(description + suffix);
 
     try {
       try {
@@ -1635,7 +1642,7 @@ public class SequenceBase {
   protected void recordSequence(String message) {
     if (recordSequence) {
       String capability = ifNotNullGet(activeCap.get(), SequenceBase::capabilityName);
-      String wrapped = ifNotNullGet(capability, c -> format("[%s] ", capability), "");
+      String wrapped = ifNotNullGet(capability, c -> format("_%s_ ", capability), "");
       String line = format("1. %s%s", wrapped, message.trim());
       sequenceMd.println(line);
       sequenceMd.flush();
@@ -2424,9 +2431,8 @@ public class SequenceBase {
     }
   }
 
-  @NotNull
   static String capabilityName(Class<? extends Capability> capability) {
-    return convertToSnakeCase(capability.getSimpleName());
+    return ifNotNullGet(capability, c -> convertToSnakeCase(c.getSimpleName()));
   }
 
   private static String convertToSnakeCase(String camelCase) {
@@ -2579,6 +2585,7 @@ public class SequenceBase {
     @Override
     protected void succeeded(Description description) {
       recordCompletion(PASS, description, "Sequence complete");
+      writeSequenceMdFooter("Test passed.");
     }
 
     @Override
@@ -2616,7 +2623,7 @@ public class SequenceBase {
       trace("ending stack trace", stackTraceString(e));
       recordCompletion(failureType, description, message);
       String action = failureType == SKIP ? "skipped" : "failed";
-      withRecordSequence(true, () -> recordSequence("Test " + action + ": " + message));
+      writeSequenceMdFooter("Test " + action + ": " + message);
       if (failureType != SKIP) {
         resetRequired = true;
         if (debugLogLevel()) {
