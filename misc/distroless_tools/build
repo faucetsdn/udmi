@@ -1,0 +1,15 @@
+#!/bin/bash -e
+set -x
+
+ROOT_DIR=$(realpath $(dirname $(realpath $0)))
+UDMI_DIR=$(realpath $ROOT_DIR/../../)
+NAME=validator
+TAG=latest
+
+docker build  --pull --no-cache -t "$NAME:$TAG" $UDMI_DIR -f $ROOT_DIR/Dockerfile
+
+PUSH_REF=$1
+if [[ -n $PUSH_REF ]]; then
+    docker tag "$NAME:$TAG" "$PUSH_REF/$NAME:$TAG"
+    docker push "$PUSH_REF/$NAME:$TAG"
+fi
