@@ -508,7 +508,7 @@ public class IotReflectorClient implements MessagePublisher {
     return envelope;
   }
 
-  private void errorHandler(Throwable throwable) {
+  protected void errorHandler(Throwable throwable) {
     System.err.printf("Received mqtt client error: %s at %s%n",
         throwable.getMessage(), getTimestamp());
     close();

@@ -26,6 +26,7 @@ import static com.google.udmi.util.Common.getExceptionMessage;
 import static com.google.udmi.util.Common.getNamespacePrefix;
 import static com.google.udmi.util.Common.removeNextArg;
 import static com.google.udmi.util.GeneralUtils.friendlyStackTrace;
+import static com.google.udmi.util.GeneralUtils.getTimestamp;
 import static com.google.udmi.util.GeneralUtils.ifNotNullGet;
 import static com.google.udmi.util.GeneralUtils.ifNotNullThen;
 import static com.google.udmi.util.GeneralUtils.ifNotNullThrow;
@@ -101,6 +102,7 @@ import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.BiConsumer;
+import java.util.function.Function;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
@@ -552,10 +554,24 @@ public class Validator {
     String keyFile = new File(config.site_model, GCP_REFLECT_KEY_PKCS8).getAbsolutePath();
     outputLogger.info("Loading reflector key file from " + keyFile);
     config.key_file = keyFile;
-    client = new IotReflectorClient(config, TOOLS_FUNCTIONS_VERSION, VALIDATOR_TOOL_NAME,
+    client = new ValidatorIotReflectorClient(config, TOOLS_FUNCTIONS_VERSION, VALIDATOR_TOOL_NAME,
         this::messageFilter);
     dataSinks.add(client);
     client.activate();
+  }
+
+  private static class ValidatorIotReflectorClient extends IotReflectorClient {
+
+    public ValidatorIotReflectorClient(ExecutionConfiguration iotConfig, int requiredVersion,
+        String toolName, Function<Envelope, Boolean> messageFilter) {
+      super(iotConfig, requiredVersion, toolName, messageFilter);
+    }
+
+    @Override
+    protected void errorHandler(Throwable throwable) {
+      System.err.printf("Suppressing mqtt client error: %s at %s%n",
+          throwable.getMessage(), getTimestamp());
+    }
   }
 
   private boolean messageFilter(Envelope envelope) {
