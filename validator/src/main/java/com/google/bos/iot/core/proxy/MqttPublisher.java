@@ -11,9 +11,11 @@ import static com.google.udmi.util.GeneralUtils.ifNotNullThen;
 import static com.google.udmi.util.GeneralUtils.ifNotNullThrow;
 import static com.google.udmi.util.GeneralUtils.ifTrueGet;
 import static com.google.udmi.util.GeneralUtils.sha256;
+import static com.google.udmi.util.JsonUtil.isoConvert;
 import static com.google.udmi.util.SiteModel.DEFAULT_CLEARBLADE_HOSTNAME;
 import static com.google.udmi.util.SiteModel.DEFAULT_GBOS_HOSTNAME;
 import static java.lang.String.format;
+import static java.lang.Thread.currentThread;
 import static java.util.Objects.requireNonNull;
 import static java.util.Optional.ofNullable;
 
@@ -24,6 +26,7 @@ import com.google.daq.mqtt.util.PublishPriority;
 import com.google.daq.mqtt.validator.Validator;
 import com.google.udmi.util.CertManager;
 import com.google.udmi.util.GeneralUtils;
+import com.google.udmi.util.JsonUtil;
 import com.google.udmi.util.SiteModel;
 import io.jsonwebtoken.JwtBuilder;
 import io.jsonwebtoken.Jwts;
@@ -94,7 +97,7 @@ public class MqttPublisher implements MessagePublisher {
   private static final int INITIALIZE_TIME_MS = 20000;
   private static final String BROKER_URL_FORMAT = "%s://%s:%s";
   private static final int PUBLISH_THREAD_COUNT = 10;
-  private static final Duration TOKEN_EXPIRATION = Duration.ofHours(1);
+  private static final Duration TOKEN_EXPIRATION = Duration.ofMinutes(1);
   private static final String TICKLE_TOPIC = "events/udmi";
   private static final long TICKLE_PERIOD_SEC = 10;
   private static final String REFLECTOR_PUBLIC_KEY = "reflector/rsa_public.pem";
@@ -275,7 +278,8 @@ public class MqttPublisher implements MessagePublisher {
     LOG.debug(this.deviceId + " publishing in background " + registryId + "/" + deviceId);
     try {
       if (shutdown) {
-        LOG.error("Publishing to shutdown connection");
+        LOG.error("Suppressing publish to shutdown connection");
+        return null;
       }
       Instant now = Instant.now();
       Runnable runnable = () -> publishCore(deviceId, topic, data, now, priority);
@@ -319,6 +323,7 @@ public class MqttPublisher implements MessagePublisher {
       throw new RuntimeException("Error acquiring lock", e);
     }
     try {
+      System.err.printf("PublishRaw start %s %s%n", isoConvert(), currentThread().getName());
       if (!mqttClient.isConnected()) {
         throw new RuntimeException("MQTT Client not connected");
       }
@@ -339,6 +344,7 @@ public class MqttPublisher implements MessagePublisher {
       throw new RuntimeException(format("Publish failed for %s: %s", deviceId, e), e);
     } finally {
       connectWait.release();
+      System.err.printf("PublishRaw finsh %s %s%n", isoConvert(), currentThread().getName());
     }
     long seconds = Duration.between(start, Instant.now()).getSeconds();
     LOG.debug(format("Publishing mqtt message took %ss", seconds));
