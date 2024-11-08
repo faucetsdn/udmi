@@ -11,11 +11,13 @@ import static com.google.udmi.util.GeneralUtils.ifNotNullThen;
 import static com.google.udmi.util.GeneralUtils.ifNotNullThrow;
 import static com.google.udmi.util.GeneralUtils.ifTrueGet;
 import static com.google.udmi.util.GeneralUtils.sha256;
+import static com.google.udmi.util.JsonUtil.getNowInstant;
 import static com.google.udmi.util.SiteModel.DEFAULT_CLEARBLADE_HOSTNAME;
 import static com.google.udmi.util.SiteModel.DEFAULT_GBOS_HOSTNAME;
 import static java.lang.String.format;
 import static java.util.Objects.requireNonNull;
 import static java.util.Optional.ofNullable;
+import static java.util.concurrent.Executors.newFixedThreadPool;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSet;
@@ -46,8 +48,8 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.ConcurrentSkipListSet;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 import java.util.concurrent.ScheduledFuture;
-import java.util.concurrent.Semaphore;
 import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -96,17 +98,16 @@ public class MqttPublisher implements MessagePublisher {
   private static final int INITIALIZE_TIME_MS = 20000;
   private static final String BROKER_URL_FORMAT = "%s://%s:%s";
   private static final int PUBLISH_THREAD_COUNT = 10;
-  private static final Duration TOKEN_EXPIRATION = Duration.ofHours(1);
+  private static final Duration TOKEN_EXPIRATION = Duration.ofMinutes(1);
   private static final String TICKLE_TOPIC = "events/udmi";
   private static final long TICKLE_PERIOD_SEC = 10;
   private static final String REFLECTOR_PUBLIC_KEY = "reflector/rsa_public.pem";
   private static final int HASH_PASSWORD_LENGTH = 8;
   private static final String UNUSED_ACCOUNT_NAME = "unused";
   private static final String MQTT_USER_NAME_FMT = "/r/%s/d/%s";
-  private final ExecutorService publisherExecutor =
-      Executors.newFixedThreadPool(PUBLISH_THREAD_COUNT);
+  private final ExecutorService publisherExecutor = newFixedThreadPool(PUBLISH_THREAD_COUNT);
+  private final ExecutorService reapExecutor = newFixedThreadPool(PUBLISH_THREAD_COUNT * 2);
   private final Queue<Runnable> priorityQueue = new ConcurrentLinkedQueue<>();
-  private final Semaphore connectWait = new Semaphore(0);
   private final Map<String, Long> lastStateTime = Maps.newConcurrentMap();
   private final MqttClient mqttClient;
   private final Set<String> attachedClients = new ConcurrentSkipListSet<>();
@@ -282,18 +283,30 @@ public class MqttPublisher implements MessagePublisher {
       }
       Instant now = Instant.now();
       Runnable publishMessage = () -> publishCore(deviceId, topic, data, now, priority);
-      int queueSize = messageQueueSize.incrementAndGet();
       queueStats.timeSample();
-      if (priority == PublishPriority.HIGH && queueSize > 1) {
+      final Future<?> submitted;
+      if (priority == PublishPriority.HIGH) {
         priorityQueue.add(publishMessage);
-        publisherExecutor.submit(this::processPriorityQueue);
+        submitted = publisherExecutor.submit(this::processPriorityQueue);
       } else {
-        publisherExecutor.submit(publishMessage);
+        submitted = publisherExecutor.submit(publishMessage);
       }
+      messageQueueSize.incrementAndGet();
+      reapExecutor.submit(() -> reapExecutor(submitted, deviceId, topic));
     } catch (Exception e) {
       throw new RuntimeException("While publishing message", e);
     }
     return null;
+  }
+
+  private void reapExecutor(Future<?> submitted, String deviceId, String topic) {
+    try {
+      submitted.get();
+    } catch (Exception e) {
+      LOG.error(format("Exception processing %s/%s: %s", deviceId, topic, e.getMessage()));
+    } finally {
+      messageQueueSize.decrementAndGet();
+    }
   }
 
   private void processPriorityQueue() {
@@ -316,11 +329,7 @@ public class MqttPublisher implements MessagePublisher {
   private synchronized void publishRaw(String deviceId, String topic, String payload,
       Instant start) {
     try {
-      messageQueueSize.decrementAndGet();
       sendStats.timeSample();
-      if (!connectWait.tryAcquire(INITIALIZE_TIME_MS, TimeUnit.MILLISECONDS)) {
-        throw new RuntimeException("Timeout waiting for connection");
-      }
     } catch (Exception e) {
       throw new RuntimeException("Error acquiring lock", e);
     }
@@ -342,8 +351,6 @@ public class MqttPublisher implements MessagePublisher {
       LOG.debug(this.deviceId + " publishing complete " + registryId + "/" + deviceId);
     } catch (Exception e) {
       throw new RuntimeException(format("Publish failed for %s: %s", deviceId, e), e);
-    } finally {
-      connectWait.release();
     }
     long seconds = Duration.between(start, Instant.now()).getSeconds();
     LOG.debug(format("Publishing mqtt message took %ss", seconds));
@@ -383,7 +390,7 @@ public class MqttPublisher implements MessagePublisher {
         LOG.error("Executor tasks still remaining");
       }
       if (mqttClient.isConnected()) {
-        mqttClient.disconnect();
+        disconnectMqtt();
       }
       mqttClient.close();
     } catch (Exception e) {
@@ -449,7 +456,6 @@ public class MqttPublisher implements MessagePublisher {
       mqttConnectOptions.setUserName(getUserName());
       mqttConnectOptions.setMaxInflight(PUBLISH_THREAD_COUNT * 2);
       connectAndSetupMqtt();
-      connectWait.release();
     } catch (Exception e) {
       throw new RuntimeException("Connecting MQTT client " + deviceId, e);
     }
@@ -501,21 +507,35 @@ public class MqttPublisher implements MessagePublisher {
   }
 
   private synchronized void maybeRefreshJwt() {
-    long refreshTime = mqttTokenSetTimeMs + TOKEN_EXPIRATION.toMillis() / 2;
+    long refreshTargetMs = mqttTokenSetTimeMs + TOKEN_EXPIRATION.toMillis() / 2;
     long currentTimeMillis = System.currentTimeMillis();
-    long remaining = refreshTime - currentTimeMillis;
-    LOG.debug(deviceId + " remaining until refresh " + remaining);
+    long remaining = refreshTargetMs - currentTimeMillis;
+    LOG.debug(format("Token refresh in %ss", Duration.ofMillis(remaining).toSeconds()));
     if (remaining < 0 && mqttClient.isConnected()) {
+      Instant refreshStart = getNowInstant();
       try {
-        LOG.info(deviceId + " handling token refresh");
-        mqttClient.disconnect();
-        long disconnectTime = System.currentTimeMillis() - currentTimeMillis;
-        LOG.debug(deviceId + " disconnect took " + disconnectTime);
+        LOG.info("Token refresh start");
+        disconnectMqtt();
+        LOG.info(format("Token refresh disconnect took %ss",
+            Duration.between(refreshStart, getNowInstant()).toSeconds()));
         connectAndSetupMqtt();
         resendState();
       } catch (Exception e) {
         throw new RuntimeException("While processing disconnect", e);
+      } finally {
+        LOG.info(format("Token refresh completion took %ss",
+            Duration.between(refreshStart, getNowInstant()).toSeconds()));
       }
+    }
+  }
+
+  private void disconnectMqtt() throws MqttException {
+    long quiesceTimeout = TOKEN_EXPIRATION.toMillis() / 8;
+    try {
+      mqttClient.disconnect(quiesceTimeout);
+    } catch (Exception e) {
+      LOG.error("Graceful disconnect failed, forcing disconnect: " + e.getMessage());
+      mqttClient.disconnectForcibly(quiesceTimeout);
     }
   }
 
@@ -643,7 +663,6 @@ public class MqttPublisher implements MessagePublisher {
     @Override
     public void connectionLost(Throwable cause) {
       LOG.warn("MQTT connection lost " + deviceId, cause);
-      connectWait.release();
       onError.accept(cause);
     }
 
