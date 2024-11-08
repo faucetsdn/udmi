@@ -10,7 +10,8 @@ import java.time.Instant;
  */
 public class TimeStatistics {
 
-  private static final double DEFAULT_ALPHA = 0.5;
+  private static final double DEFAULT_ALPHA = 0.8;
+  private static final double DEFAULT_VALUE = 1.0;
   private final double alpha;
   private Instant previous;
   private double running = Double.NaN;
@@ -23,22 +24,36 @@ public class TimeStatistics {
    * Trigger a time-based sample (so delta from previous time sample).
    */
   public void timeSample() {
+    timeSample(DEFAULT_VALUE);
+  }
+
+  /**
+   * Record a time-interval sample with the given impulse.
+   */
+  public void timeSample(double value) {
     Instant currentTimestamp = Instant.now();
     try {
       if (previous == null) {
+        running = value;
         return;
       }
-      sample(between(previous, currentTimestamp).toMillis());
+      sample(value, between(previous, currentTimestamp).toMillis() / 1000.0);
     } finally {
       previous = currentTimestamp;
     }
+  }
+
+  public void update() {
+    timeSample(0);
   }
 
   public double get() {
     return running;
   }
 
-  public void sample(double value) {
-    running = isNaN(running) ? value : (alpha * value + (1 - alpha) * running);
+  public void sample(double value, double deltaSec) {
+    double decay = Math.pow(alpha, deltaSec);
+    running = isNaN(running) ? value : (running * decay + value * (1.0 - alpha));
   }
+
 }

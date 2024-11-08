@@ -35,6 +35,7 @@ import static com.google.udmi.util.PubSubReflector.USER_NAME_DEFAULT;
 import static java.lang.String.format;
 import static java.util.Objects.requireNonNull;
 import static java.util.Optional.ofNullable;
+import static java.util.concurrent.Executors.newSingleThreadScheduledExecutor;
 
 import com.google.api.client.util.Base64;
 import com.google.common.base.Preconditions;
@@ -106,7 +107,7 @@ public class IotReflectorClient implements MessagePublisher {
   private final String udmiVersion;
   private final CountDownLatch initialConfigReceived = new CountDownLatch(1);
   private final CountDownLatch initializedStateSent = new CountDownLatch(1);
-  private final ScheduledExecutorService syncThread = Executors.newSingleThreadScheduledExecutor();
+  private final ScheduledExecutorService tickExecutor = newSingleThreadScheduledExecutor();
   private final int requiredVersion;
   private final BlockingQueue<Validator.MessageBundle> messages = new LinkedBlockingQueue<>();
   private final MessagePublisher publisher;
@@ -129,7 +130,9 @@ public class IotReflectorClient implements MessagePublisher {
   private Instant txnStartTime;
   private final TimeStatistics publishStats = new TimeStatistics();
   private final TimeStatistics receiveStats = new TimeStatistics();
-  private final Map<String, TimeStatistics> samplers = ImmutableMap.of();
+  private final Map<String, TimeStatistics> samplers = ImmutableMap.of(
+      "publish rate", publishStats,
+      "receive rate", receiveStats);
 
   /**
    * Create a new reflector instance.
@@ -212,6 +215,14 @@ public class IotReflectorClient implements MessagePublisher {
    */
   public static String getNextTransactionId() {
     return format("%s%08x", sessionPrefix, sessionCounter.incrementAndGet());
+  }
+
+  private void timerTick() {
+    samplers.forEach((key, value) -> {
+      value.update();
+      info(format("Message %s is %.2f m/s", key, value.get()));
+    });
+    setReflectorState();
   }
 
   private synchronized void setReflectorState() {
@@ -558,7 +569,7 @@ public class IotReflectorClient implements MessagePublisher {
         }
       }
 
-      syncThread.scheduleAtFixedRate(this::setReflectorState, RESYNC_INTERVAL_SEC,
+      tickExecutor.scheduleAtFixedRate(this::timerTick, RESYNC_INTERVAL_SEC,
           RESYNC_INTERVAL_SEC, TimeUnit.SECONDS);
 
       System.err.println("Subscribed to " + subscriptionId);
@@ -607,7 +618,7 @@ public class IotReflectorClient implements MessagePublisher {
   @Override
   public void close() {
     active = false;
-    syncThread.shutdown();
+    tickExecutor.shutdown();
     ifTrueThen(pubCounts.get(publisher).decrementAndGet() == 0, publisher::close);
   }
 

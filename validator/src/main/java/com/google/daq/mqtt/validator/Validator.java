@@ -699,8 +699,11 @@ public class Validator {
     ReportingDevice device = reportingDevices.computeIfAbsent(deviceId, this::newReportingDevice);
     device.clearMessageEntries();
 
+    String schemaName = messageSchema(attributes);
+    String messageTag = format("device %d/%d for %s/%s", processedDevices.size(),
+        reportingDevices.size(), deviceId, schemaName);
+
     try {
-      String schemaName = messageSchema(attributes);
       boolean isString = messageObj instanceof String;
 
       Map<String, Object> message = isString ? null : mapCast(messageObj);
@@ -733,9 +736,6 @@ public class Validator {
         return device;
       }
 
-      outputLogger.info("Processing device %s/%s as #%d/%d", deviceId, schemaName,
-          processedDevices.size(), reportingDevices.size());
-
       if ("true".equals(attributes.get("wasBase64"))) {
         base64Devices.add(deviceId);
       }
@@ -746,10 +746,12 @@ public class Validator {
       validateDeviceMessage(device, message, attributes);
 
       if (!device.hasErrors()) {
-        outputLogger.info("Validation clean %s/%s", deviceId, schemaName);
+        outputLogger.info("Validation clean %s", messageTag);
+      } else {
+        outputLogger.info("Validation error %s", messageTag);
       }
     } catch (Exception e) {
-      outputLogger.error("Error processing %s: %s", deviceId, friendlyStackTrace(e));
+      outputLogger.error("Validation exception %s: %s", messageTag, friendlyStackTrace(e));
       device.addError(e, attributes, Category.VALIDATION_DEVICE_RECEIVE);
     }
     return device;

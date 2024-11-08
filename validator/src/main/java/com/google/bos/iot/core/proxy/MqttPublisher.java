@@ -97,7 +97,7 @@ public class MqttPublisher implements MessagePublisher {
   private static final int INITIALIZE_TIME_MS = 20000;
   private static final String BROKER_URL_FORMAT = "%s://%s:%s";
   private static final int PUBLISH_THREAD_COUNT = 10;
-  private static final Duration TOKEN_EXPIRATION = Duration.ofMinutes(1);
+  private static final Duration TOKEN_EXPIRATION = Duration.ofHours(1);
   private static final String TICKLE_TOPIC = "events/udmi";
   private static final long TICKLE_PERIOD_SEC = 10;
   private static final String REFLECTOR_PUBLIC_KEY = "reflector/rsa_public.pem";
@@ -323,7 +323,6 @@ public class MqttPublisher implements MessagePublisher {
       throw new RuntimeException("Error acquiring lock", e);
     }
     try {
-      System.err.printf("PublishRaw start %s %s%n", isoConvert(), currentThread().getName());
       if (!mqttClient.isConnected()) {
         throw new RuntimeException("MQTT Client not connected");
       }
@@ -344,7 +343,6 @@ public class MqttPublisher implements MessagePublisher {
       throw new RuntimeException(format("Publish failed for %s: %s", deviceId, e), e);
     } finally {
       connectWait.release();
-      System.err.printf("PublishRaw finsh %s %s%n", isoConvert(), currentThread().getName());
     }
     long seconds = Duration.between(start, Instant.now()).getSeconds();
     LOG.debug(format("Publishing mqtt message took %ss", seconds));
