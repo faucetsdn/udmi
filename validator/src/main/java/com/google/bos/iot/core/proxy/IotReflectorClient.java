@@ -218,10 +218,7 @@ public class IotReflectorClient implements MessagePublisher {
   }
 
   private void timerTick() {
-    samplers.forEach((key, value) -> {
-      value.update();
-      info(format("Message %s is %.2f m/s", key, value.get()));
-    });
+    samplers.forEach((key, value) -> info(format("Message %s is %.2f m/s", key, value.timeGet())));
     setReflectorState();
   }
 

@@ -304,8 +304,7 @@ public class MqttPublisher implements MessagePublisher {
       LOG.debug(format("Publishing HIGH priority override after %ss", Duration.between(start,
           GeneralUtils.instantNow()).toSeconds()));
     } else {
-      Runnable queued = priorityQueue.poll();
-      if (queued != null) {
+      for (Runnable queued = priorityQueue.poll(); queued != null; queued = priorityQueue.poll()) {
         queued.run();
       }
     }

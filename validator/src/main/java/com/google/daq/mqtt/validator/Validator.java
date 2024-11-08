@@ -66,6 +66,7 @@ import com.google.daq.mqtt.util.FileDataSink;
 import com.google.daq.mqtt.util.MessagePublisher;
 import com.google.daq.mqtt.util.MessagePublisher.QuerySpeed;
 import com.google.daq.mqtt.util.PubSubClient;
+import com.google.daq.mqtt.util.TimeStatistics;
 import com.google.daq.mqtt.util.ValidationException;
 import com.google.udmi.util.Common;
 import com.google.udmi.util.GeneralUtils;
@@ -192,6 +193,7 @@ public class Validator {
   private final Map<String, AtomicInteger> deviceMessageIndex = new HashMap<>();
   private final List<MessagePublisher> dataSinks = new ArrayList<>();
   private final Set<String> summaryDevices = new HashSet<>();
+  private final TimeStatistics validationStats = new TimeStatistics();
   private Set<String> targetDevices;
   private final LoggingHandler outputLogger;
   private ImmutableSet<String> expectedDevices;
@@ -745,6 +747,8 @@ public class Validator {
       }
       validateDeviceMessage(device, message, attributes);
 
+      validationStats.timeSample();
+
       if (!device.hasErrors()) {
         outputLogger.info("Validation clean %s", messageTag);
       } else {
@@ -994,6 +998,7 @@ public class Validator {
 
   private synchronized void processValidationReport() {
     try {
+      System.err.printf("Message valdatn rate is %.2f m/s%n", validationStats.timeGet());
       processValidationReportRaw();
     } catch (Exception e) {
       e.printStackTrace();

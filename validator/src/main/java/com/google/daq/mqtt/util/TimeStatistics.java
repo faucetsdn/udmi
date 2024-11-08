@@ -1,5 +1,6 @@
 package com.google.daq.mqtt.util;
 
+import static java.lang.Double.NaN;
 import static java.lang.Double.isNaN;
 import static java.time.Duration.between;
 
@@ -56,4 +57,12 @@ public class TimeStatistics {
     running = isNaN(running) ? value : (running * decay + value * (1.0 - alpha));
   }
 
+  public double timeGet() {
+    // If not yet initialized, then don't update which would default initialize to 0.
+    if (previous == null) {
+      return NaN;
+    }
+    update();
+    return get();
+  }
 }
