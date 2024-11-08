@@ -193,7 +193,7 @@ public class Validator {
   private final Map<String, AtomicInteger> deviceMessageIndex = new HashMap<>();
   private final List<MessagePublisher> dataSinks = new ArrayList<>();
   private final Set<String> summaryDevices = new HashSet<>();
-  private final TimeStatistics validationStats = new TimeStatistics();
+  private final TimeStatistics validationStats = new TimeStatistics("Message validate");
   private Set<String> targetDevices;
   private final LoggingHandler outputLogger;
   private ImmutableSet<String> expectedDevices;
@@ -998,7 +998,7 @@ public class Validator {
 
   private synchronized void processValidationReport() {
     try {
-      System.err.printf("Message valdatn rate is %.2f m/s%n", validationStats.timeGet());
+      System.err.println(validationStats.getMessage());
       processValidationReportRaw();
     } catch (Exception e) {
       e.printStackTrace();

@@ -13,7 +13,7 @@ public class TimeStatisticsTest {
 
   @Test
   public void sampleTest() {
-    TimeStatistics timeStatistics = new TimeStatistics();
+    TimeStatistics timeStatistics = new TimeStatistics("Message test");
     timeStatistics.sample(1, 1);
     assertEquals("initial result", 1.0, timeStatistics.get(), ASSERT_DELTA);
     timeStatistics.sample(1, 1);

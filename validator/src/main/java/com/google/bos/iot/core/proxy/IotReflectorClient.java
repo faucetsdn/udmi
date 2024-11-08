@@ -39,7 +39,6 @@ import static java.util.concurrent.Executors.newSingleThreadScheduledExecutor;
 
 import com.google.api.client.util.Base64;
 import com.google.common.base.Preconditions;
-import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.daq.mqtt.util.MessagePublisher;
 import com.google.daq.mqtt.util.TimeStatistics;
@@ -57,11 +56,11 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.TreeMap;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.Executors;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
@@ -128,11 +127,9 @@ public class IotReflectorClient implements MessagePublisher {
   private int retries;
   private String expectedTxnId;
   private Instant txnStartTime;
-  private final TimeStatistics publishStats = new TimeStatistics();
-  private final TimeStatistics receiveStats = new TimeStatistics();
-  private final Map<String, TimeStatistics> samplers = ImmutableMap.of(
-      "publish rate", publishStats,
-      "receive rate", receiveStats);
+  private final TimeStatistics publishStats = new TimeStatistics("Message publish");
+  private final TimeStatistics receiveStats = new TimeStatistics("Message receive");
+  private final Set<TimeStatistics> samplers = ImmutableSet.of(publishStats, receiveStats);
 
   /**
    * Create a new reflector instance.
@@ -218,7 +215,7 @@ public class IotReflectorClient implements MessagePublisher {
   }
 
   private void timerTick() {
-    samplers.forEach((key, value) -> info(format("Message %s is %.2f m/s", key, value.timeGet())));
+    samplers.forEach(value -> info(value.getMessage()));
     setReflectorState();
   }
 

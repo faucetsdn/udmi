@@ -2,8 +2,10 @@ package com.google.daq.mqtt.util;
 
 import static java.lang.Double.NaN;
 import static java.lang.Double.isNaN;
+import static java.lang.String.format;
 import static java.time.Duration.between;
 
+import java.io.PrintStream;
 import java.time.Instant;
 
 /**
@@ -14,11 +16,13 @@ public class TimeStatistics {
   private static final double DEFAULT_ALPHA = 0.8;
   private static final double DEFAULT_VALUE = 1.0;
   private final double alpha;
+  private final String name;
   private Instant previous;
   private double running = Double.NaN;
 
-  public TimeStatistics() {
+  public TimeStatistics(String name) {
     this.alpha = DEFAULT_ALPHA;
+    this.name = name;
   }
 
   /**
@@ -28,10 +32,19 @@ public class TimeStatistics {
     timeSample(DEFAULT_VALUE);
   }
 
+  public String getName() {
+    return name;
+  }
+
+  public String getMessage() {
+    return format("%s rate is %.2f/s", getName(), timeGet());
+  }
+
+
   /**
    * Record a time-interval sample with the given impulse.
    */
-  public void timeSample(double value) {
+  public synchronized void timeSample(double value) {
     Instant currentTimestamp = Instant.now();
     try {
       if (previous == null) {
@@ -52,7 +65,7 @@ public class TimeStatistics {
     return running;
   }
 
-  public void sample(double value, double deltaSec) {
+  public synchronized void sample(double value, double deltaSec) {
     double decay = Math.pow(alpha, deltaSec);
     running = isNaN(running) ? value : (running * decay + value * (1.0 - alpha));
   }

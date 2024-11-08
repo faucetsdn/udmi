@@ -11,22 +11,21 @@ import static com.google.udmi.util.GeneralUtils.ifNotNullThen;
 import static com.google.udmi.util.GeneralUtils.ifNotNullThrow;
 import static com.google.udmi.util.GeneralUtils.ifTrueGet;
 import static com.google.udmi.util.GeneralUtils.sha256;
-import static com.google.udmi.util.JsonUtil.isoConvert;
 import static com.google.udmi.util.SiteModel.DEFAULT_CLEARBLADE_HOSTNAME;
 import static com.google.udmi.util.SiteModel.DEFAULT_GBOS_HOSTNAME;
 import static java.lang.String.format;
-import static java.lang.Thread.currentThread;
 import static java.util.Objects.requireNonNull;
 import static java.util.Optional.ofNullable;
 
 import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Maps;
 import com.google.daq.mqtt.util.MessagePublisher;
 import com.google.daq.mqtt.util.PublishPriority;
+import com.google.daq.mqtt.util.TimeStatistics;
 import com.google.daq.mqtt.validator.Validator;
 import com.google.udmi.util.CertManager;
 import com.google.udmi.util.GeneralUtils;
-import com.google.udmi.util.JsonUtil;
 import com.google.udmi.util.SiteModel;
 import io.jsonwebtoken.JwtBuilder;
 import io.jsonwebtoken.Jwts;
@@ -104,13 +103,10 @@ public class MqttPublisher implements MessagePublisher {
   private static final int HASH_PASSWORD_LENGTH = 8;
   private static final String UNUSED_ACCOUNT_NAME = "unused";
   private static final String MQTT_USER_NAME_FMT = "/r/%s/d/%s";
-  private static final int PUBLISH_LOG_MOD = 100;
   private final ExecutorService publisherExecutor =
       Executors.newFixedThreadPool(PUBLISH_THREAD_COUNT);
   private final Queue<Runnable> priorityQueue = new ConcurrentLinkedQueue<>();
   private final Semaphore connectWait = new Semaphore(0);
-  private final AtomicInteger publishCounter = new AtomicInteger(0);
-  private final AtomicInteger errorCounter = new AtomicInteger(0);
   private final Map<String, Long> lastStateTime = Maps.newConcurrentMap();
   private final MqttClient mqttClient;
   private final Set<String> attachedClients = new ConcurrentSkipListSet<>();
@@ -130,9 +126,11 @@ public class MqttPublisher implements MessagePublisher {
   private final String topicBase;
   private final CertManager certManager;
   private final Envelope savedState = new Envelope();
-  private final AtomicInteger publisherQueueSize = new AtomicInteger();
-  private final AtomicInteger publishCount = new AtomicInteger();
+  private final AtomicInteger messageQueueSize = new AtomicInteger();
   private final String mqttClientId;
+  private final TimeStatistics queueStats = new TimeStatistics("Message queue");
+  private final TimeStatistics sendStats = new TimeStatistics("Message send");
+  private final Set<TimeStatistics> samplers = ImmutableSet.of(queueStats, sendStats);
   private long mqttTokenSetTimeMs;
   private MqttConnectOptions mqttConnectOptions;
   private boolean shutdown;
@@ -254,7 +252,8 @@ public class MqttPublisher implements MessagePublisher {
   }
 
   private void tickleConnection() {
-    LOG.debug("Tickle " + mqttClientId);
+    samplers.forEach(value -> LOG.info(value.getMessage()));
+    LOG.info("Message queue size now " + messageQueueSize.get());
     if (shutdown) {
       try {
         LOG.info("Tickler closing connection due to shutdown request");
@@ -282,20 +281,25 @@ public class MqttPublisher implements MessagePublisher {
         return null;
       }
       Instant now = Instant.now();
-      Runnable runnable = () -> publishCore(deviceId, topic, data, now, priority);
-      int queueSize = publisherQueueSize.incrementAndGet();
+      Runnable publishMessage = () -> publishCore(deviceId, topic, data, now, priority);
+      int queueSize = messageQueueSize.incrementAndGet();
+      queueStats.timeSample();
       if (priority == PublishPriority.HIGH && queueSize > 1) {
-        priorityQueue.add(runnable);
+        priorityQueue.add(publishMessage);
+        publisherExecutor.submit(this::processPriorityQueue);
       } else {
-        publisherExecutor.submit(runnable);
-      }
-      if (publishCount.incrementAndGet() % PUBLISH_LOG_MOD == 0) {
-        LOG.info("Publisher queue size now " + queueSize);
+        publisherExecutor.submit(publishMessage);
       }
     } catch (Exception e) {
       throw new RuntimeException("While publishing message", e);
     }
     return null;
+  }
+
+  private void processPriorityQueue() {
+    for (Runnable queued = priorityQueue.poll(); queued != null; queued = priorityQueue.poll()) {
+      queued.run();
+    }
   }
 
   private synchronized void publishCore(String deviceId, String topic, String payload,
@@ -304,9 +308,7 @@ public class MqttPublisher implements MessagePublisher {
       LOG.debug(format("Publishing HIGH priority override after %ss", Duration.between(start,
           GeneralUtils.instantNow()).toSeconds()));
     } else {
-      for (Runnable queued = priorityQueue.poll(); queued != null; queued = priorityQueue.poll()) {
-        queued.run();
-      }
+      processPriorityQueue();
     }
     publishRaw(deviceId, topic, payload, start);
   }
@@ -314,7 +316,8 @@ public class MqttPublisher implements MessagePublisher {
   private synchronized void publishRaw(String deviceId, String topic, String payload,
       Instant start) {
     try {
-      publisherQueueSize.decrementAndGet();
+      messageQueueSize.decrementAndGet();
+      sendStats.timeSample();
       if (!connectWait.tryAcquire(INITIALIZE_TIME_MS, TimeUnit.MILLISECONDS)) {
         throw new RuntimeException("Timeout waiting for connection");
       }
@@ -338,7 +341,6 @@ public class MqttPublisher implements MessagePublisher {
       sendMessage(getMessageTopic(deviceId, topic), payload.getBytes());
       LOG.debug(this.deviceId + " publishing complete " + registryId + "/" + deviceId);
     } catch (Exception e) {
-      errorCounter.incrementAndGet();
       throw new RuntimeException(format("Publish failed for %s: %s", deviceId, e), e);
     } finally {
       connectWait.release();
@@ -369,7 +371,6 @@ public class MqttPublisher implements MessagePublisher {
   private synchronized void sendMessage(String mqttTopic, byte[] mqttMessage) throws Exception {
     LOG.debug(deviceId + " sending message to " + mqttTopic);
     mqttClient.publish(mqttTopic, mqttMessage, QOS_AT_LEAST_ONCE, MQTT_NO_RETAIN);
-    publishCounter.incrementAndGet();
   }
 
   @Override
@@ -429,7 +430,6 @@ public class MqttPublisher implements MessagePublisher {
       LOG.info(this.deviceId + " creating client " + clientId + " on " + brokerUrl);
       return mqttClient;
     } catch (Exception e) {
-      errorCounter.incrementAndGet();
       throw new RuntimeException("Creating new MQTT client " + deviceId, e);
     }
   }
@@ -451,7 +451,6 @@ public class MqttPublisher implements MessagePublisher {
       connectAndSetupMqtt();
       connectWait.release();
     } catch (Exception e) {
-      errorCounter.incrementAndGet();
       throw new RuntimeException("Connecting MQTT client " + deviceId, e);
     }
   }
