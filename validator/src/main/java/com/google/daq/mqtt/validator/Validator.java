@@ -853,7 +853,7 @@ public class Validator {
         }
       }
     } catch (Exception e) {
-      outputLogger.error(format("Timestamp validation error for %s: %s", device.getDeviceId(),
+      outputLogger.debug(format("Timestamp validation error for %s: %s", device.getDeviceId(),
           friendlyStackTrace(e)));
       device.addError(e, attributes, Category.VALIDATION_DEVICE_CONTENT);
     }

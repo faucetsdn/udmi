@@ -19,7 +19,7 @@ class LoggingHandler {
   }
 
   private static void systemLogger(Level level, String message) {
-    if (level.value() >= Level.DEBUG.value()) {
+    if (level.value() >= Level.INFO.value()) {
       PrintStream printStream = level.value() >= Level.WARNING.value() ? System.err : System.out;
       printStream.println(message);
     }
