@@ -25,6 +25,7 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Maps;
 import com.google.daq.mqtt.util.AtomicAverage;
+import com.google.daq.mqtt.util.DurationAverage;
 import com.google.daq.mqtt.util.ImpulseRunningAverage;
 import com.google.daq.mqtt.util.MessagePublisher;
 import com.google.daq.mqtt.util.PublishPriority;
@@ -135,11 +136,12 @@ public class MqttPublisher implements MessagePublisher {
   private final AtomicAverage threadCount = new AtomicAverage("Message tcount");
   private final RunningAverageBase queueStats = new ImpulseRunningAverage("Message queue");
   private final RunningAverageBase sendStats = new ImpulseRunningAverage("Message send");
-  private final RunningAverageBase priorStats = new RunningAverageBase("Message prior");
-  private final RunningAverageBase sendTime = new RunningAverageBase("Message stime");
-  private final RunningAverageBase coreTime = new RunningAverageBase("Message ctime");
+  private final DurationAverage totalTime = new DurationAverage("Message total");
+  private final DurationAverage priorTime = new DurationAverage("Message prior");
+  private final DurationAverage sendTime = new DurationAverage("Message stime");
+  private final DurationAverage coreTime = new DurationAverage("Message ctime");
   private final Set<RunningAverageBase> samplers = ImmutableSet.of(queueStats, sendStats,
-      threadCount, messageQueueSize, sendTime, coreTime, priorStats);
+      threadCount, messageQueueSize, sendTime, coreTime, priorTime, totalTime);
   private long mqttTokenSetTimeMs;
   private MqttConnectOptions mqttConnectOptions;
   private boolean shutdown;
@@ -345,17 +347,17 @@ public class MqttPublisher implements MessagePublisher {
       Instant start, PublishPriority priority) {
     Instant startTime = getNowInstant();
     try {
-      Instant priorTime = getNowInstant();
+      Instant startPrior = getNowInstant();
       if (priority == PublishPriority.HIGH) {
         LOG.debug(format("Publishing HIGH priority override after %ss", between(start,
             GeneralUtils.instantNow()).toSeconds()));
       } else {
         processPriorityQueue();
       }
-      priorStats.provide(between(priorTime, getNowInstant()).toMillis() / (double) SEC_TO_MS);
+      priorTime.provide(startPrior);
       publishRaw(deviceId, topic, payload, start);
     } finally {
-      coreTime.provide(between(startTime, getNowInstant()).toMillis() / (double) SEC_TO_MS);
+      coreTime.provide(startTime);
     }
   }
 
@@ -385,8 +387,7 @@ public class MqttPublisher implements MessagePublisher {
     } catch (Exception e) {
       throw new RuntimeException(format("Publish failed for %s: %s", deviceId, e), e);
     }
-    long seconds = between(start, Instant.now()).getSeconds();
-    LOG.debug(format("Publishing mqtt message took %ss", seconds));
+    totalTime.provide(start);
   }
 
   private synchronized void delayStateUpdate(String deviceId) {
@@ -412,7 +413,7 @@ public class MqttPublisher implements MessagePublisher {
     LOG.debug(deviceId + " sending message to " + mqttTopic);
     Instant startTime = getNowInstant();
     mqttClient.publish(mqttTopic, mqttMessage, QOS_AT_LEAST_ONCE, MQTT_NO_RETAIN);
-    sendTime.provide(between(startTime, getNowInstant()).toMillis() / (double) SEC_TO_MS);
+    sendTime.provide(startTime);
   }
 
   @Override

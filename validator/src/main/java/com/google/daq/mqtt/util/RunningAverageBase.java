@@ -7,7 +7,6 @@ import static java.lang.String.format;
 import static java.time.Duration.between;
 
 import java.time.Instant;
-import java.util.function.Supplier;
 
 public class RunningAverageBase {
 
