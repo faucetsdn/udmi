@@ -10,21 +10,33 @@ import org.junit.Test;
 public class ImpulseRunningAverageTest {
 
   private static final double ASSERT_DELTA = 0.000001;
+  private ImpulseRunningAverage impulseRunningAverage = new ImpulseRunningAverage("Message test");
 
   @Test
   public void sampleTest() {
-    ImpulseRunningAverage impulseRunningAverage = new ImpulseRunningAverage("Message test");
     impulseRunningAverage.update(1, 1);
-    assertEquals("initial result", 1.0, impulseRunningAverage.get(), ASSERT_DELTA);
+    assertAverage("initial result", 1.0);
     impulseRunningAverage.update(1, 1);
-    assertEquals("one tick result", 1.0, impulseRunningAverage.get(), ASSERT_DELTA);
+    assertAverage("one tick result", 1.0);
     impulseRunningAverage.update(1, 0);
-    assertEquals("one null result", 0.8, impulseRunningAverage.get(), ASSERT_DELTA);
+    assertAverage("one null result", 0.8);
     impulseRunningAverage.update(1, 0);
-    assertEquals("two null result", 0.64, impulseRunningAverage.get(), ASSERT_DELTA);
+    assertAverage("two null result", 0.64);
     impulseRunningAverage.update(0, 0);
-    assertEquals("null sample", 0.64, impulseRunningAverage.get(), ASSERT_DELTA);
+    assertAverage("null sample", 0.64);
     impulseRunningAverage.update(2, 1);
-    assertEquals("two delay", 0.6096, impulseRunningAverage.get(), ASSERT_DELTA);
+    assertAverage("two delay", 0.6096);
+    impulseRunningAverage.update(100000000000.0, 0);
+    assertAverage("reset wait", 0);
+    impulseRunningAverage.update(1);
+    assertAverage("tick delay 1", 0.2);
+    impulseRunningAverage.update(1);
+    assertAverage("tick delay 2", 0.36);
+    impulseRunningAverage.update(2);
+    assertAverage("tick delay 3", 0.4304);
+  }
+
+  private void assertAverage(String message, double expected) {
+    assertEquals(message, expected, impulseRunningAverage.get(), ASSERT_DELTA);
   }
 }

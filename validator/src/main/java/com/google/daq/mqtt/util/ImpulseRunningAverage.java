@@ -5,10 +5,10 @@ package com.google.daq.mqtt.util;
  */
 public class ImpulseRunningAverage extends RunningAverage {
 
-  private static final double BASELINE_VALUE = 0.0;
+  private static final double TICK_VALUE = 1.0;
 
   public ImpulseRunningAverage(String name) {
-    super(name, () -> BASELINE_VALUE);
+    super(name, () -> TICK_VALUE);
   }
 
   @Override
