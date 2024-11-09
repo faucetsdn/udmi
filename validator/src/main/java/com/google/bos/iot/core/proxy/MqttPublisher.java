@@ -16,6 +16,7 @@ import static com.google.udmi.util.JsonUtil.getNowInstant;
 import static com.google.udmi.util.SiteModel.DEFAULT_CLEARBLADE_HOSTNAME;
 import static com.google.udmi.util.SiteModel.DEFAULT_GBOS_HOSTNAME;
 import static java.lang.String.format;
+import static java.time.Duration.between;
 import static java.util.Objects.requireNonNull;
 import static java.util.Optional.ofNullable;
 import static java.util.concurrent.Executors.newFixedThreadPool;
@@ -134,10 +135,11 @@ public class MqttPublisher implements MessagePublisher {
   private final AtomicAverage threadCount = new AtomicAverage("Message tcount");
   private final RunningAverageBase queueStats = new ImpulseRunningAverage("Message queue");
   private final RunningAverageBase sendStats = new ImpulseRunningAverage("Message send");
+  private final RunningAverageBase priorStats = new RunningAverageBase("Message prior");
   private final RunningAverageBase sendTime = new RunningAverageBase("Message stime");
   private final RunningAverageBase coreTime = new RunningAverageBase("Message ctime");
   private final Set<RunningAverageBase> samplers = ImmutableSet.of(queueStats, sendStats,
-      threadCount, messageQueueSize, sendTime, coreTime);
+      threadCount, messageQueueSize, sendTime, coreTime, priorStats);
   private long mqttTokenSetTimeMs;
   private MqttConnectOptions mqttConnectOptions;
   private boolean shutdown;
@@ -343,15 +345,17 @@ public class MqttPublisher implements MessagePublisher {
       Instant start, PublishPriority priority) {
     Instant startTime = getNowInstant();
     try {
+      Instant priorTime = getNowInstant();
       if (priority == PublishPriority.HIGH) {
-        LOG.debug(format("Publishing HIGH priority override after %ss", Duration.between(start,
+        LOG.debug(format("Publishing HIGH priority override after %ss", between(start,
             GeneralUtils.instantNow()).toSeconds()));
       } else {
         processPriorityQueue();
       }
+      priorStats.provide(between(priorTime, getNowInstant()).toMillis() / (double) SEC_TO_MS);
       publishRaw(deviceId, topic, payload, start);
     } finally {
-      coreTime.provide(Duration.between(startTime, getNowInstant()).toMillis() / (double) SEC_TO_MS);
+      coreTime.provide(between(startTime, getNowInstant()).toMillis() / (double) SEC_TO_MS);
     }
   }
 
@@ -381,7 +385,7 @@ public class MqttPublisher implements MessagePublisher {
     } catch (Exception e) {
       throw new RuntimeException(format("Publish failed for %s: %s", deviceId, e), e);
     }
-    long seconds = Duration.between(start, Instant.now()).getSeconds();
+    long seconds = between(start, Instant.now()).getSeconds();
     LOG.debug(format("Publishing mqtt message took %ss", seconds));
   }
 
@@ -408,7 +412,7 @@ public class MqttPublisher implements MessagePublisher {
     LOG.debug(deviceId + " sending message to " + mqttTopic);
     Instant startTime = getNowInstant();
     mqttClient.publish(mqttTopic, mqttMessage, QOS_AT_LEAST_ONCE, MQTT_NO_RETAIN);
-    sendTime.provide(Duration.between(startTime, getNowInstant()).toMillis() / (double) SEC_TO_MS);
+    sendTime.provide(between(startTime, getNowInstant()).toMillis() / (double) SEC_TO_MS);
   }
 
   @Override
@@ -548,14 +552,14 @@ public class MqttPublisher implements MessagePublisher {
         LOG.info("Token refresh start");
         disconnectMqtt();
         LOG.debug(format("Token refresh disconnect took %ss",
-            Duration.between(refreshStart, getNowInstant()).toSeconds()));
+            between(refreshStart, getNowInstant()).toSeconds()));
         connectAndSetupMqtt();
         resendState();
       } catch (Exception e) {
         throw new RuntimeException("While processing disconnect", e);
       } finally {
         LOG.info(format("Token refresh took %ss",
-            Duration.between(refreshStart, getNowInstant()).toSeconds()));
+            between(refreshStart, getNowInstant()).toSeconds()));
       }
     }
   }
