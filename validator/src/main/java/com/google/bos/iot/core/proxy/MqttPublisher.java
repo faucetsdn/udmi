@@ -26,6 +26,7 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Maps;
 import com.google.daq.mqtt.util.AtomicAverage;
 import com.google.daq.mqtt.util.DurationAverage;
+import com.google.daq.mqtt.util.DurationAverage.SilentCloseable;
 import com.google.daq.mqtt.util.ImpulseRunningAverage;
 import com.google.daq.mqtt.util.MessagePublisher;
 import com.google.daq.mqtt.util.PublishPriority;
@@ -136,12 +137,18 @@ public class MqttPublisher implements MessagePublisher {
   private final AtomicAverage threadCount = new AtomicAverage("Message tcount");
   private final RunningAverageBase queueStats = new ImpulseRunningAverage("Message queue");
   private final RunningAverageBase sendStats = new ImpulseRunningAverage("Message send");
-  private final DurationAverage totalTime = new DurationAverage("Message total");
-  private final DurationAverage priorTime = new DurationAverage("Message prior");
+  private final DurationAverage totalTime = new DurationAverage("Message ttime");
+  private final DurationAverage priorTime = new DurationAverage("Message ptime");
   private final DurationAverage sendTime = new DurationAverage("Message stime");
   private final DurationAverage coreTime = new DurationAverage("Message ctime");
+  private final DurationAverage delayedState = new DurationAverage("Raw state");
+  private final DurationAverage maybeRefresh = new DurationAverage("Raw refresh");
+  private final DurationAverage maybeAttach = new DurationAverage("Raw attach");
+  private final DurationAverage afterAll = new DurationAverage("Raw after");
+
   private final Set<RunningAverageBase> samplers = ImmutableSet.of(queueStats, sendStats,
-      threadCount, messageQueueSize, sendTime, coreTime, priorTime, totalTime);
+      threadCount, messageQueueSize, sendTime, coreTime, priorTime, totalTime, delayedState,
+      maybeRefresh, maybeAttach, afterAll);
   private long mqttTokenSetTimeMs;
   private MqttConnectOptions mqttConnectOptions;
   private boolean shutdown;
@@ -345,19 +352,16 @@ public class MqttPublisher implements MessagePublisher {
 
   private synchronized void publishCore(String deviceId, String topic, String payload,
       Instant start, PublishPriority priority) {
-    Instant startTime = getNowInstant();
-    try {
-      Instant startPrior = getNowInstant();
-      if (priority == PublishPriority.HIGH) {
-        LOG.debug(format("Publishing HIGH priority override after %ss", between(start,
-            GeneralUtils.instantNow()).toSeconds()));
-      } else {
-        processPriorityQueue();
+    try (SilentCloseable x = coreTime.getCloseable()) {
+      try (SilentCloseable y = priorTime.getCloseable()) {
+        if (priority == PublishPriority.HIGH) {
+          LOG.debug(format("Publishing HIGH priority override after %ss", between(start,
+              GeneralUtils.instantNow()).toSeconds()));
+        } else {
+          processPriorityQueue();
+        }
       }
-      priorTime.provide(startPrior);
       publishRaw(deviceId, topic, payload, start);
-    } finally {
-      coreTime.provide(startTime);
     }
   }
 
@@ -372,18 +376,23 @@ public class MqttPublisher implements MessagePublisher {
       if (!mqttClient.isConnected()) {
         throw new RuntimeException("MQTT Client not connected");
       }
+      Instant startTime = getNowInstant();
       if (STATE_TOPIC.equals(topic)) {
         savedState.payload = payload;
         savedState.deviceId = deviceId;
         delayStateUpdate(deviceId);
       }
+      delayedState.provide(startTime);
       maybeRefreshJwt();
+      maybeRefresh.provide(startTime);
       if (!attachedClients.contains(deviceId)) {
         attachedClients.add(deviceId);
         attachClient(deviceId);
       }
+      maybeAttach.provide(startTime);
       sendMessage(getMessageTopic(deviceId, topic), payload.getBytes());
       LOG.debug(this.deviceId + " publishing complete " + registryId + "/" + deviceId);
+      afterAll.provide(startTime);
     } catch (Exception e) {
       throw new RuntimeException(format("Publish failed for %s: %s", deviceId, e), e);
     }
@@ -411,9 +420,9 @@ public class MqttPublisher implements MessagePublisher {
 
   private synchronized void sendMessage(String mqttTopic, byte[] mqttMessage) throws Exception {
     LOG.debug(deviceId + " sending message to " + mqttTopic);
-    Instant startTime = getNowInstant();
-    mqttClient.publish(mqttTopic, mqttMessage, QOS_AT_LEAST_ONCE, MQTT_NO_RETAIN);
-    sendTime.provide(startTime);
+    try (AutoCloseable x = sendTime.getCloseable()) {
+      mqttClient.publish(mqttTopic, mqttMessage, QOS_AT_LEAST_ONCE, MQTT_NO_RETAIN);
+    }
   }
 
   @Override

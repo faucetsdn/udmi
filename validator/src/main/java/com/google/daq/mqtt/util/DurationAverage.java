@@ -30,5 +30,19 @@ public class DurationAverage extends RunningAverageBase {
     provide(duration.toMillis() / (double) SEC_TO_MS);
   }
 
+  public SilentCloseable getCloseable() {
+    return new SilentCloseable() {
+      final Instant startTime = getNowInstant();
 
+      @Override
+      public void close() {
+        provide(startTime);
+      }
+    };
+  }
+
+  public interface SilentCloseable extends AutoCloseable {
+    @Override
+    void close();
+  }
 }
