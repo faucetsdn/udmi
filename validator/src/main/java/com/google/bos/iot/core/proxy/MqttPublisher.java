@@ -22,10 +22,11 @@ import static java.util.concurrent.Executors.newFixedThreadPool;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Maps;
+import com.google.daq.mqtt.util.AtomicAverage;
+import com.google.daq.mqtt.util.ImpulseRunningAverage;
 import com.google.daq.mqtt.util.MessagePublisher;
 import com.google.daq.mqtt.util.PublishPriority;
-import com.google.daq.mqtt.util.ImpulseRunningAverage;
-import com.google.daq.mqtt.util.RunningAverage;
+import com.google.daq.mqtt.util.RunningAverageBase;
 import com.google.daq.mqtt.validator.Validator;
 import com.google.udmi.util.CertManager;
 import com.google.udmi.util.GeneralUtils;
@@ -53,7 +54,6 @@ import java.util.concurrent.Future;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import javax.net.SocketFactory;
@@ -108,7 +108,7 @@ public class MqttPublisher implements MessagePublisher {
   private static final String MQTT_USER_NAME_FMT = "/r/%s/d/%s";
   private final ExecutorService publisherExecutor = newFixedThreadPool(PUBLISH_THREAD_COUNT);
   private final ExecutorService reapExecutor = newFixedThreadPool(PUBLISH_THREAD_COUNT * 2);
-  private final AtomicInteger publisherThreadCount = new AtomicInteger();
+  private final AtomicAverage pthreadCount = new AtomicAverage("Message thread");
   private final Queue<Runnable> priorityQueue = new ConcurrentLinkedQueue<>();
   private final Map<String, Long> lastStateTime = Maps.newConcurrentMap();
   private final MqttClient mqttClient;
@@ -129,15 +129,12 @@ public class MqttPublisher implements MessagePublisher {
   private final String topicBase;
   private final CertManager certManager;
   private final Envelope savedState = new Envelope();
-  private final AtomicInteger messageQueueSize = new AtomicInteger();
+  private final AtomicAverage messageQueueSize = new AtomicAverage("Message queue");
   private final String mqttClientId;
-  private final RunningAverage queueStats = new ImpulseRunningAverage("Message queue");
-  private final RunningAverage sendStats = new ImpulseRunningAverage("Message send");
-  private final RunningAverage threadStats = new RunningAverage("Message threads",
-      () -> (double) publisherThreadCount.get());
-  private final RunningAverage qsizeStats = new RunningAverage("Message qsize",
-      () -> (double) messageQueueSize.get());
-  private final Set<RunningAverage> samplers = ImmutableSet.of(queueStats, sendStats, threadStats, qsizeStats);
+  private final RunningAverageBase queueStats = new ImpulseRunningAverage("Message queue");
+  private final RunningAverageBase sendStats = new ImpulseRunningAverage("Message send");
+  private final Set<RunningAverageBase> samplers = ImmutableSet.of(queueStats, sendStats,
+      pthreadCount, messageQueueSize);
   private long mqttTokenSetTimeMs;
   private MqttConnectOptions mqttConnectOptions;
   private boolean shutdown;
@@ -260,7 +257,6 @@ public class MqttPublisher implements MessagePublisher {
 
   private void tickleConnection() {
     samplers.forEach(value -> LOG.info(value.getMessage()));
-    LOG.info("Message queue size now " + messageQueueSize.get());
     if (shutdown) {
       try {
         LOG.info("Tickler closing connection due to shutdown request");
@@ -298,7 +294,6 @@ public class MqttPublisher implements MessagePublisher {
         submitted = publisherExecutor.submit(() -> publishRunner(publishMessage));
       }
       messageQueueSize.incrementAndGet();
-      qsizeStats.update();
       reapExecutor.submit(() -> reapExecutor(submitted, deviceId, topic));
     } catch (Exception e) {
       throw new RuntimeException("While publishing message", e);
@@ -313,31 +308,26 @@ public class MqttPublisher implements MessagePublisher {
       LOG.error(format("Exception processing %s/%s: %s", deviceId, topic, e.getMessage()));
     } finally {
       messageQueueSize.decrementAndGet();
-      qsizeStats.update();
     }
   }
 
   private void processPriorityQueue() {
-    publisherThreadCount.incrementAndGet();
-    threadStats.update();
+    pthreadCount.incrementAndGet();
     try {
       for (Runnable queued = priorityQueue.poll(); queued != null; queued = priorityQueue.poll()) {
         queued.run();
       }
     } finally {
-      publisherThreadCount.decrementAndGet();
-      threadStats.update();
+      pthreadCount.decrementAndGet();
     }
   }
 
   private void publishRunner(Runnable publishMessage) {
-    publisherThreadCount.incrementAndGet();
-    threadStats.update();
+    pthreadCount.incrementAndGet();
     try {
       publishMessage.run();
     } finally {
-      publisherThreadCount.decrementAndGet();
-      threadStats.update();
+      pthreadCount.decrementAndGet();
     }
   }
 

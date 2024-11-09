@@ -8,20 +8,18 @@ import static java.time.Duration.between;
 import java.time.Instant;
 import java.util.function.Supplier;
 
-public class RunningAverage {
+public class RunningAverageBase {
 
   private static final double DEFAULT_ALPHA = 0.8;
 
   protected final double alpha;
   protected final String name;
-  private final Supplier<Double> provider;
   private Instant previous;
   protected double running = Double.NaN;
 
-  public RunningAverage(String name, Supplier<Double> provider) {
+  public RunningAverageBase(String name) {
     this.name = name;
     this.alpha = DEFAULT_ALPHA;
-    this.provider = provider;
   }
 
   public String getName() {
@@ -29,7 +27,7 @@ public class RunningAverage {
   }
 
   public String getMessage() {
-    return format("%s rate is %.2f/s", getName(), timeGet());
+    return format("%s is %.2f", getName(), timeGet());
   }
 
   /**
@@ -48,7 +46,11 @@ public class RunningAverage {
   }
 
   public synchronized void update(double deltaSec) {
-    update(deltaSec, provider.get());
+    update(deltaSec, provider());
+  }
+
+  protected double provider() {
+    return 0;
   }
 
   public synchronized void update(double deltaSec, double value) {
