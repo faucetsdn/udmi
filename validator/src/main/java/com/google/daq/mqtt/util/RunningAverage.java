@@ -58,20 +58,25 @@ public class RunningAverage {
     }
     double delta = getDelta(value);
     double remainder = delta * Math.pow(alpha, deltaSec);
-    double impulse = getImpulse(value);
-    running = remainder + impulse;
+    double impulse = (1.0 - alpha) * getImpulse(value);
+    double baseline = getBaseline(value);
+    running = baseline + remainder + impulse;
   }
 
   public double get() {
     return running;
   }
 
-  protected double getImpulse(double value) {
+  protected double getBaseline(double value) {
     return value;
   }
 
   protected double getDelta(double value) {
     return running - value;
+  }
+
+  protected double getImpulse(double value) {
+    return 0;
   }
 
   public double timeGet() {

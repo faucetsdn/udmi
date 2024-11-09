@@ -18,13 +18,16 @@ public class RunningAverageTest {
     runningAverage.update(1);
     assertEquals("one tick result", 1.0, runningAverage.get(), ASSERT_DELTA);
     runningAverage.update(0);
-    assertEquals("one null result", 1.0, runningAverage.get(), ASSERT_DELTA);
+    assertEquals("one immediate result", 1.0, runningAverage.get(), ASSERT_DELTA);
+    targetValue.set(2);
     runningAverage.update(0);
-    assertEquals("two null result", 1.0, runningAverage.get(), ASSERT_DELTA);
-    targetValue.set(0);
-    runningAverage.update(0);
-    assertEquals("null sample", 0.64, runningAverage.get(), ASSERT_DELTA);
+    assertEquals("two immediate result", 1.0, runningAverage.get(), ASSERT_DELTA);
+    runningAverage.update(1);
+    assertEquals("two tick result", 1.2, runningAverage.get(), ASSERT_DELTA);
     runningAverage.update(2);
-    assertEquals("two sample", 0.6096, runningAverage.get(), ASSERT_DELTA);
+    assertEquals("two tick twice", 1.488, runningAverage.get(), ASSERT_DELTA);
+    targetValue.set(0);
+    runningAverage.update(10);
+    assertEquals("zero ten", 0.15977278341120008, runningAverage.get(), ASSERT_DELTA);
   }
 }

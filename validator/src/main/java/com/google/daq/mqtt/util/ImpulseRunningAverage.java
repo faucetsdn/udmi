@@ -13,10 +13,16 @@ public class ImpulseRunningAverage extends RunningAverage {
 
   @Override
   protected double getImpulse(double value) {
-    return value * (1.0 - alpha);
+    return value;
   }
 
+  @Override
   protected double getDelta(double value) {
     return running;
+  }
+
+  @Override
+  protected double getBaseline(double value) {
+    return 0;
   }
 }
