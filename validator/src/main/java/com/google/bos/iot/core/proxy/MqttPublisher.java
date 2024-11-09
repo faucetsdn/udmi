@@ -24,7 +24,8 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Maps;
 import com.google.daq.mqtt.util.MessagePublisher;
 import com.google.daq.mqtt.util.PublishPriority;
-import com.google.daq.mqtt.util.TimeStatistics;
+import com.google.daq.mqtt.util.ImpulseRunningAverage;
+import com.google.daq.mqtt.util.RunningAverage;
 import com.google.daq.mqtt.validator.Validator;
 import com.google.udmi.util.CertManager;
 import com.google.udmi.util.GeneralUtils;
@@ -107,6 +108,7 @@ public class MqttPublisher implements MessagePublisher {
   private static final String MQTT_USER_NAME_FMT = "/r/%s/d/%s";
   private final ExecutorService publisherExecutor = newFixedThreadPool(PUBLISH_THREAD_COUNT);
   private final ExecutorService reapExecutor = newFixedThreadPool(PUBLISH_THREAD_COUNT * 2);
+  private final AtomicInteger publisherThreadCount = new AtomicInteger();
   private final Queue<Runnable> priorityQueue = new ConcurrentLinkedQueue<>();
   private final Map<String, Long> lastStateTime = Maps.newConcurrentMap();
   private final MqttClient mqttClient;
@@ -129,9 +131,13 @@ public class MqttPublisher implements MessagePublisher {
   private final Envelope savedState = new Envelope();
   private final AtomicInteger messageQueueSize = new AtomicInteger();
   private final String mqttClientId;
-  private final TimeStatistics queueStats = new TimeStatistics("Message queue");
-  private final TimeStatistics sendStats = new TimeStatistics("Message send");
-  private final Set<TimeStatistics> samplers = ImmutableSet.of(queueStats, sendStats);
+  private final RunningAverage queueStats = new ImpulseRunningAverage("Message queue");
+  private final RunningAverage sendStats = new ImpulseRunningAverage("Message send");
+  private final RunningAverage threadStats = new RunningAverage("Message threads",
+      () -> (double) publisherThreadCount.get());
+  private final RunningAverage qsizeStats = new RunningAverage("Message qsize",
+      () -> (double) messageQueueSize.get());
+  private final Set<RunningAverage> samplers = ImmutableSet.of(queueStats, sendStats, threadStats, qsizeStats);
   private long mqttTokenSetTimeMs;
   private MqttConnectOptions mqttConnectOptions;
   private boolean shutdown;
@@ -283,15 +289,16 @@ public class MqttPublisher implements MessagePublisher {
       }
       Instant now = Instant.now();
       Runnable publishMessage = () -> publishCore(deviceId, topic, data, now, priority);
-      queueStats.timeSample();
+      queueStats.update();
       final Future<?> submitted;
       if (priority == PublishPriority.HIGH) {
         priorityQueue.add(publishMessage);
         submitted = publisherExecutor.submit(this::processPriorityQueue);
       } else {
-        submitted = publisherExecutor.submit(publishMessage);
+        submitted = publisherExecutor.submit(() -> publishRunner(publishMessage));
       }
       messageQueueSize.incrementAndGet();
+      qsizeStats.update();
       reapExecutor.submit(() -> reapExecutor(submitted, deviceId, topic));
     } catch (Exception e) {
       throw new RuntimeException("While publishing message", e);
@@ -306,12 +313,31 @@ public class MqttPublisher implements MessagePublisher {
       LOG.error(format("Exception processing %s/%s: %s", deviceId, topic, e.getMessage()));
     } finally {
       messageQueueSize.decrementAndGet();
+      qsizeStats.update();
     }
   }
 
   private void processPriorityQueue() {
-    for (Runnable queued = priorityQueue.poll(); queued != null; queued = priorityQueue.poll()) {
-      queued.run();
+    publisherThreadCount.incrementAndGet();
+    threadStats.update();
+    try {
+      for (Runnable queued = priorityQueue.poll(); queued != null; queued = priorityQueue.poll()) {
+        queued.run();
+      }
+    } finally {
+      publisherThreadCount.decrementAndGet();
+      threadStats.update();
+    }
+  }
+
+  private void publishRunner(Runnable publishMessage) {
+    publisherThreadCount.incrementAndGet();
+    threadStats.update();
+    try {
+      publishMessage.run();
+    } finally {
+      publisherThreadCount.decrementAndGet();
+      threadStats.update();
     }
   }
 
@@ -329,7 +355,7 @@ public class MqttPublisher implements MessagePublisher {
   private synchronized void publishRaw(String deviceId, String topic, String payload,
       Instant start) {
     try {
-      sendStats.timeSample();
+      sendStats.update();
     } catch (Exception e) {
       throw new RuntimeException("Error acquiring lock", e);
     }

@@ -41,7 +41,7 @@ import com.google.api.client.util.Base64;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSet;
 import com.google.daq.mqtt.util.MessagePublisher;
-import com.google.daq.mqtt.util.TimeStatistics;
+import com.google.daq.mqtt.util.ImpulseRunningAverage;
 import com.google.daq.mqtt.validator.Validator;
 import com.google.daq.mqtt.validator.Validator.ErrorContainer;
 import com.google.udmi.util.Common;
@@ -127,9 +127,9 @@ public class IotReflectorClient implements MessagePublisher {
   private int retries;
   private String expectedTxnId;
   private Instant txnStartTime;
-  private final TimeStatistics publishStats = new TimeStatistics("Message publish");
-  private final TimeStatistics receiveStats = new TimeStatistics("Message receive");
-  private final Set<TimeStatistics> samplers = ImmutableSet.of(publishStats, receiveStats);
+  private final ImpulseRunningAverage publishStats = new ImpulseRunningAverage("Message publish");
+  private final ImpulseRunningAverage receiveStats = new ImpulseRunningAverage("Message receive");
+  private final Set<ImpulseRunningAverage> samplers = ImmutableSet.of(publishStats, receiveStats);
 
   /**
    * Create a new reflector instance.
@@ -255,7 +255,7 @@ public class IotReflectorClient implements MessagePublisher {
         info("Sending UDMI reflector state: " + stringify(map));
       }
 
-      publishStats.timeSample();
+      publishStats.update();
       publisher.publish(registryId, getReflectorTopic(), stringifyTerse(map), HIGH);
     } catch (Exception e) {
       throw new RuntimeException("Could not set reflector state", e);
@@ -282,7 +282,7 @@ public class IotReflectorClient implements MessagePublisher {
   }
 
   private void messageHandler(String topic, String payload) {
-    receiveStats.timeSample();
+    receiveStats.update();
     if (payload.length() == 0) {
       return;
     }
@@ -521,7 +521,7 @@ public class IotReflectorClient implements MessagePublisher {
   }
 
   protected void errorHandler(Throwable throwable) {
-    receiveStats.timeSample();
+    receiveStats.update();
     System.err.printf("Received mqtt client error: %s at %s%n",
         throwable.getMessage(), getTimestamp());
     close();
@@ -604,7 +604,7 @@ public class IotReflectorClient implements MessagePublisher {
     String transactionId = getNextTransactionId();
     envelope.transactionId = transactionId;
     envelope.publishTime = new Date();
-    publishStats.timeSample();
+    publishStats.update();
     publisher.publish(registryId, getPublishTopic(), stringify(envelope));
     return transactionId;
   }
