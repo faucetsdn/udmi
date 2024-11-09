@@ -109,7 +109,6 @@ public class MqttPublisher implements MessagePublisher {
   private static final String MQTT_USER_NAME_FMT = "/r/%s/d/%s";
   private final ExecutorService publisherExecutor = newFixedThreadPool(PUBLISH_THREAD_COUNT);
   private final ExecutorService reapExecutor = newFixedThreadPool(PUBLISH_THREAD_COUNT * 2);
-  private final AtomicAverage pthreadCount = new AtomicAverage("Message thread");
   private final Queue<Runnable> priorityQueue = new ConcurrentLinkedQueue<>();
   private final Map<String, Long> lastStateTime = Maps.newConcurrentMap();
   private final MqttClient mqttClient;
@@ -130,13 +129,15 @@ public class MqttPublisher implements MessagePublisher {
   private final String topicBase;
   private final CertManager certManager;
   private final Envelope savedState = new Envelope();
-  private final AtomicAverage messageQueueSize = new AtomicAverage("Message queue");
   private final String mqttClientId;
+  private final AtomicAverage messageQueueSize = new AtomicAverage("Message qsize");
+  private final AtomicAverage threadCount = new AtomicAverage("Message tcount");
   private final RunningAverageBase queueStats = new ImpulseRunningAverage("Message queue");
   private final RunningAverageBase sendStats = new ImpulseRunningAverage("Message send");
-  private final RunningAverageBase sendTime = new RunningAverageBase("Message time");
+  private final RunningAverageBase sendTime = new RunningAverageBase("Message stime");
+  private final RunningAverageBase coreTime = new RunningAverageBase("Message ctime");
   private final Set<RunningAverageBase> samplers = ImmutableSet.of(queueStats, sendStats,
-      pthreadCount, messageQueueSize, sendTime);
+      threadCount, messageQueueSize, sendTime, coreTime);
   private long mqttTokenSetTimeMs;
   private MqttConnectOptions mqttConnectOptions;
   private boolean shutdown;
@@ -319,34 +320,39 @@ public class MqttPublisher implements MessagePublisher {
   }
 
   private void processPriorityQueue() {
-    pthreadCount.incrementAndGet();
+    threadCount.incrementAndGet();
     try {
       for (Runnable queued = priorityQueue.poll(); queued != null; queued = priorityQueue.poll()) {
         queued.run();
       }
     } finally {
-      pthreadCount.decrementAndGet();
+      threadCount.decrementAndGet();
     }
   }
 
   private void publishRunner(Runnable publishMessage) {
-    pthreadCount.incrementAndGet();
+    threadCount.incrementAndGet();
     try {
       publishMessage.run();
     } finally {
-      pthreadCount.decrementAndGet();
+      threadCount.decrementAndGet();
     }
   }
 
   private synchronized void publishCore(String deviceId, String topic, String payload,
       Instant start, PublishPriority priority) {
-    if (priority == PublishPriority.HIGH) {
-      LOG.debug(format("Publishing HIGH priority override after %ss", Duration.between(start,
-          GeneralUtils.instantNow()).toSeconds()));
-    } else {
-      processPriorityQueue();
+    Instant startTime = getNowInstant();
+    try {
+      if (priority == PublishPriority.HIGH) {
+        LOG.debug(format("Publishing HIGH priority override after %ss", Duration.between(start,
+            GeneralUtils.instantNow()).toSeconds()));
+      } else {
+        processPriorityQueue();
+      }
+      publishRaw(deviceId, topic, payload, start);
+    } finally {
+      coreTime.provide(Duration.between(startTime, getNowInstant()).toMillis() / (double) SEC_TO_MS);
     }
-    publishRaw(deviceId, topic, payload, start);
   }
 
   private synchronized void publishRaw(String deviceId, String topic, String payload,
