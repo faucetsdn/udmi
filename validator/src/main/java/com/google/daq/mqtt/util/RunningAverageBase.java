@@ -1,5 +1,6 @@
 package com.google.daq.mqtt.util;
 
+import static com.google.udmi.util.Common.SEC_TO_MS;
 import static java.lang.Double.NaN;
 import static java.lang.Double.isNaN;
 import static java.lang.String.format;
@@ -34,15 +35,24 @@ public class RunningAverageBase {
    * Record a time-interval sample with the given impulse.
    */
   public synchronized void update() {
+    update(getDeltaSec());
+  }
+
+  private double getDeltaSec() {
     Instant currentTimestamp = Instant.now();
     try {
       if (previous == null) {
         previous = currentTimestamp;
+        return NaN;
       }
-      update(between(previous, currentTimestamp).toMillis() / 1000.0);
+      return between(previous, currentTimestamp).toMillis() / (double) SEC_TO_MS;
     } finally {
       previous = currentTimestamp;
     }
+  }
+
+  public synchronized void provide(double value) {
+    update(getDeltaSec(), value);
   }
 
   public synchronized void update(double deltaSec) {
@@ -50,7 +60,7 @@ public class RunningAverageBase {
   }
 
   protected double provider() {
-    return 0;
+    return NaN;
   }
 
   public synchronized void update(double deltaSec, double value) {
@@ -58,6 +68,11 @@ public class RunningAverageBase {
       running = value;
       return;
     }
+
+    if (isNaN(deltaSec) || isNaN(value)) {
+      return;
+    }
+
     double delta = getDelta(value);
     double remainder = delta * Math.pow(alpha, deltaSec);
     double impulse = (1.0 - alpha) * getImpulse(value);

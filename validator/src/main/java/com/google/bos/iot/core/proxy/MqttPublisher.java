@@ -5,6 +5,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
 import static com.google.udmi.util.CertManager.CA_CERT_FILE;
 import static com.google.udmi.util.Common.DEFAULT_REGION;
+import static com.google.udmi.util.Common.SEC_TO_MS;
 import static com.google.udmi.util.GeneralUtils.catchOrElse;
 import static com.google.udmi.util.GeneralUtils.catchToNull;
 import static com.google.udmi.util.GeneralUtils.ifNotNullThen;
@@ -84,7 +85,7 @@ public class MqttPublisher implements MessagePublisher {
   private static final String BRIDGE_PORT = "8883";
   private static final Logger LOG = LoggerFactory.getLogger(MqttPublisher.class);
   private static final boolean MQTT_NO_RETAIN = false;
-  private static final long STATE_RATE_LIMIT_MS = 1000 * 2;
+  private static final long STATE_RATE_LIMIT_MS = SEC_TO_MS * 2;
   private static final String LONG_ID_FMT = "projects/%s/locations/%s/registries/%s/devices/%s";
   private static final String SHORT_ID_FMT = "/r/%s/d/%s";
   private static final String DEVICE_TOPIC_FMT = "/devices/%s";
@@ -133,8 +134,9 @@ public class MqttPublisher implements MessagePublisher {
   private final String mqttClientId;
   private final RunningAverageBase queueStats = new ImpulseRunningAverage("Message queue");
   private final RunningAverageBase sendStats = new ImpulseRunningAverage("Message send");
+  private final RunningAverageBase sendTime = new RunningAverageBase("Message time");
   private final Set<RunningAverageBase> samplers = ImmutableSet.of(queueStats, sendStats,
-      pthreadCount, messageQueueSize);
+      pthreadCount, messageQueueSize, sendTime);
   private long mqttTokenSetTimeMs;
   private MqttConnectOptions mqttConnectOptions;
   private boolean shutdown;
@@ -256,7 +258,12 @@ public class MqttPublisher implements MessagePublisher {
   }
 
   private void tickleConnection() {
-    samplers.forEach(value -> LOG.info(value.getMessage()));
+    try {
+      samplers.forEach(value -> LOG.info(value.getMessage()));
+    } catch (Exception e) {
+      LOG.error("While updating stats: " + e.getMessage());
+      e.printStackTrace();
+    }
     if (shutdown) {
       try {
         LOG.info("Tickler closing connection due to shutdown request");
@@ -393,7 +400,9 @@ public class MqttPublisher implements MessagePublisher {
 
   private synchronized void sendMessage(String mqttTopic, byte[] mqttMessage) throws Exception {
     LOG.debug(deviceId + " sending message to " + mqttTopic);
+    Instant startTime = getNowInstant();
     mqttClient.publish(mqttTopic, mqttMessage, QOS_AT_LEAST_ONCE, MQTT_NO_RETAIN);
+    sendTime.provide(Duration.between(startTime, getNowInstant()).toMillis() / (double) SEC_TO_MS);
   }
 
   @Override
