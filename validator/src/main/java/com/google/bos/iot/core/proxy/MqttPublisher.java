@@ -547,14 +547,14 @@ public class MqttPublisher implements MessagePublisher {
       try {
         LOG.info("Token refresh start");
         disconnectMqtt();
-        LOG.info(format("Token refresh disconnect took %ss",
+        LOG.debug(format("Token refresh disconnect took %ss",
             Duration.between(refreshStart, getNowInstant()).toSeconds()));
         connectAndSetupMqtt();
         resendState();
       } catch (Exception e) {
         throw new RuntimeException("While processing disconnect", e);
       } finally {
-        LOG.info(format("Token refresh completion took %ss",
+        LOG.info(format("Token refresh took %ss",
             Duration.between(refreshStart, getNowInstant()).toSeconds()));
       }
     }

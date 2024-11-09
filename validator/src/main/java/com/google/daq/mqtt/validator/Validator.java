@@ -109,6 +109,7 @@ import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 import org.apache.commons.io.FileUtils;
 import org.jetbrains.annotations.NotNull;
+import org.slf4j.impl.SimpleLogger;
 import udmi.schema.Category;
 import udmi.schema.DeviceValidationEvents;
 import udmi.schema.Envelope;
@@ -209,6 +210,12 @@ public class Validator {
   private boolean forceUpgrade;
   private SiteModel siteModel;
   private boolean validateCurrent;
+
+  static {
+    System.setProperty(SimpleLogger.DEFAULT_LOG_LEVEL_KEY, "info");
+    System.setProperty(SimpleLogger.SHOW_THREAD_NAME_KEY, "false");
+    System.setProperty(SimpleLogger.SHOW_SHORT_LOG_NAME_KEY, "true");
+  }
 
   /**
    * Create a simplistic validator for encapsulated use.
