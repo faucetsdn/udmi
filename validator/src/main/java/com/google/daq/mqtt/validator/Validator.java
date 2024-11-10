@@ -594,7 +594,7 @@ public class Validator {
     }
     sendInitializationQuery();
     outputLogger.info("Running udmi tools version " + UDMI_TOOLS);
-    outputLogger.debug("Entering message loop on " + client.getSubscriptionId());
+    outputLogger.notice("Entering message loop on " + client.getSubscriptionId());
     processValidationReport();
     ScheduledFuture<?> reportSender =
         simulatedMessages ? null : executor.scheduleAtFixedRate(this::processValidationReport,
