@@ -110,7 +110,7 @@ public class MqttPublisher implements MessagePublisher {
   private static final String UNUSED_ACCOUNT_NAME = "unused";
   private static final String MQTT_USER_NAME_FMT = "/r/%s/d/%s";
   private final ExecutorService publisherExecutor = newFixedThreadPool(PUBLISH_THREAD_COUNT);
-  private final ExecutorService reapExecutor = newFixedThreadPool(PUBLISH_THREAD_COUNT * 2);
+  private final ExecutorService reapExecutor = newFixedThreadPool(PUBLISH_THREAD_COUNT);
   private final Queue<Runnable> priorityQueue = new ConcurrentLinkedQueue<>();
   private final Map<String, Long> lastStateTime = Maps.newConcurrentMap();
   private final MqttClient mqttClient;
@@ -442,6 +442,7 @@ public class MqttPublisher implements MessagePublisher {
       if (!publisherExecutor.awaitTermination(INITIALIZE_TIME_MS, TimeUnit.MILLISECONDS)) {
         LOG.error("Executor tasks still remaining");
       }
+      reapExecutor.shutdownNow();
       if (mqttClient.isConnected()) {
         disconnectMqtt();
       }
