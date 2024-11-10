@@ -26,14 +26,13 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Maps;
 import com.google.daq.mqtt.util.AtomicAverage;
 import com.google.daq.mqtt.util.DurationAverage;
-import com.google.daq.mqtt.util.DurationAverage.SilentCloseable;
+import com.google.daq.mqtt.util.DurationAverage.TimedSegment;
 import com.google.daq.mqtt.util.ImpulseRunningAverage;
 import com.google.daq.mqtt.util.MessagePublisher;
 import com.google.daq.mqtt.util.PublishPriority;
 import com.google.daq.mqtt.util.RunningAverageBase;
 import com.google.daq.mqtt.validator.Validator;
 import com.google.udmi.util.CertManager;
-import com.google.udmi.util.GeneralUtils;
 import com.google.udmi.util.SiteModel;
 import io.jsonwebtoken.JwtBuilder;
 import io.jsonwebtoken.Jwts;
@@ -144,11 +143,11 @@ public class MqttPublisher implements MessagePublisher {
   private final DurationAverage delayedState = new DurationAverage("Raw state");
   private final DurationAverage maybeRefresh = new DurationAverage("Raw refresh");
   private final DurationAverage maybeAttach = new DurationAverage("Raw attach");
-  private final DurationAverage afterAll = new DurationAverage("Raw after");
+  private final DurationAverage completeTime = new DurationAverage("Raw total");
 
   private final Set<RunningAverageBase> samplers = ImmutableSet.of(queueStats, sendStats,
       threadCount, messageQueueSize, sendTime, coreTime, priorTime, totalTime, delayedState,
-      maybeRefresh, maybeAttach, afterAll);
+      maybeRefresh, maybeAttach, completeTime);
   private long mqttTokenSetTimeMs;
   private MqttConnectOptions mqttConnectOptions;
   private boolean shutdown;
@@ -310,7 +309,7 @@ public class MqttPublisher implements MessagePublisher {
         priorityQueue.add(publishMessage);
         submitted = publisherExecutor.submit(this::processPriorityQueue);
       } else {
-        submitted = publisherExecutor.submit(() -> publishRunner(publishMessage));
+        submitted = publisherExecutor.submit(publishRunnable(publishMessage));
       }
       messageQueueSize.incrementAndGet();
       reapExecutor.submit(() -> reapExecutor(submitted, deviceId, topic));
@@ -333,66 +332,76 @@ public class MqttPublisher implements MessagePublisher {
   private void processPriorityQueue() {
     threadCount.incrementAndGet();
     try {
+      priorityQueueLoop();
+    } finally {
+      threadCount.decrementAndGet();
+    }
+  }
+
+  private void priorityQueueLoop() {
+    try (TimedSegment y = priorTime.getNewSegment()) {
       for (Runnable queued = priorityQueue.poll(); queued != null; queued = priorityQueue.poll()) {
         queued.run();
       }
-    } finally {
-      threadCount.decrementAndGet();
     }
   }
 
-  private void publishRunner(Runnable publishMessage) {
-    threadCount.incrementAndGet();
-    try {
-      publishMessage.run();
-    } finally {
-      threadCount.decrementAndGet();
-    }
-  }
-
-  private synchronized void publishCore(String deviceId, String topic, String payload,
-      Instant start, PublishPriority priority) {
-    try (SilentCloseable x = coreTime.getCloseable()) {
-      try (SilentCloseable y = priorTime.getCloseable()) {
-        if (priority == PublishPriority.HIGH) {
-          LOG.debug(format("Publishing HIGH priority override after %ss", between(start,
-              GeneralUtils.instantNow()).toSeconds()));
-        } else {
-          processPriorityQueue();
-        }
+  private Runnable publishRunnable(Runnable publishMessage) {
+    return () -> {
+      threadCount.incrementAndGet();
+      try {
+        publishMessage.run();
+      } finally {
+        threadCount.decrementAndGet();
       }
+    };
+  }
+
+  private void publishCore(String deviceId, String topic, String payload,
+      Instant start, PublishPriority priority) {
+    if (priority == PublishPriority.HIGH) {
+      LOG.debug(format("Publishing HIGH priority override after %ss",
+          between(start, getNowInstant()).toSeconds()));
+    } else {
+      priorityQueueLoop();
+    }
+    try (TimedSegment x = coreTime.getNewSegment()) {
       publishRaw(deviceId, topic, payload, start);
     }
   }
 
-  private synchronized void publishRaw(String deviceId, String topic, String payload,
+  private void publishRaw(String deviceId, String topic, String payload,
       Instant start) {
-    try {
-      sendStats.update();
-    } catch (Exception e) {
-      throw new RuntimeException("Error acquiring lock", e);
-    }
-    try {
-      if (!mqttClient.isConnected()) {
-        connectAndSetupMqtt();
+
+    try (TimedSegment a = completeTime.getNewSegment()) {
+      synchronized (this) {
+        sendStats.update();
+
+        try (TimedSegment y = maybeRefresh.getNewSegment()) {
+          if (!mqttClient.isConnected()) {
+            connectAndSetupMqtt();
+          }
+          maybeRefreshJwt();
+        }
+
+        try (TimedSegment x = delayedState.getNewSegment()) {
+          if (STATE_TOPIC.equals(topic)) {
+            savedState.payload = payload;
+            savedState.deviceId = deviceId;
+            delayStateUpdate(deviceId);
+          }
+        }
+
+        try (TimedSegment z = maybeAttach.getNewSegment()) {
+          if (!attachedClients.contains(deviceId)) {
+            attachedClients.add(deviceId);
+            attachClient(deviceId);
+          }
+        }
       }
-      Instant startTime = getNowInstant();
-      if (STATE_TOPIC.equals(topic)) {
-        savedState.payload = payload;
-        savedState.deviceId = deviceId;
-        delayStateUpdate(deviceId);
-      }
-      delayedState.provide(startTime);
-      maybeRefreshJwt();
-      maybeRefresh.provide(startTime);
-      if (!attachedClients.contains(deviceId)) {
-        attachedClients.add(deviceId);
-        attachClient(deviceId);
-      }
-      maybeAttach.provide(startTime);
+
       sendMessage(getMessageTopic(deviceId, topic), payload.getBytes());
       LOG.debug(this.deviceId + " publishing complete " + registryId + "/" + deviceId);
-      afterAll.provide(startTime);
     } catch (Exception e) {
       throw new RuntimeException(format("Publish failed for %s: %s", deviceId, e), e);
     }
@@ -418,9 +427,9 @@ public class MqttPublisher implements MessagePublisher {
     lastStateTime.put(deviceId, now);
   }
 
-  private synchronized void sendMessage(String mqttTopic, byte[] mqttMessage) throws Exception {
+  private void sendMessage(String mqttTopic, byte[] mqttMessage) throws Exception {
     LOG.debug(deviceId + " sending message to " + mqttTopic);
-    try (AutoCloseable x = sendTime.getCloseable()) {
+    try (AutoCloseable x = sendTime.getNewSegment()) {
       mqttClient.publish(mqttTopic, mqttMessage, QOS_AT_LEAST_ONCE, MQTT_NO_RETAIN);
     }
   }
@@ -552,9 +561,7 @@ public class MqttPublisher implements MessagePublisher {
   }
 
   private synchronized void maybeRefreshJwt() {
-    long refreshTargetMs = mqttTokenSetTimeMs + TOKEN_EXPIRATION.toMillis() / 2;
-    long currentTimeMillis = System.currentTimeMillis();
-    long remaining = refreshTargetMs - currentTimeMillis;
+    long remaining = refreshJwtFuture();
     LOG.debug(format("Token refresh in %ss", Duration.ofMillis(remaining).toSeconds()));
     if (remaining < 0 && mqttClient.isConnected()) {
       Instant refreshStart = getNowInstant();
@@ -572,6 +579,13 @@ public class MqttPublisher implements MessagePublisher {
             between(refreshStart, getNowInstant()).toSeconds()));
       }
     }
+  }
+
+  private long refreshJwtFuture() {
+    long refreshTargetMs = mqttTokenSetTimeMs + TOKEN_EXPIRATION.toMillis() / 2;
+    long currentTimeMillis = System.currentTimeMillis();
+    long remaining = refreshTargetMs - currentTimeMillis;
+    return remaining;
   }
 
   private void disconnectMqtt() throws MqttException {

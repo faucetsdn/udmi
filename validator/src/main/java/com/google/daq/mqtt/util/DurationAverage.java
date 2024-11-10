@@ -7,7 +7,7 @@ import static java.time.Duration.between;
 import java.time.Duration;
 import java.time.Instant;
 
-public class DurationAverage extends RunningAverageBase {
+public class DurationAverage extends ImpulseRunningAverage {
 
   public DurationAverage(String name) {
     super(name);
@@ -15,7 +15,7 @@ public class DurationAverage extends RunningAverageBase {
 
   @Override
   public String getMessage() {
-    return super.getMessage() + "s";
+    return messageBase() + "s";
   }
 
   public void provide(Instant start) {
@@ -30,8 +30,13 @@ public class DurationAverage extends RunningAverageBase {
     provide(duration.toMillis() / (double) SEC_TO_MS);
   }
 
-  public SilentCloseable getCloseable() {
-    return new SilentCloseable() {
+  @Override
+  protected double provider() {
+    return 0.0;
+  }
+
+  public TimedSegment getNewSegment() {
+    return new TimedSegment() {
       final Instant startTime = getNowInstant();
 
       @Override
@@ -41,7 +46,7 @@ public class DurationAverage extends RunningAverageBase {
     };
   }
 
-  public interface SilentCloseable extends AutoCloseable {
+  public interface TimedSegment extends AutoCloseable {
     @Override
     void close();
   }

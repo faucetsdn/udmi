@@ -27,6 +27,11 @@ public class RunningAverageBase {
   }
 
   public String getMessage() {
+    return messageBase();
+  }
+
+  protected String messageBase() {
+    update();
     return format("%s is %.2f", getName(), timeGet());
   }
 

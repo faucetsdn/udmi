@@ -20,7 +20,7 @@ public class ImpulseRunningAverage extends RunningAverageBase {
 
   @Override
   public String getMessage() {
-    return format("%s is %.2f/s", getName(), timeGet());
+    return messageBase() + "/s";
   }
 
   @Override
