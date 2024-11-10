@@ -63,10 +63,10 @@ import com.google.daq.mqtt.util.CloudIotManager;
 import com.google.daq.mqtt.util.ExceptionMap;
 import com.google.daq.mqtt.util.ExceptionMap.ErrorTree;
 import com.google.daq.mqtt.util.FileDataSink;
+import com.google.daq.mqtt.util.ImpulseRunningAverage;
 import com.google.daq.mqtt.util.MessagePublisher;
 import com.google.daq.mqtt.util.MessagePublisher.QuerySpeed;
 import com.google.daq.mqtt.util.PubSubClient;
-import com.google.daq.mqtt.util.ImpulseRunningAverage;
 import com.google.daq.mqtt.util.ValidationException;
 import com.google.udmi.util.Common;
 import com.google.udmi.util.GeneralUtils;
@@ -194,7 +194,8 @@ public class Validator {
   private final Map<String, AtomicInteger> deviceMessageIndex = new HashMap<>();
   private final List<MessagePublisher> dataSinks = new ArrayList<>();
   private final Set<String> summaryDevices = new HashSet<>();
-  private final ImpulseRunningAverage validationStats = new ImpulseRunningAverage("Message validate");
+  private final ImpulseRunningAverage validationStats = new ImpulseRunningAverage(
+      "Message validate");
   private Set<String> targetDevices;
   private final LoggingHandler outputLogger;
   private ImmutableSet<String> expectedDevices;

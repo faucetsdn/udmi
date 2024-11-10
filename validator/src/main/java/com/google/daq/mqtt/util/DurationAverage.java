@@ -7,6 +7,9 @@ import static java.time.Duration.between;
 import java.time.Duration;
 import java.time.Instant;
 
+/**
+ * Running average class that supports easy timing round a try-with-resources block.
+ */
 public class DurationAverage extends ImpulseRunningAverage {
 
   public DurationAverage(String name) {
@@ -35,7 +38,10 @@ public class DurationAverage extends ImpulseRunningAverage {
     return 0.0;
   }
 
-  public TimedSegment getNewSegment() {
+  /**
+   * Get a new timed segment AutoCloseable.
+   */
+  public TimedSegment newTimedSegment() {
     return new TimedSegment() {
       final Instant startTime = getNowInstant();
 
@@ -46,6 +52,9 @@ public class DurationAverage extends ImpulseRunningAverage {
     };
   }
 
+  /**
+   * An AutoCloseable that doesn't throw an exception.
+   */
   public interface TimedSegment extends AutoCloseable {
     @Override
     void close();

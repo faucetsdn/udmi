@@ -338,7 +338,7 @@ public class MqttPublisher implements MessagePublisher {
   }
 
   private void priorityQueueLoop() {
-    try (TimedSegment y = priorTime.getNewSegment()) {
+    try (TimedSegment y = priorTime.newTimedSegment()) {
       for (Runnable queued = priorityQueue.poll(); queued != null; queued = priorityQueue.poll()) {
         queued.run();
       }
@@ -364,7 +364,7 @@ public class MqttPublisher implements MessagePublisher {
     } else {
       priorityQueueLoop();
     }
-    try (TimedSegment x = coreTime.getNewSegment()) {
+    try (TimedSegment x = coreTime.newTimedSegment()) {
       publishRaw(deviceId, topic, payload, start);
     }
   }
@@ -372,18 +372,18 @@ public class MqttPublisher implements MessagePublisher {
   private void publishRaw(String deviceId, String topic, String payload,
       Instant start) {
 
-    try (TimedSegment a = completeTime.getNewSegment()) {
+    try (TimedSegment a = completeTime.newTimedSegment()) {
       synchronized (this) {
         sendStats.update();
 
-        try (TimedSegment y = maybeRefresh.getNewSegment()) {
+        try (TimedSegment y = maybeRefresh.newTimedSegment()) {
           if (!mqttClient.isConnected()) {
             connectAndSetupMqtt();
           }
           maybeRefreshJwt();
         }
 
-        try (TimedSegment x = delayedState.getNewSegment()) {
+        try (TimedSegment x = delayedState.newTimedSegment()) {
           if (STATE_TOPIC.equals(topic)) {
             savedState.payload = payload;
             savedState.deviceId = deviceId;
@@ -391,7 +391,7 @@ public class MqttPublisher implements MessagePublisher {
           }
         }
 
-        try (TimedSegment z = maybeAttach.getNewSegment()) {
+        try (TimedSegment z = maybeAttach.newTimedSegment()) {
           if (!attachedClients.contains(deviceId)) {
             attachedClients.add(deviceId);
             attachClient(deviceId);
@@ -428,7 +428,7 @@ public class MqttPublisher implements MessagePublisher {
 
   private void sendMessage(String mqttTopic, byte[] mqttMessage) throws Exception {
     LOG.debug(deviceId + " sending message to " + mqttTopic);
-    try (AutoCloseable x = sendTime.getNewSegment()) {
+    try (AutoCloseable x = sendTime.newTimedSegment()) {
       mqttClient.publish(mqttTopic, mqttMessage, QOS_AT_LEAST_ONCE, MQTT_NO_RETAIN);
     }
   }

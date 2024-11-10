@@ -5,6 +5,9 @@ import static org.junit.Assert.assertEquals;
 import com.google.common.util.concurrent.AtomicDouble;
 import org.junit.Test;
 
+/**
+ * Tests for the basic running average variant.
+ */
 public class RunningAverageBaseTest {
 
   private static final double ASSERT_DELTA = 0.000001;

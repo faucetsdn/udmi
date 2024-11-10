@@ -8,6 +8,9 @@ import static java.time.Duration.between;
 
 import java.time.Instant;
 
+/**
+ * Basic running average calculator.
+ */
 public class RunningAverageBase {
 
   private static final double DEFAULT_ALPHA = 0.8;
@@ -35,13 +38,6 @@ public class RunningAverageBase {
     return format("%s is %.2f", getName(), timeGet());
   }
 
-  /**
-   * Record a time-interval sample with the given impulse.
-   */
-  public synchronized void update() {
-    update(getDeltaSec());
-  }
-
   private double getDeltaSec() {
     Instant currentTimestamp = Instant.now();
     try {
@@ -55,18 +51,28 @@ public class RunningAverageBase {
     }
   }
 
+  protected double provider() {
+    return NaN;
+  }
+
   public synchronized void provide(double value) {
     update(getDeltaSec(), value);
+  }
+
+  /**
+   * Record a time-interval sample with the given impulse.
+   */
+  public synchronized void update() {
+    update(getDeltaSec());
   }
 
   public synchronized void update(double deltaSec) {
     update(deltaSec, provider());
   }
 
-  protected double provider() {
-    return NaN;
-  }
-
+  /**
+   * Update the average based on time and value parameters.
+   */
   public synchronized void update(double deltaSec, double value) {
     if (isNaN(running)) {
       running = value;
@@ -100,6 +106,9 @@ public class RunningAverageBase {
     return 0;
   }
 
+  /**
+   * Update to the current time and return the resulting value.
+   */
   public double timeGet() {
     // If not yet initialized, then don't update which would default initialize to 0.
     if (previous == null) {
