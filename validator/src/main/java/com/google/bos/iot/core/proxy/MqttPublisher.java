@@ -146,8 +146,7 @@ public class MqttPublisher implements MessagePublisher {
   private final DurationAverage completeTime = new DurationAverage("Raw total");
 
   private final Set<RunningAverageBase> samplers = ImmutableSet.of(queueStats, sendStats,
-      threadCount, messageQueueSize, sendTime, coreTime, priorTime, totalTime, delayedState,
-      maybeRefresh, maybeAttach, completeTime);
+      threadCount, messageQueueSize, sendTime, coreTime, priorTime, totalTime);
   private long mqttTokenSetTimeMs;
   private MqttConnectOptions mqttConnectOptions;
   private boolean shutdown;
