@@ -173,7 +173,7 @@ public class Validator {
       .toList();
 
   private static final long DEFAULT_INTERVAL_SEC = 60;
-  private static final long REPORTS_PER_SEC = 2;
+  private static final long REPORTS_PER_SEC = 10;
   private static final String VALIDATION_SITE_REPORT_DEVICE_ID = null;
   private static final String VALIDATION_EVENT_TOPIC = "validation/events";
   private static final String VALIDATION_STATE_TOPIC = "validation/state";
