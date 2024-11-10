@@ -374,7 +374,7 @@ public class MqttPublisher implements MessagePublisher {
     }
     try {
       if (!mqttClient.isConnected()) {
-        throw new RuntimeException("MQTT Client not connected");
+        connectAndSetupMqtt();
       }
       Instant startTime = getNowInstant();
       if (STATE_TOPIC.equals(topic)) {
