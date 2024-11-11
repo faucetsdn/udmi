@@ -4,7 +4,6 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 import com.google.common.collect.ImmutableList;
-import com.google.daq.mqtt.sequencer.SequenceBase;
 import com.google.udmi.util.SiteModel;
 import java.util.ArrayList;
 import java.util.HashMap;

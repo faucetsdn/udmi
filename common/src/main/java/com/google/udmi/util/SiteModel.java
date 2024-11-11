@@ -9,7 +9,6 @@ import static com.google.udmi.util.Common.UDMI_COMMIT_ENV;
 import static com.google.udmi.util.Common.UDMI_REF_ENV;
 import static com.google.udmi.util.Common.UDMI_TIMEVER_ENV;
 import static com.google.udmi.util.Common.UDMI_VERSION_ENV;
-import static com.google.udmi.util.Common.UDMI_VERSION_KEY;
 import static com.google.udmi.util.Common.getNamespacePrefix;
 import static com.google.udmi.util.GeneralUtils.OBJECT_MAPPER_RAW;
 import static com.google.udmi.util.GeneralUtils.catchToNull;
