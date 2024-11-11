@@ -41,7 +41,7 @@ public class MessageUpgrader {
    * Create basic container for message upgrading.
    *
    * @param schemaName schema name to work with
-   * @param message message to be upgraded
+   * @param message    message to be upgraded
    */
   public MessageUpgrader(String schemaName, JsonNode message) {
     if (!(message instanceof ObjectNode)) {
@@ -155,8 +155,8 @@ public class MessageUpgrader {
     }
 
     if (minor == 5) {
-      upgraded |= patch == 0 && didMessageChange(this::upgradeTo_1_5_1);
-      upgraded |= patch == 1 && didMessageChange(this::upgradeTo_1_5_2);
+      upgraded |= patch == 0 && didMessageChange(this::upgradeTo_1_5_1, patchUpdater(1));
+      upgraded |= patch == 1 && didMessageChange(this::upgradeTo_1_5_2, patchUpdater(2));
     }
 
     if (upgraded && message.get(VERSION_KEY) != null) {
@@ -173,9 +173,14 @@ public class MessageUpgrader {
     return message;
   }
 
-  private boolean didMessageChange(Runnable updater) {
+  private Runnable patchUpdater(int newPatch) {
+    return () -> patch = newPatch;
+  }
+
+  private boolean didMessageChange(Runnable updater, Runnable postfix) {
     JsonNode before = message.deepCopy();
     updater.run();
+    postfix.run();
     return !before.equals(message);
   }
 
@@ -226,15 +231,14 @@ public class MessageUpgrader {
 
   private void upgradeTo_1_5_1() {
     ifTrueThen(METADATA_SCHEMA.equals(schemaName), this::upgradeTo_1_5_1_metadata);
-    patch = 1;
   }
 
   private void upgradeTo_1_5_2() {
     ifTrueThen(EVENTS_SYSTEM_SCHEMA.equals(schemaName), this::upgradeTo_1_5_2_events_system);
-    patch = 2;
   }
 
   private void upgradeTo_1_5_2_events_system() {
+    ifNotNullThen(message.remove("event_count"), node -> message.put("event_no", node));
   }
 
   private void upgradeTo_1_5_1_metadata() {
