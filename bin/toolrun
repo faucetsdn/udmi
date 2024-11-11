@@ -19,5 +19,13 @@ JAVA_CLASS=com.google.daq.mqtt.util.Dispatcher
 
 echo starting run at $(date --utc --iso=s)
 
-echo java -cp $UDMI_JAR $JAVA_CLASS $util_name "$@"
-java -cp $UDMI_JAR $JAVA_CLASS $util_name "$@" 2>&1 | tee $OUT_DIR/$util_name.log
+if [[ ${1:-} == JDWP ]]; then
+    JDWP="-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:5005"
+    shift
+else
+    JDWP=
+fi
+
+cmd="java -cp $UDMI_JAR $JDWP $JAVA_CLASS $util_name $@"
+echo $cmd
+$cmd 2>&1 | tee $OUT_DIR/$util_name.log

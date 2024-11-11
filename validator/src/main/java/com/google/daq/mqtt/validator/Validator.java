@@ -26,6 +26,7 @@ import static com.google.udmi.util.Common.getExceptionMessage;
 import static com.google.udmi.util.Common.getNamespacePrefix;
 import static com.google.udmi.util.Common.removeNextArg;
 import static com.google.udmi.util.GeneralUtils.friendlyStackTrace;
+import static com.google.udmi.util.GeneralUtils.getTimestamp;
 import static com.google.udmi.util.GeneralUtils.ifNotNullGet;
 import static com.google.udmi.util.GeneralUtils.ifNotNullThen;
 import static com.google.udmi.util.GeneralUtils.ifNotNullThrow;
@@ -62,6 +63,7 @@ import com.google.daq.mqtt.util.CloudIotManager;
 import com.google.daq.mqtt.util.ExceptionMap;
 import com.google.daq.mqtt.util.ExceptionMap.ErrorTree;
 import com.google.daq.mqtt.util.FileDataSink;
+import com.google.daq.mqtt.util.ImpulseRunningAverage;
 import com.google.daq.mqtt.util.MessagePublisher;
 import com.google.daq.mqtt.util.MessagePublisher.QuerySpeed;
 import com.google.daq.mqtt.util.PubSubClient;
@@ -101,11 +103,13 @@ import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.BiConsumer;
+import java.util.function.Function;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 import org.apache.commons.io.FileUtils;
 import org.jetbrains.annotations.NotNull;
+import org.slf4j.impl.SimpleLogger;
 import udmi.schema.Category;
 import udmi.schema.DeviceValidationEvents;
 import udmi.schema.Envelope;
@@ -169,7 +173,7 @@ public class Validator {
       .toList();
 
   private static final long DEFAULT_INTERVAL_SEC = 60;
-  private static final long REPORTS_PER_SEC = 2;
+  private static final long REPORTS_PER_SEC = 10;
   private static final String VALIDATION_SITE_REPORT_DEVICE_ID = null;
   private static final String VALIDATION_EVENT_TOPIC = "validation/events";
   private static final String VALIDATION_STATE_TOPIC = "validation/state";
@@ -190,6 +194,8 @@ public class Validator {
   private final Map<String, AtomicInteger> deviceMessageIndex = new HashMap<>();
   private final List<MessagePublisher> dataSinks = new ArrayList<>();
   private final Set<String> summaryDevices = new HashSet<>();
+  private final ImpulseRunningAverage validationStats = new ImpulseRunningAverage(
+      "Message validate");
   private Set<String> targetDevices;
   private final LoggingHandler outputLogger;
   private ImmutableSet<String> expectedDevices;
@@ -205,6 +211,12 @@ public class Validator {
   private boolean forceUpgrade;
   private SiteModel siteModel;
   private boolean validateCurrent;
+
+  static {
+    System.setProperty(SimpleLogger.DEFAULT_LOG_LEVEL_KEY, "info");
+    System.setProperty(SimpleLogger.SHOW_THREAD_NAME_KEY, "false");
+    System.setProperty(SimpleLogger.SHOW_SHORT_LOG_NAME_KEY, "true");
+  }
 
   /**
    * Create a simplistic validator for encapsulated use.
@@ -552,10 +564,24 @@ public class Validator {
     String keyFile = new File(config.site_model, GCP_REFLECT_KEY_PKCS8).getAbsolutePath();
     outputLogger.info("Loading reflector key file from " + keyFile);
     config.key_file = keyFile;
-    client = new IotReflectorClient(config, TOOLS_FUNCTIONS_VERSION, VALIDATOR_TOOL_NAME,
+    client = new ValidatorIotReflectorClient(config, TOOLS_FUNCTIONS_VERSION, VALIDATOR_TOOL_NAME,
         this::messageFilter);
     dataSinks.add(client);
     client.activate();
+  }
+
+  private static class ValidatorIotReflectorClient extends IotReflectorClient {
+
+    public ValidatorIotReflectorClient(ExecutionConfiguration iotConfig, int requiredVersion,
+        String toolName, Function<Envelope, Boolean> messageFilter) {
+      super(iotConfig, requiredVersion, toolName, messageFilter);
+    }
+
+    @Override
+    protected void errorHandler(Throwable throwable) {
+      System.err.printf("Suppressing mqtt client error: %s at %s%n",
+          throwable.getMessage(), getTimestamp());
+    }
   }
 
   private boolean messageFilter(Envelope envelope) {
@@ -568,7 +594,7 @@ public class Validator {
     }
     sendInitializationQuery();
     outputLogger.info("Running udmi tools version " + UDMI_TOOLS);
-    outputLogger.debug("Entering message loop on " + client.getSubscriptionId());
+    outputLogger.notice("Entering message loop on " + client.getSubscriptionId());
     processValidationReport();
     ScheduledFuture<?> reportSender =
         simulatedMessages ? null : executor.scheduleAtFixedRate(this::processValidationReport,
@@ -683,8 +709,11 @@ public class Validator {
     ReportingDevice device = reportingDevices.computeIfAbsent(deviceId, this::newReportingDevice);
     device.clearMessageEntries();
 
+    String schemaName = messageSchema(attributes);
+    String messageTag = format("device %d/%d for %s/%s", processedDevices.size(),
+        reportingDevices.size(), deviceId, schemaName);
+
     try {
-      String schemaName = messageSchema(attributes);
       boolean isString = messageObj instanceof String;
 
       Map<String, Object> message = isString ? null : mapCast(messageObj);
@@ -717,9 +746,6 @@ public class Validator {
         return device;
       }
 
-      outputLogger.info("Processing device %s/%s as #%d/%d", deviceId, schemaName,
-          processedDevices.size(), reportingDevices.size());
-
       if ("true".equals(attributes.get("wasBase64"))) {
         base64Devices.add(deviceId);
       }
@@ -729,11 +755,15 @@ public class Validator {
       }
       validateDeviceMessage(device, message, attributes);
 
+      validationStats.update();
+
       if (!device.hasErrors()) {
-        outputLogger.info("Validation clean %s/%s", deviceId, schemaName);
+        outputLogger.info("Validation clean %s", messageTag);
+      } else {
+        outputLogger.info("Validation error %s", messageTag);
       }
     } catch (Exception e) {
-      outputLogger.error("Error processing %s: %s", deviceId, friendlyStackTrace(e));
+      outputLogger.error("Validation exception %s: %s", messageTag, friendlyStackTrace(e));
       device.addError(e, attributes, Category.VALIDATION_DEVICE_RECEIVE);
     }
     return device;
@@ -831,7 +861,7 @@ public class Validator {
         }
       }
     } catch (Exception e) {
-      outputLogger.error(format("Timestamp validation error for %s: %s", device.getDeviceId(),
+      outputLogger.debug(format("Timestamp validation error for %s: %s", device.getDeviceId(),
           friendlyStackTrace(e)));
       device.addError(e, attributes, Category.VALIDATION_DEVICE_CONTENT);
     }
@@ -976,6 +1006,7 @@ public class Validator {
 
   private synchronized void processValidationReport() {
     try {
+      System.err.println(validationStats.getMessage());
       processValidationReportRaw();
     } catch (Exception e) {
       e.printStackTrace();

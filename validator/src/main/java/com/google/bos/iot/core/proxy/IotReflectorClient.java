@@ -35,10 +35,12 @@ import static com.google.udmi.util.PubSubReflector.USER_NAME_DEFAULT;
 import static java.lang.String.format;
 import static java.util.Objects.requireNonNull;
 import static java.util.Optional.ofNullable;
+import static java.util.concurrent.Executors.newSingleThreadScheduledExecutor;
 
 import com.google.api.client.util.Base64;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSet;
+import com.google.daq.mqtt.util.ImpulseRunningAverage;
 import com.google.daq.mqtt.util.MessagePublisher;
 import com.google.daq.mqtt.validator.Validator;
 import com.google.daq.mqtt.validator.Validator.ErrorContainer;
@@ -54,11 +56,11 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.TreeMap;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.Executors;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
@@ -104,7 +106,7 @@ public class IotReflectorClient implements MessagePublisher {
   private final String udmiVersion;
   private final CountDownLatch initialConfigReceived = new CountDownLatch(1);
   private final CountDownLatch initializedStateSent = new CountDownLatch(1);
-  private final ScheduledExecutorService syncThread = Executors.newSingleThreadScheduledExecutor();
+  private final ScheduledExecutorService tickExecutor = newSingleThreadScheduledExecutor();
   private final int requiredVersion;
   private final BlockingQueue<Validator.MessageBundle> messages = new LinkedBlockingQueue<>();
   private final MessagePublisher publisher;
@@ -125,6 +127,9 @@ public class IotReflectorClient implements MessagePublisher {
   private int retries;
   private String expectedTxnId;
   private Instant txnStartTime;
+  private final ImpulseRunningAverage publishStats = new ImpulseRunningAverage("Message publish");
+  private final ImpulseRunningAverage receiveStats = new ImpulseRunningAverage("Message receive");
+  private final Set<ImpulseRunningAverage> samplers = ImmutableSet.of(publishStats, receiveStats);
 
   /**
    * Create a new reflector instance.
@@ -209,6 +214,11 @@ public class IotReflectorClient implements MessagePublisher {
     return format("%s%08x", sessionPrefix, sessionCounter.incrementAndGet());
   }
 
+  private void timerTick() {
+    samplers.forEach(value -> info(value.getMessage()));
+    setReflectorState();
+  }
+
   private synchronized void setReflectorState() {
     if (isInstallValid && expectedTxnId != null) {
       error(format("Missing UDMI reflector state reply for %s after %ss", expectedTxnId,
@@ -245,6 +255,7 @@ public class IotReflectorClient implements MessagePublisher {
         info("Sending UDMI reflector state: " + stringify(map));
       }
 
+      publishStats.update();
       publisher.publish(registryId, getReflectorTopic(), stringifyTerse(map), HIGH);
     } catch (Exception e) {
       throw new RuntimeException("Could not set reflector state", e);
@@ -271,6 +282,7 @@ public class IotReflectorClient implements MessagePublisher {
   }
 
   private void messageHandler(String topic, String payload) {
+    receiveStats.update();
     if (payload.length() == 0) {
       return;
     }
@@ -508,7 +520,8 @@ public class IotReflectorClient implements MessagePublisher {
     return envelope;
   }
 
-  private void errorHandler(Throwable throwable) {
+  protected void errorHandler(Throwable throwable) {
+    receiveStats.update();
     System.err.printf("Received mqtt client error: %s at %s%n",
         throwable.getMessage(), getTimestamp());
     close();
@@ -550,7 +563,7 @@ public class IotReflectorClient implements MessagePublisher {
         }
       }
 
-      syncThread.scheduleAtFixedRate(this::setReflectorState, RESYNC_INTERVAL_SEC,
+      tickExecutor.scheduleAtFixedRate(this::timerTick, RESYNC_INTERVAL_SEC,
           RESYNC_INTERVAL_SEC, TimeUnit.SECONDS);
 
       System.err.println("Subscribed to " + subscriptionId);
@@ -581,9 +594,6 @@ public class IotReflectorClient implements MessagePublisher {
 
   @Override
   public String publish(String deviceId, String topic, String data) {
-    if (!publisher.isActive()) {
-      throw new IllegalStateException("Attempted publish to closed publisher.");
-    }
     Envelope envelope = new Envelope();
     envelope.deviceRegistryId = registryId;
     envelope.deviceId = deviceId;
@@ -594,6 +604,7 @@ public class IotReflectorClient implements MessagePublisher {
     String transactionId = getNextTransactionId();
     envelope.transactionId = transactionId;
     envelope.publishTime = new Date();
+    publishStats.update();
     publisher.publish(registryId, getPublishTopic(), stringify(envelope));
     return transactionId;
   }
@@ -601,7 +612,7 @@ public class IotReflectorClient implements MessagePublisher {
   @Override
   public void close() {
     active = false;
-    syncThread.shutdown();
+    tickExecutor.shutdown();
     ifTrueThen(pubCounts.get(publisher).decrementAndGet() == 0, publisher::close);
   }
 
