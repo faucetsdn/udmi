@@ -22,6 +22,7 @@ import static com.google.udmi.util.Common.SUBFOLDER_PROPERTY_KEY;
 import static com.google.udmi.util.Common.SUBTYPE_PROPERTY_KEY;
 import static com.google.udmi.util.Common.TIMESTAMP_KEY;
 import static com.google.udmi.util.Common.UPDATE_QUERY_TOPIC;
+import static com.google.udmi.util.Common.UPGRADED_FROM;
 import static com.google.udmi.util.Common.getExceptionMessage;
 import static com.google.udmi.util.Common.getNamespacePrefix;
 import static com.google.udmi.util.Common.removeNextArg;
@@ -141,6 +142,7 @@ public class Validator {
   public static final String TIMESTAMP_UTC_SUFFIX_2 = "+0000";
   public static final String ATTRIBUTE_FILE_FORMAT = "%s.attr";
   public static final String MESSAGE_FILE_FORMAT = "%s.json";
+  public static final String ORIG_FILE_FORMAT = "%s.orig";
   private static final String SCHEMA_VALIDATION_FORMAT = "Validating %d schemas";
   private static final String TARGET_VALIDATION_FORMAT = "Validating %d files against %s";
   private static final String DEVICE_FILE_FORMAT = "devices/%s";
@@ -724,7 +726,7 @@ public class Validator {
         return null;
       }
 
-      writeDeviceOutCapture(messageObj, attributes, deviceId, schemaName);
+      File rawFile = writeDeviceOutCapture(messageObj, attributes, deviceId, schemaName, true);
 
       String subFolder = attributes.get(SUBFOLDER_PROPERTY_KEY);
       boolean processSchema = !IGNORE_FOLDERS.contains(subFolder);
@@ -753,7 +755,13 @@ public class Validator {
       if (processExceptions(attributes, deviceId, device, message)) {
         return device;
       }
+
       validateDeviceMessage(device, message, attributes);
+
+      writeDeviceOutCapture(message, attributes, deviceId, schemaName, false);
+      if (!message.containsKey(UPGRADED_FROM)) {
+        rawFile.delete();
+      }
 
       validationStats.update();
 
@@ -957,12 +965,13 @@ public class Validator {
     return process && !ignore;
   }
 
-  private void writeDeviceOutCapture(Object message, Map<String, String> attributes,
-      String deviceId, String schemaName) throws IOException {
+  private File writeDeviceOutCapture(Object message, Map<String, String> attributes,
+      String deviceId, String schemaName, boolean orig) throws IOException {
 
     File deviceDir = makeDeviceDir(deviceId);
 
-    File messageFile = new File(deviceDir, format(MESSAGE_FILE_FORMAT, schemaName));
+    String fileFormat = orig ? ORIG_FILE_FORMAT : MESSAGE_FILE_FORMAT;
+    File messageFile = new File(deviceDir, format(fileFormat, schemaName));
 
     if (message instanceof Map) {
       Map<String, Object> messageMap = mapCast(message);
@@ -977,6 +986,8 @@ public class Validator {
 
     File attributesFile = new File(deviceDir, format(ATTRIBUTE_FILE_FORMAT, schemaName));
     OBJECT_MAPPER.writeValue(attributesFile, attributes);
+
+    return messageFile;
   }
 
   private File makeDeviceDir(String deviceId) {
