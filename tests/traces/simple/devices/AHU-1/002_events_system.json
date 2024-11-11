@@ -5,10 +5,11 @@
     "timestamp" : "2022-07-19T05:04:36Z",
     "level" : 200
   } ],
+  "event_count": 100,
   "metrics": {
     "mem_total_mb": 25164.88,
     "store_total_mb": null
   },
   "timestamp" : "2022-07-19T05:04:36+0000",
-  "version" : "1.5.2"
+  "version" : "1.5.1"
 }

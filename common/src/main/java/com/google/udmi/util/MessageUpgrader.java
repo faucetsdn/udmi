@@ -4,6 +4,7 @@ import static com.google.udmi.util.Common.UPGRADED_FROM;
 import static com.google.udmi.util.Common.VERSION_KEY;
 import static com.google.udmi.util.GeneralUtils.OBJECT_MAPPER_RAW;
 import static com.google.udmi.util.GeneralUtils.ifNotNullThen;
+import static com.google.udmi.util.GeneralUtils.ifTrueThen;
 import static com.google.udmi.util.MessageDowngrader.convertVersion;
 
 import com.fasterxml.jackson.databind.JsonNode;
@@ -24,6 +25,7 @@ public class MessageUpgrader {
   public static final JsonNodeFactory NODE_FACTORY = JsonNodeFactory.instance;
   public static final String STATE_SCHEMA = "state";
   public static final String STATE_SYSTEM_SCHEMA = "state_system";
+  public static final String EVENTS_SYSTEM_SCHEMA = "events_system";
   public static final String METADATA_SCHEMA = "metadata";
   private static final String TARGET_FORMAT = "%d.%d.%d";
   private static final String RAW_GIT_VERSION = "git";
@@ -152,12 +154,9 @@ public class MessageUpgrader {
       minor = 5;
     }
 
-    if (minor == 5 && patch == 0) {
-      JsonNode before = message.deepCopy();
-      upgradeTo_1_5_1();
-      upgraded |= !before.equals(message);
-      patch = 1;
-      minor = 5;
+    if (minor == 5) {
+      upgraded |= patch == 0 && didMessageChange(this::upgradeTo_1_5_1);
+      upgraded |= patch == 1 && didMessageChange(this::upgradeTo_1_5_2);
     }
 
     if (upgraded && message.get(VERSION_KEY) != null) {
@@ -172,6 +171,12 @@ public class MessageUpgrader {
     }
 
     return message;
+  }
+
+  private boolean didMessageChange(Runnable updater) {
+    JsonNode before = message.deepCopy();
+    updater.run();
+    return !before.equals(message);
   }
 
   private void upgradeTo_1_3_14() {
@@ -220,9 +225,16 @@ public class MessageUpgrader {
   }
 
   private void upgradeTo_1_5_1() {
-    if (METADATA_SCHEMA.equals(schemaName)) {
-      upgradeTo_1_5_1_metadata();
-    }
+    ifTrueThen(METADATA_SCHEMA.equals(schemaName), this::upgradeTo_1_5_1_metadata);
+    patch = 1;
+  }
+
+  private void upgradeTo_1_5_2() {
+    ifTrueThen(EVENTS_SYSTEM_SCHEMA.equals(schemaName), this::upgradeTo_1_5_2_events_system);
+    patch = 2;
+  }
+
+  private void upgradeTo_1_5_2_events_system() {
   }
 
   private void upgradeTo_1_5_1_metadata() {
