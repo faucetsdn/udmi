@@ -1,14 +1,9 @@
 {
-  "hardware" : {
-    "model" : "Delmatic IP_BW6",
-    "make" : "unknown"
+  "firmware" : {
+    "version" : [ "D_IP_BW6_V35_6_S14" ]
   },
   "last_config" : "1999-10-20T01:02:03Z",
-  "operation" : {
-    "operational" : true
-  },
-  "software" : {
-    "firmware" : "D_IP_BW6_V35_6_S14"
-  },
+  "make_model" : "Delmatic IP_BW6",
+  "operational" : true,
   "timestamp" : "2023-03-02T19:27:38.819Z"
 }
