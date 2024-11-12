@@ -238,11 +238,10 @@ public class Validator {
   public Validator(List<String> argList) {
     outputLogger = new LoggingHandler();
     List<String> listCopy = new ArrayList<>(argList);
-    parseArgs(listCopy);
+    targetDevices = Set.copyOf(parseArgs(listCopy));
     if (client == null) {
       validateReflector();
     }
-    targetDevices = Set.copyOf(listCopy);
     siteModel = ifNotNullGet(config.site_model, SiteModel::new);
     ifNotNullThen(siteModel, this::initializeExpectedDevices);
   }
@@ -346,10 +345,13 @@ public class Validator {
 
   private List<String> postProcessArgs(List<String> argList) {
     try {
+      CommandLineProcessor commandLineProcessor = new CommandLineProcessor(this);
+      commandLineProcessor.processArgs(argList);
       while (!argList.isEmpty()) {
         String option = removeNextArg(argList);
         try {
           switch (option) {
+            case "-h" -> showHelp();
             case "-p" -> setProjectId(removeNextArg(argList));
             case "-s" -> setSiteDir(removeNextArg(argList));
             case "-a" -> setSchemaSpec(removeNextArg(argList));
@@ -377,6 +379,10 @@ public class Validator {
         setSchemaSpec(new File(UDMI_ROOT, "schema").getAbsolutePath());
       }
     }
+  }
+
+  @CommandLineOption(option = "-h", long_form = "--help")
+  private void showHelp() {
   }
 
   private void setReportDelay(String arg) {
