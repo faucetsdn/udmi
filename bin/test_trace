@@ -28,14 +28,14 @@ trace_out=$trace_in/expected/
 site_model=sites/udmi_site_model
 site_out=$site_model/out
 
-# Clean up from other unit testing
-rm -rf $site_model/devices/ACME-2301
+# Clean up from other testing runs
+rm -rf $site_model/devices/ACME-2301 $site_model/devices/*/out
+rm -rf $site_out $site_model/devices/XXX-*
+(cd $site_model; git checkout .)
 
 # Use a static/constant value to make output stable.
 export UDMI_TOOLS=test_trace
 
-# Clean things out, including some potentially corrupt state.
-rm -rf $site_out $site_model/devices/XXX-1
 cmd="$javarun -p -- -s $site_model -r $trace_in --"
 echo $cmd
 $cmd
