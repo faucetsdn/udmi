@@ -22,7 +22,7 @@ java -version
 
 POD_JAR=build/libs/udmis-1.0-SNAPSHOT-all.jar
 STACK_OPTS=-XX:-OmitStackTraceInFastThrow
-DEBUG_OPTS=-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:5005
+#DEBUG_OPTS=-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:5005
 
 gcloud_project=$(gcloud config get project || true)
 if [[ -z $GCP_PROJECT && -z $gcloud_project ]]; then
