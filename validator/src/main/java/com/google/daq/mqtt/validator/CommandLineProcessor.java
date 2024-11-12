@@ -1,62 +1,118 @@
 package com.google.daq.mqtt.validator;
 
+import static com.google.common.base.Preconditions.checkState;
 import static com.google.udmi.util.GeneralUtils.ifNotNullThen;
 
 import java.lang.reflect.Method;
+import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Optional;
-import java.util.function.Consumer;
 
 public class CommandLineProcessor {
 
   private static final String TERMINATING_ARG = "--";
   private static final String EQUALS_SIGN = "=";
-  private final Object target
+  private static final int LINUX_SUCCESS_CODE = 0;
+  private static final int LINUX_ERROR_CODE = -1;
+  private final Object target;
+  private final Method showHelpMethod;
 
   Map<CommandLineOption, Method> optionMap = new HashMap<>();
 
-  public CommandLineProcessor(Object target, Consumer<Exception> usage) {
+  public CommandLineProcessor(Object target) {
     this.target = target;
 
     List<Method> methods = new ArrayList<>(List.of(target.getClass().getMethods()));
 
+    showHelpMethod = getShowHelpMethod();
+    optionMap.put(getShowHelpOption(), showHelpMethod);
     methods.forEach(method -> ifNotNullThen(method.getAnnotation(CommandLineOption.class),
         a -> optionMap.put(a, method)));
   }
 
+  private Method getShowHelpMethod() {
+    try {
+      return CommandLineProcessor.class.getMethod("showUsage");
+    } catch (Exception e) {
+      throw new RuntimeException("While getting showHelp method", e);
+    }
+  }
+
+  private CommandLineOption getShowHelpOption() {
+    return showHelpMethod.getAnnotation(CommandLineOption.class);
+  }
+
+  @CommandLineOption(short_form = "-h")
+  public void showUsage() {
+    showUsage(null);
+  }
+
+  private void showUsage(String message) {
+    ifNotNullThen(message, m -> System.err.println(m));
+    System.err.println("Options supported:");
+    optionMap.forEach((option, method) ->
+        System.err.printf("  %s: %s%n", option.short_form(), option.long_form()));
+    System.exit(message == null ? LINUX_SUCCESS_CODE : LINUX_ERROR_CODE);
+  }
+
   public List<String> processArgs(List<String> argList) {
-    while (!argList.isEmpty()) {
-      String arg = argList.remove(0);
-      if (arg.equals(TERMINATING_ARG)) {
-        return argList;
+    try {
+      while (!argList.isEmpty()) {
+        String arg = argList.remove(0);
+        if (arg.equals(TERMINATING_ARG)) {
+          return argList;
+        }
+        Optional<Entry<CommandLineOption, Method>> first = optionMap.entrySet().stream()
+            .filter(option -> processArgEntry(arg, option.getKey(), option.getValue(), argList))
+            .findFirst();
+        if (first.isEmpty()) {
+          throw new IllegalStateException("Unrecognized command line option '" + arg + "'");
+        }
       }
-      Optional<Entry<CommandLineOption, Method>> first = optionMap.entrySet().stream()
-          .filter(option -> processArgEntry(arg, option.getKey(), option.getValue(), argList))
-          .findFirst();
-      if (first.isEmpty()) {
-        throw new IllegalStateException("Unrecognized command line option '" + arg + "'");
-      }
+      return argList;
+    } catch (Exception e) {
+      showUsage(e.getMessage());
+      return null;
     }
   }
 
   private boolean processArgEntry(String arg, CommandLineOption option, Method method,
       List<String> argList) {
-    if (arg.equals(option.option())) {
-      if (requiresArg(method)) {
-        String arg = argList.remove(0);
-        method.invoke(target, arg);
+    try {
+      if (arg.equals(option.short_form())) {
+        if (method.equals(showHelpMethod)) {
+          showUsage();
+        } else if (requiresArg(method)) {
+          String parameter = argList.remove(0);
+          method.invoke(target, parameter);
+        } else {
+          method.invoke(target);
+        }
+        return true;
+      } else if (!option.long_form().isBlank() && arg.startsWith(option.long_form())) {
+        throw new RuntimeException("Long form command line not yet supported");
+      } else if (option.short_form().isBlank() && option.long_form().isBlank()) {
+        throw new RuntimeException(
+            "Neither long nor short form not defined for " + method.getName());
       }
-      return true;
-    } else if (arg.startsWith(option.long_form())) {
-
+      return false;
+    } catch (Exception e) {
+      throw new RuntimeException("Processing command line method " + method.getName(), e);
     }
-    return false;
+  }
+
+  private void cleanExit(boolean success) {
+    System.exit(success ? LINUX_SUCCESS_CODE : LINUX_ERROR_CODE);
   }
 
   private boolean requiresArg(Method method) {
+    Type[] genericParameterTypes = method.getGenericParameterTypes();
+    checkState(genericParameterTypes.length <= 1,
+        "expected <= 1 parameter for command line method %s", method.getName());
+    return genericParameterTypes.length == 1;
   }
 }

@@ -53,6 +53,8 @@ import com.google.daq.mqtt.util.ExceptionMap;
 import com.google.daq.mqtt.util.ExceptionMap.ErrorTree;
 import com.google.daq.mqtt.util.PubSubPusher;
 import com.google.daq.mqtt.util.ValidationError;
+import com.google.daq.mqtt.validator.CommandLineOption;
+import com.google.daq.mqtt.validator.CommandLineProcessor;
 import com.google.udmi.util.Common;
 import com.google.udmi.util.SiteModel;
 import java.io.File;
@@ -83,6 +85,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
@@ -150,6 +153,7 @@ public class Registrar {
   private List<Future<?>> executing = new ArrayList<>();
   private SiteModel siteModel;
   private boolean queryOnly;
+  private final AtomicBoolean helpShown = new AtomicBoolean();
 
   /**
    * Main entry point for registrar.
@@ -206,6 +210,8 @@ public class Registrar {
   }
 
   Registrar postProcessArgs(List<String> argList) {
+    CommandLineProcessor commandLineProcessor = new CommandLineProcessor(this);
+    commandLineProcessor.processArgs(argList);
     requireNonNull(siteModel, "siteModel not defined");
     while (argList.size() > 0) {
       String option = argList.remove(0);
@@ -219,7 +225,7 @@ public class Registrar {
         case "-u" -> setUpdateFlag(true);
         case "-b" -> setBlockUnknown(true);
         case "-l" -> setIdleLimit(removeArg(argList, "idle limit"));
-        case "-t" -> setValidateMetadata(false);
+        case "-t" -> setValidateMetadata();
         case "-q" -> setQueryOnly(true);
         case "-d" -> setDeleteDevices(true);
         case "-x" -> setExpungeDevices(true);
@@ -364,8 +370,9 @@ public class Registrar {
     updateCloudIoT = update;
   }
 
-  private void setValidateMetadata(boolean validateMetadata) {
-    this.doValidate = validateMetadata;
+  @CommandLineOption(short_form = "-t")
+  private void setValidateMetadata() {
+    this.doValidate = false;
   }
 
   private void setDeviceList(List<String> deviceList) {
@@ -1178,7 +1185,8 @@ public class Registrar {
     this.projectId = projectId;
   }
 
-  protected void setToolRoot(String toolRoot) {
+  @CommandLineOption(short_form = "-r")
+  public void setToolRoot(String toolRoot) {
     try {
       schemaBase = new File(toolRoot, SCHEMA_BASE_PATH);
       if (!schemaBase.isDirectory()) {

@@ -9,7 +9,9 @@ import java.lang.annotation.Target;
 @Target({ElementType.METHOD})
 public @interface CommandLineOption {
 
-  String option();
+  String NO_VALUE = "";
 
-  String long_form();
+  String short_form() default NO_VALUE;
+
+  String long_form() default NO_VALUE;
 }
