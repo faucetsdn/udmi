@@ -1,12 +1,18 @@
 {
   "system" : {
     "last_config" : "1999-10-20T01:02:03Z",
-    "firmware" : {
-      "version" : [ "D_IP_BW6_V35_6_S14" ]
+    "hardware" : {
+      "model" : "Delmatic IP_BW6",
+      "make" : "unknown"
     },
-    "operational" : true,
-    "make_model" : "Delmatic IP_BW6"
+    "software" : {
+      "firmware" : "D_IP_BW6_V35_6_S14"
+    },
+    "operation" : {
+      "operational" : true
+    }
   },
   "timestamp" : "2023-03-02T19:27:35.819Z",
-  "version" : 1
+  "upgraded_from" : "1",
+  "version" : "1.5.2"
 }

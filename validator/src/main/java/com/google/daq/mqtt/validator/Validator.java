@@ -22,6 +22,7 @@ import static com.google.udmi.util.Common.SUBFOLDER_PROPERTY_KEY;
 import static com.google.udmi.util.Common.SUBTYPE_PROPERTY_KEY;
 import static com.google.udmi.util.Common.TIMESTAMP_KEY;
 import static com.google.udmi.util.Common.UPDATE_QUERY_TOPIC;
+import static com.google.udmi.util.Common.UPGRADED_FROM;
 import static com.google.udmi.util.Common.getExceptionMessage;
 import static com.google.udmi.util.Common.getNamespacePrefix;
 import static com.google.udmi.util.Common.removeNextArg;
@@ -108,7 +109,6 @@ import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 import org.apache.commons.io.FileUtils;
-import org.jetbrains.annotations.NotNull;
 import org.slf4j.impl.SimpleLogger;
 import udmi.schema.Category;
 import udmi.schema.DeviceValidationEvents;
@@ -141,6 +141,7 @@ public class Validator {
   public static final String TIMESTAMP_UTC_SUFFIX_2 = "+0000";
   public static final String ATTRIBUTE_FILE_FORMAT = "%s.attr";
   public static final String MESSAGE_FILE_FORMAT = "%s.json";
+  public static final String ORIG_FILE_FORMAT = "%s.orig";
   private static final String SCHEMA_VALIDATION_FORMAT = "Validating %d schemas";
   private static final String TARGET_VALIDATION_FORMAT = "Validating %d files against %s";
   private static final String DEVICE_FILE_FORMAT = "devices/%s";
@@ -503,7 +504,6 @@ public class Validator {
     }
   }
 
-  @NotNull
   private ReportingDevice newReportingDevice(String device) {
     ReportingDevice reportingDevice = new ReportingDevice(device);
     ifTrueThen(validateCurrent, () -> reportingDevice.setThreshold(reportingDelay));
@@ -753,7 +753,15 @@ public class Validator {
       if (processExceptions(attributes, deviceId, device, message)) {
         return device;
       }
+
       validateDeviceMessage(device, message, attributes);
+
+      if (message.containsKey(UPGRADED_FROM)) {
+        File jsonFile = getDeviceOutCaptureFile(deviceId, schemaName, false);
+        File origFile = getDeviceOutCaptureFile(deviceId, schemaName, true);
+        jsonFile.renameTo(origFile);
+        writeDeviceOutCapture(message, attributes, deviceId, schemaName);
+      }
 
       validationStats.update();
 
@@ -960,9 +968,7 @@ public class Validator {
   private void writeDeviceOutCapture(Object message, Map<String, String> attributes,
       String deviceId, String schemaName) throws IOException {
 
-    File deviceDir = makeDeviceDir(deviceId);
-
-    File messageFile = new File(deviceDir, format(MESSAGE_FILE_FORMAT, schemaName));
+    File messageFile = getDeviceOutCaptureFile(deviceId, schemaName, false);
 
     if (message instanceof Map) {
       Map<String, Object> messageMap = mapCast(message);
@@ -975,8 +981,15 @@ public class Validator {
       OBJECT_MAPPER.writeValue(messageFile, message);
     }
 
+    File deviceDir = makeDeviceDir(deviceId);
     File attributesFile = new File(deviceDir, format(ATTRIBUTE_FILE_FORMAT, schemaName));
     OBJECT_MAPPER.writeValue(attributesFile, attributes);
+  }
+
+  private File getDeviceOutCaptureFile(String deviceId, String schemaName, boolean orig) {
+    File deviceDir = makeDeviceDir(deviceId);
+    String fileFormat = orig ? ORIG_FILE_FORMAT : MESSAGE_FILE_FORMAT;
+    return new File(deviceDir, format(fileFormat, schemaName));
   }
 
   private File makeDeviceDir(String deviceId) {

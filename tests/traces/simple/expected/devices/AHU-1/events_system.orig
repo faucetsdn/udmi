@@ -1,5 +1,5 @@
 {
-  "event_no" : 100,
+  "event_count" : 100,
   "logentries" : [ {
     "message" : "1999-10-20T01:02:03Z sending test message #70",
     "category" : "device.testing",
@@ -10,6 +10,5 @@
     "mem_total_mb" : 25164.88
   },
   "timestamp" : "2022-07-19T05:04:36+0000",
-  "upgraded_from" : "1.5.1",
-  "version" : "1.5.2"
+  "version" : "1.5.1"
 }
