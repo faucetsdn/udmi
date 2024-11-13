@@ -82,6 +82,10 @@ public class CommandLineProcessor {
         if (first.isEmpty()) {
           throw new IllegalArgumentException("Unrecognized command line option '" + arg + "'");
         }
+        if (!arg.startsWith("-")) {
+          argList.add(0, arg);
+          return argList;
+        }
       }
       return null;
     } catch (Exception e) {
@@ -108,6 +112,8 @@ public class CommandLineProcessor {
       } else if (option.short_form().isBlank() && option.long_form().isBlank()) {
         throw new IllegalArgumentException(
             "Neither long nor short form not defined for " + method.getName());
+      } else if (!arg.startsWith("-")) {
+        return true;
       }
       return false;
     } catch (Exception e) {
