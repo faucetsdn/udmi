@@ -173,7 +173,7 @@ public class SiteModel {
       }
       String nextArg = argList.get(0);
       if (nextArg.equals(NO_SITE)) {
-        return NO_SITE;
+        return argList.remove(0);
       } else if (nextArg.startsWith("-")) {
         return null;
       }
