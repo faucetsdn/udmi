@@ -1,4 +1,4 @@
-package com.google.daq.mqtt.validator;
+package com.google.udmi.util;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;

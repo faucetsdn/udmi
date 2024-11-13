@@ -1,4 +1,4 @@
-package com.google.daq.mqtt.validator;
+package com.google.udmi.util;
 
 import static com.google.common.base.Preconditions.checkState;
 import static com.google.udmi.util.GeneralUtils.ifNotNullThen;
