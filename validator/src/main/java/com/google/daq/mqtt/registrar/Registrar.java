@@ -128,6 +128,7 @@ public class Registrar {
   private final Map<String, JsonSchema> schemas = new HashMap<>();
   private final String generation = getGenerationString();
   private final Set<Summarizer> summarizers = new HashSet<>();
+  private final CommandLineProcessor commandLineProcessor = new CommandLineProcessor(this);
   private CloudIotManager cloudIotManager;
   private File schemaBase;
   private PubSubPusher updatePusher;
@@ -152,8 +153,6 @@ public class Registrar {
   private List<Future<?>> executing = new ArrayList<>();
   private SiteModel siteModel;
   private boolean queryOnly;
-  private final AtomicBoolean helpShown = new AtomicBoolean();
-  private final CommandLineProcessor commandLineProcessor = new CommandLineProcessor(this);
 
   /**
    * Main entry point for registrar.
