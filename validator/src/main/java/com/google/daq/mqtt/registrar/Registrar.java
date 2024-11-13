@@ -213,44 +213,21 @@ public class Registrar {
     CommandLineProcessor commandLineProcessor = new CommandLineProcessor(this);
     commandLineProcessor.processArgs(argList);
     requireNonNull(siteModel, "siteModel not defined");
-    while (argList.size() > 0) {
-      String option = argList.remove(0);
-      switch (option) {
-        case "-u" -> setUpdateFlag();
-        case "-b" -> setBlockUnknown();
-        case "-l" -> setIdleLimit(removeArg(argList, "idle limit"));
-        case "-t" -> setValidateMetadata();
-        case "-q" -> setQueryOnly();
-        case "-d" -> setDeleteDevices();
-        case "-x" -> setExpungeDevices();
-        case "-n" -> setRunnerThreads(removeArg(argList, "runner threads"));
-        case "-c" -> setCreateRegistries(removeArg(argList, "create registries"));
-        case "--" -> {
-          setDeviceList(argList);
-          return this;
-        }
-        default -> {
-          if (option.startsWith("-")) {
-            throw new RuntimeException("Unknown cmdline option " + option);
-          }
-          // Add the current non-option back into the list and use it as device names list.
-          argList.add(0, option);
-          setDeviceList(argList);
-          return this;
-        }
-      }
-    }
+    setDeviceList(argList);
     return this;
   }
 
+  @CommandLineOption(short_form = "-q")
   private void setQueryOnly() {
     this.queryOnly = true;
   }
 
+  @CommandLineOption(short_form = "-b")
   private void setBlockUnknown() {
     blockUnknown = true;
   }
 
+  @CommandLineOption(short_form = "-c")
   private void setCreateRegistries(String registrySpec) {
     try {
       createRegistries = Integer.parseInt(registrySpec);
@@ -262,16 +239,19 @@ public class Registrar {
     }
   }
 
+  @CommandLineOption(short_form = "-n")
   private void setRunnerThreads(String argValue) {
     runnerThreads = Integer.parseInt(argValue);
   }
 
+  @CommandLineOption(short_form = "-d")
   private void setDeleteDevices() {
     checkNotNull(projectId, "delete devices specified with no target project");
     this.deleteDevices = true;
     this.updateCloudIoT = true;
   }
 
+  @CommandLineOption(short_form = "-x")
   private void setExpungeDevices() {
     checkNotNull(projectId, "expunge devices specified with no target project");
     this.expungeDevices = true;
@@ -356,11 +336,13 @@ public class Registrar {
     System.err.println("Created registry " + registry);
   }
 
+  @CommandLineOption(short_form = "-l")
   private void setIdleLimit(String option) {
     idleLimit = Duration.parse("PT" + option);
     System.err.println("Limiting devices to duration " + idleLimit.toSeconds() + "s");
   }
 
+  @CommandLineOption(short_form = "-u")
   private void setUpdateFlag() {
     updateCloudIoT = true;
   }
