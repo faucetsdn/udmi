@@ -32,6 +32,7 @@ public class CommandLineProcessor {
     optionMap.put(getShowHelpOption(), showHelpMethod);
     methods.forEach(method -> ifNotNullThen(method.getAnnotation(CommandLineOption.class),
         a -> optionMap.put(a, method)));
+    // TODO: Make this make target methods accessible.
   }
 
   private Method getShowHelpMethod() {
