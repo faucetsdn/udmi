@@ -15,6 +15,11 @@ public @interface CommandLineOption {
   String NO_VALUE = "";
 
   /**
+   * Set the text help description.
+   */
+  String description();
+
+  /**
    * Short form argument.
    */
   String short_form() default NO_VALUE;
@@ -23,4 +28,9 @@ public @interface CommandLineOption {
    * Long form argument.
    */
   String long_form() default NO_VALUE;
+
+  /**
+   * Set the argument type description.
+   */
+  String arg_type() default NO_VALUE;
 }
