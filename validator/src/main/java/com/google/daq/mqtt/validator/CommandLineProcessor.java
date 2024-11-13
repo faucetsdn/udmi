@@ -37,7 +37,7 @@ public class CommandLineProcessor {
 
   private Method getShowHelpMethod() {
     try {
-      return CommandLineProcessor.class.getMethod("showUsage");
+      return CommandLineProcessor.class.getDeclaredMethod("showUsage");
     } catch (Exception e) {
       throw new RuntimeException("While getting showHelp method", e);
     }
