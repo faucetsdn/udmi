@@ -74,7 +74,7 @@ public class CommandLineProcessor {
           throw new IllegalStateException("Unrecognized command line option '" + arg + "'");
         }
       }
-      return argList;
+      return null;
     } catch (Exception e) {
       showUsage(e.getMessage());
       return null;

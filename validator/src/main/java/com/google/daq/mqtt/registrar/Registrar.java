@@ -211,9 +211,9 @@ public class Registrar {
 
   Registrar postProcessArgs(List<String> argList) {
     CommandLineProcessor commandLineProcessor = new CommandLineProcessor(this);
-    commandLineProcessor.processArgs(argList);
+    List<String> remainingArgs = commandLineProcessor.processArgs(argList);
+    ifNotNullThen(remainingArgs, this::setDeviceList);
     requireNonNull(siteModel, "siteModel not defined");
-    setDeviceList(argList);
     return this;
   }
 
