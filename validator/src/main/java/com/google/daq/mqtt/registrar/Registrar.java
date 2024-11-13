@@ -216,12 +216,6 @@ public class Registrar {
     while (argList.size() > 0) {
       String option = argList.remove(0);
       switch (option) {
-        case "-r" -> setToolRoot(removeArg(argList, "tool root"));
-        case "-p" -> setProjectId(removeArg(argList, "project id"));
-        case "-s" -> setSitePath(removeArg(argList, "site path"));
-        case "-a" -> setTargetRegistry(removeArg(argList, "alt registry"));
-        case "-e" -> setRegistrySuffix(removeArg(argList, "registry suffix"));
-        case "-f" -> setFeedTopic(removeArg(argList, "feed topic"));
         case "-u" -> setUpdateFlag(true);
         case "-b" -> setBlockUnknown(true);
         case "-l" -> setIdleLimit(removeArg(argList, "idle limit"));
@@ -284,7 +278,8 @@ public class Registrar {
     this.updateCloudIoT |= expungeDevices;
   }
 
-  void setRegistrySuffix(String suffix) {
+  @CommandLineOption(short_form = "-e")
+  private void setRegistrySuffix(String suffix) {
     siteModel.getExecutionConfiguration().registry_suffix = suffix;
   }
 
@@ -380,6 +375,7 @@ public class Registrar {
     blockUnknown = false;
   }
 
+  @CommandLineOption(short_form = "-f")
   private void setFeedTopic(String feedTopic) {
     System.err.println("Sending device feed to topic " + feedTopic);
     feedPusher = new PubSubPusher(projectId, feedTopic);
@@ -447,7 +443,8 @@ public class Registrar {
     return ifNotNullGet(cloudIotManager, CloudIotManager::getVersionInformation);
   }
 
-  protected void setSitePath(String sitePath) {
+  @CommandLineOption(short_form = "-s")
+  private void setSitePath(String sitePath) {
     checkNotNull(SCHEMA_NAME, "schemaName not set yet");
     siteDir = new File(sitePath);
     siteModel = ofNullable(siteModel).orElseGet(() -> new SiteModel(sitePath));
@@ -1174,7 +1171,8 @@ public class Registrar {
     });
   }
 
-  protected void setProjectId(String projectId) {
+  @CommandLineOption(short_form = "-p")
+  private void setProjectId(String projectId) {
     if (NO_SITE.equals(projectId) || projectId == null) {
       this.projectId = null;
       return;
@@ -1266,7 +1264,8 @@ public class Registrar {
     return cloudIotManager.getMockActions();
   }
 
-  public void setTargetRegistry(String altRegistry) {
+  @CommandLineOption(short_form = "-a")
+  private void setTargetRegistry(String altRegistry) {
     siteModel.getExecutionConfiguration().registry_id = altRegistry;
     siteModel.getExecutionConfiguration().alt_registry = null;
   }
