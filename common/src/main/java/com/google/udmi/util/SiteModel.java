@@ -168,11 +168,16 @@ public class SiteModel {
 
   private static Supplier<String> projectSpecSupplier(List<String> argList) {
     return () -> {
-      String nextArg = argList.isEmpty() ? "" : argList.get(0);
-      if (nextArg.startsWith("-") && !NO_SITE.equals(nextArg)) {
+      if (argList.isEmpty()) {
+        throw new IllegalArgumentException("Missing required project spec argument");
+      }
+      String nextArg = argList.get(0);
+      if (nextArg.equals(NO_SITE)) {
+        return NO_SITE;
+      } else if (nextArg.startsWith("-")) {
         return null;
       }
-      return removeStringArg(argList, "project_spec");
+      return removeStringArg(argList, "project spec");
     };
   }
 
