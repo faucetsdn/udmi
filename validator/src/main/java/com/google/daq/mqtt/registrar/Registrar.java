@@ -216,13 +216,13 @@ public class Registrar {
     while (argList.size() > 0) {
       String option = argList.remove(0);
       switch (option) {
-        case "-u" -> setUpdateFlag(true);
-        case "-b" -> setBlockUnknown(true);
+        case "-u" -> setUpdateFlag();
+        case "-b" -> setBlockUnknown();
         case "-l" -> setIdleLimit(removeArg(argList, "idle limit"));
         case "-t" -> setValidateMetadata();
-        case "-q" -> setQueryOnly(true);
-        case "-d" -> setDeleteDevices(true);
-        case "-x" -> setExpungeDevices(true);
+        case "-q" -> setQueryOnly();
+        case "-d" -> setDeleteDevices();
+        case "-x" -> setExpungeDevices();
         case "-n" -> setRunnerThreads(removeArg(argList, "runner threads"));
         case "-c" -> setCreateRegistries(removeArg(argList, "create registries"));
         case "--" -> {
@@ -243,12 +243,12 @@ public class Registrar {
     return this;
   }
 
-  private void setQueryOnly(boolean queryOnly) {
-    this.queryOnly = queryOnly;
+  private void setQueryOnly() {
+    this.queryOnly = true;
   }
 
-  private void setBlockUnknown(boolean block) {
-    blockUnknown = block;
+  private void setBlockUnknown() {
+    blockUnknown = true;
   }
 
   private void setCreateRegistries(String registrySpec) {
@@ -266,16 +266,16 @@ public class Registrar {
     runnerThreads = Integer.parseInt(argValue);
   }
 
-  private void setDeleteDevices(boolean deleteDevices) {
-    this.deleteDevices = deleteDevices;
+  private void setDeleteDevices() {
     checkNotNull(projectId, "delete devices specified with no target project");
-    this.updateCloudIoT |= deleteDevices;
+    this.deleteDevices = true;
+    this.updateCloudIoT = true;
   }
 
-  private void setExpungeDevices(boolean expungeDevices) {
-    this.expungeDevices = expungeDevices;
+  private void setExpungeDevices() {
     checkNotNull(projectId, "expunge devices specified with no target project");
-    this.updateCloudIoT |= expungeDevices;
+    this.expungeDevices = true;
+    this.updateCloudIoT = true;
   }
 
   @CommandLineOption(short_form = "-e")
@@ -288,7 +288,7 @@ public class Registrar {
     setSitePath(config.site_model);
     setProjectId(config.project_id);
     if (config.project_id != null) {
-      setUpdateFlag(true);
+      setUpdateFlag();
     }
   }
 
@@ -361,8 +361,8 @@ public class Registrar {
     System.err.println("Limiting devices to duration " + idleLimit.toSeconds() + "s");
   }
 
-  private void setUpdateFlag(boolean update) {
-    updateCloudIoT = update;
+  private void setUpdateFlag() {
+    updateCloudIoT = true;
   }
 
   @CommandLineOption(short_form = "-t")
