@@ -26,13 +26,13 @@ public class CommandLineProcessor {
   public CommandLineProcessor(Object target) {
     this.target = target;
 
-    List<Method> methods = new ArrayList<>(List.of(target.getClass().getMethods()));
-
     showHelpMethod = getShowHelpMethod();
     optionMap.put(getShowHelpOption(), showHelpMethod);
+
+    List<Method> methods = new ArrayList<>(List.of(target.getClass().getDeclaredMethods()));
     methods.forEach(method -> ifNotNullThen(method.getAnnotation(CommandLineOption.class),
         a -> optionMap.put(a, method)));
-    // TODO: Make this make target methods accessible.
+    optionMap.values().forEach(method -> method.setAccessible(true));
   }
 
   private Method getShowHelpMethod() {
