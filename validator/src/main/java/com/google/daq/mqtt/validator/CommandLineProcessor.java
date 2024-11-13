@@ -48,7 +48,7 @@ public class CommandLineProcessor {
   }
 
   @CommandLineOption(short_form = "-h")
-  public void showUsage() {
+  private void showUsage() {
     showUsage(null);
   }
 

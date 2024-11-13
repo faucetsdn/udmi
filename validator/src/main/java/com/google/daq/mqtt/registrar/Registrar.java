@@ -1186,7 +1186,7 @@ public class Registrar {
   }
 
   @CommandLineOption(short_form = "-r")
-  public void setToolRoot(String toolRoot) {
+  private void setToolRoot(String toolRoot) {
     try {
       schemaBase = new File(toolRoot, SCHEMA_BASE_PATH);
       if (!schemaBase.isDirectory()) {
