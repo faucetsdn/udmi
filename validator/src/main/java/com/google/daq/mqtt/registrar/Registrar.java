@@ -154,6 +154,7 @@ public class Registrar {
   private SiteModel siteModel;
   private boolean queryOnly;
   private final AtomicBoolean helpShown = new AtomicBoolean();
+  private CommandLineProcessor commandLineProcessor = new CommandLineProcessor(this);
 
   /**
    * Main entry point for registrar.
@@ -204,13 +205,16 @@ public class Registrar {
       // Add implicit NO_SITE site spec for local-only site model processing.
       argList.add(NO_SITE);
     }
-    siteModel = new SiteModel(TOOL_NAME, argList);
+    try {
+      siteModel = new SiteModel(TOOL_NAME, argList);
+    } catch (IllegalArgumentException e) {
+      commandLineProcessor.showUsage(e.getMessage());
+    }
     processProfile(siteModel.getExecutionConfiguration());
     return postProcessArgs(argList);
   }
 
   Registrar postProcessArgs(List<String> argList) {
-    CommandLineProcessor commandLineProcessor = new CommandLineProcessor(this);
     List<String> remainingArgs = commandLineProcessor.processArgs(argList);
     ifNotNullThen(remainingArgs, this::setDeviceList);
     requireNonNull(siteModel, "siteModel not defined");

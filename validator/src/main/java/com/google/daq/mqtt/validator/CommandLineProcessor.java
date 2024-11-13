@@ -12,6 +12,9 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Optional;
 
+/**
+ * Simple command line parser class.
+ */
 public class CommandLineProcessor {
 
   private static final String TERMINATING_ARG = "--";
@@ -23,6 +26,9 @@ public class CommandLineProcessor {
 
   Map<CommandLineOption, Method> optionMap = new HashMap<>();
 
+  /**
+   * Create a new command line processor for the given target object.
+   */
   public CommandLineProcessor(Object target) {
     this.target = target;
 
@@ -52,7 +58,7 @@ public class CommandLineProcessor {
     showUsage(null);
   }
 
-  private void showUsage(String message) {
+  public void showUsage(String message) {
     ifNotNullThen(message, m -> System.err.println(m));
     System.err.println("Options supported:");
     optionMap.forEach((option, method) ->
@@ -60,6 +66,9 @@ public class CommandLineProcessor {
     System.exit(message == null ? LINUX_SUCCESS_CODE : LINUX_ERROR_CODE);
   }
 
+  /**
+   * Process the given arg list. Return a list of remaining arguments (if any).
+   */
   public List<String> processArgs(List<String> argList) {
     try {
       while (!argList.isEmpty()) {
@@ -71,7 +80,7 @@ public class CommandLineProcessor {
             .filter(option -> processArgEntry(arg, option.getKey(), option.getValue(), argList))
             .findFirst();
         if (first.isEmpty()) {
-          throw new IllegalStateException("Unrecognized command line option '" + arg + "'");
+          throw new IllegalArgumentException("Unrecognized command line option '" + arg + "'");
         }
       }
       return null;
@@ -95,14 +104,14 @@ public class CommandLineProcessor {
         }
         return true;
       } else if (!option.long_form().isBlank() && arg.startsWith(option.long_form())) {
-        throw new RuntimeException("Long form command line not yet supported");
+        throw new IllegalArgumentException("Long form command line not yet supported");
       } else if (option.short_form().isBlank() && option.long_form().isBlank()) {
-        throw new RuntimeException(
+        throw new IllegalArgumentException(
             "Neither long nor short form not defined for " + method.getName());
       }
       return false;
     } catch (Exception e) {
-      throw new RuntimeException("Processing command line method " + method.getName(), e);
+      throw new IllegalArgumentException("Processing command line method " + method.getName(), e);
     }
   }
 

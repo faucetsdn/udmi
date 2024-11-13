@@ -660,9 +660,16 @@ public class GeneralUtils {
 
   public static String removeArg(List<String> argList, String description) {
     if (argList.isEmpty()) {
-      throw new RuntimeException(format("Missing required %s argument", description));
+      throw new IllegalArgumentException(format("Missing required %s argument", description));
     }
     return argList.remove(0);
+  }
+
+  public static String removeStringArg(List<String> argList, String description) {
+    if (!argList.isEmpty() && argList.get(0).startsWith("-")) {
+      throw new IllegalArgumentException(format("Missing required %s string argument", description));
+    }
+    return removeArg(argList, description);
   }
 
   public static byte[] getFileBytes(String dataFile) {

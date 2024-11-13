@@ -18,6 +18,7 @@ import static com.google.udmi.util.GeneralUtils.ifNotNullGet;
 import static com.google.udmi.util.GeneralUtils.ifNotNullThen;
 import static com.google.udmi.util.GeneralUtils.ifNullThen;
 import static com.google.udmi.util.GeneralUtils.removeArg;
+import static com.google.udmi.util.GeneralUtils.removeStringArg;
 import static com.google.udmi.util.GeneralUtils.sha256;
 import static com.google.udmi.util.JsonUtil.asMap;
 import static com.google.udmi.util.JsonUtil.convertTo;
@@ -150,7 +151,7 @@ public class SiteModel {
   }
 
   public SiteModel(String toolName, List<String> argList) {
-    this(removeArg(argList, "site_model"), projectSpecSupplier(argList), null);
+    this(removeStringArg(argList, "site_model"), projectSpecSupplier(argList), null);
     ExecutionConfiguration executionConfiguration = getExecutionConfiguration();
     File outFile = new File(CONFIG_OUT_DIR, format("%s_conf.json", toolName));
     System.err.println("Writing reconciled configuration file to " + outFile.getAbsolutePath());
@@ -171,7 +172,7 @@ public class SiteModel {
       if (nextArg.startsWith("-") && !NO_SITE.equals(nextArg)) {
         return null;
       }
-      return removeArg(argList, "project_spec");
+      return removeStringArg(argList, "project_spec");
     };
   }
 
