@@ -96,7 +96,7 @@ class GlobalBacnetDiscovery(discovery.DiscoveryController):
             event.system.serial_no = serial_number
             event.system.hardware.make = vendor_name
             event.system.hardware.model = model_name
-            #event.system.software.firmware = firmware_version
+            event.system.software.firmware = firmware_version
 
             self.publisher(event)
             self.devices_published.add(device)
