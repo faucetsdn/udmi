@@ -72,13 +72,18 @@ class GlobalBacnetDiscovery(discovery.DiscoveryController):
 
             # if depths ...
             # Get make and model
-            object_name, vendor_name, firmware_version, model_name, serial_number = (
-                self.bacnet.readMultiple(
-                    f"{address} device {id} objectName vendorName"
-                    " firmwareRevision modelName serialNumber"
-                )
-            )
-
+            try:
+              object_name, vendor_name, firmware_version, model_name, serial_number = (
+                  self.bacnet.readMultiple(
+                      f"{address} device {id} objectName vendorName"
+                      " firmwareRevision modelName serialNumber"
+                  )
+              )
+            except ValueError:
+              logging.exception(f"error reading from {address}/{id}")
+              continue
+            
+            logging.info("object_name %s vendor_name %s firmware %s model %s serial %s",  object_name, vendor_name, firmware_version, model_name, serial_number)
             event = udmi.schema.discovery_event.DiscoveryEvent(
                 generation=self.config.generation,
                 scan_family=self.scan_family,
@@ -91,7 +96,7 @@ class GlobalBacnetDiscovery(discovery.DiscoveryController):
             event.system.serial_no = serial_number
             event.system.hardware.make = vendor_name
             event.system.hardware.model = model_name
-            #event.system.software.firmware = firmware_version
+            event.system.software.firmware = firmware_version
 
             self.publisher(event)
             self.devices_published.add(device)

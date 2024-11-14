@@ -57,8 +57,8 @@ def test_bacnet_integration():
       print(message.to_json())
       print("----")
     
-    expected_ethmacs = set(d["ethmac"] for d in docker_config.values())
-    seen_ethmac_toplevel = set(m.families["ethmac"].addr for m in messages if "ethmac" in m.families)
+    expected_ethmacs = set(d["ether"] for d in docker_config.values())
+    seen_ethmac_toplevel = set(m.families["ether"].addr for m in messages if "ether" in m.families)
 
     expected_bacnet_ids = set(str(d["bacnet_id"]) for d in docker_config.values())
     seen_bacnet_ids_toplevel = set(m.scan_addr for m in messages if m.scan_family == "bacnet")
