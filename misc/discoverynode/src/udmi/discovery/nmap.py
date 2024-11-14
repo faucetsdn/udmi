@@ -12,7 +12,7 @@ import udmi.schema.state
 class NmapBannerScan(discovery.DiscoveryController):
   """Passive Network Discovery."""
 
-  scan_family = "ethwe"
+  scan_family = "ether"
 
   def __init__(self, state, publisher, *, target_ips: list[str]):
     self.cancel_threads = threading.Event()
