@@ -195,6 +195,7 @@ public class IotReflectorClient implements IotProvider {
       writeErrorDetail(transactionId, error, (String) objectMap.get(DETAIL_KEY));
       throw new RuntimeException(format("UDMIS error %s: %s", transactionId, error));
     }
+    System.err.println("OPERATION " + objectMap.get("operation"));
     return objectMap;
   }
 

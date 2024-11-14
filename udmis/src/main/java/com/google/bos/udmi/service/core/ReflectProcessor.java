@@ -261,7 +261,7 @@ public class ReflectProcessor extends ProcessorBase {
       publish(attributes, stateUpdate);
       reflectStateUpdate(attributes, stringify(stateUpdate));
       CloudModel cloudModel = new CloudModel();
-      cloudModel.operation = Operation.FETCH;
+      cloudModel.operation = Operation.READ;
       return cloudModel;
     } catch (Exception e) {
       throw new RuntimeException("While querying device state " + attributes.deviceId, e);

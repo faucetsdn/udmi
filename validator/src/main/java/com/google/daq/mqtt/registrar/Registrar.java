@@ -245,6 +245,7 @@ public class Registrar {
 
   private void setQueryOnly(boolean queryOnly) {
     this.queryOnly = queryOnly;
+    this.updateCloudIoT = false;
   }
 
   private void setBlockUnknown(boolean block) {
@@ -529,16 +530,16 @@ public class Registrar {
           .collect(Collectors.toSet());
       Set<String> newDevices = difference(targetDevices, oldDevices);
 
-      if (queryOnly) {
-        System.err.println("Skipping registration because query-only mode...");
-        return;
+      int total = 0;
+
+      if (updateCloudIoT) {
+        System.err.printf("Processing %d new devices...%n", newDevices.size());
+        total += processLocalDevices(newDevices);
       }
 
-      System.err.printf("Processing %d new devices...%n", newDevices.size());
-      int total = processLocalDevices(newDevices);
       System.err.printf("Updating %d existing devices...%n", oldDevices.size());
       total += processLocalDevices(oldDevices);
-      System.err.printf("Finished registering %d/%d devices.%n", total, targetDevices.size());
+      System.err.printf("Finished processing %d/%d devices.%n", total, targetDevices.size());
 
       if (updateCloudIoT) {
         bindGatewayDevices(targetLocals);
@@ -683,7 +684,7 @@ public class Registrar {
     try {
       localDevice.writeConfigFile();
       if (cloudModels != null) {
-        created = updateCloudIoT(localName, localDevice);
+        created = syncCloudIoT(localName, localDevice);
         sendUpdateMessages(localDevice);
         cloudModels.computeIfAbsent(localName, name -> fetchDevice(localName, true));
         sendSwarmMessage(localDevice);
@@ -745,12 +746,8 @@ public class Registrar {
     return true;
   }
 
-  private boolean updateCloudIoT(String localName, LocalDevice localDevice) {
-    if (!updateCloudIoT) {
-      return false;
-    }
-
-    boolean created = updateCloudIoT(localDevice);
+  private boolean syncCloudIoT(String localName, LocalDevice localDevice) {
+    boolean created = updateCloudIoT && updateCloudIoT(localDevice);
     CloudModel device =
         checkNotNull(fetchDevice(localName, created), "missing device " + localName);
     localDevice.updateModel(device);
@@ -1039,15 +1036,14 @@ public class Registrar {
 
   private Map<String, CloudModel> fetchCloudModels() {
     try {
-      boolean requiresCloud = updateCloudIoT || (idleLimit != null);
-      if (requiresCloud) {
+      if (cloudIotManager != null) {
         System.err.printf("Fetching devices from registry %s...%n",
             cloudIotManager.getRegistryId());
         Map<String, CloudModel> devices = cloudIotManager.fetchCloudModels();
         System.err.printf("Fetched %d device models from cloud registry%n", devices.size());
         return devices;
       } else {
-        System.err.println("Skipping remote registry fetch");
+        System.err.println("Skipping remote registry fetch b/c no cloud project");
         return null;
       }
     } catch (Exception e) {
