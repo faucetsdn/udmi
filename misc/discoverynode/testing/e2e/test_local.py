@@ -87,7 +87,7 @@ def localnet_block_from_id(id: int):
 
   return {
       "ipv4": {"addr": f"192.168.11.{id}"},
-      "ethmac": {"addr": f"00:00:aa:bb:cc:{id:02x}"},
+      "ether": {"addr": f"00:00:aa:bb:cc:{id:02x}"},
       "bacnet": {"addr": str(3000 + id)},
       "vendor": {"addr": str(id)},
   }

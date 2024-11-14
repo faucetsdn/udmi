@@ -127,7 +127,7 @@ class PassiveNetworkDiscovery(discovery.DiscoveryController):
                 scan_addr=device_record.addr,
                 scan_family=self.scan_family,
                 families=dict(
-                    ethmac=udmi.schema.discovery_event.DiscoveryFamily(
+                    ether=udmi.schema.discovery_event.DiscoveryFamily(
                         device_record.mac
                     )
                 ),
