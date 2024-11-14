@@ -32,7 +32,7 @@
             "key_file": "/workspaces/udmi/sites/udmi_site_model/devices/AHU-1/rsa_private.pem",
             "algorithm": "RS256",
         },
-        "udmi":{"discovery": {"ipv4":"false", "ethmac": false, "bacnet": false}},
+        "udmi":{"discovery": {"ipv4":"false", "ether": false, "bacnet": false}},
         "bacnet": {"ip": "192.168.11.251"}
     }
     ```
@@ -54,7 +54,7 @@
         "algorithm": "RS256",
         "authentication_mechanism": "udmi_local"
         },
-        "udmi":{"discovery": {"ipv4":"false", "ethmac": false, "bacnet":false}},
+        "udmi":{"discovery": {"ipv4":"false", "ether": false, "bacnet":false}},
         "nmap": {
             "targets": [
                 "127.0.0.1"

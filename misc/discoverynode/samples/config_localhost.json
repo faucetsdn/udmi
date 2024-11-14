@@ -12,6 +12,6 @@
         "cert_file": "/workspaces/udmi/sites/udmi_site_model/devices/AHU-1/rsa_private.crt",
         "authentication_mechanism": "udmi_local"
     },
-    "udmi":{"discovery": {"ipv4":"false", "ethmac": false, "bacnet":false}},
+    "udmi":{"discovery": {"ipv4":"false", "ether": false, "bacnet":false}},
     "bacnet": {"ip": "192.168.11.251"}
 }

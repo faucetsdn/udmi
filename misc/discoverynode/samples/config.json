@@ -12,7 +12,7 @@
       "algorithm": "RS256",
       "authentication_mechanism": "udmi_local"
     },
-    "udmi":{"discovery": {"ipv4":"false", "ethmac": false, "bacnet":false}},
+    "udmi":{"discovery": {"ipv4":"false", "ether": false, "bacnet":false}},
     "nmap": {
       "targets": [
         "127.0.0.1"
