@@ -103,6 +103,7 @@ public class IotReflectorClient implements MessagePublisher {
   private static final long RESYNC_INTERVAL_SEC = 30;
   private static final Map<MessagePublisher, CountDownLatch> pubLatches = new ConcurrentHashMap<>();
   private static final Map<MessagePublisher, AtomicInteger> pubCounts = new ConcurrentHashMap<>();
+  public static boolean reportStatistics = false;
   private final String udmiVersion;
   private final CountDownLatch initialConfigReceived = new CountDownLatch(1);
   private final CountDownLatch initializedStateSent = new CountDownLatch(1);
@@ -130,7 +131,6 @@ public class IotReflectorClient implements MessagePublisher {
   private final ImpulseRunningAverage publishStats = new ImpulseRunningAverage("Message publish");
   private final ImpulseRunningAverage receiveStats = new ImpulseRunningAverage("Message receive");
   private final Set<ImpulseRunningAverage> samplers = ImmutableSet.of(publishStats, receiveStats);
-  private boolean reportStatistics = false;
 
   /**
    * Create a new reflector instance.

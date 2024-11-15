@@ -53,6 +53,7 @@ import com.github.fge.jsonschema.core.report.ProcessingReport;
 import com.github.fge.jsonschema.main.JsonSchema;
 import com.github.fge.jsonschema.main.JsonSchemaFactory;
 import com.google.bos.iot.core.proxy.IotReflectorClient;
+import com.google.bos.iot.core.proxy.MqttPublisher;
 import com.google.bos.iot.core.proxy.NullPublisher;
 import com.google.cloud.Tuple;
 import com.google.common.base.Preconditions;
@@ -361,6 +362,7 @@ public class Validator {
             case "-r" -> validateMessageTrace(removeNextArg(argList));
             case "-n" -> client = new NullPublisher();
             case "-w" -> setMessageTraceDir(removeNextArg(argList));
+            case "-z" -> setProfileMode();
             case "--" -> {
               // All remaining arguments remain in the return list.
               return argList;
@@ -377,6 +379,11 @@ public class Validator {
         setSchemaSpec(new File(UDMI_ROOT, "schema").getAbsolutePath());
       }
     }
+  }
+
+  private void setProfileMode() {
+    IotReflectorClient.reportStatistics = true;
+    MqttPublisher.reportStatistics = true;
   }
 
   private void setReportDelay(String arg) {

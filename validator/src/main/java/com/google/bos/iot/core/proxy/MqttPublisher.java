@@ -110,6 +110,7 @@ public class MqttPublisher implements MessagePublisher {
   private static final int HASH_PASSWORD_LENGTH = 8;
   private static final String UNUSED_ACCOUNT_NAME = "unused";
   private static final String MQTT_USER_NAME_FMT = "/r/%s/d/%s";
+  public static boolean reportStatistics = false;
   private final ExecutorService publisherExecutor = newFixedThreadPool(PUBLISH_THREAD_COUNT);
   private final ExecutorService reapExecutor = newFixedThreadPool(PUBLISH_THREAD_COUNT);
   private final Queue<Runnable> priorityQueue = new ConcurrentLinkedQueue<>();
@@ -151,7 +152,6 @@ public class MqttPublisher implements MessagePublisher {
   private long mqttTokenSetTimeMs;
   private MqttConnectOptions mqttConnectOptions;
   private boolean shutdown;
-  private boolean reportStatistics = false;
 
   MqttPublisher(ExecutionConfiguration config, byte[] actualKeyBytes, String keyAlgorithm,
       BiConsumer<String, String> onMessageCallback, Consumer<Throwable> onErrorCallback) {
