@@ -18,6 +18,7 @@ import static com.google.udmi.util.GeneralUtils.ifNotNullGet;
 import static com.google.udmi.util.GeneralUtils.ifNotNullThen;
 import static com.google.udmi.util.GeneralUtils.ifNullThen;
 import static com.google.udmi.util.GeneralUtils.removeArg;
+import static com.google.udmi.util.GeneralUtils.removeStringArg;
 import static com.google.udmi.util.GeneralUtils.sha256;
 import static com.google.udmi.util.JsonUtil.asMap;
 import static com.google.udmi.util.JsonUtil.convertTo;
@@ -150,7 +151,7 @@ public class SiteModel {
   }
 
   public SiteModel(String toolName, List<String> argList) {
-    this(removeArg(argList, "site_model"), projectSpecSupplier(argList), null);
+    this(removeStringArg(argList, "site_model"), projectSpecSupplier(argList), null);
     ExecutionConfiguration executionConfiguration = getExecutionConfiguration();
     File outFile = new File(CONFIG_OUT_DIR, format("%s_conf.json", toolName));
     System.err.println("Writing reconciled configuration file to " + outFile.getAbsolutePath());
@@ -167,11 +168,16 @@ public class SiteModel {
 
   private static Supplier<String> projectSpecSupplier(List<String> argList) {
     return () -> {
-      String nextArg = argList.isEmpty() ? "" : argList.get(0);
-      if (nextArg.startsWith("-") && !NO_SITE.equals(nextArg)) {
+      if (argList.isEmpty()) {
+        throw new IllegalArgumentException("Missing required project spec argument");
+      }
+      String nextArg = argList.get(0);
+      if (nextArg.equals(NO_SITE)) {
+        return argList.remove(0);
+      } else if (nextArg.startsWith("-")) {
         return null;
       }
-      return removeArg(argList, "project_spec");
+      return removeStringArg(argList, "project spec");
     };
   }
 
