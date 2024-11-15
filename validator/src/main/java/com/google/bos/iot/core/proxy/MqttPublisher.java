@@ -11,6 +11,7 @@ import static com.google.udmi.util.GeneralUtils.catchToNull;
 import static com.google.udmi.util.GeneralUtils.ifNotNullThen;
 import static com.google.udmi.util.GeneralUtils.ifNotNullThrow;
 import static com.google.udmi.util.GeneralUtils.ifTrueGet;
+import static com.google.udmi.util.GeneralUtils.ifTrueThen;
 import static com.google.udmi.util.GeneralUtils.sha256;
 import static com.google.udmi.util.JsonUtil.getNowInstant;
 import static com.google.udmi.util.SiteModel.DEFAULT_CLEARBLADE_HOSTNAME;
@@ -150,6 +151,7 @@ public class MqttPublisher implements MessagePublisher {
   private long mqttTokenSetTimeMs;
   private MqttConnectOptions mqttConnectOptions;
   private boolean shutdown;
+  private boolean reportStatistics = false;
 
   MqttPublisher(ExecutionConfiguration config, byte[] actualKeyBytes, String keyAlgorithm,
       BiConsumer<String, String> onMessageCallback, Consumer<Throwable> onErrorCallback) {
@@ -269,7 +271,7 @@ public class MqttPublisher implements MessagePublisher {
 
   private void tickleConnection() {
     try {
-      samplers.forEach(value -> LOG.info(value.getMessage()));
+      ifTrueThen(reportStatistics, () -> samplers.forEach(value -> LOG.info(value.getMessage())));
     } catch (Exception e) {
       LOG.error("While updating stats: " + e.getMessage());
       e.printStackTrace();

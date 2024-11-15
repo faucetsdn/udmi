@@ -130,6 +130,7 @@ public class IotReflectorClient implements MessagePublisher {
   private final ImpulseRunningAverage publishStats = new ImpulseRunningAverage("Message publish");
   private final ImpulseRunningAverage receiveStats = new ImpulseRunningAverage("Message receive");
   private final Set<ImpulseRunningAverage> samplers = ImmutableSet.of(publishStats, receiveStats);
+  private boolean reportStatistics = false;
 
   /**
    * Create a new reflector instance.
@@ -215,7 +216,7 @@ public class IotReflectorClient implements MessagePublisher {
   }
 
   private void timerTick() {
-    samplers.forEach(value -> info(value.getMessage()));
+    ifTrueThen(reportStatistics, () -> samplers.forEach(value -> info(value.getMessage())));
     setReflectorState();
   }
 

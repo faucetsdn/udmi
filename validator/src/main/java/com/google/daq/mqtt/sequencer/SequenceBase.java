@@ -1459,8 +1459,10 @@ public class SequenceBase {
   }
 
   private String sanitizedDescription(String description) {
-    return isOptionalDescription(description) ? description.substring(OPTIONAL_PREFIX.length())
-        : description;
+    String capabilityPrefix = ofNullable(activeCap.get()).map(
+        cap -> format("(%s) ", capabilityName(cap))).orElse("");
+    return capabilityPrefix + (isOptionalDescription(description)
+        ? description.substring(OPTIONAL_PREFIX.length()) : description);
   }
 
   private static boolean isOptionalDescription(String description) {
