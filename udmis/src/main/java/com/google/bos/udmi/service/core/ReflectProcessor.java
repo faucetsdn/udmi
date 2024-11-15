@@ -36,6 +36,7 @@ import static com.google.udmi.util.JsonUtil.toObject;
 import static java.lang.String.format;
 import static java.util.Objects.requireNonNull;
 import static java.util.Optional.ofNullable;
+import static udmi.schema.CloudModel.Operation.READ;
 import static udmi.schema.CloudModel.Resource_type.REGISTRY;
 import static udmi.schema.Envelope.SubFolder.UPDATE;
 
@@ -263,7 +264,7 @@ public class ReflectProcessor extends ProcessorBase {
       publish(attributes, stateUpdate);
       reflectStateUpdate(attributes, stringify(stateUpdate));
       CloudModel cloudModel = new CloudModel();
-      cloudModel.operation = Operation.READ;
+      cloudModel.operation = READ;
       return cloudModel;
     } catch (Exception e) {
       throw new RuntimeException("While querying device state " + attributes.deviceId, e);
@@ -309,7 +310,16 @@ public class ReflectProcessor extends ProcessorBase {
   }
 
   private CloudModel reflectQuery(Envelope attributes, Map<String, Object> payload) {
-    checkState(payload.size() == 0, "unexpected non-empty message payload");
+    CloudModel query = convertToStrict(CloudModel.class, payload);
+    CloudModel cloudModel = reflectQueryCore(attributes);
+    // TODO: Remove this workaround when all clients have been updated (2024/11/15).
+    if ((query == null || !READ.equals(query.operation)) && READ.equals(cloudModel.operation)) {
+      cloudModel.operation = null;
+    }
+    return cloudModel;
+  }
+
+  private CloudModel reflectQueryCore(Envelope attributes) {
     attributes.subType = SubType.REPLY;
     switch (attributes.subFolder) {
       case UPDATE:

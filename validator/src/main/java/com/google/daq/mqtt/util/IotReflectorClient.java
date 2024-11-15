@@ -1,7 +1,6 @@
 package com.google.daq.mqtt.util;
 
 import static com.google.common.base.Strings.isNullOrEmpty;
-import static com.google.daq.mqtt.sequencer.SequenceBase.EMPTY_MESSAGE;
 import static com.google.udmi.util.Common.CONDENSER_STRING;
 import static com.google.udmi.util.Common.DETAIL_KEY;
 import static com.google.udmi.util.Common.ERROR_KEY;
@@ -177,7 +176,8 @@ public class IotReflectorClient implements IotProvider {
   private CloudModel fetchCloudModel(String deviceId) {
     try {
       QuerySpeed speed = isSlow ? QuerySpeed.ETERNITY : QuerySpeed.SLOW;
-      Map<String, Object> message = transaction(deviceId, CLOUD_QUERY_TOPIC, EMPTY_MESSAGE, speed);
+      Map<String, Object> message = transaction(deviceId, CLOUD_QUERY_TOPIC,
+          getQueryMessageString(), speed);
       // TODO: Remove this legacy workaround once all cloud environments are updated (2024/11/15).
       if ("FETCH".equals(message.get("operation"))) {
         message.put("operation", READ.toString());
@@ -189,6 +189,12 @@ public class IotReflectorClient implements IotProvider {
       }
       throw e;
     }
+  }
+
+  private String getQueryMessageString() {
+    CloudModel cloudModel = new CloudModel();
+    cloudModel.operation = READ;
+    return stringify(cloudModel);
   }
 
   private Map<String, Object> transaction(String deviceId, String topic,
