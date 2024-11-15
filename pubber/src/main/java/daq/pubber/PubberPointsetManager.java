@@ -1,5 +1,6 @@
 package daq.pubber;
 
+import static com.google.common.base.Preconditions.checkState;
 import static com.google.udmi.util.GeneralUtils.ifNotNullGet;
 import static com.google.udmi.util.GeneralUtils.ifNotNullThen;
 import static com.google.udmi.util.GeneralUtils.ifNotTrueThen;
@@ -16,11 +17,9 @@ import com.google.common.collect.Sets;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.atomic.AtomicReference;
 import udmi.lib.client.PointsetManager;
 import udmi.lib.intf.AbstractPoint;
 import udmi.lib.intf.ManagerHost;
-import udmi.schema.Entry;
 import udmi.schema.PointPointsetConfig;
 import udmi.schema.PointPointsetModel;
 import udmi.schema.PointPointsetState;
@@ -142,49 +141,53 @@ public class PubberPointsetManager extends PubberManager implements PointsetMana
    */
   @Override
   public void updatePointsetPointsConfig(PointsetConfig config) {
+    // If there is no pointset config, then ensure that there's no pointset state.
     if (config == null) {
       pointsetState = null;
       updateState();
       return;
     }
 
+    // Known that pointset config exists, so ensure that a pointset state also exists.
     ifNullThen(pointsetState, () -> {
       pointsetState = new PointsetState();
       pointsetState.points = new HashMap<>();
       pointsetEvent.points = new HashMap<>();
     });
 
+    // Update each internally managed point with its specific pointset config (if any).
     Map<String, PointPointsetConfig> points = ofNullable(config.points).orElseGet(HashMap::new);
     managedPoints.forEach((name, point) -> updatePointConfig(point, points.get(name)));
     pointsetState.state_etag = config.state_etag;
 
+    // Calculate the differences between the config points and state points.
     Set<String> configuredPoints = points.keySet();
     Set<String> statePoints = pointsetState.points.keySet();
     Set<String> missingPoints = Sets.difference(configuredPoints, statePoints).immutableCopy();
-    final Set<String> clearPoints = Sets.difference(statePoints, configuredPoints).immutableCopy();
+    final Set<String> extraPoints = Sets.difference(statePoints, configuredPoints).immutableCopy();
 
+    // Restore points in config but not state, implicitly creating pointset.points.X as needed.
     missingPoints.forEach(name -> {
       debug("Restoring unknown point " + name);
       restorePoint(name);
     });
 
-    clearPoints.forEach(key -> {
+    // Suspend points in state but not config, implicitly removing pointset.points.X as needed.
+    extraPoints.forEach(key -> {
       debug("Clearing extraneous point " + key);
       suspendPoint(key);
     });
 
+    // Ensure that the logic was correct, and that state points match config points.
+    checkState(pointsetState.points.keySet().equals(points.keySet()),
+        "state/config pointset mismatch");
+
+    // Special testing provisions for forcing an extra point (designed to cause a violation).
     ifNotNullThen(options.extraPoint,
         extraPoint -> pointsetEvent.points.put(extraPoint,
             udmi.lib.client.PointsetManager.extraPointsetEvent()));
 
-    AtomicReference<Entry> maxStatus = new AtomicReference<>();
-    statePoints.forEach(
-        name -> ifNotNullThen(pointsetState.points.get(name).status, status -> {
-          if (maxStatus.get() == null || status.level > maxStatus.get().level) {
-            maxStatus.set(status);
-          }
-        }));
-
+    // Mark device state as dirty, so the system will send a consolidated state update.
     updateState();
   }
 
