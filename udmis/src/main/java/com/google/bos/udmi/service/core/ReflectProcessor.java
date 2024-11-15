@@ -231,7 +231,7 @@ public class ReflectProcessor extends ProcessorBase {
         isoConvert(envelope.publishTime), envelope.transactionId);
     CloudModel result = getReflectionResult(envelope, payload);
     ifNotNullThen(result,
-        v -> debug("Reflection result %s: %s", envelope.transactionId, envelope.subType));
+        v -> debug("Reflection result %s %s: %s", result.operation, envelope.transactionId, envelope.subType));
     ifNotNullThen(result, v -> sendReflectCommand(reflection, envelope, result));
   }
 
