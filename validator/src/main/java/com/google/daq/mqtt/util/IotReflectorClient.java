@@ -1,6 +1,9 @@
 package com.google.daq.mqtt.util;
 
+import static com.google.bos.iot.core.proxy.IotReflectorClient.isFunctionVersionSupported;
 import static com.google.common.base.Strings.isNullOrEmpty;
+import static com.google.daq.mqtt.sequencer.SequenceBase.EMPTY_MESSAGE;
+import static com.google.daq.mqtt.validator.Validator.TOOLS_FUNCTIONS_QUERY_READ;
 import static com.google.udmi.util.Common.CONDENSER_STRING;
 import static com.google.udmi.util.Common.DETAIL_KEY;
 import static com.google.udmi.util.Common.ERROR_KEY;
@@ -192,6 +195,9 @@ public class IotReflectorClient implements IotProvider {
   }
 
   private String getQueryMessageString() {
+    if (!isFunctionVersionSupported(TOOLS_FUNCTIONS_QUERY_READ)) {
+      return EMPTY_MESSAGE;
+    }
     CloudModel cloudModel = new CloudModel();
     cloudModel.operation = READ;
     return stringify(cloudModel);
@@ -208,7 +214,8 @@ public class IotReflectorClient implements IotProvider {
       throw new RuntimeException(format("UDMIS error %s: %s", transactionId, error));
     }
     if (isNullOrEmpty((String) objectMap.get("operation"))) {
-      System.err.println("Warning! Returned transaction operation is null/empty.");
+      System.err.printf("Warning! Returned transaction operation is null/empty: %s %s %s%n",
+          deviceId, topic, message);
     }
     return objectMap;
   }
