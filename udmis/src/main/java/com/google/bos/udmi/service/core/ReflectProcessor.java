@@ -18,6 +18,7 @@ import static com.google.udmi.util.GeneralUtils.firstNonNull;
 import static com.google.udmi.util.GeneralUtils.friendlyStackTrace;
 import static com.google.udmi.util.GeneralUtils.ifNotNullGet;
 import static com.google.udmi.util.GeneralUtils.ifNotNullThen;
+import static com.google.udmi.util.GeneralUtils.ifNullThen;
 import static com.google.udmi.util.GeneralUtils.multiTrim;
 import static com.google.udmi.util.GeneralUtils.requireNull;
 import static com.google.udmi.util.GeneralUtils.stackTraceString;
@@ -231,6 +232,7 @@ public class ReflectProcessor extends ProcessorBase {
     CloudModel result = getReflectionResult(env, payload);
     ifNotNullThen(result, r -> {
       debug("Return reflection result %s %s %s", r.operation, env.subType, env.transactionId);
+      ifNullThen(r.operation, () -> error("Reflect call has null return operation type"));
       sendReflectCommand(reflection, env, result);
     });
   }

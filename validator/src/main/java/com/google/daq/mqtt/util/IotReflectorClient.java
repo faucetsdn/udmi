@@ -1,5 +1,6 @@
 package com.google.daq.mqtt.util;
 
+import static com.google.common.base.Strings.isNullOrEmpty;
 import static com.google.daq.mqtt.sequencer.SequenceBase.EMPTY_MESSAGE;
 import static com.google.udmi.util.Common.CONDENSER_STRING;
 import static com.google.udmi.util.Common.DETAIL_KEY;
@@ -17,6 +18,7 @@ import static java.lang.String.format;
 import static java.util.Optional.ofNullable;
 import static udmi.schema.CloudModel.Operation.BIND;
 import static udmi.schema.CloudModel.Operation.BLOCK;
+import static udmi.schema.CloudModel.Operation.READ;
 
 import com.google.common.base.Preconditions;
 import com.google.daq.mqtt.util.MessagePublisher.QuerySpeed;
@@ -176,6 +178,10 @@ public class IotReflectorClient implements IotProvider {
     try {
       QuerySpeed speed = isSlow ? QuerySpeed.ETERNITY : QuerySpeed.SLOW;
       Map<String, Object> message = transaction(deviceId, CLOUD_QUERY_TOPIC, EMPTY_MESSAGE, speed);
+      // TODO: Remove this legacy workaround once all cloud environments are updated (2024/11/15).
+      if ("FETCH".equals(message.get("operation"))) {
+        message.put("operation", READ.toString());
+      }
       return convertTo(CloudModel.class, message);
     } catch (Exception e) {
       if (e.getMessage().contains("NOT_FOUND")) {
@@ -195,7 +201,9 @@ public class IotReflectorClient implements IotProvider {
       writeErrorDetail(transactionId, error, (String) objectMap.get(DETAIL_KEY));
       throw new RuntimeException(format("UDMIS error %s: %s", transactionId, error));
     }
-    System.err.println("OPERATION " + objectMap.get("operation"));
+    if (isNullOrEmpty((String) objectMap.get("operation"))) {
+      System.err.println("Warning! Returned transaction operation is null/empty.");
+    }
     return objectMap;
   }
 
