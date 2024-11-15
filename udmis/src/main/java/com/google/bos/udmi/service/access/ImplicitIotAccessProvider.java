@@ -22,6 +22,7 @@ import static java.util.Objects.requireNonNull;
 import static java.util.Optional.ofNullable;
 import static java.util.function.Predicate.not;
 import static udmi.schema.CloudModel.Operation.DELETE;
+import static udmi.schema.CloudModel.Operation.READ;
 import static udmi.schema.CloudModel.Resource_type.DEVICE;
 import static udmi.schema.CloudModel.Resource_type.GATEWAY;
 
@@ -264,6 +265,7 @@ public class ImplicitIotAccessProvider extends IotAccessBase {
     cloudModel.metadata_str = null;
 
     cloudModel.device_ids = listBoundDevices(registryId, deviceId);
+    cloudModel.operation = READ;
     return cloudModel;
   }
 
@@ -302,6 +304,7 @@ public class ImplicitIotAccessProvider extends IotAccessBase {
     CloudModel cloudModel = new CloudModel();
     cloudModel.device_ids = entries.keySet().stream().collect(
         Collectors.toMap(id -> id, id -> fetchDevice(registryId, id)));
+    cloudModel.operation = READ;
     return cloudModel;
   }
 

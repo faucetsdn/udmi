@@ -225,14 +225,14 @@ public class ReflectProcessor extends ProcessorBase {
     sendReflectCommand(reflection, envelope, message);
   }
 
-  private void processReflection(Envelope reflection, Envelope envelope,
-      Object payload) {
-    debug("Processing reflection %s/%s %s %s", envelope.subType, envelope.subFolder,
-        isoConvert(envelope.publishTime), envelope.transactionId);
-    CloudModel result = getReflectionResult(envelope, payload);
-    ifNotNullThen(result,
-        v -> debug("Reflection result %s %s: %s", result.operation, envelope.transactionId, envelope.subType));
-    ifNotNullThen(result, v -> sendReflectCommand(reflection, envelope, result));
+  private void processReflection(Envelope reflection, Envelope env, Object payload) {
+    debug("Processing reflection %s/%s %s %s", env.subType, env.subFolder,
+        isoConvert(env.publishTime), env.transactionId);
+    CloudModel result = getReflectionResult(env, payload);
+    ifNotNullThen(result, r -> {
+      debug("Return reflection result %s %s %s", r.operation, env.subType, env.transactionId);
+      sendReflectCommand(reflection, env, result);
+    });
   }
 
   private void processStateUpdate(Envelope envelope, StateUpdate stateUpdate) {
