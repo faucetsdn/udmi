@@ -520,10 +520,8 @@ public class Registrar {
 
       int total = 0;
 
-      if (updateCloudIoT) {
-        System.err.printf("Processing %d new devices...%n", newDevices.size());
-        total += processLocalDevices(newDevices);
-      }
+      System.err.printf("Processing %d new devices...%n", newDevices.size());
+      total += processLocalDevices(newDevices);
 
       System.err.printf("Updating %d existing devices...%n", oldDevices.size());
       total += processLocalDevices(oldDevices);
@@ -671,7 +669,7 @@ public class Registrar {
     boolean error = false;
     try {
       localDevice.writeConfigFile();
-      if (cloudModels != null) {
+      if (cloudModels != null && updateCloudIoT) {
         created = syncCloudIoT(localName, localDevice);
         sendUpdateMessages(localDevice);
         cloudModels.computeIfAbsent(localName, name -> fetchDevice(localName, true));
