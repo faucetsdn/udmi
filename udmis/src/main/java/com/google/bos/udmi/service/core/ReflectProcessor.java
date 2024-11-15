@@ -314,6 +314,7 @@ public class ReflectProcessor extends ProcessorBase {
     CloudModel cloudModel = reflectQueryCore(attributes);
     // TODO: Remove this workaround when all clients have been updated (2024/11/15).
     if ((query == null || !READ.equals(query.operation)) && READ.equals(cloudModel.operation)) {
+      warn("Removing return result operation due to legacy client query.");
       cloudModel.operation = null;
     }
     return cloudModel;
