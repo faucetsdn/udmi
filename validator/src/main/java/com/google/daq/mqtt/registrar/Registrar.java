@@ -19,7 +19,6 @@ import static com.google.udmi.util.GeneralUtils.ifNullThen;
 import static com.google.udmi.util.GeneralUtils.ifTrueGet;
 import static com.google.udmi.util.GeneralUtils.ifTrueThen;
 import static com.google.udmi.util.GeneralUtils.isTrue;
-import static com.google.udmi.util.GeneralUtils.removeArg;
 import static com.google.udmi.util.GeneralUtils.writeString;
 import static com.google.udmi.util.JsonUtil.JSON_SUFFIX;
 import static com.google.udmi.util.JsonUtil.OBJECT_MAPPER;
@@ -53,6 +52,8 @@ import com.google.daq.mqtt.util.ExceptionMap;
 import com.google.daq.mqtt.util.ExceptionMap.ErrorTree;
 import com.google.daq.mqtt.util.PubSubPusher;
 import com.google.daq.mqtt.util.ValidationError;
+import com.google.udmi.util.CommandLineOption;
+import com.google.udmi.util.CommandLineProcessor;
 import com.google.udmi.util.Common;
 import com.google.udmi.util.SiteModel;
 import java.io.File;
@@ -126,6 +127,7 @@ public class Registrar {
   private final Map<String, JsonSchema> schemas = new HashMap<>();
   private final String generation = getGenerationString();
   private final Set<Summarizer> summarizers = new HashSet<>();
+  private final CommandLineProcessor commandLineProcessor = new CommandLineProcessor(this);
   private CloudIotManager cloudIotManager;
   private File schemaBase;
   private PubSubPusher updatePusher;
@@ -200,58 +202,34 @@ public class Registrar {
       // Add implicit NO_SITE site spec for local-only site model processing.
       argList.add(NO_SITE);
     }
-    siteModel = new SiteModel(TOOL_NAME, argList);
+    try {
+      siteModel = new SiteModel(TOOL_NAME, argList);
+    } catch (IllegalArgumentException e) {
+      commandLineProcessor.showUsage(e.getMessage());
+    }
     processProfile(siteModel.getExecutionConfiguration());
     return postProcessArgs(argList);
   }
 
   Registrar postProcessArgs(List<String> argList) {
+    List<String> remainingArgs = commandLineProcessor.processArgs(argList);
+    ifNotNullThen(remainingArgs, this::setDeviceList);
     requireNonNull(siteModel, "siteModel not defined");
-    while (argList.size() > 0) {
-      String option = argList.remove(0);
-      switch (option) {
-        case "-r" -> setToolRoot(removeArg(argList, "tool root"));
-        case "-p" -> setProjectId(removeArg(argList, "project id"));
-        case "-s" -> setSitePath(removeArg(argList, "site path"));
-        case "-a" -> setTargetRegistry(removeArg(argList, "alt registry"));
-        case "-e" -> setRegistrySuffix(removeArg(argList, "registry suffix"));
-        case "-f" -> setFeedTopic(removeArg(argList, "feed topic"));
-        case "-u" -> setUpdateFlag(true);
-        case "-b" -> setBlockUnknown(true);
-        case "-l" -> setIdleLimit(removeArg(argList, "idle limit"));
-        case "-t" -> setValidateMetadata(false);
-        case "-q" -> setQueryOnly(true);
-        case "-d" -> setDeleteDevices(true);
-        case "-x" -> setExpungeDevices(true);
-        case "-n" -> setRunnerThreads(removeArg(argList, "runner threads"));
-        case "-c" -> setCreateRegistries(removeArg(argList, "create registries"));
-        case "--" -> {
-          setDeviceList(argList);
-          return this;
-        }
-        default -> {
-          if (option.startsWith("-")) {
-            throw new RuntimeException("Unknown cmdline option " + option);
-          }
-          // Add the current non-option back into the list and use it as device names list.
-          argList.add(0, option);
-          setDeviceList(argList);
-          return this;
-        }
-      }
-    }
     return this;
   }
 
-  private void setQueryOnly(boolean queryOnly) {
-    this.queryOnly = queryOnly;
+  @CommandLineOption(short_form = "-q", description = "Query only")
+  private void setQueryOnly() {
+    this.queryOnly = true;
     this.updateCloudIoT = false;
   }
 
-  private void setBlockUnknown(boolean block) {
-    blockUnknown = block;
+  @CommandLineOption(short_form = "-b", description = "Block unknown devices")
+  private void setBlockUnknown() {
+    blockUnknown = true;
   }
 
+  @CommandLineOption(short_form = "-c", description = "Create registries")
   private void setCreateRegistries(String registrySpec) {
     try {
       createRegistries = Integer.parseInt(registrySpec);
@@ -263,23 +241,28 @@ public class Registrar {
     }
   }
 
+  @CommandLineOption(short_form = "-n", arg_type = "n",
+      description = "Set number of runner threads")
   private void setRunnerThreads(String argValue) {
     runnerThreads = Integer.parseInt(argValue);
   }
 
-  private void setDeleteDevices(boolean deleteDevices) {
-    this.deleteDevices = deleteDevices;
+  @CommandLineOption(short_form = "-d", description = "Delete (known) devices")
+  private void setDeleteDevices() {
     checkNotNull(projectId, "delete devices specified with no target project");
-    this.updateCloudIoT |= deleteDevices;
+    this.deleteDevices = true;
+    this.updateCloudIoT = true;
   }
 
-  private void setExpungeDevices(boolean expungeDevices) {
-    this.expungeDevices = expungeDevices;
+  @CommandLineOption(short_form = "-x", description = "Expunge (unknown) devices")
+  private void setExpungeDevices() {
     checkNotNull(projectId, "expunge devices specified with no target project");
-    this.updateCloudIoT |= expungeDevices;
+    this.expungeDevices = true;
+    this.updateCloudIoT = true;
   }
 
-  void setRegistrySuffix(String suffix) {
+  @CommandLineOption(short_form = "-e", arg_type = "s", description = "Set registry suffix")
+  private void setRegistrySuffix(String suffix) {
     siteModel.getExecutionConfiguration().registry_suffix = suffix;
   }
 
@@ -288,7 +271,7 @@ public class Registrar {
     setSitePath(config.site_model);
     setProjectId(config.project_id);
     if (config.project_id != null) {
-      setUpdateFlag(true);
+      setUpdateFlag();
     }
   }
 
@@ -356,17 +339,20 @@ public class Registrar {
     System.err.println("Created registry " + registry);
   }
 
+  @CommandLineOption(short_form = "-l", arg_type = "t", description = "Set idle limit")
   private void setIdleLimit(String option) {
     idleLimit = Duration.parse("PT" + option);
     System.err.println("Limiting devices to duration " + idleLimit.toSeconds() + "s");
   }
 
-  private void setUpdateFlag(boolean update) {
-    updateCloudIoT = update;
+  @CommandLineOption(short_form = "-u", description = "Update cloud")
+  private void setUpdateFlag() {
+    updateCloudIoT = true;
   }
 
-  private void setValidateMetadata(boolean validateMetadata) {
-    this.doValidate = validateMetadata;
+  @CommandLineOption(short_form = "-t", description = "Do not validate metadata")
+  private void setValidateMetadata() {
+    this.doValidate = false;
   }
 
   private void setDeviceList(List<String> deviceList) {
@@ -374,6 +360,7 @@ public class Registrar {
     blockUnknown = false;
   }
 
+  @CommandLineOption(short_form = "-f", arg_type = "s", description = "Set PubSub feed topic")
   private void setFeedTopic(String feedTopic) {
     System.err.println("Sending device feed to topic " + feedTopic);
     feedPusher = new PubSubPusher(projectId, feedTopic);
@@ -441,7 +428,8 @@ public class Registrar {
     return ifNotNullGet(cloudIotManager, CloudIotManager::getVersionInformation);
   }
 
-  protected void setSitePath(String sitePath) {
+  @CommandLineOption(short_form = "-s", arg_type = "s", description = "Set site path")
+  private void setSitePath(String sitePath) {
     checkNotNull(SCHEMA_NAME, "schemaName not set yet");
     siteDir = new File(sitePath);
     siteModel = ofNullable(siteModel).orElseGet(() -> new SiteModel(sitePath));
@@ -1163,7 +1151,8 @@ public class Registrar {
     });
   }
 
-  protected void setProjectId(String projectId) {
+  @CommandLineOption(short_form = "-p", arg_type = "s", description = "Set project id")
+  private void setProjectId(String projectId) {
     if (NO_SITE.equals(projectId) || projectId == null) {
       this.projectId = null;
       return;
@@ -1174,7 +1163,8 @@ public class Registrar {
     this.projectId = projectId;
   }
 
-  protected void setToolRoot(String toolRoot) {
+  @CommandLineOption(short_form = "-r", arg_type = "s", description = "Set tool root")
+  private void setToolRoot(String toolRoot) {
     try {
       schemaBase = new File(toolRoot, SCHEMA_BASE_PATH);
       if (!schemaBase.isDirectory()) {
@@ -1254,7 +1244,8 @@ public class Registrar {
     return cloudIotManager.getMockActions();
   }
 
-  public void setTargetRegistry(String altRegistry) {
+  @CommandLineOption(short_form = "-a", arg_type = "s", description = "Set alternate registry")
+  private void setTargetRegistry(String altRegistry) {
     siteModel.getExecutionConfiguration().registry_id = altRegistry;
     siteModel.getExecutionConfiguration().alt_registry = null;
   }
