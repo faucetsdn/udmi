@@ -269,8 +269,8 @@ public class CloudModel {
     public enum Operation {
 
         ERROR("ERROR"),
-        FETCH("FETCH"),
         CREATE("CREATE"),
+        READ("READ"),
         UPDATE("UPDATE"),
         DELETE("DELETE"),
         MODIFY("MODIFY"),

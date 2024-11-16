@@ -90,9 +90,6 @@ public class PubberPointsetManager extends PubberManager implements PointsetMana
 
   @Override
   public void restorePoint(String pointName) {
-    if (pointName.equals(options.missingPoint)) {
-      return;
-    }
     PointsetManager.super.restorePoint(pointName);
   }
 
@@ -157,6 +154,7 @@ public class PubberPointsetManager extends PubberManager implements PointsetMana
 
     // Update each internally managed point with its specific pointset config (if any).
     Map<String, PointPointsetConfig> points = ofNullable(config.points).orElseGet(HashMap::new);
+    ifNotNullThen(options.missingPoint, points::remove);
     managedPoints.forEach((name, point) -> updatePointConfig(point, points.get(name)));
     pointsetState.state_etag = config.state_etag;
 

@@ -5,6 +5,7 @@ import static com.google.common.base.Preconditions.checkState;
 import static com.google.daq.mqtt.registrar.Registrar.DEVICE_ERRORS_MAP;
 import static com.google.daq.mqtt.registrar.Registrar.ENVELOPE_SCHEMA_JSON;
 import static com.google.daq.mqtt.registrar.Registrar.METADATA_SCHEMA_JSON;
+import static com.google.daq.mqtt.util.ConfigManager.GENERATED_CONFIG_JSON;
 import static com.google.daq.mqtt.util.ConfigManager.configFrom;
 import static com.google.udmi.util.Common.DEVICE_ID_ALLOWABLE;
 import static com.google.udmi.util.Common.POINT_NAME_ALLOWABLE;
@@ -164,7 +165,6 @@ class LocalDevice {
           EXPECTED_DIR,
           CONFIG_DIR,
           OUT_DIR);
-  private static final String GENERATED_CONFIG_JSON = ConfigManager.GENERATED_CONFIG_JSON;
   private static final Set<String> OUT_FILES = ImmutableSet.of(
       GENERATED_CONFIG_JSON, DEVICE_ERRORS_MAP, NORMALIZED_JSON, EXCEPTION_LOG_FILE);
   private static final Set<String> ALL_KEY_FILES =
