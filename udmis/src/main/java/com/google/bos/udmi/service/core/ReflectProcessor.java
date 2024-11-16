@@ -18,6 +18,7 @@ import static com.google.udmi.util.GeneralUtils.firstNonNull;
 import static com.google.udmi.util.GeneralUtils.friendlyStackTrace;
 import static com.google.udmi.util.GeneralUtils.ifNotNullGet;
 import static com.google.udmi.util.GeneralUtils.ifNotNullThen;
+import static com.google.udmi.util.GeneralUtils.ifNullThen;
 import static com.google.udmi.util.GeneralUtils.multiTrim;
 import static com.google.udmi.util.GeneralUtils.requireNull;
 import static com.google.udmi.util.GeneralUtils.stackTraceString;
@@ -35,6 +36,7 @@ import static com.google.udmi.util.JsonUtil.toObject;
 import static java.lang.String.format;
 import static java.util.Objects.requireNonNull;
 import static java.util.Optional.ofNullable;
+import static udmi.schema.CloudModel.Operation.READ;
 import static udmi.schema.CloudModel.Resource_type.REGISTRY;
 import static udmi.schema.Envelope.SubFolder.UPDATE;
 
@@ -225,14 +227,15 @@ public class ReflectProcessor extends ProcessorBase {
     sendReflectCommand(reflection, envelope, message);
   }
 
-  private void processReflection(Envelope reflection, Envelope envelope,
-      Object payload) {
-    debug("Processing reflection %s/%s %s %s", envelope.subType, envelope.subFolder,
-        isoConvert(envelope.publishTime), envelope.transactionId);
-    CloudModel result = getReflectionResult(envelope, payload);
-    ifNotNullThen(result,
-        v -> debug("Reflection result %s: %s", envelope.transactionId, envelope.subType));
-    ifNotNullThen(result, v -> sendReflectCommand(reflection, envelope, result));
+  private void processReflection(Envelope reflection, Envelope env, Object payload) {
+    debug("Processing reflection %s/%s %s %s", env.subType, env.subFolder,
+        isoConvert(env.publishTime), env.transactionId);
+    CloudModel result = getReflectionResult(env, payload);
+    ifNotNullThen(result, r -> {
+      debug("Return reflection result %s %s %s", r.operation, env.subType, env.transactionId);
+      ifNullThen(r.operation, () -> error("Reflect call has null return operation type"));
+      sendReflectCommand(reflection, env, result);
+    });
   }
 
   private void processStateUpdate(Envelope envelope, StateUpdate stateUpdate) {
@@ -261,7 +264,7 @@ public class ReflectProcessor extends ProcessorBase {
       publish(attributes, stateUpdate);
       reflectStateUpdate(attributes, stringify(stateUpdate));
       CloudModel cloudModel = new CloudModel();
-      cloudModel.operation = Operation.FETCH;
+      cloudModel.operation = READ;
       return cloudModel;
     } catch (Exception e) {
       throw new RuntimeException("While querying device state " + attributes.deviceId, e);
@@ -307,7 +310,17 @@ public class ReflectProcessor extends ProcessorBase {
   }
 
   private CloudModel reflectQuery(Envelope attributes, Map<String, Object> payload) {
-    checkState(payload.size() == 0, "unexpected non-empty message payload");
+    CloudModel query = convertToStrict(CloudModel.class, payload);
+    CloudModel cloudModel = reflectQueryCore(attributes);
+    // TODO: Remove this workaround when all clients have been updated (2024/11/15).
+    if ((query == null || !READ.equals(query.operation)) && READ.equals(cloudModel.operation)) {
+      warn("Removing return result operation due to legacy client query.");
+      cloudModel.operation = null;
+    }
+    return cloudModel;
+  }
+
+  private CloudModel reflectQueryCore(Envelope attributes) {
     attributes.subType = SubType.REPLY;
     switch (attributes.subFolder) {
       case UPDATE:

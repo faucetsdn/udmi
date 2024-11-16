@@ -104,8 +104,8 @@
     "operation": {
       "enum": [
         "ERROR",
-        "FETCH",
         "CREATE",
+        "READ",
         "UPDATE",
         "DELETE",
         "MODIFY",

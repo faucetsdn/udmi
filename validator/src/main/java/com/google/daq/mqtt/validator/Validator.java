@@ -53,6 +53,7 @@ import com.github.fge.jsonschema.core.report.ProcessingReport;
 import com.github.fge.jsonschema.main.JsonSchema;
 import com.github.fge.jsonschema.main.JsonSchemaFactory;
 import com.google.bos.iot.core.proxy.IotReflectorClient;
+import com.google.bos.iot.core.proxy.MqttPublisher;
 import com.google.bos.iot.core.proxy.NullPublisher;
 import com.google.cloud.Tuple;
 import com.google.common.base.Preconditions;
@@ -135,12 +136,14 @@ import udmi.schema.ValidationSummary;
 public class Validator {
 
   public static final int TOOLS_FUNCTIONS_VERSION = 15;
+  public static final int TOOLS_FUNCTIONS_QUERY_READ = 16;
   public static final String PROJECT_PROVIDER_PREFIX = "//";
   public static final String TIMESTAMP_ZULU_SUFFIX = "Z";
   public static final String TIMESTAMP_UTC_SUFFIX_1 = "+00:00";
   public static final String TIMESTAMP_UTC_SUFFIX_2 = "+0000";
   public static final String ATTRIBUTE_FILE_FORMAT = "%s.attr";
   public static final String MESSAGE_FILE_FORMAT = "%s.json";
+  public static final String VIOLATIONS_FILE_FORMAT = "%s.bad";
   public static final String ORIG_FILE_FORMAT = "%s.orig";
   private static final String SCHEMA_VALIDATION_FORMAT = "Validating %d schemas";
   private static final String TARGET_VALIDATION_FORMAT = "Validating %d files against %s";
@@ -361,6 +364,7 @@ public class Validator {
             case "-r" -> validateMessageTrace(removeNextArg(argList));
             case "-n" -> client = new NullPublisher();
             case "-w" -> setMessageTraceDir(removeNextArg(argList));
+            case "-z" -> setProfileMode();
             case "--" -> {
               // All remaining arguments remain in the return list.
               return argList;
@@ -377,6 +381,11 @@ public class Validator {
         setSchemaSpec(new File(UDMI_ROOT, "schema").getAbsolutePath());
       }
     }
+  }
+
+  private void setProfileMode() {
+    IotReflectorClient.reportStatistics = true;
+    MqttPublisher.reportStatistics = true;
   }
 
   private void setReportDelay(String arg) {

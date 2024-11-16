@@ -103,6 +103,8 @@ public class IotReflectorClient implements MessagePublisher {
   private static final long RESYNC_INTERVAL_SEC = 30;
   private static final Map<MessagePublisher, CountDownLatch> pubLatches = new ConcurrentHashMap<>();
   private static final Map<MessagePublisher, AtomicInteger> pubCounts = new ConcurrentHashMap<>();
+  public static boolean reportStatistics = false;
+  private static int maxFunctionsVersion;
   private final String udmiVersion;
   private final CountDownLatch initialConfigReceived = new CountDownLatch(1);
   private final CountDownLatch initializedStateSent = new CountDownLatch(1);
@@ -215,7 +217,7 @@ public class IotReflectorClient implements MessagePublisher {
   }
 
   private void timerTick() {
-    samplers.forEach(value -> info(value.getMessage()));
+    ifTrueThen(reportStatistics, () -> samplers.forEach(value -> info(value.getMessage())));
     setReflectorState();
   }
 
@@ -442,6 +444,7 @@ public class IotReflectorClient implements MessagePublisher {
               format("%s: max supported %s. Please update cloud UDMIS install.",
                   baseError, udmiInfo.functions_max));
         }
+        maxFunctionsVersion = udmiInfo.functions_max;
         isInstallValid = true;
         expectedTxnId = null;
         debug(format("UDMI reflector state transaction took %ss",
@@ -462,6 +465,11 @@ public class IotReflectorClient implements MessagePublisher {
     } catch (Exception e) {
       syncFailure = e;
     }
+  }
+
+  public static boolean isFunctionVersionSupported(int targetVersion) {
+    // TODO: Remove hacky static variable once this is properly resolved.
+    return maxFunctionsVersion >= targetVersion;
   }
 
   private void debug(String message) {
