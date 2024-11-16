@@ -25,7 +25,6 @@ import static com.google.udmi.util.Common.UPDATE_QUERY_TOPIC;
 import static com.google.udmi.util.Common.UPGRADED_FROM;
 import static com.google.udmi.util.Common.getExceptionMessage;
 import static com.google.udmi.util.Common.getNamespacePrefix;
-import static com.google.udmi.util.Common.removeNextArg;
 import static com.google.udmi.util.GeneralUtils.friendlyStackTrace;
 import static com.google.udmi.util.GeneralUtils.getTimestamp;
 import static com.google.udmi.util.GeneralUtils.ifNotNullGet;
@@ -70,6 +69,8 @@ import com.google.daq.mqtt.util.MessagePublisher;
 import com.google.daq.mqtt.util.MessagePublisher.QuerySpeed;
 import com.google.daq.mqtt.util.PubSubClient;
 import com.google.daq.mqtt.util.ValidationException;
+import com.google.udmi.util.CommandLineOption;
+import com.google.udmi.util.CommandLineProcessor;
 import com.google.udmi.util.Common;
 import com.google.udmi.util.GeneralUtils;
 import com.google.udmi.util.JsonUtil;
@@ -94,7 +95,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
-import java.util.MissingFormatArgumentException;
 import java.util.Scanner;
 import java.util.Set;
 import java.util.TreeMap;
@@ -188,7 +188,8 @@ public class Validator {
   private static final String TOOL_NAME = "validator";
   public static final String VALIDATOR_TOOL_NAME = "validator";
   public static final String REGISTRY_DEVICE_DEFAULT = "_regsitry";
-  private long reportingDelay = DEFAULT_INTERVAL_SEC;
+  private long reportingDelaySec = DEFAULT_INTERVAL_SEC;
+  private final CommandLineProcessor commandLineProcessor = new CommandLineProcessor(this);
   private final Map<String, ReportingDevice> reportingDevices = new TreeMap<>();
   private final Set<String> extraDevices = new TreeSet<>();
   private final Set<String> processedDevices = new TreeSet<>();
@@ -256,10 +257,13 @@ public class Validator {
 
   Validator processArgs(List<String> argListRaw) {
     List<String> argList = new ArrayList<>(argListRaw);
-    siteModel = new SiteModel(TOOL_NAME, argList);
+    try {
+      siteModel = new SiteModel(TOOL_NAME, argList);
+    } catch (IllegalArgumentException e) {
+      commandLineProcessor.showUsage(e.getMessage());
+    }
     processProfile(siteModel.getExecutionConfiguration());
-    postProcessArgs(argList);
-    targetDevices = Set.copyOf(argList);
+    targetDevices = Set.copyOf(postProcessArgs(argList));
     initializeExpectedDevices();
     return this;
   }
@@ -349,33 +353,8 @@ public class Validator {
 
   private List<String> postProcessArgs(List<String> argList) {
     try {
-      while (!argList.isEmpty()) {
-        String option = removeNextArg(argList);
-        try {
-          switch (option) {
-            case "-p" -> setProjectId(removeNextArg(argList));
-            case "-s" -> setSiteDir(removeNextArg(argList));
-            case "-a" -> setSchemaSpec(removeNextArg(argList));
-            case "-t" -> validatePubSub(removeNextArg(argList), true);
-            case "-f" -> validateFilesOutput(removeNextArg(argList));
-            case "-c" -> setValidateCurrent(true);
-            case "-d" -> setReportDelay(removeNextArg(argList));
-            case "-u" -> forceUpgrade = true;
-            case "-r" -> validateMessageTrace(removeNextArg(argList));
-            case "-n" -> client = new NullPublisher();
-            case "-w" -> setMessageTraceDir(removeNextArg(argList));
-            case "-z" -> setProfileMode();
-            case "--" -> {
-              // All remaining arguments remain in the return list.
-              return argList;
-            }
-            default -> throw new RuntimeException("Unknown cmdline option " + option);
-          }
-        } catch (MissingFormatArgumentException e) {
-          throw new RuntimeException("For command line option " + option, e);
-        }
-      }
-      return argList;
+      List<String> remainingArgs = commandLineProcessor.processArgs(argList);
+      return ofNullable(remainingArgs).orElse(ImmutableList.of());
     } finally {
       if (schemaMap == null) {
         setSchemaSpec(new File(UDMI_ROOT, "schema").getAbsolutePath());
@@ -383,19 +362,33 @@ public class Validator {
     }
   }
 
+  @CommandLineOption(short_form = "-n", description = "Use null client")
+  private void setNullClient() {
+    client = new NullPublisher();
+  }
+
+  @CommandLineOption(short_form = "-u", description = "Set force message upgrade")
+  private void setForceUpgrade() {
+    forceUpgrade = true;
+  }
+
+  @CommandLineOption(short_form = "-z", description = "Turn on system profiling")
   private void setProfileMode() {
     IotReflectorClient.reportStatistics = true;
     MqttPublisher.reportStatistics = true;
   }
 
+  @CommandLineOption(short_form = "-d", arg_type = "n", description = "Report delay (sec)")
   private void setReportDelay(String arg) {
-    reportingDelay = Integer.parseInt(arg);
+    reportingDelaySec = Integer.parseInt(arg);
   }
 
-  private void setValidateCurrent(boolean current) {
-    validateCurrent = current;
+  @CommandLineOption(short_form = "-c", description = "Validate current device messages")
+  private void setValidateCurrent() {
+    validateCurrent = true;
   }
 
+  @CommandLineOption(short_form = "-p", arg_type = "s", description = "Set project id")
   private void setProjectId(String projectId) {
     if (!projectId.startsWith(PROJECT_PROVIDER_PREFIX)) {
       config.project_id = projectId;
@@ -404,6 +397,11 @@ public class Validator {
     String[] parts = projectId.substring(PROJECT_PROVIDER_PREFIX.length()).split("/", 2);
     config.iot_provider = IotProvider.fromValue(parts[0]);
     config.project_id = parts[1];
+  }
+
+  @CommandLineOption(short_form = "-t", arg_type = "s", description = "Validate pub sub target")
+  private void validatePubSub(String pubSubCombo) {
+    validatePubSub(pubSubCombo, true);
   }
 
   private void validatePubSub(String pubSubCombo, boolean reflect) {
@@ -441,6 +439,7 @@ public class Validator {
     return (MessageReadingClient) client;
   }
 
+  @CommandLineOption(short_form = "-r", arg_type = "s", description = "Validate message trace")
   private void validateMessageTrace(String messageDir) {
     client = new MessageReadingClient(getRegistryId(), messageDir);
     dataSinks.add(client);
@@ -457,7 +456,8 @@ public class Validator {
    *
    * @param siteDir site model directory
    */
-  public void setSiteDir(String siteDir) {
+  @CommandLineOption(short_form = "-s", arg_type = "s", description = "Set site directory")
+  private void setSiteDir(String siteDir) {
     config.site_model = siteDir;
     final File baseDir;
     if (NO_SITE.equals(siteDir)) {
@@ -482,6 +482,7 @@ public class Validator {
     return GeneralUtils.mergeObject(siteConfig, config);
   }
 
+  @CommandLineOption(short_form = "-w", arg_type = "s", description = "Write trace output")
   private void setMessageTraceDir(String writeDirArg) {
     traceDir = new File(writeDirArg);
     outputLogger.info("Tracing message capture to " + traceDir.getAbsolutePath());
@@ -515,7 +516,7 @@ public class Validator {
 
   private ReportingDevice newReportingDevice(String device) {
     ReportingDevice reportingDevice = new ReportingDevice(device);
-    ifTrueThen(validateCurrent, () -> reportingDevice.setThreshold(reportingDelay));
+    ifTrueThen(validateCurrent, () -> reportingDevice.setThreshold(reportingDelaySec));
     return reportingDevice;
   }
 
@@ -524,7 +525,8 @@ public class Validator {
    *
    * @param schemaPath schema specification directory
    */
-  public void setSchemaSpec(String schemaPath) {
+  @CommandLineOption(short_form = "-a", arg_type = "s", description = "Set schema path")
+  private void setSchemaSpec(String schemaPath) {
     File schemaPart = new File(schemaPath);
     boolean rawPath = schemaPart.isAbsolute() || Strings.isNullOrEmpty(config.udmi_root);
     File schemaFile = rawPath ? schemaPart : new File(new File(config.udmi_root), schemaPath);
@@ -607,7 +609,7 @@ public class Validator {
     processValidationReport();
     ScheduledFuture<?> reportSender =
         simulatedMessages ? null : executor.scheduleAtFixedRate(this::processValidationReport,
-            reportingDelay, reportingDelay, TimeUnit.SECONDS);
+            reportingDelaySec, reportingDelaySec, TimeUnit.SECONDS);
     try {
       while (client.isActive()) {
         try {
@@ -1090,7 +1092,7 @@ public class Validator {
           .map(Entry::getKey).toList();
       summaryDevices.addAll(keys);
     }
-    long batchSize = reportingDelay * REPORTS_PER_SEC;
+    long batchSize = reportingDelaySec * REPORTS_PER_SEC;
     List<String> sendList = summaryDevices.stream().limit(batchSize).toList();
     System.err.printf("Sending %d device validation state updates out of an available %d%n",
         sendList.size(), summaryDevices.size());
@@ -1177,6 +1179,7 @@ public class Validator {
     schemaExceptions.throwIfNotEmpty();
   }
 
+  @CommandLineOption(short_form = "-f", arg_type = "s", description = "Validate from files")
   private void validateFilesOutput(String targetSpec) {
     try {
       String[] parts = targetSpec.split(":");
