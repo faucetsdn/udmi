@@ -488,7 +488,8 @@ public class SequenceBase {
     SubFolder subFolder = attributes.subFolder;
     String gatewayId = attributes.gatewayId;
     String deviceSuffix = ofNullable(gatewayId).map(x -> "_" + attributes.deviceId).orElse("");
-    return format("%s_%s%s", subType, subFolder, deviceSuffix);
+    String traceSuffix = traceLogLevel() ? "_" + isoConvert(attributes.publishTime) : "";
+    return format("%s_%s%s%s", subType, subFolder, deviceSuffix, traceSuffix);
   }
 
   private static void emitSequenceResult(SequenceResult result, String bucket, String name,
@@ -1057,10 +1058,6 @@ public class SequenceBase {
     }
 
     String messageBase = makeMessageBase(attributes);
-    String timestamp = message == null ? getTimestamp() : (String) message.get("timestamp");
-    if (traceLogLevel()) {
-      messageBase = messageBase + "_" + timestamp;
-    }
 
     ifTrueThen(message.containsKey(EXCEPTION_KEY), () -> unwrapException(message, attributes));
     recordRawMessage(message, messageBase);
@@ -1761,6 +1758,9 @@ public class SequenceBase {
     Envelope envelope = convertTo(Envelope.class, attributes);
 
     try {
+      envelope.publishTime = Date.from(
+          Instant.parse(message == null ? getTimestamp() : (String) message.get("timestamp")));
+
       recordRawMessage(envelope, message);
 
       preprocessMessage(envelope, message);
@@ -1798,7 +1798,8 @@ public class SequenceBase {
     modified.deviceId = FAKE_DEVICE_ID; // Allow for non-standard device IDs.
 
     messageValidator.validateDeviceMessage(reportingDevice, message, toStringMap(modified));
-    validationResults.computeIfAbsent(makeMessageBase(attributes), key -> new ArrayList<>())
+    validationResults.computeIfAbsent(makeMessageBase(attributes),
+            key -> new ArrayList<>())
         .addAll(reportingDevice.getMessageEntries());
   }
 
@@ -1929,7 +1930,8 @@ public class SequenceBase {
     maxAllowedStatusLevel = level.value();
   }
 
-  private void validateIntermediateState(Envelope envelope, State convertedState, List<DiffEntry> stateChanges) {
+  private void validateIntermediateState(Envelope envelope, State convertedState,
+      List<DiffEntry> stateChanges) {
     if (!recordSequence || !shouldValidateSchema(SubFolder.VALIDATION)) {
       return;
     }
