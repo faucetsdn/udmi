@@ -39,6 +39,7 @@ import static com.google.udmi.util.JsonUtil.isoConvert;
 import static com.google.udmi.util.JsonUtil.mapCast;
 import static com.google.udmi.util.JsonUtil.safeSleep;
 import static java.lang.String.format;
+import static java.util.Objects.requireNonNull;
 import static java.util.Optional.ofNullable;
 import static udmi.schema.IotAccess.IotProvider.PUBSUB;
 
@@ -355,33 +356,9 @@ public class Validator {
 
   private List<String> postProcessArgs(List<String> argList) {
     try {
-      while (!argList.isEmpty()) {
-        String option = removeNextArg(argList);
-        try {
-          switch (option) {
-            case "-p" -> setProjectId(removeNextArg(argList));
-            case "-s" -> setSiteDir(removeNextArg(argList));
-            case "-a" -> setSchemaSpec(removeNextArg(argList));
-            case "-t" -> validatePubSub(removeNextArg(argList));
-            case "-f" -> validateFilesOutput(removeNextArg(argList));
-            case "-c" -> setValidateCurrent();
-            case "-d" -> setReportDelay(removeNextArg(argList));
-            case "-u" -> setForceUpgrade();
-            case "-r" -> validateMessageTrace(removeNextArg(argList));
-            case "-n" -> setNullClient();
-            case "-w" -> setMessageTraceDir(removeNextArg(argList));
-            case "-z" -> setProfileMode();
-            case "--" -> {
-              // All remaining arguments remain in the return list.
-              return argList;
-            }
-            default -> throw new RuntimeException("Unknown cmdline option " + option);
-          }
-        } catch (MissingFormatArgumentException e) {
-          throw new RuntimeException("For command line option " + option, e);
-        }
-      }
-      return argList;
+      List<String> remainingArgs = commandLineProcessor.processArgs(argList);
+      requireNonNull(siteModel, "siteModel not defined");
+      return ofNullable(remainingArgs).orElse(ImmutableList.of());
     } finally {
       if (schemaMap == null) {
         setSchemaSpec(new File(UDMI_ROOT, "schema").getAbsolutePath());
