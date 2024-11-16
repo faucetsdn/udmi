@@ -357,7 +357,6 @@ public class Validator {
   private List<String> postProcessArgs(List<String> argList) {
     try {
       List<String> remainingArgs = commandLineProcessor.processArgs(argList);
-      requireNonNull(siteModel, "siteModel not defined");
       return ofNullable(remainingArgs).orElse(ImmutableList.of());
     } finally {
       if (schemaMap == null) {
