@@ -668,7 +668,7 @@ public class ClearBladeIotAccessProvider extends IotAccessBase {
       Device device = deviceManager.getDevice(request);
       requireNonNull(device, "GetDeviceRequest failed");
       CloudModel cloudModel = convertFull(device);
-      cloudModel.operation = Operation.FETCH;
+      cloudModel.operation = Operation.READ;
       cloudModel.device_ids = listRegistryDevices(registryId, deviceId, null).device_ids;
       return cloudModel;
     } catch (Exception e) {

@@ -3,10 +3,11 @@
 ROOT_DIR=$(dirname $0)/..
 cd ${ROOT_DIR}
 
-
 bin/clone_model
 
 TEST_SITE=sites/udmi_site_model
+find $TEST_SITE -name out | xargs rm -rf
+(cd $TEST_SITE; git checkout .)
 
 exit_status=clean
 echo '###################################' starting test section processing

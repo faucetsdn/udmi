@@ -11,6 +11,7 @@ import static com.google.udmi.util.GeneralUtils.catchToNull;
 import static com.google.udmi.util.GeneralUtils.ifNotNullThen;
 import static com.google.udmi.util.GeneralUtils.ifNotNullThrow;
 import static com.google.udmi.util.GeneralUtils.ifTrueGet;
+import static com.google.udmi.util.GeneralUtils.ifTrueThen;
 import static com.google.udmi.util.GeneralUtils.sha256;
 import static com.google.udmi.util.JsonUtil.getNowInstant;
 import static com.google.udmi.util.SiteModel.DEFAULT_CLEARBLADE_HOSTNAME;
@@ -109,6 +110,7 @@ public class MqttPublisher implements MessagePublisher {
   private static final int HASH_PASSWORD_LENGTH = 8;
   private static final String UNUSED_ACCOUNT_NAME = "unused";
   private static final String MQTT_USER_NAME_FMT = "/r/%s/d/%s";
+  public static boolean reportStatistics = false;
   private final ExecutorService publisherExecutor = newFixedThreadPool(PUBLISH_THREAD_COUNT);
   private final ExecutorService reapExecutor = newFixedThreadPool(PUBLISH_THREAD_COUNT);
   private final Queue<Runnable> priorityQueue = new ConcurrentLinkedQueue<>();
@@ -269,7 +271,7 @@ public class MqttPublisher implements MessagePublisher {
 
   private void tickleConnection() {
     try {
-      samplers.forEach(value -> LOG.info(value.getMessage()));
+      ifTrueThen(reportStatistics, () -> samplers.forEach(value -> LOG.info(value.getMessage())));
     } catch (Exception e) {
       LOG.error("While updating stats: " + e.getMessage());
       e.printStackTrace();
