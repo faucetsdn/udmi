@@ -143,13 +143,6 @@ public class SiteModel {
     }
   }
 
-  private static void loadVersionInfo(ExecutionConfiguration exeConfig) {
-    exeConfig.udmi_version = System.getenv(UDMI_VERSION_ENV);
-    exeConfig.udmi_commit = System.getenv(UDMI_COMMIT_ENV);
-    exeConfig.udmi_ref = System.getenv(UDMI_REF_ENV);
-    exeConfig.udmi_timever = System.getenv(UDMI_TIMEVER_ENV);
-  }
-
   public SiteModel(String toolName, List<String> argList) {
     this(removeStringArg(argList, "site_model"), projectSpecSupplier(argList), null);
     ExecutionConfiguration executionConfiguration = getExecutionConfiguration();
@@ -164,6 +157,13 @@ public class SiteModel {
     // TODO: Fix this total hack.
     exeConfig.registry_id = executionConfiguration.registry_id;
     exeConfig.registry_suffix = executionConfiguration.registry_suffix;
+  }
+
+  private static void loadVersionInfo(ExecutionConfiguration exeConfig) {
+    exeConfig.udmi_version = System.getenv(UDMI_VERSION_ENV);
+    exeConfig.udmi_commit = System.getenv(UDMI_COMMIT_ENV);
+    exeConfig.udmi_ref = System.getenv(UDMI_REF_ENV);
+    exeConfig.udmi_timever = System.getenv(UDMI_TIMEVER_ENV);
   }
 
   private static Supplier<String> projectSpecSupplier(List<String> argList) {
