@@ -143,6 +143,7 @@ public class Validator {
   public static final String TIMESTAMP_UTC_SUFFIX_2 = "+0000";
   public static final String ATTRIBUTE_FILE_FORMAT = "%s.attr";
   public static final String MESSAGE_FILE_FORMAT = "%s.json";
+  public static final String VIOLATIONS_FILE_FORMAT = "%s.bad";
   public static final String ORIG_FILE_FORMAT = "%s.orig";
   private static final String SCHEMA_VALIDATION_FORMAT = "Validating %d schemas";
   private static final String TARGET_VALIDATION_FORMAT = "Validating %d files against %s";

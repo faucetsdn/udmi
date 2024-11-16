@@ -11,6 +11,7 @@ import static com.google.daq.mqtt.util.ConfigManager.configFrom;
 import static com.google.daq.mqtt.util.TimePeriodConstants.TWO_MINUTES_MS;
 import static com.google.daq.mqtt.validator.Validator.ATTRIBUTE_FILE_FORMAT;
 import static com.google.daq.mqtt.validator.Validator.MESSAGE_FILE_FORMAT;
+import static com.google.daq.mqtt.validator.Validator.VIOLATIONS_FILE_FORMAT;
 import static com.google.udmi.util.CleanDateFormat.cleanDate;
 import static com.google.udmi.util.CleanDateFormat.dateEquals;
 import static com.google.udmi.util.Common.DEVICE_ID_KEY;
@@ -1769,7 +1770,7 @@ public class SequenceBase {
       if (proxiedDevice) {
         handleProxyMessage(deviceId, envelope, message);
       } else if (UPDATE.value().equals(subFolderRaw)) {
-        handleUpdateMessage(subTypeRaw, message, transactionId);
+        handleUpdateMessage(envelope, subTypeRaw, message, transactionId);
       } else {
         handleDeviceMessage(message, subTypeRaw, subFolderRaw, transactionId);
       }
@@ -1826,7 +1827,7 @@ public class SequenceBase {
     }
   }
 
-  private synchronized void handleUpdateMessage(String subTypeRaw,
+  private synchronized void handleUpdateMessage(Envelope envelope, String subTypeRaw,
       Map<String, Object> message, String txnId) {
     try {
       debug(format("Handling update message %s_update %s", subTypeRaw, txnId));
@@ -1900,7 +1901,7 @@ public class SequenceBase {
         debug(format("Updated state after %ds %s %s", delta, timestamp, txnId));
         if (deltaState) {
           info(format("Updated state #%03d", updateCount), changedLines(stateChanges));
-          validateIntermediateState(convertedState, stateChanges);
+          validateIntermediateState(envelope, convertedState, stateChanges);
         } else {
           info(format("Initial state #%03d", updateCount), stringify(converted));
         }
@@ -1928,23 +1929,35 @@ public class SequenceBase {
     maxAllowedStatusLevel = level.value();
   }
 
-  private void validateIntermediateState(State convertedState, List<DiffEntry> stateChanges) {
+  private void validateIntermediateState(Envelope envelope, State convertedState, List<DiffEntry> stateChanges) {
     if (!recordSequence || !shouldValidateSchema(SubFolder.VALIDATION)) {
       return;
     }
+
+    Map<String, String> newViolations = new HashMap<>();
 
     int statusLevel = catchToElse(() -> convertedState.system.status.level, Level.TRACE.value());
     if (statusLevel > maxAllowedStatusLevel) {
       String message = format("System status level %d exceeded allowed threshold %d", statusLevel,
           maxAllowedStatusLevel);
-      deviceStateViolations.put(STATUS_LEVEL_VIOLATION, message);
-      warning(message);
+      newViolations.put(STATUS_LEVEL_VIOLATION, message);
     }
     Map<String, String> badChanges = stateChanges.stream().filter(not(this::changeAllowed))
-        .collect(Collectors.toMap(DiffEntry::key, DiffEntry::toString));
-    badChanges.values().stream().map(x -> "Unexpected device state change: " + x)
-        .forEach(this::warning);
-    deviceStateViolations.putAll(badChanges);
+        .collect(Collectors.toMap(DiffEntry::key, e -> "Unexpected device state change: " + e));
+    newViolations.putAll(badChanges);
+
+    newViolations.values().forEach(this::warning);
+
+    deviceStateViolations.putAll(newViolations);
+
+    ifNotTrueThen(newViolations.isEmpty(), () -> writeViolationsFile(envelope, newViolations));
+  }
+
+  private void writeViolationsFile(Envelope envelope, Map<String, String> newViolations) {
+    String messageBase = makeMessageBase(envelope);
+    File violationsFile = new File(testDir, format(VIOLATIONS_FILE_FORMAT, messageBase));
+    String violationsString = Joiner.on("\n").join(newViolations.values());
+    writeString(violationsFile, violationsString);
   }
 
   private boolean changeAllowed(DiffEntry change) {
