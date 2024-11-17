@@ -57,7 +57,7 @@ class StateSystem:
   hardware: StateSystemHardware = dataclasses.field(
       default_factory=StateSystemHardware
   )
-  software: StateSystemOperation = dataclasses.field(
+  operation: StateSystemOperation = dataclasses.field(
       default_factory=StateSystemOperation
   )
   serial_no: str | None = None

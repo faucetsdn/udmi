@@ -44,6 +44,7 @@ class UDMICore:
     self.callbacks = {}  # lambda,
     self.state_hooks = []
 
+    # Setup state
     self.state = udmi.schema.state.State()
 
     with contextlib.suppress(FileNotFoundError):
@@ -51,7 +52,15 @@ class UDMICore:
       with open(installed_version_file, encoding="utf-8") as f:
         if (installed_version := f.read()) != "":
           self.state.system.software.version = installed_version
-        
+    
+    self.state.system.hardware.make = "unknown"
+    self.state.system.hardware.model = "unknown"
+    self.state.system.serial_no = "unknown"
+    self.state.system.operation.operational = True
+
+    threading.Thread(target=self.state_monitor, args=[], daemon=True).start()
+
+    # Setup topics
     self.topic_state = UDMICore.STATE_TOPIC_TEMPLATE.format(topic_prefix)
 
     self.topic_discovery_event = UDMICore.EVENT_DISCOVERY_TOPIC_TEMPLATE.format(
@@ -60,8 +69,6 @@ class UDMICore:
     self.topic_system_event = UDMICore.EVENT_SYSTEM_TOPIC_TEMPLATE.format(
         topic_prefix
     )
-
-    threading.Thread(target=self.state_monitor, args=[], daemon=True).start()
 
     self.enable_discovery(**config.get("udmi",{}).get("discovery", {}))
 

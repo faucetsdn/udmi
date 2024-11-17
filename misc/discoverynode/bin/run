@@ -1,7 +1,71 @@
-#!/bin/bash -e
+#!/bin/bash 
+set -x
 
-ROOT_DIR=$(realpath $(dirname $0)/../..)
+function error {
+    echo $*
+    false
+}
 
-cd $ROOT_DIR
+ROOT_DIR=$(realpath $(dirname $0)/..)
 
-sudo venv/bin/python3 discoverynode/src/main.py
+BASE_CONFIG=$(realpath $ROOT_DIR/../etc/base_config.json)
+TMP_CONFIG="/tmp/discoverynode_config.json"
+
+if [[ $# -ne 3 ]]; then
+  error Usage: $0 SITE_MODEL TARGET DEVICE_ID
+fi
+
+site_model=$1
+target=$2
+device_id=$3
+
+if ! [[ -f $site_model/cloud_iot_config.json ]]; then
+  error "$site_model/cloud_iot_config.json does not exist"
+fi
+
+if ! [[ -f $site_model/devices/$device_id/rsa_private.pem ]]; then
+  echo $site_model/devices/$device_id/rsa_private.pem not found
+  error note - only RS256 keys supported
+fi
+
+cp $BASE_CONFIG $TMP_CONFIG
+
+if [[ -z $SUDO_USER ]]; then
+  # reset owner of tmp config to the user to avoid file permission issues when next running not as root
+  chown $SUDO_USER:$SUDO_USER $TMP_CONFIG
+fi
+
+registry_id=$(cat $site_model/cloud_iot_config.json | jq -r '.registry_id')
+region=$(cat $site_model/cloud_iot_config.json | jq -r '.cloud_region')
+
+provider=$(cut -d'/' -f3 <<< $target)
+project=$(cut -d'/' -f4 <<< $target)
+namespace=$(cut -d'/' -f5 <<< $target)
+
+if [[ $provider == gbos ]]; then
+  
+  if [[ -z $namespace ]]; then
+    actual_registry=$registry~$namespace
+  else
+    acutal_registry=$registry
+  fi
+
+  read -r -d '' substitutions <<EOF
+    .mqtt.host|="mqtt.bos.goog" |
+    .mqtt.port|=8883 |
+    .mqtt.region|="$region" |
+    .mqtt.project_id|="$project" |
+    .mqtt.authentication_mechanism|="jwt_gcp" |
+    .mqtt.registry|="$actual_registry"
+
+EOF
+
+elif [[ $provider == mqtt ]]; then
+  if [[ $project != localhost ]]; then
+    error only localhost supported
+  fi
+
+else
+  echo error
+  exit
+fi
