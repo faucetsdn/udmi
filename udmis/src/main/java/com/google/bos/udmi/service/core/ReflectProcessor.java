@@ -39,6 +39,7 @@ import static java.util.Optional.ofNullable;
 import static udmi.schema.CloudModel.Operation.READ;
 import static udmi.schema.CloudModel.Resource_type.REGISTRY;
 import static udmi.schema.Envelope.SubFolder.UPDATE;
+import static udmi.schema.IotAccess.IotProvider.IMPLICIT;
 
 import com.google.bos.udmi.service.messaging.MessageContinuation;
 import com.google.bos.udmi.service.messaging.ModelUpdate;
@@ -272,12 +273,18 @@ public class ReflectProcessor extends ProcessorBase {
   }
 
   private CloudModel reflectModel(Envelope attributes, CloudModel request) {
-    ifNotNullThen(extractModel(request), model -> publish(attributes, model));
+    ifNotNullThen(extractModel(request), model -> publish(makeTargetEnvelope(attributes), model));
     if (request.resource_type == REGISTRY) {
       return iotAccess.modelRegistry(attributes.deviceRegistryId, attributes.deviceId, request);
     } else {
       return iotAccess.modelDevice(attributes.deviceRegistryId, attributes.deviceId, request);
     }
+  }
+
+  private Envelope makeTargetEnvelope(Envelope attributes) {
+    Envelope target = deepCopy(attributes);
+    target.source = IMPLICIT.toString();
+    return target;
   }
 
   private ModelUpdate asModelUpdate(String modelString) {
