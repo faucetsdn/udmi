@@ -18,8 +18,9 @@ registry_id=${project_spec##*%}
 source $UDMI_ROOT/etc/mosquitto_ctrl.sh
 
 topic_filter="/r/${registry_id}/d/+/#"
+OUT_BASE=$UDMI_ROOT/out/registries
 
-echo Starting mqtt message capture at $(date -u -Is) on topic $topic_filter
+echo Starting mqtt message capture at $(date -u -Is) on topic $topic_filter, capture to $OUT_BASE
 
 sudo mosquitto_sub $SERVER_OPTS -R -F "%j" -t $topic_filter |
     while read -r mqtt_message; do
@@ -50,16 +51,14 @@ sudo mosquitto_sub $SERVER_OPTS -R -F "%j" -t $topic_filter |
 
         timepath=$(echo ${timestamp%:*} | tr T: //) # Bucket messages by minute
         usetime=$(echo $timestamp | tr : x)  # Colon is not allowed on Windows!
-        out_base=$UDMI_ROOT/out/registries/$registryId/devices/$deviceId/${timepath}/${usetime}_${subFolder}_${subType}
-        out_file=${out_base}.json
-        echo $topic $out_file
-        mkdir -p $(dirname $out_file)
-        echo $json > $out_file
-        out_attr=${out_base}.attr
+        out_path=$OUT_BASE/$registryId/devices/$deviceId/${timepath}/${usetime}_${subFolder}_${subType}
+        mkdir -p $out_path
+        echo $(realpath --relative-to $OUT_BASE $out_path).json $topic
+        echo $json > $out_path.json
         echo {} | jq ".deviceRegistryId=\"$registryId\" | \
              .subFolder=\"$subFolder\" |
              .subType=\"$subType\" |
-             .deviceId=\"$deviceId\"" > $out_attr
+             .deviceId=\"$deviceId\"" > $out_path.attr
     done
 
 echo Finished mqtt message capture at $(date -u -Is)
