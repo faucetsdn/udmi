@@ -52,7 +52,8 @@ sudo mosquitto_sub $SERVER_OPTS -R -F "%j" -t $topic_filter |
         timepath=$(echo ${timestamp%:*} | tr T: //) # Bucket messages by minute
         usetime=$(echo $timestamp | tr : x)  # Colon is not allowed on Windows!
         out_path=$OUT_BASE/$registryId/devices/$deviceId/${timepath}/${usetime}_${subFolder}_${subType}
-        mkdir -p $out_path
+        out_dir=$(dirname $out_path)
+        mkdir -p $out_dir
         echo $(realpath --relative-to $OUT_BASE $out_path).json $topic
         echo $json > $out_path.json
         echo {} | jq ".deviceRegistryId=\"$registryId\" | \
