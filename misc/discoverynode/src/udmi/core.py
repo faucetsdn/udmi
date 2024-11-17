@@ -42,6 +42,7 @@ class UDMICore:
     self.config = config
     self.components = {}
     self.callbacks = {}  # lambda,
+    self.state_hooks = []
 
     self.state = udmi.schema.state.State()
 
@@ -94,13 +95,31 @@ class UDMICore:
         category="system.config.apply", level=500, message=str(err)
     )
 
+  def register_state_hook(self, hook: Callable) -> None:
+    """ Registers a function to execute before state is published.
+    
+    The main use case is to update values only when state is published.
+
+    Args:
+      hook: Function to execute
+    """
+    self.state_hooks.append(hook)
+
+  def execute_state_hooks(self) -> None:
+    """ Execute registered hooks before state is published. """
+    for hook in self.state_hooks:
+      hook()
+
   def state_monitor(self):
     self._last_state_hash = None
     while True:
       current_hash = self.state.get_hash()
       if self._last_state_hash != current_hash:
+        self.execute_state_hooks()
         self.publish_state()
-        self._last_state_hash = current_hash
+        
+        # Regenerate hash because the "state" may been modified by the hooks
+        self._last_state_hash = self.state.get_hash()
       time.sleep(self._STATE_MONITOR_INTERVAL)
 
   def publish_state(self):
@@ -124,6 +143,8 @@ class UDMICore:
           number_discovery,
       )
 
+      self.register_state_hook(number_discovery.on_state_update_hook)
+
       self.components["number_discovery"] = number_discovery
     
     if bacnet:
@@ -138,6 +159,8 @@ class UDMICore:
           bacnet_discovery,
       )
 
+      self.register_state_hook(bacnet_discovery.on_state_update_hook)
+
       self.components["bacnet_discovery"] = bacnet_discovery
     
     if ipv4:
@@ -149,6 +172,8 @@ class UDMICore:
           lambda x: True,
           passive_discovery,
       )
+
+      self.register_state_hook(passive_discovery.on_state_update_hook)
 
       self.components["passive_discovery"] = passive_discovery
     
@@ -163,6 +188,8 @@ class UDMICore:
           lambda x: True,
           nmap_banner_scan,
       )
+
+      self.register_state_hook(nmap_banner_scan.on_state_update_hook)
 
       self.components["nmap_banner_scan"] = nmap_banner_scan
     

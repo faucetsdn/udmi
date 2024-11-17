@@ -121,7 +121,7 @@ class PassiveNetworkDiscovery(discovery.DiscoveryController):
       new_device_records = self.device_records - self.devices_records_published
 
       for device_record in new_device_records:
-        self.publisher(
+        self.publish(
             udmi.schema.discovery_event.DiscoveryEvent(
                 generation=self.config.generation,
                 scan_addr=device_record.addr,

@@ -98,7 +98,7 @@ class GlobalBacnetDiscovery(discovery.DiscoveryController):
             event.system.hardware.model = model_name
             event.system.software.firmware = firmware_version
 
-            self.publisher(event)
+            self.publish(event)
             self.devices_published.add(device)
 
           if self.cancelled:

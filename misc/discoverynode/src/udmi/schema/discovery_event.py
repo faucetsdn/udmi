@@ -39,7 +39,6 @@ class DiscoveryEvent:
   generation: str
   scan_family: str
   scan_addr: str
-  timestamp = None
 
   version: str = "1.5.1"
   timestamp: datetime.datetime = dataclasses.field(
@@ -47,6 +46,7 @@ class DiscoveryEvent:
   )
   families: dict[str, DiscoveryFamily] = dataclasses.field(default_factory=dict)
   system: DiscoverySystem = dataclasses.field(default_factory=DiscoverySystem)
+  event_no: int | None = None
 
   def to_json(self) -> str:
     as_dict = dataclasses.asdict(self)
@@ -57,5 +57,5 @@ class DiscoveryEvent:
         copy.deepcopy(as_dict), None, [{}, None]
     )
     return json.dumps(
-        as_dict, default=udmi.schema.util.json_serializer, indent=4
+        as_dict, default=udmi.schema.util.json_serializer, indent=2
     )

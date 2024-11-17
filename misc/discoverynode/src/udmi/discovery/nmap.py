@@ -75,6 +75,4 @@ class NmapBannerScan(discovery.DiscoveryController):
               "port": {p.port_number: {"banner": p.banner} for p in host.ports}
           },
       )
-      self.publisher(event.to_json())
-
-    self.done()
+      self.publish(event.to_json())

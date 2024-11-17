@@ -20,7 +20,6 @@ class Phase(enum.StrEnum):
   pending = 'pending'
   active = 'active'
   stopped = 'stopped'
-  done = 'done'
 
 
 @dataclasses.dataclass
@@ -28,6 +27,7 @@ class Discovery:
   generation: str | None = None
   phase: Phase | None = None
   status: Status | None = None
+  active_count: int | None = None
 
 
 @dataclasses.dataclass
@@ -39,6 +39,14 @@ class StateDiscovery:
 class StateSystemSoftware:
   version: str | None = None
 
+@dataclasses.dataclass
+class StateSystemOperation:
+  operational: bool | None = None
+
+@dataclasses.dataclass
+class StateSystemHardware:
+  make: str | None = None
+  model: str | None = None
 
 @dataclasses.dataclass
 class StateSystem:
@@ -46,7 +54,13 @@ class StateSystem:
   software: StateSystemSoftware = dataclasses.field(
       default_factory=StateSystemSoftware
   )
-
+  hardware: StateSystemHardware = dataclasses.field(
+      default_factory=StateSystemHardware
+  )
+  software: StateSystemOperation = dataclasses.field(
+      default_factory=StateSystemOperation
+  )
+  serial_no: str | None = None
 
 @dataclasses.dataclass
 class LocalnetFamily:
