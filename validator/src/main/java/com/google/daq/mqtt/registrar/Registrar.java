@@ -146,6 +146,7 @@ public class Registrar {
   private File siteDir;
   private boolean deleteDevices;
   private boolean expungeDevices;
+  private boolean metadataModelOut;
   private int createRegistries = -1;
   private int runnerThreads = 5;
   private ExecutorService executor;
@@ -271,7 +272,7 @@ public class Registrar {
     setSitePath(config.site_model);
     setProjectId(config.project_id);
     if (config.project_id != null) {
-      setUpdateFlag();
+      updateCloudIoT = true;
     }
   }
 
@@ -339,15 +340,15 @@ public class Registrar {
     System.err.println("Created registry " + registry);
   }
 
+  @CommandLineOption(short_form = "-m", description = "Initial metadata model out")
+  private void setMetadataModelOut() {
+    metadataModelOut = true;
+  }
+
   @CommandLineOption(short_form = "-l", arg_type = "t", description = "Set idle limit")
   private void setIdleLimit(String option) {
     idleLimit = Duration.parse("PT" + option);
     System.err.println("Limiting devices to duration " + idleLimit.toSeconds() + "s");
-  }
-
-  @CommandLineOption(short_form = "-u", description = "Update cloud")
-  private void setUpdateFlag() {
-    updateCloudIoT = true;
   }
 
   @CommandLineOption(short_form = "-t", description = "Do not validate metadata")
@@ -1121,9 +1122,18 @@ public class Registrar {
     initializeDevices(localDevices);
     initializeSettings(localDevices);
     writeNormalized(localDevices);
+    outputMetadataModels(localDevices);
     validateExpected(localDevices);
     validateSamples(localDevices);
     validateKeys(localDevices);
+  }
+
+  private void outputMetadataModels(Map<String, LocalDevice> localDevices) {
+    if (!metadataModelOut) {
+      return;
+    }
+    cloudIotManager.previewModel();
+    System.err.println("Output metadata models");
   }
 
   private void initializeDevices(Map<String, LocalDevice> localDevices) {

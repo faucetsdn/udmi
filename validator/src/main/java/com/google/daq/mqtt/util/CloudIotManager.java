@@ -328,6 +328,15 @@ public class CloudIotManager {
             () -> metadata.put(key, REDACTED_MESSAGE))));
   }
 
+  /**
+   * Modify some metadata of the target device (not a complete update).
+   */
+  public void previewModel(String deviceId, CloudModel update) {
+    limitValueSizes(update.metadata);
+    update.operation = Operation.PREVIEW;
+    getIotProvider().updateDevice(deviceId, update);
+  }
+
   public SetupUdmiConfig getVersionInformation() {
     return getIotProvider().getVersionInformation();
   }
