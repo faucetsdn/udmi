@@ -314,12 +314,15 @@ public class Registrar {
   }
 
   private void processSiteMetadata() {
+    ifTrueThen(updateCloudIoT,
+        () -> cloudIotManager.updateRegistry(getSiteMetadata(), Operation.UPDATE));
+  }
+
+  private SiteMetadata getSiteMetadata() {
     SiteMetadata siteMetadata = ofNullable(siteModel.loadSiteMetadata()).orElseGet(
         SiteMetadata::new);
     siteMetadata.name = ofNullable(siteMetadata.name).orElse(siteModel.getSiteName());
-    if (updateCloudIoT) {
-      cloudIotManager.updateRegistry(siteMetadata);
-    }
+    return siteMetadata;
   }
 
   private void createRegistries() {
@@ -1132,8 +1135,12 @@ public class Registrar {
     if (!metadataModelOut) {
       return;
     }
-    cloudIotManager.previewModel();
-    System.err.println("Output metadata models");
+
+    cloudIotManager.updateRegistry(getSiteMetadata(), Operation.PREVIEW);
+
+    localDevices.forEach((id, device) -> {
+      cloudIotManager.updateDevice(id, device.getSettings(), Operation.PREVIEW);
+    });
   }
 
   private void initializeDevices(Map<String, LocalDevice> localDevices) {
