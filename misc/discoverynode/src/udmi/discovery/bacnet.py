@@ -109,7 +109,7 @@ class GlobalBacnetDiscovery(discovery.DiscoveryController):
  
     device = BAC0.device(address, id, self.bacnet, poll=0)
     event.points = {
-        point.name: DiscoveryPoint(
+        point.properties.name: DiscoveryPoint(
             ref = f"{point.properties.type}:{point.properties.address}",
             description = point.properties.description,
             present_value = point.lastValue,
