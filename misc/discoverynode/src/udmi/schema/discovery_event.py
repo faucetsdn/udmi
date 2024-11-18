@@ -5,6 +5,7 @@ import datetime
 import enum
 import json
 import udmi.schema.util
+from typing import Any
 
 
 @dataclasses.dataclass
@@ -35,6 +36,15 @@ class DiscoveryFamily:
 
 
 @dataclasses.dataclass
+class DiscoveryPoint:
+  ref: str | None = None
+  description: str | None = None
+  present_value: Any | None = None
+  units:  str | None = None
+
+
+
+@dataclasses.dataclass
 class DiscoveryEvent:
   generation: str
   scan_family: str
@@ -46,6 +56,7 @@ class DiscoveryEvent:
   )
   families: dict[str, DiscoveryFamily] = dataclasses.field(default_factory=dict)
   system: DiscoverySystem = dataclasses.field(default_factory=DiscoverySystem)
+  points: dict[str, DiscoveryPoint] = dataclasses.field(default_factory=dict)
   event_no: int | None = None
 
   def to_json(self) -> str:

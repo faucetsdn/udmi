@@ -16,6 +16,7 @@ import BAC0.core.io.IOExceptions
 import udmi.discovery.discovery as discovery
 import udmi.schema.discovery_event
 from udmi.schema.discovery_event import DiscoveryEvent
+from udmi.schema.discovery_event import DiscoveryPoint
 import udmi.schema.state
 import ipaddress
 
@@ -63,8 +64,7 @@ class GlobalBacnetDiscovery(discovery.DiscoveryController):
     self.cancelled = True
     self.result_producer_thread.join()
 
-  def discover_device(self,device) -> DiscoveryEvent:
-    (address, id) = device
+  def discover_device(self, address, id) -> DiscoveryEvent:
   
     ### Existence of a device
     ###################################################################
@@ -82,7 +82,6 @@ class GlobalBacnetDiscovery(discovery.DiscoveryController):
       event.families["ipv4"] = udmi.schema.discovery_event.DiscoveryFamily(
           addr=address
       ) 
-
 
     ### Basic Properties
     ###################################################################
@@ -107,14 +106,20 @@ class GlobalBacnetDiscovery(discovery.DiscoveryController):
 
     ### Points
     ###################################################################
+ 
+    device = BAC0.device(address, id, self.bacnet, poll=0)
+    event.points = {
+        point.name: DiscoveryPoint(
+            ref = f"{point.properties.type}:{point.properties.address}",
+            description = point.properties.description,
+            present_value = point.lastValue,
+            units = point.properties.units_state
+        )
+        for point in device.points
+    }
 
-    object_list = self.bacnet.readMultiple(
-        f"{address} device {id} obectList"
-    )
-
-    print(object_list)
-    logging.warning(object_list)
-    
+    return event
+  
 
   @discovery.catch_exceptions_to_state
   @discovery.main_task
@@ -132,8 +137,9 @@ class GlobalBacnetDiscovery(discovery.DiscoveryController):
             if self.cancelled:
               break
             
+            address, id = device
             start = time.monotonic()
-            event = self.discover_device(device)
+            event = self.discover_device(address, id)
             end = time.monotonic() 
             logging.info(f"discovery for {device} in {end - start} seconds")
 
