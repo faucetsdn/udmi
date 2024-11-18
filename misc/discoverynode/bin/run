@@ -1,4 +1,4 @@
-#!/bin/bash 
+#!/bin/bash -e
 set -x
 
 function error {
@@ -8,7 +8,7 @@ function error {
 
 ROOT_DIR=$(realpath $(dirname $0)/..)
 
-BASE_CONFIG=$(realpath $ROOT_DIR/../etc/base_config.json)
+BASE_CONFIG=$(realpath $ROOT_DIR/etc/base_config.json)
 TMP_CONFIG="/tmp/discoverynode_config.json"
 
 if [[ $# -ne 3 ]]; then
@@ -41,31 +41,53 @@ region=$(cat $site_model/cloud_iot_config.json | jq -r '.cloud_region')
 provider=$(cut -d'/' -f3 <<< $target)
 project=$(cut -d'/' -f4 <<< $target)
 namespace=$(cut -d'/' -f5 <<< $target)
+substitutions=
 
 if [[ $provider == gbos ]]; then
   
-  if [[ -z $namespace ]]; then
-    actual_registry=$registry~$namespace
+  if [[ -n $namespace ]]; then
+    actual_registry=$registry_id~$namespace
   else
-    acutal_registry=$registry
+    actual_registry=$registry_id
   fi
 
-  read -r -d '' substitutions <<EOF
+  substitutions=$(cat <<EOF
     .mqtt.host|="mqtt.bos.goog" |
     .mqtt.port|=8883 |
     .mqtt.region|="$region" |
     .mqtt.project_id|="$project" |
     .mqtt.authentication_mechanism|="jwt_gcp" |
-    .mqtt.registry|="$actual_registry"
-
+    .mqtt.registry_id|="$actual_registry" |
+    .mqtt.key_file|="$site_model/devices/$device_id/rsa_private.pem" |
+    .mqtt.algorithm|="RS256" |
+    .mqtt.device_id|="$device_id"
 EOF
+  )
 
 elif [[ $provider == mqtt ]]; then
   if [[ $project != localhost ]]; then
     error only localhost supported
   fi
 
+  substitutions=$(cat <<EOF
+    .mqtt.host|="localhost" |
+    .mqtt.port|=8883 |
+    .mqtt.region|="$region" |
+    .mqtt.project_id|="$project" |
+    .mqtt.authentication_mechanism|="udmi_local" |
+    .mqtt.registry_id|="$registry_id" |
+    .mqtt.key_file|="$site_model/devices/$device_id/rsa_private.pem" |
+    .mqtt.ca_file|="$site_model/reflector/ca.crt" |
+    .mqtt.cert_file|="$site_model/devices/$device_id/rsa_private.crt" |
+    .mqtt.algorithm|="RS256" |
+    .mqtt.device_id|="$device_id"
+EOF
+  )
 else
   echo error
   exit
 fi
+
+
+cat $TMP_CONFIG | jq -r  "$substitutions" | sponge $TMP_CONFIG
+$ROOT_DIR/venv/bin/python3 $ROOT_DIR/src/main.py --config_file=$TMP_CONFIG

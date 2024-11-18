@@ -288,14 +288,14 @@ class DiscoveryController(abc.ABC):
     with self.mutex:
       try:
         discovery_config_dict = config_dict["discovery"]["families"][self.scan_family]
-      except err as KeyError:
+      except KeyError as err:
         # The config has keys that this module doesn't know about
         # Should probably ignore them, but current behaviour is to fail
         self._stop()
         self.config = None
         # Because generation and counts won't link up
         self._reset_udmi_state()
-        self._handle_exception
+        self._handle_exception(err)
         # TODO: Set a status.
         return
      

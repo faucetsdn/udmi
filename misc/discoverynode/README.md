@@ -2,11 +2,41 @@
 
 ## Notes
 
-`vendor` discovery family is a counter which increments every second
+`vendor` discovery family is actually sequential number generator at one second increments.
 
-## Standalone
+## Running
 
-**TODO** - Create `bin/setup` script
+**NOTE** Below commands are run from within the `discoverynode` directory
+
+1. Setup
+
+```
+bin/setup
+```
+
+2. Run 
+
+```
+bin/run SITE_MODEL TARGET DEVICE_ID [bacnet] [ipv4] [ether]
+```
+
+- SITE_MODEl - Path to site model
+- TARGET
+
+
+3. (Optional) Running with UDMIS Locally
+
+**NOTE** This can be destructive to the site model, and file permissions may change
+```
+bin/container build 
+IMAGE_TAG=udmis:latest udmis/bin/actualize ../sites/udmi_site_model
+sudo bin/keygen CERT sites/udmi_site_model/devices/AHU-1
+bin/registrar sites/udmi_site_model //mqtt/localhost
+```
+
+## Standalone (advanced)
+
+
 
 1.  Setup a python virtual environment and install the required dependencies
 

@@ -58,8 +58,6 @@ class UDMICore:
     self.state.system.serial_no = "unknown"
     self.state.system.operation.operational = True
 
-    threading.Thread(target=self.state_monitor, args=[], daemon=True).start()
-
     # Setup topics
     self.topic_state = UDMICore.STATE_TOPIC_TEMPLATE.format(topic_prefix)
 
@@ -71,6 +69,9 @@ class UDMICore:
     )
 
     self.enable_discovery(**config.get("udmi",{}).get("discovery", {}))
+
+    # Note, this depends on topic_state being set
+    threading.Thread(target=self.state_monitor, args=[], daemon=True).start()
 
   def process_config(self, config: str):
     logging.error(f"config callback {config[:24]}")
