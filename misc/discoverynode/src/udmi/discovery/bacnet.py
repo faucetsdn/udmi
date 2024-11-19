@@ -20,10 +20,22 @@ from udmi.schema.discovery_event import DiscoveryPoint
 import udmi.schema.state
 import ipaddress
 
-
 BAC0.log_level(log_file=None, stdout=None, stderr=None)
 BAC0.log_level("silence")
 
+
+class BacnetObjectAcronyms(StrEnum):
+  """ Mapping of object names to accepted aronyms"""
+  analogInput = "AI"
+  analogOutput = "AO"
+  analogValue = "AV"
+  binaryInput = "BI"
+  binaryOutput = "BO"
+  binaryValue = "BV"
+  loop = "LP"
+  multiStateInput = "MSI"
+  multiStateOutput = "MSO"
+  characterstringValue = "CSV"
 
 class CowardlyQuit(Exception):
   pass
@@ -64,23 +76,23 @@ class GlobalBacnetDiscovery(discovery.DiscoveryController):
     self.cancelled = True
     self.result_producer_thread.join()
 
-  def discover_device(self, address, id) -> DiscoveryEvent:
+  def discover_device(self, device_address, device_id) -> DiscoveryEvent:
   
     ### Existence of a device
     ###################################################################
     event = udmi.schema.discovery_event.DiscoveryEvent(
         generation=self.config.generation,
         scan_family=self.scan_family,
-        scan_addr=str(id),
+        scan_addr=str(device_id),
     )
 
     try:
-      ipaddress.ip_address(address)
+      ipaddress.ip_address(device_address)
     except ValueError:
       pass
     else:
       event.families["ipv4"] = udmi.schema.discovery_event.DiscoveryFamily(
-          addr=address
+          addr=device_address
       ) 
 
     ### Basic Properties
@@ -88,7 +100,7 @@ class GlobalBacnetDiscovery(discovery.DiscoveryController):
     try:
       object_name, vendor_name, firmware_version, model_name, serial_number = (
           self.bacnet.readMultiple(
-              f"{address} device {id} objectName vendorName"
+              f"{device_address} device {device_id} objectName vendorName"
               " firmwareRevision modelName serialNumber"
           )
       )
@@ -101,28 +113,35 @@ class GlobalBacnetDiscovery(discovery.DiscoveryController):
       event.system.software.firmware = firmware_version
 
     except (BAC0.core.io.IOExceptions.SegmentationNotSupported, Exception) as err:
-      logging.exception(f"error reading from {address}/{id}")
+      logging.exception(f"error reading from {device_address}/{device_id}")
       return event
 
     ### Points
     ###################################################################
  
-    device = BAC0.device(address, id, self.bacnet, poll=0)
-    event.points = {
-        point.properties.name: DiscoveryPoint(
-            ref = f"{point.properties.type}:{point.properties.address}",
-            description = point.properties.description,
-            present_value = point.lastValue,
-            units = point.properties.units_state
-        )
-        for point in device.points
-    }
+    device = BAC0.device(device_address, device_id, self.bacnet, poll=0)
+
+    for point in device.points:
+      ref = DiscoveryPoint()
+      ref.name = point.properties.name
+      ref.description = point.properties.description,
+      ref.present_value = point.lastValue,
+    
+      if isinstance(point.properties.units_state, list): 
+        ref.possible_values = point.properties.units_state
+      else:
+        ref.units = point.properties.units_state
+
+      ref.ancillary = {k: v for k, v in point.properties.bacnet_properties.items()}
+      point_id = BacnetObjectAcronyms[point.properties.type].value + ":" + point.properties.address
+
+      event.refs[point_id] = ref
 
     return event
   
 
-  @discovery.catch_exceptions_to_state
   @discovery.main_task
+  @discovery.catch_exceptions_to_state
   def result_producer(self):
     while not self.cancelled:
       try:
