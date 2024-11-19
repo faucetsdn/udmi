@@ -19,12 +19,13 @@ from udmi.schema.discovery_event import DiscoveryEvent
 from udmi.schema.discovery_event import DiscoveryPoint
 import udmi.schema.state
 import ipaddress
+import enum
 
 BAC0.log_level(log_file=None, stdout=None, stderr=None)
 BAC0.log_level("silence")
 
 
-class BacnetObjectAcronyms(StrEnum):
+class BacnetObjectAcronyms(enum.StrEnum):
   """ Mapping of object names to accepted aronyms"""
   analogInput = "AI"
   analogOutput = "AO"
@@ -35,6 +36,7 @@ class BacnetObjectAcronyms(StrEnum):
   loop = "LP"
   multiStateInput = "MSI"
   multiStateOutput = "MSO"
+  multiStateValue = "MSV"
   characterstringValue = "CSV"
 
 class CowardlyQuit(Exception):
@@ -120,6 +122,9 @@ class GlobalBacnetDiscovery(discovery.DiscoveryController):
     ###################################################################
  
     device = BAC0.device(device_address, device_id, self.bacnet, poll=0)
+    print(device)
+    for x in device.points:
+      print(x)
 
     for point in device.points:
       ref = DiscoveryPoint()
