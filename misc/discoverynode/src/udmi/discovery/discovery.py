@@ -290,14 +290,11 @@ class DiscoveryController(abc.ABC):
       try:
         discovery_config_dict = config_dict["discovery"]["families"][self.scan_family]
       except KeyError as err:
-        # The config has keys that this module doesn't know about
-        # Should probably ignore them, but current behaviour is to fail
+        # `self.scan_family`` is not in the config message
+        # Stop discovery and clear state
         self._stop()
         self.config = None
-        # Because generation and counts won't link up
         self._reset_udmi_state()
-        self._handle_exception(err)
-        # TODO: Set a status.
         return
      
       # Create a new config dict (always new)
