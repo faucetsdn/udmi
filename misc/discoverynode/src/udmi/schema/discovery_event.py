@@ -53,7 +53,7 @@ class DiscoveryPoint:
   description: str | None = None
   present_value: Any | None = None
   units:  str | None = None
-  possible_values:  List[str] | None = None
+  possible_values: List[Any] | None = None
   ancillary: dict[str, Any] = dataclasses.field(default_factory=dict) 
 
 
@@ -78,7 +78,7 @@ class DiscoveryEvent:
     as_dict = dataclasses.asdict(self)
     as_dict["timestamp"] = datetime.datetime.now()
     
-    for _ in range(3):
+    for _ in range(1):
       as_dict = udmi.schema.util.deep_remove(
         copy.deepcopy(as_dict), None, [{}, None]
     )

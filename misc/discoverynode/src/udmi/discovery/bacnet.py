@@ -20,6 +20,8 @@ from udmi.schema.discovery_event import DiscoveryPoint
 import udmi.schema.state
 import ipaddress
 import enum
+import copy
+import dataclasses
 
 BAC0.log_level(log_file=None, stdout=None, stderr=None)
 BAC0.log_level("silence")
@@ -127,18 +129,15 @@ class GlobalBacnetDiscovery(discovery.DiscoveryController):
       for point in device.points:
         ref = DiscoveryPoint()
         ref.name = point.properties.name
-        ref.description = point.properties.description,
-        ref.present_value = point.lastValue,
-      
+        ref.description = point.properties.description
+        ref.present_value = point.lastValue
         if isinstance(point.properties.units_state, list): 
           ref.possible_values = point.properties.units_state
-        else:
+        elif isinstance(point.properties.units_state, str): 
           ref.units = point.properties.units_state
-
-        ref.ancillary = {k: v for k, v in point.properties.bacnet_properties.items()}
         point_id = BacnetObjectAcronyms[point.properties.type].value + ":" + point.properties.address
-
         event.refs[point_id] = ref
+  
     except Exception as err:
       event.status = udmi.schema.discovery_event.Status("discovery.error", 500, str(err))
       logging.exception(f"error reading from {device_address}/{device_id}")

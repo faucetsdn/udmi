@@ -49,8 +49,6 @@ def deep_remove(
         continue
       elif isinstance(v, dict):
         new_dict[k] = deep_remove(v, keys, values)
-      elif isinstance(v, list):
-        new_dict[k] = deep_remove(v, keys, values)
       else:
         new_dict[k] = v
     return new_dict
