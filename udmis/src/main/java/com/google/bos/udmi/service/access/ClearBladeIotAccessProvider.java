@@ -485,8 +485,8 @@ public class ClearBladeIotAccessProvider extends IotAccessBase {
       return switch (operation) {
         case CREATE -> createDevice(registryId, device);
         case UPDATE -> updateDevice(registryId, device);
-        case MODIFY -> modifyDevice(registryId, device);
         case DELETE -> unbindAndDelete(registryId, device);
+        case MODIFY -> modifyDevice(registryId, device);
         case BIND -> bindDevicesToGateway(registryId, deviceId, cloudModel);
         case BLOCK -> blockDevice(registryId, device);
         default -> throw new RuntimeException("Unknown device operation " + operation);

@@ -36,6 +36,7 @@ import static com.google.udmi.util.JsonUtil.toObject;
 import static java.lang.String.format;
 import static java.util.Objects.requireNonNull;
 import static java.util.Optional.ofNullable;
+import static udmi.schema.CloudModel.Operation.PREVIEW;
 import static udmi.schema.CloudModel.Operation.READ;
 import static udmi.schema.CloudModel.Resource_type.REGISTRY;
 import static udmi.schema.Envelope.SubFolder.UPDATE;
@@ -274,11 +275,22 @@ public class ReflectProcessor extends ProcessorBase {
 
   private CloudModel reflectModel(Envelope attributes, CloudModel request) {
     ifNotNullThen(extractModel(request), model -> publish(makeTargetEnvelope(attributes), model));
+
+    if (request.operation == PREVIEW) {
+      // Nothing more to do in this case since this is just preview, meaning no impact.
+      return previewReflectResponse();
+    }
+
     if (request.resource_type == REGISTRY) {
       return iotAccess.modelRegistry(attributes.deviceRegistryId, attributes.deviceId, request);
     } else {
       return iotAccess.modelDevice(attributes.deviceRegistryId, attributes.deviceId, request);
     }
+  }
+
+  private CloudModel previewReflectResponse() {
+    CloudModel cloudModel = new CloudModel();
+    return cloudModel;
   }
 
   private Envelope makeTargetEnvelope(Envelope attributes) {
