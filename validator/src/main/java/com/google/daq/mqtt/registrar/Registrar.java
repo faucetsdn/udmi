@@ -1139,9 +1139,20 @@ public class Registrar {
 
     cloudIotManager.updateRegistry(getSiteMetadata(), Operation.PREVIEW);
 
-    localDevices.forEach((id, device) -> {
-      cloudIotManager.updateDevice(id, device.getSettings(), Operation.PREVIEW);
-    });
+    try {
+      AtomicInteger previewCount = new AtomicInteger();
+      localDevices.forEach((id, device) -> parallelExecute(() -> {
+        int baseCount = previewCount.getAndIncrement();
+        ifTrueThen(baseCount % 100 == 0,
+            () -> System.err.printf("Sending preview for device %d/%d...%n", baseCount + 1,
+                localDevices.size()));
+        cloudIotManager.updateDevice(id, device.getSettings(), Operation.PREVIEW);
+      }));
+      dynamicTerminate(localDevices.size());
+      System.err.printf("Finished sending device preview for %d devices.%n", localDevices.size());
+    } catch (Exception e) {
+      throw new RuntimeException("While previewing local devices", e);
+    }
   }
 
   private void initializeDevices(Map<String, LocalDevice> localDevices) {
