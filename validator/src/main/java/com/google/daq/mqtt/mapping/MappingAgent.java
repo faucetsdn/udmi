@@ -33,6 +33,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 import udmi.schema.CloudModel;
+import udmi.schema.CloudModel.Operation;
 import udmi.schema.Depths.Depth;
 import udmi.schema.DiscoveryConfig;
 import udmi.schema.DiscoveryEvents;
@@ -102,7 +103,7 @@ public class MappingAgent {
   private void setupProvision() {
     CloudModel cloudModel = new CloudModel();
     cloudModel.metadata = ImmutableMap.of(UDMI_PROVISION_ENABLE, "true");
-    cloudIotManager.modifyDevice(deviceId, cloudModel);
+    cloudIotManager.updateDevice(deviceId, cloudModel, Operation.MODIFY);
   }
 
   private void initiateDiscover() {
@@ -119,7 +120,7 @@ public class MappingAgent {
 
     CloudModel cloudModel = new CloudModel();
     cloudModel.metadata = ImmutableMap.of(UDMI_PROVISION_GENERATION, generation);
-    cloudIotManager.modifyDevice(deviceId, cloudModel);
+    cloudIotManager.updateDevice(deviceId, cloudModel, Operation.MODIFY);
 
     FamilyDiscoveryConfig familyDiscoveryConfig = new FamilyDiscoveryConfig();
     familyDiscoveryConfig.generation = JsonUtil.getDate(generation);

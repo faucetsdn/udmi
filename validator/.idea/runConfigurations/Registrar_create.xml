@@ -3,7 +3,7 @@
     <option name="ALTERNATIVE_JRE_PATH" value="17" />
     <option name="MAIN_CLASS_NAME" value="com.google.daq.mqtt.registrar.Registrar" />
     <module name="validator" />
-    <option name="PROGRAM_PARAMETERS" value="/tmp/registrar_config.json -c 2" />
+    <option name="PROGRAM_PARAMETERS" value="out/registrar_conf.json -c 0" />
     <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/.." />
     <method v="2">
       <option name="Make" enabled="true" />

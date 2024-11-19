@@ -109,6 +109,7 @@
         "UPDATE",
         "DELETE",
         "MODIFY",
+        "PREVIEW",
         "BIND",
         "ALLOW",
         "BLOCK"

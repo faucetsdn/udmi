@@ -181,7 +181,7 @@ public class MessageDispatcherImpl extends ContainerBase implements MessageDispa
     String message = format("Pipe %s %s count %.3f/s latency %.03fs, queue %.03f",
         messagePipe, key, rate, average, stats.size);
     boolean asWarn = average >= LATENCY_WARNING_THRESHOLD || stats.size >= SIZE_WARNING_THRESHOLD;
-    Consumer<String> logger = asWarn ? this::warn : this::debug;
+    Consumer<String> logger = asWarn ? this::warn : this::trace;
     logger.accept(message);
   }
 

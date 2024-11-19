@@ -102,7 +102,7 @@ public class ImplicitIotAccessProvider extends IotAccessBase {
   /**
    * Create pseudo device numerical id that can be used for operation verification.
    */
-  private static String hashedDeviceId(String registryId, String deviceId) {
+  public static String hashedDeviceId(String registryId, String deviceId) {
     return String.valueOf(Math.abs(Objects.hash(registryId, deviceId)));
   }
 
@@ -332,8 +332,8 @@ public class ImplicitIotAccessProvider extends IotAccessBase {
       switch (operation) {
         case CREATE -> createDevice(registryId, deviceId, cloudModel);
         case UPDATE -> updateDevice(registryId, deviceId, cloudModel);
-        case MODIFY -> modifyDevice(registryId, deviceId, cloudModel);
         case DELETE -> deleteDevice(registryId, deviceId, cloudModel);
+        case MODIFY -> modifyDevice(registryId, deviceId, cloudModel);
         case BIND -> bindDevicesToGateway(registryId, deviceId, cloudModel);
         case BLOCK -> blockDevice(registryId, deviceId, cloudModel);
         default -> throw new RuntimeException("Unknown device operation " + operation);
