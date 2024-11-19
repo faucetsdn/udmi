@@ -406,13 +406,11 @@ public class Registrar {
     errorSummary.put(CLOUD_VERSION_KEY, getCloudVersionInfo());
     lastErrorSummary = errorSummary;
     errorSummary.put(UDMI_VERSION_KEY, Common.getUdmiVersion());
-    errorSummary.put(
-        SITE_METADATA_KEY,
-        siteModel.siteMetadataExceptionMap.stream()
-            .map(Map.Entry::getValue)
+    ifNotNullThen(siteModel.siteMetadataExceptionMap,
+        exceptions -> errorSummary.put(SITE_METADATA_KEY, exceptions.stream()
+            .map(Entry::getValue)
             .map(Exception::getMessage)
-            .collect(Collectors.toList())
-    );
+            .collect(Collectors.toList())));
     summarizers.forEach(summarizer -> {
       File outFile = summarizer.outFile;
       try {
