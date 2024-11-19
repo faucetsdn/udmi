@@ -113,6 +113,7 @@ class GlobalBacnetDiscovery(discovery.DiscoveryController):
       event.system.hardware.make = vendor_name
       event.system.hardware.model = model_name
       event.system.software.firmware = firmware_version
+      event.system.ancillary["name"] = object_name
 
     except (BAC0.core.io.IOExceptions.SegmentationNotSupported, Exception) as err:
       logging.exception(f"error reading from {device_address}/{device_id}")
@@ -122,9 +123,6 @@ class GlobalBacnetDiscovery(discovery.DiscoveryController):
     ###################################################################
     try:
       device = BAC0.device(device_address, device_id, self.bacnet, poll=0)
-      print(device)
-      for x in device.points:
-        print(x)
 
       for point in device.points:
         ref = DiscoveryPoint()

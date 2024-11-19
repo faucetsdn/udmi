@@ -168,8 +168,9 @@ class DiscoveryController(abc.ABC):
     self.state.status = None
     self._set_internal_state(states.STARTING)
     self.count_events = 0
+
     self.generation = datetime.datetime.now()
-    self.state.generation = self.generation
+
     try:
       self.start_discovery()
     except Exception as err:
@@ -199,7 +200,6 @@ class DiscoveryController(abc.ABC):
     """ Publishes the provided Discovery Event, setting event counts."""
     event_number = self._increment_event_counter_and_get()
     event.event_no = event_number
-    print(event)
     self.publisher(event)
 
   def _validate_config(config: udmi.schema.config.DiscoveryFamily):

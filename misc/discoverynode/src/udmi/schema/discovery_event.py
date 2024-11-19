@@ -38,6 +38,7 @@ class DiscoverySystem:
       default_factory=DiscoverySystemSoftware
   )
   serial_no: str | None = None
+  ancillary: dict[str, Any] = dataclasses.field(default_factory=dict) 
 
 
 @dataclasses.dataclass

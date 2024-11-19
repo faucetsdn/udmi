@@ -106,6 +106,19 @@ def test_having_no_config_then_recieve_repeated_identical_configs():
     
     mock_start.assert_called_once()
 
+def test_past_generation():
+  mock_state = udmi.schema.state.State()
+  mock_publisher = mock.MagicMock()
+
+  numbers =  udmi.discovery.numbers.NumberDiscovery(mock_state, mock_publisher)
+  generation = make_timestamp(seconds_from_now = -8)
+  numbers.controller({"discovery": {"families": {"vendor" : {"generation": generation}}}})
+  time.sleep(3)
+
+  assert mock_state.discovery.families["vendor"].generation == generation
+  assert all(x[0].generation == generation for (x, _) in mock_publisher.call_args_list)
+  
+
 def test_stopping_completed_discovery():
   # should not go through "stopping" because it's done .. i.e. ignore!
   pass
