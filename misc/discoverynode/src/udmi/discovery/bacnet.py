@@ -120,31 +120,34 @@ class GlobalBacnetDiscovery(discovery.DiscoveryController):
 
     ### Points
     ###################################################################
- 
-    device = BAC0.device(device_address, device_id, self.bacnet, poll=0)
-    print(device)
-    for x in device.points:
-      print(x)
+    try:
+      device = BAC0.device(device_address, device_id, self.bacnet, poll=0)
+      print(device)
+      for x in device.points:
+        print(x)
 
-    for point in device.points:
-      ref = DiscoveryPoint()
-      ref.name = point.properties.name
-      ref.description = point.properties.description,
-      ref.present_value = point.lastValue,
+      for point in device.points:
+        ref = DiscoveryPoint()
+        ref.name = point.properties.name
+        ref.description = point.properties.description,
+        ref.present_value = point.lastValue,
+      
+        if isinstance(point.properties.units_state, list): 
+          ref.possible_values = point.properties.units_state
+        else:
+          ref.units = point.properties.units_state
+
+        ref.ancillary = {k: v for k, v in point.properties.bacnet_properties.items()}
+        point_id = BacnetObjectAcronyms[point.properties.type].value + ":" + point.properties.address
+
+        event.refs[point_id] = ref
+    except Exception as err:
+      event.status = udmi.schema.discovery_event.Status("discovery.error", 500, str(err))
+      logging.exception(f"error reading from {device_address}/{device_id}")
+      return event
     
-      if isinstance(point.properties.units_state, list): 
-        ref.possible_values = point.properties.units_state
-      else:
-        ref.units = point.properties.units_state
-
-      ref.ancillary = {k: v for k, v in point.properties.bacnet_properties.items()}
-      point_id = BacnetObjectAcronyms[point.properties.type].value + ":" + point.properties.address
-
-      event.refs[point_id] = ref
-
     return event
   
-
   @discovery.main_task
   @discovery.catch_exceptions_to_state
   def result_producer(self):

@@ -9,6 +9,16 @@ from typing import Any, List
 
 
 @dataclasses.dataclass
+class Status:
+  category: str
+  level: int
+  message: str
+  timestamp: datetime.datetime = dataclasses.field(
+      default_factory=datetime.datetime.now
+  )
+
+
+@dataclasses.dataclass
 class DiscoverySystemSoftware:
   firmware: str = None
 
@@ -60,6 +70,8 @@ class DiscoveryEvent:
   system: DiscoverySystem = dataclasses.field(default_factory=DiscoverySystem)
   refs: dict[str, DiscoveryPoint] = dataclasses.field(default_factory=dict)
   event_no: int | None = None
+  status: Status | None = None
+
 
   def to_json(self) -> str:
     as_dict = dataclasses.asdict(self)
