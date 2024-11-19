@@ -230,7 +230,7 @@ public class Registrar {
     blockUnknown = true;
   }
 
-  @CommandLineOption(short_form = "-c", description = "Create registries")
+  @CommandLineOption(short_form = "-c", arg_type = "n", description = "Create registries")
   private void setCreateRegistries(String registrySpec) {
     try {
       createRegistries = Integer.parseInt(registrySpec);
@@ -380,6 +380,9 @@ public class Registrar {
 
   private void writeErrors() throws RuntimeException {
     Map<String, Object> errorSummary = new TreeMap<>();
+    if (localDevices == null) {
+      return;
+    }
     localDevices.values().forEach(LocalDevice::writeErrors);
     localDevices.values().forEach(device -> {
       Set<Entry<String, ErrorTree>> entries = getDeviceErrorEntries(device);
