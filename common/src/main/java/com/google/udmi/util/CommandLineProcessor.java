@@ -4,7 +4,6 @@ import static com.google.common.base.Preconditions.checkState;
 import static com.google.udmi.util.GeneralUtils.ifNotNullThen;
 import static java.lang.String.CASE_INSENSITIVE_ORDER;
 import static java.util.Objects.nonNull;
-import static org.junit.Assert.assertEquals;
 
 import java.lang.reflect.Method;
 import java.lang.reflect.Type;
