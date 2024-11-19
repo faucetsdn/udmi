@@ -1,5 +1,6 @@
 package com.google.bos.udmi.service.core;
 
+import static com.google.bos.udmi.service.access.ImplicitIotAccessProvider.hashedDeviceId;
 import static com.google.bos.udmi.service.messaging.impl.MessageDispatcherImpl.getMessageClassFor;
 import static com.google.common.base.Preconditions.checkState;
 import static com.google.udmi.util.CleanDateFormat.cleanDate;
@@ -56,7 +57,6 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.stream.Collectors;
 import udmi.schema.CloudModel;
-import udmi.schema.CloudModel.Operation;
 import udmi.schema.EndpointConfiguration;
 import udmi.schema.Entry;
 import udmi.schema.Envelope;
@@ -278,7 +278,7 @@ public class ReflectProcessor extends ProcessorBase {
 
     if (request.operation == PREVIEW) {
       // Nothing more to do in this case since this is just preview, meaning no impact.
-      return previewReflectResponse();
+      return previewReflectResponse(attributes, request);
     }
 
     if (request.resource_type == REGISTRY) {
@@ -288,8 +288,11 @@ public class ReflectProcessor extends ProcessorBase {
     }
   }
 
-  private CloudModel previewReflectResponse() {
+  private CloudModel previewReflectResponse(Envelope attributes, CloudModel request) {
     CloudModel cloudModel = new CloudModel();
+    cloudModel.operation = PREVIEW;
+    cloudModel.num_id = ofNullable(request.num_id).orElse(
+        hashedDeviceId(attributes.deviceRegistryId, attributes.deviceId));
     return cloudModel;
   }
 

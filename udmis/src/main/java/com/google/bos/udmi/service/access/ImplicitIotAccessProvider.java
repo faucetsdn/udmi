@@ -102,7 +102,7 @@ public class ImplicitIotAccessProvider extends IotAccessBase {
   /**
    * Create pseudo device numerical id that can be used for operation verification.
    */
-  private static String hashedDeviceId(String registryId, String deviceId) {
+  public static String hashedDeviceId(String registryId, String deviceId) {
     return String.valueOf(Math.abs(Objects.hash(registryId, deviceId)));
   }
 
