@@ -315,6 +315,9 @@ public class CloudIotManager {
     updateDevice(deviceId, makeDevice(settings, oldDevice), Operation.UPDATE);
   }
 
+  /**
+   * Update a device using the given operation parameter.
+   */
   public void updateDevice(String deviceId, CloudModel device, Operation operation) {
     limitValueSizes(device.metadata);
     device.operation = operation;
