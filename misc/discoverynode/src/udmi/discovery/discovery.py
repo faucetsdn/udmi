@@ -168,9 +168,10 @@ class DiscoveryController(abc.ABC):
     self.state.status = None
     self._set_internal_state(states.STARTING)
     self.count_events = 0
-
+   
     self.generation = datetime.datetime.now()
-
+    self.state.generation = self.generation
+    
     try:
       self.start_discovery()
     except Exception as err:
@@ -325,8 +326,8 @@ class DiscoveryController(abc.ABC):
         return
       
       self._reset_udmi_state()
-      generation = datetime.datetime.strptime(f"{config.generation}+0000", "%Y-%m-%dT%H:%M:%SZ%z")
-      time_delta_from_now = generation - datetime.datetime.now(tz=datetime.timezone.utc)
+      generation_from_config = datetime.datetime.strptime(f"{config.generation}+0000", "%Y-%m-%dT%H:%M:%SZ%z")
+      time_delta_from_now = generation_from_config - datetime.datetime.now(tz=datetime.timezone.utc)
       seconds_from_now = time_delta_from_now.total_seconds()
 
       if seconds_from_now < MAX_THRESHOLD_GENERATION:
@@ -356,4 +357,5 @@ class DiscoveryController(abc.ABC):
       setattr(self.state, field.name, None)
 
   def on_state_update_hook(self):
-    self.state.active_count = self.count_events
+    if self.state.active_count is not None:
+      self.state.active_count = self.count_events
