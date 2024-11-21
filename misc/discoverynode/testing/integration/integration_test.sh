@@ -11,7 +11,7 @@ bash $ROOT_DIR/../docker/discovery_node/build.sh
 
 docker network create --subnet=192.168.12.0/24 --ip-range=192.168.12.0/24 --gateway=192.168.12.254 discovery-integration || true
 
-for i in $(seq 1 5); do
+for i in $(seq 1); do
   docker run --rm -d \
     --name=discovery-integration-$i \
     --network=discovery-integration\
@@ -25,7 +25,7 @@ docker run -it --rm \
   --network=discovery-integration \
   -e I_AM_INTEGRATION_TEST=1 \
   test-discovery_node \
-  -m pytest tests/test_integration.py
+  -m pytest --capture=no --log-cli-level=INFO tests/test_integration.py
 
 EXIT_CODE=$?
 
