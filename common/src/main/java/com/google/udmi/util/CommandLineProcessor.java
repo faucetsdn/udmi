@@ -2,8 +2,8 @@ package com.google.udmi.util;
 
 import static com.google.common.base.Preconditions.checkState;
 import static com.google.udmi.util.GeneralUtils.ifNotNullThen;
-import static com.google.udmi.util.GeneralUtils.ifNotNullThrow;
 import static java.lang.String.CASE_INSENSITIVE_ORDER;
+import static java.util.Objects.nonNull;
 
 import java.lang.reflect.Method;
 import java.lang.reflect.Type;
@@ -12,7 +12,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Optional;
+import java.util.Set;
 import java.util.TreeMap;
+import java.util.stream.Collectors;
 
 /**
  * Simple command line parser class.
@@ -47,6 +49,23 @@ public class CommandLineProcessor {
     methods.forEach(method -> ifNotNullThen(method.getAnnotation(CommandLineOption.class),
         a -> optionMap.put(a, method)));
     optionMap.values().forEach(method -> method.setAccessible(true));
+
+    Set<CommandLineOption> options = optionMap.keySet();
+    List<Entry<String, List<CommandLineOption>>> duplicateShort = options.stream()
+        .filter(x -> nonNull(x.short_form()))
+        .collect(Collectors.groupingBy(CommandLineOption::short_form))
+        .entrySet().stream()
+        .filter(e -> e.getValue().size() > 1)
+        .toList();
+    checkState(duplicateShort.isEmpty(), "duplicate short form command line option");
+
+    List<Entry<String, List<CommandLineOption>>> duplicateLong = options.stream()
+        .filter(x -> nonNull(x.short_form()))
+        .collect(Collectors.groupingBy(CommandLineOption::short_form))
+        .entrySet().stream()
+        .filter(e -> e.getValue().size() > 1)
+        .toList();
+    checkState(duplicateLong.isEmpty(), "duplicate short form command line option");
   }
 
   private Method getShowHelpMethod() {
@@ -124,10 +143,8 @@ public class CommandLineProcessor {
       } else if (option.short_form().isBlank() && option.long_form().isBlank()) {
         throw new IllegalArgumentException(
             "Neither long nor short form not defined for " + method.getName());
-      } else if (!arg.startsWith("-")) {
-        return true;
-      }
-      return false;
+      } else
+        return !arg.startsWith("-");
     } catch (Exception e) {
       throw new IllegalArgumentException("Processing command line method " + method.getName(), e);
     }

@@ -1,5 +1,6 @@
 package com.google.bos.udmi.service.core;
 
+import static com.google.bos.udmi.service.access.ImplicitIotAccessProvider.hashedDeviceId;
 import static com.google.bos.udmi.service.messaging.impl.MessageDispatcherImpl.getMessageClassFor;
 import static com.google.common.base.Preconditions.checkState;
 import static com.google.udmi.util.CleanDateFormat.cleanDate;
@@ -36,9 +37,11 @@ import static com.google.udmi.util.JsonUtil.toObject;
 import static java.lang.String.format;
 import static java.util.Objects.requireNonNull;
 import static java.util.Optional.ofNullable;
+import static udmi.schema.CloudModel.Operation.PREVIEW;
 import static udmi.schema.CloudModel.Operation.READ;
 import static udmi.schema.CloudModel.Resource_type.REGISTRY;
 import static udmi.schema.Envelope.SubFolder.UPDATE;
+import static udmi.schema.IotAccess.IotProvider.IMPLICIT;
 
 import com.google.bos.udmi.service.messaging.MessageContinuation;
 import com.google.bos.udmi.service.messaging.ModelUpdate;
@@ -54,7 +57,6 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.stream.Collectors;
 import udmi.schema.CloudModel;
-import udmi.schema.CloudModel.Operation;
 import udmi.schema.EndpointConfiguration;
 import udmi.schema.Entry;
 import udmi.schema.Envelope;
@@ -272,12 +274,32 @@ public class ReflectProcessor extends ProcessorBase {
   }
 
   private CloudModel reflectModel(Envelope attributes, CloudModel request) {
-    ifNotNullThen(extractModel(request), model -> publish(attributes, model));
+    ifNotNullThen(extractModel(request), model -> publish(makeTargetEnvelope(attributes), model));
+
+    if (request.operation == PREVIEW) {
+      // Nothing more to do in this case since this is just preview, meaning no impact.
+      return previewReflectResponse(attributes, request);
+    }
+
     if (request.resource_type == REGISTRY) {
       return iotAccess.modelRegistry(attributes.deviceRegistryId, attributes.deviceId, request);
     } else {
       return iotAccess.modelDevice(attributes.deviceRegistryId, attributes.deviceId, request);
     }
+  }
+
+  private CloudModel previewReflectResponse(Envelope attributes, CloudModel request) {
+    CloudModel cloudModel = new CloudModel();
+    cloudModel.operation = PREVIEW;
+    cloudModel.num_id = ofNullable(request.num_id).orElse(
+        hashedDeviceId(attributes.deviceRegistryId, attributes.deviceId));
+    return cloudModel;
+  }
+
+  private Envelope makeTargetEnvelope(Envelope attributes) {
+    Envelope target = deepCopy(attributes);
+    target.source = IMPLICIT.toString();
+    return target;
   }
 
   private ModelUpdate asModelUpdate(String modelString) {

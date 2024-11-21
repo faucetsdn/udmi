@@ -8,7 +8,11 @@ AUTH_USER=scrumptious
 AUTH_PASS=aardvark
 
 CTRL_OPTS="-u $AUTH_USER -P $AUTH_PASS --cafile $CA_CERT --cert $CERT_DIR/rsa_private.crt --key $CERT_DIR/rsa_private.pem"
-MOSQUITTO_CTRL="sudo mosquitto_ctrl $CTRL_OPTS dynsec"
+
+NEED_SUDO=
+md5sum $CERT_DIR/rsa_private.pem || NEED_SUDO=sudo
+
+MOSQUITTO_CTRL="$NEED_SUDO mosquitto_ctrl $CTRL_OPTS dynsec"
 
 if [[ -n ${registry_id:-} ]]; then
     SERV_USER=rocket

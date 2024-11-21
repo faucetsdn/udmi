@@ -146,6 +146,7 @@ public class Registrar {
   private File siteDir;
   private boolean deleteDevices;
   private boolean expungeDevices;
+  private boolean metadataModelOut;
   private int createRegistries = -1;
   private int runnerThreads = 5;
   private ExecutorService executor;
@@ -229,7 +230,7 @@ public class Registrar {
     blockUnknown = true;
   }
 
-  @CommandLineOption(short_form = "-c", description = "Create registries")
+  @CommandLineOption(short_form = "-c", arg_type = "n", description = "Create registries")
   private void setCreateRegistries(String registrySpec) {
     try {
       createRegistries = Integer.parseInt(registrySpec);
@@ -271,7 +272,7 @@ public class Registrar {
     setSitePath(config.site_model);
     setProjectId(config.project_id);
     if (config.project_id != null) {
-      setUpdateFlag();
+      updateCloudIoT = true;
     }
   }
 
@@ -313,12 +314,15 @@ public class Registrar {
   }
 
   private void processSiteMetadata() {
+    ifTrueThen(updateCloudIoT,
+        () -> cloudIotManager.updateRegistry(getSiteMetadata(), Operation.UPDATE));
+  }
+
+  private SiteMetadata getSiteMetadata() {
     SiteMetadata siteMetadata = ofNullable(siteModel.loadSiteMetadata()).orElseGet(
         SiteMetadata::new);
     siteMetadata.name = ofNullable(siteMetadata.name).orElse(siteModel.getSiteName());
-    if (updateCloudIoT) {
-      cloudIotManager.updateRegistry(siteMetadata);
-    }
+    return siteMetadata;
   }
 
   private void createRegistries() {
@@ -339,15 +343,15 @@ public class Registrar {
     System.err.println("Created registry " + registry);
   }
 
+  @CommandLineOption(short_form = "-m", description = "Initial metadata model out")
+  private void setMetadataModelOut() {
+    metadataModelOut = true;
+  }
+
   @CommandLineOption(short_form = "-l", arg_type = "t", description = "Set idle limit")
   private void setIdleLimit(String option) {
     idleLimit = Duration.parse("PT" + option);
     System.err.println("Limiting devices to duration " + idleLimit.toSeconds() + "s");
-  }
-
-  @CommandLineOption(short_form = "-u", description = "Update cloud")
-  private void setUpdateFlag() {
-    updateCloudIoT = true;
   }
 
   @CommandLineOption(short_form = "-t", description = "Do not validate metadata")
@@ -376,6 +380,9 @@ public class Registrar {
 
   private void writeErrors() throws RuntimeException {
     Map<String, Object> errorSummary = new TreeMap<>();
+    if (localDevices == null) {
+      return;
+    }
     localDevices.values().forEach(LocalDevice::writeErrors);
     localDevices.values().forEach(device -> {
       Set<Entry<String, ErrorTree>> entries = getDeviceErrorEntries(device);
@@ -402,13 +409,11 @@ public class Registrar {
     errorSummary.put(CLOUD_VERSION_KEY, getCloudVersionInfo());
     lastErrorSummary = errorSummary;
     errorSummary.put(UDMI_VERSION_KEY, Common.getUdmiVersion());
-    errorSummary.put(
-        SITE_METADATA_KEY,
-        siteModel.siteMetadataExceptionMap.stream()
-            .map(Map.Entry::getValue)
+    ifNotNullThen(siteModel.siteMetadataExceptionMap,
+        exceptions -> errorSummary.put(SITE_METADATA_KEY, exceptions.stream()
+            .map(Entry::getValue)
             .map(Exception::getMessage)
-            .collect(Collectors.toList())
-    );
+            .collect(Collectors.toList())));
     summarizers.forEach(summarizer -> {
       File outFile = summarizer.outFile;
       try {
@@ -1121,9 +1126,33 @@ public class Registrar {
     initializeDevices(localDevices);
     initializeSettings(localDevices);
     writeNormalized(localDevices);
+    outputMetadataModels(localDevices);
     validateExpected(localDevices);
     validateSamples(localDevices);
     validateKeys(localDevices);
+  }
+
+  private void outputMetadataModels(Map<String, LocalDevice> localDevices) {
+    if (!metadataModelOut) {
+      return;
+    }
+
+    cloudIotManager.updateRegistry(getSiteMetadata(), Operation.PREVIEW);
+
+    try {
+      AtomicInteger previewCount = new AtomicInteger();
+      localDevices.forEach((id, device) -> parallelExecute(() -> {
+        int baseCount = previewCount.getAndIncrement();
+        ifTrueThen(baseCount % 100 == 0,
+            () -> System.err.printf("Sending preview for device %d/%d...%n", baseCount + 1,
+                localDevices.size()));
+        cloudIotManager.updateDevice(id, device.getSettings(), Operation.PREVIEW);
+      }));
+      dynamicTerminate(localDevices.size());
+      System.err.printf("Finished sending device preview for %d devices.%n", localDevices.size());
+    } catch (Exception e) {
+      throw new RuntimeException("While previewing local devices", e);
+    }
   }
 
   private void initializeDevices(Map<String, LocalDevice> localDevices) {

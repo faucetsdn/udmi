@@ -57,6 +57,7 @@ public class IotReflectorClient implements IotProvider {
   private static final String CONFIG_TOPIC_FORMAT = "%s/config";
   private static final File ERROR_DIR = new File("out");
   public static final double SLOW_QUERY_THRESHOLD = 10000;
+  public static final String UPDATE_PREFIX = "update/";
   private final com.google.bos.iot.core.proxy.IotReflectorClient messageClient;
   private final Map<String, CompletableFuture<Map<String, Object>>> futures =
       new ConcurrentHashMap<>();
@@ -213,9 +214,9 @@ public class IotReflectorClient implements IotProvider {
       writeErrorDetail(transactionId, error, (String) objectMap.get(DETAIL_KEY));
       throw new RuntimeException(format("UDMIS error %s: %s", transactionId, error));
     }
-    if (isNullOrEmpty((String) objectMap.get("operation"))) {
-      System.err.printf("Warning! Returned transaction operation is null/empty: %s %s %s%n",
-          deviceId, topic, message);
+    if (isNullOrEmpty((String) objectMap.get("operation")) && !topic.startsWith(UPDATE_PREFIX)) {
+      System.err.printf("Warning! Returned transaction operation is null/empty: %s %s %s %s%n",
+          deviceId, topic, transactionId, message);
     }
     return objectMap;
   }

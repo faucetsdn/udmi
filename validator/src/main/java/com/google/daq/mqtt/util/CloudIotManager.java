@@ -307,19 +307,21 @@ public class CloudIotManager {
     deviceMap.put(deviceId, newDevice);
   }
 
-  private void updateDevice(String deviceId, CloudDeviceSettings settings, CloudModel oldDevice) {
-    CloudModel device = makeDevice(settings, oldDevice);
-    limitValueSizes(device.metadata);
-    getIotProvider().updateDevice(deviceId, device);
+  public void updateDevice(String deviceId, CloudDeviceSettings settings, Operation operation) {
+    updateDevice(deviceId, makeDevice(settings, null), operation);
+  }
+
+  public void updateDevice(String deviceId, CloudDeviceSettings settings, CloudModel oldDevice) {
+    updateDevice(deviceId, makeDevice(settings, oldDevice), Operation.UPDATE);
   }
 
   /**
-   * Modify some metadata of the target device (not a complete update).
+   * Update a device using the given operation parameter.
    */
-  public void modifyDevice(String deviceId, CloudModel update) {
-    limitValueSizes(update.metadata);
-    update.operation = Operation.MODIFY;
-    getIotProvider().updateDevice(deviceId, update);
+  public void updateDevice(String deviceId, CloudModel device, Operation operation) {
+    limitValueSizes(device.metadata);
+    device.operation = operation;
+    getIotProvider().updateDevice(deviceId, device);
   }
 
   private void limitValueSizes(Map<String, String> metadata) {
@@ -433,13 +435,11 @@ public class CloudIotManager {
 
   /**
    * Update the cloud site metadata for the current registry.
-   *
-   * @param siteMetadata site metadata object.
    */
-  public void updateRegistry(SiteMetadata siteMetadata) {
+  public void updateRegistry(SiteMetadata siteMetadata, Operation operation) {
     CloudModel registryModel = new CloudModel();
     registryModel.resource_type = Resource_type.REGISTRY;
-    registryModel.operation = Operation.UPDATE;
+    registryModel.operation = operation;
     registryModel.metadata = new HashMap<>();
     registryModel.metadata.put(
         MetadataMapKeys.UDMI_METADATA, toJsonString(siteMetadata)
