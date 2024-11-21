@@ -1190,7 +1190,6 @@ public class Validator {
     } catch (ExceptionMap processingException) {
       ErrorTree errorTree = ExceptionMap.format(processingException);
       errorTree.write(System.err);
-      throw processingException;
     }
   }
 
