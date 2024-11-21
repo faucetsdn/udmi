@@ -78,7 +78,7 @@ class DiscoveryEvent:
     as_dict = dataclasses.asdict(self)
     as_dict["timestamp"] = datetime.datetime.now()
     
-    for _ in range(1):
+    for _ in range(3):
       as_dict = udmi.schema.util.deep_remove(
         copy.deepcopy(as_dict), None, [{}, None]
     )

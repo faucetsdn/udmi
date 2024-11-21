@@ -114,7 +114,8 @@ class GlobalBacnetDiscovery(discovery.DiscoveryController):
       event.system.serial_no = serial_number
       event.system.hardware.make = vendor_name
       event.system.hardware.model = model_name
-      event.system.software.firmware = firmware_version
+      # Temporarily disabled because not schema compliant
+      # event.system.software.firmware = firmware_version
       event.system.ancillary["name"] = object_name
 
     except (BAC0.core.io.IOExceptions.SegmentationNotSupported, Exception) as err:

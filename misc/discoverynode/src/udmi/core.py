@@ -138,7 +138,6 @@ class UDMICore:
     self.publisher.publish_message(self.topic_state, state)
 
   def publish_discovery(self, payload):
-    logging.warning("published discovery for %s:%s", payload.scan_family, payload.scan_addr)
     self.publisher.publish_message(self.topic_discovery_event, payload.to_json())
 
   def enable_discovery(self,*,bacnet=True,vendor=True,ipv4=True,ether=True):
