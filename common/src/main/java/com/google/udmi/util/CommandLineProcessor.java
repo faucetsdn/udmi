@@ -91,8 +91,8 @@ public class CommandLineProcessor {
   public void showUsage(String message) {
     ifNotNullThen(message, m -> System.err.println(m));
     System.err.println("Options supported:");
-    optionMap.forEach((option, method) -> System.err.printf("  %s %1s  %s%n",
-        option.short_form(), option.arg_type(), option.description()));
+    optionMap.forEach((option, method) -> System.err.printf("  %s %12s  %s%n",
+        option.short_form(), option.arg_name(), option.description()));
     System.exit(message == null ? LINUX_SUCCESS_CODE : LINUX_ERROR_CODE);
   }
 
@@ -131,7 +131,7 @@ public class CommandLineProcessor {
         if (method.equals(showHelpMethod)) {
           showUsage();
         } else if (requiresArg(method)) {
-          checkState(!option.arg_type().isBlank(), "Option with argument missing type parameter");
+          checkState(!option.arg_name().isBlank(), "Option with argument missing name parameter");
           String parameter = argList.remove(0);
           method.invoke(target, parameter);
         } else {
