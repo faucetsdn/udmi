@@ -2,10 +2,12 @@ package com.google.daq.mqtt.validator;
 
 import static com.google.udmi.util.Common.SUBFOLDER_PROPERTY_KEY;
 import static com.google.udmi.util.Common.SUBTYPE_PROPERTY_KEY;
+import static java.lang.String.format;
 import static java.util.Optional.ofNullable;
 import static org.junit.Assert.assertTrue;
 
 import com.google.common.base.Joiner;
+import com.google.daq.mqtt.util.ExceptionList;
 import com.google.daq.mqtt.util.ValidationException;
 import com.google.udmi.util.Common;
 import java.time.Instant;
@@ -39,6 +41,7 @@ public class ReportingDevice {
   private static Date mockNow;
   private final String deviceId;
   private final List<Entry> entries = new ArrayList<>();
+  private final Map<Entry, Exception> entryExceptions = new HashMap<>();
   private final List<Entry> messageEntries = new ArrayList<>();
   private final Map<String, Date> messageMarks = new HashMap<>();
   private Date lastSeen = new Date(0); // Always defined, just start a long time ago!
@@ -228,7 +231,7 @@ public class ReportingDevice {
 
   private Exception pointValidationError(String description, Set<String> points) {
     return new ValidationException(
-        String.format("Device has %s: %s", description, Joiner.on(", ").join(points)));
+        format("Device has %s: %s", description, Joiner.on(", ").join(points)));
   }
 
   private void addEntry(Entry entry) {
@@ -250,16 +253,18 @@ public class ReportingDevice {
     String subFolder = attributes.get(SUBFOLDER_PROPERTY_KEY);
     String subType = attributes.get(SUBTYPE_PROPERTY_KEY);
     addError(error, category,
-        String.format("%s: %s", typeFolderPairKey(subType, subFolder),
+        format("%s: %s", typeFolderPairKey(subType, subFolder),
             Common.getExceptionDetail(error, this.getClass(), ReportingDevice::validationMessage)));
   }
 
   void addError(Exception error, String category, String detail) {
-    addEntry(makeEntry(error, category, detail));
+    Entry entry = makeEntry(error, category, detail);
+    entryExceptions.put(entry, error);
+    addEntry(entry);
   }
 
   public static String typeFolderPairKey(String subType, String subFolder) {
-    return String.format("%s_%s", ofNullable(subType).orElse(SubType.EVENTS.value()), subFolder);
+    return format("%s_%s", ofNullable(subType).orElse(SubType.EVENTS.value()), subFolder);
   }
 
   /**
@@ -342,6 +347,17 @@ public class ReportingDevice {
 
   public List<Entry> getMessageEntries() {
     return messageEntries;
+  }
+
+  public void throwIfFailure() {
+    if (!hasErrors()) {
+      return;
+    }
+    if (messageEntries.size() == 1) {
+      throw (RuntimeException) entryExceptions.get(messageEntries.get(0));
+    }
+    List<Exception> exceptions = entries.stream().map(entry -> entryExceptions.get(entry)).toList();
+    throw new ExceptionList(exceptions);
   }
 
   /**

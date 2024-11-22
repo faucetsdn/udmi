@@ -11,6 +11,7 @@ import static com.google.daq.mqtt.util.ConfigUtil.UDMI_VERSION;
 import static com.google.daq.mqtt.util.ConfigUtil.readExeConfig;
 import static com.google.daq.mqtt.util.PubSubClient.getFeedInfo;
 import static com.google.daq.mqtt.validator.ReportingDevice.typeFolderPairKey;
+import static com.google.udmi.util.Common.DEVICE_ID_KEY;
 import static com.google.udmi.util.Common.ERROR_KEY;
 import static com.google.udmi.util.Common.EXCEPTION_KEY;
 import static com.google.udmi.util.Common.EXIT_CODE_ERROR;
@@ -104,6 +105,7 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.BiConsumer;
 import java.util.function.Function;
 import java.util.regex.Pattern;
@@ -186,8 +188,11 @@ public class Validator {
   private static final int TIMESTAMP_JITTER_SEC = 60;
   private static final String UDMI_CONFIG_JSON_FILE = "udmi_config.json";
   private static final String TOOL_NAME = "validator";
-  public static final String VALIDATOR_TOOL_NAME = "validator";
-  public static final String REGISTRY_DEVICE_DEFAULT = "_regsitry";
+  private static final String FAUX_DEVICE_ID = "TEST-97";
+  private static final String FAUX_REGISTRY_ID = "ZZ-TEST-REG";
+  private static final String VALIDATOR_TOOL_NAME = "validator";
+  private static final String REGISTRY_DEVICE_DEFAULT = "_regsitry";
+  private static final String IGNORE_ENVELOPE = "ignore_envelope";
   private long reportingDelaySec = DEFAULT_INTERVAL_SEC;
   private final CommandLineProcessor commandLineProcessor = new CommandLineProcessor(this);
   private final Map<String, ReportingDevice> reportingDevices = new TreeMap<>();
@@ -814,11 +819,13 @@ public class Validator {
     String schemaName = messageSchema(attributes);
     upgradeMessage(schemaName, message);
 
-    try {
-      validateMessage(schemaMap.get(ENVELOPE_SCHEMA_ID), (Object) attributes);
-    } catch (Exception e) {
-      outputLogger.error("Error validating attributes: " + friendlyStackTrace(e));
-      device.addError(e, attributes, Category.VALIDATION_DEVICE_RECEIVE);
+    if (!attributes.containsKey(IGNORE_ENVELOPE)) {
+      try {
+        validateMessage(schemaMap.get(ENVELOPE_SCHEMA_ID), (Object) attributes);
+      } catch (Exception e) {
+        outputLogger.error("Error validating attributes: " + friendlyStackTrace(e));
+        device.addError(e, attributes, Category.VALIDATION_DEVICE_RECEIVE);
+      }
     }
 
     if (schemaMap.containsKey(schemaName)) {
@@ -1240,6 +1247,7 @@ public class Validator {
     final File targetOut = getOutputPath(prefix, targetFile.replace(".json", ".out"));
     File outputFile = getOutputPath(prefix, targetFile);
     File inputFile = new File(targetFile);
+    AtomicReference<Exception> exceptionOut = new AtomicReference<>();
     try (OutputStream outputStream = Files.newOutputStream(outputFile.toPath())) {
       copyFileHeader(inputFile, outputStream);
       Map<String, Object> message = JsonUtil.loadMap(inputFile);
@@ -1253,13 +1261,25 @@ public class Validator {
         outputStream.close();
         FileUtils.copyFile(inputFile, outputFile);
       }
-      // TODO: TAP this as common inflection point?
-      validateJsonNode(schema, jsonNode);
+      ReportingDevice reportingDevice = new ReportingDevice(FAUX_DEVICE_ID);
+      validateDeviceMessage(reportingDevice, message, makeFileAttributes(schemaName));
+      reportingDevice.throwIfFailure();
       writeExceptionOutput(targetOut, null);
     } catch (Exception e) {
       writeExceptionOutput(targetOut, e);
       throw new RuntimeException("Generating output " + targetOut.getAbsolutePath(), e);
     }
+  }
+
+  private Map<String, String> makeFileAttributes(String schemaName) {
+    HashMap<String, String> attributes = new HashMap<>();
+    attributes.put(DEVICE_ID_KEY, FAUX_DEVICE_ID);
+    String[] parts = schemaName.split("_");
+    attributes.put(SUBTYPE_PROPERTY_KEY, parts[0]);
+    attributes.put(SUBFOLDER_PROPERTY_KEY, parts.length < 2 ? null : parts[1]);
+    attributes.put(DEVICE_REGISTRY_ID_KEY, FAUX_REGISTRY_ID);
+    attributes.put(IGNORE_ENVELOPE, schemaName);
+    return attributes;
   }
 
   private void copyFileHeader(File inputFile, OutputStream outputFile) {
