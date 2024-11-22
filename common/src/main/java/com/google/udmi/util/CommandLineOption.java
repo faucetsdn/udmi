@@ -30,7 +30,7 @@ public @interface CommandLineOption {
   String long_form() default NO_VALUE;
 
   /**
-   * Set the argument type description.
+   * Set the argument name.
    */
-  String arg_type() default NO_VALUE;
+  String arg_name() default NO_VALUE;
 }

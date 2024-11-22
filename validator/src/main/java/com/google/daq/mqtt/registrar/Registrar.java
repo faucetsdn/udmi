@@ -230,7 +230,7 @@ public class Registrar {
     blockUnknown = true;
   }
 
-  @CommandLineOption(short_form = "-c", arg_type = "n", description = "Create registries")
+  @CommandLineOption(short_form = "-c", arg_name = "count", description = "Create registries")
   private void setCreateRegistries(String registrySpec) {
     try {
       createRegistries = Integer.parseInt(registrySpec);
@@ -242,7 +242,7 @@ public class Registrar {
     }
   }
 
-  @CommandLineOption(short_form = "-n", arg_type = "n",
+  @CommandLineOption(short_form = "-n", arg_name = "threads",
       description = "Set number of runner threads")
   private void setRunnerThreads(String argValue) {
     runnerThreads = Integer.parseInt(argValue);
@@ -262,7 +262,7 @@ public class Registrar {
     this.updateCloudIoT = true;
   }
 
-  @CommandLineOption(short_form = "-e", arg_type = "s", description = "Set registry suffix")
+  @CommandLineOption(short_form = "-e", arg_name = "suffix", description = "Set registry suffix")
   private void setRegistrySuffix(String suffix) {
     siteModel.getExecutionConfiguration().registry_suffix = suffix;
   }
@@ -348,7 +348,7 @@ public class Registrar {
     metadataModelOut = true;
   }
 
-  @CommandLineOption(short_form = "-l", arg_type = "t", description = "Set idle limit")
+  @CommandLineOption(short_form = "-l", arg_name = "timeout", description = "Set idle limit")
   private void setIdleLimit(String option) {
     idleLimit = Duration.parse("PT" + option);
     System.err.println("Limiting devices to duration " + idleLimit.toSeconds() + "s");
@@ -364,7 +364,7 @@ public class Registrar {
     blockUnknown = false;
   }
 
-  @CommandLineOption(short_form = "-f", arg_type = "s", description = "Set PubSub feed topic")
+  @CommandLineOption(short_form = "-f", arg_name = "topic", description = "Set PubSub feed topic")
   private void setFeedTopic(String feedTopic) {
     System.err.println("Sending device feed to topic " + feedTopic);
     feedPusher = new PubSubPusher(projectId, feedTopic);
@@ -433,7 +433,7 @@ public class Registrar {
     return ifNotNullGet(cloudIotManager, CloudIotManager::getVersionInformation);
   }
 
-  @CommandLineOption(short_form = "-s", arg_type = "s", description = "Set site path")
+  @CommandLineOption(short_form = "-s", arg_name = "site_path", description = "Set site path")
   private void setSitePath(String sitePath) {
     checkNotNull(SCHEMA_NAME, "schemaName not set yet");
     siteDir = new File(sitePath);
@@ -1178,7 +1178,7 @@ public class Registrar {
     });
   }
 
-  @CommandLineOption(short_form = "-p", arg_type = "s", description = "Set project id")
+  @CommandLineOption(short_form = "-p", arg_name = "project_id", description = "Set project id")
   private void setProjectId(String projectId) {
     if (NO_SITE.equals(projectId) || projectId == null) {
       this.projectId = null;
@@ -1190,7 +1190,7 @@ public class Registrar {
     this.projectId = projectId;
   }
 
-  @CommandLineOption(short_form = "-r", arg_type = "s", description = "Set tool root")
+  @CommandLineOption(short_form = "-r", arg_name = "root_path", description = "Set tool root")
   private void setToolRoot(String toolRoot) {
     try {
       schemaBase = new File(toolRoot, SCHEMA_BASE_PATH);
@@ -1271,7 +1271,8 @@ public class Registrar {
     return cloudIotManager.getMockActions();
   }
 
-  @CommandLineOption(short_form = "-a", arg_type = "s", description = "Set alternate registry")
+  @CommandLineOption(short_form = "-a", arg_name = "alternate",
+      description = "Set alternate registry")
   private void setTargetRegistry(String altRegistry) {
     siteModel.getExecutionConfiguration().registry_id = altRegistry;
     siteModel.getExecutionConfiguration().alt_registry = null;
