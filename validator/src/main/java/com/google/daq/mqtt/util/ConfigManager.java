@@ -24,6 +24,7 @@ import udmi.lib.ProtocolFamily;
 import udmi.schema.Config;
 import udmi.schema.DiscoveryConfig;
 import udmi.schema.FamilyDiscoveryConfig;
+import udmi.schema.FamilyDiscoveryModel;
 import udmi.schema.FamilyLocalnetConfig;
 import udmi.schema.GatewayConfig;
 import udmi.schema.LocalnetConfig;
@@ -281,16 +282,20 @@ public class ConfigManager {
   private DiscoveryConfig getDiscoveryConfig() {
     DiscoveryConfig discoveryConfig = new DiscoveryConfig();
     discoveryConfig.families = new HashMap<>();
-    metadata.discovery.families.keySet()
-        .forEach(family -> {
-          FamilyDiscoveryConfig familyDiscoveryConfig = new FamilyDiscoveryConfig();
-          familyDiscoveryConfig.generation = metadata.discovery.families.get(family).generation;
-          familyDiscoveryConfig.scan_interval_sec = metadata.discovery.families.get(
-              family).scan_interval_sec;
-          familyDiscoveryConfig.scan_duration_sec = metadata.discovery.families.get(
-              family).scan_duration_sec;
+
+    if (metadata.discovery != null && metadata.discovery.families != null) {
+      metadata.discovery.families.keySet().forEach(family -> {
+        FamilyDiscoveryConfig familyDiscoveryConfig = new FamilyDiscoveryConfig();
+        FamilyDiscoveryModel familyModel = metadata.discovery.families.get(family);
+
+        if (familyModel != null) {
+          familyDiscoveryConfig.generation = familyModel.generation;
+          familyDiscoveryConfig.scan_interval_sec = familyModel.scan_interval_sec;
+          familyDiscoveryConfig.scan_duration_sec = familyModel.scan_duration_sec;
           discoveryConfig.families.put(family, familyDiscoveryConfig);
-        });
+        }
+      });
+    }
 
     return discoveryConfig;
   }
