@@ -378,7 +378,7 @@ public class Validator {
     MqttPublisher.reportStatistics = true;
   }
 
-  @CommandLineOption(short_form = "-d", arg_type = "n", description = "Report delay (sec)")
+  @CommandLineOption(short_form = "-d", arg_name = "delay", description = "Report delay (sec)")
   private void setReportDelay(String arg) {
     reportingDelaySec = Integer.parseInt(arg);
   }
@@ -388,7 +388,7 @@ public class Validator {
     validateCurrent = true;
   }
 
-  @CommandLineOption(short_form = "-p", arg_type = "s", description = "Set project id")
+  @CommandLineOption(short_form = "-p", arg_name = "project_id", description = "Set project id")
   private void setProjectId(String projectId) {
     if (!projectId.startsWith(PROJECT_PROVIDER_PREFIX)) {
       config.project_id = projectId;
@@ -399,7 +399,8 @@ public class Validator {
     config.project_id = parts[1];
   }
 
-  @CommandLineOption(short_form = "-t", arg_type = "s", description = "Validate pub sub target")
+  @CommandLineOption(short_form = "-t", arg_name = "target",
+      description = "Validate pub sub target")
   private void validatePubSub(String pubSubCombo) {
     validatePubSub(pubSubCombo, true);
   }
@@ -439,7 +440,8 @@ public class Validator {
     return (MessageReadingClient) client;
   }
 
-  @CommandLineOption(short_form = "-r", arg_type = "s", description = "Validate message trace")
+  @CommandLineOption(short_form = "-r", arg_name = "message_dir",
+      description = "Validate message trace")
   private void validateMessageTrace(String messageDir) {
     client = new MessageReadingClient(getRegistryId(), messageDir);
     dataSinks.add(client);
@@ -456,7 +458,7 @@ public class Validator {
    *
    * @param siteDir site model directory
    */
-  @CommandLineOption(short_form = "-s", arg_type = "s", description = "Set site directory")
+  @CommandLineOption(short_form = "-s", arg_name = "site_dir", description = "Set site directory")
   private void setSiteDir(String siteDir) {
     config.site_model = siteDir;
     final File baseDir;
@@ -482,7 +484,7 @@ public class Validator {
     return GeneralUtils.mergeObject(siteConfig, config);
   }
 
-  @CommandLineOption(short_form = "-w", arg_type = "s", description = "Write trace output")
+  @CommandLineOption(short_form = "-w", arg_name = "trace_dir", description = "Write trace output")
   private void setMessageTraceDir(String writeDirArg) {
     traceDir = new File(writeDirArg);
     outputLogger.info("Tracing message capture to " + traceDir.getAbsolutePath());
@@ -525,7 +527,7 @@ public class Validator {
    *
    * @param schemaPath schema specification directory
    */
-  @CommandLineOption(short_form = "-a", arg_type = "s", description = "Set schema path")
+  @CommandLineOption(short_form = "-a", arg_name = "schema_path", description = "Set schema path")
   private void setSchemaSpec(String schemaPath) {
     File schemaPart = new File(schemaPath);
     boolean rawPath = schemaPart.isAbsolute() || Strings.isNullOrEmpty(config.udmi_root);
@@ -1179,7 +1181,8 @@ public class Validator {
     schemaExceptions.throwIfNotEmpty();
   }
 
-  @CommandLineOption(short_form = "-f", arg_type = "s", description = "Validate from files")
+  @CommandLineOption(short_form = "-f", arg_name = "target_spec",
+      description = "Validate from files")
   private void validateFilesOutput(String targetSpec) {
     try {
       String[] parts = targetSpec.split(":");
