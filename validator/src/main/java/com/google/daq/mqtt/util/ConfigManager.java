@@ -22,6 +22,8 @@ import java.util.List;
 import org.jetbrains.annotations.NotNull;
 import udmi.lib.ProtocolFamily;
 import udmi.schema.Config;
+import udmi.schema.DiscoveryConfig;
+import udmi.schema.FamilyDiscoveryConfig;
 import udmi.schema.FamilyLocalnetConfig;
 import udmi.schema.GatewayConfig;
 import udmi.schema.LocalnetConfig;
@@ -128,6 +130,7 @@ public class ConfigManager {
     config.gateway = getGatewayConfig();
     config.pointset = getDevicePointsetConfig();
     config.localnet = getDeviceLocalnetConfig();
+    config.discovery = getDiscoveryConfig();
     return config;
   }
 
@@ -274,5 +277,23 @@ public class ConfigManager {
   public String getUpdatedTimestamp() {
     return isoConvert(metadata.timestamp);
   }
+
+  private DiscoveryConfig getDiscoveryConfig() {
+    DiscoveryConfig discoveryConfig = new DiscoveryConfig();
+    discoveryConfig.families = new HashMap<>();
+    metadata.discovery.families.keySet()
+        .forEach(family -> {
+          FamilyDiscoveryConfig familyDiscoveryConfig = new FamilyDiscoveryConfig();
+          familyDiscoveryConfig.generation = metadata.discovery.families.get(family).generation;
+          familyDiscoveryConfig.scan_interval_sec = metadata.discovery.families.get(
+              family).scan_interval_sec;
+          familyDiscoveryConfig.scan_duration_sec = metadata.discovery.families.get(
+              family).scan_duration_sec;
+          discoveryConfig.families.put(family, familyDiscoveryConfig);
+        });
+
+    return discoveryConfig;
+  }
+
 
 }
