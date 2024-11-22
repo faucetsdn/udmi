@@ -91,7 +91,7 @@ public class CommandLineProcessor {
   public void showUsage(String message) {
     ifNotNullThen(message, m -> System.err.println(m));
     System.err.println("Options supported:");
-    optionMap.forEach((option, method) -> System.err.printf("  %s %10s  %s%n",
+    optionMap.forEach((option, method) -> System.err.printf("  %s %12s  %s%n",
         option.short_form(), option.arg_name(), option.description()));
     System.exit(message == null ? LINUX_SUCCESS_CODE : LINUX_ERROR_CODE);
   }
