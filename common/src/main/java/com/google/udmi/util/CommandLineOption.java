@@ -33,4 +33,9 @@ public @interface CommandLineOption {
    * Set the argument type description.
    */
   String arg_type() default NO_VALUE;
+
+  /**
+   * Set the argument name.
+   */
+  String arg_name() default NO_VALUE;
 }
