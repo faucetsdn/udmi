@@ -810,6 +810,7 @@ public class Validator {
    */
   public void validateDeviceMessage(ReportingDevice device, Map<String, Object> message,
       Map<String, String> attributes) {
+    // TODO: TAP combine this with other validation point
     String schemaName = messageSchema(attributes);
     upgradeMessage(schemaName, message);
 
@@ -1252,6 +1253,7 @@ public class Validator {
         outputStream.close();
         FileUtils.copyFile(inputFile, outputFile);
       }
+      // TODO: TAP this as common inflection point?
       validateJsonNode(schema, jsonNode);
       writeExceptionOutput(targetOut, null);
     } catch (Exception e) {
@@ -1304,6 +1306,7 @@ public class Validator {
   }
 
   private void validateJsonNode(JsonSchema schema, JsonNode jsonNode) throws ProcessingException {
+    // TODO: TAP combine this is validation routine used by sequencer
     ProcessingReport report = schema.validate(jsonNode, true);
     ifTrueThen(!report.isSuccess(), () -> ifNotNullThrow(fromProcessingReport(report)));
   }

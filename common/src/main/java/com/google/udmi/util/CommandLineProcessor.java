@@ -1,6 +1,7 @@
 package com.google.udmi.util;
 
 import static com.google.common.base.Preconditions.checkState;
+import static com.google.udmi.util.GeneralUtils.friendlyStackTrace;
 import static com.google.udmi.util.GeneralUtils.ifNotNullThen;
 import static java.lang.String.CASE_INSENSITIVE_ORDER;
 import static java.util.Objects.nonNull;
@@ -119,7 +120,7 @@ public class CommandLineProcessor {
       }
       return null;
     } catch (Exception e) {
-      showUsage(e.getMessage());
+      showUsage(friendlyStackTrace(e));
       return null;
     }
   }
