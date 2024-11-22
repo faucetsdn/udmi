@@ -189,10 +189,9 @@ public class Validator {
   private static final String UDMI_CONFIG_JSON_FILE = "udmi_config.json";
   private static final String TOOL_NAME = "validator";
   private static final String FAUX_DEVICE_ID = "TEST-97";
-  private static final String FAUX_REGISTRY_ID = "ZZ-TEST-REG";
   private static final String VALIDATOR_TOOL_NAME = "validator";
   private static final String REGISTRY_DEVICE_DEFAULT = "_regsitry";
-  private static final String IGNORE_ENVELOPE = "ignore_envelope";
+  private static final String SCHEMA_NAME_KEY = "ignore_envelope";
   private long reportingDelaySec = DEFAULT_INTERVAL_SEC;
   private final CommandLineProcessor commandLineProcessor = new CommandLineProcessor(this);
   private final Map<String, ReportingDevice> reportingDevices = new TreeMap<>();
@@ -563,8 +562,8 @@ public class Validator {
       throw new RuntimeException("Missing schema for attribute validation: " + ENVELOPE_SCHEMA_ID);
     }
 
-    // Rename the metadata schema to model, which is how it's handled programmatically.
-    schemaMap.put("model", schemaMap.remove("metadata"));
+    // Copy the metadata schema to model, since sometimes it's referenced that way.
+    schemaMap.put("model", schemaMap.get("metadata"));
 
     return schemaMap;
   }
@@ -815,11 +814,11 @@ public class Validator {
    */
   public void validateDeviceMessage(ReportingDevice device, Map<String, Object> message,
       Map<String, String> attributes) {
-    // TODO: TAP combine this with other validation point
-    String schemaName = messageSchema(attributes);
+    String schemaName = ofNullable(attributes.get(SCHEMA_NAME_KEY)).orElseGet(() -> messageSchema(attributes));
     upgradeMessage(schemaName, message);
 
-    if (!attributes.containsKey(IGNORE_ENVELOPE)) {
+    // Assume the attributes know what they're doing when the schema name is provided explicitly.
+    if (!attributes.containsKey(SCHEMA_NAME_KEY)) {
       try {
         validateMessage(schemaMap.get(ENVELOPE_SCHEMA_ID), (Object) attributes);
       } catch (Exception e) {
@@ -1273,12 +1272,7 @@ public class Validator {
 
   private Map<String, String> makeFileAttributes(String schemaName) {
     HashMap<String, String> attributes = new HashMap<>();
-    attributes.put(DEVICE_ID_KEY, FAUX_DEVICE_ID);
-    String[] parts = schemaName.split("_");
-    attributes.put(SUBTYPE_PROPERTY_KEY, parts[0]);
-    attributes.put(SUBFOLDER_PROPERTY_KEY, parts.length < 2 ? null : parts[1]);
-    attributes.put(DEVICE_REGISTRY_ID_KEY, FAUX_REGISTRY_ID);
-    attributes.put(IGNORE_ENVELOPE, schemaName);
+    attributes.put(SCHEMA_NAME_KEY, schemaName);
     return attributes;
   }
 
