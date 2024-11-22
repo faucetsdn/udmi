@@ -349,6 +349,9 @@ public class ReportingDevice {
     return messageEntries;
   }
 
+  /**
+   * Check for errors and throw a fit if necessary.
+   */
   public void throwIfFailure() {
     if (!hasErrors()) {
       return;

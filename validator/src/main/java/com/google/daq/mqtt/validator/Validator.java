@@ -11,7 +11,6 @@ import static com.google.daq.mqtt.util.ConfigUtil.UDMI_VERSION;
 import static com.google.daq.mqtt.util.ConfigUtil.readExeConfig;
 import static com.google.daq.mqtt.util.PubSubClient.getFeedInfo;
 import static com.google.daq.mqtt.validator.ReportingDevice.typeFolderPairKey;
-import static com.google.udmi.util.Common.DEVICE_ID_KEY;
 import static com.google.udmi.util.Common.ERROR_KEY;
 import static com.google.udmi.util.Common.EXCEPTION_KEY;
 import static com.google.udmi.util.Common.EXIT_CODE_ERROR;
@@ -814,7 +813,8 @@ public class Validator {
    */
   public void validateDeviceMessage(ReportingDevice device, Map<String, Object> message,
       Map<String, String> attributes) {
-    String schemaName = ofNullable(attributes.get(SCHEMA_NAME_KEY)).orElseGet(() -> messageSchema(attributes));
+    String schemaName = ofNullable(attributes.get(SCHEMA_NAME_KEY)).orElseGet(
+        () -> messageSchema(attributes));
     upgradeMessage(schemaName, message);
 
     // Assume the attributes know what they're doing when the schema name is provided explicitly.
