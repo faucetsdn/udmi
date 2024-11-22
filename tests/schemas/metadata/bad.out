@@ -1,3 +1,4 @@
-2 schema violations found
-  /gateway/proxy_ids/0: ECMA 262 regex "^[A-Z]{2,6}-[1-9][0-9]*$" does not match input string "AHU-001"
-  /gateway/proxy_ids/1: ECMA 262 regex "^[A-Z]{2,6}-[1-9][0-9]*$" does not match input string "A-1"
+While converting to json node: 2 schema violations found
+  2 schema violations found
+    /gateway/proxy_ids/0: ECMA 262 regex "^[A-Z]{2,6}-[1-9][0-9]*$" does not match input string "AHU-001"
+    /gateway/proxy_ids/1: ECMA 262 regex "^[A-Z]{2,6}-[1-9][0-9]*$" does not match input string "A-1"

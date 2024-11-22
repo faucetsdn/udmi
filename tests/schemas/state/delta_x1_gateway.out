@@ -1,5 +1,6 @@
-4 schema violations found
-  /gateway: object instance has properties which are not allowed by the schema: ["error_ids"]
-  /system/hardware: object has missing required properties (["make","model"])
-  /system/hardware: object instance has properties which are not allowed by the schema: ["cpu_usage","free_dynamic_memory","last_reset_timestamp","last_restart_reason","reset_count","revision","total_dynamic_memory"]
-  object instance has properties which are not allowed by the schema: ["last_config"]
+While converting to json node: 4 schema violations found
+  4 schema violations found
+    /gateway: object instance has properties which are not allowed by the schema: ["error_ids"]
+    /system/hardware: object has missing required properties (["make","model"])
+    /system/hardware: object instance has properties which are not allowed by the schema: ["cpu_usage","free_dynamic_memory","last_reset_timestamp","last_restart_reason","reset_count","revision","total_dynamic_memory"]
+    object instance has properties which are not allowed by the schema: ["last_config"]

@@ -1,7 +1,8 @@
-6 schema violations found
-  /logentries/3/category: instance failed to match exactly one schema (matched 0 out of 37)
-  /logentries/4/category: instance failed to match exactly one schema (matched 0 out of 37)
-  /logentries/5/category: instance failed to match exactly one schema (matched 0 out of 37)
-  /logentries/6/category: instance failed to match exactly one schema (matched 0 out of 37)
-  /logentries/7/category: instance failed to match exactly one schema (matched 0 out of 37)
-  /logentries/9/category: instance failed to match exactly one schema (matched 0 out of 37)
+While converting to json node: 6 schema violations found
+  6 schema violations found
+    /logentries/3/category: instance failed to match exactly one schema (matched 0 out of 37)
+    /logentries/4/category: instance failed to match exactly one schema (matched 0 out of 37)
+    /logentries/5/category: instance failed to match exactly one schema (matched 0 out of 37)
+    /logentries/6/category: instance failed to match exactly one schema (matched 0 out of 37)
+    /logentries/7/category: instance failed to match exactly one schema (matched 0 out of 37)
+    /logentries/9/category: instance failed to match exactly one schema (matched 0 out of 37)

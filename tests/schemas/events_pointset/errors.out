@@ -1,9 +1,10 @@
-8 schema violations found
-  /points/guid: instance type (string) does not match any allowed primitive type (allowed: ["object"])
-  /points/missing_present_value: object has missing required properties (["present_value"])
-  /points/old_properties: object has missing required properties (["present_value"])
-  /points/old_properties: object instance has properties which are not allowed by the schema: ["properties"]
-  /points/yoyo_motion_sensor: object has missing required properties (["present_value"])
-  /points/yoyo_motion_sensor: object instance has properties which are not allowed by the schema: ["bad_property_name"]
-  /points: object instance has properties which are not allowed by the schema: ["analogValue_1","bad_____sensor","bad_entity_name_","comment$string"]
-  object instance has properties which are not allowed by the schema: ["comment$string","id","properties","state_etag"]
+While converting to json node: 8 schema violations found
+  8 schema violations found
+    /points/guid: instance type (string) does not match any allowed primitive type (allowed: ["object"])
+    /points/missing_present_value: object has missing required properties (["present_value"])
+    /points/old_properties: object has missing required properties (["present_value"])
+    /points/old_properties: object instance has properties which are not allowed by the schema: ["properties"]
+    /points/yoyo_motion_sensor: object has missing required properties (["present_value"])
+    /points/yoyo_motion_sensor: object instance has properties which are not allowed by the schema: ["bad_property_name"]
+    /points: object instance has properties which are not allowed by the schema: ["analogValue_1","bad_____sensor","bad_entity_name_","comment$string"]
+    object instance has properties which are not allowed by the schema: ["comment$string","id","properties","state_etag"]

@@ -1,3 +1,4 @@
-2 schema violations found
-  /system: object has missing required properties (["hardware","software"])
-  /system: object instance has properties which are not allowed by the schema: ["firmware","make_model"]
+While converting to json node: 2 schema violations found
+  2 schema violations found
+    /system: object has missing required properties (["hardware","software"])
+    /system: object instance has properties which are not allowed by the schema: ["firmware","make_model"]

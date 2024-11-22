@@ -1,6 +1,7 @@
-5 schema violations found
-  /families/bacnet: object has missing required properties (["addr"])
-  /families/bacnet: object instance has properties which are not allowed by the schema: ["id"]
-  /families/mac: object instance has properties which are not allowed by the schema: ["group"]
-  object has missing required properties (["scan_family"])
-  object instance has properties which are not allowed by the schema: ["addr","id","points","uniqs"]
+While converting to json node: 5 schema violations found
+  5 schema violations found
+    /families/bacnet: object has missing required properties (["addr"])
+    /families/bacnet: object instance has properties which are not allowed by the schema: ["id"]
+    /families/mac: object instance has properties which are not allowed by the schema: ["group"]
+    object has missing required properties (["scan_family"])
+    object instance has properties which are not allowed by the schema: ["addr","id","points","uniqs"]

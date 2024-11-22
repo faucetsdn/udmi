@@ -1,3 +1,4 @@
-2 schema violations found
-  /pointset/points: object has too many properties (found 672 but schema requires at most 150)
-  /system/physical_tag/asset/name: ECMA 262 regex "^[A-Z]{2,6}-[1-9][0-9]*$" does not match input string "UK-LON-S2_LTGW-3"
+While converting to json node: 2 schema violations found
+  2 schema violations found
+    /pointset/points: object has too many properties (found 672 but schema requires at most 150)
+    /system/physical_tag/asset/name: ECMA 262 regex "^[A-Z]{2,6}-[1-9][0-9]*$" does not match input string "UK-LON-S2_LTGW-3"

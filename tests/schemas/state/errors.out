@@ -1,7 +1,8 @@
-6 schema violations found
-  /pointset/points/return_air_temperature_sensor/status: instance type (string) does not match any allowed primitive type (allowed: ["object"])
-  /pointset/points/return_air_temperature_sensor: object instance has properties which are not allowed by the schema: ["cov_increment","deadband","high_limit","instance_number","low_limit","object_type","rapt","resolution"]
-  /system/status: instance type (string) does not match any allowed primitive type (allowed: ["object"])
-  /system: object has missing required properties (["hardware","last_config","operation","serial_no","software"])
-  /system: object instance has properties which are not allowed by the schema: ["device_id","device_status","fling","object_name","system_status"]
-  object instance has properties which are not allowed by the schema: ["id","status"]
+While converting to json node: 6 schema violations found
+  6 schema violations found
+    /pointset/points/return_air_temperature_sensor/status: instance type (string) does not match any allowed primitive type (allowed: ["object"])
+    /pointset/points/return_air_temperature_sensor: object instance has properties which are not allowed by the schema: ["cov_increment","deadband","high_limit","instance_number","low_limit","object_type","rapt","resolution"]
+    /system/status: instance type (string) does not match any allowed primitive type (allowed: ["object"])
+    /system: object has missing required properties (["hardware","last_config","operation","serial_no","software"])
+    /system: object instance has properties which are not allowed by the schema: ["device_id","device_status","fling","object_name","system_status"]
+    object instance has properties which are not allowed by the schema: ["id","status"]

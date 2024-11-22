@@ -1,2 +1,3 @@
-1 schema violations found
-  object has missing required properties (["scan_family","timestamp","version"])
+While converting to json node: 1 schema violations found
+  1 schema violations found
+    object has missing required properties (["scan_family","timestamp","version"])

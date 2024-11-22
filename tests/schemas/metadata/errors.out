@@ -1,8 +1,9 @@
-7 schema violations found
-  /pointset/points/return_air_temperature_sensor: object instance has properties which are not allowed by the schema: ["monkeys"]
-  /pointset: object instance has properties which are not allowed by the schema: ["rabbits"]
-  /system/location/site: ECMA 262 regex "^[A-Z]{2}-[A-Z]{3,4}-[A-Z0-9]{2,9}$" does not match input string "New Zealand"
-  /system/physical_tag/asset/name: ECMA 262 regex "^[A-Z]{2,6}-[1-9][0-9]*$" does not match input string "AHU-A01_extension11-option"
-  /system/physical_tag/asset/site: ECMA 262 regex "^[A-Z]{2}-[A-Z]{3,4}-[A-Z0-9]{2,9}$" does not match input string "US-SFO-XYY_Noope!"
-  /system/physical_tag/asset: object has missing required properties (["guid"])
-  /system: object instance has properties which are not allowed by the schema: ["guid"]
+While converting to json node: 7 schema violations found
+  7 schema violations found
+    /pointset/points/return_air_temperature_sensor: object instance has properties which are not allowed by the schema: ["monkeys"]
+    /pointset: object instance has properties which are not allowed by the schema: ["rabbits"]
+    /system/location/site: ECMA 262 regex "^[A-Z]{2}-[A-Z]{3,4}-[A-Z0-9]{2,9}$" does not match input string "New Zealand"
+    /system/physical_tag/asset/name: ECMA 262 regex "^[A-Z]{2,6}-[1-9][0-9]*$" does not match input string "AHU-A01_extension11-option"
+    /system/physical_tag/asset/site: ECMA 262 regex "^[A-Z]{2}-[A-Z]{3,4}-[A-Z0-9]{2,9}$" does not match input string "US-SFO-XYY_Noope!"
+    /system/physical_tag/asset: object has missing required properties (["guid"])
+    /system: object instance has properties which are not allowed by the schema: ["guid"]
