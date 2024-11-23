@@ -43,7 +43,6 @@ import static udmi.schema.IotAccess.IotProvider.PUBSUB;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonNode;
-import com.github.fge.jsonschema.core.exceptions.ProcessingException;
 import com.github.fge.jsonschema.core.load.configuration.LoadingConfiguration;
 import com.github.fge.jsonschema.core.load.download.URIDownloader;
 import com.github.fge.jsonschema.core.report.LogLevel;
@@ -696,12 +695,9 @@ public class Validator {
     }
   }
 
-  private void validateMessage(JsonSchema schema, Object message) {
-    try {
-      validateJsonNode(schema, OBJECT_MAPPER.valueToTree(message));
-    } catch (Exception e) {
-      throw new RuntimeException("While converting to json node: " + e.getMessage(), e);
-    }
+  private void validateMessage(JsonSchema schema, Object message) throws Exception {
+    ProcessingReport report = schema.validate(OBJECT_MAPPER.valueToTree(message), true);
+    ifTrueThen(!report.isSuccess(), () -> ifNotNullThrow(fromProcessingReport(report)));
   }
 
   private Instant getInstant(Object msgObject, Map<String, String> attributes) {
@@ -1317,12 +1313,6 @@ public class Validator {
         });
     message.clear();
     message.putAll(objectMap);
-  }
-
-  private void validateJsonNode(JsonSchema schema, JsonNode jsonNode) throws ProcessingException {
-    // TODO: TAP combine this is validation routine used by sequencer
-    ProcessingReport report = schema.validate(jsonNode, true);
-    ifTrueThen(!report.isSuccess(), () -> ifNotNullThrow(fromProcessingReport(report)));
   }
 
   private File getFullPath(String prefix, File targetFile) {
