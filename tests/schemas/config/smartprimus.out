@@ -1,4 +1,3 @@
-While converting to json node: 2 schema violations found
-  2 schema violations found
-    /pointset/points/fan_run_enable: object instance has properties which are not allowed by the schema: ["fix_value"]
-    /pointset/points/fan_run_status: object instance has properties which are not allowed by the schema: ["fix_value"]
+2 schema violations found
+  /pointset/points/fan_run_enable: object instance has properties which are not allowed by the schema: ["fix_value"]
+  /pointset/points/fan_run_status: object instance has properties which are not allowed by the schema: ["fix_value"]

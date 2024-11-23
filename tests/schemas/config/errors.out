@@ -1,8 +1,7 @@
-While converting to json node: 6 schema violations found
-  6 schema violations found
-    /pointset/points/return_air_temperature_sensor: object instance has properties which are not allowed by the schema: ["object_type"]
-    /pointset/sample_rate_sec: instance type (string) does not match any allowed primitive type (allowed: ["integer"])
-    /pointset/state_etag: string "2a8b71dwqhdhdddddddddddddddddddddddddddddddddddddddddd8" is too long (length: 55, maximum allowed: 32)
-    /pointset/version: instance type (integer) does not match any allowed primitive type (allowed: ["string"])
-    /pointset: object instance has properties which are not allowed by the schema: ["config_etag","id","properties"]
-    object instance has properties which are not allowed by the schema: ["points","properties","type","upgraded_from"]
+6 schema violations found
+  /pointset/points/return_air_temperature_sensor: object instance has properties which are not allowed by the schema: ["object_type"]
+  /pointset/sample_rate_sec: instance type (string) does not match any allowed primitive type (allowed: ["integer"])
+  /pointset/state_etag: string "2a8b71dwqhdhdddddddddddddddddddddddddddddddddddddddddd8" is too long (length: 55, maximum allowed: 32)
+  /pointset/version: instance type (integer) does not match any allowed primitive type (allowed: ["string"])
+  /pointset: object instance has properties which are not allowed by the schema: ["config_etag","id","properties"]
+  object instance has properties which are not allowed by the schema: ["points","properties","type","upgraded_from"]

@@ -1,4 +1,3 @@
-While converting to json node: 2 schema violations found
-  2 schema violations found
-    /system: object has missing required properties (["serial_no"])
-    /system: object instance has properties which are not allowed by the schema: ["vendor_name"]
+2 schema violations found
+  /system: object has missing required properties (["serial_no"])
+  /system: object instance has properties which are not allowed by the schema: ["vendor_name"]

@@ -1,4 +1,3 @@
-While converting to json node: 2 schema violations found
-  2 schema violations found
-    /deviceId: ECMA 262 regex "^[A-Z]{2,6}-[1-9][0-9]*$" does not match input string "FCUs_02_NW_12"
-    /deviceNumId: ECMA 262 regex "^[0-9]+$" does not match input string "-9213923812"
+2 schema violations found
+  /deviceId: ECMA 262 regex "^[A-Z]{2,6}-[1-9][0-9]*$" does not match input string "FCUs_02_NW_12"
+  /deviceNumId: ECMA 262 regex "^[0-9]+$" does not match input string "-9213923812"

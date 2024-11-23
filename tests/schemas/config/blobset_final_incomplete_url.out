@@ -1,3 +1,2 @@
-While converting to json node: 1 schema violations found
-  1 schema violations found
-    /blobset/blobs/_firmware_update: object has missing required properties (["generation","sha256"])
+1 schema violations found
+  /blobset/blobs/_firmware_update: object has missing required properties (["generation","sha256"])

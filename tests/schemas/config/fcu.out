@@ -1,4 +1,3 @@
-While converting to json node: 2 schema violations found
-  2 schema violations found
-    /pointset/points/chilled_water_valve_percentage_command: object instance has properties which are not allowed by the schema: ["min_update_ms"]
-    /system: object instance has properties which are not allowed by the schema: ["max_update_ms"]
+2 schema violations found
+  /pointset/points/chilled_water_valve_percentage_command: object instance has properties which are not allowed by the schema: ["min_update_ms"]
+  /system: object instance has properties which are not allowed by the schema: ["max_update_ms"]

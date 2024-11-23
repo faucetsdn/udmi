@@ -1,3 +1,2 @@
-While converting to json node: 1 schema violations found
-  1 schema violations found
-    object has missing required properties (["deviceRegistryId"])
+1 schema violations found
+  object has missing required properties (["deviceRegistryId"])

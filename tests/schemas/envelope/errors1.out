@@ -1,6 +1,5 @@
-While converting to json node: 4 schema violations found
-  4 schema violations found
-    /deviceId: ECMA 262 regex "^[A-Z]{2,6}-[1-9][0-9]*$" does not match input string "fcu-1"
-    /deviceNumId: ECMA 262 regex "^[0-9]+$" does not match input string "921302198324X"
-    /deviceRegistryId: ECMA 262 regex "^[a-zA-Z][-a-zA-Z0-9._+~%]*[a-zA-Z0-9]$" does not match input string "test/registry"
-    /subType: instance value (5) not found in enum (possible values: ["invalid","reflect","events","errors","commands","config","state","query","reply","model"])
+4 schema violations found
+  /deviceId: ECMA 262 regex "^[A-Z]{2,6}-[1-9][0-9]*$" does not match input string "fcu-1"
+  /deviceNumId: ECMA 262 regex "^[0-9]+$" does not match input string "921302198324X"
+  /deviceRegistryId: ECMA 262 regex "^[a-zA-Z][-a-zA-Z0-9._+~%]*[a-zA-Z0-9]$" does not match input string "test/registry"
+  /subType: instance value (5) not found in enum (possible values: ["invalid","reflect","events","errors","commands","config","state","query","reply","model"])

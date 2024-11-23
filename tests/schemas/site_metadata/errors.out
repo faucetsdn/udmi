@@ -1,5 +1,4 @@
-While converting to json node: 3 schema violations found
-  3 schema violations found
-    /parameters/area/net_occupied_area/unit: instance failed to match exactly one schema (matched 0 out of 7)
-    /parameters/area: object instance has properties which are not allowed by the schema: ["extra"]
-    object has missing required properties (["timestamp"])
+3 schema violations found
+  /parameters/area/net_occupied_area/unit: instance failed to match exactly one schema (matched 0 out of 7)
+  /parameters/area: object instance has properties which are not allowed by the schema: ["extra"]
+  object has missing required properties (["timestamp"])
