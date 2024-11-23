@@ -15,7 +15,7 @@ upgrade=
 schemadir=schema
 testdir=tests/schemas/
 outroot=out
-rm -rf outroot/tests
+rm -rf $outroot/tests
 
 while getopts "d:s:fnu" opt; do
     case $opt in
@@ -69,7 +69,7 @@ for subset in $subsets; do
         reldir=$(realpath --relative-to $schemadir $testdir)
         reltest=$reldir:$subset
     fi
-    cmd="$javarun -a $schemaname $upgrade -f $reltest"
+    cmd="$javarun -n -a $schemaname $upgrade -f $reltest"
     echo $cmd
     (cd $schemadir; $cmd) || true
 

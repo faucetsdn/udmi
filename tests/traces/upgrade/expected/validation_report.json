@@ -17,7 +17,7 @@
       "last_seen" : "1999-10-20T01:02:03Z",
       "status" : {
         "message" : "Multiple validation errors",
-        "detail" : "While converting to json node: 1 schema violations found; missing pointset subblock; While converting to json node: 1 schema violations found",
+        "detail" : "1 schema violations found; missing pointset subblock; 1 schema violations found",
         "category" : "validation.device.multiple",
         "timestamp" : "1999-10-20T01:02:03Z",
         "level" : 500
@@ -27,7 +27,7 @@
       "last_seen" : "1999-10-20T01:02:03Z",
       "status" : {
         "message" : "Multiple validation errors",
-        "detail" : "While converting to json node: 1 schema violations found; missing pointset subblock",
+        "detail" : "1 schema violations found; missing pointset subblock",
         "category" : "validation.device.multiple",
         "timestamp" : "1999-10-20T01:02:03Z",
         "level" : 500
@@ -36,8 +36,8 @@
     "NON-1" : {
       "last_seen" : "1999-10-20T01:02:03Z",
       "status" : {
-        "message" : "While converting to json node: 1 schema violations found",
-        "detail" : "state_update: While converting to json node: 1 schema violations found @Validator.validateMessage(REDACTED); 1 schema violations found; /system: object has missing required properties ([\"serial_no\"])",
+        "message" : "1 schema violations found",
+        "detail" : "state_update: 1 schema violations found; /system: object has missing required properties ([\"serial_no\"])",
         "category" : "validation.device.extra",
         "timestamp" : "1999-10-20T01:02:03Z",
         "level" : 400

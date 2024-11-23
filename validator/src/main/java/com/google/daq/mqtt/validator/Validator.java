@@ -43,7 +43,6 @@ import static udmi.schema.IotAccess.IotProvider.PUBSUB;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonNode;
-import com.github.fge.jsonschema.core.exceptions.ProcessingException;
 import com.github.fge.jsonschema.core.load.configuration.LoadingConfiguration;
 import com.github.fge.jsonschema.core.load.download.URIDownloader;
 import com.github.fge.jsonschema.core.report.LogLevel;
@@ -186,8 +185,10 @@ public class Validator {
   private static final int TIMESTAMP_JITTER_SEC = 60;
   private static final String UDMI_CONFIG_JSON_FILE = "udmi_config.json";
   private static final String TOOL_NAME = "validator";
-  public static final String VALIDATOR_TOOL_NAME = "validator";
-  public static final String REGISTRY_DEVICE_DEFAULT = "_regsitry";
+  private static final String FAUX_DEVICE_ID = "TEST-97";
+  private static final String VALIDATOR_TOOL_NAME = "validator";
+  private static final String REGISTRY_DEVICE_DEFAULT = "_regsitry";
+  private static final String SCHEMA_NAME_KEY = "ignore_envelope";
   private long reportingDelaySec = DEFAULT_INTERVAL_SEC;
   private final CommandLineProcessor commandLineProcessor = new CommandLineProcessor(this);
   private final Map<String, ReportingDevice> reportingDevices = new TreeMap<>();
@@ -558,8 +559,8 @@ public class Validator {
       throw new RuntimeException("Missing schema for attribute validation: " + ENVELOPE_SCHEMA_ID);
     }
 
-    // Rename the metadata schema to model, which is how it's handled programmatically.
-    schemaMap.put("model", schemaMap.remove("metadata"));
+    // Copy the metadata schema to model, since sometimes it's referenced that way.
+    schemaMap.put("model", schemaMap.get("metadata"));
 
     return schemaMap;
   }
@@ -693,12 +694,9 @@ public class Validator {
     }
   }
 
-  private void validateMessage(JsonSchema schema, Object message) {
-    try {
-      validateJsonNode(schema, OBJECT_MAPPER.valueToTree(message));
-    } catch (Exception e) {
-      throw new RuntimeException("While converting to json node: " + e.getMessage(), e);
-    }
+  private void validateMessage(JsonSchema schema, Object message) throws Exception {
+    ProcessingReport report = schema.validate(OBJECT_MAPPER.valueToTree(message), true);
+    ifTrueThen(!report.isSuccess(), () -> ifNotNullThrow(fromProcessingReport(report)));
   }
 
   private Instant getInstant(Object msgObject, Map<String, String> attributes) {
@@ -810,14 +808,18 @@ public class Validator {
    */
   public void validateDeviceMessage(ReportingDevice device, Map<String, Object> message,
       Map<String, String> attributes) {
-    String schemaName = messageSchema(attributes);
+    String schemaName = ofNullable(attributes.get(SCHEMA_NAME_KEY)).orElseGet(
+        () -> messageSchema(attributes));
     upgradeMessage(schemaName, message);
 
-    try {
-      validateMessage(schemaMap.get(ENVELOPE_SCHEMA_ID), (Object) attributes);
-    } catch (Exception e) {
-      outputLogger.error("Error validating attributes: " + friendlyStackTrace(e));
-      device.addError(e, attributes, Category.VALIDATION_DEVICE_RECEIVE);
+    // Assume the attributes know what they're doing when the schema name is provided explicitly.
+    if (!attributes.containsKey(SCHEMA_NAME_KEY)) {
+      try {
+        validateMessage(schemaMap.get(ENVELOPE_SCHEMA_ID), (Object) attributes);
+      } catch (Exception e) {
+        outputLogger.error("Error validating attributes: " + friendlyStackTrace(e));
+        device.addError(e, attributes, Category.VALIDATION_DEVICE_RECEIVE);
+      }
     }
 
     if (schemaMap.containsKey(schemaName)) {
@@ -1193,7 +1195,6 @@ public class Validator {
     } catch (ExceptionMap processingException) {
       ErrorTree errorTree = ExceptionMap.format(processingException);
       errorTree.write(System.err);
-      throw processingException;
     }
   }
 
@@ -1253,12 +1254,20 @@ public class Validator {
         outputStream.close();
         FileUtils.copyFile(inputFile, outputFile);
       }
-      validateJsonNode(schema, jsonNode);
+      ReportingDevice reportingDevice = new ReportingDevice(FAUX_DEVICE_ID);
+      validateDeviceMessage(reportingDevice, message, makeFileAttributes(schemaName));
+      reportingDevice.throwIfFailure();
       writeExceptionOutput(targetOut, null);
     } catch (Exception e) {
       writeExceptionOutput(targetOut, e);
       throw new RuntimeException("Generating output " + targetOut.getAbsolutePath(), e);
     }
+  }
+
+  private Map<String, String> makeFileAttributes(String schemaName) {
+    HashMap<String, String> attributes = new HashMap<>();
+    attributes.put(SCHEMA_NAME_KEY, schemaName);
+    return attributes;
   }
 
   private void copyFileHeader(File inputFile, OutputStream outputFile) {
@@ -1302,11 +1311,6 @@ public class Validator {
         });
     message.clear();
     message.putAll(objectMap);
-  }
-
-  private void validateJsonNode(JsonSchema schema, JsonNode jsonNode) throws ProcessingException {
-    ProcessingReport report = schema.validate(jsonNode, true);
-    ifTrueThen(!report.isSuccess(), () -> ifNotNullThrow(fromProcessingReport(report)));
   }
 
   private File getFullPath(String prefix, File targetFile) {

@@ -25,8 +25,8 @@
     "AHU-22" : {
       "last_seen" : "1999-10-20T01:02:03Z",
       "status" : {
-        "message" : "While converting to json node: 2 schema violations found",
-        "detail" : "events_pointset: While converting to json node: 2 schema violations found @Validator.validateMessage(REDACTED); 2 schema violations found; object instance has properties which are not allowed by the schema: [\"yesvalue\"]; object has missing required properties ([\"version\"])",
+        "message" : "2 schema violations found",
+        "detail" : "events_pointset: 2 schema violations found; object instance has properties which are not allowed by the schema: [\"yesvalue\"]; object has missing required properties ([\"version\"])",
         "category" : "validation.device.schema",
         "timestamp" : "1999-10-20T01:02:03Z",
         "level" : 500
@@ -46,7 +46,7 @@
       "last_seen" : "1999-10-20T01:02:03Z",
       "status" : {
         "message" : "Multiple validation errors",
-        "detail" : "While converting to json node: 1 schema violations found; Device has extra points: rocket_count, triangulating_axis_y; Unexpected character ('{' (code 123)): was expecting double-quote to start field name\n at [Source: (File), line: 1, column: 3]; While converting to json node: 1 schema violations found",
+        "detail" : "1 schema violations found; Device has extra points: rocket_count, triangulating_axis_y; Unexpected character ('{' (code 123)): was expecting double-quote to start field name\n at [Source: (File), line: 1, column: 3]; 1 schema violations found",
         "category" : "validation.device.multiple",
         "timestamp" : "1999-10-20T01:02:03Z",
         "level" : 500
