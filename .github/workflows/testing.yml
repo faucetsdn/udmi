@@ -57,7 +57,7 @@ jobs:
   spelling:
     name: Docs Spelling Checks
     runs-on: ubuntu-latest
-    timeout-minutes: 1
+    timeout-minutes: 2
     steps:
       - uses: actions/checkout@v4
       - name: Check Spelling
