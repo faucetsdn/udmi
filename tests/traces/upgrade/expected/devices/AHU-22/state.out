@@ -5,14 +5,14 @@
   "sub_type" : "state",
   "status" : {
     "message" : "Multiple validation errors",
-    "detail" : "While converting to json node: 1 schema violations found; missing pointset subblock",
+    "detail" : "1 schema violations found; missing pointset subblock",
     "category" : "validation.device.multiple",
     "timestamp" : "1999-10-20T01:02:03Z",
     "level" : 500
   },
   "errors" : [ {
-    "message" : "While converting to json node: 1 schema violations found",
-    "detail" : "state_update: While converting to json node: 1 schema violations found @Validator.validateMessage(REDACTED); 1 schema violations found; /system: object has missing required properties ([\"serial_no\"])",
+    "message" : "1 schema violations found",
+    "detail" : "state_update: 1 schema violations found; /system: object has missing required properties ([\"serial_no\"])",
     "category" : "validation.device.schema",
     "timestamp" : "1999-10-20T01:02:03Z",
     "level" : 500

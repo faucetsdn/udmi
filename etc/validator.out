@@ -66,7 +66,7 @@ sites/udmi_site_model/out/devices/AHU-1/events_pointset.out
   "sub_type" : "events",
   "status" : {
     "message" : "Multiple validation errors",
-    "detail" : "Timestamp skew REDACTED_DURATION (REDACTED_TIMESTAMP to REDACTED_TIMESTAMP) exceeds REDACTED_DURATION threshold; While converting to json node: 1 schema violations found",
+    "detail" : "Timestamp skew REDACTED_DURATION (REDACTED_TIMESTAMP to REDACTED_TIMESTAMP) exceeds REDACTED_DURATION threshold; 1 schema violations found",
     "category" : "validation.device.multiple",
     "timestamp" : "REDACTED_TIMESTAMP",
     "level" : 500
@@ -82,8 +82,8 @@ sites/udmi_site_model/out/devices/AHU-1/events_pointset.out
     "timestamp" : "REDACTED_TIMESTAMP",
     "level" : 500
   }, {
-    "message" : "While converting to json node: 1 schema violations found",
-    "detail" : "events_pointset: While converting to json node: 1 schema violations found REDACTED_ERROR; 1 schema violations found; object instance has properties which are not allowed by the schema: [\"extraField\"]",
+    "message" : "1 schema violations found",
+    "detail" : "events_pointset: 1 schema violations found; object instance has properties which are not allowed by the schema: [\"extraField\"]",
     "category" : "validation.device.schema",
     "timestamp" : "REDACTED_TIMESTAMP",
     "level" : 500
@@ -145,7 +145,7 @@ sites/udmi_site_model/out/devices/AHU-1/state.out
   "sub_type" : "state",
   "status" : {
     "message" : "Multiple validation errors",
-    "detail" : "Timestamp skew REDACTED_DURATION (REDACTED_TIMESTAMP to REDACTED_TIMESTAMP) exceeds REDACTED_DURATION threshold; While converting to json node: 1 schema violations found",
+    "detail" : "Timestamp skew REDACTED_DURATION (REDACTED_TIMESTAMP to REDACTED_TIMESTAMP) exceeds REDACTED_DURATION threshold; 1 schema violations found",
     "category" : "validation.device.multiple",
     "timestamp" : "REDACTED_TIMESTAMP",
     "level" : 500
@@ -157,8 +157,8 @@ sites/udmi_site_model/out/devices/AHU-1/state.out
     "timestamp" : "REDACTED_TIMESTAMP",
     "level" : 500
   }, {
-    "message" : "While converting to json node: 1 schema violations found",
-    "detail" : "state_update: While converting to json node: 1 schema violations found REDACTED_ERROR; 1 schema violations found; /system: object instance has properties which are not allowed by the schema: [\"extraField\"]",
+    "message" : "1 schema violations found",
+    "detail" : "state_update: 1 schema violations found; /system: object instance has properties which are not allowed by the schema: [\"extraField\"]",
     "category" : "validation.device.schema",
     "timestamp" : "REDACTED_TIMESTAMP",
     "level" : 500
@@ -411,15 +411,15 @@ sites/udmi_site_model/out/devices/GAT-123/events_discovery.out
   "sub_folder" : "discovery",
   "sub_type" : "events",
   "status" : {
-    "message" : "While converting to json node: 1 schema violations found",
-    "detail" : "events_discovery: While converting to json node: 1 schema violations found REDACTED_ERROR; 1 schema violations found; object has missing required properties ([\"scan_family\"])",
+    "message" : "1 schema violations found",
+    "detail" : "events_discovery: 1 schema violations found; object has missing required properties ([\"scan_family\"])",
     "category" : "validation.device.schema",
     "timestamp" : "REDACTED_TIMESTAMP",
     "level" : 500
   },
   "errors" : [ {
-    "message" : "While converting to json node: 1 schema violations found",
-    "detail" : "events_discovery: While converting to json node: 1 schema violations found REDACTED_ERROR; 1 schema violations found; object has missing required properties ([\"scan_family\"])",
+    "message" : "1 schema violations found",
+    "detail" : "events_discovery: 1 schema violations found; object has missing required properties ([\"scan_family\"])",
     "category" : "validation.device.schema",
     "timestamp" : "REDACTED_TIMESTAMP",
     "level" : 500

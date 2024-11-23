@@ -4,8 +4,8 @@
   "sub_folder" : "pointset",
   "sub_type" : "events",
   "status" : {
-    "message" : "While converting to json node: 2 schema violations found",
-    "detail" : "events_pointset: While converting to json node: 2 schema violations found @Validator.validateMessage(REDACTED); 2 schema violations found; object instance has properties which are not allowed by the schema: [\"yesvalue\"]; object has missing required properties ([\"version\"])",
+    "message" : "2 schema violations found",
+    "detail" : "events_pointset: 2 schema violations found; object instance has properties which are not allowed by the schema: [\"yesvalue\"]; object has missing required properties ([\"version\"])",
     "category" : "validation.device.schema",
     "timestamp" : "1999-10-20T01:02:03Z",
     "level" : 500
@@ -15,8 +15,8 @@
     "extra" : [ ]
   },
   "errors" : [ {
-    "message" : "While converting to json node: 2 schema violations found",
-    "detail" : "events_pointset: While converting to json node: 2 schema violations found @Validator.validateMessage(REDACTED); 2 schema violations found; object instance has properties which are not allowed by the schema: [\"yesvalue\"]; object has missing required properties ([\"version\"])",
+    "message" : "2 schema violations found",
+    "detail" : "events_pointset: 2 schema violations found; object instance has properties which are not allowed by the schema: [\"yesvalue\"]; object has missing required properties ([\"version\"])",
     "category" : "validation.device.schema",
     "timestamp" : "1999-10-20T01:02:03Z",
     "level" : 500
