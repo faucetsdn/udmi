@@ -103,7 +103,6 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.BiConsumer;
 import java.util.function.Function;
 import java.util.regex.Pattern;
@@ -1242,7 +1241,6 @@ public class Validator {
     final File targetOut = getOutputPath(prefix, targetFile.replace(".json", ".out"));
     File outputFile = getOutputPath(prefix, targetFile);
     File inputFile = new File(targetFile);
-    AtomicReference<Exception> exceptionOut = new AtomicReference<>();
     try (OutputStream outputStream = Files.newOutputStream(outputFile.toPath())) {
       copyFileHeader(inputFile, outputStream);
       Map<String, Object> message = JsonUtil.loadMap(inputFile);
