@@ -1,0 +1,24 @@
+{
+  "timestamp" : "1999-10-20T01:02:03Z",
+  "version" : "1.5.2",
+  "sub_folder" : "pointset",
+  "sub_type" : "events",
+  "status" : {
+    "message" : "2 schema violations found",
+    "detail" : "events_pointset: 2 schema violations found; object instance has properties which are not allowed by the schema: [\"yesvalue\"]; object has missing required properties ([\"version\"])",
+    "category" : "validation.device.schema",
+    "timestamp" : "1999-10-20T01:02:03Z",
+    "level" : 500
+  },
+  "pointset" : {
+    "missing" : [ ],
+    "extra" : [ ]
+  },
+  "errors" : [ {
+    "message" : "2 schema violations found",
+    "detail" : "events_pointset: 2 schema violations found; object instance has properties which are not allowed by the schema: [\"yesvalue\"]; object has missing required properties ([\"version\"])",
+    "category" : "validation.device.schema",
+    "timestamp" : "1999-10-20T01:02:03Z",
+    "level" : 500
+  } ]
+}

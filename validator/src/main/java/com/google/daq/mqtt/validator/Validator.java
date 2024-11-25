@@ -112,6 +112,7 @@ import org.apache.commons.io.FileUtils;
 import org.slf4j.impl.SimpleLogger;
 import udmi.schema.Category;
 import udmi.schema.DeviceValidationEvents;
+import udmi.schema.DiscoveryEvents;
 import udmi.schema.Envelope;
 import udmi.schema.Envelope.SubFolder;
 import udmi.schema.Envelope.SubType;
@@ -153,6 +154,7 @@ public class Validator {
   private static final String UNKNOWN_FOLDER_DEFAULT = "unknown";
   private static final String STATE_UPDATE_SCHEMA = "state";
   private static final String EVENTS_POINTSET_SCHEMA = "events_pointset";
+  private static final String EVENTS_DISCOVERY_SCHEMA = "events_discovery";
   private static final String STATE_POINTSET_SCHEMA = "state_pointset";
   private static final String UNKNOWN_TYPE_DEFAULT = "events";
   private static final String CONFIG_CATEGORY = "config";
@@ -164,7 +166,8 @@ public class Validator {
   private static final Map<String, Class<?>> CONTENT_VALIDATORS = ImmutableMap.of(
       STATE_UPDATE_SCHEMA, State.class,
       EVENTS_POINTSET_SCHEMA, PointsetEvents.class,
-      STATE_POINTSET_SCHEMA, PointsetState.class
+      STATE_POINTSET_SCHEMA, PointsetState.class,
+      EVENTS_DISCOVERY_SCHEMA, DiscoveryEvents.class
   );
   private static final Set<SubType> LAST_SEEN_SUBTYPES = ImmutableSet.of(SubType.EVENTS,
       SubType.STATE);
