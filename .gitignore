@@ -44,7 +44,6 @@ __pycache__/
 
 .vscode
 .class
-.idea
 
 # Terraform authentication and template files.
 cloud/gcp/terraform.tfvars

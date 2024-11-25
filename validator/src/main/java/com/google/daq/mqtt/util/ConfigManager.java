@@ -280,18 +280,29 @@ public class ConfigManager {
   }
 
   private DiscoveryConfig getDiscoveryConfig() {
+    if (metadata.discovery == null) {
+      return null;
+    }
+
     DiscoveryConfig discoveryConfig = new DiscoveryConfig();
-    discoveryConfig.families = new HashMap<>();
+    discoveryConfig.families = ifNotNullGet(metadata.discovery.families,
+        families -> new HashMap<>());
 
-    if (metadata.discovery != null && metadata.discovery.families != null) {
+    if (discoveryConfig.families != null) {
       metadata.discovery.families.keySet().forEach(family -> {
-        FamilyDiscoveryConfig familyDiscoveryConfig = new FamilyDiscoveryConfig();
-        FamilyDiscoveryModel familyModel = metadata.discovery.families.get(family);
+        FamilyDiscoveryModel familyDiscoveryModel = metadata.discovery.families.get(family);
+        if (familyDiscoveryModel != null) {
+          // for a sporadic scan, supplying generation is invalid
+          if (familyDiscoveryModel.scan_interval_sec == null) {
+            checkState(familyDiscoveryModel.generation == null,
+                "generation specified without scan_interval_sec parameter");
+          }
 
-        if (familyModel != null) {
-          familyDiscoveryConfig.generation = familyModel.generation;
-          familyDiscoveryConfig.scan_interval_sec = familyModel.scan_interval_sec;
-          familyDiscoveryConfig.scan_duration_sec = familyModel.scan_duration_sec;
+          FamilyDiscoveryConfig familyDiscoveryConfig = new FamilyDiscoveryConfig();
+          familyDiscoveryConfig.generation = familyDiscoveryModel.generation;
+          familyDiscoveryConfig.scan_interval_sec = familyDiscoveryModel.scan_interval_sec;
+          familyDiscoveryConfig.scan_duration_sec = familyDiscoveryModel.scan_duration_sec;
+
           discoveryConfig.families.put(family, familyDiscoveryConfig);
         }
       });
@@ -299,6 +310,5 @@ public class ConfigManager {
 
     return discoveryConfig;
   }
-
 
 }
