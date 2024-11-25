@@ -395,3 +395,13 @@ jobs:
           ls -l var/tmp/pod_ready.txt 2>&1
       - name: Run Tests
         run: misc/discoverynode/testing/e2e/test_local //mqtt/localhost || true
+
+  docketest:
+    name: Docker Test
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Test docker
+        run: |
+          docker pull ghcr.io/grafnu/delta_controls
+          docker images
