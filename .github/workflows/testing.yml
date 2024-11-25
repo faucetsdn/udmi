@@ -403,5 +403,5 @@ jobs:
     steps:
       - name: Test docker
         run: |
-          docker pull ghcr.io/grafnu/delta_controls
+          docker pull ghcr.io/grafnu/udmi:delta_lab_testing
           docker images
