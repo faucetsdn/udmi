@@ -1,0 +1,11 @@
+<component name="ProjectRunConfigurationManager">
+  <configuration default="false" name="Test Trace Simple" type="Application" factoryName="Application">
+    <option name="MAIN_CLASS_NAME" value="com.google.daq.mqtt.validator.SchemaTester" />
+    <module name="validator" />
+    <option name="PROGRAM_PARAMETERS" value="-p -- -s sites/udmi_site_model -r tests/traces/simple --" />
+    <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/../" />
+    <method v="2">
+      <option name="Make" enabled="true" />
+    </method>
+  </configuration>
+</component>

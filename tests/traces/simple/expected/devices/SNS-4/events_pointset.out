@@ -5,7 +5,7 @@
   "sub_type" : "events",
   "status" : {
     "message" : "Multiple validation errors",
-    "detail" : "While converting to json node: 1 schema violations found; Device has extra points: rocket_count, triangulating_axis_y",
+    "detail" : "1 schema violations found; Device has extra points: rocket_count, triangulating_axis_y",
     "category" : "validation.device.multiple",
     "timestamp" : "1999-10-20T01:02:03Z",
     "level" : 500
@@ -15,8 +15,8 @@
     "extra" : [ "rocket_count", "triangulating_axis_y" ]
   },
   "errors" : [ {
-    "message" : "While converting to json node: 1 schema violations found",
-    "detail" : "events_pointset: While converting to json node: 1 schema violations found @Validator.validateMessage(REDACTED); 1 schema violations found; object instance has properties which are not allowed by the schema: [\"monkey\"]",
+    "message" : "1 schema violations found",
+    "detail" : "events_pointset: 1 schema violations found; object instance has properties which are not allowed by the schema: [\"monkey\"]",
     "category" : "validation.device.schema",
     "timestamp" : "1999-10-20T01:02:03Z",
     "level" : 500

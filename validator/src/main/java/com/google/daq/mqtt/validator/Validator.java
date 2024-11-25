@@ -43,7 +43,6 @@ import static udmi.schema.IotAccess.IotProvider.PUBSUB;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonNode;
-import com.github.fge.jsonschema.core.exceptions.ProcessingException;
 import com.github.fge.jsonschema.core.load.configuration.LoadingConfiguration;
 import com.github.fge.jsonschema.core.load.download.URIDownloader;
 import com.github.fge.jsonschema.core.report.LogLevel;
@@ -186,8 +185,10 @@ public class Validator {
   private static final int TIMESTAMP_JITTER_SEC = 60;
   private static final String UDMI_CONFIG_JSON_FILE = "udmi_config.json";
   private static final String TOOL_NAME = "validator";
-  public static final String VALIDATOR_TOOL_NAME = "validator";
-  public static final String REGISTRY_DEVICE_DEFAULT = "_regsitry";
+  private static final String FAUX_DEVICE_ID = "TEST-97";
+  private static final String VALIDATOR_TOOL_NAME = "validator";
+  private static final String REGISTRY_DEVICE_DEFAULT = "_regsitry";
+  private static final String SCHEMA_NAME_KEY = "ignore_envelope";
   private long reportingDelaySec = DEFAULT_INTERVAL_SEC;
   private final CommandLineProcessor commandLineProcessor = new CommandLineProcessor(this);
   private final Map<String, ReportingDevice> reportingDevices = new TreeMap<>();
@@ -378,7 +379,7 @@ public class Validator {
     MqttPublisher.reportStatistics = true;
   }
 
-  @CommandLineOption(short_form = "-d", arg_type = "n", description = "Report delay (sec)")
+  @CommandLineOption(short_form = "-d", arg_name = "delay", description = "Report delay (sec)")
   private void setReportDelay(String arg) {
     reportingDelaySec = Integer.parseInt(arg);
   }
@@ -388,7 +389,7 @@ public class Validator {
     validateCurrent = true;
   }
 
-  @CommandLineOption(short_form = "-p", arg_type = "s", description = "Set project id")
+  @CommandLineOption(short_form = "-p", arg_name = "project_id", description = "Set project id")
   private void setProjectId(String projectId) {
     if (!projectId.startsWith(PROJECT_PROVIDER_PREFIX)) {
       config.project_id = projectId;
@@ -399,7 +400,8 @@ public class Validator {
     config.project_id = parts[1];
   }
 
-  @CommandLineOption(short_form = "-t", arg_type = "s", description = "Validate pub sub target")
+  @CommandLineOption(short_form = "-t", arg_name = "target",
+      description = "Validate pub sub target")
   private void validatePubSub(String pubSubCombo) {
     validatePubSub(pubSubCombo, true);
   }
@@ -439,7 +441,8 @@ public class Validator {
     return (MessageReadingClient) client;
   }
 
-  @CommandLineOption(short_form = "-r", arg_type = "s", description = "Validate message trace")
+  @CommandLineOption(short_form = "-r", arg_name = "message_dir",
+      description = "Validate message trace")
   private void validateMessageTrace(String messageDir) {
     client = new MessageReadingClient(getRegistryId(), messageDir);
     dataSinks.add(client);
@@ -456,7 +459,7 @@ public class Validator {
    *
    * @param siteDir site model directory
    */
-  @CommandLineOption(short_form = "-s", arg_type = "s", description = "Set site directory")
+  @CommandLineOption(short_form = "-s", arg_name = "site_dir", description = "Set site directory")
   private void setSiteDir(String siteDir) {
     config.site_model = siteDir;
     final File baseDir;
@@ -482,7 +485,7 @@ public class Validator {
     return GeneralUtils.mergeObject(siteConfig, config);
   }
 
-  @CommandLineOption(short_form = "-w", arg_type = "s", description = "Write trace output")
+  @CommandLineOption(short_form = "-w", arg_name = "trace_dir", description = "Write trace output")
   private void setMessageTraceDir(String writeDirArg) {
     traceDir = new File(writeDirArg);
     outputLogger.info("Tracing message capture to " + traceDir.getAbsolutePath());
@@ -525,7 +528,7 @@ public class Validator {
    *
    * @param schemaPath schema specification directory
    */
-  @CommandLineOption(short_form = "-a", arg_type = "s", description = "Set schema path")
+  @CommandLineOption(short_form = "-a", arg_name = "schema_path", description = "Set schema path")
   private void setSchemaSpec(String schemaPath) {
     File schemaPart = new File(schemaPath);
     boolean rawPath = schemaPart.isAbsolute() || Strings.isNullOrEmpty(config.udmi_root);
@@ -556,8 +559,8 @@ public class Validator {
       throw new RuntimeException("Missing schema for attribute validation: " + ENVELOPE_SCHEMA_ID);
     }
 
-    // Rename the metadata schema to model, which is how it's handled programmatically.
-    schemaMap.put("model", schemaMap.remove("metadata"));
+    // Copy the metadata schema to model, since sometimes it's referenced that way.
+    schemaMap.put("model", schemaMap.get("metadata"));
 
     return schemaMap;
   }
@@ -691,12 +694,9 @@ public class Validator {
     }
   }
 
-  private void validateMessage(JsonSchema schema, Object message) {
-    try {
-      validateJsonNode(schema, OBJECT_MAPPER.valueToTree(message));
-    } catch (Exception e) {
-      throw new RuntimeException("While converting to json node: " + e.getMessage(), e);
-    }
+  private void validateMessage(JsonSchema schema, Object message) throws Exception {
+    ProcessingReport report = schema.validate(OBJECT_MAPPER.valueToTree(message), true);
+    ifTrueThen(!report.isSuccess(), () -> ifNotNullThrow(fromProcessingReport(report)));
   }
 
   private Instant getInstant(Object msgObject, Map<String, String> attributes) {
@@ -808,14 +808,18 @@ public class Validator {
    */
   public void validateDeviceMessage(ReportingDevice device, Map<String, Object> message,
       Map<String, String> attributes) {
-    String schemaName = messageSchema(attributes);
+    String schemaName = ofNullable(attributes.get(SCHEMA_NAME_KEY)).orElseGet(
+        () -> messageSchema(attributes));
     upgradeMessage(schemaName, message);
 
-    try {
-      validateMessage(schemaMap.get(ENVELOPE_SCHEMA_ID), (Object) attributes);
-    } catch (Exception e) {
-      outputLogger.error("Error validating attributes: " + friendlyStackTrace(e));
-      device.addError(e, attributes, Category.VALIDATION_DEVICE_RECEIVE);
+    // Assume the attributes know what they're doing when the schema name is provided explicitly.
+    if (!attributes.containsKey(SCHEMA_NAME_KEY)) {
+      try {
+        validateMessage(schemaMap.get(ENVELOPE_SCHEMA_ID), (Object) attributes);
+      } catch (Exception e) {
+        outputLogger.error("Error validating attributes: " + friendlyStackTrace(e));
+        device.addError(e, attributes, Category.VALIDATION_DEVICE_RECEIVE);
+      }
     }
 
     if (schemaMap.containsKey(schemaName)) {
@@ -1179,7 +1183,8 @@ public class Validator {
     schemaExceptions.throwIfNotEmpty();
   }
 
-  @CommandLineOption(short_form = "-f", arg_type = "s", description = "Validate from files")
+  @CommandLineOption(short_form = "-f", arg_name = "target_spec",
+      description = "Validate from files")
   private void validateFilesOutput(String targetSpec) {
     try {
       String[] parts = targetSpec.split(":");
@@ -1190,7 +1195,6 @@ public class Validator {
     } catch (ExceptionMap processingException) {
       ErrorTree errorTree = ExceptionMap.format(processingException);
       errorTree.write(System.err);
-      throw processingException;
     }
   }
 
@@ -1250,12 +1254,20 @@ public class Validator {
         outputStream.close();
         FileUtils.copyFile(inputFile, outputFile);
       }
-      validateJsonNode(schema, jsonNode);
+      ReportingDevice reportingDevice = new ReportingDevice(FAUX_DEVICE_ID);
+      validateDeviceMessage(reportingDevice, message, makeFileAttributes(schemaName));
+      reportingDevice.throwIfFailure();
       writeExceptionOutput(targetOut, null);
     } catch (Exception e) {
       writeExceptionOutput(targetOut, e);
       throw new RuntimeException("Generating output " + targetOut.getAbsolutePath(), e);
     }
+  }
+
+  private Map<String, String> makeFileAttributes(String schemaName) {
+    HashMap<String, String> attributes = new HashMap<>();
+    attributes.put(SCHEMA_NAME_KEY, schemaName);
+    return attributes;
   }
 
   private void copyFileHeader(File inputFile, OutputStream outputFile) {
@@ -1299,11 +1311,6 @@ public class Validator {
         });
     message.clear();
     message.putAll(objectMap);
-  }
-
-  private void validateJsonNode(JsonSchema schema, JsonNode jsonNode) throws ProcessingException {
-    ProcessingReport report = schema.validate(jsonNode, true);
-    ifTrueThen(!report.isSuccess(), () -> ifNotNullThrow(fromProcessingReport(report)));
   }
 
   private File getFullPath(String prefix, File targetFile) {
