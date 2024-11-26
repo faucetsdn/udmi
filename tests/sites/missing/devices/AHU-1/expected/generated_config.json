@@ -6,6 +6,11 @@
     "metrics_rate_sec": 10,
     "operation": { }
   },
+  "discovery": {
+    "families": {
+      "vendor": { }
+    }
+  },
   "localnet": {
     "families": {
       "ether": { },
