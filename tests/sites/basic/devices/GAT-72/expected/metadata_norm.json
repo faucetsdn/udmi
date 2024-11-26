@@ -1,0 +1,49 @@
+{
+  "timestamp": "2020-05-01T13:39:07Z",
+  "version": "1.5.2",
+  "hash": "7ff91a51",
+  "cloud": {
+    "auth_type": "ES256"
+  },
+  "system": {
+    "tags": [ ],
+    "location": {
+      "site": "ZZ-TRI-FECTA",
+      "section": "2-3N8C"
+    },
+    "physical_tag": {
+      "asset": {
+        "guid": "drw://TBB",
+        "site": "ZZ-TRI-FECTA",
+        "name": "GAT-123"
+      }
+    },
+    "min_loglevel": 300
+  },
+  "gateway": {
+    "proxy_ids": [ "SNS-4", "AHU-22" ]
+  },
+  "discovery": {
+    "families": {
+      "bacnet": {
+        "generation": "2018-08-26T21:00:13Z"
+      },
+      "vendor": { }
+    }
+  },
+  "localnet": {
+    "families": {
+      "vendor": {
+        "addr": "20231"
+      }
+    }
+  },
+  "pointset": {
+    "points": {
+      "globulating_globar": {
+        "units": "Bars",
+        "tags": [ ]
+      }
+    }
+  }
+}
