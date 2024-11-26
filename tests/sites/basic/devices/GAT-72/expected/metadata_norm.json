@@ -1,7 +1,7 @@
 {
   "timestamp": "2020-05-01T13:39:07Z",
   "version": "1.5.2",
-  "hash": "7ff91a51",
+  "hash": "4e5ef332",
   "cloud": {
     "auth_type": "ES256"
   },
@@ -15,7 +15,7 @@
       "asset": {
         "guid": "drw://TBB",
         "site": "ZZ-TRI-FECTA",
-        "name": "GAT-123"
+        "name": "GAT-72"
       }
     },
     "min_loglevel": 300
@@ -26,7 +26,8 @@
   "discovery": {
     "families": {
       "bacnet": {
-        "generation": "2018-08-26T21:00:13Z"
+        "generation": "2018-08-26T21:00:13Z",
+        "scan_duration_sec": 400
       },
       "vendor": { }
     }

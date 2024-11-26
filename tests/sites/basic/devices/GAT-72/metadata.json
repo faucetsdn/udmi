@@ -14,7 +14,7 @@
       "asset": {
         "guid": "drw://TBB",
         "site": "ZZ-TRI-FECTA",
-        "name": "GAT-123"
+        "name": "GAT-72"
       }
     }
   },
@@ -26,7 +26,8 @@
       "vendor": {
       },
       "bacnet": {
-        "generation": "2018-08-26T21:00:13Z"
+        "generation": "2018-08-26T21:00:13Z",
+        "scan_duration_sec": 400
       }
     }
   },
