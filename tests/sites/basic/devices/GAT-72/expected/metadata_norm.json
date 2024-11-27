@@ -1,13 +1,14 @@
 {
-  "pointset": {
-    "points": {
-      "globulating_globar": {
-        "units": "Bars"
-      }
-    }
+  "timestamp": "2020-05-01T13:39:07Z",
+  "version": "1.5.2",
+  "hash": "c9c5b715",
+  "cloud": {
+    "auth_type": "ES256"
   },
   "system": {
+    "tags": [ ],
     "location": {
+      "site": "ZZ-TRI-FECTA",
       "section": "2-3N8C"
     },
     "physical_tag": {
@@ -16,18 +17,18 @@
         "site": "ZZ-TRI-FECTA",
         "name": "GAT-72"
       }
-    }
+    },
+    "min_loglevel": 300
   },
   "gateway": {
-    "proxy_ids": [ "SNS-4", "AHU-22" ]
+    "proxy_ids": [ "SNS-4", "AHU-1" ]
   },
   "discovery": {
     "families": {
-      "vendor": {
-      },
       "bacnet": {
         "generation": "2018-08-26T21:00:13Z"
-      }
+      },
+      "vendor": { }
     }
   },
   "localnet": {
@@ -37,10 +38,12 @@
       }
     }
   },
-  "cloud": {
-    "auth_type": "ES256"
-  },
-  "version": "1.5.2",
-  "timestamp": "2020-05-01T13:39:07Z"
-
+  "pointset": {
+    "points": {
+      "globulating_globar": {
+        "units": "Bars",
+        "tags": [ ]
+      }
+    }
+  }
 }
