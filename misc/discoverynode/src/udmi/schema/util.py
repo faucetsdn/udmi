@@ -1,6 +1,7 @@
 import dataclasses
 import datetime
 import json
+import numpy
 from typing import Any
 
 
@@ -18,6 +19,13 @@ def datetime_serializer(timestamp: datetime.datetime):
 def json_serializer(obj: Any):
   if isinstance(obj, datetime.datetime):
     return datetime_serializer(obj)
+  
+  if isinstance(obj, numpy.integer):
+    return int(obj)
+  
+  if isinstance(obj, numpy.floating):
+    return float(obj)
+  
   raise TypeError(f"Type {type(obj)} is not serializable")
 
 
@@ -40,8 +48,6 @@ def deep_remove(
       if v in values or k in keys:
         continue
       elif isinstance(v, dict):
-        new_dict[k] = deep_remove(v, keys, values)
-      elif isinstance(v, list):
         new_dict[k] = deep_remove(v, keys, values)
       else:
         new_dict[k] = v
