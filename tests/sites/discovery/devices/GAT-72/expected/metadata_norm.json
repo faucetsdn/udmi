@@ -1,7 +1,7 @@
 {
   "timestamp": "2020-05-01T13:39:07Z",
   "version": "1.5.2",
-  "hash": "4e5ef332",
+  "hash": "4136dae2",
   "cloud": {
     "auth_type": "ES256"
   },
@@ -26,8 +26,7 @@
   "discovery": {
     "families": {
       "bacnet": {
-        "generation": "2018-08-26T21:00:13Z",
-        "scan_duration_sec": 400
+        "generation": "2018-08-26T21:00:13Z"
       },
       "vendor": { }
     }
