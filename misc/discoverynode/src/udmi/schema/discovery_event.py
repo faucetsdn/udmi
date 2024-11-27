@@ -5,6 +5,17 @@ import datetime
 import enum
 import json
 import udmi.schema.util
+from typing import Any, List
+
+
+@dataclasses.dataclass
+class Status:
+  category: str
+  level: int
+  message: str
+  timestamp: datetime.datetime = dataclasses.field(
+      default_factory=datetime.datetime.now
+  )
 
 
 @dataclasses.dataclass
@@ -27,6 +38,7 @@ class DiscoverySystem:
       default_factory=DiscoverySystemSoftware
   )
   serial_no: str | None = None
+  ancillary: dict[str, Any] = dataclasses.field(default_factory=dict) 
 
 
 @dataclasses.dataclass
@@ -35,11 +47,21 @@ class DiscoveryFamily:
 
 
 @dataclasses.dataclass
+class DiscoveryPoint:
+  ref: str | None = None
+  name: str | None = None
+  description: str | None = None
+  type: str | None = None
+  units:  str | None = None
+  possible_values: List[Any] | None = None
+  ancillary: dict[str, Any] = dataclasses.field(default_factory=dict) 
+
+
+@dataclasses.dataclass
 class DiscoveryEvent:
   generation: str
   scan_family: str
   scan_addr: str
-  timestamp = None
 
   version: str = "1.5.1"
   timestamp: datetime.datetime = dataclasses.field(
@@ -47,6 +69,10 @@ class DiscoveryEvent:
   )
   families: dict[str, DiscoveryFamily] = dataclasses.field(default_factory=dict)
   system: DiscoverySystem = dataclasses.field(default_factory=DiscoverySystem)
+  refs: dict[str, DiscoveryPoint] = dataclasses.field(default_factory=dict)
+  event_no: int | None = None
+  status: Status | None = None
+
 
   def to_json(self) -> str:
     as_dict = dataclasses.asdict(self)
@@ -57,5 +83,5 @@ class DiscoveryEvent:
         copy.deepcopy(as_dict), None, [{}, None]
     )
     return json.dumps(
-        as_dict, default=udmi.schema.util.json_serializer, indent=4
+        as_dict, default=udmi.schema.util.json_serializer, indent=2
     )

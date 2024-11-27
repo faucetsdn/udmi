@@ -12,18 +12,41 @@ import time
 from typing import Any, Callable
 import xml.etree.ElementTree
 import BAC0
+import BAC0.core.io.IOExceptions
 import udmi.discovery.discovery as discovery
 import udmi.schema.discovery_event
 from udmi.schema.discovery_event import DiscoveryEvent
+from udmi.schema.discovery_event import DiscoveryPoint
 import udmi.schema.state
-
+import ipaddress
+import enum
+import copy
+import dataclasses
 
 BAC0.log_level(log_file=None, stdout=None, stderr=None)
 BAC0.log_level("silence")
 
 
+class BacnetObjectAcronyms(enum.StrEnum):
+  """ Mapping of object names to accepted aronyms"""
+  analogInput = "AI"
+  analogOutput = "AO"
+  analogValue = "AV"
+  binaryInput = "BI"
+  binaryOutput = "BO"
+  binaryValue = "BV"
+  loop = "LP"
+  multiStateInput = "MSI"
+  multiStateOutput = "MSO"
+  multiStateValue = "MSV"
+  characterstringValue = "CSV"
+
+class CowardlyQuit(Exception):
+  pass
+
+
 class GlobalBacnetDiscovery(discovery.DiscoveryController):
-  """Passive Network Discovery."""
+  """Bacnet discovery."""
 
   scan_family = "bacnet"
 
@@ -57,8 +80,75 @@ class GlobalBacnetDiscovery(discovery.DiscoveryController):
     self.cancelled = True
     self.result_producer_thread.join()
 
-  @discovery.catch_exceptions_to_state
+  def discover_device(self, device_address, device_id) -> DiscoveryEvent:
+  
+    ### Existence of a device
+    ###################################################################
+    event = udmi.schema.discovery_event.DiscoveryEvent(
+        generation=self.config.generation,
+        scan_family=self.scan_family,
+        scan_addr=str(device_id),
+    )
+
+    try:
+      ipaddress.ip_address(device_address)
+    except ValueError:
+      pass
+    else:
+      event.families["ipv4"] = udmi.schema.discovery_event.DiscoveryFamily(
+          addr=device_address
+      ) 
+
+    ### Basic Properties
+    ###################################################################
+    try:
+      object_name, vendor_name, firmware_version, model_name, serial_number = (
+          self.bacnet.readMultiple(
+              f"{device_address} device {device_id} objectName vendorName"
+              " firmwareRevision modelName serialNumber"
+          )
+      )
+
+      logging.info("object_name: %s vendor_name: %s firmware: %s model: %s serial: %s",  object_name, vendor_name, firmware_version, model_name, serial_number)
+
+      event.system.serial_no = serial_number
+      event.system.hardware.make = vendor_name
+      event.system.hardware.model = model_name
+  
+      event.system.ancillary["firmware"] = firmware_version
+      event.system.ancillary["name"] = object_name
+
+    except (BAC0.core.io.IOExceptions.SegmentationNotSupported, Exception) as err:
+      logging.exception(f"error reading from {device_address}/{device_id}")
+      return event
+
+    ### Points
+    ###################################################################
+    try:
+      device = BAC0.device(device_address, device_id, self.bacnet, poll=0)
+
+      for point in device.points:
+        ref = DiscoveryPoint()
+        ref.name = point.properties.name
+        ref.description = point.properties.description
+        ref.ancillary["present_value"] = point.lastValue
+        ref.type = point.properties.type
+        if isinstance(point.properties.units_state, list): 
+          ref.possible_values = point.properties.units_state
+        elif isinstance(point.properties.units_state, str): 
+          ref.units = point.properties.units_state
+        point_id = BacnetObjectAcronyms[point.properties.type].value + ":" + point.properties.address
+        event.refs[point_id] = ref
+  
+    except Exception as err:
+      event.status = udmi.schema.discovery_event.Status("discovery.error", 500, str(err))
+      logging.exception(f"error reading from {device_address}/{device_id}")
+      return event
+    
+    return event
+  
   @discovery.main_task
+  @discovery.catch_exceptions_to_state
   def result_producer(self):
     while not self.cancelled:
       try:
@@ -68,37 +158,18 @@ class GlobalBacnetDiscovery(discovery.DiscoveryController):
               set(self.bacnet.discoveredDevices.keys()) - self.devices_published
           )
           for device in new_devices:
-            (address, id) = device
-
-            # if depths ...
-            # Get make and model
-            try:
-              object_name, vendor_name, firmware_version, model_name, serial_number = (
-                  self.bacnet.readMultiple(
-                      f"{address} device {id} objectName vendorName"
-                      " firmwareRevision modelName serialNumber"
-                  )
-              )
-            except ValueError:
-              logging.exception(f"error reading from {address}/{id}")
-              continue
+            # Check that it is not cancelled in the inner loop too because this
+            # can take a long time to enumerate through all found devices.
+            if self.cancelled:
+              break
             
-            logging.info("object_name %s vendor_name %s firmware %s model %s serial %s",  object_name, vendor_name, firmware_version, model_name, serial_number)
-            event = udmi.schema.discovery_event.DiscoveryEvent(
-                generation=self.config.generation,
-                scan_family=self.scan_family,
-                scan_addr=str(id),
-            )
+            address, id = device
+            start = time.monotonic()
+            event = self.discover_device(address, id)
+            end = time.monotonic() 
+            logging.info(f"discovery for {device} in {end - start} seconds")
 
-            event.families["ipv4"] = udmi.schema.discovery_event.DiscoveryFamily(
-                addr=address
-            ) 
-            event.system.serial_no = serial_number
-            event.system.hardware.make = vendor_name
-            event.system.hardware.model = model_name
-            event.system.software.firmware = firmware_version
-
-            self.publisher(event)
+            self.publish(event)
             self.devices_published.add(device)
 
           if self.cancelled:

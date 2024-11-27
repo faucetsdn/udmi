@@ -1,4 +1,4 @@
-FROM alpine:latest
+FROM google/cloud-sdk:alpine
 
 WORKDIR /root
 
