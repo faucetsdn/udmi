@@ -15,7 +15,6 @@ import static com.google.udmi.util.GeneralUtils.isTrue;
 import static com.google.udmi.util.GeneralUtils.stackTraceString;
 import static com.google.udmi.util.GeneralUtils.toJsonFile;
 import static com.google.udmi.util.GeneralUtils.toJsonString;
-import static com.google.udmi.util.JsonUtil.getNowInstant;
 import static com.google.udmi.util.JsonUtil.isoConvert;
 import static com.google.udmi.util.JsonUtil.parseJson;
 import static com.google.udmi.util.JsonUtil.safeSleep;
@@ -855,19 +854,15 @@ public interface PubberUdmiPublisher extends UdmiPublisher {
     setLastStateTimeMs(System.currentTimeMillis());
     CountDownLatch latch = new CountDownLatch(1);
 
-    final String deviceId = getDeviceId();
     try {
-      debug(format("State send %s%s", deviceId, getDeviceManager().getTestingTag()),
+      debug(format("State update %s%s", getDeviceId(), getDeviceManager().getTestingTag()),
           toJsonString(stateToSend));
     } catch (Exception e) {
       throw new RuntimeException("While converting new device state", e);
     }
 
-    Instant stateSendStart = getNowInstant();
-    publishDeviceMessage(deviceId, stateToSend, () -> {
+    publishDeviceMessage(getDeviceId(), stateToSend, () -> {
       setLastStateTimeMs(System.currentTimeMillis());
-      debug(format("State reply %s after %ss", deviceId,
-          Duration.between(stateSendStart, getNowInstant()).toSeconds()));
       latch.countDown();
     });
     try {
