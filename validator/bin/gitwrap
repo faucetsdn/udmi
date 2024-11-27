@@ -1,0 +1,21 @@
+#!/bin/bash -e
+
+if [[ $# == 0 ]]; then
+    echo Missing command line argument.
+    false
+fi
+
+cmd="$@"
+
+(cd site_model; git pull)
+
+$cmd
+
+(
+    cd site_model
+    git add .
+    git commit -m "$cmd"
+    git push
+)
+
+echo Done with gitwrap $cmd
