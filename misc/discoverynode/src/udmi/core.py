@@ -42,15 +42,25 @@ class UDMICore:
     self.config = config
     self.components = {}
     self.callbacks = {}  # lambda,
+    self.state_hooks = []
 
+    # Setup state
     self.state = udmi.schema.state.State()
 
-    with contextlib.suppress(FileNotFoundError):
+    try:
       installed_version_file =  pathlib.Path(__file__).with_name(UDMICore.INSTALLED_VERSION_FILE)
       with open(installed_version_file, encoding="utf-8") as f:
         if (installed_version := f.read()) != "":
           self.state.system.software.version = installed_version
-        
+    except FileNotFoundError:
+      self.state.system.software.version = "1"
+    
+    self.state.system.hardware.make = "unknown"
+    self.state.system.hardware.model = "unknown"
+    self.state.system.serial_no = "unknown"
+    self.state.system.operation.operational = True
+
+    # Setup topics
     self.topic_state = UDMICore.STATE_TOPIC_TEMPLATE.format(topic_prefix)
 
     self.topic_discovery_event = UDMICore.EVENT_DISCOVERY_TOPIC_TEMPLATE.format(
@@ -60,9 +70,10 @@ class UDMICore:
         topic_prefix
     )
 
-    threading.Thread(target=self.state_monitor, args=[], daemon=True).start()
-
     self.enable_discovery(**config.get("udmi",{}).get("discovery", {}))
+
+    # Note, this depends on topic_state being set
+    threading.Thread(target=self.state_monitor, args=[], daemon=True).start()
 
   def process_config(self, config: str):
     logging.error(f"config callback {config[:24]}")
@@ -94,13 +105,31 @@ class UDMICore:
         category="system.config.apply", level=500, message=str(err)
     )
 
+  def register_state_hook(self, hook: Callable) -> None:
+    """ Registers a function to execute before state is published.
+    
+    The main use case is to update values only when state is published.
+
+    Args:
+      hook: Function to execute
+    """
+    self.state_hooks.append(hook)
+
+  def execute_state_hooks(self) -> None:
+    """ Execute registered hooks before state is published. """
+    for hook in self.state_hooks:
+      hook()
+
   def state_monitor(self):
     self._last_state_hash = None
     while True:
       current_hash = self.state.get_hash()
       if self._last_state_hash != current_hash:
+        self.execute_state_hooks()
         self.publish_state()
-        self._last_state_hash = current_hash
+        
+        # Regenerate hash because the "state" may been modified by the hooks
+        self._last_state_hash = self.state.get_hash()
       time.sleep(self._STATE_MONITOR_INTERVAL)
 
   def publish_state(self):
@@ -109,7 +138,6 @@ class UDMICore:
     self.publisher.publish_message(self.topic_state, state)
 
   def publish_discovery(self, payload):
-    logging.warning("published discovery for %s:%s", payload.scan_family, payload.scan_addr)
     self.publisher.publish_message(self.topic_discovery_event, payload.to_json())
 
   def enable_discovery(self,*,bacnet=True,vendor=True,ipv4=True,ether=True):
@@ -123,6 +151,8 @@ class UDMICore:
           lambda x: True,
           number_discovery,
       )
+
+      self.register_state_hook(number_discovery.on_state_update_hook)
 
       self.components["number_discovery"] = number_discovery
     
@@ -138,6 +168,8 @@ class UDMICore:
           bacnet_discovery,
       )
 
+      self.register_state_hook(bacnet_discovery.on_state_update_hook)
+
       self.components["bacnet_discovery"] = bacnet_discovery
     
     if ipv4:
@@ -149,6 +181,8 @@ class UDMICore:
           lambda x: True,
           passive_discovery,
       )
+
+      self.register_state_hook(passive_discovery.on_state_update_hook)
 
       self.components["passive_discovery"] = passive_discovery
     
@@ -163,6 +197,8 @@ class UDMICore:
           lambda x: True,
           nmap_banner_scan,
       )
+
+      self.register_state_hook(nmap_banner_scan.on_state_update_hook)
 
       self.components["nmap_banner_scan"] = nmap_banner_scan
     
