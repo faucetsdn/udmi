@@ -394,4 +394,4 @@ jobs:
           done
           ls -l var/tmp/pod_ready.txt 2>&1
       - name: Run Tests
-        run: misc/discoverynode/testing/e2e/test_local //mqtt/localhost || true
+        run: misc/discoverynode/testing/e2e/test_local site_model || true

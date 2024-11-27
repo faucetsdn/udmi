@@ -20,7 +20,8 @@ PRIVATE_IP_BPC_FILTER = (
     "ip and "
     "("
     "src net 10.0.0.0/8 or src net 172.16.0.0/12 or src net 192.168.0.0/16 or "
-    "dst net 10.0.0.0/8 or dst net 172.16.0.0/12 or dst net 192.168.0.0/16"
+    "dst net 10.0.0.0/8 or dst net 172.16.0.0/12 or dst net 192.168.0.0/16 or "
+    "dst net 100.64.0.0/10 or src net 100.64.0.0/10"
     ")"
 )
 
@@ -121,7 +122,7 @@ class PassiveNetworkDiscovery(discovery.DiscoveryController):
       new_device_records = self.device_records - self.devices_records_published
 
       for device_record in new_device_records:
-        self.publisher(
+        self.publish(
             udmi.schema.discovery_event.DiscoveryEvent(
                 generation=self.config.generation,
                 scan_addr=device_record.addr,
