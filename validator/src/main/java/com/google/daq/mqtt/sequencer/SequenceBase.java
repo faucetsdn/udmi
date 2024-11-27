@@ -737,7 +737,7 @@ public class SequenceBase {
     deviceConfig = clean ? new Config() : configFrom(deviceMetadata).deviceConfig();
     deviceConfig.timestamp = null;
     sanitizeConfig(deviceConfig);
-    deviceConfig.system.min_loglevel = Level.INFO.value();
+    deviceConfig.system.min_loglevel = logLevel;
     Date resetDate = ofNullable(catchToNull(() -> deviceState.system.operation.last_start))
         .orElse(RESET_LAST_START);
     debug("Configuring device last_start to be " + isoConvert(resetDate));
