@@ -50,7 +50,7 @@
     <orderEntry type="library" name="Gradle: io.moquette:moquette-broker:0.15" level="project" />
     <orderEntry type="library" name="Gradle: com.librato.metrics:metrics-librato:5.1.0" level="project" />
     <orderEntry type="library" name="Gradle: com.librato.metrics:librato-java:2.1.0" level="project" />
-    <orderEntry type="library" name="Gradle: com.bugsnag:bugsnag:3.7.1" level="project" />
+    <orderEntry type="library" name="Gradle: com.bugsnag:bugsnag:3.7.2" level="project" />
     <orderEntry type="library" name="Gradle: com.fasterxml.jackson.core:jackson-annotations:2.14.1" level="project" />
     <orderEntry type="library" name="Gradle: com.fasterxml.jackson.core:jackson-core:2.14.1" level="project" />
     <orderEntry type="library" name="Gradle: com.fasterxml.jackson.core:jackson-databind:2.14.1" level="project" />
