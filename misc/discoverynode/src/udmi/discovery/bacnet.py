@@ -114,8 +114,8 @@ class GlobalBacnetDiscovery(discovery.DiscoveryController):
       event.system.serial_no = serial_number
       event.system.hardware.make = vendor_name
       event.system.hardware.model = model_name
-      # Temporarily disabled because not schema compliant
-      # event.system.software.firmware = firmware_version
+  
+      event.system.ancillary["firmware"] = firmware_version
       event.system.ancillary["name"] = object_name
 
     except (BAC0.core.io.IOExceptions.SegmentationNotSupported, Exception) as err:
@@ -131,7 +131,8 @@ class GlobalBacnetDiscovery(discovery.DiscoveryController):
         ref = DiscoveryPoint()
         ref.name = point.properties.name
         ref.description = point.properties.description
-        ref.present_value = point.lastValue
+        ref.ancillary["present_value"] = point.lastValue
+        ref.type = point.properties.type
         if isinstance(point.properties.units_state, list): 
           ref.possible_values = point.properties.units_state
         elif isinstance(point.properties.units_state, str): 

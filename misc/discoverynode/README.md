@@ -17,12 +17,12 @@ bin/setup
 2. Run 
 
 ```
-bin/run SITE_MODEL TARGET DEVICE_ID [bacnet] [ipv4] [ether]
+bin/run SITE_MODEL TARGET DEVICE_ID
 ```
 
-- SITE_MODEl - Path to site model
-- TARGET
-
+- SITE_MODEL - Path to site model
+- TARGET - e.g. `//mqtt/localhost` or `//gbos/bos-platform-testing`
+- DEVICE_ID - device ID from site model
 
 3. (Optional) Running with UDMIS Locally
 

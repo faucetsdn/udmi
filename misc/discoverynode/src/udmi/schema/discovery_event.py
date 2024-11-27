@@ -51,7 +51,7 @@ class DiscoveryPoint:
   ref: str | None = None
   name: str | None = None
   description: str | None = None
-  present_value: Any | None = None
+  type: str | None = None
   units:  str | None = None
   possible_values: List[Any] | None = None
   ancillary: dict[str, Any] = dataclasses.field(default_factory=dict) 

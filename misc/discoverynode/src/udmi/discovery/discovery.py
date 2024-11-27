@@ -358,5 +358,6 @@ class DiscoveryController(abc.ABC):
       setattr(self.state, field.name, None)
 
   def on_state_update_hook(self):
-    if self.state.active_count is not None:
+    # Check that the state is not reset before setting the active count
+    if self.state.phase is not None:
       self.state.active_count = self.count_events
