@@ -84,3 +84,8 @@ cat <<EOF > $REFLECTOR_CONFIG
 EOF
 
 validator/bin/reflector $REFLECTOR_CONFIG update/config:${dst_config}
+
+echo
+cat ${dst_config}
+echo
+echo That config ^^^^ was applied!
