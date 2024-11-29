@@ -126,7 +126,6 @@ import java.util.function.Predicate;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import org.apache.commons.io.FileUtils;
-import org.checkerframework.checker.units.qual.A;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.VisibleForTesting;
 import org.junit.After;
@@ -675,7 +674,7 @@ public class SequenceBase {
     return new SimpleEntry<>(score, total);
   }
 
-  protected String getAlternateEndpointHostname() {
+  protected static String getAlternateEndpointHostname() {
     ifNullSkipTest(altClient, "No functional alternate registry defined");
     return altClient.getBridgeHost();
   }
@@ -835,7 +834,7 @@ public class SequenceBase {
   private void returnAltRegistryRedirect() {
     sanitizeConfig(deviceConfig);
     ifNotNullThen(altClient, client -> withAlternateClient(() -> {
-      deviceConfig.blobset = BlobsetSequences.getReturnRedirectConfig();
+      deviceConfig.blobset = BlobsetSequences.getEndpointReturnBlobset();
       updateConfig("reset alternate registry", true, false);
     }));
     deviceConfig.blobset = null;
@@ -1290,21 +1289,20 @@ public class SequenceBase {
 
   private boolean updateConfig(SubFolder subBlock, Object data) {
     try {
-      String messageData = stringify(data);
+      String actualizedData = actualize(stringify(data));
       String sentBlockConfig = String.valueOf(
           sentConfig.get(requireNonNull(subBlock, "subBlock not defined")));
-      boolean updated = !messageData.equals(sentBlockConfig);
+      boolean updated = !actualizedData.equals(sentBlockConfig);
       trace(format("updated check %s_%s: %s", CONFIG_SUBTYPE, subBlock, updated));
       if (updated) {
-        String augmentedMessage = actualize(stringify(data));
         String topic = subBlock + "/config";
         final String transactionId =
-            requireNonNull(reflector().publish(getDeviceId(), topic, augmentedMessage),
+            requireNonNull(reflector().publish(getDeviceId(), topic, actualizedData),
                 "no transactionId returned for publish");
         debug(format("update %s_%s, adding configTransaction %s",
             CONFIG_SUBTYPE, subBlock, transactionId));
         recordRawMessage(data, LOCAL_PREFIX + subBlock.value());
-        sentConfig.put(subBlock, messageData);
+        sentConfig.put(subBlock, actualizedData);
         configTransactions.add(transactionId);
       }
       return updated;
@@ -2409,7 +2407,7 @@ public class SequenceBase {
     recordSequence("Force config update to " + reason);
   }
 
-  protected void skipTest(String reason) {
+  protected static void skipTest(String reason) {
     throw new AssumptionViolatedException(reason);
   }
 
@@ -2417,7 +2415,7 @@ public class SequenceBase {
     ifTrueThen(condition, () -> skipTest(reason));
   }
 
-  protected <T> T ifNullSkipTest(T testable, String reason) {
+  protected static <T> T ifNullSkipTest(T testable, String reason) {
     ifNullThen(testable, () -> skipTest(reason));
     return testable;
   }

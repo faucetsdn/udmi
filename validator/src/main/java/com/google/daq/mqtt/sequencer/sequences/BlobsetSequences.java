@@ -58,8 +58,8 @@ public class BlobsetSequences extends SequenceBase {
     return exeConfig.iot_provider == IotProvider.MQTT;
   }
 
-  public static BlobsetConfig getReturnRedirectConfig() {
-    return null;
+  public void setReturnRedirectEndpointBlob() {
+    setDeviceConfigEndpointBlob(getAlternateEndpointHostname(), altRegistry, false);
   }
 
   @Before
@@ -67,12 +67,12 @@ public class BlobsetSequences extends SequenceBase {
     allowDeviceStateChange("blobset");
   }
 
-  private String generateEndpointConfigClientId(String registryId) {
+  private static String generateEndpointConfigClientId(String registryId) {
     return isMqttProvider() ? format(LOCAL_CLIENT_ID_FMT, registryId, getDeviceId())
         : format(IOT_CORE_CLIENT_ID_FMT, projectId, cloudRegion, registryId, getDeviceId());
   }
 
-  private String endpointConfigPayload(String hostname, String registryId) {
+  private static String endpointConfigPayload(String hostname, String registryId) {
     EndpointConfiguration endpointConfiguration = new EndpointConfiguration();
     endpointConfiguration.protocol = Protocol.MQTT;
     endpointConfiguration.hostname = hostname;
@@ -128,15 +128,25 @@ public class BlobsetSequences extends SequenceBase {
   }
 
   private void setDeviceConfigEndpointBlob(String hostname, String registryId, boolean badHash) {
-    String payload = endpointConfigPayload(hostname, registryId);
-    debug("Endpoint config", payload);
-    BlobBlobsetConfig config = makeEndpointConfigBlob(payload, badHash);
-    deviceConfig.blobset = new BlobsetConfig();
-    deviceConfig.blobset.blobs = new HashMap<>();
-    deviceConfig.blobset.blobs.put(IOT_BLOB_KEY, config);
+    deviceConfig.blobset = getEndpointRedirectBlobset(hostname, registryId, badHash);
+    debug("blobset config", stringify(deviceConfig.blobset));
   }
 
-  private BlobBlobsetConfig makeEndpointConfigBlob(String payload, boolean badHash) {
+  public static BlobsetConfig getEndpointReturnBlobset() {
+    return getEndpointRedirectBlobset(getAlternateEndpointHostname(), registryId, false);
+  }
+
+  private static BlobsetConfig getEndpointRedirectBlobset(String hostname, String registryId,
+      boolean badHash) {
+    String payload = endpointConfigPayload(hostname, registryId);
+    BlobBlobsetConfig config = makeEndpointConfigBlob(payload, badHash);
+    BlobsetConfig blobset = new BlobsetConfig();
+    blobset.blobs = new HashMap<>();
+    blobset.blobs.put(IOT_BLOB_KEY, config);
+    return blobset;
+  }
+
+  private static BlobBlobsetConfig makeEndpointConfigBlob(String payload, boolean badHash) {
     BlobBlobsetConfig config = new BlobBlobsetConfig();
     config.url = SemanticValue.describe("endpoint data", generateEndpointConfigDataUrl(payload));
     config.phase = BlobPhase.FINAL;
@@ -147,7 +157,7 @@ public class BlobsetSequences extends SequenceBase {
     return config;
   }
 
-  private String generateEndpointConfigDataUrl(String payload) {
+  private static String generateEndpointConfigDataUrl(String payload) {
     return format(DATA_URL_FORMAT, JSON_MIME_TYPE, encodeBase64(payload));
   }
 
