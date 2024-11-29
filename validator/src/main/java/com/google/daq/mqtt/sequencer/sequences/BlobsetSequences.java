@@ -58,6 +58,10 @@ public class BlobsetSequences extends SequenceBase {
     return exeConfig.iot_provider == IotProvider.MQTT;
   }
 
+  public static BlobsetConfig getReturnRedirectConfig() {
+    return null;
+  }
+
   @Before
   public void setupExpectedParameters() {
     allowDeviceStateChange("blobset");

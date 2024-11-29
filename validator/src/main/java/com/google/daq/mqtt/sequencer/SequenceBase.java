@@ -48,6 +48,7 @@ import static java.util.Objects.requireNonNull;
 import static java.util.Optional.ofNullable;
 import static java.util.stream.Collectors.toSet;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assume.assumeTrue;
 import static udmi.schema.Bucket.SYSTEM;
@@ -79,6 +80,7 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.daq.mqtt.sequencer.semantic.SemanticDate;
 import com.google.daq.mqtt.sequencer.semantic.SemanticValue;
+import com.google.daq.mqtt.sequencer.sequences.BlobsetSequences;
 import com.google.daq.mqtt.util.MessagePublisher;
 import com.google.daq.mqtt.util.MessagePublisher.QuerySpeed;
 import com.google.daq.mqtt.util.ObjectDiffEngine;
@@ -124,6 +126,7 @@ import java.util.function.Predicate;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import org.apache.commons.io.FileUtils;
+import org.checkerframework.checker.units.qual.A;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.VisibleForTesting;
 import org.junit.After;
@@ -799,6 +802,10 @@ public class SequenceBase {
     recordSequence = false;
     maxAllowedStatusLevel = NOTICE.value();
 
+    resetDeviceConfig(true);
+
+    returnAltRegistryRedirect();
+
     resetConfig(resetRequired);
 
     updateConfig("initial setup");
@@ -823,6 +830,15 @@ public class SequenceBase {
     waitingConditionStart("executing test");
 
     debug(format("stage begin %s at %s", currentWaitingCondition(), timeSinceStart()));
+  }
+
+  private void returnAltRegistryRedirect() {
+    sanitizeConfig(deviceConfig);
+    ifNotNullThen(altClient, client -> withAlternateClient(() -> {
+      deviceConfig.blobset = BlobsetSequences.getReturnRedirectConfig();
+      updateConfig("reset alternate registry", true, false);
+    }));
+    deviceConfig.blobset = null;
   }
 
   private boolean deviceSupportsState() {
@@ -1212,6 +1228,13 @@ public class SequenceBase {
     configAcked = false;
   }
 
+  private void waitForConfigIsNotPending() {
+    AtomicReference<String> detailer = new AtomicReference<>();
+    waitEvaluateLoop("pending config transaction", DEFAULT_WAIT_TIME,
+        () -> configTransactions.isEmpty() ? null : configTransactionsListString(), detailer);
+    assertNull("expected no pending transactions", detailer.get());
+  }
+
   private void assertConfigIsNotPending() {
     if (!configTransactions.isEmpty()) {
       throw new RuntimeException(
@@ -1224,6 +1247,11 @@ public class SequenceBase {
   }
 
   private void updateConfig(String reason, boolean force) {
+    updateConfig(reason, force, true);
+
+  }
+
+  private void updateConfig(String reason, boolean force, boolean waitForSync) {
     assertConfigIsNotPending();
 
     // Add a forced sleep to make sure second-quantized timestamps are unique.
@@ -1244,7 +1272,9 @@ public class SequenceBase {
       updateConfig(UPDATE, deviceConfig);
     }
 
-    if (configIsPending()) {
+    if (!waitForSync) {
+      waitForConfigIsNotPending();
+    } else if (configIsPending()) {
       configStateStart = catchToNull(() -> deviceState.timestamp);
       debug(format("Saving pre-config state timestamp " + isoConvert(configStateStart)));
       lastConfigUpdate = CleanDateFormat.clean(Instant.now());
@@ -1252,7 +1282,9 @@ public class SequenceBase {
       debug(format("Update lastConfigUpdate %s%s", lastConfigUpdate, debugReason));
       waitForConfigSync();
     }
+
     assertConfigIsNotPending();
+
     captureConfigChange(reason);
   }
 
@@ -1440,13 +1472,7 @@ public class SequenceBase {
       whileDoing(sanitizedDescription, () -> {
         ifNotTrueThen(waitingForConfigSync.get(),
             () -> updateConfig("Before " + sanitizedDescription));
-        messageEvaluateLoop(maxWait, () -> {
-          String result = evaluator.get();
-          String previous = detail.getAndSet(emptyToNull(result));
-          ifTrueThen(!Objects.equals(previous, result),
-              () -> debug(format("Detail %s is now: %s", sanitizedDescription, result)));
-          return result != null;
-        });
+        waitEvaluateLoop(sanitizedDescription, maxWait, evaluator, detail);
         recordSequence("Wait until", description);
       }, detail::get);
     } catch (Exception e) {
@@ -1454,6 +1480,17 @@ public class SequenceBase {
       recordSequence(message);
       throw new RuntimeException(message);
     }
+  }
+
+  private void waitEvaluateLoop(String sanitizedDescription, Duration maxWait, Supplier<String> evaluator,
+      AtomicReference<String> detail) {
+    messageEvaluateLoop(maxWait, () -> {
+      String result = evaluator.get();
+      String previous = detail.getAndSet(emptyToNull(result));
+      ifTrueThen(!Objects.equals(previous, result),
+          () -> debug(format("Detail %s is now: %s", sanitizedDescription, result)));
+      return result != null;
+    });
   }
 
   private String sanitizedDescription(String description) {
@@ -2183,7 +2220,7 @@ public class SequenceBase {
     } finally {
       useAlternateClient = false;
       warning("Done with alternate connection client!");
-      catchToNull(() -> deviceConfig.system.testing.endpoint_type = null);
+      deviceConfig.system.testing.endpoint_type = null;
     }
   }
 
