@@ -270,7 +270,7 @@ public class SequenceBase {
   public static ExecutionConfiguration exeConfig;
   private static Validator messageValidator;
   private static ValidationState validationState;
-  protected static int logLevel;
+  private static int logLevel;
   private static File deviceOutputDir;
   private static File resultSummary;
   private static MessagePublisher client;
@@ -861,6 +861,16 @@ public class SequenceBase {
 
   protected void resetConfig() {
     resetConfig(true);
+  }
+
+  void resetConfig(Level level) {
+    int savedLevel = logLevel;
+    try {
+      logLevel = level.value();
+      resetConfig();
+    } finally {
+      logLevel = savedLevel;
+    }
   }
 
   protected void resetConfig(boolean fullReset) {

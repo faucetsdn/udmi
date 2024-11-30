@@ -179,9 +179,7 @@ public class ConfigSequences extends SequenceBase {
       checkWasNotLogged(SYSTEM_CONFIG_APPLY, SYSTEM_CONFIG_APPLY_LEVEL);
     });
 
-    int savedLevel = logLevel;
-    logLevel = Level.INFO.value();
-    resetConfig(); // clears extra_field and interesting status checks
+    resetConfig(Level.INFO); // clears extra_field and interesting status checks
     recordSequence("(Log level is implicitly set to `INFO` through config reset)");
 
     // Revert override now that config has been reset so is not broken anymore.
@@ -199,8 +197,6 @@ public class ConfigSequences extends SequenceBase {
     // This is technically already done by resetConfig(), but doing now to generate message.
     checkThat("device state `last_config` has been updated",
         () -> dateEquals(deviceConfig.timestamp, deviceState.system.last_config));
-
-    logLevel = savedLevel;
   }
 
   @Test(timeout = TWO_MINUTES_MS)
