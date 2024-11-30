@@ -3,6 +3,7 @@ package com.google.daq.mqtt.sequencer;
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
+import static com.google.common.base.Predicates.in;
 import static com.google.common.base.Predicates.not;
 import static com.google.common.base.Strings.emptyToNull;
 import static com.google.daq.mqtt.sequencer.semantic.SemanticValue.actualize;
@@ -750,7 +751,9 @@ public class SequenceBase {
 
   private int getStartingLogLevel() {
     DefaultLogLevel defaultLogLevel = testDescription.getAnnotation(DefaultLogLevel.class);
-    return ofNullable(defaultLogLevel).map(a -> a.value().value()).orElse(logLevel);
+    Integer integer = ofNullable(defaultLogLevel).map(a -> a.value().value()).orElse(logLevel);
+    debug(format("TAP logLevel %s default %s is %s", defaultLogLevel, logLevel, integer));
+    return integer;
   }
 
   private Config sanitizeConfig(Config config) {
