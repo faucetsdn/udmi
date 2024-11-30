@@ -350,7 +350,6 @@ public class SequenceBase {
       checkNotNull(exeConfig.udmi_version, "udmi_version not defined");
       logLevel = Level.valueOf(checkNotNull(exeConfig.log_level, "log_level not defined"))
           .value();
-      System.err.println("TAP logLevel set to " + logLevel);
       key_file = checkNotNull(exeConfig.key_file, "key_file not defined");
     } catch (Exception e) {
       e.printStackTrace();
