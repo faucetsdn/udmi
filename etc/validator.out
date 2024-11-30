@@ -314,12 +314,19 @@ sites/udmi_site_model/out/devices/AHU-22/state.out
   "sub_folder" : "update",
   "sub_type" : "state",
   "status" : {
-    "message" : "Successful validation",
-    "category" : "validation.device.receive",
+    "message" : "missing pointset subblock",
+    "detail" : "state_update: missing pointset subblock",
+    "category" : "validation.device.schema",
     "timestamp" : "REDACTED_TIMESTAMP",
-    "level" : 200
+    "level" : 500
   },
-  "errors" : [ ]
+  "errors" : [ {
+    "message" : "missing pointset subblock",
+    "detail" : "state_update: missing pointset subblock",
+    "category" : "validation.device.schema",
+    "timestamp" : "REDACTED_TIMESTAMP",
+    "level" : 500
+  } ]
 }
 ::::::::::::::
 sites/udmi_site_model/out/devices/AHU-22/state_pointset.out
@@ -733,15 +740,15 @@ sites/udmi_site_model/out/devices/SNS-4/state.out
   "sub_folder" : "update",
   "sub_type" : "state",
   "status" : {
-    "message" : "Device has missing points: split_threshold, triangulating_axis",
-    "detail" : "state_update: Device has missing points: split_threshold, triangulating_axis",
+    "message" : "missing pointset subblock",
+    "detail" : "state_update: missing pointset subblock",
     "category" : "validation.device.schema",
     "timestamp" : "REDACTED_TIMESTAMP",
     "level" : 500
   },
   "errors" : [ {
-    "message" : "Device has missing points: split_threshold, triangulating_axis",
-    "detail" : "state_update: Device has missing points: split_threshold, triangulating_axis",
+    "message" : "missing pointset subblock",
+    "detail" : "state_update: missing pointset subblock",
     "category" : "validation.device.schema",
     "timestamp" : "REDACTED_TIMESTAMP",
     "level" : 500
