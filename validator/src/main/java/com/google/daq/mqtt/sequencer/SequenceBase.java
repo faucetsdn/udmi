@@ -1480,7 +1480,8 @@ public class SequenceBase {
     }
   }
 
-  private void waitEvaluateLoop(String sanitizedDescription, Duration maxWait, Supplier<String> evaluator,
+  private void waitEvaluateLoop(String sanitizedDescription, Duration maxWait,
+      Supplier<String> evaluator,
       AtomicReference<String> detail) {
     messageEvaluateLoop(maxWait, () -> {
       String result = evaluator.get();
