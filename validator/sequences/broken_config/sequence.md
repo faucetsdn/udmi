@@ -3,8 +3,6 @@
 
 Check that the device correctly handles a broken (non-json) config message.
 
-1. Update config to enable debug logging
-    * Set `system.min_loglevel` = `100`
 1. _logging_ Wait until system logs level `NOTICE` category `system.config.apply`
 1. Update config to force broken (invalid JSON) configuration
 1. _status_ Wait until system status level is >= `WARNING` (400)
