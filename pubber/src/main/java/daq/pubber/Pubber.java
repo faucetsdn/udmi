@@ -482,6 +482,7 @@ public class Pubber extends PubberManager implements PubberUdmiPublisher {
     endpoint.algorithm = config.algorithm;
     augmentEndpoint(endpoint);
     String keyPassword = siteModel.getDevicePassword(config.deviceId);
+    debug("Extracted device password from " + siteModel.getDeviceKeyFile(config.deviceId));
     String targetDeviceId = getTargetDeviceId(siteModel, config.deviceId);
     CertManager certManager = new CertManager(new File(siteModel.getReflectorDir(), CA_CRT),
         siteModel.getDeviceDir(targetDeviceId), endpoint.transport, keyPassword,
