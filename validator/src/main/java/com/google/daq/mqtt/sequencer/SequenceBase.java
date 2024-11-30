@@ -740,12 +740,17 @@ public class SequenceBase {
     deviceConfig = clean ? new Config() : configFrom(deviceMetadata).deviceConfig();
     deviceConfig.timestamp = null;
     sanitizeConfig(deviceConfig);
-    deviceConfig.system.min_loglevel = logLevel;
+    deviceConfig.system.min_loglevel = getStartingLogLevel();
     Date resetDate = ofNullable(catchToNull(() -> deviceState.system.operation.last_start))
         .orElse(RESET_LAST_START);
     debug("Configuring device last_start to be " + isoConvert(resetDate));
     setLastStart(SemanticDate.describe("device reported", resetDate));
     setExtraField(null);
+  }
+
+  private int getStartingLogLevel() {
+    DefaultLogLevel defaultLogLevel = testDescription.getAnnotation(DefaultLogLevel.class);
+    return ofNullable(defaultLogLevel).map(a -> a.value().value()).orElse(logLevel);
   }
 
   private Config sanitizeConfig(Config config) {
@@ -860,16 +865,6 @@ public class SequenceBase {
 
   protected void resetConfig() {
     resetConfig(true);
-  }
-
-  protected void resetConfig(Level level) {
-    int savedLevel = logLevel;
-    try {
-      logLevel = level.value();
-      resetConfig();
-    } finally {
-      logLevel = savedLevel;
-    }
   }
 
   protected void resetConfig(boolean fullReset) {
