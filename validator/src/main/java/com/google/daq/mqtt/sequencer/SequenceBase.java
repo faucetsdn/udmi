@@ -862,7 +862,7 @@ public class SequenceBase {
     resetConfig(true);
   }
 
-  void resetConfig(Level level) {
+  protected void resetConfig(Level level) {
     int savedLevel = logLevel;
     try {
       logLevel = level.value();
