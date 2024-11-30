@@ -345,6 +345,7 @@ public class SequenceBase {
     try {
       messageValidator = new Validator(exeConfig, SequenceBase::validatorLogger);
       siteModel = new SiteModel(checkNotNull(exeConfig.site_model, "site_model not defined"));
+      siteModel.initialize();
       projectId = checkNotNull(exeConfig.project_id, "project_id not defined");
       checkNotNull(exeConfig.udmi_version, "udmi_version not defined");
       logLevel = Level.valueOf(checkNotNull(exeConfig.log_level, "log_level not defined"))
