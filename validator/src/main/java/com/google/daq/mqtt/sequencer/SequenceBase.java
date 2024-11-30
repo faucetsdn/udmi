@@ -270,7 +270,7 @@ public class SequenceBase {
   public static ExecutionConfiguration exeConfig;
   private static Validator messageValidator;
   private static ValidationState validationState;
-  private static int logLevel;
+  protected static int logLevel;
   private static File deviceOutputDir;
   private static File resultSummary;
   private static MessagePublisher client;
@@ -350,6 +350,7 @@ public class SequenceBase {
       checkNotNull(exeConfig.udmi_version, "udmi_version not defined");
       logLevel = Level.valueOf(checkNotNull(exeConfig.log_level, "log_level not defined"))
           .value();
+      System.err.println("TAP logLevel set to " + logLevel);
       key_file = checkNotNull(exeConfig.key_file, "key_file not defined");
     } catch (Exception e) {
       e.printStackTrace();
