@@ -183,8 +183,7 @@ public class ReportingDevice implements ErrorCollector {
   public void validateRawMessage(String schemaName, Map<String, Object> message,
       Map<String, String> attributes) {
     if (metadata != null) {
-      Class<?> target = Common.classForSchema(schemaName);
-      Object obj = convertTo(target, message);
+      Object obj = convertTo(Common.classForSchema(schemaName), message);
       pointsetValidator.validateMessage(obj, attributes);
       discoveryValidator.validateMessage(obj, attributes);
     }
