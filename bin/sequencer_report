@@ -1,4 +1,6 @@
 #!/usr/bin/env python3
+# Might need to run `source venv/bin/activate` to get dependencies to work.
+#
 """Generate markdown report from sequencer results."""
 import argparse
 from collections.abc import Iterable
