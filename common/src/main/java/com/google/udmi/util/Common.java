@@ -9,6 +9,7 @@ import com.google.common.reflect.ClassPath;
 import com.google.common.reflect.ClassPath.ClassInfo;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.MissingFormatArgumentException;
 import java.util.Optional;
 import java.util.Set;
@@ -184,5 +185,9 @@ public abstract class Common {
 
   public static String getNamespacePrefix(String udmiNamespace) {
     return Strings.isNullOrEmpty(udmiNamespace) ? "" : udmiNamespace + NAMESPACE_SEPARATOR;
+  }
+
+  public static Class<?> classForSchema(String schemaName) {
+    throw new IllegalStateException("Don't know how to find class for " + schemaName);
   }
 }
