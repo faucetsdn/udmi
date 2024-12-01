@@ -27,7 +27,7 @@ public class DiscoveryValidator {
     } else if (message instanceof DiscoveryEvents discoveryEvents) {
       validateMessage(discoveryEvents);
     } else {
-      throw new RuntimeException("Unknown discovery message class " + message.getClass().getName());
+      return;
     }
   }
 

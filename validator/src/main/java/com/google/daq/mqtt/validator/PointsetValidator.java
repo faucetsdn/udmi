@@ -54,7 +54,7 @@ public class PointsetValidator {
       pointsetDiff = validateMessage(pointsetEvents);
       timestamp = pointsetEvents.timestamp;
     } else {
-      throw new RuntimeException("Unknown pointset message class " + message.getClass().getName());
+      return;
     }
 
     if (pointsetDiff == null) {

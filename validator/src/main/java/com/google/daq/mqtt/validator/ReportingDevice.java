@@ -44,10 +44,6 @@ public class ReportingDevice implements ErrorCollector {
       = "instance failed to match exactly one schema (matched 0 out of ";
   private static final String CATEGORY_MISSING_REPLACEMENT
       = "instance entry category not recognized";
-  private static final Set<Class<?>> POINTSET_VALIDATIONS = ImmutableSet.of(
-      State.class, PointsetState.class, PointsetEvents.class);
-  private static final Set<Class<?>> DISCOVERY_VALIDATIONS = ImmutableSet.of(
-      State.class, DiscoveryState.class, DiscoveryEvents.class);
 
   private static Date mockNow;
   private final String deviceId;
@@ -189,10 +185,8 @@ public class ReportingDevice implements ErrorCollector {
     if (metadata != null) {
       Class<?> target = Common.classForSchema(schemaName);
       Object obj = convertTo(target, message);
-      ifTrueThen(POINTSET_VALIDATIONS.contains(target),
-          () -> pointsetValidator.validateMessage(obj, attributes));
-      ifTrueThen(DISCOVERY_VALIDATIONS.contains(target),
-          () -> discoveryValidator.validateMessage(obj, attributes));
+      pointsetValidator.validateMessage(obj, attributes);
+      discoveryValidator.validateMessage(obj, attributes);
     }
   }
 
@@ -334,7 +328,7 @@ public class ReportingDevice implements ErrorCollector {
     if (messageEntries.size() == 1) {
       throw (RuntimeException) entryExceptions.get(messageEntries.get(0));
     }
-    List<Exception> exceptions = entries.stream().map(entry -> entryExceptions.get(entry)).toList();
+    List<Exception> exceptions = entries.stream().map(entryExceptions::get).toList();
     throw new ExceptionList(exceptions);
   }
 
