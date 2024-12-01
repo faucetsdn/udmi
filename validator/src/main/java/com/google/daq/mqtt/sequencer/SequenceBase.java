@@ -3,9 +3,9 @@ package com.google.daq.mqtt.sequencer;
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
-import static com.google.common.base.Predicates.in;
 import static com.google.common.base.Predicates.not;
 import static com.google.common.base.Strings.emptyToNull;
+import static com.google.daq.mqtt.sequencer.Feature.DEFAULT_STAGE;
 import static com.google.daq.mqtt.sequencer.semantic.SemanticValue.actualize;
 import static com.google.daq.mqtt.util.CloudIotManager.EMPTY_CONFIG;
 import static com.google.daq.mqtt.util.ConfigManager.configFrom;
@@ -725,13 +725,15 @@ public class SequenceBase {
   }
 
   private String getTestSummary(Description summary) {
-    Summary annotation = summary.getAnnotation(Summary.class);
-    return annotation == null ? null : annotation.value();
+    return ifNotNullGet(summary.getAnnotation(Summary.class), Summary::value);
+  }
+
+  private Level getDefaultLogLevel(Description summary) {
+    return ifNotNullGet(summary.getAnnotation(DefaultLogLevel.class), DefaultLogLevel::value);
   }
 
   private FeatureStage getTestStage(Description description) {
-    Feature annotation = description.getAnnotation(Feature.class);
-    return annotation == null ? Feature.DEFAULT_STAGE : annotation.stage();
+    return ifNotNullGet(description.getAnnotation(Feature.class), Feature::stage, DEFAULT_STAGE);
   }
 
   private void resetDeviceConfig(boolean clean) {
@@ -741,19 +743,13 @@ public class SequenceBase {
     deviceConfig = clean ? new Config() : configFrom(deviceMetadata).deviceConfig();
     deviceConfig.timestamp = null;
     sanitizeConfig(deviceConfig);
-    deviceConfig.system.min_loglevel = getStartingLogLevel();
+    deviceConfig.system.min_loglevel = ofNullable(getDefaultLogLevel(testDescription))
+        .map(Level::value).orElse(logLevel);
     Date resetDate = ofNullable(catchToNull(() -> deviceState.system.operation.last_start))
         .orElse(RESET_LAST_START);
     debug("Configuring device last_start to be " + isoConvert(resetDate));
     setLastStart(SemanticDate.describe("device reported", resetDate));
     setExtraField(null);
-  }
-
-  private int getStartingLogLevel() {
-    DefaultLogLevel defaultLogLevel = testDescription.getAnnotation(DefaultLogLevel.class);
-    Integer integer = ofNullable(defaultLogLevel).map(a -> a.value().value()).orElse(logLevel);
-    debug(format("TAP logLevel %s default %s is %s", defaultLogLevel, logLevel, integer));
-    return integer;
   }
 
   private Config sanitizeConfig(Config config) {
@@ -925,7 +921,7 @@ public class SequenceBase {
     Feature feature = description.getAnnotation(Feature.class);
     Map<Class<? extends Capability>, WithCapability> capabilities = getCapabilities(description);
     Bucket bucket = getBucket(feature);
-    final String stage = (feature == null ? Feature.DEFAULT_STAGE : feature.stage()).name();
+    final String stage = (feature == null ? DEFAULT_STAGE : feature.stage()).name();
     final int base = (feature == null ? Feature.DEFAULT_SCORE : feature.score());
 
     boolean isSkip = result == SKIP;
@@ -1006,7 +1002,7 @@ public class SequenceBase {
     String name = description.getMethodName();
     Feature feature = description.getAnnotation(Feature.class);
     String bucket = getBucket(feature).value();
-    String stage = (feature == null ? Feature.DEFAULT_STAGE : feature.stage()).name();
+    String stage = (feature == null ? DEFAULT_STAGE : feature.stage()).name();
     emitSchemaResult(schemaName, result, detail, name, bucket, stage);
 
     SchemaValidationState schema = validationState.schemas.computeIfAbsent(
