@@ -56,7 +56,7 @@
       "last_seen" : "1999-10-20T01:02:03Z",
       "status" : {
         "message" : "missing pointset subblock",
-        "detail" : "state_update: missing pointset subblock",
+        "detail" : "While validating pointset message at 1999-10-20T01:02:03Z",
         "category" : "validation.device.schema",
         "timestamp" : "1999-10-20T01:02:03Z",
         "level" : 500
