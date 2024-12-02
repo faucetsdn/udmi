@@ -1,5 +1,6 @@
 package com.google.udmi.util;
 
+import static com.google.udmi.util.GeneralUtils.ifTrueGet;
 import static com.google.udmi.util.GeneralUtils.stackTraceString;
 
 import com.google.common.base.Function;
@@ -15,6 +16,7 @@ import java.util.Set;
 import java.util.TreeSet;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
+import udmi.schema.State;
 
 /**
  * Collection of common constants and minor utilities.
@@ -184,5 +186,17 @@ public abstract class Common {
 
   public static String getNamespacePrefix(String udmiNamespace) {
     return Strings.isNullOrEmpty(udmiNamespace) ? "" : udmiNamespace + NAMESPACE_SEPARATOR;
+  }
+
+  public static Class<?> classForSchema(String schemaName) {
+    try {
+      String[] parts = schemaName.split("_");
+      String className = ifTrueGet(parts.length > 1, () -> capitalize(parts[1]), "")
+          + capitalize(parts[0]);
+      String fullName = State.class.getPackageName() + "." + className;
+      return Class.forName(fullName);
+    } catch (Exception e) {
+      throw new IllegalStateException("Could not find class for " + schemaName);
+    }
   }
 }

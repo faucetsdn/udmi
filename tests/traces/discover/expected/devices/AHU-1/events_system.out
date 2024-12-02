@@ -1,0 +1,13 @@
+{
+  "timestamp" : "1999-10-20T01:02:03Z",
+  "version" : "1.5.2",
+  "sub_folder" : "system",
+  "sub_type" : "events",
+  "status" : {
+    "message" : "Successful validation",
+    "category" : "validation.device.receive",
+    "timestamp" : "1999-10-20T01:02:03Z",
+    "level" : 200
+  },
+  "errors" : [ ]
+}

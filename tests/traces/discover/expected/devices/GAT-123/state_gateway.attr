@@ -1,0 +1,10 @@
+{
+  "deviceNumId" : "00000528111775",
+  "publishTime" : "1999-10-20T01:02:03Z",
+  "subFolder" : "gateway",
+  "deviceRegistryId" : "ZZ-TRI-FECTA",
+  "subType" : "state",
+  "msgSource" : "002_state_gateway.json",
+  "deviceId" : "GAT-123",
+  "projectId" : "playback-project"
+}

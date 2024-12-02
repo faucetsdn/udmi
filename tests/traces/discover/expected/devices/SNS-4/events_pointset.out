@@ -22,7 +22,7 @@
     "level" : 500
   }, {
     "message" : "Device has extra points: rocket_count, triangulating_axis_y",
-    "detail" : "While validating pointset message at 1999-10-20T01:02:03Z",
+    "detail" : "events_pointset: Device has extra points: rocket_count, triangulating_axis_y",
     "category" : "validation.device.schema",
     "timestamp" : "1999-10-20T01:02:03Z",
     "level" : 500
