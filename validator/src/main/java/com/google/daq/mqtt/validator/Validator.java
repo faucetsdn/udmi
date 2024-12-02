@@ -112,6 +112,7 @@ import org.apache.commons.io.FileUtils;
 import org.slf4j.impl.SimpleLogger;
 import udmi.schema.Category;
 import udmi.schema.DeviceValidationEvents;
+import udmi.schema.DiscoveryEvents;
 import udmi.schema.Envelope;
 import udmi.schema.Envelope.SubFolder;
 import udmi.schema.Envelope.SubType;
@@ -151,9 +152,6 @@ public class Validator {
   private static final String ENVELOPE_SCHEMA_ID = "envelope";
   private static final String DEVICE_REGISTRY_ID_KEY = "deviceRegistryId";
   private static final String UNKNOWN_FOLDER_DEFAULT = "unknown";
-  private static final String STATE_UPDATE_SCHEMA = "state";
-  private static final String EVENTS_POINTSET_SCHEMA = "events_pointset";
-  private static final String STATE_POINTSET_SCHEMA = "state_pointset";
   private static final String UNKNOWN_TYPE_DEFAULT = "events";
   private static final String CONFIG_CATEGORY = "config";
   private static final Set<String> INTERESTING_TYPES = ImmutableSet.of(
@@ -161,12 +159,8 @@ public class Validator {
       SubType.STATE.value());
   private static final Set<String> IGNORE_FOLDERS = ImmutableSet.of(
       SubFolder.ERROR.value());
-  private static final Map<String, Class<?>> CONTENT_VALIDATORS = ImmutableMap.of(
-      STATE_UPDATE_SCHEMA, State.class,
-      EVENTS_POINTSET_SCHEMA, PointsetEvents.class,
-      STATE_POINTSET_SCHEMA, PointsetState.class
-  );
-  private static final Set<SubType> LAST_SEEN_SUBTYPES = ImmutableSet.of(SubType.EVENTS,
+  private static final Set<SubType> LAST_SEEN_SUBTYPES = ImmutableSet.of(
+      SubType.EVENTS,
       SubType.STATE);
 
   @SuppressWarnings("checkstyle:linelength")
@@ -836,10 +830,7 @@ public class Validator {
       // No devices configured, so don't consider check metadata or consider extra.
     } else if (expectedDevices.contains(deviceId)) {
       try {
-        ifNotNullThen(CONTENT_VALIDATORS.get(schemaName), targetClass -> {
-          Object messageObject = OBJECT_MAPPER.convertValue(message, targetClass);
-          device.validateMessageType(messageObject, attributes);
-        });
+        device.validateRawMessage(schemaName, message, attributes);
       } catch (Exception e) {
         outputLogger.error("Error validating contents: " + friendlyStackTrace(e));
         device.addError(e, attributes, Category.VALIDATION_DEVICE_CONTENT);
