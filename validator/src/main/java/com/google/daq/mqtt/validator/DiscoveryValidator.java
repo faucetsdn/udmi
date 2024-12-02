@@ -1,5 +1,9 @@
 package com.google.daq.mqtt.validator;
 
+import static com.google.daq.mqtt.util.FamilyProvider.constructRef;
+import static udmi.lib.ProtocolFamily.BACNET;
+
+import com.google.daq.mqtt.util.FamilyProvider;
 import java.util.Map;
 import udmi.schema.DiscoveryEvents;
 import udmi.schema.DiscoveryState;
@@ -31,14 +35,16 @@ public class DiscoveryValidator {
     }
   }
 
-
   public void validateMessage(State stateMessage) {
   }
 
   public void validateMessage(DiscoveryEvents discoveryEvents) {
+    String scanFamily = discoveryEvents.scan_family;
+    FamilyProvider familyProvider = FamilyProvider.NAMED_FAMILIES.get(scanFamily);
+    discoveryEvents.refs.forEach((key, value)->
+        familyProvider.refValidator(constructRef(scanFamily, discoveryEvents.scan_addr, key)));
   }
 
   public void validateMessage(DiscoveryState discoveryState) {
   }
-
 }

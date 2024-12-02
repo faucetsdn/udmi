@@ -1,14 +1,16 @@
 package com.google.daq.mqtt.util;
 
 
+import static udmi.lib.ProtocolFamily.VENDOR;
+
 /**
  * No-validation family with no semantics, available for open use.
  */
-public class VendorFamily implements ProtocolFamily {
+public class VendorFamilyProvider implements FamilyProvider {
 
   @Override
   public String familyKey() {
-    return udmi.lib.ProtocolFamily.VENDOR;
+    return VENDOR;
   }
 
   @Override

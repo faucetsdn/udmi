@@ -493,6 +493,15 @@ public class GeneralUtils {
     return catchToElse(provider, (T) null);
   }
 
+  public static String catchToMessage(Runnable action) {
+    try {
+      action.run();
+      return null;
+    } catch (Exception e) {
+      return e.getMessage();
+    }
+  }
+
   public static String joinOrNull(String prefix, Set<Object> setDifference) {
     return ifTrueGet(setDifference == null || setDifference.isEmpty(), (String) null,
         () -> prefix + CSV_JOINER.join(setDifference));
@@ -684,4 +693,5 @@ public class GeneralUtils {
   public static byte[] getFileBytes(File dataFile) {
     return getFileBytes(dataFile.getPath());
   }
+
 }
