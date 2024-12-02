@@ -17,7 +17,6 @@ import static com.google.udmi.util.GeneralUtils.getFileBytes;
 import static com.google.udmi.util.GeneralUtils.ifNotNullGet;
 import static com.google.udmi.util.GeneralUtils.ifNotNullThen;
 import static com.google.udmi.util.GeneralUtils.ifNullThen;
-import static com.google.udmi.util.GeneralUtils.removeArg;
 import static com.google.udmi.util.GeneralUtils.removeStringArg;
 import static com.google.udmi.util.GeneralUtils.sha256;
 import static com.google.udmi.util.JsonUtil.asMap;
@@ -46,6 +45,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.Set;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
@@ -84,7 +84,7 @@ public class SiteModel {
   public static final String METADATA_DIR = "cloud_metadata";
   public static final String CLOUD_MODEL_FILE = "cloud_model.json";
   private static final String ID_FORMAT = "projects/%s/locations/%s/registries/%s/devices/%s";
-  private static final String KEY_SITE_PATH_FORMAT = "%s/devices/%s/%s_private.pkcs8";
+  private static final String KEY_SITE_PATH_FORMAT = "%s/devices/%s/%s%s_private.pkcs8";
   private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper()
       .enable(SerializationFeature.INDENT_OUTPUT)
       .setDateFormat(new ISO8601DateFormat())
@@ -107,6 +107,7 @@ public class SiteModel {
   private final Map<String, Object> siteDefaults;
   private final File siteConf;
   private final ExecutionConfiguration exeConfig;
+  private final List<String> KEY_SUFFIXES = ImmutableList.of("", "2", "3");
   private final Matcher specMatcher;
   private Map<String, Metadata> allMetadata;
   private Map<String, CloudModel> allDevices;
@@ -120,7 +121,8 @@ public class SiteModel {
     this(sitePath, null, config);
   }
 
-  public SiteModel(String specPath, Supplier<String> specSupplier, ExecutionConfiguration overrides) {
+  public SiteModel(String specPath, Supplier<String> specSupplier,
+      ExecutionConfiguration overrides) {
     File specFile = new File(requireNonNull(specPath, "site model not defined"));
     boolean specIsFile = specFile.isFile();
     siteConf = specIsFile ? specFile : cloudConfigPath(specFile);
@@ -327,20 +329,21 @@ public class SiteModel {
   }
 
 
-  public SiteMetadata loadSiteMetadata(){
+  public SiteMetadata loadSiteMetadata() {
     ObjectNode siteMetadataObject = null;
     File siteMetadataFile = new File(new File(sitePath), SITE_METADATA_FILE);
     siteMetadataExceptionMap = new ExceptionMap(SITE_METADATA_KEY);
     try {
-       siteMetadataObject = loadFileRequired(ObjectNode.class, siteMetadataFile);
-       return convertToStrict(SiteMetadata.class, siteMetadataObject);
+      siteMetadataObject = loadFileRequired(ObjectNode.class, siteMetadataFile);
+      return convertToStrict(SiteMetadata.class, siteMetadataObject);
     } catch (Exception e) {
       siteMetadataExceptionMap.put(SITE_METADATA_KEY, e);
       return convertTo(SiteMetadata.class, siteMetadataObject);
     }
   }
 
-  public Metadata loadDeviceMetadata(String deviceId, boolean safeLoading, boolean upgradeMetadata){
+  public Metadata loadDeviceMetadata(String deviceId, boolean safeLoading,
+      boolean upgradeMetadata) {
 
     try {
       File deviceDir = getDeviceDir(deviceId);
@@ -476,8 +479,14 @@ public class SiteModel {
   public String getDeviceKeyFile(String deviceId) {
     String gatewayId = findGateway(deviceId);
     String keyDevice = gatewayId != null ? gatewayId : deviceId;
-    return format(KEY_SITE_PATH_FORMAT, sitePath,
-        keyDevice, getDeviceKeyPrefix(keyDevice));
+    Optional<File> keyMatch = KEY_SUFFIXES.stream()
+        .map(suffix -> format(KEY_SITE_PATH_FORMAT, sitePath,
+            keyDevice, getDeviceKeyPrefix(keyDevice), suffix))
+        .map(File::new)
+        .filter(File::exists)
+        .findFirst();
+    return keyMatch.orElseThrow(() -> new IllegalStateException("No valid key file found"))
+        .getAbsolutePath();
   }
 
   private String findGateway(String deviceId) {
@@ -579,12 +588,7 @@ public class SiteModel {
   }
 
   public String getDevicePassword(String deviceId) {
-    String gatewayId = catchToNull(() -> getMetadata(deviceId).gateway.gateway_id);
-    String targetId = ofNullable(gatewayId).orElse(deviceId);
-    File rsaKeyFile = getDeviceFile(targetId, RSA_PRIVATE_KEY);
-    File ecKeyFile = getDeviceFile(targetId, EC_PRIVATE_KEY);
-    File keyFile = ecKeyFile.exists() ? ecKeyFile : rsaKeyFile;
-    return sha256(getFileBytes(keyFile)).substring(0, 8);
+    return sha256(getFileBytes(getDeviceKeyFile(deviceId))).substring(0, 8);
   }
 
   public String getSiteName() {
