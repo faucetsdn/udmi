@@ -25,11 +25,6 @@
     },
     "min_loglevel": 300
   },
-  "discovery": {
-    "families": {
-      "vendor": { }
-    }
-  },
   "localnet": {
     "families": {
       "ether": {
