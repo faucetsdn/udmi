@@ -3,8 +3,6 @@
 
 Check that the device correctly handles an extra out-of-schema field
 
-1. Update config before last_config not null
-    * Set `system.min_loglevel` = `100`
 1. Wait for last_config not null
 1. Wait for system operational
 1. Check that system status level is not >= `WARNING` (400)

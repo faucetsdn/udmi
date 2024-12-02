@@ -27,9 +27,10 @@ project_id=${project_id%/*}
 site_path=sites/udmi_site_model
 device_id=AHU-1 # Static device for testing. Needs to be different than other tests scripts so as not to conflict during CI.
 out_base=$site_path/devices/$device_id/out # For officially generated files (in repo)
+config_base=$site_path/devices/$device_id/config # For config specifications
 work_base=$site_path/out/devices/$device_id # For runtime out files (transitory)
 rm -rf $work_base $out_base
-mkdir -p $work_base $out_base
+mkdir -p $work_base $out_base $config_base
 
 serial_no=sequencer-$RANDOM
 log Using pubber with serial $serial_no
@@ -99,12 +100,14 @@ cat <<EOF > out/blobs.json
 EOF
 
 # Merge JSON files together into new redirect config
-jq -s '.[0] * .[1]' $out_base/generated_config.json out/blobs.json > $out_base/redirect_config.json
-jq '.system.operation.mode = "restart"' $out_base/redirect_config.json > $out_base/restart_config.json
+jq -s '.[0] * .[1]' $out_base/generated_config.json out/blobs.json > $config_base/redirect_config.json
+jq '.system.operation.mode = "restart"' $config_base/redirect_config.json > $config_base/restart_config.json
 
 log New redirection config:
 cat /tmp/${device_id}_config.json
 
+echo $config_base
+ls -l $config_base
 log bin/reset_config $site_path $project_spec $device_id redirect_config.json
 bin/reset_config $site_path $project_spec $device_id redirect_config.json
 
@@ -129,7 +132,7 @@ restarts=$(jq .restart_count $work_base/persistent_data.json)
 # Now test that pubber responds to an later last_start config (to trigger automatic shutdown)
 now_date=$(python3 -c 'import datetime; print(datetime.datetime.utcnow().isoformat() + "Z")')
 log Setting last_start time to $now_date for pubber shutdown...
-jq ".system.operation.last_start = \"$now_date\"" $out_base/redirect_config.json > $out_base/shutdown_config.json
+jq ".system.operation.last_start = \"$now_date\"" $config_base/redirect_config.json > $config_base/shutdown_config.json
 log bin/reset_config $site_path $project_spec $device_id shutdown_config.json
 bin/reset_config $site_path $project_spec $device_id shutdown_config.json
 

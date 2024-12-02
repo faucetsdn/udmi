@@ -20,6 +20,7 @@ import static udmi.schema.FeatureDiscovery.FeatureStage.ALPHA;
 import static udmi.schema.FeatureDiscovery.FeatureStage.STABLE;
 
 import com.google.daq.mqtt.sequencer.Capability;
+import com.google.daq.mqtt.sequencer.DefaultLogLevel;
 import com.google.daq.mqtt.sequencer.Feature;
 import com.google.daq.mqtt.sequencer.SequenceBase;
 import com.google.daq.mqtt.sequencer.Summary;
@@ -132,6 +133,7 @@ public class ConfigSequences extends SequenceBase {
   @WithCapability(value = Logging.class, stage = ALPHA)
   @Summary("Check that the device correctly handles a broken (non-json) config message.")
   @ValidateSchema(SubFolder.SYSTEM)
+  @DefaultLogLevel(Level.INFO)
   public void broken_config() {
     expectedStatusLevel(Level.ERROR);
 
@@ -179,8 +181,7 @@ public class ConfigSequences extends SequenceBase {
       checkWasNotLogged(SYSTEM_CONFIG_APPLY, SYSTEM_CONFIG_APPLY_LEVEL);
     });
 
-    // Will restore min_loglevel to the default of INFO.
-    resetConfig(); // clears extra_field and interesting status checks
+    resetConfig(); // clears extra_field and interesting status checks, restores logLevel
     recordSequence("(Log level is implicitly set to `INFO` through config reset)");
 
     // Revert override now that config has been reset so is not broken anymore.
