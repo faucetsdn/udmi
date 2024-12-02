@@ -1,0 +1,41 @@
+{
+  "timestamp": "2021-10-13T13:32:47Z",
+  "version": "1.5.1",
+  "upgraded_from": "1",
+  "hash": "6466ed06",
+  "system": {
+    "tags": [ ],
+    "location": {
+      "site": "TW-NTC-TPKD",
+      "section": "NTC-TPKD",
+      "position": {
+        "x": 0.0,
+        "y": 0.0
+      }
+    },
+    "physical_tag": {
+      "asset": {
+        "guid": "uuid://b4c1d209-d4ff-4966-a5c4-7a2c9c9da430",
+        "site": "TW-NTC-TPKD",
+        "name": "LTMTS-83"
+      }
+    },
+    "min_loglevel": 300
+  },
+  "gateway": {
+    "gateway_id": "LTGW-26",
+    "group_ids": [ ]
+  },
+  "pointset": {
+    "points": {
+      "lighting_percentage_sensor": {
+        "units": "Percent",
+        "tags": [ ]
+      },
+      "zone_occupancy_status": {
+        "units": "No-units",
+        "tags": [ ]
+      }
+    }
+  }
+}

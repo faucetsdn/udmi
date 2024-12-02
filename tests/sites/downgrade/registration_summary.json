@@ -1,16 +1,26 @@
 {
-  "Converting" : {
-    "DWN-2" : "REDACTED/sites/downgrade/devices/DWN-2/metadata.json"
+  "Clean" : {
+    "AHU-102" : "2024-06-11T08:31:26Z",
+    "SF-28" : "2021-02-25T09:56:39Z"
   },
   "Credential" : {
+    "CGW-1" : "While loading credentials for local device CGW-1",
+    "CGW-12" : "While loading credentials for local device CGW-12",
+    "DDC-54" : "While loading credentials for local device DDC-54",
     "DWN-1" : "While loading credentials for local device DWN-1",
-    "DWN-2" : "While loading credentials for local device DWN-2"
+    "DWN-3" : "While loading credentials for local device DWN-3"
   },
   "Files" : {
-    "DWN-1" : "devices/DWN-1",
-    "DWN-2" : "devices/DWN-2"
+    "CGW-1" : "expected files",
+    "CGW-12" : "expected files",
+    "DDC-54" : "expected files",
+    "DWN-1" : "expected files",
+    "DWN-3" : "expected files"
   },
-  "Version" : {
-    "main" : "1.4.1-38-g46f2b644b"
-  }
+  "Loading" : {
+    "DWN-2" : "While loading device metadata for DWN-2",
+    "DWN-4" : "While loading device metadata for DWN-4"
+  },
+  "site_metadata" : [ "Required file not found: /home/peringknife/udmi/tests/sites/downgrade/site_metadata.json" ],
+  udmi_version REDACTED
 }

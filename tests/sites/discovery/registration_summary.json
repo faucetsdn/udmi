@@ -1,0 +1,10 @@
+{
+  "Credential" : {
+    "GAT-123" : "While loading credentials for local device GAT-123"
+  },
+  "Files" : {
+    "GAT-123" : "expected files"
+  },
+  "site_metadata" : [ "Required file not found: /home/peringknife/udmi/tests/sites/discovery/site_metadata.json" ],
+  udmi_version REDACTED
+}
