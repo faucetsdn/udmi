@@ -5,6 +5,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
 import static com.google.common.base.Predicates.not;
 import static com.google.common.base.Strings.emptyToNull;
+import static com.google.daq.mqtt.sequencer.Feature.DEFAULT_STAGE;
 import static com.google.daq.mqtt.sequencer.semantic.SemanticValue.actualize;
 import static com.google.daq.mqtt.util.CloudIotManager.EMPTY_CONFIG;
 import static com.google.daq.mqtt.util.ConfigManager.configFrom;
@@ -48,6 +49,7 @@ import static java.util.Objects.requireNonNull;
 import static java.util.Optional.ofNullable;
 import static java.util.stream.Collectors.toSet;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assume.assumeTrue;
 import static udmi.schema.Bucket.SYSTEM;
@@ -79,6 +81,7 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.daq.mqtt.sequencer.semantic.SemanticDate;
 import com.google.daq.mqtt.sequencer.semantic.SemanticValue;
+import com.google.daq.mqtt.sequencer.sequences.BlobsetSequences;
 import com.google.daq.mqtt.util.MessagePublisher;
 import com.google.daq.mqtt.util.MessagePublisher.QuerySpeed;
 import com.google.daq.mqtt.util.ObjectDiffEngine;
@@ -343,6 +346,7 @@ public class SequenceBase {
     try {
       messageValidator = new Validator(exeConfig, SequenceBase::validatorLogger);
       siteModel = new SiteModel(checkNotNull(exeConfig.site_model, "site_model not defined"));
+      siteModel.initialize();
       projectId = checkNotNull(exeConfig.project_id, "project_id not defined");
       checkNotNull(exeConfig.udmi_version, "udmi_version not defined");
       logLevel = Level.valueOf(checkNotNull(exeConfig.log_level, "log_level not defined"))
@@ -672,7 +676,7 @@ public class SequenceBase {
     return new SimpleEntry<>(score, total);
   }
 
-  protected String getAlternateEndpointHostname() {
+  protected static String getAlternateEndpointHostname() {
     ifNullSkipTest(altClient, "No functional alternate registry defined");
     return altClient.getBridgeHost();
   }
@@ -721,13 +725,15 @@ public class SequenceBase {
   }
 
   private String getTestSummary(Description summary) {
-    Summary annotation = summary.getAnnotation(Summary.class);
-    return annotation == null ? null : annotation.value();
+    return ifNotNullGet(summary.getAnnotation(Summary.class), Summary::value);
+  }
+
+  private Level getDefaultLogLevel(Description summary) {
+    return ifNotNullGet(summary.getAnnotation(DefaultLogLevel.class), DefaultLogLevel::value);
   }
 
   private FeatureStage getTestStage(Description description) {
-    Feature annotation = description.getAnnotation(Feature.class);
-    return annotation == null ? Feature.DEFAULT_STAGE : annotation.stage();
+    return ifNotNullGet(description.getAnnotation(Feature.class), Feature::stage, DEFAULT_STAGE);
   }
 
   private void resetDeviceConfig(boolean clean) {
@@ -737,7 +743,8 @@ public class SequenceBase {
     deviceConfig = clean ? new Config() : configFrom(deviceMetadata).deviceConfig();
     deviceConfig.timestamp = null;
     sanitizeConfig(deviceConfig);
-    deviceConfig.system.min_loglevel = Level.INFO.value();
+    deviceConfig.system.min_loglevel = ofNullable(getDefaultLogLevel(testDescription))
+        .map(Level::value).orElse(logLevel);
     Date resetDate = ofNullable(catchToNull(() -> deviceState.system.operation.last_start))
         .orElse(RESET_LAST_START);
     debug("Configuring device last_start to be " + isoConvert(resetDate));
@@ -799,6 +806,10 @@ public class SequenceBase {
     recordSequence = false;
     maxAllowedStatusLevel = NOTICE.value();
 
+    resetDeviceConfig(true);
+
+    returnAltRegistryRedirect();
+
     resetConfig(resetRequired);
 
     updateConfig("initial setup");
@@ -823,6 +834,15 @@ public class SequenceBase {
     waitingConditionStart("executing test");
 
     debug(format("stage begin %s at %s", currentWaitingCondition(), timeSinceStart()));
+  }
+
+  private void returnAltRegistryRedirect() {
+    sanitizeConfig(deviceConfig);
+    ifNotNullThen(altClient, client -> withAlternateClient(() -> {
+      deviceConfig.blobset = BlobsetSequences.getEndpointReturnBlobset();
+      updateConfig("reset alternate registry", true, false);
+    }));
+    deviceConfig.blobset = null;
   }
 
   private boolean deviceSupportsState() {
@@ -901,7 +921,7 @@ public class SequenceBase {
     Feature feature = description.getAnnotation(Feature.class);
     Map<Class<? extends Capability>, WithCapability> capabilities = getCapabilities(description);
     Bucket bucket = getBucket(feature);
-    final String stage = (feature == null ? Feature.DEFAULT_STAGE : feature.stage()).name();
+    final String stage = (feature == null ? DEFAULT_STAGE : feature.stage()).name();
     final int base = (feature == null ? Feature.DEFAULT_SCORE : feature.score());
 
     boolean isSkip = result == SKIP;
@@ -982,7 +1002,7 @@ public class SequenceBase {
     String name = description.getMethodName();
     Feature feature = description.getAnnotation(Feature.class);
     String bucket = getBucket(feature).value();
-    String stage = (feature == null ? Feature.DEFAULT_STAGE : feature.stage()).name();
+    String stage = (feature == null ? DEFAULT_STAGE : feature.stage()).name();
     emitSchemaResult(schemaName, result, detail, name, bucket, stage);
 
     SchemaValidationState schema = validationState.schemas.computeIfAbsent(
@@ -1212,6 +1232,13 @@ public class SequenceBase {
     configAcked = false;
   }
 
+  private void waitForConfigIsNotPending() {
+    AtomicReference<String> detailer = new AtomicReference<>();
+    waitEvaluateLoop("pending config transaction", DEFAULT_WAIT_TIME,
+        () -> configTransactions.isEmpty() ? null : configTransactionsListString(), detailer);
+    assertNull("expected no pending transactions", detailer.get());
+  }
+
   private void assertConfigIsNotPending() {
     if (!configTransactions.isEmpty()) {
       throw new RuntimeException(
@@ -1224,6 +1251,11 @@ public class SequenceBase {
   }
 
   private void updateConfig(String reason, boolean force) {
+    updateConfig(reason, force, true);
+
+  }
+
+  private void updateConfig(String reason, boolean force, boolean waitForSync) {
     assertConfigIsNotPending();
 
     // Add a forced sleep to make sure second-quantized timestamps are unique.
@@ -1244,7 +1276,9 @@ public class SequenceBase {
       updateConfig(UPDATE, deviceConfig);
     }
 
-    if (configIsPending()) {
+    if (!waitForSync) {
+      waitForConfigIsNotPending();
+    } else if (configIsPending()) {
       configStateStart = catchToNull(() -> deviceState.timestamp);
       debug(format("Saving pre-config state timestamp " + isoConvert(configStateStart)));
       lastConfigUpdate = CleanDateFormat.clean(Instant.now());
@@ -1252,27 +1286,28 @@ public class SequenceBase {
       debug(format("Update lastConfigUpdate %s%s", lastConfigUpdate, debugReason));
       waitForConfigSync();
     }
+
     assertConfigIsNotPending();
+
     captureConfigChange(reason);
   }
 
   private boolean updateConfig(SubFolder subBlock, Object data) {
     try {
-      String messageData = stringify(data);
+      String actualizedData = actualize(stringify(data));
       String sentBlockConfig = String.valueOf(
           sentConfig.get(requireNonNull(subBlock, "subBlock not defined")));
-      boolean updated = !messageData.equals(sentBlockConfig);
+      boolean updated = !actualizedData.equals(sentBlockConfig);
       trace(format("updated check %s_%s: %s", CONFIG_SUBTYPE, subBlock, updated));
       if (updated) {
-        String augmentedMessage = actualize(stringify(data));
         String topic = subBlock + "/config";
         final String transactionId =
-            requireNonNull(reflector().publish(getDeviceId(), topic, augmentedMessage),
+            requireNonNull(reflector().publish(getDeviceId(), topic, actualizedData),
                 "no transactionId returned for publish");
         debug(format("update %s_%s, adding configTransaction %s",
             CONFIG_SUBTYPE, subBlock, transactionId));
         recordRawMessage(data, LOCAL_PREFIX + subBlock.value());
-        sentConfig.put(subBlock, messageData);
+        sentConfig.put(subBlock, actualizedData);
         configTransactions.add(transactionId);
       }
       return updated;
@@ -1440,13 +1475,7 @@ public class SequenceBase {
       whileDoing(sanitizedDescription, () -> {
         ifNotTrueThen(waitingForConfigSync.get(),
             () -> updateConfig("Before " + sanitizedDescription));
-        messageEvaluateLoop(maxWait, () -> {
-          String result = evaluator.get();
-          String previous = detail.getAndSet(emptyToNull(result));
-          ifTrueThen(!Objects.equals(previous, result),
-              () -> debug(format("Detail %s is now: %s", sanitizedDescription, result)));
-          return result != null;
-        });
+        waitEvaluateLoop(sanitizedDescription, maxWait, evaluator, detail);
         recordSequence("Wait until", description);
       }, detail::get);
     } catch (Exception e) {
@@ -1454,6 +1483,18 @@ public class SequenceBase {
       recordSequence(message);
       throw new RuntimeException(message);
     }
+  }
+
+  private void waitEvaluateLoop(String sanitizedDescription, Duration maxWait,
+      Supplier<String> evaluator,
+      AtomicReference<String> detail) {
+    messageEvaluateLoop(maxWait, () -> {
+      String result = evaluator.get();
+      String previous = detail.getAndSet(emptyToNull(result));
+      ifTrueThen(!Objects.equals(previous, result),
+          () -> debug(format("Detail %s is now: %s", sanitizedDescription, result)));
+      return result != null;
+    });
   }
 
   private String sanitizedDescription(String description) {
@@ -2183,7 +2224,7 @@ public class SequenceBase {
     } finally {
       useAlternateClient = false;
       warning("Done with alternate connection client!");
-      catchToNull(() -> deviceConfig.system.testing.endpoint_type = null);
+      deviceConfig.system.testing.endpoint_type = null;
     }
   }
 
@@ -2372,7 +2413,7 @@ public class SequenceBase {
     recordSequence("Force config update to " + reason);
   }
 
-  protected void skipTest(String reason) {
+  protected static void skipTest(String reason) {
     throw new AssumptionViolatedException(reason);
   }
 
@@ -2380,7 +2421,7 @@ public class SequenceBase {
     ifTrueThen(condition, () -> skipTest(reason));
   }
 
-  protected <T> T ifNullSkipTest(T testable, String reason) {
+  protected static <T> T ifNullSkipTest(T testable, String reason) {
     ifNullThen(testable, () -> skipTest(reason));
     return testable;
   }

@@ -1,21 +1,67 @@
 {
   "event_no" : 9,
-  "last_config" : "2024-11-06T17:35:31Z",
+  "last_config" : "2024-11-30T14:17:27Z",
   "logentries" : [ {
     "message" : "success",
     "category" : "system.config.apply",
-    "timestamp" : "2024-11-06T17:35:31Z",
+    "timestamp" : "2024-11-30T14:17:27Z",
     "level" : 300
   }, {
-    "message" : "Update state 2024-11-06T17:35:33Z last_config 2024-11-06T17:35:31Z",
+    "message" : "State update defer 1993ms",
     "category" : "device.log",
-    "timestamp" : "2024-11-06T17:35:33Z",
+    "timestamp" : "2024-11-30T14:17:27Z",
+    "level" : 100
+  }, {
+    "message" : "State update defer 1992ms",
+    "category" : "device.log",
+    "timestamp" : "2024-11-30T14:17:27Z",
+    "level" : 100
+  }, {
+    "message" : "State update defer 1992ms",
+    "category" : "device.log",
+    "timestamp" : "2024-11-30T14:17:27Z",
+    "level" : 100
+  }, {
+    "message" : "State update defer 1992ms",
+    "category" : "device.log",
+    "timestamp" : "2024-11-30T14:17:27Z",
+    "level" : 100
+  }, {
+    "message" : "State update defer 1992ms",
+    "category" : "device.log",
+    "timestamp" : "2024-11-30T14:17:27Z",
+    "level" : 100
+  }, {
+    "message" : "State update defer 1991ms",
+    "category" : "device.log",
+    "timestamp" : "2024-11-30T14:17:27Z",
+    "level" : 100
+  }, {
+    "message" : "State update defer 1991ms",
+    "category" : "device.log",
+    "timestamp" : "2024-11-30T14:17:27Z",
+    "level" : 100
+  }, {
+    "message" : "State update defer 0ms",
+    "category" : "device.log",
+    "timestamp" : "2024-11-30T14:17:29Z",
+    "level" : 100
+  }, {
+    "message" : "Update state 2024-11-30T14:17:29Z last_config 2024-11-30T14:17:27Z",
+    "category" : "device.log",
+    "timestamp" : "2024-11-30T14:17:29Z",
     "level" : 200
+  }, {
+    "message" : "State update AHU-1 (system_min_loglevel)",
+    "detail" : "{\n  \"timestamp\" : \"2024-11-30T14:17:29Z\",\n  \"version\" : \"1.5.2\",\n  \"system\" : {\n    \"last_config\" : \"2024-11-30T14:17:27Z\",\n    \"operation\" : {\n      \"operational\" : true,\n      \"last_start\" : \"2024-11-30T14:16:14Z\",\n      \"restart_count\" : 1,\n      \"mode\" : \"initial\"\n    },\n    \"serial_no\" : \"sequencer-6496\",\n    \"hardware\" : {\n      \"make\" : \"BOS\",\n      \"model\" : \"pubber\"\n    },\n    \"software\" : {\n      \"firmware\" : \"v1\"\n    },\n    \"status\" : {\n      \"message\" : \"success\",\n      \"category\" : \"system.config.apply\",\n      \"timestamp\" : \"2024-11-30T14:17:27Z\",\n      \"level\" : 300\n    }\n  },\n  \"localnet\" : {\n    \"families\" : {\n      \"ether\" : {\n        \"addr\" : \"00:22:48:0b:d0:ed\"\n      },\n      \"ipv4\" : {\n        \"addr\" : \"10.1.0.116\"\n      },\n      \"ipv6\" : {\n        \"addr\" : \"fe80::222:48ff:fe0b:d0ed\"\n      },\n      \"vendor\" : {\n        \"addr\" : \"28179023\"\n      }\n    }\n  },\n  \"pointset\" : {\n    \"points\" : {\n      \"filter_alarm_pressure_status\" : {\n        \"units\" : \"No-units\"\n      },\n      \"filter_differential_pressure_setpoint\" : {\n        \"units\" : \"Bars\",\n        \"value_state\" : \"applied\"\n      },\n      \"filter_differential_pressure_sensor\" : {\n        \"units\" : \"Degrees-Celsius\"\n      }\n    }\n  }\n}",
+    "category" : "device.log",
+    "timestamp" : "2024-11-30T14:17:29Z",
+    "level" : 100
   } ],
   "metrics" : {
     "mem_total_mb" : 254.0,
-    "mem_free_mb" : 213.79907989501953
+    "mem_free_mb" : 212.9624786376953
   },
-  "timestamp" : "2024-11-06T17:35:40Z",
+  "timestamp" : "2024-11-30T14:17:35Z",
   "version" : "1.5.2"
 }
