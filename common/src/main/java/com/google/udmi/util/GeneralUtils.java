@@ -8,7 +8,6 @@ import static com.google.udmi.util.ProperPrinter.OutputFormat.VERBOSE;
 import static java.lang.String.format;
 import static java.util.Optional.ofNullable;
 
-import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.core.JsonParser.Feature;

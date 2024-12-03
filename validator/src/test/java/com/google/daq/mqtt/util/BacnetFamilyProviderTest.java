@@ -2,17 +2,18 @@ package com.google.daq.mqtt.util;
 
 import static com.google.udmi.util.GeneralUtils.CSV_JOINER;
 import static com.google.udmi.util.GeneralUtils.catchToMessage;
-import static com.google.udmi.util.GeneralUtils.isNotEmpty;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 import com.google.common.collect.ImmutableSet;
 import com.google.udmi.util.GeneralUtils;
-import io.jsonwebtoken.lang.Assert;
 import java.util.List;
 import java.util.Set;
 import org.junit.Test;
 
+/**
+ * Basic tests for the bacnet family provider.
+ */
 public class BacnetFamilyProviderTest {
 
   public static final Set<String> GOOD_REFERENCES = ImmutableSet.of(
