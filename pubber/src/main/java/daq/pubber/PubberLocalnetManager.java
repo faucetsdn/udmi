@@ -26,7 +26,8 @@ public class PubberLocalnetManager extends PubberManager implements LocalnetMana
           ProtocolFamily.VENDOR, VendorProvider.class,
           ProtocolFamily.IPV_4, IpProvider.class,
           ProtocolFamily.IPV_6, IpProvider.class,
-          ProtocolFamily.ETHER, IpProvider.class);
+          ProtocolFamily.ETHER, IpProvider.class,
+          ProtocolFamily.BACNET, BacnetProvider.class);
 
   /**
    * Create a new container with the given host.
