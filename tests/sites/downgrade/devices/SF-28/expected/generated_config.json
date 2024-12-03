@@ -9,8 +9,9 @@
   "gateway": { },
   "localnet": {
     "families": {
-      "bacnet": {
-        "id": "1010060"
+      "bacnet": { },
+      "vendor": {
+        "id": "monkey"
       }
     }
   },

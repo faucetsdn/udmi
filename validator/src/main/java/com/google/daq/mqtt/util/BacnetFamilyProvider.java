@@ -21,13 +21,13 @@ public class BacnetFamilyProvider implements FamilyProvider {
   }
 
   @Override
-  public void refValidator(String metadataRef) {
-    requireNonNull(metadataRef, "missing required bacnet point ref");
-    Matcher matcher = BACNET_REF.matcher(metadataRef);
+  public void refValidator(String refValue) {
+    requireNonNull(refValue, "missing required bacnet point ref");
+    Matcher matcher = BACNET_REF.matcher(refValue);
     boolean matches = matcher.matches();
     if (!matches) {
       throw new RuntimeException(
-          format("protocol ref %s does not match expression %s", metadataRef, BACNET_REF));
+          format("protocol ref %s does not match expression %s", refValue, BACNET_REF));
     }
   }
 }
