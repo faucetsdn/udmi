@@ -1,0 +1,116 @@
+{
+    "timestamp": "2024-11-28T02:10:28Z",
+    "version": "1.5.1",
+    "generation": "2024-11-27T17:06:00Z",
+    "scan_family": "bacnet",
+    "scan_addr": "11286",
+    "event_no": 672,
+    "families": {
+      "ipv4": {
+        "addr": "100.95.214.111"
+      }
+    },
+    "refs": {
+      "BV:4000008": {
+        "name": "Point Count Exceeds Licenses Alarm",
+        "possible_values": [],
+        "type": "binaryValue",
+        "description": "Point count exceeds licenses.",
+        "ancillary": {
+          "present_value": "inactive"
+        }
+      },
+      "BV:4000007": {
+        "name": "BACnet/SC Certificate Expiration",
+        "possible_values": [],
+        "type": "binaryValue",
+        "description": "One or more BACnet/SC certificates are in danger of expiring or has expired",
+        "ancillary": {
+          "present_value": "inactive"
+        }
+      },
+      "BV:4000006": {
+        "name": "Excessive COV Alarm",
+        "possible_values": [],
+        "type": "binaryValue",
+        "description": "Excessive COV Subscription updates detected.",
+        "ancillary": {
+          "present_value": "inactive"
+        }
+      },
+      "BV:4000005": {
+        "name": "Program Stopped Alarm",
+        "possible_values": [],
+        "type": "binaryValue",
+        "description": "See modstat. Fix program/properties then download.",
+        "ancillary": {
+          "present_value": "inactive"
+        }
+      },
+      "BV:4000004": {
+        "name": "Control Program Alarm",
+        "possible_values": [],
+        "type": "binaryValue",
+        "description": "See modstat for details.",
+        "ancillary": {
+          "present_value": "inactive"
+        }
+      },
+      "BV:4000003": {
+        "name": "Locked I/O Alarm",
+        "possible_values": [],
+        "type": "binaryValue",
+        "description": "Points locked in program_x, where x=",
+        "ancillary": {
+          "present_value": "inactive"
+        }
+      },
+      "BV:4000002": {
+        "name": "Duplicate Address Alarm",
+        "possible_values": [],
+        "type": "binaryValue",
+        "description": "See modstat for duplicate address information.",
+        "ancillary": {
+          "present_value": "inactive"
+        }
+      },
+      "BV:4000000": {
+        "name": "Controller Halted Alarm",
+        "possible_values": [],
+        "type": "binaryValue",
+        "description": "See modstat. Restart controller, then download.",
+        "ancillary": {
+          "present_value": "inactive"
+        }
+      },
+      "BV:4001000": {
+        "name": "Dead Controller Timeout Alarm",
+        "possible_values": [],
+        "type": "binaryValue",
+        "description": "DEV:x (Device ID) is not responding, where x=",
+        "ancillary": {
+          "present_value": "inactive"
+        }
+      },
+      "BV:4000012": {
+        "name": "Port Authentication Certificate Expiration",
+        "possible_values": [],
+        "type": "binaryValue",
+        "description": "Port Authentication Certificate Expiration imminent. ",
+        "ancillary": {
+          "present_value": "inactive"
+        }
+      }
+    },
+    "system": {
+      "serial_no": "RT644009AQ",
+      "ancillary": {
+        "firmware": "108.04.20088",
+        "name": "device11286"
+      },
+      "hardware": {
+        "make": "Automated Logic Corporation",
+        "model": "G5CE"
+      }
+    }
+  }
