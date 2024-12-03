@@ -418,15 +418,21 @@ sites/udmi_site_model/out/devices/GAT-123/events_discovery.out
   "sub_folder" : "discovery",
   "sub_type" : "events",
   "status" : {
-    "message" : "1 schema violations found",
-    "detail" : "events_discovery: 1 schema violations found; object has missing required properties ([\"scan_family\"])",
-    "category" : "validation.device.schema",
+    "message" : "Multiple validation errors",
+    "detail" : "1 schema violations found; discovery scan_family not defined",
+    "category" : "validation.device.multiple",
     "timestamp" : "REDACTED_TIMESTAMP",
     "level" : 500
   },
   "errors" : [ {
     "message" : "1 schema violations found",
     "detail" : "events_discovery: 1 schema violations found; object has missing required properties ([\"scan_family\"])",
+    "category" : "validation.device.schema",
+    "timestamp" : "REDACTED_TIMESTAMP",
+    "level" : 500
+  }, {
+    "message" : "discovery scan_family not defined",
+    "detail" : "events_discovery: discovery scan_family not defined REDACTED_ERROR",
     "category" : "validation.device.schema",
     "timestamp" : "REDACTED_TIMESTAMP",
     "level" : 500
