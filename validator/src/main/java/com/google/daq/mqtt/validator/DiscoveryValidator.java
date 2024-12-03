@@ -41,8 +41,12 @@ public class DiscoveryValidator {
   public void validateMessage(DiscoveryEvents discoveryEvents) {
     String scanFamily = discoveryEvents.scan_family;
     FamilyProvider familyProvider = FamilyProvider.NAMED_FAMILIES.get(scanFamily);
-    discoveryEvents.refs.forEach((key, value) ->
-        familyProvider.refValidator(constructRef(scanFamily, discoveryEvents.scan_addr, key)));
+    if (discoveryEvents.refs == null) {
+      familyProvider.refValidator(constructRef(scanFamily, discoveryEvents.scan_addr, null));
+    } else {
+      discoveryEvents.refs.forEach((key, value) ->
+          familyProvider.refValidator(constructRef(scanFamily, discoveryEvents.scan_addr, key)));
+    }
   }
 
   public void validateMessage(DiscoveryState discoveryState) {
