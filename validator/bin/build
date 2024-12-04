@@ -21,6 +21,11 @@ cd $ROOT
 
 jarfile=build/libs/validator-1.0-SNAPSHOT-all.jar
 
+if [[ ! -d $UDMI_ROOT/gencode ]]; then
+    echo No gencode/ dir found, cowardly refusing to build.
+    exit 0
+fi
+
 newest=$(ls -rt `find src/ $UDMI_ROOT/gencode/java -type f` | tail -n 1)
 if [[ -z $check && -z $covg && -f $jarfile && $jarfile -nt $newest ]]; then
     echo $jarfile up-to-date, skipping build.

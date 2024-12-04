@@ -1,0 +1,56 @@
+{
+  "timestamp" : "1999-10-20T01:02:03Z",
+  "version" : "1.5.2",
+  "cloud_version" : {
+    "deployed_by" : "Default implementation for class com.google.daq.mqtt.validator.MessageReadingClient"
+  },
+  REDACTED,
+  "start_time" : "1999-10-20T01:02:03Z",
+  "summary" : {
+    "correct_devices" : [ "AHU-1" ],
+    "extra_devices" : [ ],
+    "missing_devices" : [ ],
+    "error_devices" : [ "AHU-22", "GAT-123", "SNS-4" ]
+  },
+  "devices" : {
+    "AHU-1" : {
+      "last_seen" : "1999-10-20T01:02:03Z",
+      "status" : {
+        "message" : "Successful validation",
+        "category" : "validation.device.receive",
+        "timestamp" : "1999-10-20T01:02:03Z",
+        "level" : 200
+      }
+    },
+    "AHU-22" : {
+      "last_seen" : "1999-10-20T01:02:03Z",
+      "status" : {
+        "message" : "2 schema violations found",
+        "detail" : "events_pointset: 2 schema violations found; object instance has properties which are not allowed by the schema: [\"yesvalue\"]; object has missing required properties ([\"version\"])",
+        "category" : "validation.device.schema",
+        "timestamp" : "1999-10-20T01:02:03Z",
+        "level" : 500
+      }
+    },
+    "GAT-123" : {
+      "last_seen" : "1999-10-20T01:02:03Z",
+      "status" : {
+        "message" : "missing pointset subblock",
+        "detail" : "state_update: missing pointset subblock",
+        "category" : "validation.device.schema",
+        "timestamp" : "1999-10-20T01:02:03Z",
+        "level" : 500
+      }
+    },
+    "SNS-4" : {
+      "last_seen" : "1999-10-20T01:02:03Z",
+      "status" : {
+        "message" : "Multiple validation errors",
+        "detail" : "1 schema violations found; Device has extra points: rocket_count, triangulating_axis_y; Unexpected character ('{' (code 123)): was expecting double-quote to start field name\n at [Source: (File), line: 1, column: 3]; 1 schema violations found",
+        "category" : "validation.device.multiple",
+        "timestamp" : "1999-10-20T01:02:03Z",
+        "level" : 500
+      }
+    }
+  }
+}

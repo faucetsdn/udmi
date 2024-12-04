@@ -1,0 +1,21 @@
+FROM validator:latest
+
+COPY etc/sshconfig .ssh/config
+COPY var/delta_controls .ssh/id_rsa
+COPY var/delta_controls.pub .ssh/id_rsa.pub
+
+RUN git clone ssh://peringknife@google.com@source.developers.google.com:2022/p/bos-platform-testing/r/UDMI-DELTACONTROLS
+
+RUN ln -s UDMI-DELTACONTROLS/udmi site_model
+
+WORKDIR site_model
+
+RUN git checkout main
+RUN git config --global user.email delta@udmi
+RUN git config --global user.name "Delta Test"
+
+WORKDIR /root
+
+ENTRYPOINT ["validator/bin/gitwrap"]
+
+CMD []

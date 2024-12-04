@@ -2,7 +2,6 @@ package udmi.lib.base;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
-import static com.google.udmi.util.Common.SEC_TO_MS;
 import static com.google.udmi.util.GeneralUtils.ifNotNullGet;
 import static com.google.udmi.util.GeneralUtils.ifTrueThen;
 import static com.google.udmi.util.GeneralUtils.isTrue;
@@ -203,7 +202,11 @@ public class MqttPublisher implements Publisher {
       String payload = getMessagePayload(data);
       String sendTopic = getSendTopic(deviceId, getMessageTopic(topicSuffix, data));
       debug("Sending message to " + sendTopic);
-      sendMessage(deviceId, sendTopic, payload.getBytes());
+      if (!sendMessage(deviceId, sendTopic, payload.getBytes())) {
+        debug("Queue message for retry");
+        publisherExecutor.submit(() -> publishCore(deviceId, topicSuffix, data, callback));
+        return;
+      }
       if (callback != null) {
         callback.run();
       }
@@ -313,7 +316,6 @@ public class MqttPublisher implements Publisher {
       mqttClient.setTimeToWait(ATTACH_DELAY_MS);
       mqttClientPublish(mqttClient, topic, mqttMessage);
       subscribeToUpdates(mqttClient, deviceId);
-      mqttClient.setTimeToWait(timeToWait);
       return mqttClient;
     } catch (Exception e) {
       throw new RuntimeException("While binding client " + deviceId, e);
@@ -379,7 +381,6 @@ public class MqttPublisher implements Publisher {
 
       info("Attempting connection to " + getClientId(deviceId));
       mqttClient.connect(options);
-
       subscribeToUpdates(mqttClient, deviceId);
       return mqttClient;
     } catch (Exception e) {
@@ -548,23 +549,24 @@ public class MqttPublisher implements Publisher {
     LOG.debug(message);
   }
 
-  private void sendMessage(String deviceId, String mqttTopic,
+  private boolean sendMessage(String deviceId, String mqttTopic,
       byte[] mqttMessage) throws Exception {
     MqttClient connectedClient = getActiveClient(deviceId);
+    if (connectedClient == null) {
+      return false;
+    }
     mqttClientPublish(connectedClient, mqttTopic, mqttMessage);
     publishCounter.incrementAndGet();
+    return true;
   }
 
   private MqttClient getActiveClient(String targetId) {
-    while (true) {
-      checkAuthentication(targetId);
-      MqttClient connectedClient = getConnectedClient(targetId, false);
-      if (connectedClient != null && connectedClient.isConnected()) {
-        return connectedClient;
-      }
-      info(format("Client %s not active, deferring message...", targetId));
-      safeSleep(DEFAULT_CONFIG_WAIT_SEC * SEC_TO_MS);
+    checkAuthentication(targetId);
+    MqttClient connectedClient = getConnectedClient(targetId, false);
+    if (connectedClient != null && connectedClient.isConnected()) {
+      return connectedClient;
     }
+    return null;
   }
 
   private void safeSleep(long timeoutMs) {

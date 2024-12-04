@@ -265,7 +265,7 @@ sites/udmi_site_model/out/devices/AHU-22/events_pointset.out
   "sub_type" : "events",
   "status" : {
     "message" : "Device has extra points: llama",
-    "detail" : "events_pointset: Device has extra points: llama",
+    "detail" : "While validating pointset message at REDACTED_TIMESTAMP",
     "category" : "validation.device.schema",
     "timestamp" : "REDACTED_TIMESTAMP",
     "level" : 500
@@ -276,7 +276,7 @@ sites/udmi_site_model/out/devices/AHU-22/events_pointset.out
   },
   "errors" : [ {
     "message" : "Device has extra points: llama",
-    "detail" : "events_pointset: Device has extra points: llama",
+    "detail" : "While validating pointset message at REDACTED_TIMESTAMP",
     "category" : "validation.device.schema",
     "timestamp" : "REDACTED_TIMESTAMP",
     "level" : 500
@@ -339,12 +339,19 @@ sites/udmi_site_model/out/devices/AHU-22/state.out
   "sub_folder" : "update",
   "sub_type" : "state",
   "status" : {
-    "message" : "Successful validation",
-    "category" : "validation.device.receive",
+    "message" : "missing pointset subblock",
+    "detail" : "While validating pointset message at REDACTED_TIMESTAMP",
+    "category" : "validation.device.schema",
     "timestamp" : "REDACTED_TIMESTAMP",
-    "level" : 200
+    "level" : 500
   },
-  "errors" : [ ]
+  "errors" : [ {
+    "message" : "missing pointset subblock",
+    "detail" : "While validating pointset message at REDACTED_TIMESTAMP",
+    "category" : "validation.device.schema",
+    "timestamp" : "REDACTED_TIMESTAMP",
+    "level" : 500
+  } ]
 }
 ::::::::::::::
 sites/udmi_site_model/out/devices/AHU-22/state_pointset.out
@@ -504,15 +511,21 @@ sites/udmi_site_model/out/devices/GAT-123/events_invalid.out
   "sub_folder" : "invalid",
   "sub_type" : "events",
   "status" : {
-    "message" : "Unknown schema subFolder 'events_invalid' for GAT-123",
-    "detail" : "events_invalid: Unknown schema subFolder 'events_invalid' for GAT-123 REDACTED_ERROR",
-    "category" : "validation.device.schema",
+    "message" : "Multiple validation errors",
+    "detail" : "Unknown schema subFolder 'events_invalid' for GAT-123; Could not find class for events_invalid",
+    "category" : "validation.device.multiple",
     "timestamp" : "REDACTED_TIMESTAMP",
     "level" : 500
   },
   "errors" : [ {
     "message" : "Unknown schema subFolder 'events_invalid' for GAT-123",
     "detail" : "events_invalid: Unknown schema subFolder 'events_invalid' for GAT-123 REDACTED_ERROR",
+    "category" : "validation.device.schema",
+    "timestamp" : "REDACTED_TIMESTAMP",
+    "level" : 500
+  }, {
+    "message" : "Could not find class for events_invalid",
+    "detail" : "events_invalid: Could not find class for events_invalid REDACTED_ERROR",
     "category" : "validation.device.schema",
     "timestamp" : "REDACTED_TIMESTAMP",
     "level" : 500
@@ -551,7 +564,7 @@ sites/udmi_site_model/out/devices/GAT-123/events_pointset.out
   "sub_type" : "events",
   "status" : {
     "message" : "Device has extra points: llama",
-    "detail" : "events_pointset: Device has extra points: llama",
+    "detail" : "While validating pointset message at REDACTED_TIMESTAMP",
     "category" : "validation.device.schema",
     "timestamp" : "REDACTED_TIMESTAMP",
     "level" : 500
@@ -562,7 +575,7 @@ sites/udmi_site_model/out/devices/GAT-123/events_pointset.out
   },
   "errors" : [ {
     "message" : "Device has extra points: llama",
-    "detail" : "events_pointset: Device has extra points: llama",
+    "detail" : "While validating pointset message at REDACTED_TIMESTAMP",
     "category" : "validation.device.schema",
     "timestamp" : "REDACTED_TIMESTAMP",
     "level" : 500
@@ -721,13 +734,13 @@ sites/udmi_site_model/out/devices/SNS-4/events_pointset.out
   },
   "errors" : [ {
     "message" : "Device has missing points: split_threshold, triangulating_axis",
-    "detail" : "events_pointset: Device has missing points: split_threshold, triangulating_axis",
+    "detail" : "While validating pointset message at REDACTED_TIMESTAMP",
     "category" : "validation.device.schema",
     "timestamp" : "REDACTED_TIMESTAMP",
     "level" : 500
   }, {
     "message" : "Device has extra points: llama",
-    "detail" : "events_pointset: Device has extra points: llama",
+    "detail" : "While validating pointset message at REDACTED_TIMESTAMP",
     "category" : "validation.device.schema",
     "timestamp" : "REDACTED_TIMESTAMP",
     "level" : 500
@@ -774,15 +787,15 @@ sites/udmi_site_model/out/devices/SNS-4/state.out
   "sub_folder" : "update",
   "sub_type" : "state",
   "status" : {
-    "message" : "Device has missing points: split_threshold, triangulating_axis",
-    "detail" : "state_update: Device has missing points: split_threshold, triangulating_axis",
+    "message" : "missing pointset subblock",
+    "detail" : "While validating pointset message at REDACTED_TIMESTAMP",
     "category" : "validation.device.schema",
     "timestamp" : "REDACTED_TIMESTAMP",
     "level" : 500
   },
   "errors" : [ {
-    "message" : "Device has missing points: split_threshold, triangulating_axis",
-    "detail" : "state_update: Device has missing points: split_threshold, triangulating_axis",
+    "message" : "missing pointset subblock",
+    "detail" : "While validating pointset message at REDACTED_TIMESTAMP",
     "category" : "validation.device.schema",
     "timestamp" : "REDACTED_TIMESTAMP",
     "level" : 500
@@ -798,7 +811,7 @@ sites/udmi_site_model/out/devices/SNS-4/state_pointset.out
   "sub_type" : "state",
   "status" : {
     "message" : "Device has missing points: split_threshold, triangulating_axis",
-    "detail" : "state_pointset: Device has missing points: split_threshold, triangulating_axis",
+    "detail" : "While validating pointset message at REDACTED_TIMESTAMP",
     "category" : "validation.device.schema",
     "timestamp" : "REDACTED_TIMESTAMP",
     "level" : 500
@@ -809,7 +822,7 @@ sites/udmi_site_model/out/devices/SNS-4/state_pointset.out
   },
   "errors" : [ {
     "message" : "Device has missing points: split_threshold, triangulating_axis",
-    "detail" : "state_pointset: Device has missing points: split_threshold, triangulating_axis",
+    "detail" : "While validating pointset message at REDACTED_TIMESTAMP",
     "category" : "validation.device.schema",
     "timestamp" : "REDACTED_TIMESTAMP",
     "level" : 500

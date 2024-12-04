@@ -4,12 +4,11 @@ import static java.lang.String.format;
 import static java.util.Objects.requireNonNull;
 
 import java.util.regex.Pattern;
-import udmi.lib.ProtocolFamily;
 
 /**
  * General family of bacnet addresses.
  */
-public class BacnetFamily implements NetworkFamily {
+public class BacnetFamily implements ProtocolFamily {
 
   // TODO: Make something that validates a bacnet addr against a decimal integer.
 
@@ -18,7 +17,7 @@ public class BacnetFamily implements NetworkFamily {
 
   @Override
   public String familyKey() {
-    return ProtocolFamily.BACNET;
+    return udmi.lib.ProtocolFamily.BACNET;
   }
 
   @Override

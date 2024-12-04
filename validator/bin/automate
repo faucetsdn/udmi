@@ -3,13 +3,15 @@
 # Automation of tools using PubSub triggers.
 #
 
+export PS4='+(${BASH_SOURCE}:${LINENO}): ${FUNCNAME[0]:+${FUNCNAME[0]}(): }'
+
 [[ -n $UDMI_NAMESPACE ]] && UDMI_PREFIX="${UDMI_NAMESPACE}~"
 
 PUBSUB_FILE=pubsub.json
 MESSAGE_FILE=message.json
 RETRY_DELAY_SEC=60
-CLONE_DIR=source_model/
-MODEL_SUBDIR=udmi/
+CLONE_DIR=source_model
+MODEL_SUBDIR=udmi
 CONFIG_FILE=registrar_config.json
 REGISTRAR_TRIGGER=run-registrar
 
@@ -26,7 +28,7 @@ gcloud config set account $GCP_SERVICE_ACCOUNT
 # Create an as-needed subscription for this pod, and then garbage collect to clean them up (eventually).
 host_suffix=${HOSTNAME##*-}
 udmi_topic=${UDMI_PREFIX}udmi_reply
-udmi_feed=${udmi_topic}-${host_suffix}
+udmi_feed=${udmi_topic}+${host_suffix}
 
 echo Checking existing subscriptions...
 gcloud pubsub subscriptions list | fgrep name: || true
@@ -112,21 +114,7 @@ while true; do
         continue
     fi
 
-    cat <<EOF > $CONFIG_FILE
-{
-  "iot_provider": "pubsub",
-  "project_id": "$GCP_PROJECT",
-  "udmi_namespace": "$UDMI_NAMESPACE",
-  "bridge_host": "${host_suffix}",
-  "site_model": "$MODEL_DIR"
-}
-EOF
-    echo Registrar config $CONFIG_FILE:
-    cat $CONFIG_FILE
-    echo
-
-    echo validator/bin/registrar $CONFIG_FILE
-    validator/bin/registrar $CONFIG_FILE || true
+    bin/registrar $MODEL_DIR //gref/$GCP_PROJECT+$host_suffix  || true
 
     cp $SUMMARY_FILE $HISTORY_FILE
 

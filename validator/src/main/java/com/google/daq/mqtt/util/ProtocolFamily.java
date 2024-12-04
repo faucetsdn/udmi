@@ -8,32 +8,32 @@ import java.util.stream.Collectors;
 /**
  * Abstract collection of stuff for managing vendor families.
  */
-public interface NetworkFamily {
+public interface ProtocolFamily {
 
   /**
-   * Set of all the supported network families.
+   * Set of all the supported protocol families.
    */
-  Set<Class<? extends NetworkFamily>> NETWORK_FAMILIES = ImmutableSet.of(
+  Set<Class<? extends ProtocolFamily>> PROTOCOL_FAMILIES = ImmutableSet.of(
       VendorFamily.class,
       BacnetFamily.class);
 
   /**
    * Map of family name to instance.
    */
-  Map<String, NetworkFamily> NAMED_FAMILIES = generateFamilyMap(NETWORK_FAMILIES);
+  Map<String, ProtocolFamily> NAMED_FAMILIES = generateFamilyMap(PROTOCOL_FAMILIES);
 
   /**
    * Generate a named map from the listed families.
    */
-  static Map<String, NetworkFamily> generateFamilyMap(
-      Set<Class<? extends NetworkFamily>> networkFamilies) {
-    return networkFamilies.stream().map(clazz -> {
+  static Map<String, ProtocolFamily> generateFamilyMap(
+      Set<Class<? extends ProtocolFamily>> protocolFamilies) {
+    return protocolFamilies.stream().map(clazz -> {
       try {
         return clazz.getDeclaredConstructor().newInstance();
       } catch (Exception e) {
-        throw new RuntimeException("While creating network family map", e);
+        throw new RuntimeException("While creating protocol family map", e);
       }
-    }).collect(Collectors.toMap(NetworkFamily::familyKey, family -> family));
+    }).collect(Collectors.toMap(ProtocolFamily::familyKey, family -> family));
   }
 
   /**

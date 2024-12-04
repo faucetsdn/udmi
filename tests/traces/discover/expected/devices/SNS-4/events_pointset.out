@@ -1,0 +1,30 @@
+{
+  "timestamp" : "1999-10-20T01:02:03Z",
+  "version" : "1.5.2",
+  "sub_folder" : "pointset",
+  "sub_type" : "events",
+  "status" : {
+    "message" : "Multiple validation errors",
+    "detail" : "1 schema violations found; Device has extra points: rocket_count, triangulating_axis_y",
+    "category" : "validation.device.multiple",
+    "timestamp" : "1999-10-20T01:02:03Z",
+    "level" : 500
+  },
+  "pointset" : {
+    "missing" : [ ],
+    "extra" : [ "rocket_count", "triangulating_axis_y" ]
+  },
+  "errors" : [ {
+    "message" : "1 schema violations found",
+    "detail" : "events_pointset: 1 schema violations found; object instance has properties which are not allowed by the schema: [\"monkey\"]",
+    "category" : "validation.device.schema",
+    "timestamp" : "1999-10-20T01:02:03Z",
+    "level" : 500
+  }, {
+    "message" : "Device has extra points: rocket_count, triangulating_axis_y",
+    "detail" : "events_pointset: Device has extra points: rocket_count, triangulating_axis_y",
+    "category" : "validation.device.schema",
+    "timestamp" : "1999-10-20T01:02:03Z",
+    "level" : 500
+  } ]
+}

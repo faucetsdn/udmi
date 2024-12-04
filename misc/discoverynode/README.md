@@ -2,11 +2,53 @@
 
 ## Notes
 
-`vendor` discovery family is a counter which increments every second
+`vendor` discovery family is actually sequential number generator at one second increments.
 
-## Standalone
+## Running
 
-**TODO** - Create `bin/setup` script
+**NOTE** Below commands are run from within the `discoverynode` directory
+
+1. Setup
+
+```
+bin/setup
+```
+
+2. Run 
+
+```
+bin/run SITE_MODEL TARGET DEVICE_ID
+```
+
+- SITE_MODEL - Path to site model
+- TARGET - e.g. `//mqtt/localhost` or `//gbos/bos-platform-testing`
+- DEVICE_ID - device ID from site model
+
+3. (Optional) Running with UDMIS Locally
+
+**NOTE** This can be destructive to the site model, and file permissions may change
+```
+bin/container build 
+IMAGE_TAG=udmis:latest udmis/bin/actualize ../sites/udmi_site_model
+sudo bin/keygen CERT sites/udmi_site_model/devices/AHU-1
+bin/registrar sites/udmi_site_model //mqtt/localhost
+```
+
+### Troubleshooting
+
+
+#### `ssl.SSLError: [SSL] PEM lib (_ssl.c:3874)` 
+
+The device certificate was not signed by the CA certificate. This occurs if UDMIS is restarted without regenerating certificates,
+because the UDMIS script (bin/setup_ca) recreates the CA certificate.
+
+To fix, run `sudo bin/keygen CERT sites/udmi_site_model/devices/GAT-1`
+
+Run the script as root
+
+## Standalone (advanced)
+
+
 
 1.  Setup a python virtual environment and install the required dependencies
 
@@ -125,3 +167,5 @@ TODO
 
 - Unit tests - `~/venv/bin/python3 -m pytest tests/`
 - Integration tests - TODO
+
+##

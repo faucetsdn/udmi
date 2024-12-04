@@ -1,0 +1,20 @@
+{
+  "timestamp" : "1999-10-20T01:02:03Z",
+  "version" : "1.5.2",
+  "sub_folder" : "discovery",
+  "sub_type" : "events",
+  "status" : {
+    "message" : "Unexpected character ('{' (code 123)): was expecting double-quote to start field name\n at [Source: (File); line: 1, column: 3]",
+    "detail" : "events_discovery: Unexpected character ('{' (code 123)): was expecting double-quote to start field name\tREDACTED\n",
+    "category" : "validation.device.schema",
+    "timestamp" : "1999-10-20T01:02:03Z",
+    "level" : 500
+  },
+  "errors" : [ {
+    "message" : "Unexpected character ('{' (code 123)): was expecting double-quote to start field name\n at [Source: (File); line: 1, column: 3]",
+    "detail" : "events_discovery: Unexpected character ('{' (code 123)): was expecting double-quote to start field name\tREDACTED\n",
+    "category" : "validation.device.schema",
+    "timestamp" : "1999-10-20T01:02:03Z",
+    "level" : 500
+  } ]
+}
