@@ -40,7 +40,6 @@
   "pointset": {
     "points": {
       "return_air_temperature_sensor": {
-        "ref": "AV-1",
         "units": "Degrees-Celsius",
         "baseline_value": 20,
         "baseline_tolerance": 2,
@@ -60,6 +59,7 @@
       "scan_addr": "1076",
       "refs": {
         "AV-1": {
+          "point": "return_air_temperature_sensor",
           "name": "Temperature Sensor 123",
           "description": "My very special temperature sensor",
           "units": "Degrees-Celsius"
