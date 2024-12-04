@@ -189,7 +189,7 @@ public class SequenceBase {
   private static final String ALL_CHANGES = "";
   private static final int SEQUENCER_FUNCTIONS_VERSION = Validator.TOOLS_FUNCTIONS_VERSION;
   private static final int SEQUENCER_FUNCTIONS_ALPHA = SEQUENCER_FUNCTIONS_VERSION;
-  private static final Duration CONFIG_BARRIER = Duration.ofSeconds(1);
+  private static final Duration CONFIG_BARRIER = Duration.ofSeconds(5);
   private static final String START_END_MARKER = "################################";
   private static final String RESULT_FORMAT = "RESULT %s %s %s %s %s/%s %s";
   private static final String CAPABILITY_FORMAT = "CPBLTY %s %s %s %s %s/%s %s";
@@ -1260,29 +1260,18 @@ public class SequenceBase {
     assertConfigIsNotPending();
 
     if (doPartialUpdates && !force) {
-      updateConfig(SubFolder.SYSTEM, augmentConfig(deviceConfig.system));
-      updateConfig(SubFolder.POINTSET, deviceConfig.pointset);
-      updateConfig(SubFolder.GATEWAY, deviceConfig.gateway);
-      updateConfig(SubFolder.LOCALNET, deviceConfig.localnet);
-      updateConfig(SubFolder.BLOBSET, deviceConfig.blobset);
-      updateConfig(SubFolder.DISCOVERY, deviceConfig.discovery);
+      updateConfig(reason, waitForSync, SubFolder.SYSTEM, augmentConfig(deviceConfig.system));
+      updateConfig(reason, waitForSync, SubFolder.POINTSET, deviceConfig.pointset);
+      updateConfig(reason, waitForSync, SubFolder.GATEWAY, deviceConfig.gateway);
+      updateConfig(reason, waitForSync, SubFolder.LOCALNET, deviceConfig.localnet);
+      updateConfig(reason, waitForSync, SubFolder.BLOBSET, deviceConfig.blobset);
+      updateConfig(reason, waitForSync, SubFolder.DISCOVERY, deviceConfig.discovery);
     } else {
       if (force) {
         debug("Forcing config update");
         sentConfig.remove(UPDATE);
       }
-      updateConfig(UPDATE, deviceConfig);
-    }
-
-    if (!waitForSync) {
-      waitForConfigIsNotPending();
-    } else if (configIsPending()) {
-      configStateStart = catchToNull(() -> deviceState.timestamp);
-      debug(format("Saving pre-config state timestamp " + isoConvert(configStateStart)));
-      lastConfigUpdate = CleanDateFormat.clean(Instant.now());
-      String debugReason = reason == null ? "" : (", because " + reason);
-      debug(format("Update lastConfigUpdate %s%s", lastConfigUpdate, debugReason));
-      waitForConfigSync();
+      updateConfig(reason, waitForSync, UPDATE, deviceConfig);
     }
 
     assertConfigIsNotPending();
@@ -1290,17 +1279,8 @@ public class SequenceBase {
     captureConfigChange(reason);
   }
 
-  private void rateLimitConfig() {
-    // Add a forced sleep to make sure configs aren't sent too quickly
-    long delayMs = CONFIG_BARRIER.toMillis() - between(lastConfigMark, getNowInstant()).toMillis();
-    ifTrueThen(delayMs > 0, () -> {
-      debug(format("Rate-limiting config by %dms", delayMs));
-      safeSleep(delayMs);
-    });
-    lastConfigMark = getNowInstant();
-  }
-
-  private boolean updateConfig(SubFolder subBlock, Object data) {
+  private boolean updateConfig(String reason, boolean waitForSync, SubFolder subBlock,
+      Object data) {
     try {
       String actualizedData = actualize(stringify(data));
       String sentBlockConfig = String.valueOf(
@@ -1318,11 +1298,35 @@ public class SequenceBase {
         recordRawMessage(data, LOCAL_PREFIX + subBlock.value());
         sentConfig.put(subBlock, actualizedData);
         configTransactions.add(transactionId);
+        waitForUpdateConfigSync(reason, waitForSync);
       }
       return updated;
     } catch (Exception e) {
       throw new RuntimeException("While updating config block " + subBlock, e);
     }
+  }
+
+  private void waitForUpdateConfigSync(String reason, boolean waitForSync) {
+    if (!waitForSync) {
+      waitForConfigIsNotPending();
+    } else if (configIsPending()) {
+      configStateStart = catchToNull(() -> deviceState.timestamp);
+      debug(format("Saving pre-config state timestamp " + isoConvert(configStateStart)));
+      lastConfigUpdate = CleanDateFormat.clean(Instant.now());
+      String debugReason = reason == null ? "" : (", because " + reason);
+      debug(format("Update lastConfigUpdate %s%s", lastConfigUpdate, debugReason));
+      waitForConfigSync();
+    }
+  }
+
+  private void rateLimitConfig() {
+    // Add a forced sleep to make sure configs aren't sent too quickly
+    long delayMs = CONFIG_BARRIER.toMillis() - between(lastConfigMark, getNowInstant()).toMillis();
+    ifTrueThen(delayMs > 0, () -> {
+      debug(format("Rate-limiting config by %dms", delayMs));
+      safeSleep(delayMs);
+    });
+    lastConfigMark = getNowInstant();
   }
 
   protected void updateProxyConfig(String proxyId, Config proxyConfig) {
