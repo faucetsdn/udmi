@@ -2,7 +2,8 @@
   "version": "1.5.2",
   "timestamp": "2018-08-26T21:39:29.364Z",
   "system": {
-    "description": "Generic test example metadata file",
+    "name": "Llama Slide #3",
+    "description": "Generic test example metadata device",
     "tags": ["energy", "lighting", "building"],
     "location": {
       "site": "US-SFO-XYY",
@@ -49,6 +50,16 @@
         "units": "Degrees-Celsius",
         "baseline_value": 20,
         "baseline_state": "applied"
+      }
+    }
+  },
+  "families": {
+    "bacnet": {
+      "timestamp": "2018-08-24T21:39:29.364Z",
+      "scan_addr": "1076",
+      "system": {
+        "name": "Air Handling Unit A1",
+        "description": "The very special AHU that I’ve just made up"
       }
     }
   },

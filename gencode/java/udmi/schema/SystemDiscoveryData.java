@@ -16,12 +16,28 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
+    "description",
+    "name",
     "serial_no",
     "ancillary",
     "hardware"
 })
 public class SystemDiscoveryData {
 
+    /**
+     * Full textual desctiiption of this device
+     * 
+     */
+    @JsonProperty("description")
+    @JsonPropertyDescription("Full textual desctiiption of this device")
+    public java.lang.String description;
+    /**
+     * Friendly name of this device
+     * 
+     */
+    @JsonProperty("name")
+    @JsonPropertyDescription("Friendly name of this device")
+    public java.lang.String name;
     /**
      * The serial number of the physical device
      * 
@@ -51,6 +67,8 @@ public class SystemDiscoveryData {
     @Override
     public int hashCode() {
         int result = 1;
+        result = ((result* 31)+((this.name == null)? 0 :this.name.hashCode()));
+        result = ((result* 31)+((this.description == null)? 0 :this.description.hashCode()));
         result = ((result* 31)+((this.ancillary == null)? 0 :this.ancillary.hashCode()));
         result = ((result* 31)+((this.serial_no == null)? 0 :this.serial_no.hashCode()));
         result = ((result* 31)+((this.hardware == null)? 0 :this.hardware.hashCode()));
@@ -66,7 +84,7 @@ public class SystemDiscoveryData {
             return false;
         }
         SystemDiscoveryData rhs = ((SystemDiscoveryData) other);
-        return ((((this.ancillary == rhs.ancillary)||((this.ancillary!= null)&&this.ancillary.equals(rhs.ancillary)))&&((this.serial_no == rhs.serial_no)||((this.serial_no!= null)&&this.serial_no.equals(rhs.serial_no))))&&((this.hardware == rhs.hardware)||((this.hardware!= null)&&this.hardware.equals(rhs.hardware))));
+        return ((((((this.name == rhs.name)||((this.name!= null)&&this.name.equals(rhs.name)))&&((this.description == rhs.description)||((this.description!= null)&&this.description.equals(rhs.description))))&&((this.ancillary == rhs.ancillary)||((this.ancillary!= null)&&this.ancillary.equals(rhs.ancillary))))&&((this.serial_no == rhs.serial_no)||((this.serial_no!= null)&&this.serial_no.equals(rhs.serial_no))))&&((this.hardware == rhs.hardware)||((this.hardware!= null)&&this.hardware.equals(rhs.hardware))));
     }
 
 }
