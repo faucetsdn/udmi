@@ -45,6 +45,7 @@ import static com.google.udmi.util.JsonUtil.toStringMap;
 import static com.google.udmi.util.SiteModel.METADATA_JSON;
 import static java.lang.String.format;
 import static java.nio.file.Files.newOutputStream;
+import static java.time.Duration.between;
 import static java.util.Objects.requireNonNull;
 import static java.util.Optional.ofNullable;
 import static java.util.stream.Collectors.toSet;
@@ -188,7 +189,7 @@ public class SequenceBase {
   private static final String ALL_CHANGES = "";
   private static final int SEQUENCER_FUNCTIONS_VERSION = Validator.TOOLS_FUNCTIONS_VERSION;
   private static final int SEQUENCER_FUNCTIONS_ALPHA = SEQUENCER_FUNCTIONS_VERSION;
-  private static final long CONFIG_BARRIER_MS = 1000;
+  private static final Duration CONFIG_BARRIER = Duration.ofSeconds(1);
   private static final String START_END_MARKER = "################################";
   private static final String RESULT_FORMAT = "RESULT %s %s %s %s %s/%s %s";
   private static final String CAPABILITY_FORMAT = "CPBLTY %s %s %s %s %s/%s %s";
@@ -336,6 +337,7 @@ public class SequenceBase {
   private Date configStateStart;
   protected boolean pretendStateUpdated;
   private Boolean stateSupported;
+  private Instant lastConfigMark = getNowInstant();
 
   private static void setupSequencer() {
     exeConfig = ofNullable(exeConfig).orElseGet(SequenceRunner::ensureExecutionConfig);
@@ -907,7 +909,7 @@ public class SequenceBase {
         processNextMessage();
         return configIsPending(false);
       });
-      Duration between = Duration.between(lastConfigUpdate, CleanDateFormat.clean(Instant.now()));
+      Duration between = between(lastConfigUpdate, CleanDateFormat.clean(Instant.now()));
       debug(format("Config sync took %ss", between.getSeconds()));
     } finally {
       waitingForConfigSync.set(false);
@@ -1252,14 +1254,10 @@ public class SequenceBase {
 
   private void updateConfig(String reason, boolean force) {
     updateConfig(reason, force, true);
-
   }
 
   private void updateConfig(String reason, boolean force, boolean waitForSync) {
     assertConfigIsNotPending();
-
-    // Add a forced sleep to make sure second-quantized timestamps are unique.
-    safeSleep(CONFIG_BARRIER_MS);
 
     if (doPartialUpdates && !force) {
       updateConfig(SubFolder.SYSTEM, augmentConfig(deviceConfig.system));
@@ -1292,6 +1290,16 @@ public class SequenceBase {
     captureConfigChange(reason);
   }
 
+  private void rateLimitConfig() {
+    // Add a forced sleep to make sure configs aren't sent too quickly
+    long delayMs = CONFIG_BARRIER.toMillis() - between(lastConfigMark, getNowInstant()).toMillis();
+    ifTrueThen(delayMs > 0, () -> {
+      debug(format("Rate-limiting config by %dms", delayMs));
+      safeSleep(delayMs);
+    });
+    lastConfigMark = getNowInstant();
+  }
+
   private boolean updateConfig(SubFolder subBlock, Object data) {
     try {
       String actualizedData = actualize(stringify(data));
@@ -1301,6 +1309,7 @@ public class SequenceBase {
       trace(format("updated check %s_%s: %s", CONFIG_SUBTYPE, subBlock, updated));
       if (updated) {
         String topic = subBlock + "/config";
+        rateLimitConfig();
         final String transactionId =
             requireNonNull(reflector().publish(getDeviceId(), topic, actualizedData),
                 "no transactionId returned for publish");
@@ -1620,7 +1629,7 @@ public class SequenceBase {
   }
 
   private void waitingConditionPop(Instant startTime) {
-    Duration between = Duration.between(startTime, Instant.now());
+    Duration between = between(startTime, Instant.now());
     debug(format("Stage finished %s at %s after %ss", currentWaitingCondition(),
         timeSinceStart(), between.toSeconds()));
     waitingCondition.pop();
@@ -1913,6 +1922,7 @@ public class SequenceBase {
         debug(format("Updated config %s %s", isoConvert(config.timestamp), txnId));
         String changeUpdate = updateCount == 1 ? stringify(deviceConfig) : changedLines(changes);
         info(format("Updated config #%03d", updateCount), changeUpdate);
+        debug(format("Expected last_config now %s", isoConvert(deviceConfig.timestamp)));
       } else if (converted instanceof State convertedState) {
         String timestamp = isoConvert(convertedState.timestamp);
         if (convertedState.timestamp == null) {
@@ -1939,7 +1949,7 @@ public class SequenceBase {
         boolean deltaState = RECV_STATE_DIFFERNATOR.isInitialized();
         List<DiffEntry> stateChanges = RECV_STATE_DIFFERNATOR.computeChanges(converted);
         Instant start = ofNullable(convertedState.timestamp).orElseGet(Date::new).toInstant();
-        long delta = Duration.between(start, Instant.now()).getSeconds();
+        long delta = between(start, Instant.now()).getSeconds();
         debug(format("Updated state after %ds %s %s", delta, timestamp, txnId));
         if (deltaState) {
           info(format("Updated state #%03d", updateCount), changedLines(stateChanges));
@@ -2102,7 +2112,7 @@ public class SequenceBase {
 
     if (debugOut) {
       if (!failures.isEmpty()) {
-        notice(format("state updated at %s then %s", isoConvert(configStateStart),
+        notice(format("previous state %s updated at %s", isoConvert(configStateStart),
             isoConvert(current)));
         notice(format("last_start synchronized %s: state/%s =? config/%s", lastStartSynced,
             isoConvert(stateLastStart), isoConvert(configLastStart)));
