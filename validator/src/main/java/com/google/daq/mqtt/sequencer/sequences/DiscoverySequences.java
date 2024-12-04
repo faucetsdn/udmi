@@ -74,7 +74,6 @@ public class DiscoverySequences extends SequenceBase {
 
   public static final Duration SCAN_START_DELAY = Duration.ofSeconds(20);
   public static final Duration WAITING_PERIOD = SCAN_START_DELAY.plus(SCAN_START_DELAY);
-  public static final int SCAN_START_DELAY_SEC = (int) SCAN_START_DELAY.getSeconds();
   public static final int SCAN_START_JITTER_SEC = 5;
   private static final int SCAN_ITERATIONS = 2;
   private static final String scanFamily = ProtocolFamily.VENDOR;
@@ -99,7 +98,7 @@ public class DiscoverySequences extends SequenceBase {
   }
 
   private DiscoveryEvents runEnumeration(Depths depths) {
-    deviceConfig.discovery = new DiscoveryConfig();
+    deviceConfig.discovery = ofNullable(deviceConfig.discovery).orElseGet(DiscoveryConfig::new);
     deviceConfig.discovery.depths = depths;
     untilTrue("enumeration not active", () -> deviceState.discovery.generation == null);
 

@@ -1,25 +1,28 @@
-2024-11-06T17:33:34Z WARNING device.log             Starting AHU-1 Pubber sender with delay 10s
-2024-11-06T17:33:34Z WARNING device.log             Dropping state update until config received...
-2024-11-06T17:33:34Z WARNING device.log             Received config for config latch AHU-1
-2024-11-06T17:33:34Z NOTICE  system.config.apply    success
-2024-11-06T17:33:34Z WARNING device.log             Start waiting 10s for config latch for AHU-1
-2024-11-06T17:33:34Z WARNING device.log             Ending connection 1730914413891 with 9
-2024-11-06T17:33:34Z NOTICE  system.config.apply    success
-2024-11-06T17:33:46Z NOTICE  system.config.apply    success
-2024-11-06T17:33:46Z INFO    device.log             Device AHU-1 config handler
-2024-11-06T17:33:46Z INFO    device.log             2024-11-06T17:33:46Z received config 2024-11-06T17:33:46Z
-2024-11-06T17:33:46Z NOTICE  system.config.apply    success
-2024-11-06T17:33:48Z INFO    device.log             Update state 2024-11-06T17:33:48Z last_config 2024-11-06T17:33:46Z
-2024-11-06T17:33:49Z INFO    device.log             Device AHU-1 config handler
-2024-11-06T17:33:49Z INFO    device.log             2024-11-06T17:33:49Z received config 2024-11-06T17:33:49Z
-2024-11-06T17:33:49Z NOTICE  system.config.apply    success
-2024-11-06T17:33:50Z INFO    device.log             Update state 2024-11-06T17:33:50Z last_config 2024-11-06T17:33:49Z
-2024-11-06T17:33:51Z INFO    device.log             Device AHU-1 config handler
-2024-11-06T17:33:51Z INFO    device.log             2024-11-06T17:33:51Z received config 2024-11-06T17:33:51Z
-2024-11-06T17:33:51Z NOTICE  system.config.apply    success
-2024-11-06T17:33:52Z INFO    device.log             Update state 2024-11-06T17:33:52Z last_config 2024-11-06T17:33:51Z
-2024-11-06T17:33:53Z INFO    device.log             Device AHU-1 config handler
-2024-11-06T17:33:53Z INFO    device.log             2024-11-06T17:33:53Z received config 2024-11-06T17:33:53Z
-2024-11-06T17:33:53Z NOTICE  system.config.apply    success
-2024-11-06T17:33:54Z INFO    device.log             Update state 2024-11-06T17:33:54Z last_config 2024-11-06T17:33:53Z
-2024-11-06T17:34:03Z NOTICE  validation.feature.sequence Sequence complete
+2024-12-03T15:58:57Z WARNING device.log             Start waiting 10s for config latch for AHU-1
+2024-12-03T15:58:57Z WARNING device.log             Starting AHU-1 Pubber sender with delay 10s
+2024-12-03T15:58:57Z WARNING device.log             Dropping state update until config received...
+2024-12-03T15:58:57Z WARNING device.log             Received config for config latch AHU-1
+2024-12-03T15:58:57Z WARNING device.log             Ending connection 1733241536278 with 9
+2024-12-03T15:58:57Z NOTICE  system.config.apply    success
+2024-12-03T15:58:57Z NOTICE  system.config.apply    success
+2024-12-03T15:59:08Z NOTICE  system.config.apply    success
+2024-12-03T15:59:08Z INFO    device.log             Device AHU-1 config handler
+2024-12-03T15:59:08Z INFO    device.log             2024-12-03T15:59:08Z received config 2024-12-03T15:59:08Z
+2024-12-03T15:59:08Z NOTICE  system.config.apply    success
+2024-12-03T15:59:10Z INFO    device.log             Update state 2024-12-03T15:59:10Z last_config 2024-12-03T15:59:08Z
+2024-12-03T15:59:11Z INFO    device.log             Device AHU-1 config handler
+2024-12-03T15:59:11Z INFO    device.log             2024-12-03T15:59:11Z received config 2024-12-03T15:59:11Z
+2024-12-03T15:59:11Z NOTICE  system.config.apply    success
+2024-12-03T15:59:12Z INFO    device.log             Update state 2024-12-03T15:59:12Z last_config 2024-12-03T15:59:11Z
+2024-12-03T15:59:13Z INFO    device.log             Device AHU-1 config handler
+2024-12-03T15:59:13Z INFO    device.log             2024-12-03T15:59:13Z received config 2024-12-03T15:59:13Z
+2024-12-03T15:59:13Z NOTICE  system.config.apply    success
+2024-12-03T15:59:14Z INFO    device.log             Update state 2024-12-03T15:59:14Z last_config 2024-12-03T15:59:13Z
+2024-12-03T15:59:15Z INFO    device.log             Device AHU-1 config handler
+2024-12-03T15:59:15Z INFO    device.log             2024-12-03T15:59:15Z received config 2024-12-03T15:59:15Z
+2024-12-03T15:59:15Z NOTICE  system.config.apply    success
+2024-12-03T15:59:16Z INFO    device.log             Update state 2024-12-03T15:59:16Z last_config 2024-12-03T15:59:15Z
+2024-12-03T15:59:16Z INFO    device.log             Device AHU-1 config handler
+2024-12-03T15:59:16Z INFO    device.log             2024-12-03T15:59:16Z received config 2024-12-03T15:59:16Z
+2024-12-03T15:59:16Z NOTICE  system.config.apply    success
+2024-12-03T15:59:23Z NOTICE  validation.feature.sequence Sequence complete

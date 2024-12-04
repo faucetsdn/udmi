@@ -1,11 +1,11 @@
 {
-  "timestamp" : "2024-11-06T17:33:15Z",
-  "version" : "@@@cloud udmi version###git-b2a557d",
+  "timestamp" : "2024-12-03T15:58:51Z",
+  "version" : "@@@cloud udmi version###git-3d8bbe5",
   "system" : {
     "min_loglevel" : 200,
     "metrics_rate_sec" : 10,
     "operation" : {
-      "last_start" : "2024-11-06T17:31:49Z"
+      "last_start" : "2024-12-03T15:57:26Z"
     },
     "testing" : {
       "sequence_name" : "enumerate_features"
@@ -14,6 +14,9 @@
   "discovery" : {
     "depths" : {
       "features" : "entries"
+    },
+    "families" : {
+      "vendor" : { }
     }
   },
   "localnet" : {

@@ -34,11 +34,11 @@ public class PointsetState {
     @JsonPropertyDescription("Not included in messages published by devices. Part of message subblocks within cloud pipeline. RFC 3339 Timestamp the payload was generated")
     public Date timestamp;
     /**
-     * Version of the UDMI schema
+     * Version of the UDMI schema, not included in messages published by devices
      * 
      */
     @JsonProperty("version")
-    @JsonPropertyDescription("Version of the UDMI schema")
+    @JsonPropertyDescription("Version of the UDMI schema, not included in messages published by devices")
     public java.lang.String version;
     /**
      * An identifier which uniquely represents the state, and used by a device avoid race conditions where the incoming config is based off an obsolete state. [Additional information on implementation](../docs/specs/sequences/writeback.md)

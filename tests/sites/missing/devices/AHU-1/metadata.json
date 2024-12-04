@@ -38,12 +38,6 @@
   "cloud": {
     "auth_type": "RS256"
   },
-  "discovery": {
-    "families": {
-      "vendor": {
-      }
-    }
-  },
   "localnet": {
     "families": {
       "ipv4": {

@@ -4,6 +4,9 @@
       "families" : "entries",
       "features" : "entries",
       "refs" : "entries"
+    },
+    "families" : {
+      "vendor" : { }
     }
   },
   "localnet" : {
@@ -34,14 +37,14 @@
     "metrics_rate_sec" : 10,
     "min_loglevel" : 200,
     "operation" : {
-      "last_start" : "2024-11-06T17:33:27Z"
+      "last_start" : "2024-12-03T15:58:57Z"
     },
     "testing" : {
-      "config_base" : 31,
+      "config_base" : 32,
       "sequence_name" : "enumerate_multi",
-      "transaction_id" : "RC:4cb417.0000000e"
+      "transaction_id" : "RC:a584c0.0000000e"
     }
   },
-  "timestamp" : "2024-11-06T17:33:52Z",
-  "version" : "git-b2a557d"
+  "timestamp" : "2024-12-03T15:59:24Z",
+  "version" : "git-3d8bbe5"
 }

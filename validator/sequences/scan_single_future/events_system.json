@@ -1,41 +1,41 @@
 {
   "event_no" : 5,
-  "last_config" : "2024-11-06T17:33:50Z",
+  "last_config" : "2024-12-03T16:00:06Z",
   "logentries" : [ {
-    "message" : "Discovery scan starting vendor generation 2024-11-06T17:34:00Z",
+    "message" : "Discovery scan starting vendor generation 2024-12-03T16:00:18Z",
     "category" : "device.log",
-    "timestamp" : "2024-11-06T17:34:00Z",
+    "timestamp" : "2024-12-03T16:00:18Z",
     "level" : 200
   }, {
-    "message" : "Update state 2024-11-06T17:34:00Z last_config 2024-11-06T17:33:50Z",
+    "message" : "Update state 2024-12-03T16:00:18Z last_config 2024-12-03T16:00:06Z",
     "category" : "device.log",
-    "timestamp" : "2024-11-06T17:34:00Z",
+    "timestamp" : "2024-12-03T16:00:18Z",
     "level" : 200
   }, {
-    "message" : "Discovered vendor device 20231 for gen 2024-11-06T17:34:00Z",
+    "message" : "Discovered vendor device 20231 for gen 2024-12-03T16:00:18Z",
     "category" : "device.log",
-    "timestamp" : "2024-11-06T17:34:00Z",
+    "timestamp" : "2024-12-03T16:00:18Z",
     "level" : 200
   }, {
-    "message" : "Discovered vendor device 28179023 for gen 2024-11-06T17:34:00Z",
+    "message" : "Discovered vendor device 28179023 for gen 2024-12-03T16:00:18Z",
     "category" : "device.log",
-    "timestamp" : "2024-11-06T17:34:00Z",
+    "timestamp" : "2024-12-03T16:00:18Z",
     "level" : 200
   }, {
-    "message" : "Discovered vendor device 0x65 for gen 2024-11-06T17:34:00Z",
+    "message" : "Discovered vendor device 0x65 for gen 2024-12-03T16:00:18Z",
     "category" : "device.log",
-    "timestamp" : "2024-11-06T17:34:00Z",
+    "timestamp" : "2024-12-03T16:00:18Z",
     "level" : 200
   }, {
-    "message" : "Update state 2024-11-06T17:34:02Z last_config 2024-11-06T17:33:50Z",
+    "message" : "Update state 2024-12-03T16:00:20Z last_config 2024-12-03T16:00:06Z",
     "category" : "device.log",
-    "timestamp" : "2024-11-06T17:34:02Z",
+    "timestamp" : "2024-12-03T16:00:20Z",
     "level" : 200
   } ],
   "metrics" : {
     "mem_total_mb" : 254.0,
-    "mem_free_mb" : 212.35082244873047
+    "mem_free_mb" : 213.53271484375
   },
-  "timestamp" : "2024-11-06T17:34:03Z",
+  "timestamp" : "2024-12-03T16:00:20Z",
   "version" : "1.5.2"
 }

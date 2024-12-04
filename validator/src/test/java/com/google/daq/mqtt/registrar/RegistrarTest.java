@@ -177,10 +177,10 @@ public class RegistrarTest {
     assertEquals("block action count", 0, blockActions.size());
 
     List<MockAction> createActions = filterActions(mockActions, CREATE_DEVICE_ACTION);
-    assertEquals("Devices created", 1, createActions.size());
+    assertEquals("Devices created", 2, createActions.size());
 
     List<MockAction> deleteActions = filterActions(mockActions, DELETE_DEVICE_ACTION);
-    assertEquals("Devices deleted", 1, deleteActions.size());
+    assertEquals("Devices deleted", 2, deleteActions.size());
 
     List<MockAction> updateActions = filterActions(mockActions, UPDATE_DEVICE_ACTION);
     assertEquals("Devices updated", 3, updateActions.size());

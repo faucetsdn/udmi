@@ -30,8 +30,5 @@
       "description": "Indicates implicit enumeration of discovered devices",
       "$ref": "file:common.json#/definitions/depth"
     }
-  },
-  "required": [
-    "generation"
-  ]
+  }
 }

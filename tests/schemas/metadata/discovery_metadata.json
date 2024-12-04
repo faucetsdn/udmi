@@ -1,0 +1,81 @@
+{
+  "version": "1.5.2",
+  "timestamp": "2018-08-26T21:39:29.364Z",
+  "system": {
+    "description": "Generic test example metadata file",
+    "tags": ["energy", "lighting", "building"],
+    "location": {
+      "site": "US-SFO-XYY",
+      "section": "NW-2F",
+      "floor": "2",
+      "floor_seq": 2,
+      "room": "2F26",
+      "position": {
+        "x": 10,
+        "y": 20,
+        "z": 3.7
+      },
+      "coordinates": {
+        "lat":  37.386051,
+        "long": -122.083855,
+        "alt_m": 8849.0
+      }
+    },
+    "physical_tag": {
+      "asset": {
+        "guid": "bim://04aEp5ymD_$u5IxhJN2aGi",
+        "site": "US-SFO-XYY",
+        "name": "AHU-1"
+      }
+    },
+    "adjunct": {
+      "suffix": "extention11-optional"
+    }
+  },
+  "cloud": {
+    "auth_type": "ES256",
+    "connection_type": "DIRECT"
+  },
+  "pointset": {
+    "points": {
+      "return_air_temperature_sensor": {
+        "units": "Degrees-Celsius",
+        "baseline_value": 20,
+        "baseline_tolerance": 2,
+        "tags": ["hvac"]
+      },
+      "room_setpoint": {
+        "writable": true,
+        "units": "Degrees-Celsius",
+        "baseline_value": 20,
+        "baseline_state": "applied"
+      }
+    }
+  },
+  "discovery": {
+    "families": {
+      "bacnet": {
+        "generation": "2018-08-26T21:00:13Z",
+        "scan_interval_sec": 600,
+        "scan_duration_sec": 60
+      }
+    }
+  },
+  "testing": {
+    "targets": {
+      "invalid": {
+        "target_point": "return_air_temperature_sensor",
+        "target_value": -20
+      },
+      "failure": {
+        "target_point": "room_setpoint",
+        "target_value": -20
+      }
+    }
+  },
+  "features": {
+    "system": { },
+    "enumeration": { "stage": "beta" },
+    "enumeration.pointset": { "stage": "alpha" }
+  }
+}

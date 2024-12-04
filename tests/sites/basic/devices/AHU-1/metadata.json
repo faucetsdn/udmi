@@ -47,7 +47,10 @@
   },
   "discovery": {
     "families": {
-      "vendor": {
+      "bacnet": {
+        "generation": "2018-08-26T21:00:13Z",
+        "scan_interval_sec": 600,
+        "scan_duration_sec": 60
       }
     }
   },
