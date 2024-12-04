@@ -189,7 +189,7 @@ public class SequenceBase {
   private static final String ALL_CHANGES = "";
   private static final int SEQUENCER_FUNCTIONS_VERSION = Validator.TOOLS_FUNCTIONS_VERSION;
   private static final int SEQUENCER_FUNCTIONS_ALPHA = SEQUENCER_FUNCTIONS_VERSION;
-  private static final Duration CONFIG_BARRIER = Duration.ofSeconds(5);
+  private static final Duration CONFIG_BARRIER = Duration.ofSeconds(2);
   private static final String START_END_MARKER = "################################";
   private static final String RESULT_FORMAT = "RESULT %s %s %s %s %s/%s %s";
   private static final String CAPABILITY_FORMAT = "CPBLTY %s %s %s %s %s/%s %s";
