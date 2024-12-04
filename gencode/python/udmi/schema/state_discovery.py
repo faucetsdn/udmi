@@ -6,6 +6,8 @@ class DiscoveryState:
   """Generated schema class"""
 
   def __init__(self):
+    self.timestamp = None
+    self.version = None
     self.generation = None
     self.families = None
 
@@ -14,6 +16,8 @@ class DiscoveryState:
     if not source:
       return None
     result = DiscoveryState()
+    result.timestamp = source.get('timestamp')
+    result.version = source.get('version')
     result.generation = source.get('generation')
     result.families = FamilyDiscoveryState.map_from(source.get('families'))
     return result
@@ -36,6 +40,10 @@ class DiscoveryState:
 
   def to_dict(self):
     result = {}
+    if self.timestamp:
+      result['timestamp'] = self.timestamp # 5
+    if self.version:
+      result['version'] = self.version # 5
     if self.generation:
       result['generation'] = self.generation # 5
     if self.families:

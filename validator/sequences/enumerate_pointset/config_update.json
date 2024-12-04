@@ -2,6 +2,9 @@
   "discovery" : {
     "depths" : {
       "refs" : "entries"
+    },
+    "families" : {
+      "vendor" : { }
     }
   },
   "localnet" : {
@@ -32,14 +35,14 @@
     "metrics_rate_sec" : 10,
     "min_loglevel" : 200,
     "operation" : {
-      "last_start" : "2024-11-06T17:33:33Z"
+      "last_start" : "2024-12-03T15:58:55Z"
     },
     "testing" : {
-      "config_base" : 28,
+      "config_base" : 29,
       "sequence_name" : "enumerate_pointset",
-      "transaction_id" : "RC:45d88a.0000000e"
+      "transaction_id" : "RC:4341b5.0000000e"
     }
   },
-  "timestamp" : "2024-11-06T17:34:01Z",
-  "version" : "git-b2a557d"
+  "timestamp" : "2024-12-03T15:59:21Z",
+  "version" : "git-3d8bbe5"
 }

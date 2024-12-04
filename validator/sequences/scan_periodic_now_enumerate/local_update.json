@@ -1,11 +1,11 @@
 {
-  "timestamp" : "2024-11-06T17:34:03Z",
-  "version" : "@@@cloud udmi version###git-b2a557d",
+  "timestamp" : "2024-12-03T15:59:36Z",
+  "version" : "@@@cloud udmi version###git-3d8bbe5",
   "system" : {
     "min_loglevel" : 200,
     "metrics_rate_sec" : 10,
     "operation" : {
-      "last_start" : "2024-11-06T17:33:35Z"
+      "last_start" : "2024-12-03T15:59:07Z"
     },
     "testing" : {
       "sequence_name" : "scan_periodic_now_enumerate"
@@ -14,7 +14,7 @@
   "discovery" : {
     "families" : {
       "vendor" : {
-        "generation" : "2024-11-06T17:34:01Z",
+        "generation" : "2024-12-03T15:59:34Z",
         "scan_interval_sec" : 20,
         "scan_duration_sec" : 20,
         "depth" : "entries"
