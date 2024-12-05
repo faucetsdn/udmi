@@ -180,8 +180,8 @@ public class DynamicIotAccessProvider extends IotAccessBase {
       String affinity = providerId.substring(0, index < 0 ? providerId.length() : index);
       String providerKey = getProviderKey(registryId, deviceId);
       String previous = registryProviders.put(providerKey, affinity);
-      if (!providerId.equals(previous)) {
-        debug(format("Switching registry affinity for %s from %s -> %s", providerKey, previous,
+      if (!affinity.equals(previous)) {
+        debug(format("Switched registry affinity for %s from %s -> %s", providerKey, previous,
             affinity));
       }
     }
