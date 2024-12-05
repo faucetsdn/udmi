@@ -230,8 +230,8 @@ public class ReflectProcessor extends ProcessorBase {
   }
 
   private void processReflection(Envelope reflection, Envelope env, Object payload) {
-    debug("Processing reflection %s/%s %s %s", env.subType, env.subFolder,
-        isoConvert(env.publishTime), env.transactionId);
+    debug("Processing reflection %s/%s %s %s for %s", env.subType, env.subFolder,
+        isoConvert(env.publishTime), env.transactionId, env.deviceId);
     CloudModel result = getReflectionResult(env, payload);
     ifNotNullThen(result, r -> {
       debug("Return reflection result %s %s %s", r.operation, env.subType, env.transactionId);
