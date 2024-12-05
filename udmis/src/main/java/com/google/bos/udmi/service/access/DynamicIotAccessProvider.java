@@ -64,7 +64,7 @@ public class DynamicIotAccessProvider extends IotAccessBase {
   }
 
   private IotAccessProvider getProviderFor(String registryId, String deviceId) {
-    String entryKey = format(PROVIDER_KEY_FORMAT, registryId, deviceId);
+    String entryKey = getProviderKey(registryId, deviceId);
     String providerKey = registryProviders.computeIfAbsent(entryKey, this::determineProvider);
     IotAccessProvider provider = getProviders().get(providerKey);
     return requireNonNull(provider,
@@ -177,13 +177,18 @@ public class DynamicIotAccessProvider extends IotAccessBase {
     if (providerId != null) {
       int index = providerId.indexOf(Common.SOURCE_SEPARATOR);
       String affinity = providerId.substring(0, index < 0 ? providerId.length() : index);
-      String previous = registryProviders.put(registryId, affinity);
+      String providerKey = getProviderKey(registryId, deviceId);
+      String previous = registryProviders.put(providerKey, affinity);
       if (!providerId.equals(previous)) {
-        debug(format("Switching registry affinity for %s from %s -> %s", registryId, previous,
+        debug(format("Switching registry affinity for %s from %s -> %s", providerKey, previous,
             affinity));
       }
     }
     super.setProviderAffinity(registryId, deviceId, providerId);
+  }
+
+  private static String getProviderKey(String registryId, String deviceId) {
+    return format(PROVIDER_KEY_FORMAT, registryId, deviceId);
   }
 
   @Override
