@@ -386,7 +386,7 @@ public class SequenceBase {
     String registrySuffix = exeConfig.registry_suffix;
     altRegistry = SiteModel.getRegistryActual(udmiNamespace, altRegistryId, registrySuffix);
     altClient = getAlternateClient();
-    altClient.activate();
+    ifNotNullThen(altClient, IotReflectorClient::activate);
   }
 
   private static void validatorLogger(Level level, String message) {
