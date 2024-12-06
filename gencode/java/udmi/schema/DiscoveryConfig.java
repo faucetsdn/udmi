@@ -31,18 +31,18 @@ public class DiscoveryConfig {
     @JsonPropertyDescription("Generational marker for controlling enumeration")
     public Date generation;
     /**
-     * Indicates which discovery sub-categories to activate
+     * Indicates which discovery sub-categories to enumerate
      * 
      */
     @JsonProperty("depths")
-    @JsonPropertyDescription("Indicates which discovery sub-categories to activate")
+    @JsonPropertyDescription("Indicates which discovery sub-categories to enumerate")
     public Depths depths;
     /**
-     * Address family config for a scan.
+     * Control over discovery scan operation by address family.
      * 
      */
     @JsonProperty("families")
-    @JsonPropertyDescription("Address family config for a scan.")
+    @JsonPropertyDescription("Control over discovery scan operation by address family.")
     public HashMap<String, FamilyDiscoveryConfig> families;
 
     @Override
