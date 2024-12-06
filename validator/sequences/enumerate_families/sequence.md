@@ -4,7 +4,7 @@
 Check enumeration of network families
 
 1. Update config before enumeration not active
-    * Add `discovery` = { "depths": { "families": `entries` } }
+    * Add `discovery` = { "enumerations": { "families": `entries` } }
 1. Wait for enumeration not active
 1. Update config before matching enumeration generation
     * Add `discovery.generation` = `generation start time`

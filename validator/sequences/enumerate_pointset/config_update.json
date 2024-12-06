@@ -1,6 +1,6 @@
 {
   "discovery" : {
-    "depths" : {
+    "enumerations" : {
       "refs" : "entries"
     }
   },
@@ -30,16 +30,16 @@
   },
   "system" : {
     "metrics_rate_sec" : 10,
-    "min_loglevel" : 200,
+    "min_loglevel" : 100,
     "operation" : {
-      "last_start" : "2024-11-06T17:33:33Z"
+      "last_start" : "2024-12-06T19:00:31Z"
     },
     "testing" : {
       "config_base" : 28,
       "sequence_name" : "enumerate_pointset",
-      "transaction_id" : "RC:45d88a.0000000e"
+      "transaction_id" : "RC:d775ce.0000000f"
     }
   },
-  "timestamp" : "2024-11-06T17:34:01Z",
-  "version" : "git-b2a557d"
+  "timestamp" : "2024-12-06T19:00:59Z",
+  "version" : "git-0ae3f17"
 }
