@@ -17,10 +17,25 @@ import org.junit.Test;
 public class BacnetFamilyProviderTest {
 
   public static final Set<String> GOOD_REFERENCES = ImmutableSet.of(
-      "bacnet://291842/AI-2#present_value",
-      "bacnet://291842/BO-21");
+      "bacnet://291842/AI:2#present_value",
+      "bacnet://29212/AI:2#something_else",
+      "bacnet://1/AI:2",
+      "bacnet://291842/BO:21");
+
   public static final Set<String> BAD_REFERENCES = ImmutableSet.of(
-      "modbus://291842/AI-2#present_value");
+      "bacnet://-82/AI:2#present_value",
+      "bacnet://091842/AI:2#present_value",
+      "bacnet://other/AI:2#present_value",
+      "bacnet://291842/AI:2#something-else",
+      "bacnet://29A821/AI:2#present_value",
+      "bacnet://23a87/AI:2#present_value",
+      "bacnet://291842/nope:2#present_value",
+      "bacnet://291842/AI#present_value",
+      "bacnet://291842/AI",
+      "bacnet://291842/VV:x",
+      "bacnet://291842/AI2#present_value",
+      "bacnet://291842/AI-2#present_value",
+      "modbus://291842/AI:2#present_value");
 
   BacnetFamilyProvider provider = new BacnetFamilyProvider();
 
