@@ -246,7 +246,8 @@ public class SequenceBase {
   private static final String FAKE_DEVICE_ID = "TAP-1";
   private static final String NO_EXTRA_DETAIL = "no logs";
   private static final Duration DEFAULT_WAIT_TIME = Duration.ofSeconds(10);
-  private static final Duration CONFIG_WAIT_TIME = Duration.ofSeconds(30);
+  // TODO Config wait time increased for endpoint_failure_and_restart test
+  private static final Duration CONFIG_WAIT_TIME = Duration.ofSeconds(60);
   private static final Duration LOG_WAIT_TIME = Duration.ofSeconds(30);
   private static final Duration DEFAULT_LOOP_TIMEOUT = Duration.ofHours(30);
   private static final Set<String> SYSTEM_STATE_CHANGES = ImmutableSet.of(

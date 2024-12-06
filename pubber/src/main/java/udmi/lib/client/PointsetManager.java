@@ -1,7 +1,6 @@
 package udmi.lib.client;
 
 import static com.google.udmi.util.GeneralUtils.getNow;
-import static com.google.udmi.util.GeneralUtils.getTimestamp;
 import static com.google.udmi.util.GeneralUtils.ifNotNullGet;
 import static com.google.udmi.util.GeneralUtils.ifNotNullThen;
 import static java.lang.String.format;
@@ -157,9 +156,8 @@ public interface PointsetManager extends ManagerLog {
    */
   default void sendDevicePoints() {
     if (getPointsetUpdateCount() % MESSAGE_REPORT_INTERVAL == 0) {
-      info(format("%s sending %s message #%d with %d points",
-          getTimestamp(), getDeviceId(), getPointsetUpdateCount(),
-          getPointsetEvent().points.size()));
+      info(format("sending %s message #%d with %d points", getDeviceId(), getPointsetUpdateCount(),
+              getPointsetEvent().points.size()));
     }
     getHost().publish(getPointsetEvent());
   }

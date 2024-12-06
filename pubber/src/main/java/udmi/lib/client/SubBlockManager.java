@@ -9,7 +9,7 @@ import udmi.lib.intf.ManagerLog;
  * Interface for providing main manager functionalities.
  *
  */
-public interface SubblockManager extends ManagerLog {
+public interface SubBlockManager extends ManagerLog {
 
   void updateState(Object state);
 

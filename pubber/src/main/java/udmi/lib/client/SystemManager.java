@@ -31,7 +31,7 @@ import udmi.schema.SystemState;
 /**
  * System client.
  */
-public interface SystemManager extends SubblockManager {
+public interface SystemManager extends SubBlockManager {
 
   String UDMI_PUBLISHER_LOG_CATEGORY = "device.log";
 
