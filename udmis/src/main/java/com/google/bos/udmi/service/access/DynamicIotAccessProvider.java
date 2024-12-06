@@ -34,6 +34,7 @@ import udmi.schema.IotAccess;
 public class DynamicIotAccessProvider extends IotAccessBase {
 
   private static final long INDEX_ORDERING_MULTIPLIER_MS = 10000L;
+  public static final String PROVIDER_KEY_FORMAT = "%s/%s";
   private final Map<String, String> registryProviders = new ConcurrentHashMap<>();
   private final List<String> providerList;
   private final Map<String, IotAccessProvider> providers = new HashMap<>();
@@ -59,13 +60,16 @@ public class DynamicIotAccessProvider extends IotAccessBase {
   }
 
   private IotAccessProvider getProviderFor(Envelope envelope) {
-    return getProviderFor(envelope.deviceRegistryId);
+    return getProviderFor(envelope.deviceRegistryId, envelope.deviceId);
   }
 
-  private IotAccessProvider getProviderFor(String registryId) {
-    String providerKey = registryProviders.computeIfAbsent(registryId, this::determineProvider);
+  private IotAccessProvider getProviderFor(String registryId, String deviceId) {
+    String entryKey = getProviderKey(registryId, deviceId);
+    String providerKey =
+        registryProviders.computeIfAbsent(entryKey, k -> determineProvider(registryId));
     IotAccessProvider provider = getProviders().get(providerKey);
-    return requireNonNull(provider, "Could not determine provider for " + registryId);
+    return requireNonNull(provider,
+        format("Could not determine provider for %s from %s", providerKey, entryKey));
   }
 
   private Map<String, IotAccessProvider> getProviders() {
@@ -102,27 +106,27 @@ public class DynamicIotAccessProvider extends IotAccessBase {
 
   @Override
   public Entry<Long, String> fetchConfig(String registryId, String deviceId) {
-    return getProviderFor(registryId).fetchConfig(registryId, deviceId);
+    return getProviderFor(registryId, deviceId).fetchConfig(registryId, deviceId);
   }
 
   @Override
   public CloudModel fetchDevice(String registryId, String deviceId) {
-    return getProviderFor(registryId).fetchDevice(registryId, deviceId);
+    return getProviderFor(registryId, deviceId).fetchDevice(registryId, deviceId);
   }
 
   @Override
   public String fetchRegistryMetadata(String registryId, String metadataKey) {
-    return getProviderFor(registryId).fetchRegistryMetadata(registryId, metadataKey);
+    return getProviderFor(registryId, null).fetchRegistryMetadata(registryId, metadataKey);
   }
 
   @Override
   public String fetchState(String registryId, String deviceId) {
-    return getProviderFor(registryId).fetchState(registryId, deviceId);
+    return getProviderFor(registryId, deviceId).fetchState(registryId, deviceId);
   }
 
   @Override
   public void saveState(String registryId, String deviceId, String stateBlob) {
-    getProviderFor(registryId).saveState(registryId, deviceId, stateBlob);
+    getProviderFor(registryId, deviceId).saveState(registryId, deviceId, stateBlob);
   }
 
   @Override
@@ -143,19 +147,19 @@ public class DynamicIotAccessProvider extends IotAccessBase {
 
   @Override
   public CloudModel listDevices(String registryId, Consumer<Integer> progress) {
-    return getProviderFor(registryId).listDevices(registryId, progress);
+    return getProviderFor(registryId, null).listDevices(registryId, progress);
   }
 
   @Override
   public CloudModel modelDevice(String registryId, String deviceId, CloudModel cloudModel) {
     debug("%s iot device %s/%s, %s %s", cloudModel.operation, registryId, deviceId,
         cloudModel.blocked, cloudModel.num_id);
-    return getProviderFor(registryId).modelDevice(registryId, deviceId, cloudModel);
+    return getProviderFor(registryId, deviceId).modelDevice(registryId, deviceId, cloudModel);
   }
 
   @Override
   public CloudModel modelRegistry(String registryId, String deviceId, CloudModel cloudModel) {
-    return getProviderFor(registryId).modelRegistry(registryId, deviceId, cloudModel);
+    return getProviderFor(registryId, deviceId).modelRegistry(registryId, deviceId, cloudModel);
   }
 
   @Override
@@ -174,13 +178,18 @@ public class DynamicIotAccessProvider extends IotAccessBase {
     if (providerId != null) {
       int index = providerId.indexOf(Common.SOURCE_SEPARATOR);
       String affinity = providerId.substring(0, index < 0 ? providerId.length() : index);
-      String previous = registryProviders.put(registryId, affinity);
-      if (!providerId.equals(previous)) {
-        debug(format("Switching registry affinity for %s from %s -> %s", registryId, previous,
+      String providerKey = getProviderKey(registryId, deviceId);
+      String previous = registryProviders.put(providerKey, affinity);
+      if (!affinity.equals(previous)) {
+        debug(format("Switched registry affinity for %s from %s -> %s", providerKey, previous,
             affinity));
       }
     }
     super.setProviderAffinity(registryId, deviceId, providerId);
+  }
+
+  private static String getProviderKey(String registryId, String deviceId) {
+    return format(PROVIDER_KEY_FORMAT, registryId, deviceId);
   }
 
   @Override
