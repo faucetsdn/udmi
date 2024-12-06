@@ -1,27 +1,73 @@
-2024-11-06T17:33:11Z WARNING device.log             Starting AHU-1 Pubber sender with delay 10s
-2024-11-06T17:33:11Z WARNING device.log             Dropping state update until config received...
-2024-11-06T17:33:11Z WARNING device.log             Start waiting 10s for config latch for AHU-1
-2024-11-06T17:33:11Z WARNING device.log             Received config for config latch AHU-1
-2024-11-06T17:33:11Z WARNING device.log             Ending connection 1730914391082 with 9
-2024-11-06T17:33:11Z NOTICE  system.config.apply    success
-2024-11-06T17:33:11Z NOTICE  system.config.apply    success
-2024-11-06T17:33:23Z NOTICE  system.config.apply    success
-2024-11-06T17:33:23Z INFO    device.log             2024-11-06T17:33:23Z received config 2024-11-06T17:33:23Z
-2024-11-06T17:33:23Z NOTICE  system.config.apply    success
-2024-11-06T17:33:25Z INFO    device.log             Update state 2024-11-06T17:33:25Z last_config 2024-11-06T17:33:23Z
-2024-11-06T17:33:26Z INFO    device.log             Device AHU-1 config handler
-2024-11-06T17:33:26Z INFO    device.log             2024-11-06T17:33:26Z received config 2024-11-06T17:33:26Z
-2024-11-06T17:33:26Z NOTICE  system.config.apply    success
-2024-11-06T17:33:27Z INFO    device.log             Update state 2024-11-06T17:33:27Z last_config 2024-11-06T17:33:26Z
-2024-11-06T17:33:28Z INFO    device.log             Device AHU-1 config handler
-2024-11-06T17:33:28Z INFO    device.log             2024-11-06T17:33:28Z received config 2024-11-06T17:33:28Z
-2024-11-06T17:33:28Z NOTICE  system.config.apply    success
-2024-11-06T17:33:29Z INFO    device.log             Update state 2024-11-06T17:33:29Z last_config 2024-11-06T17:33:28Z
-2024-11-06T17:33:30Z INFO    device.log             Device AHU-1 config handler
-2024-11-06T17:33:30Z INFO    device.log             2024-11-06T17:33:30Z received config 2024-11-06T17:33:30Z
-2024-11-06T17:33:30Z NOTICE  system.config.apply    success
-2024-11-06T17:33:31Z INFO    device.log             Update state 2024-11-06T17:33:31Z last_config 2024-11-06T17:33:30Z
-2024-11-06T17:33:31Z INFO    device.log             Device AHU-1 config handler
-2024-11-06T17:33:31Z INFO    device.log             2024-11-06T17:33:31Z received config 2024-11-06T17:33:31Z
-2024-11-06T17:33:31Z NOTICE  system.config.apply    success
-2024-11-06T17:33:40Z NOTICE  validation.feature.sequence Sequence complete
+2024-12-06T18:59:54Z WARNING device.log             Starting AHU-1 Pubber sender with delay 10s
+2024-12-06T18:59:54Z WARNING device.log             Dropping state update until config received...
+2024-12-06T18:59:54Z WARNING device.log             Received config for config latch AHU-1
+2024-12-06T18:59:54Z NOTICE  system.config.apply    success
+2024-12-06T18:59:54Z WARNING device.log             Start waiting 10s for config latch for AHU-1
+2024-12-06T18:59:54Z WARNING device.log             Ending connection 1733511593541 with 9
+2024-12-06T18:59:54Z NOTICE  system.config.apply    success
+2024-12-06T19:00:06Z NOTICE  system.config.apply    success
+2024-12-06T19:00:06Z DEBUG   device.log             State update defer 1999ms
+2024-12-06T19:00:06Z DEBUG   device.log             State update defer 1998ms
+2024-12-06T19:00:06Z DEBUG   device.log             State update defer 1998ms
+2024-12-06T19:00:06Z DEBUG   device.log             State update defer 1997ms
+2024-12-06T19:00:06Z DEBUG   device.log             State update defer 1997ms
+2024-12-06T19:00:06Z DEBUG   device.log             State update defer 1997ms
+2024-12-06T19:00:06Z DEBUG   system.config.receive  success
+2024-12-06T19:00:06Z DEBUG   device.log             State update defer 1929ms
+2024-12-06T19:00:06Z DEBUG   system.config.parse    success
+2024-12-06T19:00:06Z INFO    device.log             Device AHU-1 config handler
+2024-12-06T19:00:06Z DEBUG   device.log             State update defer 1927ms
+2024-12-06T19:00:06Z DEBUG   device.log             Config update AHU-1 (enumerate_families)
+2024-12-06T19:00:06Z INFO    device.log             2024-12-06T19:00:06Z received config 2024-12-06T19:00:06Z
+2024-12-06T19:00:06Z NOTICE  system.config.apply    success
+2024-12-06T19:00:06Z DEBUG   device.log             State update defer 1924ms
+2024-12-06T19:00:06Z DEBUG   device.log             State update defer 1924ms
+2024-12-06T19:00:08Z DEBUG   device.log             State update defer 0ms
+2024-12-06T19:00:08Z INFO    device.log             Update state 2024-12-06T19:00:08Z last_config 2024-12-06T19:00:06Z
+2024-12-06T19:00:08Z DEBUG   device.log             State update AHU-1 (enumerate_families)
+2024-12-06T19:00:09Z DEBUG   system.config.receive  success
+2024-12-06T19:00:09Z DEBUG   device.log             State update defer 899ms
+2024-12-06T19:00:09Z DEBUG   system.config.parse    success
+2024-12-06T19:00:09Z INFO    device.log             Device AHU-1 config handler
+2024-12-06T19:00:09Z DEBUG   device.log             Config update AHU-1 (enumerate_families)
+2024-12-06T19:00:09Z INFO    device.log             2024-12-06T19:00:09Z received config 2024-12-06T19:00:09Z
+2024-12-06T19:00:09Z NOTICE  system.config.apply    success
+2024-12-06T19:00:09Z DEBUG   device.log             State update defer 896ms
+2024-12-06T19:00:09Z DEBUG   device.log             State update defer 896ms
+2024-12-06T19:00:09Z DEBUG   device.log             State update defer 896ms
+2024-12-06T19:00:10Z DEBUG   device.log             State update defer 0ms
+2024-12-06T19:00:10Z INFO    device.log             Update state 2024-12-06T19:00:10Z last_config 2024-12-06T19:00:09Z
+2024-12-06T19:00:10Z DEBUG   device.log             State update AHU-1 (enumerate_families)
+2024-12-06T19:00:11Z DEBUG   system.config.receive  success
+2024-12-06T19:00:11Z DEBUG   device.log             State update defer 798ms
+2024-12-06T19:00:11Z DEBUG   system.config.parse    success
+2024-12-06T19:00:11Z INFO    device.log             Device AHU-1 config handler
+2024-12-06T19:00:11Z DEBUG   device.log             State update defer 797ms
+2024-12-06T19:00:11Z DEBUG   device.log             Config update AHU-1 (enumerate_families)
+2024-12-06T19:00:11Z INFO    device.log             2024-12-06T19:00:11Z received config 2024-12-06T19:00:11Z
+2024-12-06T19:00:11Z NOTICE  system.config.apply    success
+2024-12-06T19:00:11Z DEBUG   device.log             State update defer 795ms
+2024-12-06T19:00:11Z DEBUG   device.log             State update defer 794ms
+2024-12-06T19:00:11Z DEBUG   device.log             State update defer 794ms
+2024-12-06T19:00:11Z DEBUG   device.log             State update defer 794ms
+2024-12-06T19:00:11Z DEBUG   device.log             State update defer 794ms
+2024-12-06T19:00:11Z DEBUG   device.log             State update defer 793ms
+2024-12-06T19:00:11Z DEBUG   device.log             State update defer 793ms
+2024-12-06T19:00:12Z DEBUG   device.log             State update defer 0ms
+2024-12-06T19:00:12Z INFO    device.log             Update state 2024-12-06T19:00:12Z last_config 2024-12-06T19:00:11Z
+2024-12-06T19:00:12Z DEBUG   device.log             State update AHU-1 (enumerate_families)
+2024-12-06T19:00:13Z DEBUG   system.config.receive  success
+2024-12-06T19:00:13Z DEBUG   device.log             State update defer 893ms
+2024-12-06T19:00:13Z DEBUG   system.config.parse    success
+2024-12-06T19:00:13Z INFO    device.log             Device AHU-1 config handler
+2024-12-06T19:00:13Z DEBUG   device.log             Config update AHU-1 (enumerate_families)
+2024-12-06T19:00:13Z INFO    device.log             2024-12-06T19:00:13Z received config 2024-12-06T19:00:13Z
+2024-12-06T19:00:13Z DEBUG   device.log             State update defer 890ms
+2024-12-06T19:00:13Z DEBUG   device.log             State update defer 890ms
+2024-12-06T19:00:13Z DEBUG   device.log             State update defer 890ms
+2024-12-06T19:00:13Z DEBUG   device.log             State update defer 890ms
+2024-12-06T19:00:13Z DEBUG   device.log             State update defer 890ms
+2024-12-06T19:00:13Z NOTICE  system.config.apply    success
+2024-12-06T19:00:13Z DEBUG   device.log             State update defer 889ms
+2024-12-06T19:00:13Z DEBUG   device.log             State update defer 888ms
+2024-12-06T19:00:23Z NOTICE  validation.feature.sequence Sequence complete
