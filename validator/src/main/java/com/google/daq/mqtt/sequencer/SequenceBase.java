@@ -272,7 +272,7 @@ public class SequenceBase {
   public static ExecutionConfiguration exeConfig;
   private static Validator messageValidator;
   private static ValidationState validationState;
-  private static int logLevel;
+  private static int logLevel = -1;
   private static File deviceOutputDir;
   private static File resultSummary;
   private static MessagePublisher client;
@@ -280,6 +280,7 @@ public class SequenceBase {
   private static MessageBundle stashedBundle;
   private static boolean enableAllTargets = true;
   private static boolean useAlternateClient;
+  private static boolean gateConfigUpdate;
 
   static {
     // Sanity check to make sure ALPHA version is increased if forced by increased BETA.
@@ -353,6 +354,7 @@ public class SequenceBase {
       checkNotNull(exeConfig.udmi_version, "udmi_version not defined");
       logLevel = Level.valueOf(checkNotNull(exeConfig.log_level, "log_level not defined"))
           .value();
+      gateConfigUpdate = traceLogLevel();
       key_file = checkNotNull(exeConfig.key_file, "key_file not defined");
     } catch (Exception e) {
       e.printStackTrace();
@@ -455,10 +457,12 @@ public class SequenceBase {
   }
 
   private static boolean debugLogLevel() {
+    checkState(logLevel >= 0, "logLevel not initialized");
     return logLevel <= Level.DEBUG.value();
   }
 
   private static boolean traceLogLevel() {
+    checkState(logLevel >= 0, "logLevel not initialized");
     return logLevel <= Level.TRACE.value();
   }
 
@@ -1257,23 +1261,32 @@ public class SequenceBase {
     updateConfig(reason, force, true);
   }
 
-  private void updateConfig(String reason, boolean force, boolean waitForSync) {
+  /**
+   * Do a config update cycle.
+   *
+   * @param reason       description reason of why this is being done
+   * @param force        indicate if this should force a complete update
+   * @param waitForState indicate if this should wait for a state-sync from the device
+   */
+  private void updateConfig(String reason, boolean force, boolean waitForState) {
     assertConfigIsNotPending();
 
     if (doPartialUpdates && !force) {
-      updateConfig(reason, waitForSync, SubFolder.SYSTEM, augmentConfig(deviceConfig.system));
-      updateConfig(reason, waitForSync, SubFolder.POINTSET, deviceConfig.pointset);
-      updateConfig(reason, waitForSync, SubFolder.GATEWAY, deviceConfig.gateway);
-      updateConfig(reason, waitForSync, SubFolder.LOCALNET, deviceConfig.localnet);
-      updateConfig(reason, waitForSync, SubFolder.BLOBSET, deviceConfig.blobset);
-      updateConfig(reason, waitForSync, SubFolder.DISCOVERY, deviceConfig.discovery);
+      updateConfig(reason, waitForState, SubFolder.SYSTEM, augmentConfig(deviceConfig.system));
+      updateConfig(reason, waitForState, SubFolder.POINTSET, deviceConfig.pointset);
+      updateConfig(reason, waitForState, SubFolder.GATEWAY, deviceConfig.gateway);
+      updateConfig(reason, waitForState, SubFolder.LOCALNET, deviceConfig.localnet);
+      updateConfig(reason, waitForState, SubFolder.BLOBSET, deviceConfig.blobset);
+      updateConfig(reason, waitForState, SubFolder.DISCOVERY, deviceConfig.discovery);
     } else {
       if (force) {
         debug("Forcing config update");
         sentConfig.remove(UPDATE);
       }
-      updateConfig(reason, waitForSync, UPDATE, deviceConfig);
+      updateConfig(reason, waitForState, UPDATE, deviceConfig);
     }
+
+    ifNotTrueThen(gateConfigUpdate, () -> waitForUpdateConfigSync(reason, waitForState));
 
     assertConfigIsNotPending();
 
@@ -1290,7 +1303,7 @@ public class SequenceBase {
       trace(format("updated check %s_%s: %s", CONFIG_SUBTYPE, subBlock, updated));
       if (updated) {
         String topic = subBlock + "/config";
-        rateLimitConfig();
+        ifTrueThen(gateConfigUpdate, this::rateLimitConfig);
         final String transactionId =
             requireNonNull(reflector().publish(getDeviceId(), topic, actualizedData),
                 "no transactionId returned for publish");
@@ -1299,7 +1312,7 @@ public class SequenceBase {
         recordRawMessage(data, LOCAL_PREFIX + subBlock.value());
         sentConfig.put(subBlock, actualizedData);
         configTransactions.add(transactionId);
-        waitForUpdateConfigSync(reason, waitForSync);
+        ifTrueThen(gateConfigUpdate, () -> waitForUpdateConfigSync(reason, waitForSync));
       }
       return updated;
     } catch (Exception e) {
