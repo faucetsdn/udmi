@@ -1,7 +1,7 @@
 """Generated class for config_discovery.json"""
 
 
-class ObjectED573706:
+class ObjectAAE11824:
   """Generated schema class"""
 
   def __init__(self):
@@ -14,7 +14,7 @@ class ObjectED573706:
   def from_dict(source):
     if not source:
       return None
-    result = ObjectED573706()
+    result = ObjectAAE11824()
     result.families = source.get('families')
     result.devices = source.get('devices')
     result.refs = source.get('refs')
@@ -27,7 +27,7 @@ class ObjectED573706:
       return None
     result = {}
     for key in source:
-      result[key] = ObjectED573706.from_dict(source[key])
+      result[key] = ObjectAAE11824.from_dict(source[key])
     return result
 
   @staticmethod
@@ -56,7 +56,7 @@ class DiscoveryConfig:
 
   def __init__(self):
     self.generation = None
-    self.depths = None
+    self.enumerations = None
     self.families = None
 
   @staticmethod
@@ -65,7 +65,7 @@ class DiscoveryConfig:
       return None
     result = DiscoveryConfig()
     result.generation = source.get('generation')
-    result.depths = ObjectED573706.from_dict(source.get('depths'))
+    result.enumerations = ObjectAAE11824.from_dict(source.get('enumerations'))
     result.families = FamilyDiscoveryConfig.map_from(source.get('families'))
     return result
 
@@ -89,8 +89,8 @@ class DiscoveryConfig:
     result = {}
     if self.generation:
       result['generation'] = self.generation # 5
-    if self.depths:
-      result['depths'] = self.depths.to_dict() # 4
+    if self.enumerations:
+      result['enumerations'] = self.enumerations.to_dict() # 4
     if self.families:
       result['families'] = FamilyDiscoveryConfig.expand_dict(self.families) # 2
     return result

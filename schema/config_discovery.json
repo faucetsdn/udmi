@@ -11,8 +11,8 @@
       "type": "string",
       "format": "date-time"
     },
-    "depths": {
-      "description": "Indicates which discovery sub-categories to activate",
+    "enumerations": {
+      "description": "Enumeration depth for self-enumerations.",
       "type": "object",
       "additionalProperties": false,
       "properties": {
@@ -31,7 +31,7 @@
       }
     },
     "families": {
-      "description": "Address family config for a scan.",
+      "description": "Address family configs for discovery scans.",
       "existingJavaType": "java.util.HashMap<String, FamilyDiscoveryConfig>",
       "additionalProperties": false,
       "patternProperties": {

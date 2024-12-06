@@ -1,0 +1,12 @@
+{
+  "$udmi_version": "1.5.2",
+  "title": "Depth",
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "enum",
+  "enum": [
+    "containers",
+    "entries",
+    "details",
+    "parts"
+  ]
+}
