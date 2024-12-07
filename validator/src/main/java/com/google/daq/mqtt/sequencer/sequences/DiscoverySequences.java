@@ -57,7 +57,6 @@ import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import org.junit.Before;
 import org.junit.Test;
-import udmi.lib.ProtocolFamily;
 import udmi.schema.Bucket;
 import udmi.schema.Depths;
 import udmi.schema.Depths.Depth;
@@ -74,16 +73,16 @@ public class DiscoverySequences extends SequenceBase {
 
   public static final Duration SCAN_START_DELAY = Duration.ofSeconds(20);
   public static final Duration WAITING_PERIOD = SCAN_START_DELAY.plus(SCAN_START_DELAY);
-  public static final int SCAN_START_DELAY_SEC = (int) SCAN_START_DELAY.getSeconds();
   public static final int SCAN_START_JITTER_SEC = 5;
   private static final int SCAN_ITERATIONS = 2;
-  private static final String scanFamily = ProtocolFamily.VENDOR;
   private static final long RANDOM_YEAR_SEC = (long) (Math.random() * 60 * 60 * 24 * 365);
   private static final Instant BASE_OLD_TIME = Instant.parse("2020-10-18T12:02:01Z");
   private static final Date LONG_TIME_AGO = Date.from(BASE_OLD_TIME.plusSeconds(RANDOM_YEAR_SEC));
   private static final int SCAN_DURATION_SEC = 10;
+  private static final String DISCOVERY_TARGET = "scan_family";
   private Set<String> metaFamilies;
   private Instant scanGeneration;
+  private String scanFamily;
 
   private static boolean isActive(Entry<String, FeatureDiscovery> entry) {
     return ofNullable(entry.getValue().stage).orElse(STABLE).compareTo(BETA) >= 0;
@@ -96,6 +95,8 @@ public class DiscoverySequences extends SequenceBase {
   @Before
   public void setupExpectedParameters() {
     allowDeviceStateChange("discovery");
+    scanFamily = catchToNull(() ->
+        (String) deviceMetadata.testing.targets.get(DISCOVERY_TARGET).target_value);
   }
 
   private DiscoveryEvents runEnumeration(Depths depths) {
@@ -387,10 +388,14 @@ public class DiscoverySequences extends SequenceBase {
   }
 
   private void initializeDiscovery() {
+    ifNullSkipTest(scanFamily,
+        format("metadata.testing.targets.%s.target_value not defined", DISCOVERY_TARGET));
     metaFamilies = catchToNull(() -> deviceMetadata.discovery.families.keySet());
     if (metaFamilies == null || metaFamilies.isEmpty()) {
       skipTest("No discovery families configured");
     }
+    checkState(metaFamilies.contains(scanFamily),
+        format("Discovery scan family %s not specified in metadata", scanFamily));
     deviceConfig.discovery = new DiscoveryConfig();
     deviceConfig.discovery.families = new HashMap<>();
     untilTrue("discovery families defined", () -> deviceState.discovery.families != null);
