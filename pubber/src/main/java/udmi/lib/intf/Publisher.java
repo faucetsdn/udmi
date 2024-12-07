@@ -28,6 +28,11 @@ public interface Publisher {
       Class<T> messageType);
 
   /**
+   * Unregister handlers.
+   */
+  void unregisterHandlers();
+
+  /**
    * Connect the given device id.
    *
    * @param deviceId device to connect

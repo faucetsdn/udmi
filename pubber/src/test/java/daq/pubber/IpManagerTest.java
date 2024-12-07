@@ -56,19 +56,19 @@ public class IpManagerTest {
 
   @Test
   public void testGetDefaultInterfaceOne() {
-    String defaultInterface = IpProvider.getDefaultInterfaceStatic(IP_ROUTE_BASIC);
+    String defaultInterface = PubberIpProvider.getDefaultInterfaceStatic(IP_ROUTE_BASIC);
     assertEquals("default interface", "eth0", defaultInterface);
   }
 
   @Test
   public void testGetDefaultInterfaceTwo() {
-    String defaultInterface = IpProvider.getDefaultInterfaceStatic(IP_ROUTE_DUAL);
+    String defaultInterface = PubberIpProvider.getDefaultInterfaceStatic(IP_ROUTE_DUAL);
     assertEquals("default interface", "enp0s31f6", defaultInterface);
   }
 
   @Test
   public void testGetInterfaceAddresses() {
-    Map<String, String> interfaceAddresses = IpProvider.getInterfaceAddressesStatic(
+    Map<String, String> interfaceAddresses = PubberIpProvider.getInterfaceAddressesStatic(
         INTERFACE_STRINGS_DEBIAN);
     ImmutableMap<String, String> expectedInterfaces = ImmutableMap.of(
         ProtocolFamily.ETHER, "8c:8c:aa:50:bc:72",
@@ -80,9 +80,9 @@ public class IpManagerTest {
 
   @Test
   public void testAlternateInputs() {
-    String defaultInterface = IpProvider.getDefaultInterfaceStatic(IP_ROUTE_ALTERNATE);
+    String defaultInterface = PubberIpProvider.getDefaultInterfaceStatic(IP_ROUTE_ALTERNATE);
     assertEquals("expected alternate default interface", "ethX", defaultInterface);
-    Map<String, String> interfaceAddresses = IpProvider.getInterfaceAddressesStatic(
+    Map<String, String> interfaceAddresses = PubberIpProvider.getInterfaceAddressesStatic(
         IP_ADDR_ALTERNATE);
     ImmutableMap<String, String> expectedInterfaces = ImmutableMap.of(
         ProtocolFamily.IPV_4, "192.168.1.141",

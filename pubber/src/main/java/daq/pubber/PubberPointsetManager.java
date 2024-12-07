@@ -72,9 +72,9 @@ public class PubberPointsetManager extends PubberManager implements PointsetMana
 
   private AbstractPoint makePoint(String name, PointPointsetModel point) {
     if (BOOLEAN_UNITS.contains(point.units)) {
-      return new RandomBoolean(name, point);
+      return new PubberRandomBoolean(name, point);
     } else {
-      return new RandomPoint(name, point);
+      return new PubberRandomPoint(name, point);
     }
   }
 

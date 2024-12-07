@@ -13,7 +13,7 @@ import udmi.schema.Operation.SystemMode;
 /**
  * Device client.
  */
-public interface DeviceManager extends SubblockManager {
+public interface DeviceManager extends SubBlockManager {
   
   PointsetManager getPointsetManager();
 
@@ -68,13 +68,15 @@ public interface DeviceManager extends SubblockManager {
 
   /**
    * Update the config of this device.
+   * Maintain the same order as manager initialization to ensure consistency.
+   * Update gateway config last, as it may restart gateway for certain implementations.
    */
   default void updateConfig(Config config) {
-    getPointsetManager().updateConfig(config.pointset);
     getSystemManager().updateConfig(config.system, config.timestamp);
-    getGatewayManager().updateConfig(config.gateway);
-    getDiscoveryManager().updateConfig(config.discovery);
     getLocalnetManager().updateConfig(config.localnet);
+    getPointsetManager().updateConfig(config.pointset);
+    getDiscoveryManager().updateConfig(config.discovery);
+    getGatewayManager().updateConfig(config.gateway);
   }
 
   /**

@@ -59,6 +59,11 @@ public class ListPublisher implements Publisher {
   }
 
   @Override
+  public void unregisterHandlers() {
+    handlers.clear();
+  }
+
+  @Override
   public void connect(String deviceId, boolean clean) {
     Consumer<Object> handler = handlers.get("config").getKey();
     handler.accept(new Config());

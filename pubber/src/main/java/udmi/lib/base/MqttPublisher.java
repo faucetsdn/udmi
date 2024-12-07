@@ -84,6 +84,7 @@ public class MqttPublisher implements Publisher {
   private static final int INITIALIZE_TIME_MS = 10000;
   private static final String BROKER_URL_FORMAT = "%s://%s:%s";
   private static final int PUBLISH_THREAD_COUNT = 10;
+  private static final int MAX_IN_FLIGHT = 1024;
   private static final String HANDLER_KEY_FORMAT = "%s/%s";
   private static final int TOKEN_EXPIRY_MINUTES = 60;
   private static final int QOS_AT_MOST_ONCE = 0;
@@ -280,6 +281,7 @@ public class MqttPublisher implements Publisher {
     try {
       warn("Closing publisher connection");
       mqttClients.keySet().forEach(this::closeMqttClient);
+      unregisterHandlers();
     } catch (Exception e) {
       error("While closing publisher", deviceId, null, "close", e);
     }
@@ -372,7 +374,7 @@ public class MqttPublisher implements Publisher {
 
       MqttConnectOptions options = new MqttConnectOptions();
       options.setMqttVersion(MqttConnectOptions.MQTT_VERSION_3_1_1);
-      options.setMaxInflight(PUBLISH_THREAD_COUNT * 2);
+      options.setMaxInflight(MAX_IN_FLIGHT);
       options.setConnectionTimeout(INITIALIZE_TIME_MS);
 
       configureAuth(options);
@@ -503,6 +505,12 @@ public class MqttPublisher implements Publisher {
     } else {
       throw new IllegalStateException("Overwriting existing handler " + handlerKey);
     }
+  }
+
+  @Override
+  public void unregisterHandlers() {
+    handlers.clear();
+    handlersType.clear();
   }
 
   private String getHandlerKey(String topic) {

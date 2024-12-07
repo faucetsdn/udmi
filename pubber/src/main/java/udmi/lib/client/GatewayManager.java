@@ -6,7 +6,6 @@ import static com.google.udmi.util.GeneralUtils.ifNotNullThen;
 import static java.lang.String.format;
 import static java.util.Optional.ofNullable;
 
-import com.google.udmi.util.SiteModel;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -25,7 +24,7 @@ import udmi.schema.PointsetConfig;
 /**
  * Gateway client.
  */
-public interface GatewayManager extends SubblockManager {
+public interface GatewayManager extends SubBlockManager {
 
   String EXTRA_PROXY_DEVICE = "XXX-1";
   String EXTRA_PROXY_POINT = "xxx_conflagration";
@@ -124,5 +123,4 @@ public interface GatewayManager extends SubblockManager {
   }
 
   void updateConfig(GatewayConfig gateway);
-
 }

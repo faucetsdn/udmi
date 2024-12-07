@@ -14,7 +14,7 @@ import udmi.schema.LocalnetState;
 /**
  * Localnet client.
  */
-public interface LocalnetManager extends ManagerHost, SubblockManager {
+public interface LocalnetManager extends ManagerHost, SubBlockManager {
 
 
   LocalnetConfig getLocalnetConfig();

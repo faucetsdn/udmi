@@ -52,7 +52,7 @@ public class PubberGatewayManager extends PubberManager implements GatewayManage
 
   @Override
   public ProxyDeviceHost makeExtraDevice() {
-    return new ProxyDevice(getHost(), EXTRA_PROXY_DEVICE, config);
+    return new PubberProxyDevice(getHost(), EXTRA_PROXY_DEVICE, config);
   }
 
   /**
@@ -140,6 +140,6 @@ public class PubberGatewayManager extends PubberManager implements GatewayManage
 
   @Override
   public ProxyDeviceHost createProxyDevice(ManagerHost host, String id) {
-    return new ProxyDevice(host, id, config);
+    return new PubberProxyDevice(host, id, config);
   }
 }
