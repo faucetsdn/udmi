@@ -1422,7 +1422,7 @@ public class SequenceBase {
   protected void checkThat(String description, Supplier<Boolean> condition, String details) {
     if (!catchToFalse(condition)) {
       String message = "Failed check that " + sanitizedDescription(description)
-          + ifNotNullGet(details, base -> "; " + base, "");
+          + ifNotNullGet(details, base -> ": " + base, "");
       warning(message);
       throw new IllegalStateException(message);
     }
