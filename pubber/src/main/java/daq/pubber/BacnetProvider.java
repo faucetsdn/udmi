@@ -9,6 +9,9 @@ import udmi.lib.intf.ManagerHost;
 import udmi.schema.DiscoveryEvents;
 import udmi.schema.RefDiscovery;
 
+/**
+ * Provides for the bacnet family of stuffs.
+ */
 public class BacnetProvider extends ManagerBase implements FamilyProvider {
 
   private final LocalnetManager localnetHost;

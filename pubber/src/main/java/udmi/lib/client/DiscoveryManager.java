@@ -67,7 +67,7 @@ public interface DiscoveryManager extends SubblockManager {
     });
   }
 
-  default  <K, V> Map<K, V> maybeEnumerate(Depths.Depth depth, Supplier<Map<K, V>> supplier) {
+  default <K, V> Map<K, V> maybeEnumerate(Depths.Depth depth, Supplier<Map<K, V>> supplier) {
     return ifTrueGet(shouldEnumerateTo(depth), supplier);
   }
 
@@ -150,7 +150,8 @@ public interface DiscoveryManager extends SubblockManager {
   default void cancelDiscoveryScan(String family, Date configGeneration) {
     FamilyDiscoveryState familyDiscoveryState = getFamilyDiscoveryState(family);
     if (familyDiscoveryState != null) {
-      info(format("Discovery scan %s phase %s as %s", family, STOPPED, isoConvert(configGeneration)));
+      info(format("Discovery scan %s phase %s as %s", family, STOPPED,
+          isoConvert(configGeneration)));
       familyDiscoveryState.phase = STOPPED;
       familyDiscoveryState.generation = configGeneration;
       updateState();
@@ -179,7 +180,7 @@ public interface DiscoveryManager extends SubblockManager {
   /**
    * Checks and scan for discovery.
    *
-   * @param family family
+   * @param family         family
    * @param scanGeneration scan generation.
    */
   default void checkDiscoveryScan(String family, Date scanGeneration) {
