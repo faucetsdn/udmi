@@ -29,6 +29,10 @@ public class PubberDeviceManager extends PubberManager implements DeviceManager 
 
   /**
    * Create a new instance.
+   * Managers are logically ordered to ensure proper initialization and shutdown.
+   * Stop/shutdown order is the reverse of the boot order.
+   * SystemManager should be created first b/c logging dependency.
+   * The remaining managers are placed in a logical boot/shutdown order.
    */
   public PubberDeviceManager(ManagerHost host, PubberConfiguration configuration) {
     super(host, configuration);
@@ -38,8 +42,7 @@ public class PubberDeviceManager extends PubberManager implements DeviceManager 
     discoveryManager = new PubberDiscoveryManager(host, configuration, this);
     gatewayManager = new PubberGatewayManager(host, configuration);
     subManagers = Arrays.asList(
-            systemManager, localnetManager, pointsetManager, discoveryManager, gatewayManager);
-    Collections.reverse(subManagers);
+            gatewayManager, discoveryManager, pointsetManager, localnetManager, systemManager);
   }
 
   @Override

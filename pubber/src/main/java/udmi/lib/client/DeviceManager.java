@@ -68,6 +68,8 @@ public interface DeviceManager extends SubBlockManager {
 
   /**
    * Update the config of this device.
+   * Maintain the same order as manager initialization to ensure consistency.
+   * Update gateway config last, as it may restart gateway for certain implementations.
    */
   default void updateConfig(Config config) {
     getSystemManager().updateConfig(config.system, config.timestamp);
