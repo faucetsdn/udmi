@@ -3,7 +3,7 @@
 1 RESULT fail pointset pointset_remove_point STABLE 0/10 Failed waiting until pointset state matches config
 1 RESULT fail pointset pointset_remove_point STABLE 0/10 Failed waiting until config update synchronized
 1 RESULT fail system too_much_state ALPHA 0/10 Failed check that No more than 6 state updates in 60s
-1 RESULT fail enumeration.features enumerate_features PREVIEW 0/10 Failed check that feature enumeration matches metadata; missing { enumeration }, extra { unknown }
+1 RESULT fail enumeration.features enumerate_features PREVIEW 0/10 Failed check that feature enumeration matches metadata: missing { enumeration }, extra { unknown }
 1 RESULT pass system valid_serial_no STABLE 10/10 Sequence complete
 1 RESULT pass system valid_serial_no STABLE 10/10 Sequence complete
 1 RESULT fail writeback writeback_success ALPHA 0/10 Failed waiting until target point to have value_state default (null)
