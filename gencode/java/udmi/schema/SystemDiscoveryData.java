@@ -18,7 +18,8 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 @JsonPropertyOrder({
     "serial_no",
     "ancillary",
-    "hardware"
+    "hardware",
+    "software"
 })
 public class SystemDiscoveryData {
 
@@ -47,11 +48,19 @@ public class SystemDiscoveryData {
     @JsonProperty("hardware")
     @JsonPropertyDescription("A collection of fields which describe the physical hardware of the device.")
     public StateSystemHardware hardware;
+    /**
+     * A collection of items which can be used to describe version of software running on a device
+     * 
+     */
+    @JsonProperty("software")
+    @JsonPropertyDescription("A collection of items which can be used to describe version of software running on a device")
+    public Map<String, String> software;
 
     @Override
     public int hashCode() {
         int result = 1;
         result = ((result* 31)+((this.ancillary == null)? 0 :this.ancillary.hashCode()));
+        result = ((result* 31)+((this.software == null)? 0 :this.software.hashCode()));
         result = ((result* 31)+((this.serial_no == null)? 0 :this.serial_no.hashCode()));
         result = ((result* 31)+((this.hardware == null)? 0 :this.hardware.hashCode()));
         return result;
@@ -66,7 +75,7 @@ public class SystemDiscoveryData {
             return false;
         }
         SystemDiscoveryData rhs = ((SystemDiscoveryData) other);
-        return ((((this.ancillary == rhs.ancillary)||((this.ancillary!= null)&&this.ancillary.equals(rhs.ancillary)))&&((this.serial_no == rhs.serial_no)||((this.serial_no!= null)&&this.serial_no.equals(rhs.serial_no))))&&((this.hardware == rhs.hardware)||((this.hardware!= null)&&this.hardware.equals(rhs.hardware))));
+        return (((((this.ancillary == rhs.ancillary)||((this.ancillary!= null)&&this.ancillary.equals(rhs.ancillary)))&&((this.software == rhs.software)||((this.software!= null)&&this.software.equals(rhs.software))))&&((this.serial_no == rhs.serial_no)||((this.serial_no!= null)&&this.serial_no.equals(rhs.serial_no))))&&((this.hardware == rhs.hardware)||((this.hardware!= null)&&this.hardware.equals(rhs.hardware))));
     }
 
 }

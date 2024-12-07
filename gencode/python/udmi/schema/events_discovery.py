@@ -17,6 +17,7 @@ class SystemDiscoveryData:
     self.serial_no = None
     self.ancillary = None
     self.hardware = None
+    self.software = None
 
   @staticmethod
   def from_dict(source):
@@ -26,6 +27,7 @@ class SystemDiscoveryData:
     result.serial_no = source.get('serial_no')
     result.ancillary = AncillaryProperties.from_dict(source.get('ancillary'))
     result.hardware = StateSystemHardware.from_dict(source.get('hardware'))
+    result.software = source.get('software')
     return result
 
   @staticmethod
@@ -52,6 +54,8 @@ class SystemDiscoveryData:
       result['ancillary'] = self.ancillary.to_dict() # 4
     if self.hardware:
       result['hardware'] = self.hardware.to_dict() # 4
+    if self.software:
+      result['software'] = self.software # 1
     return result
 
 
