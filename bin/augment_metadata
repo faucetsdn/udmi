@@ -47,10 +47,11 @@ echo Setting ipv4 addr to $ipv4_addr
 echo Setting ipv6 addr to $ipv6_addr
 echo Setting nostate to $nostate
 
-jq ".localnet.families.ether.addr = \"$ether_addr\"" $metadata_file |
-    jq ".localnet.families.ipv4.addr = \"$ipv4_addr\"" |
-    jq ".localnet.families.ipv6.addr = \"$ipv6_addr\"" |
-    jq ".testing.nostate = $nostate" > $metadata_out
+cp $metadata_file $metadata_out
+jq ".localnet.families.ether.addr = \"$ether_addr\"" $metadata_out | sponge $metadata_out
+jq ".localnet.families.ipv4.addr = \"$ipv4_addr\"" $metadata_out | sponge $metadata_out
+jq ".localnet.families.ipv6.addr = \"$ipv6_addr\"" $metadata_out | sponge $metadata_out
+jq ".testing.nostate = $nostate" $metadata_out | sponge $metadata_out
 
 # Dynamically update the site model based off of dynamic pubber output.
 pubber_features=$(< $site_dir/out/pubber_features.json)
