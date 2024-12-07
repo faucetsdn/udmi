@@ -11,8 +11,8 @@ ROOT_DIR=$(realpath $(dirname $0)/..)
 BASE_CONFIG=$(realpath $ROOT_DIR/etc/base_config.json)
 TMP_CONFIG="/tmp/discoverynode_config.json"
 
-if [[ $# -ne 3 ]]; then
-  error Usage: $0 SITE_MODEL TARGET DEVICE_ID
+if (( $# -le 4 )); then
+  error Usage: $0 SITE_MODEL TARGET DEVICE_ID [OPTIONS]
 fi
 
 site_model=$1
@@ -65,12 +65,8 @@ EOF
   )
 
 elif [[ $provider == mqtt ]]; then
-  if [[ $project != localhost ]]; then
-    error only localhost supported
-  fi
-
   substitutions=$(cat <<EOF
-    .mqtt.host|="localhost" |
+    .mqtt.host|="$project" |
     .mqtt.port|=8883 |
     .mqtt.region|="$region" |
     .mqtt.project_id|="$project" |
@@ -88,6 +84,13 @@ else
   exit
 fi
 
+shift 3
 
 cat $TMP_CONFIG | jq -r  "$substitutions" | sponge $TMP_CONFIG
+
+for option in "$@"
+do
+  cat $TMP_CONFIG | jq -r ".${option/=/|=\"}\"" | sponge $TMP_CONFIG
+done
+
 $ROOT_DIR/venv/bin/python3 $ROOT_DIR/src/main.py --config_file=$TMP_CONFIG
