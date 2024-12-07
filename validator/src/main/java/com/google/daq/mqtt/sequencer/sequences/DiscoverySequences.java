@@ -92,6 +92,9 @@ public class DiscoverySequences extends SequenceBase {
     return shouldEnumerate == PLEASE_ENUMERATE ? ENTRIES : null;
   }
 
+  /**
+   * Do some basic setup for things applicable to all tests.
+   */
   @Before
   public void setupExpectedParameters() {
     allowDeviceStateChange("discovery");
