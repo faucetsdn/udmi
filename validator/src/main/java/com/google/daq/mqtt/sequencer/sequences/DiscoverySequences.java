@@ -36,6 +36,7 @@ import static udmi.schema.FeatureDiscovery.FeatureStage.BETA;
 import static udmi.schema.FeatureDiscovery.FeatureStage.PREVIEW;
 import static udmi.schema.FeatureDiscovery.FeatureStage.STABLE;
 
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
 import com.google.common.collect.Sets.SetView;
 import com.google.daq.mqtt.sequencer.DiscoveryScanMode;
@@ -130,12 +131,12 @@ public class DiscoverySequences extends SequenceBase {
   private void checkSelfEnumeration(DiscoveryEvents event, Depths depths) {
     if (shouldEnumerate(depths.families)) {
       Set<String> models = ofNullable(deviceMetadata.localnet)
-          .map(localnet -> localnet.families.keySet()).orElse(null);
+          .map(localnet -> localnet.families.keySet()).orElse(ImmutableSet.of());
       Set<String> events = ofNullable(event.families).map(Map::keySet)
-          .orElse(null);
+          .orElse(ImmutableSet.of());
 
       String detail = models.size() == events.size() ? null
-          : format("model size %d but received %d events", models.size(), events.size());
+          : format("received %s, expected %s", CSV_JOINER.join(events), CSV_JOINER.join(models));
       checkThat("family enumeration size matches", detail);
     } else {
       checkThat("no family enumeration exists", () -> event.families == null);
