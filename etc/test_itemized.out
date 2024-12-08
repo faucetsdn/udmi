@@ -49,7 +49,7 @@
 1 RESULT fail gateway gateway_proxy_events BETA 0/10 Failed waiting until All proxy devices received pointset
 1 RESULT pass gateway gateway_proxy_state PREVIEW 10/10 Sequence complete
 1 RESULT pass gateway gateway_proxy_state PREVIEW 10/10 Sequence complete
-1 RESULT pass discovery.scan scan_single_future ALPHA 10/10 Sequence complete
+1 RESULT fail discovery.scan scan_single_future ALPHA 0/10 Failed check that discovery events were valid: bacnet scan_addr snoozle does not match expression [1-9][0-9]*
 4 RESULT pass gateway gateway_proxy_events BETA 10/10 Sequence complete
 1 RESULT pass gateway gateway_proxy_events BETA 10/10 Sequence complete
 1 RESULT pass gateway gateway_proxy_state PREVIEW 10/10 Sequence complete
