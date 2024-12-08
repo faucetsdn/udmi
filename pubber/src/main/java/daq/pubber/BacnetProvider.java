@@ -85,7 +85,7 @@ public class BacnetProvider extends ManagerBase implements PubberFamilyProvider 
 
   @Override
   public synchronized void stopScan() {
-    stop();
+    cancelPeriodicSend();
   }
 
   @Override

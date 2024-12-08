@@ -38,6 +38,7 @@ import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Base64;
+import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
@@ -97,8 +98,8 @@ public class GeneralUtils {
    * the target class is "final" but the fields themselves need to be updated.
    *
    * @param from source object
-   * @param to target object
-   * @param <T> type of object
+   * @param to   target object
+   * @param <T>  type of object
    */
   public static <T> void copyFields(T from, T to, boolean includeNull) {
     Field[] fields = from.getClass().getDeclaredFields();
@@ -324,6 +325,13 @@ public class GeneralUtils {
 
   public static void requireNull(Object value, String description) {
     checkState(value == null, description);
+  }
+
+  public static <T extends Collection<?>> void ifNotEmptyThrow(T value,
+      Function<T, String> detailer) {
+    if (!value.isEmpty()) {
+      throw new RuntimeException(detailer.apply(value));
+    }
   }
 
   public static <T> void ifNotNullThrow(T value, String message) {
@@ -675,7 +683,8 @@ public class GeneralUtils {
 
   public static String removeStringArg(List<String> argList, String description) {
     if (!argList.isEmpty() && argList.get(0).startsWith("-")) {
-      throw new IllegalArgumentException(format("Missing required %s string argument", description));
+      throw new IllegalArgumentException(
+          format("Missing required %s string argument", description));
     }
     return removeArg(argList, description);
   }

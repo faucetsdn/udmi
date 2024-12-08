@@ -4,7 +4,6 @@ import java.util.Date;
 import java.util.concurrent.ScheduledFuture;
 import udmi.lib.intf.ManagerHost;
 import udmi.lib.intf.ManagerLog;
-import udmi.schema.Metadata;
 
 /**
  * Interface for providing main manager functionalities.

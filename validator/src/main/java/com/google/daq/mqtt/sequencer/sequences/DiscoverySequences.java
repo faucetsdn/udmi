@@ -10,6 +10,8 @@ import static com.google.udmi.util.CleanDateFormat.cleanDate;
 import static com.google.udmi.util.CleanDateFormat.cleanInstantDate;
 import static com.google.udmi.util.CleanDateFormat.dateEquals;
 import static com.google.udmi.util.GeneralUtils.CSV_JOINER;
+import static com.google.udmi.util.GeneralUtils.changedLines;
+import static com.google.udmi.util.GeneralUtils.ifNotEmptyThrow;
 import static com.google.udmi.util.GeneralUtils.ifNotNullGet;
 import static com.google.udmi.util.GeneralUtils.ifNotTrueGet;
 import static com.google.udmi.util.GeneralUtils.ifNullElse;
@@ -47,6 +49,7 @@ import com.google.daq.mqtt.sequencer.semantic.SemanticDate;
 import com.google.daq.mqtt.util.FamilyProvider;
 import java.time.Duration;
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
@@ -311,10 +314,13 @@ public class DiscoverySequences extends SequenceBase {
     Integer stateEvents = deviceState.discovery.families.get(scanFamily).active_count;
     List<DiscoveryEvents> events = popReceivedEvents(DiscoveryEvents.class);
     Date generation = deviceConfig.discovery.families.get(scanFamily).generation;
-    Function<DiscoveryEvents, String> invalidator = event -> invalidReasons(event, generation);
+    Function<DiscoveryEvents, List<String>> invalidator = event -> invalidReasons(event,
+        generation);
     checkThat("discovery events were received", events.size() == stateEvents);
-    Set<String> reasons = events.stream().map(invalidator).filter(Objects::nonNull)
-        .collect(Collectors.toSet());
+    List<String> reasons = events.stream().map(invalidator).flatMap(List::stream)
+        .collect(Collectors.toList());
+    reasons.addAll(checkEnumeration(events, shouldEnumerate));
+
     checkThat("discovery events were valid", reasons.isEmpty(), CSV_JOINER.join(reasons));
 
     Set<String> duplicates = events.stream().map(x -> x.scan_addr)
@@ -333,7 +339,6 @@ public class DiscoverySequences extends SequenceBase {
     checkThat("all expected addresses were found", differences.isEmpty(),
         format("expected %s, found %s", expectedAddresses, discoveredAddresses));
 
-    checkEnumeration(events, shouldEnumerate);
   }
 
   private String detailScanPending() {
@@ -351,16 +356,23 @@ public class DiscoverySequences extends SequenceBase {
         format("Expected stopped %s but %s", isoConvert(scanGeneration), describedFamilyState()));
   }
 
-  private String invalidReasons(DiscoveryEvents discoveryEvent, Date scanGeneration) {
+  private List<String> invalidReasons(DiscoveryEvents discoveryEvent, Date scanGeneration) {
+    List<String> exceptions = new ArrayList<>();
+    addIfCaught(exceptions,
+        () -> assertEquals("bad scan family", scanFamily, discoveryEvent.scan_family));
+    addIfCaught(exceptions,
+        () -> assertEquals("bad generation", scanGeneration, discoveryEvent.generation));
+    addIfCaught(exceptions, () -> assertNotNull("empty scan address", discoveryEvent.scan_addr));
+    addIfCaught(exceptions, () -> providerFamily.validateAddr(discoveryEvent.scan_addr));
+    return exceptions;
+  }
+
+  private void addIfCaught(List<String> exceptions, Runnable checker) {
     try {
-      assertEquals("bad scan family", scanFamily, discoveryEvent.scan_family);
-      assertEquals("bad generation", scanGeneration, discoveryEvent.generation);
-      assertNotNull("empty scan address", discoveryEvent.scan_addr);
-      providerFamily.validateAddr(discoveryEvent.scan_addr);
+      checker.run();
     } catch (Exception e) {
-      return e.getMessage();
+      exceptions.add(e.getMessage());
     }
-    return null;
   }
 
   private String describedFamilyState() {
@@ -371,14 +383,18 @@ public class DiscoverySequences extends SequenceBase {
     return ifNotNullGet(deviceState.discovery.families, map -> map.get(scanFamily));
   }
 
-  private void checkEnumeration(List<DiscoveryEvents> receivedEvents,
+  private List<String> checkEnumeration(List<DiscoveryEvents> receivedEvents,
       DiscoveryScanMode shouldEnumerate) {
+    List<String> exceptions = new ArrayList<>();
     Predicate<DiscoveryEvents> hasRefs = event -> event.refs != null && !event.refs.isEmpty();
     if (shouldEnumerate == PLEASE_ENUMERATE) {
-      checkThat("all events have discovered refs", receivedEvents.stream().allMatch(hasRefs));
+      addIfCaught(exceptions, () ->
+          checkThat("all events have discovered refs", receivedEvents.stream().allMatch(hasRefs)));
     } else {
-      checkThat("no events have discovered refs", receivedEvents.stream().noneMatch(hasRefs));
+      addIfCaught(exceptions, () ->
+          checkThat("no events have discovered refs", receivedEvents.stream().noneMatch(hasRefs)));
     }
+    return exceptions;
   }
 
   @Test(timeout = TWO_MINUTES_MS)
@@ -396,7 +412,7 @@ public class DiscoverySequences extends SequenceBase {
     checkThat("scan did not terminate prematurely",
         metaFamilies.stream().noneMatch(scanStopped(Date.from(finishTime))));
     List<DiscoveryEvents> receivedEvents = popReceivedEvents(DiscoveryEvents.class);
-    checkEnumeration(receivedEvents, PLEASE_ENUMERATE);
+    ifNotEmptyThrow(checkEnumeration(receivedEvents, PLEASE_ENUMERATE), CSV_JOINER::join);
   }
 
   private void initializeDiscovery() {
