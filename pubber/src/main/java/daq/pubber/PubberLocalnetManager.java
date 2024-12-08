@@ -57,7 +57,6 @@ public class PubberLocalnetManager extends PubberManager implements LocalnetMana
     localnetProviders.forEach((key, value) -> value.setSiteModel(siteModel));
   }
 
-
   @Override
   public LocalnetState getLocalnetState() {
     return this.localnetState;
