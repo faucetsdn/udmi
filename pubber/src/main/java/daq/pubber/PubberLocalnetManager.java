@@ -3,6 +3,7 @@ package daq.pubber;
 import com.google.udmi.util.SiteModel;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.stream.Collectors;
 import udmi.lib.ProtocolFamily;
 import udmi.lib.client.LocalnetManager;
@@ -18,16 +19,15 @@ import udmi.schema.PubberConfiguration;
 public class PubberLocalnetManager extends PubberManager implements LocalnetManager {
 
   private final LocalnetState localnetState;
-  private final Map<String, FamilyProvider> localnetProviders;
+  private final Map<String, PubberFamilyProvider> localnetProviders;
   private LocalnetConfig localnetConfig;
 
-  static Map<String, Class<? extends FamilyProvider>> LOCALNET_PROVIDERS =
-      Map.of(
-          ProtocolFamily.VENDOR, VendorProvider.class,
-          ProtocolFamily.IPV_4, IpProvider.class,
-          ProtocolFamily.IPV_6, IpProvider.class,
-          ProtocolFamily.ETHER, IpProvider.class,
-          ProtocolFamily.BACNET, BacnetProvider.class);
+  static Map<String, Class<? extends PubberFamilyProvider>> LOCALNET_PROVIDERS = Map.of(
+      ProtocolFamily.VENDOR, VendorProvider.class,
+      ProtocolFamily.IPV_4, IpProvider.class,
+      ProtocolFamily.IPV_6, IpProvider.class,
+      ProtocolFamily.ETHER, IpProvider.class,
+      ProtocolFamily.BACNET, BacnetProvider.class);
 
   /**
    * Create a new container with the given host.
@@ -43,7 +43,7 @@ public class PubberLocalnetManager extends PubberManager implements LocalnetMana
   /**
    * Instantiate a family provider.
    */
-  FamilyProvider instantiateProvider(String family) {
+  PubberFamilyProvider instantiateProvider(String family) {
     try {
       return LOCALNET_PROVIDERS.get(family).getDeclaredConstructor(
               ManagerHost.class, String.class, String.class)
@@ -54,6 +54,7 @@ public class PubberLocalnetManager extends PubberManager implements LocalnetMana
   }
 
   public void setSiteModel(SiteModel siteModel) {
+    ((VendorProvider) getLocalnetProviders().get(ProtocolFamily.VENDOR)).setSiteModel(siteModel);
     ((VendorProvider) getLocalnetProviders().get(ProtocolFamily.VENDOR)).setSiteModel(siteModel);
   }
 
@@ -76,7 +77,9 @@ public class PubberLocalnetManager extends PubberManager implements LocalnetMana
 
   @Override
   public Map<String, FamilyProvider> getLocalnetProviders() {
-    return localnetProviders;
+    // Silly type downgrade from PubberFamilyProvider to FamilyProvider.
+    return localnetProviders.entrySet().stream()
+        .collect(Collectors.toMap(Entry::getKey, Entry::getValue));
   }
 
 }

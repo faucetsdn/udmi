@@ -10,14 +10,12 @@ import static udmi.lib.ProtocolFamily.VENDOR;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.udmi.util.SiteModel;
-import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.function.BiConsumer;
 import udmi.lib.base.ManagerBase;
 import udmi.lib.client.DiscoveryManager;
 import udmi.lib.client.LocalnetManager;
-import udmi.lib.intf.FamilyProvider;
 import udmi.lib.intf.ManagerHost;
 import udmi.schema.DiscoveryEvents;
 import udmi.schema.FamilyLocalnetState;
@@ -28,7 +26,7 @@ import udmi.schema.RefDiscovery;
 /**
  * Basic provider for the Vendor protocol family.
  */
-public class VendorProvider extends ManagerBase implements FamilyProvider {
+public class VendorProvider extends ManagerBase implements PubberFamilyProvider {
 
   private final LocalnetManager localnetHost;
   private SiteModel siteModel;
@@ -63,6 +61,7 @@ public class VendorProvider extends ManagerBase implements FamilyProvider {
     });
   }
 
+  @Override
   public void setSiteModel(SiteModel siteModel) {
     this.siteModel = siteModel;
     updateStateAddress();

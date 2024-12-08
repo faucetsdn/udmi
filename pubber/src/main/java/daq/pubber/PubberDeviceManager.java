@@ -10,6 +10,7 @@ import udmi.lib.client.PointsetManager;
 import udmi.lib.client.SystemManager;
 import udmi.lib.intf.ManagerHost;
 import udmi.schema.Config;
+import udmi.schema.Metadata;
 import udmi.schema.PubberConfiguration;
 
 /**
@@ -99,4 +100,8 @@ public class PubberDeviceManager extends PubberManager implements DeviceManager 
     localnetManager.setSiteModel(siteModel);
   }
 
+  @Override
+  public void setMetadata(Metadata metadata) {
+    DeviceManager.super.setMetadata(metadata);
+  }
 }
