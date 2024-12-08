@@ -158,7 +158,7 @@ public abstract class ManagerBase implements SubblockManager {
       return;
     }
     int previous = sendRateSec.getAndSet(intervalSec);
-    if (previous != intervalSec && periodicSender != null) {
+    if (previous != intervalSec || periodicSender == null) {
       cancelPeriodicSend();
       if (intervalSec > DISABLED_INTERVAL) {
         startPeriodicSend();
