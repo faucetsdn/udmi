@@ -327,7 +327,7 @@ public class DiscoverySequences extends SequenceBase {
         .filter(Objects::nonNull).collect(Collectors.toSet());
     SetView<String> differences = symmetricDifference(discoveredAddresses, expectedAddresses);
     checkThat("all expected addresses were found", differences.isEmpty(),
-        format("expected %s, discovered %s", expectedAddresses, discoveredAddresses));
+        format("expected %s, found %s", expectedAddresses, discoveredAddresses));
 
     checkEnumeration(events, shouldEnumerate);
   }

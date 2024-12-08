@@ -54,8 +54,7 @@ public class PubberLocalnetManager extends PubberManager implements LocalnetMana
   }
 
   public void setSiteModel(SiteModel siteModel) {
-    ((VendorProvider) getLocalnetProviders().get(ProtocolFamily.VENDOR)).setSiteModel(siteModel);
-    ((VendorProvider) getLocalnetProviders().get(ProtocolFamily.VENDOR)).setSiteModel(siteModel);
+    localnetProviders.forEach((key, value) -> value.setSiteModel(siteModel));
   }
 
 
