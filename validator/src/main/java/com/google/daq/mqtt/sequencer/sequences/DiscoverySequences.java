@@ -407,8 +407,7 @@ public class DiscoverySequences extends SequenceBase {
     configureScan(scanGeneration, SCAN_START_DELAY, PLEASE_ENUMERATE);
     Instant endTime = Instant.now().plusSeconds(SCAN_START_DELAY.getSeconds() * SCAN_ITERATIONS);
     untilUntrue("scan iterations", () -> Instant.now().isBefore(endTime));
-    String oneFamily = metaFamilies.iterator().next();
-    Instant finishTime = deviceState.discovery.families.get(oneFamily).generation.toInstant();
+    Instant finishTime = deviceState.discovery.families.get(scanFamily).generation.toInstant();
     checkThat("scan did not terminate prematurely",
         metaFamilies.stream().noneMatch(scanStopped(Date.from(finishTime))));
     List<DiscoveryEvents> receivedEvents = popReceivedEvents(DiscoveryEvents.class);
