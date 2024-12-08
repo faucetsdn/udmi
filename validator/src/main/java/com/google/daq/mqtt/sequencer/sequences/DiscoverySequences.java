@@ -44,6 +44,7 @@ import com.google.daq.mqtt.sequencer.Feature;
 import com.google.daq.mqtt.sequencer.SequenceBase;
 import com.google.daq.mqtt.sequencer.Summary;
 import com.google.daq.mqtt.sequencer.semantic.SemanticDate;
+import com.google.daq.mqtt.util.FamilyProvider;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.Date;
@@ -84,6 +85,7 @@ public class DiscoverySequences extends SequenceBase {
   private Set<String> metaFamilies;
   private Instant scanGeneration;
   private String scanFamily;
+  private FamilyProvider providerFamily;
 
   private static boolean isActive(Entry<String, FeatureDiscovery> entry) {
     return ofNullable(entry.getValue().stage).orElse(STABLE).compareTo(BETA) >= 0;
@@ -101,6 +103,8 @@ public class DiscoverySequences extends SequenceBase {
     allowDeviceStateChange("discovery");
     scanFamily = catchToNull(() ->
         (String) deviceMetadata.testing.targets.get(DISCOVERY_TARGET).target_value);
+    providerFamily = FamilyProvider.NAMED_FAMILIES.get(scanFamily);
+    checkState(providerFamily != null, "No provider family found for scan family " + scanFamily);
   }
 
   private DiscoveryEvents runEnumeration(Depths depths) {
@@ -352,6 +356,7 @@ public class DiscoverySequences extends SequenceBase {
       assertEquals("bad scan family", scanFamily, discoveryEvent.scan_family);
       assertEquals("bad generation", scanGeneration, discoveryEvent.generation);
       assertNotNull("empty scan address", discoveryEvent.scan_addr);
+      providerFamily.validateAddr(discoveryEvent.scan_addr);
     } catch (Exception e) {
       return e.getMessage();
     }

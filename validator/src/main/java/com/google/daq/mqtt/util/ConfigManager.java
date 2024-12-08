@@ -231,7 +231,7 @@ public class ConfigManager {
         requireNonNull(catchToNull(() -> metadata.localnet.families.get(family).addr),
             format("metadata.localnet.families.[%s].addr not defined", family)));
 
-    NAMED_FAMILIES.get(family).refValidator(pointRef);
+    NAMED_FAMILIES.get(family).validateRef(pointRef);
     return pointRef;
   }
 

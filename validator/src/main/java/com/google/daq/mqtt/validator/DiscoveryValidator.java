@@ -46,10 +46,10 @@ public class DiscoveryValidator {
     FamilyProvider familyProvider = FamilyProvider.NAMED_FAMILIES.get(scanFamily);
     checkNotNull(familyProvider, "Unknown provider for discovery family " + scanFamily);
     if (discoveryEvents.refs == null) {
-      familyProvider.refValidator(constructRef(scanFamily, discoveryEvents.scan_addr, null));
+      familyProvider.validateRef(constructRef(scanFamily, discoveryEvents.scan_addr, null));
     } else {
       discoveryEvents.refs.forEach((key, value) ->
-          familyProvider.refValidator(constructRef(scanFamily, discoveryEvents.scan_addr, key)));
+          familyProvider.validateRef(constructRef(scanFamily, discoveryEvents.scan_addr, key)));
     }
   }
 

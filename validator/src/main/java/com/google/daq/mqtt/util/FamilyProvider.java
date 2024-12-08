@@ -48,5 +48,7 @@ public interface FamilyProvider {
   /**
    * Validate the given point ref for the address family.
    */
-  void refValidator(String metadataRef);
+  void validateRef(String metadataRef);
+
+  void validateAddr(String scanAddr);
 }
