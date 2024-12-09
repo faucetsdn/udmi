@@ -374,9 +374,12 @@ public class Pubber extends PubberManager implements PubberUdmiPublisher {
     targetSchema = ifNotNullGet(metadata.system.device_version, SchemaVersion::fromKey);
     ifNotNullThen(targetSchema, version -> warn("Emulating UDMI version " + version.key()));
 
-    config.serialNo = catchToNull(() -> metadata.system.serial_no);
-
-    config.gatewayId = catchToNull(() -> metadata.gateway.gateway_id);
+    if (config.serialNo == null) {
+      config.serialNo = catchToNull(() -> metadata.system.serial_no);
+    }
+    if (config.gatewayId == null) {
+      config.gatewayId = catchToNull(() -> metadata.gateway.gateway_id);
+    }
 
     config.algorithm = config.gatewayId == null
         ? catchToNull(() -> metadata.cloud.auth_type.value())
