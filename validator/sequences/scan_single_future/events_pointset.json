@@ -7,9 +7,9 @@
       "present_value" : 98
     },
     "filter_differential_pressure_sensor" : {
-      "present_value" : 10
+      "present_value" : 9
     }
   },
-  "timestamp" : "2024-12-09T02:12:32Z",
+  "timestamp" : "2024-12-03T16:00:20Z",
   "version" : "1.5.2"
 }

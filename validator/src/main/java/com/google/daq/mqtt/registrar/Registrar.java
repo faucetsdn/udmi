@@ -501,7 +501,7 @@ public class Registrar {
       localDevices = loadLocalDevices(explicitDevices);
       ifNotNullThen(modelMunger, Runnable::run);
       initializeLocalDevices();
-      cloudModels = ifNotNullGet(fetchCloudModels(), devices -> new HashMap<>(devices));
+      cloudModels = ifNotNullGet(fetchCloudModels(), devices -> new ConcurrentHashMap<>(devices));
       if (deleteDevices || expungeDevices) {
         deleteCloudDevices();
         return;

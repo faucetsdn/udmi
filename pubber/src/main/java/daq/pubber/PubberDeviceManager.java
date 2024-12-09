@@ -1,12 +1,14 @@
 package daq.pubber;
 
 import com.google.udmi.util.SiteModel;
-import java.util.Date;
+import java.util.Arrays;
+import java.util.List;
 import udmi.lib.client.DeviceManager;
 import udmi.lib.client.DiscoveryManager;
 import udmi.lib.client.GatewayManager;
 import udmi.lib.client.LocalnetManager;
 import udmi.lib.client.PointsetManager;
+import udmi.lib.client.SubBlockManager;
 import udmi.lib.client.SystemManager;
 import udmi.lib.intf.ManagerHost;
 import udmi.schema.Config;
@@ -23,23 +25,28 @@ public class PubberDeviceManager extends PubberManager implements DeviceManager 
   private final PubberLocalnetManager localnetManager;
   private final PubberGatewayManager gatewayManager;
   private final PubberDiscoveryManager discoveryManager;
-  private Date lastConfigTimestamp;
+  private final List<SubBlockManager> subManagers;
 
   /**
    * Create a new instance.
+   * Managers are logically ordered to ensure proper initialization and shutdown.
+   * Stop/shutdown order is the reverse of the boot order.
+   * SystemManager should be created first b/c logging dependency.
+   * The remaining managers are placed in a logical boot/shutdown order.
    */
   public PubberDeviceManager(ManagerHost host, PubberConfiguration configuration) {
     super(host, configuration);
     systemManager = new PubberSystemManager(host, configuration);
-    pointsetManager = new PubberPointsetManager(host, configuration);
     localnetManager = new PubberLocalnetManager(host, configuration);
-    gatewayManager = new PubberGatewayManager(host, configuration);
+    pointsetManager = new PubberPointsetManager(host, configuration);
     discoveryManager = new PubberDiscoveryManager(host, configuration, this);
+    gatewayManager = new PubberGatewayManager(host, configuration);
+    subManagers = Arrays.asList(
+            gatewayManager, discoveryManager, pointsetManager, localnetManager, systemManager);
   }
 
   @Override
   public void updateConfig(Config config) {
-    lastConfigTimestamp = config.timestamp;
     DeviceManager.super.updateConfig(config);
   }
 
@@ -73,22 +80,15 @@ public class PubberDeviceManager extends PubberManager implements DeviceManager 
    */
   @Override
   public void shutdown() {
-    getGatewayManager().shutdown();
-    getLocalnetManager().shutdown();
-    getPointsetManager().shutdown();
-    getSystemManager().shutdown();
+    subManagers.forEach(SubBlockManager::shutdown);
   }
-
 
   /**
    * Stop periodic senders.
    */
   @Override
   public void stop() {
-    getGatewayManager().stop();
-    getLocalnetManager().stop();
-    getPointsetManager().stop();
-    getSystemManager().stop();
+    subManagers.forEach(SubBlockManager::stop);
   }
 
   /**
@@ -99,9 +99,12 @@ public class PubberDeviceManager extends PubberManager implements DeviceManager 
     gatewayManager.setSiteModel(siteModel);
     localnetManager.setSiteModel(siteModel);
   }
+<<<<<<< HEAD
 
   @Override
   public void setMetadata(Metadata metadata) {
     DeviceManager.super.setMetadata(metadata);
   }
+=======
+>>>>>>> master
 }

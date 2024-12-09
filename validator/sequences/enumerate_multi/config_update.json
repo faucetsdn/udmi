@@ -4,13 +4,16 @@
       "families" : "entries",
       "features" : "entries",
       "refs" : "entries"
+    },
+    "families" : {
+      "vendor" : { }
     }
   },
   "localnet" : {
     "families" : {
-      "bacnet" : { },
       "ether" : { },
       "ipv4" : { },
+      "ipv6" : { },
       "vendor" : { }
     }
   },
@@ -32,16 +35,16 @@
   },
   "system" : {
     "metrics_rate_sec" : 10,
-    "min_loglevel" : 100,
+    "min_loglevel" : 200,
     "operation" : {
-      "last_start" : "2024-12-09T01:29:09Z"
+      "last_start" : "2024-12-03T15:58:57Z"
     },
     "testing" : {
-      "config_base" : 31,
+      "config_base" : 32,
       "sequence_name" : "enumerate_multi",
-      "transaction_id" : "RC:77e6fe.0000000f"
+      "transaction_id" : "RC:a584c0.0000000e"
     }
   },
-  "timestamp" : "2024-12-09T01:29:37Z",
-  "version" : "git-dee7a47"
+  "timestamp" : "2024-12-03T15:59:24Z",
+  "version" : "git-3d8bbe5"
 }

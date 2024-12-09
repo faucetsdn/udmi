@@ -34,7 +34,7 @@ import udmi.schema.RefDiscovery;
 /**
  * Discovery client.
  */
-public interface DiscoveryManager extends SubblockManager {
+public interface DiscoveryManager extends SubBlockManager {
 
 
   static String getVendorRefKey(Map.Entry<String, PointPointsetModel> entry) {
@@ -150,9 +150,14 @@ public interface DiscoveryManager extends SubblockManager {
   default void cancelDiscoveryScan(String family, Date configGeneration) {
     FamilyDiscoveryState familyDiscoveryState = getFamilyDiscoveryState(family);
     if (familyDiscoveryState != null) {
+<<<<<<< HEAD
       info(format("Discovery scan %s phase %s as %s", family, STOPPED,
           isoConvert(configGeneration)));
       familyDiscoveryState.phase = STOPPED;
+=======
+      info(format("Discovery scan %s phase %s as %s", family, phase, isoConvert(configGeneration)));
+      familyDiscoveryState.phase = phase;
+>>>>>>> master
       familyDiscoveryState.generation = configGeneration;
       updateState();
     }

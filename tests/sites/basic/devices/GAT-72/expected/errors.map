@@ -1,0 +1,7 @@
+Exceptions for GAT-72
+  While loading credentials for local device GAT-72
+    Found 0 credentials
+  expected files
+    Missing files: [ec_private.pem, ec_private.pkcs8, ec_public.pem]
+  While converting device config
+    generation specified without scan_interval_sec parameter

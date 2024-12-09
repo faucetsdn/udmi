@@ -111,7 +111,7 @@ public class DiscoverySequences extends SequenceBase {
   }
 
   private DiscoveryEvents runEnumeration(Depths depths) {
-    deviceConfig.discovery = new DiscoveryConfig();
+    deviceConfig.discovery = ofNullable(deviceConfig.discovery).orElseGet(DiscoveryConfig::new);
     deviceConfig.discovery.depths = depths;
     untilTrue("enumeration not active", () -> deviceState.discovery.generation == null);
 

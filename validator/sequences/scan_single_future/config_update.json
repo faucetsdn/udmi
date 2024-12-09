@@ -2,16 +2,16 @@
   "discovery" : {
     "families" : {
       "vendor" : {
-        "generation" : "2024-12-09T02:12:30Z",
+        "generation" : "2024-12-03T16:00:18Z",
         "scan_duration_sec" : 10
       }
     }
   },
   "localnet" : {
     "families" : {
-      "bacnet" : { },
       "ether" : { },
       "ipv4" : { },
+      "ipv6" : { },
       "vendor" : { }
     }
   },
@@ -33,16 +33,16 @@
   },
   "system" : {
     "metrics_rate_sec" : 10,
-    "min_loglevel" : 100,
+    "min_loglevel" : 200,
     "operation" : {
-      "last_start" : "2024-12-09T02:11:50Z"
+      "last_start" : "2024-12-03T15:59:39Z"
     },
     "testing" : {
-      "config_base" : 34,
+      "config_base" : 36,
       "sequence_name" : "scan_single_future",
-      "transaction_id" : "RC:7d645f.0000000e"
+      "transaction_id" : "RC:bac512.0000000d"
     }
   },
-  "timestamp" : "2024-12-09T02:12:20Z",
-  "version" : "git-dee7a47"
+  "timestamp" : "2024-12-03T16:00:06Z",
+  "version" : "git-3d8bbe5"
 }

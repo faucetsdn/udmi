@@ -26,13 +26,17 @@ import udmi.schema.RefDiscovery;
 /**
  * Basic provider for the Vendor protocol family.
  */
+<<<<<<< HEAD:pubber/src/main/java/daq/pubber/VendorProvider.java
 public class VendorProvider extends ManagerBase implements PubberFamilyProvider {
+=======
+public class PubberVendorProvider extends ManagerBase implements FamilyProvider {
+>>>>>>> master:pubber/src/main/java/daq/pubber/PubberVendorProvider.java
 
   private final LocalnetManager localnetHost;
   private SiteModel siteModel;
   private String selfAddr;
 
-  public VendorProvider(ManagerHost host, String family, String deviceId) {
+  public PubberVendorProvider(ManagerHost host, String family, String deviceId) {
     super(host, deviceId);
     localnetHost = (LocalnetManager) host;
   }

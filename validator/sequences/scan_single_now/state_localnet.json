@@ -1,18 +1,18 @@
 {
   "families" : {
     "ether" : {
-      "addr" : "00:0d:3a:4e:47:01"
+      "addr" : "7c:1e:52:39:8e:34"
     },
     "ipv4" : {
-      "addr" : "10.1.0.45"
+      "addr" : "10.1.1.114"
     },
     "ipv6" : {
-      "addr" : "fe80::20d:3aff:fe4e:4701"
+      "addr" : "fe80::7e1e:52ff:fe39:8e34"
     },
     "vendor" : {
       "addr" : "28179023"
     }
   },
-  "timestamp" : "2024-12-09T01:28:41Z",
+  "timestamp" : "2024-12-03T15:59:02Z",
   "version" : "1.5.2"
 }

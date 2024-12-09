@@ -3,8 +3,11 @@ package daq.pubber;
 import com.google.udmi.util.SiteModel;
 import java.util.HashMap;
 import java.util.Map;
+<<<<<<< HEAD
 import java.util.Map.Entry;
 import java.util.stream.Collectors;
+=======
+>>>>>>> master
 import udmi.lib.ProtocolFamily;
 import udmi.lib.client.LocalnetManager;
 import udmi.lib.intf.FamilyProvider;
@@ -22,12 +25,21 @@ public class PubberLocalnetManager extends PubberManager implements LocalnetMana
   private final Map<String, PubberFamilyProvider> localnetProviders;
   private LocalnetConfig localnetConfig;
 
+<<<<<<< HEAD
   static Map<String, Class<? extends PubberFamilyProvider>> LOCALNET_PROVIDERS = Map.of(
       ProtocolFamily.VENDOR, VendorProvider.class,
       ProtocolFamily.IPV_4, IpProvider.class,
       ProtocolFamily.IPV_6, IpProvider.class,
       ProtocolFamily.ETHER, IpProvider.class,
       ProtocolFamily.BACNET, BacnetProvider.class);
+=======
+  static Map<String, Class<? extends FamilyProvider>> LOCALNET_PROVIDERS =
+      Map.of(
+          ProtocolFamily.VENDOR, PubberVendorProvider.class,
+          ProtocolFamily.IPV_4, PubberIpProvider.class,
+          ProtocolFamily.IPV_6, PubberIpProvider.class,
+          ProtocolFamily.ETHER, PubberIpProvider.class);
+>>>>>>> master
 
   /**
    * Create a new container with the given host.
@@ -36,8 +48,13 @@ public class PubberLocalnetManager extends PubberManager implements LocalnetMana
     super(host, configuration);
     localnetState = new LocalnetState();
     localnetState.families = new HashMap<>();
-    localnetProviders = LOCALNET_PROVIDERS
-        .keySet().stream().collect(Collectors.toMap(family -> family, this::instantiateProvider));
+
+    localnetProviders = new HashMap<>();
+    LOCALNET_PROVIDERS.forEach((family, providerClass) -> {
+      if (host instanceof Pubber || providerClass != PubberIpProvider.class) {
+        localnetProviders.put(family, instantiateProvider(family));
+      }
+    });
   }
 
   /**
@@ -54,7 +71,12 @@ public class PubberLocalnetManager extends PubberManager implements LocalnetMana
   }
 
   public void setSiteModel(SiteModel siteModel) {
+<<<<<<< HEAD
     localnetProviders.forEach((key, value) -> value.setSiteModel(siteModel));
+=======
+    ((PubberVendorProvider) getLocalnetProviders().get(ProtocolFamily.VENDOR))
+            .setSiteModel(siteModel);
+>>>>>>> master
   }
 
   @Override

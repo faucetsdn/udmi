@@ -12,6 +12,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Objects;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.regex.Matcher;
@@ -25,7 +26,11 @@ import udmi.schema.FamilyLocalnetState;
 /**
  * Wrapper for family of IP-based protocols.
  */
+<<<<<<< HEAD:pubber/src/main/java/daq/pubber/IpProvider.java
 public class IpProvider extends ManagerBase implements PubberFamilyProvider {
+=======
+public class PubberIpProvider extends ManagerBase implements FamilyProvider {
+>>>>>>> master:pubber/src/main/java/daq/pubber/PubberIpProvider.java
 
   public static final int DEFAULT_METRIC = 0;
   private static final List<Pattern> familyPatterns = ImmutableList.of(
@@ -40,13 +45,15 @@ public class IpProvider extends ManagerBase implements PubberFamilyProvider {
   );
 
   private final LocalnetManager localnetHost;
+  private final String family;
 
   /**
    * Create a basic provider instance.
    */
-  public IpProvider(ManagerHost host, String family, String deviceId) {
+  public PubberIpProvider(ManagerHost host, String family, String deviceId) {
     super(host, deviceId);
     localnetHost = (LocalnetManager) host;
+    this.family = family;
     populateInterfaceAddresses();
   }
 
@@ -128,16 +135,19 @@ public class IpProvider extends ManagerBase implements PubberFamilyProvider {
    */
   private void populateInterfaceAddresses() {
     String defaultInterface = getDefaultInterface();
-    info("Using addresses from default interface " + defaultInterface);
+    info("Using addresses from default interface: " + defaultInterface + " for family: " + family);
     Map<String, String> interfaceAddresses = ofNullable(
         getInterfaceAddresses(defaultInterface)).orElse(ImmutableMap.of());
     interfaceAddresses.entrySet().forEach(this::addStateMapEntry);
   }
 
   private void addStateMapEntry(Entry<String, String> entry) {
+    String family = entry.getKey();
+    if (!Objects.equals(this.family, family)) {
+      return;
+    }
     FamilyLocalnetState stateEntry = new FamilyLocalnetState();
     stateEntry.addr = entry.getValue();
-    String family = entry.getKey();
     info("Family " + family + " address is " + stateEntry.addr);
     localnetHost.update(family, stateEntry);
   }
