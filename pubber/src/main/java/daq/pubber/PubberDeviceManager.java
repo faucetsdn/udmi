@@ -2,7 +2,6 @@ package daq.pubber;
 
 import com.google.udmi.util.SiteModel;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
 import udmi.lib.client.DeviceManager;
 import udmi.lib.client.DiscoveryManager;

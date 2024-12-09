@@ -2,12 +2,9 @@ package daq.pubber;
 
 import com.google.udmi.util.SiteModel;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 import udmi.lib.ProtocolFamily;
 import udmi.lib.client.LocalnetManager;
-import udmi.lib.client.ProxyDeviceHost;
 import udmi.lib.intf.FamilyProvider;
 import udmi.lib.intf.ManagerHost;
 import udmi.schema.LocalnetConfig;
