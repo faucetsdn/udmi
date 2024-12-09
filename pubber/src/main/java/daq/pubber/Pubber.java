@@ -707,7 +707,7 @@ public class Pubber extends PubberManager implements PubberUdmiPublisher {
     return SystemManager.getLogMap().apply(LOG);
   }
 
-  public Metadata getMetadata(String id) {
-    return siteModel.getMetadata(id);
+  public SiteModel getSiteModel() {
+    return siteModel;
   }
 }

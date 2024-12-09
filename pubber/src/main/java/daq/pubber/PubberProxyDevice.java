@@ -30,6 +30,7 @@ public class PubberProxyDevice extends PubberManager implements ProxyDeviceHost 
     pubberHost = (Pubber) host;
     deviceManager = new PubberDeviceManager(this, makeProxyConfiguration(host, id,
         pubberConfig));
+    deviceManager.setSiteModel(pubberHost.getSiteModel());
     executor.scheduleAtFixedRate(this::publishDirtyState, STATE_INTERVAL_MS, STATE_INTERVAL_MS,
         TimeUnit.MILLISECONDS);
   }
@@ -38,7 +39,7 @@ public class PubberProxyDevice extends PubberManager implements ProxyDeviceHost 
       PubberConfiguration config) {
     PubberConfiguration proxyConfiguration = deepCopy(config);
     proxyConfiguration.deviceId = id;
-    Metadata metadata = ((Pubber) host).getMetadata(id);
+    Metadata metadata = ((Pubber) host).getSiteModel().getMetadata(id);
     proxyConfiguration.serialNo = catchToNull(() -> metadata.system.serial_no);
     return proxyConfiguration;
   }
