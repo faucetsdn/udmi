@@ -36,7 +36,6 @@ public class DiscoveryEvents {
 
     /**
      * RFC 3339 UTC timestamp the discover telemetry event was generated
-     * (Required)
      * 
      */
     @JsonProperty("timestamp")
@@ -44,7 +43,6 @@ public class DiscoveryEvents {
     public Date timestamp;
     /**
      * Version of the UDMI schema
-     * (Required)
      * 
      */
     @JsonProperty("version")
@@ -65,11 +63,6 @@ public class DiscoveryEvents {
      */
     @JsonProperty("status")
     public Entry status;
-    /**
-     * 
-     * (Required)
-     * 
-     */
     @JsonProperty("scan_family")
     public String scan_family;
     /**
@@ -87,11 +80,11 @@ public class DiscoveryEvents {
     @JsonPropertyDescription("The active or passive series number of this result (matches reported state values)")
     public Integer event_no;
     /**
-     * Address family discovery discovery results.
+     * Links to other address families (family and id)
      * 
      */
     @JsonProperty("families")
-    @JsonPropertyDescription("Address family discovery discovery results.")
+    @JsonPropertyDescription("Links to other address families (family and id)")
     public Map<String, FamilyDiscovery> families;
     /**
      * Registry discovery results.

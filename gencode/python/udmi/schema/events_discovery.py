@@ -14,6 +14,8 @@ class SystemDiscoveryData:
   """Generated schema class"""
 
   def __init__(self):
+    self.description = None
+    self.name = None
     self.serial_no = None
     self.ancillary = None
     self.hardware = None
@@ -23,6 +25,8 @@ class SystemDiscoveryData:
     if not source:
       return None
     result = SystemDiscoveryData()
+    result.description = source.get('description')
+    result.name = source.get('name')
     result.serial_no = source.get('serial_no')
     result.ancillary = AncillaryProperties.from_dict(source.get('ancillary'))
     result.hardware = StateSystemHardware.from_dict(source.get('hardware'))
@@ -46,6 +50,10 @@ class SystemDiscoveryData:
 
   def to_dict(self):
     result = {}
+    if self.description:
+      result['description'] = self.description # 5
+    if self.name:
+      result['name'] = self.name # 5
     if self.serial_no:
       result['serial_no'] = self.serial_no # 5
     if self.ancillary:
