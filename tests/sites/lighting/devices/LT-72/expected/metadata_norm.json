@@ -1,0 +1,37 @@
+{
+  "timestamp": "2021-10-13T13:32:46Z",
+  "version": "1.5.1",
+  "upgraded_from": "1",
+  "hash": "71636ce0",
+  "system": {
+    "tags": [ ],
+    "location": {
+      "site": "TW-NTC-TPKD",
+      "section": "NTC-TPKD",
+      "position": {
+        "x": 0.0,
+        "y": 0.0
+      }
+    },
+    "physical_tag": {
+      "asset": {
+        "guid": "uuid://7bc77bdd-cdbd-4799-a67b-29c227467ea7",
+        "site": "TW-NTC-TPKD",
+        "name": "LT-72"
+      }
+    },
+    "min_loglevel": 300
+  },
+  "gateway": {
+    "gateway_id": "LTGW-28",
+    "group_ids": [ "LGRP-725", "LGRP-825" ]
+  },
+  "pointset": {
+    "points": {
+      "dimmer_percentage_command": {
+        "units": "Percent",
+        "tags": [ ]
+      }
+    }
+  }
+}

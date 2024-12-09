@@ -1,0 +1,24 @@
+{
+  "timestamp": "2021-10-13T13:32:47Z",
+  "version": 1,
+  "system": {
+    "min_loglevel": 300,
+    "metrics_rate_sec": 10,
+    "operation": { }
+  },
+  "gateway": { },
+  "pointset": {
+    "points": {
+      "brightness_percentage_command": {
+        "units": "Percent"
+      },
+      "scene_command": {
+        "units": "No-units"
+      },
+      "zone_scene_command": {
+        "units": "No-units"
+      }
+    }
+  },
+  "downgraded_from": "1.5.1"
+}
