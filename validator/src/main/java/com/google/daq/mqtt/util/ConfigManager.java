@@ -293,10 +293,9 @@ public class ConfigManager {
         FamilyDiscoveryModel familyDiscoveryModel = metadata.discovery.families.get(family);
         if (familyDiscoveryModel != null) {
           // for a sporadic scan, supplying generation is invalid
-          if (familyDiscoveryModel.scan_interval_sec == null) {
-            checkState(familyDiscoveryModel.generation == null,
-                "generation specified without scan_interval_sec parameter");
-          }
+          checkState(familyDiscoveryModel.scan_interval_sec != null ||
+              familyDiscoveryModel.generation == null,
+              "generation specified without scan_interval_sec parameter");
 
           FamilyDiscoveryConfig familyDiscoveryConfig = new FamilyDiscoveryConfig();
           familyDiscoveryConfig.generation = familyDiscoveryModel.generation;
