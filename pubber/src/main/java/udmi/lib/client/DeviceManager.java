@@ -90,6 +90,9 @@ public interface DeviceManager extends SubBlockManager {
     }
   }
 
+  /**
+   * Set status for target device.
+   */
   default void setStatus(Entry report, String targetId) {
     if (getDeviceId().equals(targetId)) {
       getSystemManager().setStatus(report);
