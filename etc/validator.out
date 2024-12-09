@@ -2,6 +2,7 @@ sites/udmi_site_model/out/devices/AHU-1/config.json
 sites/udmi_site_model/out/devices/AHU-1/events_pointset.json
 sites/udmi_site_model/out/devices/AHU-1/events_system.json
 sites/udmi_site_model/out/devices/AHU-1/persistent_data.json
+sites/udmi_site_model/out/devices/AHU-1/state_discovery.json
 sites/udmi_site_model/out/devices/AHU-1/state.json
 sites/udmi_site_model/out/devices/AHU-1/state_localnet.json
 sites/udmi_site_model/out/devices/AHU-1/state_pointset.json
@@ -26,6 +27,7 @@ sites/udmi_site_model/out/devices/GAT-123/events_mapping.json
 sites/udmi_site_model/out/devices/GAT-123/events_pointset.json
 sites/udmi_site_model/out/devices/GAT-123/events_system.json
 sites/udmi_site_model/out/devices/GAT-123/persistent_data.json
+sites/udmi_site_model/out/devices/GAT-123/state_discovery.json
 sites/udmi_site_model/out/devices/GAT-123/state_gateway.json
 sites/udmi_site_model/out/devices/GAT-123/state.json
 sites/udmi_site_model/out/devices/GAT-123/state_localnet.json
@@ -107,6 +109,29 @@ sites/udmi_site_model/out/devices/AHU-1/events_system.out
   "errors" : [ {
     "message" : "Timestamp skew REDACTED_DURATION (REDACTED_TIMESTAMP to REDACTED_TIMESTAMP) exceeds REDACTED_DURATION threshold",
     "detail" : "events_system: Timestamp skew REDACTED_DURATION (REDACTED_TIMESTAMP to REDACTED_TIMESTAMP) exceeds REDACTED_DURATION threshold REDACTED_ERROR",
+    "category" : "validation.device.schema",
+    "timestamp" : "REDACTED_TIMESTAMP",
+    "level" : 500
+  } ]
+}
+::::::::::::::
+sites/udmi_site_model/out/devices/AHU-1/state_discovery.out
+::::::::::::::
+{
+  "timestamp" : "REDACTED_TIMESTAMP",
+  "version" : "1.5.2",
+  "sub_folder" : "discovery",
+  "sub_type" : "state",
+  "status" : {
+    "message" : "Timestamp skew REDACTED_DURATION (REDACTED_TIMESTAMP to REDACTED_TIMESTAMP) exceeds REDACTED_DURATION threshold",
+    "detail" : "state_discovery: Timestamp skew REDACTED_DURATION (REDACTED_TIMESTAMP to REDACTED_TIMESTAMP) exceeds REDACTED_DURATION threshold REDACTED_ERROR",
+    "category" : "validation.device.schema",
+    "timestamp" : "REDACTED_TIMESTAMP",
+    "level" : 500
+  },
+  "errors" : [ {
+    "message" : "Timestamp skew REDACTED_DURATION (REDACTED_TIMESTAMP to REDACTED_TIMESTAMP) exceeds REDACTED_DURATION threshold",
+    "detail" : "state_discovery: Timestamp skew REDACTED_DURATION (REDACTED_TIMESTAMP to REDACTED_TIMESTAMP) exceeds REDACTED_DURATION threshold REDACTED_ERROR",
     "category" : "validation.device.schema",
     "timestamp" : "REDACTED_TIMESTAMP",
     "level" : 500
@@ -564,6 +589,22 @@ sites/udmi_site_model/out/devices/GAT-123/events_system.out
   "version" : "1.5.2",
   "sub_folder" : "system",
   "sub_type" : "events",
+  "status" : {
+    "message" : "Successful validation",
+    "category" : "validation.device.receive",
+    "timestamp" : "REDACTED_TIMESTAMP",
+    "level" : 200
+  },
+  "errors" : [ ]
+}
+::::::::::::::
+sites/udmi_site_model/out/devices/GAT-123/state_discovery.out
+::::::::::::::
+{
+  "timestamp" : "REDACTED_TIMESTAMP",
+  "version" : "1.5.2",
+  "sub_folder" : "discovery",
+  "sub_type" : "state",
   "status" : {
     "message" : "Successful validation",
     "category" : "validation.device.receive",

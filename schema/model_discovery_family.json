@@ -5,5 +5,21 @@
   "$schema": "http://json-schema.org/draft-04/schema#",
   "additionalProperties": false,
   "properties": {
+    "generation": {
+      "description": "Generational marker for controlling discovery",
+      "type": "string",
+      "format": "date-time",
+      "examples": ["2018-08-26T21:00:13Z"]
+    },
+    "scan_interval_sec": {
+      "description": "Period, in seconds, for automatic scanning",
+      "type": "integer",
+      "minimum": 0
+    },
+    "scan_duration_sec": {
+      "description": "Scan duration, in seconds",
+      "type": "integer",
+      "minimum": 0
+    }
   }
 }
