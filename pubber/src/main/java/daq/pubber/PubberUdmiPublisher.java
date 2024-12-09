@@ -329,7 +329,7 @@ public interface PubberUdmiPublisher extends UdmiPublisher {
     Entry report = entryFromException(category, cause);
     getDeviceManager().localLog(report);
     publishLogMessage(report, targetId);
-    ifTrueThen(getDeviceId().equals(targetId), () -> registerSystemStatus(report));
+    registerSystemStatus(report, targetId);
   }
 
   void error(String s);
@@ -337,10 +337,9 @@ public interface PubberUdmiPublisher extends UdmiPublisher {
   /**
    * Register a system status entry.
    */
-  default void registerSystemStatus(Entry report) {
+  default void registerSystemStatus(Entry report, String targetId) {
     if (isNotTrue(getOptions().noStatus)) {
-      getDeviceState().system.status = report;
-      markStateDirty();
+      getDeviceManager().setStatus(report, targetId);
     }
   }
 

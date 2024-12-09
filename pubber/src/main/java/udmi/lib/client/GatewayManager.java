@@ -10,6 +10,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.NoSuchElementException;
+import java.util.concurrent.ConcurrentHashMap;
 import udmi.lib.ProtocolFamily;
 import udmi.lib.intf.ManagerHost;
 import udmi.schema.Config;
@@ -48,7 +49,7 @@ public interface GatewayManager extends SubBlockManager {
       return Map.of();
     }
 
-    Map<String, ProxyDeviceHost> devices = new HashMap<>();
+    Map<String, ProxyDeviceHost> devices = new ConcurrentHashMap<>();
     proxyIds.forEach(id -> devices.put(id, createProxyDevice(getHost(), id)));
 
     return devices;
@@ -66,11 +67,18 @@ public interface GatewayManager extends SubBlockManager {
    * Publish log message for target device.
    */
   default void publishLogMessage(Entry logEntry, String targetId) {
-    ifNotNullThen(getProxyDevices(), p -> p.values().forEach(pd -> {
-      if (pd.getDeviceId().equals(targetId)) {
-        pd.getDeviceManager().publishLogMessage(logEntry, targetId);
-      }
-    }));
+    ifNotNullThen(getProxyDevices(), p ->
+          ifNotNullThen(p.getOrDefault(targetId, null), pd ->
+                pd.getDeviceManager().publishLogMessage(logEntry, targetId)));
+  }
+
+  /**
+   * Set device status for target device.
+   */
+  default void setStatus(Entry report, String targetId) {
+    ifNotNullThen(getProxyDevices(), p ->
+          ifNotNullThen(p.getOrDefault(targetId, null), pd ->
+                pd.getDeviceManager().setStatus(report, targetId)));
   }
 
   /**

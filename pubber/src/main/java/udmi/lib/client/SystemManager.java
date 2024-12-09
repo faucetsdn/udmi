@@ -243,6 +243,11 @@ public interface SystemManager extends SubBlockManager {
     publishLogMessage(logEntry);
   }
 
+  default void setStatus(Entry report) {
+    getSystemState().status = report;
+    updateState();
+  }
+
   /**
    * Extra system state with extra field.
    */

@@ -90,6 +90,14 @@ public interface DeviceManager extends SubBlockManager {
     }
   }
 
+  default void setStatus(Entry report, String targetId) {
+    if (getDeviceId().equals(targetId)) {
+      getSystemManager().setStatus(report);
+    } else {
+      getGatewayManager().setStatus(report, targetId);
+    }
+  }
+
   default void cloudLog(String message, Level level, String detail) {
     getSystemManager().cloudLog(message, level, detail);
   }
