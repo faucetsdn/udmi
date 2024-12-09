@@ -21,12 +21,6 @@
   "gateway": {
     "proxy_ids": [ "SNS-4", "AHU-22" ]
   },
-  "discovery": {
-    "families": {
-      "vendor": {
-      }
-    }
-  },
   "localnet": {
     "families": {
       "vendor": {

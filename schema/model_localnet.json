@@ -14,7 +14,7 @@
           "$ref": "file:model_localnet_family.json"
         }
       },
-      "examples": ["bacnet", "modbus", "ether", "ipv4"]
+      "examples": ["bacnet", "modbus", "ether", "ipv4", "iot"]
     }
   },
   "required": [

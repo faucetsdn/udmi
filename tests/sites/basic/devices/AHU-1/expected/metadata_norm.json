@@ -1,7 +1,7 @@
 {
   "timestamp": "2020-05-01T13:39:07Z",
   "version": "1.5.2",
-  "hash": "2a5236f4",
+  "hash": "3623ef24",
   "cloud": {
     "auth_type": "RS256"
   },
@@ -33,7 +33,11 @@
   },
   "discovery": {
     "families": {
-      "vendor": { }
+      "bacnet": {
+        "generation": "2018-08-26T21:00:13Z",
+        "scan_interval_sec": 600,
+        "scan_duration_sec": 60
+      }
     }
   },
   "localnet": {

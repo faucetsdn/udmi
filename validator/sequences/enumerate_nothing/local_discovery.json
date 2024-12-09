@@ -1,3 +1,6 @@
 {
-  "depths" : { }
+  "depths" : { },
+  "families" : {
+    "vendor" : { }
+  }
 }

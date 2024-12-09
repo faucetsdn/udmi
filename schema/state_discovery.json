@@ -6,6 +6,16 @@
   "$schema": "http://json-schema.org/draft-07/schema#",
   "additionalProperties": false,
   "properties": {
+    "timestamp": {
+      "description": "Not included in messages published by devices. Part of message subblocks within cloud pipeline. RFC 3339 Timestamp the payload was generated",
+      "type": "string",
+      "format": "date-time",
+      "examples": ["2019-01-17T14:02:29.364Z"]
+    },
+    "version": {
+      "description": "Version of the UDMI schema, not included in messages published by devices",
+      "type": "string"
+    },
     "generation": {
       "description": "Generational marker to group results together",
       "type": "string",

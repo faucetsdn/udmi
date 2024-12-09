@@ -29,12 +29,12 @@ import static udmi.schema.EndpointConfiguration.Protocol.MQTT;
 import com.google.udmi.util.CertManager;
 import com.google.udmi.util.SiteModel;
 import com.google.udmi.util.SiteModel.MetadataException;
-import daq.pubber.PubSubClient.Bundle;
+import daq.pubber.PubberPubSubClient.Bundle;
 import java.io.File;
 import java.io.PrintStream;
 import java.time.Duration;
-import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -79,7 +79,7 @@ public class Pubber extends PubberManager implements PubberUdmiPublisher {
 
   private static final String PUBSUB_SITE = "PubSub";
 
-  private static final Map<String, AtomicInteger> MESSAGE_COUNTS = new HashMap<>();
+  private static final Map<String, AtomicInteger> MESSAGE_COUNTS = new ConcurrentHashMap<>();
   private static final int CONNECT_RETRIES = 10;
   private static final AtomicInteger retriesRemaining = new AtomicInteger(CONNECT_RETRIES);
   private static final long RESTART_DELAY_MS = 1000;
@@ -94,7 +94,7 @@ public class Pubber extends PubberManager implements PubberUdmiPublisher {
   private CountDownLatch configLatch;
   private MqttDevice deviceTarget;
   private long lastStateTimeMs;
-  private PubSubClient pubSubClient;
+  private PubberPubSubClient pubSubClient;
   private Function<String, Boolean> connectionDone;
   private String workingEndpoint;
   private String attemptedEndpoint;
@@ -136,7 +136,7 @@ public class Pubber extends PubberManager implements PubberUdmiPublisher {
       checkState(outDir.mkdirs(), "could not make out dir " + outDir.getAbsolutePath());
     }
     if (PUBSUB_SITE.equals(sitePath)) {
-      pubSubClient = new PubSubClient(iotProject, deviceId);
+      pubSubClient = new PubberPubSubClient(iotProject, deviceId);
     }
   }
 
@@ -331,11 +331,6 @@ public class Pubber extends PubberManager implements PubberUdmiPublisher {
         new File(siteModel.getDeviceWorkingDir(deviceId), PERSISTENT_STORE_FILE);
   }
 
-  private void markStateDirty(Runnable action) {
-    action.run();
-    markStateDirty();
-  }
-
   @Override
   public void markStateDirty(long delayMs) {
     stateDirty.set(true);
@@ -379,9 +374,12 @@ public class Pubber extends PubberManager implements PubberUdmiPublisher {
     targetSchema = ifNotNullGet(metadata.system.device_version, SchemaVersion::fromKey);
     ifNotNullThen(targetSchema, version -> warn("Emulating UDMI version " + version.key()));
 
-    config.serialNo = catchToNull(() -> metadata.system.serial_no);
-
-    config.gatewayId = catchToNull(() -> metadata.gateway.gateway_id);
+    if (config.serialNo == null) {
+      config.serialNo = catchToNull(() -> metadata.system.serial_no);
+    }
+    if (config.gatewayId == null) {
+      config.gatewayId = catchToNull(() -> metadata.gateway.gateway_id);
+    }
 
     config.algorithm = config.gatewayId == null
         ? catchToNull(() -> metadata.cloud.auth_type.value())
@@ -431,9 +429,11 @@ public class Pubber extends PubberManager implements PubberUdmiPublisher {
     try {
       isConnected = false;
       deviceManager.stop();
+      super.stop();
       if (deviceTarget == null) {
         throw new RuntimeException("Mqtt publisher not initialized");
       }
+      registerMessageHandlers();
       connect();
       configLatchWait();
       isConnected = true;
@@ -488,7 +488,6 @@ public class Pubber extends PubberManager implements PubberUdmiPublisher {
         siteModel.getDeviceDir(targetDeviceId), endpoint.transport, keyPassword,
         this::info);
     deviceTarget = new MqttDevice(endpoint, this::publisherException, certManager);
-    registerMessageHandlers();
     publishDirtyState();
   }
 
@@ -559,7 +558,6 @@ public class Pubber extends PubberManager implements PubberUdmiPublisher {
     String timestamp = getTimestamp().replace("Z", format(".%03dZ", serial));
     return messageBase + (isTrue(config.options.messageTrace) ? ("_" + timestamp) : "");
   }
-
 
   private void trace(String message) {
     cloudLog(message, Level.TRACE);
@@ -712,7 +710,7 @@ public class Pubber extends PubberManager implements PubberUdmiPublisher {
     return SystemManager.getLogMap().apply(LOG);
   }
 
-  public Metadata getMetadata(String id) {
-    return siteModel.getMetadata(id);
+  public SiteModel getSiteModel() {
+    return siteModel;
   }
 }

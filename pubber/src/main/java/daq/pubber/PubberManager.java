@@ -26,6 +26,6 @@ public class PubberManager extends ManagerBase {
 
   @Override
   protected int getIntervalSec(Integer sampleRateSec) {
-    return (int) ofNullable(options.fixedSampleRate).orElse(super.getIntervalSec(sampleRateSec));
+    return ofNullable(options.fixedSampleRate).orElse(super.getIntervalSec(sampleRateSec));
   }
 }

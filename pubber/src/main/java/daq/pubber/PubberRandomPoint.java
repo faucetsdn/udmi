@@ -1,5 +1,6 @@
 package daq.pubber;
 
+import udmi.lib.base.BasicPoint;
 import udmi.lib.intf.AbstractPoint;
 import udmi.schema.PointPointsetModel;
 import udmi.schema.RefDiscovery;
@@ -7,7 +8,7 @@ import udmi.schema.RefDiscovery;
 /**
  * Represents a randomly generated numerical point.
  */
-public class RandomPoint extends BasicPoint implements AbstractPoint {
+public class PubberRandomPoint extends BasicPoint implements AbstractPoint {
 
   private static final double DEFAULT_BASELINE_VALUE = 50;
   private final double min;
@@ -17,7 +18,7 @@ public class RandomPoint extends BasicPoint implements AbstractPoint {
   /**
    * Creates a random point generator for data simulation.
    */
-  public RandomPoint(String name, PointPointsetModel pointModel) {
+  public PubberRandomPoint(String name, PointPointsetModel pointModel) {
     super(name, pointModel);
     double baselineValue = convertValue(pointModel.baseline_value, DEFAULT_BASELINE_VALUE);
     double baselineTolerance = convertValue(pointModel.baseline_tolerance, baselineValue);
