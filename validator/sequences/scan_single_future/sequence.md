@@ -16,9 +16,9 @@ Check results of a single scan scheduled soon
 1. Wait until scheduled scan complete
 1. Check that scan completed at time
 1. Check that discovery events were received
+1. Check that no events have discovered refs
 1. Check that discovery events were valid
 1. Check that all scan addresses are unique
 1. Check that all expected addresses were found
-1. Check that no events have discovered refs
 
 Test passed.
