@@ -141,10 +141,12 @@ public interface SystemManager extends SubBlockManager {
   default void sendSystemEvent() {
     SystemEvents systemEvent = getSystemEvent();
     systemEvent.metrics = new Metrics();
-    Runtime runtime = Runtime.getRuntime();
-    systemEvent.metrics.mem_free_mb = (double) runtime.freeMemory() / BYTES_PER_MEGABYTE;
-    systemEvent.metrics.mem_total_mb = (double) runtime.totalMemory() / BYTES_PER_MEGABYTE;
-    systemEvent.metrics.store_total_mb = Double.NaN;
+    if (!(getHost() instanceof ProxyDeviceHost)) {
+      Runtime runtime = Runtime.getRuntime();
+      systemEvent.metrics.mem_free_mb = (double) runtime.freeMemory() / BYTES_PER_MEGABYTE;
+      systemEvent.metrics.mem_total_mb = (double) runtime.totalMemory() / BYTES_PER_MEGABYTE;
+      systemEvent.metrics.store_total_mb = Double.NaN;
+    }
     systemEvent.event_no = incrementEventCount();
     systemEvent.logentries = getLogentries();
     getHost().publish(systemEvent);

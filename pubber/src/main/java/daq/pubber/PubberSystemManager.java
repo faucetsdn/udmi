@@ -112,9 +112,7 @@ public class PubberSystemManager extends PubberManager implements SystemManager 
 
   @Override
   public void periodicUpdate() {
-    if (host instanceof Pubber) {
-      sendSystemEvent();
-    }
+    sendSystemEvent();
   }
 
   @Override
