@@ -5,13 +5,18 @@ class FamilyDiscoveryModel:
   """Generated schema class"""
 
   def __init__(self):
-    pass
+    self.generation = None
+    self.scan_interval_sec = None
+    self.scan_duration_sec = None
 
   @staticmethod
   def from_dict(source):
     if not source:
       return None
     result = FamilyDiscoveryModel()
+    result.generation = source.get('generation')
+    result.scan_interval_sec = source.get('scan_interval_sec')
+    result.scan_duration_sec = source.get('scan_duration_sec')
     return result
 
   @staticmethod
@@ -32,4 +37,10 @@ class FamilyDiscoveryModel:
 
   def to_dict(self):
     result = {}
+    if self.generation:
+      result['generation'] = self.generation # 5
+    if self.scan_interval_sec:
+      result['scan_interval_sec'] = self.scan_interval_sec # 5
+    if self.scan_duration_sec:
+      result['scan_duration_sec'] = self.scan_duration_sec # 5
     return result

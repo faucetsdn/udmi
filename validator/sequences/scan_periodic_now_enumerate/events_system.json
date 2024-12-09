@@ -1,11 +1,16 @@
 {
   "event_no" : 7,
-  "last_config" : "2024-11-06T17:34:03Z",
-  "logentries" : [ ],
+  "last_config" : "2024-12-03T15:59:36Z",
+  "logentries" : [ {
+    "message" : "Update state 2024-12-03T16:00:04Z last_config 2024-12-03T15:59:36Z",
+    "category" : "device.log",
+    "timestamp" : "2024-12-03T16:00:04Z",
+    "level" : 200
+  } ],
   "metrics" : {
     "mem_total_mb" : 254.0,
-    "mem_free_mb" : 211.8297576904297
+    "mem_free_mb" : 211.32958984375
   },
-  "timestamp" : "2024-11-06T17:34:36Z",
+  "timestamp" : "2024-12-03T16:00:08Z",
   "version" : "1.5.2"
 }
