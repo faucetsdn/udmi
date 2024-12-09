@@ -27,9 +27,10 @@
     },
     "depth": {
       "enum": [
-        "registries",
+        "buckets",
         "entries",
-        "details"
+        "details",
+        "parts"
       ]
     },
     "iot_provider": {

@@ -11,7 +11,7 @@ import com.fasterxml.jackson.annotation.JsonValue;
 
 
 /**
- * Indicates which discovery sub-categories to activate
+ * Enumeration depth for self-enumerations.
  * 
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
@@ -21,16 +21,16 @@ import com.fasterxml.jackson.annotation.JsonValue;
     "refs",
     "features"
 })
-public class Depths {
+public class Enumerations {
 
     @JsonProperty("families")
-    public Depths.Depth families;
+    public Enumerations.Depth families;
     @JsonProperty("devices")
-    public Depths.Depth devices;
+    public Enumerations.Depth devices;
     @JsonProperty("refs")
-    public Depths.Depth refs;
+    public Enumerations.Depth refs;
     @JsonProperty("features")
-    public Depths.Depth features;
+    public Enumerations.Depth features;
 
     @Override
     public int hashCode() {
@@ -47,23 +47,24 @@ public class Depths {
         if (other == this) {
             return true;
         }
-        if ((other instanceof Depths) == false) {
+        if ((other instanceof Enumerations) == false) {
             return false;
         }
-        Depths rhs = ((Depths) other);
+        Enumerations rhs = ((Enumerations) other);
         return (((((this.features == rhs.features)||((this.features!= null)&&this.features.equals(rhs.features)))&&((this.families == rhs.families)||((this.families!= null)&&this.families.equals(rhs.families))))&&((this.devices == rhs.devices)||((this.devices!= null)&&this.devices.equals(rhs.devices))))&&((this.refs == rhs.refs)||((this.refs!= null)&&this.refs.equals(rhs.refs))));
     }
 
     public enum Depth {
 
-        REGISTRIES("registries"),
+        BUCKETS("buckets"),
         ENTRIES("entries"),
-        DETAILS("details");
+        DETAILS("details"),
+        PARTS("parts");
         private final String value;
-        private final static Map<String, Depths.Depth> CONSTANTS = new HashMap<String, Depths.Depth>();
+        private final static Map<String, Enumerations.Depth> CONSTANTS = new HashMap<String, Enumerations.Depth>();
 
         static {
-            for (Depths.Depth c: values()) {
+            for (Enumerations.Depth c: values()) {
                 CONSTANTS.put(c.value, c);
             }
         }
@@ -83,8 +84,8 @@ public class Depths {
         }
 
         @JsonCreator
-        public static Depths.Depth fromValue(String value) {
-            Depths.Depth constant = CONSTANTS.get(value);
+        public static Enumerations.Depth fromValue(String value) {
+            Enumerations.Depth constant = CONSTANTS.get(value);
             if (constant == null) {
                 throw new IllegalArgumentException(value);
             } else {

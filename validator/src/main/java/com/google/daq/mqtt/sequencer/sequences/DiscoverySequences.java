@@ -27,7 +27,7 @@ import static udmi.schema.Bucket.ENUMERATION;
 import static udmi.schema.Bucket.ENUMERATION_FAMILIES;
 import static udmi.schema.Bucket.ENUMERATION_FEATURES;
 import static udmi.schema.Bucket.ENUMERATION_POINTSET;
-import static udmi.schema.Depths.Depth.ENTRIES;
+import static udmi.schema.Enumerations.Depth.ENTRIES;
 import static udmi.schema.FamilyDiscoveryState.Phase.ACTIVE;
 import static udmi.schema.FamilyDiscoveryState.Phase.PENDING;
 import static udmi.schema.FamilyDiscoveryState.Phase.STOPPED;
@@ -59,10 +59,10 @@ import org.junit.Before;
 import org.junit.Test;
 import udmi.lib.ProtocolFamily;
 import udmi.schema.Bucket;
-import udmi.schema.Depths;
-import udmi.schema.Depths.Depth;
 import udmi.schema.DiscoveryConfig;
 import udmi.schema.DiscoveryEvents;
+import udmi.schema.Enumerations;
+import udmi.schema.Enumerations.Depth;
 import udmi.schema.FamilyDiscoveryConfig;
 import udmi.schema.FamilyDiscoveryState;
 import udmi.schema.FeatureDiscovery;
@@ -97,9 +97,15 @@ public class DiscoverySequences extends SequenceBase {
     allowDeviceStateChange("discovery");
   }
 
+<<<<<<< HEAD
+  private DiscoveryEvents runEnumeration(Enumerations depths) {
+    deviceConfig.discovery = new DiscoveryConfig();
+    deviceConfig.discovery.enumerations = depths;
+=======
   private DiscoveryEvents runEnumeration(Depths depths) {
     deviceConfig.discovery = ofNullable(deviceConfig.discovery).orElseGet(DiscoveryConfig::new);
     deviceConfig.discovery.depths = depths;
+>>>>>>> master
     untilTrue("enumeration not active", () -> deviceState.discovery.generation == null);
 
     Date startTime = SemanticDate.describe("generation start time", cleanDate());
@@ -122,7 +128,7 @@ public class DiscoverySequences extends SequenceBase {
     return event;
   }
 
-  private void checkSelfEnumeration(DiscoveryEvents event, Depths depths) {
+  private void checkSelfEnumeration(DiscoveryEvents event, Enumerations depths) {
     if (shouldEnumerate(depths.families)) {
       Set<String> models = ofNullable(deviceMetadata.localnet)
           .map(localnet -> localnet.families.keySet()).orElse(null);
@@ -181,7 +187,7 @@ public class DiscoverySequences extends SequenceBase {
   @Feature(bucket = ENUMERATION, stage = PREVIEW)
   @Summary("Check enumeration of nothing at all")
   public void enumerate_nothing() {
-    Depths enumerate = new Depths();
+    Enumerations enumerate = new Enumerations();
     DiscoveryEvents event = runEnumeration(enumerate);
     checkSelfEnumeration(event, enumerate);
   }
@@ -193,7 +199,7 @@ public class DiscoverySequences extends SequenceBase {
     if (!catchToFalse(() -> deviceMetadata.pointset.points != null)) {
       skipTest("No metadata pointset points defined");
     }
-    Depths enumerate = new Depths();
+    Enumerations enumerate = new Enumerations();
     enumerate.refs = ENTRIES;
     DiscoveryEvents event = runEnumeration(enumerate);
     checkSelfEnumeration(event, enumerate);
@@ -203,7 +209,7 @@ public class DiscoverySequences extends SequenceBase {
   @Feature(bucket = ENUMERATION_FEATURES, stage = PREVIEW)
   @Summary("Check enumeration of device features")
   public void enumerate_features() {
-    Depths enumerate = new Depths();
+    Enumerations enumerate = new Enumerations();
     enumerate.features = ENTRIES;
     DiscoveryEvents event = runEnumeration(enumerate);
     checkSelfEnumeration(event, enumerate);
@@ -213,7 +219,7 @@ public class DiscoverySequences extends SequenceBase {
   @Summary("Check enumeration of network families")
   @Feature(bucket = ENUMERATION_FAMILIES, stage = ALPHA)
   public void enumerate_families() {
-    Depths enumerate = new Depths();
+    Enumerations enumerate = new Enumerations();
     enumerate.families = ENTRIES;
     DiscoveryEvents event = runEnumeration(enumerate);
     checkSelfEnumeration(event, enumerate);
@@ -223,7 +229,7 @@ public class DiscoverySequences extends SequenceBase {
   @Feature(bucket = ENUMERATION, stage = ALPHA)
   @Summary("Check enumeration of multiple categories")
   public void enumerate_multi() {
-    Depths enumerate = new Depths();
+    Enumerations enumerate = new Enumerations();
     enumerate.families = enumerateIfBucketEnabled(ENUMERATION_FAMILIES);
     enumerate.features = enumerateIfBucketEnabled(ENUMERATION_FEATURES);
     enumerate.refs = enumerateIfBucketEnabled(ENUMERATION_POINTSET);
