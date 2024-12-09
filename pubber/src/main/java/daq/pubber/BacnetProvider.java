@@ -11,6 +11,7 @@ import static udmi.lib.ProtocolFamily.BACNET;
 import com.google.udmi.util.SiteModel;
 import java.util.ArrayDeque;
 import java.util.Deque;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.function.BiConsumer;
@@ -53,12 +54,8 @@ public class BacnetProvider extends ManagerBase implements PubberFamilyProvider 
     String addr = getBacnetAddr(getMetadata(deviceId));
     DiscoveryEvents event = new DiscoveryEvents();
     event.scan_addr = addr;
-    event.refs = ifTrueGet(enumerate, () -> getDiscoveredRefs(getMetadata(deviceId)));
+    event.refs = ifTrueGet(enumerate, () -> enumerateRefs(deviceId));
     return event;
-  }
-
-  private Map<String, RefDiscovery> getDiscoveredRefs(Metadata metadata) {
-    return null;
   }
 
   private Metadata getMetadata(String deviceId) {
@@ -90,7 +87,8 @@ public class BacnetProvider extends ManagerBase implements PubberFamilyProvider 
 
   @Override
   public Map<String, RefDiscovery> enumerateRefs(String addr) {
-    throw new RuntimeException("bacnet ref enumeration not implemented");
+    // TODO: Actually fill in returned refs.
+    return new HashMap<>();
   }
 
   @Override
