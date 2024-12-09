@@ -20,7 +20,6 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import org.slf4j.Logger;
 import udmi.lib.client.SystemManager;
 import udmi.lib.intf.ManagerHost;
 import udmi.schema.Entry;
@@ -48,10 +47,8 @@ public class PubberSystemManager extends PubberManager implements SystemManager 
   private final List<Entry> logentries = new ArrayList<>();
   private final ExtraSystemState systemState;
   private final ManagerHost host;
-  private int systemEventCount;
   private SystemConfig systemConfig;
   private boolean publishingLog;
-  private static final Logger LOG = Pubber.LOG;
 
   /**
    * New instance.
@@ -62,9 +59,8 @@ public class PubberSystemManager extends PubberManager implements SystemManager 
 
     if (host instanceof Pubber pubberHost) {
       initializeLogger(pubberHost);
+      info("Device start time is " + isoConvert(DEVICE_START_TIME));
     }
-
-    info("Device start time is " + isoConvert(DEVICE_START_TIME));
 
     systemState = new ExtraSystemState();
     systemState.operation = new StateSystemOperation();
@@ -141,12 +137,12 @@ public class PubberSystemManager extends PubberManager implements SystemManager 
   public void localLog(String message, Level level, String timestamp, String detail) {
     String detailPostfix = detail == null ? "" : ":\n" + detail;
     String logMessage = format("%s %s%s", timestamp, message, detailPostfix);
-    udmi.lib.client.SystemManager.getLogMap().apply(LOG).get(level).accept(logMessage);
+    SystemManager.getLogMap().apply(Pubber.LOG).get(level).accept(logMessage);
     try {
       PrintStream stream;
       if (host instanceof Pubber pubberHost) {
         stream = pubberHost.logPrintWriter;
-      } else if (host instanceof ProxyDevice proxyHost) {
+      } else if (host instanceof PubberProxyDevice proxyHost) {
         stream = proxyHost.pubberHost.logPrintWriter;
       } else {
         throw new RuntimeException("While writing log output file: Unknown host");

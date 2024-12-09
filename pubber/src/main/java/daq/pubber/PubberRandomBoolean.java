@@ -1,5 +1,6 @@
 package daq.pubber;
 
+import udmi.lib.base.BasicPoint;
 import udmi.lib.intf.AbstractPoint;
 import udmi.schema.PointPointsetModel;
 import udmi.schema.RefDiscovery;
@@ -7,9 +8,9 @@ import udmi.schema.RefDiscovery;
 /**
  * Represents a random boolean point.
  */
-public class RandomBoolean extends BasicPoint implements AbstractPoint {
+public class PubberRandomBoolean extends BasicPoint implements AbstractPoint {
 
-  public RandomBoolean(String name, PointPointsetModel pointModel) {
+  public PubberRandomBoolean(String name, PointPointsetModel pointModel) {
     super(name, pointModel);
   }
 

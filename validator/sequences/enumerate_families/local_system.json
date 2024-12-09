@@ -1,8 +1,8 @@
 {
-  "min_loglevel" : 100,
+  "min_loglevel" : 200,
   "metrics_rate_sec" : 10,
   "operation" : {
-    "last_start" : "2024-12-06T18:59:53Z"
+    "last_start" : "2024-12-03T15:58:40Z"
   },
   "testing" : {
     "sequence_name" : "enumerate_families"

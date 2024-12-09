@@ -266,6 +266,7 @@ public interface PubberUdmiPublisher extends UdmiPublisher {
    * whether the device is a gateway or a proxy device.
    */
   default void registerMessageHandlers() {
+    getDeviceTarget().unregisterHandlers();
     getDeviceTarget().registerHandler(CONFIG_TOPIC, this::configHandler, Config.class);
     String gatewayId = getGatewayId(getDeviceId(), getConfig());
     if (isGatewayDevice()) {
@@ -278,7 +279,6 @@ public interface PubberUdmiPublisher extends UdmiPublisher {
       gatewayTarget.registerHandler(ERRORS_TOPIC, this::errorHandler, GatewayError.class);
     }
   }
-
 
   default MqttDevice getMqttDevice(String proxyId) {
     return new MqttDevice(proxyId, getDeviceTarget());
@@ -329,7 +329,7 @@ public interface PubberUdmiPublisher extends UdmiPublisher {
     Entry report = entryFromException(category, cause);
     getDeviceManager().localLog(report);
     publishLogMessage(report, targetId);
-    ifTrueThen(getDeviceId().equals(targetId), () -> registerSystemStatus(report));
+    registerSystemStatus(report, targetId);
   }
 
   void error(String s);
@@ -337,10 +337,9 @@ public interface PubberUdmiPublisher extends UdmiPublisher {
   /**
    * Register a system status entry.
    */
-  default void registerSystemStatus(Entry report) {
+  default void registerSystemStatus(Entry report, String targetId) {
     if (isNotTrue(getOptions().noStatus)) {
-      getDeviceState().system.status = report;
-      markStateDirty();
+      getDeviceManager().setStatus(report, targetId);
     }
   }
 
@@ -405,11 +404,11 @@ public interface PubberUdmiPublisher extends UdmiPublisher {
       configPreprocess(getDeviceId(), config);
       debug(format("Config update %s%s", getDeviceId(), getDeviceManager().getTestingTag()),
           toJsonString(config));
-      processConfigUpdate(config);
       if (getConfigLatch().getCount() > 0) {
         warn("Received config for config latch " + getDeviceId());
         getConfigLatch().countDown();
       }
+      processConfigUpdate(config);
       publisherConfigLog("apply", null, getDeviceId());
     } catch (Exception e) {
       publisherConfigLog("apply", e, getDeviceId());
@@ -451,8 +450,8 @@ public interface PubberUdmiPublisher extends UdmiPublisher {
     } catch (Exception e) {
       throw new RuntimeException("While acquiring state lock", e);
     }
-
     try {
+      updateInterval(DEFAULT_REPORT_SEC);
       if (configMsg != null) {
         if (configMsg.system == null && isTrue(getConfig().options.barfConfig)) {
           error("Empty config system block and configured to restart on bad config!");
@@ -465,7 +464,6 @@ public interface PubberUdmiPublisher extends UdmiPublisher {
       } else {
         info(getTimestamp() + " defaulting empty config");
       }
-      updateInterval(DEFAULT_REPORT_SEC);
     } finally {
       getStateLock().unlock();
     }
@@ -895,7 +893,6 @@ public interface PubberUdmiPublisher extends UdmiPublisher {
       error("publisher not active");
       return;
     }
-
     String topicSuffix = MESSAGE_TOPIC_SUFFIX_MAP.get(message.getClass());
     if (topicSuffix == null) {
       error("Unknown message class " + message.getClass());
@@ -904,11 +901,6 @@ public interface PubberUdmiPublisher extends UdmiPublisher {
 
     if (!shouldSendState() && topicSuffix.equals(STATE_TOPIC)) {
       warn("Squelching state update as per configuration");
-      return;
-    }
-
-    if (getDeviceTarget() == null) {
-      error("publisher not active");
       return;
     }
 

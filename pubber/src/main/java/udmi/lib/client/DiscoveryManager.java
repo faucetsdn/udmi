@@ -32,7 +32,7 @@ import udmi.schema.RefDiscovery;
 /**
  * Discovery client.
  */
-public interface DiscoveryManager extends SubblockManager {
+public interface DiscoveryManager extends SubBlockManager {
 
 
   static String getVendorRefKey(Map.Entry<String, PointPointsetModel> entry) {
@@ -148,10 +148,12 @@ public interface DiscoveryManager extends SubblockManager {
   default void cancelDiscoveryScan(String family, Date configGeneration,
       FamilyDiscoveryState.Phase phase) {
     FamilyDiscoveryState familyDiscoveryState = getFamilyDiscoveryState(family);
-    info(format("Discovery scan %s phase %s as %s", family, phase, isoConvert(configGeneration)));
-    familyDiscoveryState.phase = phase;
-    familyDiscoveryState.generation = configGeneration;
-    updateState();
+    if (familyDiscoveryState != null) {
+      info(format("Discovery scan %s phase %s as %s", family, phase, isoConvert(configGeneration)));
+      familyDiscoveryState.phase = phase;
+      familyDiscoveryState.generation = configGeneration;
+      updateState();
+    }
   }
 
   default FamilyDiscoveryState getFamilyDiscoveryState(String family) {

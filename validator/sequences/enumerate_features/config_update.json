@@ -1,7 +1,10 @@
 {
   "discovery" : {
-    "enumerations" : {
+    "depths" : {
       "features" : "entries"
+    },
+    "families" : {
+      "vendor" : { }
     }
   },
   "localnet" : {
@@ -30,16 +33,16 @@
   },
   "system" : {
     "metrics_rate_sec" : 10,
-    "min_loglevel" : 100,
+    "min_loglevel" : 200,
     "operation" : {
-      "last_start" : "2024-12-06T18:58:22Z"
+      "last_start" : "2024-12-03T15:57:26Z"
     },
     "testing" : {
-      "config_base" : 26,
+      "config_base" : 27,
       "sequence_name" : "enumerate_features",
-      "transaction_id" : "RC:e70dc1.00000027"
+      "transaction_id" : "RC:0c930c.00000026"
     }
   },
-  "timestamp" : "2024-12-06T18:59:48Z",
-  "version" : "git-0ae3f17"
+  "timestamp" : "2024-12-03T15:58:51Z",
+  "version" : "git-3d8bbe5"
 }

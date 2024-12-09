@@ -259,7 +259,11 @@ Test passed.
 Check enumeration of device features
 
 1. Update config before enumeration not active
+<<<<<<< HEAD
     * Add `discovery` = { "enumerations": { "features": `entries` } }
+=======
+    * Add `discovery.depths` = { "features": `entries` }
+>>>>>>> master
 1. Wait for enumeration not active
 1. Update config before matching enumeration generation
     * Add `discovery.generation` = `generation start time`
@@ -279,7 +283,11 @@ Test passed.
 Check enumeration of nothing at all
 
 1. Update config before enumeration not active
+<<<<<<< HEAD
     * Add `discovery` = { "enumerations": {  } }
+=======
+    * Add `discovery.depths` = {  }
+>>>>>>> master
 1. Wait for enumeration not active
 1. Update config before matching enumeration generation
     * Add `discovery.generation` = `generation start time`

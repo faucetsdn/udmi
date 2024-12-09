@@ -3,5 +3,8 @@
     "families" : "entries",
     "refs" : "entries",
     "features" : "entries"
+  },
+  "families" : {
+    "vendor" : { }
   }
 }

@@ -1,5 +1,8 @@
 {
   "enumerations" : {
     "refs" : "entries"
+  },
+  "families" : {
+    "vendor" : { }
   }
 }
