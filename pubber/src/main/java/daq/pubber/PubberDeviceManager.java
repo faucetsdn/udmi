@@ -1,7 +1,7 @@
 package daq.pubber;
 
 import com.google.udmi.util.SiteModel;
-import java.util.Arrays;
+import java.util.ArrayList;
 import java.util.List;
 import udmi.lib.client.DeviceManager;
 import udmi.lib.client.DiscoveryManager;
@@ -12,7 +12,6 @@ import udmi.lib.client.SubBlockManager;
 import udmi.lib.client.SystemManager;
 import udmi.lib.intf.ManagerHost;
 import udmi.schema.Config;
-import udmi.schema.Metadata;
 import udmi.schema.PubberConfiguration;
 
 /**
@@ -25,7 +24,7 @@ public class PubberDeviceManager extends PubberManager implements DeviceManager 
   private final PubberLocalnetManager localnetManager;
   private final PubberGatewayManager gatewayManager;
   private final PubberDiscoveryManager discoveryManager;
-  private final List<SubBlockManager> subManagers;
+  private final List<SubBlockManager> subManagers = new ArrayList<>();
 
   /**
    * Create a new instance.
@@ -36,13 +35,17 @@ public class PubberDeviceManager extends PubberManager implements DeviceManager 
    */
   public PubberDeviceManager(ManagerHost host, PubberConfiguration configuration) {
     super(host, configuration);
-    systemManager = new PubberSystemManager(host, configuration);
-    localnetManager = new PubberLocalnetManager(host, configuration);
-    pointsetManager = new PubberPointsetManager(host, configuration);
-    discoveryManager = new PubberDiscoveryManager(host, configuration, this);
-    gatewayManager = new PubberGatewayManager(host, configuration);
-    subManagers = Arrays.asList(
-            gatewayManager, discoveryManager, pointsetManager, localnetManager, systemManager);
+    systemManager = addManager(new PubberSystemManager(host, configuration));
+    localnetManager = addManager(new PubberLocalnetManager(host, configuration));
+    pointsetManager = addManager(new PubberPointsetManager(host, configuration));
+    discoveryManager = addManager(new PubberDiscoveryManager(host, configuration, this));
+    gatewayManager = addManager(new PubberGatewayManager(host, configuration));
+  }
+
+  private <T extends SubBlockManager> T addManager(T manager) {
+    // Keep the resulting list in reverse order for proper shutdown semantics.
+    subManagers.add(0, manager);
+    return manager;
   }
 
   @Override
@@ -99,12 +102,4 @@ public class PubberDeviceManager extends PubberManager implements DeviceManager 
     gatewayManager.setSiteModel(siteModel);
     localnetManager.setSiteModel(siteModel);
   }
-<<<<<<< HEAD
-
-  @Override
-  public void setMetadata(Metadata metadata) {
-    DeviceManager.super.setMetadata(metadata);
-  }
-=======
->>>>>>> master
 }

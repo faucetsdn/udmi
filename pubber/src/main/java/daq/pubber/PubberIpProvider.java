@@ -19,18 +19,13 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import udmi.lib.base.ManagerBase;
 import udmi.lib.client.LocalnetManager;
-import udmi.lib.intf.FamilyProvider;
 import udmi.lib.intf.ManagerHost;
 import udmi.schema.FamilyLocalnetState;
 
 /**
  * Wrapper for family of IP-based protocols.
  */
-<<<<<<< HEAD:pubber/src/main/java/daq/pubber/IpProvider.java
-public class IpProvider extends ManagerBase implements PubberFamilyProvider {
-=======
-public class PubberIpProvider extends ManagerBase implements FamilyProvider {
->>>>>>> master:pubber/src/main/java/daq/pubber/PubberIpProvider.java
+public class PubberIpProvider extends ManagerBase implements PubberFamilyProvider {
 
   public static final int DEFAULT_METRIC = 0;
   private static final List<Pattern> familyPatterns = ImmutableList.of(
