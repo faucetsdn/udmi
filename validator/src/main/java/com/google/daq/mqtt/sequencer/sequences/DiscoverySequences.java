@@ -436,7 +436,7 @@ public class DiscoverySequences extends SequenceBase {
 
   @Test(timeout = TWO_MINUTES_MS)
   @Feature(bucket = DISCOVERY_SCAN, stage = PREVIEW)
-  @Summary("Check periodic scan on a fixed schedule amd enumeration")
+  @Summary("Check periodic scan on a fixed schedule and enumeration")
   public void scan_periodic_now_enumerate() {
     initializeDiscovery();
     checkState(scanGeneration == null, "scanStartTime not null");

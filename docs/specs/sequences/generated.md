@@ -58,7 +58,7 @@ Some caveats:
 * [pointset_publish_interval](#pointset_publish_interval-stable): Check handling of sample_rate_sec and sample_limit_sec
 * [pointset_remove_point](#pointset_remove_point-stable): Check that pointset state does not report an unconfigured point
 * [pointset_request_extraneous](#pointset_request_extraneous-stable): Check error when pointset configuration contains extraneous point
-* [scan_periodic_now_enumerate](#scan_periodic_now_enumerate-preview): Check periodic scan on a fixed schedule amd enumeration
+* [scan_periodic_now_enumerate](#scan_periodic_now_enumerate-preview): Check periodic scan on a fixed schedule and enumeration
 * [scan_single_future](#scan_single_future-preview): Check results of a single scan scheduled soon
 * [scan_single_now](#scan_single_now-preview): Check results of a single scan scheduled in the recent past
 * [scan_single_past](#scan_single_past-preview): Check that a scan scheduled in the past never starts
@@ -481,7 +481,7 @@ Test passed.
 
 ## scan_periodic_now_enumerate (PREVIEW)
 
-Check periodic scan on a fixed schedule amd enumeration
+Check periodic scan on a fixed schedule and enumeration
 
 1. Update config before discovery families defined
     * Remove `discovery.families.vendor`
