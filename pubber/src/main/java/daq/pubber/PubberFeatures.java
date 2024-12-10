@@ -12,7 +12,6 @@ import static udmi.schema.Bucket.ENUMERATION_POINTSET;
 import static udmi.schema.Bucket.POINTSET;
 import static udmi.schema.Bucket.SYSTEM;
 import static udmi.schema.Bucket.UNKNOWN_DEFAULT;
-import static udmi.schema.FeatureDiscovery.FeatureStage.ALPHA;
 import static udmi.schema.FeatureDiscovery.FeatureStage.BETA;
 import static udmi.schema.FeatureDiscovery.FeatureStage.PREVIEW;
 import static udmi.schema.FeatureDiscovery.FeatureStage.STABLE;
