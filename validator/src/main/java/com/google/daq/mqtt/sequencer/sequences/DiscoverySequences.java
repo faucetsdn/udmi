@@ -399,13 +399,14 @@ public class DiscoverySequences extends SequenceBase {
   }
 
   private String mismatchedDetail(List<DiscoveryEvents> receivedEvents) {
-    List<String> strings = receivedEvents.stream().map(this::refsMatch).toList();
+    List<String> strings = receivedEvents.stream()
+        .map(this::refsMatch).filter(Objects::nonNull).toList();
     return strings.isEmpty() ? null : strings.toString();
   }
 
   private String refsMatch(DiscoveryEvents discoveryEvents) {
-    Metadata deviceMetadata = targetMetadata(discoveryEvents.scan_addr).getValue();
-    HashMap<String, PointPointsetModel> devicePoints = deviceMetadata.pointset.points;
+    Entry<String, Metadata> deviceEntry = targetMetadata(discoveryEvents.scan_addr);
+    HashMap<String, PointPointsetModel> devicePoints = deviceEntry.getValue().pointset.points;
     Map<String, RefDiscovery> refs = discoveryEvents.refs;
     List<PointPointsetModel> refPoints = refs.values().stream()
         .map(ref -> devicePoints.get(ref.point))
@@ -414,7 +415,8 @@ public class DiscoverySequences extends SequenceBase {
     List<String> pointRefs = refPoints.stream().map(x -> x.ref).toList();
     Set<String> refKeys = refs.keySet();
     return pointRefs.size() == refKeys.size() ? null
-        : format("Refs %s do not match point refs %s", refKeys, pointRefs);
+        : format("Device %s refs %s do not match point refs %s",
+            deviceEntry.getKey(), refKeys, pointRefs);
   }
 
   private Entry<String, Metadata> targetMetadata(String scanAddr) {
