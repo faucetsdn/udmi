@@ -32,7 +32,7 @@ RESULT pass system device_config_acked STABLE 10/10 Sequence complete
 RESULT pass system extra_config STABLE 10/10 Sequence complete
 RESULT pass system family_ether_addr PREVIEW 10/10 Sequence complete
 RESULT pass system family_ipv4_addr PREVIEW 10/10 Sequence complete
-RESULT pass system family_ipv6_addr PREVIEW 10/10 Sequence complete
+RESULT skip system family_ipv6_addr PREVIEW 0/0 No ipv6 address defined in metadata
 RESULT pass system.mode system_mode_restart ALPHA 10/10 Sequence complete
 RESULT pass system state_make_model STABLE 10/10 Sequence complete
 RESULT pass system state_software STABLE 10/10 Sequence complete

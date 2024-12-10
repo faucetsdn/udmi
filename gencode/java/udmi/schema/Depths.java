@@ -11,7 +11,7 @@ import com.fasterxml.jackson.annotation.JsonValue;
 
 
 /**
- * Indicates which discovery sub-categories to activate
+ * Indicates which discovery sub-categories to enumerate
  * 
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)

@@ -48,7 +48,7 @@ Some caveats:
 * [extra_config](#extra_config-stable): Check that the device correctly handles an extra out-of-schema field
 * [family_ether_addr](#family_ether_addr-preview)
 * [family_ipv4_addr](#family_ipv4_addr-preview)
-* [family_ipv6_addr](#family_ipv6_addr-preview)
+* [family_ipv6_addr](#family_ipv6_addr-preview): Test skipped: No ipv6 address defined in metadata
 * [gateway_proxy_events](#gateway_proxy_events-beta): Check that a gateway proxies pointset events for indicated devices Test skipped: Not a gateway
 * [gateway_proxy_state](#gateway_proxy_state-preview): Check that a gateway proxies state updates for indicated devices Test skipped: Not a gateway
 * [pointset_publish](#pointset_publish-stable): Check that a device publishes pointset events
@@ -332,10 +332,8 @@ Test passed.
 
 ## family_ipv6_addr (PREVIEW)
 
-1. Wait until localnet family state ipv6 available
-1. Check that family ipv6 address matches
 
-Test passed.
+Test skipped: No ipv6 address defined in metadata
 
 ## gateway_proxy_events (BETA)
 

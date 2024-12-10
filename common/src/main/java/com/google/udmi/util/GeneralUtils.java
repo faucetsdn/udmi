@@ -8,7 +8,6 @@ import static com.google.udmi.util.ProperPrinter.OutputFormat.VERBOSE;
 import static java.lang.String.format;
 import static java.util.Optional.ofNullable;
 
-import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.core.JsonParser.Feature;
@@ -39,6 +38,7 @@ import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Base64;
+import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
@@ -98,8 +98,8 @@ public class GeneralUtils {
    * the target class is "final" but the fields themselves need to be updated.
    *
    * @param from source object
-   * @param to target object
-   * @param <T> type of object
+   * @param to   target object
+   * @param <T>  type of object
    */
   public static <T> void copyFields(T from, T to, boolean includeNull) {
     Field[] fields = from.getClass().getDeclaredFields();
@@ -327,6 +327,13 @@ public class GeneralUtils {
     checkState(value == null, description);
   }
 
+  public static <T extends Collection<?>> void ifNotEmptyThrow(T value,
+      Function<T, String> detailer) {
+    if (!value.isEmpty()) {
+      throw new RuntimeException(detailer.apply(value));
+    }
+  }
+
   public static <T> void ifNotNullThrow(T value, String message) {
     if (value != null) {
       throw new RuntimeException(message);
@@ -491,6 +498,15 @@ public class GeneralUtils {
 
   public static <T> T catchToNull(Supplier<T> provider) {
     return catchToElse(provider, (T) null);
+  }
+
+  public static String catchToMessage(Runnable action) {
+    try {
+      action.run();
+      return null;
+    } catch (Exception e) {
+      return e.getMessage();
+    }
   }
 
   public static String joinOrNull(String prefix, Set<Object> setDifference) {
@@ -667,7 +683,8 @@ public class GeneralUtils {
 
   public static String removeStringArg(List<String> argList, String description) {
     if (!argList.isEmpty() && argList.get(0).startsWith("-")) {
-      throw new IllegalArgumentException(format("Missing required %s string argument", description));
+      throw new IllegalArgumentException(
+          format("Missing required %s string argument", description));
     }
     return removeArg(argList, description);
   }
@@ -684,4 +701,5 @@ public class GeneralUtils {
   public static byte[] getFileBytes(File dataFile) {
     return getFileBytes(dataFile.getPath());
   }
+
 }

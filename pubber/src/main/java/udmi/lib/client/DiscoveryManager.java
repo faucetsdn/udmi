@@ -18,6 +18,7 @@ import static udmi.schema.FamilyDiscoveryState.Phase.STOPPED;
 import java.time.Instant;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ScheduledFuture;
 import java.util.function.Supplier;
@@ -49,7 +50,7 @@ public interface DiscoveryManager extends SubBlockManager {
     PointPointsetModel model = entry.getValue();
     refDiscovery.writable = model.writable;
     refDiscovery.units = model.units;
-    refDiscovery.point = ifNotNullGet(model.ref, entry::getKey);
+    refDiscovery.point = model.ref;
     return refDiscovery;
   }
 
@@ -66,7 +67,7 @@ public interface DiscoveryManager extends SubBlockManager {
     });
   }
 
-  default  <K, V> Map<K, V> maybeEnumerate(Depths.Depth depth, Supplier<Map<K, V>> supplier) {
+  default <K, V> Map<K, V> maybeEnumerate(Depths.Depth depth, Supplier<Map<K, V>> supplier) {
     return ifTrueGet(shouldEnumerateTo(depth), supplier);
   }
 
@@ -79,8 +80,9 @@ public interface DiscoveryManager extends SubBlockManager {
     Map<String, FamilyDiscoveryConfig> families = ofNullable(raw).orElse(Map.of());
     ifNullThen(getDiscoveryState().families, () -> getDiscoveryState().families = new HashMap<>());
 
-    getDiscoveryState().families.keySet().stream().filter(not(families::containsKey))
-        .forEach(this::removeDiscoveryScan);
+    List<String> toRemove = getDiscoveryState().families.keySet().stream()
+        .filter(not(families::containsKey)).toList();
+    toRemove.forEach(this::removeDiscoveryScan);
     families.keySet().forEach(this::scheduleDiscoveryScan);
 
     if (raw == null) {
@@ -98,7 +100,7 @@ public interface DiscoveryManager extends SubBlockManager {
     Date rawGeneration = familyDiscoveryConfig.generation;
     int interval = getScanInterval(family);
     if (rawGeneration == null && interval == 0) {
-      cancelDiscoveryScan(family, null, null);
+      cancelDiscoveryScan(family, null);
       return;
     }
 
@@ -112,7 +114,7 @@ public interface DiscoveryManager extends SubBlockManager {
       long deltaSec = floorMod(configGeneration.getTime() / 1000 - now.getEpochSecond(), interval);
       startGeneration = Date.from(now.plusSeconds(deltaSec));
     } else if (configGeneration.before(baseGeneration)) {
-      cancelDiscoveryScan(family, configGeneration, STOPPED);
+      cancelDiscoveryScan(family, configGeneration);
       return;
     } else {
       startGeneration = configGeneration;
@@ -136,22 +138,21 @@ public interface DiscoveryManager extends SubBlockManager {
 
   default void removeDiscoveryScan(String family) {
     FamilyDiscoveryState removed = getDiscoveryState().families.remove(family);
-    ifNotNullThen(removed, was -> cancelDiscoveryScan(family, was.generation, STOPPED));
+    ifNotNullThen(removed, was -> cancelDiscoveryScan(family, was.generation));
   }
 
   /**
    * Cancels discovery scan.
    *
-   * @param family family string.
+   * @param family           family string.
    * @param configGeneration Config generation.
-   * @param phase Family discovery phase.
    */
-  default void cancelDiscoveryScan(String family, Date configGeneration,
-      FamilyDiscoveryState.Phase phase) {
+  default void cancelDiscoveryScan(String family, Date configGeneration) {
     FamilyDiscoveryState familyDiscoveryState = getFamilyDiscoveryState(family);
     if (familyDiscoveryState != null) {
-      info(format("Discovery scan %s phase %s as %s", family, phase, isoConvert(configGeneration)));
-      familyDiscoveryState.phase = phase;
+      info(format("Discovery scan %s phase %s as %s", family, STOPPED,
+          isoConvert(configGeneration)));
+      familyDiscoveryState.phase = STOPPED;
       familyDiscoveryState.generation = configGeneration;
       updateState();
     }
@@ -179,7 +180,7 @@ public interface DiscoveryManager extends SubBlockManager {
   /**
    * Checks and scan for discovery.
    *
-   * @param family family
+   * @param family         family
    * @param scanGeneration scan generation.
    */
   default void checkDiscoveryScan(String family, Date scanGeneration) {

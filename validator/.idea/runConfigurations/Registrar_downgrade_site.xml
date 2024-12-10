@@ -2,7 +2,7 @@
   <configuration default="false" name="Registrar downgrade.site" type="Application" factoryName="Application">
     <option name="MAIN_CLASS_NAME" value="com.google.daq.mqtt.registrar.Registrar" />
     <module name="validator" />
-    <option name="PROGRAM_PARAMETERS" value="-s tests/downgrade.site" />
+    <option name="PROGRAM_PARAMETERS" value="tests/sites/downgrade/cloud_iot_config.json" />
     <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/.." />
     <extension name="coverage">
       <pattern>

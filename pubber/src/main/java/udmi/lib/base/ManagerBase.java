@@ -138,6 +138,15 @@ public abstract class ManagerBase implements SubBlockManager {
     host.error(message, null);
   }
 
+  protected int getIntervalSec(Integer sampleRateSec) {
+    return ofNullable(sampleRateSec).orElse(DEFAULT_REPORT_SEC);
+  }
+
+  @Override
+  public void periodicUpdate() {
+    throw new IllegalStateException("No periodic update handler defined");
+  }
+
   /**
    * Updates the interval for periodic updates based on the provided sample rate.
    */
@@ -149,22 +158,13 @@ public abstract class ManagerBase implements SubBlockManager {
           intervalSec));
       return;
     }
-    if (periodicSender == null || intervalSec != sendRateSec.get()) {
+    int previous = sendRateSec.getAndSet(intervalSec);
+    if (previous != intervalSec || periodicSender == null) {
       cancelPeriodicSend();
-      sendRateSec.set(intervalSec);
       if (intervalSec > DISABLED_INTERVAL) {
         startPeriodicSend();
       }
     }
-  }
-
-  protected int getIntervalSec(Integer sampleRateSec) {
-    return ofNullable(sampleRateSec).orElse(DEFAULT_REPORT_SEC);
-  }
-
-  @Override
-  public void periodicUpdate() {
-    throw new IllegalStateException("No periodic update handler defined");
   }
 
   protected synchronized void startPeriodicSend() {

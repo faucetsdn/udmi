@@ -9,12 +9,12 @@
   "gateway": {
     "target": {
       "addr": "0x65",
-      "family": "bacnet"
+      "family": "vendor"
     }
   },
   "localnet": {
     "families": {
-      "bacnet": { }
+      "vendor": { }
     }
   },
   "pointset": {

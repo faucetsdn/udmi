@@ -7,6 +7,7 @@ import static java.util.Optional.ofNullable;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.udmi.util.SiteModel;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -18,14 +19,13 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import udmi.lib.base.ManagerBase;
 import udmi.lib.client.LocalnetManager;
-import udmi.lib.intf.FamilyProvider;
 import udmi.lib.intf.ManagerHost;
 import udmi.schema.FamilyLocalnetState;
 
 /**
  * Wrapper for family of IP-based protocols.
  */
-public class PubberIpProvider extends ManagerBase implements FamilyProvider {
+public class PubberIpProvider extends ManagerBase implements PubberFamilyProvider {
 
   public static final int DEFAULT_METRIC = 0;
   private static final List<Pattern> familyPatterns = ImmutableList.of(
@@ -167,4 +167,7 @@ public class PubberIpProvider extends ManagerBase implements FamilyProvider {
     }
   }
 
+  @Override
+  public void setSiteModel(SiteModel siteModel) {
+  }
 }
