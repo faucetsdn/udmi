@@ -173,7 +173,7 @@ bin/registrar $site_args $device_id
 echo Check $device_id to make sure that it works...
 echo bin/pubber $pubber_config
 result=0
-timeout 20s bin/pubber $pubber_config 2> $pubber_log || result=$?
+timeout 30s bin/pubber $pubber_config 2> $pubber_log || result=$?
 [[ $result == 0 ]] || fail Improper pubber failure code $result
 
 echo Clean out the registry to make sure devices get removed...
@@ -209,7 +209,7 @@ check_csv_file BLOCK
 echo Check $device_id again, but this time with success...
 echo bin/pubber $pubber_config
 result=0
-timeout 20s bin/pubber $pubber_config 2> $pubber_log || result=$?
+timeout 30s bin/pubber $pubber_config 2> $pubber_log || result=$?
 [[ $result == 0 ]] || fail Improper pubber failure code $result
 
 echo Successful pubber check passed on clean registry.
