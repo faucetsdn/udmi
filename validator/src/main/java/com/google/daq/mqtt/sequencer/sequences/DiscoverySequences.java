@@ -412,11 +412,13 @@ public class DiscoverySequences extends SequenceBase {
         .map(ref -> devicePoints.get(ref.point))
         .filter(Objects::nonNull)
         .toList();
-    List<String> pointRefs = refPoints.stream().map(x -> x.ref).toList();
-    Set<String> refKeys = refs.keySet();
-    return pointRefs.size() == refKeys.size() ? null
-        : format("Device %s refs %s do not match point refs %s",
-            deviceEntry.getKey(), refKeys, pointRefs);
+    Set<String> metadataRefs = refPoints.stream().map(x -> x.ref).collect(Collectors.toSet());
+    Set<String> discoveredRefs = refs.keySet();
+    SetView<String> extraMetadata = Sets.difference(metadataRefs, discoveredRefs);
+    SetView<String> extraDiscovered = Sets.difference(discoveredRefs, metadataRefs);
+    return extraMetadata.isEmpty() && extraDiscovered.isEmpty() ? null
+        : format("Device %s has extra metadata refs %s and/or extra discovered refs %s",
+            deviceEntry.getKey(), extraMetadata, extraDiscovered);
   }
 
   private Entry<String, Metadata> targetMetadata(String scanAddr) {
