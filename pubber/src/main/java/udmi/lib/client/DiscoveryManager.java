@@ -1,7 +1,6 @@
 package udmi.lib.client;
 
 import static com.google.udmi.util.GeneralUtils.catchToNull;
-import static com.google.udmi.util.GeneralUtils.ifNotNullGet;
 import static com.google.udmi.util.GeneralUtils.ifNotNullThen;
 import static com.google.udmi.util.GeneralUtils.ifNullElse;
 import static com.google.udmi.util.GeneralUtils.ifNullThen;
@@ -28,31 +27,12 @@ import udmi.schema.DiscoveryConfig;
 import udmi.schema.DiscoveryState;
 import udmi.schema.FamilyDiscoveryConfig;
 import udmi.schema.FamilyDiscoveryState;
-import udmi.schema.PointPointsetModel;
-import udmi.schema.RefDiscovery;
 
 /**
  * Discovery client.
  */
 public interface DiscoveryManager extends SubBlockManager {
 
-
-  static String getVendorRefKey(Map.Entry<String, PointPointsetModel> entry) {
-    return ofNullable(entry.getValue().ref).orElse(entry.getKey());
-  }
-
-  /**
-   * Get vendor ref value.
-   */
-  static RefDiscovery getVendorRefValue(Map.Entry<String, PointPointsetModel> entry) {
-    RefDiscovery refDiscovery = new RefDiscovery();
-    refDiscovery.possible_values = null;
-    PointPointsetModel model = entry.getValue();
-    refDiscovery.writable = model.writable;
-    refDiscovery.units = model.units;
-    refDiscovery.point = model.ref;
-    return refDiscovery;
-  }
 
   /**
    * Determines whether enumeration to a specific depth level is required.

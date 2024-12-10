@@ -6,6 +6,7 @@ import static com.google.udmi.util.JsonUtil.getNowInstant;
 import static com.google.udmi.util.JsonUtil.isoConvert;
 import static daq.pubber.PubberUdmiPublisher.DEVICE_START_TIME;
 import static java.lang.String.format;
+import static java.util.Optional.ofNullable;
 import static java.util.stream.Collectors.toMap;
 import static udmi.schema.FamilyDiscoveryState.Phase.ACTIVE;
 import static udmi.schema.FamilyDiscoveryState.Phase.STOPPED;
@@ -23,6 +24,7 @@ import udmi.schema.DiscoveryConfig;
 import udmi.schema.DiscoveryEvents;
 import udmi.schema.DiscoveryState;
 import udmi.schema.FamilyDiscoveryState;
+import udmi.schema.PointPointsetModel;
 import udmi.schema.PubberConfiguration;
 import udmi.schema.RefDiscovery;
 import udmi.schema.SystemDiscoveryData;
@@ -43,6 +45,23 @@ public class PubberDiscoveryManager extends PubberManager implements DiscoveryMa
       PubberDeviceManager deviceManager) {
     super(host, configuration);
     this.deviceManager = deviceManager;
+  }
+
+  public static String getVendorRefKey(Map.Entry<String, PointPointsetModel> entry) {
+    return ofNullable(entry.getValue().ref).orElse(entry.getKey());
+  }
+
+  /**
+   * Get vendor ref value.
+   */
+  public static RefDiscovery getVendorRefValue(Map.Entry<String, PointPointsetModel> entry) {
+    RefDiscovery refDiscovery = new RefDiscovery();
+    refDiscovery.possible_values = null;
+    PointPointsetModel model = entry.getValue();
+    refDiscovery.writable = model.writable;
+    refDiscovery.units = model.units;
+    refDiscovery.point = model.ref;
+    return refDiscovery;
   }
 
 
@@ -129,8 +148,8 @@ public class PubberDiscoveryManager extends PubberManager implements DiscoveryMa
 
   private Map<String, RefDiscovery> enumerateRefs(String deviceId) {
     return siteModel.getMetadata(deviceId).pointset.points.entrySet().stream()
-        .collect(toMap(udmi.lib.client.DiscoveryManager::getVendorRefKey,
-            udmi.lib.client.DiscoveryManager::getVendorRefValue));
+        .collect(toMap(PubberDiscoveryManager::getVendorRefKey,
+            PubberDiscoveryManager::getVendorRefValue));
   }
 
   public void setSiteModel(SiteModel siteModel) {
