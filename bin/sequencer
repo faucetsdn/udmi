@@ -213,9 +213,9 @@ echo
 echo Extracting sequence results:
 # Sort by test name (6th field)
 egrep 'RESULT |CPBLTY ' $SEQUENCER_LOG | fgrep NOTICE | sort -k 6 | \
-    sed -E -e 's/.* NOTICE +//' | tee $SEQUENCER_OUT
+    sed -E -e 's/.* NOTICE +//' | tee $SEQUENCER_OUT || true
 
-[[ -s $SEQUENCER_OUT ]] || fail No test results found.
+[[ $sequences == null || -s $SEQUENCER_OUT ]] || fail No test results found.
 
 # Sort by test name (3th field)
 fgrep RESULT $site_model/out/devices/$device_id/RESULT.log | \
