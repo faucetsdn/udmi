@@ -33,7 +33,6 @@ import static udmi.schema.Depths.Depth.ENTRIES;
 import static udmi.schema.FamilyDiscoveryState.Phase.ACTIVE;
 import static udmi.schema.FamilyDiscoveryState.Phase.PENDING;
 import static udmi.schema.FamilyDiscoveryState.Phase.STOPPED;
-import static udmi.schema.FeatureDiscovery.FeatureStage.ALPHA;
 import static udmi.schema.FeatureDiscovery.FeatureStage.BETA;
 import static udmi.schema.FeatureDiscovery.FeatureStage.PREVIEW;
 import static udmi.schema.FeatureDiscovery.FeatureStage.STABLE;
@@ -72,7 +71,6 @@ import udmi.schema.FamilyDiscoveryState;
 import udmi.schema.FeatureDiscovery;
 import udmi.schema.Metadata;
 import udmi.schema.PointPointsetModel;
-import udmi.schema.RefDiscovery;
 
 /**
  * Validation tests for discovery scan and enumeration capabilities.
@@ -149,22 +147,30 @@ public class DiscoverySequences extends SequenceBase {
           : format("received %s, expected %s", CSV_JOINER.join(events), CSV_JOINER.join(models));
       checkThat("family enumeration size matches", detail);
     } else {
-      checkThat("no family enumeration exists", () -> event.families == null);
+      checkThat("no family enumeration exists", event.families == null);
     }
 
     if (shouldEnumerate(depths.features)) {
       checkFeatureDiscovery(event.features);
     } else {
-      checkThat("no feature enumeration exists", () -> event.features == null);
+      checkThat("no feature enumeration exists", event.features == null);
     }
 
     if (shouldEnumerate(depths.refs)) {
-      int expectedSize = ofNullable(deviceMetadata.pointset.points).map(HashMap::size)
-          .orElse(0);
-      checkThat("enumerated point count matches", () -> event.refs.size() == expectedSize);
+      checkThat("enumerated point count matches",
+          enumeratedPoints(event, deviceMetadata.pointset.points));
     } else {
-      checkThat("no point enumeration exists", () -> event.refs == null);
+      checkThat("no point enumeration exists", event.refs == null);
     }
+  }
+
+  private String enumeratedPoints(DiscoveryEvents discovery,
+      HashMap<String, PointPointsetModel> points) {
+    Set<String> discoveryPoints = discovery.refs.keySet();
+    Set<String> metadataPoints = points.entrySet().stream().map(entry ->
+        ofNullable(entry.getValue().ref).orElse(entry.getKey())).collect(Collectors.toSet());
+    return discoveryPoints.equals(metadataPoints) ? null : format(
+        "Discovered points %s don't match metadata points %s", discoveryPoints, metadataPoints);
   }
 
   private boolean shouldEnumerate(Depth depth) {
@@ -393,7 +399,7 @@ public class DiscoverySequences extends SequenceBase {
           checkThat("all events have matching refs", mismatchedDetail(receivedEvents)));
     } else {
       addIfCaught(exceptions, () -> checkThat("no events have discovered refs",
-              receivedEvents.stream().noneMatch(event -> nonNull(event.refs))));
+          receivedEvents.stream().noneMatch(event -> nonNull(event.refs))));
     }
     return exceptions;
   }
