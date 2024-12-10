@@ -12,6 +12,6 @@ Check periodic scan on a fixed schedule amd enumeration
     * Add `discovery.families.vendor` = { "generation": `family generation`, "scan_interval_sec": `20`, "depth": `entries`, "scan_duration_sec": `20` }
 1. Wait for scan iterations
 1. Check that scan did not terminate prematurely
-1. Check that all events have discovered refs
+1. Check that all events have matching refs
 
 Test passed.
