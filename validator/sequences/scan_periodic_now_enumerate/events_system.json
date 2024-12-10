@@ -1,16 +1,27 @@
 {
-  "event_no" : 7,
-  "last_config" : "2024-12-03T15:59:36Z",
+  "event_no" : 10,
+  "last_config" : "2024-12-10T16:14:37Z",
   "logentries" : [ {
-    "message" : "Update state 2024-12-03T16:00:04Z last_config 2024-12-03T15:59:36Z",
+    "message" : "State update defer -5996ms",
     "category" : "device.log",
-    "timestamp" : "2024-12-03T16:00:04Z",
+    "timestamp" : "2024-12-10T16:15:05Z",
+    "level" : 100
+  }, {
+    "message" : "Update state 2024-12-10T16:15:05Z last_config 2024-12-10T16:14:37Z",
+    "category" : "device.log",
+    "timestamp" : "2024-12-10T16:15:05Z",
     "level" : 200
+  }, {
+    "message" : "State update AHU-1 (scan_periodic_now_enumerate)",
+    "detail" : "{\n  \"timestamp\" : \"2024-12-10T16:15:05Z\",\n  \"version\" : \"1.5.2\",\n  \"system\" : {\n    \"last_config\" : \"2024-12-10T16:14:37Z\",\n    \"operation\" : {\n      \"operational\" : true,\n      \"last_start\" : \"2024-12-10T16:13:31Z\",\n      \"restart_count\" : 1,\n      \"mode\" : \"initial\"\n    },\n    \"serial_no\" : \"sequencer-5314\",\n    \"hardware\" : {\n      \"make\" : \"BOS\",\n      \"model\" : \"pubber\"\n    },\n    \"software\" : {\n      \"firmware\" : \"v1\"\n    },\n    \"status\" : {\n      \"message\" : \"success\",\n      \"category\" : \"system.config.apply\",\n      \"timestamp\" : \"2024-12-10T16:14:37Z\",\n      \"level\" : 300\n    }\n  },\n  \"discovery\" : {\n    \"families\" : {\n      \"vendor\" : {\n        \"generation\" : \"2024-12-10T16:15:15Z\",\n        \"phase\" : \"pending\",\n        \"active_count\" : 3\n      }\n    }\n  },\n  \"localnet\" : {\n    \"families\" : {\n      \"ether\" : {\n        \"addr\" : \"00:0d:3a:3d:42:08\"\n      },\n      \"ipv4\" : {\n        \"addr\" : \"10.1.0.206\"\n      },\n      \"ipv6\" : {\n        \"addr\" : \"fe80::20d:3aff:fe3d:4208\"\n      },\n      \"vendor\" : {\n        \"addr\" : \"28179023\"\n      }\n    }\n  },\n  \"pointset\" : {\n    \"points\" : {\n      \"filter_alarm_pressure_status\" : {\n        \"units\" : \"No-units\"\n      },\n      \"filter_differential_pressure_setpoint\" : {\n        \"units\" : \"Bars\",\n        \"value_state\" : \"applied\"\n      },\n      \"filter_differential_pressure_sensor\" : {\n        \"units\" : \"Degrees-Celsius\"\n      }\n    }\n  }\n}",
+    "category" : "device.log",
+    "timestamp" : "2024-12-10T16:15:05Z",
+    "level" : 100
   } ],
   "metrics" : {
     "mem_total_mb" : 254.0,
-    "mem_free_mb" : 211.32958984375
+    "mem_free_mb" : 204.94338989257812
   },
-  "timestamp" : "2024-12-03T16:00:08Z",
+  "timestamp" : "2024-12-10T16:15:12Z",
   "version" : "1.5.2"
 }

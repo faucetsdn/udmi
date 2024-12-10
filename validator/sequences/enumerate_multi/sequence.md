@@ -1,5 +1,5 @@
 
-## enumerate_multi (ALPHA)
+## enumerate_multi (PREVIEW)
 
 Check enumeration of multiple categories
 

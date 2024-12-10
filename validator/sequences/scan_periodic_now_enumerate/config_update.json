@@ -3,7 +3,7 @@
     "families" : {
       "vendor" : {
         "depth" : "entries",
-        "generation" : "2024-12-03T15:59:34Z",
+        "generation" : "2024-12-10T16:14:35Z",
         "scan_duration_sec" : 20,
         "scan_interval_sec" : 20
       }
@@ -11,9 +11,9 @@
   },
   "localnet" : {
     "families" : {
+      "bacnet" : { },
       "ether" : { },
       "ipv4" : { },
-      "ipv6" : { },
       "vendor" : { }
     }
   },
@@ -35,16 +35,16 @@
   },
   "system" : {
     "metrics_rate_sec" : 10,
-    "min_loglevel" : 200,
+    "min_loglevel" : 100,
     "operation" : {
-      "last_start" : "2024-12-03T15:59:07Z"
+      "last_start" : "2024-12-10T16:13:31Z"
     },
     "testing" : {
-      "config_base" : 42,
+      "config_base" : 22,
       "sequence_name" : "scan_periodic_now_enumerate",
-      "transaction_id" : "RC:355ee9.0000000d"
+      "transaction_id" : "RC:0c26ea.0000001e"
     }
   },
-  "timestamp" : "2024-12-03T15:59:36Z",
-  "version" : "git-3d8bbe5"
+  "timestamp" : "2024-12-10T16:14:37Z",
+  "version" : "git-e79bdcc"
 }

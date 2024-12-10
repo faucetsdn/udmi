@@ -1,11 +1,11 @@
 {
-  "timestamp" : "2024-12-03T15:59:21Z",
-  "version" : "@@@cloud udmi version###git-3d8bbe5",
+  "timestamp" : "2024-12-10T16:14:23Z",
+  "version" : "@@@cloud udmi version###git-e79bdcc",
   "system" : {
-    "min_loglevel" : 200,
+    "min_loglevel" : 100,
     "metrics_rate_sec" : 10,
     "operation" : {
-      "last_start" : "2024-12-03T15:58:55Z"
+      "last_start" : "2024-12-10T16:12:48Z"
     },
     "testing" : {
       "sequence_name" : "enumerate_pointset"
@@ -24,7 +24,7 @@
       "ether" : { },
       "ipv4" : { },
       "vendor" : { },
-      "ipv6" : { }
+      "bacnet" : { }
     }
   },
   "pointset" : {

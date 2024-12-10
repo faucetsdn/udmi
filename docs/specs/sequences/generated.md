@@ -43,8 +43,11 @@ Some caveats:
 * [endpoint_connection_success_reconnect](#endpoint_connection_success_reconnect-preview): Check a successful reconnect to the same endpoint.
 * [endpoint_failure_and_restart](#endpoint_failure_and_restart-preview)
 * [endpoint_redirect_and_restart](#endpoint_redirect_and_restart-preview)
+* [enumerate_families](#enumerate_families-preview): Check enumeration of network families
 * [enumerate_features](#enumerate_features-preview): Check enumeration of device features
+* [enumerate_multi](#enumerate_multi-preview): Check enumeration of multiple categories
 * [enumerate_nothing](#enumerate_nothing-preview): Check enumeration of nothing at all
+* [enumerate_pointset](#enumerate_pointset-preview): Check enumeration of device points
 * [extra_config](#extra_config-stable): Check that the device correctly handles an extra out-of-schema field
 * [family_ether_addr](#family_ether_addr-preview)
 * [family_ipv4_addr](#family_ipv4_addr-preview)
@@ -55,6 +58,10 @@ Some caveats:
 * [pointset_publish_interval](#pointset_publish_interval-stable): Check handling of sample_rate_sec and sample_limit_sec
 * [pointset_remove_point](#pointset_remove_point-stable): Check that pointset state does not report an unconfigured point
 * [pointset_request_extraneous](#pointset_request_extraneous-stable): Check error when pointset configuration contains extraneous point
+* [scan_periodic_now_enumerate](#scan_periodic_now_enumerate-preview): Check periodic scan on a fixed schedule amd enumeration
+* [scan_single_future](#scan_single_future-preview): Check results of a single scan scheduled soon
+* [scan_single_now](#scan_single_now-preview): Check results of a single scan scheduled in the recent past
+* [scan_single_past](#scan_single_past-preview): Check that a scan scheduled in the past never starts
 * [state_make_model](#state_make_model-stable): Check that a device publishes correct make and model information in state messages
 * [state_software](#state_software-stable): Check that a device publishes correct software information in state messages
 * [system_last_update](#system_last_update-stable): Check that last_update state is correctly set in response to a config update.
@@ -254,6 +261,25 @@ Test passed.
 
 Test passed.
 
+## enumerate_families (PREVIEW)
+
+Check enumeration of network families
+
+1. Update config before enumeration not active
+    * Add `discovery.depths` = { "families": `entries` }
+1. Wait for enumeration not active
+1. Update config before matching enumeration generation
+    * Add `discovery.generation` = `generation start time`
+1. Wait for matching enumeration generation
+1. Update config before cleared enumeration generation
+    * Remove `discovery.generation`
+1. Wait for cleared enumeration generation
+1. Check that family enumeration size matches
+1. Check that no feature enumeration exists
+1. Check that no point enumeration exists
+
+Test passed.
+
 ## enumerate_features (PREVIEW)
 
 Check enumeration of device features
@@ -274,6 +300,26 @@ Check enumeration of device features
 
 Test passed.
 
+## enumerate_multi (PREVIEW)
+
+Check enumeration of multiple categories
+
+1. Update config before enumeration not active
+    * Add `discovery.depths` = { "features": `entries`, "refs": `entries`, "families": `entries` }
+1. Wait for enumeration not active
+1. Update config before matching enumeration generation
+    * Add `discovery.generation` = `generation start time`
+1. Wait for matching enumeration generation
+1. Update config before cleared enumeration generation
+    * Remove `discovery.generation`
+1. Wait for cleared enumeration generation
+1. Check that family enumeration size matches
+1. Check that feature enumeration matches metadata
+1. Check that all enumerated features are official buckets
+1. Check that enumerated point count matches
+
+Test passed.
+
 ## enumerate_nothing (PREVIEW)
 
 Check enumeration of nothing at all
@@ -290,6 +336,25 @@ Check enumeration of nothing at all
 1. Check that no family enumeration exists
 1. Check that no feature enumeration exists
 1. Check that no point enumeration exists
+
+Test passed.
+
+## enumerate_pointset (PREVIEW)
+
+Check enumeration of device points
+
+1. Update config before enumeration not active
+    * Add `discovery.depths` = { "refs": `entries` }
+1. Wait for enumeration not active
+1. Update config before matching enumeration generation
+    * Add `discovery.generation` = `generation start time`
+1. Wait for matching enumeration generation
+1. Update config before cleared enumeration generation
+    * Remove `discovery.generation`
+1. Wait for cleared enumeration generation
+1. Check that no family enumeration exists
+1. Check that no feature enumeration exists
+1. Check that enumerated point count matches
 
 Test passed.
 
@@ -411,6 +476,86 @@ Check error when pointset configuration contains extraneous point
 1. Wait for pointset state removes extraneous point error
 1. Wait until pointset state matches config
 1. Wait until pointset event contains correct points
+
+Test passed.
+
+## scan_periodic_now_enumerate (PREVIEW)
+
+Check periodic scan on a fixed schedule amd enumeration
+
+1. Update config before discovery families defined
+    * Remove `discovery.families.vendor`
+1. Wait for discovery families defined
+1. Wait until discovery family keys match
+1. Wait for no scans active
+1. Update config before scan iterations
+    * Add `discovery.families.vendor` = { "generation": `family generation`, "scan_interval_sec": `20`, "depth": `entries`, "scan_duration_sec": `20` }
+1. Wait for scan iterations
+1. Check that scan did not terminate prematurely
+
+Test failed: Failed check that all events have matching refs: [Device AHU-1 has extra metadata refs [BV11.present_value, AV12.present_value] and/or extra discovered refs [filter_alarm_pressure_status, filter_differential_pressure_sensor], Device AHU-22 has extra metadata refs [BV11.present_value, AV12.present_value] and/or extra discovered refs [filter_alarm_pressure_status, filter_differential_pressure_sensor]]
+
+## scan_single_future (PREVIEW)
+
+Check results of a single scan scheduled soon
+
+1. Update config before discovery families defined
+    * Remove `discovery.families.vendor`
+1. Wait for discovery families defined
+1. Wait until discovery family keys match
+1. Wait for no scans active
+1. Update config Before scheduled scan pending
+    * Add `discovery.families.vendor` = { "generation": `family generation`, "scan_duration_sec": `10` }
+1. Wait until scheduled scan pending
+1. Wait until scheduled scan active
+1. Check that scan started at time
+1. Wait until scheduled scan complete
+1. Check that scan completed at time
+1. Check that discovery events were received
+1. Check that no events have discovered refs
+1. Check that discovery events were valid
+1. Check that all scan addresses are unique
+1. Check that all expected addresses were found
+
+Test passed.
+
+## scan_single_now (PREVIEW)
+
+Check results of a single scan scheduled in the recent past
+
+1. Update config before discovery families defined
+    * Remove `discovery.families.vendor`
+1. Wait for discovery families defined
+1. Wait until discovery family keys match
+1. Wait for no scans active
+1. Update config Before scheduled scan active
+    * Add `discovery.families.vendor` = { "generation": `family generation`, "scan_duration_sec": `10` }
+1. Wait until scheduled scan active
+1. Check that scan started at time
+1. Wait until scheduled scan complete
+1. Check that scan completed at time
+1. Check that discovery events were received
+1. Check that no events have discovered refs
+1. Check that discovery events were valid
+1. Check that all scan addresses are unique
+1. Check that all expected addresses were found
+
+Test passed.
+
+## scan_single_past (PREVIEW)
+
+Check that a scan scheduled in the past never starts
+
+1. Update config before discovery families defined
+    * Remove `discovery.families.vendor`
+1. Wait for discovery families defined
+1. Wait until discovery family keys match
+1. Wait for no scans active
+1. Update config Before scan schedule initially not active
+    * Add `discovery.families.vendor` = { "generation": `family generation`, "scan_duration_sec": `10` }
+1. Wait until scan schedule initially not active
+1. Wait until scan schedule still not active
+1. Check that there were no received discovery events
 
 Test passed.
 

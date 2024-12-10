@@ -1,5 +1,5 @@
 
-## scan_single_future (ALPHA)
+## scan_single_future (PREVIEW)
 
 Check results of a single scan scheduled soon
 

@@ -1,5 +1,5 @@
 
-## enumerate_families (ALPHA)
+## enumerate_families (PREVIEW)
 
 Check enumeration of network families
 

@@ -11,9 +11,9 @@
   },
   "localnet" : {
     "families" : {
+      "bacnet" : { },
       "ether" : { },
       "ipv4" : { },
-      "ipv6" : { },
       "vendor" : { }
     }
   },
@@ -35,16 +35,16 @@
   },
   "system" : {
     "metrics_rate_sec" : 10,
-    "min_loglevel" : 200,
+    "min_loglevel" : 100,
     "operation" : {
-      "last_start" : "2024-12-03T15:58:57Z"
+      "last_start" : "2024-12-10T16:13:44Z"
     },
     "testing" : {
-      "config_base" : 32,
+      "config_base" : 30,
       "sequence_name" : "enumerate_multi",
-      "transaction_id" : "RC:a584c0.0000000e"
+      "transaction_id" : "RC:578f19.00000026"
     }
   },
-  "timestamp" : "2024-12-03T15:59:24Z",
-  "version" : "git-3d8bbe5"
+  "timestamp" : "2024-12-10T16:14:43Z",
+  "version" : "git-e79bdcc"
 }

@@ -1,5 +1,5 @@
 
-## scan_single_now (ALPHA)
+## scan_single_now (PREVIEW)
 
 Check results of a single scan scheduled in the recent past
 

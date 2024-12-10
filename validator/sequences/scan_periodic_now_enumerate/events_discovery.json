@@ -1,17 +1,13 @@
 {
-  "generation" : "2024-12-03T16:00:14Z",
+  "generation" : "2024-12-10T16:15:15Z",
   "refs" : {
-    "BV11.present_value" : {
-      "point" : "filter_alarm_pressure_status",
+    "filter_alarm_pressure_status" : {
+      "point" : "BV11.present_value",
       "possible_values" : [ ],
       "units" : "No-units"
     },
-    "filter_differential_pressure" : {
-      "possible_values" : [ ],
-      "units" : "Bars"
-    },
-    "AV12.present_value" : {
-      "point" : "filter_differential_pressure_sensor",
+    "filter_differential_pressure_sensor" : {
+      "point" : "AV12.present_value",
       "possible_values" : [ ],
       "units" : "Degrees-Celsius"
     }
@@ -23,6 +19,6 @@
       "device-name" : "AHU-22"
     }
   },
-  "timestamp" : "2024-12-03T16:00:14Z",
+  "timestamp" : "2024-12-10T16:15:15Z",
   "version" : "1.5.2"
 }

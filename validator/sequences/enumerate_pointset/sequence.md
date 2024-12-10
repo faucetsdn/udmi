@@ -1,5 +1,5 @@
 
-## enumerate_pointset (ALPHA)
+## enumerate_pointset (PREVIEW)
 
 Check enumeration of device points
 
