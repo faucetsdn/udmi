@@ -50,7 +50,7 @@ public interface DiscoveryManager extends SubBlockManager {
     PointPointsetModel model = entry.getValue();
     refDiscovery.writable = model.writable;
     refDiscovery.units = model.units;
-    refDiscovery.point = ifNotNullGet(model.ref, entry::getKey);
+    refDiscovery.point = model.ref;
     return refDiscovery;
   }
 
