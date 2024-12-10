@@ -72,6 +72,7 @@ import udmi.schema.FamilyDiscoveryState;
 import udmi.schema.FeatureDiscovery;
 import udmi.schema.Metadata;
 import udmi.schema.PointPointsetModel;
+import udmi.schema.RefDiscovery;
 
 /**
  * Validation tests for discovery scan and enumeration capabilities.
@@ -388,8 +389,8 @@ public class DiscoverySequences extends SequenceBase {
       DiscoveryScanMode shouldEnumerate) {
     List<String> exceptions = new ArrayList<>();
     if (shouldEnumerate == PLEASE_ENUMERATE) {
-      addIfCaught(exceptions, () -> checkThat("all events have matching refs",
-              receivedEvents.stream().allMatch(this::refsMatch)));
+      addIfCaught(exceptions, () ->
+          checkThat("all events have matching refs", mismatchedDetail(receivedEvents)));
     } else {
       addIfCaught(exceptions, () -> checkThat("no events have discovered refs",
               receivedEvents.stream().noneMatch(event -> nonNull(event.refs))));
@@ -397,14 +398,23 @@ public class DiscoverySequences extends SequenceBase {
     return exceptions;
   }
 
-  private boolean refsMatch(DiscoveryEvents discoveryEvents) {
+  private String mismatchedDetail(List<DiscoveryEvents> receivedEvents) {
+    List<String> strings = receivedEvents.stream().map(this::refsMatch).toList();
+    return strings.isEmpty() ? null : strings.toString();
+  }
+
+  private String refsMatch(DiscoveryEvents discoveryEvents) {
     Metadata deviceMetadata = targetMetadata(discoveryEvents.scan_addr).getValue();
     HashMap<String, PointPointsetModel> devicePoints = deviceMetadata.pointset.points;
-    List<PointPointsetModel> refPoints = discoveryEvents.refs.values().stream()
+    Map<String, RefDiscovery> refs = discoveryEvents.refs;
+    List<PointPointsetModel> refPoints = refs.values().stream()
         .map(ref -> devicePoints.get(ref.point))
         .filter(Objects::nonNull)
         .toList();
-    return refPoints.size() == discoveryEvents.refs.size();
+    List<String> pointRefs = refPoints.stream().map(x -> x.ref).toList();
+    Set<String> refKeys = refs.keySet();
+    return pointRefs.size() == refKeys.size() ? null
+        : format("Refs %s do not match point refs %s", refKeys, pointRefs);
   }
 
   private Entry<String, Metadata> targetMetadata(String scanAddr) {
