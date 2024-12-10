@@ -5,6 +5,7 @@ RESULT skip endpoint.config endpoint_connection_success_reconnect PREVIEW 0/0 St
 RESULT skip endpoint.config endpoint_failure_and_restart PREVIEW 0/0 State testing disabled
 RESULT skip endpoint.config endpoint_redirect_and_restart PREVIEW 0/0 State testing disabled
 RESULT skip enumeration enumerate_nothing PREVIEW 0/0 State testing disabled
+RESULT skip enumeration.families enumerate_families PREVIEW 0/0 State testing disabled
 RESULT skip enumeration.features enumerate_features PREVIEW 0/0 State testing disabled
 RESULT skip gateway bad_point_ref PREVIEW 0/0 Not a proxied device
 RESULT skip gateway bad_target_address PREVIEW 0/0 Not a proxied device
