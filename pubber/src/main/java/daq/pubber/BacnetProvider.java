@@ -1,14 +1,17 @@
 package daq.pubber;
 
 import static com.google.common.base.Preconditions.checkState;
+import static com.google.udmi.util.GeneralUtils.catchToElse;
 import static com.google.udmi.util.GeneralUtils.catchToNull;
 import static com.google.udmi.util.GeneralUtils.ifNotNullThen;
 import static com.google.udmi.util.GeneralUtils.ifTrueGet;
 import static java.lang.String.format;
 import static java.util.Objects.nonNull;
+import static java.util.Objects.requireNonNull;
 import static udmi.lib.ProtocolFamily.BACNET;
 
 import com.google.udmi.util.SiteModel;
+import java.util.AbstractMap;
 import java.util.ArrayDeque;
 import java.util.Deque;
 import java.util.HashMap;
@@ -19,7 +22,9 @@ import java.util.stream.Collectors;
 import udmi.lib.base.ManagerBase;
 import udmi.lib.intf.ManagerHost;
 import udmi.schema.DiscoveryEvents;
+import udmi.schema.Level;
 import udmi.schema.Metadata;
+import udmi.schema.PointPointsetModel;
 import udmi.schema.RefDiscovery;
 
 /**
@@ -54,7 +59,12 @@ public class BacnetProvider extends ManagerBase implements PubberFamilyProvider 
     String addr = getBacnetAddr(getMetadata(deviceId));
     DiscoveryEvents event = new DiscoveryEvents();
     event.scan_addr = addr;
-    event.refs = ifTrueGet(enumerate, () -> enumerateRefs(deviceId));
+    try {
+      event.refs = ifTrueGet(enumerate, () -> enumerateRefs(deviceId));
+    } catch (Exception e) {
+      event.status = new udmi.schema.Entry();
+      event.status.level = Level.ERROR.value();
+    }
     return event;
   }
 
@@ -87,8 +97,19 @@ public class BacnetProvider extends ManagerBase implements PubberFamilyProvider 
 
   @Override
   public Map<String, RefDiscovery> enumerateRefs(String addr) {
-    // TODO: Actually fill in returned refs.
-    return new HashMap<>();
+    HashMap<String, PointPointsetModel> points = catchToElse(
+        () -> bacnetDevices.get(addr).pointset.points, new HashMap<>());
+    return points.entrySet().stream()
+        .filter(entry -> entry.getValue().ref != null)
+        .map(this::pointToRef)
+        .collect(Collectors.toMap(Entry::getKey, Entry::getValue));
+  }
+
+  private Entry<String, RefDiscovery> pointToRef(Entry<String, PointPointsetModel> entry) {
+    RefDiscovery refDiscovery = new RefDiscovery();
+    refDiscovery.point = entry.getKey();
+    String refKey = requireNonNull(entry.getValue().ref, "missing point ref");
+    return new AbstractMap.SimpleEntry<>(refKey, refDiscovery);
   }
 
   @Override

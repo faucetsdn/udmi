@@ -10,7 +10,6 @@ import static com.google.udmi.util.CleanDateFormat.cleanDate;
 import static com.google.udmi.util.CleanDateFormat.cleanInstantDate;
 import static com.google.udmi.util.CleanDateFormat.dateEquals;
 import static com.google.udmi.util.GeneralUtils.CSV_JOINER;
-import static com.google.udmi.util.GeneralUtils.changedLines;
 import static com.google.udmi.util.GeneralUtils.ifNotEmptyThrow;
 import static com.google.udmi.util.GeneralUtils.ifNotNullGet;
 import static com.google.udmi.util.GeneralUtils.ifNotTrueGet;
@@ -20,6 +19,7 @@ import static com.google.udmi.util.JsonUtil.getNowInstant;
 import static com.google.udmi.util.JsonUtil.isoConvert;
 import static com.google.udmi.util.JsonUtil.stringifyTerse;
 import static java.lang.String.format;
+import static java.util.Objects.nonNull;
 import static java.util.Objects.requireNonNull;
 import static java.util.Optional.ofNullable;
 import static org.junit.Assert.assertEquals;
@@ -70,6 +70,8 @@ import udmi.schema.DiscoveryEvents;
 import udmi.schema.FamilyDiscoveryConfig;
 import udmi.schema.FamilyDiscoveryState;
 import udmi.schema.FeatureDiscovery;
+import udmi.schema.Metadata;
+import udmi.schema.PointPointsetModel;
 
 /**
  * Validation tests for discovery scan and enumeration capabilities.
@@ -332,8 +334,7 @@ public class DiscoverySequences extends SequenceBase {
 
     Set<String> discoveredAddresses = events.stream().map(x -> x.scan_addr)
         .collect(Collectors.toSet());
-    Set<String> expectedAddresses = siteModel.metadataStream()
-        .map(e -> catchToNull(() -> e.getValue().localnet.families.get(scanFamily).addr))
+    Set<String> expectedAddresses = siteModel.metadataStream().map(this::scanFamilyAddr)
         .filter(Objects::nonNull).collect(Collectors.toSet());
     SetView<String> differences = symmetricDifference(discoveredAddresses, expectedAddresses);
     checkThat("all expected addresses were found", differences.isEmpty(),
@@ -386,15 +387,36 @@ public class DiscoverySequences extends SequenceBase {
   private List<String> checkEnumeration(List<DiscoveryEvents> receivedEvents,
       DiscoveryScanMode shouldEnumerate) {
     List<String> exceptions = new ArrayList<>();
-    Predicate<DiscoveryEvents> hasRefs = event -> event.refs != null && !event.refs.isEmpty();
     if (shouldEnumerate == PLEASE_ENUMERATE) {
-      addIfCaught(exceptions, () ->
-          checkThat("all events have discovered refs", receivedEvents.stream().allMatch(hasRefs)));
+      addIfCaught(exceptions, () -> checkThat("all events have matching refs",
+              receivedEvents.stream().allMatch(this::refsMatch)));
     } else {
-      addIfCaught(exceptions, () ->
-          checkThat("no events have discovered refs", receivedEvents.stream().noneMatch(hasRefs)));
+      addIfCaught(exceptions, () -> checkThat("no events have discovered refs",
+              receivedEvents.stream().noneMatch(event -> nonNull(event.refs))));
     }
     return exceptions;
+  }
+
+  private boolean refsMatch(DiscoveryEvents discoveryEvents) {
+    Metadata deviceMetadata = targetMetadata(discoveryEvents.scan_addr).getValue();
+    HashMap<String, PointPointsetModel> devicePoints = deviceMetadata.pointset.points;
+    List<PointPointsetModel> refPoints = discoveryEvents.refs.values().stream()
+        .map(ref -> devicePoints.get(ref.point))
+        .filter(Objects::nonNull)
+        .toList();
+    return refPoints.size() == discoveryEvents.refs.size();
+  }
+
+  private Entry<String, Metadata> targetMetadata(String scanAddr) {
+    return siteModel.allMetadata().entrySet().stream()
+        .filter(entry -> scanAddr.equals(scanFamilyAddr(entry)))
+        .findFirst()
+        .orElseThrow(() -> new IllegalStateException(
+            format("No device match found for %s addr %s", scanFamily, scanAddr)));
+  }
+
+  private String scanFamilyAddr(Entry<String, Metadata> entry) {
+    return catchToNull(() -> entry.getValue().localnet.families.get(scanFamily).addr);
   }
 
   @Test(timeout = TWO_MINUTES_MS)
