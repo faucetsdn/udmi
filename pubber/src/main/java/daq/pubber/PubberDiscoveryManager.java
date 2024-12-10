@@ -50,12 +50,13 @@ public class PubberDiscoveryManager extends PubberManager implements DiscoveryMa
   /**
    * Get a ref value that describes a point for self enumeration.
    */
-  public static RefDiscovery getModelPointRef(Map.Entry<String, PointPointsetModel> entry) {
+  public static RefDiscovery getModelPointRef(Entry<String, PointPointsetModel> entry,
+      boolean swapPointRef) {
     RefDiscovery refDiscovery = new RefDiscovery();
     PointPointsetModel model = entry.getValue();
     refDiscovery.writable = model.writable;
     refDiscovery.units = model.units;
-    refDiscovery.point = model.ref;
+    refDiscovery.point = swapPointRef ? model.ref : entry.getKey();
     return refDiscovery;
   }
 
@@ -142,7 +143,7 @@ public class PubberDiscoveryManager extends PubberManager implements DiscoveryMa
 
   private Map<String, RefDiscovery> enumeratePoints(String deviceId) {
     return siteModel.getMetadata(deviceId).pointset.points.entrySet().stream()
-        .collect(toMap(Entry::getKey, PubberDiscoveryManager::getModelPointRef));
+        .collect(toMap(Entry::getKey, entry -> getModelPointRef(entry, true)));
   }
 
   public void setSiteModel(SiteModel siteModel) {

@@ -49,13 +49,14 @@ public class PubberVendorProvider extends ManagerBase implements PubberFamilyPro
   private Map<String, RefDiscovery> getDiscoveredRefs(Metadata entry) {
     Map<String, PointPointsetModel> points = catchToNull(() -> entry.pointset.points);
     return ofNullable(points).orElse(ImmutableMap.of()).entrySet().stream()
+        .filter(point -> nonNull(point.getValue().ref))
         .map(this::pointsetToRef)
-        .filter(ref -> nonNull(ref.getValue().point))
         .collect(toMap(Entry::getKey, Entry::getValue));
   }
 
   private Entry<String, RefDiscovery> pointsetToRef(Entry<String, PointPointsetModel> entry) {
-    return new SimpleEntry<>(entry.getKey(), PubberDiscoveryManager.getModelPointRef(entry));
+    return new SimpleEntry<>(entry.getValue().ref,
+        PubberDiscoveryManager.getModelPointRef(entry, false));
   }
 
   private void updateStateAddress() {
