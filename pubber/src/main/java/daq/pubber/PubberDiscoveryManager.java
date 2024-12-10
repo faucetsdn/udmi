@@ -6,7 +6,6 @@ import static com.google.udmi.util.JsonUtil.getNowInstant;
 import static com.google.udmi.util.JsonUtil.isoConvert;
 import static daq.pubber.PubberUdmiPublisher.DEVICE_START_TIME;
 import static java.lang.String.format;
-import static java.util.Optional.ofNullable;
 import static java.util.stream.Collectors.toMap;
 import static udmi.schema.FamilyDiscoveryState.Phase.ACTIVE;
 import static udmi.schema.FamilyDiscoveryState.Phase.STOPPED;
