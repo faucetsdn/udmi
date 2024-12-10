@@ -206,7 +206,7 @@ public class DiscoverySequences extends SequenceBase {
   }
 
   @Test(timeout = TWO_MINUTES_MS)
-  @Feature(bucket = ENUMERATION_POINTSET, stage = ALPHA)
+  @Feature(bucket = ENUMERATION_POINTSET, stage = PREVIEW)
   @Summary("Check enumeration of device points")
   public void enumerate_pointset() {
     if (!catchToFalse(() -> deviceMetadata.pointset.points != null)) {
@@ -230,7 +230,7 @@ public class DiscoverySequences extends SequenceBase {
 
   @Test
   @Summary("Check enumeration of network families")
-  @Feature(bucket = ENUMERATION_FAMILIES, stage = ALPHA)
+  @Feature(bucket = ENUMERATION_FAMILIES, stage = PREVIEW)
   public void enumerate_families() {
     Depths enumerate = new Depths();
     enumerate.families = ENTRIES;
@@ -239,7 +239,7 @@ public class DiscoverySequences extends SequenceBase {
   }
 
   @Test
-  @Feature(bucket = ENUMERATION, stage = ALPHA)
+  @Feature(bucket = ENUMERATION, stage = PREVIEW)
   @Summary("Check enumeration of multiple categories")
   public void enumerate_multi() {
     Depths enumerate = new Depths();
@@ -255,21 +255,21 @@ public class DiscoverySequences extends SequenceBase {
   }
 
   @Test(timeout = TWO_MINUTES_MS)
-  @Feature(bucket = DISCOVERY_SCAN, stage = ALPHA)
+  @Feature(bucket = DISCOVERY_SCAN, stage = PREVIEW)
   @Summary("Check that a scan scheduled in the past never starts")
   public void scan_single_past() {
     scanAndVerify(LONG_TIME_AGO, NO_SCAN);
   }
 
   @Test
-  @Feature(bucket = DISCOVERY_SCAN, stage = ALPHA)
+  @Feature(bucket = DISCOVERY_SCAN, stage = PREVIEW)
   @Summary("Check results of a single scan scheduled in the recent past")
   public void scan_single_now() {
     scanAndVerify(cleanInstantDate(Instant.now().minusSeconds(1)), NO_ENUMERATION);
   }
 
   @Test(timeout = TWO_MINUTES_MS)
-  @Feature(bucket = DISCOVERY_SCAN, stage = ALPHA)
+  @Feature(bucket = DISCOVERY_SCAN, stage = PREVIEW)
   @Summary("Check results of a single scan scheduled soon")
   public void scan_single_future() {
     scanAndVerify(cleanInstantDate(Instant.now().plus(SCAN_START_DELAY)), NO_ENUMERATION);
@@ -430,7 +430,7 @@ public class DiscoverySequences extends SequenceBase {
   }
 
   @Test(timeout = TWO_MINUTES_MS)
-  @Feature(bucket = DISCOVERY_SCAN, stage = ALPHA)
+  @Feature(bucket = DISCOVERY_SCAN, stage = PREVIEW)
   @Summary("Check periodic scan on a fixed schedule amd enumeration")
   public void scan_periodic_now_enumerate() {
     initializeDiscovery();
