@@ -1432,6 +1432,10 @@ public class SequenceBase {
         () -> recordSequence("Check that", description));
   }
 
+  protected void quietlyCheckThat(String description, Boolean condition) {
+    checkThat(OPTIONAL_PREFIX + description, condition);
+  }
+
   protected void quietlyCheckThat(String description, Supplier<Boolean> condition) {
     checkThat(OPTIONAL_PREFIX + description, condition);
   }

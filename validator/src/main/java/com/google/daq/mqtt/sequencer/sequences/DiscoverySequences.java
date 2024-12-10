@@ -317,8 +317,8 @@ public class DiscoverySequences extends SequenceBase {
     Integer stateEvents = deviceState.discovery.families.get(scanFamily).active_count;
     List<DiscoveryEvents> events = popReceivedEvents(DiscoveryEvents.class);
     Date generation = deviceConfig.discovery.families.get(scanFamily).generation;
-    Function<DiscoveryEvents, List<String>> invalidator = event -> invalidReasons(event,
-        generation);
+    Function<DiscoveryEvents, List<String>> invalidator = event ->
+        invalidReasons(event, generation);
     checkThat("discovery events were received", events.size() == stateEvents);
     List<String> reasons = events.stream().map(invalidator).flatMap(List::stream)
         .collect(Collectors.toList());
@@ -407,13 +407,9 @@ public class DiscoverySequences extends SequenceBase {
   private String refsMatch(DiscoveryEvents discoveryEvents) {
     Entry<String, Metadata> deviceEntry = targetMetadata(discoveryEvents.scan_addr);
     HashMap<String, PointPointsetModel> devicePoints = deviceEntry.getValue().pointset.points;
-    Map<String, RefDiscovery> refs = discoveryEvents.refs;
-    List<PointPointsetModel> refPoints = refs.values().stream()
-        .map(ref -> devicePoints.get(ref.point))
-        .filter(Objects::nonNull)
-        .toList();
-    Set<String> metadataRefs = refPoints.stream().map(x -> x.ref).collect(Collectors.toSet());
-    Set<String> discoveredRefs = refs.keySet();
+    Set<String> metadataRefs = devicePoints.values().stream()
+        .map(x -> x.ref).filter(Objects::nonNull).collect(Collectors.toSet());
+    Set<String> discoveredRefs = discoveryEvents.refs.keySet();
     SetView<String> extraMetadata = Sets.difference(metadataRefs, discoveredRefs);
     SetView<String> extraDiscovered = Sets.difference(discoveredRefs, metadataRefs);
     return extraMetadata.isEmpty() && extraDiscovered.isEmpty() ? null
@@ -447,7 +443,11 @@ public class DiscoverySequences extends SequenceBase {
     checkThat("scan did not terminate prematurely",
         metaFamilies.stream().noneMatch(scanStopped(Date.from(finishTime))));
     List<DiscoveryEvents> receivedEvents = popReceivedEvents(DiscoveryEvents.class);
-    ifNotEmptyThrow(checkEnumeration(receivedEvents, PLEASE_ENUMERATE), CSV_JOINER::join);
+    quietlyCheckThat("discovery events were received", !receivedEvents.isEmpty());
+    Date generation = receivedEvents.get(receivedEvents.size() - 1).generation;
+    List<DiscoveryEvents> lastGenerationEvents = receivedEvents.stream()
+        .filter(event -> event.generation.equals(generation)).toList();
+    ifNotEmptyThrow(checkEnumeration(lastGenerationEvents, PLEASE_ENUMERATE), CSV_JOINER::join);
   }
 
   private void initializeDiscovery() {
