@@ -15,6 +15,7 @@ import com.google.udmi.util.SiteModel;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.concurrent.atomic.AtomicInteger;
 import udmi.lib.client.DiscoveryManager;
 import udmi.lib.intf.FamilyProvider;
@@ -47,23 +48,17 @@ public class PubberDiscoveryManager extends PubberManager implements DiscoveryMa
     this.deviceManager = deviceManager;
   }
 
-  public static String getVendorRefKey(Map.Entry<String, PointPointsetModel> entry) {
-    return ofNullable(entry.getValue().ref).orElse(entry.getKey());
-  }
-
   /**
-   * Get vendor ref value.
+   * Get a ref value that describes a point for self enumeration.
    */
-  public static RefDiscovery getVendorRefValue(Map.Entry<String, PointPointsetModel> entry) {
+  public static RefDiscovery getModelPointRef(Map.Entry<String, PointPointsetModel> entry) {
     RefDiscovery refDiscovery = new RefDiscovery();
-    refDiscovery.possible_values = null;
     PointPointsetModel model = entry.getValue();
     refDiscovery.writable = model.writable;
     refDiscovery.units = model.units;
     refDiscovery.point = model.ref;
     return refDiscovery;
   }
-
 
   /**
    * Updates discovery enumeration.
@@ -85,7 +80,7 @@ public class PubberDiscoveryManager extends PubberManager implements DiscoveryMa
     DiscoveryEvents discoveryEvent = new DiscoveryEvents();
     discoveryEvent.generation = enumerationGeneration;
     Depths depths = config.depths;
-    discoveryEvent.refs = maybeEnumerate(depths.refs, () -> enumerateRefs(deviceId));
+    discoveryEvent.refs = maybeEnumerate(depths.refs, () -> enumeratePoints(deviceId));
     discoveryEvent.features = maybeEnumerate(depths.features, PubberFeatures::getFeatures);
     discoveryEvent.families = maybeEnumerate(depths.families, deviceManager::enumerateFamilies);
     host.publish(discoveryEvent);
@@ -146,10 +141,9 @@ public class PubberDiscoveryManager extends PubberManager implements DiscoveryMa
     return DEVICE_START_TIME;
   }
 
-  private Map<String, RefDiscovery> enumerateRefs(String deviceId) {
+  private Map<String, RefDiscovery> enumeratePoints(String deviceId) {
     return siteModel.getMetadata(deviceId).pointset.points.entrySet().stream()
-        .collect(toMap(PubberDiscoveryManager::getVendorRefKey,
-            PubberDiscoveryManager::getVendorRefValue));
+        .collect(toMap(Entry::getKey, PubberDiscoveryManager::getModelPointRef));
   }
 
   public void setSiteModel(SiteModel siteModel) {

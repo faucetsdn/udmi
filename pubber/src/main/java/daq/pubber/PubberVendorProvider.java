@@ -55,8 +55,7 @@ public class PubberVendorProvider extends ManagerBase implements PubberFamilyPro
   }
 
   private Entry<String, RefDiscovery> pointsetToRef(Entry<String, PointPointsetModel> entry) {
-    return new SimpleEntry<>(PubberDiscoveryManager.getVendorRefKey(entry),
-        PubberDiscoveryManager.getVendorRefValue(entry));
+    return new SimpleEntry<>(entry.getKey(), PubberDiscoveryManager.getModelPointRef(entry));
   }
 
   private void updateStateAddress() {

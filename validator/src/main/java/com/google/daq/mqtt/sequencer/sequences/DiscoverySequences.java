@@ -167,8 +167,7 @@ public class DiscoverySequences extends SequenceBase {
   private String enumeratedPoints(DiscoveryEvents discovery,
       HashMap<String, PointPointsetModel> points) {
     Set<String> discoveryPoints = discovery.refs.keySet();
-    Set<String> metadataPoints = points.entrySet().stream().map(entry ->
-        ofNullable(entry.getValue().ref).orElse(entry.getKey())).collect(Collectors.toSet());
+    Set<String> metadataPoints = points.keySet();
     return discoveryPoints.equals(metadataPoints) ? null : format(
         "Discovered points %s don't match metadata points %s", discoveryPoints, metadataPoints);
   }
