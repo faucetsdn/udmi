@@ -266,7 +266,7 @@ Test passed.
 Check enumeration of network families
 
 1. Update config before enumeration not active
-    * Add `discovery.depths` = { "families": `entries` }
+    * Add `discovery.enumerations` = { "families": `entries` }
 1. Wait for enumeration not active
 1. Update config before matching enumeration generation
     * Add `discovery.generation` = `generation start time`
@@ -285,11 +285,7 @@ Test passed.
 Check enumeration of device features
 
 1. Update config before enumeration not active
-<<<<<<< HEAD
-    * Add `discovery` = { "enumerations": { "features": `entries` } }
-=======
-    * Add `discovery.depths` = { "features": `entries` }
->>>>>>> master
+    * Add `discovery.enumerations` = { "features": `entries` }
 1. Wait for enumeration not active
 1. Update config before matching enumeration generation
     * Add `discovery.generation` = `generation start time`
@@ -309,7 +305,7 @@ Test passed.
 Check enumeration of multiple categories
 
 1. Update config before enumeration not active
-    * Add `discovery.depths` = { "features": `entries`, "refs": `entries`, "families": `entries` }
+    * Add `discovery.enumerations` = { "features": `entries`, "families": `entries`, "points": `entries` }
 1. Wait for enumeration not active
 1. Update config before matching enumeration generation
     * Add `discovery.generation` = `generation start time`
@@ -329,11 +325,7 @@ Test passed.
 Check enumeration of nothing at all
 
 1. Update config before enumeration not active
-<<<<<<< HEAD
-    * Add `discovery` = { "enumerations": {  } }
-=======
-    * Add `discovery.depths` = {  }
->>>>>>> master
+    * Add `discovery.enumerations` = {  }
 1. Wait for enumeration not active
 1. Update config before matching enumeration generation
     * Add `discovery.generation` = `generation start time`
@@ -352,7 +344,7 @@ Test passed.
 Check enumeration of device points
 
 1. Update config before enumeration not active
-    * Add `discovery.depths` = { "refs": `entries` }
+    * Add `discovery.enumerations` = { "points": `entries` }
 1. Wait for enumeration not active
 1. Update config before matching enumeration generation
     * Add `discovery.generation` = `generation start time`

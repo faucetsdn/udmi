@@ -1,6 +1,6 @@
 {
   "enumerations" : {
-    "refs" : "entries"
+    "points" : "entries"
   },
   "families" : {
     "vendor" : { }
