@@ -40,7 +40,7 @@ public class CloudQuery {
     @JsonPropertyDescription("generational marker for this query")
     public Date generation;
     @JsonProperty("depth")
-    public udmi.schema.Depths.Depth depth;
+    public udmi.schema.Enumerations.Depth depth;
 
     @Override
     public int hashCode() {

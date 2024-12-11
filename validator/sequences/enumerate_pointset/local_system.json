@@ -1,8 +1,8 @@
 {
-  "min_loglevel" : 200,
+  "min_loglevel" : 100,
   "metrics_rate_sec" : 10,
   "operation" : {
-    "last_start" : "2024-12-03T15:58:55Z"
+    "last_start" : "2024-12-11T05:43:05Z"
   },
   "testing" : {
     "sequence_name" : "enumerate_pointset"

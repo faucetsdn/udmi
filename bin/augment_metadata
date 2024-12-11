@@ -41,16 +41,25 @@ ipv4_addr=${ipv4_addr%/*}
 ipv6_addr=$(ip addr show dev $default_iface | fgrep 'inet6 ' | tail -n 1 | awk '{print $2}')
 ipv6_addr=${ipv6_addr%/*}
 
-echo Augmenting to $metadata_out
-echo Setting ether addr to $ether_addr
 echo Setting ipv4 addr to $ipv4_addr
 echo Setting ipv6 addr to $ipv6_addr
 echo Setting nostate to $nostate
 
-jq ".localnet.families.ether.addr = \"$ether_addr\"" $metadata_file |
-    jq ".localnet.families.ipv4.addr = \"$ipv4_addr\"" |
-    jq ".localnet.families.ipv6.addr = \"$ipv6_addr\"" |
-    jq ".testing.nostate = $nostate" > $metadata_out
+function update_if_available {
+    family=$1
+    addr=$2
+    if jq -e .localnet.families.$family.addr $metadata_file > /dev/null; then
+        echo Setting $family addr to $addr
+        jq ".localnet.families.$family.addr = \"$addr\"" $metadata_out | sponge $metadata_out
+    fi
+}
+
+echo Augmenting to $metadata_out
+cp $metadata_file $metadata_out
+update_if_available ether $ether_addr
+update_if_available ipv4 $ipv4_addr
+update_if_available ipv6 $ipv6_addr
+jq ".testing.nostate = $nostate" $metadata_out | sponge $metadata_out
 
 # Dynamically update the site model based off of dynamic pubber output.
 pubber_features=$(< $site_dir/out/pubber_features.json)

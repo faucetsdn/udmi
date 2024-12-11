@@ -21,7 +21,7 @@ import static com.google.udmi.util.JsonUtil.safeSleep;
 import static com.google.udmi.util.JsonUtil.stringify;
 import static java.lang.String.format;
 import static java.util.Optional.ofNullable;
-import static udmi.lib.base.ManagerBase.WAIT_TIME_SEC;
+import static udmi.lib.base.ManagerBase.INITIAL_THRESHOLD_SEC;
 import static udmi.lib.base.ManagerBase.updateStateHolder;
 import static udmi.lib.base.MqttDevice.CONFIG_TOPIC;
 import static udmi.lib.base.MqttDevice.ERRORS_TOPIC;
@@ -864,7 +864,7 @@ public interface PubberUdmiPublisher extends UdmiPublisher {
       latch.countDown();
     });
     try {
-      if (shouldSendState() && !latch.await(WAIT_TIME_SEC, TimeUnit.SECONDS)) {
+      if (shouldSendState() && !latch.await(INITIAL_THRESHOLD_SEC, TimeUnit.SECONDS)) {
         throw new RuntimeException("Timeout waiting for state send");
       }
     } catch (Exception e) {

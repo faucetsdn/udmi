@@ -1,4 +1,4 @@
-package com.google.daq.mqtt.util;
+package com.google.daq.mqtt.util.providers;
 
 import com.google.common.collect.ImmutableSet;
 import java.util.Map;
@@ -8,32 +8,37 @@ import java.util.stream.Collectors;
 /**
  * Abstract collection of stuff for managing vendor families.
  */
-public interface ProtocolFamily {
+public interface FamilyProvider {
 
   /**
    * Set of all the supported protocol families.
    */
-  Set<Class<? extends ProtocolFamily>> PROTOCOL_FAMILIES = ImmutableSet.of(
-      VendorFamily.class,
-      BacnetFamily.class);
+  Set<Class<? extends FamilyProvider>> PROTOCOL_FAMILIES = ImmutableSet.of(
+      IotFamilyProvider.class,
+      VendorFamilyProvider.class,
+      BacnetFamilyProvider.class);
 
   /**
    * Map of family name to instance.
    */
-  Map<String, ProtocolFamily> NAMED_FAMILIES = generateFamilyMap(PROTOCOL_FAMILIES);
+  Map<String, FamilyProvider> NAMED_FAMILIES = generateFamilyMap(PROTOCOL_FAMILIES);
 
   /**
    * Generate a named map from the listed families.
    */
-  static Map<String, ProtocolFamily> generateFamilyMap(
-      Set<Class<? extends ProtocolFamily>> protocolFamilies) {
+  static Map<String, FamilyProvider> generateFamilyMap(
+      Set<Class<? extends FamilyProvider>> protocolFamilies) {
     return protocolFamilies.stream().map(clazz -> {
       try {
         return clazz.getDeclaredConstructor().newInstance();
       } catch (Exception e) {
         throw new RuntimeException("While creating protocol family map", e);
       }
-    }).collect(Collectors.toMap(ProtocolFamily::familyKey, family -> family));
+    }).collect(Collectors.toMap(FamilyProvider::familyKey, family -> family));
+  }
+
+  static String constructRef(String family, String device, String point) {
+    return family + "://" + device + "/" + point;
   }
 
   /**
@@ -44,5 +49,7 @@ public interface ProtocolFamily {
   /**
    * Validate the given point ref for the address family.
    */
-  void refValidator(String metadataRef);
+  void validateRef(String metadataRef);
+
+  void validateAddr(String scanAddr);
 }

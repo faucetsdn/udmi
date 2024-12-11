@@ -23,11 +23,14 @@
     "families": {
       "bacnet": {
         "addr": "11052"
+      },
+      "vendor": {
+        "addr": "monkey"
       }
     }
   },
   "gateway": {
-    "family": "bacnet",
+    "family": "vendor",
     "gateway_id": "CGW-1"
   },
   "pointset": {

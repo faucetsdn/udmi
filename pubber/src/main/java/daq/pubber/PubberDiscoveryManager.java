@@ -6,7 +6,6 @@ import static com.google.udmi.util.JsonUtil.getNowInstant;
 import static com.google.udmi.util.JsonUtil.isoConvert;
 import static daq.pubber.PubberUdmiPublisher.DEVICE_START_TIME;
 import static java.lang.String.format;
-import static java.util.stream.Collectors.toMap;
 import static udmi.schema.FamilyDiscoveryState.Phase.ACTIVE;
 import static udmi.schema.FamilyDiscoveryState.Phase.STOPPED;
 
@@ -14,15 +13,18 @@ import com.google.udmi.util.SiteModel;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.concurrent.atomic.AtomicInteger;
+import udmi.lib.ProtocolFamily;
 import udmi.lib.client.DiscoveryManager;
 import udmi.lib.intf.FamilyProvider;
 import udmi.lib.intf.ManagerHost;
-import udmi.schema.Depths;
 import udmi.schema.DiscoveryConfig;
 import udmi.schema.DiscoveryEvents;
 import udmi.schema.DiscoveryState;
+import udmi.schema.Enumerations;
 import udmi.schema.FamilyDiscoveryState;
+import udmi.schema.PointPointsetModel;
 import udmi.schema.PubberConfiguration;
 import udmi.schema.RefDiscovery;
 import udmi.schema.SystemDiscoveryData;
@@ -45,6 +47,18 @@ public class PubberDiscoveryManager extends PubberManager implements DiscoveryMa
     this.deviceManager = deviceManager;
   }
 
+  /**
+   * Get a ref value that describes a point for self enumeration.
+   */
+  public static RefDiscovery getModelPointRef(Entry<String, PointPointsetModel> entry,
+      boolean swapPointRef) {
+    RefDiscovery refDiscovery = new RefDiscovery();
+    PointPointsetModel model = entry.getValue();
+    refDiscovery.writable = model.writable;
+    refDiscovery.units = model.units;
+    refDiscovery.point = swapPointRef ? model.ref : entry.getKey();
+    return refDiscovery;
+  }
 
   /**
    * Updates discovery enumeration.
@@ -64,9 +78,10 @@ public class PubberDiscoveryManager extends PubberManager implements DiscoveryMa
     discoveryState.generation = enumerationGeneration;
     info("Discovery enumeration at " + isoConvert(enumerationGeneration));
     DiscoveryEvents discoveryEvent = new DiscoveryEvents();
+    discoveryEvent.scan_family = ProtocolFamily.IOT;
     discoveryEvent.generation = enumerationGeneration;
-    Depths depths = config.depths;
-    discoveryEvent.refs = maybeEnumerate(depths.refs, () -> enumerateRefs(deviceId));
+    Enumerations depths = config.enumerations;
+    discoveryEvent.points = maybeEnumerate(depths.points, () -> enumeratePoints(deviceId));
     discoveryEvent.features = maybeEnumerate(depths.features, PubberFeatures::getFeatures);
     discoveryEvent.families = maybeEnumerate(depths.families, deviceManager::enumerateFamilies);
     host.publish(discoveryEvent);
@@ -127,10 +142,8 @@ public class PubberDiscoveryManager extends PubberManager implements DiscoveryMa
     return DEVICE_START_TIME;
   }
 
-  private Map<String, RefDiscovery> enumerateRefs(String deviceId) {
-    return siteModel.getMetadata(deviceId).pointset.points.entrySet().stream()
-        .collect(toMap(udmi.lib.client.DiscoveryManager::getVendorRefKey,
-            udmi.lib.client.DiscoveryManager::getVendorRefValue));
+  private Map<String, PointPointsetModel> enumeratePoints(String deviceId) {
+    return siteModel.getMetadata(deviceId).pointset.points;
   }
 
   public void setSiteModel(SiteModel siteModel) {
