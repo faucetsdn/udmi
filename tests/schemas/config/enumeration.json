@@ -10,7 +10,7 @@
     "enumerations": {
       "families": "entries",
       "features": "buckets",
-      "refs": "details"
+      "points": "details"
     }
   }
 }

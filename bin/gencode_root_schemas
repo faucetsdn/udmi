@@ -19,7 +19,9 @@ IGNORE_LIST = ['events.json']
 
 # Files to always include as root schema
 # These are sometimes referenced (e.g. by pubber) but should be considered root
-ALWAYS_ROOT = ['configuration_endpoint.json', 'events_system.json', 'events_discovery.json']
+ALWAYS_ROOT = ['configuration_endpoint.json',
+               'events_system.json',
+               'events_discovery.json']
 
 def parse_command_line_args():
   parser = argparse.ArgumentParser()
