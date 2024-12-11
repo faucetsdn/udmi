@@ -25,7 +25,7 @@ Some caveats:
   (you will need to run an instance of pubber separately).
 
 * Test resuts in sites/udmi_site_model` take`` precedence
-  over files in the sequencer cache. If using imported 
+  over files in the sequencer cache. If using imported
   github artifacts, remove the `sites/udmi_site_model`
   directory to generate the document
 -->
@@ -492,8 +492,9 @@ Check periodic scan on a fixed schedule and enumeration
     * Add `discovery.families.vendor` = { "generation": `family generation`, "scan_interval_sec": `20`, "depth": `entries`, "scan_duration_sec": `20` }
 1. Wait for scan iterations
 1. Check that scan did not terminate prematurely
+1. Check that all events have matching refs
 
-Test failed: Failed check that all events have matching refs: [Device AHU-1 has extra metadata refs [BV11.present_value, AV12.present_value] and/or extra discovered refs [filter_alarm_pressure_status, filter_differential_pressure_sensor], Device AHU-22 has extra metadata refs [BV11.present_value, AV12.present_value] and/or extra discovered refs [filter_alarm_pressure_status, filter_differential_pressure_sensor]]
+Test passed.
 
 ## scan_single_future (PREVIEW)
 
