@@ -32,7 +32,7 @@ public abstract class ManagerBase implements SubBlockManager {
 
   public static final int DISABLED_INTERVAL = 0;
   protected static final int DEFAULT_REPORT_SEC = 10;
-  public static final int WAIT_TIME_SEC = 10;
+  public static final int INITIAL_THRESHOLD_SEC = 5;
   protected final AtomicInteger sendRateSec = new AtomicInteger(DEFAULT_REPORT_SEC);
   protected final ManagerHost host;
   protected final Config deviceConfig = new Config();
@@ -173,9 +173,9 @@ public abstract class ManagerBase implements SubBlockManager {
     warn(format("Starting %s %s sender with delay %ds",
         deviceId, this.getClass().getSimpleName(), sec));
     if (sec != 0) {
-      if (sec > WAIT_TIME_SEC) {
+      if (sec > INITIAL_THRESHOLD_SEC) {
         // Do this sooner to raise any obvious exceptions.
-        initialUpdate = executor.schedule(this::periodicUpdate, WAIT_TIME_SEC, SECONDS);
+        initialUpdate = executor.schedule(this::periodicUpdate, INITIAL_THRESHOLD_SEC, SECONDS);
       }
       periodicSender = schedulePeriodic(sec, this::periodicUpdate);
     }
@@ -201,7 +201,7 @@ public abstract class ManagerBase implements SubBlockManager {
   private void stopExecutor() {
     try {
       executor.shutdown();
-      if (!executor.awaitTermination(WAIT_TIME_SEC, TimeUnit.SECONDS)) {
+      if (!executor.awaitTermination(INITIAL_THRESHOLD_SEC, TimeUnit.SECONDS)) {
         throw new RuntimeException("Failed to shutdown scheduled tasks");
       }
     } catch (Exception e) {
