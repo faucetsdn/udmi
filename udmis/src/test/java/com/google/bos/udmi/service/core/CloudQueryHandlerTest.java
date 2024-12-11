@@ -20,8 +20,8 @@ import org.mockito.ArgumentCaptor;
 import udmi.lib.ProtocolFamily;
 import udmi.schema.CloudModel;
 import udmi.schema.CloudQuery;
-import udmi.schema.Depths.Depth;
 import udmi.schema.DiscoveryEvents;
+import udmi.schema.Enumerations.Depth;
 import udmi.schema.Envelope;
 
 class CloudQueryHandlerTest implements MessageContinuation {

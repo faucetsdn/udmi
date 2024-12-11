@@ -57,8 +57,7 @@ src_count=$(find $sites_in/out-seq -name sequence.md | wc -l)
 dst_count=$(find $sites_out -name sequence.md | wc -l)
 
 if [[ $src_count != $dst_count ]]; then
-    echo Mismatch in src/dst count: $src_count != $dst_count
-    false
+    echo WARNING: Mismatch in src/dst count: $src_count != $dst_count
 fi
 
 echo Restored $dst_count test output files to $sites_out

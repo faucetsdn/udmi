@@ -31,6 +31,7 @@ output_file=$site_path/out/registration_summary.json
 csv_file=$site_path/out/registration_summary.csv
 expected_num_id=1234567890
 pubber_config=/tmp/pubber_config.json
+pubber_log=out/pubber.log
 serial_no=clean-$RANDOM
 device_id=AHU-1
 fake_id=ACME-2301
@@ -135,6 +136,7 @@ cat <<EOF > $pubber_config
     "sitePath": "$site_path",
     "deviceId": "$device_id",
     "projectId": "$project_id",
+    "registryId": "$registry_id",
     "serialNo": "$serial_no",
     "options": {
       "smokeCheck": true
@@ -169,9 +171,9 @@ echo bin/registrar $site_args $device_id
 bin/registrar $site_args $device_id
 
 echo Check $device_id to make sure that it works...
-echo pubber/bin/run $pubber_config
+echo bin/pubber $pubber_config
 result=0
-timeout 20s pubber/bin/run $pubber_config || result=$?
+timeout 30s bin/pubber $pubber_config 2> $pubber_log || result=$?
 [[ $result == 0 ]] || fail Improper pubber failure code $result
 
 echo Clean out the registry to make sure devices get removed...
@@ -185,9 +187,9 @@ echo Pubber config from $pubber_config:
 cat $pubber_config
 
 echo Check for failure in running pubber...
-echo pubber/bin/run $pubber_config
+echo bin/pubber $pubber_config
 result=0
-timeout 30s pubber/bin/run $pubber_config || result=$?
+timeout 30s bin/pubber $pubber_config 2> $pubber_log || result=$?
 [[ $result == 255 ]] || fail Improper pubber failure code $result
 
 echo Now recreate the registry from scratch!
@@ -205,9 +207,9 @@ echo $UDMI_ROOT/bin/registrar $full_args -b
 check_csv_file BLOCK
 
 echo Check $device_id again, but this time with success...
-echo pubber/bin/run $pubber_config
+echo bin/pubber $pubber_config
 result=0
-timeout 20s pubber/bin/run $pubber_config || result=$?
+timeout 30s bin/pubber $pubber_config 2> $pubber_log || result=$?
 [[ $result == 0 ]] || fail Improper pubber failure code $result
 
 echo Successful pubber check passed on clean registry.

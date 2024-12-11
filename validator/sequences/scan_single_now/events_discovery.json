@@ -1,5 +1,5 @@
 {
-  "generation" : "2024-12-03T15:58:51Z",
+  "generation" : "2024-12-10T16:14:04Z",
   "scan_addr" : "28179023",
   "scan_family" : "vendor",
   "system" : {
@@ -7,6 +7,6 @@
       "device-name" : "AHU-1"
     }
   },
-  "timestamp" : "2024-12-03T15:59:00Z",
+  "timestamp" : "2024-12-10T16:14:13Z",
   "version" : "1.5.2"
 }
