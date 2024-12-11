@@ -53,27 +53,28 @@
       }
     }
   },
+  "families": {
+    "bacnet": {
+      "timestamp": "2018-08-24T21:39:29.364Z",
+      "scan_addr": "1076",
+      "refs": {
+        "AV-1": {
+          "point": "return_air_temperature_sensor",
+          "name": "Temperature Sensor 123",
+          "description": "My very special temperature sensor",
+          "units": "Degrees-Celsius"
+        }
+      },
+      "system": {
+        "name": "Air Handling Unit A1",
+        "description": "The very special AHU that I’ve just made up"
+      }
+    }
+  },
   "discovery": {
     "families": {
       "bacnet": {
       }
     }
-  },
-  "testing": {
-    "targets": {
-      "invalid": {
-        "target_point": "return_air_temperature_sensor",
-        "target_value": -20
-      },
-      "failure": {
-        "target_point": "room_setpoint",
-        "target_value": -20
-      }
-    }
-  },
-  "features": {
-    "system": { },
-    "enumeration": { "stage": "beta" },
-    "enumeration.pointset": { "stage": "alpha" }
   }
 }

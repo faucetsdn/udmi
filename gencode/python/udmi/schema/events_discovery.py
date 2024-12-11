@@ -3,6 +3,7 @@ from .entry import Entry
 from .discovery_family import FamilyDiscovery
 from .model_cloud import CloudModel
 from .model_cloud import CloudModel
+from .model_pointset_point import PointPointsetModel
 from .discovery_ref import RefDiscovery
 from .discovery_feature import FeatureDiscovery
 from .model_cloud import CloudModel
@@ -14,6 +15,8 @@ class SystemDiscoveryData:
   """Generated schema class"""
 
   def __init__(self):
+    self.description = None
+    self.name = None
     self.serial_no = None
     self.ancillary = None
     self.hardware = None
@@ -23,6 +26,8 @@ class SystemDiscoveryData:
     if not source:
       return None
     result = SystemDiscoveryData()
+    result.description = source.get('description')
+    result.name = source.get('name')
     result.serial_no = source.get('serial_no')
     result.ancillary = AncillaryProperties.from_dict(source.get('ancillary'))
     result.hardware = StateSystemHardware.from_dict(source.get('hardware'))
@@ -46,6 +51,10 @@ class SystemDiscoveryData:
 
   def to_dict(self):
     result = {}
+    if self.description:
+      result['description'] = self.description # 5
+    if self.name:
+      result['name'] = self.name # 5
     if self.serial_no:
       result['serial_no'] = self.serial_no # 5
     if self.ancillary:
@@ -69,6 +78,7 @@ class DiscoveryEvents:
     self.families = None
     self.registries = None
     self.devices = None
+    self.points = None
     self.refs = None
     self.features = None
     self.cloud_model = None
@@ -89,6 +99,7 @@ class DiscoveryEvents:
     result.families = FamilyDiscovery.map_from(source.get('families'))
     result.registries = CloudModel.map_from(source.get('registries'))
     result.devices = CloudModel.map_from(source.get('devices'))
+    result.points = PointPointsetModel.map_from(source.get('points'))
     result.refs = RefDiscovery.map_from(source.get('refs'))
     result.features = FeatureDiscovery.map_from(source.get('features'))
     result.cloud_model = CloudModel.from_dict(source.get('cloud_model'))
@@ -133,6 +144,8 @@ class DiscoveryEvents:
       result['registries'] = CloudModel.expand_dict(self.registries) # 2
     if self.devices:
       result['devices'] = CloudModel.expand_dict(self.devices) # 2
+    if self.points:
+      result['points'] = PointPointsetModel.expand_dict(self.points) # 2
     if self.refs:
       result['refs'] = RefDiscovery.expand_dict(self.refs) # 2
     if self.features:

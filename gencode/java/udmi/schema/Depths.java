@@ -18,7 +18,7 @@ import com.fasterxml.jackson.annotation.JsonValue;
 @JsonPropertyOrder({
     "families",
     "devices",
-    "refs",
+    "points",
     "features"
 })
 public class Depths {
@@ -27,8 +27,8 @@ public class Depths {
     public Depths.Depth families;
     @JsonProperty("devices")
     public Depths.Depth devices;
-    @JsonProperty("refs")
-    public Depths.Depth refs;
+    @JsonProperty("points")
+    public Depths.Depth points;
     @JsonProperty("features")
     public Depths.Depth features;
 
@@ -38,7 +38,7 @@ public class Depths {
         result = ((result* 31)+((this.features == null)? 0 :this.features.hashCode()));
         result = ((result* 31)+((this.families == null)? 0 :this.families.hashCode()));
         result = ((result* 31)+((this.devices == null)? 0 :this.devices.hashCode()));
-        result = ((result* 31)+((this.refs == null)? 0 :this.refs.hashCode()));
+        result = ((result* 31)+((this.points == null)? 0 :this.points.hashCode()));
         return result;
     }
 
@@ -51,7 +51,7 @@ public class Depths {
             return false;
         }
         Depths rhs = ((Depths) other);
-        return (((((this.features == rhs.features)||((this.features!= null)&&this.features.equals(rhs.features)))&&((this.families == rhs.families)||((this.families!= null)&&this.families.equals(rhs.families))))&&((this.devices == rhs.devices)||((this.devices!= null)&&this.devices.equals(rhs.devices))))&&((this.refs == rhs.refs)||((this.refs!= null)&&this.refs.equals(rhs.refs))));
+        return (((((this.features == rhs.features)||((this.features!= null)&&this.features.equals(rhs.features)))&&((this.families == rhs.families)||((this.families!= null)&&this.families.equals(rhs.families))))&&((this.devices == rhs.devices)||((this.devices!= null)&&this.devices.equals(rhs.devices))))&&((this.points == rhs.points)||((this.points!= null)&&this.points.equals(rhs.points))));
     }
 
     public enum Depth {
