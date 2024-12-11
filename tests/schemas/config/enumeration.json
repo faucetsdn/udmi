@@ -7,10 +7,10 @@
   "timestamp": "2018-08-26T21:39:29.364Z",
   "discovery": {
     "generation": "2018-08-26T21:37:12Z",
-    "depths": {
+    "enumerations": {
       "families": "entries",
-      "features": "registries",
-      "refs": "details"
+      "features": "buckets",
+      "points": "details"
     }
   }
 }

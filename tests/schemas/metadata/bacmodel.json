@@ -1,0 +1,80 @@
+{
+  "version": "1.5.2",
+  "timestamp": "2018-08-26T21:39:29.364Z",
+  "system": {
+    "name": "Llama Slide #3",
+    "description": "Generic test example metadata device",
+    "tags": ["energy", "lighting", "building"],
+    "location": {
+      "site": "US-SFO-XYY",
+      "section": "NW-2F",
+      "floor": "2",
+      "floor_seq": 2,
+      "room": "2F26",
+      "position": {
+        "x": 10,
+        "y": 20,
+        "z": 3.7
+      },
+      "coordinates": {
+        "lat":  37.386051,
+        "long": -122.083855,
+        "alt_m": 8849.0
+      }
+    },
+    "physical_tag": {
+      "asset": {
+        "guid": "bim://04aEp5ymD_$u5IxhJN2aGi",
+        "site": "US-SFO-XYY",
+        "name": "AHU-1"
+      }
+    },
+    "adjunct": {
+      "suffix": "extention11-optional"
+    }
+  },
+  "cloud": {
+    "auth_type": "ES256",
+    "connection_type": "DIRECT"
+  },
+  "pointset": {
+    "points": {
+      "return_air_temperature_sensor": {
+        "units": "Degrees-Celsius",
+        "baseline_value": 20,
+        "baseline_tolerance": 2,
+        "tags": ["hvac"]
+      },
+      "room_setpoint": {
+        "writable": true,
+        "units": "Degrees-Celsius",
+        "baseline_value": 20,
+        "baseline_state": "applied"
+      }
+    }
+  },
+  "families": {
+    "bacnet": {
+      "timestamp": "2018-08-24T21:39:29.364Z",
+      "scan_addr": "1076",
+      "refs": {
+        "AV-1": {
+          "point": "return_air_temperature_sensor",
+          "name": "Temperature Sensor 123",
+          "description": "My very special temperature sensor",
+          "units": "Degrees-Celsius"
+        }
+      },
+      "system": {
+        "name": "Air Handling Unit A1",
+        "description": "The very special AHU that I’ve just made up"
+      }
+    }
+  },
+  "discovery": {
+    "families": {
+      "bacnet": {
+      }
+    }
+  }
+}

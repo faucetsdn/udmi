@@ -35,12 +35,12 @@
   "gateway": {
     "gateway_id": "GAT-123",
     "target": {
-      "family": "bacnet"
+      "family": "vendor"
     }
   },
   "localnet": {
     "families": {
-      "bacnet": {
+      "vendor": {
         "addr": "0x65"
       }
     }

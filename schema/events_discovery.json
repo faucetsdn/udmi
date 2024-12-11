@@ -38,7 +38,7 @@
       "type": "integer"
     },
     "families": {
-      "description": "Address family discovery discovery results.",
+      "description": "Links to other address families (family and id)",
       "type": "object",
       "additionalProperties": false,
       "existingJavaType": "java.util.Map<String, FamilyDiscovery>",
@@ -70,6 +70,16 @@
         }
       }
     },
+    "points": {
+      "description": "Information about a specific point name of the device.",
+      "additionalProperties": false,
+      "existingJavaType": "java.util.Map<String, PointPointsetModel>",
+      "patternProperties": {
+        "^[a-z][a-z0-9]*(_[a-z0-9]+)*$": {
+          "$ref": "file:model_pointset_point.json#"
+        }
+      }
+    },
     "refs": {
       "description": "Collection of point references discovered",
       "additionalProperties": false,
@@ -98,6 +108,14 @@
       "type": "object",
       "additionalProperties": false,
       "properties": {
+        "description": {
+          "description": "Full textual desctiiption of this device",
+          "type": "string"
+        },
+        "name": {
+          "description": "Friendly name of this device",
+          "type": "string"
+        },
         "serial_no": {
           "description": "The serial number of the physical device",
           "type": "string"
@@ -110,10 +128,5 @@
         }
       }
     }
-  },
-  "required": [
-    "timestamp",
-    "version",
-    "scan_family"
-  ]
+  }
 }

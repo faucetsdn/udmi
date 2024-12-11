@@ -53,7 +53,6 @@ public class BasicTest extends TestBase {
     validator.validateMessage(bundle);
     ValidationState report = getValidationReport();
     assertEquals("One error summary", 1, report.summary.error_devices.size());
-    assertEquals("One error device", 1, report.devices.size());
   }
 
   @Test
@@ -63,7 +62,6 @@ public class BasicTest extends TestBase {
     validator.validateMessage(bundle);
     ValidationState report = getValidationReport();
     assertEquals("One error summary", 1, report.summary.error_devices.size());
-    assertEquals("One error device", 1, report.devices.size());
   }
 
   @Test
@@ -72,7 +70,7 @@ public class BasicTest extends TestBase {
     MessageBundle bundle = getMessageBundle(EVENTS_SUBTYPE, POINTSET_SUBFOLDER, messageObject);
     validator.validateMessage(bundle);
     ValidationState report = getValidationReport();
-    assertEquals("No error devices", 1, report.devices.size());
+    assertEquals("No error devices", 0, report.summary.error_devices.size());
     DeviceValidationEvents deviceValidationEvents = report.devices.get(TestCommon.DEVICE_ID);
     assertEquals("report status level", (Object) INFO.value(),
         deviceValidationEvents.status.level);
@@ -88,7 +86,7 @@ public class BasicTest extends TestBase {
     MessageBundle bundle = getMessageBundle(EVENTS_SUBTYPE, POINTSET_SUBFOLDER, messageObject);
     validator.validateMessage(bundle);
     ValidationState report = getValidationReport();
-    assertEquals("One error devices", 1, report.devices.size());
+    assertEquals("One error devices", 1, report.summary.error_devices.size());
     ValidationEvents result = getValidationResult(TestCommon.DEVICE_ID, EVENTS_SUBTYPE,
         POINTSET_SUBFOLDER);
     PointsetSummary pointset = result.pointset;
@@ -104,7 +102,7 @@ public class BasicTest extends TestBase {
     MessageBundle bundle = getMessageBundle(EVENTS_SUBTYPE, POINTSET_SUBFOLDER, messageObject);
     validator.validateMessage(bundle);
     ValidationState report = getValidationReport();
-    assertEquals("No error devices", 1, report.devices.size());
+    assertEquals("One error devices", 1, report.summary.error_devices.size());
     ValidationEvents result = getValidationResult(TestCommon.DEVICE_ID, EVENTS_SUBTYPE,
         POINTSET_SUBFOLDER);
     PointsetSummary points = result.pointset;
@@ -120,7 +118,7 @@ public class BasicTest extends TestBase {
     MessageBundle bundle = getMessageBundle(STATE_SUBTYPE, POINTSET_SUBFOLDER, messageObject);
     validator.validateMessage(bundle);
     ValidationState report = getValidationReport();
-    assertEquals("No error devices", 1, report.devices.size());
+    assertEquals("One error devices", 1, report.summary.error_devices.size());
     ValidationEvents result = getValidationResult(TestCommon.DEVICE_ID, STATE_SUBTYPE,
         POINTSET_SUBFOLDER);
     List<String> missingPoints = result.pointset.missing;

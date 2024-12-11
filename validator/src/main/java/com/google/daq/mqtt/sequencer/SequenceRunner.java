@@ -230,7 +230,8 @@ public class SequenceRunner {
     }
     System.err.println("Target sequence classes:\n  " + Joiner.on("\n  ").join(sequenceClasses));
     SequenceBase.initialize();
-    targets = ofNullable(SequenceBase.exeConfig.sequences).orElseGet(ImmutableList::of);
+    List<String> specifiedSequences = SequenceBase.exeConfig.sequences;
+    targets = ofNullable(specifiedSequences).orElseGet(ImmutableList::of);
     boolean enableAllBuckets = shouldExecuteAll() || !targets.isEmpty();
     SequenceBase.enableAllBuckets(enableAllBuckets);
     Set<String> remainingMethods = new HashSet<>(targets);
@@ -265,7 +266,7 @@ public class SequenceRunner {
       throw new RuntimeException("Failed to find tests: " + Joiner.on(", ").join(remainingMethods));
     }
 
-    if (runCount <= 0) {
+    if (runCount <= 0 && specifiedSequences != null) {
       throw new RuntimeException("No tests were executed!");
     }
 
