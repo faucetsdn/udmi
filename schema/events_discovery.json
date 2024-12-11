@@ -70,6 +70,16 @@
         }
       }
     },
+    "points": {
+      "description": "Information about a specific point name of the device.",
+      "additionalProperties": false,
+      "existingJavaType": "java.util.HashMap<String, PointPointsetModel>",
+      "patternProperties": {
+        "^[a-z][a-z0-9]*(_[a-z0-9]+)*$": {
+          "$ref": "file:model_pointset_point.json#"
+        }
+      }
+    },
     "refs": {
       "description": "Collection of point references discovered",
       "additionalProperties": false,

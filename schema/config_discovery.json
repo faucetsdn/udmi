@@ -22,7 +22,7 @@
         "devices": {
           "$ref": "file:common.json#/definitions/depth"
         },
-        "refs": {
+        "points": {
           "$ref": "file:common.json#/definitions/depth"
         },
         "features": {
