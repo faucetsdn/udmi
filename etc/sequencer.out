@@ -1,4 +1,4 @@
-RESULT fail discovery.scan scan_periodic_now_enumerate PREVIEW 0/10 Failed check that all events have matching refs: [Device AHU-1 has extra metadata refs [BV11.present_value, AV12.present_value] and/or extra discovered refs [filter_alarm_pressure_status, filter_differential_pressure_sensor], Device AHU-22 has extra metadata refs [BV11.present_value, AV12.present_value] and/or extra discovered refs [filter_alarm_pressure_status, filter_differential_pressure_sensor]]
+RESULT pass discovery.scan scan_periodic_now_enumerate PREVIEW 10/10 Sequence complete
 RESULT pass discovery.scan scan_single_future PREVIEW 10/10 Sequence complete
 RESULT pass discovery.scan scan_single_now PREVIEW 10/10 Sequence complete
 RESULT pass discovery.scan scan_single_past PREVIEW 10/10 Sequence complete
