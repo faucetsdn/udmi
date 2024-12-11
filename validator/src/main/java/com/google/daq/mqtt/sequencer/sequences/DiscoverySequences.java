@@ -111,15 +111,9 @@ public class DiscoverySequences extends SequenceBase {
     checkState(providerFamily != null, "No provider family found for scan family " + scanFamily);
   }
 
-<<<<<<< HEAD
   private DiscoveryEvents runEnumeration(Enumerations depths) {
-    deviceConfig.discovery = new DiscoveryConfig();
-    deviceConfig.discovery.enumerations = depths;
-=======
-  private DiscoveryEvents runEnumeration(Depths depths) {
     deviceConfig.discovery = ofNullable(deviceConfig.discovery).orElseGet(DiscoveryConfig::new);
-    deviceConfig.discovery.depths = depths;
->>>>>>> master
+    deviceConfig.discovery.enumerations = depths;
     untilTrue("enumeration not active", () -> deviceState.discovery.generation == null);
 
     Date startTime = SemanticDate.describe("generation start time", cleanDate());
@@ -162,7 +156,7 @@ public class DiscoverySequences extends SequenceBase {
       checkThat("no feature enumeration exists", event.features == null);
     }
 
-    if (shouldEnumerate(depths.refs)) {
+    if (shouldEnumerate(depths.points)) {
       checkThat("enumerated point count matches",
           enumeratedPoints(event, deviceMetadata.pointset.points));
     } else {
@@ -224,7 +218,7 @@ public class DiscoverySequences extends SequenceBase {
       skipTest("No metadata pointset points defined");
     }
     Enumerations enumerate = new Enumerations();
-    enumerate.refs = ENTRIES;
+    enumerate.points = ENTRIES;
     DiscoveryEvents event = runEnumeration(enumerate);
     checkSelfEnumeration(event, enumerate);
   }
@@ -256,7 +250,7 @@ public class DiscoverySequences extends SequenceBase {
     Enumerations enumerate = new Enumerations();
     enumerate.families = enumerateIfBucketEnabled(ENUMERATION_FAMILIES);
     enumerate.features = enumerateIfBucketEnabled(ENUMERATION_FEATURES);
-    enumerate.refs = enumerateIfBucketEnabled(ENUMERATION_POINTSET);
+    enumerate.points = enumerateIfBucketEnabled(ENUMERATION_POINTSET);
     DiscoveryEvents event = runEnumeration(enumerate);
     checkSelfEnumeration(event, enumerate);
   }
