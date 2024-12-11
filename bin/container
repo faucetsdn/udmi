@@ -118,7 +118,7 @@ fi
 if [[ -n $build ]]; then
     echo Cleaning old images...
     images=$(docker images | fgrep $REPOSITORY | awk '{print $1":"$2}' | fgrep -v '<none>') || true
-    [[ -n $images ]] && docker rmi $images
+    [[ -n $images ]] && docker rmi $images || true
 
     echo Building Dockerfile.$target
     echo docker build -f Dockerfile.$target -t $target .
