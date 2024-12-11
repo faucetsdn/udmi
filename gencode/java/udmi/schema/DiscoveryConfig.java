@@ -18,7 +18,7 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
     "generation",
-    "depths",
+    "enumerations",
     "families"
 })
 public class DiscoveryConfig {
@@ -31,25 +31,25 @@ public class DiscoveryConfig {
     @JsonPropertyDescription("Generational marker for controlling enumeration")
     public Date generation;
     /**
-     * Indicates which discovery sub-categories to enumerate
+     * Enumeration depth for self-enumerations.
      * 
      */
-    @JsonProperty("depths")
-    @JsonPropertyDescription("Indicates which discovery sub-categories to enumerate")
-    public Depths depths;
+    @JsonProperty("enumerations")
+    @JsonPropertyDescription("Enumeration depth for self-enumerations.")
+    public Enumerations enumerations;
     /**
-     * Control over discovery scan operation by address family.
+     * Address family configs for discovery scans.
      * 
      */
     @JsonProperty("families")
-    @JsonPropertyDescription("Control over discovery scan operation by address family.")
+    @JsonPropertyDescription("Address family configs for discovery scans.")
     public HashMap<String, FamilyDiscoveryConfig> families;
 
     @Override
     public int hashCode() {
         int result = 1;
         result = ((result* 31)+((this.generation == null)? 0 :this.generation.hashCode()));
-        result = ((result* 31)+((this.depths == null)? 0 :this.depths.hashCode()));
+        result = ((result* 31)+((this.enumerations == null)? 0 :this.enumerations.hashCode()));
         result = ((result* 31)+((this.families == null)? 0 :this.families.hashCode()));
         return result;
     }
@@ -63,7 +63,7 @@ public class DiscoveryConfig {
             return false;
         }
         DiscoveryConfig rhs = ((DiscoveryConfig) other);
-        return ((((this.generation == rhs.generation)||((this.generation!= null)&&this.generation.equals(rhs.generation)))&&((this.depths == rhs.depths)||((this.depths!= null)&&this.depths.equals(rhs.depths))))&&((this.families == rhs.families)||((this.families!= null)&&this.families.equals(rhs.families))));
+        return ((((this.generation == rhs.generation)||((this.generation!= null)&&this.generation.equals(rhs.generation)))&&((this.enumerations == rhs.enumerations)||((this.enumerations!= null)&&this.enumerations.equals(rhs.enumerations))))&&((this.families == rhs.families)||((this.families!= null)&&this.families.equals(rhs.families))));
     }
 
 }

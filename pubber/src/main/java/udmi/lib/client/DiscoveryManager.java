@@ -21,10 +21,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ScheduledFuture;
 import java.util.function.Supplier;
-import udmi.schema.Depths;
-import udmi.schema.Depths.Depth;
 import udmi.schema.DiscoveryConfig;
 import udmi.schema.DiscoveryState;
+import udmi.schema.Enumerations.Depth;
 import udmi.schema.FamilyDiscoveryConfig;
 import udmi.schema.FamilyDiscoveryState;
 
@@ -47,7 +46,7 @@ public interface DiscoveryManager extends SubBlockManager {
     });
   }
 
-  default <K, V> Map<K, V> maybeEnumerate(Depths.Depth depth, Supplier<Map<K, V>> supplier) {
+  default <K, V> Map<K, V> maybeEnumerate(Depth depth, Supplier<Map<K, V>> supplier) {
     return ifTrueGet(shouldEnumerateTo(depth), supplier);
   }
 
