@@ -1,4 +1,7 @@
 RESULT skip discovery.scan scan_periodic_now_enumerate PREVIEW 0/0 State testing disabled
+RESULT skip discovery.scan scan_single_future PREVIEW 0/0 State testing disabled
+RESULT skip discovery.scan scan_single_now PREVIEW 10/10 State testing disabled
+RESULT skip discovery.scan scan_single_past PREVIEW 10/10 State testing disabled
 RESULT skip endpoint.config endpoint_connection_error PREVIEW 0/0 State testing disabled
 RESULT skip endpoint.config endpoint_connection_retry PREVIEW 0/0 State testing disabled
 RESULT skip endpoint.config endpoint_connection_success_alternate PREVIEW 0/0 State testing disabled
