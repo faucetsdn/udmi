@@ -1,4 +1,4 @@
-package com.google.daq.mqtt.util;
+package com.google.daq.mqtt.util.providers;
 
 import static com.google.common.base.Preconditions.checkState;
 import static java.lang.String.format;

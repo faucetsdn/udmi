@@ -1,10 +1,10 @@
 package com.google.daq.mqtt.validator;
 
 import static com.google.common.base.Preconditions.checkNotNull;
-import static com.google.daq.mqtt.util.FamilyProvider.constructRef;
+import static com.google.daq.mqtt.util.providers.FamilyProvider.constructRef;
 import static java.util.Objects.requireNonNull;
 
-import com.google.daq.mqtt.util.FamilyProvider;
+import com.google.daq.mqtt.util.providers.FamilyProvider;
 import java.util.Map;
 import udmi.schema.DiscoveryEvents;
 import udmi.schema.DiscoveryState;

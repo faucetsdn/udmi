@@ -45,7 +45,7 @@ import com.google.daq.mqtt.sequencer.Feature;
 import com.google.daq.mqtt.sequencer.SequenceBase;
 import com.google.daq.mqtt.sequencer.Summary;
 import com.google.daq.mqtt.sequencer.semantic.SemanticDate;
-import com.google.daq.mqtt.util.FamilyProvider;
+import com.google.daq.mqtt.util.providers.FamilyProvider;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.ArrayList;

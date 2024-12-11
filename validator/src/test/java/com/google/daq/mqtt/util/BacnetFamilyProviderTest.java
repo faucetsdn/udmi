@@ -6,6 +6,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 import com.google.common.collect.ImmutableSet;
+import com.google.daq.mqtt.util.providers.BacnetFamilyProvider;
 import com.google.udmi.util.GeneralUtils;
 import java.util.List;
 import java.util.Set;

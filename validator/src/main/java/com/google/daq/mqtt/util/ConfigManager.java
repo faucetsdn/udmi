@@ -1,7 +1,7 @@
 package com.google.daq.mqtt.util;
 
 import static com.google.common.base.Preconditions.checkState;
-import static com.google.daq.mqtt.util.FamilyProvider.NAMED_FAMILIES;
+import static com.google.daq.mqtt.util.providers.FamilyProvider.NAMED_FAMILIES;
 import static com.google.udmi.util.GeneralUtils.catchToNull;
 import static com.google.udmi.util.GeneralUtils.deepCopy;
 import static com.google.udmi.util.GeneralUtils.ifNotNullGet;

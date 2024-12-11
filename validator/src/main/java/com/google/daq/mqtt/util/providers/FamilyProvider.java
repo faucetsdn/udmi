@@ -1,4 +1,4 @@
-package com.google.daq.mqtt.util;
+package com.google.daq.mqtt.util.providers;
 
 import com.google.common.collect.ImmutableSet;
 import java.util.Map;
@@ -14,6 +14,7 @@ public interface FamilyProvider {
    * Set of all the supported protocol families.
    */
   Set<Class<? extends FamilyProvider>> PROTOCOL_FAMILIES = ImmutableSet.of(
+      IotFamilyProvider.class,
       VendorFamilyProvider.class,
       BacnetFamilyProvider.class);
 

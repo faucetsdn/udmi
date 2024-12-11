@@ -15,6 +15,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.concurrent.atomic.AtomicInteger;
+import udmi.lib.ProtocolFamily;
 import udmi.lib.client.DiscoveryManager;
 import udmi.lib.intf.FamilyProvider;
 import udmi.lib.intf.ManagerHost;
@@ -77,6 +78,7 @@ public class PubberDiscoveryManager extends PubberManager implements DiscoveryMa
     discoveryState.generation = enumerationGeneration;
     info("Discovery enumeration at " + isoConvert(enumerationGeneration));
     DiscoveryEvents discoveryEvent = new DiscoveryEvents();
+    discoveryEvent.scan_family = ProtocolFamily.IOT;
     discoveryEvent.generation = enumerationGeneration;
     Enumerations depths = config.enumerations;
     discoveryEvent.points = maybeEnumerate(depths.points, () -> enumeratePoints(deviceId));
