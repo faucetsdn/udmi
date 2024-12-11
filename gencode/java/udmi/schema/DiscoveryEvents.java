@@ -2,7 +2,6 @@
 package udmi.schema;
 
 import java.util.Date;
-import java.util.HashMap;
 import java.util.Map;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -108,7 +107,7 @@ public class DiscoveryEvents {
      */
     @JsonProperty("points")
     @JsonPropertyDescription("Information about a specific point name of the device.")
-    public HashMap<String, PointPointsetModel> points;
+    public Map<String, PointPointsetModel> points;
     /**
      * Collection of point references discovered
      * 

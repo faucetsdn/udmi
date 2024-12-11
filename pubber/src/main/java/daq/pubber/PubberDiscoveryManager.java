@@ -6,7 +6,6 @@ import static com.google.udmi.util.JsonUtil.getNowInstant;
 import static com.google.udmi.util.JsonUtil.isoConvert;
 import static daq.pubber.PubberUdmiPublisher.DEVICE_START_TIME;
 import static java.lang.String.format;
-import static java.util.stream.Collectors.toMap;
 import static udmi.schema.FamilyDiscoveryState.Phase.ACTIVE;
 import static udmi.schema.FamilyDiscoveryState.Phase.STOPPED;
 
@@ -80,7 +79,7 @@ public class PubberDiscoveryManager extends PubberManager implements DiscoveryMa
     DiscoveryEvents discoveryEvent = new DiscoveryEvents();
     discoveryEvent.generation = enumerationGeneration;
     Enumerations depths = config.enumerations;
-    discoveryEvent.points = maybeEnumerate(depths.refs, () -> enumeratePoints(deviceId));
+    discoveryEvent.points = maybeEnumerate(depths.points, () -> enumeratePoints(deviceId));
     discoveryEvent.features = maybeEnumerate(depths.features, PubberFeatures::getFeatures);
     discoveryEvent.families = maybeEnumerate(depths.families, deviceManager::enumerateFamilies);
     host.publish(discoveryEvent);
@@ -141,9 +140,8 @@ public class PubberDiscoveryManager extends PubberManager implements DiscoveryMa
     return DEVICE_START_TIME;
   }
 
-  private Map<String, RefDiscovery> enumeratePoints(String deviceId) {
-    return siteModel.getMetadata(deviceId).pointset.points.entrySet().stream()
-        .collect(toMap(Entry::getKey, entry -> getModelPointRef(entry, true)));
+  private Map<String, PointPointsetModel> enumeratePoints(String deviceId) {
+    return siteModel.getMetadata(deviceId).pointset.points;
   }
 
   public void setSiteModel(SiteModel siteModel) {
