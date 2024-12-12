@@ -109,7 +109,7 @@ def run(cmd: str) -> subprocess.CompletedProcess:
   execution_time_seconds = time.monotonic() - start
   info("completed with result code %s in %s seconds", str(result.returncode), str(execution_time_seconds))
   # print not log, so they are captured when there is a failure
-  print(result.stdout.decode("utf-8"))
+  # print(result.stdout.decode("utf-8"))
   return result
 
 
@@ -134,7 +134,9 @@ def docker_devices():
       )
 
   yield _docker_devices
+
   result = run("docker logs discoverynode-test-device1")
+  print("discovery node logs")
   print(result.stdout.decode("utf-8"))
   run(
       "docker ps -a | grep 'discoverynode-test-device' | awk '{print $1}' |"
@@ -278,17 +280,19 @@ def test_sequencer(new_site_model, docker_devices, discovery_node):
 
   run(f"bin/registrar {SITE_PATH} {TARGET}")
 
-  # Note: Start after running registrar preferably
+  # Note: Start after running registrar preferably.
   discovery_node(
       device_id="GAT-1",
       site_path=SITE_PATH
   )
 
   result = run(
-      f"bin/sequencer -v {SITE_PATH} {TARGET} GAT-1 single_scan_future"
+      f"bin/sequencer -v {SITE_PATH} {TARGET} GAT-1 scan_single_future"
   )
 
-  assert "RESULT pass discovery.scan single_scan_future" in str(result.stdout), "result is pass (note this test can be flakey)"
+  print("sequencer output")
+  print(result.stdout.decode("utf8"))
+  assert "RESULT pass discovery.scan scan_single_future" in str(result.stdout), "result is pass (note this test can be flakey)"
 
 
 @pytest.fixture
