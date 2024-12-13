@@ -1,7 +1,7 @@
 package com.google.daq.mqtt.util;
 
 import static com.google.common.base.Preconditions.checkState;
-import static com.google.daq.mqtt.util.ProtocolFamily.NAMED_FAMILIES;
+import static com.google.daq.mqtt.util.providers.FamilyProvider.NAMED_FAMILIES;
 import static com.google.udmi.util.GeneralUtils.catchToNull;
 import static com.google.udmi.util.GeneralUtils.deepCopy;
 import static com.google.udmi.util.GeneralUtils.ifNotNullGet;
@@ -240,7 +240,7 @@ public class ConfigManager {
     ifNotNullThen(rawFamily, raw ->
         requireNonNull(catchToNull(() -> metadata.localnet.families.get(family).addr),
             format("metadata.localnet.families.[%s].addr not defined", family)));
-    recordIfSchemaViolations(() -> NAMED_FAMILIES.get(family).refValidator(pointRef));
+    recordIfSchemaViolations(() -> NAMED_FAMILIES.get(family).validateRef(pointRef));
     return pointRef;
   }
 

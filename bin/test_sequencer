@@ -184,8 +184,8 @@ else
 fi
 
 echo Sanity check for completed tests...
-target_count=$(fgrep "Running target" out/sequencer$suffix.log.save | wc -l)
-result_count=$(fgrep RESULT out/sequencer$suffix.out.save | wc -l)
+target_count=$(fgrep "Running target" out/sequencer$suffix.log.save | wc -l) || true
+result_count=$(fgrep RESULT out/sequencer$suffix.out.save | wc -l) || true
 if [[ $target_count != $result_count ]]; then
     fail Only $result_count results found for expected $target_count targets.
 fi

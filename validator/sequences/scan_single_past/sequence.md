@@ -1,5 +1,5 @@
 
-## scan_single_past (ALPHA)
+## scan_single_past (PREVIEW)
 
 Check that a scan scheduled in the past never starts
 

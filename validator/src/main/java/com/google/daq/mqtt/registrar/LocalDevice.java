@@ -521,7 +521,8 @@ class LocalDevice {
     try {
       Object fromValue = config.deviceConfigJson();
 
-      config.getSchemaViolations().forEach(e -> captureError(e.getClass().getName(), e));
+      config.getSchemaViolations().forEach(e -> captureError(e.getClass().getName() +
+          e.getMessage(), e));
 
       if (fromValue instanceof String stringValue) {
         return stringValue;

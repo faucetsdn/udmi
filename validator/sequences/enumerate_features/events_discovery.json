@@ -13,16 +13,20 @@
       "stage" : "beta"
     },
     "enumeration.pointset" : {
-      "stage" : "alpha"
+      "stage" : "preview"
     },
     "pointset" : {
       "stage" : "beta"
     },
     "enumeration" : {
       "stage" : "stable"
+    },
+    "discovery.scan" : {
+      "stage" : "preview"
     }
   },
-  "generation" : "2024-12-03T15:58:48Z",
-  "timestamp" : "2024-12-03T15:58:49Z",
+  "generation" : "2024-12-11T05:44:03Z",
+  "scan_family" : "iot",
+  "timestamp" : "2024-12-11T05:44:04Z",
   "version" : "1.5.2"
 }

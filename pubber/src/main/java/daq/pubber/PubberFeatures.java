@@ -3,6 +3,7 @@ package daq.pubber;
 import static com.google.udmi.util.GeneralUtils.getTimestamp;
 import static com.google.udmi.util.GeneralUtils.isTrue;
 import static com.google.udmi.util.JsonUtil.writeFile;
+import static udmi.schema.Bucket.DISCOVERY_SCAN;
 import static udmi.schema.Bucket.ENDPOINT_CONFIG;
 import static udmi.schema.Bucket.ENUMERATION;
 import static udmi.schema.Bucket.ENUMERATION_FAMILIES;
@@ -11,7 +12,6 @@ import static udmi.schema.Bucket.ENUMERATION_POINTSET;
 import static udmi.schema.Bucket.POINTSET;
 import static udmi.schema.Bucket.SYSTEM;
 import static udmi.schema.Bucket.UNKNOWN_DEFAULT;
-import static udmi.schema.FeatureDiscovery.FeatureStage.ALPHA;
 import static udmi.schema.FeatureDiscovery.FeatureStage.BETA;
 import static udmi.schema.FeatureDiscovery.FeatureStage.PREVIEW;
 import static udmi.schema.FeatureDiscovery.FeatureStage.STABLE;
@@ -38,7 +38,8 @@ public abstract class PubberFeatures {
     add(ENUMERATION, STABLE);
     add(ENUMERATION_FEATURES, BETA);
     add(ENUMERATION_FAMILIES, PREVIEW);
-    add(ENUMERATION_POINTSET, ALPHA);
+    add(ENUMERATION_POINTSET, PREVIEW);
+    add(DISCOVERY_SCAN, PREVIEW);
     add(POINTSET, BETA);
     add(SYSTEM, BETA);
   }

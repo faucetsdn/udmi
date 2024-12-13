@@ -45,6 +45,7 @@ import static com.google.udmi.util.JsonUtil.toStringMap;
 import static com.google.udmi.util.SiteModel.METADATA_JSON;
 import static java.lang.String.format;
 import static java.nio.file.Files.newOutputStream;
+import static java.time.Duration.between;
 import static java.util.Objects.requireNonNull;
 import static java.util.Optional.ofNullable;
 import static java.util.stream.Collectors.toSet;
@@ -188,7 +189,7 @@ public class SequenceBase {
   private static final String ALL_CHANGES = "";
   private static final int SEQUENCER_FUNCTIONS_VERSION = Validator.TOOLS_FUNCTIONS_VERSION;
   private static final int SEQUENCER_FUNCTIONS_ALPHA = SEQUENCER_FUNCTIONS_VERSION;
-  private static final long CONFIG_BARRIER_MS = 1000;
+  private static final Duration CONFIG_BARRIER = Duration.ofSeconds(2);
   private static final String START_END_MARKER = "################################";
   private static final String RESULT_FORMAT = "RESULT %s %s %s %s %s/%s %s";
   private static final String CAPABILITY_FORMAT = "CPBLTY %s %s %s %s %s/%s %s";
@@ -272,7 +273,7 @@ public class SequenceBase {
   public static ExecutionConfiguration exeConfig;
   private static Validator messageValidator;
   private static ValidationState validationState;
-  private static int logLevel;
+  private static int logLevel = -1;
   private static File deviceOutputDir;
   private static File resultSummary;
   private static MessagePublisher client;
@@ -280,6 +281,7 @@ public class SequenceBase {
   private static MessageBundle stashedBundle;
   private static boolean enableAllTargets = true;
   private static boolean useAlternateClient;
+  private static boolean shouldGateConfigUpdate;
 
   static {
     // Sanity check to make sure ALPHA version is increased if forced by increased BETA.
@@ -337,6 +339,7 @@ public class SequenceBase {
   private Date configStateStart;
   protected boolean pretendStateUpdated;
   private Boolean stateSupported;
+  private Instant lastConfigMark = getNowInstant();
 
   private static void setupSequencer() {
     exeConfig = ofNullable(exeConfig).orElseGet(SequenceRunner::ensureExecutionConfig);
@@ -352,6 +355,7 @@ public class SequenceBase {
       checkNotNull(exeConfig.udmi_version, "udmi_version not defined");
       logLevel = Level.valueOf(checkNotNull(exeConfig.log_level, "log_level not defined"))
           .value();
+      shouldGateConfigUpdate = traceLogLevel();
       key_file = checkNotNull(exeConfig.key_file, "key_file not defined");
     } catch (Exception e) {
       e.printStackTrace();
@@ -385,6 +389,7 @@ public class SequenceBase {
     String registrySuffix = exeConfig.registry_suffix;
     altRegistry = SiteModel.getRegistryActual(udmiNamespace, altRegistryId, registrySuffix);
     altClient = getAlternateClient();
+    ifNotNullThen(altClient, IotReflectorClient::activate);
   }
 
   private static void validatorLogger(Level level, String message) {
@@ -453,10 +458,12 @@ public class SequenceBase {
   }
 
   private static boolean debugLogLevel() {
+    checkState(logLevel >= 0, "logLevel not initialized");
     return logLevel <= Level.DEBUG.value();
   }
 
   private static boolean traceLogLevel() {
+    checkState(logLevel >= 0, "logLevel not initialized");
     return logLevel <= Level.TRACE.value();
   }
 
@@ -908,7 +915,7 @@ public class SequenceBase {
         processNextMessage();
         return configIsPending(false);
       });
-      Duration between = Duration.between(lastConfigUpdate, CleanDateFormat.clean(Instant.now()));
+      Duration between = between(lastConfigUpdate, CleanDateFormat.clean(Instant.now()));
       debug(format("Config sync took %ss", between.getSeconds()));
     } finally {
       waitingForConfigSync.set(false);
@@ -1253,30 +1260,68 @@ public class SequenceBase {
 
   private void updateConfig(String reason, boolean force) {
     updateConfig(reason, force, true);
-
   }
 
-  private void updateConfig(String reason, boolean force, boolean waitForSync) {
+  /**
+   * Do a config update cycle.
+   *
+   * @param reason       description reason of why this is being done
+   * @param force        indicate if this should force a complete update
+   * @param waitForState indicate if this should wait for a state-sync from the device
+   */
+  private void updateConfig(String reason, boolean force, boolean waitForState) {
     assertConfigIsNotPending();
 
-    // Add a forced sleep to make sure second-quantized timestamps are unique.
-    safeSleep(CONFIG_BARRIER_MS);
-
     if (doPartialUpdates && !force) {
-      updateConfig(SubFolder.SYSTEM, augmentConfig(deviceConfig.system));
-      updateConfig(SubFolder.POINTSET, deviceConfig.pointset);
-      updateConfig(SubFolder.GATEWAY, deviceConfig.gateway);
-      updateConfig(SubFolder.LOCALNET, deviceConfig.localnet);
-      updateConfig(SubFolder.BLOBSET, deviceConfig.blobset);
-      updateConfig(SubFolder.DISCOVERY, deviceConfig.discovery);
+      updateConfig(reason, waitForState, SubFolder.SYSTEM, augmentConfig(deviceConfig.system));
+      updateConfig(reason, waitForState, SubFolder.POINTSET, deviceConfig.pointset);
+      updateConfig(reason, waitForState, SubFolder.GATEWAY, deviceConfig.gateway);
+      updateConfig(reason, waitForState, SubFolder.LOCALNET, deviceConfig.localnet);
+      updateConfig(reason, waitForState, SubFolder.BLOBSET, deviceConfig.blobset);
+      updateConfig(reason, waitForState, SubFolder.DISCOVERY, deviceConfig.discovery);
     } else {
       if (force) {
         debug("Forcing config update");
         sentConfig.remove(UPDATE);
       }
-      updateConfig(UPDATE, deviceConfig);
+      updateConfig(reason, waitForState, UPDATE, deviceConfig);
     }
 
+    ifNotTrueThen(shouldGateConfigUpdate, () -> waitForUpdateConfigSync(reason, waitForState));
+
+    assertConfigIsNotPending();
+
+    captureConfigChange(reason);
+  }
+
+  private boolean updateConfig(String reason, boolean waitForSync, SubFolder subBlock,
+      Object data) {
+    try {
+      String actualizedData = actualize(stringify(data));
+      String sentBlockConfig = String.valueOf(
+          sentConfig.get(requireNonNull(subBlock, "subBlock not defined")));
+      boolean updated = !actualizedData.equals(sentBlockConfig);
+      trace(format("updated check %s_%s: %s", CONFIG_SUBTYPE, subBlock, updated));
+      if (updated) {
+        String topic = subBlock + "/config";
+        ifTrueThen(shouldGateConfigUpdate, this::rateLimitConfig);
+        final String transactionId =
+            requireNonNull(reflector().publish(getDeviceId(), topic, actualizedData),
+                "no transactionId returned for publish");
+        debug(format("update %s_%s, adding configTransaction %s",
+            CONFIG_SUBTYPE, subBlock, transactionId));
+        recordRawMessage(data, LOCAL_PREFIX + subBlock.value());
+        sentConfig.put(subBlock, actualizedData);
+        configTransactions.add(transactionId);
+        ifTrueThen(shouldGateConfigUpdate, () -> waitForUpdateConfigSync(reason, waitForSync));
+      }
+      return updated;
+    } catch (Exception e) {
+      throw new RuntimeException("While updating config block " + subBlock, e);
+    }
+  }
+
+  private void waitForUpdateConfigSync(String reason, boolean waitForSync) {
     if (!waitForSync) {
       waitForConfigIsNotPending();
     } else if (configIsPending()) {
@@ -1287,34 +1332,16 @@ public class SequenceBase {
       debug(format("Update lastConfigUpdate %s%s", lastConfigUpdate, debugReason));
       waitForConfigSync();
     }
-
-    assertConfigIsNotPending();
-
-    captureConfigChange(reason);
   }
 
-  private boolean updateConfig(SubFolder subBlock, Object data) {
-    try {
-      String actualizedData = actualize(stringify(data));
-      String sentBlockConfig = String.valueOf(
-          sentConfig.get(requireNonNull(subBlock, "subBlock not defined")));
-      boolean updated = !actualizedData.equals(sentBlockConfig);
-      trace(format("updated check %s_%s: %s", CONFIG_SUBTYPE, subBlock, updated));
-      if (updated) {
-        String topic = subBlock + "/config";
-        final String transactionId =
-            requireNonNull(reflector().publish(getDeviceId(), topic, actualizedData),
-                "no transactionId returned for publish");
-        debug(format("update %s_%s, adding configTransaction %s",
-            CONFIG_SUBTYPE, subBlock, transactionId));
-        recordRawMessage(data, LOCAL_PREFIX + subBlock.value());
-        sentConfig.put(subBlock, actualizedData);
-        configTransactions.add(transactionId);
-      }
-      return updated;
-    } catch (Exception e) {
-      throw new RuntimeException("While updating config block " + subBlock, e);
-    }
+  private void rateLimitConfig() {
+    // Add a forced sleep to make sure configs aren't sent too quickly
+    long delayMs = CONFIG_BARRIER.toMillis() - between(lastConfigMark, getNowInstant()).toMillis();
+    ifTrueThen(delayMs > 0, () -> {
+      debug(format("Rate-limiting config by %dms", delayMs));
+      safeSleep(delayMs);
+    });
+    lastConfigMark = getNowInstant();
   }
 
   protected void updateProxyConfig(String proxyId, Config proxyConfig) {
@@ -1423,13 +1450,17 @@ public class SequenceBase {
   protected void checkThat(String description, Supplier<Boolean> condition, String details) {
     if (!catchToFalse(condition)) {
       String message = "Failed check that " + sanitizedDescription(description)
-          + ifNotNullGet(details, base -> "; " + base, "");
+          + ifNotNullGet(details, base -> ": " + base, "");
       warning(message);
       throw new IllegalStateException(message);
     }
 
     ifNotTrueThen(isOptionalDescription(description),
         () -> recordSequence("Check that", description));
+  }
+
+  protected void quietlyCheckThat(String description, Boolean condition) {
+    checkThat(OPTIONAL_PREFIX + description, condition);
   }
 
   protected void quietlyCheckThat(String description, Supplier<Boolean> condition) {
@@ -1621,7 +1652,7 @@ public class SequenceBase {
   }
 
   private void waitingConditionPop(Instant startTime) {
-    Duration between = Duration.between(startTime, Instant.now());
+    Duration between = between(startTime, Instant.now());
     debug(format("Stage finished %s at %s after %ss", currentWaitingCondition(),
         timeSinceStart(), between.toSeconds()));
     waitingCondition.pop();
@@ -1914,6 +1945,7 @@ public class SequenceBase {
         debug(format("Updated config %s %s", isoConvert(config.timestamp), txnId));
         String changeUpdate = updateCount == 1 ? stringify(deviceConfig) : changedLines(changes);
         info(format("Updated config #%03d", updateCount), changeUpdate);
+        debug(format("Expected last_config now %s", isoConvert(deviceConfig.timestamp)));
       } else if (converted instanceof State convertedState) {
         String timestamp = isoConvert(convertedState.timestamp);
         if (convertedState.timestamp == null) {
@@ -1940,7 +1972,7 @@ public class SequenceBase {
         boolean deltaState = RECV_STATE_DIFFERNATOR.isInitialized();
         List<DiffEntry> stateChanges = RECV_STATE_DIFFERNATOR.computeChanges(converted);
         Instant start = ofNullable(convertedState.timestamp).orElseGet(Date::new).toInstant();
-        long delta = Duration.between(start, Instant.now()).getSeconds();
+        long delta = between(start, Instant.now()).getSeconds();
         debug(format("Updated state after %ds %s %s", delta, timestamp, txnId));
         if (deltaState) {
           info(format("Updated state #%03d", updateCount), changedLines(stateChanges));
@@ -2103,7 +2135,7 @@ public class SequenceBase {
 
     if (debugOut) {
       if (!failures.isEmpty()) {
-        notice(format("state updated at %s then %s", isoConvert(configStateStart),
+        notice(format("previous state %s updated at %s", isoConvert(configStateStart),
             isoConvert(current)));
         notice(format("last_start synchronized %s: state/%s =? config/%s", lastStartSynced,
             isoConvert(stateLastStart), isoConvert(configLastStart)));

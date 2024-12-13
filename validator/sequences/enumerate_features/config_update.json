@@ -1,6 +1,6 @@
 {
   "discovery" : {
-    "depths" : {
+    "enumerations" : {
       "features" : "entries"
     },
     "families" : {
@@ -9,9 +9,9 @@
   },
   "localnet" : {
     "families" : {
+      "bacnet" : { },
       "ether" : { },
       "ipv4" : { },
-      "ipv6" : { },
       "vendor" : { }
     }
   },
@@ -33,16 +33,16 @@
   },
   "system" : {
     "metrics_rate_sec" : 10,
-    "min_loglevel" : 200,
+    "min_loglevel" : 100,
     "operation" : {
-      "last_start" : "2024-12-03T15:57:26Z"
+      "last_start" : "2024-12-11T05:43:03Z"
     },
     "testing" : {
-      "config_base" : 27,
+      "config_base" : 24,
       "sequence_name" : "enumerate_features",
-      "transaction_id" : "RC:0c930c.00000026"
+      "transaction_id" : "RC:901017.0000001f"
     }
   },
-  "timestamp" : "2024-12-03T15:58:51Z",
-  "version" : "git-3d8bbe5"
+  "timestamp" : "2024-12-11T05:44:06Z",
+  "version" : "git-85bdd38"
 }

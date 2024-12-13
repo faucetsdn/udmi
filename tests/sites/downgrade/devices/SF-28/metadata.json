@@ -15,6 +15,9 @@
     "families": {
       "bacnet": {
         "id": "1010060"
+      },
+      "vendor": {
+        "id": "monkey"
       }
     }
   },
@@ -23,7 +26,7 @@
   },
   "pointset": {
     "points": {
-      "zone_air_temperature_sensor": {
+     "zone_air_temperature_sensor": {
         "ref": "AI101001.Present_Value",
         "units": "degrees-celcius"
       },   

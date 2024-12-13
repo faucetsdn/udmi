@@ -304,11 +304,10 @@ public class MessageUpgrader {
     final String targetFamily;
     if (gateway.has("family")) {
       targetFamily = gateway.remove("family").asText();
-    } else if (localnetFamilies.has("bacnet")) {
-      // Prioritise "bacnet" over any other value
-      targetFamily = "bacnet";
     } else if (localnetFamilies.has("vendor")) {
       targetFamily = "vendor";
+    } else if (localnetFamilies.has("bacnet")) {
+      targetFamily = "bacnet";
     } else {
       targetFamily = null;
     }

@@ -252,9 +252,10 @@ public class IotReflectorClient implements MessagePublisher {
       map.put(SubFolder.UDMI.value(), udmiState);
 
       if (isInstallValid) {
-        debug("Sending UDMI reflector state: " + stringifyTerse(udmiState.setup));
+        debug(format("Sending UDMI reflector state to %s: %s", registryId,
+            stringifyTerse(udmiState.setup)));
       } else {
-        info("Sending UDMI reflector state: " + stringify(map));
+        info(format("Sending UDMI reflector state to %s: %s", registryId, stringify(map)));
       }
 
       publishStats.update();
@@ -546,6 +547,7 @@ public class IotReflectorClient implements MessagePublisher {
     try {
       // Some publishers are shared, while others are unique, so handle accordingly.
       if (pubCounts.get(publisher).getAndIncrement() > 0) {
+        setReflectorState();
         ifTrueThen(pubLatches.get(publisher).getCount() > 0,
             () -> System.err.println("Waiting for the other shoe to drop..."));
         pubLatches.get(publisher).await(CONFIG_TIMEOUT_SEC, TimeUnit.SECONDS);

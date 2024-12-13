@@ -361,7 +361,7 @@ public class Pubber extends PubberManager implements PubberUdmiPublisher {
         return;
       } catch (Exception e) {
         error("Error pulling swarm message", e);
-        safeSleep(WAIT_TIME_SEC);
+        safeSleep(INITIAL_THRESHOLD_SEC);
       }
     }
   }
