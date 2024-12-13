@@ -1,7 +1,7 @@
 {
   "timestamp": "2020-05-01T13:39:07Z",
   "version": "1.5.2",
-  "hash": "f65ecfd9",
+  "hash": "9ee6f853",
   "cloud": {
     "auth_type": "ES256"
   },
@@ -36,6 +36,7 @@
         "units": "Bars",
         "tags": [ ]
       }
-    }
+    },
+    "sample_rate_sec": 30
   }
 }

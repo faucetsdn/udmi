@@ -15,6 +15,7 @@
     }
   },
   "pointset": {
+    "sample_rate_sec": 30,
     "points": {
       "globulating_globar": {
         "units": "Bars"
