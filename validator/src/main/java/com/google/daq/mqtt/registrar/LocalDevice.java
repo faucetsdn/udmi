@@ -520,6 +520,9 @@ class LocalDevice {
   private String deviceConfigString() {
     try {
       Object fromValue = config.deviceConfigJson();
+
+      config.getSchemaViolations().forEach(e -> captureError(e.getClass().getName(), e));
+
       if (fromValue instanceof String stringValue) {
         return stringValue;
       }

@@ -1,4 +1,2 @@
 Exceptions for AHU-22
-  While converting device config
-    While converting point filter_differential_pressure_sensor
-      point ref FAXLE12.present_value does not match expression ([A-Z]{2,4})([0-9]+)\.([A-Za-z_]+)
+  point ref FAXLE12.present_value does not match expression ([A-Z]{2,4})([0-9]+)\.([A-Za-z_]+)

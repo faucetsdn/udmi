@@ -17,8 +17,12 @@ import static java.util.Optional.ofNullable;
 import com.google.common.collect.ImmutableList;
 import com.google.udmi.util.SiteModel;
 import java.io.File;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.function.Consumer;
+import java.util.function.Function;
+import java.util.function.Supplier;
 import org.jetbrains.annotations.NotNull;
 import udmi.lib.ProtocolFamily;
 import udmi.schema.Config;
@@ -48,6 +52,7 @@ public class ConfigManager {
   private final Metadata metadata;
   private final String deviceId;
   private final SiteModel siteModel;
+  private final List<Exception> schemaViolations;
 
   /**
    * Initiates ConfigManager for the given device at the given file location.
@@ -60,6 +65,7 @@ public class ConfigManager {
     this.metadata = metadata;
     this.deviceId = deviceId;
     this.siteModel = siteModel;
+    this.schemaViolations = new ArrayList<>();
   }
 
   public static ConfigManager configFrom(Metadata metadata) {
@@ -234,7 +240,7 @@ public class ConfigManager {
     ifNotNullThen(rawFamily, raw ->
         requireNonNull(catchToNull(() -> metadata.localnet.families.get(family).addr),
             format("metadata.localnet.families.[%s].addr not defined", family)));
-    NAMED_FAMILIES.get(family).refValidator(pointRef);
+    recordIfSchemaViolations(() -> NAMED_FAMILIES.get(family).refValidator(pointRef));
     return pointRef;
   }
 
@@ -308,6 +314,44 @@ public class ConfigManager {
     }
 
     return discoveryConfig;
+  }
+
+  public List<Exception> getSchemaViolations() {
+    return schemaViolations;
+  }
+
+  private void recordIfSchemaViolations(Runnable function) {
+    try {
+      function.run();
+    } catch (Exception e) {
+      schemaViolations.add(e);
+    }
+  }
+
+  private <T> void recordIfSchemaViolations(Consumer<T> consumer, T argument) {
+    try {
+      consumer.accept(argument);
+    } catch (Exception e) {
+      schemaViolations.add(e);
+    }
+  }
+
+  private <R> R recordIfSchemaViolations(Supplier<R> supplier) {
+    try {
+      return supplier.get();
+    } catch (Exception e) {
+      schemaViolations.add(e);
+      return null;
+    }
+  }
+
+  private <T, R> R recordIfSchemaViolations(Function<T, R> function, T argument) {
+    try {
+      return function.apply(argument);
+    } catch (Exception e) {
+      schemaViolations.add(e);
+      return null;
+    }
   }
 
 }
