@@ -7,7 +7,7 @@
     "operation": { }
   },
   "gateway": {
-    "proxy_ids": [ "SNS-4", "AHU-22" ]
+    "proxy_ids": [ "SNS-4", "AHU-22", "SNS-8" ]
   },
   "localnet": {
     "families": {
