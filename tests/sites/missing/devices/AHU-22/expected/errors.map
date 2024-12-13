@@ -1,4 +1,4 @@
 Exceptions for AHU-22
   protocol ref FAXLE12.present_value does not match expression bacnet://[1-9][0-9]*/([A-Z]{2,4}):([1-9][0-9]*)(#[_a-z]+)?
-  protocol ref AI2.differential does not match expression bacnet://[1-9][0-9]*/([A-Z]{2,4}):([1-9][0-9]*)(#[_a-z]+)?
   protocol ref MCN8.present_value does not match expression bacnet://[1-9][0-9]*/([A-Z]{2,4}):([1-9][0-9]*)(#[_a-z]+)?
+  protocol ref AI2.differential does not match expression bacnet://[1-9][0-9]*/([A-Z]{2,4}):([1-9][0-9]*)(#[_a-z]+)?
