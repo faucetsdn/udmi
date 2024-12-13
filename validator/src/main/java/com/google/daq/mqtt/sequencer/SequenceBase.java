@@ -370,7 +370,7 @@ public class SequenceBase {
     serialNo = ofNullable(exeConfig.serial_no)
         .orElseGet(() -> GeneralUtils.catchToNull(() -> deviceMetadata.system.serial_no));
 
-    File baseOutputDir = siteModel.getSubdirectory("out");
+    File baseOutputDir = siteModel.getSiteFile("out");
     deviceOutputDir = new File(baseOutputDir, "devices/" + getDeviceId());
     deviceOutputDir.mkdirs();
 
@@ -439,7 +439,7 @@ public class SequenceBase {
   }
 
   private static Metadata readDeviceMetadata() {
-    File moddataFile = siteModel.getSubdirectory(format(OUT_DEVICE_FORMAT, getDeviceId()));
+    File moddataFile = siteModel.getSiteFile(format(OUT_DEVICE_FORMAT, getDeviceId()));
     File metadataFile = siteModel.getDeviceFile(getDeviceId(), METADATA_JSON);
     System.err.println("Checking for modified metadata file " + moddataFile.getAbsolutePath());
     File useFile = moddataFile.exists() ? moddataFile : metadataFile;
@@ -476,7 +476,7 @@ public class SequenceBase {
   }
 
   static File getSequencerStateFile() {
-    return siteModel.getSubdirectory(format(SUMMARY_OUTPUT_FORMAT, getDeviceId()));
+    return siteModel.getSiteFile(format(SUMMARY_OUTPUT_FORMAT, getDeviceId()));
   }
 
   static void processComplete(Throwable e) {

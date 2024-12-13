@@ -11,7 +11,6 @@ import static com.google.udmi.util.Common.UDMI_TIMEVER_ENV;
 import static com.google.udmi.util.Common.UDMI_VERSION_ENV;
 import static com.google.udmi.util.Common.getNamespacePrefix;
 import static com.google.udmi.util.GeneralUtils.OBJECT_MAPPER_RAW;
-import static com.google.udmi.util.GeneralUtils.catchToNull;
 import static com.google.udmi.util.GeneralUtils.friendlyStackTrace;
 import static com.google.udmi.util.GeneralUtils.getFileBytes;
 import static com.google.udmi.util.GeneralUtils.ifNotNullGet;
@@ -23,7 +22,6 @@ import static com.google.udmi.util.JsonUtil.asMap;
 import static com.google.udmi.util.JsonUtil.convertTo;
 import static com.google.udmi.util.JsonUtil.convertToStrict;
 import static com.google.udmi.util.JsonUtil.loadFileRequired;
-import static com.google.udmi.util.JsonUtil.loadFileStrict;
 import static com.google.udmi.util.MessageUpgrader.METADATA_SCHEMA;
 import static java.lang.String.format;
 import static java.util.Objects.requireNonNull;
@@ -135,9 +133,7 @@ public class SiteModel {
         .orElse(siteConf.getParent());
     exeConfig.site_model = new File(sitePath).getAbsolutePath();
     loadVersionInfo(exeConfig);
-    siteDefaults = ofNullable(
-        asMap(loadFileStrict(Metadata.class, getSubdirectory(SITE_DEFAULTS_FILE))))
-        .orElseGet(HashMap::new);
+    siteDefaults = ofNullable(asMap(getSiteFile(SITE_DEFAULTS_FILE))).orElseGet(HashMap::new);
     if (overrides != null && overrides.project_id != null) {
       exeConfig.iot_provider = overrides.iot_provider;
       exeConfig.project_id = overrides.project_id;
@@ -351,7 +347,7 @@ public class SiteModel {
 
       ObjectNode rawMetadata = loadFileRequired(ObjectNode.class, deviceMetadataFile);
       Map<String, Object> mergedMetadata = GeneralUtils.deepCopy(siteDefaults);
-      GeneralUtils.mergeObject(mergedMetadata, JsonUtil.asMap(rawMetadata));
+      GeneralUtils.mergeObject(mergedMetadata, asMap(rawMetadata));
 
       ObjectNode metadataObject = OBJECT_MAPPER_RAW.valueToTree(mergedMetadata);
 
@@ -561,12 +557,12 @@ public class SiteModel {
     return exeConfig;
   }
 
-  public File getSubdirectory(String path) {
+  public File getSiteFile(String path) {
     return new File(sitePath, path);
   }
 
   public File getExtrasDir() {
-    return getSubdirectory(EXTRAS_DIR);
+    return getSiteFile(EXTRAS_DIR);
   }
 
   public boolean deviceExists(String deviceId) {
@@ -584,7 +580,7 @@ public class SiteModel {
   }
 
   public File getReflectorDir() {
-    return getSubdirectory(REFLECTOR_DIR);
+    return getSiteFile(REFLECTOR_DIR);
   }
 
   public String getDevicePassword(String deviceId) {

@@ -1,10 +1,10 @@
 {
-  "system": {
+  "?system": {
     "location": {
       "site": "ZZ-TRI-FECTA"
     }
   },
-  "pointset": {
+  "?pointset": {
     "sample_rate_sec": 30
   }
 }
