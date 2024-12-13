@@ -31,6 +31,7 @@ public class GeneralUtilsTest {
     Map<String, Object> original = new HashMap<>();
     original.put("A", "B");
     original.put("C", ImmutableMap.of("D", "E", "F", "G"));
+    original.put("D", ImmutableMap.of("D", "E", "F", "G"));
     return original;
   }
 
@@ -58,6 +59,25 @@ public class GeneralUtilsTest {
     assertEquals("target C.D", "Q", targetC.get("D"));
     assertEquals("target C.F", "G", targetC.get("F"));
     assertEquals("target C.H", "I", targetC.get("H"));
+  }
+
+  @Test
+  @SuppressWarnings("unchecked")
+  public void testMergeConditional() {
+    final Map<String, Object> target = deepCopy(getBaseMap());
+    final Map<String, Object> originalTarget = deepCopy(target);
+    final Map<String, Object> source = deepCopy(target);
+    target.put("?C", hashMapOf("X", "Y"));
+    target.put("?E", hashMapOf("X", "Y"));
+    mergeObject(target, source);
+    ((Map<String, Object>) originalTarget.get("C")).put("X", "Y");
+    assertEquals(target, originalTarget);
+  }
+
+  private Object hashMapOf(String x, String y) {
+    HashMap<Object, Object> hashMap = new HashMap<>();
+    hashMap.put(x, y);
+    return hashMap;
   }
 
   @Test
