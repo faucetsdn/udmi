@@ -1,6 +1,7 @@
 package daq.pubber;
 
 import static com.google.common.base.Preconditions.checkState;
+import static com.google.udmi.util.Common.TIMESTAMP_KEY;
 import static com.google.udmi.util.GeneralUtils.catchToNull;
 import static com.google.udmi.util.GeneralUtils.deepCopy;
 import static com.google.udmi.util.GeneralUtils.fromJsonString;
@@ -15,6 +16,7 @@ import static com.google.udmi.util.GeneralUtils.isTrue;
 import static com.google.udmi.util.GeneralUtils.stackTraceString;
 import static com.google.udmi.util.GeneralUtils.toJsonFile;
 import static com.google.udmi.util.GeneralUtils.toJsonString;
+import static com.google.udmi.util.JsonUtil.asMap;
 import static com.google.udmi.util.JsonUtil.isoConvert;
 import static com.google.udmi.util.JsonUtil.parseJson;
 import static com.google.udmi.util.JsonUtil.safeSleep;
@@ -121,6 +123,7 @@ public interface PubberUdmiPublisher extends UdmiPublisher {
   Duration SMOKE_CHECK_TIME = Duration.ofMinutes(5);
   String RAW_EVENT_TOPIC = "events";
   String SYSTEM_EVENT_TOPIC = "events/system";
+  String LAST_CONFIG_KEY = "last_config";
 
   State getDeviceState();
 
@@ -926,10 +929,18 @@ public interface PubberUdmiPublisher extends UdmiPublisher {
   }
 
   private Object mungeMessage(Object message) {
-    if (message instanceof State && isTrue(getOptions().badTimestamp)) {
-      return null;
+    if (message instanceof State state && isTrue(getOptions().badTimestamp)) {
+      Map<String, Object> stateMap = asMap(state);
+      @SuppressWarnings("unchecked")
+      Map<String, Object> systemMap = (Map<String, Object>) stateMap.get("system");
+      systemMap.put(LAST_CONFIG_KEY, mungeTimestamp(systemMap.remove(LAST_CONFIG_KEY)));
+      return stateMap;
     }
     return message;
+  }
+
+  private static String mungeTimestamp(Object timestamp) {
+    return ((String) timestamp).replace("Z", ".0000000Z");
   }
 
   private Object downgradeMessage(Object message) {
