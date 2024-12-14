@@ -281,7 +281,7 @@ public class SequenceBase {
   private static MessageBundle stashedBundle;
   private static boolean enableAllTargets = true;
   private static boolean useAlternateClient;
-  private static boolean shouldGateConfigUpdate;
+  private static boolean skipConfigSync;
 
   static {
     // Sanity check to make sure ALPHA version is increased if forced by increased BETA.
@@ -355,7 +355,7 @@ public class SequenceBase {
       checkNotNull(exeConfig.udmi_version, "udmi_version not defined");
       logLevel = Level.valueOf(checkNotNull(exeConfig.log_level, "log_level not defined"))
           .value();
-      shouldGateConfigUpdate = traceLogLevel();
+      skipConfigSync = traceLogLevel();
       key_file = checkNotNull(exeConfig.key_file, "key_file not defined");
     } catch (Exception e) {
       e.printStackTrace();
@@ -1287,7 +1287,8 @@ public class SequenceBase {
       updateConfig(reason, waitForState, UPDATE, deviceConfig);
     }
 
-    ifNotTrueThen(shouldGateConfigUpdate, () -> waitForUpdateConfigSync(reason, waitForState));
+    ifTrueThen(configIsPending() && !skipConfigSync,
+        () -> waitForUpdateConfigSync(reason, waitForState));
 
     assertConfigIsNotPending();
 
@@ -1304,7 +1305,7 @@ public class SequenceBase {
       trace(format("updated check %s_%s: %s", CONFIG_SUBTYPE, subBlock, updated));
       if (updated) {
         String topic = subBlock + "/config";
-        ifTrueThen(shouldGateConfigUpdate, this::rateLimitConfig);
+        ifTrueThen(skipConfigSync, this::rateLimitConfig);
         final String transactionId =
             requireNonNull(reflector().publish(getDeviceId(), topic, actualizedData),
                 "no transactionId returned for publish");
@@ -1313,7 +1314,7 @@ public class SequenceBase {
         recordRawMessage(data, LOCAL_PREFIX + subBlock.value());
         sentConfig.put(subBlock, actualizedData);
         configTransactions.add(transactionId);
-        ifTrueThen(shouldGateConfigUpdate, () -> waitForUpdateConfigSync(reason, waitForSync));
+        ifTrueThen(skipConfigSync, () -> waitForUpdateConfigSync(reason, waitForSync));
       }
       return updated;
     } catch (Exception e) {

@@ -30,7 +30,7 @@ namespace=${namespace%%+*}
 echo Using project $project_id namespace $namespace, suffix ${suffix}
 
 [[ ! -n $namespace ]] || namespace=${namespace}~
-subscription=${namespace}udmi_target+${suffix}
+subscription=${namespace}udmi_reflect+${suffix}
 echo Pulling from subscription $subscription
 
 pull_limit=100
