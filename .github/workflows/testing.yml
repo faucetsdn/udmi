@@ -16,7 +16,7 @@ concurrency:
 jobs:
   unit:
     name: Unit Tests
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 10
     steps:
       - uses: actions/setup-java@v4
@@ -56,7 +56,7 @@ jobs:
 
   spelling:
     name: Docs Spelling Checks
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 2
     steps:
       - uses: actions/checkout@v4
@@ -68,7 +68,7 @@ jobs:
 
   automapping:
     name: Automapping capability
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 10
     if: ${{ vars.TARGET_PROJECT != '' && !cancelled() }}
     env:
@@ -117,7 +117,7 @@ jobs:
 
   baseline:
     name: Baseline Tests
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 15
     needs: automapping
     if: vars.TARGET_PROJECT != ''
@@ -166,7 +166,7 @@ jobs:
 
   sequencer:
     name: Sequencer Tests
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 20
     strategy:
       fail-fast: false
@@ -229,7 +229,7 @@ jobs:
 
   runlocal:
     name: UDMIS Local Setup
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 20
     steps:
       - uses: actions/checkout@v4
@@ -277,7 +277,7 @@ jobs:
 
   endpoint:
     name: Endpoint Redirection
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 15
     env:
       UDMI_ALT_REGISTRY: ZZ-REDIRECT-NA
@@ -314,7 +314,7 @@ jobs:
 
   posttest:
     name: Post-test Summarization
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 5
     needs: [ baseline, sequencer, endpoint, runlocal ]
     if: ${{ !cancelled() && vars.TARGET_PROJECT != '' }}
@@ -355,7 +355,7 @@ jobs:
 
   discovery:
     name: Discovery Tests
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 15
     steps:
       - uses: actions/checkout@v4
