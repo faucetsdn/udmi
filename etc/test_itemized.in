@@ -6,6 +6,7 @@ TEST too_much_state spamState
 TEST enumerate_features featureEnableSwap
 TEST valid_serial_no noLastStart
 TEST valid_serial_no noFolder
+TEST valid_serial_no badTimestamp
 TEST writeback_success extraPoint=filter_differential_pressure_setpoint
 TEST writeback_success noWriteback
 TEST writeback_success noPointState

@@ -910,8 +910,8 @@ public interface PubberUdmiPublisher extends UdmiPublisher {
 
     String useId = ofNullable(targetId).orElseGet(this::getDeviceId);
     augmentDeviceMessage(message, getNow(), isTrue(getOptions().badVersion));
-    Object downgraded = downgradeMessage(message);
-    getDeviceTarget().publish(useId, topicSuffix, downgraded, callback);
+    Object munged = mungeMessage(downgradeMessage(message));
+    getDeviceTarget().publish(useId, topicSuffix, munged, callback);
     String messageBase = topicSuffix.replace("/", "_");
     String gatewayId = getGatewayId(useId, getConfig());
     String suffix = ifNotNullGet(gatewayId, x -> "_" + useId, "");
@@ -919,10 +919,17 @@ public interface PubberUdmiPublisher extends UdmiPublisher {
         traceTimestamp(messageBase + suffix)));
 
     try {
-      toJsonFile(messageOut, downgraded);
+      toJsonFile(messageOut, munged);
     } catch (Exception e) {
       throw new RuntimeException("While writing " + messageOut.getAbsolutePath(), e);
     }
+  }
+
+  private Object mungeMessage(Object message) {
+    if (message instanceof State && isTrue(getOptions().badTimestamp)) {
+      return null;
+    }
+    return message;
   }
 
   private Object downgradeMessage(Object message) {
