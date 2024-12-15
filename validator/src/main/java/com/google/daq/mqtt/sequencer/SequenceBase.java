@@ -1298,16 +1298,6 @@ public class SequenceBase {
     captureConfigChange(reason);
   }
 
-  /**
-   * Ensure the update is noticeably after the last state update, for synchronization tracking.
-   */
-  private void ensureStateConfigHoldoff() {
-    configStateStart = ofNullable(catchToNull(() -> deviceState.timestamp)).orElse(new Date(0));
-    Instant syncDelayTarget = configStateStart.toInstant().plus(STATE_CONFIG_HOLDOFF);
-    long betweenMs = between(getNowInstant(), syncDelayTarget).toMillis();
-    ifTrueThen(betweenMs > 0, () -> safeSleep(betweenMs));
-  }
-
   private boolean updateConfig(String reason, boolean waitForSync, SubFolder subBlock,
       Object data) {
     try {
@@ -1333,6 +1323,16 @@ public class SequenceBase {
     } catch (Exception e) {
       throw new RuntimeException("While updating config block " + subBlock, e);
     }
+  }
+
+  /**
+   * Ensure the update is noticeably after the last state update, for synchronization tracking.
+   */
+  private void ensureStateConfigHoldoff() {
+    configStateStart = ofNullable(catchToNull(() -> deviceState.timestamp)).orElse(new Date(0));
+    Instant syncDelayTarget = configStateStart.toInstant().plus(STATE_CONFIG_HOLDOFF);
+    long betweenMs = between(getNowInstant(), syncDelayTarget).toMillis();
+    ifTrueThen(betweenMs > 0, () -> safeSleep(betweenMs));
   }
 
   private void waitForUpdateConfigSync(String reason, boolean waitForSync) {
