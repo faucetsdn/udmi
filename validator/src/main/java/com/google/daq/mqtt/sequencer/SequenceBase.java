@@ -262,6 +262,7 @@ public class SequenceBase {
   private static final String NOT_MARKER = " n0t ";
   private static final String NOT_REPLACEMENT = " not ";
   private static final String NOT_MISSING = " ";
+  private static final Duration STATE_CONFIG_HOLDOFF = Duration.ofMillis(0);
   protected static Metadata deviceMetadata;
   protected static String projectId;
   protected static String cloudRegion;
@@ -1272,6 +1273,8 @@ public class SequenceBase {
   private void updateConfig(String reason, boolean force, boolean waitForState) {
     assertConfigIsNotPending();
 
+    ensureStateConfigHoldoff();
+
     if (doPartialUpdates && !force) {
       updateConfig(reason, waitForState, SubFolder.SYSTEM, augmentConfig(deviceConfig.system));
       updateConfig(reason, waitForState, SubFolder.POINTSET, deviceConfig.pointset);
@@ -1293,6 +1296,16 @@ public class SequenceBase {
     assertConfigIsNotPending();
 
     captureConfigChange(reason);
+  }
+
+  /**
+   * Ensure the update is noticeably after the last state update, for synchronization tracking.
+   */
+  private void ensureStateConfigHoldoff() {
+    configStateStart = ofNullable(catchToNull(() -> deviceState.timestamp)).orElse(new Date(0));
+    Instant syncDelayTarget = configStateStart.toInstant().plus(STATE_CONFIG_HOLDOFF);
+    long betweenMs = between(getNowInstant(), syncDelayTarget).toMillis();
+    ifTrueThen(betweenMs > 0, () -> safeSleep(betweenMs));
   }
 
   private boolean updateConfig(String reason, boolean waitForSync, SubFolder subBlock,
@@ -1326,8 +1339,7 @@ public class SequenceBase {
     if (!waitForSync) {
       waitForConfigIsNotPending();
     } else if (configIsPending()) {
-      configStateStart = catchToNull(() -> deviceState.timestamp);
-      debug(format("Saving pre-config state timestamp " + isoConvert(configStateStart)));
+      debug(format("Using pre-config state timestamp " + isoConvert(configStateStart)));
       lastConfigUpdate = CleanDateFormat.clean(Instant.now());
       String debugReason = reason == null ? "" : (", because " + reason);
       debug(format("Update lastConfigUpdate %s%s", lastConfigUpdate, debugReason));
