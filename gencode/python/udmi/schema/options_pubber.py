@@ -31,7 +31,6 @@ class PubberOptions:
     self.noStatus = None
     self.noFolder = None
     self.badLevel = None
-    self.badTimestamp = None
     self.spamState = None
     self.tweakState = None
     self.badState = None
@@ -75,7 +74,6 @@ class PubberOptions:
     result.noStatus = source.get('noStatus')
     result.noFolder = source.get('noFolder')
     result.badLevel = source.get('badLevel')
-    result.badTimestamp = source.get('badTimestamp')
     result.spamState = source.get('spamState')
     result.tweakState = source.get('tweakState')
     result.badState = source.get('badState')
@@ -159,8 +157,6 @@ class PubberOptions:
       result['noFolder'] = self.noFolder # 5
     if self.badLevel:
       result['badLevel'] = self.badLevel # 5
-    if self.badTimestamp:
-      result['badTimestamp'] = self.badTimestamp # 5
     if self.spamState:
       result['spamState'] = self.spamState # 5
     if self.tweakState:

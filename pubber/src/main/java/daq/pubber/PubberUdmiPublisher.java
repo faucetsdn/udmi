@@ -1,7 +1,6 @@
 package daq.pubber;
 
 import static com.google.common.base.Preconditions.checkState;
-import static com.google.udmi.util.Common.TIMESTAMP_KEY;
 import static com.google.udmi.util.GeneralUtils.catchToNull;
 import static com.google.udmi.util.GeneralUtils.deepCopy;
 import static com.google.udmi.util.GeneralUtils.fromJsonString;
@@ -16,7 +15,6 @@ import static com.google.udmi.util.GeneralUtils.isTrue;
 import static com.google.udmi.util.GeneralUtils.stackTraceString;
 import static com.google.udmi.util.GeneralUtils.toJsonFile;
 import static com.google.udmi.util.GeneralUtils.toJsonString;
-import static com.google.udmi.util.JsonUtil.asMap;
 import static com.google.udmi.util.JsonUtil.isoConvert;
 import static com.google.udmi.util.JsonUtil.parseJson;
 import static com.google.udmi.util.JsonUtil.safeSleep;
@@ -123,7 +121,6 @@ public interface PubberUdmiPublisher extends UdmiPublisher {
   Duration SMOKE_CHECK_TIME = Duration.ofMinutes(5);
   String RAW_EVENT_TOPIC = "events";
   String SYSTEM_EVENT_TOPIC = "events/system";
-  String LAST_CONFIG_KEY = "last_config";
 
   State getDeviceState();
 
@@ -913,8 +910,8 @@ public interface PubberUdmiPublisher extends UdmiPublisher {
 
     String useId = ofNullable(targetId).orElseGet(this::getDeviceId);
     augmentDeviceMessage(message, getNow(), isTrue(getOptions().badVersion));
-    Object munged = mungeMessage(downgradeMessage(message));
-    getDeviceTarget().publish(useId, topicSuffix, munged, callback);
+    Object downgraded = downgradeMessage(message);
+    getDeviceTarget().publish(useId, topicSuffix, downgraded, callback);
     String messageBase = topicSuffix.replace("/", "_");
     String gatewayId = getGatewayId(useId, getConfig());
     String suffix = ifNotNullGet(gatewayId, x -> "_" + useId, "");
@@ -922,25 +919,10 @@ public interface PubberUdmiPublisher extends UdmiPublisher {
         traceTimestamp(messageBase + suffix)));
 
     try {
-      toJsonFile(messageOut, munged);
+      toJsonFile(messageOut, downgraded);
     } catch (Exception e) {
       throw new RuntimeException("While writing " + messageOut.getAbsolutePath(), e);
     }
-  }
-
-  private Object mungeMessage(Object message) {
-    if (message instanceof State state && isTrue(getOptions().badTimestamp)) {
-      Map<String, Object> stateMap = asMap(state);
-      @SuppressWarnings("unchecked")
-      Map<String, Object> systemMap = (Map<String, Object>) stateMap.get("system");
-      systemMap.put(LAST_CONFIG_KEY, mungeTimestamp(systemMap.remove(LAST_CONFIG_KEY)));
-      return stateMap;
-    }
-    return message;
-  }
-
-  private static String mungeTimestamp(Object timestamp) {
-    return ((String) timestamp).replace("Z", ".0000000Z");
   }
 
   private Object downgradeMessage(Object message) {

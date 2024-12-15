@@ -82,9 +82,6 @@
     "badLevel": {
       "type": "boolean"
     },
-    "badTimestamp": {
-      "type": "boolean"
-    },
     "spamState": {
       "type": "boolean"
     },
