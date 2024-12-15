@@ -262,7 +262,7 @@ public class SequenceBase {
   private static final String NOT_MARKER = " n0t ";
   private static final String NOT_REPLACEMENT = " not ";
   private static final String NOT_MISSING = " ";
-  private static final Duration STATE_CONFIG_HOLDOFF = Duration.ofMillis(0);
+  private static final Duration STATE_CONFIG_HOLDOFF = Duration.ofMillis(1000);
   protected static Metadata deviceMetadata;
   protected static String projectId;
   protected static String cloudRegion;
