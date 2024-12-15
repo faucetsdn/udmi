@@ -2136,8 +2136,8 @@ public class SequenceBase {
 
     if (debugOut) {
       if (!failures.isEmpty()) {
-        notice(format("previous state %s updated at %s", isoConvert(configStateStart),
-            isoConvert(current)));
+        notice(format("previous state updated %s: %s at %s", stateUpdated,
+            isoConvert(configStateStart), isoConvert(current)));
         notice(format("last_start synchronized %s: state/%s =? config/%s", lastStartSynced,
             isoConvert(stateLastStart), isoConvert(configLastStart)));
         notice(format("configTransactions flushed %s: %s", transactionsClean,
