@@ -7,7 +7,6 @@ import static com.google.daq.mqtt.util.TimePeriodConstants.TWO_MINUTES_MS;
 import static com.google.udmi.util.CleanDateFormat.dateEquals;
 import static com.google.udmi.util.GeneralUtils.ifTrueGet;
 import static com.google.udmi.util.JsonUtil.isoConvert;
-import static com.google.udmi.util.JsonUtil.safeSleep;
 import static java.lang.String.format;
 import static udmi.schema.Bucket.SYSTEM;
 import static udmi.schema.Category.SYSTEM_CONFIG_APPLY;
@@ -17,7 +16,6 @@ import static udmi.schema.Category.SYSTEM_CONFIG_PARSE_LEVEL;
 import static udmi.schema.Category.SYSTEM_CONFIG_RECEIVE;
 import static udmi.schema.Category.SYSTEM_CONFIG_RECEIVE_LEVEL;
 import static udmi.schema.FeatureDiscovery.FeatureStage.ALPHA;
-import static udmi.schema.FeatureDiscovery.FeatureStage.PREVIEW;
 import static udmi.schema.FeatureDiscovery.FeatureStage.STABLE;
 
 import com.google.daq.mqtt.sequencer.Capability;
@@ -51,7 +49,7 @@ public class ConfigSequences extends SequenceBase {
   @Feature(stage = STABLE, bucket = SYSTEM)
   @Summary("Check that last_update state is correctly set in response to a config update.")
   @ValidateSchema(SubFolder.SYSTEM)
-  @WithCapability(value = Subblocks.class, stage = PREVIEW)
+  @WithCapability(value = Subblocks.class, stage = ALPHA)
   public void system_last_update() {
     waitUntil("state last_config matches config timestamp", this::lastConfigUpdated);
     waitForCapability(Subblocks.class, "state update complete", this::stateMatchesConfig);
@@ -73,7 +71,7 @@ public class ConfigSequences extends SequenceBase {
   }
 
   @Test(timeout = TWO_MINUTES_MS)
-  @Feature(stage = PREVIEW, bucket = SYSTEM, nostate = true)
+  @Feature(stage = ALPHA, bucket = SYSTEM, nostate = true)
   @Summary("Check that the min log-level config is honored by the device.")
   @ValidateSchema(SubFolder.SYSTEM)
   public void system_min_loglevel() {
