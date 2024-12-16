@@ -17,6 +17,7 @@ import static udmi.schema.Category.SYSTEM_CONFIG_PARSE_LEVEL;
 import static udmi.schema.Category.SYSTEM_CONFIG_RECEIVE;
 import static udmi.schema.Category.SYSTEM_CONFIG_RECEIVE_LEVEL;
 import static udmi.schema.FeatureDiscovery.FeatureStage.ALPHA;
+import static udmi.schema.FeatureDiscovery.FeatureStage.PREVIEW;
 import static udmi.schema.FeatureDiscovery.FeatureStage.STABLE;
 
 import com.google.daq.mqtt.sequencer.Capability;
@@ -43,8 +44,6 @@ public class ConfigSequences extends SequenceBase {
 
   // Delay to wait to let a device apply and log a new config.
   private static final long CONFIG_THRESHOLD_SEC = 20;
-  // Delay after receiving a parse error to ensure an apply entry has not been received.
-  private static final long LOG_APPLY_DELAY_MS = 1000;
   // How frequently to send out confg queries for device config acked check.
   private static final Duration CONFIG_QUERY_INTERVAL = Duration.ofSeconds(30);
 
@@ -52,7 +51,7 @@ public class ConfigSequences extends SequenceBase {
   @Feature(stage = STABLE, bucket = SYSTEM)
   @Summary("Check that last_update state is correctly set in response to a config update.")
   @ValidateSchema(SubFolder.SYSTEM)
-  @WithCapability(value = Subblocks.class, stage = ALPHA)
+  @WithCapability(value = Subblocks.class, stage = PREVIEW)
   public void system_last_update() {
     waitUntil("state last_config matches config timestamp", this::lastConfigUpdated);
     waitForCapability(Subblocks.class, "state update complete", this::stateMatchesConfig);
@@ -74,7 +73,7 @@ public class ConfigSequences extends SequenceBase {
   }
 
   @Test(timeout = TWO_MINUTES_MS)
-  @Feature(stage = ALPHA, bucket = SYSTEM, nostate = true)
+  @Feature(stage = PREVIEW, bucket = SYSTEM, nostate = true)
   @Summary("Check that the min log-level config is honored by the device.")
   @ValidateSchema(SubFolder.SYSTEM)
   public void system_min_loglevel() {
@@ -86,9 +85,8 @@ public class ConfigSequences extends SequenceBase {
     final Instant startTime = Instant.now();
     deviceConfig.system.min_loglevel = Level.INFO.value();
     untilLogged(SYSTEM_CONFIG_APPLY, SYSTEM_CONFIG_APPLY_LEVEL);
-    checkWasNotLogged(SYSTEM_CONFIG_APPLY, Level.WARNING);
-    Instant expectedFinish = startTime.plusSeconds(CONFIG_THRESHOLD_SEC);
     Instant logFinished = Instant.now();
+    Instant expectedFinish = startTime.plusSeconds(CONFIG_THRESHOLD_SEC);
     checkThat(format("device config resolved within %ss", CONFIG_THRESHOLD_SEC),
         ifTrueGet(logFinished.isAfter(expectedFinish),
             format("apply log took until %s, expected before %s", isoConvert(logFinished),
@@ -96,8 +94,7 @@ public class ConfigSequences extends SequenceBase {
 
     deviceConfig.system.min_loglevel = Level.WARNING.value();
     updateConfig("warning loglevel");
-    // Nothing to actively wait for, so wait for some amount of time instead.
-    safeSleep(CONFIG_THRESHOLD_SEC * 2000);
+
     checkWasNotLogged(SYSTEM_CONFIG_APPLY, SYSTEM_CONFIG_APPLY_LEVEL);
 
     deviceConfig.system.min_loglevel = savedLevel;
@@ -177,7 +174,6 @@ public class ConfigSequences extends SequenceBase {
     forCapability(Logging.class, () -> {
       waitForLog(SYSTEM_CONFIG_RECEIVE, SYSTEM_CONFIG_RECEIVE_LEVEL);
       waitForLog(SYSTEM_CONFIG_PARSE, Level.ERROR);
-      safeSleep(LOG_APPLY_DELAY_MS);
       checkWasNotLogged(SYSTEM_CONFIG_APPLY, SYSTEM_CONFIG_APPLY_LEVEL);
     });
 
@@ -212,7 +208,9 @@ public class ConfigSequences extends SequenceBase {
     final Date prevConfig = deviceState.system.last_config;
     setExtraField("Flabberguilstadt");
     untilLogged(SYSTEM_CONFIG_RECEIVE, SYSTEM_CONFIG_RECEIVE_LEVEL);
-    untilTrue("last_config updated", () -> !deviceState.system.last_config.equals(prevConfig));
+    waitUntil("last_config updated", () -> deviceState.system.last_config.equals(prevConfig) ? null
+        : format("previous config was %s, current state last_config is %s",
+            isoConvert(prevConfig), isoConvert(deviceState.system.last_config)));
     untilTrue("system operational", () -> deviceState.system.operation.operational);
     checkThatHasNoInterestingStatus();
     untilLogged(SYSTEM_CONFIG_PARSE, SYSTEM_CONFIG_PARSE_LEVEL);

@@ -10,6 +10,7 @@
 1 RESULT fail writeback writeback_success ALPHA 0/10 Failed waiting until target point to have value_state applied
 1 RESULT fail writeback writeback_success ALPHA 0/10 Failed waiting until target point to have value_state applied
 1 RESULT fail pointset pointset_publish_interval STABLE 0/10 Failed check that time period between successive pointset events is between 5 and 8 seconds
+1 RESULT fail system system_min_loglevel PREVIEW 0/10 Failed check that log level `NOTICE` (or greater) category `system.config.apply` was not logged
 1 RESULT fail system.mode system_mode_restart ALPHA 0/10 Failed check that restart count increased by one
 1 RESULT fail system config_logging STABLE 0/10 Failed waiting until config update synchronized
 1 CPBLTY fail system broken_config.logging ALPHA 0/1 Failed waiting until (logging) system logs level `DEBUG` category `system.config.receive`
@@ -43,8 +44,8 @@
 4 RESULT skip system valid_serial_no STABLE 0/0 State testing disabled
 1 CPBLTY skip system system_last_update.subblocks ALPHA 0/0 Never executed
 0 RESULT skip system system_last_update STABLE 0/0 State testing disabled
-1 RESULT pass system system_min_loglevel ALPHA 10/10 Sequence complete
-1 RESULT pass system system_min_loglevel ALPHA 10/10 Sequence complete
+1 RESULT pass system system_min_loglevel PREVIEW 10/10 Sequence complete
+1 RESULT pass system system_min_loglevel PREVIEW 10/10 Sequence complete
 4 RESULT pass gateway gateway_proxy_events BETA 10/10 Sequence complete
 1 RESULT fail gateway gateway_proxy_events BETA 0/10 Failed waiting until All proxy devices received pointset
 1 RESULT pass gateway gateway_proxy_state PREVIEW 10/10 Sequence complete
