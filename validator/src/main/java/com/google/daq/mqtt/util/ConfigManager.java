@@ -1,6 +1,9 @@
 package com.google.daq.mqtt.util;
 
 import static com.google.common.base.Preconditions.checkState;
+import static com.google.daq.mqtt.util.ContextWrapper.getCurrentContext;
+import static com.google.daq.mqtt.util.ContextWrapper.withContext;
+import static com.google.daq.mqtt.util.ContextWrapper.wrapExceptionWithContext;
 import static com.google.daq.mqtt.util.providers.FamilyProvider.NAMED_FAMILIES;
 import static com.google.udmi.util.GeneralUtils.catchToNull;
 import static com.google.udmi.util.GeneralUtils.deepCopy;
@@ -8,9 +11,6 @@ import static com.google.udmi.util.GeneralUtils.ifNotNullGet;
 import static com.google.udmi.util.GeneralUtils.ifNotNullThen;
 import static com.google.udmi.util.GeneralUtils.ifNotNullThrow;
 import static com.google.udmi.util.GeneralUtils.isTrue;
-import static com.google.daq.mqtt.util.ContextWrapper.withContext;
-import static com.google.daq.mqtt.util.ContextWrapper.getCurrentContext;
-import static com.google.daq.mqtt.util.ContextWrapper.wrapExceptionWithContext;
 import static com.google.udmi.util.JsonUtil.isoConvert;
 import static com.google.udmi.util.JsonUtil.loadFileString;
 import static java.lang.String.format;
@@ -210,18 +210,15 @@ public class ConfigManager {
 
   PointPointsetConfig configFromMetadata(String configKey, PointPointsetModel metadata,
       boolean excludeUnits) {
-    try {
+    return withContext("While converting point " + configKey, () -> {
       PointPointsetConfig pointConfig = new PointPointsetConfig();
       pointConfig.units = excludeUnits ? null : metadata.units;
-      pointConfig.ref = withContext("converting point " + configKey,
-          () -> pointConfigRef(metadata));
+      pointConfig.ref = pointConfigRef(metadata);
       if (Boolean.TRUE.equals(metadata.writable)) {
         pointConfig.set_value = metadata.baseline_value;
       }
       return pointConfig;
-    } catch (Exception e) {
-      throw new RuntimeException("While converting point " + configKey, e);
-    }
+    });
   }
 
   private String pointConfigRef(PointPointsetModel model) {
@@ -244,7 +241,7 @@ public class ConfigManager {
       NAMED_FAMILIES.get(family).validateRef(pointRef);
     } catch (Exception e) {
       schemaViolationsMap.put(family + " " + pointRef + ": " + getCurrentContext(),
-          wrapExceptionWithContext(e));
+          wrapExceptionWithContext(e, false));
     }
     return pointRef;
   }

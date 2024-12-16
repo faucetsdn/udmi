@@ -13,7 +13,7 @@ public class ContextWrapper {
     try {
       return supplier.get();
     } catch (Exception e) {
-      throw wrapExceptionWithContext(e);
+      throw wrapExceptionWithContext(e, true);
     } finally {
       contexts.get().remove(contexts.get().size() - 1);
     }
@@ -31,11 +31,19 @@ public class ContextWrapper {
     return String.join(" -> ", contextList);
   }
 
-  public static RuntimeException wrapExceptionWithContext(Exception e) {
-    RuntimeException wrappedException = new RuntimeException(e);
-    for (int i = contexts.get().size() - 1; i >= 0; i--) {
-      String context = contexts.get().get(i);
-      wrappedException = new RuntimeException("While " + context, wrappedException);
+  public static RuntimeException wrapExceptionWithContext(Exception e, boolean includeOnlyLatest) {
+    List<String> contextStrings = contexts.get();
+    if (contextStrings.size() == 0) {
+      return new RuntimeException(e);
+    }
+
+    RuntimeException wrappedException = new RuntimeException(
+        contextStrings.get(contextStrings.size() - 1), e);
+    if (!includeOnlyLatest) {
+      for (int i = contextStrings.size() - 2; i >= 0; i--) {
+        String context = contextStrings.get(i);
+        wrappedException = new RuntimeException(context, wrappedException);
+      }
     }
     return wrappedException;
   }
