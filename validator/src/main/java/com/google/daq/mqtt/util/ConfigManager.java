@@ -2,7 +2,7 @@ package com.google.daq.mqtt.util;
 
 import static com.google.common.base.Preconditions.checkState;
 import static com.google.daq.mqtt.util.ContextWrapper.getCurrentContext;
-import static com.google.daq.mqtt.util.ContextWrapper.withContext;
+import static com.google.daq.mqtt.util.ContextWrapper.runInContext;
 import static com.google.daq.mqtt.util.ContextWrapper.wrapExceptionWithContext;
 import static com.google.daq.mqtt.util.providers.FamilyProvider.NAMED_FAMILIES;
 import static com.google.udmi.util.GeneralUtils.catchToNull;
@@ -210,7 +210,7 @@ public class ConfigManager {
 
   PointPointsetConfig configFromMetadata(String configKey, PointPointsetModel metadata,
       boolean excludeUnits) {
-    return withContext("While converting point " + configKey, () -> {
+    return runInContext("While converting point " + configKey, () -> {
       PointPointsetConfig pointConfig = new PointPointsetConfig();
       pointConfig.units = excludeUnits ? null : metadata.units;
       pointConfig.ref = pointConfigRef(metadata);
@@ -240,7 +240,7 @@ public class ConfigManager {
     try {
       NAMED_FAMILIES.get(family).validateRef(pointRef);
     } catch (Exception e) {
-      schemaViolationsMap.put(family + " " + pointRef + ": " + getCurrentContext(),
+      schemaViolationsMap.put(String.format("%s %s: %s", family, pointRef, getCurrentContext()),
           wrapExceptionWithContext(e, false));
     }
     return pointRef;

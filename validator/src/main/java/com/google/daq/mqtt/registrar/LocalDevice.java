@@ -7,7 +7,7 @@ import static com.google.daq.mqtt.registrar.Registrar.ENVELOPE_SCHEMA_JSON;
 import static com.google.daq.mqtt.registrar.Registrar.METADATA_SCHEMA_JSON;
 import static com.google.daq.mqtt.util.ConfigManager.GENERATED_CONFIG_JSON;
 import static com.google.daq.mqtt.util.ConfigManager.configFrom;
-import static com.google.daq.mqtt.util.ContextWrapper.withContext;
+import static com.google.daq.mqtt.util.ContextWrapper.runInContext;
 import static com.google.udmi.util.Common.DEVICE_ID_ALLOWABLE;
 import static com.google.udmi.util.Common.POINT_NAME_ALLOWABLE;
 import static com.google.udmi.util.GeneralUtils.CSV_JOINER;
@@ -519,7 +519,7 @@ class LocalDevice {
   }
 
   private String deviceConfigString() {
-    return withContext("While converting device config", () -> {
+    return runInContext("While converting device config", () -> {
       Object fromValue = config.deviceConfigJson();
 
       config.getSchemaViolationsMap().forEach(this::captureError);

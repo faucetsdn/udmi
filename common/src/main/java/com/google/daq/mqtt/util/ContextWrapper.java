@@ -8,7 +8,7 @@ public class ContextWrapper {
 
   private static final ThreadLocal<List<String>> contexts = ThreadLocal.withInitial(ArrayList::new);
 
-  public static <T> T withContext(String context, Supplier<T> supplier) {
+  public static <T> T runInContext(String context, Supplier<T> supplier) {
     contexts.get().add(context);
     try {
       return supplier.get();
@@ -19,8 +19,8 @@ public class ContextWrapper {
     }
   }
 
-  public static void withContext(String context, Runnable action) {
-    withContext(context, () -> {
+  public static void runInContext(String context, Runnable action) {
+    runInContext(context, () -> {
       action.run();
       return null;
     });
