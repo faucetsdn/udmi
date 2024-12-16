@@ -23,7 +23,6 @@ import static com.google.udmi.util.JsonUtil.unquoteJson;
 import static com.google.udmi.util.SiteModel.METADATA_JSON;
 import static com.google.udmi.util.SiteModel.NORMALIZED_JSON;
 import static java.lang.String.format;
-import static java.util.Optional.ofNullable;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.github.fge.jsonschema.core.exceptions.ProcessingException;
@@ -82,6 +81,8 @@ import udmi.schema.Envelope.SubFolder;
 import udmi.schema.Envelope.SubType;
 import udmi.schema.Metadata;
 import udmi.schema.PointPointsetModel;
+
+import static com.google.daq.mqtt.util.ContextWrapper.withContext;
 
 class LocalDevice {
 
@@ -519,11 +520,9 @@ class LocalDevice {
 
   private String deviceConfigString() {
     try {
-      Object fromValue = config.deviceConfigJson();
+      Object fromValue = withContext("converting device config", () -> config.deviceConfigJson());
 
-      config.getSchemaViolations().forEach(
-          e -> captureError(String.format("%s: %s", e.getClass().getSimpleName(), e.getMessage()),
-              e));
+      config.getSchemaViolationsMap().forEach(this::captureError);
 
       if (fromValue instanceof String stringValue) {
         return stringValue;

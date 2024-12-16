@@ -8,6 +8,9 @@ import static com.google.udmi.util.GeneralUtils.ifNotNullGet;
 import static com.google.udmi.util.GeneralUtils.ifNotNullThen;
 import static com.google.udmi.util.GeneralUtils.ifNotNullThrow;
 import static com.google.udmi.util.GeneralUtils.isTrue;
+import static com.google.daq.mqtt.util.ContextWrapper.withContext;
+import static com.google.daq.mqtt.util.ContextWrapper.getCurrentContext;
+import static com.google.daq.mqtt.util.ContextWrapper.wrapExceptionWithContext;
 import static com.google.udmi.util.JsonUtil.isoConvert;
 import static com.google.udmi.util.JsonUtil.loadFileString;
 import static java.lang.String.format;
@@ -17,12 +20,9 @@ import static java.util.Optional.ofNullable;
 import com.google.common.collect.ImmutableList;
 import com.google.udmi.util.SiteModel;
 import java.io.File;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
-import java.util.function.Consumer;
-import java.util.function.Function;
-import java.util.function.Supplier;
+import java.util.Map;
 import org.jetbrains.annotations.NotNull;
 import udmi.lib.ProtocolFamily;
 import udmi.schema.Config;
@@ -52,7 +52,7 @@ public class ConfigManager {
   private final Metadata metadata;
   private final String deviceId;
   private final SiteModel siteModel;
-  private final List<Exception> schemaViolations;
+  private final Map<String, Exception> schemaViolationsMap = new HashMap<>();
 
   /**
    * Initiates ConfigManager for the given device at the given file location.
@@ -65,7 +65,6 @@ public class ConfigManager {
     this.metadata = metadata;
     this.deviceId = deviceId;
     this.siteModel = siteModel;
-    this.schemaViolations = new ArrayList<>();
   }
 
   public static ConfigManager configFrom(Metadata metadata) {
@@ -214,7 +213,8 @@ public class ConfigManager {
     try {
       PointPointsetConfig pointConfig = new PointPointsetConfig();
       pointConfig.units = excludeUnits ? null : metadata.units;
-      pointConfig.ref = pointConfigRef(metadata);
+      pointConfig.ref = withContext("converting point " + configKey,
+          () -> pointConfigRef(metadata));
       if (Boolean.TRUE.equals(metadata.writable)) {
         pointConfig.set_value = metadata.baseline_value;
       }
@@ -240,7 +240,12 @@ public class ConfigManager {
     ifNotNullThen(rawFamily, raw ->
         requireNonNull(catchToNull(() -> metadata.localnet.families.get(family).addr),
             format("metadata.localnet.families.[%s].addr not defined", family)));
-    recordIfSchemaViolations(() -> NAMED_FAMILIES.get(family).validateRef(pointRef));
+    try {
+      NAMED_FAMILIES.get(family).validateRef(pointRef);
+    } catch (Exception e) {
+      schemaViolationsMap.put(family + " " + pointRef + ": " + getCurrentContext(),
+          wrapExceptionWithContext(e));
+    }
     return pointRef;
   }
 
@@ -316,42 +321,8 @@ public class ConfigManager {
     return discoveryConfig;
   }
 
-  public List<Exception> getSchemaViolations() {
-    return schemaViolations;
-  }
-
-  private void recordIfSchemaViolations(Runnable function) {
-    try {
-      function.run();
-    } catch (Exception e) {
-      schemaViolations.add(e);
-    }
-  }
-
-  private <T> void recordIfSchemaViolations(Consumer<T> consumer, T argument) {
-    try {
-      consumer.accept(argument);
-    } catch (Exception e) {
-      schemaViolations.add(e);
-    }
-  }
-
-  private <R> R recordIfSchemaViolations(Supplier<R> supplier) {
-    try {
-      return supplier.get();
-    } catch (Exception e) {
-      schemaViolations.add(e);
-      return null;
-    }
-  }
-
-  private <T, R> R recordIfSchemaViolations(Function<T, R> function, T argument) {
-    try {
-      return function.apply(argument);
-    } catch (Exception e) {
-      schemaViolations.add(e);
-      return null;
-    }
+  public Map<String, Exception> getSchemaViolationsMap() {
+    return schemaViolationsMap;
   }
 
 }

@@ -1,4 +1,13 @@
 Exceptions for AHU-22
-  protocol ref FAXLE12.present_value does not match expression bacnet://[1-9][0-9]*/([A-Z]{2,4}):([1-9][0-9]*)(#[_a-z]+)?
-  protocol ref MCN8.present_value does not match expression bacnet://[1-9][0-9]*/([A-Z]{2,4}):([1-9][0-9]*)(#[_a-z]+)?
-  protocol ref AI2.differential does not match expression bacnet://[1-9][0-9]*/([A-Z]{2,4}):([1-9][0-9]*)(#[_a-z]+)?
+  While converting device config
+    While converting point filter_alarm_pressure_status
+      java.lang.RuntimeException: protocol ref MCN8.present_value does not match expression bacnet://[1-9][0-9]*/([A-Z]{2,4}):([1-9][0-9]*)(#[_a-z]+)?
+        protocol ref MCN8.present_value does not match expression bacnet://[1-9][0-9]*/([A-Z]{2,4}):([1-9][0-9]*)(#[_a-z]+)?
+  While converting device config
+    While converting point filter_differential_pressure_sensor
+      java.lang.RuntimeException: protocol ref FAXLE12.present_value does not match expression bacnet://[1-9][0-9]*/([A-Z]{2,4}):([1-9][0-9]*)(#[_a-z]+)?
+        protocol ref FAXLE12.present_value does not match expression bacnet://[1-9][0-9]*/([A-Z]{2,4}):([1-9][0-9]*)(#[_a-z]+)?
+  While converting device config
+    While converting point filter_differential_pressure
+      java.lang.RuntimeException: protocol ref AI2.differential does not match expression bacnet://[1-9][0-9]*/([A-Z]{2,4}):([1-9][0-9]*)(#[_a-z]+)?
+        protocol ref AI2.differential does not match expression bacnet://[1-9][0-9]*/([A-Z]{2,4}):([1-9][0-9]*)(#[_a-z]+)?
