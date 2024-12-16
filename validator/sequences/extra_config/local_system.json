@@ -2,9 +2,10 @@
   "min_loglevel" : 100,
   "metrics_rate_sec" : 10,
   "operation" : {
-    "last_start" : "2024-11-30T14:12:44Z"
+    "last_start" : "2024-12-16T23:13:35Z"
   },
   "testing" : {
     "sequence_name" : "extra_config"
-  }
+  },
+  "extra_field" : "Flabberguilstadt"
 }
