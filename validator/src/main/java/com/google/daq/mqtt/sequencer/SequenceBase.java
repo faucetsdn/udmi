@@ -2130,15 +2130,15 @@ public class SequenceBase {
     Date configLastStart = catchToNull(() -> deviceConfig.system.operation.last_start);
     boolean lastStartSynced = stateLastStart == null || stateLastStart.equals(configLastStart);
 
-    Date current = catchToNull(() -> deviceState.timestamp);
-    final boolean stateUpdated =
-        !deviceSupportsState() || !dateEquals(configStateStart, current) || pretendStateUpdated;
-
     Date stateLastConfig = catchToNull(() -> deviceState.system.last_config);
 
     Date lastConfig = catchToNull(() -> deviceConfig.timestamp);
     final boolean lastConfigSynced = stateLastConfig == null || stateLastConfig.equals(lastConfig);
     final boolean transactionsClean = configTransactions.isEmpty();
+
+    Date current = catchToNull(() -> deviceState.timestamp);
+    final boolean stateUpdated = !deviceSupportsState() || !dateEquals(configStateStart, current)
+        || pretendStateUpdated || lastConfigSynced;
 
     List<String> failures = new ArrayList<>();
     ifNotTrueThen(stateUpdated, () -> failures.add("device state not updated since config issued"));
