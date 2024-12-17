@@ -27,7 +27,7 @@ public class PubberLocalnetManager extends PubberManager implements LocalnetMana
       ProtocolFamily.IPV_4, PubberIpProvider.class,
       ProtocolFamily.IPV_6, PubberIpProvider.class,
       ProtocolFamily.ETHER, PubberIpProvider.class,
-      ProtocolFamily.BACNET, BacnetProvider.class);
+      ProtocolFamily.BACNET, PubberBacnetProvider.class);
 
   /**
    * Create a new container with the given host.
@@ -39,7 +39,7 @@ public class PubberLocalnetManager extends PubberManager implements LocalnetMana
 
     localnetProviders = new HashMap<>();
     LOCALNET_PROVIDERS.forEach((family, providerClass) -> {
-      if (host instanceof Pubber || providerClass != PubberIpProvider.class) {
+      if (host instanceof Pubber || providerClass == PubberVendorProvider.class) {
         localnetProviders.put(family, instantiateProvider(family));
       }
     });

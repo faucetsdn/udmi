@@ -145,7 +145,7 @@ public class CertManager {
   public SocketFactory getSocketFactory() {
     try {
       if (!isSsl) {
-        return SSLSocketFactory.getDefault();
+        return SocketFactory.getDefault();
       }
       return getCertSocketFactory();
     } catch (Exception e) {

@@ -219,14 +219,6 @@ public interface PubberUdmiPublisher extends UdmiPublisher {
     publishStateMessage(dupeState);
   }
 
-  private void sendDupeState() {
-    State dupeState = new State();
-    dupeState.system = getDeviceState().system;
-    dupeState.timestamp = getDeviceState().timestamp;
-    dupeState.version = getDeviceState().version;
-    publishStateMessage(dupeState);
-  }
-
   @Override
   default void publish(String targetId, Object message) {
     publishDeviceMessage(targetId, message);
@@ -409,7 +401,12 @@ public interface PubberUdmiPublisher extends UdmiPublisher {
     return buffer.toString();
   }
 
-  private void configHandler(Config config) {
+  /**
+   * Configures the handler with the given configuration.
+   *
+   * @param config The configuration to be applied.
+   */
+  default void configHandler(Config config) {
     try {
       configPreprocess(getDeviceId(), config);
       debug(format("Config update %s%s", getDeviceId(), getDeviceManager().getTestingTag()),
