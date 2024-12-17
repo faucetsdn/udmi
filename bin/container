@@ -118,7 +118,7 @@ fi
 if [[ -n $build ]]; then
     echo Building Dockerfile.$target
     echo docker build -f Dockerfile.$target -t $udmi_ref .
-    docker build -f Dockerfile.$target -t $udmi_ref .
+    docker build -f Dockerfile.$target -t $udmi_ref -t $target .
 
     echo Cleaning dangling images...
     images=$(docker images -f "dangling=true" -q)
