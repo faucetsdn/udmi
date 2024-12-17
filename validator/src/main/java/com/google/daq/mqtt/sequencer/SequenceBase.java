@@ -696,7 +696,7 @@ public class SequenceBase {
    */
   public void setExtraField(String extraField) {
     boolean extraFieldChanged = !Objects.equals(this.extraField, extraField);
-    debug("extraFieldChanged " + extraFieldChanged + " because extra_field " + extraField);
+    debug("Set extraFieldChanged " + extraFieldChanged + " because extra_field " + extraField);
     this.extraField = extraField;
   }
 
@@ -1115,7 +1115,7 @@ public class SequenceBase {
     boolean stateMessage = messageBase.startsWith(STATE_SUBTYPE);
     boolean syntheticMessage = (configMessage || stateMessage) && !updateMessage;
 
-    String prefix = localUpdate ? "local " : "received ";
+    String prefix = localUpdate ? "Outgoing " : "Received ";
     File messageFile = new File(testDir, format(MESSAGE_FILE_FORMAT, messageBase));
 
     if (message.containsKey(EXCEPTION_KEY)) {
@@ -1154,7 +1154,7 @@ public class SequenceBase {
     try {
       checkArgument(!messageBase.startsWith(LOCAL_PREFIX));
       SystemEvents event = convertTo(SystemEvents.class, message);
-      String prefix = "received " + messageBase + " ";
+      String prefix = "Received " + messageBase + " ";
       if (event.logentries == null || event.logentries.isEmpty()) {
         debug(prefix + "(no logs)");
       } else {
@@ -1291,6 +1291,9 @@ public class SequenceBase {
 
     assertConfigIsNotPending();
 
+    // Rate-limit from the point the config was _applied_, not when it was _sent_.
+    lastConfigMark = getNowInstant();
+
     captureConfigChange(reason);
   }
 
@@ -1301,14 +1304,14 @@ public class SequenceBase {
       String sentBlockConfig = String.valueOf(
           sentConfig.get(requireNonNull(subBlock, "subBlock not defined")));
       boolean updated = !actualizedData.equals(sentBlockConfig);
-      trace(format("updated check %s_%s: %s", CONFIG_SUBTYPE, subBlock, updated));
+      trace(format("Updated check %s_%s: %s", CONFIG_SUBTYPE, subBlock, updated));
       if (updated) {
         String topic = subBlock + "/config";
         ifTrueThen(shouldGateConfigUpdate, this::rateLimitConfig);
         final String transactionId =
             requireNonNull(reflector().publish(getDeviceId(), topic, actualizedData),
                 "no transactionId returned for publish");
-        debug(format("update %s_%s, adding configTransaction %s",
+        debug(format("Update %s_%s, adding configTransaction %s",
             CONFIG_SUBTYPE, subBlock, transactionId));
         recordRawMessage(data, LOCAL_PREFIX + subBlock.value());
         sentConfig.put(subBlock, actualizedData);
@@ -1341,7 +1344,6 @@ public class SequenceBase {
       debug(format("Rate-limiting config by %dms", delayMs));
       safeSleep(delayMs);
     });
-    lastConfigMark = getNowInstant();
   }
 
   protected void updateProxyConfig(String proxyId, Config proxyConfig) {
@@ -1380,7 +1382,7 @@ public class SequenceBase {
     try {
       AugmentedSystemConfig augmentedConfig = JsonUtil.OBJECT_MAPPER.readValue(stringify(system),
           AugmentedSystemConfig.class);
-      debug("system config extra field " + extraField);
+      debug("System config extra field " + extraField);
       augmentedConfig.extraField = extraField;
       return augmentedConfig;
     } catch (Exception e) {
