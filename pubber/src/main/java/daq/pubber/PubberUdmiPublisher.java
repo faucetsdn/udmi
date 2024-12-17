@@ -27,6 +27,7 @@ import static udmi.lib.base.MqttDevice.CONFIG_TOPIC;
 import static udmi.lib.base.MqttDevice.ERRORS_TOPIC;
 import static udmi.lib.base.MqttDevice.STATE_TOPIC;
 import static udmi.lib.base.MqttPublisher.DEFAULT_CONFIG_WAIT_SEC;
+import static udmi.lib.client.SystemManager.UDMI_PUBLISHER_LOG_CATEGORY;
 import static udmi.schema.BlobsetConfig.SystemBlobsets.IOT_ENDPOINT_CONFIG;
 
 import com.google.common.collect.ImmutableMap;
@@ -333,7 +334,8 @@ public interface PubberUdmiPublisher extends UdmiPublisher {
       }
     }
     String usePhase = isTrue(getOptions().badCategory) ? "apply" : phase;
-    String category = format(SYSTEM_CATEGORY_FORMAT, type, usePhase);
+    String category = type == null ? UDMI_PUBLISHER_LOG_CATEGORY :
+        format(SYSTEM_CATEGORY_FORMAT, type, usePhase);
     Entry report = entryFromException(category, cause);
     getDeviceManager().localLog(report);
     publishLogMessage(report, targetId);
