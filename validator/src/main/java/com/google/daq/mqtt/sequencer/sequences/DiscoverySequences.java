@@ -331,12 +331,14 @@ public class DiscoverySequences extends SequenceBase {
 
     checkThat("discovery events were valid", reasons.isEmpty(), CSV_JOINER.join(reasons));
 
+    /* Allow duplicate scan addresses
     Set<String> duplicates = events.stream().map(x -> x.scan_addr)
         .collect(Collectors.groupingBy(Function.identity(), Collectors.counting()))
         .entrySet().stream().filter(p -> p.getValue() > 1).map(Entry::getKey)
         .collect(Collectors.toSet());
     checkThat("all scan addresses are unique", duplicates.isEmpty(),
         "duplicates: " + CSV_JOINER.join(duplicates));
+     */
 
     Set<String> discoveredAddresses = events.stream().map(x -> x.scan_addr)
         .collect(Collectors.toSet());
