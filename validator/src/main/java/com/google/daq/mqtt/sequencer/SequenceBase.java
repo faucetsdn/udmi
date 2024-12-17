@@ -1511,7 +1511,7 @@ public class SequenceBase {
         recordSequence("Wait until", description);
       }, detail::get);
     } catch (Exception e) {
-      String message = "Failed waiting until " + sanitizedDescription;
+      String message = format("Failed waiting until %s: %s", sanitizedDescription, detail.get());
       recordSequence(message);
       throw new RuntimeException(message);
     }
@@ -1595,8 +1595,8 @@ public class SequenceBase {
     List<SystemEvents> receivedEvents = popReceivedEvents(SystemEvents.class);
     receivedEvents.forEach(systemEvent -> {
       int eventCount = ofNullable(systemEvent.event_no).orElse(previousEventCount + 1);
-      if (eventCount != previousEventCount + 1) {
-        debug("Missing system events " + previousEventCount + " -> " + eventCount);
+      if (eventCount != previousEventCount + 1 && previousEventCount != 0) {
+        warning("Missing system events " + previousEventCount + " -> " + eventCount);
       }
       previousEventCount = eventCount;
       logEntryQueue.addAll(ofNullable(systemEvent.logentries).orElse(ImmutableList.of()));

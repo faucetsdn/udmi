@@ -212,7 +212,8 @@ public class ConfigSequences extends SequenceBase {
     final Date prevConfig = deviceState.system.last_config;
     setExtraField("Flabberguilstadt");
     untilLogged(SYSTEM_CONFIG_RECEIVE, SYSTEM_CONFIG_RECEIVE_LEVEL);
-    untilTrue("last_config updated", () -> !deviceState.system.last_config.equals(prevConfig));
+    waitUntil("last_config updated", () -> !deviceState.system.last_config.equals(prevConfig) ? null
+        : format("previous value of %s", isoConvert(prevConfig)));
     untilTrue("system operational", () -> deviceState.system.operation.operational);
     checkThatHasNoInterestingStatus();
     untilLogged(SYSTEM_CONFIG_PARSE, SYSTEM_CONFIG_PARSE_LEVEL);
