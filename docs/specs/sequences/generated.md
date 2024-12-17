@@ -102,9 +102,13 @@ Check that the device correctly handles a broken (non-json) config message.
 1. Check that device state `last_config` has not been updated
 1. _logging_ Wait until system logs level `DEBUG` category `system.config.receive`
 1. _logging_ Wait until system logs level `ERROR` category `system.config.parse`
+1. _logging_ Check that log level `NOTICE` (or greater) category `system.config.apply` was not logged
 1. Reset config to clean version
 1. (Log level is implicitly set to `INFO` through config reset)
 1. _status_ Wait until system status level is not >= `WARNING` (400)
+1. _logging_ Wait until system logs level `NOTICE` category `system.config.apply`
+1. _logging_ Check that log level `DEBUG` (or greater) category `system.config.receive` was not logged
+1. _logging_ Check that log level `DEBUG` (or greater) category `system.config.parse` was not logged
 1. Check that device state `last_config` has been updated
 
 Test passed.
@@ -361,11 +365,21 @@ Check that the device correctly handles an extra out-of-schema field
 1. Wait for last_config not null
 1. Wait for system operational
 1. Check that system status level is not >= `WARNING` (400)
-1. Update config Before system logs level `DEBUG` category `system.config.receive`
+1. Update config before system logs level `DEBUG` category `system.config.receive`
 1. Wait until system logs level `DEBUG` category `system.config.receive`
-1. Failed waiting until last_config updated
+1. Wait until last_config updated
+1. Wait for system operational
+1. Check that system status level is not >= `WARNING` (400)
+1. Wait until system logs level `DEBUG` category `system.config.parse`
+1. Wait until system logs level `NOTICE` category `system.config.apply`
+1. Update config before system logs level `DEBUG` category `system.config.receive`
+1. Wait until system logs level `DEBUG` category `system.config.receive`
+1. Wait for last_config updated again
+1. Wait for system operational
+1. Wait until system logs level `DEBUG` category `system.config.parse`
+1. Wait until system logs level `NOTICE` category `system.config.apply`
 
-Test failed: Failed waiting until last_config updated
+Test passed.
 
 ## family_ether_addr (PREVIEW)
 
@@ -448,7 +462,7 @@ Test passed.
 
 Check error when pointset configuration contains extraneous point
 
-1. Update config Before pointset state matches config
+1. Update config before pointset state matches config
     * Add `pointset.sample_rate_sec` = `10`
 1. Wait until pointset state matches config
 1. Wait until pointset event contains correct points
@@ -491,7 +505,7 @@ Check results of a single scan scheduled soon
 1. Wait for discovery families defined
 1. Wait until discovery family keys match
 1. Wait for no scans active
-1. Update config Before scheduled scan pending
+1. Update config before scheduled scan pending
     * Add `discovery.families.vendor` = { "generation": `family generation`, "scan_duration_sec": `10` }
 1. Wait until scheduled scan pending
 1. Wait until scheduled scan active
@@ -515,7 +529,7 @@ Check results of a single scan scheduled in the recent past
 1. Wait for discovery families defined
 1. Wait until discovery family keys match
 1. Wait for no scans active
-1. Update config Before scheduled scan active
+1. Update config before scheduled scan active
     * Add `discovery.families.vendor` = { "generation": `family generation`, "scan_duration_sec": `10` }
 1. Wait until scheduled scan active
 1. Check that scan started at time
@@ -538,7 +552,7 @@ Check that a scan scheduled in the past never starts
 1. Wait for discovery families defined
 1. Wait until discovery family keys match
 1. Wait for no scans active
-1. Update config Before scan schedule initially not active
+1. Update config before scan schedule initially not active
     * Add `discovery.families.vendor` = { "generation": `family generation`, "scan_duration_sec": `10` }
 1. Wait until scan schedule initially not active
 1. Wait until scan schedule still not active

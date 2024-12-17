@@ -1,14 +1,19 @@
 {
-  "timestamp" : "2024-11-06T17:36:02Z",
-  "version" : "@@@cloud udmi version###git-b2a557d",
+  "timestamp" : "2024-12-17T05:29:02Z",
+  "version" : "@@@cloud udmi version###git-46fef59",
   "system" : {
-    "min_loglevel" : 200,
+    "min_loglevel" : 100,
     "metrics_rate_sec" : 10,
     "operation" : {
-      "last_start" : "2024-11-06T17:34:19Z"
+      "last_start" : "2024-12-17T05:28:30Z"
     },
     "testing" : {
       "sequence_name" : "writeback_failure"
+    }
+  },
+  "discovery" : {
+    "families" : {
+      "vendor" : { }
     }
   },
   "localnet" : {
@@ -16,7 +21,7 @@
       "ether" : { },
       "ipv4" : { },
       "vendor" : { },
-      "ipv6" : { }
+      "bacnet" : { }
     }
   },
   "pointset" : {

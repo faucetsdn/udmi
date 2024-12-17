@@ -1,43 +1,152 @@
-2024-11-06T17:33:11Z INFO    device.log             Update state 2024-11-06T17:33:11Z last_config 2024-11-06T17:33:10Z
-2024-11-06T17:33:13Z INFO    device.log             Device AHU-1 config handler
-2024-11-06T17:33:13Z INFO    device.log             2024-11-06T17:33:13Z received config 2024-11-06T17:33:13Z
-2024-11-06T17:33:13Z INFO    device.log             Discovery enumeration at 2024-11-06T17:33:12Z
-2024-11-06T17:33:13Z NOTICE  system.config.apply    success
-2024-11-06T17:33:13Z INFO    device.log             Update state 2024-11-06T17:33:13Z last_config 2024-11-06T17:33:13Z
-2024-11-06T17:33:15Z INFO    device.log             Device AHU-1 config handler
-2024-11-06T17:33:15Z INFO    device.log             2024-11-06T17:33:15Z received config 2024-11-06T17:33:15Z
-2024-11-06T17:33:15Z NOTICE  system.config.apply    success
-2024-11-06T17:33:15Z INFO    device.log             Update state 2024-11-06T17:33:15Z last_config 2024-11-06T17:33:15Z
-2024-11-06T17:33:26Z INFO    device.log             Update state 2024-11-06T17:33:26Z last_config 2024-11-06T17:33:15Z
-2024-11-06T17:33:26Z INFO    device.log             Device AHU-1 config handler
-2024-11-06T17:33:26Z INFO    device.log             2024-11-06T17:33:26Z received config 2024-11-06T17:33:26Z
-2024-11-06T17:33:26Z NOTICE  system.config.apply    success
-2024-11-06T17:33:26Z INFO    device.log             Device AHU-1 config handler
-2024-11-06T17:33:26Z INFO    device.log             2024-11-06T17:33:26Z received config 2024-11-06T17:33:26Z
-2024-11-06T17:33:26Z NOTICE  system.config.apply    success
-2024-11-06T17:33:28Z INFO    device.log             Update state 2024-11-06T17:33:28Z last_config 2024-11-06T17:33:26Z
-2024-11-06T17:33:29Z INFO    device.log             Device AHU-1 config handler
-2024-11-06T17:33:29Z INFO    device.log             2024-11-06T17:33:29Z received config 2024-11-06T17:33:29Z
-2024-11-06T17:33:29Z NOTICE  system.config.apply    success
-2024-11-06T17:33:30Z INFO    device.log             Update state 2024-11-06T17:33:30Z last_config 2024-11-06T17:33:29Z
-2024-11-06T17:33:31Z INFO    device.log             Device AHU-1 config handler
-2024-11-06T17:33:31Z INFO    device.log             2024-11-06T17:33:31Z received config 2024-11-06T17:33:31Z
-2024-11-06T17:33:31Z NOTICE  system.config.apply    success
-2024-11-06T17:33:31Z INFO    device.log             2024-11-06T17:33:31Z sending AHU-1 message #10 with 3 points
-2024-11-06T17:33:32Z INFO    device.log             Update state 2024-11-06T17:33:32Z last_config 2024-11-06T17:33:31Z
-2024-11-06T17:33:33Z INFO    device.log             Device AHU-1 config handler
-2024-11-06T17:33:33Z INFO    device.log             2024-11-06T17:33:33Z received config 2024-11-06T17:33:33Z
-2024-11-06T17:33:33Z NOTICE  system.config.apply    success
-2024-11-06T17:33:34Z INFO    device.log             Update state 2024-11-06T17:33:34Z last_config 2024-11-06T17:33:33Z
-2024-11-06T17:33:34Z INFO    device.log             2024-11-06T17:33:34Z received config 2024-11-06T17:33:34Z
-2024-11-06T17:33:34Z NOTICE  system.config.apply    success
-2024-11-06T17:33:35Z INFO    device.log             Device AHU-1 config handler
-2024-11-06T17:33:35Z INFO    device.log             2024-11-06T17:33:35Z received config 2024-11-06T17:33:35Z
-2024-11-06T17:33:35Z NOTICE  system.config.apply    success
-2024-11-06T17:33:36Z INFO    device.log             Update state 2024-11-06T17:33:36Z last_config 2024-11-06T17:33:35Z
-2024-11-06T17:33:43Z INFO    device.log             Update state 2024-11-06T17:33:43Z last_config 2024-11-06T17:33:35Z
-2024-11-06T17:33:43Z INFO    device.log             Device AHU-1 config handler
-2024-11-06T17:33:43Z INFO    device.log             2024-11-06T17:33:43Z received config 2024-11-06T17:33:43Z
-2024-11-06T17:33:43Z NOTICE  system.config.apply    success
-2024-11-06T17:33:45Z INFO    device.log             Update state 2024-11-06T17:33:45Z last_config 2024-11-06T17:33:43Z
-2024-11-06T17:34:03Z NOTICE  validation.feature.sequence Sequence complete
+2024-12-17T05:27:16Z INFO    device.log             sending AHU-1 message #10 with 3 points
+2024-12-17T05:27:16Z DEBUG   device.log             State update defer -6003ms
+2024-12-17T05:27:16Z INFO    device.log             Update state 2024-12-17T05:27:16Z last_config 2024-12-17T05:27:06Z
+2024-12-17T05:27:16Z DEBUG   device.log             State update AHU-1 (scan_single_now)
+2024-12-17T05:27:26Z DEBUG   system.config.receive  success
+2024-12-17T05:27:26Z DEBUG   device.log             State update defer -8125ms
+2024-12-17T05:27:26Z INFO    device.log             Update state 2024-12-17T05:27:26Z last_config 2024-12-17T05:27:06Z
+2024-12-17T05:27:26Z DEBUG   system.config.parse    success
+2024-12-17T05:27:26Z INFO    device.log             Device AHU-1 config handler
+2024-12-17T05:27:26Z DEBUG   device.log             Config update AHU-1 (scan_single_now)
+2024-12-17T05:27:26Z DEBUG   device.log             State update defer 2000ms
+2024-12-17T05:27:26Z INFO    device.log             2024-12-17T05:27:26Z received config 2024-12-17T05:27:26Z
+2024-12-17T05:27:26Z INFO    device.log             Discovery scan vendor phase stopped as null
+2024-12-17T05:27:26Z NOTICE  system.config.apply    success
+2024-12-17T05:27:26Z DEBUG   device.log             State update defer 1999ms
+2024-12-17T05:27:26Z DEBUG   device.log             State update defer 1999ms
+2024-12-17T05:27:26Z DEBUG   device.log             State update defer 1999ms
+2024-12-17T05:27:26Z DEBUG   device.log             State update defer 1998ms
+2024-12-17T05:27:26Z DEBUG   device.log             State update defer 1998ms
+2024-12-17T05:27:26Z DEBUG   device.log             State update defer 1998ms
+2024-12-17T05:27:26Z DEBUG   device.log             State update defer 1998ms
+2024-12-17T05:27:26Z DEBUG   device.log             State update defer 1998ms
+2024-12-17T05:27:26Z DEBUG   system.config.receive  success
+2024-12-17T05:27:26Z DEBUG   device.log             State update defer 1940ms
+2024-12-17T05:27:26Z DEBUG   system.config.parse    success
+2024-12-17T05:27:26Z INFO    device.log             Device AHU-1 config handler
+2024-12-17T05:27:26Z DEBUG   device.log             Config update AHU-1 (pointset_request_extraneous)
+2024-12-17T05:27:26Z INFO    device.log             2024-12-17T05:27:26Z received config 2024-12-17T05:27:26Z
+2024-12-17T05:27:26Z INFO    device.log             Discovery scan vendor phase stopped as null
+2024-12-17T05:27:26Z NOTICE  system.config.apply    success
+2024-12-17T05:27:26Z DEBUG   device.log             State update defer 1938ms
+2024-12-17T05:27:26Z DEBUG   device.log             State update defer 1938ms
+2024-12-17T05:27:26Z DEBUG   device.log             State update defer 1938ms
+2024-12-17T05:27:26Z DEBUG   device.log             State update defer 1938ms
+2024-12-17T05:27:26Z DEBUG   device.log             State update defer 1938ms
+2024-12-17T05:27:28Z DEBUG   device.log             State update defer 0ms
+2024-12-17T05:27:28Z INFO    device.log             Update state 2024-12-17T05:27:28Z last_config 2024-12-17T05:27:26Z
+2024-12-17T05:27:28Z DEBUG   device.log             State update AHU-1 (pointset_request_extraneous)
+2024-12-17T05:27:30Z DEBUG   system.config.receive  success
+2024-12-17T05:27:30Z DEBUG   device.log             State update defer -51ms
+2024-12-17T05:27:30Z INFO    device.log             Update state 2024-12-17T05:27:30Z last_config 2024-12-17T05:27:26Z
+2024-12-17T05:27:30Z DEBUG   system.config.parse    success
+2024-12-17T05:27:30Z INFO    device.log             Device AHU-1 config handler
+2024-12-17T05:27:30Z DEBUG   device.log             State update AHU-1 (pointset_request_extraneous)
+2024-12-17T05:27:30Z DEBUG   device.log             Config update AHU-1 (pointset_request_extraneous)
+2024-12-17T05:27:30Z DEBUG   device.log             State update defer 2000ms
+2024-12-17T05:27:30Z INFO    device.log             2024-12-17T05:27:30Z received config 2024-12-17T05:27:30Z
+2024-12-17T05:27:30Z INFO    device.log             Discovery scan vendor phase stopped as null
+2024-12-17T05:27:30Z NOTICE  system.config.apply    success
+2024-12-17T05:27:30Z DEBUG   device.log             State update defer 1999ms
+2024-12-17T05:27:30Z DEBUG   device.log             State update defer 1999ms
+2024-12-17T05:27:30Z DEBUG   device.log             State update defer 1999ms
+2024-12-17T05:27:30Z DEBUG   device.log             State update defer 1999ms
+2024-12-17T05:27:30Z DEBUG   device.log             State update defer 1998ms
+2024-12-17T05:27:32Z DEBUG   device.log             State update defer 0ms
+2024-12-17T05:27:32Z INFO    device.log             Update state 2024-12-17T05:27:32Z last_config 2024-12-17T05:27:30Z
+2024-12-17T05:27:32Z DEBUG   device.log             State update AHU-1 (pointset_request_extraneous)
+2024-12-17T05:27:35Z DEBUG   system.config.receive  success
+2024-12-17T05:27:35Z DEBUG   device.log             State update defer -91ms
+2024-12-17T05:27:35Z INFO    device.log             Update state 2024-12-17T05:27:35Z last_config 2024-12-17T05:27:30Z
+2024-12-17T05:27:35Z DEBUG   system.config.parse    success
+2024-12-17T05:27:35Z INFO    device.log             Device AHU-1 config handler
+2024-12-17T05:27:35Z DEBUG   device.log             Config update AHU-1 (pointset_request_extraneous)
+2024-12-17T05:27:35Z DEBUG   device.log             State update defer 2000ms
+2024-12-17T05:27:35Z INFO    device.log             2024-12-17T05:27:35Z received config 2024-12-17T05:27:34Z
+2024-12-17T05:27:35Z INFO    device.log             Discovery scan vendor phase stopped as null
+2024-12-17T05:27:35Z NOTICE  system.config.apply    success
+2024-12-17T05:27:35Z DEBUG   device.log             State update defer 1999ms
+2024-12-17T05:27:35Z DEBUG   device.log             State update defer 1998ms
+2024-12-17T05:27:35Z DEBUG   device.log             State update defer 1998ms
+2024-12-17T05:27:35Z DEBUG   device.log             State update defer 1998ms
+2024-12-17T05:27:35Z DEBUG   device.log             State update defer 1998ms
+2024-12-17T05:27:35Z DEBUG   device.log             State update defer 1998ms
+2024-12-17T05:27:35Z DEBUG   device.log             State update defer 1998ms
+2024-12-17T05:27:35Z DEBUG   device.log             State update defer 1998ms
+2024-12-17T05:27:36Z DEBUG   device.log             State update defer 867ms
+2024-12-17T05:27:37Z DEBUG   device.log             State update defer 0ms
+2024-12-17T05:27:37Z INFO    device.log             Update state 2024-12-17T05:27:37Z last_config 2024-12-17T05:27:34Z
+2024-12-17T05:27:37Z DEBUG   device.log             State update AHU-1 (pointset_request_extraneous)
+2024-12-17T05:27:39Z DEBUG   system.config.receive  success
+2024-12-17T05:27:39Z DEBUG   device.log             State update defer -103ms
+2024-12-17T05:27:39Z INFO    device.log             Update state 2024-12-17T05:27:39Z last_config 2024-12-17T05:27:34Z
+2024-12-17T05:27:39Z DEBUG   system.config.parse    success
+2024-12-17T05:27:39Z DEBUG   device.log             State update AHU-1 (pointset_request_extraneous)
+2024-12-17T05:27:39Z DEBUG   device.log             Config update AHU-1 (pointset_request_extraneous)
+2024-12-17T05:27:39Z DEBUG   device.log             State update defer 2000ms
+2024-12-17T05:27:39Z INFO    device.log             2024-12-17T05:27:39Z received config 2024-12-17T05:27:39Z
+2024-12-17T05:27:39Z INFO    device.log             Discovery scan vendor phase stopped as null
+2024-12-17T05:27:39Z NOTICE  system.config.apply    success
+2024-12-17T05:27:39Z DEBUG   device.log             State update defer 1999ms
+2024-12-17T05:27:40Z DEBUG   system.config.receive  success
+2024-12-17T05:27:40Z DEBUG   device.log             State update defer 797ms
+2024-12-17T05:27:40Z DEBUG   system.config.parse    success
+2024-12-17T05:27:40Z INFO    device.log             Device AHU-1 config handler
+2024-12-17T05:27:40Z DEBUG   device.log             Config update AHU-1 (pointset_request_extraneous)
+2024-12-17T05:27:40Z INFO    device.log             2024-12-17T05:27:40Z received config 2024-12-17T05:27:40Z
+2024-12-17T05:27:40Z INFO    device.log             Discovery scan vendor phase stopped as null
+2024-12-17T05:27:40Z NOTICE  system.config.apply    success
+2024-12-17T05:27:40Z DEBUG   device.log             State update defer 795ms
+2024-12-17T05:27:40Z DEBUG   device.log             State update defer 795ms
+2024-12-17T05:27:40Z DEBUG   device.log             State update defer 794ms
+2024-12-17T05:27:40Z DEBUG   device.log             State update defer 794ms
+2024-12-17T05:27:40Z DEBUG   device.log             State update defer 794ms
+2024-12-17T05:27:40Z DEBUG   device.log             State update defer 794ms
+2024-12-17T05:27:41Z DEBUG   device.log             State update defer 0ms
+2024-12-17T05:27:41Z INFO    device.log             Update state 2024-12-17T05:27:41Z last_config 2024-12-17T05:27:40Z
+2024-12-17T05:27:41Z DEBUG   device.log             State update AHU-1 (pointset_request_extraneous)
+2024-12-17T05:27:41Z DEBUG   system.config.receive  success
+2024-12-17T05:27:41Z DEBUG   device.log             State update defer 1596ms
+2024-12-17T05:27:41Z DEBUG   system.config.parse    success
+2024-12-17T05:27:41Z INFO    device.log             Device AHU-1 config handler
+2024-12-17T05:27:41Z DEBUG   device.log             Config update AHU-1 (pointset_request_extraneous)
+2024-12-17T05:27:41Z INFO    device.log             2024-12-17T05:27:41Z received config 2024-12-17T05:27:41Z
+2024-12-17T05:27:41Z INFO    device.log             Discovery scan vendor phase stopped as null
+2024-12-17T05:27:41Z NOTICE  system.config.apply    success
+2024-12-17T05:27:41Z DEBUG   device.log             State update defer 1595ms
+2024-12-17T05:27:41Z DEBUG   device.log             State update defer 1594ms
+2024-12-17T05:27:41Z DEBUG   device.log             State update defer 1594ms
+2024-12-17T05:27:42Z DEBUG   system.config.receive  success
+2024-12-17T05:27:42Z DEBUG   device.log             State update defer 487ms
+2024-12-17T05:27:42Z DEBUG   system.config.parse    success
+2024-12-17T05:27:42Z INFO    device.log             Device AHU-1 config handler
+2024-12-17T05:27:42Z DEBUG   device.log             Config update AHU-1 (pointset_request_extraneous)
+2024-12-17T05:27:42Z INFO    device.log             2024-12-17T05:27:42Z received config 2024-12-17T05:27:42Z
+2024-12-17T05:27:42Z INFO    device.log             Discovery scan vendor phase stopped as null
+2024-12-17T05:27:42Z NOTICE  system.config.apply    success
+2024-12-17T05:27:42Z DEBUG   device.log             State update defer 485ms
+2024-12-17T05:27:42Z DEBUG   device.log             State update defer 484ms
+2024-12-17T05:27:43Z DEBUG   device.log             State update defer 0ms
+2024-12-17T05:27:43Z INFO    device.log             Update state 2024-12-17T05:27:43Z last_config 2024-12-17T05:27:42Z
+2024-12-17T05:27:43Z DEBUG   device.log             State update AHU-1 (pointset_request_extraneous)
+2024-12-17T05:27:47Z DEBUG   system.config.receive  success
+2024-12-17T05:27:47Z DEBUG   device.log             State update defer -2051ms
+2024-12-17T05:27:47Z INFO    device.log             Update state 2024-12-17T05:27:47Z last_config 2024-12-17T05:27:42Z
+2024-12-17T05:27:47Z DEBUG   system.config.parse    success
+2024-12-17T05:27:47Z DEBUG   device.log             State update AHU-1 (pointset_request_extraneous)
+2024-12-17T05:27:47Z INFO    device.log             Device AHU-1 config handler
+2024-12-17T05:27:47Z DEBUG   device.log             Config update AHU-1 (pointset_request_extraneous)
+2024-12-17T05:27:47Z DEBUG   device.log             State update defer 2000ms
+2024-12-17T05:27:47Z INFO    device.log             2024-12-17T05:27:47Z received config 2024-12-17T05:27:47Z
+2024-12-17T05:27:47Z DEBUG   device.log             Restoring unknown point extraneous_point
+2024-12-17T05:27:47Z INFO    device.log             Discovery scan vendor phase stopped as null
+2024-12-17T05:27:47Z NOTICE  system.config.apply    success
+2024-12-17T05:27:47Z DEBUG   device.log             State update defer 1999ms
+2024-12-17T05:27:47Z DEBUG   device.log             State update defer 1999ms
+2024-12-17T05:27:47Z DEBUG   device.log             State update defer 1999ms
+2024-12-17T05:27:47Z DEBUG   device.log             State update defer 1999ms
+2024-12-17T05:27:47Z DEBUG   device.log             State update defer 1999ms
+2024-12-17T05:27:49Z DEBUG   device.log             State update defer 0ms
+2024-12-17T05:27:49Z INFO    device.log             Update state 2024-12-17T05:27:49Z last_config 2024-12-17T05:27:47Z
+2024-12-17T05:27:49Z DEBUG   device.log             State update AHU-1 (pointset_request_extraneous)
+2024-12-17T05:28:06Z NOTICE  validation.feature.sequence Sequence complete
