@@ -311,7 +311,7 @@ public class SequenceBase {
   private int maxAllowedStatusLevel;
   private String extraField;
   private String updatedExtraField;
-  protected Instant lastConfigUpdate;
+  private Instant lastConfigUpdate;
   private boolean enforceSerial;
   private String testName;
   private String testSummary;
