@@ -266,7 +266,6 @@ public interface PubberUdmiPublisher extends UdmiPublisher {
    * whether the device is a gateway or a proxy device.
    */
   default void registerMessageHandlers() {
-    getDeviceTarget().unregisterHandlers();
     getDeviceTarget().registerHandler(CONFIG_TOPIC, this::configHandler, Config.class);
     String gatewayId = getGatewayId(getDeviceId(), getConfig());
     if (isGatewayDevice()) {
@@ -280,7 +279,16 @@ public interface PubberUdmiPublisher extends UdmiPublisher {
     }
   }
 
+  /**
+   * Get MqttDevice for given proxy.
+   *
+   * @param proxyId Proxy device id
+   * @return MqttDevice
+   */
   default MqttDevice getMqttDevice(String proxyId) {
+    if (getDeviceTarget() == null) {
+      return null;
+    }
     return new MqttDevice(proxyId, getDeviceTarget());
   }
 

@@ -430,8 +430,10 @@ public class Pubber extends PubberManager implements PubberUdmiPublisher {
       isConnected = false;
       deviceManager.stop();
       super.stop();
-      if (deviceTarget == null) {
-        throw new RuntimeException("Mqtt publisher not initialized");
+      if (deviceTarget == null || !deviceTarget.isActive()) {
+        error("Mqtt publisher not active");
+        disconnectMqtt();
+        initializeMqtt();
       }
       registerMessageHandlers();
       connect();
@@ -455,9 +457,9 @@ public class Pubber extends PubberManager implements PubberUdmiPublisher {
       deviceState.system.operation.mode = SystemMode.SHUTDOWN;
     }
 
-    super.shutdown();
-    ifNotNullThen(deviceManager, dm -> captureExceptions("device manager shutdown", dm::shutdown));
     captureExceptions("publishing shutdown state", this::publishSynchronousState);
+    ifNotNullThen(deviceManager, dm -> captureExceptions("device manager shutdown", dm::shutdown));
+    super.shutdown();
     captureExceptions("disconnecting mqtt", this::disconnectMqtt);
   }
 
@@ -535,7 +537,6 @@ public class Pubber extends PubberManager implements PubberUdmiPublisher {
     persistentData.endpoint = endpoint;
     writePersistentStore();
   }
-
 
   @Override
   public void resetConnection(String targetEndpoint) {
