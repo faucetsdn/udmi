@@ -7,6 +7,7 @@ import static com.google.daq.mqtt.registrar.Registrar.ENVELOPE_SCHEMA_JSON;
 import static com.google.daq.mqtt.registrar.Registrar.METADATA_SCHEMA_JSON;
 import static com.google.daq.mqtt.util.ConfigManager.GENERATED_CONFIG_JSON;
 import static com.google.daq.mqtt.util.ConfigManager.configFrom;
+import static com.google.daq.mqtt.util.ContextWrapper.runInContext;
 import static com.google.udmi.util.Common.DEVICE_ID_ALLOWABLE;
 import static com.google.udmi.util.Common.POINT_NAME_ALLOWABLE;
 import static com.google.udmi.util.GeneralUtils.CSV_JOINER;
@@ -23,7 +24,6 @@ import static com.google.udmi.util.JsonUtil.unquoteJson;
 import static com.google.udmi.util.SiteModel.METADATA_JSON;
 import static com.google.udmi.util.SiteModel.NORMALIZED_JSON;
 import static java.lang.String.format;
-import static java.util.Optional.ofNullable;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.github.fge.jsonschema.core.exceptions.ProcessingException;
@@ -82,6 +82,7 @@ import udmi.schema.Envelope.SubFolder;
 import udmi.schema.Envelope.SubType;
 import udmi.schema.Metadata;
 import udmi.schema.PointPointsetModel;
+
 
 class LocalDevice {
 
@@ -518,8 +519,11 @@ class LocalDevice {
   }
 
   private String deviceConfigString() {
-    try {
+    return runInContext("While converting device config", () -> {
       Object fromValue = config.deviceConfigJson();
+
+      config.getSchemaViolationsMap().forEach(this::captureError);
+
       if (fromValue instanceof String stringValue) {
         return stringValue;
       }
@@ -528,9 +532,7 @@ class LocalDevice {
         new MessageDowngrader("config", configJson).downgrade(baseVersion);
       }
       return compressJsonString(configJson, MAX_JSON_LENGTH);
-    } catch (Exception e) {
-      throw new RuntimeException("While converting device config", e);
-    }
+    });
   }
 
   private String deviceMetadataString() {
