@@ -10,11 +10,11 @@ import static com.google.udmi.util.JsonUtil.isoConvert;
 import static java.lang.Math.floorMod;
 import static java.lang.String.format;
 import static java.util.Optional.ofNullable;
-import static java.util.function.Predicate.not;
 import static udmi.schema.FamilyDiscoveryState.Phase.PENDING;
 import static udmi.schema.FamilyDiscoveryState.Phase.STOPPED;
 
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
@@ -31,8 +31,6 @@ import udmi.schema.FamilyDiscoveryState;
  * Discovery client.
  */
 public interface DiscoveryManager extends SubBlockManager {
-
-
   /**
    * Determines whether enumeration to a specific depth level is required.
    *
@@ -59,8 +57,8 @@ public interface DiscoveryManager extends SubBlockManager {
     Map<String, FamilyDiscoveryConfig> families = ofNullable(raw).orElse(Map.of());
     ifNullThen(getDiscoveryState().families, () -> getDiscoveryState().families = new HashMap<>());
 
-    List<String> toRemove = getDiscoveryState().families.keySet().stream()
-        .filter(not(families::containsKey)).toList();
+    List<String> toRemove = new ArrayList<>(getDiscoveryState().families.keySet());
+    toRemove.removeIf(families::containsKey);
     toRemove.forEach(this::removeDiscoveryScan);
     families.keySet().forEach(this::scheduleDiscoveryScan);
 
@@ -221,5 +219,4 @@ public interface DiscoveryManager extends SubBlockManager {
   void startDiscoveryScan(String family, Date scanGeneration);
 
   void updateDiscoveryEnumeration(DiscoveryConfig config);
-
 }
