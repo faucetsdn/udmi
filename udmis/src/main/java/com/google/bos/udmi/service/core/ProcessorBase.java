@@ -353,7 +353,7 @@ public abstract class ProcessorBase extends ContainerBase implements SimpleHandl
     }
 
     Date oldLastStart = getDate((String) oldOperation.get("last_start"));
-    boolean shouldUpdate = oldLastStart == null || oldLastStart.before(newLastStart);
+    boolean shouldUpdate = oldLastStart != null && oldLastStart.before(newLastStart);
     debug("Last start was %s, now %s, updating %s", isoConvert(oldLastStart),
         isoConvert(newLastStart), shouldUpdate);
     if (!shouldUpdate) {
