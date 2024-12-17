@@ -59,6 +59,7 @@ jacocoTestReport {
 checkstyle {
     ignoreFailures = false
     maxWarnings = 0
+    configFile = file('../etc/checkstyle.xml')
 }
 checkstyleMain.source = 'src/main/java'
 

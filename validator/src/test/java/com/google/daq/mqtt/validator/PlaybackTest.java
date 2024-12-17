@@ -1,7 +1,6 @@
 package com.google.daq.mqtt.validator;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNull;
 import static udmi.schema.Level.INFO;
 
 import com.google.daq.mqtt.TestCommon;
