@@ -20,7 +20,7 @@ git_prefix=${git_url%.*}
 git_prefix=${git_prefix#*.com/}
 git_repo=${git_prefix#*.com:}
 
-GCP_PROJECT=$(gcloud config get project)
+GCP_PROJECT=$(gcloud config get project) || true
 REPOSITORY=ghcr.io/${git_repo}
 TEMPLATES=$(cd etc; ls k8s_*.yaml) || true
 
@@ -100,7 +100,7 @@ if [[ -n $prep ]]; then
 
     LIBFILE=build/libs/*-1.0-SNAPSHOT-all.jar
     build_time=`date --utc -Imin -r $LIBFILE` || true
-    [[ -n $build_time ]] || build_time=unknown
+    [[ -n $build_time ]] || build_time="1970-01-01T00:00:00Z"
 
     cat <<EOF > var/deployed_version.json
 {
@@ -116,14 +116,13 @@ EOF
 fi
 
 if [[ -n $build ]]; then
-    echo Cleaning old images...
-    images=$(docker images | fgrep $REPOSITORY | awk '{print $1":"$2}' | fgrep -v '<none>') || true
-    [[ -n $images ]] && docker rmi $images || true
-
     echo Building Dockerfile.$target
-    echo docker build -f Dockerfile.$target -t $target .
-    docker build -f Dockerfile.$target -t $target .
-    docker tag $target $udmi_ref
+    echo docker build -f Dockerfile.$target -t $udmi_ref .
+    docker build -f Dockerfile.$target -t $udmi_ref .
+
+    echo Cleaning dangling images...
+    images=$(docker images -f "dangling=true" -q)
+    [[ -n $images ]] && docker rmi $images
 fi
 
 if [[ -n $push ]]; then
