@@ -206,7 +206,7 @@ public class ConfigSequences extends SequenceBase {
     untilLogged(SYSTEM_CONFIG_RECEIVE, SYSTEM_CONFIG_RECEIVE_LEVEL);
     waitUntil("last_config updated", () -> deviceState.system.last_config.equals(prevConfig)
         ? format("last_config still matches previous %s", isoConvert(prevConfig)) : null);
-    untilTrue( "system operational", () -> deviceState.system.operation.operational);
+    untilTrue("system operational", () -> deviceState.system.operation.operational);
     checkThatHasNoInterestingStatus();
     untilLogged(SYSTEM_CONFIG_PARSE, SYSTEM_CONFIG_PARSE_LEVEL);
     untilLogged(SYSTEM_CONFIG_APPLY, SYSTEM_CONFIG_APPLY_LEVEL);
