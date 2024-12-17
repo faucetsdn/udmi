@@ -21,9 +21,9 @@
 1 CPBLTY skip system broken_config.logging ALPHA 0/0 Never executed
 0 CPBLTY skip system broken_config.status ALPHA 0/0 Never executed
 0 RESULT fail system broken_config STABLE 0/8 Failed waiting until config update synchronized
-1 CPBLTY fail system broken_config.status ALPHA 0/1 Failed waiting until (status) system status level is >= `WARNING` (400)
-0 CPBLTY pass system broken_config.logging ALPHA 1/1 Capability supported
-0 RESULT pass system broken_config STABLE 9/10 Sequence complete
+1 CPBLTY fail system broken_config.logging ALPHA 0/1 Failed check that (logging) log level `DEBUG` (or greater) category `system.config.receive` was not logged
+0 CPBLTY fail system broken_config.status ALPHA 0/1 Failed waiting until (status) system status level is >= `WARNING` (400)
+0 RESULT pass system broken_config STABLE 8/10 Sequence complete
 1 CPBLTY fail system broken_config.logging ALPHA 0/1 Failed waiting until (logging) system logs level `NOTICE` category `system.config.apply`
 0 CPBLTY pass system broken_config.status ALPHA 1/1 Capability supported
 0 RESULT pass system broken_config STABLE 9/10 Sequence complete
