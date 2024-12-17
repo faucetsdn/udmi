@@ -1585,7 +1585,7 @@ public class SequenceBase {
           if (!entries.isEmpty()) {
             warning(format("Filtered entries between %s and %s:", isoConvert(lastConfigUpdate),
                 isoConvert(endTime)));
-            entries.forEach(entry -> error("undesirable " + entryMessage(entry)));
+            entries.forEach(entry -> error("Forbidden entry: " + entryMessage(entry)));
           }
           return entries.isEmpty();
         });
@@ -1608,9 +1608,9 @@ public class SequenceBase {
     List<Entry> toRemove = logEntryQueue.stream()
         .filter(entry -> entry.timestamp.toInstant().isBefore(lastConfigUpdate)).toList();
     if (!toRemove.isEmpty()) {
-      debug("ignoring log entries before lastConfigUpdate " + lastConfigUpdate);
+      debug("Flushing log entries before lastConfigUpdate " + lastConfigUpdate);
     }
-    toRemove.forEach(entry -> debug(" x " + entryMessage(entry)));
+    toRemove.forEach(entry -> debug("Flushing entry: " + entryMessage(entry)));
     logEntryQueue.removeAll(toRemove);
   }
 

@@ -183,6 +183,10 @@ public class ConfigSequences extends SequenceBase {
     resetConfig(); // clears extra_field and interesting status checks, restores logLevel
     recordSequence("(Log level is implicitly set to `INFO` through config reset)");
 
+    info("TAP3: stableConfig " + isoConvert(stableConfig));
+    info("TAP3: last_config " + isoConvert(deviceState.system.last_config));
+    info("TAP3: lastConfigUpdate " + isoConvert(lastConfigUpdate));
+
     // Revert override now that config has been reset so is not broken anymore.
     pretendStateUpdated = false;
 
