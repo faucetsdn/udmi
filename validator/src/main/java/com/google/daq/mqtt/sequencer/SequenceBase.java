@@ -707,7 +707,7 @@ public class SequenceBase {
    */
   public void setLastStart(Date use) {
     boolean changed = !stringify(deviceConfig.system.operation.last_start).equals(stringify(use));
-    debug("last_start changed " + changed + ", last_start " + isoConvert(use));
+    debug("Set last_start changed " + changed + ", last_start " + isoConvert(use));
     deviceConfig.system.operation.last_start = use;
   }
 
@@ -1272,6 +1272,8 @@ public class SequenceBase {
   private void updateConfig(String reason, boolean force, boolean waitForState) {
     assertConfigIsNotPending();
 
+    ifNotTrueThen(shouldGateConfigUpdate, this::rateLimitConfig);
+
     if (doPartialUpdates && !force) {
       updateConfig(reason, waitForState, SubFolder.SYSTEM, augmentConfig(deviceConfig.system));
       updateConfig(reason, waitForState, SubFolder.POINTSET, deviceConfig.pointset);
@@ -1293,6 +1295,7 @@ public class SequenceBase {
 
     // Rate-limit from the point the config was _applied_, not when it was _sent_.
     lastConfigMark = getNowInstant();
+    debug(format("New lastConfigMark at %s", isoConvert(lastConfigMark)));
 
     captureConfigChange(reason);
   }
@@ -1340,6 +1343,7 @@ public class SequenceBase {
   private void rateLimitConfig() {
     // Add a forced sleep to make sure configs aren't sent too quickly
     long delayMs = CONFIG_BARRIER.toMillis() - between(lastConfigMark, getNowInstant()).toMillis();
+    debug(format("Delay from lastConfigMark %s is %sms", lastConfigMark, delayMs));
     ifTrueThen(delayMs > 0, () -> {
       debug(format("Rate-limiting config by %dms", delayMs));
       safeSleep(delayMs);
@@ -2141,16 +2145,16 @@ public class SequenceBase {
 
     if (debugOut) {
       if (!failures.isEmpty()) {
-        notice(format("previous state %s updated at %s", isoConvert(configStateStart),
-            isoConvert(current)));
-        notice(format("last_start synchronized %s: state/%s =? config/%s", lastStartSynced,
+        notice(format("Saw previous state updated %s: %s %s", stateUpdated,
+            isoConvert(configStateStart), isoConvert(current)));
+        notice(format("Saw last_start synchronized %s: state/%s =? config/%s", lastStartSynced,
             isoConvert(stateLastStart), isoConvert(configLastStart)));
-        notice(format("configTransactions flushed %s: %s", transactionsClean,
+        notice(format("Saw configTransactions flushed %s: %s", transactionsClean,
             configTransactionsListString()));
-        notice(format("last_config synchronized %s: state/%s =? config/%s", lastConfigSynced,
+        notice(format("Saw last_config synchronized %s: state/%s =? config/%s", lastConfigSynced,
             isoConvert(stateLastConfig), isoConvert(lastConfig)));
       } else if (stateLastConfig == null) {
-        debug("last_config synchronized check disabled due to missing state.system.last_config");
+        debug("Saw last_config synchronized check disabled: missing state.system.last_config");
       }
     }
     return ifNotTrueGet(failures.isEmpty(), () -> CSV_JOINER.join(failures));
