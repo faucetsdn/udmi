@@ -1512,7 +1512,7 @@ public class SequenceBase {
     try {
       whileDoing(sanitizedDescription, () -> {
         ifNotTrueThen(waitingForConfigSync.get(),
-            () -> updateConfig("Before " + sanitizedDescription));
+            () -> updateConfig("before " + sanitizedDescription));
         waitEvaluateLoop(sanitizedDescription, maxWait, evaluator, detail);
         recordSequence("Wait until", description);
       }, detail::get);

@@ -42,8 +42,9 @@ public class ConfigSequences extends SequenceBase {
 
   // Delay to wait to let a device apply and log a new config.
   private static final long CONFIG_THRESHOLD_SEC = 20;
-  // How frequently to send out confg queries for device config acked check.
+  // How frequently to send out config queries for device config acked check.
   private static final Duration CONFIG_QUERY_INTERVAL = Duration.ofSeconds(30);
+  private static final String THAT_PLACE_IN_ARUBA = "Flabberguilstadt";
 
   @Test(timeout = TWO_MINUTES_MS)
   @Feature(stage = STABLE, bucket = SYSTEM)
@@ -148,10 +149,6 @@ public class ConfigSequences extends SequenceBase {
     // Special override because there might not be a state update with a broken config.
     pretendStateUpdated = true;
 
-    info("TAP1: stableConfig " + isoConvert(stableConfig));
-    info("TAP1: last_config " + isoConvert(deviceState.system.last_config));
-    info("TAP1: lastConfigUpdate " + isoConvert(lastConfigUpdate));
-
     setExtraField("break_json");
     updateConfig("to force broken (invalid JSON) configuration");
 
@@ -166,10 +163,6 @@ public class ConfigSequences extends SequenceBase {
           SYSTEM_CONFIG_PARSE.equals(stateStatus.category));
     });
 
-    info("TAP2: stableConfig " + isoConvert(stableConfig));
-    info("TAP2: last_config " + isoConvert(deviceState.system.last_config));
-    info("TAP2: lastConfigUpdate " + isoConvert(lastConfigUpdate));
-
     // The last_config should not be updated to not reflect the broken config.
     checkThat("device state `last_config` has not been updated",
         dateEquals(stableConfig, deviceState.system.last_config));
@@ -182,10 +175,6 @@ public class ConfigSequences extends SequenceBase {
 
     resetConfig(); // clears extra_field and interesting status checks, restores logLevel
     recordSequence("(Log level is implicitly set to `INFO` through config reset)");
-
-    info("TAP3: stableConfig " + isoConvert(stableConfig));
-    info("TAP3: last_config " + isoConvert(deviceState.system.last_config));
-    info("TAP3: lastConfigUpdate " + isoConvert(lastConfigUpdate));
 
     // Revert override now that config has been reset so is not broken anymore.
     pretendStateUpdated = false;
@@ -213,12 +202,11 @@ public class ConfigSequences extends SequenceBase {
     untilTrue("system operational", () -> deviceState.system.operation.operational);
     checkThatHasNoInterestingStatus();
     final Date prevConfig = deviceState.system.last_config;
-    setExtraField("Flabberguilstadt");
+    setExtraField(THAT_PLACE_IN_ARUBA);
     untilLogged(SYSTEM_CONFIG_RECEIVE, SYSTEM_CONFIG_RECEIVE_LEVEL);
-    waitUntil("last_config updated", () -> deviceState.system.last_config.equals(prevConfig) ? null
-        : format("previous config was %s, current state last_config is %s",
-            isoConvert(prevConfig), isoConvert(deviceState.system.last_config)));
-    untilTrue("system operational", () -> deviceState.system.operation.operational);
+    waitUntil("last_config updated", () -> deviceState.system.last_config.equals(prevConfig)
+        ? format("last_config still matches previous %s", isoConvert(prevConfig)) : null);
+    untilTrue( "system operational", () -> deviceState.system.operation.operational);
     checkThatHasNoInterestingStatus();
     untilLogged(SYSTEM_CONFIG_PARSE, SYSTEM_CONFIG_PARSE_LEVEL);
     untilLogged(SYSTEM_CONFIG_APPLY, SYSTEM_CONFIG_APPLY_LEVEL);
