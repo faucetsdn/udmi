@@ -311,7 +311,7 @@ public class SequenceBase {
   private int maxAllowedStatusLevel;
   private String extraField;
   private String updatedExtraField;
-  private Instant lastConfigUpdate;
+  protected Instant lastConfigUpdate;
   private boolean enforceSerial;
   private String testName;
   private String testSummary;
@@ -1572,7 +1572,9 @@ public class SequenceBase {
           waitUntil("last_config synchronized", this::lastConfigUpdated));
     });
     final Instant endTime = lastConfigUpdate.plusSeconds(LOG_TIMEOUT_SEC);
-    warning("TAP waiting until " + endTime + " for captured messages");
+    if (endTime.isAfter(getNowInstant())) {
+      debug(format("Waiting until %s for logs to arrive...", isoConvert(endTime)));
+    }
     messageEvaluateLoop(() -> endTime.isAfter(getNowInstant()));
     processLogMessages();
     List<Entry> entries = matchingLogQueue(

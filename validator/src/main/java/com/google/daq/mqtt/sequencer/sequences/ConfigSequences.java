@@ -148,6 +148,10 @@ public class ConfigSequences extends SequenceBase {
     // Special override because there might not be a state update with a broken config.
     pretendStateUpdated = true;
 
+    info("TAP1: stableConfig " + isoConvert(stableConfig));
+    info("TAP1: last_config " + isoConvert(deviceState.system.last_config));
+    info("TAP1: lastConfigUpdate " + isoConvert(lastConfigUpdate));
+
     setExtraField("break_json");
     updateConfig("to force broken (invalid JSON) configuration");
 
@@ -162,8 +166,9 @@ public class ConfigSequences extends SequenceBase {
           SYSTEM_CONFIG_PARSE.equals(stateStatus.category));
     });
 
-    info("following stable_config " + isoConvert(stableConfig));
-    info("following last_config " + isoConvert(deviceState.system.last_config));
+    info("TAP2: stableConfig " + isoConvert(stableConfig));
+    info("TAP2: last_config " + isoConvert(deviceState.system.last_config));
+    info("TAP2: lastConfigUpdate " + isoConvert(lastConfigUpdate));
 
     // The last_config should not be updated to not reflect the broken config.
     checkThat("device state `last_config` has not been updated",
