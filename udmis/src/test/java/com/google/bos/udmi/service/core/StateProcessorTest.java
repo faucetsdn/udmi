@@ -108,7 +108,7 @@ public class StateProcessorTest extends ProcessorTestBase {
   public void lastStartEmpty() {
     Config testConfig = getTestConfig();
     Config newConfig = processLastStart(testConfig);
-    assertNull(newConfig);
+    assertEquals(INITIAL_LAST_START, newConfig.system.operation.last_start, "new last_start");
   }
 
   @Test
