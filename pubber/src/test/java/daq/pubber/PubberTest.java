@@ -196,9 +196,9 @@ public class PubberTest extends TestBase {
   }
 
   @Test
-  public void redirectEndpoint() throws InterruptedException {
+  public void redirectEndpoint() {
     configurePubberEndpoint();
-    pubber.maybeRedirectEndpoint();
+    pubber.maybeRedirectEndpoint(pubber.getExtractedEndpoint());
     assertEquals(BlobPhase.FINAL,
         pubber.getDeviceState().blobset.blobs.get(IOT_ENDPOINT_CONFIG.value()).phase);
     Date initialGeneration = pubber.getDeviceState().blobset.blobs.get(
@@ -206,7 +206,7 @@ public class PubberTest extends TestBase {
     assertNotEquals(null, initialGeneration);
 
     configurePubberRedirect();
-    pubber.maybeRedirectEndpoint();
+    pubber.maybeRedirectEndpoint(pubber.getExtractedEndpoint());
     assertEquals(BlobPhase.FINAL,
         pubber.getDeviceState().blobset.blobs.get(IOT_ENDPOINT_CONFIG.value()).phase);
     Date redirectGeneration = pubber.getDeviceState().blobset.blobs.get(

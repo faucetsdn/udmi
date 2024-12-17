@@ -493,7 +493,6 @@ public interface PubberUdmiPublisher extends UdmiPublisher {
     }
   }
 
-
   /**
    * Deferred config actions.
    */
@@ -505,9 +504,8 @@ public interface PubberUdmiPublisher extends UdmiPublisher {
     getDeviceManager().maybeRestartSystem();
 
     // Do redirect after restart system check, since this might take a long time.
-    maybeRedirectEndpoint();
+    maybeRedirectEndpoint(getExtractedEndpoint());
   }
-
 
   /**
    * For testing, if configured, send a slate of bad messages for testing by the message handling
@@ -628,11 +626,11 @@ public interface PubberUdmiPublisher extends UdmiPublisher {
    * Attempts to redirect the endpoint based on configuration settings and handles redirection
    * logic.
    */
-  default void maybeRedirectEndpoint() {
+  default void maybeRedirectEndpoint(EndpointConfiguration extractedEndpoint) {
     String redirectRegistry = getConfig().options.redirectRegistry;
     String currentSignature = toJsonString(getConfig().endpoint);
     String extractedSignature =
-        redirectRegistry == null ? toJsonString(getExtractedEndpoint())
+        redirectRegistry == null ? toJsonString(extractedEndpoint)
             : redirectedEndpoint(redirectRegistry);
 
     if (extractedSignature == null) {
@@ -648,18 +646,18 @@ public interface PubberUdmiPublisher extends UdmiPublisher {
       return; // No need to redirect anything!
     }
 
-    if (getExtractedEndpoint() != null) {
-      if (!Objects.equals(endpointState.generation, getExtractedEndpoint().generation)) {
+    if (extractedEndpoint != null) {
+      if (!Objects.equals(endpointState.generation, extractedEndpoint.generation)) {
         notice("Starting new endpoint generation");
         endpointState.phase = null;
         endpointState.status = null;
-        endpointState.generation = getExtractedEndpoint().generation;
+        endpointState.generation = extractedEndpoint.generation;
       }
 
-      if (getExtractedEndpoint().error != null) {
+      if (extractedEndpoint.error != null) {
         setAttemptedEndpoint(extractedSignature);
         endpointState.phase = BlobPhase.FINAL;
-        Exception applyError = new RuntimeException(getExtractedEndpoint().error);
+        Exception applyError = new RuntimeException(extractedEndpoint.error);
         endpointState.status = exceptionStatus(applyError, Category.BLOBSET_BLOB_APPLY);
         publishSynchronousState();
         return;
@@ -673,7 +671,7 @@ public interface PubberUdmiPublisher extends UdmiPublisher {
       endpointState.phase = BlobPhase.APPLY;
       publishSynchronousState();
       resetConnection(extractedSignature);
-      persistEndpoint(getExtractedEndpoint());
+      persistEndpoint(extractedEndpoint);
       endpointState.phase = BlobPhase.FINAL;
       markStateDirty();
     } catch (Exception e) {
@@ -692,7 +690,6 @@ public interface PubberUdmiPublisher extends UdmiPublisher {
   }
 
   String getWorkingEndpoint();
-
 
   void setAttemptedEndpoint(String s);
 
