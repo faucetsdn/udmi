@@ -3,6 +3,6 @@
     "ether" : { },
     "ipv4" : { },
     "vendor" : { },
-    "bacnet" : { }
+    "ipv6" : { }
   }
 }

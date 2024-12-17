@@ -1,19 +1,14 @@
 {
-  "timestamp" : "2024-12-16T23:14:05Z",
-  "version" : "@@@cloud udmi version###git-31e7ea5",
+  "timestamp" : "2024-12-01T09:20:10Z",
+  "version" : "@@@cloud udmi version###git-36684ca",
   "system" : {
     "min_loglevel" : 200,
     "metrics_rate_sec" : 10,
     "operation" : {
-      "last_start" : "2024-12-16T23:13:27Z"
+      "last_start" : "2024-12-01T09:19:18Z"
     },
     "testing" : {
       "sequence_name" : "broken_config"
-    }
-  },
-  "discovery" : {
-    "families" : {
-      "vendor" : { }
     }
   },
   "localnet" : {
@@ -21,7 +16,7 @@
       "ether" : { },
       "ipv4" : { },
       "vendor" : { },
-      "bacnet" : { }
+      "ipv6" : { }
     }
   },
   "pointset" : {

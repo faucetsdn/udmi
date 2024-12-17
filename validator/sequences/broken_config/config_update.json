@@ -1,14 +1,9 @@
 {
-  "discovery" : {
-    "families" : {
-      "vendor" : { }
-    }
-  },
   "localnet" : {
     "families" : {
-      "bacnet" : { },
       "ether" : { },
       "ipv4" : { },
+      "ipv6" : { },
       "vendor" : { }
     }
   },
@@ -32,14 +27,14 @@
     "metrics_rate_sec" : 10,
     "min_loglevel" : 200,
     "operation" : {
-      "last_start" : "2024-12-16T23:13:27Z"
+      "last_start" : "2024-12-01T09:19:18Z"
     },
     "testing" : {
-      "config_base" : 19,
+      "config_base" : 17,
       "sequence_name" : "broken_config",
-      "transaction_id" : "RC:2557b7.00000016"
+      "transaction_id" : "RC:e9edc4.00000014"
     }
   },
-  "timestamp" : "2024-12-16T23:14:05Z",
-  "version" : "git-31e7ea5"
+  "timestamp" : "2024-12-01T09:20:10Z",
+  "version" : "git-36684ca"
 }
