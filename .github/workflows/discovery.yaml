@@ -26,10 +26,10 @@ jobs:
         run: |
           docker pull ghcr.io/noursaidi/discoverybuilder:latest 
           docker run --rm --volume $(realpath misc/discoverynode/src):/src --mount type=bind,source=/tmp/discovery_build_script.sh,target=/root/build.sh ghcr.io/noursaidi/discoverybuilder:latest /bin/bash /root/build.sh
-          tar -czvf discoverynode-${{ github.sha }}.tar.gz misc/discoverynode/src/discoverynode 
+          tar -czvf discoverynode-${{ github.sha }}.tar.gz 
       - uses: actions/upload-artifact@v4
         if: ${{ !cancelled() }}
         with:
           if-no-files-found: error
           name: discoverynode-${{ github.sha }}
-          path: discoverynode-${{ github.sha }}.tar.gz
+          path: misc/discoverynode/src/discoverynode
