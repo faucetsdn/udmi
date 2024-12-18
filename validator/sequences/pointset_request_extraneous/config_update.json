@@ -1,9 +1,14 @@
 {
+  "discovery" : {
+    "families" : {
+      "vendor" : { }
+    }
+  },
   "localnet" : {
     "families" : {
+      "bacnet" : { },
       "ether" : { },
       "ipv4" : { },
-      "ipv6" : { },
       "vendor" : { }
     }
   },
@@ -26,16 +31,16 @@
   },
   "system" : {
     "metrics_rate_sec" : 10,
-    "min_loglevel" : 200,
+    "min_loglevel" : 100,
     "operation" : {
-      "last_start" : "2024-11-06T17:31:49Z"
+      "last_start" : "2024-12-17T05:25:35Z"
     },
     "testing" : {
-      "config_base" : 35,
+      "config_base" : 33,
       "sequence_name" : "pointset_request_extraneous",
-      "transaction_id" : "RC:eea582.00000034"
+      "transaction_id" : "RC:bc7efb.00000033"
     }
   },
-  "timestamp" : "2024-11-06T17:33:54Z",
-  "version" : "git-b2a557d"
+  "timestamp" : "2024-12-17T05:27:56Z",
+  "version" : "git-46fef59"
 }
