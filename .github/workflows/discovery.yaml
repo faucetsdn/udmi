@@ -5,10 +5,6 @@ on:
     branches:
       - '**'
 
-concurrency:
-  group: ci-${{ github.repository }}
-  cancel-in-progress: true
-
 jobs:
   build:
     name: Automapping capability
