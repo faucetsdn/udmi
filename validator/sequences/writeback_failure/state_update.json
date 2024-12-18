@@ -1,14 +1,17 @@
 {
+  "discovery" : {
+    "families" : { }
+  },
   "localnet" : {
     "families" : {
       "ether" : {
-        "addr" : "7c:1e:52:59:f6:f5"
+        "addr" : "00:22:48:0a:90:88"
       },
       "ipv4" : {
-        "addr" : "10.1.0.159"
+        "addr" : "10.1.0.199"
       },
       "ipv6" : {
-        "addr" : "fe80::7e1e:52ff:fe59:f6f5"
+        "addr" : "fe80::222:48ff:fe0a:9088"
       },
       "vendor" : {
         "addr" : "28179023"
@@ -24,7 +27,7 @@
           "message" : "Point is not writable",
           "detail" : "Point filter_alarm_pressure_status (writable false)",
           "category" : "pointset.point.failure",
-          "timestamp" : "2024-11-06T17:36:02Z",
+          "timestamp" : "2024-12-18T01:55:55Z",
           "level" : 500
         }
       },
@@ -38,14 +41,14 @@
     }
   },
   "system" : {
-    "last_config" : "2024-11-06T17:36:02Z",
+    "last_config" : "2024-12-18T01:55:55Z",
     "operation" : {
       "operational" : true,
-      "last_start" : "2024-11-06T17:34:19Z",
+      "last_start" : "2024-12-18T01:55:33Z",
       "restart_count" : 1,
       "mode" : "initial"
     },
-    "serial_no" : "sequencer-28991",
+    "serial_no" : "sequencer-29848",
     "hardware" : {
       "make" : "BOS",
       "model" : "pubber"
@@ -56,10 +59,10 @@
     "status" : {
       "message" : "success",
       "category" : "system.config.apply",
-      "timestamp" : "2024-11-06T17:36:02Z",
+      "timestamp" : "2024-12-18T01:55:55Z",
       "level" : 300
     }
   },
-  "timestamp" : "2024-11-06T17:36:03Z",
+  "timestamp" : "2024-12-18T01:55:57Z",
   "version" : "1.5.2"
 }

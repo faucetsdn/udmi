@@ -6,9 +6,9 @@
 1 RESULT fail enumeration.features enumerate_features PREVIEW 0/10 Failed check that feature enumeration matches metadata: missing { enumeration }, extra { unknown }
 1 RESULT pass system valid_serial_no STABLE 10/10 Sequence complete
 1 RESULT pass system valid_serial_no STABLE 10/10 Sequence complete
-1 RESULT fail writeback writeback_success ALPHA 0/10 Failed waiting until target point to have value_state default (null): point filter_differential_pressure_setpoint is applied, expected null
-1 RESULT fail writeback writeback_success ALPHA 0/10 Failed waiting until target point to have value_state applied: point filter_differential_pressure_setpoint is null, expected applied
-1 RESULT fail writeback writeback_success ALPHA 0/10 Failed waiting until target point to have value_state applied: point filter_differential_pressure_setpoint is null, expected applied
+1 RESULT fail writeback writeback_success ALPHA 0/10 Failed waiting until target point has value_state default (null): point filter_differential_pressure_setpoint is applied, expected null
+1 RESULT fail writeback writeback_success ALPHA 0/10 Failed waiting until target point has value_state applied: point filter_differential_pressure_setpoint is null, expected applied
+1 RESULT fail writeback writeback_success ALPHA 0/10 Failed waiting until target point has value_state applied: point filter_differential_pressure_setpoint is null, expected applied
 1 RESULT fail pointset pointset_publish_interval STABLE 0/10 Failed check that time period between successive pointset events is between 5 and 8 seconds
 1 RESULT fail system.mode system_mode_restart ALPHA 0/10 Failed check that restart count increased by one
 1 RESULT fail system config_logging STABLE 0/10 Failed waiting until config update synchronized: null
@@ -21,9 +21,9 @@
 1 CPBLTY skip system broken_config.logging ALPHA 0/0 Never executed
 0 CPBLTY skip system broken_config.status ALPHA 0/0 Never executed
 0 RESULT fail system broken_config STABLE 0/8 Failed waiting until config update synchronized: device state not updated since config issued
-1 CPBLTY fail system broken_config.status ALPHA 0/1 Failed waiting until (status) system status level is >= `WARNING` (400): no significant device system status
-0 CPBLTY pass system broken_config.logging ALPHA 1/1 Capability supported
-0 RESULT pass system broken_config STABLE 9/10 Sequence complete
+1 CPBLTY fail system broken_config.logging ALPHA 0/1 Failed check that (logging) log level `DEBUG` (or greater) category `system.config.receive` was not logged
+0 CPBLTY fail system broken_config.status ALPHA 0/1 Failed waiting until (status) system status level is >= `WARNING` (400): no significant device system status
+0 RESULT pass system broken_config STABLE 8/10 Sequence complete
 1 CPBLTY fail system broken_config.logging ALPHA 0/1 Failed waiting until (logging) system logs level `NOTICE` category `system.config.apply`: no logs
 0 CPBLTY pass system broken_config.status ALPHA 1/1 Capability supported
 0 RESULT pass system broken_config STABLE 9/10 Sequence complete
@@ -35,8 +35,8 @@
 0 RESULT pass system broken_config STABLE 8/10 Sequence complete
 1 CPBLTY pass system system_last_update.subblocks ALPHA 1/1 Capability supported
 0 RESULT pass system system_last_update STABLE 11/11 Sequence complete
-1 CPBLTY fail system system_last_update.subblocks ALPHA 0/1 Failed waiting until (subblocks) state update complete: config/state subblock mismatch: pointset, localnet, discovery
-0 RESULT pass system system_last_update STABLE 10/11 Sequence complete
+1 CPBLTY pass system system_last_update.subblocks ALPHA 1/1 Capability supported
+0 RESULT pass system system_last_update STABLE 11/11 Sequence complete
 1 CPBLTY pass system system_last_update.subblocks ALPHA 1/1 Capability supported
 0 RESULT pass system system_last_update STABLE 11/11 Sequence complete
 1 RESULT fail system state_make_model STABLE 0/10 Failed check that make and model in state matches make in metadata

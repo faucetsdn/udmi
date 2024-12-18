@@ -37,7 +37,7 @@
 1 system_last_update RESULT fail schemas state_update_stable STABLE 10/10 Schema violations found
 0 system_last_update RESULT pass schemas device_state_stable STABLE 10/10 Schema validation passed
 0 system_last_update RESULT pass schemas events_system_stable STABLE 10/10 Schema validation passed
-1 system_last_update RESULT pass schemas device_state_stable STABLE 10/10 Schema validation passed
+1 system_last_update RESULT fail schemas device_state_stable STABLE 10/10 Schema violations found
 0 system_last_update RESULT pass schemas events_system_stable STABLE 10/10 Schema validation passed
 0 system_last_update RESULT pass schemas state_update_stable STABLE 10/10 Schema validation passed
 1 system_last_update RESULT fail schemas events_system_stable STABLE 10/10 Schema violations found

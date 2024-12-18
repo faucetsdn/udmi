@@ -1,51 +1,497 @@
 {
-  "event_no" : 5,
-  "last_config" : "2024-11-06T17:33:49Z",
+  "event_no" : 3,
+  "last_config" : "2024-12-18T01:15:32Z",
   "logentries" : [ {
-    "message" : "Update state 2024-11-06T17:33:49Z last_config 2024-11-06T17:33:38Z",
+    "message" : "success",
+    "category" : "system.config.apply",
+    "timestamp" : "2024-12-18T01:15:23Z",
+    "level" : 300
+  }, {
+    "message" : "State update defer -6686ms",
     "category" : "device.log",
-    "timestamp" : "2024-11-06T17:33:49Z",
+    "timestamp" : "2024-12-18T01:15:23Z",
+    "level" : 100
+  }, {
+    "message" : "Update state 2024-12-18T01:15:23Z last_config 2024-12-18T01:15:23Z",
+    "category" : "device.log",
+    "timestamp" : "2024-12-18T01:15:23Z",
     "level" : 200
+  }, {
+    "message" : "State update AHU-1 (writeback_invalid)",
+    "detail" : "{\n  \"timestamp\" : \"2024-12-18T01:15:23Z\",\n  \"version\" : \"1.5.2\",\n  \"system\" : {\n    \"last_config\" : \"2024-12-18T01:15:23Z\",\n    \"operation\" : {\n      \"operational\" : true,\n      \"last_start\" : \"2024-12-18T01:15:11Z\",\n      \"restart_count\" : 1,\n      \"mode\" : \"initial\"\n    },\n    \"serial_no\" : \"sequencer-10868\",\n    \"hardware\" : {\n      \"make\" : \"BOS\",\n      \"model\" : \"pubber\"\n    },\n    \"software\" : {\n      \"firmware\" : \"v1\"\n    },\n    \"status\" : {\n      \"message\" : \"success\",\n      \"category\" : \"system.config.apply\",\n      \"timestamp\" : \"2024-12-18T01:15:23Z\",\n      \"level\" : 300\n    }\n  },\n  \"discovery\" : {\n    \"families\" : { }\n  },\n  \"localnet\" : {\n    \"families\" : {\n      \"ether\" : {\n        \"addr\" : \"7c:1e:52:00:5d:d9\"\n      },\n      \"ipv4\" : {\n        \"addr\" : \"10.1.0.67\"\n      },\n      \"ipv6\" : {\n        \"addr\" : \"fe80::7e1e:52ff:fe00:5dd9\"\n      },\n      \"vendor\" : {\n        \"addr\" : \"28179023\"\n      }\n    }\n  },\n  \"pointset\" : {\n    \"points\" : {\n      \"filter_alarm_pressure_status\" : {\n        \"units\" : \"No-units\"\n      },\n      \"filter_differential_pressure_setpoint\" : {\n        \"units\" : \"Bars\",\n        \"value_state\" : \"applied\"\n      },\n      \"filter_differential_pressure_sensor\" : {\n        \"units\" : \"Degrees-Celsius\"\n      }\n    }\n  }\n}",
+    "category" : "device.log",
+    "timestamp" : "2024-12-18T01:15:23Z",
+    "level" : 100
+  }, {
+    "message" : "success",
+    "category" : "system.config.receive",
+    "timestamp" : "2024-12-18T01:15:23Z",
+    "level" : 100
+  }, {
+    "message" : "State update defer 1933ms",
+    "category" : "device.log",
+    "timestamp" : "2024-12-18T01:15:23Z",
+    "level" : 100
+  }, {
+    "message" : "success",
+    "category" : "system.config.parse",
+    "timestamp" : "2024-12-18T01:15:23Z",
+    "level" : 100
   }, {
     "message" : "Device AHU-1 config handler",
     "category" : "device.log",
-    "timestamp" : "2024-11-06T17:33:49Z",
+    "timestamp" : "2024-12-18T01:15:23Z",
     "level" : 200
   }, {
-    "message" : "2024-11-06T17:33:49Z received config 2024-11-06T17:33:49Z",
+    "message" : "Config update AHU-1 (writeback_invalid)",
+    "detail" : "{\n  \"timestamp\" : \"2024-12-18T01:15:23Z\",\n  \"version\" : \"git-5360efd\",\n  \"system\" : {\n    \"min_loglevel\" : 100,\n    \"metrics_rate_sec\" : 10,\n    \"operation\" : {\n      \"last_start\" : \"2024-12-18T01:15:11Z\"\n    },\n    \"testing\" : {\n      \"sequence_name\" : \"writeback_invalid\",\n      \"transaction_id\" : \"MP:a7c491c2\",\n      \"config_base\" : 41\n    }\n  },\n  \"discovery\" : {\n    \"families\" : {\n      \"vendor\" : { }\n    }\n  },\n  \"localnet\" : {\n    \"families\" : {\n      \"ether\" : { },\n      \"ipv4\" : { },\n      \"vendor\" : { },\n      \"bacnet\" : { }\n    }\n  },\n  \"pointset\" : {\n    \"points\" : {\n      \"filter_alarm_pressure_status\" : {\n        \"ref\" : \"BV11.present_value\",\n        \"units\" : \"No-units\"\n      },\n      \"filter_differential_pressure_setpoint\" : {\n        \"units\" : \"Bars\",\n        \"set_value\" : 98\n      },\n      \"filter_differential_pressure_sensor\" : {\n        \"ref\" : \"AV12.present_value\",\n        \"units\" : \"Degrees-Celsius\"\n      }\n    }\n  }\n}",
     "category" : "device.log",
-    "timestamp" : "2024-11-06T17:33:49Z",
+    "timestamp" : "2024-12-18T01:15:23Z",
+    "level" : 100
+  }, {
+    "message" : "2024-12-18T01:15:23Z received config 2024-12-18T01:15:23Z",
+    "category" : "device.log",
+    "timestamp" : "2024-12-18T01:15:23Z",
     "level" : 200
   }, {
     "message" : "success",
     "category" : "system.config.apply",
-    "timestamp" : "2024-11-06T17:33:49Z",
+    "timestamp" : "2024-12-18T01:15:23Z",
     "level" : 300
+  }, {
+    "message" : "State update defer 1929ms",
+    "category" : "device.log",
+    "timestamp" : "2024-12-18T01:15:23Z",
+    "level" : 100
+  }, {
+    "message" : "State update defer 1926ms",
+    "category" : "device.log",
+    "timestamp" : "2024-12-18T01:15:23Z",
+    "level" : 100
+  }, {
+    "message" : "State update defer 1925ms",
+    "category" : "device.log",
+    "timestamp" : "2024-12-18T01:15:23Z",
+    "level" : 100
+  }, {
+    "message" : "State update defer 1925ms",
+    "category" : "device.log",
+    "timestamp" : "2024-12-18T01:15:23Z",
+    "level" : 100
+  }, {
+    "message" : "State update defer 1925ms",
+    "category" : "device.log",
+    "timestamp" : "2024-12-18T01:15:23Z",
+    "level" : 100
+  }, {
+    "message" : "State update defer 1925ms",
+    "category" : "device.log",
+    "timestamp" : "2024-12-18T01:15:23Z",
+    "level" : 100
+  }, {
+    "message" : "State update defer 1924ms",
+    "category" : "device.log",
+    "timestamp" : "2024-12-18T01:15:23Z",
+    "level" : 100
+  }, {
+    "message" : "State update defer 1924ms",
+    "category" : "device.log",
+    "timestamp" : "2024-12-18T01:15:23Z",
+    "level" : 100
+  }, {
+    "message" : "State update defer 0ms",
+    "category" : "device.log",
+    "timestamp" : "2024-12-18T01:15:25Z",
+    "level" : 100
+  }, {
+    "message" : "Update state 2024-12-18T01:15:25Z last_config 2024-12-18T01:15:23Z",
+    "category" : "device.log",
+    "timestamp" : "2024-12-18T01:15:25Z",
+    "level" : 200
+  }, {
+    "message" : "State update AHU-1 (writeback_invalid)",
+    "detail" : "{\n  \"timestamp\" : \"2024-12-18T01:15:25Z\",\n  \"version\" : \"1.5.2\",\n  \"system\" : {\n    \"last_config\" : \"2024-12-18T01:15:23Z\",\n    \"operation\" : {\n      \"operational\" : true,\n      \"last_start\" : \"2024-12-18T01:15:11Z\",\n      \"restart_count\" : 1,\n      \"mode\" : \"initial\"\n    },\n    \"serial_no\" : \"sequencer-10868\",\n    \"hardware\" : {\n      \"make\" : \"BOS\",\n      \"model\" : \"pubber\"\n    },\n    \"software\" : {\n      \"firmware\" : \"v1\"\n    },\n    \"status\" : {\n      \"message\" : \"success\",\n      \"category\" : \"system.config.apply\",\n      \"timestamp\" : \"2024-12-18T01:15:23Z\",\n      \"level\" : 300\n    }\n  },\n  \"discovery\" : {\n    \"families\" : { }\n  },\n  \"localnet\" : {\n    \"families\" : {\n      \"ether\" : {\n        \"addr\" : \"7c:1e:52:00:5d:d9\"\n      },\n      \"ipv4\" : {\n        \"addr\" : \"10.1.0.67\"\n      },\n      \"ipv6\" : {\n        \"addr\" : \"fe80::7e1e:52ff:fe00:5dd9\"\n      },\n      \"vendor\" : {\n        \"addr\" : \"28179023\"\n      }\n    }\n  },\n  \"pointset\" : {\n    \"points\" : {\n      \"filter_alarm_pressure_status\" : {\n        \"units\" : \"No-units\"\n      },\n      \"filter_differential_pressure_setpoint\" : {\n        \"units\" : \"Bars\",\n        \"value_state\" : \"applied\"\n      },\n      \"filter_differential_pressure_sensor\" : {\n        \"units\" : \"Degrees-Celsius\"\n      }\n    }\n  }\n}",
+    "category" : "device.log",
+    "timestamp" : "2024-12-18T01:15:25Z",
+    "level" : 100
+  }, {
+    "message" : "success",
+    "category" : "system.config.receive",
+    "timestamp" : "2024-12-18T01:15:25Z",
+    "level" : 100
+  }, {
+    "message" : "success",
+    "category" : "system.config.parse",
+    "timestamp" : "2024-12-18T01:15:25Z",
+    "level" : 100
   }, {
     "message" : "Device AHU-1 config handler",
     "category" : "device.log",
-    "timestamp" : "2024-11-06T17:33:49Z",
+    "timestamp" : "2024-12-18T01:15:25Z",
     "level" : 200
   }, {
-    "message" : "2024-11-06T17:33:49Z received config 2024-11-06T17:33:49Z",
+    "message" : "Config update AHU-1 (writeback_invalid)",
+    "detail" : "{\n  \"timestamp\" : \"2024-12-18T01:15:25Z\",\n  \"version\" : \"git-5360efd\",\n  \"system\" : {\n    \"min_loglevel\" : 100,\n    \"metrics_rate_sec\" : 10,\n    \"operation\" : {\n      \"last_start\" : \"2024-12-18T01:15:11Z\"\n    },\n    \"testing\" : {\n      \"sequence_name\" : \"writeback_invalid\",\n      \"transaction_id\" : \"RC:535cb8.00000008\",\n      \"config_base\" : 42\n    }\n  },\n  \"discovery\" : {\n    \"families\" : {\n      \"vendor\" : { }\n    }\n  },\n  \"localnet\" : {\n    \"families\" : {\n      \"ether\" : { },\n      \"ipv4\" : { },\n      \"vendor\" : { },\n      \"bacnet\" : { }\n    }\n  },\n  \"pointset\" : {\n    \"points\" : {\n      \"filter_alarm_pressure_status\" : {\n        \"ref\" : \"BV11.present_value\",\n        \"units\" : \"No-units\"\n      },\n      \"filter_differential_pressure_setpoint\" : {\n        \"units\" : \"Bars\",\n        \"set_value\" : 98\n      },\n      \"filter_differential_pressure_sensor\" : {\n        \"ref\" : \"AV12.present_value\",\n        \"units\" : \"Degrees-Celsius\"\n      }\n    }\n  }\n}",
     "category" : "device.log",
-    "timestamp" : "2024-11-06T17:33:49Z",
+    "timestamp" : "2024-12-18T01:15:25Z",
+    "level" : 100
+  }, {
+    "message" : "State update defer 1930ms",
+    "category" : "device.log",
+    "timestamp" : "2024-12-18T01:15:25Z",
+    "level" : 100
+  }, {
+    "message" : "State update defer 1929ms",
+    "category" : "device.log",
+    "timestamp" : "2024-12-18T01:15:25Z",
+    "level" : 100
+  }, {
+    "message" : "2024-12-18T01:15:25Z received config 2024-12-18T01:15:25Z",
+    "category" : "device.log",
+    "timestamp" : "2024-12-18T01:15:25Z",
     "level" : 200
   }, {
     "message" : "success",
     "category" : "system.config.apply",
-    "timestamp" : "2024-11-06T17:33:49Z",
+    "timestamp" : "2024-12-18T01:15:25Z",
     "level" : 300
   }, {
-    "message" : "Update state 2024-11-06T17:33:51Z last_config 2024-11-06T17:33:49Z",
+    "message" : "State update defer 1927ms",
     "category" : "device.log",
-    "timestamp" : "2024-11-06T17:33:51Z",
+    "timestamp" : "2024-12-18T01:15:25Z",
+    "level" : 100
+  }, {
+    "message" : "State update defer 1927ms",
+    "category" : "device.log",
+    "timestamp" : "2024-12-18T01:15:25Z",
+    "level" : 100
+  }, {
+    "message" : "State update defer 1927ms",
+    "category" : "device.log",
+    "timestamp" : "2024-12-18T01:15:25Z",
+    "level" : 100
+  }, {
+    "message" : "State update defer 1926ms",
+    "category" : "device.log",
+    "timestamp" : "2024-12-18T01:15:25Z",
+    "level" : 100
+  }, {
+    "message" : "State update defer 1926ms",
+    "category" : "device.log",
+    "timestamp" : "2024-12-18T01:15:25Z",
+    "level" : 100
+  }, {
+    "message" : "State update defer 1926ms",
+    "category" : "device.log",
+    "timestamp" : "2024-12-18T01:15:25Z",
+    "level" : 100
+  }, {
+    "message" : "State update defer 1926ms",
+    "category" : "device.log",
+    "timestamp" : "2024-12-18T01:15:25Z",
+    "level" : 100
+  }, {
+    "message" : "State update defer 0ms",
+    "category" : "device.log",
+    "timestamp" : "2024-12-18T01:15:27Z",
+    "level" : 100
+  }, {
+    "message" : "Update state 2024-12-18T01:15:27Z last_config 2024-12-18T01:15:25Z",
+    "category" : "device.log",
+    "timestamp" : "2024-12-18T01:15:27Z",
     "level" : 200
+  }, {
+    "message" : "State update AHU-1 (writeback_invalid)",
+    "detail" : "{\n  \"timestamp\" : \"2024-12-18T01:15:27Z\",\n  \"version\" : \"1.5.2\",\n  \"system\" : {\n    \"last_config\" : \"2024-12-18T01:15:25Z\",\n    \"operation\" : {\n      \"operational\" : true,\n      \"last_start\" : \"2024-12-18T01:15:11Z\",\n      \"restart_count\" : 1,\n      \"mode\" : \"initial\"\n    },\n    \"serial_no\" : \"sequencer-10868\",\n    \"hardware\" : {\n      \"make\" : \"BOS\",\n      \"model\" : \"pubber\"\n    },\n    \"software\" : {\n      \"firmware\" : \"v1\"\n    },\n    \"status\" : {\n      \"message\" : \"success\",\n      \"category\" : \"system.config.apply\",\n      \"timestamp\" : \"2024-12-18T01:15:25Z\",\n      \"level\" : 300\n    }\n  },\n  \"discovery\" : {\n    \"families\" : { }\n  },\n  \"localnet\" : {\n    \"families\" : {\n      \"ether\" : {\n        \"addr\" : \"7c:1e:52:00:5d:d9\"\n      },\n      \"ipv4\" : {\n        \"addr\" : \"10.1.0.67\"\n      },\n      \"ipv6\" : {\n        \"addr\" : \"fe80::7e1e:52ff:fe00:5dd9\"\n      },\n      \"vendor\" : {\n        \"addr\" : \"28179023\"\n      }\n    }\n  },\n  \"pointset\" : {\n    \"points\" : {\n      \"filter_alarm_pressure_status\" : {\n        \"units\" : \"No-units\"\n      },\n      \"filter_differential_pressure_setpoint\" : {\n        \"units\" : \"Bars\",\n        \"value_state\" : \"applied\"\n      },\n      \"filter_differential_pressure_sensor\" : {\n        \"units\" : \"Degrees-Celsius\"\n      }\n    }\n  }\n}",
+    "category" : "device.log",
+    "timestamp" : "2024-12-18T01:15:27Z",
+    "level" : 100
+  }, {
+    "message" : "success",
+    "category" : "system.config.receive",
+    "timestamp" : "2024-12-18T01:15:28Z",
+    "level" : 100
+  }, {
+    "message" : "State update defer 1775ms",
+    "category" : "device.log",
+    "timestamp" : "2024-12-18T01:15:28Z",
+    "level" : 100
+  }, {
+    "message" : "success",
+    "category" : "system.config.parse",
+    "timestamp" : "2024-12-18T01:15:28Z",
+    "level" : 100
+  }, {
+    "message" : "Device AHU-1 config handler",
+    "category" : "device.log",
+    "timestamp" : "2024-12-18T01:15:28Z",
+    "level" : 200
+  }, {
+    "message" : "Config update AHU-1 (writeback_invalid)",
+    "detail" : "{\n  \"timestamp\" : \"2024-12-18T01:15:28Z\",\n  \"version\" : \"git-5360efd\",\n  \"system\" : {\n    \"min_loglevel\" : 100,\n    \"metrics_rate_sec\" : 10,\n    \"operation\" : {\n      \"last_start\" : \"2024-12-18T01:15:11Z\"\n    },\n    \"testing\" : {\n      \"sequence_name\" : \"writeback_invalid\",\n      \"transaction_id\" : \"RC:535cb8.0000000a\",\n      \"config_base\" : 43\n    }\n  },\n  \"discovery\" : {\n    \"families\" : {\n      \"vendor\" : { }\n    }\n  },\n  \"localnet\" : {\n    \"families\" : {\n      \"ether\" : { },\n      \"ipv4\" : { },\n      \"vendor\" : { },\n      \"bacnet\" : { }\n    }\n  },\n  \"pointset\" : {\n    \"points\" : {\n      \"filter_alarm_pressure_status\" : {\n        \"ref\" : \"BV11.present_value\",\n        \"units\" : \"No-units\"\n      },\n      \"filter_differential_pressure_setpoint\" : {\n        \"units\" : \"Bars\",\n        \"set_value\" : 98\n      },\n      \"filter_differential_pressure_sensor\" : {\n        \"ref\" : \"AV12.present_value\",\n        \"units\" : \"Degrees-Celsius\"\n      }\n    }\n  }\n}",
+    "category" : "device.log",
+    "timestamp" : "2024-12-18T01:15:28Z",
+    "level" : 100
+  }, {
+    "message" : "2024-12-18T01:15:28Z received config 2024-12-18T01:15:28Z",
+    "category" : "device.log",
+    "timestamp" : "2024-12-18T01:15:28Z",
+    "level" : 200
+  }, {
+    "message" : "State update defer 1772ms",
+    "category" : "device.log",
+    "timestamp" : "2024-12-18T01:15:28Z",
+    "level" : 100
+  }, {
+    "message" : "State update defer 1771ms",
+    "category" : "device.log",
+    "timestamp" : "2024-12-18T01:15:28Z",
+    "level" : 100
+  }, {
+    "message" : "State update defer 1771ms",
+    "category" : "device.log",
+    "timestamp" : "2024-12-18T01:15:28Z",
+    "level" : 100
+  }, {
+    "message" : "State update defer 1771ms",
+    "category" : "device.log",
+    "timestamp" : "2024-12-18T01:15:28Z",
+    "level" : 100
+  }, {
+    "message" : "success",
+    "category" : "system.config.apply",
+    "timestamp" : "2024-12-18T01:15:28Z",
+    "level" : 300
+  }, {
+    "message" : "State update defer 1771ms",
+    "category" : "device.log",
+    "timestamp" : "2024-12-18T01:15:28Z",
+    "level" : 100
+  }, {
+    "message" : "State update defer 0ms",
+    "category" : "device.log",
+    "timestamp" : "2024-12-18T01:15:29Z",
+    "level" : 100
+  }, {
+    "message" : "Update state 2024-12-18T01:15:29Z last_config 2024-12-18T01:15:28Z",
+    "category" : "device.log",
+    "timestamp" : "2024-12-18T01:15:29Z",
+    "level" : 200
+  }, {
+    "message" : "State update AHU-1 (writeback_invalid)",
+    "detail" : "{\n  \"timestamp\" : \"2024-12-18T01:15:29Z\",\n  \"version\" : \"1.5.2\",\n  \"system\" : {\n    \"last_config\" : \"2024-12-18T01:15:28Z\",\n    \"operation\" : {\n      \"operational\" : true,\n      \"last_start\" : \"2024-12-18T01:15:11Z\",\n      \"restart_count\" : 1,\n      \"mode\" : \"initial\"\n    },\n    \"serial_no\" : \"sequencer-10868\",\n    \"hardware\" : {\n      \"make\" : \"BOS\",\n      \"model\" : \"pubber\"\n    },\n    \"software\" : {\n      \"firmware\" : \"v1\"\n    },\n    \"status\" : {\n      \"message\" : \"success\",\n      \"category\" : \"system.config.apply\",\n      \"timestamp\" : \"2024-12-18T01:15:28Z\",\n      \"level\" : 300\n    }\n  },\n  \"discovery\" : {\n    \"families\" : { }\n  },\n  \"localnet\" : {\n    \"families\" : {\n      \"ether\" : {\n        \"addr\" : \"7c:1e:52:00:5d:d9\"\n      },\n      \"ipv4\" : {\n        \"addr\" : \"10.1.0.67\"\n      },\n      \"ipv6\" : {\n        \"addr\" : \"fe80::7e1e:52ff:fe00:5dd9\"\n      },\n      \"vendor\" : {\n        \"addr\" : \"28179023\"\n      }\n    }\n  },\n  \"pointset\" : {\n    \"points\" : {\n      \"filter_alarm_pressure_status\" : {\n        \"units\" : \"No-units\"\n      },\n      \"filter_differential_pressure_setpoint\" : {\n        \"units\" : \"Bars\",\n        \"value_state\" : \"applied\"\n      },\n      \"filter_differential_pressure_sensor\" : {\n        \"units\" : \"Degrees-Celsius\"\n      }\n    }\n  }\n}",
+    "category" : "device.log",
+    "timestamp" : "2024-12-18T01:15:29Z",
+    "level" : 100
+  }, {
+    "message" : "success",
+    "category" : "system.config.receive",
+    "timestamp" : "2024-12-18T01:15:30Z",
+    "level" : 100
+  }, {
+    "message" : "success",
+    "category" : "system.config.parse",
+    "timestamp" : "2024-12-18T01:15:30Z",
+    "level" : 100
+  }, {
+    "message" : "Device AHU-1 config handler",
+    "category" : "device.log",
+    "timestamp" : "2024-12-18T01:15:30Z",
+    "level" : 200
+  }, {
+    "message" : "State update defer 1797ms",
+    "category" : "device.log",
+    "timestamp" : "2024-12-18T01:15:30Z",
+    "level" : 100
+  }, {
+    "message" : "State update defer 1797ms",
+    "category" : "device.log",
+    "timestamp" : "2024-12-18T01:15:30Z",
+    "level" : 100
+  }, {
+    "message" : "Config update AHU-1 (writeback_invalid)",
+    "detail" : "{\n  \"timestamp\" : \"2024-12-18T01:15:30Z\",\n  \"version\" : \"git-5360efd\",\n  \"system\" : {\n    \"min_loglevel\" : 100,\n    \"metrics_rate_sec\" : 10,\n    \"operation\" : {\n      \"last_start\" : \"2024-12-18T01:15:11Z\"\n    },\n    \"testing\" : {\n      \"sequence_name\" : \"writeback_invalid\",\n      \"transaction_id\" : \"RC:535cb8.0000000c\",\n      \"config_base\" : 44\n    }\n  },\n  \"discovery\" : {\n    \"families\" : {\n      \"vendor\" : { }\n    }\n  },\n  \"localnet\" : {\n    \"families\" : {\n      \"ether\" : { },\n      \"ipv4\" : { },\n      \"vendor\" : { },\n      \"bacnet\" : { }\n    }\n  },\n  \"pointset\" : {\n    \"points\" : {\n      \"filter_alarm_pressure_status\" : {\n        \"ref\" : \"BV11.present_value\",\n        \"units\" : \"No-units\"\n      },\n      \"filter_differential_pressure_setpoint\" : {\n        \"units\" : \"Bars\",\n        \"set_value\" : 98\n      },\n      \"filter_differential_pressure_sensor\" : {\n        \"ref\" : \"AV12.present_value\",\n        \"units\" : \"Degrees-Celsius\"\n      }\n    }\n  }\n}",
+    "category" : "device.log",
+    "timestamp" : "2024-12-18T01:15:30Z",
+    "level" : 100
+  }, {
+    "message" : "2024-12-18T01:15:30Z received config 2024-12-18T01:15:30Z",
+    "category" : "device.log",
+    "timestamp" : "2024-12-18T01:15:30Z",
+    "level" : 200
+  }, {
+    "message" : "success",
+    "category" : "system.config.apply",
+    "timestamp" : "2024-12-18T01:15:30Z",
+    "level" : 300
+  }, {
+    "message" : "State update defer 1795ms",
+    "category" : "device.log",
+    "timestamp" : "2024-12-18T01:15:30Z",
+    "level" : 100
+  }, {
+    "message" : "State update defer 1794ms",
+    "category" : "device.log",
+    "timestamp" : "2024-12-18T01:15:30Z",
+    "level" : 100
+  }, {
+    "message" : "State update defer 1794ms",
+    "category" : "device.log",
+    "timestamp" : "2024-12-18T01:15:30Z",
+    "level" : 100
+  }, {
+    "message" : "State update defer 1794ms",
+    "category" : "device.log",
+    "timestamp" : "2024-12-18T01:15:30Z",
+    "level" : 100
+  }, {
+    "message" : "success",
+    "category" : "system.config.receive",
+    "timestamp" : "2024-12-18T01:15:31Z",
+    "level" : 100
+  }, {
+    "message" : "State update defer 596ms",
+    "category" : "device.log",
+    "timestamp" : "2024-12-18T01:15:31Z",
+    "level" : 100
+  }, {
+    "message" : "success",
+    "category" : "system.config.parse",
+    "timestamp" : "2024-12-18T01:15:31Z",
+    "level" : 100
+  }, {
+    "message" : "State update defer 595ms",
+    "category" : "device.log",
+    "timestamp" : "2024-12-18T01:15:31Z",
+    "level" : 100
+  }, {
+    "message" : "Device AHU-1 config handler",
+    "category" : "device.log",
+    "timestamp" : "2024-12-18T01:15:31Z",
+    "level" : 200
+  }, {
+    "message" : "Config update AHU-1 (writeback_invalid)",
+    "detail" : "{\n  \"timestamp\" : \"2024-12-18T01:15:31Z\",\n  \"version\" : \"git-5360efd\",\n  \"system\" : {\n    \"min_loglevel\" : 100,\n    \"metrics_rate_sec\" : 10,\n    \"operation\" : {\n      \"last_start\" : \"2024-12-18T01:15:11Z\"\n    },\n    \"testing\" : {\n      \"sequence_name\" : \"writeback_invalid\",\n      \"transaction_id\" : \"RC:535cb8.0000000e\",\n      \"config_base\" : 45\n    }\n  },\n  \"discovery\" : {\n    \"families\" : {\n      \"vendor\" : { }\n    }\n  },\n  \"localnet\" : {\n    \"families\" : {\n      \"ether\" : { },\n      \"ipv4\" : { },\n      \"vendor\" : { },\n      \"bacnet\" : { }\n    }\n  },\n  \"pointset\" : {\n    \"points\" : {\n      \"filter_alarm_pressure_status\" : {\n        \"ref\" : \"BV11.present_value\",\n        \"units\" : \"No-units\"\n      },\n      \"filter_differential_pressure_setpoint\" : {\n        \"units\" : \"Bars\",\n        \"set_value\" : 98\n      },\n      \"filter_differential_pressure_sensor\" : {\n        \"ref\" : \"AV12.present_value\",\n        \"units\" : \"Degrees-Celsius\"\n      }\n    }\n  }\n}",
+    "category" : "device.log",
+    "timestamp" : "2024-12-18T01:15:31Z",
+    "level" : 100
+  }, {
+    "message" : "2024-12-18T01:15:31Z received config 2024-12-18T01:15:31Z",
+    "category" : "device.log",
+    "timestamp" : "2024-12-18T01:15:31Z",
+    "level" : 200
+  }, {
+    "message" : "success",
+    "category" : "system.config.apply",
+    "timestamp" : "2024-12-18T01:15:31Z",
+    "level" : 300
+  }, {
+    "message" : "State update defer 592ms",
+    "category" : "device.log",
+    "timestamp" : "2024-12-18T01:15:31Z",
+    "level" : 100
+  }, {
+    "message" : "State update defer 591ms",
+    "category" : "device.log",
+    "timestamp" : "2024-12-18T01:15:31Z",
+    "level" : 100
+  }, {
+    "message" : "State update defer 591ms",
+    "category" : "device.log",
+    "timestamp" : "2024-12-18T01:15:31Z",
+    "level" : 100
+  }, {
+    "message" : "State update defer 591ms",
+    "category" : "device.log",
+    "timestamp" : "2024-12-18T01:15:31Z",
+    "level" : 100
+  }, {
+    "message" : "State update defer 590ms",
+    "category" : "device.log",
+    "timestamp" : "2024-12-18T01:15:31Z",
+    "level" : 100
+  }, {
+    "message" : "State update defer 590ms",
+    "category" : "device.log",
+    "timestamp" : "2024-12-18T01:15:31Z",
+    "level" : 100
+  }, {
+    "message" : "State update defer 590ms",
+    "category" : "device.log",
+    "timestamp" : "2024-12-18T01:15:31Z",
+    "level" : 100
+  }, {
+    "message" : "State update defer 0ms",
+    "category" : "device.log",
+    "timestamp" : "2024-12-18T01:15:31Z",
+    "level" : 100
+  }, {
+    "message" : "Update state 2024-12-18T01:15:31Z last_config 2024-12-18T01:15:31Z",
+    "category" : "device.log",
+    "timestamp" : "2024-12-18T01:15:31Z",
+    "level" : 200
+  }, {
+    "message" : "State update AHU-1 (writeback_invalid)",
+    "detail" : "{\n  \"timestamp\" : \"2024-12-18T01:15:31Z\",\n  \"version\" : \"1.5.2\",\n  \"system\" : {\n    \"last_config\" : \"2024-12-18T01:15:31Z\",\n    \"operation\" : {\n      \"operational\" : true,\n      \"last_start\" : \"2024-12-18T01:15:11Z\",\n      \"restart_count\" : 1,\n      \"mode\" : \"initial\"\n    },\n    \"serial_no\" : \"sequencer-10868\",\n    \"hardware\" : {\n      \"make\" : \"BOS\",\n      \"model\" : \"pubber\"\n    },\n    \"software\" : {\n      \"firmware\" : \"v1\"\n    },\n    \"status\" : {\n      \"message\" : \"success\",\n      \"category\" : \"system.config.apply\",\n      \"timestamp\" : \"2024-12-18T01:15:31Z\",\n      \"level\" : 300\n    }\n  },\n  \"discovery\" : {\n    \"families\" : { }\n  },\n  \"localnet\" : {\n    \"families\" : {\n      \"ether\" : {\n        \"addr\" : \"7c:1e:52:00:5d:d9\"\n      },\n      \"ipv4\" : {\n        \"addr\" : \"10.1.0.67\"\n      },\n      \"ipv6\" : {\n        \"addr\" : \"fe80::7e1e:52ff:fe00:5dd9\"\n      },\n      \"vendor\" : {\n        \"addr\" : \"28179023\"\n      }\n    }\n  },\n  \"pointset\" : {\n    \"points\" : {\n      \"filter_alarm_pressure_status\" : {\n        \"units\" : \"No-units\"\n      },\n      \"filter_differential_pressure_setpoint\" : {\n        \"units\" : \"Bars\",\n        \"value_state\" : \"applied\"\n      },\n      \"filter_differential_pressure_sensor\" : {\n        \"units\" : \"Degrees-Celsius\"\n      }\n    }\n  }\n}",
+    "category" : "device.log",
+    "timestamp" : "2024-12-18T01:15:31Z",
+    "level" : 100
+  }, {
+    "message" : "success",
+    "category" : "system.config.receive",
+    "timestamp" : "2024-12-18T01:15:32Z",
+    "level" : 100
+  }, {
+    "message" : "State update defer 1494ms",
+    "category" : "device.log",
+    "timestamp" : "2024-12-18T01:15:32Z",
+    "level" : 100
+  }, {
+    "message" : "success",
+    "category" : "system.config.parse",
+    "timestamp" : "2024-12-18T01:15:32Z",
+    "level" : 100
+  }, {
+    "message" : "Device AHU-1 config handler",
+    "category" : "device.log",
+    "timestamp" : "2024-12-18T01:15:32Z",
+    "level" : 200
+  }, {
+    "message" : "State update defer 1492ms",
+    "category" : "device.log",
+    "timestamp" : "2024-12-18T01:15:32Z",
+    "level" : 100
+  }, {
+    "message" : "Config update AHU-1 (writeback_invalid)",
+    "detail" : "{\n  \"timestamp\" : \"2024-12-18T01:15:32Z\",\n  \"version\" : \"git-5360efd\",\n  \"system\" : {\n    \"min_loglevel\" : 100,\n    \"metrics_rate_sec\" : 10,\n    \"operation\" : {\n      \"last_start\" : \"2024-12-18T01:15:11Z\"\n    },\n    \"testing\" : {\n      \"sequence_name\" : \"writeback_invalid\",\n      \"transaction_id\" : \"RC:535cb8.0000000d\",\n      \"config_base\" : 46\n    }\n  },\n  \"discovery\" : {\n    \"families\" : {\n      \"vendor\" : { }\n    }\n  },\n  \"localnet\" : {\n    \"families\" : {\n      \"ether\" : { },\n      \"ipv4\" : { },\n      \"vendor\" : { },\n      \"bacnet\" : { }\n    }\n  },\n  \"pointset\" : {\n    \"points\" : {\n      \"filter_alarm_pressure_status\" : {\n        \"ref\" : \"BV11.present_value\",\n        \"units\" : \"No-units\"\n      },\n      \"filter_differential_pressure_setpoint\" : {\n        \"units\" : \"Bars\",\n        \"set_value\" : 98\n      },\n      \"filter_differential_pressure_sensor\" : {\n        \"ref\" : \"AV12.present_value\",\n        \"units\" : \"Degrees-Celsius\"\n      }\n    }\n  }\n}",
+    "category" : "device.log",
+    "timestamp" : "2024-12-18T01:15:32Z",
+    "level" : 100
+  }, {
+    "message" : "2024-12-18T01:15:32Z received config 2024-12-18T01:15:32Z",
+    "category" : "device.log",
+    "timestamp" : "2024-12-18T01:15:32Z",
+    "level" : 200
+  }, {
+    "message" : "success",
+    "category" : "system.config.apply",
+    "timestamp" : "2024-12-18T01:15:32Z",
+    "level" : 300
+  }, {
+    "message" : "State update defer 1490ms",
+    "category" : "device.log",
+    "timestamp" : "2024-12-18T01:15:32Z",
+    "level" : 100
+  }, {
+    "message" : "State update defer 822ms",
+    "category" : "device.log",
+    "timestamp" : "2024-12-18T01:15:33Z",
+    "level" : 100
   } ],
   "metrics" : {
     "mem_total_mb" : 254.0,
-    "mem_free_mb" : 212.39669799804688
+    "mem_free_mb" : 211.68798828125
   },
-  "timestamp" : "2024-11-06T17:33:51Z",
+  "timestamp" : "2024-12-18T01:15:33Z",
   "version" : "1.5.2"
 }
