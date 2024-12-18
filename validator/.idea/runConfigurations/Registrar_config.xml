@@ -1,9 +1,6 @@
 <component name="ProjectRunConfigurationManager">
   <configuration default="false" name="Registrar config" type="Application" factoryName="Application">
     <option name="ALTERNATIVE_JRE_PATH" value="17" />
-    <envs>
-      <env name="UDMI_COMMIT" value="12345678" />
-    </envs>
     <option name="MAIN_CLASS_NAME" value="com.google.daq.mqtt.registrar.Registrar" />
     <module name="validator" />
     <option name="PROGRAM_PARAMETERS" value="out/registrar_conf.json" />
