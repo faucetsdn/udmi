@@ -1870,7 +1870,7 @@ public class SequenceBase {
   }
 
   private void handleProxyMessage(String deviceId, Envelope envelope, Map<String, Object> message) {
-    info(format("Handling proxy %s message %s", deviceId, envelope.subFolder.value()));
+    info(format("Handling proxy device %s %s message", deviceId, envelope.subFolder.value()));
     getReceivedEvents(deviceId, envelope.subFolder).add(message);
   }
 
