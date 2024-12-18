@@ -702,7 +702,7 @@ public class SequenceBase {
    */
   public void setExtraField(String extraField) {
     boolean extraFieldChanged = !Objects.equals(this.extraField, extraField);
-    debug("extraFieldChanged " + extraFieldChanged + " because extra_field " + extraField);
+    debug("Set extraFieldChanged " + extraFieldChanged + " because extra_field " + extraField);
     this.extraField = extraField;
   }
 
@@ -713,7 +713,7 @@ public class SequenceBase {
    */
   public void setLastStart(Date use) {
     boolean changed = !stringify(deviceConfig.system.operation.last_start).equals(stringify(use));
-    debug("last_start changed " + changed + ", last_start " + isoConvert(use));
+    debug("Set last_start changed " + changed + ", last_start " + isoConvert(use));
     deviceConfig.system.operation.last_start = use;
   }
 
@@ -1121,7 +1121,7 @@ public class SequenceBase {
     boolean stateMessage = messageBase.startsWith(STATE_SUBTYPE);
     boolean syntheticMessage = (configMessage || stateMessage) && !updateMessage;
 
-    String prefix = localUpdate ? "local " : "received ";
+    String prefix = localUpdate ? "Outgoing " : "Received ";
     File messageFile = new File(testDir, format(MESSAGE_FILE_FORMAT, messageBase));
 
     if (message.containsKey(EXCEPTION_KEY)) {
@@ -1160,7 +1160,7 @@ public class SequenceBase {
     try {
       checkArgument(!messageBase.startsWith(LOCAL_PREFIX));
       SystemEvents event = convertTo(SystemEvents.class, message);
-      String prefix = "received " + messageBase + " ";
+      String prefix = "Received " + messageBase + " ";
       if (event.logentries == null || event.logentries.isEmpty()) {
         debug(prefix + "(no logs)");
       } else {
@@ -1278,6 +1278,8 @@ public class SequenceBase {
   private void updateConfig(String reason, boolean force, boolean waitForState) {
     assertConfigIsNotPending();
 
+    ifNotTrueThen(shouldGateConfigUpdate, this::rateLimitConfig);
+
     if (doPartialUpdates && !force) {
       updateConfig(reason, waitForState, SubFolder.SYSTEM, augmentConfig(deviceConfig.system));
       updateConfig(reason, waitForState, SubFolder.POINTSET, deviceConfig.pointset);
@@ -1297,6 +1299,10 @@ public class SequenceBase {
 
     assertConfigIsNotPending();
 
+    // Rate-limit from the point the config was _applied_, not when it was _sent_.
+    lastConfigMark = getNowInstant();
+    debug(format("New lastConfigMark at %s", isoConvert(lastConfigMark)));
+
     captureConfigChange(reason);
   }
 
@@ -1307,14 +1313,14 @@ public class SequenceBase {
       String sentBlockConfig = String.valueOf(
           sentConfig.get(requireNonNull(subBlock, "subBlock not defined")));
       boolean updated = !actualizedData.equals(sentBlockConfig);
-      trace(format("updated check %s_%s: %s", CONFIG_SUBTYPE, subBlock, updated));
+      trace(format("Updated check %s_%s: %s", CONFIG_SUBTYPE, subBlock, updated));
       if (updated) {
         String topic = subBlock + "/config";
         ifTrueThen(shouldGateConfigUpdate, this::rateLimitConfig);
         final String transactionId =
             requireNonNull(reflector().publish(getDeviceId(), topic, actualizedData),
                 "no transactionId returned for publish");
-        debug(format("update %s_%s, adding configTransaction %s",
+        debug(format("Update %s_%s, adding configTransaction %s",
             CONFIG_SUBTYPE, subBlock, transactionId));
         recordRawMessage(data, LOCAL_PREFIX + subBlock.value());
         sentConfig.put(subBlock, actualizedData);
@@ -1343,11 +1349,11 @@ public class SequenceBase {
   private void rateLimitConfig() {
     // Add a forced sleep to make sure configs aren't sent too quickly
     long delayMs = CONFIG_BARRIER.toMillis() - between(lastConfigMark, getNowInstant()).toMillis();
+    debug(format("Delay from lastConfigMark %s is %sms", lastConfigMark, delayMs));
     ifTrueThen(delayMs > 0, () -> {
       debug(format("Rate-limiting config by %dms", delayMs));
       safeSleep(delayMs);
     });
-    lastConfigMark = getNowInstant();
   }
 
   protected void updateProxyConfig(String proxyId, Config proxyConfig) {
@@ -1386,7 +1392,7 @@ public class SequenceBase {
     try {
       AugmentedSystemConfig augmentedConfig = JsonUtil.OBJECT_MAPPER.readValue(stringify(system),
           AugmentedSystemConfig.class);
-      debug("system config extra field " + extraField);
+      debug("System config extra field " + extraField);
       augmentedConfig.extraField = extraField;
       return augmentedConfig;
     } catch (Exception e) {
@@ -1512,7 +1518,7 @@ public class SequenceBase {
     try {
       whileDoing(sanitizedDescription, () -> {
         ifNotTrueThen(waitingForConfigSync.get(),
-            () -> updateConfig("Before " + sanitizedDescription));
+            () -> updateConfig("before " + sanitizedDescription));
         waitEvaluateLoop(sanitizedDescription, maxWait, evaluator, detail);
         recordSequence("Wait until", description);
       }, detail::get);
@@ -1576,18 +1582,22 @@ public class SequenceBase {
     withRecordSequence(false, () -> {
       ifTrueThen(deviceSupportsState(), () ->
           waitUntil("last_config synchronized", this::lastConfigUpdated));
-      processLogMessages();
     });
     final Instant endTime = lastConfigUpdate.plusSeconds(LOG_TIMEOUT_SEC);
+    if (endTime.isAfter(getNowInstant())) {
+      debug(format("Waiting until %s for logs to arrive...", isoConvert(endTime)));
+    }
+    messageEvaluateLoop(() -> endTime.isAfter(getNowInstant()));
+    processLogMessages();
     List<Entry> entries = matchingLogQueue(
         entry -> category.equals(entry.category) && entry.level >= minLevel.value());
     checkThat(
         format("log level `%s` (or greater) category `%s` was not logged", minLevel, category),
         () -> {
           if (!entries.isEmpty()) {
-            warning(format("Filtered config between %s and %s", isoConvert(lastConfigUpdate),
+            warning(format("Filtered entries between %s and %s:", isoConvert(lastConfigUpdate),
                 isoConvert(endTime)));
-            entries.forEach(entry -> error("undesirable " + entryMessage(entry)));
+            entries.forEach(entry -> error("Forbidden entry: " + entryMessage(entry)));
           }
           return entries.isEmpty();
         });
@@ -1610,9 +1620,9 @@ public class SequenceBase {
     List<Entry> toRemove = logEntryQueue.stream()
         .filter(entry -> entry.timestamp.toInstant().isBefore(lastConfigUpdate)).toList();
     if (!toRemove.isEmpty()) {
-      debug("ignoring log entries before lastConfigUpdate " + lastConfigUpdate);
+      debug("Flushing log entries before lastConfigUpdate " + lastConfigUpdate);
     }
-    toRemove.forEach(entry -> debug(" x " + entryMessage(entry)));
+    toRemove.forEach(entry -> debug("Flushing entry: " + entryMessage(entry)));
     logEntryQueue.removeAll(toRemove);
   }
 
@@ -2141,16 +2151,16 @@ public class SequenceBase {
 
     if (debugOut) {
       if (!failures.isEmpty()) {
-        notice(format("previous state %s updated at %s", isoConvert(configStateStart),
-            isoConvert(current)));
-        notice(format("last_start synchronized %s: state/%s =? config/%s", lastStartSynced,
+        notice(format("Saw previous state updated %s: %s %s", stateUpdated,
+            isoConvert(configStateStart), isoConvert(current)));
+        notice(format("Saw last_start synchronized %s: state/%s =? config/%s", lastStartSynced,
             isoConvert(stateLastStart), isoConvert(configLastStart)));
-        notice(format("configTransactions flushed %s: %s", transactionsClean,
+        notice(format("Saw configTransactions flushed %s: %s", transactionsClean,
             configTransactionsListString()));
-        notice(format("last_config synchronized %s: state/%s =? config/%s", lastConfigSynced,
+        notice(format("Saw last_config synchronized %s: state/%s =? config/%s", lastConfigSynced,
             isoConvert(stateLastConfig), isoConvert(lastConfig)));
       } else if (stateLastConfig == null) {
-        debug("last_config synchronized check disabled due to missing state.system.last_config");
+        debug("Saw last_config synchronized check disabled: missing state.system.last_config");
       }
     }
     return ifNotTrueGet(failures.isEmpty(), () -> CSV_JOINER.join(failures));
@@ -2242,8 +2252,6 @@ public class SequenceBase {
 
   protected <T> List<T> popReceivedEvents(Class<T> clazz) {
     SubFolder subFolder = CLASS_SUBFOLDER_MAP.get(clazz);
-    // TODO blocking sleep causing proxy device tests to fail
-    safeSleep(EVENT_WAIT_DELAY_MS);
     List<Map<String, Object>> events = getReceivedEvents().remove(subFolder);
     if (events == null) {
       return ImmutableList.of();
