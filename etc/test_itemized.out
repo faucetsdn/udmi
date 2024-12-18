@@ -12,7 +12,7 @@
 1 RESULT fail pointset pointset_publish_interval STABLE 0/10 Failed check that time period between successive pointset events is between 5 and 8 seconds
 1 RESULT fail system system_min_loglevel ALPHA 0/10 Failed check that log level `NOTICE` (or greater) category `system.config.apply` was not logged
 1 RESULT fail system.mode system_mode_restart ALPHA 0/10 Failed check that restart count increased by one
-1 RESULT fail system config_logging STABLE 0/10 Failed waiting until config update synchronized: initial exception
+1 RESULT fail system config_logging STABLE 0/10 Failed waiting until config update synchronized: While processing message state_update MP:3caf1fbf, While parsing version string 1.4., Bad message version string 1.4.
 1 CPBLTY fail system broken_config.logging ALPHA 0/1 Failed waiting until (logging) system logs level `DEBUG` category `system.config.receive`: no logs
 0 CPBLTY fail system broken_config.status ALPHA 0/1 Failed waiting until (status) system status level is >= `WARNING` (400): no significant device system status
 0 RESULT pass system broken_config STABLE 8/10 Sequence complete
