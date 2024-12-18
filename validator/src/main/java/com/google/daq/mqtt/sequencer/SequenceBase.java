@@ -1544,15 +1544,19 @@ public class SequenceBase {
       Supplier<String> evaluator,
       AtomicReference<String> detail) {
 
-    // Cover the case where the first call to evaluator throws an exception.
-    detail.set("initial exception");
-
     messageEvaluateLoop(maxWait, () -> {
-      String result = evaluator.get();
-      String previous = detail.getAndSet(emptyToNull(result));
-      ifTrueThen(!Objects.equals(previous, result),
-          () -> debug(format("Detail %s is now: %s", sanitizedDescription, result)));
-      return result != null;
+      try {
+        String result = evaluator.get();
+        String previous = detail.getAndSet(emptyToNull(result));
+        ifTrueThen(!Objects.equals(previous, result),
+            () -> debug(format("Detail %s is now: %s", sanitizedDescription, result)));
+        return result != null;
+      } catch (Exception e) {
+        String message = friendlyStackTrace(e);
+        warning(format("Detail %s exception: %s", sanitizedDescription, message));
+        detail.set(message);
+        throw e;
+      }
     });
   }
 
