@@ -27,6 +27,7 @@ import static udmi.lib.base.MqttDevice.CONFIG_TOPIC;
 import static udmi.lib.base.MqttDevice.ERRORS_TOPIC;
 import static udmi.lib.base.MqttDevice.STATE_TOPIC;
 import static udmi.lib.base.MqttPublisher.DEFAULT_CONFIG_WAIT_SEC;
+import static udmi.lib.client.SystemManager.UDMI_PUBLISHER_LOG_CATEGORY;
 import static udmi.schema.BlobsetConfig.SystemBlobsets.IOT_ENDPOINT_CONFIG;
 
 import com.google.common.collect.ImmutableMap;
@@ -218,14 +219,6 @@ public interface PubberUdmiPublisher extends UdmiPublisher {
     publishStateMessage(dupeState);
   }
 
-  private void sendDupeState() {
-    State dupeState = new State();
-    dupeState.system = getDeviceState().system;
-    dupeState.timestamp = getDeviceState().timestamp;
-    dupeState.version = getDeviceState().version;
-    publishStateMessage(dupeState);
-  }
-
   @Override
   default void publish(String targetId, Object message) {
     publishDeviceMessage(targetId, message);
@@ -266,7 +259,6 @@ public interface PubberUdmiPublisher extends UdmiPublisher {
    * whether the device is a gateway or a proxy device.
    */
   default void registerMessageHandlers() {
-    getDeviceTarget().unregisterHandlers();
     getDeviceTarget().registerHandler(CONFIG_TOPIC, this::configHandler, Config.class);
     String gatewayId = getGatewayId(getDeviceId(), getConfig());
     if (isGatewayDevice()) {
@@ -280,7 +272,16 @@ public interface PubberUdmiPublisher extends UdmiPublisher {
     }
   }
 
+  /**
+   * Get MqttDevice for given proxy.
+   *
+   * @param proxyId Proxy device id
+   * @return MqttDevice
+   */
   default MqttDevice getMqttDevice(String proxyId) {
+    if (getDeviceTarget() == null) {
+      return null;
+    }
     return new MqttDevice(proxyId, getDeviceTarget());
   }
 
@@ -322,10 +323,12 @@ public interface PubberUdmiPublisher extends UdmiPublisher {
       if (isTrue(getConfig().options.barfConfig)) {
         error("Restarting system because of restart-on-error configuration setting");
         getDeviceManager().systemLifecycle(SystemMode.RESTART);
+        return;
       }
     }
     String usePhase = isTrue(getOptions().badCategory) ? "apply" : phase;
-    String category = format(SYSTEM_CATEGORY_FORMAT, type, usePhase);
+    String category = type == null ? UDMI_PUBLISHER_LOG_CATEGORY :
+        format(SYSTEM_CATEGORY_FORMAT, type, usePhase);
     Entry report = entryFromException(category, cause);
     getDeviceManager().localLog(report);
     publishLogMessage(report, targetId);
@@ -399,7 +402,12 @@ public interface PubberUdmiPublisher extends UdmiPublisher {
     return buffer.toString();
   }
 
-  private void configHandler(Config config) {
+  /**
+   * Configures the handler with the given configuration.
+   *
+   * @param config The configuration to be applied.
+   */
+  default void configHandler(Config config) {
     try {
       configPreprocess(getDeviceId(), config);
       debug(format("Config update %s%s", getDeviceId(), getDeviceManager().getTestingTag()),
@@ -456,6 +464,7 @@ public interface PubberUdmiPublisher extends UdmiPublisher {
         if (configMsg.system == null && isTrue(getConfig().options.barfConfig)) {
           error("Empty config system block and configured to restart on bad config!");
           getDeviceManager().systemLifecycle(SystemMode.RESTART);
+          return;
         }
         GeneralUtils.copyFields(configMsg, getDeviceConfig(), true);
         info(format("%s received config %s", getTimestamp(), isoConvert(configMsg.timestamp)));
@@ -483,7 +492,6 @@ public interface PubberUdmiPublisher extends UdmiPublisher {
     }
   }
 
-
   /**
    * Deferred config actions.
    */
@@ -491,13 +499,15 @@ public interface PubberUdmiPublisher extends UdmiPublisher {
     if (!isConnected()) {
       return;
     }
-
-    getDeviceManager().maybeRestartSystem();
-
-    // Do redirect after restart system check, since this might take a long time.
-    maybeRedirectEndpoint();
+    DeviceManager deviceManager = getDeviceManager();
+    deviceManager.maybeRestartSystem();
+    SystemState systemState = deviceManager.getSystemManager().getSystemState();
+    SystemMode mode = catchToNull(() -> systemState.operation.mode);
+    if (SystemMode.INITIAL.equals(mode) || SystemMode.ACTIVE.equals(mode)) {
+      // Do redirect after restart system check, since this might take a long time.
+      maybeRedirectEndpoint(getExtractedEndpoint());
+    }
   }
-
 
   /**
    * For testing, if configured, send a slate of bad messages for testing by the message handling
@@ -618,11 +628,11 @@ public interface PubberUdmiPublisher extends UdmiPublisher {
    * Attempts to redirect the endpoint based on configuration settings and handles redirection
    * logic.
    */
-  default void maybeRedirectEndpoint() {
+  default void maybeRedirectEndpoint(EndpointConfiguration extractedEndpoint) {
     String redirectRegistry = getConfig().options.redirectRegistry;
     String currentSignature = toJsonString(getConfig().endpoint);
     String extractedSignature =
-        redirectRegistry == null ? toJsonString(getExtractedEndpoint())
+        redirectRegistry == null ? toJsonString(extractedEndpoint)
             : redirectedEndpoint(redirectRegistry);
 
     if (extractedSignature == null) {
@@ -638,18 +648,18 @@ public interface PubberUdmiPublisher extends UdmiPublisher {
       return; // No need to redirect anything!
     }
 
-    if (getExtractedEndpoint() != null) {
-      if (!Objects.equals(endpointState.generation, getExtractedEndpoint().generation)) {
+    if (extractedEndpoint != null) {
+      if (!Objects.equals(endpointState.generation, extractedEndpoint.generation)) {
         notice("Starting new endpoint generation");
         endpointState.phase = null;
         endpointState.status = null;
-        endpointState.generation = getExtractedEndpoint().generation;
+        endpointState.generation = extractedEndpoint.generation;
       }
 
-      if (getExtractedEndpoint().error != null) {
+      if (extractedEndpoint.error != null) {
         setAttemptedEndpoint(extractedSignature);
         endpointState.phase = BlobPhase.FINAL;
-        Exception applyError = new RuntimeException(getExtractedEndpoint().error);
+        Exception applyError = new RuntimeException(extractedEndpoint.error);
         endpointState.status = exceptionStatus(applyError, Category.BLOBSET_BLOB_APPLY);
         publishSynchronousState();
         return;
@@ -663,7 +673,7 @@ public interface PubberUdmiPublisher extends UdmiPublisher {
       endpointState.phase = BlobPhase.APPLY;
       publishSynchronousState();
       resetConnection(extractedSignature);
-      persistEndpoint(getExtractedEndpoint());
+      persistEndpoint(extractedEndpoint);
       endpointState.phase = BlobPhase.FINAL;
       markStateDirty();
     } catch (Exception e) {
@@ -682,7 +692,6 @@ public interface PubberUdmiPublisher extends UdmiPublisher {
   }
 
   String getWorkingEndpoint();
-
 
   void setAttemptedEndpoint(String s);
 

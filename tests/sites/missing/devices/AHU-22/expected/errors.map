@@ -1,10 +1,10 @@
 Exceptions for AHU-22
   While converting device config
     While converting point filter_differential_pressure_sensor
-      protocol ref FAXLE12.present_value does not match expression bacnet://[1-9][0-9]*/([A-Z]{2,4}):([1-9][0-9]*)(#[_a-z]+)?
+      protocol ref FAXLE12.present_value does not match expression bacnet://(0|[1-9][0-9]*)/([A-Z]{2,4}):(0|[1-9][0-9]*)(#[_a-z]+)?
   While converting device config
     While converting point filter_alarm_pressure_status
-      protocol ref MCN8.present_value does not match expression bacnet://[1-9][0-9]*/([A-Z]{2,4}):([1-9][0-9]*)(#[_a-z]+)?
+      protocol ref MCN8.present_value does not match expression bacnet://(0|[1-9][0-9]*)/([A-Z]{2,4}):(0|[1-9][0-9]*)(#[_a-z]+)?
   While converting device config
     While converting point filter_differential_pressure
-      protocol ref AI2.differential does not match expression bacnet://[1-9][0-9]*/([A-Z]{2,4}):([1-9][0-9]*)(#[_a-z]+)?
+      protocol ref AI2.differential does not match expression bacnet://(0|[1-9][0-9]*)/([A-Z]{2,4}):(0|[1-9][0-9]*)(#[_a-z]+)?

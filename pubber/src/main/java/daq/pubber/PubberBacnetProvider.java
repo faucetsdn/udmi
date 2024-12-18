@@ -20,8 +20,10 @@ import java.util.Map.Entry;
 import java.util.function.BiConsumer;
 import java.util.stream.Collectors;
 import udmi.lib.base.ManagerBase;
+import udmi.lib.client.LocalnetManager;
 import udmi.lib.intf.ManagerHost;
 import udmi.schema.DiscoveryEvents;
+import udmi.schema.FamilyLocalnetState;
 import udmi.schema.Level;
 import udmi.schema.Metadata;
 import udmi.schema.PointPointsetModel;
@@ -30,9 +32,10 @@ import udmi.schema.RefDiscovery;
 /**
  * Provides for the bacnet family of stuffs.
  */
-public class BacnetProvider extends ManagerBase implements PubberFamilyProvider {
+public class PubberBacnetProvider extends ManagerBase implements PubberFamilyProvider {
 
   private static final int BACNET_DISCOVERY_RATE_SEC = 1;
+  private final LocalnetManager localnetHost;
   private final Deque<String> toReport = new ArrayDeque<>();
   private Map<String, Metadata> bacnetDevices;
   private BiConsumer<String, DiscoveryEvents> publisher;
@@ -41,10 +44,16 @@ public class BacnetProvider extends ManagerBase implements PubberFamilyProvider 
   /**
    * Provider for metadata-based (simulated) bacnet discovery.
    */
-  public BacnetProvider(ManagerHost host, String family, String deviceId) {
+  public PubberBacnetProvider(ManagerHost host, String family, String deviceId) {
     super(host, deviceId);
     checkState(family.equals(BACNET));
-    updateInterval(BACNET_DISCOVERY_RATE_SEC);
+    localnetHost = ((LocalnetManager) host);
+  }
+
+  private void addStateMapEntry() {
+    FamilyLocalnetState stateEntry = new FamilyLocalnetState();
+    stateEntry.addr = getBacnetAddr(getMetadata(deviceId));
+    localnetHost.update(BACNET, stateEntry);
   }
 
   @Override
@@ -87,12 +96,12 @@ public class BacnetProvider extends ManagerBase implements PubberFamilyProvider 
     toReport.addAll(bacnetDevices.keySet());
     this.publisher = publisher;
     this.enumerate = enumerate;
-    startPeriodicSend();
+    updateInterval(BACNET_DISCOVERY_RATE_SEC);
   }
 
   @Override
   public synchronized void stopScan() {
-    cancelPeriodicSend();
+    super.stop();
   }
 
   @Override
@@ -117,5 +126,6 @@ public class BacnetProvider extends ManagerBase implements PubberFamilyProvider 
     bacnetDevices = siteModel.allMetadata().entrySet().stream()
         .filter(entry -> nonNull(getBacnetAddr(entry.getValue())))
         .collect(Collectors.toMap(Entry::getKey, Entry::getValue));
+    addStateMapEntry();
   }
 }
