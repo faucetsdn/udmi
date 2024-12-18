@@ -262,6 +262,7 @@ public class SequenceBase {
   private static final String NOT_MARKER = " n0t ";
   private static final String NOT_REPLACEMENT = " not ";
   private static final String NOT_MISSING = " ";
+  private static final Duration STATE_CONFIG_HOLDOFF = Duration.ofMillis(1000);
   protected static Metadata deviceMetadata;
   protected static String projectId;
   protected static String cloudRegion;
@@ -281,7 +282,7 @@ public class SequenceBase {
   private static MessageBundle stashedBundle;
   private static boolean enableAllTargets = true;
   private static boolean useAlternateClient;
-  private static boolean shouldGateConfigUpdate;
+  private static boolean skipConfigSync;
 
   static {
     // Sanity check to make sure ALPHA version is increased if forced by increased BETA.
@@ -355,7 +356,7 @@ public class SequenceBase {
       checkNotNull(exeConfig.udmi_version, "udmi_version not defined");
       logLevel = Level.valueOf(checkNotNull(exeConfig.log_level, "log_level not defined"))
           .value();
-      shouldGateConfigUpdate = traceLogLevel();
+      skipConfigSync = traceLogLevel();
       key_file = checkNotNull(exeConfig.key_file, "key_file not defined");
     } catch (Exception e) {
       e.printStackTrace();
@@ -1276,7 +1277,9 @@ public class SequenceBase {
   private void updateConfig(String reason, boolean force, boolean waitForState) {
     assertConfigIsNotPending();
 
-    ifNotTrueThen(shouldGateConfigUpdate, this::rateLimitConfig);
+    ensureStateConfigHoldoff();
+
+    ifTrueThen(!skipConfigSync, this::rateLimitConfig);
 
     if (doPartialUpdates && !force) {
       updateConfig(reason, waitForState, SubFolder.SYSTEM, augmentConfig(deviceConfig.system));
@@ -1293,7 +1296,8 @@ public class SequenceBase {
       updateConfig(reason, waitForState, UPDATE, deviceConfig);
     }
 
-    ifNotTrueThen(shouldGateConfigUpdate, () -> waitForUpdateConfigSync(reason, waitForState));
+    ifTrueThen(configIsPending() && !skipConfigSync,
+        () -> waitForUpdateConfigSync(reason, waitForState));
 
     assertConfigIsNotPending();
 
@@ -1314,7 +1318,7 @@ public class SequenceBase {
       trace(format("Updated check %s_%s: %s", CONFIG_SUBTYPE, subBlock, updated));
       if (updated) {
         String topic = subBlock + "/config";
-        ifTrueThen(shouldGateConfigUpdate, this::rateLimitConfig);
+        ifTrueThen(skipConfigSync, this::rateLimitConfig);
         final String transactionId =
             requireNonNull(reflector().publish(getDeviceId(), topic, actualizedData),
                 "no transactionId returned for publish");
@@ -1323,7 +1327,7 @@ public class SequenceBase {
         recordRawMessage(data, LOCAL_PREFIX + subBlock.value());
         sentConfig.put(subBlock, actualizedData);
         configTransactions.add(transactionId);
-        ifTrueThen(shouldGateConfigUpdate, () -> waitForUpdateConfigSync(reason, waitForSync));
+        ifTrueThen(skipConfigSync, () -> waitForUpdateConfigSync(reason, waitForSync));
       }
       return updated;
     } catch (Exception e) {
@@ -1331,12 +1335,21 @@ public class SequenceBase {
     }
   }
 
+  /**
+   * Ensure the update is noticeably after the last state update, for synchronization tracking.
+   */
+  private void ensureStateConfigHoldoff() {
+    configStateStart = ofNullable(catchToNull(() -> deviceState.timestamp)).orElse(new Date(0));
+    Instant syncDelayTarget = configStateStart.toInstant().plus(STATE_CONFIG_HOLDOFF);
+    long betweenMs = between(getNowInstant(), syncDelayTarget).toMillis();
+    ifTrueThen(betweenMs > 0, () -> safeSleep(betweenMs));
+  }
+
   private void waitForUpdateConfigSync(String reason, boolean waitForSync) {
     if (!waitForSync) {
       waitForConfigIsNotPending();
     } else if (configIsPending()) {
-      configStateStart = catchToNull(() -> deviceState.timestamp);
-      debug(format("Saving pre-config state timestamp " + isoConvert(configStateStart)));
+      debug(format("Using pre-config state timestamp " + isoConvert(configStateStart)));
       lastConfigUpdate = CleanDateFormat.clean(Instant.now());
       String debugReason = reason == null ? "" : (", because " + reason);
       debug(format("Update lastConfigUpdate %s%s", lastConfigUpdate, debugReason));
@@ -2131,15 +2144,15 @@ public class SequenceBase {
     Date configLastStart = catchToNull(() -> deviceConfig.system.operation.last_start);
     boolean lastStartSynced = stateLastStart == null || stateLastStart.equals(configLastStart);
 
-    Date current = catchToNull(() -> deviceState.timestamp);
-    final boolean stateUpdated =
-        !deviceSupportsState() || !dateEquals(configStateStart, current) || pretendStateUpdated;
-
     Date stateLastConfig = catchToNull(() -> deviceState.system.last_config);
 
     Date lastConfig = catchToNull(() -> deviceConfig.timestamp);
     final boolean lastConfigSynced = stateLastConfig == null || stateLastConfig.equals(lastConfig);
     final boolean transactionsClean = configTransactions.isEmpty();
+
+    Date current = catchToNull(() -> deviceState.timestamp);
+    final boolean stateUpdated = !deviceSupportsState() || !dateEquals(configStateStart, current)
+        || pretendStateUpdated || lastConfigSynced;
 
     List<String> failures = new ArrayList<>();
     ifNotTrueThen(stateUpdated, () -> failures.add("device state not updated since config issued"));

@@ -5,7 +5,7 @@
     <envs>
       <env name="CLEARBLADE_CONFIGURATION" value="$USER_HOME$/creds/bos-platform-dev-credentials.json" />
       <env name="GCP_PROJECT" value="bos-platform-dev" />
-      <env name="UDMI_PREFIX" value="" />
+      <env name="UDMI_PREFIX" value="peringknife~" />
       <env name="CLEARBLADE_PROJECT" value="bos-platform-dev" />
     </envs>
     <output_file path="out/console.log" is_save="true" />
