@@ -18,6 +18,7 @@
     }
   },
   "pointset": {
+    "sample_rate_sec": 30,
     "points": {
       "filter_alarm_pressure_status": {
         "ref": "BV11.present_value",

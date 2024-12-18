@@ -7,7 +7,7 @@
     "operation": { }
   },
   "gateway": {
-    "proxy_ids": [ "SNS-4", "AHU-22" ]
+    "proxy_ids": [ "SNS-4", "AHU-22", "SNS-8" ]
   },
   "localnet": {
     "families": {
@@ -15,6 +15,7 @@
     }
   },
   "pointset": {
+    "sample_rate_sec": 30,
     "points": {
       "globulating_globar": {
         "units": "Bars"
