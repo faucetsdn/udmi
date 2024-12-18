@@ -17,6 +17,7 @@ import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.databind.util.ISO8601DateFormat;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Sets;
 import com.google.common.hash.Hashing;
 import com.google.daq.mqtt.util.ValidationException;
 import com.google.udmi.util.ProperPrinter.OutputFormat;
@@ -76,6 +77,7 @@ public class GeneralUtils {
   private static final String SEPARATOR = "\n  ";
   private static final Joiner INDENTED_LINES = Joiner.on(SEPARATOR);
   private static final String NULL_STRING = "null";
+  private static final String CONDITIONAL_KEY_PREFIX = "?";
   private static Duration clockSkew = Duration.ZERO;
 
   public static String[] arrayOf(String... args) {
@@ -527,19 +529,37 @@ public class GeneralUtils {
   }
 
   public static void mergeObject(Map<String, Object> under, Map<String, Object> over) {
-    for (String key : over.keySet()) {
-      Object underValue = under.get(key);
-      Object overValue = over.get(key);
-      if (underValue instanceof Map && overValue instanceof Map) {
-        @SuppressWarnings("unchecked")
-        Map<String, Object> underCast = (Map<String, Object>) underValue;
-        @SuppressWarnings("unchecked")
-        Map<String, Object> overCast = (Map<String, Object>) overValue;
-        mergeObject(underCast, overCast);
-      } else {
-        under.put(key, overValue);
-      }
-    }
+    over.keySet().forEach(key -> {
+          String conditionalKey = CONDITIONAL_KEY_PREFIX + key;
+          Object underValue = under.get(key);
+          Object underMaybe = under.get(conditionalKey);
+          Object overValue = over.get(key);
+          if (overValue instanceof Map) {
+            if (underMaybe instanceof Map) {
+              mergeHelper(underMaybe, overValue);
+              under.put(key, underMaybe);
+              under.remove(conditionalKey);
+            } else if (underValue instanceof Map) {
+              mergeHelper(underValue, overValue);
+            } else {
+              under.put(key, overValue);
+            }
+          } else {
+            under.put(key, overValue);
+            under.remove(conditionalKey);
+          }
+        });
+    Set<String> extras = Sets.difference(under.keySet(), over.keySet()).stream()
+        .filter(key -> key.startsWith(CONDITIONAL_KEY_PREFIX)).collect(Collectors.toSet());
+    extras.forEach(under::remove);
+  }
+
+  private static void mergeHelper(Object underValue, Object overValue) {
+    @SuppressWarnings("unchecked")
+    Map<String, Object> underCast = (Map<String, Object>) underValue;
+    @SuppressWarnings("unchecked")
+    Map<String, Object> overCast = (Map<String, Object>) overValue;
+    mergeObject(underCast, overCast);
   }
 
   /**

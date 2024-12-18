@@ -42,8 +42,9 @@ cp -a ../etc build/udmi_etc/
 cp -a ../schema build/schema/
 
 if [[ -n $check ]]; then
-    (cd $UDMI_ROOT/sites/udmi_site_model/devices; rm -rf XXX-* ACME-*)
     $UDMI_ROOT/bin/clone_model
+    (cd $UDMI_ROOT/sites/udmi_site_model/devices; rm -rf XXX-* ACME-*)
+    (cd $UDMI_ROOT/sites/udmi_site_model; git checkout .)
 fi
 
 echo Java version $(java --version)
