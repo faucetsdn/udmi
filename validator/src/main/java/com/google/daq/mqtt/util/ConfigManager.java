@@ -1,6 +1,9 @@
 package com.google.daq.mqtt.util;
 
 import static com.google.common.base.Preconditions.checkState;
+import static com.google.daq.mqtt.util.ContextWrapper.getCurrentContext;
+import static com.google.daq.mqtt.util.ContextWrapper.runInContext;
+import static com.google.daq.mqtt.util.ContextWrapper.wrapExceptionWithContext;
 import static com.google.daq.mqtt.util.providers.FamilyProvider.NAMED_FAMILIES;
 import static com.google.udmi.util.GeneralUtils.catchToNull;
 import static com.google.udmi.util.GeneralUtils.deepCopy;
@@ -19,6 +22,7 @@ import com.google.udmi.util.SiteModel;
 import java.io.File;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import org.jetbrains.annotations.NotNull;
 import udmi.lib.ProtocolFamily;
 import udmi.schema.Config;
@@ -48,6 +52,7 @@ public class ConfigManager {
   private final Metadata metadata;
   private final String deviceId;
   private final SiteModel siteModel;
+  private final Map<String, Exception> schemaViolationsMap = new HashMap<>();
 
   /**
    * Initiates ConfigManager for the given device at the given file location.
@@ -205,7 +210,7 @@ public class ConfigManager {
 
   PointPointsetConfig configFromMetadata(String configKey, PointPointsetModel metadata,
       boolean excludeUnits) {
-    try {
+    return runInContext("While converting point " + configKey, () -> {
       PointPointsetConfig pointConfig = new PointPointsetConfig();
       pointConfig.units = excludeUnits ? null : metadata.units;
       pointConfig.ref = pointConfigRef(metadata);
@@ -213,9 +218,7 @@ public class ConfigManager {
         pointConfig.set_value = metadata.baseline_value;
       }
       return pointConfig;
-    } catch (Exception e) {
-      throw new RuntimeException("While converting point " + configKey, e);
-    }
+    });
   }
 
   private String pointConfigRef(PointPointsetModel model) {
@@ -234,8 +237,12 @@ public class ConfigManager {
     ifNotNullThen(rawFamily, raw ->
         requireNonNull(catchToNull(() -> metadata.localnet.families.get(family).addr),
             format("metadata.localnet.families.[%s].addr not defined", family)));
-
-    NAMED_FAMILIES.get(family).validateRef(pointRef);
+    try {
+      NAMED_FAMILIES.get(family).validateRef(pointRef);
+    } catch (Exception e) {
+      schemaViolationsMap.put(String.format("%s %s: %s", family, pointRef, getCurrentContext()),
+          wrapExceptionWithContext(e, false));
+    }
     return pointRef;
   }
 
@@ -309,6 +316,10 @@ public class ConfigManager {
     }
 
     return discoveryConfig;
+  }
+
+  public Map<String, Exception> getSchemaViolationsMap() {
+    return schemaViolationsMap;
   }
 
 }
