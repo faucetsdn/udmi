@@ -323,6 +323,7 @@ public interface PubberUdmiPublisher extends UdmiPublisher {
       if (isTrue(getConfig().options.barfConfig)) {
         error("Restarting system because of restart-on-error configuration setting");
         getDeviceManager().systemLifecycle(SystemMode.RESTART);
+        return;
       }
     }
     String usePhase = isTrue(getOptions().badCategory) ? "apply" : phase;
@@ -463,6 +464,7 @@ public interface PubberUdmiPublisher extends UdmiPublisher {
         if (configMsg.system == null && isTrue(getConfig().options.barfConfig)) {
           error("Empty config system block and configured to restart on bad config!");
           getDeviceManager().systemLifecycle(SystemMode.RESTART);
+          return;
         }
         GeneralUtils.copyFields(configMsg, getDeviceConfig(), true);
         info(format("%s received config %s", getTimestamp(), isoConvert(configMsg.timestamp)));
@@ -497,11 +499,14 @@ public interface PubberUdmiPublisher extends UdmiPublisher {
     if (!isConnected()) {
       return;
     }
-
-    getDeviceManager().maybeRestartSystem();
-
-    // Do redirect after restart system check, since this might take a long time.
-    maybeRedirectEndpoint(getExtractedEndpoint());
+    DeviceManager deviceManager = getDeviceManager();
+    deviceManager.maybeRestartSystem();
+    SystemState systemState = deviceManager.getSystemManager().getSystemState();
+    SystemMode mode = catchToNull(() -> systemState.operation.mode);
+    if (SystemMode.INITIAL.equals(mode) || SystemMode.ACTIVE.equals(mode)) {
+      // Do redirect after restart system check, since this might take a long time.
+      maybeRedirectEndpoint(getExtractedEndpoint());
+    }
   }
 
   /**

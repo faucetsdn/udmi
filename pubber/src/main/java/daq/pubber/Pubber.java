@@ -457,10 +457,12 @@ public class Pubber extends PubberManager implements PubberUdmiPublisher {
       deviceState.system.operation.mode = SystemMode.SHUTDOWN;
     }
 
-    captureExceptions("publishing shutdown state", this::publishSynchronousState);
-    ifNotNullThen(deviceManager, dm -> captureExceptions("device manager shutdown", dm::shutdown));
-    super.shutdown();
-    captureExceptions("disconnecting mqtt", this::disconnectMqtt);
+    if (isConnected()) {
+      captureExceptions("Publishing shutdown state", this::publishSynchronousState);
+    }
+    ifNotNullThen(deviceManager, dm -> captureExceptions("Device manager shutdown", dm::shutdown));
+    captureExceptions("Pubber sender shutdown", super::shutdown);
+    captureExceptions("Disconnecting mqtt", this::disconnectMqtt);
   }
 
   @Override
