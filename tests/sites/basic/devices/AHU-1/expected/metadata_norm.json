@@ -1,7 +1,7 @@
 {
   "timestamp": "2020-05-01T13:39:07Z",
   "version": "1.5.2",
-  "hash": "3623ef24",
+  "hash": "8923a228",
   "cloud": {
     "auth_type": "RS256"
   },
@@ -89,6 +89,7 @@
         "baseline_value": 98,
         "tags": [ ]
       }
-    }
+    },
+    "sample_rate_sec": 30
   }
 }

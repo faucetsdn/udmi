@@ -183,7 +183,7 @@ public class RegistrarTest {
     assertEquals("Devices deleted", 2, deleteActions.size());
 
     List<MockAction> updateActions = filterActions(mockActions, UPDATE_DEVICE_ACTION);
-    assertEquals("Devices updated", 3, updateActions.size());
+    assertEquals("Devices updated", 4, updateActions.size());
 
     assertTrue("all devices not blocked", updateActions.stream().allMatch(this::isNotBlocking));
     List<MockAction> bindActions = filterActions(mockActions, BIND_DEVICE_ACTION);

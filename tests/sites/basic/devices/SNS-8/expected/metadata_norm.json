@@ -1,7 +1,7 @@
 {
   "timestamp": "2020-05-01T13:39:07Z",
   "version": "1.5.2",
-  "hash": "324ddfb4",
+  "hash": "94aa3778",
   "system": {
     "tags": [ ],
     "location": {
@@ -12,26 +12,12 @@
       "asset": {
         "guid": "drw://TBA",
         "site": "ZZ-TRI-FECTA",
-        "name": "SNS-4"
+        "name": "SNS-8"
       }
     },
     "min_loglevel": 300
   },
   "gateway": {
     "gateway_id": "GAT-123"
-  },
-  "pointset": {
-    "points": {
-      "split_threshold": {
-        "units": "Imperial-gallons-per-minute",
-        "tags": [ ]
-      },
-      "triangulating_axis": {
-        "units": "Degrees-phase",
-        "tags": [ ]
-      }
-    },
-    "exclude_points_from_config": true,
-    "sample_rate_sec": 30
   }
 }

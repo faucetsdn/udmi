@@ -6,8 +6,5 @@
     "metrics_rate_sec": 10,
     "operation": { }
   },
-  "gateway": { },
-  "pointset": {
-    "sample_rate_sec": 30
-  }
+  "gateway": { }
 }
