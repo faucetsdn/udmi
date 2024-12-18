@@ -47,7 +47,8 @@ public class PubberGatewayManager extends PubberManager implements GatewayManage
 
   @Override
   public void activate() {
-    ifNotNullThen(proxyDevices, p -> p.values().forEach(ProxyDeviceHost::activate));
+    ifNotNullThen(proxyDevices, p -> p.values()
+        .parallelStream().forEach(ProxyDeviceHost::activate));
   }
 
   @Override

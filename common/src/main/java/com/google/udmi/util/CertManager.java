@@ -48,7 +48,7 @@ public class CertManager {
   private final File keyFile;
   private final File crtFile;
   private final char[] password;
-  private final boolean isSsl;
+  private final Transport transport;
 
   {
     Security.addProvider(new BouncyCastleProvider());
@@ -60,9 +60,9 @@ public class CertManager {
   public CertManager(File caCrtFile, File clientDir, Transport transport,
       String passString, Consumer<String> logging) {
     this.caCrtFile = caCrtFile;
-    isSsl = Transport.SSL.equals(transport);
+    this.transport = transport;
 
-    if (isSsl) {
+    if (Transport.SSL.equals(transport)) {
       String prefix = keyPrefix(clientDir);
       crtFile = new File(clientDir, prefix + "_private.crt");
       keyFile = new File(clientDir, prefix + "_private.pem");
@@ -144,7 +144,10 @@ public class CertManager {
    */
   public SocketFactory getSocketFactory() {
     try {
-      if (!isSsl) {
+      if (!Transport.SSL.equals(transport)) {
+        if (Transport.TCP.equals(transport)) {
+          return SocketFactory.getDefault();
+        }
         return SSLSocketFactory.getDefault();
       }
       return getCertSocketFactory();

@@ -2,12 +2,10 @@ package com.google.bos.udmi.service.messaging;
 
 import static com.google.udmi.util.GeneralUtils.ifNotNullGet;
 import static com.google.udmi.util.GeneralUtils.ifNotNullThen;
-import static com.google.udmi.util.GeneralUtils.ifTrueGet;
 
 import com.google.bos.udmi.service.messaging.impl.MessageDispatcherImpl;
 import java.util.AbstractMap.SimpleEntry;
 import java.util.Collection;
-import java.util.Map;
 import java.util.function.Consumer;
 import udmi.schema.EndpointConfiguration;
 import udmi.schema.Envelope;

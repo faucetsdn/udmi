@@ -365,7 +365,7 @@ public class SequenceBase {
     cloudRegion = exeConfig.cloud_region;
     registryId = SiteModel.getRegistryActual(exeConfig);
 
-    deviceMetadata = readDeviceMetadata();
+    deviceMetadata = readDeviceMetadata(getDeviceId());
 
     serialNo = ofNullable(exeConfig.serial_no)
         .orElseGet(() -> GeneralUtils.catchToNull(() -> deviceMetadata.system.serial_no));
@@ -438,9 +438,15 @@ public class SequenceBase {
     validationState = null;
   }
 
-  private static Metadata readDeviceMetadata() {
-    File moddataFile = siteModel.getSubdirectory(format(OUT_DEVICE_FORMAT, getDeviceId()));
-    File metadataFile = siteModel.getDeviceFile(getDeviceId(), METADATA_JSON);
+  /**
+   * Read device metadata from site model.
+   *
+   * @param deviceId deviceId
+   * @return Metadata
+   */
+  public static Metadata readDeviceMetadata(String deviceId) {
+    File moddataFile = siteModel.getSubdirectory(format(OUT_DEVICE_FORMAT, deviceId));
+    File metadataFile = siteModel.getDeviceFile(deviceId, METADATA_JSON);
     System.err.println("Checking for modified metadata file " + moddataFile.getAbsolutePath());
     File useFile = moddataFile.exists() ? moddataFile : metadataFile;
     System.err.println("Reading device metadata file " + useFile.getPath());

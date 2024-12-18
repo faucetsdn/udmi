@@ -17,13 +17,14 @@ import org.junit.Test;
  */
 public class BacnetFamilyProviderTest {
 
-  public static final Set<String> GOOD_ADDRS = ImmutableSet.of("10", "23", "9273123");
+  public static final Set<String> GOOD_ADDRS = ImmutableSet.of("0", "10", "23", "4194302");
   public static final Set<String> BAD_ADDRS = ImmutableSet.of(
       "", "x", "snoop", "01293", "0x9122", "B87AC9", "87a8c");
 
   public static final Set<String> GOOD_REFERENCES = ImmutableSet.of(
       "bacnet://291842/AI:2#present_value",
       "bacnet://29212/AI:2#something_else",
+      "bacnet://0/DO:0",
       "bacnet://1/AI:2",
       "bacnet://291842/BO:21");
 

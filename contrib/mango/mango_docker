@@ -1,15 +1,8 @@
 #!/bin/sh
 set -o errexit -o nounset
 
-cd "$(dirname "$0")"/mount
-
-MANGO_VERSION=5.2.0
-curl -sSL https://store.mango-os.com/downloads/m2m2-udmi-${MANGO_VERSION}.zip -o udmi.zip
-rm -rf udmi && unzip -q udmi.zip -d udmi && rm udmi.zip
-
 docker run --rm \
   -p 8080:8080 \
   -p 8443:8443 \
-  -v ./data:/opt/mango-data \
-  -v ./udmi:/opt/mango/web/modules/udmi \
-  ghcr.io/radixiot/mango:${MANGO_VERSION}
+  -v "$(dirname "$0")"/data:/opt/mango-data \
+  ghcr.io/radixiot/mango:latest

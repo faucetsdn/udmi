@@ -13,9 +13,9 @@ import java.util.regex.Pattern;
  */
 public class BacnetFamilyProvider implements FamilyProvider {
 
-  private static final Pattern BACNET_ADDR = Pattern.compile("[1-9][0-9]*");
+  private static final Pattern BACNET_ADDR = Pattern.compile("0|[1-9][0-9]*");
   private static final Pattern BACNET_REF = Pattern.compile(
-      "bacnet://[1-9][0-9]*/([A-Z]{2,4}):([1-9][0-9]*)(#[_a-z]+)?");
+      "bacnet://(0|[1-9][0-9]*)/([A-Z]{2,4}):(0|[1-9][0-9]*)(#[_a-z]+)?");
 
   @Override
   public String familyKey() {

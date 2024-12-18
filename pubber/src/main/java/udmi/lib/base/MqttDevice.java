@@ -62,10 +62,6 @@ public class MqttDevice {
     publisher.registerHandler(deviceId, topicSuffix, handler, messageType);
   }
 
-  public void unregisterHandlers() {
-    publisher.unregisterHandlers();
-  }
-
   public void connect() {
     publisher.connect(deviceId, true);
   }

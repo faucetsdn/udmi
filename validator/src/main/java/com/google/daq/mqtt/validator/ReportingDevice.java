@@ -2,15 +2,11 @@ package com.google.daq.mqtt.validator;
 
 import static com.google.udmi.util.Common.SUBFOLDER_PROPERTY_KEY;
 import static com.google.udmi.util.Common.SUBTYPE_PROPERTY_KEY;
-import static com.google.udmi.util.GeneralUtils.ifNotNullThen;
-import static com.google.udmi.util.GeneralUtils.ifTrueThen;
 import static com.google.udmi.util.JsonUtil.convertTo;
 import static java.lang.String.format;
 import static java.util.Optional.ofNullable;
 import static org.junit.Assert.assertTrue;
 
-import com.google.common.base.Joiner;
-import com.google.common.collect.ImmutableSet;
 import com.google.daq.mqtt.util.ExceptionList;
 import com.google.daq.mqtt.util.ValidationException;
 import com.google.udmi.util.Common;
@@ -23,15 +19,10 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 import udmi.schema.Category;
-import udmi.schema.DiscoveryEvents;
-import udmi.schema.DiscoveryState;
 import udmi.schema.Entry;
 import udmi.schema.Envelope.SubType;
 import udmi.schema.Level;
 import udmi.schema.Metadata;
-import udmi.schema.PointsetEvents;
-import udmi.schema.PointsetState;
-import udmi.schema.State;
 
 /**
  * Encapsulation of device data for a basic reporting device.
