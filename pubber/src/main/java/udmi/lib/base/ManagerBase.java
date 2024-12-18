@@ -183,18 +183,21 @@ public abstract class ManagerBase implements SubBlockManager {
 
   protected synchronized void cancelPeriodicSend() {
     if (periodicSender != null) {
-      try {
-        warn(format("Terminating %s %s sender", deviceId, this.getClass().getSimpleName()));
-        periodicSender.cancel(false);
-      } catch (Exception e) {
-        throw new RuntimeException("While cancelling executor", e);
-      } finally {
-        periodicSender = null;
-      }
+      warn(format("Terminating %s %s sender", deviceId, this.getClass().getSimpleName()));
+      cancelFuture(periodicSender);
+      periodicSender = null;
     }
     if (initialUpdate != null) {
-      initialUpdate.cancel(false);
+      cancelFuture(initialUpdate);
       initialUpdate = null;
+    }
+  }
+
+  private void cancelFuture(ScheduledFuture<?> future) {
+    try {
+      future.cancel(false);
+    } catch (Exception e) {
+      throw new RuntimeException("While cancelling future", e);
     }
   }
 

@@ -39,7 +39,7 @@ public class PubberPointsetManager extends PubberManager implements PointsetMana
   private static final Map<String, PointPointsetModel> DEFAULT_POINTS = ImmutableMap.of(
       "recalcitrant_angle", makePointPointsetModel(true, 50, 50, "Celsius"),
       "faulty_finding", makePointPointsetModel(true, 40, 0, "deg"),
-      "superimposition_reading", makePointPointsetModel(false)
+      "superimposition_reading", new PointPointsetModel()
   );
   private final ExtraPointsetEvent pointsetEvent = new ExtraPointsetEvent();
   private final Map<String, AbstractPoint> managedPoints = new HashMap<>();
@@ -65,11 +65,6 @@ public class PubberPointsetManager extends PubberManager implements PointsetMana
     return pointMetadata;
   }
 
-  private static PointPointsetModel makePointPointsetModel(boolean writable) {
-    PointPointsetModel pointMetadata = new PointPointsetModel();
-    return pointMetadata;
-  }
-
   private AbstractPoint makePoint(String name, PointPointsetModel point) {
     if (BOOLEAN_UNITS.contains(point.units)) {
       return new PubberRandomBoolean(name, point);
@@ -86,11 +81,6 @@ public class PubberPointsetManager extends PubberManager implements PointsetMana
         () -> pointState.value_state = ofNullable(pointState.value_state).orElse(
             Value_state.APPLIED));
     return ifTrueGet(options.noPointState, PointPointsetState::new, pointState);
-  }
-
-  @Override
-  public void restorePoint(String pointName) {
-    PointsetManager.super.restorePoint(pointName);
   }
 
   /**
@@ -181,9 +171,8 @@ public class PubberPointsetManager extends PubberManager implements PointsetMana
         "state/config pointset mismatch");
 
     // Special testing provisions for forcing an extra point (designed to cause a violation).
-    ifNotNullThen(options.extraPoint,
-        extraPoint -> pointsetEvent.points.put(extraPoint,
-            udmi.lib.client.PointsetManager.extraPointsetEvent()));
+    ifNotNullThen(options.extraPoint, extraPoint -> pointsetEvent.points.put(extraPoint,
+        PointsetManager.extraPointsetEvent()));
 
     // Mark device state as dirty, so the system will send a consolidated state update.
     updateState();

@@ -75,6 +75,27 @@ public class PubberIpProvider extends ManagerBase implements PubberFamilyProvide
     return currentInterface.get();
   }
 
+  /**
+   * Try to use first match per family.
+   *
+   * <pre>
+   * ip addr show eth0
+   * 149: eth0@if150: *BROADCAST,MULTICAST,UP,LOWER_UP,M-DOWN> mtu 1500 qdisc noqueue state UP
+   *     link/ether 02:42:ac:11:00:10 brd ff:ff:ff:ff:ff:ff
+   *     inet 10.0.0.10/24 brd 10.0.0.255 scope global eth0
+   *        valid_lft forever preferred_lft forever
+   *     inet6 fd00:1234:abc:1::10/120 scope global flags 02
+   *        valid_lft forever preferred_lft forever
+   *     inet6 fe80::42:acff:fe11:10/64 scope link
+   *        valid_lft forever preferred_lft forever
+   *
+   * ip -6 route
+   * fd00:1234:abc:1::/120 dev eth0  metric 256
+   * fe80::/64 dev eth0  metric 256
+   * default via fd00:1234:abc:1::1 dev eth0  metric 1024
+   * multicast ff00::/8 dev eth0  metric 256
+   * </pre>
+   */
   @VisibleForTesting
   static Map<String, String> getInterfaceAddressesStatic(List<String> strings) {
     Map<String, String> interfaceMap = new HashMap<>();
@@ -83,7 +104,7 @@ public class PubberIpProvider extends ManagerBase implements PubberFamilyProvide
         Matcher matcher = pattern.matcher(line);
         if (matcher.matches()) {
           String family = IFACE_MAP.get(matcher.group(1));
-          interfaceMap.put(family, matcher.group(2));
+          interfaceMap.putIfAbsent(family, matcher.group(2));
         }
       }
     });

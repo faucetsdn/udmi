@@ -11,7 +11,6 @@ import com.fasterxml.jackson.databind.util.ISO8601DateFormat;
 import com.google.api.services.cloudiot.v1.model.Device;
 import com.google.cloud.ServiceOptions;
 import com.google.daq.mqtt.util.MessagePublisher;
-import com.google.udmi.util.GeneralUtils;
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.Base64;

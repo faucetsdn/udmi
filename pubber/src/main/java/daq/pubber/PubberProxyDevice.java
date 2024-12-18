@@ -47,22 +47,24 @@ public class PubberProxyDevice extends PubberManager implements ProxyDeviceHost 
   @Override
   public void shutdown() {
     deviceManager.shutdown();
+    isActive().set(false);
   }
 
   @Override
   public void stop() {
     deviceManager.stop();
+    isActive().set(false);
   }
 
   private void publishDirtyState() {
     if (stateDirty.getAndSet(false)) {
-      pubberHost.publish(deviceId, deviceState);
+      publish(deviceId, deviceState);
     }
   }
 
   @Override
   public void publish(String targetId, Object message) {
-    pubberHost.publish(targetId, message);
+    publish(message);
   }
 
   @Override

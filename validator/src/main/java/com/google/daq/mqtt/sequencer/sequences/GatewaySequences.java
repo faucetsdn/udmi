@@ -1,6 +1,7 @@
 package com.google.daq.mqtt.sequencer.sequences;
 
 import static com.google.common.collect.Sets.difference;
+import static com.google.daq.mqtt.util.ConfigManager.configFrom;
 import static com.google.daq.mqtt.util.TimePeriodConstants.TWO_MINUTES_MS;
 import static com.google.udmi.util.GeneralUtils.CSV_JOINER;
 import static java.lang.String.format;
@@ -28,7 +29,7 @@ import udmi.schema.Bucket;
 import udmi.schema.Config;
 import udmi.schema.Envelope.SubFolder;
 import udmi.schema.FeatureDiscovery.FeatureStage;
-import udmi.schema.PointsetConfig;
+import udmi.schema.Metadata;
 
 /**
  * Specific tests for logical gateway devices. This is not the same as proxied devices (devices that
@@ -108,9 +109,8 @@ public class GatewaySequences extends SequenceBase {
   }
 
   private Config makeDefaultConfig(String id) {
-    Config config = new Config();
-    config.pointset = new PointsetConfig();
-    return config;
+    Metadata proxyMetadata = readDeviceMetadata(id);
+    return configFrom(proxyMetadata).deviceConfig();
   }
 
   private Set<String> receivedDevices(Set<String> proxyIds, SubFolder subFolder) {
