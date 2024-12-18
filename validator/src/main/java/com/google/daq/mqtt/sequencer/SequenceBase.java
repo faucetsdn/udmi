@@ -1543,6 +1543,10 @@ public class SequenceBase {
   private void waitEvaluateLoop(String sanitizedDescription, Duration maxWait,
       Supplier<String> evaluator,
       AtomicReference<String> detail) {
+
+    // Cover the case where the first call to evaluator throws an exception.
+    detail.set("initial exception");
+
     messageEvaluateLoop(maxWait, () -> {
       String result = evaluator.get();
       String previous = detail.getAndSet(emptyToNull(result));
