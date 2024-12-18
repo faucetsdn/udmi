@@ -339,15 +339,15 @@ sites/udmi_site_model/out/devices/AHU-22/state.out
   "sub_folder" : "update",
   "sub_type" : "state",
   "status" : {
-    "message" : "missing pointset subblock",
-    "detail" : "While validating pointset message at REDACTED_TIMESTAMP",
+    "message" : "1 schema violations found",
+    "detail" : "state_update: 1 schema violations found; /system: object has missing required properties ([\"serial_no\"])",
     "category" : "validation.device.schema",
     "timestamp" : "REDACTED_TIMESTAMP",
     "level" : 500
   },
   "errors" : [ {
-    "message" : "missing pointset subblock",
-    "detail" : "While validating pointset message at REDACTED_TIMESTAMP",
+    "message" : "1 schema violations found",
+    "detail" : "state_update: 1 schema violations found; /system: object has missing required properties ([\"serial_no\"])",
     "category" : "validation.device.schema",
     "timestamp" : "REDACTED_TIMESTAMP",
     "level" : 500
@@ -382,12 +382,19 @@ sites/udmi_site_model/out/devices/AHU-22/state_system.out
   "sub_folder" : "system",
   "sub_type" : "state",
   "status" : {
-    "message" : "Successful validation",
-    "category" : "validation.device.receive",
+    "message" : "1 schema violations found",
+    "detail" : "state_system: 1 schema violations found; object has missing required properties ([\"serial_no\"])",
+    "category" : "validation.device.schema",
     "timestamp" : "REDACTED_TIMESTAMP",
-    "level" : 200
+    "level" : 500
   },
-  "errors" : [ ]
+  "errors" : [ {
+    "message" : "1 schema violations found",
+    "detail" : "state_system: 1 schema violations found; object has missing required properties ([\"serial_no\"])",
+    "category" : "validation.device.schema",
+    "timestamp" : "REDACTED_TIMESTAMP",
+    "level" : 500
+  } ]
 }
 ::::::::::::::
 sites/udmi_site_model/out/devices/GAT-123/config.out
@@ -787,14 +794,20 @@ sites/udmi_site_model/out/devices/SNS-4/state.out
   "sub_folder" : "update",
   "sub_type" : "state",
   "status" : {
-    "message" : "missing pointset subblock",
-    "detail" : "While validating pointset message at REDACTED_TIMESTAMP",
-    "category" : "validation.device.schema",
+    "message" : "Multiple validation errors",
+    "detail" : "1 schema violations found; Device has missing points: split_threshold, triangulating_axis",
+    "category" : "validation.device.multiple",
     "timestamp" : "REDACTED_TIMESTAMP",
     "level" : 500
   },
   "errors" : [ {
-    "message" : "missing pointset subblock",
+    "message" : "1 schema violations found",
+    "detail" : "state_update: 1 schema violations found; /system: object has missing required properties ([\"serial_no\"])",
+    "category" : "validation.device.schema",
+    "timestamp" : "REDACTED_TIMESTAMP",
+    "level" : 500
+  }, {
+    "message" : "Device has missing points: split_threshold, triangulating_axis",
     "detail" : "While validating pointset message at REDACTED_TIMESTAMP",
     "category" : "validation.device.schema",
     "timestamp" : "REDACTED_TIMESTAMP",
@@ -837,10 +850,17 @@ sites/udmi_site_model/out/devices/SNS-4/state_system.out
   "sub_folder" : "system",
   "sub_type" : "state",
   "status" : {
-    "message" : "Successful validation",
-    "category" : "validation.device.receive",
+    "message" : "1 schema violations found",
+    "detail" : "state_system: 1 schema violations found; object has missing required properties ([\"serial_no\"])",
+    "category" : "validation.device.schema",
     "timestamp" : "REDACTED_TIMESTAMP",
-    "level" : 200
+    "level" : 500
   },
-  "errors" : [ ]
+  "errors" : [ {
+    "message" : "1 schema violations found",
+    "detail" : "state_system: 1 schema violations found; object has missing required properties ([\"serial_no\"])",
+    "category" : "validation.device.schema",
+    "timestamp" : "REDACTED_TIMESTAMP",
+    "level" : 500
+  } ]
 }

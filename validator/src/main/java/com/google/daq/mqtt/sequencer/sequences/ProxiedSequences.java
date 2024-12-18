@@ -21,8 +21,6 @@ import udmi.schema.GatewayConfig;
 import udmi.schema.Level;
 import udmi.schema.PointPointsetConfig;
 
-;
-
 /**
  * Validate pointset related functionality for proxied devices.
  */

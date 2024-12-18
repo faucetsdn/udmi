@@ -55,12 +55,11 @@ public class ListPublisher implements Publisher {
       Consumer<T> handler, Class<T> messageType) {
     Consumer<Object> foo = (Consumer<Object>) handler;
     Class<Object> clazz = (Class<Object>) messageType;
-    handlers.put(topicSuffix, new SimpleEntry<>(foo, clazz));
-  }
-
-  @Override
-  public void unregisterHandlers() {
-    handlers.clear();
+    if (handler == null) {
+      handlers.remove(topicSuffix);
+    } else {
+      handlers.put(topicSuffix, new SimpleEntry<>(foo, clazz));
+    }
   }
 
   @Override

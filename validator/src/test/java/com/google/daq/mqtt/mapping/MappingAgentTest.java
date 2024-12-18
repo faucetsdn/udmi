@@ -2,7 +2,6 @@ package com.google.daq.mqtt.mapping;
 
 import static com.google.daq.mqtt.TestCommon.GATEWAY_ID;
 import static com.google.daq.mqtt.TestCommon.REGISTRY_ID;
-import static com.google.daq.mqtt.TestCommon.SITE_DIR;
 import static com.google.udmi.util.SiteModel.MOCK_PROJECT;
 import static org.junit.Assert.assertEquals;
 

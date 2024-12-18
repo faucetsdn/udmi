@@ -1,7 +1,5 @@
 package com.google.daq.mqtt.util;
 
-import static java.lang.String.format;
-
 /**
  * Basic class to gather and manage time statistics.
  */

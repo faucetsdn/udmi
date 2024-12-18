@@ -8,6 +8,8 @@ import udmi.schema.Config;
  */
 public interface UdmiPublisher extends ManagerHost {
 
+  boolean isConnected();
+
   MqttDevice getMqttDevice(String deviceId);
 
   void configPreprocess(String deviceId, Config config);

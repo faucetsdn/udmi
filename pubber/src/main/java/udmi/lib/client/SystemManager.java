@@ -110,6 +110,7 @@ public interface SystemManager extends SubBlockManager {
         && SystemMode.RESTART.equals(configMode)) {
       error("System mode requesting device restart");
       systemLifecycle(SystemMode.RESTART);
+      return;
     }
 
     if (SystemMode.ACTIVE.equals(configMode)) {

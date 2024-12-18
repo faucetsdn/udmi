@@ -2,7 +2,6 @@ package com.google.daq.mqtt.util;
 
 import static org.junit.Assert.assertEquals;
 
-import com.google.common.util.concurrent.AtomicDouble;
 import org.junit.Test;
 
 /**
