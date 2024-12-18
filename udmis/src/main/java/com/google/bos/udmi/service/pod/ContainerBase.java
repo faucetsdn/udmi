@@ -20,7 +20,6 @@ import static java.util.stream.Collectors.toSet;
 import com.google.bos.udmi.service.core.ComponentName;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
-import com.google.udmi.util.GeneralUtils;
 import com.google.udmi.util.JsonUtil;
 import java.io.PrintStream;
 import java.time.Duration;

@@ -6,7 +6,6 @@ import static com.google.udmi.util.GeneralUtils.ifNotNullGet;
 import static com.google.udmi.util.GeneralUtils.ifNotNullThen;
 import static com.google.udmi.util.JsonUtil.isoConvert;
 import static com.google.udmi.util.JsonUtil.safeSleep;
-import static com.google.udmi.util.JsonUtil.stringifyTerse;
 import static com.google.udmi.util.JsonUtil.toMap;
 import static java.lang.String.format;
 import static java.util.Objects.requireNonNull;

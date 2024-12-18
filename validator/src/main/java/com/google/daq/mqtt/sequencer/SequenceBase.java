@@ -365,7 +365,7 @@ public class SequenceBase {
     cloudRegion = exeConfig.cloud_region;
     registryId = SiteModel.getRegistryActual(exeConfig);
 
-    deviceMetadata = readDeviceMetadata();
+    deviceMetadata = readDeviceMetadata(getDeviceId());
 
     serialNo = ofNullable(exeConfig.serial_no)
         .orElseGet(() -> GeneralUtils.catchToNull(() -> deviceMetadata.system.serial_no));
@@ -438,6 +438,11 @@ public class SequenceBase {
     validationState = null;
   }
 
+  /**
+   * Read device metadata from site model.
+   *
+   * @return Metadata
+   */
   private static Metadata readDeviceMetadata() {
     File moddataFile = siteModel.getSiteFile(format(OUT_DEVICE_FORMAT, getDeviceId()));
     File metadataFile = siteModel.getDeviceFile(getDeviceId(), METADATA_JSON);

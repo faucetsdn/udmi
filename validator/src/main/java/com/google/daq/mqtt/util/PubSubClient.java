@@ -20,7 +20,6 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.google.api.client.util.Base64;
-import com.google.api.core.ApiFuture;
 import com.google.api.gax.rpc.NotFoundException;
 import com.google.bos.iot.core.proxy.IotReflectorClient;
 import com.google.cloud.Tuple;
