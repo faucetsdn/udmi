@@ -168,4 +168,26 @@ TODO
 - Unit tests - `~/venv/bin/python3 -m pytest tests/`
 - Integration tests - TODO
 
-##
+## Building
+
+```
+docker build -f ubuntu.Dockerfile  -t discoverybuilder .
+docker tag discoverybuilder ghcr.io/noursaidi/discoverybuilder:latest
+docker push ghcr.io/noursaidi/discoverybuilder:latest
+```
+
+```
+cat >/tmp/discovery_build_script.sh <<EOF
+mkdir /tmp/build
+cp -r /src /tmp/build
+cd /tmp/build/src
+pip3 install -r requirements.txt
+pyinstaller --onefile --hidden-import udmi main.py
+ls /src/dist
+cp dist/main /src/discoverynode
+EOF
+... 
+
+docker run --rm --volume $(realpath src):/src --mount type=bind,source=/tmp/discovery_build_script.sh,target=/root/build.sh discoverybuilder /bin/bash /root/build.sh
+
+pyinstaller --onefile --hidden-import udmi main.py

@@ -1,0 +1,42 @@
+name: Discovery
+
+on:
+  push:
+    branches:
+      - '**'
+
+concurrency:
+  group: ci-${{ github.repository }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    name: Automapping capability
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - name: setup
+        run: |
+          cat >/tmp/discovery_build_script.sh <<-EOF
+              mkdir /tmp/build
+              cp -r /src /tmp/build
+              cd /tmp/build/src
+              pip3 install -r requirements.txt
+              pyinstaller --onefile --hidden-import udmi main.py
+              ls /src/dist
+              cp dist/main /src/discoverynode
+              EOF
+      - name: build
+        run: |
+          docker run --rm --volume $(realpath misc/discoverynode/src):/src --mount type=bind,source=/tmp/discovery_build_script.sh,target=/root/build.sh ghcr.io/noursaidi/discoverybuilder:latest /bin/bash /root/build.sh
+          tar -czvf discoverynode.tar.gz misc/discoverynode/src/discoverynode 
+      - name: support bundle
+        if: ${{ !cancelled() }}
+        run: bin/support ${{ github.repository_owner }}_${{ github.job }}_
+      - uses: actions/upload-artifact@v4
+        if: ${{ !cancelled() }}
+        with:
+          if-no-files-found: error
+          name: discoverynode-${{ github.run_id }}
+          path: discoverynode.tar.gz
