@@ -236,7 +236,7 @@ class MQTT(udmi.publishers.publisher.Publisher):
         )
 
         if self.autentication_mechanism == "jwt_gcp":
-            client.tls_set(tls_version=ssl.PROTOCOL_TLSv1_2)
+            client.tls_set(self.ca_file, tls_version=ssl.PROTOCOL_TLSv1_2)
         elif self.autentication_mechanism == "udmi_local":
             client.tls_set(
                 self.ca_file,
@@ -244,7 +244,9 @@ class MQTT(udmi.publishers.publisher.Publisher):
                 keyfile=self.private_key_file,
                 certfile=self.cert_file,
             )
-            client.tls_insecure_set(True)
+            # Commented out because this was not expected to be here
+            # But elaving it here incase it breaks, 
+            #client.tls_insecure_set(True)
         else:
             raise RuntimeError("unknown authentication mechanism")
 
