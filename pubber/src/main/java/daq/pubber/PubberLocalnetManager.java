@@ -1,5 +1,7 @@
 package daq.pubber;
 
+import static com.google.udmi.util.GeneralUtils.catchToNull;
+
 import com.google.udmi.util.SiteModel;
 import java.util.HashMap;
 import java.util.Map;
@@ -11,6 +13,7 @@ import udmi.lib.intf.FamilyProvider;
 import udmi.lib.intf.ManagerHost;
 import udmi.schema.LocalnetConfig;
 import udmi.schema.LocalnetState;
+import udmi.schema.Metadata;
 import udmi.schema.PubberConfiguration;
 
 /**
@@ -36,13 +39,7 @@ public class PubberLocalnetManager extends PubberManager implements LocalnetMana
     super(host, configuration);
     localnetState = new LocalnetState();
     localnetState.families = new HashMap<>();
-
     localnetProviders = new HashMap<>();
-    LOCALNET_PROVIDERS.forEach((family, providerClass) -> {
-      if (host instanceof Pubber || providerClass == PubberVendorProvider.class) {
-        localnetProviders.put(family, instantiateProvider(family));
-      }
-    });
   }
 
   /**
@@ -58,7 +55,27 @@ public class PubberLocalnetManager extends PubberManager implements LocalnetMana
     }
   }
 
+  /**
+   * Set site model.
+   */
   public void setSiteModel(SiteModel siteModel) {
+    LOCALNET_PROVIDERS.forEach((family, providerClass) -> {
+      if (providerClass == PubberVendorProvider.class) {
+        localnetProviders.put(family, instantiateProvider(family));
+        return;
+      }
+      if (providerClass == PubberBacnetProvider.class && host instanceof Pubber) {
+        localnetProviders.put(family, instantiateProvider(family));
+        return;
+      }
+      if (providerClass == PubberIpProvider.class && host instanceof Pubber pubberHost) {
+        Metadata metadata = siteModel.getMetadata(getDeviceId());
+        String addr = catchToNull(() -> metadata.localnet.families.get(family).addr);
+        if (addr != null) {
+          localnetProviders.put(family, instantiateProvider(family));
+        }
+      }
+    });
     localnetProviders.forEach((key, value) -> value.setSiteModel(siteModel));
   }
 
