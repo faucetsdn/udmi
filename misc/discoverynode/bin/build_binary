@@ -1,0 +1,24 @@
+#!/bin/bash -e
+set -x
+ROOT_DIR=$(realpath $(dirname $0)/..)
+
+TMP_DIR=$(mktemp -d)
+OUT_DIR=$ROOT_DIR/dist
+OUT_FILE=$OUT_DIR/discoverynode
+
+echo Building binary to 
+cat >$TMP_DIR/build.sh <<-EOF
+            set -x
+            mkdir /build
+            cp -r /src /build
+            cd /build/src
+            pip3 install -r requirements.txt
+            pyinstaller --onefile --hidden-import udmi main.py
+            mv dist/main /tmp/main
+EOF
+
+docker pull ghcr.io/noursaidi/discoverybuilder:latest 
+docker run --rm --volume $ROOT_DIR/src:/src --volume $TMP_DIR:/tmp ghcr.io/noursaidi/discoverybuilder:latest /bin/bash /tmp/build.sh
+mkdir -p $OUT_DIR
+mv $TMP_DIR/main $OUT_FILE
+chmod 7755 $OUT_FILE
