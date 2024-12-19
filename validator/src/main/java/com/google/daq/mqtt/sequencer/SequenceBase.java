@@ -241,7 +241,7 @@ public class SequenceBase {
   private static final ObjectDiffEngine RECV_STATE_DIFFERNATOR = new ObjectDiffEngine();
   private static final Set<String> configTransactions = new ConcurrentSkipListSet<>();
   private static final AtomicReference<String> stateTransaction = new AtomicReference<>();
-  private static final int MINIMUM_TEST_SEC = 15;
+  private static final Duration MINIMUM_TEST_TIME = Duration.ofSeconds(15);
   private static final Date RESET_LAST_START = new Date(73642);
   private static final Date stateCutoffThreshold = Date.from(Instant.now());
   private static final String FAKE_DEVICE_ID = "TAP-1";
@@ -965,7 +965,7 @@ public class SequenceBase {
 
   private void recordSchemaValidations(Description description) {
     // Ensure that enough time has passed to capture event messages for schema validation.
-    info(format("waiting %ds for more messages...", waitTimeRemainingSec()));
+    info(format("Waiting %ds for more messages...", waitTimeRemainingSec()));
     whileDoing("minimum test time", () -> messageEvaluateLoop(() -> waitTimeRemainingSec() > 0));
 
     validationResults.entrySet().stream()
@@ -1770,7 +1770,8 @@ public class SequenceBase {
   }
 
   private long waitTimeRemainingSec() {
-    return Math.max(0, MINIMUM_TEST_SEC - (System.currentTimeMillis() - startCaptureTime) / 1000);
+    return Math.max(0,
+        MINIMUM_TEST_TIME.toMillis() - (System.currentTimeMillis() - startCaptureTime)) / 1000;
   }
 
   private String timeSinceStart() {
@@ -2670,8 +2671,7 @@ public class SequenceBase {
 
         startCaptureTime = 0;
         startTestTimeMs = System.currentTimeMillis();
-        notice("starting test " + testName + " " + START_END_MARKER);
-
+        notice("Starting test " + testName + " " + START_END_MARKER);
       } catch (IllegalArgumentException e) {
         putSequencerResult(description, ERRR);
         recordCompletion(ERRR, description, friendlyStackTrace(e));
@@ -2697,7 +2697,7 @@ public class SequenceBase {
       ifTrueThen(testResult == PASS && shouldValidateSchema(SubFolder.VALIDATION),
           () -> recordSchemaValidations(description));
 
-      notice("ending test " + testName + " after " + timeSinceStart() + " " + START_END_MARKER);
+      notice("Ending test " + testName + " after " + timeSinceStart() + " " + START_END_MARKER);
       testName = null;
       if (deviceConfig != null) {
         deviceConfig.system.testing = null;
