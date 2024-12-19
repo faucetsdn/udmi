@@ -1359,7 +1359,8 @@ public class SequenceBase {
 
   private void rateLimitConfig() {
     // Add a forced sleep to make sure configs aren't sent too quickly
-    long delayMs = CONFIG_BARRIER.toMillis() - between(lastConfigApplied, getNowInstant()).toMillis();
+    long delayMs =
+        CONFIG_BARRIER.toMillis() - between(lastConfigApplied, getNowInstant()).toMillis();
     debug(format("Delay from lastConfigApplied %s is %sms", lastConfigApplied, delayMs));
     ifTrueThen(delayMs > 0, () -> {
       debug(format("Rate-limiting config by %dms", delayMs));
