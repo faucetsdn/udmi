@@ -1534,7 +1534,7 @@ public class SequenceBase {
         recordSequence("Wait until", description);
       }, detail::get);
     } catch (Exception e) {
-      String message = "Failed waiting until " + sanitizedDescription;
+      String message = format("Failed waiting until %s: %s", sanitizedDescription, detail.get());
       recordSequence(message);
       throw new RuntimeException(message);
     }
@@ -1543,12 +1543,20 @@ public class SequenceBase {
   private void waitEvaluateLoop(String sanitizedDescription, Duration maxWait,
       Supplier<String> evaluator,
       AtomicReference<String> detail) {
+
     messageEvaluateLoop(maxWait, () -> {
-      String result = evaluator.get();
-      String previous = detail.getAndSet(emptyToNull(result));
-      ifTrueThen(!Objects.equals(previous, result),
-          () -> debug(format("Detail %s is now: %s", sanitizedDescription, result)));
-      return result != null;
+      try {
+        String result = evaluator.get();
+        String previous = detail.getAndSet(emptyToNull(result));
+        ifTrueThen(!Objects.equals(previous, result),
+            () -> debug(format("Detail %s is now: %s", sanitizedDescription, result)));
+        return result != null;
+      } catch (Exception e) {
+        String message = friendlyStackTrace(e);
+        warning(format("Detail %s exception: %s", sanitizedDescription, message));
+        detail.set(message);
+        throw e;
+      }
     });
   }
 
@@ -1622,8 +1630,8 @@ public class SequenceBase {
     List<SystemEvents> receivedEvents = popReceivedEvents(SystemEvents.class);
     receivedEvents.forEach(systemEvent -> {
       int eventCount = ofNullable(systemEvent.event_no).orElse(previousEventCount + 1);
-      if (eventCount != previousEventCount + 1) {
-        debug("Missing system events " + previousEventCount + " -> " + eventCount);
+      if (eventCount != previousEventCount + 1 && previousEventCount != 0) {
+        warning("Missing system events " + previousEventCount + " -> " + eventCount);
       }
       previousEventCount = eventCount;
       logEntryQueue.addAll(ofNullable(systemEvent.logentries).orElse(ImmutableList.of()));
@@ -1837,7 +1845,7 @@ public class SequenceBase {
     String transactionId = attributes.get("transactionId");
 
     String commandSignature = format("%s/%s/%s", deviceId, subTypeRaw, subFolderRaw);
-    trace("received command " + commandSignature);
+    trace("Received command " + commandSignature + " as " + transactionId);
 
     boolean targetDevice = getDeviceId().equals(deviceId);
     boolean proxiedDevice = !targetDevice && receivedEvents.containsKey(deviceId);
@@ -1875,13 +1883,14 @@ public class SequenceBase {
         handleDeviceMessage(message, subTypeRaw, subFolderRaw, transactionId);
       }
     } catch (Exception e) {
-      throw new AbortMessageLoop(
-          format("While processing message %s_%s %s", subTypeRaw, subFolderRaw, transactionId), e);
+      error(format("Exception processing %s as %s: %s", commandSignature, transactionId,
+          friendlyStackTrace(e)));
+      throw new AbortMessageLoop(format("While handling %s_%s", subTypeRaw, subFolderRaw), e);
     }
   }
 
   private void handleProxyMessage(String deviceId, Envelope envelope, Map<String, Object> message) {
-    info(format("Handling proxy %s message %s", deviceId, envelope.subFolder.value()));
+    info(format("Handling proxy device %s %s message", deviceId, envelope.subFolder.value()));
     getReceivedEvents(deviceId, envelope.subFolder).add(message);
   }
 
@@ -2147,18 +2156,19 @@ public class SequenceBase {
     Date stateLastConfig = catchToNull(() -> deviceState.system.last_config);
 
     Date lastConfig = catchToNull(() -> deviceConfig.timestamp);
-    final boolean lastConfigSynced = stateLastConfig == null || stateLastConfig.equals(lastConfig);
+    final boolean lastConfigMatches = stateLastConfig != null && stateLastConfig.equals(lastConfig);
+    final boolean configNotPending = stateLastConfig == null || lastConfigMatches;
     final boolean transactionsClean = configTransactions.isEmpty();
 
     Date current = catchToNull(() -> deviceState.timestamp);
     final boolean stateUpdated = !deviceSupportsState() || !dateEquals(configStateStart, current)
-        || pretendStateUpdated || lastConfigSynced;
+        || pretendStateUpdated || lastConfigMatches;
 
     List<String> failures = new ArrayList<>();
     ifNotTrueThen(stateUpdated, () -> failures.add("device state not updated since config issued"));
     ifNotTrueThen(lastStartSynced, () -> failures.add("last_start not synced in config"));
     ifNotTrueThen(transactionsClean, () -> failures.add("config transactions not cleared"));
-    ifNotTrueThen(lastConfigSynced, () -> failures.add("last_config not synced in state"));
+    ifNotTrueThen(configNotPending, () -> failures.add("last_config not synced in state"));
 
     if (debugOut) {
       if (!failures.isEmpty()) {
@@ -2168,7 +2178,7 @@ public class SequenceBase {
             isoConvert(stateLastStart), isoConvert(configLastStart)));
         notice(format("Saw configTransactions flushed %s: %s", transactionsClean,
             configTransactionsListString()));
-        notice(format("Saw last_config synchronized %s: state/%s =? config/%s", lastConfigSynced,
+        notice(format("Saw last_config synchronized %s: state/%s =? config/%s", configNotPending,
             isoConvert(stateLastConfig), isoConvert(lastConfig)));
       } else if (stateLastConfig == null) {
         debug("Saw last_config synchronized check disabled: missing state.system.last_config");

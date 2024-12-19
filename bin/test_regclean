@@ -111,6 +111,8 @@ if [[ $iot_provider == \"clearblade\" ]]; then
     broker_hostname=${cloud_region}-mqtt.clearblade.com
 elif [[ $iot_provider == \"gbos\" ]]; then
     broker_hostname=mqtt.bos.goog
+elif [[ $iot_provider == \"gref\" ]]; then
+    broker_hostname=mqtt.bos.goog
 elif [[ $iot_provider == \"mqtt\" ]]; then
     broker_hostname=$project_id
     client_id=\"/r/$registry_prefix$registry_id$registry_suffix/d/$device_id\"

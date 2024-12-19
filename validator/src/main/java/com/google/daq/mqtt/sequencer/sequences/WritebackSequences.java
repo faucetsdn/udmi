@@ -52,7 +52,7 @@ public class WritebackSequences extends PointsetBase {
    */
   private String expectedValueState(String expectedValue) {
     String targetState = expectedValue == null ? "default (null)" : expectedValue;
-    return format("target point to have value_state %s", targetState);
+    return format("target point has value_state %s", targetState);
   }
 
   /**
