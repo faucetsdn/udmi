@@ -57,7 +57,6 @@ import com.google.cloud.Tuple;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.daq.mqtt.util.CloudIotManager;
 import com.google.daq.mqtt.util.ExceptionMap;
@@ -112,7 +111,6 @@ import org.apache.commons.io.FileUtils;
 import org.slf4j.impl.SimpleLogger;
 import udmi.schema.Category;
 import udmi.schema.DeviceValidationEvents;
-import udmi.schema.DiscoveryEvents;
 import udmi.schema.Envelope;
 import udmi.schema.Envelope.SubFolder;
 import udmi.schema.Envelope.SubType;
@@ -120,11 +118,8 @@ import udmi.schema.ExecutionConfiguration;
 import udmi.schema.IotAccess.IotProvider;
 import udmi.schema.Level;
 import udmi.schema.Metadata;
-import udmi.schema.PointsetEvents;
-import udmi.schema.PointsetState;
 import udmi.schema.PointsetSummary;
 import udmi.schema.SetupUdmiConfig;
-import udmi.schema.State;
 import udmi.schema.UdmiConfig;
 import udmi.schema.ValidationEvents;
 import udmi.schema.ValidationState;
@@ -499,8 +494,9 @@ public class Validator {
           Metadata metadata = siteModel.loadDeviceMetadata(device);
           reportingDevice.setMetadata(metadata);
         } catch (Exception e) {
-          outputLogger.error("Error while loading device %s: %s", device, e);
-          reportingDevice.addError(e, Category.VALIDATION_DEVICE_SCHEMA, "loading device");
+          String detail = friendlyStackTrace(e);
+          outputLogger.error("Error while loading device %s: %s", device, detail);
+          reportingDevice.addError(e, Category.VALIDATION_DEVICE_SCHEMA, detail);
         }
         reportingDevices.put(device, reportingDevice);
       }

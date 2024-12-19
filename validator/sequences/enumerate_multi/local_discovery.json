@@ -1,7 +1,10 @@
 {
-  "depths" : {
+  "enumerations" : {
     "families" : "entries",
-    "refs" : "entries",
+    "points" : "entries",
     "features" : "entries"
+  },
+  "families" : {
+    "vendor" : { }
   }
 }

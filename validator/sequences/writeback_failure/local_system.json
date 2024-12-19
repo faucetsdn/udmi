@@ -1,8 +1,8 @@
 {
-  "min_loglevel" : 200,
+  "min_loglevel" : 100,
   "metrics_rate_sec" : 10,
   "operation" : {
-    "last_start" : "2024-11-06T17:34:19Z"
+    "last_start" : "2024-12-18T15:32:27Z"
   },
   "testing" : {
     "sequence_name" : "writeback_failure"

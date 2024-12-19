@@ -1,5 +1,6 @@
 package com.google.daq.mqtt.sequencer.sequences;
 
+import static com.google.common.base.Strings.isNullOrEmpty;
 import static com.google.daq.mqtt.util.TimePeriodConstants.THREE_MINUTES_MS;
 import static com.google.daq.mqtt.util.TimePeriodConstants.TWO_MINUTES_MS;
 import static com.google.udmi.util.GeneralUtils.encodeBase64;
@@ -60,6 +61,13 @@ public class BlobsetSequences extends SequenceBase {
 
   public void setReturnRedirectEndpointBlob() {
     setDeviceConfigEndpointBlob(getAlternateEndpointHostname(), altRegistry, false);
+  }
+
+  @Override
+  public void setUp() {
+    ifTrueSkipTest(catchToFalse(() -> !isNullOrEmpty(deviceMetadata.gateway.gateway_id)),
+        "No blobset check for proxy device");
+    super.setUp();
   }
 
   @Before

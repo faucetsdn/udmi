@@ -26,7 +26,6 @@ public class FamilyDiscoveryConfig {
 
     /**
      * Generational marker for controlling discovery
-     * (Required)
      * 
      */
     @JsonProperty("generation")
@@ -54,7 +53,7 @@ public class FamilyDiscoveryConfig {
     @JsonPropertyDescription("Holdoff time for passively discovered devices")
     public Integer passive_sec;
     @JsonProperty("depth")
-    public udmi.schema.Depths.Depth depth;
+    public udmi.schema.Enumerations.Depth depth;
 
     @Override
     public int hashCode() {

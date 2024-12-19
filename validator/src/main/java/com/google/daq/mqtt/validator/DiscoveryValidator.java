@@ -1,5 +1,10 @@
 package com.google.daq.mqtt.validator;
 
+import static com.google.common.base.Preconditions.checkNotNull;
+import static com.google.daq.mqtt.util.providers.FamilyProvider.constructRef;
+import static java.util.Objects.requireNonNull;
+
+import com.google.daq.mqtt.util.providers.FamilyProvider;
 import java.util.Map;
 import udmi.schema.DiscoveryEvents;
 import udmi.schema.DiscoveryState;
@@ -26,19 +31,28 @@ public class DiscoveryValidator {
       validateMessage(discoveryState);
     } else if (message instanceof DiscoveryEvents discoveryEvents) {
       validateMessage(discoveryEvents);
-    } else {
-      return;
     }
   }
-
 
   public void validateMessage(State stateMessage) {
   }
 
+  /**
+   * Validate a discovery event.
+   */
   public void validateMessage(DiscoveryEvents discoveryEvents) {
+    String scanFamily = requireNonNull(discoveryEvents.scan_family,
+        "discovery scan_family not defined");
+    FamilyProvider familyProvider = FamilyProvider.NAMED_FAMILIES.get(scanFamily);
+    checkNotNull(familyProvider, "Unknown provider for discovery family " + scanFamily);
+    if (discoveryEvents.refs == null) {
+      familyProvider.validateRef(constructRef(scanFamily, discoveryEvents.scan_addr, null));
+    } else {
+      discoveryEvents.refs.forEach((key, value) ->
+          familyProvider.validateRef(constructRef(scanFamily, discoveryEvents.scan_addr, key)));
+    }
   }
 
   public void validateMessage(DiscoveryState discoveryState) {
   }
-
 }

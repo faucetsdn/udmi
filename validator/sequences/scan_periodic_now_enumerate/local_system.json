@@ -1,8 +1,8 @@
 {
-  "min_loglevel" : 200,
+  "min_loglevel" : 100,
   "metrics_rate_sec" : 10,
   "operation" : {
-    "last_start" : "2024-11-06T17:33:35Z"
+    "last_start" : "2024-12-11T05:43:02Z"
   },
   "testing" : {
     "sequence_name" : "scan_periodic_now_enumerate"

@@ -2,6 +2,7 @@ sites/udmi_site_model/out/devices/AHU-1/config.json
 sites/udmi_site_model/out/devices/AHU-1/events_pointset.json
 sites/udmi_site_model/out/devices/AHU-1/events_system.json
 sites/udmi_site_model/out/devices/AHU-1/persistent_data.json
+sites/udmi_site_model/out/devices/AHU-1/state_discovery.json
 sites/udmi_site_model/out/devices/AHU-1/state.json
 sites/udmi_site_model/out/devices/AHU-1/state_localnet.json
 sites/udmi_site_model/out/devices/AHU-1/state_pointset.json
@@ -26,6 +27,7 @@ sites/udmi_site_model/out/devices/GAT-123/events_mapping.json
 sites/udmi_site_model/out/devices/GAT-123/events_pointset.json
 sites/udmi_site_model/out/devices/GAT-123/events_system.json
 sites/udmi_site_model/out/devices/GAT-123/persistent_data.json
+sites/udmi_site_model/out/devices/GAT-123/state_discovery.json
 sites/udmi_site_model/out/devices/GAT-123/state_gateway.json
 sites/udmi_site_model/out/devices/GAT-123/state.json
 sites/udmi_site_model/out/devices/GAT-123/state_localnet.json
@@ -107,6 +109,29 @@ sites/udmi_site_model/out/devices/AHU-1/events_system.out
   "errors" : [ {
     "message" : "Timestamp skew REDACTED_DURATION (REDACTED_TIMESTAMP to REDACTED_TIMESTAMP) exceeds REDACTED_DURATION threshold",
     "detail" : "events_system: Timestamp skew REDACTED_DURATION (REDACTED_TIMESTAMP to REDACTED_TIMESTAMP) exceeds REDACTED_DURATION threshold REDACTED_ERROR",
+    "category" : "validation.device.schema",
+    "timestamp" : "REDACTED_TIMESTAMP",
+    "level" : 500
+  } ]
+}
+::::::::::::::
+sites/udmi_site_model/out/devices/AHU-1/state_discovery.out
+::::::::::::::
+{
+  "timestamp" : "REDACTED_TIMESTAMP",
+  "version" : "1.5.2",
+  "sub_folder" : "discovery",
+  "sub_type" : "state",
+  "status" : {
+    "message" : "Timestamp skew REDACTED_DURATION (REDACTED_TIMESTAMP to REDACTED_TIMESTAMP) exceeds REDACTED_DURATION threshold",
+    "detail" : "state_discovery: Timestamp skew REDACTED_DURATION (REDACTED_TIMESTAMP to REDACTED_TIMESTAMP) exceeds REDACTED_DURATION threshold REDACTED_ERROR",
+    "category" : "validation.device.schema",
+    "timestamp" : "REDACTED_TIMESTAMP",
+    "level" : 500
+  },
+  "errors" : [ {
+    "message" : "Timestamp skew REDACTED_DURATION (REDACTED_TIMESTAMP to REDACTED_TIMESTAMP) exceeds REDACTED_DURATION threshold",
+    "detail" : "state_discovery: Timestamp skew REDACTED_DURATION (REDACTED_TIMESTAMP to REDACTED_TIMESTAMP) exceeds REDACTED_DURATION threshold REDACTED_ERROR",
     "category" : "validation.device.schema",
     "timestamp" : "REDACTED_TIMESTAMP",
     "level" : 500
@@ -314,15 +339,15 @@ sites/udmi_site_model/out/devices/AHU-22/state.out
   "sub_folder" : "update",
   "sub_type" : "state",
   "status" : {
-    "message" : "missing pointset subblock",
-    "detail" : "While validating pointset message at REDACTED_TIMESTAMP",
+    "message" : "1 schema violations found",
+    "detail" : "state_update: 1 schema violations found; /system: object has missing required properties ([\"serial_no\"])",
     "category" : "validation.device.schema",
     "timestamp" : "REDACTED_TIMESTAMP",
     "level" : 500
   },
   "errors" : [ {
-    "message" : "missing pointset subblock",
-    "detail" : "While validating pointset message at REDACTED_TIMESTAMP",
+    "message" : "1 schema violations found",
+    "detail" : "state_update: 1 schema violations found; /system: object has missing required properties ([\"serial_no\"])",
     "category" : "validation.device.schema",
     "timestamp" : "REDACTED_TIMESTAMP",
     "level" : 500
@@ -357,12 +382,19 @@ sites/udmi_site_model/out/devices/AHU-22/state_system.out
   "sub_folder" : "system",
   "sub_type" : "state",
   "status" : {
-    "message" : "Successful validation",
-    "category" : "validation.device.receive",
+    "message" : "1 schema violations found",
+    "detail" : "state_system: 1 schema violations found; object has missing required properties ([\"serial_no\"])",
+    "category" : "validation.device.schema",
     "timestamp" : "REDACTED_TIMESTAMP",
-    "level" : 200
+    "level" : 500
   },
-  "errors" : [ ]
+  "errors" : [ {
+    "message" : "1 schema violations found",
+    "detail" : "state_system: 1 schema violations found; object has missing required properties ([\"serial_no\"])",
+    "category" : "validation.device.schema",
+    "timestamp" : "REDACTED_TIMESTAMP",
+    "level" : 500
+  } ]
 }
 ::::::::::::::
 sites/udmi_site_model/out/devices/GAT-123/config.out
@@ -418,15 +450,15 @@ sites/udmi_site_model/out/devices/GAT-123/events_discovery.out
   "sub_folder" : "discovery",
   "sub_type" : "events",
   "status" : {
-    "message" : "1 schema violations found",
-    "detail" : "events_discovery: 1 schema violations found; object has missing required properties ([\"scan_family\"])",
+    "message" : "discovery scan_family not defined",
+    "detail" : "events_discovery: discovery scan_family not defined REDACTED_ERROR",
     "category" : "validation.device.schema",
     "timestamp" : "REDACTED_TIMESTAMP",
     "level" : 500
   },
   "errors" : [ {
-    "message" : "1 schema violations found",
-    "detail" : "events_discovery: 1 schema violations found; object has missing required properties ([\"scan_family\"])",
+    "message" : "discovery scan_family not defined",
+    "detail" : "events_discovery: discovery scan_family not defined REDACTED_ERROR",
     "category" : "validation.device.schema",
     "timestamp" : "REDACTED_TIMESTAMP",
     "level" : 500
@@ -564,6 +596,22 @@ sites/udmi_site_model/out/devices/GAT-123/events_system.out
   "version" : "1.5.2",
   "sub_folder" : "system",
   "sub_type" : "events",
+  "status" : {
+    "message" : "Successful validation",
+    "category" : "validation.device.receive",
+    "timestamp" : "REDACTED_TIMESTAMP",
+    "level" : 200
+  },
+  "errors" : [ ]
+}
+::::::::::::::
+sites/udmi_site_model/out/devices/GAT-123/state_discovery.out
+::::::::::::::
+{
+  "timestamp" : "REDACTED_TIMESTAMP",
+  "version" : "1.5.2",
+  "sub_folder" : "discovery",
+  "sub_type" : "state",
   "status" : {
     "message" : "Successful validation",
     "category" : "validation.device.receive",
@@ -746,14 +794,20 @@ sites/udmi_site_model/out/devices/SNS-4/state.out
   "sub_folder" : "update",
   "sub_type" : "state",
   "status" : {
-    "message" : "missing pointset subblock",
-    "detail" : "While validating pointset message at REDACTED_TIMESTAMP",
-    "category" : "validation.device.schema",
+    "message" : "Multiple validation errors",
+    "detail" : "1 schema violations found; Device has missing points: split_threshold, triangulating_axis",
+    "category" : "validation.device.multiple",
     "timestamp" : "REDACTED_TIMESTAMP",
     "level" : 500
   },
   "errors" : [ {
-    "message" : "missing pointset subblock",
+    "message" : "1 schema violations found",
+    "detail" : "state_update: 1 schema violations found; /system: object has missing required properties ([\"serial_no\"])",
+    "category" : "validation.device.schema",
+    "timestamp" : "REDACTED_TIMESTAMP",
+    "level" : 500
+  }, {
+    "message" : "Device has missing points: split_threshold, triangulating_axis",
     "detail" : "While validating pointset message at REDACTED_TIMESTAMP",
     "category" : "validation.device.schema",
     "timestamp" : "REDACTED_TIMESTAMP",
@@ -796,10 +850,17 @@ sites/udmi_site_model/out/devices/SNS-4/state_system.out
   "sub_folder" : "system",
   "sub_type" : "state",
   "status" : {
-    "message" : "Successful validation",
-    "category" : "validation.device.receive",
+    "message" : "1 schema violations found",
+    "detail" : "state_system: 1 schema violations found; object has missing required properties ([\"serial_no\"])",
+    "category" : "validation.device.schema",
     "timestamp" : "REDACTED_TIMESTAMP",
-    "level" : 200
+    "level" : 500
   },
-  "errors" : [ ]
+  "errors" : [ {
+    "message" : "1 schema violations found",
+    "detail" : "state_system: 1 schema violations found; object has missing required properties ([\"serial_no\"])",
+    "category" : "validation.device.schema",
+    "timestamp" : "REDACTED_TIMESTAMP",
+    "level" : 500
+  } ]
 }

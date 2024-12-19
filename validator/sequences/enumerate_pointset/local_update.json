@@ -1,19 +1,22 @@
 {
-  "timestamp" : "2024-11-06T17:34:01Z",
-  "version" : "@@@cloud udmi version###git-b2a557d",
+  "timestamp" : "2024-12-11T05:44:38Z",
+  "version" : "@@@cloud udmi version###git-85bdd38",
   "system" : {
-    "min_loglevel" : 200,
+    "min_loglevel" : 100,
     "metrics_rate_sec" : 10,
     "operation" : {
-      "last_start" : "2024-11-06T17:33:33Z"
+      "last_start" : "2024-12-11T05:43:05Z"
     },
     "testing" : {
       "sequence_name" : "enumerate_pointset"
     }
   },
   "discovery" : {
-    "depths" : {
-      "refs" : "entries"
+    "enumerations" : {
+      "points" : "entries"
+    },
+    "families" : {
+      "vendor" : { }
     }
   },
   "localnet" : {
@@ -21,7 +24,7 @@
       "ether" : { },
       "ipv4" : { },
       "vendor" : { },
-      "ipv6" : { }
+      "bacnet" : { }
     }
   },
   "pointset" : {

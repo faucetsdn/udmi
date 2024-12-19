@@ -1,7 +1,7 @@
 {
   "timestamp": "2020-05-01T13:39:07Z",
   "version": "1.5.2",
-  "hash": "f372489c",
+  "hash": "9ee6f853",
   "cloud": {
     "auth_type": "ES256"
   },
@@ -21,12 +21,7 @@
     "min_loglevel": 300
   },
   "gateway": {
-    "proxy_ids": [ "SNS-4", "AHU-22" ]
-  },
-  "discovery": {
-    "families": {
-      "vendor": { }
-    }
+    "proxy_ids": [ "SNS-4", "AHU-22", "SNS-8" ]
   },
   "localnet": {
     "families": {
@@ -41,6 +36,7 @@
         "units": "Bars",
         "tags": [ ]
       }
-    }
+    },
+    "sample_rate_sec": 30
   }
 }

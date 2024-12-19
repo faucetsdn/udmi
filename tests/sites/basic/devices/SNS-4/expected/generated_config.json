@@ -7,5 +7,7 @@
     "operation": { }
   },
   "gateway": { },
-  "pointset": { }
+  "pointset": {
+    "sample_rate_sec": 30
+  }
 }

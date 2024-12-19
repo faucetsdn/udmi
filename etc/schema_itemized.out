@@ -13,6 +13,9 @@
 1 writeback_success
 1 writeback_success
 1 pointset_publish_interval
+1 system_min_loglevel RESULT pass schemas device_state_alpha ALPHA 10/10 Schema validation passed
+0 system_min_loglevel RESULT pass schemas events_system_alpha ALPHA 10/10 Schema validation passed
+0 system_min_loglevel RESULT pass schemas state_update_alpha ALPHA 10/10 Schema validation passed
 1 system_mode_restart
 1 config_logging
 1 broken_config RESULT fail schemas device_state_stable STABLE 10/10 Schema violations found
@@ -55,6 +58,8 @@
 1 gateway_proxy_events
 1 gateway_proxy_state
 1 gateway_proxy_state
+1 scan_single_future
+1 scan_periodic_now_enumerate
 4 gateway_proxy_events
 1 gateway_proxy_events
 1 gateway_proxy_state

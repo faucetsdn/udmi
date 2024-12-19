@@ -1,12 +1,12 @@
 {
-  "generation" : "2024-11-06T17:34:00Z",
-  "scan_addr" : "20231",
+  "generation" : "2024-12-17T05:26:45Z",
+  "scan_addr" : "28179023",
   "scan_family" : "vendor",
   "system" : {
     "ancillary" : {
-      "device-name" : "GAT-123"
+      "device-name" : "AHU-1"
     }
   },
-  "timestamp" : "2024-11-06T17:34:00Z",
+  "timestamp" : "2024-12-17T05:26:45Z",
   "version" : "1.5.2"
 }

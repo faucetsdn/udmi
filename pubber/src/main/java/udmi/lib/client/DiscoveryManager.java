@@ -1,7 +1,6 @@
 package udmi.lib.client;
 
 import static com.google.udmi.util.GeneralUtils.catchToNull;
-import static com.google.udmi.util.GeneralUtils.ifNotNullGet;
 import static com.google.udmi.util.GeneralUtils.ifNotNullThen;
 import static com.google.udmi.util.GeneralUtils.ifNullElse;
 import static com.google.udmi.util.GeneralUtils.ifNullThen;
@@ -11,48 +10,27 @@ import static com.google.udmi.util.JsonUtil.isoConvert;
 import static java.lang.Math.floorMod;
 import static java.lang.String.format;
 import static java.util.Optional.ofNullable;
-import static java.util.function.Predicate.not;
 import static udmi.schema.FamilyDiscoveryState.Phase.PENDING;
 import static udmi.schema.FamilyDiscoveryState.Phase.STOPPED;
 
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ScheduledFuture;
 import java.util.function.Supplier;
-import udmi.schema.Depths;
-import udmi.schema.Depths.Depth;
 import udmi.schema.DiscoveryConfig;
 import udmi.schema.DiscoveryState;
+import udmi.schema.Enumerations.Depth;
 import udmi.schema.FamilyDiscoveryConfig;
 import udmi.schema.FamilyDiscoveryState;
-import udmi.schema.PointPointsetModel;
-import udmi.schema.RefDiscovery;
 
 /**
  * Discovery client.
  */
-public interface DiscoveryManager extends SubblockManager {
-
-
-  static String getVendorRefKey(Map.Entry<String, PointPointsetModel> entry) {
-    return ofNullable(entry.getValue().ref).orElse(entry.getKey());
-  }
-
-  /**
-   * Get vendor ref value.
-   */
-  static RefDiscovery getVendorRefValue(Map.Entry<String, PointPointsetModel> entry) {
-    RefDiscovery refDiscovery = new RefDiscovery();
-    refDiscovery.possible_values = null;
-    PointPointsetModel model = entry.getValue();
-    refDiscovery.writable = model.writable;
-    refDiscovery.units = model.units;
-    refDiscovery.point = ifNotNullGet(model.ref, entry::getKey);
-    return refDiscovery;
-  }
-
+public interface DiscoveryManager extends SubBlockManager {
   /**
    * Determines whether enumeration to a specific depth level is required.
    *
@@ -66,7 +44,7 @@ public interface DiscoveryManager extends SubblockManager {
     });
   }
 
-  default  <K, V> Map<K, V> maybeEnumerate(Depths.Depth depth, Supplier<Map<K, V>> supplier) {
+  default <K, V> Map<K, V> maybeEnumerate(Depth depth, Supplier<Map<K, V>> supplier) {
     return ifTrueGet(shouldEnumerateTo(depth), supplier);
   }
 
@@ -79,8 +57,9 @@ public interface DiscoveryManager extends SubblockManager {
     Map<String, FamilyDiscoveryConfig> families = ofNullable(raw).orElse(Map.of());
     ifNullThen(getDiscoveryState().families, () -> getDiscoveryState().families = new HashMap<>());
 
-    getDiscoveryState().families.keySet().stream().filter(not(families::containsKey))
-        .forEach(this::removeDiscoveryScan);
+    List<String> toRemove = new ArrayList<>(getDiscoveryState().families.keySet());
+    toRemove.removeIf(families::containsKey);
+    toRemove.forEach(this::removeDiscoveryScan);
     families.keySet().forEach(this::scheduleDiscoveryScan);
 
     if (raw == null) {
@@ -98,7 +77,7 @@ public interface DiscoveryManager extends SubblockManager {
     Date rawGeneration = familyDiscoveryConfig.generation;
     int interval = getScanInterval(family);
     if (rawGeneration == null && interval == 0) {
-      cancelDiscoveryScan(family, null, null);
+      cancelDiscoveryScan(family, null);
       return;
     }
 
@@ -112,7 +91,7 @@ public interface DiscoveryManager extends SubblockManager {
       long deltaSec = floorMod(configGeneration.getTime() / 1000 - now.getEpochSecond(), interval);
       startGeneration = Date.from(now.plusSeconds(deltaSec));
     } else if (configGeneration.before(baseGeneration)) {
-      cancelDiscoveryScan(family, configGeneration, STOPPED);
+      cancelDiscoveryScan(family, configGeneration);
       return;
     } else {
       startGeneration = configGeneration;
@@ -136,23 +115,24 @@ public interface DiscoveryManager extends SubblockManager {
 
   default void removeDiscoveryScan(String family) {
     FamilyDiscoveryState removed = getDiscoveryState().families.remove(family);
-    ifNotNullThen(removed, was -> cancelDiscoveryScan(family, was.generation, STOPPED));
+    ifNotNullThen(removed, was -> cancelDiscoveryScan(family, was.generation));
   }
 
   /**
    * Cancels discovery scan.
    *
-   * @param family family string.
+   * @param family           family string.
    * @param configGeneration Config generation.
-   * @param phase Family discovery phase.
    */
-  default void cancelDiscoveryScan(String family, Date configGeneration,
-      FamilyDiscoveryState.Phase phase) {
+  default void cancelDiscoveryScan(String family, Date configGeneration) {
     FamilyDiscoveryState familyDiscoveryState = getFamilyDiscoveryState(family);
-    info(format("Discovery scan %s phase %s as %s", family, phase, isoConvert(configGeneration)));
-    familyDiscoveryState.phase = phase;
-    familyDiscoveryState.generation = configGeneration;
-    updateState();
+    if (familyDiscoveryState != null) {
+      info(format("Discovery scan %s phase %s as %s", family, STOPPED,
+          isoConvert(configGeneration)));
+      familyDiscoveryState.phase = STOPPED;
+      familyDiscoveryState.generation = configGeneration;
+      updateState();
+    }
   }
 
   default FamilyDiscoveryState getFamilyDiscoveryState(String family) {
@@ -177,7 +157,7 @@ public interface DiscoveryManager extends SubblockManager {
   /**
    * Checks and scan for discovery.
    *
-   * @param family family
+   * @param family         family
    * @param scanGeneration scan generation.
    */
   default void checkDiscoveryScan(String family, Date scanGeneration) {
@@ -239,5 +219,4 @@ public interface DiscoveryManager extends SubblockManager {
   void startDiscoveryScan(String family, Date scanGeneration);
 
   void updateDiscoveryEnumeration(DiscoveryConfig config);
-
 }

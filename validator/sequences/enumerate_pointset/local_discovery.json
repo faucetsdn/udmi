@@ -1,5 +1,8 @@
 {
-  "depths" : {
-    "refs" : "entries"
+  "enumerations" : {
+    "points" : "entries"
+  },
+  "families" : {
+    "vendor" : { }
   }
 }

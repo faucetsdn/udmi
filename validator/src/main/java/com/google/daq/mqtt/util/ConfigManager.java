@@ -1,7 +1,10 @@
 package com.google.daq.mqtt.util;
 
 import static com.google.common.base.Preconditions.checkState;
-import static com.google.daq.mqtt.util.ProtocolFamily.NAMED_FAMILIES;
+import static com.google.daq.mqtt.util.ContextWrapper.getCurrentContext;
+import static com.google.daq.mqtt.util.ContextWrapper.runInContext;
+import static com.google.daq.mqtt.util.ContextWrapper.wrapExceptionWithContext;
+import static com.google.daq.mqtt.util.providers.FamilyProvider.NAMED_FAMILIES;
 import static com.google.udmi.util.GeneralUtils.catchToNull;
 import static com.google.udmi.util.GeneralUtils.deepCopy;
 import static com.google.udmi.util.GeneralUtils.ifNotNullGet;
@@ -19,9 +22,13 @@ import com.google.udmi.util.SiteModel;
 import java.io.File;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import org.jetbrains.annotations.NotNull;
 import udmi.lib.ProtocolFamily;
 import udmi.schema.Config;
+import udmi.schema.DiscoveryConfig;
+import udmi.schema.FamilyDiscoveryConfig;
+import udmi.schema.FamilyDiscoveryModel;
 import udmi.schema.FamilyLocalnetConfig;
 import udmi.schema.GatewayConfig;
 import udmi.schema.LocalnetConfig;
@@ -45,6 +52,7 @@ public class ConfigManager {
   private final Metadata metadata;
   private final String deviceId;
   private final SiteModel siteModel;
+  private final Map<String, Exception> schemaViolationsMap = new HashMap<>();
 
   /**
    * Initiates ConfigManager for the given device at the given file location.
@@ -128,6 +136,7 @@ public class ConfigManager {
     config.gateway = getGatewayConfig();
     config.pointset = getDevicePointsetConfig();
     config.localnet = getDeviceLocalnetConfig();
+    config.discovery = getDiscoveryConfig();
     return config;
   }
 
@@ -201,7 +210,7 @@ public class ConfigManager {
 
   PointPointsetConfig configFromMetadata(String configKey, PointPointsetModel metadata,
       boolean excludeUnits) {
-    try {
+    return runInContext("While converting point " + configKey, () -> {
       PointPointsetConfig pointConfig = new PointPointsetConfig();
       pointConfig.units = excludeUnits ? null : metadata.units;
       pointConfig.ref = pointConfigRef(metadata);
@@ -209,9 +218,7 @@ public class ConfigManager {
         pointConfig.set_value = metadata.baseline_value;
       }
       return pointConfig;
-    } catch (Exception e) {
-      throw new RuntimeException("While converting point " + configKey, e);
-    }
+    });
   }
 
   private String pointConfigRef(PointPointsetModel model) {
@@ -230,7 +237,12 @@ public class ConfigManager {
     ifNotNullThen(rawFamily, raw ->
         requireNonNull(catchToNull(() -> metadata.localnet.families.get(family).addr),
             format("metadata.localnet.families.[%s].addr not defined", family)));
-    NAMED_FAMILIES.get(family).refValidator(pointRef);
+    try {
+      NAMED_FAMILIES.get(family).validateRef(pointRef);
+    } catch (Exception e) {
+      schemaViolationsMap.put(String.format("%s %s: %s", family, pointRef, getCurrentContext()),
+          wrapExceptionWithContext(e, false));
+    }
     return pointRef;
   }
 
@@ -273,6 +285,41 @@ public class ConfigManager {
 
   public String getUpdatedTimestamp() {
     return isoConvert(metadata.timestamp);
+  }
+
+  private DiscoveryConfig getDiscoveryConfig() {
+    if (metadata.discovery == null) {
+      return null;
+    }
+
+    DiscoveryConfig discoveryConfig = new DiscoveryConfig();
+    discoveryConfig.families = ifNotNullGet(metadata.discovery.families,
+        families -> new HashMap<>());
+
+    if (discoveryConfig.families != null) {
+      metadata.discovery.families.keySet().forEach(family -> {
+        FamilyDiscoveryModel familyDiscoveryModel = metadata.discovery.families.get(family);
+        if (familyDiscoveryModel != null) {
+          // for a sporadic scan, supplying generation is invalid
+          checkState(familyDiscoveryModel.scan_interval_sec != null
+                  || familyDiscoveryModel.generation == null,
+              "generation specified without scan_interval_sec parameter");
+
+          FamilyDiscoveryConfig familyDiscoveryConfig = new FamilyDiscoveryConfig();
+          familyDiscoveryConfig.generation = familyDiscoveryModel.generation;
+          familyDiscoveryConfig.scan_interval_sec = familyDiscoveryModel.scan_interval_sec;
+          familyDiscoveryConfig.scan_duration_sec = familyDiscoveryModel.scan_duration_sec;
+
+          discoveryConfig.families.put(family, familyDiscoveryConfig);
+        }
+      });
+    }
+
+    return discoveryConfig;
+  }
+
+  public Map<String, Exception> getSchemaViolationsMap() {
+    return schemaViolationsMap;
   }
 
 }

@@ -10,6 +10,7 @@ TEST writeback_success extraPoint=filter_differential_pressure_setpoint
 TEST writeback_success noWriteback
 TEST writeback_success noPointState
 TEST pointset_publish_interval fixedSampleRate=10
+TEST system_min_loglevel fixedLogLevel=100
 TEST system_mode_restart noPersist
 TEST config_logging badVersion
 TEST broken_config barfConfig
@@ -37,6 +38,8 @@ TEST gateway_proxy_events
 TEST gateway_proxy_events noProxy
 TEST gateway_proxy_state
 TEST gateway_proxy_state noProxy
+TEST scan_single_future
+TEST scan_periodic_now_enumerate
 
 # Test gateway configurations that doesn't do state
 WITH GAT-123 noState

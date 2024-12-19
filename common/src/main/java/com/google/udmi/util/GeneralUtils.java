@@ -8,7 +8,6 @@ import static com.google.udmi.util.ProperPrinter.OutputFormat.VERBOSE;
 import static java.lang.String.format;
 import static java.util.Optional.ofNullable;
 
-import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.core.JsonParser.Feature;
@@ -18,6 +17,7 @@ import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.databind.util.ISO8601DateFormat;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Sets;
 import com.google.common.hash.Hashing;
 import com.google.daq.mqtt.util.ValidationException;
 import com.google.udmi.util.ProperPrinter.OutputFormat;
@@ -39,6 +39,7 @@ import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Base64;
+import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
@@ -76,6 +77,7 @@ public class GeneralUtils {
   private static final String SEPARATOR = "\n  ";
   private static final Joiner INDENTED_LINES = Joiner.on(SEPARATOR);
   private static final String NULL_STRING = "null";
+  private static final String CONDITIONAL_KEY_PREFIX = "?";
   private static Duration clockSkew = Duration.ZERO;
 
   public static String[] arrayOf(String... args) {
@@ -98,8 +100,8 @@ public class GeneralUtils {
    * the target class is "final" but the fields themselves need to be updated.
    *
    * @param from source object
-   * @param to target object
-   * @param <T> type of object
+   * @param to   target object
+   * @param <T>  type of object
    */
   public static <T> void copyFields(T from, T to, boolean includeNull) {
     Field[] fields = from.getClass().getDeclaredFields();
@@ -327,6 +329,13 @@ public class GeneralUtils {
     checkState(value == null, description);
   }
 
+  public static <T extends Collection<?>> void ifNotEmptyThrow(T value,
+      Function<T, String> detailer) {
+    if (!value.isEmpty()) {
+      throw new RuntimeException(detailer.apply(value));
+    }
+  }
+
   public static <T> void ifNotNullThrow(T value, String message) {
     if (value != null) {
       throw new RuntimeException(message);
@@ -493,6 +502,15 @@ public class GeneralUtils {
     return catchToElse(provider, (T) null);
   }
 
+  public static String catchToMessage(Runnable action) {
+    try {
+      action.run();
+      return null;
+    } catch (Exception e) {
+      return e.getMessage();
+    }
+  }
+
   public static String joinOrNull(String prefix, Set<Object> setDifference) {
     return ifTrueGet(setDifference == null || setDifference.isEmpty(), (String) null,
         () -> prefix + CSV_JOINER.join(setDifference));
@@ -511,19 +529,37 @@ public class GeneralUtils {
   }
 
   public static void mergeObject(Map<String, Object> under, Map<String, Object> over) {
-    for (String key : over.keySet()) {
-      Object underValue = under.get(key);
-      Object overValue = over.get(key);
-      if (underValue instanceof Map && overValue instanceof Map) {
-        @SuppressWarnings("unchecked")
-        Map<String, Object> underCast = (Map<String, Object>) underValue;
-        @SuppressWarnings("unchecked")
-        Map<String, Object> overCast = (Map<String, Object>) overValue;
-        mergeObject(underCast, overCast);
-      } else {
-        under.put(key, overValue);
-      }
-    }
+    over.keySet().forEach(key -> {
+          String conditionalKey = CONDITIONAL_KEY_PREFIX + key;
+          Object underValue = under.get(key);
+          Object underMaybe = under.get(conditionalKey);
+          Object overValue = over.get(key);
+          if (overValue instanceof Map) {
+            if (underMaybe instanceof Map) {
+              mergeHelper(underMaybe, overValue);
+              under.put(key, underMaybe);
+              under.remove(conditionalKey);
+            } else if (underValue instanceof Map) {
+              mergeHelper(underValue, overValue);
+            } else {
+              under.put(key, overValue);
+            }
+          } else {
+            under.put(key, overValue);
+            under.remove(conditionalKey);
+          }
+        });
+    Set<String> extras = Sets.difference(under.keySet(), over.keySet()).stream()
+        .filter(key -> key.startsWith(CONDITIONAL_KEY_PREFIX)).collect(Collectors.toSet());
+    extras.forEach(under::remove);
+  }
+
+  private static void mergeHelper(Object underValue, Object overValue) {
+    @SuppressWarnings("unchecked")
+    Map<String, Object> underCast = (Map<String, Object>) underValue;
+    @SuppressWarnings("unchecked")
+    Map<String, Object> overCast = (Map<String, Object>) overValue;
+    mergeObject(underCast, overCast);
   }
 
   /**
@@ -667,7 +703,8 @@ public class GeneralUtils {
 
   public static String removeStringArg(List<String> argList, String description) {
     if (!argList.isEmpty() && argList.get(0).startsWith("-")) {
-      throw new IllegalArgumentException(format("Missing required %s string argument", description));
+      throw new IllegalArgumentException(
+          format("Missing required %s string argument", description));
     }
     return removeArg(argList, description);
   }
@@ -684,4 +721,5 @@ public class GeneralUtils {
   public static byte[] getFileBytes(File dataFile) {
     return getFileBytes(dataFile.getPath());
   }
+
 }

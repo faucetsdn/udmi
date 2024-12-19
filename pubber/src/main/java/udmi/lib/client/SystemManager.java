@@ -31,7 +31,7 @@ import udmi.schema.SystemState;
 /**
  * System client.
  */
-public interface SystemManager extends SubblockManager {
+public interface SystemManager extends SubBlockManager {
 
   String UDMI_PUBLISHER_LOG_CATEGORY = "device.log";
 
@@ -110,6 +110,7 @@ public interface SystemManager extends SubblockManager {
         && SystemMode.RESTART.equals(configMode)) {
       error("System mode requesting device restart");
       systemLifecycle(SystemMode.RESTART);
+      return;
     }
 
     if (SystemMode.ACTIVE.equals(configMode)) {
@@ -141,10 +142,12 @@ public interface SystemManager extends SubblockManager {
   default void sendSystemEvent() {
     SystemEvents systemEvent = getSystemEvent();
     systemEvent.metrics = new Metrics();
-    Runtime runtime = Runtime.getRuntime();
-    systemEvent.metrics.mem_free_mb = (double) runtime.freeMemory() / BYTES_PER_MEGABYTE;
-    systemEvent.metrics.mem_total_mb = (double) runtime.totalMemory() / BYTES_PER_MEGABYTE;
-    systemEvent.metrics.store_total_mb = Double.NaN;
+    if (!(getHost() instanceof ProxyDeviceHost)) {
+      Runtime runtime = Runtime.getRuntime();
+      systemEvent.metrics.mem_free_mb = (double) runtime.freeMemory() / BYTES_PER_MEGABYTE;
+      systemEvent.metrics.mem_total_mb = (double) runtime.totalMemory() / BYTES_PER_MEGABYTE;
+      systemEvent.metrics.store_total_mb = Double.NaN;
+    }
     systemEvent.event_no = incrementEventCount();
     systemEvent.logentries = getLogentries();
     getHost().publish(systemEvent);
@@ -239,6 +242,11 @@ public interface SystemManager extends SubblockManager {
     logEntry.message = logMessage;
     logEntry.detail = detail;
     publishLogMessage(logEntry);
+  }
+
+  default void setStatus(Entry report) {
+    getSystemState().status = report;
+    updateState();
   }
 
   /**

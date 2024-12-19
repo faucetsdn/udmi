@@ -6,11 +6,11 @@ import static com.google.udmi.util.GeneralUtils.ifNotNullThen;
 import static java.lang.String.format;
 import static java.util.Optional.ofNullable;
 
-import com.google.udmi.util.SiteModel;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.NoSuchElementException;
+import java.util.concurrent.ConcurrentHashMap;
 import udmi.lib.ProtocolFamily;
 import udmi.lib.intf.ManagerHost;
 import udmi.schema.Config;
@@ -25,7 +25,7 @@ import udmi.schema.PointsetConfig;
 /**
  * Gateway client.
  */
-public interface GatewayManager extends SubblockManager {
+public interface GatewayManager extends SubBlockManager {
 
   String EXTRA_PROXY_DEVICE = "XXX-1";
   String EXTRA_PROXY_POINT = "xxx_conflagration";
@@ -49,7 +49,7 @@ public interface GatewayManager extends SubblockManager {
       return Map.of();
     }
 
-    Map<String, ProxyDeviceHost> devices = new HashMap<>();
+    Map<String, ProxyDeviceHost> devices = new ConcurrentHashMap<>();
     proxyIds.forEach(id -> devices.put(id, createProxyDevice(getHost(), id)));
 
     return devices;
@@ -67,11 +67,18 @@ public interface GatewayManager extends SubblockManager {
    * Publish log message for target device.
    */
   default void publishLogMessage(Entry logEntry, String targetId) {
-    ifNotNullThen(getProxyDevices(), p -> p.values().forEach(pd -> {
-      if (pd.getDeviceId().equals(targetId)) {
-        pd.getDeviceManager().publishLogMessage(logEntry, targetId);
-      }
-    }));
+    ifNotNullThen(getProxyDevices(), p ->
+          ifNotNullThen(p.getOrDefault(targetId, null), pd ->
+                pd.getDeviceManager().publishLogMessage(logEntry, targetId)));
+  }
+
+  /**
+   * Set device status for target device.
+   */
+  default void setStatus(Entry report, String targetId) {
+    ifNotNullThen(getProxyDevices(), p ->
+          ifNotNullThen(p.getOrDefault(targetId, null), pd ->
+                pd.getDeviceManager().setStatus(report, targetId)));
   }
 
   /**
@@ -124,5 +131,4 @@ public interface GatewayManager extends SubblockManager {
   }
 
   void updateConfig(GatewayConfig gateway);
-
 }

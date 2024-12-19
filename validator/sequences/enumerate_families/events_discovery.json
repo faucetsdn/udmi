@@ -1,19 +1,20 @@
 {
   "families" : {
     "ether" : {
-      "addr" : "00:0d:3a:8d:f3:81"
+      "addr" : "00:0d:3a:e6:1a:11"
     },
     "ipv4" : {
-      "addr" : "10.1.0.193"
+      "addr" : "10.1.0.78"
     },
     "ipv6" : {
-      "addr" : "fe80::20d:3aff:fe8d:f381"
+      "addr" : "fe80::20d:3aff:fee6:1a11"
     },
     "vendor" : {
       "addr" : "28179023"
     }
   },
-  "generation" : "2024-11-06T17:33:35Z",
-  "timestamp" : "2024-11-06T17:33:36Z",
+  "generation" : "2024-12-11T05:44:12Z",
+  "scan_family" : "iot",
+  "timestamp" : "2024-12-11T05:44:13Z",
   "version" : "1.5.2"
 }

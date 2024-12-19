@@ -15,6 +15,7 @@ import static com.google.udmi.util.GeneralUtils.compressJsonString;
 import static com.google.udmi.util.GeneralUtils.deepCopy;
 import static com.google.udmi.util.GeneralUtils.encodeBase64;
 import static com.google.udmi.util.GeneralUtils.friendlyStackTrace;
+import static com.google.udmi.util.GeneralUtils.fromJsonString;
 import static com.google.udmi.util.GeneralUtils.getSubMapDefault;
 import static com.google.udmi.util.GeneralUtils.getSubMapNull;
 import static com.google.udmi.util.GeneralUtils.ifNotNullGet;
@@ -34,6 +35,7 @@ import static java.util.Optional.ofNullable;
 import static udmi.schema.Envelope.SubFolder.UPDATE;
 
 import com.google.bos.udmi.service.access.IotAccessBase;
+import com.google.bos.udmi.service.messaging.ConfigUpdate;
 import com.google.bos.udmi.service.messaging.MessageContinuation;
 import com.google.bos.udmi.service.messaging.MessageDispatcher;
 import com.google.bos.udmi.service.messaging.MessageDispatcher.HandlerSpecification;
@@ -144,7 +146,7 @@ public abstract class ProcessorBase extends ContainerBase implements SimpleHandl
     return null;
   }
 
-  protected void processConfigChange(Envelope envelope, Object payload, Date newLastStart) {
+  protected String processConfigChange(Envelope envelope, Object payload, Date newLastStart) {
     // TODO: This should really be pushed down to ReflectProcessor, not sure why it's here.
     SubFolder subFolder = envelope.subFolder;
     debug(format("Modifying device config %s/%s/%s %s", envelope.deviceRegistryId,
@@ -154,7 +156,7 @@ public abstract class ProcessorBase extends ContainerBase implements SimpleHandl
         envelope, previous -> updateConfig(previous, envelope, payload, newLastStart));
 
     if (configUpdate == null) {
-      return;
+      return null;
     }
     Envelope useAttributes = deepCopy(envelope);
     ifNotNullThen(newLastStart, start -> useAttributes.subType = SubType.CONFIG);
@@ -163,6 +165,7 @@ public abstract class ProcessorBase extends ContainerBase implements SimpleHandl
     debug("Acknowledging config/%s %s %s", subFolder, useAttributes.transactionId,
         isoConvert(newLastStart));
     reflectMessage(useAttributes, configUpdate);
+    return configUpdate;
   }
 
   protected void reflectError(SubType subType, BundleException bundleException) {
@@ -454,11 +457,12 @@ public abstract class ProcessorBase extends ContainerBase implements SimpleHandl
     }
 
     try {
-      String serialNo = message.system.serial_no;
       Date newLastStart = message.system.operation.last_start;
-      debug("Checking config last_start for %s/%s sn:%s against state last_start %s",
-          envelope.deviceRegistryId, envelope.deviceId, serialNo, isoConvert(newLastStart));
-      processConfigChange(envelope, new HashMap<>(), newLastStart);
+      String config = processConfigChange(envelope, new HashMap<>(), newLastStart);
+      debug("Config last_start update for %s/%s against state last_start %s, updated %s",
+          envelope.deviceRegistryId, envelope.deviceId, isoConvert(newLastStart), config != null);
+      ifNotNullThen(config,
+          newConfig -> dispatcher.publish(fromJsonString(newConfig, ConfigUpdate.class)));
     } catch (Exception e) {
       debug("Could not process config last_state update, skipping: "
           + friendlyStackTrace(e));

@@ -1,41 +1,154 @@
 {
-  "event_no" : 5,
-  "last_config" : "2024-11-06T17:33:50Z",
+  "event_no" : 8,
+  "last_config" : "2024-12-17T05:26:37Z",
   "logentries" : [ {
-    "message" : "Discovery scan starting vendor generation 2024-11-06T17:34:00Z",
+    "message" : "success",
+    "category" : "system.config.receive",
+    "timestamp" : "2024-12-17T05:26:37Z",
+    "level" : 100
+  }, {
+    "message" : "State update defer -4058ms",
     "category" : "device.log",
-    "timestamp" : "2024-11-06T17:34:00Z",
+    "timestamp" : "2024-12-17T05:26:37Z",
+    "level" : 100
+  }, {
+    "message" : "Update state 2024-12-17T05:26:37Z last_config 2024-12-17T05:26:30Z",
+    "category" : "device.log",
+    "timestamp" : "2024-12-17T05:26:37Z",
     "level" : 200
   }, {
-    "message" : "Update state 2024-11-06T17:34:00Z last_config 2024-11-06T17:33:50Z",
+    "message" : "success",
+    "category" : "system.config.parse",
+    "timestamp" : "2024-12-17T05:26:37Z",
+    "level" : 100
+  }, {
+    "message" : "Device AHU-1 config handler",
     "category" : "device.log",
-    "timestamp" : "2024-11-06T17:34:00Z",
+    "timestamp" : "2024-12-17T05:26:37Z",
     "level" : 200
   }, {
-    "message" : "Discovered vendor device 20231 for gen 2024-11-06T17:34:00Z",
+    "message" : "Config update AHU-1 (scan_single_future)",
+    "detail" : "{\n  \"timestamp\" : \"2024-12-17T05:26:37Z\",\n  \"version\" : \"git-46fef59\",\n  \"system\" : {\n    \"min_loglevel\" : 100,\n    \"metrics_rate_sec\" : 10,\n    \"operation\" : {\n      \"last_start\" : \"2024-12-17T05:25:34Z\"\n    },\n    \"testing\" : {\n      \"sequence_name\" : \"scan_single_future\",\n      \"transaction_id\" : \"RC:8d810a.0000001e\",\n      \"config_base\" : 21\n    }\n  },\n  \"discovery\" : {\n    \"families\" : {\n      \"vendor\" : {\n        \"generation\" : \"2024-12-17T05:26:45Z\",\n        \"scan_duration_sec\" : 10\n      }\n    }\n  },\n  \"localnet\" : {\n    \"families\" : {\n      \"ether\" : { },\n      \"ipv4\" : { },\n      \"vendor\" : { },\n      \"bacnet\" : { }\n    }\n  },\n  \"pointset\" : {\n    \"points\" : {\n      \"filter_alarm_pressure_status\" : {\n        \"ref\" : \"BV11.present_value\",\n        \"units\" : \"No-units\"\n      },\n      \"filter_differential_pressure_setpoint\" : {\n        \"units\" : \"Bars\",\n        \"set_value\" : 98\n      },\n      \"filter_differential_pressure_sensor\" : {\n        \"ref\" : \"AV12.present_value\",\n        \"units\" : \"Degrees-Celsius\"\n      }\n    }\n  }\n}",
     "category" : "device.log",
-    "timestamp" : "2024-11-06T17:34:00Z",
+    "timestamp" : "2024-12-17T05:26:37Z",
+    "level" : 100
+  }, {
+    "message" : "State update defer 1999ms",
+    "category" : "device.log",
+    "timestamp" : "2024-12-17T05:26:37Z",
+    "level" : 100
+  }, {
+    "message" : "2024-12-17T05:26:37Z received config 2024-12-17T05:26:37Z",
+    "category" : "device.log",
+    "timestamp" : "2024-12-17T05:26:37Z",
     "level" : 200
   }, {
-    "message" : "Discovered vendor device 28179023 for gen 2024-11-06T17:34:00Z",
+    "message" : "Discovery scan generation vendor pending at 2024-12-17T05:26:45Z",
     "category" : "device.log",
-    "timestamp" : "2024-11-06T17:34:00Z",
+    "timestamp" : "2024-12-17T05:26:37Z",
     "level" : 200
   }, {
-    "message" : "Discovered vendor device 0x65 for gen 2024-11-06T17:34:00Z",
+    "message" : "Scheduling future in 7759ms",
     "category" : "device.log",
-    "timestamp" : "2024-11-06T17:34:00Z",
+    "timestamp" : "2024-12-17T05:26:37Z",
+    "level" : 100
+  }, {
+    "message" : "success",
+    "category" : "system.config.apply",
+    "timestamp" : "2024-12-17T05:26:37Z",
+    "level" : 300
+  }, {
+    "message" : "State update defer 1995ms",
+    "category" : "device.log",
+    "timestamp" : "2024-12-17T05:26:37Z",
+    "level" : 100
+  }, {
+    "message" : "State update defer 1995ms",
+    "category" : "device.log",
+    "timestamp" : "2024-12-17T05:26:37Z",
+    "level" : 100
+  }, {
+    "message" : "State update defer 0ms",
+    "category" : "device.log",
+    "timestamp" : "2024-12-17T05:26:39Z",
+    "level" : 100
+  }, {
+    "message" : "Update state 2024-12-17T05:26:39Z last_config 2024-12-17T05:26:37Z",
+    "category" : "device.log",
+    "timestamp" : "2024-12-17T05:26:39Z",
     "level" : 200
   }, {
-    "message" : "Update state 2024-11-06T17:34:02Z last_config 2024-11-06T17:33:50Z",
+    "message" : "State update AHU-1 (scan_single_future)",
+    "detail" : "{\n  \"timestamp\" : \"2024-12-17T05:26:39Z\",\n  \"version\" : \"1.5.2\",\n  \"system\" : {\n    \"last_config\" : \"2024-12-17T05:26:37Z\",\n    \"operation\" : {\n      \"operational\" : true,\n      \"last_start\" : \"2024-12-17T05:25:34Z\",\n      \"restart_count\" : 1,\n      \"mode\" : \"initial\"\n    },\n    \"serial_no\" : \"sequencer-14408\",\n    \"hardware\" : {\n      \"make\" : \"BOS\",\n      \"model\" : \"pubber\"\n    },\n    \"software\" : {\n      \"firmware\" : \"v1\"\n    },\n    \"status\" : {\n      \"message\" : \"success\",\n      \"category\" : \"system.config.apply\",\n      \"timestamp\" : \"2024-12-17T05:26:37Z\",\n      \"level\" : 300\n    }\n  },\n  \"discovery\" : {\n    \"families\" : {\n      \"vendor\" : {\n        \"generation\" : \"2024-12-17T05:26:45Z\",\n        \"phase\" : \"pending\"\n      }\n    }\n  },\n  \"localnet\" : {\n    \"families\" : {\n      \"ether\" : {\n        \"addr\" : \"60:45:bd:78:e2:18\"\n      },\n      \"ipv4\" : {\n        \"addr\" : \"10.1.0.76\"\n      },\n      \"ipv6\" : {\n        \"addr\" : \"fe80::6245:bdff:fe78:e218\"\n      },\n      \"vendor\" : {\n        \"addr\" : \"28179023\"\n      }\n    }\n  },\n  \"pointset\" : {\n    \"points\" : {\n      \"filter_alarm_pressure_status\" : {\n        \"units\" : \"No-units\"\n      },\n      \"filter_differential_pressure_setpoint\" : {\n        \"units\" : \"Bars\",\n        \"value_state\" : \"applied\"\n      },\n      \"filter_differential_pressure_sensor\" : {\n        \"units\" : \"Degrees-Celsius\"\n      }\n    }\n  }\n}",
     "category" : "device.log",
-    "timestamp" : "2024-11-06T17:34:02Z",
+    "timestamp" : "2024-12-17T05:26:39Z",
+    "level" : 100
+  }, {
+    "message" : "Discovery scan starting vendor generation 2024-12-17T05:26:45Z",
+    "category" : "device.log",
+    "timestamp" : "2024-12-17T05:26:45Z",
     "level" : 200
+  }, {
+    "message" : "Scheduling future in 10000ms",
+    "category" : "device.log",
+    "timestamp" : "2024-12-17T05:26:45Z",
+    "level" : 100
+  }, {
+    "message" : "State update defer -3760ms",
+    "category" : "device.log",
+    "timestamp" : "2024-12-17T05:26:45Z",
+    "level" : 100
+  }, {
+    "message" : "Update state 2024-12-17T05:26:45Z last_config 2024-12-17T05:26:37Z",
+    "category" : "device.log",
+    "timestamp" : "2024-12-17T05:26:45Z",
+    "level" : 200
+  }, {
+    "message" : "State update AHU-1 (scan_single_future)",
+    "detail" : "{\n  \"timestamp\" : \"2024-12-17T05:26:45Z\",\n  \"version\" : \"1.5.2\",\n  \"system\" : {\n    \"last_config\" : \"2024-12-17T05:26:37Z\",\n    \"operation\" : {\n      \"operational\" : true,\n      \"last_start\" : \"2024-12-17T05:25:34Z\",\n      \"restart_count\" : 1,\n      \"mode\" : \"initial\"\n    },\n    \"serial_no\" : \"sequencer-14408\",\n    \"hardware\" : {\n      \"make\" : \"BOS\",\n      \"model\" : \"pubber\"\n    },\n    \"software\" : {\n      \"firmware\" : \"v1\"\n    },\n    \"status\" : {\n      \"message\" : \"success\",\n      \"category\" : \"system.config.apply\",\n      \"timestamp\" : \"2024-12-17T05:26:37Z\",\n      \"level\" : 300\n    }\n  },\n  \"discovery\" : {\n    \"families\" : {\n      \"vendor\" : {\n        \"generation\" : \"2024-12-17T05:26:45Z\",\n        \"phase\" : \"active\",\n        \"active_count\" : 0\n      }\n    }\n  },\n  \"localnet\" : {\n    \"families\" : {\n      \"ether\" : {\n        \"addr\" : \"60:45:bd:78:e2:18\"\n      },\n      \"ipv4\" : {\n        \"addr\" : \"10.1.0.76\"\n      },\n      \"ipv6\" : {\n        \"addr\" : \"fe80::6245:bdff:fe78:e218\"\n      },\n      \"vendor\" : {\n        \"addr\" : \"28179023\"\n      }\n    }\n  },\n  \"pointset\" : {\n    \"points\" : {\n      \"filter_alarm_pressure_status\" : {\n        \"units\" : \"No-units\"\n      },\n      \"filter_differential_pressure_setpoint\" : {\n        \"units\" : \"Bars\",\n        \"value_state\" : \"applied\"\n      },\n      \"filter_differential_pressure_sensor\" : {\n        \"units\" : \"Degrees-Celsius\"\n      }\n    }\n  }\n}",
+    "category" : "device.log",
+    "timestamp" : "2024-12-17T05:26:45Z",
+    "level" : 100
+  }, {
+    "message" : "Discovered vendor device 20231 for gen 2024-12-17T05:26:45Z",
+    "category" : "device.log",
+    "timestamp" : "2024-12-17T05:26:45Z",
+    "level" : 200
+  }, {
+    "message" : "State update defer 1997ms",
+    "category" : "device.log",
+    "timestamp" : "2024-12-17T05:26:45Z",
+    "level" : 100
+  }, {
+    "message" : "Discovered vendor device 28179023 for gen 2024-12-17T05:26:45Z",
+    "category" : "device.log",
+    "timestamp" : "2024-12-17T05:26:45Z",
+    "level" : 200
+  }, {
+    "message" : "State update defer 1987ms",
+    "category" : "device.log",
+    "timestamp" : "2024-12-17T05:26:45Z",
+    "level" : 100
+  }, {
+    "message" : "Discovered vendor device 0x65 for gen 2024-12-17T05:26:45Z",
+    "category" : "device.log",
+    "timestamp" : "2024-12-17T05:26:45Z",
+    "level" : 200
+  }, {
+    "message" : "State update defer 1986ms",
+    "category" : "device.log",
+    "timestamp" : "2024-12-17T05:26:45Z",
+    "level" : 100
+  }, {
+    "message" : "State update defer 1206ms",
+    "category" : "device.log",
+    "timestamp" : "2024-12-17T05:26:45Z",
+    "level" : 100
   } ],
   "metrics" : {
     "mem_total_mb" : 254.0,
-    "mem_free_mb" : 212.35082244873047
+    "mem_free_mb" : 204.30736541748047
   },
-  "timestamp" : "2024-11-06T17:34:03Z",
+  "timestamp" : "2024-12-17T05:26:45Z",
   "version" : "1.5.2"
 }

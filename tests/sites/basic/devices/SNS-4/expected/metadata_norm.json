@@ -1,7 +1,7 @@
 {
   "timestamp": "2020-05-01T13:39:07Z",
   "version": "1.5.2",
-  "hash": "7b031918",
+  "hash": "324ddfb4",
   "system": {
     "tags": [ ],
     "location": {
@@ -31,6 +31,7 @@
         "tags": [ ]
       }
     },
-    "exclude_points_from_config": true
+    "exclude_points_from_config": true,
+    "sample_rate_sec": 30
   }
 }

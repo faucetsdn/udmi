@@ -84,6 +84,7 @@ public class MqttPublisher implements Publisher {
   private static final int INITIALIZE_TIME_MS = 10000;
   private static final String BROKER_URL_FORMAT = "%s://%s:%s";
   private static final int PUBLISH_THREAD_COUNT = 10;
+  private static final int MAX_IN_FLIGHT = 1024;
   private static final String HANDLER_KEY_FORMAT = "%s/%s";
   private static final int TOKEN_EXPIRY_MINUTES = 60;
   private static final int QOS_AT_MOST_ONCE = 0;
@@ -204,7 +205,10 @@ public class MqttPublisher implements Publisher {
       debug("Sending message to " + sendTopic);
       if (!sendMessage(deviceId, sendTopic, payload.getBytes())) {
         debug("Queue message for retry");
-        publisherExecutor.submit(() -> publishCore(deviceId, topicSuffix, data, callback));
+        safeSleep(ATTACH_DELAY_MS);
+        if (isActive()) {
+          publisherExecutor.submit(() -> publishCore(deviceId, topicSuffix, data, callback));
+        }
         return;
       }
       if (callback != null) {
@@ -218,9 +222,15 @@ public class MqttPublisher implements Publisher {
         if (mqttClients.isEmpty()) {
           warn("Last client closed, shutting down connection.");
           close();
+          shutdown();
+          // Force reconnect to address potential bad states
+          onError.accept(new ConnectionClosedException());
         }
-      } else {
+      } else if (getGatewayId().equals(deviceId)) {
         close();
+        shutdown();
+        // Force reconnect to address potential bad states
+        onError.accept(new ConnectionClosedException());
       }
     }
   }
@@ -306,7 +316,7 @@ public class MqttPublisher implements Publisher {
   private MqttClient newProxyClient(String deviceId) {
     String gatewayId = getGatewayId();
     info(format("Connecting device %s through gateway %s", deviceId, gatewayId));
-    final MqttClient mqttClient = getConnectedClient(gatewayId, true);
+    final MqttClient mqttClient = getConnectedClient(gatewayId);
     long timeToWait = mqttClient.getTimeToWait();
     try {
       startupLatchWait(connectionLatch, "gateway startup exchange");
@@ -372,7 +382,7 @@ public class MqttPublisher implements Publisher {
 
       MqttConnectOptions options = new MqttConnectOptions();
       options.setMqttVersion(MqttConnectOptions.MQTT_VERSION_3_1_1);
-      options.setMaxInflight(PUBLISH_THREAD_COUNT * 2);
+      options.setMaxInflight(MAX_IN_FLIGHT);
       options.setConnectionTimeout(INITIALIZE_TIME_MS);
 
       configureAuth(options);
@@ -497,11 +507,10 @@ public class MqttPublisher implements Publisher {
       info(format("Removing handler %s", handlerKey));
       handlers.remove(handlerKey);
       handlersType.remove(handlerKey);
-    } else if (handlers.put(handlerKey, (Consumer<Object>) handler) == null) {
+    } else {
+      handlers.put(handlerKey, (Consumer<Object>) handler);
       info(format("Registered handler for %s as %s", handlerKey, messageType.getSimpleName()));
       handlersType.put(handlerKey, (Class<Object>) messageType);
-    } else {
-      throw new IllegalStateException("Overwriting existing handler " + handlerKey);
     }
   }
 
@@ -525,7 +534,7 @@ public class MqttPublisher implements Publisher {
 
   public void connect(String targetId, boolean clean) {
     ifTrueThen(clean, () -> closeMqttClient(targetId));
-    getConnectedClient(targetId, true);
+    getConnectedClient(targetId);
   }
 
   private void success(String message, String deviceId, String type, String phase) {
@@ -562,9 +571,9 @@ public class MqttPublisher implements Publisher {
 
   private MqttClient getActiveClient(String targetId) {
     checkAuthentication(targetId);
-    MqttClient connectedClient = getConnectedClient(targetId, false);
-    if (connectedClient != null && connectedClient.isConnected()) {
-      return connectedClient;
+    MqttClient client = getConnectedClient(targetId);
+    if (client.isConnected()) {
+      return client;
     }
     return null;
   }
@@ -586,23 +595,21 @@ public class MqttPublisher implements Publisher {
     warn("Authentication retry time reached for " + authId);
     reauthTimes.remove(authId);
     synchronized (mqttClients) {
-      MqttClient client = cleanClients(authId);
       try {
-        client.disconnect();
-        client.close();
+        close();
+        shutdown();
+        // Force reconnect to address potential bad states
+        onError.accept(new ConnectionClosedException());
       } catch (Exception e) {
         throw new RuntimeException("While trying to reconnect mqtt client", e);
       }
     }
   }
 
-  private MqttClient getConnectedClient(String deviceId, boolean proxyActiveOnly) {
+  private MqttClient getConnectedClient(String deviceId) {
     try {
       synchronized (mqttClients) {
         if (isProxyDevice(deviceId)) {
-          if (!proxyActiveOnly && !mqttClients.containsKey(deviceId)) {
-            return null;
-          }
           return mqttClients.computeIfAbsent(deviceId, this::newProxyClient);
         }
         return mqttClients.computeIfAbsent(deviceId, this::newDirectClient);
@@ -717,6 +724,8 @@ public class MqttPublisher implements Publisher {
       boolean connected = cleanClients(deviceId).isConnected();
       warn("MQTT Connection Lost: " + connected + cause);
       close();
+      shutdown();
+      // Force reconnect to address potential bad states
       onError.accept(new ConnectionClosedException());
     }
 
