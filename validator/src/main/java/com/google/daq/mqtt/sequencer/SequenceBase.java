@@ -312,7 +312,7 @@ public class SequenceBase {
   private int maxAllowedStatusLevel;
   private String extraField;
   private String updatedExtraField;
-  private Instant lastConfigUpdate;
+  private Instant lastConfigIssued;
   private boolean enforceSerial;
   private String testName;
   private String testSummary;
@@ -340,7 +340,7 @@ public class SequenceBase {
   private Date configStateStart;
   protected boolean pretendStateUpdated;
   private Boolean stateSupported;
-  private Instant lastConfigMark = getNowInstant();
+  private Instant lastConfigApplied = getNowInstant();
 
   private static void setupSequencer() {
     exeConfig = ofNullable(exeConfig).orElseGet(SequenceRunner::ensureExecutionConfig);
@@ -920,7 +920,7 @@ public class SequenceBase {
         processNextMessage();
         return configIsPending(false);
       });
-      Duration between = between(lastConfigUpdate, CleanDateFormat.clean(Instant.now()));
+      Duration between = between(lastConfigIssued, CleanDateFormat.clean(Instant.now()));
       debug(format("Config sync took %ss", between.getSeconds()));
     } finally {
       waitingForConfigSync.set(false);
@@ -1302,8 +1302,8 @@ public class SequenceBase {
     assertConfigIsNotPending();
 
     // Rate-limit from the point the config was _applied_, not when it was _sent_.
-    lastConfigMark = getNowInstant();
-    debug(format("New lastConfigMark at %s", isoConvert(lastConfigMark)));
+    lastConfigApplied = getNowInstant();
+    debug(format("New lastConfigApplied at %s", isoConvert(lastConfigApplied)));
 
     captureConfigChange(reason);
   }
@@ -1350,17 +1350,17 @@ public class SequenceBase {
       waitForConfigIsNotPending();
     } else if (configIsPending()) {
       debug(format("Using pre-config state timestamp " + isoConvert(configStateStart)));
-      lastConfigUpdate = CleanDateFormat.clean(Instant.now());
+      lastConfigIssued = CleanDateFormat.clean(Instant.now());
       String debugReason = reason == null ? "" : (", because " + reason);
-      debug(format("Update lastConfigUpdate %s%s", lastConfigUpdate, debugReason));
+      debug(format("Update lastConfigIssued %s%s", lastConfigIssued, debugReason));
       waitForConfigSync();
     }
   }
 
   private void rateLimitConfig() {
     // Add a forced sleep to make sure configs aren't sent too quickly
-    long delayMs = CONFIG_BARRIER.toMillis() - between(lastConfigMark, getNowInstant()).toMillis();
-    debug(format("Delay from lastConfigMark %s is %sms", lastConfigMark, delayMs));
+    long delayMs = CONFIG_BARRIER.toMillis() - between(lastConfigApplied, getNowInstant()).toMillis();
+    debug(format("Delay from lastConfigApplied %s is %sms", lastConfigApplied, delayMs));
     ifTrueThen(delayMs > 0, () -> {
       debug(format("Rate-limiting config by %dms", delayMs));
       safeSleep(delayMs);
@@ -1602,7 +1602,7 @@ public class SequenceBase {
       ifTrueThen(deviceSupportsState(), () ->
           waitUntil("last_config synchronized", this::lastConfigUpdated));
     });
-    final Instant endTime = lastConfigUpdate.plusSeconds(LOG_TIMEOUT_SEC);
+    final Instant endTime = lastConfigApplied.plusSeconds(LOG_TIMEOUT_SEC);
     if (endTime.isAfter(getNowInstant())) {
       debug(format("Waiting until %s for logs to arrive...", isoConvert(endTime)));
     }
@@ -1614,7 +1614,7 @@ public class SequenceBase {
         format("log level `%s` (or greater) category `%s` was not logged", minLevel, category),
         () -> {
           if (!entries.isEmpty()) {
-            warning(format("Filtered entries between %s and %s:", isoConvert(lastConfigUpdate),
+            warning(format("Filtered entries between %s and %s:", isoConvert(lastConfigApplied),
                 isoConvert(endTime)));
             entries.forEach(entry -> error("Forbidden entry: " + entryMessage(entry)));
           }
@@ -1637,9 +1637,9 @@ public class SequenceBase {
       logEntryQueue.addAll(ofNullable(systemEvent.logentries).orElse(ImmutableList.of()));
     });
     List<Entry> toRemove = logEntryQueue.stream()
-        .filter(entry -> entry.timestamp.toInstant().isBefore(lastConfigUpdate)).toList();
+        .filter(entry -> entry.timestamp.toInstant().isBefore(lastConfigApplied)).toList();
     if (!toRemove.isEmpty()) {
-      debug("Flushing log entries before lastConfigUpdate " + lastConfigUpdate);
+      debug("Flushing log entries before lastConfigApplied " + lastConfigApplied);
     }
     toRemove.forEach(entry -> debug("Flushing entry: " + entryMessage(entry)));
     logEntryQueue.removeAll(toRemove);
