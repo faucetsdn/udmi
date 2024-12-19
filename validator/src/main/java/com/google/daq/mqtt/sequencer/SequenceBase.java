@@ -1845,7 +1845,7 @@ public class SequenceBase {
     String transactionId = attributes.get("transactionId");
 
     String commandSignature = format("%s/%s/%s", deviceId, subTypeRaw, subFolderRaw);
-    trace("received command " + commandSignature);
+    trace("Received command " + commandSignature + " as " + transactionId);
 
     boolean targetDevice = getDeviceId().equals(deviceId);
     boolean proxiedDevice = !targetDevice && receivedEvents.containsKey(deviceId);
@@ -1883,8 +1883,9 @@ public class SequenceBase {
         handleDeviceMessage(message, subTypeRaw, subFolderRaw, transactionId);
       }
     } catch (Exception e) {
-      throw new AbortMessageLoop(
-          format("While processing message %s_%s %s", subTypeRaw, subFolderRaw, transactionId), e);
+      error(format("Exception processing %s as %s: %s", commandSignature, transactionId,
+          friendlyStackTrace(e)));
+      throw new AbortMessageLoop(format("While handling %s_%s", subTypeRaw, subFolderRaw), e);
     }
   }
 
