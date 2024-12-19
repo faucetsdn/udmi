@@ -1638,9 +1638,9 @@ public class SequenceBase {
       logEntryQueue.addAll(ofNullable(systemEvent.logentries).orElse(ImmutableList.of()));
     });
     List<Entry> toRemove = logEntryQueue.stream()
-        .filter(entry -> entry.timestamp.toInstant().isBefore(lastConfigApplied)).toList();
+        .filter(entry -> entry.timestamp.toInstant().isBefore(lastConfigIssued)).toList();
     if (!toRemove.isEmpty()) {
-      debug("Flushing log entries before lastConfigApplied " + lastConfigApplied);
+      debug("Flushing log entries before lastConfigIssued " + lastConfigIssued);
     }
     toRemove.forEach(entry -> debug("Flushing entry: " + entryMessage(entry)));
     logEntryQueue.removeAll(toRemove);
