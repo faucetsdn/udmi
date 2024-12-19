@@ -2156,18 +2156,19 @@ public class SequenceBase {
     Date stateLastConfig = catchToNull(() -> deviceState.system.last_config);
 
     Date lastConfig = catchToNull(() -> deviceConfig.timestamp);
-    final boolean lastConfigSynced = stateLastConfig == null || stateLastConfig.equals(lastConfig);
+    final boolean lastStateConfigMatches = stateLastConfig.equals(lastConfig);
+    final boolean lastConfigPending = stateLastConfig == null || lastStateConfigMatches;
     final boolean transactionsClean = configTransactions.isEmpty();
 
     Date current = catchToNull(() -> deviceState.timestamp);
     final boolean stateUpdated = !deviceSupportsState() || !dateEquals(configStateStart, current)
-        || pretendStateUpdated || lastConfigSynced;
+        || pretendStateUpdated || lastStateConfigMatches;
 
     List<String> failures = new ArrayList<>();
     ifNotTrueThen(stateUpdated, () -> failures.add("device state not updated since config issued"));
     ifNotTrueThen(lastStartSynced, () -> failures.add("last_start not synced in config"));
     ifNotTrueThen(transactionsClean, () -> failures.add("config transactions not cleared"));
-    ifNotTrueThen(lastConfigSynced, () -> failures.add("last_config not synced in state"));
+    ifNotTrueThen(lastConfigPending, () -> failures.add("last_config not synced in state"));
 
     if (debugOut) {
       if (!failures.isEmpty()) {
@@ -2177,7 +2178,7 @@ public class SequenceBase {
             isoConvert(stateLastStart), isoConvert(configLastStart)));
         notice(format("Saw configTransactions flushed %s: %s", transactionsClean,
             configTransactionsListString()));
-        notice(format("Saw last_config synchronized %s: state/%s =? config/%s", lastConfigSynced,
+        notice(format("Saw last_config synchronized %s: state/%s =? config/%s", lastConfigPending,
             isoConvert(stateLastConfig), isoConvert(lastConfig)));
       } else if (stateLastConfig == null) {
         debug("Saw last_config synchronized check disabled: missing state.system.last_config");
