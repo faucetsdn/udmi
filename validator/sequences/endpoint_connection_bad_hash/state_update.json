@@ -1,32 +1,20 @@
 {
-  "blobset" : {
-    "blobs" : {
-      "_iot_endpoint_config" : {
-        "phase" : "final",
-        "status" : {
-          "message" : "java.lang.RuntimeException: Blob data hash mismatch",
-          "detail" : "java.lang.RuntimeException: java.lang.RuntimeException: Blob data hash mismatch\n\tat daq.pubber.PubberUdmiPublisher.maybeRedirectEndpoint(PubberUdmiPublisher.java:654)\n\tat daq.pubber.PubberUdmiPublisher.deferredConfigActions(PubberUdmiPublisher.java:500)\n\tat daq.pubber.Pubber.periodicUpdate(Pubber.java:402)\n\tat java.base/java.util.concurrent.Executors$RunnableAdapter.call(Executors.java:539)\n\tat java.base/java.util.concurrent.FutureTask.runAndReset(FutureTask.java:305)\n\tat java.base/java.util.concurrent.ScheduledThreadPoolExecutor$ScheduledFutureTask.run(ScheduledThreadPoolExecutor.java:305)\n\tat java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1136)\n\tat java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:635)\n\tat java.base/java.lang.Thread.run(Thread.java:840)\n",
-          "category" : "blobset.blob.apply",
-          "timestamp" : "2024-11-06T17:36:02Z",
-          "level" : 500
-        },
-        "generation" : "2024-11-06T17:35:50Z"
-      }
-    }
+  "discovery" : {
+    "families" : { }
   },
   "localnet" : {
     "families" : {
       "ether" : {
-        "addr" : "60:45:bd:05:3c:88"
+        "addr" : "42:01:c0:a8:2e:a8"
       },
       "ipv4" : {
-        "addr" : "10.1.0.117"
-      },
-      "ipv6" : {
-        "addr" : "fe80::6245:bdff:fe05:3c88"
+        "addr" : "192.168.46.168"
       },
       "vendor" : {
         "addr" : "28179023"
+      },
+      "bacnet" : {
+        "addr" : "snoozle"
       }
     }
   },
@@ -45,14 +33,14 @@
     }
   },
   "system" : {
-    "last_config" : "2024-11-06T17:35:54Z",
+    "last_config" : "2024-12-20T08:52:21Z",
     "operation" : {
       "operational" : true,
-      "last_start" : "2024-11-06T17:35:31Z",
+      "last_start" : "2024-12-20T08:52:00Z",
       "restart_count" : 1,
       "mode" : "initial"
     },
-    "serial_no" : "sequencer-30867",
+    "serial_no" : "sequencer-31569",
     "hardware" : {
       "make" : "BOS",
       "model" : "pubber"
@@ -63,10 +51,10 @@
     "status" : {
       "message" : "success",
       "category" : "system.config.apply",
-      "timestamp" : "2024-11-06T17:35:54Z",
+      "timestamp" : "2024-12-20T08:52:21Z",
       "level" : 300
     }
   },
-  "timestamp" : "2024-11-06T17:36:02Z",
+  "timestamp" : "2024-12-20T08:52:23Z",
   "version" : "1.5.2"
 }

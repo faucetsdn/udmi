@@ -1,12 +1,14 @@
 {
-  "blobset" : {
-    "blobs" : { }
+  "discovery" : {
+    "families" : {
+      "vendor" : { }
+    }
   },
   "localnet" : {
     "families" : {
+      "bacnet" : { },
       "ether" : { },
       "ipv4" : { },
-      "ipv6" : { },
       "vendor" : { }
     }
   },
@@ -28,16 +30,16 @@
   },
   "system" : {
     "metrics_rate_sec" : 10,
-    "min_loglevel" : 200,
+    "min_loglevel" : 100,
     "operation" : {
-      "last_start" : "2024-11-06T17:31:47Z"
+      "last_start" : "2024-12-20T08:29:44Z"
     },
     "testing" : {
-      "config_base" : 13,
+      "config_base" : 29,
       "sequence_name" : "endpoint_connection_success_reconnect",
-      "transaction_id" : "RC:63be1a.00000010"
+      "transaction_id" : "RC:6a91f6.00000023"
     }
   },
-  "timestamp" : "2024-11-06T17:32:22Z",
-  "version" : "git-b2a557d"
+  "timestamp" : "2024-12-20T08:31:46Z",
+  "version" : "git-bd82e7ab"
 }

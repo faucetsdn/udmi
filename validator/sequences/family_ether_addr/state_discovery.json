@@ -1,0 +1,10 @@
+{
+  "families" : {
+    "vendor" : {
+      "phase" : "stopped",
+      "active_count" : 3
+    }
+  },
+  "timestamp" : "2024-12-20T08:45:39Z",
+  "version" : "1.5.2"
+}

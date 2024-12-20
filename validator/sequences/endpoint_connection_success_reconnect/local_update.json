@@ -1,14 +1,19 @@
 {
-  "timestamp" : "2024-11-06T17:32:22Z",
-  "version" : "@@@cloud udmi version###git-b2a557d",
+  "timestamp" : "2024-12-20T08:31:46Z",
+  "version" : "@@@cloud udmi version###git-bd82e7ab",
   "system" : {
-    "min_loglevel" : 200,
+    "min_loglevel" : 100,
     "metrics_rate_sec" : 10,
     "operation" : {
-      "last_start" : "2024-11-06T17:31:47Z"
+      "last_start" : "2024-12-20T08:29:44Z"
     },
     "testing" : {
       "sequence_name" : "endpoint_connection_success_reconnect"
+    }
+  },
+  "discovery" : {
+    "families" : {
+      "vendor" : { }
     }
   },
   "localnet" : {
@@ -16,11 +21,8 @@
       "ether" : { },
       "ipv4" : { },
       "vendor" : { },
-      "ipv6" : { }
+      "bacnet" : { }
     }
-  },
-  "blobset" : {
-    "blobs" : { }
   },
   "pointset" : {
     "points" : {

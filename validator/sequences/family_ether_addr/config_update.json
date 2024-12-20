@@ -1,9 +1,14 @@
 {
+  "discovery" : {
+    "families" : {
+      "vendor" : { }
+    }
+  },
   "localnet" : {
     "families" : {
+      "bacnet" : { },
       "ether" : { },
       "ipv4" : { },
-      "ipv6" : { },
       "vendor" : { }
     }
   },
@@ -25,16 +30,16 @@
   },
   "system" : {
     "metrics_rate_sec" : 10,
-    "min_loglevel" : 200,
+    "min_loglevel" : 100,
     "operation" : {
-      "last_start" : "2024-11-06T17:31:47Z"
+      "last_start" : "2024-12-20T08:33:26Z"
     },
     "testing" : {
-      "config_base" : 24,
+      "config_base" : 220,
       "sequence_name" : "family_ether_addr",
-      "transaction_id" : "RC:79ded3.00000021"
+      "transaction_id" : "RC:6a91f6.00000131"
     }
   },
-  "timestamp" : "2024-11-06T17:33:04Z",
-  "version" : "git-b2a557d"
+  "timestamp" : "2024-12-20T08:45:39Z",
+  "version" : "git-bd82e7ab"
 }
