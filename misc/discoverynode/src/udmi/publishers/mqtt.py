@@ -239,8 +239,7 @@ class MQTT(udmi.publishers.publisher.Publisher):
             client.tls_set(self.ca_file, tls_version=ssl.PROTOCOL_TLSv1_2)
         elif self.autentication_mechanism == "udmi_local":
             client.tls_set(
-                # See comment below
-                #self.ca_file,
+                self.ca_file,
                 tls_version=ssl.PROTOCOL_TLSv1_2,
                 keyfile=self.private_key_file,
                 certfile=self.cert_file,
