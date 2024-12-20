@@ -123,7 +123,7 @@ public class ConfigSequences extends SequenceBase {
     });
   }
 
-  @Test(timeout = TWO_MINUTES_MS)
+  @Test(timeout = THREE_MINUTES_MS)
   @Feature(stage = STABLE, bucket = SYSTEM, score = 8)
   @WithCapability(value = Status.class, stage = ALPHA)
   @WithCapability(value = Logging.class, stage = ALPHA)

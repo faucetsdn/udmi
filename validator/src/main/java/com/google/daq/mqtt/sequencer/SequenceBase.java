@@ -263,6 +263,7 @@ public class SequenceBase {
   private static final String NOT_REPLACEMENT = " not ";
   private static final String NOT_MISSING = " ";
   private static final Duration STATE_CONFIG_HOLDOFF = Duration.ofMillis(1000);
+  public static final String ELAPSED_TIME_PREFIX = "@";
   protected static Metadata deviceMetadata;
   protected static String projectId;
   protected static String cloudRegion;
@@ -1776,7 +1777,7 @@ public class SequenceBase {
   }
 
   private String timeSinceStart() {
-    return (System.currentTimeMillis() - startTestTimeMs) / 1000 + "s";
+    return ELAPSED_TIME_PREFIX + (System.currentTimeMillis() - startTestTimeMs) / 1000 + "s";
   }
 
   protected void untilTrue(String description, Supplier<Boolean> evaluator) {
@@ -2757,7 +2758,7 @@ public class SequenceBase {
         if (debugLogLevel()) {
           processComplete(e);
           trace("Stack trace:", stackTraceString(e));
-          error("terminating test " + testName + " after " + timeSinceStart() + " "
+          error("terminating test " + testName + " at " + timeSinceStart() + " "
               + START_END_MARKER);
           System.exit(EXIT_CODE_PRESERVE);
         }
