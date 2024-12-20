@@ -363,7 +363,7 @@ def new_site_model():
     ) as f:
       json.dump(gateway_metadata, f, indent=2)
     
-    print("gateway metadata: ". json.dump(gateway_metadata, indent=2))
+    print(f"gateway metadata: {json.dumps(gateway_metadata, indent=2)}")
 
     run(f"bin/keygen RS256 {gateway_path}")
     run(f"bin/keygen CERT/localhost {gateway_path}")
