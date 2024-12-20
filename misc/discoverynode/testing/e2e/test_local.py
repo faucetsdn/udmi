@@ -346,6 +346,9 @@ def new_site_model():
         "timestamp": "2020-05-01T13:39:07Z",
     }
 
+    warning("setting scan target to 0th index of discovery_node_families: %s", )
+    gateway_metadata["testing"] = {"targets": {"scan_family": {"target_value": discovery_node_families[0]}}}
+    
     for family in discovery_node_families:
       gateway_metadata["discovery"]["families"][family] = {}
 

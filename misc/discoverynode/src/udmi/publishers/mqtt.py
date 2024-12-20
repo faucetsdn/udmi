@@ -244,9 +244,10 @@ class MQTT(udmi.publishers.publisher.Publisher):
                 keyfile=self.private_key_file,
                 certfile=self.cert_file,
             )
-            # Commented out because this was not expected to be here
-            # But elaving it here incase it breaks, 
-            #client.tls_insecure_set(True)
+            # I don't know why this doesn't like the UDMIS certs
+            # ssl.SSLError: [SSL] PEM lib (_ssl.c:3874)
+            # TODO: Investigate SSL errors with local UDMIS
+            client.tls_insecure_set(True)
         else:
             raise RuntimeError("unknown authentication mechanism")
 
