@@ -1,11 +1,11 @@
 {
-  "timestamp" : "2024-12-20T08:52:21Z",
-  "version" : "@@@cloud udmi version###git-bd82e7ab",
+  "timestamp" : "2024-12-20T09:58:33Z",
+  "version" : "@@@cloud udmi version###git-61cf36e",
   "system" : {
     "min_loglevel" : 100,
     "metrics_rate_sec" : 10,
     "operation" : {
-      "last_start" : "2024-12-20T08:52:00Z"
+      "last_start" : "2024-12-20T09:58:06Z"
     },
     "testing" : {
       "sequence_name" : "endpoint_connection_bad_hash"
@@ -22,6 +22,16 @@
       "ipv4" : { },
       "vendor" : { },
       "bacnet" : { }
+    }
+  },
+  "blobset" : {
+    "blobs" : {
+      "_iot_endpoint_config" : {
+        "phase" : "final",
+        "url" : "@@@endpoint data###data:application/json;base64,ewogICJwcm90b2NvbCIgOiAibXF0dCIsCiAgInRyYW5zcG9ydCIgOiAic3NsIiwKICAiaG9zdG5hbWUiIDogImxvY2FsaG9zdCIsCiAgImNsaWVudF9pZCIgOiAiL3IvWlotVFJJLUZFQ1RBXzAvZC9BSFUtMSIsCiAgInRvcGljX3ByZWZpeCIgOiAiL3IvWlotVFJJLUZFQ1RBXzAvZC9BSFUtMSIsCiAgImF1dGhfcHJvdmlkZXIiIDogewogICAgImJhc2ljIiA6IHsKICAgICAgInVzZXJuYW1lIiA6ICIvci9aWi1UUkktRkVDVEFfMC9kL0FIVS0xIiwKICAgICAgInBhc3N3b3JkIiA6ICIzODI2OWQxMSIKICAgIH0KICB9Cn0=",
+        "sha256" : "@@@invalid blob data hash###6aaf0fa3fdaa5936c973968a08fcea1e5e1fed003996d3ad9959c72c5e79ca49",
+        "generation" : "2024-12-20T09:58:28Z"
+      }
     }
   },
   "pointset" : {

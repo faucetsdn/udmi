@@ -2,7 +2,7 @@
   "min_loglevel" : 100,
   "metrics_rate_sec" : 10,
   "operation" : {
-    "last_start" : "2024-12-20T08:33:26Z"
+    "last_start" : "2024-12-20T09:54:40Z"
   },
   "testing" : {
     "sequence_name" : "family_ether_addr"

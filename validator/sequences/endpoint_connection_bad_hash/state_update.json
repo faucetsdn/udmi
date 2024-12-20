@@ -1,14 +1,29 @@
 {
+  "blobset" : {
+    "blobs" : {
+      "_iot_endpoint_config" : {
+        "phase" : "final",
+        "status" : {
+          "message" : "java.lang.RuntimeException: Blob data hash mismatch",
+          "detail" : "java.lang.RuntimeException: java.lang.RuntimeException: Blob data hash mismatch\n\tat daq.pubber.PubberUdmiPublisher.maybeRedirectEndpoint(PubberUdmiPublisher.java:662)\n\tat daq.pubber.PubberUdmiPublisher.deferredConfigActions(PubberUdmiPublisher.java:508)\n\tat daq.pubber.Pubber.periodicUpdate(Pubber.java:400)\n\tat java.base/java.util.concurrent.Executors$RunnableAdapter.call(Executors.java:539)\n\tat java.base/java.util.concurrent.FutureTask.runAndReset(FutureTask.java:305)\n\tat java.base/java.util.concurrent.ScheduledThreadPoolExecutor$ScheduledFutureTask.run(ScheduledThreadPoolExecutor.java:305)\n\tat java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1136)\n\tat java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:635)\n\tat java.base/java.lang.Thread.run(Thread.java:840)\n",
+          "category" : "blobset.blob.apply",
+          "timestamp" : "2024-12-20T09:58:37Z",
+          "level" : 500
+        },
+        "generation" : "2024-12-20T09:58:28Z"
+      }
+    }
+  },
   "discovery" : {
     "families" : { }
   },
   "localnet" : {
     "families" : {
       "ether" : {
-        "addr" : "42:01:c0:a8:2e:a8"
+        "addr" : "00:0d:3a:3c:63:b8"
       },
       "ipv4" : {
-        "addr" : "192.168.46.168"
+        "addr" : "10.1.0.165"
       },
       "vendor" : {
         "addr" : "28179023"
@@ -33,14 +48,14 @@
     }
   },
   "system" : {
-    "last_config" : "2024-12-20T08:52:21Z",
+    "last_config" : "2024-12-20T09:58:33Z",
     "operation" : {
       "operational" : true,
-      "last_start" : "2024-12-20T08:52:00Z",
+      "last_start" : "2024-12-20T09:58:06Z",
       "restart_count" : 1,
       "mode" : "initial"
     },
-    "serial_no" : "sequencer-31569",
+    "serial_no" : "sequencer-2746",
     "hardware" : {
       "make" : "BOS",
       "model" : "pubber"
@@ -51,10 +66,10 @@
     "status" : {
       "message" : "success",
       "category" : "system.config.apply",
-      "timestamp" : "2024-12-20T08:52:21Z",
+      "timestamp" : "2024-12-20T09:58:33Z",
       "level" : 300
     }
   },
-  "timestamp" : "2024-12-20T08:52:23Z",
+  "timestamp" : "2024-12-20T09:58:37Z",
   "version" : "1.5.2"
 }

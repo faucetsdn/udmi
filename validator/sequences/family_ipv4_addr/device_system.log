@@ -1,167 +1,121 @@
-2024-12-20T08:45:37Z DEBUG   system.config.receive  success
-2024-12-20T08:45:37Z DEBUG   device.log             State update defer -167ms
-2024-12-20T08:45:37Z DEBUG   system.config.parse    success
-2024-12-20T08:45:37Z INFO    device.log             Update state 2024-12-20T08:45:37Z last_config 2024-12-20T08:45:32Z
-2024-12-20T08:45:37Z DEBUG   device.log             State update AHU-1 (family_ether_addr)
-2024-12-20T08:45:37Z DEBUG   device.log             Config update AHU-1 (family_ether_addr)
-2024-12-20T08:45:37Z DEBUG   device.log             State update defer 2000ms
-2024-12-20T08:45:37Z INFO    device.log             2024-12-20T08:45:37Z received config 2024-12-20T08:45:37Z
-2024-12-20T08:45:37Z INFO    device.log             Discovery scan vendor phase stopped as null
-2024-12-20T08:45:37Z NOTICE  system.config.apply    success
-2024-12-20T08:45:37Z DEBUG   device.log             State update defer 1999ms
-2024-12-20T08:45:37Z DEBUG   device.log             State update defer 1999ms
-2024-12-20T08:45:37Z DEBUG   device.log             State update defer 1999ms
-2024-12-20T08:45:37Z DEBUG   device.log             State update defer 1998ms
-2024-12-20T08:45:38Z DEBUG   system.config.receive  success
-2024-12-20T08:45:38Z DEBUG   device.log             State update defer 810ms
-2024-12-20T08:45:38Z DEBUG   system.config.parse    success
-2024-12-20T08:45:38Z INFO    device.log             Device AHU-1 config handler
-2024-12-20T08:45:38Z DEBUG   device.log             Config update AHU-1 (family_ether_addr)
-2024-12-20T08:45:38Z INFO    device.log             2024-12-20T08:45:38Z received config 2024-12-20T08:45:38Z
-2024-12-20T08:45:38Z INFO    device.log             Discovery scan vendor phase stopped as null
-2024-12-20T08:45:38Z NOTICE  system.config.apply    success
-2024-12-20T08:45:38Z DEBUG   device.log             State update defer 808ms
-2024-12-20T08:45:38Z DEBUG   device.log             State update defer 808ms
-2024-12-20T08:45:39Z DEBUG   device.log             State update defer 0ms
-2024-12-20T08:45:39Z INFO    device.log             Update state 2024-12-20T08:45:39Z last_config 2024-12-20T08:45:38Z
-2024-12-20T08:45:39Z DEBUG   device.log             State update AHU-1 (family_ether_addr)
-2024-12-20T08:45:39Z DEBUG   system.config.receive  success
-2024-12-20T08:45:39Z DEBUG   device.log             State update defer 1773ms
-2024-12-20T08:45:39Z DEBUG   system.config.parse    success
-2024-12-20T08:45:39Z INFO    device.log             Device AHU-1 config handler
-2024-12-20T08:45:39Z DEBUG   device.log             State update defer 1772ms
-2024-12-20T08:45:39Z DEBUG   device.log             Config update AHU-1 (family_ether_addr)
-2024-12-20T08:45:39Z INFO    device.log             2024-12-20T08:45:39Z received config 2024-12-20T08:45:39Z
-2024-12-20T08:45:39Z INFO    device.log             Discovery scan vendor phase stopped as null
-2024-12-20T08:45:39Z NOTICE  system.config.apply    success
-2024-12-20T08:45:39Z DEBUG   device.log             State update defer 1771ms
-2024-12-20T08:45:39Z DEBUG   device.log             State update defer 1771ms
-2024-12-20T08:45:39Z DEBUG   device.log             State update defer 1771ms
-2024-12-20T08:45:39Z DEBUG   device.log             State update defer 1771ms
-2024-12-20T08:45:39Z DEBUG   system.config.receive  success
-2024-12-20T08:45:39Z DEBUG   device.log             State update defer 1694ms
-2024-12-20T08:45:39Z DEBUG   system.config.parse    success
-2024-12-20T08:45:39Z INFO    device.log             Device AHU-1 config handler
-2024-12-20T08:45:39Z DEBUG   device.log             Config update AHU-1 (family_ether_addr)
-2024-12-20T08:45:39Z INFO    device.log             2024-12-20T08:45:39Z received config 2024-12-20T08:45:39Z
-2024-12-20T08:45:39Z INFO    device.log             Discovery scan vendor phase stopped as null
-2024-12-20T08:45:39Z NOTICE  system.config.apply    success
-2024-12-20T08:45:39Z DEBUG   device.log             State update defer 1693ms
-2024-12-20T08:45:39Z DEBUG   device.log             State update defer 1692ms
-2024-12-20T08:45:39Z DEBUG   device.log             State update defer 1692ms
-2024-12-20T08:45:39Z DEBUG   device.log             State update defer 1692ms
-2024-12-20T08:45:41Z DEBUG   device.log             State update defer 0ms
-2024-12-20T08:45:41Z INFO    device.log             Update state 2024-12-20T08:45:41Z last_config 2024-12-20T08:45:39Z
-2024-12-20T08:45:41Z DEBUG   device.log             State update AHU-1 (family_ether_addr)
-2024-12-20T08:45:49Z DEBUG   system.config.receive  success
-2024-12-20T08:45:49Z DEBUG   device.log             State update defer -6100ms
-2024-12-20T08:45:49Z INFO    device.log             Update state 2024-12-20T08:45:49Z last_config 2024-12-20T08:45:39Z
-2024-12-20T08:45:49Z DEBUG   system.config.parse    success
-2024-12-20T08:45:49Z INFO    device.log             Device AHU-1 config handler
-2024-12-20T08:45:49Z DEBUG   device.log             State update AHU-1 (family_ether_addr)
-2024-12-20T08:45:49Z DEBUG   device.log             Config update AHU-1 (family_ether_addr)
-2024-12-20T08:45:49Z INFO    device.log             2024-12-20T08:45:49Z received config 2024-12-20T08:45:49Z
-2024-12-20T08:45:49Z INFO    device.log             Discovery scan vendor phase stopped as null
-2024-12-20T08:45:49Z NOTICE  system.config.apply    success
-2024-12-20T08:45:49Z DEBUG   device.log             State update defer 1999ms
-2024-12-20T08:45:49Z DEBUG   device.log             State update defer 1999ms
-2024-12-20T08:45:49Z DEBUG   system.config.receive  success
-2024-12-20T08:45:49Z DEBUG   device.log             State update defer 1922ms
-2024-12-20T08:45:49Z DEBUG   system.config.parse    success
-2024-12-20T08:45:49Z INFO    device.log             Device AHU-1 config handler
-2024-12-20T08:45:49Z DEBUG   device.log             State update defer 1922ms
-2024-12-20T08:45:49Z DEBUG   device.log             Config update AHU-1 (family_ipv4_addr)
-2024-12-20T08:45:49Z INFO    device.log             2024-12-20T08:45:49Z received config 2024-12-20T08:45:49Z
-2024-12-20T08:45:49Z INFO    device.log             Discovery scan vendor phase stopped as null
-2024-12-20T08:45:49Z NOTICE  system.config.apply    success
-2024-12-20T08:45:49Z DEBUG   device.log             State update defer 1921ms
-2024-12-20T08:45:49Z DEBUG   device.log             State update defer 1921ms
-2024-12-20T08:45:49Z DEBUG   device.log             State update defer 1921ms
-2024-12-20T08:45:49Z DEBUG   device.log             State update defer 1921ms
-2024-12-20T08:45:51Z DEBUG   device.log             State update defer 0ms
-2024-12-20T08:45:51Z INFO    device.log             Update state 2024-12-20T08:45:51Z last_config 2024-12-20T08:45:49Z
-2024-12-20T08:45:51Z DEBUG   device.log             State update AHU-1 (family_ipv4_addr)
-2024-12-20T08:45:53Z DEBUG   system.config.receive  success
-2024-12-20T08:45:53Z DEBUG   device.log             State update defer -53ms
-2024-12-20T08:45:53Z INFO    device.log             Update state 2024-12-20T08:45:53Z last_config 2024-12-20T08:45:49Z
-2024-12-20T08:45:53Z DEBUG   system.config.parse    success
-2024-12-20T08:45:53Z INFO    device.log             Device AHU-1 config handler
-2024-12-20T08:45:53Z DEBUG   device.log             State update AHU-1 (family_ipv4_addr)
-2024-12-20T08:45:53Z DEBUG   device.log             Config update AHU-1 (family_ipv4_addr)
-2024-12-20T08:45:53Z INFO    device.log             2024-12-20T08:45:53Z received config 2024-12-20T08:45:53Z
-2024-12-20T08:45:53Z INFO    device.log             Discovery scan vendor phase stopped as null
-2024-12-20T08:45:53Z NOTICE  system.config.apply    success
-2024-12-20T08:45:53Z DEBUG   device.log             State update defer 1999ms
-2024-12-20T08:45:55Z DEBUG   device.log             State update defer 227ms
-2024-12-20T08:45:55Z DEBUG   device.log             State update defer 0ms
-2024-12-20T08:45:55Z INFO    device.log             Update state 2024-12-20T08:45:55Z last_config 2024-12-20T08:45:53Z
-2024-12-20T08:45:55Z DEBUG   device.log             State update AHU-1 (family_ipv4_addr)
-2024-12-20T08:45:57Z DEBUG   system.config.receive  success
-2024-12-20T08:45:57Z DEBUG   device.log             State update defer -97ms
-2024-12-20T08:45:57Z DEBUG   system.config.parse    success
-2024-12-20T08:45:57Z INFO    device.log             Update state 2024-12-20T08:45:57Z last_config 2024-12-20T08:45:53Z
-2024-12-20T08:45:57Z INFO    device.log             Device AHU-1 config handler
-2024-12-20T08:45:57Z DEBUG   device.log             State update AHU-1 (family_ipv4_addr)
-2024-12-20T08:45:57Z DEBUG   device.log             Config update AHU-1 (family_ipv4_addr)
-2024-12-20T08:45:57Z DEBUG   device.log             State update defer 2000ms
-2024-12-20T08:45:57Z INFO    device.log             2024-12-20T08:45:57Z received config 2024-12-20T08:45:57Z
-2024-12-20T08:45:57Z INFO    device.log             Discovery scan vendor phase stopped as null
-2024-12-20T08:45:57Z NOTICE  system.config.apply    success
-2024-12-20T08:45:57Z DEBUG   device.log             State update defer 1999ms
-2024-12-20T08:45:57Z DEBUG   device.log             State update defer 1999ms
-2024-12-20T08:45:59Z DEBUG   device.log             State update defer 0ms
-2024-12-20T08:45:59Z INFO    device.log             Update state 2024-12-20T08:45:59Z last_config 2024-12-20T08:45:57Z
-2024-12-20T08:45:59Z DEBUG   device.log             State update AHU-1 (family_ipv4_addr)
-2024-12-20T08:46:01Z DEBUG   system.config.receive  success
-2024-12-20T08:46:01Z DEBUG   device.log             State update defer -174ms
-2024-12-20T08:46:01Z INFO    device.log             Update state 2024-12-20T08:46:01Z last_config 2024-12-20T08:45:57Z
-2024-12-20T08:46:01Z DEBUG   system.config.parse    success
-2024-12-20T08:46:01Z INFO    device.log             Device AHU-1 config handler
-2024-12-20T08:46:01Z DEBUG   device.log             State update AHU-1 (family_ipv4_addr)
-2024-12-20T08:46:01Z DEBUG   device.log             Config update AHU-1 (family_ipv4_addr)
-2024-12-20T08:46:01Z DEBUG   device.log             State update defer 2000ms
-2024-12-20T08:46:01Z INFO    device.log             2024-12-20T08:46:01Z received config 2024-12-20T08:46:01Z
-2024-12-20T08:46:01Z INFO    device.log             Discovery scan vendor phase stopped as null
-2024-12-20T08:46:01Z NOTICE  system.config.apply    success
-2024-12-20T08:46:01Z DEBUG   device.log             State update defer 1999ms
-2024-12-20T08:46:01Z DEBUG   device.log             State update defer 1999ms
-2024-12-20T08:46:02Z DEBUG   system.config.receive  success
-2024-12-20T08:46:02Z DEBUG   device.log             State update defer 885ms
-2024-12-20T08:46:02Z DEBUG   system.config.parse    success
-2024-12-20T08:46:02Z INFO    device.log             Device AHU-1 config handler
-2024-12-20T08:46:02Z DEBUG   device.log             State update defer 884ms
-2024-12-20T08:46:02Z DEBUG   device.log             Config update AHU-1 (family_ipv4_addr)
-2024-12-20T08:46:02Z INFO    device.log             2024-12-20T08:46:02Z received config 2024-12-20T08:46:02Z
-2024-12-20T08:46:02Z INFO    device.log             Discovery scan vendor phase stopped as null
-2024-12-20T08:46:02Z NOTICE  system.config.apply    success
-2024-12-20T08:46:02Z DEBUG   device.log             State update defer 884ms
-2024-12-20T08:46:02Z DEBUG   device.log             State update defer 883ms
-2024-12-20T08:46:03Z DEBUG   device.log             State update defer 0ms
-2024-12-20T08:46:03Z INFO    device.log             Update state 2024-12-20T08:46:03Z last_config 2024-12-20T08:46:02Z
-2024-12-20T08:46:03Z DEBUG   device.log             State update AHU-1 (family_ipv4_addr)
-2024-12-20T08:46:03Z DEBUG   system.config.receive  success
-2024-12-20T08:46:03Z DEBUG   device.log             State update defer 1842ms
-2024-12-20T08:46:03Z DEBUG   system.config.parse    success
-2024-12-20T08:46:03Z INFO    device.log             Device AHU-1 config handler
-2024-12-20T08:46:03Z DEBUG   device.log             Config update AHU-1 (family_ipv4_addr)
-2024-12-20T08:46:03Z INFO    device.log             2024-12-20T08:46:03Z received config 2024-12-20T08:46:03Z
-2024-12-20T08:46:03Z INFO    device.log             Discovery scan vendor phase stopped as null
-2024-12-20T08:46:03Z NOTICE  system.config.apply    success
-2024-12-20T08:46:03Z DEBUG   device.log             State update defer 1841ms
-2024-12-20T08:46:03Z DEBUG   device.log             State update defer 1841ms
-2024-12-20T08:46:03Z DEBUG   device.log             State update defer 1841ms
-2024-12-20T08:46:03Z DEBUG   system.config.receive  success
-2024-12-20T08:46:03Z DEBUG   device.log             State update defer 1775ms
-2024-12-20T08:46:03Z DEBUG   system.config.parse    success
-2024-12-20T08:46:03Z INFO    device.log             Device AHU-1 config handler
-2024-12-20T08:46:03Z DEBUG   device.log             State update defer 1774ms
-2024-12-20T08:46:03Z DEBUG   device.log             Config update AHU-1 (family_ipv4_addr)
-2024-12-20T08:46:03Z INFO    device.log             2024-12-20T08:46:03Z received config 2024-12-20T08:46:03Z
-2024-12-20T08:46:03Z INFO    device.log             Discovery scan vendor phase stopped as null
-2024-12-20T08:46:03Z NOTICE  system.config.apply    success
-2024-12-20T08:46:03Z DEBUG   device.log             State update defer 1773ms
-2024-12-20T08:46:03Z DEBUG   device.log             State update defer 1773ms
-2024-12-20T08:46:03Z DEBUG   device.log             State update defer 1773ms
-2024-12-20T08:46:03Z DEBUG   device.log             State update defer 1773ms
-2024-12-20T08:46:05Z DEBUG   device.log             State update defer 507ms
-2024-12-20T08:46:05Z NOTICE  validation.feature.sequence Sequence complete
+2024-12-20T09:56:23Z DEBUG   system.config.receive  success
+2024-12-20T09:56:23Z DEBUG   device.log             State update defer -87ms
+2024-12-20T09:56:23Z INFO    device.log             Update state 2024-12-20T09:56:23Z last_config 2024-12-20T09:56:19Z
+2024-12-20T09:56:23Z DEBUG   system.config.parse    success
+2024-12-20T09:56:23Z INFO    device.log             Device AHU-1 config handler
+2024-12-20T09:56:23Z DEBUG   device.log             State update AHU-1 (enumerate_multi)
+2024-12-20T09:56:23Z DEBUG   device.log             Config update AHU-1 (enumerate_multi)
+2024-12-20T09:56:23Z DEBUG   device.log             State update defer 2000ms
+2024-12-20T09:56:23Z INFO    device.log             2024-12-20T09:56:23Z received config 2024-12-20T09:56:23Z
+2024-12-20T09:56:23Z INFO    device.log             Discovery enumeration at 2024-12-20T09:56:21Z
+2024-12-20T09:56:23Z NOTICE  system.config.apply    success
+2024-12-20T09:56:23Z DEBUG   device.log             State update defer 1983ms
+2024-12-20T09:56:23Z DEBUG   device.log             State update defer 1983ms
+2024-12-20T09:56:23Z DEBUG   device.log             State update defer 1983ms
+2024-12-20T09:56:23Z DEBUG   device.log             State update defer 1983ms
+2024-12-20T09:56:25Z DEBUG   device.log             State update defer 0ms
+2024-12-20T09:56:25Z INFO    device.log             Update state 2024-12-20T09:56:25Z last_config 2024-12-20T09:56:23Z
+2024-12-20T09:56:25Z DEBUG   device.log             State update AHU-1 (enumerate_multi)
+2024-12-20T09:56:27Z DEBUG   system.config.receive  success
+2024-12-20T09:56:27Z DEBUG   device.log             State update defer -51ms
+2024-12-20T09:56:27Z INFO    device.log             Update state 2024-12-20T09:56:27Z last_config 2024-12-20T09:56:23Z
+2024-12-20T09:56:27Z DEBUG   device.log             State update AHU-1 (enumerate_multi)
+2024-12-20T09:56:27Z DEBUG   system.config.parse    success
+2024-12-20T09:56:27Z INFO    device.log             Device AHU-1 config handler
+2024-12-20T09:56:27Z DEBUG   device.log             Config update AHU-1 (enumerate_multi)
+2024-12-20T09:56:27Z DEBUG   device.log             State update defer 1999ms
+2024-12-20T09:56:27Z INFO    device.log             2024-12-20T09:56:27Z received config 2024-12-20T09:56:27Z
+2024-12-20T09:56:27Z NOTICE  system.config.apply    success
+2024-12-20T09:56:27Z DEBUG   device.log             State update defer 1997ms
+2024-12-20T09:56:27Z DEBUG   device.log             State update defer 1997ms
+2024-12-20T09:56:29Z DEBUG   device.log             State update defer 0ms
+2024-12-20T09:56:29Z INFO    device.log             Update state 2024-12-20T09:56:29Z last_config 2024-12-20T09:56:27Z
+2024-12-20T09:56:29Z DEBUG   device.log             State update AHU-1 (enumerate_multi)
+2024-12-20T09:56:39Z DEBUG   system.config.receive  success
+2024-12-20T09:56:39Z DEBUG   device.log             State update defer -8114ms
+2024-12-20T09:56:39Z DEBUG   system.config.parse    success
+2024-12-20T09:56:39Z INFO    device.log             Update state 2024-12-20T09:56:39Z last_config 2024-12-20T09:56:27Z
+2024-12-20T09:56:39Z DEBUG   device.log             State update AHU-1 (enumerate_multi)
+2024-12-20T09:56:39Z DEBUG   device.log             Config update AHU-1 (enumerate_multi)
+2024-12-20T09:56:39Z DEBUG   device.log             State update defer 2000ms
+2024-12-20T09:56:39Z INFO    device.log             2024-12-20T09:56:39Z received config 2024-12-20T09:56:39Z
+2024-12-20T09:56:39Z NOTICE  system.config.apply    success
+2024-12-20T09:56:39Z DEBUG   device.log             State update defer 1999ms
+2024-12-20T09:56:39Z DEBUG   device.log             State update defer 1999ms
+2024-12-20T09:56:39Z DEBUG   device.log             State update defer 1999ms
+2024-12-20T09:56:39Z DEBUG   device.log             State update defer 1998ms
+2024-12-20T09:56:39Z DEBUG   device.log             State update defer 1998ms
+2024-12-20T09:56:39Z DEBUG   device.log             State update defer 1998ms
+2024-12-20T09:56:39Z DEBUG   device.log             State update defer 1998ms
+2024-12-20T09:56:39Z DEBUG   system.config.receive  success
+2024-12-20T09:56:39Z DEBUG   system.config.parse    success
+2024-12-20T09:56:39Z INFO    device.log             Device AHU-1 config handler
+2024-12-20T09:56:39Z DEBUG   device.log             Config update AHU-1 (family_ipv4_addr)
+2024-12-20T09:56:39Z INFO    device.log             2024-12-20T09:56:39Z received config 2024-12-20T09:56:39Z
+2024-12-20T09:56:39Z NOTICE  system.config.apply    success
+2024-12-20T09:56:39Z DEBUG   device.log             State update defer 1944ms
+2024-12-20T09:56:39Z DEBUG   device.log             State update defer 1944ms
+2024-12-20T09:56:41Z DEBUG   device.log             State update defer 0ms
+2024-12-20T09:56:41Z INFO    device.log             Update state 2024-12-20T09:56:41Z last_config 2024-12-20T09:56:39Z
+2024-12-20T09:56:41Z DEBUG   device.log             State update AHU-1 (family_ipv4_addr)
+2024-12-20T09:56:43Z DEBUG   system.config.receive  success
+2024-12-20T09:56:43Z DEBUG   device.log             State update defer -88ms
+2024-12-20T09:56:43Z INFO    device.log             Update state 2024-12-20T09:56:43Z last_config 2024-12-20T09:56:39Z
+2024-12-20T09:56:43Z DEBUG   system.config.parse    success
+2024-12-20T09:56:43Z DEBUG   device.log             State update AHU-1 (family_ipv4_addr)
+2024-12-20T09:56:43Z DEBUG   device.log             Config update AHU-1 (family_ipv4_addr)
+2024-12-20T09:56:43Z DEBUG   device.log             State update defer 2000ms
+2024-12-20T09:56:43Z INFO    device.log             2024-12-20T09:56:43Z received config 2024-12-20T09:56:43Z
+2024-12-20T09:56:43Z NOTICE  system.config.apply    success
+2024-12-20T09:56:43Z DEBUG   device.log             State update defer 1999ms
+2024-12-20T09:56:43Z DEBUG   device.log             State update defer 1999ms
+2024-12-20T09:56:43Z DEBUG   device.log             State update defer 1999ms
+2024-12-20T09:56:43Z DEBUG   device.log             State update defer 1999ms
+2024-12-20T09:56:43Z DEBUG   device.log             State update defer 1999ms
+2024-12-20T09:56:43Z DEBUG   device.log             State update defer 1999ms
+2024-12-20T09:56:43Z DEBUG   device.log             State update defer 1998ms
+2024-12-20T09:56:45Z DEBUG   device.log             State update defer 0ms
+2024-12-20T09:56:45Z INFO    device.log             Update state 2024-12-20T09:56:45Z last_config 2024-12-20T09:56:43Z
+2024-12-20T09:56:45Z DEBUG   device.log             State update AHU-1 (family_ipv4_addr)
+2024-12-20T09:56:47Z DEBUG   system.config.receive  success
+2024-12-20T09:56:47Z DEBUG   device.log             State update defer -51ms
+2024-12-20T09:56:47Z INFO    device.log             Update state 2024-12-20T09:56:47Z last_config 2024-12-20T09:56:43Z
+2024-12-20T09:56:47Z DEBUG   system.config.parse    success
+2024-12-20T09:56:47Z DEBUG   device.log             State update AHU-1 (family_ipv4_addr)
+2024-12-20T09:56:47Z DEBUG   device.log             Config update AHU-1 (family_ipv4_addr)
+2024-12-20T09:56:47Z DEBUG   device.log             State update defer 1999ms
+2024-12-20T09:56:47Z INFO    device.log             2024-12-20T09:56:47Z received config 2024-12-20T09:56:47Z
+2024-12-20T09:56:47Z NOTICE  system.config.apply    success
+2024-12-20T09:56:47Z DEBUG   device.log             State update defer 1999ms
+2024-12-20T09:56:47Z DEBUG   device.log             State update defer 1999ms
+2024-12-20T09:56:49Z DEBUG   device.log             State update defer 0ms
+2024-12-20T09:56:49Z INFO    device.log             Update state 2024-12-20T09:56:49Z last_config 2024-12-20T09:56:47Z
+2024-12-20T09:56:49Z DEBUG   device.log             State update AHU-1 (family_ipv4_addr)
+2024-12-20T09:56:51Z DEBUG   system.config.receive  success
+2024-12-20T09:56:51Z DEBUG   device.log             State update defer -117ms
+2024-12-20T09:56:51Z INFO    device.log             Update state 2024-12-20T09:56:51Z last_config 2024-12-20T09:56:47Z
+2024-12-20T09:56:51Z DEBUG   system.config.parse    success
+2024-12-20T09:56:51Z INFO    device.log             Device AHU-1 config handler
+2024-12-20T09:56:51Z DEBUG   device.log             Config update AHU-1 (family_ipv4_addr)
+2024-12-20T09:56:51Z DEBUG   device.log             State update defer 2000ms
+2024-12-20T09:56:51Z INFO    device.log             2024-12-20T09:56:51Z received config 2024-12-20T09:56:51Z
+2024-12-20T09:56:51Z NOTICE  system.config.apply    success
+2024-12-20T09:56:51Z DEBUG   device.log             State update defer 2000ms
+2024-12-20T09:56:51Z DEBUG   device.log             State update defer 1999ms
+2024-12-20T09:56:51Z DEBUG   device.log             State update defer 1999ms
+2024-12-20T09:56:51Z DEBUG   device.log             State update defer 1999ms
+2024-12-20T09:56:51Z DEBUG   device.log             State update defer 1999ms
+2024-12-20T09:56:51Z DEBUG   device.log             State update defer 1999ms
+2024-12-20T09:56:51Z DEBUG   device.log             State update defer 1999ms
+2024-12-20T09:56:52Z DEBUG   system.config.receive  success
+2024-12-20T09:56:52Z DEBUG   device.log             State update defer 801ms
+2024-12-20T09:56:52Z DEBUG   system.config.parse    success
+2024-12-20T09:56:52Z INFO    device.log             Device AHU-1 config handler
+2024-12-20T09:56:52Z DEBUG   device.log             State update defer 800ms
+2024-12-20T09:56:52Z DEBUG   device.log             Config update AHU-1 (family_ipv4_addr)
+2024-12-20T09:56:52Z INFO    device.log             2024-12-20T09:56:52Z received config 2024-12-20T09:56:52Z
+2024-12-20T09:56:52Z NOTICE  system.config.apply    success
+2024-12-20T09:56:52Z DEBUG   device.log             State update defer 800ms
+2024-12-20T09:56:52Z DEBUG   device.log             State update defer 799ms
+2024-12-20T09:56:52Z DEBUG   device.log             State update defer 793ms
+2024-12-20T09:56:55Z NOTICE  validation.feature.sequence Sequence complete
