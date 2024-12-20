@@ -109,7 +109,10 @@ def run(cmd: str) -> subprocess.CompletedProcess:
   execution_time_seconds = time.monotonic() - start
   info("completed with result code %s in %s seconds", str(result.returncode), str(execution_time_seconds))
   # print not log, so they are captured when there is a failure
-  # print(result.stdout.decode("utf-8"))
+  print("-----")
+  print(cmd)
+  print(result.stdout.decode("utf-8"))
+  print("-----")
   return result
 
 
