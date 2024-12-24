@@ -103,7 +103,11 @@ public class TraceMessagePipeTest {
   @Test
   public void tracePlayback() {
     TraceMessagePipe fileMessagePipe = new TraceMessagePipe(getTraceInConfig());
-    fileMessagePipe.activate(consumed::add);
+    fileMessagePipe.activate(message -> {
+      synchronized (consumed) {
+        consumed.add(message);
+      }
+    });
     fileMessagePipe.awaitShutdown();
 
     safeSleep(1000); // Stability delay

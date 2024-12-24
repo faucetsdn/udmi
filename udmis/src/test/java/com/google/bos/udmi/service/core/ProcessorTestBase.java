@@ -140,6 +140,8 @@ public abstract class ProcessorTestBase extends MessageTestBase {
   }
 
   private void resultHandler(Object message) {
-    captured.add(message);
+    synchronized (captured) {
+      captured.add(message);
+    }
   }
 }

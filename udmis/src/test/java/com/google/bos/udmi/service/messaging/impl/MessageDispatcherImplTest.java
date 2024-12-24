@@ -33,7 +33,7 @@ public class MessageDispatcherImplTest {
 
   public static final long GET_TIMEOUT_SEC = 1;
 
-  List<Object> devNullCapture = new ArrayList<>();
+  final List<Object> devNullCapture = new ArrayList<>();
 
   private EndpointConfiguration getConfiguration(boolean reversed) {
     EndpointConfiguration config = new EndpointConfiguration();
@@ -90,7 +90,9 @@ public class MessageDispatcherImplTest {
 
     @Override
     protected void devNullHandler(Object message) {
-      devNullCapture.add(message);
+      synchronized (devNullCapture) {
+        devNullCapture.add(message);
+      }
     }
   }
 
