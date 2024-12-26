@@ -728,7 +728,8 @@ public class Validator {
       writeDeviceOutCapture(messageObj, attributes, deviceId, schemaName);
 
       String subFolder = attributes.get(SUBFOLDER_PROPERTY_KEY);
-      boolean processSchema = !IGNORE_FOLDERS.contains(subFolder);
+      boolean processSchema = !SubType.REPLY.value().equalsIgnoreCase(schemaName) &&
+          !IGNORE_FOLDERS.contains(subFolder);
 
       try {
         if (processSchema && !schemaMap.containsKey(schemaName)) {
