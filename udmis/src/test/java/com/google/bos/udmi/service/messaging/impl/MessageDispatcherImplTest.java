@@ -12,6 +12,7 @@ import com.google.bos.udmi.service.core.ProcessorTestBase;
 import com.google.bos.udmi.service.messaging.MessageDispatcher;
 import com.google.udmi.util.JsonUtil;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
@@ -33,7 +34,7 @@ public class MessageDispatcherImplTest {
 
   public static final long GET_TIMEOUT_SEC = 1;
 
-  final List<Object> devNullCapture = new ArrayList<>();
+  List<Object> devNullCapture = Collections.synchronizedList(new ArrayList<>());
 
   private EndpointConfiguration getConfiguration(boolean reversed) {
     EndpointConfiguration config = new EndpointConfiguration();
@@ -90,9 +91,7 @@ public class MessageDispatcherImplTest {
 
     @Override
     protected void devNullHandler(Object message) {
-      synchronized (devNullCapture) {
-        devNullCapture.add(message);
-      }
+      devNullCapture.add(message);
     }
   }
 

@@ -208,7 +208,8 @@ public class RegistrarTest {
   private List<MockAction> getMockedActions(ImmutableList<String> optArgs) {
     Registrar registrar = getRegistrar(optArgs);
     registrar.execute();
-    return registrar.getMockActions().stream().map(a -> (MockAction) a)
+    List<Object> actions = registrar.getMockActions();
+    return actions.stream().map(a -> (MockAction) a)
         .collect(Collectors.toList());
   }
 }
