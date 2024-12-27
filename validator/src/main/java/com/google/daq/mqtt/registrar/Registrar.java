@@ -42,6 +42,7 @@ import com.github.fge.jsonschema.core.load.download.URIDownloader;
 import com.github.fge.jsonschema.main.JsonSchema;
 import com.github.fge.jsonschema.main.JsonSchemaFactory;
 import com.google.common.base.Joiner;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
@@ -127,7 +128,11 @@ public class Registrar {
   private final Map<String, JsonSchema> schemas = new HashMap<>();
   private final String generation = getGenerationString();
   private final Set<Summarizer> summarizers = new HashSet<>();
-  private final CommandLineProcessor commandLineProcessor = new CommandLineProcessor(this);
+  private final List<String> usageForms = ImmutableList.of(
+      "bin/registrar site_model project_spec [options] [devices...]",
+      "bin/registrar site_spec [options] [devices...]");
+  private final CommandLineProcessor commandLineProcessor = new CommandLineProcessor(this,
+      usageForms);
   private CloudIotManager cloudIotManager;
   private File schemaBase;
   private PubSubPusher updatePusher;

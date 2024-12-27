@@ -28,6 +28,7 @@ public class CommandLineProcessor {
   private static final int LINUX_ERROR_CODE = -1;
   private final Object target;
   private final Method showHelpMethod;
+  private List<String> usageForms = null;
 
   Map<CommandLineOption, Method> optionMap = new TreeMap<>(
       (a, b) -> CASE_INSENSITIVE_ORDER.compare(getSortArg(a), getSortArg(b)));
@@ -69,6 +70,13 @@ public class CommandLineProcessor {
     checkState(duplicateLong.isEmpty(), "duplicate short form command line option");
   }
 
+  public CommandLineProcessor(Object target, List<String> usageForms) {
+    this(target);
+    if (usageForms != null && !usageForms.isEmpty()) {
+      this.usageForms = usageForms;
+    }
+  }
+
   private Method getShowHelpMethod() {
     try {
       return CommandLineProcessor.class.getDeclaredMethod("showUsage");
@@ -91,6 +99,10 @@ public class CommandLineProcessor {
    */
   public void showUsage(String message) {
     ifNotNullThen(message, m -> System.err.println(m));
+    ifNotNullThen(this.usageForms, () -> {
+      System.err.println("Usage forms:");
+      this.usageForms.forEach(form -> System.err.printf("\t%s%n", form));
+    });
     System.err.println("Options supported:");
     optionMap.forEach((option, method) -> System.err.printf("  %s %12s  %s%n",
         option.short_form(), option.arg_name(), option.description()));

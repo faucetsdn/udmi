@@ -39,22 +39,33 @@ be used to specific specific device(s) to register (rather than all).
 ```
 Usage:
 
-bin/registrar site_path [project_id] [options] [devices...]
+bin/registrar site_model project_spec [options] [devices...]
 
-bin/registrar config_file
+bin/registrar site_spec [options] [devices...]
 ```
 
-* `config_file`: Path to a configuration file which contains configuration options;
-* `site_path`: The _directory_ containing the site model, or a model-with-project _file_ directly.
-* `project_id`: The project ID that contains the target registry. The project ID can be prepended with iot_provider:
+* `site_model`: The path to the _directory_ containing the site model, or a model-with-project _file_ directly.
+* `project_spec`: The project ID that contains the target registry. The project ID can be prepended with iot_provider:
   * `//clearblade/PROJECT_ID` for a public ClearBlade project.
   * `//gbos/PROJECT_ID` for a Google operated ClearBlade project.
+* `site_spec`: Path to a configuration file which contains configuration options;
 * `options`: Various options to impact behavior:
-  * `-u` Update.
-  * `-d` Delete all device in the site model from the registry (combine with `-x` to delete all devices from the registry)
+  * `-a` Set alternate registry 
   * `-b` Block unknown devices.
-  * `-x` Delete unknown devices from the registry.
+  * `-c` Count of registries to be created
+  * `-d` Delete all device in the site model from the registry (combine with `-x` to delete all devices from the registry)
+  * `-e` Set registry suffix
+  * `-f` Set PubSub feed topic
+  * `-h` Show help and exit
+  * `-l` Set idle limit
+  * `-m` Initial metadata model out
   * `-n` Number of thread counts.
+  * `-p` Set Project ID
+  * `-q` Query only, registry to not be updated
+  * `-r` Set tool root path
+  * `-s` Set site path
+  * `-t` Do not validate metadata
+  * `-x` Delete unknown devices from the registry.
 * `devices`: Multiple device entries for limited registration. Can be just the device name
   (`AHU-12`), or path to device (`site/devices/AHU-12`) for use with file-name glob.
 
