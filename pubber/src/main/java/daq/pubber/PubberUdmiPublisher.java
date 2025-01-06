@@ -50,13 +50,16 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 import java.util.function.Consumer;
 import java.util.function.Function;
+import org.apache.http.ConnectionClosedException;
 import udmi.lib.base.GatewayError;
 import udmi.lib.base.MqttDevice;
 import udmi.lib.base.MqttPublisher.FakeTopic;
 import udmi.lib.base.MqttPublisher.InjectedMessage;
 import udmi.lib.base.MqttPublisher.InjectedState;
+import udmi.lib.base.MqttPublisher.PublisherException;
 import udmi.lib.client.DeviceManager;
 import udmi.lib.client.PointsetManager;
 import udmi.lib.client.PointsetManager.ExtraPointsetEvent;
@@ -122,6 +125,7 @@ public interface PubberUdmiPublisher extends UdmiPublisher {
   Duration SMOKE_CHECK_TIME = Duration.ofMinutes(5);
   String RAW_EVENT_TOPIC = "events";
   String SYSTEM_EVENT_TOPIC = "events/system";
+  ReentrantLock reconnectLock = new ReentrantLock();
 
   State getDeviceState();
 
@@ -989,6 +993,10 @@ public interface PubberUdmiPublisher extends UdmiPublisher {
 
   void startConnection(Function<String, Boolean> connectionDone);
 
+  void reconnect();
+
+  void resetConnection(String targetEndpoint);
+
   /**
    * Flushes the dirty state by publishing an asynchronous state change.
    */
@@ -1000,11 +1008,31 @@ public interface PubberUdmiPublisher extends UdmiPublisher {
 
   byte[] ensureKeyBytes();
 
-  void publisherException(Exception toReport);
+  /**
+   * Handles exceptions related to the publisher and
+   * takes appropriate actions based on the exception type.
+   *
+   * @param toReport the exception to be handled;
+   */
+  default void publisherException(Exception toReport) {
+    if (toReport instanceof PublisherException report) {
+      publisherHandler(report.getType(), report.getPhase(), report.getCause(),
+              report.getDeviceId());
+    } else if (toReport instanceof ConnectionClosedException) {
+      if (reconnectLock.tryLock()) {
+        try {
+          error("Connection closed, attempting reconnect...");
+          reconnect();
+        } finally {
+          reconnectLock.unlock();
+        }
+      }
+    } else {
+      error("Unknown exception type " + toReport.getClass(), toReport);
+    }
+  }
 
   void persistEndpoint(EndpointConfiguration endpoint);
-
-  void resetConnection(String targetEndpoint);
 
   String traceTimestamp(String messageBase);
 

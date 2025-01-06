@@ -221,18 +221,19 @@ public class MqttPublisher implements Publisher {
         closeMqttClient(deviceId);
         if (mqttClients.isEmpty()) {
           warn("Last client closed, shutting down connection.");
-          close();
-          shutdown();
-          // Force reconnect to address potential bad states
-          onError.accept(new ConnectionClosedException());
+          reconnect();
         }
       } else if (getGatewayId().equals(deviceId)) {
-        close();
-        shutdown();
-        // Force reconnect to address potential bad states
-        onError.accept(new ConnectionClosedException());
+        reconnect();
       }
     }
+  }
+
+  private void reconnect() {
+    close();
+    shutdown();
+    // Force reconnect to address potential bad states
+    onError.accept(new ConnectionClosedException());
   }
 
   private String getMessageTopic(String deviceId, String topic) {
@@ -596,10 +597,7 @@ public class MqttPublisher implements Publisher {
     reauthTimes.remove(authId);
     synchronized (mqttClients) {
       try {
-        close();
-        shutdown();
-        // Force reconnect to address potential bad states
-        onError.accept(new ConnectionClosedException());
+        reconnect();
       } catch (Exception e) {
         throw new RuntimeException("While trying to reconnect mqtt client", e);
       }
@@ -722,11 +720,8 @@ public class MqttPublisher implements Publisher {
     @Override
     public void connectionLost(Throwable cause) {
       boolean connected = cleanClients(deviceId).isConnected();
-      warn("MQTT Connection Lost: " + connected + cause);
-      close();
-      shutdown();
-      // Force reconnect to address potential bad states
-      onError.accept(new ConnectionClosedException());
+      warn(format("MQTT Connection Lost: %s %s", connected, cause));
+      reconnect();
     }
 
     @Override
