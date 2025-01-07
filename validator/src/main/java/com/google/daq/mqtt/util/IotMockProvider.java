@@ -13,6 +13,7 @@ import static udmi.schema.CloudModel.Resource_type.GATEWAY;
 import com.google.udmi.util.IotProvider;
 import com.google.udmi.util.SiteModel;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -35,7 +36,7 @@ public class IotMockProvider implements IotProvider {
   private final SiteModel siteModel;
   private final String client;
   private final Map<String, CloudModel> cloudDevices = new HashMap<>();
-  private List<MockAction> mockActions = new ArrayList<>();
+  private List<MockAction> mockActions = Collections.synchronizedList(new ArrayList<>());
 
   /**
    * Create a mock provider used for unit testing.
