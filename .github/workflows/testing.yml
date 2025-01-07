@@ -245,19 +245,19 @@ jobs:
       - name: local setup
         run: |
           bin/start_local sites/udmi_site_model //mqtt/localhost
-          bin/pull_messages //mqtt/localhost > /tmp/message_capture.log 2>&1 &
+          bin/pull_messages //mqtt/localhost > out/message_capture.log 2>&1 &
       - name: bin/test_etcd
         run: bin/test_etcd
       - name: bin/test_mosquitto
         run: bin/test_mosquitto
       - name: bin/test_regclean
         run: bin/test_regclean //mqtt/localhost
+      - name: bin/test_runlocal
+        run: bin/test_runlocal
       - name: bin/test_sequencer
         run: bin/test_sequencer local full //mqtt/localhost $(< etc/local_tests.txt)
       - name: bin/test_udmis
         run: bin/test_udmis
-      - name: bin/test_runlocal
-        run: bin/test_runlocal
       - name: mosquitto debug
         if: ${{ !cancelled() }}
         run: |
