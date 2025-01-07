@@ -399,9 +399,9 @@ jobs:
           ls -l site_model
           ls -l site_model/reflector
           whoami
-          sudo chown -R runner site_model
+          sudo chown -R $(whoami) site_model
           ls -l site_model
           ls -l sites/udmi_site_model
           ls -l site_model/reflector
       - name: Run Tests
-        run: misc/discoverynode/testing/e2e/test_local site_model
+        run: sudo misc/discoverynode/testing/e2e/test_local site_model
