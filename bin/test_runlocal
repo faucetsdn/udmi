@@ -8,8 +8,9 @@ cd $UDMI_ROOT
 
 source etc/shell_common.sh
 
+echo Captured $(wc -l /tmp/message_capture.log) messages.
+
 deletes=$(find out/registries/ -name \*update_model.json | xargs jq .cloud.operation | fgrep DELETE | wc -l)
-[[ $deletes == 2 ]] || fail Expected 2 delete operations
+[[ $deletes == 2 ]] || fail Expected 2 delete operations, found $deletes
 
 echo Done with successful runlocal validation.
-

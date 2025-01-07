@@ -248,6 +248,8 @@ jobs:
           bin/pull_messages //mqtt/localhost > /tmp/message_capture.log 2>&1 &
       - name: bin/test_etcd
         run: bin/test_etcd
+      - name: messages
+        run: cat /tmp/message_capture.log
       - name: bin/test_mosquitto
         run: bin/test_mosquitto
       - name: bin/test_regclean
@@ -269,9 +271,6 @@ jobs:
       - name: mosquitto logs
         if: ${{ !cancelled() }}
         run: cat /var/log/mosquitto/mosquitto.log || true
-      - name: captured messages
-        if: ${{ !cancelled() }}
-        run: find out/registries -type f
       - name: support bundle
         if: ${{ !cancelled() }}
         run: bin/support ${{ github.repository_owner }}_${{ github.job }}_
