@@ -8,8 +8,8 @@ cd $UDMI_ROOT
 
 source etc/shell_common.sh
 
-echo Captured $(wc -l /tmp/message_capture.log) messages.
-cat /tmp/message_capture.log
+echo Captured $(wc -l out/message_capture.log) messages.
+cat out/message_capture.log
 
 pwd
 ls -l out/
