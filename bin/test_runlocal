@@ -8,11 +8,9 @@ cd $UDMI_ROOT
 
 source etc/shell_common.sh
 
-echo Captured $(wc -l out/message_capture.log) messages.
 cat out/message_capture.log
 
-pwd
-ls -l out/
+echo Captured $(wc -l out/message_capture.log) messages.
 
 deletes=$(find out/registries/ -name \*update_model.json | xargs jq .cloud.operation | fgrep DELETE | wc -l)
 [[ $deletes == 2 ]] || fail Expected 2 delete operations, found $deletes
