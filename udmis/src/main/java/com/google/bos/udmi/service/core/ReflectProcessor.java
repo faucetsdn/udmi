@@ -151,10 +151,10 @@ public class ReflectProcessor extends ProcessorBase {
 
   private Object extractModel(CloudModel request) {
     String metadata = catchToNull(() -> request.metadata.get(MetadataMapKeys.UDMI_METADATA));
-    if (metadata == null) {
-      return null;
-    } else if (request.resource_type == REGISTRY) {
+    if (request.resource_type == REGISTRY) {
       return asSiteMetadataUpdate(metadata);
+    } else if (metadata == null) {
+      return asModelUpdate(request);
     } else {
       return asModelUpdate(metadata);
     }
@@ -300,6 +300,12 @@ public class ReflectProcessor extends ProcessorBase {
     Envelope target = deepCopy(attributes);
     target.source = IMPLICIT.toString();
     return target;
+  }
+
+  private ModelUpdate asModelUpdate(CloudModel request) {
+    ModelUpdate modelUpdate = new ModelUpdate();
+    modelUpdate.cloud = request;
+    return modelUpdate;
   }
 
   private ModelUpdate asModelUpdate(String modelString) {
