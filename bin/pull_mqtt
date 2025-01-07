@@ -31,10 +31,10 @@ sudo mosquitto_sub $SERVER_OPTS -R -F "%j" -t $topic_filter |
         json=$(jq . <<< "$payload" 2> /dev/null) || json=$payload
 
         readarray -d '/' -t array <<< "${topic}/"
-        registryId=${array[2]}
-        deviceId=${array[4]}
-        subType=${array[5]}
-        subFolder=${array[6]}
+        registryId=${array[2]:-}
+        deviceId=${array[4]:-}
+        subType=${array[5]:-}
+        subFolder=${array[6]:-}
 
         # Trim whitespace
         subFolder=$(echo $subFolder | xargs)
