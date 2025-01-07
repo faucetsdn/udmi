@@ -25,7 +25,7 @@ public class LocalnetSequences extends SequenceBase {
     HashMap<String, FamilyLocalnetState> families = deviceState.localnet.families;
     waitUntil(format("device state localnet family %s is available", family),
         () -> families.containsKey(family) ? null
-            : format("Because family %s not found in device state localnet family set: %s", family,
+            : format("because family %s not found in device state localnet family set: %s", family,
                 CSV_JOINER.join(families.keySet())));
     String actual = families.get(family).addr;
     checkThat(format("family %s address matches", family), () -> expected.equals(actual));
