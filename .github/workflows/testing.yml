@@ -246,9 +246,6 @@ jobs:
         run: |
           bin/start_local sites/udmi_site_model //mqtt/localhost
           bin/pull_messages //mqtt/localhost > out/message_capture.log 2>&1 &
-          sleep 1
-          ls -l out/message_capture.log
-          cat out/message_capture.log
       - name: bin/test_etcd
         run: bin/test_etcd
       - name: bin/test_mosquitto

@@ -155,7 +155,7 @@ public class ReflectProcessor extends ProcessorBase {
       return asModelUpdate(request);
     } else if (request.resource_type == REGISTRY) {
       return asSiteMetadataUpdate(metadata);
-    } else  {
+    } else {
       return asModelUpdate(metadata);
     }
   }
