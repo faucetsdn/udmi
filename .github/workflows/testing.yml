@@ -248,8 +248,6 @@ jobs:
           bin/pull_messages //mqtt/localhost > /tmp/message_capture.log 2>&1 &
       - name: bin/test_etcd
         run: bin/test_etcd
-      - name: messages
-        run: cat /tmp/message_capture.log
       - name: bin/test_mosquitto
         run: bin/test_mosquitto
       - name: bin/test_regclean
