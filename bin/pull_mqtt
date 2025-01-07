@@ -38,6 +38,7 @@ sudo mosquitto_sub $SERVER_OPTS -R -F "%j" -t $topic_filter |
 
         # Trim whitespace
         subFolder=$(echo $subFolder | xargs)
+        subType=$(echo $subType | xargs)
 
         [[ -n ${subFolder% } ]] || subFolder=update
 
