@@ -394,6 +394,8 @@ jobs:
           done
           ls -l var/tmp/pod_ready.txt 2>&1
       - name: debug
-        run: ls -l site_model/reflector
+        run: |
+          ls -l site_model
+          ls -l site_model/reflector
       # - name: Run Tests
       #   run: misc/discoverynode/testing/e2e/test_local site_model
