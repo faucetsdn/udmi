@@ -537,8 +537,6 @@ public class Pubber extends PubberManager implements PubberUdmiPublisher {
     try {
       config.endpoint = fromJsonString(targetEndpoint,
           EndpointConfiguration.class);
-      disconnectMqtt();
-      initializeMqtt();
       retriesRemaining.set(CONNECT_RETRIES);
       startConnection(connectionDone);
     } catch (Exception e) {
