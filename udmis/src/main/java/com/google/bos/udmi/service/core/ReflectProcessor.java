@@ -151,11 +151,11 @@ public class ReflectProcessor extends ProcessorBase {
 
   private Object extractModel(CloudModel request) {
     String metadata = catchToNull(() -> request.metadata.get(MetadataMapKeys.UDMI_METADATA));
-    if (request.resource_type == REGISTRY) {
-      return asSiteMetadataUpdate(metadata);
-    } else if (metadata == null) {
+    if (metadata == null) {
       return asModelUpdate(request);
-    } else {
+    } else if (request.resource_type == REGISTRY) {
+      return asSiteMetadataUpdate(metadata);
+    } else  {
       return asModelUpdate(metadata);
     }
   }

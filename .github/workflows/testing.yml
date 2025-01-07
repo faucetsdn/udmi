@@ -268,6 +268,7 @@ jobs:
         if: ${{ !cancelled() }}
         run: cat /var/log/mosquitto/mosquitto.log || true
       - name: captured messages
+        if: ${{ !cancelled() }}
         run: find out/registries -type f
       - name: support bundle
         if: ${{ !cancelled() }}
