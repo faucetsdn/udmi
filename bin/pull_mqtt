@@ -1,4 +1,4 @@
-#!/bin/bash -e
+#!/bin/bash -ex
 
 UDMI_ROOT=$(dirname $0)/..
 cd $UDMI_ROOT
@@ -54,6 +54,7 @@ sudo mosquitto_sub $SERVER_OPTS -R -F "%j" -t $topic_filter |
         out_path=$OUT_BASE/$registryId/devices/$deviceId/${timepath}/${usetime}_${subFolder}_${subType}
         out_dir=$(dirname $out_path)
         mkdir -p $out_dir
+        echo out_path is $out_path
         echo $(realpath --relative-to $OUT_BASE $out_path).json $topic
         echo $json > $out_path.json
         echo {} | jq ".deviceRegistryId=\"$registryId\" | \
