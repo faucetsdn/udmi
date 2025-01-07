@@ -12,7 +12,13 @@ cat out/message_capture.log
 
 echo Captured $(wc -l out/message_capture.log) messages.
 
+systems=$(find out/registries/ -name \*update_model.json | xargs jq .system | fgrep -v null | wc -l)
+[[ $systems == 412 ]] || fail Expected 412 system operations, found $systems
+
 deletes=$(find out/registries/ -name \*update_model.json | xargs jq .cloud.operation | fgrep DELETE | wc -l)
-[[ $deletes == 2 ]] || fail Expected 2 delete operations, found $deletes
+[[ $deletes == 1 ]] || fail Expected 1 delete operations, found $deletes
+
+binds=$(find out/registries/ -name \*update_model.json | xargs jq .cloud.operation | fgrep BIND | wc -l)
+[[ $binds == 4 ]] || fail Expected 4 bind operations, found $binds
 
 echo Done with successful runlocal validation.
