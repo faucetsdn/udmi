@@ -20,5 +20,5 @@ echo Importing server certs from $site_model...
 sudo cp $site_model/reflector/ca.* $CERT_DIR/
 sudo cp $site_model/reflector/rsa_private.* $CERT_DIR/
 sudo chgrp -R mosquitto $CERT_DIR
-sudo chmod 0644 $CERT_DIR/rsa_private.*
+sudo chmod -R 0644 $CERT_DIR
 ls -l $CERT_DIR
