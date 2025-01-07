@@ -399,7 +399,7 @@ jobs:
           ls -l site_model
           ls -l site_model/reflector
           whoami
-          sudo chmod -R 755 site_model
+          sudo chown -R runner site_model
           ls -l site_model
           ls -l sites/udmi_site_model
           ls -l site_model/reflector
