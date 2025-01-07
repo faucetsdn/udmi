@@ -243,7 +243,9 @@ jobs:
           bin/clone_model
           bin/registrar sites/udmi_site_model
       - name: local setup
-        run: bin/start_local sites/udmi_site_model //mqtt/localhost
+        run: |
+          bin/start_local sites/udmi_site_model //mqtt/localhost
+          bin/pull_messages //mqtt/localhost /tmp/message_capture.log 2>&1 &
       - name: bin/test_etcd
         run: bin/test_etcd
       - name: bin/test_mosquitto
@@ -265,6 +267,8 @@ jobs:
       - name: mosquitto logs
         if: ${{ !cancelled() }}
         run: cat /var/log/mosquitto/mosquitto.log || true
+      - name: captured messages
+        run: find out/registries -type f
       - name: support bundle
         if: ${{ !cancelled() }}
         run: bin/support ${{ github.repository_owner }}_${{ github.job }}_
