@@ -15,6 +15,7 @@ import com.google.bos.udmi.service.messaging.impl.MessageBase.Bundle;
 import com.google.udmi.util.JsonUtil;
 import java.io.File;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
@@ -42,7 +43,7 @@ public class TraceMessagePipeTest {
   private static final String VALUE_ONE = "value1";
   private static final String VALUE_TWO = "value2";
   private static final Date FIRST_PUBLISHED = new Date(1681554607000L);
-  private final List<Bundle> consumed = new ArrayList<>();
+  private final List<Bundle> consumed = Collections.synchronizedList(new ArrayList<>());
 
   @SuppressWarnings("unchecked")
   private Map<String, String> extractMessage(Bundle bundle) {
