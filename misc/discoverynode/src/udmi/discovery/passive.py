@@ -182,15 +182,14 @@ class PassiveNetworkDiscovery(discovery.DiscoveryController):
                 and ip is not None
                 and ip not in self.addresses_seen
             ):
-              if ipaddress.ip_address(ip).is_private:
-                self.addresses_seen.add(ip)
-                self.device_records.add(
-                    PassiveScanRecord(
-                        addr=ip,
-                        hostname=self.get_host(ip),
-                        mac=getattr(item[scapy.layers.inet.Ether], x),
-                    )
-                )
+              self.addresses_seen.add(ip)
+              self.device_records.add(
+                  PassiveScanRecord(
+                      addr=ip,
+                      hostname=self.get_host(ip),
+                      mac=getattr(item[scapy.layers.inet.Ether], x),
+                  )
+              )
       except queue.Empty:
         if self.cancel_threads.is_set():
           return

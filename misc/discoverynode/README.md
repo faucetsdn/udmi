@@ -168,4 +168,6 @@ TODO
 - Unit tests - `~/venv/bin/python3 -m pytest tests/`
 - Integration tests - TODO
 
-##
+## Building binary
+
+Use `bin/build_binary`
