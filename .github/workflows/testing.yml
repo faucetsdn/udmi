@@ -352,3 +352,51 @@ jobs:
       - name: Itemized validation
         if: ${{ !cancelled() }}
         run: bin/test_itemcheck
+
+  discovery:
+    name: Discovery Tests
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          fetch-tags: true
+      - uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+      - name: Setup prerequisites
+        run: |
+          bin/setup_base
+          bin/clone_model
+          ln -s sites/udmi_site_model/ site_model
+          (cd site_model; git log -n 1)
+          docker network create udminet --subnet 192.168.99.0/24
+      - name: Build UDMIS container
+        run: |
+          udmis/bin/build check
+          bin/container udmis build --no-check latest
+          echo Built local UDMIS
+      - name: Start UDMIS container
+        run: |
+          docker run -d --net udminet --name udmis -p 8883:8883 \
+            -v $PWD/site_model:/root/site_model \
+            -v $PWD/var/tmp:/tmp \
+            -v $PWD/var/etcd:/root/udmi/var/etcd \
+            -v $PWD/var/mosquitto:/etc/mosquitto \
+            udmis udmi/bin/start_local block site_model/cloud_iot_config.json
+          for count in `seq 0 30`; do
+            echo Waiting for UDMIS startup $((30 - count))
+            [[ ! -f var/tmp/pod_ready.txt ]] || break
+            (docker ps | fgrep -q udmis) || break
+            sleep 1
+          done
+          ls -l var/tmp/pod_ready.txt 2>&1
+      - name: Run Tests
+        # This runs as sudo because docker containers in Github CI run as root.
+        # So, when the UDMIS container runs `keygen`, the CSR and SRL files are
+        # owned by root, and cannot be ovewritten by system calls to keygen,
+        # unless it too is root, or the behaviour is changed, or the permisions
+        # are fixed. 
+        run: sudo misc/discoverynode/testing/e2e/test_local site_model
