@@ -88,8 +88,7 @@ shift 3
 
 cat $TMP_CONFIG | jq -r  "$substitutions" | sponge $TMP_CONFIG
 
-for option in "$@"
-do
+for option in "$@"; do
   cat $TMP_CONFIG | jq -r ".${option/=/|=\"}\"" | sponge $TMP_CONFIG
 done
 
