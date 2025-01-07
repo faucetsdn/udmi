@@ -1,0 +1,15 @@
+#!/bin/bash -e
+#
+# This doesn't actually run the local stuff, it's just used post-execution to validate results.
+#
+
+UDMI_ROOT=$(dirname $0)/..
+cd $UDMI_ROOT
+
+source etc/shell_common.sh
+
+deletes=$(find out/registries/ -name \*update_model.json | xargs jq .cloud.operation | fgrep DELETE | wc -l)
+[[ $deletes == 2 ]] || fail Expected 2 delete operations
+
+echo Done with successful runlocal validation.
+
