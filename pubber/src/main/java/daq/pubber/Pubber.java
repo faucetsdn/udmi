@@ -101,7 +101,6 @@ public class Pubber extends PubberManager implements PubberUdmiPublisher {
   private SchemaVersion targetSchema;
   private int deviceUpdateCount = -1;
   private PubberDeviceManager deviceManager;
-  private boolean isConnected;
   private boolean isGatewayDevice;
 
   /**
@@ -426,18 +425,13 @@ public class Pubber extends PubberManager implements PubberUdmiPublisher {
 
   private boolean attemptConnection() {
     try {
-      isConnected = false;
       deviceManager.stop();
       super.stop();
-      if (deviceTarget == null || !deviceTarget.isActive()) {
-        warn("Mqtt publisher not active");
-      }
       disconnectMqtt();
       initializeMqtt();
       registerMessageHandlers();
       connect();
       configLatchWait();
-      isConnected = true;
       deviceManager.activate();
       return true;
     } catch (Exception e) {
@@ -459,7 +453,6 @@ public class Pubber extends PubberManager implements PubberUdmiPublisher {
     if (isConnected()) {
       captureExceptions("Publishing shutdown state", this::publishSynchronousState);
     }
-    isConnected = false;
     ifNotNullThen(deviceManager, dm -> captureExceptions("Device manager shutdown", dm::shutdown));
     captureExceptions("Pubber sender shutdown", super::shutdown);
     captureExceptions("Disconnecting mqtt", this::disconnectMqtt);
@@ -690,7 +683,7 @@ public class Pubber extends PubberManager implements PubberUdmiPublisher {
 
   @Override
   public boolean isConnected() {
-    return isConnected;
+    return deviceTarget != null && deviceTarget.isActive();
   }
 
   @Override

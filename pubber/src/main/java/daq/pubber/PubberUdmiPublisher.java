@@ -50,7 +50,6 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.locks.Lock;
-import java.util.concurrent.locks.ReentrantLock;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import org.apache.http.ConnectionClosedException;
@@ -125,7 +124,6 @@ public interface PubberUdmiPublisher extends UdmiPublisher {
   Duration SMOKE_CHECK_TIME = Duration.ofMinutes(5);
   String RAW_EVENT_TOPIC = "events";
   String SYSTEM_EVENT_TOPIC = "events/system";
-  ReentrantLock reconnectLock = new ReentrantLock();
 
   State getDeviceState();
 
@@ -246,9 +244,9 @@ public interface PubberUdmiPublisher extends UdmiPublisher {
    */
   default void disconnectMqtt() {
     if (getDeviceTarget() != null) {
-      captureExceptions("closing mqtt publisher", () -> getDeviceTarget().close());
-      captureExceptions("shutting down mqtt publisher executor",
+      captureExceptions("Shutting down MQTT publisher executor",
           () -> getDeviceTarget().shutdown());
+      captureExceptions("Closing MQTT publisher", () -> getDeviceTarget().close());
       setDeviceTarget(null);
     }
   }
@@ -809,16 +807,12 @@ public interface PubberUdmiPublisher extends UdmiPublisher {
     }
   }
 
-  default boolean publisherActive() {
-    return getDeviceTarget() != null && getDeviceTarget().isActive();
-  }
-
   /**
    * Publishes the current device state as a message to the publisher if the publisher is active. If
    * the publisher is not active, it marks the state as dirty and returns without publishing.
    */
   default void publishStateMessage() {
-    if (!publisherActive()) {
+    if (!isConnected()) {
       markStateDirty(-1);
       return;
     }
@@ -902,8 +896,8 @@ public interface PubberUdmiPublisher extends UdmiPublisher {
    * configured.
    */
   default void publishDeviceMessage(String targetId, Object message, Runnable callback) {
-    if (getDeviceTarget() == null) {
-      error("publisher not active");
+    if (!isConnected()) {
+      error(format("Publisher not active (%s)", targetId));
       return;
     }
     String topicSuffix = MESSAGE_TOPIC_SUFFIX_MAP.get(message.getClass());
@@ -1015,18 +1009,11 @@ public interface PubberUdmiPublisher extends UdmiPublisher {
    * @param toReport the exception to be handled;
    */
   default void publisherException(Exception toReport) {
-    if (toReport instanceof PublisherException report) {
-      publisherHandler(report.getType(), report.getPhase(), report.getCause(),
-              report.getDeviceId());
+    if (toReport instanceof PublisherException r) {
+      publisherHandler(r.getType(), r.getPhase(), r.getCause(), r.getDeviceId());
     } else if (toReport instanceof ConnectionClosedException) {
-      if (reconnectLock.tryLock()) {
-        try {
-          error("Connection closed, attempting reconnect...");
-          reconnect();
-        } finally {
-          reconnectLock.unlock();
-        }
-      }
+      warn("Connection closed, attempting reconnect...");
+      reconnect();
     } else {
       error("Unknown exception type " + toReport.getClass(), toReport);
     }

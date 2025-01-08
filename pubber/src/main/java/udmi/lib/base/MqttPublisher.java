@@ -41,6 +41,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.locks.ReentrantLock;
 import java.util.function.Consumer;
 import javax.net.SocketFactory;
 import javax.net.ssl.SSLSocketFactory;
@@ -100,6 +101,7 @@ public class MqttPublisher implements Publisher {
 
   private final Map<String, MqttClient> mqttClients = new ConcurrentHashMap<>();
   private final Map<String, Instant> reauthTimes = new ConcurrentHashMap<>();
+  ReentrantLock reconnectLock = new ReentrantLock();
 
   private final ExecutorService publisherExecutor =
       Executors.newFixedThreadPool(PUBLISH_THREAD_COUNT);
@@ -215,6 +217,9 @@ public class MqttPublisher implements Publisher {
         callback.run();
       }
     } catch (Exception e) {
+      if (!isActive()) {
+        return;
+      }
       errorCounter.incrementAndGet();
       warn(format("Publish %s failed for %s: %s", topicSuffix, deviceId, e));
       if (getGatewayId() == null) {
@@ -229,11 +234,17 @@ public class MqttPublisher implements Publisher {
     }
   }
 
-  private void reconnect() {
-    close();
-    shutdown();
-    // Force reconnect to address potential bad states
-    onError.accept(new ConnectionClosedException());
+  private synchronized void reconnect() {
+    if (isActive()) {
+      if (reconnectLock.tryLock()) {
+        try {
+          // Force reconnect to address potential bad states
+          onError.accept(new ConnectionClosedException());
+        } finally {
+          reconnectLock.unlock();
+        }
+      }
+    }
   }
 
   private String getMessageTopic(String deviceId, String topic) {
@@ -269,7 +280,7 @@ public class MqttPublisher implements Publisher {
       if (removed != null) {
         try {
           if (removed.isConnected()) {
-            removed.disconnect();
+            removed.disconnectForcibly();
           }
           removed.close();
         } catch (Exception e) {
@@ -299,7 +310,7 @@ public class MqttPublisher implements Publisher {
   @Override
   public void shutdown() {
     if (isActive()) {
-      publisherExecutor.shutdown();
+      publisherExecutor.shutdownNow();
     }
   }
 
@@ -533,7 +544,7 @@ public class MqttPublisher implements Publisher {
     return topic.split("/")[splitIndex];
   }
 
-  public void connect(String targetId, boolean clean) {
+  public synchronized void connect(String targetId, boolean clean) {
     ifTrueThen(clean, () -> closeMqttClient(targetId));
     getConnectedClient(targetId);
   }
@@ -570,8 +581,10 @@ public class MqttPublisher implements Publisher {
     return true;
   }
 
-  private MqttClient getActiveClient(String targetId) {
-    checkAuthentication(targetId);
+  private synchronized MqttClient getActiveClient(String targetId) {
+    if (!checkAuthentication(targetId)) {
+      return null;
+    }
     MqttClient client = getConnectedClient(targetId);
     if (client.isConnected()) {
       return client;
@@ -587,21 +600,16 @@ public class MqttPublisher implements Publisher {
     }
   }
 
-  private void checkAuthentication(String targetId) {
+  private boolean checkAuthentication(String targetId) {
     String authId = ofNullable(getGatewayId()).orElse(targetId);
     Instant reAuthTime = reauthTimes.get(authId);
     if (reAuthTime == null || Instant.now().isBefore(reAuthTime)) {
-      return;
+      return true;
     }
     warn("Authentication retry time reached for " + authId);
     reauthTimes.remove(authId);
-    synchronized (mqttClients) {
-      try {
-        reconnect();
-      } catch (Exception e) {
-        throw new RuntimeException("While trying to reconnect mqtt client", e);
-      }
-    }
+    reconnect();
+    return false;
   }
 
   private MqttClient getConnectedClient(String deviceId) {
@@ -719,9 +727,11 @@ public class MqttPublisher implements Publisher {
 
     @Override
     public void connectionLost(Throwable cause) {
-      boolean connected = cleanClients(deviceId).isConnected();
-      warn(format("MQTT Connection Lost: %s %s", connected, cause));
-      reconnect();
+      if (isActive()) {
+        boolean connected = cleanClients(deviceId).isConnected();
+        warn(format("MQTT Connection Lost: %s %s", connected, cause));
+        reconnect();
+      }
     }
 
     @Override
@@ -729,13 +739,11 @@ public class MqttPublisher implements Publisher {
     }
 
     @Override
-    public void messageArrived(String topic, MqttMessage message) {
-      synchronized (MqttPublisher.this) {
-        try {
-          messageArrivedCore(topic, message);
-        } catch (Exception e) {
-          error("While processing message", deviceId, null, "handle", e);
-        }
+    public synchronized void messageArrived(String topic, MqttMessage message) {
+      try {
+        messageArrivedCore(topic, message);
+      } catch (Exception e) {
+        error("While processing message", deviceId, null, "handle", e);
       }
     }
 
