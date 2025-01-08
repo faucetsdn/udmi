@@ -101,7 +101,7 @@ public class CommandLineProcessor {
     ifNotNullThen(message, m -> System.err.println(m));
     ifNotNullThen(this.usageForms, () -> {
       System.err.println("Usage forms:");
-      this.usageForms.forEach(form -> System.err.printf("\t%s%n", form));
+      this.usageForms.forEach(form -> System.err.printf("    %s%n", form));
     });
     System.err.println("Options supported:");
     optionMap.forEach((option, method) -> System.err.printf("  %s %12s  %s%n",
