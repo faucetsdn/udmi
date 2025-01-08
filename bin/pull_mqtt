@@ -31,24 +31,23 @@ sudo mosquitto_sub $SERVER_OPTS -R -F "%j" -t $topic_filter |
         json=$(jq . <<< "$payload" 2> /dev/null) || json=$payload
 
         readarray -d '/' -t array <<< "${topic}/"
-        registryId=${array[2]:-}
+
+        registryId=${array[2]:-}  # Use :- to substute default empty to prevent script termination-on-undefined
         deviceId=${array[4]:-}
         subType=${array[5]:-}
         subFolder=${array[6]:-}
 
-        # Trim whitespace
-        subFolder=$(echo $subFolder | xargs)
+
+        subFolder=$(echo $subFolder | xargs)  # Trim whitespace
         [[ -n $subFolder ]] || subFolder=update
 
         subType=$(echo $subType | xargs)
         [[ -n $subType ]] || subType=events
+        [[ $subType != "null" ]] || subType=events
+
 
         if [[ $deviceId == "" ]]; then
             deviceId=empty
-        fi
-
-        if [[ $subType == null ]]; then
-            subType=events
         fi
 
         timepath=$(echo ${timestamp%:*} | tr T: //) # Bucket messages by minute
