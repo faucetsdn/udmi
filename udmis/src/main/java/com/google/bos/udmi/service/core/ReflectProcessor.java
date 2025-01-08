@@ -152,6 +152,7 @@ public class ReflectProcessor extends ProcessorBase {
   private Object extractModel(CloudModel request) {
     String metadata = catchToNull(() -> request.metadata.get(MetadataMapKeys.UDMI_METADATA));
     if (metadata == null) {
+      // Cover the cases for DELETE and BIND operations where there is no actual model.
       return asModelUpdate(request);
     } else if (request.resource_type == REGISTRY) {
       return asSiteMetadataUpdate(metadata);
