@@ -16,6 +16,7 @@ import com.google.udmi.util.SiteModel;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.CompletableFuture;
 import udmi.lib.ProtocolFamily;
 import udmi.lib.client.GatewayManager;
 import udmi.lib.client.ProxyDeviceHost;
@@ -47,8 +48,9 @@ public class PubberGatewayManager extends PubberManager implements GatewayManage
 
   @Override
   public void activate() {
-    ifNotNullThen(proxyDevices, p -> p.values()
-        .parallelStream().forEach(ProxyDeviceHost::activate));
+    ifNotNullThen(proxyDevices, p -> CompletableFuture.runAsync(() -> p.values()
+            .parallelStream()
+            .forEach(ProxyDeviceHost::activate)));
   }
 
   @Override

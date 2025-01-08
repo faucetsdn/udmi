@@ -43,11 +43,9 @@ import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.function.Consumer;
 import java.util.function.Function;
-import org.apache.http.ConnectionClosedException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import udmi.lib.base.MqttDevice;
-import udmi.lib.base.MqttPublisher.PublisherException;
 import udmi.lib.client.DeviceManager;
 import udmi.lib.client.SystemManager;
 import udmi.lib.intf.FamilyProvider;
@@ -103,7 +101,6 @@ public class Pubber extends PubberManager implements PubberUdmiPublisher {
   private SchemaVersion targetSchema;
   private int deviceUpdateCount = -1;
   private PubberDeviceManager deviceManager;
-  private boolean isConnected;
   private boolean isGatewayDevice;
 
   /**
@@ -393,7 +390,7 @@ public class Pubber extends PubberManager implements PubberUdmiPublisher {
   }
 
   @Override
-  public void periodicUpdate() {
+  public synchronized void periodicUpdate() {
     try {
       deviceUpdateCount++;
       checkSmokyFailure();
@@ -403,6 +400,7 @@ public class Pubber extends PubberManager implements PubberUdmiPublisher {
       flushDirtyState();
     } catch (Exception e) {
       error("Fatal error during execution", e);
+      resetConnection(getWorkingEndpoint());
     }
   }
 
@@ -427,18 +425,13 @@ public class Pubber extends PubberManager implements PubberUdmiPublisher {
 
   private boolean attemptConnection() {
     try {
-      isConnected = false;
       deviceManager.stop();
       super.stop();
-      if (deviceTarget == null || !deviceTarget.isActive()) {
-        error("Mqtt publisher not active");
-        disconnectMqtt();
-        initializeMqtt();
-      }
+      disconnectMqtt();
+      initializeMqtt();
       registerMessageHandlers();
       connect();
       configLatchWait();
-      isConnected = true;
       deviceManager.activate();
       return true;
     } catch (Exception e) {
@@ -515,22 +508,14 @@ public class Pubber extends PubberManager implements PubberUdmiPublisher {
   }
 
   @Override
-  public void publisherException(Exception toReport) {
-    if (toReport instanceof PublisherException report) {
-      publisherHandler(report.getType(), report.getPhase(), report.getCause(),
-          report.getDeviceId());
-    } else if (toReport instanceof ConnectionClosedException) {
-      error("Connection closed, attempting reconnect...");
-      while (retriesRemaining.getAndDecrement() > 0) {
-        if (attemptConnection()) {
-          return;
-        }
+  public synchronized void reconnect() {
+    while (retriesRemaining.getAndDecrement() > 0) {
+      if (attemptConnection()) {
+        return;
       }
-      error("Connection retry failed, giving up.");
-      deviceManager.systemLifecycle(SystemMode.TERMINATE);
-    } else {
-      error("Unknown exception type " + toReport.getClass(), toReport);
     }
+    error("Connection retry failed, giving up.");
+    deviceManager.systemLifecycle(SystemMode.TERMINATE);
   }
 
   @Override
@@ -541,12 +526,10 @@ public class Pubber extends PubberManager implements PubberUdmiPublisher {
   }
 
   @Override
-  public void resetConnection(String targetEndpoint) {
+  public synchronized void resetConnection(String targetEndpoint) {
     try {
       config.endpoint = fromJsonString(targetEndpoint,
           EndpointConfiguration.class);
-      disconnectMqtt();
-      initializeMqtt();
       retriesRemaining.set(CONNECT_RETRIES);
       startConnection(connectionDone);
     } catch (Exception e) {
@@ -700,7 +683,7 @@ public class Pubber extends PubberManager implements PubberUdmiPublisher {
 
   @Override
   public boolean isConnected() {
-    return isConnected;
+    return deviceTarget != null && deviceTarget.isActive();
   }
 
   @Override

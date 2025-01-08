@@ -78,6 +78,7 @@ public interface DiscoveryManager extends SubBlockManager {
     int interval = getScanInterval(family);
     if (rawGeneration == null && interval == 0) {
       cancelDiscoveryScan(family, null);
+      removeDiscoveryScan(family);
       return;
     }
 
