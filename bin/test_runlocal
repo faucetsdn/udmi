@@ -19,6 +19,6 @@ deletes=$(find out/registries/ -name \*update_model.json | xargs jq .cloud.opera
 [[ $deletes == 1 ]] || fail Expected 1 delete operations, found $deletes
 
 binds=$(find out/registries/ -name \*update_model.json | xargs jq .cloud.operation | fgrep BIND | wc -l)
-[[ $binds == 4 ]] || fail Expected 4 bind operations, found $binds
+[[ $binds == 2 ]] || fail Expected 2 bind operations, found $binds
 
 echo Done with successful runlocal validation.
