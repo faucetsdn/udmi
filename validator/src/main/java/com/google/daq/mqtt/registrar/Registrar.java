@@ -558,19 +558,32 @@ public class Registrar {
       return;
     }
     Set<String> explicitDevices = getExplicitDevices();
-    if (explicitDevices != null) {
-      executeDelete(explicitDevices, "explicit");
-      return;
-    }
     Set<String> cloudDevices = cloudModels.keySet();
-    if (deleteDevices) {
-      SetView<String> devices = Sets.intersection(cloudDevices, localDevices.keySet());
-      executeDelete(devices, "registered");
+
+    final SetView<String> toDelete;
+    final String reason;
+    boolean handleExplicitly = explicitDevices != null;
+
+    if (handleExplicitly) {
+      toDelete = intersection(cloudDevices, explicitDevices);
+      reason = "explicit";
+    } else if (deleteDevices) {
+      toDelete = intersection(cloudDevices, localDevices.keySet());
+      reason = "registered";
+    } else if (expungeDevices) {
+      toDelete = difference(cloudDevices, localDevices.keySet());
+      reason = "extra";
+    } else {
+      throw new IllegalStateException("Neither delete nor expunge indicated");
     }
+
+    executeDelete(toDelete, reason);
+
     if (expungeDevices) {
-      SetView<String> extras = difference(cloudDevices, localDevices.keySet());
-      executeDelete(extras, "unknown");
-      reapExtraDevices(ImmutableSet.of());
+      Set<String> existingExtras = getExistingExtras();
+      Set<String> toExpunge = ofNullable(explicitDevices).orElse(existingExtras);
+      Set<String> toReap = intersection(existingExtras, toExpunge);
+      reapExtraDevices(toReap);
     }
   }
 
@@ -611,14 +624,21 @@ public class Registrar {
   }
 
   private void synchronizedDelete(Set<String> devices) throws InterruptedException {
-    AtomicInteger count = new AtomicInteger();
-    devices.forEach(id -> parallelExecute(() -> {
-      int incremented = count.incrementAndGet();
-      System.err.printf("Deleting device %s (%d/%d)%n", id, incremented, devices.size());
-      deleteDevice(id);
-    }));
+    AtomicInteger accumlator = new AtomicInteger();
+    int totalCount = devices.size();
+    devices.forEach(id -> parallelExecute(() -> deleteSingleDevice(totalCount, accumlator, id)));
     System.err.println("Waiting for device deletion...");
-    dynamicTerminate(devices.size());
+    dynamicTerminate(totalCount);
+  }
+
+  private void deleteSingleDevice(int totalCount, AtomicInteger count, String id) {
+    int incremented = count.incrementAndGet();
+    System.err.printf("Deleting device %s (%d/%d)%n", id, incremented, totalCount);
+    try {
+      deleteDevice(id);
+    } catch (Exception e) {
+      System.err.println("Exception caught during execution: " + friendlyStackTrace(e));
+    }
   }
 
   private void deleteDevice(String deviceId) {
@@ -797,7 +817,7 @@ public class Registrar {
       dynamicTerminate(extraDevices.size());
       System.err.printf("There were %d/%d already blocked devices.%n", alreadyBlocked.get(),
           extraDevices.size());
-      reapExtraDevices(extras.keySet());
+      reapExtraDevices(extraDevices);
       return extras;
     } catch (Exception e) {
       throw new RuntimeException(format("Processing %d extra devices", extraDevices.size()), e);
@@ -827,20 +847,26 @@ public class Registrar {
     }
   }
 
-  private void reapExtraDevices(Set<String> current) {
-    File extrasDir = new File(siteDir, SiteModel.EXTRAS_DIR);
-    String[] existing = ofNullable(extrasDir.list()).orElse(new String[0]);
-    Set<String> previous = Arrays.stream(existing).collect(Collectors.toSet());
-    difference(previous, current).forEach(expired -> {
-      File file = new File(extrasDir, expired);
+  private void reapExtraDevices(Set<String> toReap) {
+    toReap.forEach(extraDeviceId -> {
+      File file = new File(getExtrasDir(), extraDeviceId);
       try {
         FileUtils.deleteDirectory(file);
-        System.err.println("Deleted extraneous extra device directory " + expired);
+        System.err.println("Deleted extraneous extra device directory " + extraDeviceId);
       } catch (Exception e) {
         throw new RuntimeException("Error deleting extraneous directory " + file.getAbsolutePath(),
             e);
       }
     });
+  }
+
+  private Set<String> getExistingExtras() {
+    String[] existing = ofNullable(getExtrasDir().list()).orElse(new String[0]);
+    return Arrays.stream(existing).collect(Collectors.toSet());
+  }
+
+  private File getExtrasDir() {
+    return new File(siteDir, SiteModel.EXTRAS_DIR);
   }
 
   private void writeExtraDevice(String extraName, CloudModel augmentedModel) {
