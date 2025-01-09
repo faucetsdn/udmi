@@ -252,8 +252,10 @@ public class ReflectProcessor extends ProcessorBase {
   }
 
   private CloudModel queryCloudRegistry(Envelope attributes) {
-    return iotAccess.listDevices(attributes.deviceRegistryId,
+    CloudModel cloudModel = iotAccess.listDevices(attributes.deviceRegistryId,
         progress -> reflectUdmiLog(attributes, format("Fetched %d devices...", progress)));
+    cloudModel.operation = READ;
+    return cloudModel;
   }
 
   private CloudModel queryDeviceState(Envelope attributes) {
