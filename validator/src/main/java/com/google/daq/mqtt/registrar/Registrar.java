@@ -11,6 +11,7 @@ import static com.google.udmi.util.Common.SEC_TO_MS;
 import static com.google.udmi.util.Common.SITE_METADATA_KEY;
 import static com.google.udmi.util.Common.UDMI_VERSION_KEY;
 import static com.google.udmi.util.GeneralUtils.CSV_JOINER;
+import static com.google.udmi.util.GeneralUtils.catchToNull;
 import static com.google.udmi.util.GeneralUtils.friendlyStackTrace;
 import static com.google.udmi.util.GeneralUtils.ifNotNullGet;
 import static com.google.udmi.util.GeneralUtils.ifNotNullThen;
@@ -44,7 +45,6 @@ import com.github.fge.jsonschema.main.JsonSchemaFactory;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Sets;
 import com.google.common.collect.Sets.SetView;
 import com.google.daq.mqtt.util.CloudDeviceSettings;
 import com.google.daq.mqtt.util.CloudIotManager;
@@ -599,11 +599,13 @@ public class Registrar {
 
       final Instant start = Instant.now();
 
+      System.err.printf("Deleting %d gateways and %d devices%n", gateways.size(), others.size());
+
       // Delete gateways first so that they aren't holding the other devices hostage.
       synchronizedDelete(gateways);
       synchronizedDelete(others);
 
-      // There is a hidden race-condition in the Clearblade IoT API that will report a device
+      // There is a hidden race-condition in the ClearBlade IoT API that will report a device
       // as deleted (not listed in the registry), but still complain with an "already exists"
       // error if it's attempted to be created. Just as a hack, add a sleep in here to make
       // sure the backend is cleared out.
@@ -624,10 +626,10 @@ public class Registrar {
   }
 
   private void synchronizedDelete(Set<String> devices) throws InterruptedException {
-    AtomicInteger accumlator = new AtomicInteger();
+    AtomicInteger accumulator = new AtomicInteger();
     int totalCount = devices.size();
-    devices.forEach(id -> parallelExecute(() -> deleteSingleDevice(totalCount, accumlator, id)));
-    System.err.println("Waiting for device deletion...");
+    devices.forEach(id -> parallelExecute(() -> deleteSingleDevice(totalCount, accumulator, id)));
+    System.err.println("Waiting for device deletion completion...");
     dynamicTerminate(totalCount);
   }
 
@@ -643,7 +645,9 @@ public class Registrar {
 
   private void deleteDevice(String deviceId) {
     try {
-      cloudIotManager.deleteDevice(deviceId);
+      List<String> unbindIds = catchToNull(
+          () -> localDevices.get(deviceId).getMetadata().gateway.proxy_ids);
+      cloudIotManager.deleteDevice(deviceId, unbindIds);
     } catch (Exception e) {
       throw new RuntimeException("While deleting device " + deviceId, e);
     }
@@ -771,7 +775,7 @@ public class Registrar {
     CloudDeviceSettings localDeviceSettings = localDevice.getSettings();
     if (preDeleteDevice(localName)) {
       System.err.println("Deleting to incite recreation " + localName);
-      cloudIotManager.deleteDevice(localName);
+      cloudIotManager.deleteDevice(localName, null);
     }
     return cloudIotManager.registerDevice(localName, localDeviceSettings);
   }

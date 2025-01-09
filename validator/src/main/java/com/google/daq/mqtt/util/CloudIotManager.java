@@ -417,8 +417,8 @@ public class CloudIotManager {
     ifNotNullThen(iotProvider, IotProvider::shutdown);
   }
 
-  public void deleteDevice(String deviceId) {
-    getIotProvider().deleteDevice(deviceId);
+  public void deleteDevice(String deviceId, List<String> unbindIds) {
+    getIotProvider().deleteDevice(deviceId, unbindIds);
     deviceMap.remove(deviceId);
   }
 

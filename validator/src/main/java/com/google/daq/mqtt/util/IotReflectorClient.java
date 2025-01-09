@@ -38,6 +38,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 import org.jetbrains.annotations.Nullable;
 import udmi.schema.CloudModel;
 import udmi.schema.CloudModel.Operation;
@@ -138,10 +139,18 @@ public class IotReflectorClient implements IotProvider {
   }
 
   @Override
-  public void deleteDevice(String deviceId) {
+  public void deleteDevice(String deviceId, List<String> unbindIds) {
     CloudModel deleteModel = new CloudModel();
     deleteModel.operation = Operation.DELETE;
+    deleteModel.device_ids = ifNotNullGet(unbindIds, ids -> ids.stream().collect(Collectors
+        .toMap(id -> id, IotReflectorClient::unbindCloudModel)));
     cloudModelTransaction(deviceId, CLOUD_MODEL_TOPIC, deleteModel);
+  }
+
+  private static CloudModel unbindCloudModel(String id) {
+    CloudModel cloudModel = new CloudModel();
+    cloudModel.operation = Operation.UNBIND;
+    return cloudModel;
   }
 
   private CloudModel cloudModelTransaction(String deviceId, String topic, CloudModel model) {

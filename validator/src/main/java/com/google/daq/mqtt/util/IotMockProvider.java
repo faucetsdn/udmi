@@ -97,7 +97,7 @@ public class IotMockProvider implements IotProvider {
   }
 
   @Override
-  public void deleteDevice(String deviceId) {
+  public void deleteDevice(String deviceId, List<String> unbindIds) {
     checkArgument(cloudDevices.containsKey(deviceId), "missing device");
     cloudDevices.remove(deviceId);
     mockAction(DELETE_DEVICE_ACTION, deviceId, null, null);

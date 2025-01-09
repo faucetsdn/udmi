@@ -55,9 +55,10 @@ public interface IotProvider {
   /**
    * Delete the specified device from the iot registry.
    *
-   * @param deviceId device id to delete
+   * @param deviceId  device id to delete
+   * @param unbindIds optional list of devices to unbind if gateway
    */
-  void deleteDevice(String deviceId);
+  void deleteDevice(String deviceId, List<String> unbindIds);
 
   /**
    * Fetch a device for the given id.

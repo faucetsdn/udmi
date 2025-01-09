@@ -427,7 +427,7 @@ public class ClearBladeIotAccessProvider extends IotAccessBase {
     String deviceId = device.toBuilder().getId();
     info("Unbinding %s/%s from gateways: " + registryId, deviceId, CSV_JOINER.join(allGateways));
     allGateways.forEach(gatewayId -> unbindDevice(registryId, gatewayId, deviceId));
-    return unbindAndDeleteCore(registryId, device);
+    return unbindAndDeleteCore(registryId, device, null);
   }
 
   private String getDeviceName(String registryId, String deviceId) {
@@ -485,7 +485,7 @@ public class ClearBladeIotAccessProvider extends IotAccessBase {
       return switch (operation) {
         case CREATE -> createDevice(registryId, device);
         case UPDATE -> updateDevice(registryId, device);
-        case DELETE -> unbindAndDelete(registryId, device);
+        case DELETE -> unbindAndDelete(registryId, device, cloudModel);
         case MODIFY -> modifyDevice(registryId, device);
         case BIND -> bindDevicesToGateway(registryId, deviceId, cloudModel);
         case BLOCK -> blockDevice(registryId, device);
@@ -546,9 +546,10 @@ public class ClearBladeIotAccessProvider extends IotAccessBase {
     return StateNotificationConfig.newBuilder().setPubsubTopicName(topicName).build();
   }
 
-  private CloudModel unbindAndDelete(String registryId, Device device) {
+  private CloudModel unbindAndDelete(String registryId, Device device, CloudModel request) {
     try {
-      return unbindAndDeleteCore(registryId, device);
+      Set<String> unbindIds = ifNotNullGet(request.device_ids, Map::keySet);
+      return unbindAndDeleteCore(registryId, device, unbindIds);
     } catch (Exception e) {
       if (friendlyStackTrace(e).contains(BOUND_TO_GATEWAY_MARKER)) {
         debug("Device bound to gateway. Finding bindings to unbind...");
@@ -559,10 +560,10 @@ public class ClearBladeIotAccessProvider extends IotAccessBase {
     }
   }
 
-  private CloudModel unbindAndDeleteCore(String registryId, Device device) {
+  private CloudModel unbindAndDeleteCore(String registryId, Device device, Set<String> unbindIds) {
     String deviceId = requireNonNull(device.toBuilder().getId(), "unspecified device id");
     try {
-      unbindGatewayDevices(registryId, device);
+      ifNotNullThen(unbindIds, ids -> unbindGatewayDevices(registryId, device, ids));
       String location = getRegistryLocation(registryId);
       DeviceName deviceName = DeviceName.of(projectId, location, registryId, deviceId);
       DeleteDeviceRequest request =
@@ -590,15 +591,10 @@ public class ClearBladeIotAccessProvider extends IotAccessBase {
     }
   }
 
-  private void unbindGatewayDevices(String registryId, Device gatewayDevice) {
+  private void unbindGatewayDevices(String registryId, Device gatewayDevice, Set<String> unbindIds) {
     String gatewayId = gatewayDevice.toBuilder().getId();
-    CloudModel cloudModel = listRegistryDevices(registryId, gatewayId, null);
-    if (!cloudModel.device_ids.isEmpty()) {
-      debug(format("Unbinding from %s/%s: %s", registryId, gatewayId,
-          CSV_JOINER.join(cloudModel.device_ids.keySet())));
-      ifNotNullThen(cloudModel.device_ids, ids -> ids.keySet()
-          .forEach(id -> unbindDevice(registryId, gatewayId, id)));
-    }
+    info("TAP unbindGatewayDevices %d for gateway %s", unbindIds.size(), gatewayId);
+    unbindIds.forEach(id -> unbindDevice(registryId, gatewayId, id));
   }
 
   private CloudModel updateDevice(String registryId, Device device) {
@@ -607,7 +603,6 @@ public class ClearBladeIotAccessProvider extends IotAccessBase {
     return cloudModel;
   }
 
-  @NotNull
   private CloudModel updateDevice(String registryId, Device device, String updateFieldMask) {
     String deviceId = device.toBuilder().getId();
     String name = getDeviceName(registryId, deviceId);
