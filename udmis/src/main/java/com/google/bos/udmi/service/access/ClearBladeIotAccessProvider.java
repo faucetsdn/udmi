@@ -591,7 +591,8 @@ public class ClearBladeIotAccessProvider extends IotAccessBase {
     }
   }
 
-  private void unbindGatewayDevices(String registryId, Device gatewayDevice, Set<String> unbindIds) {
+  private void unbindGatewayDevices(String registryId, Device gatewayDevice,
+      Set<String> unbindIds) {
     String gatewayId = gatewayDevice.toBuilder().getId();
     unbindIds.forEach(id -> unbindDevice(registryId, gatewayId, id));
   }
