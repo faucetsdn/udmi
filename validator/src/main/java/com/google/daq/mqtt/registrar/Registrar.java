@@ -821,7 +821,7 @@ public class Registrar {
       dynamicTerminate(extraDevices.size());
       System.err.printf("There were %d/%d already blocked devices.%n", alreadyBlocked.get(),
           extraDevices.size());
-      reapExtraDevices(extraDevices);
+      reapExtraDevices(difference(getExistingExtras(), extraDevices));
       return extras;
     } catch (Exception e) {
       throw new RuntimeException(format("Processing %d extra devices", extraDevices.size()), e);
