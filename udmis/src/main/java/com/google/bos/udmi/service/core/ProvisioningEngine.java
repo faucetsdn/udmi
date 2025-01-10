@@ -64,7 +64,8 @@ public class ProvisioningEngine extends ProcessorBase {
     cloudModel.metadata.put(UDMI_UPDATED, isoConvert());
     cloudModel.metadata.put(UDMI_GENERATION, isoConvert(discoveryEvent.generation));
     catchToElse(
-        (Supplier<CloudModel>) () -> iotAccess.modelDevice(registryId, expectedId, cloudModel, null),
+        (Supplier<CloudModel>) () -> iotAccess.modelDevice(registryId, expectedId, cloudModel,
+            null),
         (Consumer<Exception>) e -> error(
             "Error creating device (exists but not bound?): " + friendlyStackTrace(e)));
     bindDeviceToGateway(registryId, expectedId, gatewayId);

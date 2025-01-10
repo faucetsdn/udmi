@@ -414,20 +414,20 @@ public class ClearBladeIotAccessProvider extends IotAccessBase {
     return collect;
   }
 
-  private List<String> findGateways(String registryId, Device proxyDevice) {
+  private Set<String> findGateways(String registryId, Device proxyDevice) {
     CloudModel cloudModel = listDevices(registryId, null);
     return cloudModel.device_ids.entrySet().stream().filter(entry ->
-        entry.getValue().resource_type == GATEWAY).map(Entry::getKey).toList();
+        entry.getValue().resource_type == GATEWAY).map(Entry::getKey).collect(Collectors.toSet());
   }
 
   private CloudModel findUnbindAndDelete(String registryId, Device device,
       Consumer<Integer> progress) {
-    List<String> allGateways = findGateways(registryId, device);
+    Set<String> allGateways = findGateways(registryId, device);
     if (allGateways.isEmpty()) {
       throw new RuntimeException("Was expecting at least one bound gateway!");
     }
     ImmutableSet<String> deviceIds = ImmutableSet.of(device.toBuilder().getId());
-    unbindDevicesGateways(String registryId, allGateways, deviceIds);
+    unbindDevicesGateways(registryId, allGateways, deviceIds, progress);
     return unbindAndDeleteCore(registryId, device, null, progress);
   }
 
@@ -582,7 +582,8 @@ public class ClearBladeIotAccessProvider extends IotAccessBase {
     }
   }
 
-  private void unbindDevicesGateways(String registryId, Set<String> gatewayIds, Set<String> deviceIds,
+  private void unbindDevicesGateways(String registryId, Set<String> gatewayIds,
+      Set<String> deviceIds,
       Consumer<Integer> progress) {
     info("Unbinding in %s: gateways %s devices %s", registryId, gatewayIds, deviceIds);
     AtomicInteger unbindCount = new AtomicInteger(0);
