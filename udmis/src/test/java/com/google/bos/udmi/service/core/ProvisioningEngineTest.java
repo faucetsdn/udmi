@@ -123,7 +123,7 @@ public class ProvisioningEngineTest extends ProcessorTestBase {
     ArgumentCaptor<String> deviceCaptor = ArgumentCaptor.forClass(String.class);
     ArgumentCaptor<CloudModel> modelCaptor = ArgumentCaptor.forClass(CloudModel.class);
     verify(provider, times(2)).modelDevice(eq(TEST_REGISTRY), deviceCaptor.capture(),
-        modelCaptor.capture());
+        modelCaptor.capture(), null);
     List<String> devices = deviceCaptor.getAllValues();
     List<CloudModel> models = modelCaptor.getAllValues();
 
@@ -145,6 +145,6 @@ public class ProvisioningEngineTest extends ProcessorTestBase {
 
     terminateAndWait();
     verify(provider, times(1)).fetchDevice(eq(TEST_REGISTRY), eq(TEST_GATEWAY));
-    verify(provider, never()).modelDevice(eq(TEST_REGISTRY), any(), any());
+    verify(provider, never()).modelDevice(eq(TEST_REGISTRY), any(), any(), null);
   }
 }

@@ -322,7 +322,8 @@ public class ImplicitIotAccessProvider extends IotAccessBase {
   }
 
   @Override
-  public CloudModel modelDevice(String registryId, String deviceId, CloudModel cloudModel) {
+  public CloudModel modelDevice(String registryId, String deviceId, CloudModel cloudModel,
+      Consumer<Integer> progress) {
     Operation operation = cloudModel.operation;
     Resource_type type = ofNullable(cloudModel.resource_type).orElse(Resource_type.DEVICE);
     checkState(type == DEVICE || type == GATEWAY, "unexpected resource type " + type);

@@ -151,10 +151,11 @@ public class DynamicIotAccessProvider extends IotAccessBase {
   }
 
   @Override
-  public CloudModel modelDevice(String registryId, String deviceId, CloudModel cloudModel) {
+  public CloudModel modelDevice(String registryId, String deviceId, CloudModel cloudModel,
+      Consumer<Integer> progress) {
     debug("%s iot device %s/%s, %s %s", cloudModel.operation, registryId, deviceId,
         cloudModel.blocked, cloudModel.num_id);
-    return getProviderFor(registryId, deviceId).modelDevice(registryId, deviceId, cloudModel);
+    return getProviderFor(registryId, deviceId).modelDevice(registryId, deviceId, cloudModel, null);
   }
 
   @Override

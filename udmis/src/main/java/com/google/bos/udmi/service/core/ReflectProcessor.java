@@ -287,7 +287,8 @@ public class ReflectProcessor extends ProcessorBase {
     if (request.resource_type == REGISTRY) {
       return iotAccess.modelRegistry(attributes.deviceRegistryId, attributes.deviceId, request);
     } else {
-      return iotAccess.modelDevice(attributes.deviceRegistryId, attributes.deviceId, request);
+      return iotAccess.modelDevice(attributes.deviceRegistryId, attributes.deviceId, request,
+          progress -> reflectUdmiLog(attributes, format("Processed %d entries...", progress)));
     }
   }
 
