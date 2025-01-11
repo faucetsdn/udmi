@@ -11,7 +11,6 @@ import static com.google.udmi.util.Common.SEC_TO_MS;
 import static com.google.udmi.util.Common.SITE_METADATA_KEY;
 import static com.google.udmi.util.Common.UDMI_VERSION_KEY;
 import static com.google.udmi.util.GeneralUtils.CSV_JOINER;
-import static com.google.udmi.util.GeneralUtils.catchToNull;
 import static com.google.udmi.util.GeneralUtils.friendlyStackTrace;
 import static com.google.udmi.util.GeneralUtils.ifNotNullGet;
 import static com.google.udmi.util.GeneralUtils.ifNotNullThen;
@@ -646,9 +645,9 @@ public class Registrar {
 
   private void deleteDevice(String deviceId) {
     try {
-//      List<String> unbindIds = catchToNull(
-//          () -> localDevices.get(deviceId).getMetadata().gateway.proxy_ids);
-//      cloudIotManager.deleteDevice(deviceId, unbindIds);
+      //      List<String> unbindIds = catchToNull(
+      //          () -> localDevices.get(deviceId).getMetadata().gateway.proxy_ids);
+      //      cloudIotManager.deleteDevice(deviceId, unbindIds);
       cloudIotManager.deleteDevice(deviceId, null);
     } catch (DeviceGatewayBoundException boundException) {
       CloudModel cloudModel = boundException.getCloudModel();
