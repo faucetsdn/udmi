@@ -20,10 +20,10 @@ import static java.lang.String.format;
 import static java.util.Objects.requireNonNull;
 import static java.util.Optional.ofNullable;
 import static java.util.function.Function.identity;
-import static udmi.schema.CloudModel.Operation.BIND;
+import static java.util.stream.Collectors.toMap;
+import static udmi.schema.CloudModel.Operation.BOUND;
 import static udmi.schema.CloudModel.Operation.CREATE;
 import static udmi.schema.CloudModel.Operation.DELETE;
-import static udmi.schema.CloudModel.Operation.UNBIND;
 import static udmi.schema.CloudModel.Operation.UPDATE;
 import static udmi.schema.CloudModel.Resource_type.DEVICE;
 import static udmi.schema.CloudModel.Resource_type.GATEWAY;
@@ -129,7 +129,8 @@ public class ClearBladeIotAccessProvider extends IotAccessBase {
   private static final String UDMI_TARGET_TOPIC = "udmi_target"; // TODO: Make this not hardcoded.
   private static final String UDMI_STATE_TOPIC = "udmi_state"; // TODO: Make this not hardcoded.
   private static final String TOPIC_NAME_FORMAT = "projects/%s/topics/%s";
-  private static final CharSequence BOUND_TO_GATEWAY_MARKER = " it's associated ";
+  private static final CharSequence HAD_BOUND_DEVICES_MARKER = " it has associated devices.";
+  private static final CharSequence BOUND_TO_GATEWAY_MARKER = " it's associated with ";
   private static final int UNBIND_BATCH_SIZE = 10;
   private final String projectId;
   private final DeviceManagerInterface deviceManager;
@@ -387,11 +388,21 @@ public class ClearBladeIotAccessProvider extends IotAccessBase {
     return EventNotificationConfig.newBuilder().setPubsubTopicName(topicName).build();
   }
 
-  @NotNull
+  private HashMap<String, CloudModel> fetchBoundGateways(String deviceRegistryId, String deviceId,
+      Consumer<Integer> progress) {
+    GatewayListOptions gatewayListOptions = ifNotNullGet(deviceId, this::getBoundGatewaysOptions);
+    return fetchDevices(deviceRegistryId, progress, gatewayListOptions);
+  }
+
   private HashMap<String, CloudModel> fetchDevices(String deviceRegistryId, String gatewayId,
       Consumer<Integer> progress) {
+    GatewayListOptions gatewayListOptions = ifNotNullGet(gatewayId, this::getBoundDevicesOptions);
+    return fetchDevices(deviceRegistryId, progress, gatewayListOptions);
+  }
+
+  private HashMap<String, CloudModel> fetchDevices(String deviceRegistryId,
+      Consumer<Integer> progress, GatewayListOptions gatewayListOptions) {
     String location = getRegistryLocation(deviceRegistryId);
-    GatewayListOptions gatewayListOptions = ifNotNullGet(gatewayId, this::getGatewayListOptions);
     String registryFullName =
         RegistryName.of(projectId, location, deviceRegistryId).getRegistryFullName();
     String pageToken = null;
@@ -407,7 +418,7 @@ public class ClearBladeIotAccessProvider extends IotAccessBase {
       requireNonNull(response, "DeviceRegistriesList fetch failed");
       Map<String, CloudModel> responseMap =
           response.getDevicesList().stream().map(ClearBladeIotAccessProvider::convertPartial)
-              .collect(Collectors.toMap(Entry::getKey, Entry::getValue));
+              .collect(toMap(Entry::getKey, Entry::getValue));
       collect.putAll(responseMap);
       pageToken = response.getNextPageToken();
       queryCount++;
@@ -418,30 +429,35 @@ public class ClearBladeIotAccessProvider extends IotAccessBase {
     return collect;
   }
 
-  private Set<String> findGateways(String registryId, Device proxyDevice) {
-    CloudModel cloudModel = listDevices(registryId, null);
-    return cloudModel.device_ids.entrySet().stream().filter(entry ->
-        entry.getValue().resource_type == GATEWAY).map(Entry::getKey).collect(Collectors.toSet());
+  private CloudModel findBoundDevices(String registryId, Device device) {
+    CloudModel cloudModel = listRegistryDevices(registryId, device.toBuilder().getId(), null);
+    cloudModel.operation = BOUND;
+    cloudModel.resource_type = GATEWAY;
+    return cloudModel;
   }
 
   private CloudModel findBoundGateways(String registryId, Device device) {
-    Set<String> allGateways = findGateways(registryId, device);
-    if (allGateways.isEmpty()) {
+    String deviceId = requireNonNull(device.toBuilder().getId(), "unspecified device id");
+    Set<String> boundGateways = fetchBoundGateways(registryId, deviceId, null).keySet();
+    if (boundGateways.isEmpty()) {
       throw new RuntimeException("Was expecting at least one bound gateway!");
     }
-    String deviceId = requireNonNull(device.toBuilder().getId(), "unspecified device id");
-    ImmutableSet<String> deviceIds = ImmutableSet.of(device.toBuilder().getId());
     CloudModel cloudModel = new CloudModel();
     cloudModel.num_id = hashedDeviceId(registryId, deviceId);
-    // The combination of UNBIND with a set of BIND devices indicates the condition where a
-    // device DELETE attempt failed because it's bound to the indicated gateways.
-    cloudModel.operation = UNBIND;
-    cloudModel.device_ids = deviceIds.stream().collect(Collectors.toMap(identity(), id -> {
-      CloudModel gatewayModel = new CloudModel();
-      gatewayModel.operation = BIND;
-      return gatewayModel;
-    }));
+    cloudModel.operation = BOUND;
+    cloudModel.resource_type = DEVICE;
+    cloudModel.device_ids = boundGateways.stream().collect(toMap(identity(), this::getBoundModel));
     return cloudModel;
+  }
+
+  private CloudModel getBoundModel(String id) {
+    return new CloudModel();
+  }
+
+  private Set<String> findGatewaysForDevice(String registryId, Device proxyDevice) {
+    CloudModel cloudModel = findBoundGateways(registryId, proxyDevice);
+    return cloudModel.device_ids.entrySet().stream().filter(entry ->
+        entry.getValue().resource_type == GATEWAY).map(Entry::getKey).collect(Collectors.toSet());
   }
 
   private String getDeviceName(String registryId, String deviceId) {
@@ -449,10 +465,17 @@ public class ClearBladeIotAccessProvider extends IotAccessBase {
         .toString();
   }
 
-  private GatewayListOptions getGatewayListOptions(String gatewayId) {
+  private GatewayListOptions getBoundDevicesOptions(String gatewayId) {
     return GatewayListOptions.newBuilder()
         .setGatewayType(NON_GATEWAY)
         .setAssociationsGatewayId(requireNonNull(gatewayId, "gateway undefined"))
+        .build();
+  }
+
+  private GatewayListOptions getBoundGatewaysOptions(String deviceId) {
+    return GatewayListOptions.newBuilder()
+        .setGatewayType(GatewayType.GATEWAY)
+        .setAssociationsDeviceId(requireNonNull(deviceId, "device undefined"))
         .build();
   }
 
@@ -567,9 +590,13 @@ public class ClearBladeIotAccessProvider extends IotAccessBase {
       Set<String> unbindIds = ifNotNullGet(request.device_ids, Map::keySet);
       return unbindAndDeleteCore(registryId, device, unbindIds, progress);
     } catch (Exception e) {
-      if (friendlyStackTrace(e).contains(BOUND_TO_GATEWAY_MARKER)) {
+      String stackTrace = friendlyStackTrace(e);
+      if (stackTrace.contains(BOUND_TO_GATEWAY_MARKER)) {
         debug("Device bound to gateway. Finding bindings to unbind...");
         return findBoundGateways(registryId, device);
+      } else if (stackTrace.contains(HAD_BOUND_DEVICES_MARKER)) {
+        debug("Gateway has bound devices. Finding bindings to unbind...");
+        return findBoundDevices(registryId, device);
       } else {
         throw e;
       }

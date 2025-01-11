@@ -48,6 +48,7 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets.SetView;
 import com.google.daq.mqtt.util.CloudDeviceSettings;
 import com.google.daq.mqtt.util.CloudIotManager;
+import com.google.daq.mqtt.util.DeviceGatewayBoundException;
 import com.google.daq.mqtt.util.ExceptionMap;
 import com.google.daq.mqtt.util.ExceptionMap.ErrorTree;
 import com.google.daq.mqtt.util.PubSubPusher;
@@ -645,9 +646,23 @@ public class Registrar {
 
   private void deleteDevice(String deviceId) {
     try {
-      List<String> unbindIds = catchToNull(
-          () -> localDevices.get(deviceId).getMetadata().gateway.proxy_ids);
-      cloudIotManager.deleteDevice(deviceId, unbindIds);
+//      List<String> unbindIds = catchToNull(
+//          () -> localDevices.get(deviceId).getMetadata().gateway.proxy_ids);
+//      cloudIotManager.deleteDevice(deviceId, unbindIds);
+      cloudIotManager.deleteDevice(deviceId, null);
+    } catch (DeviceGatewayBoundException boundException) {
+      CloudModel cloudModel = boundException.getCloudModel();
+      if (cloudModel.resource_type == Resource_type.GATEWAY) {
+        Set<String> boundDevices = cloudModel.device_ids.keySet();
+        System.err.println("Retrying gateway delete with bound devices: " + boundDevices);
+        cloudIotManager.deleteDevice(deviceId, boundDevices);
+      } else if (cloudModel.resource_type == Resource_type.DEVICE) {
+        Set<String> boundGateways = cloudModel.device_ids.keySet();
+        System.err.println("Unbinding bound gateways: " + boundGateways);
+        cloudIotManager.deleteDevice(deviceId, null);
+      } else {
+        throw new RuntimeException("Unknown cloud model resource type", boundException);
+      }
     } catch (Exception e) {
       throw new RuntimeException("While deleting device " + deviceId, e);
     }

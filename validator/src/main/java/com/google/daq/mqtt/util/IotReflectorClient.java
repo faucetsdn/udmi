@@ -20,6 +20,8 @@ import static java.lang.String.format;
 import static java.util.Optional.ofNullable;
 import static udmi.schema.CloudModel.Operation.BIND;
 import static udmi.schema.CloudModel.Operation.BLOCK;
+import static udmi.schema.CloudModel.Operation.BOUND;
+import static udmi.schema.CloudModel.Operation.DELETE;
 import static udmi.schema.CloudModel.Operation.READ;
 
 import com.google.common.base.Preconditions;
@@ -33,6 +35,7 @@ import java.io.PrintWriter;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
@@ -139,7 +142,7 @@ public class IotReflectorClient implements IotProvider {
   }
 
   @Override
-  public void deleteDevice(String deviceId, List<String> unbindIds) {
+  public void deleteDevice(String deviceId, Set<String> unbindIds) {
     CloudModel deleteModel = new CloudModel();
     deleteModel.operation = Operation.DELETE;
     deleteModel.device_ids = ifNotNullGet(unbindIds, ids -> ids.stream().collect(Collectors
@@ -159,7 +162,11 @@ public class IotReflectorClient implements IotProvider {
     CloudModel cloudModel = convertTo(CloudModel.class, message);
     String cloudNumId = ifNotNullGet(cloudModel, result -> result.num_id);
     Operation cloudOperation = ifNotNullGet(cloudModel, result -> result.operation);
-    if (cloudModel == null || cloudNumId == null || cloudOperation != operation) {
+    // This happens with devices are bound to gateways, so explicitly capture the relevant info.
+    if (operation == DELETE && cloudOperation == BOUND) {
+      throw new DeviceGatewayBoundException(cloudModel);
+    }
+    if (cloudNumId == null || cloudOperation != operation) {
       throw new RuntimeException(
           format("Invalid return receipt: %s / %s", cloudOperation, cloudNumId));
     }

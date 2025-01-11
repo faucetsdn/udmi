@@ -277,6 +277,7 @@ public class CloudModel {
         PREVIEW("PREVIEW"),
         BIND("BIND"),
         UNBIND("UNBIND"),
+        BOUND("BOUND"),
         ALLOW("ALLOW"),
         BLOCK("BLOCK");
         private final java.lang.String value;

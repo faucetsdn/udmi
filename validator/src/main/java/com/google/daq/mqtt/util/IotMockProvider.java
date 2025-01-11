@@ -19,6 +19,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Objects;
+import java.util.Set;
 import java.util.stream.Collectors;
 import udmi.schema.CloudModel;
 import udmi.schema.Envelope.SubFolder;
@@ -97,7 +98,7 @@ public class IotMockProvider implements IotProvider {
   }
 
   @Override
-  public void deleteDevice(String deviceId, List<String> unbindIds) {
+  public void deleteDevice(String deviceId, Set<String> unbindIds) {
     checkArgument(cloudDevices.containsKey(deviceId), "missing device");
     cloudDevices.remove(deviceId);
     mockAction(DELETE_DEVICE_ACTION, deviceId, null, null);

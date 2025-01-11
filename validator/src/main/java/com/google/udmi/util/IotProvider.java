@@ -2,6 +2,7 @@ package com.google.udmi.util;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import udmi.schema.CloudModel;
 import udmi.schema.Credential;
 import udmi.schema.Envelope.SubFolder;
@@ -58,7 +59,7 @@ public interface IotProvider {
    * @param deviceId  device id to delete
    * @param unbindIds optional list of devices to unbind if gateway
    */
-  void deleteDevice(String deviceId, List<String> unbindIds);
+  void deleteDevice(String deviceId, Set<String> unbindIds);
 
   /**
    * Fetch a device for the given id.

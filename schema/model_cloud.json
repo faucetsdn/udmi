@@ -112,6 +112,7 @@
         "PREVIEW",
         "BIND",
         "UNBIND",
+        "BOUND",
         "ALLOW",
         "BLOCK"
       ]
