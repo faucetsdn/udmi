@@ -10,6 +10,7 @@ import static com.google.udmi.util.GeneralUtils.friendlyStackTrace;
 import static com.google.udmi.util.GeneralUtils.ifNotNullGet;
 import static com.google.udmi.util.GeneralUtils.ifNotNullThen;
 import static com.google.udmi.util.GeneralUtils.ifNotTrueThen;
+import static com.google.udmi.util.GeneralUtils.ifTrueThen;
 import static com.google.udmi.util.GeneralUtils.isTrue;
 import static com.google.udmi.util.GeneralUtils.writeString;
 import static com.google.udmi.util.JsonUtil.getDate;
@@ -18,8 +19,11 @@ import static com.google.udmi.util.MetadataMapKeys.UDMI_UPDATED;
 import static java.lang.String.format;
 import static java.util.Objects.requireNonNull;
 import static java.util.Optional.ofNullable;
+import static java.util.function.Function.identity;
+import static udmi.schema.CloudModel.Operation.BIND;
 import static udmi.schema.CloudModel.Operation.CREATE;
 import static udmi.schema.CloudModel.Operation.DELETE;
+import static udmi.schema.CloudModel.Operation.UNBIND;
 import static udmi.schema.CloudModel.Operation.UPDATE;
 import static udmi.schema.CloudModel.Resource_type.DEVICE;
 import static udmi.schema.CloudModel.Resource_type.GATEWAY;
@@ -420,15 +424,24 @@ public class ClearBladeIotAccessProvider extends IotAccessBase {
         entry.getValue().resource_type == GATEWAY).map(Entry::getKey).collect(Collectors.toSet());
   }
 
-  private CloudModel findUnbindAndDelete(String registryId, Device device,
-      Consumer<Integer> progress) {
+  private CloudModel findBoundGateways(String registryId, Device device) {
     Set<String> allGateways = findGateways(registryId, device);
     if (allGateways.isEmpty()) {
       throw new RuntimeException("Was expecting at least one bound gateway!");
     }
+    String deviceId = requireNonNull(device.toBuilder().getId(), "unspecified device id");
     ImmutableSet<String> deviceIds = ImmutableSet.of(device.toBuilder().getId());
-    unbindDevicesGateways(registryId, allGateways, deviceIds, progress);
-    return unbindAndDeleteCore(registryId, device, null, progress);
+    CloudModel cloudModel = new CloudModel();
+    cloudModel.num_id = hashedDeviceId(registryId, deviceId);
+    // The combination of UNBIND with a set of BIND devices indicates the condition where a
+    // device DELETE attempt failed because it's bound to the indicated gateways.
+    cloudModel.operation = UNBIND;
+    cloudModel.device_ids = deviceIds.stream().collect(Collectors.toMap(identity(), id -> {
+      CloudModel gatewayModel = new CloudModel();
+      gatewayModel.operation = BIND;
+      return gatewayModel;
+    }));
+    return cloudModel;
   }
 
   private String getDeviceName(String registryId, String deviceId) {
@@ -556,7 +569,7 @@ public class ClearBladeIotAccessProvider extends IotAccessBase {
     } catch (Exception e) {
       if (friendlyStackTrace(e).contains(BOUND_TO_GATEWAY_MARKER)) {
         debug("Device bound to gateway. Finding bindings to unbind...");
-        return findUnbindAndDelete(registryId, device, progress);
+        return findBoundGateways(registryId, device);
       } else {
         throw e;
       }
@@ -589,9 +602,8 @@ public class ClearBladeIotAccessProvider extends IotAccessBase {
     AtomicInteger unbindCount = new AtomicInteger(0);
     gatewayIds.forEach(gatewayId -> {
       deviceIds.forEach(deviceId -> {
-        if (unbindCount.incrementAndGet() % UNBIND_BATCH_SIZE == 0) {
-          ifNotNullThen(progress, p -> p.accept(unbindCount.get()));
-        }
+        ifTrueThen(unbindCount.incrementAndGet() % UNBIND_BATCH_SIZE == 0,
+            () -> ifNotNullThen(progress, p -> p.accept(unbindCount.get())));
         unbindDevice(registryId, gatewayId, deviceId);
       });
     });
