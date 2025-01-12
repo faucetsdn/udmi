@@ -132,7 +132,7 @@ public class ClearBladeIotAccessProvider extends IotAccessBase {
   private static final String TOPIC_NAME_FORMAT = "projects/%s/topics/%s";
   private static final CharSequence HAD_BOUND_DEVICES_MARKER = " it has associated devices.";
   private static final CharSequence BOUND_TO_GATEWAY_MARKER = " it's associated with ";
-  private static final int UNBIND_BATCH_SIZE = 10;
+  private static final int OP_PROGRESS_BATCH_SIZE = 10;
   private final String projectId;
   private final DeviceManagerInterface deviceManager;
 
@@ -243,17 +243,13 @@ public class ClearBladeIotAccessProvider extends IotAccessBase {
   }
 
   private CloudModel bindDevicesToGateway(String registryId, String gatewayId,
-      CloudModel cloudModel) {
-    CloudModel reply = new CloudModel();
-    reply.device_ids = new HashMap<>();
+      CloudModel cloudModel, Consumer<Integer> progress) {
     Set<String> deviceIds = cloudModel.device_ids.keySet();
+    boolean toBind = cloudModel.operation == BIND;
+    bindDevicesGateways(registryId, ImmutableSet.of(gatewayId), deviceIds, toBind, progress);
+    CloudModel reply = new CloudModel();
     reply.num_id = deviceIds.size() > 0 ? EMPTY_RETURN_RECEIPT : null;
     reply.operation = cloudModel.operation;
-    boolean toBind = reply.operation == BIND;
-    Consumer<String> deviceAction = toBind
-        ? id -> bindDevice(registryId, gatewayId, id)
-        : id -> unbindDevice(registryId, gatewayId, id);
-    deviceIds.forEach(deviceAction);
     return reply;
   }
 
@@ -532,8 +528,7 @@ public class ClearBladeIotAccessProvider extends IotAccessBase {
         case UPDATE -> updateDevice(registryId, device);
         case DELETE -> unbindAndDelete(registryId, device, cloudModel, progress);
         case MODIFY -> modifyDevice(registryId, device);
-        case BIND -> bindDevicesToGateway(registryId, deviceId, cloudModel);
-        case UNBIND -> bindDevicesToGateway(registryId, deviceId, cloudModel);
+        case BIND, UNBIND -> bindDevicesToGateway(registryId, deviceId, cloudModel, progress);
         case BLOCK -> blockDevice(registryId, device);
         default -> throw new RuntimeException("Unknown device operation " + operation);
       };
@@ -630,19 +625,21 @@ public class ClearBladeIotAccessProvider extends IotAccessBase {
     }
   }
 
-  private void unbindDevicesGateways(String registryId, Set<String> gatewayIds,
-      Set<String> deviceIds,
-      Consumer<Integer> progress) {
-    info("Unbinding in %s: gateways %s devices %s", registryId, gatewayIds, deviceIds);
-    AtomicInteger unbindCount = new AtomicInteger(0);
+  private void bindDevicesGateways(String registryId, Set<String> gatewayIds,
+      Set<String> deviceIds, boolean toBind, Consumer<Integer> progress) {
+    String opCode = toBind ? "Binding" : "Unbinding";
+    info("%s %s: gateways %s devices %s", opCode, registryId, gatewayIds, deviceIds);
+    AtomicInteger opCount = new AtomicInteger(0);
     gatewayIds.forEach(gatewayId -> {
       deviceIds.forEach(deviceId -> {
-        ifTrueThen(unbindCount.incrementAndGet() % UNBIND_BATCH_SIZE == 0,
-            () -> ifNotNullThen(progress, p -> p.accept(unbindCount.get())));
-        unbindDevice(registryId, gatewayId, deviceId);
+        ifTrueThen(opCount.incrementAndGet() % OP_PROGRESS_BATCH_SIZE == 0,
+            () -> ifNotNullThen(progress, p -> p.accept(opCount.get())));
+        ifTrueThen(toBind,
+            () -> bindDevice(registryId, gatewayId, deviceId),
+            () -> unbindDevice(registryId, gatewayId, deviceId));
       });
     });
-    ifNotNullThen(progress, p -> p.accept(unbindCount.get()));
+    ifNotNullThen(progress, p -> p.accept(opCount.get()));
   }
 
   private void unbindDevice(String registryId, String gatewayId, String proxyId) {
@@ -661,7 +658,7 @@ public class ClearBladeIotAccessProvider extends IotAccessBase {
   private void unbindGatewayDevices(String registryId, Device gatewayDevice,
       Set<String> unbindIds, Consumer<Integer> progress) {
     ImmutableSet<String> gatewayIds = ImmutableSet.of(gatewayDevice.toBuilder().getId());
-    unbindDevicesGateways(registryId, gatewayIds, unbindIds, progress);
+    bindDevicesGateways(registryId, gatewayIds, unbindIds, false, progress);
   }
 
   private CloudModel updateDevice(String registryId, Device device) {
