@@ -137,7 +137,7 @@ public class RegistrarTest {
       try {
         Registrar registrar = getRegistrar(ImmutableList.of());
         registrar.execute(() -> {
-          Map<String, LocalDevice> localDevices = registrar.getLocalDevices();
+          Map<String, LocalDevice> localDevices = registrar.getWorkingDevices();
           localDevices.put(deviceId, localDevices.get(DEVICE_ID).duplicate(deviceId));
         });
         okAddedIds.add(deviceId); // Record devices that don't throw an exception.
@@ -156,7 +156,7 @@ public class RegistrarTest {
       try {
         Registrar registrar = getRegistrar(ImmutableList.of());
         registrar.execute(() -> {
-          Map<String, LocalDevice> localDevices = registrar.getLocalDevices();
+          Map<String, LocalDevice> localDevices = registrar.getWorkingDevices();
           Metadata metadata = localDevices.get(DEVICE_ID).getMetadata();
           metadata.pointset.points.put(pointName, new PointPointsetModel());
         });
