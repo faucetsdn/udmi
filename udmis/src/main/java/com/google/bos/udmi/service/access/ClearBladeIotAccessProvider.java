@@ -21,6 +21,7 @@ import static java.util.Objects.requireNonNull;
 import static java.util.Optional.ofNullable;
 import static java.util.function.Function.identity;
 import static java.util.stream.Collectors.toMap;
+import static udmi.schema.CloudModel.Operation.BIND;
 import static udmi.schema.CloudModel.Operation.BOUND;
 import static udmi.schema.CloudModel.Operation.CREATE;
 import static udmi.schema.CloudModel.Operation.DELETE;
@@ -248,23 +249,29 @@ public class ClearBladeIotAccessProvider extends IotAccessBase {
     Set<String> deviceIds = cloudModel.device_ids.keySet();
     reply.num_id = deviceIds.size() > 0 ? EMPTY_RETURN_RECEIPT : null;
     reply.operation = cloudModel.operation;
-    deviceIds.forEach(id -> {
-      try {
-        String location = getRegistryLocation(registryId);
-        RegistryName parent = RegistryName.of(projectId, location, registryId);
-        BindDeviceToGatewayRequest request =
-            BindDeviceToGatewayRequest.Builder.newBuilder()
-                .setParent(parent.getRegistryFullName())
-                .setDevice(id)
-                .setGateway(gatewayId)
-                .build();
-        requireNonNull(deviceManager.bindDeviceToGateway(request),
-            "binding device to gateway");
-      } catch (Exception e) {
-        throw new RuntimeException(format("While binding %s to gateway %s", id, gatewayId), e);
-      }
-    });
+    boolean toBind = reply.operation == BIND;
+    Consumer<String> deviceAction = toBind
+        ? id -> bindDevice(registryId, gatewayId, id)
+        : id -> unbindDevice(registryId, gatewayId, id);
+    deviceIds.forEach(deviceAction);
     return reply;
+  }
+
+  private void bindDevice(String registryId, String gatewayId, String id) {
+    try {
+      String location = getRegistryLocation(registryId);
+      RegistryName parent = RegistryName.of(projectId, location, registryId);
+      BindDeviceToGatewayRequest request =
+          BindDeviceToGatewayRequest.Builder.newBuilder()
+              .setParent(parent.getRegistryFullName())
+              .setDevice(id)
+              .setGateway(gatewayId)
+              .build();
+      requireNonNull(deviceManager.bindDeviceToGateway(request),
+          "binding device to gateway");
+    } catch (Exception e) {
+      throw new RuntimeException(format("While binding %s to gateway %s", id, gatewayId), e);
+    }
   }
 
   private CloudModel blockDevice(String registryId, Device device) {
@@ -526,6 +533,7 @@ public class ClearBladeIotAccessProvider extends IotAccessBase {
         case DELETE -> unbindAndDelete(registryId, device, cloudModel, progress);
         case MODIFY -> modifyDevice(registryId, device);
         case BIND -> bindDevicesToGateway(registryId, deviceId, cloudModel);
+        case UNBIND -> bindDevicesToGateway(registryId, deviceId, cloudModel);
         case BLOCK -> blockDevice(registryId, device);
         default -> throw new RuntimeException("Unknown device operation " + operation);
       };

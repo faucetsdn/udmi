@@ -72,10 +72,11 @@ public interface IotProvider {
   /**
    * Make the given proxy device bound to the given gateway.
    *
-   * @param proxyDeviceId   device to bind
+   * @param proxyDeviceIds  devices to (un)bind
    * @param gatewayDeviceId thing to bind to
+   * @param toBind          true if the device should be bound, else unbind it
    */
-  void bindDeviceToGateway(String proxyDeviceId, String gatewayDeviceId);
+  void bindDeviceToGateway(Set<String> proxyDeviceIds, String gatewayDeviceId, boolean toBind);
 
   /**
    * Return all the device ids currently registered.

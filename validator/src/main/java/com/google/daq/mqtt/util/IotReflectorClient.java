@@ -18,11 +18,13 @@ import static com.google.udmi.util.JsonUtil.stringify;
 import static com.google.udmi.util.JsonUtil.stringifyTerse;
 import static java.lang.String.format;
 import static java.util.Optional.ofNullable;
+import static java.util.stream.Collectors.toMap;
 import static udmi.schema.CloudModel.Operation.BIND;
 import static udmi.schema.CloudModel.Operation.BLOCK;
 import static udmi.schema.CloudModel.Operation.BOUND;
 import static udmi.schema.CloudModel.Operation.DELETE;
 import static udmi.schema.CloudModel.Operation.READ;
+import static udmi.schema.CloudModel.Operation.UNBIND;
 
 import com.google.common.base.Preconditions;
 import com.google.daq.mqtt.util.MessagePublisher.QuerySpeed;
@@ -32,7 +34,6 @@ import com.google.udmi.util.IotProvider;
 import com.google.udmi.util.SiteModel;
 import java.io.File;
 import java.io.PrintWriter;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -41,7 +42,6 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
-import java.util.stream.Collectors;
 import org.jetbrains.annotations.Nullable;
 import udmi.schema.CloudModel;
 import udmi.schema.CloudModel.Operation;
@@ -145,8 +145,8 @@ public class IotReflectorClient implements IotProvider {
   public void deleteDevice(String deviceId, Set<String> unbindIds) {
     CloudModel deleteModel = new CloudModel();
     deleteModel.operation = Operation.DELETE;
-    deleteModel.device_ids = ifNotNullGet(unbindIds, ids -> ids.stream().collect(Collectors
-        .toMap(id -> id, IotReflectorClient::unbindCloudModel)));
+    deleteModel.device_ids = ifNotNullGet(unbindIds, ids -> ids.stream().collect(
+        toMap(id -> id, IotReflectorClient::unbindCloudModel)));
     cloudModelTransaction(deviceId, CLOUD_MODEL_TOPIC, deleteModel);
   }
 
@@ -179,11 +179,10 @@ public class IotReflectorClient implements IotProvider {
   }
 
   @Override
-  public void bindDeviceToGateway(String proxyId, String gatewayId) {
+  public void bindDeviceToGateway(Set<String> proxyId, String gatewayId, boolean toBind) {
     CloudModel device = new CloudModel();
-    device.operation = BIND;
-    device.device_ids = new HashMap<>();
-    device.device_ids.put(proxyId, new CloudModel());
+    device.operation = toBind ? BIND : UNBIND;
+    device.device_ids = proxyId.stream().collect(toMap(id -> id, id -> new CloudModel()));
     cloudModelTransaction(gatewayId, CLOUD_MODEL_TOPIC, device);
   }
 

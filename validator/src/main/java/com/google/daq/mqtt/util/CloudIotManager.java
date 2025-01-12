@@ -405,8 +405,8 @@ public class CloudIotManager {
     return cloudRegion;
   }
 
-  public void bindDevice(String proxyDeviceId, String gatewayDeviceId) {
-    getIotProvider().bindDeviceToGateway(proxyDeviceId, gatewayDeviceId);
+  public void bindDevices(Set<String> proxyDeviceIds, String gatewayDeviceId, boolean toBind) {
+    getIotProvider().bindDeviceToGateway(proxyDeviceIds, gatewayDeviceId, toBind);
   }
 
   public List<Object> getMockActions() {

@@ -628,22 +628,22 @@ public class Registrar {
   private void synchronizedDelete(Set<String> devices) throws InterruptedException {
     AtomicInteger accumulator = new AtomicInteger();
     int totalCount = devices.size();
-    devices.forEach(id -> parallelExecute(() -> deleteSingleDevice(totalCount, accumulator, id)));
+    devices.forEach(id -> parallelExecute(() -> deleteSingleDevice(devices, accumulator, id)));
     System.err.println("Waiting for device deletion completion...");
     dynamicTerminate(totalCount);
   }
 
-  private void deleteSingleDevice(int totalCount, AtomicInteger count, String id) {
+  private void deleteSingleDevice(Set<String> allDevices, AtomicInteger count, String id) {
     int incremented = count.incrementAndGet();
-    System.err.printf("Deleting device %s (%d/%d)%n", id, incremented, totalCount);
+    System.err.printf("Deleting device %s (%d/%d)%n", id, incremented, allDevices.size());
     try {
-      deleteDevice(id);
+      deleteDevice(allDevices, id);
     } catch (Exception e) {
       System.err.println("Exception caught during execution: " + friendlyStackTrace(e));
     }
   }
 
-  private void deleteDevice(String deviceId) {
+  private void deleteDevice(Set<String> allDevices, String deviceId) {
     try {
       //      List<String> unbindIds = catchToNull(
       //          () -> localDevices.get(deviceId).getMetadata().gateway.proxy_ids);
@@ -651,19 +651,37 @@ public class Registrar {
       cloudIotManager.deleteDevice(deviceId, null);
     } catch (DeviceGatewayBoundException boundException) {
       CloudModel cloudModel = boundException.getCloudModel();
+      Set<String> allIds = cloudModel.device_ids.keySet();
       if (cloudModel.resource_type == Resource_type.GATEWAY) {
-        Set<String> boundDevices = cloudModel.device_ids.keySet();
-        System.err.println("Retrying gateway delete with bound devices: " + boundDevices);
-        cloudIotManager.deleteDevice(deviceId, boundDevices);
+        System.err.printf("Retrying delete %s with bound devices: %s%n", deviceId, allIds);
+        cloudIotManager.deleteDevice(deviceId, allIds);
       } else if (cloudModel.resource_type == Resource_type.DEVICE) {
-        Set<String> boundGateways = cloudModel.device_ids.keySet();
-        System.err.println("Unbinding bound gateways: " + boundGateways);
+        System.err.printf("Unbinding %s from bound gateways: %s%n", deviceId, allIds);
+        unbindDevicesFromGateways(allDevices, allIds);
+        System.err.printf("Retrying delete %s%n", deviceId);
         cloudIotManager.deleteDevice(deviceId, null);
       } else {
         throw new RuntimeException("Unknown cloud model resource type", boundException);
       }
     } catch (Exception e) {
       throw new RuntimeException("While deleting device " + deviceId, e);
+    }
+  }
+
+  /**
+   * Unbind all devices for the list of gateways. This is synchronized at the class level to ensure
+   * that only one instance at a time, since it's a global operation that doesn't need to be
+   * executed for each device individually.
+   */
+  private void unbindDevicesFromGateways(Set<String> allDevices,
+      Set<String> boundGateways) {
+    synchronized (Operation.UNBIND) {
+      boundGateways.forEach(gatewayId -> {
+        Map<String, CloudModel> boundDevices = cloudIotManager.fetchDevice(gatewayId).device_ids;
+        SetView<String> toUnbind = intersection(allDevices, boundDevices.keySet());
+        System.err.printf("Unbinding from gateway %s: %s%n", gatewayId, toUnbind);
+        cloudIotManager.bindDevices(toUnbind, gatewayId, false);
+      });
     }
   }
 
@@ -1000,7 +1018,7 @@ public class Registrar {
             int count = bindingCount.incrementAndGet();
             System.err.printf("Binding %s to %s (%d/%d)%n", proxyDeviceId, gatewayId, count,
                 bindings.size());
-            cloudIotManager.bindDevice(proxyDeviceId, gatewayId);
+            cloudIotManager.bindDevices(ImmutableSet.of(proxyDeviceId), gatewayId, true);
           } catch (Exception e) {
             localDevices.get(binding.getKey()).captureError(LocalDevice.EXCEPTION_BINDING, e);
           }
