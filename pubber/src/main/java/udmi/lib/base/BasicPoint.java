@@ -3,6 +3,7 @@ package udmi.lib.base;
 import static com.google.udmi.util.GeneralUtils.deepCopy;
 import static com.google.udmi.util.GeneralUtils.getNow;
 import static com.google.udmi.util.GeneralUtils.isTrue;
+import static java.lang.String.format;
 
 import java.util.Objects;
 import udmi.lib.intf.AbstractPoint;
@@ -20,11 +21,12 @@ import udmi.schema.RefDiscovery;
  */
 public abstract class BasicPoint implements AbstractPoint {
 
-  protected final String name;
   protected final PointPointsetEvents data = new PointPointsetEvents();
   private final PointPointsetState state = new PointPointsetState();
+  protected final String name;
   private final boolean writable;
   private final String pointRef;
+
   protected boolean written;
   private boolean dirty;
 
@@ -133,7 +135,7 @@ public abstract class BasicPoint implements AbstractPoint {
   @Override
   public RefDiscovery enumerate() {
     RefDiscovery point = new RefDiscovery();
-    point.description = getClass().getSimpleName() + " " + getName();
+    point.description = format("%s %s", getClass().getSimpleName(), getName());
     point.writable = writable ? true : null;
     populateEnumeration(point);
     return point;
@@ -141,7 +143,7 @@ public abstract class BasicPoint implements AbstractPoint {
 
   private Entry createEntryFrom(String category, String message) {
     Entry entry = new Entry();
-    entry.detail = String.format("Point %s (writable %s)", name, writable);
+    entry.detail = format("Point %s (writable %s)", name, writable);
     entry.timestamp = getNow();
     entry.message = message;
     entry.category = category;

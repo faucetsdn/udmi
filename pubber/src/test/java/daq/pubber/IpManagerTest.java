@@ -4,6 +4,7 @@ import static org.junit.Assert.assertEquals;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import daq.pubber.impl.provider.PubberIpProvider;
 import java.util.List;
 import java.util.Map;
 import org.junit.Test;

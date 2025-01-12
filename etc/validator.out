@@ -339,15 +339,15 @@ sites/udmi_site_model/out/devices/AHU-22/state.out
   "sub_folder" : "update",
   "sub_type" : "state",
   "status" : {
-    "message" : "1 schema violations found",
-    "detail" : "state_update: 1 schema violations found; /system: object has missing required properties ([\"serial_no\"])",
+    "message" : "2 schema violations found",
+    "detail" : "state_update: 2 schema violations found; /system: object has missing required properties ([\"serial_no\",\"software\"]); /system/hardware: object has missing required properties ([\"make\",\"model\"])",
     "category" : "validation.device.schema",
     "timestamp" : "REDACTED_TIMESTAMP",
     "level" : 500
   },
   "errors" : [ {
-    "message" : "1 schema violations found",
-    "detail" : "state_update: 1 schema violations found; /system: object has missing required properties ([\"serial_no\"])",
+    "message" : "2 schema violations found",
+    "detail" : "state_update: 2 schema violations found; /system: object has missing required properties ([\"serial_no\",\"software\"]); /system/hardware: object has missing required properties ([\"make\",\"model\"])",
     "category" : "validation.device.schema",
     "timestamp" : "REDACTED_TIMESTAMP",
     "level" : 500
@@ -382,15 +382,15 @@ sites/udmi_site_model/out/devices/AHU-22/state_system.out
   "sub_folder" : "system",
   "sub_type" : "state",
   "status" : {
-    "message" : "1 schema violations found",
-    "detail" : "state_system: 1 schema violations found; object has missing required properties ([\"serial_no\"])",
+    "message" : "2 schema violations found",
+    "detail" : "state_system: 2 schema violations found; object has missing required properties ([\"serial_no\",\"software\"]); /hardware: object has missing required properties ([\"make\",\"model\"])",
     "category" : "validation.device.schema",
     "timestamp" : "REDACTED_TIMESTAMP",
     "level" : 500
   },
   "errors" : [ {
-    "message" : "1 schema violations found",
-    "detail" : "state_system: 1 schema violations found; object has missing required properties ([\"serial_no\"])",
+    "message" : "2 schema violations found",
+    "detail" : "state_system: 2 schema violations found; object has missing required properties ([\"serial_no\",\"software\"]); /hardware: object has missing required properties ([\"make\",\"model\"])",
     "category" : "validation.device.schema",
     "timestamp" : "REDACTED_TIMESTAMP",
     "level" : 500
@@ -795,14 +795,14 @@ sites/udmi_site_model/out/devices/SNS-4/state.out
   "sub_type" : "state",
   "status" : {
     "message" : "Multiple validation errors",
-    "detail" : "1 schema violations found; Device has missing points: split_threshold, triangulating_axis",
+    "detail" : "2 schema violations found; Device has missing points: split_threshold, triangulating_axis",
     "category" : "validation.device.multiple",
     "timestamp" : "REDACTED_TIMESTAMP",
     "level" : 500
   },
   "errors" : [ {
-    "message" : "1 schema violations found",
-    "detail" : "state_update: 1 schema violations found; /system: object has missing required properties ([\"serial_no\"])",
+    "message" : "2 schema violations found",
+    "detail" : "state_update: 2 schema violations found; /system: object has missing required properties ([\"serial_no\",\"software\"]); /system/hardware: object has missing required properties ([\"make\",\"model\"])",
     "category" : "validation.device.schema",
     "timestamp" : "REDACTED_TIMESTAMP",
     "level" : 500
@@ -850,15 +850,15 @@ sites/udmi_site_model/out/devices/SNS-4/state_system.out
   "sub_folder" : "system",
   "sub_type" : "state",
   "status" : {
-    "message" : "1 schema violations found",
-    "detail" : "state_system: 1 schema violations found; object has missing required properties ([\"serial_no\"])",
+    "message" : "2 schema violations found",
+    "detail" : "state_system: 2 schema violations found; object has missing required properties ([\"serial_no\",\"software\"]); /hardware: object has missing required properties ([\"make\",\"model\"])",
     "category" : "validation.device.schema",
     "timestamp" : "REDACTED_TIMESTAMP",
     "level" : 500
   },
   "errors" : [ {
-    "message" : "1 schema violations found",
-    "detail" : "state_system: 1 schema violations found; object has missing required properties ([\"serial_no\"])",
+    "message" : "2 schema violations found",
+    "detail" : "state_system: 2 schema violations found; object has missing required properties ([\"serial_no\",\"software\"]); /hardware: object has missing required properties ([\"make\",\"model\"])",
     "category" : "validation.device.schema",
     "timestamp" : "REDACTED_TIMESTAMP",
     "level" : 500

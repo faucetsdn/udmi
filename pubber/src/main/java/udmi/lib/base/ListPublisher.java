@@ -2,6 +2,7 @@ package udmi.lib.base;
 
 import static com.google.common.base.Preconditions.checkState;
 import static com.google.udmi.util.GeneralUtils.ifNotNullThen;
+import static java.lang.String.format;
 
 import com.google.udmi.util.JsonUtil;
 import java.util.AbstractMap.SimpleEntry;
@@ -22,15 +23,16 @@ import udmi.schema.Config;
 public class ListPublisher implements Publisher {
 
   private final ExecutorService publisherExecutor = Executors.newFixedThreadPool(1);
+  private final Map<String, Entry<Consumer<Object>, Class<Object>>> handlers = new HashMap<>();
+
   private List<String> messages = new ArrayList<>();
   private String usePrefix;
-  private final Map<String, Entry<Consumer<Object>, Class<Object>>> handlers = new HashMap<>();
 
   public ListPublisher(Consumer<Exception> onError) {
   }
 
   public static String getMessageString(String deviceId, String topic, Object message) {
-    return String.format("%s/%s/%s", deviceId, topic, JsonUtil.stringify(message));
+    return format("%s/%s/%s", deviceId, topic, JsonUtil.stringify(message));
   }
 
   /**
@@ -70,7 +72,7 @@ public class ListPublisher implements Publisher {
 
   @Override
   public void publish(String deviceId, String topicSuffix, Object message, Runnable callback) {
-    String useTopic = usePrefix + "/" + topicSuffix;
+    String useTopic = format("%s/%s", usePrefix, topicSuffix);
     messages.add(getMessageString(deviceId, useTopic, message));
     ifNotNullThen(callback, () -> publisherExecutor.submit(callback));
   }
@@ -82,7 +84,6 @@ public class ListPublisher implements Publisher {
 
   @Override
   public void close() {
-
   }
 
   @Override
