@@ -318,7 +318,7 @@ public class ClearBladeIotAccessProvider extends IotAccessBase {
     cloudModel.last_state_time = getSafeDate(device.getLastStateTime());
     cloudModel.last_config_time = getSafeDate(device.getLastConfigSendTime());
     cloudModel.last_config_ack = getSafeDate(device.getLastConfigAckTime());
-    cloudModel.last_event_time = getSafeDate(device.getLastErrorTime());
+    cloudModel.last_error_time = getSafeDate(device.getLastErrorTime());
     cloudModel.credentials = convertIot(device.getCredentials());
     cloudModel.updated_time = catchToNull(() -> getDate(device.getMetadata().get(UDMI_UPDATED)));
     return cloudModel;
