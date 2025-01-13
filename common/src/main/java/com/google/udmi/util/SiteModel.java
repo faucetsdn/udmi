@@ -561,6 +561,10 @@ public class SiteModel {
     return new File(sitePath, path);
   }
 
+  public File getExtraDir(String deviceId) {
+    return new File(getExtrasDir(), deviceId);
+  }
+
   public File getExtrasDir() {
     return getSiteFile(EXTRAS_DIR);
   }

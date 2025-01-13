@@ -135,7 +135,7 @@
       "description": "If operating on the entire registry, then this manifests as a map of devices not just one device.",
       "existingJavaType": "java.util.Map<String, CloudModel>",
       "patternProperties": {
-        "^[-_a-zA-Z0-9]+$": {
+        "^[-._a-zA-Z0-9]+$": {
           "additionalProperties": false,
           "type": "object"
         }

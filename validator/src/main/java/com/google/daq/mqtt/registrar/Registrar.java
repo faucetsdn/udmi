@@ -45,6 +45,7 @@ import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets.SetView;
+import com.google.daq.mqtt.registrar.LocalDevice.DeviceKind;
 import com.google.daq.mqtt.util.CloudDeviceSettings;
 import com.google.daq.mqtt.util.CloudIotManager;
 import com.google.daq.mqtt.util.DeviceGatewayBoundException;
@@ -535,7 +536,7 @@ public class Registrar {
         bindGatewayDevices(targetLocals);
       }
 
-      if (cloudModels != null && !isTargeted) {
+      if (cloudModels != null && !isTargeted && !instantiateExtras) {
         extraDevices = processExtraDevices(difference(cloudModels.keySet(), targetDevices));
       }
     } catch (Exception e) {
@@ -548,11 +549,19 @@ public class Registrar {
     Set<String> deviceIds = ofNullable(explicitDevices).orElse(expectedExtras);
     SetView<String> unknownExtras = difference(deviceIds, expectedExtras);
     ifNotEmptyThrow(unknownExtras, extras -> "Devices not found in extras dir: " + extras);
-    return deviceIds.stream().collect(Collectors.toMap(id -> id, this::makeLocalDevice));
+    return deviceIds.stream().collect(Collectors.toMap(id -> id, this::makeExtraDevice));
   }
 
   private LocalDevice makeLocalDevice(String id) {
-    return new LocalDevice(siteModel, id, schemas, generation, doValidate);
+    return makeLocalDevice(id, doValidate ? DeviceKind.LOCAL : DeviceKind.SIMPLE);
+  }
+
+  private LocalDevice makeExtraDevice(String id) {
+    return makeLocalDevice(id, DeviceKind.EXTRA);
+  }
+
+  private LocalDevice makeLocalDevice(String id, DeviceKind kind) {
+    return new LocalDevice(siteModel, id, schemas, generation, kind);
   }
 
   private boolean alreadyRegistered(String device) {

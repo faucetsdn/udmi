@@ -182,11 +182,11 @@ class LocalDevice {
   private final Map<String, JsonSchema> schemas;
   private final File deviceDir;
   private final File outDir;
+  private final DeviceKind deviceKind;
   private Metadata metadata;
   private final ExceptionMap exceptionMap;
   private final String generation;
   private final List<Credential> deviceCredentials = new ArrayList<>();
-  private final boolean validateMetadata;
   private ConfigManager config;
   private final DeviceExceptionManager exceptionManager;
   private final SiteModel siteModel;
@@ -200,19 +200,20 @@ class LocalDevice {
 
   LocalDevice(
       SiteModel siteModel, String deviceId, Map<String, JsonSchema> schemas,
-      String generation, boolean validateMetadata) {
+      String generation, DeviceKind kind) {
     try {
       this.deviceId = deviceId;
       this.schemas = schemas;
       this.generation = generation;
       this.siteModel = siteModel;
-      this.validateMetadata = validateMetadata;
+      this.deviceKind = kind;
       if (!DEVICE_ID_ALLOWABLE.matcher(deviceId).matches()) {
         throw new ValidationError(format("Device id does not match allowable pattern %s",
             DEVICE_ID_ALLOWABLE.pattern()));
       }
       exceptionMap = new ExceptionMap("Exceptions for " + deviceId);
-      deviceDir = siteModel.getDeviceDir(deviceId);
+      deviceDir = kind != DeviceKind.EXTRA
+          ? siteModel.getDeviceDir(deviceId) : siteModel.getExtraDir(deviceId);
       outDir = new File(deviceDir, OUT_DIR);
       exceptionManager = new DeviceExceptionManager(new File(siteModel.getSitePath()));
       metadata = readMetadata();
@@ -223,7 +224,7 @@ class LocalDevice {
 
   public void initialize() {
     prepareOutDir();
-    ifTrueThen(validateMetadata && metadata != null, this::validateMetadata);
+    ifTrueThen(deviceKind == DeviceKind.LOCAL && metadata != null, this::validateMetadata);
     config = configFrom(metadata, deviceId, siteModel);
   }
 
@@ -782,7 +783,7 @@ class LocalDevice {
   }
 
   public LocalDevice duplicate(String newId) {
-    return new LocalDevice(siteModel, newId, schemas, generation, validateMetadata);
+    return new LocalDevice(siteModel, newId, schemas, generation, deviceKind);
   }
 
   public enum DeviceStatus {
@@ -790,5 +791,9 @@ class LocalDevice {
     ERRORS,
     INVALID,
     BLOCKED
+  }
+
+  enum DeviceKind {
+    LOCAL, SIMPLE, EXTRA
   }
 }
