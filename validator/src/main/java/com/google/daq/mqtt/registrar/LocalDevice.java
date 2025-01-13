@@ -732,7 +732,7 @@ class LocalDevice {
   }
 
   public boolean isValid() {
-    return metadata != null;
+    return metadata != null || deviceKind == DeviceKind.EXTRA;
   }
 
   public void validateSamples() {

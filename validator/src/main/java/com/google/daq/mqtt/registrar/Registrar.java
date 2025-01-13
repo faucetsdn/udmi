@@ -28,6 +28,7 @@ import static com.google.udmi.util.JsonUtil.loadFileRequired;
 import static com.google.udmi.util.JsonUtil.safeSleep;
 import static com.google.udmi.util.JsonUtil.writeFile;
 import static com.google.udmi.util.MetadataMapKeys.UDMI_PREFIX;
+import static com.google.udmi.util.SiteModel.CLOUD_MODEL_FILE;
 import static com.google.udmi.util.SiteModel.DEVICES_DIR;
 import static com.google.udmi.util.SiteModel.MOCK_PROJECT;
 import static java.lang.Math.ceil;
@@ -545,7 +546,7 @@ public class Registrar {
   }
 
   private Map<String, LocalDevice> loadExtraDevices(Set<String> explicitDevices) {
-    Set<String> expectedExtras = getExtraDevices();
+    Set<String> expectedExtras = siteModel.getExtraDevices();
     Set<String> deviceIds = ofNullable(explicitDevices).orElse(expectedExtras);
     SetView<String> unknownExtras = difference(deviceIds, expectedExtras);
     ifNotEmptyThrow(unknownExtras, extras -> "Devices not found in extras dir: " + extras);
@@ -596,7 +597,7 @@ public class Registrar {
     executeDelete(toDelete, reason);
 
     if (expungeDevices) {
-      Set<String> existingExtras = getExtraDevices();
+      Set<String> existingExtras = siteModel.getExtraDevices();
       Set<String> toExpunge = ofNullable(explicitDevices).orElse(existingExtras);
       Set<String> toReap = intersection(existingExtras, toExpunge);
       reapExtraDevices(toReap);
@@ -759,9 +760,9 @@ public class Registrar {
     }
     Duration between = Duration.between(start, Instant.now());
     double seconds = (between.getSeconds() + between.getNano() / 1e9) / runnerThreads;
-    String code = error ? "error" : (created ? "add" : "update");
+    String result = error ? "error" : (created ? "add" : "update");
     System.err.printf("Processed %s (%d/%d) in %.03fs (%s)%n", localName, count, totalCount,
-        seconds, code);
+        seconds, result);
     return created;
   }
 
@@ -869,7 +870,7 @@ public class Registrar {
       dynamicTerminate(extraDevices.size());
       System.err.printf("There were %d/%d already blocked devices.%n", alreadyBlocked.get(),
           extraDevices.size());
-      reapExtraDevices(difference(getExtraDevices(), extraDevices));
+      reapExtraDevices(difference(siteModel.getExtraDevices(), extraDevices));
       return extras;
     } catch (Exception e) {
       throw new RuntimeException(format("Processing %d extra devices", extraDevices.size()), e);
@@ -901,7 +902,7 @@ public class Registrar {
 
   private void reapExtraDevices(Set<String> toReap) {
     toReap.forEach(extraDeviceId -> {
-      File file = new File(getExtrasDir(), extraDeviceId);
+      File file = siteModel.getExtraDir(extraDeviceId);
       try {
         FileUtils.deleteDirectory(file);
         System.err.println("Deleted extraneous extra device directory " + extraDeviceId);
@@ -910,15 +911,6 @@ public class Registrar {
             e);
       }
     });
-  }
-
-  private Set<String> getExtraDevices() {
-    String[] existing = ofNullable(getExtrasDir().list()).orElse(new String[0]);
-    return Arrays.stream(existing).collect(Collectors.toSet());
-  }
-
-  private File getExtrasDir() {
-    return new File(siteDir, SiteModel.EXTRAS_DIR);
   }
 
   private void writeExtraDevice(String extraName, CloudModel augmentedModel) {

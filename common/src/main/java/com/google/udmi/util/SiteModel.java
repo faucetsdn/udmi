@@ -290,6 +290,15 @@ public class SiteModel {
     return getNamespacePrefix(namespace) + registry_id + ofNullable(registry_suffix).orElse("");
   }
 
+  public Set<String> getExtraDevices() {
+    String[] existing = ofNullable(getExtrasDir().list()).orElse(new String[0]);
+    return Arrays.stream(existing).filter(this::extraExists).collect(Collectors.toSet());
+  }
+
+  private boolean extraExists(String extraId) {
+    return new File(getExtraDir(extraId), CLOUD_MODEL_FILE).exists();
+  }
+
   private static void augmentConfig(ExecutionConfiguration exeConfig, Matcher specMatcher) {
     try {
       String iotProvider = specMatcher.group(SPEC_PROVIDER_GROUP);
