@@ -1,4 +1,5 @@
 """Generated class for model_cloud.json"""
+from .model_gateway import GatewayModel
 from .model_cloud_config import CloudConfigModel
 
 
@@ -46,6 +47,7 @@ class CloudModel:
     self.auth_type = None
     self.device_key = None
     self.resource_type = None
+    self.gateway = None
     self.config = None
     self.blocked = None
     self.detail = None
@@ -73,6 +75,7 @@ class CloudModel:
     result.auth_type = source.get('auth_type')
     result.device_key = source.get('device_key')
     result.resource_type = source.get('resource_type')
+    result.gateway = GatewayModel.from_dict(source.get('gateway'))
     result.config = CloudConfigModel.from_dict(source.get('config'))
     result.blocked = source.get('blocked')
     result.detail = source.get('detail')
@@ -120,6 +123,8 @@ class CloudModel:
       result['device_key'] = self.device_key # 5
     if self.resource_type:
       result['resource_type'] = self.resource_type # 5
+    if self.gateway:
+      result['gateway'] = self.gateway.to_dict() # 4
     if self.config:
       result['config'] = self.config.to_dict() # 4
     if self.blocked:

@@ -45,6 +45,9 @@
         "REGISTRY"
       ]
     },
+    "gateway": {
+      "$ref": "file:model_gateway.json#"
+    },      
     "config": {
       "$ref": "file:model_cloud_config.json#"
     },
