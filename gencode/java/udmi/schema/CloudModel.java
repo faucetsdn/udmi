@@ -139,11 +139,11 @@ public class CloudModel {
     @JsonPropertyDescription("Strigified version of the metadata object, used for internal backend processing")
     public java.lang.String metadata_str;
     /**
-     * If operating on the entire registry, then this manifests as a map of devices not just one device.
+     * If operating on the entire registry, then this contains results for multiple devices (batched operation).
      * 
      */
     @JsonProperty("device_ids")
-    @JsonPropertyDescription("If operating on the entire registry, then this manifests as a map of devices not just one device.")
+    @JsonPropertyDescription("If operating on the entire registry, then this contains results for multiple devices (batched operation).")
     public Map<String, CloudModel> device_ids;
 
     @Override

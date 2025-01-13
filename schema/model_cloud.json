@@ -135,7 +135,7 @@
       "description": "Strigified version of the metadata object, used for internal backend processing"
     },
     "device_ids": {
-      "description": "If operating on the entire registry, then this manifests as a map of devices not just one device.",
+      "description": "If operating on the entire registry, then this contains results for multiple devices (batched operation).",
       "existingJavaType": "java.util.Map<String, CloudModel>",
       "patternProperties": {
         "^[-._a-zA-Z0-9]+$": {
