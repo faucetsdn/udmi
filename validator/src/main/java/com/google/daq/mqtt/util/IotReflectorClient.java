@@ -191,7 +191,6 @@ public class IotReflectorClient implements IotProvider {
     return ofNullable(fetchCloudModel(forGatewayId)).map(model -> model.device_ids).orElse(null);
   }
 
-  @Nullable
   private CloudModel fetchCloudModel(String deviceId) {
     try {
       QuerySpeed speed = isSlow ? QuerySpeed.ETERNITY : QuerySpeed.SLOW;

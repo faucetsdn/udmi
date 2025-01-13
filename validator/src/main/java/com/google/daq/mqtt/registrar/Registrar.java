@@ -665,6 +665,7 @@ public class Registrar {
       //      List<String> unbindIds = catchToNull(
       //          () -> localDevices.get(deviceId).getMetadata().gateway.proxy_ids);
       //      cloudIotManager.deleteDevice(deviceId, unbindIds);
+      System.err.println("TAP fix/remove this bit!!!!!@!@!!!!!!");
       cloudIotManager.deleteDevice(deviceId, null);
     } catch (DeviceGatewayBoundException boundException) {
       CloudModel cloudModel = boundException.getCloudModel();

@@ -289,6 +289,7 @@ public class CloudIotManager {
     cloudModel.credentials = getCredentials(settings);
     cloudModel.metadata = metadataMap;
     cloudModel.num_id = settings.deviceNumId;
+    cloudModel.blocked = settings.blocked;
     return cloudModel;
   }
 
