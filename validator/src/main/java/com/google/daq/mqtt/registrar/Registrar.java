@@ -667,7 +667,7 @@ public class Registrar {
       cloudIotManager.deleteDevice(deviceId, null);
     } catch (DeviceGatewayBoundException boundException) {
       CloudModel cloudModel = boundException.getCloudModel();
-      Set<String> allIds = cloudModel.device_ids.keySet();
+      Set<String> allIds = new HashSet<>(cloudModel.gateway.proxy_ids);
       if (cloudModel.resource_type == Resource_type.GATEWAY) {
         System.err.printf("Retrying delete %s with bound devices: %s%n", deviceId, allIds);
         cloudIotManager.deleteDevice(deviceId, allIds);

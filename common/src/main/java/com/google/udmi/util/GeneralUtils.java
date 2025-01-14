@@ -50,7 +50,6 @@ import java.util.TreeMap;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Supplier;
-import java.util.function.ToLongBiFunction;
 import java.util.stream.Collector;
 import java.util.stream.Collectors;
 import org.apache.commons.io.FileUtils;
@@ -159,7 +158,13 @@ public class GeneralUtils {
    * hopefully somewhat meaningful. Real debuggers will need to dig out the full stack trace!
    */
   public static String friendlyStackTrace(Throwable e) {
-    return CSV_JOINER.join(friendlyLineTrace(e)).replace('\n', ' ');
+    List<String> lines = e instanceof NullPointerException ? traceDetails(e) : friendlyLineTrace(e);
+    return CSV_JOINER.join(lines).replace('\n', ' ');
+  }
+
+  private static List<String> traceDetails(Throwable e) {
+    // Only include the base message and first line of output, which will have the offending line.
+    return Arrays.stream(stackTraceString(e).split("\n")).toList().subList(0, 2);
   }
 
   public static List<String> friendlyLineTrace(Throwable e) {
