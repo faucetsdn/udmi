@@ -467,11 +467,12 @@ class LocalDevice {
       settings.credentials = deviceCredentials;
       settings.generation = generation;
       settings.blocked = deviceKind == DeviceKind.EXTRA;
-      settings.updated = config.getUpdatedTimestamp();
 
       if (metadata == null) {
         return;
       }
+
+      settings.updated = config.getUpdatedTimestamp();
       settings.metadata = deviceMetadataString();
       settings.deviceNumId = ifNotNullGet(metadata.cloud, cloud -> cloud.num_id);
       settings.proxyDevices = config.getProxyDevicesList();
