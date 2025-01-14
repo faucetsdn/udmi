@@ -28,7 +28,6 @@ import static com.google.udmi.util.JsonUtil.loadFileRequired;
 import static com.google.udmi.util.JsonUtil.safeSleep;
 import static com.google.udmi.util.JsonUtil.writeFile;
 import static com.google.udmi.util.MetadataMapKeys.UDMI_PREFIX;
-import static com.google.udmi.util.SiteModel.CLOUD_MODEL_FILE;
 import static com.google.udmi.util.SiteModel.DEVICES_DIR;
 import static com.google.udmi.util.SiteModel.MOCK_PROJECT;
 import static java.lang.Math.ceil;
@@ -70,7 +69,6 @@ import java.time.Duration;
 import java.time.Instant;
 import java.util.AbstractMap.SimpleEntry;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Base64;
 import java.util.Collection;
 import java.util.Date;
@@ -557,12 +555,12 @@ public class Registrar {
     return makeLocalDevice(id, doValidate ? DeviceKind.LOCAL : DeviceKind.SIMPLE);
   }
 
-  private LocalDevice makeExtraDevice(String id) {
-    return makeLocalDevice(id, DeviceKind.EXTRA);
-  }
-
   private LocalDevice makeLocalDevice(String id, DeviceKind kind) {
     return new LocalDevice(siteModel, id, schemas, generation, kind);
+  }
+
+  private LocalDevice makeExtraDevice(String id) {
+    return makeLocalDevice(id, DeviceKind.EXTRA);
   }
 
   private boolean alreadyRegistered(String device) {

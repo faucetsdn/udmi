@@ -504,7 +504,8 @@ public class ClearBladeIotAccessProvider extends IotAccessBase {
       Consumer<Integer> progress) {
     try {
       CloudModel cloudModel = new CloudModel();
-      HashMap<String, CloudModel> boundDevices = fetchDevices(deviceRegistryId, gatewayId, progress);
+      HashMap<String, CloudModel> boundDevices =
+          fetchDevices(deviceRegistryId, gatewayId, progress);
       ifNotNullThen(gatewayId, options -> {
         debug(format("Gateway %s has %d bound devices", gatewayId, boundDevices.size()));
         cloudModel.gateway = makeGatewayModel(boundDevices);

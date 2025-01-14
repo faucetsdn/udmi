@@ -1,8 +1,6 @@
 package com.google.daq.mqtt.util;
 
-import static com.google.bos.iot.core.proxy.IotReflectorClient.isFunctionVersionSupported;
 import static com.google.common.base.Strings.isNullOrEmpty;
-import static com.google.daq.mqtt.sequencer.SequenceBase.EMPTY_MESSAGE;
 import static com.google.udmi.util.Common.CONDENSER_STRING;
 import static com.google.udmi.util.Common.DETAIL_KEY;
 import static com.google.udmi.util.Common.ERROR_KEY;
