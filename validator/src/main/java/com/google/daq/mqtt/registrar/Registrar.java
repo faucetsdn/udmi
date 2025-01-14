@@ -667,13 +667,14 @@ public class Registrar {
       cloudIotManager.deleteDevice(deviceId, null);
     } catch (DeviceGatewayBoundException boundException) {
       CloudModel cloudModel = boundException.getCloudModel();
-      Set<String> allIds = new HashSet<>(cloudModel.gateway.proxy_ids);
       if (cloudModel.resource_type == Resource_type.GATEWAY) {
-        System.err.printf("Retrying delete %s with bound devices: %s%n", deviceId, allIds);
-        cloudIotManager.deleteDevice(deviceId, allIds);
+        Set<String> proxyIds = new HashSet<>(cloudModel.gateway.proxy_ids);
+        System.err.printf("Retrying delete %s with bound devices: %s%n", deviceId, proxyIds);
+        cloudIotManager.deleteDevice(deviceId, proxyIds);
       } else if (cloudModel.resource_type == Resource_type.DEVICE) {
-        System.err.printf("Unbinding %s from bound gateways: %s%n", deviceId, allIds);
-        unbindDevicesFromGateways(allDevices, allIds);
+        Set<String> gatewayIds = ImmutableSet.of(cloudModel.gateway.gateway_id);
+        System.err.printf("Unbinding %s from bound gateways: %s%n", deviceId, gatewayIds);
+        unbindDevicesFromGateways(allDevices, gatewayIds);
         System.err.printf("Retrying delete %s%n", deviceId);
         cloudIotManager.deleteDevice(deviceId, null);
       } else {
