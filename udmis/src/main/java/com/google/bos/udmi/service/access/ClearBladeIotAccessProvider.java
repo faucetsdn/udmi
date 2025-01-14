@@ -534,7 +534,8 @@ public class ClearBladeIotAccessProvider extends IotAccessBase {
     return boundDevices;
   }
 
-  private void augmentProxiedModel(Entry<String, CloudModel> entry, HashMap<String, String> proxyDeviceGateways) {
+  private void augmentProxiedModel(Entry<String, CloudModel> entry,
+      HashMap<String, String> proxyDeviceGateways) {
     String gatewayId = proxyDeviceGateways.get(entry.getKey());
     ifNotNullThen(gatewayId, id -> {
       GatewayModel gatewayModel = new GatewayModel();
