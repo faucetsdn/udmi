@@ -120,7 +120,7 @@ public class IotMockProvider implements IotProvider {
   }
 
   @Override
-  public void bindDeviceToGateway(Set<String> proxyDeviceIds, String gatewayDeviceId,
+  public void bindGatewayDevices(String gatewayDeviceId, Set<String> proxyDeviceIds,
       boolean toBind) {
     proxyDeviceIds.forEach(proxyDeviceId -> {
       checkArgument(cloudDevices.containsKey(proxyDeviceId), "missing proxy device");
