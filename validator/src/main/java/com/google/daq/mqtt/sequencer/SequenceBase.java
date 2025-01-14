@@ -822,9 +822,10 @@ public class SequenceBase {
 
     resetDeviceConfig(true);
 
-    returnAltRegistryRedirect();
-
+    // Do this before altRegistryRedirect() because of the change-detecting process.
     resetConfig(resetRequired);
+
+    returnAltRegistryRedirect();
 
     updateConfig("initial setup");
 
