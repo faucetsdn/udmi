@@ -59,7 +59,7 @@ public abstract class Common {
   public static final Joiner DETAIL_JOINER = Joiner.on(DETAIL_SEPARATOR);
   public static final String CATEGORY_PROPERTY_KEY = "category";
   public static final Pattern DEVICE_ID_ALLOWABLE = Pattern.compile("^[-._a-zA-Z0-9]+$");
-  public static final Pattern POINT_NAME_ALLOWABLE = DEVICE_ID_ALLOWABLE;
+  public static final Pattern POINT_NAME_ALLOWABLE = Pattern.compile("^[-_a-zA-Z0-9]+$");
   public static final int SEC_TO_MS = 1000;
   public static final String SOURCE_SEPARATOR = "+";
   public static final String SOURCE_SEPARATOR_REGEX = "\\" + SOURCE_SEPARATOR;
