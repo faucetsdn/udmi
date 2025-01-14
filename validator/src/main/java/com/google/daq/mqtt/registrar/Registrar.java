@@ -36,6 +36,7 @@ import static java.lang.Math.ceil;
 import static java.lang.String.format;
 import static java.util.Objects.requireNonNull;
 import static java.util.Optional.ofNullable;
+import static java.util.stream.Collectors.groupingBy;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
@@ -1010,37 +1011,35 @@ public class Registrar {
   private void bindGatewayDevices(Map<String, LocalDevice> localDevices) {
     try {
       final Instant start = Instant.now();
-      Set<LocalDevice> gateways = localDevices.values().stream().filter(LocalDevice::isGateway)
-          .collect(Collectors.toSet());
-      Set<Entry<String, String>> bindings = gateways.stream()
-          .map(gateway -> getBindings(localDevices.keySet(), gateway)).flatMap(Collection::stream)
-          .collect(Collectors.toSet());
+      Map<String, Set<LocalDevice>> gatewayBindings = localDevices.values().stream()
+          .filter(LocalDevice::isProxied)
+          .collect(groupingBy(LocalDevice::getGatewayId, Collectors.toSet()));
       AtomicInteger bindingCount = new AtomicInteger();
-      System.err.printf("Binding %d unbound devices to %d gateways...%n", bindings.size(),
-          gateways.size());
-      bindings.forEach(binding -> {
+      System.err.printf("Binding devices to gateways: %s%n", gatewayBindings.keySet());
+      gatewayBindings.forEach((gatewayId, proxiedDevices) -> {
         parallelExecute(() -> {
           try {
-            String proxyDeviceId = binding.getKey();
-            String gatewayId = binding.getValue();
+            Set<String> proxyIds = proxiedDevices.stream().map(LocalDevice::getDeviceId)
+                .collect(Collectors.toSet());
             int count = bindingCount.incrementAndGet();
-            System.err.printf("Binding %s to %s (%d/%d)%n", proxyDeviceId, gatewayId, count,
-                bindings.size());
-            cloudIotManager.bindDevices(ImmutableSet.of(proxyDeviceId), gatewayId, true);
+            System.err.printf("Binding %s to %s (%d/%d)%n", proxyIds, gatewayId, count,
+                gatewayBindings.size());
+            cloudIotManager.bindDevices(proxyIds, gatewayId, true);
           } catch (Exception e) {
-            localDevices.get(binding.getKey()).captureError(LocalDevice.EXCEPTION_BINDING, e);
+            proxiedDevices.forEach(
+                localDevice -> localDevice.captureError(LocalDevice.EXCEPTION_BINDING, e));
           }
         });
       });
 
       System.err.println("Waiting for device binding...");
-      dynamicTerminate(bindings.size());
+      dynamicTerminate(gatewayBindings.size());
 
       Duration between = Duration.between(start, Instant.now());
       double seconds = between.getSeconds() + between.getNano() / 1e9;
       System.err.printf("Finished binding gateways in %.03f%n", seconds);
     } catch (Exception e) {
-      throw new RuntimeException("While binding gateways", e);
+      throw new RuntimeException("While binding devices to gateways", e);
     }
   }
 

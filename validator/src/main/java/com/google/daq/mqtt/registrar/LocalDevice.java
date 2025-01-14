@@ -20,7 +20,9 @@ import static com.google.udmi.util.GeneralUtils.ifTrueThen;
 import static com.google.udmi.util.GeneralUtils.isTrue;
 import static com.google.udmi.util.GeneralUtils.writeString;
 import static com.google.udmi.util.JsonUtil.OBJECT_MAPPER;
+import static com.google.udmi.util.JsonUtil.loadFile;
 import static com.google.udmi.util.JsonUtil.unquoteJson;
+import static com.google.udmi.util.SiteModel.CLOUD_MODEL_FILE;
 import static com.google.udmi.util.SiteModel.METADATA_JSON;
 import static com.google.udmi.util.SiteModel.NORMALIZED_JSON;
 import static java.lang.String.format;
@@ -183,7 +185,7 @@ class LocalDevice {
   private final File deviceDir;
   private final File outDir;
   private final DeviceKind deviceKind;
-  private Metadata metadata;
+  private final Metadata metadata;
   private final ExceptionMap exceptionMap;
   private final String generation;
   private final List<Credential> deviceCredentials = new ArrayList<>();
@@ -450,7 +452,21 @@ class LocalDevice {
   }
 
   boolean isProxied() {
-    return config != null && config.isProxied();
+    return isExtraKind() ? getGatewayId() != null
+        : config != null && config.isProxied();
+  }
+
+  private CloudModel extraCloudModel() {
+    return loadFile(CloudModel.class, new File(siteModel.getExtraDir(deviceId), CLOUD_MODEL_FILE));
+  }
+
+  private boolean isExtraKind() {
+    return deviceKind == DeviceKind.EXTRA;
+  }
+
+  String getGatewayId() {
+    return isExtraKind() ? extraCloudModel().gateway.gateway_id
+        : ifNotNullGet(metadata.gateway, model -> model.gateway_id);
   }
 
   boolean isDirectConnect() {
