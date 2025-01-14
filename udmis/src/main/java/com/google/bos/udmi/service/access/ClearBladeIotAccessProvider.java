@@ -10,6 +10,7 @@ import static com.google.udmi.util.GeneralUtils.friendlyStackTrace;
 import static com.google.udmi.util.GeneralUtils.ifNotNullGet;
 import static com.google.udmi.util.GeneralUtils.ifNotNullThen;
 import static com.google.udmi.util.GeneralUtils.ifNotTrueThen;
+import static com.google.udmi.util.GeneralUtils.ifTrueGet;
 import static com.google.udmi.util.GeneralUtils.ifTrueThen;
 import static com.google.udmi.util.GeneralUtils.isTrue;
 import static com.google.udmi.util.GeneralUtils.writeString;
@@ -19,7 +20,6 @@ import static com.google.udmi.util.MetadataMapKeys.UDMI_UPDATED;
 import static java.lang.String.format;
 import static java.util.Objects.requireNonNull;
 import static java.util.Optional.ofNullable;
-import static java.util.function.Function.identity;
 import static java.util.stream.Collectors.toMap;
 import static udmi.schema.CloudModel.Operation.BIND;
 import static udmi.schema.CloudModel.Operation.BOUND;
@@ -75,12 +75,14 @@ import com.google.common.collect.BiMap;
 import com.google.common.collect.ImmutableBiMap;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
+import com.google.udmi.util.GeneralUtils;
 import com.google.udmi.util.JsonUtil;
 import java.io.File;
 import java.util.AbstractMap.SimpleEntry;
 import java.util.Base64;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -98,6 +100,7 @@ import udmi.schema.Credential;
 import udmi.schema.Credential.Key_format;
 import udmi.schema.Envelope;
 import udmi.schema.Envelope.SubFolder;
+import udmi.schema.GatewayModel;
 import udmi.schema.IotAccess;
 
 /**
@@ -244,7 +247,7 @@ public class ClearBladeIotAccessProvider extends IotAccessBase {
 
   private CloudModel bindDevicesToGateway(String registryId, String gatewayId,
       CloudModel cloudModel, Consumer<Integer> progress) {
-    Set<String> deviceIds = cloudModel.device_ids.keySet();
+    Set<String> deviceIds = new HashSet<>(cloudModel.gateway.proxy_ids);
     boolean toBind = cloudModel.operation == BIND;
     bindDevicesGateways(registryId, ImmutableSet.of(gatewayId), deviceIds, toBind, progress);
     CloudModel reply = new CloudModel();
@@ -449,18 +452,14 @@ public class ClearBladeIotAccessProvider extends IotAccessBase {
     cloudModel.num_id = hashedDeviceId(registryId, deviceId);
     cloudModel.operation = BOUND;
     cloudModel.resource_type = DEVICE;
-    cloudModel.device_ids = boundGateways.stream().collect(toMap(identity(), this::getBoundModel));
+    cloudModel.gateway = getDeviceGatewayModel(boundGateways);
     return cloudModel;
   }
 
-  private CloudModel getBoundModel(String id) {
-    return new CloudModel();
-  }
-
-  private Set<String> findGatewaysForDevice(String registryId, Device proxyDevice) {
-    CloudModel cloudModel = findBoundGateways(registryId, proxyDevice);
-    return cloudModel.device_ids.entrySet().stream().filter(entry ->
-        entry.getValue().resource_type == GATEWAY).map(Entry::getKey).collect(Collectors.toSet());
+  private GatewayModel getDeviceGatewayModel(Set<String> boundGateways) {
+    GatewayModel gatewayModel = new GatewayModel();
+    gatewayModel.gateway_id = GeneralUtils.thereCanBeOnlyOne(boundGateways.stream().toList());
+    return gatewayModel;
   }
 
   private String getDeviceName(String registryId, String deviceId) {
@@ -505,13 +504,21 @@ public class ClearBladeIotAccessProvider extends IotAccessBase {
       Consumer<Integer> progress) {
     try {
       CloudModel cloudModel = new CloudModel();
-      cloudModel.device_ids = fetchDevices(deviceRegistryId, gatewayId, progress);
-      ifNotNullThen(gatewayId, options -> debug(format("Gateway %s has %d bound devices",
-          gatewayId, cloudModel.device_ids.size())));
+      HashMap<String, CloudModel> boundDevices = fetchDevices(deviceRegistryId, gatewayId, progress);
+      ifNotNullThen(gatewayId, options -> {
+        debug(format("Gateway %s has %d bound devices", gatewayId, boundDevices.size()));
+        cloudModel.gateway = makeGatewayModel(boundDevices);
+      }, () -> cloudModel.device_ids = boundDevices);
       return cloudModel;
     } catch (Exception e) {
       throw new RuntimeException("While listing devices " + getRegistryName(deviceRegistryId), e);
     }
+  }
+
+  private GatewayModel makeGatewayModel(HashMap<String, CloudModel> boundDevices) {
+    GatewayModel gatewayModel = new GatewayModel();
+    gatewayModel.proxy_ids = boundDevices.keySet().stream().toList();
+    return gatewayModel;
   }
 
   @Override
@@ -590,7 +597,8 @@ public class ClearBladeIotAccessProvider extends IotAccessBase {
   private CloudModel unbindAndDelete(String registryId, Device device, CloudModel request,
       Consumer<Integer> progress) {
     try {
-      Set<String> unbindIds = ifNotNullGet(request.device_ids, Map::keySet);
+      Set<String> unbindIds = ofNullable(request.gateway)
+          .map(gatewayModel -> new HashSet<>(gatewayModel.proxy_ids)).orElse(null);
       return unbindAndDeleteCore(registryId, device, unbindIds, progress);
     } catch (Exception e) {
       String stackTrace = friendlyStackTrace(e);
@@ -728,12 +736,18 @@ public class ClearBladeIotAccessProvider extends IotAccessBase {
       requireNonNull(device, "GetDeviceRequest failed");
       CloudModel cloudModel = convertFull(device);
       cloudModel.operation = Operation.READ;
-      cloudModel.device_ids = listRegistryDevices(registryId, deviceId, null).device_ids;
+      cloudModel.gateway = fetchDeviceGatewayModel(registryId, deviceId, device);
       return cloudModel;
     } catch (Exception e) {
       throw new RuntimeException("While fetching device " + devicePath, e);
     }
 
+  }
+
+  private GatewayModel fetchDeviceGatewayModel(String registryId, String gatewayId, Device device) {
+    requireNonNull(gatewayId, "gateway id not specified");
+    return ifTrueGet(device.toBuilder().getGatewayConfig().getGatewayType() == GatewayType.GATEWAY,
+        () -> listRegistryDevices(registryId, gatewayId, null).gateway);
   }
 
   @Override

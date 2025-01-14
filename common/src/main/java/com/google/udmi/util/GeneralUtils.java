@@ -50,6 +50,7 @@ import java.util.TreeMap;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Supplier;
+import java.util.function.ToLongBiFunction;
 import java.util.stream.Collector;
 import java.util.stream.Collectors;
 import org.apache.commons.io.FileUtils;
@@ -249,6 +250,16 @@ public class GeneralUtils {
 
   public static String nullAsNull(String part) {
     return NULL_STRING.equals(part) ? null : part;
+  }
+
+  public static String thereCanBeOnlyOne(List<String> list) {
+    if (list == null || list.size() == 0) {
+      return null;
+    }
+    if (list.size() != 1) {
+      throw new RuntimeException("More than one singular candidate: " + list);
+    }
+    return list.get(0);
   }
 
   public static Date toDate(Instant lastSeen) {
