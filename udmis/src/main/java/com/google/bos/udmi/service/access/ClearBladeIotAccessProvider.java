@@ -181,8 +181,8 @@ public class ClearBladeIotAccessProvider extends IotAccessBase {
     return getDate(isNullOrEmpty(lastEventTime) ? null : lastEventTime);
   }
 
-  private static boolean isGateway(Device device) {
-    return resourceType(device) == GATEWAY;
+  private boolean isGateway(Entry<String, CloudModel> modelEntry) {
+    return modelEntry.getValue().resource_type == GATEWAY;
   }
 
   /**
@@ -253,6 +253,7 @@ public class ClearBladeIotAccessProvider extends IotAccessBase {
     CloudModel reply = new CloudModel();
     reply.num_id = deviceIds.size() > 0 ? EMPTY_RETURN_RECEIPT : null;
     reply.operation = cloudModel.operation;
+    reply.credentials = null;
     return reply;
   }
 
@@ -285,6 +286,7 @@ public class ClearBladeIotAccessProvider extends IotAccessBase {
       CloudModel cloudModel = new CloudModel();
       cloudModel.operation = Operation.BLOCK;
       cloudModel.num_id = hashedDeviceId(registryId, deviceId);
+      cloudModel.credentials = null;
       return cloudModel;
     } catch (Exception e) {
       throw new RuntimeException("While updating " + deviceId, e);
@@ -307,6 +309,7 @@ public class ClearBladeIotAccessProvider extends IotAccessBase {
     CloudModel cloudModel = new CloudModel();
     cloudModel.operation = operation;
     cloudModel.num_id = EMPTY_RETURN_RECEIPT;
+    cloudModel.credentials = null;
     return cloudModel;
   }
 
@@ -453,6 +456,7 @@ public class ClearBladeIotAccessProvider extends IotAccessBase {
     cloudModel.operation = BOUND;
     cloudModel.resource_type = DEVICE;
     cloudModel.gateway = getDeviceGatewayModel(boundGateways);
+    cloudModel.credentials = null;
     return cloudModel;
   }
 
@@ -500,20 +504,52 @@ public class ClearBladeIotAccessProvider extends IotAccessBase {
     return String.valueOf(Objects.hash(registryId, deviceId));
   }
 
-  private CloudModel listRegistryDevices(String deviceRegistryId, String gatewayId,
+  private CloudModel listRegistryDevices(String registryId, String gatewayId,
       Consumer<Integer> progress) {
     try {
       CloudModel cloudModel = new CloudModel();
       HashMap<String, CloudModel> boundDevices =
-          fetchDevices(deviceRegistryId, gatewayId, progress);
-      ifNotNullThen(gatewayId, options -> {
-        debug(format("Gateway %s has %d bound devices", gatewayId, boundDevices.size()));
+          fetchDevices(registryId, gatewayId, progress);
+      debug(format("Fetched %d devices from %s gateway %s", boundDevices.size(), registryId,
+          gatewayId));
+      if (gatewayId != null) {
         cloudModel.gateway = makeGatewayModel(boundDevices);
-      }, () -> cloudModel.device_ids = boundDevices);
+      } else {
+        cloudModel.device_ids = augmentGatewayModels(registryId, boundDevices);
+      }
+      cloudModel.credentials = null;
       return cloudModel;
     } catch (Exception e) {
-      throw new RuntimeException("While listing devices " + getRegistryName(deviceRegistryId), e);
+      throw new RuntimeException("While listing devices " + getRegistryName(registryId), e);
     }
+  }
+
+  private Map<String, CloudModel> augmentGatewayModels(String registryId,
+      HashMap<String, CloudModel> boundDevices) {
+    HashMap<String, String> proxyDeviceGateways = new HashMap<>();
+    boundDevices.entrySet().stream().filter(this::isGateway)
+        .forEach(entry -> augmentGatewayModel(registryId, entry, proxyDeviceGateways));
+    boundDevices.entrySet()
+        .forEach(entry -> augmentProxiedModel(entry, proxyDeviceGateways));
+    return boundDevices;
+  }
+
+  private void augmentProxiedModel(Entry<String, CloudModel> entry, HashMap<String, String> proxyDeviceGateways) {
+    String gatewayId = proxyDeviceGateways.get(entry.getKey());
+    ifNotNullThen(gatewayId, id -> {
+      GatewayModel gatewayModel = new GatewayModel();
+      gatewayModel.gateway_id = id;
+      gatewayModel.proxy_ids = null;
+      entry.getValue().gateway = gatewayModel;
+    });
+  }
+
+  private void augmentGatewayModel(String registryId, Entry<String, CloudModel> model,
+      HashMap<String, String> proxyDeviceGateways) {
+    String gatewayId = model.getKey();
+    CloudModel gatewayModel = listRegistryDevices(registryId, gatewayId, null);
+    model.getValue().gateway = gatewayModel.gateway;
+    gatewayModel.gateway.proxy_ids.forEach(proxyId -> proxyDeviceGateways.put(proxyId, gatewayId));
   }
 
   private GatewayModel makeGatewayModel(HashMap<String, CloudModel> boundDevices) {

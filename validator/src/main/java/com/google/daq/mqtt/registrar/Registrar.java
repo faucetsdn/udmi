@@ -17,6 +17,7 @@ import static com.google.udmi.util.GeneralUtils.ifNotEmptyThrow;
 import static com.google.udmi.util.GeneralUtils.ifNotNullGet;
 import static com.google.udmi.util.GeneralUtils.ifNotNullThen;
 import static com.google.udmi.util.GeneralUtils.ifNotNullThrow;
+import static com.google.udmi.util.GeneralUtils.ifNotTrueThen;
 import static com.google.udmi.util.GeneralUtils.ifNullThen;
 import static com.google.udmi.util.GeneralUtils.ifTrueGet;
 import static com.google.udmi.util.GeneralUtils.ifTrueThen;
@@ -72,7 +73,6 @@ import java.util.AbstractMap.SimpleEntry;
 import java.util.ArrayList;
 import java.util.Base64;
 import java.util.Collection;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -921,13 +921,11 @@ public class Registrar {
     try {
       extraDir.mkdirs();
       File modelFile = new File(extraDir, SiteModel.CLOUD_MODEL_FILE);
-      Date previous = ifTrueGet(modelFile.exists(),
-          () -> loadFile(CloudModel.class, modelFile).updated_time);
-      if (previous == null || !previous.equals(augmentedModel.updated_time)) {
+      ifNotTrueThen(augmentedModel.equals(loadFile(CloudModel.class, modelFile)), () -> {
         System.err.println("Writing extra device model to " + devPath);
         writeFile(augmentedModel, modelFile);
         updateExtraMetadata(extraName, extraDir);
-      }
+      });
     } catch (Exception e) {
       throw new RuntimeException("Writing extra device data " + extraDir.getAbsolutePath(), e);
     }
