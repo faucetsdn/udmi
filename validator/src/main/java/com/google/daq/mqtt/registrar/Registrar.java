@@ -1021,6 +1021,8 @@ public class Registrar {
           try {
             Set<String> proxyIds = proxiedDevices.stream().map(LocalDevice::getDeviceId)
                 .collect(Collectors.toSet());
+            CloudModel gatewayCloud = cloudModels.get(gatewayId);
+            System.err.println("Already bound: " + gatewayCloud.gateway.proxy_ids);
             int count = bindingCount.incrementAndGet();
             System.err.printf("Binding %s to %s (%d/%d)%n", proxyIds, gatewayId, count,
                 gatewayBindings.size());
