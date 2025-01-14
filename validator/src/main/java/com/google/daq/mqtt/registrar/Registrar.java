@@ -575,13 +575,16 @@ public class Registrar {
     Set<String> explicitDevices = getExplicitDevices();
     Set<String> cloudDevices = cloudModels.keySet();
 
-    final SetView<String> toDelete;
+    final Set<String> toDelete;
     final String reason;
     boolean handleExplicitly = explicitDevices != null;
 
     if (handleExplicitly) {
       toDelete = intersection(cloudDevices, explicitDevices);
       reason = "explicit";
+    } else if (deleteDevices && expungeDevices) {
+      toDelete = cloudDevices;
+      reason = "everything";
     } else if (deleteDevices) {
       toDelete = intersection(cloudDevices, workingDevices.keySet());
       reason = "registered";
