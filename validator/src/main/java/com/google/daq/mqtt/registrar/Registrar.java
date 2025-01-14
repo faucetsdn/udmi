@@ -73,7 +73,6 @@ import java.time.Instant;
 import java.util.AbstractMap.SimpleEntry;
 import java.util.ArrayList;
 import java.util.Base64;
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -1021,12 +1020,14 @@ public class Registrar {
           try {
             Set<String> proxyIds = proxiedDevices.stream().map(LocalDevice::getDeviceId)
                 .collect(Collectors.toSet());
-            CloudModel gatewayCloud = cloudModels.get(gatewayId);
-            System.err.println("Already bound: " + gatewayCloud.gateway.proxy_ids);
+            Set<String> boundDevices = ofNullable(cloudIotManager.fetchBoundDevices(gatewayId))
+                .orElse(ImmutableSet.of());
+            System.err.printf("Already bound to %s: %s%n", gatewayId, boundDevices);
+            SetView<String> toBind = difference(proxyIds, boundDevices);
             int count = bindingCount.incrementAndGet();
-            System.err.printf("Binding %s to %s (%d/%d)%n", proxyIds, gatewayId, count,
+            System.err.printf("Binding %s to %s (%d/%d)%n", toBind, gatewayId, count,
                 gatewayBindings.size());
-            cloudIotManager.bindDevices(proxyIds, gatewayId, true);
+            cloudIotManager.bindDevices(toBind, gatewayId, true);
           } catch (Exception e) {
             proxiedDevices.forEach(
                 localDevice -> localDevice.captureError(LocalDevice.EXCEPTION_BINDING, e));
