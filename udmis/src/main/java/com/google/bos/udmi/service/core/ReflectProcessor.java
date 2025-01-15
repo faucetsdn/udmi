@@ -355,9 +355,11 @@ public class ReflectProcessor extends ProcessorBase {
     return cloudModel;
   }
 
+  /**
+   /* TODO: Remove this workaround when all clients have been updated (2025/01/14).
+   /* Normally would check the actual version value, but this is checking legacy before it existed.
+   */
   public static boolean isLegacyRequest(CloudModel query) {
-    // TODO: Remove this workaround when all clients have been updated (2025/01/14).
-    // Normally would check the actual version value, but this is checking legacy before it existed.
     return query == null || query.functions_ver == null;
   }
 

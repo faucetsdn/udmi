@@ -13,7 +13,6 @@ import static com.google.udmi.util.GeneralUtils.ifNotTrueThen;
 import static com.google.udmi.util.GeneralUtils.ifTrueGet;
 import static com.google.udmi.util.GeneralUtils.ifTrueThen;
 import static com.google.udmi.util.GeneralUtils.isTrue;
-import static com.google.udmi.util.GeneralUtils.thereCanBeOnlyOne;
 import static com.google.udmi.util.GeneralUtils.writeString;
 import static com.google.udmi.util.JsonUtil.getDate;
 import static com.google.udmi.util.JsonUtil.writeFile;
