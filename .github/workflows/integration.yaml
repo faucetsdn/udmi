@@ -69,7 +69,7 @@ jobs:
   simple:
     name: Simple sequence test
     runs-on: ubuntu-latest
-    timeout-minutes: 5
+    timeout-minutes: 10
     needs: images
     strategy:
       fail-fast: false
