@@ -13,6 +13,7 @@ import static com.google.udmi.util.GeneralUtils.ifNotTrueThen;
 import static com.google.udmi.util.GeneralUtils.ifTrueGet;
 import static com.google.udmi.util.GeneralUtils.ifTrueThen;
 import static com.google.udmi.util.GeneralUtils.isTrue;
+import static com.google.udmi.util.GeneralUtils.thereCanBeOnlyOne;
 import static com.google.udmi.util.GeneralUtils.writeString;
 import static com.google.udmi.util.JsonUtil.getDate;
 import static com.google.udmi.util.JsonUtil.writeFile;
@@ -259,7 +260,7 @@ public class ClearBladeIotAccessProvider extends IotAccessBase {
     return reply;
   }
 
-  private static HashSet<String> getDeviceIds(GatewayModel gateway) {
+  private static Set<String> getDeviceIds(GatewayModel gateway) {
     return new HashSet<>(gateway.proxy_ids);
   }
 
@@ -649,7 +650,12 @@ public class ClearBladeIotAccessProvider extends IotAccessBase {
       String stackTrace = friendlyStackTrace(e);
       if (stackTrace.contains(BOUND_TO_GATEWAY_MARKER)) {
         debug("Device bound to gateway. Finding bindings to unbind...");
-        return findGatewaysForDevice(registryId, device);
+        CloudModel gatewaysForDevice = findGatewaysForDevice(registryId, device);
+        if (ReflectProcessor.isLegacyRequest(request)) {
+          warn("Handling legacy bound delete...");
+          return findUnbindAndDelete(registryId, device, gatewaysForDevice);
+        }
+        return gatewaysForDevice;
       } else if (stackTrace.contains(HAD_BOUND_DEVICES_MARKER)) {
         debug("Gateway has bound devices. Finding bindings to unbind...");
         return findDevicesForGateway(registryId, device);
@@ -657,6 +663,16 @@ public class ClearBladeIotAccessProvider extends IotAccessBase {
         throw e;
       }
     }
+  }
+
+  private CloudModel findUnbindAndDelete(String registryId, Device device, CloudModel request) {
+    String gatewayId = request.gateway.gateway_id;
+    String deviceId = device.toBuilder().getId();
+    unbindDevice(registryId, gatewayId, deviceId);
+    unbindAndDeleteCore(registryId, device, null, null);
+    CloudModel cloudModel = new CloudModel();
+    cloudModel.operation = DELETE;
+    return cloudModel;
   }
 
   private Set<String> legacyFindGateways(String registryId, Device device) {
