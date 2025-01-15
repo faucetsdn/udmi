@@ -20,6 +20,7 @@ import static com.google.udmi.util.GeneralUtils.friendlyStackTrace;
 import static com.google.udmi.util.GeneralUtils.ifNotNullGet;
 import static com.google.udmi.util.GeneralUtils.ifNotNullThen;
 import static com.google.udmi.util.GeneralUtils.ifNullThen;
+import static com.google.udmi.util.GeneralUtils.ifTrueThen;
 import static com.google.udmi.util.GeneralUtils.multiTrim;
 import static com.google.udmi.util.GeneralUtils.requireNull;
 import static com.google.udmi.util.GeneralUtils.stackTraceString;
@@ -53,6 +54,7 @@ import com.google.udmi.util.JsonUtil;
 import com.google.udmi.util.MetadataMapKeys;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.stream.Collectors;
@@ -349,7 +351,27 @@ public class ReflectProcessor extends ProcessorBase {
       warn("Removing return result operation due to legacy client query.");
       cloudModel.operation = null;
     }
+    ifTrueThen(isLegacyRequest(query), () -> downgradeReply(attributes, cloudModel));
     return cloudModel;
+  }
+
+  public static boolean isLegacyRequest(CloudModel query) {
+    // TODO: Remove this workaround when all clients have been updated (2025/01/14).
+    return query == null || query.req_version == null;
+  }
+
+  private void downgradeReply(Envelope attributes, CloudModel cloudModel) {
+    if (cloudModel.gateway != null) {
+      List<String> proxyIds = cloudModel.gateway.proxy_ids;
+      warn("Downgrading legacy query reply for " + attributes.deviceRegistryId);
+      cloudModel.device_ids =
+          proxyIds.stream().collect(Collectors.toMap(id -> id, this::makeDummyCloudModel));
+      cloudModel.gateway = null;
+    }
+  }
+
+  private CloudModel makeDummyCloudModel(String id) {
+    return new CloudModel();
   }
 
   private CloudModel reflectQueryCore(Envelope attributes) {

@@ -70,6 +70,7 @@ import com.clearblade.cloud.iot.v1.unbinddevicefromgateway.UnbindDeviceFromGatew
 import com.clearblade.cloud.iot.v1.updatedevice.UpdateDeviceRequest;
 import com.clearblade.cloud.iot.v1.utils.ByteString;
 import com.clearblade.cloud.iot.v1.utils.LogLevel;
+import com.google.bos.udmi.service.core.ReflectProcessor;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.BiMap;
 import com.google.common.collect.ImmutableBiMap;
@@ -247,7 +248,8 @@ public class ClearBladeIotAccessProvider extends IotAccessBase {
 
   private CloudModel bindDevicesToGateway(String registryId, String gatewayId,
       CloudModel cloudModel, Consumer<Integer> progress) {
-    Set<String> deviceIds = new HashSet<>(cloudModel.gateway.proxy_ids);
+    Set<String> deviceIds = ReflectProcessor.isLegacyRequest(cloudModel)
+        ? cloudModel.device_ids.keySet() : getDeviceIds(cloudModel.gateway);
     boolean toBind = cloudModel.operation == BIND;
     bindDevicesGateways(registryId, ImmutableSet.of(gatewayId), deviceIds, toBind, progress);
     CloudModel reply = new CloudModel();
@@ -255,6 +257,10 @@ public class ClearBladeIotAccessProvider extends IotAccessBase {
     reply.operation = cloudModel.operation;
     reply.credentials = null;
     return reply;
+  }
+
+  private static HashSet<String> getDeviceIds(GatewayModel gateway) {
+    return new HashSet<>(gateway.proxy_ids);
   }
 
   private void bindDevice(String registryId, String gatewayId, String id) {
@@ -438,14 +444,14 @@ public class ClearBladeIotAccessProvider extends IotAccessBase {
     return collect;
   }
 
-  private CloudModel findBoundDevices(String registryId, Device device) {
+  private CloudModel findDevicesForGateway(String registryId, Device device) {
     CloudModel cloudModel = listRegistryDevices(registryId, device.toBuilder().getId(), null);
     cloudModel.operation = BOUND;
     cloudModel.resource_type = GATEWAY;
     return cloudModel;
   }
 
-  private CloudModel findBoundGateways(String registryId, Device device) {
+  private CloudModel findGatewaysForDevice(String registryId, Device device) {
     String deviceId = requireNonNull(device.toBuilder().getId(), "unspecified device id");
     Set<String> boundGateways = fetchBoundGateways(registryId, deviceId, null).keySet();
     if (boundGateways.isEmpty()) {
@@ -635,20 +641,30 @@ public class ClearBladeIotAccessProvider extends IotAccessBase {
   private CloudModel unbindAndDelete(String registryId, Device device, CloudModel request,
       Consumer<Integer> progress) {
     try {
-      Set<String> unbindIds = ofNullable(request.gateway)
-          .map(gatewayModel -> new HashSet<>(gatewayModel.proxy_ids)).orElse(null);
+      final Set<String> unbindIds = ReflectProcessor.isLegacyRequest(request)
+          ? legacyFindGateways(registryId, device)
+          : ifNotNullGet(request.gateway, ClearBladeIotAccessProvider::getDeviceIds);
       return unbindAndDeleteCore(registryId, device, unbindIds, progress);
     } catch (Exception e) {
       String stackTrace = friendlyStackTrace(e);
       if (stackTrace.contains(BOUND_TO_GATEWAY_MARKER)) {
         debug("Device bound to gateway. Finding bindings to unbind...");
-        return findBoundGateways(registryId, device);
+        return findGatewaysForDevice(registryId, device);
       } else if (stackTrace.contains(HAD_BOUND_DEVICES_MARKER)) {
         debug("Gateway has bound devices. Finding bindings to unbind...");
-        return findBoundDevices(registryId, device);
+        return findDevicesForGateway(registryId, device);
       } else {
         throw e;
       }
+    }
+  }
+
+  private Set<String> legacyFindGateways(String registryId, Device device) {
+    try {
+      return getDeviceIds(findDevicesForGateway(registryId, device).gateway);
+    } catch (RuntimeException e) {
+      warn("Ignoring legacy exception (likely not a gateway)");
+      return null;
     }
   }
 
@@ -685,7 +701,7 @@ public class ClearBladeIotAccessProvider extends IotAccessBase {
             () -> unbindDevice(registryId, gatewayId, deviceId));
       });
     });
-    ifNotNullThen(progress, p -> p.accept(opCount.get()));
+    ifTrueThen(opCount.get() > 0, () -> ifNotNullThen(progress, p -> p.accept(opCount.get())));
   }
 
   private void unbindDevice(String registryId, String gatewayId, String proxyId) {

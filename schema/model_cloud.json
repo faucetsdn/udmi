@@ -16,6 +16,10 @@
       "description": "Version of the UDMI schema",
       "type": "string"
     },
+    "req_version": {
+      "description": "Function version of this request",
+      "type": "integer"
+    },
     "connection_type": {
       "description": "Connection type for connecting to cloud",
       "enum": [
