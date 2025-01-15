@@ -82,6 +82,7 @@ import udmi.schema.Credential;
 import udmi.schema.Envelope;
 import udmi.schema.Envelope.SubFolder;
 import udmi.schema.Envelope.SubType;
+import udmi.schema.GatewayModel;
 import udmi.schema.Metadata;
 import udmi.schema.PointPointsetModel;
 
@@ -465,8 +466,8 @@ class LocalDevice {
   }
 
   String getGatewayId() {
-    return isExtraKind() ? extraCloudModel().gateway.gateway_id
-        : ifNotNullGet(metadata.gateway, model -> model.gateway_id);
+    GatewayModel gatewayModel = isExtraKind() ? extraCloudModel().gateway : metadata.gateway;
+    return ifNotNullGet(gatewayModel, model -> model.gateway_id);
   }
 
   boolean isDirectConnect() {
