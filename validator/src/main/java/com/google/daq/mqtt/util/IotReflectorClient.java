@@ -1,6 +1,7 @@
 package com.google.daq.mqtt.util;
 
 import static com.google.common.base.Strings.isNullOrEmpty;
+import static com.google.daq.mqtt.validator.Validator.TOOLS_FUNCTIONS_VERSION;
 import static com.google.udmi.util.Common.CONDENSER_STRING;
 import static com.google.udmi.util.Common.DETAIL_KEY;
 import static com.google.udmi.util.Common.ERROR_KEY;
@@ -75,7 +76,7 @@ public class IotReflectorClient implements IotProvider {
     SiteModel siteModel = new SiteModel(executionConfiguration.site_model);
     executionConfiguration.key_file = siteModel.validatorKey();
     messageClient = new com.google.bos.iot.core.proxy.IotReflectorClient(executionConfiguration,
-        Validator.TOOLS_FUNCTIONS_VERSION, toolName);
+        TOOLS_FUNCTIONS_VERSION, toolName);
     messageClient.activate();
     sessionPrefix = messageClient.getSessionPrefix();
     executor.execute(this::processReplies);
@@ -153,6 +154,7 @@ public class IotReflectorClient implements IotProvider {
 
   private CloudModel cloudModelTransaction(String deviceId, String topic, CloudModel model) {
     Operation operation = Preconditions.checkNotNull(model.operation, "no operation");
+    model.functions_ver = TOOLS_FUNCTIONS_VERSION;
     Map<String, Object> message = transaction(deviceId, topic, stringify(model), QuerySpeed.LONG);
     CloudModel cloudModel = convertTo(CloudModel.class, message);
     String cloudNumId = ifNotNullGet(cloudModel, result -> result.num_id);

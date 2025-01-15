@@ -357,7 +357,8 @@ public class ReflectProcessor extends ProcessorBase {
 
   public static boolean isLegacyRequest(CloudModel query) {
     // TODO: Remove this workaround when all clients have been updated (2025/01/14).
-    return query == null || query.req_version == null;
+    // Normally would check the actual version value, but this is checking legacy before it existed.
+    return query == null || query.functions_ver == null;
   }
 
   private void downgradeReply(Envelope attributes, CloudModel cloudModel) {

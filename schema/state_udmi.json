@@ -43,6 +43,10 @@
           "type": "string",
           "description": "Semantic tagged version of udmis install"
         },
+        "functions_ver": {
+          "type": "integer",
+          "description": "Version of the function interface used by this client"
+        },
         "udmi_commit": {
           "type": "string",
           "description": "Commit hash of this udmis install"

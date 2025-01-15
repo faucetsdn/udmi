@@ -43,7 +43,7 @@ class CloudModel:
   def __init__(self):
     self.timestamp = None
     self.version = None
-    self.req_version = None
+    self.functions_ver = None
     self.connection_type = None
     self.auth_type = None
     self.device_key = None
@@ -72,7 +72,7 @@ class CloudModel:
     result = CloudModel()
     result.timestamp = source.get('timestamp')
     result.version = source.get('version')
-    result.req_version = source.get('req_version')
+    result.functions_ver = source.get('functions_ver')
     result.connection_type = source.get('connection_type')
     result.auth_type = source.get('auth_type')
     result.device_key = source.get('device_key')
@@ -117,8 +117,8 @@ class CloudModel:
       result['timestamp'] = self.timestamp # 5
     if self.version:
       result['version'] = self.version # 5
-    if self.req_version:
-      result['req_version'] = self.req_version # 5
+    if self.functions_ver:
+      result['functions_ver'] = self.functions_ver # 5
     if self.connection_type:
       result['connection_type'] = self.connection_type # 5
     if self.auth_type:

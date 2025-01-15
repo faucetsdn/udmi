@@ -16,7 +16,7 @@
       "description": "Version of the UDMI schema",
       "type": "string"
     },
-    "req_version": {
+    "functions_ver": {
       "description": "Function version of this request",
       "type": "integer"
     },
