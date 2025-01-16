@@ -630,6 +630,8 @@ public class ClearBladeIotAccessProvider extends IotAccessBase {
     builder.setMetadata(model.metadata);
     CloudModel cloudModel = updateDevice(registryId, builder.build(), METADATA_FIELD_MASK);
     cloudModel.operation = Operation.MODIFY;
+    cloudModel.gateway = model.gateway;
+    cloudModel.device_ids = model.device_ids;
     return cloudModel;
   }
 
