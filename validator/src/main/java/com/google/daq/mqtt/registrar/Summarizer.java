@@ -2,6 +2,9 @@ package com.google.daq.mqtt.registrar;
 
 import static com.google.udmi.util.GeneralUtils.CSV_JOINER;
 import static com.google.udmi.util.GeneralUtils.ifNotNullGet;
+import static com.google.udmi.util.GeneralUtils.ifNotNullThen;
+import static com.google.udmi.util.GeneralUtils.ifNotNullThrow;
+import static com.google.udmi.util.GeneralUtils.ifTrueThen;
 import static com.google.udmi.util.JsonUtil.OBJECT_MAPPER;
 import static java.util.Optional.ofNullable;
 
@@ -62,13 +65,22 @@ abstract class Summarizer {
       try (PrintWriter writer = new PrintWriter(outFile)) {
         writer.println(CSV_JOINER.join(headers));
         combined.forEach(deviceId -> {
+          LocalDevice localDevice = localDevices.get(deviceId);
+          CloudModel cloudModel = cloudModels.get(deviceId);
+          correlateModels(localDevice, cloudModel);
           Map<String, String> rowValues =
-              ofNullable(ifNotNullGet(cloudModels.get(deviceId), this::extractDeviceRow))
-                  .orElse(ifNotNullGet(localDevices.get(deviceId), this::extractDeviceRow));
+              ofNullable(ifNotNullGet(cloudModel, this::extractDeviceRow))
+                  .orElse(ifNotNullGet(localDevice, this::extractDeviceRow));
           List<String> listValues = new ArrayList<>(headers.stream().map(rowValues::get).toList());
           listValues.set(headers.indexOf(DEVICE_ID_HEADER), deviceId);
           writer.println(CSV_JOINER.join(listValues));
         });
+      }
+    }
+
+    private void correlateModels(LocalDevice localDevice, CloudModel cloudModel) {
+      if (localDevice != null && cloudModel != null && localDevice.hasErrors()) {
+        cloudModel.operation = Operation.ERROR;
       }
     }
 

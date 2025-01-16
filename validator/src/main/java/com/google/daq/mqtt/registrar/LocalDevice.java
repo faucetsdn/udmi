@@ -377,11 +377,8 @@ class LocalDevice {
         throw new RuntimeException("Credential cloud.auth_type definition missing");
       }
       String authType = getAuthType();
-      Set<String> keyFiles =
-          (authType.equals(ES_CERT_TYPE) || authType.equals(
-              RSA_CERT_TYPE))
-              ? ALL_CERT_FILES
-              : ALL_KEY_FILES;
+      Set<String> keyFiles = (authType.equals(ES_CERT_TYPE) || authType.equals(RSA_CERT_TYPE))
+              ? ALL_CERT_FILES : ALL_KEY_FILES;
       for (String keyFile : keyFiles) {
         Credential deviceCredential = getDeviceCredential(keyFile);
         if (deviceCredential != null) {
@@ -629,9 +626,8 @@ class LocalDevice {
   }
 
   public void writeErrors() {
-    List<Pattern> ignoreErrors = exceptionManager.forDevice(getDeviceId());
+    ErrorTree errorTree = getErrorTree();
     File errorsFile = new File(outDir, DEVICE_ERRORS_MAP);
-    ErrorTree errorTree = getErrorTree(ignoreErrors);
     if (errorTree != null) {
       try (PrintStream printStream = new PrintStream(Files.newOutputStream(errorsFile.toPath()))) {
         System.err.println("Updating errors " + errorsFile);
@@ -645,12 +641,20 @@ class LocalDevice {
     }
   }
 
+  private ErrorTree getErrorTree() {
+    return getErrorTree(exceptionManager.forDevice(getDeviceId()));
+  }
+
   ErrorTree getErrorTree(List<Pattern> ignoreErrors) {
     if (exceptionMap.isEmpty()) {
       return null;
     }
     ErrorTree errorTree = ExceptionMap.format(exceptionMap);
     return errorTree.purge(ignoreErrors) ? null : errorTree;
+  }
+
+  public boolean hasErrors() {
+    return getErrorTree() != null;
   }
 
   String getNormalizedTimestamp() {
@@ -781,8 +785,7 @@ class LocalDevice {
   }
 
   public Set<Entry<String, ErrorTree>> getTreeChildren() {
-    List<Pattern> ignoreErrors = exceptionManager.forDevice(getDeviceId());
-    ErrorTree errorTree = getErrorTree(ignoreErrors);
+    ErrorTree errorTree = getErrorTree();
     if (errorTree != null && errorTree.children != null) {
       return errorTree.children.entrySet();
     }
