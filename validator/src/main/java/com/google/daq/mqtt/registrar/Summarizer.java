@@ -2,9 +2,6 @@ package com.google.daq.mqtt.registrar;
 
 import static com.google.udmi.util.GeneralUtils.CSV_JOINER;
 import static com.google.udmi.util.GeneralUtils.ifNotNullGet;
-import static com.google.udmi.util.GeneralUtils.ifNotNullThen;
-import static com.google.udmi.util.GeneralUtils.ifNotNullThrow;
-import static com.google.udmi.util.GeneralUtils.ifTrueThen;
 import static com.google.udmi.util.JsonUtil.OBJECT_MAPPER;
 import static java.util.Optional.ofNullable;
 

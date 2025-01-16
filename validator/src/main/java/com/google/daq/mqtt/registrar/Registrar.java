@@ -300,7 +300,7 @@ public class Registrar {
         createRegistries();
       } else {
         processSiteMetadata();
-        processDevices(modelMunger);
+        processAllDevices(modelMunger);
       }
       writeErrors();
     } catch (ExceptionMap em) {
@@ -489,7 +489,7 @@ public class Registrar {
     }
   }
 
-  private void processDevices(Runnable modelMunger) {
+  private void processAllDevices(Runnable modelMunger) {
     Set<String> explicitDevices = getExplicitDevices();
     try {
       workingDevices = instantiateExtras
@@ -542,6 +542,34 @@ public class Registrar {
       }
     } catch (Exception e) {
       throw new RuntimeException("While processing devices", e);
+    }
+  }
+
+  private int processDevices(Set<String> deviceSet) {
+    try {
+      AtomicInteger queued = new AtomicInteger();
+      final Instant start = Instant.now();
+      int deviceCount = deviceSet.size();
+      AtomicInteger processedCount = new AtomicInteger();
+      deviceSet.forEach(localName -> {
+        queued.incrementAndGet();
+        parallelExecute(() -> {
+          processLocalDevice(localName, processedCount, deviceCount);
+          queued.decrementAndGet();
+        });
+      });
+      System.err.println("Waiting for device processing...");
+      dynamicTerminate(queued.get());
+
+      Duration between = Duration.between(start, Instant.now());
+      double seconds = between.getSeconds() + between.getNano() / 1e9;
+      double perDevice = Math.floor(seconds / workingDevices.size() * 1000.0) / 1000.0;
+      int finalCount = processedCount.get();
+      System.err.printf("Processed %d (skipped %d) devices in %.03fs, %.03fs/d%n",
+          finalCount, deviceCount - finalCount, seconds, perDevice);
+      return finalCount;
+    } catch (Exception e) {
+      throw new RuntimeException("While processing local devices", e);
     }
   }
 
@@ -702,34 +730,6 @@ public class Registrar {
         System.err.printf("Unbinding from gateway %s: %s%n", gatewayId, toUnbind);
         cloudIotManager.bindDevices(toUnbind, gatewayId, false);
       });
-    }
-  }
-
-  private int processDevices(Set<String> deviceSet) {
-    try {
-      AtomicInteger queued = new AtomicInteger();
-      final Instant start = Instant.now();
-      int deviceCount = deviceSet.size();
-      AtomicInteger processedCount = new AtomicInteger();
-      deviceSet.forEach(localName -> {
-        queued.incrementAndGet();
-        parallelExecute(() -> {
-          processLocalDevice(localName, processedCount, deviceCount);
-          queued.decrementAndGet();
-        });
-      });
-      System.err.println("Waiting for device processing...");
-      dynamicTerminate(queued.get());
-
-      Duration between = Duration.between(start, Instant.now());
-      double seconds = between.getSeconds() + between.getNano() / 1e9;
-      double perDevice = Math.floor(seconds / workingDevices.size() * 1000.0) / 1000.0;
-      int finalCount = processedCount.get();
-      System.err.printf("Processed %d (skipped %d) devices in %.03fs, %.03fs/d%n",
-          finalCount, deviceCount - finalCount, seconds, perDevice);
-      return finalCount;
-    } catch (Exception e) {
-      throw new RuntimeException("While processing local devices", e);
     }
   }
 
