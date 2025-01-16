@@ -83,7 +83,6 @@ function pubber_bg {
 UDMI_ROOT=$(realpath $UDMI_ROOT)
 
 UDMI_JAR=$UDMI_ROOT/validator/build/libs/validator-1.0-SNAPSHOT-all.jar
-UDMIS_JAR=$UDMI_ROOT/udmis/build/libs/udmis-1.0-SNAPSHOT-all.jar
 
 VERSION_BASE='1.*'
 
