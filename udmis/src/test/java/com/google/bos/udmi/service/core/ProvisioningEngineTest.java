@@ -19,6 +19,7 @@ import com.google.bos.udmi.service.access.IotAccessBase;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.udmi.util.JsonUtil;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
@@ -32,6 +33,7 @@ import udmi.schema.CloudModel.Operation;
 import udmi.schema.CloudModel.Resource_type;
 import udmi.schema.DiscoveryEvents;
 import udmi.schema.Envelope;
+import udmi.schema.GatewayModel;
 
 /**
  * Simple tests for the auto-mapping provisioning agent.
@@ -75,10 +77,11 @@ public class ProvisioningEngineTest extends ProcessorTestBase {
     CloudModel gatewayModel = new CloudModel();
     registryModel.device_ids.put(TEST_GATEWAY, gatewayModel);
     gatewayModel.resource_type = Resource_type.GATEWAY;
-    gatewayModel.device_ids = new HashMap<>();
-    gatewayModel.device_ids.put(TEST_DEVICE, new CloudModel());
+    gatewayModel.gateway = new GatewayModel();
+    gatewayModel.gateway.proxy_ids = new ArrayList<>();
+    gatewayModel.gateway.proxy_ids.add(TEST_DEVICE);
     ifTrueThen(alreadyProvisioned, () ->
-        gatewayModel.device_ids.put(DISCOVERED_DEVICE, new CloudModel()));
+        gatewayModel.gateway.proxy_ids.add(DISCOVERED_DEVICE));
     gatewayModel.metadata = getGatewayMetadata();
 
     when(provider.getRegistries()).thenReturn(ImmutableSet.of(TEST_REGISTRY));
