@@ -235,6 +235,7 @@ public class IotReflectorClient implements MessagePublisher {
     UdmiState udmiState = new UdmiState();
     udmiState.setup = new SetupUdmiState();
     udmiState.setup.user = System.getenv("USER");
+    udmiState.setup.functions_ver = TOOLS_FUNCTIONS_VERSION;
     udmiState.setup.transaction_id = expectedTxnId;
     udmiState.setup.update_to = updateVersion;
     udmiState.setup.msg_source = userName;

@@ -11,10 +11,13 @@ import static com.google.udmi.util.Common.SEC_TO_MS;
 import static com.google.udmi.util.Common.SITE_METADATA_KEY;
 import static com.google.udmi.util.Common.UDMI_VERSION_KEY;
 import static com.google.udmi.util.GeneralUtils.CSV_JOINER;
+import static com.google.udmi.util.GeneralUtils.catchToNull;
 import static com.google.udmi.util.GeneralUtils.friendlyStackTrace;
+import static com.google.udmi.util.GeneralUtils.ifNotEmptyThrow;
 import static com.google.udmi.util.GeneralUtils.ifNotNullGet;
 import static com.google.udmi.util.GeneralUtils.ifNotNullThen;
 import static com.google.udmi.util.GeneralUtils.ifNotNullThrow;
+import static com.google.udmi.util.GeneralUtils.ifNotTrueThen;
 import static com.google.udmi.util.GeneralUtils.ifNullThen;
 import static com.google.udmi.util.GeneralUtils.ifTrueGet;
 import static com.google.udmi.util.GeneralUtils.ifTrueThen;
@@ -33,8 +36,8 @@ import static java.lang.Math.ceil;
 import static java.lang.String.format;
 import static java.util.Objects.requireNonNull;
 import static java.util.Optional.ofNullable;
+import static java.util.stream.Collectors.groupingBy;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.github.fge.jsonschema.core.load.configuration.LoadingConfiguration;
@@ -44,10 +47,11 @@ import com.github.fge.jsonschema.main.JsonSchemaFactory;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Sets;
 import com.google.common.collect.Sets.SetView;
+import com.google.daq.mqtt.registrar.LocalDevice.DeviceKind;
 import com.google.daq.mqtt.util.CloudDeviceSettings;
 import com.google.daq.mqtt.util.CloudIotManager;
+import com.google.daq.mqtt.util.DeviceGatewayBoundException;
 import com.google.daq.mqtt.util.ExceptionMap;
 import com.google.daq.mqtt.util.ExceptionMap.ErrorTree;
 import com.google.daq.mqtt.util.PubSubPusher;
@@ -55,6 +59,7 @@ import com.google.daq.mqtt.util.ValidationError;
 import com.google.udmi.util.CommandLineOption;
 import com.google.udmi.util.CommandLineProcessor;
 import com.google.udmi.util.Common;
+import com.google.udmi.util.JsonUtil;
 import com.google.udmi.util.SiteModel;
 import java.io.File;
 import java.io.FileInputStream;
@@ -67,10 +72,7 @@ import java.time.Duration;
 import java.time.Instant;
 import java.util.AbstractMap.SimpleEntry;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Base64;
-import java.util.Collection;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -86,6 +88,7 @@ import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 import org.apache.commons.io.FileUtils;
 import org.jetbrains.annotations.NotNull;
@@ -125,15 +128,15 @@ public class Registrar {
   private static final long DELETE_FLUSH_DELAY_MS = 10 * SEC_TO_MS;
   public static final String REGISTRAR_TOOL_NAME = "registrar";
   private final Map<String, JsonSchema> schemas = new HashMap<>();
-  private final String generation = getGenerationString();
+  private final String generation = JsonUtil.isoConvert();
   private final Set<Summarizer> summarizers = new HashSet<>();
   private final CommandLineProcessor commandLineProcessor = new CommandLineProcessor(this);
   private CloudIotManager cloudIotManager;
   private File schemaBase;
   private PubSubPusher updatePusher;
   private PubSubPusher feedPusher;
-  private Map<String, LocalDevice> localDevices;
-  private Map<String, CloudModel> extraDevices;
+  private Map<String, LocalDevice> workingDevices;
+  private Set<String> extraDevices;
   private String projectId;
   private boolean updateCloudIoT;
   private Duration idleLimit;
@@ -146,6 +149,7 @@ public class Registrar {
   private File siteDir;
   private boolean deleteDevices;
   private boolean expungeDevices;
+  private boolean instantiateExtras;
   private boolean metadataModelOut;
   private int createRegistries = -1;
   private int runnerThreads = 5;
@@ -186,11 +190,6 @@ public class Registrar {
 
   private static boolean isNotGateway(CloudModel device) {
     return device.resource_type != Resource_type.GATEWAY;
-  }
-
-  private static CloudModel augmentModel(CloudModel cloudModel) {
-    cloudModel.operation = ifTrueGet(cloudModel.blocked, Operation.BLOCK, Operation.ALLOW);
-    return cloudModel;
   }
 
   private static String defaultToolRoot() {
@@ -255,6 +254,12 @@ public class Registrar {
     this.updateCloudIoT = true;
   }
 
+  @CommandLineOption(short_form = "-i", description = "Instantiate extra (unknown) devices")
+  private void setInstantiateExtras() {
+    this.instantiateExtras = true;
+    this.updateCloudIoT = true;
+  }
+
   @CommandLineOption(short_form = "-x", description = "Expunge (unknown) devices")
   private void setExpungeDevices() {
     checkNotNull(projectId, "expunge devices specified with no target project");
@@ -295,7 +300,7 @@ public class Registrar {
         createRegistries();
       } else {
         processSiteMetadata();
-        processDevices(modelMunger);
+        processAllDevices(modelMunger);
       }
       writeErrors();
     } catch (ExceptionMap em) {
@@ -309,8 +314,8 @@ public class Registrar {
   }
 
   @VisibleForTesting
-  protected Map<String, LocalDevice> getLocalDevices() {
-    return localDevices;
+  protected Map<String, LocalDevice> getWorkingDevices() {
+    return workingDevices;
   }
 
   private void processSiteMetadata() {
@@ -380,11 +385,11 @@ public class Registrar {
 
   private void writeErrors() throws RuntimeException {
     Map<String, Object> errorSummary = new TreeMap<>();
-    if (localDevices == null) {
+    if (workingDevices == null) {
       return;
     }
-    localDevices.values().forEach(LocalDevice::writeErrors);
-    localDevices.values().forEach(device -> {
+    workingDevices.values().forEach(LocalDevice::writeErrors);
+    workingDevices.values().forEach(device -> {
       Set<Entry<String, ErrorTree>> entries = getDeviceErrorEntries(device);
       if (entries.isEmpty()) {
         getErrorKeyMap(errorSummary, "Clean")
@@ -397,14 +402,13 @@ public class Registrar {
       }
     });
     if (extraDevices != null && !extraDevices.isEmpty()) {
-      errorSummary.put("Extra", extraDevices.entrySet().stream()
-          .collect(
-              Collectors.toMap(Entry::getKey, entry -> entry.getValue().operation.toString())));
+      errorSummary.put("Extra", extraDevices.stream().collect(Collectors.toMap(
+          Function.identity(), id -> cloudModels.get(id).operation.toString())));
     }
     System.err.println("\nSummary:");
     errorSummary.forEach((key, value) -> System.err.println(
         "  Device " + key + ": " + getErrorSummaryDetail(value)));
-    System.err.println("Out of " + localDevices.size() + " total.");
+    System.err.println("Out of " + workingDevices.size() + " total.");
     // WARNING! entries inserted into `errorSummary` ABOVE this comment must have a map value ^^^^^^
     errorSummary.put(CLOUD_VERSION_KEY, getCloudVersionInfo());
     lastErrorSummary = errorSummary;
@@ -417,7 +421,7 @@ public class Registrar {
     summarizers.forEach(summarizer -> {
       File outFile = summarizer.outFile;
       try {
-        summarizer.summarize(localDevices, errorSummary, extraDevices);
+        summarizer.summarize(workingDevices, errorSummary, cloudModels);
         System.err.println("Registration summary available in " + outFile.getAbsolutePath());
       } catch (Exception e) {
         throw new RuntimeException("While summarizing output to " + outFile.getAbsolutePath(), e);
@@ -485,20 +489,11 @@ public class Registrar {
     }
   }
 
-  private String getGenerationString() {
-    try {
-      Date generationDate = new Date();
-      String quotedString = OBJECT_MAPPER.writeValueAsString(generationDate);
-      return quotedString.substring(1, quotedString.length() - 1);
-    } catch (JsonProcessingException e) {
-      throw new RuntimeException("While forming generation timestamp", e);
-    }
-  }
-
-  private void processDevices(Runnable modelMunger) {
+  private void processAllDevices(Runnable modelMunger) {
     Set<String> explicitDevices = getExplicitDevices();
     try {
-      localDevices = loadLocalDevices(explicitDevices);
+      workingDevices = instantiateExtras
+          ? loadExtraDevices(explicitDevices) : loadLocalDevices(explicitDevices);
       ifNotNullThen(modelMunger, Runnable::run);
       initializeLocalDevices();
       cloudModels = ifNotNullGet(fetchCloudModels(), devices -> new ConcurrentHashMap<>(devices));
@@ -508,7 +503,7 @@ public class Registrar {
       }
 
       if (explicitDevices != null) {
-        Set<String> unknownLocals = difference(explicitDevices, localDevices.keySet());
+        Set<String> unknownLocals = difference(explicitDevices, workingDevices.keySet());
         if (!unknownLocals.isEmpty()) {
           throw new RuntimeException(
               "Unknown specified devices: " + JOIN_CSV.join(unknownLocals));
@@ -516,27 +511,33 @@ public class Registrar {
       }
 
       boolean isTargeted = explicitDevices != null;
-      Set<String> targetDevices = isTargeted ? explicitDevices : localDevices.keySet();
+      Set<String> targetDevices = isTargeted ? explicitDevices : workingDevices.keySet();
       Map<String, LocalDevice> targetLocals = targetDevices.stream()
-          .collect(Collectors.toMap(key -> key, key -> localDevices.get(key)));
+          .collect(Collectors.toMap(key -> key, key -> workingDevices.get(key)));
       Set<String> oldDevices = targetDevices.stream().filter(this::alreadyRegistered)
           .collect(Collectors.toSet());
       Set<String> newDevices = difference(targetDevices, oldDevices);
 
       int total = 0;
 
-      System.err.printf("Processing %d new devices...%n", newDevices.size());
-      total += processLocalDevices(newDevices);
+      if (updateCloudIoT) {
+        System.err.printf("Processing %d new devices...%n", newDevices.size());
+        total += processDevices(newDevices);
 
-      System.err.printf("Updating %d existing devices...%n", oldDevices.size());
-      total += processLocalDevices(oldDevices);
+        System.err.printf("Updating %d existing devices...%n", oldDevices.size());
+        total += processDevices(oldDevices);
+      } else {
+        System.err.printf("Processing %d target devices...%n", targetDevices.size());
+        total += processDevices(targetDevices);
+      }
+
       System.err.printf("Finished processing %d/%d devices.%n", total, targetDevices.size());
 
       if (updateCloudIoT) {
         bindGatewayDevices(targetLocals);
       }
 
-      if (cloudModels != null && !isTargeted) {
+      if (cloudModels != null && !isTargeted && !instantiateExtras) {
         extraDevices = processExtraDevices(difference(cloudModels.keySet(), targetDevices));
       }
     } catch (Exception e) {
@@ -544,8 +545,52 @@ public class Registrar {
     }
   }
 
-  private boolean notAlreadyRegistered(String device) {
-    return !alreadyRegistered(device);
+  private int processDevices(Set<String> deviceSet) {
+    try {
+      AtomicInteger queued = new AtomicInteger();
+      final Instant start = Instant.now();
+      int deviceCount = deviceSet.size();
+      AtomicInteger processedCount = new AtomicInteger();
+      deviceSet.forEach(localName -> {
+        queued.incrementAndGet();
+        parallelExecute(() -> {
+          processLocalDevice(localName, processedCount, deviceCount);
+          queued.decrementAndGet();
+        });
+      });
+      System.err.println("Waiting for device processing...");
+      dynamicTerminate(queued.get());
+
+      Duration between = Duration.between(start, Instant.now());
+      double seconds = between.getSeconds() + between.getNano() / 1e9;
+      double perDevice = Math.floor(seconds / workingDevices.size() * 1000.0) / 1000.0;
+      int finalCount = processedCount.get();
+      System.err.printf("Processed %d (skipped %d) devices in %.03fs, %.03fs/d%n",
+          finalCount, deviceCount - finalCount, seconds, perDevice);
+      return finalCount;
+    } catch (Exception e) {
+      throw new RuntimeException("While processing local devices", e);
+    }
+  }
+
+  private Map<String, LocalDevice> loadExtraDevices(Set<String> explicitDevices) {
+    Set<String> expectedExtras = siteModel.getExtraDevices();
+    Set<String> deviceIds = ofNullable(explicitDevices).orElse(expectedExtras);
+    SetView<String> unknownExtras = difference(deviceIds, expectedExtras);
+    ifNotEmptyThrow(unknownExtras, extras -> "Devices not found in extras dir: " + extras);
+    return deviceIds.stream().collect(Collectors.toMap(id -> id, this::makeExtraDevice));
+  }
+
+  private LocalDevice makeLocalDevice(String id) {
+    return makeLocalDevice(id, doValidate ? DeviceKind.LOCAL : DeviceKind.SIMPLE);
+  }
+
+  private LocalDevice makeLocalDevice(String id, DeviceKind kind) {
+    return new LocalDevice(siteModel, id, schemas, generation, kind);
+  }
+
+  private LocalDevice makeExtraDevice(String id) {
+    return makeLocalDevice(id, DeviceKind.EXTRA);
   }
 
   private boolean alreadyRegistered(String device) {
@@ -558,19 +603,35 @@ public class Registrar {
       return;
     }
     Set<String> explicitDevices = getExplicitDevices();
-    if (explicitDevices != null) {
-      executeDelete(explicitDevices, "explicit");
-      return;
-    }
     Set<String> cloudDevices = cloudModels.keySet();
-    if (deleteDevices) {
-      SetView<String> devices = Sets.intersection(cloudDevices, localDevices.keySet());
-      executeDelete(devices, "registered");
+
+    final Set<String> toDelete;
+    final String reason;
+    boolean handleExplicitly = explicitDevices != null;
+
+    if (handleExplicitly) {
+      toDelete = intersection(cloudDevices, explicitDevices);
+      reason = "explicit";
+    } else if (deleteDevices && expungeDevices) {
+      toDelete = cloudDevices;
+      reason = "everything";
+    } else if (deleteDevices) {
+      toDelete = intersection(cloudDevices, workingDevices.keySet());
+      reason = "registered";
+    } else if (expungeDevices) {
+      toDelete = difference(cloudDevices, workingDevices.keySet());
+      reason = "extra";
+    } else {
+      throw new IllegalStateException("Neither delete nor expunge indicated");
     }
+
+    executeDelete(toDelete, reason);
+
     if (expungeDevices) {
-      SetView<String> extras = difference(cloudDevices, localDevices.keySet());
-      executeDelete(extras, "unknown");
-      reapExtraDevices(ImmutableSet.of());
+      Set<String> existingExtras = siteModel.getExtraDevices();
+      Set<String> toExpunge = ofNullable(explicitDevices).orElse(existingExtras);
+      Set<String> toReap = intersection(existingExtras, toExpunge);
+      reapExtraDevices(toReap);
     }
   }
 
@@ -580,17 +641,19 @@ public class Registrar {
       if (deviceSet.isEmpty()) {
         return;
       }
-      Set<String> gateways = deviceSet.stream().filter(id -> ifNotNullGet(localDevices.get(id),
+      Set<String> gateways = deviceSet.stream().filter(id -> ifNotNullGet(workingDevices.get(id),
           LocalDevice::isGateway, false)).collect(Collectors.toSet());
       final Set<String> others = difference(deviceSet, gateways);
 
       final Instant start = Instant.now();
 
+      System.err.printf("Deleting %d gateways and %d devices%n", gateways.size(), others.size());
+
       // Delete gateways first so that they aren't holding the other devices hostage.
       synchronizedDelete(gateways);
       synchronizedDelete(others);
 
-      // There is a hidden race-condition in the Clearblade IoT API that will report a device
+      // There is a hidden race-condition in the ClearBlade IoT API that will report a device
       // as deleted (not listed in the registry), but still complain with an "already exists"
       // error if it's attempted to be created. Just as a hack, add a sleep in here to make
       // sure the backend is cleared out.
@@ -611,55 +674,68 @@ public class Registrar {
   }
 
   private void synchronizedDelete(Set<String> devices) throws InterruptedException {
-    AtomicInteger count = new AtomicInteger();
-    devices.forEach(id -> parallelExecute(() -> {
-      int incremented = count.incrementAndGet();
-      System.err.printf("Deleting device %s (%d/%d)%n", id, incremented, devices.size());
-      deleteDevice(id);
-    }));
-    System.err.println("Waiting for device deletion...");
-    dynamicTerminate(devices.size());
+    AtomicInteger accumulator = new AtomicInteger();
+    int totalCount = devices.size();
+    devices.forEach(id -> parallelExecute(() -> deleteSingleDevice(devices, accumulator, id)));
+    System.err.println("Waiting for device deletion completion...");
+    dynamicTerminate(totalCount);
   }
 
-  private void deleteDevice(String deviceId) {
+  private void deleteSingleDevice(Set<String> allDevices, AtomicInteger count, String id) {
+    int incremented = count.incrementAndGet();
+    System.err.printf("Deleting device %s (%d/%d)%n", id, incremented, allDevices.size());
     try {
-      cloudIotManager.deleteDevice(deviceId);
+      deleteDevice(allDevices, id);
+    } catch (Exception e) {
+      System.err.println("Exception caught during execution: " + friendlyStackTrace(e));
+    }
+  }
+
+  private void deleteDevice(Set<String> allDevices, String deviceId) {
+    try {
+      Set<String> unbindIds = catchToNull(
+          () -> new HashSet<>(workingDevices.get(deviceId).getMetadata().gateway.proxy_ids));
+      cloudIotManager.deleteDevice(deviceId, unbindIds);
+    } catch (DeviceGatewayBoundException boundException) {
+      CloudModel cloudModel = boundException.getCloudModel();
+      if (cloudModel.resource_type == Resource_type.GATEWAY) {
+        Set<String> proxyIds = new HashSet<>(cloudModel.gateway.proxy_ids);
+        System.err.printf("Retrying delete %s with bound devices: %s%n", deviceId, proxyIds);
+        cloudIotManager.deleteDevice(deviceId, proxyIds);
+      } else if (cloudModel.resource_type == Resource_type.DEVICE) {
+        Set<String> gatewayIds = ImmutableSet.of(cloudModel.gateway.gateway_id);
+        System.err.printf("Unbinding %s from bound gateways: %s%n", deviceId, gatewayIds);
+        unbindDevicesFromGateways(allDevices, gatewayIds);
+        System.err.printf("Retrying delete %s%n", deviceId);
+        cloudIotManager.deleteDevice(deviceId, null);
+      } else {
+        throw new RuntimeException("Unknown cloud model resource type", boundException);
+      }
     } catch (Exception e) {
       throw new RuntimeException("While deleting device " + deviceId, e);
     }
   }
 
-  private int processLocalDevices(Set<String> deviceSet) {
-    try {
-      AtomicInteger queued = new AtomicInteger();
-      final Instant start = Instant.now();
-      int deviceCount = deviceSet.size();
-      AtomicInteger processedCount = new AtomicInteger();
-      deviceSet.forEach(localName -> {
-        queued.incrementAndGet();
-        parallelExecute(() -> {
-          processLocalDevice(localName, processedCount, deviceCount);
-          queued.decrementAndGet();
-        });
+  /**
+   * Unbind all devices for the list of gateways. This is synchronized at the class level to ensure
+   * that only one instance at a time, since it's a global operation that doesn't need to be
+   * executed for each device individually.
+   */
+  private void unbindDevicesFromGateways(Set<String> allDevices,
+      Set<String> boundGateways) {
+    synchronized (Operation.UNBIND) {
+      boundGateways.forEach(gatewayId -> {
+        Map<String, CloudModel> boundDevices = cloudIotManager.fetchDevice(gatewayId).device_ids;
+        SetView<String> toUnbind = intersection(allDevices, boundDevices.keySet());
+        System.err.printf("Unbinding from gateway %s: %s%n", gatewayId, toUnbind);
+        cloudIotManager.bindDevices(toUnbind, gatewayId, false);
       });
-      System.err.println("Waiting for device processing...");
-      dynamicTerminate(queued.get());
-
-      Duration between = Duration.between(start, Instant.now());
-      double seconds = between.getSeconds() + between.getNano() / 1e9;
-      double perDevice = Math.floor(seconds / localDevices.size() * 1000.0) / 1000.0;
-      int finalCount = processedCount.get();
-      System.err.printf("Processed %d (skipped %d) devices in %.03fs, %.03fs/d%n",
-          finalCount, deviceCount - finalCount, seconds, perDevice);
-      return finalCount;
-    } catch (Exception e) {
-      throw new RuntimeException("While processing local devices", e);
     }
   }
 
   private boolean processLocalDevice(String localName, AtomicInteger processedDeviceCount,
       int totalCount) {
-    LocalDevice localDevice = localDevices.get(localName);
+    LocalDevice localDevice = workingDevices.get(localName);
     if (!localDevice.isValid()) {
       System.err.println("Skipping invalid device " + localName);
       return false;
@@ -671,25 +747,23 @@ public class Registrar {
     Instant start = Instant.now();
     int count = processedDeviceCount.incrementAndGet();
     boolean created = false;
-    boolean error = false;
     try {
       localDevice.writeConfigFile();
       if (cloudModels != null && updateCloudIoT) {
-        created = syncCloudIoT(localName, localDevice);
+        created = pushToCloudIoT(localName, localDevice);
         sendUpdateMessages(localDevice);
         cloudModels.computeIfAbsent(localName, name -> fetchDevice(localName, true));
         sendSwarmMessage(localDevice);
+
+        Duration between = Duration.between(start, Instant.now());
+        double seconds = (between.getSeconds() + between.getNano() / 1e9) / runnerThreads;
+        System.err.printf("Processed %s (%d/%d) in %.03fs (%s)%n", localName, count, totalCount,
+            seconds, created ? "add" : "update");
       }
     } catch (Exception e) {
-      System.err.printf("Deferring exception for %s: %s%n", localDevice.getDeviceId(), e);
+      System.err.printf("Error processing %s: %s%n", localDevice.getDeviceId(), e);
       localDevice.captureError(LocalDevice.EXCEPTION_REGISTERING, e);
-      error = true;
     }
-    Duration between = Duration.between(start, Instant.now());
-    double seconds = (between.getSeconds() + between.getNano() / 1e9) / runnerThreads;
-    String code = error ? "error" : (created ? "add" : "update");
-    System.err.printf("Processed %s (%d/%d) in %.03fs (%s)%n", localName, count, totalCount,
-        seconds, code);
     return created;
   }
 
@@ -737,7 +811,7 @@ public class Registrar {
     return true;
   }
 
-  private boolean syncCloudIoT(String localName, LocalDevice localDevice) {
+  private boolean pushToCloudIoT(String localName, LocalDevice localDevice) {
     boolean created = updateCloudIoT && updateCloudIoT(localDevice);
     CloudModel device =
         checkNotNull(fetchDevice(localName, created), "missing device " + localName);
@@ -751,13 +825,13 @@ public class Registrar {
     CloudDeviceSettings localDeviceSettings = localDevice.getSettings();
     if (preDeleteDevice(localName)) {
       System.err.println("Deleting to incite recreation " + localName);
-      cloudIotManager.deleteDevice(localName);
+      cloudIotManager.deleteDevice(localName, null);
     }
     return cloudIotManager.registerDevice(localName, localDeviceSettings);
   }
 
   private boolean preDeleteDevice(String localName) {
-    if (!localDevices.get(localName).isGateway()) {
+    if (!workingDevices.get(localName).isGateway()) {
       return false;
     }
     CloudModel registeredDevice = cloudIotManager.getRegisteredDevice(localName);
@@ -782,11 +856,11 @@ public class Registrar {
     return device;
   }
 
-  private Map<String, CloudModel> processExtraDevices(Set<String> extraDevices) {
+  private Set<String> processExtraDevices(Set<String> extraDevices) {
     try {
       Map<String, CloudModel> extras = new ConcurrentHashMap<>();
       if (extraDevices.isEmpty()) {
-        return extras;
+        return extras.keySet();
       }
       if (blockUnknown) {
         System.err.printf("Blocking %d extra devices...", extraDevices.size());
@@ -797,45 +871,39 @@ public class Registrar {
       dynamicTerminate(extraDevices.size());
       System.err.printf("There were %d/%d already blocked devices.%n", alreadyBlocked.get(),
           extraDevices.size());
-      reapExtraDevices(extras.keySet());
-      return extras;
+      reapExtraDevices(difference(siteModel.getExtraDevices(), extraDevices));
+      return extras.keySet();
     } catch (Exception e) {
       throw new RuntimeException(format("Processing %d extra devices", extraDevices.size()), e);
     }
   }
 
   private CloudModel processExtra(String extraName, AtomicInteger alreadyBlocked) {
+    CloudModel cloudModel = cloudModels.get(extraName);
+    boolean isBlocked = isTrue(cloudModel.blocked);
+    ifTrueThen(isBlocked, alreadyBlocked::incrementAndGet);
     try {
-      boolean isBlocked = isTrue(cloudModels.get(extraName).blocked);
-      final CloudModel augmentedModel;
       if (blockUnknown && !isBlocked) {
-        System.err.println("Blocking extra device: " + extraName);
+        System.err.println("Blocking device " + extraName);
         cloudIotManager.blockDevice(extraName, true);
-        augmentedModel = augmentModel(cloudIotManager.fetchDevice(extraName));
-      } else {
-        ifTrueThen(isBlocked, alreadyBlocked::incrementAndGet);
-        augmentedModel = augmentModel(cloudModels.get(extraName));
+        cloudModel.blocked = true;
       }
-      writeExtraDevice(extraName, augmentedModel);
-      return augmentedModel;
+      cloudModel.operation = ifTrueGet(cloudModel.blocked, Operation.BLOCK, Operation.ALLOW);
     } catch (Exception e) {
-      CloudModel errorModel = new CloudModel();
-      errorModel.detail = e.toString();
-      errorModel.operation = Operation.ERROR;
-      writeExtraDevice(extraName, errorModel);
-      return errorModel;
+      cloudModel.operation = Operation.ERROR;
+      cloudModel.detail = friendlyStackTrace(e);
+      System.err.printf("Blocking device %s: %s%n", extraName, cloudModel.detail);
     }
+    writeExtraDevice(extraName, cloudModel);
+    return cloudModel;
   }
 
-  private void reapExtraDevices(Set<String> current) {
-    File extrasDir = new File(siteDir, SiteModel.EXTRAS_DIR);
-    String[] existing = ofNullable(extrasDir.list()).orElse(new String[0]);
-    Set<String> previous = Arrays.stream(existing).collect(Collectors.toSet());
-    difference(previous, current).forEach(expired -> {
-      File file = new File(extrasDir, expired);
+  private void reapExtraDevices(Set<String> toReap) {
+    toReap.forEach(extraDeviceId -> {
+      File file = siteModel.getExtraDir(extraDeviceId);
       try {
         FileUtils.deleteDirectory(file);
-        System.err.println("Deleted extraneous extra device directory " + expired);
+        System.err.println("Deleted extraneous extra device directory " + extraDeviceId);
       } catch (Exception e) {
         throw new RuntimeException("Error deleting extraneous directory " + file.getAbsolutePath(),
             e);
@@ -849,13 +917,11 @@ public class Registrar {
     try {
       extraDir.mkdirs();
       File modelFile = new File(extraDir, SiteModel.CLOUD_MODEL_FILE);
-      Date previous = ifTrueGet(modelFile.exists(),
-          () -> loadFile(CloudModel.class, modelFile).updated_time);
-      if (previous == null || !previous.equals(augmentedModel.updated_time)) {
+      ifNotTrueThen(augmentedModel.equals(loadFile(CloudModel.class, modelFile)), () -> {
         System.err.println("Writing extra device model to " + devPath);
         writeFile(augmentedModel, modelFile);
         updateExtraMetadata(extraName, extraDir);
-      }
+      });
     } catch (Exception e) {
       throw new RuntimeException("Writing extra device data " + extraDir.getAbsolutePath(), e);
     }
@@ -940,37 +1006,39 @@ public class Registrar {
   private void bindGatewayDevices(Map<String, LocalDevice> localDevices) {
     try {
       final Instant start = Instant.now();
-      Set<LocalDevice> gateways = localDevices.values().stream().filter(LocalDevice::isGateway)
-          .collect(Collectors.toSet());
-      Set<Entry<String, String>> bindings = gateways.stream()
-          .map(gateway -> getBindings(localDevices.keySet(), gateway)).flatMap(Collection::stream)
-          .collect(Collectors.toSet());
+      Map<String, Set<LocalDevice>> gatewayBindings = localDevices.values().stream()
+          .filter(LocalDevice::isProxied)
+          .collect(groupingBy(LocalDevice::getGatewayId, Collectors.toSet()));
       AtomicInteger bindingCount = new AtomicInteger();
-      System.err.printf("Binding %d unbound devices to %d gateways...%n", bindings.size(),
-          gateways.size());
-      bindings.forEach(binding -> {
+      System.err.printf("Binding devices to gateways: %s%n", gatewayBindings.keySet());
+      gatewayBindings.forEach((gatewayId, proxiedDevices) -> {
         parallelExecute(() -> {
           try {
-            String proxyDeviceId = binding.getKey();
-            String gatewayId = binding.getValue();
+            Set<String> proxyIds = proxiedDevices.stream().map(LocalDevice::getDeviceId)
+                .collect(Collectors.toSet());
+            Set<String> boundDevices = ofNullable(cloudIotManager.fetchBoundDevices(gatewayId))
+                .orElse(ImmutableSet.of());
+            System.err.printf("Already bound to %s: %s%n", gatewayId, boundDevices);
+            SetView<String> toBind = difference(proxyIds, boundDevices);
             int count = bindingCount.incrementAndGet();
-            System.err.printf("Binding %s to %s (%d/%d)%n", proxyDeviceId, gatewayId, count,
-                bindings.size());
-            cloudIotManager.bindDevice(proxyDeviceId, gatewayId);
+            System.err.printf("Binding %s to %s (%d/%d)%n", toBind, gatewayId, count,
+                gatewayBindings.size());
+            cloudIotManager.bindDevices(toBind, gatewayId, true);
           } catch (Exception e) {
-            localDevices.get(binding.getKey()).captureError(LocalDevice.EXCEPTION_BINDING, e);
+            proxiedDevices.forEach(
+                localDevice -> localDevice.captureError(LocalDevice.EXCEPTION_BINDING, e));
           }
         });
       });
 
       System.err.println("Waiting for device binding...");
-      dynamicTerminate(bindings.size());
+      dynamicTerminate(gatewayBindings.size());
 
       Duration between = Duration.between(start, Instant.now());
       double seconds = between.getSeconds() + between.getNano() / 1e9;
       System.err.printf("Finished binding gateways in %.03f%n", seconds);
     } catch (Exception e) {
-      throw new RuntimeException("While binding gateways", e);
+      throw new RuntimeException("While binding devices to gateways", e);
     }
   }
 
@@ -1003,7 +1071,7 @@ public class Registrar {
         ImmutableSet.of());
     System.err.printf("Binding devices to %s, already bound: %s%n",
         gatewayId, JOIN_CSV.join(boundDevices));
-    int total = cloudModels.size() != 0 ? cloudModels.size() : localDevices.size();
+    int total = cloudModels.size() != 0 ? cloudModels.size() : workingDevices.size();
     checkState(boundDevices.size() != total,
         "all devices including the gateway can't be bound to one gateway!");
     return localDevice.getSettings().proxyDevices.stream()
@@ -1043,7 +1111,7 @@ public class Registrar {
   }
 
   private Map<String, LocalDevice> loadLocalDevices(Set<String> specifiedDevices) {
-    checkNotNull(siteDir, "site directory");
+    checkNotNull(siteDir, "missing site directory");
     File devicesDir = new File(siteDir, DEVICES_DIR);
     if (!devicesDir.isDirectory()) {
       throw new RuntimeException("Not a valid directory: " + devicesDir.getAbsolutePath());
@@ -1117,19 +1185,18 @@ public class Registrar {
   private Map<String, LocalDevice> loadDevices(List<String> devices) {
     Set<String> actual = devices.stream()
         .filter(deviceName -> siteModel.deviceExists(deviceName)).collect(Collectors.toSet());
-    return actual.stream().collect(Collectors.toMap(name -> name, name ->
-        new LocalDevice(siteModel, name, schemas, generation, doValidate)));
+    return actual.stream().collect(Collectors.toMap(name -> name, this::makeLocalDevice));
   }
 
   private void initializeLocalDevices() {
-    System.err.printf("Initializing %d local devices...%n", localDevices.size());
-    initializeDevices(localDevices);
-    initializeSettings(localDevices);
-    writeNormalized(localDevices);
-    outputMetadataModels(localDevices);
-    validateExpected(localDevices);
-    validateSamples(localDevices);
-    validateKeys(localDevices);
+    System.err.printf("Initializing %d local devices...%n", workingDevices.size());
+    initializeDevices(workingDevices);
+    initializeSettings(workingDevices);
+    writeNormalized(workingDevices);
+    outputMetadataModels(workingDevices);
+    validateExpected(workingDevices);
+    validateSamples(workingDevices);
+    validateKeys(workingDevices);
   }
 
   private void outputMetadataModels(Map<String, LocalDevice> localDevices) {

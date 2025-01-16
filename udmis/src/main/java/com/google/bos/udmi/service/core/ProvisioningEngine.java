@@ -19,7 +19,9 @@ import static udmi.schema.CloudModel.Operation.BIND;
 
 import java.util.Date;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
@@ -50,7 +52,7 @@ public class ProvisioningEngine extends ProcessorBase {
     model.operation = BIND;
     model.device_ids = new HashMap<>();
     model.device_ids.put(proxyId, new CloudModel());
-    iotAccess.modelDevice(registryId, gatewayId, model);
+    iotAccess.modelDevice(registryId, gatewayId, model, null);
   }
 
   private void createDeviceEntry(String registryId, String expectedId, String gatewayId,
@@ -64,7 +66,8 @@ public class ProvisioningEngine extends ProcessorBase {
     cloudModel.metadata.put(UDMI_UPDATED, isoConvert());
     cloudModel.metadata.put(UDMI_GENERATION, isoConvert(discoveryEvent.generation));
     catchToElse(
-        (Supplier<CloudModel>) () -> iotAccess.modelDevice(registryId, expectedId, cloudModel),
+        (Supplier<CloudModel>) () -> iotAccess.modelDevice(registryId, expectedId, cloudModel,
+            null),
         (Consumer<Exception>) e -> error(
             "Error creating device (exists but not bound?): " + friendlyStackTrace(e)));
     bindDeviceToGateway(registryId, expectedId, gatewayId);
@@ -80,7 +83,7 @@ public class ProvisioningEngine extends ProcessorBase {
     return scanAgent.computeIfAbsent(gatewayKey, key -> new CloudModel());
   }
 
-  private synchronized Map<String, CloudModel> refreshModelDevices(String deviceRegistryId,
+  private synchronized Set<String> refreshModelDevices(String deviceRegistryId,
       String gatewayId, Date generation) {
     CloudModel cloudModel = getCachedModel(deviceRegistryId, gatewayId);
     if (!generation.equals(cloudModel.timestamp)) {
@@ -97,11 +100,12 @@ public class ProvisioningEngine extends ProcessorBase {
         return null;
       }
       cloudModel.metadata = fetchedModel.metadata;
-      cloudModel.device_ids = fetchedModel.device_ids;
+      cloudModel.gateway = fetchedModel.gateway;
       info("Scan device %s/%s generation %s, provisioning %s", deviceRegistryId, gatewayId,
           isoConvert(generation), shouldProvision(generation, cloudModel));
     }
-    return ifTrueGet(shouldProvision(generation, cloudModel), cloudModel.device_ids);
+    return ifTrueGet(shouldProvision(generation, cloudModel),
+        () -> new HashSet<>(cloudModel.gateway.proxy_ids));
   }
 
   private boolean shouldProvision(Date generation, CloudModel cloudModel) {
@@ -122,7 +126,7 @@ public class ProvisioningEngine extends ProcessorBase {
         return;
       }
       Date generation = requireNonNull(discoveryEvent.generation, "missing scan generation");
-      Map<String, CloudModel> deviceIds = refreshModelDevices(registryId, gatewayId, generation);
+      Set<String> deviceIds = refreshModelDevices(registryId, gatewayId, generation);
       if (deviceIds == null) {
         info("Scan device %s/%s provisioning disabled", registryId, gatewayId);
         return;
@@ -130,12 +134,12 @@ public class ProvisioningEngine extends ProcessorBase {
       String family = requireNonNull(discoveryEvent.scan_family, "missing scan_family");
       String addr = requireNonNull(discoveryEvent.scan_addr, "missing scan_addr");
       String expectedId = format(DISCOVERED_DEVICE_FORMAT, family, addr);
-      if (deviceIds.containsKey(expectedId)) {
+      if (deviceIds.contains(expectedId)) {
         debug("Scan device %s/%s target %s already registered", registryId, gatewayId, expectedId);
       } else {
         notice("Scan device %s/%s target %s missing, creating", registryId, gatewayId, expectedId);
         createDeviceEntry(registryId, expectedId, gatewayId, envelope, discoveryEvent);
-        deviceIds.put(expectedId, new CloudModel());
+        deviceIds.add(expectedId);
       }
     } catch (Exception e) {
       error("Error during discovery event processing: " + friendlyStackTrace(e));

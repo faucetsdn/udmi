@@ -20,6 +20,7 @@ import static com.google.udmi.util.GeneralUtils.friendlyStackTrace;
 import static com.google.udmi.util.GeneralUtils.ifNotNullGet;
 import static com.google.udmi.util.GeneralUtils.ifNotNullThen;
 import static com.google.udmi.util.GeneralUtils.ifNullThen;
+import static com.google.udmi.util.GeneralUtils.ifTrueThen;
 import static com.google.udmi.util.GeneralUtils.multiTrim;
 import static com.google.udmi.util.GeneralUtils.requireNull;
 import static com.google.udmi.util.GeneralUtils.stackTraceString;
@@ -53,6 +54,7 @@ import com.google.udmi.util.JsonUtil;
 import com.google.udmi.util.MetadataMapKeys;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.stream.Collectors;
@@ -252,8 +254,10 @@ public class ReflectProcessor extends ProcessorBase {
   }
 
   private CloudModel queryCloudRegistry(Envelope attributes) {
-    return iotAccess.listDevices(attributes.deviceRegistryId,
+    CloudModel cloudModel = iotAccess.listDevices(attributes.deviceRegistryId,
         progress -> reflectUdmiLog(attributes, format("Fetched %d devices...", progress)));
+    cloudModel.operation = READ;
+    return cloudModel;
   }
 
   private CloudModel queryDeviceState(Envelope attributes) {
@@ -282,10 +286,14 @@ public class ReflectProcessor extends ProcessorBase {
       return previewReflectResponse(attributes, request);
     }
 
+    String deviceId = attributes.deviceId;
+    String deviceRegistryId = attributes.deviceRegistryId;
+
     if (request.resource_type == REGISTRY) {
-      return iotAccess.modelRegistry(attributes.deviceRegistryId, attributes.deviceId, request);
+      return iotAccess.modelRegistry(deviceRegistryId, deviceId, request);
     } else {
-      return iotAccess.modelDevice(attributes.deviceRegistryId, attributes.deviceId, request);
+      return iotAccess.modelDevice(deviceRegistryId, deviceId, request, progress ->
+          reflectUdmiLog(attributes, format("Processed %d entries for %s...", progress, deviceId)));
     }
   }
 
@@ -346,7 +354,30 @@ public class ReflectProcessor extends ProcessorBase {
       warn("Removing return result operation due to legacy client query.");
       cloudModel.operation = null;
     }
+    ifTrueThen(isLegacyRequest(query), () -> downgradeReply(attributes, cloudModel));
     return cloudModel;
+  }
+
+  /**
+   /* TODO: Remove this workaround when all clients have been updated (2025/01/14).
+   /* Normally would check the actual version value, but this is checking legacy before it existed.
+   */
+  public static boolean isLegacyRequest(CloudModel query) {
+    return query == null || query.functions_ver == null;
+  }
+
+  private void downgradeReply(Envelope attributes, CloudModel cloudModel) {
+    if (cloudModel.gateway != null) {
+      List<String> proxyIds = cloudModel.gateway.proxy_ids;
+      warn("Downgrading legacy query reply for " + attributes.deviceRegistryId);
+      cloudModel.device_ids =
+          proxyIds.stream().collect(Collectors.toMap(id -> id, this::makeDummyCloudModel));
+      cloudModel.gateway = null;
+    }
+  }
+
+  private CloudModel makeDummyCloudModel(String id) {
+    return new CloudModel();
   }
 
   private CloudModel reflectQueryCore(Envelope attributes) {

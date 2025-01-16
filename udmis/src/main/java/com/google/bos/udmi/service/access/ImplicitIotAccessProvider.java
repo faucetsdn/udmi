@@ -58,6 +58,7 @@ import udmi.schema.Credential.Key_format;
 import udmi.schema.Envelope;
 import udmi.schema.Envelope.SubFolder;
 import udmi.schema.Envelope.SubType;
+import udmi.schema.GatewayModel;
 import udmi.schema.IotAccess;
 import udmi.schema.IotAccess.IotProvider;
 
@@ -107,9 +108,9 @@ public class ImplicitIotAccessProvider extends IotAccessBase {
   }
 
   private void bindDevicesToGateway(String registryId, String gatewayId, CloudModel cloudModel) {
-    Set<String> deviceIds = cloudModel.device_ids.keySet();
-    deviceIds.forEach(
-        deviceId -> registryDeviceRef(registryId, deviceId).put(BOUND_TO_KEY, gatewayId));
+    Set<String> deviceIds = ImmutableSet.copyOf(cloudModel.gateway.proxy_ids);
+    deviceIds.forEach(deviceId ->
+        registryDeviceRef(registryId, deviceId).put(BOUND_TO_KEY, gatewayId));
   }
 
   private void blockDevice(String registryId, String deviceId, CloudModel cloudModel) {
@@ -264,7 +265,9 @@ public class ImplicitIotAccessProvider extends IotAccessBase {
     cloudModel.metadata = ifNotNullGet(cloudModel.metadata_str, JsonUtil::toStringMapStr);
     cloudModel.metadata_str = null;
 
-    cloudModel.device_ids = listBoundDevices(registryId, deviceId);
+    cloudModel.gateway = new GatewayModel();
+    cloudModel.gateway.proxy_ids =
+        listBoundDevices(registryId, deviceId).keySet().stream().toList();
     cloudModel.operation = READ;
     return cloudModel;
   }
@@ -322,7 +325,8 @@ public class ImplicitIotAccessProvider extends IotAccessBase {
   }
 
   @Override
-  public CloudModel modelDevice(String registryId, String deviceId, CloudModel cloudModel) {
+  public CloudModel modelDevice(String registryId, String deviceId, CloudModel cloudModel,
+      Consumer<Integer> progress) {
     Operation operation = cloudModel.operation;
     Resource_type type = ofNullable(cloudModel.resource_type).orElse(Resource_type.DEVICE);
     checkState(type == DEVICE || type == GATEWAY, "unexpected resource type " + type);
