@@ -734,7 +734,7 @@ class LocalDevice {
     if (getTreeChildren().isEmpty()) {
       return DeviceStatus.CLEAN;
     }
-    return DeviceStatus.ERRORS;
+    return DeviceStatus.ERROR;
   }
 
   public void captureError(String exceptionType, Exception exception) {
@@ -810,7 +810,7 @@ class LocalDevice {
 
   public enum DeviceStatus {
     CLEAN,
-    ERRORS,
+    ERROR,
     INVALID,
     BLOCKED
   }
