@@ -27,5 +27,7 @@ else
 fi
 
 cmd="java -cp $UDMI_JAR $JDWP $JAVA_CLASS $util_name $@"
+source $UDMI_ROOT/bin/stream_logs_to_gsheets.sh
+
 echo $cmd
-$cmd 2>&1 | tee $OUT_DIR/$util_name.log
+$cmd 2>&1 | tee $OUT_DIR/$util_name.log | stream_to_gsheets
