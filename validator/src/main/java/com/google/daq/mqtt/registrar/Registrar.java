@@ -426,7 +426,7 @@ public class Registrar {
     summarizers.forEach(summarizer -> {
       File outFile = summarizer.outFile;
       try {
-        summarizer.summarize(workingDevices, errorSummary, extraDevices);
+        summarizer.summarize(workingDevices, errorSummary, cloudModels);
         System.err.println("Registration summary available in " + outFile.getAbsolutePath());
       } catch (Exception e) {
         throw new RuntimeException("While summarizing output to " + outFile.getAbsolutePath(), e);
@@ -525,11 +525,17 @@ public class Registrar {
 
       int total = 0;
 
-      System.err.printf("Processing %d new devices...%n", newDevices.size());
-      total += processLocalDevices(newDevices);
+      if (updateCloudIoT) {
+        System.err.printf("Processing %d new devices...%n", newDevices.size());
+        total += processLocalDevices(newDevices);
 
-      System.err.printf("Updating %d existing devices...%n", oldDevices.size());
-      total += processLocalDevices(oldDevices);
+        System.err.printf("Updating %d existing devices...%n", oldDevices.size());
+        total += processLocalDevices(oldDevices);
+      } else {
+        System.err.printf("Processing %d target devices...%n", targetDevices.size());
+        total += processLocalDevices(targetDevices);
+      }
+
       System.err.printf("Finished processing %d/%d devices.%n", total, targetDevices.size());
 
       if (updateCloudIoT) {
@@ -746,7 +752,6 @@ public class Registrar {
     Instant start = Instant.now();
     int count = processedDeviceCount.incrementAndGet();
     boolean created = false;
-    boolean error = false;
     try {
       localDevice.writeConfigFile();
       if (cloudModels != null && updateCloudIoT) {
@@ -754,17 +759,16 @@ public class Registrar {
         sendUpdateMessages(localDevice);
         cloudModels.computeIfAbsent(localName, name -> fetchDevice(localName, true));
         sendSwarmMessage(localDevice);
+
+        Duration between = Duration.between(start, Instant.now());
+        double seconds = (between.getSeconds() + between.getNano() / 1e9) / runnerThreads;
+        System.err.printf("Processed %s (%d/%d) in %.03fs (%s)%n", localName, count, totalCount,
+            seconds, created ? "add" : "update");
       }
     } catch (Exception e) {
-      System.err.printf("Deferring exception for %s: %s%n", localDevice.getDeviceId(), e);
+      System.err.printf("Error processing %s: %s%n", localDevice.getDeviceId(), e);
       localDevice.captureError(LocalDevice.EXCEPTION_REGISTERING, e);
-      error = true;
     }
-    Duration between = Duration.between(start, Instant.now());
-    double seconds = (between.getSeconds() + between.getNano() / 1e9) / runnerThreads;
-    String result = error ? "error" : (created ? "add" : "update");
-    System.err.printf("Processed %s (%d/%d) in %.03fs (%s)%n", localName, count, totalCount,
-        seconds, result);
     return created;
   }
 

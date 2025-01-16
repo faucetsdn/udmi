@@ -734,10 +734,15 @@ public class ClearBladeIotAccessProvider extends IotAccessBase {
     }
   }
 
-  private void unbindGatewayDevices(String registryId, Device gatewayDevice,
+  private boolean unbindGatewayDevices(String registryId, Device gatewayDevice,
       Set<String> unbindIds, Consumer<Integer> progress) {
-    ImmutableSet<String> gatewayIds = ImmutableSet.of(gatewayDevice.toBuilder().getId());
-    bindDevicesGateways(registryId, gatewayIds, unbindIds, false, progress);
+    try {
+      ImmutableSet<String> gatewayIds = ImmutableSet.of(gatewayDevice.toBuilder().getId());
+      bindDevicesGateways(registryId, gatewayIds, unbindIds, false, progress);
+      return true;
+    } catch (Exception e) {
+      return false;
+    }
   }
 
   private CloudModel updateDevice(String registryId, Device device) {

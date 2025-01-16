@@ -286,11 +286,14 @@ public class ReflectProcessor extends ProcessorBase {
       return previewReflectResponse(attributes, request);
     }
 
+    String deviceId = attributes.deviceId;
+    String deviceRegistryId = attributes.deviceRegistryId;
+
     if (request.resource_type == REGISTRY) {
-      return iotAccess.modelRegistry(attributes.deviceRegistryId, attributes.deviceId, request);
+      return iotAccess.modelRegistry(deviceRegistryId, deviceId, request);
     } else {
-      return iotAccess.modelDevice(attributes.deviceRegistryId, attributes.deviceId, request,
-          progress -> reflectUdmiLog(attributes, format("Processed %d entries...", progress)));
+      return iotAccess.modelDevice(deviceRegistryId, deviceId, request, progress ->
+          reflectUdmiLog(attributes, format("Processed %d entries for %s...", progress, deviceId)));
     }
   }
 
