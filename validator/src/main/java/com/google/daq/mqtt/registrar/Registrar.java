@@ -88,6 +88,7 @@ import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 import org.apache.commons.io.FileUtils;
 import org.jetbrains.annotations.NotNull;
@@ -135,7 +136,7 @@ public class Registrar {
   private PubSubPusher updatePusher;
   private PubSubPusher feedPusher;
   private Map<String, LocalDevice> workingDevices;
-  private Map<String, CloudModel> extraDevices;
+  private Set<String> extraDevices;
   private String projectId;
   private boolean updateCloudIoT;
   private Duration idleLimit;
@@ -189,11 +190,6 @@ public class Registrar {
 
   private static boolean isNotGateway(CloudModel device) {
     return device.resource_type != Resource_type.GATEWAY;
-  }
-
-  private static CloudModel augmentModel(CloudModel cloudModel) {
-    cloudModel.operation = ifTrueGet(cloudModel.blocked, Operation.BLOCK, Operation.ALLOW);
-    return cloudModel;
   }
 
   private static String defaultToolRoot() {
@@ -406,9 +402,8 @@ public class Registrar {
       }
     });
     if (extraDevices != null && !extraDevices.isEmpty()) {
-      errorSummary.put("Extra", extraDevices.entrySet().stream()
-          .collect(
-              Collectors.toMap(Entry::getKey, entry -> entry.getValue().operation.toString())));
+      errorSummary.put("Extra", extraDevices.stream().collect(Collectors.toMap(
+          Function.identity(), id -> cloudModels.get(id).operation.toString())));
     }
     System.err.println("\nSummary:");
     errorSummary.forEach((key, value) -> System.err.println(
@@ -527,13 +522,13 @@ public class Registrar {
 
       if (updateCloudIoT) {
         System.err.printf("Processing %d new devices...%n", newDevices.size());
-        total += processLocalDevices(newDevices);
+        total += processDevices(newDevices);
 
         System.err.printf("Updating %d existing devices...%n", oldDevices.size());
-        total += processLocalDevices(oldDevices);
+        total += processDevices(oldDevices);
       } else {
         System.err.printf("Processing %d target devices...%n", targetDevices.size());
-        total += processLocalDevices(targetDevices);
+        total += processDevices(targetDevices);
       }
 
       System.err.printf("Finished processing %d/%d devices.%n", total, targetDevices.size());
@@ -710,7 +705,7 @@ public class Registrar {
     }
   }
 
-  private int processLocalDevices(Set<String> deviceSet) {
+  private int processDevices(Set<String> deviceSet) {
     try {
       AtomicInteger queued = new AtomicInteger();
       final Instant start = Instant.now();
@@ -755,7 +750,7 @@ public class Registrar {
     try {
       localDevice.writeConfigFile();
       if (cloudModels != null && updateCloudIoT) {
-        created = syncCloudIoT(localName, localDevice);
+        created = pushToCloudIoT(localName, localDevice);
         sendUpdateMessages(localDevice);
         cloudModels.computeIfAbsent(localName, name -> fetchDevice(localName, true));
         sendSwarmMessage(localDevice);
@@ -816,7 +811,7 @@ public class Registrar {
     return true;
   }
 
-  private boolean syncCloudIoT(String localName, LocalDevice localDevice) {
+  private boolean pushToCloudIoT(String localName, LocalDevice localDevice) {
     boolean created = updateCloudIoT && updateCloudIoT(localDevice);
     CloudModel device =
         checkNotNull(fetchDevice(localName, created), "missing device " + localName);
@@ -861,11 +856,11 @@ public class Registrar {
     return device;
   }
 
-  private Map<String, CloudModel> processExtraDevices(Set<String> extraDevices) {
+  private Set<String> processExtraDevices(Set<String> extraDevices) {
     try {
       Map<String, CloudModel> extras = new ConcurrentHashMap<>();
       if (extraDevices.isEmpty()) {
-        return extras;
+        return extras.keySet();
       }
       if (blockUnknown) {
         System.err.printf("Blocking %d extra devices...", extraDevices.size());
@@ -877,33 +872,30 @@ public class Registrar {
       System.err.printf("There were %d/%d already blocked devices.%n", alreadyBlocked.get(),
           extraDevices.size());
       reapExtraDevices(difference(siteModel.getExtraDevices(), extraDevices));
-      return extras;
+      return extras.keySet();
     } catch (Exception e) {
       throw new RuntimeException(format("Processing %d extra devices", extraDevices.size()), e);
     }
   }
 
   private CloudModel processExtra(String extraName, AtomicInteger alreadyBlocked) {
+    CloudModel cloudModel = cloudModels.get(extraName);
+    boolean isBlocked = isTrue(cloudModel.blocked);
+    ifTrueThen(isBlocked, alreadyBlocked::incrementAndGet);
     try {
-      boolean isBlocked = isTrue(cloudModels.get(extraName).blocked);
-      final CloudModel augmentedModel;
       if (blockUnknown && !isBlocked) {
-        System.err.println("Blocking extra device: " + extraName);
+        System.err.println("Blocking device " + extraName);
         cloudIotManager.blockDevice(extraName, true);
-        augmentedModel = augmentModel(cloudIotManager.fetchDevice(extraName));
-      } else {
-        ifTrueThen(isBlocked, alreadyBlocked::incrementAndGet);
-        augmentedModel = augmentModel(cloudModels.get(extraName));
+        cloudModel.blocked = true;
       }
-      writeExtraDevice(extraName, augmentedModel);
-      return augmentedModel;
+      cloudModel.operation = ifTrueGet(cloudModel.blocked, Operation.BLOCK, Operation.ALLOW);
     } catch (Exception e) {
-      CloudModel errorModel = new CloudModel();
-      errorModel.detail = e.toString();
-      errorModel.operation = Operation.ERROR;
-      writeExtraDevice(extraName, errorModel);
-      return errorModel;
+      cloudModel.operation = Operation.ERROR;
+      cloudModel.detail = friendlyStackTrace(e);
+      System.err.printf("Blocking device %s: %s%n", extraName, cloudModel.detail);
     }
+    writeExtraDevice(extraName, cloudModel);
+    return cloudModel;
   }
 
   private void reapExtraDevices(Set<String> toReap) {

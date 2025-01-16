@@ -108,9 +108,9 @@ public class ImplicitIotAccessProvider extends IotAccessBase {
   }
 
   private void bindDevicesToGateway(String registryId, String gatewayId, CloudModel cloudModel) {
-    Set<String> deviceIds = cloudModel.device_ids.keySet();
-    deviceIds.forEach(
-        deviceId -> registryDeviceRef(registryId, deviceId).put(BOUND_TO_KEY, gatewayId));
+    Set<String> deviceIds = ImmutableSet.copyOf(cloudModel.gateway.proxy_ids);
+    deviceIds.forEach(deviceId ->
+        registryDeviceRef(registryId, deviceId).put(BOUND_TO_KEY, gatewayId));
   }
 
   private void blockDevice(String registryId, String deviceId, CloudModel cloudModel) {
