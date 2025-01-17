@@ -11,6 +11,7 @@ import static com.google.udmi.util.Common.UDMI_TIMEVER_ENV;
 import static com.google.udmi.util.Common.UDMI_VERSION_ENV;
 import static com.google.udmi.util.Common.getNamespacePrefix;
 import static com.google.udmi.util.GeneralUtils.OBJECT_MAPPER_RAW;
+import static com.google.udmi.util.GeneralUtils.catchToTrue;
 import static com.google.udmi.util.GeneralUtils.friendlyStackTrace;
 import static com.google.udmi.util.GeneralUtils.getFileBytes;
 import static com.google.udmi.util.GeneralUtils.ifNotNullGet;
@@ -377,7 +378,7 @@ public class SiteModel {
 
       // Missing arrays are automatically parsed to an empty list, which is not what
       // we want, so hacky go through and convert an empty list to null.
-      if (metadata.gateway != null && metadata.gateway.proxy_ids.isEmpty()) {
+      if (metadata.gateway != null && catchToTrue(() -> metadata.gateway.proxy_ids.isEmpty())) {
         metadata.gateway.proxy_ids = null;
       }
 

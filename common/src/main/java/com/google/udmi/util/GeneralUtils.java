@@ -514,6 +514,10 @@ public class GeneralUtils {
     return catchToElse(provider, false);
   }
 
+  public static boolean catchToTrue(Supplier<Boolean> provider) {
+    return catchToElse(provider, true);
+  }
+
   public static <T> T catchToNull(Supplier<T> provider) {
     return catchToElse(provider, (T) null);
   }
