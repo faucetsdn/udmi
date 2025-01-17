@@ -1,7 +1,6 @@
 
 package udmi.schema;
 
-import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
@@ -120,7 +119,7 @@ public class CloudModel {
     @JsonProperty("detail")
     public java.lang.String detail;
     @JsonProperty("credentials")
-    public List<Credential> credentials = new ArrayList<Credential>();
+    public List<Credential> credentials;
     @JsonProperty("updated_time")
     public Date updated_time;
     @JsonProperty("last_event_time")

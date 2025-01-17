@@ -1,7 +1,6 @@
 
 package udmi.schema;
 
-import java.util.ArrayList;
 import java.util.List;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -166,7 +165,7 @@ public class ExecutionConfiguration {
     @JsonProperty("block_unknown")
     public Boolean block_unknown;
     @JsonProperty("sequences")
-    public List<String> sequences = new ArrayList<String>();
+    public List<String> sequences;
 
     @Override
     public int hashCode() {

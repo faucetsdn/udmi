@@ -1,7 +1,6 @@
 
 package udmi.schema;
 
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import com.fasterxml.jackson.annotation.JsonInclude;
@@ -80,7 +79,7 @@ public class MappingEventEntity {
      */
     @JsonProperty("missing_telemetry_fields")
     @JsonPropertyDescription("DBO fields which are required by the type but absent from the translation")
-    public List<java.lang.String> missing_telemetry_fields = new ArrayList<java.lang.String>();
+    public List<java.lang.String> missing_telemetry_fields;
 
     @Override
     public int hashCode() {
