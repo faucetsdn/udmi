@@ -165,7 +165,6 @@ public class SheetsOutputStream extends OutputStream {
     }
   }
 
-
   /**
    * Redirects `System.out` and `System.err` to the google sheets.
    */
