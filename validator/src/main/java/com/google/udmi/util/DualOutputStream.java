@@ -4,6 +4,10 @@ import java.io.IOException;
 import java.io.OutputStream;
 import org.jetbrains.annotations.NotNull;
 
+/**
+ * An OutputStream that duplicates output to two output streams, useful for scenarios such as
+ * logging to multiple destinations simultaneously.
+ */
 public class DualOutputStream extends OutputStream {
 
   private final OutputStream primary;

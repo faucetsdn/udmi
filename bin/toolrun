@@ -6,6 +6,7 @@ util_name=$(basename $0)
 UDMI_ROOT=$(realpath $(dirname $0)/..)
 
 source $UDMI_ROOT/etc/shell_common.sh
+source $UDMI_ROOT/bin/stream_logs_to_sheets.sh
 
 OUT_DIR=$UDMI_ROOT/out
 mkdir -p $OUT_DIR
@@ -27,7 +28,6 @@ else
 fi
 
 cmd="java -cp $UDMI_JAR $JDWP $JAVA_CLASS $util_name $@"
-source $UDMI_ROOT/bin/stream_logs_to_gsheets.sh
 
 echo $cmd
-$cmd 2>&1 | tee $OUT_DIR/$util_name.log | stream_to_gsheets
+$cmd 2>&1 | tee $OUT_DIR/$util_name.log | stream_to_gsheets "$util_name" "12leoCVQpdXx6MdKlVCCI4O1mi35dOTw_FxDMBetuwXQ"
