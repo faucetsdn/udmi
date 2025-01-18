@@ -60,6 +60,7 @@ import static udmi.schema.Bucket.UNKNOWN_DEFAULT;
 import static udmi.schema.Category.VALIDATION_FEATURE_CAPABILITY;
 import static udmi.schema.Category.VALIDATION_FEATURE_SCHEMA;
 import static udmi.schema.Category.VALIDATION_FEATURE_SEQUENCE;
+import static udmi.schema.CloudModel.Operation.REPLY;
 import static udmi.schema.Envelope.SubFolder.UPDATE;
 import static udmi.schema.FeatureDiscovery.FeatureStage.ALPHA;
 import static udmi.schema.FeatureDiscovery.FeatureStage.PREVIEW;
@@ -267,6 +268,7 @@ public class SequenceBase {
   private static final Duration STATE_CONFIG_HOLDOFF = Duration.ofMillis(1000);
   public static final String ELAPSED_TIME_PREFIX = "@";
   private static final String EXCEPTION_FILE = "sequencer.err";
+  private static final String OPERATION_KEY = "operation";
   protected static Metadata deviceMetadata;
   protected static String projectId;
   protected static String cloudRegion;
@@ -1980,6 +1982,10 @@ public class SequenceBase {
         return;
       }
       Object converted = convertTo(EXPECTED_UPDATES.get(subTypeRaw), message);
+      if (REPLY.value().equals(message.get(OPERATION_KEY))) {
+        debug("Ignoring operation reply " + txnId);
+        return;
+      }
       getReceivedUpdates().put(subTypeRaw, converted);
       int updateCount = getUpdateCount(subTypeRaw).incrementAndGet();
       if (converted instanceof Config config) {
