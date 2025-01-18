@@ -333,7 +333,7 @@ public class ReflectProcessor extends ProcessorBase {
 
   private CloudModel reflectProcess(Envelope attributes, Object payload) {
     CloudModel reply = new CloudModel();
-    reply.operation = Operation.UPDATE;
+    reply.operation = Operation.REPLY;
     if (payload == null) {
       return reply;
     }

@@ -290,6 +290,7 @@ public class CloudModel {
         ERROR("ERROR"),
         CREATE("CREATE"),
         READ("READ"),
+        REPLY("REPLY"),
         UPDATE("UPDATE"),
         DELETE("DELETE"),
         MODIFY("MODIFY"),
