@@ -1840,13 +1840,12 @@ public class SequenceBase {
   }
 
   private void processNextMessage() {
-    MessageBundle bundle = nextMessageBundle();
-    if (bundle != null) {
-      processMessage(bundle.attributes, bundle.message);
-    }
+    ifNotNullThen(nextMessageBundle(), this::getProcessMessage);
   }
 
-  private void processMessage(Map<String, String> attributes, Map<String, Object> message) {
+  private void getProcessMessage(MessageBundle bundle) {
+    final Map<String, String> attributes = bundle.attributes;
+    final Map<String, Object> message = bundle.message;
     String deviceId = attributes.get(DEVICE_ID_KEY);
     String subFolderRaw = attributes.get("subFolder");
     String subTypeRaw = attributes.get("subType");
