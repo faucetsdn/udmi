@@ -742,4 +742,7 @@ public class GeneralUtils {
     return getFileBytes(dataFile.getPath());
   }
 
+  public static Instant toInstant(String timestamp) {
+    return ifNotNullGet(timestamp, Instant::parse);
+  }
 }
