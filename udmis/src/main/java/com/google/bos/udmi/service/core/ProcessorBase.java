@@ -161,7 +161,6 @@ public abstract class ProcessorBase extends ContainerBase implements SimpleHandl
     Envelope useAttributes = deepCopy(envelope);
     ifNotNullThen(newLastStart, start -> useAttributes.subType = SubType.CONFIG);
     useAttributes.subFolder = UPDATE;
-    useAttributes.transactionId = null;
     checkState(useAttributes.subType == SubType.CONFIG);
     debug("Acknowledging config/%s %s %s", subFolder, useAttributes.transactionId,
         isoConvert(newLastStart));

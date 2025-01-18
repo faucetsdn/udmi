@@ -80,13 +80,17 @@ public class ReflectProcessor extends ProcessorBase {
   public static final String PAYLOAD_KEY = "payload";
   private static final Date START_TIME = new Date();
   private static final String LEGACY_METADATA_STRING = "{ }";
+  private static final String REFLECTOR_TXN_PREFIX = "RC:";
+  private static final String CONFIG_TXN_PREFIX = "CU:";
+  private static final String PROCESSOR_TXN_PREFIX = "RP:";
 
   public ReflectProcessor(EndpointConfiguration config) {
     super(config);
   }
 
   public static String makeTransactionId() {
-    return format("RP:%08x", Objects.hash(System.currentTimeMillis(), Thread.currentThread()));
+    return format("%s%08x", PROCESSOR_TXN_PREFIX,
+        Objects.hash(System.currentTimeMillis(), Thread.currentThread()));
   }
 
   @Override
@@ -338,7 +342,11 @@ public class ReflectProcessor extends ProcessorBase {
       return reply;
     }
     if (attributes.subType == SubType.CONFIG) {
-      processConfigChange(attributes, payload, null);
+      // If there was actually a config change, then the transaction will be acknowledged that way.
+      String s = processConfigChange(attributes, payload, null);
+      if (s != null) {
+        attributes.transactionId = makeConfigUpdateTransaction(attributes.transactionId);
+      }
     }
     if (payload instanceof String) {
       return reply;
@@ -347,6 +355,14 @@ public class ReflectProcessor extends ProcessorBase {
     debug("Propagating message %s: %s", attributes.transactionId, messageClass.getSimpleName());
     publish(attributes, convertTo(messageClass, payload));
     return reply;
+  }
+
+  private String makeConfigUpdateTransaction(String transactionId) {
+    if (transactionId.startsWith(REFLECTOR_TXN_PREFIX)) {
+      return CONFIG_TXN_PREFIX + transactionId.substring(REFLECTOR_TXN_PREFIX.length());
+    } else {
+      return transactionId;
+    }
   }
 
   private CloudModel reflectQuery(Envelope attributes, Map<String, Object> payload) {
@@ -362,8 +378,8 @@ public class ReflectProcessor extends ProcessorBase {
   }
 
   /**
-   /* TODO: Remove this workaround when all clients have been updated (2025/01/14).
-   /* Normally would check the actual version value, but this is checking legacy before it existed.
+   * TODO: Remove this workaround when all clients have been updated (2025/01/14).
+   * Normally would check the actual version value, but this is checking legacy before it existed.
    */
   public static boolean isLegacyRequest(CloudModel query) {
     return query == null || query.functions_ver == null;
