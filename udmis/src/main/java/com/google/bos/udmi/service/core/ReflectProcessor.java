@@ -343,10 +343,8 @@ public class ReflectProcessor extends ProcessorBase {
     }
     if (attributes.subType == SubType.CONFIG) {
       // If there was actually a config change, then the transaction will be acknowledged that way.
-      String s = processConfigChange(attributes, payload, null);
-      if (s != null) {
-        attributes.transactionId = makeConfigUpdateTransaction(attributes.transactionId);
-      }
+      ifNotNullThen(processConfigChange(attributes, payload, null), updated ->
+          attributes.transactionId = makeConfigUpdateTransaction(attributes.transactionId));
     }
     if (payload instanceof String) {
       return reply;
@@ -358,11 +356,9 @@ public class ReflectProcessor extends ProcessorBase {
   }
 
   private String makeConfigUpdateTransaction(String transactionId) {
-    if (transactionId.startsWith(REFLECTOR_TXN_PREFIX)) {
-      return CONFIG_TXN_PREFIX + transactionId.substring(REFLECTOR_TXN_PREFIX.length());
-    } else {
-      return transactionId;
-    }
+    return transactionId.startsWith(REFLECTOR_TXN_PREFIX)
+        ? CONFIG_TXN_PREFIX + transactionId.substring(REFLECTOR_TXN_PREFIX.length())
+        : transactionId;
   }
 
   private CloudModel reflectQuery(Envelope attributes, Map<String, Object> payload) {
