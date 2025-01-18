@@ -59,6 +59,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.stream.Collectors;
 import udmi.schema.CloudModel;
+import udmi.schema.CloudModel.Operation;
 import udmi.schema.EndpointConfiguration;
 import udmi.schema.Entry;
 import udmi.schema.Envelope;
@@ -331,19 +332,21 @@ public class ReflectProcessor extends ProcessorBase {
   }
 
   private CloudModel reflectProcess(Envelope attributes, Object payload) {
+    CloudModel reply = new CloudModel();
+    reply.operation = Operation.UPDATE;
     if (payload == null) {
-      return null;
+      return reply;
     }
     if (attributes.subType == SubType.CONFIG) {
       processConfigChange(attributes, payload, null);
     }
     if (payload instanceof String) {
-      return null;
+      return reply;
     }
     Class<?> messageClass = getMessageClassFor(attributes, true);
     debug("Propagating message %s: %s", attributes.transactionId, messageClass.getSimpleName());
     publish(attributes, convertTo(messageClass, payload));
-    return null;
+    return reply;
   }
 
   private CloudModel reflectQuery(Envelope attributes, Map<String, Object> payload) {
