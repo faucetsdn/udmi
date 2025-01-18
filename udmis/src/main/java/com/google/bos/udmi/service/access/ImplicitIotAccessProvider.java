@@ -211,12 +211,12 @@ public class ImplicitIotAccessProvider extends IotAccessBase {
     properties.put(BLOCKED_PROPERTY, booleanString(cloudModel.blocked));
     ifNotNullThen(cloudModel.num_id, id -> properties.put(NUM_ID_PROPERTY, id));
     ifNotNullThen(cloudModel.credentials, creds -> ifNotTrueThen(creds.isEmpty(), () -> {
-          checkState(creds.size() == 1, "only one credential supported");
-          Credential cred = creds.get(0);
-          checkState(cred.key_format == Key_format.PASSWORD,
-              "key type not supported: " + cred.key_format);
-          properties.put(AUTH_PASSWORD_PROPERTY, cred.key_data);
-        }));
+      checkState(creds.size() == 1, "only one credential supported");
+      Credential cred = creds.get(0);
+      checkState(cred.key_format == Key_format.PASSWORD,
+          "key type not supported: " + cred.key_format);
+      properties.put(AUTH_PASSWORD_PROPERTY, cred.key_data);
+    }));
     return properties;
   }
 
