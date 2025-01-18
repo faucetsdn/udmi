@@ -1891,9 +1891,10 @@ public class SequenceBase {
         handleDeviceMessage(message, subTypeRaw, subFolderRaw, transactionId);
       }
     } catch (Exception e) {
-      error(format("Exception processing %s as %s: %s", commandSignature, transactionId,
-          friendlyStackTrace(e)));
-      writeString(exceptionOutFile(), stackTraceString(e));
+      File exceptionOutFile = exceptionOutFile();
+      error(format("Exception processing %s as %s: %s (in %s)", commandSignature, transactionId,
+          friendlyStackTrace(e), exceptionOutFile.getAbsolutePath()));
+      writeString(exceptionOutFile, stackTraceString(e));
       throw new AbortMessageLoop(format("While handling %s_%s", subTypeRaw, subFolderRaw), e);
     }
   }
