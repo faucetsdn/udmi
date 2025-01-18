@@ -11,7 +11,6 @@ import static com.google.udmi.util.GeneralUtils.ifNotNullGet;
 import static com.google.udmi.util.GeneralUtils.ifNotNullThen;
 import static com.google.udmi.util.GeneralUtils.ifNotTrueThen;
 import static com.google.udmi.util.GeneralUtils.ifNullThen;
-import static com.google.udmi.util.GeneralUtils.ifTrueThen;
 import static com.google.udmi.util.GeneralUtils.isNullOrNotEmpty;
 import static com.google.udmi.util.GeneralUtils.requireNull;
 import static com.google.udmi.util.JsonUtil.asMap;
@@ -211,13 +210,13 @@ public class ImplicitIotAccessProvider extends IotAccessBase {
     properties.put(METADATA_STR_KEY, stringifyTerse(cloudModel.metadata));
     properties.put(BLOCKED_PROPERTY, booleanString(cloudModel.blocked));
     ifNotNullThen(cloudModel.num_id, id -> properties.put(NUM_ID_PROPERTY, id));
-    ifNotNullThen(cloudModel.credentials, credentials -> ifNotTrueThen(credentials.isEmpty(), () -> {
-      checkState(credentials.size() == 1, "only one credential supported");
-      Credential cred = credentials.get(0);
-      checkState(cred.key_format == Key_format.PASSWORD,
-          "key type not supported: " + cred.key_format);
-      properties.put(AUTH_PASSWORD_PROPERTY, cred.key_data);
-    }));
+    ifNotNullThen(cloudModel.credentials, creds -> ifNotTrueThen(creds.isEmpty(), () -> {
+          checkState(creds.size() == 1, "only one credential supported");
+          Credential cred = creds.get(0);
+          checkState(cred.key_format == Key_format.PASSWORD,
+              "key type not supported: " + cred.key_format);
+          properties.put(AUTH_PASSWORD_PROPERTY, cred.key_data);
+        }));
     return properties;
   }
 
