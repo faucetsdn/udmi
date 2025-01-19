@@ -481,6 +481,7 @@ class LocalDevice {
       settings.credentials = deviceCredentials;
       settings.generation = generation;
       settings.blocked = deviceKind == DeviceKind.EXTRA;
+      settings.proxyDevices = getProxyDevicesList();
 
       if (metadata == null) {
         return;
@@ -489,13 +490,20 @@ class LocalDevice {
       settings.updated = config.getUpdatedTimestamp();
       settings.metadata = deviceMetadataString();
       settings.deviceNumId = ifNotNullGet(metadata.cloud, cloud -> cloud.num_id);
-      settings.proxyDevices = config.getProxyDevicesList();
       settings.keyAlgorithm = getAuthType();
       settings.keyBytes = getKeyBytes();
       settings.config = deviceConfigString();
     } catch (Exception e) {
       captureError(EXCEPTION_INITIALIZING, e);
     }
+  }
+
+  private List<String> getProxyDevicesList() {
+    return isExtraKind() ? getCloudModelProxyList() : config.getProxyDevicesList();
+  }
+
+  private List<String> getCloudModelProxyList() {
+    return catchToNull(() -> extraCloudModel().gateway.proxy_ids);
   }
 
   public void updateModel(CloudModel device) {
