@@ -196,19 +196,3 @@ jobs:
       - name: Discoverynode logs
         if: ${{ !cancelled() }}
         run: docker logs discoverynode
-  
-  udmif:
-    name: UDMIF unit tests
-    runs-on: ubuntu-latest
-    timeout-minutes: 5
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 20.9.0
-      - name: Install Angular CLI
-        run: npm install -g @angular/cli
-      - name: web tests
-        run: echo Disabled udmif/web/runTests due to dependency integration problems
-      - name: api tests
-        run: echo Disabled udmif/api/runTests due to dependency integration problems

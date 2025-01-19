@@ -1,7 +1,0 @@
-<mat-card class="validation" *ngIf="validation | parse as v">
-  <mat-card-header>
-    <app-level-indicator mat-card-avatar [level]="v.status?.level"></app-level-indicator>
-    <mat-card-title>{{ v.status?.message }}</mat-card-title>
-    <mat-card-subtitle>{{ v.status?.details }}</mat-card-subtitle>
-  </mat-card-header>
-</mat-card>
