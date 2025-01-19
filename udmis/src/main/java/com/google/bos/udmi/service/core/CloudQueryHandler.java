@@ -90,7 +90,6 @@ public class CloudQueryHandler {
   private CloudModel makeCloudModel(String registryId) {
     CloudModel cloudModel = new CloudModel();
     cloudModel.last_event_time = toDate(target.getLastSeen(registryId));
-    cloudModel.credentials = null;
     return cloudModel;
   }
 

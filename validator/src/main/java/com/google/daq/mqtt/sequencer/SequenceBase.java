@@ -34,6 +34,8 @@ import static com.google.udmi.util.GeneralUtils.ifTrueGet;
 import static com.google.udmi.util.GeneralUtils.ifTrueThen;
 import static com.google.udmi.util.GeneralUtils.isTrue;
 import static com.google.udmi.util.GeneralUtils.stackTraceString;
+import static com.google.udmi.util.GeneralUtils.toDate;
+import static com.google.udmi.util.GeneralUtils.toInstant;
 import static com.google.udmi.util.GeneralUtils.writeString;
 import static com.google.udmi.util.JsonUtil.convertTo;
 import static com.google.udmi.util.JsonUtil.getNowInstant;
@@ -58,6 +60,7 @@ import static udmi.schema.Bucket.UNKNOWN_DEFAULT;
 import static udmi.schema.Category.VALIDATION_FEATURE_CAPABILITY;
 import static udmi.schema.Category.VALIDATION_FEATURE_SCHEMA;
 import static udmi.schema.Category.VALIDATION_FEATURE_SEQUENCE;
+import static udmi.schema.CloudModel.Operation.REPLY;
 import static udmi.schema.Envelope.SubFolder.UPDATE;
 import static udmi.schema.FeatureDiscovery.FeatureStage.ALPHA;
 import static udmi.schema.FeatureDiscovery.FeatureStage.PREVIEW;
@@ -264,6 +267,8 @@ public class SequenceBase {
   private static final String NOT_MISSING = " ";
   private static final Duration STATE_CONFIG_HOLDOFF = Duration.ofMillis(1000);
   public static final String ELAPSED_TIME_PREFIX = "@";
+  private static final String EXCEPTION_FILE = "sequencer.err";
+  private static final String OPERATION_KEY = "operation";
   protected static Metadata deviceMetadata;
   protected static String projectId;
   protected static String cloudRegion;
@@ -284,6 +289,7 @@ public class SequenceBase {
   private static boolean enableAllTargets = true;
   private static boolean useAlternateClient;
   private static boolean skipConfigSync;
+  private static File baseOutputDir;
 
   static {
     // Sanity check to make sure ALPHA version is increased if forced by increased BETA.
@@ -372,7 +378,7 @@ public class SequenceBase {
     serialNo = ofNullable(exeConfig.serial_no)
         .orElseGet(() -> GeneralUtils.catchToNull(() -> deviceMetadata.system.serial_no));
 
-    File baseOutputDir = siteModel.getSiteFile("out");
+    baseOutputDir = siteModel.getSiteFile("out");
     deviceOutputDir = new File(baseOutputDir, "devices/" + getDeviceId());
     deviceOutputDir.mkdirs();
 
@@ -1836,13 +1842,12 @@ public class SequenceBase {
   }
 
   private void processNextMessage() {
-    MessageBundle bundle = nextMessageBundle();
-    if (bundle != null) {
-      processMessage(bundle.attributes, bundle.message);
-    }
+    ifNotNullThen(nextMessageBundle(), this::getProcessMessage);
   }
 
-  private void processMessage(Map<String, String> attributes, Map<String, Object> message) {
+  private void getProcessMessage(MessageBundle bundle) {
+    final Map<String, String> attributes = bundle.attributes;
+    final Map<String, Object> message = bundle.message;
     String deviceId = attributes.get(DEVICE_ID_KEY);
     String subFolderRaw = attributes.get("subFolder");
     String subTypeRaw = attributes.get("subType");
@@ -1870,8 +1875,8 @@ public class SequenceBase {
     Envelope envelope = convertTo(Envelope.class, attributes);
 
     try {
-      envelope.publishTime = Date.from(
-          Instant.parse(message == null ? getTimestamp() : (String) message.get("timestamp")));
+      envelope.publishTime = ofNullable(toDate(toInstant(ifNotNullGet(message, m ->
+          (String) m.get("timestamp"))))).orElseGet(GeneralUtils::getNow);
 
       recordRawMessage(envelope, message);
 
@@ -1887,10 +1892,16 @@ public class SequenceBase {
         handleDeviceMessage(message, subTypeRaw, subFolderRaw, transactionId);
       }
     } catch (Exception e) {
-      error(format("Exception processing %s as %s: %s", commandSignature, transactionId,
-          friendlyStackTrace(e)));
+      File exceptionOutFile = exceptionOutFile();
+      error(format("Exception processing %s as %s: %s (in %s)", commandSignature, transactionId,
+          friendlyStackTrace(e), exceptionOutFile.getAbsolutePath()));
+      writeString(exceptionOutFile, stackTraceString(e));
       throw new AbortMessageLoop(format("While handling %s_%s", subTypeRaw, subFolderRaw), e);
     }
+  }
+
+  private File exceptionOutFile() {
+    return new File(baseOutputDir, EXCEPTION_FILE);
   }
 
   private void handleProxyMessage(String deviceId, Envelope envelope, Map<String, Object> message) {
@@ -1971,6 +1982,10 @@ public class SequenceBase {
         return;
       }
       Object converted = convertTo(EXPECTED_UPDATES.get(subTypeRaw), message);
+      if (REPLY.value().equals(message.get(OPERATION_KEY))) {
+        debug("Ignoring operation reply " + txnId);
+        return;
+      }
       getReceivedUpdates().put(subTypeRaw, converted);
       int updateCount = getUpdateCount(subTypeRaw).incrementAndGet();
       if (converted instanceof Config config) {

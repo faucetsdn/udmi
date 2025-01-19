@@ -1,7 +1,6 @@
 
 package udmi.schema;
 
-import java.util.ArrayList;
 import java.util.List;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -24,13 +23,13 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 public class ValidationSummary {
 
     @JsonProperty("correct_devices")
-    public List<String> correct_devices = new ArrayList<String>();
+    public List<String> correct_devices;
     @JsonProperty("extra_devices")
-    public List<String> extra_devices = new ArrayList<String>();
+    public List<String> extra_devices;
     @JsonProperty("missing_devices")
-    public List<String> missing_devices = new ArrayList<String>();
+    public List<String> missing_devices;
     @JsonProperty("error_devices")
-    public List<String> error_devices = new ArrayList<String>();
+    public List<String> error_devices;
 
     @Override
     public int hashCode() {

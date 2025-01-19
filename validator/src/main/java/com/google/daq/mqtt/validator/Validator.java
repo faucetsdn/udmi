@@ -637,8 +637,7 @@ public class Validator {
 
     // Don't validate validation messages. Not really a problem, but sometimes validation messages
     // aren't reflected back (when not using PubSub), so for consistency just reject everything.
-    return SubFolder.VALIDATION.value().equals(subFolderRaw)
-        && SubType.EVENTS.value().equals(subTypeRaw);
+    return SubFolder.VALIDATION.value().equals(subFolderRaw);
   }
 
   private void handleUdmiConfig(UdmiConfig udmiConfig) {

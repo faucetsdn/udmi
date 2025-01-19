@@ -172,7 +172,6 @@ public class ClearBladeIotAccessProvider extends IotAccessBase {
     cloudModel.resource_type = resourceType(deviceRaw);
     cloudModel.last_event_time = getSafeDate(device.getLastEventTime());
     cloudModel.blocked = device.isBlocked() ? true : null;
-    cloudModel.credentials = null;
     cloudModel.updated_time = catchToNull(() -> getDate(device.getMetadata().get(UDMI_UPDATED)));
     return new SimpleEntry<>(device.getId(), cloudModel);
   }
@@ -255,7 +254,6 @@ public class ClearBladeIotAccessProvider extends IotAccessBase {
     CloudModel reply = new CloudModel();
     reply.num_id = deviceIds.size() > 0 ? EMPTY_RETURN_RECEIPT : null;
     reply.operation = cloudModel.operation;
-    reply.credentials = null;
     return reply;
   }
 
@@ -292,7 +290,6 @@ public class ClearBladeIotAccessProvider extends IotAccessBase {
       CloudModel cloudModel = new CloudModel();
       cloudModel.operation = Operation.BLOCK;
       cloudModel.num_id = hashedDeviceId(registryId, deviceId);
-      cloudModel.credentials = null;
       return cloudModel;
     } catch (Exception e) {
       throw new RuntimeException("While updating " + deviceId, e);
@@ -315,7 +312,6 @@ public class ClearBladeIotAccessProvider extends IotAccessBase {
     CloudModel cloudModel = new CloudModel();
     cloudModel.operation = operation;
     cloudModel.num_id = EMPTY_RETURN_RECEIPT;
-    cloudModel.credentials = null;
     return cloudModel;
   }
 
@@ -462,7 +458,6 @@ public class ClearBladeIotAccessProvider extends IotAccessBase {
     cloudModel.operation = BOUND;
     cloudModel.resource_type = DEVICE;
     cloudModel.gateway = getDeviceGatewayModel(boundGateways);
-    cloudModel.credentials = null;
     return cloudModel;
   }
 
@@ -523,7 +518,6 @@ public class ClearBladeIotAccessProvider extends IotAccessBase {
       } else {
         cloudModel.device_ids = augmentGatewayModels(registryId, boundDevices);
       }
-      cloudModel.credentials = null;
       return cloudModel;
     } catch (Exception e) {
       throw new RuntimeException("While listing devices " + getRegistryName(registryId), e);
