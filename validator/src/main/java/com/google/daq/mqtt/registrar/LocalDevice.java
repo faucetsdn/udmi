@@ -200,6 +200,7 @@ class LocalDevice {
   private String baseVersion;
   private Date lastActive;
   private boolean blocked;
+  private CloudModel cloudModel;
 
   LocalDevice(
       SiteModel siteModel, String deviceId, Map<String, JsonSchema> schemas,
@@ -229,6 +230,7 @@ class LocalDevice {
     prepareOutDir();
     ifTrueThen(deviceKind == DeviceKind.LOCAL && metadata != null, this::validateMetadata);
     config = configFrom(metadata, deviceId, siteModel);
+    ifTrueThen(deviceKind == DeviceKind.EXTRA, this::loadExtraCloudModel);
   }
 
   public static void parseMetadataValidateProcessingReport(ProcessingReport report)
@@ -454,8 +456,8 @@ class LocalDevice {
         : config != null && config.isProxied();
   }
 
-  private CloudModel extraCloudModel() {
-    return loadFile(CloudModel.class, new File(siteModel.getExtraDir(deviceId), CLOUD_MODEL_FILE));
+  private void loadExtraCloudModel() {
+    cloudModel = loadFile(CloudModel.class, new File(siteModel.getExtraDir(deviceId), CLOUD_MODEL_FILE));
   }
 
   private boolean isExtraKind() {
@@ -463,7 +465,7 @@ class LocalDevice {
   }
 
   String getGatewayId() {
-    GatewayModel gatewayModel = isExtraKind() ? extraCloudModel().gateway : metadata.gateway;
+    GatewayModel gatewayModel = isExtraKind() ? cloudModel.gateway : metadata.gateway;
     return ifNotNullGet(gatewayModel, model -> model.gateway_id);
   }
 
@@ -482,6 +484,7 @@ class LocalDevice {
       settings.generation = generation;
       settings.blocked = deviceKind == DeviceKind.EXTRA;
       settings.proxyDevices = getProxyDevicesList();
+      settings.deviceNumId = findDeviceNumId();
 
       if (metadata == null) {
         return;
@@ -489,7 +492,6 @@ class LocalDevice {
 
       settings.updated = config.getUpdatedTimestamp();
       settings.metadata = deviceMetadataString();
-      settings.deviceNumId = ifNotNullGet(metadata.cloud, cloud -> cloud.num_id);
       settings.keyAlgorithm = getAuthType();
       settings.keyBytes = getKeyBytes();
       settings.config = deviceConfigString();
@@ -498,12 +500,16 @@ class LocalDevice {
     }
   }
 
+  private String findDeviceNumId() {
+    return isExtraKind() ? cloudModel.num_id  : ifNotNullGet(metadata.cloud, cloud -> cloud.num_id);
+  }
+
   private List<String> getProxyDevicesList() {
     return isExtraKind() ? getCloudModelProxyList() : config.getProxyDevicesList();
   }
 
   private List<String> getCloudModelProxyList() {
-    return catchToNull(() -> extraCloudModel().gateway.proxy_ids);
+    return catchToNull(() -> cloudModel.gateway.proxy_ids);
   }
 
   public void updateModel(CloudModel device) {
