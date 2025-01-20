@@ -1029,10 +1029,10 @@ public class Registrar {
                 .collect(Collectors.toSet());
             Set<String> boundDevices = ofNullable(cloudIotManager.fetchBoundDevices(gatewayId))
                 .orElse(ImmutableSet.of());
-            System.err.printf("Already bound to %s: %s%n", gatewayId, boundDevices);
+            System.err.printf("Already bound to %s: %s%n", gatewayId, setOrSize(boundDevices));
             SetView<String> toBind = difference(proxyIds, boundDevices);
             int count = bindingCount.incrementAndGet();
-            System.err.printf("Binding %s to %s (%d/%d)%n", toBind, gatewayId, count,
+            System.err.printf("Binding %s to %s (%d/%d)%n", setOrSize(toBind), gatewayId, count,
                 gatewayBindings.size());
             cloudIotManager.bindDevices(toBind, gatewayId, true);
           } catch (Exception e) {
