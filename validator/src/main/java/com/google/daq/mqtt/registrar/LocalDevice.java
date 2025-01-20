@@ -380,7 +380,7 @@ class LocalDevice {
       }
       String authType = getAuthType();
       Set<String> keyFiles = (authType.equals(ES_CERT_TYPE) || authType.equals(RSA_CERT_TYPE))
-              ? ALL_CERT_FILES : ALL_KEY_FILES;
+          ? ALL_CERT_FILES : ALL_KEY_FILES;
       for (String keyFile : keyFiles) {
         Credential deviceCredential = getDeviceCredential(keyFile);
         if (deviceCredential != null) {
@@ -457,7 +457,8 @@ class LocalDevice {
   }
 
   private void loadExtraCloudModel() {
-    cloudModel = loadFile(CloudModel.class, new File(siteModel.getExtraDir(deviceId), CLOUD_MODEL_FILE));
+    cloudModel = loadFile(CloudModel.class,
+        new File(siteModel.getExtraDir(deviceId), CLOUD_MODEL_FILE));
   }
 
   private boolean isExtraKind() {
@@ -501,7 +502,7 @@ class LocalDevice {
   }
 
   private String findDeviceNumId() {
-    return isExtraKind() ? cloudModel.num_id  : ifNotNullGet(metadata.cloud, cloud -> cloud.num_id);
+    return isExtraKind() ? cloudModel.num_id : catchToNull(() -> metadata.cloud.num_id);
   }
 
   private List<String> getProxyDevicesList() {

@@ -731,8 +731,8 @@ public class Registrar {
         boolean multiple = toUnbind.size() > SET_SIZE_THRESHOLD;
         while (!toUnbind.isEmpty()) {
           Set<String> limitedSet = limitSetSize(toUnbind, SET_SIZE_THRESHOLD);
-          ifTrueThen(multiple, () ->
-              System.err.printf("Unbinding subset from %s: %s%n", gatewayId, setOrSize(limitedSet)));
+          ifTrueThen(multiple, () -> System.err.printf("Unbinding subset from %s: %s%n", gatewayId,
+              setOrSize(limitedSet)));
           cloudIotManager.bindDevices(limitedSet, gatewayId, false);
           toUnbind.removeAll(limitedSet);
         }
