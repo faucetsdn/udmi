@@ -3,6 +3,7 @@ package com.google.daq.mqtt.sequencer.sequences;
 import static com.google.daq.mqtt.util.TimePeriodConstants.THREE_MINUTES_MS;
 import static com.google.daq.mqtt.util.TimePeriodConstants.TWO_MINUTES_MS;
 import static com.google.udmi.util.GeneralUtils.CSV_JOINER;
+import static com.google.udmi.util.GeneralUtils.catchToElse;
 import static com.google.udmi.util.GeneralUtils.ifNotNullGet;
 import static com.google.udmi.util.GeneralUtils.ifNotNullThen;
 import static com.google.udmi.util.GeneralUtils.ifNotTrueGet;
@@ -18,6 +19,7 @@ import static udmi.schema.Category.POINTSET_POINT_INVALID;
 import static udmi.schema.Category.POINTSET_POINT_INVALID_VALUE;
 import static udmi.schema.FeatureDiscovery.FeatureStage.STABLE;
 
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
 import com.google.daq.mqtt.sequencer.Feature;
 import com.google.daq.mqtt.sequencer.PointsetBase;
@@ -67,7 +69,8 @@ public class PointsetSequences extends PointsetBase {
 
       waitUntil("pointset state matches config", EVENT_WAIT_DURATION, () -> {
         Set<String> configPoints = deviceConfig.pointset.points.keySet();
-        Set<String> statePoints = deviceState.pointset.points.keySet();
+        Set<String> statePoints = catchToElse(() ->
+                deviceState.pointset.points.keySet(), ImmutableSet.of());
         String prefix = format("config %s state %s differences: ",
             isoConvert(deviceConfig.timestamp), isoConvert(deviceState.timestamp));
         return prefixedDifference(prefix, configPoints, statePoints);

@@ -383,14 +383,14 @@ Test passed.
 
 ## family_ether_addr (PREVIEW)
 
-1. Wait until localnet family state ether available
+1. Wait until device state localnet family ether is available
 1. Check that family ether address matches
 
 Test passed.
 
 ## family_ipv4_addr (PREVIEW)
 
-1. Wait until localnet family state ipv4 available
+1. Wait until device state localnet family ipv4 is available
 1. Check that family ipv4 address matches
 
 Test passed.
