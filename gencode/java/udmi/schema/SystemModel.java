@@ -1,7 +1,6 @@
 
 package udmi.schema;
 
-import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Set;
 import com.fasterxml.jackson.annotation.JsonInclude;
@@ -70,7 +69,7 @@ public class SystemModel {
     @JsonProperty("tags")
     @JsonDeserialize(as = java.util.LinkedHashSet.class)
     @JsonPropertyDescription("Tags associated with the device")
-    public Set<Object> tags = new LinkedHashSet<Object>();
+    public Set<Object> tags;
     /**
      * Properties of the expected physical location of the device
      * 

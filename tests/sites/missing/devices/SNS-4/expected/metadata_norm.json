@@ -1,12 +1,11 @@
 {
   "timestamp": "2020-05-01T13:39:07Z",
   "version": "1.5.2",
-  "hash": "ceffb31b",
+  "hash": "42a46586",
   "cloud": {
     "detail": "site default for unit tests"
   },
   "system": {
-    "tags": [ ],
     "location": {
       "site": "ZZ-TRI-FECTA",
       "section": "2-3N8C"
@@ -37,13 +36,11 @@
     "points": {
       "split_threshold": {
         "units": "Imperial-gallons-per-minute",
-        "ref": "vendor-ref can be anything",
-        "tags": [ ]
+        "ref": "vendor-ref can be anything"
       },
       "triangulating_axis": {
         "units": "Degrees-phase",
-        "ref": "anything-goes!",
-        "tags": [ ]
+        "ref": "anything-goes!"
       }
     }
   }

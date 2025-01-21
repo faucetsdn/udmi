@@ -1,7 +1,6 @@
 
 package udmi.schema;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import com.fasterxml.jackson.annotation.JsonInclude;
@@ -50,7 +49,7 @@ public class RefDiscovery {
      */
     @JsonProperty("possible_values")
     @JsonPropertyDescription("List of possible enumerated values for the point")
-    public List<java.lang.String> possible_values = new ArrayList<java.lang.String>();
+    public List<java.lang.String> possible_values;
     /**
      * Current or default unit for this point
      * 

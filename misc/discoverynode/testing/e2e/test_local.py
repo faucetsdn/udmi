@@ -109,7 +109,10 @@ def run(cmd: str) -> subprocess.CompletedProcess:
   execution_time_seconds = time.monotonic() - start
   info("completed with result code %s in %s seconds", str(result.returncode), str(execution_time_seconds))
   # print not log, so they are captured when there is a failure
+  print("-----")
+  print(cmd)
   print(result.stdout.decode("utf-8"))
+  print("-----")
   return result
 
 
@@ -134,7 +137,9 @@ def docker_devices():
       )
 
   yield _docker_devices
+
   result = run("docker logs discoverynode-test-device1")
+  print("discovery node logs")
   print(result.stdout.decode("utf-8"))
   run(
       "docker ps -a | grep 'discoverynode-test-device' | awk '{print $1}' |"
@@ -278,17 +283,19 @@ def test_sequencer(new_site_model, docker_devices, discovery_node):
 
   run(f"bin/registrar {SITE_PATH} {TARGET}")
 
-  # Note: Start after running registrar preferably
+  # Note: Start after running registrar preferably.
   discovery_node(
       device_id="GAT-1",
       site_path=SITE_PATH
   )
 
   result = run(
-      f"bin/sequencer -v {SITE_PATH} {TARGET} GAT-1 single_scan_future"
+      f"bin/sequencer -v {SITE_PATH} {TARGET} GAT-1 scan_single_future"
   )
 
-  assert "RESULT pass discovery.scan single_scan_future" in str(result.stdout), "result is pass (note this test can be flakey)"
+  print("sequencer output")
+  print(result.stdout.decode("utf8"))
+  assert "RESULT pass discovery.scan scan_single_future" in str(result.stdout), "result is pass (note this test can be flakey)"
 
 
 @pytest.fixture
@@ -342,6 +349,10 @@ def new_site_model():
         "timestamp": "2020-05-01T13:39:07Z",
     }
 
+    if discovery_node_families:
+      warning("setting scan target to 0th index of discovery_node_families: %s", discovery_node_families[0])
+      gateway_metadata["testing"] = {"targets": {"scan_family": {"target_value": discovery_node_families[0]}}}
+
     for family in discovery_node_families:
       gateway_metadata["discovery"]["families"][family] = {}
 
@@ -354,6 +365,8 @@ def new_site_model():
         os.path.join(gateway_path, "metadata.json"), mode="w", encoding="utf-8"
     ) as f:
       json.dump(gateway_metadata, f, indent=2)
+    
+    print(f"gateway metadata: {json.dumps(gateway_metadata, indent=2)}")
 
     run(f"bin/keygen RS256 {gateway_path}")
     run(f"bin/keygen CERT/localhost {gateway_path}")

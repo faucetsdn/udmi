@@ -1,7 +1,6 @@
 
 package udmi.schema;
 
-import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import com.fasterxml.jackson.annotation.JsonInclude;
@@ -84,7 +83,7 @@ public class ValidationEvents {
      */
     @JsonProperty("errors")
     @JsonPropertyDescription("List of errors encountered while validating a device")
-    public List<Entry> errors = new ArrayList<Entry>();
+    public List<Entry> errors;
 
     @Override
     public int hashCode() {

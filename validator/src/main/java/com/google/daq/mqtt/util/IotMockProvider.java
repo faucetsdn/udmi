@@ -19,8 +19,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Objects;
+import java.util.Set;
 import java.util.stream.Collectors;
 import udmi.schema.CloudModel;
+import udmi.schema.CloudModel.Operation;
 import udmi.schema.Envelope.SubFolder;
 import udmi.schema.ExecutionConfiguration;
 import udmi.schema.Metadata;
@@ -97,7 +99,7 @@ public class IotMockProvider implements IotProvider {
   }
 
   @Override
-  public void deleteDevice(String deviceId) {
+  public void deleteDevice(String deviceId, Set<String> unbindIds) {
     checkArgument(cloudDevices.containsKey(deviceId), "missing device");
     cloudDevices.remove(deviceId);
     mockAction(DELETE_DEVICE_ACTION, deviceId, null, null);
@@ -118,11 +120,15 @@ public class IotMockProvider implements IotProvider {
   }
 
   @Override
-  public void bindDeviceToGateway(String proxyDeviceId, String gatewayDeviceId) {
-    checkArgument(cloudDevices.containsKey(proxyDeviceId), "missing proxy device");
-    checkArgument(cloudDevices.containsKey(gatewayDeviceId), "missing gateway device");
-    checkArgument(populateCloudModel(gatewayDeviceId).resource_type == GATEWAY, "not a gateway");
-    mockAction(BIND_DEVICE_ACTION, proxyDeviceId, gatewayDeviceId, null);
+  public void bindGatewayDevices(String gatewayDeviceId, Set<String> proxyDeviceIds,
+      boolean toBind) {
+    proxyDeviceIds.forEach(proxyDeviceId -> {
+      checkArgument(cloudDevices.containsKey(proxyDeviceId), "missing proxy device");
+      checkArgument(cloudDevices.containsKey(gatewayDeviceId), "missing gateway device");
+      checkArgument(populateCloudModel(gatewayDeviceId).resource_type == GATEWAY, "not a gateway");
+      mockAction(BIND_DEVICE_ACTION, proxyDeviceId, gatewayDeviceId,
+          (toBind ? Operation.BIND : Operation.UNBIND).value());
+    });
   }
 
   @Override

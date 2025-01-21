@@ -130,8 +130,7 @@ import udmi.schema.ValidationSummary;
  */
 public class Validator {
 
-  public static final int TOOLS_FUNCTIONS_VERSION = 15;
-  public static final int TOOLS_FUNCTIONS_QUERY_READ = 16;
+  public static final int TOOLS_FUNCTIONS_VERSION = 17;
   public static final String PROJECT_PROVIDER_PREFIX = "//";
   public static final String TIMESTAMP_ZULU_SUFFIX = "Z";
   public static final String TIMESTAMP_UTC_SUFFIX_1 = "+00:00";
@@ -638,8 +637,7 @@ public class Validator {
 
     // Don't validate validation messages. Not really a problem, but sometimes validation messages
     // aren't reflected back (when not using PubSub), so for consistency just reject everything.
-    return SubFolder.VALIDATION.value().equals(subFolderRaw)
-        && SubType.EVENTS.value().equals(subTypeRaw);
+    return SubFolder.VALIDATION.value().equals(subFolderRaw);
   }
 
   private void handleUdmiConfig(UdmiConfig udmiConfig) {

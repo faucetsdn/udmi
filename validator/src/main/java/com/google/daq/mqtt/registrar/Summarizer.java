@@ -17,6 +17,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
 import udmi.schema.CloudModel;
+import udmi.schema.CloudModel.Operation;
 
 abstract class Summarizer {
 
@@ -54,16 +55,19 @@ abstract class Summarizer {
 
     @Override
     public void summarize(Map<String, LocalDevice> localDevices, Map<String, Object> errorSummary,
-        Map<String, CloudModel> extraDevices)
+        Map<String, CloudModel> maybeCloudModels)
         throws Exception {
-      Map<String, CloudModel> external = ofNullable(extraDevices).orElse(ImmutableMap.of());
-      Set<String> combined = new TreeSet<>(Sets.union(localDevices.keySet(), external.keySet()));
+      Map<String, CloudModel> cloudModels = ofNullable(maybeCloudModels).orElse(ImmutableMap.of());
+      Set<String> combined = new TreeSet<>(Sets.union(localDevices.keySet(), cloudModels.keySet()));
       try (PrintWriter writer = new PrintWriter(outFile)) {
         writer.println(CSV_JOINER.join(headers));
         combined.forEach(deviceId -> {
+          LocalDevice localDevice = localDevices.get(deviceId);
+          CloudModel cloudModel = cloudModels.get(deviceId);
+          correlateModels(localDevice, cloudModel);
           Map<String, String> rowValues =
-              ofNullable(ifNotNullGet(localDevices.get(deviceId), this::extractDeviceRow))
-                  .orElse(ifNotNullGet(external.get(deviceId), this::extractDeviceRow));
+              ofNullable(ifNotNullGet(cloudModel, this::extractDeviceRow))
+                  .orElse(ifNotNullGet(localDevice, this::extractDeviceRow));
           List<String> listValues = new ArrayList<>(headers.stream().map(rowValues::get).toList());
           listValues.set(headers.indexOf(DEVICE_ID_HEADER), deviceId);
           writer.println(CSV_JOINER.join(listValues));
@@ -71,10 +75,16 @@ abstract class Summarizer {
       }
     }
 
+    private void correlateModels(LocalDevice localDevice, CloudModel cloudModel) {
+      if (localDevice != null && cloudModel != null && localDevice.hasErrors()) {
+        cloudModel.operation = Operation.ERROR;
+      }
+    }
+
     private Map<String, String> extractDeviceRow(CloudModel cloudModel) {
       return ImmutableMap.of(
           NUM_ID_HEADER, ofNullable(cloudModel.num_id).orElse(UNKNOWN_NUM_ID),
-          STATUS_HEADER, cloudModel.operation.toString(),
+          STATUS_HEADER, ofNullable(cloudModel.operation).orElse(Operation.READ).toString(),
           ACTIVE_HEADER, JsonUtil.isoConvert(cloudModel.last_event_time),
           DETAIL_HEADER, ofNullable(cloudModel.detail).orElse(NO_DETAIL));
     }
