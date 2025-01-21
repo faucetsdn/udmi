@@ -198,7 +198,7 @@ echo Now recreate the registry from scratch!
 echo bin/registrar $site_args
 bin/registrar $site_args
 
-check_csv_file ERRORS
+check_csv_file ERROR
 
 echo Remove fake device from site model, so it will be blocked
 rm -rf $fake_device

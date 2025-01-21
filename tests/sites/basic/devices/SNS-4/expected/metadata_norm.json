@@ -1,9 +1,8 @@
 {
   "timestamp": "2020-05-01T13:39:07Z",
   "version": "1.5.2",
-  "hash": "324ddfb4",
+  "hash": "539a2745",
   "system": {
-    "tags": [ ],
     "location": {
       "site": "ZZ-TRI-FECTA",
       "section": "2-3N8C"
@@ -23,12 +22,10 @@
   "pointset": {
     "points": {
       "split_threshold": {
-        "units": "Imperial-gallons-per-minute",
-        "tags": [ ]
+        "units": "Imperial-gallons-per-minute"
       },
       "triangulating_axis": {
-        "units": "Degrees-phase",
-        "tags": [ ]
+        "units": "Degrees-phase"
       }
     },
     "exclude_points_from_config": true,

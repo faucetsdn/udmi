@@ -20,7 +20,9 @@ import static com.google.udmi.util.GeneralUtils.ifTrueThen;
 import static com.google.udmi.util.GeneralUtils.isTrue;
 import static com.google.udmi.util.GeneralUtils.writeString;
 import static com.google.udmi.util.JsonUtil.OBJECT_MAPPER;
+import static com.google.udmi.util.JsonUtil.loadFile;
 import static com.google.udmi.util.JsonUtil.unquoteJson;
+import static com.google.udmi.util.SiteModel.CLOUD_MODEL_FILE;
 import static com.google.udmi.util.SiteModel.METADATA_JSON;
 import static com.google.udmi.util.SiteModel.NORMALIZED_JSON;
 import static java.lang.String.format;
@@ -80,6 +82,7 @@ import udmi.schema.Credential;
 import udmi.schema.Envelope;
 import udmi.schema.Envelope.SubFolder;
 import udmi.schema.Envelope.SubType;
+import udmi.schema.GatewayModel;
 import udmi.schema.Metadata;
 import udmi.schema.PointPointsetModel;
 
@@ -182,11 +185,11 @@ class LocalDevice {
   private final Map<String, JsonSchema> schemas;
   private final File deviceDir;
   private final File outDir;
-  private Metadata metadata;
+  private final DeviceKind deviceKind;
+  private final Metadata metadata;
   private final ExceptionMap exceptionMap;
   private final String generation;
   private final List<Credential> deviceCredentials = new ArrayList<>();
-  private final boolean validateMetadata;
   private ConfigManager config;
   private final DeviceExceptionManager exceptionManager;
   private final SiteModel siteModel;
@@ -200,19 +203,20 @@ class LocalDevice {
 
   LocalDevice(
       SiteModel siteModel, String deviceId, Map<String, JsonSchema> schemas,
-      String generation, boolean validateMetadata) {
+      String generation, DeviceKind kind) {
     try {
       this.deviceId = deviceId;
       this.schemas = schemas;
       this.generation = generation;
       this.siteModel = siteModel;
-      this.validateMetadata = validateMetadata;
+      this.deviceKind = kind;
       if (!DEVICE_ID_ALLOWABLE.matcher(deviceId).matches()) {
         throw new ValidationError(format("Device id does not match allowable pattern %s",
             DEVICE_ID_ALLOWABLE.pattern()));
       }
       exceptionMap = new ExceptionMap("Exceptions for " + deviceId);
-      deviceDir = siteModel.getDeviceDir(deviceId);
+      deviceDir = kind != DeviceKind.EXTRA
+          ? siteModel.getDeviceDir(deviceId) : siteModel.getExtraDir(deviceId);
       outDir = new File(deviceDir, OUT_DIR);
       exceptionManager = new DeviceExceptionManager(new File(siteModel.getSitePath()));
       metadata = readMetadata();
@@ -223,7 +227,7 @@ class LocalDevice {
 
   public void initialize() {
     prepareOutDir();
-    ifTrueThen(validateMetadata && metadata != null, this::validateMetadata);
+    ifTrueThen(deviceKind == DeviceKind.LOCAL && metadata != null, this::validateMetadata);
     config = configFrom(metadata, deviceId, siteModel);
   }
 
@@ -373,11 +377,8 @@ class LocalDevice {
         throw new RuntimeException("Credential cloud.auth_type definition missing");
       }
       String authType = getAuthType();
-      Set<String> keyFiles =
-          (authType.equals(ES_CERT_TYPE) || authType.equals(
-              RSA_CERT_TYPE))
-              ? ALL_CERT_FILES
-              : ALL_KEY_FILES;
+      Set<String> keyFiles = (authType.equals(ES_CERT_TYPE) || authType.equals(RSA_CERT_TYPE))
+              ? ALL_CERT_FILES : ALL_KEY_FILES;
       for (String keyFile : keyFiles) {
         Credential deviceCredential = getDeviceCredential(keyFile);
         if (deviceCredential != null) {
@@ -449,7 +450,21 @@ class LocalDevice {
   }
 
   boolean isProxied() {
-    return config != null && config.isProxied();
+    return isExtraKind() ? getGatewayId() != null
+        : config != null && config.isProxied();
+  }
+
+  private CloudModel extraCloudModel() {
+    return loadFile(CloudModel.class, new File(siteModel.getExtraDir(deviceId), CLOUD_MODEL_FILE));
+  }
+
+  private boolean isExtraKind() {
+    return deviceKind == DeviceKind.EXTRA;
+  }
+
+  String getGatewayId() {
+    GatewayModel gatewayModel = isExtraKind() ? extraCloudModel().gateway : metadata.gateway;
+    return ifNotNullGet(gatewayModel, model -> model.gateway_id);
   }
 
   boolean isDirectConnect() {
@@ -465,10 +480,12 @@ class LocalDevice {
       settings = new CloudDeviceSettings();
       settings.credentials = deviceCredentials;
       settings.generation = generation;
+      settings.blocked = deviceKind == DeviceKind.EXTRA;
 
       if (metadata == null) {
         return;
       }
+
       settings.updated = config.getUpdatedTimestamp();
       settings.metadata = deviceMetadataString();
       settings.deviceNumId = ifNotNullGet(metadata.cloud, cloud -> cloud.num_id);
@@ -609,9 +626,8 @@ class LocalDevice {
   }
 
   public void writeErrors() {
-    List<Pattern> ignoreErrors = exceptionManager.forDevice(getDeviceId());
+    ErrorTree errorTree = getErrorTree();
     File errorsFile = new File(outDir, DEVICE_ERRORS_MAP);
-    ErrorTree errorTree = getErrorTree(ignoreErrors);
     if (errorTree != null) {
       try (PrintStream printStream = new PrintStream(Files.newOutputStream(errorsFile.toPath()))) {
         System.err.println("Updating errors " + errorsFile);
@@ -625,12 +641,20 @@ class LocalDevice {
     }
   }
 
+  private ErrorTree getErrorTree() {
+    return getErrorTree(exceptionManager.forDevice(getDeviceId()));
+  }
+
   ErrorTree getErrorTree(List<Pattern> ignoreErrors) {
     if (exceptionMap.isEmpty()) {
       return null;
     }
     ErrorTree errorTree = ExceptionMap.format(exceptionMap);
     return errorTree.purge(ignoreErrors) ? null : errorTree;
+  }
+
+  public boolean hasErrors() {
+    return getErrorTree() != null;
   }
 
   String getNormalizedTimestamp() {
@@ -710,7 +734,7 @@ class LocalDevice {
     if (getTreeChildren().isEmpty()) {
       return DeviceStatus.CLEAN;
     }
-    return DeviceStatus.ERRORS;
+    return DeviceStatus.ERROR;
   }
 
   public void captureError(String exceptionType, Exception exception) {
@@ -731,7 +755,7 @@ class LocalDevice {
   }
 
   public boolean isValid() {
-    return metadata != null;
+    return metadata != null || deviceKind == DeviceKind.EXTRA;
   }
 
   public void validateSamples() {
@@ -761,8 +785,7 @@ class LocalDevice {
   }
 
   public Set<Entry<String, ErrorTree>> getTreeChildren() {
-    List<Pattern> ignoreErrors = exceptionManager.forDevice(getDeviceId());
-    ErrorTree errorTree = getErrorTree(ignoreErrors);
+    ErrorTree errorTree = getErrorTree();
     if (errorTree != null && errorTree.children != null) {
       return errorTree.children.entrySet();
     }
@@ -782,13 +805,17 @@ class LocalDevice {
   }
 
   public LocalDevice duplicate(String newId) {
-    return new LocalDevice(siteModel, newId, schemas, generation, validateMetadata);
+    return new LocalDevice(siteModel, newId, schemas, generation, deviceKind);
   }
 
   public enum DeviceStatus {
     CLEAN,
-    ERRORS,
+    ERROR,
     INVALID,
     BLOCKED
+  }
+
+  enum DeviceKind {
+    LOCAL, SIMPLE, EXTRA
   }
 }

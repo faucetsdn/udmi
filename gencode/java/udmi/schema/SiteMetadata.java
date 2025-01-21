@@ -2,7 +2,6 @@
 package udmi.schema;
 
 import java.util.Date;
-import java.util.LinkedHashSet;
 import java.util.Set;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -67,7 +66,7 @@ public class SiteMetadata {
     @JsonProperty("tags")
     @JsonDeserialize(as = java.util.LinkedHashSet.class)
     @JsonPropertyDescription("Tags associated with the site")
-    public Set<Object> tags = new LinkedHashSet<Object>();
+    public Set<Object> tags;
     /**
      * Site Location
      * <p>

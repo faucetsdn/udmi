@@ -13,7 +13,7 @@ cat out/message_capture.log
 echo Captured $(wc -l out/message_capture.log) messages.
 
 systems=$(find out/registries/ -name \*update_model.json | xargs jq .system | fgrep -v null | wc -l)
-[[ $systems == 206 ]] || fail Expected 206 system operations, found $systems
+[[ $systems == 196 ]] || fail Expected 196 system operations, found $systems
 
 deletes=$(find out/registries/ -name \*update_model.json | xargs jq .cloud.operation | fgrep DELETE | wc -l)
 [[ $deletes == 1 ]] || fail Expected 1 delete operations, found $deletes

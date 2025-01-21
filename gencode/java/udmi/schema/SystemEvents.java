@@ -1,7 +1,6 @@
 
 package udmi.schema;
 
-import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import com.fasterxml.jackson.annotation.JsonInclude;
@@ -59,7 +58,7 @@ public class SystemEvents {
     @JsonPropertyDescription("Last config received")
     public Date last_config;
     @JsonProperty("logentries")
-    public List<Entry> logentries = new ArrayList<Entry>();
+    public List<Entry> logentries;
     /**
      * Sequence number for this event
      * 

@@ -2,12 +2,11 @@
   "timestamp": "2020-05-01T13:39:07Z",
   "version": "1.5.2",
   "upgraded_from": "1",
-  "hash": "519e736f",
+  "hash": "f93e9dff",
   "cloud": {
     "auth_type": "RS256"
   },
   "system": {
-    "tags": [ ],
     "location": {
       "site": "US-SFO-XYY",
       "section": "2-3N8C",
@@ -41,17 +40,14 @@
     "points": {
       "filter_alarm_pressure_status": {
         "units": "No-units",
-        "ref": "BV11.present_value",
-        "tags": [ ]
+        "ref": "BV11.present_value"
       },
       "filter_differential_pressure": {
-        "units": "Bars",
-        "tags": [ ]
+        "units": "Bars"
       },
       "filter_differential_pressure_sensor": {
         "units": "Degrees-Celsius",
-        "ref": "AV12.present_value",
-        "tags": [ ]
+        "ref": "AV12.present_value"
       }
     }
   }

@@ -2,9 +2,8 @@
   "timestamp": "2021-02-25T09:56:39Z",
   "version": "1.5.2",
   "upgraded_from": "1.3.14",
-  "hash": "22ef250e",
+  "hash": "60f264a5",
   "system": {
-    "tags": [ ],
     "location": {
       "site": "US-SFO-XYY",
       "section": "L02-R16",
@@ -42,63 +41,51 @@
     "points": {
       "discharge_air_temperature_sensor": {
         "units": "degrees-celcius",
-        "ref": "AI1104.Present_Value",
-        "tags": [ ]
+        "ref": "AI1104.Present_Value"
       },
       "discharge_fan_fault_status": {
         "units": "No-units",
-        "ref": "BI1103.Present_Value",
-        "tags": [ ]
+        "ref": "BI1103.Present_Value"
       },
       "discharge_fan_percentage_speed_command": {
         "units": "percent",
-        "ref": "AO1101.Present_Value",
-        "tags": [ ]
+        "ref": "AO1101.Present_Value"
       },
       "discharge_fan_percentage_speed_setpoint": {
         "units": "percent",
-        "ref": "AV101.Present_Value",
-        "tags": [ ]
+        "ref": "AV101.Present_Value"
       },
       "discharge_fan_run_status": {
         "units": "No-units",
-        "ref": "BI1102.Present_Value",
-        "tags": [ ]
+        "ref": "BI1102.Present_Value"
       },
       "discharge_fan_static_pressure_status": {
         "units": "No-units",
-        "ref": "BI1105.Present_Value",
-        "tags": [ ]
+        "ref": "BI1105.Present_Value"
       },
       "fire_alarm_status": {
         "units": "No-units",
-        "ref": "BV1001.Present_Value",
-        "tags": [ ]
+        "ref": "BV1001.Present_Value"
       },
       "zone_air_co2_concentration_sensor": {
         "units": "parts_per_million",
-        "ref": "AI101004.Present_Value",
-        "tags": [ ]
+        "ref": "AI101004.Present_Value"
       },
       "zone_air_co2_concentration_setpoint": {
         "units": "parts_per_million",
-        "ref": "AV2.Present_Value",
-        "tags": [ ]
+        "ref": "AV2.Present_Value"
       },
       "zone_air_temperature_sensor": {
         "units": "degrees-celcius",
-        "ref": "AI101001.Present_Value",
-        "tags": [ ]
+        "ref": "AI101001.Present_Value"
       },
       "zone_air_temperature_setpoint": {
         "units": "degrees-celcius",
-        "ref": "AV101022.Present_Value",
-        "tags": [ ]
+        "ref": "AV101022.Present_Value"
       },
       "zone_occupancy_status": {
         "units": "No-units",
-        "ref": "BV1003.Present_Value",
-        "tags": [ ]
+        "ref": "BV1003.Present_Value"
       }
     }
   }

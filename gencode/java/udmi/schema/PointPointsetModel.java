@@ -2,7 +2,6 @@
 package udmi.schema;
 
 import java.util.HashMap;
-import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Set;
 import com.fasterxml.jackson.annotation.JsonCreator;
@@ -105,7 +104,7 @@ public class PointPointsetModel {
     @JsonProperty("tags")
     @JsonDeserialize(as = java.util.LinkedHashSet.class)
     @JsonPropertyDescription("Tags assosciated with the point")
-    public Set<Object> tags = new LinkedHashSet<Object>();
+    public Set<Object> tags;
 
     @Override
     public int hashCode() {

@@ -1,12 +1,11 @@
 {
   "timestamp": "2020-05-01T13:39:07Z",
   "version": "1.5.2",
-  "hash": "9ee6f853",
+  "hash": "73717715",
   "cloud": {
     "auth_type": "ES256"
   },
   "system": {
-    "tags": [ ],
     "location": {
       "site": "ZZ-TRI-FECTA",
       "section": "2-3N8C"
@@ -33,8 +32,7 @@
   "pointset": {
     "points": {
       "globulating_globar": {
-        "units": "Bars",
-        "tags": [ ]
+        "units": "Bars"
       }
     },
     "sample_rate_sec": 30
