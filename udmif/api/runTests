@@ -1,6 +1,0 @@
-#!/bin/bash -e
-
-ROOT_DIR=$(realpath $(dirname $0))
-cd $ROOT_DIR
-
-npm install && npm test
