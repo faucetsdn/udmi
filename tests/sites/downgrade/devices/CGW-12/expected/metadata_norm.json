@@ -2,12 +2,11 @@
   "timestamp": "2018-08-26T21:39:29Z",
   "version": "1.5.2",
   "upgraded_from": "1.3.14",
-  "hash": "22a513c8",
+  "hash": "502b4d97",
   "cloud": {
     "auth_type": "RS256"
   },
   "system": {
-    "tags": [ ],
     "location": {
       "site": "US-SFO-XYY",
       "position": {
@@ -40,52 +39,40 @@
   "pointset": {
     "points": {
       "chiller_fault_status": {
-        "units": "no_units",
-        "tags": [ ]
+        "units": "no_units"
       },
       "chiller_run_status": {
-        "units": "no_units",
-        "tags": [ ]
+        "units": "no_units"
       },
       "cooling_water_primary_return_temperature_sensor": {
-        "units": "degrees-celcius",
-        "tags": [ ]
+        "units": "degrees-celcius"
       },
       "cooling_water_primary_supply_temperature_sensor": {
-        "units": "degrees-celcius",
-        "tags": [ ]
+        "units": "degrees-celcius"
       },
       "cooling_water_secondary_pump_differential_pressure_status": {
-        "units": "no_units",
-        "tags": [ ]
+        "units": "no_units"
       },
       "cooling_water_secondary_pump_fault_status_1": {
-        "units": "no_units",
-        "tags": [ ]
+        "units": "no_units"
       },
       "cooling_water_secondary_pump_fault_status_2": {
-        "units": "no_units",
-        "tags": [ ]
+        "units": "no_units"
       },
       "cooling_water_secondary_pump_run_command_1": {
-        "units": "no_units",
-        "tags": [ ]
+        "units": "no_units"
       },
       "cooling_water_secondary_pump_run_command_2": {
-        "units": "no_units",
-        "tags": [ ]
+        "units": "no_units"
       },
       "cooling_water_secondary_return_temperature_sensor": {
-        "units": "degrees-celcius",
-        "tags": [ ]
+        "units": "degrees-celcius"
       },
       "cooling_water_secondary_supply_temperature_sensor": {
-        "units": "degrees-celcius",
-        "tags": [ ]
+        "units": "degrees-celcius"
       },
       "cooling_water_system_pressurization_unit_status": {
-        "units": "no_units",
-        "tags": [ ]
+        "units": "no_units"
       }
     }
   }

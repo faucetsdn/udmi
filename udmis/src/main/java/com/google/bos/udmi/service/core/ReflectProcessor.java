@@ -20,6 +20,7 @@ import static com.google.udmi.util.GeneralUtils.friendlyStackTrace;
 import static com.google.udmi.util.GeneralUtils.ifNotNullGet;
 import static com.google.udmi.util.GeneralUtils.ifNotNullThen;
 import static com.google.udmi.util.GeneralUtils.ifNullThen;
+import static com.google.udmi.util.GeneralUtils.ifTrueThen;
 import static com.google.udmi.util.GeneralUtils.multiTrim;
 import static com.google.udmi.util.GeneralUtils.requireNull;
 import static com.google.udmi.util.GeneralUtils.stackTraceString;
@@ -53,10 +54,12 @@ import com.google.udmi.util.JsonUtil;
 import com.google.udmi.util.MetadataMapKeys;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.stream.Collectors;
 import udmi.schema.CloudModel;
+import udmi.schema.CloudModel.Operation;
 import udmi.schema.EndpointConfiguration;
 import udmi.schema.Entry;
 import udmi.schema.Envelope;
@@ -77,13 +80,17 @@ public class ReflectProcessor extends ProcessorBase {
   public static final String PAYLOAD_KEY = "payload";
   private static final Date START_TIME = new Date();
   private static final String LEGACY_METADATA_STRING = "{ }";
+  private static final String REFLECTOR_TXN_PREFIX = "RC:";
+  private static final String CONFIG_TXN_PREFIX = "CU:";
+  private static final String PROCESSOR_TXN_PREFIX = "RP:";
 
   public ReflectProcessor(EndpointConfiguration config) {
     super(config);
   }
 
   public static String makeTransactionId() {
-    return format("RP:%08x", Objects.hash(System.currentTimeMillis(), Thread.currentThread()));
+    return format("%s%08x", PROCESSOR_TXN_PREFIX,
+        Objects.hash(System.currentTimeMillis(), Thread.currentThread()));
   }
 
   @Override
@@ -152,7 +159,8 @@ public class ReflectProcessor extends ProcessorBase {
   private Object extractModel(CloudModel request) {
     String metadata = catchToNull(() -> request.metadata.get(MetadataMapKeys.UDMI_METADATA));
     if (metadata == null) {
-      return null;
+      // Cover the cases for DELETE and BIND operations where there is no actual model.
+      return asModelUpdate(request);
     } else if (request.resource_type == REGISTRY) {
       return asSiteMetadataUpdate(metadata);
     } else {
@@ -251,8 +259,10 @@ public class ReflectProcessor extends ProcessorBase {
   }
 
   private CloudModel queryCloudRegistry(Envelope attributes) {
-    return iotAccess.listDevices(attributes.deviceRegistryId,
+    CloudModel cloudModel = iotAccess.listDevices(attributes.deviceRegistryId,
         progress -> reflectUdmiLog(attributes, format("Fetched %d devices...", progress)));
+    cloudModel.operation = READ;
+    return cloudModel;
   }
 
   private CloudModel queryDeviceState(Envelope attributes) {
@@ -281,10 +291,14 @@ public class ReflectProcessor extends ProcessorBase {
       return previewReflectResponse(attributes, request);
     }
 
+    String deviceId = attributes.deviceId;
+    String deviceRegistryId = attributes.deviceRegistryId;
+
     if (request.resource_type == REGISTRY) {
-      return iotAccess.modelRegistry(attributes.deviceRegistryId, attributes.deviceId, request);
+      return iotAccess.modelRegistry(deviceRegistryId, deviceId, request);
     } else {
-      return iotAccess.modelDevice(attributes.deviceRegistryId, attributes.deviceId, request);
+      return iotAccess.modelDevice(deviceRegistryId, deviceId, request, progress ->
+          reflectUdmiLog(attributes, format("Processed %d entries for %s...", progress, deviceId)));
     }
   }
 
@@ -302,6 +316,12 @@ public class ReflectProcessor extends ProcessorBase {
     return target;
   }
 
+  private ModelUpdate asModelUpdate(CloudModel request) {
+    ModelUpdate modelUpdate = new ModelUpdate();
+    modelUpdate.cloud = request;
+    return modelUpdate;
+  }
+
   private ModelUpdate asModelUpdate(String modelString) {
     // If it's not a valid JSON object, then fall back to a string description alternate.
     if (modelString == null || !modelString.startsWith(JsonUtil.JSON_OBJECT_LEADER)) {
@@ -316,19 +336,29 @@ public class ReflectProcessor extends ProcessorBase {
   }
 
   private CloudModel reflectProcess(Envelope attributes, Object payload) {
+    CloudModel reply = new CloudModel();
+    reply.operation = Operation.REPLY;
     if (payload == null) {
-      return null;
+      return reply;
     }
     if (attributes.subType == SubType.CONFIG) {
-      processConfigChange(attributes, payload, null);
+      // If there was actually a config change, then the transaction will be acknowledged that way.
+      ifNotNullThen(processConfigChange(attributes, payload, null), updated ->
+          attributes.transactionId = makeConfigUpdateTransaction(attributes.transactionId));
     }
     if (payload instanceof String) {
-      return null;
+      return reply;
     }
     Class<?> messageClass = getMessageClassFor(attributes, true);
     debug("Propagating message %s: %s", attributes.transactionId, messageClass.getSimpleName());
     publish(attributes, convertTo(messageClass, payload));
-    return null;
+    return reply;
+  }
+
+  private String makeConfigUpdateTransaction(String transactionId) {
+    return transactionId.startsWith(REFLECTOR_TXN_PREFIX)
+        ? CONFIG_TXN_PREFIX + transactionId.substring(REFLECTOR_TXN_PREFIX.length())
+        : transactionId;
   }
 
   private CloudModel reflectQuery(Envelope attributes, Map<String, Object> payload) {
@@ -339,7 +369,30 @@ public class ReflectProcessor extends ProcessorBase {
       warn("Removing return result operation due to legacy client query.");
       cloudModel.operation = null;
     }
+    ifTrueThen(isLegacyRequest(query), () -> downgradeReply(attributes, cloudModel));
     return cloudModel;
+  }
+
+  /**
+   * TODO: Remove this workaround when all clients have been updated (2025/01/14).
+   * Normally would check the actual version value, but this is checking legacy before it existed.
+   */
+  public static boolean isLegacyRequest(CloudModel query) {
+    return query == null || query.functions_ver == null;
+  }
+
+  private void downgradeReply(Envelope attributes, CloudModel cloudModel) {
+    if (cloudModel.gateway != null) {
+      List<String> proxyIds = cloudModel.gateway.proxy_ids;
+      warn("Downgrading legacy query reply for " + attributes.deviceRegistryId);
+      cloudModel.device_ids =
+          proxyIds.stream().collect(Collectors.toMap(id -> id, this::makeDummyCloudModel));
+      cloudModel.gateway = null;
+    }
+  }
+
+  private CloudModel makeDummyCloudModel(String id) {
+    return new CloudModel();
   }
 
   private CloudModel reflectQueryCore(Envelope attributes) {

@@ -11,9 +11,10 @@ class NumberDiscovery(discovery.DiscoveryController):
 
   scan_family = "vendor"
 
-  def __init__(self, state, publisher):
+  def __init__(self, state, publisher, *, range):
     self.cancelled = None
     self.task_thread = None
+    self.range = range
     super().__init__(state, publisher)
 
   def start_discovery(self):
@@ -26,13 +27,19 @@ class NumberDiscovery(discovery.DiscoveryController):
   @discovery.catch_exceptions_to_state
   @discovery.main_task
   def discoverer(self):
-    for i in itertools.count(1):
+    if self.range:
+      iterator = self.range.split(",")
+    else:
+      iterator = itertools.count(1)
+
+    for i in iterator:
       if self.cancelled:
         return
-      result = DiscoveryEvent(
-          generation=self.generation, scan_family=self.scan_family, scan_addr=str(i)
-      )
-      self.publish(result)
+      if i:
+        result = DiscoveryEvent(
+            generation=self.generation, scan_family=self.scan_family, scan_addr=str(i)
+        )
+        self.publish(result)
       time.sleep(1)
 
   def stop_discovery(self):

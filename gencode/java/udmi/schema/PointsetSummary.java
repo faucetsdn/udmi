@@ -1,7 +1,6 @@
 
 package udmi.schema;
 
-import java.util.ArrayList;
 import java.util.List;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -28,14 +27,14 @@ public class PointsetSummary {
      */
     @JsonProperty("missing")
     @JsonPropertyDescription("Missing points discovered while validating a device")
-    public List<String> missing = new ArrayList<String>();
+    public List<String> missing;
     /**
      * Extra points discovered while validating a device
      * 
      */
     @JsonProperty("extra")
     @JsonPropertyDescription("Extra points discovered while validating a device")
-    public List<String> extra = new ArrayList<String>();
+    public List<String> extra;
 
     @Override
     public int hashCode() {

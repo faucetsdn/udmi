@@ -1,7 +1,6 @@
 
 package udmi.schema;
 
-import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import com.fasterxml.jackson.annotation.JsonInclude;
@@ -39,7 +38,7 @@ public class UdmiEvents {
     @JsonPropertyDescription("Version of the UDMI schema")
     public String version;
     @JsonProperty("logentries")
-    public List<Entry> logentries = new ArrayList<Entry>();
+    public List<Entry> logentries;
 
     @Override
     public int hashCode() {

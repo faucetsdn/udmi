@@ -236,7 +236,7 @@ class MQTT(udmi.publishers.publisher.Publisher):
         )
 
         if self.autentication_mechanism == "jwt_gcp":
-            client.tls_set(tls_version=ssl.PROTOCOL_TLSv1_2)
+            client.tls_set(self.ca_file, tls_version=ssl.PROTOCOL_TLSv1_2)
         elif self.autentication_mechanism == "udmi_local":
             client.tls_set(
                 self.ca_file,
@@ -244,6 +244,9 @@ class MQTT(udmi.publishers.publisher.Publisher):
                 keyfile=self.private_key_file,
                 certfile=self.cert_file,
             )
+            # I don't know why this doesn't like the UDMIS certs
+            # ssl.SSLError: [SSL] PEM lib (_ssl.c:3874)
+            # TODO: Investigate SSL errors with local UDMIS
             client.tls_insecure_set(True)
         else:
             raise RuntimeError("unknown authentication mechanism")

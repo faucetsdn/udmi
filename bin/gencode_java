@@ -32,7 +32,7 @@ find . -name \*~ | xargs -r rm
 
 JOPTS="-d . -ds -dg -S -p udmi.schema -ut"
 echo Generating code in $OUTDIR
-$JARBIN $JOPTS --source . --target $OUTDIR
+$JARBIN $JOPTS -N --source . --target $OUTDIR
 
 # There is no way to specify enum constants in generated code, so just hack it in manually.
 echo Copying shared constants $ROOT_DIR/etc/*.java

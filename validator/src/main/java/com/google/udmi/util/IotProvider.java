@@ -2,6 +2,7 @@ package com.google.udmi.util;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import udmi.schema.CloudModel;
 import udmi.schema.Credential;
 import udmi.schema.Envelope.SubFolder;
@@ -55,9 +56,10 @@ public interface IotProvider {
   /**
    * Delete the specified device from the iot registry.
    *
-   * @param deviceId device id to delete
+   * @param deviceId  device id to delete
+   * @param unbindIds optional list of devices to unbind if gateway
    */
-  void deleteDevice(String deviceId);
+  void deleteDevice(String deviceId, Set<String> unbindIds);
 
   /**
    * Fetch a device for the given id.
@@ -70,10 +72,11 @@ public interface IotProvider {
   /**
    * Make the given proxy device bound to the given gateway.
    *
-   * @param proxyDeviceId   device to bind
    * @param gatewayDeviceId thing to bind to
+   * @param proxyDeviceIds  devices to (un)bind
+   * @param toBind          true if the device should be bound, else unbind it
    */
-  void bindDeviceToGateway(String proxyDeviceId, String gatewayDeviceId);
+  void bindGatewayDevices(String gatewayDeviceId, Set<String> proxyDeviceIds, boolean toBind);
 
   /**
    * Return all the device ids currently registered.

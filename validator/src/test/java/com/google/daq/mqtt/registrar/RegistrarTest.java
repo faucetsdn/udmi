@@ -47,7 +47,7 @@ public class RegistrarTest {
   private static final Set<String> ALLOWED_DEVICE_IDS = ImmutableSet.of("bacnet_29314",
       "bacnet-29138", "AHU-0001");
   private static final Set<String> ILLEGAL_DEVICE_IDS = ImmutableSet.of("bacnet/293124",
-      "BACnet.213214");
+      "BACnet@213214");
   private static final Set<String> ALLOWED_POINT_NAMES = ImmutableSet.of("kWh", "Current",
       "analogValue_13", "analogValue-13", "AV_-13", "Electric_L_OrchesTra");
   private static final Set<String> ILLEGAL_POINT_NAMES = ImmutableSet.of("av/13", "av%13", "23,11",
@@ -137,7 +137,7 @@ public class RegistrarTest {
       try {
         Registrar registrar = getRegistrar(ImmutableList.of());
         registrar.execute(() -> {
-          Map<String, LocalDevice> localDevices = registrar.getLocalDevices();
+          Map<String, LocalDevice> localDevices = registrar.getWorkingDevices();
           localDevices.put(deviceId, localDevices.get(DEVICE_ID).duplicate(deviceId));
         });
         okAddedIds.add(deviceId); // Record devices that don't throw an exception.
@@ -156,7 +156,7 @@ public class RegistrarTest {
       try {
         Registrar registrar = getRegistrar(ImmutableList.of());
         registrar.execute(() -> {
-          Map<String, LocalDevice> localDevices = registrar.getLocalDevices();
+          Map<String, LocalDevice> localDevices = registrar.getWorkingDevices();
           Metadata metadata = localDevices.get(DEVICE_ID).getMetadata();
           metadata.pointset.points.put(pointName, new PointPointsetModel());
         });

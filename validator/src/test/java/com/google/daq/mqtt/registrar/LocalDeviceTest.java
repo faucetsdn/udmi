@@ -9,6 +9,7 @@ import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
 import com.github.fge.jsonschema.main.JsonSchema;
+import com.google.daq.mqtt.registrar.LocalDevice.DeviceKind;
 import com.google.udmi.util.JsonUtil;
 import com.google.udmi.util.SiteModel;
 import java.io.File;
@@ -53,6 +54,6 @@ public class LocalDeviceTest {
     rawMetadata = JsonUtil.loadFileStrictRequired(Metadata.class, rawMetadataFile);
     rawMetadata.version = null;
     rawMetadata.gateway = null;
-    return new LocalDevice(siteModel, DEVICE_ID, SCHEMAS, null, false);
+    return new LocalDevice(siteModel, DEVICE_ID, SCHEMAS, null, DeviceKind.SIMPLE);
   }
 }

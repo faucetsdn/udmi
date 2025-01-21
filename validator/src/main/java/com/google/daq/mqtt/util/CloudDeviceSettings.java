@@ -17,4 +17,5 @@ public class CloudDeviceSettings {
   public byte[] keyBytes;
   public String updated;
   public String generation;
+  public boolean blocked;
 }

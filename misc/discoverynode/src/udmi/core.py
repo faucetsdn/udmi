@@ -144,7 +144,7 @@ class UDMICore:
 
     if vendor:
       number_discovery = udmi.discovery.numbers.NumberDiscovery(
-          self.state, self.publish_discovery
+          self.state, self.publish_discovery, range=self.config.get("vendor", {}).get("range"),
       )
 
       self.add_config_route(
