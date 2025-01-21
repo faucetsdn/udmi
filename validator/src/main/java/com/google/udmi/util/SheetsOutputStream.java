@@ -38,7 +38,7 @@ public class SheetsOutputStream extends OutputStream {
 
   private static final Logger LOGGER = LoggerFactory.getLogger(SheetsOutputStream.class);
   private static final JsonFactory JSON_FACTORY = GsonFactory.getDefaultInstance();
-  private static final List<String> SCOPES = Collections.singletonList(SheetsScopes.SPREADSHEETS);
+  static final List<String> SCOPES = Collections.singletonList(SheetsScopes.SPREADSHEETS);
   private static final long DEFAULT_SYNC_TIME = 2000;
   private static final NetHttpTransport HTTP_TRANSPORT;
 
@@ -50,13 +50,13 @@ public class SheetsOutputStream extends OutputStream {
     }
   }
 
-  private final long syncTime;
+  final long syncTime;
   private long lastWriteMillis = 0;
   private final String applicationName;
   private final String spreadsheetId;
   private final String outputSheetTitle;
   private final Sheets sheetsService;
-  private final StringBuilder buffer = new StringBuilder();
+  final StringBuilder buffer = new StringBuilder();
   private PrintStream originalSystemOut;
   private PrintStream originalSystemErr;
 
@@ -113,7 +113,7 @@ public class SheetsOutputStream extends OutputStream {
     }
   }
 
-  private void appendToSheet() {
+  void appendToSheet() {
     String content = buffer.toString();
     if (content.trim().isEmpty()) {
       buffer.setLength(0); // Clear buffer even if nothing to write
@@ -137,7 +137,7 @@ public class SheetsOutputStream extends OutputStream {
     }
   }
 
-  private Sheets createSheetsService() throws IOException {
+  Sheets createSheetsService() throws IOException {
     GoogleCredentials credential =
         GoogleCredentials.getApplicationDefault().createScoped(SCOPES);
     return new Sheets.Builder(HTTP_TRANSPORT, JSON_FACTORY, new HttpCredentialsAdapter(credential))
