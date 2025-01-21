@@ -37,6 +37,9 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+/**
+ * Unit tests for SheetsOutputStream.java
+ */
 @ExtendWith(MockitoExtension.class)
 public class SheetsOutputStreamTest {
 
@@ -59,6 +62,9 @@ public class SheetsOutputStreamTest {
   private SheetsOutputStream sheetsOutputStream;
 
 
+  /**
+   * Mock interactions with the gcloud API.
+   */
   @Before
   public void setup() throws IOException {
     mockSheet.setProperties(
