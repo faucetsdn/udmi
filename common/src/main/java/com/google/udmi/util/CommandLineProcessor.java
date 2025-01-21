@@ -28,7 +28,7 @@ public class CommandLineProcessor {
   private static final int LINUX_ERROR_CODE = -1;
   private final Object target;
   private final Method showHelpMethod;
-  private List<String> usageForms = null;
+  private List<String> usageForms;
 
   Map<CommandLineOption, Method> optionMap = new TreeMap<>(
       (a, b) -> CASE_INSENSITIVE_ORDER.compare(getSortArg(a), getSortArg(b)));
@@ -99,9 +99,9 @@ public class CommandLineProcessor {
    */
   public void showUsage(String message) {
     ifNotNullThen(message, m -> System.err.println(m));
-    ifNotNullThen(this.usageForms, () -> {
+    ifNotNullThen(usageForms, () -> {
       System.err.println("Usage forms:");
-      this.usageForms.forEach(form -> System.err.printf("    %s%n", form));
+      usageForms.forEach(form -> System.err.printf("    %s%n", form));
     });
     System.err.println("Options supported:");
     optionMap.forEach((option, method) -> System.err.printf("  %s %12s  %s%n",
