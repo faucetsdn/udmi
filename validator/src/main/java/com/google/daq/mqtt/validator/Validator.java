@@ -800,6 +800,9 @@ public class Validator {
       Map<String, String> attributes) {
     String schemaName = ofNullable(attributes.get(SCHEMA_NAME_KEY)).orElseGet(
         () -> messageSchema(attributes));
+    if (SubType.REPLY.value().equals(attributes.get(SUBTYPE_PROPERTY_KEY))) {
+      return;
+    }
     upgradeMessage(schemaName, message);
 
     // Assume the attributes know what they're doing when the schema name is provided explicitly.
