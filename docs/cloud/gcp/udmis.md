@@ -2,7 +2,7 @@
 
 # UDMIS
 
-UDMIS (Universal Device Management Interface Services) is a cloud infrastructure which comprises cloud functions. These process messages according to the [sub-blocks API](../../specs/subblocks.md). This is required for the enablement of other applications and tooling e.g. [UDMIF](UDMIF Deployment](../../../../../udmif/deploy.md) and [validation tooling](../../tools/readme.md)
+UDMIS (Universal Device Management Interface Services) is a cloud infrastructure which comprises cloud functions. These process messages according to the [sub-blocks API](../../specs/subblocks.md). This is required for the enablement of other applications and tooling e.g. [validation tooling](../../tools/readme.md).
 
 # Deployment
 
