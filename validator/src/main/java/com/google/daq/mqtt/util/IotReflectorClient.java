@@ -1,9 +1,7 @@
 package com.google.daq.mqtt.util;
 
-import static com.google.bos.iot.core.proxy.IotReflectorClient.isFunctionVersionSupported;
 import static com.google.common.base.Strings.isNullOrEmpty;
-import static com.google.daq.mqtt.sequencer.SequenceBase.EMPTY_MESSAGE;
-import static com.google.daq.mqtt.validator.Validator.TOOLS_FUNCTIONS_QUERY_READ;
+import static com.google.daq.mqtt.validator.Validator.TOOLS_FUNCTIONS_VERSION;
 import static com.google.udmi.util.Common.CONDENSER_STRING;
 import static com.google.udmi.util.Common.DETAIL_KEY;
 import static com.google.udmi.util.Common.ERROR_KEY;
@@ -20,30 +18,32 @@ import static java.lang.String.format;
 import static java.util.Optional.ofNullable;
 import static udmi.schema.CloudModel.Operation.BIND;
 import static udmi.schema.CloudModel.Operation.BLOCK;
+import static udmi.schema.CloudModel.Operation.BOUND;
+import static udmi.schema.CloudModel.Operation.DELETE;
 import static udmi.schema.CloudModel.Operation.READ;
+import static udmi.schema.CloudModel.Operation.UNBIND;
 
 import com.google.common.base.Preconditions;
 import com.google.daq.mqtt.util.MessagePublisher.QuerySpeed;
-import com.google.daq.mqtt.validator.Validator;
 import com.google.daq.mqtt.validator.Validator.MessageBundle;
 import com.google.udmi.util.IotProvider;
 import com.google.udmi.util.SiteModel;
 import java.io.File;
 import java.io.PrintWriter;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
-import org.jetbrains.annotations.Nullable;
 import udmi.schema.CloudModel;
 import udmi.schema.CloudModel.Operation;
 import udmi.schema.Credential;
 import udmi.schema.Envelope.SubFolder;
 import udmi.schema.ExecutionConfiguration;
+import udmi.schema.GatewayModel;
 import udmi.schema.SetupUdmiConfig;
 
 /**
@@ -75,7 +75,7 @@ public class IotReflectorClient implements IotProvider {
     SiteModel siteModel = new SiteModel(executionConfiguration.site_model);
     executionConfiguration.key_file = siteModel.validatorKey();
     messageClient = new com.google.bos.iot.core.proxy.IotReflectorClient(executionConfiguration,
-        Validator.TOOLS_FUNCTIONS_VERSION, toolName);
+        TOOLS_FUNCTIONS_VERSION, toolName);
     messageClient.activate();
     sessionPrefix = messageClient.getSessionPrefix();
     executor.execute(this::processReplies);
@@ -138,19 +138,31 @@ public class IotReflectorClient implements IotProvider {
   }
 
   @Override
-  public void deleteDevice(String deviceId) {
+  public void deleteDevice(String deviceId, Set<String> unbindIds) {
     CloudModel deleteModel = new CloudModel();
     deleteModel.operation = Operation.DELETE;
+    deleteModel.gateway = ifNotNullGet(unbindIds, this::proxyGatewayModel);
     cloudModelTransaction(deviceId, CLOUD_MODEL_TOPIC, deleteModel);
+  }
+
+  private GatewayModel proxyGatewayModel(Set<String> unbindIds) {
+    GatewayModel gatewayModel = new GatewayModel();
+    gatewayModel.proxy_ids = unbindIds.stream().toList();
+    return gatewayModel;
   }
 
   private CloudModel cloudModelTransaction(String deviceId, String topic, CloudModel model) {
     Operation operation = Preconditions.checkNotNull(model.operation, "no operation");
+    model.functions_ver = TOOLS_FUNCTIONS_VERSION;
     Map<String, Object> message = transaction(deviceId, topic, stringify(model), QuerySpeed.LONG);
     CloudModel cloudModel = convertTo(CloudModel.class, message);
     String cloudNumId = ifNotNullGet(cloudModel, result -> result.num_id);
     Operation cloudOperation = ifNotNullGet(cloudModel, result -> result.operation);
-    if (cloudModel == null || cloudNumId == null || cloudOperation != operation) {
+    // This happens with devices are bound to gateways, so explicitly capture the relevant info.
+    if (operation == DELETE && cloudOperation == BOUND) {
+      throw new DeviceGatewayBoundException(cloudModel);
+    }
+    if (cloudNumId == null || cloudOperation != operation) {
       throw new RuntimeException(
           format("Invalid return receipt: %s / %s", cloudOperation, cloudNumId));
     }
@@ -163,11 +175,10 @@ public class IotReflectorClient implements IotProvider {
   }
 
   @Override
-  public void bindDeviceToGateway(String proxyId, String gatewayId) {
+  public void bindGatewayDevices(String gatewayId, Set<String> deviceIds, boolean shouldBind) {
     CloudModel device = new CloudModel();
-    device.operation = BIND;
-    device.device_ids = new HashMap<>();
-    device.device_ids.put(proxyId, new CloudModel());
+    device.operation = shouldBind ? BIND : UNBIND;
+    device.gateway = proxyGatewayModel(deviceIds);
     cloudModelTransaction(gatewayId, CLOUD_MODEL_TOPIC, device);
   }
 
@@ -176,7 +187,6 @@ public class IotReflectorClient implements IotProvider {
     return ofNullable(fetchCloudModel(forGatewayId)).map(model -> model.device_ids).orElse(null);
   }
 
-  @Nullable
   private CloudModel fetchCloudModel(String deviceId) {
     try {
       QuerySpeed speed = isSlow ? QuerySpeed.ETERNITY : QuerySpeed.SLOW;
@@ -196,9 +206,6 @@ public class IotReflectorClient implements IotProvider {
   }
 
   private String getQueryMessageString() {
-    if (!isFunctionVersionSupported(TOOLS_FUNCTIONS_QUERY_READ)) {
-      return EMPTY_MESSAGE;
-    }
     CloudModel cloudModel = new CloudModel();
     cloudModel.operation = READ;
     return stringify(cloudModel);

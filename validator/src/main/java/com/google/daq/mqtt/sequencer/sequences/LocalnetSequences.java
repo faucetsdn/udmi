@@ -23,9 +23,10 @@ public class LocalnetSequences extends SequenceBase {
         catchToNull(() -> deviceMetadata.localnet.families.get(family).addr),
         format("No %s address defined in metadata", family));
     HashMap<String, FamilyLocalnetState> families = deviceState.localnet.families;
-    waitUntil(format("localnet family state %s available", family),
+    waitUntil(format("device state localnet family %s is available", family),
         () -> families.containsKey(family) ? null
-            : format("family %s not in %s", family, CSV_JOINER.join(families.keySet())));
+            : format("because family %s not found in device state localnet family set: %s", family,
+                CSV_JOINER.join(families.keySet())));
     String actual = families.get(family).addr;
     checkThat(format("family %s address matches", family), () -> expected.equals(actual));
   }

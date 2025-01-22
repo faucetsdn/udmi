@@ -180,7 +180,7 @@ public class MessageDowngrader {
 
     // Create localnet block
     if (!message.has("localnet")) {
-        message.put("localnet", new ObjectNode(NODE_FACTORY));
+      message.put("localnet", new ObjectNode(NODE_FACTORY));
     }
     ObjectNode localnet = (ObjectNode) message.get("localnet");
     ObjectNode localnetFamilies = (ObjectNode) localnet.get("families");
@@ -188,7 +188,6 @@ public class MessageDowngrader {
     localnetFamilies.set(targetFamily, new ObjectNode(NODE_FACTORY));
     ObjectNode localnetFamily = (ObjectNode) localnetFamilies.get(targetFamily);
     localnetFamily.put("addr", targetAddr);
-
   }
 
   private void downgradeLocalnetTo_1_3_13_From_1_4_1() {
@@ -206,7 +205,6 @@ public class MessageDowngrader {
         }
       });
     }
-
   }
 
   private void downgradeLocalnetTo_1_From_1_3_13() {

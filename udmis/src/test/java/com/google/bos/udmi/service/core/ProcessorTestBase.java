@@ -15,6 +15,7 @@ import com.google.bos.udmi.service.pod.UdmiServicePod;
 import com.google.udmi.util.CleanDateFormat;
 import java.io.File;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 import udmi.schema.EndpointConfiguration;
@@ -30,7 +31,7 @@ public abstract class ProcessorTestBase extends MessageTestBase {
   public static final String TEST_USER = "giraffe@safari.com";
   public static final Date TEST_TIMESTAMP = CleanDateFormat.cleanDate();
   public static final long ASYNC_PROCESSING_DELAY_MS = 2000;
-  protected final List<Object> captured = new ArrayList<>();
+  protected final List<Object> captured = Collections.synchronizedList(new ArrayList<>());
   protected IotAccessBase provider;
   private ProcessorBase processor;
 

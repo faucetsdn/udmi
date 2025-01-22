@@ -40,6 +40,7 @@ credentials.json
 __pycache__/
 /tests/sites/*/out/
 /tests/sites/*/devices/*/out/
+/tests/sites/basic/extras/
 /udmi_*.log
 
 .vscode

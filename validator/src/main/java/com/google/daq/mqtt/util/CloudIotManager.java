@@ -289,6 +289,7 @@ public class CloudIotManager {
     cloudModel.credentials = getCredentials(settings);
     cloudModel.metadata = metadataMap;
     cloudModel.num_id = settings.deviceNumId;
+    cloudModel.blocked = settings.blocked;
     return cloudModel;
   }
 
@@ -405,8 +406,8 @@ public class CloudIotManager {
     return cloudRegion;
   }
 
-  public void bindDevice(String proxyDeviceId, String gatewayDeviceId) {
-    getIotProvider().bindDeviceToGateway(proxyDeviceId, gatewayDeviceId);
+  public void bindDevices(Set<String> proxyDeviceIds, String gatewayDeviceId, boolean toBind) {
+    getIotProvider().bindGatewayDevices(gatewayDeviceId, proxyDeviceIds, toBind);
   }
 
   public List<Object> getMockActions() {
@@ -417,8 +418,8 @@ public class CloudIotManager {
     ifNotNullThen(iotProvider, IotProvider::shutdown);
   }
 
-  public void deleteDevice(String deviceId) {
-    getIotProvider().deleteDevice(deviceId);
+  public void deleteDevice(String deviceId, Set<String> unbindIds) {
+    getIotProvider().deleteDevice(deviceId, unbindIds);
     deviceMap.remove(deviceId);
   }
 

@@ -7,6 +7,7 @@ class SetupUdmiState:
   def __init__(self):
     self.user = None
     self.udmi_version = None
+    self.functions_ver = None
     self.udmi_commit = None
     self.udmi_ref = None
     self.udmi_timever = None
@@ -22,6 +23,7 @@ class SetupUdmiState:
     result = SetupUdmiState()
     result.user = source.get('user')
     result.udmi_version = source.get('udmi_version')
+    result.functions_ver = source.get('functions_ver')
     result.udmi_commit = source.get('udmi_commit')
     result.udmi_ref = source.get('udmi_ref')
     result.udmi_timever = source.get('udmi_timever')
@@ -53,6 +55,8 @@ class SetupUdmiState:
       result['user'] = self.user # 5
     if self.udmi_version:
       result['udmi_version'] = self.udmi_version # 5
+    if self.functions_ver:
+      result['functions_ver'] = self.functions_ver # 5
     if self.udmi_commit:
       result['udmi_commit'] = self.udmi_commit # 5
     if self.udmi_ref:

@@ -11,6 +11,7 @@ import static com.google.udmi.util.Common.UDMI_TIMEVER_ENV;
 import static com.google.udmi.util.Common.UDMI_VERSION_ENV;
 import static com.google.udmi.util.Common.getNamespacePrefix;
 import static com.google.udmi.util.GeneralUtils.OBJECT_MAPPER_RAW;
+import static com.google.udmi.util.GeneralUtils.catchToTrue;
 import static com.google.udmi.util.GeneralUtils.friendlyStackTrace;
 import static com.google.udmi.util.GeneralUtils.getFileBytes;
 import static com.google.udmi.util.GeneralUtils.ifNotNullGet;
@@ -290,6 +291,15 @@ public class SiteModel {
     return getNamespacePrefix(namespace) + registry_id + ofNullable(registry_suffix).orElse("");
   }
 
+  public Set<String> getExtraDevices() {
+    String[] existing = ofNullable(getExtrasDir().list()).orElse(new String[0]);
+    return Arrays.stream(existing).filter(this::extraExists).collect(Collectors.toSet());
+  }
+
+  private boolean extraExists(String extraId) {
+    return new File(getExtraDir(extraId), CLOUD_MODEL_FILE).exists();
+  }
+
   private static void augmentConfig(ExecutionConfiguration exeConfig, Matcher specMatcher) {
     try {
       String iotProvider = specMatcher.group(SPEC_PROVIDER_GROUP);
@@ -368,7 +378,7 @@ public class SiteModel {
 
       // Missing arrays are automatically parsed to an empty list, which is not what
       // we want, so hacky go through and convert an empty list to null.
-      if (metadata.gateway != null && metadata.gateway.proxy_ids.isEmpty()) {
+      if (metadata.gateway != null && catchToTrue(() -> metadata.gateway.proxy_ids.isEmpty())) {
         metadata.gateway.proxy_ids = null;
       }
 
@@ -559,6 +569,10 @@ public class SiteModel {
 
   public File getSiteFile(String path) {
     return new File(sitePath, path);
+  }
+
+  public File getExtraDir(String deviceId) {
+    return new File(getExtrasDir(), deviceId);
   }
 
   public File getExtrasDir() {

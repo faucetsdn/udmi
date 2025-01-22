@@ -158,7 +158,13 @@ public class GeneralUtils {
    * hopefully somewhat meaningful. Real debuggers will need to dig out the full stack trace!
    */
   public static String friendlyStackTrace(Throwable e) {
-    return CSV_JOINER.join(friendlyLineTrace(e)).replace('\n', ' ');
+    List<String> lines = e instanceof NullPointerException ? traceDetails(e) : friendlyLineTrace(e);
+    return CSV_JOINER.join(lines).replace('\n', ' ');
+  }
+
+  private static List<String> traceDetails(Throwable e) {
+    // Only include the first two lines of output, which will have the message and offending line.
+    return Arrays.stream(stackTraceString(e).split("\n")).limit(2).toList();
   }
 
   public static List<String> friendlyLineTrace(Throwable e) {
@@ -249,6 +255,16 @@ public class GeneralUtils {
 
   public static String nullAsNull(String part) {
     return NULL_STRING.equals(part) ? null : part;
+  }
+
+  public static String thereCanBeOnlyOne(List<String> list) {
+    if (list == null || list.size() == 0) {
+      return null;
+    }
+    if (list.size() != 1) {
+      throw new RuntimeException("More than one singular candidate: " + list);
+    }
+    return list.get(0);
   }
 
   public static Date toDate(Instant lastSeen) {
@@ -498,6 +514,10 @@ public class GeneralUtils {
     return catchToElse(provider, false);
   }
 
+  public static boolean catchToTrue(Supplier<Boolean> provider) {
+    return catchToElse(provider, true);
+  }
+
   public static <T> T catchToNull(Supplier<T> provider) {
     return catchToElse(provider, (T) null);
   }
@@ -722,4 +742,7 @@ public class GeneralUtils {
     return getFileBytes(dataFile.getPath());
   }
 
+  public static Instant toInstant(String timestamp) {
+    return ifNotNullGet(timestamp, Instant::parse);
+  }
 }

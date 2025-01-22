@@ -243,13 +243,17 @@ jobs:
           bin/clone_model
           bin/registrar sites/udmi_site_model
       - name: local setup
-        run: bin/start_local sites/udmi_site_model //mqtt/localhost
+        run: |
+          bin/start_local sites/udmi_site_model //mqtt/localhost
+          bin/pull_messages //mqtt/localhost > out/message_capture.log 2>&1 &
       - name: bin/test_etcd
         run: bin/test_etcd
       - name: bin/test_mosquitto
         run: bin/test_mosquitto
       - name: bin/test_regclean
         run: bin/test_regclean //mqtt/localhost
+      - name: bin/test_runlocal
+        run: bin/test_runlocal
       - name: bin/test_sequencer
         run: bin/test_sequencer local full //mqtt/localhost $(< etc/local_tests.txt)
       - name: bin/test_udmis
@@ -373,7 +377,7 @@ jobs:
           ln -s sites/udmi_site_model/ site_model
           (cd site_model; git log -n 1)
           docker network create udminet --subnet 192.168.99.0/24
-      - name: Build UDMIS
+      - name: Build UDMIS container
         run: |
           udmis/bin/build check
           bin/container udmis build --no-check latest
@@ -394,4 +398,9 @@ jobs:
           done
           ls -l var/tmp/pod_ready.txt 2>&1
       - name: Run Tests
-        run: misc/discoverynode/testing/e2e/test_local site_model || true
+        # This runs as sudo because docker containers in Github CI run as root.
+        # So, when the UDMIS container runs `keygen`, the CSR and SRL files are
+        # owned by root, and cannot be ovewritten by system calls to keygen,
+        # unless it too is root, or the behaviour is changed, or the permisions
+        # are fixed. 
+        run: sudo misc/discoverynode/testing/e2e/test_local site_model

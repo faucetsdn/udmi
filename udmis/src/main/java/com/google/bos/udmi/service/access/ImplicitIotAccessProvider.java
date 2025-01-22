@@ -9,8 +9,8 @@ import static com.google.udmi.util.GeneralUtils.deepCopy;
 import static com.google.udmi.util.GeneralUtils.friendlyStackTrace;
 import static com.google.udmi.util.GeneralUtils.ifNotNullGet;
 import static com.google.udmi.util.GeneralUtils.ifNotNullThen;
+import static com.google.udmi.util.GeneralUtils.ifNotTrueThen;
 import static com.google.udmi.util.GeneralUtils.ifNullThen;
-import static com.google.udmi.util.GeneralUtils.ifTrueThen;
 import static com.google.udmi.util.GeneralUtils.isNullOrNotEmpty;
 import static com.google.udmi.util.GeneralUtils.requireNull;
 import static com.google.udmi.util.JsonUtil.asMap;
@@ -58,6 +58,7 @@ import udmi.schema.Credential.Key_format;
 import udmi.schema.Envelope;
 import udmi.schema.Envelope.SubFolder;
 import udmi.schema.Envelope.SubType;
+import udmi.schema.GatewayModel;
 import udmi.schema.IotAccess;
 import udmi.schema.IotAccess.IotProvider;
 
@@ -107,9 +108,9 @@ public class ImplicitIotAccessProvider extends IotAccessBase {
   }
 
   private void bindDevicesToGateway(String registryId, String gatewayId, CloudModel cloudModel) {
-    Set<String> deviceIds = cloudModel.device_ids.keySet();
-    deviceIds.forEach(
-        deviceId -> registryDeviceRef(registryId, deviceId).put(BOUND_TO_KEY, gatewayId));
+    Set<String> deviceIds = ImmutableSet.copyOf(cloudModel.gateway.proxy_ids);
+    deviceIds.forEach(deviceId ->
+        registryDeviceRef(registryId, deviceId).put(BOUND_TO_KEY, gatewayId));
   }
 
   private void blockDevice(String registryId, String deviceId, CloudModel cloudModel) {
@@ -209,13 +210,13 @@ public class ImplicitIotAccessProvider extends IotAccessBase {
     properties.put(METADATA_STR_KEY, stringifyTerse(cloudModel.metadata));
     properties.put(BLOCKED_PROPERTY, booleanString(cloudModel.blocked));
     ifNotNullThen(cloudModel.num_id, id -> properties.put(NUM_ID_PROPERTY, id));
-    ifTrueThen(!cloudModel.credentials.isEmpty(), () -> {
-      checkState(cloudModel.credentials.size() == 1, "only one credential supported");
-      Credential cred = cloudModel.credentials.get(0);
+    ifNotNullThen(cloudModel.credentials, creds -> ifNotTrueThen(creds.isEmpty(), () -> {
+      checkState(creds.size() == 1, "only one credential supported");
+      Credential cred = creds.get(0);
       checkState(cred.key_format == Key_format.PASSWORD,
           "key type not supported: " + cred.key_format);
       properties.put(AUTH_PASSWORD_PROPERTY, cred.key_data);
-    });
+    }));
     return properties;
   }
 
@@ -264,7 +265,9 @@ public class ImplicitIotAccessProvider extends IotAccessBase {
     cloudModel.metadata = ifNotNullGet(cloudModel.metadata_str, JsonUtil::toStringMapStr);
     cloudModel.metadata_str = null;
 
-    cloudModel.device_ids = listBoundDevices(registryId, deviceId);
+    cloudModel.gateway = new GatewayModel();
+    cloudModel.gateway.proxy_ids =
+        listBoundDevices(registryId, deviceId).keySet().stream().toList();
     cloudModel.operation = READ;
     return cloudModel;
   }
@@ -322,7 +325,8 @@ public class ImplicitIotAccessProvider extends IotAccessBase {
   }
 
   @Override
-  public CloudModel modelDevice(String registryId, String deviceId, CloudModel cloudModel) {
+  public CloudModel modelDevice(String registryId, String deviceId, CloudModel cloudModel,
+      Consumer<Integer> progress) {
     Operation operation = cloudModel.operation;
     Resource_type type = ofNullable(cloudModel.resource_type).orElse(Resource_type.DEVICE);
     checkState(type == DEVICE || type == GATEWAY, "unexpected resource type " + type);

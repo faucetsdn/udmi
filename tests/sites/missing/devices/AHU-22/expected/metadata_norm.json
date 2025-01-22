@@ -1,12 +1,11 @@
 {
   "timestamp": "2020-05-01T13:39:07Z",
   "version": "1.5.2",
-  "hash": "c94d42a9",
+  "hash": "9d74a38d",
   "cloud": {
     "detail": "site default for unit tests"
   },
   "system": {
-    "tags": [ ],
     "location": {
       "site": "ZZ-TRI-FECTA",
       "section": "2-3N8C",
@@ -41,18 +40,15 @@
     "points": {
       "filter_alarm_pressure_status": {
         "units": "No-units",
-        "ref": "MCN8.present_value",
-        "tags": [ ]
+        "ref": "MCN8.present_value"
       },
       "filter_differential_pressure": {
         "units": "Bars",
-        "ref": "AI2.differential",
-        "tags": [ ]
+        "ref": "AI2.differential"
       },
       "filter_differential_pressure_sensor": {
         "units": "Degrees-Celsius",
-        "ref": "FAXLE12.present_value",
-        "tags": [ ]
+        "ref": "FAXLE12.present_value"
       }
     }
   }

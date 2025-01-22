@@ -3,7 +3,6 @@ package com.google.bos.udmi.service.access;
 import static com.clearblade.cloud.iot.v1.devicetypes.GatewayType.NON_GATEWAY;
 import static com.google.common.base.Preconditions.checkState;
 import static com.google.common.base.Strings.isNullOrEmpty;
-import static com.google.udmi.util.GeneralUtils.CSV_JOINER;
 import static com.google.udmi.util.GeneralUtils.catchToNull;
 import static com.google.udmi.util.GeneralUtils.deepCopy;
 import static com.google.udmi.util.GeneralUtils.encodeBase64;
@@ -11,6 +10,8 @@ import static com.google.udmi.util.GeneralUtils.friendlyStackTrace;
 import static com.google.udmi.util.GeneralUtils.ifNotNullGet;
 import static com.google.udmi.util.GeneralUtils.ifNotNullThen;
 import static com.google.udmi.util.GeneralUtils.ifNotTrueThen;
+import static com.google.udmi.util.GeneralUtils.ifTrueGet;
+import static com.google.udmi.util.GeneralUtils.ifTrueThen;
 import static com.google.udmi.util.GeneralUtils.isTrue;
 import static com.google.udmi.util.GeneralUtils.writeString;
 import static com.google.udmi.util.JsonUtil.getDate;
@@ -19,6 +20,9 @@ import static com.google.udmi.util.MetadataMapKeys.UDMI_UPDATED;
 import static java.lang.String.format;
 import static java.util.Objects.requireNonNull;
 import static java.util.Optional.ofNullable;
+import static java.util.stream.Collectors.toMap;
+import static udmi.schema.CloudModel.Operation.BIND;
+import static udmi.schema.CloudModel.Operation.BOUND;
 import static udmi.schema.CloudModel.Operation.CREATE;
 import static udmi.schema.CloudModel.Operation.DELETE;
 import static udmi.schema.CloudModel.Operation.UPDATE;
@@ -66,22 +70,26 @@ import com.clearblade.cloud.iot.v1.unbinddevicefromgateway.UnbindDeviceFromGatew
 import com.clearblade.cloud.iot.v1.updatedevice.UpdateDeviceRequest;
 import com.clearblade.cloud.iot.v1.utils.ByteString;
 import com.clearblade.cloud.iot.v1.utils.LogLevel;
+import com.google.bos.udmi.service.core.ReflectProcessor;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.BiMap;
 import com.google.common.collect.ImmutableBiMap;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
+import com.google.udmi.util.GeneralUtils;
 import com.google.udmi.util.JsonUtil;
 import java.io.File;
 import java.util.AbstractMap.SimpleEntry;
 import java.util.Base64;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Objects;
 import java.util.Set;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 import org.jetbrains.annotations.NotNull;
@@ -93,6 +101,7 @@ import udmi.schema.Credential;
 import udmi.schema.Credential.Key_format;
 import udmi.schema.Envelope;
 import udmi.schema.Envelope.SubFolder;
+import udmi.schema.GatewayModel;
 import udmi.schema.IotAccess;
 
 /**
@@ -125,7 +134,9 @@ public class ClearBladeIotAccessProvider extends IotAccessBase {
   private static final String UDMI_TARGET_TOPIC = "udmi_target"; // TODO: Make this not hardcoded.
   private static final String UDMI_STATE_TOPIC = "udmi_state"; // TODO: Make this not hardcoded.
   private static final String TOPIC_NAME_FORMAT = "projects/%s/topics/%s";
-  private static final CharSequence BOUND_TO_GATEWAY_MARKER = " it's associated ";
+  private static final CharSequence HAD_BOUND_DEVICES_MARKER = " it has associated devices.";
+  private static final CharSequence BOUND_TO_GATEWAY_MARKER = " it's associated with ";
+  private static final int OP_PROGRESS_BATCH_SIZE = 10;
   private final String projectId;
   private final DeviceManagerInterface deviceManager;
 
@@ -161,7 +172,6 @@ public class ClearBladeIotAccessProvider extends IotAccessBase {
     cloudModel.resource_type = resourceType(deviceRaw);
     cloudModel.last_event_time = getSafeDate(device.getLastEventTime());
     cloudModel.blocked = device.isBlocked() ? true : null;
-    cloudModel.credentials = null;
     cloudModel.updated_time = catchToNull(() -> getDate(device.getMetadata().get(UDMI_UPDATED)));
     return new SimpleEntry<>(device.getId(), cloudModel);
   }
@@ -171,8 +181,8 @@ public class ClearBladeIotAccessProvider extends IotAccessBase {
     return getDate(isNullOrEmpty(lastEventTime) ? null : lastEventTime);
   }
 
-  private static boolean isGateway(Device device) {
-    return resourceType(device) == GATEWAY;
+  private boolean isGateway(Entry<String, CloudModel> modelEntry) {
+    return modelEntry.getValue().resource_type == GATEWAY;
   }
 
   /**
@@ -236,29 +246,36 @@ public class ClearBladeIotAccessProvider extends IotAccessBase {
   }
 
   private CloudModel bindDevicesToGateway(String registryId, String gatewayId,
-      CloudModel cloudModel) {
+      CloudModel cloudModel, Consumer<Integer> progress) {
+    Set<String> deviceIds = ReflectProcessor.isLegacyRequest(cloudModel)
+        ? cloudModel.device_ids.keySet() : getDeviceIds(cloudModel.gateway);
+    boolean toBind = cloudModel.operation == BIND;
+    bindDevicesGateways(registryId, ImmutableSet.of(gatewayId), deviceIds, toBind, progress);
     CloudModel reply = new CloudModel();
-    reply.device_ids = new HashMap<>();
-    Set<String> deviceIds = cloudModel.device_ids.keySet();
     reply.num_id = deviceIds.size() > 0 ? EMPTY_RETURN_RECEIPT : null;
     reply.operation = cloudModel.operation;
-    deviceIds.forEach(id -> {
-      try {
-        String location = getRegistryLocation(registryId);
-        RegistryName parent = RegistryName.of(projectId, location, registryId);
-        BindDeviceToGatewayRequest request =
-            BindDeviceToGatewayRequest.Builder.newBuilder()
-                .setParent(parent.getRegistryFullName())
-                .setDevice(id)
-                .setGateway(gatewayId)
-                .build();
-        requireNonNull(deviceManager.bindDeviceToGateway(request),
-            "binding device to gateway");
-      } catch (Exception e) {
-        throw new RuntimeException(format("While binding %s to gateway %s", id, gatewayId), e);
-      }
-    });
     return reply;
+  }
+
+  private static Set<String> getDeviceIds(GatewayModel gateway) {
+    return new HashSet<>(gateway.proxy_ids);
+  }
+
+  private void bindDevice(String registryId, String gatewayId, String id) {
+    try {
+      String location = getRegistryLocation(registryId);
+      RegistryName parent = RegistryName.of(projectId, location, registryId);
+      BindDeviceToGatewayRequest request =
+          BindDeviceToGatewayRequest.Builder.newBuilder()
+              .setParent(parent.getRegistryFullName())
+              .setDevice(id)
+              .setGateway(gatewayId)
+              .build();
+      requireNonNull(deviceManager.bindDeviceToGateway(request),
+          "binding device to gateway");
+    } catch (Exception e) {
+      throw new RuntimeException(format("While binding %s to gateway %s", id, gatewayId), e);
+    }
   }
 
   private CloudModel blockDevice(String registryId, Device device) {
@@ -309,7 +326,7 @@ public class ClearBladeIotAccessProvider extends IotAccessBase {
     cloudModel.last_state_time = getSafeDate(device.getLastStateTime());
     cloudModel.last_config_time = getSafeDate(device.getLastConfigSendTime());
     cloudModel.last_config_ack = getSafeDate(device.getLastConfigAckTime());
-    cloudModel.last_event_time = getSafeDate(device.getLastErrorTime());
+    cloudModel.last_error_time = getSafeDate(device.getLastErrorTime());
     cloudModel.credentials = convertIot(device.getCredentials());
     cloudModel.updated_time = catchToNull(() -> getDate(device.getMetadata().get(UDMI_UPDATED)));
     return cloudModel;
@@ -382,11 +399,21 @@ public class ClearBladeIotAccessProvider extends IotAccessBase {
     return EventNotificationConfig.newBuilder().setPubsubTopicName(topicName).build();
   }
 
-  @NotNull
+  private HashMap<String, CloudModel> fetchBoundGateways(String deviceRegistryId, String deviceId,
+      Consumer<Integer> progress) {
+    GatewayListOptions gatewayListOptions = ifNotNullGet(deviceId, this::getBoundGatewaysOptions);
+    return fetchDevices(deviceRegistryId, progress, gatewayListOptions);
+  }
+
   private HashMap<String, CloudModel> fetchDevices(String deviceRegistryId, String gatewayId,
       Consumer<Integer> progress) {
+    GatewayListOptions gatewayListOptions = ifNotNullGet(gatewayId, this::getBoundDevicesOptions);
+    return fetchDevices(deviceRegistryId, progress, gatewayListOptions);
+  }
+
+  private HashMap<String, CloudModel> fetchDevices(String deviceRegistryId,
+      Consumer<Integer> progress, GatewayListOptions gatewayListOptions) {
     String location = getRegistryLocation(deviceRegistryId);
-    GatewayListOptions gatewayListOptions = ifNotNullGet(gatewayId, this::getGatewayListOptions);
     String registryFullName =
         RegistryName.of(projectId, location, deviceRegistryId).getRegistryFullName();
     String pageToken = null;
@@ -402,7 +429,7 @@ public class ClearBladeIotAccessProvider extends IotAccessBase {
       requireNonNull(response, "DeviceRegistriesList fetch failed");
       Map<String, CloudModel> responseMap =
           response.getDevicesList().stream().map(ClearBladeIotAccessProvider::convertPartial)
-              .collect(Collectors.toMap(Entry::getKey, Entry::getValue));
+              .collect(toMap(Entry::getKey, Entry::getValue));
       collect.putAll(responseMap);
       pageToken = response.getNextPageToken();
       queryCount++;
@@ -413,21 +440,31 @@ public class ClearBladeIotAccessProvider extends IotAccessBase {
     return collect;
   }
 
-  private List<String> findGateways(String registryId, Device proxyDevice) {
-    CloudModel cloudModel = listDevices(registryId, null);
-    return cloudModel.device_ids.entrySet().stream().filter(entry ->
-        entry.getValue().resource_type == GATEWAY).map(Entry::getKey).toList();
+  private CloudModel findDevicesForGateway(String registryId, Device device) {
+    CloudModel cloudModel = listRegistryDevices(registryId, device.toBuilder().getId(), null);
+    cloudModel.operation = BOUND;
+    cloudModel.resource_type = GATEWAY;
+    return cloudModel;
   }
 
-  private CloudModel findUnbindAndDelete(String registryId, Device device) {
-    List<String> allGateways = findGateways(registryId, device);
-    if (allGateways.isEmpty()) {
+  private CloudModel findGatewaysForDevice(String registryId, Device device) {
+    String deviceId = requireNonNull(device.toBuilder().getId(), "unspecified device id");
+    Set<String> boundGateways = fetchBoundGateways(registryId, deviceId, null).keySet();
+    if (boundGateways.isEmpty()) {
       throw new RuntimeException("Was expecting at least one bound gateway!");
     }
-    String deviceId = device.toBuilder().getId();
-    info("Unbinding %s/%s from gateways: " + registryId, deviceId, CSV_JOINER.join(allGateways));
-    allGateways.forEach(gatewayId -> unbindDevice(registryId, gatewayId, deviceId));
-    return unbindAndDeleteCore(registryId, device);
+    CloudModel cloudModel = new CloudModel();
+    cloudModel.num_id = hashedDeviceId(registryId, deviceId);
+    cloudModel.operation = BOUND;
+    cloudModel.resource_type = DEVICE;
+    cloudModel.gateway = getDeviceGatewayModel(boundGateways);
+    return cloudModel;
+  }
+
+  private GatewayModel getDeviceGatewayModel(Set<String> boundGateways) {
+    GatewayModel gatewayModel = new GatewayModel();
+    gatewayModel.gateway_id = GeneralUtils.thereCanBeOnlyOne(boundGateways.stream().toList());
+    return gatewayModel;
   }
 
   private String getDeviceName(String registryId, String deviceId) {
@@ -435,10 +472,17 @@ public class ClearBladeIotAccessProvider extends IotAccessBase {
         .toString();
   }
 
-  private GatewayListOptions getGatewayListOptions(String gatewayId) {
+  private GatewayListOptions getBoundDevicesOptions(String gatewayId) {
     return GatewayListOptions.newBuilder()
         .setGatewayType(NON_GATEWAY)
         .setAssociationsGatewayId(requireNonNull(gatewayId, "gateway undefined"))
+        .build();
+  }
+
+  private GatewayListOptions getBoundGatewaysOptions(String deviceId) {
+    return GatewayListOptions.newBuilder()
+        .setGatewayType(GatewayType.GATEWAY)
+        .setAssociationsDeviceId(requireNonNull(deviceId, "device undefined"))
         .build();
   }
 
@@ -461,21 +505,63 @@ public class ClearBladeIotAccessProvider extends IotAccessBase {
     return String.valueOf(Objects.hash(registryId, deviceId));
   }
 
-  private CloudModel listRegistryDevices(String deviceRegistryId, String gatewayId,
+  private CloudModel listRegistryDevices(String registryId, String gatewayId,
       Consumer<Integer> progress) {
     try {
       CloudModel cloudModel = new CloudModel();
-      cloudModel.device_ids = fetchDevices(deviceRegistryId, gatewayId, progress);
-      ifNotNullThen(gatewayId, options -> debug(format("Gateway %s has %d bound devices",
-          gatewayId, cloudModel.device_ids.size())));
+      HashMap<String, CloudModel> boundDevices =
+          fetchDevices(registryId, gatewayId, progress);
+      debug(format("Fetched %d devices from %s gateway %s", boundDevices.size(), registryId,
+          gatewayId));
+      if (gatewayId != null) {
+        cloudModel.gateway = makeGatewayModel(boundDevices);
+      } else {
+        cloudModel.device_ids = augmentGatewayModels(registryId, boundDevices);
+      }
       return cloudModel;
     } catch (Exception e) {
-      throw new RuntimeException("While listing devices " + getRegistryName(deviceRegistryId), e);
+      throw new RuntimeException("While listing devices " + getRegistryName(registryId), e);
     }
   }
 
+  private Map<String, CloudModel> augmentGatewayModels(String registryId,
+      HashMap<String, CloudModel> boundDevices) {
+    HashMap<String, String> proxyDeviceGateways = new HashMap<>();
+    boundDevices.entrySet().stream().filter(this::isGateway)
+        .forEach(entry -> augmentGatewayModel(registryId, entry, proxyDeviceGateways));
+    boundDevices.entrySet()
+        .forEach(entry -> augmentProxiedModel(entry, proxyDeviceGateways));
+    return boundDevices;
+  }
+
+  private void augmentProxiedModel(Entry<String, CloudModel> entry,
+      HashMap<String, String> proxyDeviceGateways) {
+    String gatewayId = proxyDeviceGateways.get(entry.getKey());
+    ifNotNullThen(gatewayId, id -> {
+      GatewayModel gatewayModel = new GatewayModel();
+      gatewayModel.gateway_id = id;
+      gatewayModel.proxy_ids = null;
+      entry.getValue().gateway = gatewayModel;
+    });
+  }
+
+  private void augmentGatewayModel(String registryId, Entry<String, CloudModel> model,
+      HashMap<String, String> proxyDeviceGateways) {
+    String gatewayId = model.getKey();
+    CloudModel gatewayModel = listRegistryDevices(registryId, gatewayId, null);
+    model.getValue().gateway = gatewayModel.gateway;
+    gatewayModel.gateway.proxy_ids.forEach(proxyId -> proxyDeviceGateways.put(proxyId, gatewayId));
+  }
+
+  private GatewayModel makeGatewayModel(HashMap<String, CloudModel> boundDevices) {
+    GatewayModel gatewayModel = new GatewayModel();
+    gatewayModel.proxy_ids = boundDevices.keySet().stream().toList();
+    return gatewayModel;
+  }
+
   @Override
-  public CloudModel modelDevice(String registryId, String deviceId, CloudModel cloudModel) {
+  public CloudModel modelDevice(String registryId, String deviceId, CloudModel cloudModel,
+      Consumer<Integer> progress) {
     String devicePath = getDeviceName(registryId, deviceId);
     Operation operation = cloudModel.operation;
     Resource_type type = ofNullable(cloudModel.resource_type).orElse(Resource_type.DEVICE);
@@ -485,9 +571,9 @@ public class ClearBladeIotAccessProvider extends IotAccessBase {
       return switch (operation) {
         case CREATE -> createDevice(registryId, device);
         case UPDATE -> updateDevice(registryId, device);
-        case DELETE -> unbindAndDelete(registryId, device);
+        case DELETE -> unbindAndDelete(registryId, device, cloudModel, progress);
         case MODIFY -> modifyDevice(registryId, device);
-        case BIND -> bindDevicesToGateway(registryId, deviceId, cloudModel);
+        case BIND, UNBIND -> bindDevicesToGateway(registryId, deviceId, cloudModel, progress);
         case BLOCK -> blockDevice(registryId, device);
         default -> throw new RuntimeException("Unknown device operation " + operation);
       };
@@ -516,7 +602,7 @@ public class ClearBladeIotAccessProvider extends IotAccessBase {
         if (deviceId != null && !deviceId.isEmpty()) {
           CloudModel deviceModel = deepCopy(cloudModel);
           deviceModel.resource_type = DEVICE;
-          modelDevice(reflectRegistry, registryActual, deviceModel);
+          modelDevice(reflectRegistry, registryActual, deviceModel, null);
         }
         Resource_type type = ofNullable(cloudModel.resource_type).orElse(Resource_type.DEVICE);
         checkState(type == REGISTRY, "unexpected resource type " + type);
@@ -538,6 +624,8 @@ public class ClearBladeIotAccessProvider extends IotAccessBase {
     builder.setMetadata(model.metadata);
     CloudModel cloudModel = updateDevice(registryId, builder.build(), METADATA_FIELD_MASK);
     cloudModel.operation = Operation.MODIFY;
+    cloudModel.gateway = model.gateway;
+    cloudModel.device_ids = model.device_ids;
     return cloudModel;
   }
 
@@ -546,23 +634,56 @@ public class ClearBladeIotAccessProvider extends IotAccessBase {
     return StateNotificationConfig.newBuilder().setPubsubTopicName(topicName).build();
   }
 
-  private CloudModel unbindAndDelete(String registryId, Device device) {
+  private CloudModel unbindAndDelete(String registryId, Device device, CloudModel request,
+      Consumer<Integer> progress) {
     try {
-      return unbindAndDeleteCore(registryId, device);
+      final Set<String> unbindIds = ReflectProcessor.isLegacyRequest(request)
+          ? legacyFindGateways(registryId, device)
+          : ifNotNullGet(request.gateway, ClearBladeIotAccessProvider::getDeviceIds);
+      return unbindAndDeleteCore(registryId, device, unbindIds, progress);
     } catch (Exception e) {
-      if (friendlyStackTrace(e).contains(BOUND_TO_GATEWAY_MARKER)) {
+      String stackTrace = friendlyStackTrace(e);
+      if (stackTrace.contains(BOUND_TO_GATEWAY_MARKER)) {
         debug("Device bound to gateway. Finding bindings to unbind...");
-        return findUnbindAndDelete(registryId, device);
+        CloudModel gatewaysForDevice = findGatewaysForDevice(registryId, device);
+        if (ReflectProcessor.isLegacyRequest(request)) {
+          warn("Handling legacy bound delete...");
+          return findUnbindAndDelete(registryId, device, gatewaysForDevice);
+        }
+        return gatewaysForDevice;
+      } else if (stackTrace.contains(HAD_BOUND_DEVICES_MARKER)) {
+        debug("Gateway has bound devices. Finding bindings to unbind...");
+        return findDevicesForGateway(registryId, device);
       } else {
         throw e;
       }
     }
   }
 
-  private CloudModel unbindAndDeleteCore(String registryId, Device device) {
+  private CloudModel findUnbindAndDelete(String registryId, Device device, CloudModel request) {
+    String gatewayId = request.gateway.gateway_id;
+    String deviceId = device.toBuilder().getId();
+    unbindDevice(registryId, gatewayId, deviceId);
+    unbindAndDeleteCore(registryId, device, null, null);
+    CloudModel cloudModel = new CloudModel();
+    cloudModel.operation = DELETE;
+    return cloudModel;
+  }
+
+  private Set<String> legacyFindGateways(String registryId, Device device) {
+    try {
+      return getDeviceIds(findDevicesForGateway(registryId, device).gateway);
+    } catch (RuntimeException e) {
+      warn("Ignoring legacy exception (likely not a gateway)");
+      return null;
+    }
+  }
+
+  private CloudModel unbindAndDeleteCore(String registryId, Device device, Set<String> unbindIds,
+      Consumer<Integer> progress) {
     String deviceId = requireNonNull(device.toBuilder().getId(), "unspecified device id");
     try {
-      unbindGatewayDevices(registryId, device);
+      ifNotNullThen(unbindIds, ids -> unbindGatewayDevices(registryId, device, ids, progress));
       String location = getRegistryLocation(registryId);
       DeviceName deviceName = DeviceName.of(projectId, location, registryId, deviceId);
       DeleteDeviceRequest request =
@@ -575,6 +696,23 @@ public class ClearBladeIotAccessProvider extends IotAccessBase {
     } catch (Exception e) {
       throw new RuntimeException(format("While deleting %s/%s", registryId, deviceId), e);
     }
+  }
+
+  private void bindDevicesGateways(String registryId, Set<String> gatewayIds,
+      Set<String> deviceIds, boolean toBind, Consumer<Integer> progress) {
+    String opCode = toBind ? "Binding" : "Unbinding";
+    info("%s %s: gateways %s devices %s", opCode, registryId, gatewayIds, deviceIds);
+    AtomicInteger opCount = new AtomicInteger(0);
+    gatewayIds.forEach(gatewayId -> {
+      deviceIds.forEach(deviceId -> {
+        ifTrueThen(opCount.incrementAndGet() % OP_PROGRESS_BATCH_SIZE == 0,
+            () -> ifNotNullThen(progress, p -> p.accept(opCount.get())));
+        ifTrueThen(toBind,
+            () -> bindDevice(registryId, gatewayId, deviceId),
+            () -> unbindDevice(registryId, gatewayId, deviceId));
+      });
+    });
+    ifTrueThen(opCount.get() > 0, () -> ifNotNullThen(progress, p -> p.accept(opCount.get())));
   }
 
   private void unbindDevice(String registryId, String gatewayId, String proxyId) {
@@ -590,14 +728,14 @@ public class ClearBladeIotAccessProvider extends IotAccessBase {
     }
   }
 
-  private void unbindGatewayDevices(String registryId, Device gatewayDevice) {
-    String gatewayId = gatewayDevice.toBuilder().getId();
-    CloudModel cloudModel = listRegistryDevices(registryId, gatewayId, null);
-    if (!cloudModel.device_ids.isEmpty()) {
-      debug(format("Unbinding from %s/%s: %s", registryId, gatewayId,
-          CSV_JOINER.join(cloudModel.device_ids.keySet())));
-      ifNotNullThen(cloudModel.device_ids, ids -> ids.keySet()
-          .forEach(id -> unbindDevice(registryId, gatewayId, id)));
+  private boolean unbindGatewayDevices(String registryId, Device gatewayDevice,
+      Set<String> unbindIds, Consumer<Integer> progress) {
+    try {
+      ImmutableSet<String> gatewayIds = ImmutableSet.of(gatewayDevice.toBuilder().getId());
+      bindDevicesGateways(registryId, gatewayIds, unbindIds, false, progress);
+      return true;
+    } catch (Exception e) {
+      return false;
     }
   }
 
@@ -607,7 +745,6 @@ public class ClearBladeIotAccessProvider extends IotAccessBase {
     return cloudModel;
   }
 
-  @NotNull
   private CloudModel updateDevice(String registryId, Device device, String updateFieldMask) {
     String deviceId = device.toBuilder().getId();
     String name = getDeviceName(registryId, deviceId);
@@ -669,12 +806,18 @@ public class ClearBladeIotAccessProvider extends IotAccessBase {
       requireNonNull(device, "GetDeviceRequest failed");
       CloudModel cloudModel = convertFull(device);
       cloudModel.operation = Operation.READ;
-      cloudModel.device_ids = listRegistryDevices(registryId, deviceId, null).device_ids;
+      cloudModel.gateway = fetchDeviceGatewayModel(registryId, deviceId, device);
       return cloudModel;
     } catch (Exception e) {
       throw new RuntimeException("While fetching device " + devicePath, e);
     }
 
+  }
+
+  private GatewayModel fetchDeviceGatewayModel(String registryId, String gatewayId, Device device) {
+    requireNonNull(gatewayId, "gateway id not specified");
+    return ifTrueGet(device.toBuilder().getGatewayConfig().getGatewayType() == GatewayType.GATEWAY,
+        () -> listRegistryDevices(registryId, gatewayId, null).gateway);
   }
 
   @Override

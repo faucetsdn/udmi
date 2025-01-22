@@ -3,8 +3,8 @@
   "deviceNumId" : "123456789101112",
   "deviceRegistryId" : "ZZ-TRI-FECTA_3",
   "projectId" : "localhost",
-  "transactionId" : "RC:63be1a.00000010",
-  "publishTime" : "2024-11-06T17:32:22Z",
+  "transactionId" : "RC:f39498.00000013",
+  "publishTime" : "2024-12-20T09:55:14Z",
   "subFolder" : "update",
   "subType" : "config"
 }

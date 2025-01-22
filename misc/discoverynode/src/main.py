@@ -36,7 +36,8 @@ def get_arguments():
   parser.add_argument(
       "--config_file",
       type=str,
-      help="path to config file"
+      help="path to config file",
+      required=True
   )
   return parser.parse_args()
 
