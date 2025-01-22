@@ -163,8 +163,8 @@ public class GeneralUtils {
   }
 
   private static List<String> traceDetails(Throwable e) {
-    // Only include the base message and first line of output, which will have the offending line.
-    return Arrays.stream(stackTraceString(e).split("\n")).toList().subList(0, 2);
+    // Only include the first two lines of output, which will have the message and offending line.
+    return Arrays.stream(stackTraceString(e).split("\n")).limit(2).toList();
   }
 
   public static List<String> friendlyLineTrace(Throwable e) {

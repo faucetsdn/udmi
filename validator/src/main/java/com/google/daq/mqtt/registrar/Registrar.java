@@ -128,6 +128,7 @@ public class Registrar {
   private static final String TOOL_NAME = "registrar";
   private static final long DELETE_FLUSH_DELAY_MS = 10 * SEC_TO_MS;
   public static final String REGISTRAR_TOOL_NAME = "registrar";
+  private static final int SET_SIZE_THRESHOLD = 10;
   private final Map<String, JsonSchema> schemas = new HashMap<>();
   private final String generation = JsonUtil.isoConvert();
   private final Set<Summarizer> summarizers = new HashSet<>();
@@ -722,20 +723,30 @@ public class Registrar {
   }
 
   /**
-   * Unbind all devices for the list of gateways. This is synchronized at the class level to ensure
-   * that only one instance at a time, since it's a global operation that doesn't need to be
-   * executed for each device individually.
+   * Unbind all devices for the list of gateways. This is synchronized to ensure that only one
+   * instance at a time, since it's a global operation that doesn't need to be executed for each
+   * device individually.
    */
-  private void unbindDevicesFromGateways(Set<String> allDevices,
-      Set<String> boundGateways) {
-    synchronized (Operation.UNBIND) {
-      boundGateways.forEach(gatewayId -> {
+  private void unbindDevicesFromGateways(Set<String> allDevices, Set<String> boundGateways) {
+    boundGateways.forEach(gatewayId -> {
+      synchronized (Operation.UNBIND) {
         Map<String, CloudModel> boundDevices = cloudIotManager.fetchDevice(gatewayId).device_ids;
-        SetView<String> toUnbind = intersection(allDevices, boundDevices.keySet());
-        System.err.printf("Unbinding from gateway %s: %s%n", gatewayId, toUnbind);
-        cloudIotManager.bindDevices(toUnbind, gatewayId, false);
-      });
-    }
+        Set<String> toUnbind = new HashSet<>(intersection(allDevices, boundDevices.keySet()));
+        System.err.printf("Unbinding from gateway %s: %s%n", gatewayId, setOrSize(toUnbind));
+        boolean multiple = toUnbind.size() > SET_SIZE_THRESHOLD;
+        while (!toUnbind.isEmpty()) {
+          Set<String> limitedSet = limitSetSize(toUnbind, SET_SIZE_THRESHOLD);
+          ifTrueThen(multiple, () -> System.err.printf("Unbinding subset from %s: %s%n", gatewayId,
+              setOrSize(limitedSet)));
+          cloudIotManager.bindDevices(limitedSet, gatewayId, false);
+          toUnbind.removeAll(limitedSet);
+        }
+      }
+    });
+  }
+
+  private Set<String> limitSetSize(Set<String> toUnbind, int sizeLimit) {
+    return toUnbind.stream().limit(sizeLimit).collect(Collectors.toSet());
   }
 
   private boolean processLocalDevice(String localName, AtomicInteger processedDeviceCount,
@@ -1015,7 +1026,7 @@ public class Registrar {
           .filter(LocalDevice::isProxied)
           .collect(groupingBy(LocalDevice::getGatewayId, Collectors.toSet()));
       AtomicInteger bindingCount = new AtomicInteger();
-      System.err.printf("Binding devices to gateways: %s%n", gatewayBindings.keySet());
+      System.err.printf("Binding devices to gateways: %s%n", setOrSize(gatewayBindings.keySet()));
       gatewayBindings.forEach((gatewayId, proxiedDevices) -> {
         parallelExecute(() -> {
           try {
@@ -1023,10 +1034,10 @@ public class Registrar {
                 .collect(Collectors.toSet());
             Set<String> boundDevices = ofNullable(cloudIotManager.fetchBoundDevices(gatewayId))
                 .orElse(ImmutableSet.of());
-            System.err.printf("Already bound to %s: %s%n", gatewayId, boundDevices);
+            System.err.printf("Already bound to %s: %s%n", gatewayId, setOrSize(boundDevices));
             SetView<String> toBind = difference(proxyIds, boundDevices);
             int count = bindingCount.incrementAndGet();
-            System.err.printf("Binding %s to %s (%d/%d)%n", toBind, gatewayId, count,
+            System.err.printf("Binding %s to %s (%d/%d)%n", setOrSize(toBind), gatewayId, count,
                 gatewayBindings.size());
             cloudIotManager.bindDevices(toBind, gatewayId, true);
           } catch (Exception e) {
@@ -1045,6 +1056,11 @@ public class Registrar {
     } catch (Exception e) {
       throw new RuntimeException("While binding devices to gateways", e);
     }
+  }
+
+  private static String setOrSize(Set<String> items) {
+    return items.size() > SET_SIZE_THRESHOLD
+        ? format("%d devices", items.size()) : items.toString();
   }
 
   private synchronized void dynamicTerminate(int expected) throws InterruptedException {

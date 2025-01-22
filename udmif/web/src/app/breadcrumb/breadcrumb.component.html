@@ -1,9 +1,0 @@
-<div class="breadcrumbs">
-  <ng-container *ngFor="let item of items; let i = index">
-    <ng-container *ngIf="i === items.length - 1; else elseBlock">{{ item.label }}</ng-container>
-    <ng-template #elseBlock
-      ><a [routerLink]="item.url">{{ item.label }}</a></ng-template
-    >
-    <mat-icon *ngIf="i < items.length - 1">arrow_right</mat-icon>
-  </ng-container>
-</div>
