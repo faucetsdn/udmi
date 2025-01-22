@@ -727,8 +727,7 @@ public class Validator {
 
       String subFolder = attributes.get(SUBFOLDER_PROPERTY_KEY);
       String subType = attributes.get(SUBTYPE_PROPERTY_KEY);
-      boolean processSchema = !SubType.REPLY.value().equals(schemaName)
-          && !SubType.REPLY.value().equals(subType)
+      boolean processSchema = !SubType.REPLY.value().equals(subType)
           && !IGNORE_FOLDERS.contains(subFolder);
 
       try {
