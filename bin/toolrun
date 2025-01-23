@@ -30,18 +30,18 @@ fi
 cmd="java -cp $UDMI_JAR $JDWP $JAVA_CLASS $util_name $@"
 echo $cmd
 
-if [[ "$#" -eq 1 ]]; then
-  site_path=$(jq -r '.site_model' "$(realpath "$1")")
-else
-  site_path=$(realpath "$1")
+site_path=$(realpath "$1")
+if [[ ! -d $site_path ]]; then
+  site_path=$(dirname "$site_path")
 fi
 
-spreadsheet=$(jq -r '.logs' "$site_path/site_metadata.json")
-
-if [[ $spreadsheet != "null" && -n "$spreadsheet" ]]; then
-  spreadsheet_id=$(echo "$spreadsheet" | grep -oP '(?<=/d/)[^/]+')
-  echo "Streaming logs to gsheet id $spreadsheet_id"
-  $cmd 2>&1 | tee $OUT_DIR/$util_name.log | stream_to_gsheets "$util_name" "$spreadsheet_id"
+if [[ -e "$site_path/site_metadata.json" ]]; then
+  spreadsheet=$(jq -r '.logs' "$site_path/site_metadata.json")
+  if [[ $spreadsheet != "null" && -n "$spreadsheet" ]]; then
+    spreadsheet_id=$(echo "$spreadsheet" | grep -oP '(?<=/d/)[^/]+')
+    echo "Streaming logs to gsheet id $spreadsheet_id"
+    $cmd 2>&1 | tee $OUT_DIR/$util_name.log | stream_to_gsheets "$util_name" "$spreadsheet_id"
+  fi
 else
   $cmd 2>&1 | tee $OUT_DIR/$util_name.log
 fi
