@@ -55,6 +55,7 @@ class SiteLinks:
     self.folder = None
     self.image = None
     self.repo = None
+    self.logs = None
 
   @staticmethod
   def from_dict(source):
@@ -66,6 +67,7 @@ class SiteLinks:
     result.folder = source.get('folder')
     result.image = source.get('image')
     result.repo = source.get('repo')
+    result.logs = source.get('logs')
     return result
 
   @staticmethod
@@ -96,6 +98,8 @@ class SiteLinks:
       result['image'] = self.image # 5
     if self.repo:
       result['repo'] = self.repo # 5
+    if self.logs:
+      result['logs'] = self.logs # 5
     return result
 from .dimension import Dimension
 from .dimension import Dimension

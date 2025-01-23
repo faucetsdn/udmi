@@ -6,7 +6,7 @@ util_name=$(basename $0)
 UDMI_ROOT=$(realpath $(dirname $0)/..)
 
 source $UDMI_ROOT/etc/shell_common.sh
-source $UDMI_ROOT/bin/stream_logs_to_sheets.sh
+source $UDMI_ROOT/etc/stream_logs_to_sheets.sh
 
 OUT_DIR=$UDMI_ROOT/out
 mkdir -p $OUT_DIR
@@ -28,6 +28,20 @@ else
 fi
 
 cmd="java -cp $UDMI_JAR $JDWP $JAVA_CLASS $util_name $@"
-
 echo $cmd
-$cmd 2>&1 | tee $OUT_DIR/$util_name.log | stream_to_gsheets "$util_name" "12leoCVQpdXx6MdKlVCCI4O1mi35dOTw_FxDMBetuwXQ"
+
+if [[ "$#" -eq 1 ]]; then
+  site_path=$(jq -r '.site_model' "$(realpath "$1")")
+else
+  site_path=$(realpath "$1")
+fi
+
+spreadsheet=$(jq -r '.logs' "$site_path/site_metadata.json")
+
+if [[ $spreadsheet != "null" && -n "$spreadsheet" ]]; then
+  spreadsheet_id=$(echo "$spreadsheet" | grep -oP '(?<=/d/)[^/]+')
+  echo Streaming logs to gsheet id $spreadsheet_id
+  $cmd 2>&1 | tee $OUT_DIR/$util_name.log | stream_to_gsheets "$util_name" $spreadsheet_id
+else
+  $cmd 2>&1 | tee $OUT_DIR/$util_name.log
+fi
