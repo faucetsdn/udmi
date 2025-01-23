@@ -6,7 +6,7 @@ import org.jetbrains.annotations.NotNull;
 
 /**
  * An OutputStream that duplicates output to two output streams, useful for scenarios such as
- * logging to multiple destinations simultaneously.
+ * logging to two destinations simultaneously.
  */
 public class DualOutputStream extends OutputStream {
 
