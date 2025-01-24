@@ -16,6 +16,7 @@ plugins {
     id 'java'
     id 'jacoco'
     id 'checkstyle'
+    id 'maven-publish'
 }
 
 group 'daq-pubber'
@@ -74,6 +75,27 @@ repositories {
     mavenLocal()
     maven { url 'https://mvnrepository.com' }
     maven { url 'https://jitpack.io' }
+}
+
+publishing {
+    repositories {
+        maven {
+            url = "https://maven.pkg.github.com/${System.getenv("GITHUB_REPOSITORY")}"
+            name = "GitHubPackages"
+            credentials {
+                username = System.getenv("GITHUB_ACTOR")
+                password = System.getenv("GITHUB_TOKEN")
+            }
+        }
+    }
+    publications {
+        mavenJava(MavenPublication) {
+            groupId = 'com.google.udmi'
+            artifactId = 'lib'
+            version = System.getenv("UDMI_VERSION")
+            from components.java
+        }
+    }
 }
 
 dependencies {

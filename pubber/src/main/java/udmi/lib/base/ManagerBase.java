@@ -13,8 +13,8 @@ import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
-import udmi.lib.client.SubBlockManager;
 import udmi.lib.intf.ManagerHost;
+import udmi.lib.intf.SubBlockManager;
 import udmi.schema.Config;
 import udmi.schema.DiscoveryState;
 import udmi.schema.GatewayState;
@@ -30,20 +30,21 @@ import udmi.util.SchemaVersion;
  */
 public abstract class ManagerBase implements SubBlockManager {
 
-  public static final int DISABLED_INTERVAL = 0;
   protected static final int DEFAULT_REPORT_SEC = 10;
+  public static final int DISABLED_INTERVAL = 0;
   public static final int INITIAL_THRESHOLD_SEC = 5;
+
   protected final AtomicInteger sendRateSec = new AtomicInteger(DEFAULT_REPORT_SEC);
-  protected final ManagerHost host;
   protected final Config deviceConfig = new Config();
   protected final State deviceState = new State();
   protected final ScheduledExecutorService executor = new CatchingScheduledThreadPoolExecutor(1);
   protected final AtomicBoolean stateDirty = new AtomicBoolean();
+  private final AtomicInteger eventCount = new AtomicInteger();
+  protected final ManagerHost host;
   protected final String deviceId;
+
   protected ScheduledFuture<?> periodicSender;
   protected ScheduledFuture<?> initialUpdate;
-  private final AtomicInteger eventCount = new AtomicInteger();
-
 
   /**
    * New instance.
@@ -66,7 +67,8 @@ public abstract class ManagerBase implements SubBlockManager {
     try {
       checkTarget = markerClass ? ((Class<?>) update).getConstructor().newInstance() : update;
     } catch (Exception e) {
-      throw new RuntimeException("Could not create marker instance of class " + update.getClass());
+      throw new RuntimeException(
+        format("Could not create marker instance of class %s", update.getClass()));
     }
     if (checkTarget instanceof SystemState) {
       state.system = (SystemState) checkValue;
@@ -80,7 +82,7 @@ public abstract class ManagerBase implements SubBlockManager {
       state.discovery = (DiscoveryState) checkValue;
     } else {
       throw new RuntimeException(
-          "Unrecognized update type " + checkTarget.getClass().getSimpleName());
+        format("Unrecognized update type %s", checkTarget.getClass().getSimpleName()));
     }
   }
 
@@ -93,8 +95,8 @@ public abstract class ManagerBase implements SubBlockManager {
    * Schedule a future for the futureTask parameter.
    */
   public ScheduledFuture<?> scheduleFuture(Date futureTime, Runnable futureTask) {
-    if (executor.isShutdown() || executor.isTerminated()) {
-      throw new RuntimeException("Executor shutdown/terminated, not scheduling");
+    if (executor.isShutdown()) {
+      throw new RuntimeException("Executor shutdown, not scheduling");
     }
     long delay = Math.max(futureTime.getTime() - getNow().getTime(), 0);
     debug(format("Scheduling future in %dms", delay));
@@ -235,6 +237,10 @@ public abstract class ManagerBase implements SubBlockManager {
 
   public State getDeviceState() {
     return deviceState;
+  }
+
+  public Config getDeviceConfig() {
+    return deviceConfig;
   }
 
   public AtomicBoolean getStateDirty() {
