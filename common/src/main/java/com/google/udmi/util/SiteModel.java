@@ -608,6 +608,7 @@ public class SiteModel {
   public void resetRegistryId(String altRegistry) {
     String previousId = getRegistryId();
     getExecutionConfiguration().registry_id = altRegistry;
+    getExecutionConfiguration().alt_registry = null;
     String newId = getRegistryId();
     checkState(!newId.equals(previousId), "resetting to unchanged registry id");
     System.err.printf("Switched target registry from %s to %s%n", previousId, newId);

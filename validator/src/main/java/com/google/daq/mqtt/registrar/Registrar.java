@@ -129,6 +129,7 @@ public class Registrar {
   private static final long DELETE_FLUSH_DELAY_MS = 10 * SEC_TO_MS;
   public static final String REGISTRAR_TOOL_NAME = "registrar";
   private static final int SET_SIZE_THRESHOLD = 10;
+  private boolean autoAltRegistry;
   private final Map<String, JsonSchema> schemas = new HashMap<>();
   private final String generation = JsonUtil.isoConvert();
   private final Set<Summarizer> summarizers = new HashSet<>();
@@ -170,8 +171,7 @@ public class Registrar {
   public static void main(String[] args) {
     ArrayList<String> argList = new ArrayList<>(List.of(args));
     try {
-      Registrar registrar = new Registrar().processArgs(argList).execute();
-      registrar.maybeProcessAltRegistry();
+      new Registrar().processArgs(argList).execute();
     } catch (Exception e) {
       System.err.println("Exception in main: " + friendlyStackTrace(e));
       e.printStackTrace();
@@ -184,7 +184,9 @@ public class Registrar {
   }
 
   private void maybeProcessAltRegistry() {
-    ifNotNullThen(siteModel.getExecutionConfiguration().alt_registry, this::processAltRegistry);
+    if (autoAltRegistry) {
+      ifNotNullThen(siteModel.getExecutionConfiguration().alt_registry, this::processAltRegistry);
+    }
   }
 
   private void processAltRegistry(String altRegistry) {
@@ -301,6 +303,7 @@ public class Registrar {
 
   Registrar execute() {
     execute(null);
+    maybeProcessAltRegistry();
     return this;
   }
 
@@ -1377,6 +1380,11 @@ public class Registrar {
   private void setTargetRegistry(String altRegistry) {
     siteModel.getExecutionConfiguration().registry_id = altRegistry;
     siteModel.getExecutionConfiguration().alt_registry = null;
+  }
+
+  @CommandLineOption(short_form = "-A", description = "Auto process alt_registry from config")
+  private void setAutoAltRegistry() {
+    autoAltRegistry = true;
   }
 
   class RelativeDownloader implements URIDownloader {
