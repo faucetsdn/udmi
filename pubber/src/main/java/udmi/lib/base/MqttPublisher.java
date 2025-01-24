@@ -98,26 +98,24 @@ public class MqttPublisher implements Publisher {
   private static final String LOCAL_MQTT_PREFIX = "/r/";
 
   private final Semaphore connectionLock = new Semaphore(1);
-
   private final Map<String, MqttClient> mqttClients = new ConcurrentHashMap<>();
-  private final Map<String, Instant> reauthTimes = new ConcurrentHashMap<>();
-  ReentrantLock reconnectLock = new ReentrantLock();
-
+  private final Map<String, Instant> reAuthTimes = new ConcurrentHashMap<>();
+  private final ReentrantLock reconnectLock = new ReentrantLock();
   private final ExecutorService publisherExecutor =
       Executors.newFixedThreadPool(PUBLISH_THREAD_COUNT);
-
-  private final String registryId;
-  private final String projectId;
-  private final String cloudRegion;
-
   private final AtomicInteger publishCounter = new AtomicInteger(0);
   private final AtomicInteger errorCounter = new AtomicInteger(0);
   private final Map<String, Consumer<Object>> handlers = new ConcurrentHashMap<>();
   private final Map<String, Class<Object>> handlersType = new ConcurrentHashMap<>();
-  private final Consumer<Exception> onError;
+
+  private final String registryId;
+  private final String projectId;
+  private final String cloudRegion;
   private final String deviceId;
   private final CertManager certManager;
   private final EndpointConfiguration configuration;
+  private final Consumer<Exception> onError;
+
   private CountDownLatch connectionLatch;
   private String topicPrefixPrefix;
 
@@ -145,8 +143,7 @@ public class MqttPublisher implements Publisher {
   }
 
   private boolean isGcpIotCore(EndpointConfiguration configuration) {
-    return configuration.client_id != null && configuration.client_id.startsWith(
-        GCP_CLIENT_PREFIX);
+    return configuration.client_id != null && configuration.client_id.startsWith(GCP_CLIENT_PREFIX);
   }
 
   private String getClientId(String targetId) {
@@ -170,13 +167,14 @@ public class MqttPublisher implements Publisher {
   @Override
   public void publish(String deviceId, String topicSuffix, Object data, Runnable callback) {
     Preconditions.checkNotNull(deviceId, "publish deviceId");
-    debug("Publishing in background " + topicSuffix);
-    Object marked =
-        topicSuffix.startsWith(EVENT_MARK_PREFIX) ? decorateMessage(topicSuffix, data) : data;
+    debug(format("Publishing in background %s", topicSuffix));
+    Object marked = topicSuffix.startsWith(EVENT_MARK_PREFIX)
+        ? decorateMessage(topicSuffix, data)
+        : data;
     try {
       publisherExecutor.submit(() -> publishCore(deviceId, topicSuffix, marked, callback));
     } catch (Exception e) {
-      throw new RuntimeException("While publishing to topic suffix " + topicSuffix, e);
+      throw new RuntimeException(format("While publishing to topic suffix %s", topicSuffix), e);
     }
   }
 
@@ -204,9 +202,9 @@ public class MqttPublisher implements Publisher {
     try {
       String payload = getMessagePayload(data);
       String sendTopic = getSendTopic(deviceId, getMessageTopic(topicSuffix, data));
-      debug("Sending message to " + sendTopic);
+      debug(format("Sending message to %s", sendTopic));
       if (!sendMessage(deviceId, sendTopic, payload.getBytes())) {
-        debug("Queue message for retry");
+        debug(format("Queue message for retry %s %s", topicSuffix, deviceId));
         safeSleep(ATTACH_DELAY_MS);
         if (isActive()) {
           publisherExecutor.submit(() -> publishCore(deviceId, topicSuffix, data, callback));
@@ -217,19 +215,12 @@ public class MqttPublisher implements Publisher {
         callback.run();
       }
     } catch (Exception e) {
-      if (!isActive()) {
-        return;
-      }
-      errorCounter.incrementAndGet();
-      warn(format("Publish %s failed for %s: %s", topicSuffix, deviceId, e));
-      if (getGatewayId() == null) {
-        closeMqttClient(deviceId);
-        if (mqttClients.isEmpty()) {
-          warn("Last client closed, shutting down connection.");
+      if (isActive()) {
+        errorCounter.incrementAndGet();
+        warn(format("Publish %s failed for %s: %s", topicSuffix, deviceId, e));
+        if (!isProxyDevice(deviceId)) {
           reconnect();
         }
-      } else if (getGatewayId().equals(deviceId)) {
-        reconnect();
       }
     }
   }
@@ -248,7 +239,8 @@ public class MqttPublisher implements Publisher {
   }
 
   private String getMessageTopic(String deviceId, String topic) {
-    return ofNullable(topicPrefixPrefix).orElse(DEFAULT_TOPIC_PREFIX) + deviceId + "/" + topic;
+    return format("%s%s/%s",
+        ofNullable(topicPrefixPrefix).orElse(DEFAULT_TOPIC_PREFIX), deviceId, topic);
   }
 
   @SuppressWarnings("unchecked")
@@ -284,7 +276,7 @@ public class MqttPublisher implements Publisher {
           }
           removed.close();
         } catch (Exception e) {
-          error("Error closing MQTT client: " + e, deviceId, null, "stop", e);
+          error(format("Error closing MQTT client: %s", e), deviceId, null, "stop", e);
         }
       }
     }
@@ -333,14 +325,14 @@ public class MqttPublisher implements Publisher {
     try {
       startupLatchWait(connectionLatch, "gateway startup exchange");
       String topic = getMessageTopic(deviceId, MqttDevice.ATTACH_TOPIC);
-      info("Publishing attach message " + topic);
+      info(format("Publishing attach message %s", topic));
       byte[] mqttMessage = EMPTY_STRING.getBytes(StandardCharsets.UTF_8);
       mqttClient.setTimeToWait(ATTACH_DELAY_MS);
       mqttClientPublish(mqttClient, topic, mqttMessage);
       subscribeToUpdates(mqttClient, deviceId);
       return mqttClient;
     } catch (Exception e) {
-      throw new RuntimeException("While binding client " + deviceId, e);
+      throw new RuntimeException(format("While binding client %s", deviceId), e);
     } finally {
       mqttClient.setTimeToWait(timeToWait);
     }
@@ -353,14 +345,13 @@ public class MqttPublisher implements Publisher {
 
   private void startupLatchWait(CountDownLatch gatewayLatch, String designator) {
     try {
-      int waitTimeSec = ofNullable(configuration.config_sync_sec)
-          .orElse(DEFAULT_CONFIG_WAIT_SEC);
+      int waitTimeSec = ofNullable(configuration.config_sync_sec).orElse(DEFAULT_CONFIG_WAIT_SEC);
       int useWaitTime = waitTimeSec == 0 ? DEFAULT_CONFIG_WAIT_SEC : waitTimeSec;
       if (useWaitTime > 0 && !gatewayLatch.await(useWaitTime, TimeUnit.SECONDS)) {
-        throw new RuntimeException("Latch timeout " + designator);
+        throw new RuntimeException(format("Latch timeout %s", designator));
       }
     } catch (Exception e) {
-      throw new RuntimeException("While waiting for " + designator, e);
+      throw new RuntimeException(format("While waiting for %s", designator), e);
     }
   }
 
@@ -370,11 +361,11 @@ public class MqttPublisher implements Publisher {
       String clientId = getClientId(deviceId);
       String brokerUrl = getBrokerUrl();
       MqttClient mqttClient = getMqttClient(clientId, brokerUrl);
-      info("Creating new client to " + brokerUrl + " as " + clientId);
+      info(format("Creating new client to %s as %s", brokerUrl, clientId));
       return mqttClient;
     } catch (Exception e) {
       errorCounter.incrementAndGet();
-      throw new RuntimeException("Creating new MQTT client " + deviceId, e);
+      throw new RuntimeException(format("Creating new MQTT client %s", deviceId), e);
     }
   }
 
@@ -398,15 +389,15 @@ public class MqttPublisher implements Publisher {
       options.setConnectionTimeout(INITIALIZE_TIME_MS);
 
       configureAuth(options);
-      reauthTimes.put(deviceId, Instant.now().plusSeconds(TOKEN_EXPIRY_MINUTES * 60 / 2));
+      reAuthTimes.put(deviceId, Instant.now().plusSeconds(TOKEN_EXPIRY_MINUTES * 60 / 2));
       connectionLatch = new CountDownLatch(1);
 
-      info("Attempting connection to " + getClientId(deviceId));
+      info(format("Attempting connection to %s", getClientId(deviceId)));
       mqttClient.connect(options);
       subscribeToUpdates(mqttClient, deviceId);
       return mqttClient;
     } catch (Exception e) {
-      throw new RuntimeException("While connecting mqtt client " + deviceId, e);
+      throw new RuntimeException(format("While connecting mqtt client %s", deviceId), e);
     } finally {
       connectionLock.release();
     }
@@ -417,7 +408,7 @@ public class MqttPublisher implements Publisher {
         .orElse(SSLSocketFactory.getDefault());
   }
 
-  private void configureAuth(MqttConnectOptions options) throws Exception {
+  private void configureAuth(MqttConnectOptions options) {
     options.setSocketFactory(getSocketFactory());
     if (configuration.auth_provider == null) {
       info("No endpoint auth_provider found, using gcp defaults");
@@ -431,17 +422,17 @@ public class MqttPublisher implements Publisher {
     }
   }
 
-  private void configureAuth(MqttConnectOptions options, Jwt jwt) throws Exception {
+  private void configureAuth(MqttConnectOptions options, Jwt jwt) {
     String audience = jwt == null ? projectId : jwt.audience;
-    info("Auth using audience " + audience);
+    info(format("Auth using audience %s", audience));
     options.setUserName(UNUSED_ACCOUNT_NAME);
-    info("Key hash " + Hashing.sha256().hashBytes((byte[]) configuration.keyBytes));
+    info(format("Key hash %s", Hashing.sha256().hashBytes((byte[]) configuration.keyBytes)));
     options.setPassword(createJwt(audience, (byte[]) configuration.keyBytes,
         configuration.algorithm).toCharArray());
   }
 
   private void configureAuth(MqttConnectOptions options, Basic basic) {
-    info("Auth using username " + basic.username);
+    info(format("Auth using username %s", basic.username));
     options.setUserName(basic.username);
     options.setPassword(basic.password.toCharArray());
   }
@@ -449,17 +440,15 @@ public class MqttPublisher implements Publisher {
   /**
    * Create a Cloud IoT JWT for the given project id, signed with the given private key.
    */
-  private String createJwt(String audience, byte[] privateKeyBytes, String algorithm)
-      throws Exception {
+  private String createJwt(String audience, byte[] privateKeyBytes, String algorithm) {
     DateTime now = new DateTime();
     // Create a JWT to authenticate this device. The device will be disconnected after the token
     // expires, and will have to reconnect with a new token. The audience field should always be set
     // to the GCP project id.
-    JwtBuilder jwtBuilder =
-        Jwts.builder()
-            .setIssuedAt(now.toDate())
-            .setExpiration(now.plusMinutes(TOKEN_EXPIRY_MINUTES).toDate())
-            .setAudience(audience);
+    JwtBuilder jwtBuilder = Jwts.builder()
+        .setIssuedAt(now.toDate())
+        .setExpiration(now.plusMinutes(TOKEN_EXPIRY_MINUTES).toDate())
+        .setAudience(audience);
 
     if (algorithm.equals("RS256") || algorithm.equals("RS256_X509")) {
       PrivateKey privateKey = loadKeyBytes(privateKeyBytes, "RSA");
@@ -469,7 +458,7 @@ public class MqttPublisher implements Publisher {
       return jwtBuilder.signWith(SignatureAlgorithm.ES256, privateKey).compact();
     } else {
       throw new IllegalArgumentException(
-          "Invalid algorithm " + algorithm + ". Should be one of 'RS256' or 'ES256'.");
+          format("Invalid algorithm %s should be one of 'RS256' or 'ES256'.", algorithm));
     }
   }
 
@@ -482,8 +471,7 @@ public class MqttPublisher implements Publisher {
   }
 
   private void subscribeToUpdates(MqttClient client, String deviceId) {
-    int configQos =
-        isTrue(configuration.noConfigAck) ? QOS_AT_MOST_ONCE : QOS_AT_LEAST_ONCE;
+    int configQos = isTrue(configuration.noConfigAck) ? QOS_AT_MOST_ONCE : QOS_AT_LEAST_ONCE;
     if (configuration.recv_id == null) {
       subscribeTopic(client, getMessageTopic(deviceId, MqttDevice.CONFIG_TOPIC), configQos);
       subscribeTopic(client, getMessageTopic(deviceId, MqttDevice.ERRORS_TOPIC), QOS_AT_MOST_ONCE);
@@ -497,7 +485,7 @@ public class MqttPublisher implements Publisher {
       client.subscribe(updateTopic, mqttQos);
       info(format("Subscribed to mqtt topic %s (qos %d)", updateTopic, mqttQos));
     } catch (MqttException e) {
-      throw new RuntimeException("While subscribing to MQTT topic " + updateTopic, e);
+      throw new RuntimeException(format("While subscribing to MQTT topic %s", updateTopic), e);
     }
   }
 
@@ -570,8 +558,8 @@ public class MqttPublisher implements Publisher {
     LOG.debug(message);
   }
 
-  private boolean sendMessage(String deviceId, String mqttTopic,
-      byte[] mqttMessage) throws Exception {
+  private boolean sendMessage(String deviceId, String mqttTopic, byte[] mqttMessage)
+      throws Exception {
     MqttClient connectedClient = getActiveClient(deviceId);
     if (connectedClient == null) {
       return false;
@@ -602,12 +590,12 @@ public class MqttPublisher implements Publisher {
 
   private boolean checkAuthentication(String targetId) {
     String authId = ofNullable(getGatewayId()).orElse(targetId);
-    Instant reAuthTime = reauthTimes.get(authId);
+    Instant reAuthTime = reAuthTimes.get(authId);
     if (reAuthTime == null || Instant.now().isBefore(reAuthTime)) {
       return true;
     }
-    warn("Authentication retry time reached for " + authId);
-    reauthTimes.remove(authId);
+    warn(format("Authentication retry time reached for %s", authId));
+    reAuthTimes.remove(authId);
     reconnect();
     return false;
   }
@@ -621,7 +609,7 @@ public class MqttPublisher implements Publisher {
         return mqttClients.computeIfAbsent(deviceId, this::newDirectClient);
       }
     } catch (Exception e) {
-      throw new RuntimeException("While getting mqtt client " + deviceId + ": " + e, e);
+      throw new RuntimeException(format("While getting mqtt client %s : %s", deviceId, e), e);
     }
   }
 
@@ -637,7 +625,7 @@ public class MqttPublisher implements Publisher {
   /**
    * Load a PKCS8 encoded keyfile from the given path.
    */
-  private PrivateKey loadKeyBytes(byte[] keyBytes, String algorithm) throws Exception {
+  private PrivateKey loadKeyBytes(byte[] keyBytes, String algorithm) {
     try {
       PKCS8EncodedKeySpec spec = new PKCS8EncodedKeySpec(keyBytes);
       KeyFactory kf = KeyFactory.getInstance(algorithm);
@@ -714,7 +702,6 @@ public class MqttPublisher implements Publisher {
    * Injected state.
    */
   public static class InjectedState extends InjectedMessage {
-
   }
 
   private class MqttCallbackHandler implements MqttCallback {
@@ -755,8 +742,8 @@ public class MqttPublisher implements Publisher {
       Consumer<Object> handler = handlers.get(handlerKey);
       Class<Object> type = handlersType.get(handlerKey);
       if (handler == null) {
-        error("Missing handler " + handlerKey, deviceId, messageType, "receive",
-            new RuntimeException("No registered handler for topic " + topic));
+        error(format("Missing handler %s", handlerKey), deviceId, messageType, "receive",
+            new RuntimeException(format("No registered handler for topic %s", topic)));
         handlersType.put(handlerKey, Object.class);
         handlers.put(handlerKey, this::ignoringHandler);
         return;
@@ -765,7 +752,7 @@ public class MqttPublisher implements Publisher {
 
       final Object payload;
       try {
-        if (message.toString().length() == 0) {
+        if (message.toString().isEmpty()) {
           payload = null;
         } else {
           payload = OBJECT_MAPPER.readValue(message.toString(), type);

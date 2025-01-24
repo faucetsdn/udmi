@@ -1,0 +1,24 @@
+#!/bin/bash -e
+
+UDMI_ROOT=$(realpath $(dirname $0)/../..)
+cd $UDMI_ROOT
+
+DEFAULT_TASK="publish"
+task=${1:-$DEFAULT_TASK}
+
+# Validate the task
+VALID_TASKS=("publish" "publishToMavenLocal")
+if [[ ! " ${VALID_TASKS[@]} " =~ " $task " ]]; then
+    echo "Usage: $0 [publishTask]"
+    echo "  publishTask: Task to execute. Default is '$DEFAULT_TASK'."
+    echo "  Valid tasks are: ${VALID_TASKS[*]}"
+    echo
+    echo "Error: Invalid task '$task'"
+    exit 1
+fi
+
+source $UDMI_ROOT/etc/shell_common.sh
+
+echo pubber/gradlew -p pubber $task
+echo $UDMI_VERSION
+$UDMI_ROOT/pubber/gradlew -p pubber $task

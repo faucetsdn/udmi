@@ -1,11 +1,18 @@
 package udmi.util;
 
+import static com.google.udmi.util.GeneralUtils.ifNotNullThen;
+
 import java.util.concurrent.ScheduledThreadPoolExecutor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Thread executor wrapper that does a better job of exposing exceptions during execution.
  */
 public class CatchingScheduledThreadPoolExecutor extends ScheduledThreadPoolExecutor {
+
+  public static final Logger LOG =
+      LoggerFactory.getLogger(CatchingScheduledThreadPoolExecutor.class);
 
   /**
    * Create a new executor.
@@ -17,10 +24,7 @@ public class CatchingScheduledThreadPoolExecutor extends ScheduledThreadPoolExec
   }
 
   protected void afterExecute(Runnable r, Throwable t) {
-    if (t != null) {
-      System.err.println("Exception during scheduled execution:");
-      t.printStackTrace();
-    }
+    ifNotNullThen(t, () -> LOG.error("Exception during scheduled execution", t));
     super.afterExecute(r, null);
   }
 }

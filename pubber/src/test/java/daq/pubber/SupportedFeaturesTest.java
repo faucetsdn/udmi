@@ -5,6 +5,7 @@ import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertTrue;
 import static udmi.schema.Bucket.ENUMERATION_FEATURES;
 
+import daq.pubber.impl.PubberFeatures;
 import java.util.Map;
 import org.junit.Test;
 import udmi.schema.Bucket;
