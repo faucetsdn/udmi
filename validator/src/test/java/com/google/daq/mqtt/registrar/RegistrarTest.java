@@ -55,19 +55,19 @@ public class RegistrarTest {
 
   @SuppressWarnings("unchecked")
   private static double getValidatingSize(Map<String, Object> summary) {
-    return ((Map<String, Object>) summary.get(ExceptionCategory.Validating.toString())).size();
+    return ((Map<String, Object>) summary.get(ExceptionCategory.validation.toString())).size();
   }
 
   private void assertErrorSummaryValidateSuccess(Map<String, Object> summary) {
-    if ((summary == null) || (summary.get(ExceptionCategory.Validating.toString()) == null)
+    if ((summary == null) || (summary.get(ExceptionCategory.validation.toString()) == null)
         || (getValidatingSize(summary) == 0)) {
       return;
     }
-    fail(summary.get(ExceptionCategory.Validating.toString()).toString());
+    fail(summary.get(ExceptionCategory.validation.toString()).toString());
   }
 
   private void assertErrorSummaryValidateFailure(Map<String, Object> summary) {
-    if ((summary == null) || (summary.get(ExceptionCategory.Validating.toString()) == null)) {
+    if ((summary == null) || (summary.get(ExceptionCategory.validation.toString()) == null)) {
       fail("Error summary for Validating key is null");
     }
     if (getValidatingSize(summary) == 0) {
