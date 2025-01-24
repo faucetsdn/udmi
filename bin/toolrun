@@ -37,11 +37,14 @@ fi
 
 if [[ -e "$site_path/site_metadata.json" ]]; then
   spreadsheet=$(jq -r '.logs' "$site_path/site_metadata.json")
-  if [[ $spreadsheet != "null" && -n "$spreadsheet" ]]; then
-    spreadsheet_id=$(echo "$spreadsheet" | grep -oP '(?<=/d/)[^/]+')
-    echo "Streaming logs to gsheet id $spreadsheet_id"
-    $cmd 2>&1 | tee $OUT_DIR/$util_name.log | stream_to_gsheets "$util_name" "$spreadsheet_id"
-  fi
+else
+  spreadsheet=
+fi
+
+if [[ $spreadsheet != "null" && -n "$spreadsheet" ]]; then
+  spreadsheet_id=$(echo "$spreadsheet" | grep -oP '(?<=/d/)[^/]+')
+  echo "Streaming logs to gsheet id $spreadsheet_id"
+  $cmd 2>&1 | tee $OUT_DIR/$util_name.log | stream_to_gsheets "$util_name" "$spreadsheet_id"
 else
   $cmd 2>&1 | tee $OUT_DIR/$util_name.log
 fi
