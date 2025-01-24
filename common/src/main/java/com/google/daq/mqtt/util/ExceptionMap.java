@@ -25,10 +25,16 @@ public class ExceptionMap extends RuntimeException {
   private static final byte[] SEPARATOR_BYTES = ": ".getBytes();
   private static final String ERROR_FORMAT_INDENT = "  ";
 
-  final Map<String, Exception> exceptions = new TreeMap<>();
+  final Map<ExceptionCategory, Exception> exceptions = new TreeMap<>();
 
   public ExceptionMap(String description) {
     super(description);
+  }
+
+  public enum ExceptionCategory {
+    missing, extra, out, validation, loading, writing, site_metadata, initializing, sample,
+    EXCEPTION_REGISTERING, EXCEPTION_ENVELOPE, EXCEPTION_CREDENTIALS, EXCEPTION_SAMPLES,
+    EXCEPTION_FILES, EXCEPTION_BINDING, creating, updating, schema, configuring
   }
 
   /**
@@ -50,8 +56,8 @@ public class ExceptionMap extends RuntimeException {
       if (e.getCause() != null) {
         errorTree.child = format(e.getCause(), newPrefix, indent);
       }
-      ((ExceptionMap) e)
-          .forEach((key, sub) -> errorTree.children.put(key, format(sub, newPrefix, indent)));
+      ((ExceptionMap) e).forEach((key, sub) ->
+          errorTree.children.put(key.toString(), format(sub, newPrefix, indent)));
     } else if (e instanceof ValidationException) {
       ((ValidationException) e)
           .getCausingExceptions()
@@ -69,7 +75,7 @@ public class ExceptionMap extends RuntimeException {
     return errorTree;
   }
 
-  private void forEach(BiConsumer<String, Exception> consumer) {
+  private void forEach(BiConsumer<ExceptionCategory, Exception> consumer) {
     exceptions.forEach(consumer);
   }
 
@@ -96,13 +102,13 @@ public class ExceptionMap extends RuntimeException {
    * @param key       entry key
    * @param exception exception to add
    */
-  public void put(String key, Exception exception) {
+  public void put(ExceptionCategory key, Exception exception) {
     if (exceptions.put(key, exception) != null) {
       throw new IllegalArgumentException("Exception key already defined: " + key);
     }
   }
 
-  public Stream<Map.Entry<String, Exception>> stream() {
+  public Stream<Map.Entry<ExceptionCategory, Exception>> stream() {
     return exceptions.entrySet().stream();
   }
 
@@ -118,7 +124,7 @@ public class ExceptionMap extends RuntimeException {
   /**
    * Execute the action and capture into the map if it throws an exception.
    */
-  public void capture(String category, Runnable action) {
+  public void capture(ExceptionCategory category, Runnable action) {
     try {
       action.run();
     } catch (Exception e) {

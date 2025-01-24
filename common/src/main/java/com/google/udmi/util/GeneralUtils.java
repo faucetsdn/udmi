@@ -298,18 +298,18 @@ public class GeneralUtils {
     }
   }
 
+  @SuppressWarnings("unchecked")
   public static Map<String, Object> getSubMap(Map<String, Object> input, String field) {
-    //noinspection unchecked
     return (Map<String, Object>) input.get(field);
   }
 
+  @SuppressWarnings("unchecked")
   public static Map<String, Object> getSubMapNull(Map<String, Object> input, String field) {
-    //noinspection unchecked
     return ifNotNullGet(input, map -> (Map<String, Object>) map.get(field));
   }
 
+  @SuppressWarnings("unchecked")
   public static Map<String, Object> getSubMapDefault(Map<String, Object> input, String field) {
-    //noinspection unchecked
     return ifNotNullGet(input,
         map -> (Map<String, Object>) map.computeIfAbsent(field, k -> new HashMap<>()));
   }

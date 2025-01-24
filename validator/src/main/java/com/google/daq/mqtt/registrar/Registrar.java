@@ -55,6 +55,7 @@ import com.google.daq.mqtt.util.CloudIotManager;
 import com.google.daq.mqtt.util.DeviceGatewayBoundException;
 import com.google.daq.mqtt.util.ExceptionMap;
 import com.google.daq.mqtt.util.ExceptionMap.ErrorTree;
+import com.google.daq.mqtt.util.ExceptionMap.ExceptionCategory;
 import com.google.daq.mqtt.util.PubSubPusher;
 import com.google.daq.mqtt.util.ValidationError;
 import com.google.udmi.util.CommandLineOption;
@@ -794,7 +795,7 @@ public class Registrar {
       }
     } catch (Exception e) {
       System.err.printf("Error processing %s: %s%n", localDevice.getDeviceId(), e);
-      localDevice.captureError(LocalDevice.EXCEPTION_REGISTERING, e);
+      localDevice.captureError(ExceptionCategory.EXCEPTION_REGISTERING, e);
     }
     return created;
   }
@@ -1058,7 +1059,7 @@ public class Registrar {
             cloudIotManager.bindDevices(toBind, gatewayId, true);
           } catch (Exception e) {
             proxiedDevices.forEach(
-                localDevice -> localDevice.captureError(LocalDevice.EXCEPTION_BINDING, e));
+                localDevice -> localDevice.captureError(ExceptionCategory.EXCEPTION_BINDING, e));
           }
         });
       });
@@ -1173,7 +1174,7 @@ public class Registrar {
       try {
         device.validateSamples();
       } catch (Exception e) {
-        device.captureError(LocalDevice.EXCEPTION_SAMPLES, e);
+        device.captureError(ExceptionCategory.EXCEPTION_SAMPLES, e);
       }
     }
   }
@@ -1183,7 +1184,7 @@ public class Registrar {
       try {
         device.validateExpectedFiles();
       } catch (Exception e) {
-        device.captureError(LocalDevice.EXCEPTION_FILES, e);
+        device.captureError(ExceptionCategory.EXCEPTION_FILES, e);
       }
     }
   }
@@ -1213,7 +1214,7 @@ public class Registrar {
                       new RuntimeException(
                           format(
                               "Duplicate credentials found for %s & %s", previous, deviceName));
-                  localDevice.captureError(LocalDevice.EXCEPTION_CREDENTIALS, exception);
+                  localDevice.captureError(ExceptionCategory.EXCEPTION_CREDENTIALS, exception);
                 }
               }
             });
@@ -1230,13 +1231,13 @@ public class Registrar {
     initializeDevices(workingDevices);
     initializeSettings(workingDevices);
     writeNormalized(workingDevices);
-    outputMetadataModels(workingDevices);
+    previewModels(workingDevices);
     validateExpected(workingDevices);
     validateSamples(workingDevices);
     validateKeys(workingDevices);
   }
 
-  private void outputMetadataModels(Map<String, LocalDevice> localDevices) {
+  private void previewModels(Map<String, LocalDevice> localDevices) {
     if (!metadataModelOut) {
       return;
     }
@@ -1267,7 +1268,7 @@ public class Registrar {
       } catch (ValidationError error) {
         throw new RuntimeException("While initializing device", error);
       } catch (Exception e) {
-        localDevice.captureError(LocalDevice.EXCEPTION_CREDENTIALS, e);
+        localDevice.captureError(ExceptionCategory.EXCEPTION_CREDENTIALS, e);
       }
 
       if (cloudIotManager != null) {
@@ -1275,7 +1276,7 @@ public class Registrar {
           localDevice.validateEnvelope(
               cloudIotManager.getRegistryId(), cloudIotManager.getSiteName());
         } catch (Exception e) {
-          localDevice.captureError(LocalDevice.EXCEPTION_ENVELOPE,
+          localDevice.captureError(ExceptionCategory.EXCEPTION_ENVELOPE,
               new RuntimeException("While validating envelope", e));
         }
       }

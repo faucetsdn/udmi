@@ -18,6 +18,7 @@ import static udmi.schema.IotAccess.IotProvider.MQTT;
 import static udmi.schema.IotAccess.IotProvider.PUBSUB;
 
 import com.google.common.collect.ImmutableList;
+import com.google.daq.mqtt.util.ExceptionMap.ExceptionCategory;
 import com.google.udmi.util.GeneralUtils;
 import com.google.udmi.util.IotProvider;
 import com.google.udmi.util.MetadataMapKeys;
@@ -212,13 +213,15 @@ public class CloudIotManager {
       coerceCredentialsToPassword(deviceId, settings);
     }
     if (device == null) {
-      exceptions.capture("creating", () -> createDevice(deviceId, settings));
+      exceptions.capture(ExceptionCategory.creating, () -> createDevice(deviceId, settings));
     } else {
-      exceptions.capture("updating", () -> updateDevice(deviceId, settings, device));
+      exceptions.capture(ExceptionCategory.updating,
+          () -> updateDevice(deviceId, settings, device));
     }
 
     if (settings.config != null) {
-      exceptions.capture("configuring", () -> writeDeviceConfig(deviceId, settings.config));
+      exceptions.capture(ExceptionCategory.configuring,
+          () -> writeDeviceConfig(deviceId, settings.config));
     }
 
     exceptions.throwIfNotEmpty();

@@ -36,6 +36,7 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.fasterxml.jackson.databind.util.ISO8601DateFormat;
 import com.google.common.collect.ImmutableList;
 import com.google.daq.mqtt.util.ExceptionMap;
+import com.google.daq.mqtt.util.ExceptionMap.ExceptionCategory;
 import java.io.File;
 import java.util.Arrays;
 import java.util.Collection;
@@ -343,7 +344,7 @@ public class SiteModel {
       siteMetadataObject = loadFileRequired(ObjectNode.class, siteMetadataFile);
       return convertToStrict(SiteMetadata.class, siteMetadataObject);
     } catch (Exception e) {
-      siteMetadataExceptionMap.put(SITE_METADATA_KEY, e);
+      siteMetadataExceptionMap.put(ExceptionCategory.site_metadata, e);
       return convertTo(SiteMetadata.class, siteMetadataObject);
     }
   }
