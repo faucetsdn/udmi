@@ -94,17 +94,6 @@ import udmi.schema.PointPointsetModel;
 class LocalDevice {
 
   public static final String INVALID_METADATA_HASH = "INVALID";
-  public static final String EXCEPTION_INITIALIZING = "Initializing";
-  public static final String EXCEPTION_VALIDATING = "Validating";
-  public static final String EXCEPTION_CONVERTING = "Converting";
-  public static final String EXCEPTION_LOADING = "Loading";
-  public static final String EXCEPTION_WRITING = "Writing";
-  public static final String EXCEPTION_FILES = "Files";
-  public static final String EXCEPTION_REGISTERING = "Registering";
-  public static final String EXCEPTION_CREDENTIALS = "Credential";
-  public static final String EXCEPTION_ENVELOPE = "Envelope";
-  public static final String EXCEPTION_SAMPLES = "Samples";
-  public static final String EXCEPTION_BINDING = "Binding";
   private static final String RSA_PUBLIC_PEM = "rsa_public.pem";
   private static final String RSA2_PUBLIC_PEM = "rsa2_public.pem";
   private static final String RSA3_PUBLIC_PEM = "rsa3_public.pem";
@@ -271,7 +260,8 @@ class LocalDevice {
     Set<String> expectedFiles = Sets.union(DEVICE_FILES, keyFiles());
     SortedSet<String> missing = new TreeSet<>(Sets.difference(expectedFiles, actualFiles));
     if (!missing.isEmpty()) {
-      exceptionMap.put(ExceptionCategory.missing, new RuntimeException("Missing files: " + missing));
+      exceptionMap.put(ExceptionCategory.missing,
+          new RuntimeException("Missing files: " + missing));
     }
     SortedSet<String> extra = new TreeSet<>(
         Sets.difference(Sets.difference(actualFiles, expectedFiles), OPTIONAL_FILES));
@@ -283,7 +273,8 @@ class LocalDevice {
       Set<String> outSet = ImmutableSet.copyOf(outFiles);
       SortedSet<String> extraOut = new TreeSet<>(Sets.difference(outSet, OUT_FILES));
       if (!extraOut.isEmpty()) {
-        exceptionMap.put(ExceptionCategory.out, new RuntimeException("Extra out files: " + extraOut));
+        exceptionMap.put(ExceptionCategory.out,
+            new RuntimeException("Extra out files: " + extraOut));
       }
     }
 

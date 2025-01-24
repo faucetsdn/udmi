@@ -5,7 +5,6 @@ import static com.google.daq.mqtt.TestCommon.DEVICE_ID;
 import static com.google.daq.mqtt.TestCommon.MOCK_SITE;
 import static com.google.daq.mqtt.TestCommon.REGISTRY_ID;
 import static com.google.daq.mqtt.TestCommon.SITE_REGION;
-import static com.google.daq.mqtt.registrar.LocalDevice.EXCEPTION_VALIDATING;
 import static com.google.daq.mqtt.util.IotMockProvider.ActionType.BIND_DEVICE_ACTION;
 import static com.google.daq.mqtt.util.IotMockProvider.ActionType.BLOCK_DEVICE_ACTION;
 import static com.google.daq.mqtt.util.IotMockProvider.ActionType.CREATE_DEVICE_ACTION;
@@ -24,6 +23,7 @@ import static org.junit.Assert.fail;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
+import com.google.daq.mqtt.util.ExceptionMap.ExceptionCategory;
 import com.google.daq.mqtt.util.IotMockProvider;
 import com.google.daq.mqtt.util.IotMockProvider.ActionType;
 import com.google.daq.mqtt.util.IotMockProvider.MockAction;
@@ -55,19 +55,19 @@ public class RegistrarTest {
 
   @SuppressWarnings("unchecked")
   private static double getValidatingSize(Map<String, Object> summary) {
-    return ((Map<String, Object>) summary.get(EXCEPTION_VALIDATING)).size();
+    return ((Map<String, Object>) summary.get(ExceptionCategory.Validating.toString())).size();
   }
 
   private void assertErrorSummaryValidateSuccess(Map<String, Object> summary) {
-    if ((summary == null) || (summary.get(EXCEPTION_VALIDATING) == null)
+    if ((summary == null) || (summary.get(ExceptionCategory.Validating.toString()) == null)
         || (getValidatingSize(summary) == 0)) {
       return;
     }
-    fail(summary.get(EXCEPTION_VALIDATING).toString());
+    fail(summary.get(ExceptionCategory.Validating.toString()).toString());
   }
 
   private void assertErrorSummaryValidateFailure(Map<String, Object> summary) {
-    if ((summary == null) || (summary.get(EXCEPTION_VALIDATING) == null)) {
+    if ((summary == null) || (summary.get(ExceptionCategory.Validating.toString()) == null)) {
       fail("Error summary for Validating key is null");
     }
     if (getValidatingSize(summary) == 0) {
