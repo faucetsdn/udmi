@@ -1,4 +1,4 @@
-#!/bin/bash -e
+#!/bin/bash -ex
 #
 # This doesn't actually run the local stuff, it's just used post-execution to validate results.
 #
