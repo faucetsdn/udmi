@@ -33,8 +33,8 @@ public class ExceptionMap extends RuntimeException {
 
   public enum ExceptionCategory {
     missing, extra, out, validation, loading, writing, site_metadata, initializing, sample,
-    EXCEPTION_REGISTERING, EXCEPTION_ENVELOPE, EXCEPTION_CREDENTIALS, EXCEPTION_SAMPLES,
-    EXCEPTION_FILES, EXCEPTION_BINDING, creating, updating, schema, configuring
+    Registering, Envelope, Credentials, Samples, Files, Binding, creating, updating, schema,
+    configuring
   }
 
   /**

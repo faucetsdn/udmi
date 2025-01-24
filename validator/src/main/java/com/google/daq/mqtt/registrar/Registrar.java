@@ -795,7 +795,7 @@ public class Registrar {
       }
     } catch (Exception e) {
       System.err.printf("Error processing %s: %s%n", localDevice.getDeviceId(), e);
-      localDevice.captureError(ExceptionCategory.EXCEPTION_REGISTERING, e);
+      localDevice.captureError(ExceptionCategory.Registering, e);
     }
     return created;
   }
@@ -1059,7 +1059,7 @@ public class Registrar {
             cloudIotManager.bindDevices(toBind, gatewayId, true);
           } catch (Exception e) {
             proxiedDevices.forEach(
-                localDevice -> localDevice.captureError(ExceptionCategory.EXCEPTION_BINDING, e));
+                localDevice -> localDevice.captureError(ExceptionCategory.Binding, e));
           }
         });
       });
@@ -1174,7 +1174,7 @@ public class Registrar {
       try {
         device.validateSamples();
       } catch (Exception e) {
-        device.captureError(ExceptionCategory.EXCEPTION_SAMPLES, e);
+        device.captureError(ExceptionCategory.Samples, e);
       }
     }
   }
@@ -1184,7 +1184,7 @@ public class Registrar {
       try {
         device.validateExpectedFiles();
       } catch (Exception e) {
-        device.captureError(ExceptionCategory.EXCEPTION_FILES, e);
+        device.captureError(ExceptionCategory.Files, e);
       }
     }
   }
@@ -1214,7 +1214,7 @@ public class Registrar {
                       new RuntimeException(
                           format(
                               "Duplicate credentials found for %s & %s", previous, deviceName));
-                  localDevice.captureError(ExceptionCategory.EXCEPTION_CREDENTIALS, exception);
+                  localDevice.captureError(ExceptionCategory.Credentials, exception);
                 }
               }
             });
@@ -1268,7 +1268,7 @@ public class Registrar {
       } catch (ValidationError error) {
         throw new RuntimeException("While initializing device", error);
       } catch (Exception e) {
-        localDevice.captureError(ExceptionCategory.EXCEPTION_CREDENTIALS, e);
+        localDevice.captureError(ExceptionCategory.Credentials, e);
       }
 
       if (cloudIotManager != null) {
@@ -1276,7 +1276,7 @@ public class Registrar {
           localDevice.validateEnvelope(
               cloudIotManager.getRegistryId(), cloudIotManager.getSiteName());
         } catch (Exception e) {
-          localDevice.captureError(ExceptionCategory.EXCEPTION_ENVELOPE,
+          localDevice.captureError(ExceptionCategory.Envelope,
               new RuntimeException("While validating envelope", e));
         }
       }
