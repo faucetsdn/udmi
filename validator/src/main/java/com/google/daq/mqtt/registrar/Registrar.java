@@ -170,7 +170,8 @@ public class Registrar {
   public static void main(String[] args) {
     ArrayList<String> argList = new ArrayList<>(List.of(args));
     try {
-      new Registrar().processArgs(argList).execute();
+      Registrar registrar = new Registrar().processArgs(argList).execute();
+      registrar.maybeProcessAltRegistry();
     } catch (Exception e) {
       System.err.println("Exception in main: " + friendlyStackTrace(e));
       e.printStackTrace();
@@ -180,6 +181,17 @@ public class Registrar {
     // Force exist because PubSub Subscriber in PubSubReflector does not shut down properly.
     safeSleep(2000);
     System.exit(0);
+  }
+
+  private void maybeProcessAltRegistry() {
+    ifNotNullThen(siteModel.getExecutionConfiguration().alt_registry, this::processAltRegistry);
+  }
+
+  private void processAltRegistry(String altRegistry) {
+    System.err.printf("%n%n%n%nDoing that whole thing again for the alternate registry %s%n%n%n%n",
+        altRegistry);
+    siteModel.resetRegistryId(altRegistry);
+    execute();
   }
 
   @SuppressWarnings("unchecked")
@@ -287,8 +299,9 @@ public class Registrar {
     }
   }
 
-  void execute() {
+  Registrar execute() {
     execute(null);
+    return this;
   }
 
   @VisibleForTesting

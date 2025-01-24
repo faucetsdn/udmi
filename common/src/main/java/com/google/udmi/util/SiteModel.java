@@ -605,6 +605,14 @@ public class SiteModel {
     return exeConfig.site_name;
   }
 
+  public void resetRegistryId(String altRegistry) {
+    String previousId = getRegistryId();
+    getExecutionConfiguration().registry_id = altRegistry;
+    String newId = getRegistryId();
+    checkState(!newId.equals(previousId), "resetting to unchanged registry id");
+    System.err.printf("Switched target registry from %s to %s%n", previousId, newId);
+  }
+
   public static class MetadataException extends Metadata {
 
     public final File file;
