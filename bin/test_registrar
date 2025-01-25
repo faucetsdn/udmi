@@ -9,18 +9,18 @@ TEST_SITE=sites/udmi_site_model
 find $TEST_SITE -name out | xargs rm -rf
 (cd $TEST_SITE; git checkout .)
 
-exit_status=clean
+exit_status=
 echo '###################################' starting test section processing
 
 bin/registrar ${TEST_SITE}
 
 output_file=${TEST_SITE}/out/registration_summary.json
 
-clean_devices=$(jq -r .Clean[] $output_file | wc -l)
+clean_devices=$(jq -r .status $output_file | fgrep CLEAN | wc -l)
 EXPECTED_CLEAN=3  # AHU-1 has a bad site location, so does not match as clean.
 
 echo Found ${clean_devices} clean devices, expecting $EXPECTED_CLEAN.
-[ "${clean_devices}" == $EXPECTED_CLEAN ] || exit_status=expected_clean
+[ "${clean_devices}" == $EXPECTED_CLEAN ] || exit_status+=" expected_clean"
 echo '###################################' end test section expected_clean: $exit_status
 
 device_files=$(ls -d ${TEST_SITE}/devices/* | fgrep -v XXX)
@@ -33,7 +33,7 @@ generated_config=sites/udmi_site_model/devices/AHU-1/out/generated_config.json
 [[ "Degrees-Celsius" == $(jq -r .pointset.points.filter_differential_pressure_sensor.units $generated_config) ]] || (echo Units mismatch; touch $error_file)
 if [[ -f $error_file ]]; then
     echo Errors found testing generated config.
-    exit_status=generated_config
+    exit_status+=" generated_config"
 fi
 echo '###################################' end test section generated_config: $exit_status
 
@@ -62,7 +62,7 @@ function check_norm {
 sm_devices=$(check_norm)
 echo Devices with correct site_defaults: ${sm_devices}
 
-[ "${sm_devices}" == "${device_files}" ] || exit_status=site_defaults
+[ "${sm_devices}" == "${device_files}" ] || exit_status+=" site_defaults"
 echo '###################################' end test section site_defaults: $exit_status
 
 mv ${TEST_SITE}/site_defaults.json ${TEST_SITE}/_site_defaults.json
@@ -73,19 +73,19 @@ base_devices=sites/udmi_site_model/devices/AHU-1
 sm_devices=$(check_norm)
 echo Devices with correct no-defaults site_defaults: ${sm_devices}
 echo Expecting: $base_devices
-[ "${sm_devices}" == "${base_devices}" ] || exit_status=no_defaults
+[ "${sm_devices}" == "${base_devices}" ] || exit_status+=" no_defaults"
 echo '###################################' end test section no_defaults: $exit_status
 
 
 config_points=`jq '.pointset.points | length' $TEST_SITE/devices/AHU-22/out/generated_config.json`
-[[ $config_points == 3 ]] || exit_status=missing_points
+[[ $config_points == 3 ]] || exit_status+=" missing_points"
 echo '###################################' end test section missing_points: $exit_status
 
 config_points=`jq .pointset.points $TEST_SITE/devices/SNS-4/out/generated_config.json`
-[[ $config_points == null ]] || exit_status=configured_points
+[[ $config_points == null ]] || exit_status+=" configured_points'
 echo '###################################' end test section configured_points: $exit_status
 
 mv ${TEST_SITE}/_site_defaults.json ${TEST_SITE}/site_defaults.json
 
-echo Done with registrar tests, results are \'$exit_status\' \(expected to be \'clean\'\)
-[[ $exit_status == clean ]]
+echo Done with registrar tests, results are: \'$exit_status\'
+[[ -z $exit_status ]]
