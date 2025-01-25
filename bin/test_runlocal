@@ -1,4 +1,4 @@
-#!/bin/bash -ex
+#!/bin/bash -e
 #
 # This doesn't actually run the local stuff, it's just used post-execution to validate results.
 #
@@ -16,9 +16,12 @@ systems=$(find out/registries/ -name \*update_model.json | xargs jq .system | fg
 [[ $systems == 196 ]] || fail Expected 196 system operations, found $systems
 
 deletes=$(find out/registries/ -name \*update_model.json | xargs jq .cloud.operation | fgrep DELETE | wc -l)
-[[ $deletes == 1 ]] || fail Expected 1 delete operations, found $deletes
+[[ $deletes == 5 ]] || fail Expected 5 delete operations, found $deletes
 
 binds=$(find out/registries/ -name \*update_model.json | xargs jq .cloud.operation | fgrep BIND | wc -l)
 [[ $binds == 2 ]] || fail Expected 2 bind operations, found $binds
+
+blocks=$(find out/registries/ -name \*update_model.json | xargs jq .cloud.operation | fgrep BLOCK | wc -l)
+[[ $blocks == 1 ]] || fail Expected 1 block operations, found $blocks
 
 echo Done with successful runlocal validation.
