@@ -1,7 +1,13 @@
 package com.google.daq.mqtt.validator;
 
 import static com.google.daq.mqtt.util.FileDataSink.REPORT_JSON_FILENAME;
+import static com.google.udmi.util.Common.DEVICE_ID_KEY;
+import static com.google.udmi.util.Common.DEVICE_NUM_KEY;
+import static com.google.udmi.util.Common.PROJECT_ID_PROPERTY_KEY;
 import static com.google.udmi.util.Common.PUBLISH_TIME_KEY;
+import static com.google.udmi.util.Common.REGISTRY_ID_PROPERTY_KEY;
+import static com.google.udmi.util.Common.SUBFOLDER_PROPERTY_KEY;
+import static com.google.udmi.util.Common.SUBTYPE_PROPERTY_KEY;
 import static com.google.udmi.util.JsonUtil.getDate;
 import static com.google.udmi.util.JsonUtil.isoConvert;
 
@@ -111,12 +117,12 @@ public class TestBase {
 
   private Map<String, String> messageAttributes(String subType, String subFolder) {
     Map<String, String> attributes = new HashMap<>();
-    attributes.put("deviceRegistryId", TestCommon.REGISTRY_ID);
-    attributes.put("deviceId", TestCommon.DEVICE_ID);
-    attributes.put("subFolder", subFolder);
-    attributes.put("subType", subType);
-    attributes.put("deviceNumId", TestCommon.DEVICE_NUM_ID);
-    attributes.put(Common.PROJECT_ID_PROPERTY_KEY, SiteModel.MOCK_PROJECT);
+    attributes.put(REGISTRY_ID_PROPERTY_KEY, TestCommon.REGISTRY_ID);
+    attributes.put(DEVICE_ID_KEY, TestCommon.DEVICE_ID);
+    attributes.put(SUBFOLDER_PROPERTY_KEY, subFolder);
+    attributes.put(SUBTYPE_PROPERTY_KEY, subType);
+    attributes.put(DEVICE_NUM_KEY, TestCommon.DEVICE_NUM_ID);
+    attributes.put(PROJECT_ID_PROPERTY_KEY, SiteModel.MOCK_PROJECT);
     attributes.put(PUBLISH_TIME_KEY, getTestTimestamp());
     return attributes;
   }

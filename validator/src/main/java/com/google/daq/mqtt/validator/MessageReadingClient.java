@@ -18,7 +18,6 @@ import com.fasterxml.jackson.databind.util.ISO8601DateFormat;
 import com.google.daq.mqtt.util.MessagePublisher;
 import com.google.daq.mqtt.validator.Validator.ErrorContainer;
 import com.google.daq.mqtt.validator.Validator.MessageBundle;
-import com.google.udmi.util.Common;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Arrays;
