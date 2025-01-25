@@ -116,7 +116,7 @@ public class TestBase {
     attributes.put("subFolder", subFolder);
     attributes.put("subType", subType);
     attributes.put("deviceNumId", TestCommon.DEVICE_NUM_ID);
-    attributes.put("projectId", SiteModel.MOCK_PROJECT);
+    attributes.put(Common.PROJECT_ID_PROPERTY_KEY, SiteModel.MOCK_PROJECT);
     attributes.put(PUBLISH_TIME_KEY, getTestTimestamp());
     return attributes;
   }

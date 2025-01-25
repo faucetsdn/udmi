@@ -4,7 +4,6 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
 import static com.google.udmi.util.Common.DEFAULT_REGION;
 import static com.google.udmi.util.Common.NO_SITE;
-import static com.google.udmi.util.Common.SITE_METADATA_KEY;
 import static com.google.udmi.util.Common.UDMI_COMMIT_ENV;
 import static com.google.udmi.util.Common.UDMI_REF_ENV;
 import static com.google.udmi.util.Common.UDMI_TIMEVER_ENV;
@@ -339,7 +338,7 @@ public class SiteModel {
   public SiteMetadata loadSiteMetadata() {
     ObjectNode siteMetadataObject = null;
     File siteMetadataFile = new File(new File(sitePath), SITE_METADATA_FILE);
-    siteMetadataExceptionMap = new ExceptionMap(SITE_METADATA_KEY);
+    siteMetadataExceptionMap = new ExceptionMap("Site metadata validation");
     try {
       siteMetadataObject = loadFileRequired(ObjectNode.class, siteMetadataFile);
       return convertToStrict(SiteMetadata.class, siteMetadataObject);

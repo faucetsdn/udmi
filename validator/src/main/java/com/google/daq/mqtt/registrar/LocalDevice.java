@@ -16,6 +16,7 @@ import static com.google.udmi.util.GeneralUtils.catchToNull;
 import static com.google.udmi.util.GeneralUtils.compressJsonString;
 import static com.google.udmi.util.GeneralUtils.ifNotNullGet;
 import static com.google.udmi.util.GeneralUtils.ifNotNullThen;
+import static com.google.udmi.util.GeneralUtils.ifNotTrueThen;
 import static com.google.udmi.util.GeneralUtils.ifTrueThen;
 import static com.google.udmi.util.GeneralUtils.isTrue;
 import static com.google.udmi.util.GeneralUtils.writeString;
@@ -559,11 +560,11 @@ class LocalDevice {
     return runInContext("While converting device config", () -> {
       Object fromValue = config.deviceConfigJson();
 
-      ifNotNullThen(config.getSchemaViolationsMap(), map -> {
+      ifNotNullThen(config.getSchemaViolationsMap(), map -> ifNotTrueThen(map.isEmpty(), () -> {
         ErrorMap schemaValidationErrors = new ErrorMap("schema validation errors");
         schemaValidationErrors.putAll(map);
         captureError(ExceptionCategory.schema, schemaValidationErrors.asException());
-      });
+      }));
 
       if (fromValue instanceof String stringValue) {
         return stringValue;
