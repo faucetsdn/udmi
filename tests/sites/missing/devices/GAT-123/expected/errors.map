@@ -1,5 +1,5 @@
 Exceptions for GAT-123
   While loading credentials for local device GAT-123
     Found 0 credentials
-  expected files
+  expected files mismatch
     Missing files: [ec_private.pem, ec_private.pkcs8, ec_public.pem]
