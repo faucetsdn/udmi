@@ -1,7 +1,8 @@
 #!/bin/bash -e
 
-ROOT_DIR=$(dirname $0)/..
-cd ${ROOT_DIR}
+UDMI_ROOT=$(dirname $0)/..
+cd ${UDMI_ROOT}
+source etc/shell_common.sh
 
 bin/clone_model
 
@@ -82,10 +83,10 @@ config_points=`jq '.pointset.points | length' $TEST_SITE/devices/AHU-22/out/gene
 echo '###################################' end test section missing_points: $exit_status
 
 config_points=`jq .pointset.points $TEST_SITE/devices/SNS-4/out/generated_config.json`
-[[ $config_points == null ]] || exit_status+=" configured_points'
+[[ $config_points == null ]] || exit_status+=" configured_points"
 echo '###################################' end test section configured_points: $exit_status
 
 mv ${TEST_SITE}/_site_defaults.json ${TEST_SITE}/site_defaults.json
 
-echo Done with registrar tests, results are: \'$exit_status\'
-[[ -z $exit_status ]]
+[[ -z $exit_status ]] || fail Failed registrar tests: $exit_status
+echo Registrar standalone tests passed.
