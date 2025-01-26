@@ -2,7 +2,7 @@ package com.google.daq.mqtt.util;
 
 import static com.google.udmi.util.GeneralUtils.multiTrim;
 
-import com.google.daq.mqtt.validator.ErrorMap.ErrorMapException;
+import com.google.daq.mqtt.util.ErrorMap.ErrorMapException;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
