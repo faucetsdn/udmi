@@ -739,6 +739,8 @@ public class Registrar {
     } catch (Exception e) {
       throw new RuntimeException("While deleting device " + deviceId, e);
     }
+
+    cloudModels.remove(deviceId);
   }
 
   /**
