@@ -666,9 +666,10 @@ public class Registrar {
       if (deviceSet.isEmpty()) {
         return;
       }
-      Set<String> gateways = deviceSet.stream().filter(id -> ifNotNullGet(workingDevices.get(id),
+      final Set<String> original = ImmutableSet.copyOf(deviceSet);
+      Set<String> gateways = original.stream().filter(id -> ifNotNullGet(workingDevices.get(id),
           LocalDevice::isGateway, false)).collect(Collectors.toSet());
-      final Set<String> others = difference(deviceSet, gateways);
+      final Set<String> others = difference(original, gateways);
 
       final Instant start = Instant.now();
 
@@ -686,10 +687,10 @@ public class Registrar {
 
       Duration between = Duration.between(start, Instant.now());
       double seconds = between.getSeconds() + between.getNano() / 1e9;
-      System.err.printf("Deleted %d devices in %.03fs%n", deviceSet.size(), seconds);
+      System.err.printf("Deleted %d devices in %.03fs%n", original.size(), seconds);
 
       Set<String> deviceIds = fetchCloudModels().keySet();
-      Set<String> remaining = intersection(deviceIds, deviceSet);
+      Set<String> remaining = intersection(deviceIds, original);
       if (!remaining.isEmpty()) {
         throw new RuntimeException("Did not delete all devices! " + CSV_JOINER.join(remaining));
       }
