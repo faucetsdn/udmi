@@ -49,6 +49,7 @@ import com.google.daq.mqtt.util.ExceptionMap.ExceptionCategory;
 import com.google.daq.mqtt.util.ValidationError;
 import com.google.daq.mqtt.util.ValidationException;
 import com.google.daq.mqtt.validator.ErrorMap;
+import com.google.daq.mqtt.validator.ErrorMap.ErrorMapException;
 import com.google.daq.mqtt.validator.Validator;
 import com.google.udmi.util.JsonUtil;
 import com.google.udmi.util.MessageDowngrader;
@@ -772,6 +773,8 @@ class LocalDevice {
         exception.printStackTrace(printWriter);
         if (exception instanceof ExceptionMap exceptionMap) {
           exceptionMap.forEach(mapped -> mapped.printStackTrace(printWriter));
+        } else if (exception instanceof ErrorMapException errorMap) {
+          errorMap.getMap().forEach((message, ex) -> ex.printStackTrace(printWriter));
         }
       }
     } catch (Exception e) {

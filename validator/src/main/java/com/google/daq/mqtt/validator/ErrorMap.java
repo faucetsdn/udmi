@@ -1,6 +1,7 @@
 package com.google.daq.mqtt.validator;
 
 import java.util.HashMap;
+import java.util.Map;
 
 /**
  * Simple class for a keyed map of exceptions.
@@ -27,7 +28,14 @@ public class ErrorMap extends HashMap<String, Exception> {
     return new ErrorMapException();
   }
 
-  class ErrorMapException extends RuntimeException {
+  public class ErrorMapException extends RuntimeException {
 
+    ErrorMapException() {
+      super(description);
+    }
+
+    public Map<String, Exception> getMap() {
+      return ErrorMap.this;
+    }
   }
 }
