@@ -33,8 +33,7 @@ public class MqttDevice {
     this.certManager = certManager;
     deviceId = requireNonNull(configuration.deviceId, "deviceId not specified");
     publisher = getPublisher(configuration, onError);
-    ifNotNullThen(configuration.topic_prefix,
-        prefix -> publisher.setDeviceTopicPrefix(deviceId, prefix));
+    ifNotNullThen(configuration.topic_prefix, p -> publisher.setDeviceTopicPrefix(deviceId, p));
   }
 
   /**
@@ -51,8 +50,7 @@ public class MqttDevice {
     certManager = null;
   }
 
-  Publisher getPublisher(EndpointConfiguration configuration,
-      Consumer<Exception> onError) {
+  Publisher getPublisher(EndpointConfiguration configuration, Consumer<Exception> onError) {
     return TEST_PREFIX.equals(configuration.topic_prefix)
         ? new ListPublisher(onError)
         : new MqttPublisher(configuration, onError, certManager);
