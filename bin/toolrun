@@ -6,7 +6,6 @@ util_name=$(basename $0)
 UDMI_ROOT=$(realpath $(dirname $0)/..)
 
 source $UDMI_ROOT/etc/shell_common.sh
-source $UDMI_ROOT/etc/stream_logs_to_sheets.sh
 
 OUT_DIR=$UDMI_ROOT/out
 mkdir -p $OUT_DIR
@@ -36,7 +35,7 @@ if [[ ! -d $site_path ]]; then
 fi
 
 if [[ -e "$site_path/site_metadata.json" ]]; then
-  spreadsheet=$(jq -r '.logs' "$site_path/site_metadata.json")
+  spreadsheet=$(jq -r '.sheet' "$site_path/site_metadata.json")
 else
   spreadsheet=
 fi

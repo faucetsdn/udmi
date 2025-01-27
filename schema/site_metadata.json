@@ -93,8 +93,8 @@
           "type": "string",
           "examples": ["https://github.com/faucetsdn/udmi_site_model", "git@github.com:faucetsdn/udmi_site_model.git"]
         },
-        "logs": {
-          "description": "Link to the spreadsheet where logs will be streamed",
+        "sheet": {
+          "description": "Link to a spreadsheet to observe real-time output from any server-side tool",
           "type": "string",
           "examples": ["https://docs.google.com/spreadsheets/d/<spreadsheet_id>"]
         }
