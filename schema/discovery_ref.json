@@ -43,6 +43,17 @@
     },
     "ancillary": {
       "$ref": "file:ancillary_properties.json"
+    },
+    "families": {
+      "description": "Reference links to alternate families",
+      "type": "object",
+      "additionalProperties": false,
+      "existingJavaType": "java.util.Map<String, FamilyDiscovery>",
+      "patternProperties": {
+        "^[a-z][a-z0-9]*(_[a-z0-9]+)*$": {
+          "$ref": "file:discovery_family.json"
+        }
+      }
     }
   }
 }

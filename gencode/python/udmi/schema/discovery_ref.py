@@ -1,6 +1,7 @@
 """Generated class for discovery_ref.json"""
 from .entry import Entry
 from .ancillary_properties import AncillaryProperties
+from .discovery_family import FamilyDiscovery
 
 
 class RefDiscovery:
@@ -16,6 +17,7 @@ class RefDiscovery:
     self.description = None
     self.status = None
     self.ancillary = None
+    self.families = None
 
   @staticmethod
   def from_dict(source):
@@ -31,6 +33,7 @@ class RefDiscovery:
     result.description = source.get('description')
     result.status = Entry.from_dict(source.get('status'))
     result.ancillary = AncillaryProperties.from_dict(source.get('ancillary'))
+    result.families = FamilyDiscovery.map_from(source.get('families'))
     return result
 
   @staticmethod
@@ -69,4 +72,6 @@ class RefDiscovery:
       result['status'] = self.status.to_dict() # 4
     if self.ancillary:
       result['ancillary'] = self.ancillary.to_dict() # 4
+    if self.families:
+      result['families'] = FamilyDiscovery.expand_dict(self.families) # 2
     return result
