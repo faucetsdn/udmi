@@ -22,7 +22,6 @@ jobs:
         container: [ "udmis", "validator", "pubber", "misc" ]
     env:
       PUSH_REGISTRY: ghcr.io
-      IMAGE_NAME: ${{ github.repository }}
       CONTAINER: ${{ matrix.container }}
       REF_NAME: ${{ github.ref_name }}
     steps:
@@ -40,11 +39,13 @@ jobs:
           registry: ${{ env.PUSH_REGISTRY }}
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Convert repository name to lowercase
+        run: echo "IMAGE_NAME=${GITHUB_REPOSITORY,,}" >> $GITHUB_ENV
       - name: Container build and push
         run: |
           revhash=$(git log -n 1 --pretty=format:"%h")
           IMAGE_HASH=g${revhash:0:8}
-          PUSH_REPO=$PUSH_REGISTRY/${IMAGE_NAME,,}
+          PUSH_REPO=$PUSH_REGISTRY/$IMAGE_NAME
 
           TAG_BASE=$PUSH_REPO:$CONTAINER
           PUSH_TAG=${TAG_BASE}-$IMAGE_HASH
@@ -66,6 +67,28 @@ jobs:
           echo
           docker history $PUSH_TAG
 
+  maven:
+    name: Publish maven package (pubber)
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    timeout-minutes: 5
+    env:
+      GITHUB_ACTOR: ${{ github.actor }}
+      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          fetch-tags: true
+      - uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+      - name: Publish maven package
+        run:  pubber/bin/publish
+
   simple:
     name: Simple sequence test
     runs-on: ubuntu-latest
@@ -76,7 +99,6 @@ jobs:
       matrix:
         device_id: [ "AHU-1", "AHU-22", "GAT-123" ]
     env:
-      IMAGE_NAME: ${{ github.repository }}
       REF_NAME: ${{ github.ref_name }}
       DEVICE_ID: ${{ matrix.device_id }}
     steps:
@@ -89,6 +111,8 @@ jobs:
           jq ".device_id = \"$DEVICE_ID\"" site_model/cloud_iot_config.json | sponge site_model/cloud_iot_config.json
           jq . site_model/cloud_iot_config.json
           docker network create udminet --subnet 192.168.99.0/24
+      - name: Convert repository name to lowercase
+        run: echo "IMAGE_NAME=${GITHUB_REPOSITORY,,}" >> $GITHUB_ENV
       - name: Start UDMIS container
         run: |
           export IMAGE_TAG=ghcr.io/$IMAGE_NAME:udmis-$REF_NAME
@@ -148,7 +172,6 @@ jobs:
     timeout-minutes: 5
     needs: images
     env:
-      IMAGE_NAME: ${{ github.repository }}
       REF_NAME: ${{ github.ref_name }}
       DEVICE_ID: ${{'AHU-1'}}
     steps:
@@ -161,6 +184,8 @@ jobs:
           jq ".device_id = \"$DEVICE_ID\"" site_model/cloud_iot_config.json | sponge site_model/cloud_iot_config.json
           jq . site_model/cloud_iot_config.json
           docker network create udminet --subnet 192.168.99.0/24
+      - name: Convert repository name to lowercase
+        run: echo "IMAGE_NAME=${GITHUB_REPOSITORY,,}" >> $GITHUB_ENV
       - name: Start UDMIS container
         run: |
           export IMAGE_TAG=ghcr.io/$IMAGE_NAME:udmis-$REF_NAME

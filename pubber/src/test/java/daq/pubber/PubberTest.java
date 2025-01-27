@@ -11,11 +11,14 @@ import static udmi.schema.BlobsetConfig.SystemBlobsets.IOT_ENDPOINT_CONFIG;
 
 import com.google.common.collect.ImmutableList;
 import com.google.udmi.util.JsonUtil;
+import daq.pubber.impl.host.PubberPublisherHost;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import org.junit.After;
 import org.junit.Test;
+import udmi.lib.TestBase;
+import udmi.lib.client.host.PublisherHost;
 import udmi.schema.BlobBlobsetConfig;
 import udmi.schema.BlobBlobsetConfig.BlobPhase;
 import udmi.schema.BlobsetConfig;
@@ -38,7 +41,7 @@ public class PubberTest extends TestBase {
   private static final String TEST_REDIRECT_HOSTNAME = "mqtt-redirect.google.com";
   private static final String DATA_URL_PREFIX = "data:application/json;base64,";
   private static final EndpointConfiguration TEST_ENDPOINT = getEndpointConfiguration(null);
-  private static final EndpointConfiguration TEST_REDIRECT_ENDPOINT = 
+  private static final EndpointConfiguration TEST_REDIRECT_ENDPOINT =
       getEndpointConfiguration(TEST_REDIRECT_HOSTNAME);
   private static final String ENDPOINT_BLOB = JsonUtil.stringify(TEST_ENDPOINT);
   private static final String ENDPOINT_REDIRECT_BLOB = JsonUtil.stringify(TEST_REDIRECT_ENDPOINT);
@@ -49,7 +52,7 @@ public class PubberTest extends TestBase {
     OptionsNoPersist
   }
 
-  private class PubberUnderTest extends Pubber {
+  private class PubberUnderTest extends PubberPublisherHost {
 
     private HashMap<PubberUnderTestFeatures, Boolean> testFeatures = new HashMap<>();
 
@@ -97,8 +100,7 @@ public class PubberTest extends TestBase {
   private PubberUnderTest singularPubber(String[] args) {
     PubberUnderTest pubber = new PubberUnderTest(args[0], args[1], args[2], args[3]);
     pubber.initialize();
-    pubber.startConnection(deviceId -> {
-      return true; });
+    pubber.startConnection();
     return pubber;
   }
 
@@ -178,14 +180,14 @@ public class PubberTest extends TestBase {
   @Test
   public void parseDataUrl() {
     String testBlobDataUrl = DATA_URL_PREFIX + encodeBase64(TEST_BLOB_DATA);
-    String blobData = PubberUdmiPublisher.acquireBlobData(testBlobDataUrl, sha256(TEST_BLOB_DATA));
+    String blobData = PublisherHost.acquireBlobData(testBlobDataUrl, sha256(TEST_BLOB_DATA));
     assertEquals("extracted blob data", blobData, TEST_BLOB_DATA);
   }
 
   @Test(expected = RuntimeException.class)
   public void badDataUrl() {
     String testBlobDataUrl = DATA_URL_PREFIX + encodeBase64(TEST_BLOB_DATA + "XXXX");
-    PubberUdmiPublisher.acquireBlobData(testBlobDataUrl, sha256(TEST_BLOB_DATA));
+    PublisherHost.acquireBlobData(testBlobDataUrl, sha256(TEST_BLOB_DATA));
   }
 
   @Test
@@ -221,13 +223,13 @@ public class PubberTest extends TestBase {
     State testMessage = new State();
 
     assertNull(testMessage.timestamp);
-    PubberUdmiPublisher.augmentDeviceMessage(testMessage, new Date(), false);
-    assertEquals(testMessage.version, Pubber.UDMI_VERSION);
+    PublisherHost.augmentDeviceMessage(testMessage, new Date(), false);
+    assertEquals(testMessage.version, PublisherHost.UDMI_VERSION);
     assertNotEquals(testMessage.timestamp, null);
 
     testMessage.timestamp = new Date(1241);
-    PubberUdmiPublisher.augmentDeviceMessage(testMessage, new Date(), false);
-    assertEquals(testMessage.version, Pubber.UDMI_VERSION);
+    PublisherHost.augmentDeviceMessage(testMessage, new Date(), false);
+    assertEquals(testMessage.version, PublisherHost.UDMI_VERSION);
     assertNotEquals(testMessage.timestamp, new Date(1241));
   }
 
@@ -239,9 +241,7 @@ public class PubberTest extends TestBase {
     testFeatures.put(PubberUnderTestFeatures.noInitializePersistentStore, true);
     pubber = new PubberUnderTest(TEST_PROJECT, TEST_SITE, TEST_DEVICE, SERIAL_NO, testFeatures);
     pubber.initialize();
-    pubber.startConnection(deviceId -> {
-      return true;
-    });
+    pubber.startConnection();
 
     // Prepare test.
     testPersistentData.endpoint = null;
@@ -259,9 +259,7 @@ public class PubberTest extends TestBase {
     testFeatures.put(PubberUnderTestFeatures.noInitializePersistentStore, true);
     pubber = new PubberUnderTest(TEST_PROJECT, TEST_SITE, TEST_DEVICE, SERIAL_NO, testFeatures);
     pubber.initialize();
-    pubber.startConnection(deviceId -> {
-      return true;
-    });
+    pubber.startConnection();
 
     // Prepare test.
     testPersistentData.endpoint = null;
@@ -276,12 +274,11 @@ public class PubberTest extends TestBase {
   @Test
   public void initializePersistentStoreFromPersistentDataTest() {
     // Initialize the test Pubber.
-    HashMap<PubberUnderTestFeatures, Boolean> testFeatures = new HashMap<
-        PubberUnderTestFeatures, Boolean>();
+    HashMap<PubberUnderTestFeatures, Boolean> testFeatures = new HashMap<>();
     testFeatures.put(PubberUnderTestFeatures.noInitializePersistentStore, true);
     pubber = new PubberUnderTest(TEST_PROJECT, TEST_SITE, TEST_DEVICE, SERIAL_NO, testFeatures);
     pubber.initialize();
-    pubber.startConnection(deviceId -> true);
+    pubber.startConnection();
 
     // Prepare test.
     testPersistentData.endpoint = getEndpointConfiguration("persistent");
