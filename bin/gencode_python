@@ -264,20 +264,16 @@ def generate_module(in_files):
   shutil.rmtree(OUT_DIR, ignore_errors=True)
   os.makedirs(OUT_DIR, exist_ok=True)
 
-  # Extract the necessary parent paths from OUT_DIR
   parts = OUT_DIR.split(os.sep)
   python_dir = os.path.join(*parts[0:2])
   udmi_dir = os.path.join(*parts[0:3])
 
-  # Create __init__.py in the root folder of gencode/python
   python_init_path = os.path.join(python_dir, '__init__.py')
-  open(python_init_path, 'w').close() # Create empty file
+  open(python_init_path, 'w').close()
 
-  # Create __init__.py in the udmi folder
   udmi_init_path = os.path.join(udmi_dir, '__init__.py')
-  open(udmi_init_path, 'w').close() # Create empty file
+  open(udmi_init_path, 'w').close()
 
-  # Create __init__.py in the schema folder
   schema_init_path = os.path.join(OUT_DIR, '__init__.py')
   with open(schema_init_path, 'w') as fd:
     writer = lambda line: fd.write(line + '\n')
