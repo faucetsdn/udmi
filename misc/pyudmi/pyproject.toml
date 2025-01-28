@@ -1,5 +1,5 @@
 [project]
-name = "udmi4py"
+name = "pyudmi"
 version = "0.1.0"
 description = "A Python library for UDMI"
 authors = [
