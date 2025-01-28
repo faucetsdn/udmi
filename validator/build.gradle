@@ -27,6 +27,10 @@ java {
     }
 }
 
+compileJava {
+    options.compilerArgs = ['-Xlint:unchecked']
+}
+
 sourceSets {
     main {
         java {

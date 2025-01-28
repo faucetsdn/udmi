@@ -7,6 +7,7 @@ import static com.google.daq.mqtt.validator.Validator.TOOLS_FUNCTIONS_VERSION;
 import static com.google.udmi.util.CleanDateFormat.dateEquals;
 import static com.google.udmi.util.Common.DEVICE_ID_KEY;
 import static com.google.udmi.util.Common.GATEWAY_ID_KEY;
+import static com.google.udmi.util.Common.PROJECT_ID_PROPERTY_KEY;
 import static com.google.udmi.util.Common.PUBLISH_TIME_KEY;
 import static com.google.udmi.util.Common.SOURCE_KEY;
 import static com.google.udmi.util.Common.SOURCE_SEPARATOR_REGEX;
@@ -336,7 +337,7 @@ public class IotReflectorClient implements MessagePublisher {
   @NotNull
   private Map<String, String> extractAttributes(Map<String, Object> messageMap) {
     Map<String, String> attributes = new TreeMap<>();
-    attributes.put("projectId", projectId);
+    attributes.put(PROJECT_ID_PROPERTY_KEY, projectId);
     attributes.put("deviceRegistryId", registryId);
     COPY_IDS.forEach(key -> attributes.put(key, (String) messageMap.get(key)));
     attributes.put("deviceNumId", MOCK_DEVICE_NUM_ID);

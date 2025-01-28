@@ -252,7 +252,7 @@ public class ClearBladeIotAccessProvider extends IotAccessBase {
     boolean toBind = cloudModel.operation == BIND;
     bindDevicesGateways(registryId, ImmutableSet.of(gatewayId), deviceIds, toBind, progress);
     CloudModel reply = new CloudModel();
-    reply.num_id = deviceIds.size() > 0 ? EMPTY_RETURN_RECEIPT : null;
+    reply.num_id = EMPTY_RETURN_RECEIPT;
     reply.operation = cloudModel.operation;
     return reply;
   }

@@ -4,7 +4,6 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
 import static com.google.udmi.util.Common.DEFAULT_REGION;
 import static com.google.udmi.util.Common.NO_SITE;
-import static com.google.udmi.util.Common.SITE_METADATA_KEY;
 import static com.google.udmi.util.Common.UDMI_COMMIT_ENV;
 import static com.google.udmi.util.Common.UDMI_REF_ENV;
 import static com.google.udmi.util.Common.UDMI_TIMEVER_ENV;
@@ -36,6 +35,7 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.fasterxml.jackson.databind.util.ISO8601DateFormat;
 import com.google.common.collect.ImmutableList;
 import com.google.daq.mqtt.util.ExceptionMap;
+import com.google.daq.mqtt.util.ExceptionMap.ExceptionCategory;
 import java.io.File;
 import java.util.Arrays;
 import java.util.Collection;
@@ -338,12 +338,12 @@ public class SiteModel {
   public SiteMetadata loadSiteMetadata() {
     ObjectNode siteMetadataObject = null;
     File siteMetadataFile = new File(new File(sitePath), SITE_METADATA_FILE);
-    siteMetadataExceptionMap = new ExceptionMap(SITE_METADATA_KEY);
+    siteMetadataExceptionMap = new ExceptionMap("Site metadata validation");
     try {
       siteMetadataObject = loadFileRequired(ObjectNode.class, siteMetadataFile);
       return convertToStrict(SiteMetadata.class, siteMetadataObject);
     } catch (Exception e) {
-      siteMetadataExceptionMap.put(SITE_METADATA_KEY, e);
+      siteMetadataExceptionMap.put(ExceptionCategory.site_metadata, e);
       return convertTo(SiteMetadata.class, siteMetadataObject);
     }
   }
@@ -603,6 +603,15 @@ public class SiteModel {
 
   public String getSiteName() {
     return exeConfig.site_name;
+  }
+
+  public void resetRegistryId(String altRegistry) {
+    String previousId = getRegistryId();
+    getExecutionConfiguration().registry_id = altRegistry;
+    getExecutionConfiguration().alt_registry = null;
+    String newId = getRegistryId();
+    checkState(!newId.equals(previousId), "resetting to unchanged registry id");
+    System.err.printf("Switched target registry from %s to %s%n", previousId, newId);
   }
 
   public static class MetadataException extends Metadata {
