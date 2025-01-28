@@ -1,0 +1,50 @@
+{
+  "timestamp": "2020-05-01T13:39:07Z",
+  "version": "1.5.2",
+  "gateway": {
+    "gateway_id": "GAT-123",
+    "target": {
+      "family": "vendor"
+    }
+  },
+  "pointset": {
+    "points": {
+      "meter_reading": {
+        "units": "Bars",
+        "ref": "72312"
+      }
+    }
+  },
+  "structure": {
+    "vendor": {
+      "refs": {
+        "72312": {
+          "families": {
+            "bacnet": {
+              "addr": "92132",
+              "ref": "AI:1"
+            }
+          }
+        }
+      }
+    }
+    "bacnet": {
+      "addr": "92132",
+      "refs": {
+        "AI:1": {
+          "name": "FCU_1180 Room Temp",
+          "units": "degreesCelsius",
+          "description": "This is some kind of sensor",
+          "ancillary": {
+            "present_value": 20.488115310668945
+          }
+        }
+      },
+      "system": {
+        "name": "Room 1180 FCU",
+        "description": "The thing that sits in 1180 and does stuff"
+      }
+    },
+   }
+}
+
