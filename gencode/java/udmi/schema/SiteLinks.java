@@ -60,11 +60,11 @@ public class SiteLinks {
     @JsonPropertyDescription("Source repository where the UDMI site model is stored")
     public String repo;
     /**
-     * Link to a spreadsheet to observe real-time output from any server-side tool
+     * Link to a spreadsheet to observe real-time output from any tool
      * 
      */
     @JsonProperty("sheet")
-    @JsonPropertyDescription("Link to a spreadsheet to observe real-time output from any server-side tool")
+    @JsonPropertyDescription("Link to a spreadsheet to observe real-time output from any tool")
     public String sheet;
 
     @Override

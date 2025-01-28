@@ -105,10 +105,10 @@ export UDMI_COMMIT=$udmi_commit
 export UDMI_TIMEVER=$udmi_timever
 export UDMI_REV=$udmi_rev
 
-stream_to_gsheets() {
-  local tool_name=$1
-  local sheet_id=$2
-  timestamp=$(date +%Y%m%d_%H%M%S)
-  java -cp "$UDMI_JAR" "com.google.udmi.util.SheetsOutputStream" "$tool_name" \
-  "$sheet_id" "$tool_name.$timestamp.log"
+function stream_to_gsheets {
+    local tool_name=$1
+    local sheet_id=$2
+    timestamp=$(date +%Y%m%d_%H%M%S)
+    java -cp "$UDMI_JAR" "com.google.udmi.util.SheetsOutputStream" "$tool_name" \
+        "$sheet_id" "$tool_name.$timestamp.log"
 }
