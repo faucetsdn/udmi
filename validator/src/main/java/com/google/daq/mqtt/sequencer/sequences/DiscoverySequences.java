@@ -12,6 +12,7 @@ import static com.google.udmi.util.CleanDateFormat.dateEquals;
 import static com.google.udmi.util.GeneralUtils.CSV_JOINER;
 import static com.google.udmi.util.GeneralUtils.ifNotEmptyThrow;
 import static com.google.udmi.util.GeneralUtils.ifNotNullGet;
+import static com.google.udmi.util.GeneralUtils.ifNotNullThen;
 import static com.google.udmi.util.GeneralUtils.ifNotTrueGet;
 import static com.google.udmi.util.GeneralUtils.ifNullElse;
 import static com.google.udmi.util.GeneralUtils.joinOrNull;
@@ -20,7 +21,6 @@ import static com.google.udmi.util.JsonUtil.isoConvert;
 import static com.google.udmi.util.JsonUtil.stringifyTerse;
 import static java.lang.String.format;
 import static java.util.Objects.nonNull;
-import static java.util.Objects.requireNonNull;
 import static java.util.Optional.ofNullable;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
@@ -182,23 +182,24 @@ public class DiscoverySequences extends SequenceBase {
   private void checkFeatureDiscovery(Map<String, FeatureDiscovery> features) {
     Set<String> enumeratedFeatures = features.entrySet().stream()
         .filter(DiscoverySequences::isActive).map(Entry::getKey).collect(Collectors.toSet());
-    requireNonNull(deviceMetadata.features, "device metadata features missing");
-    Set<String> enabledFeatures = deviceMetadata.features.entrySet().stream()
-        .filter(DiscoverySequences::isActive).map(Entry::getKey).collect(Collectors.toSet());
-    SetView<String> extraFeatures = Sets.difference(enumeratedFeatures, enabledFeatures);
-    SetView<String> missingFeatures = Sets.difference(enabledFeatures, enumeratedFeatures);
-    SetView<String> difference = Sets.union(extraFeatures, missingFeatures);
-    String details = format("missing { %s }, extra { %s }", CSV_JOINER.join(missingFeatures),
-        CSV_JOINER.join(extraFeatures));
-    checkThat("feature enumeration matches metadata", difference::isEmpty, details);
+    checkFeatureMetadata(enumeratedFeatures);
     Set<String> unofficial = enumeratedFeatures.stream()
         .filter(feature -> !Bucket.contains(feature)).collect(Collectors.toSet());
     String format = format("unrecognized { %s }", CSV_JOINER.join(unofficial));
     checkThat("all enumerated features are official buckets", unofficial::isEmpty, format);
   }
 
-  private boolean isTrue(Boolean condition) {
-    return ofNullable(condition).orElse(false);
+  private void checkFeatureMetadata(Set<String> enumeratedFeatures) {
+    ifNotNullThen(deviceMetadata.features, metadataFeatures -> {
+      Set<String> enabledFeatures = metadataFeatures.entrySet().stream()
+          .filter(DiscoverySequences::isActive).map(Entry::getKey).collect(Collectors.toSet());
+      SetView<String> extraFeatures = Sets.difference(enumeratedFeatures, enabledFeatures);
+      SetView<String> missingFeatures = Sets.difference(enabledFeatures, enumeratedFeatures);
+      SetView<String> difference = Sets.union(extraFeatures, missingFeatures);
+      String details = format("missing { %s }, extra { %s }", CSV_JOINER.join(missingFeatures),
+          CSV_JOINER.join(extraFeatures));
+      checkThat("feature enumeration matches metadata", difference::isEmpty, details);
+    });
   }
 
   @Test(timeout = TWO_MINUTES_MS)
