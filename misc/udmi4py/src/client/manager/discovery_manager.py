@@ -1,4 +1,4 @@
-import udmi4py.client.manager.base as base
+import src.client.manager.base as base
 from udmi.schema.state_discovery import DiscoveryState
 
 
