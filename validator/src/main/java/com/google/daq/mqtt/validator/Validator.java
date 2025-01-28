@@ -59,6 +59,7 @@ import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.daq.mqtt.util.CloudIotManager;
+import com.google.daq.mqtt.util.ErrorMap;
 import com.google.daq.mqtt.util.ExceptionMap;
 import com.google.daq.mqtt.util.ExceptionMap.ErrorTree;
 import com.google.daq.mqtt.util.FileDataSink;
@@ -1065,7 +1066,7 @@ public class Validator {
       }
     }
 
-    summary.missing_devices = new ArrayList(targets);
+    summary.missing_devices = new ArrayList<>(targets);
     summary.missing_devices.removeAll(summary.error_devices);
     summary.missing_devices.removeAll(summary.correct_devices);
 
@@ -1142,14 +1143,14 @@ public class Validator {
     if (targetFiles.size() == 0) {
       throw new RuntimeException("Cowardly refusing to validate against zero targets");
     }
-    ExceptionMap schemaExceptions =
-        new ExceptionMap(format(SCHEMA_VALIDATION_FORMAT, schemaFiles.size()));
+    ErrorMap schemaExceptions =
+        new ErrorMap(format(SCHEMA_VALIDATION_FORMAT, schemaFiles.size()));
     for (File schemaFile : schemaFiles) {
       try {
         JsonSchema schema = getSchema(schemaFile);
         String fileName = schemaFile.getName();
-        ExceptionMap validateExceptions =
-            new ExceptionMap(format(TARGET_VALIDATION_FORMAT, targetFiles.size(), fileName));
+        ErrorMap validateExceptions =
+            new ErrorMap(format(TARGET_VALIDATION_FORMAT, targetFiles.size(), fileName));
         for (File targetFile : targetFiles) {
           try {
             System.out.println(

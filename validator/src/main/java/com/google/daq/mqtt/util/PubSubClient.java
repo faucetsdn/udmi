@@ -353,7 +353,7 @@ public class PubSubClient implements MessagePublisher, MessageHandler {
   private String publishReflector(String deviceId, String topic, String data) {
     try {
       Map<String, String> attributesMap = Map.of(
-          "projectId", projectId,
+          Common.PROJECT_ID_PROPERTY_KEY, projectId,
           "subFolder", SubFolder.UDMI.toString()
       );
       Envelope envelopedData = makeReflectorMessage(deviceId, topic, data);
