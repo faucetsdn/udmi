@@ -6,5 +6,21 @@
   "cloud": {
     "auth_type": "ES256",
     "connection_type": "DIRECT"
+  },
+  "localnet": {
+    "families": {
+      "ipv4": {
+        "addr": "100.100.100.98",
+        "network": {
+          "bcast": "100.100.100.255"
+        }
+      },
+      "bacnet": {
+        "addr": 8234,
+        "network": {
+          "family": "ipv4"
+        }
+      }
+    }
   }
 }

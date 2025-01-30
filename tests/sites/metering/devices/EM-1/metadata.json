@@ -5,5 +5,13 @@
   },
   "gateway": {
     "gateway_id": "GAT-1"
+  },
+  "localnet": {
+    "families": {
+      "modbus": {
+        "addr": 1,
+        "parent_id": "DDC-1"
+      }
+    }
   }
 }
