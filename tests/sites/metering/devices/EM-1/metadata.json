@@ -4,16 +4,6 @@
   "system": {
   },
   "gateway": {
-    "gateway_id": "GAT-1",
-    "target": {
-      "family": "vendor"
-    }
-  },
-  "localnet": {
-    "families": {
-      "vendor": {
-        "addr": "xxx"
-      }
-    }
+    "gateway_id": "GAT-1"
   }
 }

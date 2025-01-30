@@ -5,7 +5,6 @@ import static com.google.daq.mqtt.util.ContextWrapper.getCurrentContext;
 import static com.google.daq.mqtt.util.ContextWrapper.runInContext;
 import static com.google.daq.mqtt.util.ContextWrapper.wrapExceptionWithContext;
 import static com.google.daq.mqtt.util.providers.FamilyProvider.NAMED_FAMILIES;
-import static com.google.udmi.util.GeneralUtils.catchToElse;
 import static com.google.udmi.util.GeneralUtils.catchToNull;
 import static com.google.udmi.util.GeneralUtils.deepCopy;
 import static com.google.udmi.util.GeneralUtils.ifNotNullGet;
@@ -169,9 +168,14 @@ public class ConfigManager {
 
     final GatewayConfig configVar = gatewayConfig;
     ifNotNullThen(metadata.gateway.target, target -> {
-      ifNotNullThrow(target.addr, "metadata.gateway.target.addr should not be defined");
       configVar.target = deepCopy(target);
-      configVar.target.addr = ifNotNullGet(target.family, this::getLocalnetAddr);
+      String family = target.family;
+      String localAddr = ifNotNullGet(family, this::getLocalnetAddr);
+      String gatewayAddr = target.addr;
+      checkState(localAddr == null || gatewayAddr == null,
+          format("both gateway.target.addr and localnet.families.%s.addr should not be defined",
+              family));
+      configVar.target.addr = ofNullable(localAddr).orElse(gatewayAddr);
     });
 
     return gatewayConfig;
@@ -179,8 +183,7 @@ public class ConfigManager {
 
   private String getLocalnetAddr(String rawFamily) {
     String family = ofNullable(rawFamily).orElse(DEFAULT_FAMILY);
-    String address = catchToNull(() -> metadata.localnet.families.get(family).addr);
-    return requireNonNull(address, format("metadata.localnet.families[%s].addr undefined", family));
+    return catchToNull(() -> metadata.localnet.families.get(family).addr);
   }
 
   private PointsetConfig getDevicePointsetConfig() {
