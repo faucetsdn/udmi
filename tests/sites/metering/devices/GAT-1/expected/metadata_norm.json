@@ -1,0 +1,13 @@
+{
+  "timestamp": "2020-05-01T13:39:07Z",
+  "version": "1.5.2",
+  "hash": "acc72202",
+  "cloud": {
+    "connection_type": "GATEWAY",
+    "auth_type": "ES256"
+  },
+  "system": {
+    "min_loglevel": 300
+  },
+  "gateway": { }
+}

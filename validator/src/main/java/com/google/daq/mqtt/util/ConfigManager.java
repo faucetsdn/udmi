@@ -5,6 +5,7 @@ import static com.google.daq.mqtt.util.ContextWrapper.getCurrentContext;
 import static com.google.daq.mqtt.util.ContextWrapper.runInContext;
 import static com.google.daq.mqtt.util.ContextWrapper.wrapExceptionWithContext;
 import static com.google.daq.mqtt.util.providers.FamilyProvider.NAMED_FAMILIES;
+import static com.google.udmi.util.GeneralUtils.catchToElse;
 import static com.google.udmi.util.GeneralUtils.catchToNull;
 import static com.google.udmi.util.GeneralUtils.deepCopy;
 import static com.google.udmi.util.GeneralUtils.ifNotNullGet;
@@ -262,12 +263,19 @@ public class ConfigManager {
   }
 
   /**
+   * Indicate if this is a directly connected device.
+   */
+  public boolean isDirect() {
+    return catchToNull(() -> metadata.cloud.auth_type) != null && !isGateway();
+  }
+
+  /**
    * Indicate if this is a gateway device.
    */
   public boolean isGateway() {
-    return metadata != null
-        && metadata.gateway != null
-        && metadata.gateway.gateway_id == null;
+    return catchToNull(() -> metadata.gateway) != null
+        && metadata.gateway.gateway_id == null
+        && catchToNull(() -> metadata.cloud.auth_type) != null;
   }
 
   public boolean isProxied() {
@@ -321,5 +329,4 @@ public class ConfigManager {
   public Map<String, Exception> getSchemaViolationsMap() {
     return schemaViolationsMap;
   }
-
 }

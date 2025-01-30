@@ -409,7 +409,7 @@ class LocalDevice {
   }
 
   private Set<String> keyFiles() {
-    if (metadata == null || !isDirectConnect()) {
+    if (!isGateway() && !isDirectConnect()) {
       return ImmutableSet.of();
     }
     String authType = getAuthType();
@@ -473,7 +473,7 @@ class LocalDevice {
   }
 
   boolean isDirectConnect() {
-    return isGateway() || !isProxied();
+    return config != null && config.isDirect();
   }
 
   CloudDeviceSettings getSettings() {
@@ -534,7 +534,7 @@ class LocalDevice {
   }
 
   public byte[] getKeyBytes() {
-    if (!isDirectConnect()) {
+    if (!isDirectConnect() && !isGateway()) {
       return null;
     }
     String keyFile = PRIVATE_PKCS8_MAP.get(getAuthType());
