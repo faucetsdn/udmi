@@ -2,9 +2,10 @@
 from .entry import Entry
 from .ancillary_properties import AncillaryProperties
 from .discovery_family import FamilyDiscovery
+from .discovery_family import FamilyDiscovery
 
 
-class ObjectE2BF36D9:
+class Object9F2E28DD:
   """Generated schema class"""
 
   def __init__(self):
@@ -15,8 +16,8 @@ class ObjectE2BF36D9:
   def from_dict(source):
     if not source:
       return None
-    result = ObjectE2BF36D9()
-    result.point = source.get('point')
+    result = Object9F2E28DD()
+    result.point = FamilyDiscovery.from_dict(source.get('point'))
     result.families = FamilyDiscovery.map_from(source.get('families'))
     return result
 
@@ -26,7 +27,7 @@ class ObjectE2BF36D9:
       return None
     result = {}
     for key in source:
-      result[key] = ObjectE2BF36D9.from_dict(source[key])
+      result[key] = Object9F2E28DD.from_dict(source[key])
     return result
 
   @staticmethod
@@ -39,7 +40,7 @@ class ObjectE2BF36D9:
   def to_dict(self):
     result = {}
     if self.point:
-      result['point'] = self.point # 5
+      result['point'] = self.point.to_dict() # 4
     if self.families:
       result['families'] = FamilyDiscovery.expand_dict(self.families) # 2
     return result
@@ -74,7 +75,7 @@ class RefDiscovery:
     result.description = source.get('description')
     result.status = Entry.from_dict(source.get('status'))
     result.ancillary = AncillaryProperties.from_dict(source.get('ancillary'))
-    result.structure = ObjectE2BF36D9.from_dict(source.get('structure'))
+    result.structure = Object9F2E28DD.from_dict(source.get('structure'))
     return result
 
   @staticmethod
