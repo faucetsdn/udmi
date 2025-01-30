@@ -53,7 +53,7 @@
       }
     }
   },
-  "families": {
+  "structure": {
     "bacnet": {
       "timestamp": "2018-08-24T21:39:29.364Z",
       "addr": "1076",
