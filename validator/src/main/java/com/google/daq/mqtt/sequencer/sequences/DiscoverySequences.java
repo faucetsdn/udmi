@@ -181,11 +181,11 @@ public class DiscoverySequences extends SequenceBase {
   private void checkFeatureDiscovery(Map<String, FeatureDiscovery> features) {
     Set<String> enumeratedFeatures = features.entrySet().stream()
         .filter(DiscoverySequences::isActive).map(Entry::getKey).collect(Collectors.toSet());
+    checkFeatureMetadata(enumeratedFeatures);
     Set<String> unofficial = enumeratedFeatures.stream()
         .filter(feature -> !Bucket.contains(feature)).collect(Collectors.toSet());
     String format = format("unrecognized { %s }", CSV_JOINER.join(unofficial));
     checkThat("all enumerated features are official buckets", unofficial::isEmpty, format);
-    checkFeatureMetadata(enumeratedFeatures);
   }
 
   private void checkFeatureMetadata(Set<String> enumeratedFeatures) {
