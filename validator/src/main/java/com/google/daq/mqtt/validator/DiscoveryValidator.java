@@ -41,15 +41,15 @@ public class DiscoveryValidator {
    * Validate a discovery event.
    */
   public void validateMessage(DiscoveryEvents discoveryEvents) {
-    String scanFamily = requireNonNull(discoveryEvents.scan_family,
+    String scanFamily = requireNonNull(discoveryEvents.family,
         "discovery scan_family not defined");
     FamilyProvider familyProvider = FamilyProvider.NAMED_FAMILIES.get(scanFamily);
     checkNotNull(familyProvider, "Unknown provider for discovery family " + scanFamily);
     if (discoveryEvents.refs == null) {
-      familyProvider.validateRef(constructRef(scanFamily, discoveryEvents.scan_addr, null));
+      familyProvider.validateRef(constructRef(scanFamily, discoveryEvents.addr, null));
     } else {
       discoveryEvents.refs.forEach((key, value) ->
-          familyProvider.validateRef(constructRef(scanFamily, discoveryEvents.scan_addr, key)));
+          familyProvider.validateRef(constructRef(scanFamily, discoveryEvents.addr, key)));
     }
   }
 
