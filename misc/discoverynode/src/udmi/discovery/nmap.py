@@ -69,7 +69,7 @@ class NmapBannerScan(discovery.DiscoveryController):
     for host in nmap.results_reader(OUTPUT_FILE):
       event = udmi.schema.discovery_event.DiscoveryEvent(
           generation=self.generation,
-          family=self.scan_family,
+          family=self.family,
           addr=host.ip,
           families={
               "port": {p.port_number: {"banner": p.banner} for p in host.ports}

@@ -126,7 +126,7 @@ class PassiveNetworkDiscovery(discovery.DiscoveryController):
             udmi.schema.discovery_event.DiscoveryEvent(
                 generation=self.config.generation,
                 addr=device_record.addr,
-                family=self.scan_family,
+                family=self.family,
                 families=dict(
                     ether=udmi.schema.discovery_event.DiscoveryFamily(
                         device_record.mac

@@ -86,7 +86,7 @@ class GlobalBacnetDiscovery(discovery.DiscoveryController):
     ###################################################################
     event = udmi.schema.discovery_event.DiscoveryEvent(
         generation=self.config.generation,
-        family=self.scan_family,
+        family=self.family,
         addr=str(device_id),
     )
 

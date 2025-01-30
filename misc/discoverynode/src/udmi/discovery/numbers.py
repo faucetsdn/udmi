@@ -37,7 +37,7 @@ class NumberDiscovery(discovery.DiscoveryController):
         return
       if i:
         result = DiscoveryEvent(
-            generation=self.generation, family=self.scan_family, addr=str(i)
+            generation=self.generation, family=self.family, addr=str(i)
         )
         self.publish(result)
       time.sleep(1)

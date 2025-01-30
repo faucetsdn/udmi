@@ -351,7 +351,7 @@ def new_site_model():
 
     if discovery_node_families:
       warning("setting scan target to 0th index of discovery_node_families: %s", discovery_node_families[0])
-      gateway_metadata["testing"] = {"targets": {"scan_family": {"target_value": discovery_node_families[0]}}}
+      gateway_metadata["testing"] = {"targets": {"family": {"target_value": discovery_node_families[0]}}}
 
     for family in discovery_node_families:
       gateway_metadata["discovery"]["families"][family] = {}
