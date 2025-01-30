@@ -48,7 +48,7 @@ class CowardlyQuit(Exception):
 class GlobalBacnetDiscovery(discovery.DiscoveryController):
   """Bacnet discovery."""
 
-  scan_family = "bacnet"
+  family = "bacnet"
 
   def __init__(
       self,
@@ -86,8 +86,8 @@ class GlobalBacnetDiscovery(discovery.DiscoveryController):
     ###################################################################
     event = udmi.schema.discovery_event.DiscoveryEvent(
         generation=self.config.generation,
-        scan_family=self.scan_family,
-        scan_addr=str(device_id),
+        family=self.scan_family,
+        addr=str(device_id),
     )
 
     try:
