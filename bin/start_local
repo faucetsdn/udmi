@@ -51,6 +51,12 @@ fi
 [[ -n ${project_target:-} ]] || project_target=$(jq -r .project_id $site_config)
 registry_id=$(jq -r .registry_id $site_config)${UDMI_REGISTRY_SUFFIX:-}
 
+echo TAP
+pwd
+ls -l
+find . -name udmis
+echo TAP
+
 echo Starting etcd... | tee -a $UDMIS_LOG
 bin/start_etcd
 
