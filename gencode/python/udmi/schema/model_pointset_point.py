@@ -1,4 +1,5 @@
 """Generated class for model_pointset_point.json"""
+from .discovery_ref import RefDiscovery
 
 
 class PointPointsetModel:
@@ -15,6 +16,7 @@ class PointPointsetModel:
     self.cov_increment = None
     self.ref = None
     self.tags = None
+    self.structure = None
 
   @staticmethod
   def from_dict(source):
@@ -31,6 +33,7 @@ class PointPointsetModel:
     result.cov_increment = source.get('cov_increment')
     result.ref = source.get('ref')
     result.tags = source.get('tags')
+    result.structure = RefDiscovery.map_from(source.get('structure'))
     return result
 
   @staticmethod
@@ -71,4 +74,6 @@ class PointPointsetModel:
       result['ref'] = self.ref # 5
     if self.tags:
       result['tags'] = self.tags # 1
+    if self.structure:
+      result['structure'] = RefDiscovery.expand_dict(self.structure) # 2
     return result

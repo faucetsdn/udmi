@@ -30,7 +30,8 @@ import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
     "range_max",
     "cov_increment",
     "ref",
-    "tags"
+    "tags",
+    "structure"
 })
 public class PointPointsetModel {
 
@@ -40,7 +41,7 @@ public class PointPointsetModel {
      */
     @JsonProperty("units")
     @JsonPropertyDescription("Expected unit configuration for the point")
-    public String units;
+    public java.lang.String units;
     /**
      * Indicates if this point is writable (else read-only)
      * 
@@ -96,7 +97,7 @@ public class PointPointsetModel {
      */
     @JsonProperty("ref")
     @JsonPropertyDescription("Mapping for the point to an internal resource (e.g. BACnet object reference)")
-    public String ref;
+    public java.lang.String ref;
     /**
      * Tags assosciated with the point
      * 
@@ -105,6 +106,13 @@ public class PointPointsetModel {
     @JsonDeserialize(as = java.util.LinkedHashSet.class)
     @JsonPropertyDescription("Tags assosciated with the point")
     public Set<Object> tags;
+    /**
+     * Collection of family point information
+     * 
+     */
+    @JsonProperty("structure")
+    @JsonPropertyDescription("Collection of family point information")
+    public Map<String, RefDiscovery> structure;
 
     @Override
     public int hashCode() {
@@ -117,6 +125,7 @@ public class PointPointsetModel {
         result = ((result* 31)+((this.units == null)? 0 :this.units.hashCode()));
         result = ((result* 31)+((this.baseline_tolerance == null)? 0 :this.baseline_tolerance.hashCode()));
         result = ((result* 31)+((this.cov_increment == null)? 0 :this.cov_increment.hashCode()));
+        result = ((result* 31)+((this.structure == null)? 0 :this.structure.hashCode()));
         result = ((result* 31)+((this.writable == null)? 0 :this.writable.hashCode()));
         result = ((result* 31)+((this.tags == null)? 0 :this.tags.hashCode()));
         return result;
@@ -131,7 +140,7 @@ public class PointPointsetModel {
             return false;
         }
         PointPointsetModel rhs = ((PointPointsetModel) other);
-        return (((((((((((this.ref == rhs.ref)||((this.ref!= null)&&this.ref.equals(rhs.ref)))&&((this.baseline_value == rhs.baseline_value)||((this.baseline_value!= null)&&this.baseline_value.equals(rhs.baseline_value))))&&((this.baseline_state == rhs.baseline_state)||((this.baseline_state!= null)&&this.baseline_state.equals(rhs.baseline_state))))&&((this.range_min == rhs.range_min)||((this.range_min!= null)&&this.range_min.equals(rhs.range_min))))&&((this.range_max == rhs.range_max)||((this.range_max!= null)&&this.range_max.equals(rhs.range_max))))&&((this.units == rhs.units)||((this.units!= null)&&this.units.equals(rhs.units))))&&((this.baseline_tolerance == rhs.baseline_tolerance)||((this.baseline_tolerance!= null)&&this.baseline_tolerance.equals(rhs.baseline_tolerance))))&&((this.cov_increment == rhs.cov_increment)||((this.cov_increment!= null)&&this.cov_increment.equals(rhs.cov_increment))))&&((this.writable == rhs.writable)||((this.writable!= null)&&this.writable.equals(rhs.writable))))&&((this.tags == rhs.tags)||((this.tags!= null)&&this.tags.equals(rhs.tags))));
+        return ((((((((((((this.ref == rhs.ref)||((this.ref!= null)&&this.ref.equals(rhs.ref)))&&((this.baseline_value == rhs.baseline_value)||((this.baseline_value!= null)&&this.baseline_value.equals(rhs.baseline_value))))&&((this.baseline_state == rhs.baseline_state)||((this.baseline_state!= null)&&this.baseline_state.equals(rhs.baseline_state))))&&((this.range_min == rhs.range_min)||((this.range_min!= null)&&this.range_min.equals(rhs.range_min))))&&((this.range_max == rhs.range_max)||((this.range_max!= null)&&this.range_max.equals(rhs.range_max))))&&((this.units == rhs.units)||((this.units!= null)&&this.units.equals(rhs.units))))&&((this.baseline_tolerance == rhs.baseline_tolerance)||((this.baseline_tolerance!= null)&&this.baseline_tolerance.equals(rhs.baseline_tolerance))))&&((this.cov_increment == rhs.cov_increment)||((this.cov_increment!= null)&&this.cov_increment.equals(rhs.cov_increment))))&&((this.structure == rhs.structure)||((this.structure!= null)&&this.structure.equals(rhs.structure))))&&((this.writable == rhs.writable)||((this.writable!= null)&&this.writable.equals(rhs.writable))))&&((this.tags == rhs.tags)||((this.tags!= null)&&this.tags.equals(rhs.tags))));
     }
 
 
@@ -146,8 +155,8 @@ public class PointPointsetModel {
         OVERRIDDEN("overridden"),
         INVALID("invalid"),
         FAILURE("failure");
-        private final String value;
-        private final static Map<String, PointPointsetModel.Baseline_state> CONSTANTS = new HashMap<String, PointPointsetModel.Baseline_state>();
+        private final java.lang.String value;
+        private final static Map<java.lang.String, PointPointsetModel.Baseline_state> CONSTANTS = new HashMap<java.lang.String, PointPointsetModel.Baseline_state>();
 
         static {
             for (PointPointsetModel.Baseline_state c: values()) {
@@ -155,22 +164,22 @@ public class PointPointsetModel {
             }
         }
 
-        Baseline_state(String value) {
+        Baseline_state(java.lang.String value) {
             this.value = value;
         }
 
         @Override
-        public String toString() {
+        public java.lang.String toString() {
             return this.value;
         }
 
         @JsonValue
-        public String value() {
+        public java.lang.String value() {
             return this.value;
         }
 
         @JsonCreator
-        public static PointPointsetModel.Baseline_state fromValue(String value) {
+        public static PointPointsetModel.Baseline_state fromValue(java.lang.String value) {
             PointPointsetModel.Baseline_state constant = CONSTANTS.get(value);
             if (constant == null) {
                 throw new IllegalArgumentException(value);

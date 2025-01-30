@@ -61,6 +61,16 @@
         "pattern": "^[a-z0-9]+$"
       },
       "examples": [["lighting"], ["energy", "hvac"]]
+    },
+    "structure": {
+      "description": "Collection of family point information",
+      "additionalProperties": false,
+      "existingJavaType": "java.util.Map<String, RefDiscovery>",
+      "patternProperties": {
+        "^[-_.:/a-zA-Z0-9]+$": {
+          "$ref": "file:discovery_ref.json#"
+        }
+      }
     }
   }
 }

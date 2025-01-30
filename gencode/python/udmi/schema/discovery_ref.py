@@ -4,6 +4,47 @@ from .ancillary_properties import AncillaryProperties
 from .discovery_family import FamilyDiscovery
 
 
+class ObjectE2BF36D9:
+  """Generated schema class"""
+
+  def __init__(self):
+    self.point = None
+    self.families = None
+
+  @staticmethod
+  def from_dict(source):
+    if not source:
+      return None
+    result = ObjectE2BF36D9()
+    result.point = source.get('point')
+    result.families = FamilyDiscovery.map_from(source.get('families'))
+    return result
+
+  @staticmethod
+  def map_from(source):
+    if not source:
+      return None
+    result = {}
+    for key in source:
+      result[key] = ObjectE2BF36D9.from_dict(source[key])
+    return result
+
+  @staticmethod
+  def expand_dict(input):
+    result = {}
+    for property in input:
+      result[property] = input[property].to_dict() if input[property] else {}
+    return result
+
+  def to_dict(self):
+    result = {}
+    if self.point:
+      result['point'] = self.point # 5
+    if self.families:
+      result['families'] = FamilyDiscovery.expand_dict(self.families) # 2
+    return result
+
+
 class RefDiscovery:
   """Generated schema class"""
 
@@ -17,7 +58,7 @@ class RefDiscovery:
     self.description = None
     self.status = None
     self.ancillary = None
-    self.families = None
+    self.structure = None
 
   @staticmethod
   def from_dict(source):
@@ -33,7 +74,7 @@ class RefDiscovery:
     result.description = source.get('description')
     result.status = Entry.from_dict(source.get('status'))
     result.ancillary = AncillaryProperties.from_dict(source.get('ancillary'))
-    result.families = FamilyDiscovery.map_from(source.get('families'))
+    result.structure = ObjectE2BF36D9.from_dict(source.get('structure'))
     return result
 
   @staticmethod
@@ -72,6 +113,6 @@ class RefDiscovery:
       result['status'] = self.status.to_dict() # 4
     if self.ancillary:
       result['ancillary'] = self.ancillary.to_dict() # 4
-    if self.families:
-      result['families'] = FamilyDiscovery.expand_dict(self.families) # 2
+    if self.structure:
+      result['structure'] = self.structure.to_dict() # 4
     return result
