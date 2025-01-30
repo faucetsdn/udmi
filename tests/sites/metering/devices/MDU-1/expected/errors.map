@@ -1,0 +1,6 @@
+Exceptions for MDU-1
+  expected files mismatch
+    Extra files: [metadata.json~]
+  While loading device metadata for MDU-1
+    While lREDACTED/sites/metering/devices/MDU-1/metadata.json
+      Unexpected character ('"' (code 34)): was expecting comma to separate Object entries at [Source: (File); line: 31, column: 6]

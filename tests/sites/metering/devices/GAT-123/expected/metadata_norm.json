@@ -1,30 +1,9 @@
 {
   "timestamp": "2020-05-01T13:39:07Z",
   "version": "1.5.2",
-  "hash": "a63589c4",
+  "hash": "7e3911bb",
   "cloud": {
+    "connection_type": "GATEWAY",
     "auth_type": "ES256"
-  },
-  "system": {
-    "location": {
-      "site": "ZZ-TRI-FECTA",
-      "section": "2-3N8C"
-    },
-    "physical_tag": {
-      "asset": {
-        "guid": "drw://TBB",
-        "site": "ZZ-TRI-FECTA",
-        "name": "GAT-123"
-      }
-    },
-    "min_loglevel": 300
-  },
-  "gateway": { },
-  "pointset": {
-    "points": {
-      "globulating_globar": {
-        "units": "Bars"
-      }
-    }
   }
 }
