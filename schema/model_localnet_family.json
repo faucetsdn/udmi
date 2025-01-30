@@ -11,6 +11,14 @@
       "description": "The address of a device on the fieldbus/local network",
       "examples": ["0x414889"]
     },
+    "network": {
+      "type": "object",
+      "existingJavaType": "java.util.HashMap<String, String>"
+    },
+    "parent_id": {
+      "type": "string",
+      "description": "The device id of the network parent"
+    },
     "family": {
       "type": "string"
     }
