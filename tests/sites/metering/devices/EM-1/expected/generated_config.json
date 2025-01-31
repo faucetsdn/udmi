@@ -5,5 +5,11 @@
     "min_loglevel": 300,
     "metrics_rate_sec": 10,
     "operation": { }
+  },
+  "gateway": { },
+  "localnet": {
+    "families": {
+      "modbus": { }
+    }
   }
 }

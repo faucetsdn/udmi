@@ -5,5 +5,12 @@
     "min_loglevel": 300,
     "metrics_rate_sec": 10,
     "operation": { }
+  },
+  "localnet": {
+    "families": {
+      "bacnet": { },
+      "ipv4": { },
+      "modbus": { }
+    }
   }
 }

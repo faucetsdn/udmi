@@ -1,6 +1,4 @@
 Exceptions for GAT-456
-  While loading credentials for local device GAT-456
-    Found 0 credentials
   expected files mismatch
     Missing files: [ec_private.pem, ec_private.pkcs8, ec_public.pem]
   1 schema violations found

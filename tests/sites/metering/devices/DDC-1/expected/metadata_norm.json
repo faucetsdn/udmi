@@ -1,9 +1,32 @@
 {
   "timestamp": "2020-05-01T13:39:07Z",
   "version": "1.5.2",
-  "hash": "7e3911bb",
-  "cloud": {
-    "connection_type": "GATEWAY",
-    "auth_type": "ES256"
+  "hash": "886b35b8",
+  "system": {
+    "min_loglevel": 300
+  },
+  "localnet": {
+    "families": {
+      "bacnet": {
+        "addr": "12345",
+        "parent_id": "SRV-1"
+      },
+      "ipv4": {
+        "addr": "100.100.100.123",
+        "network": {
+          "bcast": "100.100.100.255"
+        }
+      },
+      "modbus": {
+        "addr": "0",
+        "network": {
+          "baud": "9600",
+          "bits": "8",
+          "enconding": "rtu",
+          "stop": "2"
+        },
+        "parent_id": "DDC-1"
+      }
+    }
   }
 }
