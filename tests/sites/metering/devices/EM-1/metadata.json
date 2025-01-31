@@ -9,7 +9,7 @@
   "localnet": {
     "families": {
       "modbus": {
-        "addr": 1,
+        "addr": "1",
         "parent_id": "DDC-1"
       }
     }
@@ -22,11 +22,9 @@
         "description": "Under the stairs",
         "structure": {
           "modbus": {
-            "addr": "100",
-            "ref": "1"
+            "ref": "100"
           },
           "bacnet": {
-            "addr": "12345",
             "ref": "AV:12",
             "name": "Power Sensor 1",
             "description": "My name for a power sensor",
@@ -34,6 +32,14 @@
           }
         }
       }
+    }
+  },
+  "structure": {
+    "bacnet": {
+      "addr": "12345"
+    },
+    "modbus": {
+      "addr": "1"
     }
   }
 }
