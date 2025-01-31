@@ -110,24 +110,26 @@ public class MappingAgent {
     Set<String> families = catchToNull(
         () -> siteModel.getMetadata(deviceId).discovery.families.keySet());
     checkNotNull(families, "No discovery families defined");
-    families.forEach(this::initiateDiscover);
-  }
 
-  private void initiateDiscover(String family) {
     String generation = isoConvert(new Date());
-    System.err.printf("Initiating %s discovery on %s/%s at %s%n", family,
-        siteModel.getRegistryId(), deviceId, generation);
-
+    Date generateDate = JsonUtil.getDate(generation);
     CloudModel cloudModel = new CloudModel();
     cloudModel.metadata = ImmutableMap.of(UDMI_PROVISION_GENERATION, generation);
     cloudIotManager.updateDevice(deviceId, cloudModel, Operation.MODIFY);
 
-    FamilyDiscoveryConfig familyDiscoveryConfig = new FamilyDiscoveryConfig();
-    familyDiscoveryConfig.generation = JsonUtil.getDate(generation);
-    familyDiscoveryConfig.depth = Depth.DETAILS;
+    System.err.printf("Initiating %s discovery on %s/%s at %s%n", families,
+        siteModel.getRegistryId(), deviceId, generation);
+
     DiscoveryConfig discoveryConfig = new DiscoveryConfig();
+
     discoveryConfig.families = new HashMap<>();
-    discoveryConfig.families.put(family, familyDiscoveryConfig);
+    families.forEach(family -> discoveryConfig.families.computeIfAbsent(family, key -> {
+      FamilyDiscoveryConfig familyDiscoveryConfig = new FamilyDiscoveryConfig();
+      familyDiscoveryConfig.generation = generateDate;
+      familyDiscoveryConfig.depth = Depth.DETAILS;
+      discoveryConfig.families.put(family, familyDiscoveryConfig);
+    }));
+
     cloudIotManager.modifyConfig(deviceId, SubFolder.DISCOVERY, stringify(discoveryConfig));
   }
 
