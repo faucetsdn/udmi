@@ -1,5 +1,4 @@
-import src.client.manager.base as base
-from udmi.schema.state_discovery import DiscoveryState
+import src.udmi.client.manager.base as base
 
 
 class DiscoveryManager(base.Manager):

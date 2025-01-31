@@ -22,6 +22,8 @@ pytest = "^8.3.4"
 
 [tool.poetry]
 packages = [
-    { include = "udmi", from = "../../gencode/python" },
+    { include = "udmi", from = "src" },
 ]
 
+[tool.poetry.dependencies]
+udmi = {path = "../../gencode/python/udmi", develop = true }
