@@ -10,6 +10,10 @@
       "description": "Expected unit configuration for the point",
       "type": "string"
     },
+    "description": {
+      "description": "Detailed description of this point",
+      "type": "string"
+    },
     "writable": {
       "description": "Indicates if this point is writable (else read-only)",
       "type": "boolean"

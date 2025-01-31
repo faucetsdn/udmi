@@ -11,9 +11,15 @@
       "description": "The address of a device on the fieldbus/local network",
       "examples": ["0x414889"]
     },
-    "network": {
+    "adjunct": {
       "type": "object",
-      "existingJavaType": "java.util.HashMap<String, String>"
+      "existingJavaType": "java.util.Map<String, String>",
+      "additionalProperties": false,
+      "patternProperties": {
+        "^[a-z_]+$": {
+          "type": "string"
+        }
+      }
     },
     "parent_id": {
       "type": "string",

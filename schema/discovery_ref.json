@@ -26,6 +26,14 @@
       "description": "Current or default unit for this point",
       "type": "string"
     },
+    "ref": {
+      "description": "Family reference for structures",
+      "type": "string"
+    },
+    "addr": {
+      "description": "Family device addr for structures",
+      "type": "string"
+    },
     "type": {
       "description": "Current or default type for this point",
       "type": "string"

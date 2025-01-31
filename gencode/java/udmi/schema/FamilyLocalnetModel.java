@@ -1,7 +1,7 @@
 
 package udmi.schema;
 
-import java.util.HashMap;
+import java.util.Map;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyDescription;
@@ -17,7 +17,7 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
     "addr",
-    "network",
+    "adjunct",
     "parent_id",
     "family"
 })
@@ -30,8 +30,8 @@ public class FamilyLocalnetModel {
     @JsonProperty("addr")
     @JsonPropertyDescription("The address of a device on the fieldbus/local network")
     public java.lang.String addr;
-    @JsonProperty("network")
-    public HashMap<String, String> network;
+    @JsonProperty("adjunct")
+    public Map<String, String> adjunct;
     /**
      * The device id of the network parent
      * 
@@ -46,9 +46,9 @@ public class FamilyLocalnetModel {
     public int hashCode() {
         int result = 1;
         result = ((result* 31)+((this.addr == null)? 0 :this.addr.hashCode()));
+        result = ((result* 31)+((this.adjunct == null)? 0 :this.adjunct.hashCode()));
         result = ((result* 31)+((this.family == null)? 0 :this.family.hashCode()));
         result = ((result* 31)+((this.parent_id == null)? 0 :this.parent_id.hashCode()));
-        result = ((result* 31)+((this.network == null)? 0 :this.network.hashCode()));
         return result;
     }
 
@@ -61,7 +61,7 @@ public class FamilyLocalnetModel {
             return false;
         }
         FamilyLocalnetModel rhs = ((FamilyLocalnetModel) other);
-        return (((((this.addr == rhs.addr)||((this.addr!= null)&&this.addr.equals(rhs.addr)))&&((this.family == rhs.family)||((this.family!= null)&&this.family.equals(rhs.family))))&&((this.parent_id == rhs.parent_id)||((this.parent_id!= null)&&this.parent_id.equals(rhs.parent_id))))&&((this.network == rhs.network)||((this.network!= null)&&this.network.equals(rhs.network))));
+        return (((((this.addr == rhs.addr)||((this.addr!= null)&&this.addr.equals(rhs.addr)))&&((this.adjunct == rhs.adjunct)||((this.adjunct!= null)&&this.adjunct.equals(rhs.adjunct))))&&((this.family == rhs.family)||((this.family!= null)&&this.family.equals(rhs.family))))&&((this.parent_id == rhs.parent_id)||((this.parent_id!= null)&&this.parent_id.equals(rhs.parent_id))));
     }
 
 }

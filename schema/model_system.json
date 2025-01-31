@@ -165,10 +165,12 @@
     "adjunct": {
       "type": "object",
       "additionalProperties": false,
+      "existingJavaType": "java.util.Map<String, String>",
       "properties": {
-        "suffix": {
-          "type": "string",
-          "pattern": "^[a-zA-Z0-9-]+$"
+        "patternProperties": {
+          "^[a-z_]+$": {
+            "type": "string"
+          }
         }
       }
     },

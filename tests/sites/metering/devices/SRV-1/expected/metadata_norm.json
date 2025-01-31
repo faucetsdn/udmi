@@ -1,7 +1,7 @@
 {
   "timestamp": "2020-05-01T13:39:07Z",
   "version": "1.5.2",
-  "hash": "d3550b85",
+  "hash": "508203a5",
   "cloud": {
     "connection_type": "DIRECT",
     "auth_type": "ES256"
@@ -13,13 +13,13 @@
     "families": {
       "bacnet": {
         "addr": "8234",
-        "network": {
+        "adjunct": {
           "family": "ipv4"
         }
       },
       "ipv4": {
         "addr": "100.100.100.98",
-        "network": {
+        "adjunct": {
           "bcast": "100.100.100.255"
         }
       }

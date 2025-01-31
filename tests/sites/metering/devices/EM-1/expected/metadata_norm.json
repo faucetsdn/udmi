@@ -1,7 +1,7 @@
 {
   "timestamp": "2020-05-01T13:39:07Z",
   "version": "1.5.2",
-  "hash": "266bdd09",
+  "hash": "6c6128fd",
   "system": {
     "min_loglevel": 300
   },
@@ -13,6 +13,28 @@
       "modbus": {
         "addr": "1",
         "parent_id": "DDC-1"
+      }
+    }
+  },
+  "pointset": {
+    "points": {
+      "energy_sensor": {
+        "units": "kwH",
+        "description": "Under the stairs",
+        "ref": "2983",
+        "structure": {
+          "bacnet": {
+            "name": "Power Sensor 1",
+            "units": "KiloWatts",
+            "ref": "AV:12",
+            "addr": "12345",
+            "description": "My name for a power sensor"
+          },
+          "modbus": {
+            "ref": "1",
+            "addr": "100"
+          }
+        }
       }
     }
   }

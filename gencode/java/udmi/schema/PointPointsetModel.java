@@ -22,6 +22,7 @@ import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
     "units",
+    "description",
     "writable",
     "baseline_value",
     "baseline_tolerance",
@@ -42,6 +43,13 @@ public class PointPointsetModel {
     @JsonProperty("units")
     @JsonPropertyDescription("Expected unit configuration for the point")
     public java.lang.String units;
+    /**
+     * Detailed description of this point
+     * 
+     */
+    @JsonProperty("description")
+    @JsonPropertyDescription("Detailed description of this point")
+    public java.lang.String description;
     /**
      * Indicates if this point is writable (else read-only)
      * 
@@ -117,17 +125,18 @@ public class PointPointsetModel {
     @Override
     public int hashCode() {
         int result = 1;
-        result = ((result* 31)+((this.ref == null)? 0 :this.ref.hashCode()));
-        result = ((result* 31)+((this.baseline_value == null)? 0 :this.baseline_value.hashCode()));
         result = ((result* 31)+((this.baseline_state == null)? 0 :this.baseline_state.hashCode()));
         result = ((result* 31)+((this.range_min == null)? 0 :this.range_min.hashCode()));
-        result = ((result* 31)+((this.range_max == null)? 0 :this.range_max.hashCode()));
+        result = ((result* 31)+((this.description == null)? 0 :this.description.hashCode()));
         result = ((result* 31)+((this.units == null)? 0 :this.units.hashCode()));
         result = ((result* 31)+((this.baseline_tolerance == null)? 0 :this.baseline_tolerance.hashCode()));
-        result = ((result* 31)+((this.cov_increment == null)? 0 :this.cov_increment.hashCode()));
         result = ((result* 31)+((this.structure == null)? 0 :this.structure.hashCode()));
         result = ((result* 31)+((this.writable == null)? 0 :this.writable.hashCode()));
         result = ((result* 31)+((this.tags == null)? 0 :this.tags.hashCode()));
+        result = ((result* 31)+((this.ref == null)? 0 :this.ref.hashCode()));
+        result = ((result* 31)+((this.baseline_value == null)? 0 :this.baseline_value.hashCode()));
+        result = ((result* 31)+((this.range_max == null)? 0 :this.range_max.hashCode()));
+        result = ((result* 31)+((this.cov_increment == null)? 0 :this.cov_increment.hashCode()));
         return result;
     }
 
@@ -140,7 +149,7 @@ public class PointPointsetModel {
             return false;
         }
         PointPointsetModel rhs = ((PointPointsetModel) other);
-        return ((((((((((((this.ref == rhs.ref)||((this.ref!= null)&&this.ref.equals(rhs.ref)))&&((this.baseline_value == rhs.baseline_value)||((this.baseline_value!= null)&&this.baseline_value.equals(rhs.baseline_value))))&&((this.baseline_state == rhs.baseline_state)||((this.baseline_state!= null)&&this.baseline_state.equals(rhs.baseline_state))))&&((this.range_min == rhs.range_min)||((this.range_min!= null)&&this.range_min.equals(rhs.range_min))))&&((this.range_max == rhs.range_max)||((this.range_max!= null)&&this.range_max.equals(rhs.range_max))))&&((this.units == rhs.units)||((this.units!= null)&&this.units.equals(rhs.units))))&&((this.baseline_tolerance == rhs.baseline_tolerance)||((this.baseline_tolerance!= null)&&this.baseline_tolerance.equals(rhs.baseline_tolerance))))&&((this.cov_increment == rhs.cov_increment)||((this.cov_increment!= null)&&this.cov_increment.equals(rhs.cov_increment))))&&((this.structure == rhs.structure)||((this.structure!= null)&&this.structure.equals(rhs.structure))))&&((this.writable == rhs.writable)||((this.writable!= null)&&this.writable.equals(rhs.writable))))&&((this.tags == rhs.tags)||((this.tags!= null)&&this.tags.equals(rhs.tags))));
+        return (((((((((((((this.baseline_state == rhs.baseline_state)||((this.baseline_state!= null)&&this.baseline_state.equals(rhs.baseline_state)))&&((this.range_min == rhs.range_min)||((this.range_min!= null)&&this.range_min.equals(rhs.range_min))))&&((this.description == rhs.description)||((this.description!= null)&&this.description.equals(rhs.description))))&&((this.units == rhs.units)||((this.units!= null)&&this.units.equals(rhs.units))))&&((this.baseline_tolerance == rhs.baseline_tolerance)||((this.baseline_tolerance!= null)&&this.baseline_tolerance.equals(rhs.baseline_tolerance))))&&((this.structure == rhs.structure)||((this.structure!= null)&&this.structure.equals(rhs.structure))))&&((this.writable == rhs.writable)||((this.writable!= null)&&this.writable.equals(rhs.writable))))&&((this.tags == rhs.tags)||((this.tags!= null)&&this.tags.equals(rhs.tags))))&&((this.ref == rhs.ref)||((this.ref!= null)&&this.ref.equals(rhs.ref))))&&((this.baseline_value == rhs.baseline_value)||((this.baseline_value!= null)&&this.baseline_value.equals(rhs.baseline_value))))&&((this.range_max == rhs.range_max)||((this.range_max!= null)&&this.range_max.equals(rhs.range_max))))&&((this.cov_increment == rhs.cov_increment)||((this.cov_increment!= null)&&this.cov_increment.equals(rhs.cov_increment))));
     }
 
 

@@ -11,13 +11,13 @@
     "families": {
       "ipv4": {
         "addr": "100.100.100.98",
-        "network": {
+        "adjunct": {
           "bcast": "100.100.100.255"
         }
       },
       "bacnet": {
         "addr": 8234,
-        "network": {
+        "adjunct": {
           "family": "ipv4"
         }
       }

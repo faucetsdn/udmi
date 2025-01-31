@@ -1,7 +1,7 @@
 {
   "timestamp": "2020-05-01T13:39:07Z",
   "version": "1.5.2",
-  "hash": "886b35b8",
+  "hash": "6aba676a",
   "system": {
     "min_loglevel": 300
   },
@@ -13,13 +13,14 @@
       },
       "ipv4": {
         "addr": "100.100.100.123",
-        "network": {
-          "bcast": "100.100.100.255"
+        "adjunct": {
+          "bcast": "100.100.100.255",
+          "cidr": "100.100.100.0/24"
         }
       },
       "modbus": {
         "addr": "0",
-        "network": {
+        "adjunct": {
           "baud": "9600",
           "bits": "8",
           "enconding": "rtu",

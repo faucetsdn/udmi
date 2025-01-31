@@ -11,5 +11,13 @@
     "families": {
       "modbus": { }
     }
+  },
+  "pointset": {
+    "points": {
+      "energy_sensor": {
+        "ref": "2983",
+        "units": "kwH"
+      }
+    }
   }
 }

@@ -7,6 +7,7 @@ class PointPointsetModel:
 
   def __init__(self):
     self.units = None
+    self.description = None
     self.writable = None
     self.baseline_value = None
     self.baseline_tolerance = None
@@ -24,6 +25,7 @@ class PointPointsetModel:
       return None
     result = PointPointsetModel()
     result.units = source.get('units')
+    result.description = source.get('description')
     result.writable = source.get('writable')
     result.baseline_value = source.get('baseline_value')
     result.baseline_tolerance = source.get('baseline_tolerance')
@@ -56,6 +58,8 @@ class PointPointsetModel:
     result = {}
     if self.units:
       result['units'] = self.units # 5
+    if self.description:
+      result['description'] = self.description # 5
     if self.writable:
       result['writable'] = self.writable # 5
     if self.baseline_value:

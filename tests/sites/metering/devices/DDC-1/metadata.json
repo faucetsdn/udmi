@@ -7,14 +7,15 @@
     "families": {
       "ipv4": {
         "addr": "100.100.100.123",
-        "network": {
+        "adjunct": {
+          "cidr": "100.100.100.0/24",
           "bcast": "100.100.100.255"
         }
       },
       "modbus": {
         "addr": 0,
         "parent_id": "DDC-1",
-        "network": {
+        "adjunct": {
           "baud": "9600",
           "bits": "8",
           "stop": "2",

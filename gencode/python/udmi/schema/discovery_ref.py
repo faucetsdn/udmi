@@ -54,6 +54,8 @@ class RefDiscovery:
     self.name = None
     self.possible_values = None
     self.units = None
+    self.ref = None
+    self.addr = None
     self.type = None
     self.writable = None
     self.description = None
@@ -70,6 +72,8 @@ class RefDiscovery:
     result.name = source.get('name')
     result.possible_values = source.get('possible_values')
     result.units = source.get('units')
+    result.ref = source.get('ref')
+    result.addr = source.get('addr')
     result.type = source.get('type')
     result.writable = source.get('writable')
     result.description = source.get('description')
@@ -104,6 +108,10 @@ class RefDiscovery:
       result['possible_values'] = self.possible_values # 1
     if self.units:
       result['units'] = self.units # 5
+    if self.ref:
+      result['ref'] = self.ref # 5
+    if self.addr:
+      result['addr'] = self.addr # 5
     if self.type:
       result['type'] = self.type # 5
     if self.writable:

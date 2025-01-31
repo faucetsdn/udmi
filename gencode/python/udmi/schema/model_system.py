@@ -239,18 +239,18 @@ class ObjectDCD5CB93:
     return result
 
 
-class Object734A44BA:
+class ObjectA5112C4F:
   """Generated schema class"""
 
   def __init__(self):
-    self.suffix = None
+    self.patternProperties = None
 
   @staticmethod
   def from_dict(source):
     if not source:
       return None
-    result = Object734A44BA()
-    result.suffix = source.get('suffix')
+    result = ObjectA5112C4F()
+    result.patternProperties = source.get('patternProperties')
     return result
 
   @staticmethod
@@ -259,7 +259,7 @@ class Object734A44BA:
       return None
     result = {}
     for key in source:
-      result[key] = Object734A44BA.from_dict(source[key])
+      result[key] = ObjectA5112C4F.from_dict(source[key])
     return result
 
   @staticmethod
@@ -271,8 +271,8 @@ class Object734A44BA:
 
   def to_dict(self):
     result = {}
-    if self.suffix:
-      result['suffix'] = self.suffix # 5
+    if self.patternProperties:
+      result['patternProperties'] = self.patternProperties # 5
     return result
 
 
@@ -309,7 +309,7 @@ class SystemModel:
     result.hardware = SystemHardware.from_dict(source.get('hardware'))
     result.software = source.get('software')
     result.physical_tag = Object30AFA53A.from_dict(source.get('physical_tag'))
-    result.adjunct = Object734A44BA.from_dict(source.get('adjunct'))
+    result.adjunct = ObjectA5112C4F.from_dict(source.get('adjunct'))
     result.min_loglevel = source.get('min_loglevel')
     result.metrics_rate_sec = source.get('metrics_rate_sec')
     return result
