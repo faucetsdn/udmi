@@ -37,9 +37,6 @@
   "structure": {
     "bacnet": {
       "addr": "12345"
-    },
-    "modbus": {
-      "addr": "1"
     }
   }
 }
