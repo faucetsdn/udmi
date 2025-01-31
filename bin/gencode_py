@@ -56,7 +56,7 @@ echo "Generated pyschema in '$SCHEMA_OUTPUT_DIR'"
 datamodel-codegen --input "$SCHEMA_OUTPUT_DIR" --input-file-type jsonschema \
 --output "$PYTHON_OUTPUT_DIR" --use-default --force-optional \
 --use-schema-description --reuse-model --use-exact-imports \
---output-model-type pydantic_v2.BaseModel
+--output-model-type pydantic_v2.BaseModel --disable-timestamp
 
 echo "Generated python code in '$PYTHON_OUTPUT_DIR'"
 
