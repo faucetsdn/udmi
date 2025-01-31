@@ -12,7 +12,7 @@ else
     extra_packages="${NO_CACHE_DIR:+--no-cache} linux-headers g++ gcc"
 fi
 
-sudo $update_cmd $extra_packages moreutils expect python3 python3-venv python3-pip
+sudo $update_cmd $extra_packages moreutils expect python3 python3-pip python3-venv
 
 python3 --version
 
