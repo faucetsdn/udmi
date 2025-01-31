@@ -23,7 +23,7 @@
         }
       },
       "bacnet": {
-        "addr": 12345,
+        "addr": "12345",
         "parent_id": "SRV-1"
       }
     }

@@ -21,6 +21,10 @@
         }
       }
     },
+    "shadow_id": {
+      "description": "Specifies that this is a shadow of the indicated device",
+      "type": "string"
+    },
     "parent_id": {
       "type": "string",
       "description": "The device id of the network parent"

@@ -5,12 +5,27 @@
   },
   "gateway": {
     "gateway_id": "GAT-1"
+    "target": {
+      "family": "vendor"
+    }
   },
   "localnet": {
     "families": {
       "modbus": {
         "addr": "1",
         "parent_id": "DDC-1"
+      },
+      "ipv4": {
+        "shadow_id": "DDC-1",
+        "addr": "100.100.100.123",
+        "adjunct": {
+          "cidr": "100.100.100.0/24",
+          "bcast": "100.100.100.255"
+        }
+      },
+      "bacnet": {
+        "shadow_id": "DDC-1",
+        "addr": "12345"
       }
     }
   },
