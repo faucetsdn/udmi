@@ -4,9 +4,10 @@
   "system": {
   },
   "gateway": {
-    "gateway_id": "GAT-1"
+    "gateway_id": "GAT-1",
     "target": {
-      "family": "vendor"
+      "family": "vendor",
+      "addr": "xxx"
     }
   },
   "localnet": {
@@ -37,7 +38,13 @@
         "description": "Under the stairs",
         "structure": {
           "modbus": {
-            "ref": "100"
+            "ref": "100",
+            "name": "Power Sensor",
+            "adjunct": {
+              "data_type": "int32",
+              "multiplier": "1",
+              "constant": "0"
+            }
           },
           "bacnet": {
             "ref": "AV:12",

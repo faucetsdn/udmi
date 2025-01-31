@@ -236,11 +236,11 @@ public class ConfigManager {
 
     requireNonNull(family, "missing gateway.target.family designation");
     checkState(NAMED_FAMILIES.containsKey(family), "gateway.target.family unknown: " + family);
-    ifNotNullThrow(catchToNull(() -> metadata.gateway.target.addr),
-        "gateway.target.addr field should not be defined");
-    ifNotNullThen(rawFamily, raw ->
-        requireNonNull(catchToNull(() -> metadata.localnet.families.get(family).addr),
-            format("metadata.localnet.families.[%s].addr not defined", family)));
+    String localAddr = catchToNull(() -> metadata.localnet.families.get(family).addr);
+    String gatewayAddr = catchToNull(() -> metadata.gateway.target.addr);
+    checkState(localAddr == null || gatewayAddr == null,
+        format("both gateway.target.addr and localnet.families.%s.addr should not be defined",
+            family));
     try {
       NAMED_FAMILIES.get(family).validateRef(pointRef);
     } catch (Exception e) {

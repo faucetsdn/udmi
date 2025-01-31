@@ -7,6 +7,7 @@ class FamilyLocalnetModel:
   def __init__(self):
     self.addr = None
     self.adjunct = None
+    self.shadow_id = None
     self.parent_id = None
     self.family = None
 
@@ -17,6 +18,7 @@ class FamilyLocalnetModel:
     result = FamilyLocalnetModel()
     result.addr = source.get('addr')
     result.adjunct = source.get('adjunct')
+    result.shadow_id = source.get('shadow_id')
     result.parent_id = source.get('parent_id')
     result.family = source.get('family')
     return result
@@ -43,6 +45,8 @@ class FamilyLocalnetModel:
       result['addr'] = self.addr # 5
     if self.adjunct:
       result['adjunct'] = self.adjunct # 1
+    if self.shadow_id:
+      result['shadow_id'] = self.shadow_id # 5
     if self.parent_id:
       result['parent_id'] = self.parent_id # 5
     if self.family:

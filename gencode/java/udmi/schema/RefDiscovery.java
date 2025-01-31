@@ -22,12 +22,12 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
     "possible_values",
     "units",
     "ref",
-    "addr",
     "type",
     "writable",
     "description",
     "status",
     "ancillary",
+    "adjunct",
     "structure"
 })
 public class RefDiscovery {
@@ -68,13 +68,6 @@ public class RefDiscovery {
     @JsonPropertyDescription("Family reference for structures")
     public java.lang.String ref;
     /**
-     * Family device addr for structures
-     * 
-     */
-    @JsonProperty("addr")
-    @JsonPropertyDescription("Family device addr for structures")
-    public java.lang.String addr;
-    /**
      * Current or default type for this point
      * 
      */
@@ -112,6 +105,8 @@ public class RefDiscovery {
     @JsonProperty("ancillary")
     @JsonPropertyDescription("Arbitrary blob of json associated with this point")
     public Map<String, Object> ancillary;
+    @JsonProperty("adjunct")
+    public Map<String, String> adjunct;
     @JsonProperty("structure")
     public Structure structure;
 
@@ -127,8 +122,8 @@ public class RefDiscovery {
         result = ((result* 31)+((this.ref == null)? 0 :this.ref.hashCode()));
         result = ((result* 31)+((this.possible_values == null)? 0 :this.possible_values.hashCode()));
         result = ((result* 31)+((this.name == null)? 0 :this.name.hashCode()));
-        result = ((result* 31)+((this.addr == null)? 0 :this.addr.hashCode()));
         result = ((result* 31)+((this.ancillary == null)? 0 :this.ancillary.hashCode()));
+        result = ((result* 31)+((this.adjunct == null)? 0 :this.adjunct.hashCode()));
         result = ((result* 31)+((this.status == null)? 0 :this.status.hashCode()));
         return result;
     }
@@ -142,7 +137,7 @@ public class RefDiscovery {
             return false;
         }
         RefDiscovery rhs = ((RefDiscovery) other);
-        return (((((((((((((this.description == rhs.description)||((this.description!= null)&&this.description.equals(rhs.description)))&&((this.units == rhs.units)||((this.units!= null)&&this.units.equals(rhs.units))))&&((this.type == rhs.type)||((this.type!= null)&&this.type.equals(rhs.type))))&&((this.point == rhs.point)||((this.point!= null)&&this.point.equals(rhs.point))))&&((this.structure == rhs.structure)||((this.structure!= null)&&this.structure.equals(rhs.structure))))&&((this.writable == rhs.writable)||((this.writable!= null)&&this.writable.equals(rhs.writable))))&&((this.ref == rhs.ref)||((this.ref!= null)&&this.ref.equals(rhs.ref))))&&((this.possible_values == rhs.possible_values)||((this.possible_values!= null)&&this.possible_values.equals(rhs.possible_values))))&&((this.name == rhs.name)||((this.name!= null)&&this.name.equals(rhs.name))))&&((this.addr == rhs.addr)||((this.addr!= null)&&this.addr.equals(rhs.addr))))&&((this.ancillary == rhs.ancillary)||((this.ancillary!= null)&&this.ancillary.equals(rhs.ancillary))))&&((this.status == rhs.status)||((this.status!= null)&&this.status.equals(rhs.status))));
+        return (((((((((((((this.description == rhs.description)||((this.description!= null)&&this.description.equals(rhs.description)))&&((this.units == rhs.units)||((this.units!= null)&&this.units.equals(rhs.units))))&&((this.type == rhs.type)||((this.type!= null)&&this.type.equals(rhs.type))))&&((this.point == rhs.point)||((this.point!= null)&&this.point.equals(rhs.point))))&&((this.structure == rhs.structure)||((this.structure!= null)&&this.structure.equals(rhs.structure))))&&((this.writable == rhs.writable)||((this.writable!= null)&&this.writable.equals(rhs.writable))))&&((this.ref == rhs.ref)||((this.ref!= null)&&this.ref.equals(rhs.ref))))&&((this.possible_values == rhs.possible_values)||((this.possible_values!= null)&&this.possible_values.equals(rhs.possible_values))))&&((this.name == rhs.name)||((this.name!= null)&&this.name.equals(rhs.name))))&&((this.ancillary == rhs.ancillary)||((this.ancillary!= null)&&this.ancillary.equals(rhs.ancillary))))&&((this.adjunct == rhs.adjunct)||((this.adjunct!= null)&&this.adjunct.equals(rhs.adjunct))))&&((this.status == rhs.status)||((this.status!= null)&&this.status.equals(rhs.status))));
     }
 
 }

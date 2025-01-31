@@ -48,6 +48,16 @@
     "ancillary": {
       "$ref": "file:ancillary_properties.json"
     },
+    "adjunct": {
+      "type": "object",
+      "existingJavaType": "java.util.Map<String, String>",
+      "additionalProperties": false,
+      "patternProperties": {
+        "^[a-z_]+$": {
+          "type": "string"
+        }
+      }
+    },
     "structure": {
       "type": "object",
       "properties": {

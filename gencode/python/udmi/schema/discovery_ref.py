@@ -55,12 +55,12 @@ class RefDiscovery:
     self.possible_values = None
     self.units = None
     self.ref = None
-    self.addr = None
     self.type = None
     self.writable = None
     self.description = None
     self.status = None
     self.ancillary = None
+    self.adjunct = None
     self.structure = None
 
   @staticmethod
@@ -73,12 +73,12 @@ class RefDiscovery:
     result.possible_values = source.get('possible_values')
     result.units = source.get('units')
     result.ref = source.get('ref')
-    result.addr = source.get('addr')
     result.type = source.get('type')
     result.writable = source.get('writable')
     result.description = source.get('description')
     result.status = Entry.from_dict(source.get('status'))
     result.ancillary = AncillaryProperties.from_dict(source.get('ancillary'))
+    result.adjunct = source.get('adjunct')
     result.structure = Object9F2E28DD.from_dict(source.get('structure'))
     return result
 
@@ -110,8 +110,6 @@ class RefDiscovery:
       result['units'] = self.units # 5
     if self.ref:
       result['ref'] = self.ref # 5
-    if self.addr:
-      result['addr'] = self.addr # 5
     if self.type:
       result['type'] = self.type # 5
     if self.writable:
@@ -122,6 +120,8 @@ class RefDiscovery:
       result['status'] = self.status.to_dict() # 4
     if self.ancillary:
       result['ancillary'] = self.ancillary.to_dict() # 4
+    if self.adjunct:
+      result['adjunct'] = self.adjunct # 1
     if self.structure:
       result['structure'] = self.structure.to_dict() # 4
     return result
