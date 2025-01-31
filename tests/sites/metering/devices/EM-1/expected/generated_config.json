@@ -6,9 +6,16 @@
     "metrics_rate_sec": 10,
     "operation": { }
   },
-  "gateway": { },
+  "gateway": {
+    "target": {
+      "addr": "xxx",
+      "family": "vendor"
+    }
+  },
   "localnet": {
     "families": {
+      "bacnet": { },
+      "ipv4": { },
       "modbus": { }
     }
   },
