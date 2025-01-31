@@ -32,6 +32,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
+import org.jetbrains.annotations.NotNull;
 import udmi.schema.CloudModel;
 import udmi.schema.CloudModel.Operation;
 import udmi.schema.DiscoveryConfig;
@@ -57,6 +58,7 @@ public class MappingAgent {
   private final String deviceId;
   private CloudIotManager cloudIotManager;
   private SiteModel siteModel;
+  private Date generationDate;
 
   /**
    * Create an agent given the configuration.
@@ -97,6 +99,7 @@ public class MappingAgent {
         case "reconcile" -> reconcileDiscovery();
         default -> throw new RuntimeException("Unknown mapping command " + mappingCommand);
       }
+      System.err.printf("Completed mapper %s command%n", mappingCommand);
     }
   }
 
@@ -111,8 +114,8 @@ public class MappingAgent {
         () -> siteModel.getMetadata(deviceId).discovery.families.keySet());
     checkNotNull(families, "No discovery families defined");
 
-    String generation = isoConvert(new Date());
-    Date generateDate = JsonUtil.getDate(generation);
+    generationDate = new Date();
+    String generation = isoConvert(generationDate);
     CloudModel cloudModel = new CloudModel();
     cloudModel.metadata = ImmutableMap.of(UDMI_PROVISION_GENERATION, generation);
     cloudIotManager.updateDevice(deviceId, cloudModel, Operation.MODIFY);
@@ -122,15 +125,18 @@ public class MappingAgent {
 
     DiscoveryConfig discoveryConfig = new DiscoveryConfig();
 
-    discoveryConfig.families = new HashMap<>();
-    families.forEach(family -> discoveryConfig.families.computeIfAbsent(family, key -> {
-      FamilyDiscoveryConfig familyDiscoveryConfig = new FamilyDiscoveryConfig();
-      familyDiscoveryConfig.generation = generateDate;
-      familyDiscoveryConfig.depth = Depth.DETAILS;
-      discoveryConfig.families.put(family, familyDiscoveryConfig);
-    }));
+    HashMap<String, FamilyDiscoveryConfig> familiesMap = new HashMap<>();
+    discoveryConfig.families = familiesMap;
+    families.forEach(family -> familiesMap.computeIfAbsent(family, this::getFamilyDiscoveryConfig));
 
     cloudIotManager.modifyConfig(deviceId, SubFolder.DISCOVERY, stringify(discoveryConfig));
+  }
+
+  private FamilyDiscoveryConfig getFamilyDiscoveryConfig(String family) {
+    FamilyDiscoveryConfig familyDiscoveryConfig = new FamilyDiscoveryConfig();
+    familyDiscoveryConfig.generation = generationDate;
+    familyDiscoveryConfig.depth = Depth.DETAILS;
+    return familyDiscoveryConfig;
   }
 
   private void reconcileDiscovery() {
