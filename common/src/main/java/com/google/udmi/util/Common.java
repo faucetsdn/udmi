@@ -2,6 +2,7 @@ package com.google.udmi.util;
 
 import static com.google.udmi.util.GeneralUtils.ifTrueGet;
 import static com.google.udmi.util.GeneralUtils.stackTraceString;
+import static com.google.udmi.util.JsonUtil.safeSleep;
 
 import com.google.common.base.Function;
 import com.google.common.base.Joiner;
@@ -200,5 +201,11 @@ public abstract class Common {
     } catch (Exception e) {
       throw new IllegalStateException("Could not find class for " + schemaName);
     }
+  }
+
+  public static void forcedDelayedShutdown() {
+    // Force exist because PubSub Subscriber in PubSubReflector does not shut down properly.
+    safeSleep(2000);
+    System.exit(0);
   }
 }
