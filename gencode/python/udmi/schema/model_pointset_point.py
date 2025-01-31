@@ -16,6 +16,7 @@ class PointPointsetModel:
     self.range_max = None
     self.cov_increment = None
     self.ref = None
+    self.adjunct = None
     self.tags = None
     self.structure = None
 
@@ -34,6 +35,7 @@ class PointPointsetModel:
     result.range_max = source.get('range_max')
     result.cov_increment = source.get('cov_increment')
     result.ref = source.get('ref')
+    result.adjunct = source.get('adjunct')
     result.tags = source.get('tags')
     result.structure = RefDiscovery.map_from(source.get('structure'))
     return result
@@ -76,6 +78,8 @@ class PointPointsetModel:
       result['cov_increment'] = self.cov_increment # 5
     if self.ref:
       result['ref'] = self.ref # 5
+    if self.adjunct:
+      result['adjunct'] = self.adjunct # 1
     if self.tags:
       result['tags'] = self.tags # 1
     if self.structure:

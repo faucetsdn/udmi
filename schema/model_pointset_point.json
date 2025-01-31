@@ -57,6 +57,16 @@
       "type": "string",
       "examples": ["AI3", "400070"]
     },
+    "adjunct": {
+      "type": "object",
+      "existingJavaType": "java.util.Map<String, String>",
+      "additionalProperties": false,
+      "patternProperties": {
+        "^[a-z_]+$": {
+          "type": "string"
+        }
+      }
+    },
     "tags":{
       "description": "Tags assosciated with the point",
       "type": "array",
