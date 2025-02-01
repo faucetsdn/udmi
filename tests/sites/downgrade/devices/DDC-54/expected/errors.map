@@ -1,3 +1,5 @@
 Exceptions for DDC-54
+  While loading credentials for local device DDC-54
+    Found 0 credentials
   expected files mismatch
     Missing files: [rsa_private.pem, rsa_private.pkcs8, rsa_public.pem]

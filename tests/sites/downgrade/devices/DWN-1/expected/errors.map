@@ -1,3 +1,5 @@
 Exceptions for DWN-1
+  While loading credentials for local device DWN-1
+    Found 0 credentials
   expected files mismatch
     Missing files: [rsa_private.pem, rsa_private.pkcs8, rsa_public.pem]
