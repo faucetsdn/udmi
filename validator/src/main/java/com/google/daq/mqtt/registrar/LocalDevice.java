@@ -374,7 +374,7 @@ class LocalDevice {
       if (isProxied() && hasAuthType()) {
         throw new RuntimeException("Proxied devices should not have cloud.auth_type defined");
       }
-      if (!isDirectConnect()) {
+      if (!hasCloudConnection()) {
         return;
       }
       if (!hasAuthType()) {
@@ -447,6 +447,10 @@ class LocalDevice {
         RSA_CERT_TYPE))
         ? Set.of(CERT_FILE_MAP.get(getAuthType()))
         : Set.of();
+  }
+
+  boolean hasCloudConnection() {
+    return isDirectConnect() || isGateway();
   }
 
   boolean isGateway() {
@@ -534,7 +538,7 @@ class LocalDevice {
   }
 
   public byte[] getKeyBytes() {
-    if (!isDirectConnect() && !isGateway()) {
+    if (!hasCloudConnection()) {
       return null;
     }
     String keyFile = PRIVATE_PKCS8_MAP.get(getAuthType());
