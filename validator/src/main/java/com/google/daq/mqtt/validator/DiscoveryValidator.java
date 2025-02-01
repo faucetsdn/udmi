@@ -42,7 +42,7 @@ public class DiscoveryValidator {
    */
   public void validateMessage(DiscoveryEvents discoveryEvents) {
     String scanFamily = requireNonNull(discoveryEvents.family,
-        "discovery scan_family not defined");
+        "discovery family not defined");
     FamilyProvider familyProvider = FamilyProvider.NAMED_FAMILIES.get(scanFamily);
     checkNotNull(familyProvider, "Unknown provider for discovery family " + scanFamily);
     if (discoveryEvents.refs == null) {
