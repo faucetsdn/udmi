@@ -55,7 +55,7 @@ public class BitboxAdapterTest extends ProcessorTestBase {
 
     assertEquals(1, captured.size(), "expected only one captured event");
     DiscoveryEvents discoveryEvent = (DiscoveryEvents) captured.get(0);
-    assertEquals(ProtocolFamily.BACNET, discoveryEvent.family, "scan_family");
+    assertEquals(ProtocolFamily.BACNET, discoveryEvent.family, "family not bacnet");
     long deltaSec = abs(between(discoveryEvent.generation.toInstant(), Instant.now()).toSeconds());
     long deltaDays = deltaSec / 60 / 60 / 24;
     assertTrue(deltaDays < 14, format("generation too far off, was %s days", deltaDays));

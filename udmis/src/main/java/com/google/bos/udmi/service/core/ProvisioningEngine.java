@@ -131,8 +131,8 @@ public class ProvisioningEngine extends ProcessorBase {
         info("Scan device %s/%s provisioning disabled", registryId, gatewayId);
         return;
       }
-      String family = requireNonNull(discoveryEvent.family, "missing scan_family");
-      String addr = requireNonNull(discoveryEvent.addr, "missing scan_addr");
+      String family = requireNonNull(discoveryEvent.family, "missing family");
+      String addr = requireNonNull(discoveryEvent.addr, "missing addr");
       String expectedId = format(DISCOVERED_DEVICE_FORMAT, family, addr);
       if (deviceIds.contains(expectedId)) {
         debug("Scan device %s/%s target %s already registered", registryId, gatewayId, expectedId);
