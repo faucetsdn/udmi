@@ -41,6 +41,10 @@
       },
       "examples": [["new_construction"], ["existing", "brownfield"]]
     },
+    "warnings_as_errors": {
+      "type": "boolean",
+      "description": "Enable strict checking and treat warnings as errors"
+    },
     "location": {
       "title": "Site Location",
       "type": "object",

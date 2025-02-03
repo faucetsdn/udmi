@@ -23,6 +23,7 @@ import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
     "site",
     "name",
     "tags",
+    "warnings_as_errors",
     "location",
     "links",
     "parameters"
@@ -68,6 +69,13 @@ public class SiteMetadata {
     @JsonPropertyDescription("Tags associated with the site")
     public Set<Object> tags;
     /**
+     * Enable strict checking and treat warnings as errors
+     * 
+     */
+    @JsonProperty("warnings_as_errors")
+    @JsonPropertyDescription("Enable strict checking and treat warnings as errors")
+    public Boolean warnings_as_errors;
+    /**
      * Site Location
      * <p>
      * 
@@ -97,6 +105,7 @@ public class SiteMetadata {
         result = ((result* 31)+((this.parameters == null)? 0 :this.parameters.hashCode()));
         result = ((result* 31)+((this.timestamp == null)? 0 :this.timestamp.hashCode()));
         result = ((result* 31)+((this.tags == null)? 0 :this.tags.hashCode()));
+        result = ((result* 31)+((this.warnings_as_errors == null)? 0 :this.warnings_as_errors.hashCode()));
         return result;
     }
 
@@ -109,7 +118,7 @@ public class SiteMetadata {
             return false;
         }
         SiteMetadata rhs = ((SiteMetadata) other);
-        return (((((((((this.site == rhs.site)||((this.site!= null)&&this.site.equals(rhs.site)))&&((this.name == rhs.name)||((this.name!= null)&&this.name.equals(rhs.name))))&&((this.location == rhs.location)||((this.location!= null)&&this.location.equals(rhs.location))))&&((this.links == rhs.links)||((this.links!= null)&&this.links.equals(rhs.links))))&&((this.version == rhs.version)||((this.version!= null)&&this.version.equals(rhs.version))))&&((this.parameters == rhs.parameters)||((this.parameters!= null)&&this.parameters.equals(rhs.parameters))))&&((this.timestamp == rhs.timestamp)||((this.timestamp!= null)&&this.timestamp.equals(rhs.timestamp))))&&((this.tags == rhs.tags)||((this.tags!= null)&&this.tags.equals(rhs.tags))));
+        return ((((((((((this.site == rhs.site)||((this.site!= null)&&this.site.equals(rhs.site)))&&((this.name == rhs.name)||((this.name!= null)&&this.name.equals(rhs.name))))&&((this.location == rhs.location)||((this.location!= null)&&this.location.equals(rhs.location))))&&((this.links == rhs.links)||((this.links!= null)&&this.links.equals(rhs.links))))&&((this.version == rhs.version)||((this.version!= null)&&this.version.equals(rhs.version))))&&((this.parameters == rhs.parameters)||((this.parameters!= null)&&this.parameters.equals(rhs.parameters))))&&((this.timestamp == rhs.timestamp)||((this.timestamp!= null)&&this.timestamp.equals(rhs.timestamp))))&&((this.tags == rhs.tags)||((this.tags!= null)&&this.tags.equals(rhs.tags))))&&((this.warnings_as_errors == rhs.warnings_as_errors)||((this.warnings_as_errors!= null)&&this.warnings_as_errors.equals(rhs.warnings_as_errors))));
     }
 
 }

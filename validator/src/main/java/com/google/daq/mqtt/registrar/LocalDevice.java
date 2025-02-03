@@ -51,6 +51,7 @@ import com.google.daq.mqtt.util.ExceptionMap.ErrorTree;
 import com.google.daq.mqtt.util.ExceptionMap.ExceptionCategory;
 import com.google.daq.mqtt.util.ValidationError;
 import com.google.daq.mqtt.util.ValidationException;
+import com.google.daq.mqtt.util.ValidationWarning;
 import com.google.daq.mqtt.validator.Validator;
 import com.google.udmi.util.JsonUtil;
 import com.google.udmi.util.MessageDowngrader;
@@ -820,8 +821,14 @@ class LocalDevice {
   }
 
   public void preprocessMetadata() {
-    ifNotNullThrow(catchToNull(() -> metadata.cloud.config.static_file),
+    ifTrueWarn(catchToNull(() -> metadata.cloud.config.static_file) != null,
         "Disallowed cloud.config.static_file defined");
+  }
+
+  private void ifTrueWarn(boolean condition, String message) {
+    if (condition && siteModel.getWarningsAsErrors()) {
+      throw new ValidationWarning(message);
+    }
   }
 
   public enum DeviceStatus {

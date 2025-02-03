@@ -64,6 +64,7 @@ import com.google.daq.mqtt.util.ExceptionMap.ErrorTree;
 import com.google.daq.mqtt.util.ExceptionMap.ExceptionCategory;
 import com.google.daq.mqtt.util.PubSubPusher;
 import com.google.daq.mqtt.util.ValidationError;
+import com.google.daq.mqtt.util.ValidationWarning;
 import com.google.udmi.util.CommandLineOption;
 import com.google.udmi.util.CommandLineProcessor;
 import com.google.udmi.util.Common;
@@ -171,6 +172,7 @@ public class Registrar {
   private List<Future<?>> executing = new ArrayList<>();
   private SiteModel siteModel;
   private boolean queryOnly;
+  private boolean warningsAsErrors;
 
   /**
    * Main entry point for registrar.
@@ -230,7 +232,7 @@ public class Registrar {
       argList.add(NO_SITE);
     }
     try {
-      siteModel = new SiteModel(TOOL_NAME, argList);
+      setSiteModel(new SiteModel(TOOL_NAME, argList));
     } catch (IllegalArgumentException e) {
       commandLineProcessor.showUsage(e.getMessage());
     }
@@ -462,11 +464,16 @@ public class Registrar {
     return ifNotNullGet(cloudIotManager, CloudIotManager::getVersionInformation);
   }
 
+  private void setSiteModel(SiteModel siteModel) {
+    this.siteModel = siteModel;
+    ifTrueThen(warningsAsErrors, siteModel::setWarningsAsErrors);
+  }
+
   @CommandLineOption(short_form = "-s", arg_name = "site_path", description = "Set site path")
   private void setSitePath(String sitePath) {
     checkNotNull(SCHEMA_NAME, "schemaName not set yet");
     siteDir = new File(sitePath);
-    siteModel = ofNullable(siteModel).orElseGet(() -> new SiteModel(sitePath));
+    setSiteModel(ofNullable(siteModel).orElseGet(() -> new SiteModel(sitePath)));
     File summaryBase = new File(siteDir, SiteModel.REGISTRATION_SUMMARY_BASE);
     File parentFile = summaryBase.getParentFile();
     if (!parentFile.isDirectory() && !parentFile.mkdirs()) {
@@ -1333,6 +1340,12 @@ public class Registrar {
     }
   }
 
+  @CommandLineOption(short_form = "-w", description = "Warnings as errors")
+  private void setWarningsAsErrors() {
+    warningsAsErrors = true;
+    ifNotNullThen(siteModel, SiteModel::setWarningsAsErrors);
+  }
+  
   private void loadSchema(String key) {
     File schemaFile = new File(schemaBase, key);
     try (InputStream schemaStream = Files.newInputStream(schemaFile.toPath())) {

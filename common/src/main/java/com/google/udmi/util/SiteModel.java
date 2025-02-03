@@ -111,6 +111,8 @@ public class SiteModel {
   private Map<String, Metadata> allMetadata;
   private Map<String, CloudModel> allDevices;
   public ExceptionMap siteMetadataExceptionMap;
+  private boolean warningsAsErrors;
+  private SiteMetadata siteMetadata;
 
   public SiteModel(String specPath) {
     this(specPath, null, null);
@@ -334,18 +336,25 @@ public class SiteModel {
         .collect(Collectors.toSet());
   }
 
-
   public SiteMetadata loadSiteMetadata() {
+    if (siteMetadata != null) {
+      return siteMetadata;
+    }
+
     ObjectNode siteMetadataObject = null;
-    File siteMetadataFile = new File(new File(sitePath), SITE_METADATA_FILE);
     siteMetadataExceptionMap = new ExceptionMap("Site metadata validation");
+
     try {
+      File siteMetadataFile = new File(new File(sitePath), SITE_METADATA_FILE);
       siteMetadataObject = loadFileRequired(ObjectNode.class, siteMetadataFile);
-      return convertToStrict(SiteMetadata.class, siteMetadataObject);
+      siteMetadata = convertToStrict(SiteMetadata.class, siteMetadataObject);
     } catch (Exception e) {
+      // Can't check getWarningsAsErrors now, since it might be set w/ a  flag after loading.
       siteMetadataExceptionMap.put(ExceptionCategory.site_metadata, e);
       return convertTo(SiteMetadata.class, siteMetadataObject);
     }
+
+    return siteMetadata;
   }
 
   public Metadata loadDeviceMetadata(String deviceId, boolean safeLoading,
@@ -612,6 +621,15 @@ public class SiteModel {
     String newId = getRegistryId();
     checkState(!newId.equals(previousId), "resetting to unchanged registry id");
     System.err.printf("Switched target registry from %s to %s%n", previousId, newId);
+  }
+
+  public void setWarningsAsErrors() {
+    siteMetadata.warnings_as_errors = true;
+  }
+
+  public boolean getWarningsAsErrors() {
+    return true;
+    //return siteMetadata.warnings_as_errors;
   }
 
   public static class MetadataException extends Metadata {
