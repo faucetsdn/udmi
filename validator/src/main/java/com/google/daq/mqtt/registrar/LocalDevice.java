@@ -17,6 +17,7 @@ import static com.google.udmi.util.GeneralUtils.compressJsonString;
 import static com.google.udmi.util.GeneralUtils.ifNotNullGet;
 import static com.google.udmi.util.GeneralUtils.ifNotNullThen;
 import static com.google.udmi.util.GeneralUtils.ifNotTrueThen;
+import static com.google.udmi.util.GeneralUtils.ifNotNullThrow;
 import static com.google.udmi.util.GeneralUtils.ifTrueThen;
 import static com.google.udmi.util.GeneralUtils.isTrue;
 import static com.google.udmi.util.GeneralUtils.writeString;
@@ -59,7 +60,6 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.PrintStream;
 import java.io.PrintWriter;
@@ -791,25 +791,8 @@ class LocalDevice {
     if (!samplesDir.exists()) {
       return;
     }
-    File[] samples = samplesDir.listFiles();
-    if (samples == null) {
-      return;
-    }
-    ExceptionMap samplesMap = new ExceptionMap("Sample Validation");
-    for (File sampleFile : samples) {
-      String sampleName = sampleFile.getName();
-      try (InputStream sampleStream = new FileInputStream(sampleFile)) {
-        if (!schemas.containsKey(sampleName)) {
-          throw new RuntimeException("No valid matching schema found");
-        }
-        schemas.get(sampleName).validate(OBJECT_MAPPER_STRICT.readTree(sampleStream));
-      } catch (Exception e) {
-        Exception scopedException =
-            new RuntimeException("While validating sample file " + sampleName, e);
-        samplesMap.put(ExceptionCategory.sample, scopedException);
-      }
-    }
-    samplesMap.throwIfNotEmpty();
+    // TODO: Remove this once it's been out there for a while, deprecated 2025/02/03.
+    throw new RuntimeException("Deprecated samples/ directory: " + samplesDir.getAbsolutePath());
   }
 
   public Set<Entry<String, ErrorTree>> getTreeChildren() {
@@ -834,6 +817,11 @@ class LocalDevice {
 
   public LocalDevice duplicate(String newId) {
     return new LocalDevice(siteModel, newId, schemas, generation, deviceKind);
+  }
+
+  public void preprocessMetadata() {
+    ifNotNullThrow(catchToNull(() -> metadata.cloud.config.static_file),
+        "Disallowed cloud.config.static_file defined");
   }
 
   public enum DeviceStatus {

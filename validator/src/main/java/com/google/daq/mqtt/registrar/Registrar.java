@@ -1183,6 +1183,18 @@ public class Registrar {
       }
     }
   }
+  
+  private void preprocessMetadata(Map<String, LocalDevice> workingDevices) {
+    workingDevices.values().forEach(localDevice -> {
+      try {
+        localDevice.preprocessMetadata();
+      } catch (ValidationError error) {
+        throw new RuntimeException("While preprocessing metadata", error);
+      } catch (Exception e) {
+        localDevice.captureError(ExceptionCategory.metadata, e);
+      }
+    });
+  }
 
   private void validateExpected(Map<String, LocalDevice> localDevices) {
     for (LocalDevice device : localDevices.values()) {
@@ -1234,6 +1246,7 @@ public class Registrar {
   private void initializeLocalDevices() {
     System.err.printf("Initializing %d local devices...%n", workingDevices.size());
     initializeDevices(workingDevices);
+    preprocessMetadata(workingDevices);
     initializeSettings(workingDevices);
     writeNormalized(workingDevices);
     previewModels(workingDevices);
