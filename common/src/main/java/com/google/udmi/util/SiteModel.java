@@ -126,12 +126,12 @@ public class SiteModel {
   public SiteModel(String specPath, Supplier<String> specSupplier,
       ExecutionConfiguration overrides) {
     File specFile = new File(requireNonNull(specPath, "site model not defined"));
-    boolean specIsFile = specFile.isFile();
-    siteConf = specIsFile ? specFile : cloudConfigPath(specFile);
+    boolean specIsDirectory = specFile.isDirectory();
+    siteConf = specIsDirectory ? cloudConfigPath(specFile) : specFile;
     if (!siteConf.exists()) {
       throw new RuntimeException("File not found: " + siteConf.getAbsolutePath());
     }
-    specMatcher = (specIsFile || specSupplier == null) ? null : extractSpec(specSupplier.get());
+    specMatcher = ifNotNullGet(specSupplier, spec -> extractSpec(spec.get()));
     exeConfig = loadSiteConfig();
     sitePath = ofNullable(exeConfig.site_model).map(f -> maybeRelativeTo(f, exeConfig.src_file))
         .orElse(siteConf.getParent());
@@ -596,6 +596,9 @@ public class SiteModel {
   }
 
   private Matcher extractSpec(String projectSpec) {
+    if (projectSpec == null) {
+      return null;
+    }
     Matcher matcher = SPEC_PATTERN.matcher(projectSpec);
     if (!matcher.matches()) {
       throw new RuntimeException(
