@@ -1183,7 +1183,7 @@ public class Registrar {
       }
     }
   }
-  
+
   private void preprocessMetadata(Map<String, LocalDevice> workingDevices) {
     workingDevices.values().forEach(localDevice -> {
       try {
