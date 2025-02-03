@@ -4,7 +4,7 @@ version = "0.1.0"
 description = "Generated UDMI schema classes"
 
 [tool.poetry.dependencies]
-python = "^3.8"
+python = ">=3.8,<4.0"
 pydantic = "^2.10.6"
 
 [build-system]
