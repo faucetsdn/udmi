@@ -80,6 +80,7 @@ function pubber_bg {
     fi
 }
 
+[[ -n ${UDMI_ROOT:-} ]] || UDMI_ROOT=$PWD
 UDMI_ROOT=$(realpath $UDMI_ROOT)
 
 UDMI_JAR=$UDMI_ROOT/validator/build/libs/validator-1.0-SNAPSHOT-all.jar
@@ -104,3 +105,11 @@ export UDMI_VERSION=$udmi_version
 export UDMI_COMMIT=$udmi_commit
 export UDMI_TIMEVER=$udmi_timever
 export UDMI_REV=$udmi_rev
+
+function stream_to_gsheets {
+    local tool_name=$1
+    local sheet_id=$2
+    timestamp=$(date +%Y%m%d_%H%M%S)
+    java -cp "$UDMI_JAR" "com.google.udmi.util.SheetsOutputStream" "$tool_name" \
+        "$sheet_id" "$tool_name.$timestamp.log"
+}

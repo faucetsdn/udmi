@@ -19,7 +19,8 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
     "docs",
     "folder",
     "image",
-    "repo"
+    "repo",
+    "sheet"
 })
 public class SiteLinks {
 
@@ -58,6 +59,13 @@ public class SiteLinks {
     @JsonProperty("repo")
     @JsonPropertyDescription("Source repository where the UDMI site model is stored")
     public String repo;
+    /**
+     * Link to a spreadsheet to observe real-time output from any tool
+     * 
+     */
+    @JsonProperty("sheet")
+    @JsonPropertyDescription("Link to a spreadsheet to observe real-time output from any tool")
+    public String sheet;
 
     @Override
     public int hashCode() {
@@ -65,8 +73,9 @@ public class SiteLinks {
         result = ((result* 31)+((this.image == null)? 0 :this.image.hashCode()));
         result = ((result* 31)+((this.folder == null)? 0 :this.folder.hashCode()));
         result = ((result* 31)+((this.docs == null)? 0 :this.docs.hashCode()));
-        result = ((result* 31)+((this.dashboard == null)? 0 :this.dashboard.hashCode()));
         result = ((result* 31)+((this.repo == null)? 0 :this.repo.hashCode()));
+        result = ((result* 31)+((this.sheet == null)? 0 :this.sheet.hashCode()));
+        result = ((result* 31)+((this.dashboard == null)? 0 :this.dashboard.hashCode()));
         return result;
     }
 
@@ -79,7 +88,7 @@ public class SiteLinks {
             return false;
         }
         SiteLinks rhs = ((SiteLinks) other);
-        return ((((((this.image == rhs.image)||((this.image!= null)&&this.image.equals(rhs.image)))&&((this.folder == rhs.folder)||((this.folder!= null)&&this.folder.equals(rhs.folder))))&&((this.docs == rhs.docs)||((this.docs!= null)&&this.docs.equals(rhs.docs))))&&((this.dashboard == rhs.dashboard)||((this.dashboard!= null)&&this.dashboard.equals(rhs.dashboard))))&&((this.repo == rhs.repo)||((this.repo!= null)&&this.repo.equals(rhs.repo))));
+        return (((((((this.image == rhs.image)||((this.image!= null)&&this.image.equals(rhs.image)))&&((this.folder == rhs.folder)||((this.folder!= null)&&this.folder.equals(rhs.folder))))&&((this.docs == rhs.docs)||((this.docs!= null)&&this.docs.equals(rhs.docs))))&&((this.repo == rhs.repo)||((this.repo!= null)&&this.repo.equals(rhs.repo))))&&((this.sheet == rhs.sheet)||((this.sheet!= null)&&this.sheet.equals(rhs.sheet))))&&((this.dashboard == rhs.dashboard)||((this.dashboard!= null)&&this.dashboard.equals(rhs.dashboard))));
     }
 
 }
