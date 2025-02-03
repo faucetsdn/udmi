@@ -41,7 +41,7 @@
       },
       "examples": [["new_construction"], ["existing", "brownfield"]]
     },
-    "warnings_as_errors": {
+    "strict_warnings": {
       "type": "boolean",
       "description": "Enable strict checking and treat warnings as errors"
     },

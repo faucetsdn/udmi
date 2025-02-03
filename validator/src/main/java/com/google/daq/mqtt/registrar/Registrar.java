@@ -64,7 +64,6 @@ import com.google.daq.mqtt.util.ExceptionMap.ErrorTree;
 import com.google.daq.mqtt.util.ExceptionMap.ExceptionCategory;
 import com.google.daq.mqtt.util.PubSubPusher;
 import com.google.daq.mqtt.util.ValidationError;
-import com.google.daq.mqtt.util.ValidationWarning;
 import com.google.udmi.util.CommandLineOption;
 import com.google.udmi.util.CommandLineProcessor;
 import com.google.udmi.util.Common;
@@ -172,7 +171,7 @@ public class Registrar {
   private List<Future<?>> executing = new ArrayList<>();
   private SiteModel siteModel;
   private boolean queryOnly;
-  private boolean warningsAsErrors;
+  private boolean strictWarnings;
 
   /**
    * Main entry point for registrar.
@@ -355,8 +354,7 @@ public class Registrar {
   }
 
   private SiteMetadata getSiteMetadata() {
-    SiteMetadata siteMetadata = ofNullable(siteModel.loadSiteMetadata()).orElseGet(
-        SiteMetadata::new);
+    SiteMetadata siteMetadata = siteModel.loadSiteMetadata();
     siteMetadata.name = ofNullable(siteMetadata.name).orElse(siteModel.getSiteName());
     return siteMetadata;
   }
@@ -465,8 +463,9 @@ public class Registrar {
   }
 
   private void setSiteModel(SiteModel siteModel) {
+    siteModel.loadSiteMetadata();
     this.siteModel = siteModel;
-    ifTrueThen(warningsAsErrors, siteModel::setWarningsAsErrors);
+    ifTrueThen(strictWarnings, siteModel::setStrictWarnings);
   }
 
   @CommandLineOption(short_form = "-s", arg_name = "site_path", description = "Set site path")
@@ -1340,10 +1339,10 @@ public class Registrar {
     }
   }
 
-  @CommandLineOption(short_form = "-w", description = "Warnings as errors")
-  private void setWarningsAsErrors() {
-    warningsAsErrors = true;
-    ifNotNullThen(siteModel, SiteModel::setWarningsAsErrors);
+  @CommandLineOption(short_form = "-w", description = "Strict warning checking (pedantic mode)")
+  private void setStrictWarnings() {
+    strictWarnings = true;
+    ifNotNullThen(siteModel, SiteModel::setStrictWarnings);
   }
   
   private void loadSchema(String key) {

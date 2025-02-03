@@ -826,7 +826,7 @@ class LocalDevice {
   }
 
   private void ifTrueWarn(boolean condition, String message) {
-    if (condition && siteModel.getWarningsAsErrors()) {
+    if (condition && siteModel.getStrictWarnings()) {
       throw new ValidationWarning(message);
     }
   }

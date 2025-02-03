@@ -16,6 +16,7 @@ import static com.google.udmi.util.GeneralUtils.getFileBytes;
 import static com.google.udmi.util.GeneralUtils.ifNotNullGet;
 import static com.google.udmi.util.GeneralUtils.ifNotNullThen;
 import static com.google.udmi.util.GeneralUtils.ifNullThen;
+import static com.google.udmi.util.GeneralUtils.isTrue;
 import static com.google.udmi.util.GeneralUtils.removeStringArg;
 import static com.google.udmi.util.GeneralUtils.sha256;
 import static com.google.udmi.util.JsonUtil.asMap;
@@ -351,8 +352,10 @@ public class SiteModel {
     } catch (Exception e) {
       // Can't check getWarningsAsErrors now, since it might be set w/ a  flag after loading.
       siteMetadataExceptionMap.put(ExceptionCategory.site_metadata, e);
-      return convertTo(SiteMetadata.class, siteMetadataObject);
+      siteMetadata = convertTo(SiteMetadata.class, siteMetadataObject);
     }
+
+    ifNullThen(siteMetadata, () -> siteMetadata = new SiteMetadata());
 
     return siteMetadata;
   }
@@ -623,13 +626,12 @@ public class SiteModel {
     System.err.printf("Switched target registry from %s to %s%n", previousId, newId);
   }
 
-  public void setWarningsAsErrors() {
-    siteMetadata.warnings_as_errors = true;
+  public void setStrictWarnings() {
+    siteMetadata.strict_warnings = true;
   }
 
-  public boolean getWarningsAsErrors() {
-    return true;
-    //return siteMetadata.warnings_as_errors;
+  public boolean getStrictWarnings() {
+    return isTrue(siteMetadata.strict_warnings);
   }
 
   public static class MetadataException extends Metadata {
