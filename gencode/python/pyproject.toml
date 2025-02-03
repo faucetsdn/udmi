@@ -1,5 +1,5 @@
 [tool.poetry]
-name = "udmi"
+name = "udmi_schema"
 version = "0.1.0"
 description = "Generated UDMI schema classes"
 
