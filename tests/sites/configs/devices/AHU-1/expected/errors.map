@@ -1,4 +1,5 @@
 Exceptions for AHU-1
+  Disallowed cloud.config.static_file defined
   While loading credentials for local device AHU-1
     Found 0 credentials
   expected files mismatch
