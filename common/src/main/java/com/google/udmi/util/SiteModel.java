@@ -171,7 +171,7 @@ public class SiteModel {
   private static Supplier<String> projectSpecSupplier(List<String> argList) {
     return () -> {
       if (argList.isEmpty()) {
-        throw new IllegalArgumentException("Missing required project spec argument");
+        return NO_SITE;
       }
       String nextArg = argList.get(0);
       if (nextArg.equals(NO_SITE)) {
