@@ -20,6 +20,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.daq.mqtt.util.CloudIotManager;
 import com.google.daq.mqtt.util.ConfigUtil;
+import com.google.udmi.util.Common;
 import com.google.udmi.util.JsonUtil;
 import com.google.udmi.util.SiteModel;
 import java.io.File;
@@ -57,6 +58,7 @@ public class MappingAgent {
   private final String deviceId;
   private CloudIotManager cloudIotManager;
   private SiteModel siteModel;
+  private Date generationDate;
 
   /**
    * Create an agent given the configuration.
@@ -85,6 +87,8 @@ public class MappingAgent {
     } finally {
       agent.shutdown();
     }
+
+    Common.forcedDelayedShutdown();
   }
 
   void process(List<String> argsList) {
@@ -97,6 +101,7 @@ public class MappingAgent {
         case "reconcile" -> reconcileDiscovery();
         default -> throw new RuntimeException("Unknown mapping command " + mappingCommand);
       }
+      System.err.printf("Completed mapper %s command%n", mappingCommand);
     }
   }
 
@@ -110,25 +115,30 @@ public class MappingAgent {
     Set<String> families = catchToNull(
         () -> siteModel.getMetadata(deviceId).discovery.families.keySet());
     checkNotNull(families, "No discovery families defined");
-    families.forEach(this::initiateDiscover);
-  }
 
-  private void initiateDiscover(String family) {
-    String generation = isoConvert(new Date());
-    System.err.printf("Initiating %s discovery on %s/%s at %s%n", family,
-        siteModel.getRegistryId(), deviceId, generation);
-
+    generationDate = new Date();
+    String generation = isoConvert(generationDate);
     CloudModel cloudModel = new CloudModel();
     cloudModel.metadata = ImmutableMap.of(UDMI_PROVISION_GENERATION, generation);
     cloudIotManager.updateDevice(deviceId, cloudModel, Operation.MODIFY);
 
-    FamilyDiscoveryConfig familyDiscoveryConfig = new FamilyDiscoveryConfig();
-    familyDiscoveryConfig.generation = JsonUtil.getDate(generation);
-    familyDiscoveryConfig.depth = Depth.DETAILS;
+    System.err.printf("Initiating %s discovery on %s/%s at %s%n", families,
+        siteModel.getRegistryId(), deviceId, generation);
+
     DiscoveryConfig discoveryConfig = new DiscoveryConfig();
-    discoveryConfig.families = new HashMap<>();
-    discoveryConfig.families.put(family, familyDiscoveryConfig);
+
+    HashMap<String, FamilyDiscoveryConfig> familiesMap = new HashMap<>();
+    discoveryConfig.families = familiesMap;
+    families.forEach(family -> familiesMap.computeIfAbsent(family, this::getFamilyDiscoveryConfig));
+
     cloudIotManager.modifyConfig(deviceId, SubFolder.DISCOVERY, stringify(discoveryConfig));
+  }
+
+  private FamilyDiscoveryConfig getFamilyDiscoveryConfig(String family) {
+    FamilyDiscoveryConfig familyDiscoveryConfig = new FamilyDiscoveryConfig();
+    familyDiscoveryConfig.generation = generationDate;
+    familyDiscoveryConfig.depth = Depth.DETAILS;
+    return familyDiscoveryConfig;
   }
 
   private void reconcileDiscovery() {

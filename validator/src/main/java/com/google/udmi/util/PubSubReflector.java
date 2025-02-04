@@ -48,6 +48,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.TreeMap;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.BiConsumer;
@@ -278,7 +279,11 @@ public class PubSubReflector implements MessagePublisher {
   public void close() {
     active.set(false);
     if (subscriber != null) {
-      subscriber.stopAsync().awaitTerminated();
+      try {
+        subscriber.stopAsync().awaitTerminated(5, TimeUnit.SECONDS);
+      } catch (Exception e) {
+        System.err.println("Error shutting down subscriber: " + friendlyStackTrace(e));
+      }
     }
     if (publisher != null) {
       try {
@@ -298,7 +303,8 @@ public class PubSubReflector implements MessagePublisher {
     try (SubscriptionAdminClient subscriptionAdminClient = SubscriptionAdminClient.create()) {
       System.err.println("Resetting existing subscription " + subscriptionName);
       subscriptionAdminClient.seek(getCurrentTimeSeekRequest(subscriptionName.toString()));
-      Thread.sleep(SUBSCRIPTION_RACE_DELAY_MS);
+      subscriptionAdminClient.shutdown();
+      subscriptionAdminClient.awaitTermination(SUBSCRIPTION_RACE_DELAY_MS, TimeUnit.MILLISECONDS);
     } catch (NotFoundException e) {
       throw new RuntimeException("Missing subscription for " + subscriptionName);
     } catch (Exception e) {

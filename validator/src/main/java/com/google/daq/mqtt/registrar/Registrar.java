@@ -186,9 +186,7 @@ public class Registrar {
       System.exit(Common.EXIT_CODE_ERROR);
     }
 
-    // Force exist because PubSub Subscriber in PubSubReflector does not shut down properly.
-    safeSleep(2000);
-    System.exit(0);
+    Common.forcedDelayedShutdown();
   }
 
   private void maybeProcessAltRegistry() {
