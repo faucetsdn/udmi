@@ -1,23 +1,6 @@
 {
-  "timestamp": "2020-05-01T13:39:07Z",
-  "version": "1.5.2",
-  "hash": "42a46586",
   "cloud": {
     "detail": "site default for unit tests"
-  },
-  "system": {
-    "location": {
-      "site": "ZZ-TRI-FECTA",
-      "section": "2-3N8C"
-    },
-    "physical_tag": {
-      "asset": {
-        "guid": "drw://TBA",
-        "site": "ZZ-TRI-FECTA",
-        "name": "SNS-4"
-      }
-    },
-    "min_loglevel": 300
   },
   "gateway": {
     "gateway_id": "GAT-123",
@@ -25,6 +8,7 @@
       "family": "vendor"
     }
   },
+  "hash": "42a46586",
   "localnet": {
     "families": {
       "vendor": {
@@ -35,13 +19,29 @@
   "pointset": {
     "points": {
       "split_threshold": {
-        "units": "Imperial-gallons-per-minute",
-        "ref": "vendor-ref can be anything"
+        "ref": "vendor-ref can be anything",
+        "units": "Imperial-gallons-per-minute"
       },
       "triangulating_axis": {
-        "units": "Degrees-phase",
-        "ref": "anything-goes!"
+        "ref": "anything-goes!",
+        "units": "Degrees-phase"
       }
     }
-  }
+  },
+  "system": {
+    "location": {
+      "section": "2-3N8C",
+      "site": "ZZ-TRI-FECTA"
+    },
+    "min_loglevel": 300,
+    "physical_tag": {
+      "asset": {
+        "guid": "drw://TBA",
+        "name": "SNS-4",
+        "site": "ZZ-TRI-FECTA"
+      }
+    }
+  },
+  "timestamp": "2020-05-01T13:39:07Z",
+  "version": "1.5.2"
 }

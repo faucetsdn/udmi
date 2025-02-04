@@ -1,25 +1,29 @@
 {
-  "timestamp": "2020-05-01T13:39:07Z",
-  "version": "1.5.2",
-  "system": {
-    "min_loglevel": 300,
-    "metrics_rate_sec": 10,
-    "operation": { }
-  },
   "gateway": {
-    "proxy_ids": [ "SNS-4", "AHU-22", "SNS-8" ]
+    "proxy_ids": [
+      "SNS-4",
+      "AHU-22",
+      "SNS-8"
+    ]
   },
   "localnet": {
     "families": {
-      "vendor": { }
+      "vendor": {}
     }
   },
   "pointset": {
-    "sample_rate_sec": 30,
     "points": {
       "globulating_globar": {
         "units": "Bars"
       }
-    }
-  }
+    },
+    "sample_rate_sec": 30
+  },
+  "system": {
+    "metrics_rate_sec": 10,
+    "min_loglevel": 300,
+    "operation": {}
+  },
+  "timestamp": "2020-05-01T13:39:07Z",
+  "version": "1.5.2"
 }

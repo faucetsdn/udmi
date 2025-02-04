@@ -1,11 +1,4 @@
 {
-  "timestamp": "2020-05-01T13:39:07Z",
-  "version": "1.5.2",
-  "system": {
-    "min_loglevel": 300,
-    "metrics_rate_sec": 10,
-    "operation": { }
-  },
   "gateway": {
     "target": {
       "addr": "whatEVERyouWANT!!!#!#!",
@@ -14,7 +7,7 @@
   },
   "localnet": {
     "families": {
-      "vendor": { }
+      "vendor": {}
     }
   },
   "pointset": {
@@ -28,5 +21,12 @@
         "units": "Degrees-phase"
       }
     }
-  }
+  },
+  "system": {
+    "metrics_rate_sec": 10,
+    "min_loglevel": 300,
+    "operation": {}
+  },
+  "timestamp": "2020-05-01T13:39:07Z",
+  "version": "1.5.2"
 }

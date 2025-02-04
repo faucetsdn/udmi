@@ -1,26 +1,29 @@
 {
-  "timestamp": "2020-05-01T13:39:07Z",
-  "version": "1.5.2",
-  "hash": "d7067208",
   "cloud": {
     "auth_type": "ES256",
     "detail": "site default for unit tests"
   },
+  "gateway": {
+    "proxy_ids": [
+      "SNS-4",
+      "AHU-22"
+    ]
+  },
+  "hash": "d7067208",
   "system": {
     "location": {
-      "site": "ZZ-TRI-FECTA",
-      "section": "2-3N8C"
+      "section": "2-3N8C",
+      "site": "ZZ-TRI-FECTA"
     },
+    "min_loglevel": 300,
     "physical_tag": {
       "asset": {
         "guid": "drw://TBB",
-        "site": "ZZ-TRI-FECTA",
-        "name": "GAT-123"
+        "name": "GAT-123",
+        "site": "ZZ-TRI-FECTA"
       }
-    },
-    "min_loglevel": 300
+    }
   },
-  "gateway": {
-    "proxy_ids": [ "SNS-4", "AHU-22" ]
-  }
+  "timestamp": "2020-05-01T13:39:07Z",
+  "version": "1.5.2"
 }

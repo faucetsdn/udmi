@@ -1,25 +1,10 @@
 {
-  "timestamp": "2020-05-01T13:39:07Z",
-  "version": "1.5.2",
-  "hash": "539a2745",
-  "system": {
-    "location": {
-      "site": "ZZ-TRI-FECTA",
-      "section": "2-3N8C"
-    },
-    "physical_tag": {
-      "asset": {
-        "guid": "drw://TBA",
-        "site": "ZZ-TRI-FECTA",
-        "name": "SNS-4"
-      }
-    },
-    "min_loglevel": 300
-  },
   "gateway": {
     "gateway_id": "GAT-123"
   },
+  "hash": "539a2745",
   "pointset": {
+    "exclude_points_from_config": true,
     "points": {
       "split_threshold": {
         "units": "Imperial-gallons-per-minute"
@@ -28,7 +13,22 @@
         "units": "Degrees-phase"
       }
     },
-    "exclude_points_from_config": true,
     "sample_rate_sec": 30
-  }
+  },
+  "system": {
+    "location": {
+      "section": "2-3N8C",
+      "site": "ZZ-TRI-FECTA"
+    },
+    "min_loglevel": 300,
+    "physical_tag": {
+      "asset": {
+        "guid": "drw://TBA",
+        "name": "SNS-4",
+        "site": "ZZ-TRI-FECTA"
+      }
+    }
+  },
+  "timestamp": "2020-05-01T13:39:07Z",
+  "version": "1.5.2"
 }
