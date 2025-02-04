@@ -1,13 +1,7 @@
 {
-  "timestamp": "2020-05-01T13:39:07Z",
-  "version": 1,
-  "system": {
-    "min_loglevel": 300,
-    "metrics_rate_sec": 10,
-    "operation": { }
-  },
+  "downgraded_from": "1.5.2",
   "gateway": {
-    "proxy_ids": [ ]
+    "proxy_ids": []
   },
   "localnet": {
     "subsystem": {
@@ -21,11 +15,17 @@
       "filter_alarm_pressure_status": {
         "ref": "BV11.present_value"
       },
-      "filter_differential_pressure": { },
+      "filter_differential_pressure": {},
       "filter_differential_pressure_sensor": {
         "ref": "AV12.present_value"
       }
     }
   },
-  "downgraded_from": "1.5.2"
+  "system": {
+    "metrics_rate_sec": 10,
+    "min_loglevel": 300,
+    "operation": {}
+  },
+  "timestamp": "2020-05-01T13:39:07Z",
+  "version": 1
 }

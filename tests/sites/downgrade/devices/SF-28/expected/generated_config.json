@@ -1,15 +1,9 @@
 {
-  "timestamp": "2021-02-25T09:56:39Z",
-  "version": "1.3.13",
-  "system": {
-    "min_loglevel": 300,
-    "metrics_rate_sec": 10,
-    "operation": { }
-  },
-  "gateway": { },
+  "downgraded_from": "1.5.2",
+  "gateway": {},
   "localnet": {
     "families": {
-      "bacnet": { },
+      "bacnet": {},
       "vendor": {
         "id": "monkey"
       }
@@ -67,5 +61,11 @@
       }
     }
   },
-  "downgraded_from": "1.5.2"
+  "system": {
+    "metrics_rate_sec": 10,
+    "min_loglevel": 300,
+    "operation": {}
+  },
+  "timestamp": "2021-02-25T09:56:39Z",
+  "version": "1.3.13"
 }
