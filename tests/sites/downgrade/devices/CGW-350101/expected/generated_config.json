@@ -1,0 +1,33 @@
+{
+  "timestamp":"2024-11-04T10:02:28Z",
+  "version":"1.4.2",
+  "system":{
+    "min_loglevel":300,
+    "metrics_rate_sec":10,
+    "operation":{}
+  },
+  "pointset":{
+    "points":{
+      "valve_command_43":{
+        "ref":"BO:1.present_value",
+        "units":""
+      },
+      "valve_command_44":{
+        "ref":"BO:2.present_value",
+        "units":""
+      },
+      "valve_command_45":{
+        "ref":"BO:3.present_value",
+        "units":""
+      }
+    },
+    "sample_rate_sec":300
+  },
+  "localnet":{
+    "families":{
+      "bacnet":{
+        "addr":"11271"
+      }
+    }
+  }
+}

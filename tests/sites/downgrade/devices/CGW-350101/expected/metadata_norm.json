@@ -1,0 +1,48 @@
+{
+  "timestamp": "2024-11-04T10:02:28Z",
+  "version": "1.5.2",
+  "hash": "ea0eb0bd",
+  "cloud": {
+    "connection_type": "PROXIED"
+  },
+  "system": {
+    "location": {
+      "site": "IN-BLR-ANANTA",
+      "section": "IN-BLR-ANANTA-4"
+    },
+    "physical_tag": {
+      "asset": {
+        "guid": "uuid://960af84a-78bb-44a0-8bb9-de95e1ffa5dc",
+        "site": "IN-BLR-ANANTA",
+        "name": "CGW-350101"
+      }
+    },
+    "min_loglevel": 300
+  },
+  "gateway": {
+    "gateway_id": "DDC-35"
+  },
+  "localnet": {
+    "families": {
+      "bacnet": {
+        "addr": "11271"
+      }
+    }
+  },
+  "pointset": {
+    "points": {
+      "valve_command_43": {
+        "units": "",
+        "ref": "BO:1.present_value"
+      },
+      "valve_command_44": {
+        "units": "",
+        "ref": "BO:2.present_value"
+      },
+      "valve_command_45": {
+        "units": "",
+        "ref": "BO:3.present_value"
+      }
+    }
+  }
+}
