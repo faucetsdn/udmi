@@ -6,12 +6,13 @@ authors = [
     { name = "Your Name", email = "you@example.com" }
 ]
 readme = "README.md"
-requires-python = ">=3.11"
-dependencies = [
-    "paho-mqtt (>=2.1.0,<3.0.0)",
-    "bac0 (>=2024.9.20,<2025.0.0)"
-]
 
+[tool.poetry.dependencies]
+python = ">=3.8,<4.0"
+paho-mqtt = ">=2.1.0,<3.0.0"
+bac0 = ">=2024.9.20,<2025.0.0"
+udmi-schema = {path = "../../codegen/udmi_schema-0.1.0-py3-none-any.whl"}
+scapy = "^2.6.1"
 
 [build-system]
 requires = ["poetry-core>=2.0.0,<3.0.0"]
@@ -24,6 +25,3 @@ pytest = "^8.3.4"
 packages = [
     { include = "udmi", from = "src" },
 ]
-
-[tool.poetry.dependencies]
-udmi = {path = "../../gencode/python/udmi", develop = true }
