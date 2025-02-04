@@ -826,7 +826,7 @@ class LocalDevice {
 
   private void ifTrueWarn(boolean condition, String message) {
     ifTrueThen(condition && siteModel.getStrictWarnings(),
-        ()-> captureError(ExceptionCategory.metadata, new ValidationWarning(message)));
+        () -> captureError(ExceptionCategory.metadata, new ValidationWarning(message)));
   }
 
   public enum DeviceStatus {
