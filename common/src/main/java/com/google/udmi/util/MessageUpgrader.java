@@ -4,7 +4,6 @@ import static com.google.udmi.util.Common.UPGRADED_FROM;
 import static com.google.udmi.util.Common.VERSION_KEY;
 import static com.google.udmi.util.GeneralUtils.OBJECT_MAPPER_RAW;
 import static com.google.udmi.util.GeneralUtils.ifNotNullThen;
-import static com.google.udmi.util.GeneralUtils.ifNotTrueThen;
 import static com.google.udmi.util.GeneralUtils.ifTrueThen;
 import static com.google.udmi.util.MessageDowngrader.convertVersion;
 
@@ -161,9 +160,10 @@ public class MessageUpgrader {
     }
 
     String currentVersion = SchemaVersion.CURRENT.key();
-    ifNotTrueThen(currentVersion.equals(originalVersion),
-        () -> message.put(UPGRADED_FROM, originalVersion));
-    message.put(VERSION_KEY, currentVersion);
+    if (upgraded && message.has(VERSION_KEY) && !currentVersion.equals(originalVersion)) {
+      message.put(UPGRADED_FROM, originalVersion);
+      message.put(VERSION_KEY, currentVersion);
+    }
 
     return message;
   }
