@@ -3,7 +3,7 @@
     "auth_type": "RS256",
     "detail": "site default for unit tests"
   },
-  "hash": "2cd8d4c1",
+  "hash": "bb136d03",
   "localnet": {
     "families": {
       "ether": {
@@ -68,5 +68,5 @@
     }
   },
   "timestamp": "2020-05-01T13:39:07Z",
-  "version": "1.5.2"
+  "version": "1.5.0"
 }

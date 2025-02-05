@@ -9,7 +9,7 @@
       "AHU-22"
     ]
   },
-  "hash": "d7067208",
+  "hash": "0a53924a",
   "system": {
     "location": {
       "section": "2-3N8C",
@@ -25,5 +25,5 @@
     }
   },
   "timestamp": "2020-05-01T13:39:07Z",
-  "version": "1.5.2"
+  "version": "1.5.0"
 }

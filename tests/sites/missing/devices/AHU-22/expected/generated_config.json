@@ -1,4 +1,5 @@
 {
+  "downgraded_from": "1.5.2",
   "gateway": {
     "target": {
       "addr": "0x65",
@@ -7,7 +8,9 @@
   },
   "localnet": {
     "families": {
-      "bacnet": {}
+      "bacnet": {
+        "addr": "0x65"
+      }
     }
   },
   "pointset": {
@@ -32,5 +35,5 @@
     "operation": {}
   },
   "timestamp": "2020-05-01T13:39:07Z",
-  "version": "1.5.2"
+  "version": "1.4.2"
 }
