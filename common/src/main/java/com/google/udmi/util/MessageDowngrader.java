@@ -59,6 +59,16 @@ public class MessageDowngrader {
     this(schemaName, OBJECT_MAPPER_RAW.valueToTree(message), metadata);
   }
 
+  /**
+   * Create message down-grader.
+   *
+   * @param schemaName schema to downgrade
+   * @param message    message object
+   */
+  public MessageDowngrader(String schemaName, Object message) {
+    this(schemaName, OBJECT_MAPPER_RAW.valueToTree(message), null);
+  }
+
   static String convertVersion(String version) {
     if (version == null) {
       return "1";
