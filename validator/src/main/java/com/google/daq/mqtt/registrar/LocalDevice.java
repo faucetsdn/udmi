@@ -28,6 +28,7 @@ import static com.google.udmi.util.SiteModel.CLOUD_MODEL_FILE;
 import static com.google.udmi.util.SiteModel.METADATA_JSON;
 import static com.google.udmi.util.SiteModel.NORMALIZED_JSON;
 import static java.lang.String.format;
+import static java.util.Optional.ofNullable;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.github.fge.jsonschema.core.exceptions.ProcessingException;
@@ -311,8 +312,7 @@ class LocalDevice {
         throw new RuntimeException("Loading " + metadataException.file.getAbsolutePath(),
             metadataException.exception);
       }
-      baseVersion = (deviceMetadata.upgraded_from == null
-          ? deviceMetadata.version : deviceMetadata.upgraded_from);
+      baseVersion = ofNullable(deviceMetadata.upgraded_from).orElse(deviceMetadata.version);
 
       List<String> proxyIds = catchToNull(() -> deviceMetadata.gateway.proxy_ids);
       ifNotNullThen(proxyIds,
@@ -572,7 +572,7 @@ class LocalDevice {
       }
       JsonNode configJson = OBJECT_MAPPER_STRICT.valueToTree(fromValue);
       if (config.shouldBeDowngraded()) {
-        new MessageDowngrader("config", configJson).downgrade(baseVersion);
+        new MessageDowngrader("config", configJson, metadata).downgrade(baseVersion);
       }
       return compressJsonString(configJson, MAX_JSON_LENGTH);
     });

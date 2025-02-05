@@ -5,7 +5,7 @@
   "gateway": {
     "gateway_id": "DDC-35"
   },
-  "hash": "ea0eb0bd",
+  "hash": "4927c3db",
   "localnet": {
     "families": {
       "bacnet": {
@@ -44,5 +44,6 @@
     }
   },
   "timestamp": "2024-11-04T10:02:28Z",
+  "upgraded_from": "1.4.2",
   "version": "1.5.2"
 }

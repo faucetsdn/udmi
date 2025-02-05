@@ -3,7 +3,9 @@
   "gateway": {},
   "localnet": {
     "families": {
-      "bacnet": {},
+      "bacnet": {
+        "addr": "11052"
+      },
       "vendor": {
         "addr": "monkey"
       }

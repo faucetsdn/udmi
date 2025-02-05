@@ -40,7 +40,7 @@ public class MessageDowngraderTest {
     state.system = new SystemState();
     state.system.operation = new StateSystemOperation();
     state.system.operation.operational = TRUE;
-    MessageDowngrader messageDowngrader = new MessageDowngrader(STATE_SCHEMA, state);
+    MessageDowngrader messageDowngrader = new MessageDowngrader(STATE_SCHEMA, state, null);
     Map<String, Object> downgrade = messageDowngrader.downgrade(SchemaVersion.VERSION_1_4_0);
     Object operational = GeneralUtils.getSubMap(downgrade, "system").get("operational");
     assertTrue("downgraded operational not TRUE", (Boolean) operational);
@@ -49,14 +49,14 @@ public class MessageDowngraderTest {
   @Test
   public void downgradeToFutureVersion() {
     JsonNode simpleConfig = getSimpleTestConfig(LOCALNET_CONFIG_FILE);
-    MessageDowngrader downgrader = new MessageDowngrader(CONFIG_SCHEMA, simpleConfig);
+    MessageDowngrader downgrader = new MessageDowngrader(CONFIG_SCHEMA, simpleConfig, null);
     assertThrows(IllegalStateException.class, () -> downgrader.downgrade(FUTURE_VERSION));
   }
 
   @Test
   public void families() {
     JsonNode simpleConfig = getSimpleTestConfig(LOCALNET_CONFIG_FILE);
-    MessageDowngrader downgrader = new MessageDowngrader(CONFIG_SCHEMA, simpleConfig);
+    MessageDowngrader downgrader = new MessageDowngrader(CONFIG_SCHEMA, simpleConfig, null);
     downgrader.downgrade(OLD_VERSION.asText());
     assertEquals("version node", simpleConfig.get("version"), OLD_VERSION);
     assertTrue("families", !simpleConfig.get("localnet").has("families"));
