@@ -5,7 +5,7 @@
       "family": "vendor"
     }
   },
-  "hash": "60f264a5",
+  "hash": "4f94cec4",
   "localnet": {
     "families": {
       "bacnet": {
@@ -88,5 +88,5 @@
   },
   "timestamp": "2021-02-25T09:56:39Z",
   "upgraded_from": "1.3.14",
-  "version": "1.5.2"
+  "version": "1.5.3"
 }

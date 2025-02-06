@@ -92,7 +92,7 @@
       "family": "bacnet"
     }
   },
-  "hash": "b50b4bfd",
+  "hash": "68efa6be",
   "localnet": {
     "families": {
       "bacnet": {
@@ -124,5 +124,5 @@
   },
   "timestamp": "2024-06-11T08:31:32Z",
   "upgraded_from": "1.4.0",
-  "version": "1.5.2"
+  "version": "1.5.3"
 }

@@ -7,7 +7,7 @@
       "family": "vendor"
     }
   },
-  "hash": "95d0f363",
+  "hash": "c97665a4",
   "localnet": {
     "families": {
       "vendor": {
@@ -51,5 +51,5 @@
   },
   "timestamp": "2020-05-01T13:39:07Z",
   "upgraded_from": "1",
-  "version": "1.5.2"
+  "version": "1.5.3"
 }

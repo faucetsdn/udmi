@@ -1,14 +1,9 @@
 {
-  "timestamp": "2020-05-01T13:39:07Z",
-  "version": "1.5.2",
-  "hash": "508203a5",
   "cloud": {
-    "connection_type": "DIRECT",
-    "auth_type": "ES256"
+    "auth_type": "ES256",
+    "connection_type": "DIRECT"
   },
-  "system": {
-    "min_loglevel": 300
-  },
+  "hash": "04d53566",
   "localnet": {
     "families": {
       "bacnet": {
@@ -24,5 +19,10 @@
         }
       }
     }
-  }
+  },
+  "system": {
+    "min_loglevel": 300
+  },
+  "timestamp": "2020-05-01T13:39:07Z",
+  "version": "1.5.3"
 }

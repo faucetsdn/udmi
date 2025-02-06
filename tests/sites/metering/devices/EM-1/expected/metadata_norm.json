@@ -1,10 +1,4 @@
 {
-  "timestamp": "2020-05-01T13:39:07Z",
-  "version": "1.5.2",
-  "hash": "e3aebc54",
-  "system": {
-    "min_loglevel": 300
-  },
   "gateway": {
     "gateway_id": "GAT-1",
     "target": {
@@ -12,6 +6,7 @@
       "family": "vendor"
     }
   },
+  "hash": "e3aebc54",
   "localnet": {
     "families": {
       "bacnet": {
@@ -35,26 +30,26 @@
   "pointset": {
     "points": {
       "energy_sensor": {
-        "units": "kwH",
         "description": "Under the stairs",
         "ref": "2983",
         "structure": {
           "bacnet": {
+            "description": "My name for a power sensor",
             "name": "Power Sensor 1",
-            "units": "KiloWatts",
             "ref": "AV:12",
-            "description": "My name for a power sensor"
+            "units": "KiloWatts"
           },
           "modbus": {
-            "name": "Power Sensor",
-            "ref": "100",
             "adjunct": {
               "constant": "0",
               "data_type": "int32",
               "multiplier": "1"
-            }
+            },
+            "name": "Power Sensor",
+            "ref": "100"
           }
-        }
+        },
+        "units": "kwH"
       }
     }
   },
@@ -62,5 +57,10 @@
     "bacnet": {
       "addr": "12345"
     }
-  }
+  },
+  "system": {
+    "min_loglevel": 300
+  },
+  "timestamp": "2020-05-01T13:39:07Z",
+  "version": "1.5.2"
 }
