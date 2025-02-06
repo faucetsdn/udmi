@@ -2,8 +2,8 @@
   "timestamp": "2024-11-21T12:10:46Z",
   "version": "1.5.1",
   "generation": "2024-11-21T12:09:30Z",
-  "scan_family": "bacnet",
-  "scan_addr": "10117",
+  "family": "bacnet",
+  "addr": "10117",
   "event_no": 9,
   "families": {
     "ipv4": {

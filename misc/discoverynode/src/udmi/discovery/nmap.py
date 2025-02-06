@@ -12,7 +12,7 @@ import udmi.schema.state
 class NmapBannerScan(discovery.DiscoveryController):
   """Passive Network Discovery."""
 
-  scan_family = "ether"
+  family = "ether"
 
   def __init__(self, state, publisher, *, target_ips: list[str]):
     self.cancel_threads = threading.Event()
@@ -69,8 +69,8 @@ class NmapBannerScan(discovery.DiscoveryController):
     for host in nmap.results_reader(OUTPUT_FILE):
       event = udmi.schema.discovery_event.DiscoveryEvent(
           generation=self.generation,
-          scan_family=self.scan_family,
-          scan_addr=host.ip,
+          family=self.family,
+          addr=host.ip,
           families={
               "port": {p.port_number: {"banner": p.banner} for p in host.ports}
           },

@@ -59,7 +59,7 @@ def test_number_discovery_start_and_stop():
   assert numbers.state.phase == state.Phase.stopped
   #until_true(lambda: numbers.state.phase == discovery.states.FINISHED, "phase to be finished", 8)
   # maybe flakey?
-  assert [1, 2, 3, 4, 5] == [x[0].scan_addr for (x, _) in mock_publisher.call_args_list]
+  assert [1, 2, 3, 4, 5] == [x[0].addr for (x, _) in mock_publisher.call_args_list]
 
 
 def test_event_counts():
