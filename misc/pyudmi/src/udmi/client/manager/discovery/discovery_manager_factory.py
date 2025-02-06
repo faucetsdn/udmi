@@ -4,10 +4,10 @@ from udmi.client.manager.discovery.passive_network_scan import (
     PassiveNetworkScan
 )
 
-DISCOVERY_SCAN_MAP = {
+SCAN_FAMILY_TO_DISCOVERY_MAP = {
     'bacnet': GlobalBacnetScan,
-    'nmap': NmapBannerScan,
-    'passive': PassiveNetworkScan
+    'ether': NmapBannerScan,
+    'ipv4': PassiveNetworkScan
 }
 
 
@@ -15,9 +15,10 @@ class ScanNotImplemented(Exception):
     pass
 
 
-def get_manager(key, *args, **kwargs):
-    manager = DISCOVERY_SCAN_MAP.get(key)
+def get_manager_for_family(family_name: str, *args, **kwargs):
+    manager = SCAN_FAMILY_TO_DISCOVERY_MAP.get(family_name)
     if not manager:
         raise ScanNotImplemented(f"Invalid key, choose one from available "
-                                 f"scans: {DISCOVERY_SCAN_MAP.keys()}")
+                                 f"scans: {SCAN_FAMILY_TO_DISCOVERY_MAP.keys()}"
+                                 )
     return manager(*args, **kwargs)

@@ -20,6 +20,8 @@ from udmi_schema.schema.state_discovery_family import (
 
 from udmi.util.status import Status
 
+ACTION_START = 1
+ACTION_STOP = -1
 RUNNER_LOOP_INTERVAL = 0.1
 MAX_THRESHOLD_GENERATION = -10  # [seconds], should be negative
 
@@ -41,11 +43,28 @@ def catch_exceptions_to_status(method: Callable):
     return _impl
 
 
-def _validate_config(config: FamilyDiscoveryConfig):
+def mark_task_complete_on_return(method: Callable):
+    """
+    Decorator which marks discovery as `done` when wrapped function returns.
+    :param method: method to wrap
+    :return:
+    """
+
+    @functools.wraps(method)
+    def _impl(self, *args, **kwargs):
+        method(self, *args, **kwargs)
+        self._set_internal_status(Status.FINISHED)
+        self.state.phase = Phase.stopped
+
+    return _impl
+
+
+def _validate_discovery_config(config: FamilyDiscoveryConfig):
     """
     Validates that the config is valid
     Throws:
       RuntimeError: If the provided config is invalid
+    :param config: FamilyDiscoveryConfig
     :return:
     """
     if config.scan_duration_sec > config.scan_interval_sec:
@@ -53,11 +72,6 @@ def _validate_config(config: FamilyDiscoveryConfig):
 
     if config.scan_duration_sec < 0 or config.scan_interval_sec < 0:
         raise RuntimeError("scan duration or interval cannot be negative")
-
-
-class Action(Enum):
-    START = 1
-    STOP = -1
 
 
 class DiscoveryManager(abc.ABC):
@@ -108,7 +122,10 @@ class DiscoveryManager(abc.ABC):
         self.state = FamilyDiscoveryState()
         self.internal_status = None
         self.publisher = publisher
+
+        # TODO: Check if below assignment is even required and why.
         state.discovery.families[self.scan_family] = self.state
+
         self.config = None
         self.mutex = threading.Lock()
         self.scheduler_thread = None
@@ -227,7 +244,7 @@ class DiscoveryManager(abc.ABC):
         """
         # Initial execution of the scheduler is always to start a discovery
         next_action_time = start_time
-        next_action = Action.START
+        next_action = ACTION_START
 
         self._set_internal_status(Status.SCHEDULED)
         self.state.phase = Phase.pending
@@ -255,11 +272,11 @@ class DiscoveryManager(abc.ABC):
                     # safely mutated
                     current_action = next_action
 
-                    if current_action == Action.START:
+                    if current_action == ACTION_START:
                         self._start()
 
                         if scan_duration_sec > 0:
-                            next_action = Action.STOP
+                            next_action = ACTION_STOP
                             next_action_time = (time.monotonic() +
                                                 scan_duration_sec)
                             logging.info(
@@ -273,12 +290,12 @@ class DiscoveryManager(abc.ABC):
                                 f"indefinitely")
                             return
 
-                    elif current_action == Action.STOP:
+                    elif current_action == ACTION_STOP:
                         self._stop()
 
                         # If the scan is repetitive, schedule the next start
                         if scan_interval_sec > 0:
-                            next_action = Action.START
+                            next_action = ACTION_START
                             sleep_interval = (scan_interval_sec -
                                               scan_duration_sec)
                             next_action_time = time.monotonic() + sleep_interval
@@ -295,8 +312,9 @@ class DiscoveryManager(abc.ABC):
             time.sleep(RUNNER_LOOP_INTERVAL)
 
     @catch_exceptions_to_status
-    def process_udmi_config(self, config_dict):
+    def apply_discovery_config(self, config_dict):
         """
+        TODO: Find a better name for this method
         :param config_dict: Complete UDMI configuration as a dictionary
         :return:
         """
