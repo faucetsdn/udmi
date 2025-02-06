@@ -261,6 +261,7 @@ def generate_class(contents):
     write_class(writer, contents)
 
 def generate_module(in_files):
+  shutil.rmtree(OUT_DIR)
   os.makedirs(OUT_DIR, exist_ok=True)
   full_path = os.path.join(OUT_DIR, '__init__.py')
   with open(full_path, 'w') as fd:
