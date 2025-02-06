@@ -171,6 +171,7 @@ public class Registrar {
   private List<Future<?>> executing = new ArrayList<>();
   private SiteModel siteModel;
   private boolean queryOnly;
+  private boolean strictWarnings;
 
   /**
    * Main entry point for registrar.
@@ -228,7 +229,7 @@ public class Registrar {
       argList.add(NO_SITE);
     }
     try {
-      siteModel = new SiteModel(TOOL_NAME, argList);
+      setSiteModel(new SiteModel(TOOL_NAME, argList));
     } catch (IllegalArgumentException e) {
       commandLineProcessor.showUsage(e.getMessage());
     }
@@ -351,8 +352,7 @@ public class Registrar {
   }
 
   private SiteMetadata getSiteMetadata() {
-    SiteMetadata siteMetadata = ofNullable(siteModel.loadSiteMetadata()).orElseGet(
-        SiteMetadata::new);
+    SiteMetadata siteMetadata = siteModel.loadSiteMetadata();
     siteMetadata.name = ofNullable(siteMetadata.name).orElse(siteModel.getSiteName());
     return siteMetadata;
   }
@@ -460,11 +460,17 @@ public class Registrar {
     return ifNotNullGet(cloudIotManager, CloudIotManager::getVersionInformation);
   }
 
+  private void setSiteModel(SiteModel siteModel) {
+    siteModel.loadSiteMetadata();
+    this.siteModel = siteModel;
+    ifTrueThen(strictWarnings, siteModel::setStrictWarnings);
+  }
+
   @CommandLineOption(short_form = "-s", arg_name = "site_path", description = "Set site path")
   private void setSitePath(String sitePath) {
     checkNotNull(SCHEMA_NAME, "schemaName not set yet");
     siteDir = new File(sitePath);
-    siteModel = ofNullable(siteModel).orElseGet(() -> new SiteModel(sitePath));
+    setSiteModel(ofNullable(siteModel).orElseGet(() -> new SiteModel(sitePath)));
     File summaryBase = new File(siteDir, SiteModel.REGISTRATION_SUMMARY_BASE);
     File parentFile = summaryBase.getParentFile();
     if (!parentFile.isDirectory() && !parentFile.mkdirs()) {
@@ -1182,6 +1188,18 @@ public class Registrar {
     }
   }
 
+  private void preprocessMetadata(Map<String, LocalDevice> workingDevices) {
+    workingDevices.values().forEach(localDevice -> {
+      try {
+        localDevice.preprocessMetadata();
+      } catch (ValidationError error) {
+        throw new RuntimeException("While preprocessing metadata", error);
+      } catch (Exception e) {
+        localDevice.captureError(ExceptionCategory.metadata, e);
+      }
+    });
+  }
+
   private void validateExpected(Map<String, LocalDevice> localDevices) {
     for (LocalDevice device : localDevices.values()) {
       try {
@@ -1232,6 +1250,7 @@ public class Registrar {
   private void initializeLocalDevices() {
     System.err.printf("Initializing %d local devices...%n", workingDevices.size());
     initializeDevices(workingDevices);
+    preprocessMetadata(workingDevices);
     initializeSettings(workingDevices);
     writeNormalized(workingDevices);
     previewModels(workingDevices);
@@ -1318,6 +1337,12 @@ public class Registrar {
     }
   }
 
+  @CommandLineOption(short_form = "-w", description = "Strict warning checking (pedantic mode)")
+  private void setStrictWarnings() {
+    strictWarnings = true;
+    ifNotNullThen(siteModel, SiteModel::setStrictWarnings);
+  }
+  
   private void loadSchema(String key) {
     File schemaFile = new File(schemaBase, key);
     try (InputStream schemaStream = Files.newInputStream(schemaFile.toPath())) {

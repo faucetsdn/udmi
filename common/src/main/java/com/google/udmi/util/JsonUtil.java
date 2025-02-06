@@ -16,7 +16,9 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.google.gson.internal.bind.util.ISO8601Utils;
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.nio.file.Files;
+import java.nio.file.NoSuchFileException;
 import java.time.Instant;
 import java.util.Date;
 import java.util.Map;
@@ -289,6 +291,8 @@ public abstract class JsonUtil {
     }
     try {
       return STRICT_MAPPER.readValue(file, clazz);
+    } catch (NoSuchFileException notFoundException) {
+      throw new RuntimeException("File not found: " + file.getAbsolutePath());
     } catch (Exception e) {
       throw new RuntimeException("While loading " + file.getAbsolutePath(), e);
     }
@@ -297,6 +301,8 @@ public abstract class JsonUtil {
   public static String loadFileString(File file) {
     try {
       return new String(Files.readAllBytes(file.toPath()));
+    } catch (NoSuchFileException notFoundException) {
+      throw new RuntimeException("File not found: " + file.getAbsolutePath());
     } catch (Exception e) {
       throw new RuntimeException("While loading file " + file.getAbsolutePath(), e);
     }

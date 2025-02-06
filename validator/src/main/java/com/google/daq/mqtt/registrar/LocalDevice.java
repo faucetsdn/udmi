@@ -50,6 +50,7 @@ import com.google.daq.mqtt.util.ExceptionMap.ErrorTree;
 import com.google.daq.mqtt.util.ExceptionMap.ExceptionCategory;
 import com.google.daq.mqtt.util.ValidationError;
 import com.google.daq.mqtt.util.ValidationException;
+import com.google.daq.mqtt.util.ValidationWarning;
 import com.google.daq.mqtt.validator.Validator;
 import com.google.udmi.util.JsonUtil;
 import com.google.udmi.util.MessageDowngrader;
@@ -59,7 +60,6 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.PrintStream;
 import java.io.PrintWriter;
@@ -795,25 +795,8 @@ class LocalDevice {
     if (!samplesDir.exists()) {
       return;
     }
-    File[] samples = samplesDir.listFiles();
-    if (samples == null) {
-      return;
-    }
-    ExceptionMap samplesMap = new ExceptionMap("Sample Validation");
-    for (File sampleFile : samples) {
-      String sampleName = sampleFile.getName();
-      try (InputStream sampleStream = new FileInputStream(sampleFile)) {
-        if (!schemas.containsKey(sampleName)) {
-          throw new RuntimeException("No valid matching schema found");
-        }
-        schemas.get(sampleName).validate(OBJECT_MAPPER_STRICT.readTree(sampleStream));
-      } catch (Exception e) {
-        Exception scopedException =
-            new RuntimeException("While validating sample file " + sampleName, e);
-        samplesMap.put(ExceptionCategory.sample, scopedException);
-      }
-    }
-    samplesMap.throwIfNotEmpty();
+    // TODO: Remove this once it's been out there for a while, deprecated 2025/02/03.
+    throw new RuntimeException("Deprecated samples/ directory: " + samplesDir.getAbsolutePath());
   }
 
   public Set<Entry<String, ErrorTree>> getTreeChildren() {
@@ -838,6 +821,16 @@ class LocalDevice {
 
   public LocalDevice duplicate(String newId) {
     return new LocalDevice(siteModel, newId, schemas, generation, deviceKind);
+  }
+
+  public void preprocessMetadata() {
+    ifTrueWarn(catchToNull(() -> metadata.cloud.config.static_file) != null,
+        "Disallowed cloud.config.static_file defined");
+  }
+
+  private void ifTrueWarn(boolean condition, String message) {
+    ifTrueThen(condition && siteModel.getStrictWarnings(),
+        () -> captureError(ExceptionCategory.metadata, new ValidationWarning(message)));
   }
 
   public enum DeviceStatus {
