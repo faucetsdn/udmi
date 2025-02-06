@@ -9,7 +9,7 @@ Automated sequencer running and reporting using GKE, GCS and Pub/Sub
     - uploads results to GCS
     - publishes a Pub/Sub message to 
 - `reporter` is a utility which:
-    - receieves a Pub/Sub message
+    - receives a Pub/Sub message
     - downloads results from GCS
     - generates a report
     - uploads report to GCS
