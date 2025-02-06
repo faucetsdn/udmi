@@ -123,6 +123,7 @@ class PassiveNetworkScan(DiscoveryManager):
             logging.warning("No interface specified, cannot get packet counter")
             return None
         try:
+            # TODO: Below logic is platform specific, make it generic
             with open(
                  f"/sys/class/net/{self.interface}/statistics/rx_packets") as f:
                 rx = int(f.read())

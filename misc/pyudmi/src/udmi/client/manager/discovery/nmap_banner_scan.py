@@ -44,11 +44,12 @@ class NmapBannerScan(DiscoveryManager):
     @mark_task_complete_on_return
     @catch_exceptions_to_status
     def runner(self):
+        # TODO: Add handling for nmap not found
         nmap_output_file = "nmap_localhost.xml"
 
         with subprocess.Popen(
             [
-                "/usr/bin/nmap",
+                "/usr/bin/nmap",  # TODO: Test if shutil.which("nmap") works
                 "--script",
                 "banner",
                 "127.0.0.1",

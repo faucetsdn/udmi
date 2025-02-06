@@ -123,7 +123,7 @@ class DiscoveryManager(abc.ABC):
         self.internal_status = None
         self.publisher = publisher
 
-        # TODO: Check if below assignment is even required and why.
+        # TODO: Check if below assignment is required and why.
         state.discovery.families[self.scan_family] = self.state
 
         self.config = None
@@ -228,6 +228,7 @@ class DiscoveryManager(abc.ABC):
 
     def on_state_update_hook(self):
         """
+        TODO: Figure out where this needs to be used
         Check that the state is not reset before setting the active count
         :return:
         """
@@ -237,6 +238,7 @@ class DiscoveryManager(abc.ABC):
     @catch_exceptions_to_status
     def _scheduler(self, start_time: int, config: FamilyDiscoveryConfig):
         """
+        TODO: Check how scheduler and manager can be decoupled
         The scheduler thread.
         :param start_time:
         :param config:
