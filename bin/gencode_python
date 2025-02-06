@@ -261,14 +261,7 @@ def generate_class(contents):
     write_class(writer, contents)
 
 def generate_module(in_files):
-  shutil.rmtree(OUT_DIR, ignore_errors=True)
   os.makedirs(OUT_DIR, exist_ok=True)
-  udmi_dir = os.path.dirname(OUT_DIR)
-  python_dir = os.path.dirname(udmi_dir)
-
-  open(os.path.join(udmi_dir, '__init__.py'), 'w').close()
-  open(os.path.join(python_dir, '__init__.py'), 'w').close()
-
   full_path = os.path.join(OUT_DIR, '__init__.py')
   with open(full_path, 'w') as fd:
     writer = lambda line: fd.write(line + '\n')
