@@ -11,6 +11,24 @@
       "description": "The address of a device on the fieldbus/local network",
       "examples": ["0x414889"]
     },
+    "adjunct": {
+      "type": "object",
+      "existingJavaType": "java.util.Map<String, String>",
+      "additionalProperties": false,
+      "patternProperties": {
+        "^[a-z_]+$": {
+          "type": "string"
+        }
+      }
+    },
+    "shadow_id": {
+      "description": "Specifies that this is a shadow of the indicated device",
+      "type": "string"
+    },
+    "parent_id": {
+      "type": "string",
+      "description": "The device id of the network parent"
+    },
     "family": {
       "type": "string"
     }

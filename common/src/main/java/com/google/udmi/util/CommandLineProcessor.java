@@ -131,11 +131,12 @@ public class CommandLineProcessor {
           return argList;
         }
       }
-      return null;
+    } catch (IllegalArgumentException e) {
+      System.err.println("Invalid argument: " + friendlyStackTrace(e));
     } catch (Exception e) {
       showUsage(friendlyStackTrace(e));
-      return null;
     }
+    return null;
   }
 
   private boolean processArgEntry(String arg, CommandLineOption option, Method method,

@@ -60,7 +60,7 @@ def test_bacnet_integration():
     seen_ethmac_toplevel = set(m.families["ether"].addr for m in messages if "ether" in m.families)
 
     expected_bacnet_ids = set(str(d["bacnet_id"]) for d in docker_config.values())
-    seen_bacnet_ids_toplevel = set(m.scan_addr for m in messages if m.scan_family == "bacnet")
+    seen_bacnet_ids_toplevel = set(m.addr for m in messages if m.family == "bacnet")
 
     # subset because passive scan will find the gateway and device itself
     assert seen_ethmac_toplevel == expected_ethmacs + 2

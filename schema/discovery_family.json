@@ -10,9 +10,11 @@
       "type": "string",
       "pattern": "^[-_.:0-9A-Z]+$",
       "description": "Device addr in the namespace of the given family"
+    },
+    "ref": {
+      "type": "string",
+      "pattern": "^[-_.:0-9A-Z]+$",
+      "description": "Point reference in the namespace of the given family"
     }
-  },
-  "required": [
-    "addr"
-  ]
+  }
 }

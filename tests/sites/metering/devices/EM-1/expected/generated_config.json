@@ -1,0 +1,30 @@
+{
+  "timestamp": "2020-05-01T13:39:07Z",
+  "version": "1.5.2",
+  "system": {
+    "min_loglevel": 300,
+    "metrics_rate_sec": 10,
+    "operation": { }
+  },
+  "gateway": {
+    "target": {
+      "addr": "xxx",
+      "family": "vendor"
+    }
+  },
+  "localnet": {
+    "families": {
+      "bacnet": { },
+      "ipv4": { },
+      "modbus": { }
+    }
+  },
+  "pointset": {
+    "points": {
+      "energy_sensor": {
+        "ref": "2983",
+        "units": "kwH"
+      }
+    }
+  }
+}
