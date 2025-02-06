@@ -239,43 +239,6 @@ class ObjectDCD5CB93:
     return result
 
 
-class Object734A44BA:
-  """Generated schema class"""
-
-  def __init__(self):
-    self.suffix = None
-
-  @staticmethod
-  def from_dict(source):
-    if not source:
-      return None
-    result = Object734A44BA()
-    result.suffix = source.get('suffix')
-    return result
-
-  @staticmethod
-  def map_from(source):
-    if not source:
-      return None
-    result = {}
-    for key in source:
-      result[key] = Object734A44BA.from_dict(source[key])
-    return result
-
-  @staticmethod
-  def expand_dict(input):
-    result = {}
-    for property in input:
-      result[property] = input[property].to_dict() if input[property] else {}
-    return result
-
-  def to_dict(self):
-    result = {}
-    if self.suffix:
-      result['suffix'] = self.suffix # 5
-    return result
-
-
 class SystemModel:
   """Generated schema class"""
 
@@ -309,7 +272,7 @@ class SystemModel:
     result.hardware = SystemHardware.from_dict(source.get('hardware'))
     result.software = source.get('software')
     result.physical_tag = Object30AFA53A.from_dict(source.get('physical_tag'))
-    result.adjunct = Object734A44BA.from_dict(source.get('adjunct'))
+    result.adjunct = source.get('adjunct')
     result.min_loglevel = source.get('min_loglevel')
     result.metrics_rate_sec = source.get('metrics_rate_sec')
     return result
@@ -353,7 +316,7 @@ class SystemModel:
     if self.physical_tag:
       result['physical_tag'] = self.physical_tag.to_dict() # 4
     if self.adjunct:
-      result['adjunct'] = self.adjunct.to_dict() # 4
+      result['adjunct'] = self.adjunct # 1
     if self.min_loglevel:
       result['min_loglevel'] = self.min_loglevel # 5
     if self.metrics_rate_sec:

@@ -54,7 +54,7 @@ class CloudQueryHandlerTest implements MessageContinuation {
     List<Object> targetMessages = targetCapture.getAllValues();
     assertEquals(1, targetMessages.size(), "published messages");
     DiscoveryEvents registryDiscovery = (DiscoveryEvents) targetMessages.get(0);
-    assertEquals(ProtocolFamily.IOT, registryDiscovery.scan_family);
+    assertEquals(ProtocolFamily.IOT, registryDiscovery.family);
     assertEquals(1, registryDiscovery.registries.size(), "discovered registries");
     assertEquals(QUERY_GENERATION, registryDiscovery.generation, "discovery generation");
     CloudModel cloudModel = registryDiscovery.registries.get(TEST_REGISTRY);

@@ -52,7 +52,7 @@ echo Checking vendor extracted device type $type
 [[ $type == DEVICE ]] || fail Vendor device type should be DEVICE, was $type
 
 echo Checking discovered device metadata
-addr=$(jq -r .scan_addr $site_path/extras/discovered_vendor-20231/cloud_metadata/udmi_discovered_with.json)
+addr=$(jq -r .addr $site_path/extras/discovered_vendor-20231/cloud_metadata/udmi_discovered_with.json)
 [[ $addr == 20231 ]] || fail Vendor device addr should be 20231, was $addr
 
 echo

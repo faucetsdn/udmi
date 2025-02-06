@@ -60,8 +60,8 @@ class DiscoveryPoint:
 @dataclasses.dataclass
 class DiscoveryEvent:
   generation: str
-  scan_family: str
-  scan_addr: str
+  family: str
+  addr: str
 
   version: str = "1.5.1"
   timestamp: datetime.datetime = dataclasses.field(

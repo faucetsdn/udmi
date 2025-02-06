@@ -91,8 +91,8 @@ class DiscoveryController(abc.ABC):
   """"""
   @property
   @abc.abstractmethod
-  def scan_family(self):
-    """The primary `scan_family` for this discovery component.
+  def family(self):
+    """The primary `family` for this discovery component.
 
     E.g. ipv4, bacnet
     """
@@ -134,7 +134,7 @@ class DiscoveryController(abc.ABC):
     self.state = udmi.schema.state.Discovery()
     self.internal_state = None
     self.publisher = publisher
-    state.discovery.families[self.scan_family] = self.state
+    state.discovery.families[self.family] = self.state
     self.config = None
     self.mutex = threading.Lock()
     self.scheduler_thread = None
@@ -201,7 +201,7 @@ class DiscoveryController(abc.ABC):
     """ Publishes the provided Discovery Event, setting event counts."""
     event_number = self._increment_event_counter_and_get()
     event.event_no = event_number
-    logging.warning("published discovery for %s:%s #%d", event.scan_family, event.scan_addr, event_number)
+    logging.warning("published discovery for %s:%s #%d", event.family, event.addr, event_number)
     self.publisher(event)
 
   def _validate_config(config: udmi.schema.config.DiscoveryFamily):
@@ -290,9 +290,9 @@ class DiscoveryController(abc.ABC):
     logging.debug("received config %s", config_dict)
     with self.mutex:
       try:
-        discovery_config_dict = config_dict["discovery"]["families"][self.scan_family]
+        discovery_config_dict = config_dict["discovery"]["families"][self.family]
       except KeyError as err:
-        # `self.scan_family`` is not in the config message
+        # `self.family`` is not in the config message
         # Stop discovery and clear state
         self._stop()
         self.config = None

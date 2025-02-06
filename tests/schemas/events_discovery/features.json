@@ -6,7 +6,7 @@
   "version": "1.4.2",
   "timestamp": "2018-08-26T21:42:12.237Z",
   "generation": "2018-08-26T21:37:12Z",
-  "scan_family": "features",
+  "family": "features",
   "features": {
     "endpoint.config": {
       "stage": "alpha"

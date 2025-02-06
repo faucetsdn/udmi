@@ -1,7 +1,7 @@
 {
   "generation": "2024-09-11T12:45:42Z",
-  "scan_family": "bacnet",
-  "scan_addr": "3002",
+  "family": "bacnet",
+  "addr": "3002",
   "event_no": 3,
   "version": "1.5.1",
   "timestamp": "2024-09-11T12:45:42Z",

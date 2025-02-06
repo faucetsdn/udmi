@@ -55,7 +55,7 @@
     "pointset": {
       "$ref": "file:model_pointset.json#"
     },
-    "families": {
+    "structure": {
       "existingJavaType": "java.util.HashMap<String, DiscoveryEvents>",
       "patternProperties": {
         "^[a-z][a-z0-9]*(_[a-z0-9]+)*$": {

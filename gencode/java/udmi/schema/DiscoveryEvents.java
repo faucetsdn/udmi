@@ -21,8 +21,8 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
     "version",
     "generation",
     "status",
-    "scan_family",
-    "scan_addr",
+    "family",
+    "addr",
     "event_no",
     "families",
     "registries",
@@ -64,15 +64,15 @@ public class DiscoveryEvents {
      */
     @JsonProperty("status")
     public Entry status;
-    @JsonProperty("scan_family")
-    public String scan_family;
+    @JsonProperty("family")
+    public String family;
     /**
-     * The primary address of the device (for scan_family)
+     * The primary address of the device (for indicated family)
      * 
      */
-    @JsonProperty("scan_addr")
-    @JsonPropertyDescription("The primary address of the device (for scan_family)")
-    public java.lang.String scan_addr;
+    @JsonProperty("addr")
+    @JsonPropertyDescription("The primary address of the device (for indicated family)")
+    public java.lang.String addr;
     /**
      * The active or passive series number of this result (matches reported state values)
      * 
@@ -88,18 +88,18 @@ public class DiscoveryEvents {
     @JsonPropertyDescription("Links to other address families (family and id)")
     public Map<String, FamilyDiscovery> families;
     /**
-     * Registry discovery results.
+     * Registry iot cloud models
      * 
      */
     @JsonProperty("registries")
-    @JsonPropertyDescription("Registry discovery results.")
+    @JsonPropertyDescription("Registry iot cloud models")
     public Map<String, CloudModel> registries;
     /**
-     * Device iot discovery scan results.
+     * Device iot cloud models
      * 
      */
     @JsonProperty("devices")
-    @JsonPropertyDescription("Device iot discovery scan results.")
+    @JsonPropertyDescription("Device iot cloud models")
     public Map<String, CloudModel> devices;
     /**
      * Information about a specific point name of the device.
@@ -109,11 +109,11 @@ public class DiscoveryEvents {
     @JsonPropertyDescription("Information about a specific point name of the device.")
     public Map<String, PointPointsetModel> points;
     /**
-     * Collection of point references discovered
+     * Collection of point references
      * 
      */
     @JsonProperty("refs")
-    @JsonPropertyDescription("Collection of point references discovered")
+    @JsonPropertyDescription("Collection of point references")
     public Map<String, RefDiscovery> refs;
     /**
      * Discovery of features supported by this device.
@@ -153,11 +153,11 @@ public class DiscoveryEvents {
         result = ((result* 31)+((this.system == null)? 0 :this.system.hashCode()));
         result = ((result* 31)+((this.event_no == null)? 0 :this.event_no.hashCode()));
         result = ((result* 31)+((this.refs == null)? 0 :this.refs.hashCode()));
-        result = ((result* 31)+((this.scan_family == null)? 0 :this.scan_family.hashCode()));
+        result = ((result* 31)+((this.family == null)? 0 :this.family.hashCode()));
+        result = ((result* 31)+((this.addr == null)? 0 :this.addr.hashCode()));
         result = ((result* 31)+((this.cloud_model == null)? 0 :this.cloud_model.hashCode()));
         result = ((result* 31)+((this.timestamp == null)? 0 :this.timestamp.hashCode()));
         result = ((result* 31)+((this.status == null)? 0 :this.status.hashCode()));
-        result = ((result* 31)+((this.scan_addr == null)? 0 :this.scan_addr.hashCode()));
         return result;
     }
 
@@ -170,7 +170,7 @@ public class DiscoveryEvents {
             return false;
         }
         DiscoveryEvents rhs = ((DiscoveryEvents) other);
-        return ((((((((((((((((this.generation == rhs.generation)||((this.generation!= null)&&this.generation.equals(rhs.generation)))&&((this.devices == rhs.devices)||((this.devices!= null)&&this.devices.equals(rhs.devices))))&&((this.registries == rhs.registries)||((this.registries!= null)&&this.registries.equals(rhs.registries))))&&((this.families == rhs.families)||((this.families!= null)&&this.families.equals(rhs.families))))&&((this.version == rhs.version)||((this.version!= null)&&this.version.equals(rhs.version))))&&((this.points == rhs.points)||((this.points!= null)&&this.points.equals(rhs.points))))&&((this.features == rhs.features)||((this.features!= null)&&this.features.equals(rhs.features))))&&((this.system == rhs.system)||((this.system!= null)&&this.system.equals(rhs.system))))&&((this.event_no == rhs.event_no)||((this.event_no!= null)&&this.event_no.equals(rhs.event_no))))&&((this.refs == rhs.refs)||((this.refs!= null)&&this.refs.equals(rhs.refs))))&&((this.scan_family == rhs.scan_family)||((this.scan_family!= null)&&this.scan_family.equals(rhs.scan_family))))&&((this.cloud_model == rhs.cloud_model)||((this.cloud_model!= null)&&this.cloud_model.equals(rhs.cloud_model))))&&((this.timestamp == rhs.timestamp)||((this.timestamp!= null)&&this.timestamp.equals(rhs.timestamp))))&&((this.status == rhs.status)||((this.status!= null)&&this.status.equals(rhs.status))))&&((this.scan_addr == rhs.scan_addr)||((this.scan_addr!= null)&&this.scan_addr.equals(rhs.scan_addr))));
+        return ((((((((((((((((this.generation == rhs.generation)||((this.generation!= null)&&this.generation.equals(rhs.generation)))&&((this.devices == rhs.devices)||((this.devices!= null)&&this.devices.equals(rhs.devices))))&&((this.registries == rhs.registries)||((this.registries!= null)&&this.registries.equals(rhs.registries))))&&((this.families == rhs.families)||((this.families!= null)&&this.families.equals(rhs.families))))&&((this.version == rhs.version)||((this.version!= null)&&this.version.equals(rhs.version))))&&((this.points == rhs.points)||((this.points!= null)&&this.points.equals(rhs.points))))&&((this.features == rhs.features)||((this.features!= null)&&this.features.equals(rhs.features))))&&((this.system == rhs.system)||((this.system!= null)&&this.system.equals(rhs.system))))&&((this.event_no == rhs.event_no)||((this.event_no!= null)&&this.event_no.equals(rhs.event_no))))&&((this.refs == rhs.refs)||((this.refs!= null)&&this.refs.equals(rhs.refs))))&&((this.family == rhs.family)||((this.family!= null)&&this.family.equals(rhs.family))))&&((this.addr == rhs.addr)||((this.addr!= null)&&this.addr.equals(rhs.addr))))&&((this.cloud_model == rhs.cloud_model)||((this.cloud_model!= null)&&this.cloud_model.equals(rhs.cloud_model))))&&((this.timestamp == rhs.timestamp)||((this.timestamp!= null)&&this.timestamp.equals(rhs.timestamp))))&&((this.status == rhs.status)||((this.status!= null)&&this.status.equals(rhs.status))));
     }
 
 }

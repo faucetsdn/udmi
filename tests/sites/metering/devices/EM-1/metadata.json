@@ -1,0 +1,64 @@
+{
+  "timestamp": "2020-05-01T13:39:07Z",
+  "version": "1.5.2",
+  "system": {
+  },
+  "gateway": {
+    "gateway_id": "GAT-1",
+    "target": {
+      "family": "vendor",
+      "addr": "xxx"
+    }
+  },
+  "localnet": {
+    "families": {
+      "modbus": {
+        "addr": "1",
+        "parent_id": "DDC-1"
+      },
+      "ipv4": {
+        "shadow_id": "DDC-1",
+        "addr": "100.100.100.123",
+        "adjunct": {
+          "cidr": "100.100.100.0/24",
+          "bcast": "100.100.100.255"
+        }
+      },
+      "bacnet": {
+        "shadow_id": "DDC-1",
+        "addr": "12345"
+      }
+    }
+  },
+  "pointset": {
+    "points": {
+      "energy_sensor": {
+        "ref": "2983",
+        "units": "kwH",
+        "description": "Under the stairs",
+        "structure": {
+          "modbus": {
+            "ref": "100",
+            "name": "Power Sensor",
+            "adjunct": {
+              "data_type": "int32",
+              "multiplier": "1",
+              "constant": "0"
+            }
+          },
+          "bacnet": {
+            "ref": "AV:12",
+            "name": "Power Sensor 1",
+            "description": "My name for a power sensor",
+            "units": "KiloWatts"
+          }
+        }
+      }
+    }
+  },
+  "structure": {
+    "bacnet": {
+      "addr": "12345"
+    }
+  }
+}
