@@ -1,0 +1,28 @@
+{
+  "timestamp": "2020-05-01T13:39:07Z",
+  "version": "1.5.2",
+  "hash": "508203a5",
+  "cloud": {
+    "connection_type": "DIRECT",
+    "auth_type": "ES256"
+  },
+  "system": {
+    "min_loglevel": 300
+  },
+  "localnet": {
+    "families": {
+      "bacnet": {
+        "addr": "8234",
+        "adjunct": {
+          "family": "ipv4"
+        }
+      },
+      "ipv4": {
+        "addr": "100.100.100.98",
+        "adjunct": {
+          "bcast": "100.100.100.255"
+        }
+      }
+    }
+  }
+}

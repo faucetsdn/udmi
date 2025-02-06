@@ -6,6 +6,7 @@ class FamilyDiscovery:
 
   def __init__(self):
     self.addr = None
+    self.ref = None
 
   @staticmethod
   def from_dict(source):
@@ -13,6 +14,7 @@ class FamilyDiscovery:
       return None
     result = FamilyDiscovery()
     result.addr = source.get('addr')
+    result.ref = source.get('ref')
     return result
 
   @staticmethod
@@ -35,4 +37,6 @@ class FamilyDiscovery:
     result = {}
     if self.addr:
       result['addr'] = self.addr # 5
+    if self.ref:
+      result['ref'] = self.ref # 5
     return result

@@ -75,7 +75,7 @@ public interface DiscoveryManager extends SubBlockManager {
     getDiscoveryState().generation = enumerationGeneration;
     info(format("Discovery enumeration at %s", isoConvert(enumerationGeneration)));
     DiscoveryEvents discoveryEvent = new DiscoveryEvents();
-    discoveryEvent.scan_family = ProtocolFamily.IOT;
+    discoveryEvent.family = ProtocolFamily.IOT;
     discoveryEvent.generation = enumerationGeneration;
     Enumerations depths = config.enumerations;
     discoveryEvent.points = maybeEnumerate(depths.points, () -> enumeratePoints(getDeviceId()));
@@ -286,10 +286,10 @@ public interface DiscoveryManager extends SubBlockManager {
   default void startDiscoveryForFamily(String family, Date scanGeneration,
       FamilyDiscoveryState familyDiscoveryState, AtomicInteger sendCount) {
     discoveryProvider(family).startScan(shouldEnumerate(family), (deviceId, discoveryEvent) -> {
-      ifNotNullThen(discoveryEvent.scan_addr, addr -> {
+      ifNotNullThen(discoveryEvent.addr, addr -> {
         info(
             format("Discovered %s device %s for gen %s", family, addr, isoConvert(scanGeneration)));
-        discoveryEvent.scan_family = family;
+        discoveryEvent.family = family;
         discoveryEvent.generation = scanGeneration;
         postDiscoveryProcess(deviceId, discoveryEvent);
 

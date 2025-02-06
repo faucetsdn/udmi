@@ -67,7 +67,7 @@ public class PubberBacnetProvider extends ManagerBase implements PubberFamilyPro
   private DiscoveryEvents augmentSend(String deviceId, boolean enumerate) {
     String addr = getBacnetAddr(getMetadata(deviceId));
     DiscoveryEvents event = new DiscoveryEvents();
-    event.scan_addr = addr;
+    event.addr = addr;
     try {
       event.refs = ifTrueGet(enumerate, () -> enumerateRefs(deviceId));
     } catch (Exception e) {

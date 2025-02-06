@@ -1,5 +1,4 @@
-4 schema violations found
-  /families/bacnet: object has missing required properties (["addr"])
+3 schema violations found
   /families/bacnet: object instance has properties which are not allowed by the schema: ["id"]
   /families/mac: object instance has properties which are not allowed by the schema: ["group"]
-  object instance has properties which are not allowed by the schema: ["addr","id","rabbits","uniqs"]
+  object instance has properties which are not allowed by the schema: ["id","rabbits","scan_addr","uniqs"]

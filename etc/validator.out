@@ -471,15 +471,15 @@ sites/udmi_site_model/out/devices/GAT-123/events_discovery.out
   "sub_folder" : "discovery",
   "sub_type" : "events",
   "status" : {
-    "message" : "discovery scan_family not defined",
-    "detail" : "events_discovery: discovery scan_family not defined REDACTED_ERROR",
+    "message" : "discovery family not defined",
+    "detail" : "events_discovery: discovery family not defined REDACTED_ERROR",
     "category" : "validation.device.schema",
     "timestamp" : "REDACTED_TIMESTAMP",
     "level" : 500
   },
   "errors" : [ {
-    "message" : "discovery scan_family not defined",
-    "detail" : "events_discovery: discovery scan_family not defined REDACTED_ERROR",
+    "message" : "discovery family not defined",
+    "detail" : "events_discovery: discovery family not defined REDACTED_ERROR",
     "category" : "validation.device.schema",
     "timestamp" : "REDACTED_TIMESTAMP",
     "level" : 500

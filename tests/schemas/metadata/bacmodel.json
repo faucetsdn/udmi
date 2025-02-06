@@ -53,10 +53,10 @@
       }
     }
   },
-  "families": {
+  "structure": {
     "bacnet": {
       "timestamp": "2018-08-24T21:39:29.364Z",
-      "scan_addr": "1076",
+      "addr": "1076",
       "refs": {
         "AV-1": {
           "point": "return_air_temperature_sensor",

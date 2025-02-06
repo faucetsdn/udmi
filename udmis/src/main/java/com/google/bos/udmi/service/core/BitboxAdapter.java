@@ -71,8 +71,8 @@ public class BitboxAdapter extends ProcessorBase {
 
     try {
       DiscoveryEvents discoveryEvent = new DiscoveryEvents();
-      discoveryEvent.scan_family = (String) map.get("protocol");
-      discoveryEvent.scan_addr = (String) map.get("id");
+      discoveryEvent.family = (String) map.get("protocol");
+      discoveryEvent.addr = (String) map.get("id");
       discoveryEvent.generation = generation;
       discoveryEvent.refs = extractRefs(map.get("data"));
       return discoveryEvent;
