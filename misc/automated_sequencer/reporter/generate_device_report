@@ -1,0 +1,26 @@
+#!/bin/bash -e
+ROOT_DIR=$(realpath $(dirname $0))
+
+# FIXED CONFIG VARIABLES
+source config.sh
+
+# ARGS
+if [[ $# -ne 3 ]]; then
+    echo $0 GCS_BUCKET DEVICE_PATH REPORT_PATH
+    exit 1
+fi
+
+GCS_BUCKET=$1
+DEVICE_PATH=$2
+REPORT_PATH=$3
+
+rm -rf $LOCAL_RESULTS_DIR/$DEVICE_PATH
+mkdir -p $LOCAL_RESULTS_DIR/$DEVICE_PATH
+
+# /.. because gsutil will copy into /device_id/device_id
+gsutil -m cp -r gs://$GCS_BUCKET/$GCS_SUMMARY_SUBDIR/$DEVICE_PATH $LOCAL_RESULTS_DIR/$DEVICE_PATH/..
+
+python3 $ROOT_DIR/python/generate_report.py \
+    $LOCAL_RESULTS_DIR/$DEVICE_PATH $DEVICE_PATH $REPORT_PATH
+
+echo done generating device report
