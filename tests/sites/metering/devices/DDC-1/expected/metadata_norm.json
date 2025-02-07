@@ -1,10 +1,5 @@
 {
-  "timestamp": "2020-05-01T13:39:07Z",
-  "version": "1.5.2",
-  "hash": "6aba676a",
-  "system": {
-    "min_loglevel": 300
-  },
+  "hash": "ba65dfc9",
   "localnet": {
     "families": {
       "bacnet": {
@@ -29,5 +24,10 @@
         "parent_id": "DDC-1"
       }
     }
-  }
+  },
+  "system": {
+    "min_loglevel": 300
+  },
+  "timestamp": "2020-05-01T13:39:07Z",
+  "version": "1.5.3"
 }

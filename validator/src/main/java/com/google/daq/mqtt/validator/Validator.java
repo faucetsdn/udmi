@@ -60,6 +60,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.daq.mqtt.util.CloudIotManager;
 import com.google.daq.mqtt.util.ErrorMap;
+import com.google.daq.mqtt.util.ErrorMap.ErrorMapException;
 import com.google.daq.mqtt.util.ExceptionMap;
 import com.google.daq.mqtt.util.ExceptionMap.ErrorTree;
 import com.google.daq.mqtt.util.FileDataSink;
@@ -1181,6 +1182,8 @@ public class Validator {
     } catch (ExceptionMap processingException) {
       ErrorTree errorTree = ExceptionMap.format(processingException);
       errorTree.write(System.err);
+    } catch (ErrorMapException e) {
+      e.getMap().values().forEach(ex -> System.err.println(friendlyStackTrace(ex)));
     }
   }
 

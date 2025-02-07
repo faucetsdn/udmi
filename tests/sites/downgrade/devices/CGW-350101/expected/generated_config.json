@@ -1,0 +1,34 @@
+{
+  "downgraded_from": "1.5.3",
+  "gateway": {},
+  "localnet": {
+    "families": {
+      "bacnet": {
+        "addr": "11271"
+      }
+    }
+  },
+  "pointset": {
+    "points": {
+      "valve_command_43": {
+        "ref": "BO:1.present_value",
+        "units": ""
+      },
+      "valve_command_44": {
+        "ref": "BO:2.present_value",
+        "units": ""
+      },
+      "valve_command_45": {
+        "ref": "BO:3.present_value",
+        "units": ""
+      }
+    }
+  },
+  "system": {
+    "metrics_rate_sec": 10,
+    "min_loglevel": 300,
+    "operation": {}
+  },
+  "timestamp": "2024-11-04T10:02:28Z",
+  "version": "1.4.2"
+}

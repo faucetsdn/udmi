@@ -1,16 +1,16 @@
 {
-  "timestamp": "2020-05-01T13:39:07Z",
-  "version": "1.5.2",
-  "system": {
-    "min_loglevel": 300,
-    "metrics_rate_sec": 10,
-    "operation": { }
-  },
   "localnet": {
     "families": {
-      "bacnet": { },
-      "ipv4": { },
-      "modbus": { }
+      "bacnet": {},
+      "ipv4": {},
+      "modbus": {}
     }
-  }
+  },
+  "system": {
+    "metrics_rate_sec": 10,
+    "min_loglevel": 300,
+    "operation": {}
+  },
+  "timestamp": "2020-05-01T13:39:07Z",
+  "version": "1.5.3"
 }

@@ -1,29 +1,22 @@
 {
-  "timestamp": "2020-05-01T13:39:07Z",
-  "version": "1.5.2",
-  "system": {
-    "min_loglevel": 300,
-    "metrics_rate_sec": 10,
-    "operation": { }
-  },
   "discovery": {
     "families": {
       "bacnet": {
         "generation": "2018-08-26T21:00:13Z",
-        "scan_interval_sec": 600,
-        "scan_duration_sec": 60
+        "scan_duration_sec": 60,
+        "scan_interval_sec": 600
       }
     }
   },
+  "downgraded_from": "1.5.3",
   "localnet": {
     "families": {
-      "ether": { },
-      "ipv4": { },
-      "vendor": { }
+      "ether": {},
+      "ipv4": {},
+      "vendor": {}
     }
   },
   "pointset": {
-    "sample_rate_sec": 30,
     "points": {
       "filter_alarm_pressure_status": {
         "ref": "BV11.present_value",
@@ -34,9 +27,17 @@
         "units": "Degrees-Celsius"
       },
       "filter_differential_pressure_setpoint": {
-        "units": "Bars",
-        "set_value": 98
+        "set_value": 98,
+        "units": "Bars"
       }
-    }
-  }
+    },
+    "sample_rate_sec": 30
+  },
+  "system": {
+    "metrics_rate_sec": 10,
+    "min_loglevel": 300,
+    "operation": {}
+  },
+  "timestamp": "2020-05-01T13:39:07Z",
+  "version": "1.4.2"
 }
