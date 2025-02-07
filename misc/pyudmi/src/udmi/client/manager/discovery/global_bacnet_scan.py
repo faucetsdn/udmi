@@ -8,11 +8,13 @@ from typing import Callable
 
 import BAC0
 from BAC0.core.io.IOExceptions import SegmentationNotSupported
-from udmi_schema.schema.discovery_family import FamilyDiscovery
-from udmi_schema.schema.discovery_ref import RefDiscovery
-from udmi_schema.schema.entry import Entry
-from udmi_schema.schema.events_discovery import DiscoveryEvents
-from udmi_schema.schema.state import State
+from udmi.schema import (
+    DiscoveryEvents,
+    Entry,
+    FamilyDiscovery,
+    RefDiscovery,
+    State
+)
 
 from udmi.client.manager.discovery.discovery_manager import DiscoveryManager
 from udmi.client.manager.discovery.discovery_manager import (

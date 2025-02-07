@@ -10,9 +10,11 @@ import scapy.all
 import scapy.layers.inet
 import scapy.sendrecv
 
-from udmi_schema.schema.events_discovery import DiscoveryEvents
-from udmi_schema.schema.state import State
-from udmi_schema.schema.discovery_family import FamilyDiscovery
+from udmi.schema import (
+    DiscoveryEvents,
+    FamilyDiscovery,
+    State
+)
 
 from udmi.client.manager.discovery.discovery_manager import DiscoveryManager
 

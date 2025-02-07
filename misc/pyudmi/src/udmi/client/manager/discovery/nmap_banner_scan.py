@@ -4,8 +4,10 @@ import subprocess
 import threading
 from typing import Callable
 
-from udmi_schema.schema.events_discovery import DiscoveryEvents
-from udmi_schema.schema.state import State
+from udmi.schema import (
+    DiscoveryEvents,
+    State
+)
 
 from udmi.client.manager.discovery.discovery_manager import DiscoveryManager
 from udmi.client.manager.discovery.discovery_manager import (

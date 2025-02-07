@@ -6,18 +6,16 @@ import functools
 import logging
 import threading
 import time
-from enum import Enum
 from typing import Callable
 
-from udmi_schema.schema.config_discovery import FamilyDiscoveryConfig
-from udmi_schema.schema.entry import Entry
-from udmi_schema.schema.events_discovery import DiscoveryEvents
-from udmi_schema.schema.state import State
-from udmi_schema.schema.state_discovery_family import (
+from udmi.schema import (
+    DiscoveryEvents,
+    Entry,
+    FamilyDiscoveryConfig,
     FamilyDiscoveryState,
-    Phase
+    Phase,
+    State
 )
-
 from udmi.util.status import Status
 
 ACTION_START = 1
