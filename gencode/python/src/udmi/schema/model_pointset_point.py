@@ -5,7 +5,9 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from enum import Enum
-from typing import Any, List, Optional
+from typing import Any, Dict, List, Optional
+
+from .discovery_ref import RefDiscovery
 
 
 class BaselineState(Enum):
@@ -30,6 +32,7 @@ class PointPointsetModel:
     """
 
     units: Optional[str] = None
+    description: Optional[str] = None
     writable: Optional[bool] = None
     baseline_value: Optional[Any] = None
     baseline_tolerance: Optional[float] = None
@@ -38,4 +41,6 @@ class PointPointsetModel:
     range_max: Optional[float] = None
     cov_increment: Optional[float] = None
     ref: Optional[str] = None
+    adjunct: Optional[Dict[str, str]] = None
     tags: Optional[List[Tag]] = None
+    structure: Optional[Dict[str, RefDiscovery]] = None

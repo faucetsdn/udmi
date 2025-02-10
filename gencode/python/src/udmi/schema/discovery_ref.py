@@ -4,10 +4,17 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import List, Optional
+from typing import Dict, List, Optional
 
 from .ancillary_properties import AncillaryProperties
+from .discovery_family import FamilyDiscovery
 from .entry import Entry
+
+
+@dataclass
+class Structure:
+    point: Optional[FamilyDiscovery] = None
+    families: Optional[Dict[str, FamilyDiscovery]] = None
 
 
 @dataclass
@@ -20,8 +27,11 @@ class RefDiscovery:
     name: Optional[str] = None
     possible_values: Optional[List[str]] = None
     units: Optional[str] = None
+    ref: Optional[str] = None
     type: Optional[str] = None
     writable: Optional[bool] = None
     description: Optional[str] = None
     status: Optional[Entry] = None
     ancillary: Optional[AncillaryProperties] = None
+    adjunct: Optional[Dict[str, str]] = None
+    structure: Optional[Structure] = None

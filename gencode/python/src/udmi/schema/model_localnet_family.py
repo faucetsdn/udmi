@@ -4,7 +4,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Optional
+from typing import Dict, Optional
 
 
 @dataclass
@@ -14,4 +14,7 @@ class FamilyLocalnetModel:
     """
 
     addr: Optional[str] = None
+    adjunct: Optional[Dict[str, str]] = None
+    shadow_id: Optional[str] = None
+    parent_id: Optional[str] = None
     family: Optional[str] = None

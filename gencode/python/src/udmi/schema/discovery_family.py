@@ -14,3 +14,4 @@ class FamilyDiscovery:
     """
 
     addr: Optional[str] = None
+    ref: Optional[str] = None

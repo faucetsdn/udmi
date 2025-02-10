@@ -65,6 +65,7 @@ class SiteMetadata:
     site: Optional[str] = None
     name: Optional[str] = None
     tags: Optional[List[Tag]] = None
+    strict_warnings: Optional[bool] = None
     location: Optional[Location] = None
     links: Optional[Links] = None
     parameters: Optional[Parameters] = None

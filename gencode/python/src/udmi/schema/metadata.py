@@ -35,4 +35,4 @@ class Metadata:
     testing: Optional[TestingModel] = None
     features: Optional[TestingModel_1] = None
     pointset: Optional[PointsetModel] = None
-    families: Optional[Dict[str, DiscoveryEvents]] = None
+    structure: Optional[Dict[str, DiscoveryEvents]] = None

@@ -35,8 +35,8 @@ class DiscoveryEvents:
     version: Optional[str] = None
     generation: Optional[str] = None
     status: Optional[Entry] = None
-    scan_family: Optional[Any] = None
-    scan_addr: Optional[str] = None
+    family: Optional[Any] = None
+    addr: Optional[str] = None
     event_no: Optional[int] = None
     families: Optional[Dict[str, FamilyDiscovery]] = None
     registries: Optional[Dict[str, CloudModel]] = None

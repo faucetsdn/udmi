@@ -58,11 +58,6 @@ class PhysicalTag:
 
 
 @dataclass
-class Adjunct:
-    suffix: Optional[str] = None
-
-
-@dataclass
 class SystemModel:
     """
     High-level system information about the device. [System Model Documentation](../docs/messages/system.md)
@@ -78,6 +73,6 @@ class SystemModel:
     hardware: Optional[SystemHardware] = None
     software: Optional[Dict[str, str]] = None
     physical_tag: Optional[PhysicalTag] = None
-    adjunct: Optional[Adjunct] = None
+    adjunct: Optional[Dict[str, str]] = None
     min_loglevel: Optional[int] = 300
     metrics_rate_sec: Optional[int] = None
