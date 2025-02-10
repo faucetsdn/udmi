@@ -16,7 +16,9 @@ from udmi.schema import (
     State
 )
 
-from udmi.client.manager.discovery.discovery_manager import DiscoveryManager
+from udmi.client.manager.discovery.network_discovery_manager import (
+    NetworkDiscoveryManager
+)
 
 BACNET_BVLC_MARKER = b"\x81"
 BACNET_APDU_I_AM_START = b"\x10\x00\xc4"
@@ -47,7 +49,7 @@ def get_host(ip: str) -> Optional[str]:
         logging.error(f"Error during DNS lookup for {ip}: {e}")
 
 
-class PassiveNetworkScan(DiscoveryManager):
+class PassiveNetworkScan(NetworkDiscoveryManager):
     scan_family = "ipv4"
 
     def __init__(
@@ -87,7 +89,7 @@ class PassiveNetworkScan(DiscoveryManager):
                       f"publish_interval: {self.publish_interval}")
         super().__init__(state, publisher)
 
-    def start_discovery(self) -> None:
+    def start_scan(self) -> None:
         logging.info("Starting network discovery...")
         self.cancel_threads.clear()
         self.packets_seen = 0
@@ -101,7 +103,7 @@ class PassiveNetworkScan(DiscoveryManager):
         self.packet_count_start = self._get_packet_counter_total()
         logging.info("Network discovery started.")
 
-    def stop_discovery(self) -> None:
+    def stop_scan(self) -> None:
         logging.info("Stopping network discovery...")
         self.sniffer.stop()
         self.sniffer.join()
@@ -208,8 +210,9 @@ class PassiveNetworkScan(DiscoveryManager):
 
     def discovery_service(self):
         logging.debug("Discovery service thread started.")
-        while not self.cancel_threads.is_set():  # More robust thread stopping
-            new_device_records = self.device_records - self.devices_records_published
+        while not self.cancel_threads.is_set():
+            new_device_records = (
+                self.device_records - self.devices_records_published)
 
             if new_device_records:
                 try:
@@ -217,18 +220,19 @@ class PassiveNetworkScan(DiscoveryManager):
                     discovery_events = [
                         DiscoveryEvents(
                             generation=self.config.generation,
-                            scan_addr=device_record.addr,
-                            scan_family=self.scan_family,
+                            addr=device_record.addr,
+                            family=self.scan_family,
                             families=dict(
                                 ether=FamilyDiscovery(addr=device_record.mac)),
                         )
                         for device_record in new_device_records
                     ]
                     for event in discovery_events:
-                        self.publish(event)  # Publish all events
+                        self.publish(event)
                     self.devices_records_published.update(new_device_records)
                     logging.info(
-                        f"Published {len(new_device_records)} new device records.")
+                        f"Published {len(new_device_records)} new device "
+                        f"records.")
 
                 except Exception as e:
                     logging.error(f"Error publishing discovery events: {e}")
@@ -236,7 +240,6 @@ class PassiveNetworkScan(DiscoveryManager):
             try:
                 time.sleep(self.publish_interval)
             except InterruptedError:
-                # Handle potential interruption during sleep
                 pass
 
         logging.debug("Discovery service thread stopped.")

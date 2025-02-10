@@ -16,8 +16,8 @@ from udmi.schema import (
     State
 )
 
-from udmi.client.manager.discovery.discovery_manager import DiscoveryManager
-from udmi.client.manager.discovery.discovery_manager import (
+from udmi.client.manager.discovery.network_discovery_manager import (
+    NetworkDiscoveryManager,
     catch_exceptions_to_status,
     mark_task_complete_on_return
 )
@@ -42,7 +42,7 @@ class BacnetObjectAcronyms(StrEnum):
     characterstringValue = "CSV"
 
 
-class GlobalBacnetScan(DiscoveryManager):
+class GlobalBacnetScan(NetworkDiscoveryManager):
     scan_family = "bacnet"
 
     def __init__(
@@ -59,7 +59,7 @@ class GlobalBacnetScan(DiscoveryManager):
         self.bacnet = BAC0.lite(ip=bacnet_ip, port=bacnet_port)
         super().__init__(state, publisher)
 
-    def start_discovery(self) -> None:
+    def start_scan(self) -> None:
         self.devices_published.clear()
         self.cancelled = False
         self.runner_thread = threading.Thread(
@@ -68,7 +68,7 @@ class GlobalBacnetScan(DiscoveryManager):
         self.runner_thread.start()
         self.bacnet.discover(global_broadcast=True)
 
-    def stop_discovery(self) -> None:
+    def stop_scan(self) -> None:
         self.cancelled = True
         self.runner_thread.join()
 
@@ -115,8 +115,8 @@ class GlobalBacnetScan(DiscoveryManager):
         # Capture existence of the device
         event = DiscoveryEvents(
             generation=self.config.generation,
-            scan_family=self.scan_family,
-            scan_addr=str(device_id)
+            family=self.scan_family,
+            addr=str(device_id)
         )
 
         try:

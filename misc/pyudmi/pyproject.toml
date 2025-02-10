@@ -26,7 +26,7 @@ packages = [
     { include = "udmi", from = "src" },
 ]
 
-[tool.poetry.plugins."udmi.discovery_scans"]
+[tool.poetry.plugins."udmi.network_discovery_scans"]
 global_bacnet = "udmi.client.manager.discovery.global_bacnet_scan:GlobalBacnetScan"
 nmap_banner = "udmi.client.manager.discovery.nmap_banner_scan:NmapBannerScan"
 passive_network = "udmi.client.manager.discovery.passive_network_scan:PassiveNetworkScan"

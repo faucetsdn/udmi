@@ -1,6 +1,7 @@
 import abc
 import atexit
 import copy
+import dataclasses
 import datetime
 import functools
 import logging
@@ -72,7 +73,7 @@ def _validate_discovery_config(config: FamilyDiscoveryConfig):
         raise RuntimeError("scan duration or interval cannot be negative")
 
 
-class DiscoveryManager(abc.ABC):
+class NetworkDiscoveryManager(abc.ABC):
 
     @property
     @abc.abstractmethod
@@ -83,7 +84,7 @@ class DiscoveryManager(abc.ABC):
         """
 
     @abc.abstractmethod
-    def start_discovery(self) -> None:
+    def start_scan(self) -> None:
         """
         Trigger the start of discovery.
 
@@ -97,7 +98,7 @@ class DiscoveryManager(abc.ABC):
         """
 
     @abc.abstractmethod
-    def stop_discovery(self) -> None:
+    def stop_scan(self) -> None:
         """
         Trigger stopping discovery and clean shutdown of any discovery
         processes, threads, etc
@@ -174,7 +175,7 @@ class DiscoveryManager(abc.ABC):
         self.generation = datetime.datetime.now()
         self.state.generation = self.generation
         try:
-            self.start_discovery()
+            self.start_scan()
         except Exception as err:
             self._handle_exception(err)
         else:
@@ -197,7 +198,7 @@ class DiscoveryManager(abc.ABC):
         self.state.status = None
         self._set_internal_status(Status.CANCELLING)
         try:
-            self.stop_discovery()
+            self.stop_scan()
             self.state.phase = Phase.stopped
             self._set_internal_status(Status.CANCELLED)
             logging.info(f"Stopped... {self.__class__.__name__}")
@@ -212,7 +213,7 @@ class DiscoveryManager(abc.ABC):
         event_number = self._increment_event_counter_and_get()
         event.event_no = event_number
         logging.warning(
-            f"published discovery for {event.scan_family}:{event.scan_addr} "
+            f"published discovery for {event.family}:{event.addr} "
             f"#{event_number}")
         self.publisher(event)
 
@@ -221,8 +222,8 @@ class DiscoveryManager(abc.ABC):
         Resets the UDMI state for this family by setting all keys as null.
         :return:
         """
-        for field_name in self.state.__fields__:
-            setattr(self.state, field_name, None)
+        for field in dataclasses.fields(self.state):
+            setattr(self.state, field.name, None)
 
     def on_state_update_hook(self):
         """

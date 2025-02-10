@@ -23,7 +23,7 @@ def get_manager(key, *args, **kwargs):
         ScanNotImplemented: If the specified key is not found in the registered
          scans.
     """
-    entry_point_group = "udmi.discovery_scans"  # The entry point group name
+    entry_point_group = "udmi.network_discovery_scans"
     discovery_scans = {}
 
     for entry_point in pkg_resources.iter_entry_points(entry_point_group):

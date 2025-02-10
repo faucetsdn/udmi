@@ -267,7 +267,7 @@ optional = false
 python-versions = ">=3.8,<4.0"
 groups = ["main"]
 files = [
-    {file = "udmi_schema-0.1.0-py3-none-any.whl", hash = "sha256:a061b40d4aea47c0e0cbf5e31149259dca24867d31410bcec9440749f9afc114"},
+    {file = "udmi_schema-0.1.0-py3-none-any.whl", hash = "sha256:38baf539da65f4de30b088c84a7db38726027bf588cb9b2655e8d159934672a2"},
 ]
 
 [package.source]

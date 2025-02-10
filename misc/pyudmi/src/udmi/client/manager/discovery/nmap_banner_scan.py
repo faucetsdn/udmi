@@ -1,3 +1,4 @@
+import dataclasses
 import logging
 import os
 import subprocess
@@ -5,20 +6,20 @@ import threading
 from typing import Callable
 
 from udmi.schema import (
+    FamilyDiscovery,
     DiscoveryEvents,
     State
 )
 
-from udmi.client.manager.discovery.discovery_manager import DiscoveryManager
-from udmi.client.manager.discovery.discovery_manager import (
+from udmi.client.manager.discovery.network_discovery_manager import (
+    NetworkDiscoveryManager,
     catch_exceptions_to_status,
     mark_task_complete_on_return
 )
 from udmi.util import nmap
 
 
-class NmapBannerScan(DiscoveryManager):
-
+class NmapBannerScan(NetworkDiscoveryManager):
     scan_family = "ether"
 
     def __init__(self,
@@ -31,14 +32,14 @@ class NmapBannerScan(DiscoveryManager):
         self.runner_thread = None
         super().__init__(state, publisher)
 
-    def start_discovery(self) -> None:
+    def start_scan(self) -> None:
         self.cancel_threads.clear()
         self.runner_thread = threading.Thread(
             target=self.runner, args=[], daemon=True
         )
         self.runner_thread.start()
 
-    def stop_discovery(self) -> None:
+    def stop_scan(self) -> None:
         logging.info(f"stopping scan {self.__class__.__name__}")
         self.cancel_threads.set()
         self.runner_thread.join()
@@ -82,11 +83,11 @@ class NmapBannerScan(DiscoveryManager):
         for host in nmap.results_reader(nmap_output_file):
             event = DiscoveryEvents(
                 generation=self.generation,
-                scan_family=self.scan_family,
-                scan_addr=host.ip,
+                family=self.scan_family,
+                addr=host.ip,
                 families={
-                    "port": {p.port_number: {"banner": p.banner} for p in
-                             host.ports}
-                },
+                    p.port_number: FamilyDiscovery(addr=p.banner)
+                    for p in host.ports
+                }
             )
-            self.publish(event.to_json())
+            self.publish(event)
