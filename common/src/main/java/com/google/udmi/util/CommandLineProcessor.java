@@ -15,6 +15,7 @@ import java.util.Map.Entry;
 import java.util.Optional;
 import java.util.Set;
 import java.util.TreeMap;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
 
 /**
@@ -114,9 +115,11 @@ public class CommandLineProcessor {
    * Process the given arg list. Return a list of remaining arguments (if any).
    */
   public List<String> processArgs(List<String> argList) {
+    AtomicReference<String> argRef = new AtomicReference<>();
     try {
       while (!argList.isEmpty()) {
         String arg = argList.remove(0);
+        argRef.set(arg);
         if (arg.equals(TERMINATING_ARG)) {
           return argList;
         }
@@ -131,11 +134,12 @@ public class CommandLineProcessor {
           return argList;
         }
       }
-      return null;
+    } catch (IllegalArgumentException e) {
+      System.err.println("Invalid argument: " + friendlyStackTrace(e));
     } catch (Exception e) {
-      showUsage(friendlyStackTrace(e));
-      return null;
+      showUsage(String.format("While processing %s: %s", argRef.get(), friendlyStackTrace(e)));
     }
+    return null;
   }
 
   private boolean processArgEntry(String arg, CommandLineOption option, Method method,

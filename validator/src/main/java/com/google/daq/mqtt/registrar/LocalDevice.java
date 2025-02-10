@@ -28,6 +28,7 @@ import static com.google.udmi.util.SiteModel.CLOUD_MODEL_FILE;
 import static com.google.udmi.util.SiteModel.METADATA_JSON;
 import static com.google.udmi.util.SiteModel.NORMALIZED_JSON;
 import static java.lang.String.format;
+import static java.util.Optional.ofNullable;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.github.fge.jsonschema.core.exceptions.ProcessingException;
@@ -50,6 +51,7 @@ import com.google.daq.mqtt.util.ExceptionMap.ErrorTree;
 import com.google.daq.mqtt.util.ExceptionMap.ExceptionCategory;
 import com.google.daq.mqtt.util.ValidationError;
 import com.google.daq.mqtt.util.ValidationException;
+import com.google.daq.mqtt.util.ValidationWarning;
 import com.google.daq.mqtt.validator.Validator;
 import com.google.udmi.util.JsonUtil;
 import com.google.udmi.util.MessageDowngrader;
@@ -59,7 +61,6 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.PrintStream;
 import java.io.PrintWriter;
@@ -311,8 +312,7 @@ class LocalDevice {
         throw new RuntimeException("Loading " + metadataException.file.getAbsolutePath(),
             metadataException.exception);
       }
-      baseVersion = (deviceMetadata.upgraded_from == null
-          ? deviceMetadata.version : deviceMetadata.upgraded_from);
+      baseVersion = ofNullable(deviceMetadata.upgraded_from).orElse(deviceMetadata.version);
 
       List<String> proxyIds = catchToNull(() -> deviceMetadata.gateway.proxy_ids);
       ifNotNullThen(proxyIds,
@@ -374,7 +374,7 @@ class LocalDevice {
       if (isProxied() && hasAuthType()) {
         throw new RuntimeException("Proxied devices should not have cloud.auth_type defined");
       }
-      if (!isDirectConnect()) {
+      if (!hasCloudConnection()) {
         return;
       }
       if (!hasAuthType()) {
@@ -409,7 +409,7 @@ class LocalDevice {
   }
 
   private Set<String> keyFiles() {
-    if (metadata == null || !isDirectConnect()) {
+    if (!isGateway() && !isDirectConnect()) {
       return ImmutableSet.of();
     }
     String authType = getAuthType();
@@ -449,6 +449,10 @@ class LocalDevice {
         : Set.of();
   }
 
+  boolean hasCloudConnection() {
+    return isDirectConnect() || isGateway();
+  }
+
   boolean isGateway() {
     return config != null && config.isGateway();
   }
@@ -473,7 +477,7 @@ class LocalDevice {
   }
 
   boolean isDirectConnect() {
-    return isGateway() || !isProxied();
+    return config != null && config.isDirect();
   }
 
   CloudDeviceSettings getSettings() {
@@ -534,7 +538,7 @@ class LocalDevice {
   }
 
   public byte[] getKeyBytes() {
-    if (!isDirectConnect()) {
+    if (!hasCloudConnection()) {
       return null;
     }
     String keyFile = PRIVATE_PKCS8_MAP.get(getAuthType());
@@ -572,7 +576,7 @@ class LocalDevice {
       }
       JsonNode configJson = OBJECT_MAPPER_STRICT.valueToTree(fromValue);
       if (config.shouldBeDowngraded()) {
-        new MessageDowngrader("config", configJson).downgrade(baseVersion);
+        new MessageDowngrader("config", configJson, metadata).downgrade(baseVersion);
       }
       return compressJsonString(configJson, MAX_JSON_LENGTH);
     });
@@ -791,25 +795,8 @@ class LocalDevice {
     if (!samplesDir.exists()) {
       return;
     }
-    File[] samples = samplesDir.listFiles();
-    if (samples == null) {
-      return;
-    }
-    ExceptionMap samplesMap = new ExceptionMap("Sample Validation");
-    for (File sampleFile : samples) {
-      String sampleName = sampleFile.getName();
-      try (InputStream sampleStream = new FileInputStream(sampleFile)) {
-        if (!schemas.containsKey(sampleName)) {
-          throw new RuntimeException("No valid matching schema found");
-        }
-        schemas.get(sampleName).validate(OBJECT_MAPPER_STRICT.readTree(sampleStream));
-      } catch (Exception e) {
-        Exception scopedException =
-            new RuntimeException("While validating sample file " + sampleName, e);
-        samplesMap.put(ExceptionCategory.sample, scopedException);
-      }
-    }
-    samplesMap.throwIfNotEmpty();
+    // TODO: Remove this once it's been out there for a while, deprecated 2025/02/03.
+    throw new RuntimeException("Deprecated samples/ directory: " + samplesDir.getAbsolutePath());
   }
 
   public Set<Entry<String, ErrorTree>> getTreeChildren() {
@@ -834,6 +821,16 @@ class LocalDevice {
 
   public LocalDevice duplicate(String newId) {
     return new LocalDevice(siteModel, newId, schemas, generation, deviceKind);
+  }
+
+  public void preprocessMetadata() {
+    ifTrueWarn(catchToNull(() -> metadata.cloud.config.static_file) != null,
+        "Disallowed cloud.config.static_file defined");
+  }
+
+  private void ifTrueWarn(boolean condition, String message) {
+    ifTrueThen(condition && siteModel.getStrictWarnings(),
+        () -> captureError(ExceptionCategory.metadata, new ValidationWarning(message)));
   }
 
   public enum DeviceStatus {

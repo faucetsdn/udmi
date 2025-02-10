@@ -328,6 +328,7 @@ class SiteMetadata:
     self.site = None
     self.name = None
     self.tags = None
+    self.strict_warnings = None
     self.location = None
     self.links = None
     self.parameters = None
@@ -342,6 +343,7 @@ class SiteMetadata:
     result.site = source.get('site')
     result.name = source.get('name')
     result.tags = source.get('tags')
+    result.strict_warnings = source.get('strict_warnings')
     result.location = SiteLocation.from_dict(source.get('location'))
     result.links = SiteLinks.from_dict(source.get('links'))
     result.parameters = ObjectBB16A108.from_dict(source.get('parameters'))
@@ -375,6 +377,8 @@ class SiteMetadata:
       result['name'] = self.name # 5
     if self.tags:
       result['tags'] = self.tags # 1
+    if self.strict_warnings:
+      result['strict_warnings'] = self.strict_warnings # 5
     if self.location:
       result['location'] = self.location.to_dict() # 4
     if self.links:

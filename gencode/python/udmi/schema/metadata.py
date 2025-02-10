@@ -26,7 +26,7 @@ class Metadata:
     self.testing = None
     self.features = None
     self.pointset = None
-    self.families = None
+    self.structure = None
 
   @staticmethod
   def from_dict(source):
@@ -45,7 +45,7 @@ class Metadata:
     result.testing = TestingModel.from_dict(source.get('testing'))
     result.features = FeatureDiscovery.map_from(source.get('features'))
     result.pointset = PointsetModel.from_dict(source.get('pointset'))
-    result.families = DiscoveryEvents.map_from(source.get('families'))
+    result.structure = DiscoveryEvents.map_from(source.get('structure'))
     return result
 
   @staticmethod
@@ -90,6 +90,6 @@ class Metadata:
       result['features'] = FeatureDiscovery.expand_dict(self.features) # 2
     if self.pointset:
       result['pointset'] = self.pointset.to_dict() # 4
-    if self.families:
-      result['families'] = DiscoveryEvents.expand_dict(self.families) # 2
+    if self.structure:
+      result['structure'] = DiscoveryEvents.expand_dict(self.structure) # 2
     return result

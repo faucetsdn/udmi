@@ -126,7 +126,7 @@ public class DiscoverySequences extends SequenceBase {
 
     List<DiscoveryEvents> allEvents = popReceivedEvents(DiscoveryEvents.class);
     // Filter for enumeration events, since there will sometimes be lingering scan events.
-    List<DiscoveryEvents> enumEvents = allEvents.stream().filter(event -> event.scan_addr == null)
+    List<DiscoveryEvents> enumEvents = allEvents.stream().filter(event -> event.addr == null)
         .toList();
     assertEquals("a single discovery event received", 1, enumEvents.size());
     DiscoveryEvents event = enumEvents.get(0);
@@ -330,14 +330,14 @@ public class DiscoverySequences extends SequenceBase {
 
     checkThat("discovery events were valid", reasons.isEmpty(), CSV_JOINER.join(reasons));
 
-    Set<String> duplicates = events.stream().map(x -> x.scan_addr)
+    Set<String> duplicates = events.stream().map(x -> x.addr)
         .collect(Collectors.groupingBy(Function.identity(), Collectors.counting()))
         .entrySet().stream().filter(p -> p.getValue() > 1).map(Entry::getKey)
         .collect(Collectors.toSet());
     checkThat("all scan addresses are unique", duplicates.isEmpty(),
         "duplicates: " + CSV_JOINER.join(duplicates));
 
-    Set<String> discoveredAddresses = events.stream().map(x -> x.scan_addr)
+    Set<String> discoveredAddresses = events.stream().map(x -> x.addr)
         .collect(Collectors.toSet());
     Set<String> expectedAddresses = siteModel.metadataStream().map(this::scanFamilyAddr)
         .filter(Objects::nonNull).collect(Collectors.toSet());
@@ -365,11 +365,11 @@ public class DiscoverySequences extends SequenceBase {
   private List<String> invalidReasons(DiscoveryEvents discoveryEvent, Date scanGeneration) {
     List<String> exceptions = new ArrayList<>();
     addIfCaught(exceptions,
-        () -> assertEquals("bad scan family", scanFamily, discoveryEvent.scan_family));
+        () -> assertEquals("bad scan family", scanFamily, discoveryEvent.family));
     addIfCaught(exceptions,
         () -> assertEquals("bad generation", scanGeneration, discoveryEvent.generation));
-    addIfCaught(exceptions, () -> assertNotNull("empty scan address", discoveryEvent.scan_addr));
-    addIfCaught(exceptions, () -> providerFamily.validateAddr(discoveryEvent.scan_addr));
+    addIfCaught(exceptions, () -> assertNotNull("empty scan address", discoveryEvent.addr));
+    addIfCaught(exceptions, () -> providerFamily.validateAddr(discoveryEvent.addr));
     return exceptions;
   }
 
@@ -409,7 +409,7 @@ public class DiscoverySequences extends SequenceBase {
   }
 
   private String refsMatch(DiscoveryEvents discoveryEvents) {
-    Entry<String, Metadata> deviceEntry = targetMetadata(discoveryEvents.scan_addr);
+    Entry<String, Metadata> deviceEntry = targetMetadata(discoveryEvents.addr);
     HashMap<String, PointPointsetModel> devicePoints = deviceEntry.getValue().pointset.points;
     Set<String> metadataRefs = devicePoints.values().stream()
         .map(x -> x.ref).filter(Objects::nonNull).collect(Collectors.toSet());

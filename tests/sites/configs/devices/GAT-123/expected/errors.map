@@ -1,4 +1,5 @@
 Exceptions for GAT-123
+  Disallowed cloud.config.static_file defined
   While loading credentials for local device GAT-123
     Found 0 credentials
   expected files mismatch

@@ -1,27 +1,6 @@
 {
-  "timestamp": "2020-05-01T13:39:07Z",
-  "version": "1.5.2",
-  "hash": "9d74a38d",
   "cloud": {
     "detail": "site default for unit tests"
-  },
-  "system": {
-    "location": {
-      "site": "ZZ-TRI-FECTA",
-      "section": "2-3N8C",
-      "position": {
-        "x": -111.0,
-        "y": 102.3
-      }
-    },
-    "physical_tag": {
-      "asset": {
-        "guid": "drw://TBD",
-        "site": "ZZ-TRI-FECTA",
-        "name": "AHU-22"
-      }
-    },
-    "min_loglevel": 300
   },
   "gateway": {
     "gateway_id": "GAT-123",
@@ -29,6 +8,7 @@
       "family": "bacnet"
     }
   },
+  "hash": "fb7395cf",
   "localnet": {
     "families": {
       "bacnet": {
@@ -39,17 +19,37 @@
   "pointset": {
     "points": {
       "filter_alarm_pressure_status": {
-        "units": "No-units",
-        "ref": "MCN8.present_value"
+        "ref": "MCN8.present_value",
+        "units": "No-units"
       },
       "filter_differential_pressure": {
-        "units": "Bars",
-        "ref": "AI2.differential"
+        "ref": "AI2.differential",
+        "units": "Bars"
       },
       "filter_differential_pressure_sensor": {
-        "units": "Degrees-Celsius",
-        "ref": "FAXLE12.present_value"
+        "ref": "FAXLE12.present_value",
+        "units": "Degrees-Celsius"
       }
     }
-  }
+  },
+  "system": {
+    "location": {
+      "position": {
+        "x": -111.0,
+        "y": 102.3
+      },
+      "section": "2-3N8C",
+      "site": "ZZ-TRI-FECTA"
+    },
+    "min_loglevel": 300,
+    "physical_tag": {
+      "asset": {
+        "guid": "drw://TBD",
+        "name": "AHU-22",
+        "site": "ZZ-TRI-FECTA"
+      }
+    }
+  },
+  "timestamp": "2020-05-01T13:39:07Z",
+  "version": "1.5.0"
 }

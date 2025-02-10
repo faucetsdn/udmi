@@ -10,6 +10,10 @@
       "description": "Expected unit configuration for the point",
       "type": "string"
     },
+    "description": {
+      "description": "Detailed description of this point",
+      "type": "string"
+    },
     "writable": {
       "description": "Indicates if this point is writable (else read-only)",
       "type": "boolean"
@@ -53,6 +57,16 @@
       "type": "string",
       "examples": ["AI3", "400070"]
     },
+    "adjunct": {
+      "type": "object",
+      "existingJavaType": "java.util.Map<String, String>",
+      "additionalProperties": false,
+      "patternProperties": {
+        "^[a-z_]+$": {
+          "type": "string"
+        }
+      }
+    },
     "tags":{
       "description": "Tags assosciated with the point",
       "type": "array",
@@ -61,6 +75,16 @@
         "pattern": "^[a-z0-9]+$"
       },
       "examples": [["lighting"], ["energy", "hvac"]]
+    },
+    "structure": {
+      "description": "Collection of family point information",
+      "additionalProperties": false,
+      "existingJavaType": "java.util.Map<String, RefDiscovery>",
+      "patternProperties": {
+        "^[-_.:/a-zA-Z0-9]+$": {
+          "$ref": "file:discovery_ref.json#"
+        }
+      }
     }
   }
 }

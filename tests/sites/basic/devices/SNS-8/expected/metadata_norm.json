@@ -1,22 +1,22 @@
 {
-  "timestamp": "2020-05-01T13:39:07Z",
-  "version": "1.5.2",
+  "gateway": {
+    "gateway_id": "GAT-123"
+  },
   "hash": "d1a93ccf",
   "system": {
     "location": {
-      "site": "ZZ-TRI-FECTA",
-      "section": "2-3N8C"
+      "section": "2-3N8C",
+      "site": "ZZ-TRI-FECTA"
     },
+    "min_loglevel": 300,
     "physical_tag": {
       "asset": {
         "guid": "drw://TBA",
-        "site": "ZZ-TRI-FECTA",
-        "name": "SNS-8"
+        "name": "SNS-8",
+        "site": "ZZ-TRI-FECTA"
       }
-    },
-    "min_loglevel": 300
+    }
   },
-  "gateway": {
-    "gateway_id": "GAT-123"
-  }
+  "timestamp": "2020-05-01T13:39:07Z",
+  "version": "1.5.2"
 }

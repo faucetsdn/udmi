@@ -1,34 +1,13 @@
 {
-  "timestamp": "2020-05-01T13:39:07Z",
-  "version": "1.5.2",
-  "upgraded_from": "1",
-  "hash": "f93e9dff",
   "cloud": {
     "auth_type": "RS256"
-  },
-  "system": {
-    "location": {
-      "site": "US-SFO-XYY",
-      "section": "2-3N8C",
-      "position": {
-        "x": -111.0,
-        "y": 102.3
-      }
-    },
-    "physical_tag": {
-      "asset": {
-        "guid": "bim://04aEp5ymD_$u5IxhJN2aGi",
-        "site": "US-SFO-XYY",
-        "name": "AHU-1"
-      }
-    },
-    "min_loglevel": 300
   },
   "gateway": {
     "target": {
       "family": "vendor"
     }
   },
+  "hash": "09a1fede",
   "localnet": {
     "families": {
       "vendor": {
@@ -39,16 +18,37 @@
   "pointset": {
     "points": {
       "filter_alarm_pressure_status": {
-        "units": "No-units",
-        "ref": "BV11.present_value"
+        "ref": "BV11.present_value",
+        "units": "No-units"
       },
       "filter_differential_pressure": {
         "units": "Bars"
       },
       "filter_differential_pressure_sensor": {
-        "units": "Degrees-Celsius",
-        "ref": "AV12.present_value"
+        "ref": "AV12.present_value",
+        "units": "Degrees-Celsius"
       }
     }
-  }
+  },
+  "system": {
+    "location": {
+      "position": {
+        "x": -111.0,
+        "y": 102.3
+      },
+      "section": "2-3N8C",
+      "site": "US-SFO-XYY"
+    },
+    "min_loglevel": 300,
+    "physical_tag": {
+      "asset": {
+        "guid": "bim://04aEp5ymD_$u5IxhJN2aGi",
+        "name": "AHU-1",
+        "site": "US-SFO-XYY"
+      }
+    }
+  },
+  "timestamp": "2020-05-01T13:39:07Z",
+  "upgraded_from": "1",
+  "version": "1.5.3"
 }
