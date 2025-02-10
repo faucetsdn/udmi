@@ -1,0 +1,32 @@
+[project]
+name = "pyudmi"
+version = "0.1.0"
+description = "A Python library for UDMI"
+authors = [
+    { name = "Your Name", email = "you@example.com" }
+]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = ">=3.8,<4.0"
+paho-mqtt = ">=2.1.0,<3.0.0"
+bac0 = ">=2024.9.20,<2025.0.0"
+udmi-schema = {path = "../../codegen/udmi_schema-0.1.0-py3-none-any.whl"}
+scapy = "^2.6.1"
+
+[build-system]
+requires = ["poetry-core>=2.0.0,<3.0.0"]
+build-backend = "poetry.core.masonry.api"
+
+[tool.poetry.group.dev.dependencies]
+pytest = "^8.3.4"
+
+[tool.poetry]
+packages = [
+    { include = "udmi", from = "src" },
+]
+
+[tool.poetry.plugins."udmi.network_discovery_scans"]
+global_bacnet = "udmi.client.manager.discovery.global_bacnet_scan:GlobalBacnetScan"
+nmap_banner = "udmi.client.manager.discovery.nmap_banner_scan:NmapBannerScan"
+passive_network = "udmi.client.manager.discovery.passive_network_scan:PassiveNetworkScan"
