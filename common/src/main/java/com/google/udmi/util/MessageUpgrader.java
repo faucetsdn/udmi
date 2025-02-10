@@ -159,15 +159,10 @@ public class MessageUpgrader {
       upgraded |= patch == 1 && didMessageChange(this::upgradeTo_1_5_2, patchUpdater(2));
     }
 
-    if (upgraded && message.get(VERSION_KEY) != null) {
+    String currentVersion = SchemaVersion.CURRENT.key();
+    if (upgraded && message.has(VERSION_KEY) && !currentVersion.equals(originalVersion)) {
       message.put(UPGRADED_FROM, originalVersion);
-      message.put(VERSION_KEY, String.format(TARGET_FORMAT, major, minor, patch));
-    }
-
-    // Even if the message was not modified, it is now conformant to the current version
-    // of UDMI, so update the version property if it exists
-    if (message.has(VERSION_KEY)) {
-      message.put(VERSION_KEY, SchemaVersion.CURRENT.key());
+      message.put(VERSION_KEY, currentVersion);
     }
 
     return message;

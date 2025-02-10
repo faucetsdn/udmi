@@ -108,7 +108,7 @@ public class SystemModel {
     @JsonPropertyDescription("Information used to print a physical QR code label.")
     public Physical_tag physical_tag;
     @JsonProperty("adjunct")
-    public Adjunct adjunct;
+    public Map<String, String> adjunct;
     /**
      * The minimum loglevel for reporting log messages below which log entries should not be sent. Default to 300.
      * 

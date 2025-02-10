@@ -1,36 +1,16 @@
 {
-  "timestamp": "2020-05-01T13:39:07Z",
-  "version": "1.5.2",
-  "hash": "3d7471e7",
   "cloud": {
     "auth_type": "RS256",
     "config": {
       "static_file": "non-existant.file"
     }
   },
-  "system": {
-    "location": {
-      "site": "ZZ-TRI-FECTA-AHU",
-      "section": "2-3N8C",
-      "position": {
-        "x": 111.0,
-        "y": 102.3
-      }
-    },
-    "physical_tag": {
-      "asset": {
-        "guid": "drw://TBC",
-        "site": "ZZ-TRI-FECTA",
-        "name": "AHU-1"
-      }
-    },
-    "min_loglevel": 300
-  },
   "discovery": {
     "families": {
-      "vendor": { }
+      "vendor": {}
     }
   },
+  "hash": "3d7471e7",
   "localnet": {
     "families": {
       "ether": {
@@ -38,6 +18,43 @@
       },
       "ipv4": {
         "addr": "192.168.2.1"
+      }
+    }
+  },
+  "pointset": {
+    "points": {
+      "filter_alarm_pressure_status": {
+        "ref": "BV11.present_value",
+        "units": "No-units"
+      },
+      "filter_differential_pressure_sensor": {
+        "baseline_tolerance": 2.0,
+        "baseline_value": 10,
+        "ref": "FAXLE12.present_value",
+        "units": "Degrees-Celsius"
+      },
+      "filter_differential_pressure_setpoint": {
+        "baseline_value": 98,
+        "units": "Bars",
+        "writable": true
+      }
+    }
+  },
+  "system": {
+    "location": {
+      "position": {
+        "x": 111.0,
+        "y": 102.3
+      },
+      "section": "2-3N8C",
+      "site": "ZZ-TRI-FECTA-AHU"
+    },
+    "min_loglevel": 300,
+    "physical_tag": {
+      "asset": {
+        "guid": "drw://TBC",
+        "name": "AHU-1",
+        "site": "ZZ-TRI-FECTA"
       }
     }
   },
@@ -57,23 +74,6 @@
       }
     }
   },
-  "pointset": {
-    "points": {
-      "filter_alarm_pressure_status": {
-        "units": "No-units",
-        "ref": "BV11.present_value"
-      },
-      "filter_differential_pressure_sensor": {
-        "units": "Degrees-Celsius",
-        "baseline_value": 10,
-        "baseline_tolerance": 2.0,
-        "ref": "FAXLE12.present_value"
-      },
-      "filter_differential_pressure_setpoint": {
-        "units": "Bars",
-        "writable": true,
-        "baseline_value": 98
-      }
-    }
-  }
+  "timestamp": "2020-05-01T13:39:07Z",
+  "version": "1.5.2"
 }

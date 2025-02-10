@@ -5,7 +5,7 @@ import com.google.common.collect.ImmutableList;
 /**
  * Exception during validation.
  */
-public class ValidationException extends RuntimeException {
+public class ValidationException extends ValidationError {
 
   private final ImmutableList<ValidationException> causingExceptions;
 

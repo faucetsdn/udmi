@@ -1,7 +1,7 @@
 {
   "generation": "2022-06-21T17:19:49.191023+00:00",
-  "scan_family": "bacnet",
-  "scan_addr": "5005",
+  "family": "bacnet",
+  "addr": "5005",
   "event_no": 5,
   "refs": {
     "AI1094": {

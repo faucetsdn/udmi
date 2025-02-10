@@ -36,7 +36,7 @@ class PassiveScanRecord:
 class PassiveNetworkDiscovery(discovery.DiscoveryController):
   """Passive Network Discovery."""
 
-  scan_family = "ipv4"
+  family = "ipv4"
 
   def __init__(self, state, publisher, *, interface=None):
 
@@ -125,8 +125,8 @@ class PassiveNetworkDiscovery(discovery.DiscoveryController):
         self.publish(
             udmi.schema.discovery_event.DiscoveryEvent(
                 generation=self.config.generation,
-                scan_addr=device_record.addr,
-                scan_family=self.scan_family,
+                addr=device_record.addr,
+                family=self.family,
                 families=dict(
                     ether=udmi.schema.discovery_event.DiscoveryFamily(
                         device_record.mac

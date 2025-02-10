@@ -1,34 +1,16 @@
 {
-  "timestamp": "2018-08-26T21:39:29Z",
-  "version": "1.5.2",
-  "upgraded_from": "1.3.13",
-  "hash": "3c1b230d",
   "cloud": {
     "auth_type": "RS256"
   },
-  "system": {
-    "location": {
-      "site": "US-SFO-XYY",
-      "position": {
-        "x": 19280.45652,
-        "y": 16975.6483
-      }
-    },
-    "physical_tag": {
-      "asset": {
-        "guid": "bim://04aEp5ymD_$u5IxhJN2aGi",
-        "site": "US-SFO-XYY",
-        "name": "AHU-1"
-      }
-    },
-    "min_loglevel": 300
-  },
   "gateway": {
+    "proxy_ids": [
+      "SF-28"
+    ],
     "target": {
       "family": "bacnet"
-    },
-    "proxy_ids": [ "SF-28" ]
+    }
   },
+  "hash": "1413df4e",
   "localnet": {
     "families": {
       "bacnet": {
@@ -37,6 +19,26 @@
     }
   },
   "pointset": {
-    "points": { }
-  }
+    "points": {}
+  },
+  "system": {
+    "location": {
+      "position": {
+        "x": 19280.45652,
+        "y": 16975.6483
+      },
+      "site": "US-SFO-XYY"
+    },
+    "min_loglevel": 300,
+    "physical_tag": {
+      "asset": {
+        "guid": "bim://04aEp5ymD_$u5IxhJN2aGi",
+        "name": "AHU-1",
+        "site": "US-SFO-XYY"
+      }
+    }
+  },
+  "timestamp": "2018-08-26T21:39:29Z",
+  "upgraded_from": "1.3.13",
+  "version": "1.5.3"
 }

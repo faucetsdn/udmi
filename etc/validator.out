@@ -51,12 +51,19 @@ sites/udmi_site_model/out/devices/AHU-1/config.out
   "sub_folder" : "update",
   "sub_type" : "config",
   "status" : {
-    "message" : "Successful validation",
-    "category" : "validation.device.receive",
+    "message" : "1 schema violations found",
+    "detail" : "config_update: 1 schema violations found; /localnet/families/bacnet: object instance has properties which are not allowed by the schema: [\"addr\"]",
+    "category" : "validation.device.schema",
     "timestamp" : "REDACTED_TIMESTAMP",
-    "level" : 200
+    "level" : 500
   },
-  "errors" : [ ]
+  "errors" : [ {
+    "message" : "1 schema violations found",
+    "detail" : "config_update: 1 schema violations found; /localnet/families/bacnet: object instance has properties which are not allowed by the schema: [\"addr\"]",
+    "category" : "validation.device.schema",
+    "timestamp" : "REDACTED_TIMESTAMP",
+    "level" : 500
+  } ]
 }
 ::::::::::::::
 sites/udmi_site_model/out/devices/AHU-1/events_pointset.out
@@ -248,12 +255,19 @@ sites/udmi_site_model/out/devices/AHU-22/config.out
   "sub_folder" : "update",
   "sub_type" : "config",
   "status" : {
-    "message" : "Successful validation",
-    "category" : "validation.device.receive",
+    "message" : "1 schema violations found",
+    "detail" : "config_update: 1 schema violations found; /localnet/families/vendor: object instance has properties which are not allowed by the schema: [\"addr\"]",
+    "category" : "validation.device.schema",
     "timestamp" : "REDACTED_TIMESTAMP",
-    "level" : 200
+    "level" : 500
   },
-  "errors" : [ ]
+  "errors" : [ {
+    "message" : "1 schema violations found",
+    "detail" : "config_update: 1 schema violations found; /localnet/families/vendor: object instance has properties which are not allowed by the schema: [\"addr\"]",
+    "category" : "validation.device.schema",
+    "timestamp" : "REDACTED_TIMESTAMP",
+    "level" : 500
+  } ]
 }
 ::::::::::::::
 sites/udmi_site_model/out/devices/AHU-22/events_pointset.out
@@ -405,12 +419,19 @@ sites/udmi_site_model/out/devices/GAT-123/config.out
   "sub_folder" : "update",
   "sub_type" : "config",
   "status" : {
-    "message" : "Successful validation",
-    "category" : "validation.device.receive",
+    "message" : "1 schema violations found",
+    "detail" : "config_update: 1 schema violations found; /localnet/families/bacnet: object instance has properties which are not allowed by the schema: [\"addr\"]",
+    "category" : "validation.device.schema",
     "timestamp" : "REDACTED_TIMESTAMP",
-    "level" : 200
+    "level" : 500
   },
-  "errors" : [ ]
+  "errors" : [ {
+    "message" : "1 schema violations found",
+    "detail" : "config_update: 1 schema violations found; /localnet/families/bacnet: object instance has properties which are not allowed by the schema: [\"addr\"]",
+    "category" : "validation.device.schema",
+    "timestamp" : "REDACTED_TIMESTAMP",
+    "level" : 500
+  } ]
 }
 ::::::::::::::
 sites/udmi_site_model/out/devices/GAT-123/events_blobset.out
@@ -450,15 +471,15 @@ sites/udmi_site_model/out/devices/GAT-123/events_discovery.out
   "sub_folder" : "discovery",
   "sub_type" : "events",
   "status" : {
-    "message" : "discovery scan_family not defined",
-    "detail" : "events_discovery: discovery scan_family not defined REDACTED_ERROR",
+    "message" : "discovery family not defined",
+    "detail" : "events_discovery: discovery family not defined REDACTED_ERROR",
     "category" : "validation.device.schema",
     "timestamp" : "REDACTED_TIMESTAMP",
     "level" : 500
   },
   "errors" : [ {
-    "message" : "discovery scan_family not defined",
-    "detail" : "events_discovery: discovery scan_family not defined REDACTED_ERROR",
+    "message" : "discovery family not defined",
+    "detail" : "events_discovery: discovery family not defined REDACTED_ERROR",
     "category" : "validation.device.schema",
     "timestamp" : "REDACTED_TIMESTAMP",
     "level" : 500

@@ -61,14 +61,14 @@ echo Checking for mismatching class signatures...
 rm -f $MARKER
 dups=$(find $OUTDIR -name \*__\*.java)
 for file in $dups; do
-    root=${file%__1.java}
-    versions=$(sha256sum ${root}* | sort | awk '{print $1}' | uniq | wc -l)
+    base=${file%__1.java}.java
+    versions=$(sha256sum $base $file | sort | awk '{print $1}' | uniq | wc -l)
     [[ $versions == 1 ]] || (
         touch $MARKER
-        echo $versions of $root
-        ls -l $root*
-        diff $root*
-        fgrep ${root}__ -r $OUTDIR
+        echo $versions of $base found
+        ls -l $base $file
+        diff $base $file
+        fgrep ${base%.java}__ -r $OUTDIR
     )
 done
 [[ ! -f $MARKER ]]

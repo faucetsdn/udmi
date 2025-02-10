@@ -1,15 +1,9 @@
 {
-  "timestamp": "2020-05-01T13:39:07Z",
-  "version": "1.5.2",
-  "system": {
-    "min_loglevel": 300,
-    "metrics_rate_sec": 10,
-    "operation": { }
-  },
+  "downgraded_from": "1.5.3",
   "localnet": {
     "families": {
-      "ether": { },
-      "ipv4": { }
+      "ether": {},
+      "ipv4": {}
     }
   },
   "pointset": {
@@ -23,9 +17,16 @@
         "units": "Degrees-Celsius"
       },
       "filter_differential_pressure_setpoint": {
-        "units": "Bars",
-        "set_value": 98
+        "set_value": 98,
+        "units": "Bars"
       }
     }
-  }
+  },
+  "system": {
+    "metrics_rate_sec": 10,
+    "min_loglevel": 300,
+    "operation": {}
+  },
+  "timestamp": "2020-05-01T13:39:07Z",
+  "version": "1.4.2"
 }

@@ -25,7 +25,7 @@ idna==3.7
 importlib_metadata==8.4.0
 iniconfig==2.0.0
 isort==5.11.3
-Jinja2==3.1.4
+Jinja2==3.1.5
 json-schema-for-humans==0.40
 lazy-object-proxy==1.8.0
 markdown2==2.4.2

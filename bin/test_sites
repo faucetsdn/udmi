@@ -69,15 +69,17 @@ for subset in $subsets; do
     bin/registrar $site_dir/cloud_iot_config.json
 
     for device in $devices; do
-        if [[ -d $devicesdir/$device/out ]]; then
-            redact_files $devicesdir/$device/out/* $site_dir/registration_summary.json
-            diffs=$(diff -rq $devicesdir/$device/out $devicesdir/$device/expected 2>&1) || true
+        devicesout=$devicesdir/$device/out
+        if [[ -d $devicesout ]]; then
+            find $devicesout -name \*.json | xargs -i bash -c "jq -S . {} | sponge {}"
+            redact_files $devicesout/* $site_dir/registration_summary.json
+            diffs=$(diff -rq $devicesout $devicesdir/$device/expected 2>&1) || true
             if [[ -n $diffs ]]; then
                 cat <<< $diffs >> $FAILURES
-                diff -r $devicesdir/$device/out $devicesdir/$device/expected || true
+                diff -r $devicesout $devicesdir/$device/expected || true
             fi
         elif [[ -d $devicesdir/$device/expected ]]; then
-            echo Missing output directory $devicesdir/$device/out
+            echo Missing output directory $devicesout
             false
         fi
     done

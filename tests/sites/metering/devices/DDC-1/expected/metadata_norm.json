@@ -1,0 +1,33 @@
+{
+  "hash": "ba65dfc9",
+  "localnet": {
+    "families": {
+      "bacnet": {
+        "addr": "12345",
+        "parent_id": "SRV-1"
+      },
+      "ipv4": {
+        "addr": "100.100.100.123",
+        "adjunct": {
+          "bcast": "100.100.100.255",
+          "cidr": "100.100.100.0/24"
+        }
+      },
+      "modbus": {
+        "addr": "0",
+        "adjunct": {
+          "baud": "9600",
+          "bits": "8",
+          "enconding": "rtu",
+          "stop": "2"
+        },
+        "parent_id": "DDC-1"
+      }
+    }
+  },
+  "system": {
+    "min_loglevel": 300
+  },
+  "timestamp": "2020-05-01T13:39:07Z",
+  "version": "1.5.3"
+}
