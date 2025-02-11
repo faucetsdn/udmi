@@ -100,8 +100,6 @@ It can be used with other tools similarly.
 ```json lines
 // site_model/site_metadata.json
 {
-  "site": "zz-top-example",
-  "name": "Reference udmi site model",
   "sheet": "https://docs.google.com/spreadsheets/d/YOUR_SPREADSHEET_ID"
 }
 ```
