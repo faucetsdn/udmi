@@ -95,11 +95,10 @@ Google Sheet. Each line of output will be written to a new row in the sheet.
 We have already integrated the `stream_to_gsheets` utility in `bin/registrar`. 
 It can be used with other tools similarly.
 
-* Define the link to the spreadsheet in your site model's site_metadata.json
+* Define the link to the spreadsheet in your site model's `site_metadata.json`
   file under the key `sheet`.
   
 ```json
-// site_model/site_metadata.json
 {
   "sheet": "https://docs.google.com/spreadsheets/d/YOUR_SPREADSHEET_ID"
 }
