@@ -98,7 +98,7 @@ It can be used with other tools similarly.
 * Define the link to the spreadsheet in your site model's site_metadata.json
   file under the key `sheet`.
   
-```json lines
+```json
 // site_model/site_metadata.json
 {
   "sheet": "https://docs.google.com/spreadsheets/d/YOUR_SPREADSHEET_ID"
