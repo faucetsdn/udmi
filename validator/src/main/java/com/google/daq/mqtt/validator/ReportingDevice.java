@@ -2,6 +2,7 @@ package com.google.daq.mqtt.validator;
 
 import static com.google.udmi.util.Common.SUBFOLDER_PROPERTY_KEY;
 import static com.google.udmi.util.Common.SUBTYPE_PROPERTY_KEY;
+import static com.google.udmi.util.GeneralUtils.ifNotNullGet;
 import static com.google.udmi.util.JsonUtil.convertTo;
 import static java.lang.String.format;
 import static java.util.Optional.ofNullable;
@@ -265,7 +266,7 @@ public class ReportingDevice implements ErrorCollector {
   }
 
   public Set<String> getMissingPoints() {
-    return pointsetValidator.getMissingPoints();
+    return ifNotNullGet(pointsetValidator, PointsetValidator::getMissingPoints);
   }
 
   public Set<String> getExtraPoints() {
