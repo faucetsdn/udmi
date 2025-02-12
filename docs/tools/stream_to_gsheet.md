@@ -96,14 +96,17 @@ We have already integrated the `stream_to_gsheets` utility in `bin/registrar`.
 It can be used with other tools similarly.
 
 * Define the link to the spreadsheet in your site model's site_metadata.json
-  file under the key `sheet`
+  file under the key `sheet`.
+  
 ```json lines
 // site_model/site_metadata.json
 {
   "sheet": "https://docs.google.com/spreadsheets/d/YOUR_SPREADSHEET_ID"
 }
 ```
+
 * In the tool script, add the required commands:
+
 ```shell
 source $UDMI_ROOT/etc/shell_common.sh
 
