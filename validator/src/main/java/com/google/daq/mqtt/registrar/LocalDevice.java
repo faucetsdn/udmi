@@ -7,9 +7,9 @@ import static com.google.daq.mqtt.registrar.Registrar.ENVELOPE_SCHEMA_JSON;
 import static com.google.daq.mqtt.registrar.Registrar.METADATA_SCHEMA_JSON;
 import static com.google.daq.mqtt.util.ConfigManager.GENERATED_CONFIG_JSON;
 import static com.google.daq.mqtt.util.ConfigManager.configFrom;
-import static com.google.daq.mqtt.util.ContextWrapper.runInContext;
 import static com.google.udmi.util.Common.DEVICE_ID_ALLOWABLE;
 import static com.google.udmi.util.Common.POINT_NAME_ALLOWABLE;
+import static com.google.udmi.util.ContextWrapper.runInContext;
 import static com.google.udmi.util.GeneralUtils.CSV_JOINER;
 import static com.google.udmi.util.GeneralUtils.OBJECT_MAPPER_STRICT;
 import static com.google.udmi.util.GeneralUtils.catchToNull;
@@ -44,19 +44,19 @@ import com.google.daq.mqtt.util.CloudDeviceSettings;
 import com.google.daq.mqtt.util.CloudIotManager;
 import com.google.daq.mqtt.util.ConfigManager;
 import com.google.daq.mqtt.util.DeviceExceptionManager;
-import com.google.daq.mqtt.util.ErrorMap;
-import com.google.daq.mqtt.util.ErrorMap.ErrorMapException;
-import com.google.daq.mqtt.util.ExceptionMap;
-import com.google.daq.mqtt.util.ExceptionMap.ErrorTree;
-import com.google.daq.mqtt.util.ExceptionMap.ExceptionCategory;
-import com.google.daq.mqtt.util.ValidationError;
-import com.google.daq.mqtt.util.ValidationException;
-import com.google.daq.mqtt.util.ValidationWarning;
-import com.google.daq.mqtt.validator.Validator;
+import com.google.udmi.util.ErrorMap;
+import com.google.udmi.util.ErrorMap.ErrorMapException;
+import com.google.udmi.util.ExceptionMap;
+import com.google.udmi.util.ExceptionMap.ErrorTree;
+import com.google.udmi.util.ExceptionMap.ExceptionCategory;
 import com.google.udmi.util.JsonUtil;
 import com.google.udmi.util.MessageDowngrader;
+import com.google.udmi.util.MessageValidator;
 import com.google.udmi.util.SiteModel;
 import com.google.udmi.util.SiteModel.MetadataException;
+import com.google.udmi.util.ValidationError;
+import com.google.udmi.util.ValidationException;
+import com.google.udmi.util.ValidationWarning;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileWriter;
@@ -238,7 +238,7 @@ class LocalDevice {
 
     for (ProcessingMessage msg : report) {
       if (msg.getLogLevel().compareTo(LogLevel.ERROR) >= 0) {
-        throw Validator.fromProcessingReport(report);
+        throw MessageValidator.fromProcessingReport(report);
       }
     }
   }

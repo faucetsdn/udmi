@@ -8,9 +8,9 @@ import static java.lang.String.format;
 import static java.util.Optional.ofNullable;
 import static org.junit.Assert.assertTrue;
 
-import com.google.daq.mqtt.util.ExceptionList;
-import com.google.daq.mqtt.util.ValidationException;
 import com.google.udmi.util.Common;
+import com.google.udmi.util.ExceptionList;
+import com.google.udmi.util.ValidationException;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Date;

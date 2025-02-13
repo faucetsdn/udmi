@@ -100,6 +100,7 @@ publishing {
 
 dependencies {
     implementation 'io.jsonwebtoken:jjwt:0.9.1'
+    implementation group: 'com.github.java-json-tools', name: 'json-schema-validator', version: '2.2.14'
     implementation 'javax.xml.bind:jaxb-api:2.3.1'
     implementation 'com.sun.xml.bind:jaxb-impl:3.0.1'
     implementation 'commons-io:commons-io:2.5'

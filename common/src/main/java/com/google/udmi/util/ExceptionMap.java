@@ -1,8 +1,8 @@
-package com.google.daq.mqtt.util;
+package com.google.udmi.util;
 
 import static com.google.udmi.util.GeneralUtils.multiTrim;
 
-import com.google.daq.mqtt.util.ErrorMap.ErrorMapException;
+import com.google.udmi.util.ErrorMap.ErrorMapException;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
