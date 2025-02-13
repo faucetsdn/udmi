@@ -54,6 +54,7 @@ import com.google.bos.iot.core.proxy.IotReflectorClient;
 import com.google.bos.iot.core.proxy.MqttPublisher;
 import com.google.bos.iot.core.proxy.NullPublisher;
 import com.google.cloud.Tuple;
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
@@ -112,6 +113,7 @@ import java.util.stream.StreamSupport;
 import org.apache.commons.io.FileUtils;
 import org.slf4j.impl.SimpleLogger;
 import udmi.schema.Category;
+import udmi.schema.CloudModel.Operation;
 import udmi.schema.DeviceValidationEvents;
 import udmi.schema.Envelope;
 import udmi.schema.Envelope.SubFolder;
@@ -244,6 +246,11 @@ public class Validator {
 
   public Validator() {
     outputLogger = new LoggingHandler();
+  }
+
+  @VisibleForTesting
+  public Map<String, ReportingDevice> getReportingDevices() {
+    return reportingDevices;
   }
 
   Validator processArgs(List<String> argListRaw) {
@@ -646,10 +653,36 @@ public class Validator {
     JsonUtil.writeFile(udmiConfig, new File(outBaseDir, UDMI_CONFIG_JSON_FILE));
   }
 
+  private boolean handleMetadataUpdate(Map<String, String> attributes, Object object) {
+    Metadata metadata = convertTo(Metadata.class, object);
+    String subFolderRaw = attributes.get(SUBFOLDER_PROPERTY_KEY);
+    String subTypeRaw = attributes.get(SUBTYPE_PROPERTY_KEY);
+    String deviceId = attributes.get("deviceId");
+
+    if (metadata != null && SubType.MODEL.value().equals(subTypeRaw) &&
+        SubFolder.UPDATE.value().equals(subFolderRaw) && reportingDevices.containsKey(deviceId)) {
+
+      ReportingDevice reportingDevice = reportingDevices.get(deviceId);
+
+      if (metadata.system == null && metadata.cloud != null &&
+          metadata.cloud.operation == Operation.DELETE) {
+        reportingDevices.remove(deviceId);
+        return true;
+      }
+      if (metadata.system != null) {
+        reportingDevice.setMetadata(metadata);
+        return true;
+      }
+    }
+
+    return false;
+  }
+
   protected synchronized void validateMessage(MessageBundle message) {
     ifNotNullThen(message, bundle -> {
       Object object = ofNullable((Object) bundle.message).orElse(bundle.rawMessage);
-      if (!handleSystemMessage(bundle.attributes, object)) {
+      if (!handleSystemMessage(bundle.attributes, object) &&
+          !handleMetadataUpdate(bundle.attributes, object)) {
         validateMessage(object, bundle.attributes);
       }
     });
