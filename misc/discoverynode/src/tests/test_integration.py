@@ -8,7 +8,6 @@ import udmi.core
 import udmi.schema.util
 import udmi.discovery.discovery
 import os
-import logging
 
 # This test runs inside a discoverynode container as a command
 assert "I_AM_INTEGRATION_TEST" in os.environ
@@ -24,7 +23,6 @@ def test_bacnet_integration():
   test_config["mqtt"] = dict(device_id="THUNDERBIRD-2")
   test_config["bacnet"] = dict(ip=None, port=None, interface=None)
   test_config["udmi"] = {"discovery": dict(ipv4=False,vendor=False,ether=False,bacnet=True)}
-  logging.error("im here")
   # Container for storing all discovery messages
   messages = []
 
@@ -55,15 +53,10 @@ def test_bacnet_integration():
       print("----")
     
 
-    #expected_ethmacs = set(d["ether"] for d in docker_config.values())
-    #seen_ethmac_toplevel = set(m.families["ether"].addr for m in messages if "ether" in m.families)
-
-    #expected_bacnet_ids = set(str(d["bacnet_id"]) for d in docker_config.values())
+   
     expected_bacnet_ids = set(["1"])
     seen_bacnet_ids_toplevel = set(m.addr for m in messages if m.family == "bacnet")
 
-    # subset because passive scan will find the gateway and device itself
-    #assert seen_ethmac_toplevel == expected_ethmacs + 2
     assert expected_bacnet_ids == seen_bacnet_ids_toplevel 
 
 
@@ -109,13 +102,3 @@ def test_nmap():
     
 
     assert False, "failing so messages are printed to terminal"
-
-    expected_ethmacs = set(d["ether"] for d in docker_config.values())
-    seen_ethmac_toplevel = set(m.families["ether"].addr for m in messages if "ether" in m.families)
-
-    expected_bacnet_ids = set(str(d["bacnet_id"]) for d in docker_config.values())
-    seen_bacnet_ids_toplevel = set(m.addr for m in messages if m.family == "bacnet")
-
-    # subset because passive scan will find the gateway and device itself
-    assert seen_ethmac_toplevel == expected_ethmacs + 2
-    assert expected_bacnet_ids == seen_bacnet_ids_toplevel 
