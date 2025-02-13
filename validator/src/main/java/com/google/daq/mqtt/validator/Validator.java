@@ -148,7 +148,6 @@ public class Validator {
   private static final String DEVICE_FILE_FORMAT = "devices/%s";
   private static final String SCHEMA_SKIP_FORMAT = "Unknown schema subFolder '%s' for %s";
   private static final String ENVELOPE_SCHEMA_ID = "envelope";
-  private static final String METADATA_SCHEMA_ID = "metadata";
   private static final String DEVICE_REGISTRY_ID_KEY = "deviceRegistryId";
   private static final String UNKNOWN_FOLDER_DEFAULT = "unknown";
   private static final String UNKNOWN_TYPE_DEFAULT = "events";
@@ -686,8 +685,8 @@ public class Validator {
   protected synchronized void validateMessage(MessageBundle message) {
     ifNotNullThen(message, bundle -> {
       Object object = ofNullable((Object) bundle.message).orElse(bundle.rawMessage);
-      if (!handleSystemMessage(bundle.attributes, object) &&
-          !handleMetadataUpdate(bundle.attributes, object)) {
+      if (!handleSystemMessage(bundle.attributes, object)
+          && !handleMetadataUpdate(bundle.attributes, object)) {
         validateMessage(object, bundle.attributes);
       }
     });
@@ -1041,10 +1040,6 @@ public class Validator {
   private String messageSchema(Map<String, String> attributes) {
     String subFolder = attributes.get(SUBFOLDER_PROPERTY_KEY);
     String subType = attributes.get(SUBTYPE_PROPERTY_KEY);
-
-    if (SubFolder.UPDATE.value().equals(subFolder) && SubType.MODEL.value().equals(subType)) {
-      return METADATA_SCHEMA_ID;
-    }
 
     if (SubFolder.UPDATE.value().equals(subFolder)) {
       return subType;
