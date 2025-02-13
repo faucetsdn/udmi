@@ -131,7 +131,7 @@ public class SiteModel {
     if (!siteConf.exists()) {
       throw new RuntimeException("File not found: " + siteConf.getAbsolutePath());
     }
-    specMatcher = ifNotNullGet(specSupplier, spec -> extractSpec(spec.get()));
+    specMatcher = specIsDirectory && specSupplier != null ? extractSpec(specSupplier.get()) : null;
     exeConfig = loadSiteConfig();
     sitePath = ofNullable(exeConfig.site_model).map(f -> maybeRelativeTo(f, exeConfig.src_file))
         .orElse(siteConf.getParent());
