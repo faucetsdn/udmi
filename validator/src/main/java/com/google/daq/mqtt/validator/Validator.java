@@ -654,28 +654,40 @@ public class Validator {
     JsonUtil.writeFile(udmiConfig, new File(outBaseDir, UDMI_CONFIG_JSON_FILE));
   }
 
-  private void handleIfMetadataUpdate(ReportingDevice device, Map<String, String> attributes,
-      Object messageObject) {
+  private boolean handleMetadataUpdate(Map<String, String> attributes, Object messageObject) {
     String deviceId = attributes.get("deviceId");
+
+    if (!reportingDevices.containsKey(deviceId)) {
+      return false;
+    }
+
+    ReportingDevice device = reportingDevices.get(deviceId);
     String subFolderRaw = attributes.get(SUBFOLDER_PROPERTY_KEY);
     String subTypeRaw = attributes.get(SUBTYPE_PROPERTY_KEY);
-    Metadata metadata = convertTo(Metadata.class, messageObject);
 
-    if (metadata != null && SubType.MODEL.value().equals(subTypeRaw)
-        && SubFolder.UPDATE.value().equals(subFolderRaw)) {
+    if (SubType.MODEL.value().equals(subTypeRaw) && SubFolder.UPDATE.value().equals(subFolderRaw)) {
+      Metadata metadata = convertTo(Metadata.class, messageObject);
 
+      if (metadata == null) {
+        return false;
+      }
       if (metadata.cloud != null && metadata.cloud.operation == Operation.DELETE) {
         reportingDevices.remove(deviceId);
-      } else if (metadata.system != null) {
+        return true;
+      }
+      if (metadata.system != null) {
         device.setMetadata(metadata);
+        return true;
       }
     }
+    return false;
   }
 
   protected synchronized void validateMessage(MessageBundle message) {
     ifNotNullThen(message, bundle -> {
       Object object = ofNullable((Object) bundle.message).orElse(bundle.rawMessage);
-      if (!handleSystemMessage(bundle.attributes, object)) {
+      if (!handleSystemMessage(bundle.attributes, object) &&
+          !handleMetadataUpdate(bundle.attributes, object)) {
         validateMessage(object, bundle.attributes);
       }
     });
@@ -794,7 +806,6 @@ public class Validator {
 
       if (!device.hasErrors()) {
         outputLogger.info("Validation clean %s", messageTag);
-        handleIfMetadataUpdate(device, attributes, messageObj);
       } else {
         outputLogger.info("Validation error %s", messageTag);
       }
