@@ -666,10 +666,7 @@ public class Validator {
 
       if (metadata.cloud != null && metadata.cloud.operation == Operation.DELETE) {
         reportingDevices.remove(deviceId);
-        return;
-      }
-
-      if (metadata.system != null) {
+      } else if (metadata.system != null) {
         device.setMetadata(metadata);
       }
     }
