@@ -159,9 +159,21 @@ journalctl -f -xeu udmi_discovery
 
 ```
 
+## Integration Test
+
+```
+misc/discoverynode/testing/integration/integration_test.sh
+```
+
+This will load a docker container, however with a dedicated testing wrapper 
+`misc/discoverynode/src/tests/test_integration.py` 
+as the entrypoint.
+
+This can be used to validate that discovery actually discovers, message formats, etc.
+
 ## E2E Test
 
-TODO
+Refer to Github CI test. 
 
 ## Test Suite
 
