@@ -148,6 +148,7 @@ public class Validator {
   private static final String DEVICE_FILE_FORMAT = "devices/%s";
   private static final String SCHEMA_SKIP_FORMAT = "Unknown schema subFolder '%s' for %s";
   private static final String ENVELOPE_SCHEMA_ID = "envelope";
+  private static final String METADATA_SCHEMA_ID = "metadata";
   private static final String DEVICE_REGISTRY_ID_KEY = "deviceRegistryId";
   private static final String UNKNOWN_FOLDER_DEFAULT = "unknown";
   private static final String UNKNOWN_TYPE_DEFAULT = "events";
@@ -653,36 +654,31 @@ public class Validator {
     JsonUtil.writeFile(udmiConfig, new File(outBaseDir, UDMI_CONFIG_JSON_FILE));
   }
 
-  private boolean handleMetadataUpdate(Map<String, String> attributes, Object object) {
-    Metadata metadata = convertTo(Metadata.class, object);
+  private void handleIfMetadataUpdate(ReportingDevice device, Map<String, String> attributes,
+      Object messageObject) {
+    String deviceId = attributes.get("deviceId");
     String subFolderRaw = attributes.get(SUBFOLDER_PROPERTY_KEY);
     String subTypeRaw = attributes.get(SUBTYPE_PROPERTY_KEY);
-    String deviceId = attributes.get("deviceId");
+    Metadata metadata = convertTo(Metadata.class, messageObject);
 
-    if (metadata != null && SubType.MODEL.value().equals(subTypeRaw) &&
-        SubFolder.UPDATE.value().equals(subFolderRaw) && reportingDevices.containsKey(deviceId)) {
+    if (metadata != null && SubType.MODEL.value().equals(subTypeRaw)
+        && SubFolder.UPDATE.value().equals(subFolderRaw)) {
 
-      ReportingDevice reportingDevice = reportingDevices.get(deviceId);
-
-      if (metadata.system == null && metadata.cloud != null &&
-          metadata.cloud.operation == Operation.DELETE) {
+      if (metadata.cloud != null && metadata.cloud.operation == Operation.DELETE) {
         reportingDevices.remove(deviceId);
-        return true;
+        return;
       }
+
       if (metadata.system != null) {
-        reportingDevice.setMetadata(metadata);
-        return true;
+        device.setMetadata(metadata);
       }
     }
-
-    return false;
   }
 
   protected synchronized void validateMessage(MessageBundle message) {
     ifNotNullThen(message, bundle -> {
       Object object = ofNullable((Object) bundle.message).orElse(bundle.rawMessage);
-      if (!handleSystemMessage(bundle.attributes, object) &&
-          !handleMetadataUpdate(bundle.attributes, object)) {
+      if (!handleSystemMessage(bundle.attributes, object)) {
         validateMessage(object, bundle.attributes);
       }
     });
@@ -801,6 +797,7 @@ public class Validator {
 
       if (!device.hasErrors()) {
         outputLogger.info("Validation clean %s", messageTag);
+        handleIfMetadataUpdate(device, attributes, messageObj);
       } else {
         outputLogger.info("Validation error %s", messageTag);
       }
@@ -1036,6 +1033,10 @@ public class Validator {
   private String messageSchema(Map<String, String> attributes) {
     String subFolder = attributes.get(SUBFOLDER_PROPERTY_KEY);
     String subType = attributes.get(SUBTYPE_PROPERTY_KEY);
+
+    if (SubFolder.UPDATE.value().equals(subFolder) && SubType.MODEL.value().equals(subType)) {
+      return METADATA_SCHEMA_ID;
+    }
 
     if (SubFolder.UPDATE.value().equals(subFolder)) {
       return subType;

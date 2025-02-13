@@ -156,6 +156,7 @@ public class BasicTest extends TestBase {
   @Test
   public void deviceMetadataUpdate() {
     Metadata messageObject = new Metadata();
+    messageObject.version = TestCommon.UDMI_VERSION;
     messageObject.system = new SystemModel();
     messageObject.system.description = "Updated description";
     MessageBundle messageBundle = getMessageBundle(MODEL_SUBTYPE, UPDATE_SUBFOLDER, messageObject);
@@ -170,6 +171,8 @@ public class BasicTest extends TestBase {
   @Test
   public void deviceDeleteMetadataUpdate() {
     Metadata messageObject = new Metadata();
+    messageObject.version = TestCommon.UDMI_VERSION;
+    messageObject.system = new SystemModel();
     messageObject.cloud = new CloudModel();
     messageObject.cloud.operation = Operation.DELETE;
     MessageBundle messageBundle = getMessageBundle(MODEL_SUBTYPE, UPDATE_SUBFOLDER, messageObject);
