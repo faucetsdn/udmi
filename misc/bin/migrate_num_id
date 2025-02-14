@@ -1,0 +1,13 @@
+#!/bin/bash -e
+
+more +2 out/registration_summary.csv | while read dev_id num_id other; do
+    device=${dev_id%,}
+    num_id=${num_id%,}
+    metadata=devices/$device/metadata.json
+    
+    # echo Reformatting $device metadata.json...
+    # jq "." $metadata | sponge $metadata
+    
+    echo Updating $device with num_id $num_id
+    jq ".cloud.num_id = \"$num_id\"" $metadata | sponge $metadata
+done
