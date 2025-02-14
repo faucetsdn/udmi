@@ -38,6 +38,7 @@ import static com.google.udmi.util.JsonUtil.isoConvert;
 import static com.google.udmi.util.JsonUtil.mapCast;
 import static com.google.udmi.util.JsonUtil.safeSleep;
 import static java.lang.String.format;
+import static java.util.Objects.requireNonNull;
 import static java.util.Optional.ofNullable;
 import static udmi.schema.IotAccess.IotProvider.PUBSUB;
 
@@ -655,29 +656,22 @@ public class Validator {
 
   private boolean handleMetadataUpdate(Map<String, String> attributes, Object messageObject) {
     String deviceId = attributes.get("deviceId");
-
-    if (!reportingDevices.containsKey(deviceId)) {
-      return false;
-    }
-
-    ReportingDevice device = reportingDevices.get(deviceId);
     String subFolderRaw = attributes.get(SUBFOLDER_PROPERTY_KEY);
     String subTypeRaw = attributes.get(SUBTYPE_PROPERTY_KEY);
 
     if (SubType.MODEL.value().equals(subTypeRaw) && SubFolder.UPDATE.value().equals(subFolderRaw)) {
-      Metadata metadata = convertTo(Metadata.class, messageObject);
+      if (reportingDevices.containsKey(deviceId)) {
+        ReportingDevice device = reportingDevices.get(deviceId);
+        Metadata metadata = convertTo(Metadata.class,
+            requireNonNull(messageObject, "messageObject is null"));
 
-      if (metadata == null) {
-        return false;
+        if (metadata.cloud != null && metadata.cloud.operation == Operation.DELETE) {
+          reportingDevices.remove(deviceId);
+        } else if (metadata.system != null) {
+          device.setMetadata(metadata);
+        }
       }
-      if (metadata.cloud != null && metadata.cloud.operation == Operation.DELETE) {
-        reportingDevices.remove(deviceId);
-        return true;
-      }
-      if (metadata.system != null) {
-        device.setMetadata(metadata);
-        return true;
-      }
+      return true;
     }
     return false;
   }
