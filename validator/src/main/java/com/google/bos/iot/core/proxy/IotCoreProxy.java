@@ -10,6 +10,7 @@ import com.fasterxml.jackson.databind.util.ISO8601DateFormat;
 import com.google.cloud.ServiceOptions;
 import com.google.daq.mqtt.util.PubSubClient;
 import com.google.daq.mqtt.util.PubSubPusher;
+import com.google.udmi.util.MessageValidator;
 import java.io.File;
 import java.util.Date;
 import java.util.HashMap;

@@ -19,7 +19,6 @@ import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Sets;
 import com.google.common.hash.Hashing;
-import com.google.daq.mqtt.util.ValidationException;
 import com.google.udmi.util.ProperPrinter.OutputFormat;
 import java.io.BufferedReader;
 import java.io.ByteArrayOutputStream;

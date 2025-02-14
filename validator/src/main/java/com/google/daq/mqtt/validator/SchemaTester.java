@@ -1,6 +1,6 @@
 package com.google.daq.mqtt.validator;
 
-import com.google.daq.mqtt.util.ExceptionMap;
+import com.google.udmi.util.ExceptionMap;
 import java.util.Arrays;
 
 /**
