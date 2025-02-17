@@ -1868,7 +1868,7 @@ public class SequenceBase {
       return;
     }
 
-    if (SubType.REPLY.value().equals(subTypeRaw)) {
+    if (Validator.isReplySubtype(subTypeRaw)) {
       return;
     }
 

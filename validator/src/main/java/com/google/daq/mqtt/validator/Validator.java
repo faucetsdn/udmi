@@ -717,9 +717,7 @@ public class Validator {
       writeDeviceOutCapture(messageObj, attributes, deviceId, schemaName);
 
       String subFolder = attributes.get(SUBFOLDER_PROPERTY_KEY);
-      String subType = attributes.get(SUBTYPE_PROPERTY_KEY);
-      boolean processSchema = !SubType.REPLY.value().equals(subType)
-          && !IGNORE_FOLDERS.contains(subFolder);
+      boolean processSchema = !IGNORE_FOLDERS.contains(subFolder);
 
       try {
         if (processSchema && !schemaMap.containsKey(schemaName)) {
@@ -791,10 +789,6 @@ public class Validator {
       Map<String, String> attributes) {
     String schemaName = ofNullable(attributes.get(SCHEMA_NAME_KEY)).orElseGet(
         () -> messageSchema(attributes));
-
-    if (SubType.REPLY.value().equals(attributes.get(SUBTYPE_PROPERTY_KEY))) {
-      return;
-    }
 
     upgradeMessage(schemaName, message);
 
@@ -956,7 +950,7 @@ public class Validator {
     String subType = attributes.get(SUBTYPE_PROPERTY_KEY);
     String subFolder = attributes.get(SUBFOLDER_PROPERTY_KEY);
     String category = attributes.get("category");
-    boolean ignore = CONFIG_CATEGORY.equals(category);
+    boolean ignore = CONFIG_CATEGORY.equals(category) || isReplySubtype(subType);
     boolean process = subType == null
         || INTERESTING_TYPES.contains(subType)
         || SubFolder.UPDATE.value().equals(subFolder);
@@ -1300,6 +1294,10 @@ public class Validator {
 
   private File getFullPath(String prefix, File targetFile) {
     return prefix == null ? targetFile : new File(new File(prefix), targetFile.getPath());
+  }
+
+  public static boolean isReplySubtype(String subtype) {
+    return SubType.REPLY.value().equals(subtype);
   }
 
   /**
