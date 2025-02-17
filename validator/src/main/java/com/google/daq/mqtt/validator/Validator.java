@@ -25,6 +25,7 @@ import static com.google.udmi.util.Common.UPDATE_QUERY_TOPIC;
 import static com.google.udmi.util.Common.UPGRADED_FROM;
 import static com.google.udmi.util.Common.getExceptionMessage;
 import static com.google.udmi.util.Common.getNamespacePrefix;
+import static com.google.udmi.util.GeneralUtils.catchToNull;
 import static com.google.udmi.util.GeneralUtils.friendlyStackTrace;
 import static com.google.udmi.util.GeneralUtils.getTimestamp;
 import static com.google.udmi.util.GeneralUtils.ifNotNullGet;
@@ -665,7 +666,7 @@ public class Validator {
         Metadata metadata = convertTo(Metadata.class,
             requireNonNull(messageObject, "messageObject is null"));
 
-        if (metadata.cloud != null && metadata.cloud.operation == Operation.DELETE) {
+        if (catchToNull(() -> metadata.cloud.operation) == Operation.DELETE) {
           reportingDevices.remove(deviceId);
         } else if (metadata.system != null) {
           device.setMetadata(metadata);
