@@ -2,7 +2,6 @@ package com.google.daq.mqtt.validator;
 
 import static com.google.api.client.util.Preconditions.checkState;
 import static com.google.common.base.Preconditions.checkArgument;
-import static com.google.common.collect.ImmutableList.toImmutableList;
 import static com.google.daq.mqtt.registrar.Registrar.BASE_DIR;
 import static com.google.daq.mqtt.sequencer.SequenceBase.EMPTY_MESSAGE;
 import static com.google.daq.mqtt.util.ConfigUtil.UDMI_ROOT;
@@ -25,6 +24,7 @@ import static com.google.udmi.util.Common.UPDATE_QUERY_TOPIC;
 import static com.google.udmi.util.Common.UPGRADED_FROM;
 import static com.google.udmi.util.Common.getExceptionMessage;
 import static com.google.udmi.util.Common.getNamespacePrefix;
+import static com.google.udmi.util.GeneralUtils.catchToNull;
 import static com.google.udmi.util.GeneralUtils.friendlyStackTrace;
 import static com.google.udmi.util.GeneralUtils.getTimestamp;
 import static com.google.udmi.util.GeneralUtils.ifNotNullGet;
@@ -38,6 +38,7 @@ import static com.google.udmi.util.JsonUtil.isoConvert;
 import static com.google.udmi.util.JsonUtil.mapCast;
 import static com.google.udmi.util.JsonUtil.safeSleep;
 import static java.lang.String.format;
+import static java.util.Objects.requireNonNull;
 import static java.util.Optional.ofNullable;
 import static udmi.schema.IotAccess.IotProvider.PUBSUB;
 
@@ -45,8 +46,6 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.github.fge.jsonschema.core.load.configuration.LoadingConfiguration;
 import com.github.fge.jsonschema.core.load.download.URIDownloader;
-import com.github.fge.jsonschema.core.report.LogLevel;
-import com.github.fge.jsonschema.core.report.ProcessingMessage;
 import com.github.fge.jsonschema.core.report.ProcessingReport;
 import com.github.fge.jsonschema.main.JsonSchema;
 import com.github.fge.jsonschema.main.JsonSchemaFactory;
@@ -54,25 +53,28 @@ import com.google.bos.iot.core.proxy.IotReflectorClient;
 import com.google.bos.iot.core.proxy.MqttPublisher;
 import com.google.bos.iot.core.proxy.NullPublisher;
 import com.google.cloud.Tuple;
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.daq.mqtt.util.CloudIotManager;
-import com.google.daq.mqtt.util.ExceptionMap;
-import com.google.daq.mqtt.util.ExceptionMap.ErrorTree;
 import com.google.daq.mqtt.util.FileDataSink;
 import com.google.daq.mqtt.util.ImpulseRunningAverage;
 import com.google.daq.mqtt.util.MessagePublisher;
 import com.google.daq.mqtt.util.MessagePublisher.QuerySpeed;
 import com.google.daq.mqtt.util.PubSubClient;
-import com.google.daq.mqtt.util.ValidationException;
 import com.google.udmi.util.CommandLineOption;
 import com.google.udmi.util.CommandLineProcessor;
 import com.google.udmi.util.Common;
+import com.google.udmi.util.ErrorMap;
+import com.google.udmi.util.ErrorMap.ErrorMapException;
+import com.google.udmi.util.ExceptionMap;
+import com.google.udmi.util.ExceptionMap.ErrorTree;
 import com.google.udmi.util.GeneralUtils;
 import com.google.udmi.util.JsonUtil;
 import com.google.udmi.util.MessageUpgrader;
+import com.google.udmi.util.MessageValidator;
 import com.google.udmi.util.SiteModel;
 import java.io.File;
 import java.io.FilenameFilter;
@@ -104,12 +106,11 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.BiConsumer;
 import java.util.function.Function;
-import java.util.regex.Pattern;
 import java.util.stream.Collectors;
-import java.util.stream.StreamSupport;
 import org.apache.commons.io.FileUtils;
 import org.slf4j.impl.SimpleLogger;
 import udmi.schema.Category;
+import udmi.schema.CloudModel.Operation;
 import udmi.schema.DeviceValidationEvents;
 import udmi.schema.Envelope;
 import udmi.schema.Envelope.SubFolder;
@@ -156,12 +157,6 @@ public class Validator {
   private static final Set<SubType> LAST_SEEN_SUBTYPES = ImmutableSet.of(
       SubType.EVENTS,
       SubType.STATE);
-
-  @SuppressWarnings("checkstyle:linelength")
-  private static final List<String> IGNORE_LIST = ImmutableList.of(
-      "instance type \\(string\\) does not match any allowed primitive type \\(allowed: \\[.*\"number\"\\]\\)");
-  private static final List<Pattern> IGNORE_PATTERNS = IGNORE_LIST.stream().map(Pattern::compile)
-      .toList();
 
   private static final long DEFAULT_INTERVAL_SEC = 60;
   private static final long REPORTS_PER_SEC = 10;
@@ -244,6 +239,11 @@ public class Validator {
     outputLogger = new LoggingHandler();
   }
 
+  @VisibleForTesting
+  public Map<String, ReportingDevice> getReportingDevices() {
+    return reportingDevices;
+  }
+
   Validator processArgs(List<String> argListRaw) {
     List<String> argList = new ArrayList<>(argListRaw);
     try {
@@ -296,39 +296,6 @@ public class Validator {
     if (message.get(EXCEPTION_KEY) instanceof Exception exception) {
       message.put(EXCEPTION_KEY, friendlyStackTrace(exception));
     }
-  }
-
-  /**
-   * From an external processing report.
-   *
-   * @param report Report to convert
-   * @return Converted exception.
-   */
-  public static ValidationException fromProcessingReport(ProcessingReport report) {
-    checkArgument(!report.isSuccess(), "Report must not be successful");
-    ImmutableList<ValidationException> causingExceptions =
-        StreamSupport.stream(report.spliterator(), false)
-            .filter(Validator::errorOrWorse)
-            .filter(Validator::notOnIgnoreList)
-            .map(Validator::convertMessage).collect(toImmutableList());
-    return causingExceptions.isEmpty() ? null : new ValidationException(
-        format("%d schema violations found", causingExceptions.size()), causingExceptions);
-  }
-
-  private static boolean notOnIgnoreList(ProcessingMessage processingMessage) {
-    return IGNORE_PATTERNS.stream()
-        .noneMatch(p -> p.matcher(processingMessage.getMessage()).matches());
-  }
-
-  private static boolean errorOrWorse(ProcessingMessage processingMessage) {
-    return processingMessage.getLogLevel().compareTo(LogLevel.ERROR) >= 0;
-  }
-
-  private static ValidationException convertMessage(ProcessingMessage processingMessage) {
-    String pointer = processingMessage.asJson().get("instance").get("pointer").asText();
-    String prefix =
-        com.google.api.client.util.Strings.isNullOrEmpty(pointer) ? "" : (pointer + ": ");
-    return new ValidationException(prefix + processingMessage.getMessage());
   }
 
   private List<String> parseArgs(List<String> argList) {
@@ -644,10 +611,33 @@ public class Validator {
     JsonUtil.writeFile(udmiConfig, new File(outBaseDir, UDMI_CONFIG_JSON_FILE));
   }
 
+  private boolean handleMetadataUpdate(Map<String, String> attributes, Object messageObject) {
+    String deviceId = attributes.get("deviceId");
+    String subFolderRaw = attributes.get(SUBFOLDER_PROPERTY_KEY);
+    String subTypeRaw = attributes.get(SUBTYPE_PROPERTY_KEY);
+
+    if (SubType.MODEL.value().equals(subTypeRaw) && SubFolder.UPDATE.value().equals(subFolderRaw)) {
+      if (reportingDevices.containsKey(deviceId)) {
+        ReportingDevice device = reportingDevices.get(deviceId);
+        Metadata metadata = convertTo(Metadata.class,
+            requireNonNull(messageObject, "messageObject is null"));
+
+        if (catchToNull(() -> metadata.cloud.operation) == Operation.DELETE) {
+          reportingDevices.remove(deviceId);
+        } else if (metadata.system != null) {
+          device.setMetadata(metadata);
+        }
+      }
+      return true;
+    }
+    return false;
+  }
+
   protected synchronized void validateMessage(MessageBundle message) {
     ifNotNullThen(message, bundle -> {
       Object object = ofNullable((Object) bundle.message).orElse(bundle.rawMessage);
-      if (!handleSystemMessage(bundle.attributes, object)) {
+      if (!handleSystemMessage(bundle.attributes, object)
+          && !handleMetadataUpdate(bundle.attributes, object)) {
         validateMessage(object, bundle.attributes);
       }
     });
@@ -684,7 +674,8 @@ public class Validator {
 
   private void validateMessage(JsonSchema schema, Object message) throws Exception {
     ProcessingReport report = schema.validate(OBJECT_MAPPER.valueToTree(message), true);
-    ifTrueThen(!report.isSuccess(), () -> ifNotNullThrow(fromProcessingReport(report)));
+    ifTrueThen(!report.isSuccess(),
+        () -> ifNotNullThrow(MessageValidator.fromProcessingReport(report)));
   }
 
   private Instant getInstant(Object msgObject, Map<String, String> attributes) {
@@ -1072,7 +1063,7 @@ public class Validator {
       }
     }
 
-    summary.missing_devices = new ArrayList(targets);
+    summary.missing_devices = new ArrayList<>(targets);
     summary.missing_devices.removeAll(summary.error_devices);
     summary.missing_devices.removeAll(summary.correct_devices);
 
@@ -1149,14 +1140,14 @@ public class Validator {
     if (targetFiles.size() == 0) {
       throw new RuntimeException("Cowardly refusing to validate against zero targets");
     }
-    ExceptionMap schemaExceptions =
-        new ExceptionMap(format(SCHEMA_VALIDATION_FORMAT, schemaFiles.size()));
+    ErrorMap schemaExceptions =
+        new ErrorMap(format(SCHEMA_VALIDATION_FORMAT, schemaFiles.size()));
     for (File schemaFile : schemaFiles) {
       try {
         JsonSchema schema = getSchema(schemaFile);
         String fileName = schemaFile.getName();
-        ExceptionMap validateExceptions =
-            new ExceptionMap(format(TARGET_VALIDATION_FORMAT, targetFiles.size(), fileName));
+        ErrorMap validateExceptions =
+            new ErrorMap(format(TARGET_VALIDATION_FORMAT, targetFiles.size(), fileName));
         for (File targetFile : targetFiles) {
           try {
             System.out.println(
@@ -1187,6 +1178,8 @@ public class Validator {
     } catch (ExceptionMap processingException) {
       ErrorTree errorTree = ExceptionMap.format(processingException);
       errorTree.write(System.err);
+    } catch (ErrorMapException e) {
+      e.getMap().values().forEach(ex -> System.err.println(friendlyStackTrace(ex)));
     }
   }
 

@@ -55,12 +55,13 @@ sudo mosquitto_sub $SERVER_OPTS -R -F "%j" -t $topic_filter |
         out_path=$OUT_BASE/$registryId/devices/$deviceId/${timepath}/${usetime}_${subFolder}_${subType}
         out_dir=$(dirname $out_path)
         mkdir -p $out_dir
-        echo $(realpath --relative-to $OUT_BASE $out_path).json $topic
+        echo $(realpath --relative-to $UDMI_ROOT $out_path).json
         echo $json > $out_path.json
         echo {} | jq ".deviceRegistryId=\"$registryId\" | \
              .subFolder=\"$subFolder\" |
              .subType=\"$subType\" |
              .deviceId=\"$deviceId\"" > $out_path.attr
+        echo $topic > $out_path.mqtt
     done
 
 echo Finished mqtt message capture at $(date -u -Is)

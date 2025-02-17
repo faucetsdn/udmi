@@ -6,9 +6,15 @@ import static com.google.common.collect.Sets.difference;
 import static com.google.common.collect.Sets.intersection;
 import static com.google.daq.mqtt.util.ConfigUtil.UDMI_ROOT;
 import static com.google.udmi.util.Common.CLOUD_VERSION_KEY;
+import static com.google.udmi.util.Common.DEVICE_ID_KEY;
+import static com.google.udmi.util.Common.DEVICE_NUM_KEY;
 import static com.google.udmi.util.Common.NO_SITE;
+import static com.google.udmi.util.Common.PROJECT_ID_PROPERTY_KEY;
+import static com.google.udmi.util.Common.REGISTRY_ID_PROPERTY_KEY;
 import static com.google.udmi.util.Common.SEC_TO_MS;
 import static com.google.udmi.util.Common.SITE_METADATA_KEY;
+import static com.google.udmi.util.Common.SUBFOLDER_PROPERTY_KEY;
+import static com.google.udmi.util.Common.SUBTYPE_PROPERTY_KEY;
 import static com.google.udmi.util.Common.UDMI_VERSION_KEY;
 import static com.google.udmi.util.GeneralUtils.CSV_JOINER;
 import static com.google.udmi.util.GeneralUtils.catchToNull;
@@ -53,15 +59,16 @@ import com.google.daq.mqtt.registrar.LocalDevice.DeviceKind;
 import com.google.daq.mqtt.util.CloudDeviceSettings;
 import com.google.daq.mqtt.util.CloudIotManager;
 import com.google.daq.mqtt.util.DeviceGatewayBoundException;
-import com.google.daq.mqtt.util.ExceptionMap;
-import com.google.daq.mqtt.util.ExceptionMap.ErrorTree;
 import com.google.daq.mqtt.util.PubSubPusher;
-import com.google.daq.mqtt.util.ValidationError;
 import com.google.udmi.util.CommandLineOption;
 import com.google.udmi.util.CommandLineProcessor;
 import com.google.udmi.util.Common;
+import com.google.udmi.util.ExceptionMap;
+import com.google.udmi.util.ExceptionMap.ErrorTree;
+import com.google.udmi.util.ExceptionMap.ExceptionCategory;
 import com.google.udmi.util.JsonUtil;
 import com.google.udmi.util.SiteModel;
+import com.google.udmi.util.ValidationError;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
@@ -129,6 +136,7 @@ public class Registrar {
   private static final long DELETE_FLUSH_DELAY_MS = 10 * SEC_TO_MS;
   public static final String REGISTRAR_TOOL_NAME = "registrar";
   private static final int SET_SIZE_THRESHOLD = 10;
+  private boolean autoAltRegistry;
   private final Map<String, JsonSchema> schemas = new HashMap<>();
   private final String generation = JsonUtil.isoConvert();
   private final Set<Summarizer> summarizers = new HashSet<>();
@@ -163,6 +171,7 @@ public class Registrar {
   private List<Future<?>> executing = new ArrayList<>();
   private SiteModel siteModel;
   private boolean queryOnly;
+  private boolean strictWarnings;
 
   /**
    * Main entry point for registrar.
@@ -177,9 +186,20 @@ public class Registrar {
       System.exit(Common.EXIT_CODE_ERROR);
     }
 
-    // Force exist because PubSub Subscriber in PubSubReflector does not shut down properly.
-    safeSleep(2000);
-    System.exit(0);
+    Common.forcedDelayedShutdown();
+  }
+
+  private void maybeProcessAltRegistry() {
+    if (autoAltRegistry) {
+      ifNotNullThen(siteModel.getExecutionConfiguration().alt_registry, this::processAltRegistry);
+    }
+  }
+
+  private void processAltRegistry(String altRegistry) {
+    System.err.printf("%n%n%n%nDoing that whole thing again for the alternate registry %s%n%n%n%n",
+        altRegistry);
+    siteModel.resetRegistryId(altRegistry);
+    execute();
   }
 
   @SuppressWarnings("unchecked")
@@ -209,7 +229,7 @@ public class Registrar {
       argList.add(NO_SITE);
     }
     try {
-      siteModel = new SiteModel(TOOL_NAME, argList);
+      setSiteModel(new SiteModel(TOOL_NAME, argList));
     } catch (IllegalArgumentException e) {
       commandLineProcessor.showUsage(e.getMessage());
     }
@@ -287,8 +307,10 @@ public class Registrar {
     }
   }
 
-  void execute() {
+  Registrar execute() {
     execute(null);
+    maybeProcessAltRegistry();
+    return this;
   }
 
   @VisibleForTesting
@@ -330,8 +352,7 @@ public class Registrar {
   }
 
   private SiteMetadata getSiteMetadata() {
-    SiteMetadata siteMetadata = ofNullable(siteModel.loadSiteMetadata()).orElseGet(
-        SiteMetadata::new);
+    SiteMetadata siteMetadata = siteModel.loadSiteMetadata();
     siteMetadata.name = ofNullable(siteMetadata.name).orElse(siteModel.getSiteName());
     return siteMetadata;
   }
@@ -396,20 +417,15 @@ public class Registrar {
     }
     workingDevices.values().forEach(LocalDevice::writeErrors);
     workingDevices.values().forEach(device -> {
-      Set<Entry<String, ErrorTree>> entries = getDeviceErrorEntries(device);
-      if (entries.isEmpty()) {
-        getErrorKeyMap(errorSummary, "Clean")
-            .put(device.getDeviceId(), device.getNormalizedTimestamp());
-      } else {
-        entries
-            .forEach(
-                error -> getErrorKeyMap(errorSummary, error.getKey())
-                    .put(device.getDeviceId(), error.getValue().message));
-      }
+      getErrorKeyMap(errorSummary, ExceptionCategory.status.toString())
+          .put(device.getDeviceId(), device.getStatus().toString());
+      getDeviceErrorEntries(device).forEach(error -> getErrorKeyMap(errorSummary, error.getKey())
+          .put(device.getDeviceId(), error.getValue().message));
     });
     if (extraDevices != null && !extraDevices.isEmpty()) {
-      errorSummary.put("Extra", extraDevices.stream().collect(Collectors.toMap(
-          Function.identity(), id -> cloudModels.get(id).operation.toString())));
+      errorSummary.put(ExceptionCategory.extra.toString(),
+          extraDevices.stream().collect(Collectors.toMap(Function.identity(),
+              id -> cloudModels.get(id).operation.toString())));
     }
     System.err.println("\nSummary:");
     errorSummary.forEach((key, value) -> System.err.println(
@@ -420,10 +436,11 @@ public class Registrar {
     lastErrorSummary = errorSummary;
     errorSummary.put(UDMI_VERSION_KEY, Common.getUdmiVersion());
     ifNotNullThen(siteModel.siteMetadataExceptionMap,
-        exceptions -> errorSummary.put(SITE_METADATA_KEY, exceptions.stream()
-            .map(Entry::getValue)
-            .map(Exception::getMessage)
-            .collect(Collectors.toList())));
+        exceptions -> ifNotTrueThen(exceptions.isEmpty(), () ->
+            errorSummary.put(SITE_METADATA_KEY, exceptions.stream()
+                .map(Entry::getValue)
+                .map(Exception::getMessage)
+                .collect(Collectors.toList()))));
     summarizers.forEach(summarizer -> {
       File outFile = summarizer.outFile;
       try {
@@ -443,11 +460,17 @@ public class Registrar {
     return ifNotNullGet(cloudIotManager, CloudIotManager::getVersionInformation);
   }
 
+  private void setSiteModel(SiteModel siteModel) {
+    siteModel.loadSiteMetadata();
+    this.siteModel = siteModel;
+    ifTrueThen(strictWarnings, siteModel::setStrictWarnings);
+  }
+
   @CommandLineOption(short_form = "-s", arg_name = "site_path", description = "Set site path")
   private void setSitePath(String sitePath) {
     checkNotNull(SCHEMA_NAME, "schemaName not set yet");
     siteDir = new File(sitePath);
-    siteModel = ofNullable(siteModel).orElseGet(() -> new SiteModel(sitePath));
+    setSiteModel(ofNullable(siteModel).orElseGet(() -> new SiteModel(sitePath)));
     File summaryBase = new File(siteDir, SiteModel.REGISTRATION_SUMMARY_BASE);
     File parentFile = summaryBase.getParentFile();
     if (!parentFile.isDirectory() && !parentFile.mkdirs()) {
@@ -647,9 +670,10 @@ public class Registrar {
       if (deviceSet.isEmpty()) {
         return;
       }
-      Set<String> gateways = deviceSet.stream().filter(id -> ifNotNullGet(workingDevices.get(id),
+      final Set<String> original = ImmutableSet.copyOf(deviceSet);
+      Set<String> gateways = original.stream().filter(id -> ifNotNullGet(workingDevices.get(id),
           LocalDevice::isGateway, false)).collect(Collectors.toSet());
-      final Set<String> others = difference(deviceSet, gateways);
+      final Set<String> others = difference(original, gateways);
 
       final Instant start = Instant.now();
 
@@ -667,10 +691,10 @@ public class Registrar {
 
       Duration between = Duration.between(start, Instant.now());
       double seconds = between.getSeconds() + between.getNano() / 1e9;
-      System.err.printf("Deleted %d devices in %.03fs%n", deviceSet.size(), seconds);
+      System.err.printf("Deleted %d devices in %.03fs%n", original.size(), seconds);
 
       Set<String> deviceIds = fetchCloudModels().keySet();
-      Set<String> remaining = intersection(deviceIds, deviceSet);
+      Set<String> remaining = intersection(deviceIds, original);
       if (!remaining.isEmpty()) {
         throw new RuntimeException("Did not delete all devices! " + CSV_JOINER.join(remaining));
       }
@@ -720,6 +744,8 @@ public class Registrar {
     } catch (Exception e) {
       throw new RuntimeException("While deleting device " + deviceId, e);
     }
+
+    cloudModels.remove(deviceId);
   }
 
   /**
@@ -778,7 +804,7 @@ public class Registrar {
       }
     } catch (Exception e) {
       System.err.printf("Error processing %s: %s%n", localDevice.getDeviceId(), e);
-      localDevice.captureError(LocalDevice.EXCEPTION_REGISTERING, e);
+      localDevice.captureError(ExceptionCategory.registering, e);
     }
     return created;
   }
@@ -1004,12 +1030,12 @@ public class Registrar {
       Object subConfig) {
     try {
       Map<String, String> attributes = new HashMap<>();
-      attributes.put("deviceId", localDevice.getDeviceId());
-      attributes.put("deviceNumId", localDevice.getDeviceNumId());
-      attributes.put("deviceRegistryId", cloudIotManager.getRegistryId());
-      attributes.put("projectId", cloudIotManager.getProjectId());
-      attributes.put("subType", subType);
-      attributes.put("subFolder", subFolder.value());
+      attributes.put(DEVICE_ID_KEY, localDevice.getDeviceId());
+      attributes.put(DEVICE_NUM_KEY, localDevice.getDeviceNumId());
+      attributes.put(REGISTRY_ID_PROPERTY_KEY, cloudIotManager.getRegistryId());
+      attributes.put(PROJECT_ID_PROPERTY_KEY, cloudIotManager.getProjectId());
+      attributes.put(SUBTYPE_PROPERTY_KEY, subType);
+      attributes.put(SUBFOLDER_PROPERTY_KEY, subFolder.value());
       String messageString = OBJECT_MAPPER.writeValueAsString(subConfig);
       updatePusher.sendMessage(attributes, messageString);
     } catch (Exception e) {
@@ -1041,8 +1067,8 @@ public class Registrar {
                 gatewayBindings.size());
             cloudIotManager.bindDevices(toBind, gatewayId, true);
           } catch (Exception e) {
-            proxiedDevices.forEach(
-                localDevice -> localDevice.captureError(LocalDevice.EXCEPTION_BINDING, e));
+            proxiedDevices.forEach(localDevice ->
+                localDevice.captureError(ExceptionCategory.binding, e));
           }
         });
       });
@@ -1157,9 +1183,21 @@ public class Registrar {
       try {
         device.validateSamples();
       } catch (Exception e) {
-        device.captureError(LocalDevice.EXCEPTION_SAMPLES, e);
+        device.captureError(ExceptionCategory.samples, e);
       }
     }
+  }
+
+  private void preprocessMetadata(Map<String, LocalDevice> workingDevices) {
+    workingDevices.values().forEach(localDevice -> {
+      try {
+        localDevice.preprocessMetadata();
+      } catch (ValidationError error) {
+        throw new RuntimeException("While preprocessing metadata", error);
+      } catch (Exception e) {
+        localDevice.captureError(ExceptionCategory.metadata, e);
+      }
+    });
   }
 
   private void validateExpected(Map<String, LocalDevice> localDevices) {
@@ -1167,7 +1205,7 @@ public class Registrar {
       try {
         device.validateExpectedFiles();
       } catch (Exception e) {
-        device.captureError(LocalDevice.EXCEPTION_FILES, e);
+        device.captureError(ExceptionCategory.files, e);
       }
     }
   }
@@ -1197,7 +1235,7 @@ public class Registrar {
                       new RuntimeException(
                           format(
                               "Duplicate credentials found for %s & %s", previous, deviceName));
-                  localDevice.captureError(LocalDevice.EXCEPTION_CREDENTIALS, exception);
+                  localDevice.captureError(ExceptionCategory.credentials, exception);
                 }
               }
             });
@@ -1212,15 +1250,16 @@ public class Registrar {
   private void initializeLocalDevices() {
     System.err.printf("Initializing %d local devices...%n", workingDevices.size());
     initializeDevices(workingDevices);
+    preprocessMetadata(workingDevices);
     initializeSettings(workingDevices);
     writeNormalized(workingDevices);
-    outputMetadataModels(workingDevices);
+    previewModels(workingDevices);
     validateExpected(workingDevices);
     validateSamples(workingDevices);
     validateKeys(workingDevices);
   }
 
-  private void outputMetadataModels(Map<String, LocalDevice> localDevices) {
+  private void previewModels(Map<String, LocalDevice> localDevices) {
     if (!metadataModelOut) {
       return;
     }
@@ -1251,7 +1290,7 @@ public class Registrar {
       } catch (ValidationError error) {
         throw new RuntimeException("While initializing device", error);
       } catch (Exception e) {
-        localDevice.captureError(LocalDevice.EXCEPTION_CREDENTIALS, e);
+        localDevice.captureError(ExceptionCategory.credentials, e);
       }
 
       if (cloudIotManager != null) {
@@ -1259,7 +1298,7 @@ public class Registrar {
           localDevice.validateEnvelope(
               cloudIotManager.getRegistryId(), cloudIotManager.getSiteName());
         } catch (Exception e) {
-          localDevice.captureError(LocalDevice.EXCEPTION_ENVELOPE,
+          localDevice.captureError(ExceptionCategory.envelope,
               new RuntimeException("While validating envelope", e));
         }
       }
@@ -1298,6 +1337,12 @@ public class Registrar {
     }
   }
 
+  @CommandLineOption(short_form = "-w", description = "Strict warning checking (pedantic mode)")
+  private void setStrictWarnings() {
+    strictWarnings = true;
+    ifNotNullThen(siteModel, SiteModel::setStrictWarnings);
+  }
+  
   private void loadSchema(String key) {
     File schemaFile = new File(schemaBase, key);
     try (InputStream schemaStream = Files.newInputStream(schemaFile.toPath())) {
@@ -1364,6 +1409,11 @@ public class Registrar {
   private void setTargetRegistry(String altRegistry) {
     siteModel.getExecutionConfiguration().registry_id = altRegistry;
     siteModel.getExecutionConfiguration().alt_registry = null;
+  }
+
+  @CommandLineOption(short_form = "-A", description = "Auto process alt_registry from config")
+  private void setAutoAltRegistry() {
+    autoAltRegistry = true;
   }
 
   class RelativeDownloader implements URIDownloader {

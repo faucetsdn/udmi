@@ -1,6 +1,10 @@
 package com.google.daq.mqtt.validator;
 
+import static com.google.udmi.util.Common.DEVICE_ID_KEY;
+import static com.google.udmi.util.Common.DEVICE_NUM_KEY;
+import static com.google.udmi.util.Common.PROJECT_ID_PROPERTY_KEY;
 import static com.google.udmi.util.Common.PUBLISH_TIME_KEY;
+import static com.google.udmi.util.Common.REGISTRY_ID_PROPERTY_KEY;
 import static com.google.udmi.util.Common.SUBFOLDER_PROPERTY_KEY;
 import static com.google.udmi.util.Common.SUBTYPE_PROPERTY_KEY;
 import static com.google.udmi.util.Common.TIMESTAMP_KEY;
@@ -118,10 +122,10 @@ public class MessageReadingClient implements MessagePublisher {
     try {
       Map<String, String> attributes = new HashMap<>();
       attributes.put(MSG_SOURCE, msgName);
-      attributes.put("deviceId", deviceId);
-      attributes.put("deviceNumId", getNumId(deviceId));
-      attributes.put("projectId", PLAYBACK_PROJECT_ID);
-      attributes.put("deviceRegistryId", registryId);
+      attributes.put(DEVICE_ID_KEY, deviceId);
+      attributes.put(DEVICE_NUM_KEY, getNumId(deviceId));
+      attributes.put(PROJECT_ID_PROPERTY_KEY, PLAYBACK_PROJECT_ID);
+      attributes.put(REGISTRY_ID_PROPERTY_KEY, registryId);
       attributes.put(PUBLISH_TIME_KEY, (String) msgObj.get(TIMESTAMP_KEY));
 
       Matcher matcher = filenamePattern.matcher(msgName);

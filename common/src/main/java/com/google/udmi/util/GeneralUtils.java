@@ -19,7 +19,6 @@ import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Sets;
 import com.google.common.hash.Hashing;
-import com.google.daq.mqtt.util.ValidationException;
 import com.google.udmi.util.ProperPrinter.OutputFormat;
 import java.io.BufferedReader;
 import java.io.ByteArrayOutputStream;
@@ -298,18 +297,18 @@ public class GeneralUtils {
     }
   }
 
+  @SuppressWarnings("unchecked")
   public static Map<String, Object> getSubMap(Map<String, Object> input, String field) {
-    //noinspection unchecked
     return (Map<String, Object>) input.get(field);
   }
 
+  @SuppressWarnings("unchecked")
   public static Map<String, Object> getSubMapNull(Map<String, Object> input, String field) {
-    //noinspection unchecked
     return ifNotNullGet(input, map -> (Map<String, Object>) map.get(field));
   }
 
+  @SuppressWarnings("unchecked")
   public static Map<String, Object> getSubMapDefault(Map<String, Object> input, String field) {
-    //noinspection unchecked
     return ifNotNullGet(input,
         map -> (Map<String, Object>) map.computeIfAbsent(field, k -> new HashMap<>()));
   }

@@ -42,7 +42,7 @@ public class PubberVendorProvider extends ManagerBase implements PubberFamilyPro
   private DiscoveryEvents augmentSend(Entry<String, Metadata> entry, boolean enumerate) {
     String addr = catchToNull(() -> entry.getValue().localnet.families.get(VENDOR).addr);
     DiscoveryEvents event = new DiscoveryEvents();
-    event.scan_addr = addr;
+    event.addr = addr;
     event.refs = ifTrueGet(enumerate, () -> getDiscoveredRefs(entry.getValue()));
     return event;
   }

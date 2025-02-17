@@ -2,8 +2,8 @@
   "timestamp": "2022-06-21T17:19:49.191023+00:00",
   "version": "1.5.2",
   "generation": "2022-06-21T17:19:49.191023+00:00",
-  "scan_family": "vendor",
-  "scan_addr": "2803104",
+  "family": "vendor",
+  "addr": "2803104",
   "event_no": 10,
   "refs": {
     "afb0afbo": {

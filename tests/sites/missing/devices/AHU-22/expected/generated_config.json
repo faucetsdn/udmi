@@ -1,11 +1,5 @@
 {
-  "timestamp": "2020-05-01T13:39:07Z",
-  "version": "1.5.2",
-  "system": {
-    "min_loglevel": 300,
-    "metrics_rate_sec": 10,
-    "operation": { }
-  },
+  "downgraded_from": "1.5.3",
   "gateway": {
     "target": {
       "addr": "0x65",
@@ -14,7 +8,9 @@
   },
   "localnet": {
     "families": {
-      "bacnet": { }
+      "bacnet": {
+        "addr": "0x65"
+      }
     }
   },
   "pointset": {
@@ -32,5 +28,12 @@
         "units": "Degrees-Celsius"
       }
     }
-  }
+  },
+  "system": {
+    "metrics_rate_sec": 10,
+    "min_loglevel": 300,
+    "operation": {}
+  },
+  "timestamp": "2020-05-01T13:39:07Z",
+  "version": "1.4.2"
 }

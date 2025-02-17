@@ -15,23 +15,31 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
-    "addr"
+    "addr",
+    "ref"
 })
 public class FamilyDiscovery {
 
     /**
      * Device addr in the namespace of the given family
-     * (Required)
      * 
      */
     @JsonProperty("addr")
     @JsonPropertyDescription("Device addr in the namespace of the given family")
     public String addr;
+    /**
+     * Point reference in the namespace of the given family
+     * 
+     */
+    @JsonProperty("ref")
+    @JsonPropertyDescription("Point reference in the namespace of the given family")
+    public String ref;
 
     @Override
     public int hashCode() {
         int result = 1;
         result = ((result* 31)+((this.addr == null)? 0 :this.addr.hashCode()));
+        result = ((result* 31)+((this.ref == null)? 0 :this.ref.hashCode()));
         return result;
     }
 
@@ -44,7 +52,7 @@ public class FamilyDiscovery {
             return false;
         }
         FamilyDiscovery rhs = ((FamilyDiscovery) other);
-        return ((this.addr == rhs.addr)||((this.addr!= null)&&this.addr.equals(rhs.addr)));
+        return (((this.addr == rhs.addr)||((this.addr!= null)&&this.addr.equals(rhs.addr)))&&((this.ref == rhs.ref)||((this.ref!= null)&&this.ref.equals(rhs.ref))));
     }
 
 }

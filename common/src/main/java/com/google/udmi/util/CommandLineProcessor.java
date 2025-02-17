@@ -3,9 +3,9 @@ package com.google.udmi.util;
 import static com.google.common.base.Preconditions.checkState;
 import static com.google.udmi.util.GeneralUtils.friendlyStackTrace;
 import static com.google.udmi.util.GeneralUtils.ifNotNullThen;
-import static java.lang.String.CASE_INSENSITIVE_ORDER;
 import static java.util.Objects.nonNull;
 
+import com.google.common.base.Strings;
 import java.lang.reflect.Method;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
@@ -15,6 +15,7 @@ import java.util.Map.Entry;
 import java.util.Optional;
 import java.util.Set;
 import java.util.TreeMap;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
 
 /**
@@ -31,11 +32,11 @@ public class CommandLineProcessor {
   private List<String> usageForms;
 
   Map<CommandLineOption, Method> optionMap = new TreeMap<>(
-      (a, b) -> CASE_INSENSITIVE_ORDER.compare(getSortArg(a), getSortArg(b)));
+      (a, b) -> getSortArg(a).compareTo(getSortArg(b)));
 
   private static String getSortArg(CommandLineOption k) {
     String shortForm = k.short_form();
-    return shortForm.isBlank() ? k.long_form().substring(1, 2) : shortForm.substring(1, 2);
+    return shortForm.isBlank() ? k.long_form() : shortForm;
   }
 
   /**
@@ -54,20 +55,21 @@ public class CommandLineProcessor {
 
     Set<CommandLineOption> options = optionMap.keySet();
     List<Entry<String, List<CommandLineOption>>> duplicateShort = options.stream()
-        .filter(x -> nonNull(x.short_form()))
+        .filter(x -> !Strings.isNullOrEmpty(x.short_form()))
         .collect(Collectors.groupingBy(CommandLineOption::short_form))
         .entrySet().stream()
         .filter(e -> e.getValue().size() > 1)
         .toList();
-    checkState(duplicateShort.isEmpty(), "duplicate short form command line option");
+    checkState(duplicateShort.isEmpty(),
+        "duplicate short form command line option: " + duplicateShort);
 
     List<Entry<String, List<CommandLineOption>>> duplicateLong = options.stream()
-        .filter(x -> nonNull(x.short_form()))
-        .collect(Collectors.groupingBy(CommandLineOption::short_form))
+        .filter(x -> !Strings.isNullOrEmpty(x.long_form()))
+        .collect(Collectors.groupingBy(CommandLineOption::long_form))
         .entrySet().stream()
         .filter(e -> e.getValue().size() > 1)
         .toList();
-    checkState(duplicateLong.isEmpty(), "duplicate short form command line option");
+    checkState(duplicateLong.isEmpty(), "duplicate long form command line option " + duplicateLong);
   }
 
   public CommandLineProcessor(Object target, List<String> usageForms) {
@@ -113,9 +115,11 @@ public class CommandLineProcessor {
    * Process the given arg list. Return a list of remaining arguments (if any).
    */
   public List<String> processArgs(List<String> argList) {
+    AtomicReference<String> argRef = new AtomicReference<>();
     try {
       while (!argList.isEmpty()) {
         String arg = argList.remove(0);
+        argRef.set(arg);
         if (arg.equals(TERMINATING_ARG)) {
           return argList;
         }
@@ -130,11 +134,12 @@ public class CommandLineProcessor {
           return argList;
         }
       }
-      return null;
+    } catch (IllegalArgumentException e) {
+      System.err.println("Invalid argument: " + friendlyStackTrace(e));
     } catch (Exception e) {
-      showUsage(friendlyStackTrace(e));
-      return null;
+      showUsage(String.format("While processing %s: %s", argRef.get(), friendlyStackTrace(e)));
     }
+    return null;
   }
 
   private boolean processArgEntry(String arg, CommandLineOption option, Method method,
@@ -156,8 +161,9 @@ public class CommandLineProcessor {
       } else if (option.short_form().isBlank() && option.long_form().isBlank()) {
         throw new IllegalArgumentException(
             "Neither long nor short form not defined for " + method.getName());
-      } else
+      } else {
         return !arg.startsWith("-");
+      }
     } catch (Exception e) {
       throw new IllegalArgumentException("Processing command line method " + method.getName(), e);
     }

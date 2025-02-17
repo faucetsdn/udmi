@@ -55,6 +55,7 @@ class SiteLinks:
     self.folder = None
     self.image = None
     self.repo = None
+    self.sheet = None
 
   @staticmethod
   def from_dict(source):
@@ -66,6 +67,7 @@ class SiteLinks:
     result.folder = source.get('folder')
     result.image = source.get('image')
     result.repo = source.get('repo')
+    result.sheet = source.get('sheet')
     return result
 
   @staticmethod
@@ -96,6 +98,8 @@ class SiteLinks:
       result['image'] = self.image # 5
     if self.repo:
       result['repo'] = self.repo # 5
+    if self.sheet:
+      result['sheet'] = self.sheet # 5
     return result
 from .dimension import Dimension
 from .dimension import Dimension
@@ -324,6 +328,7 @@ class SiteMetadata:
     self.site = None
     self.name = None
     self.tags = None
+    self.strict_warnings = None
     self.location = None
     self.links = None
     self.parameters = None
@@ -338,6 +343,7 @@ class SiteMetadata:
     result.site = source.get('site')
     result.name = source.get('name')
     result.tags = source.get('tags')
+    result.strict_warnings = source.get('strict_warnings')
     result.location = SiteLocation.from_dict(source.get('location'))
     result.links = SiteLinks.from_dict(source.get('links'))
     result.parameters = ObjectBB16A108.from_dict(source.get('parameters'))
@@ -371,6 +377,8 @@ class SiteMetadata:
       result['name'] = self.name # 5
     if self.tags:
       result['tags'] = self.tags # 1
+    if self.strict_warnings:
+      result['strict_warnings'] = self.strict_warnings # 5
     if self.location:
       result['location'] = self.location.to_dict() # 4
     if self.links:

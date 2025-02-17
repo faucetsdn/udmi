@@ -1,6 +1,5 @@
 package com.google.daq.mqtt.util;
 
-import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
 import static com.google.daq.mqtt.util.ConfigUtil.readExeConfig;
 import static com.google.udmi.util.GeneralUtils.encodeBase64;
@@ -18,6 +17,8 @@ import static udmi.schema.IotAccess.IotProvider.MQTT;
 import static udmi.schema.IotAccess.IotProvider.PUBSUB;
 
 import com.google.common.collect.ImmutableList;
+import com.google.udmi.util.ExceptionMap;
+import com.google.udmi.util.ExceptionMap.ExceptionCategory;
 import com.google.udmi.util.GeneralUtils;
 import com.google.udmi.util.IotProvider;
 import com.google.udmi.util.MetadataMapKeys;
@@ -67,15 +68,14 @@ public class CloudIotManager {
   public CloudIotManager(String projectId, File siteDir, String altRegistry,
       String registrySuffix, IotAccess.IotProvider iotProvider, String toolName) {
     this.toolName = toolName;
-    checkNotNull(projectId, "project id undefined");
-    this.siteModel = checkNotNull(siteDir, "site directory undefined");
+    this.siteModel = requireNonNull(siteDir, "site directory undefined");
     checkState(siteDir.isDirectory(), "not a directory " + siteDir.getAbsolutePath());
     this.useReflectClient = iotProvider != null && iotProvider != PUBSUB;
-    this.projectId = projectId;
+    this.projectId = requireNonNull(projectId, "project id undefined");
     File cloudConfig = new File(siteDir, CLOUD_IOT_CONFIG_JSON);
     try {
       System.err.println("Reading cloud config from " + cloudConfig.getAbsolutePath());
-      executionConfiguration = validate(readExeConfig(cloudConfig), this.projectId);
+      executionConfiguration = validate(readExeConfig(cloudConfig), projectId);
       executionConfiguration.iot_provider = iotProvider;
       executionConfiguration.site_model = siteDir.getPath();
       executionConfiguration.registry_suffix = registrySuffix;
@@ -133,6 +133,7 @@ public class CloudIotManager {
    */
   public static ExecutionConfiguration validate(ExecutionConfiguration executionConfiguration,
       String projectId) {
+    requireNonNull(projectId, "missing project id");
     if (projectId.equals(executionConfiguration.alt_project)) {
       System.err.printf("Using alt_registry %s for alt_project %s\n",
           executionConfiguration.alt_registry,
@@ -144,8 +145,8 @@ public class CloudIotManager {
     if (executionConfiguration.project_id == null) {
       executionConfiguration.project_id = projectId;
     }
-    checkNotNull(executionConfiguration.registry_id, "registry_id not defined");
-    checkNotNull(executionConfiguration.site_name, "site_name not defined");
+    requireNonNull(executionConfiguration.registry_id, "registry_id not defined");
+    requireNonNull(executionConfiguration.site_name, "site_name not defined");
     return executionConfiguration;
   }
 
@@ -212,13 +213,15 @@ public class CloudIotManager {
       coerceCredentialsToPassword(deviceId, settings);
     }
     if (device == null) {
-      exceptions.capture("creating", () -> createDevice(deviceId, settings));
+      exceptions.capture(ExceptionCategory.creating, () -> createDevice(deviceId, settings));
     } else {
-      exceptions.capture("updating", () -> updateDevice(deviceId, settings, device));
+      exceptions.capture(ExceptionCategory.updating,
+          () -> updateDevice(deviceId, settings, device));
     }
 
     if (settings.config != null) {
-      exceptions.capture("configuring", () -> writeDeviceConfig(deviceId, settings.config));
+      exceptions.capture(ExceptionCategory.configuring,
+          () -> writeDeviceConfig(deviceId, settings.config));
     }
 
     exceptions.throwIfNotEmpty();
@@ -248,7 +251,7 @@ public class CloudIotManager {
   }
 
   public CloudModel getRegisteredDevice(String deviceId) {
-    checkNotNull(deviceMap, "deviceMap not initialized");
+    requireNonNull(deviceMap, "deviceMap not initialized");
     return deviceMap.get(deviceId);
   }
 
@@ -453,7 +456,7 @@ public class CloudIotManager {
   }
 
   private IotProvider getIotProvider() {
-    return checkNotNull(iotProvider, "iot provider not properly initialized");
+    return requireNonNull(iotProvider, "iot provider not properly initialized");
   }
 
   public boolean canUpdateCloud() {

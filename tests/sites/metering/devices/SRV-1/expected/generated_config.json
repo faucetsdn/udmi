@@ -1,0 +1,15 @@
+{
+  "localnet": {
+    "families": {
+      "bacnet": {},
+      "ipv4": {}
+    }
+  },
+  "system": {
+    "metrics_rate_sec": 10,
+    "min_loglevel": 300,
+    "operation": {}
+  },
+  "timestamp": "2020-05-01T13:39:07Z",
+  "version": "1.5.3"
+}

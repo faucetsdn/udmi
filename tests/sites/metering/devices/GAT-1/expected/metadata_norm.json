@@ -1,0 +1,13 @@
+{
+  "cloud": {
+    "auth_type": "ES256",
+    "connection_type": "GATEWAY"
+  },
+  "gateway": {},
+  "hash": "1cabfba1",
+  "system": {
+    "min_loglevel": 300
+  },
+  "timestamp": "2020-05-01T13:39:07Z",
+  "version": "1.5.3"
+}

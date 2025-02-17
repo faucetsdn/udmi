@@ -26,6 +26,10 @@
       "description": "Current or default unit for this point",
       "type": "string"
     },
+    "ref": {
+      "description": "Family reference for structures",
+      "type": "string"
+    },
     "type": {
       "description": "Current or default type for this point",
       "type": "string"
@@ -43,6 +47,38 @@
     },
     "ancillary": {
       "$ref": "file:ancillary_properties.json"
+    },
+    "adjunct": {
+      "type": "object",
+      "existingJavaType": "java.util.Map<String, String>",
+      "additionalProperties": false,
+      "patternProperties": {
+        "^[a-z_]+$": {
+          "type": "string"
+        }
+      }
+    },
+    "structure": {
+      "type": "object",
+      "properties": {
+        "point": {
+          "type": "object",
+          "additionalProperties": false,
+          "existingJavaType": "FamilyDiscovery",
+          "$ref": "file:discovery_family.json"
+        },
+        "families": {
+          "description": "Reference links to alternate families",
+          "type": "object",
+          "additionalProperties": false,
+          "existingJavaType": "java.util.Map<String, FamilyDiscovery>",
+          "patternProperties": {
+            "^[a-z][a-z0-9]*(_[a-z0-9]+)*$": {
+              "$ref": "file:discovery_family.json"
+            }
+          }
+        }
+      }
     }
   }
 }

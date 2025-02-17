@@ -1,6 +1,5 @@
 Exceptions for GAT-123
-  While loading credentials for local device GAT-123
-    Credential cloud.auth_type definition missing
+  While converting device config
+    unrecognized schema version null
   1 schema violations found
     object has missing required properties (["system","version"])
-  Invalid auth type null

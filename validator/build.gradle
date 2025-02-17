@@ -27,6 +27,10 @@ java {
     }
 }
 
+compileJava {
+    options.compilerArgs = ['-Xlint:unchecked']
+}
+
 sourceSets {
     main {
         java {
@@ -100,4 +104,12 @@ dependencies {
     implementation 'com.google.cloud:google-cloud-firestore:0.84.0-beta'
     implementation group: 'junit', name: 'junit', version: '4.13.2'
     implementation 'org.jetbrains:annotations:20.1.0'
+
+    implementation 'com.google.oauth-client:google-oauth-client-jetty:1.20.0'
+    implementation 'com.google.apis:google-api-services-sheets:v4-rev484-1.20.0'
+
+    testImplementation 'org.junit.jupiter:junit-jupiter-api:5.9.2'
+    testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.9.2'
+    testImplementation 'org.mockito:mockito-core:5.3.1'
+    testImplementation 'org.mockito:mockito-junit-jupiter:5.6.0'
 }

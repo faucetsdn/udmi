@@ -107,8 +107,8 @@ public class ProvisioningEngineTest extends ProcessorTestBase {
   private DiscoveryEvents getDiscoveryScanEvent(String targetDeviceId) {
     String[] split = targetDeviceId.split("-");
     DiscoveryEvents discoveryEvent = new DiscoveryEvents();
-    discoveryEvent.scan_family = split[0];
-    discoveryEvent.scan_addr = split[1];
+    discoveryEvent.family = split[0];
+    discoveryEvent.addr = split[1];
     discoveryEvent.generation = SCAN_GENERATION;
     return discoveryEvent;
   }

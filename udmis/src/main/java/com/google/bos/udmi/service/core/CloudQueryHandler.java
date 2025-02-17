@@ -102,7 +102,7 @@ public class CloudQueryHandler {
     requireNull(envelope.deviceId, "device id");
     Set<String> registries = iotAccess.getRegistries();
     DiscoveryEvents discoveryEvent = new DiscoveryEvents();
-    discoveryEvent.scan_family = ProtocolFamily.IOT;
+    discoveryEvent.family = ProtocolFamily.IOT;
     discoveryEvent.generation = query.generation;
     discoveryEvent.registries = registries.stream()
         .collect(Collectors.toMap(registryId -> registryId, this::makeCloudModel));
@@ -119,7 +119,7 @@ public class CloudQueryHandler {
     String deviceId = requireNonNull(envelope.deviceId, "device id");
 
     DiscoveryEvents discoveryEvent = new DiscoveryEvents();
-    discoveryEvent.scan_family = ProtocolFamily.IOT;
+    discoveryEvent.family = ProtocolFamily.IOT;
     discoveryEvent.generation = query.generation;
     discoveryEvent.cloud_model = iotAccess.fetchDevice(deviceRegistryId, deviceId);
     discoveryEvent.cloud_model.operation = null;
@@ -140,7 +140,7 @@ public class CloudQueryHandler {
         envelope.transactionId);
 
     DiscoveryEvents discoveryEvent = new DiscoveryEvents();
-    discoveryEvent.scan_family = ProtocolFamily.IOT;
+    discoveryEvent.family = ProtocolFamily.IOT;
     discoveryEvent.generation = query.generation;
     discoveryEvent.devices = deviceSet.stream().collect(Collectors.toMap(
         Entry::getKey, entry -> convertDeviceEntry(entry.getValue())));

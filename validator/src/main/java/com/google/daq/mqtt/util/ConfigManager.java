@@ -1,15 +1,14 @@
 package com.google.daq.mqtt.util;
 
 import static com.google.common.base.Preconditions.checkState;
-import static com.google.daq.mqtt.util.ContextWrapper.getCurrentContext;
-import static com.google.daq.mqtt.util.ContextWrapper.runInContext;
-import static com.google.daq.mqtt.util.ContextWrapper.wrapExceptionWithContext;
 import static com.google.daq.mqtt.util.providers.FamilyProvider.NAMED_FAMILIES;
+import static com.google.udmi.util.ContextWrapper.getCurrentContext;
+import static com.google.udmi.util.ContextWrapper.runInContext;
+import static com.google.udmi.util.ContextWrapper.wrapExceptionWithContext;
 import static com.google.udmi.util.GeneralUtils.catchToNull;
 import static com.google.udmi.util.GeneralUtils.deepCopy;
 import static com.google.udmi.util.GeneralUtils.ifNotNullGet;
 import static com.google.udmi.util.GeneralUtils.ifNotNullThen;
-import static com.google.udmi.util.GeneralUtils.ifNotNullThrow;
 import static com.google.udmi.util.GeneralUtils.isTrue;
 import static com.google.udmi.util.JsonUtil.isoConvert;
 import static com.google.udmi.util.JsonUtil.loadFileString;
@@ -168,9 +167,14 @@ public class ConfigManager {
 
     final GatewayConfig configVar = gatewayConfig;
     ifNotNullThen(metadata.gateway.target, target -> {
-      ifNotNullThrow(target.addr, "metadata.gateway.target.addr should not be defined");
       configVar.target = deepCopy(target);
-      configVar.target.addr = ifNotNullGet(target.family, this::getLocalnetAddr);
+      String family = target.family;
+      String localAddr = ifNotNullGet(family, this::getLocalnetAddr);
+      String gatewayAddr = target.addr;
+      checkState(localAddr == null || gatewayAddr == null,
+          format("both gateway.target.addr and localnet.families.%s.addr should not be defined",
+              family));
+      configVar.target.addr = ofNullable(localAddr).orElse(gatewayAddr);
     });
 
     return gatewayConfig;
@@ -178,8 +182,7 @@ public class ConfigManager {
 
   private String getLocalnetAddr(String rawFamily) {
     String family = ofNullable(rawFamily).orElse(DEFAULT_FAMILY);
-    String address = catchToNull(() -> metadata.localnet.families.get(family).addr);
-    return requireNonNull(address, format("metadata.localnet.families[%s].addr undefined", family));
+    return catchToNull(() -> metadata.localnet.families.get(family).addr);
   }
 
   private PointsetConfig getDevicePointsetConfig() {
@@ -232,11 +235,11 @@ public class ConfigManager {
 
     requireNonNull(family, "missing gateway.target.family designation");
     checkState(NAMED_FAMILIES.containsKey(family), "gateway.target.family unknown: " + family);
-    ifNotNullThrow(catchToNull(() -> metadata.gateway.target.addr),
-        "gateway.target.addr field should not be defined");
-    ifNotNullThen(rawFamily, raw ->
-        requireNonNull(catchToNull(() -> metadata.localnet.families.get(family).addr),
-            format("metadata.localnet.families.[%s].addr not defined", family)));
+    String localAddr = catchToNull(() -> metadata.localnet.families.get(family).addr);
+    String gatewayAddr = catchToNull(() -> metadata.gateway.target.addr);
+    checkState(localAddr == null || gatewayAddr == null,
+        format("both gateway.target.addr and localnet.families.%s.addr should not be defined",
+            family));
     try {
       NAMED_FAMILIES.get(family).validateRef(pointRef);
     } catch (Exception e) {
@@ -262,12 +265,19 @@ public class ConfigManager {
   }
 
   /**
+   * Indicate if this is a directly connected device.
+   */
+  public boolean isDirect() {
+    return catchToNull(() -> metadata.cloud.auth_type) != null && !isGateway();
+  }
+
+  /**
    * Indicate if this is a gateway device.
    */
   public boolean isGateway() {
-    return metadata != null
-        && metadata.gateway != null
-        && metadata.gateway.gateway_id == null;
+    return catchToNull(() -> metadata.gateway) != null
+        && metadata.gateway.gateway_id == null
+        && catchToNull(() -> metadata.cloud.auth_type) != null;
   }
 
   public boolean isProxied() {
@@ -321,5 +331,4 @@ public class ConfigManager {
   public Map<String, Exception> getSchemaViolationsMap() {
     return schemaViolationsMap;
   }
-
 }

@@ -50,6 +50,7 @@ import java.util.Map;
 import java.util.TreeMap;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingDeque;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
@@ -353,7 +354,7 @@ public class PubSubClient implements MessagePublisher, MessageHandler {
   private String publishReflector(String deviceId, String topic, String data) {
     try {
       Map<String, String> attributesMap = Map.of(
-          "projectId", projectId,
+          Common.PROJECT_ID_PROPERTY_KEY, projectId,
           "subFolder", SubFolder.UDMI.toString()
       );
       Envelope envelopedData = makeReflectorMessage(deviceId, topic, data);
@@ -386,7 +387,11 @@ public class PubSubClient implements MessagePublisher, MessageHandler {
   public void close() {
     if (subscriber != null) {
       active.set(false);
-      subscriber.stopAsync();
+      try {
+        subscriber.stopAsync().awaitTerminated(5, TimeUnit.SECONDS);
+      } catch (Exception e) {
+        throw new RuntimeException("While attempting to shutdown subscriber", e);
+      }
     }
   }
 

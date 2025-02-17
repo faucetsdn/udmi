@@ -41,6 +41,10 @@
       },
       "examples": [["new_construction"], ["existing", "brownfield"]]
     },
+    "strict_warnings": {
+      "type": "boolean",
+      "description": "Enable strict checking and treat warnings as errors"
+    },
     "location": {
       "title": "Site Location",
       "type": "object",
@@ -92,6 +96,11 @@
           "description": "Source repository where the UDMI site model is stored",
           "type": "string",
           "examples": ["https://github.com/faucetsdn/udmi_site_model", "git@github.com:faucetsdn/udmi_site_model.git"]
+        },
+        "sheet": {
+          "description": "Link to a spreadsheet to observe real-time output from any tool",
+          "type": "string",
+          "examples": ["https://docs.google.com/spreadsheets/d/<spreadsheet_id>"]
         }
       }
     },

@@ -4,7 +4,6 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
 import static com.google.udmi.util.Common.DEFAULT_REGION;
 import static com.google.udmi.util.Common.NO_SITE;
-import static com.google.udmi.util.Common.SITE_METADATA_KEY;
 import static com.google.udmi.util.Common.UDMI_COMMIT_ENV;
 import static com.google.udmi.util.Common.UDMI_REF_ENV;
 import static com.google.udmi.util.Common.UDMI_TIMEVER_ENV;
@@ -17,6 +16,7 @@ import static com.google.udmi.util.GeneralUtils.getFileBytes;
 import static com.google.udmi.util.GeneralUtils.ifNotNullGet;
 import static com.google.udmi.util.GeneralUtils.ifNotNullThen;
 import static com.google.udmi.util.GeneralUtils.ifNullThen;
+import static com.google.udmi.util.GeneralUtils.isTrue;
 import static com.google.udmi.util.GeneralUtils.removeStringArg;
 import static com.google.udmi.util.GeneralUtils.sha256;
 import static com.google.udmi.util.JsonUtil.asMap;
@@ -35,7 +35,7 @@ import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.fasterxml.jackson.databind.util.ISO8601DateFormat;
 import com.google.common.collect.ImmutableList;
-import com.google.daq.mqtt.util.ExceptionMap;
+import com.google.udmi.util.ExceptionMap.ExceptionCategory;
 import java.io.File;
 import java.util.Arrays;
 import java.util.Collection;
@@ -111,6 +111,8 @@ public class SiteModel {
   private Map<String, Metadata> allMetadata;
   private Map<String, CloudModel> allDevices;
   public ExceptionMap siteMetadataExceptionMap;
+  private boolean warningsAsErrors;
+  private SiteMetadata siteMetadata;
 
   public SiteModel(String specPath) {
     this(specPath, null, null);
@@ -123,12 +125,12 @@ public class SiteModel {
   public SiteModel(String specPath, Supplier<String> specSupplier,
       ExecutionConfiguration overrides) {
     File specFile = new File(requireNonNull(specPath, "site model not defined"));
-    boolean specIsFile = specFile.isFile();
-    siteConf = specIsFile ? specFile : cloudConfigPath(specFile);
+    boolean specIsDirectory = specFile.isDirectory();
+    siteConf = specIsDirectory ? cloudConfigPath(specFile) : specFile;
     if (!siteConf.exists()) {
       throw new RuntimeException("File not found: " + siteConf.getAbsolutePath());
     }
-    specMatcher = (specIsFile || specSupplier == null) ? null : extractSpec(specSupplier.get());
+    specMatcher = specIsDirectory && specSupplier != null ? extractSpec(specSupplier.get()) : null;
     exeConfig = loadSiteConfig();
     sitePath = ofNullable(exeConfig.site_model).map(f -> maybeRelativeTo(f, exeConfig.src_file))
         .orElse(siteConf.getParent());
@@ -168,7 +170,7 @@ public class SiteModel {
   private static Supplier<String> projectSpecSupplier(List<String> argList) {
     return () -> {
       if (argList.isEmpty()) {
-        throw new IllegalArgumentException("Missing required project spec argument");
+        return NO_SITE;
       }
       String nextArg = argList.get(0);
       if (nextArg.equals(NO_SITE)) {
@@ -334,18 +336,27 @@ public class SiteModel {
         .collect(Collectors.toSet());
   }
 
-
   public SiteMetadata loadSiteMetadata() {
-    ObjectNode siteMetadataObject = null;
-    File siteMetadataFile = new File(new File(sitePath), SITE_METADATA_FILE);
-    siteMetadataExceptionMap = new ExceptionMap(SITE_METADATA_KEY);
-    try {
-      siteMetadataObject = loadFileRequired(ObjectNode.class, siteMetadataFile);
-      return convertToStrict(SiteMetadata.class, siteMetadataObject);
-    } catch (Exception e) {
-      siteMetadataExceptionMap.put(SITE_METADATA_KEY, e);
-      return convertTo(SiteMetadata.class, siteMetadataObject);
+    if (siteMetadata != null) {
+      return siteMetadata;
     }
+
+    ObjectNode siteMetadataObject = null;
+    siteMetadataExceptionMap = new ExceptionMap("Site metadata validation");
+
+    try {
+      File siteMetadataFile = new File(new File(sitePath), SITE_METADATA_FILE);
+      siteMetadataObject = loadFileRequired(ObjectNode.class, siteMetadataFile);
+      siteMetadata = convertToStrict(SiteMetadata.class, siteMetadataObject);
+    } catch (Exception e) {
+      // Can't check getWarningsAsErrors now, since it might be set w/ a  flag after loading.
+      siteMetadataExceptionMap.put(ExceptionCategory.site_metadata, e);
+      siteMetadata = convertTo(SiteMetadata.class, siteMetadataObject);
+    }
+
+    ifNullThen(siteMetadata, () -> siteMetadata = new SiteMetadata());
+
+    return siteMetadata;
   }
 
   public Metadata loadDeviceMetadata(String deviceId, boolean safeLoading,
@@ -584,6 +595,9 @@ public class SiteModel {
   }
 
   private Matcher extractSpec(String projectSpec) {
+    if (projectSpec == null) {
+      return null;
+    }
     Matcher matcher = SPEC_PATTERN.matcher(projectSpec);
     if (!matcher.matches()) {
       throw new RuntimeException(
@@ -603,6 +617,23 @@ public class SiteModel {
 
   public String getSiteName() {
     return exeConfig.site_name;
+  }
+
+  public void resetRegistryId(String altRegistry) {
+    String previousId = getRegistryId();
+    getExecutionConfiguration().registry_id = altRegistry;
+    getExecutionConfiguration().alt_registry = null;
+    String newId = getRegistryId();
+    checkState(!newId.equals(previousId), "resetting to unchanged registry id");
+    System.err.printf("Switched target registry from %s to %s%n", previousId, newId);
+  }
+
+  public void setStrictWarnings() {
+    siteMetadata.strict_warnings = true;
+  }
+
+  public boolean getStrictWarnings() {
+    return isTrue(siteMetadata.strict_warnings);
   }
 
   public static class MetadataException extends Metadata {

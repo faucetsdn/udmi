@@ -7,25 +7,28 @@ import static com.google.daq.mqtt.registrar.Registrar.ENVELOPE_SCHEMA_JSON;
 import static com.google.daq.mqtt.registrar.Registrar.METADATA_SCHEMA_JSON;
 import static com.google.daq.mqtt.util.ConfigManager.GENERATED_CONFIG_JSON;
 import static com.google.daq.mqtt.util.ConfigManager.configFrom;
-import static com.google.daq.mqtt.util.ContextWrapper.runInContext;
 import static com.google.udmi.util.Common.DEVICE_ID_ALLOWABLE;
 import static com.google.udmi.util.Common.POINT_NAME_ALLOWABLE;
+import static com.google.udmi.util.ContextWrapper.runInContext;
 import static com.google.udmi.util.GeneralUtils.CSV_JOINER;
 import static com.google.udmi.util.GeneralUtils.OBJECT_MAPPER_STRICT;
 import static com.google.udmi.util.GeneralUtils.catchToNull;
 import static com.google.udmi.util.GeneralUtils.compressJsonString;
 import static com.google.udmi.util.GeneralUtils.ifNotNullGet;
 import static com.google.udmi.util.GeneralUtils.ifNotNullThen;
+import static com.google.udmi.util.GeneralUtils.ifNotTrueThen;
 import static com.google.udmi.util.GeneralUtils.ifTrueThen;
 import static com.google.udmi.util.GeneralUtils.isTrue;
 import static com.google.udmi.util.GeneralUtils.writeString;
 import static com.google.udmi.util.JsonUtil.OBJECT_MAPPER;
+import static com.google.udmi.util.JsonUtil.getNowInstant;
 import static com.google.udmi.util.JsonUtil.loadFile;
 import static com.google.udmi.util.JsonUtil.unquoteJson;
 import static com.google.udmi.util.SiteModel.CLOUD_MODEL_FILE;
 import static com.google.udmi.util.SiteModel.METADATA_JSON;
 import static com.google.udmi.util.SiteModel.NORMALIZED_JSON;
 import static java.lang.String.format;
+import static java.util.Optional.ofNullable;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.github.fge.jsonschema.core.exceptions.ProcessingException;
@@ -41,20 +44,23 @@ import com.google.daq.mqtt.util.CloudDeviceSettings;
 import com.google.daq.mqtt.util.CloudIotManager;
 import com.google.daq.mqtt.util.ConfigManager;
 import com.google.daq.mqtt.util.DeviceExceptionManager;
-import com.google.daq.mqtt.util.ExceptionMap;
-import com.google.daq.mqtt.util.ExceptionMap.ErrorTree;
-import com.google.daq.mqtt.util.ValidationError;
-import com.google.daq.mqtt.util.ValidationException;
-import com.google.daq.mqtt.validator.Validator;
+import com.google.udmi.util.ErrorMap;
+import com.google.udmi.util.ErrorMap.ErrorMapException;
+import com.google.udmi.util.ExceptionMap;
+import com.google.udmi.util.ExceptionMap.ErrorTree;
+import com.google.udmi.util.ExceptionMap.ExceptionCategory;
 import com.google.udmi.util.JsonUtil;
 import com.google.udmi.util.MessageDowngrader;
+import com.google.udmi.util.MessageValidator;
 import com.google.udmi.util.SiteModel;
 import com.google.udmi.util.SiteModel.MetadataException;
+import com.google.udmi.util.ValidationError;
+import com.google.udmi.util.ValidationException;
+import com.google.udmi.util.ValidationWarning;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.PrintStream;
 import java.io.PrintWriter;
@@ -62,6 +68,7 @@ import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
@@ -90,17 +97,6 @@ import udmi.schema.PointPointsetModel;
 class LocalDevice {
 
   public static final String INVALID_METADATA_HASH = "INVALID";
-  public static final String EXCEPTION_INITIALIZING = "Initializing";
-  public static final String EXCEPTION_VALIDATING = "Validating";
-  public static final String EXCEPTION_CONVERTING = "Converting";
-  public static final String EXCEPTION_LOADING = "Loading";
-  public static final String EXCEPTION_WRITING = "Writing";
-  public static final String EXCEPTION_FILES = "Files";
-  public static final String EXCEPTION_REGISTERING = "Registering";
-  public static final String EXCEPTION_CREDENTIALS = "Credential";
-  public static final String EXCEPTION_ENVELOPE = "Envelope";
-  public static final String EXCEPTION_SAMPLES = "Samples";
-  public static final String EXCEPTION_BINDING = "Binding";
   private static final String RSA_PUBLIC_PEM = "rsa_public.pem";
   private static final String RSA2_PUBLIC_PEM = "rsa2_public.pem";
   private static final String RSA3_PUBLIC_PEM = "rsa3_public.pem";
@@ -201,6 +197,7 @@ class LocalDevice {
   private Date lastActive;
   private boolean blocked;
   private CloudModel cloudModel;
+  private Instant lastUpdated;
 
   LocalDevice(
       SiteModel siteModel, String deviceId, Map<String, JsonSchema> schemas,
@@ -241,7 +238,7 @@ class LocalDevice {
 
     for (ProcessingMessage msg : report) {
       if (msg.getLogLevel().compareTo(LogLevel.ERROR) >= 0) {
-        throw Validator.fromProcessingReport(report);
+        throw MessageValidator.fromProcessingReport(report);
       }
     }
   }
@@ -254,7 +251,11 @@ class LocalDevice {
   }
 
   public void validateExpectedFiles() {
-    ExceptionMap exceptionMap = new ExceptionMap("expected files");
+    if (isExtraKind()) {
+      return;
+    }
+
+    ExceptionMap exceptionMap = new ExceptionMap("expected files mismatch");
 
     String[] files = deviceDir.list();
     checkNotNull(files, "No files found in " + deviceDir.getAbsolutePath());
@@ -262,19 +263,21 @@ class LocalDevice {
     Set<String> expectedFiles = Sets.union(DEVICE_FILES, keyFiles());
     SortedSet<String> missing = new TreeSet<>(Sets.difference(expectedFiles, actualFiles));
     if (!missing.isEmpty()) {
-      exceptionMap.put("missing", new RuntimeException("Missing files: " + missing));
+      exceptionMap.put(ExceptionCategory.missing,
+          new RuntimeException("Missing files: " + missing));
     }
     SortedSet<String> extra = new TreeSet<>(
         Sets.difference(Sets.difference(actualFiles, expectedFiles), OPTIONAL_FILES));
     if (!extra.isEmpty()) {
-      exceptionMap.put("extra", new RuntimeException("Extra files: " + extra));
+      exceptionMap.put(ExceptionCategory.extra, new RuntimeException("Extra files: " + extra));
     }
     String[] outFiles = outDir.list();
     if (outFiles != null) {
       Set<String> outSet = ImmutableSet.copyOf(outFiles);
       SortedSet<String> extraOut = new TreeSet<>(Sets.difference(outSet, OUT_FILES));
       if (!extraOut.isEmpty()) {
-        exceptionMap.put("out", new RuntimeException("Extra out files: " + extraOut));
+        exceptionMap.put(ExceptionCategory.out,
+            new RuntimeException("Extra out files: " + extraOut));
       }
     }
 
@@ -288,7 +291,7 @@ class LocalDevice {
       ProcessingReport report = schemas.get(METADATA_SCHEMA_JSON).validate(metadataObject);
       parseMetadataValidateProcessingReport(report);
     } catch (ProcessingException | ValidationException e) {
-      exceptionMap.put(EXCEPTION_VALIDATING, e);
+      exceptionMap.put(ExceptionCategory.validation, e);
     }
   }
 
@@ -309,15 +312,14 @@ class LocalDevice {
         throw new RuntimeException("Loading " + metadataException.file.getAbsolutePath(),
             metadataException.exception);
       }
-      baseVersion = (deviceMetadata.upgraded_from == null
-          ? deviceMetadata.version : deviceMetadata.upgraded_from);
+      baseVersion = ofNullable(deviceMetadata.upgraded_from).orElse(deviceMetadata.version);
 
       List<String> proxyIds = catchToNull(() -> deviceMetadata.gateway.proxy_ids);
       ifNotNullThen(proxyIds,
           ids -> ifTrueThen(ids.isEmpty(), () -> deviceMetadata.gateway.proxy_ids = null));
       return deviceMetadata;
     } catch (Exception exception) {
-      exceptionMap.put(EXCEPTION_LOADING, exception);
+      exceptionMap.put(ExceptionCategory.loading, exception);
       return null;
     }
   }
@@ -372,7 +374,7 @@ class LocalDevice {
       if (isProxied() && hasAuthType()) {
         throw new RuntimeException("Proxied devices should not have cloud.auth_type defined");
       }
-      if (!isDirectConnect()) {
+      if (!hasCloudConnection()) {
         return;
       }
       if (!hasAuthType()) {
@@ -407,7 +409,7 @@ class LocalDevice {
   }
 
   private Set<String> keyFiles() {
-    if (metadata == null || !isDirectConnect()) {
+    if (!isGateway() && !isDirectConnect()) {
       return ImmutableSet.of();
     }
     String authType = getAuthType();
@@ -447,6 +449,10 @@ class LocalDevice {
         : Set.of();
   }
 
+  boolean hasCloudConnection() {
+    return isDirectConnect() || isGateway();
+  }
+
   boolean isGateway() {
     return config != null && config.isGateway();
   }
@@ -471,7 +477,7 @@ class LocalDevice {
   }
 
   boolean isDirectConnect() {
-    return isGateway() || !isProxied();
+    return config != null && config.isDirect();
   }
 
   CloudDeviceSettings getSettings() {
@@ -497,7 +503,7 @@ class LocalDevice {
       settings.keyBytes = getKeyBytes();
       settings.config = deviceConfigString();
     } catch (Exception e) {
-      captureError(EXCEPTION_INITIALIZING, e);
+      captureError(ExceptionCategory.initializing, e);
     }
   }
 
@@ -516,6 +522,11 @@ class LocalDevice {
   public void updateModel(CloudModel device) {
     setDeviceNumId(checkNotNull(device.num_id, "missing deviceNumId for " + deviceId));
     setLastActive(device.last_event_time);
+    setLastUpdated(getNowInstant());
+  }
+
+  private void setLastUpdated(Instant lastUpdated) {
+    this.lastUpdated = lastUpdated;
   }
 
   public String getLastActive() {
@@ -527,7 +538,7 @@ class LocalDevice {
   }
 
   public byte[] getKeyBytes() {
-    if (!isDirectConnect()) {
+    if (!hasCloudConnection()) {
       return null;
     }
     String keyFile = PRIVATE_PKCS8_MAP.get(getAuthType());
@@ -554,14 +565,18 @@ class LocalDevice {
     return runInContext("While converting device config", () -> {
       Object fromValue = config.deviceConfigJson();
 
-      config.getSchemaViolationsMap().forEach(this::captureError);
+      ifNotNullThen(config.getSchemaViolationsMap(), map -> ifNotTrueThen(map.isEmpty(), () -> {
+        ErrorMap schemaValidationErrors = new ErrorMap("schema validation errors");
+        schemaValidationErrors.putAll(map);
+        captureError(ExceptionCategory.schema, schemaValidationErrors.asException());
+      }));
 
       if (fromValue instanceof String stringValue) {
         return stringValue;
       }
       JsonNode configJson = OBJECT_MAPPER_STRICT.valueToTree(fromValue);
       if (config.shouldBeDowngraded()) {
-        new MessageDowngrader("config", configJson).downgrade(baseVersion);
+        new MessageDowngrader("config", configJson, metadata).downgrade(baseVersion);
       }
       return compressJsonString(configJson, MAX_JSON_LENGTH);
     });
@@ -699,7 +714,7 @@ class LocalDevice {
     try {
       writeString(metadataFile, compressJsonString(metadata, MAX_JSON_LENGTH));
     } catch (Exception e) {
-      exceptionMap.put(EXCEPTION_WRITING, e);
+      exceptionMap.put(ExceptionCategory.writing, e);
     }
   }
 
@@ -752,7 +767,7 @@ class LocalDevice {
     return DeviceStatus.ERROR;
   }
 
-  public void captureError(String exceptionType, Exception exception) {
+  public void captureError(ExceptionCategory exceptionType, Exception exception) {
     exceptionMap.put(exceptionType, exception);
     File exceptionLog = new File(outDir, EXCEPTION_LOG_FILE);
     try {
@@ -762,6 +777,8 @@ class LocalDevice {
         exception.printStackTrace(printWriter);
         if (exception instanceof ExceptionMap exceptionMap) {
           exceptionMap.forEach(mapped -> mapped.printStackTrace(printWriter));
+        } else if (exception instanceof ErrorMapException errorMap) {
+          errorMap.getMap().forEach((message, ex) -> ex.printStackTrace(printWriter));
         }
       }
     } catch (Exception e) {
@@ -778,25 +795,8 @@ class LocalDevice {
     if (!samplesDir.exists()) {
       return;
     }
-    File[] samples = samplesDir.listFiles();
-    if (samples == null) {
-      return;
-    }
-    ExceptionMap samplesMap = new ExceptionMap("Sample Validation");
-    for (File sampleFile : samples) {
-      String sampleName = sampleFile.getName();
-      try (InputStream sampleStream = new FileInputStream(sampleFile)) {
-        if (!schemas.containsKey(sampleName)) {
-          throw new RuntimeException("No valid matching schema found");
-        }
-        schemas.get(sampleName).validate(OBJECT_MAPPER_STRICT.readTree(sampleStream));
-      } catch (Exception e) {
-        Exception scopedException =
-            new RuntimeException("While validating sample file " + sampleName, e);
-        samplesMap.put(sampleName, scopedException);
-      }
-    }
-    samplesMap.throwIfNotEmpty();
+    // TODO: Remove this once it's been out there for a while, deprecated 2025/02/03.
+    throw new RuntimeException("Deprecated samples/ directory: " + samplesDir.getAbsolutePath());
   }
 
   public Set<Entry<String, ErrorTree>> getTreeChildren() {
@@ -821,6 +821,16 @@ class LocalDevice {
 
   public LocalDevice duplicate(String newId) {
     return new LocalDevice(siteModel, newId, schemas, generation, deviceKind);
+  }
+
+  public void preprocessMetadata() {
+    ifTrueWarn(catchToNull(() -> metadata.cloud.config.static_file) != null,
+        "Disallowed cloud.config.static_file defined");
+  }
+
+  private void ifTrueWarn(boolean condition, String message) {
+    ifTrueThen(condition && siteModel.getStrictWarnings(),
+        () -> captureError(ExceptionCategory.metadata, new ValidationWarning(message)));
   }
 
   public enum DeviceStatus {

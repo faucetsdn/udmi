@@ -1,7 +1,8 @@
-package com.google.daq.mqtt.util;
+package com.google.udmi.util;
 
 import static com.google.udmi.util.GeneralUtils.multiTrim;
 
+import com.google.udmi.util.ErrorMap.ErrorMapException;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
@@ -25,10 +26,16 @@ public class ExceptionMap extends RuntimeException {
   private static final byte[] SEPARATOR_BYTES = ": ".getBytes();
   private static final String ERROR_FORMAT_INDENT = "  ";
 
-  final Map<String, Exception> exceptions = new TreeMap<>();
+  final Map<ExceptionCategory, Exception> exceptions = new TreeMap<>();
 
   public ExceptionMap(String description) {
     super(description);
+  }
+
+  public enum ExceptionCategory {
+    missing, extra, out, validation, loading, writing, site_metadata, initializing, sample,
+    registering, envelope, credentials, samples, files, binding, creating, updating, schema,
+    configuring, metadata, status
   }
 
   /**
@@ -46,12 +53,15 @@ public class ExceptionMap extends RuntimeException {
     errorTree.prefix = prefix;
     errorTree.message = multiTrim(e.getMessage());
     final String newPrefix = prefix + indent;
-    if (e instanceof ExceptionMap) {
+    if (e instanceof ExceptionMap exceptionMap) {
       if (e.getCause() != null) {
         errorTree.child = format(e.getCause(), newPrefix, indent);
       }
-      ((ExceptionMap) e)
-          .forEach((key, sub) -> errorTree.children.put(key, format(sub, newPrefix, indent)));
+      exceptionMap.forEach((key, sub) ->
+          errorTree.children.put(key.toString(), format(sub, newPrefix, indent)));
+    } else if (e instanceof ErrorMapException errorMap) {
+      errorMap.getMap().forEach((key, sub) ->
+          errorTree.children.put(key, format(sub, newPrefix, indent)));
     } else if (e instanceof ValidationException) {
       ((ValidationException) e)
           .getCausingExceptions()
@@ -69,7 +79,7 @@ public class ExceptionMap extends RuntimeException {
     return errorTree;
   }
 
-  private void forEach(BiConsumer<String, Exception> consumer) {
+  private void forEach(BiConsumer<ExceptionCategory, Exception> consumer) {
     exceptions.forEach(consumer);
   }
 
@@ -96,13 +106,13 @@ public class ExceptionMap extends RuntimeException {
    * @param key       entry key
    * @param exception exception to add
    */
-  public void put(String key, Exception exception) {
+  public void put(ExceptionCategory key, Exception exception) {
     if (exceptions.put(key, exception) != null) {
       throw new IllegalArgumentException("Exception key already defined: " + key);
     }
   }
 
-  public Stream<Map.Entry<String, Exception>> stream() {
+  public Stream<Map.Entry<ExceptionCategory, Exception>> stream() {
     return exceptions.entrySet().stream();
   }
 
@@ -118,7 +128,7 @@ public class ExceptionMap extends RuntimeException {
   /**
    * Execute the action and capture into the map if it throws an exception.
    */
-  public void capture(String category, Runnable action) {
+  public void capture(ExceptionCategory category, Runnable action) {
     try {
       action.run();
     } catch (Exception e) {

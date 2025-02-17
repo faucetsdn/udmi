@@ -12,7 +12,7 @@ import java.util.Map;
 // This class is manually curated, auto-generated, and then copied into the gencode directory.
 // Look for the proper source and don't be fooled! Ultimately sourced from docs/specs/categories.md
 public class Category {
-    public static final Map<String, Level> LEVEL = new HashMap();
+    public static final Map<String, Level> LEVEL = new HashMap<>();
 
 
     // System is in the process of (re)starting and essentially offline

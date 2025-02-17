@@ -2,12 +2,14 @@ package com.google.udmi.util;
 
 import static com.google.udmi.util.GeneralUtils.ifTrueGet;
 import static com.google.udmi.util.GeneralUtils.stackTraceString;
+import static com.google.udmi.util.JsonUtil.safeSleep;
 
 import com.google.common.base.Function;
 import com.google.common.base.Joiner;
 import com.google.common.base.Strings;
 import com.google.common.reflect.ClassPath;
 import com.google.common.reflect.ClassPath.ClassInfo;
+import com.google.udmi.util.ExceptionMap.ExceptionCategory;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.MissingFormatArgumentException;
@@ -36,7 +38,7 @@ public abstract class Common {
   public static final String UPGRADED_FROM = "upgraded_from";
   public static final String DOWNGRADED_FROM = "downgraded_from";
   public static final String CLOUD_VERSION_KEY = "cloud_version";
-  public static final String SITE_METADATA_KEY = "site_metadata";
+  public static final String SITE_METADATA_KEY = ExceptionCategory.site_metadata.toString();
   public static final String UDMI_VERSION_KEY = "udmi_version";
   public static final String UDMI_VERSION_ENV = "UDMI_VERSION";
   public static final String UDMI_COMMIT_ENV = "UDMI_COMMIT";
@@ -49,6 +51,7 @@ public abstract class Common {
   public static final String REGISTRY_ID_PROPERTY_KEY = "deviceRegistryId";
   public static final String DEFAULT_REGION = "us-central1";
   public static final String DEVICE_ID_KEY = "deviceId";
+  public static final String DEVICE_NUM_KEY = "deviceNumId";
   public static final String GATEWAY_ID_KEY = "gatewayId";
   public static final String SOURCE_KEY = "source";
   public static final String NO_SITE = "--";
@@ -198,5 +201,11 @@ public abstract class Common {
     } catch (Exception e) {
       throw new IllegalStateException("Could not find class for " + schemaName);
     }
+  }
+
+  public static void forcedDelayedShutdown() {
+    // Force exist because PubSub Subscriber in PubSubReflector does not shut down properly.
+    safeSleep(2000);
+    System.exit(0);
   }
 }

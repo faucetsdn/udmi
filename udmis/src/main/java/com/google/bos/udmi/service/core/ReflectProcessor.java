@@ -284,8 +284,13 @@ public class ReflectProcessor extends ProcessorBase {
   }
 
   private CloudModel reflectModel(Envelope attributes, CloudModel request) {
-    ifNotNullThen(extractModel(request), model -> publish(makeTargetEnvelope(attributes), model));
+    CloudModel modelResult = updateModel(attributes, request);
+    ifNotNullThen(extractModel(request),
+        model -> publish(makeTargetEnvelope(attributes), model));
+    return modelResult;
+  }
 
+  private CloudModel updateModel(Envelope attributes, CloudModel request) {
     if (request.operation == PREVIEW) {
       // Nothing more to do in this case since this is just preview, meaning no impact.
       return previewReflectResponse(attributes, request);

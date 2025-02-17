@@ -26,11 +26,11 @@
     "status": {
       "$ref": "file:entry.json"
     },
-    "scan_family": {
+    "family": {
       "existingJavaType": "String"
     },
-    "scan_addr": {
-      "description": "The primary address of the device (for scan_family)",
+    "addr": {
+      "description": "The primary address of the device (for indicated family)",
       "type": "string"
     },
     "event_no": {
@@ -49,7 +49,7 @@
       }
     },
     "registries": {
-      "description": "Registry discovery results.",
+      "description": "Registry iot cloud models",
       "type": "object",
       "additionalProperties": false,
       "existingJavaType": "java.util.Map<String, CloudModel>",
@@ -60,7 +60,7 @@
       }
     },
     "devices": {
-      "description": "Device iot discovery scan results.",
+      "description": "Device iot cloud models",
       "type": "object",
       "additionalProperties": false,
       "existingJavaType": "java.util.Map<String, CloudModel>",
@@ -81,7 +81,7 @@
       }
     },
     "refs": {
-      "description": "Collection of point references discovered",
+      "description": "Collection of point references",
       "additionalProperties": false,
       "existingJavaType": "java.util.Map<String, RefDiscovery>",
       "patternProperties": {
