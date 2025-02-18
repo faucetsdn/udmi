@@ -17,7 +17,8 @@ import static udmi.schema.IotAccess.IotProvider.MQTT;
 import static udmi.schema.IotAccess.IotProvider.PUBSUB;
 
 import com.google.common.collect.ImmutableList;
-import com.google.daq.mqtt.util.ExceptionMap.ExceptionCategory;
+import com.google.udmi.util.ExceptionMap;
+import com.google.udmi.util.ExceptionMap.ExceptionCategory;
 import com.google.udmi.util.GeneralUtils;
 import com.google.udmi.util.IotProvider;
 import com.google.udmi.util.MetadataMapKeys;

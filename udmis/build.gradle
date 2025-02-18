@@ -84,6 +84,7 @@ repositories {
 dependencies {
     implementation group: 'com.fasterxml.jackson.core', name: 'jackson-databind', version: '2.12.4'
     implementation group: 'com.fasterxml.jackson.dataformat', name: 'jackson-dataformat-yaml', version: '2.11.0'
+    implementation group: 'com.github.java-json-tools', name: 'json-schema-validator', version: '2.2.14'
     implementation 'commons-io:commons-io:2.5'
 
     implementation group: 'com.github.spullara.mustache.java', name: 'compiler', version: '0.9.10'

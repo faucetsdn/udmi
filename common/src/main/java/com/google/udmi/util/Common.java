@@ -9,7 +9,7 @@ import com.google.common.base.Joiner;
 import com.google.common.base.Strings;
 import com.google.common.reflect.ClassPath;
 import com.google.common.reflect.ClassPath.ClassInfo;
-import com.google.daq.mqtt.util.ExceptionMap.ExceptionCategory;
+import com.google.udmi.util.ExceptionMap.ExceptionCategory;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.MissingFormatArgumentException;

@@ -2,7 +2,6 @@ package com.google.daq.mqtt.validator;
 
 import static com.google.api.client.util.Preconditions.checkState;
 import static com.google.common.base.Preconditions.checkArgument;
-import static com.google.common.collect.ImmutableList.toImmutableList;
 import static com.google.daq.mqtt.registrar.Registrar.BASE_DIR;
 import static com.google.daq.mqtt.sequencer.SequenceBase.EMPTY_MESSAGE;
 import static com.google.daq.mqtt.util.ConfigUtil.UDMI_ROOT;
@@ -47,8 +46,6 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.github.fge.jsonschema.core.load.configuration.LoadingConfiguration;
 import com.github.fge.jsonschema.core.load.download.URIDownloader;
-import com.github.fge.jsonschema.core.report.LogLevel;
-import com.github.fge.jsonschema.core.report.ProcessingMessage;
 import com.github.fge.jsonschema.core.report.ProcessingReport;
 import com.github.fge.jsonschema.main.JsonSchema;
 import com.github.fge.jsonschema.main.JsonSchemaFactory;
@@ -62,22 +59,22 @@ import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.daq.mqtt.util.CloudIotManager;
-import com.google.daq.mqtt.util.ErrorMap;
-import com.google.daq.mqtt.util.ErrorMap.ErrorMapException;
-import com.google.daq.mqtt.util.ExceptionMap;
-import com.google.daq.mqtt.util.ExceptionMap.ErrorTree;
 import com.google.daq.mqtt.util.FileDataSink;
 import com.google.daq.mqtt.util.ImpulseRunningAverage;
 import com.google.daq.mqtt.util.MessagePublisher;
 import com.google.daq.mqtt.util.MessagePublisher.QuerySpeed;
 import com.google.daq.mqtt.util.PubSubClient;
-import com.google.daq.mqtt.util.ValidationException;
 import com.google.udmi.util.CommandLineOption;
 import com.google.udmi.util.CommandLineProcessor;
 import com.google.udmi.util.Common;
+import com.google.udmi.util.ErrorMap;
+import com.google.udmi.util.ErrorMap.ErrorMapException;
+import com.google.udmi.util.ExceptionMap;
+import com.google.udmi.util.ExceptionMap.ErrorTree;
 import com.google.udmi.util.GeneralUtils;
 import com.google.udmi.util.JsonUtil;
 import com.google.udmi.util.MessageUpgrader;
+import com.google.udmi.util.MessageValidator;
 import com.google.udmi.util.SiteModel;
 import java.io.File;
 import java.io.FilenameFilter;
@@ -109,9 +106,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.BiConsumer;
 import java.util.function.Function;
-import java.util.regex.Pattern;
 import java.util.stream.Collectors;
-import java.util.stream.StreamSupport;
 import org.apache.commons.io.FileUtils;
 import org.slf4j.impl.SimpleLogger;
 import udmi.schema.Category;
@@ -162,12 +157,6 @@ public class Validator {
   private static final Set<SubType> LAST_SEEN_SUBTYPES = ImmutableSet.of(
       SubType.EVENTS,
       SubType.STATE);
-
-  @SuppressWarnings("checkstyle:linelength")
-  private static final List<String> IGNORE_LIST = ImmutableList.of(
-      "instance type \\(string\\) does not match any allowed primitive type \\(allowed: \\[.*\"number\"\\]\\)");
-  private static final List<Pattern> IGNORE_PATTERNS = IGNORE_LIST.stream().map(Pattern::compile)
-      .toList();
 
   private static final long DEFAULT_INTERVAL_SEC = 60;
   private static final long REPORTS_PER_SEC = 10;
@@ -307,39 +296,6 @@ public class Validator {
     if (message.get(EXCEPTION_KEY) instanceof Exception exception) {
       message.put(EXCEPTION_KEY, friendlyStackTrace(exception));
     }
-  }
-
-  /**
-   * From an external processing report.
-   *
-   * @param report Report to convert
-   * @return Converted exception.
-   */
-  public static ValidationException fromProcessingReport(ProcessingReport report) {
-    checkArgument(!report.isSuccess(), "Report must not be successful");
-    ImmutableList<ValidationException> causingExceptions =
-        StreamSupport.stream(report.spliterator(), false)
-            .filter(Validator::errorOrWorse)
-            .filter(Validator::notOnIgnoreList)
-            .map(Validator::convertMessage).collect(toImmutableList());
-    return causingExceptions.isEmpty() ? null : new ValidationException(
-        format("%d schema violations found", causingExceptions.size()), causingExceptions);
-  }
-
-  private static boolean notOnIgnoreList(ProcessingMessage processingMessage) {
-    return IGNORE_PATTERNS.stream()
-        .noneMatch(p -> p.matcher(processingMessage.getMessage()).matches());
-  }
-
-  private static boolean errorOrWorse(ProcessingMessage processingMessage) {
-    return processingMessage.getLogLevel().compareTo(LogLevel.ERROR) >= 0;
-  }
-
-  private static ValidationException convertMessage(ProcessingMessage processingMessage) {
-    String pointer = processingMessage.asJson().get("instance").get("pointer").asText();
-    String prefix =
-        com.google.api.client.util.Strings.isNullOrEmpty(pointer) ? "" : (pointer + ": ");
-    return new ValidationException(prefix + processingMessage.getMessage());
   }
 
   private List<String> parseArgs(List<String> argList) {
@@ -718,7 +674,8 @@ public class Validator {
 
   private void validateMessage(JsonSchema schema, Object message) throws Exception {
     ProcessingReport report = schema.validate(OBJECT_MAPPER.valueToTree(message), true);
-    ifTrueThen(!report.isSuccess(), () -> ifNotNullThrow(fromProcessingReport(report)));
+    ifTrueThen(!report.isSuccess(),
+        () -> ifNotNullThrow(MessageValidator.fromProcessingReport(report)));
   }
 
   private Instant getInstant(Object msgObject, Map<String, String> attributes) {

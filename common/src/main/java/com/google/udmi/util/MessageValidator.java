@@ -1,17 +1,21 @@
-package com.google.bos.iot.core.proxy;
+package com.google.udmi.util;
+
+import static com.google.common.base.Preconditions.checkArgument;
+import static com.google.common.collect.ImmutableList.toImmutableList;
+import static java.lang.String.format;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.fge.jsonschema.core.exceptions.ProcessingException;
 import com.github.fge.jsonschema.core.load.configuration.LoadingConfiguration;
 import com.github.fge.jsonschema.core.load.download.URIDownloader;
+import com.github.fge.jsonschema.core.report.LogLevel;
+import com.github.fge.jsonschema.core.report.ProcessingMessage;
 import com.github.fge.jsonschema.core.report.ProcessingReport;
 import com.github.fge.jsonschema.main.JsonSchema;
 import com.github.fge.jsonschema.main.JsonSchemaFactory;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Maps;
-import com.google.daq.mqtt.util.ValidationException;
-import com.google.daq.mqtt.validator.Validator;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -20,6 +24,8 @@ import java.net.URI;
 import java.net.URL;
 import java.util.List;
 import java.util.Map;
+import java.util.regex.Pattern;
+import java.util.stream.StreamSupport;
 
 /**
  * Validation wrapper for processing individual messages.
@@ -27,6 +33,11 @@ import java.util.Map;
 public class MessageValidator {
 
   private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
+  @SuppressWarnings("checkstyle:linelength")
+  private static final List<String> IGNORE_LIST = ImmutableList.of(
+      "instance type \\(string\\) does not match any allowed primitive type \\(allowed: \\[.*\"number\"\\]\\)");
+  private static final List<Pattern> IGNORE_PATTERNS = IGNORE_LIST.stream().map(Pattern::compile)
+      .toList();
 
   private final Map<String, JsonSchema> schemaMap = Maps.newConcurrentMap();
   private final File schemaRoot;
@@ -45,6 +56,39 @@ public class MessageValidator {
   }
 
   /**
+   * From an external processing report.
+   *
+   * @param report Report to convert
+   * @return Converted exception.
+   */
+  public static ValidationException fromProcessingReport(ProcessingReport report) {
+    checkArgument(!report.isSuccess(), "Report must not be successful");
+    ImmutableList<ValidationException> causingExceptions =
+        StreamSupport.stream(report.spliterator(), false)
+            .filter(MessageValidator::errorOrWorse)
+            .filter(MessageValidator::notOnIgnoreList)
+            .map(MessageValidator::convertMessage).collect(toImmutableList());
+    return causingExceptions.isEmpty() ? null : new ValidationException(
+        format("%d schema violations found", causingExceptions.size()), causingExceptions);
+  }
+
+  private static boolean notOnIgnoreList(ProcessingMessage processingMessage) {
+    return IGNORE_PATTERNS.stream()
+        .noneMatch(p -> p.matcher(processingMessage.getMessage()).matches());
+  }
+
+  private static boolean errorOrWorse(ProcessingMessage processingMessage) {
+    return processingMessage.getLogLevel().compareTo(LogLevel.ERROR) >= 0;
+  }
+
+  private static ValidationException convertMessage(ProcessingMessage processingMessage) {
+    String pointer = processingMessage.asJson().get("instance").get("pointer").asText();
+    String prefix =
+        com.google.api.client.util.Strings.isNullOrEmpty(pointer) ? "" : (pointer + ": ");
+    return new ValidationException(prefix + processingMessage.getMessage());
+  }
+
+  /**
    * Validate the indicated message.
    *
    * @param subFolder indicates the type of message for validation
@@ -58,7 +102,7 @@ public class MessageValidator {
       if (report.isSuccess()) {
         return ImmutableList.of();
       }
-      throw Validator.fromProcessingReport(report);
+      throw fromProcessingReport(report);
     } catch (ValidationException e) {
       return e.getAllMessages();
     } catch (IOException | ProcessingException ex) {
