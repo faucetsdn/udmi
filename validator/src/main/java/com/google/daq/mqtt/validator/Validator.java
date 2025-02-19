@@ -187,7 +187,7 @@ public class Validator {
       "Message validate");
   private Set<String> targetDevices;
   private final LoggingHandler outputLogger;
-  private ImmutableSet<String> expectedDevices;
+  private Set<String> expectedDevices;
   private File outBaseDir;
   private File schemaRoot;
   private String schemaSpec;
@@ -242,6 +242,11 @@ public class Validator {
   @VisibleForTesting
   public Map<String, ReportingDevice> getReportingDevices() {
     return reportingDevices;
+  }
+
+  @VisibleForTesting
+  public Set<String> getExpectedDevices() {
+    return expectedDevices;
   }
 
   Validator processArgs(List<String> argListRaw) {
@@ -453,7 +458,7 @@ public class Validator {
   private void initializeExpectedDevices() {
     Set<String> siteDevices = siteModel.getDeviceIds();
     try {
-      expectedDevices = ImmutableSet.copyOf(siteDevices);
+      expectedDevices = new HashSet<>(siteDevices);
       for (String device : siteDevices) {
         ReportingDevice reportingDevice = newReportingDevice(device);
         try {
@@ -612,25 +617,28 @@ public class Validator {
   }
 
   private boolean handleMetadataUpdate(Map<String, String> attributes, Object messageObject) {
-    String deviceId = attributes.get("deviceId");
     String subFolderRaw = attributes.get(SUBFOLDER_PROPERTY_KEY);
     String subTypeRaw = attributes.get(SUBTYPE_PROPERTY_KEY);
 
-    if (SubType.MODEL.value().equals(subTypeRaw) && SubFolder.UPDATE.value().equals(subFolderRaw)) {
-      if (reportingDevices.containsKey(deviceId)) {
-        ReportingDevice device = reportingDevices.get(deviceId);
-        Metadata metadata = convertTo(Metadata.class,
-            requireNonNull(messageObject, "messageObject is null"));
-
-        if (catchToNull(() -> metadata.cloud.operation) == Operation.DELETE) {
-          reportingDevices.remove(deviceId);
-        } else if (metadata.system != null) {
-          device.setMetadata(metadata);
-        }
-      }
-      return true;
+    if (!SubType.MODEL.value().equals(subTypeRaw)
+        || !SubFolder.UPDATE.value().equals(subFolderRaw)) {
+      return false;
     }
-    return false;
+
+    String deviceId = attributes.get("deviceId");
+    Metadata metadata = convertTo(Metadata.class,
+        requireNonNull(messageObject, "messageObject is null"));
+    ReportingDevice device = reportingDevices.computeIfAbsent(deviceId, this::newReportingDevice);
+
+    if (catchToNull(() -> metadata.cloud.operation) == Operation.DELETE) {
+      reportingDevices.remove(deviceId);
+    } else {
+      ifNotNullThen(metadata.system, () -> {
+        device.setMetadata(metadata);
+        expectedDevices.add(deviceId);
+      });
+    }
+    return true;
   }
 
   protected synchronized void validateMessage(MessageBundle message) {

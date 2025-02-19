@@ -1,5 +1,6 @@
 package com.google.daq.mqtt.validator;
 
+import static com.google.udmi.util.Common.DEVICE_ID_KEY;
 import static com.google.udmi.util.Common.TIMESTAMP_KEY;
 import static com.google.udmi.util.JsonUtil.getInstant;
 import static com.google.udmi.util.JsonUtil.isoConvert;
@@ -16,6 +17,7 @@ import java.time.Instant;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import org.junit.Test;
 import udmi.schema.CloudModel;
 import udmi.schema.CloudModel.Operation;
@@ -181,6 +183,28 @@ public class BasicTest extends TestBase {
 
     Map<String, ReportingDevice> reportingDevices = validator.getReportingDevices();
     assertNull(reportingDevices.get(TestCommon.DEVICE_ID));
+  }
+
+  @Test
+  public void addNewDeviceWithModelUpdate() {
+    Metadata messageObject = new Metadata();
+    messageObject.version = TestCommon.UDMI_VERSION;
+    messageObject.system = new SystemModel();
+    messageObject.system.description = "New description";
+    MessageBundle messageBundle = getMessageBundle(MODEL_SUBTYPE, UPDATE_SUBFOLDER, messageObject);
+
+    String newDeviceId = TestCommon.DEVICE_ID + "_1";
+    messageBundle.attributes.put(DEVICE_ID_KEY, newDeviceId);
+
+    validator.validateMessage(messageBundle);
+
+    Map<String, ReportingDevice> reportingDevices = validator.getReportingDevices();
+    Set<String> expectedDevices = validator.getExpectedDevices();
+
+    assertTrue(expectedDevices.contains(newDeviceId));
+    assertTrue(reportingDevices.containsKey(newDeviceId));
+    assertEquals(messageObject.system.description,
+        reportingDevices.get(newDeviceId).getMetadata().system.description);
   }
 
 }
