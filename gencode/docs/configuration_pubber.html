@@ -15,20 +15,20 @@
     
     <title>Pubber Configuration</title>
 <script src="schema_extras.js" ></script></head>
-    <body onload="anchorOnLoad();removedHostedMDExtensions();" id="root"><nav> <ol class="breadcrumb bg-white" style="padding: 0"> <li class="breadcrumb-item"><a href="../../">UDMI</a></li> <li class="breadcrumb-item"><a href="../">Schema</a></li> <li class="breadcrumb-item"><a href="./">Schema Viewer</a></li> </ol> </nav> <h1>Pubber Configuration</h1><div class="text-right">
+    <body onload="anchorOnLoad();removedHostedMDExtensions();" id="root"><nav> <ol class="breadcrumb bg-white" style="padding: 0"> <li class="breadcrumb-item"><a href="../../">UDMI</a></li> <li class="breadcrumb-item"><a href="../">Schema</a></li> <li class="breadcrumb-item"><a href="./">Schema Viewer</a></li> </ol> </nav> <div class="text-right">
             <button class="btn btn-primary" type="button" data-toggle="collapse" data-target=".collapse:not(.show)" aria-expanded="false">Expand all</button>
             <button class="btn btn-primary" type="button" data-toggle="collapse" data-target=".collapse.show" aria-expanded="false">Collapse all</button>
         </div>
 
-    <div class="breadcrumbs"></div><span class="badge badge-dark value-type">Type: object</span><br/>
+    <div class="breadcrumbs"></div> <h1>Pubber Configuration</h1><span class="badge badge-dark value-type">Type: object</span><br/>
 <span class="description"><p>Parameters to define a pubber runtime instance</p>
 </span>
-            
+        
 
-            
-            
+        
+        
 
-            
+        
 <div class="accordion" id="accordionendpoint">
     <div class="card">
         <div class="card-header" id="headingendpoint">
@@ -50,17 +50,17 @@
                 d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
             />
         </svg>
-    <a href="#endpoint" onclick="anchorLink('endpoint')">endpoint</a></div><span class="badge badge-dark value-type">Type: object</span><br/>
+    <a href="#endpoint" onclick="anchorLink('endpoint')">endpoint</a></div><h4>Endpoint Configuration</h4><span class="badge badge-dark value-type">Type: object</span><br/>
 <span class="description"><p>Parameters to define a message endpoint</p>
 </span>
 
      <span class="badge badge-info no-additional">No Additional Properties</span>
-            
+        
 
-            
-            
+        
+        
 
-            
+        
 <div class="accordion" id="accordionendpoint_name">
     <div class="card">
         <div class="card-header" id="headingendpoint_name">
@@ -92,12 +92,12 @@
     <a href="#endpoint_name" onclick="anchorLink('endpoint_name')">name</a></div><span class="badge badge-dark value-type">Type: string</span><br/>
 <span class="description"><p>Friendly name for this flow (debugging and diagnostics)</p>
 </span>
-            
+        
 
-            
-            
+        
+        
 
-            
+        
             </div>
         </div>
     </div>
@@ -132,15 +132,15 @@
         </svg>
     <a href="#endpoint_protocol" onclick="anchorLink('endpoint_protocol')">protocol</a></div><span class="badge badge-dark value-type">Type: enum (of string)</span><br/>
 <div class="enum-value" id="endpoint_protocol_enum">
-                <h4>Must be one of:</h4>
-                <ul class="list-group"><li class="list-group-item enum-item">"local"</li><li class="list-group-item enum-item">"pubsub"</li><li class="list-group-item enum-item">"file"</li><li class="list-group-item enum-item">"trace"</li><li class="list-group-item enum-item">"mqtt"</li></ul>
-                </div>
-            
+            <h4>Must be one of:</h4>
+            <ul class="list-group"><li class="list-group-item enum-item">"local"</li><li class="list-group-item enum-item">"pubsub"</li><li class="list-group-item enum-item">"file"</li><li class="list-group-item enum-item">"trace"</li><li class="list-group-item enum-item">"mqtt"</li></ul>
+            </div>
+        
 
-            
-            
+        
+        
 
-            
+        
             </div>
         </div>
     </div>
@@ -175,15 +175,15 @@
         </svg>
     <a href="#endpoint_transport" onclick="anchorLink('endpoint_transport')">transport</a></div><span class="badge badge-dark value-type">Type: enum (of string)</span><br/>
 <div class="enum-value" id="endpoint_transport_enum">
-                <h4>Must be one of:</h4>
-                <ul class="list-group"><li class="list-group-item enum-item">"ssl"</li><li class="list-group-item enum-item">"tcp"</li></ul>
-                </div>
-            
+            <h4>Must be one of:</h4>
+            <ul class="list-group"><li class="list-group-item enum-item">"ssl"</li><li class="list-group-item enum-item">"tcp"</li></ul>
+            </div>
+        
 
-            
-            
+        
+        
 
-            
+        
             </div>
         </div>
     </div>
@@ -218,12 +218,12 @@
         </svg>
     <a href="#endpoint_hostname" onclick="anchorLink('endpoint_hostname')">hostname</a></div><span class="badge badge-dark value-type">Type: string</span><br/>
 
-            
+        
 
-            
-            
+        
+        
 
-            
+        
             </div>
         </div>
     </div>
@@ -259,12 +259,12 @@
     <a href="#endpoint_payload" onclick="anchorLink('endpoint_payload')">payload</a></div><span class="badge badge-dark value-type">Type: string</span><br/>
 <span class="description"><p>Simple payload template for simple injection use cases</p>
 </span>
-            
+        
 
-            
-            
+        
+        
 
-            
+        
             </div>
         </div>
     </div>
@@ -300,12 +300,12 @@
     <a href="#endpoint_error" onclick="anchorLink('endpoint_error')">error</a></div><span class="badge badge-dark value-type">Type: string</span><br/>
 <span class="description"><p>Error message container for capturing errors during parsing/handling</p>
 </span>
-            
+        
 
-            
-            
+        
+        
 
-            
+        
             </div>
         </div>
     </div>
@@ -340,12 +340,12 @@
         </svg>
     <a href="#endpoint_port" onclick="anchorLink('endpoint_port')">port</a></div><span class="badge badge-dark value-type">Type: integer</span><br/>
 
-            
+        
 
-            
-            
+        
+        
 
-            
+        
             </div>
         </div>
     </div>
@@ -381,12 +381,12 @@
     <a href="#endpoint_config_sync_sec" onclick="anchorLink('endpoint_config_sync_sec')">config_sync_sec</a></div><span class="badge badge-dark value-type">Type: integer</span><br/>
 <span class="description"><p>Delay waiting for config message on start, 0 for default, &lt;0 to disable</p>
 </span>
-            
+        
 
-            
-            
+        
+        
 
-            
+        
             </div>
         </div>
     </div>
@@ -421,12 +421,12 @@
         </svg>
     <a href="#endpoint_client_id" onclick="anchorLink('endpoint_client_id')">client_id</a></div><span class="badge badge-dark value-type">Type: string</span><br/>
 
-            
+        
 
-            
-            
+        
+        
 
-            
+        
             </div>
         </div>
     </div>
@@ -462,12 +462,12 @@
     <a href="#endpoint_topic_prefix" onclick="anchorLink('endpoint_topic_prefix')">topic_prefix</a></div><span class="badge badge-dark value-type">Type: string</span><br/>
 <span class="description"><p>Prefix for message topics</p>
 </span><span class="pattern-value" id="endpoint_topic_prefix_pattern">Must match regular expression: <code>^[-_/a-zA-Z0-9]+$</code></span>
-            
+        
 
-            
-            
+        
+        
 
-            
+        
             </div>
         </div>
     </div>
@@ -503,12 +503,12 @@
     <a href="#endpoint_recv_id" onclick="anchorLink('endpoint_recv_id')">recv_id</a></div><span class="badge badge-dark value-type">Type: string</span><br/>
 <span class="description"><p>Id for the receiving message channel</p>
 </span><span class="pattern-value" id="endpoint_recv_id_pattern">Must match regular expression: <code>^[-_/a-zA-Z0-9#]+$</code></span>
-            
+        
 
-            
-            
+        
+        
 
-            
+        
             </div>
         </div>
     </div>
@@ -544,12 +544,12 @@
     <a href="#endpoint_send_id" onclick="anchorLink('endpoint_send_id')">send_id</a></div><span class="badge badge-dark value-type">Type: string</span><br/>
 <span class="description"><p>Id for the sending messages channel</p>
 </span><span class="pattern-value" id="endpoint_send_id_pattern">Must match regular expression: <code>^[-_/a-zA-Z0-9#]+$</code></span>
-            
+        
 
-            
-            
+        
+        
 
-            
+        
             </div>
         </div>
     </div>
@@ -585,12 +585,12 @@
     <a href="#endpoint_side_id" onclick="anchorLink('endpoint_side_id')">side_id</a></div><span class="badge badge-dark value-type">Type: string</span><br/>
 <span class="description"><p>Id for a side-car message channel</p>
 </span><span class="pattern-value" id="endpoint_side_id_pattern">Must match regular expression: <code>^[-_/a-zA-Z0-9#]+$</code></span>
-            
+        
 
-            
-            
+        
+        
 
-            
+        
             </div>
         </div>
     </div>
@@ -625,12 +625,12 @@
         </svg>
     <a href="#endpoint_gatewayId" onclick="anchorLink('endpoint_gatewayId')">gatewayId</a></div><span class="badge badge-dark value-type">Type: string</span><br/>
 
-            
+        
 
-            
-            
+        
+        
 
-            
+        
             </div>
         </div>
     </div>
@@ -665,12 +665,12 @@
         </svg>
     <a href="#endpoint_deviceId" onclick="anchorLink('endpoint_deviceId')">deviceId</a></div><span class="badge badge-dark value-type">Type: string</span><br/>
 
-            
+        
 
-            
-            
+        
+        
 
-            
+        
             </div>
         </div>
     </div>
@@ -706,12 +706,12 @@
     <a href="#endpoint_enabled" onclick="anchorLink('endpoint_enabled')">enabled</a></div><span class="badge badge-dark value-type">Type: string</span><br/>
 <span class="description"><p>Indicator if this endpoint should be active (null or non-empty)</p>
 </span>
-            
+        
 
-            
-            
+        
+        
 
-            
+        
             </div>
         </div>
     </div>
@@ -747,12 +747,12 @@
     <a href="#endpoint_noConfigAck" onclick="anchorLink('endpoint_noConfigAck')">noConfigAck</a></div><span class="badge badge-dark value-type">Type: boolean</span><br/>
 <span class="description"><p>True if config messages should not be acked (lower QOS)</p>
 </span>
-            
+        
 
-            
-            
+        
+        
 
-            
+        
             </div>
         </div>
     </div>
@@ -788,12 +788,12 @@
     <a href="#endpoint_capacity" onclick="anchorLink('endpoint_capacity')">capacity</a></div><span class="badge badge-dark value-type">Type: integer</span><br/>
 <span class="description"><p>Queue capacity for limiting pipes</p>
 </span>
-            
+        
 
-            
-            
+        
+        
 
-            
+        
             </div>
         </div>
     </div>
@@ -829,12 +829,12 @@
     <a href="#endpoint_publish_delay_sec" onclick="anchorLink('endpoint_publish_delay_sec')">publish_delay_sec</a></div><span class="badge badge-dark value-type">Type: integer</span><br/>
 <span class="description"><p>Artifical publish delay for testing</p>
 </span>
-            
+        
 
-            
-            
+        
+        
 
-            
+        
             </div>
         </div>
     </div>
@@ -870,12 +870,12 @@
     <a href="#endpoint_periodic_sec" onclick="anchorLink('endpoint_periodic_sec')">periodic_sec</a></div><span class="badge badge-dark value-type">Type: integer</span><br/>
 <span class="description"><p>Rate for periodic task execution</p>
 </span>
-            
+        
 
-            
-            
+        
+        
 
-            
+        
             </div>
         </div>
     </div>
@@ -910,12 +910,12 @@
         </svg>
     <a href="#endpoint_keyBytes" onclick="anchorLink('endpoint_keyBytes')">keyBytes</a></div><span class="badge badge-dark value-type">Type: object</span><br/>
 
-            
+        
 
-            
-            
+        
+        
 
-            
+        
             </div>
         </div>
     </div>
@@ -950,12 +950,12 @@
         </svg>
     <a href="#endpoint_algorithm" onclick="anchorLink('endpoint_algorithm')">algorithm</a></div><span class="badge badge-dark value-type">Type: string</span><br/>
 
-            
+        
 
-            
-            
+        
+        
 
-            
+        
             </div>
         </div>
     </div>
@@ -990,12 +990,12 @@
         </svg>
     <a href="#endpoint_auth_provider" onclick="anchorLink('endpoint_auth_provider')">auth_provider</a></div><span class="badge badge-dark value-type">Type: object</span><br/>
  <span class="badge badge-info no-additional">No Additional Properties</span>
-            
+        
 
-            
-            
+        
+        
 
-            
+        
 <div class="accordion" id="accordionendpoint_auth_provider_basic">
     <div class="card">
         <div class="card-header" id="headingendpoint_auth_provider_basic">
@@ -1033,12 +1033,12 @@
         </svg>
     <a href="#endpoint_auth_provider_basic" onclick="anchorLink('endpoint_auth_provider_basic')">basic</a></div><span class="badge badge-dark value-type">Type: object</span><br/>
  <span class="badge badge-info no-additional">No Additional Properties</span>
-            
+        
 
-            
-            
+        
+        
 
-            
+        
 <div class="accordion" id="accordionendpoint_auth_provider_basic_username">
     <div class="card">
         <div class="card-header" id="headingendpoint_auth_provider_basic_username">
@@ -1083,12 +1083,12 @@
         </svg>
     <a href="#endpoint_auth_provider_basic_username" onclick="anchorLink('endpoint_auth_provider_basic_username')">username</a></div><span class="badge badge-dark value-type">Type: string</span><br/>
 
-            
+        
 
-            
-            
+        
+        
 
-            
+        
             </div>
         </div>
     </div>
@@ -1137,12 +1137,12 @@
         </svg>
     <a href="#endpoint_auth_provider_basic_password" onclick="anchorLink('endpoint_auth_provider_basic_password')">password</a></div><span class="badge badge-dark value-type">Type: string</span><br/>
 
-            
+        
 
-            
-            
+        
+        
 
-            
+        
             </div>
         </div>
     </div>
@@ -1188,12 +1188,12 @@
         </svg>
     <a href="#endpoint_auth_provider_jwt" onclick="anchorLink('endpoint_auth_provider_jwt')">jwt</a></div><span class="badge badge-dark value-type">Type: object</span><br/>
  <span class="badge badge-info no-additional">No Additional Properties</span>
-            
+        
 
-            
-            
+        
+        
 
-            
+        
 <div class="accordion" id="accordionendpoint_auth_provider_jwt_audience">
     <div class="card">
         <div class="card-header" id="headingendpoint_auth_provider_jwt_audience">
@@ -1238,12 +1238,12 @@
         </svg>
     <a href="#endpoint_auth_provider_jwt_audience" onclick="anchorLink('endpoint_auth_provider_jwt_audience')">audience</a></div><span class="badge badge-dark value-type">Type: string</span><br/>
 
-            
+        
 
-            
-            
+        
+        
 
-            
+        
             </div>
         </div>
     </div>
@@ -1284,15 +1284,15 @@
                 d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
             />
         </svg>
-    <a href="#endpoint_generation" onclick="anchorLink('endpoint_generation')">generation</a></div><span class="badge badge-dark value-type">Type: string</span><br/>
+    <a href="#endpoint_generation" onclick="anchorLink('endpoint_generation')">generation</a></div><span class="badge badge-dark value-type">Type: string</span><span class="badge badge-info value-type">Format: date-time</span><br/>
 <span class="description"><p>The timestamp of the endpoint generation</p>
 </span>
-            
+        
 
-            
-            
+        
+        
 
-            <br/>
+        <br/>
 <div class="badge badge-secondary">Example:</div>
 <br/><div id="endpoint_generation_ex1" class="jumbotron examples"><div class="highlight"><pre><span></span><span class="s2">&quot;2019-01-17T14:02:29.364Z&quot;</span>
 </pre></div>
@@ -1329,12 +1329,12 @@
     <a href="#iotProject" onclick="anchorLink('iotProject')">iotProject</a></div><span class="badge badge-dark value-type">Type: string</span><br/>
 <span class="description"><p>IoT Core ingest project id</p>
 </span>
-            
+        
 
-            
-            
+        
+        
 
-            
+        
             </div>
         </div>
     </div>
@@ -1362,12 +1362,12 @@
         </svg>
     <a href="#projectId" onclick="anchorLink('projectId')">projectId</a></div><span class="badge badge-dark value-type">Type: string</span><br/>
 
-            
+        
 
-            
-            
+        
+        
 
-            
+        
             </div>
         </div>
     </div>
@@ -1395,12 +1395,12 @@
         </svg>
     <a href="#registryId" onclick="anchorLink('registryId')">registryId</a></div><span class="badge badge-dark value-type">Type: string</span><br/>
 
-            
+        
 
-            
-            
+        
+        
 
-            
+        
             </div>
         </div>
     </div>
@@ -1428,12 +1428,12 @@
         </svg>
     <a href="#deviceId" onclick="anchorLink('deviceId')">deviceId</a></div><span class="badge badge-dark value-type">Type: string</span><br/>
 
-            
+        
 
-            
-            
+        
+        
 
-            
+        
             </div>
         </div>
     </div>
@@ -1461,12 +1461,12 @@
         </svg>
     <a href="#gatewayId" onclick="anchorLink('gatewayId')">gatewayId</a></div><span class="badge badge-dark value-type">Type: string</span><br/>
 
-            
+        
 
-            
-            
+        
+        
 
-            
+        
             </div>
         </div>
     </div>
@@ -1494,12 +1494,12 @@
         </svg>
     <a href="#sitePath" onclick="anchorLink('sitePath')">sitePath</a></div><span class="badge badge-dark value-type">Type: string</span><br/>
 
-            
+        
 
-            
-            
+        
+        
 
-            
+        
             </div>
         </div>
     </div>
@@ -1527,12 +1527,12 @@
         </svg>
     <a href="#keyFile" onclick="anchorLink('keyFile')">keyFile</a></div><span class="badge badge-dark value-type">Type: string</span> <span class="badge badge-success default-value">Default: "local/rsa_private.pkcs8"</span><br/>
 
-            
+        
 
-            
-            
+        
+        
 
-            
+        
             </div>
         </div>
     </div>
@@ -1560,12 +1560,12 @@
         </svg>
     <a href="#algorithm" onclick="anchorLink('algorithm')">algorithm</a></div><span class="badge badge-dark value-type">Type: string</span> <span class="badge badge-success default-value">Default: "RS256"</span><br/>
 
-            
+        
 
-            
-            
+        
+        
 
-            
+        
             </div>
         </div>
     </div>
@@ -1593,12 +1593,12 @@
         </svg>
     <a href="#serialNo" onclick="anchorLink('serialNo')">serialNo</a></div><span class="badge badge-dark value-type">Type: string</span><br/>
 
-            
+        
 
-            
-            
+        
+        
 
-            
+        
             </div>
         </div>
     </div>
@@ -1626,12 +1626,12 @@
         </svg>
     <a href="#macAddr" onclick="anchorLink('macAddr')">macAddr</a></div><span class="badge badge-dark value-type">Type: string</span><br/>
 
-            
+        
 
-            
-            
+        
+        
 
-            
+        
             </div>
         </div>
     </div>
@@ -1659,12 +1659,12 @@
         </svg>
     <a href="#keyBytes" onclick="anchorLink('keyBytes')">keyBytes</a></div><span class="badge badge-dark value-type">Type: object</span><br/>
 
-            
+        
 
-            
-            
+        
+        
 
-            
+        
             </div>
         </div>
     </div>
@@ -1690,17 +1690,17 @@
                 d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
             />
         </svg>
-    <a href="#options" onclick="anchorLink('options')">options</a></div><span class="badge badge-dark value-type">Type: object</span><br/>
+    <a href="#options" onclick="anchorLink('options')">options</a></div><h4>Pubber Options</h4><span class="badge badge-dark value-type">Type: object</span><br/>
 <span class="description"><p>Pubber runtime options</p>
 </span>
 
     
-            
+        
 
-            
-            
+        
+        
 
-            
+        
 <div class="accordion" id="accordionoptions_fixedSampleRate">
     <div class="card">
         <div class="card-header" id="headingoptions_fixedSampleRate">
@@ -1731,12 +1731,12 @@
         </svg>
     <a href="#options_fixedSampleRate" onclick="anchorLink('options_fixedSampleRate')">fixedSampleRate</a></div><span class="badge badge-dark value-type">Type: integer</span><br/>
 
-            
+        
 
-            
-            
+        
+        
 
-            
+        
             </div>
         </div>
     </div>
@@ -1771,12 +1771,12 @@
         </svg>
     <a href="#options_noHardware" onclick="anchorLink('options_noHardware')">noHardware</a></div><span class="badge badge-dark value-type">Type: boolean</span><br/>
 
-            
+        
 
-            
-            
+        
+        
 
-            
+        
             </div>
         </div>
     </div>
@@ -1811,12 +1811,12 @@
         </svg>
     <a href="#options_noConfigAck" onclick="anchorLink('options_noConfigAck')">noConfigAck</a></div><span class="badge badge-dark value-type">Type: boolean</span><br/>
 
-            
+        
 
-            
-            
+        
+        
 
-            
+        
             </div>
         </div>
     </div>
@@ -1851,12 +1851,12 @@
         </svg>
     <a href="#options_noPersist" onclick="anchorLink('options_noPersist')">noPersist</a></div><span class="badge badge-dark value-type">Type: boolean</span><br/>
 
-            
+        
 
-            
-            
+        
+        
 
-            
+        
             </div>
         </div>
     </div>
@@ -1891,12 +1891,12 @@
         </svg>
     <a href="#options_noLastStart" onclick="anchorLink('options_noLastStart')">noLastStart</a></div><span class="badge badge-dark value-type">Type: boolean</span><br/>
 
-            
+        
 
-            
-            
+        
+        
 
-            
+        
             </div>
         </div>
     </div>
@@ -1931,12 +1931,12 @@
         </svg>
     <a href="#options_noLastConfig" onclick="anchorLink('options_noLastConfig')">noLastConfig</a></div><span class="badge badge-dark value-type">Type: boolean</span><br/>
 
-            
+        
 
-            
-            
+        
+        
 
-            
+        
             </div>
         </div>
     </div>
@@ -1971,12 +1971,12 @@
         </svg>
     <a href="#options_badCategory" onclick="anchorLink('options_badCategory')">badCategory</a></div><span class="badge badge-dark value-type">Type: boolean</span><br/>
 
-            
+        
 
-            
-            
+        
+        
 
-            
+        
             </div>
         </div>
     </div>
@@ -2011,12 +2011,12 @@
         </svg>
     <a href="#options_badVersion" onclick="anchorLink('options_badVersion')">badVersion</a></div><span class="badge badge-dark value-type">Type: boolean</span><br/>
 
-            
+        
 
-            
-            
+        
+        
 
-            
+        
             </div>
         </div>
     </div>
@@ -2051,12 +2051,12 @@
         </svg>
     <a href="#options_badAddr" onclick="anchorLink('options_badAddr')">badAddr</a></div><span class="badge badge-dark value-type">Type: boolean</span><br/>
 
-            
+        
 
-            
-            
+        
+        
 
-            
+        
             </div>
         </div>
     </div>
@@ -2091,12 +2091,12 @@
         </svg>
     <a href="#options_noProxy" onclick="anchorLink('options_noProxy')">noProxy</a></div><span class="badge badge-dark value-type">Type: boolean</span><br/>
 
-            
+        
 
-            
-            
+        
+        
 
-            
+        
             </div>
         </div>
     </div>
@@ -2131,12 +2131,12 @@
         </svg>
     <a href="#options_extraDevice" onclick="anchorLink('options_extraDevice')">extraDevice</a></div><span class="badge badge-dark value-type">Type: boolean</span><br/>
 
-            
+        
 
-            
-            
+        
+        
 
-            
+        
             </div>
         </div>
     </div>
@@ -2171,12 +2171,12 @@
         </svg>
     <a href="#options_barfConfig" onclick="anchorLink('options_barfConfig')">barfConfig</a></div><span class="badge badge-dark value-type">Type: boolean</span><br/>
 
-            
+        
 
-            
-            
+        
+        
 
-            
+        
             </div>
         </div>
     </div>
@@ -2211,12 +2211,12 @@
         </svg>
     <a href="#options_messageTrace" onclick="anchorLink('options_messageTrace')">messageTrace</a></div><span class="badge badge-dark value-type">Type: boolean</span><br/>
 
-            
+        
 
-            
-            
+        
+        
 
-            
+        
             </div>
         </div>
     </div>
@@ -2251,12 +2251,12 @@
         </svg>
     <a href="#options_extraPoint" onclick="anchorLink('options_extraPoint')">extraPoint</a></div><span class="badge badge-dark value-type">Type: string</span><br/>
 
-            
+        
 
-            
-            
+        
+        
 
-            
+        
             </div>
         </div>
     </div>
@@ -2291,12 +2291,12 @@
         </svg>
     <a href="#options_configStateDelay" onclick="anchorLink('options_configStateDelay')">configStateDelay</a></div><span class="badge badge-dark value-type">Type: boolean</span><br/>
 
-            
+        
 
-            
-            
+        
+        
 
-            
+        
             </div>
         </div>
     </div>
@@ -2331,12 +2331,12 @@
         </svg>
     <a href="#options_missingPoint" onclick="anchorLink('options_missingPoint')">missingPoint</a></div><span class="badge badge-dark value-type">Type: string</span><br/>
 
-            
+        
 
-            
-            
+        
+        
 
-            
+        
             </div>
         </div>
     </div>
@@ -2371,12 +2371,12 @@
         </svg>
     <a href="#options_extraField" onclick="anchorLink('options_extraField')">extraField</a></div><span class="badge badge-dark value-type">Type: string</span><br/>
 
-            
+        
 
-            
-            
+        
+        
 
-            
+        
             </div>
         </div>
     </div>
@@ -2411,12 +2411,12 @@
         </svg>
     <a href="#options_emptyMissing" onclick="anchorLink('options_emptyMissing')">emptyMissing</a></div><span class="badge badge-dark value-type">Type: boolean</span><br/>
 
-            
+        
 
-            
-            
+        
+        
 
-            
+        
             </div>
         </div>
     </div>
@@ -2451,12 +2451,12 @@
         </svg>
     <a href="#options_redirectRegistry" onclick="anchorLink('options_redirectRegistry')">redirectRegistry</a></div><span class="badge badge-dark value-type">Type: string</span><br/>
 
-            
+        
 
-            
-            
+        
+        
 
-            
+        
             </div>
         </div>
     </div>
@@ -2491,12 +2491,12 @@
         </svg>
     <a href="#options_smokeCheck" onclick="anchorLink('options_smokeCheck')">smokeCheck</a></div><span class="badge badge-dark value-type">Type: boolean</span><br/>
 
-            
+        
 
-            
-            
+        
+        
 
-            
+        
             </div>
         </div>
     </div>
@@ -2531,12 +2531,12 @@
         </svg>
     <a href="#options_skewClock" onclick="anchorLink('options_skewClock')">skewClock</a></div><span class="badge badge-dark value-type">Type: boolean</span><br/>
 
-            
+        
 
-            
-            
+        
+        
 
-            
+        
             </div>
         </div>
     </div>
@@ -2571,12 +2571,12 @@
         </svg>
     <a href="#options_noPointState" onclick="anchorLink('options_noPointState')">noPointState</a></div><span class="badge badge-dark value-type">Type: boolean</span><br/>
 
-            
+        
 
-            
-            
+        
+        
 
-            
+        
             </div>
         </div>
     </div>
@@ -2611,12 +2611,12 @@
         </svg>
     <a href="#options_noState" onclick="anchorLink('options_noState')">noState</a></div><span class="badge badge-dark value-type">Type: boolean</span><br/>
 
-            
+        
 
-            
-            
+        
+        
 
-            
+        
             </div>
         </div>
     </div>
@@ -2651,12 +2651,12 @@
         </svg>
     <a href="#options_noStatus" onclick="anchorLink('options_noStatus')">noStatus</a></div><span class="badge badge-dark value-type">Type: boolean</span><br/>
 
-            
+        
 
-            
-            
+        
+        
 
-            
+        
             </div>
         </div>
     </div>
@@ -2691,12 +2691,12 @@
         </svg>
     <a href="#options_noFolder" onclick="anchorLink('options_noFolder')">noFolder</a></div><span class="badge badge-dark value-type">Type: boolean</span><br/>
 
-            
+        
 
-            
-            
+        
+        
 
-            
+        
             </div>
         </div>
     </div>
@@ -2731,12 +2731,12 @@
         </svg>
     <a href="#options_badLevel" onclick="anchorLink('options_badLevel')">badLevel</a></div><span class="badge badge-dark value-type">Type: boolean</span><br/>
 
-            
+        
 
-            
-            
+        
+        
 
-            
+        
             </div>
         </div>
     </div>
@@ -2771,12 +2771,12 @@
         </svg>
     <a href="#options_spamState" onclick="anchorLink('options_spamState')">spamState</a></div><span class="badge badge-dark value-type">Type: boolean</span><br/>
 
-            
+        
 
-            
-            
+        
+        
 
-            
+        
             </div>
         </div>
     </div>
@@ -2811,12 +2811,12 @@
         </svg>
     <a href="#options_tweakState" onclick="anchorLink('options_tweakState')">tweakState</a></div><span class="badge badge-dark value-type">Type: boolean</span><br/>
 
-            
+        
 
-            
-            
+        
+        
 
-            
+        
             </div>
         </div>
     </div>
@@ -2851,12 +2851,12 @@
         </svg>
     <a href="#options_badState" onclick="anchorLink('options_badState')">badState</a></div><span class="badge badge-dark value-type">Type: boolean</span><br/>
 
-            
+        
 
-            
-            
+        
+        
 
-            
+        
             </div>
         </div>
     </div>
@@ -2891,12 +2891,12 @@
         </svg>
     <a href="#options_baseState" onclick="anchorLink('options_baseState')">baseState</a></div><span class="badge badge-dark value-type">Type: boolean</span><br/>
 
-            
+        
 
-            
-            
+        
+        
 
-            
+        
             </div>
         </div>
     </div>
@@ -2931,12 +2931,12 @@
         </svg>
     <a href="#options_dupeState" onclick="anchorLink('options_dupeState')">dupeState</a></div><span class="badge badge-dark value-type">Type: boolean</span><br/>
 
-            
+        
 
-            
-            
+        
+        
 
-            
+        
             </div>
         </div>
     </div>
@@ -2971,12 +2971,12 @@
         </svg>
     <a href="#options_noLog" onclick="anchorLink('options_noLog')">noLog</a></div><span class="badge badge-dark value-type">Type: boolean</span><br/>
 
-            
+        
 
-            
-            
+        
+        
 
-            
+        
             </div>
         </div>
     </div>
@@ -3011,12 +3011,12 @@
         </svg>
     <a href="#options_featureEnableSwap" onclick="anchorLink('options_featureEnableSwap')">featureEnableSwap</a></div><span class="badge badge-dark value-type">Type: boolean</span><br/>
 
-            
+        
 
-            
-            
+        
+        
 
-            
+        
             </div>
         </div>
     </div>
@@ -3052,12 +3052,12 @@
     <a href="#options_disableWriteback" onclick="anchorLink('options_disableWriteback')">disableWriteback</a></div><span class="badge badge-dark value-type">Type: boolean</span><br/>
 <span class="description"><p>Disable writeback, equivelant to marking all points as unwriteable</p>
 </span>
-            
+        
 
-            
-            
+        
+        
 
-            
+        
             </div>
         </div>
     </div>
@@ -3093,12 +3093,12 @@
     <a href="#options_noWriteback" onclick="anchorLink('options_noWriteback')">noWriteback</a></div><span class="badge badge-dark value-type">Type: boolean</span><br/>
 <span class="description"><p>Removes writeback functionality, mimicking a device without Writeback support</p>
 </span>
-            
+        
 
-            
-            
+        
+        
 
-            
+        
             </div>
         </div>
     </div>
@@ -3133,12 +3133,12 @@
         </svg>
     <a href="#options_fixedLogLevel" onclick="anchorLink('options_fixedLogLevel')">fixedLogLevel</a></div><span class="badge badge-dark value-type">Type: integer</span><br/>
 
-            
+        
 
-            
-            
+        
+        
 
-            
+        
             </div>
         </div>
     </div>
@@ -3173,12 +3173,12 @@
         </svg>
     <a href="#options_softwareFirmwareValue" onclick="anchorLink('options_softwareFirmwareValue')">softwareFirmwareValue</a></div><span class="badge badge-dark value-type">Type: string</span><br/>
 
-            
+        
 
-            
-            
+        
+        
 
-            
+        
             </div>
         </div>
     </div>
@@ -3213,12 +3213,12 @@
         </svg>
     <a href="#options_additionalProperties" onclick="anchorLink('options_additionalProperties')">additionalProperties</a></div><span class="badge badge-dark value-type">Type: object</span><br/>
 
-            
+        
 
-            
-            
+        
+        
 
-            
+        
             </div>
         </div>
     </div>
@@ -3250,12 +3250,12 @@
         </svg>
     <a href="#additionalProperties" onclick="anchorLink('additionalProperties')">additionalProperties</a></div><span class="badge badge-dark value-type">Type: object</span><br/>
 
-            
+        
 
-            
-            
+        
+        
 
-            
+        
             </div>
         </div>
     </div>
