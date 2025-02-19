@@ -110,7 +110,7 @@ import java.util.stream.Collectors;
 import org.apache.commons.io.FileUtils;
 import org.slf4j.impl.SimpleLogger;
 import udmi.schema.Category;
-import udmi.schema.CloudModel.Operation;
+import udmi.schema.CloudModel.ModelOperation;
 import udmi.schema.DeviceValidationEvents;
 import udmi.schema.Envelope;
 import udmi.schema.Envelope.SubFolder;
@@ -630,7 +630,7 @@ public class Validator {
         requireNonNull(messageObject, "messageObject is null"));
     ReportingDevice device = reportingDevices.computeIfAbsent(deviceId, this::newReportingDevice);
 
-    if (catchToNull(() -> metadata.cloud.operation) == Operation.DELETE) {
+    if (catchToNull(() -> metadata.cloud.operation) == ModelOperation.DELETE) {
       reportingDevices.remove(deviceId);
     } else {
       ifNotNullThen(metadata.system, () -> {
