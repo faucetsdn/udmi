@@ -29,7 +29,7 @@ public class PlaybackTest extends TestBase {
   @Test
   public void simpleTraceReport() {
     MessageReadingClient client = validateTrace(SIMPLE_TRACE_DIR);
-    assertEquals("trace message count", 13, client.messageCount);
+    assertEquals("trace message count", 14, client.messageCount);
     List<OutputBundle> outputMessages = client.getOutputMessages();
     OutputBundle lastBundle = outputMessages.get(outputMessages.size() - 1);
     ValidationState finalReport = asValidationState(lastBundle.message);
@@ -94,7 +94,7 @@ public class PlaybackTest extends TestBase {
   @Test
   public void deviceArgs() {
     MessageReadingClient client = validateTrace(SIMPLE_TRACE_DIR, TRACE_DEVICES);
-    assertEquals("trace message count", 13, client.messageCount);
+    assertEquals("trace message count", 14, client.messageCount);
     List<OutputBundle> outputMessages = client.getOutputMessages();
     TreeMap<String, Object> lastMessage = outputMessages.get(outputMessages.size() - 1).message;
     ValidationState finalReport = asValidationState(lastMessage);
