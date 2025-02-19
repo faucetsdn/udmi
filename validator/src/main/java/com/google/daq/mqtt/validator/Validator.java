@@ -957,7 +957,7 @@ public class Validator {
     String subType = attributes.get(SUBTYPE_PROPERTY_KEY);
     String subFolder = attributes.get(SUBFOLDER_PROPERTY_KEY);
     String category = attributes.get("category");
-    boolean ignore = CONFIG_CATEGORY.equals(category);
+    boolean ignore = CONFIG_CATEGORY.equals(category) || isReplySubtype(subType);
     boolean process = subType == null
         || INTERESTING_TYPES.contains(subType)
         || SubFolder.UPDATE.value().equals(subFolder);
@@ -1301,6 +1301,10 @@ public class Validator {
 
   private File getFullPath(String prefix, File targetFile) {
     return prefix == null ? targetFile : new File(new File(prefix), targetFile.getPath());
+  }
+
+  public static boolean isReplySubtype(String subtype) {
+    return SubType.REPLY.value().equals(subtype);
   }
 
   /**
