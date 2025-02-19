@@ -134,8 +134,14 @@ public class CloudModel {
     public Date last_config_ack;
     @JsonProperty("num_id")
     public java.lang.String num_id;
+    /**
+     * Model Operation
+     * <p>
+     * 
+     * 
+     */
     @JsonProperty("operation")
-    public CloudModel.Operation operation;
+    public CloudModel.ModelOperation operation;
     @JsonProperty("metadata")
     public Map<String, String> metadata;
     /**
@@ -285,7 +291,14 @@ public class CloudModel {
 
     }
 
-    public enum Operation {
+
+    /**
+     * Model Operation
+     * <p>
+     * 
+     * 
+     */
+    public enum ModelOperation {
 
         ERROR("ERROR"),
         CREATE("CREATE"),
@@ -301,15 +314,15 @@ public class CloudModel {
         ALLOW("ALLOW"),
         BLOCK("BLOCK");
         private final java.lang.String value;
-        private final static Map<java.lang.String, CloudModel.Operation> CONSTANTS = new HashMap<java.lang.String, CloudModel.Operation>();
+        private final static Map<java.lang.String, CloudModel.ModelOperation> CONSTANTS = new HashMap<java.lang.String, CloudModel.ModelOperation>();
 
         static {
-            for (CloudModel.Operation c: values()) {
+            for (CloudModel.ModelOperation c: values()) {
                 CONSTANTS.put(c.value, c);
             }
         }
 
-        Operation(java.lang.String value) {
+        ModelOperation(java.lang.String value) {
             this.value = value;
         }
 
@@ -324,8 +337,8 @@ public class CloudModel {
         }
 
         @JsonCreator
-        public static CloudModel.Operation fromValue(java.lang.String value) {
-            CloudModel.Operation constant = CONSTANTS.get(value);
+        public static CloudModel.ModelOperation fromValue(java.lang.String value) {
+            CloudModel.ModelOperation constant = CONSTANTS.get(value);
             if (constant == null) {
                 throw new IllegalArgumentException(value);
             } else {
