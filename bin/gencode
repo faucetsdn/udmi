@@ -34,6 +34,9 @@ if [[ -n $check ]]; then
     echo Checking gencode docs links...
     bin/gencode_docs_checklinks
 
+    echo Diff that one file...
+    diff BridgePodConfiguration.java gencode/java/udmi/schema/BridgePodConfiguration.java
+
     files=`find gencode/ -type f | sort`
     sha256sum $files > /tmp/gencode.hash
     echo Checking gencode hash: diff /tmp/gencode.hash .gencode_hash.txt
