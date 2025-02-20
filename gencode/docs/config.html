@@ -1,0 +1,3056 @@
+
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <link rel="stylesheet" type="text/css" href="https://fonts.googleapis.com/css?family=Overpass:300,400,600,800">
+    <script src="https://code.jquery.com/jquery-3.4.1.min.js" integrity="sha256-CSXorXvZcTkaix6Yvo6HppcZGetbYMGWSFlBw8HfCJo=" crossorigin="anonymous"></script>
+    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js" integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM" crossorigin="anonymous"></script>
+	<link rel="stylesheet" type="text/css" href="schema_doc.css">
+    <script src="https://use.fontawesome.com/facf9fa52c.js"></script>
+    <script src="schema_doc.min.js"></script>
+    <meta charset="utf-8"/>
+        
+    
+    <title>Config</title>
+<script src="schema_extras.js" ></script></head>
+    <body onload="anchorOnLoad();removedHostedMDExtensions();" id="root"><nav> <ol class="breadcrumb bg-white" style="padding: 0"> <li class="breadcrumb-item"><a href="../../">UDMI</a></li> <li class="breadcrumb-item"><a href="../">Schema</a></li> <li class="breadcrumb-item"><a href="./">Schema Viewer</a></li> </ol> </nav> <div class="text-right">
+            <button class="btn btn-primary" type="button" data-toggle="collapse" data-target=".collapse:not(.show)" aria-expanded="false">Expand all</button>
+            <button class="btn btn-primary" type="button" data-toggle="collapse" data-target=".collapse.show" aria-expanded="false">Collapse all</button>
+        </div>
+
+    <div class="breadcrumbs"></div> <h1>Config</h1><span class="badge badge-dark value-type">Type: object</span><br/>
+<span class="description"><p>The config block controls a device's intended behavior. <a href="../../docs/messages/config.md">Config Documentation</a></p>
+</span> <span class="badge badge-info no-additional">No Additional Properties</span>
+        
+
+        
+        
+
+        
+<div class="accordion" id="accordiontimestamp">
+    <div class="card">
+        <div class="card-header" id="headingtimestamp">
+            <h2 class="mb-0">
+                <button class="btn btn-link property-name-button" type="button" data-toggle="collapse" data-target="#timestamp"
+                        aria-expanded="" aria-controls="timestamp" onclick="setAnchor('#timestamp')"><span class="property-name">timestamp</span> <span class="badge badge-warning required-property">Required</span></button>
+            </h2>
+        </div>
+
+        <div id="timestamp"
+             class="collapse property-definition-div" aria-labelledby="headingtimestamp"
+             data-parent="#accordiontimestamp">
+            <div class="card-body pl-5">
+
+    <div class="breadcrumbs">root
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#timestamp" onclick="anchorLink('timestamp')">timestamp</a></div><span class="badge badge-dark value-type">Type: string</span><span class="badge badge-info value-type">Format: date-time</span><br/>
+<span class="description"><p>RFC 3339 UTC timestamp the configuration was generated</p>
+</span>
+        
+
+        
+        
+
+        <br/>
+<div class="badge badge-secondary">Example:</div>
+<br/><div id="timestamp_ex1" class="jumbotron examples"><div class="highlight"><pre><span></span><span class="s2">&quot;2019-01-17T14:02:29.364Z&quot;</span>
+</pre></div>
+</div>
+            </div>
+        </div>
+    </div>
+</div>
+<div class="accordion" id="accordionversion">
+    <div class="card">
+        <div class="card-header" id="headingversion">
+            <h2 class="mb-0">
+                <button class="btn btn-link property-name-button" type="button" data-toggle="collapse" data-target="#version"
+                        aria-expanded="" aria-controls="version" onclick="setAnchor('#version')"><span class="property-name">version</span> <span class="badge badge-warning required-property">Required</span></button>
+            </h2>
+        </div>
+
+        <div id="version"
+             class="collapse property-definition-div" aria-labelledby="headingversion"
+             data-parent="#accordionversion">
+            <div class="card-body pl-5">
+
+    <div class="breadcrumbs">root
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#version" onclick="anchorLink('version')">version</a></div><span class="badge badge-dark value-type">Type: string</span><br/>
+<span class="description"><p>Version of the UDMI schema</p>
+</span>
+        
+
+        
+        
+
+        
+            </div>
+        </div>
+    </div>
+</div>
+<div class="accordion" id="accordiondowngraded_from">
+    <div class="card">
+        <div class="card-header" id="headingdowngraded_from">
+            <h2 class="mb-0">
+                <button class="btn btn-link property-name-button" type="button" data-toggle="collapse" data-target="#downgraded_from"
+                        aria-expanded="" aria-controls="downgraded_from" onclick="setAnchor('#downgraded_from')"><span class="property-name">downgraded_from</span></button>
+            </h2>
+        </div>
+
+        <div id="downgraded_from"
+             class="collapse property-definition-div" aria-labelledby="headingdowngraded_from"
+             data-parent="#accordiondowngraded_from">
+            <div class="card-body pl-5">
+
+    <div class="breadcrumbs">root
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#downgraded_from" onclick="anchorLink('downgraded_from')">downgraded_from</a></div><span class="badge badge-dark value-type">Type: string</span><br/>
+<span class="description"><p>Original version of schema pre-downgrade</p>
+</span>
+        
+
+        
+        
+
+        
+            </div>
+        </div>
+    </div>
+</div>
+<div class="accordion" id="accordionsystem">
+    <div class="card">
+        <div class="card-header" id="headingsystem">
+            <h2 class="mb-0">
+                <button class="btn btn-link property-name-button" type="button" data-toggle="collapse" data-target="#system"
+                        aria-expanded="" aria-controls="system" onclick="setAnchor('#system')"><span class="property-name">system</span></button>
+            </h2>
+        </div>
+
+        <div id="system"
+             class="collapse property-definition-div" aria-labelledby="headingsystem"
+             data-parent="#accordionsystem">
+            <div class="card-body pl-5">
+
+    <div class="breadcrumbs">root
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#system" onclick="anchorLink('system')">system</a></div><h4>System Config</h4><span class="badge badge-dark value-type">Type: object</span><br/>
+<span class="description"><p><a href="../../docs/messages/system.md#config">System Config Documentation</a></p>
+</span>
+
+     <span class="badge badge-info no-additional">No Additional Properties</span>
+        
+
+        
+        
+
+        
+<div class="accordion" id="accordionsystem_min_loglevel">
+    <div class="card">
+        <div class="card-header" id="headingsystem_min_loglevel">
+            <h2 class="mb-0">
+                <button class="btn btn-link property-name-button" type="button" data-toggle="collapse" data-target="#system_min_loglevel"
+                        aria-expanded="" aria-controls="system_min_loglevel" onclick="setAnchor('#system_min_loglevel')"><span class="property-name">min_loglevel</span></button>
+            </h2>
+        </div>
+
+        <div id="system_min_loglevel"
+             class="collapse property-definition-div" aria-labelledby="headingsystem_min_loglevel"
+             data-parent="#accordionsystem_min_loglevel">
+            <div class="card-body pl-5">
+
+    <div class="breadcrumbs">root
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#system" onclick="anchorLink('system')">system</a>
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#system_min_loglevel" onclick="anchorLink('system_min_loglevel')">min_loglevel</a></div><span class="badge badge-dark value-type">Type: integer</span> <span class="badge badge-success default-value">Default: 300</span><br/>
+<span class="description"><p>The minimum loglevel for reporting log messages below which log entries should not be sent. Default to 300.</p>
+</span>
+        
+
+        
+        <p><span class="badge badge-light restriction numeric-restriction" id="system_min_loglevel_number">Value must be greater or equal to <code>100</code> and lesser or equal to <code>800</code></span></p>
+
+        
+            </div>
+        </div>
+    </div>
+</div>
+<div class="accordion" id="accordionsystem_metrics_rate_sec">
+    <div class="card">
+        <div class="card-header" id="headingsystem_metrics_rate_sec">
+            <h2 class="mb-0">
+                <button class="btn btn-link property-name-button" type="button" data-toggle="collapse" data-target="#system_metrics_rate_sec"
+                        aria-expanded="" aria-controls="system_metrics_rate_sec" onclick="setAnchor('#system_metrics_rate_sec')"><span class="property-name">metrics_rate_sec</span></button>
+            </h2>
+        </div>
+
+        <div id="system_metrics_rate_sec"
+             class="collapse property-definition-div" aria-labelledby="headingsystem_metrics_rate_sec"
+             data-parent="#accordionsystem_metrics_rate_sec">
+            <div class="card-body pl-5">
+
+    <div class="breadcrumbs">root
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#system" onclick="anchorLink('system')">system</a>
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#system_metrics_rate_sec" onclick="anchorLink('system_metrics_rate_sec')">metrics_rate_sec</a></div><span class="badge badge-dark value-type">Type: integer</span> <span class="badge badge-success default-value">Default: 10</span><br/>
+<span class="description"><p>The rate at which the system should send system event updates. 0 indicates no updates.</p>
+</span>
+        
+
+        
+        <p><span class="badge badge-light restriction numeric-restriction" id="system_metrics_rate_sec_number">Value must be greater or equal to <code>0</code> and lesser or equal to <code>86400</code></span></p>
+
+        
+            </div>
+        </div>
+    </div>
+</div>
+<div class="accordion" id="accordionsystem_operation">
+    <div class="card">
+        <div class="card-header" id="headingsystem_operation">
+            <h2 class="mb-0">
+                <button class="btn btn-link property-name-button" type="button" data-toggle="collapse" data-target="#system_operation"
+                        aria-expanded="" aria-controls="system_operation" onclick="setAnchor('#system_operation')"><span class="property-name">operation</span></button>
+            </h2>
+        </div>
+
+        <div id="system_operation"
+             class="collapse property-definition-div" aria-labelledby="headingsystem_operation"
+             data-parent="#accordionsystem_operation">
+            <div class="card-body pl-5">
+
+    <div class="breadcrumbs">root
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#system" onclick="anchorLink('system')">system</a>
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#system_operation" onclick="anchorLink('system_operation')">operation</a></div><span class="badge badge-dark value-type">Type: object</span><br/>
+ <span class="badge badge-info no-additional">No Additional Properties</span>
+        
+
+        
+        
+
+        
+<div class="accordion" id="accordionsystem_operation_mode">
+    <div class="card">
+        <div class="card-header" id="headingsystem_operation_mode">
+            <h2 class="mb-0">
+                <button class="btn btn-link property-name-button" type="button" data-toggle="collapse" data-target="#system_operation_mode"
+                        aria-expanded="" aria-controls="system_operation_mode" onclick="setAnchor('#system_operation_mode')"><span class="property-name">mode</span></button>
+            </h2>
+        </div>
+
+        <div id="system_operation_mode"
+             class="collapse property-definition-div" aria-labelledby="headingsystem_operation_mode"
+             data-parent="#accordionsystem_operation_mode">
+            <div class="card-body pl-5">
+
+    <div class="breadcrumbs">root
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#system" onclick="anchorLink('system')">system</a>
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#system_operation" onclick="anchorLink('system_operation')">operation</a>
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#system_operation_mode" onclick="anchorLink('system_operation_mode')">mode</a></div><h4>System Mode</h4><span class="badge badge-dark value-type">Type: enum (of string)</span><br/>
+<span class="description"><p>Operating mode for the device. Default is 'active'.</p>
+</span>
+
+    <div class="enum-value" id="system_operation_mode_enum">
+            <h4>Must be one of:</h4>
+            <ul class="list-group"><li class="list-group-item enum-item">"initial"</li><li class="list-group-item enum-item">"active"</li><li class="list-group-item enum-item">"updating"</li><li class="list-group-item enum-item">"restart"</li><li class="list-group-item enum-item">"terminate"</li><li class="list-group-item enum-item">"shutdown"</li></ul>
+            </div>
+        
+
+        
+        
+
+        
+            </div>
+        </div>
+    </div>
+</div>
+<div class="accordion" id="accordionsystem_operation_last_start">
+    <div class="card">
+        <div class="card-header" id="headingsystem_operation_last_start">
+            <h2 class="mb-0">
+                <button class="btn btn-link property-name-button" type="button" data-toggle="collapse" data-target="#system_operation_last_start"
+                        aria-expanded="" aria-controls="system_operation_last_start" onclick="setAnchor('#system_operation_last_start')"><span class="property-name">last_start</span></button>
+            </h2>
+        </div>
+
+        <div id="system_operation_last_start"
+             class="collapse property-definition-div" aria-labelledby="headingsystem_operation_last_start"
+             data-parent="#accordionsystem_operation_last_start">
+            <div class="card-body pl-5">
+
+    <div class="breadcrumbs">root
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#system" onclick="anchorLink('system')">system</a>
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#system_operation" onclick="anchorLink('system_operation')">operation</a>
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#system_operation_last_start" onclick="anchorLink('system_operation_last_start')">last_start</a></div><span class="badge badge-dark value-type">Type: string</span><span class="badge badge-info value-type">Format: date-time</span><br/>
+<span class="description"><p>Last time a device with this id said it restarted: being later than status-supplied last_start indicates resource conflict.</p>
+</span>
+        
+
+        
+        
+
+        
+            </div>
+        </div>
+    </div>
+</div>
+            </div>
+        </div>
+    </div>
+</div>
+<div class="accordion" id="accordionsystem_testing">
+    <div class="card">
+        <div class="card-header" id="headingsystem_testing">
+            <h2 class="mb-0">
+                <button class="btn btn-link property-name-button" type="button" data-toggle="collapse" data-target="#system_testing"
+                        aria-expanded="" aria-controls="system_testing" onclick="setAnchor('#system_testing')"><span class="property-name">testing</span></button>
+            </h2>
+        </div>
+
+        <div id="system_testing"
+             class="collapse property-definition-div" aria-labelledby="headingsystem_testing"
+             data-parent="#accordionsystem_testing">
+            <div class="card-body pl-5">
+
+    <div class="breadcrumbs">root
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#system" onclick="anchorLink('system')">system</a>
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#system_testing" onclick="anchorLink('system_testing')">testing</a></div><h4>Testing System Config</h4><span class="badge badge-dark value-type">Type: object</span><br/>
+<span class="description"><p>Configuration parameters for device-under-test</p>
+</span>
+
+     <span class="badge badge-info no-additional">No Additional Properties</span>
+        
+
+        
+        
+
+        
+<div class="accordion" id="accordionsystem_testing_sequence_name">
+    <div class="card">
+        <div class="card-header" id="headingsystem_testing_sequence_name">
+            <h2 class="mb-0">
+                <button class="btn btn-link property-name-button" type="button" data-toggle="collapse" data-target="#system_testing_sequence_name"
+                        aria-expanded="" aria-controls="system_testing_sequence_name" onclick="setAnchor('#system_testing_sequence_name')"><span class="property-name">sequence_name</span></button>
+            </h2>
+        </div>
+
+        <div id="system_testing_sequence_name"
+             class="collapse property-definition-div" aria-labelledby="headingsystem_testing_sequence_name"
+             data-parent="#accordionsystem_testing_sequence_name">
+            <div class="card-body pl-5">
+
+    <div class="breadcrumbs">root
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#system" onclick="anchorLink('system')">system</a>
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#system_testing" onclick="anchorLink('system_testing')">testing</a>
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#system_testing_sequence_name" onclick="anchorLink('system_testing_sequence_name')">sequence_name</a></div><span class="badge badge-dark value-type">Type: string</span><br/>
+<span class="description"><p>The sequence name currently being tested (for debug logging)</p>
+</span>
+        
+
+        
+        
+
+        
+            </div>
+        </div>
+    </div>
+</div>
+<div class="accordion" id="accordionsystem_testing_transaction_id">
+    <div class="card">
+        <div class="card-header" id="headingsystem_testing_transaction_id">
+            <h2 class="mb-0">
+                <button class="btn btn-link property-name-button" type="button" data-toggle="collapse" data-target="#system_testing_transaction_id"
+                        aria-expanded="" aria-controls="system_testing_transaction_id" onclick="setAnchor('#system_testing_transaction_id')"><span class="property-name">transaction_id</span></button>
+            </h2>
+        </div>
+
+        <div id="system_testing_transaction_id"
+             class="collapse property-definition-div" aria-labelledby="headingsystem_testing_transaction_id"
+             data-parent="#accordionsystem_testing_transaction_id">
+            <div class="card-body pl-5">
+
+    <div class="breadcrumbs">root
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#system" onclick="anchorLink('system')">system</a>
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#system_testing" onclick="anchorLink('system_testing')">testing</a>
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#system_testing_transaction_id" onclick="anchorLink('system_testing_transaction_id')">transaction_id</a></div><span class="badge badge-dark value-type">Type: string</span><br/>
+<span class="description"><p>The transaction id used to generate this config update</p>
+</span>
+        
+
+        
+        
+
+        
+            </div>
+        </div>
+    </div>
+</div>
+<div class="accordion" id="accordionsystem_testing_config_base">
+    <div class="card">
+        <div class="card-header" id="headingsystem_testing_config_base">
+            <h2 class="mb-0">
+                <button class="btn btn-link property-name-button" type="button" data-toggle="collapse" data-target="#system_testing_config_base"
+                        aria-expanded="" aria-controls="system_testing_config_base" onclick="setAnchor('#system_testing_config_base')"><span class="property-name">config_base</span></button>
+            </h2>
+        </div>
+
+        <div id="system_testing_config_base"
+             class="collapse property-definition-div" aria-labelledby="headingsystem_testing_config_base"
+             data-parent="#accordionsystem_testing_config_base">
+            <div class="card-body pl-5">
+
+    <div class="breadcrumbs">root
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#system" onclick="anchorLink('system')">system</a>
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#system_testing" onclick="anchorLink('system_testing')">testing</a>
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#system_testing_config_base" onclick="anchorLink('system_testing_config_base')">config_base</a></div><span class="badge badge-dark value-type">Type: integer</span><br/>
+<span class="description"><p>The configuration version that this update was based on</p>
+</span>
+        
+
+        
+        
+
+        
+            </div>
+        </div>
+    </div>
+</div>
+<div class="accordion" id="accordionsystem_testing_endpoint_type">
+    <div class="card">
+        <div class="card-header" id="headingsystem_testing_endpoint_type">
+            <h2 class="mb-0">
+                <button class="btn btn-link property-name-button" type="button" data-toggle="collapse" data-target="#system_testing_endpoint_type"
+                        aria-expanded="" aria-controls="system_testing_endpoint_type" onclick="setAnchor('#system_testing_endpoint_type')"><span class="property-name">endpoint_type</span></button>
+            </h2>
+        </div>
+
+        <div id="system_testing_endpoint_type"
+             class="collapse property-definition-div" aria-labelledby="headingsystem_testing_endpoint_type"
+             data-parent="#accordionsystem_testing_endpoint_type">
+            <div class="card-body pl-5">
+
+    <div class="breadcrumbs">root
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#system" onclick="anchorLink('system')">system</a>
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#system_testing" onclick="anchorLink('system_testing')">testing</a>
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#system_testing_endpoint_type" onclick="anchorLink('system_testing_endpoint_type')">endpoint_type</a></div><span class="badge badge-dark value-type">Type: string</span><br/>
+<span class="description"><p>Designator for the kind of endpoint being used for this test</p>
+</span>
+        
+
+        
+        
+
+        
+            </div>
+        </div>
+    </div>
+</div>
+            </div>
+        </div>
+    </div>
+</div>
+            </div>
+        </div>
+    </div>
+</div>
+<div class="accordion" id="accordiongateway">
+    <div class="card">
+        <div class="card-header" id="headinggateway">
+            <h2 class="mb-0">
+                <button class="btn btn-link property-name-button" type="button" data-toggle="collapse" data-target="#gateway"
+                        aria-expanded="" aria-controls="gateway" onclick="setAnchor('#gateway')"><span class="property-name">gateway</span></button>
+            </h2>
+        </div>
+
+        <div id="gateway"
+             class="collapse property-definition-div" aria-labelledby="headinggateway"
+             data-parent="#accordiongateway">
+            <div class="card-body pl-5">
+
+    <div class="breadcrumbs">root
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#gateway" onclick="anchorLink('gateway')">gateway</a></div><h4>Gateway Config</h4><span class="badge badge-dark value-type">Type: object</span><br/>
+<span class="description"><p>Configuration for gateways. Only required for devices which are acting as <a href="../../docs/specs/gateway.md">gateways</a></p>
+</span>
+
+     <span class="badge badge-info no-additional">No Additional Properties</span>
+        
+
+        
+        
+
+        
+<div class="accordion" id="accordiongateway_proxy_ids">
+    <div class="card">
+        <div class="card-header" id="headinggateway_proxy_ids">
+            <h2 class="mb-0">
+                <button class="btn btn-link property-name-button" type="button" data-toggle="collapse" data-target="#gateway_proxy_ids"
+                        aria-expanded="" aria-controls="gateway_proxy_ids" onclick="setAnchor('#gateway_proxy_ids')"><span class="property-name">proxy_ids</span></button>
+            </h2>
+        </div>
+
+        <div id="gateway_proxy_ids"
+             class="collapse property-definition-div" aria-labelledby="headinggateway_proxy_ids"
+             data-parent="#accordiongateway_proxy_ids">
+            <div class="card-body pl-5">
+
+    <div class="breadcrumbs">root
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#gateway" onclick="anchorLink('gateway')">gateway</a>
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#gateway_proxy_ids" onclick="anchorLink('gateway_proxy_ids')">proxy_ids</a></div><span class="badge badge-dark value-type">Type: array of string</span><br/>
+<span class="description"><p>An array of all the device IDs which are bound to the device</p>
+</span>
+        
+
+        
+        
+
+         <span class="badge badge-info no-additional">No Additional Items</span><h4>Each item of this array must be:</h4>
+    <div class="card">
+        <div class="card-body items-definition" id="gateway_proxy_ids_items">
+            
+
+    <div class="breadcrumbs">root
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#gateway" onclick="anchorLink('gateway')">gateway</a>
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#gateway_proxy_ids" onclick="anchorLink('gateway_proxy_ids')">proxy_ids</a>
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#gateway_proxy_ids_items" onclick="anchorLink('gateway_proxy_ids_items')">proxy_ids items</a></div><span class="badge badge-dark value-type">Type: string</span><br/>
+<span class="pattern-value" id="gateway_proxy_ids_items_pattern">Must match regular expression: <code>^[A-Z]{2,6}-[1-9][0-9]*$</code></span>
+        
+
+        
+        
+
+        
+        </div>
+    </div><br/>
+<div class="badge badge-secondary">Example:</div>
+<br/><div id="gateway_proxy_ids_ex1" class="jumbotron examples"><div class="highlight"><pre><span></span><span class="p">[</span>
+<span class="w">    </span><span class="s2">&quot;AHU-22&quot;</span>
+<span class="p">]</span>
+</pre></div>
+</div>
+            </div>
+        </div>
+    </div>
+</div>
+<div class="accordion" id="accordiongateway_target">
+    <div class="card">
+        <div class="card-header" id="headinggateway_target">
+            <h2 class="mb-0">
+                <button class="btn btn-link property-name-button" type="button" data-toggle="collapse" data-target="#gateway_target"
+                        aria-expanded="" aria-controls="gateway_target" onclick="setAnchor('#gateway_target')"><span class="property-name">target</span></button>
+            </h2>
+        </div>
+
+        <div id="gateway_target"
+             class="collapse property-definition-div" aria-labelledby="headinggateway_target"
+             data-parent="#accordiongateway_target">
+            <div class="card-body pl-5">
+
+    <div class="breadcrumbs">root
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#gateway" onclick="anchorLink('gateway')">gateway</a>
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#gateway_target" onclick="anchorLink('gateway_target')">target</a></div><h4>Family Localnet Model</h4><span class="badge badge-dark value-type">Type: object</span><br/>
+<span class="description"><p>For proxied devices, this represents the target proxy device address for use by its gateway</p>
+</span>
+
+     <span class="badge badge-info no-additional">No Additional Properties</span>
+        
+
+        
+        
+
+        
+<div class="accordion" id="accordiongateway_target_addr">
+    <div class="card">
+        <div class="card-header" id="headinggateway_target_addr">
+            <h2 class="mb-0">
+                <button class="btn btn-link property-name-button" type="button" data-toggle="collapse" data-target="#gateway_target_addr"
+                        aria-expanded="" aria-controls="gateway_target_addr" onclick="setAnchor('#gateway_target_addr')"><span class="property-name">addr</span></button>
+            </h2>
+        </div>
+
+        <div id="gateway_target_addr"
+             class="collapse property-definition-div" aria-labelledby="headinggateway_target_addr"
+             data-parent="#accordiongateway_target_addr">
+            <div class="card-body pl-5">
+
+    <div class="breadcrumbs">root
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#gateway" onclick="anchorLink('gateway')">gateway</a>
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#gateway_target" onclick="anchorLink('gateway_target')">target</a>
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#gateway_target_addr" onclick="anchorLink('gateway_target_addr')">addr</a></div><span class="badge badge-dark value-type">Type: string</span><br/>
+<span class="description"><p>The address of a device on the fieldbus/local network</p>
+</span>
+        
+
+        
+        
+
+        <br/>
+<div class="badge badge-secondary">Example:</div>
+<br/><div id="gateway_target_addr_ex1" class="jumbotron examples"><div class="highlight"><pre><span></span><span class="s2">&quot;0x414889&quot;</span>
+</pre></div>
+</div>
+            </div>
+        </div>
+    </div>
+</div>
+<div class="accordion" id="accordiongateway_target_adjunct">
+    <div class="card">
+        <div class="card-header" id="headinggateway_target_adjunct">
+            <h2 class="mb-0">
+                <button class="btn btn-link property-name-button" type="button" data-toggle="collapse" data-target="#gateway_target_adjunct"
+                        aria-expanded="" aria-controls="gateway_target_adjunct" onclick="setAnchor('#gateway_target_adjunct')"><span class="property-name">adjunct</span></button>
+            </h2>
+        </div>
+
+        <div id="gateway_target_adjunct"
+             class="collapse property-definition-div" aria-labelledby="headinggateway_target_adjunct"
+             data-parent="#accordiongateway_target_adjunct">
+            <div class="card-body pl-5">
+
+    <div class="breadcrumbs">root
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#gateway" onclick="anchorLink('gateway')">gateway</a>
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#gateway_target" onclick="anchorLink('gateway_target')">target</a>
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#gateway_target_adjunct" onclick="anchorLink('gateway_target_adjunct')">adjunct</a></div><span class="badge badge-dark value-type">Type: object</span><br/>
+ <span class="badge badge-info no-additional">No Additional Properties</span>
+        
+
+        
+        
+
+        
+<div class="accordion" id="accordiongateway_target_adjunct_pattern1">
+    <div class="card">
+        <div class="card-header" id="headinggateway_target_adjunct_pattern1">
+            <h2 class="mb-0">
+                <button class="btn btn-link property-name-button" type="button" data-toggle="collapse" data-target="#gateway_target_adjunct_pattern1"
+                        aria-expanded="" aria-controls="gateway_target_adjunct_pattern1" onclick="setAnchor('#gateway_target_adjunct_pattern1')"><span class="property-name">^[a-z_]+$</span> <span class="badge badge-info pattern-property">Pattern Property</span></button>
+            </h2>
+        </div>
+
+        <div id="gateway_target_adjunct_pattern1"
+             class="collapse property-definition-div" aria-labelledby="headinggateway_target_adjunct_pattern1"
+             data-parent="#accordiongateway_target_adjunct_pattern1">
+            <div class="card-body pl-5"><h2 class="handle">
+                        <label>Pattern Property</label>
+                    </h2>
+                    <p>All properties whose name matches the following regular expression must respect the following conditions</p>
+                    <span class="pattern-value">Property name regular expression: <code>^[a-z_]+$</code></span>
+                    <br/>
+
+    <div class="breadcrumbs">root
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#gateway" onclick="anchorLink('gateway')">gateway</a>
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#gateway_target" onclick="anchorLink('gateway_target')">target</a>
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#gateway_target_adjunct" onclick="anchorLink('gateway_target_adjunct')">adjunct</a>
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#gateway_target_adjunct_pattern1" onclick="anchorLink('gateway_target_adjunct_pattern1')">^[a-z_]+$</a></div><span class="badge badge-dark value-type">Type: string</span><br/>
+
+        
+
+        
+        
+
+        
+            </div>
+        </div>
+    </div>
+</div>
+            </div>
+        </div>
+    </div>
+</div>
+<div class="accordion" id="accordiongateway_target_shadow_id">
+    <div class="card">
+        <div class="card-header" id="headinggateway_target_shadow_id">
+            <h2 class="mb-0">
+                <button class="btn btn-link property-name-button" type="button" data-toggle="collapse" data-target="#gateway_target_shadow_id"
+                        aria-expanded="" aria-controls="gateway_target_shadow_id" onclick="setAnchor('#gateway_target_shadow_id')"><span class="property-name">shadow_id</span></button>
+            </h2>
+        </div>
+
+        <div id="gateway_target_shadow_id"
+             class="collapse property-definition-div" aria-labelledby="headinggateway_target_shadow_id"
+             data-parent="#accordiongateway_target_shadow_id">
+            <div class="card-body pl-5">
+
+    <div class="breadcrumbs">root
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#gateway" onclick="anchorLink('gateway')">gateway</a>
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#gateway_target" onclick="anchorLink('gateway_target')">target</a>
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#gateway_target_shadow_id" onclick="anchorLink('gateway_target_shadow_id')">shadow_id</a></div><span class="badge badge-dark value-type">Type: string</span><br/>
+<span class="description"><p>Specifies that this is a shadow of the indicated device</p>
+</span>
+        
+
+        
+        
+
+        
+            </div>
+        </div>
+    </div>
+</div>
+<div class="accordion" id="accordiongateway_target_parent_id">
+    <div class="card">
+        <div class="card-header" id="headinggateway_target_parent_id">
+            <h2 class="mb-0">
+                <button class="btn btn-link property-name-button" type="button" data-toggle="collapse" data-target="#gateway_target_parent_id"
+                        aria-expanded="" aria-controls="gateway_target_parent_id" onclick="setAnchor('#gateway_target_parent_id')"><span class="property-name">parent_id</span></button>
+            </h2>
+        </div>
+
+        <div id="gateway_target_parent_id"
+             class="collapse property-definition-div" aria-labelledby="headinggateway_target_parent_id"
+             data-parent="#accordiongateway_target_parent_id">
+            <div class="card-body pl-5">
+
+    <div class="breadcrumbs">root
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#gateway" onclick="anchorLink('gateway')">gateway</a>
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#gateway_target" onclick="anchorLink('gateway_target')">target</a>
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#gateway_target_parent_id" onclick="anchorLink('gateway_target_parent_id')">parent_id</a></div><span class="badge badge-dark value-type">Type: string</span><br/>
+<span class="description"><p>The device id of the network parent</p>
+</span>
+        
+
+        
+        
+
+        
+            </div>
+        </div>
+    </div>
+</div>
+<div class="accordion" id="accordiongateway_target_family">
+    <div class="card">
+        <div class="card-header" id="headinggateway_target_family">
+            <h2 class="mb-0">
+                <button class="btn btn-link property-name-button" type="button" data-toggle="collapse" data-target="#gateway_target_family"
+                        aria-expanded="" aria-controls="gateway_target_family" onclick="setAnchor('#gateway_target_family')"><span class="property-name">family</span></button>
+            </h2>
+        </div>
+
+        <div id="gateway_target_family"
+             class="collapse property-definition-div" aria-labelledby="headinggateway_target_family"
+             data-parent="#accordiongateway_target_family">
+            <div class="card-body pl-5">
+
+    <div class="breadcrumbs">root
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#gateway" onclick="anchorLink('gateway')">gateway</a>
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#gateway_target" onclick="anchorLink('gateway_target')">target</a>
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#gateway_target_family" onclick="anchorLink('gateway_target_family')">family</a></div><span class="badge badge-dark value-type">Type: string</span><br/>
+
+        
+
+        
+        
+
+        
+            </div>
+        </div>
+    </div>
+</div>
+            </div>
+        </div>
+    </div>
+</div>
+            </div>
+        </div>
+    </div>
+</div>
+<div class="accordion" id="accordiondiscovery">
+    <div class="card">
+        <div class="card-header" id="headingdiscovery">
+            <h2 class="mb-0">
+                <button class="btn btn-link property-name-button" type="button" data-toggle="collapse" data-target="#discovery"
+                        aria-expanded="" aria-controls="discovery" onclick="setAnchor('#discovery')"><span class="property-name">discovery</span></button>
+            </h2>
+        </div>
+
+        <div id="discovery"
+             class="collapse property-definition-div" aria-labelledby="headingdiscovery"
+             data-parent="#accordiondiscovery">
+            <div class="card-body pl-5">
+
+    <div class="breadcrumbs">root
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#discovery" onclick="anchorLink('discovery')">discovery</a></div><h4>Discovery Config</h4><span class="badge badge-dark value-type">Type: object</span><br/>
+<span class="description"><p>Configuration for <a href="../../docs/specs/discovery.md">discovery</a></p>
+</span>
+
+     <span class="badge badge-info no-additional">No Additional Properties</span>
+        
+
+        
+        
+
+        
+<div class="accordion" id="accordiondiscovery_generation">
+    <div class="card">
+        <div class="card-header" id="headingdiscovery_generation">
+            <h2 class="mb-0">
+                <button class="btn btn-link property-name-button" type="button" data-toggle="collapse" data-target="#discovery_generation"
+                        aria-expanded="" aria-controls="discovery_generation" onclick="setAnchor('#discovery_generation')"><span class="property-name">generation</span></button>
+            </h2>
+        </div>
+
+        <div id="discovery_generation"
+             class="collapse property-definition-div" aria-labelledby="headingdiscovery_generation"
+             data-parent="#accordiondiscovery_generation">
+            <div class="card-body pl-5">
+
+    <div class="breadcrumbs">root
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#discovery" onclick="anchorLink('discovery')">discovery</a>
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#discovery_generation" onclick="anchorLink('discovery_generation')">generation</a></div><span class="badge badge-dark value-type">Type: string</span><span class="badge badge-info value-type">Format: date-time</span><br/>
+<span class="description"><p>Generational marker for controlling self-enumeration</p>
+</span>
+        
+
+        
+        
+
+        
+            </div>
+        </div>
+    </div>
+</div>
+<div class="accordion" id="accordiondiscovery_enumerations">
+    <div class="card">
+        <div class="card-header" id="headingdiscovery_enumerations">
+            <h2 class="mb-0">
+                <button class="btn btn-link property-name-button" type="button" data-toggle="collapse" data-target="#discovery_enumerations"
+                        aria-expanded="" aria-controls="discovery_enumerations" onclick="setAnchor('#discovery_enumerations')"><span class="property-name">enumerations</span></button>
+            </h2>
+        </div>
+
+        <div id="discovery_enumerations"
+             class="collapse property-definition-div" aria-labelledby="headingdiscovery_enumerations"
+             data-parent="#accordiondiscovery_enumerations">
+            <div class="card-body pl-5">
+
+    <div class="breadcrumbs">root
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#discovery" onclick="anchorLink('discovery')">discovery</a>
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#discovery_enumerations" onclick="anchorLink('discovery_enumerations')">enumerations</a></div><span class="badge badge-dark value-type">Type: object</span><br/>
+<span class="description"><p>Enumeration depth for self-enumerations.</p>
+</span> <span class="badge badge-info no-additional">No Additional Properties</span>
+        
+
+        
+        
+
+        
+<div class="accordion" id="accordiondiscovery_enumerations_families">
+    <div class="card">
+        <div class="card-header" id="headingdiscovery_enumerations_families">
+            <h2 class="mb-0">
+                <button class="btn btn-link property-name-button" type="button" data-toggle="collapse" data-target="#discovery_enumerations_families"
+                        aria-expanded="" aria-controls="discovery_enumerations_families" onclick="setAnchor('#discovery_enumerations_families')"><span class="property-name">families</span></button>
+            </h2>
+        </div>
+
+        <div id="discovery_enumerations_families"
+             class="collapse property-definition-div" aria-labelledby="headingdiscovery_enumerations_families"
+             data-parent="#accordiondiscovery_enumerations_families">
+            <div class="card-body pl-5">
+
+    <div class="breadcrumbs">root
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#discovery" onclick="anchorLink('discovery')">discovery</a>
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#discovery_enumerations" onclick="anchorLink('discovery_enumerations')">enumerations</a>
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#discovery_enumerations_families" onclick="anchorLink('discovery_enumerations_families')">families</a></div><span class="badge badge-dark value-type">Type: enum (of string)</span><br/>
+
+
+    <div class="enum-value" id="discovery_enumerations_families_enum">
+            <h4>Must be one of:</h4>
+            <ul class="list-group"><li class="list-group-item enum-item">"buckets"</li><li class="list-group-item enum-item">"entries"</li><li class="list-group-item enum-item">"details"</li><li class="list-group-item enum-item">"parts"</li></ul>
+            </div>
+        
+
+        
+        
+
+        
+            </div>
+        </div>
+    </div>
+</div>
+<div class="accordion" id="accordiondiscovery_enumerations_devices">
+    <div class="card">
+        <div class="card-header" id="headingdiscovery_enumerations_devices">
+            <h2 class="mb-0">
+                <button class="btn btn-link property-name-button" type="button" data-toggle="collapse" data-target="#discovery_enumerations_devices"
+                        aria-expanded="" aria-controls="discovery_enumerations_devices" onclick="setAnchor('#discovery_enumerations_devices')"><span class="property-name">devices</span></button>
+            </h2>
+        </div>
+
+        <div id="discovery_enumerations_devices"
+             class="collapse property-definition-div" aria-labelledby="headingdiscovery_enumerations_devices"
+             data-parent="#accordiondiscovery_enumerations_devices">
+            <div class="card-body pl-5">
+
+    <div class="breadcrumbs">root
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#discovery" onclick="anchorLink('discovery')">discovery</a>
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#discovery_enumerations" onclick="anchorLink('discovery_enumerations')">enumerations</a>
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#discovery_enumerations_devices" onclick="anchorLink('discovery_enumerations_devices')">devices</a></div><span class="badge badge-dark value-type">Type: enum (of string)</span><br/>
+
+
+    <div class="enum-value" id="discovery_enumerations_devices_enum">
+            <h4>Must be one of:</h4>
+            <ul class="list-group"><li class="list-group-item enum-item">"buckets"</li><li class="list-group-item enum-item">"entries"</li><li class="list-group-item enum-item">"details"</li><li class="list-group-item enum-item">"parts"</li></ul>
+            </div>
+        
+
+        
+        
+
+        
+            </div>
+        </div>
+    </div>
+</div>
+<div class="accordion" id="accordiondiscovery_enumerations_points">
+    <div class="card">
+        <div class="card-header" id="headingdiscovery_enumerations_points">
+            <h2 class="mb-0">
+                <button class="btn btn-link property-name-button" type="button" data-toggle="collapse" data-target="#discovery_enumerations_points"
+                        aria-expanded="" aria-controls="discovery_enumerations_points" onclick="setAnchor('#discovery_enumerations_points')"><span class="property-name">points</span></button>
+            </h2>
+        </div>
+
+        <div id="discovery_enumerations_points"
+             class="collapse property-definition-div" aria-labelledby="headingdiscovery_enumerations_points"
+             data-parent="#accordiondiscovery_enumerations_points">
+            <div class="card-body pl-5">
+
+    <div class="breadcrumbs">root
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#discovery" onclick="anchorLink('discovery')">discovery</a>
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#discovery_enumerations" onclick="anchorLink('discovery_enumerations')">enumerations</a>
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#discovery_enumerations_points" onclick="anchorLink('discovery_enumerations_points')">points</a></div><span class="badge badge-dark value-type">Type: enum (of string)</span><br/>
+
+
+    <div class="enum-value" id="discovery_enumerations_points_enum">
+            <h4>Must be one of:</h4>
+            <ul class="list-group"><li class="list-group-item enum-item">"buckets"</li><li class="list-group-item enum-item">"entries"</li><li class="list-group-item enum-item">"details"</li><li class="list-group-item enum-item">"parts"</li></ul>
+            </div>
+        
+
+        
+        
+
+        
+            </div>
+        </div>
+    </div>
+</div>
+<div class="accordion" id="accordiondiscovery_enumerations_features">
+    <div class="card">
+        <div class="card-header" id="headingdiscovery_enumerations_features">
+            <h2 class="mb-0">
+                <button class="btn btn-link property-name-button" type="button" data-toggle="collapse" data-target="#discovery_enumerations_features"
+                        aria-expanded="" aria-controls="discovery_enumerations_features" onclick="setAnchor('#discovery_enumerations_features')"><span class="property-name">features</span></button>
+            </h2>
+        </div>
+
+        <div id="discovery_enumerations_features"
+             class="collapse property-definition-div" aria-labelledby="headingdiscovery_enumerations_features"
+             data-parent="#accordiondiscovery_enumerations_features">
+            <div class="card-body pl-5">
+
+    <div class="breadcrumbs">root
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#discovery" onclick="anchorLink('discovery')">discovery</a>
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#discovery_enumerations" onclick="anchorLink('discovery_enumerations')">enumerations</a>
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#discovery_enumerations_features" onclick="anchorLink('discovery_enumerations_features')">features</a></div><span class="badge badge-dark value-type">Type: enum (of string)</span><br/>
+
+
+    <div class="enum-value" id="discovery_enumerations_features_enum">
+            <h4>Must be one of:</h4>
+            <ul class="list-group"><li class="list-group-item enum-item">"buckets"</li><li class="list-group-item enum-item">"entries"</li><li class="list-group-item enum-item">"details"</li><li class="list-group-item enum-item">"parts"</li></ul>
+            </div>
+        
+
+        
+        
+
+        
+            </div>
+        </div>
+    </div>
+</div>
+            </div>
+        </div>
+    </div>
+</div>
+<div class="accordion" id="accordiondiscovery_families">
+    <div class="card">
+        <div class="card-header" id="headingdiscovery_families">
+            <h2 class="mb-0">
+                <button class="btn btn-link property-name-button" type="button" data-toggle="collapse" data-target="#discovery_families"
+                        aria-expanded="" aria-controls="discovery_families" onclick="setAnchor('#discovery_families')"><span class="property-name">families</span></button>
+            </h2>
+        </div>
+
+        <div id="discovery_families"
+             class="collapse property-definition-div" aria-labelledby="headingdiscovery_families"
+             data-parent="#accordiondiscovery_families">
+            <div class="card-body pl-5">
+
+    <div class="breadcrumbs">root
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#discovery" onclick="anchorLink('discovery')">discovery</a>
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#discovery_families" onclick="anchorLink('discovery_families')">families</a></div><span class="badge badge-dark value-type">Type: object</span><br/>
+<span class="description"><p>Address family configs for discovery scans.</p>
+</span> <span class="badge badge-info no-additional">No Additional Properties</span>
+        
+
+        
+        
+
+        
+<div class="accordion" id="accordiondiscovery_families_pattern1">
+    <div class="card">
+        <div class="card-header" id="headingdiscovery_families_pattern1">
+            <h2 class="mb-0">
+                <button class="btn btn-link property-name-button" type="button" data-toggle="collapse" data-target="#discovery_families_pattern1"
+                        aria-expanded="" aria-controls="discovery_families_pattern1" onclick="setAnchor('#discovery_families_pattern1')"><span class="property-name">Family Discovery Config</span> <span class="badge badge-info pattern-property">Pattern Property</span></button>
+            </h2>
+        </div>
+
+        <div id="discovery_families_pattern1"
+             class="collapse property-definition-div" aria-labelledby="headingdiscovery_families_pattern1"
+             data-parent="#accordiondiscovery_families_pattern1">
+            <div class="card-body pl-5"><h2 class="handle">
+                        <label>Pattern Property</label>
+                    </h2>
+                    <p>All properties whose name matches the following regular expression must respect the following conditions</p>
+                    <span class="pattern-value">Property name regular expression: <code>^[a-z][a-z0-9]*(_[a-z0-9]+)*$</code></span>
+                    <br/>
+
+    <div class="breadcrumbs">root
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#discovery" onclick="anchorLink('discovery')">discovery</a>
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#discovery_families" onclick="anchorLink('discovery_families')">families</a>
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#discovery_families_pattern1" onclick="anchorLink('discovery_families_pattern1')">Family Discovery Config</a></div><h4>Family Discovery Config</h4><span class="badge badge-dark value-type">Type: object</span><br/>
+<span class="description"><p>Configuration for <a href="../../docs/specs/discovery.md">discovery</a></p>
+</span>
+
+     <span class="badge badge-info no-additional">No Additional Properties</span>
+        
+
+        
+        
+
+        
+<div class="accordion" id="accordiondiscovery_families_pattern1_generation">
+    <div class="card">
+        <div class="card-header" id="headingdiscovery_families_pattern1_generation">
+            <h2 class="mb-0">
+                <button class="btn btn-link property-name-button" type="button" data-toggle="collapse" data-target="#discovery_families_pattern1_generation"
+                        aria-expanded="" aria-controls="discovery_families_pattern1_generation" onclick="setAnchor('#discovery_families_pattern1_generation')"><span class="property-name">generation</span></button>
+            </h2>
+        </div>
+
+        <div id="discovery_families_pattern1_generation"
+             class="collapse property-definition-div" aria-labelledby="headingdiscovery_families_pattern1_generation"
+             data-parent="#accordiondiscovery_families_pattern1_generation">
+            <div class="card-body pl-5">
+
+    <div class="breadcrumbs">root
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#discovery" onclick="anchorLink('discovery')">discovery</a>
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#discovery_families" onclick="anchorLink('discovery_families')">families</a>
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#discovery_families_pattern1" onclick="anchorLink('discovery_families_pattern1')">Family Discovery Config</a>
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#discovery_families_pattern1_generation" onclick="anchorLink('discovery_families_pattern1_generation')">generation</a></div><span class="badge badge-dark value-type">Type: string</span><span class="badge badge-info value-type">Format: date-time</span><br/>
+<span class="description"><p>Generational marker for controlling discovery</p>
+</span>
+        
+
+        
+        
+
+        
+            </div>
+        </div>
+    </div>
+</div>
+<div class="accordion" id="accordiondiscovery_families_pattern1_scan_interval_sec">
+    <div class="card">
+        <div class="card-header" id="headingdiscovery_families_pattern1_scan_interval_sec">
+            <h2 class="mb-0">
+                <button class="btn btn-link property-name-button" type="button" data-toggle="collapse" data-target="#discovery_families_pattern1_scan_interval_sec"
+                        aria-expanded="" aria-controls="discovery_families_pattern1_scan_interval_sec" onclick="setAnchor('#discovery_families_pattern1_scan_interval_sec')"><span class="property-name">scan_interval_sec</span></button>
+            </h2>
+        </div>
+
+        <div id="discovery_families_pattern1_scan_interval_sec"
+             class="collapse property-definition-div" aria-labelledby="headingdiscovery_families_pattern1_scan_interval_sec"
+             data-parent="#accordiondiscovery_families_pattern1_scan_interval_sec">
+            <div class="card-body pl-5">
+
+    <div class="breadcrumbs">root
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#discovery" onclick="anchorLink('discovery')">discovery</a>
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#discovery_families" onclick="anchorLink('discovery_families')">families</a>
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#discovery_families_pattern1" onclick="anchorLink('discovery_families_pattern1')">Family Discovery Config</a>
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#discovery_families_pattern1_scan_interval_sec" onclick="anchorLink('discovery_families_pattern1_scan_interval_sec')">scan_interval_sec</a></div><span class="badge badge-dark value-type">Type: integer</span><br/>
+<span class="description"><p>Period, in seconds, for automatic scanning</p>
+</span>
+        
+
+        
+        <p><span class="badge badge-light restriction numeric-restriction" id="discovery_families_pattern1_scan_interval_sec_number">Value must be greater or equal to <code>0</code></span></p>
+
+        
+            </div>
+        </div>
+    </div>
+</div>
+<div class="accordion" id="accordiondiscovery_families_pattern1_scan_duration_sec">
+    <div class="card">
+        <div class="card-header" id="headingdiscovery_families_pattern1_scan_duration_sec">
+            <h2 class="mb-0">
+                <button class="btn btn-link property-name-button" type="button" data-toggle="collapse" data-target="#discovery_families_pattern1_scan_duration_sec"
+                        aria-expanded="" aria-controls="discovery_families_pattern1_scan_duration_sec" onclick="setAnchor('#discovery_families_pattern1_scan_duration_sec')"><span class="property-name">scan_duration_sec</span></button>
+            </h2>
+        </div>
+
+        <div id="discovery_families_pattern1_scan_duration_sec"
+             class="collapse property-definition-div" aria-labelledby="headingdiscovery_families_pattern1_scan_duration_sec"
+             data-parent="#accordiondiscovery_families_pattern1_scan_duration_sec">
+            <div class="card-body pl-5">
+
+    <div class="breadcrumbs">root
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#discovery" onclick="anchorLink('discovery')">discovery</a>
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#discovery_families" onclick="anchorLink('discovery_families')">families</a>
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#discovery_families_pattern1" onclick="anchorLink('discovery_families_pattern1')">Family Discovery Config</a>
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#discovery_families_pattern1_scan_duration_sec" onclick="anchorLink('discovery_families_pattern1_scan_duration_sec')">scan_duration_sec</a></div><span class="badge badge-dark value-type">Type: integer</span><br/>
+<span class="description"><p>Scan duration, in seconds</p>
+</span>
+        
+
+        
+        <p><span class="badge badge-light restriction numeric-restriction" id="discovery_families_pattern1_scan_duration_sec_number">Value must be greater or equal to <code>0</code></span></p>
+
+        
+            </div>
+        </div>
+    </div>
+</div>
+<div class="accordion" id="accordiondiscovery_families_pattern1_addrs">
+    <div class="card">
+        <div class="card-header" id="headingdiscovery_families_pattern1_addrs">
+            <h2 class="mb-0">
+                <button class="btn btn-link property-name-button" type="button" data-toggle="collapse" data-target="#discovery_families_pattern1_addrs"
+                        aria-expanded="" aria-controls="discovery_families_pattern1_addrs" onclick="setAnchor('#discovery_families_pattern1_addrs')"><span class="property-name">addrs</span></button>
+            </h2>
+        </div>
+
+        <div id="discovery_families_pattern1_addrs"
+             class="collapse property-definition-div" aria-labelledby="headingdiscovery_families_pattern1_addrs"
+             data-parent="#accordiondiscovery_families_pattern1_addrs">
+            <div class="card-body pl-5">
+
+    <div class="breadcrumbs">root
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#discovery" onclick="anchorLink('discovery')">discovery</a>
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#discovery_families" onclick="anchorLink('discovery_families')">families</a>
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#discovery_families_pattern1" onclick="anchorLink('discovery_families_pattern1')">Family Discovery Config</a>
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#discovery_families_pattern1_addrs" onclick="anchorLink('discovery_families_pattern1_addrs')">addrs</a></div><span class="badge badge-dark value-type">Type: list</span><br/>
+
+        
+
+        
+        
+
+        
+            </div>
+        </div>
+    </div>
+</div>
+<div class="accordion" id="accordiondiscovery_families_pattern1_passive_sec">
+    <div class="card">
+        <div class="card-header" id="headingdiscovery_families_pattern1_passive_sec">
+            <h2 class="mb-0">
+                <button class="btn btn-link property-name-button" type="button" data-toggle="collapse" data-target="#discovery_families_pattern1_passive_sec"
+                        aria-expanded="" aria-controls="discovery_families_pattern1_passive_sec" onclick="setAnchor('#discovery_families_pattern1_passive_sec')"><span class="property-name">passive_sec</span></button>
+            </h2>
+        </div>
+
+        <div id="discovery_families_pattern1_passive_sec"
+             class="collapse property-definition-div" aria-labelledby="headingdiscovery_families_pattern1_passive_sec"
+             data-parent="#accordiondiscovery_families_pattern1_passive_sec">
+            <div class="card-body pl-5">
+
+    <div class="breadcrumbs">root
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#discovery" onclick="anchorLink('discovery')">discovery</a>
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#discovery_families" onclick="anchorLink('discovery_families')">families</a>
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#discovery_families_pattern1" onclick="anchorLink('discovery_families_pattern1')">Family Discovery Config</a>
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#discovery_families_pattern1_passive_sec" onclick="anchorLink('discovery_families_pattern1_passive_sec')">passive_sec</a></div><span class="badge badge-dark value-type">Type: integer</span><br/>
+<span class="description"><p>Holdoff time for passively discovered devices</p>
+</span>
+        
+
+        
+        <p><span class="badge badge-light restriction numeric-restriction" id="discovery_families_pattern1_passive_sec_number">Value must be greater or equal to <code>0</code></span></p>
+
+        
+            </div>
+        </div>
+    </div>
+</div>
+<div class="accordion" id="accordiondiscovery_families_pattern1_depth">
+    <div class="card">
+        <div class="card-header" id="headingdiscovery_families_pattern1_depth">
+            <h2 class="mb-0">
+                <button class="btn btn-link property-name-button" type="button" data-toggle="collapse" data-target="#discovery_families_pattern1_depth"
+                        aria-expanded="" aria-controls="discovery_families_pattern1_depth" onclick="setAnchor('#discovery_families_pattern1_depth')"><span class="property-name">depth</span></button>
+            </h2>
+        </div>
+
+        <div id="discovery_families_pattern1_depth"
+             class="collapse property-definition-div" aria-labelledby="headingdiscovery_families_pattern1_depth"
+             data-parent="#accordiondiscovery_families_pattern1_depth">
+            <div class="card-body pl-5">
+
+    <div class="breadcrumbs">root
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#discovery" onclick="anchorLink('discovery')">discovery</a>
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#discovery_families" onclick="anchorLink('discovery_families')">families</a>
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#discovery_families_pattern1" onclick="anchorLink('discovery_families_pattern1')">Family Discovery Config</a>
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#discovery_families_pattern1_depth" onclick="anchorLink('discovery_families_pattern1_depth')">depth</a></div><span class="badge badge-dark value-type">Type: enum (of string)</span><br/>
+<span class="description"><p>Indicates implicit enumeration of discovered devices</p>
+</span>
+
+    <div class="enum-value" id="discovery_families_pattern1_depth_enum">
+            <h4>Must be one of:</h4>
+            <ul class="list-group"><li class="list-group-item enum-item">"buckets"</li><li class="list-group-item enum-item">"entries"</li><li class="list-group-item enum-item">"details"</li><li class="list-group-item enum-item">"parts"</li></ul>
+            </div>
+        
+
+        
+        
+
+        
+            </div>
+        </div>
+    </div>
+</div>
+            </div>
+        </div>
+    </div>
+</div>
+            </div>
+        </div>
+    </div>
+</div>
+            </div>
+        </div>
+    </div>
+</div>
+<div class="accordion" id="accordionlocalnet">
+    <div class="card">
+        <div class="card-header" id="headinglocalnet">
+            <h2 class="mb-0">
+                <button class="btn btn-link property-name-button" type="button" data-toggle="collapse" data-target="#localnet"
+                        aria-expanded="" aria-controls="localnet" onclick="setAnchor('#localnet')"><span class="property-name">localnet</span></button>
+            </h2>
+        </div>
+
+        <div id="localnet"
+             class="collapse property-definition-div" aria-labelledby="headinglocalnet"
+             data-parent="#accordionlocalnet">
+            <div class="card-body pl-5">
+
+    <div class="breadcrumbs">root
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#localnet" onclick="anchorLink('localnet')">localnet</a></div><h4>Localnet Config</h4><span class="badge badge-dark value-type">Type: object</span><br/>
+<span class="description"><p>Currently unused: request local network configuration</p>
+</span>
+
+     <span class="badge badge-info no-additional">No Additional Properties</span>
+        
+
+        
+        
+
+        
+<div class="accordion" id="accordionlocalnet_families">
+    <div class="card">
+        <div class="card-header" id="headinglocalnet_families">
+            <h2 class="mb-0">
+                <button class="btn btn-link property-name-button" type="button" data-toggle="collapse" data-target="#localnet_families"
+                        aria-expanded="" aria-controls="localnet_families" onclick="setAnchor('#localnet_families')"><span class="property-name">families</span></button>
+            </h2>
+        </div>
+
+        <div id="localnet_families"
+             class="collapse property-definition-div" aria-labelledby="headinglocalnet_families"
+             data-parent="#accordionlocalnet_families">
+            <div class="card-body pl-5">
+
+    <div class="breadcrumbs">root
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#localnet" onclick="anchorLink('localnet')">localnet</a>
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#localnet_families" onclick="anchorLink('localnet_families')">families</a></div><span class="badge badge-dark value-type">Type: object</span><br/>
+<span class="description"><p>Address family config for reporting.</p>
+</span> <span class="badge badge-info no-additional">No Additional Properties</span>
+        
+
+        
+        
+
+        
+<div class="accordion" id="accordionlocalnet_families_pattern1">
+    <div class="card">
+        <div class="card-header" id="headinglocalnet_families_pattern1">
+            <h2 class="mb-0">
+                <button class="btn btn-link property-name-button" type="button" data-toggle="collapse" data-target="#localnet_families_pattern1"
+                        aria-expanded="" aria-controls="localnet_families_pattern1" onclick="setAnchor('#localnet_families_pattern1')"><span class="property-name">Family Localnet Config</span> <span class="badge badge-info pattern-property">Pattern Property</span></button>
+            </h2>
+        </div>
+
+        <div id="localnet_families_pattern1"
+             class="collapse property-definition-div" aria-labelledby="headinglocalnet_families_pattern1"
+             data-parent="#accordionlocalnet_families_pattern1">
+            <div class="card-body pl-5"><h2 class="handle">
+                        <label>Pattern Property</label>
+                    </h2>
+                    <p>All properties whose name matches the following regular expression must respect the following conditions</p>
+                    <span class="pattern-value">Property name regular expression: <code>^[a-z][a-z0-9]*(_[a-z0-9]+)*$</code></span>
+                    <br/>
+
+    <div class="breadcrumbs">root
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#localnet" onclick="anchorLink('localnet')">localnet</a>
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#localnet_families" onclick="anchorLink('localnet_families')">families</a>
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#localnet_families_pattern1" onclick="anchorLink('localnet_families_pattern1')">Family Localnet Config</a></div><h4>Family Localnet Config</h4><span class="badge badge-dark value-type">Type: object</span><br/>
+
+
+    
+        
+
+        
+        
+
+        
+            </div>
+        </div>
+    </div>
+</div>
+            </div>
+        </div>
+    </div>
+</div>
+            </div>
+        </div>
+    </div>
+</div>
+<div class="accordion" id="accordionblobset">
+    <div class="card">
+        <div class="card-header" id="headingblobset">
+            <h2 class="mb-0">
+                <button class="btn btn-link property-name-button" type="button" data-toggle="collapse" data-target="#blobset"
+                        aria-expanded="" aria-controls="blobset" onclick="setAnchor('#blobset')"><span class="property-name">blobset</span></button>
+            </h2>
+        </div>
+
+        <div id="blobset"
+             class="collapse property-definition-div" aria-labelledby="headingblobset"
+             data-parent="#accordionblobset">
+            <div class="card-body pl-5">
+
+    <div class="breadcrumbs">root
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#blobset" onclick="anchorLink('blobset')">blobset</a></div><h4>Blobset Config</h4><span class="badge badge-dark value-type">Type: object</span><br/>
+
+
+     <span class="badge badge-info no-additional">No Additional Properties</span>
+        
+
+        
+        
+
+        
+<div class="accordion" id="accordionblobset_blobsets">
+    <div class="card">
+        <div class="card-header" id="headingblobset_blobsets">
+            <h2 class="mb-0">
+                <button class="btn btn-link property-name-button" type="button" data-toggle="collapse" data-target="#blobset_blobsets"
+                        aria-expanded="" aria-controls="blobset_blobsets" onclick="setAnchor('#blobset_blobsets')"><span class="property-name">blobsets</span></button>
+            </h2>
+        </div>
+
+        <div id="blobset_blobsets"
+             class="collapse property-definition-div" aria-labelledby="headingblobset_blobsets"
+             data-parent="#accordionblobset_blobsets">
+            <div class="card-body pl-5">
+
+    <div class="breadcrumbs">root
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#blobset" onclick="anchorLink('blobset')">blobset</a>
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#blobset_blobsets" onclick="anchorLink('blobset_blobsets')">blobsets</a></div><h4>System Blobsets</h4><span class="badge badge-dark value-type">Type: enum (of string)</span><br/>
+<span class="description"><p>Placeholder to create generated code enum</p>
+</span>
+
+    <div class="enum-value" id="blobset_blobsets_enum">
+            <h4>Must be one of:</h4>
+            <ul class="list-group"><li class="list-group-item enum-item">"_iot_endpoint_config"</li></ul>
+            </div>
+        
+
+        
+        
+
+        
+            </div>
+        </div>
+    </div>
+</div>
+<div class="accordion" id="accordionblobset_blobs">
+    <div class="card">
+        <div class="card-header" id="headingblobset_blobs">
+            <h2 class="mb-0">
+                <button class="btn btn-link property-name-button" type="button" data-toggle="collapse" data-target="#blobset_blobs"
+                        aria-expanded="" aria-controls="blobset_blobs" onclick="setAnchor('#blobset_blobs')"><span class="property-name">blobs</span></button>
+            </h2>
+        </div>
+
+        <div id="blobset_blobs"
+             class="collapse property-definition-div" aria-labelledby="headingblobset_blobs"
+             data-parent="#accordionblobset_blobs">
+            <div class="card-body pl-5">
+
+    <div class="breadcrumbs">root
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#blobset" onclick="anchorLink('blobset')">blobset</a>
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#blobset_blobs" onclick="anchorLink('blobset_blobs')">blobs</a></div><span class="badge badge-dark value-type">Type: object</span><br/>
+ <span class="badge badge-info no-additional">No Additional Properties</span>
+        
+
+        
+        
+
+        
+<div class="accordion" id="accordionblobset_blobs_pattern1">
+    <div class="card">
+        <div class="card-header" id="headingblobset_blobs_pattern1">
+            <h2 class="mb-0">
+                <button class="btn btn-link property-name-button" type="button" data-toggle="collapse" data-target="#blobset_blobs_pattern1"
+                        aria-expanded="" aria-controls="blobset_blobs_pattern1" onclick="setAnchor('#blobset_blobs_pattern1')"><span class="property-name">Blob Blobset Config</span> <span class="badge badge-info pattern-property">Pattern Property</span></button>
+            </h2>
+        </div>
+
+        <div id="blobset_blobs_pattern1"
+             class="collapse property-definition-div" aria-labelledby="headingblobset_blobs_pattern1"
+             data-parent="#accordionblobset_blobs_pattern1">
+            <div class="card-body pl-5"><h2 class="handle">
+                        <label>Pattern Property</label>
+                    </h2>
+                    <p>All properties whose name matches the following regular expression must respect the following conditions</p>
+                    <span class="pattern-value">Property name regular expression: <code>^_?[a-z][a-z0-9]*(_[a-z0-9]+)*$</code></span>
+                    <br/>
+
+    <div class="breadcrumbs">root
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#blobset" onclick="anchorLink('blobset')">blobset</a>
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#blobset_blobs" onclick="anchorLink('blobset_blobs')">blobs</a>
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#blobset_blobs_pattern1" onclick="anchorLink('blobset_blobs_pattern1')">Blob Blobset Config</a></div><h4>Blob Blobset Config</h4><span class="badge badge-dark value-type">Type: object</span><br/>
+
+
+     <span class="badge badge-info no-additional">No Additional Properties</span>
+        
+
+        
+        
+
+        
+<div class="accordion" id="accordionblobset_blobs_pattern1_phase">
+    <div class="card">
+        <div class="card-header" id="headingblobset_blobs_pattern1_phase">
+            <h2 class="mb-0">
+                <button class="btn btn-link property-name-button" type="button" data-toggle="collapse" data-target="#blobset_blobs_pattern1_phase"
+                        aria-expanded="" aria-controls="blobset_blobs_pattern1_phase" onclick="setAnchor('#blobset_blobs_pattern1_phase')"><span class="property-name">phase</span> <span class="badge badge-warning required-property">Required</span></button>
+            </h2>
+        </div>
+
+        <div id="blobset_blobs_pattern1_phase"
+             class="collapse property-definition-div" aria-labelledby="headingblobset_blobs_pattern1_phase"
+             data-parent="#accordionblobset_blobs_pattern1_phase">
+            <div class="card-body pl-5">
+
+    <div class="breadcrumbs">root
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#blobset" onclick="anchorLink('blobset')">blobset</a>
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#blobset_blobs" onclick="anchorLink('blobset_blobs')">blobs</a>
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#blobset_blobs_pattern1" onclick="anchorLink('blobset_blobs_pattern1')">Blob Blobset Config</a>
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#blobset_blobs_pattern1_phase" onclick="anchorLink('blobset_blobs_pattern1_phase')">phase</a></div><h4>BlobPhase</h4><span class="badge badge-dark value-type">Type: enum (of string)</span><br/>
+<span class="description"><p>Phase for the management of a configuration blob.</p>
+</span>
+
+    <div class="enum-value" id="blobset_blobs_pattern1_phase_enum">
+            <h4>Must be one of:</h4>
+            <ul class="list-group"><li class="list-group-item enum-item">"apply"</li><li class="list-group-item enum-item">"final"</li></ul>
+            </div>
+        
+
+        
+        
+
+        
+            </div>
+        </div>
+    </div>
+</div>
+<div class="accordion" id="accordionblobset_blobs_pattern1_url">
+    <div class="card">
+        <div class="card-header" id="headingblobset_blobs_pattern1_url">
+            <h2 class="mb-0">
+                <button class="btn btn-link property-name-button" type="button" data-toggle="collapse" data-target="#blobset_blobs_pattern1_url"
+                        aria-expanded="" aria-controls="blobset_blobs_pattern1_url" onclick="setAnchor('#blobset_blobs_pattern1_url')"><span class="property-name">url</span> <span class="badge badge-warning required-property">Required</span></button>
+            </h2>
+        </div>
+
+        <div id="blobset_blobs_pattern1_url"
+             class="collapse property-definition-div" aria-labelledby="headingblobset_blobs_pattern1_url"
+             data-parent="#accordionblobset_blobs_pattern1_url">
+            <div class="card-body pl-5">
+
+    <div class="breadcrumbs">root
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#blobset" onclick="anchorLink('blobset')">blobset</a>
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#blobset_blobs" onclick="anchorLink('blobset_blobs')">blobs</a>
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#blobset_blobs_pattern1" onclick="anchorLink('blobset_blobs_pattern1')">Blob Blobset Config</a>
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#blobset_blobs_pattern1_url" onclick="anchorLink('blobset_blobs_pattern1_url')">url</a></div><span class="badge badge-dark value-type">Type: string</span><br/>
+
+        
+
+        
+        
+
+        
+            </div>
+        </div>
+    </div>
+</div>
+<div class="accordion" id="accordionblobset_blobs_pattern1_sha256">
+    <div class="card">
+        <div class="card-header" id="headingblobset_blobs_pattern1_sha256">
+            <h2 class="mb-0">
+                <button class="btn btn-link property-name-button" type="button" data-toggle="collapse" data-target="#blobset_blobs_pattern1_sha256"
+                        aria-expanded="" aria-controls="blobset_blobs_pattern1_sha256" onclick="setAnchor('#blobset_blobs_pattern1_sha256')"><span class="property-name">sha256</span> <span class="badge badge-warning required-property">Required</span></button>
+            </h2>
+        </div>
+
+        <div id="blobset_blobs_pattern1_sha256"
+             class="collapse property-definition-div" aria-labelledby="headingblobset_blobs_pattern1_sha256"
+             data-parent="#accordionblobset_blobs_pattern1_sha256">
+            <div class="card-body pl-5">
+
+    <div class="breadcrumbs">root
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#blobset" onclick="anchorLink('blobset')">blobset</a>
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#blobset_blobs" onclick="anchorLink('blobset_blobs')">blobs</a>
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#blobset_blobs_pattern1" onclick="anchorLink('blobset_blobs_pattern1')">Blob Blobset Config</a>
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#blobset_blobs_pattern1_sha256" onclick="anchorLink('blobset_blobs_pattern1_sha256')">sha256</a></div><span class="badge badge-dark value-type">Type: string</span><br/>
+<span class="description"><p>Expected hash of the retrieved resource</p>
+</span><span class="pattern-value" id="blobset_blobs_pattern1_sha256_pattern">Must match regular expression: <code>^[0-9a-f]{64}$</code></span>
+        
+
+        
+        
+
+        
+            </div>
+        </div>
+    </div>
+</div>
+<div class="accordion" id="accordionblobset_blobs_pattern1_generation">
+    <div class="card">
+        <div class="card-header" id="headingblobset_blobs_pattern1_generation">
+            <h2 class="mb-0">
+                <button class="btn btn-link property-name-button" type="button" data-toggle="collapse" data-target="#blobset_blobs_pattern1_generation"
+                        aria-expanded="" aria-controls="blobset_blobs_pattern1_generation" onclick="setAnchor('#blobset_blobs_pattern1_generation')"><span class="property-name">generation</span> <span class="badge badge-warning required-property">Required</span></button>
+            </h2>
+        </div>
+
+        <div id="blobset_blobs_pattern1_generation"
+             class="collapse property-definition-div" aria-labelledby="headingblobset_blobs_pattern1_generation"
+             data-parent="#accordionblobset_blobs_pattern1_generation">
+            <div class="card-body pl-5">
+
+    <div class="breadcrumbs">root
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#blobset" onclick="anchorLink('blobset')">blobset</a>
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#blobset_blobs" onclick="anchorLink('blobset_blobs')">blobs</a>
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#blobset_blobs_pattern1" onclick="anchorLink('blobset_blobs_pattern1')">Blob Blobset Config</a>
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#blobset_blobs_pattern1_generation" onclick="anchorLink('blobset_blobs_pattern1_generation')">generation</a></div><span class="badge badge-dark value-type">Type: string</span><span class="badge badge-info value-type">Format: date-time</span><br/>
+<span class="description"><p>RFC 3339 UTC timestamp of the blob generation</p>
+</span>
+        
+
+        
+        
+
+        <br/>
+<div class="badge badge-secondary">Example:</div>
+<br/><div id="blobset_blobs_pattern1_generation_ex1" class="jumbotron examples"><div class="highlight"><pre><span></span><span class="s2">&quot;2019-01-17T14:02:29.364Z&quot;</span>
+</pre></div>
+</div>
+            </div>
+        </div>
+    </div>
+</div>
+            </div>
+        </div>
+    </div>
+</div>
+            </div>
+        </div>
+    </div>
+</div>
+            </div>
+        </div>
+    </div>
+</div>
+<div class="accordion" id="accordionpointset">
+    <div class="card">
+        <div class="card-header" id="headingpointset">
+            <h2 class="mb-0">
+                <button class="btn btn-link property-name-button" type="button" data-toggle="collapse" data-target="#pointset"
+                        aria-expanded="" aria-controls="pointset" onclick="setAnchor('#pointset')"><span class="property-name">pointset</span></button>
+            </h2>
+        </div>
+
+        <div id="pointset"
+             class="collapse property-definition-div" aria-labelledby="headingpointset"
+             data-parent="#accordionpointset">
+            <div class="card-body pl-5">
+
+    <div class="breadcrumbs">root
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#pointset" onclick="anchorLink('pointset')">pointset</a></div><h4>Pointset Config</h4><span class="badge badge-dark value-type">Type: object</span><br/>
+<span class="description"><p><a href="../../docs/messages/pointset.md#config">Pointset Config Documentation</a></p>
+</span>
+
+     <span class="badge badge-info no-additional">No Additional Properties</span>
+        
+
+        
+        
+
+        
+<div class="accordion" id="accordionpointset_timestamp">
+    <div class="card">
+        <div class="card-header" id="headingpointset_timestamp">
+            <h2 class="mb-0">
+                <button class="btn btn-link property-name-button" type="button" data-toggle="collapse" data-target="#pointset_timestamp"
+                        aria-expanded="" aria-controls="pointset_timestamp" onclick="setAnchor('#pointset_timestamp')"><span class="property-name">timestamp</span></button>
+            </h2>
+        </div>
+
+        <div id="pointset_timestamp"
+             class="collapse property-definition-div" aria-labelledby="headingpointset_timestamp"
+             data-parent="#accordionpointset_timestamp">
+            <div class="card-body pl-5">
+
+    <div class="breadcrumbs">root
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#pointset" onclick="anchorLink('pointset')">pointset</a>
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#pointset_timestamp" onclick="anchorLink('pointset_timestamp')">timestamp</a></div><span class="badge badge-dark value-type">Type: string</span><span class="badge badge-info value-type">Format: date-time</span><br/>
+<span class="description"><p>RFC 3339 UTC timestamp the configuration was generated</p>
+</span>
+        
+
+        
+        
+
+        <br/>
+<div class="badge badge-secondary">Example:</div>
+<br/><div id="pointset_timestamp_ex1" class="jumbotron examples"><div class="highlight"><pre><span></span><span class="s2">&quot;2019-01-17T14:02:29.364Z&quot;</span>
+</pre></div>
+</div>
+            </div>
+        </div>
+    </div>
+</div>
+<div class="accordion" id="accordionpointset_version">
+    <div class="card">
+        <div class="card-header" id="headingpointset_version">
+            <h2 class="mb-0">
+                <button class="btn btn-link property-name-button" type="button" data-toggle="collapse" data-target="#pointset_version"
+                        aria-expanded="" aria-controls="pointset_version" onclick="setAnchor('#pointset_version')"><span class="property-name">version</span></button>
+            </h2>
+        </div>
+
+        <div id="pointset_version"
+             class="collapse property-definition-div" aria-labelledby="headingpointset_version"
+             data-parent="#accordionpointset_version">
+            <div class="card-body pl-5">
+
+    <div class="breadcrumbs">root
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#pointset" onclick="anchorLink('pointset')">pointset</a>
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#pointset_version" onclick="anchorLink('pointset_version')">version</a></div><span class="badge badge-dark value-type">Type: string</span><br/>
+<span class="description"><p>Version of the UDMI schema</p>
+</span>
+        
+
+        
+        
+
+        
+            </div>
+        </div>
+    </div>
+</div>
+<div class="accordion" id="accordionpointset_state_etag">
+    <div class="card">
+        <div class="card-header" id="headingpointset_state_etag">
+            <h2 class="mb-0">
+                <button class="btn btn-link property-name-button" type="button" data-toggle="collapse" data-target="#pointset_state_etag"
+                        aria-expanded="" aria-controls="pointset_state_etag" onclick="setAnchor('#pointset_state_etag')"><span class="property-name">state_etag</span></button>
+            </h2>
+        </div>
+
+        <div id="pointset_state_etag"
+             class="collapse property-definition-div" aria-labelledby="headingpointset_state_etag"
+             data-parent="#accordionpointset_state_etag">
+            <div class="card-body pl-5">
+
+    <div class="breadcrumbs">root
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#pointset" onclick="anchorLink('pointset')">pointset</a>
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#pointset_state_etag" onclick="anchorLink('pointset_state_etag')">state_etag</a></div><span class="badge badge-dark value-type">Type: string</span><br/>
+<span class="description"><p>The <code>state_etag</code> of the last <em>state</em> message sent by the device. <a href="../../docs/specs/sequences/writeback.md">Writeback documentation</a></p>
+</span>
+        
+
+        
+        <p><span class="badge badge-light restriction max-length-restriction" id="pointset_state_etag_maxLength">Must be at most <code>32</code> characters long</span></p>
+
+        
+            </div>
+        </div>
+    </div>
+</div>
+<div class="accordion" id="accordionpointset_set_value_expiry">
+    <div class="card">
+        <div class="card-header" id="headingpointset_set_value_expiry">
+            <h2 class="mb-0">
+                <button class="btn btn-link property-name-button" type="button" data-toggle="collapse" data-target="#pointset_set_value_expiry"
+                        aria-expanded="" aria-controls="pointset_set_value_expiry" onclick="setAnchor('#pointset_set_value_expiry')"><span class="property-name">set_value_expiry</span></button>
+            </h2>
+        </div>
+
+        <div id="pointset_set_value_expiry"
+             class="collapse property-definition-div" aria-labelledby="headingpointset_set_value_expiry"
+             data-parent="#accordionpointset_set_value_expiry">
+            <div class="card-body pl-5">
+
+    <div class="breadcrumbs">root
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#pointset" onclick="anchorLink('pointset')">pointset</a>
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#pointset_set_value_expiry" onclick="anchorLink('pointset_set_value_expiry')">set_value_expiry</a></div><span class="badge badge-dark value-type">Type: string</span><span class="badge badge-info value-type">Format: date-time</span><br/>
+<span class="description"><p>An expiry for the the device to revert to baseline (no set value). <a href="../../docs/specs/sequences/writeback.md">Writeback documentation</a></p>
+</span>
+        
+
+        
+        
+
+        
+            </div>
+        </div>
+    </div>
+</div>
+<div class="accordion" id="accordionpointset_sample_limit_sec">
+    <div class="card">
+        <div class="card-header" id="headingpointset_sample_limit_sec">
+            <h2 class="mb-0">
+                <button class="btn btn-link property-name-button" type="button" data-toggle="collapse" data-target="#pointset_sample_limit_sec"
+                        aria-expanded="" aria-controls="pointset_sample_limit_sec" onclick="setAnchor('#pointset_sample_limit_sec')"><span class="property-name">sample_limit_sec</span></button>
+            </h2>
+        </div>
+
+        <div id="pointset_sample_limit_sec"
+             class="collapse property-definition-div" aria-labelledby="headingpointset_sample_limit_sec"
+             data-parent="#accordionpointset_sample_limit_sec">
+            <div class="card-body pl-5">
+
+    <div class="breadcrumbs">root
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#pointset" onclick="anchorLink('pointset')">pointset</a>
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#pointset_sample_limit_sec" onclick="anchorLink('pointset_sample_limit_sec')">sample_limit_sec</a></div><span class="badge badge-dark value-type">Type: integer</span><br/>
+<span class="description"><p>Minimum time between sample updates for the device (including complete and COV updates). Updates more frequent than this should be coalesced into one update.</p>
+</span>
+        
+
+        
+        <p><span class="badge badge-light restriction numeric-restriction" id="pointset_sample_limit_sec_number">Value must be greater or equal to <code>0</code> and lesser or equal to <code>86400</code></span></p>
+
+        
+            </div>
+        </div>
+    </div>
+</div>
+<div class="accordion" id="accordionpointset_sample_rate_sec">
+    <div class="card">
+        <div class="card-header" id="headingpointset_sample_rate_sec">
+            <h2 class="mb-0">
+                <button class="btn btn-link property-name-button" type="button" data-toggle="collapse" data-target="#pointset_sample_rate_sec"
+                        aria-expanded="" aria-controls="pointset_sample_rate_sec" onclick="setAnchor('#pointset_sample_rate_sec')"><span class="property-name">sample_rate_sec</span></button>
+            </h2>
+        </div>
+
+        <div id="pointset_sample_rate_sec"
+             class="collapse property-definition-div" aria-labelledby="headingpointset_sample_rate_sec"
+             data-parent="#accordionpointset_sample_rate_sec">
+            <div class="card-body pl-5">
+
+    <div class="breadcrumbs">root
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#pointset" onclick="anchorLink('pointset')">pointset</a>
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#pointset_sample_rate_sec" onclick="anchorLink('pointset_sample_rate_sec')">sample_rate_sec</a></div><span class="badge badge-dark value-type">Type: integer</span><br/>
+<span class="description"><p>Maximum time between samples for the device to send out a complete update. It can send out updates more frequently than this. Default to 600.</p>
+</span>
+        
+
+        
+        <p><span class="badge badge-light restriction numeric-restriction" id="pointset_sample_rate_sec_number">Value must be greater or equal to <code>1</code> and lesser or equal to <code>86400</code></span></p>
+
+        
+            </div>
+        </div>
+    </div>
+</div>
+<div class="accordion" id="accordionpointset_points">
+    <div class="card">
+        <div class="card-header" id="headingpointset_points">
+            <h2 class="mb-0">
+                <button class="btn btn-link property-name-button" type="button" data-toggle="collapse" data-target="#pointset_points"
+                        aria-expanded="" aria-controls="pointset_points" onclick="setAnchor('#pointset_points')"><span class="property-name">points</span></button>
+            </h2>
+        </div>
+
+        <div id="pointset_points"
+             class="collapse property-definition-div" aria-labelledby="headingpointset_points"
+             data-parent="#accordionpointset_points">
+            <div class="card-body pl-5">
+
+    <div class="breadcrumbs">root
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#pointset" onclick="anchorLink('pointset')">pointset</a>
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#pointset_points" onclick="anchorLink('pointset_points')">points</a></div><span class="badge badge-dark value-type">Type: object</span><br/>
+<span class="description"><p>The points defined in this dictionary is the authoritative source indicating the representative points for the device (in both <code>telemetry</code> and <code>state</code> messages). <a href="../../docs/messages/pointset.md">Pointset doumentation</a></p>
+</span> <span class="badge badge-info no-additional">No Additional Properties</span>
+        
+
+        
+        
+
+        
+<div class="accordion" id="accordionpointset_points_pattern1">
+    <div class="card">
+        <div class="card-header" id="headingpointset_points_pattern1">
+            <h2 class="mb-0">
+                <button class="btn btn-link property-name-button" type="button" data-toggle="collapse" data-target="#pointset_points_pattern1"
+                        aria-expanded="" aria-controls="pointset_points_pattern1" onclick="setAnchor('#pointset_points_pattern1')"><span class="property-name">Point Pointset Config</span> <span class="badge badge-info pattern-property">Pattern Property</span></button>
+            </h2>
+        </div>
+
+        <div id="pointset_points_pattern1"
+             class="collapse property-definition-div" aria-labelledby="headingpointset_points_pattern1"
+             data-parent="#accordionpointset_points_pattern1">
+            <div class="card-body pl-5"><h2 class="handle">
+                        <label>Pattern Property</label>
+                    </h2>
+                    <p>All properties whose name matches the following regular expression must respect the following conditions</p>
+                    <span class="pattern-value">Property name regular expression: <code>^[a-z][a-z0-9]*(_[a-z0-9]+)*$</code></span>
+                    <br/>
+
+    <div class="breadcrumbs">root
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#pointset" onclick="anchorLink('pointset')">pointset</a>
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#pointset_points" onclick="anchorLink('pointset_points')">points</a>
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#pointset_points_pattern1" onclick="anchorLink('pointset_points_pattern1')">Point Pointset Config</a></div><h4>Point Pointset Config</h4><span class="badge badge-dark value-type">Type: object</span><br/>
+
+
+     <span class="badge badge-info no-additional">No Additional Properties</span>
+        
+
+        
+        
+
+        
+<div class="accordion" id="accordionpointset_points_pattern1_ref">
+    <div class="card">
+        <div class="card-header" id="headingpointset_points_pattern1_ref">
+            <h2 class="mb-0">
+                <button class="btn btn-link property-name-button" type="button" data-toggle="collapse" data-target="#pointset_points_pattern1_ref"
+                        aria-expanded="" aria-controls="pointset_points_pattern1_ref" onclick="setAnchor('#pointset_points_pattern1_ref')"><span class="property-name">ref</span></button>
+            </h2>
+        </div>
+
+        <div id="pointset_points_pattern1_ref"
+             class="collapse property-definition-div" aria-labelledby="headingpointset_points_pattern1_ref"
+             data-parent="#accordionpointset_points_pattern1_ref">
+            <div class="card-body pl-5">
+
+    <div class="breadcrumbs">root
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#pointset" onclick="anchorLink('pointset')">pointset</a>
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#pointset_points" onclick="anchorLink('pointset_points')">points</a>
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#pointset_points_pattern1" onclick="anchorLink('pointset_points_pattern1')">Point Pointset Config</a>
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#pointset_points_pattern1_ref" onclick="anchorLink('pointset_points_pattern1_ref')">ref</a></div><span class="badge badge-dark value-type">Type: string</span><br/>
+<span class="description"><p>Mapping for the point to an internal resource (e.g. BACnet object reference)</p>
+</span>
+        
+
+        
+        
+
+        <br/>
+<div class="badge badge-secondary">Example:</div>
+<br/><div id="pointset_points_pattern1_ref_ex1" class="jumbotron examples"><div class="highlight"><pre><span></span><span class="s2">&quot;AI1106&quot;</span>
+</pre></div>
+</div>
+            </div>
+        </div>
+    </div>
+</div>
+<div class="accordion" id="accordionpointset_points_pattern1_units">
+    <div class="card">
+        <div class="card-header" id="headingpointset_points_pattern1_units">
+            <h2 class="mb-0">
+                <button class="btn btn-link property-name-button" type="button" data-toggle="collapse" data-target="#pointset_points_pattern1_units"
+                        aria-expanded="" aria-controls="pointset_points_pattern1_units" onclick="setAnchor('#pointset_points_pattern1_units')"><span class="property-name">units</span></button>
+            </h2>
+        </div>
+
+        <div id="pointset_points_pattern1_units"
+             class="collapse property-definition-div" aria-labelledby="headingpointset_points_pattern1_units"
+             data-parent="#accordionpointset_points_pattern1_units">
+            <div class="card-body pl-5">
+
+    <div class="breadcrumbs">root
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#pointset" onclick="anchorLink('pointset')">pointset</a>
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#pointset_points" onclick="anchorLink('pointset_points')">points</a>
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#pointset_points_pattern1" onclick="anchorLink('pointset_points_pattern1')">Point Pointset Config</a>
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#pointset_points_pattern1_units" onclick="anchorLink('pointset_points_pattern1_units')">units</a></div><span class="badge badge-dark value-type">Type: string</span><br/>
+<span class="description"><p>If specified, indicates the units the device should report the data in.</p>
+</span>
+        
+
+        
+        
+
+        
+            </div>
+        </div>
+    </div>
+</div>
+<div class="accordion" id="accordionpointset_points_pattern1_set_value">
+    <div class="card">
+        <div class="card-header" id="headingpointset_points_pattern1_set_value">
+            <h2 class="mb-0">
+                <button class="btn btn-link property-name-button" type="button" data-toggle="collapse" data-target="#pointset_points_pattern1_set_value"
+                        aria-expanded="" aria-controls="pointset_points_pattern1_set_value" onclick="setAnchor('#pointset_points_pattern1_set_value')"><span class="property-name">set_value</span></button>
+            </h2>
+        </div>
+
+        <div id="pointset_points_pattern1_set_value"
+             class="collapse property-definition-div" aria-labelledby="headingpointset_points_pattern1_set_value"
+             data-parent="#accordionpointset_points_pattern1_set_value">
+            <div class="card-body pl-5">
+
+    <div class="breadcrumbs">root
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#pointset" onclick="anchorLink('pointset')">pointset</a>
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#pointset_points" onclick="anchorLink('pointset_points')">points</a>
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#pointset_points_pattern1" onclick="anchorLink('pointset_points_pattern1')">Point Pointset Config</a>
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#pointset_points_pattern1_set_value" onclick="anchorLink('pointset_points_pattern1_set_value')">set_value</a></div><span class="badge badge-dark value-type">Type: object</span><br/>
+<span class="description"><p>Used for cloud writeback functionality, this field specifies the value for a given point in the device's current units.</p>
+</span>
+        
+
+        
+        
+
+        <br/>
+<div class="badge badge-secondary">Example:</div>
+<br/><div id="pointset_points_pattern1_set_value_ex1" class="jumbotron examples"><div class="highlight"><pre><span></span><span class="mf">22.4</span>
+</pre></div>
+</div>
+            </div>
+        </div>
+    </div>
+</div>
+<div class="accordion" id="accordionpointset_points_pattern1_stop_time">
+    <div class="card">
+        <div class="card-header" id="headingpointset_points_pattern1_stop_time">
+            <h2 class="mb-0">
+                <button class="btn btn-link property-name-button" type="button" data-toggle="collapse" data-target="#pointset_points_pattern1_stop_time"
+                        aria-expanded="" aria-controls="pointset_points_pattern1_stop_time" onclick="setAnchor('#pointset_points_pattern1_stop_time')"><span class="property-name">stop_time</span></button>
+            </h2>
+        </div>
+
+        <div id="pointset_points_pattern1_stop_time"
+             class="collapse property-definition-div" aria-labelledby="headingpointset_points_pattern1_stop_time"
+             data-parent="#accordionpointset_points_pattern1_stop_time">
+            <div class="card-body pl-5">
+
+    <div class="breadcrumbs">root
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#pointset" onclick="anchorLink('pointset')">pointset</a>
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#pointset_points" onclick="anchorLink('pointset_points')">points</a>
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#pointset_points_pattern1" onclick="anchorLink('pointset_points_pattern1')">Point Pointset Config</a>
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#pointset_points_pattern1_stop_time" onclick="anchorLink('pointset_points_pattern1_stop_time')">stop_time</a></div><span class="badge badge-dark value-type">Type: string</span><span class="badge badge-info value-type">Format: date-time</span><br/>
+<span class="description"><p>RFC 3339 timestamp for the specified point write easing to stop</p>
+</span>
+        
+
+        
+        
+
+        <br/>
+<div class="badge badge-secondary">Example:</div>
+<br/><div id="pointset_points_pattern1_stop_time_ex1" class="jumbotron examples"><div class="highlight"><pre><span></span><span class="s2">&quot;2019-01-17T14:02:29.364Z&quot;</span>
+</pre></div>
+</div>
+            </div>
+        </div>
+    </div>
+</div>
+<div class="accordion" id="accordionpointset_points_pattern1_cov_increment">
+    <div class="card">
+        <div class="card-header" id="headingpointset_points_pattern1_cov_increment">
+            <h2 class="mb-0">
+                <button class="btn btn-link property-name-button" type="button" data-toggle="collapse" data-target="#pointset_points_pattern1_cov_increment"
+                        aria-expanded="" aria-controls="pointset_points_pattern1_cov_increment" onclick="setAnchor('#pointset_points_pattern1_cov_increment')"><span class="property-name">cov_increment</span></button>
+            </h2>
+        </div>
+
+        <div id="pointset_points_pattern1_cov_increment"
+             class="collapse property-definition-div" aria-labelledby="headingpointset_points_pattern1_cov_increment"
+             data-parent="#accordionpointset_points_pattern1_cov_increment">
+            <div class="card-body pl-5">
+
+    <div class="breadcrumbs">root
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#pointset" onclick="anchorLink('pointset')">pointset</a>
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#pointset_points" onclick="anchorLink('pointset_points')">points</a>
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#pointset_points_pattern1" onclick="anchorLink('pointset_points_pattern1')">Point Pointset Config</a>
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#pointset_points_pattern1_cov_increment" onclick="anchorLink('pointset_points_pattern1_cov_increment')">cov_increment</a></div><span class="badge badge-dark value-type">Type: number</span><br/>
+<span class="description"><p>The CoV (change of value) increment, which when set, enables CoV on the point and defines the minimum change in present value of the respective point before an update is published</p>
+</span>
+        
+
+        
+        <p><span class="badge badge-light restriction numeric-restriction" id="pointset_points_pattern1_cov_increment_number">Value must be greater or equal to <code>0</code></span></p>
+
+        
+            </div>
+        </div>
+    </div>
+</div>
+            </div>
+        </div>
+    </div>
+</div>
+            </div>
+        </div>
+    </div>
+</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+    <footer>
+        <p class="generated-by-footer">Generated using <a href="https://github.com/coveooss/json-schema-for-humans">json-schema-for-humans</a></p>
+    </footer></body>
+</html>
