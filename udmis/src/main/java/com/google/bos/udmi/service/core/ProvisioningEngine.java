@@ -15,7 +15,7 @@ import static com.google.udmi.util.MetadataMapKeys.UDMI_PROVISION_ENABLE;
 import static com.google.udmi.util.MetadataMapKeys.UDMI_UPDATED;
 import static java.lang.String.format;
 import static java.util.Objects.requireNonNull;
-import static udmi.schema.CloudModel.Operation.BIND;
+import static udmi.schema.CloudModel.ModelOperation.BIND;
 
 import java.util.Date;
 import java.util.HashMap;
@@ -26,7 +26,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 import udmi.schema.CloudModel;
-import udmi.schema.CloudModel.Operation;
+import udmi.schema.CloudModel.ModelOperation;
 import udmi.schema.CloudModel.Resource_type;
 import udmi.schema.DiscoveryEvents;
 import udmi.schema.EndpointConfiguration;
@@ -58,7 +58,7 @@ public class ProvisioningEngine extends ProcessorBase {
   private void createDeviceEntry(String registryId, String expectedId, String gatewayId,
       Envelope envelope, DiscoveryEvents discoveryEvent) {
     CloudModel cloudModel = new CloudModel();
-    cloudModel.operation = Operation.CREATE;
+    cloudModel.operation = ModelOperation.CREATE;
     cloudModel.blocked = true;
     ifNullThen(cloudModel.metadata, () -> cloudModel.metadata = new HashMap<>());
     cloudModel.metadata.put(UDMI_DISCOVERED_FROM, stringifyTerse(envelope));
