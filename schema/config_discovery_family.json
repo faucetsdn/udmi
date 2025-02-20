@@ -21,6 +21,10 @@
       "type": "integer",
       "minimum": 0
     },
+    "addrs": {
+      "descritpion": "List of addresses to actively probe",
+      "type": "list"
+    },
     "passive_sec": {
       "description": "Holdoff time for passively discovered devices",
       "type": "integer",
