@@ -22,7 +22,7 @@ jobs:
       - uses: actions/setup-java@v4
         with:
           distribution: 'temurin'
-          java-version: '17'
+          java-version: '21'
       - uses: actions/setup-python@v5
         with:
           python-version: '3.10'
@@ -78,7 +78,7 @@ jobs:
       - uses: actions/setup-java@v4
         with:
           distribution: 'temurin'
-          java-version: '17'
+          java-version: '21'
       - name: base setup
         run: |
           bin/setup_base
@@ -129,7 +129,7 @@ jobs:
       - uses: actions/setup-java@v4
         with:
           distribution: 'temurin'
-          java-version: '17'
+          java-version: '21'
       - name: base setup
         run: bin/run_tests install_dependencies
       - name: local setup
@@ -184,7 +184,7 @@ jobs:
       - uses: actions/setup-java@v4
         with:
           distribution: 'temurin'
-          java-version: '17'
+          java-version: '21'
       - name: base setup
         run: bin/run_tests install_dependencies
       - name: local setup
@@ -236,7 +236,7 @@ jobs:
       - uses: actions/setup-java@v4
         with:
           distribution: 'temurin'
-          java-version: '17'
+          java-version: '21'
       - name: base setup
         run: |
           bin/setup_base
@@ -291,7 +291,7 @@ jobs:
       - uses: actions/setup-java@v4
         with:
           distribution: 'temurin'
-          java-version: '17'
+          java-version: '21'
       - name: base setup
         run: bin/run_tests install_dependencies
       - name: local setup
@@ -369,7 +369,7 @@ jobs:
       - uses: actions/setup-java@v4
         with:
           distribution: 'temurin'
-          java-version: '17'
+          java-version: '21'
       - name: Setup prerequisites
         run: |
           bin/setup_base

@@ -46,9 +46,9 @@ public class SiteLocation {
     @Override
     public int hashCode() {
         int result = 1;
-        result = ((result* 31)+((this.address == null)? 0 :this.address.hashCode()));
         result = ((result* 31)+((this.lat == null)? 0 :this.lat.hashCode()));
         result = ((result* 31)+((this._long == null)? 0 :this._long.hashCode()));
+        result = ((result* 31)+((this.address == null)? 0 :this.address.hashCode()));
         return result;
     }
 
@@ -61,7 +61,7 @@ public class SiteLocation {
             return false;
         }
         SiteLocation rhs = ((SiteLocation) other);
-        return ((((this.address == rhs.address)||((this.address!= null)&&this.address.equals(rhs.address)))&&((this.lat == rhs.lat)||((this.lat!= null)&&this.lat.equals(rhs.lat))))&&((this._long == rhs._long)||((this._long!= null)&&this._long.equals(rhs._long))));
+        return ((((this.lat == rhs.lat)||((this.lat!= null)&&this.lat.equals(rhs.lat)))&&((this._long == rhs._long)||((this._long!= null)&&this._long.equals(rhs._long))))&&((this.address == rhs.address)||((this.address!= null)&&this.address.equals(rhs.address))));
     }
 
 }
