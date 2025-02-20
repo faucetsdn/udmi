@@ -15,20 +15,20 @@
     
     <title>Pointset Events</title>
 <script src="schema_extras.js" ></script></head>
-    <body onload="anchorOnLoad();removedHostedMDExtensions();" id="root"><nav> <ol class="breadcrumb bg-white" style="padding: 0"> <li class="breadcrumb-item"><a href="../../">UDMI</a></li> <li class="breadcrumb-item"><a href="../">Schema</a></li> <li class="breadcrumb-item"><a href="./">Schema Viewer</a></li> </ol> </nav> <h1>Pointset Events</h1><div class="text-right">
+    <body onload="anchorOnLoad();removedHostedMDExtensions();" id="root"><nav> <ol class="breadcrumb bg-white" style="padding: 0"> <li class="breadcrumb-item"><a href="../../">UDMI</a></li> <li class="breadcrumb-item"><a href="../">Schema</a></li> <li class="breadcrumb-item"><a href="./">Schema Viewer</a></li> </ol> </nav> <div class="text-right">
             <button class="btn btn-primary" type="button" data-toggle="collapse" data-target=".collapse:not(.show)" aria-expanded="false">Expand all</button>
             <button class="btn btn-primary" type="button" data-toggle="collapse" data-target=".collapse.show" aria-expanded="false">Collapse all</button>
         </div>
 
-    <div class="breadcrumbs"></div><span class="badge badge-dark value-type">Type: object</span><br/>
+    <div class="breadcrumbs"></div> <h1>Pointset Events</h1><span class="badge badge-dark value-type">Type: object</span><br/>
 <span class="description"><p>A set of points reporting telemetry data. <a href="../../docs/messages/pointset.md#telemetry">Pointset Events Documentation</a></p>
 </span> <span class="badge badge-info no-additional">No Additional Properties</span>
-            
+        
 
-            
-            
+        
+        
 
-            
+        
 <div class="accordion" id="accordiontimestamp">
     <div class="card">
         <div class="card-header" id="headingtimestamp">
@@ -50,15 +50,15 @@
                 d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
             />
         </svg>
-    <a href="#timestamp" onclick="anchorLink('timestamp')">timestamp</a></div><span class="badge badge-dark value-type">Type: string</span><br/>
+    <a href="#timestamp" onclick="anchorLink('timestamp')">timestamp</a></div><span class="badge badge-dark value-type">Type: string</span><span class="badge badge-info value-type">Format: date-time</span><br/>
 <span class="description"><p>RFC 3339 UTC timestamp the telemetry event was generated</p>
 </span>
-            
+        
 
-            
-            
+        
+        
 
-            <br/>
+        <br/>
 <div class="badge badge-secondary">Example:</div>
 <br/><div id="timestamp_ex1" class="jumbotron examples"><div class="highlight"><pre><span></span><span class="s2">&quot;2019-01-17T14:02:29.364Z&quot;</span>
 </pre></div>
@@ -91,12 +91,12 @@
     <a href="#version" onclick="anchorLink('version')">version</a></div><span class="badge badge-dark value-type">Type: string</span><br/>
 <span class="description"><p>Version of the UDMI schema</p>
 </span>
-            
+        
 
-            
-            
+        
+        
 
-            
+        
             </div>
         </div>
     </div>
@@ -125,12 +125,12 @@
     <a href="#upgraded_from" onclick="anchorLink('upgraded_from')">upgraded_from</a></div><span class="badge badge-dark value-type">Type: string</span><br/>
 <span class="description"><p>Original version of schema pre-upgrade</p>
 </span>
-            
+        
 
-            
-            
+        
+        
 
-            
+        
             </div>
         </div>
     </div>
@@ -159,12 +159,12 @@
     <a href="#partial_update" onclick="anchorLink('partial_update')">partial_update</a></div><span class="badge badge-dark value-type">Type: boolean</span><br/>
 <span class="description"><p>Indicates if this is a partial update (only some points may be included)</p>
 </span>
-            
+        
 
-            
-            
+        
+        
 
-            
+        
             </div>
         </div>
     </div>
@@ -193,18 +193,18 @@
     <a href="#points" onclick="anchorLink('points')">points</a></div><span class="badge badge-dark value-type">Type: object</span><br/>
 <span class="description"><p>Collection of point names, defining the representative point set for this device.</p>
 </span> <span class="badge badge-info no-additional">No Additional Properties</span>
-            
+        
 
-            
-            
+        
+        
 
-            
+        
 <div class="accordion" id="accordionpoints_pattern1">
     <div class="card">
         <div class="card-header" id="headingpoints_pattern1">
             <h2 class="mb-0">
                 <button class="btn btn-link property-name-button" type="button" data-toggle="collapse" data-target="#points_pattern1"
-                        aria-expanded="" aria-controls="points_pattern1" onclick="setAnchor('#points_pattern1')"><span class="property-name">^[a-z][a-z0-9]*(_[a-z0-9]+)*$</span> <span class="badge badge-info pattern-property">Pattern Property</span></button>
+                        aria-expanded="" aria-controls="points_pattern1" onclick="setAnchor('#points_pattern1')"><span class="property-name">Point Pointset Events</span> <span class="badge badge-info pattern-property">Pattern Property</span></button>
             </h2>
         </div>
 
@@ -214,7 +214,7 @@
             <div class="card-body pl-5"><h2 class="handle">
                         <label>Pattern Property</label>
                     </h2>
-                    <p>All property whose name matches the following regular expression must respect the following conditions</p>
+                    <p>All properties whose name matches the following regular expression must respect the following conditions</p>
                     <span class="pattern-value">Property name regular expression: <code>^[a-z][a-z0-9]*(_[a-z0-9]+)*$</code></span>
                     <br/>
 
@@ -232,17 +232,17 @@
                 d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
             />
         </svg>
-    <a href="#points_pattern1" onclick="anchorLink('points_pattern1')">events_pointset_point.json#</a></div><span class="badge badge-dark value-type">Type: object</span><br/>
+    <a href="#points_pattern1" onclick="anchorLink('points_pattern1')">Point Pointset Events</a></div><h4>Point Pointset Events</h4><span class="badge badge-dark value-type">Type: object</span><br/>
 <span class="description"><p>Object representation for for a single point</p>
 </span>
 
      <span class="badge badge-info no-additional">No Additional Properties</span>
-            
+        
 
-            
-            
+        
+        
 
-            
+        
 <div class="accordion" id="accordionpoints_pattern1_present_value">
     <div class="card">
         <div class="card-header" id="headingpoints_pattern1_present_value">
@@ -281,12 +281,12 @@
     <a href="#points_pattern1_present_value" onclick="anchorLink('points_pattern1_present_value')">present_value</a></div><span class="badge badge-dark value-type">Type: object</span><br/>
 <span class="description"><p>The specific point data reading</p>
 </span>
-            
+        
 
-            
-            
+        
+        
 
-            <br/>
+        <br/>
 <div class="badge badge-secondary">Examples:</div>
 <br/><div id="points_pattern1_present_value_ex1" class="jumbotron examples"><div class="highlight"><pre><span></span><span class="mf">24.1</span>
 </pre></div>
