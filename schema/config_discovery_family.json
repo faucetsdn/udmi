@@ -23,7 +23,10 @@
     },
     "addrs": {
       "descritpion": "List of addresses to actively probe",
-      "type": "list"
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
     },
     "passive_sec": {
       "description": "Holdoff time for passively discovered devices",
