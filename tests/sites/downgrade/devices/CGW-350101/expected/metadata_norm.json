@@ -1,11 +1,11 @@
 {
   "cloud": {
-    "connection_type": "PROXIED"
+    "resource_type": "PROXIED"
   },
   "gateway": {
     "gateway_id": "DDC-35"
   },
-  "hash": "abfe545e",
+  "hash": "0a14502a",
   "localnet": {
     "families": {
       "bacnet": {
@@ -44,5 +44,6 @@
     }
   },
   "timestamp": "2024-11-04T10:02:28Z",
-  "version": "1.4.2"
+  "upgraded_from": "1.4.2",
+  "version": "1.5.3"
 }
