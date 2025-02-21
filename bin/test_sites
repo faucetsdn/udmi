@@ -89,11 +89,16 @@ if [[ -s $FAILURES ]]; then
     echo
     echo :::::: Failures found, to fix execute $FAILURES:
     sed -i -E \
-        -e 's/^Files (.*) and (.*) differ$/cp \1 \2/' \
-        -e 's-^Only in (.*)/out: (.*)$-touch \1/expected/\2-' \
-        -e 's-^Only in (.*)/expected: (.*)$-rm \1/expected/\2-' \
+        -e 's/^Files (.*) and (.*) differ$/diff \1 \2/' \
+        -e 's-^Only in (.*)/out: (.*)$-echo \1/expected/\2-' \
+        -e 's-^Only in (.*)/expected: (.*)$-touch \1/expected/\2-' \
         $FAILURES
     cat $FAILURES
+    sed -i -E \
+        -e 's/^diff /cp /' \
+        -e 's/^echo /touch /' \
+        -e 's/^touch /rm /' \
+        $FAILURES
     false
 fi
 

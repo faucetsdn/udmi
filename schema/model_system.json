@@ -25,6 +25,12 @@
       "pattern": "^[-_a-zA-Z0-9]+$",
       "examples": ["Zone1", "Kitchen_101"]
     },
+    "node_type": {
+      "description": "The description of what kind of node this is.",
+      "type": "string",
+      "pattern": "^[a-z][_a-z0-9]+$",
+      "examples": ["vitual_device", "field_group", "field_controller", "network_scan_agent"]
+    },
     "tags":{
       "description": "Tags associated with the device",
       "type": "array",
