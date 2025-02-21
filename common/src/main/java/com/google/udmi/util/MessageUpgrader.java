@@ -13,11 +13,12 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.fasterxml.jackson.databind.node.TextNode;
-import com.google.gson.JsonObject;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
+import udmi.schema.CloudModel.Resource_type;
 import udmi.util.SchemaVersion;
 
 /**
@@ -32,6 +33,7 @@ public class MessageUpgrader {
   public static final String METADATA_SCHEMA = "metadata";
   private static final String TARGET_FORMAT = "%d.%d.%d";
   private static final String RAW_GIT_VERSION = "git";
+  public static final String DEVICE_TYPE = "DEVICE";
   private final ObjectNode message;
   private final JsonNode original;
   private final String schemaName;
@@ -263,14 +265,18 @@ public class MessageUpgrader {
   }
 
   private void upgradeTo_1_5_3_metadata_cloud(ObjectNode cloud) {
+    String orig = ifNotNullGet(cloud.remove("resource_type"), JsonNode::textValue);
+    AtomicReference<String> type = new AtomicReference<>(orig);
+
     ifNotNullThen(cloud.remove("connection_type"), node -> {
       String connection = node.textValue();
-      String resource = ifNotNullGet(cloud.remove("resource_type"), JsonNode::textValue);
-      if (resource != null && !resource.equals(connection)) {
-        throw new RuntimeException(format("Connection/resource mismatch: %s/%s", connection, resource));
+      if (type.get() != null && !type.get().equals(connection)) {
+        throw new RuntimeException(format("Connection/resource mismatch: %s/%s", connection, type));
       }
-      cloud.put("resource_type", connection);
+      type.set(connection);
     });
+    ifTrueThen(DEVICE_TYPE.equals(type.get()), () -> type.set(Resource_type.DIRECT.value()));
+    cloud.put("resource_type", type.get());
   }
 
   private void upgradeTo_1_5_0() {
