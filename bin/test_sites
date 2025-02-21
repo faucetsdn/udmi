@@ -96,8 +96,8 @@ if [[ -s $FAILURES ]]; then
     cat $FAILURES
     sed -i -E \
         -e 's/^diff /cp /' \
-        -e 's/^echo /touch /' \
         -e 's/^touch /rm /' \
+        -e 's/^echo /touch /' \
         $FAILURES
     false
 fi
