@@ -161,8 +161,8 @@ public class MessageUpgrader {
 
     if (minor == 5) {
       upgraded |= patch == 0 && didMessageChange(this::upgradeTo_1_5_1, patchUpdater(1));
-      upgraded |= patch == 1 && didMessageChange(this::upgradeTo_1_5_2, patchUpdater(2));
-      upgraded |= patch == 2 && didMessageChange(this::upgradeTo_1_5_3, patchUpdater(3));
+      upgraded |= patch <= 1 && didMessageChange(this::upgradeTo_1_5_2, patchUpdater(2));
+      upgraded |= patch <= 2 && didMessageChange(this::upgradeTo_1_5_3, patchUpdater(3));
     }
 
     String currentVersion = SchemaVersion.CURRENT.key();
@@ -276,7 +276,7 @@ public class MessageUpgrader {
       type.set(connection);
     });
     ifTrueThen(DEVICE_TYPE.equals(type.get()), () -> type.set(Resource_type.DIRECT.value()));
-    cloud.put("resource_type", type.get());
+    ifNotNullThen(type.get(), endResult -> cloud.put("resource_type", endResult));
   }
 
   private void upgradeTo_1_5_0() {
