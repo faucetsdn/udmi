@@ -24,6 +24,7 @@ import java.util.List;
 import java.util.Map;
 import org.jetbrains.annotations.NotNull;
 import udmi.lib.ProtocolFamily;
+import udmi.schema.CloudModel.Resource_type;
 import udmi.schema.Config;
 import udmi.schema.DiscoveryConfig;
 import udmi.schema.FamilyDiscoveryConfig;
@@ -275,9 +276,12 @@ public class ConfigManager {
    * Indicate if this is a gateway device.
    */
   public boolean isGateway() {
-    return catchToNull(() -> metadata.gateway) != null
+    boolean cloudGateway = catchToNull(() -> metadata.cloud.resource_type) == Resource_type.GATEWAY;
+    boolean proxyGateway = catchToNull(() -> metadata.gateway) != null
+        && metadata.gateway.proxy_ids != null
         && metadata.gateway.gateway_id == null
         && catchToNull(() -> metadata.cloud.auth_type) != null;
+    return cloudGateway || proxyGateway;
   }
 
   public boolean isProxied() {

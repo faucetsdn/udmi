@@ -732,7 +732,7 @@ public class Registrar {
         Set<String> proxyIds = new HashSet<>(cloudModel.gateway.proxy_ids);
         System.err.printf("Retrying delete %s with bound devices: %s%n", deviceId, proxyIds);
         cloudIotManager.deleteDevice(deviceId, proxyIds);
-      } else if (cloudModel.resource_type == Resource_type.DEVICE) {
+      } else if (cloudModel.resource_type == Resource_type.DIRECT) {
         Set<String> gatewayIds = ImmutableSet.of(cloudModel.gateway.gateway_id);
         System.err.printf("Unbinding %s from bound gateways: %s%n", deviceId, gatewayIds);
         unbindDevicesFromGateways(allDevices, gatewayIds);

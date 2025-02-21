@@ -3,14 +3,17 @@ package com.google.udmi.util;
 import static com.google.udmi.util.Common.UPGRADED_FROM;
 import static com.google.udmi.util.Common.VERSION_KEY;
 import static com.google.udmi.util.GeneralUtils.OBJECT_MAPPER_RAW;
+import static com.google.udmi.util.GeneralUtils.ifNotNullGet;
 import static com.google.udmi.util.GeneralUtils.ifNotNullThen;
 import static com.google.udmi.util.GeneralUtils.ifTrueThen;
 import static com.google.udmi.util.MessageDowngrader.convertVersion;
+import static java.lang.String.format;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.fasterxml.jackson.databind.node.TextNode;
+import com.google.gson.JsonObject;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
@@ -157,6 +160,7 @@ public class MessageUpgrader {
     if (minor == 5) {
       upgraded |= patch == 0 && didMessageChange(this::upgradeTo_1_5_1, patchUpdater(1));
       upgraded |= patch == 1 && didMessageChange(this::upgradeTo_1_5_2, patchUpdater(2));
+      upgraded |= patch == 2 && didMessageChange(this::upgradeTo_1_5_3, patchUpdater(3));
     }
 
     String currentVersion = SchemaVersion.CURRENT.key();
@@ -228,14 +232,6 @@ public class MessageUpgrader {
     ifTrueThen(METADATA_SCHEMA.equals(schemaName), this::upgradeTo_1_5_1_metadata);
   }
 
-  private void upgradeTo_1_5_2() {
-    ifTrueThen(EVENTS_SYSTEM_SCHEMA.equals(schemaName), this::upgradeTo_1_5_2_events_system);
-  }
-
-  private void upgradeTo_1_5_2_events_system() {
-    ifNotNullThen(message.remove("event_count"), node -> message.put("event_no", node));
-  }
-
   private void upgradeTo_1_5_1_metadata() {
     JsonNode tags = message.remove("tags");
     if (tags == null) {
@@ -248,6 +244,33 @@ public class MessageUpgrader {
 
     ObjectNode system = (ObjectNode) message.get("system");
     system.put("tags", tags);
+  }
+
+  private void upgradeTo_1_5_2() {
+    ifTrueThen(EVENTS_SYSTEM_SCHEMA.equals(schemaName), this::upgradeTo_1_5_2_events_system);
+  }
+
+  private void upgradeTo_1_5_2_events_system() {
+    ifNotNullThen(message.remove("event_count"), node -> message.put("event_no", node));
+  }
+
+  private void upgradeTo_1_5_3() {
+    ifTrueThen(METADATA_SCHEMA.equals(schemaName), this::upgradeTo_1_5_3_metadata);
+  }
+
+  private void upgradeTo_1_5_3_metadata() {
+    ifNotNullThen((ObjectNode) message.get("cloud"), this::upgradeTo_1_5_3_metadata_cloud);
+  }
+
+  private void upgradeTo_1_5_3_metadata_cloud(ObjectNode cloud) {
+    ifNotNullThen(cloud.remove("connection_type"), node -> {
+      String connection = node.textValue();
+      String resource = ifNotNullGet(cloud.remove("resource_type"), JsonNode::textValue);
+      if (resource != null && !resource.equals(connection)) {
+        throw new RuntimeException(format("Connection/resource mismatch: %s/%s", connection, resource));
+      }
+      cloud.put("resource_type", connection);
+    });
   }
 
   private void upgradeTo_1_5_0() {
