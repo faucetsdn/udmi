@@ -5,8 +5,10 @@
       "static_file": "notjson.txt"
     }
   },
-  "gateway": {},
-  "hash": "d1ab96a4",
+  "gateway": {
+    "proxy_ids": []
+  },
+  "hash": "fedaab8f",
   "system": {
     "location": {
       "section": "2-3N8C"
