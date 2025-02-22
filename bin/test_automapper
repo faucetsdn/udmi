@@ -17,13 +17,13 @@ site_path=sites/udmi_site_model
 echo Clear out the registries to start from scratch.
 bin/registrar $site_path $project_spec -x -d
 
-echo "Munge the model to have just the gateway (no proxied devices)"
-metadata=$site_path/devices/GAT-123/metadata.json
-jq '.gateway.proxy_ids = []' $metadata | sponge $metadata
+#echo "Munge the model to have just the gateway (no proxied devices)"
+#metadata=$site_path/devices/GAT-123/metadata.json
+#jq '.gateway.proxy_ids = []' $metadata | sponge $metadata
 
 bin/registrar $site_path $project_spec GAT-123
 
-[[ ! -f sites/udmi_site_model/devices/GAT-123/out/errors.map ]] || fail Terminating because of gateway error.
+[[ ! -f $site_path/devices/GAT-123/out/errors.map ]] || fail Terminating because of gateway error.
 
 entries=$(wc -l < $site_path/out/registration_summary.csv)
 [[ $entries == 2 ]] || fail Unexpected registered entries, found $entries

@@ -1202,7 +1202,9 @@ public class Registrar {
   private void preprocessSiteMetadata(Map<String, LocalDevice> workingDevices) {
     siteModel.initialize();
     workingDevices.values().stream().filter(LocalDevice::isGateway).forEach(gateway -> {
-      GatewayModel gatewayMetadata = gateway.getMetadata().gateway;
+      Metadata metadata = gateway.getMetadata();
+      ifNullThen(metadata.gateway, () -> metadata.gateway = new GatewayModel());
+      GatewayModel gatewayMetadata = metadata.gateway;
       String gatewayId = gateway.getDeviceId();
       ifNotNullThen(gatewayMetadata.proxy_ids,
           list -> normalizeChildren(gatewayId, listUniqueSet(list)),
