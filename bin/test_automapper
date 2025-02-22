@@ -17,9 +17,13 @@ site_path=sites/udmi_site_model
 echo Clear out the registries to start from scratch.
 bin/registrar $site_path $project_spec -x -d
 
-#echo "Munge the model to have just the gateway (no proxied devices)"
-#metadata=$site_path/devices/GAT-123/metadata.json
-#jq '.gateway.proxy_ids = []' $metadata | sponge $metadata
+echo "Munge the model to have just the gateway (no proxied devices)"
+metadata=$site_path/devices/GAT-123/metadata.json
+jq '.gateway.proxy_ids = []' $metadata | sponge $metadata
+proxied=$(fgrep -l gateway_id $site_path/devices/*/metadata.json)
+for proxy in $proxied; do
+  jq '.gateway.gateway_id = null' $proxy | sponge $proxy
+done
 
 bin/registrar $site_path $project_spec GAT-123
 
@@ -49,7 +53,7 @@ echo Checking vendor device status is $status
 
 type=$(jq -r .resource_type $site_path/extras/discovered_vendor-20231/cloud_model.json) || true
 echo Checking vendor extracted device type $type
-[[ $type == DEVICE ]] || fail Vendor device type should be DEVICE, was $type
+[[ $type == DIRECT ]] || fail Vendor device type should be DIRECT, was $type
 
 echo Checking discovered device metadata
 addr=$(jq -r .addr $site_path/extras/discovered_vendor-20231/cloud_metadata/udmi_discovered_with.json)
