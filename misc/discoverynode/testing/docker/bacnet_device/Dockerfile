@@ -10,8 +10,11 @@ COPY requirements.txt /requirements.txt
 RUN /venv/bin/pip install --disable-pip-version-check -r /requirements.txt
 
 # Copy the virtualenv into a distroless image
-FROM gcr.io/distroless/python3-debian12:debug
+FROM debian:12
+RUN apt-get update && \
+    apt-get install --no-install-suggests --no-install-recommends --yes python3 coreutils netcat-openbsd ssh openssh-server
 COPY --from=build-venv /venv /venv
 COPY . /app
 WORKDIR /app
-ENTRYPOINT [ "/venv/bin/python3", "bacnet_server.py" ]
+ENTRYPOINT ["/app/entrypoint.sh"]
+

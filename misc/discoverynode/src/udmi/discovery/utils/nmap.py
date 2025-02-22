@@ -17,6 +17,7 @@ class NmapPort:
   port_number: int
   sort_index: int = dataclasses.field(init=False, repr=False)
   service: str | None = None
+  version: str | None = None 
   state: str | None = None
   protocol: str | None = None
   product: str | None = None
@@ -66,6 +67,7 @@ def results_reader(nmap_file: str) -> Generator[NmapHost, None, None]:
         port.product = service.attrib.get('product')
         if service.attrib['method'] == 'probed':
           port.service = service.attrib['name']
+          port.version = service.attrib.get('version')
 
       host.ports.append(port)
 
