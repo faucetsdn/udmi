@@ -286,6 +286,7 @@ public class ConfigManager {
 
   public boolean isProxied() {
     return getGatewayId() != null;
+
   }
 
   /**

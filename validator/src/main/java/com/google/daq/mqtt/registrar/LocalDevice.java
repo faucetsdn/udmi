@@ -12,6 +12,7 @@ import static com.google.udmi.util.Common.POINT_NAME_ALLOWABLE;
 import static com.google.udmi.util.ContextWrapper.runInContext;
 import static com.google.udmi.util.GeneralUtils.CSV_JOINER;
 import static com.google.udmi.util.GeneralUtils.OBJECT_MAPPER_STRICT;
+import static com.google.udmi.util.GeneralUtils.catchToFalse;
 import static com.google.udmi.util.GeneralUtils.catchToNull;
 import static com.google.udmi.util.GeneralUtils.compressJsonString;
 import static com.google.udmi.util.GeneralUtils.ifNotNullGet;
@@ -692,6 +693,8 @@ class LocalDevice {
   }
 
   void writeNormalized() {
+    validateConsistency();
+
     File metadataFile = new File(outDir, NORMALIZED_JSON);
     if (metadata == null) {
       System.err.println("Deleting (invalid) " + metadataFile.getAbsolutePath());
@@ -716,6 +719,14 @@ class LocalDevice {
     } catch (Exception e) {
       exceptionMap.put(ExceptionCategory.writing, e);
     }
+  }
+
+  private void validateConsistency() {
+    checkState(!(isProxied() && isGateway()), "device is both proxy and gateway");
+    boolean hasProxyIds = catchToFalse(() -> metadata.gateway.proxy_ids != null);
+    checkState(hasProxyIds == isGateway(), "gateway has no proxies");
+    boolean hasGatewayId = catchToFalse(() -> metadata.gateway.gateway_id != null);
+    checkState(hasGatewayId == isProxied(), "proxy has no gateway");
   }
 
   /**
