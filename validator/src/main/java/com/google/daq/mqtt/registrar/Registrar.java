@@ -19,6 +19,7 @@ import static com.google.udmi.util.Common.UDMI_VERSION_KEY;
 import static com.google.udmi.util.GeneralUtils.CSV_JOINER;
 import static com.google.udmi.util.GeneralUtils.catchToNull;
 import static com.google.udmi.util.GeneralUtils.friendlyStackTrace;
+import static com.google.udmi.util.GeneralUtils.ifNotEmptyThen;
 import static com.google.udmi.util.GeneralUtils.ifNotEmptyThrow;
 import static com.google.udmi.util.GeneralUtils.ifNotNullGet;
 import static com.google.udmi.util.GeneralUtils.ifNotNullThen;
@@ -28,6 +29,7 @@ import static com.google.udmi.util.GeneralUtils.ifNullThen;
 import static com.google.udmi.util.GeneralUtils.ifTrueGet;
 import static com.google.udmi.util.GeneralUtils.ifTrueThen;
 import static com.google.udmi.util.GeneralUtils.isTrue;
+import static com.google.udmi.util.GeneralUtils.listUniqueSet;
 import static com.google.udmi.util.GeneralUtils.writeString;
 import static com.google.udmi.util.JsonUtil.JSON_SUFFIX;
 import static com.google.udmi.util.JsonUtil.OBJECT_MAPPER;
@@ -54,6 +56,7 @@ import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Sets;
 import com.google.common.collect.Sets.SetView;
 import com.google.daq.mqtt.registrar.LocalDevice.DeviceKind;
 import com.google.daq.mqtt.util.CloudDeviceSettings;
@@ -63,6 +66,7 @@ import com.google.daq.mqtt.util.PubSubPusher;
 import com.google.udmi.util.CommandLineOption;
 import com.google.udmi.util.CommandLineProcessor;
 import com.google.udmi.util.Common;
+import com.google.udmi.util.ExceptionList;
 import com.google.udmi.util.ExceptionMap;
 import com.google.udmi.util.ExceptionMap.ErrorTree;
 import com.google.udmi.util.ExceptionMap.ExceptionCategory;
@@ -89,6 +93,7 @@ import java.util.Map.Entry;
 import java.util.Objects;
 import java.util.Set;
 import java.util.TreeMap;
+import java.util.TreeSet;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -107,6 +112,7 @@ import udmi.schema.CloudModel.Resource_type;
 import udmi.schema.Credential;
 import udmi.schema.Envelope.SubFolder;
 import udmi.schema.ExecutionConfiguration;
+import udmi.schema.GatewayModel;
 import udmi.schema.Metadata;
 import udmi.schema.SetupUdmiConfig;
 import udmi.schema.SiteMetadata;
@@ -347,14 +353,14 @@ public class Registrar {
   }
 
   private void processSiteMetadata() {
+    SiteMetadata siteMetadata = siteModel.loadSiteMetadata();
+    siteMetadata.name = ofNullable(siteMetadata.name).orElse(siteModel.getSiteName());
     ifTrueThen(updateCloudIoT,
         () -> cloudIotManager.updateRegistry(getSiteMetadata(), Operation.UPDATE));
   }
 
   private SiteMetadata getSiteMetadata() {
-    SiteMetadata siteMetadata = siteModel.loadSiteMetadata();
-    siteMetadata.name = ofNullable(siteMetadata.name).orElse(siteModel.getSiteName());
-    return siteMetadata;
+    return siteModel.loadSiteMetadata();
   }
 
   private void createRegistries() {
@@ -1189,6 +1195,52 @@ public class Registrar {
   }
 
   private void preprocessMetadata(Map<String, LocalDevice> workingDevices) {
+    preprocessSiteMetadata(workingDevices);
+    preprocessDeviceMetadata(workingDevices);
+  }
+
+  private void preprocessSiteMetadata(Map<String, LocalDevice> workingDevices) {
+    siteModel.initialize();
+    workingDevices.values().stream().filter(LocalDevice::isGateway).forEach(gateway -> {
+      GatewayModel gatewayMetadata = gateway.getMetadata().gateway;
+      String gatewayId = gateway.getDeviceId();
+      ifNotNullThen(gatewayMetadata.proxy_ids,
+          list -> normalizeChildren(gatewayId, listUniqueSet(list)),
+          () -> gatewayMetadata.proxy_ids = new ArrayList<>(proxiedChildren(gatewayId)));
+    });
+  }
+
+  private void normalizeChildren(String gatewayId, Set<String> proxyIds) {
+    List<Exception> exceptions = new ArrayList<>();
+    siteModel.allMetadata().entrySet().stream().filter(entry -> proxyIds.contains(entry.getKey()))
+        .forEach(entry -> {
+          try {
+            Metadata deviceMetadata = entry.getValue();
+            ifNullThen(deviceMetadata.gateway, () -> deviceMetadata.gateway = new GatewayModel());
+            GatewayModel gatewayMetadata = deviceMetadata.gateway;
+            ifNullThen(gatewayMetadata.gateway_id, () -> gatewayMetadata.gateway_id = gatewayId);
+            checkState(gatewayMetadata.gateway_id.equals(gatewayId),
+                format("gateway_id mismatch for %s: %s != %s",
+                    entry.getKey(), gatewayMetadata.gateway_id, gatewayId));
+          } catch (Exception e) {
+            exceptions.add(e);
+            ifNotNullThen(workingDevices.get(entry.getKey()),
+                device -> device.captureError(ExceptionCategory.proxy, e));
+          }
+        });
+    ifNotEmptyThen(Sets.symmetricDifference(proxiedChildren(gatewayId), proxyIds), diff ->
+        exceptions.add(new RuntimeException(format("%s proxy_id mismatch: %s", gatewayId, diff))));
+    ifNotEmptyThen(exceptions, list -> ifNotNullThen(workingDevices.get(gatewayId),
+        gateway -> gateway.captureError(ExceptionCategory.proxy, new ExceptionList(exceptions))));
+  }
+
+  private Set<String> proxiedChildren(String gatewayId) {
+    return siteModel.allMetadata().entrySet().stream()
+        .filter(entry -> gatewayId.equals(catchToNull(() -> entry.getValue().gateway.gateway_id)))
+        .map(Entry::getKey).collect(Collectors.toCollection(TreeSet::new));
+  }
+
+  private void preprocessDeviceMetadata(Map<String, LocalDevice> workingDevices) {
     workingDevices.values().forEach(localDevice -> {
       try {
         localDevice.preprocessMetadata();

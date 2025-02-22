@@ -35,7 +35,7 @@ public class ExceptionMap extends RuntimeException {
   public enum ExceptionCategory {
     missing, extra, out, validation, loading, writing, site_metadata, initializing, sample,
     registering, envelope, credentials, samples, files, binding, creating, updating, schema,
-    configuring, metadata, status
+    configuring, metadata, status, proxy
   }
 
   /**
@@ -67,6 +67,10 @@ public class ExceptionMap extends RuntimeException {
           .getCausingExceptions()
           .forEach(sub -> errorTree.children.put(multiTrim(sub.getMessage()),
               format(sub, newPrefix, indent)));
+    } else if (e instanceof ExceptionList exceptionList) {
+      exceptionList.exceptions().forEach(sub -> {
+        errorTree.children.put(sub.getMessage(), format(sub, newPrefix, indent));
+      });
     } else if (e.getCause() != null) {
       errorTree.child = format(e.getCause(), newPrefix, indent);
     }

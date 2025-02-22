@@ -1,3 +1,6 @@
 Exceptions for GAT-72
+  List of 2 exceptions
+    gateway_id mismatch for SNS-4: GAT-123 != GAT-72
+    GAT-72 proxy_id mismatch: [SNS-4]
   While converting device config
     generation specified without scan_interval_sec parameter
