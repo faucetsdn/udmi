@@ -3,8 +3,12 @@
     "auth_type": "ES256",
     "resource_type": "GATEWAY"
   },
-  "gateway": {},
-  "hash": "901b7c11",
+  "gateway": {
+    "proxy_ids": [
+      "EM-1"
+    ]
+  },
+  "hash": "4a140296",
   "system": {
     "min_loglevel": 300
   },
