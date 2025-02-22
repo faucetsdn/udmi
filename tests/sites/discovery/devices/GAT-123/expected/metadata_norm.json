@@ -2,8 +2,10 @@
   "cloud": {
     "auth_type": "ES256"
   },
-  "gateway": {},
-  "hash": "a63589c4",
+  "gateway": {
+    "proxy_ids": []
+  },
+  "hash": "f09efa19",
   "pointset": {
     "points": {
       "globulating_globar": {

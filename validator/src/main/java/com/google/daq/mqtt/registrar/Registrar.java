@@ -835,7 +835,7 @@ public class Registrar {
       return false;
     }
 
-    if (!localDevice.isDirectConnect()) {
+    if (!localDevice.isDirect()) {
       System.err.println("Skipping feed message for proxy device " + localDevice.getDeviceId());
       return false;
     }
@@ -1275,7 +1275,7 @@ public class Registrar {
   private void validateKeys(Map<String, LocalDevice> localDevices) {
     Map<Credential, String> usedCredentials = new HashMap<>();
     localDevices.values().stream()
-        .filter(LocalDevice::isDirectConnect)
+        .filter(LocalDevice::isDirect)
         .forEach(
             localDevice -> {
               CloudDeviceSettings settings = localDevice.getSettings();
