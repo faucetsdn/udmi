@@ -406,6 +406,11 @@ jobs:
         run: |
           echo TAP1
           java -version
-          validator/bin/build
+          env | fgrep JAVA || true
+          which java
           echo TAP2
+          sudo java -version
+          sudo which java
+          sudo env | fgrep JAVA || true
+          echo TAP3
           sudo misc/discoverynode/testing/e2e/test_local site_model
