@@ -407,10 +407,12 @@ jobs:
           echo TAP1
           java -version
           env | fgrep JAVA || true
+          echo $PATH
           which java
           echo TAP2
           sudo -E java -version
-          sudo -E which java
           sudo -E env | fgrep JAVA || true
+          sudo -E echo $PATH
+          sudo -E which java
           echo TAP3
           sudo -E misc/discoverynode/testing/e2e/test_local site_model
