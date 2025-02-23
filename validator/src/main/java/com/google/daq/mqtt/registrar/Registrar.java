@@ -1216,17 +1216,22 @@ public class Registrar {
     List<Exception> exceptions = new ArrayList<>();
     allDevices.entrySet().stream().filter(entry -> proxyIds.contains(entry.getKey()))
         .forEach(entry -> {
+          String deviceId = entry.getKey();
+          LocalDevice local = entry.getValue();
           try {
-            Metadata deviceMetadata = entry.getValue().getMetadata();
+            checkState(!local.isDirect(), "Should not proxy direct device " + deviceId);
+            checkState(!local.isGateway(), "Should not proxy gateway device " + deviceId);
+            Metadata deviceMetadata = local.getMetadata();
             ifNullThen(deviceMetadata.gateway, () -> deviceMetadata.gateway = new GatewayModel());
             GatewayModel gatewayMetadata = deviceMetadata.gateway;
             ifNullThen(gatewayMetadata.gateway_id, () -> gatewayMetadata.gateway_id = gatewayId);
             checkState(gatewayMetadata.gateway_id.equals(gatewayId),
                 format("gateway_id mismatch for %s: %s != %s",
-                    entry.getKey(), gatewayMetadata.gateway_id, gatewayId));
+                    deviceId, gatewayMetadata.gateway_id, gatewayId));
+            checkState(local.isProxied(), "Does not identify as proxied device " + deviceId);
           } catch (Exception e) {
             exceptions.add(e);
-            ifNotNullThen(workingDevices.get(entry.getKey()),
+            ifNotNullThen(workingDevices.get(deviceId),
                 device -> device.captureError(ExceptionCategory.proxy, e));
           }
         });
