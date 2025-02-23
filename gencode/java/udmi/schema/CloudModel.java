@@ -82,11 +82,11 @@ public class CloudModel {
     @JsonPropertyDescription("Indicates if the device private key is provided in the site model.")
     public Boolean device_key;
     /**
-     * The resource type of this model
+     * The cloud resource type
      * 
      */
     @JsonProperty("resource_type")
-    @JsonPropertyDescription("The resource type of this model")
+    @JsonPropertyDescription("The cloud resource type")
     public CloudModel.Resource_type resource_type;
     /**
      * Gateway Model
@@ -283,7 +283,7 @@ public class CloudModel {
 
 
     /**
-     * The resource type of this model
+     * The cloud resource type
      * 
      */
     public enum Resource_type {
