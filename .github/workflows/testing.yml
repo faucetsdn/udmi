@@ -405,16 +405,8 @@ jobs:
         # are fixed.
         run: |
           echo TAP1
-          java -version
-          env | fgrep JAVA || true
-          echo $PATH
-          which java
-          ls -l $JAVA_HOME/bin
+          export SAVE_PATH=$PATH
+          sudo -E bash -c 'PATH=$SAVE_PATH env'
+          sudo -E bash -c 'PATH=$SAVE_PATH java -version'
           echo TAP2
-          sudo -E java -version
-          sudo -E env | fgrep JAVA || true
-          sudo -E echo $PATH
-          sudo -E which java
-          sudo -E ls -l $JAVA_HOME/bin
-          echo TAP3
-          sudo -E misc/discoverynode/testing/e2e/test_local site_model
+          sudo -E bash -c 'PATH=$SAVE_PATH misc/discoverynode/testing/e2e/test_local site_model'
