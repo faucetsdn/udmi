@@ -228,8 +228,14 @@ class LocalDevice {
   public void initialize() {
     prepareOutDir();
     ifTrueThen(deviceKind == DeviceKind.LOCAL && metadata != null, this::validateMetadata);
-    config = configFrom(metadata, deviceId, siteModel);
-    ifTrueThen(deviceKind == DeviceKind.EXTRA, this::loadExtraCloudModel);
+    configure();
+  }
+
+  void configure() {
+    if (config == null) {
+      config = configFrom(metadata, deviceId, siteModel);
+      ifTrueThen(deviceKind == DeviceKind.EXTRA, this::loadExtraCloudModel);
+    }
   }
 
   public static void parseMetadataValidateProcessingReport(ProcessingReport report)
