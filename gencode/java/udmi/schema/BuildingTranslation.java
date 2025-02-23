@@ -36,8 +36,8 @@ public class BuildingTranslation {
     @Override
     public int hashCode() {
         int result = 1;
-        result = ((result* 31)+((this.units == null)? 0 :this.units.hashCode()));
         result = ((result* 31)+((this.present_value == null)? 0 :this.present_value.hashCode()));
+        result = ((result* 31)+((this.units == null)? 0 :this.units.hashCode()));
         result = ((result* 31)+((this.states == null)? 0 :this.states.hashCode()));
         return result;
     }
@@ -51,7 +51,7 @@ public class BuildingTranslation {
             return false;
         }
         BuildingTranslation rhs = ((BuildingTranslation) other);
-        return ((((this.units == rhs.units)||((this.units!= null)&&this.units.equals(rhs.units)))&&((this.present_value == rhs.present_value)||((this.present_value!= null)&&this.present_value.equals(rhs.present_value))))&&((this.states == rhs.states)||((this.states!= null)&&this.states.equals(rhs.states))));
+        return ((((this.present_value == rhs.present_value)||((this.present_value!= null)&&this.present_value.equals(rhs.present_value)))&&((this.units == rhs.units)||((this.units!= null)&&this.units.equals(rhs.units))))&&((this.states == rhs.states)||((this.states!= null)&&this.states.equals(rhs.states))));
     }
 
 }

@@ -1,13 +1,12 @@
 {
-  "cloud": {
-    "auth_type": "RS256"
-  },
+  "cloud": {},
   "gateway": {
+    "gateway_id": "DDC-54",
     "target": {
       "family": "vendor"
     }
   },
-  "hash": "09a1fede",
+  "hash": "95f05272",
   "localnet": {
     "families": {
       "vendor": {

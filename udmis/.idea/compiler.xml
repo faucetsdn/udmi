@@ -2,7 +2,7 @@
 <project version="4">
   <component name="CompilerConfiguration">
     <bytecodeTargetLevel target="1.9">
-      <module name="udmis" target="17" />
+      <module name="udmis" target="21" />
     </bytecodeTargetLevel>
   </component>
 </project>
