@@ -409,8 +409,8 @@ jobs:
           env | fgrep JAVA || true
           which java
           echo TAP2
-          sudo java -version
-          sudo which java
-          sudo env | fgrep JAVA || true
+          sudo -E java -version
+          sudo -E which java
+          sudo -E env | fgrep JAVA || true
           echo TAP3
-          sudo misc/discoverynode/testing/e2e/test_local site_model
+          sudo -E misc/discoverynode/testing/e2e/test_local site_model
