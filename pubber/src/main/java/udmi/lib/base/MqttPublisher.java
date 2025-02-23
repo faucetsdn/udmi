@@ -211,18 +211,17 @@ public class MqttPublisher implements Publisher {
         }
         return;
       }
-      if (callback != null) {
-        callback.run();
-      }
     } catch (Exception e) {
-      e.printStackTrace();
       if (isActive()) {
         errorCounter.incrementAndGet();
         warn(format("Publish %s failed for %s: %s", topicSuffix, deviceId, e));
-        callback.run();
         if (!isProxyDevice(deviceId)) {
           reconnect();
         }
+      }
+    } finally {
+      if (callback != null) {
+        callback.run();
       }
     }
   }
