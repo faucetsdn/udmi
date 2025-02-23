@@ -1,8 +1,11 @@
 {
   "downgraded_from": "1.5.3",
+  "gateway": {},
   "localnet": {
     "subsystem": {
-      "vendor": {}
+      "vendor": {
+        "id": "0x65"
+      }
     }
   },
   "pointset": {

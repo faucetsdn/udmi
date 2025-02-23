@@ -13,7 +13,7 @@
     "auth_type": "RS256"
   },
   "gateway": {
-    "proxy_ids": [ "SF-28" ]
+    "proxy_ids": [ "SF-28", "DWN-1" ]
   },
   "localnet": {
     "families": {
