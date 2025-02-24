@@ -106,6 +106,8 @@ public class PubberManager extends ManagerBase {
   }
 
   public boolean isBadVersion() {
+    // Only use bad versions after initial config synchronization. Otherwise, it just makes
+    // some tests flaky. This essentially provides a bit more stability for sequencer tests.
     return configSynchronized && isTrue(options.badVersion);
   }
 
