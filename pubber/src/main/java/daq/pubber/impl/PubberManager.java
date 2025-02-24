@@ -28,7 +28,7 @@ public class PubberManager extends ManagerBase {
   protected static final String PERSISTENT_STORE_FILE = "persistent_data.json";
   protected static final String PERSISTENT_TMP_FORMAT = "/tmp/pubber_%s_" + PERSISTENT_STORE_FILE;
 
-  static protected boolean configSynchronized;
+  protected static boolean configSynchronized;
   protected final PubberConfiguration config;
   protected final PubberOptions options;
   protected File outDir;
@@ -105,9 +105,12 @@ public class PubberManager extends ManagerBase {
     return options.redirectRegistry;
   }
 
+  /**
+   * Check to see if a bad version string should be used, to test various parts of the pipeline.
+   * But, only use bad versions after initial config synchronization. Otherwise, it just makes
+   * some tests flaky. This essentially provides a bit more stability for sequencer tests.
+   */
   public boolean isBadVersion() {
-    // Only use bad versions after initial config synchronization. Otherwise, it just makes
-    // some tests flaky. This essentially provides a bit more stability for sequencer tests.
     return configSynchronized && isTrue(options.badVersion);
   }
 
