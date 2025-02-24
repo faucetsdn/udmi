@@ -89,7 +89,7 @@ public class PubberSystemManager extends PubberManager implements SystemManager 
 
   @Override
   public void updateConfig(SystemConfig system, Date timestamp) {
-    ((SystemManager) this).updateConfig(system, timestamp);
+    SystemManager.super.updateConfig(system, timestamp);
 
     // Hack here for testing. This just indicates that it's "ok" to do some wonky stuff a bit
     // after initial startup (after initial config synchronization).
