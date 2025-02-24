@@ -290,6 +290,7 @@ public class CloudModel {
 
         DIRECT("DIRECT"),
         GATEWAY("GATEWAY"),
+        FUNNEL("FUNNEL"),
         PROXIED("PROXIED"),
         REGISTRY("REGISTRY");
         private final java.lang.String value;
