@@ -187,10 +187,9 @@ public interface PublisherHost extends ManagerHost {
   /**
    * Augments a given {@code message} object with the current timestamp and version information.
    */
-  static void augmentDeviceMessage(Object message, Date now, boolean maybeBadVersion) {
+  static void augmentDeviceMessage(Object message, Date now, boolean useBadVersion) {
     try {
       Field version = message.getClass().getField("version");
-      boolean useBadVersion = maybeBadVersion && message instanceof PointsetEvents;
       version.set(message, useBadVersion ? BROKEN_VERSION : UDMI_VERSION);
       Field timestamp = message.getClass().getField("timestamp");
       timestamp.set(message, now);
@@ -930,7 +929,8 @@ public interface PublisherHost extends ManagerHost {
     }
 
     String useId = ofNullable(targetId).orElseGet(this::getDeviceId);
-    augmentDeviceMessage(message, getNow(), isBadVersion());
+    boolean useBadVersion = message instanceof State && isBadVersion();
+    augmentDeviceMessage(message, getNow(), useBadVersion);
     Object downgraded = downgradeMessage(message);
     getDeviceTarget().publish(useId, topicSuffix, downgraded, callback);
     String messageBase = topicSuffix.replace("/", "_");

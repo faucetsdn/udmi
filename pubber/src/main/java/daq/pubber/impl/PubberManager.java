@@ -111,7 +111,9 @@ public class PubberManager extends ManagerBase {
    * some tests flaky. This essentially provides a bit more stability for sequencer tests.
    */
   public boolean isBadVersion() {
-    return configSynchronized && isTrue(options.badVersion);
+    boolean wasSynchronized = configSynchronized;
+    configSynchronized = false;
+    return wasSynchronized && isTrue(options.badVersion);
   }
 
   public boolean isNoFolder() {
