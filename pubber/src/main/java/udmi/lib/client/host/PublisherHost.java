@@ -187,9 +187,10 @@ public interface PublisherHost extends ManagerHost {
   /**
    * Augments a given {@code message} object with the current timestamp and version information.
    */
-  static void augmentDeviceMessage(Object message, Date now, boolean useBadVersion) {
+  static void augmentDeviceMessage(Object message, Date now, boolean maybeBadVersion) {
     try {
       Field version = message.getClass().getField("version");
+      boolean useBadVersion = maybeBadVersion && message instanceof PointsetEvents;
       version.set(message, useBadVersion ? BROKEN_VERSION : UDMI_VERSION);
       Field timestamp = message.getClass().getField("timestamp");
       timestamp.set(message, now);
