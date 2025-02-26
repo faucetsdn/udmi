@@ -23,7 +23,7 @@ import static java.util.Optional.ofNullable;
 import static java.util.function.Predicate.not;
 import static udmi.schema.CloudModel.Operation.DELETE;
 import static udmi.schema.CloudModel.Operation.READ;
-import static udmi.schema.CloudModel.Resource_type.DEVICE;
+import static udmi.schema.CloudModel.Resource_type.DIRECT;
 import static udmi.schema.CloudModel.Resource_type.GATEWAY;
 
 import com.google.bos.udmi.service.core.ReflectProcessor;
@@ -205,7 +205,7 @@ public class ImplicitIotAccessProvider extends IotAccessBase {
     Map<String, String> properties = new HashMap<>();
     ifNotNullThen(createdAt, x -> properties.put(CREATED_AT_PROPERTY, createdAt));
     properties.put(RESOURCE_TYPE_PROPERTY,
-        ofNullable(cloudModel.resource_type).orElse(DEVICE).toString());
+        ofNullable(cloudModel.resource_type).orElse(DIRECT).toString());
     requireNull(cloudModel.metadata_str, "unexpected metadata_str content");
     properties.put(METADATA_STR_KEY, stringifyTerse(cloudModel.metadata));
     properties.put(BLOCKED_PROPERTY, booleanString(cloudModel.blocked));
@@ -328,8 +328,8 @@ public class ImplicitIotAccessProvider extends IotAccessBase {
   public CloudModel modelDevice(String registryId, String deviceId, CloudModel cloudModel,
       Consumer<Integer> progress) {
     Operation operation = cloudModel.operation;
-    Resource_type type = ofNullable(cloudModel.resource_type).orElse(Resource_type.DEVICE);
-    checkState(type == DEVICE || type == GATEWAY, "unexpected resource type " + type);
+    Resource_type type = ofNullable(cloudModel.resource_type).orElse(Resource_type.DIRECT);
+    checkState(type == DIRECT || type == GATEWAY, "unexpected resource type " + type);
     try {
       String deleteNumId =
           operation != DELETE ? null : registryDeviceRef(registryId, deviceId).get(NUM_ID_PROPERTY);

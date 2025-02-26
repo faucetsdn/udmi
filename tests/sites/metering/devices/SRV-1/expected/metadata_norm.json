@@ -1,9 +1,9 @@
 {
   "cloud": {
     "auth_type": "ES256",
-    "connection_type": "DIRECT"
+    "resource_type": "DIRECT"
   },
-  "hash": "04d53566",
+  "hash": "7892fd7e",
   "localnet": {
     "families": {
       "bacnet": {

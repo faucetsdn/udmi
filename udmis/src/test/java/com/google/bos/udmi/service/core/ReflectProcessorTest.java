@@ -153,12 +153,12 @@ public class ReflectProcessorTest extends ProcessorTestBase {
   public void modelDeviceTest() {
     CloudModel returnModel = new CloudModel();
     returnModel.operation = Operation.CREATE;
-    returnModel.resource_type = Resource_type.DEVICE;
+    returnModel.resource_type = Resource_type.DIRECT;
     when(provider.modelDevice(anyString(), anyString(), notNull(), any())).thenReturn(returnModel);
 
     CloudModel requestModel = new CloudModel();
     requestModel.operation = Operation.BIND;
-    requestModel.resource_type = Resource_type.DEVICE;
+    requestModel.resource_type = Resource_type.DIRECT;
     activeTestInstance(() -> getReverseDispatcher().publish(makeModelBundle(requestModel)));
     verify(provider, times(1)).modelDevice(eq(TEST_REGISTRY), eq(TEST_DEVICE),
         eq(requestModel), any());

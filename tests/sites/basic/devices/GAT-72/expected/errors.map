@@ -1,3 +1,7 @@
 Exceptions for GAT-72
+  List of 3 exceptions
+    GAT-72 proxy_id mismatch: [AHU-1, SNS-4]
+    Should not proxy direct device AHU-1
+    gateway_id mismatch for SNS-4: GAT-123 != GAT-72
   While converting device config
     generation specified without scan_interval_sec parameter

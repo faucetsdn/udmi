@@ -20,14 +20,6 @@
       "description": "Function version of this request",
       "type": "integer"
     },
-    "connection_type": {
-      "description": "Connection type for connecting to cloud",
-      "enum": [
-        "GATEWAY",
-        "DIRECT",
-        "PROXIED"
-      ]
-    },
     "auth_type": {
       "description": "The key type used for cloud communication.",
       "enum": [
@@ -42,10 +34,12 @@
       "description": "Indicates if the device private key is provided in the site model."
     },
     "resource_type": {
-      "description": "The resource type of this model",
+      "description": "The cloud resource type",
       "enum": [
-        "DEVICE",
+        "DIRECT",
         "GATEWAY",
+        "FUNNEL",
+        "PROXIED",
         "REGISTRY"
       ]
     },

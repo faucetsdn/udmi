@@ -23,8 +23,10 @@
       }
     }
   },
+  "cloud": {
+    "resource_type": "PROXIED"
+  },
   "gateway": {
-    "gateway_id": "GAT-123",
     "target": {
       "family": "vendor"
     }
