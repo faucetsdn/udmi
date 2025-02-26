@@ -929,8 +929,7 @@ public interface PublisherHost extends ManagerHost {
     }
 
     String useId = ofNullable(targetId).orElseGet(this::getDeviceId);
-    boolean useBadVersion = message instanceof State && isBadVersion();
-    augmentDeviceMessage(message, getNow(), useBadVersion);
+    augmentDeviceMessage(message, getNow(), isBadVersion());
     Object downgraded = downgradeMessage(message);
     getDeviceTarget().publish(useId, topicSuffix, downgraded, callback);
     String messageBase = topicSuffix.replace("/", "_");
