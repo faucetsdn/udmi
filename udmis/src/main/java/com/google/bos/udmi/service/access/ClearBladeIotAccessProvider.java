@@ -516,7 +516,7 @@ public class ClearBladeIotAccessProvider extends IotAccessBase {
       if (gatewayId != null) {
         cloudModel.gateway = makeGatewayModel(boundDevices);
       } else {
-        cloudModel.device_ids = augmentGatewayModels(registryId, boundDevices);
+        cloudModel.device_ids = augmentGatewayModels(registryId, boundDevices, progress);
       }
       return cloudModel;
     } catch (Exception e) {
@@ -525,10 +525,15 @@ public class ClearBladeIotAccessProvider extends IotAccessBase {
   }
 
   private Map<String, CloudModel> augmentGatewayModels(String registryId,
-      HashMap<String, CloudModel> boundDevices) {
+      HashMap<String, CloudModel> boundDevices, Consumer<Integer> progress) {
     HashMap<String, String> proxyDeviceGateways = new HashMap<>();
-    boundDevices.entrySet().stream().filter(this::isGateway)
-        .forEach(entry -> augmentGatewayModel(registryId, entry, proxyDeviceGateways));
+    Set<Entry<String, CloudModel>> gateways =
+        boundDevices.entrySet().stream().filter(this::isGateway).collect(Collectors.toSet());
+    AtomicInteger count = new AtomicInteger(-gateways.size());
+    gateways.forEach(entry -> {
+      augmentGatewayModel(registryId, entry, proxyDeviceGateways);
+      progress.accept(count.incrementAndGet());
+    });
     boundDevices.entrySet()
         .forEach(entry -> augmentProxiedModel(entry, proxyDeviceGateways));
     return boundDevices;
