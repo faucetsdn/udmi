@@ -20,8 +20,10 @@ import static com.google.udmi.util.Common.VERSION_KEY;
 import static com.google.udmi.util.Common.getNamespacePrefix;
 import static com.google.udmi.util.GeneralUtils.decodeBase64;
 import static com.google.udmi.util.GeneralUtils.getTimestamp;
+import static com.google.udmi.util.GeneralUtils.ifNotEmptyThrow;
 import static com.google.udmi.util.GeneralUtils.ifNotNullGet;
 import static com.google.udmi.util.GeneralUtils.ifNotNullThen;
+import static com.google.udmi.util.GeneralUtils.ifNotTrueThen;
 import static com.google.udmi.util.GeneralUtils.ifTrueThen;
 import static com.google.udmi.util.GeneralUtils.isTrue;
 import static com.google.udmi.util.JsonUtil.asMap;
@@ -133,6 +135,7 @@ public class IotReflectorClient implements MessagePublisher {
   private final ImpulseRunningAverage publishStats = new ImpulseRunningAverage("Message publish");
   private final ImpulseRunningAverage receiveStats = new ImpulseRunningAverage("Message receive");
   private final Set<ImpulseRunningAverage> samplers = ImmutableSet.of(publishStats, receiveStats);
+  private Instant lastProgressEvent;
 
   /**
    * Create a new reflector instance.
@@ -380,8 +383,17 @@ public class IotReflectorClient implements MessagePublisher {
     return transactionId != null && !transactionId.startsWith(sessionPrefix);
   }
 
+  public Instant getLastProgressEvent() {
+    return lastProgressEvent;
+  }
+
+  private void updateLastProgressEvent() {
+    lastProgressEvent = Instant.now();
+  }
+
   private void processUdmiEvent(Map<String, Object> message) {
     UdmiEvents events = convertTo(UdmiEvents.class, message);
+    ifNotTrueThen(events.logentries.isEmpty(), this::updateLastProgressEvent);
     events.logentries.forEach(
         entry -> System.err.printf("%s %s%n", isoConvert(entry.timestamp), entry.message));
   }
@@ -606,6 +618,7 @@ public class IotReflectorClient implements MessagePublisher {
 
   @Override
   public String publish(String deviceId, String topic, String data) {
+    updateLastProgressEvent();
     Envelope envelope = new Envelope();
     envelope.deviceRegistryId = registryId;
     envelope.deviceId = deviceId;

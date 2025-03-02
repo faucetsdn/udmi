@@ -1287,11 +1287,15 @@ public class Registrar {
     localDevices.values().forEach(localDevice -> {
       try {
         localDevice.initialize();
+      } catch (Exception e) {
+        localDevice.captureError(ExceptionCategory.settings, e);
+        return;
+      }
+      try {
         localDevice.loadCredentials();
-      } catch (ValidationError error) {
-        throw new RuntimeException("While initializing device", error);
       } catch (Exception e) {
         localDevice.captureError(ExceptionCategory.credentials, e);
+        return;
       }
 
       if (cloudIotManager != null) {

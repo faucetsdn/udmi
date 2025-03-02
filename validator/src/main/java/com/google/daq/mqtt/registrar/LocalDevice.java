@@ -512,7 +512,8 @@ class LocalDevice {
   }
 
   private List<String> getProxyDevicesList() {
-    return isExtraKind() ? getCloudModelProxyList() : config.getProxyDevicesList();
+    return isExtraKind() ? getCloudModelProxyList()
+        : ifNotNullGet(config, ConfigManager::getProxyDevicesList);
   }
 
   private List<String> getCloudModelProxyList() {

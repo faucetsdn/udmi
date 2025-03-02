@@ -30,6 +30,7 @@ import com.google.udmi.util.IotProvider;
 import com.google.udmi.util.SiteModel;
 import java.io.File;
 import java.io.PrintWriter;
+import java.time.Instant;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -38,6 +39,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 import udmi.schema.CloudModel;
 import udmi.schema.CloudModel.Operation;
 import udmi.schema.Credential;
@@ -56,13 +58,11 @@ public class IotReflectorClient implements IotProvider {
   // Requires functions that support cloud device manager support.
   private static final String CONFIG_TOPIC_FORMAT = "%s/config";
   private static final File ERROR_DIR = new File("out");
-  public static final double SLOW_QUERY_THRESHOLD = 10000;
   public static final String UPDATE_PREFIX = "update/";
   private final com.google.bos.iot.core.proxy.IotReflectorClient messageClient;
   private final Map<String, CompletableFuture<Map<String, Object>>> futures =
       new ConcurrentHashMap<>();
   private final ExecutorService executor = Executors.newSingleThreadExecutor();
-  private final boolean isSlow;
   private final String sessionPrefix;
 
   /**
@@ -79,11 +79,6 @@ public class IotReflectorClient implements IotProvider {
     messageClient.activate();
     sessionPrefix = messageClient.getSessionPrefix();
     executor.execute(this::processReplies);
-    isSlow = siteModel.getDeviceIds().size() > SLOW_QUERY_THRESHOLD;
-    if (isSlow) {
-      // TODO: Replace this with a dynamic mechanism that gets incremental progress from UDMIS.
-      System.err.println("Using very long list devices timeout because of large number of devices");
-    }
   }
 
   @Override
@@ -189,9 +184,8 @@ public class IotReflectorClient implements IotProvider {
 
   private CloudModel fetchCloudModel(String deviceId) {
     try {
-      QuerySpeed speed = isSlow ? QuerySpeed.ETERNITY : QuerySpeed.SLOW;
       Map<String, Object> message = transaction(deviceId, CLOUD_QUERY_TOPIC,
-          getQueryMessageString(), speed);
+          getQueryMessageString(), QuerySpeed.DYNAMIC);
       // TODO: Remove this legacy workaround once all cloud environments are updated (2024/11/15).
       if ("FETCH".equals(message.get("operation"))) {
         message.put("operation", READ.toString());
@@ -246,12 +240,26 @@ public class IotReflectorClient implements IotProvider {
     try {
       CompletableFuture<Map<String, Object>> replyFuture = new CompletableFuture<>();
       futures.put(sentId, replyFuture);
-      return replyFuture.get(speed.seconds(), TimeUnit.SECONDS);
+      return speed == QuerySpeed.DYNAMIC ? dynamicReplyFutureGet(replyFuture) :
+          replyFuture.get(speed.seconds(), TimeUnit.SECONDS);
     } catch (Exception e) {
       futures.remove(sentId);
       throw new RuntimeException(
           format("UDMIS reflector timeout %ss for %s", speed.seconds(), sentId));
     }
+  }
+
+  private Map<String, Object> dynamicReplyFutureGet(
+      CompletableFuture<Map<String, Object>> replyFuture) throws Exception {
+    int pollSeconds = QuerySpeed.SHORT.seconds();
+    while (messageClient.getLastProgressEvent().plusSeconds(pollSeconds).isAfter(Instant.now())) {
+      try {
+        return replyFuture.get(pollSeconds, TimeUnit.SECONDS);
+      } catch (TimeoutException e) {
+        // Do nothing, but loop for timeout check only when there's a timeout.
+      }
+    }
+    return replyFuture.get(pollSeconds, TimeUnit.SECONDS);
   }
 
   private void processReplies() {
