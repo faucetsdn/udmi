@@ -59,7 +59,7 @@ public interface IotAccessProvider extends UdmiComponent {
 
   boolean isEnabled();
 
-  CloudModel listDevices(String registryId, Consumer<Integer> progress);
+  CloudModel listDevices(String registryId, Consumer<String> progress);
 
   CloudModel modelDevice(String registryId, String deviceId,
       CloudModel cloudModel, Consumer<Integer> progress);
