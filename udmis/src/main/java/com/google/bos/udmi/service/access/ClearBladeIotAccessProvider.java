@@ -400,19 +400,19 @@ public class ClearBladeIotAccessProvider extends IotAccessBase {
   }
 
   private HashMap<String, CloudModel> fetchBoundGateways(String deviceRegistryId, String deviceId,
-      Consumer<Integer> progress) {
+      Consumer<String> progress) {
     GatewayListOptions gatewayListOptions = ifNotNullGet(deviceId, this::getBoundGatewaysOptions);
     return fetchDevices(deviceRegistryId, progress, gatewayListOptions);
   }
 
   private HashMap<String, CloudModel> fetchDevices(String deviceRegistryId, String gatewayId,
-      Consumer<Integer> progress) {
+      Consumer<String> progress) {
     GatewayListOptions gatewayListOptions = ifNotNullGet(gatewayId, this::getBoundDevicesOptions);
     return fetchDevices(deviceRegistryId, progress, gatewayListOptions);
   }
 
   private HashMap<String, CloudModel> fetchDevices(String deviceRegistryId,
-      Consumer<Integer> progress, GatewayListOptions gatewayListOptions) {
+      Consumer<String> progress, GatewayListOptions gatewayListOptions) {
     String location = getRegistryLocation(deviceRegistryId);
     String registryFullName =
         RegistryName.of(projectId, location, deviceRegistryId).getRegistryFullName();
@@ -433,7 +433,7 @@ public class ClearBladeIotAccessProvider extends IotAccessBase {
       collect.putAll(responseMap);
       pageToken = response.getNextPageToken();
       queryCount++;
-      ifNotNullThen(progress, p -> p.accept(collect.size()));
+      ifNotNullThen(progress, p -> p.accept(format("Fetched %d devices...", collect.size())));
       debug(format("fetchDevices %s #%d found %d total %d more %s", deviceRegistryId,
           queryCount, responseMap.size(), collect.size(), pageToken != null));
     } while (pageToken != null);
@@ -506,7 +506,7 @@ public class ClearBladeIotAccessProvider extends IotAccessBase {
   }
 
   private CloudModel listRegistryDevices(String registryId, String gatewayId,
-      Consumer<Integer> progress) {
+      Consumer<String> progress) {
     try {
       CloudModel cloudModel = new CloudModel();
       HashMap<String, CloudModel> boundDevices =
@@ -525,14 +525,14 @@ public class ClearBladeIotAccessProvider extends IotAccessBase {
   }
 
   private Map<String, CloudModel> augmentGatewayModels(String registryId,
-      HashMap<String, CloudModel> boundDevices, Consumer<Integer> progress) {
+      HashMap<String, CloudModel> boundDevices, Consumer<String> progress) {
     HashMap<String, String> proxyDeviceGateways = new HashMap<>();
     Set<Entry<String, CloudModel>> gateways =
         boundDevices.entrySet().stream().filter(this::isGateway).collect(Collectors.toSet());
     AtomicInteger count = new AtomicInteger(-gateways.size());
     gateways.forEach(entry -> {
       augmentGatewayModel(registryId, entry, proxyDeviceGateways);
-      progress.accept(count.incrementAndGet());
+      progress.accept(format("Processed %d gateways...", count.incrementAndGet()));
     });
     boundDevices.entrySet()
         .forEach(entry -> augmentProxiedModel(entry, proxyDeviceGateways));
@@ -886,7 +886,7 @@ public class ClearBladeIotAccessProvider extends IotAccessBase {
   }
 
   @Override
-  public CloudModel listDevices(String registryId, Consumer<Integer> progress) {
+  public CloudModel listDevices(String registryId, Consumer<String> progress) {
     return listRegistryDevices(registryId, null, progress);
   }
 
