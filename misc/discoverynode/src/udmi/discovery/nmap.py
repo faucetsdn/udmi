@@ -7,6 +7,7 @@ import udmi.discovery.discovery as discovery
 import udmi.discovery.utils.nmap as nmap
 import udmi.schema.discovery_event
 import udmi.schema.state
+import dataclasses
 
 
 class NmapBannerScan(discovery.DiscoveryController):
@@ -42,7 +43,10 @@ class NmapBannerScan(discovery.DiscoveryController):
             "/usr/bin/nmap",
             "--script",
             "banner",
-            "127.0.0.1",
+            "-p-",
+            "-T4",
+            "-A",
+            self.target_ips[0],
             "-oX",
             OUTPUT_FILE,
             "--stats-every",
@@ -71,8 +75,8 @@ class NmapBannerScan(discovery.DiscoveryController):
           generation=self.generation,
           family=self.family,
           addr=host.ip,
-          families={
-              "port": {p.port_number: {"banner": p.banner} for p in host.ports}
+          refs={
+              f"{p.port_number}": {"adjunct": dataclasses.asdict(p)} for p in host.ports
           },
       )
-      self.publish(event.to_json())
+      self.publish(event)
