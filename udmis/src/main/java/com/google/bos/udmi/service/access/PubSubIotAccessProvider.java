@@ -144,7 +144,7 @@ public class PubSubIotAccessProvider extends IotAccessBase {
 
   @Override
   public CloudModel modelDevice(String registryId, String deviceId, CloudModel cloudModel,
-      Consumer<Integer> progress) {
+      Consumer<String> progress) {
     throw new RuntimeException("modelDevice not implemented for PubSub");
   }
 

@@ -173,6 +173,7 @@ public class Registrar {
   private SiteModel siteModel;
   private boolean queryOnly;
   private boolean strictWarnings;
+  private boolean doNotUpdate;
 
   /**
    * Main entry point for registrar.
@@ -277,21 +278,26 @@ public class Registrar {
   @CommandLineOption(short_form = "-d", description = "Delete (known) devices")
   private void setDeleteDevices() {
     checkNotNull(projectId, "delete devices specified with no target project");
-    this.deleteDevices = true;
-    this.updateCloudIoT = true;
+    deleteDevices = true;
+    updateCloudIoT = true;
   }
 
   @CommandLineOption(short_form = "-i", description = "Instantiate extra (unknown) devices")
   private void setInstantiateExtras() {
-    this.instantiateExtras = true;
-    this.updateCloudIoT = true;
+    instantiateExtras = true;
+    updateCloudIoT = true;
   }
 
   @CommandLineOption(short_form = "-x", description = "Expunge (unknown) devices")
   private void setExpungeDevices() {
     checkNotNull(projectId, "expunge devices specified with no target project");
-    this.expungeDevices = true;
-    this.updateCloudIoT = true;
+    expungeDevices = true;
+    updateCloudIoT = true;
+  }
+
+  @CommandLineOption(short_form = "-z", description = "Do not update existing devices")
+  private void setDoNotUpdate() {
+    doNotUpdate = true;
   }
 
   @CommandLineOption(short_form = "-e", arg_name = "suffix", description = "Set registry suffix")
@@ -787,6 +793,11 @@ public class Registrar {
       System.err.println("Skipping active device " + localDevice.getDeviceId());
       return false;
     }
+
+    if (doNotUpdate && cloudModels.containsKey(localName)) {
+      return false;
+    }
+
     Instant start = Instant.now();
     int count = processedDeviceCount.incrementAndGet();
     boolean created = false;
