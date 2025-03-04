@@ -76,7 +76,7 @@ class NmapBannerScan(discovery.DiscoveryController):
           family=self.family,
           addr=host.ip,
           refs={
-              f"{p.port_number}": {"aux": dataclasses.asdict(p)} for p in host.ports
+              f"{p.port_number}": {"adjunct": dataclasses.asdict(p)} for p in host.ports
           },
       )
       self.publish(event)
