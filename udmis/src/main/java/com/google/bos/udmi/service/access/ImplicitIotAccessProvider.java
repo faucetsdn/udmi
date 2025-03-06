@@ -303,7 +303,8 @@ public class ImplicitIotAccessProvider extends IotAccessBase {
   @Override
   public CloudModel listDevices(String registryId, Consumer<String> progress) {
     Map<String, String> entries = registryDevicesRef(registryId).entries();
-    ifNotNullThen(progress, p -> p.accept(format("Fetched %d devices.", entries.size())));
+    ifNotNullThen(progress,
+        p -> p.accept(format("Fetched %d devices from registry %s", entries.size(), registryId)));
     CloudModel cloudModel = new CloudModel();
     cloudModel.device_ids = entries.keySet().stream().collect(
         Collectors.toMap(id -> id, id -> fetchDevice(registryId, id)));

@@ -422,7 +422,7 @@ public class Registrar {
     if (workingDevices == null) {
       return;
     }
-    workingDevices.values().forEach(LocalDevice::writeErrors);
+    ifNotTrueThen(doNotUpdate, () -> workingDevices.values().forEach(LocalDevice::writeErrors));
     workingDevices.values().forEach(device -> {
       getErrorKeyMap(errorSummary, ExceptionCategory.status.toString())
           .put(device.getDeviceId(), device.getStatus().toString());
