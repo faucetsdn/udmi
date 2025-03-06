@@ -38,8 +38,8 @@ import static com.google.udmi.util.JsonUtil.toObject;
 import static java.lang.String.format;
 import static java.util.Objects.requireNonNull;
 import static java.util.Optional.ofNullable;
-import static udmi.schema.CloudModel.Operation.PREVIEW;
-import static udmi.schema.CloudModel.Operation.READ;
+import static udmi.schema.CloudModel.ModelOperation.PREVIEW;
+import static udmi.schema.CloudModel.ModelOperation.READ;
 import static udmi.schema.CloudModel.Resource_type.REGISTRY;
 import static udmi.schema.Envelope.SubFolder.UPDATE;
 import static udmi.schema.IotAccess.IotProvider.IMPLICIT;
@@ -59,7 +59,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.stream.Collectors;
 import udmi.schema.CloudModel;
-import udmi.schema.CloudModel.Operation;
+import udmi.schema.CloudModel.ModelOperation;
 import udmi.schema.EndpointConfiguration;
 import udmi.schema.Entry;
 import udmi.schema.Envelope;
@@ -323,7 +323,7 @@ public class ReflectProcessor extends ProcessorBase {
 
   private ModelUpdate asModelUpdate(CloudModel request) {
     ModelUpdate modelUpdate = new ModelUpdate();
-    modelUpdate.cloud = request;
+    modelUpdate.operation = request.operation;
     return modelUpdate;
   }
 
@@ -342,7 +342,7 @@ public class ReflectProcessor extends ProcessorBase {
 
   private CloudModel reflectProcess(Envelope attributes, Object payload) {
     CloudModel reply = new CloudModel();
-    reply.operation = Operation.REPLY;
+    reply.operation = ModelOperation.REPLY;
     if (payload == null) {
       return reply;
     }

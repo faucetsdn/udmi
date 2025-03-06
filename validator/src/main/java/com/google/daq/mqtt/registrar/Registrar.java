@@ -102,7 +102,7 @@ import org.apache.commons.io.FileUtils;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.VisibleForTesting;
 import udmi.schema.CloudModel;
-import udmi.schema.CloudModel.Operation;
+import udmi.schema.CloudModel.ModelOperation;
 import udmi.schema.CloudModel.Resource_type;
 import udmi.schema.Credential;
 import udmi.schema.Envelope.SubFolder;
@@ -348,7 +348,7 @@ public class Registrar {
 
   private void processSiteMetadata() {
     ifTrueThen(updateCloudIoT,
-        () -> cloudIotManager.updateRegistry(getSiteMetadata(), Operation.UPDATE));
+        () -> cloudIotManager.updateRegistry(getSiteMetadata(), ModelOperation.UPDATE));
   }
 
   private SiteMetadata getSiteMetadata() {
@@ -755,7 +755,7 @@ public class Registrar {
    */
   private void unbindDevicesFromGateways(Set<String> allDevices, Set<String> boundGateways) {
     boundGateways.forEach(gatewayId -> {
-      synchronized (Operation.UNBIND) {
+      synchronized (ModelOperation.UNBIND) {
         Map<String, CloudModel> boundDevices = cloudIotManager.fetchDevice(gatewayId).device_ids;
         Set<String> toUnbind = new HashSet<>(intersection(allDevices, boundDevices.keySet()));
         System.err.printf("Unbinding from gateway %s: %s%n", gatewayId, setOrSize(toUnbind));
@@ -930,9 +930,10 @@ public class Registrar {
         cloudIotManager.blockDevice(extraName, true);
         cloudModel.blocked = true;
       }
-      cloudModel.operation = ifTrueGet(cloudModel.blocked, Operation.BLOCK, Operation.ALLOW);
+      cloudModel.operation = ifTrueGet(cloudModel.blocked, ModelOperation.BLOCK,
+          ModelOperation.ALLOW);
     } catch (Exception e) {
-      cloudModel.operation = Operation.ERROR;
+      cloudModel.operation = ModelOperation.ERROR;
       cloudModel.detail = friendlyStackTrace(e);
       System.err.printf("Blocking device %s: %s%n", extraName, cloudModel.detail);
     }
@@ -1264,7 +1265,7 @@ public class Registrar {
       return;
     }
 
-    cloudIotManager.updateRegistry(getSiteMetadata(), Operation.PREVIEW);
+    cloudIotManager.updateRegistry(getSiteMetadata(), ModelOperation.PREVIEW);
 
     try {
       AtomicInteger previewCount = new AtomicInteger();
@@ -1273,7 +1274,7 @@ public class Registrar {
         ifTrueThen(baseCount % 100 == 0,
             () -> System.err.printf("Sending preview for device %d/%d...%n", baseCount + 1,
                 localDevices.size()));
-        cloudIotManager.updateDevice(id, device.getSettings(), Operation.PREVIEW);
+        cloudIotManager.updateDevice(id, device.getSettings(), ModelOperation.PREVIEW);
       }));
       dynamicTerminate(localDevices.size());
       System.err.printf("Finished sending device preview for %d devices.%n", localDevices.size());

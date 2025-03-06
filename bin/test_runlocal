@@ -15,13 +15,13 @@ echo Captured $(wc -l out/message_capture.log) messages.
 systems=$(find out/registries/ -name \*update_model.json | xargs jq .system | fgrep -v null | wc -l) || true
 [[ $systems == 269 ]] || fail Expected 269 system operations, found $systems
 
-deletes=$(find out/registries/ -name \*update_model.json | xargs jq .cloud.operation | fgrep DELETE | wc -l) || true
+deletes=$(find out/registries/ -name \*update_model.json | xargs jq .operation | fgrep DELETE | wc -l) || true
 [[ $deletes == 1 ]] || fail Expected 1 delete operations, found $deletes
 
-binds=$(find out/registries/ -name \*update_model.json | xargs jq .cloud.operation | fgrep BIND | wc -l) || true
+binds=$(find out/registries/ -name \*update_model.json | xargs jq .operation | fgrep BIND | wc -l) || true
 [[ $binds == 3 ]] || fail Expected 3 bind operations, found $binds
 
-blocks=$(find out/registries/ -name \*update_model.json | xargs jq .cloud.operation | fgrep BLOCK | wc -l) || true
+blocks=$(find out/registries/ -name \*update_model.json | xargs jq .operation | fgrep BLOCK | wc -l) || true
 [[ $blocks == 1 ]] || fail Expected 1 block operations, found $blocks
 
 echo Done with successful runlocal validation.

@@ -17,7 +17,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
 import udmi.schema.CloudModel;
-import udmi.schema.CloudModel.Operation;
+import udmi.schema.CloudModel.ModelOperation;
 
 abstract class Summarizer {
 
@@ -77,14 +77,14 @@ abstract class Summarizer {
 
     private void correlateModels(LocalDevice localDevice, CloudModel cloudModel) {
       if (localDevice != null && cloudModel != null && localDevice.hasErrors()) {
-        cloudModel.operation = Operation.ERROR;
+        cloudModel.operation = ModelOperation.ERROR;
       }
     }
 
     private Map<String, String> extractDeviceRow(CloudModel cloudModel) {
       return ImmutableMap.of(
           NUM_ID_HEADER, ofNullable(cloudModel.num_id).orElse(UNKNOWN_NUM_ID),
-          STATUS_HEADER, ofNullable(cloudModel.operation).orElse(Operation.READ).toString(),
+          STATUS_HEADER, ofNullable(cloudModel.operation).orElse(ModelOperation.READ).toString(),
           ACTIVE_HEADER, JsonUtil.isoConvert(cloudModel.last_event_time),
           DETAIL_HEADER, ofNullable(cloudModel.detail).orElse(NO_DETAIL));
     }

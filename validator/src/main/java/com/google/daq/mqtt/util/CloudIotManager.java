@@ -30,7 +30,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import udmi.schema.CloudModel;
-import udmi.schema.CloudModel.Operation;
+import udmi.schema.CloudModel.ModelOperation;
 import udmi.schema.CloudModel.Resource_type;
 import udmi.schema.Credential;
 import udmi.schema.Credential.Key_format;
@@ -311,18 +311,19 @@ public class CloudIotManager {
     deviceMap.put(deviceId, newDevice);
   }
 
-  public void updateDevice(String deviceId, CloudDeviceSettings settings, Operation operation) {
+  public void updateDevice(String deviceId, CloudDeviceSettings settings,
+      ModelOperation operation) {
     updateDevice(deviceId, makeDevice(settings, null), operation);
   }
 
   public void updateDevice(String deviceId, CloudDeviceSettings settings, CloudModel oldDevice) {
-    updateDevice(deviceId, makeDevice(settings, oldDevice), Operation.UPDATE);
+    updateDevice(deviceId, makeDevice(settings, oldDevice), ModelOperation.UPDATE);
   }
 
   /**
    * Update a device using the given operation parameter.
    */
-  public void updateDevice(String deviceId, CloudModel device, Operation operation) {
+  public void updateDevice(String deviceId, CloudModel device, ModelOperation operation) {
     limitValueSizes(device.metadata);
     device.operation = operation;
     getIotProvider().updateDevice(deviceId, device);
@@ -440,7 +441,7 @@ public class CloudIotManager {
   /**
    * Update the cloud site metadata for the current registry.
    */
-  public void updateRegistry(SiteMetadata siteMetadata, Operation operation) {
+  public void updateRegistry(SiteMetadata siteMetadata, ModelOperation operation) {
     CloudModel registryModel = new CloudModel();
     registryModel.resource_type = Resource_type.REGISTRY;
     registryModel.operation = operation;
