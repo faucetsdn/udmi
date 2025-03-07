@@ -1066,8 +1066,10 @@ public class Registrar {
           .filter(LocalDevice::isProxied)
           .collect(groupingBy(LocalDevice::getGatewayId, Collectors.toSet()));
       AtomicInteger bindingCount = new AtomicInteger();
+      AtomicInteger opCount = new AtomicInteger();
       System.err.printf("Binding devices to gateways: %s%n", setOrSize(gatewayBindings.keySet()));
       gatewayBindings.forEach((gatewayId, proxiedDevices) -> {
+        opCount.addAndGet(1);
         parallelExecute(() -> {
           try {
             Set<String> proxyIds = proxiedDevices.stream().map(LocalDevice::getDeviceId)
@@ -1080,6 +1082,7 @@ public class Registrar {
             System.err.printf("Binding %s to %s (%d/%d)%n", setOrSize(toBind), gatewayId, count,
                 gatewayBindings.size());
             cloudIotManager.bindDevices(toBind, gatewayId, true);
+            opCount.addAndGet(toBind.size());
           } catch (Exception e) {
             proxiedDevices.forEach(localDevice ->
                 localDevice.captureError(ExceptionCategory.binding, e));
@@ -1087,8 +1090,8 @@ public class Registrar {
         });
       });
 
-      System.err.println("Waiting for device binding...");
-      dynamicTerminate(gatewayBindings.size() * 10); // TAP debugging delay
+      System.err.printf("Waiting for device binding of %s operations...%n", opCount);
+      dynamicTerminate(opCount.get());
 
       Duration between = Duration.between(start, Instant.now());
       double seconds = between.getSeconds() + between.getNano() / 1e9;

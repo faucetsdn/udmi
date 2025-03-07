@@ -439,6 +439,10 @@ public class ClearBladeIotAccessProvider extends IotAccessBase {
       Map<String, CloudModel> responseMap =
           response.getDevicesList().stream().map(ClearBladeIotAccessProvider::convertPartial)
               .collect(toMap(Entry::getKey, Entry::getValue));
+      List<String> exists = responseMap.keySet().stream().filter(collect::containsKey).toList();
+      ifNotTrueThen(exists.isEmpty(), () -> ifNotNullThen(progress,
+          p -> p.accept("Found duplicate device entries: " + exists)));
+
       collect.putAll(responseMap);
       pageToken = response.getNextPageToken();
       queryCount++;
@@ -554,9 +558,9 @@ public class ClearBladeIotAccessProvider extends IotAccessBase {
         boundDevices.entrySet().stream().filter(this::isGateway).collect(Collectors.toSet());
     AtomicInteger count = new AtomicInteger();
     gateways.forEach(entry -> {
-      augmentGatewayModel(registryId, entry, proxyDeviceGateways, progress);
-      progress.accept(format("Augmented gateway %s (%d/%d)",
-          entry.getKey(), count.incrementAndGet(), gateways.size()));
+      int added = augmentGatewayModel(registryId, entry, proxyDeviceGateways, progress);
+      progress.accept(format("Augmented gateway %s (%d/%d) with %d entries",
+          entry.getKey(), count.incrementAndGet(), gateways.size(), added));
     });
     progress.accept(format("Bound to gateways: %s", setOrSize(proxyDeviceGateways.keySet())));
     boundDevices.entrySet()
@@ -575,12 +579,13 @@ public class ClearBladeIotAccessProvider extends IotAccessBase {
     });
   }
 
-  private void augmentGatewayModel(String registryId, Entry<String, CloudModel> model,
+  private int augmentGatewayModel(String registryId, Entry<String, CloudModel> model,
       HashMap<String, String> proxyDeviceGateways, Consumer<String> progress) {
     String gatewayId = model.getKey();
     CloudModel gatewayModel = listRegistryDevices(registryId, gatewayId, progress);
     model.getValue().gateway = gatewayModel.gateway;
     gatewayModel.gateway.proxy_ids.forEach(proxyId -> proxyDeviceGateways.put(proxyId, gatewayId));
+    return gatewayModel.gateway.proxy_ids.size();
   }
 
   private GatewayModel makeGatewayModel(HashMap<String, CloudModel> boundDevices) {
