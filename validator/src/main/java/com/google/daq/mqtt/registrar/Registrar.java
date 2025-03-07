@@ -1082,6 +1082,7 @@ public class Registrar {
             System.err.printf("Binding %s to %s (%d/%d)%n", setOrSize(toBind), gatewayId, count,
                 gatewayBindings.size());
             cloudIotManager.bindDevices(toBind, gatewayId, true);
+            // TODO: This doesn't work because it executes after the terminate call starts.
             opCount.addAndGet(toBind.size());
           } catch (Exception e) {
             proxiedDevices.forEach(localDevice ->
@@ -1091,6 +1092,7 @@ public class Registrar {
       });
 
       System.err.printf("Waiting for device binding of %s operations...%n", opCount);
+      // TODO: Convert this to use the dynamic mechanism.
       dynamicTerminate(opCount.get());
 
       Duration between = Duration.between(start, Instant.now());
