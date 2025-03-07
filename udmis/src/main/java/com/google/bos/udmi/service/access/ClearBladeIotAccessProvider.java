@@ -13,6 +13,7 @@ import static com.google.udmi.util.GeneralUtils.ifNotTrueThen;
 import static com.google.udmi.util.GeneralUtils.ifTrueGet;
 import static com.google.udmi.util.GeneralUtils.ifTrueThen;
 import static com.google.udmi.util.GeneralUtils.isTrue;
+import static com.google.udmi.util.GeneralUtils.setOrSize;
 import static com.google.udmi.util.GeneralUtils.writeString;
 import static com.google.udmi.util.JsonUtil.getDate;
 import static com.google.udmi.util.JsonUtil.writeFile;
@@ -262,8 +263,7 @@ public class ClearBladeIotAccessProvider extends IotAccessBase {
       Consumer<String> progress) {
     CloudModel cloudModel = listRegistryDevices(registryId, gatewayId, progress);
     List<String> proxyIds = cloudModel.gateway.proxy_ids;
-    progress.accept(
-        format("Devices bound to gateway %s (%s): %s", gatewayId, proxyIds.size(), proxyIds));
+    progress.accept(format("Found %d devices bound to gateway %s.", proxyIds.size(), gatewayId));
   }
 
   private static Set<String> getDeviceIds(GatewayModel gateway) {
@@ -452,9 +452,16 @@ public class ClearBladeIotAccessProvider extends IotAccessBase {
   private static String getProgressMessage(HashMap<String, CloudModel> collect,
       GatewayListOptions gatewayListOptions) {
     if (gatewayListOptions != null) {
-
+      String gatewayId = gatewayListOptions.getAssociationsGatewayId();
+      if (gatewayId != null) {
+        return format("Fetched %d devices bound to gateway %s", collect.size(), gatewayId);
+      }
+      String deviceId = gatewayListOptions.getAssociationsDeviceId();
+      if (deviceId != null) {
+        return format("Fetched %s gateways bound to device %s", collect.size(), deviceId);
+      }
     }
-    return format("Fetched %d devices... %s", collect.size(), gatewayListOptions);
+    return format("Fetched %d devices...", collect.size());
   }
 
   private CloudModel findDevicesForGateway(String registryId, Device device) {
@@ -551,7 +558,7 @@ public class ClearBladeIotAccessProvider extends IotAccessBase {
       progress.accept(format("Augmented gateway %s (%d/%d)",
           entry.getKey(), count.incrementAndGet(), gateways.size()));
     });
-    progress.accept(format("Found gateways: %s", proxyDeviceGateways.keySet()));
+    progress.accept(format("Bound to gateways: %s", setOrSize(proxyDeviceGateways.keySet())));
     boundDevices.entrySet()
         .forEach(entry -> augmentProxiedModel(entry, proxyDeviceGateways));
     return boundDevices;
