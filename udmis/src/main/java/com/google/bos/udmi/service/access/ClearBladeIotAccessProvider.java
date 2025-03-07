@@ -678,7 +678,7 @@ public class ClearBladeIotAccessProvider extends IotAccessBase {
         CloudModel gatewaysForDevice = findGatewaysForDevice(registryId, device);
         if (ReflectProcessor.isLegacyRequest(request)) {
           warn("Handling legacy bound delete...");
-          return findUnbindAndDelete(registryId, device, gatewaysForDevice);
+          return findUnbindAndDelete(registryId, device, gatewaysForDevice, progress);
         }
         return gatewaysForDevice;
       } else if (stackTrace.contains(HAD_BOUND_DEVICES_MARKER)) {
@@ -690,11 +690,12 @@ public class ClearBladeIotAccessProvider extends IotAccessBase {
     }
   }
 
-  private CloudModel findUnbindAndDelete(String registryId, Device device, CloudModel request) {
+  private CloudModel findUnbindAndDelete(String registryId, Device device, CloudModel request,
+      Consumer<String> progress) {
     String gatewayId = request.gateway.gateway_id;
     String deviceId = device.toBuilder().getId();
     unbindDevice(registryId, gatewayId, deviceId);
-    unbindAndDeleteCore(registryId, device, null, null);
+    unbindAndDeleteCore(registryId, device, null, progress);
     CloudModel cloudModel = new CloudModel();
     cloudModel.operation = DELETE;
     return cloudModel;
@@ -738,9 +739,10 @@ public class ClearBladeIotAccessProvider extends IotAccessBase {
             gatewayIds.size())));
     gatewayIds.forEach(gatewayId -> {
       deviceIds.forEach(deviceId -> {
-        ifTrueThen(opCount.incrementAndGet() % OP_PROGRESS_BATCH_SIZE == 0,
-            () -> ifNotNullThen(progress,
-                p -> p.accept(format("%s %d devices...", opCode, opCount.get()))));
+        // ifTrueThen(opCount.incrementAndGet() % OP_PROGRESS_BATCH_SIZE == 0,
+        //     () -> ifNotNullThen(progress,
+        //         p -> p.accept(format("%s %d devices...", opCode, opCount.get()))));
+        ifNotNullThen(progress, p -> p.accept(format("%s %s from/to %s", opCode, deviceId, gatewayId)));
         ifTrueThen(toBind,
             () -> bindDevice(registryId, gatewayId, deviceId),
             () -> unbindDevice(registryId, gatewayId, deviceId));

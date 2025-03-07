@@ -29,6 +29,7 @@ import static com.google.udmi.util.GeneralUtils.ifNullThen;
 import static com.google.udmi.util.GeneralUtils.ifTrueGet;
 import static com.google.udmi.util.GeneralUtils.ifTrueThen;
 import static com.google.udmi.util.GeneralUtils.isTrue;
+import static com.google.udmi.util.GeneralUtils.setOrSize;
 import static com.google.udmi.util.GeneralUtils.writeString;
 import static com.google.udmi.util.JsonUtil.JSON_SUFFIX;
 import static com.google.udmi.util.JsonUtil.OBJECT_MAPPER;
@@ -737,7 +738,8 @@ public class Registrar {
       CloudModel cloudModel = boundException.getCloudModel();
       if (cloudModel.resource_type == Resource_type.GATEWAY) {
         Set<String> proxyIds = new HashSet<>(cloudModel.gateway.proxy_ids);
-        System.err.printf("Retrying delete %s with bound devices: %s%n", deviceId, proxyIds);
+        System.err.printf("Retrying delete %s with bound devices: %s%n", deviceId,
+            setOrSize(proxyIds));
         cloudIotManager.deleteDevice(deviceId, proxyIds);
       } else if (cloudModel.resource_type == Resource_type.DEVICE) {
         Set<String> gatewayIds = ImmutableSet.of(cloudModel.gateway.gateway_id);
@@ -765,12 +767,12 @@ public class Registrar {
       synchronized (Operation.UNBIND) {
         Map<String, CloudModel> boundDevices = cloudIotManager.fetchDevice(gatewayId).device_ids;
         Set<String> toUnbind = new HashSet<>(intersection(allDevices, boundDevices.keySet()));
-        System.err.printf("Unbinding from gateway %s: %s%n", gatewayId, GeneralUtils.setOrSize(toUnbind));
+        System.err.printf("Unbinding from gateway %s: %s%n", gatewayId, setOrSize(toUnbind));
         boolean multiple = toUnbind.size() > GeneralUtils.SET_SIZE_THRESHOLD;
         while (!toUnbind.isEmpty()) {
           Set<String> limitedSet = limitSetSize(toUnbind, GeneralUtils.SET_SIZE_THRESHOLD);
           ifTrueThen(multiple, () -> System.err.printf("Unbinding subset from %s: %s%n", gatewayId,
-              GeneralUtils.setOrSize(limitedSet)));
+              setOrSize(limitedSet)));
           cloudIotManager.bindDevices(limitedSet, gatewayId, false);
           toUnbind.removeAll(limitedSet);
         }
@@ -1064,7 +1066,7 @@ public class Registrar {
           .filter(LocalDevice::isProxied)
           .collect(groupingBy(LocalDevice::getGatewayId, Collectors.toSet()));
       AtomicInteger bindingCount = new AtomicInteger();
-      System.err.printf("Binding devices to gateways: %s%n", GeneralUtils.setOrSize(gatewayBindings.keySet()));
+      System.err.printf("Binding devices to gateways: %s%n", setOrSize(gatewayBindings.keySet()));
       gatewayBindings.forEach((gatewayId, proxiedDevices) -> {
         parallelExecute(() -> {
           try {
@@ -1072,10 +1074,10 @@ public class Registrar {
                 .collect(Collectors.toSet());
             Set<String> boundDevices = ofNullable(cloudIotManager.fetchBoundDevices(gatewayId))
                 .orElse(ImmutableSet.of());
-            System.err.printf("Already bound to %s: %s%n", gatewayId, GeneralUtils.setOrSize(boundDevices));
+            System.err.printf("Already bound to %s: %s%n", gatewayId, setOrSize(boundDevices));
             SetView<String> toBind = difference(proxyIds, boundDevices);
             int count = bindingCount.incrementAndGet();
-            System.err.printf("Binding %s to %s (%d/%d)%n", GeneralUtils.setOrSize(toBind), gatewayId, count,
+            System.err.printf("Binding %s to %s (%d/%d)%n", setOrSize(toBind), gatewayId, count,
                 gatewayBindings.size());
             cloudIotManager.bindDevices(toBind, gatewayId, true);
           } catch (Exception e) {
@@ -1086,7 +1088,7 @@ public class Registrar {
       });
 
       System.err.println("Waiting for device binding...");
-      dynamicTerminate(gatewayBindings.size());
+      dynamicTerminate(gatewayBindings.size() * 10); // TAP debugging delay
 
       Duration between = Duration.between(start, Instant.now());
       double seconds = between.getSeconds() + between.getNano() / 1e9;
