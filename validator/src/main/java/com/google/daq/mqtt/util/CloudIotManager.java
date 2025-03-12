@@ -462,4 +462,8 @@ public class CloudIotManager {
   public boolean canUpdateCloud() {
     return iotProvider != null;
   }
+
+  public boolean stillActive() {
+    return getIotProvider().stillActive();
+  }
 }

@@ -170,6 +170,12 @@ public class IotReflectorClient implements IotProvider {
   }
 
   @Override
+  public boolean stillActive() {
+    int pollSeconds = QuerySpeed.SHORT.seconds();
+    return messageClient.getLastProgressEvent().plusSeconds(pollSeconds).isAfter(Instant.now());
+  }
+
+  @Override
   public void bindGatewayDevices(String gatewayId, Set<String> deviceIds, boolean shouldBind) {
     CloudModel device = new CloudModel();
     device.operation = shouldBind ? BIND : UNBIND;

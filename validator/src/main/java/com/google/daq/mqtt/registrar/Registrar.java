@@ -61,6 +61,7 @@ import com.google.daq.mqtt.registrar.LocalDevice.DeviceKind;
 import com.google.daq.mqtt.util.CloudDeviceSettings;
 import com.google.daq.mqtt.util.CloudIotManager;
 import com.google.daq.mqtt.util.DeviceGatewayBoundException;
+import com.google.daq.mqtt.util.MessagePublisher.QuerySpeed;
 import com.google.daq.mqtt.util.PubSubPusher;
 import com.google.udmi.util.CommandLineOption;
 import com.google.udmi.util.CommandLineProcessor;
@@ -1066,10 +1067,8 @@ public class Registrar {
           .filter(LocalDevice::isProxied)
           .collect(groupingBy(LocalDevice::getGatewayId, Collectors.toSet()));
       AtomicInteger bindingCount = new AtomicInteger();
-      AtomicInteger opCount = new AtomicInteger();
       System.err.printf("Binding devices to gateways: %s%n", setOrSize(gatewayBindings.keySet()));
       gatewayBindings.forEach((gatewayId, proxiedDevices) -> {
-        opCount.addAndGet(1);
         parallelExecute(() -> {
           try {
             Set<String> proxyIds = proxiedDevices.stream().map(LocalDevice::getDeviceId)
@@ -1082,8 +1081,6 @@ public class Registrar {
             System.err.printf("Binding %s to %s (%d/%d)%n", setOrSize(toBind), gatewayId, count,
                 gatewayBindings.size());
             cloudIotManager.bindDevices(toBind, gatewayId, true);
-            // TODO: This doesn't work because it executes after the terminate call starts.
-            opCount.addAndGet(toBind.size());
           } catch (Exception e) {
             proxiedDevices.forEach(localDevice ->
                 localDevice.captureError(ExceptionCategory.binding, e));
@@ -1091,15 +1088,34 @@ public class Registrar {
         });
       });
 
-      System.err.printf("Waiting for device binding of %s operations...%n", opCount);
-      // TODO: Convert this to use the dynamic mechanism.
-      dynamicTerminate(opCount.get());
+      System.err.printf("Waiting for device binding...%n");
+      dynamicTerminate();
 
       Duration between = Duration.between(start, Instant.now());
       double seconds = between.getSeconds() + between.getNano() / 1e9;
       System.err.printf("Finished binding gateways in %.03f%n", seconds);
     } catch (Exception e) {
       throw new RuntimeException("While binding devices to gateways", e);
+    }
+  }
+
+  private synchronized void dynamicTerminate() throws InterruptedException {
+    try {
+      if (executor == null) {
+        return;
+      }
+      executor.shutdown();
+      System.err.printf("Waiting for tasks to complete...%n");
+      while (!executor.awaitTermination(QuerySpeed.SHORT.seconds(), TimeUnit.SECONDS)
+        && cloudIotManager.stillActive()) {
+        System.err.println("Still waiting...");
+      }
+      if (!executor.isTerminated()) {
+        throw new RuntimeException("Incomplete executor termination.");
+      }
+    } finally {
+      executor = null;
+      executing = null;
     }
   }
 
