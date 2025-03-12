@@ -440,13 +440,13 @@ public class ClearBladeIotAccessProvider extends IotAccessBase {
           response.getDevicesList().stream().map(ClearBladeIotAccessProvider::convertPartial)
               .collect(toMap(Entry::getKey, Entry::getValue));
       List<String> exists = responseMap.keySet().stream().filter(collect::containsKey).toList();
-      ifNotTrueThen(exists.isEmpty(), () -> ifNotNullThen(progress,
-          p -> p.accept("Found duplicate device entries: " + exists)));
+      ifNotTrueThen(exists.isEmpty(),
+          () -> progress.accept("Found duplicate device entries: " + exists));
 
       collect.putAll(responseMap);
       pageToken = response.getNextPageToken();
       queryCount++;
-      ifNotNullThen(progress, p -> p.accept(getProgressMessage(collect, gatewayListOptions)));
+      progress.accept(getProgressMessage(collect, gatewayListOptions));
       debug(format("fetchDevices %s #%d found %d total %d more %s", deviceRegistryId,
           queryCount, responseMap.size(), collect.size(), pageToken != null));
     } while (pageToken != null);
@@ -596,10 +596,11 @@ public class ClearBladeIotAccessProvider extends IotAccessBase {
 
   @Override
   public CloudModel modelDevice(String registryId, String deviceId, CloudModel cloudModel,
-      Consumer<String> progress) {
+      Consumer<String> maybeProgress) {
     String devicePath = getDeviceName(registryId, deviceId);
     Operation operation = cloudModel.operation;
     Resource_type type = ofNullable(cloudModel.resource_type).orElse(Resource_type.DEVICE);
+    Consumer<String> progress = ofNullable(maybeProgress).orElse(this::bitBucket);
     checkState(type == DEVICE || type == GATEWAY, "unexpected resource type " + type);
     try {
       Device device = convert(cloudModel, deviceId);
@@ -615,6 +616,10 @@ public class ClearBladeIotAccessProvider extends IotAccessBase {
     } catch (Exception e) {
       throw new RuntimeException("While " + operation + "ing " + devicePath, e);
     }
+  }
+
+  private void bitBucket(String s) {
+    // Do nothing, just drop the messages on the floor.
   }
 
   private CloudModel getReply(String registryId, String deviceId, CloudModel request,
@@ -739,22 +744,18 @@ public class ClearBladeIotAccessProvider extends IotAccessBase {
     String opCode = toBind ? "Binding" : "Unbinding";
     info("%s %s: gateways %s devices %s", opCode, registryId, gatewayIds, deviceIds);
     AtomicInteger opCount = new AtomicInteger(0);
-    ifNotNullThen(progress,
-        p -> p.accept(format("%s %d devices on %d gateways", opCode, deviceIds.size(),
-            gatewayIds.size())));
+    progress.accept(format("%s %d devices on %d gateways", opCode, deviceIds.size(),
+        gatewayIds.size()));
     gatewayIds.forEach(gatewayId -> {
       deviceIds.forEach(deviceId -> {
-        // ifTrueThen(opCount.incrementAndGet() % OP_PROGRESS_BATCH_SIZE == 0,
-        //     () -> ifNotNullThen(progress,
-        //         p -> p.accept(format("%s %d devices...", opCode, opCount.get()))));
-        ifNotNullThen(progress, p -> p.accept(format("%s %s from/to %s", opCode, deviceId, gatewayId)));
+        progress.accept(format("%s %s from/to %s", opCode, deviceId, gatewayId));
         ifTrueThen(toBind,
             () -> bindDevice(registryId, gatewayId, deviceId),
             () -> unbindDevice(registryId, gatewayId, deviceId));
       });
     });
-    ifTrueThen(opCount.get() > 0, () -> ifNotNullThen(progress, p -> p.accept(
-        format("Completed binding %d devices.", opCount.get()))));
+    ifTrueThen(opCount.get() > 0, () -> progress.accept(
+        format("Completed binding %d devices.", opCount.get())));
   }
 
   private void unbindDevice(String registryId, String gatewayId, String proxyId) {
@@ -923,7 +924,8 @@ public class ClearBladeIotAccessProvider extends IotAccessBase {
   }
 
   @Override
-  public CloudModel listDevices(String registryId, Consumer<String> progress) {
+  public CloudModel listDevices(String registryId, Consumer<String> maybeProgress) {
+    Consumer<String> progress = ofNullable(maybeProgress).orElse(this::bitBucket);
     return listRegistryDevices(registryId, null, progress);
   }
 
