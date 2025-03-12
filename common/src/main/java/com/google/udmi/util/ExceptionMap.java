@@ -91,6 +91,10 @@ public class ExceptionMap extends RuntimeException {
     return exceptions.isEmpty();
   }
 
+  public boolean hasCategory(ExceptionCategory category) {
+    return exceptions.containsKey(category);
+  }
+
   /**
    * Throw an exception if the map is not empty, otherwise do nothing.
    */
