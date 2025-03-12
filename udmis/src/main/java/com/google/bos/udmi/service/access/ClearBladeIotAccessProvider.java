@@ -261,6 +261,7 @@ public class ClearBladeIotAccessProvider extends IotAccessBase {
 
   private void checkBoundState(String registryId, String gatewayId, Set<String> deviceIds,
       Consumer<String> progress) {
+    requireNonNull(progress, "checkBoundState has null progress");
     CloudModel cloudModel = listRegistryDevices(registryId, gatewayId, progress);
     List<String> proxyIds = cloudModel.gateway.proxy_ids;
     progress.accept(format("Found %d devices bound to gateway %s.", proxyIds.size(), gatewayId));
@@ -422,6 +423,7 @@ public class ClearBladeIotAccessProvider extends IotAccessBase {
 
   private HashMap<String, CloudModel> fetchDevices(String deviceRegistryId,
       Consumer<String> progress, GatewayListOptions gatewayListOptions) {
+    requireNonNull(progress, "fetchDevices has null progress");
     String location = getRegistryLocation(deviceRegistryId);
     String registryFullName =
         RegistryName.of(projectId, location, deviceRegistryId).getRegistryFullName();
@@ -553,6 +555,7 @@ public class ClearBladeIotAccessProvider extends IotAccessBase {
 
   private Map<String, CloudModel> augmentGatewayModels(String registryId,
       HashMap<String, CloudModel> boundDevices, Consumer<String> progress) {
+    requireNonNull(progress, "augmentGatewayModels has null progress");
     HashMap<String, String> proxyDeviceGateways = new HashMap<>();
     Set<Entry<String, CloudModel>> gateways =
         boundDevices.entrySet().stream().filter(this::isGateway).collect(Collectors.toSet());
@@ -741,6 +744,7 @@ public class ClearBladeIotAccessProvider extends IotAccessBase {
 
   private void bindDevicesGateways(String registryId, Set<String> gatewayIds,
       Set<String> deviceIds, boolean toBind, Consumer<String> progress) {
+    requireNonNull(progress, "bindDevicesGateways has null progress");
     String opCode = toBind ? "Binding" : "Unbinding";
     info("%s %s: gateways %s devices %s", opCode, registryId, gatewayIds, deviceIds);
     AtomicInteger opCount = new AtomicInteger(0);
