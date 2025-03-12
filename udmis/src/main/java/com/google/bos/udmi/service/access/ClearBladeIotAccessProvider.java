@@ -479,7 +479,7 @@ public class ClearBladeIotAccessProvider extends IotAccessBase {
 
   private CloudModel findGatewaysForDevice(String registryId, Device device) {
     String deviceId = requireNonNull(device.toBuilder().getId(), "unspecified device id");
-    Set<String> boundGateways = fetchBoundGateways(registryId, deviceId, null).keySet();
+    Set<String> boundGateways = fetchBoundGateways(registryId, deviceId, this::bitBucket).keySet();
     if (boundGateways.isEmpty()) {
       throw new RuntimeException("Was expecting at least one bound gateway!");
     }
