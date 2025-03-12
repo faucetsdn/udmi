@@ -834,6 +834,10 @@ class LocalDevice {
         () -> captureError(ExceptionCategory.metadata, new ValidationWarning(message)));
   }
 
+  public boolean hasCategory(ExceptionCategory category) {
+    return exceptionMap.hasCategory(category);
+  }
+
   public enum DeviceStatus {
     CLEAN,
     ERROR,
