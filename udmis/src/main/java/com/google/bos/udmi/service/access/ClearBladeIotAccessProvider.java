@@ -561,7 +561,8 @@ public class ClearBladeIotAccessProvider extends IotAccessBase {
         boundDevices.entrySet().stream().filter(this::isGateway).collect(Collectors.toSet());
     AtomicInteger count = new AtomicInteger();
     gateways.forEach(entry -> {
-      int added = augmentGatewayModel(registryId, entry, proxyDeviceGateways, progress);
+      // Send progress updates to bitBucket to suppress redundant log messages.
+      int added = augmentGatewayModel(registryId, entry, proxyDeviceGateways, this::bitBucket);
       progress.accept(format("Augmented gateway %s (%d/%d) with %d entries",
           entry.getKey(), count.incrementAndGet(), gateways.size(), added));
     });
