@@ -262,8 +262,7 @@ public class ClearBladeIotAccessProvider extends IotAccessBase {
     return new HashSet<>(gateway.proxy_ids);
   }
 
-  private void bindDevice(String registryId, String gatewayId, String deviceId,
-      Consumer<String> progress) {
+  private void bindDevice(String registryId, String gatewayId, String deviceId) {
     try {
       String location = getRegistryLocation(registryId);
       RegistryName parent = RegistryName.of(projectId, location, registryId);
@@ -279,7 +278,6 @@ public class ClearBladeIotAccessProvider extends IotAccessBase {
       } catch (Exception e) {
         if (friendlyStackTrace(e).contains(DUPLICATES_ERROR_MARKER)) {
           warn("Ignoring duplicate bound device error for " + gatewayId);
-          progress.accept("Ignoring duplicate bound device error");
         } else {
           throw e;
         }
@@ -753,7 +751,7 @@ public class ClearBladeIotAccessProvider extends IotAccessBase {
       deviceIds.forEach(deviceId -> {
         progress.accept(format("%s %s from/to %s", opCode, deviceId, gatewayId));
         ifTrueThen(toBind,
-            () -> bindDevice(registryId, gatewayId, deviceId, progress),
+            () -> bindDevice(registryId, gatewayId, deviceId),
             () -> unbindDevice(registryId, gatewayId, deviceId));
       });
     });
