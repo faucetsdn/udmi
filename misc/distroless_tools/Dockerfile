@@ -1,6 +1,7 @@
-FROM openjdk:17-jdk-slim AS build-env
+FROM gradle:jdk17 AS build-env
 COPY . /app/
 WORKDIR /app
+RUN cd validator && gradle wrapper
 RUN /app/validator/bin/build
 
 FROM gcr.io/distroless/java17-debian12
