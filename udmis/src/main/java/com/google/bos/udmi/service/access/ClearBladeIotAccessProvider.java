@@ -536,7 +536,8 @@ public class ClearBladeIotAccessProvider extends IotAccessBase {
       CloudModel cloudModel = new CloudModel();
       Consumer<String> progress = ofNullable(maybeProgress).orElse(this::bitBucket);
       GatewayListOptions options = ifNotNullGet(gatewayId, this::getBoundDevicesOptions);
-      HashMap<String, CloudModel> boundDevices = fetchDevices(registryId, progress, chattyProgress, options);
+      HashMap<String, CloudModel> boundDevices =
+          fetchDevices(registryId, progress, chattyProgress, options);
       debug(format("Fetched %d devices from %s gateway %s", boundDevices.size(), registryId,
           gatewayId));
       if (gatewayId != null) {
