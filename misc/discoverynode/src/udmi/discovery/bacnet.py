@@ -101,49 +101,51 @@ class GlobalBacnetDiscovery(discovery.DiscoveryController):
 
     ### Basic Properties
     ###################################################################
-    try:
-      object_name, vendor_name, firmware_version, model_name, serial_number = (
-          self.bacnet.readMultiple(
-              f"{device_address} device {device_id} objectName vendorName"
-              " firmwareRevision modelName serialNumber"
-          )
-      )
+    if self.config.depth in ["system", "device"]:
+      try:
+        object_name, vendor_name, firmware_version, model_name, serial_number = (
+            self.bacnet.readMultiple(
+                f"{device_address} device {device_id} objectName vendorName"
+                " firmwareRevision modelName serialNumber"
+            )
+        )
 
-      logging.info("object_name: %s vendor_name: %s firmware: %s model: %s serial: %s",  object_name, vendor_name, firmware_version, model_name, serial_number)
+        logging.info("object_name: %s vendor_name: %s firmware: %s model: %s serial: %s",  object_name, vendor_name, firmware_version, model_name, serial_number)
 
-      event.system.serial_no = serial_number
-      event.system.hardware.make = vendor_name
-      event.system.hardware.model = model_name
-  
-      event.system.ancillary["firmware"] = firmware_version
-      event.system.ancillary["name"] = object_name
+        event.system.serial_no = serial_number
+        event.system.hardware.make = vendor_name
+        event.system.hardware.model = model_name
+    
+        event.system.ancillary["firmware"] = firmware_version
+        event.system.ancillary["name"] = object_name
 
-    except (BAC0.core.io.IOExceptions.SegmentationNotSupported, Exception) as err:
-      logging.exception(f"error reading from {device_address}/{device_id}")
-      return event
+      except (BAC0.core.io.IOExceptions.SegmentationNotSupported, Exception) as err:
+        logging.exception(f"error reading from {device_address}/{device_id}")
+        return event
 
     ### Points
     ###################################################################
-    try:
-      device = BAC0.device(device_address, device_id, self.bacnet, poll=0)
+    if self.config.depth in ["refs", "system", "device"]:
+      try:
+        device = BAC0.device(device_address, device_id, self.bacnet, poll=0)
 
-      for point in device.points:
-        ref = DiscoveryPoint()
-        ref.name = point.properties.name
-        ref.description = point.properties.description
-        ref.ancillary["present_value"] = point.lastValue
-        ref.type = point.properties.type
-        if isinstance(point.properties.units_state, list): 
-          ref.possible_values = point.properties.units_state
-        elif isinstance(point.properties.units_state, str): 
-          ref.units = point.properties.units_state
-        point_id = BacnetObjectAcronyms[point.properties.type].value + ":" + point.properties.address
-        event.refs[point_id] = ref
-  
-    except Exception as err:
-      event.status = udmi.schema.discovery_event.Status("discovery.error", 500, str(err))
-      logging.exception(f"error reading from {device_address}/{device_id}")
-      return event
+        for point in device.points:
+          ref = DiscoveryPoint()
+          ref.name = point.properties.name
+          ref.description = point.properties.description
+          ref.ancillary["present_value"] = point.lastValue
+          ref.type = point.properties.type
+          if isinstance(point.properties.units_state, list): 
+            ref.possible_values = point.properties.units_state
+          elif isinstance(point.properties.units_state, str): 
+            ref.units = point.properties.units_state
+          point_id = BacnetObjectAcronyms[point.properties.type].value + ":" + point.properties.address
+          event.refs[point_id] = ref
+    
+      except Exception as err:
+        event.status = udmi.schema.discovery_event.Status("discovery.error", 500, str(err))
+        logging.exception(f"error reading from {device_address}/{device_id}")
+        return event
     
     return event
   
