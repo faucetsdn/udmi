@@ -69,7 +69,6 @@ import com.google.udmi.util.Common;
 import com.google.udmi.util.ExceptionMap;
 import com.google.udmi.util.ExceptionMap.ErrorTree;
 import com.google.udmi.util.ExceptionMap.ExceptionCategory;
-import com.google.udmi.util.GeneralUtils;
 import com.google.udmi.util.JsonUtil;
 import com.google.udmi.util.SiteModel;
 import com.google.udmi.util.ValidationError;
@@ -139,6 +138,7 @@ public class Registrar {
   private static final String TOOL_NAME = "registrar";
   private static final long DELETE_FLUSH_DELAY_MS = 10 * SEC_TO_MS;
   public static final String REGISTRAR_TOOL_NAME = "registrar";
+  private static final int UNBIND_SET_SIZE = 1000;
   private boolean autoAltRegistry;
   private final Map<String, JsonSchema> schemas = new HashMap<>();
   private final String generation = JsonUtil.isoConvert();
@@ -769,9 +769,9 @@ public class Registrar {
         Map<String, CloudModel> boundDevices = cloudIotManager.fetchDevice(gatewayId).device_ids;
         Set<String> toUnbind = new HashSet<>(intersection(allDevices, boundDevices.keySet()));
         System.err.printf("Unbinding from gateway %s: %s%n", gatewayId, setOrSize(toUnbind));
-        boolean multiple = toUnbind.size() > GeneralUtils.SET_SIZE_THRESHOLD;
+        boolean multiple = toUnbind.size() > UNBIND_SET_SIZE;
         while (!toUnbind.isEmpty()) {
-          Set<String> limitedSet = limitSetSize(toUnbind, GeneralUtils.SET_SIZE_THRESHOLD);
+          Set<String> limitedSet = limitSetSize(toUnbind, UNBIND_SET_SIZE);
           ifTrueThen(multiple, () -> System.err.printf("Unbinding subset from %s: %s%n", gatewayId,
               setOrSize(limitedSet)));
           cloudIotManager.bindDevices(limitedSet, gatewayId, false);
