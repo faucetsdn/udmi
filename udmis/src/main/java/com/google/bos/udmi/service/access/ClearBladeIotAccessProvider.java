@@ -137,7 +137,7 @@ public class ClearBladeIotAccessProvider extends IotAccessBase {
   private static final String TOPIC_NAME_FORMAT = "projects/%s/topics/%s";
   private static final CharSequence HAD_BOUND_DEVICES_MARKER = " it has associated devices.";
   private static final CharSequence BOUND_TO_GATEWAY_MARKER = " it's associated with ";
-  private static final int OP_PROGRESS_BATCH_SIZE = 10;
+  private static final CharSequence DUPLICATES_ERROR_MARKER = " duplicates in bound_devices";
   private final String projectId;
   private final DeviceManagerInterface deviceManager;
 
@@ -252,39 +252,40 @@ public class ClearBladeIotAccessProvider extends IotAccessBase {
         ? cloudModel.device_ids.keySet() : getDeviceIds(cloudModel.gateway);
     boolean toBind = cloudModel.operation == BIND;
     bindDevicesGateways(registryId, ImmutableSet.of(gatewayId), deviceIds, toBind, progress);
-    checkBoundState(registryId, gatewayId, deviceIds, progress);
     CloudModel reply = new CloudModel();
     reply.num_id = EMPTY_RETURN_RECEIPT;
     reply.operation = cloudModel.operation;
     return reply;
   }
 
-  private void checkBoundState(String registryId, String gatewayId, Set<String> deviceIds,
-      Consumer<String> progress) {
-    requireNonNull(progress, "checkBoundState has null progress");
-    CloudModel cloudModel = listRegistryDevices(registryId, gatewayId, progress);
-    List<String> proxyIds = cloudModel.gateway.proxy_ids;
-    progress.accept(format("Found %d devices bound to gateway %s.", proxyIds.size(), gatewayId));
-  }
-
   private static Set<String> getDeviceIds(GatewayModel gateway) {
     return new HashSet<>(gateway.proxy_ids);
   }
 
-  private void bindDevice(String registryId, String gatewayId, String id) {
+  private void bindDevice(String registryId, String gatewayId, String deviceId,
+      Consumer<String> progress) {
     try {
       String location = getRegistryLocation(registryId);
       RegistryName parent = RegistryName.of(projectId, location, registryId);
       BindDeviceToGatewayRequest request =
           BindDeviceToGatewayRequest.Builder.newBuilder()
               .setParent(parent.getRegistryFullName())
-              .setDevice(id)
+              .setDevice(deviceId)
               .setGateway(gatewayId)
               .build();
-      requireNonNull(deviceManager.bindDeviceToGateway(request),
-          "binding device to gateway");
+      try {
+        requireNonNull(deviceManager.bindDeviceToGateway(request),
+            "binding device to gateway");
+      } catch (Exception e) {
+        if (friendlyStackTrace(e).contains(DUPLICATES_ERROR_MARKER)) {
+          warn("Ignoring duplicate bound device error for " + gatewayId);
+          progress.accept("Ignoring duplicate bound device error");
+        } else {
+          throw e;
+        }
+      }
     } catch (Exception e) {
-      throw new RuntimeException(format("While binding %s to gateway %s", id, gatewayId), e);
+      throw new RuntimeException(format("While binding %s to gateway %s", deviceId, gatewayId), e);
     }
   }
 
@@ -752,7 +753,7 @@ public class ClearBladeIotAccessProvider extends IotAccessBase {
       deviceIds.forEach(deviceId -> {
         progress.accept(format("%s %s from/to %s", opCode, deviceId, gatewayId));
         ifTrueThen(toBind,
-            () -> bindDevice(registryId, gatewayId, deviceId),
+            () -> bindDevice(registryId, gatewayId, deviceId, progress),
             () -> unbindDevice(registryId, gatewayId, deviceId));
       });
     });
