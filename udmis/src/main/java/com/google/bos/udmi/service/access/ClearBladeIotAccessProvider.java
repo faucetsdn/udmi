@@ -536,9 +536,10 @@ public class ClearBladeIotAccessProvider extends IotAccessBase {
   }
 
   private CloudModel listRegistryDevices(String registryId, String gatewayId,
-      Consumer<String> progress) {
+      Consumer<String> maybeProgress) {
     try {
       CloudModel cloudModel = new CloudModel();
+      Consumer<String> progress = ofNullable(maybeProgress).orElse(this::bitBucket);
       HashMap<String, CloudModel> boundDevices = fetchDevices(registryId, gatewayId, progress);
       debug(format("Fetched %d devices from %s gateway %s", boundDevices.size(), registryId,
           gatewayId));
@@ -929,8 +930,7 @@ public class ClearBladeIotAccessProvider extends IotAccessBase {
   }
 
   @Override
-  public CloudModel listDevices(String registryId, Consumer<String> maybeProgress) {
-    Consumer<String> progress = ofNullable(maybeProgress).orElse(this::bitBucket);
+  public CloudModel listDevices(String registryId, Consumer<String> progress) {
     return listRegistryDevices(registryId, null, progress);
   }
 
