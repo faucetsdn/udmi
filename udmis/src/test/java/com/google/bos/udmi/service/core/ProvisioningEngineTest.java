@@ -29,7 +29,7 @@ import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 import udmi.lib.ProtocolFamily;
 import udmi.schema.CloudModel;
-import udmi.schema.CloudModel.Operation;
+import udmi.schema.CloudModel.ModelOperation;
 import udmi.schema.CloudModel.Resource_type;
 import udmi.schema.DiscoveryEvents;
 import udmi.schema.Envelope;
@@ -131,11 +131,11 @@ public class ProvisioningEngineTest extends ProcessorTestBase {
     List<CloudModel> models = modelCaptor.getAllValues();
 
     assertEquals(DISCOVERED_DEVICE, devices.get(0), "created device id");
-    assertEquals(Operation.CREATE, models.get(0).operation, "operation mismatch");
+    assertEquals(ModelOperation.CREATE, models.get(0).operation, "operation mismatch");
     assertTrue(models.get(0).blocked, "device blocked");
 
     assertEquals(TEST_GATEWAY, devices.get(1), "scanning gateway id");
-    assertEquals(Operation.BIND, models.get(1).operation, "operation mismatch");
+    assertEquals(ModelOperation.BIND, models.get(1).operation, "operation mismatch");
     assertNotNull(models.get(1).device_ids.get(DISCOVERED_DEVICE), "binding device entry");
   }
 

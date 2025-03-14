@@ -21,8 +21,8 @@ import static java.lang.String.format;
 import static java.util.Objects.requireNonNull;
 import static java.util.Optional.ofNullable;
 import static java.util.function.Predicate.not;
-import static udmi.schema.CloudModel.Operation.DELETE;
-import static udmi.schema.CloudModel.Operation.READ;
+import static udmi.schema.CloudModel.ModelOperation.DELETE;
+import static udmi.schema.CloudModel.ModelOperation.READ;
 import static udmi.schema.CloudModel.Resource_type.DIRECT;
 import static udmi.schema.CloudModel.Resource_type.GATEWAY;
 
@@ -51,7 +51,7 @@ import java.util.concurrent.Future;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 import udmi.schema.CloudModel;
-import udmi.schema.CloudModel.Operation;
+import udmi.schema.CloudModel.ModelOperation;
 import udmi.schema.CloudModel.Resource_type;
 import udmi.schema.Credential;
 import udmi.schema.Credential.Key_format;
@@ -301,9 +301,9 @@ public class ImplicitIotAccessProvider extends IotAccessBase {
   }
 
   @Override
-  public CloudModel listDevices(String registryId, Consumer<Integer> progress) {
+  public CloudModel listDevices(String registryId, Consumer<String> progress) {
     Map<String, String> entries = registryDevicesRef(registryId).entries();
-    ifNotNullThen(progress, p -> p.accept(entries.size()));
+    ifNotNullThen(progress, p -> p.accept(format("Fetched %d devices.", entries.size())));
     CloudModel cloudModel = new CloudModel();
     cloudModel.device_ids = entries.keySet().stream().collect(
         Collectors.toMap(id -> id, id -> fetchDevice(registryId, id)));
@@ -326,8 +326,8 @@ public class ImplicitIotAccessProvider extends IotAccessBase {
 
   @Override
   public CloudModel modelDevice(String registryId, String deviceId, CloudModel cloudModel,
-      Consumer<Integer> progress) {
-    Operation operation = cloudModel.operation;
+      Consumer<String> progress) {
+    ModelOperation operation = cloudModel.operation;
     Resource_type type = ofNullable(cloudModel.resource_type).orElse(Resource_type.DIRECT);
     checkState(type == DIRECT || type == GATEWAY, "unexpected resource type " + type);
     try {
@@ -350,7 +350,7 @@ public class ImplicitIotAccessProvider extends IotAccessBase {
 
   @Override
   public CloudModel modelRegistry(String registryId, String deviceId, CloudModel cloudModel) {
-    Operation operation = cloudModel.operation;
+    ModelOperation operation = cloudModel.operation;
     try {
       // TODO: Make this update the saved metadata for the registry.
       return getReply(registryId, deviceId, cloudModel, "registry");

@@ -35,7 +35,7 @@ public class ExceptionMap extends RuntimeException {
   public enum ExceptionCategory {
     missing, extra, out, validation, loading, writing, site_metadata, initializing, sample,
     registering, envelope, credentials, samples, files, binding, creating, updating, schema,
-    configuring, metadata, status, proxy
+    configuring, metadata, settings, status, proxy
   }
 
   /**
@@ -93,6 +93,10 @@ public class ExceptionMap extends RuntimeException {
 
   public boolean isEmpty() {
     return exceptions.isEmpty();
+  }
+
+  public boolean hasCategory(ExceptionCategory category) {
+    return exceptions.containsKey(category);
   }
 
   /**

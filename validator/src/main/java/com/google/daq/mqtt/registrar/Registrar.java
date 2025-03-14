@@ -19,6 +19,7 @@ import static com.google.udmi.util.Common.UDMI_VERSION_KEY;
 import static com.google.udmi.util.GeneralUtils.CSV_JOINER;
 import static com.google.udmi.util.GeneralUtils.catchToNull;
 import static com.google.udmi.util.GeneralUtils.friendlyStackTrace;
+import static com.google.udmi.util.GeneralUtils.getTimestamp;
 import static com.google.udmi.util.GeneralUtils.ifNotEmptyThen;
 import static com.google.udmi.util.GeneralUtils.ifNotEmptyThrow;
 import static com.google.udmi.util.GeneralUtils.ifNotNullGet;
@@ -107,7 +108,7 @@ import org.apache.commons.io.FileUtils;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.VisibleForTesting;
 import udmi.schema.CloudModel;
-import udmi.schema.CloudModel.Operation;
+import udmi.schema.CloudModel.ModelOperation;
 import udmi.schema.CloudModel.Resource_type;
 import udmi.schema.Credential;
 import udmi.schema.Envelope.SubFolder;
@@ -179,6 +180,7 @@ public class Registrar {
   private SiteModel siteModel;
   private boolean queryOnly;
   private boolean strictWarnings;
+  private boolean doNotUpdate;
 
   /**
    * Main entry point for registrar.
@@ -188,7 +190,7 @@ public class Registrar {
     try {
       new Registrar().processArgs(argList).execute();
     } catch (Exception e) {
-      System.err.println("Exception in main: " + friendlyStackTrace(e));
+      System.err.printf("Exception at %s in main: %s%n", getTimestamp(), friendlyStackTrace(e));
       e.printStackTrace();
       System.exit(Common.EXIT_CODE_ERROR);
     }
@@ -283,21 +285,26 @@ public class Registrar {
   @CommandLineOption(short_form = "-d", description = "Delete (known) devices")
   private void setDeleteDevices() {
     checkNotNull(projectId, "delete devices specified with no target project");
-    this.deleteDevices = true;
-    this.updateCloudIoT = true;
+    deleteDevices = true;
+    updateCloudIoT = true;
   }
 
   @CommandLineOption(short_form = "-i", description = "Instantiate extra (unknown) devices")
   private void setInstantiateExtras() {
-    this.instantiateExtras = true;
-    this.updateCloudIoT = true;
+    instantiateExtras = true;
+    updateCloudIoT = true;
   }
 
   @CommandLineOption(short_form = "-x", description = "Expunge (unknown) devices")
   private void setExpungeDevices() {
     checkNotNull(projectId, "expunge devices specified with no target project");
-    this.expungeDevices = true;
-    this.updateCloudIoT = true;
+    expungeDevices = true;
+    updateCloudIoT = true;
+  }
+
+  @CommandLineOption(short_form = "-z", description = "Do not update existing devices")
+  private void setDoNotUpdate() {
+    doNotUpdate = true;
   }
 
   @CommandLineOption(short_form = "-e", arg_name = "suffix", description = "Set registry suffix")
@@ -357,7 +364,7 @@ public class Registrar {
     SiteMetadata siteMetadata = siteModel.loadSiteMetadata();
     siteMetadata.name = ofNullable(siteMetadata.name).orElse(siteModel.getSiteName());
     ifTrueThen(updateCloudIoT,
-        () -> cloudIotManager.updateRegistry(getSiteMetadata(), Operation.UPDATE));
+        () -> cloudIotManager.updateRegistry(getSiteMetadata(), ModelOperation.UPDATE));
   }
 
   private SiteMetadata getSiteMetadata() {
@@ -772,7 +779,7 @@ public class Registrar {
    */
   private void unbindDevicesFromGateways(Set<String> allDevices, Set<String> boundGateways) {
     boundGateways.forEach(gatewayId -> {
-      synchronized (Operation.UNBIND) {
+      synchronized (ModelOperation.UNBIND) {
         Map<String, CloudModel> boundDevices = cloudIotManager.fetchDevice(gatewayId).device_ids;
         Set<String> toUnbind = new HashSet<>(intersection(allDevices, boundDevices.keySet()));
         System.err.printf("Unbinding from gateway %s: %s%n", gatewayId, setOrSize(toUnbind));
@@ -803,6 +810,11 @@ public class Registrar {
       System.err.println("Skipping active device " + localDevice.getDeviceId());
       return false;
     }
+
+    if (doNotUpdate && cloudModels.containsKey(localName)) {
+      return false;
+    }
+
     Instant start = Instant.now();
     int count = processedDeviceCount.incrementAndGet();
     boolean created = false;
@@ -947,9 +959,10 @@ public class Registrar {
         cloudIotManager.blockDevice(extraName, true);
         cloudModel.blocked = true;
       }
-      cloudModel.operation = ifTrueGet(cloudModel.blocked, Operation.BLOCK, Operation.ALLOW);
+      cloudModel.operation = ifTrueGet(cloudModel.blocked, ModelOperation.BLOCK,
+          ModelOperation.ALLOW);
     } catch (Exception e) {
-      cloudModel.operation = Operation.ERROR;
+      cloudModel.operation = ModelOperation.ERROR;
       cloudModel.detail = friendlyStackTrace(e);
       System.err.printf("Blocking device %s: %s%n", extraName, cloudModel.detail);
     }
@@ -1324,7 +1337,7 @@ public class Registrar {
       return;
     }
 
-    cloudIotManager.updateRegistry(getSiteMetadata(), Operation.PREVIEW);
+    cloudIotManager.updateRegistry(getSiteMetadata(), ModelOperation.PREVIEW);
 
     try {
       AtomicInteger previewCount = new AtomicInteger();
@@ -1333,7 +1346,7 @@ public class Registrar {
         ifTrueThen(baseCount % 100 == 0,
             () -> System.err.printf("Sending preview for device %d/%d...%n", baseCount + 1,
                 localDevices.size()));
-        cloudIotManager.updateDevice(id, device.getSettings(), Operation.PREVIEW);
+        cloudIotManager.updateDevice(id, device.getSettings(), ModelOperation.PREVIEW);
       }));
       dynamicTerminate(localDevices.size());
       System.err.printf("Finished sending device preview for %d devices.%n", localDevices.size());
@@ -1346,11 +1359,15 @@ public class Registrar {
     localDevices.values().forEach(localDevice -> {
       try {
         localDevice.initialize();
+      } catch (Exception e) {
+        localDevice.captureError(ExceptionCategory.settings, e);
+        return;
+      }
+      try {
         localDevice.loadCredentials();
-      } catch (ValidationError error) {
-        throw new RuntimeException("While initializing device", error);
       } catch (Exception e) {
         localDevice.captureError(ExceptionCategory.credentials, e);
+        return;
       }
 
       if (cloudIotManager != null) {

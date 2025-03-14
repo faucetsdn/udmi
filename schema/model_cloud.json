@@ -103,21 +103,7 @@
       "type": "string"
     },
     "operation": {
-      "enum": [
-        "ERROR",
-        "CREATE",
-        "READ",
-        "REPLY",
-        "UPDATE",
-        "DELETE",
-        "MODIFY",
-        "PREVIEW",
-        "BIND",
-        "UNBIND",
-        "BOUND",
-        "ALLOW",
-        "BLOCK"
-      ]
+      "$ref": "file:common.json#/definitions/operation"
     },
     "metadata": {
       "type": "object",

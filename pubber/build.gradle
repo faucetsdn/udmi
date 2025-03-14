@@ -122,5 +122,5 @@ dependencies {
     implementation 'org.slf4j:slf4j-simple:1.7.30'
     implementation 'org.bouncycastle:bcpkix-jdk15on:1.64'
     testImplementation group: 'junit', name: 'junit', version: '4.13.2'
-    testImplementation 'org.mockito:mockito-core:3.11.2'
+    testImplementation 'org.mockito:mockito-core:5.3.1'
 }

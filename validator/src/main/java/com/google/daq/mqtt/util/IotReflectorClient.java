@@ -16,12 +16,12 @@ import static com.google.udmi.util.JsonUtil.stringify;
 import static com.google.udmi.util.JsonUtil.stringifyTerse;
 import static java.lang.String.format;
 import static java.util.Optional.ofNullable;
-import static udmi.schema.CloudModel.Operation.BIND;
-import static udmi.schema.CloudModel.Operation.BLOCK;
-import static udmi.schema.CloudModel.Operation.BOUND;
-import static udmi.schema.CloudModel.Operation.DELETE;
-import static udmi.schema.CloudModel.Operation.READ;
-import static udmi.schema.CloudModel.Operation.UNBIND;
+import static udmi.schema.CloudModel.ModelOperation.BIND;
+import static udmi.schema.CloudModel.ModelOperation.BLOCK;
+import static udmi.schema.CloudModel.ModelOperation.BOUND;
+import static udmi.schema.CloudModel.ModelOperation.DELETE;
+import static udmi.schema.CloudModel.ModelOperation.READ;
+import static udmi.schema.CloudModel.ModelOperation.UNBIND;
 
 import com.google.common.base.Preconditions;
 import com.google.daq.mqtt.util.MessagePublisher.QuerySpeed;
@@ -30,6 +30,7 @@ import com.google.udmi.util.IotProvider;
 import com.google.udmi.util.SiteModel;
 import java.io.File;
 import java.io.PrintWriter;
+import java.time.Instant;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -38,8 +39,9 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 import udmi.schema.CloudModel;
-import udmi.schema.CloudModel.Operation;
+import udmi.schema.CloudModel.ModelOperation;
 import udmi.schema.Credential;
 import udmi.schema.Envelope.SubFolder;
 import udmi.schema.ExecutionConfiguration;
@@ -56,13 +58,11 @@ public class IotReflectorClient implements IotProvider {
   // Requires functions that support cloud device manager support.
   private static final String CONFIG_TOPIC_FORMAT = "%s/config";
   private static final File ERROR_DIR = new File("out");
-  public static final double SLOW_QUERY_THRESHOLD = 10000;
   public static final String UPDATE_PREFIX = "update/";
   private final com.google.bos.iot.core.proxy.IotReflectorClient messageClient;
   private final Map<String, CompletableFuture<Map<String, Object>>> futures =
       new ConcurrentHashMap<>();
   private final ExecutorService executor = Executors.newSingleThreadExecutor();
-  private final boolean isSlow;
   private final String sessionPrefix;
 
   /**
@@ -79,11 +79,6 @@ public class IotReflectorClient implements IotProvider {
     messageClient.activate();
     sessionPrefix = messageClient.getSessionPrefix();
     executor.execute(this::processReplies);
-    isSlow = siteModel.getDeviceIds().size() > SLOW_QUERY_THRESHOLD;
-    if (isSlow) {
-      // TODO: Replace this with a dynamic mechanism that gets incremental progress from UDMIS.
-      System.err.println("Using very long list devices timeout because of large number of devices");
-    }
   }
 
   @Override
@@ -117,19 +112,19 @@ public class IotReflectorClient implements IotProvider {
 
   @Override
   public void updateDevice(String deviceId, CloudModel device) {
-    device.operation = ofNullable(device.operation).orElse(Operation.UPDATE);
+    device.operation = ofNullable(device.operation).orElse(ModelOperation.UPDATE);
     cloudModelTransaction(deviceId, CLOUD_MODEL_TOPIC, device);
   }
 
   @Override
   public void updateRegistry(CloudModel registry) {
-    registry.operation = ofNullable(registry.operation).orElse(Operation.UPDATE);
+    registry.operation = ofNullable(registry.operation).orElse(ModelOperation.UPDATE);
     cloudModelTransaction(null, CLOUD_MODEL_TOPIC, registry);
   }
 
   @Override
   public void createResource(String deviceId, CloudModel makeDevice) {
-    makeDevice.operation = Operation.CREATE;
+    makeDevice.operation = ModelOperation.CREATE;
     CloudModel created = cloudModelTransaction(deviceId, CLOUD_MODEL_TOPIC, makeDevice);
     ifNotNullThen(makeDevice.num_id, () -> ifTrueThen(!makeDevice.num_id.equals(created.num_id),
         () -> System.err.printf("created num_id %s does not match expected %s%n", created.num_id,
@@ -140,7 +135,7 @@ public class IotReflectorClient implements IotProvider {
   @Override
   public void deleteDevice(String deviceId, Set<String> unbindIds) {
     CloudModel deleteModel = new CloudModel();
-    deleteModel.operation = Operation.DELETE;
+    deleteModel.operation = ModelOperation.DELETE;
     deleteModel.gateway = ifNotNullGet(unbindIds, this::proxyGatewayModel);
     cloudModelTransaction(deviceId, CLOUD_MODEL_TOPIC, deleteModel);
   }
@@ -152,12 +147,12 @@ public class IotReflectorClient implements IotProvider {
   }
 
   private CloudModel cloudModelTransaction(String deviceId, String topic, CloudModel model) {
-    Operation operation = Preconditions.checkNotNull(model.operation, "no operation");
+    ModelOperation operation = Preconditions.checkNotNull(model.operation, "no operation");
     model.functions_ver = TOOLS_FUNCTIONS_VERSION;
     Map<String, Object> message = transaction(deviceId, topic, stringify(model), QuerySpeed.LONG);
     CloudModel cloudModel = convertTo(CloudModel.class, message);
     String cloudNumId = ifNotNullGet(cloudModel, result -> result.num_id);
-    Operation cloudOperation = ifNotNullGet(cloudModel, result -> result.operation);
+    ModelOperation cloudOperation = ifNotNullGet(cloudModel, result -> result.operation);
     // This happens with devices are bound to gateways, so explicitly capture the relevant info.
     if (operation == DELETE && cloudOperation == BOUND) {
       throw new DeviceGatewayBoundException(cloudModel);
@@ -189,9 +184,8 @@ public class IotReflectorClient implements IotProvider {
 
   private CloudModel fetchCloudModel(String deviceId) {
     try {
-      QuerySpeed speed = isSlow ? QuerySpeed.ETERNITY : QuerySpeed.SLOW;
       Map<String, Object> message = transaction(deviceId, CLOUD_QUERY_TOPIC,
-          getQueryMessageString(), speed);
+          getQueryMessageString(), QuerySpeed.DYNAMIC);
       // TODO: Remove this legacy workaround once all cloud environments are updated (2024/11/15).
       if ("FETCH".equals(message.get("operation"))) {
         message.put("operation", READ.toString());
@@ -246,12 +240,26 @@ public class IotReflectorClient implements IotProvider {
     try {
       CompletableFuture<Map<String, Object>> replyFuture = new CompletableFuture<>();
       futures.put(sentId, replyFuture);
-      return replyFuture.get(speed.seconds(), TimeUnit.SECONDS);
+      return speed == QuerySpeed.DYNAMIC ? dynamicReplyFutureGet(replyFuture) :
+          replyFuture.get(speed.seconds(), TimeUnit.SECONDS);
     } catch (Exception e) {
       futures.remove(sentId);
       throw new RuntimeException(
           format("UDMIS reflector timeout %ss for %s", speed.seconds(), sentId));
     }
+  }
+
+  private Map<String, Object> dynamicReplyFutureGet(
+      CompletableFuture<Map<String, Object>> replyFuture) throws Exception {
+    int pollSeconds = QuerySpeed.SHORT.seconds();
+    while (messageClient.getLastProgressEvent().plusSeconds(pollSeconds).isAfter(Instant.now())) {
+      try {
+        return replyFuture.get(pollSeconds, TimeUnit.SECONDS);
+      } catch (TimeoutException e) {
+        // Do nothing, but loop for timeout check only when there's a timeout.
+      }
+    }
+    return replyFuture.get(pollSeconds, TimeUnit.SECONDS);
   }
 
   private void processReplies() {

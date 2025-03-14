@@ -21,11 +21,11 @@ import static java.lang.String.format;
 import static java.util.Objects.requireNonNull;
 import static java.util.Optional.ofNullable;
 import static java.util.stream.Collectors.toMap;
-import static udmi.schema.CloudModel.Operation.BIND;
-import static udmi.schema.CloudModel.Operation.BOUND;
-import static udmi.schema.CloudModel.Operation.CREATE;
-import static udmi.schema.CloudModel.Operation.DELETE;
-import static udmi.schema.CloudModel.Operation.UPDATE;
+import static udmi.schema.CloudModel.ModelOperation.BIND;
+import static udmi.schema.CloudModel.ModelOperation.BOUND;
+import static udmi.schema.CloudModel.ModelOperation.CREATE;
+import static udmi.schema.CloudModel.ModelOperation.DELETE;
+import static udmi.schema.CloudModel.ModelOperation.UPDATE;
 import static udmi.schema.CloudModel.Resource_type.DIRECT;
 import static udmi.schema.CloudModel.Resource_type.GATEWAY;
 import static udmi.schema.CloudModel.Resource_type.REGISTRY;
@@ -95,7 +95,7 @@ import java.util.stream.Collectors;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import udmi.schema.CloudModel;
-import udmi.schema.CloudModel.Operation;
+import udmi.schema.CloudModel.ModelOperation;
 import udmi.schema.CloudModel.Resource_type;
 import udmi.schema.Credential;
 import udmi.schema.Credential.Key_format;
@@ -246,7 +246,7 @@ public class ClearBladeIotAccessProvider extends IotAccessBase {
   }
 
   private CloudModel bindDevicesToGateway(String registryId, String gatewayId,
-      CloudModel cloudModel, Consumer<Integer> progress) {
+      CloudModel cloudModel, Consumer<String> progress) {
     Set<String> deviceIds = ReflectProcessor.isLegacyRequest(cloudModel)
         ? cloudModel.device_ids.keySet() : getDeviceIds(cloudModel.gateway);
     boolean toBind = cloudModel.operation == BIND;
@@ -288,7 +288,7 @@ public class ClearBladeIotAccessProvider extends IotAccessBase {
               .setUpdateMask(BLOCKED_FIELD_MASK).build();
       requireNonNull(deviceManager.updateDevice(request), "Invalid RPC response");
       CloudModel cloudModel = new CloudModel();
-      cloudModel.operation = Operation.BLOCK;
+      cloudModel.operation = ModelOperation.BLOCK;
       cloudModel.num_id = hashedDeviceId(registryId, deviceId);
       return cloudModel;
     } catch (Exception e) {
@@ -308,7 +308,7 @@ public class ClearBladeIotAccessProvider extends IotAccessBase {
         .build();
   }
 
-  private CloudModel convert(Empty execute, Operation operation) {
+  private CloudModel convert(Empty execute, ModelOperation operation) {
     CloudModel cloudModel = new CloudModel();
     cloudModel.operation = operation;
     cloudModel.num_id = EMPTY_RETURN_RECEIPT;
@@ -400,19 +400,19 @@ public class ClearBladeIotAccessProvider extends IotAccessBase {
   }
 
   private HashMap<String, CloudModel> fetchBoundGateways(String deviceRegistryId, String deviceId,
-      Consumer<Integer> progress) {
+      Consumer<String> progress) {
     GatewayListOptions gatewayListOptions = ifNotNullGet(deviceId, this::getBoundGatewaysOptions);
     return fetchDevices(deviceRegistryId, progress, gatewayListOptions);
   }
 
   private HashMap<String, CloudModel> fetchDevices(String deviceRegistryId, String gatewayId,
-      Consumer<Integer> progress) {
+      Consumer<String> progress) {
     GatewayListOptions gatewayListOptions = ifNotNullGet(gatewayId, this::getBoundDevicesOptions);
     return fetchDevices(deviceRegistryId, progress, gatewayListOptions);
   }
 
   private HashMap<String, CloudModel> fetchDevices(String deviceRegistryId,
-      Consumer<Integer> progress, GatewayListOptions gatewayListOptions) {
+      Consumer<String> progress, GatewayListOptions gatewayListOptions) {
     String location = getRegistryLocation(deviceRegistryId);
     String registryFullName =
         RegistryName.of(projectId, location, deviceRegistryId).getRegistryFullName();
@@ -433,7 +433,7 @@ public class ClearBladeIotAccessProvider extends IotAccessBase {
       collect.putAll(responseMap);
       pageToken = response.getNextPageToken();
       queryCount++;
-      ifNotNullThen(progress, p -> p.accept(collect.size()));
+      ifNotNullThen(progress, p -> p.accept(format("Fetched %d devices...", collect.size())));
       debug(format("fetchDevices %s #%d found %d total %d more %s", deviceRegistryId,
           queryCount, responseMap.size(), collect.size(), pageToken != null));
     } while (pageToken != null);
@@ -506,7 +506,7 @@ public class ClearBladeIotAccessProvider extends IotAccessBase {
   }
 
   private CloudModel listRegistryDevices(String registryId, String gatewayId,
-      Consumer<Integer> progress) {
+      Consumer<String> progress) {
     try {
       CloudModel cloudModel = new CloudModel();
       HashMap<String, CloudModel> boundDevices =
@@ -516,7 +516,7 @@ public class ClearBladeIotAccessProvider extends IotAccessBase {
       if (gatewayId != null) {
         cloudModel.gateway = makeGatewayModel(boundDevices);
       } else {
-        cloudModel.device_ids = augmentGatewayModels(registryId, boundDevices);
+        cloudModel.device_ids = augmentGatewayModels(registryId, boundDevices, progress);
       }
       return cloudModel;
     } catch (Exception e) {
@@ -525,10 +525,16 @@ public class ClearBladeIotAccessProvider extends IotAccessBase {
   }
 
   private Map<String, CloudModel> augmentGatewayModels(String registryId,
-      HashMap<String, CloudModel> boundDevices) {
+      HashMap<String, CloudModel> boundDevices, Consumer<String> progress) {
     HashMap<String, String> proxyDeviceGateways = new HashMap<>();
-    boundDevices.entrySet().stream().filter(this::isGateway)
-        .forEach(entry -> augmentGatewayModel(registryId, entry, proxyDeviceGateways));
+    Set<Entry<String, CloudModel>> gateways =
+        boundDevices.entrySet().stream().filter(this::isGateway).collect(Collectors.toSet());
+    AtomicInteger count = new AtomicInteger();
+    gateways.forEach(entry -> {
+      augmentGatewayModel(registryId, entry, proxyDeviceGateways);
+      progress.accept(format("Augmented gateway %s (%d/%d)",
+          entry.getKey(), count.incrementAndGet(), gateways.size()));
+    });
     boundDevices.entrySet()
         .forEach(entry -> augmentProxiedModel(entry, proxyDeviceGateways));
     return boundDevices;
@@ -561,9 +567,9 @@ public class ClearBladeIotAccessProvider extends IotAccessBase {
 
   @Override
   public CloudModel modelDevice(String registryId, String deviceId, CloudModel cloudModel,
-      Consumer<Integer> progress) {
+      Consumer<String> progress) {
     String devicePath = getDeviceName(registryId, deviceId);
-    Operation operation = cloudModel.operation;
+    ModelOperation operation = cloudModel.operation;
     Resource_type type = ofNullable(cloudModel.resource_type).orElse(Resource_type.DIRECT);
     checkState(type == DIRECT || type == GATEWAY, "unexpected resource type " + type);
     try {
@@ -592,7 +598,7 @@ public class ClearBladeIotAccessProvider extends IotAccessBase {
 
   @Override
   public CloudModel modelRegistry(String registryId, String deviceId, CloudModel cloudModel) {
-    Operation operation = cloudModel.operation;
+    ModelOperation operation = cloudModel.operation;
     String registryActual = registryId + deviceId;
     try {
       if (operation == UPDATE) {
@@ -623,7 +629,7 @@ public class ClearBladeIotAccessProvider extends IotAccessBase {
     model.metadata.putAll(builder.getMetadata());
     builder.setMetadata(model.metadata);
     CloudModel cloudModel = updateDevice(registryId, builder.build(), METADATA_FIELD_MASK);
-    cloudModel.operation = Operation.MODIFY;
+    cloudModel.operation = ModelOperation.MODIFY;
     cloudModel.gateway = model.gateway;
     cloudModel.device_ids = model.device_ids;
     return cloudModel;
@@ -635,7 +641,7 @@ public class ClearBladeIotAccessProvider extends IotAccessBase {
   }
 
   private CloudModel unbindAndDelete(String registryId, Device device, CloudModel request,
-      Consumer<Integer> progress) {
+      Consumer<String> progress) {
     try {
       final Set<String> unbindIds = ReflectProcessor.isLegacyRequest(request)
           ? legacyFindGateways(registryId, device)
@@ -680,7 +686,7 @@ public class ClearBladeIotAccessProvider extends IotAccessBase {
   }
 
   private CloudModel unbindAndDeleteCore(String registryId, Device device, Set<String> unbindIds,
-      Consumer<Integer> progress) {
+      Consumer<String> progress) {
     String deviceId = requireNonNull(device.toBuilder().getId(), "unspecified device id");
     try {
       ifNotNullThen(unbindIds, ids -> unbindGatewayDevices(registryId, device, ids, progress));
@@ -699,20 +705,25 @@ public class ClearBladeIotAccessProvider extends IotAccessBase {
   }
 
   private void bindDevicesGateways(String registryId, Set<String> gatewayIds,
-      Set<String> deviceIds, boolean toBind, Consumer<Integer> progress) {
+      Set<String> deviceIds, boolean toBind, Consumer<String> progress) {
     String opCode = toBind ? "Binding" : "Unbinding";
     info("%s %s: gateways %s devices %s", opCode, registryId, gatewayIds, deviceIds);
     AtomicInteger opCount = new AtomicInteger(0);
+    ifNotNullThen(progress,
+        p -> p.accept(format("%s %d devices on %d gateways", opCode, deviceIds.size(),
+            gatewayIds.size())));
     gatewayIds.forEach(gatewayId -> {
       deviceIds.forEach(deviceId -> {
         ifTrueThen(opCount.incrementAndGet() % OP_PROGRESS_BATCH_SIZE == 0,
-            () -> ifNotNullThen(progress, p -> p.accept(opCount.get())));
+            () -> ifNotNullThen(progress,
+                p -> p.accept(format("%s %d devices...", opCode, opCount.get()))));
         ifTrueThen(toBind,
             () -> bindDevice(registryId, gatewayId, deviceId),
             () -> unbindDevice(registryId, gatewayId, deviceId));
       });
     });
-    ifTrueThen(opCount.get() > 0, () -> ifNotNullThen(progress, p -> p.accept(opCount.get())));
+    ifTrueThen(opCount.get() > 0, () -> ifNotNullThen(progress, p -> p.accept(
+        format("Completed binding %d devices.", opCount.get()))));
   }
 
   private void unbindDevice(String registryId, String gatewayId, String proxyId) {
@@ -729,7 +740,7 @@ public class ClearBladeIotAccessProvider extends IotAccessBase {
   }
 
   private boolean unbindGatewayDevices(String registryId, Device gatewayDevice,
-      Set<String> unbindIds, Consumer<Integer> progress) {
+      Set<String> unbindIds, Consumer<String> progress) {
     try {
       ImmutableSet<String> gatewayIds = ImmutableSet.of(gatewayDevice.toBuilder().getId());
       bindDevicesGateways(registryId, gatewayIds, unbindIds, false, progress);
@@ -805,7 +816,7 @@ public class ClearBladeIotAccessProvider extends IotAccessBase {
       Device device = deviceManager.getDevice(request);
       requireNonNull(device, "GetDeviceRequest failed");
       CloudModel cloudModel = convertFull(device);
-      cloudModel.operation = Operation.READ;
+      cloudModel.operation = ModelOperation.READ;
       cloudModel.gateway = fetchDeviceGatewayModel(registryId, deviceId, device);
       return cloudModel;
     } catch (Exception e) {
@@ -881,7 +892,7 @@ public class ClearBladeIotAccessProvider extends IotAccessBase {
   }
 
   @Override
-  public CloudModel listDevices(String registryId, Consumer<Integer> progress) {
+  public CloudModel listDevices(String registryId, Consumer<String> progress) {
     return listRegistryDevices(registryId, null, progress);
   }
 
