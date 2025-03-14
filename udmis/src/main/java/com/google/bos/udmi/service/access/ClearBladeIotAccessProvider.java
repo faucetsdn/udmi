@@ -21,11 +21,11 @@ import static java.lang.String.format;
 import static java.util.Objects.requireNonNull;
 import static java.util.Optional.ofNullable;
 import static java.util.stream.Collectors.toMap;
-import static udmi.schema.CloudModel.Operation.BIND;
-import static udmi.schema.CloudModel.Operation.BOUND;
-import static udmi.schema.CloudModel.Operation.CREATE;
-import static udmi.schema.CloudModel.Operation.DELETE;
-import static udmi.schema.CloudModel.Operation.UPDATE;
+import static udmi.schema.CloudModel.ModelOperation.BIND;
+import static udmi.schema.CloudModel.ModelOperation.BOUND;
+import static udmi.schema.CloudModel.ModelOperation.CREATE;
+import static udmi.schema.CloudModel.ModelOperation.DELETE;
+import static udmi.schema.CloudModel.ModelOperation.UPDATE;
 import static udmi.schema.CloudModel.Resource_type.DEVICE;
 import static udmi.schema.CloudModel.Resource_type.GATEWAY;
 import static udmi.schema.CloudModel.Resource_type.REGISTRY;
@@ -95,7 +95,7 @@ import java.util.stream.Collectors;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import udmi.schema.CloudModel;
-import udmi.schema.CloudModel.Operation;
+import udmi.schema.CloudModel.ModelOperation;
 import udmi.schema.CloudModel.Resource_type;
 import udmi.schema.Credential;
 import udmi.schema.Credential.Key_format;
@@ -288,7 +288,7 @@ public class ClearBladeIotAccessProvider extends IotAccessBase {
               .setUpdateMask(BLOCKED_FIELD_MASK).build();
       requireNonNull(deviceManager.updateDevice(request), "Invalid RPC response");
       CloudModel cloudModel = new CloudModel();
-      cloudModel.operation = Operation.BLOCK;
+      cloudModel.operation = ModelOperation.BLOCK;
       cloudModel.num_id = hashedDeviceId(registryId, deviceId);
       return cloudModel;
     } catch (Exception e) {
@@ -308,7 +308,7 @@ public class ClearBladeIotAccessProvider extends IotAccessBase {
         .build();
   }
 
-  private CloudModel convert(Empty execute, Operation operation) {
+  private CloudModel convert(Empty execute, ModelOperation operation) {
     CloudModel cloudModel = new CloudModel();
     cloudModel.operation = operation;
     cloudModel.num_id = EMPTY_RETURN_RECEIPT;
@@ -569,7 +569,7 @@ public class ClearBladeIotAccessProvider extends IotAccessBase {
   public CloudModel modelDevice(String registryId, String deviceId, CloudModel cloudModel,
       Consumer<String> progress) {
     String devicePath = getDeviceName(registryId, deviceId);
-    Operation operation = cloudModel.operation;
+    ModelOperation operation = cloudModel.operation;
     Resource_type type = ofNullable(cloudModel.resource_type).orElse(Resource_type.DEVICE);
     checkState(type == DEVICE || type == GATEWAY, "unexpected resource type " + type);
     try {
@@ -598,7 +598,7 @@ public class ClearBladeIotAccessProvider extends IotAccessBase {
 
   @Override
   public CloudModel modelRegistry(String registryId, String deviceId, CloudModel cloudModel) {
-    Operation operation = cloudModel.operation;
+    ModelOperation operation = cloudModel.operation;
     String registryActual = registryId + deviceId;
     try {
       if (operation == UPDATE) {
@@ -629,7 +629,7 @@ public class ClearBladeIotAccessProvider extends IotAccessBase {
     model.metadata.putAll(builder.getMetadata());
     builder.setMetadata(model.metadata);
     CloudModel cloudModel = updateDevice(registryId, builder.build(), METADATA_FIELD_MASK);
-    cloudModel.operation = Operation.MODIFY;
+    cloudModel.operation = ModelOperation.MODIFY;
     cloudModel.gateway = model.gateway;
     cloudModel.device_ids = model.device_ids;
     return cloudModel;
@@ -816,7 +816,7 @@ public class ClearBladeIotAccessProvider extends IotAccessBase {
       Device device = deviceManager.getDevice(request);
       requireNonNull(device, "GetDeviceRequest failed");
       CloudModel cloudModel = convertFull(device);
-      cloudModel.operation = Operation.READ;
+      cloudModel.operation = ModelOperation.READ;
       cloudModel.gateway = fetchDeviceGatewayModel(registryId, deviceId, device);
       return cloudModel;
     } catch (Exception e) {

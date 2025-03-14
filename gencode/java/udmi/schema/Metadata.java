@@ -22,6 +22,7 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
     "version",
     "upgraded_from",
     "hash",
+    "operation",
     "cloud",
     "system",
     "gateway",
@@ -64,6 +65,14 @@ public class Metadata {
     @JsonProperty("hash")
     @JsonPropertyDescription("Automatically generated field that contains the hash of file contents.")
     public java.lang.String hash;
+    /**
+     * Model Operation
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("operation")
+    public CloudModel.ModelOperation operation;
     /**
      * Cloud Model
      * <p>
@@ -152,6 +161,7 @@ public class Metadata {
         result = ((result* 31)+((this.discovery == null)? 0 :this.discovery.hashCode()));
         result = ((result* 31)+((this.upgraded_from == null)? 0 :this.upgraded_from.hashCode()));
         result = ((result* 31)+((this.pointset == null)? 0 :this.pointset.hashCode()));
+        result = ((result* 31)+((this.operation == null)? 0 :this.operation.hashCode()));
         result = ((result* 31)+((this.hash == null)? 0 :this.hash.hashCode()));
         result = ((result* 31)+((this.gateway == null)? 0 :this.gateway.hashCode()));
         result = ((result* 31)+((this.localnet == null)? 0 :this.localnet.hashCode()));
@@ -168,7 +178,7 @@ public class Metadata {
             return false;
         }
         Metadata rhs = ((Metadata) other);
-        return ((((((((((((((this.testing == rhs.testing)||((this.testing!= null)&&this.testing.equals(rhs.testing)))&&((this.version == rhs.version)||((this.version!= null)&&this.version.equals(rhs.version))))&&((this.structure == rhs.structure)||((this.structure!= null)&&this.structure.equals(rhs.structure))))&&((this.cloud == rhs.cloud)||((this.cloud!= null)&&this.cloud.equals(rhs.cloud))))&&((this.features == rhs.features)||((this.features!= null)&&this.features.equals(rhs.features))))&&((this.system == rhs.system)||((this.system!= null)&&this.system.equals(rhs.system))))&&((this.discovery == rhs.discovery)||((this.discovery!= null)&&this.discovery.equals(rhs.discovery))))&&((this.upgraded_from == rhs.upgraded_from)||((this.upgraded_from!= null)&&this.upgraded_from.equals(rhs.upgraded_from))))&&((this.pointset == rhs.pointset)||((this.pointset!= null)&&this.pointset.equals(rhs.pointset))))&&((this.hash == rhs.hash)||((this.hash!= null)&&this.hash.equals(rhs.hash))))&&((this.gateway == rhs.gateway)||((this.gateway!= null)&&this.gateway.equals(rhs.gateway))))&&((this.localnet == rhs.localnet)||((this.localnet!= null)&&this.localnet.equals(rhs.localnet))))&&((this.timestamp == rhs.timestamp)||((this.timestamp!= null)&&this.timestamp.equals(rhs.timestamp))));
+        return (((((((((((((((this.testing == rhs.testing)||((this.testing!= null)&&this.testing.equals(rhs.testing)))&&((this.version == rhs.version)||((this.version!= null)&&this.version.equals(rhs.version))))&&((this.structure == rhs.structure)||((this.structure!= null)&&this.structure.equals(rhs.structure))))&&((this.cloud == rhs.cloud)||((this.cloud!= null)&&this.cloud.equals(rhs.cloud))))&&((this.features == rhs.features)||((this.features!= null)&&this.features.equals(rhs.features))))&&((this.system == rhs.system)||((this.system!= null)&&this.system.equals(rhs.system))))&&((this.discovery == rhs.discovery)||((this.discovery!= null)&&this.discovery.equals(rhs.discovery))))&&((this.upgraded_from == rhs.upgraded_from)||((this.upgraded_from!= null)&&this.upgraded_from.equals(rhs.upgraded_from))))&&((this.pointset == rhs.pointset)||((this.pointset!= null)&&this.pointset.equals(rhs.pointset))))&&((this.operation == rhs.operation)||((this.operation!= null)&&this.operation.equals(rhs.operation))))&&((this.hash == rhs.hash)||((this.hash!= null)&&this.hash.equals(rhs.hash))))&&((this.gateway == rhs.gateway)||((this.gateway!= null)&&this.gateway.equals(rhs.gateway))))&&((this.localnet == rhs.localnet)||((this.localnet!= null)&&this.localnet.equals(rhs.localnet))))&&((this.timestamp == rhs.timestamp)||((this.timestamp!= null)&&this.timestamp.equals(rhs.timestamp))));
     }
 
 }

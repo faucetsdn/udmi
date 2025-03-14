@@ -20,7 +20,7 @@ import java.util.Map;
 import java.util.Set;
 import org.junit.Test;
 import udmi.schema.CloudModel;
-import udmi.schema.CloudModel.Operation;
+import udmi.schema.CloudModel.ModelOperation;
 import udmi.schema.Config;
 import udmi.schema.DeviceValidationEvents;
 import udmi.schema.DiscoveryEvents;
@@ -176,7 +176,7 @@ public class BasicTest extends TestBase {
     messageObject.version = TestCommon.UDMI_VERSION;
     messageObject.system = new SystemModel();
     messageObject.cloud = new CloudModel();
-    messageObject.cloud.operation = Operation.DELETE;
+    messageObject.cloud.operation = ModelOperation.DELETE;
     MessageBundle messageBundle = getMessageBundle(MODEL_SUBTYPE, UPDATE_SUBFOLDER, messageObject);
 
     validator.validateMessage(messageBundle);
