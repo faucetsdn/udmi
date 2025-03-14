@@ -260,7 +260,7 @@ public class ReflectProcessor extends ProcessorBase {
 
   private CloudModel queryCloudRegistry(Envelope attributes) {
     CloudModel cloudModel = iotAccess.listDevices(attributes.deviceRegistryId,
-        progress -> reflectUdmiLog(attributes, format("Fetched %d devices...", progress)));
+        progress -> reflectUdmiLog(attributes, progress));
     cloudModel.operation = READ;
     return cloudModel;
   }
@@ -303,7 +303,7 @@ public class ReflectProcessor extends ProcessorBase {
       return iotAccess.modelRegistry(deviceRegistryId, deviceId, request);
     } else {
       return iotAccess.modelDevice(deviceRegistryId, deviceId, request, progress ->
-          reflectUdmiLog(attributes, format("Processed %d entries for %s...", progress, deviceId)));
+          reflectUdmiLog(attributes, progress));
     }
   }
 

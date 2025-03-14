@@ -512,7 +512,8 @@ class LocalDevice {
   }
 
   private List<String> getProxyDevicesList() {
-    return isExtraKind() ? getCloudModelProxyList() : config.getProxyDevicesList();
+    return isExtraKind() ? getCloudModelProxyList()
+        : ifNotNullGet(config, ConfigManager::getProxyDevicesList);
   }
 
   private List<String> getCloudModelProxyList() {
@@ -831,6 +832,10 @@ class LocalDevice {
   private void ifTrueWarn(boolean condition, String message) {
     ifTrueThen(condition && siteModel.getStrictWarnings(),
         () -> captureError(ExceptionCategory.metadata, new ValidationWarning(message)));
+  }
+
+  public boolean hasCategory(ExceptionCategory category) {
+    return exceptionMap.hasCategory(category);
   }
 
   public enum DeviceStatus {

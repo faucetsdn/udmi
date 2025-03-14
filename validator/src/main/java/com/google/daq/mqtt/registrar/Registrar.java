@@ -19,6 +19,7 @@ import static com.google.udmi.util.Common.UDMI_VERSION_KEY;
 import static com.google.udmi.util.GeneralUtils.CSV_JOINER;
 import static com.google.udmi.util.GeneralUtils.catchToNull;
 import static com.google.udmi.util.GeneralUtils.friendlyStackTrace;
+import static com.google.udmi.util.GeneralUtils.getTimestamp;
 import static com.google.udmi.util.GeneralUtils.ifNotEmptyThrow;
 import static com.google.udmi.util.GeneralUtils.ifNotNullGet;
 import static com.google.udmi.util.GeneralUtils.ifNotNullThen;
@@ -172,6 +173,7 @@ public class Registrar {
   private SiteModel siteModel;
   private boolean queryOnly;
   private boolean strictWarnings;
+  private boolean doNotUpdate;
 
   /**
    * Main entry point for registrar.
@@ -181,7 +183,7 @@ public class Registrar {
     try {
       new Registrar().processArgs(argList).execute();
     } catch (Exception e) {
-      System.err.println("Exception in main: " + friendlyStackTrace(e));
+      System.err.printf("Exception at %s in main: %s%n", getTimestamp(), friendlyStackTrace(e));
       e.printStackTrace();
       System.exit(Common.EXIT_CODE_ERROR);
     }
@@ -276,21 +278,26 @@ public class Registrar {
   @CommandLineOption(short_form = "-d", description = "Delete (known) devices")
   private void setDeleteDevices() {
     checkNotNull(projectId, "delete devices specified with no target project");
-    this.deleteDevices = true;
-    this.updateCloudIoT = true;
+    deleteDevices = true;
+    updateCloudIoT = true;
   }
 
   @CommandLineOption(short_form = "-i", description = "Instantiate extra (unknown) devices")
   private void setInstantiateExtras() {
-    this.instantiateExtras = true;
-    this.updateCloudIoT = true;
+    instantiateExtras = true;
+    updateCloudIoT = true;
   }
 
   @CommandLineOption(short_form = "-x", description = "Expunge (unknown) devices")
   private void setExpungeDevices() {
     checkNotNull(projectId, "expunge devices specified with no target project");
-    this.expungeDevices = true;
-    this.updateCloudIoT = true;
+    expungeDevices = true;
+    updateCloudIoT = true;
+  }
+
+  @CommandLineOption(short_form = "-z", description = "Do not update existing devices")
+  private void setDoNotUpdate() {
+    doNotUpdate = true;
   }
 
   @CommandLineOption(short_form = "-e", arg_name = "suffix", description = "Set registry suffix")
@@ -786,6 +793,11 @@ public class Registrar {
       System.err.println("Skipping active device " + localDevice.getDeviceId());
       return false;
     }
+
+    if (doNotUpdate && cloudModels.containsKey(localName)) {
+      return false;
+    }
+
     Instant start = Instant.now();
     int count = processedDeviceCount.incrementAndGet();
     boolean created = false;
@@ -1287,11 +1299,15 @@ public class Registrar {
     localDevices.values().forEach(localDevice -> {
       try {
         localDevice.initialize();
+      } catch (Exception e) {
+        localDevice.captureError(ExceptionCategory.settings, e);
+        return;
+      }
+      try {
         localDevice.loadCredentials();
-      } catch (ValidationError error) {
-        throw new RuntimeException("While initializing device", error);
       } catch (Exception e) {
         localDevice.captureError(ExceptionCategory.credentials, e);
+        return;
       }
 
       if (cloudIotManager != null) {

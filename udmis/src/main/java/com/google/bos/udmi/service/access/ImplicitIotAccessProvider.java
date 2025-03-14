@@ -301,9 +301,9 @@ public class ImplicitIotAccessProvider extends IotAccessBase {
   }
 
   @Override
-  public CloudModel listDevices(String registryId, Consumer<Integer> progress) {
+  public CloudModel listDevices(String registryId, Consumer<String> progress) {
     Map<String, String> entries = registryDevicesRef(registryId).entries();
-    ifNotNullThen(progress, p -> p.accept(entries.size()));
+    ifNotNullThen(progress, p -> p.accept(format("Fetched %d devices.", entries.size())));
     CloudModel cloudModel = new CloudModel();
     cloudModel.device_ids = entries.keySet().stream().collect(
         Collectors.toMap(id -> id, id -> fetchDevice(registryId, id)));
@@ -326,7 +326,7 @@ public class ImplicitIotAccessProvider extends IotAccessBase {
 
   @Override
   public CloudModel modelDevice(String registryId, String deviceId, CloudModel cloudModel,
-      Consumer<Integer> progress) {
+      Consumer<String> progress) {
     ModelOperation operation = cloudModel.operation;
     Resource_type type = ofNullable(cloudModel.resource_type).orElse(Resource_type.DEVICE);
     checkState(type == DEVICE || type == GATEWAY, "unexpected resource type " + type);
