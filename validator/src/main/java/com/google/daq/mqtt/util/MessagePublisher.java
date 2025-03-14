@@ -86,6 +86,7 @@ public interface MessagePublisher {
    * Speed of a query -- how long to wait before a timeout.
    */
   enum QuerySpeed {
+    DYNAMIC(-1),
     QUICK(1),
     SHORT(15),
     LONG(30),

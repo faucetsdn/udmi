@@ -3,7 +3,7 @@ FROM alpine:latest
 WORKDIR /root
 
 # Ideally shared with validator and pubber to amortize build differences.
-RUN apk add --no-cache bash openjdk17 gcompat curl jq sudo git python3 moreutils mosquitto mosquitto-clients openssl coreutils
+RUN apk add --no-cache bash openjdk21 gcompat curl jq sudo git python3 moreutils mosquitto mosquitto-clients openssl coreutils
 
 # Workaround for https://github.com/grpc/grpc-java/issues/8751
 # Only necessary for running on GKE -- won't show up with docker!

@@ -2,6 +2,7 @@
 package udmi.schema;
 
 import java.util.Date;
+import java.util.List;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyDescription;
@@ -47,7 +48,7 @@ public class FamilyDiscoveryConfig {
     @JsonPropertyDescription("Scan duration, in seconds")
     public Integer scan_duration_sec;
     @JsonProperty("addrs")
-    public Object addrs;
+    public List<String> addrs;
     /**
      * Holdoff time for passively discovered devices
      * 

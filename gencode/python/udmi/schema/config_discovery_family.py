@@ -50,7 +50,7 @@ class FamilyDiscoveryConfig:
     if self.scan_duration_sec:
       result['scan_duration_sec'] = self.scan_duration_sec # 5
     if self.addrs:
-      result['addrs'] = self.addrs # 5
+      result['addrs'] = self.addrs # 1
     if self.passive_sec:
       result['passive_sec'] = self.passive_sec # 5
     if self.depth:

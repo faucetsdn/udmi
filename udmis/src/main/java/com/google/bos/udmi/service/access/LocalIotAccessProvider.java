@@ -83,13 +83,13 @@ public class LocalIotAccessProvider extends IotAccessBase {
   }
 
   @Override
-  public CloudModel listDevices(String registryId, Consumer<Integer> progress) {
+  public CloudModel listDevices(String registryId, Consumer<String> progress) {
     throw new RuntimeException("Not yet implemented");
   }
 
   @Override
   public CloudModel modelDevice(String registryId, String deviceId, CloudModel cloudModel,
-      Consumer<Integer> progress) {
+      Consumer<String> progress) {
     throw new RuntimeException("Not yet implemented");
   }
 

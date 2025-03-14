@@ -4,5 +4,4 @@ metadata:
   name: config
 data:
   BITBOX_DISCOVERY: prodev~udmi_target-discover
-  ETCD_CLUSTER: etcd-set-0.etcd-set
   UDMI_NAMESPACE: @UDMI_NAMESPACE@
