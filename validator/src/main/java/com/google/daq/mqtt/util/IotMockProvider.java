@@ -162,6 +162,11 @@ public class IotMockProvider implements IotProvider {
   }
 
   @Override
+  public boolean stillActive() {
+    return false;
+  }
+
+  @Override
   public List<Object> getMockActions() {
     List<Object> savedActions = mockActions.stream().map(a -> (Object) a)
         .collect(Collectors.toList());

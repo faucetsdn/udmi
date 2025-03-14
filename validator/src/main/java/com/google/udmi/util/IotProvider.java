@@ -115,4 +115,6 @@ public interface IotProvider {
   default Credential getCredential() {
     throw new IllegalStateException("getCredential not implemented");
   }
+
+  boolean stillActive();
 }
