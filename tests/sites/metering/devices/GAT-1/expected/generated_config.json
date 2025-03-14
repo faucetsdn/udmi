@@ -1,6 +1,8 @@
 {
   "gateway": {
-    "proxy_ids": []
+    "proxy_ids": [
+      "EM-1"
+    ]
   },
   "system": {
     "metrics_rate_sec": 10,

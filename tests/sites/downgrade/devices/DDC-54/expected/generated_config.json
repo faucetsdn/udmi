@@ -2,7 +2,8 @@
   "downgraded_from": "1.5.3",
   "gateway": {
     "proxy_ids": [
-      "SF-28"
+      "SF-28",
+      "DWN-1"
     ]
   },
   "localnet": {

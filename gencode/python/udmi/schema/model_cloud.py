@@ -44,7 +44,6 @@ class CloudModel:
     self.timestamp = None
     self.version = None
     self.functions_ver = None
-    self.connection_type = None
     self.auth_type = None
     self.device_key = None
     self.resource_type = None
@@ -73,7 +72,6 @@ class CloudModel:
     result.timestamp = source.get('timestamp')
     result.version = source.get('version')
     result.functions_ver = source.get('functions_ver')
-    result.connection_type = source.get('connection_type')
     result.auth_type = source.get('auth_type')
     result.device_key = source.get('device_key')
     result.resource_type = source.get('resource_type')
@@ -119,8 +117,6 @@ class CloudModel:
       result['version'] = self.version # 5
     if self.functions_ver:
       result['functions_ver'] = self.functions_ver # 5
-    if self.connection_type:
-      result['connection_type'] = self.connection_type # 5
     if self.auth_type:
       result['auth_type'] = self.auth_type # 5
     if self.device_key:

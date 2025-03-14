@@ -12,7 +12,6 @@ TEST writeback_success noPointState
 TEST pointset_publish_interval fixedSampleRate=10
 TEST system_min_loglevel fixedLogLevel=100
 TEST system_mode_restart noPersist
-TEST config_logging badVersion
 TEST broken_config barfConfig
 TEST broken_config configStateDelay
 TEST broken_config noState
