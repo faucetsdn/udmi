@@ -16,12 +16,12 @@ import static com.google.udmi.util.JsonUtil.stringify;
 import static com.google.udmi.util.JsonUtil.stringifyTerse;
 import static java.lang.String.format;
 import static java.util.Optional.ofNullable;
-import static udmi.schema.CloudModel.Operation.BIND;
-import static udmi.schema.CloudModel.Operation.BLOCK;
-import static udmi.schema.CloudModel.Operation.BOUND;
-import static udmi.schema.CloudModel.Operation.DELETE;
-import static udmi.schema.CloudModel.Operation.READ;
-import static udmi.schema.CloudModel.Operation.UNBIND;
+import static udmi.schema.CloudModel.ModelOperation.BIND;
+import static udmi.schema.CloudModel.ModelOperation.BLOCK;
+import static udmi.schema.CloudModel.ModelOperation.BOUND;
+import static udmi.schema.CloudModel.ModelOperation.DELETE;
+import static udmi.schema.CloudModel.ModelOperation.READ;
+import static udmi.schema.CloudModel.ModelOperation.UNBIND;
 
 import com.google.common.base.Preconditions;
 import com.google.daq.mqtt.util.MessagePublisher.QuerySpeed;
@@ -41,7 +41,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import udmi.schema.CloudModel;
-import udmi.schema.CloudModel.Operation;
+import udmi.schema.CloudModel.ModelOperation;
 import udmi.schema.Credential;
 import udmi.schema.Envelope.SubFolder;
 import udmi.schema.ExecutionConfiguration;
@@ -112,19 +112,19 @@ public class IotReflectorClient implements IotProvider {
 
   @Override
   public void updateDevice(String deviceId, CloudModel device) {
-    device.operation = ofNullable(device.operation).orElse(Operation.UPDATE);
+    device.operation = ofNullable(device.operation).orElse(ModelOperation.UPDATE);
     cloudModelTransaction(deviceId, CLOUD_MODEL_TOPIC, device);
   }
 
   @Override
   public void updateRegistry(CloudModel registry) {
-    registry.operation = ofNullable(registry.operation).orElse(Operation.UPDATE);
+    registry.operation = ofNullable(registry.operation).orElse(ModelOperation.UPDATE);
     cloudModelTransaction(null, CLOUD_MODEL_TOPIC, registry);
   }
 
   @Override
   public void createResource(String deviceId, CloudModel makeDevice) {
-    makeDevice.operation = Operation.CREATE;
+    makeDevice.operation = ModelOperation.CREATE;
     CloudModel created = cloudModelTransaction(deviceId, CLOUD_MODEL_TOPIC, makeDevice);
     ifNotNullThen(makeDevice.num_id, () -> ifTrueThen(!makeDevice.num_id.equals(created.num_id),
         () -> System.err.printf("created num_id %s does not match expected %s%n", created.num_id,
@@ -135,7 +135,7 @@ public class IotReflectorClient implements IotProvider {
   @Override
   public void deleteDevice(String deviceId, Set<String> unbindIds) {
     CloudModel deleteModel = new CloudModel();
-    deleteModel.operation = Operation.DELETE;
+    deleteModel.operation = ModelOperation.DELETE;
     deleteModel.gateway = ifNotNullGet(unbindIds, this::proxyGatewayModel);
     cloudModelTransaction(deviceId, CLOUD_MODEL_TOPIC, deleteModel);
   }
@@ -147,12 +147,12 @@ public class IotReflectorClient implements IotProvider {
   }
 
   private CloudModel cloudModelTransaction(String deviceId, String topic, CloudModel model) {
-    Operation operation = Preconditions.checkNotNull(model.operation, "no operation");
+    ModelOperation operation = Preconditions.checkNotNull(model.operation, "no operation");
     model.functions_ver = TOOLS_FUNCTIONS_VERSION;
     Map<String, Object> result = transaction(deviceId, topic, stringify(model), QuerySpeed.DYNAMIC);
     CloudModel cloudModel = convertTo(CloudModel.class, result);
     String cloudNumId = ifNotNullGet(cloudModel, out -> out.num_id);
-    Operation cloudOperation = ifNotNullGet(cloudModel, out -> out.operation);
+    ModelOperation cloudOperation = ifNotNullGet(cloudModel, out -> out.operation);
     // This happens with devices are bound to gateways, so explicitly capture the relevant info.
     if (operation == DELETE && cloudOperation == BOUND) {
       throw new DeviceGatewayBoundException(cloudModel);

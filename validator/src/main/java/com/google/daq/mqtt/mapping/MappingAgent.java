@@ -34,7 +34,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 import udmi.schema.CloudModel;
-import udmi.schema.CloudModel.Operation;
+import udmi.schema.CloudModel.ModelOperation;
 import udmi.schema.DiscoveryConfig;
 import udmi.schema.DiscoveryEvents;
 import udmi.schema.Enumerations.Depth;
@@ -108,7 +108,7 @@ public class MappingAgent {
   private void setupProvision() {
     CloudModel cloudModel = new CloudModel();
     cloudModel.metadata = ImmutableMap.of(UDMI_PROVISION_ENABLE, "true");
-    cloudIotManager.updateDevice(deviceId, cloudModel, Operation.MODIFY);
+    cloudIotManager.updateDevice(deviceId, cloudModel, ModelOperation.MODIFY);
   }
 
   private void initiateDiscover() {
@@ -120,7 +120,7 @@ public class MappingAgent {
     String generation = isoConvert(generationDate);
     CloudModel cloudModel = new CloudModel();
     cloudModel.metadata = ImmutableMap.of(UDMI_PROVISION_GENERATION, generation);
-    cloudIotManager.updateDevice(deviceId, cloudModel, Operation.MODIFY);
+    cloudIotManager.updateDevice(deviceId, cloudModel, ModelOperation.MODIFY);
 
     System.err.printf("Initiating %s discovery on %s/%s at %s%n", families,
         siteModel.getRegistryId(), deviceId, generation);

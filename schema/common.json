@@ -48,6 +48,24 @@
         "clearblade"
       ]
     },
+    "operation": {
+      "title": "Model Operation",
+      "enum": [
+        "ERROR",
+        "CREATE",
+        "READ",
+        "REPLY",
+        "UPDATE",
+        "DELETE",
+        "MODIFY",
+        "PREVIEW",
+        "BIND",
+        "UNBIND",
+        "BOUND",
+        "ALLOW",
+        "BLOCK"
+      ]
+    },
     "stage": {
       "title": "FeatureStage",
       "description": "Stage of a feature implemenation",

@@ -60,7 +60,7 @@ import static udmi.schema.Bucket.UNKNOWN_DEFAULT;
 import static udmi.schema.Category.VALIDATION_FEATURE_CAPABILITY;
 import static udmi.schema.Category.VALIDATION_FEATURE_SCHEMA;
 import static udmi.schema.Category.VALIDATION_FEATURE_SEQUENCE;
-import static udmi.schema.CloudModel.Operation.REPLY;
+import static udmi.schema.CloudModel.ModelOperation.REPLY;
 import static udmi.schema.Envelope.SubFolder.UPDATE;
 import static udmi.schema.FeatureDiscovery.FeatureStage.ALPHA;
 import static udmi.schema.FeatureDiscovery.FeatureStage.PREVIEW;

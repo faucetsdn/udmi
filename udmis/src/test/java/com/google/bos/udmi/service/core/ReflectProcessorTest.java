@@ -29,7 +29,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 import udmi.schema.CloudModel;
-import udmi.schema.CloudModel.Operation;
+import udmi.schema.CloudModel.ModelOperation;
 import udmi.schema.CloudModel.Resource_type;
 import udmi.schema.Envelope;
 import udmi.schema.Envelope.SubFolder;
@@ -152,12 +152,12 @@ public class ReflectProcessorTest extends ProcessorTestBase {
   @Test
   public void modelDeviceTest() {
     CloudModel returnModel = new CloudModel();
-    returnModel.operation = Operation.CREATE;
+    returnModel.operation = ModelOperation.CREATE;
     returnModel.resource_type = Resource_type.DEVICE;
     when(provider.modelDevice(anyString(), anyString(), notNull(), any())).thenReturn(returnModel);
 
     CloudModel requestModel = new CloudModel();
-    requestModel.operation = Operation.BIND;
+    requestModel.operation = ModelOperation.BIND;
     requestModel.resource_type = Resource_type.DEVICE;
     activeTestInstance(() -> getReverseDispatcher().publish(makeModelBundle(requestModel)));
     verify(provider, times(1)).modelDevice(eq(TEST_REGISTRY), eq(TEST_DEVICE),
@@ -173,7 +173,7 @@ public class ReflectProcessorTest extends ProcessorTestBase {
   @Test
   public void modelRegistryUpdateTest() {
     CloudModel requestModel = new CloudModel();
-    requestModel.operation = Operation.UPDATE;
+    requestModel.operation = ModelOperation.UPDATE;
     requestModel.resource_type = Resource_type.REGISTRY;
     activeTestInstance(() -> getReverseDispatcher().publish(makeModelBundle(requestModel)));
     verify(provider, times(1)).modelRegistry(eq(TEST_REGISTRY), any(),

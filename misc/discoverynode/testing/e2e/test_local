@@ -4,6 +4,7 @@ ROOT_DIR=$(dirname $(realpath $0))
 
 export DN_SITE_PATH=$(realpath $1)
 export DN_TARGET=//mqtt/localhost
+export PATH=$JAVA_HOME/bin:$PATH
 
 if [[ -z $DN_SITE_PATH ]]; then
   echo "Usage $0 SITE_PATH [TEST_REGEX]"
