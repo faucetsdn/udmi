@@ -1291,12 +1291,16 @@ public class Validator {
 
   private void upgradeMessage(String schemaName, Map<String, Object> message) {
     JsonNode jsonNode = OBJECT_MAPPER.convertValue(message, JsonNode.class);
-    Object upgraded = new MessageUpgrader(schemaName, jsonNode).upgrade(forceUpgrade);
-    Map<String, Object> objectMap = OBJECT_MAPPER.convertValue(upgraded,
-        new TypeReference<>() {
-        });
-    message.clear();
-    message.putAll(objectMap);
+    try {
+      Object upgraded = new MessageUpgrader(schemaName, jsonNode).upgrade(forceUpgrade);
+      Map<String, Object> objectMap = OBJECT_MAPPER.convertValue(upgraded,
+          new TypeReference<>() {
+          });
+      message.clear();
+      message.putAll(objectMap);
+    } catch (Exception e) {
+      message.put(EXCEPTION_KEY, "Could not upgrade message: " + e.getMessage());
+    }
   }
 
   private File getFullPath(String prefix, File targetFile) {
