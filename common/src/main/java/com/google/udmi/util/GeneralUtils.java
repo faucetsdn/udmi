@@ -358,6 +358,12 @@ public class GeneralUtils {
     }
   }
 
+  public static <T> void ifNotNullThrow(T value, Function<T, String> formatter) {
+    if (value != null) {
+      throw new RuntimeException(formatter.apply(value));
+    }
+  }
+
   public static <T extends RuntimeException> void ifNotNullThrow(T value) {
     if (value != null) {
       throw value;
