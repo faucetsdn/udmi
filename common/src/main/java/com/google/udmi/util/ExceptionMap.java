@@ -115,8 +115,11 @@ public class ExceptionMap extends RuntimeException {
    * @param exception exception to add
    */
   public void put(ExceptionCategory key, Exception exception) {
-    if (exceptions.put(key, exception) != null) {
-      throw new IllegalArgumentException("Exception key already defined: " + key);
+    Exception previous = exceptions.put(key, exception);
+    if (previous instanceof ExceptionList exceptionList) {
+      exceptionList.exceptions().add(exception);
+    } else if (previous != null) {
+      exceptions.put(key, new ExceptionList(List.of(previous, exception)));
     }
   }
 
