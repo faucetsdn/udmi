@@ -170,6 +170,7 @@ public class PointsetSequences extends PointsetBase {
   @Test(timeout = TWO_MINUTES_MS)
   @Summary("Check that a device publishes pointset events")
   @Feature(stage = STABLE, bucket = POINTSET, nostate = true)
+  @ValidateSchema(SubFolder.POINTSET)
   public void pointset_publish() {
     ifNullSkipTest(deviceConfig.pointset, "no pointset found in config");
 

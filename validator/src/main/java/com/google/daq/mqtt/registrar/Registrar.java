@@ -29,6 +29,7 @@ import static com.google.udmi.util.GeneralUtils.ifNullThen;
 import static com.google.udmi.util.GeneralUtils.ifTrueGet;
 import static com.google.udmi.util.GeneralUtils.ifTrueThen;
 import static com.google.udmi.util.GeneralUtils.isTrue;
+import static com.google.udmi.util.GeneralUtils.setOrSize;
 import static com.google.udmi.util.GeneralUtils.writeString;
 import static com.google.udmi.util.JsonUtil.JSON_SUFFIX;
 import static com.google.udmi.util.JsonUtil.OBJECT_MAPPER;
@@ -60,6 +61,7 @@ import com.google.daq.mqtt.registrar.LocalDevice.DeviceKind;
 import com.google.daq.mqtt.util.CloudDeviceSettings;
 import com.google.daq.mqtt.util.CloudIotManager;
 import com.google.daq.mqtt.util.DeviceGatewayBoundException;
+import com.google.daq.mqtt.util.MessagePublisher.QuerySpeed;
 import com.google.daq.mqtt.util.PubSubPusher;
 import com.google.udmi.util.CommandLineOption;
 import com.google.udmi.util.CommandLineProcessor;
@@ -136,7 +138,7 @@ public class Registrar {
   private static final String TOOL_NAME = "registrar";
   private static final long DELETE_FLUSH_DELAY_MS = 10 * SEC_TO_MS;
   public static final String REGISTRAR_TOOL_NAME = "registrar";
-  private static final int SET_SIZE_THRESHOLD = 10;
+  private static final int UNBIND_SET_SIZE = 1000;
   private boolean autoAltRegistry;
   private final Map<String, JsonSchema> schemas = new HashMap<>();
   private final String generation = JsonUtil.isoConvert();
@@ -422,7 +424,7 @@ public class Registrar {
     if (workingDevices == null) {
       return;
     }
-    workingDevices.values().forEach(LocalDevice::writeErrors);
+    ifNotTrueThen(doNotUpdate, () -> workingDevices.values().forEach(LocalDevice::writeErrors));
     workingDevices.values().forEach(device -> {
       getErrorKeyMap(errorSummary, ExceptionCategory.status.toString())
           .put(device.getDeviceId(), device.getStatus().toString());
@@ -737,7 +739,8 @@ public class Registrar {
       CloudModel cloudModel = boundException.getCloudModel();
       if (cloudModel.resource_type == Resource_type.GATEWAY) {
         Set<String> proxyIds = new HashSet<>(cloudModel.gateway.proxy_ids);
-        System.err.printf("Retrying delete %s with bound devices: %s%n", deviceId, proxyIds);
+        System.err.printf("Retrying delete %s with bound devices: %s%n", deviceId,
+            setOrSize(proxyIds));
         cloudIotManager.deleteDevice(deviceId, proxyIds);
       } else if (cloudModel.resource_type == Resource_type.DEVICE) {
         Set<String> gatewayIds = ImmutableSet.of(cloudModel.gateway.gateway_id);
@@ -766,9 +769,9 @@ public class Registrar {
         Map<String, CloudModel> boundDevices = cloudIotManager.fetchDevice(gatewayId).device_ids;
         Set<String> toUnbind = new HashSet<>(intersection(allDevices, boundDevices.keySet()));
         System.err.printf("Unbinding from gateway %s: %s%n", gatewayId, setOrSize(toUnbind));
-        boolean multiple = toUnbind.size() > SET_SIZE_THRESHOLD;
+        boolean multiple = toUnbind.size() > UNBIND_SET_SIZE;
         while (!toUnbind.isEmpty()) {
-          Set<String> limitedSet = limitSetSize(toUnbind, SET_SIZE_THRESHOLD);
+          Set<String> limitedSet = limitSetSize(toUnbind, UNBIND_SET_SIZE);
           ifTrueThen(multiple, () -> System.err.printf("Unbinding subset from %s: %s%n", gatewayId,
               setOrSize(limitedSet)));
           cloudIotManager.bindDevices(limitedSet, gatewayId, false);
@@ -1086,8 +1089,8 @@ public class Registrar {
         });
       });
 
-      System.err.println("Waiting for device binding...");
-      dynamicTerminate(gatewayBindings.size());
+      System.err.printf("Waiting for device binding...%n");
+      dynamicTerminate();
 
       Duration between = Duration.between(start, Instant.now());
       double seconds = between.getSeconds() + between.getNano() / 1e9;
@@ -1097,9 +1100,24 @@ public class Registrar {
     }
   }
 
-  private static String setOrSize(Set<String> items) {
-    return items.size() > SET_SIZE_THRESHOLD
-        ? format("%d devices", items.size()) : items.toString();
+  private synchronized void dynamicTerminate() throws InterruptedException {
+    try {
+      if (executor == null) {
+        return;
+      }
+      executor.shutdown();
+      System.err.printf("Waiting for tasks to complete...%n");
+      while (!executor.awaitTermination(QuerySpeed.SHORT.seconds(), TimeUnit.SECONDS)
+        && cloudIotManager.stillActive()) {
+        System.err.println("Still waiting...");
+      }
+      if (!executor.isTerminated()) {
+        throw new RuntimeException("Incomplete executor termination.");
+      }
+    } finally {
+      executor = null;
+      executing = null;
+    }
   }
 
   private synchronized void dynamicTerminate(int expected) throws InterruptedException {

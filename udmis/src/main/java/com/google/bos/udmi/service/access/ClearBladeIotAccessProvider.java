@@ -13,6 +13,7 @@ import static com.google.udmi.util.GeneralUtils.ifNotTrueThen;
 import static com.google.udmi.util.GeneralUtils.ifTrueGet;
 import static com.google.udmi.util.GeneralUtils.ifTrueThen;
 import static com.google.udmi.util.GeneralUtils.isTrue;
+import static com.google.udmi.util.GeneralUtils.setOrSize;
 import static com.google.udmi.util.GeneralUtils.writeString;
 import static com.google.udmi.util.JsonUtil.getDate;
 import static com.google.udmi.util.JsonUtil.writeFile;
@@ -136,7 +137,7 @@ public class ClearBladeIotAccessProvider extends IotAccessBase {
   private static final String TOPIC_NAME_FORMAT = "projects/%s/topics/%s";
   private static final CharSequence HAD_BOUND_DEVICES_MARKER = " it has associated devices.";
   private static final CharSequence BOUND_TO_GATEWAY_MARKER = " it's associated with ";
-  private static final int OP_PROGRESS_BATCH_SIZE = 10;
+  private static final CharSequence DUPLICATES_ERROR_MARKER = " duplicates in bound_devices";
   private final String projectId;
   private final DeviceManagerInterface deviceManager;
 
@@ -261,20 +262,28 @@ public class ClearBladeIotAccessProvider extends IotAccessBase {
     return new HashSet<>(gateway.proxy_ids);
   }
 
-  private void bindDevice(String registryId, String gatewayId, String id) {
+  private void bindDevice(String registryId, String gatewayId, String deviceId) {
     try {
       String location = getRegistryLocation(registryId);
       RegistryName parent = RegistryName.of(projectId, location, registryId);
       BindDeviceToGatewayRequest request =
           BindDeviceToGatewayRequest.Builder.newBuilder()
               .setParent(parent.getRegistryFullName())
-              .setDevice(id)
+              .setDevice(deviceId)
               .setGateway(gatewayId)
               .build();
-      requireNonNull(deviceManager.bindDeviceToGateway(request),
-          "binding device to gateway");
+      try {
+        requireNonNull(deviceManager.bindDeviceToGateway(request),
+            "binding device to gateway");
+      } catch (Exception e) {
+        if (friendlyStackTrace(e).contains(DUPLICATES_ERROR_MARKER)) {
+          warn("Ignoring duplicate bound device error for " + gatewayId);
+        } else {
+          throw e;
+        }
+      }
     } catch (Exception e) {
-      throw new RuntimeException(format("While binding %s to gateway %s", id, gatewayId), e);
+      throw new RuntimeException(format("While binding %s to gateway %s", deviceId, gatewayId), e);
     }
   }
 
@@ -399,20 +408,8 @@ public class ClearBladeIotAccessProvider extends IotAccessBase {
     return EventNotificationConfig.newBuilder().setPubsubTopicName(topicName).build();
   }
 
-  private HashMap<String, CloudModel> fetchBoundGateways(String deviceRegistryId, String deviceId,
-      Consumer<String> progress) {
-    GatewayListOptions gatewayListOptions = ifNotNullGet(deviceId, this::getBoundGatewaysOptions);
-    return fetchDevices(deviceRegistryId, progress, gatewayListOptions);
-  }
-
-  private HashMap<String, CloudModel> fetchDevices(String deviceRegistryId, String gatewayId,
-      Consumer<String> progress) {
-    GatewayListOptions gatewayListOptions = ifNotNullGet(gatewayId, this::getBoundDevicesOptions);
-    return fetchDevices(deviceRegistryId, progress, gatewayListOptions);
-  }
-
   private HashMap<String, CloudModel> fetchDevices(String deviceRegistryId,
-      Consumer<String> progress, GatewayListOptions gatewayListOptions) {
+      Consumer<String> progress, boolean chattyProgress, GatewayListOptions gatewayListOptions) {
     String location = getRegistryLocation(deviceRegistryId);
     String registryFullName =
         RegistryName.of(projectId, location, deviceRegistryId).getRegistryFullName();
@@ -430,14 +427,34 @@ public class ClearBladeIotAccessProvider extends IotAccessBase {
       Map<String, CloudModel> responseMap =
           response.getDevicesList().stream().map(ClearBladeIotAccessProvider::convertPartial)
               .collect(toMap(Entry::getKey, Entry::getValue));
+      List<String> exists = responseMap.keySet().stream().filter(collect::containsKey).toList();
+      ifNotTrueThen(exists.isEmpty(),
+          () -> progress.accept("Found duplicate device entries: " + exists));
+
       collect.putAll(responseMap);
       pageToken = response.getNextPageToken();
       queryCount++;
-      ifNotNullThen(progress, p -> p.accept(format("Fetched %d devices...", collect.size())));
+      ifTrueThen(pageToken != null || chattyProgress,
+          () -> progress.accept(getProgressMessage(collect, gatewayListOptions)));
       debug(format("fetchDevices %s #%d found %d total %d more %s", deviceRegistryId,
           queryCount, responseMap.size(), collect.size(), pageToken != null));
     } while (pageToken != null);
     return collect;
+  }
+
+  private static String getProgressMessage(HashMap<String, CloudModel> collect,
+      GatewayListOptions gatewayListOptions) {
+    if (gatewayListOptions != null) {
+      String gatewayId = gatewayListOptions.getAssociationsGatewayId();
+      if (gatewayId != null) {
+        return format("Fetched %d devices bound to gateway %s", collect.size(), gatewayId);
+      }
+      String deviceId = gatewayListOptions.getAssociationsDeviceId();
+      if (deviceId != null) {
+        return format("Fetched %s gateways bound to device %s", collect.size(), deviceId);
+      }
+    }
+    return format("Fetched %d devices...", collect.size());
   }
 
   private CloudModel findDevicesForGateway(String registryId, Device device) {
@@ -449,7 +466,8 @@ public class ClearBladeIotAccessProvider extends IotAccessBase {
 
   private CloudModel findGatewaysForDevice(String registryId, Device device) {
     String deviceId = requireNonNull(device.toBuilder().getId(), "unspecified device id");
-    Set<String> boundGateways = fetchBoundGateways(registryId, deviceId, null).keySet();
+    Set<String> boundGateways = fetchDevices(registryId, this::bitBucket,
+        true, getBoundGatewaysOptions(deviceId)).keySet();
     if (boundGateways.isEmpty()) {
       throw new RuntimeException("Was expecting at least one bound gateway!");
     }
@@ -506,11 +524,18 @@ public class ClearBladeIotAccessProvider extends IotAccessBase {
   }
 
   private CloudModel listRegistryDevices(String registryId, String gatewayId,
-      Consumer<String> progress) {
+      Consumer<String> maybeProgress) {
+    return listRegistryDevices(registryId, gatewayId, maybeProgress, true);
+  }
+
+  private CloudModel listRegistryDevices(String registryId, String gatewayId,
+      Consumer<String> maybeProgress, boolean chattyProgress) {
     try {
       CloudModel cloudModel = new CloudModel();
+      Consumer<String> progress = ofNullable(maybeProgress).orElse(this::bitBucket);
+      GatewayListOptions options = ifNotNullGet(gatewayId, this::getBoundDevicesOptions);
       HashMap<String, CloudModel> boundDevices =
-          fetchDevices(registryId, gatewayId, progress);
+          fetchDevices(registryId, progress, chattyProgress, options);
       debug(format("Fetched %d devices from %s gateway %s", boundDevices.size(), registryId,
           gatewayId));
       if (gatewayId != null) {
@@ -526,15 +551,17 @@ public class ClearBladeIotAccessProvider extends IotAccessBase {
 
   private Map<String, CloudModel> augmentGatewayModels(String registryId,
       HashMap<String, CloudModel> boundDevices, Consumer<String> progress) {
+    requireNonNull(progress, "augmentGatewayModels has null progress");
     HashMap<String, String> proxyDeviceGateways = new HashMap<>();
     Set<Entry<String, CloudModel>> gateways =
         boundDevices.entrySet().stream().filter(this::isGateway).collect(Collectors.toSet());
     AtomicInteger count = new AtomicInteger();
     gateways.forEach(entry -> {
-      augmentGatewayModel(registryId, entry, proxyDeviceGateways);
-      progress.accept(format("Augmented gateway %s (%d/%d)",
-          entry.getKey(), count.incrementAndGet(), gateways.size()));
+      int added = augmentGatewayModel(registryId, entry, proxyDeviceGateways, progress);
+      progress.accept(format("Augmented gateway %s (%d/%d) with %d entries",
+          entry.getKey(), count.incrementAndGet(), gateways.size(), added));
     });
+    progress.accept(format("Bound to gateways: %s", setOrSize(proxyDeviceGateways.keySet())));
     boundDevices.entrySet()
         .forEach(entry -> augmentProxiedModel(entry, proxyDeviceGateways));
     return boundDevices;
@@ -551,12 +578,13 @@ public class ClearBladeIotAccessProvider extends IotAccessBase {
     });
   }
 
-  private void augmentGatewayModel(String registryId, Entry<String, CloudModel> model,
-      HashMap<String, String> proxyDeviceGateways) {
+  private int augmentGatewayModel(String registryId, Entry<String, CloudModel> model,
+      HashMap<String, String> proxyDeviceGateways, Consumer<String> progress) {
     String gatewayId = model.getKey();
-    CloudModel gatewayModel = listRegistryDevices(registryId, gatewayId, null);
+    CloudModel gatewayModel = listRegistryDevices(registryId, gatewayId, progress, false);
     model.getValue().gateway = gatewayModel.gateway;
     gatewayModel.gateway.proxy_ids.forEach(proxyId -> proxyDeviceGateways.put(proxyId, gatewayId));
+    return gatewayModel.gateway.proxy_ids.size();
   }
 
   private GatewayModel makeGatewayModel(HashMap<String, CloudModel> boundDevices) {
@@ -567,10 +595,11 @@ public class ClearBladeIotAccessProvider extends IotAccessBase {
 
   @Override
   public CloudModel modelDevice(String registryId, String deviceId, CloudModel cloudModel,
-      Consumer<String> progress) {
+      Consumer<String> maybeProgress) {
     String devicePath = getDeviceName(registryId, deviceId);
     ModelOperation operation = cloudModel.operation;
     Resource_type type = ofNullable(cloudModel.resource_type).orElse(Resource_type.DEVICE);
+    Consumer<String> progress = ofNullable(maybeProgress).orElse(this::bitBucket);
     checkState(type == DEVICE || type == GATEWAY, "unexpected resource type " + type);
     try {
       Device device = convert(cloudModel, deviceId);
@@ -586,6 +615,10 @@ public class ClearBladeIotAccessProvider extends IotAccessBase {
     } catch (Exception e) {
       throw new RuntimeException("While " + operation + "ing " + devicePath, e);
     }
+  }
+
+  private void bitBucket(String s) {
+    // Do nothing, just drop the messages on the floor.
   }
 
   private CloudModel getReply(String registryId, String deviceId, CloudModel request,
@@ -654,7 +687,7 @@ public class ClearBladeIotAccessProvider extends IotAccessBase {
         CloudModel gatewaysForDevice = findGatewaysForDevice(registryId, device);
         if (ReflectProcessor.isLegacyRequest(request)) {
           warn("Handling legacy bound delete...");
-          return findUnbindAndDelete(registryId, device, gatewaysForDevice);
+          return findUnbindAndDelete(registryId, device, gatewaysForDevice, progress);
         }
         return gatewaysForDevice;
       } else if (stackTrace.contains(HAD_BOUND_DEVICES_MARKER)) {
@@ -666,11 +699,12 @@ public class ClearBladeIotAccessProvider extends IotAccessBase {
     }
   }
 
-  private CloudModel findUnbindAndDelete(String registryId, Device device, CloudModel request) {
+  private CloudModel findUnbindAndDelete(String registryId, Device device, CloudModel request,
+      Consumer<String> progress) {
     String gatewayId = request.gateway.gateway_id;
     String deviceId = device.toBuilder().getId();
     unbindDevice(registryId, gatewayId, deviceId);
-    unbindAndDeleteCore(registryId, device, null, null);
+    unbindAndDeleteCore(registryId, device, null, progress);
     CloudModel cloudModel = new CloudModel();
     cloudModel.operation = DELETE;
     return cloudModel;
@@ -706,24 +740,23 @@ public class ClearBladeIotAccessProvider extends IotAccessBase {
 
   private void bindDevicesGateways(String registryId, Set<String> gatewayIds,
       Set<String> deviceIds, boolean toBind, Consumer<String> progress) {
+
+    requireNonNull(progress, "bindDevicesGateways has null progress");
     String opCode = toBind ? "Binding" : "Unbinding";
     info("%s %s: gateways %s devices %s", opCode, registryId, gatewayIds, deviceIds);
     AtomicInteger opCount = new AtomicInteger(0);
-    ifNotNullThen(progress,
-        p -> p.accept(format("%s %d devices on %d gateways", opCode, deviceIds.size(),
-            gatewayIds.size())));
+    progress.accept(format("%s %d devices on %d gateways", opCode, deviceIds.size(),
+        gatewayIds.size()));
     gatewayIds.forEach(gatewayId -> {
       deviceIds.forEach(deviceId -> {
-        ifTrueThen(opCount.incrementAndGet() % OP_PROGRESS_BATCH_SIZE == 0,
-            () -> ifNotNullThen(progress,
-                p -> p.accept(format("%s %d devices...", opCode, opCount.get()))));
+        progress.accept(format("%s %s from/to %s", opCode, deviceId, gatewayId));
         ifTrueThen(toBind,
             () -> bindDevice(registryId, gatewayId, deviceId),
             () -> unbindDevice(registryId, gatewayId, deviceId));
       });
     });
-    ifTrueThen(opCount.get() > 0, () -> ifNotNullThen(progress, p -> p.accept(
-        format("Completed binding %d devices.", opCount.get()))));
+    ifTrueThen(opCount.get() > 0, () -> progress.accept(
+        format("Completed binding %d devices.", opCount.get())));
   }
 
   private void unbindDevice(String registryId, String gatewayId, String proxyId) {
