@@ -149,10 +149,10 @@ public class IotReflectorClient implements IotProvider {
   private CloudModel cloudModelTransaction(String deviceId, String topic, CloudModel model) {
     ModelOperation operation = Preconditions.checkNotNull(model.operation, "no operation");
     model.functions_ver = TOOLS_FUNCTIONS_VERSION;
-    Map<String, Object> message = transaction(deviceId, topic, stringify(model), QuerySpeed.LONG);
-    CloudModel cloudModel = convertTo(CloudModel.class, message);
-    String cloudNumId = ifNotNullGet(cloudModel, result -> result.num_id);
-    ModelOperation cloudOperation = ifNotNullGet(cloudModel, result -> result.operation);
+    Map<String, Object> result = transaction(deviceId, topic, stringify(model), QuerySpeed.DYNAMIC);
+    CloudModel cloudModel = convertTo(CloudModel.class, result);
+    String cloudNumId = ifNotNullGet(cloudModel, out -> out.num_id);
+    ModelOperation cloudOperation = ifNotNullGet(cloudModel, out -> out.operation);
     // This happens with devices are bound to gateways, so explicitly capture the relevant info.
     if (operation == DELETE && cloudOperation == BOUND) {
       throw new DeviceGatewayBoundException(cloudModel);
@@ -167,6 +167,12 @@ public class IotReflectorClient implements IotProvider {
   @Override
   public CloudModel fetchDevice(String deviceId) {
     return fetchCloudModel(deviceId);
+  }
+
+  @Override
+  public boolean stillActive() {
+    int pollSeconds = QuerySpeed.SHORT.seconds();
+    return messageClient.getLastProgressEvent().plusSeconds(pollSeconds).isAfter(Instant.now());
   }
 
   @Override

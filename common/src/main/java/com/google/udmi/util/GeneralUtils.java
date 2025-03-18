@@ -77,6 +77,7 @@ public class GeneralUtils {
   private static final Joiner INDENTED_LINES = Joiner.on(SEPARATOR);
   private static final String NULL_STRING = "null";
   private static final String CONDITIONAL_KEY_PREFIX = "?";
+  public static final int SET_SIZE_THRESHOLD = 10;
   private static Duration clockSkew = Duration.ZERO;
 
   public static String[] arrayOf(String... args) {
@@ -354,6 +355,12 @@ public class GeneralUtils {
   public static <T> void ifNotNullThrow(T value, String message) {
     if (value != null) {
       throw new RuntimeException(message);
+    }
+  }
+
+  public static <T> void ifNotNullThrow(T value, Function<T, String> formatter) {
+    if (value != null) {
+      throw new RuntimeException(formatter.apply(value));
     }
   }
 
@@ -743,5 +750,10 @@ public class GeneralUtils {
 
   public static Instant toInstant(String timestamp) {
     return ifNotNullGet(timestamp, Instant::parse);
+  }
+
+  public static String setOrSize(Set<String> items) {
+    return items.size() > SET_SIZE_THRESHOLD
+        ? format("%d devices", items.size()) : items.toString();
   }
 }
