@@ -1891,6 +1891,10 @@ public class SequenceBase {
       } else {
         handleDeviceMessage(message, subTypeRaw, subFolderRaw, transactionId);
       }
+
+      if (!waitingForConfigSync.get() && message.containsKey(EXCEPTION_KEY)) {
+        throw new RuntimeException("Message exception: " + message.get(EXCEPTION_KEY));
+      }
     } catch (Exception e) {
       File exceptionOutFile = exceptionOutFile();
       error(format("Exception processing %s as %s: %s (in %s)", commandSignature, transactionId,
