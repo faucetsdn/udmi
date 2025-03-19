@@ -12,6 +12,7 @@ import static com.google.udmi.util.Common.POINT_NAME_ALLOWABLE;
 import static com.google.udmi.util.ContextWrapper.runInContext;
 import static com.google.udmi.util.GeneralUtils.CSV_JOINER;
 import static com.google.udmi.util.GeneralUtils.OBJECT_MAPPER_STRICT;
+import static com.google.udmi.util.GeneralUtils.catchToFalse;
 import static com.google.udmi.util.GeneralUtils.catchToNull;
 import static com.google.udmi.util.GeneralUtils.compressJsonString;
 import static com.google.udmi.util.GeneralUtils.ifNotNullGet;
@@ -72,6 +73,7 @@ import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -226,8 +228,14 @@ class LocalDevice {
   public void initialize() {
     prepareOutDir();
     ifTrueThen(deviceKind == DeviceKind.LOCAL && metadata != null, this::validateMetadata);
-    config = configFrom(metadata, deviceId, siteModel);
-    ifTrueThen(deviceKind == DeviceKind.EXTRA, this::loadExtraCloudModel);
+    configure();
+  }
+
+  void configure() {
+    if (config == null) {
+      config = configFrom(metadata, deviceId, siteModel);
+      ifTrueThen(deviceKind == DeviceKind.EXTRA, this::loadExtraCloudModel);
+    }
   }
 
   public static void parseMetadataValidateProcessingReport(ProcessingReport report)
@@ -313,10 +321,6 @@ class LocalDevice {
             metadataException.exception);
       }
       baseVersion = ofNullable(deviceMetadata.upgraded_from).orElse(deviceMetadata.version);
-
-      List<String> proxyIds = catchToNull(() -> deviceMetadata.gateway.proxy_ids);
-      ifNotNullThen(proxyIds,
-          ids -> ifTrueThen(ids.isEmpty(), () -> deviceMetadata.gateway.proxy_ids = null));
       return deviceMetadata;
     } catch (Exception exception) {
       exceptionMap.put(ExceptionCategory.loading, exception);
@@ -409,7 +413,7 @@ class LocalDevice {
   }
 
   private Set<String> keyFiles() {
-    if (!isGateway() && !isDirectConnect()) {
+    if (!isGateway() && !isDirect()) {
       return ImmutableSet.of();
     }
     String authType = getAuthType();
@@ -450,7 +454,15 @@ class LocalDevice {
   }
 
   boolean hasCloudConnection() {
-    return isDirectConnect() || isGateway();
+    return isDirect() || isGateway();
+  }
+
+  boolean isDirect() {
+    return config != null && config.isDirect();
+  }
+
+  boolean isVirtual() {
+    return config != null && config.isVirtual();
   }
 
   boolean isGateway() {
@@ -474,10 +486,6 @@ class LocalDevice {
   String getGatewayId() {
     GatewayModel gatewayModel = isExtraKind() ? cloudModel.gateway : metadata.gateway;
     return ifNotNullGet(gatewayModel, model -> model.gateway_id);
-  }
-
-  boolean isDirectConnect() {
-    return config != null && config.isDirect();
   }
 
   CloudDeviceSettings getSettings() {
@@ -693,15 +701,13 @@ class LocalDevice {
   }
 
   void writeNormalized() {
+    validateConsistency();
+
     File metadataFile = new File(outDir, NORMALIZED_JSON);
     if (metadata == null) {
       System.err.println("Deleting (invalid) " + metadataFile.getAbsolutePath());
       metadataFile.delete();
       return;
-    }
-    if (metadata.cloud != null && metadata.cloud.credentials != null
-        && metadata.cloud.credentials.isEmpty()) {
-      metadata.cloud.credentials = null;
     }
     metadata.timestamp = metadata.timestamp != null ? metadata.timestamp : new Date();
     Metadata normalized = readNormalized();
@@ -717,6 +723,21 @@ class LocalDevice {
     } catch (Exception e) {
       exceptionMap.put(ExceptionCategory.writing, e);
     }
+  }
+
+  private void validateConsistency() {
+    checkState(!(isProxied() && isGateway()), "device is both proxy and gateway");
+    boolean hasProxyIds = catchToFalse(() -> metadata.gateway.proxy_ids != null);
+    checkState(hasProxyIds == isGateway(), "gateway has no proxies");
+    boolean hasGatewayId = catchToFalse(() -> metadata.gateway.gateway_id != null);
+    checkState(hasGatewayId == isProxied(), "proxy has no gateway");
+
+    Set<String> types = new HashSet<>();
+    ifTrueThen(isProxied(), () -> types.add("proxied"));
+    ifTrueThen(isGateway(), () -> types.add("gateway"));
+    ifTrueThen(isDirect(), () -> types.add("direct"));
+    ifTrueThen(isVirtual(), () -> types.add("virtual"));
+    checkState(types.size() == 1, "Bad device classification: " + types);
   }
 
   /**

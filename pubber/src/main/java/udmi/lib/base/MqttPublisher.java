@@ -211,9 +211,6 @@ public class MqttPublisher implements Publisher {
         }
         return;
       }
-      if (callback != null) {
-        callback.run();
-      }
     } catch (Exception e) {
       if (isActive()) {
         errorCounter.incrementAndGet();
@@ -221,6 +218,10 @@ public class MqttPublisher implements Publisher {
         if (!isProxyDevice(deviceId)) {
           reconnect();
         }
+      }
+    } finally {
+      if (callback != null) {
+        callback.run();
       }
     }
   }

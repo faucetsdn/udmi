@@ -12,4 +12,8 @@ public class ExceptionList extends RuntimeException {
     super(format("List of %d exceptions", list.size()));
     this.list = list;
   }
+
+  public List<Exception> exceptions() {
+    return list;
+  }
 }
