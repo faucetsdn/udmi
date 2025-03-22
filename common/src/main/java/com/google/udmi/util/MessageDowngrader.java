@@ -145,30 +145,11 @@ public class MessageDowngrader {
     final SchemaVersion targetVersionEnum = SchemaVersion.fromKey(targetVersionString);
     final Integer targetVersion = targetVersionEnum.value();
 
-    if (currentVersion() > VERSION_1_4_2.value() && currentVersion() > targetVersion) {
-      downgradeLocalnetTo_1_4_2_From_1_5_2();
-      setCurrentVersion(VERSION_1_4_2);
-    }
-
-    if (currentVersion() > VERSION_1_4_1.value() && currentVersion() > targetVersion) {
-      downgradeLocalnetTo_1_4_1_From_1_5_0();
-      setCurrentVersion(VERSION_1_4_1);
-    }
-
-    if (currentVersion() > VERSION_1_4_0.value() && currentVersion() > targetVersion) {
-      downgradeOperational_From_1_4_0();
-      setCurrentVersion(VERSION_1_4_0);
-    }
-
-    if (currentVersion() > VERSION_1_3_13.value() && currentVersion() > targetVersion) {
-      downgradeLocalnetTo_1_3_13_From_1_4_1();
-      setCurrentVersion(VERSION_1_3_13);
-    }
-
-    if (currentVersion() > VERSION_1.value() && currentVersion() > targetVersion) {
-      downgradeLocalnetTo_1_From_1_3_13();
-      setCurrentVersion(VERSION_1);
-    }
+    maybeDowngrade(VERSION_1_4_2, targetVersionEnum, this::downgradeLocalnetTo_1_4_2_From_1_5_2);
+    maybeDowngrade(VERSION_1_4_1, targetVersionEnum, this::downgradeLocalnetTo_1_4_1_From_1_5_0);
+    maybeDowngrade(VERSION_1_4_0, targetVersionEnum, this::downgradeOperational_From_1_4_0);
+    maybeDowngrade(VERSION_1_3_13, targetVersionEnum, this::downgradeLocalnetTo_1_3_13_From_1_4_1);
+    maybeDowngrade(VERSION_1, targetVersionEnum, this::downgradeLocalnetTo_1_From_1_3_13);
 
     if (wasDowngraded()) {
       message.set(DOWNGRADED_FROM, original.get(VERSION_KEY));
@@ -178,7 +159,13 @@ public class MessageDowngrader {
     if (message.get(VERSION_KEY).asText().equals(VERSION_1.key())) {
       message.put(VERSION_KEY, LEGACY_REPLACEMENT);
     }
+  }
 
+  private void maybeDowngrade(SchemaVersion target, SchemaVersion endgame, Runnable downgrade) {
+    if (currentVersion() > target.value() && target.value() >= endgame.value()) {
+      downgrade.run();
+      setCurrentVersion(target);
+    }
   }
 
   private void downgradeLocalnetTo_1_4_2_From_1_5_2() {
