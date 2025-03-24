@@ -114,15 +114,12 @@ public class ProvisioningEngine extends ProcessorBase {
   }
 
   private void gatewayDiscovery(DiscoveryEvents discoveryEvent, CloudModel gatewayModel,
-      Envelope envelope, String registryId, String deviceId, Date generation) {
+      Envelope envelope, String registryId, String deviceId, Date generation, String expectedId) {
     Set<String> deviceIds = refreshModelDevices(registryId, deviceId, generation, gatewayModel);
     if (deviceIds == null) {
       info("Scan device %s/%s provisioning disabled", registryId, deviceId);
       return;
     }
-    String family = requireNonNull(discoveryEvent.family, "missing family");
-    String addr = requireNonNull(discoveryEvent.addr, "missing addr");
-    String expectedId = format(DISCOVERED_DEVICE_FORMAT, family, addr);
     if (deviceIds.contains(expectedId)) {
       debug("Scan device %s/%s target %s already registered", registryId, deviceId, expectedId);
     } else {
@@ -133,7 +130,7 @@ public class ProvisioningEngine extends ProcessorBase {
   }
 
   private void nonGatewayDiscovery(DiscoveryEvents discoveryEvent, CloudModel deviceModel,
-      Envelope envelope, String registryId, String deviceId, Date generation) {
+      Envelope envelope, String registryId, String deviceId, Date generation, String expectedId) {
 
     if (!shouldProvision(generation, deviceModel)) {
       info("Scan device %s/%s provisioning disabled", registryId, deviceId);
@@ -141,9 +138,7 @@ public class ProvisioningEngine extends ProcessorBase {
     }
 
     Set<String> deviceIds = catchToNull(() -> iotAccess.listDevices(registryId, null).device_ids.keySet());
-        String family = requireNonNull(discoveryEvent.family, "missing family");
-    String addr = requireNonNull(discoveryEvent.addr, "missing addr");
-    String expectedId = format(DISCOVERED_DEVICE_FORMAT, family, addr);
+
 
     if (deviceIds.contains(expectedId)) {
       debug("Scan device %s/%s target %s already registered", registryId, deviceId, expectedId);
@@ -175,11 +170,16 @@ public class ProvisioningEngine extends ProcessorBase {
       }
 
       Date generation = requireNonNull(discoveryEvent.generation, "missing scan generation");
+      String family = requireNonNull(discoveryEvent.family, "missing family");
+      String addr = requireNonNull(discoveryEvent.addr, "missing addr");
+      String expectedId = format(DISCOVERED_DEVICE_FORMAT, family, addr);
 
       if (isDeviceAGateway(deviceModel)) {
-        gatewayDiscovery(discoveryEvent, deviceModel, envelope, registryId, deviceId, generation);
+        gatewayDiscovery(discoveryEvent, deviceModel, envelope, registryId,
+            deviceId, generation, expectedId);
       } else {
-        nonGatewayDiscovery(discoveryEvent, deviceModel, envelope, registryId, deviceId, generation);
+        nonGatewayDiscovery(discoveryEvent, deviceModel, envelope, registryId,
+            deviceId, generation, expectedId);
       }
     } catch (Exception e) {
       error("Error during discovery event processing: " + friendlyStackTrace(e));
