@@ -89,7 +89,7 @@ public class ProvisioningEngine extends ProcessorBase {
     return catchToNull(() -> iotAccess.fetchDevice(deviceRegistryId, deviceId));
   }
 
-  private boolean isDeviceAGateway(CloudModel deviceModel) {
+  private boolean isGateway(CloudModel deviceModel) {
     return deviceModel != null && deviceModel.resource_type == Resource_type.GATEWAY;
   }
 
@@ -137,7 +137,8 @@ public class ProvisioningEngine extends ProcessorBase {
       return;
     }
 
-    Set<String> deviceIds = catchToNull(() -> iotAccess.listDevices(registryId, null).device_ids.keySet());
+    Set<String> deviceIds = catchToNull(() ->
+        iotAccess.listDevices(registryId, null).device_ids.keySet());
 
 
     if (deviceIds.contains(expectedId)) {
@@ -174,7 +175,7 @@ public class ProvisioningEngine extends ProcessorBase {
       String addr = requireNonNull(discoveryEvent.addr, "missing addr");
       String expectedId = format(DISCOVERED_DEVICE_FORMAT, family, addr);
 
-      if (isDeviceAGateway(deviceModel)) {
+      if (isGateway(deviceModel)) {
         gatewayDiscovery(discoveryEvent, deviceModel, envelope, registryId,
             deviceId, generation, expectedId);
       } else {
