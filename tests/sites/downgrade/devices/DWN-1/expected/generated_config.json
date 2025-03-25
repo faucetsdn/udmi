@@ -1,8 +1,6 @@
 {
   "downgraded_from": "1.5.3",
-  "gateway": {
-    "proxy_ids": []
-  },
+  "gateway": {},
   "localnet": {
     "subsystem": {
       "vendor": {

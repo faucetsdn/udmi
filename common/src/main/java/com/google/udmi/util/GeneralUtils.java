@@ -41,6 +41,7 @@ import java.util.Base64;
 import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -349,6 +350,12 @@ public class GeneralUtils {
       Function<T, String> detailer) {
     if (!value.isEmpty()) {
       throw new RuntimeException(detailer.apply(value));
+    }
+  }
+
+  public static <T extends Collection<?>> void ifNotEmptyThen(T value, Consumer<T> handler) {
+    if (!value.isEmpty()) {
+      handler.accept(value);
     }
   }
 
@@ -750,6 +757,19 @@ public class GeneralUtils {
 
   public static Instant toInstant(String timestamp) {
     return ifNotNullGet(timestamp, Instant::parse);
+  }
+
+  public static <T> Set<T> findDuplicates(List<T> list) {
+    Set<T> elements = new HashSet<>();
+    return list.stream()
+        .filter(n -> !elements.add(n))
+        .collect(Collectors.toSet());
+  }
+
+  public static <T> Set<T> listUniqueSet(List<T> proxyIdList) {
+    ifNotEmptyThrow(findDuplicates(proxyIdList),
+        duplicates -> format("Duplicate proxy_id entries: " + duplicates));
+    return new HashSet<>(proxyIdList);
   }
 
   public static String setOrSize(Set<String> items) {

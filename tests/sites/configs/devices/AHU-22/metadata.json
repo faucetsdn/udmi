@@ -38,6 +38,9 @@
       "family": "vendor"
     }
   },
+  "cloud": {
+    "auth_type": "ES256"
+  },
   "localnet": {
     "families": {
       "vendor": {

@@ -247,6 +247,7 @@ class SystemModel:
     self.description = None
     self.device_version = None
     self.zone = None
+    self.node_type = None
     self.tags = None
     self.location = None
     self.serial_no = None
@@ -266,6 +267,7 @@ class SystemModel:
     result.description = source.get('description')
     result.device_version = source.get('device_version')
     result.zone = source.get('zone')
+    result.node_type = source.get('node_type')
     result.tags = source.get('tags')
     result.location = Object8B23C514.from_dict(source.get('location'))
     result.serial_no = source.get('serial_no')
@@ -303,6 +305,8 @@ class SystemModel:
       result['device_version'] = self.device_version # 5
     if self.zone:
       result['zone'] = self.zone # 5
+    if self.node_type:
+      result['node_type'] = self.node_type # 5
     if self.tags:
       result['tags'] = self.tags # 1
     if self.location:
