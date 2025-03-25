@@ -85,11 +85,7 @@ jobs:
       - uses: actions/setup-java@v4
         with:
           distribution: 'temurin'
-<<<<<<< HEAD
-          java-version: '23'
-=======
           java-version: '21'
->>>>>>> master
       - name: Publish maven package
         run:  pubber/bin/publish
 
