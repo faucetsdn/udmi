@@ -113,42 +113,6 @@ public class ProvisioningEngine extends ProcessorBase {
     return TRUE_OPTION.equals(ifNotNullGet(cloudModel.metadata, m -> m.get(UDMI_PROVISION_ENABLE)));
   }
 
-  private void gatewayDiscovery(DiscoveryEvents discoveryEvent, CloudModel gatewayModel,
-      Envelope envelope, String registryId, String deviceId, Date generation, String expectedId) {
-    Set<String> deviceIds = refreshModelDevices(registryId, deviceId, generation, gatewayModel);
-    if (deviceIds == null) {
-      info("Scan device %s/%s provisioning disabled", registryId, deviceId);
-      return;
-    }
-    if (deviceIds.contains(expectedId)) {
-      debug("Scan device %s/%s target %s already registered", registryId, deviceId, expectedId);
-    } else {
-      notice("Scan device %s/%s target %s missing, creating", registryId, deviceId, expectedId);
-      createDeviceEntry(registryId, expectedId, deviceId, envelope, discoveryEvent, true);
-      deviceIds.add(expectedId);
-    }
-  }
-
-  private void nonGatewayDiscovery(DiscoveryEvents discoveryEvent, CloudModel deviceModel,
-      Envelope envelope, String registryId, String deviceId, Date generation, String expectedId) {
-
-    if (!shouldProvision(generation, deviceModel)) {
-      info("Scan device %s/%s provisioning disabled", registryId, deviceId);
-      return;
-    }
-
-    Set<String> deviceIds = catchToNull(() ->
-        iotAccess.listDevices(registryId, null).device_ids.keySet());
-
-
-    if (deviceIds.contains(expectedId)) {
-      debug("Scan device %s/%s target %s already registered", registryId, deviceId, expectedId);
-    } else {
-      notice("Scan device %s/%s target %s missing, creating", registryId, deviceId, expectedId);
-      createDeviceEntry(registryId, expectedId, deviceId, envelope, discoveryEvent, false);
-    }
-  }
-
   /**
    * Process any discovery events floating around.
    */
@@ -164,24 +128,35 @@ public class ProvisioningEngine extends ProcessorBase {
       }
 
       CloudModel deviceModel = fetchDeviceModel(registryId, deviceId);
+      Date generation = requireNonNull(discoveryEvent.generation, "missing scan generation");
 
       if (deviceModel == null) {
         warn("Scan device %s/%s not found, ignoring results", registryId, deviceId);
         return;
       }
 
-      Date generation = requireNonNull(discoveryEvent.generation, "missing scan generation");
+      if (!shouldProvision(generation, deviceModel)) {
+        info("Scan device %s/%s provisioning disabled", registryId, deviceId);
+        return;
+      }
+
       String family = requireNonNull(discoveryEvent.family, "missing family");
       String addr = requireNonNull(discoveryEvent.addr, "missing addr");
       String expectedId = format(DISCOVERED_DEVICE_FORMAT, family, addr);
+      boolean isGateway = isGateway(deviceModel);
 
-      if (isGateway(deviceModel)) {
-        gatewayDiscovery(discoveryEvent, deviceModel, envelope, registryId,
-            deviceId, generation, expectedId);
-      } else {
-        nonGatewayDiscovery(discoveryEvent, deviceModel, envelope, registryId,
-            deviceId, generation, expectedId);
+      Set<String> deviceIds = ifTrueGet(isGateway,
+          refreshModelDevices(registryId, deviceId, generation, deviceModel),
+          catchToNull(() -> iotAccess.listDevices(registryId, null).device_ids.keySet()));
+
+      if (deviceIds.contains(expectedId)) {
+        debug("Scan device %s/%s target %s already registered", registryId, deviceId, expectedId);
+        return;
       }
+
+      notice("Scan device %s/%s target %s missing, creating", registryId, deviceId, expectedId);
+      createDeviceEntry(registryId, expectedId, deviceId, envelope, discoveryEvent,
+          isGateway);
     } catch (Exception e) {
       error("Error during discovery event processing: " + friendlyStackTrace(e));
     }
