@@ -657,12 +657,12 @@ public class Validator {
       processedDevices.add(deviceId);
     }
 
-    if (!shouldProcessMessage(attributes)) {
-      return;
-    }
-
     if (traceDir != null) {
       writeMessageCapture(msgObject, attributes);
+    }
+
+    if (!shouldProcessMessage(attributes)) {
+      return;
     }
 
     if (simulatedMessages) {
@@ -809,7 +809,7 @@ public class Validator {
       }
     }
 
-    if (schemaMap.containsKey(schemaName)) {
+    if (schemaMap.containsKey(schemaName) && shouldValidateMessage(attributes)) {
       try {
         validateMessage(schemaMap.get(schemaName), message);
       } catch (Exception e) {
@@ -956,12 +956,18 @@ public class Validator {
 
     String subType = attributes.get(SUBTYPE_PROPERTY_KEY);
     String subFolder = attributes.get(SUBFOLDER_PROPERTY_KEY);
-    String category = attributes.get("category");
-    boolean ignore = CONFIG_CATEGORY.equals(category) || isReplySubtype(subType);
+    boolean ignore = isReplySubtype(subType);
     boolean process = subType == null
         || INTERESTING_TYPES.contains(subType)
         || SubFolder.UPDATE.value().equals(subFolder);
     return process && !ignore;
+  }
+
+  private boolean shouldValidateMessage(Map<String, String> attributes) {
+    String subType = attributes.get(SUBTYPE_PROPERTY_KEY);
+    String category = attributes.get("category");
+    boolean isConfig = CONFIG_CATEGORY.equals(category) || SubType.CONFIG.value().equals(subType);
+    return !isConfig;
   }
 
   private void writeDeviceOutCapture(Object message, Map<String, String> attributes,

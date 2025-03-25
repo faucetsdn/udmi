@@ -1,5 +1,4 @@
 {
-  "downgraded_from": "1.5.3",
   "localnet": {
     "families": {
       "ether": {},
@@ -28,5 +27,5 @@
     "operation": {}
   },
   "timestamp": "2020-05-01T13:39:07Z",
-  "version": "1.4.2"
+  "version": "1.5.3"
 }

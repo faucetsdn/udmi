@@ -3,7 +3,7 @@
   "localnet": {
     "families": {
       "bacnet": {
-        "id": "1011001"
+        "addr": "1011001"
       }
     }
   },
@@ -53,5 +53,5 @@
     "operation": {}
   },
   "timestamp": "2018-08-26T21:39:29Z",
-  "version": "1.3.13"
+  "version": "1.4.0"
 }
