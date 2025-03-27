@@ -19,7 +19,7 @@ pyOpenSSL==24.2.1
 pytest==8.3.2
 python-dateutil==2.9.0.post0
 pytz==2024.1
-scapy==2.5.0
+scapy==2.6.1
 six==1.16.0
 tzdata==2024.1
 pyasyncore; python_version>'3.11'
