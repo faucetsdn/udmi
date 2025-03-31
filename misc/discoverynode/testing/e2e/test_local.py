@@ -263,11 +263,6 @@ def test_discovered_proxied_devices_are_created(
 
   site_model = Path(SITE_PATH)
 
-  with open(
-      os.path.join(SITE_PATH, "devices/GAT-1/metadata.json"), encoding="utf-8"
-  ) as f:
-    info(json.load(f))
-
   extra_devices = list([x.stem for x in site_model.glob("extras/*")])
   assert len(extra_devices) == 9, "found exactly 9 devices"
 
