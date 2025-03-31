@@ -266,6 +266,48 @@ def test_discovered_devices_are_created(
   assert len(extra_devices) == 9, "found exactly 9 devices"
 
 
+def test_discovered_devices_are_created_with_non_gateway_discovery(
+    new_site_model, docker_devices, discovery_node
+):
+
+  new_site_model(
+      site_path=SITE_PATH,
+      delete=True,
+      devices=range(0),
+      devices_with_localnet_block=range(0),
+      discovery_node_id="AHU-1",
+      discovery_node_is_gateway=False,
+      discovery_node_families=["bacnet"],
+  )
+
+  docker_devices(devices=range(1, 7))
+
+  info("deleting all devices")
+
+  run(f"bin/registrar {SITE_PATH} {TARGET} -d -x")
+
+  run(f"bin/registrar {SITE_PATH} {TARGET}")
+
+  # Note: Start after running registrar preferably
+  discovery_node(
+      device_id="AHU-1",
+      site_path=SITE_PATH
+  )
+
+  run("bin/mapper AHU-1 provision")
+
+  time.sleep(5)
+
+  run("bin/mapper AHU-1 discover")
+
+  time.sleep(30)
+
+  run(f"bin/registrar {SITE_PATH} {TARGET}")
+
+  site_model = Path(SITE_PATH)
+  extra_devices = list([x.stem for x in site_model.glob("extras/*")])
+  assert len(extra_devices) == 6, "found exactly 6 devices"
+
 def test_sequencer(new_site_model, docker_devices, discovery_node):
   
   new_site_model(
