@@ -223,7 +223,7 @@ def discovery_node():
   run("docker rm discoverynode-test-node")
 
 
-def test_discovered_devices_are_created(
+def test_discovered_proxied_devices_are_created(
     new_site_model, docker_devices, discovery_node
 ):
 
@@ -262,11 +262,11 @@ def test_discovered_devices_are_created(
   run(f"bin/registrar {SITE_PATH} {TARGET}")
 
   site_model = Path(SITE_PATH)
+  run(f"cat {SITE_PATH}/devices/GAT-1/metadata.json")
   extra_devices = list([x.stem for x in site_model.glob("extras/*")])
   assert len(extra_devices) == 9, "found exactly 9 devices"
 
-
-def test_discovered_devices_are_created_with_non_gateway_discovery(
+def test_discovered_devices_are_created(
     new_site_model, docker_devices, discovery_node
 ):
 
@@ -309,7 +309,7 @@ def test_discovered_devices_are_created_with_non_gateway_discovery(
   assert len(extra_devices) == 6, "found exactly 6 devices"
 
 def test_sequencer(new_site_model, docker_devices, discovery_node):
-  
+
   new_site_model(
       site_path=SITE_PATH,
       delete=True,
