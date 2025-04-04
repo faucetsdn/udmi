@@ -55,8 +55,8 @@ public class ProvisioningEngine extends ProcessorBase {
     iotAccess.modelDevice(registryId, gatewayId, model, null);
   }
 
-  private void createDeviceEntry(String registryId, String expectedId, String gatewayId,
-      Envelope envelope, DiscoveryEvents discoveryEvent) {
+  private void createDeviceEntry(String registryId, String expectedId, String deviceId,
+      Envelope envelope, DiscoveryEvents discoveryEvent, boolean shouldBindToGateway) {
     CloudModel cloudModel = new CloudModel();
     cloudModel.operation = ModelOperation.CREATE;
     cloudModel.blocked = true;
@@ -70,7 +70,9 @@ public class ProvisioningEngine extends ProcessorBase {
             null),
         (Consumer<Exception>) e -> error(
             "Error creating device (exists but not bound?): " + friendlyStackTrace(e)));
-    bindDeviceToGateway(registryId, expectedId, gatewayId);
+    if (shouldBindToGateway) {
+      bindDeviceToGateway(registryId, expectedId, deviceId);
+    }
     Envelope modelEnvelope = new Envelope();
 
     modelEnvelope.deviceRegistryId = registryId;
@@ -83,22 +85,21 @@ public class ProvisioningEngine extends ProcessorBase {
     return scanAgent.computeIfAbsent(gatewayKey, key -> new CloudModel());
   }
 
+  private CloudModel fetchDeviceModel(String deviceRegistryId, String deviceId) {
+    return catchToNull(() -> iotAccess.fetchDevice(deviceRegistryId, deviceId));
+  }
+
+  private boolean isGateway(CloudModel deviceModel) {
+    return deviceModel != null && deviceModel.resource_type == Resource_type.GATEWAY;
+  }
+
+
   private synchronized Set<String> refreshModelDevices(String deviceRegistryId,
-      String gatewayId, Date generation) {
+      String gatewayId, Date generation, CloudModel fetchedModel) {
     CloudModel cloudModel = getCachedModel(deviceRegistryId, gatewayId);
     if (!generation.equals(cloudModel.timestamp)) {
       cloudModel.timestamp = generation;
       cloudModel.device_ids = null;
-      CloudModel fetchedModel =
-          catchToNull(() -> iotAccess.fetchDevice(deviceRegistryId, gatewayId));
-      if (fetchedModel == null) {
-        warn("Scan device %s/%s not found, ignoring results", deviceRegistryId, gatewayId);
-        return null;
-      }
-      if (fetchedModel.resource_type != Resource_type.GATEWAY) {
-        warn("Scan device %s/%s is not a gateway, ignoring results", deviceRegistryId, gatewayId);
-        return null;
-      }
       cloudModel.metadata = fetchedModel.metadata;
       cloudModel.gateway = fetchedModel.gateway;
       info("Scan device %s/%s generation %s, provisioning %s", deviceRegistryId, gatewayId,
@@ -120,27 +121,42 @@ public class ProvisioningEngine extends ProcessorBase {
     try {
       Envelope envelope = getContinuation(discoveryEvent).getEnvelope();
       String registryId = envelope.deviceRegistryId;
-      String gatewayId = envelope.deviceId;
-      if (registryId == null || gatewayId == null) {
-        info("Skipping incomplete discovery event for %s/%s", registryId, gatewayId);
+      String deviceId = envelope.deviceId;
+      if (registryId == null || deviceId == null) {
+        info("Skipping incomplete discovery event for %s/%s", registryId, deviceId);
         return;
       }
+
+      CloudModel deviceModel = fetchDeviceModel(registryId, deviceId);
       Date generation = requireNonNull(discoveryEvent.generation, "missing scan generation");
-      Set<String> deviceIds = refreshModelDevices(registryId, gatewayId, generation);
-      if (deviceIds == null) {
-        info("Scan device %s/%s provisioning disabled", registryId, gatewayId);
+
+      if (deviceModel == null) {
+        warn("Scan device %s/%s not found, ignoring results", registryId, deviceId);
         return;
       }
+
+      if (!shouldProvision(generation, deviceModel)) {
+        info("Scan device %s/%s provisioning disabled", registryId, deviceId);
+        return;
+      }
+
       String family = requireNonNull(discoveryEvent.family, "missing family");
       String addr = requireNonNull(discoveryEvent.addr, "missing addr");
       String expectedId = format(DISCOVERED_DEVICE_FORMAT, family, addr);
+      boolean isGateway = isGateway(deviceModel);
+
+      Set<String> deviceIds = ifTrueGet(isGateway,
+          refreshModelDevices(registryId, deviceId, generation, deviceModel),
+          catchToNull(() -> iotAccess.listDevices(registryId, null).device_ids.keySet()));
+
       if (deviceIds.contains(expectedId)) {
-        debug("Scan device %s/%s target %s already registered", registryId, gatewayId, expectedId);
-      } else {
-        notice("Scan device %s/%s target %s missing, creating", registryId, gatewayId, expectedId);
-        createDeviceEntry(registryId, expectedId, gatewayId, envelope, discoveryEvent);
-        deviceIds.add(expectedId);
+        debug("Scan device %s/%s target %s already registered", registryId, deviceId, expectedId);
+        return;
       }
+
+      notice("Scan device %s/%s target %s missing, creating", registryId, deviceId, expectedId);
+      createDeviceEntry(registryId, expectedId, deviceId, envelope, discoveryEvent,
+          isGateway);
     } catch (Exception e) {
       error("Error during discovery event processing: " + friendlyStackTrace(e));
     }
