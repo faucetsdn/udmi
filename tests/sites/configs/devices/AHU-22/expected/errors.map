@@ -1,3 +1,5 @@
 Exceptions for AHU-22
+  While loading credentials for local device AHU-22
+    Proxied devices should not have cloud.auth_type defined
   1 schema violations found
     /system/location: object has missing required properties (["site"])

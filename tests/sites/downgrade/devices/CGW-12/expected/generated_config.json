@@ -1,8 +1,5 @@
 {
   "downgraded_from": "1.5.3",
-  "gateway": {
-    "proxy_ids": []
-  },
   "localnet": {
     "families": {
       "bacnet": {
