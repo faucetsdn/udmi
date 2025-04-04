@@ -1,30 +1,14 @@
 package com.google.udmi.util;
 
-import com.google.api.client.googleapis.javanet.GoogleNetHttpTransport;
-import com.google.api.client.http.javanet.NetHttpTransport;
-import com.google.api.client.json.JsonFactory;
-import com.google.api.client.json.gson.GsonFactory;
-import com.google.api.services.sheets.v4.Sheets;
-import com.google.api.services.sheets.v4.SheetsScopes;
-import com.google.api.services.sheets.v4.model.AddSheetRequest;
-import com.google.api.services.sheets.v4.model.BatchUpdateSpreadsheetRequest;
-import com.google.api.services.sheets.v4.model.Request;
-import com.google.api.services.sheets.v4.model.SheetProperties;
-import com.google.api.services.sheets.v4.model.Spreadsheet;
-import com.google.api.services.sheets.v4.model.ValueRange;
-import com.google.auth.http.HttpCredentialsAdapter;
-import com.google.auth.oauth2.GoogleCredentials;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.io.PrintStream;
-import java.security.GeneralSecurityException;
 import java.time.Instant;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
-import java.util.stream.Collectors;
 import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -37,25 +21,11 @@ import org.slf4j.LoggerFactory;
 public class SheetsOutputStream extends OutputStream {
 
   private static final Logger LOGGER = LoggerFactory.getLogger(SheetsOutputStream.class);
-  private static final JsonFactory JSON_FACTORY = GsonFactory.getDefaultInstance();
-  static final List<String> SCOPES = Collections.singletonList(SheetsScopes.SPREADSHEETS);
   private static final long DEFAULT_SYNC_TIME = 2000;
-  private static final NetHttpTransport HTTP_TRANSPORT;
-
-  static {
-    try {
-      HTTP_TRANSPORT = GoogleNetHttpTransport.newTrustedTransport();
-    } catch (GeneralSecurityException | IOException e) {
-      throw new ExceptionInInitializerError("Error initializing HTTP Transport: " + e.getMessage());
-    }
-  }
-
   final long syncTime;
   private long lastWriteMillis = 0;
-  private final String applicationName;
-  private final String spreadsheetId;
   private final String outputSheetTitle;
-  private final Sheets sheetsService;
+  private final SpreadsheetManager spreadsheetManager;
   final StringBuilder buffer = new StringBuilder();
   private PrintStream originalSystemOut;
   private PrintStream originalSystemErr;
@@ -85,12 +55,10 @@ public class SheetsOutputStream extends OutputStream {
   public SheetsOutputStream(String applicationName, String spreadsheetId, String outputSheetTitle,
       long syncTime)
       throws IOException {
-    this.applicationName = applicationName;
-    this.spreadsheetId = spreadsheetId;
     this.outputSheetTitle = outputSheetTitle;
-    this.sheetsService = createSheetsService();
+    this.spreadsheetManager = new SpreadsheetManager(applicationName, spreadsheetId);
     this.syncTime = syncTime;
-    addOutputSheet();
+    this.spreadsheetManager.addNewSheet(outputSheetTitle);
   }
 
   @Override
@@ -123,45 +91,14 @@ public class SheetsOutputStream extends OutputStream {
       List<List<Object>> values = Arrays.stream(content.split("\\n"))
           .filter(line -> !line.trim().isEmpty()) // Filter out empty lines
           .map(line -> Collections.singletonList((Object) line))
-          .collect(Collectors.toList());
+          .toList();
 
       if (!values.isEmpty()) {
-        ValueRange appendBody = new ValueRange().setValues(values);
-        sheetsService.spreadsheets().values()
-            .append(spreadsheetId, outputSheetTitle, appendBody)
-            .setValueInputOption("RAW").execute();
+        spreadsheetManager.appendToSheet(outputSheetTitle, values);
       }
       buffer.setLength(0);
     } catch (IOException e) {
       LOGGER.error("Error appending to sheet", e);
-    }
-  }
-
-  Sheets createSheetsService() throws IOException {
-    GoogleCredentials credential =
-        GoogleCredentials.getApplicationDefault().createScoped(SCOPES);
-    return new Sheets.Builder(HTTP_TRANSPORT, JSON_FACTORY, new HttpCredentialsAdapter(credential))
-        .setApplicationName(this.applicationName)
-        .build();
-  }
-
-
-  private boolean outputSheetExists() throws IOException {
-    Spreadsheet spreadsheet = sheetsService.spreadsheets().get(spreadsheetId).execute();
-    return spreadsheet.getSheets().stream()
-        .anyMatch(sheet -> sheet.getProperties().getTitle().equalsIgnoreCase(outputSheetTitle));
-  }
-
-  private void addOutputSheet() throws IOException {
-    if (!outputSheetExists()) {
-      BatchUpdateSpreadsheetRequest body = new BatchUpdateSpreadsheetRequest()
-          .setRequests(List.of(new Request().setAddSheet(new AddSheetRequest()
-              .setProperties(new SheetProperties().setTitle(outputSheetTitle)))));
-      try {
-        sheetsService.spreadsheets().batchUpdate(spreadsheetId, body).execute();
-      } catch (IOException e) {
-        throw new IOException("Failed to add output sheet: " + outputSheetTitle, e);
-      }
     }
   }
 
