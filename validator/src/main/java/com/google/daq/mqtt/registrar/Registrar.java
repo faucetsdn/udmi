@@ -1232,7 +1232,11 @@ public class Registrar {
 
   private void preprocessSiteMetadata() {
     allDevices.values().forEach(LocalDevice::configure);
-    allDevices.values().stream().filter(LocalDevice::isGateway).forEach(gateway -> {
+    allDevices.values().stream().filter(LocalDevice::isGateway).forEach(this::preprocessGateway);
+  }
+
+  private void preprocessGateway(LocalDevice gateway) {
+    try {
       Metadata metadata = gateway.getMetadata();
       ifNullThen(metadata.gateway, () -> metadata.gateway = new GatewayModel());
       GatewayModel gatewayMetadata = metadata.gateway;
@@ -1240,7 +1244,9 @@ public class Registrar {
       ifNotNullThen(gatewayMetadata.proxy_ids,
           list -> normalizeChildren(gatewayId, listUniqueSet(list)),
           () -> gatewayMetadata.proxy_ids = new ArrayList<>(proxiedChildren(gatewayId)));
-    });
+    } catch (Exception e) {
+      gateway.captureError(ExceptionCategory.preprocess, e);
+    }
   }
 
   private void normalizeChildren(String gatewayId, Set<String> proxyIds) {
