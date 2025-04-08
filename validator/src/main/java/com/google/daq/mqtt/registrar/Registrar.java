@@ -20,6 +20,7 @@ import static com.google.udmi.util.GeneralUtils.CSV_JOINER;
 import static com.google.udmi.util.GeneralUtils.catchToNull;
 import static com.google.udmi.util.GeneralUtils.friendlyStackTrace;
 import static com.google.udmi.util.GeneralUtils.getTimestamp;
+import static com.google.udmi.util.GeneralUtils.ifNotEmptyThen;
 import static com.google.udmi.util.GeneralUtils.ifNotEmptyThrow;
 import static com.google.udmi.util.GeneralUtils.ifNotNullGet;
 import static com.google.udmi.util.GeneralUtils.ifNotNullThen;
@@ -29,6 +30,7 @@ import static com.google.udmi.util.GeneralUtils.ifNullThen;
 import static com.google.udmi.util.GeneralUtils.ifTrueGet;
 import static com.google.udmi.util.GeneralUtils.ifTrueThen;
 import static com.google.udmi.util.GeneralUtils.isTrue;
+import static com.google.udmi.util.GeneralUtils.listUniqueSet;
 import static com.google.udmi.util.GeneralUtils.setOrSize;
 import static com.google.udmi.util.GeneralUtils.writeString;
 import static com.google.udmi.util.JsonUtil.JSON_SUFFIX;
@@ -56,6 +58,7 @@ import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Sets;
 import com.google.common.collect.Sets.SetView;
 import com.google.daq.mqtt.registrar.LocalDevice.DeviceKind;
 import com.google.daq.mqtt.util.CloudDeviceSettings;
@@ -66,6 +69,7 @@ import com.google.daq.mqtt.util.PubSubPusher;
 import com.google.udmi.util.CommandLineOption;
 import com.google.udmi.util.CommandLineProcessor;
 import com.google.udmi.util.Common;
+import com.google.udmi.util.ExceptionList;
 import com.google.udmi.util.ExceptionMap;
 import com.google.udmi.util.ExceptionMap.ErrorTree;
 import com.google.udmi.util.ExceptionMap.ExceptionCategory;
@@ -92,6 +96,7 @@ import java.util.Map.Entry;
 import java.util.Objects;
 import java.util.Set;
 import java.util.TreeMap;
+import java.util.TreeSet;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -110,6 +115,7 @@ import udmi.schema.CloudModel.Resource_type;
 import udmi.schema.Credential;
 import udmi.schema.Envelope.SubFolder;
 import udmi.schema.ExecutionConfiguration;
+import udmi.schema.GatewayModel;
 import udmi.schema.Metadata;
 import udmi.schema.SetupUdmiConfig;
 import udmi.schema.SiteMetadata;
@@ -152,6 +158,7 @@ public class Registrar {
   private File schemaBase;
   private PubSubPusher updatePusher;
   private PubSubPusher feedPusher;
+  private Map<String, LocalDevice> allDevices;
   private Map<String, LocalDevice> workingDevices;
   private Set<String> extraDevices;
   private String projectId;
@@ -356,14 +363,14 @@ public class Registrar {
   }
 
   private void processSiteMetadata() {
+    SiteMetadata siteMetadata = siteModel.loadSiteMetadata();
+    siteMetadata.name = ofNullable(siteMetadata.name).orElse(siteModel.getSiteName());
     ifTrueThen(updateCloudIoT,
         () -> cloudIotManager.updateRegistry(getSiteMetadata(), ModelOperation.UPDATE));
   }
 
   private SiteMetadata getSiteMetadata() {
-    SiteMetadata siteMetadata = siteModel.loadSiteMetadata();
-    siteMetadata.name = ofNullable(siteMetadata.name).orElse(siteModel.getSiteName());
-    return siteMetadata;
+    return siteModel.loadSiteMetadata();
   }
 
   private void createRegistries() {
@@ -528,10 +535,11 @@ public class Registrar {
   }
 
   private void processAllDevices(Runnable modelMunger) {
+    allDevices = loadAllDevices();
     Set<String> explicitDevices = getExplicitDevices();
     try {
       workingDevices = instantiateExtras
-          ? loadExtraDevices(explicitDevices) : loadLocalDevices(explicitDevices);
+          ? loadExtraDevices(explicitDevices) : getLocalDevices(explicitDevices);
       ifNotNullThen(modelMunger, Runnable::run);
       initializeLocalDevices();
       cloudModels = ifNotNullGet(fetchCloudModels(), devices -> new ConcurrentHashMap<>(devices));
@@ -581,6 +589,15 @@ public class Registrar {
     } catch (Exception e) {
       throw new RuntimeException("While processing devices", e);
     }
+  }
+
+  private Map<String, LocalDevice> loadAllDevices() {
+    checkNotNull(siteDir, "missing site directory");
+    File devicesDir = new File(siteDir, DEVICES_DIR);
+    if (!devicesDir.isDirectory()) {
+      throw new RuntimeException("Not a valid directory: " + devicesDir.getAbsolutePath());
+    }
+    return loadDevices(SiteModel.listDevices(devicesDir));
   }
 
   private int processDevices(Set<String> deviceSet) {
@@ -742,7 +759,7 @@ public class Registrar {
         System.err.printf("Retrying delete %s with bound devices: %s%n", deviceId,
             setOrSize(proxyIds));
         cloudIotManager.deleteDevice(deviceId, proxyIds);
-      } else if (cloudModel.resource_type == Resource_type.DEVICE) {
+      } else if (cloudModel.resource_type == Resource_type.DIRECT) {
         Set<String> gatewayIds = ImmutableSet.of(cloudModel.gateway.gateway_id);
         System.err.printf("Unbinding %s from bound gateways: %s%n", deviceId, gatewayIds);
         unbindDevicesFromGateways(allDevices, gatewayIds);
@@ -844,7 +861,7 @@ public class Registrar {
       return false;
     }
 
-    if (!localDevice.isDirectConnect()) {
+    if (!localDevice.isDirect()) {
       System.err.println("Skipping feed message for proxy device " + localDevice.getDeviceId());
       return false;
     }
@@ -1188,21 +1205,10 @@ public class Registrar {
     }
   }
 
-  private Map<String, LocalDevice> loadLocalDevices(Set<String> specifiedDevices) {
-    checkNotNull(siteDir, "missing site directory");
-    File devicesDir = new File(siteDir, DEVICES_DIR);
-    if (!devicesDir.isDirectory()) {
-      throw new RuntimeException("Not a valid directory: " + devicesDir.getAbsolutePath());
-    }
-
-    List<String> deviceList = getDeviceList(specifiedDevices, devicesDir);
-    return loadDevices(deviceList);
-  }
-
-  private List<String> getDeviceList(Set<String> specifiedDevices, File devicesDir) {
-    return SiteModel.listDevices(devicesDir).stream()
-        .filter(name -> specifiedDevices == null || specifiedDevices.contains(name))
-        .collect(Collectors.toList());
+  private Map<String, LocalDevice> getLocalDevices(Set<String> specifiedDevices) {
+    return allDevices.entrySet().stream()
+        .filter(entry -> specifiedDevices == null || specifiedDevices.contains(entry.getKey()))
+        .collect(Collectors.toMap(Entry::getKey, Entry::getValue));
   }
 
   private void initializeSettings(Map<String, LocalDevice> localDevices) {
@@ -1220,6 +1226,66 @@ public class Registrar {
   }
 
   private void preprocessMetadata(Map<String, LocalDevice> workingDevices) {
+    preprocessSiteMetadata();
+    preprocessDeviceMetadata(workingDevices);
+  }
+
+  private void preprocessSiteMetadata() {
+    allDevices.values().forEach(LocalDevice::configure);
+    allDevices.values().stream().filter(LocalDevice::isGateway).forEach(this::preprocessGateway);
+  }
+
+  private void preprocessGateway(LocalDevice gateway) {
+    try {
+      Metadata metadata = gateway.getMetadata();
+      ifNullThen(metadata.gateway, () -> metadata.gateway = new GatewayModel());
+      GatewayModel gatewayMetadata = metadata.gateway;
+      String gatewayId = gateway.getDeviceId();
+      ifNotNullThen(gatewayMetadata.proxy_ids,
+          list -> normalizeChildren(gatewayId, listUniqueSet(list)),
+          () -> gatewayMetadata.proxy_ids = new ArrayList<>(proxiedChildren(gatewayId)));
+    } catch (Exception e) {
+      gateway.captureError(ExceptionCategory.preprocess, e);
+    }
+  }
+
+  private void normalizeChildren(String gatewayId, Set<String> proxyIds) {
+    List<Exception> exceptions = new ArrayList<>();
+    allDevices.entrySet().stream().filter(entry -> proxyIds.contains(entry.getKey()))
+        .forEach(entry -> {
+          String deviceId = entry.getKey();
+          LocalDevice local = entry.getValue();
+          try {
+            checkState(!local.isDirect(), "Should not proxy direct device " + deviceId);
+            checkState(!local.isGateway(), "Should not proxy gateway device " + deviceId);
+            Metadata deviceMetadata = local.getMetadata();
+            ifNullThen(deviceMetadata.gateway, () -> deviceMetadata.gateway = new GatewayModel());
+            GatewayModel gatewayMetadata = deviceMetadata.gateway;
+            ifNullThen(gatewayMetadata.gateway_id, () -> gatewayMetadata.gateway_id = gatewayId);
+            checkState(gatewayMetadata.gateway_id.equals(gatewayId),
+                format("gateway_id mismatch for %s: %s != %s",
+                    deviceId, gatewayMetadata.gateway_id, gatewayId));
+            checkState(local.isProxied(), "Does not identify as proxied device " + deviceId);
+          } catch (Exception e) {
+            exceptions.add(e);
+            ifNotNullThen(workingDevices.get(deviceId),
+                device -> device.captureError(ExceptionCategory.proxy, e));
+          }
+        });
+    ifNotEmptyThen(Sets.symmetricDifference(proxiedChildren(gatewayId), proxyIds), diff ->
+        exceptions.add(new RuntimeException(format("%s proxy_id mismatch: %s", gatewayId, diff))));
+    ifNotEmptyThen(exceptions, list -> ifNotNullThen(workingDevices.get(gatewayId),
+        gateway -> gateway.captureError(ExceptionCategory.proxy, new ExceptionList(exceptions))));
+  }
+
+  private Set<String> proxiedChildren(String gatewayId) {
+    return allDevices.entrySet().stream()
+        .filter(entry ->
+            gatewayId.equals(catchToNull(() -> entry.getValue().getMetadata().gateway.gateway_id)))
+        .map(Entry::getKey).collect(Collectors.toCollection(TreeSet::new));
+  }
+
+  private void preprocessDeviceMetadata(Map<String, LocalDevice> workingDevices) {
     workingDevices.values().forEach(localDevice -> {
       try {
         localDevice.preprocessMetadata();
@@ -1254,7 +1320,7 @@ public class Registrar {
   private void validateKeys(Map<String, LocalDevice> localDevices) {
     Map<Credential, String> usedCredentials = new HashMap<>();
     localDevices.values().stream()
-        .filter(LocalDevice::isDirectConnect)
+        .filter(LocalDevice::isDirect)
         .forEach(
             localDevice -> {
               CloudDeviceSettings settings = localDevice.getSettings();

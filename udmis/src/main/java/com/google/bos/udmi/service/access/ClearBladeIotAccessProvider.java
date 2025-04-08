@@ -27,7 +27,7 @@ import static udmi.schema.CloudModel.ModelOperation.BOUND;
 import static udmi.schema.CloudModel.ModelOperation.CREATE;
 import static udmi.schema.CloudModel.ModelOperation.DELETE;
 import static udmi.schema.CloudModel.ModelOperation.UPDATE;
-import static udmi.schema.CloudModel.Resource_type.DEVICE;
+import static udmi.schema.CloudModel.Resource_type.DIRECT;
 import static udmi.schema.CloudModel.Resource_type.GATEWAY;
 import static udmi.schema.CloudModel.Resource_type.REGISTRY;
 
@@ -238,7 +238,7 @@ public class ClearBladeIotAccessProvider extends IotAccessBase {
     if (gatewayConfig != null && GatewayType.GATEWAY == gatewayConfig.getGatewayType()) {
       return GATEWAY;
     }
-    return Resource_type.DEVICE;
+    return Resource_type.DIRECT;
   }
 
   @VisibleForTesting
@@ -474,7 +474,7 @@ public class ClearBladeIotAccessProvider extends IotAccessBase {
     CloudModel cloudModel = new CloudModel();
     cloudModel.num_id = hashedDeviceId(registryId, deviceId);
     cloudModel.operation = BOUND;
-    cloudModel.resource_type = DEVICE;
+    cloudModel.resource_type = DIRECT;
     cloudModel.gateway = getDeviceGatewayModel(boundGateways);
     return cloudModel;
   }
@@ -598,9 +598,9 @@ public class ClearBladeIotAccessProvider extends IotAccessBase {
       Consumer<String> maybeProgress) {
     String devicePath = getDeviceName(registryId, deviceId);
     ModelOperation operation = cloudModel.operation;
-    Resource_type type = ofNullable(cloudModel.resource_type).orElse(Resource_type.DEVICE);
+    Resource_type type = ofNullable(cloudModel.resource_type).orElse(Resource_type.DIRECT);
+    checkState(type == DIRECT || type == GATEWAY, "unexpected resource type " + type);
     Consumer<String> progress = ofNullable(maybeProgress).orElse(this::bitBucket);
-    checkState(type == DEVICE || type == GATEWAY, "unexpected resource type " + type);
     try {
       Device device = convert(cloudModel, deviceId);
       return switch (operation) {
@@ -640,10 +640,10 @@ public class ClearBladeIotAccessProvider extends IotAccessBase {
       } else if (operation == CREATE) {
         if (deviceId != null && !deviceId.isEmpty()) {
           CloudModel deviceModel = deepCopy(cloudModel);
-          deviceModel.resource_type = DEVICE;
+          deviceModel.resource_type = DIRECT;
           modelDevice(reflectRegistry, registryActual, deviceModel, null);
         }
-        Resource_type type = ofNullable(cloudModel.resource_type).orElse(Resource_type.DEVICE);
+        Resource_type type = ofNullable(cloudModel.resource_type).orElse(Resource_type.DIRECT);
         checkState(type == REGISTRY, "unexpected resource type " + type);
         Device device = convert(cloudModel, deviceId);
         return createRegistry(registryActual, device);
