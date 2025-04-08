@@ -102,6 +102,7 @@ for subset in $subsets; do
         if [ $force == y ]; then
             diff $output $expected || echo Updating $expected && cp $output $expected
         else
+            echo diff -b $output $expected
             diff -b $output $expected || (echo '   ' diff $output $expected | tee -a $errorfile)
         fi
 
