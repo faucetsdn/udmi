@@ -1,4 +1,6 @@
 Exceptions for GAT-123
+  List of 1 exceptions
+    GAT-123 proxy_id mismatch: [SNS-4]
   Disallowed cloud.config.static_file defined
   While loading credentials for local device GAT-123
     Found 0 credentials

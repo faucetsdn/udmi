@@ -402,7 +402,8 @@ jobs:
         # So, when the UDMIS container runs `keygen`, the CSR and SRL files are
         # owned by root, and cannot be ovewritten by system calls to keygen,
         # unless it too is root, or the behaviour is changed, or the permisions
-        # are fixed.
-        # Use -E to pass the env variables, else it runs with a different
-        # java version
-        run: sudo -E misc/discoverynode/testing/e2e/test_local site_model
+        # are fixed. This also requires playing some fancy games with the sudo
+        # eng and PATH, so that the right version of java is picked up!
+        run: |
+          export SAVE_PATH=$PATH
+          sudo -E bash -c 'PATH=$SAVE_PATH misc/discoverynode/testing/e2e/test_local site_model'

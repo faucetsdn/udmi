@@ -1,6 +1,7 @@
 {
   "cloud": {
-    "detail": "site default for unit tests"
+    "detail": "site default for unit tests",
+    "resource_type": "PROXIED"
   },
   "gateway": {
     "gateway_id": "GAT-123",
@@ -8,7 +9,7 @@
       "family": "vendor"
     }
   },
-  "hash": "6746d2c8",
+  "hash": "66cef882",
   "localnet": {
     "families": {
       "vendor": {
