@@ -1,15 +1,16 @@
 {
   "cloud": {
-    "auth_type": "ES256"
+    "auth_type": "ES256",
+    "resource_type": "GATEWAY"
   },
   "gateway": {
     "proxy_ids": [
-      "SNS-4",
       "AHU-22",
+      "SNS-4",
       "SNS-8"
     ]
   },
-  "hash": "73717715",
+  "hash": "6bdf3f23",
   "localnet": {
     "families": {
       "vendor": {
@@ -31,6 +32,7 @@
       "site": "ZZ-TRI-FECTA"
     },
     "min_loglevel": 300,
+    "node_type": "cloud_gateway",
     "physical_tag": {
       "asset": {
         "guid": "drw://TBB",
@@ -40,5 +42,6 @@
     }
   },
   "timestamp": "2020-05-01T13:39:07Z",
-  "version": "1.5.2"
+  "upgraded_from": "1.5.2",
+  "version": "1.5.3"
 }

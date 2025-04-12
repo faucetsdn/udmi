@@ -4,13 +4,14 @@
   },
   "gateway": {
     "proxy_ids": [
-      "SF-28"
+      "SF-28",
+      "DWN-1"
     ],
     "target": {
       "family": "bacnet"
     }
   },
-  "hash": "1413df4e",
+  "hash": "9712e7bd",
   "localnet": {
     "families": {
       "bacnet": {

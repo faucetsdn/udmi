@@ -20,10 +20,14 @@ bin/registrar $site_path $project_spec -x -d
 echo "Munge the model to have just the gateway (no proxied devices)"
 metadata=$site_path/devices/GAT-123/metadata.json
 jq '.gateway.proxy_ids = []' $metadata | sponge $metadata
+proxied=$(fgrep -l gateway_id $site_path/devices/*/metadata.json)
+for proxy in $proxied; do
+  jq '.gateway.gateway_id = null' $proxy | sponge $proxy
+done
 
 bin/registrar $site_path $project_spec GAT-123
 
-[[ ! -f sites/udmi_site_model/devices/GAT-123/out/errors.map ]] || fail Terminating because of gateway error.
+[[ ! -f $site_path/devices/GAT-123/out/errors.map ]] || fail Terminating because of gateway error.
 
 entries=$(wc -l < $site_path/out/registration_summary.csv)
 [[ $entries == 2 ]] || fail Unexpected registered entries, found $entries
@@ -49,7 +53,7 @@ echo Checking vendor device status is $status
 
 type=$(jq -r .resource_type $site_path/extras/discovered_vendor-20231/cloud_model.json) || true
 echo Checking vendor extracted device type $type
-[[ $type == DEVICE ]] || fail Vendor device type should be DEVICE, was $type
+[[ $type == DIRECT ]] || fail Vendor device type should be DIRECT, was $type
 
 echo Checking discovered device metadata
 addr=$(jq -r .addr $site_path/extras/discovered_vendor-20231/cloud_metadata/udmi_discovered_with.json)

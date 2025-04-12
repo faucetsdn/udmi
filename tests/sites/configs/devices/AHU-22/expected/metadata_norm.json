@@ -1,11 +1,14 @@
 {
+  "cloud": {
+    "auth_type": "ES256"
+  },
   "gateway": {
     "gateway_id": "GAT-123",
     "target": {
       "family": "vendor"
     }
   },
-  "hash": "cd0a2095",
+  "hash": "a79a0b00",
   "localnet": {
     "families": {
       "vendor": {

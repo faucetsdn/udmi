@@ -22,8 +22,8 @@ import java.io.File;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import org.jetbrains.annotations.NotNull;
 import udmi.lib.ProtocolFamily;
+import udmi.schema.CloudModel.Resource_type;
 import udmi.schema.Config;
 import udmi.schema.DiscoveryConfig;
 import udmi.schema.FamilyDiscoveryConfig;
@@ -120,7 +120,6 @@ public class ConfigManager {
     }
   }
 
-
   /**
    * Return a complete UDMI Config message object.
    */
@@ -128,6 +127,9 @@ public class ConfigManager {
     if (metadata == null) {
       throw new RuntimeException("config could not be generated due to metadata errors");
     }
+    List<Boolean> types = ImmutableList.of(isProxied(), isGateway(), isDirect(), isVirtual());
+    checkState(types.size() == 4, "missing classification");
+    checkState(types.stream().filter(x -> x).count() == 1, "multiple classifications");
     Config config = new Config();
     config.timestamp = metadata.timestamp;
     config.version = SchemaVersion.CURRENT.key();
@@ -139,7 +141,6 @@ public class ConfigManager {
     return config;
   }
 
-  @NotNull
   private SystemConfig getSystemConfig() {
     SystemConfig system;
     system = new SystemConfig();
@@ -153,9 +154,8 @@ public class ConfigManager {
     return system;
   }
 
-  @NotNull
   private GatewayConfig getGatewayConfig() {
-    if (metadata.gateway == null) {
+    if (!isProxied() && !isGateway()) {
       return null;
     }
 
@@ -265,23 +265,42 @@ public class ConfigManager {
   }
 
   /**
+   * Indicate if this is a virtual device.
+   */
+  public boolean isVirtual() {
+    return !isDirect() && !isProxied() && !isGateway();
+  }
+
+  /**
    * Indicate if this is a directly connected device.
    */
   public boolean isDirect() {
-    return catchToNull(() -> metadata.cloud.auth_type) != null && !isGateway();
+    boolean explicit = catchToNull(() -> metadata.cloud.resource_type) == Resource_type.DIRECT;
+    boolean implicit = catchToNull(() -> metadata.cloud.auth_type) != null
+        && catchToNull(() -> metadata.gateway.gateway_id) == null
+        && catchToNull(() -> metadata.gateway.proxy_ids) == null;
+    return explicit || implicit;
   }
 
   /**
    * Indicate if this is a gateway device.
    */
   public boolean isGateway() {
-    return catchToNull(() -> metadata.gateway) != null
+    boolean explicit = catchToNull(() -> metadata.cloud.resource_type) == Resource_type.GATEWAY;
+    boolean implicit = catchToNull(() -> metadata.gateway) != null
+        && metadata.gateway.proxy_ids != null
         && metadata.gateway.gateway_id == null
         && catchToNull(() -> metadata.cloud.auth_type) != null;
+    return explicit || implicit;
   }
 
+  /**
+   * Check if this is a proxied device.
+   */
   public boolean isProxied() {
-    return getGatewayId() != null;
+    boolean explicit = catchToNull(() -> metadata.cloud.resource_type) == Resource_type.PROXIED;
+    boolean implicit = getGatewayId() != null;
+    return explicit || implicit;
   }
 
   /**
