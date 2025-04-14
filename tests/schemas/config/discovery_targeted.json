@@ -9,6 +9,8 @@
     "families": {
       "bacnet": {
         "generation": "2018-08-26T21:00:13Z",
+        // These addresses are explicit devices to enumerate, so no scan is performed.
+        // Using this form defaults the depth to "details" of the indicated devices.
         "addrs": [ "9218", "294124", "12933" ]
       }
     }
