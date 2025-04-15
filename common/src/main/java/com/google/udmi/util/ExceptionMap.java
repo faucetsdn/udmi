@@ -35,7 +35,7 @@ public class ExceptionMap extends RuntimeException {
   public enum ExceptionCategory {
     missing, extra, out, validation, loading, writing, site_metadata, initializing, sample,
     registering, envelope, credentials, samples, files, binding, creating, updating, schema,
-    configuring, metadata, settings, status
+    configuring, metadata, settings, status, preprocess, proxy
   }
 
   /**
@@ -67,6 +67,10 @@ public class ExceptionMap extends RuntimeException {
           .getCausingExceptions()
           .forEach(sub -> errorTree.children.put(multiTrim(sub.getMessage()),
               format(sub, newPrefix, indent)));
+    } else if (e instanceof ExceptionList exceptionList) {
+      exceptionList.exceptions().forEach(sub -> {
+        errorTree.children.put(sub.getMessage(), format(sub, newPrefix, indent));
+      });
     } else if (e.getCause() != null) {
       errorTree.child = format(e.getCause(), newPrefix, indent);
     }
@@ -111,8 +115,11 @@ public class ExceptionMap extends RuntimeException {
    * @param exception exception to add
    */
   public void put(ExceptionCategory key, Exception exception) {
-    if (exceptions.put(key, exception) != null) {
-      throw new IllegalArgumentException("Exception key already defined: " + key);
+    Exception previous = exceptions.put(key, exception);
+    if (previous instanceof ExceptionList exceptionList) {
+      exceptionList.exceptions().add(exception);
+    } else if (previous != null) {
+      exceptions.put(key, new ExceptionList(List.of(previous, exception)));
     }
   }
 

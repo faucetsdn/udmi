@@ -1,3 +1,4 @@
+
 {
   "pointset": {
     "points": {
@@ -7,6 +8,7 @@
     }
   },
   "system": {
+    "node_type": "cloud_gateway",
     "location": {
       "section": "2-3N8C"
     },
@@ -19,7 +21,6 @@
     }
   },
   "gateway": {
-    "proxy_ids": [ "SNS-4", "AHU-22", "SNS-8" ]
   },
   "localnet": {
     "families": {
@@ -29,7 +30,8 @@
     }
   },
   "cloud": {
-    "auth_type": "ES256"
+    "auth_type": "ES256",
+    "connection_type": "GATEWAY"
   },
   "version": "1.5.2",
   "timestamp": "2020-05-01T13:39:07Z"

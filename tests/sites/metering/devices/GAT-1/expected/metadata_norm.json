@@ -1,10 +1,14 @@
 {
   "cloud": {
     "auth_type": "ES256",
-    "connection_type": "GATEWAY"
+    "resource_type": "GATEWAY"
   },
-  "gateway": {},
-  "hash": "1cabfba1",
+  "gateway": {
+    "proxy_ids": [
+      "EM-1"
+    ]
+  },
+  "hash": "4a140296",
   "system": {
     "min_loglevel": 300
   },
