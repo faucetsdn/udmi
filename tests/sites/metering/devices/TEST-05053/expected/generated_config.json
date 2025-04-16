@@ -1,0 +1,36 @@
+{
+  "discovery": {
+    "families": {
+      "iot": {},
+      "vendor": {}
+    }
+  },
+  "gateway": {
+    "target": {
+      "addr": "TEST-05053",
+      "family": "iot"
+    }
+  },
+  "localnet": {
+    "families": {
+      "iot": {}
+    }
+  },
+  "pointset": {
+    "points": {
+      "HOLDING_REGISTER_153": {
+        "ref": "281"
+      },
+      "HOLDING_REGISTER_53": {
+        "ref": "181"
+      }
+    }
+  },
+  "system": {
+    "metrics_rate_sec": 10,
+    "min_loglevel": 300,
+    "operation": {}
+  },
+  "timestamp": "2025-03-13T14:23:04Z",
+  "version": "1.5.3"
+}

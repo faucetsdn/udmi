@@ -1,0 +1,63 @@
+{
+  "timestamp" : "2025-03-13T14:23:04Z",
+  "version" : "1.5.2",
+  "cloud" : {
+    "connection_type" : "PROXIED",
+    "resource_type" : "DEVICE"
+  },
+  "system" : {
+    "location" : {
+      "site" : "UK-LON-GLAB"
+    },
+    "min_loglevel" : 300
+  },
+  "gateway" : {
+    "gateway_id" : "CGW-05",
+    "target" : {
+      "family" : "iot"
+    }
+  },
+  "discovery" : {
+    "families" : {
+      "vendor" : { },
+      "iot" : { }
+    }
+  },
+  "localnet" : {
+    "families" : {
+      "iot" : {
+        "addr" : "TEST-05053"
+      }
+    }
+  },
+  "testing" : {
+    "targets" : {
+      "applied" : {
+        "target_point" : "HOLDING_REGISTER_153",
+        "target_value" : 52
+      },
+      "tweaked_ref" : {
+        "target_point" : "HOLDING_REGISTER_153"
+      },
+      "invalid" : {
+        "target_point" : "HOLDING_REGISTER_153",
+        "target_value" : [ ]
+      },
+      "scan_family" : {
+        "target_value" : "vendor"
+      }
+    }
+  },
+  "pointset" : {
+    "points" : {
+      "HOLDING_REGISTER_153" : {
+        "writable" : true,
+        "ref" : "281"
+      },
+      "HOLDING_REGISTER_53" : {
+        "writable" : true,
+        "ref" : "181"
+      }
+    }
+  }
+}
