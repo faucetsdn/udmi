@@ -34,6 +34,8 @@ public class MessageUpgrader {
   private static final String TARGET_FORMAT = "%d.%d.%d";
   private static final String RAW_GIT_VERSION = "git";
   public static final String DEVICE_TYPE = "DEVICE";
+  public static final String PROXIED_TYPE = Resource_type.PROXIED.value();
+  public static final String DIRECT_TYPE = Resource_type.DIRECT.value();
   private final ObjectNode message;
   private final JsonNode original;
   private final String schemaName;
@@ -266,17 +268,19 @@ public class MessageUpgrader {
 
   private void upgradeTo_1_5_3_metadata_cloud(ObjectNode cloud) {
     String orig = ifNotNullGet(cloud.remove("resource_type"), JsonNode::textValue);
-    AtomicReference<String> type = new AtomicReference<>(orig);
+    AtomicReference<String> rType = new AtomicReference<>(orig);
 
     ifNotNullThen(cloud.remove("connection_type"), node -> {
-      String connection = node.textValue();
-      if (type.get() != null && !type.get().equals(connection)) {
-        throw new RuntimeException(format("Connection/resource mismatch: %s/%s", connection, type));
+      String cType = node.textValue();
+      boolean legacyProxy = PROXIED_TYPE.equals(cType) && DEVICE_TYPE.equals(rType.get());
+      if (!legacyProxy && rType.get() != null && !rType.get().equals(cType)) {
+        throw new RuntimeException(
+            format("(connection_type %s) != (resource_type %s)", cType, rType));
       }
-      type.set(connection);
+      rType.set(cType);
     });
-    ifTrueThen(DEVICE_TYPE.equals(type.get()), () -> type.set(Resource_type.DIRECT.value()));
-    ifNotNullThen(type.get(), endResult -> cloud.put("resource_type", endResult));
+    ifTrueThen(DEVICE_TYPE.equals(rType.get()), () -> rType.set(DIRECT_TYPE));
+    ifNotNullThen(rType.get(), endResult -> cloud.put("resource_type", endResult));
   }
 
   private void upgradeTo_1_5_0() {
