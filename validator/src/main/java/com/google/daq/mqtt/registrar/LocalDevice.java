@@ -701,7 +701,11 @@ class LocalDevice {
   }
 
   void writeNormalized() {
-    validateConsistency();
+    try {
+      validateConsistency();
+    } catch (Exception e) {
+      exceptionMap.put(ExceptionCategory.validation, e);
+    }
 
     File metadataFile = new File(outDir, NORMALIZED_JSON);
     if (metadata == null) {

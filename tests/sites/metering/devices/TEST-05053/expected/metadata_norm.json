@@ -1,0 +1,64 @@
+{
+  "cloud": {
+    "resource_type": "PROXIED"
+  },
+  "discovery": {
+    "families": {
+      "iot": {},
+      "vendor": {}
+    }
+  },
+  "gateway": {
+    "gateway_id": "CGW-05",
+    "target": {
+      "family": "iot"
+    }
+  },
+  "hash": "def0fe94",
+  "localnet": {
+    "families": {
+      "iot": {
+        "addr": "TEST-05053"
+      }
+    }
+  },
+  "pointset": {
+    "points": {
+      "HOLDING_REGISTER_153": {
+        "ref": "281",
+        "writable": true
+      },
+      "HOLDING_REGISTER_53": {
+        "ref": "181",
+        "writable": true
+      }
+    }
+  },
+  "system": {
+    "location": {
+      "site": "UK-LON-GLAB"
+    },
+    "min_loglevel": 300
+  },
+  "testing": {
+    "targets": {
+      "applied": {
+        "target_point": "HOLDING_REGISTER_153",
+        "target_value": 52
+      },
+      "invalid": {
+        "target_point": "HOLDING_REGISTER_153",
+        "target_value": []
+      },
+      "scan_family": {
+        "target_value": "vendor"
+      },
+      "tweaked_ref": {
+        "target_point": "HOLDING_REGISTER_153"
+      }
+    }
+  },
+  "timestamp": "2025-03-13T14:23:04Z",
+  "upgraded_from": "1.5.2",
+  "version": "1.5.3"
+}
