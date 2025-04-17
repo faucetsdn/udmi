@@ -268,19 +268,21 @@ public class MessageUpgrader {
 
   private void upgradeTo_1_5_3_metadata_cloud(ObjectNode cloud) {
     String orig = ifNotNullGet(cloud.remove("resource_type"), JsonNode::textValue);
-    AtomicReference<String> rType = new AtomicReference<>(orig);
+    AtomicReference<String> resourceType = new AtomicReference<>(orig);
 
     ifNotNullThen(cloud.remove("connection_type"), node -> {
-      String cType = node.textValue();
-      boolean legacyProxy = PROXIED_TYPE.equals(cType) && DEVICE_TYPE.equals(rType.get());
-      if (!legacyProxy && rType.get() != null && !rType.get().equals(cType)) {
+      String connectionType = node.textValue();
+      boolean legacyProxy =
+          PROXIED_TYPE.equals(connectionType) && DEVICE_TYPE.equals(resourceType.get());
+      if (!legacyProxy && resourceType.get() != null
+          && !resourceType.get().equals(connectionType)) {
         throw new RuntimeException(
-            format("(connection_type %s) != (resource_type %s)", cType, rType));
+            format("(connection_type %s) != (resource_type %s)", connectionType, resourceType));
       }
-      rType.set(cType);
+      resourceType.set(connectionType);
     });
-    ifTrueThen(DEVICE_TYPE.equals(rType.get()), () -> rType.set(DIRECT_TYPE));
-    ifNotNullThen(rType.get(), endResult -> cloud.put("resource_type", endResult));
+    ifTrueThen(DEVICE_TYPE.equals(resourceType.get()), () -> resourceType.set(DIRECT_TYPE));
+    ifNotNullThen(resourceType.get(), endResult -> cloud.put("resource_type", endResult));
   }
 
   private void upgradeTo_1_5_0() {
