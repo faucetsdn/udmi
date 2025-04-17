@@ -2,6 +2,8 @@
   "timestamp" : "2025-03-13T14:23:04Z",
   "version" : "1.5.2",
   "cloud" : {
+    // This is a legacy representation of the resource_type for a proxied device,
+    // and it should be cleaned up by the upgrader.
     "connection_type" : "PROXIED",
     "resource_type" : "DEVICE"
   },
