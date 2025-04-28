@@ -1,238 +1,466 @@
 package com.google.udmi.util;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.mockito.ArgumentMatchers.any;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertSame;
+import static org.junit.Assert.assertTrue;
+import static org.mockito.ArgumentMatchers.anyList;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.anyString;
-import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.atLeastOnce;
+import static org.mockito.Mockito.doNothing;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.reset;
+import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import com.google.api.services.sheets.v4.Sheets;
-import com.google.api.services.sheets.v4.Sheets.Spreadsheets;
-import com.google.api.services.sheets.v4.Sheets.Spreadsheets.BatchUpdate;
-import com.google.api.services.sheets.v4.Sheets.Spreadsheets.Get;
-import com.google.api.services.sheets.v4.Sheets.Spreadsheets.Values;
-import com.google.api.services.sheets.v4.Sheets.Spreadsheets.Values.Append;
-import com.google.api.services.sheets.v4.model.AppendValuesResponse;
-import com.google.api.services.sheets.v4.model.BatchUpdateSpreadsheetRequest;
-import com.google.api.services.sheets.v4.model.BatchUpdateSpreadsheetResponse;
-import com.google.api.services.sheets.v4.model.Sheet;
-import com.google.api.services.sheets.v4.model.SheetProperties;
-import com.google.api.services.sheets.v4.model.Spreadsheet;
-import com.google.api.services.sheets.v4.model.ValueRange;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.PrintStream;
-import java.util.ArrayList;
-import java.util.Collections;
+import java.nio.charset.StandardCharsets;
+import java.time.Instant;
 import java.util.List;
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.runner.RunWith;
 import org.mockito.ArgumentCaptor;
-import org.mockito.junit.jupiter.MockitoExtension;
+import org.mockito.Captor;
+import org.mockito.Mock;
+import org.mockito.MockedStatic;
+import org.mockito.Mockito;
+import org.mockito.junit.MockitoJUnitRunner;
 
 /**
- * Unit tests for SheetsOutputStream.java
+ * Unit tests for SheetsOutputStream.java.
  */
-@ExtendWith(MockitoExtension.class)
+@RunWith(MockitoJUnitRunner.class)
 public class SheetsOutputStreamTest {
 
-  private final Append mockAppend = mock(Append.class);
-  private final AppendValuesResponse mockAppendValuesResponse = mock(AppendValuesResponse.class);
-  private final BatchUpdate mockBatchUpdate = mock(BatchUpdate.class);
-  private final BatchUpdateSpreadsheetResponse mockBatchUpdateResponse = mock(
-      BatchUpdateSpreadsheetResponse.class);
-  private final Get mockSpreadsheetsGet = mock(Get.class);
-  private final Sheet mockSheet = new Sheet();
-  private final Sheets mockSheetsService = mock(Sheets.class);
-  private final Spreadsheet mockSpreadSheet = mock(Spreadsheet.class);
-  private final Spreadsheets mockSpreadsheets = mock(Spreadsheets.class);
-  private final Values mockValues = mock(Values.class);
+  private static final String TEST_SHEET_TITLE = "TestOutputSheet";
+  private static final long TEST_SYNC_TIME = 50;
 
-  private final String applicationName = "TestApp";
-  private final String spreadsheetId = "testSpreadsheetId";
-  private final String outputSheetTitle = "TestSheet";
-  private final long syncTime = 2000;
+  @Mock
+  private SpreadsheetManager mockSpreadsheetManager;
+
+  private MockedStatic<Instant> mockedStaticInstant;
+  @Mock
+  private Instant mockInstant;
+  @Captor
+  private ArgumentCaptor<List<List<Object>>> valuesCaptor;
+
   private SheetsOutputStream sheetsOutputStream;
+
+  // --- Variables to hold original System streams ---
+  private PrintStream originalSystemOut;
+  private PrintStream originalSystemErr;
+  private InputStream originalSystemIn;
+
+  // --- Test streams ---
+  private ByteArrayOutputStream testOutContent;
+  private ByteArrayOutputStream testErrContent;
+  private PrintStream testOutPrintStream;
+  private PrintStream testErrPrintStream;
 
 
   /**
-   * Mock interactions with the gcloud API.
+   * Setup and mock as required.
    */
   @Before
-  public void setup() throws IOException {
-    mockSheet.setProperties(
-        new SheetProperties().setTitle(outputSheetTitle)
-    );
+  public void setUp() throws IOException {
+    originalSystemOut = System.out;
+    originalSystemErr = System.err;
+    originalSystemIn = System.in;
 
-    when(mockSheetsService.spreadsheets()).thenReturn(mockSpreadsheets);
-    when(mockSpreadsheets.get(anyString())).thenReturn(mockSpreadsheetsGet);
-    when(mockSpreadsheetsGet.execute()).thenReturn(mockSpreadSheet);
-    when(mockSpreadSheet.getSheets()).thenReturn(new ArrayList<Sheet>(List.of(mockSheet)));
-    when(mockSpreadsheets.batchUpdate(anyString(),
-        any(BatchUpdateSpreadsheetRequest.class))).thenReturn(mockBatchUpdate);
-    when(mockBatchUpdate.execute()).thenReturn(mockBatchUpdateResponse);
-    when(mockSpreadsheets.values()).thenReturn(mockValues);
-    when(mockValues.append(any(), any(), any())).thenReturn(mockAppend);
-    when(mockAppend.setValueInputOption(anyString())).thenReturn(mockAppend);
-    when(mockAppend.execute()).thenReturn(mockAppendValuesResponse);
-    sheetsOutputStream = new SheetsOutputStream(applicationName, spreadsheetId, outputSheetTitle,
-        syncTime) {
-      @Override
-      Sheets createSheetsService() {
-        return mockSheetsService;
-      }
-    };
+    testOutContent = new ByteArrayOutputStream();
+    testErrContent = new ByteArrayOutputStream();
+    testOutPrintStream = new PrintStream(testOutContent, true, StandardCharsets.UTF_8);
+    testErrPrintStream = new PrintStream(testErrContent, true, StandardCharsets.UTF_8);
+
+    mockedStaticInstant = Mockito.mockStatic(Instant.class);
+    mockedStaticInstant.when(Instant::now).thenReturn(mockInstant);
+    when(mockInstant.toEpochMilli()).thenReturn(0L); // Start time at 0
+
+    sheetsOutputStream = spy(
+        new SheetsOutputStream(mockSpreadsheetManager, TEST_SHEET_TITLE, TEST_SYNC_TIME));
+
+    doNothing().when(mockSpreadsheetManager).appendToSheet(eq(TEST_SHEET_TITLE), anyList());
+  }
+
+  /**
+   * Reset to original streams.
+   */
+  @After
+  public void tearDown() {
+    System.setOut(originalSystemOut);
+    System.setErr(originalSystemErr);
+    System.setIn(originalSystemIn);
+
+    mockedStaticInstant.close();
+
+    try {
+      testOutPrintStream.close();
+      testErrPrintStream.close();
+      testOutContent.close();
+      testErrContent.close();
+    } catch (IOException e) {
+      // Ignore closing errors
+    }
   }
 
   @Test
-  public void testConstructorWithDefaultSyncTime() throws IOException {
-    SheetsOutputStream stream = new SheetsOutputStream(applicationName, spreadsheetId,
-        outputSheetTitle) {
-      @Override
-      Sheets createSheetsService() {
-        return mockSheetsService;
-      }
-    };
-    assertNotNull(stream);
+  public void constructor_callsAddNewSheet() throws IOException {
+    reset(mockSpreadsheetManager);
+    doNothing().when(mockSpreadsheetManager).addNewSheet(anyString());
+    new SheetsOutputStream(mockSpreadsheetManager, TEST_SHEET_TITLE, TEST_SYNC_TIME);
+    verify(mockSpreadsheetManager).addNewSheet(TEST_SHEET_TITLE);
   }
 
   @Test
-  public void testConstructorWithCustomSyncTime() {
-    assertNotNull(sheetsOutputStream);
-    assertEquals(syncTime, sheetsOutputStream.syncTime);
-  }
-
-
-  @Test
-  public void testWriteSingleCharacter() throws IOException {
-    sheetsOutputStream.startStream();
-    sheetsOutputStream.write('A');
-    assertEquals(sheetsOutputStream.buffer.toString(), "A");
-    sheetsOutputStream.stopStream();
-
-    // verify stream was appended to the sheet
-    verify(mockValues, times(1)).append(any(), any(), any());
-  }
-
-
-  @Test
-  public void testWriteMultipleCharacters() throws IOException {
-    sheetsOutputStream.startStream();
-    String testString = "Hello World!";
-    sheetsOutputStream.write(testString.getBytes(), 0, testString.length());
-    assertEquals(testString, sheetsOutputStream.buffer.toString());
-    sheetsOutputStream.stopStream();
-
-    // verify stream was appended to the sheet
-    verify(mockValues, times(1)).append(any(), any(), any());
+  public void write_int_appendsCharToBuffer() {
+    sheetsOutputStream.write('H');
+    sheetsOutputStream.write('i');
+    assertEquals("Hi", sheetsOutputStream.buffer.toString());
+    verify(sheetsOutputStream, never()).appendToSheet();
   }
 
   @Test
-  public void testWriteMultiLineString() throws IOException {
-    sheetsOutputStream.startStream();
-    String testString = "First line.\nSecond line.\nThird line.";
-    sheetsOutputStream.write(testString.getBytes(), 0, testString.length());
+  public void write_byteArray_appendsStringToBuffer() {
+    byte[] data = "Hello".getBytes(StandardCharsets.UTF_8);
+    sheetsOutputStream.write(data, 0, data.length);
+    assertEquals("Hello", sheetsOutputStream.buffer.toString());
+    verify(sheetsOutputStream, never()).appendToSheet();
+  }
 
-    // verify stream was appended to the sheet
-    ArgumentCaptor<ValueRange> argumentCaptor = ArgumentCaptor.forClass(ValueRange.class);
-    verify(mockValues, times(1)).append(eq(spreadsheetId), eq(outputSheetTitle),
-        argumentCaptor.capture());
-    ValueRange capturedValue = argumentCaptor.getValue();
-    assertEquals(3, capturedValue.getValues().size());
-    assertEquals("First line.", capturedValue.getValues().get(0).get(0));
-    assertEquals("Second line.", capturedValue.getValues().get(1).get(0));
-    assertEquals("Third line.", capturedValue.getValues().get(2).get(0));
+  @Test
+  public void write_byteArray_partial_appendsStringToBuffer() {
+    byte[] data = "XHelloX".getBytes(StandardCharsets.UTF_8);
+    sheetsOutputStream.write(data, 1, 5);
+    assertEquals("Hello", sheetsOutputStream.buffer.toString());
+    verify(sheetsOutputStream, never()).appendToSheet();
+  }
 
-    // buffer is emptied after appending to the sheet
+  @Test
+  public void syncIfNeeded_doesNotSync_ifNoNewline() {
+    when(mockInstant.toEpochMilli()).thenReturn(0L, TEST_SYNC_TIME + 10);
+    sheetsOutputStream.write('a');
+    sheetsOutputStream.write('b');
+    verify(sheetsOutputStream, never()).appendToSheet();
+    assertEquals("ab", sheetsOutputStream.buffer.toString());
+  }
+
+  @Test
+  public void syncIfNeeded_doesNotSync_ifNewlineButTimeNotElapsed() throws IOException {
+    when(mockInstant.toEpochMilli()).thenReturn(0L, TEST_SYNC_TIME - 10);
+    sheetsOutputStream.write("a\n".getBytes());
+    sheetsOutputStream.write('b');
+    verify(sheetsOutputStream, never()).appendToSheet();
+    assertEquals("a\nb", sheetsOutputStream.buffer.toString());
+  }
+
+  @Test
+  public void syncIfNeeded_Syncs_ifNewlineAndTimeElapsed() throws IOException {
+    when(mockInstant.toEpochMilli()).thenReturn(0L, TEST_SYNC_TIME + 10);
+    sheetsOutputStream.write("line1\n".getBytes());
+    sheetsOutputStream.write("line2".getBytes());
+    verify(sheetsOutputStream, times(1)).appendToSheet();
     assertEquals("", sheetsOutputStream.buffer.toString());
-
-    sheetsOutputStream.stopStream();
   }
 
   @Test
-  public void testAppendToSheetEmptyContent() throws IOException {
-    sheetsOutputStream.buffer.append("  \n  \n"); // Whitespace and empty lines
+  public void appendToSheet_sendsBufferedLinesToManager() throws IOException {
+    String line1 = "First line";
+    String line2 = "Second line";
+    sheetsOutputStream.buffer.append(line1).append("\n").append(line2).append("\n");
     sheetsOutputStream.appendToSheet();
-
-    // empty content is not appended to the sheet
-    verify(mockValues, never()).append(any(), any(), any());
-    assertEquals("", sheetsOutputStream.buffer.toString());
+    verify(mockSpreadsheetManager).appendToSheet(eq(TEST_SHEET_TITLE), valuesCaptor.capture());
+    List<List<Object>> capturedValues = valuesCaptor.getValue();
+    assertEquals(2, capturedValues.size());
+    assertEquals(line1, capturedValues.get(0).get(0));
+    assertEquals(line2, capturedValues.get(1).get(0));
+    assertEquals(0, sheetsOutputStream.buffer.length());
   }
 
   @Test
-  public void testAddSheetIfNotExist() throws IOException {
-    when(mockSpreadsheetsGet.execute()).thenReturn(
-        new Spreadsheet().setSheets(Collections.emptyList()));
-    SheetsOutputStream outputStream =
-        new SheetsOutputStream(applicationName, spreadsheetId, outputSheetTitle, syncTime) {
-          @Override
-          Sheets createSheetsService() {
-            return mockSheetsService;
-          }
-        };
-    verify(mockBatchUpdate, times(1)).execute();
+  public void appendToSheet_handlesEmptyLinesAndWhitespace() throws IOException {
+    sheetsOutputStream.buffer.append("  \n").append("Real Data\n\n").append("   More Data   \n");
+    sheetsOutputStream.appendToSheet();
+    verify(mockSpreadsheetManager).appendToSheet(eq(TEST_SHEET_TITLE), valuesCaptor.capture());
+    List<List<Object>> capturedValues = valuesCaptor.getValue();
+    assertEquals(2, capturedValues.size());
+    assertEquals("Real Data", capturedValues.get(0).get(0));
+    assertEquals("   More Data   ", capturedValues.get(1).get(0));
+    assertEquals(0, sheetsOutputStream.buffer.length());
   }
 
   @Test
-  public void testAddSheetFails() throws IOException {
-    when(mockSpreadsheetsGet.execute()).thenReturn(
-        new Spreadsheet().setSheets(Collections.emptyList()));
-    when(mockBatchUpdate.execute()).thenThrow(new IOException("Failed to add sheet"));
-    assertThrows(
-        IOException.class,
-        () -> new SheetsOutputStream(applicationName, spreadsheetId, outputSheetTitle,
-            syncTime) {
-          @Override
-          Sheets createSheetsService() {
-            return mockSheetsService;
-          }
-        });
-  }
+  public void appendToSheet_doesNothingIfBufferIsEmptyOrWhitespace() throws IOException {
+    sheetsOutputStream.buffer.setLength(0);
+    sheetsOutputStream.appendToSheet();
+    verify(mockSpreadsheetManager, never()).appendToSheet(anyString(), anyList());
+    assertEquals(0, sheetsOutputStream.buffer.length());
 
+    sheetsOutputStream.buffer.append("   \n\t  \n ");
+    sheetsOutputStream.appendToSheet();
+    verify(mockSpreadsheetManager, never()).appendToSheet(anyString(), anyList());
+    assertEquals(0, sheetsOutputStream.buffer.length());
+  }
 
   @Test
-  public void testSheetExists() throws IOException {
-    SheetProperties sheetProperties = new SheetProperties().setTitle(outputSheetTitle);
-    Sheet sheet = new Sheet().setProperties(sheetProperties);
-    when(mockSpreadsheetsGet.execute()).thenReturn(
-        new Spreadsheet().setSheets(Collections.singletonList(sheet)));
-    SheetsOutputStream outputStream =
-        new SheetsOutputStream(applicationName, spreadsheetId, outputSheetTitle, syncTime) {
-          @Override
-          Sheets createSheetsService() {
-            return mockSheetsService;
-          }
-        };
-    verify(mockBatchUpdate, never()).execute();
+  public void appendToSheet_doesNotClearBufferIfApiCallFails() throws IOException {
+    String text = "Some data\n";
+    sheetsOutputStream.buffer.append(text);
+    doThrow(new IOException("Sheet API Error")).when(mockSpreadsheetManager)
+        .appendToSheet(anyString(), anyList());
+    sheetsOutputStream.appendToSheet();
+    assertEquals(text, sheetsOutputStream.buffer.toString());
+    verify(mockSpreadsheetManager).appendToSheet(eq(TEST_SHEET_TITLE), anyList());
   }
-
 
   @Test
-  public void testStartAndStopStream() throws IOException {
-    SheetsOutputStream outputStream =
-        new SheetsOutputStream(applicationName, spreadsheetId, outputSheetTitle, syncTime) {
-          @Override
-          Sheets createSheetsService() {
-            return mockSheetsService;
-          }
-        };
-    PrintStream originalOut = System.out;
-    PrintStream originalErr = System.err;
-    outputStream.startStream();
-    assertNotEquals(originalOut, System.out);
-    assertNotEquals(originalErr, System.err);
-    String testString = "Test output";
-    System.out.println(testString);
-    outputStream.stopStream();
-    assertEquals(originalOut, System.out);
-    assertEquals(originalErr, System.err);
+  public void startStream_redirectsSystemOutAndErr() throws Exception {
+    String testOutMessage = "Message to System.out";
+    String testErrMessage = "Message to System.err";
+
+    try {
+      // --- Redirect ---
+      System.setOut(testOutPrintStream);
+      System.setErr(testErrPrintStream);
+
+      // --- Act ---
+      SheetsOutputStream stream = spy(
+          new SheetsOutputStream(mockSpreadsheetManager, TEST_SHEET_TITLE, TEST_SYNC_TIME));
+      stream.startStream();
+
+      // The internal originalSystemOut field now holds our testOutPrintStream
+      assertSame(testOutPrintStream, stream.originalSystemOut);
+      assertSame(testErrPrintStream, stream.originalSystemErr);
+
+      // Simulate output
+      when(mockInstant.toEpochMilli()).thenReturn(0L, TEST_SYNC_TIME + 10, TEST_SYNC_TIME + 20);
+      System.out.println(
+          testOutMessage); // Goes to DualOutputStream -> testOutPrintStream AND SheetsOutputStream
+      System.err.println(
+          testErrMessage); // Goes to DualOutputStream -> testOutPrintStream AND SheetsOutputStream
+
+      // --- Assert ---
+      // 1. Check captured output
+      testOutPrintStream.flush();
+      testErrPrintStream.flush();
+      String capturedOut = testOutContent.toString(StandardCharsets.UTF_8).trim();
+      String capturedErr = testErrContent.toString(StandardCharsets.UTF_8).trim();
+
+      assertTrue("Captured output should contain System.out message",
+          capturedOut.contains(testOutMessage));
+      assertTrue("Captured output should also contain System.err message",
+          capturedOut.contains(testErrMessage));
+      assertEquals("Captured error stream should be empty after startStream", 0,
+          capturedErr.length());
+
+      // 2. Check if SheetsOutputStream synced
+      verify(stream, atLeastOnce()).appendToSheet();
+      verify(mockSpreadsheetManager, times(1)).appendToSheet(eq(TEST_SHEET_TITLE),
+          valuesCaptor.capture());
+
+      List<List<Object>> allValues = valuesCaptor.getAllValues().stream().flatMap(List::stream)
+          .toList();
+      assertEquals(2, allValues.size());
+      assertTrue(allValues.stream().anyMatch(row -> testOutMessage.equals(row.get(0))));
+      assertTrue(allValues.stream().anyMatch(row -> testErrMessage.equals(row.get(0))));
+
+      stream.stopStream();
+    } finally {
+      System.setOut(originalSystemOut);
+      System.setErr(originalSystemErr);
+    }
   }
 
+  @Test
+  public void stopStream_restoresOriginalStreamsAndFlushes() throws Exception {
+    PrintStream realOriginalOut = originalSystemOut;
+    PrintStream realOriginalErr = originalSystemErr;
+
+    try {
+      // Redirect system streams so startStream captures them
+      System.setOut(testOutPrintStream);
+      System.setErr(testErrPrintStream);
+
+      // Arrange: Start stream, put data in buffer
+      SheetsOutputStream stream = spy(
+          new SheetsOutputStream(mockSpreadsheetManager, TEST_SHEET_TITLE, TEST_SYNC_TIME));
+      stream.startStream();
+      stream.buffer.append("Final data\n");
+      reset(mockSpreadsheetManager);
+      doNothing().when(mockSpreadsheetManager).appendToSheet(anyString(), anyList());
+
+      // Act
+      stream.stopStream(); // Should restore testOutPrintStream/testErrPrintStream
+
+      // Assert: Streams restored
+      assertSame("System.out should be restored to what startStream captured", testOutPrintStream,
+          System.out);
+      assertSame("System.err should be restored to what startStream captured", testErrPrintStream,
+          System.err);
+
+      // Assert: Check final flush happened
+      verify(mockSpreadsheetManager).appendToSheet(eq(TEST_SHEET_TITLE), valuesCaptor.capture());
+      assertEquals("Final data", valuesCaptor.getValue().get(0).get(0));
+      assertEquals(0, stream.buffer.length());
+
+      // Assert: Internal fields nulled
+      assertNull(stream.originalSystemOut);
+      assertNull(stream.originalSystemErr);
+
+    } finally {
+      System.setOut(realOriginalOut);
+      System.setErr(realOriginalErr);
+    }
+  }
+
+  @Test
+  public void startStream_isIdempotent() throws Exception {
+    PrintStream firstCapturedOut = null;
+    PrintStream firstCapturedErr = null;
+    PrintStream originalOutRef = null;
+    try {
+      System.setOut(testOutPrintStream); // Redirect before first call
+      System.setErr(testErrPrintStream);
+
+      SheetsOutputStream stream = spy(
+          new SheetsOutputStream(mockSpreadsheetManager, TEST_SHEET_TITLE, TEST_SYNC_TIME));
+      stream.startStream(); // First call
+
+      firstCapturedOut = System.out;
+      firstCapturedErr = System.err;
+      originalOutRef = stream.originalSystemOut;
+
+      stream.startStream(); // Second call
+
+      // Assert: Streams shouldn't have changed from the first call
+      assertSame(firstCapturedOut, System.out);
+      assertSame(firstCapturedErr, System.err); // Should be same object
+      // Assert: Internal original refs should not be overwritten
+      assertSame(originalOutRef, stream.originalSystemOut);
+
+    } finally {
+      System.setOut(originalSystemOut);
+      System.setErr(originalSystemErr);
+    }
+  }
+
+  @Test
+  public void stopStream_isIdempotent() throws IOException {
+    try {
+      System.setOut(testOutPrintStream);
+      System.setErr(testErrPrintStream);
+
+      SheetsOutputStream stream = spy(
+          new SheetsOutputStream(mockSpreadsheetManager, TEST_SHEET_TITLE, TEST_SYNC_TIME));
+      stream.startStream();
+      stream.buffer.append("Data");
+
+      // First call, flushes
+      stream.stopStream();
+      // Flushed once
+      verify(stream, times(1)).appendToSheet();
+
+      // Second call
+      stream.stopStream();
+      // Should not flush again, count unchanged
+      verify(stream, times(1)).appendToSheet();
+
+      // Streams should remain restored to what startStream captured
+      assertSame(testOutPrintStream, System.out);
+      assertSame(testErrPrintStream, System.err);
+
+    } finally {
+      System.setOut(originalSystemOut);
+      System.setErr(originalSystemErr);
+    }
+  }
+
+  @Test
+  public void startStreamFromInput_readsInputAndWritesToSheet() throws Exception {
+    String line1 = "Input Line One";
+    String line2 = "Input Line Two";
+    String simulatedInput = line1 + System.lineSeparator() + line2 + System.lineSeparator();
+
+    try (InputStream testInputStream = new ByteArrayInputStream(
+        simulatedInput.getBytes(StandardCharsets.UTF_8))) {
+      // --- Redirect ---
+      System.setIn(testInputStream);
+      System.setOut(testOutPrintStream);
+
+      // --- Act ---
+      sheetsOutputStream = spy(
+          new SheetsOutputStream(mockSpreadsheetManager, TEST_SHEET_TITLE, TEST_SYNC_TIME));
+      reset(mockSpreadsheetManager);
+      doNothing().when(mockSpreadsheetManager).appendToSheet(anyString(), anyList());
+      when(mockInstant.toEpochMilli()).thenReturn(0L, 1L, 2L, 3L,
+          TEST_SYNC_TIME + 10);
+
+      sheetsOutputStream.startStreamFromInput();
+
+      // --- Assert ---
+      // 1. Check output echoed to testOutPrintStream
+      testOutPrintStream.flush();
+      String capturedEcho = testOutContent.toString(StandardCharsets.UTF_8);
+      assertTrue(capturedEcho.contains(line1));
+      assertTrue(capturedEcho.contains(line2));
+
+      // 2. Check appendToSheet calls
+      verify(sheetsOutputStream, atLeastOnce()).appendToSheet();
+      verify(mockSpreadsheetManager, atLeastOnce()).appendToSheet(eq(TEST_SHEET_TITLE),
+          valuesCaptor.capture());
+
+      List<List<Object>> allValues = valuesCaptor.getAllValues().stream().flatMap(List::stream)
+          .toList();
+      assertTrue(allValues.stream().anyMatch(row -> line1.equals(row.get(0))));
+      assertTrue(allValues.stream().anyMatch(row -> line2.equals(row.get(0))));
+
+    } finally {
+      System.setIn(originalSystemIn);
+      System.setOut(originalSystemOut);
+    }
+  }
+
+  @Test
+  public void startStreamFromInput_finalFlushHappens() throws Exception {
+    String lastLine = "The very last line, no newline";
+
+    try (InputStream testInputStream = new ByteArrayInputStream(
+        lastLine.getBytes(StandardCharsets.UTF_8))) {
+      // --- Redirect ---
+      System.setIn(testInputStream);
+      System.setOut(testOutPrintStream);
+
+      // --- Act ---
+      sheetsOutputStream = spy(
+          new SheetsOutputStream(mockSpreadsheetManager, TEST_SHEET_TITLE, TEST_SYNC_TIME));
+      reset(mockSpreadsheetManager);
+      doNothing().when(mockSpreadsheetManager).appendToSheet(anyString(), anyList());
+
+      sheetsOutputStream.startStreamFromInput();
+
+      // --- Assert ---
+      verify(sheetsOutputStream, atLeastOnce()).appendToSheet();
+      verify(mockSpreadsheetManager, atLeastOnce()).appendToSheet(eq(TEST_SHEET_TITLE),
+          valuesCaptor.capture());
+
+      // Check the *last* captured value list contains the final line
+      List<List<Object>> lastValues = valuesCaptor.getValue();
+      assertFalse("Expected final values list to not be empty", lastValues.isEmpty());
+      assertEquals(lastLine, lastValues.get(lastValues.size() - 1).get(0));
+
+    } finally {
+      System.setIn(originalSystemIn);
+      System.setOut(originalSystemOut);
+    }
+  }
 }

@@ -1,5 +1,6 @@
 package com.google.udmi.util;
 
+import com.google.common.annotations.VisibleForTesting;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -27,8 +28,8 @@ public class SheetsOutputStream extends OutputStream {
   private final String outputSheetTitle;
   private final SpreadsheetManager spreadsheetManager;
   final StringBuilder buffer = new StringBuilder();
-  private PrintStream originalSystemOut;
-  private PrintStream originalSystemErr;
+  PrintStream originalSystemOut;
+  PrintStream originalSystemErr;
 
   /**
    * Constructs a new `GSheetsOutputStream` with default sync time.
@@ -57,6 +58,15 @@ public class SheetsOutputStream extends OutputStream {
       throws IOException {
     this.outputSheetTitle = outputSheetTitle;
     this.spreadsheetManager = new SpreadsheetManager(applicationName, spreadsheetId);
+    this.syncTime = syncTime;
+    this.spreadsheetManager.addNewSheet(outputSheetTitle);
+  }
+
+  @VisibleForTesting
+  public SheetsOutputStream(SpreadsheetManager mockSpreadsheetManager, String outputSheetTitle, long syncTime)
+      throws IOException {
+    this.outputSheetTitle = outputSheetTitle;
+    this.spreadsheetManager = mockSpreadsheetManager;
     this.syncTime = syncTime;
     this.spreadsheetManager.addNewSheet(outputSheetTitle);
   }

@@ -12,8 +12,11 @@ import com.fasterxml.jackson.core.JsonParser.Feature;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.json.JsonReadFeature;
 import com.fasterxml.jackson.databind.DeserializationFeature;
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
+import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.google.gson.internal.bind.util.ISO8601Utils;
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -484,6 +487,123 @@ public abstract class JsonUtil {
       OBJECT_MAPPER.writeValue(file, theThing);
     } catch (Exception e) {
       throw new RuntimeException("While writing " + file.getAbsolutePath(), e);
+    }
+  }
+
+  public static Map<String, Object> flattenNestedMap(Map<String, Object> map, String separator) {
+    Map<String, Object> flattenedMap = new TreeMap<>();
+    flatten(map, "", flattenedMap, separator);
+    return flattenedMap;
+  }
+
+  @SuppressWarnings("unchecked")
+  private static void flatten(Map<String, Object> currentMap, String currentKey,
+      Map<String, Object> flattenedMap, String separator) {
+    for (Map.Entry<String, Object> entry : currentMap.entrySet()) {
+      String key = entry.getKey();
+      Object value = entry.getValue();
+      String newKey = currentKey.isEmpty() ? key : currentKey + separator + key;
+
+      if (value instanceof Map) {
+        flatten((Map<String, Object>) value, newKey, flattenedMap, separator);
+      } else {
+        flattenedMap.put(newKey, value);
+      }
+    }
+  }
+
+  public static JsonNode nestFlattenedJson(Map<String, String> flattenedJsonMap) {
+    ObjectMapper mapper = new ObjectMapper();
+    ObjectNode rootNode = mapper.createObjectNode();
+
+    for (Map.Entry<String, String> entry : flattenedJsonMap.entrySet()) {
+      String key = entry.getKey();
+      String value = entry.getValue();
+      String[] parts = key.split("\\.");
+      nest(rootNode, parts, value, 0, mapper);
+    }
+
+    return rootNode;
+  }
+
+  private static void nest(JsonNode currentNode, String[] parts, String value,
+      int index, ObjectMapper mapper) {
+    if (index == parts.length - 1) {
+      if (currentNode instanceof ObjectNode) {
+        ((ObjectNode) currentNode).put(parts[index], value);
+      } else if (currentNode instanceof ArrayNode) {
+        try {
+          int arrayIndex = Integer.parseInt(parts[index]);
+          ((ArrayNode) currentNode).set(arrayIndex, mapper.getNodeFactory().textNode(value));
+        } catch (NumberFormatException e) {
+          System.err.println("Warning: Cannot set array value at non-numeric index: " + parts[index]);
+        }
+      }
+      return;
+    }
+
+    String currentPart = parts[index];
+    JsonNode nextNode = currentNode.get(currentPart);
+
+    boolean isArrayIndex = false;
+    int arrayIndex = -1;
+    if (index < parts.length - 1) {
+      try {
+        arrayIndex = Integer.parseInt(parts[index + 1]);
+        isArrayIndex = true;
+      } catch (NumberFormatException ignored) {
+      }
+    }
+
+    if (nextNode == null) {
+      if (isArrayIndex) {
+        ArrayNode arrayNode = mapper.createArrayNode();
+        if (currentNode instanceof ObjectNode) {
+          ((ObjectNode) currentNode).set(currentPart, arrayNode);
+        } else if (currentNode instanceof ArrayNode) {
+          try {
+            int currentIndex = Integer.parseInt(currentPart);
+            while (currentNode.size() <= currentIndex) {
+              ((ArrayNode) currentNode).addNull();
+            }
+            ((ArrayNode) currentNode).set(currentIndex, arrayNode);
+          } catch (NumberFormatException e) {
+            System.err.println("Warning: Cannot set array at non-numeric index: " + currentPart);
+            return;
+          }
+        }
+
+        while (arrayNode.size() <= arrayIndex) {
+          arrayNode.addNull();
+        }
+        nest(arrayNode.get(arrayIndex), parts, value, index + 2, mapper);
+      } else {
+        ObjectNode objectNode = mapper.createObjectNode();
+        if (currentNode instanceof ObjectNode) {
+          ((ObjectNode) currentNode).set(currentPart, objectNode);
+        } else if (currentNode instanceof ArrayNode) {
+          try {
+            int currentIndex = Integer.parseInt(currentPart);
+            while (((ArrayNode) currentNode).size() <= currentIndex) {
+              ((ArrayNode) currentNode).addNull();
+            }
+            ((ArrayNode) currentNode).set(currentIndex, objectNode);
+          } catch (NumberFormatException e) {
+            System.err.println("Warning: Cannot set object at non-numeric index: " + currentPart);
+            return;
+          }
+        }
+        nest(objectNode, parts, value, index + 1, mapper);
+      }
+    } else {
+      if (isArrayIndex && nextNode instanceof ArrayNode) {
+        nest(nextNode.get(arrayIndex), parts, value, index + 2, mapper);
+      } else if (!isArrayIndex && nextNode instanceof ObjectNode) {
+        nest(nextNode, parts, value, index + 1, mapper);
+      } else {
+        System.err.println("Warning: Cannot nest further at key part: " + currentPart +
+            " with existing node of type: " + nextNode.getClass().getSimpleName());
+      }
     }
   }
 }

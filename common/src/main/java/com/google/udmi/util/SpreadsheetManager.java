@@ -9,11 +9,13 @@ import com.google.api.services.sheets.v4.SheetsScopes;
 import com.google.api.services.sheets.v4.model.AddSheetRequest;
 import com.google.api.services.sheets.v4.model.BatchUpdateSpreadsheetRequest;
 import com.google.api.services.sheets.v4.model.Request;
+import com.google.api.services.sheets.v4.model.Sheet;
 import com.google.api.services.sheets.v4.model.SheetProperties;
 import com.google.api.services.sheets.v4.model.Spreadsheet;
 import com.google.api.services.sheets.v4.model.ValueRange;
 import com.google.auth.http.HttpCredentialsAdapter;
 import com.google.auth.oauth2.GoogleCredentials;
+import com.google.common.annotations.VisibleForTesting;
 import java.io.IOException;
 import java.security.GeneralSecurityException;
 import java.util.Collections;
@@ -26,6 +28,7 @@ import org.slf4j.LoggerFactory;
  */
 public class SpreadsheetManager {
 
+  static final List<String> DEFAULT_SCOPES = Collections.singletonList(SheetsScopes.SPREADSHEETS);
   private static final Logger LOGGER = LoggerFactory.getLogger(SpreadsheetManager.class);
   private static final JsonFactory JSON_FACTORY = GsonFactory.getDefaultInstance();
   private static final NetHttpTransport HTTP_TRANSPORT;
@@ -38,7 +41,6 @@ public class SpreadsheetManager {
     }
   }
 
-  static final List<String> DEFAULT_SCOPES = Collections.singletonList(SheetsScopes.SPREADSHEETS);
   private final String applicationName;
   private final Sheets sheetsService;
   private final String spreadSheetId;
@@ -54,6 +56,13 @@ public class SpreadsheetManager {
     this(applicationName, spreadSheetId, DEFAULT_SCOPES);
   }
 
+  @VisibleForTesting
+  public SpreadsheetManager(String testAppName, String spreadSheetId, Sheets mockSheetsService) {
+    this.applicationName = testAppName;
+    this.spreadSheetId = spreadSheetId;
+    this.sheetsService = mockSheetsService;
+  }
+
   private Sheets createSheetsService(List<String> scopes) throws IOException {
     GoogleCredentials credential =
         GoogleCredentials.getApplicationDefault().createScoped(scopes);
@@ -64,13 +73,15 @@ public class SpreadsheetManager {
 
   public boolean checkSheetExists(String sheetName) throws IOException {
     Spreadsheet spreadsheet = this.sheetsService.spreadsheets().get(this.spreadSheetId).execute();
-    return spreadsheet.getSheets().stream()
+    List<Sheet> sheets = spreadsheet.getSheets();
+    return sheets != null && sheets.stream()
         .anyMatch(sheet -> sheet.getProperties().getTitle().equalsIgnoreCase(sheetName));
   }
 
   public void addNewSheet(String sheetName) throws IOException {
     if (checkSheetExists(sheetName)) {
       LOGGER.info("Skipping addNewSheet, sheet already exists with name: " + sheetName);
+      return;
     }
     BatchUpdateSpreadsheetRequest body = new BatchUpdateSpreadsheetRequest()
         .setRequests(List.of(new Request().setAddSheet(new AddSheetRequest()
@@ -135,7 +146,7 @@ public class SpreadsheetManager {
           .update(this.spreadSheetId, range, body)
           .setValueInputOption("RAW")
           .execute();
-      LOGGER.info("Successfully wrote data to range: {}", range);
+      LOGGER.info("successfully wrote {} rows to range: {}", values.size(), range);
     } catch (IOException e) {
       throw new IOException("Failed to write data to range: " + range, e);
     }
@@ -150,29 +161,21 @@ public class SpreadsheetManager {
    * @throws IOException If an error occurs while communicating with the Google Sheets API.
    */
   public List<List<Object>> getSheetRecords(String sheetName) throws IOException {
+    LOGGER.info("fetching records from sheet {}", sheetName);
     try {
       ValueRange response = this.sheetsService.spreadsheets().values()
           .get(this.spreadSheetId, sheetName)
           .execute();
       List<List<Object>> values = response.getValues();
       if (values == null || values.isEmpty()) {
-        LOGGER.info("No data found in sheet: {}", sheetName);
+        LOGGER.info("no data found in sheet: {}", sheetName);
         return Collections.emptyList();
       }
       return values;
     } catch (IOException e) {
-      LOGGER.error("Failed to fetch data from sheet: {}", sheetName, e);
-      throw new IOException("Failed to fetch data from sheet: " + sheetName, e);
+      LOGGER.error("failed to fetch data from sheet: {}", sheetName, e);
+      throw new IOException("failed to fetch data from sheet: " + sheetName, e);
     }
-  }
-
-  public static void main(String[] args) throws IOException {
-    String spreadsheetId = "1uTrepQk2eeUxHdcWOTV30xxPkEqSAOh0_uScAZq4gSs";
-    String app = "test";
-
-    SpreadsheetManager manager = new SpreadsheetManager(app, spreadsheetId);
-    List<List<Object>> records = manager.getSheetRecords("site_metadata");
-    records = manager.getSheetRecords("system");
   }
 
 }
