@@ -62,9 +62,12 @@ public class SheetsOutputStream extends OutputStream {
     this.spreadsheetManager.addNewSheet(outputSheetTitle);
   }
 
+  /**
+   * A constructor only for tests - does not use gcloud credentials.
+   */
   @VisibleForTesting
-  public SheetsOutputStream(SpreadsheetManager mockSpreadsheetManager, String outputSheetTitle, long syncTime)
-      throws IOException {
+  public SheetsOutputStream(SpreadsheetManager mockSpreadsheetManager, String outputSheetTitle,
+      long syncTime) throws IOException {
     this.outputSheetTitle = outputSheetTitle;
     this.spreadsheetManager = mockSpreadsheetManager;
     this.syncTime = syncTime;

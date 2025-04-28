@@ -24,7 +24,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * Interact with Google Sheets
+ * Interact with Google Sheets.
  */
 public class SpreadsheetManager {
 
@@ -45,6 +45,14 @@ public class SpreadsheetManager {
   private final Sheets sheetsService;
   private final String spreadSheetId;
 
+  /**
+   * Manages a spreadsheet.
+   *
+   * @param applicationName name of the application accessing the spreadsheet
+   * @param spreadSheetId alphanumeric id of a spreadsheet obtained from its URL
+   * @param scopes OAuth 2.0 scopes for use with the Google Sheets API.
+   * @throws IOException if an error occurs while communicating with the Google Sheets API.
+   */
   public SpreadsheetManager(String applicationName, String spreadSheetId, List<String> scopes)
       throws IOException {
     this.applicationName = applicationName;
@@ -52,10 +60,20 @@ public class SpreadsheetManager {
     this.sheetsService = createSheetsService(scopes);
   }
 
+  /**
+   * Manages a spreadsheet.
+   *
+   * @param applicationName name of the application accessing the spreadsheet
+   * @param spreadSheetId alphanumeric id of a spreadsheet obtained from its URL
+   * @throws IOException if an error occurs while communicating with the Google Sheets API.
+   */
   public SpreadsheetManager(String applicationName, String spreadSheetId) throws IOException {
     this(applicationName, spreadSheetId, DEFAULT_SCOPES);
   }
 
+  /**
+   * A constructor only for tests - does not use gcloud credentials.
+   */
   @VisibleForTesting
   public SpreadsheetManager(String testAppName, String spreadSheetId, Sheets mockSheetsService) {
     this.applicationName = testAppName;
@@ -71,6 +89,13 @@ public class SpreadsheetManager {
         .build();
   }
 
+  /**
+   * Check if a sheet/tab with the input sheetName already exists in the spreadsheet.
+   *
+   * @param sheetName name of the sheet
+   * @return true if sheet exists, false otherwise
+   * @throws IOException if an error occurs while communicating with the Google Sheets API.
+   */
   public boolean checkSheetExists(String sheetName) throws IOException {
     Spreadsheet spreadsheet = this.sheetsService.spreadsheets().get(this.spreadSheetId).execute();
     List<Sheet> sheets = spreadsheet.getSheets();
@@ -78,6 +103,12 @@ public class SpreadsheetManager {
         .anyMatch(sheet -> sheet.getProperties().getTitle().equalsIgnoreCase(sheetName));
   }
 
+  /**
+   * Adds a new sheet/tab to the spreadsheet if it does not already exist.
+   *
+   * @param sheetName name of the sheet to be created
+   * @throws IOException if an error occurs while communicating with the Google Sheets API.
+   */
   public void addNewSheet(String sheetName) throws IOException {
     if (checkSheetExists(sheetName)) {
       LOGGER.info("Skipping addNewSheet, sheet already exists with name: " + sheetName);
