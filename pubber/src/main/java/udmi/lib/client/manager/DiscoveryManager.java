@@ -247,6 +247,19 @@ public interface DiscoveryManager extends SubBlockManager {
         catchToNull(() -> getFamilyDiscoveryConfig(family).scan_interval_sec)).orElse(0);
   }
 
+  /**
+   * Retrieves the scan duration (in seconds) for the specified device family.
+   *
+   * @param family the name of the device family
+   * @return the scan duration in seconds. either from the configuration or the default value
+   */
+  default int getScanDuration(String family) {
+    return ofNullable(
+        catchToNull(
+            () -> getFamilyDiscoveryConfig(family).scan_duration_sec)
+    ).orElse(SCAN_DURATION_SEC);
+  }
+
   default boolean shouldEnumerate(String family) {
     return shouldEnumerateTo(getFamilyDiscoveryConfig(family).depth);
   }
