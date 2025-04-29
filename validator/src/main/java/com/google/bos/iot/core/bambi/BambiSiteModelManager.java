@@ -89,6 +89,7 @@ public class BambiSiteModelManager {
       newData.put(header, data.getOrDefault(header, ""));
     }
     try {
+      spreadsheetManager.clearValuesFromRange(sheet.getName());
       spreadsheetManager.writeToRange(sheet.getName(), asSheetData(newData));
     } catch (IOException e) {
       throw new RuntimeException("while writing to bambi sheet " + sheet.getName(), e);
@@ -129,6 +130,7 @@ public class BambiSiteModelManager {
     try {
       for (Map.Entry<BambiSheet, List<List<Object>>> entry : dataToWrite.entrySet()) {
         LOGGER.info("writing to sheet " + entry.getKey().getName());
+        spreadsheetManager.clearValuesFromRange(entry.getKey().getName());
         spreadsheetManager.writeToRange(entry.getKey().getName(), entry.getValue());
       }
     } catch (IOException e) {

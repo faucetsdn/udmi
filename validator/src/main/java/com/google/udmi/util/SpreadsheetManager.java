@@ -8,6 +8,7 @@ import com.google.api.services.sheets.v4.Sheets;
 import com.google.api.services.sheets.v4.SheetsScopes;
 import com.google.api.services.sheets.v4.model.AddSheetRequest;
 import com.google.api.services.sheets.v4.model.BatchUpdateSpreadsheetRequest;
+import com.google.api.services.sheets.v4.model.ClearValuesRequest;
 import com.google.api.services.sheets.v4.model.Request;
 import com.google.api.services.sheets.v4.model.Sheet;
 import com.google.api.services.sheets.v4.model.SheetProperties;
@@ -85,7 +86,7 @@ public class SpreadsheetManager {
     GoogleCredentials credential =
         GoogleCredentials.getApplicationDefault().createScoped(scopes);
     return new Sheets.Builder(HTTP_TRANSPORT, JSON_FACTORY, new HttpCredentialsAdapter(credential))
-        .setApplicationName(this.applicationName)
+        .setApplicationName(applicationName)
         .build();
   }
 
@@ -97,7 +98,7 @@ public class SpreadsheetManager {
    * @throws IOException if an error occurs while communicating with the Google Sheets API.
    */
   public boolean checkSheetExists(String sheetName) throws IOException {
-    Spreadsheet spreadsheet = this.sheetsService.spreadsheets().get(this.spreadSheetId).execute();
+    Spreadsheet spreadsheet = sheetsService.spreadsheets().get(spreadSheetId).execute();
     List<Sheet> sheets = spreadsheet.getSheets();
     return sheets != null && sheets.stream()
         .anyMatch(sheet -> sheet.getProperties().getTitle().equalsIgnoreCase(sheetName));
@@ -118,7 +119,7 @@ public class SpreadsheetManager {
         .setRequests(List.of(new Request().setAddSheet(new AddSheetRequest()
             .setProperties(new SheetProperties().setTitle(sheetName)))));
     try {
-      this.sheetsService.spreadsheets().batchUpdate(this.spreadSheetId, body).execute();
+      sheetsService.spreadsheets().batchUpdate(spreadSheetId, body).execute();
     } catch (IOException e) {
       throw new IOException("Failed to add output sheet: " + sheetName, e);
     }
@@ -138,8 +139,8 @@ public class SpreadsheetManager {
     String range = sheetName + "!" + startColumn + ":" + startColumn;
     ValueRange body = new ValueRange().setValues(values);
     try {
-      this.sheetsService.spreadsheets().values()
-          .append(this.spreadSheetId, range, body)
+      sheetsService.spreadsheets().values()
+          .append(spreadSheetId, range, body)
           .setValueInputOption("RAW")
           .execute();
     } catch (IOException e) {
@@ -173,13 +174,28 @@ public class SpreadsheetManager {
   public void writeToRange(String range, List<List<Object>> values) throws IOException {
     ValueRange body = new ValueRange().setValues(values);
     try {
-      this.sheetsService.spreadsheets().values()
-          .update(this.spreadSheetId, range, body)
+      sheetsService.spreadsheets().values()
+          .update(spreadSheetId, range, body)
           .setValueInputOption("RAW")
           .execute();
       LOGGER.info("successfully wrote {} rows to range: {}", values.size(), range);
     } catch (IOException e) {
       throw new IOException("Failed to write data to range: " + range, e);
+    }
+  }
+
+  /**
+   * Clear value from a range in spreadsheet.
+   *
+   * @param range the A1 notation of the range to write to (e.g., "Sheet1!A1:C3" or simply "Sheet1")
+   * @throws IOException If an error occurs while communicating with the Google Sheets API.
+   */
+  public void clearValuesFromRange(String range) throws IOException {
+    try {
+      sheetsService.spreadsheets().values()
+          .clear(spreadSheetId, range, new ClearValuesRequest()).execute();
+    } catch (IOException e) {
+      throw new IOException("Could not clear range " + range, e);
     }
   }
 
@@ -194,8 +210,8 @@ public class SpreadsheetManager {
   public List<List<Object>> getSheetRecords(String sheetName) throws IOException {
     LOGGER.info("fetching records from sheet {}", sheetName);
     try {
-      ValueRange response = this.sheetsService.spreadsheets().values()
-          .get(this.spreadSheetId, sheetName)
+      ValueRange response = sheetsService.spreadsheets().values()
+          .get(spreadSheetId, sheetName)
           .execute();
       List<List<Object>> values = response.getValues();
       if (values == null || values.isEmpty()) {

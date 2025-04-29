@@ -38,6 +38,10 @@ public class LocalSiteModelManager {
    * @param pathToSiteModel absolute path to the site model
    */
   public LocalSiteModelManager(String pathToSiteModel) {
+    File file = new File(pathToSiteModel);
+    if (!file.exists()) {
+      throw new IllegalArgumentException("site model directory does not exist " + pathToSiteModel);
+    }
     this.pathToSiteModel = pathToSiteModel;
   }
 
