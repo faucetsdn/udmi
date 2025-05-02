@@ -15,6 +15,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.databind.util.ISO8601DateFormat;
+import com.fasterxml.jackson.databind.util.ISO8601Utils;
 import com.google.common.base.Preconditions;
 import com.google.common.hash.Hashing;
 import com.google.udmi.util.CertManager;
@@ -28,6 +29,7 @@ import java.nio.charset.StandardCharsets;
 import java.security.KeyFactory;
 import java.security.PrivateKey;
 import java.security.spec.PKCS8EncodedKeySpec;
+import java.text.FieldPosition;
 import java.time.Instant;
 import java.util.Date;
 import java.util.HashMap;
@@ -73,12 +75,6 @@ public class MqttPublisher implements Publisher {
   public static final String TEST_PREFIX = "test_prefix/AHU-1";
   private static final String DEFAULT_TOPIC_PREFIX = "/devices/";
   private static final Logger LOG = LoggerFactory.getLogger(MqttPublisher.class);
-  private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper()
-      .disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS)
-      .disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES)
-      .setDateFormat(new ISO8601DateFormat())
-      .registerModule(NanSerializer.TO_NAN)
-      .setSerializationInclusion(JsonInclude.Include.NON_NULL);
   // Indicate if this message should be a MQTT 'retained' message.
   private static final boolean DO_NOT_RETAIN = false;
   private static final String UNUSED_ACCOUNT_NAME = "unused";
@@ -97,6 +93,7 @@ public class MqttPublisher implements Publisher {
   private static final long RETRY_DELAY_MS = 1000;
   private static final String LOCAL_MQTT_PREFIX = "/r/";
 
+  private final ObjectMapper objectMapper;
   private final Semaphore connectionLock = new Semaphore(1);
   private final Map<String, MqttClient> mqttClients = new ConcurrentHashMap<>();
   private final Map<String, Instant> reAuthTimes = new ConcurrentHashMap<>();
@@ -123,7 +120,7 @@ public class MqttPublisher implements Publisher {
    * Create a mqtt publisher for this client.
    */
   public MqttPublisher(EndpointConfiguration configuration, Consumer<Exception> onError,
-      CertManager certManager) {
+      CertManager certManager, boolean msTimestamp) {
     this.configuration = configuration;
     this.certManager = certManager;
     if (isGcpIotCore(configuration)) {
@@ -139,8 +136,29 @@ public class MqttPublisher implements Publisher {
       this.deviceId = null;
     }
     this.onError = onError;
+    objectMapper = createObjectMapper(msTimestamp);
     validateCloudIotOptions();
   }
+
+  private ISO8601DateFormat getDateFormat(boolean msTimestamp) {
+    return new ISO8601DateFormat() {
+      @Override
+      public StringBuffer format(Date date, StringBuffer toAppendTo, FieldPosition fieldPosition) {
+        toAppendTo.append(ISO8601Utils.format(date, msTimestamp));
+        return toAppendTo;
+      }
+    };
+  }
+
+  private ObjectMapper createObjectMapper(boolean includeMsInTimestamp) {
+    return new ObjectMapper()
+        .disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS)
+        .disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES)
+        .setDateFormat(getDateFormat(includeMsInTimestamp))
+        .registerModule(NanSerializer.TO_NAN)
+        .setSerializationInclusion(JsonInclude.Include.NON_NULL);
+  }
+
 
   private boolean isGcpIotCore(EndpointConfiguration configuration) {
     return configuration.client_id != null && configuration.client_id.startsWith(GCP_CLIENT_PREFIX);
@@ -181,7 +199,7 @@ public class MqttPublisher implements Publisher {
   @SuppressWarnings("unchecked")
   private Object decorateMessage(String topic, Object data) {
     try {
-      Map<String, Object> mapped = OBJECT_MAPPER.convertValue(data, Map.class);
+      Map<String, Object> mapped = objectMapper.convertValue(data, Map.class);
       String timestamp = (String) mapped.get("timestamp");
       int serialNo = EVENT_SERIAL
           .computeIfAbsent(topic, key -> new AtomicInteger()).incrementAndGet();
@@ -259,7 +277,7 @@ public class MqttPublisher implements Publisher {
     String altMessage = data instanceof Map
         ? ((Map<String, String>) data).remove(InjectedMessage.REPLACE_MESSAGE_KEY)
         : stringMessage;
-    return altMessage != null ? altMessage : OBJECT_MAPPER.writeValueAsString(data);
+    return altMessage != null ? altMessage : objectMapper.writeValueAsString(data);
   }
 
   private String getSendTopic(String deviceId, String topicSuffix) {
@@ -752,7 +770,7 @@ public class MqttPublisher implements Publisher {
         if (message.toString().isEmpty()) {
           payload = null;
         } else {
-          payload = OBJECT_MAPPER.readValue(message.toString(), type);
+          payload = objectMapper.readValue(message.toString(), type);
           nukeProxyIdsIfNull(message.toString(), payload);
         }
       } catch (Exception e) {
@@ -769,7 +787,7 @@ public class MqttPublisher implements Publisher {
     private void nukeProxyIdsIfNull(String message, Object payload) {
       try {
         if (payload instanceof Config configPayload) {
-          JsonNode jsonNode = OBJECT_MAPPER.readTree(message);
+          JsonNode jsonNode = objectMapper.readTree(message);
           JsonNode gateway = jsonNode.get("gateway");
           JsonNode proxyIds = ifNotNullGet(gateway, g -> g.get("proxy_ids"));
           if (gateway != null && proxyIds == null) {
