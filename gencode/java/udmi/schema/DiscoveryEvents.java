@@ -130,7 +130,7 @@ public class DiscoveryEvents {
      */
     @JsonProperty("cloud_model")
     @JsonPropertyDescription("Information specific to how the device communicates with the cloud.")
-    public udmi.schema.CloudModel cloud_model;
+    public CloudModel cloud_model;
     /**
      * System Discovery Data
      * <p>

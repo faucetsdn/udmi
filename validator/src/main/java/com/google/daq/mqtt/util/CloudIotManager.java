@@ -165,7 +165,7 @@ public class CloudIotManager {
   }
 
   private static Resource_type gatewayIfTrue(boolean isGateway) {
-    return isGateway ? Resource_type.GATEWAY : Resource_type.DIRECT;
+    return isGateway ? Resource_type.GATEWAY : Resource_type.DEVICE;
   }
 
   private void initializeIotProvider() {

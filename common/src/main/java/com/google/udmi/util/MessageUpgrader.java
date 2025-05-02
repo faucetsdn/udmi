@@ -18,7 +18,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
-import udmi.schema.CloudModel.Resource_type;
+import udmi.schema.CloudModel.Connection_type;
 import udmi.util.SchemaVersion;
 
 /**
@@ -34,8 +34,8 @@ public class MessageUpgrader {
   private static final String TARGET_FORMAT = "%d.%d.%d";
   private static final String RAW_GIT_VERSION = "git";
   public static final String DEVICE_TYPE = "DEVICE";
-  public static final String PROXIED_TYPE = Resource_type.PROXIED.value();
-  public static final String DIRECT_TYPE = Resource_type.DIRECT.value();
+  public static final String PROXIED_TYPE = Connection_type.PROXIED.value();
+  public static final String DIRECT_TYPE = Connection_type.DIRECT.value();
   private final ObjectNode message;
   private final JsonNode original;
   private final String schemaName;
