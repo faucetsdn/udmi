@@ -26,9 +26,14 @@ if ! diff $tmpfile etc/requirements.txt; then
     false
 fi
 
+cp gencode/java/udmi/schema/CloudModel.java /tmp/CloudModel.java
+
 bin/gencode_java
 bin/gencode_python
 bin/gencode_docs
+
+diff gencode/java/udmi/schema/CloudModel.java /tmp/CloudModel.java
+echo TAP done
 
 if [[ -n $check ]]; then
     echo Checking gencode docs links...
