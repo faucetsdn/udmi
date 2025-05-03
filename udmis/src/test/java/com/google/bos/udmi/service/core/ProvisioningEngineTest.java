@@ -65,12 +65,12 @@ public class ProvisioningEngineTest extends ProcessorTestBase {
     registryModel.device_ids = new HashMap<>();
 
     CloudModel deviceModel = new CloudModel();
-    deviceModel.resource_type = Resource_type.DIRECT;
+    deviceModel.resource_type = Resource_type.DEVICE;
     registryModel.device_ids.put(TEST_DEVICE, deviceModel);
 
     if (alreadyProvisioned) {
       CloudModel provisionedModel = new CloudModel();
-      provisionedModel.resource_type = Resource_type.DIRECT;
+      provisionedModel.resource_type = Resource_type.DEVICE;
       registryModel.device_ids.put(DISCOVERED_DEVICE, provisionedModel);
     }
 

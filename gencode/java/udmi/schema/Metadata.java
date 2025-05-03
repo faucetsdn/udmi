@@ -72,7 +72,7 @@ public class Metadata {
      * 
      */
     @JsonProperty("operation")
-    public CloudModel.ModelOperation operation;
+    public udmi.schema.CloudModel.ModelOperation operation;
     /**
      * Cloud Model
      * <p>
