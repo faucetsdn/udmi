@@ -24,6 +24,7 @@ import java.util.List;
 import java.util.Map;
 import udmi.lib.ProtocolFamily;
 import udmi.schema.CloudModel.Connection_type;
+import udmi.schema.CloudModel.Resource_type;
 import udmi.schema.Config;
 import udmi.schema.DiscoveryConfig;
 import udmi.schema.FamilyDiscoveryConfig;
@@ -275,7 +276,8 @@ public class ConfigManager {
    * Indicate if this is a directly connected device.
    */
   public boolean isDirect() {
-    boolean explicit = catchToNull(() -> metadata.cloud.connection_type) == Connection_type.DIRECT;
+    boolean explicit = catchToNull(() -> metadata.cloud.resource_type) == Resource_type.DEVICE
+        || catchToNull(() -> metadata.cloud.connection_type) == Connection_type.DIRECT;
     boolean implicit = catchToNull(() -> metadata.cloud.auth_type) != null
         && catchToNull(() -> metadata.gateway.gateway_id) == null
         && catchToNull(() -> metadata.gateway.proxy_ids) == null;
@@ -286,7 +288,8 @@ public class ConfigManager {
    * Indicate if this is a gateway device.
    */
   public boolean isGateway() {
-    boolean explicit = catchToNull(() -> metadata.cloud.connection_type) == Connection_type.GATEWAY;
+    boolean explicit = catchToNull(() -> metadata.cloud.resource_type) == Resource_type.GATEWAY
+        || catchToNull(() -> metadata.cloud.connection_type) == Connection_type.GATEWAY;
     boolean implicit = catchToNull(() -> metadata.gateway) != null
         && metadata.gateway.proxy_ids != null
         && metadata.gateway.gateway_id == null
