@@ -144,7 +144,9 @@ public class PubberManager extends ManagerBase {
     return isTrue(options.badCategory);
   }
 
-  public boolean isMsTimestamp() { return isTrue(options.msTimestamp); }
+  public boolean isMsTimestamp() {
+    return isTrue(options.msTimestamp);
+  }
 
   public boolean isNoStatus() {
     return isTrue(options.noStatus);

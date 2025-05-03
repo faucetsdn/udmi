@@ -20,7 +20,7 @@ public class MqttDeviceTest extends TestBase {
     EndpointConfiguration endpoint = getTestConfiguration().endpoint;
     endpoint.deviceId = TEST_DEVICE;
     MqttDevice mqttDevice = new MqttDevice(endpoint,
-        exception -> sent.countDown(), null);
+        exception -> sent.countDown(), null, false);
 
     mqttDevice.publish(TEST_DEVICE, TEST_TOPIC, TEST_MESSAGE, sent::countDown);
     sent.await();

@@ -52,7 +52,7 @@ public class MqttPublisherTest extends TestBase {
 
     public MockPublisher(EndpointConfiguration configuration,
         Consumer<Exception> onError) {
-      super(configuration, onError, null);
+      super(configuration, onError, null, true);
     }
 
     @Override

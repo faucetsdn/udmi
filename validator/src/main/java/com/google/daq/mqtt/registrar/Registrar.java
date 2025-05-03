@@ -110,7 +110,6 @@ import org.apache.commons.io.FileUtils;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.VisibleForTesting;
 import udmi.schema.CloudModel;
-import udmi.schema.CloudModel.Connection_type;
 import udmi.schema.CloudModel.ModelOperation;
 import udmi.schema.CloudModel.Resource_type;
 import udmi.schema.Credential;
@@ -227,7 +226,7 @@ public class Registrar {
   }
 
   private static boolean isNotGateway(CloudModel device) {
-    return device.connection_type != Connection_type.GATEWAY;
+    return device.resource_type != Resource_type.GATEWAY;
   }
 
   private static String defaultToolRoot() {
@@ -760,7 +759,7 @@ public class Registrar {
         System.err.printf("Retrying delete %s with bound devices: %s%n", deviceId,
             setOrSize(proxyIds));
         cloudIotManager.deleteDevice(deviceId, proxyIds);
-      } else if (cloudModel.resource_type == Resource_type.DEVICE) {
+      } else if (cloudModel.resource_type == Resource_type.DIRECT) {
         Set<String> gatewayIds = ImmutableSet.of(cloudModel.gateway.gateway_id);
         System.err.printf("Unbinding %s from bound gateways: %s%n", deviceId, gatewayIds);
         unbindDevicesFromGateways(allDevices, gatewayIds);
