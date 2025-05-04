@@ -3,6 +3,7 @@ package udmi.lib.base;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
 import static com.google.udmi.util.GeneralUtils.ifNotNullGet;
+import static com.google.udmi.util.GeneralUtils.ifNotTrueThen;
 import static com.google.udmi.util.GeneralUtils.ifTrueThen;
 import static com.google.udmi.util.GeneralUtils.isTrue;
 import static java.lang.String.format;
@@ -112,6 +113,7 @@ public class MqttPublisher implements Publisher {
   private final CertManager certManager;
   private final EndpointConfiguration configuration;
   private final Consumer<Exception> onError;
+  private final boolean msTimestamp;
 
   private CountDownLatch connectionLatch;
   private String topicPrefixPrefix;
@@ -123,6 +125,8 @@ public class MqttPublisher implements Publisher {
       CertManager certManager, boolean msTimestamp) {
     this.configuration = configuration;
     this.certManager = certManager;
+    this.msTimestamp = msTimestamp;
+
     if (isGcpIotCore(configuration)) {
       ClientInfo clientIdParts = SiteModel.parseClientId(configuration.client_id);
       this.projectId = clientIdParts.iotProject;
@@ -136,11 +140,11 @@ public class MqttPublisher implements Publisher {
       this.deviceId = null;
     }
     this.onError = onError;
-    objectMapper = createObjectMapper(msTimestamp);
+    objectMapper = createObjectMapper();
     validateCloudIotOptions();
   }
 
-  private ISO8601DateFormat getDateFormat(boolean msTimestamp) {
+  private ISO8601DateFormat getDateFormat() {
     return new ISO8601DateFormat() {
       @Override
       public StringBuffer format(Date date, StringBuffer toAppendTo, FieldPosition fieldPosition) {
@@ -150,11 +154,11 @@ public class MqttPublisher implements Publisher {
     };
   }
 
-  private ObjectMapper createObjectMapper(boolean includeMsInTimestamp) {
+  private ObjectMapper createObjectMapper() {
     return new ObjectMapper()
         .disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS)
         .disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES)
-        .setDateFormat(getDateFormat(includeMsInTimestamp))
+        .setDateFormat(getDateFormat())
         .registerModule(NanSerializer.TO_NAN)
         .setSerializationInclusion(JsonInclude.Include.NON_NULL);
   }
@@ -200,14 +204,18 @@ public class MqttPublisher implements Publisher {
   private Object decorateMessage(String topic, Object data) {
     try {
       Map<String, Object> mapped = objectMapper.convertValue(data, Map.class);
-      String timestamp = (String) mapped.get("timestamp");
       int serialNo = EVENT_SERIAL
           .computeIfAbsent(topic, key -> new AtomicInteger()).incrementAndGet();
-      mapped.put("timestamp", timestamp.replace("Z", format(".%03dZ", serialNo % 1000)));
+      ifNotTrueThen(msTimestamp, () -> replaceUtcWithSerialNo(mapped, serialNo));
       return mapped;
     } catch (Exception e) {
       throw new RuntimeException("While decorating message", e);
     }
+  }
+
+  private static Object replaceUtcWithSerialNo(Map<String, Object> mapped, int serialNo) {
+    String current = (String) mapped.get("timestamp");
+    return mapped.put("timestamp", current.replace("Z", format(".%03dZ", serialNo % 1000)));
   }
 
   @Override
