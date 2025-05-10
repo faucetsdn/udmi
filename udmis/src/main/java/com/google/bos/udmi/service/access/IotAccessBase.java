@@ -233,7 +233,13 @@ public abstract class IotAccessBase extends ContainerBase implements IotAccessPr
           debug("Retrieved config %s/%s #%d", registryId, deviceId, version);
           String updatedConfig = ifNotNullGet(safeMunge(munger, currentConfig),
               updated -> checkedUpdate(envelope, version, updated));
-          debug("Applied config %s/%s #%d", registryId, deviceId, version);
+          /**
+           * Before adding below debug log, check if any configuration was actually updated.
+           * This prevents a spurious "applied config" message when no changes occurred.
+           */
+          if (updatedConfig != null) {
+            debug("Applied config %s/%s #%d", registryId, deviceId, version);
+          }
           return updatedConfig;
         } catch (AbortLoopException e) {
           throw e;
