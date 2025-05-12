@@ -24,6 +24,7 @@ class PubberOptions:
     self.extraField = None
     self.emptyMissing = None
     self.redirectRegistry = None
+    self.msTimestamp = None
     self.smokeCheck = None
     self.skewClock = None
     self.noPointState = None
@@ -67,6 +68,7 @@ class PubberOptions:
     result.extraField = source.get('extraField')
     result.emptyMissing = source.get('emptyMissing')
     result.redirectRegistry = source.get('redirectRegistry')
+    result.msTimestamp = source.get('msTimestamp')
     result.smokeCheck = source.get('smokeCheck')
     result.skewClock = source.get('skewClock')
     result.noPointState = source.get('noPointState')
@@ -143,6 +145,8 @@ class PubberOptions:
       result['emptyMissing'] = self.emptyMissing # 5
     if self.redirectRegistry:
       result['redirectRegistry'] = self.redirectRegistry # 5
+    if self.msTimestamp:
+      result['msTimestamp'] = self.msTimestamp # 5
     if self.smokeCheck:
       result['smokeCheck'] = self.smokeCheck # 5
     if self.skewClock:

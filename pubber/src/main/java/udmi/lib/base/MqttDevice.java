@@ -24,13 +24,15 @@ public class MqttDevice {
   private final String deviceId;
   private final Publisher publisher;
   private final CertManager certManager;
+  private final boolean msTimestamp;
 
   /**
    * Builds a MQTT device.
    */
   public MqttDevice(EndpointConfiguration configuration, Consumer<Exception> onError,
-      CertManager certManager) {
+      CertManager certManager, boolean msTimestamp) {
     this.certManager = certManager;
+    this.msTimestamp = msTimestamp;
     deviceId = requireNonNull(configuration.deviceId, "deviceId not specified");
     publisher = getPublisher(configuration, onError);
     ifNotNullThen(configuration.topic_prefix, p -> publisher.setDeviceTopicPrefix(deviceId, p));
@@ -48,12 +50,13 @@ public class MqttDevice {
     this.deviceId = deviceId;
     publisher = target.publisher;
     certManager = null;
+    msTimestamp = false;
   }
 
   Publisher getPublisher(EndpointConfiguration configuration, Consumer<Exception> onError) {
     return TEST_PREFIX.equals(configuration.topic_prefix)
         ? new ListPublisher(onError)
-        : new MqttPublisher(configuration, onError, certManager);
+        : new MqttPublisher(configuration, onError, certManager, msTimestamp);
   }
 
   public <T> void registerHandler(String topicSuffix, Consumer<T> handler, Class<T> messageType) {

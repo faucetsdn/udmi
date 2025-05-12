@@ -6,6 +6,7 @@
 1 RESULT fail enumeration.features enumerate_features PREVIEW 0/10 Failed check that feature enumeration matches metadata: missing { enumeration }, extra { unknown }
 1 RESULT pass system valid_serial_no STABLE 10/10 Sequence complete
 1 RESULT pass system valid_serial_no STABLE 10/10 Sequence complete
+1 RESULT pass system valid_serial_no STABLE 10/10 Sequence complete
 1 RESULT fail writeback writeback_success ALPHA 0/10 Failed waiting until target point has value_state default (null): point filter_differential_pressure_setpoint is applied, expected null
 1 RESULT fail writeback writeback_success ALPHA 0/10 Failed waiting until target point has value_state applied: point filter_differential_pressure_setpoint is null, expected applied
 1 RESULT fail writeback writeback_success ALPHA 0/10 Failed waiting until target point has value_state applied: point filter_differential_pressure_setpoint is null, expected applied
