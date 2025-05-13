@@ -168,15 +168,20 @@ public class LocalSiteModelManager {
       if (Objects.equals(value, "__DELETE__") && metadataOnDisk.containsKey(key)) {
         metadataOnDisk.remove(key);
       } else if (!value.isEmpty() && !value.equals(metadataOnDisk.getOrDefault(key, ""))) {
-        metadataOnDisk.put(key, handleList(value));
+        populateMap(key, value, metadataOnDisk);
       }
     }
   }
 
-  private String handleList(String value) {
-    if (value.contains(",")) {
-      return "[" + value + "]";
+  private void populateMap(String key, String newValue, Map<String, String> map) {
+    if (key.equals("gateway.proxy_ids") || key.equals("system.tags")) {
+      map.remove(key); // remove old consolidated value
+      String[] arrayValues = newValue.split(",");
+      for (int i = 0; i < arrayValues.length; i++) {
+        map.put(key + "." + i, arrayValues[i].trim());
+      }
+    } else {
+      map.put(key, newValue);
     }
-    return value;
   }
 }
