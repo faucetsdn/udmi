@@ -165,7 +165,7 @@ public class LocalSiteModelManager {
     for (Entry<String, String> entry : newMetadata.entrySet()) {
       String key = entry.getKey();
       String value = entry.getValue();
-      if (Objects.equals(value, "__DELETE__") && metadataOnDisk.containsKey(key)) {
+      if (Objects.equals(value, "__DELETE__")) {
         metadataOnDisk.remove(key);
       } else if (!value.isEmpty() && !value.equals(metadataOnDisk.getOrDefault(key, ""))) {
         populateMap(key, value, metadataOnDisk);

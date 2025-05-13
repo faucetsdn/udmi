@@ -1,6 +1,7 @@
 package com.google.bos.iot.core.bambi;
 
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.udmi.util.SpreadsheetManager;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -30,6 +31,28 @@ public class BambiSiteModelManager {
   public BambiSiteModelManager(String spreadsheetId) {
     try {
       spreadsheetManager = new SpreadsheetManager("BAMBI", spreadsheetId);
+      bambiSiteModel = new BambiSiteModel(
+          getRecordsFromSheet(BambiSheet.SITE_METADATA),
+          getRecordsFromSheet(BambiSheet.CLOUD_IOT_CONFIG),
+          getRecordsFromSheet(BambiSheet.SYSTEM),
+          getRecordsFromSheet(BambiSheet.CLOUD),
+          getRecordsFromSheet(BambiSheet.GATEWAY),
+          getRecordsFromSheet(BambiSheet.LOCALNET),
+          getRecordsFromSheet(BambiSheet.POINTSET),
+          getRecordsFromSheet(BambiSheet.POINTS)
+      );
+    } catch (IOException e) {
+      throw new RuntimeException("while initializing BambiSiteModelManager: ", e);
+    }
+  }
+
+  /**
+   * Constructor for testing only - does not use gcloud credentials
+   */
+  @VisibleForTesting
+  public BambiSiteModelManager(SpreadsheetManager mockSpreadsheetManager) {
+    try {
+      spreadsheetManager = mockSpreadsheetManager;
       bambiSiteModel = new BambiSiteModel(
           getRecordsFromSheet(BambiSheet.SITE_METADATA),
           getRecordsFromSheet(BambiSheet.CLOUD_IOT_CONFIG),
@@ -106,15 +129,15 @@ public class BambiSiteModelManager {
     Map<BambiSheet, List<List<Object>>> dataToWrite = new HashMap<>();
 
     List<SheetConfig> simpleTableConfigs = List.of(
-        new SheetConfig(BambiSheet.SYSTEM, bambiSiteModel.getSystemDataHeaders(), "system."),
-        new SheetConfig(BambiSheet.CLOUD, bambiSiteModel.getCloudDataHeaders(), "cloud."),
-        new SheetConfig(BambiSheet.GATEWAY, bambiSiteModel.getGatewayDataHeaders(), "gateway."),
-        new SheetConfig(BambiSheet.LOCALNET, bambiSiteModel.getLocalnetDataHeaders(), "localnet.")
+        new SheetConfig(BambiSheet.SYSTEM, bambiSiteModel.getSystemDataHeaders()),
+        new SheetConfig(BambiSheet.CLOUD, bambiSiteModel.getCloudDataHeaders()),
+        new SheetConfig(BambiSheet.GATEWAY, bambiSiteModel.getGatewayDataHeaders()),
+        new SheetConfig(BambiSheet.LOCALNET, bambiSiteModel.getLocalnetDataHeaders())
     );
 
     for (SheetConfig config : simpleTableConfigs) {
       List<List<Object>> sheetData = processSimpleTableData(
-          deviceToMetadataMap, config.headers(), config.keyPrefix()
+          deviceToMetadataMap, config.headers(), config.sheet().getName() + "."
       );
       dataToWrite.put(config.sheet(), sheetData);
     }
@@ -197,8 +220,8 @@ public class BambiSiteModelManager {
     List<List<Object>> pointsetOutput = new ArrayList<>();
     List<List<Object>> pointsOutput = new ArrayList<>();
 
-    final String pointsetPrefix = "pointset.";
-    final String pointsPrefix = pointsetPrefix + "points.";
+    final String pointsetPrefix = BambiSheet.POINTSET.getName() + ".";
+    final String pointsPrefix = pointsetPrefix + BambiSheet.POINTS.getName() + ".";
 
     // Add header rows
     pointsOutput.add(new ArrayList<>(pointsDataHeaders));
@@ -287,7 +310,7 @@ public class BambiSiteModelManager {
   }
 
   // Helper structure for simple table configurations
-  private record SheetConfig(BambiSheet sheet, List<String> headers, String keyPrefix) { }
+  private record SheetConfig(BambiSheet sheet, List<String> headers) { }
 
   // Helper structure for point and pointset data to be populated in BAMBI
   private record PointsetAndPointsData(List<List<Object>> pointsetData,
