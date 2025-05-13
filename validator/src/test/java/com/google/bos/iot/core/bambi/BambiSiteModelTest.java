@@ -15,7 +15,9 @@ import java.util.List;
 import java.util.Map;
 import org.junit.Test;
 
-
+/**
+ * Tests for BambiSiteModel.java.
+ */
 public class BambiSiteModelTest {
 
   private static final String PREFIX_SYSTEM = BambiSheet.SYSTEM.getName();
@@ -392,7 +394,7 @@ public class BambiSiteModelTest {
   }
 
   @Test(expected = RuntimeException.class)
-  public void mergePointsWithPointset_pointsRowWithNullTemplateName_throwsNPEDuringParsing() {
+  public void mergePointsWithPointset_pointsRowWithNullTemplateName_throwsException() {
     List<List<Object>> pointsetSheet = createTableListFromArrays(
         new Object[]{BambiSiteModel.DEVICE_ID, BambiSiteModel.POINTS_TEMPLATE_NAME},
         new Object[]{"dev1", "tpl1"}
@@ -408,7 +410,7 @@ public class BambiSiteModelTest {
   }
 
   @Test
-  public void mergePointsWithPointset_pointsRowWithStringValueNullTemplateName_throwsRuntimeException() {
+  public void mergePointsWithPointset_pointsRowWithStringValueNullTemplateName_throwsException() {
     List<List<Object>> pointsetSheet = createTableListFromArrays(
         new Object[]{BambiSiteModel.DEVICE_ID, BambiSiteModel.POINTS_TEMPLATE_NAME},
         new Object[]{"dev1", "tpl1"}

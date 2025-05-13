@@ -47,7 +47,7 @@ public class BambiSiteModelManager {
   }
 
   /**
-   * Constructor for testing only - does not use gcloud credentials
+   * Constructor for testing only - does not use gcloud credentials.
    */
   @VisibleForTesting
   public BambiSiteModelManager(SpreadsheetManager mockSpreadsheetManager) {

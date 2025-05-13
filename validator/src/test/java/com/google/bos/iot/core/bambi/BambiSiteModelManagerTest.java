@@ -28,6 +28,9 @@ import org.mockito.Captor;
 import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnitRunner;
 
+/**
+ * Tests for BambiSiteModelManager.java.
+ */
 @RunWith(MockitoJUnitRunner.class)
 public class BambiSiteModelManagerTest {
 
@@ -55,6 +58,9 @@ public class BambiSiteModelManagerTest {
   @Captor
   private ArgumentCaptor<List<List<Object>>> sheetDataCaptor;
 
+  /**
+   * Setup mock spreadsheet manager.
+   */
   @Before
   public void setUp() throws Exception {
     when(mockSpreadsheetManager.getSheetRecords(
@@ -108,7 +114,7 @@ public class BambiSiteModelManagerTest {
   }
 
   @Test
-  public void constructor_getSheetRecordsThrowsIOException_wrapsInRuntimeException()
+  public void constructor_getSheetRecordsThrowsException_wrapsInRuntimeException()
       throws IOException {
     when(mockSpreadsheetManager.getSheetRecords(BambiSiteModelManager.BambiSheet.SYSTEM.getName()))
         .thenThrow(new IOException("Failed to read system sheet"));
@@ -229,7 +235,6 @@ public class BambiSiteModelManagerTest {
   public void writeDevicesMetadata_writesCorrectDataForAllSheets() throws IOException {
     bambiSiteModelManager = new BambiSiteModelManager(mockSpreadsheetManager);
 
-    Map<String, Map<String, String>> deviceToMetadataMap = new HashMap<>();
     Map<String, String> dev1Meta = new HashMap<>();
     dev1Meta.put("system." + BambiSiteModel.DEVICE_ID, "dev1");
     dev1Meta.put("system.os", "LinuxOS");
@@ -243,6 +248,7 @@ public class BambiSiteModelManagerTest {
     dev1Meta.put("pointset.points.temp_sensor.ref", "temp.ref");
     dev1Meta.put("pointset.points.pressure_sensor.units", "[kPa,psi]");
 
+    Map<String, Map<String, String>> deviceToMetadataMap = new HashMap<>();
     deviceToMetadataMap.put("dev1", dev1Meta);
 
     bambiSiteModelManager.writeDevicesMetadata(deviceToMetadataMap);

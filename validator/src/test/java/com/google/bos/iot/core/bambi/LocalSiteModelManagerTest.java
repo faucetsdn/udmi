@@ -20,6 +20,9 @@ import org.junit.Test;
 import org.junit.rules.ExpectedException;
 import org.junit.rules.TemporaryFolder;
 
+/**
+ * Tests for LocalSiteModelManager.java.
+ */
 public class LocalSiteModelManagerTest {
 
   private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
@@ -104,12 +107,12 @@ public class LocalSiteModelManagerTest {
 
   @Test
   public void getDeviceMetadata_readsAndFlattensJson() {
-    String deviceId = "dev-001";
     Map<String, Object> content = new LinkedHashMap<>();
     content.put("model", "XYZ-1000");
     Map<String, Object> point = new LinkedHashMap<>();
     point.put("units", "Celsius");
     content.put("points.temperature", point);
+    String deviceId = "dev-001";
     createJsonFile(siteModelDir, DEVICES_FOLDER, deviceId, DEVICE_METADATA_FILE, content);
 
     Map<String, String> metadata = siteModelManager.getDeviceMetadata(deviceId);
@@ -310,11 +313,11 @@ public class LocalSiteModelManagerTest {
     initialContent.put("status", "active");
     createJsonFile(siteModelDir, DEVICES_FOLDER, devId, DEVICE_METADATA_FILE, initialContent);
 
-    Map<String, Map<String, String>> newAllData = new HashMap<>();
     Map<String, String> newDevData = new LinkedHashMap<>();
     newDevData.put("model", "NewModel");
     newDevData.put("location", "RoomA");
     newDevData.put("status", "__DELETE__");
+    Map<String, Map<String, String>> newAllData = new HashMap<>();
     newAllData.put(devId, newDevData);
 
     siteModelManager.mergeAllDevicesMetadataOnDisk(newAllData);
