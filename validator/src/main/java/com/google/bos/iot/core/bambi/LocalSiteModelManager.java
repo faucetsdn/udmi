@@ -62,7 +62,7 @@ public class LocalSiteModelManager {
   private void writeJsonToDisk(Map<String, String> flattenedData, String... paths) {
     URI filePath = Paths.get(pathToSiteModel, paths).toUri();
     LOGGER.info("writing data to file {}", filePath);
-    JsonNode jsonNode = nestFlattenedJson(flattenedData);
+    JsonNode jsonNode = nestFlattenedJson(flattenedData, "\\.");
     File file = new File(filePath);
     file.getParentFile().mkdirs();
     writeFile(jsonNode, new File(filePath));

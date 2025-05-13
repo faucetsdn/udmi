@@ -1,6 +1,7 @@
 package com.google.bos.iot.core.bambi;
 
 import java.io.IOException;
+import java.time.Instant;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -48,7 +49,9 @@ public class BambiSync {
           "Usage: BambiSync <spreadsheetId> <pathToSiteModel>");
       System.exit(1);
     }
+    long start = Instant.now().getEpochSecond();
     BambiSync bambiSync = new BambiSync(args[0], args[1]);
     bambiSync.execute();
+    LOGGER.info("Sync completed in {} seconds", Instant.now().getEpochSecond() - start);
   }
 }

@@ -512,22 +512,22 @@ public abstract class JsonUtil {
     }
   }
 
-  public static JsonNode nestFlattenedJson(Map<String, String> flattenedJsonMap) {
-    ObjectMapper mapper = new ObjectMapper();
-    ObjectNode rootNode = mapper.createObjectNode();
+  public static JsonNode nestFlattenedJson(Map<String, String> flattenedJsonMap,
+      String separatorRegex) {
+    ObjectNode rootNode = OBJECT_MAPPER.createObjectNode();
 
     for (Map.Entry<String, String> entry : flattenedJsonMap.entrySet()) {
       String key = entry.getKey();
       String value = entry.getValue();
-      String[] parts = key.split("\\.");
-      nest(rootNode, parts, value, 0, mapper);
+      String[] parts = key.split(separatorRegex);
+      nest(rootNode, parts, value, 0, OBJECT_MAPPER);
     }
 
     return rootNode;
   }
 
-  private static void nest(JsonNode currentNode, String[] parts, String value,
-      int index, ObjectMapper mapper) {
+  private static void nest(JsonNode currentNode, String[] parts, String value, int index,
+      ObjectMapper mapper) {
     if (index == parts.length - 1) {
       if (currentNode instanceof ObjectNode) {
         ((ObjectNode) currentNode).put(parts[index], value);

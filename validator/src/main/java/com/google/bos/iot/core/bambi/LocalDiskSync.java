@@ -4,6 +4,7 @@ import static com.google.bos.iot.core.bambi.BambiSiteModel.DEVICE_ID;
 import static com.google.bos.iot.core.bambi.BambiSiteModel.POINTS_TEMPLATE_NAME;
 import static com.google.bos.iot.core.bambi.BambiSiteModel.POINT_NAME;
 
+import java.time.Instant;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -70,8 +71,9 @@ public class LocalDiskSync {
           "Usage: LocalDiskSync <spreadsheetId> <pathToSiteModel>");
       System.exit(1);
     }
-
+    long start = Instant.now().getEpochSecond();
     LocalDiskSync localDiskSync = new LocalDiskSync(args[0], args[1]);
     localDiskSync.execute();
+    LOGGER.info("Sync completed in {} seconds", Instant.now().getEpochSecond() - start);
   }
 }
