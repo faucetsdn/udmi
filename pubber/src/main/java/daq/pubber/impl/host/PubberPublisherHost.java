@@ -236,7 +236,7 @@ public class PubberPublisherHost extends PubberManager implements PublisherHost 
     String targetDeviceId = getTargetDeviceId(siteModel, config.deviceId);
     CertManager certManager = new CertManager(new File(siteModel.getReflectorDir(), "ca.crt"),
             siteModel.getDeviceDir(targetDeviceId), endpoint.transport, keyPassword, this::info);
-    deviceTarget = new MqttDevice(endpoint, this::publisherException, certManager);
+    deviceTarget = new MqttDevice(endpoint, this::publisherException, certManager, isMsTimestamp());
     publishDirtyState();
   }
 

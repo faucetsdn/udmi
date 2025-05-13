@@ -1252,6 +1252,7 @@ public class Registrar {
   private void normalizeChildren(String gatewayId, Set<String> proxyIds) {
     List<Exception> exceptions = new ArrayList<>();
     allDevices.entrySet().stream().filter(entry -> proxyIds.contains(entry.getKey()))
+        .filter(entry -> entry.getValue().getMetadata() != null)
         .forEach(entry -> {
           String deviceId = entry.getKey();
           LocalDevice local = entry.getValue();
