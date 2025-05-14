@@ -112,15 +112,15 @@ public class PointsetValidator {
     for (Entry<String, PointPointsetEvents> entry : points.entrySet()) {
       String pointName = entry.getKey();
       PointPointsetModel pointModel = modelPoints.get(pointName);
+      if (pointModel == null) {
+        continue;
+      }
 
       if (pointModel.range_min == null && pointModel.range_max == null) {
         continue;
       }
 
       PointPointsetEvents point = points.get(pointName);
-      if (point == null) {
-        continue;
-      }
 
       if (pointModel.range_min != null || pointModel.range_max != null) {
         if (!Number.class.isInstance(point.present_value)) {
