@@ -1,0 +1,8 @@
+{
+  "description": "Test that missing pointset metadata doesn't cause a NPE in validator",
+  "site_model": "tests/sites/supersimple",
+  "traces": "tests/traces/supersimple",
+  "validator": {
+    "check": "sed -i -E 's/[0-9-]{10}T[0-9:.]+Z/REDACTED_TIMESTAMP/g' tests/sites/supersimple/out/devices/TPS-1/*; diff tests/sites/supersimple/out/devices/TPS-1/events_pointset.out tests/traces/supersimple/expected/devices/TPS-1/events_pointset.out"
+  }
+}

@@ -1,0 +1,15 @@
+{
+  "points" : {
+    "room_temperature_sensor" : {
+      "present_value" : -100
+    },
+    "room_humidity_sensor" : {
+      "present_value" : 1235
+    },
+    "room_co2_sensor" : {
+      "present_value" : 4000
+    }
+  },
+  "timestamp" : "2022-07-19T05:04:36Z",
+  "version" : "1.5.2"
+}
