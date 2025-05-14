@@ -121,7 +121,7 @@ public class PointsetValidator {
     return metadataDiff;
   }
 
-   private Set<String> validatePointValues(
+  private Set<String> validatePointValues(
       Map<String, PointPointsetModel> modelPoints, Map<String, PointPointsetEvents> points) {
     Set<String> outOfRangeErrors = new HashSet<>();
     for (Entry<String, PointPointsetEvents> entry : points.entrySet()) {
