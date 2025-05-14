@@ -10,9 +10,9 @@ import com.google.daq.mqtt.validator.ReportingDevice.MetadataDiff;
 import com.google.udmi.util.JsonUtil;
 import com.google.udmi.util.ValidationException;
 import java.util.Date;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.Map.Entry;
-import java.util.HashSet;
 import java.util.Set;
 import java.util.TreeSet;
 import udmi.schema.Category;
@@ -106,7 +106,22 @@ public class PointsetValidator {
     return metadataDiff;
   }
 
-  private Set<String> validatePointValues(
+  MetadataDiff validateMessage(PointsetState message) {
+    return validateMessage(getPoints(message).keySet());
+  }
+
+  private MetadataDiff validateMessage(Set<String> strings) {
+    Set<String> deliveredPoints = new TreeSet<>(strings);
+    Set<String> expectedPoints = new TreeSet<>(getPoints(metadata).keySet());
+    MetadataDiff metadataDiff = new MetadataDiff();
+    metadataDiff.extraPoints = new TreeSet<>(deliveredPoints);
+    metadataDiff.extraPoints.removeAll(expectedPoints);
+    metadataDiff.missingPoints = new TreeSet<>(expectedPoints);
+    metadataDiff.missingPoints.removeAll(deliveredPoints);
+    return metadataDiff;
+  }
+
+   private Set<String> validatePointValues(
       Map<String, PointPointsetModel> modelPoints, Map<String, PointPointsetEvents> points) {
     Set<String> outOfRangeErrors = new HashSet<>();
     for (Entry<String, PointPointsetEvents> entry : points.entrySet()) {
@@ -142,21 +157,6 @@ public class PointsetValidator {
       }
     }
     return outOfRangeErrors;
-  }
-
-  MetadataDiff validateMessage(PointsetState message) {
-    return validateMessage(getPoints(message).keySet());
-  }
-
-  private MetadataDiff validateMessage(Set<String> strings) {
-    Set<String> deliveredPoints = new TreeSet<>(strings);
-    Set<String> expectedPoints = new TreeSet<>(getPoints(metadata).keySet());
-    MetadataDiff metadataDiff = new MetadataDiff();
-    metadataDiff.extraPoints = new TreeSet<>(deliveredPoints);
-    metadataDiff.extraPoints.removeAll(expectedPoints);
-    metadataDiff.missingPoints = new TreeSet<>(expectedPoints);
-    metadataDiff.missingPoints.removeAll(deliveredPoints);
-    return metadataDiff;
   }
 
   private String makeMessageDetail(Date timestamp, Map<String, String> attributes) {
