@@ -47,8 +47,6 @@ if [[ -z $check && -z $covg && -z $newer_files ]]; then
     exit 0
 fi
 
-export JAVA_HOME=$JAVA_HOME_11_X64
-
 echo Building udmis in $PWD
 
 ./gradlew shadow $check $covg $*
