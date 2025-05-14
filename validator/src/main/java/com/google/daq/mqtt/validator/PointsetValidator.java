@@ -24,9 +24,7 @@ import udmi.schema.PointsetEvents;
 import udmi.schema.PointsetState;
 import udmi.schema.State;
 
-/**
- * Manage pointset validation.
- */
+/** Manage pointset validation. */
 public class PointsetValidator {
 
   private final Metadata metadata;
@@ -40,9 +38,7 @@ public class PointsetValidator {
     this.metadata = metadata;
   }
 
-  /**
-   * Validate a typed message.
-   */
+  /** Validate a typed message. */
   public void validateMessage(Object message, Map<String, String> attributes) {
     final MetadataDiff pointsetDiff;
     final Date timestamp;
@@ -84,7 +80,6 @@ public class PointsetValidator {
     if (outOfRangePoints != null && !outOfRangePoints.isEmpty()) {
       addError(pointValidationError("points out of range", outOfRangePoints), messageDetail);
     }
-
   }
 
   MetadataDiff validateMessage(State message) {
@@ -101,7 +96,7 @@ public class PointsetValidator {
   }
 
   MetadataDiff validateMessage(PointsetEvents message) {
-  
+
     MetadataDiff metadataDiff = validateMessage(getPoints(message).keySet());
     if (TRUE.equals(message.partial_update)) {
       metadataDiff.missingPoints = ImmutableSet.of();
@@ -111,13 +106,14 @@ public class PointsetValidator {
     return metadataDiff;
   }
 
-  private Set<String> validatePointValues(Map<String, PointPointsetModel> modelPoints, Map<String, PointPointsetEvents> points) {
+  private Set<String> validatePointValues(
+      Map<String, PointPointsetModel> modelPoints, Map<String, PointPointsetEvents> points) {
     Set<String> outOfRangeErrors = new HashSet<>();
     for (Entry<String, PointPointsetEvents> entry : points.entrySet()) {
       String pointName = entry.getKey();
       PointPointsetModel pointModel = modelPoints.get(pointName);
-      
-      if (pointModel.range_min == null && pointModel.range_max == null){
+
+      if (pointModel.range_min == null && pointModel.range_max == null) {
         continue;
       }
 
@@ -127,33 +123,25 @@ public class PointsetValidator {
       }
 
       if (pointModel.range_min != null || pointModel.range_max != null) {
-         if (!Number.class.isInstance(point.present_value)){
-            outOfRangeErrors.add(String.format("%s: not numeric value, but range is set", pointName));
-         }
+        if (!Number.class.isInstance(point.present_value)) {
+          outOfRangeErrors.add(String.format("%s: not numeric value, but range is set", pointName));
+        }
 
-         Double presentValue = ((Number) point.present_value).doubleValue();
-         if ( pointModel.range_max != null && presentValue > pointModel.range_max ){
-          outOfRangeErrors.add(String.format("%s: present_value %s greater than range_max %s", pointName, presentValue, pointModel.range_max));
-         } else if (pointModel.range_min != null && presentValue < pointModel.range_min ){
-          outOfRangeErrors.add(String.format("%s: present_value %s lower than range_min %s", pointName, presentValue, pointModel.range_min));
-         }
+        Double presentValue = ((Number) point.present_value).doubleValue();
+        if (pointModel.range_max != null && presentValue > pointModel.range_max) {
+          outOfRangeErrors.add(
+              String.format(
+                  "%s: present_value %s greater than range_max %s",
+                  pointName, presentValue, pointModel.range_max));
+        } else if (pointModel.range_min != null && presentValue < pointModel.range_min) {
+          outOfRangeErrors.add(
+              String.format(
+                  "%s: present_value %s lower than range_min %s",
+                  pointName, presentValue, pointModel.range_min));
+        }
       }
     }
     return outOfRangeErrors;
-  }
-
-  private void checkRange(String pointName, double value, Double min, Double max,
-      String messageDetail) {
-    if (min != null && value < min) {
-      addError(new ValidationException(
-              format("Point %s value %s is below range_min %s", pointName, value, min)),
-          messageDetail);
-    }
-    if (max != null && value > max) {
-      addError(new ValidationException(
-              format("Point %s value %s is above range_max %s", pointName, value, max)),
-          messageDetail);
-    }
   }
 
   MetadataDiff validateMessage(PointsetState message) {
