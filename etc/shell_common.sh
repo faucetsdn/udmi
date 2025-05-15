@@ -114,7 +114,7 @@ function stream_to_gsheets {
         "$sheet_id" "$tool_name.$timestamp.log"
 }
 
-function sync_site_model_to_bambi {
+function sync_disk_site_model_to_bambi {
     local spreadsheet_id=$1
     local local_path_to_site_model=$2
     java -cp "$UDMI_JAR" "com.google.bos.iot.core.bambi.BambiSync" \
