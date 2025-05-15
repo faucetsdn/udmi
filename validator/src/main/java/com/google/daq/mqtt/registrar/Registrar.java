@@ -183,6 +183,7 @@ public class Registrar {
   private boolean queryOnly;
   private boolean strictWarnings;
   private boolean doNotUpdate;
+  private boolean expandDependencies;
 
   /**
    * Main entry point for registrar.
@@ -1349,12 +1350,35 @@ public class Registrar {
     System.err.printf("Initializing %d local devices...%n", workingDevices.size());
     initializeDevices(workingDevices);
     preprocessMetadata(workingDevices);
+    expandDependencies(workingDevices);
     initializeSettings(workingDevices);
     writeNormalized(workingDevices);
     previewModels(workingDevices);
     validateExpected(workingDevices);
     validateSamples(workingDevices);
     validateKeys(workingDevices);
+  }
+
+  @CommandLineOption(short_form = "T", description = "Expand transitive dependencies")
+  private void setExpandDependencies() {
+    expandDependencies = true;
+  }
+
+  private void expandDependencies(Map<String, LocalDevice> workingDevices) {
+    if (!expandDependencies) {
+      return;
+    }
+
+    Set<String> proxyIds = workingDevices.values().stream()
+        .filter(LocalDevice::isGateway)
+        .map(LocalDevice::getProxyIds)
+        .flatMap(List::stream).collect(Collectors.toSet());
+    SetView<String> newDevices = difference(workingDevices.keySet(), proxyIds);
+    Map<String, LocalDevice> newEntries = newDevices.stream()
+        .collect(Collectors.toMap(Function.identity(), allDevices::get));
+    initializeDevices(newEntries);
+    workingDevices.putAll(newEntries);
+    System.err.printf("Added %d transitive devices to working set.%n", newDevices.size());
   }
 
   private void previewModels(Map<String, LocalDevice> localDevices) {

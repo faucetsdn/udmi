@@ -33,6 +33,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 import org.junit.Test;
 import udmi.schema.CloudModel;
 import udmi.schema.Metadata;
@@ -171,6 +172,21 @@ public class RegistrarTest {
       }
     });
     assertEquals("set of allowed point names", ALLOWED_POINT_NAMES, okAddedNames);
+  }
+
+  @Test
+  public void transitiveUpdate() {
+    List<MockAction> baseCreate =
+        filterActions(getMockedActions(ImmutableList.of("GAT-123")), CREATE_DEVICE_ACTION);
+    assertEquals("Devices created directly", 1, baseCreate.size());
+
+    List<MockAction> transitiveCreate =
+        filterActions(getMockedActions(ImmutableList.of("-T", "GAT-123")), CREATE_DEVICE_ACTION);
+    assertEquals("Devices created transitively", 2, transitiveCreate.size());
+
+    int transitiveCreates = transitiveCreate.stream()
+        .filter(mock -> !mock.deviceId.equals("GAT-123")).toList().size();
+    assertEquals("Transitively created devices", transitiveCreates, 1);
   }
 
   @Test
