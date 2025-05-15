@@ -1,5 +1,5 @@
 {
-  "description": "Test that missing pointset metadata doesn't cause a NPE in validator",
+  "description": "A simple trace and site model used to test telemetry point validation. This exists because the traces all use the default udmi_site_model and it was simpler to use a simpler site.",
   "site_model": "tests/sites/supersimple",
   "traces": "tests/traces/supersimple",
   "validator": {
