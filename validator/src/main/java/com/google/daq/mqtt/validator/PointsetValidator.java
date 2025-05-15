@@ -137,23 +137,21 @@ public class PointsetValidator {
 
       PointPointsetEvents point = points.get(pointName);
 
-      if (pointModel.range_min != null || pointModel.range_max != null) {
-        if (!Number.class.isInstance(point.present_value)) {
-          outOfRangeErrors.add(String.format("%s: not numeric value, but range is set", pointName));
-        }
+      if (!Number.class.isInstance(point.present_value)) {
+        outOfRangeErrors.add(String.format("%s: not numeric value, but range is set", pointName));
+      }
 
-        Double presentValue = ((Number) point.present_value).doubleValue();
-        if (pointModel.range_max != null && presentValue > pointModel.range_max) {
-          outOfRangeErrors.add(
-              String.format(
-                  "%s: present_value %s greater than range_max %s",
-                  pointName, presentValue, pointModel.range_max));
-        } else if (pointModel.range_min != null && presentValue < pointModel.range_min) {
-          outOfRangeErrors.add(
-              String.format(
-                  "%s: present_value %s lower than range_min %s",
-                  pointName, presentValue, pointModel.range_min));
-        }
+      Double presentValue = ((Number) point.present_value).doubleValue();
+      if (pointModel.range_max != null && presentValue > pointModel.range_max) {
+        outOfRangeErrors.add(
+            String.format(
+                "%s: present_value %s greater than range_max %s",
+                pointName, presentValue, pointModel.range_max));
+      } else if (pointModel.range_min != null && presentValue < pointModel.range_min) {
+        outOfRangeErrors.add(
+            String.format(
+                "%s: present_value %s lower than range_min %s",
+                pointName, presentValue, pointModel.range_min));
       }
     }
     return outOfRangeErrors;
