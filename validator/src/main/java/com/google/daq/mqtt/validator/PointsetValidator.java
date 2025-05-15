@@ -10,7 +10,9 @@ import com.google.daq.mqtt.validator.ReportingDevice.MetadataDiff;
 import com.google.udmi.util.JsonUtil;
 import com.google.udmi.util.ValidationException;
 import java.util.Date;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Set;
 import java.util.TreeSet;
 import udmi.schema.Category;
@@ -22,27 +24,25 @@ import udmi.schema.PointsetEvents;
 import udmi.schema.PointsetState;
 import udmi.schema.State;
 
-/**
- * Manage pointset validation.
- */
+/** Manage pointset validation. */
 public class PointsetValidator {
 
   private final Metadata metadata;
   private final ErrorCollector errorCollector;
   private Set<String> missingPoints;
   private Set<String> extraPoints;
+  private Set<String> outOfRangePoints;
 
   public PointsetValidator(ErrorCollector errorCollector, Metadata metadata) {
     this.errorCollector = errorCollector;
     this.metadata = metadata;
   }
 
-  /**
-   * Validate a typed message.
-   */
+  /** Validate a typed message. */
   public void validateMessage(Object message, Map<String, String> attributes) {
     final MetadataDiff pointsetDiff;
     final Date timestamp;
+    final Map<String, PointPointsetEvents> points;
 
     if (message instanceof State stateMessage) {
       pointsetDiff = validateMessage(stateMessage);
@@ -75,6 +75,11 @@ public class PointsetValidator {
     if (extraPoints != null && !extraPoints.isEmpty()) {
       addError(pointValidationError("extra points", extraPoints), messageDetail);
     }
+
+    outOfRangePoints = pointsetDiff.outOfRangePoints;
+    if (outOfRangePoints != null && !outOfRangePoints.isEmpty()) {
+      addError(pointValidationError("points out of range", outOfRangePoints), messageDetail);
+    }
   }
 
   MetadataDiff validateMessage(State message) {
@@ -91,10 +96,13 @@ public class PointsetValidator {
   }
 
   MetadataDiff validateMessage(PointsetEvents message) {
+
     MetadataDiff metadataDiff = validateMessage(getPoints(message).keySet());
     if (TRUE.equals(message.partial_update)) {
       metadataDiff.missingPoints = ImmutableSet.of();
     }
+
+    metadataDiff.outOfRangePoints = validatePointValues(getPoints(metadata), getPoints(message));
     return metadataDiff;
   }
 
@@ -111,6 +119,42 @@ public class PointsetValidator {
     metadataDiff.missingPoints = new TreeSet<>(expectedPoints);
     metadataDiff.missingPoints.removeAll(deliveredPoints);
     return metadataDiff;
+  }
+
+  private Set<String> validatePointValues(
+      Map<String, PointPointsetModel> modelPoints, Map<String, PointPointsetEvents> points) {
+    Set<String> outOfRangeErrors = new HashSet<>();
+    for (Entry<String, PointPointsetEvents> entry : points.entrySet()) {
+      String pointName = entry.getKey();
+      PointPointsetModel pointModel = modelPoints.get(pointName);
+      if (pointModel == null) {
+        continue;
+      }
+
+      if (pointModel.range_min == null && pointModel.range_max == null) {
+        continue;
+      }
+
+      PointPointsetEvents point = points.get(pointName);
+
+      if (!Number.class.isInstance(point.present_value)) {
+        outOfRangeErrors.add(String.format("%s: not numeric value, but range is set", pointName));
+      }
+
+      Double presentValue = ((Number) point.present_value).doubleValue();
+      if (pointModel.range_max != null && presentValue > pointModel.range_max) {
+        outOfRangeErrors.add(
+            String.format(
+                "%s: present_value %s greater than range_max %s",
+                pointName, presentValue, pointModel.range_max));
+      } else if (pointModel.range_min != null && presentValue < pointModel.range_min) {
+        outOfRangeErrors.add(
+            String.format(
+                "%s: present_value %s lower than range_min %s",
+                pointName, presentValue, pointModel.range_min));
+      }
+    }
+    return outOfRangeErrors;
   }
 
   private String makeMessageDetail(Date timestamp, Map<String, String> attributes) {

@@ -1,0 +1,26 @@
+{
+  "timestamp" : "2025-05-08T15:12:51Z",
+  "version" : "1.5.2",
+  "cloud_version" : {
+    "deployed_by" : "Default implementation for class com.google.daq.mqtt.validator.MessageReadingClient"
+  },
+  "udmi_version" : "unknown",
+  "start_time" : "2025-05-08T15:12:50Z",
+  "summary" : {
+    "correct_devices" : [ "TPS-1" ],
+    "extra_devices" : [ ],
+    "missing_devices" : [ ],
+    "error_devices" : [ ]
+  },
+  "devices" : {
+    "TPS-1" : {
+      "last_seen" : "2022-07-19T05:04:36Z",
+      "status" : {
+        "message" : "Successful validation",
+        "category" : "validation.device.receive",
+        "timestamp" : "2022-07-19T05:04:36Z",
+        "level" : 200
+      }
+    }
+  }
+}
