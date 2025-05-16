@@ -8,6 +8,7 @@ import static com.google.daq.mqtt.util.IotMockProvider.ActionType.CREATE_DEVICE_
 import static com.google.daq.mqtt.util.IotMockProvider.ActionType.DELETE_DEVICE_ACTION;
 import static com.google.daq.mqtt.util.IotMockProvider.ActionType.UPDATE_DEVICE_ACTION;
 import static com.google.daq.mqtt.util.IotMockProvider.ActionType.UPDATE_REGISTRY_ACTION;
+import static com.google.udmi.util.GeneralUtils.ifNotTrueThen;
 import static udmi.schema.CloudModel.Resource_type.GATEWAY;
 
 import com.google.udmi.util.IotProvider;
@@ -46,7 +47,8 @@ public class IotMockProvider implements IotProvider {
   public IotMockProvider(ExecutionConfiguration executionConfiguration) {
     siteModel = new SiteModel(executionConfiguration);
     siteModel.initialize();
-    siteModel.forEachDeviceId(this::populateCloudModel);
+    ifNotTrueThen(executionConfiguration.project_id.equals(SiteModel.MOCK_CLEAN),
+        () -> siteModel.forEachDeviceId(this::populateCloudModel));
     client = mockClientString(executionConfiguration.project_id, siteModel.getRegistryId(),
         siteModel.getCloudRegion());
   }

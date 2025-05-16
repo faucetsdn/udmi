@@ -863,6 +863,10 @@ class LocalDevice {
     return exceptionMap.hasCategory(category);
   }
 
+  public List<String> getProxyIds() {
+    return getMetadata().gateway.proxy_ids;
+  }
+
   public enum DeviceStatus {
     CLEAN,
     ERROR,
