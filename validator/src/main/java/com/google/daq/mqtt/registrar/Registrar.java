@@ -595,7 +595,8 @@ public class Registrar {
     }
   }
 
-  private void updateExplicitDevices(Set<String> explicitDevices, Map<String, LocalDevice> workingDevices) {
+  private void updateExplicitDevices(Set<String> explicitDevices,
+      Map<String, LocalDevice> workingDevices) {
     ifNotNullThen(explicitDevices, () -> explicitDevices.addAll(workingDevices.keySet()));
   }
 
@@ -1133,7 +1134,7 @@ public class Registrar {
       executor.shutdown();
       System.err.printf("Waiting for tasks to complete...%n");
       while (!executor.awaitTermination(QuerySpeed.SHORT.seconds(), TimeUnit.SECONDS)
-        && cloudIotManager.stillActive()) {
+          && cloudIotManager.stillActive()) {
         System.err.println("Still waiting...");
       }
       if (!executor.isTerminated()) {
@@ -1475,7 +1476,7 @@ public class Registrar {
     strictWarnings = true;
     ifNotNullThen(siteModel, SiteModel::setStrictWarnings);
   }
-  
+
   private void loadSchema(String key) {
     File schemaFile = new File(schemaBase, key);
     try (InputStream schemaStream = Files.newInputStream(schemaFile.toPath())) {
@@ -1533,6 +1534,9 @@ public class Registrar {
     }
   }
 
+  /**
+   * Get mock actions. Only for testing!
+   */
   public List<Object> getMockActions() {
     if (cloudIotManager == null) {
       // Hacky workaround for startup-condition... wanted to avoid a messy refactoring.

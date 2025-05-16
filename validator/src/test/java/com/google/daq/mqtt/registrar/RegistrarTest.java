@@ -34,8 +34,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
-import org.junit.Before;
 import org.junit.Test;
 import udmi.schema.CloudModel;
 import udmi.schema.Metadata;
@@ -99,7 +97,7 @@ public class RegistrarTest {
 
   @Test
   public void blockDevicesTest() {
-    List<MockAction> mockActions = getMockedActions(ImmutableList.of("-b"));
+    List<MockAction> mockActions = executePopulated(ImmutableList.of("-b"));
     List<MockAction> blockActions = filterActions(mockActions, BLOCK_DEVICE_ACTION);
     assertEquals("block action count", 1, blockActions.size());
     assertEquals("block action distinct devices", blockActions.size(),
@@ -178,12 +176,12 @@ public class RegistrarTest {
 
   @Test
   public void transitiveUpdate() {
-    List<MockAction> baseCreate =
-        filterActions(getMockedActions(true, ImmutableList.of(GATEWAY_ID)), CREATE_DEVICE_ACTION);
+    List<MockAction> baseMocked = executeClean(ImmutableList.of(GATEWAY_ID));
+    List<MockAction> baseCreate = filterActions(baseMocked, CREATE_DEVICE_ACTION);
     assertEquals("Devices created directly", 1, baseCreate.size());
 
-    List<MockAction> transitiveCreate =
-        filterActions(getMockedActions(true, ImmutableList.of("-T", GATEWAY_ID)), CREATE_DEVICE_ACTION);
+    List<MockAction> transitiveMocked = executeClean(ImmutableList.of("-T", GATEWAY_ID));
+    List<MockAction> transitiveCreate = filterActions(transitiveMocked, CREATE_DEVICE_ACTION);
     assertEquals("Devices created transitively", 4, transitiveCreate.size());
 
     int transitiveCreates = transitiveCreate.stream()
@@ -193,7 +191,7 @@ public class RegistrarTest {
 
   @Test
   public void basicUpdates() {
-    List<MockAction> mockActions = getMockedActions(ImmutableList.of());
+    List<MockAction> mockActions = executePopulated(ImmutableList.of());
 
     List<MockAction> blockActions = filterActions(mockActions, BLOCK_DEVICE_ACTION);
     assertEquals("block action count", 0, blockActions.size());
@@ -227,8 +225,12 @@ public class RegistrarTest {
         .collect(Collectors.toList());
   }
 
-  private List<MockAction> getMockedActions(ImmutableList<String> optArgs) {
+  private List<MockAction> executePopulated(ImmutableList<String> optArgs) {
     return getMockedActions(false, optArgs);
+  }
+
+  private List<MockAction> executeClean(ImmutableList<String> optArgs) {
+    return getMockedActions(true, optArgs);
   }
 
   private List<MockAction> getMockedActions(boolean cleanStart, ImmutableList<String> optArgs) {
