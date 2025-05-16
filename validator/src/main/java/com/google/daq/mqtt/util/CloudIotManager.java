@@ -182,7 +182,7 @@ public class CloudIotManager {
   private IotProvider makeIotProvider() {
     usePasswords = executionConfiguration.iot_provider == MQTT;
 
-    if (projectId.equals(SiteModel.MOCK_PROJECT)) {
+    if (projectId.equals(SiteModel.MOCK_PROJECT) || projectId.equals(SiteModel.MOCK_CLEAN)) {
       System.err.println("Using mock iot client for special client " + projectId);
       return new IotMockProvider(executionConfiguration);
     }

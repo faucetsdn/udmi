@@ -184,7 +184,6 @@ public class Registrar {
   private boolean strictWarnings;
   private boolean doNotUpdate;
   private boolean expandDependencies;
-  private boolean flushMocked;
 
   /**
    * Main entry point for registrar.
@@ -511,7 +510,6 @@ public class Registrar {
   private void initializeCloudProject() {
     cloudIotManager = new CloudIotManager(siteModel.getExecutionConfiguration(),
         REGISTRAR_TOOL_NAME);
-    ifTrueThen(flushMocked, cloudIotManager::getMockActions);
     System.err.printf(
         "Working with project %s registry %s/%s%n",
         cloudIotManager.getProjectId(),
@@ -1534,15 +1532,7 @@ public class Registrar {
     }
   }
 
-  /**
-   * Get mock actions. Only for testing!
-   */
   public List<Object> getMockActions() {
-    if (cloudIotManager == null) {
-      // Hacky workaround for startup-condition... wanted to avoid a messy refactoring.
-      flushMocked = true;
-      return null;
-    }
     return cloudIotManager.getMockActions();
   }
 

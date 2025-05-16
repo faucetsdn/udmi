@@ -69,6 +69,7 @@ public class SiteModel {
   public static final String DEFAULT_CLEARBLADE_HOSTNAME_FORMAT = "%s-mqtt.clearblade.com";
   public static final String DEFAULT_GBOS_HOSTNAME = "mqtt.bos.goog";
   public static final String MOCK_PROJECT = "mock-project";
+  public static final String MOCK_CLEAN = "mock-clean";
   public static final String LOCALHOST_HOSTNAME = "localhost";
   public static final String DEVICES_DIR = "devices";
   public static final String REFLECTOR_DIR = "reflector";
