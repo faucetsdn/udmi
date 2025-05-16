@@ -41,6 +41,7 @@ import static com.google.udmi.util.JsonUtil.safeSleep;
 import static com.google.udmi.util.JsonUtil.writeFile;
 import static com.google.udmi.util.MetadataMapKeys.UDMI_PREFIX;
 import static com.google.udmi.util.SiteModel.DEVICES_DIR;
+import static com.google.udmi.util.SiteModel.MOCK_CLEAN;
 import static com.google.udmi.util.SiteModel.MOCK_PROJECT;
 import static java.lang.Math.ceil;
 import static java.lang.String.format;
@@ -107,7 +108,6 @@ import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import org.apache.commons.io.FileUtils;
-import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.VisibleForTesting;
 import udmi.schema.CloudModel;
 import udmi.schema.CloudModel.ModelOperation;
@@ -215,7 +215,6 @@ public class Registrar {
   }
 
   @SuppressWarnings("unchecked")
-  @NotNull
   private static Map<String, String> getErrorKeyMap(Map<String, Object> resultMap,
       String errorKey) {
     return (Map<String, String>) resultMap.computeIfAbsent(errorKey, cat -> new TreeMap<>());
@@ -338,7 +337,7 @@ public class Registrar {
       }
       if (schemaBase == null) {
         // Use the proper (relative) tool root directory for unit tests.
-        setToolRoot(MOCK_PROJECT.equals(projectId) ? ".." : defaultToolRoot());
+        setToolRoot(isMockProject() ? ".." : defaultToolRoot());
       }
       loadSiteDefaults();
       if (createRegistries >= 0) {
@@ -356,6 +355,10 @@ public class Registrar {
     } finally {
       shutdown();
     }
+  }
+
+  private boolean isMockProject() {
+    return MOCK_PROJECT.equals(projectId) || MOCK_CLEAN.equals(projectId);
   }
 
   @VisibleForTesting
