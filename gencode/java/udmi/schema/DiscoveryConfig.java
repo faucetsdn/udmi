@@ -24,11 +24,11 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 public class DiscoveryConfig {
 
     /**
-     * Generational marker for controlling enumeration
+     * Generational marker for controlling self-enumeration
      * 
      */
     @JsonProperty("generation")
-    @JsonPropertyDescription("Generational marker for controlling enumeration")
+    @JsonPropertyDescription("Generational marker for controlling self-enumeration")
     public Date generation;
     /**
      * Enumeration depth for self-enumerations.
