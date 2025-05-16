@@ -2,6 +2,7 @@ package com.google.daq.mqtt.registrar;
 
 import static com.google.daq.mqtt.TestCommon.ALT_REGISTRY;
 import static com.google.daq.mqtt.TestCommon.DEVICE_ID;
+import static com.google.daq.mqtt.TestCommon.GATEWAY_ID;
 import static com.google.daq.mqtt.TestCommon.MOCK_SITE;
 import static com.google.daq.mqtt.TestCommon.REGISTRY_ID;
 import static com.google.daq.mqtt.TestCommon.SITE_REGION;
@@ -34,6 +35,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
+import org.junit.Before;
 import org.junit.Test;
 import udmi.schema.CloudModel;
 import udmi.schema.Metadata;
@@ -177,16 +179,16 @@ public class RegistrarTest {
   @Test
   public void transitiveUpdate() {
     List<MockAction> baseCreate =
-        filterActions(getMockedActions(ImmutableList.of("GAT-123")), CREATE_DEVICE_ACTION);
+        filterActions(getMockedActions(true, ImmutableList.of(GATEWAY_ID)), CREATE_DEVICE_ACTION);
     assertEquals("Devices created directly", 1, baseCreate.size());
 
     List<MockAction> transitiveCreate =
-        filterActions(getMockedActions(ImmutableList.of("-T", "GAT-123")), CREATE_DEVICE_ACTION);
-    assertEquals("Devices created transitively", 2, transitiveCreate.size());
+        filterActions(getMockedActions(true, ImmutableList.of("-T", GATEWAY_ID)), CREATE_DEVICE_ACTION);
+    assertEquals("Devices created transitively", 4, transitiveCreate.size());
 
     int transitiveCreates = transitiveCreate.stream()
-        .filter(mock -> !mock.deviceId.equals("GAT-123")).toList().size();
-    assertEquals("Transitively created devices", transitiveCreates, 1);
+        .filter(mock -> !mock.deviceId.equals(GATEWAY_ID)).toList().size();
+    assertEquals("Transitive devices", 3, transitiveCreates);
   }
 
   @Test
@@ -226,7 +228,12 @@ public class RegistrarTest {
   }
 
   private List<MockAction> getMockedActions(ImmutableList<String> optArgs) {
+    return getMockedActions(false, optArgs);
+  }
+
+  private List<MockAction> getMockedActions(boolean cleanStart, ImmutableList<String> optArgs) {
     Registrar registrar = getRegistrar(optArgs);
+    ifTrueThen(cleanStart, registrar::getMockActions);
     registrar.execute();
     return registrar.getMockActions().stream().map(a -> (MockAction) a)
         .collect(Collectors.toList());

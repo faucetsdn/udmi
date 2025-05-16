@@ -184,6 +184,7 @@ public class Registrar {
   private boolean strictWarnings;
   private boolean doNotUpdate;
   private boolean expandDependencies;
+  private boolean flushMocked;
 
   /**
    * Main entry point for registrar.
@@ -510,6 +511,7 @@ public class Registrar {
   private void initializeCloudProject() {
     cloudIotManager = new CloudIotManager(siteModel.getExecutionConfiguration(),
         REGISTRAR_TOOL_NAME);
+    ifTrueThen(flushMocked, cloudIotManager::getMockActions);
     System.err.printf(
         "Working with project %s registry %s/%s%n",
         cloudIotManager.getProjectId(),
@@ -543,6 +545,7 @@ public class Registrar {
           ? loadExtraDevices(explicitDevices) : getLocalDevices(explicitDevices);
       ifNotNullThen(modelMunger, Runnable::run);
       initializeLocalDevices();
+      updateExplicitDevices(explicitDevices, workingDevices);
       cloudModels = ifNotNullGet(fetchCloudModels(), devices -> new ConcurrentHashMap<>(devices));
       if (deleteDevices || expungeDevices) {
         deleteCloudDevices();
@@ -590,6 +593,10 @@ public class Registrar {
     } catch (Exception e) {
       throw new RuntimeException("While processing devices", e);
     }
+  }
+
+  private void updateExplicitDevices(Set<String> explicitDevices, Map<String, LocalDevice> workingDevices) {
+    ifNotNullThen(explicitDevices, () -> explicitDevices.addAll(workingDevices.keySet()));
   }
 
   private Map<String, LocalDevice> loadAllDevices() {
@@ -1359,7 +1366,7 @@ public class Registrar {
     validateKeys(workingDevices);
   }
 
-  @CommandLineOption(short_form = "T", description = "Expand transitive dependencies")
+  @CommandLineOption(short_form = "-T", description = "Expand transitive dependencies")
   private void setExpandDependencies() {
     expandDependencies = true;
   }
@@ -1373,11 +1380,11 @@ public class Registrar {
         .filter(LocalDevice::isGateway)
         .map(LocalDevice::getProxyIds)
         .flatMap(List::stream).collect(Collectors.toSet());
-    SetView<String> newDevices = difference(workingDevices.keySet(), proxyIds);
+    SetView<String> newDevices = difference(proxyIds, workingDevices.keySet());
     Map<String, LocalDevice> newEntries = newDevices.stream()
         .collect(Collectors.toMap(Function.identity(), allDevices::get));
-    initializeDevices(newEntries);
     workingDevices.putAll(newEntries);
+    initializeDevices(newEntries);
     System.err.printf("Added %d transitive devices to working set.%n", newDevices.size());
   }
 
@@ -1527,6 +1534,11 @@ public class Registrar {
   }
 
   public List<Object> getMockActions() {
+    if (cloudIotManager == null) {
+      // Hacky workaround for startup-condition... wanted to avoid a messy refactoring.
+      flushMocked = true;
+      return null;
+    }
     return cloudIotManager.getMockActions();
   }
 

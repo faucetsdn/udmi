@@ -63,6 +63,7 @@ public class IotMockProvider implements IotProvider {
     mockAction.deviceId = deviceId;
     mockAction.data = data;
     mockActions.add(mockAction);
+    System.err.printf("Mock %s device %s%n", action, deviceId);
   }
 
   @Override
@@ -171,6 +172,7 @@ public class IotMockProvider implements IotProvider {
     List<Object> savedActions = mockActions.stream().map(a -> (Object) a)
         .collect(Collectors.toList());
     mockActions = new ArrayList<>();
+    cloudDevices.clear();
     return savedActions;
   }
 
