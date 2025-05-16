@@ -1,0 +1,10 @@
+{
+  "site_metadata" : [ "Required file not found: /workspaces/udmi/tests/sites/supersimple/site_metadata.json" ],
+  "status" : {
+    "TPS-1" : "ERROR"
+  },
+  "udmi_version" : "1.4.2-376-gdf983021-dirty",
+  "validation" : {
+    "TPS-1" : "1 schema violations found"
+  }
+}

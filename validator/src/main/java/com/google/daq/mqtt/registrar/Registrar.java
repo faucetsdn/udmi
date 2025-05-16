@@ -41,6 +41,7 @@ import static com.google.udmi.util.JsonUtil.safeSleep;
 import static com.google.udmi.util.JsonUtil.writeFile;
 import static com.google.udmi.util.MetadataMapKeys.UDMI_PREFIX;
 import static com.google.udmi.util.SiteModel.DEVICES_DIR;
+import static com.google.udmi.util.SiteModel.MOCK_CLEAN;
 import static com.google.udmi.util.SiteModel.MOCK_PROJECT;
 import static java.lang.Math.ceil;
 import static java.lang.String.format;
@@ -107,7 +108,6 @@ import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import org.apache.commons.io.FileUtils;
-import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.VisibleForTesting;
 import udmi.schema.CloudModel;
 import udmi.schema.CloudModel.ModelOperation;
@@ -183,6 +183,7 @@ public class Registrar {
   private boolean queryOnly;
   private boolean strictWarnings;
   private boolean doNotUpdate;
+  private boolean expandDependencies;
 
   /**
    * Main entry point for registrar.
@@ -214,7 +215,6 @@ public class Registrar {
   }
 
   @SuppressWarnings("unchecked")
-  @NotNull
   private static Map<String, String> getErrorKeyMap(Map<String, Object> resultMap,
       String errorKey) {
     return (Map<String, String>) resultMap.computeIfAbsent(errorKey, cat -> new TreeMap<>());
@@ -337,7 +337,7 @@ public class Registrar {
       }
       if (schemaBase == null) {
         // Use the proper (relative) tool root directory for unit tests.
-        setToolRoot(MOCK_PROJECT.equals(projectId) ? ".." : defaultToolRoot());
+        setToolRoot(isMockProject() ? ".." : defaultToolRoot());
       }
       loadSiteDefaults();
       if (createRegistries >= 0) {
@@ -355,6 +355,10 @@ public class Registrar {
     } finally {
       shutdown();
     }
+  }
+
+  private boolean isMockProject() {
+    return MOCK_PROJECT.equals(projectId) || MOCK_CLEAN.equals(projectId);
   }
 
   @VisibleForTesting
@@ -542,6 +546,7 @@ public class Registrar {
           ? loadExtraDevices(explicitDevices) : getLocalDevices(explicitDevices);
       ifNotNullThen(modelMunger, Runnable::run);
       initializeLocalDevices();
+      updateExplicitDevices(explicitDevices, workingDevices);
       cloudModels = ifNotNullGet(fetchCloudModels(), devices -> new ConcurrentHashMap<>(devices));
       if (deleteDevices || expungeDevices) {
         deleteCloudDevices();
@@ -589,6 +594,11 @@ public class Registrar {
     } catch (Exception e) {
       throw new RuntimeException("While processing devices", e);
     }
+  }
+
+  private void updateExplicitDevices(Set<String> explicitDevices,
+      Map<String, LocalDevice> workingDevices) {
+    ifNotNullThen(explicitDevices, () -> explicitDevices.addAll(workingDevices.keySet()));
   }
 
   private Map<String, LocalDevice> loadAllDevices() {
@@ -1125,7 +1135,7 @@ public class Registrar {
       executor.shutdown();
       System.err.printf("Waiting for tasks to complete...%n");
       while (!executor.awaitTermination(QuerySpeed.SHORT.seconds(), TimeUnit.SECONDS)
-        && cloudIotManager.stillActive()) {
+          && cloudIotManager.stillActive()) {
         System.err.println("Still waiting...");
       }
       if (!executor.isTerminated()) {
@@ -1349,12 +1359,35 @@ public class Registrar {
     System.err.printf("Initializing %d local devices...%n", workingDevices.size());
     initializeDevices(workingDevices);
     preprocessMetadata(workingDevices);
+    expandDependencies(workingDevices);
     initializeSettings(workingDevices);
     writeNormalized(workingDevices);
     previewModels(workingDevices);
     validateExpected(workingDevices);
     validateSamples(workingDevices);
     validateKeys(workingDevices);
+  }
+
+  @CommandLineOption(short_form = "-T", description = "Expand transitive dependencies")
+  private void setExpandDependencies() {
+    expandDependencies = true;
+  }
+
+  private void expandDependencies(Map<String, LocalDevice> workingDevices) {
+    if (!expandDependencies) {
+      return;
+    }
+
+    Set<String> proxyIds = workingDevices.values().stream()
+        .filter(LocalDevice::isGateway)
+        .map(LocalDevice::getProxyIds)
+        .flatMap(List::stream).collect(Collectors.toSet());
+    SetView<String> newDevices = difference(proxyIds, workingDevices.keySet());
+    Map<String, LocalDevice> newEntries = newDevices.stream()
+        .collect(Collectors.toMap(Function.identity(), allDevices::get));
+    workingDevices.putAll(newEntries);
+    initializeDevices(newEntries);
+    System.err.printf("Added %d transitive devices to working set.%n", newDevices.size());
   }
 
   private void previewModels(Map<String, LocalDevice> localDevices) {
@@ -1444,7 +1477,7 @@ public class Registrar {
     strictWarnings = true;
     ifNotNullThen(siteModel, SiteModel::setStrictWarnings);
   }
-  
+
   private void loadSchema(String key) {
     File schemaFile = new File(schemaBase, key);
     try (InputStream schemaStream = Files.newInputStream(schemaFile.toPath())) {

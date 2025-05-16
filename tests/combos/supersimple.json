@@ -1,0 +1,8 @@
+{
+  "description": "A simple trace and site model used to test telemetry point validation. This exists because the traces all use the default udmi_site_model and it was simpler to use a simpler site.",
+  "site_model": "tests/sites/supersimple",
+  "traces": "tests/traces/supersimple",
+  "validator": {
+    "check": "sed -i -E 's/[0-9-]{10}T[0-9:.]+Z/REDACTED_TIMESTAMP/g' tests/sites/supersimple/out/devices/TPS-1/*; diff tests/sites/supersimple/out/devices/TPS-1/events_pointset.out tests/traces/supersimple/expected/devices/TPS-1/events_pointset.out"
+  }
+}

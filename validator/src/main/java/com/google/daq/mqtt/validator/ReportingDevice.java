@@ -335,5 +335,6 @@ public class ReportingDevice implements ErrorCollector {
 
     public Set<String> extraPoints;
     public Set<String> missingPoints;
+    public Set<String> outOfRangePoints;
   }
 }

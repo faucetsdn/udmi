@@ -16,7 +16,7 @@
     },
     "reglist": {
       "periodic_sec": 3600,
-      "payload": "query/cloud:{\"generation\":\"{{timestamp}}\", \"depth\":\"registries\"}",
+      "payload": "query/cloud:{\"generation\":\"{{timestamp}}\", \"depth\":\"buckets\"}",
       "send_id": "${UDMI_PREFIX}udmi_control",
       "generation": "2024-03-06T00:00:00Z"
     },
