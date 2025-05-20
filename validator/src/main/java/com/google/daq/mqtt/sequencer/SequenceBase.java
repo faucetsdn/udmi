@@ -1154,13 +1154,13 @@ public class SequenceBase {
     String contents = message instanceof String ? (String) message : stringify(message);
     writeString(messageFile, contents);
 
-    //    String gatewayId = attributes.gatewayId;
-    //    String deviceSuffix = ofNullable(gatewayId).map(x -> "_" + attributes.deviceId).orElse("");
-    //    String traceSuffix = isTraceLogLevel() ? "_" + isoConvert(attributes.publishTime) : "";
+    //  String gatewayId = attributes.gatewayId;
+    //  String deviceSuffix = ofNullable(gatewayId).map(x -> "_" + attributes.deviceId).orElse("");
+    //  String traceSuffix = isTraceLogLevel() ? "_" + isoConvert(attributes.publishTime) : "";
 
-    //    if (isTraceLogLevel()) {
-    //      messageBase = messageBase + "_" + getTimestamp();
-    //    }
+    //  if (isTraceLogLevel()) {
+    //    messageBase = messageBase + "_" + getTimestamp();
+    //  }
   }
 
   private void logSystemEvents(String messageBase, Map<String, Object> message) {
