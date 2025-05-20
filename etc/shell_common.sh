@@ -83,6 +83,7 @@ function pubber_bg {
 [[ -n ${UDMI_ROOT:-} ]] || UDMI_ROOT=$PWD
 UDMI_ROOT=$(realpath $UDMI_ROOT)
 
+UDMI_JAR=$UDMI_ROOT/validator/build/libs/validator-1.0-SNAPSHOT-all.jar
 BAMBI_JAR=$UDMI_ROOT/bambi/build/libs/bambi-1.0-SNAPSHOT-all.jar
 VERSION_BASE='1.*'
 
