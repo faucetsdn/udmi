@@ -31,6 +31,10 @@ credentials.json
 /pubber/out/
 /pubber/pubber/out/
 /pubber/.idea/libraries/
+/bambi/build/
+/bambi/out/
+/bambi/var/
+/bambi/.idea/libraries/
 /sites/
 /attributes.json
 /venv/

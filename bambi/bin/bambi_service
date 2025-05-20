@@ -1,0 +1,118 @@
+#!/bin/bash -ex
+#
+# BAMBI backend worker
+#
+SCRIPT_ROOT=$(realpath $(dirname $0))
+UDMI_ROOT=$(realpath "$SCRIPT_ROOT"/../..)
+
+source "$UDMI_ROOT"/etc/shell_common.sh
+
+export PS4='+(${BASH_SOURCE}:${LINENO}): ${FUNCNAME[0]:+${FUNCNAME[0]}(): }'
+
+[[ -n $UDMI_NAMESPACE ]] && UDMI_PREFIX="${UDMI_NAMESPACE}~"
+
+# shellcheck disable=SC2155
+export GCP_PROJECT=$(gcloud config get-value project)
+echo Using GCP_PROJECT "$GCP_PROJECT"
+
+GCP_SERVICE_ACCOUNT=$(curl -s -H "Metadata-Flavor: Google" http://169.254.169.254/computeMetadata/v1/instance/service-accounts/default/email)
+echo Configured with GCP service account "$GCP_SERVICE_ACCOUNT"
+gcloud config set account "$GCP_SERVICE_ACCOUNT"
+
+BAMBI_REQUESTS_TOPIC=${UDMI_PREFIX}bambi-requests
+BAMBI_REQUESTS_SUBSCRIPTION=${UDMI_PREFIX}bambi-requests
+SITE_MODEL_CLONE_DIR=${UDMI_ROOT}/var/udmi/sites
+
+SLEEP_INTERVAL=1
+
+git config --global user.email "$GCP_SERVICE_ACCOUNT"
+git config --global user.name "BAMBI backend runner ${UDMI_PREFIX#\~}"
+
+echo Checking existing topics...
+gcloud pubsub subscriptions list | fgrep name: || true
+existing_topic=$(gcloud pubsub topics list | fgrep "${BAMBI_REQUESTS_TOPIC}" || true)
+if [[ -n $existing_topic ]]; then
+    echo Topic "${BAMBI_REQUESTS_TOPIC}" exists
+else
+    echo Creating topic "${BAMBI_REQUESTS_TOPIC}"
+    gcloud pubsub topics create "${BAMBI_REQUESTS_TOPIC}"
+fi
+
+echo Checking existing subscriptions...
+gcloud pubsub subscriptions list | fgrep name: || true
+existing=$(gcloud pubsub subscriptions list | fgrep "${BAMBI_REQUESTS_SUBSCRIPTION}" || true)
+if [[ -n $existing ]]; then
+    echo Using existing subscription "${BAMBI_REQUESTS_SUBSCRIPTION}"
+else
+    gcloud pubsub subscriptions create "${BAMBI_REQUESTS_SUBSCRIPTION}" --topic="${BAMBI_REQUESTS_TOPIC}" --expiration-period=24h
+fi
+
+while true; do
+    PULL_OUTPUT=$(gcloud pubsub subscriptions pull \
+        "${BAMBI_REQUESTS_SUBSCRIPTION}" \
+        --auto-ack \
+        --limit=1 \
+        --format=json)
+
+    if [[ -z "$PULL_OUTPUT" || "$PULL_OUTPUT" == "[]" ]]; then
+        sleep ${SLEEP_INTERVAL}
+        continue
+    fi
+
+    echo "Message received. Processing..."
+    MESSAGE_ATTRIBUTES_JSON=$(echo "${PULL_OUTPUT}" | jq -c '.[0].message.attributes // {}')
+
+    # --- Handle Attributes ---
+    echo "Attributes (JSON): ${MESSAGE_ATTRIBUTES_JSON}"
+    if [[ "$MESSAGE_ATTRIBUTES_JSON" != "{}" ]]; then
+        request_type=$(echo "${MESSAGE_ATTRIBUTES_JSON}" | jq -r '.request_type')
+        source=$(echo "${MESSAGE_ATTRIBUTES_JSON}" | jq -r '.source')
+        user=$(echo "${MESSAGE_ATTRIBUTES_JSON}" | jq -r '.user')
+        registry_id=$(echo "${MESSAGE_ATTRIBUTES_JSON}" | jq -r '.registry_id')
+        import_branch=$(echo "${MESSAGE_ATTRIBUTES_JSON}" | jq -r '.import_branch')
+
+        if [[ $import_branch == "null" ]]; then
+            import_branch="main"
+        fi
+
+        spreadsheet_id=$(echo "$source" | grep -oP '(?<=/d/)[^/]+')
+        repo_dir="${SITE_MODEL_CLONE_DIR}"/"${registry_id}"
+        export_branch="proposal.${spreadsheet_id}.$(date +%Y%m%d.%H%M%S)"
+
+    (
+        echo Processing "$request_type" request from "$user"
+        if clone_gcsr_site_model "$registry_id" "$GCP_PROJECT" "$repo_dir"; then
+            cd "$repo_dir"
+            if git switch "$import_branch"; then
+                if [[ "$request_type" == "import" ]]; then
+                    echo Populating site model in bambi sheet
+                    echo sync_site_model_to_bambi "$spreadsheet_id" "$repo_dir"/udmi
+                    sync_disk_site_model_to_bambi "$spreadsheet_id" "$repo_dir"/udmi
+                elif [[ "$request_type" == "merge" ]]; then
+                    echo Merging data from BAMBI to site model on disk
+                    if git checkout -b "$export_branch"; then
+                        echo sync_bambi_site_model_to_disk "$spreadsheet_id" "$repo_dir"/udmi
+                        sync_bambi_site_model_to_disk "$spreadsheet_id" "$repo_dir"/udmi
+                        git add .
+                        if git commit -m "Merge changes from BAMBI"; then
+                            if ! git push origin "$export_branch":"$export_branch"; then
+                              warn Could not push branch "$export_branch", please try again later
+                            fi
+                        fi
+                    else
+                        echo Unable to create branch "$export_branch"
+                    fi
+                fi
+            else
+                echo Skipping import because branch $import_branch does not exist
+            fi
+            cd "$SCRIPT_ROOT"
+        else
+            warn Skipping import, could not clone repository "$registry_id"
+        fi
+    ) 2>&1 | tee /tmp/bambi_service.log | stream_to_gsheets "bambi_service.$request_type" "$spreadsheet_id"
+    else
+        echo No attributes found on this message.
+    fi
+    sleep ${SLEEP_INTERVAL}
+done
