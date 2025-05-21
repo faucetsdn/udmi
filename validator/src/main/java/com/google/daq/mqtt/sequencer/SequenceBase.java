@@ -107,9 +107,11 @@ import java.io.PrintWriter;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.AbstractMap.SimpleEntry;
+import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
+import java.util.Deque;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -122,6 +124,8 @@ import java.util.Stack;
 import java.util.TreeMap;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentSkipListSet;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.concurrent.LinkedBlockingDeque;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -274,6 +278,7 @@ public class SequenceBase {
   public static final String PROXIED_SUBDIR = "proxied";
   public static final String TRACE_SUBDIR = "trace";
   public static final String STRAY_SUBDIR = "stray";
+  private static final long MESSAGE_POLL_SLEEP_MS = 1000;
   protected static Metadata deviceMetadata;
   protected static String projectId;
   protected static String cloudRegion;
@@ -290,7 +295,9 @@ public class SequenceBase {
   private static File resultSummary;
   private static MessagePublisher client;
   private static SequenceBase activeInstance;
-  private static MessageBundle stashedBundle;
+  private static final int MESSAGE_QUEUE_SIZE = 32;
+  private static final Deque<MessageBundle> messageQueue = new ArrayDeque<>(MESSAGE_QUEUE_SIZE);
+  private static final ExecutorService executorService = Executors.newFixedThreadPool(4);
   private static boolean enableAllTargets = true;
   private static boolean useAlternateClient;
   private static boolean skipConfigSync;
@@ -396,6 +403,7 @@ public class SequenceBase {
     client = checkNotNull(getPublisherClient(), "primary client not created");
     client.activate();
     sessionPrefix = client.getSessionPrefix();
+    startMessageSucker(client);
 
     String udmiNamespace = exeConfig.udmi_namespace;
     String altRegistryId = exeConfig.alt_registry;
@@ -403,6 +411,7 @@ public class SequenceBase {
     altRegistry = SiteModel.getRegistryActual(udmiNamespace, altRegistryId, registrySuffix);
     altClient = getAlternateClient();
     ifNotNullThen(altClient, IotReflectorClient::activate);
+    ifNotNullThen(altClient, SequenceBase::startMessageSucker);
   }
 
   private static void validatorLogger(Level level, String message) {
@@ -1155,6 +1164,8 @@ public class SequenceBase {
     String messageBase = messageCaptureBase(envelope);
     boolean isFallbackRegistry = FALLBACK_REGISTRY_MARK.equals(envelope.source);
 
+    warning(format("TAP capture %s %s", isFallbackRegistry, messageBase));
+
     String contents = message instanceof String ? (String) message : stringify(message);
 
     if (!isFallbackRegistry) {
@@ -1823,6 +1834,17 @@ public class SequenceBase {
     untilLoop(description, () -> catchToFalse(evaluator));
   }
 
+  private static void startMessageSucker(MessagePublisher publisher) {
+    executorService.submit(() -> messageSucker(publisher));
+  }
+
+  private static void messageSucker(MessagePublisher reflector) {
+    while (true) {
+      MessageBundle nextMessageBundle = getNextMessageBundle(reflector);
+      ifNotNullThen(nextMessageBundle, bundle -> messageQueue.add(bundle));
+    }
+  }
+
   /**
    * Thread-safe way to get a message. Tests are run in different threads, and if one blocks it
    * might end up trying to take a message while another thread is still looping. This prevents that
@@ -1832,41 +1854,24 @@ public class SequenceBase {
    * @return message bundle
    */
   MessageBundle nextMessageBundle() {
-    synchronized (SequenceBase.class) {
-      if (stashedBundle != null) {
-        debug("using stashed message bundle");
-        MessageBundle bundle = stashedBundle;
-        stashedBundle = null;
-        return bundle;
-      }
-      MessageBundle primaryBundle = getNextMessageBundle(false);
-      // If the alternate is defined, and primary returns nothing, check the secondary.
-      MessageBundle bundle = ofNullable(primaryBundle).orElseGet(() ->
-          ifNotNullGet(altClient, client -> getNextMessageBundle(true)));
-      if (activeInstance != this) {
-        debug("stashing interrupted message bundle");
-        checkState(stashedBundle == null, "stashed bundle is not null");
-        stashedBundle = bundle;
-        throw new RuntimeException("Message loop no longer for active thread");
-      }
-      return bundle;
+    if (activeInstance == this) {
+      MessageBundle poll = messageQueue.poll();
+      ifNullThen(poll, () -> safeSleep(MESSAGE_POLL_SLEEP_MS));
+      return poll;
     }
+    throw new RuntimeException("Message loop no longer for active instance");
   }
 
-  private static MessageBundle getNextMessageBundle(boolean pollBackup) {
-    boolean useAlternate = useAlternateClient != pollBackup;
-    MessagePublisher reflector = reflector(useAlternate);
+  private static MessageBundle getNextMessageBundle(MessagePublisher reflector) {
     if (!reflector.isActive()) {
       throw new RuntimeException(
           "Trying to receive message from inactive client " + reflector.getSubscriptionId());
     }
-    final MessageBundle bundle;
     try {
-      bundle = reflector.takeNextMessage(QuerySpeed.SHORT);
+      return reflector.takeNextMessage(QuerySpeed.SHORT);
     } catch (Exception e) {
       throw new AbortMessageLoop("Exception receiving message", e);
     }
-    return bundle;
   }
 
   private void processNextMessage() {
@@ -1881,10 +1886,10 @@ public class SequenceBase {
     String subFolderRaw = attributes.get("subFolder");
     String subTypeRaw = attributes.get("subType");
     String transactionId = attributes.get("transactionId");
-    boolean isBackupRegistry = SequenceBase.registryId.equals(registryId) == useAlternateClient;
+    final boolean isBackup = SequenceBase.registryId.equals(registryId) == useAlternateClient;
 
     String commandSignature = format("%s/%s/%s", deviceId, subTypeRaw, subFolderRaw);
-    trace("Received command " + commandSignature + " as " + transactionId);
+    debug("Received command " + commandSignature + " as " + transactionId);
 
     boolean targetDevice = getDeviceId().equals(deviceId);
     boolean proxiedDevice = !targetDevice && receivedEvents.containsKey(deviceId);
@@ -1904,7 +1909,7 @@ public class SequenceBase {
 
     Envelope envelope = convertTo(Envelope.class, attributes);
 
-    if (isBackupRegistry) {
+    if (isBackup) {
       debug(format("Received backup message %s: %s", commandSignature, stringifyTerse(message)));
       envelope.source = FALLBACK_REGISTRY_MARK;
     }
@@ -1915,7 +1920,7 @@ public class SequenceBase {
 
       recordRawMessage(envelope, message);
 
-      if (isBackupRegistry) {
+      if (isBackup) {
         return;
       }
 
