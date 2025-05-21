@@ -1,4 +1,4 @@
-#!/bin/bash -ex
+#!/bin/bash -e
 #
 # BAMBI backend worker
 #
@@ -9,43 +9,59 @@ source "$UDMI_ROOT"/etc/shell_common.sh
 
 export PS4='+(${BASH_SOURCE}:${LINENO}): ${FUNCNAME[0]:+${FUNCNAME[0]}(): }'
 
-[[ -n $UDMI_NAMESPACE ]] && UDMI_PREFIX="${UDMI_NAMESPACE}~"
+LOCAL=
+[[ ${1:-} == "--local" ]] && LOCAL=1 && shift
+
+NO_CHECK=
+[[ ${1:-} == "--no-check" ]] && NO_CHECK=1 && shift
+
+if [[ -n ${UDMI_NAMESPACE:-} ]]; then
+    UDMI_PREFIX="${UDMI_NAMESPACE}~"
+    echo Using UDMI_PREFIX "$UDMI_PREFIX"
+else
+    UDMI_PREFIX=
+fi
 
 # shellcheck disable=SC2155
 export GCP_PROJECT=$(gcloud config get-value project)
 echo Using GCP_PROJECT "$GCP_PROJECT"
 
-GCP_SERVICE_ACCOUNT=$(curl -s -H "Metadata-Flavor: Google" http://169.254.169.254/computeMetadata/v1/instance/service-accounts/default/email)
-echo Configured with GCP service account "$GCP_SERVICE_ACCOUNT"
-gcloud config set account "$GCP_SERVICE_ACCOUNT"
+if [[ -z $LOCAL ]]; then
+    GCP_SERVICE_ACCOUNT=$(curl -s -H "Metadata-Flavor: Google" http://169.254.169.254/computeMetadata/v1/instance/service-accounts/default/email)
+    echo Configured with GCP service account "$GCP_SERVICE_ACCOUNT"
+    gcloud config set account "$GCP_SERVICE_ACCOUNT"
+    git config --global user.email "$GCP_SERVICE_ACCOUNT"
+    git config --global user.name "BAMBI backend runner ${UDMI_PREFIX#\~}"
+fi
 
 BAMBI_REQUESTS_TOPIC=${UDMI_PREFIX}bambi-requests
 BAMBI_REQUESTS_SUBSCRIPTION=${UDMI_PREFIX}bambi-requests
 SITE_MODEL_CLONE_DIR=${UDMI_ROOT}/var/udmi/sites
 
-SLEEP_INTERVAL=1
+SLEEP_INTERVAL=0.2
 
-git config --global user.email "$GCP_SERVICE_ACCOUNT"
-git config --global user.name "BAMBI backend runner ${UDMI_PREFIX#\~}"
+if [[ -z $NO_CHECK ]]; then
+    echo Checking existing topics...
+    gcloud pubsub subscriptions list | grep -F name: || true
+    existing_topic=$(gcloud pubsub topics list | grep -F "${BAMBI_REQUESTS_TOPIC}" || true)
+    if [[ -n $existing_topic ]]; then
+        echo Topic "${BAMBI_REQUESTS_TOPIC}" exists
+    else
+        echo Creating topic "${BAMBI_REQUESTS_TOPIC}"
+        gcloud pubsub topics create "${BAMBI_REQUESTS_TOPIC}"
+    fi
 
-echo Checking existing topics...
-gcloud pubsub subscriptions list | fgrep name: || true
-existing_topic=$(gcloud pubsub topics list | fgrep "${BAMBI_REQUESTS_TOPIC}" || true)
-if [[ -n $existing_topic ]]; then
-    echo Topic "${BAMBI_REQUESTS_TOPIC}" exists
-else
-    echo Creating topic "${BAMBI_REQUESTS_TOPIC}"
-    gcloud pubsub topics create "${BAMBI_REQUESTS_TOPIC}"
+    echo Checking existing subscriptions...
+    gcloud pubsub subscriptions list | grep -F name: || true
+    existing=$(gcloud pubsub subscriptions list | grep -F "${BAMBI_REQUESTS_SUBSCRIPTION}" || true)
+    if [[ -n $existing ]]; then
+        echo Using existing subscription "${BAMBI_REQUESTS_SUBSCRIPTION}"
+    else
+        gcloud pubsub subscriptions create "${BAMBI_REQUESTS_SUBSCRIPTION}" --topic="${BAMBI_REQUESTS_TOPIC}" --expiration-period=24h
+    fi
 fi
 
-echo Checking existing subscriptions...
-gcloud pubsub subscriptions list | fgrep name: || true
-existing=$(gcloud pubsub subscriptions list | fgrep "${BAMBI_REQUESTS_SUBSCRIPTION}" || true)
-if [[ -n $existing ]]; then
-    echo Using existing subscription "${BAMBI_REQUESTS_SUBSCRIPTION}"
-else
-    gcloud pubsub subscriptions create "${BAMBI_REQUESTS_SUBSCRIPTION}" --topic="${BAMBI_REQUESTS_TOPIC}" --expiration-period=24h
-fi
+echo Polling for messages...
 
 while true; do
     PULL_OUTPUT=$(gcloud pubsub subscriptions pull \
@@ -79,7 +95,7 @@ while true; do
         repo_dir="${SITE_MODEL_CLONE_DIR}"/"${registry_id}"
         export_branch="proposal.${spreadsheet_id}.$(date +%Y%m%d.%H%M%S)"
 
-    (
+        (
         echo Processing "$request_type" request from "$user"
         if clone_gcsr_site_model "$registry_id" "$GCP_PROJECT" "$repo_dir"; then
             cd "$repo_dir"
@@ -110,9 +126,11 @@ while true; do
         else
             warn Skipping import, could not clone repository "$registry_id"
         fi
-    ) 2>&1 | tee /tmp/bambi_service.log | stream_to_gsheets "bambi_service.$request_type" "$spreadsheet_id"
+        ) 2>&1 | tee /tmp/bambi_service.log | stream_to_gsheets "bambi_service.$request_type" "$spreadsheet_id"
+        echo Polling for new messages...
     else
         echo No attributes found on this message.
+        echo Resuming polling...
     fi
     sleep ${SLEEP_INTERVAL}
 done

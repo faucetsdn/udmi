@@ -22,7 +22,7 @@ spec:
         imagePullPolicy: Always
         resources:
           requests:
-            cpu: 100m
+            cpu: 500m
             memory: 500Mi
         env:
         - name: UDMI_NAMESPACE
