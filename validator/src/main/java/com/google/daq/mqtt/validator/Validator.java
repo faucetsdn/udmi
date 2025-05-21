@@ -137,7 +137,6 @@ public class Validator {
   public static final String TIMESTAMP_UTC_SUFFIX_1 = "+00:00";
   public static final String TIMESTAMP_UTC_SUFFIX_2 = "+0000";
   public static final String ATTRIBUTE_SUFFIX = ".attr";
-  public static final String MESSAGE_SUFFIX = ".json";
   public static final String VIOLATIONS_SUFFIX = ".bad";
   public static final String ORIG_SUFFIX = ".orig";
   private static final String SCHEMA_VALIDATION_FORMAT = "Validating %d schemas";
@@ -993,7 +992,7 @@ public class Validator {
 
   private File getDeviceOutCaptureFile(String deviceId, String schemaName, boolean orig) {
     File deviceDir = makeDeviceDir(deviceId);
-    String suffix = orig ? ORIG_SUFFIX : MESSAGE_SUFFIX;
+    String suffix = orig ? ORIG_SUFFIX : JSON_SUFFIX;
     return new File(deviceDir, schemaName + suffix);
   }
 

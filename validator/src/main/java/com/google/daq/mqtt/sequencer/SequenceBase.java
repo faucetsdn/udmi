@@ -11,7 +11,6 @@ import static com.google.daq.mqtt.util.CloudIotManager.EMPTY_CONFIG;
 import static com.google.daq.mqtt.util.ConfigManager.configFrom;
 import static com.google.daq.mqtt.util.TimePeriodConstants.TWO_MINUTES_MS;
 import static com.google.daq.mqtt.validator.Validator.ATTRIBUTE_SUFFIX;
-import static com.google.daq.mqtt.validator.Validator.MESSAGE_SUFFIX;
 import static com.google.daq.mqtt.validator.Validator.VIOLATIONS_SUFFIX;
 import static com.google.udmi.util.CleanDateFormat.cleanDate;
 import static com.google.udmi.util.CleanDateFormat.dateEquals;
@@ -272,6 +271,9 @@ public class SequenceBase {
   private static final String EXCEPTION_FILE = "sequencer.err";
   private static final String OPERATION_KEY = "operation";
   private static final String FALLBACK_REGISTRY_MARK = "from-fallback-registry";
+  public static final String PROXIED_SUBDIR = "proxied";
+  public static final String TRACE_SUBDIR = "trace";
+  public static final String STRAY_SUBDIR = "stray";
   protected static Metadata deviceMetadata;
   protected static String projectId;
   protected static String cloudRegion;
@@ -1118,7 +1120,7 @@ public class SequenceBase {
     if (message.containsKey(EXCEPTION_KEY)) {
       String exceptionMessage = (String) message.get(MESSAGE_KEY);
       Envelope exceptionWrapper = JsonUtil.fromString(Envelope.class, exceptionMessage);
-      captureMessage(attributes, MESSAGE_SUFFIX, decodeBase64(exceptionWrapper.payload));
+      captureMessage(attributes, JSON_SUFFIX, decodeBase64(exceptionWrapper.payload));
       return;
     }
 
@@ -1128,7 +1130,7 @@ public class SequenceBase {
       if (savedException instanceof Exception) {
         message.put(EXCEPTION_KEY, ((Exception) savedException).getMessage());
       }
-      captureMessage(attributes, MESSAGE_SUFFIX, message);
+      captureMessage(attributes, JSON_SUFFIX, message);
       if (systemEvents) {
         logSystemEvents(messageBase, message);
       } else {
@@ -1153,9 +1155,10 @@ public class SequenceBase {
     String messageBase = messageCaptureBase(envelope);
     boolean isFallbackRegistry = FALLBACK_REGISTRY_MARK.equals(envelope.source);
 
+    String contents = message instanceof String ? (String) message : stringify(message);
+
     if (!isFallbackRegistry) {
       File messageFile = new File(testDir, messageBase + fileSuffix);
-      String contents = message instanceof String ? (String) message : stringify(message);
       writeString(messageFile, contents);
     }
 
@@ -1163,9 +1166,9 @@ public class SequenceBase {
       return;
     }
 
-    String proxiedSubdir = "proxied/" + envelope.deviceId;
-    String altDir = ofNullable(envelope.gatewayId).map(x -> proxiedSubdir).orElse("trace");
-    String useDir = isFallbackRegistry ? "stray" : altDir;
+    String proxiedSubdir = PROXIED_SUBDIR + "/" + envelope.deviceId;
+    String altDir = ofNullable(envelope.gatewayId).map(x -> proxiedSubdir).orElse(TRACE_SUBDIR);
+    String useDir = isFallbackRegistry ? STRAY_SUBDIR : altDir;
     File altFile = new File(testDir, useDir);
     String timeSuffix = ifNotNullGet(envelope.publishTime, JsonUtil::isoConvert, getTimestamp());
     File altOut = new File(altFile, messageBase + "_" + timeSuffix + fileSuffix);
