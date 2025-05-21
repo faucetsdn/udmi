@@ -18,6 +18,7 @@ import static com.google.udmi.util.CleanDateFormat.dateEquals;
 import static com.google.udmi.util.Common.DEVICE_ID_KEY;
 import static com.google.udmi.util.Common.EXCEPTION_KEY;
 import static com.google.udmi.util.Common.MESSAGE_KEY;
+import static com.google.udmi.util.Common.REGISTRY_ID_PROPERTY_KEY;
 import static com.google.udmi.util.GeneralUtils.CSV_JOINER;
 import static com.google.udmi.util.GeneralUtils.catchToElse;
 import static com.google.udmi.util.GeneralUtils.changedLines;
@@ -44,6 +45,7 @@ import static com.google.udmi.util.JsonUtil.isoConvert;
 import static com.google.udmi.util.JsonUtil.loadFileRequired;
 import static com.google.udmi.util.JsonUtil.safeSleep;
 import static com.google.udmi.util.JsonUtil.stringify;
+import static com.google.udmi.util.JsonUtil.stringifyTerse;
 import static com.google.udmi.util.JsonUtil.toStringMap;
 import static com.google.udmi.util.SiteModel.METADATA_JSON;
 import static java.lang.String.format;
@@ -269,6 +271,7 @@ public class SequenceBase {
   public static final String ELAPSED_TIME_PREFIX = "@";
   private static final String EXCEPTION_FILE = "sequencer.err";
   private static final String OPERATION_KEY = "operation";
+  private static final String FALLBACK_REGISTRY_MARK = "from-fallback-registry";
   protected static Metadata deviceMetadata;
   protected static String projectId;
   protected static String cloudRegion;
@@ -1148,9 +1151,13 @@ public class SequenceBase {
     }
 
     String messageBase = messageCaptureBase(envelope);
-    File messageFile = new File(testDir, messageBase + fileSuffix);
-    String contents = message instanceof String ? (String) message : stringify(message);
-    writeString(messageFile, contents);
+    boolean isFallbackRegistry = FALLBACK_REGISTRY_MARK.equals(envelope.source);
+
+    if (!isFallbackRegistry) {
+      File messageFile = new File(testDir, messageBase + fileSuffix);
+      String contents = message instanceof String ? (String) message : stringify(message);
+      writeString(messageFile, contents);
+    }
 
     if (!isDebugLogLevel()) {
       return;
@@ -1158,7 +1165,8 @@ public class SequenceBase {
 
     String proxiedSubdir = "proxied/" + envelope.deviceId;
     String altDir = ofNullable(envelope.gatewayId).map(x -> proxiedSubdir).orElse("trace");
-    File altFile = new File(testDir, altDir);
+    String useDir = isFallbackRegistry ? "stray" : altDir;
+    File altFile = new File(testDir, useDir);
     String timeSuffix = ifNotNullGet(envelope.publishTime, JsonUtil::isoConvert, getTimestamp());
     File altOut = new File(altFile, messageBase + "_" + timeSuffix + fileSuffix);
     writeString(altOut, contents);
@@ -1865,10 +1873,12 @@ public class SequenceBase {
   private void getProcessMessage(MessageBundle bundle) {
     final Map<String, String> attributes = bundle.attributes;
     final Map<String, Object> message = bundle.message;
+    String registryId = attributes.get(REGISTRY_ID_PROPERTY_KEY);
     String deviceId = attributes.get(DEVICE_ID_KEY);
     String subFolderRaw = attributes.get("subFolder");
     String subTypeRaw = attributes.get("subType");
     String transactionId = attributes.get("transactionId");
+    boolean isBackupRegistry = SequenceBase.registryId.equals(registryId) == useAlternateClient;
 
     String commandSignature = format("%s/%s/%s", deviceId, subTypeRaw, subFolderRaw);
     trace("Received command " + commandSignature + " as " + transactionId);
@@ -1891,11 +1901,20 @@ public class SequenceBase {
 
     Envelope envelope = convertTo(Envelope.class, attributes);
 
+    if (isBackupRegistry) {
+      debug(format("Received backup message %s: %s", commandSignature, stringifyTerse(message)));
+      envelope.source = FALLBACK_REGISTRY_MARK;
+    }
+
     try {
       envelope.publishTime = ofNullable(toDate(toInstant(ifNotNullGet(message, m ->
           (String) m.get("timestamp"))))).orElseGet(GeneralUtils::getNow);
 
       recordRawMessage(envelope, message);
+
+      if (isBackupRegistry) {
+        return;
+      }
 
       preprocessMessage(envelope, message);
 
