@@ -1,12 +1,12 @@
 <component name="ProjectRunConfigurationManager">
   <configuration default="false" name="UdmiServicePod Dev" type="Application" factoryName="Application">
-    <option name="ALTERNATIVE_JRE_PATH" value="17" />
+    <option name="ALTERNATIVE_JRE_PATH" value="21 (2)" />
     <option name="ALTERNATIVE_JRE_PATH_ENABLED" value="true" />
     <envs>
-      <env name="CLEARBLADE_CONFIGURATION" value="$USER_HOME$/creds/bos-platform-dev-credentials.json" />
-      <env name="GCP_PROJECT" value="bos-platform-dev" />
-      <env name="UDMI_PREFIX" value="peringknife~" />
+      <env name="CLEARBLADE_CONFIGURATION" value="$USER_HOME$/Downloads/jainnitish-credentials.json" />
       <env name="CLEARBLADE_PROJECT" value="bos-platform-dev" />
+      <env name="GCP_PROJECT" value="bos-platform-dev" />
+      <env name="UDMI_PREFIX" value="jainnitish~" />
     </envs>
     <output_file path="out/console.log" is_save="true" />
     <option name="MAIN_CLASS_NAME" value="com.google.bos.udmi.service.pod.UdmiServicePod" />
@@ -20,7 +20,7 @@
     </extension>
     <method v="2">
       <option name="Make" enabled="true" />
-      <option name="ToolBeforeRunTask" enabled="true" actionId="Tool_External Tools_Remove pod_ready" />
+      <option name="ToolBeforeRunTask" enabled="true" actionId="Tool_External Tools_rm -f tmp/pod_ready.txt" />
     </method>
   </configuration>
 </component>
