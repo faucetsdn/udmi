@@ -1828,17 +1828,10 @@ public class SequenceBase {
         stashedBundle = null;
         return bundle;
       }
-      MessagePublisher reflector = reflector();
-      if (!reflector.isActive()) {
-        throw new RuntimeException(
-            "Trying to receive message from inactive client " + reflector.getSubscriptionId());
-      }
-      final MessageBundle bundle;
-      try {
-        bundle = reflector.takeNextMessage(QuerySpeed.SHORT);
-      } catch (Exception e) {
-        throw new AbortMessageLoop("Exception receiving message", e);
-      }
+      MessageBundle primaryBundle = getNextMessageBundle(false);
+      // If the alternate is defined, and primary returns nothing, check the secondary.
+      MessageBundle bundle = ofNullable(primaryBundle).orElseGet(() ->
+          ifNotNullGet(altClient, client -> getNextMessageBundle(true)));
       if (activeInstance != this) {
         debug("stashing interrupted message bundle");
         checkState(stashedBundle == null, "stashed bundle is not null");
@@ -1847,6 +1840,22 @@ public class SequenceBase {
       }
       return bundle;
     }
+  }
+
+  private static MessageBundle getNextMessageBundle(boolean pollBackup) {
+    boolean useAlternate = useAlternateClient != pollBackup;
+    MessagePublisher reflector = reflector(useAlternate);
+    if (!reflector.isActive()) {
+      throw new RuntimeException(
+          "Trying to receive message from inactive client " + reflector.getSubscriptionId());
+    }
+    final MessageBundle bundle;
+    try {
+      bundle = reflector.takeNextMessage(QuerySpeed.SHORT);
+    } catch (Exception e) {
+      throw new AbortMessageLoop("Exception receiving message", e);
+    }
+    return bundle;
   }
 
   private void processNextMessage() {

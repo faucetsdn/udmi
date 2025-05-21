@@ -54,13 +54,10 @@ public class BlobsetSequences extends SequenceBase {
       "projects/%s/locations/%s/registries/%s/devices/%s";
   private static final String LOCAL_CLIENT_ID_FMT = "/r/%s/d/%s";
   private static final String BOGUS_ENDPOINT_HOSTNAME = "twiddily.fiddily.fog";
+  public static final String BOGUS_REGISTRY = "BOGUS_REGISTRY";
 
   private static boolean isMqttProvider() {
     return exeConfig.iot_provider == IotProvider.MQTT;
-  }
-
-  public void setReturnRedirectEndpointBlob() {
-    setDeviceConfigEndpointBlob(getAlternateEndpointHostname(), altRegistry, false);
   }
 
   @Override
@@ -222,17 +219,25 @@ public class BlobsetSequences extends SequenceBase {
     });
   }
 
+  @Feature(stage = ALPHA, bucket = ENDPOINT_CONFIG)
+  @Summary("Failed connection never uses alternate registry.")
+  @ValidateSchema(SubFolder.BLOBSET)
+  @Test(timeout = TWO_MINUTES_MS)
+  public void endpoint_connection_no_alternate() {
+    check_endpoint_connection_success(false, BOGUS_REGISTRY);
+  }
+
   @Test(timeout = TWO_MINUTES_MS)
   @Feature(stage = PREVIEW, bucket = ENDPOINT_CONFIG)
   @Summary("Check connection to an alternate project.")
   public void endpoint_connection_success_alternate() {
-    check_endpoint_connection_success(false);
+    check_endpoint_connection_success(false, altRegistry);
   }
 
   @Test(timeout = THREE_MINUTES_MS)
   @Feature(stage = PREVIEW, bucket = ENDPOINT_CONFIG)
   public void endpoint_redirect_and_restart() {
-    check_endpoint_connection_success(true);
+    check_endpoint_connection_success(true, altRegistry);
   }
 
   @Test(timeout = TWO_MINUTES_MS)
@@ -244,10 +249,10 @@ public class BlobsetSequences extends SequenceBase {
     untilClearedRedirect();
   }
 
-  private void check_endpoint_connection_success(boolean doRestart) {
+  private void check_endpoint_connection_success(boolean doRestart, String useRegistry) {
     // Phase one: initiate connection to alternate registry.
     waitUntil("initial last_config matches config timestamp", this::lastConfigUpdated);
-    setDeviceConfigEndpointBlob(getAlternateEndpointHostname(), altRegistry, false);
+    setDeviceConfigEndpointBlob(getAlternateEndpointHostname(), useRegistry, false);
     untilSuccessfulRedirect(BlobPhase.APPLY);
 
     withAlternateClient(() -> {
