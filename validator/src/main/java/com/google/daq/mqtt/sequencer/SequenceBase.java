@@ -1333,7 +1333,7 @@ public class SequenceBase {
                 "no transactionId returned for publish");
         debug(format("Update %s_%s, adding configTransaction %s",
             CONFIG_SUBTYPE, subBlock, transactionId));
-        recordRawMessage(fauxEnvelope(SubType.LOCAL, subBlock), data);
+        recordRawMessage(simpleEnvelope(SubType.LOCAL, subBlock), data);
         sentConfig.put(subBlock, actualizedData);
         configTransactions.add(transactionId);
         ifTrueThen(skipConfigSync, () -> waitForUpdateConfigSync(reason, waitForSync));
@@ -1344,8 +1344,11 @@ public class SequenceBase {
     }
   }
 
-  private Envelope fauxEnvelope(SubType local, SubFolder subBlock) {
-    return null;
+  private Envelope simpleEnvelope(SubType subType, SubFolder subBlock) {
+    Envelope envelope = new Envelope();
+    envelope.subType = subType;
+    envelope.subFolder = subBlock;
+    return envelope;
   }
 
   /**
@@ -1390,7 +1393,7 @@ public class SequenceBase {
     try {
       String header = format("Update config %s", ofNullable(reason).orElse("")).trim();
       debug(header + " timestamp " + isoConvert(deviceConfig.timestamp));
-      recordRawMessage(fauxEnvelope(SubType.CONFIG, UPDATE), deviceConfig);
+      recordRawMessage(simpleEnvelope(SubType.CONFIG, UPDATE), deviceConfig);
       List<DiffEntry> allDiffs = SENT_CONFIG_DIFFERNATOR.computeChanges(deviceConfig);
       List<DiffEntry> filteredDiffs = filterTesting(allDiffs);
       boolean extraFieldChanged = !Objects.equals(extraField, updatedExtraField);
