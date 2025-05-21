@@ -1854,12 +1854,13 @@ public class SequenceBase {
    * @return message bundle
    */
   MessageBundle nextMessageBundle() {
-    if (activeInstance == this) {
-      MessageBundle poll = messageQueue.poll();
-      ifNullThen(poll, () -> safeSleep(MESSAGE_POLL_SLEEP_MS));
-      return poll;
+    if (activeInstance != this) {
+      throw new RuntimeException("Message loop no longer for active instance");
     }
-    throw new RuntimeException("Message loop no longer for active instance");
+
+    MessageBundle poll = messageQueue.poll();
+    ifNullThen(poll, () -> safeSleep(MESSAGE_POLL_SLEEP_MS));
+    return poll;
   }
 
   private static MessageBundle getNextMessageBundle(MessagePublisher reflector) {
