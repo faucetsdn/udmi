@@ -136,10 +136,10 @@ public class Validator {
   public static final String TIMESTAMP_ZULU_SUFFIX = "Z";
   public static final String TIMESTAMP_UTC_SUFFIX_1 = "+00:00";
   public static final String TIMESTAMP_UTC_SUFFIX_2 = "+0000";
-  public static final String ATTRIBUTE_FILE_FORMAT = "%s.attr";
-  public static final String MESSAGE_FILE_FORMAT = "%s.json";
-  public static final String VIOLATIONS_FILE_FORMAT = "%s.bad";
-  public static final String ORIG_FILE_FORMAT = "%s.orig";
+  public static final String ATTRIBUTE_SUFFIX = ".attr";
+  public static final String MESSAGE_SUFFIX = ".json";
+  public static final String VIOLATIONS_SUFFIX = ".bad";
+  public static final String ORIG_SUFFIX = ".orig";
   private static final String SCHEMA_VALIDATION_FORMAT = "Validating %d schemas";
   private static final String TARGET_VALIDATION_FORMAT = "Validating %d files against %s";
   private static final String DEVICE_FILE_FORMAT = "devices/%s";
@@ -987,14 +987,14 @@ public class Validator {
     }
 
     File deviceDir = makeDeviceDir(deviceId);
-    File attributesFile = new File(deviceDir, format(ATTRIBUTE_FILE_FORMAT, schemaName));
+    File attributesFile = new File(deviceDir, schemaName + ATTRIBUTE_SUFFIX);
     OBJECT_MAPPER.writeValue(attributesFile, attributes);
   }
 
   private File getDeviceOutCaptureFile(String deviceId, String schemaName, boolean orig) {
     File deviceDir = makeDeviceDir(deviceId);
-    String fileFormat = orig ? ORIG_FILE_FORMAT : MESSAGE_FILE_FORMAT;
-    return new File(deviceDir, format(fileFormat, schemaName));
+    String suffix = orig ? ORIG_SUFFIX : MESSAGE_SUFFIX;
+    return new File(deviceDir, schemaName + suffix);
   }
 
   private File makeDeviceDir(String deviceId) {
