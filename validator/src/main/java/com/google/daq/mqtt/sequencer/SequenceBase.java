@@ -1160,7 +1160,7 @@ public class SequenceBase {
     String altDir = ofNullable(envelope.gatewayId).map(x -> proxiedSubdir).orElse("trace");
     File altFile = new File(testDir, altDir);
     String timeSuffix = ifNotNullGet(envelope.publishTime, JsonUtil::isoConvert, getTimestamp());
-    File altOut = new File(altFile, messageBase + "_" + timeSuffix);
+    File altOut = new File(altFile, messageBase + "_" + timeSuffix + fileSuffix);
     writeString(altOut, contents);
   }
 
