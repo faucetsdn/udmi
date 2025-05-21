@@ -12,8 +12,11 @@ import com.fasterxml.jackson.core.JsonParser.Feature;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.json.JsonReadFeature;
 import com.fasterxml.jackson.databind.DeserializationFeature;
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
+import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.google.gson.internal.bind.util.ISO8601Utils;
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -486,4 +489,153 @@ public abstract class JsonUtil {
       throw new RuntimeException("While writing " + file.getAbsolutePath(), e);
     }
   }
+
+  public static Map<String, Object> flattenNestedMap(Map<String, Object> map, String separator) {
+    Map<String, Object> flattenedMap = new TreeMap<>();
+    flatten(map, "", flattenedMap, separator);
+    return flattenedMap;
+  }
+
+  @SuppressWarnings("unchecked")
+  private static void flatten(Map<String, Object> currentMap, String currentKey,
+      Map<String, Object> flattenedMap, String separator) {
+    for (Map.Entry<String, Object> entry : currentMap.entrySet()) {
+      String key = entry.getKey();
+      Object value = entry.getValue();
+      String newKey = currentKey.isEmpty() ? key : currentKey + separator + key;
+
+      if (value instanceof Map) {
+        flatten((Map<String, Object>) value, newKey, flattenedMap, separator);
+      } else {
+        flattenedMap.put(newKey, value);
+      }
+    }
+  }
+
+  public static JsonNode nestFlattenedJson(Map<String, String> flattenedJsonMap,
+      String separatorRegex) {
+    ObjectNode rootNode = OBJECT_MAPPER.createObjectNode();
+
+    for (Map.Entry<String, String> entry : flattenedJsonMap.entrySet()) {
+      String key = entry.getKey();
+      String value = entry.getValue();
+      String[] parts = key.split(separatorRegex);
+      nest(rootNode, parts, value, 0, OBJECT_MAPPER);
+    }
+
+    return rootNode;
+  }
+
+  private static void nest(JsonNode currentNode, String[] parts, String value, int index,
+      ObjectMapper mapper) {
+
+    String currentPart = parts[index];
+
+    if (index == parts.length - 1) {
+      handleSetLeafValue(currentNode, currentPart, value, mapper);
+      return;
+    }
+    JsonNode childNode;
+    int numericCurrentPartIfArray = -1;
+
+    if (currentNode instanceof ObjectNode) {
+      childNode = currentNode.get(currentPart);
+    } else if (currentNode instanceof ArrayNode) {
+      numericCurrentPartIfArray = parseAndValidateArrayIndex(currentPart, (ArrayNode) currentNode);
+      childNode = currentNode.get(numericCurrentPartIfArray);
+    } else {
+      throw new RuntimeException(
+          "Cannot traverse into node type: " + currentNode.getNodeType() +
+              " for part '" + currentPart + "'. Current node: " + currentNode);
+    }
+
+    String nextPart = parts[index + 1];
+    childNode = ensureAndGetChildNode(currentNode, childNode, currentPart,
+        numericCurrentPartIfArray, nextPart, mapper);
+
+    nest(childNode, parts, value, index + 1, mapper);
+  }
+
+  private static void handleSetLeafValue(JsonNode currentNode, String part, String value,
+      ObjectMapper mapper) {
+    if (currentNode instanceof ObjectNode) {
+      ((ObjectNode) currentNode).put(part, value);
+    } else if (currentNode instanceof ArrayNode) {
+      int arrayIndex = parseAndValidateArrayIndex(part, (ArrayNode) currentNode);
+      ((ArrayNode) currentNode).set(arrayIndex, mapper.getNodeFactory().textNode(value));
+    } else {
+      throw new RuntimeException(
+          "Cannot set value on node type: " + currentNode.getNodeType() +
+              " for part '" + part + "'. Current node: " + currentNode);
+    }
+  }
+
+  private static int parseAndValidateArrayIndex(String part, ArrayNode arrayNode) {
+    try {
+      int arrayIndex = Integer.parseInt(part);
+      if (arrayIndex < 0) {
+        throw new RuntimeException("Array index cannot be negative: " + part);
+      }
+      while (arrayNode.size() <= arrayIndex) {
+        arrayNode.addNull();
+      }
+      return arrayIndex;
+    } catch (NumberFormatException e) {
+      throw new RuntimeException(
+          "Expected numeric array index for part '" + part +
+              "' when current node is an Array. Array content: " + arrayNode.toString(), e);
+    }
+  }
+
+  private static JsonNode ensureAndGetChildNode(
+      JsonNode parentNode,
+      JsonNode childNode,
+      String currentKeyOrStringIndex,
+      int numericIndexIfParentIsArray,
+      String nextKeyOrStringIndex,
+      ObjectMapper mapper) {
+
+    boolean nextPathPartSuggestsArray = isPathPartArrayIndex(nextKeyOrStringIndex);
+
+    if (childNode == null || childNode.isNull()) {
+      if (nextPathPartSuggestsArray) {
+        childNode = mapper.createArrayNode();
+      } else {
+        childNode = mapper.createObjectNode();
+      }
+
+      if (parentNode instanceof ObjectNode) {
+        ((ObjectNode) parentNode).set(currentKeyOrStringIndex, childNode);
+      } else if (parentNode instanceof ArrayNode) {
+        ((ArrayNode) parentNode).set(numericIndexIfParentIsArray, childNode);
+      } else {
+        throw new IllegalStateException("Parent node is neither ObjectNode nor ArrayNode, "
+            + "cannot attach child. Parent: " + parentNode);
+      }
+    } else {
+      if (nextPathPartSuggestsArray && !childNode.isArray()) {
+        throw new RuntimeException(
+            "Path conflict: Expected ArrayNode for current part '" + currentKeyOrStringIndex +
+                "' (because next part '" + nextKeyOrStringIndex + "' is numeric), but found " +
+                childNode.getNodeType() + ". Existing node: " + childNode);
+      }
+      if (!nextPathPartSuggestsArray && !childNode.isObject()) {
+        throw new RuntimeException(
+            "Path conflict: Expected ObjectNode for current part '" + currentKeyOrStringIndex +
+                "' (because next part '" + nextKeyOrStringIndex + "' is not numeric), but found "
+                + childNode.getNodeType() + ". Existing node: " + childNode);
+      }
+    }
+    return childNode;
+  }
+
+  private static boolean isPathPartArrayIndex(String pathPart) {
+    try {
+      Integer.parseInt(pathPart);
+      return true;
+    } catch (NumberFormatException ignored) {
+      return false;
+    }
+  }
+
 }

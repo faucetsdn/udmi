@@ -2,6 +2,7 @@ package com.google.daq.mqtt.registrar;
 
 import static com.google.daq.mqtt.TestCommon.ALT_REGISTRY;
 import static com.google.daq.mqtt.TestCommon.DEVICE_ID;
+import static com.google.daq.mqtt.TestCommon.GATEWAY_ID;
 import static com.google.daq.mqtt.TestCommon.MOCK_SITE;
 import static com.google.daq.mqtt.TestCommon.REGISTRY_ID;
 import static com.google.daq.mqtt.TestCommon.SITE_REGION;
@@ -14,6 +15,7 @@ import static com.google.daq.mqtt.util.IotMockProvider.MOCK_DEVICE_ID;
 import static com.google.udmi.util.GeneralUtils.friendlyStackTrace;
 import static com.google.udmi.util.GeneralUtils.ifNotNullThen;
 import static com.google.udmi.util.GeneralUtils.ifTrueThen;
+import static com.google.udmi.util.SiteModel.MOCK_CLEAN;
 import static com.google.udmi.util.SiteModel.MOCK_PROJECT;
 import static java.lang.Boolean.TRUE;
 import static org.junit.Assert.assertEquals;
@@ -33,6 +35,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
+import org.jetbrains.annotations.NotNull;
 import org.junit.Test;
 import udmi.schema.CloudModel;
 import udmi.schema.Metadata;
@@ -76,10 +79,14 @@ public class RegistrarTest {
   }
 
   private Registrar getRegistrar(List<String> args) {
+    return getRegistrar(false, args);
+  }
+
+  private Registrar getRegistrar(boolean cleanRegistry, List<String> args) {
     try {
       List<String> registrarArgs = new ArrayList<>();
       registrarArgs.add(MOCK_SITE);
-      registrarArgs.add(MOCK_PROJECT);
+      registrarArgs.add(cleanRegistry ? MOCK_CLEAN : MOCK_PROJECT);
       ifNotNullThen(args, () -> registrarArgs.addAll(args));
       return new Registrar().processArgs(registrarArgs);
     } catch (Exception e) {
@@ -96,7 +103,7 @@ public class RegistrarTest {
 
   @Test
   public void blockDevicesTest() {
-    List<MockAction> mockActions = getMockedActions(ImmutableList.of("-b"));
+    List<MockAction> mockActions = getMockedPopulated(ImmutableList.of("-b"));
     List<MockAction> blockActions = filterActions(mockActions, BLOCK_DEVICE_ACTION);
     assertEquals("block action count", 1, blockActions.size());
     assertEquals("block action distinct devices", blockActions.size(),
@@ -174,8 +181,23 @@ public class RegistrarTest {
   }
 
   @Test
+  public void transitiveUpdate() {
+    List<MockAction> baseMocked = getMockedClean(ImmutableList.of(GATEWAY_ID));
+    List<MockAction> baseCreate = filterActions(baseMocked, CREATE_DEVICE_ACTION);
+    assertEquals("Devices created directly", 1, baseCreate.size());
+
+    List<MockAction> transitiveMocked = getMockedClean(ImmutableList.of("-T", GATEWAY_ID));
+    List<MockAction> transitiveCreate = filterActions(transitiveMocked, CREATE_DEVICE_ACTION);
+    assertEquals("Devices created transitively", 4, transitiveCreate.size());
+
+    int transitiveCreates = transitiveCreate.stream()
+        .filter(mock -> !mock.deviceId.equals(GATEWAY_ID)).toList().size();
+    assertEquals("Transitive devices", 3, transitiveCreates);
+  }
+
+  @Test
   public void basicUpdates() {
-    List<MockAction> mockActions = getMockedActions(ImmutableList.of());
+    List<MockAction> mockActions = getMockedPopulated(ImmutableList.of());
 
     List<MockAction> blockActions = filterActions(mockActions, BLOCK_DEVICE_ACTION);
     assertEquals("block action count", 0, blockActions.size());
@@ -209,8 +231,17 @@ public class RegistrarTest {
         .collect(Collectors.toList());
   }
 
-  private List<MockAction> getMockedActions(ImmutableList<String> optArgs) {
-    Registrar registrar = getRegistrar(optArgs);
+  private List<MockAction> getMockedPopulated(ImmutableList<String> optArgs) {
+    return getMockedRegistrar(false, optArgs);
+  }
+
+  private List<MockAction> getMockedClean(ImmutableList<String> optArgs) {
+    return getMockedRegistrar(true, optArgs);
+  }
+
+  @NotNull
+  private List<MockAction> getMockedRegistrar(boolean clean, ImmutableList<String> optArgs) {
+    Registrar registrar = getRegistrar(clean, optArgs);
     registrar.execute();
     return registrar.getMockActions().stream().map(a -> (MockAction) a)
         .collect(Collectors.toList());

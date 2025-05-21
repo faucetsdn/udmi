@@ -9,6 +9,9 @@
 0 valid_serial_no RESULT pass schemas state_update_stable STABLE 10/10 Schema validation passed
 1 valid_serial_no RESULT pass schemas device_state_stable STABLE 10/10 Schema validation passed
 0 valid_serial_no RESULT pass schemas state_update_stable STABLE 10/10 Schema validation passed
+1 valid_serial_no RESULT pass schemas device_state_stable STABLE 10/10 Schema validation passed
+0 valid_serial_no RESULT pass schemas events_system_stable STABLE 10/10 Schema validation passed
+0 valid_serial_no RESULT pass schemas state_update_stable STABLE 10/10 Schema validation passed
 1 writeback_success
 1 writeback_success
 1 writeback_success
