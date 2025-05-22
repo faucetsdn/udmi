@@ -43,8 +43,6 @@ public class SequenceBaseTest {
     Description testOne = makeTestDescription("test_one");
     baseOne.testWatcher.starting(testOne);
 
-    safeSleep(1000);
-
     MessageBundle bundleOne = baseOne.nextMessageBundle();
     System.err.println(stringify(bundleOne));
     Map<?, ?> featuresOne = (Map<?, ?>) bundleOne.message.get("features");

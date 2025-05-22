@@ -66,9 +66,6 @@ public class MockPublisher implements MessagePublisher {
   @Override
   public Validator.MessageBundle takeNextMessage(QuerySpeed speed) {
     try {
-      if (messages.isEmpty()) {
-        throw new RuntimeException("Mock publisher has no messages");
-      }
       return messages.poll(speed.seconds(), TimeUnit.SECONDS);
     } catch (Exception e) {
       throw new RuntimeException("While taking next message", e);
