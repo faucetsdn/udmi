@@ -1346,6 +1346,11 @@ public class SequenceBase {
       String sentBlockConfig = String.valueOf(
           sentConfig.get(requireNonNull(subBlock, "subBlock not defined")));
       boolean updated = !actualizedData.equals(sentBlockConfig);
+      if (updated) {
+        debug("TAPX: updated " + subBlock);
+        debug("TAP1: " + sentBlockConfig);
+        debug("TAP2: " + actualizedData);
+      }
       trace(format("Updated check %s_%s: %s", CONFIG_SUBTYPE, subBlock, updated));
       if (updated) {
         String topic = subBlock + "/config";
@@ -1876,10 +1881,10 @@ public class SequenceBase {
   }
 
   private void processNextMessage() {
-    ifNotNullThen(nextMessageBundle(), this::getProcessMessage);
+    ifNotNullThen(nextMessageBundle(), this::processMessageBundle);
   }
 
-  private void getProcessMessage(MessageBundle bundle) {
+  private void processMessageBundle(MessageBundle bundle) {
     final Map<String, String> attributes = bundle.attributes;
     final Map<String, Object> message = bundle.message;
     String registryId = attributes.get(REGISTRY_ID_PROPERTY_KEY);
@@ -2348,13 +2353,17 @@ public class SequenceBase {
   }
 
   protected void withAlternateClient(Runnable evaluator) {
+    withAlternateClient(false, evaluator);
+  }
+
+  protected void withAlternateClient(boolean suppressEndpointType, Runnable evaluator) {
     checkNotNull(altClient, "Alternate client used but test not skipped");
     checkState(!useAlternateClient, "Alternate client already in use");
     checkState(deviceConfig.system.testing.endpoint_type == null, "endpoint type not null");
     try {
       useAlternateClient = true;
       warning("Now using alternate connection client!");
-      deviceConfig.system.testing.endpoint_type = "alternate";
+      deviceConfig.system.testing.endpoint_type = suppressEndpointType ? null : "alternate";
       whileDoing("using alternate client", evaluator);
     } finally {
       useAlternateClient = false;

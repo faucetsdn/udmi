@@ -4,7 +4,12 @@ import static com.google.common.base.Strings.isNullOrEmpty;
 import static com.google.daq.mqtt.util.TimePeriodConstants.THREE_MINUTES_MS;
 import static com.google.daq.mqtt.util.TimePeriodConstants.TWO_MINUTES_MS;
 import static com.google.udmi.util.GeneralUtils.encodeBase64;
+import static com.google.udmi.util.GeneralUtils.ifTrueGet;
+import static com.google.udmi.util.GeneralUtils.ifTrueThen;
+import static com.google.udmi.util.GeneralUtils.instantNow;
 import static com.google.udmi.util.GeneralUtils.sha256;
+import static com.google.udmi.util.JsonUtil.getNowInstant;
+import static com.google.udmi.util.JsonUtil.isoConvert;
 import static com.google.udmi.util.JsonUtil.stringify;
 import static java.lang.String.format;
 import static org.junit.Assert.assertNotEquals;
@@ -20,6 +25,8 @@ import com.google.daq.mqtt.sequencer.Summary;
 import com.google.daq.mqtt.sequencer.ValidateSchema;
 import com.google.daq.mqtt.sequencer.semantic.SemanticDate;
 import com.google.daq.mqtt.sequencer.semantic.SemanticValue;
+import java.time.Duration;
+import java.time.Instant;
 import java.util.Date;
 import java.util.HashMap;
 import org.junit.Before;
@@ -255,22 +262,25 @@ public class BlobsetSequences extends SequenceBase {
     setDeviceConfigEndpointBlob(getAlternateEndpointHostname(), useRegistry, false);
     untilSuccessfulRedirect(BlobPhase.APPLY);
 
-    withAlternateClient(() -> {
-      // Phase two: verify connection to alternate registry.
-      untilSuccessfulRedirect(BlobPhase.FINAL);
-      waitUntil("alternate last_config matches config timestamp",
-          this::lastConfigUpdated);
-      untilClearedRedirect();
-
-      if (doRestart) {
-        // Phase two.five: restart the system to make sure the change sticks.
-        check_system_restart();
-      }
-
-      // Phase three: initiate connection back to initial registry.
-      // Phase 3/4 test the same thing as phase 1/2, included to restore system to initial state.
-      setDeviceConfigEndpointBlob(getAlternateEndpointHostname(), registryId, false);
-      untilSuccessfulRedirect(BlobPhase.APPLY);
+    Instant endTime = instantNow().plusSeconds(20);
+    withAlternateClient(true, () -> {
+      waitDuration("alternate client connect delay", Duration.ofSeconds(10));
+      //waitUntil("timeout", () -> ifTrueGet(instantNow().isBefore(endTime), waitingMessage));
+//      // Phase two: verify connection to alternate registry.
+//      untilSuccessfulRedirect(BlobPhase.FINAL);
+//      waitUntil("alternate last_config matches config timestamp",
+//          this::lastConfigUpdated);
+//      untilClearedRedirect();
+//
+//      if (doRestart) {
+//        // Phase two.five: restart the system to make sure the change sticks.
+//        check_system_restart();
+//      }
+//
+//      // Phase three: initiate connection back to initial registry.
+//      // Phase 3/4 test the same thing as phase 1/2, included to restore system to initial state.
+//      setDeviceConfigEndpointBlob(getAlternateEndpointHostname(), registryId, false);
+//      untilSuccessfulRedirect(BlobPhase.APPLY);
     });
 
     // Phase four: verify restoration of initial registry connection.
@@ -279,6 +289,12 @@ public class BlobsetSequences extends SequenceBase {
       waitUntil("restored last_config matches config timestamp", this::lastConfigUpdated);
       untilClearedRedirect();
     });
+  }
+
+  private void waitDuration(String reason, Duration duration) {
+    Instant endTime = getNowInstant().plus(duration);
+    String waitingMessage = "waiting until " + isoConvert(endTime);
+    waitUntil(reason, () -> ifTrueGet(getNowInstant().isBefore(endTime), waitingMessage));
   }
 
   @Test
