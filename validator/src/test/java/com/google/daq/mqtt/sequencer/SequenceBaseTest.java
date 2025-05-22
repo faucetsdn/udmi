@@ -1,5 +1,6 @@
 package com.google.daq.mqtt.sequencer;
 
+import static com.google.udmi.util.JsonUtil.safeSleep;
 import static com.google.udmi.util.JsonUtil.stringify;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
@@ -41,6 +42,8 @@ public class SequenceBaseTest {
     final SequenceBase baseOne = new SequenceBase();
     Description testOne = makeTestDescription("test_one");
     baseOne.testWatcher.starting(testOne);
+
+    safeSleep(1000);
 
     MessageBundle bundleOne = baseOne.nextMessageBundle();
     System.err.println(stringify(bundleOne));
