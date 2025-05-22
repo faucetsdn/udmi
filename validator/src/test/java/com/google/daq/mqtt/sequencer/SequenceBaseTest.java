@@ -1,6 +1,5 @@
 package com.google.daq.mqtt.sequencer;
 
-import static com.google.udmi.util.JsonUtil.safeSleep;
 import static com.google.udmi.util.JsonUtil.stringify;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
