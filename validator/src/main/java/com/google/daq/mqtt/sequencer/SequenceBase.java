@@ -1164,8 +1164,6 @@ public class SequenceBase {
     String messageBase = messageCaptureBase(envelope);
     boolean isFallbackRegistry = FALLBACK_REGISTRY_MARK.equals(envelope.source);
 
-    warning(format("TAP capture %s %s", isFallbackRegistry, messageBase));
-
     String contents = message instanceof String ? (String) message : stringify(message);
 
     if (!isFallbackRegistry) {

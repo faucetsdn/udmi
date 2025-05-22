@@ -4,10 +4,8 @@ import static com.google.common.base.Strings.isNullOrEmpty;
 import static com.google.daq.mqtt.util.TimePeriodConstants.THREE_MINUTES_MS;
 import static com.google.daq.mqtt.util.TimePeriodConstants.TWO_MINUTES_MS;
 import static com.google.udmi.util.GeneralUtils.encodeBase64;
-import static com.google.udmi.util.GeneralUtils.ifNotTrueThen;
 import static com.google.udmi.util.GeneralUtils.ifTrueGet;
 import static com.google.udmi.util.GeneralUtils.ifTrueThen;
-import static com.google.udmi.util.GeneralUtils.instantNow;
 import static com.google.udmi.util.GeneralUtils.sha256;
 import static com.google.udmi.util.JsonUtil.getNowInstant;
 import static com.google.udmi.util.JsonUtil.isoConvert;
@@ -26,7 +24,6 @@ import com.google.daq.mqtt.sequencer.Summary;
 import com.google.daq.mqtt.sequencer.ValidateSchema;
 import com.google.daq.mqtt.sequencer.semantic.SemanticDate;
 import com.google.daq.mqtt.sequencer.semantic.SemanticValue;
-import com.google.udmi.util.GeneralUtils;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.Date;
@@ -105,23 +102,28 @@ public class BlobsetSequences extends SequenceBase {
 
   private void untilClearedRedirect() {
     deviceConfig.blobset.blobs.remove(IOT_BLOB_KEY);
-    untilTrue("endpoint config blobset state not defined", () -> deviceState.blobset == null
-        || deviceState.blobset.blobs.get(IOT_BLOB_KEY) == null);
+    untilTrue("endpoint config blobset state not defined",
+        () -> deviceState.blobset == null || deviceState.blobset.blobs.get(IOT_BLOB_KEY) == null);
   }
 
   private void untilSuccessfulRedirect(BlobPhase blobPhase) {
+    untilCompletedRedirect(blobPhase, false);
+  }
+
+  private void untilCompletedRedirect(BlobPhase blobPhase, boolean expectFailure) {
     // This case is tracking the initial apply of a redirect, so it sets up the mirror config.
     if (blobPhase == BlobPhase.APPLY) {
       mirrorToOtherConfig();
     }
-    untilTrue(format("blobset phase is %s and stateStatus is null", blobPhase), () -> {
+    String prefix = ifTrueGet(expectFailure, "not ", "");
+    untilTrue(format("blobset phase is %s and stateStatus is %snull", blobPhase, prefix), () -> {
       BlobBlobsetState blobBlobsetState = deviceState.blobset.blobs.get(IOT_BLOB_KEY);
       BlobBlobsetConfig blobBlobsetConfig = deviceConfig.blobset.blobs.get(IOT_BLOB_KEY);
-      // Successful reconnect sends a state message with empty Entry.
-      Entry blobStateStatus = blobBlobsetState.status;
+      // Successful reconnect sends a state message with empty Entry, error will have status.
+      boolean statusError = blobBlobsetState.status != null;
       return blobPhase.equals(blobBlobsetState.phase)
           && blobBlobsetConfig.generation.equals(blobBlobsetState.generation)
-          && blobStateStatus == null;
+          && statusError == expectFailure;
     });
 
     // This case is tracking the finalization of the redirect, so clear out the non-used one.
@@ -261,39 +263,45 @@ public class BlobsetSequences extends SequenceBase {
   private void check_endpoint_connection_success(boolean doRestart, boolean useInvalidRegistry) {
     // Phase one: initiate connection to alternate registry.
     waitUntil("initial last_config matches config timestamp", this::lastConfigUpdated);
+
     String useRegistry = useInvalidRegistry ? BOGUS_REGISTRY : altRegistry;
     setDeviceConfigEndpointBlob(getAlternateEndpointHostname(), useRegistry, false);
-    untilSuccessfulRedirect(BlobPhase.APPLY);
 
-    boolean suppressEndpointType = useInvalidRegistry;
-    withAlternateClient(suppressEndpointType, () -> {
+    BlobPhase endPhase = useInvalidRegistry ? BlobPhase.FINAL : BlobPhase.APPLY;
+    untilCompletedRedirect(endPhase, useInvalidRegistry);
+
+    withAlternateClient(useInvalidRegistry, () -> {
+      // Phase two: verify connection to alternate registry.
+      untilCompletedRedirect(BlobPhase.FINAL, useInvalidRegistry);
+
       if (useInvalidRegistry) {
-        // This will never be valid, so wait a bit to ensure it's had time to proess the error.
+        // This will never be valid, so wait a bit to ensure it's had time to process the error.
         waitDuration("alternate client connect delay", Duration.ofSeconds(10));
-      } else {
-        // Phase two: verify connection to alternate registry.
-        untilSuccessfulRedirect(BlobPhase.FINAL);
-        waitUntil("alternate last_config matches config timestamp",
-            this::lastConfigUpdated);
-        untilClearedRedirect();
-
-        if (doRestart) {
-          // Phase two.five: restart the system to make sure the change sticks.
-          check_system_restart();
-        }
-
-        // Phase three: initiate connection back to initial registry.
-        // Phase 3/4 test the same thing as phase 1/2, included to restore system to initial state.
-        setDeviceConfigEndpointBlob(getAlternateEndpointHostname(), registryId, false);
-        untilSuccessfulRedirect(BlobPhase.APPLY);
+        return;
       }
+
+      waitUntil("alternate last_config matches config timestamp", this::lastConfigUpdated);
+      untilClearedRedirect();
+
+      if (doRestart) {
+        // Phase two.five: restart the system to make sure the change sticks.
+        check_system_restart();
+      }
+
+      // Phase three: initiate connection back to initial registry.
+      // Phase 3/4 test the same thing as phase 1/2, included to restore system to initial state.
+      setDeviceConfigEndpointBlob(getAlternateEndpointHostname(), registryId, false);
+      untilSuccessfulRedirect(BlobPhase.APPLY);
     });
+
+    ifTrueThen(useInvalidRegistry,
+        () -> setDeviceConfigEndpointBlob(getAlternateEndpointHostname(), registryId, false));
 
     // Phase four: verify restoration of initial registry connection.
     whileDoing("restoring main connection", () -> {
       untilSuccessfulRedirect(BlobPhase.FINAL);
       waitUntil("restored last_config matches config timestamp", this::lastConfigUpdated);
-      ifNotTrueThen(useInvalidRegistry, this::untilClearedRedirect);
+      untilClearedRedirect();
     });
   }
 
