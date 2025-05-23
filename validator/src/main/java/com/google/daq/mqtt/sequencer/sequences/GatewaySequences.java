@@ -115,7 +115,7 @@ public class GatewaySequences extends SequenceBase {
 
   private Set<String> receivedDevices(Set<String> proxyIds, SubFolder subFolder) {
     return proxyIds.stream().filter(deviceId -> {
-      CaptureMap receivedEvents = getReceivedEvents(deviceId);
+      CaptureMap receivedEvents = getCapturedMessageDevice(deviceId);
       return !ofNullable(receivedEvents.get(subFolder)).map(List::isEmpty).orElse(true);
     }).collect(Collectors.toSet());
   }

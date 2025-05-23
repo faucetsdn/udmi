@@ -211,7 +211,7 @@ public class SequenceBase {
   private static final String RESULT_LOG_FILE = "RESULT.log";
   private static final String OUT_DEVICE_FORMAT = "out/devices/%s/metadata_mod.json";
   private static final String SUMMARY_OUTPUT_FORMAT = "out/sequencer_%s.json";
-  private static final Map<Class<?>, SubFolder> CLASS_SUBFOLDER_MAP = ImmutableMap.of(
+  private static final Map<Class<?>, SubFolder> CLASS_EVENT_SUBTYPE_MAP = ImmutableMap.of(
       SystemEvents.class, SubFolder.SYSTEM,
       PointsetEvents.class, SubFolder.POINTSET,
       DiscoveryEvents.class, SubFolder.DISCOVERY
@@ -309,7 +309,7 @@ public class SequenceBase {
         "ALPHA functions version should not be > BETA");
   }
 
-  private final Map<String, CaptureMap> receivedEvents = new HashMap<>();
+  private final Map<String, CaptureMap> capturdMessages = new HashMap<>();
   private final Map<String, Object> receivedUpdates = new HashMap<>();
   private final Queue<Entry> logEntryQueue = new LinkedBlockingDeque<>();
   private final Stack<String> waitingCondition = new Stack<>();
@@ -354,7 +354,6 @@ public class SequenceBase {
   private int lastStatusLevel;
   private final CaptureMap otherEvents = new CaptureMap();
   private final AtomicBoolean waitingForConfigSync = new AtomicBoolean();
-  protected final Map<String, AtomicInteger> captureMap = new ConcurrentHashMap<>();
   private static String sessionPrefix;
   private static Scoring scoringResult;
   private Date configStateStart;
@@ -523,7 +522,13 @@ public class SequenceBase {
   }
 
   private static String messageCaptureBase(Envelope attributes) {
-    return format("%s_%s", attributes.subType, attributes.subFolder);
+    return messageCaptureBase(attributes.subType, attributes.subFolder);
+  }
+
+  private static String messageCaptureBase(SubType subType, SubFolder subFolder) {
+    SubType useType = ofNullable(subType).orElse(SubType.INVALID);
+    SubFolder useFolder = ofNullable(subFolder).orElse(SubFolder.INVALID);
+    return format("%s_%s", useType, useFolder);
   }
 
   private static void emitSequenceResult(SequenceResult result, String bucket, String name,
@@ -855,7 +860,7 @@ public class SequenceBase {
     // Do this late in the sequence to make sure any state is cleared out from previous test.
     startStateCount = getStateUpdateCount();
     startCaptureTime = System.currentTimeMillis();
-    clearReceivedEvents();
+    resetCapturedMessages();
     validationResults.clear();
 
     waitForConfigSync();
@@ -1167,7 +1172,6 @@ public class SequenceBase {
 
     String captureKey = format("%s_%s_%s_%s", envelope.deviceRegistryId, envelope.deviceId,
         envelope.subType.value(), envelope.subFolder.value());
-    captureMap.computeIfAbsent(captureKey, k -> new AtomicInteger()).incrementAndGet();
 
     String contents = message instanceof String ? (String) message : stringify(message);
 
@@ -1901,7 +1905,7 @@ public class SequenceBase {
     debug("Received command " + commandSignature + " as " + transactionId);
 
     boolean targetDevice = getDeviceId().equals(deviceId);
-    boolean proxiedDevice = !targetDevice && receivedEvents.containsKey(deviceId);
+    boolean proxiedDevice = !targetDevice && capturdMessages.containsKey(deviceId);
 
     if (!targetDevice && !proxiedDevice) {
       return;
@@ -1962,8 +1966,9 @@ public class SequenceBase {
   }
 
   private void handleProxyMessage(String deviceId, Envelope envelope, Map<String, Object> message) {
-    info(format("Handling proxy device %s %s message", deviceId, envelope.subFolder.value()));
-    getReceivedEvents(deviceId, envelope.subFolder).add(message);
+    String messageKey = messageCaptureBase(envelope);
+    info(format("Capturing proxy device %s %s message", deviceId, messageKey));
+    getCapturedMessages(deviceId, messageKey).add(message);
   }
 
   private void validateMessage(Envelope attributes, Map<String, Object> message) {
@@ -2212,7 +2217,7 @@ public class SequenceBase {
   }
 
   private void handleEventMessage(SubFolder subFolder, Map<String, Object> message) {
-    getReceivedEvents(ofNullable(subFolder).orElse(SubFolder.INVALID)).add(message);
+    getCapturedMessageType(messageCaptureBase(SubType.EVENTS, subFolder)).add(message);
     if (SubFolder.SYSTEM.equals(subFolder)) {
       writeSystemLogs(convertTo(SystemEvents.class, message));
     }
@@ -2337,8 +2342,8 @@ public class SequenceBase {
    * @return Number of messages
    */
   protected int countReceivedEvents(Class<?> clazz) {
-    SubFolder subFolder = CLASS_SUBFOLDER_MAP.get(clazz);
-    List<Map<String, Object>> events = getReceivedEvents(subFolder);
+    String messageKey = messageCaptureBase(SubType.EVENTS, CLASS_EVENT_SUBTYPE_MAP.get(clazz));
+    List<Map<String, Object>> events = getCapturedMessageType(messageKey);
     if (events == null) {
       return 0;
     }
@@ -2346,8 +2351,8 @@ public class SequenceBase {
   }
 
   protected <T> List<T> popReceivedEvents(Class<T> clazz) {
-    SubFolder subFolder = CLASS_SUBFOLDER_MAP.get(clazz);
-    List<Map<String, Object>> events = getReceivedEvents().remove(subFolder);
+    String messageKey = messageCaptureBase(SubType.EVENTS, CLASS_EVENT_SUBTYPE_MAP.get(clazz));
+    List<Map<String, Object>> events = getCapturedMessages().remove(messageKey);
     if (events == null) {
       return ImmutableList.of();
     }
@@ -2584,33 +2589,39 @@ public class SequenceBase {
   }
 
   public Set<String> getReceivedDevices() {
-    return receivedEvents.entrySet().stream().filter(entry -> !entry.getValue().isEmpty())
+    return capturdMessages.entrySet().stream().filter(entry -> !entry.getValue().isEmpty())
         .map(Map.Entry::getKey).collect(toSet());
   }
 
   protected void captureReceivedEventsFor(Set<String> proxyDevices) {
-    proxyDevices.forEach(proxyId -> receivedEvents.put(proxyId, new CaptureMap()));
+    proxyDevices.forEach(proxyId -> capturdMessages.put(proxyId, new CaptureMap()));
   }
 
-  public List<Map<String, Object>> getReceivedEvents(String deviceId, SubFolder subFolder) {
-    return getReceivedEvents(deviceId).computeIfAbsent(subFolder, key -> new ArrayList<>());
+  public List<Map<String, Object>> getCapturedMessages(String deviceId, String messageKey) {
+    return getCapturedMessageDevice(deviceId).computeIfAbsent(messageKey, key -> new ArrayList<>());
   }
 
-  public List<Map<String, Object>> getReceivedEvents(SubFolder subFolder) {
-    return getReceivedEvents(getDeviceId(), subFolder);
+  public List<Map<String, Object>> getCapturedMessageType(String messageKey) {
+    return getCapturedMessages(getDeviceId(), messageKey);
   }
 
-  public CaptureMap getReceivedEvents() {
-    return getReceivedEvents(getDeviceId());
+  public CaptureMap getCapturedMessages() {
+    return getCapturedMessageDevice(getDeviceId());
   }
 
-  public CaptureMap getReceivedEvents(String deviceId) {
-    return ofNullable(receivedEvents.get(deviceId)).orElse(otherEvents);
+  public CaptureMap getCapturedMessageDevice(String deviceId) {
+    return ofNullable(capturdMessages.get(deviceId)).orElse(otherEvents);
   }
 
-  private void clearReceivedEvents() {
-    receivedEvents.clear();
-    receivedEvents.put(getDeviceId(), new CaptureMap());
+  protected HashMap<String, CaptureMap> flushCapturedMessages() {
+    HashMap<String, CaptureMap> messages = new HashMap<>(capturdMessages);
+    capturdMessages.clear();
+    return messages;
+  }
+
+  private void resetCapturedMessages() {
+    capturdMessages.clear();
+    capturdMessages.put(getDeviceId(), new CaptureMap());
     otherEvents.clear();
   }
 
@@ -2678,7 +2689,7 @@ public class SequenceBase {
   /**
    * Map of captured messages for a device, grouped by SubFolder.
    */
-  protected static class CaptureMap extends HashMap<SubFolder, List<Map<String, Object>>> {
+  protected static class CaptureMap extends HashMap<String, List<Map<String, Object>>> {
 
   }
 
