@@ -354,6 +354,7 @@ public class SequenceBase {
   private int lastStatusLevel;
   private final CaptureMap otherEvents = new CaptureMap();
   private final AtomicBoolean waitingForConfigSync = new AtomicBoolean();
+  protected final Map<String, AtomicInteger> captureMap = new ConcurrentHashMap<>();
   private static String sessionPrefix;
   private static Scoring scoringResult;
   private Date configStateStart;
@@ -1163,6 +1164,10 @@ public class SequenceBase {
 
     String messageBase = messageCaptureBase(envelope);
     boolean isFallbackRegistry = FALLBACK_REGISTRY_MARK.equals(envelope.source);
+
+    String captureKey = format("%s_%s_%s_%s", envelope.deviceRegistryId, envelope.deviceId,
+        envelope.subType.value(), envelope.subFolder.value());
+    captureMap.computeIfAbsent(captureKey, k -> new AtomicInteger()).incrementAndGet();
 
     String contents = message instanceof String ? (String) message : stringify(message);
 

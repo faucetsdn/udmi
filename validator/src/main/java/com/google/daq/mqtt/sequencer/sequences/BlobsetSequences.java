@@ -11,6 +11,7 @@ import static com.google.udmi.util.JsonUtil.getNowInstant;
 import static com.google.udmi.util.JsonUtil.isoConvert;
 import static com.google.udmi.util.JsonUtil.stringify;
 import static java.lang.String.format;
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotEquals;
 import static udmi.schema.Bucket.ENDPOINT_CONFIG;
 import static udmi.schema.Bucket.SYSTEM_MODE;
@@ -235,14 +236,17 @@ public class BlobsetSequences extends SequenceBase {
   @ValidateSchema(SubFolder.BLOBSET)
   @Test(timeout = TWO_MINUTES_MS)
   public void endpoint_connection_no_alternate() {
-    check_endpoint_connection_success(false, true);
+    int alternatesReceived = check_endpoint_connection_success(false, true);
+    // TODO: This is wrong, counting the wrong thing.
+    assertEquals("messages received during alternate", 10, alternatesReceived);
   }
 
   @Test(timeout = TWO_MINUTES_MS)
   @Feature(stage = PREVIEW, bucket = ENDPOINT_CONFIG)
   @Summary("Check connection to an alternate project.")
   public void endpoint_connection_success_alternate() {
-    check_endpoint_connection_success(false, false);
+    int alternatesReceived = check_endpoint_connection_success(false, false);
+    assertEquals("messages received during alternate", 10, alternatesReceived);
   }
 
   @Test(timeout = THREE_MINUTES_MS)
@@ -260,7 +264,7 @@ public class BlobsetSequences extends SequenceBase {
     untilClearedRedirect();
   }
 
-  private void check_endpoint_connection_success(boolean doRestart, boolean useInvalidRegistry) {
+  private int check_endpoint_connection_success(boolean doRestart, boolean useInvalidRegistry) {
     // Phase one: initiate connection to alternate registry.
     waitUntil("initial last_config matches config timestamp", this::lastConfigUpdated);
 
@@ -271,6 +275,9 @@ public class BlobsetSequences extends SequenceBase {
     untilCompletedRedirect(endPhase, useInvalidRegistry);
 
     withAlternateClient(useInvalidRegistry, () -> {
+      // Clear this to only test what is captured while using the alternate client.
+      captureMap.clear();
+
       // Phase two: verify connection to alternate registry.
       untilCompletedRedirect(BlobPhase.FINAL, useInvalidRegistry);
 
@@ -294,6 +301,10 @@ public class BlobsetSequences extends SequenceBase {
       untilSuccessfulRedirect(BlobPhase.APPLY);
     });
 
+    // Check this now so as not to count any more messages captured.
+    int received = captureMap.size();
+    debug(format("Received %d messages during alternate phase", received));
+
     ifTrueThen(useInvalidRegistry,
         () -> setDeviceConfigEndpointBlob(getAlternateEndpointHostname(), registryId, false));
 
@@ -303,6 +314,8 @@ public class BlobsetSequences extends SequenceBase {
       waitUntil("restored last_config matches config timestamp", this::lastConfigUpdated);
       untilClearedRedirect();
     });
+
+    return received;
   }
 
   private void waitDuration(String reason, Duration duration) {
