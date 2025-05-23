@@ -2601,12 +2601,12 @@ public class SequenceBase {
     return getCapturedMessageDevice(deviceId).computeIfAbsent(messageKey, key -> new ArrayList<>());
   }
 
-  public List<Map<String, Object>> getCapturedMessageType(String messageKey) {
-    return getCapturedMessages(getDeviceId(), messageKey);
-  }
-
   public CaptureMap getCapturedMessages() {
     return getCapturedMessageDevice(getDeviceId());
+  }
+
+  public List<Map<String, Object>> getCapturedMessageType(String messageKey) {
+    return getCapturedMessages(getDeviceId(), messageKey);
   }
 
   public CaptureMap getCapturedMessageDevice(String deviceId) {

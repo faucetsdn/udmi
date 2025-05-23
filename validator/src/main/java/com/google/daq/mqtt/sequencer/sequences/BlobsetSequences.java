@@ -11,7 +11,6 @@ import static com.google.udmi.util.JsonUtil.getNowInstant;
 import static com.google.udmi.util.JsonUtil.isoConvert;
 import static com.google.udmi.util.JsonUtil.stringify;
 import static java.lang.String.format;
-import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotEquals;
 import static udmi.schema.Bucket.ENDPOINT_CONFIG;
 import static udmi.schema.Bucket.SYSTEM_MODE;
@@ -261,7 +260,8 @@ public class BlobsetSequences extends SequenceBase {
     untilClearedRedirect();
   }
 
-  private HashMap<String, CaptureMap> check_endpoint_connection_success(boolean doRestart, boolean useInvalidRegistry) {
+  private HashMap<String, CaptureMap> check_endpoint_connection_success(boolean doRestart,
+      boolean useInvalidRegistry) {
     // Phase one: initiate connection to alternate registry.
     waitUntil("initial last_config matches config timestamp", this::lastConfigUpdated);
 
