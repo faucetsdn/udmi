@@ -2613,12 +2613,13 @@ public class SequenceBase {
   protected HashMap<String, CaptureMap> flushCapturedMessages() {
     HashMap<String, CaptureMap> messages = new HashMap<>(capturdMessages);
     capturdMessages.clear();
+    captureReceivedEventsFor(messages.keySet());
     return messages;
   }
 
   private void resetCapturedMessages() {
     capturdMessages.clear();
-    capturdMessages.put(getDeviceId(), new CaptureMap());
+    captureReceivedEventsFor(ImmutableSet.of(getDeviceId()));
     otherEvents.clear();
   }
 

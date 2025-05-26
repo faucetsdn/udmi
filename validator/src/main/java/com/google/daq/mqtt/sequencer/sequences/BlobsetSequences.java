@@ -10,6 +10,7 @@ import static com.google.udmi.util.GeneralUtils.sha256;
 import static com.google.udmi.util.JsonUtil.getNowInstant;
 import static com.google.udmi.util.JsonUtil.isoConvert;
 import static com.google.udmi.util.JsonUtil.stringify;
+import static com.google.udmi.util.JsonUtil.stringifyTerse;
 import static java.lang.String.format;
 import static org.junit.Assert.assertNotEquals;
 import static udmi.schema.Bucket.ENDPOINT_CONFIG;
@@ -235,7 +236,9 @@ public class BlobsetSequences extends SequenceBase {
   @ValidateSchema(SubFolder.BLOBSET)
   @Test(timeout = TWO_MINUTES_MS)
   public void endpoint_connection_no_alternate() {
-    check_endpoint_connection_success(false, true);
+    HashMap<String, CaptureMap> captureMaps = check_endpoint_connection_success(false,
+        true);
+    debug("Capture Maps: " + stringify(captureMaps));
   }
 
   @Test(timeout = TWO_MINUTES_MS)
