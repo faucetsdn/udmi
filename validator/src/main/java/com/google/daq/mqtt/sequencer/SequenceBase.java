@@ -1170,9 +1170,6 @@ public class SequenceBase {
     String messageBase = messageCaptureBase(envelope);
     boolean isFallbackRegistry = FALLBACK_REGISTRY_MARK.equals(envelope.source);
 
-    String captureKey = format("%s_%s_%s_%s", envelope.deviceRegistryId, envelope.deviceId,
-        envelope.subType.value(), envelope.subFolder.value());
-
     String contents = message instanceof String ? (String) message : stringify(message);
 
     if (!isFallbackRegistry) {
