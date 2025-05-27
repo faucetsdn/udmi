@@ -1162,10 +1162,11 @@ public class SequenceBase {
     }
   }
 
-  private boolean captureMessage(String deviceId, boolean backupRegistry, String messageKey,
-      Map<String, Object> message) {
-    debug(format("Capturing %s message %s", deviceId, messageKey));
-    return getCapturedMessagesList(deviceId, messageKey).add(message);
+  private boolean captureMessage(Envelope envelope, Map<String, Object> message) {
+    String deviceId = envelope.deviceId;
+    String messageBase = messageCaptureBase(envelope);
+    debug(format("Capturing %s message %s", deviceId, messageBase));
+    return getCapturedMessagesList(deviceId, messageBase).add(message);
   }
 
   private void recordMessageFile(Envelope envelope, String fileSuffix, Object message) {
@@ -1967,7 +1968,7 @@ public class SequenceBase {
   }
 
   private void handleProxyMessage(String deviceId, Envelope envelope, Map<String, Object> message) {
-    captureMessage(deviceId, isBackupMessage(envelope), messageCaptureBase(envelope), message);
+    captureMessage(envelope, message);
   }
 
   private void validateMessage(Envelope attributes, Map<String, Object> message) {
@@ -2061,8 +2062,7 @@ public class SequenceBase {
         info(format("Updated config #%03d", updateCount), changeUpdate);
         debug(format("Expected last_config now %s", isoConvert(deviceConfig.timestamp)));
       } else if (converted instanceof State convertedState) {
-        captureMessage(getDeviceId(), isBackupMessage(envelope),
-            messageCaptureBase(SubType.STATE, UPDATE), message);
+        captureMessage(envelope, message);
         String timestamp = isoConvert(convertedState.timestamp);
         if (convertedState.timestamp == null) {
           warning("No timestamp in state message, rejecting.");
@@ -2220,7 +2220,7 @@ public class SequenceBase {
   }
 
   private void handleEventMessage(Envelope envelope, Map<String, Object> message) {
-    captureMessage(getDeviceId(), isBackupMessage(envelope), messageCaptureBase(envelope), message);
+    captureMessage(envelope, message);
     if (SubFolder.SYSTEM.equals(envelope.subFolder)) {
       writeSystemLogs(convertTo(SystemEvents.class, message));
     }
