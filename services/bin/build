@@ -19,7 +19,7 @@ ROOT=$(dirname $0)/..
 UDMI_ROOT=..
 cd $ROOT
 
-jarfile=build/libs/bambi-1.0-SNAPSHOT-all.jar
+jarfile=build/libs/services-1.0-SNAPSHOT-all.jar
 
 if [[ ! -d $UDMI_ROOT/gencode ]]; then
     echo No gencode/ dir found, cowardly refusing to build.
@@ -43,10 +43,10 @@ cp -a ../schema build/schema/
 
 echo Java version $(java --version)
 
-echo Building bambi in $PWD
+echo Building services in $PWD
 
 ./gradlew shadow $check $covg $*
 
 ls -l $jarfile
 
-echo Done with bambi build.
+echo Done with services build.

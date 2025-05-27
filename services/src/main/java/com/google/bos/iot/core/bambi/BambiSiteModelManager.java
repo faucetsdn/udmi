@@ -159,7 +159,7 @@ public class BambiSiteModelManager {
         spreadsheetManager.writeToRange(entry.getKey().getName(), entry.getValue());
       }
     } catch (IOException e) {
-      LOGGER.error("exception while writing device metadata to spreasheet {}", e.getMessage());
+      LOGGER.error("exception while writing device metadata to spreadsheet {}", e.getMessage());
     }
   }
 

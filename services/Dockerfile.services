@@ -18,7 +18,7 @@ ADD build/schema/ schema/
 ENV NO_CACHE_DIR=true
 RUN bin/setup_base
 
-ADD bin/ bambi/bin/
-ADD build/libs bambi/build/libs/
+ADD bin/ services/bin/
+ADD build/libs services/build/libs/
 
-CMD ["/root/bambi/bin/bambi_service"]
+CMD ["/root/services/bin/bambi_service"]

@@ -32,6 +32,10 @@ if [[ -z $LOCAL ]]; then
     gcloud config set account "$GCP_SERVICE_ACCOUNT"
     git config --global user.email "$GCP_SERVICE_ACCOUNT"
     git config --global user.name "BAMBI backend runner ${UDMI_PREFIX#\~}"
+else
+  [[ ! -d $UDMI_ROOT/services/src ]] ||
+      up_to_date "$SERVICES_JAR" "$UDMI_ROOT"/services/src ||
+      "$UDMI_ROOT"/services/bin/build
 fi
 
 BAMBI_REQUESTS_TOPIC=${UDMI_PREFIX}bambi-requests

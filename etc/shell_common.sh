@@ -84,7 +84,7 @@ function pubber_bg {
 UDMI_ROOT=$(realpath $UDMI_ROOT)
 
 UDMI_JAR=$UDMI_ROOT/validator/build/libs/validator-1.0-SNAPSHOT-all.jar
-BAMBI_JAR=$UDMI_ROOT/bambi/build/libs/bambi-1.0-SNAPSHOT-all.jar
+SERVICES_JAR=$UDMI_ROOT/services/build/libs/services-1.0-SNAPSHOT-all.jar
 VERSION_BASE='1.*'
 
 # Ignore non-version branches (e.g. something like 'develop'), but include dirty info.
@@ -110,21 +110,21 @@ function stream_to_gsheets {
     local tool_name=$1
     local sheet_id=$2
     timestamp=$(date +%Y%m%d_%H%M%S)
-    java -cp "$BAMBI_JAR" "com.google.udmi.util.SheetsOutputStream" "$tool_name" \
+    java -cp "$SERVICES_JAR" "com.google.udmi.util.SheetsOutputStream" "$tool_name" \
         "$sheet_id" "$tool_name.$timestamp.log"
 }
 
 function sync_disk_site_model_to_bambi {
     local spreadsheet_id=$1
     local local_path_to_site_model=$2
-    java -cp "$BAMBI_JAR" "com.google.bos.iot.core.bambi.BambiSync" \
+    java -cp "$SERVICES_JAR" "com.google.bos.iot.core.bambi.BambiSync" \
         "$spreadsheet_id" "$local_path_to_site_model"
 }
 
 function sync_bambi_site_model_to_disk {
     local spreadsheet_id=$1
     local local_path_to_site_model=$2
-    java -cp "$BAMBI_JAR" "com.google.bos.iot.core.bambi.LocalDiskSync" \
+    java -cp "$SERVICES_JAR" "com.google.bos.iot.core.bambi.LocalDiskSync" \
         "$spreadsheet_id" "$local_path_to_site_model"
 }
 
