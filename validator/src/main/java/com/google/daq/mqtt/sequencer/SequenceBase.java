@@ -309,7 +309,7 @@ public class SequenceBase {
         "ALPHA functions version should not be > BETA");
   }
 
-  private final Map<String, CaptureMap> capturdMessages = new HashMap<>();
+  private final Map<String, CaptureMap> capturedMessages = new HashMap<>();
   private final Map<String, Object> receivedUpdates = new HashMap<>();
   private final Queue<Entry> logEntryQueue = new LinkedBlockingDeque<>();
   private final Stack<String> waitingCondition = new Stack<>();
@@ -1093,7 +1093,7 @@ public class SequenceBase {
   }
 
   private void recordMessageAttributes(Envelope attributes) {
-    captureMessage(attributes, ATTRIBUTE_SUFFIX, attributes);
+    recordMessageFile(attributes, ATTRIBUTE_SUFFIX, attributes);
   }
 
   private void unwrapException(Map<String, Object> message, Envelope attributes) {
@@ -1107,7 +1107,7 @@ public class SequenceBase {
     Map<String, Object> objectMap = JsonUtil.OBJECT_MAPPER.convertValue(message,
         new TypeReference<>() {
         });
-    captureMessage(attributes, JSON_SUFFIX, objectMap);
+    recordMessageFile(attributes, JSON_SUFFIX, objectMap);
   }
 
   private void recordRawMessage(Envelope attributes, Map<String, Object> message) {
@@ -1135,7 +1135,7 @@ public class SequenceBase {
     if (message.containsKey(EXCEPTION_KEY)) {
       String exceptionMessage = (String) message.get(MESSAGE_KEY);
       Envelope exceptionWrapper = JsonUtil.fromString(Envelope.class, exceptionMessage);
-      captureMessage(attributes, JSON_SUFFIX, decodeBase64(exceptionWrapper.payload));
+      recordMessageFile(attributes, JSON_SUFFIX, decodeBase64(exceptionWrapper.payload));
       return;
     }
 
@@ -1145,7 +1145,7 @@ public class SequenceBase {
       if (savedException instanceof Exception) {
         message.put(EXCEPTION_KEY, ((Exception) savedException).getMessage());
       }
-      captureMessage(attributes, JSON_SUFFIX, message);
+      recordMessageFile(attributes, JSON_SUFFIX, message);
       if (systemEvents) {
         logSystemEvents(messageBase, message);
       } else {
@@ -1162,7 +1162,12 @@ public class SequenceBase {
     }
   }
 
-  private void captureMessage(Envelope envelope, String fileSuffix, Object message) {
+  private boolean captureMessage(String deviceId, String messageKey, Map<String, Object> message) {
+    debug(format("Capturing %s message %s", deviceId, messageKey));
+    return getCapturedMessagesList(deviceId, messageKey).add(message);
+  }
+
+  private void recordMessageFile(Envelope envelope, String fileSuffix, Object message) {
     if (testName == null || !recordMessages) {
       return;
     }
@@ -1902,7 +1907,7 @@ public class SequenceBase {
     debug("Received command " + commandSignature + " as " + transactionId);
 
     boolean targetDevice = getDeviceId().equals(deviceId);
-    boolean proxiedDevice = !targetDevice && capturdMessages.containsKey(deviceId);
+    boolean proxiedDevice = !targetDevice && capturingMessagesFor(deviceId);
 
     if (!targetDevice && !proxiedDevice) {
       return;
@@ -1963,9 +1968,7 @@ public class SequenceBase {
   }
 
   private void handleProxyMessage(String deviceId, Envelope envelope, Map<String, Object> message) {
-    String messageKey = messageCaptureBase(envelope);
-    info(format("Capturing proxy device %s %s message", deviceId, messageKey));
-    getCapturedMessages(deviceId, messageKey).add(message);
+    captureMessage(deviceId, messageCaptureBase(envelope), message);
   }
 
   private void validateMessage(Envelope attributes, Map<String, Object> message) {
@@ -2061,6 +2064,7 @@ public class SequenceBase {
         info(format("Updated config #%03d", updateCount), changeUpdate);
         debug(format("Expected last_config now %s", isoConvert(deviceConfig.timestamp)));
       } else if (converted instanceof State convertedState) {
+        captureMessage(getDeviceId(), messageCaptureBase(SubType.STATE, UPDATE), message);
         String timestamp = isoConvert(convertedState.timestamp);
         if (convertedState.timestamp == null) {
           warning("No timestamp in state message, rejecting.");
@@ -2145,7 +2149,7 @@ public class SequenceBase {
 
   private void writeViolationsFile(Envelope envelope, Map<String, String> newViolations) {
     String violationsString = Joiner.on("\n").join(newViolations.values());
-    captureMessage(envelope, VIOLATIONS_SUFFIX, violationsString);
+    recordMessageFile(envelope, VIOLATIONS_SUFFIX, violationsString);
   }
 
   private boolean changeAllowed(DiffEntry change) {
@@ -2214,7 +2218,7 @@ public class SequenceBase {
   }
 
   private void handleEventMessage(SubFolder subFolder, Map<String, Object> message) {
-    getCapturedMessageType(messageCaptureBase(SubType.EVENTS, subFolder)).add(message);
+    captureMessage(getDeviceId(), messageCaptureBase(SubType.EVENTS, subFolder), message);
     if (SubFolder.SYSTEM.equals(subFolder)) {
       writeSystemLogs(convertTo(SystemEvents.class, message));
     }
@@ -2340,7 +2344,7 @@ public class SequenceBase {
    */
   protected int countReceivedEvents(Class<?> clazz) {
     String messageKey = messageCaptureBase(SubType.EVENTS, CLASS_EVENT_SUBTYPE_MAP.get(clazz));
-    List<Map<String, Object>> events = getCapturedMessageType(messageKey);
+    List<Map<String, Object>> events = getCapturedMessagesList(getDeviceId(), messageKey);
     if (events == null) {
       return 0;
     }
@@ -2349,7 +2353,7 @@ public class SequenceBase {
 
   protected <T> List<T> popReceivedEvents(Class<T> clazz) {
     String messageKey = messageCaptureBase(SubType.EVENTS, CLASS_EVENT_SUBTYPE_MAP.get(clazz));
-    List<Map<String, Object>> events = getCapturedMessages().remove(messageKey);
+    List<Map<String, Object>> events = getCaptureMap(getDeviceId()).remove(messageKey);
     if (events == null) {
       return ImmutableList.of();
     }
@@ -2585,41 +2589,37 @@ public class SequenceBase {
     SENT_CONFIG_DIFFERNATOR.mapSemanticKey(keyPath, keyName, description, describedValue);
   }
 
-  public Set<String> getReceivedDevices() {
-    return capturdMessages.entrySet().stream().filter(entry -> !entry.getValue().isEmpty())
+  public Set<String> getDevicesWithCapturedMessages() {
+    return capturedMessages.entrySet().stream().filter(entry -> !entry.getValue().isEmpty())
         .map(Map.Entry::getKey).collect(toSet());
   }
 
-  protected void captureReceivedEventsFor(Set<String> proxyDevices) {
-    proxyDevices.forEach(proxyId -> capturdMessages.put(proxyId, new CaptureMap()));
+  protected void enableCapturedMessagesFor(Set<String> proxyDevices) {
+    proxyDevices.forEach(proxyId -> capturedMessages.put(proxyId, new CaptureMap()));
   }
 
-  public List<Map<String, Object>> getCapturedMessages(String deviceId, String messageKey) {
-    return getCapturedMessageDevice(deviceId).computeIfAbsent(messageKey, key -> new ArrayList<>());
+  private boolean capturingMessagesFor(String deviceId) {
+    return capturedMessages.containsKey(deviceId);
   }
 
-  public CaptureMap getCapturedMessages() {
-    return getCapturedMessageDevice(getDeviceId());
+  public CaptureMap getCaptureMap(String deviceId) {
+    return ofNullable(capturedMessages.get(deviceId)).orElse(otherEvents);
   }
 
-  public List<Map<String, Object>> getCapturedMessageType(String messageKey) {
-    return getCapturedMessages(getDeviceId(), messageKey);
-  }
-
-  public CaptureMap getCapturedMessageDevice(String deviceId) {
-    return ofNullable(capturdMessages.get(deviceId)).orElse(otherEvents);
+  public List<Map<String, Object>> getCapturedMessagesList(String deviceId, String messageKey) {
+    return getCaptureMap(deviceId).computeIfAbsent(messageKey, key -> new ArrayList<>());
   }
 
   protected HashMap<String, CaptureMap> flushCapturedMessages() {
-    HashMap<String, CaptureMap> messages = new HashMap<>(capturdMessages);
-    capturdMessages.clear();
-    captureReceivedEventsFor(messages.keySet());
+    HashMap<String, CaptureMap> messages = new HashMap<>(capturedMessages);
+    capturedMessages.clear();
+    enableCapturedMessagesFor(messages.keySet());
     return messages;
   }
 
   private void resetCapturedMessages() {
-    capturdMessages.clear();
-    captureReceivedEventsFor(ImmutableSet.of(getDeviceId()));
+    capturedMessages.clear();
+    enableCapturedMessagesFor(ImmutableSet.of(getDeviceId()));
     otherEvents.clear();
   }
 
@@ -2685,7 +2685,7 @@ public class SequenceBase {
   }
 
   /**
-   * Map of captured messages for a device, grouped by SubFolder.
+   * Map of captured messages for a device, grouped by combined message key.
    */
   protected static class CaptureMap extends HashMap<String, List<Map<String, Object>>> {
 

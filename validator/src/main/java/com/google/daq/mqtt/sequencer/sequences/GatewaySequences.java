@@ -84,7 +84,7 @@ public class GatewaySequences extends SequenceBase {
 
   private void waitForProxyMessages(SubFolder subFolder) {
     Set<String> proxyIds = ImmutableSet.copyOf(deviceMetadata.gateway.proxy_ids);
-    captureReceivedEventsFor(proxyIds);
+    enableCapturedMessagesFor(proxyIds);
 
     proxyIds.forEach(this::updateProxyConfig);
 
@@ -95,7 +95,7 @@ public class GatewaySequences extends SequenceBase {
           : format("Missing %s from %s", subFolder.value(), CSV_JOINER.join(remainingTargets));
     });
 
-    Set<String> receivedDevices = getReceivedDevices();
+    Set<String> receivedDevices = getDevicesWithCapturedMessages();
     SetView<String> difference = difference(difference(receivedDevices, proxyIds),
         ImmutableSet.of(getDeviceId()));
     assertTrue("unexpected proxy device: " + CSV_JOINER.join(difference), difference.isEmpty());
@@ -115,8 +115,9 @@ public class GatewaySequences extends SequenceBase {
 
   private Set<String> receivedDevices(Set<String> proxyIds, SubFolder subFolder) {
     return proxyIds.stream().filter(deviceId -> {
-      CaptureMap receivedEvents = getCapturedMessageDevice(deviceId);
-      return !ofNullable(receivedEvents.get(subFolder)).map(List::isEmpty).orElse(true);
+      CaptureMap receivedEvents = getCaptureMap(deviceId);
+      String suffix = "_" + subFolder.value();
+      return receivedEvents.keySet().stream().anyMatch(key -> key.endsWith(suffix));
     }).collect(Collectors.toSet());
   }
 }
