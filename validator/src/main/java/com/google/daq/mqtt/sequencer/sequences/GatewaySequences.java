@@ -5,7 +5,6 @@ import static com.google.daq.mqtt.util.ConfigManager.configFrom;
 import static com.google.daq.mqtt.util.TimePeriodConstants.TWO_MINUTES_MS;
 import static com.google.udmi.util.GeneralUtils.CSV_JOINER;
 import static java.lang.String.format;
-import static java.util.Optional.ofNullable;
 import static org.junit.Assert.assertTrue;
 import static udmi.schema.Envelope.SubFolder.POINTSET;
 import static udmi.schema.Envelope.SubFolder.UPDATE;
@@ -19,7 +18,6 @@ import java.time.Duration;
 import java.time.temporal.ChronoUnit;
 import java.util.Date;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -95,7 +93,7 @@ public class GatewaySequences extends SequenceBase {
           : format("Missing %s from %s", subFolder.value(), CSV_JOINER.join(remainingTargets));
     });
 
-    Set<String> receivedDevices = getDevicesWithCapturedMessages();
+    Set<String> receivedDevices = getCapturedMessagesDevices();
     SetView<String> difference = difference(difference(receivedDevices, proxyIds),
         ImmutableSet.of(getDeviceId()));
     assertTrue("unexpected proxy device: " + CSV_JOINER.join(difference), difference.isEmpty());

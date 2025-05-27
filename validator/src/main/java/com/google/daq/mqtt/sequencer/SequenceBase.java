@@ -216,9 +216,9 @@ public class SequenceBase {
       PointsetEvents.class, SubFolder.POINTSET,
       DiscoveryEvents.class, SubFolder.DISCOVERY
   );
-  private static final Map<String, Class<?>> EXPECTED_UPDATES = ImmutableMap.of(
-      SubType.CONFIG.value(), Config.class,
-      SubType.STATE.value(), State.class
+  private static final Map<SubType, Class<?>> EXPECTED_UPDATES = ImmutableMap.of(
+      SubType.CONFIG, Config.class,
+      SubType.STATE, State.class
   );
   private static final Map<String, AtomicInteger> UPDATE_COUNTS = new HashMap<>();
   private static final String LOCAL_PREFIX = "local_";
@@ -1162,7 +1162,8 @@ public class SequenceBase {
     }
   }
 
-  private boolean captureMessage(String deviceId, String messageKey, Map<String, Object> message) {
+  private boolean captureMessage(String deviceId, boolean backupRegistry, String messageKey,
+      Map<String, Object> message) {
     debug(format("Capturing %s message %s", deviceId, messageKey));
     return getCapturedMessagesList(deviceId, messageKey).add(message);
   }
@@ -1907,7 +1908,7 @@ public class SequenceBase {
     debug("Received command " + commandSignature + " as " + transactionId);
 
     boolean targetDevice = getDeviceId().equals(deviceId);
-    boolean proxiedDevice = !targetDevice && capturingMessagesFor(deviceId);
+    boolean proxiedDevice = !targetDevice && isCapturingMessagesFor(deviceId);
 
     if (!targetDevice && !proxiedDevice) {
       return;
@@ -1927,6 +1928,8 @@ public class SequenceBase {
     if (isBackup) {
       debug(format("Received backup message %s: %s", commandSignature, stringifyTerse(message)));
       envelope.source = FALLBACK_REGISTRY_MARK;
+    } else {
+      envelope.source = null;
     }
 
     try {
@@ -1935,10 +1938,6 @@ public class SequenceBase {
 
       recordRawMessage(envelope, message);
 
-      if (isBackup) {
-        return;
-      }
-
       preprocessMessage(envelope, message);
 
       validateMessage(envelope, message);
@@ -1946,9 +1945,9 @@ public class SequenceBase {
       if (proxiedDevice) {
         handleProxyMessage(deviceId, envelope, message);
       } else if (UPDATE.value().equals(subFolderRaw)) {
-        handleUpdateMessage(envelope, subTypeRaw, message, transactionId);
+        handleUpdateMessage(envelope, message, transactionId);
       } else {
-        handleDeviceMessage(message, subTypeRaw, subFolderRaw, transactionId);
+        handleDeviceMessage(envelope, message, transactionId);
       }
 
       if (!waitingForConfigSync.get() && message.containsKey(EXCEPTION_KEY)) {
@@ -1968,7 +1967,7 @@ public class SequenceBase {
   }
 
   private void handleProxyMessage(String deviceId, Envelope envelope, Map<String, Object> message) {
-    captureMessage(deviceId, messageCaptureBase(envelope), message);
+    captureMessage(deviceId, isBackupMessage(envelope), messageCaptureBase(envelope), message);
   }
 
   private void validateMessage(Envelope attributes, Map<String, Object> message) {
@@ -1998,33 +1997,31 @@ public class SequenceBase {
     }
   }
 
-  private void handleDeviceMessage(Map<String, Object> message, String subTypeRaw,
-      String subFolderRaw, String transactionId) {
-    debug(format("Handling device message %s_%s %s", subTypeRaw, subFolderRaw, transactionId));
-    SubType subType = SubType.fromValue(requireNonNull(subTypeRaw, "missing subType"));
-    SubFolder subFolder = ifNotNullGet(subFolderRaw,
-        rawFolder -> SubFolder.fromValue(requireNonNull(rawFolder, "missing subFolder")));
-    switch (subType) {
+  private void handleDeviceMessage(Envelope envelope, Map<String, Object> message,
+      String transactionId) {
+    debug(format("Handling device message %s %s", messageCaptureBase(envelope), transactionId));
+    switch (envelope.subType) {
       // These are echos of sent partial config messages, so do nothing.
       case CONFIG -> trace("Ignoring echo configTransaction " + transactionId);
       // State updates are handled as a monolithic block with a state reflector update.
       case STATE -> trace("Ignoring partial state update");
-      case EVENTS -> handleEventMessage(subFolder, message);
-      default -> info("Encountered unexpected subType " + subTypeRaw);
+      case EVENTS -> handleEventMessage(envelope, message);
+      default -> info("Encountered unexpected subType " + envelope.subType);
     }
   }
 
-  private synchronized void handleUpdateMessage(Envelope envelope, String subTypeRaw,
+  private synchronized void handleUpdateMessage(Envelope envelope,
       Map<String, Object> message, String txnId) {
     try {
-      debug(format("Handling update message %s_update %s", subTypeRaw, txnId));
+      debug(format("Handling update message %s %s", messageCaptureBase(envelope), txnId));
 
       // Do this first to handle all cases of update payloads, including exceptions.
+      SubType subType = envelope.subType;
       if (txnId != null) {
-        if (CONFIG_SUBTYPE.equals(subTypeRaw)) {
+        if (SubType.CONFIG == subType) {
           ifTrueThen(configTransactions.remove(txnId),
               () -> debug("Removed configTransaction " + txnId));
-        } else if (STATE_SUBTYPE.equals(subTypeRaw) && txnId.startsWith(sessionPrefix)) {
+        } else if (SubType.STATE == subType && txnId.startsWith(sessionPrefix)) {
           String expected = stateTransaction.getAndSet(null);
           if (txnId.equals(expected)) {
             debug("Removed stateTransaction " + txnId);
@@ -2039,17 +2036,17 @@ public class SequenceBase {
         return;
       }
 
-      if (!EXPECTED_UPDATES.containsKey(subTypeRaw)) {
-        debug("Ignoring unexpected update type " + subTypeRaw);
+      if (!EXPECTED_UPDATES.containsKey(subType)) {
+        debug("Ignoring unexpected update type " + subType);
         return;
       }
-      Object converted = convertTo(EXPECTED_UPDATES.get(subTypeRaw), message);
+      Object converted = convertTo(EXPECTED_UPDATES.get(subType), message);
       if (REPLY.value().equals(message.get(OPERATION_KEY))) {
         debug("Ignoring operation reply " + txnId);
         return;
       }
-      getReceivedUpdates().put(subTypeRaw, converted);
-      int updateCount = getUpdateCount(subTypeRaw).incrementAndGet();
+      getReceivedUpdates().put(subType.value(), converted);
+      int updateCount = getUpdateCount(subType.value()).incrementAndGet();
       if (converted instanceof Config config) {
         String extraField = getExtraField(message);
         if (RESET_CONFIG_MARKER.equals(extraField)) {
@@ -2064,7 +2061,8 @@ public class SequenceBase {
         info(format("Updated config #%03d", updateCount), changeUpdate);
         debug(format("Expected last_config now %s", isoConvert(deviceConfig.timestamp)));
       } else if (converted instanceof State convertedState) {
-        captureMessage(getDeviceId(), messageCaptureBase(SubType.STATE, UPDATE), message);
+        captureMessage(getDeviceId(), isBackupMessage(envelope),
+            messageCaptureBase(SubType.STATE, UPDATE), message);
         String timestamp = isoConvert(convertedState.timestamp);
         if (convertedState.timestamp == null) {
           warning("No timestamp in state message, rejecting.");
@@ -2116,6 +2114,10 @@ public class SequenceBase {
     } catch (Exception e) {
       throw new RuntimeException("While handling reflector message", e);
     }
+  }
+
+  private static boolean isBackupMessage(Envelope envelope) {
+    return envelope.source != null;
   }
 
   protected void expectedStatusLevel(Level level) {
@@ -2217,9 +2219,9 @@ public class SequenceBase {
     return null;
   }
 
-  private void handleEventMessage(SubFolder subFolder, Map<String, Object> message) {
-    captureMessage(getDeviceId(), messageCaptureBase(SubType.EVENTS, subFolder), message);
-    if (SubFolder.SYSTEM.equals(subFolder)) {
+  private void handleEventMessage(Envelope envelope, Map<String, Object> message) {
+    captureMessage(getDeviceId(), isBackupMessage(envelope), messageCaptureBase(envelope), message);
+    if (SubFolder.SYSTEM.equals(envelope.subFolder)) {
       writeSystemLogs(convertTo(SystemEvents.class, message));
     }
   }
@@ -2589,7 +2591,7 @@ public class SequenceBase {
     SENT_CONFIG_DIFFERNATOR.mapSemanticKey(keyPath, keyName, description, describedValue);
   }
 
-  public Set<String> getDevicesWithCapturedMessages() {
+  public Set<String> getCapturedMessagesDevices() {
     return capturedMessages.entrySet().stream().filter(entry -> !entry.getValue().isEmpty())
         .map(Map.Entry::getKey).collect(toSet());
   }
@@ -2598,7 +2600,7 @@ public class SequenceBase {
     proxyDevices.forEach(proxyId -> capturedMessages.put(proxyId, new CaptureMap()));
   }
 
-  private boolean capturingMessagesFor(String deviceId) {
+  private boolean isCapturingMessagesFor(String deviceId) {
     return capturedMessages.containsKey(deviceId);
   }
 
@@ -2611,6 +2613,7 @@ public class SequenceBase {
   }
 
   protected HashMap<String, CaptureMap> flushCapturedMessages() {
+    debug("Flushing captured messages for " + capturedMessages.keySet());
     HashMap<String, CaptureMap> messages = new HashMap<>(capturedMessages);
     capturedMessages.clear();
     enableCapturedMessagesFor(messages.keySet());
