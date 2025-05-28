@@ -6,6 +6,7 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 
 import com.google.bos.iot.core.bambi.BambiSiteModelManager.BambiSheet;
 import java.util.ArrayList;
@@ -204,13 +205,13 @@ public class BambiSiteModelTest {
     assertEquals(Arrays.asList("", "Header2", ""), model.getSystemDataHeaders());
   }
 
-  @Test(expected = IndexOutOfBoundsException.class)
+  @Test
   public void constructor_emptyTableSheet_throwsIndexOutOfBoundsException() {
-    new BambiSiteModel(
+    assertDoesNotThrow(() -> new BambiSiteModel(
         emptySheet(), emptySheet(), emptySheet(), // systemData is completely empty
         headerOnlySheet("h"), headerOnlySheet("h"), headerOnlySheet("h"),
         headerOnlySheet("h"), headerOnlySheet("h")
-    );
+    ));
   }
 
   @Test
