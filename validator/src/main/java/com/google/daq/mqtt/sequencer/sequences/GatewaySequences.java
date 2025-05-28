@@ -71,17 +71,17 @@ public class GatewaySequences extends SequenceBase {
   @Summary("Check that a gateway proxies pointset events for indicated devices")
   @Test(timeout = TWO_MINUTES_MS)
   public void gateway_proxy_events() {
-    waitForProxyMessages(POINTSET);
+    waitForProxyMessages(SubType.EVENTS, POINTSET);
   }
 
   @Feature(stage = FeatureStage.PREVIEW, bucket = Bucket.GATEWAY, nostate = true)
   @Summary("Check that a gateway proxies state updates for indicated devices")
   @Test(timeout = TWO_MINUTES_MS)
   public void gateway_proxy_state() {
-    waitForProxyMessages(UPDATE);
+    waitForProxyMessages(SubType.STATE, UPDATE);
   }
 
-  private void waitForProxyMessages(SubFolder subFolder) {
+  private void waitForProxyMessages(SubType subType, SubFolder subFolder) {
     Set<String> proxyIds = ImmutableSet.copyOf(deviceMetadata.gateway.proxy_ids);
     enableCapturedMessagesFor(proxyIds);
 
@@ -90,7 +90,7 @@ public class GatewaySequences extends SequenceBase {
     String description = format("All proxy devices received %s", subFolder.value());
     waitUntil(description, MESSAGE_WAIT_DURATION, () -> {
       Set<String> remainingTargets = difference(proxyIds,
-          receivedDevices(proxyIds, SubType.EVENTS, subFolder));
+          receivedDevices(proxyIds, subType, subFolder));
       return remainingTargets.isEmpty() ? null
           : format("Missing %s from %s", subFolder.value(), CSV_JOINER.join(remainingTargets));
     });
