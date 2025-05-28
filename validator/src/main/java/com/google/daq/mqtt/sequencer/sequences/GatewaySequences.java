@@ -26,6 +26,7 @@ import org.junit.Test;
 import udmi.schema.Bucket;
 import udmi.schema.Config;
 import udmi.schema.Envelope.SubFolder;
+import udmi.schema.Envelope.SubType;
 import udmi.schema.FeatureDiscovery.FeatureStage;
 import udmi.schema.Metadata;
 
@@ -88,7 +89,8 @@ public class GatewaySequences extends SequenceBase {
 
     String description = format("All proxy devices received %s", subFolder.value());
     waitUntil(description, MESSAGE_WAIT_DURATION, () -> {
-      Set<String> remainingTargets = difference(proxyIds, receivedDevices(proxyIds, subFolder));
+      Set<String> remainingTargets = difference(proxyIds,
+          receivedDevices(proxyIds, SubType.EVENTS, subFolder));
       return remainingTargets.isEmpty() ? null
           : format("Missing %s from %s", subFolder.value(), CSV_JOINER.join(remainingTargets));
     });
@@ -111,11 +113,9 @@ public class GatewaySequences extends SequenceBase {
     return configFrom(proxyMetadata).deviceConfig();
   }
 
-  private Set<String> receivedDevices(Set<String> proxyIds, SubFolder subFolder) {
-    return proxyIds.stream().filter(deviceId -> {
-      CaptureMap receivedEvents = getCaptureMap(deviceId);
-      String suffix = "_" + subFolder.value();
-      return receivedEvents.keySet().stream().anyMatch(key -> key.endsWith(suffix));
-    }).collect(Collectors.toSet());
+  private Set<String> receivedDevices(Set<String> proxyIds, SubType subType, SubFolder subFolder) {
+    return proxyIds.stream().filter(deviceId ->
+            getCaptureMap(deviceId).containsKey(messageCaptureBase(subType, subFolder)))
+        .collect(Collectors.toSet());
   }
 }

@@ -525,7 +525,7 @@ public class SequenceBase {
     return messageCaptureBase(attributes.subType, attributes.subFolder);
   }
 
-  private static String messageCaptureBase(SubType subType, SubFolder subFolder) {
+  protected static String messageCaptureBase(SubType subType, SubFolder subFolder) {
     SubType useType = ofNullable(subType).orElse(SubType.INVALID);
     SubFolder useFolder = ofNullable(subFolder).orElse(SubFolder.INVALID);
     return format("%s_%s", useType, useFolder);
