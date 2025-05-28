@@ -16,6 +16,7 @@ Many tools take a [project spec](project_spec.md) as the second argument.
 - [validator](validator.md) - a utility for validating messages (GCP)
 - [gittools](gittools.md) - collection of utilities for working with git branches
 - [gcloud](gcloud.md) - various tips and tricks for working with gcloud on GCP
+- [bambi backend service](bambi_service.md) - a service to use Google Sheets as an interface to manage updates to the site model source repository 
 
 ## Setup
 
