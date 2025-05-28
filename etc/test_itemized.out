@@ -55,7 +55,7 @@
 1 RESULT pass discovery.scan scan_periodic_now_enumerate PREVIEW 10/10 Sequence complete
 4 RESULT fail gateway gateway_proxy_events BETA 0/10 Failed waiting until All proxy devices received pointset: Missing pointset from SNS-4, AHU-22
 1 RESULT pass gateway gateway_proxy_events BETA 10/10 Sequence complete
-1 RESULT pass gateway gateway_proxy_state PREVIEW 10/10 Failed waiting until All proxy devices received pointset: Missing pointset from SNS-4, AHU-22
+1 RESULT pass gateway gateway_proxy_state PREVIEW 10/10 Failed waiting until All proxy devices received update: Missing update from SNS-4, AHU-22
 4 RESULT skip system device_config_acked STABLE 0/0 No config check for proxy device
 1 RESULT pass gateway bad_target_family PREVIEW 10/10 Sequence complete
 1 RESULT pass gateway bad_target_address PREVIEW 10/10 Sequence complete
