@@ -1,0 +1,49 @@
+{
+  "version": "1.5.0",
+  "timestamp": "2018-08-26T21:39:29.364Z",
+  "system":{
+
+  },
+  "pointset": {
+    "points": {
+      "power_sensor": {
+        "families": {
+          "modbus": {
+            "offset": 1,
+            "data_type": "should really be an enumration but there is great variety between manufacturers. typically int64, int16u, float32, datetime (which might be a schnedier only thing and is actually composed of 3 different registers under the hood?), ...",
+            "bit": 1, // if binary
+            "number_of_registers": 2, // if variable
+            "multiplier": 1,
+            "constant": 0
+          }
+        }
+      }
+    }
+  },
+
+  "localnet": {
+    "families": {
+      // in priniciple there could be more than one modbus network?
+      // How does one know all the modbus devices are on the same network?
+      // If we care?
+      "modbus": {
+      
+        // This is the actual device
+        "addr": "100",
+        
+        // host machine specific specific
+        "serial_port": "usb0",
+
+        // These describe the modbus network itself
+        // Only modbus MSTP
+        "bit_rate": 9600,
+        "data_bits": "5|6|7|8",
+        "stop_bits": "1|1.5|2",
+        "parity": "none|odd|even|mark|space",
+        "encoding": "rtu|ascii"
+        
+        // There might be more options, e.g. flowContrlIn and flowControlOut
+      }
+    }
+  }
+}
