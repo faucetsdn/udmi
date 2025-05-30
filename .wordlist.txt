@@ -4,6 +4,7 @@ AHU
 anagement
 api
 APIs
+appscript
 ARP
 ascii
 auth
@@ -12,8 +13,9 @@ backend
 backoff
 bacnet
 BACnet
-BAMBI
 bambi
+BAMBI
+BAMBISheetsInterface
 blobset
 BMS
 BOS
@@ -113,6 +115,7 @@ parsers
 pointname
 pointset
 postfix
+pre
 prem
 Prem
 prepend
@@ -126,6 +129,8 @@ PUBACKs
 pubber
 PubSub
 pubsub
+PubSubPublisherWebApp
+py
 QoS
 Readme
 repo
@@ -176,6 +181,7 @@ unwriteable
 uplink
 url
 validator
+venv
 writeable
 writeback
 Writeback
