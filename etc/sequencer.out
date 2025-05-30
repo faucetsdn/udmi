@@ -2,9 +2,9 @@ RESULT pass discovery.scan scan_periodic_now_enumerate PREVIEW 10/10 Sequence co
 RESULT pass discovery.scan scan_single_future PREVIEW 10/10 Sequence complete
 RESULT pass discovery.scan scan_single_now PREVIEW 10/10 Sequence complete
 RESULT pass discovery.scan scan_single_past PREVIEW 10/10 Sequence complete
+RESULT pass endpoint.config endpoint_connection_bad_alternate ALPHA 10/10 Sequence complete
 RESULT pass endpoint.config endpoint_connection_bad_hash ALPHA 10/10 Sequence complete
 RESULT pass endpoint.config endpoint_connection_error PREVIEW 10/10 Sequence complete
-RESULT pass endpoint.config endpoint_connection_no_alternate ALPHA 10/10 Sequence complete
 RESULT pass endpoint.config endpoint_connection_retry PREVIEW 10/10 Sequence complete
 RESULT pass endpoint.config endpoint_connection_success_alternate PREVIEW 10/10 Sequence complete
 RESULT pass endpoint.config endpoint_connection_success_reconnect PREVIEW 10/10 Sequence complete
