@@ -4,6 +4,7 @@ import static com.google.common.base.Strings.isNullOrEmpty;
 import static com.google.daq.mqtt.util.TimePeriodConstants.THREE_MINUTES_MS;
 import static com.google.daq.mqtt.util.TimePeriodConstants.TWO_MINUTES_MS;
 import static com.google.udmi.util.GeneralUtils.encodeBase64;
+import static com.google.udmi.util.GeneralUtils.ifNotNullGet;
 import static com.google.udmi.util.GeneralUtils.ifTrueGet;
 import static com.google.udmi.util.GeneralUtils.ifTrueThen;
 import static com.google.udmi.util.GeneralUtils.sha256;
@@ -11,7 +12,9 @@ import static com.google.udmi.util.JsonUtil.getNowInstant;
 import static com.google.udmi.util.JsonUtil.isoConvert;
 import static com.google.udmi.util.JsonUtil.stringify;
 import static java.lang.String.format;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotEquals;
+import static org.junit.Assert.assertTrue;
 import static udmi.schema.Bucket.ENDPOINT_CONFIG;
 import static udmi.schema.Bucket.SYSTEM_MODE;
 import static udmi.schema.Category.BLOBSET_BLOB_APPLY;
@@ -28,6 +31,8 @@ import java.time.Duration;
 import java.time.Instant;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import org.junit.Before;
 import org.junit.Test;
 import udmi.schema.Auth_provider;
@@ -230,21 +235,28 @@ public class BlobsetSequences extends SequenceBase {
     });
   }
 
+  private boolean hasBackupStateUpdate(HashMap<String, CaptureMap> captureMaps) {
+    List<Map<String, Object>> stateUpdates = captureMaps.get(getDeviceId())
+        .get(STATE_UPDATE_MESSAGE_TYPE);
+    return ifNotNullGet(stateUpdates, updates -> updates.stream().anyMatch(this::isBackupSource),
+        false);
+  }
+
   @Feature(stage = ALPHA, bucket = ENDPOINT_CONFIG)
   @Summary("Failed connection never uses alternate registry.")
   @ValidateSchema(SubFolder.BLOBSET)
   @Test(timeout = TWO_MINUTES_MS)
-  public void endpoint_connection_no_alternate() {
-    HashMap<String, CaptureMap> captureMaps = check_endpoint_connection_success(false,
-        true);
-    debug("Capture Maps: " + stringify(captureMaps));
+  public void endpoint_connection_bad_alternate() {
+    HashMap<String, CaptureMap> capture = check_endpoint_connection_success(false, true);
+    assertTrue("no backup state update", hasBackupStateUpdate(capture));
   }
 
   @Test(timeout = TWO_MINUTES_MS)
   @Feature(stage = PREVIEW, bucket = ENDPOINT_CONFIG)
   @Summary("Check connection to an alternate project.")
   public void endpoint_connection_success_alternate() {
-    check_endpoint_connection_success(false, false);
+    HashMap<String, CaptureMap> capture = check_endpoint_connection_success(false, false);
+    assertFalse("found backup state update", hasBackupStateUpdate(capture));
   }
 
   @Test(timeout = THREE_MINUTES_MS)

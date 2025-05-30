@@ -22,6 +22,7 @@ import static com.google.udmi.util.GeneralUtils.CSV_JOINER;
 import static com.google.udmi.util.GeneralUtils.catchToElse;
 import static com.google.udmi.util.GeneralUtils.changedLines;
 import static com.google.udmi.util.GeneralUtils.decodeBase64;
+import static com.google.udmi.util.GeneralUtils.deepCopy;
 import static com.google.udmi.util.GeneralUtils.friendlyStackTrace;
 import static com.google.udmi.util.GeneralUtils.getTimestamp;
 import static com.google.udmi.util.GeneralUtils.ifNotNullGet;
@@ -279,6 +280,7 @@ public class SequenceBase {
   public static final String TRACE_SUBDIR = "trace";
   public static final String STRAY_SUBDIR = "stray";
   private static final long MESSAGE_POLL_SLEEP_MS = 1000;
+  private static final String MESSAGE_SOURCE_INDICATOR = "message_envelope_source_key";
   protected static Metadata deviceMetadata;
   protected static String projectId;
   protected static String cloudRegion;
@@ -1166,7 +1168,9 @@ public class SequenceBase {
     String deviceId = envelope.deviceId;
     String messageBase = messageCaptureBase(envelope);
     debug(format("Capturing %s message %s", deviceId, messageBase));
-    return getCapturedMessagesList(deviceId, messageBase).add(message);
+    Map<String, Object> messageCopy = deepCopy(message);
+    messageCopy.put(MESSAGE_SOURCE_INDICATOR, envelope.source);
+    return getCapturedMessagesList(deviceId, messageBase).add(messageCopy);
   }
 
   private void recordMessageFile(Envelope envelope, String fileSuffix, Object message) {
@@ -2673,6 +2677,10 @@ public class SequenceBase {
     } catch (Exception e) {
       throw new RuntimeException("While validating test specification", e);
     }
+  }
+
+  protected boolean isBackupSource(Map<String, Object> message) {
+    return FALLBACK_REGISTRY_MARK.equals(message.get(MESSAGE_SOURCE_INDICATOR));
   }
 
   /**
