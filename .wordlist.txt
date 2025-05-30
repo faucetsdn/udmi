@@ -5,6 +5,7 @@ anagement
 api
 APIs
 appscript
+appsscript
 ARP
 ascii
 auth
