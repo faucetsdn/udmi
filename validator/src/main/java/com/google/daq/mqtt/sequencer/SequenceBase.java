@@ -1598,6 +1598,9 @@ public class SequenceBase {
       Supplier<String> evaluator,
       AtomicReference<String> detail) {
 
+    // Initialize to avoid potential `null` if loop terminates immediately.
+    detail.set(evaluator.get());
+
     messageEvaluateLoop(maxWait, () -> {
       try {
         String result = evaluator.get();
