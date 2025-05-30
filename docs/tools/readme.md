@@ -23,3 +23,4 @@ Many tools take a [project spec](project_spec.md) as the second argument.
 - [Setup instructions (GCP)](setup.md) are provided to set up the local environment for using tools.
 - [sharding](sharding.md) - ability to run sequencer in shards for parallelism
 - [Output streaming](stream_to_gsheet.md) can be enabled to stream output from any tool to a Google Sheet
+- [BAMBI sheet setup instructions](bambi_appsscript.md) are provided to create a BAMBI Sheet to interact with the BAMBI backend service

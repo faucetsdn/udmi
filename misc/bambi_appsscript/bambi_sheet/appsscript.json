@@ -1,0 +1,27 @@
+{
+  "timeZone": "Asia/Kolkata",
+  "dependencies": {
+    "libraries": [
+      {
+        "userSymbol": "BOSPlatformLibraries",
+        "version": "1",
+        "libraryId": "1Dw1TtJVTFfBazkqYuTXGbj14mypAvMc4Of8wwteyhLc8W2KWXdAwQhYC",
+        "developmentMode": false
+      }
+    ],
+    "enabledAdvancedServices": [
+      {
+        "userSymbol": "Drive",
+        "version": "v3",
+        "serviceId": "drive"
+      },
+      {
+        "userSymbol": "Sheets",
+        "version": "v4",
+        "serviceId": "sheets"
+      }
+    ]
+  },
+  "exceptionLogging": "STACKDRIVER",
+  "runtimeVersion": "V8"
+}

@@ -1,0 +1,16 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <base target="_top">
+</head>
+<body>
+<div id="folder"></div>
+<script>
+  google.script.run
+      .withSuccessHandler(function(html) {
+        document.getElementById('folder').innerHTML = html;
+      })
+      .getFolderContent();
+</script>
+</body>
+</html>
