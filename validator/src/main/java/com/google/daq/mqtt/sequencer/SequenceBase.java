@@ -1357,11 +1357,6 @@ public class SequenceBase {
       String sentBlockConfig = String.valueOf(
           sentConfig.get(requireNonNull(subBlock, "subBlock not defined")));
       boolean updated = !actualizedData.equals(sentBlockConfig);
-      if (updated) {
-        debug("TAPX: updated " + subBlock);
-        debug("TAP1: " + sentBlockConfig);
-        debug("TAP2: " + actualizedData);
-      }
       trace(format("Updated check %s_%s: %s", CONFIG_SUBTYPE, subBlock, updated));
       if (updated) {
         String topic = subBlock + "/config";
