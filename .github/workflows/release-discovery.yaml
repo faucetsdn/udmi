@@ -4,9 +4,9 @@ on:
   push:
     branches:
       - '**'
-    paths: 
-      - misc/discoverynode/**
-      - .github.workflows/release-discovery.yaml
+    #paths: 
+    #  - misc/discoverynode/**
+    #  - .github.workflows/release-discovery.yaml
 
 jobs:
   buildenvs:
