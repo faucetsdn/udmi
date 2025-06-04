@@ -19,7 +19,7 @@ if [[ ! -f $DOCKERFILE_PATH ]]; then
 fi
 
 # Build if the image doesn't exist in the remot erepo
-docker manifest inspect $ref > /dev/null || shouldbuild=y
+docker manifest inspect $IMAGE_REF > /dev/null || shouldbuild=y
 
 # Else if there has been a change
 git diff --quiet HEAD HEAD~1 -- "$DOCKERFILE_PATH" || shouldbuild=y
