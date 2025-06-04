@@ -17,7 +17,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        container: [ "udmis", "validator", "pubber" ]
+        container: [ "udmis", "validator", "pubber", "services" ]
     env:
       PUSH_REGISTRY: ghcr.io
       CONTAINER: ${{ matrix.container }}
