@@ -34,4 +34,4 @@ if [[ $shouldbuild != y ]]; then
 fi
 
 docker build -f "$DOCKERFILE_PATH" -t $IMAGE_REF:latest .
-docker push $ref:latest
+docker push $IMAGE_REF:latest
