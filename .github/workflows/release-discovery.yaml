@@ -6,6 +6,7 @@ on:
       - '**'
     paths: 
       - misc/discoverynode/**
+      - .github.workflows/release-discovery.yaml
 
 jobs:
   buildenvs:
