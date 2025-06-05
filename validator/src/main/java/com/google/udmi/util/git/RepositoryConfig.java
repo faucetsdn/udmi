@@ -29,6 +29,10 @@ public record RepositoryConfig(String remoteUrl,
         credentialsProvider, null);
   }
 
+  public static RepositoryConfig forRemote(String remoteUrl, String localPath) {
+    return new RepositoryConfig(remoteUrl, localPath, RepositoryType.LOCAL_REMOTE, null, null);
+  }
+
   public static RepositoryConfig forGoogleCloudSourceRepoUrl(String remoteUrl, String localPath,
       CredentialsProvider credentialsProvider, String projectId) {
     return new RepositoryConfig(remoteUrl, localPath, RepositoryType.GOOGLE_CLOUD_SOURCE,

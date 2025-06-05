@@ -1,5 +1,7 @@
 package com.google.bos.iot.core.bambi;
 
+import static com.google.udmi.util.git.RepositoryConfig.forRemote;
+import static com.google.udmi.util.git.RepositoryConfig.fromGoogleCloudSourceRepoName;
 import static org.apache.commons.io.FileUtils.deleteDirectory;
 
 import com.google.daq.mqtt.util.MessagePublisher;
@@ -8,8 +10,8 @@ import com.google.daq.mqtt.validator.Validator.MessageBundle;
 import com.google.udmi.util.JsonUtil;
 import com.google.udmi.util.SheetsAppender;
 import com.google.udmi.util.SheetsOutputStream;
+import com.google.udmi.util.git.GenericGitRepository;
 import com.google.udmi.util.git.GoogleCloudSourceRepository;
-import com.google.udmi.util.git.RepositoryConfig;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -41,9 +43,17 @@ public class BambiService {
   private final String gcpProject;
   private final String siteModelCloneDir;
 
+  private final String localOriginDir;
+
   public BambiService(String gcpProject, String udmiNamespace, String siteModelBaseDir) {
+    this(gcpProject, udmiNamespace, siteModelBaseDir, null);
+  }
+
+  public BambiService(String gcpProject, String udmiNamespace, String siteModelBaseDir,
+      String localOriginDir) {
     this.gcpProject = gcpProject;
     this.siteModelCloneDir = siteModelBaseDir;
+    this.localOriginDir = localOriginDir;
 
     String udmiNamespacePrefix = Optional.ofNullable(udmiNamespace).map(ns -> ns + "~").orElse("");
     String requestsSubscription = udmiNamespacePrefix + "bambi-requests";
@@ -73,14 +83,19 @@ public class BambiService {
     String gcpProject = args[0];
     String siteModelBaseDir = args[1];
     String udmiNamespace = System.getenv("UDMI_NAMESPACE");
+    String localOriginDir = args.length == 3 ? args[2] : null;
 
     LOGGER.info(
         "Using GCP_PROJECT {}, UDMI_NAMESPACE {}, CLONE_DIR {}",
         gcpProject,
         udmiNamespace == null ? "<not set>" : udmiNamespace,
         siteModelBaseDir);
+    if (localOriginDir != null) {
+      LOGGER.info("Running in local origin mode...");
+    }
 
-    BambiService service = new BambiService(gcpProject, udmiNamespace, siteModelBaseDir);
+    BambiService service = new BambiService(gcpProject, udmiNamespace, siteModelBaseDir,
+        localOriginDir);
     service.start();
 
     Runtime.getRuntime()
@@ -178,8 +193,11 @@ public class BambiService {
           deleteDirectory(repoDirFile);
         }
 
-        try (GoogleCloudSourceRepository repository = new GoogleCloudSourceRepository(
-            RepositoryConfig.fromGoogleCloudSourceRepoName(registryId, repoDir, gcpProject))) {
+        try (GenericGitRepository repository = localOriginDir == null
+            ? new GoogleCloudSourceRepository(
+            fromGoogleCloudSourceRepoName(registryId, repoDir, gcpProject))
+            : new GenericGitRepository(
+                forRemote(Paths.get(localOriginDir, registryId).toString(), repoDir))) {
 
           repository.cloneRepo(importBranch);
 
