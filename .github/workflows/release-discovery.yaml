@@ -73,12 +73,12 @@ jobs:
           misc/discoverynode/bin/build_binary $PUSH_REGISTRY/$GITHUB_REPOSITORY_OWNER/udmi/discoverynode/buildenv-$BUILDENV || true
       - name: build and push oci image
         run: |
-          cat <<EOF > Dockerfile.scratch
+          cat <<EOF > Dockerfile
           FROM scratch
           COPY misc/discoverynode/dist/discoverynode discoverynode
           EOF
           IMAGE_TAG=$(date +%y%m%d)-$(git rev-list --count --since="today 00:00:00" HEAD)
           IMAGE_REF="$PUSH_REGISTRY/$GITHUB_REPOSITORY_OWNER/udmi/discoverynode-$BUILDENV"
-          docker build --no-cache -t $IMAGE_REF:$IMAGE_TAG -f Dockerfile.scratch .
+          docker build --no-cache -t $IMAGE_REF:$IMAGE_TAG -f Dockerfile .
           docker push $IMAGE_REF
           echo Pushed built $CONTAINER container as $IMAGE_REF:$IMAGE_TAG | tee -a $GITHUB_STEP_SUMMARY
