@@ -6,7 +6,7 @@ on:
       - 'master'
     paths: 
      - misc/discoverynode/**
-     - .github.workflows/release-discovery.yaml
+     - .github/workflows/release-discovery.yaml
 
 jobs:
   buildenvs:
