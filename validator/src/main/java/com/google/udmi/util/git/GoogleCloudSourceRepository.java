@@ -52,7 +52,7 @@ public class GoogleCloudSourceRepository extends GenericGitRepository {
     ))) {
       repo1.open();
       List<String> l = repo1.listLocalBranches();
-      for (String n: l) {
+      for (String n : l) {
         System.out.println("Local: " + n);
       }
       try {

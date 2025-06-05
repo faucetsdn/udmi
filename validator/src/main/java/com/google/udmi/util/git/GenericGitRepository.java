@@ -150,6 +150,10 @@ public class GenericGitRepository implements GitRepositoryInterface {
     return git;
   }
 
+  public boolean isWorkingTreeClean() throws GitAPIException {
+    return getGit().status().call().isClean();
+  }
+
   @Override
   public void add(String filePattern) throws GitAPIException, IOException {
     getGit().add().addFilepattern(filePattern).call();

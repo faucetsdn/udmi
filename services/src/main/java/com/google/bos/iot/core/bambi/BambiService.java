@@ -1,15 +1,17 @@
 package com.google.bos.iot.core.bambi;
 
+import static org.apache.commons.io.FileUtils.deleteDirectory;
+
 import com.google.daq.mqtt.util.MessagePublisher;
 import com.google.daq.mqtt.util.PubSubClient;
 import com.google.daq.mqtt.validator.Validator.MessageBundle;
 import com.google.udmi.util.JsonUtil;
 import com.google.udmi.util.SheetsAppender;
 import com.google.udmi.util.SheetsOutputStream;
-import java.io.BufferedReader;
+import com.google.udmi.util.git.GoogleCloudSourceRepository;
+import com.google.udmi.util.git.RepositoryConfig;
 import java.io.File;
 import java.io.IOException;
-import java.io.InputStreamReader;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.text.SimpleDateFormat;
@@ -171,68 +173,37 @@ public class BambiService {
                 "Processing '%s' request from '%s' for registry '%s', spreadsheet '%s'",
                 requestType, user, registryId, spreadsheetId));
 
-        executeCliCommand(null, "rm", "-rf", repoDir);
+        File repoDirFile = new File(repoDir);
+        if (repoDirFile.exists()) {
+          deleteDirectory(repoDirFile);
+        }
 
-        if (executeCliCommand(
-            null,
-            "gcloud",
-            "source",
-            "repos",
-            "clone",
-            registryId,
-            repoDir,
-            "--project=" + gcpProject)
-            .exitCode
-            == 0) {
-          if (executeCliCommand(repoDir, "git", "switch", importBranch).exitCode == 0) {
-            if ("import".equals(requestType)) {
-              LOGGER.info("Populating site model in bambi sheet");
-              BambiSync sync = new BambiSync(spreadsheetId, repoDir + "/udmi");
-              sync.execute();
-            } else if ("merge".equals(requestType)) {
-              LOGGER.info("Merging data from BAMBI to site model on disk");
-              if (executeCliCommand(repoDir, "git", "checkout", "-b", exportBranch).exitCode == 0) {
-                LocalDiskSync sync = new LocalDiskSync(spreadsheetId, repoDir + "/udmi");
-                sync.execute();
-                executeCliCommand(repoDir, "git", "add", ".");
-                CommandResult commitResult =
-                    executeCliCommand(repoDir, "git", "commit", "-m", "Merge changes from BAMBI");
-                if (commitResult.exitCode == 0
-                    && !commitResult.stdout.contains(
-                    "nothing to commit")) { // Check if commit actually happened
-                  CommandResult pushResult =
-                      executeCliCommand(
-                          repoDir, "git", "push", "origin", exportBranch + ":" + exportBranch);
-                  if (pushResult.exitCode != 0) {
-                    LOGGER.warn(
-                        String.format(
-                            "Could not push branch %s. stdout: %s, stderr: %s",
-                            exportBranch, pushResult.stdout, pushResult.stderr));
-                  }
-                } else if (commitResult.stdout.contains("nothing to commit")) {
-                  LOGGER.info("No changes to commit after sync from BAMBI.");
-                } else {
-                  LOGGER.warn(
-                      String.format(
-                          "Git commit failed. stdout: %s, stderr: %s",
-                          commitResult.stdout, commitResult.stderr));
-                }
-              } else {
-                LOGGER.error("Unable to create branch " + exportBranch);
-              }
+        try (GoogleCloudSourceRepository repository = new GoogleCloudSourceRepository(
+            RepositoryConfig.fromGoogleCloudSourceRepoName(registryId, repoDir, gcpProject))) {
+
+          repository.cloneRepo(importBranch);
+
+          if ("import".equals(requestType)) {
+            LOGGER.info("Populating site model in bambi sheet");
+            BambiSync sync = new BambiSync(spreadsheetId, repoDir + "/udmi");
+            sync.execute();
+          } else if ("merge".equals(requestType)) {
+            LOGGER.info("Merging data from BAMBI to site model on disk");
+            repository.createAndCheckoutBranch(exportBranch);
+            LocalDiskSync sync = new LocalDiskSync(spreadsheetId, repoDir + "/udmi");
+            sync.execute();
+
+            if (repository.isWorkingTreeClean()) {
+              LOGGER.info("Working tree is clean, nothing to commit.");
             } else {
-              LOGGER.warn("Unknown request_type: " + requestType);
+              LOGGER.info("Commit and Push in progress.");
+              repository.add(".");
+              repository.commit("Merge changes from BAMBI");
+              repository.push();
             }
-          } else {
-            LOGGER.warn(
-                "Skipping request because branch "
-                    + importBranch
-                    + " does not exist or could not be switched to in "
-                    + repoDir);
           }
-        } else {
-          LOGGER.warn(
-              "Skipping request, could not clone repository " + registryId + " to " + repoDir);
+        } catch (Exception e) {
+          LOGGER.error("Could not complete request, failed with error {}", e.getMessage());
         }
       } catch (Exception e) {
         LOGGER.error("Exception during processing request: " + e.getMessage());
@@ -248,81 +219,6 @@ public class BambiService {
     } catch (IOException e) {
       throw new RuntimeException(e);
     }
-  }
-
-  private CommandResult executeCliCommand(String workingDir, String... command) {
-    LOGGER.info(
-        "[COMMAND] Executing: "
-            + String.join(" ", command)
-            + (workingDir != null ? " in " + workingDir : ""));
-    ProcessBuilder processBuilder = new ProcessBuilder(command);
-    if (workingDir != null) {
-      processBuilder.directory(new File(workingDir));
-    }
-
-    StringBuilder stdoutBuilder = new StringBuilder();
-    StringBuilder stderrBuilder = new StringBuilder();
-    int exitCode = -1;
-
-    try {
-      Process process = processBuilder.start();
-
-      try (ExecutorService stdoutExecutor = Executors.newSingleThreadExecutor()) {
-        stdoutExecutor.submit(
-            () -> {
-              try (BufferedReader reader =
-                  new BufferedReader(new InputStreamReader(process.getInputStream()))) {
-                String line;
-                while ((line = reader.readLine()) != null) {
-                  LOGGER.info("[COMMAND] stdout: " + line);
-                  stdoutBuilder.append(line).append(System.lineSeparator());
-                }
-              } catch (IOException e) {
-                LOGGER.error("[COMMAND] error reading stdout: " + e.getMessage());
-              }
-            });
-        stdoutExecutor.shutdown();
-        stdoutExecutor.awaitTermination(1, TimeUnit.MINUTES);
-      }
-
-      try (ExecutorService stderrExecutor = Executors.newSingleThreadExecutor()) {
-        stderrExecutor.submit(
-            () -> {
-              try (BufferedReader reader =
-                  new BufferedReader(new InputStreamReader(process.getErrorStream()))) {
-                String line;
-                while ((line = reader.readLine()) != null) {
-                  LOGGER.info("[COMMAND] stderr: " + line);
-                  stderrBuilder.append(line).append(System.lineSeparator());
-                }
-              } catch (IOException e) {
-                LOGGER.error("[COMMAND] error reading stderr: " + e.getMessage());
-              }
-            });
-        stderrExecutor.shutdown();
-        stderrExecutor.awaitTermination(1, TimeUnit.MINUTES);
-      }
-
-      boolean finished = process.waitFor(5, TimeUnit.MINUTES);
-
-      if (finished) {
-        exitCode = process.exitValue();
-        LOGGER.info("[COMMAND] finished with exit code: " + exitCode);
-      } else {
-        LOGGER.error("[COMMAND] error: Command timed out: " + String.join(" ", command));
-        process.destroyForcibly();
-        exitCode = -100;
-      }
-
-    } catch (IOException | InterruptedException e) {
-      LOGGER.error(
-          "[COMMAND] error executing command " + String.join(" ", command) + ": " + e.getMessage());
-      if (e instanceof InterruptedException) {
-        Thread.currentThread().interrupt();
-      }
-      stderrBuilder.append("Execution exception: ").append(e.getMessage());
-    }
-    return new CommandResult(exitCode, stdoutBuilder.toString(), stderrBuilder.toString());
   }
 
   public void stop() {
@@ -343,5 +239,7 @@ public class BambiService {
     }
   }
 
-  private record CommandResult(int exitCode, String stdout, String stderr) {}
+  private record CommandResult(int exitCode, String stdout, String stderr) {
+
+  }
 }
