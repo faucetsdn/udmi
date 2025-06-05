@@ -1,0 +1,77 @@
+#!/bin/bash -ex
+UDMI_ROOT=$(realpath $(dirname $0)/..)
+
+
+if (( $# != 3 )); then
+  echo Usage: $0 SOURCE_SITE_MODEL TARGET_PROJECT TARGET_REGISTRY
+  echo Example: $0 sites/udmi_site_model //mqtt/localhost ZZ-TRI-FECTA
+  exit 1
+fi
+
+SOURCE_SITE_MODEL=$1
+TARGET_PROJECT=$2
+TARGET_REGISTRY=$3
+
+err=0 # set to 0 (success) to catch exit codes
+
+TMP_DIR=$(mktemp -d)
+SITE_MODEL_DIR=$TMP_DIR
+
+# Copy the site model into a temporary directory (why???? maybe local testing??)
+cp -r $SOURCE_SITE_MODEL/* $SITE_MODEL_DIR
+
+cat $SITE_MODEL_DIR/cloud_iot_config.json
+
+# Update the target registry with a testing registry,
+# Because the site model may not be real or it may be a real site model 
+# And we want to use a dedicated testing registry
+jq -r ".registry_id=\"$TARGET_REGISTRY\"" $SITE_MODEL_DIR/cloud_iot_config.json | sponge $SITE_MODEL_DIR/cloud_iot_config.json
+jq -r ".site_name=\"$TARGET_REGISTRY\"" $SITE_MODEL_DIR/cloud_iot_config.json | sponge $SITE_MODEL_DIR/cloud_iot_config.json
+
+# There is a source credentials for this testing directory
+# Probably a kubernetes secret or something
+# Ignore for now because just use "ZZ-TRI-FECTA"
+#cp $SOURCE_CREDS/rsa_private.pkcs8 $SITE_MODEL_DIR/reflector/rsa_private.pkcs8
+
+# Delete target registry, so that
+# - The registry is empty (because the same registry is reused and not deleted/recreated)
+# - Test the deletion functionality
+$UDMI_ROOT/bin/registrar $SITE_MODEL_DIR $TARGET_PROJECT -x -d || err=y
+if [[ $err != 0 ]]; then
+  echo "Registrar exitted with error code $err"
+  false
+fi
+
+# Run registrar again, to fetch 0 devices to confirm the directory is empty
+$UDMI_ROOT/bin/registrar $SITE_MODEL_DIR $TARGET_PROJECT -x -d | tee $TMP_DIR/deletion.txt || err=y
+if [[ $err != 0 ]]; then
+  echo "Registrar exitted with error code $err"
+  false
+fi
+
+# Look for 0 devices to throw an error
+grep "Fetched 0 device models from cloud registry" $TMP_DIR/deletion.txt || err=y
+if [[ $err != 0 ]]; then
+  echo Registry purge failed - more than 0 devices found
+  false
+fi
+
+# Register devices
+# 1800s (30m) timeout limit
+registrar_start=$(date +%s)
+timeout 1800 $UDMI_ROOT/bin/registrar $SITE_MODEL_DIR $TARGET_PROJECT || err=y
+if [[ $err != 0 ]]; then
+  echo "Registrar exitted with an error"
+  false
+fi
+registrar_end=$(date +%s)
+echo Registrar successfully completed in $((registrar_end-registrar_start)) seconds
+
+# Test mqtt connections and configs succeed
+
+export SITE_PATH=$TMP_DIR
+export PYTEST_
+
+TMP_FILE=$(mktemp --suffix=.py validate_site_model_actual_XXXXXXXX)
+cp bin/validate_site_model_actual $TMP_FILE
+$UDMI_ROOT/venv/bin/python3 -m pytest -n 10 -k test_device --durations=0 $TMP_FILE
