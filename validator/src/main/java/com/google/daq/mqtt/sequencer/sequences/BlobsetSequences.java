@@ -19,6 +19,7 @@ import static udmi.schema.Bucket.ENDPOINT_CONFIG;
 import static udmi.schema.Bucket.SYSTEM_MODE;
 import static udmi.schema.Category.BLOBSET_BLOB_APPLY;
 import static udmi.schema.FeatureDiscovery.FeatureStage.ALPHA;
+import static udmi.schema.FeatureDiscovery.FeatureStage.BETA;
 import static udmi.schema.FeatureDiscovery.FeatureStage.PREVIEW;
 
 import com.google.daq.mqtt.sequencer.Feature;
@@ -217,7 +218,7 @@ public class BlobsetSequences extends SequenceBase {
     untilClearedRedirect();
   }
 
-  @Feature(stage = ALPHA, bucket = ENDPOINT_CONFIG)
+  @Feature(stage = PREVIEW, bucket = ENDPOINT_CONFIG)
   @Summary("Failed connection because of bad hash.")
   @ValidateSchema(SubFolder.BLOBSET)
   @Test(timeout = TWO_MINUTES_MS)
@@ -242,7 +243,7 @@ public class BlobsetSequences extends SequenceBase {
         false);
   }
 
-  @Feature(stage = ALPHA, bucket = ENDPOINT_CONFIG)
+  @Feature(stage = PREVIEW, bucket = ENDPOINT_CONFIG)
   @Summary("Failed connection never uses alternate registry.")
   @ValidateSchema(SubFolder.BLOBSET)
   @Test(timeout = TWO_MINUTES_MS)
@@ -335,7 +336,7 @@ public class BlobsetSequences extends SequenceBase {
 
   @Test
   @Summary("Restart and connect to same endpoint and expect it returns.")
-  @Feature(stage = ALPHA, bucket = SYSTEM_MODE)
+  @Feature(stage = PREVIEW, bucket = SYSTEM_MODE)
   public void system_mode_restart() {
     check_system_restart();
   }
