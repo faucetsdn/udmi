@@ -1,4 +1,4 @@
-package com.google.udmi.util.git;
+package com.google.udmi.util;
 
 import com.google.auth.oauth2.GoogleCredentials;
 import java.io.IOException;

@@ -7,6 +7,7 @@ import com.google.api.services.sourcerepo.v1.CloudSourceRepositoriesScopes;
 import com.google.api.services.sourcerepo.v1.model.Repo;
 import com.google.auth.http.HttpCredentialsAdapter;
 import com.google.auth.oauth2.GoogleCredentials;
+import com.google.udmi.util.GoogleCloudCredentialsProvider;
 import java.io.IOException;
 import java.security.GeneralSecurityException;
 import java.util.Collections;

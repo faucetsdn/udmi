@@ -4,16 +4,15 @@ import static com.google.udmi.util.git.RepositoryConfig.forRemote;
 import static com.google.udmi.util.git.RepositoryConfig.fromGoogleCloudSourceRepoName;
 import static org.apache.commons.io.FileUtils.deleteDirectory;
 
-import com.google.daq.mqtt.util.MessagePublisher;
-import com.google.daq.mqtt.util.PubSubClient;
-import com.google.daq.mqtt.validator.Validator.MessageBundle;
-import com.google.udmi.util.JsonUtil;
+import com.google.pubsub.v1.PubsubMessage;
+import com.google.udmi.util.GenericPubSubClient;
 import com.google.udmi.util.SheetsAppender;
 import com.google.udmi.util.SheetsOutputStream;
 import com.google.udmi.util.git.GenericGitRepository;
 import com.google.udmi.util.git.GoogleCloudSourceRepository;
 import java.io.File;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.text.SimpleDateFormat;
@@ -34,20 +33,15 @@ public class BambiService {
   private static final Logger LOGGER = LoggerFactory.getLogger(BambiService.class);
   private static final String DEFAULT_IMPORT_BRANCH = "main";
   private static final Pattern SPREADSHEET_ID_PATTERN = Pattern.compile("/d/([^/]+)");
-
-  private final PubSubClient pubSubClient;
+  private static final long POLL_TIMEOUT_MS = 1000;
+  private final GenericPubSubClient pubSubClient;
   private final ExecutorService pollingExecutor;
   private final AtomicBoolean running = new AtomicBoolean(false);
   private final String serviceName = "BambiService";
 
   private final String gcpProject;
   private final String siteModelCloneDir;
-
   private final String localOriginDir;
-
-  public BambiService(String gcpProject, String udmiNamespace, String siteModelBaseDir) {
-    this(gcpProject, udmiNamespace, siteModelBaseDir, null);
-  }
 
   public BambiService(String gcpProject, String udmiNamespace, String siteModelBaseDir,
       String localOriginDir) {
@@ -58,17 +52,18 @@ public class BambiService {
     String udmiNamespacePrefix = Optional.ofNullable(udmiNamespace).map(ns -> ns + "~").orElse("");
     String requestsSubscription = udmiNamespacePrefix + "bambi-requests";
 
-    this.pubSubClient =
-        new PubSubClient(gcpProject, null, requestsSubscription, null, false, false);
-    this.pollingExecutor =
-        Executors.newSingleThreadExecutor(r -> new Thread(r, serviceName + "-poller"));
+    if (!GenericPubSubClient.subscriptionExists(gcpProject, requestsSubscription)) {
+      throw new RuntimeException(
+          requestsSubscription + " subscription does not exist in project " + gcpProject
+              + ". Please ensure it exists and retry!");
+    }
 
-    LOGGER.info(
-        serviceName
-            + " initialized for project "
-            + gcpProject
-            + " and subscription: "
-            + pubSubClient.getSubscriptionId());
+    this.pubSubClient = new GenericPubSubClient(gcpProject, requestsSubscription, null);
+    this.pollingExecutor = Executors.newSingleThreadExecutor(
+        r -> new Thread(r, serviceName + "-poller"));
+
+    LOGGER.info("{} initialized for project {} and subscription {}", serviceName, gcpProject,
+        requestsSubscription);
     LOGGER.info("Site model clone base directory: " + siteModelCloneDir);
 
     try {
@@ -77,6 +72,10 @@ public class BambiService {
       throw new RuntimeException(
           "Could not create site model clone directory: " + this.siteModelCloneDir, e);
     }
+  }
+
+  public BambiService(String gcpProject, String udmiNamespace, String siteModelBaseDir) {
+    this(gcpProject, udmiNamespace, siteModelBaseDir, null);
   }
 
   public static void main(String[] args) {
@@ -115,32 +114,33 @@ public class BambiService {
   }
 
   private void pollForMessages() {
-    while (running.get() && pubSubClient.isActive()) {
+    LOGGER.info("Polling for new messages...");
+    while (running.get()) {
       try {
-        MessageBundle bundle = pubSubClient.takeNextMessage(MessagePublisher.QuerySpeed.QUICK);
+        PubsubMessage message = pubSubClient.poll(POLL_TIMEOUT_MS, TimeUnit.MILLISECONDS);
 
-        if (bundle != null && bundle.attributes != null && !bundle.attributes.isEmpty()) {
-          LOGGER.info("Message received. Processing...");
-          LOGGER.info("Attributes: " + bundle.attributes);
-
-          processBambiRequest(bundle.attributes);
-
-        } else if (bundle != null) {
-          LOGGER.info("Received message with no attributes or empty attributes map. Ignoring.");
-          LOGGER.info("Payload (if any): " + JsonUtil.stringify(bundle.message));
-        } else {
-          LOGGER.info("Polled but received null bundle.");
+        if (message != null) {
+          Map<String, String> attributes = message.getAttributesMap();
+          if (!attributes.isEmpty()) {
+            LOGGER.info("Message received. Processing...");
+            LOGGER.info("Attributes: " + attributes);
+            processBambiRequest(attributes);
+          } else {
+            String payload = message.getData().toString(StandardCharsets.UTF_8);
+            LOGGER.warn("Received message with no attributes. Ignoring.");
+            LOGGER.info("Payload (if any): " + payload);
+          }
         }
       } catch (Exception e) {
-        LOGGER.error("Error in polling/processing loop: " + e.getMessage());
-        e.printStackTrace();
+        LOGGER.error("Error in processing loop: " + e.getMessage(), e);
         try {
           TimeUnit.SECONDS.sleep(5);
         } catch (InterruptedException ie) {
           Thread.currentThread().interrupt();
+          LOGGER.warn("Polling loop interrupted during error backoff.");
+          break;
         }
       }
-      LOGGER.info("Polling for new messages...");
     }
     LOGGER.info("Polling loop finished.");
   }
@@ -257,7 +257,4 @@ public class BambiService {
     }
   }
 
-  private record CommandResult(int exitCode, String stdout, String stderr) {
-
-  }
 }

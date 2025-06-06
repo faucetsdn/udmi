@@ -245,7 +245,7 @@ public class PubSubClient implements MessagePublisher, MessageHandler {
       }
       byte[] rawData = message.getData().toByteArray();
       final String data;
-      boolean base64 = rawData.length > 0 && rawData[0] != '{';
+      boolean base64 = rawData[0] != '{';
       if (base64) {
         data = new String(Base64.decodeBase64(rawData));
       } else {
