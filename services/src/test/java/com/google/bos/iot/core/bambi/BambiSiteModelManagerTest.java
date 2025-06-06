@@ -3,9 +3,12 @@ package com.google.bos.iot.core.bambi;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.mockito.ArgumentMatchers.anyList;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -114,14 +117,13 @@ public class BambiSiteModelManagerTest {
   }
 
   @Test
-  public void constructor_getSheetRecordsThrowsException_wrapsInRuntimeException()
+  public void constructor_getSheetRecordsThrowsException_isHandled()
       throws IOException {
     when(mockSpreadsheetManager.getSheetRecords(BambiSiteModelManager.BambiSheet.SYSTEM.getName()))
         .thenThrow(new IOException("Failed to read system sheet"));
 
-    thrown.expect(RuntimeException.class);
-    thrown.expectMessage("while initializing BambiSiteModelManager:");
-    new BambiSiteModelManager(mockSpreadsheetManager);
+    BambiSiteModelManager manager = new BambiSiteModelManager(mockSpreadsheetManager);
+    assertTrue(manager.getAllDevicesMetadata().isEmpty());
   }
 
   @Test
@@ -201,14 +203,17 @@ public class BambiSiteModelManagerTest {
 
 
   @Test
-  public void writeSiteMetadata_ioExceptionOnClear_throwsRuntimeException() throws IOException {
+  public void writeSiteMetadata_ioExceptionOnClear_handled() throws IOException {
     bambiSiteModelManager = new BambiSiteModelManager(mockSpreadsheetManager);
     doThrow(new IOException("Clear failed")).when(mockSpreadsheetManager)
         .clearValuesFromRange(BambiSiteModelManager.BambiSheet.SITE_METADATA.getName());
 
-    thrown.expect(RuntimeException.class);
-    thrown.expectMessage("while writing to bambi sheet site_metadata");
     bambiSiteModelManager.writeSiteMetadata(new HashMap<>());
+
+    verify(mockSpreadsheetManager, times(1))
+        .clearValuesFromRange(BambiSiteModelManager.BambiSheet.SITE_METADATA.getName());
+
+    verify(mockSpreadsheetManager, never()).writeToRange(anyString(), anyList());
   }
 
   @Test
@@ -325,20 +330,17 @@ public class BambiSiteModelManagerTest {
 
 
   @Test
-  public void writeDevicesMetadata_ioExceptionOnWrite_throwsRuntimeException() throws IOException {
+  public void writeDevicesMetadata_ioExceptionOnWrite_isHandled() throws IOException {
     bambiSiteModelManager = new BambiSiteModelManager(mockSpreadsheetManager);
     doThrow(new IOException("Write to Gateway failed")).when(mockSpreadsheetManager)
         .writeToRange(eq(BambiSiteModelManager.BambiSheet.GATEWAY.getName()), anyList());
-
-    thrown.expect(RuntimeException.class);
-    thrown.expectMessage("failed to write device metadata to spreadsheet");
 
     Map<String, Map<String, String>> deviceToMetadataMap = new HashMap<>();
     Map<String, String> dev1Meta = new HashMap<>();
     dev1Meta.put("gateway.model", "TestModel");
     deviceToMetadataMap.put("dev1", dev1Meta);
 
-    bambiSiteModelManager.writeDevicesMetadata(deviceToMetadataMap);
+    assertDoesNotThrow(() -> bambiSiteModelManager.writeDevicesMetadata(deviceToMetadataMap));
   }
 
   @Test

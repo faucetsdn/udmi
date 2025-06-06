@@ -155,13 +155,15 @@ public class BambiSiteModel {
 
   private void populateInDeviceMap(List<Map<String, String>> allDeviceData,
       Map<String, Map<String, String>> deviceMap, String keyPrefix) {
-    for (Map<String, String> deviceData : allDeviceData) {
-      String deviceId = deviceData.getOrDefault(DEVICE_ID, null);
-      if (deviceId != null) {
-        deviceMap.putIfAbsent(deviceId, new LinkedHashMap<>());
-        for (Entry<String, String> cell : deviceData.entrySet()) {
-          deviceMap.get(deviceId)
-              .put((keyPrefix == null ? "" : keyPrefix + ".") + cell.getKey(), cell.getValue());
+    if (allDeviceData != null) {
+      for (Map<String, String> deviceData : allDeviceData) {
+        String deviceId = deviceData.getOrDefault(DEVICE_ID, null);
+        if (deviceId != null) {
+          deviceMap.putIfAbsent(deviceId, new LinkedHashMap<>());
+          for (Entry<String, String> cell : deviceData.entrySet()) {
+            deviceMap.get(deviceId)
+                .put((keyPrefix == null ? "" : keyPrefix + ".") + cell.getKey(), cell.getValue());
+          }
         }
       }
     }
@@ -211,6 +213,9 @@ public class BambiSiteModel {
   }
 
   private List<Map<String, String>> getRowsFromSheet(List<List<Object>> sheetData) {
+    if (sheetData.isEmpty()) {
+      return null;
+    }
     List<Map<String, String>> rows = new ArrayList<>();
     List<String> headers = getColumnHeadersFromSheetData(sheetData);
 
@@ -225,6 +230,9 @@ public class BambiSiteModel {
   }
 
   private List<String> getColumnHeadersFromSheetData(List<List<Object>> sheetData) {
+    if (sheetData.isEmpty()) {
+      return null;
+    }
     List<Object> headerObjects = sheetData.get(0);
     if (headerObjects == null || headerObjects.isEmpty()) {
       return null;

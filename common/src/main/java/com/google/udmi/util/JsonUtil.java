@@ -556,13 +556,50 @@ public abstract class JsonUtil {
     nest(childNode, parts, value, index + 1, mapper);
   }
 
+  private static JsonNode convertValueToJsonNode(String value, ObjectMapper mapper) {
+    if (value == null) {
+      return mapper.getNodeFactory().nullNode();
+    }
+    String trimmedValue = value.trim();
+
+    if ("true".equalsIgnoreCase(trimmedValue)) {
+      return mapper.getNodeFactory().booleanNode(true);
+    }
+    if ("false".equalsIgnoreCase(trimmedValue)) {
+      return mapper.getNodeFactory().booleanNode(false);
+    }
+
+    if ("null".equalsIgnoreCase(trimmedValue)) {
+      return mapper.getNodeFactory().nullNode();
+    }
+
+    try {
+      int intValue = Integer.parseInt(trimmedValue);
+      return mapper.getNodeFactory().numberNode(intValue);
+    } catch (NumberFormatException e1) {
+      try {
+        long longValue = Long.parseLong(trimmedValue);
+        return mapper.getNodeFactory().numberNode(longValue);
+      } catch (NumberFormatException e2) {
+        try {
+          double doubleValue = Double.parseDouble(trimmedValue);
+          return mapper.getNodeFactory().numberNode(doubleValue);
+        } catch (NumberFormatException e3) {
+          return mapper.getNodeFactory().textNode(value);
+        }
+      }
+    }
+  }
+
   private static void handleSetLeafValue(JsonNode currentNode, String part, String value,
       ObjectMapper mapper) {
+    JsonNode valueNode = convertValueToJsonNode(value, mapper);
+
     if (currentNode instanceof ObjectNode) {
-      ((ObjectNode) currentNode).put(part, value);
-    } else if (currentNode instanceof ArrayNode) {
-      int arrayIndex = parseAndValidateArrayIndex(part, (ArrayNode) currentNode);
-      ((ArrayNode) currentNode).set(arrayIndex, mapper.getNodeFactory().textNode(value));
+      ((ObjectNode) currentNode).set(part, valueNode);
+    } else if (currentNode instanceof ArrayNode arrayNode) {
+      int arrayIndex = parseAndValidateArrayIndex(part, arrayNode);
+      arrayNode.set(arrayIndex, valueNode);
     } else {
       throw new RuntimeException(
           "Cannot set value on node type: " + currentNode.getNodeType() +

@@ -1,0 +1,52 @@
+#!/bin/bash -e
+
+while [[ $# -gt 0 ]]; do
+  if [[ "$1" == "check" ]]; then
+    check=check
+    shift
+  elif [[ "$1" == "debug" ]]; then
+    check="check -i"
+    shift
+  elif [[ "$1" == "covg" ]]; then
+    covg=jacocoTestReport
+    shift
+  else
+    break
+  fi
+done
+
+ROOT=$(dirname $0)/..
+UDMI_ROOT=..
+cd $ROOT
+
+jarfile=build/libs/services-1.0-SNAPSHOT-all.jar
+
+if [[ ! -d $UDMI_ROOT/gencode ]]; then
+    echo No gencode/ dir found, cowardly refusing to build.
+    exit 0
+fi
+
+newest=$(ls -rt `find src/ $UDMI_ROOT/gencode/java -type f` | tail -n 1)
+if [[ -z $check && -z $covg && -f $jarfile && $jarfile -nt $newest ]]; then
+    echo $jarfile up-to-date, skipping build.
+    exit 0
+fi
+
+echo Cleaning $ROOT/build/
+rm -rf build/
+mkdir build/
+
+echo Mirroring udmi files...
+cp -a ../bin build/udmi_bin/
+cp -a ../etc build/udmi_etc/
+cp -a ../schema build/schema/
+
+echo Java version $(java --version)
+
+echo Building services in $PWD
+
+./gradlew shadow $check $covg $*
+
+ls -l $jarfile
+
+echo Done with services build.

@@ -1,0 +1,24 @@
+FROM google/cloud-sdk:alpine
+
+WORKDIR /root
+
+# Ideally the same as from Dockerfile.udmis to share layers
+RUN apk add --no-cache bash openjdk21 gcompat curl jq sudo git python3 moreutils mosquitto mosquitto-clients openssl coreutils grep
+
+# Workaround for https://github.com/grpc/grpc-java/issues/8751
+# Only necessary for running on GKE -- won't show up with docker!
+ENV LD_PRELOAD=/lib/libgcompat.so.0
+
+# RUN apk add openssh
+
+ADD build/udmi_bin/ bin/
+ADD build/udmi_etc/ etc/
+ADD build/schema/ schema/
+
+ENV NO_CACHE_DIR=true
+RUN bin/setup_base
+
+ADD bin/ services/bin/
+ADD build/libs services/build/libs/
+
+CMD ["/root/services/bin/bambi_service"]
