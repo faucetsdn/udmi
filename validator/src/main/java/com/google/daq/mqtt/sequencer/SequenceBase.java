@@ -10,18 +10,19 @@ import static com.google.daq.mqtt.sequencer.semantic.SemanticValue.actualize;
 import static com.google.daq.mqtt.util.CloudIotManager.EMPTY_CONFIG;
 import static com.google.daq.mqtt.util.ConfigManager.configFrom;
 import static com.google.daq.mqtt.util.TimePeriodConstants.TWO_MINUTES_MS;
-import static com.google.daq.mqtt.validator.Validator.ATTRIBUTE_FILE_FORMAT;
-import static com.google.daq.mqtt.validator.Validator.MESSAGE_FILE_FORMAT;
-import static com.google.daq.mqtt.validator.Validator.VIOLATIONS_FILE_FORMAT;
+import static com.google.daq.mqtt.validator.Validator.ATTRIBUTE_SUFFIX;
+import static com.google.daq.mqtt.validator.Validator.VIOLATIONS_SUFFIX;
 import static com.google.udmi.util.CleanDateFormat.cleanDate;
 import static com.google.udmi.util.CleanDateFormat.dateEquals;
 import static com.google.udmi.util.Common.DEVICE_ID_KEY;
 import static com.google.udmi.util.Common.EXCEPTION_KEY;
 import static com.google.udmi.util.Common.MESSAGE_KEY;
+import static com.google.udmi.util.Common.REGISTRY_ID_PROPERTY_KEY;
 import static com.google.udmi.util.GeneralUtils.CSV_JOINER;
 import static com.google.udmi.util.GeneralUtils.catchToElse;
 import static com.google.udmi.util.GeneralUtils.changedLines;
 import static com.google.udmi.util.GeneralUtils.decodeBase64;
+import static com.google.udmi.util.GeneralUtils.deepCopy;
 import static com.google.udmi.util.GeneralUtils.friendlyStackTrace;
 import static com.google.udmi.util.GeneralUtils.getTimestamp;
 import static com.google.udmi.util.GeneralUtils.ifNotNullGet;
@@ -37,12 +38,14 @@ import static com.google.udmi.util.GeneralUtils.stackTraceString;
 import static com.google.udmi.util.GeneralUtils.toDate;
 import static com.google.udmi.util.GeneralUtils.toInstant;
 import static com.google.udmi.util.GeneralUtils.writeString;
+import static com.google.udmi.util.JsonUtil.JSON_SUFFIX;
 import static com.google.udmi.util.JsonUtil.convertTo;
 import static com.google.udmi.util.JsonUtil.getNowInstant;
 import static com.google.udmi.util.JsonUtil.isoConvert;
 import static com.google.udmi.util.JsonUtil.loadFileRequired;
 import static com.google.udmi.util.JsonUtil.safeSleep;
 import static com.google.udmi.util.JsonUtil.stringify;
+import static com.google.udmi.util.JsonUtil.stringifyTerse;
 import static com.google.udmi.util.JsonUtil.toStringMap;
 import static com.google.udmi.util.SiteModel.METADATA_JSON;
 import static java.lang.String.format;
@@ -105,9 +108,11 @@ import java.io.PrintWriter;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.AbstractMap.SimpleEntry;
+import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
+import java.util.Deque;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -120,6 +125,8 @@ import java.util.Stack;
 import java.util.TreeMap;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentSkipListSet;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.concurrent.LinkedBlockingDeque;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -205,24 +212,23 @@ public class SequenceBase {
   private static final String RESULT_LOG_FILE = "RESULT.log";
   private static final String OUT_DEVICE_FORMAT = "out/devices/%s/metadata_mod.json";
   private static final String SUMMARY_OUTPUT_FORMAT = "out/sequencer_%s.json";
-  private static final Map<Class<?>, SubFolder> CLASS_SUBFOLDER_MAP = ImmutableMap.of(
+  private static final Map<Class<?>, SubFolder> CLASS_EVENT_SUBTYPE_MAP = ImmutableMap.of(
       SystemEvents.class, SubFolder.SYSTEM,
       PointsetEvents.class, SubFolder.POINTSET,
       DiscoveryEvents.class, SubFolder.DISCOVERY
   );
-  private static final Map<String, Class<?>> EXPECTED_UPDATES = ImmutableMap.of(
-      SubType.CONFIG.value(), Config.class,
-      SubType.STATE.value(), State.class
+  private static final Map<SubType, Class<?>> EXPECTED_UPDATES = ImmutableMap.of(
+      SubType.CONFIG, Config.class,
+      SubType.STATE, State.class
   );
   private static final Map<String, AtomicInteger> UPDATE_COUNTS = new HashMap<>();
   private static final String LOCAL_PREFIX = "local_";
   private static final String UPDATE_SUBFOLDER = UPDATE.value();
   private static final String STATE_SUBTYPE = SubType.STATE.value();
   private static final String CONFIG_SUBTYPE = SubType.CONFIG.value();
-  private static final String LOCAL_CONFIG_UPDATE = LOCAL_PREFIX + UPDATE_SUBFOLDER;
-  private static final String SEQUENCER_LOG = "sequencer.log";
-  private static final String DEVICE_SYSTEM_LOG = "device_system.log";
+  private static final String SEQUENCE_LOG = "sequence.log";
   private static final String SEQUENCE_MD = "sequence.md";
+  private static final String DEVICE_SYSTEM_LOG = "device_system.log";
   private static final int LOG_TIMEOUT_SEC = 10;
   private static final long ONE_SECOND_MS = 1000;
   private static final int EXIT_CODE_PRESERVE = -9;
@@ -269,6 +275,12 @@ public class SequenceBase {
   public static final String ELAPSED_TIME_PREFIX = "@";
   private static final String EXCEPTION_FILE = "sequencer.err";
   private static final String OPERATION_KEY = "operation";
+  private static final String FALLBACK_REGISTRY_MARK = "from-fallback-registry";
+  public static final String PROXIED_SUBDIR = "proxied";
+  public static final String TRACE_SUBDIR = "trace";
+  public static final String STRAY_SUBDIR = "stray";
+  private static final long MESSAGE_POLL_SLEEP_MS = 1000;
+  private static final String MESSAGE_SOURCE_INDICATOR = "message_envelope_source_key";
   protected static Metadata deviceMetadata;
   protected static String projectId;
   protected static String cloudRegion;
@@ -285,7 +297,9 @@ public class SequenceBase {
   private static File resultSummary;
   private static MessagePublisher client;
   private static SequenceBase activeInstance;
-  private static MessageBundle stashedBundle;
+  private static final int MESSAGE_QUEUE_SIZE = 32;
+  private static final Deque<MessageBundle> messageQueue = new ArrayDeque<>(MESSAGE_QUEUE_SIZE);
+  private static final ExecutorService executorService = Executors.newFixedThreadPool(4);
   private static boolean enableAllTargets = true;
   private static boolean useAlternateClient;
   private static boolean skipConfigSync;
@@ -297,7 +311,7 @@ public class SequenceBase {
         "ALPHA functions version should not be > BETA");
   }
 
-  private final Map<String, CaptureMap> receivedEvents = new HashMap<>();
+  private final Map<String, CaptureMap> capturedMessages = new HashMap<>();
   private final Map<String, Object> receivedUpdates = new HashMap<>();
   private final Queue<Entry> logEntryQueue = new LinkedBlockingDeque<>();
   private final Stack<String> waitingCondition = new Stack<>();
@@ -363,7 +377,7 @@ public class SequenceBase {
       checkNotNull(exeConfig.udmi_version, "udmi_version not defined");
       logLevel = Level.valueOf(checkNotNull(exeConfig.log_level, "log_level not defined"))
           .value();
-      skipConfigSync = traceLogLevel();
+      skipConfigSync = isTraceLogLevel();
       key_file = checkNotNull(exeConfig.key_file, "key_file not defined");
     } catch (Exception e) {
       e.printStackTrace();
@@ -391,6 +405,7 @@ public class SequenceBase {
     client = checkNotNull(getPublisherClient(), "primary client not created");
     client.activate();
     sessionPrefix = client.getSessionPrefix();
+    startMessageSucker(client);
 
     String udmiNamespace = exeConfig.udmi_namespace;
     String altRegistryId = exeConfig.alt_registry;
@@ -398,6 +413,7 @@ public class SequenceBase {
     altRegistry = SiteModel.getRegistryActual(udmiNamespace, altRegistryId, registrySuffix);
     altClient = getAlternateClient();
     ifNotNullThen(altClient, IotReflectorClient::activate);
+    ifNotNullThen(altClient, SequenceBase::startMessageSucker);
   }
 
   private static void validatorLogger(Level level, String message) {
@@ -469,12 +485,12 @@ public class SequenceBase {
     }
   }
 
-  private static boolean debugLogLevel() {
+  private static boolean isDebugLogLevel() {
     checkState(logLevel >= 0, "logLevel not initialized");
     return logLevel <= Level.DEBUG.value();
   }
 
-  private static boolean traceLogLevel() {
+  private static boolean isTraceLogLevel() {
     checkState(logLevel >= 0, "logLevel not initialized");
     return logLevel <= Level.TRACE.value();
   }
@@ -507,13 +523,14 @@ public class SequenceBase {
     enableAllTargets = enabled;
   }
 
-  private static String makeMessageBase(Envelope attributes) {
-    SubType subType = attributes.subType;
-    SubFolder subFolder = attributes.subFolder;
-    String gatewayId = attributes.gatewayId;
-    String deviceSuffix = ofNullable(gatewayId).map(x -> "_" + attributes.deviceId).orElse("");
-    String traceSuffix = traceLogLevel() ? "_" + isoConvert(attributes.publishTime) : "";
-    return format("%s_%s%s%s", subType, subFolder, deviceSuffix, traceSuffix);
+  private static String messageCaptureBase(Envelope attributes) {
+    return messageCaptureBase(attributes.subType, attributes.subFolder);
+  }
+
+  protected static String messageCaptureBase(SubType subType, SubFolder subFolder) {
+    SubType useType = ofNullable(subType).orElse(SubType.INVALID);
+    SubFolder useFolder = ofNullable(subFolder).orElse(SubFolder.INVALID);
+    return format("%s_%s", useType, useFolder);
   }
 
   private static void emitSequenceResult(SequenceResult result, String bucket, String name,
@@ -607,7 +624,7 @@ public class SequenceBase {
     } catch (Exception e) {
       System.err.println(
           "Could not connect to alternate registry, disabling: " + friendlyStackTrace(e));
-      if (traceLogLevel()) {
+      if (isTraceLogLevel()) {
         e.printStackTrace();
       }
       return null;
@@ -845,7 +862,7 @@ public class SequenceBase {
     // Do this late in the sequence to make sure any state is cleared out from previous test.
     startStateCount = getStateUpdateCount();
     startCaptureTime = System.currentTimeMillis();
-    clearReceivedEvents();
+    resetCapturedMessages();
     validationResults.clear();
 
     waitForConfigSync();
@@ -1077,13 +1094,8 @@ public class SequenceBase {
     return implicit == UNKNOWN_DEFAULT ? explicit : implicit;
   }
 
-  private void recordMessageAttributes(Envelope attributes, String messageBase) {
-    File file = new File(testDir, format(ATTRIBUTE_FILE_FORMAT, messageBase));
-    try {
-      JsonUtil.OBJECT_MAPPER.writeValue(file, attributes);
-    } catch (Exception e) {
-      throw new RuntimeException("While writing attributes to " + file.getAbsolutePath(), e);
-    }
+  private void recordMessageAttributes(Envelope attributes) {
+    recordMessageFile(attributes, ATTRIBUTE_SUFFIX, attributes);
   }
 
   private void unwrapException(Map<String, Object> message, Envelope attributes) {
@@ -1093,33 +1105,25 @@ public class SequenceBase {
         (Supplier<String>) () -> (String) ex);
   }
 
-  private void recordRawMessage(Envelope attributes, Map<String, Object> message) {
-    if (testName == null || !recordMessages) {
-      return;
-    }
-
-    String messageBase = makeMessageBase(attributes);
-
-    ifTrueThen(message.containsKey(EXCEPTION_KEY), () -> unwrapException(message, attributes));
-    recordRawMessage(message, messageBase);
-    recordMessageAttributes(attributes, messageBase);
-  }
-
-  private void recordRawMessage(Object message, String messageBase) {
+  private void recordRawMessage(Envelope attributes, Object message) {
     Map<String, Object> objectMap = JsonUtil.OBJECT_MAPPER.convertValue(message,
         new TypeReference<>() {
         });
-    if (traceLogLevel()) {
-      messageBase = messageBase + "_" + getTimestamp();
-    }
-    recordRawMessage(objectMap, messageBase);
+    recordMessageFile(attributes, JSON_SUFFIX, objectMap);
   }
 
-  private void recordRawMessage(Map<String, Object> message, String messageBase) {
+  private void recordRawMessage(Envelope attributes, Map<String, Object> message) {
+    ifTrueThen(message.containsKey(EXCEPTION_KEY), () -> unwrapException(message, attributes));
+    recordMessageActual(attributes, message);
+    recordMessageAttributes(attributes);
+  }
+
+  private void recordMessageActual(Envelope attributes, Map<String, Object> message) {
     if (!recordMessages) {
       return;
     }
 
+    String messageBase = messageCaptureBase(attributes);
     boolean systemEvents = messageBase.equals(SYSTEM_EVENTS_MESSAGE_BASE);
     boolean anyEvent = messageBase.startsWith(EVENTS_PREFIX);
     boolean localUpdate = messageBase.startsWith(LOCAL_PREFIX);
@@ -1129,12 +1133,11 @@ public class SequenceBase {
     boolean syntheticMessage = (configMessage || stateMessage) && !updateMessage;
 
     String prefix = localUpdate ? "Outgoing " : "Received ";
-    File messageFile = new File(testDir, format(MESSAGE_FILE_FORMAT, messageBase));
 
     if (message.containsKey(EXCEPTION_KEY)) {
       String exceptionMessage = (String) message.get(MESSAGE_KEY);
       Envelope exceptionWrapper = JsonUtil.fromString(Envelope.class, exceptionMessage);
-      writeString(messageFile, decodeBase64(exceptionWrapper.payload));
+      recordMessageFile(attributes, JSON_SUFFIX, decodeBase64(exceptionWrapper.payload));
       return;
     }
 
@@ -1144,7 +1147,7 @@ public class SequenceBase {
       if (savedException instanceof Exception) {
         message.put(EXCEPTION_KEY, ((Exception) savedException).getMessage());
       }
-      JsonUtil.OBJECT_MAPPER.writeValue(messageFile, message);
+      recordMessageFile(attributes, JSON_SUFFIX, message);
       if (systemEvents) {
         logSystemEvents(messageBase, message);
       } else {
@@ -1154,13 +1157,48 @@ public class SequenceBase {
           debug(prefix + messageBase);
         }
       }
-    } catch (Exception e) {
-      throw new RuntimeException("While writing message to " + messageFile.getAbsolutePath(), e);
     } finally {
       if (savedException != null) {
         message.put(EXCEPTION_KEY, savedException);
       }
     }
+  }
+
+  private boolean captureMessage(Envelope envelope, Map<String, Object> message) {
+    String deviceId = envelope.deviceId;
+    String messageBase = messageCaptureBase(envelope);
+    debug(format("Capturing %s message %s", deviceId, messageBase));
+    Map<String, Object> messageCopy = deepCopy(message);
+    messageCopy.put(MESSAGE_SOURCE_INDICATOR, envelope.source);
+    return getCapturedMessagesList(deviceId, messageBase).add(messageCopy);
+  }
+
+  private void recordMessageFile(Envelope envelope, String fileSuffix, Object message) {
+    if (testName == null || !recordMessages) {
+      return;
+    }
+
+    String messageBase = messageCaptureBase(envelope);
+    boolean isFallbackRegistry = FALLBACK_REGISTRY_MARK.equals(envelope.source);
+
+    String contents = message instanceof String ? (String) message : stringify(message);
+
+    if (!isFallbackRegistry) {
+      File messageFile = new File(testDir, messageBase + fileSuffix);
+      writeString(messageFile, contents);
+    }
+
+    if (!isDebugLogLevel()) {
+      return;
+    }
+
+    String proxiedSubdir = PROXIED_SUBDIR + "/" + envelope.deviceId;
+    String altDir = ofNullable(envelope.gatewayId).map(x -> proxiedSubdir).orElse(TRACE_SUBDIR);
+    String useDir = isFallbackRegistry ? STRAY_SUBDIR : altDir;
+    File altFile = new File(testDir, useDir);
+    String timeSuffix = ifNotNullGet(envelope.publishTime, JsonUtil::isoConvert, getTimestamp());
+    File altOut = new File(altFile, messageBase + "_" + timeSuffix + fileSuffix);
+    writeString(altOut, contents);
   }
 
   private void logSystemEvents(String messageBase, Map<String, Object> message) {
@@ -1332,7 +1370,7 @@ public class SequenceBase {
                 "no transactionId returned for publish");
         debug(format("Update %s_%s, adding configTransaction %s",
             CONFIG_SUBTYPE, subBlock, transactionId));
-        recordRawMessage(data, LOCAL_PREFIX + subBlock.value());
+        recordRawMessage(simpleEnvelope(SubType.LOCAL, subBlock), data);
         sentConfig.put(subBlock, actualizedData);
         configTransactions.add(transactionId);
         ifTrueThen(skipConfigSync, () -> waitForUpdateConfigSync(reason, waitForSync));
@@ -1341,6 +1379,13 @@ public class SequenceBase {
     } catch (Exception e) {
       throw new RuntimeException("While updating config block " + subBlock, e);
     }
+  }
+
+  private Envelope simpleEnvelope(SubType subType, SubFolder subBlock) {
+    Envelope envelope = new Envelope();
+    envelope.subType = subType;
+    envelope.subFolder = subBlock;
+    return envelope;
   }
 
   /**
@@ -1385,7 +1430,7 @@ public class SequenceBase {
     try {
       String header = format("Update config %s", ofNullable(reason).orElse("")).trim();
       debug(header + " timestamp " + isoConvert(deviceConfig.timestamp));
-      recordRawMessage(deviceConfig, LOCAL_CONFIG_UPDATE);
+      recordRawMessage(simpleEnvelope(SubType.CONFIG, UPDATE), deviceConfig);
       List<DiffEntry> allDiffs = SENT_CONFIG_DIFFERNATOR.computeChanges(deviceConfig);
       List<DiffEntry> filteredDiffs = filterTesting(allDiffs);
       boolean extraFieldChanged = !Objects.equals(extraField, updatedExtraField);
@@ -1552,6 +1597,9 @@ public class SequenceBase {
   private void waitEvaluateLoop(String sanitizedDescription, Duration maxWait,
       Supplier<String> evaluator,
       AtomicReference<String> detail) {
+
+    // Initialize to avoid potential `null` if loop terminates immediately.
+    detail.set(evaluator.get());
 
     messageEvaluateLoop(maxWait, () -> {
       try {
@@ -1804,6 +1852,17 @@ public class SequenceBase {
     untilLoop(description, () -> catchToFalse(evaluator));
   }
 
+  private static void startMessageSucker(MessagePublisher publisher) {
+    executorService.submit(() -> messageSucker(publisher));
+  }
+
+  private static void messageSucker(MessagePublisher reflector) {
+    while (true) {
+      MessageBundle nextMessageBundle = getNextMessageBundle(reflector);
+      ifNotNullThen(nextMessageBundle, bundle -> messageQueue.add(bundle));
+    }
+  }
+
   /**
    * Thread-safe way to get a message. Tests are run in different threads, and if one blocks it
    * might end up trying to take a message while another thread is still looping. This prevents that
@@ -1813,51 +1872,46 @@ public class SequenceBase {
    * @return message bundle
    */
   MessageBundle nextMessageBundle() {
-    synchronized (SequenceBase.class) {
-      if (stashedBundle != null) {
-        debug("using stashed message bundle");
-        MessageBundle bundle = stashedBundle;
-        stashedBundle = null;
-        return bundle;
-      }
-      MessagePublisher reflector = reflector();
-      if (!reflector.isActive()) {
-        throw new RuntimeException(
-            "Trying to receive message from inactive client " + reflector.getSubscriptionId());
-      }
-      final MessageBundle bundle;
-      try {
-        bundle = reflector.takeNextMessage(QuerySpeed.SHORT);
-      } catch (Exception e) {
-        throw new AbortMessageLoop("Exception receiving message", e);
-      }
-      if (activeInstance != this) {
-        debug("stashing interrupted message bundle");
-        checkState(stashedBundle == null, "stashed bundle is not null");
-        stashedBundle = bundle;
-        throw new RuntimeException("Message loop no longer for active thread");
-      }
-      return bundle;
+    if (activeInstance != this) {
+      throw new RuntimeException("Message loop no longer for active instance");
+    }
+
+    MessageBundle poll = messageQueue.poll();
+    ifNullThen(poll, () -> safeSleep(MESSAGE_POLL_SLEEP_MS));
+    return poll;
+  }
+
+  private static MessageBundle getNextMessageBundle(MessagePublisher reflector) {
+    if (!reflector.isActive()) {
+      throw new RuntimeException(
+          "Trying to receive message from inactive client " + reflector.getSubscriptionId());
+    }
+    try {
+      return reflector.takeNextMessage(QuerySpeed.SHORT);
+    } catch (Exception e) {
+      throw new AbortMessageLoop("Exception receiving message", e);
     }
   }
 
   private void processNextMessage() {
-    ifNotNullThen(nextMessageBundle(), this::getProcessMessage);
+    ifNotNullThen(nextMessageBundle(), this::processMessageBundle);
   }
 
-  private void getProcessMessage(MessageBundle bundle) {
+  private void processMessageBundle(MessageBundle bundle) {
     final Map<String, String> attributes = bundle.attributes;
     final Map<String, Object> message = bundle.message;
+    String registryId = attributes.get(REGISTRY_ID_PROPERTY_KEY);
     String deviceId = attributes.get(DEVICE_ID_KEY);
     String subFolderRaw = attributes.get("subFolder");
     String subTypeRaw = attributes.get("subType");
     String transactionId = attributes.get("transactionId");
+    final boolean isBackup = SequenceBase.registryId.equals(registryId) == useAlternateClient;
 
     String commandSignature = format("%s/%s/%s", deviceId, subTypeRaw, subFolderRaw);
-    trace("Received command " + commandSignature + " as " + transactionId);
+    debug("Received command " + commandSignature + " as " + transactionId);
 
     boolean targetDevice = getDeviceId().equals(deviceId);
-    boolean proxiedDevice = !targetDevice && receivedEvents.containsKey(deviceId);
+    boolean proxiedDevice = !targetDevice && isCapturingMessagesFor(deviceId);
 
     if (!targetDevice && !proxiedDevice) {
       return;
@@ -1874,6 +1928,13 @@ public class SequenceBase {
 
     Envelope envelope = convertTo(Envelope.class, attributes);
 
+    if (isBackup) {
+      debug(format("Received backup message %s: %s", commandSignature, stringifyTerse(message)));
+      envelope.source = FALLBACK_REGISTRY_MARK;
+    } else {
+      envelope.source = null;
+    }
+
     try {
       envelope.publishTime = ofNullable(toDate(toInstant(ifNotNullGet(message, m ->
           (String) m.get("timestamp"))))).orElseGet(GeneralUtils::getNow);
@@ -1887,9 +1948,9 @@ public class SequenceBase {
       if (proxiedDevice) {
         handleProxyMessage(deviceId, envelope, message);
       } else if (UPDATE.value().equals(subFolderRaw)) {
-        handleUpdateMessage(envelope, subTypeRaw, message, transactionId);
+        handleUpdateMessage(envelope, message, transactionId);
       } else {
-        handleDeviceMessage(message, subTypeRaw, subFolderRaw, transactionId);
+        handleDeviceMessage(envelope, message, transactionId);
       }
 
       if (!waitingForConfigSync.get() && message.containsKey(EXCEPTION_KEY)) {
@@ -1909,8 +1970,7 @@ public class SequenceBase {
   }
 
   private void handleProxyMessage(String deviceId, Envelope envelope, Map<String, Object> message) {
-    info(format("Handling proxy device %s %s message", deviceId, envelope.subFolder.value()));
-    getReceivedEvents(deviceId, envelope.subFolder).add(message);
+    captureMessage(envelope, message);
   }
 
   private void validateMessage(Envelope attributes, Map<String, Object> message) {
@@ -1926,7 +1986,7 @@ public class SequenceBase {
     modified.deviceId = FAKE_DEVICE_ID; // Allow for non-standard device IDs.
 
     messageValidator.validateDeviceMessage(reportingDevice, message, toStringMap(modified));
-    validationResults.computeIfAbsent(makeMessageBase(attributes),
+    validationResults.computeIfAbsent(messageCaptureBase(attributes),
             key -> new ArrayList<>())
         .addAll(reportingDevice.getMessageEntries());
   }
@@ -1940,33 +2000,31 @@ public class SequenceBase {
     }
   }
 
-  private void handleDeviceMessage(Map<String, Object> message, String subTypeRaw,
-      String subFolderRaw, String transactionId) {
-    debug(format("Handling device message %s_%s %s", subTypeRaw, subFolderRaw, transactionId));
-    SubType subType = SubType.fromValue(requireNonNull(subTypeRaw, "missing subType"));
-    SubFolder subFolder = ifNotNullGet(subFolderRaw,
-        rawFolder -> SubFolder.fromValue(requireNonNull(rawFolder, "missing subFolder")));
-    switch (subType) {
+  private void handleDeviceMessage(Envelope envelope, Map<String, Object> message,
+      String transactionId) {
+    debug(format("Handling device message %s %s", messageCaptureBase(envelope), transactionId));
+    switch (envelope.subType) {
       // These are echos of sent partial config messages, so do nothing.
       case CONFIG -> trace("Ignoring echo configTransaction " + transactionId);
       // State updates are handled as a monolithic block with a state reflector update.
       case STATE -> trace("Ignoring partial state update");
-      case EVENTS -> handleEventMessage(subFolder, message);
-      default -> info("Encountered unexpected subType " + subTypeRaw);
+      case EVENTS -> handleEventMessage(envelope, message);
+      default -> info("Encountered unexpected subType " + envelope.subType);
     }
   }
 
-  private synchronized void handleUpdateMessage(Envelope envelope, String subTypeRaw,
+  private synchronized void handleUpdateMessage(Envelope envelope,
       Map<String, Object> message, String txnId) {
     try {
-      debug(format("Handling update message %s_update %s", subTypeRaw, txnId));
+      debug(format("Handling update message %s %s", messageCaptureBase(envelope), txnId));
 
       // Do this first to handle all cases of update payloads, including exceptions.
+      SubType subType = envelope.subType;
       if (txnId != null) {
-        if (CONFIG_SUBTYPE.equals(subTypeRaw)) {
+        if (SubType.CONFIG == subType) {
           ifTrueThen(configTransactions.remove(txnId),
               () -> debug("Removed configTransaction " + txnId));
-        } else if (STATE_SUBTYPE.equals(subTypeRaw) && txnId.startsWith(sessionPrefix)) {
+        } else if (SubType.STATE == subType && txnId.startsWith(sessionPrefix)) {
           String expected = stateTransaction.getAndSet(null);
           if (txnId.equals(expected)) {
             debug("Removed stateTransaction " + txnId);
@@ -1981,17 +2039,17 @@ public class SequenceBase {
         return;
       }
 
-      if (!EXPECTED_UPDATES.containsKey(subTypeRaw)) {
-        debug("Ignoring unexpected update type " + subTypeRaw);
+      if (!EXPECTED_UPDATES.containsKey(subType)) {
+        debug("Ignoring unexpected update type " + subType);
         return;
       }
-      Object converted = convertTo(EXPECTED_UPDATES.get(subTypeRaw), message);
+      Object converted = convertTo(EXPECTED_UPDATES.get(subType), message);
       if (REPLY.value().equals(message.get(OPERATION_KEY))) {
         debug("Ignoring operation reply " + txnId);
         return;
       }
-      getReceivedUpdates().put(subTypeRaw, converted);
-      int updateCount = getUpdateCount(subTypeRaw).incrementAndGet();
+      getReceivedUpdates().put(subType.value(), converted);
+      int updateCount = getUpdateCount(subType.value()).incrementAndGet();
       if (converted instanceof Config config) {
         String extraField = getExtraField(message);
         if (RESET_CONFIG_MARKER.equals(extraField)) {
@@ -2006,6 +2064,7 @@ public class SequenceBase {
         info(format("Updated config #%03d", updateCount), changeUpdate);
         debug(format("Expected last_config now %s", isoConvert(deviceConfig.timestamp)));
       } else if (converted instanceof State convertedState) {
+        captureMessage(envelope, message);
         String timestamp = isoConvert(convertedState.timestamp);
         if (convertedState.timestamp == null) {
           warning("No timestamp in state message, rejecting.");
@@ -2059,6 +2118,10 @@ public class SequenceBase {
     }
   }
 
+  private static boolean isBackupMessage(Envelope envelope) {
+    return envelope.source != null;
+  }
+
   protected void expectedStatusLevel(Level level) {
     maxAllowedStatusLevel = level.value();
   }
@@ -2089,10 +2152,8 @@ public class SequenceBase {
   }
 
   private void writeViolationsFile(Envelope envelope, Map<String, String> newViolations) {
-    String messageBase = makeMessageBase(envelope);
-    File violationsFile = new File(testDir, format(VIOLATIONS_FILE_FORMAT, messageBase));
     String violationsString = Joiner.on("\n").join(newViolations.values());
-    writeString(violationsFile, violationsString);
+    recordMessageFile(envelope, VIOLATIONS_SUFFIX, violationsString);
   }
 
   private boolean changeAllowed(DiffEntry change) {
@@ -2160,9 +2221,9 @@ public class SequenceBase {
     return null;
   }
 
-  private void handleEventMessage(SubFolder subFolder, Map<String, Object> message) {
-    getReceivedEvents(ofNullable(subFolder).orElse(SubFolder.INVALID)).add(message);
-    if (SubFolder.SYSTEM.equals(subFolder)) {
+  private void handleEventMessage(Envelope envelope, Map<String, Object> message) {
+    captureMessage(envelope, message);
+    if (SubFolder.SYSTEM.equals(envelope.subFolder)) {
       writeSystemLogs(convertTo(SystemEvents.class, message));
     }
   }
@@ -2286,8 +2347,8 @@ public class SequenceBase {
    * @return Number of messages
    */
   protected int countReceivedEvents(Class<?> clazz) {
-    SubFolder subFolder = CLASS_SUBFOLDER_MAP.get(clazz);
-    List<Map<String, Object>> events = getReceivedEvents(subFolder);
+    String messageKey = messageCaptureBase(SubType.EVENTS, CLASS_EVENT_SUBTYPE_MAP.get(clazz));
+    List<Map<String, Object>> events = getCapturedMessagesList(getDeviceId(), messageKey);
     if (events == null) {
       return 0;
     }
@@ -2295,8 +2356,8 @@ public class SequenceBase {
   }
 
   protected <T> List<T> popReceivedEvents(Class<T> clazz) {
-    SubFolder subFolder = CLASS_SUBFOLDER_MAP.get(clazz);
-    List<Map<String, Object>> events = getReceivedEvents().remove(subFolder);
+    String messageKey = messageCaptureBase(SubType.EVENTS, CLASS_EVENT_SUBTYPE_MAP.get(clazz));
+    List<Map<String, Object>> events = getCaptureMap(getDeviceId()).remove(messageKey);
     if (events == null) {
       return ImmutableList.of();
     }
@@ -2305,13 +2366,17 @@ public class SequenceBase {
   }
 
   protected void withAlternateClient(Runnable evaluator) {
+    withAlternateClient(false, evaluator);
+  }
+
+  protected void withAlternateClient(boolean suppressEndpointType, Runnable evaluator) {
     checkNotNull(altClient, "Alternate client used but test not skipped");
     checkState(!useAlternateClient, "Alternate client already in use");
     checkState(deviceConfig.system.testing.endpoint_type == null, "endpoint type not null");
     try {
       useAlternateClient = true;
       warning("Now using alternate connection client!");
-      deviceConfig.system.testing.endpoint_type = "alternate";
+      deviceConfig.system.testing.endpoint_type = suppressEndpointType ? null : "alternate";
       whileDoing("using alternate client", evaluator);
     } finally {
       useAlternateClient = false;
@@ -2528,34 +2593,38 @@ public class SequenceBase {
     SENT_CONFIG_DIFFERNATOR.mapSemanticKey(keyPath, keyName, description, describedValue);
   }
 
-  public Set<String> getReceivedDevices() {
-    return receivedEvents.entrySet().stream().filter(entry -> !entry.getValue().isEmpty())
+  public Set<String> getCapturedMessagesDevices() {
+    return capturedMessages.entrySet().stream().filter(entry -> !entry.getValue().isEmpty())
         .map(Map.Entry::getKey).collect(toSet());
   }
 
-  protected void captureReceivedEventsFor(Set<String> proxyDevices) {
-    proxyDevices.forEach(proxyId -> receivedEvents.put(proxyId, new CaptureMap()));
+  protected void enableCapturedMessagesFor(Set<String> proxyDevices) {
+    proxyDevices.forEach(proxyId -> capturedMessages.put(proxyId, new CaptureMap()));
   }
 
-  public List<Map<String, Object>> getReceivedEvents(String deviceId, SubFolder subFolder) {
-    return getReceivedEvents(deviceId).computeIfAbsent(subFolder, key -> new ArrayList<>());
+  private boolean isCapturingMessagesFor(String deviceId) {
+    return capturedMessages.containsKey(deviceId);
   }
 
-  public List<Map<String, Object>> getReceivedEvents(SubFolder subFolder) {
-    return getReceivedEvents(getDeviceId(), subFolder);
+  public CaptureMap getCaptureMap(String deviceId) {
+    return ofNullable(capturedMessages.get(deviceId)).orElse(otherEvents);
   }
 
-  public CaptureMap getReceivedEvents() {
-    return getReceivedEvents(getDeviceId());
+  public List<Map<String, Object>> getCapturedMessagesList(String deviceId, String messageKey) {
+    return getCaptureMap(deviceId).computeIfAbsent(messageKey, key -> new ArrayList<>());
   }
 
-  public CaptureMap getReceivedEvents(String deviceId) {
-    return ofNullable(receivedEvents.get(deviceId)).orElse(otherEvents);
+  protected HashMap<String, CaptureMap> flushCapturedMessages() {
+    debug("Flushing captured messages for " + capturedMessages.keySet());
+    HashMap<String, CaptureMap> messages = new HashMap<>(capturedMessages);
+    capturedMessages.clear();
+    enableCapturedMessagesFor(messages.keySet());
+    return messages;
   }
 
-  private void clearReceivedEvents() {
-    receivedEvents.clear();
-    receivedEvents.put(getDeviceId(), new CaptureMap());
+  private void resetCapturedMessages() {
+    capturedMessages.clear();
+    enableCapturedMessagesFor(ImmutableSet.of(getDeviceId()));
     otherEvents.clear();
   }
 
@@ -2613,6 +2682,10 @@ public class SequenceBase {
     }
   }
 
+  protected boolean isBackupSource(Map<String, Object> message) {
+    return FALLBACK_REGISTRY_MARK.equals(message.get(MESSAGE_SOURCE_INDICATOR));
+  }
+
   /**
    * Capability indicating if the target implements last_config state reporting.
    */
@@ -2621,9 +2694,9 @@ public class SequenceBase {
   }
 
   /**
-   * Map of captured messages for a device, grouped by SubFolder.
+   * Map of captured messages for a device, grouped by combined message key.
    */
-  protected static class CaptureMap extends HashMap<SubFolder, List<Map<String, Object>>> {
+  protected static class CaptureMap extends HashMap<String, List<Map<String, Object>>> {
 
   }
 
@@ -2671,7 +2744,7 @@ public class SequenceBase {
         testDir.mkdirs();
         deviceSystemLog = new PrintWriter(
             newOutputStream(new File(testDir, DEVICE_SYSTEM_LOG).toPath()));
-        sequencerLog = new PrintWriter(newOutputStream(new File(testDir, SEQUENCER_LOG).toPath()));
+        sequencerLog = new PrintWriter(newOutputStream(new File(testDir, SEQUENCE_LOG).toPath()));
         sequenceMd = new PrintWriter(newOutputStream(new File(testDir, SEQUENCE_MD).toPath()));
 
         putSequencerResult(description, SequenceResult.START);
@@ -2775,7 +2848,7 @@ public class SequenceBase {
       writeSequenceMdFooter("Test " + action + ": " + message);
       if (failureType != SKIP) {
         resetRequired = true;
-        if (debugLogLevel()) {
+        if (isDebugLogLevel()) {
           processComplete(e);
           trace("Stack trace:", stackTraceString(e));
           error("terminating test " + testName + " at " + timeSinceStart() + " "

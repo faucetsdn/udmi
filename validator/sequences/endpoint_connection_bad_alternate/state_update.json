@@ -1,0 +1,27 @@
+{
+  "system" : {
+    "last_config" : "2025-05-30T05:23:25Z",
+    "operation" : {
+      "operational" : true,
+      "last_start" : "2025-05-30T05:21:44Z",
+      "restart_count" : 1,
+      "mode" : "initial"
+    },
+    "serial_no" : "sequencer-24685",
+    "hardware" : {
+      "make" : "BOS",
+      "model" : "pubber"
+    },
+    "software" : {
+      "firmware" : "v1"
+    },
+    "status" : {
+      "message" : "success",
+      "category" : "system.config.apply",
+      "timestamp" : "2025-05-30T05:23:25Z",
+      "level" : 300
+    }
+  },
+  "timestamp" : "2025-05-30T05:23:27Z",
+  "version" : "1.5.3"
+}

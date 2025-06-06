@@ -33,12 +33,12 @@ def subscribe_callback(message: pubsub_v1.subscriber.message.Message) -> None:
     message_type = 'state'
   elif 'subFolder' in message.attributes and \
     'subType' not in message.attributes:
-    message_type = f'event_{message.attributes["subFolder"]}'
+    message_type = f'event_{message.attributes['subFolder']}'
   else:
     message.ack()
     return
 
-  print(f'{message.publish_time}: {message.attributes.get("deviceId")}'
+  print(f'{message.publish_time}: {message.attributes.get('deviceId')}'
         f'{message_type} \n---')
 
   # Try to pretty-print messages
@@ -101,7 +101,7 @@ response = subscriber.seek(request=request)
 
 future = subscriber.subscribe(subscription, subscribe_callback)
 print(f'Subscribing to messages from'
-      f'{",".join(device_ids)} in registry {registry_id}')
+      f'{','.join(device_ids)} in registry {registry_id}')
 
 while True:
   try:

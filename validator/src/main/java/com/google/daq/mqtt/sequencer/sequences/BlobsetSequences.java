@@ -4,14 +4,20 @@ import static com.google.common.base.Strings.isNullOrEmpty;
 import static com.google.daq.mqtt.util.TimePeriodConstants.THREE_MINUTES_MS;
 import static com.google.daq.mqtt.util.TimePeriodConstants.TWO_MINUTES_MS;
 import static com.google.udmi.util.GeneralUtils.encodeBase64;
+import static com.google.udmi.util.GeneralUtils.ifNotNullGet;
+import static com.google.udmi.util.GeneralUtils.ifTrueGet;
+import static com.google.udmi.util.GeneralUtils.ifTrueThen;
 import static com.google.udmi.util.GeneralUtils.sha256;
+import static com.google.udmi.util.JsonUtil.getNowInstant;
+import static com.google.udmi.util.JsonUtil.isoConvert;
 import static com.google.udmi.util.JsonUtil.stringify;
 import static java.lang.String.format;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotEquals;
+import static org.junit.Assert.assertTrue;
 import static udmi.schema.Bucket.ENDPOINT_CONFIG;
 import static udmi.schema.Bucket.SYSTEM_MODE;
 import static udmi.schema.Category.BLOBSET_BLOB_APPLY;
-import static udmi.schema.FeatureDiscovery.FeatureStage.ALPHA;
 import static udmi.schema.FeatureDiscovery.FeatureStage.PREVIEW;
 
 import com.google.daq.mqtt.sequencer.Feature;
@@ -20,8 +26,12 @@ import com.google.daq.mqtt.sequencer.Summary;
 import com.google.daq.mqtt.sequencer.ValidateSchema;
 import com.google.daq.mqtt.sequencer.semantic.SemanticDate;
 import com.google.daq.mqtt.sequencer.semantic.SemanticValue;
+import java.time.Duration;
+import java.time.Instant;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import org.junit.Before;
 import org.junit.Test;
 import udmi.schema.Auth_provider;
@@ -54,13 +64,10 @@ public class BlobsetSequences extends SequenceBase {
       "projects/%s/locations/%s/registries/%s/devices/%s";
   private static final String LOCAL_CLIENT_ID_FMT = "/r/%s/d/%s";
   private static final String BOGUS_ENDPOINT_HOSTNAME = "twiddily.fiddily.fog";
+  public static final String BOGUS_REGISTRY = "BOGUS_REGISTRY";
 
   private static boolean isMqttProvider() {
     return exeConfig.iot_provider == IotProvider.MQTT;
-  }
-
-  public void setReturnRedirectEndpointBlob() {
-    setDeviceConfigEndpointBlob(getAlternateEndpointHostname(), altRegistry, false);
   }
 
   @Override
@@ -99,23 +106,28 @@ public class BlobsetSequences extends SequenceBase {
 
   private void untilClearedRedirect() {
     deviceConfig.blobset.blobs.remove(IOT_BLOB_KEY);
-    untilTrue("endpoint config blobset state not defined", () -> deviceState.blobset == null
-        || deviceState.blobset.blobs.get(IOT_BLOB_KEY) == null);
+    untilTrue("endpoint config blobset state not defined",
+        () -> deviceState.blobset == null || deviceState.blobset.blobs.get(IOT_BLOB_KEY) == null);
   }
 
   private void untilSuccessfulRedirect(BlobPhase blobPhase) {
+    untilCompletedRedirect(blobPhase, false);
+  }
+
+  private void untilCompletedRedirect(BlobPhase blobPhase, boolean expectFailure) {
     // This case is tracking the initial apply of a redirect, so it sets up the mirror config.
     if (blobPhase == BlobPhase.APPLY) {
       mirrorToOtherConfig();
     }
-    untilTrue(format("blobset phase is %s and stateStatus is null", blobPhase), () -> {
+    String prefix = ifTrueGet(expectFailure, "not ", "");
+    untilTrue(format("blobset phase is %s and stateStatus is %snull", blobPhase, prefix), () -> {
       BlobBlobsetState blobBlobsetState = deviceState.blobset.blobs.get(IOT_BLOB_KEY);
       BlobBlobsetConfig blobBlobsetConfig = deviceConfig.blobset.blobs.get(IOT_BLOB_KEY);
-      // Successful reconnect sends a state message with empty Entry.
-      Entry blobStateStatus = blobBlobsetState.status;
+      // Successful reconnect sends a state message with empty Entry, error will have status.
+      boolean statusError = blobBlobsetState.status != null;
       return blobPhase.equals(blobBlobsetState.phase)
           && blobBlobsetConfig.generation.equals(blobBlobsetState.generation)
-          && blobStateStatus == null;
+          && statusError == expectFailure;
     });
 
     // This case is tracking the finalization of the redirect, so clear out the non-used one.
@@ -204,7 +216,7 @@ public class BlobsetSequences extends SequenceBase {
     untilClearedRedirect();
   }
 
-  @Feature(stage = ALPHA, bucket = ENDPOINT_CONFIG)
+  @Feature(stage = PREVIEW, bucket = ENDPOINT_CONFIG)
   @Summary("Failed connection because of bad hash.")
   @ValidateSchema(SubFolder.BLOBSET)
   @Test(timeout = TWO_MINUTES_MS)
@@ -222,17 +234,34 @@ public class BlobsetSequences extends SequenceBase {
     });
   }
 
+  private boolean hasBackupStateUpdate(HashMap<String, CaptureMap> captureMaps) {
+    List<Map<String, Object>> stateUpdates = captureMaps.get(getDeviceId())
+        .get(STATE_UPDATE_MESSAGE_TYPE);
+    return ifNotNullGet(stateUpdates, updates -> updates.stream().anyMatch(this::isBackupSource),
+        false);
+  }
+
+  @Feature(stage = PREVIEW, bucket = ENDPOINT_CONFIG)
+  @Summary("Failed connection never uses alternate registry.")
+  @ValidateSchema(SubFolder.BLOBSET)
+  @Test(timeout = TWO_MINUTES_MS)
+  public void endpoint_connection_bad_alternate() {
+    HashMap<String, CaptureMap> capture = check_endpoint_connection_success(false, true);
+    assertTrue("no backup state update", hasBackupStateUpdate(capture));
+  }
+
   @Test(timeout = TWO_MINUTES_MS)
   @Feature(stage = PREVIEW, bucket = ENDPOINT_CONFIG)
   @Summary("Check connection to an alternate project.")
   public void endpoint_connection_success_alternate() {
-    check_endpoint_connection_success(false);
+    HashMap<String, CaptureMap> capture = check_endpoint_connection_success(false, false);
+    assertFalse("found backup state update", hasBackupStateUpdate(capture));
   }
 
   @Test(timeout = THREE_MINUTES_MS)
   @Feature(stage = PREVIEW, bucket = ENDPOINT_CONFIG)
   public void endpoint_redirect_and_restart() {
-    check_endpoint_connection_success(true);
+    check_endpoint_connection_success(true, false);
   }
 
   @Test(timeout = TWO_MINUTES_MS)
@@ -244,17 +273,31 @@ public class BlobsetSequences extends SequenceBase {
     untilClearedRedirect();
   }
 
-  private void check_endpoint_connection_success(boolean doRestart) {
+  private HashMap<String, CaptureMap> check_endpoint_connection_success(boolean doRestart,
+      boolean useInvalidRegistry) {
     // Phase one: initiate connection to alternate registry.
     waitUntil("initial last_config matches config timestamp", this::lastConfigUpdated);
-    setDeviceConfigEndpointBlob(getAlternateEndpointHostname(), altRegistry, false);
-    untilSuccessfulRedirect(BlobPhase.APPLY);
 
-    withAlternateClient(() -> {
+    String useRegistry = useInvalidRegistry ? BOGUS_REGISTRY : altRegistry;
+    setDeviceConfigEndpointBlob(getAlternateEndpointHostname(), useRegistry, false);
+
+    BlobPhase endPhase = useInvalidRegistry ? BlobPhase.FINAL : BlobPhase.APPLY;
+    untilCompletedRedirect(endPhase, useInvalidRegistry);
+
+    // Flush now to only preserve messages during alternate client interval.
+    flushCapturedMessages();
+
+    withAlternateClient(useInvalidRegistry, () -> {
       // Phase two: verify connection to alternate registry.
-      untilSuccessfulRedirect(BlobPhase.FINAL);
-      waitUntil("alternate last_config matches config timestamp",
-          this::lastConfigUpdated);
+      untilCompletedRedirect(BlobPhase.FINAL, useInvalidRegistry);
+
+      if (useInvalidRegistry) {
+        // This will never be valid, so wait a bit to ensure it's had time to process the error.
+        waitDuration("alternate client connect delay", Duration.ofSeconds(10));
+        return;
+      }
+
+      waitUntil("alternate last_config matches config timestamp", this::lastConfigUpdated);
       untilClearedRedirect();
 
       if (doRestart) {
@@ -268,17 +311,30 @@ public class BlobsetSequences extends SequenceBase {
       untilSuccessfulRedirect(BlobPhase.APPLY);
     });
 
+    HashMap<String, CaptureMap> messages = flushCapturedMessages();
+
+    ifTrueThen(useInvalidRegistry,
+        () -> setDeviceConfigEndpointBlob(getAlternateEndpointHostname(), registryId, false));
+
     // Phase four: verify restoration of initial registry connection.
     whileDoing("restoring main connection", () -> {
       untilSuccessfulRedirect(BlobPhase.FINAL);
       waitUntil("restored last_config matches config timestamp", this::lastConfigUpdated);
       untilClearedRedirect();
     });
+
+    return messages;
+  }
+
+  private void waitDuration(String reason, Duration duration) {
+    Instant endTime = getNowInstant().plus(duration);
+    String waitingMessage = "waiting until " + isoConvert(endTime);
+    waitUntil(reason, () -> ifTrueGet(getNowInstant().isBefore(endTime), waitingMessage));
   }
 
   @Test
   @Summary("Restart and connect to same endpoint and expect it returns.")
-  @Feature(stage = ALPHA, bucket = SYSTEM_MODE)
+  @Feature(stage = PREVIEW, bucket = SYSTEM_MODE)
   public void system_mode_restart() {
     check_system_restart();
   }

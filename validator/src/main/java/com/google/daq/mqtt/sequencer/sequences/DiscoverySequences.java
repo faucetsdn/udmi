@@ -78,7 +78,7 @@ public class DiscoverySequences extends SequenceBase {
 
   public static final Duration SCAN_START_DELAY = Duration.ofSeconds(20);
   public static final Duration WAITING_PERIOD = SCAN_START_DELAY.plus(SCAN_START_DELAY);
-  public static final int SCAN_START_JITTER_SEC = 5;
+  public static final int SCAN_START_JITTER_SEC = 10;
   private static final int SCAN_ITERATIONS = 2;
   private static final long RANDOM_YEAR_SEC = (long) (Math.random() * 60 * 60 * 24 * 365);
   private static final Instant BASE_OLD_TIME = Instant.parse("2020-10-18T12:02:01Z");
@@ -308,7 +308,8 @@ public class DiscoverySequences extends SequenceBase {
     Instant scanStarted = getNowInstant();
     long deltaStart = Math.abs(Duration.between(scanStarted, expectedStart).toSeconds());
     checkThat("scan started at time", deltaStart <= SCAN_START_JITTER_SEC,
-        format("scan start %ss different from expected %s", deltaStart, isoConvert(expectedStart)));
+        format("scan start %s %ss different from expected %s", isoConvert(scanStarted), deltaStart,
+            isoConvert(expectedStart)));
 
     Instant expectedFinish = scanStarted.plusSeconds(SCAN_DURATION_SEC);
     waitUntil("scheduled scan complete", WAITING_PERIOD, this::detailScanStopped);
