@@ -43,7 +43,7 @@ if [[ $err != 0 ]]; then
 fi
 
 # Run registrar again, to fetch 0 devices to confirm the directory is empty
-$UDMI_ROOT/bin/registrar $SITE_MODEL_DIR $TARGET_PROJECT -x -d | tee $TMP_DIR/deletion.txt || err=y
+$UDMI_ROOT/bin/registrar $SITE_MODEL_DIR $TARGET_PROJECT | tee $TMP_DIR/deletion.txt || err=y
 if [[ $err != 0 ]]; then
   echo "Registrar exitted with error code $err"
   false
@@ -72,6 +72,7 @@ echo Registrar successfully completed in $((registrar_end-registrar_start)) seco
 export SITE_PATH=$TMP_DIR
 export PYTEST_
 
+# Pytest only accepts `.py` file endings, so make a temporary copy
 TMP_FILE=$(mktemp --suffix=.py validate_site_model_actual_XXXXXXXX)
 cp bin/validate_site_model_actual $TMP_FILE
 $UDMI_ROOT/venv/bin/python3 -m pytest -n 10 -k test_device --durations=0 $TMP_FILE
