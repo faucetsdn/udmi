@@ -1,0 +1,178 @@
+{
+    "version": "1.5.2",
+    "timestamp": "2025-05-26T21:39:29.364Z",
+    "system": {
+        "name": "device_name",
+        "description": "device description",
+        "device_version": "1.5.2",
+        "zone": "zone1",
+        "node_type": "vitual_device",
+        "tags": [
+            "energy",
+            "building"
+        ],
+        "location": {
+            "site": "AB-CDE-FGH1",
+            "panel": "Panel123",
+            "section": "AB123",
+            "room": "Room 101",
+            "floor": "1",
+            "floor_seq": 1,
+            "position": {
+                "x": 123,
+                "y": 123,
+                "z": 123
+            },
+            "coordinates": {
+                "lat": 123,
+                "long": 123,
+                "alt_m": 123
+            }
+        },
+        "serial_no": "A1B2C3D4",
+        "hardware": {
+            "make": "ACME",
+            "model": "Model 1",
+            "sku": "GF5KQ",
+            "rev": "A"
+        },
+        "software": {
+            "firmware": "123.456",
+            "os": "linux",
+            "driver": "567.123"
+        },
+        "physical_tag": {
+            "asset": {
+                "guid": "f481ef2c-3836-41e7-a3bd-af7be7ce7e4b",
+                "site": "AB-CDE-FGH1",
+                "name": "DEV-1"
+            }
+        },
+        "min_loglevel": 300,
+        "metrics_rate_sec": 300
+    },
+    "cloud": {
+        "auth_type": "RS256",
+        "resource_type": "PROXIED",
+        "config": {
+            "static_file": "example_string"
+        },
+        "blocked": true,
+        "num_id": "example_string"
+    },
+    "gateway": {
+        "gateway_id": "GAT-1",
+        "target": {
+            "family": "bacnet"
+        }
+    },
+    "localnet": {
+        "parent": {
+            "target": "DDC-1",
+            "family": "bacnet_mstp"
+        },
+        "families": {
+            "bacnet": {
+                "addr": "12345",
+                "adjunct": {
+                    "name": "My BACnet device",
+                    "description": "My very special device"
+                }
+            },
+            "modbus": {
+                "addr": "100",
+                "adjunct": {
+                    "serial_port": "/dev/USB0|COM1:",
+                    "bit_rate": 9600,
+                    "data_bits": "5|6|7|8",
+                    "stop_bits": "1|1.5|2",
+                    "parity": "none|odd|even|mark|space",
+                    "encoding": "rtu|ascii"
+                }
+            },
+            "mbus": {
+                "addr": "10",
+                "adjunct": {
+                    "serial_port": "/dev/USB0|COM1:",
+                    "bit_rate": 2400,
+                    "secondary_addr": "181129145F1D0102"
+                }
+            },
+            "ether": {
+                "addr": "12:72:9f:28:0a:9b"
+            },
+            "ipv4": {
+                "addr": "192.168.1.74"
+            },
+            "ipv6": {
+                "addr": "f4:26:27:81:a7:2f"
+            },
+            "fqdn": {
+                "addr": "dev-1.example.com"
+            },
+            "iot": {
+                "addr": "DEV-1"
+            }
+        }
+    },
+    "pointset": {
+        "exclude_units_from_config": false,
+        "exclude_points_from_config": false,
+        "sample_limit_sec": 300,
+        "sample_rate_sec": 300,
+        "points": {
+            "bacnet_temperature_sensor": {
+                "units": "no_units",
+                "description": "point description",
+                "writable": true,
+                "baseline_value": 22,
+                "baseline_tolerance": 2,
+                "baseline_state": "applied",
+                "range_min": 0,
+                "range_max": 100,
+                "cov_increment": 1,
+                "ref": "other_ref",
+                "tags": [
+                    "hvac",
+                    "temperature"
+                ],
+                "structure": {
+                    "ref": "AV:1",
+                    "name": "Temperature Sensor 123",
+                    "description": "My very special temperature sensor",
+                    "units": "Degrees-Celsius",
+                    "family": "bacnet",
+                    "possible_values": []
+                }
+            },
+            "modbus_temperature_sensor": {
+                "units": "no_units",
+                "description": "point description",
+                "writable": true,
+                "baseline_value": 22,
+                "baseline_tolerance": 2,
+                "baseline_state": "applied",
+                "range_min": 0,
+                "range_max": 100,
+                "cov_increment": 1,
+                "ref": "other_ref",
+                "tags": [
+                    "hvac",
+                    "temperature"
+                ],
+                "structure": {
+                    "ref": "modbus://1/i64/1/2/1/0",
+                    "offset": 1,
+                    "data_type": "int64|int16|float32",
+                    "bit": 1, 
+                    "number_of_registers": 2, 
+                    "multiplier": 1,
+                    "constant": 0,
+                    "name": "Temperature Sensor 123",
+                    "description": "My very special temperature sensor",
+                    "family": "modbus",
+                }
+            }
+        }
+    }
+}

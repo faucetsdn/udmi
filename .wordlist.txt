@@ -12,8 +12,11 @@ backend
 backoff
 bacnet
 BACnet
+BAMBI
+bambi
 blobset
 BMS
+BOS
 breakpoint
 buildingsiot
 centric

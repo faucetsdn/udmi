@@ -5,6 +5,7 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.udmi.util.SpreadsheetManager;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -115,7 +116,8 @@ public class BambiSiteModelManager {
       spreadsheetManager.clearValuesFromRange(sheet.getName());
       spreadsheetManager.writeToRange(sheet.getName(), asSheetData(newData));
     } catch (IOException e) {
-      throw new RuntimeException("while writing to bambi sheet " + sheet.getName(), e);
+      LOGGER.error("exception while writing to bambi sheet {}: {}",
+          sheet.getName(), e.getMessage());
     }
   }
 
@@ -157,7 +159,7 @@ public class BambiSiteModelManager {
         spreadsheetManager.writeToRange(entry.getKey().getName(), entry.getValue());
       }
     } catch (IOException e) {
-      throw new RuntimeException("failed to write device metadata to spreadsheet", e);
+      LOGGER.error("exception while writing device metadata to spreadsheet {}", e.getMessage());
     }
   }
 
@@ -277,7 +279,13 @@ public class BambiSiteModelManager {
   }
 
   private List<List<Object>> getRecordsFromSheet(BambiSheet bambiSheet) throws IOException {
-    return spreadsheetManager.getSheetRecords(bambiSheet.getName());
+    try {
+      return spreadsheetManager.getSheetRecords(bambiSheet.getName());
+    } catch (IOException ex) {
+      LOGGER.error("could not get records from tab {}, failed with exception {}",
+          bambiSheet.getName(), ex.getMessage());
+      return Collections.emptyList();
+    }
   }
 
   private List<List<Object>> asSheetData(Map<String, String> map) {

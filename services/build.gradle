@@ -6,7 +6,7 @@ buildscript {
     }
 
     dependencies {
-        classpath 'com.github.johnrengelman.shadow:com.github.johnrengelman.shadow.gradle.plugin:7.1.2'
+        classpath 'gradle.plugin.com.github.johnrengelman:shadow:7.1.2'
     }
 }
 
@@ -16,18 +16,19 @@ plugins {
     id 'java'
     id 'jacoco'
     id 'checkstyle'
-    id 'maven-publish'
 }
 
-group 'daq-pubber'
+group 'services'
 version '1.0-SNAPSHOT'
 
 java {
     toolchain {
         languageVersion = JavaLanguageVersion.of(21)
     }
-    sourceCompatibility = JavaVersion.VERSION_17
-    targetCompatibility = JavaVersion.VERSION_17
+}
+
+compileJava {
+    options.compilerArgs = ['-Xlint:unchecked']
 }
 
 sourceSets {
@@ -42,6 +43,10 @@ sourceSets {
             srcDirs '../common/src/test/java'
         }
     }
+}
+
+test {
+    finalizedBy jacocoTestReport
 }
 
 jacocoTestReport {
@@ -62,11 +67,12 @@ checkstyle {
 }
 checkstyleMain.source = 'src/main/java'
 
-jar {
-    manifest {
-        attributes 'Main-Class': 'daq.pubber.Pubber'
-    }
-}
+// TODO: Uncomment after java app is added in place of bin/bambi_service
+//jar {
+//    manifest {
+//        attributes 'Main-Class': 'com.google.bos.iot.core.services.Application'
+//    }
+//}
 
 shadowJar {
     mergeServiceFiles()
@@ -79,55 +85,32 @@ repositories {
     maven { url 'https://jitpack.io' }
 }
 
-publishing {
-    repositories {
-        maven {
-            url = "https://maven.pkg.github.com/${System.getenv("GITHUB_REPOSITORY")}"
-            name = "GitHubPackages"
-            credentials {
-                username = System.getenv("GITHUB_ACTOR")
-                password = System.getenv("GITHUB_TOKEN")
-            }
-        }
-    }
-    publications {
-        mavenJava(MavenPublication) {
-            groupId = 'com.google.udmi'
-            artifactId = 'lib'
-            version = System.getenv("UDMI_VERSION")
-            from components.java
-        }
-    }
-}
-
 dependencies {
-    implementation 'io.jsonwebtoken:jjwt:0.9.1'
+    implementation group: 'org.slf4j', name: 'slf4j-simple', version:'1.7.5'
+    implementation group: 'com.fasterxml.jackson.core', name: 'jackson-databind', version: '2.12.4'
+    implementation group: 'com.fasterxml.jackson.dataformat', name: 'jackson-dataformat-yaml', version: '2.11.0'
     implementation group: 'com.github.java-json-tools', name: 'json-schema-validator', version: '2.2.14'
+    implementation 'io.jsonwebtoken:jjwt:0.7.0'
     implementation 'javax.xml.bind:jaxb-api:2.3.1'
-    implementation 'com.sun.xml.bind:jaxb-impl:3.0.1'
-    implementation 'commons-io:commons-io:2.5'
+    implementation 'org.eclipse.paho:org.eclipse.paho.client.mqttv3:1.1.0'
     implementation 'com.google.guava:guava:30.1.1-jre'
     implementation 'com.google.cloud:google-cloud-logging:2.3.2'
-    implementation 'com.google.cloud:google-cloud-pubsub:1.66.0'
-    implementation('com.google.api-client:google-api-client:1.31.2') {
+    implementation ('com.google.apis:google-api-services-cloudiot:v1-rev20210323-1.31.0') {
         exclude group: 'com.google.guava', module: 'guava-jdk5'
     }
-    implementation 'com.fasterxml.jackson.core:jackson-databind:2.12.4'
-    implementation('com.google.apis:google-api-services-cloudiot:v1-rev20210323-1.31.0') {
-        exclude group: 'com.google.guava', module: 'guava-jdk5'
-    }
-    implementation 'joda-time:joda-time:2.10.10'
-    implementation 'org.eclipse.paho:org.eclipse.paho.client.mqttv3:1.2.5'
-    implementation('io.moquette:moquette-broker:0.15') {
-        exclude group: 'org.slf4j', module: 'slf4j-log4j12'
-    }
-    implementation 'org.slf4j:slf4j-simple:1.7.30'
+    implementation 'commons-io:commons-io:2.5'
     implementation 'org.bouncycastle:bcpkix-jdk15on:1.64'
+
+    implementation 'com.google.cloud:google-cloud-pubsub:1.66.0'
+    implementation 'com.google.cloud:google-cloud-firestore:0.84.0-beta'
+    implementation group: 'junit', name: 'junit', version: '4.13.2'
+    implementation 'org.jetbrains:annotations:20.1.0'
 
     implementation 'com.google.oauth-client:google-oauth-client-jetty:1.20.0'
     implementation 'com.google.apis:google-api-services-sheets:v4-rev484-1.20.0'
-    implementation 'org.jetbrains:annotations:20.1.0'
 
-    testImplementation group: 'junit', name: 'junit', version: '4.13.2'
+    testImplementation 'org.junit.jupiter:junit-jupiter-api:5.9.2'
+    testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.9.2'
     testImplementation 'org.mockito:mockito-core:5.3.1'
+    testImplementation 'org.mockito:mockito-junit-jupiter:5.6.0'
 }
