@@ -115,7 +115,7 @@ while True:
     td = datetime.datetime.utcnow() - search_timestamp
     if td.total_seconds() > search_window:
       search_timestamp = (search_timestamp
-        + datetime.timedelta(seconds=(td.total_seconds() - search_window)))
+        + datetime.timedelta(seconds=td.total_seconds() - search_window))
   except subprocess.CalledProcessError as e :
     print(e)
     print('Ensure gcloud is authenticated and account has permissions')

@@ -237,7 +237,7 @@ class Sequence:
       for l in failing:
         f.append(
             # pylint: disable-next=line-too-long
-            f"{Sequence.indent(l.ljust(longest_line_length, ' '), 4, CROSS)} {CROSS}"
+            f"{Sequence.indent(l.ljust(longest_line_length, " "), 4, CROSS)} {CROSS}"
         )
       f.append("-" * dash_width)
       f.append("")
