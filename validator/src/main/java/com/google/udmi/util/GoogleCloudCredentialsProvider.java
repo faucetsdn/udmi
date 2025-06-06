@@ -7,6 +7,9 @@ import org.eclipse.jgit.transport.CredentialItem;
 import org.eclipse.jgit.transport.CredentialsProvider;
 import org.eclipse.jgit.transport.URIish;
 
+/**
+ * Google Cloud Credentials Provider - refreshes credentials periodically for the requested scopes.
+ */
 public class GoogleCloudCredentialsProvider extends CredentialsProvider {
 
   private final GoogleCredentials credentials;

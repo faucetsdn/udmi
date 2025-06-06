@@ -24,7 +24,9 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.PrintStream;
 import java.nio.charset.StandardCharsets;
+import java.time.Clock;
 import java.time.Instant;
+import java.time.ZoneOffset;
 import java.util.List;
 import org.junit.After;
 import org.junit.Before;
@@ -50,6 +52,7 @@ public class SheetsOutputStreamTest {
   private SpreadsheetManager mockSpreadsheetManager;
 
   private MockedStatic<Instant> mockedStaticInstant;
+  private MockedStatic<Clock> mockedStaticClock;
   @Mock
   private Instant mockInstant;
   @Captor
@@ -83,8 +86,17 @@ public class SheetsOutputStreamTest {
     testOutPrintStream = new PrintStream(testOutContent, true, StandardCharsets.UTF_8);
     testErrPrintStream = new PrintStream(testErrContent, true, StandardCharsets.UTF_8);
 
+    Clock fixedClock = Clock.fixed(Instant.ofEpochMilli(0), ZoneOffset.UTC);
+    mockedStaticClock = Mockito.mockStatic(Clock.class);
+    mockedStaticClock.when(Clock::systemUTC).thenReturn(fixedClock);
+
     mockedStaticInstant = Mockito.mockStatic(Instant.class);
     mockedStaticInstant.when(Instant::now).thenReturn(mockInstant);
+
+    Clock spyClock = spy(fixedClock);
+    when(spyClock.instant()).thenReturn(mockInstant);
+    mockedStaticClock.when(Clock::systemUTC).thenReturn(spyClock);
+
     when(mockInstant.toEpochMilli()).thenReturn(0L); // Start time at 0
 
     sheetsOutputStream = spy(
@@ -102,7 +114,12 @@ public class SheetsOutputStreamTest {
     System.setErr(originalSystemErr);
     System.setIn(originalSystemIn);
 
-    mockedStaticInstant.close();
+    if (mockedStaticInstant != null) {
+      mockedStaticInstant.close();
+    }
+    if (mockedStaticClock != null) {
+      mockedStaticClock.close();
+    }
 
     try {
       testOutPrintStream.close();

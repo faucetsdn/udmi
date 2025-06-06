@@ -8,6 +8,9 @@ import org.eclipse.jgit.revwalk.RevCommit;
 import org.eclipse.jgit.transport.FetchResult;
 import org.eclipse.jgit.transport.PushResult;
 
+/**
+ * Interface for a Git Repository.
+ */
 public interface GitRepositoryInterface extends AutoCloseable {
 
   void init() throws GitAPIException;

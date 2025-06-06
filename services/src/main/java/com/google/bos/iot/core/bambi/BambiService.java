@@ -28,6 +28,10 @@ import java.util.regex.Pattern;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+/**
+ * BAMBI Backend Service - polls the PubSub topic and responds to incoming requests
+ * for import/export operations while streaming logs to the requesting spreadsheet.
+ */
 public class BambiService {
 
   private static final Logger LOGGER = LoggerFactory.getLogger(BambiService.class);
@@ -43,6 +47,9 @@ public class BambiService {
   private final String siteModelCloneDir;
   private final String localOriginDir;
 
+  /**
+   * Initialize the BambiService.
+   */
   public BambiService(String gcpProject, String udmiNamespace, String siteModelBaseDir,
       String localOriginDir) {
     this.gcpProject = gcpProject;
@@ -78,7 +85,19 @@ public class BambiService {
     this(gcpProject, udmiNamespace, siteModelBaseDir, null);
   }
 
+  /**
+   * Entry into the service.
+   *
+   * @param args command line args
+   */
   public static void main(String[] args) {
+
+    if (args.length < 2 || args.length > 3) {
+      System.err.println(
+          "Usage: BambiService <gcpProjectId> <siteModelCloneDir> [<localOriginDir>]");
+      System.exit(1);
+    }
+
     String gcpProject = args[0];
     String siteModelBaseDir = args[1];
     String udmiNamespace = System.getenv("UDMI_NAMESPACE");
@@ -106,6 +125,9 @@ public class BambiService {
                 }));
   }
 
+  /**
+   * Start the service.
+   */
   public void start() {
     if (running.compareAndSet(false, true)) {
       pollingExecutor.submit(this::pollForMessages);
@@ -239,6 +261,9 @@ public class BambiService {
     }
   }
 
+  /**
+   * Stop the service.
+   */
   public void stop() {
     LOGGER.info("Attempting to stop poller...");
     running.set(false);

@@ -13,6 +13,9 @@ import java.util.stream.Collectors;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+/**
+ * Manage interactions with a Google Cloud Source Repository.
+ */
 public class GoogleCloudSourceRepository extends GenericGitRepository {
 
   private static final Logger LOGGER = LoggerFactory.getLogger(GoogleCloudSourceRepository.class);
@@ -25,6 +28,9 @@ public class GoogleCloudSourceRepository extends GenericGitRepository {
   private final boolean subscriptionExists;
   private final RepositoryConfig repositoryConfig;
 
+  /**
+   * Initialize a Google cloud source repository.
+   */
   public GoogleCloudSourceRepository(RepositoryConfig config) {
     super(config);
     this.repositoryConfig = config;

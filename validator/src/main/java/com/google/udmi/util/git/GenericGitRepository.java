@@ -26,6 +26,9 @@ import org.eclipse.jgit.transport.RemoteRefUpdate;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+/**
+ * Class for interactions with a generic Git repository.
+ */
 public class GenericGitRepository implements GitRepositoryInterface {
 
   protected static Logger LOGGER = LoggerFactory.getLogger(GenericGitRepository.class);
@@ -87,7 +90,6 @@ public class GenericGitRepository implements GitRepositoryInterface {
       throw new IllegalStateException("Remote URL must be configured for cloning.");
     }
     File localDir = prepareLocalDirectory();
-    // Check if the directory exists, is not a git repo, but is not empty
     if (localDir.exists() && localDir.isDirectory() && !new File(localDir, ".git").exists()) {
       if (localDir.list() != null && Objects.requireNonNull(localDir.list()).length > 0) {
         throw new IOException("Local path " + localDir.getAbsolutePath()
@@ -96,7 +98,7 @@ public class GenericGitRepository implements GitRepositoryInterface {
       }
     } else if (new File(localDir, ".git").exists()) {
       LOGGER.info("Repository already exists at {}. Attempting to open.", config.localPath());
-      open(); // If .git exists, just open it. Consider fetching/pulling after this.
+      open();
       return;
     }
 
@@ -107,7 +109,7 @@ public class GenericGitRepository implements GitRepositoryInterface {
     if (config.credentialsProvider() != null) {
       cloneCmd.setCredentialsProvider(config.credentialsProvider());
     }
-    this.git = cloneCmd.call(); // Assign to the managed git instance
+    this.git = cloneCmd.call();
     LOGGER.info("Repository cloned successfully.");
   }
 
@@ -117,7 +119,6 @@ public class GenericGitRepository implements GitRepositoryInterface {
       throw new IllegalStateException("Remote URL must be configured for cloning.");
     }
     File localDir = prepareLocalDirectory();
-    // Check if the directory exists, is not a git repo, but is not empty
     if (localDir.exists() && localDir.isDirectory() && !new File(localDir, ".git").exists()) {
       if (localDir.list() != null && Objects.requireNonNull(localDir.list()).length > 0) {
         throw new IOException("Local path " + localDir.getAbsolutePath()
@@ -126,7 +127,7 @@ public class GenericGitRepository implements GitRepositoryInterface {
       }
     } else if (new File(localDir, ".git").exists()) {
       LOGGER.info("Repository already exists at {}. Attempting to open.", config.localPath());
-      open(); // If .git exists, just open it. Consider fetching/pulling after this.
+      open();
       return;
     }
 
@@ -138,14 +139,15 @@ public class GenericGitRepository implements GitRepositoryInterface {
     if (config.credentialsProvider() != null) {
       cloneCmd.setCredentialsProvider(config.credentialsProvider());
     }
-    this.git = cloneCmd.call(); // Assign to the managed git instance
+    this.git = cloneCmd.call();
     LOGGER.info("Repository cloned successfully.");
   }
 
   protected Git getGit() {
     if (git == null) {
       throw new IllegalStateException(
-          "Git repository is not initialized or opened. Call init(), cloneRepo(), or ensure the constructor opened an existing repo.");
+          "Git repository is not initialized or opened. "
+              + "Call init(), cloneRepo(), or ensure the constructor opened an existing repo.");
     }
     return git;
   }
@@ -160,19 +162,19 @@ public class GenericGitRepository implements GitRepositoryInterface {
   }
 
   @Override
-  public RevCommit commit(String message) throws GitAPIException, IOException {
+  public RevCommit commit(String message) throws GitAPIException {
     return getGit().commit().setMessage(message).call();
   }
 
   @Override
   public RevCommit commit(String authorName, String authorEmail, String message)
-      throws GitAPIException, IOException {
+      throws GitAPIException {
     PersonIdent author = new PersonIdent(authorName, authorEmail);
     return getGit().commit().setAuthor(author).setCommitter(author).setMessage(message).call();
   }
 
   @Override
-  public FetchResult fetch() throws GitAPIException, IOException {
+  public FetchResult fetch() throws GitAPIException {
     FetchCommand fetchCmd = getGit().fetch();
     if (config.credentialsProvider() != null) {
       fetchCmd.setCredentialsProvider(config.credentialsProvider());
@@ -181,18 +183,17 @@ public class GenericGitRepository implements GitRepositoryInterface {
   }
 
   @Override
-  public void pull() throws GitAPIException, IOException {
+  public void pull() throws GitAPIException {
     PullCommand pullCmd = getGit().pull();
     if (config.credentialsProvider() != null) {
       pullCmd.setCredentialsProvider(config.credentialsProvider());
     }
     PullResult result = pullCmd.call();
     if (!result.isSuccessful()) {
-      // Provide more context from FetchResult if pull failed
-      String fetchResultMessage = result.getFetchResult() != null ?
-          result.getFetchResult().getMessages() : "No fetch result messages.";
-      String mergeStatus = result.getMergeResult() != null ?
-          result.getMergeResult().getMergeStatus().toString() : "No merge result.";
+      String fetchResultMessage = result.getFetchResult() != null
+          ? result.getFetchResult().getMessages() : "No fetch result messages.";
+      String mergeStatus = result.getMergeResult() != null
+          ? result.getMergeResult().getMergeStatus().toString() : "No merge result.";
 
       throw new GitAPIException(String.format("Pull failed. Fetch result: %s. Merge status: %s",
           fetchResultMessage, mergeStatus)) {
@@ -202,7 +203,7 @@ public class GenericGitRepository implements GitRepositoryInterface {
   }
 
   @Override
-  public Iterable<PushResult> push() throws GitAPIException, IOException {
+  public Iterable<PushResult> push() throws GitAPIException {
     PushCommand pushCmd = getGit().push();
     if (config.credentialsProvider() != null) {
       pushCmd.setCredentialsProvider(config.credentialsProvider());
@@ -224,26 +225,26 @@ public class GenericGitRepository implements GitRepositoryInterface {
   }
 
   @Override
-  public String getCurrentBranch() throws IOException, GitAPIException {
+  public String getCurrentBranch() throws IOException {
     return getGit().getRepository().getBranch();
   }
 
   @Override
-  public List<String> listLocalBranches() throws GitAPIException, IOException {
+  public List<String> listLocalBranches() throws GitAPIException {
     return getGit().branchList().call().stream()
         .map(Ref::getName)
         .collect(Collectors.toList());
   }
 
   @Override
-  public List<String> listRemoteBranches() throws GitAPIException, IOException {
+  public List<String> listRemoteBranches() throws GitAPIException {
     return getGit().branchList().setListMode(ListBranchCommand.ListMode.REMOTE).call().stream()
         .map(Ref::getName)
         .collect(Collectors.toList());
   }
 
   @Override
-  public List<String> listTags() throws GitAPIException, IOException {
+  public List<String> listTags() throws GitAPIException {
     return getGit().tagList().call().stream()
         .map(Ref::getName)
         .map(name -> name.startsWith(Constants.R_TAGS) ? name.substring(Constants.R_TAGS.length())
@@ -252,18 +253,18 @@ public class GenericGitRepository implements GitRepositoryInterface {
   }
 
   @Override
-  public Status getStatus() throws GitAPIException, IOException {
+  public Status getStatus() throws GitAPIException {
     return getGit().status().call();
   }
 
   @Override
-  public List<RevCommit> getCommitLog(int maxCount) throws GitAPIException, IOException {
+  public List<RevCommit> getCommitLog(int maxCount) throws GitAPIException {
     Iterable<RevCommit> log = getGit().log().setMaxCount(maxCount).call();
     return StreamSupport.stream(log.spliterator(), false).collect(Collectors.toList());
   }
 
   @Override
-  public void checkoutBranch(String branchName) throws GitAPIException, IOException {
+  public void checkoutBranch(String branchName) throws GitAPIException {
     getGit().checkout().setName(branchName).call();
   }
 
@@ -286,12 +287,12 @@ public class GenericGitRepository implements GitRepositoryInterface {
   }
 
   @Override
-  public void createBranch(String branchName) throws GitAPIException, IOException {
+  public void createBranch(String branchName) throws GitAPIException {
     getGit().branchCreate().setName(branchName).call();
   }
 
   @Override
-  public void createAndCheckoutBranch(String branchName) throws GitAPIException, IOException {
+  public void createAndCheckoutBranch(String branchName) throws GitAPIException {
     getGit().checkout().setCreateBranch(true).setName(branchName).call();
   }
 
@@ -299,7 +300,6 @@ public class GenericGitRepository implements GitRepositoryInterface {
   public void deleteLocalBranch(String branchName, boolean force)
       throws GitAPIException, IOException {
     if (getCurrentBranch().equals(branchName)) {
-      // Attempt to switch to a common default branch before deleting
       String mainBranch = Constants.R_HEADS + "main";
       String masterBranch = Constants.R_HEADS + "master";
       List<String> localBranches = listLocalBranches();
@@ -309,7 +309,6 @@ public class GenericGitRepository implements GitRepositoryInterface {
       } else if (localBranches.contains(masterBranch)) {
         checkoutBranch("master");
       } else if (!localBranches.isEmpty() && !localBranches.get(0).endsWith(branchName)) {
-        // Checkout first available different branch
         checkoutBranch(localBranches.get(0).substring(Constants.R_HEADS.length()));
       } else {
         throw new IllegalStateException("Cannot delete current branch '" + branchName

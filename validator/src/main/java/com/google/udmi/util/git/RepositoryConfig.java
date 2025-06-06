@@ -13,11 +13,16 @@ import java.security.GeneralSecurityException;
 import java.util.Collections;
 import org.eclipse.jgit.transport.CredentialsProvider;
 
-enum RepositoryType {
-  GOOGLE_CLOUD_SOURCE, // GCP Cloud Source Repositories
-  LOCAL_REMOTE,        // A generic Git server or local file system repo
-}
 
+/**
+ * Repository Config. Used to initialize a GenericGitRepository.
+ *
+ * @param remoteUrl URL for remote repository, can also be a local path
+ * @param localPath URL for the local repository
+ * @param type Type of the repository
+ * @param credentialsProvider To manage credentials
+ * @param projectId Project ID specifically for Google cloud source repositories
+ */
 public record RepositoryConfig(String remoteUrl,
                                String localPath,
                                RepositoryType type,
@@ -40,6 +45,9 @@ public record RepositoryConfig(String remoteUrl,
         credentialsProvider, projectId);
   }
 
+  /**
+   * Get RepositoryConfig for a GCSR from its repository name.
+   */
   public static RepositoryConfig fromGoogleCloudSourceRepoName(String repoName, String localPath,
       CredentialsProvider credentialsProvider, String projectId)
       throws IOException, GeneralSecurityException {
