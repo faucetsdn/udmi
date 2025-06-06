@@ -95,8 +95,8 @@ while True:
 
       if log_data['status'].get('code') != 0:
         metadata = (f'{metadata}'
-                    f'({log_data["status"].get("description")}'
-                    f'{log_data["status"].get("message", "")})')
+                    f'({log_data['status'].get('description')}'
+                    f'{log_data['status'].get('message', '')})')
 
       entries.append({'timestamp_obj': dateutil.parser.parse(timestamp),
               'timestamp': timestamp,
