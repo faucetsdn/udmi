@@ -33,7 +33,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
-import org.jetbrains.annotations.NotNull;
 import udmi.schema.CloudModel;
 import udmi.schema.CloudModel.ModelOperation;
 import udmi.schema.DiscoveryConfig;
@@ -61,6 +60,8 @@ public class MappingAgent {
   private CloudIotManager cloudIotManager;
   private SiteModel siteModel;
   private Date generationDate;
+
+  private Integer suffixToStart = 1;
 
   /**
    * Create an agent given the configuration.
@@ -153,7 +154,10 @@ public class MappingAgent {
         System.err.println("Skipping existing device file for family::address = " + entry.getKey());
         //TODO: update the existing device
       } else {
-        File metadataFile = siteModel.getDeviceFile(entry.getKey(), METADATA_JSON);
+        // UNK denotes unknown device
+        String newDeviceName = "UNK-" + suffixToStart;
+        suffixToStart++;
+        File metadataFile = siteModel.getDeviceFile(newDeviceName, METADATA_JSON);
         System.err.println("Writing device metadata file " + metadataFile);
         metadataFile.getParentFile().mkdirs();
         JsonUtil.writeFile(entry.getValue(), metadataFile);
