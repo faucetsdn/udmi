@@ -33,6 +33,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
+import org.jetbrains.annotations.NotNull;
 import udmi.schema.CloudModel;
 import udmi.schema.CloudModel.ModelOperation;
 import udmi.schema.DiscoveryConfig;
@@ -41,6 +42,7 @@ import udmi.schema.Enumerations.Depth;
 import udmi.schema.Envelope.SubFolder;
 import udmi.schema.ExecutionConfiguration;
 import udmi.schema.FamilyDiscoveryConfig;
+import udmi.schema.FamilyLocalnetModel;
 import udmi.schema.GatewayModel;
 import udmi.schema.Metadata;
 import udmi.schema.SystemModel;
@@ -98,7 +100,7 @@ public class MappingAgent {
       switch (mappingCommand) {
         case "provision" -> setupProvision();
         case "discover" -> initiateDiscover();
-        case "reconcile" -> reconcileDiscovery();
+        case "map" -> mapDiscoveredDevices();
         default -> throw new RuntimeException("Unknown mapping command " + mappingCommand);
       }
       System.err.printf("Completed mapper %s command%n", mappingCommand);
@@ -141,25 +143,63 @@ public class MappingAgent {
     return familyDiscoveryConfig;
   }
 
-  private void reconcileDiscovery() {
-    File extrasDir = siteModel.getExtrasDir();
-    File[] extras = extrasDir.listFiles();
-    if (extras == null || extras.length == 0) {
-      throw new RuntimeException("No extras found to reconcile");
-    }
-    List<Entry<String, Metadata>> entries = Arrays.stream(extras).map(this::convertExtra)
-        .filter(entry -> !entry.getKey().equals(NO_DISCOVERY)).toList();
-    entries.forEach(entry -> {
-      File metadataFile = siteModel.getDeviceFile(entry.getKey(), METADATA_JSON);
-      if (metadataFile.exists()) {
-        System.err.println("Skipping existing device file " + metadataFile);
+  private void mapDiscoveredDevices() {
+    List<Entry<String, Metadata>> mappedDiscoveredEntries = getMappedDiscoveredEntries();
+    Map<String, Metadata> devicesEntriesMap = getDevicesEntries();
+
+    mappedDiscoveredEntries.forEach(entry -> {
+
+      if (devicesEntriesMap.containsKey(entry.getKey())) {
+        System.err.println("Skipping existing device file for family::address = " + entry.getKey());
+        //TODO: update the existing device
       } else {
+        File metadataFile = siteModel.getDeviceFile(entry.getKey(), METADATA_JSON);
         System.err.println("Writing device metadata file " + metadataFile);
         metadataFile.getParentFile().mkdirs();
         JsonUtil.writeFile(entry.getValue(), metadataFile);
       }
     });
 
+    updateProxyIdsForDiscoveryNode(mappedDiscoveredEntries);
+  }
+
+  private List<Entry<String, Metadata>> getMappedDiscoveredEntries() {
+    File extrasDir = siteModel.getExtrasDir();
+    File[] extras = extrasDir.listFiles();
+    if (extras == null || extras.length == 0) {
+      throw new RuntimeException("No extras found to reconcile");
+    }
+    List<Entry<String, Metadata>> mappedDiscoveredEntries = Arrays.stream(extras)
+        .map(this::convertExtraDiscoveredEvents)
+        .filter(entry -> !entry.getKey().equals(NO_DISCOVERY)).toList();
+    return mappedDiscoveredEntries;
+  }
+
+  private Map<String, Metadata> getDevicesEntries() {
+    File devicesDir = siteModel.getDevicesDir();
+    File[] devices = devicesDir.listFiles();
+    Map<String, Metadata> devicesEntriesMap = new HashMap<>();
+    if (devices == null || devices.length == 0) {
+      return devicesEntriesMap;
+    }
+
+    for (File file :devices) {
+      Metadata deviceMetadata = loadFileStrict(Metadata.class,
+          new File(file, "metadata.json"));
+      if (deviceMetadata == null || deviceMetadata.localnet == null) {
+        continue;
+      }
+      Map<String, FamilyLocalnetModel> deviceFamilies = deviceMetadata.localnet.families;
+      for (String familyName : deviceFamilies.keySet()) {
+        devicesEntriesMap.put(familyName + "::" + deviceFamilies.get(familyName).addr,
+            deviceMetadata);
+      }
+    }
+
+    return devicesEntriesMap;
+  }
+
+  private void updateProxyIdsForDiscoveryNode(List<Entry<String, Metadata>> entries) {
     List<String> proxyIds = entries.stream().map(Entry::getKey).toList();
     File gatewayMetadata = siteModel.getDeviceFile(deviceId, METADATA_JSON);
     Metadata metadata = loadFileStrictRequired(Metadata.class, gatewayMetadata);
@@ -173,10 +213,15 @@ public class MappingAgent {
     writeFile(metadata, gatewayMetadata);
   }
 
-  private Entry<String, Metadata> convertExtra(File file) {
+  private Entry<String, Metadata> convertExtraDiscoveredEvents(File file) {
     DiscoveryEvents discoveryEvents = loadFileStrict(DiscoveryEvents.class,
         new File(file, "cloud_metadata/udmi_discovered_with.json"));
-    if (discoveryEvents == null) {
+    boolean isInvalidDiscoveryEvent = false;
+    if (discoveryEvents.family == null ||discoveryEvents.addr == null) {
+      System.err.println("Invalid discovery event, family or address not present");
+      isInvalidDiscoveryEvent = true;
+    }
+    if (discoveryEvents == null || isInvalidDiscoveryEvent) {
       return Map.entry(NO_DISCOVERY, new Metadata());
     }
     Metadata metadata = new Metadata();
@@ -185,8 +230,8 @@ public class MappingAgent {
     metadata.system = new SystemModel();
     metadata.gateway = new GatewayModel();
     metadata.gateway.gateway_id = deviceId;
-    String deviceName = (String) discoveryEvents.system.ancillary.get("device-name");
-    return Map.entry(deviceName, metadata);
+    String familyWithAddress = discoveryEvents.family + "::" + discoveryEvents.addr;
+    return Map.entry(familyWithAddress, metadata);
   }
 
   private void initialize() {
