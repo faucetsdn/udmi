@@ -94,15 +94,15 @@ while True:
         metadata = log_data['disconnectType']
 
       if log_data['status'].get('code') != 0:
-        metadata = (f'{metadata}'
-                    f'({log_data['status'].get('description')}'
-                    f'{log_data['status'].get('message', '')})')
+        description = log_data['status'].get('description')
+        message = log_data['status'].get('message', '')
+        metadata = f'{metadata}{description}{message}'
 
       entries.append({'timestamp_obj': dateutil.parser.parse(timestamp),
               'timestamp': timestamp,
-              'registry_id':registry_id,
-              'event_type':event_type,
-              'metadata':metadata,
+              'registry_id': registry_id,
+              'event_type': event_type,
+              'metadata': metadata,
               'device_id': log_device_id })
 
     entries.sort(key=lambda item: item['timestamp_obj'])
