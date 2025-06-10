@@ -102,8 +102,9 @@ print(f'Seeking subscription to {time_now}')
 response = subscriber.seek(request=request)
 
 future = subscriber.subscribe(subscription, subscribe_callback)
+devices_csv = ','.join(device_ids)
 print(f'Subscribing to messages from'
-      f'{','.join(device_ids)} in registry {registry_id}')
+      f'{devices_csv} in registry {registry_id}')
 
 while True:
   try:
