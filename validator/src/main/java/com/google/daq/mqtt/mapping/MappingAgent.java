@@ -3,8 +3,10 @@ package com.google.daq.mqtt.mapping;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
 import static com.google.daq.mqtt.util.ConfigUtil.UDMI_VERSION;
+import static com.google.udmi.util.Common.UNKOWN_DEVICE_NAME_PREFIX;
 import static com.google.udmi.util.Common.removeNextArg;
 import static com.google.udmi.util.GeneralUtils.catchToNull;
+import static com.google.udmi.util.GeneralUtils.generateKeyWithTwoFields;
 import static com.google.udmi.util.JsonUtil.isoConvert;
 import static com.google.udmi.util.JsonUtil.loadFileStrict;
 import static com.google.udmi.util.JsonUtil.loadFileStrictRequired;
@@ -154,13 +156,9 @@ public class MappingAgent {
         System.err.println("Skipping existing device file for family::address = " + entry.getKey());
         //TODO: update the existing device
       } else {
-        // UNK denotes unknown device
-        String newDeviceName = "UNK-" + suffixToStart;
+        String newDeviceName = UNKOWN_DEVICE_NAME_PREFIX + suffixToStart;
         suffixToStart++;
-        File metadataFile = siteModel.getDeviceFile(newDeviceName, METADATA_JSON);
-        System.err.println("Writing device metadata file " + metadataFile);
-        metadataFile.getParentFile().mkdirs();
-        JsonUtil.writeFile(entry.getValue(), metadataFile);
+        siteModel.createDeviceMetadata(entry.getValue(), newDeviceName);
       }
     });
 
@@ -180,23 +178,13 @@ public class MappingAgent {
   }
 
   private Map<String, Metadata> getDevicesEntries() {
-    File devicesDir = siteModel.getDevicesDir();
-    File[] devices = devicesDir.listFiles();
     Map<String, Metadata> devicesEntriesMap = new HashMap<>();
-    if (devices == null || devices.length == 0) {
-      return devicesEntriesMap;
-    }
 
-    for (File file :devices) {
-      Metadata deviceMetadata = loadFileStrict(Metadata.class,
-          new File(file, "metadata.json"));
-      if (deviceMetadata == null || deviceMetadata.localnet == null) {
-        continue;
-      }
+    for (Metadata deviceMetadata : siteModel.allMetadata().values()) {
       Map<String, FamilyLocalnetModel> deviceFamilies = deviceMetadata.localnet.families;
       for (String familyName : deviceFamilies.keySet()) {
-        devicesEntriesMap.put(familyName + "::" + deviceFamilies.get(familyName).addr,
-            deviceMetadata);
+        devicesEntriesMap.put(generateKeyWithTwoFields(familyName,
+            deviceFamilies.get(familyName).addr), deviceMetadata);
       }
     }
 
@@ -234,8 +222,8 @@ public class MappingAgent {
     metadata.system = new SystemModel();
     metadata.gateway = new GatewayModel();
     metadata.gateway.gateway_id = deviceId;
-    String familyWithAddress = discoveryEvents.family + "::" + discoveryEvents.addr;
-    return Map.entry(familyWithAddress, metadata);
+    return Map.entry(generateKeyWithTwoFields(discoveryEvents.family,
+        discoveryEvents.addr), metadata);
   }
 
   private void initialize() {

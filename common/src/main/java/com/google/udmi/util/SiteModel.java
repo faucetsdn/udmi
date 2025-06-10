@@ -629,6 +629,13 @@ public class SiteModel {
     return isTrue(siteMetadata.strict_warnings);
   }
 
+  public void createDeviceMetadata(Metadata metadata, String deviceName) {
+    File metadataFile = getDeviceFile(deviceName, METADATA_JSON);
+    System.err.println("Writing device metadata file " + metadataFile);
+    metadataFile.getParentFile().mkdirs();
+    JsonUtil.writeFile(metadata, metadataFile);
+  }
+
   public static class MetadataException extends Metadata {
 
     public final File file;
