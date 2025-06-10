@@ -26,6 +26,8 @@ RESULT pass pointset pointset_publish_interval STABLE 10/10 Sequence complete
 RESULT pass pointset pointset_remove_point STABLE 10/10 Sequence complete
 RESULT pass pointset pointset_request_extraneous STABLE 10/10 Sequence complete
 RESULT pass system broken_config STABLE 10/10 Sequence complete
+CPBLTY pass system broken_config.logging ALPHA 1/1 Capability supported
+CPBLTY pass system broken_config.status ALPHA 1/1 Capability supported
 RESULT pass system config_logging STABLE 10/10 Sequence complete
 RESULT pass system device_config_acked STABLE 10/10 Sequence complete
 RESULT pass system extra_config STABLE 10/10 Sequence complete
@@ -36,6 +38,7 @@ RESULT skip system.mode system_mode_restart PREVIEW 0/0 Feature bucket mode not 
 RESULT pass system state_make_model STABLE 10/10 Sequence complete
 RESULT pass system state_software STABLE 10/10 Sequence complete
 RESULT pass system system_last_update STABLE 11/11 Sequence complete
+CPBLTY pass system system_last_update.subblocks ALPHA 1/1 Capability supported
 RESULT pass system system_min_loglevel ALPHA 10/10 Sequence complete
 RESULT pass system too_much_state ALPHA 10/10 Sequence complete
 RESULT pass system valid_serial_no STABLE 10/10 Sequence complete
