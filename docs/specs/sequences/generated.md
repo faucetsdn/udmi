@@ -37,6 +37,8 @@ Some caveats:
 * [broken_config](#broken_config-stable): Check that the device correctly handles a broken (non-json) config message.
 * [config_logging](#config_logging-stable): Check that the device publishes minimum required log entries when receiving config
 * [device_config_acked](#device_config_acked-stable): Check that the device MQTT-acknowledges a sent config.
+* [endpoint_connection_bad_alternate](#endpoint_connection_bad_alternate-preview): Failed connection never uses alternate registry.
+* [endpoint_connection_bad_hash](#endpoint_connection_bad_hash-preview): Failed connection because of bad hash.
 * [endpoint_connection_error](#endpoint_connection_error-preview): Push endpoint config message to device that results in a connection error.
 * [endpoint_connection_retry](#endpoint_connection_retry-preview): Check repeated endpoint with same information gets retried.
 * [endpoint_connection_success_alternate](#endpoint_connection_success_alternate-preview): Check connection to an alternate project.
@@ -65,6 +67,7 @@ Some caveats:
 * [state_make_model](#state_make_model-stable): Check that a device publishes correct make and model information in state messages
 * [state_software](#state_software-stable): Check that a device publishes correct software information in state messages
 * [system_last_update](#system_last_update-stable): Check that last_update state is correctly set in response to a config update.
+* [system_mode_restart](#system_mode_restart-preview): Restart and connect to same endpoint and expect it returns. Test skipped: Feature bucket mode not enabled
 * [valid_serial_no](#valid_serial_no-stable)
 
 ## bad_point_ref (PREVIEW)
@@ -129,6 +132,34 @@ Test passed.
 Check that the device MQTT-acknowledges a sent config.
 
 1. Wait for config acked
+
+Test passed.
+
+## endpoint_connection_bad_alternate (PREVIEW)
+
+Failed connection never uses alternate registry.
+
+1. Wait until initial last_config matches config timestamp
+1. Update config before blobset phase is final and stateStatus is not null
+    * Add `blobset` = { "blobs": { "_iot_endpoint_config": { "phase": `final`, "generation": `blob generation`, "sha256": `blob data hash`, "url": `endpoint data` } } }
+1. Wait for blobset phase is final and stateStatus is not null
+1. Wait for blobset phase is final and stateStatus is not null
+1. Wait until alternate client connect delay
+1. Wait for blobset phase is final and stateStatus is null
+1. Wait until restored last_config matches config timestamp
+1. Update config before endpoint config blobset state not defined
+    * Remove `blobset.blobs._iot_endpoint_config`
+1. Wait for endpoint config blobset state not defined
+
+Test passed.
+
+## endpoint_connection_bad_hash (PREVIEW)
+
+Failed connection because of bad hash.
+
+1. Update config before blobset status is ERROR
+    * Add `blobset` = { "blobs": { "_iot_endpoint_config": { "phase": `final`, "generation": `blob generation`, "sha256": `invalid blob data hash`, "url": `endpoint data` } } }
+1. Wait for blobset status is ERROR
 
 Test passed.
 
@@ -590,6 +621,13 @@ Check that last_update state is correctly set in response to a config update.
 1. _subblocks_ Wait until state update complete
 
 Test passed.
+
+## system_mode_restart (PREVIEW)
+
+Restart and connect to same endpoint and expect it returns.
+
+
+Test skipped: Feature bucket mode not enabled
 
 ## valid_serial_no (STABLE)
 

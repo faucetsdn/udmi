@@ -12,7 +12,7 @@
 1 RESULT fail writeback writeback_success ALPHA 0/10 Failed waiting until target point has value_state applied: point filter_differential_pressure_setpoint is null, expected applied
 1 RESULT fail pointset pointset_publish_interval STABLE 0/10 Failed check that time period between successive pointset events is between 5 and 8 seconds
 1 RESULT fail system system_min_loglevel ALPHA 0/10 Failed check that log level `NOTICE` (or greater) category `system.config.apply` was not logged
-1 RESULT fail system.mode system_mode_restart ALPHA 0/10 Failed check that restart count increased by one
+1 RESULT fail system.mode system_mode_restart PREVIEW 0/10 Failed check that restart count increased by one
 1 RESULT fail pointset pointset_publish STABLE 0/10 Message exception: Could not upgrade message: While parsing version string 1.4.
 1 CPBLTY fail system broken_config.logging ALPHA 0/1 Failed waiting until (logging) system logs level `DEBUG` category `system.config.receive`: no logs
 0 CPBLTY fail system broken_config.status ALPHA 0/1 Failed waiting until (status) system status level is >= `WARNING` (400): no significant device system status
@@ -34,18 +34,18 @@
 0 RESULT pass system broken_config STABLE 8/10 Sequence complete
 1 CPBLTY fail system broken_config.logging ALPHA 0/1 Failed waiting until (logging) system logs level `NOTICE` category `system.config.apply`: no logs
 0 CPBLTY fail system broken_config.status ALPHA 0/1 Failed waiting until (status) system status level is >= `WARNING` (400): no significant device system status
-0 RESULT pass system broken_config STABLE 8/10 Sequence complete
+0 RESULT fail system broken_config STABLE 0/10 Failed waiting until config update synchronized: last_config not synced in state
 1 CPBLTY pass system system_last_update.subblocks ALPHA 1/1 Capability supported
 0 RESULT pass system system_last_update STABLE 11/11 Sequence complete
-1 CPBLTY pass system system_last_update.subblocks ALPHA 1/1 Capability supported
-0 RESULT pass system system_last_update STABLE 11/11 Sequence complete
+1 CPBLTY fail system system_last_update.subblocks ALPHA 0/1 Failed waiting until (subblocks) state update complete: config/state subblock mismatch: pointset, localnet, discovery
+0 RESULT pass system system_last_update STABLE 10/11 Sequence complete
 1 CPBLTY pass system system_last_update.subblocks ALPHA 1/1 Capability supported
 0 RESULT pass system system_last_update STABLE 11/11 Sequence complete
 1 RESULT fail system state_make_model STABLE 0/10 Failed check that make and model in state matches make in metadata
 4 RESULT skip system valid_serial_no STABLE 0/0 State testing disabled
 1 CPBLTY skip system system_last_update.subblocks ALPHA 0/0 Never executed
 0 RESULT skip system system_last_update STABLE 0/0 State testing disabled
-1 RESULT pass system system_min_loglevel ALPHA 10/10 Sequence complete
+1 RESULT fail system system_min_loglevel ALPHA 0/10 Failed waiting until system logs level `NOTICE` category `system.config.apply`: no logs
 1 RESULT pass system system_min_loglevel ALPHA 10/10 Sequence complete
 4 RESULT pass gateway gateway_proxy_events BETA 10/10 Sequence complete
 1 RESULT fail gateway gateway_proxy_events BETA 0/10 Failed waiting until All proxy devices received pointset: Missing pointset from AHU-22

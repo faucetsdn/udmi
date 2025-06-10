@@ -1,5 +1,5 @@
 
-## endpoint_connection_bad_alternate (ALPHA)
+## endpoint_connection_bad_alternate (PREVIEW)
 
 Failed connection never uses alternate registry.
 
