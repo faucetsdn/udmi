@@ -235,10 +235,8 @@ class Sequence:
           Sequence.indent(f"{step_count}. {unnumbered_line} {CROSS}", 4, CROSS)
       )
       for l in failing:
-        f.append(
-            # pylint: disable-next=line-too-long
-            f"{Sequence.indent(l.ljust(longest_line_length, " "), 4, CROSS)} {CROSS}"
-        )
+        indented = Sequence.indent(l.ljust(longest_line_length, " "), 4, CROSS)
+        f.append(f"{indented} {CROSS}")
       f.append("-" * dash_width)
       f.append("")
 
