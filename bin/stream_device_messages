@@ -39,7 +39,8 @@ def subscribe_callback(message: pubsub_v1.subscriber.message.Message) -> None:
     message.ack()
     return
 
-  print(f'{message.publish_time}: {message.attributes.get('deviceId')}'
+  message_device_id=message.attributes.get('deviceId')
+  print(f'{message.publish_time}: {message_device_id}'
         f'{message_type} \n---')
 
   # Try to pretty-print messages
