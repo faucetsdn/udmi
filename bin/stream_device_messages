@@ -33,8 +33,8 @@ def subscribe_callback(message: pubsub_v1.subscriber.message.Message) -> None:
     message_type = 'state'
   elif 'subFolder' in message.attributes and \
     'subType' not in message.attributes:
-    subFolder=message.attributes['subFolder']
-    message_type = f'event_{subFolder}'
+    sub_folder=message.attributes['subFolder']
+    message_type = f'event_{sub_folder}'
   else:
     message.ack()
     return
