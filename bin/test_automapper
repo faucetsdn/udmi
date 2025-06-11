@@ -59,5 +59,13 @@ echo Checking discovered device metadata
 addr=$(jq -r .addr $site_path/extras/discovered_vendor-20231/cloud_metadata/udmi_discovered_with.json)
 [[ $addr == 20231 ]] || fail Vendor device addr should be 20231, was $addr
 
+echo Kick off a second discovery scan to validate updates
+bin/mapper GAT-123 discover
+
+echo Extracting updated results at $(date -u -Is)
+bin/registrar $site_path $project_spec
+
+fail TODO: Check that the metadata entries for the devices have been updated with the newness.
+
 echo
 echo Done with automapper test
