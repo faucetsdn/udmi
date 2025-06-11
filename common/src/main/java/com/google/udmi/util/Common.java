@@ -71,7 +71,7 @@ public abstract class Common {
   public static final int EXIT_CODE_ERROR = 1;
   public static final String UNKNOWN_UDMI_VERSION = "unknown";
 
-  public static final String UNKOWN_DEVICE_NAME_PREFIX = "UNK-";
+  public static final String UNKNOWN_DEVICE_NAME_PREFIX = "UNK-";
 
   public static final String DOUBLE_COLON_SEPARATOR = "::";
 

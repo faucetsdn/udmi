@@ -3,10 +3,10 @@ package com.google.daq.mqtt.mapping;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
 import static com.google.daq.mqtt.util.ConfigUtil.UDMI_VERSION;
-import static com.google.udmi.util.Common.UNKOWN_DEVICE_NAME_PREFIX;
+import static com.google.udmi.util.Common.UNKNOWN_DEVICE_NAME_PREFIX;
 import static com.google.udmi.util.Common.removeNextArg;
 import static com.google.udmi.util.GeneralUtils.catchToNull;
-import static com.google.udmi.util.GeneralUtils.generateKeyWithTwoFields;
+import static com.google.udmi.util.GeneralUtils.generateDeviceKey;
 import static com.google.udmi.util.JsonUtil.isoConvert;
 import static com.google.udmi.util.JsonUtil.loadFileStrict;
 import static com.google.udmi.util.JsonUtil.loadFileStrictRequired;
@@ -23,7 +23,6 @@ import com.google.common.collect.ImmutableMap;
 import com.google.daq.mqtt.util.CloudIotManager;
 import com.google.daq.mqtt.util.ConfigUtil;
 import com.google.udmi.util.Common;
-import com.google.udmi.util.JsonUtil;
 import com.google.udmi.util.SiteModel;
 import java.io.File;
 import java.util.ArrayList;
@@ -150,19 +149,27 @@ public class MappingAgent {
     List<Entry<String, Metadata>> mappedDiscoveredEntries = getMappedDiscoveredEntries();
     Map<String, Metadata> devicesEntriesMap = getDevicesEntries();
 
+    Set<String> devicesPresent = new HashSet<>(siteModel.getDeviceIds());
     mappedDiscoveredEntries.forEach(entry -> {
 
       if (devicesEntriesMap.containsKey(entry.getKey())) {
         System.err.println("Skipping existing device file for family::address = " + entry.getKey());
         //TODO: update the existing device
       } else {
-        String newDeviceName = UNKOWN_DEVICE_NAME_PREFIX + suffixToStart;
-        suffixToStart++;
+        String newDeviceName = getNewDeviceName();
+        while (!devicesPresent.contains(newDeviceName)) {
+          newDeviceName = getNewDeviceName();
+        }
+        devicesPresent.add(newDeviceName);
         siteModel.createDeviceMetadata(entry.getValue(), newDeviceName);
       }
     });
 
-    updateProxyIdsForDiscoveryNode(mappedDiscoveredEntries);
+    updateProxyIdsForDiscoveryNode(devicesPresent);
+  }
+
+  private String getNewDeviceName() {
+    return UNKNOWN_DEVICE_NAME_PREFIX + suffixToStart++;
   }
 
   private List<Entry<String, Metadata>> getMappedDiscoveredEntries() {
@@ -183,7 +190,7 @@ public class MappingAgent {
     for (Metadata deviceMetadata : siteModel.allMetadata().values()) {
       Map<String, FamilyLocalnetModel> deviceFamilies = deviceMetadata.localnet.families;
       for (String familyName : deviceFamilies.keySet()) {
-        devicesEntriesMap.put(generateKeyWithTwoFields(familyName,
+        devicesEntriesMap.put(generateDeviceKey(familyName,
             deviceFamilies.get(familyName).addr), deviceMetadata);
       }
     }
@@ -191,8 +198,7 @@ public class MappingAgent {
     return devicesEntriesMap;
   }
 
-  private void updateProxyIdsForDiscoveryNode(List<Entry<String, Metadata>> entries) {
-    List<String> proxyIds = entries.stream().map(Entry::getKey).toList();
+  private void updateProxyIdsForDiscoveryNode(Set<String> proxyIds) {
     File gatewayMetadata = siteModel.getDeviceFile(deviceId, METADATA_JSON);
     Metadata metadata = loadFileStrictRequired(Metadata.class, gatewayMetadata);
     List<String> idList = ofNullable(metadata.gateway.proxy_ids).orElse(ImmutableList.of());
@@ -222,7 +228,7 @@ public class MappingAgent {
     metadata.system = new SystemModel();
     metadata.gateway = new GatewayModel();
     metadata.gateway.gateway_id = deviceId;
-    return Map.entry(generateKeyWithTwoFields(discoveryEvents.family,
+    return Map.entry(generateDeviceKey(discoveryEvents.family,
         discoveryEvents.addr), metadata);
   }
 

@@ -46,6 +46,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Objects;
 import java.util.Set;
 import java.util.TreeMap;
 import java.util.function.Consumer;
@@ -97,7 +98,9 @@ public class GeneralUtils {
     return (header + INDENTED_LINES.join(changes)).trim();
   }
 
-  public static String generateKeyWithTwoFields(String field1, String field2) {
+  public static String generateDeviceKey(String field1, String field2) {
+    Objects.requireNonNull(field1, "field1 cannot be null");
+    Objects.requireNonNull(field2, "field2 cannot be null");
     return field1 + DOUBLE_COLON_SEPARATOR + field2;
   }
 
