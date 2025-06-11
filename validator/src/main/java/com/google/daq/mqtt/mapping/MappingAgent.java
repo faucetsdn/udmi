@@ -148,16 +148,18 @@ public class MappingAgent {
   private void mapDiscoveredDevices() {
     List<Entry<String, Metadata>> mappedDiscoveredEntries = getMappedDiscoveredEntries();
     Map<String, Metadata> devicesEntriesMap = getDevicesEntries();
+    Map<String, String> devicesFamilyAddressMap = getDeviceFamilyAddressMap();
 
-    Set<String> devicesPresent = new HashSet<>(siteModel.getDeviceIds());
+    Set<String> devicesPresent = new HashSet<>();
     mappedDiscoveredEntries.forEach(entry -> {
 
       if (devicesEntriesMap.containsKey(entry.getKey())) {
         System.err.println("Skipping existing device file for family::address = " + entry.getKey());
+        devicesPresent.add(devicesFamilyAddressMap.get(entry.getKey()));
         //TODO: update the existing device
       } else {
         String newDeviceName = getNewDeviceName();
-        while (!devicesPresent.contains(newDeviceName)) {
+        while (devicesPresent.contains(newDeviceName)) {
           newDeviceName = getNewDeviceName();
         }
         devicesPresent.add(newDeviceName);
@@ -166,6 +168,24 @@ public class MappingAgent {
     });
 
     updateProxyIdsForDiscoveryNode(devicesPresent);
+  }
+
+  private Map<String, String> getDeviceFamilyAddressMap() {
+    Map<String, String> devicesFamilyAddressMap = new HashMap<>();
+
+    for (String device : siteModel.allMetadata().keySet()) {
+      Metadata deviceMetadata = siteModel.allMetadata().get(device);
+      if (deviceMetadata.localnet == null ||deviceMetadata.localnet.families == null) {
+        continue;
+      }
+      Map<String, FamilyLocalnetModel> deviceFamilies = deviceMetadata.localnet.families;
+      for (String familyName : deviceFamilies.keySet()) {
+        devicesFamilyAddressMap.put(generateDeviceKey(familyName,
+            deviceFamilies.get(familyName).addr), device);
+      }
+    }
+
+    return devicesFamilyAddressMap;
   }
 
   private String getNewDeviceName() {
@@ -188,6 +208,9 @@ public class MappingAgent {
     Map<String, Metadata> devicesEntriesMap = new HashMap<>();
 
     for (Metadata deviceMetadata : siteModel.allMetadata().values()) {
+      if (deviceMetadata.localnet == null ||deviceMetadata.localnet.families == null) {
+        continue;
+      }
       Map<String, FamilyLocalnetModel> deviceFamilies = deviceMetadata.localnet.families;
       for (String familyName : deviceFamilies.keySet()) {
         devicesEntriesMap.put(generateDeviceKey(familyName,

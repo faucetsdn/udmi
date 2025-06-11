@@ -15,7 +15,8 @@ import org.junit.Test;
 /**
  * Tests for general utilities.
  */
-public class GeneralUtilsTest {
+public class
+GeneralUtilsTest {
 
   @Test
   @SuppressWarnings("unchecked")
