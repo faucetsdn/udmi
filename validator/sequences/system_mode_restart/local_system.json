@@ -1,9 +1,9 @@
 {
-  "min_loglevel" : 200,
+  "min_loglevel" : 100,
   "metrics_rate_sec" : 10,
   "operation" : {
     "mode" : "active",
-    "last_start" : "2024-11-06T17:35:05Z"
+    "last_start" : "2025-06-10T19:55:06Z"
   },
   "testing" : {
     "sequence_name" : "system_mode_restart"
