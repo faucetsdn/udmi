@@ -1,5 +1,5 @@
 
-## endpoint_connection_bad_hash (ALPHA)
+## endpoint_connection_bad_hash (PREVIEW)
 
 Failed connection because of bad hash.
 

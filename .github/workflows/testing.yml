@@ -167,7 +167,7 @@ jobs:
   sequencer:
     name: Sequencer Tests
     runs-on: ubuntu-24.04
-    timeout-minutes: 20
+    timeout-minutes: 25
     strategy:
       fail-fast: false
       matrix:

@@ -29,6 +29,7 @@
     <orderEntry type="library" name="Gradle: commons-io:commons-io:2.5" level="project" />
     <orderEntry type="library" name="Gradle: com.google.cloud:google-cloud-logging:2.3.2" level="project" />
     <orderEntry type="library" name="Gradle: com.google.apis:google-api-services-cloudiot:v1-rev20210323-1.31.0" level="project" />
+    <orderEntry type="library" name="Gradle: com.google.apis:google-api-services-sheets:v4-rev484-1.20.0" level="project" />
     <orderEntry type="library" name="Gradle: com.google.api-client:google-api-client:1.31.2" level="project" />
     <orderEntry type="library" name="Gradle: com.github.java-json-tools:json-schema-core:1.2.14" level="project" />
     <orderEntry type="library" name="Gradle: com.google.cloud:google-cloud-pubsub:1.66.0" level="project" />
@@ -41,6 +42,8 @@
     <orderEntry type="library" name="Gradle: com.google.api:gax:1.66.0" level="project" />
     <orderEntry type="library" name="Gradle: com.google.auth:google-auth-library-oauth2-http:0.26.0" level="project" />
     <orderEntry type="library" name="Gradle: com.google.http-client:google-http-client-gson:1.39.2" level="project" />
+    <orderEntry type="library" name="Gradle: com.google.oauth-client:google-oauth-client-jetty:1.20.0" level="project" />
+    <orderEntry type="library" name="Gradle: com.google.oauth-client:google-oauth-client-java6:1.20.0" level="project" />
     <orderEntry type="library" name="Gradle: com.google.oauth-client:google-oauth-client:1.31.4" level="project" />
     <orderEntry type="library" name="Gradle: com.google.http-client:google-http-client-apache-v2:1.38.1" level="project" />
     <orderEntry type="library" name="Gradle: com.google.http-client:google-http-client:1.39.2" level="project" />
@@ -61,6 +64,7 @@
     <orderEntry type="library" name="Gradle: org.eclipse.paho:org.eclipse.paho.client.mqttv3:1.2.5" level="project" />
     <orderEntry type="library" name="Gradle: org.slf4j:slf4j-simple:1.7.30" level="project" />
     <orderEntry type="library" name="Gradle: org.bouncycastle:bcpkix-jdk15on:1.64" level="project" />
+    <orderEntry type="library" name="Gradle: org.jetbrains:annotations:20.1.0" level="project" />
     <orderEntry type="library" name="Gradle: com.github.java-json-tools:jackson-coreutils-equivalence:1.0" level="project" />
     <orderEntry type="library" name="Gradle: com.sun.mail:mailapi:1.6.2" level="project" />
     <orderEntry type="library" name="Gradle: com.googlecode.libphonenumber:libphonenumber:8.11.1" level="project" />
@@ -115,10 +119,13 @@
     <orderEntry type="library" name="Gradle: io.netty:netty-common:4.1.59.Final" level="project" />
     <orderEntry type="library" name="Gradle: com.h2database:h2-mvstore:1.4.199" level="project" />
     <orderEntry type="library" name="Gradle: org.bouncycastle:bcprov-jdk15on:1.64" level="project" />
+    <orderEntry type="library" name="Gradle: org.mortbay.jetty:jetty:6.1.26" level="project" />
     <orderEntry type="library" name="Gradle: com.github.java-json-tools:jackson-coreutils:2.0" level="project" />
     <orderEntry type="library" name="Gradle: org.mozilla:rhino:1.7.7.2" level="project" />
     <orderEntry type="library" name="Gradle: jakarta.xml.bind:jakarta.xml.bind-api:3.0.1" level="project" />
     <orderEntry type="library" name="Gradle: com.sun.activation:jakarta.activation:2.0.1" level="project" />
+    <orderEntry type="library" name="Gradle: org.mortbay.jetty:jetty-util:6.1.26" level="project" />
+    <orderEntry type="library" name="Gradle: org.mortbay.jetty:servlet-api:2.5-20081211" level="project" />
     <orderEntry type="library" scope="RUNTIME" name="Gradle: com.google.android:annotations:4.1.1.4" level="project" />
     <orderEntry type="library" scope="RUNTIME" name="Gradle: org.codehaus.mojo:animal-sniffer-annotations:1.20" level="project" />
     <orderEntry type="library" scope="RUNTIME" name="Gradle: io.perfmark:perfmark-api:0.23.0" level="project" />

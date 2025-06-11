@@ -12,6 +12,7 @@ import static udmi.schema.Bucket.ENUMERATION_FEATURES;
 import static udmi.schema.Bucket.ENUMERATION_POINTSET;
 import static udmi.schema.Bucket.POINTSET;
 import static udmi.schema.Bucket.SYSTEM;
+import static udmi.schema.Bucket.SYSTEM_MODE;
 import static udmi.schema.Bucket.UNKNOWN_DEFAULT;
 import static udmi.schema.FeatureDiscovery.FeatureStage.BETA;
 import static udmi.schema.FeatureDiscovery.FeatureStage.PREVIEW;
@@ -36,14 +37,15 @@ public abstract class PubberFeatures {
   private static final Map<String, FeatureDiscovery> FEATURES_MAP = new HashMap<>();
 
   static {
-    add(ENDPOINT_CONFIG, BETA);
+    add(SYSTEM, BETA);
+    add(SYSTEM_MODE, BETA);
+    add(POINTSET, BETA);
     add(ENUMERATION, STABLE);
     add(ENUMERATION_FEATURES, BETA);
     add(ENUMERATION_FAMILIES, PREVIEW);
     add(ENUMERATION_POINTSET, PREVIEW);
+    add(ENDPOINT_CONFIG, BETA);
     add(DISCOVERY_SCAN, PREVIEW);
-    add(POINTSET, BETA);
-    add(SYSTEM, BETA);
   }
 
   private static void add(Bucket featureBucket, FeatureStage stage) {
