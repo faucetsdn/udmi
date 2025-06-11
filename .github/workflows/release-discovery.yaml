@@ -80,5 +80,5 @@ jobs:
           IMAGE_TAG=$(date +%y%m%d)-$(git rev-list --count --since="today 00:00:00" HEAD)
           IMAGE_REF="$PUSH_REGISTRY/$GITHUB_REPOSITORY_OWNER/udmi/discoverynode-$BUILDENV"
           docker build --no-cache -t $IMAGE_REF:$IMAGE_TAG -f Dockerfile .
-          docker push $IMAGE_REF
+          docker push $IMAGE_REF:$IMAGE_TAG
           echo Pushed built $CONTAINER container as $IMAGE_REF:$IMAGE_TAG | tee -a $GITHUB_STEP_SUMMARY
