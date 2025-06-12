@@ -161,8 +161,6 @@ public class ProvisioningEngineTest extends ProcessorTestBase {
     assertEquals(ModelOperation.UPDATE, models.get(0).operation, "operation mismatch");
     assertTrue(models.get(0).blocked, "device blocked");
 
-    assertEquals(TEST_GATEWAY, devices.get(1), "scanning gateway id");
-    assertEquals(ModelOperation.BIND, models.get(1).operation, "operation mismatch");
-    assertNotNull(models.get(1).device_ids.get(DISCOVERED_DEVICE), "binding device entry");
+    assertEquals(1, devices.size(), "size of device operation list");
   }
 }
