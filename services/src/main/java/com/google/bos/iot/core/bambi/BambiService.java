@@ -4,6 +4,10 @@ import static com.google.udmi.util.git.RepositoryConfig.forRemote;
 import static com.google.udmi.util.git.RepositoryConfig.fromGoogleCloudSourceRepoName;
 import static org.apache.commons.io.FileUtils.deleteDirectory;
 
+import com.google.api.client.googleapis.auth.oauth2.GoogleIdToken;
+import com.google.api.client.googleapis.auth.oauth2.GoogleIdTokenVerifier;
+import com.google.api.client.http.javanet.NetHttpTransport;
+import com.google.api.client.json.gson.GsonFactory;
 import com.google.pubsub.v1.PubsubMessage;
 import com.google.udmi.util.GenericPubSubClient;
 import com.google.udmi.util.SheetsAppender;
@@ -15,6 +19,7 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.security.GeneralSecurityException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Map;
@@ -29,8 +34,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * BAMBI Backend Service - polls the PubSub topic and responds to incoming requests
- * for import/export operations while streaming logs to the requesting spreadsheet.
+ * BAMBI Backend Service - polls the PubSub topic and responds to incoming requests for
+ * import/export operations while streaming logs to the requesting spreadsheet.
  */
 public class BambiService {
 
@@ -141,7 +146,7 @@ public class BambiService {
       try {
         PubsubMessage message = pubSubClient.poll(POLL_TIMEOUT_MS, TimeUnit.MILLISECONDS);
 
-        if (message != null) {
+        if (message != null && verifyIdentityToken(message.getData().toStringUtf8())) {
           Map<String, String> attributes = message.getAttributesMap();
           if (!attributes.isEmpty()) {
             LOGGER.info("Message received. Processing...");
@@ -165,6 +170,32 @@ public class BambiService {
       }
     }
     LOGGER.info("Polling loop finished.");
+  }
+
+  /**
+   * Validate that request originated from Apps Script.
+   * <p>
+   * TODO: Once the add-on is finally deployed, we can setAudience with the add-on client ID
+   * for the verifier to only allow requests from one source.
+   */
+  private boolean verifyIdentityToken(String identityTokenString) {
+    if (identityTokenString == null || identityTokenString.isEmpty()) {
+      return false;
+    }
+    GoogleIdTokenVerifier verifier = new GoogleIdTokenVerifier.Builder(new NetHttpTransport(),
+        new GsonFactory()).build();
+    try {
+      GoogleIdToken token = verifier.verify(identityTokenString);
+      if (token != null && token.getPayload().getEmailVerified()) {
+        LOGGER.info("Received verified request from {}", token.getPayload().getEmail());
+        return true;
+      }
+      LOGGER.warn("Could not verify identity token, request will not be processed");
+      return false;
+    } catch (GeneralSecurityException | IOException e) {
+      LOGGER.error("Exception while verifying identity, request will not be processed", e);
+      return false;
+    }
   }
 
   private void processBambiRequest(Map<String, String> attributes) {
