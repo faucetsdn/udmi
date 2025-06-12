@@ -142,7 +142,7 @@ public class ProvisioningEngineTest extends ProcessorTestBase {
     ArgumentCaptor<String> deviceCaptor = ArgumentCaptor.forClass(String.class);
     ArgumentCaptor<CloudModel> modelCaptor = ArgumentCaptor.forClass(CloudModel.class);
     int events = includeBind ? 2 : 1;
-    verify(provider, times(2)).modelDevice(eq(TEST_REGISTRY), deviceCaptor.capture(),
+    verify(provider, times(events)).modelDevice(eq(TEST_REGISTRY), deviceCaptor.capture(),
         modelCaptor.capture(), isNull());
     return new SimpleEntry<>(deviceCaptor.getAllValues(), modelCaptor.getAllValues());
   }
