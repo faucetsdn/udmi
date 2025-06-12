@@ -55,7 +55,7 @@ public class ProvisioningEngine extends ProcessorBase {
     iotAccess.modelDevice(registryId, gatewayId, model, null);
   }
 
-  private void createDeviceEntry(String registryId, String expectedId, String deviceId,
+  private void manageDeviceEntry(String registryId, String expectedId, String deviceId,
       Envelope envelope, DiscoveryEvents discoveryEvent, boolean shouldBindToGateway,
       boolean isUpdate) {
     CloudModel cloudModel = new CloudModel();
@@ -72,7 +72,7 @@ public class ProvisioningEngine extends ProcessorBase {
         (Consumer<Exception>) e -> error(
             format("Error %sing device (exists but not bound?): %s", cloudModel.operation,
                 friendlyStackTrace(e))));
-    if (shouldBindToGateway) {
+    if (shouldBindToGateway && !isUpdate) {
       bindDeviceToGateway(registryId, expectedId, deviceId);
     }
     Envelope modelEnvelope = new Envelope();
@@ -154,7 +154,7 @@ public class ProvisioningEngine extends ProcessorBase {
       boolean isUpdate = deviceIds.contains(expectedId);
       notice("Scan %s device %s/%s target %s", isUpdate ? "update" : "create", registryId, deviceId,
           expectedId);
-      createDeviceEntry(registryId, expectedId, deviceId, envelope, discoveryEvent,
+      manageDeviceEntry(registryId, expectedId, deviceId, envelope, discoveryEvent,
           isGateway, isUpdate);
     } catch (Exception e) {
       error("Error during discovery event processing: " + friendlyStackTrace(e));
