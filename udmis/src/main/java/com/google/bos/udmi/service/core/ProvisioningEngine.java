@@ -59,7 +59,7 @@ public class ProvisioningEngine extends ProcessorBase {
       Envelope envelope, DiscoveryEvents discoveryEvent, boolean shouldBindToGateway,
       boolean isUpdate) {
     CloudModel cloudModel = new CloudModel();
-    cloudModel.operation = isUpdate ? ModelOperation.CREATE : ModelOperation.UPDATE;
+    cloudModel.operation = isUpdate ? ModelOperation.UPDATE : ModelOperation.CREATE;
     cloudModel.blocked = true;
     ifNullThen(cloudModel.metadata, () -> cloudModel.metadata = new HashMap<>());
     cloudModel.metadata.put(UDMI_DISCOVERED_FROM, stringifyTerse(envelope));
@@ -152,8 +152,8 @@ public class ProvisioningEngine extends ProcessorBase {
           catchToNull(() -> iotAccess.listDevices(registryId, null).device_ids.keySet()));
 
       boolean isUpdate = deviceIds.contains(expectedId);
-      notice("Scan %s device %s/%s target %s is %s", isUpdate ? "update" : "create",
-          registryId, deviceId, expectedId);
+      notice("Scan %s device %s/%s target %s", isUpdate ? "update" : "create", registryId, deviceId,
+          expectedId);
       createDeviceEntry(registryId, expectedId, deviceId, envelope, discoveryEvent,
           isGateway, isUpdate);
     } catch (Exception e) {
