@@ -6,6 +6,8 @@ import static com.google.udmi.util.GeneralUtils.mergeObject;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertThrows;
+import static org.junit.Assert.assertTrue;
 
 import com.google.common.collect.ImmutableMap;
 import java.util.HashMap;
@@ -15,8 +17,7 @@ import org.junit.Test;
 /**
  * Tests for general utilities.
  */
-public class
-GeneralUtilsTest {
+public class GeneralUtilsTest {
 
   @Test
   @SuppressWarnings("unchecked")
@@ -127,6 +128,18 @@ GeneralUtilsTest {
     String stackTrace = friendlyStackTrace(three);
     String expected = "And smash it with a hammer!, Wrap it in a box..., Deepest Level!";
     assertEquals("expected output", expected, stackTrace);
+  }
+
+
+  @Test
+  public void testGenerateDeviceKey() {
+    String key = GeneralUtils.generateDeviceKey("familyA", "addr123");
+    assertEquals("familyA::addr123", key);
+
+    Exception exception = assertThrows(NullPointerException.class, () -> {
+      GeneralUtils.generateDeviceKey(null, "addr123");
+    });
+    assertTrue(exception.getMessage().contains("field1 cannot be null"));
   }
 
   /**

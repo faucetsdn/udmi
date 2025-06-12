@@ -2,7 +2,6 @@ package com.google.udmi.util;
 
 import static com.google.common.base.Preconditions.checkState;
 import static com.google.common.collect.Sets.symmetricDifference;
-import static com.google.udmi.util.Common.DOUBLE_COLON_SEPARATOR;
 import static com.google.udmi.util.JsonUtil.isoConvert;
 import static com.google.udmi.util.ProperPrinter.OutputFormat.COMPRESSED;
 import static com.google.udmi.util.ProperPrinter.OutputFormat.VERBOSE;
@@ -96,12 +95,6 @@ public class GeneralUtils {
     String terminator = changes.size() == 0 ? "." : ":";
     String header = format("Changed %d fields%s%s", changes.size(), terminator, SEPARATOR);
     return (header + INDENTED_LINES.join(changes)).trim();
-  }
-
-  public static String generateDeviceKey(String field1, String field2) {
-    Objects.requireNonNull(field1, "field1 cannot be null");
-    Objects.requireNonNull(field2, "field2 cannot be null");
-    return field1 + DOUBLE_COLON_SEPARATOR + field2;
   }
 
   /**
