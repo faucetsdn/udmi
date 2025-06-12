@@ -59,5 +59,9 @@ echo Checking discovered device metadata
 addr=$(jq -r .addr $site_path/extras/discovered_vendor-20231/cloud_metadata/udmi_discovered_with.json)
 [[ $addr == 20231 ]] || fail Vendor device addr should be 20231, was $addr
 
+
+bin/mapper GAT-123 map
+
+
 echo
 echo Done with automapper test
