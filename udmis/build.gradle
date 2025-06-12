@@ -115,4 +115,5 @@ dependencies {
 
     implementation 'com.google.oauth-client:google-oauth-client-jetty:1.20.0'
     implementation 'com.google.apis:google-api-services-sheets:v4-rev484-1.20.0'
+    implementation 'ch.qos.logback:logback-classic:1.5.6'
 }

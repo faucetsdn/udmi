@@ -19,7 +19,7 @@ import org.slf4j.LoggerFactory;
  * Generic utility to log messages to Google Sheets. This class extends {@link OutputStream} and
  * redirects output to a specified sheet in a Google Spreadsheet.
  */
-public class SheetsOutputStream extends OutputStream {
+public class SheetsOutputStream extends OutputStream implements AutoCloseable {
 
   private static final Logger LOGGER = LoggerFactory.getLogger(SheetsOutputStream.class);
   private static final long DEFAULT_SYNC_TIME = 2000;
@@ -94,7 +94,7 @@ public class SheetsOutputStream extends OutputStream {
     }
   }
 
-  void appendToSheet() {
+  public void appendToSheet() {
     String content = buffer.toString();
     if (content.trim().isEmpty()) {
       buffer.setLength(0); // Clear buffer even if nothing to write
@@ -163,6 +163,11 @@ public class SheetsOutputStream extends OutputStream {
       // added to ensure last batch is always appended & to prevent loss in case of exceptions
       appendToSheet();
     }
+  }
+
+  @Override
+  public void close()  {
+    stopStream();
   }
 
   /**
