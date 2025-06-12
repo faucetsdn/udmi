@@ -158,9 +158,9 @@ public class MappingAgent {
         devicesPresent.add(devicesFamilyAddressMap.get(entry.getKey()));
         //TODO: update the existing device
       } else {
-        String newDeviceId = getNextDeviceID();
+        String newDeviceId = getNextDeviceId();
         while (devicesPresent.contains(newDeviceId)) {
-          newDeviceId = getNextDeviceID();
+          newDeviceId = getNextDeviceId();
         }
         devicesPresent.add(newDeviceId);
         siteModel.createNewDevice(newDeviceId, entry.getValue());
@@ -175,7 +175,7 @@ public class MappingAgent {
 
     for (String device : siteModel.allMetadata().keySet()) {
       Metadata deviceMetadata = siteModel.allMetadata().get(device);
-      if (deviceMetadata.localnet == null ||deviceMetadata.localnet.families == null) {
+      if (deviceMetadata.localnet == null || deviceMetadata.localnet.families == null) {
         continue;
       }
       Map<String, FamilyLocalnetModel> deviceFamilies = deviceMetadata.localnet.families;
@@ -188,7 +188,7 @@ public class MappingAgent {
     return devicesFamilyAddressMap;
   }
 
-  private String getNextDeviceID() {
+  private String getNextDeviceId() {
     return UNKNOWN_DEVICE_ID_PREFIX + suffixToStart++;
   }
 
@@ -208,7 +208,7 @@ public class MappingAgent {
     Map<String, Metadata> devicesEntriesMap = new HashMap<>();
 
     for (Metadata deviceMetadata : siteModel.allMetadata().values()) {
-      if (deviceMetadata.localnet == null ||deviceMetadata.localnet.families == null) {
+      if (deviceMetadata.localnet == null || deviceMetadata.localnet.families == null) {
         continue;
       }
       Map<String, FamilyLocalnetModel> deviceFamilies = deviceMetadata.localnet.families;
@@ -238,7 +238,7 @@ public class MappingAgent {
     DiscoveryEvents discoveryEvents = loadFileStrict(DiscoveryEvents.class,
         new File(file, "cloud_metadata/udmi_discovered_with.json"));
     boolean isInvalidDiscoveryEvent = false;
-    if (discoveryEvents.family == null ||discoveryEvents.addr == null) {
+    if (discoveryEvents.family == null || discoveryEvents.addr == null) {
       System.err.println("Invalid discovery event, family or address not present");
       isInvalidDiscoveryEvent = true;
     }
