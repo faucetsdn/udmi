@@ -77,7 +77,18 @@ echo "Reverting the address for AHU-22 device back"
 device_metadata=$site_path/devices/AHU-22/metadata.json
 jq '.localnet.families.vendor.addr = "0x65"' $device_metadata | sponge $device_metadata
 
-if [[ ! -d $site_path/devices/UNK-1 ]] || rm -r $site_path/devices/UNK-1
+
+if [[ -d $site_path/devices/UNK-1 ]]; then
+  echo "Directory '$site_path/devices/UNK-1' exists. Removing it..."
+  if rm -r "$site_path/devices/UNK-1"; then
+    echo "Directory '$site_path/devices/UNK-1' removed successfully."
+  else
+    echo "Error: Failed to remove '$site_path/devices/UNK-1'."
+    exit 1
+  fi
+else
+  echo "Directory '$site_path/devices/UNK-1' does not exist. Nothing to remove."
+fi
 
 echo
 echo Done with automapper test
