@@ -55,10 +55,11 @@ public class ProvisioningEngine extends ProcessorBase {
     iotAccess.modelDevice(registryId, gatewayId, model, null);
   }
 
-  private void createDeviceEntry(String registryId, String expectedId, String deviceId,
-      Envelope envelope, DiscoveryEvents discoveryEvent, boolean shouldBindToGateway) {
+  private void processDeviceEntryChange(String registryId, String expectedId, String deviceId,
+      Envelope envelope, DiscoveryEvents discoveryEvent, boolean shouldBindToGateway,
+      boolean isUpdate) {
     CloudModel cloudModel = new CloudModel();
-    cloudModel.operation = ModelOperation.CREATE;
+    cloudModel.operation = isUpdate ? ModelOperation.UPDATE : ModelOperation.CREATE;
     cloudModel.blocked = true;
     ifNullThen(cloudModel.metadata, () -> cloudModel.metadata = new HashMap<>());
     cloudModel.metadata.put(UDMI_DISCOVERED_FROM, stringifyTerse(envelope));
@@ -69,8 +70,9 @@ public class ProvisioningEngine extends ProcessorBase {
         (Supplier<CloudModel>) () -> iotAccess.modelDevice(registryId, expectedId, cloudModel,
             null),
         (Consumer<Exception>) e -> error(
-            "Error creating device (exists but not bound?): " + friendlyStackTrace(e)));
-    if (shouldBindToGateway) {
+            format("Error %sing device (exists but not bound?): %s", cloudModel.operation,
+                friendlyStackTrace(e))));
+    if (shouldBindToGateway && !isUpdate) {
       bindDeviceToGateway(registryId, expectedId, deviceId);
     }
     Envelope modelEnvelope = new Envelope();
@@ -149,14 +151,11 @@ public class ProvisioningEngine extends ProcessorBase {
           refreshModelDevices(registryId, deviceId, generation, deviceModel),
           catchToNull(() -> iotAccess.listDevices(registryId, null).device_ids.keySet()));
 
-      if (deviceIds.contains(expectedId)) {
-        debug("Scan device %s/%s target %s already registered", registryId, deviceId, expectedId);
-        return;
-      }
-
-      notice("Scan device %s/%s target %s missing, creating", registryId, deviceId, expectedId);
-      createDeviceEntry(registryId, expectedId, deviceId, envelope, discoveryEvent,
-          isGateway);
+      boolean isUpdate = deviceIds.contains(expectedId);
+      notice("Scan %s device %s/%s target %s", isUpdate ? "update" : "create", registryId, deviceId,
+          expectedId);
+      processDeviceEntryChange(registryId, expectedId, deviceId, envelope, discoveryEvent,
+          isGateway, isUpdate);
     } catch (Exception e) {
       error("Error during discovery event processing: " + friendlyStackTrace(e));
     }
