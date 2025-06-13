@@ -44,6 +44,7 @@ import udmi.schema.ExecutionConfiguration;
 import udmi.schema.FamilyDiscoveryConfig;
 import udmi.schema.FamilyLocalnetModel;
 import udmi.schema.GatewayModel;
+import udmi.schema.LocalnetModel;
 import udmi.schema.Metadata;
 import udmi.schema.SystemModel;
 
@@ -250,9 +251,18 @@ public class MappingAgent {
     metadata.timestamp = new Date();
     metadata.system = new SystemModel();
     metadata.gateway = new GatewayModel();
+    populateMetadataLocalnet(discoveryEvents, metadata);
     metadata.gateway.gateway_id = deviceId;
     return Map.entry(generateColonKey(discoveryEvents.family,
         discoveryEvents.addr), metadata);
+  }
+
+  private static void populateMetadataLocalnet(DiscoveryEvents discoveryEvents, Metadata metadata) {
+    metadata.localnet = new LocalnetModel();
+    metadata.localnet.families = new HashMap<>();
+    FamilyLocalnetModel familyLocalnetModel = new FamilyLocalnetModel();
+    familyLocalnetModel.addr = discoveryEvents.addr;
+    metadata.localnet.families.put(discoveryEvents.family, familyLocalnetModel);
   }
 
   private void initialize() {
