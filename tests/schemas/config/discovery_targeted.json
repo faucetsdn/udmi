@@ -1,0 +1,18 @@
+//
+// MQTT topic: /devices/{device_id}/config
+// where {device_id} is that of the discovery node.
+//
+{
+  "version": "1.5.2",
+  "timestamp": "2018-08-26T21:39:29.364Z",
+  "discovery": {
+    "families": {
+      "bacnet": {
+        "generation": "2018-08-26T21:00:13Z",
+        // These addresses are explicit devices to enumerate, so no scan is performed.
+        // Using this form defaults the depth to "details" of the indicated devices.
+        "addrs": [ "9218", "294124", "12933" ]
+      }
+    }
+  }
+}
