@@ -34,6 +34,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
+import java.util.concurrent.atomic.AtomicInteger;
 import udmi.schema.CloudModel;
 import udmi.schema.CloudModel.ModelOperation;
 import udmi.schema.DiscoveryConfig;
@@ -63,7 +64,7 @@ public class MappingAgent {
   private SiteModel siteModel;
   private Date generationDate;
 
-  private Integer suffixToStart = 1;
+  private AtomicInteger suffixToStart = new AtomicInteger(1);
 
   /**
    * Create an agent given the configuration.
@@ -190,7 +191,7 @@ public class MappingAgent {
   }
 
   private String getNextDeviceId() {
-    return UNKNOWN_DEVICE_ID_PREFIX + suffixToStart++;
+    return UNKNOWN_DEVICE_ID_PREFIX + suffixToStart.getAndIncrement();
   }
 
   private List<Entry<String, Metadata>> getMappedDiscoveredEntries() {
