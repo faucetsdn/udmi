@@ -74,8 +74,8 @@ done
 
 if [[ -n $update ]]; then
     mkdir -p $CACHE_ROOT
-    find $CACHE_ROOT/ -name sequencer.log | xargs fgrep -H RESULT | awk '{print $6}' > $TEST_LIST
-    find $TEST_ROOT/ -name sequencer.log | xargs fgrep -H RESULT | awk '{print $6}'>> $TEST_LIST
+    find $CACHE_ROOT/ -name sequence.log | xargs fgrep -H RESULT | awk '{print $6}' > $TEST_LIST
+    find $TEST_ROOT/ -name sequence.log | xargs fgrep -H RESULT | awk '{print $6}'>> $TEST_LIST
     sort < $TEST_LIST | uniq | sponge $TEST_LIST
     all_tests=$(cat $TEST_LIST)
     rm -f $RESULT_OUT
@@ -94,7 +94,7 @@ if [[ -n $update ]]; then
             ls -l $src_dir/sequence.md $cache_dir/sequence.md
         fi
 
-        fgrep RESULT $src_dir/sequencer.log | sed -E -e 's/.*NOTICE +RESULT/RESULT/' >> $RESULT_OUT
+        fgrep RESULT $src_dir/sequence.log | sed -E -e 's/.*NOTICE +RESULT/RESULT/' >> $RESULT_OUT
     done
 
     sort -k 3 < $RESULT_OUT | fgrep -v " DISABLED " | sponge $RESULT_OUT

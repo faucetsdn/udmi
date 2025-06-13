@@ -31,6 +31,10 @@ credentials.json
 /pubber/out/
 /pubber/pubber/out/
 /pubber/.idea/libraries/
+/services/build/
+/services/out/
+/services/var/
+/services/.idea/libraries/
 /sites/
 /attributes.json
 /venv/

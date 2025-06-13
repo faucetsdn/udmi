@@ -59,7 +59,6 @@ echo Checking discovered device metadata
 addr=$(jq -r .addr $site_path/extras/discovered_vendor-20231/cloud_metadata/udmi_discovered_with.json)
 [[ $addr == 20231 ]] || fail Vendor device addr should be 20231, was $addr
 
-
 echo "Changing the address for AHU-22 device to 0x68"
 device_metadata=$site_path/devices/AHU-22/metadata.json
 jq '.localnet.families.vendor.addr = "0x68"' $device_metadata | sponge $device_metadata
@@ -89,6 +88,23 @@ if [[ -d $site_path/devices/UNK-1 ]]; then
 else
   echo "Directory '$site_path/devices/UNK-1' does not exist. Nothing to remove."
 fi
+
+first_generation=`jq -r .generation $site_path/extras/discovered_vendor-20231/cloud_metadata/udmi_discovered_with.json`
+echo First discovered generation is $first_generation
+
+echo Kick off a second discovery scan to validate updates
+bin/mapper GAT-123 discover
+
+echo Waiting 20s for the second discovery to complete...
+sleep 20
+
+echo Extracting updated results at $(date -u -Is)
+bin/registrar $site_path $project_spec
+
+second_generation=`jq -r .generation $site_path/extras/discovered_vendor-20231/cloud_metadata/udmi_discovered_with.json`
+echo Second discovered generation is $second_generation
+
+[[ $first_generation != $second_generation ]] || fail Second discovery generation was not updated!
 
 echo
 echo Done with automapper test

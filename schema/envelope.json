@@ -67,6 +67,7 @@
     "subType": {
       "enum": [
         "invalid",
+        "local",
         "reflect",
         "events",
         "errors",

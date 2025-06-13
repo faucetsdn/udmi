@@ -1,5 +1,5 @@
 
-## system_mode_restart (ALPHA)
+## system_mode_restart (PREVIEW)
 
 Restart and connect to same endpoint and expect it returns.
 
