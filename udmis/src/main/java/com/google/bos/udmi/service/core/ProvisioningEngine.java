@@ -55,7 +55,7 @@ public class ProvisioningEngine extends ProcessorBase {
     iotAccess.modelDevice(registryId, gatewayId, model, null);
   }
 
-  private void manageDeviceEntry(String registryId, String expectedId, String deviceId,
+  private void processDeviceEntryChange(String registryId, String expectedId, String deviceId,
       Envelope envelope, DiscoveryEvents discoveryEvent, boolean shouldBindToGateway,
       boolean isUpdate) {
     CloudModel cloudModel = new CloudModel();
@@ -154,7 +154,7 @@ public class ProvisioningEngine extends ProcessorBase {
       boolean isUpdate = deviceIds.contains(expectedId);
       notice("Scan %s device %s/%s target %s", isUpdate ? "update" : "create", registryId, deviceId,
           expectedId);
-      manageDeviceEntry(registryId, expectedId, deviceId, envelope, discoveryEvent,
+      processDeviceEntryChange(registryId, expectedId, deviceId, envelope, discoveryEvent,
           isGateway, isUpdate);
     } catch (Exception e) {
       error("Error during discovery event processing: " + friendlyStackTrace(e));
