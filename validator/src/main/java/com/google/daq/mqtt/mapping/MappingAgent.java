@@ -3,6 +3,8 @@ package com.google.daq.mqtt.mapping;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
 import static com.google.daq.mqtt.util.ConfigUtil.UDMI_VERSION;
+import static com.google.udmi.util.Common.UNKNOWN_DEVICE_ID_PREFIX;
+import static com.google.udmi.util.Common.generateColonKey;
 import static com.google.udmi.util.Common.removeNextArg;
 import static com.google.udmi.util.GeneralUtils.catchToNull;
 import static com.google.udmi.util.JsonUtil.isoConvert;
@@ -21,7 +23,6 @@ import com.google.common.collect.ImmutableMap;
 import com.google.daq.mqtt.util.CloudIotManager;
 import com.google.daq.mqtt.util.ConfigUtil;
 import com.google.udmi.util.Common;
-import com.google.udmi.util.JsonUtil;
 import com.google.udmi.util.SiteModel;
 import java.io.File;
 import java.util.ArrayList;
@@ -33,6 +34,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
+import java.util.concurrent.atomic.AtomicInteger;
 import udmi.schema.CloudModel;
 import udmi.schema.CloudModel.ModelOperation;
 import udmi.schema.DiscoveryConfig;
@@ -41,7 +43,9 @@ import udmi.schema.Enumerations.Depth;
 import udmi.schema.Envelope.SubFolder;
 import udmi.schema.ExecutionConfiguration;
 import udmi.schema.FamilyDiscoveryConfig;
+import udmi.schema.FamilyLocalnetModel;
 import udmi.schema.GatewayModel;
+import udmi.schema.LocalnetModel;
 import udmi.schema.Metadata;
 import udmi.schema.SystemModel;
 
@@ -59,6 +63,8 @@ public class MappingAgent {
   private CloudIotManager cloudIotManager;
   private SiteModel siteModel;
   private Date generationDate;
+
+  private AtomicInteger suffixToStart = new AtomicInteger(1);
 
   /**
    * Create an agent given the configuration.
@@ -98,7 +104,7 @@ public class MappingAgent {
       switch (mappingCommand) {
         case "provision" -> setupProvision();
         case "discover" -> initiateDiscover();
-        case "reconcile" -> reconcileDiscovery();
+        case "map" -> mapDiscoveredDevices();
         default -> throw new RuntimeException("Unknown mapping command " + mappingCommand);
       }
       System.err.printf("Completed mapper %s command%n", mappingCommand);
@@ -141,26 +147,83 @@ public class MappingAgent {
     return familyDiscoveryConfig;
   }
 
-  private void reconcileDiscovery() {
+  private void mapDiscoveredDevices() {
+    List<Entry<String, Metadata>> mappedDiscoveredEntries = getMappedDiscoveredEntries();
+    Map<String, Metadata> devicesEntriesMap = getDevicesEntries();
+    Map<String, String> devicesFamilyAddressMap = getDeviceFamilyAddressMap();
+
+    Set<String> devicesPresent = new HashSet<>();
+    mappedDiscoveredEntries.forEach(entry -> {
+
+      if (devicesEntriesMap.containsKey(entry.getKey())) {
+        System.err.println("Skipping existing device file for family::address = " + entry.getKey());
+        devicesPresent.add(devicesFamilyAddressMap.get(entry.getKey()));
+        //TODO: update the existing device
+      } else {
+        String newDeviceId = getNextDeviceId();
+        while (devicesPresent.contains(newDeviceId)) {
+          newDeviceId = getNextDeviceId();
+        }
+        devicesPresent.add(newDeviceId);
+        siteModel.createNewDevice(newDeviceId, entry.getValue());
+      }
+    });
+
+    updateProxyIdsForDiscoveryNode(devicesPresent);
+  }
+
+  private Map<String, String> getDeviceFamilyAddressMap() {
+    Map<String, String> devicesFamilyAddressMap = new HashMap<>();
+
+    for (String device : siteModel.allMetadata().keySet()) {
+      Metadata deviceMetadata = siteModel.allMetadata().get(device);
+      if (deviceMetadata.localnet == null || deviceMetadata.localnet.families == null) {
+        continue;
+      }
+      Map<String, FamilyLocalnetModel> deviceFamilies = deviceMetadata.localnet.families;
+      for (String familyName : deviceFamilies.keySet()) {
+        devicesFamilyAddressMap.put(generateColonKey(familyName,
+            deviceFamilies.get(familyName).addr), device);
+      }
+    }
+
+    return devicesFamilyAddressMap;
+  }
+
+  private String getNextDeviceId() {
+    return UNKNOWN_DEVICE_ID_PREFIX + suffixToStart.getAndIncrement();
+  }
+
+  private List<Entry<String, Metadata>> getMappedDiscoveredEntries() {
     File extrasDir = siteModel.getExtrasDir();
     File[] extras = extrasDir.listFiles();
     if (extras == null || extras.length == 0) {
       throw new RuntimeException("No extras found to reconcile");
     }
-    List<Entry<String, Metadata>> entries = Arrays.stream(extras).map(this::convertExtra)
+    List<Entry<String, Metadata>> mappedDiscoveredEntries = Arrays.stream(extras)
+        .map(this::convertExtraDiscoveredEvents)
         .filter(entry -> !entry.getKey().equals(NO_DISCOVERY)).toList();
-    entries.forEach(entry -> {
-      File metadataFile = siteModel.getDeviceFile(entry.getKey(), METADATA_JSON);
-      if (metadataFile.exists()) {
-        System.err.println("Skipping existing device file " + metadataFile);
-      } else {
-        System.err.println("Writing device metadata file " + metadataFile);
-        metadataFile.getParentFile().mkdirs();
-        JsonUtil.writeFile(entry.getValue(), metadataFile);
-      }
-    });
+    return mappedDiscoveredEntries;
+  }
 
-    List<String> proxyIds = entries.stream().map(Entry::getKey).toList();
+  private Map<String, Metadata> getDevicesEntries() {
+    Map<String, Metadata> devicesEntriesMap = new HashMap<>();
+
+    for (Metadata deviceMetadata : siteModel.allMetadata().values()) {
+      if (deviceMetadata.localnet == null || deviceMetadata.localnet.families == null) {
+        continue;
+      }
+      Map<String, FamilyLocalnetModel> deviceFamilies = deviceMetadata.localnet.families;
+      for (String familyName : deviceFamilies.keySet()) {
+        devicesEntriesMap.put(generateColonKey(familyName,
+            deviceFamilies.get(familyName).addr), deviceMetadata);
+      }
+    }
+
+    return devicesEntriesMap;
+  }
+
+  private void updateProxyIdsForDiscoveryNode(Set<String> proxyIds) {
     File gatewayMetadata = siteModel.getDeviceFile(deviceId, METADATA_JSON);
     Metadata metadata = loadFileStrictRequired(Metadata.class, gatewayMetadata);
     List<String> idList = ofNullable(metadata.gateway.proxy_ids).orElse(ImmutableList.of());
@@ -173,10 +236,15 @@ public class MappingAgent {
     writeFile(metadata, gatewayMetadata);
   }
 
-  private Entry<String, Metadata> convertExtra(File file) {
+  private Entry<String, Metadata> convertExtraDiscoveredEvents(File file) {
     DiscoveryEvents discoveryEvents = loadFileStrict(DiscoveryEvents.class,
         new File(file, "cloud_metadata/udmi_discovered_with.json"));
-    if (discoveryEvents == null) {
+    boolean isInvalidDiscoveryEvent = false;
+    if (discoveryEvents.family == null || discoveryEvents.addr == null) {
+      System.err.println("Invalid discovery event, family or address not present");
+      isInvalidDiscoveryEvent = true;
+    }
+    if (discoveryEvents == null || isInvalidDiscoveryEvent) {
       return Map.entry(NO_DISCOVERY, new Metadata());
     }
     Metadata metadata = new Metadata();
@@ -184,9 +252,18 @@ public class MappingAgent {
     metadata.timestamp = new Date();
     metadata.system = new SystemModel();
     metadata.gateway = new GatewayModel();
+    populateMetadataLocalnet(discoveryEvents, metadata);
     metadata.gateway.gateway_id = deviceId;
-    String deviceName = (String) discoveryEvents.system.ancillary.get("device-name");
-    return Map.entry(deviceName, metadata);
+    return Map.entry(generateColonKey(discoveryEvents.family,
+        discoveryEvents.addr), metadata);
+  }
+
+  private static void populateMetadataLocalnet(DiscoveryEvents discoveryEvents, Metadata metadata) {
+    metadata.localnet = new LocalnetModel();
+    metadata.localnet.families = new HashMap<>();
+    FamilyLocalnetModel familyLocalnetModel = new FamilyLocalnetModel();
+    familyLocalnetModel.addr = discoveryEvents.addr;
+    metadata.localnet.families.put(discoveryEvents.family, familyLocalnetModel);
   }
 
   private void initialize() {
