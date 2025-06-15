@@ -10,7 +10,6 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.ArgumentMatchers.isNull;
-import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -19,11 +18,13 @@ import com.google.bos.udmi.service.access.IotAccessBase;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.udmi.util.JsonUtil;
+import java.util.AbstractMap.SimpleEntry;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
@@ -121,33 +122,48 @@ public class ProvisioningEngineTest extends ProcessorTestBase {
         .publish(getDiscoveryScanEvent(TARGET_DEVICE));
     terminateAndWait();
 
-    verify(provider, times(1)).fetchDevice(eq(TEST_REGISTRY), eq(TEST_GATEWAY));
-
-    ArgumentCaptor<String> deviceCaptor = ArgumentCaptor.forClass(String.class);
-    ArgumentCaptor<CloudModel> modelCaptor = ArgumentCaptor.forClass(CloudModel.class);
-    verify(provider, times(2)).modelDevice(eq(TEST_REGISTRY), deviceCaptor.capture(),
-        modelCaptor.capture(), isNull());
-    List<String> devices = deviceCaptor.getAllValues();
-    List<CloudModel> models = modelCaptor.getAllValues();
+    Entry<List<String>, List<CloudModel>> tuple = extractDeviceInfo(true);
+    List<String> devices = tuple.getKey();
+    List<CloudModel> models = tuple.getValue();
 
     assertEquals(DISCOVERED_DEVICE, devices.get(0), "created device id");
     assertEquals(ModelOperation.CREATE, models.get(0).operation, "operation mismatch");
     assertTrue(models.get(0).blocked, "device blocked");
+
+    assertEquals(2, devices.size(), "size of device operation list");
 
     assertEquals(TEST_GATEWAY, devices.get(1), "scanning gateway id");
     assertEquals(ModelOperation.BIND, models.get(1).operation, "operation mismatch");
     assertNotNull(models.get(1).device_ids.get(DISCOVERED_DEVICE), "binding device entry");
   }
 
+  private Entry<List<String>, List<CloudModel>> extractDeviceInfo(boolean includeBind) {
+    verify(provider, times(1)).fetchDevice(eq(TEST_REGISTRY), eq(TEST_GATEWAY));
+    ArgumentCaptor<String> deviceCaptor = ArgumentCaptor.forClass(String.class);
+    ArgumentCaptor<CloudModel> modelCaptor = ArgumentCaptor.forClass(CloudModel.class);
+    int events = includeBind ? 2 : 1;
+    verify(provider, times(events)).modelDevice(eq(TEST_REGISTRY), deviceCaptor.capture(),
+        modelCaptor.capture(), isNull());
+    return new SimpleEntry<>(deviceCaptor.getAllValues(), modelCaptor.getAllValues());
+  }
+
   @Test
-  public void discoveryEventExisting() {
+  public void discoveryEventUpdate() {
     initializeTestInstance(true);
     getReverseDispatcher()
         .withEnvelope(getScanEnvelope())
         .publish(getDiscoveryScanEvent(TARGET_DEVICE));
 
     terminateAndWait();
-    verify(provider, times(1)).fetchDevice(eq(TEST_REGISTRY), eq(TEST_GATEWAY));
-    verify(provider, never()).modelDevice(eq(TEST_REGISTRY), any(), any(), isNull());
+
+    Entry<List<String>, List<CloudModel>> tuple = extractDeviceInfo(false);
+    List<String> devices = tuple.getKey();
+    List<CloudModel> models = tuple.getValue();
+
+    assertEquals(DISCOVERED_DEVICE, devices.get(0), "created device id");
+    assertEquals(ModelOperation.UPDATE, models.get(0).operation, "operation mismatch");
+    assertTrue(models.get(0).blocked, "device blocked");
+
+    assertEquals(1, devices.size(), "size of device operation list");
   }
 }

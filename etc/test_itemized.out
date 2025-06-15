@@ -12,7 +12,7 @@
 1 RESULT fail writeback writeback_success ALPHA 0/10 Failed waiting until target point has value_state applied: point filter_differential_pressure_setpoint is null, expected applied
 1 RESULT fail pointset pointset_publish_interval STABLE 0/10 Failed check that time period between successive pointset events is between 5 and 8 seconds
 1 RESULT fail system system_min_loglevel ALPHA 0/10 Failed check that log level `NOTICE` (or greater) category `system.config.apply` was not logged
-1 RESULT fail system.mode system_mode_restart ALPHA 0/10 Failed check that restart count increased by one
+1 RESULT fail system.mode system_mode_restart PREVIEW 0/10 Failed check that restart count increased by one
 1 RESULT fail pointset pointset_publish STABLE 0/10 Message exception: Could not upgrade message: While parsing version string 1.4.
 1 CPBLTY fail system broken_config.logging ALPHA 0/1 Failed waiting until (logging) system logs level `DEBUG` category `system.config.receive`: no logs
 0 CPBLTY fail system broken_config.status ALPHA 0/1 Failed waiting until (status) system status level is >= `WARNING` (400): no significant device system status
@@ -50,12 +50,12 @@
 4 RESULT pass gateway gateway_proxy_events BETA 10/10 Sequence complete
 1 RESULT fail gateway gateway_proxy_events BETA 0/10 Failed waiting until All proxy devices received pointset: Missing pointset from AHU-22
 1 RESULT pass gateway gateway_proxy_state PREVIEW 10/10 Sequence complete
-1 RESULT pass gateway gateway_proxy_state PREVIEW 10/10 Sequence complete
+1 RESULT fail gateway gateway_proxy_state PREVIEW 0/10 Failed waiting until All proxy devices received update: Missing update from AHU-22
 1 RESULT fail discovery.scan scan_single_future PREVIEW 0/10 Failed check that discovery events were valid: bacnet scan_addr snoozle does not match expression 0|[1-9][0-9]*
 1 RESULT pass discovery.scan scan_periodic_now_enumerate PREVIEW 10/10 Sequence complete
 4 RESULT pass gateway gateway_proxy_events BETA 10/10 Sequence complete
 1 RESULT pass gateway gateway_proxy_events BETA 10/10 Sequence complete
-1 RESULT pass gateway gateway_proxy_state PREVIEW 10/10 Sequence complete
+1 RESULT fail gateway gateway_proxy_state PREVIEW 0/10 Failed waiting until All proxy devices received update: Missing update from SNS-4, AHU-22
 4 RESULT skip system device_config_acked STABLE 0/0 No config check for proxy device
 1 RESULT pass gateway bad_target_family PREVIEW 10/10 Sequence complete
 1 RESULT pass gateway bad_target_address PREVIEW 10/10 Sequence complete
