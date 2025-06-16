@@ -1,10 +1,8 @@
 package com.google.udmi.util.messaging;
 
 import com.google.gson.Gson;
-import com.google.gson.reflect.TypeToken;
 import com.google.protobuf.ByteString;
 import com.google.pubsub.v1.PubsubMessage;
-import java.lang.reflect.Type;
 import java.nio.charset.StandardCharsets;
 import java.util.Map;
 import java.util.UUID;
@@ -15,14 +13,13 @@ import org.eclipse.paho.client.mqttv3.IMqttMessageListener;
 import org.eclipse.paho.client.mqttv3.MqttClient;
 import org.eclipse.paho.client.mqttv3.MqttConnectOptions;
 import org.eclipse.paho.client.mqttv3.MqttException;
-import org.eclipse.paho.client.mqttv3.MqttMessage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
  * An MQTT-based implementation of the IMessagingClient interface for local testing.
  */
-public class MqttMessagingClient implements IMessagingClient {
+public class MqttMessagingClient implements MessagingClient {
 
   private static final Logger LOGGER = LoggerFactory.getLogger(MqttMessagingClient.class);
   private static final Gson GSON = new Gson();
@@ -31,17 +28,11 @@ public class MqttMessagingClient implements IMessagingClient {
   private final BlockingQueue<PubsubMessage> messageQueue = new LinkedBlockingQueue<>();
 
   /**
-   * For MQTT, we expect a JSON message with a specific structure to mimic Pub/Sub.
-   * {
-   *   "data": "base64-encoded-payload", // or a plain string
-   *   "attributes": { "key": "value", ... }
-   * }
+   * Initialize a generic MQTT Messaging client which mimics a Pub/Sub client.
+   *
+   * @param brokerUrl broker URL e.g. "tcp://localhost:1883"
+   * @param topic subscription topic
    */
-  private static class MqttWrapper {
-    public String data;
-    public Map<String, String> attributes;
-  }
-
   public MqttMessagingClient(String brokerUrl, String topic) {
     try {
       String clientId = "bambi-service-client-" + UUID.randomUUID();
@@ -110,5 +101,15 @@ public class MqttMessagingClient implements IMessagingClient {
     } catch (MqttException e) {
       LOGGER.error("Error while closing MQTT client", e);
     }
+  }
+
+  /**
+   * For MQTT, we expect a JSON message with a specific structure to mimic Pub/Sub. { "data":
+   * "base64-encoded-payload", or a plain string with "attributes": { "key": "value", ... } }
+   */
+  private static class MqttWrapper {
+
+    public String data;
+    public Map<String, String> attributes;
   }
 }

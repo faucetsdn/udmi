@@ -8,7 +8,7 @@ import java.util.concurrent.TimeUnit;
  * An interface for a generic messaging client, abstracting away the specifics
  * of the underlying technology (e.g., Google Pub/Sub, MQTT).
  */
-public interface IMessagingClient extends Closeable {
+public interface MessagingClient extends Closeable {
 
   /**
    * Polls for a message from the subscription, waiting up to the specified timeout.

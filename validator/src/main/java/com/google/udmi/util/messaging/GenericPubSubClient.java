@@ -29,7 +29,7 @@ import org.slf4j.LoggerFactory;
  * is schema-agnostic and works with raw Pub/Sub messages. It is independent of the UDMI-specific
  * PubSubClient.
  */
-public final class GenericPubSubClient implements IMessagingClient, Closeable {
+public final class GenericPubSubClient implements MessagingClient, Closeable {
 
   private static final Logger LOGGER = LoggerFactory.getLogger(GenericPubSubClient.class);
 

@@ -15,7 +15,7 @@ import com.google.udmi.util.SheetsOutputStream;
 import com.google.udmi.util.git.GenericGitRepository;
 import com.google.udmi.util.git.GoogleCloudSourceRepository;
 import com.google.udmi.util.messaging.GenericPubSubClient;
-import com.google.udmi.util.messaging.IMessagingClient;
+import com.google.udmi.util.messaging.MessagingClient;
 import com.google.udmi.util.messaging.MqttMessagingClient;
 import java.io.File;
 import java.io.IOException;
@@ -55,7 +55,7 @@ public class BambiService {
   private static final String PROJECT_TARGET_REGEX = "\\/\\/(mqtt|gbos)(\\/[^\\/\\s]*){1,2}";
   private static final String MQTT = "mqtt";
 
-  private final IMessagingClient messagingClient;
+  private final MessagingClient messagingClient;
   private final ExecutorService pollingExecutor;
   private final AtomicBoolean running = new AtomicBoolean(false);
 
@@ -101,6 +101,11 @@ public class BambiService {
     this(projectTarget, siteModelBaseDir, null);
   }
 
+  /**
+   * BAMBI backend service to support management of site models through Google Sheets.
+   *
+   * @param args command line args e.g. //gbos/bos-platform-dev/udmis /tmp/udmi/sites/
+   */
   public static void main(String[] args) {
     if (args.length < 2 || args.length > 3) {
       System.err.println(
@@ -126,6 +131,9 @@ public class BambiService {
     }));
   }
 
+  /**
+   * Start the service.
+   */
   public void start() {
     if (running.compareAndSet(false, true)) {
       pollingExecutor.submit(this::pollForMessages);
@@ -133,6 +141,9 @@ public class BambiService {
     }
   }
 
+  /**
+   * Stop ther service.
+   */
   public void stop() {
     LOGGER.info("Attempting to stop {}...", SERVICE_NAME);
     running.set(false);
@@ -168,7 +179,7 @@ public class BambiService {
     }
   }
 
-  private IMessagingClient createMqttClient(String requestsSubscription) {
+  private MessagingClient createMqttClient(String requestsSubscription) {
     LOGGER.info("Running in LOCAL MQTT mode.");
     MqttMessagingClient client = new MqttMessagingClient(DEFAULT_MQTT_BROKER, requestsSubscription);
     LOGGER.info("{} initialized for MQTT broker {} and topic {}", SERVICE_NAME, DEFAULT_MQTT_BROKER,
@@ -176,7 +187,7 @@ public class BambiService {
     return client;
   }
 
-  private IMessagingClient createGcpPubSubClient(String gcpProject, String requestsSubscription) {
+  private MessagingClient createGcpPubSubClient(String gcpProject, String requestsSubscription) {
     LOGGER.info("Running in GCP Pub/Sub mode.");
     if (!GenericPubSubClient.subscriptionExists(gcpProject, requestsSubscription)) {
       throw new IllegalStateException(String.format(
