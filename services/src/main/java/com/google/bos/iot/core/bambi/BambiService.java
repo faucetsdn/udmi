@@ -61,6 +61,7 @@ public class BambiService {
 
   private final String protocol;
   private final String gcpProject;
+  private final String udmiNamespace;
   private final String baseCloningDir;
   private final String localOriginDir;
 
@@ -78,6 +79,7 @@ public class BambiService {
 
     ProjectSpec spec = getProjectSpec(projectTarget);
     this.protocol = spec.protocol;
+    this.udmiNamespace = spec.udmiNamespace;
     this.baseCloningDir = siteModelBaseDir;
     this.localOriginDir = localOriginDir;
     this.pollingExecutor = Executors.newSingleThreadExecutor(
@@ -391,7 +393,7 @@ public class BambiService {
     }
     LOGGER.info("Using Google Cloud Source Repository {} in project {}", repoName, gcpProject);
     return new GoogleCloudSourceRepository(
-        fromGoogleCloudSourceRepoName(repoName, repoClonePath, gcpProject));
+        fromGoogleCloudSourceRepoName(repoName, repoClonePath, gcpProject), udmiNamespace);
   }
 
   private ProjectSpec getProjectSpec(String target) {

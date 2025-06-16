@@ -31,10 +31,9 @@ public class GoogleCloudSourceRepository extends GenericGitRepository {
   /**
    * Initialize a Google cloud source repository.
    */
-  public GoogleCloudSourceRepository(RepositoryConfig config) {
+  public GoogleCloudSourceRepository(RepositoryConfig config, String udmiNamespace) {
     super(config);
     this.repositoryConfig = config;
-    String udmiNamespace = System.getenv("UDMI_NAMESPACE");
     String udmiNamespacePrefix = Optional.ofNullable(udmiNamespace).map(ns -> ns + "~").orElse("");
     this.topicId = udmiNamespacePrefix + BASE_TOPIC;
     this.subscriptionId = udmiNamespacePrefix + BASE_SUBSCRIPTION;
@@ -50,6 +49,10 @@ public class GoogleCloudSourceRepository extends GenericGitRepository {
       LOGGER.warn("Pub/Sub subscription {} not found. Listing PRs will not be possible.",
           this.subscriptionId);
     }
+  }
+
+  public GoogleCloudSourceRepository(RepositoryConfig config) {
+    this(config, System.getenv("UDMI_NAMESPACE"));
   }
 
   @Override

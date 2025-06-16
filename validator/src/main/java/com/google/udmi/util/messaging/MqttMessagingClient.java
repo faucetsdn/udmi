@@ -1,6 +1,7 @@
 package com.google.udmi.util.messaging;
 
 import com.google.gson.Gson;
+import com.google.gson.JsonSyntaxException;
 import com.google.protobuf.ByteString;
 import com.google.pubsub.v1.PubsubMessage;
 import java.nio.charset.StandardCharsets;
@@ -51,27 +52,39 @@ public class MqttMessagingClient implements MessagingClient {
 
   private void subscribeToTopic(String topic) throws MqttException {
     IMqttMessageListener listener = (t, msg) -> {
+      String payload = new String(msg.getPayload(), StandardCharsets.UTF_8);
+      LOGGER.debug("Received MQTT message on topic {}", t);
+
       try {
-        LOGGER.debug("Received MQTT message on topic {}", t);
-        String payload = new String(msg.getPayload(), StandardCharsets.UTF_8);
-
-        // Attempt to parse the wrapper, otherwise treat the whole payload as data.
-        MqttWrapper wrapper = GSON.fromJson(payload, MqttWrapper.class);
-
         PubsubMessage.Builder builder = PubsubMessage.newBuilder();
-        if (wrapper != null && wrapper.data != null) {
-          builder.setData(ByteString.copyFromUtf8(wrapper.data));
-          if (wrapper.attributes != null) {
-            builder.putAllAttributes(wrapper.attributes);
+        boolean messageProcessed = false;
+
+        if (payload.trim().startsWith("{")) {
+          try {
+            MqttWrapper wrapper = GSON.fromJson(payload, MqttWrapper.class);
+            if (wrapper != null && wrapper.data != null) {
+              builder.setData(ByteString.copyFromUtf8(wrapper.data));
+              if (wrapper.attributes != null) {
+                builder.putAllAttributes(wrapper.attributes);
+              }
+              messageProcessed = true;
+            } else {
+              LOGGER.warn("Received valid JSON that is not a valid MqttWrapper: {}", payload);
+            }
+          } catch (JsonSyntaxException e) {
+            LOGGER.error("Error parsing malformed JSON MQTT message: " + payload, e);
           }
         } else {
-          // Fallback for simple string messages with no attributes
           builder.setData(ByteString.copyFromUtf8(payload));
+          messageProcessed = true;
         }
 
-        messageQueue.offer(builder.build());
+        if (messageProcessed) {
+          messageQueue.offer(builder.build());
+        }
+
       } catch (Exception e) {
-        LOGGER.error("Error processing incoming MQTT message", e);
+        LOGGER.error("Unexpected error processing incoming MQTT message", e);
       }
     };
 
