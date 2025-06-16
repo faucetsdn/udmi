@@ -56,7 +56,7 @@ public class GenericGitRepositoryTest {
           tempCloneGit.branchRename().setNewName("main").call();
         }
 
-        tempCloneGit.push().call();
+        tempCloneGit.push().setForce(true).call();
       }
     }
 
