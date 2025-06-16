@@ -45,7 +45,7 @@ public class GenericGitRepositoryTest {
     try (Git remoteGit = Git.init().setDirectory(remotePath).setBare(true).call()) {
       File tempClonePath = tempFolder.newFolder("tempClone");
       try (Git tempCloneGit = Git.cloneRepository().setURI(remotePath.toURI().toString())
-          .setDirectory(tempClonePath).call()) {
+          .setDirectory(tempClonePath).setBranch("main").call()) {
         File initialFile = new File(tempClonePath, "initial.txt");
         Files.write(initialFile.toPath(), "initial content".getBytes());
         tempCloneGit.add().addFilepattern("initial.txt").call();
