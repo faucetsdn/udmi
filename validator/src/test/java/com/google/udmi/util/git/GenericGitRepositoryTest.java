@@ -1,5 +1,6 @@
 package com.google.udmi.util.git;
 
+import static org.apache.commons.io.FileUtils.deleteDirectory;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
@@ -42,8 +43,7 @@ public class GenericGitRepositoryTest {
   @Before
   public void setUp() throws IOException, GitAPIException {
     remotePath = tempFolder.newFolder("remote.git");
-    try (Git remoteGit = Git.init().setDirectory(remotePath).setBare(true)
-        .setInitialBranch("main").call()) {
+    try (Git remoteGit = Git.init().setDirectory(remotePath).setBare(true).call()) {
       File tempClonePath = tempFolder.newFolder("tempClone");
       try (Git tempCloneGit = Git.cloneRepository().setURI(remotePath.toURI().toString())
           .setDirectory(tempClonePath).call()) {
@@ -51,6 +51,11 @@ public class GenericGitRepositoryTest {
         Files.write(initialFile.toPath(), "initial content".getBytes());
         tempCloneGit.add().addFilepattern("initial.txt").call();
         tempCloneGit.commit().setMessage("Initial commit").call();
+
+        if (!tempCloneGit.getRepository().getBranch().equalsIgnoreCase("main")) {
+          tempCloneGit.branchRename().setNewName("main").call();
+        }
+
         tempCloneGit.push().call();
       }
     }
@@ -68,10 +73,12 @@ public class GenericGitRepositoryTest {
    * Ensure git resources are released.
    */
   @After
-  public void tearDown() {
+  public void tearDown() throws IOException {
     if (gitRepo != null) {
       gitRepo.close();
     }
+    deleteDirectory(localPath);
+    deleteDirectory(remotePath);
   }
 
   @Test
