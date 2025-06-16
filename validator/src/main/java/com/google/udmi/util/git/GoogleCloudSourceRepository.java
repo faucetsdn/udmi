@@ -1,10 +1,10 @@
 package com.google.udmi.util.git;
 
-import static com.google.udmi.util.GenericPubSubClient.subscriptionExists;
-import static com.google.udmi.util.GenericPubSubClient.topicExists;
+import static com.google.udmi.util.messaging.GenericPubSubClient.subscriptionExists;
+import static com.google.udmi.util.messaging.GenericPubSubClient.topicExists;
 
 import com.google.pubsub.v1.PubsubMessage;
-import com.google.udmi.util.GenericPubSubClient;
+import com.google.udmi.util.messaging.GenericPubSubClient;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;

@@ -1,4 +1,4 @@
-package com.google.udmi.util;
+package com.google.udmi.util.messaging;
 
 import com.google.api.gax.rpc.NotFoundException;
 import com.google.cloud.pubsub.v1.AckReplyConsumer;
@@ -29,7 +29,7 @@ import org.slf4j.LoggerFactory;
  * is schema-agnostic and works with raw Pub/Sub messages. It is independent of the UDMI-specific
  * PubSubClient.
  */
-public final class GenericPubSubClient implements Closeable {
+public final class GenericPubSubClient implements IMessagingClient, Closeable {
 
   private static final Logger LOGGER = LoggerFactory.getLogger(GenericPubSubClient.class);
 

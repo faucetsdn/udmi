@@ -84,6 +84,10 @@ public class GenericGitRepository implements GitRepositoryInterface {
     LOGGER.info("Initialized empty Git repository in {}", config.localPath());
   }
 
+  public String getDirectory() {
+    return config.localPath();
+  }
+
   @Override
   public void cloneRepo() throws GitAPIException, IOException {
     if (config.remoteUrl() == null || config.remoteUrl().isEmpty()) {

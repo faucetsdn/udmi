@@ -15,16 +15,18 @@ LOCAL=
 NO_CHECK=
 [[ ${1:-} == "--no-check" ]] && NO_CHECK=1 && shift
 
-if [[ -n ${UDMI_NAMESPACE:-} ]]; then
-    UDMI_PREFIX="${UDMI_NAMESPACE}~"
-    echo Using UDMI_PREFIX "$UDMI_PREFIX"
-else
-    UDMI_PREFIX=
-fi
-
 # shellcheck disable=SC2155
 export GCP_PROJECT=$(gcloud config get-value project)
 echo Using GCP_PROJECT "$GCP_PROJECT"
+
+if [[ -n ${UDMI_NAMESPACE:-} ]]; then
+    UDMI_PREFIX="${UDMI_NAMESPACE}~"
+    TARGET="//gbos/${GCP_PROJECT}/${UDMI_NAMESPACE}"
+    echo Using UDMI_PREFIX "$UDMI_PREFIX"
+else
+    UDMI_PREFIX=
+    TARGET="//gbos/${GCP_PROJECT}"
+fi
 
 if [[ -z $LOCAL ]]; then
     GCP_SERVICE_ACCOUNT=$(curl -s -H "Metadata-Flavor: Google" http://169.254.169.254/computeMetadata/v1/instance/service-accounts/default/email)
@@ -64,4 +66,4 @@ if [[ -z $NO_CHECK ]]; then
 fi
 
 java -cp "$SERVICES_JAR" "com.google.bos.iot.core.bambi.BambiService" \
-    "$GCP_PROJECT" "$SITE_MODEL_CLONE_DIR"
+    "$TARGET" "$SITE_MODEL_CLONE_DIR"
