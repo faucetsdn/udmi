@@ -13,14 +13,10 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
-import java.util.stream.Collectors;
 import org.eclipse.jgit.api.Git;
-import org.eclipse.jgit.api.ListBranchCommand;
-import org.eclipse.jgit.api.ListBranchCommand.ListMode;
 import org.eclipse.jgit.api.Status;
 import org.eclipse.jgit.api.errors.GitAPIException;
 import org.eclipse.jgit.lib.Constants;
-import org.eclipse.jgit.lib.Ref;
 import org.eclipse.jgit.lib.StoredConfig;
 import org.eclipse.jgit.revwalk.RevCommit;
 import org.junit.After;
@@ -64,25 +60,14 @@ public class GenericGitRepositoryTest {
         tempCloneGit.push().setRemote("origin").setForce(true).call();
 
         StoredConfig remoteConfig = remoteGit.getRepository().getConfig();
-        remoteConfig.setString("core", null, "bare", "true"); // Ensure it's marked as bare
-        remoteConfig.setString("remote", "origin", "url", remotePath.toURI().toString()); // Add remote origin
-        remoteConfig.setString("remote", "origin", "fetch", "+refs/heads/*:refs/remotes/origin/*"); // Add fetch refspec
-        remoteConfig.setString("branch", "main", "remote", "origin"); // Set main to track origin
-        remoteConfig.setString("branch", "main", "merge", "refs/heads/main"); // Set main to merge refs/heads/main
+        remoteConfig.setString("core", null, "bare", "true");
+        remoteConfig.setString("remote", "origin", "url", remotePath.toURI().toString());
+        remoteConfig.setString("remote", "origin", "fetch", "+refs/heads/*:refs/remotes/origin/*");
+        remoteConfig.setString("branch", "main", "remote", "origin");
+        remoteConfig.setString("branch", "main", "merge", "refs/heads/main");
         remoteConfig.save();
-
-        // Directly set the HEAD of the bare repository
         remoteGit.getRepository().updateRef(Constants.HEAD).link("refs/heads/main");
-
       }
-
-      List<String> remoteBranches = remoteGit.branchList().setListMode(ListMode.ALL).call().stream()
-          .map(Ref::getName)
-          .toList();
-      for (String branch: remoteBranches) {
-        System.err.println("%%%%%%%%%%% " + branch);
-      }
-      assertTrue(remoteBranches.contains("refs/heads/main"));
     }
 
     localPath = tempFolder.newFolder("local");
