@@ -13,10 +13,14 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
+import java.util.stream.Collectors;
 import org.eclipse.jgit.api.Git;
+import org.eclipse.jgit.api.ListBranchCommand;
+import org.eclipse.jgit.api.ListBranchCommand.ListMode;
 import org.eclipse.jgit.api.Status;
 import org.eclipse.jgit.api.errors.GitAPIException;
 import org.eclipse.jgit.lib.Constants;
+import org.eclipse.jgit.lib.Ref;
 import org.eclipse.jgit.revwalk.RevCommit;
 import org.junit.After;
 import org.junit.Before;
@@ -56,8 +60,16 @@ public class GenericGitRepositoryTest {
           tempCloneGit.branchRename().setNewName("main").call();
         }
 
-        tempCloneGit.push().setForce(true).call();
+        tempCloneGit.push().setRemote("origin").setForce(true).call();
       }
+
+      List<String> remoteBranches = remoteGit.branchList().setListMode(ListMode.ALL).call().stream()
+          .map(Ref::getName)
+          .toList();
+      for (String branch: remoteBranches) {
+        System.err.println("%%%%%%%%%%% " + branch);
+      }
+      assertTrue(remoteBranches.contains("refs/heads/main"));
     }
 
     localPath = tempFolder.newFolder("local");
