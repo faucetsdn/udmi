@@ -42,10 +42,11 @@ public class GenericGitRepositoryTest {
   @Before
   public void setUp() throws IOException, GitAPIException {
     remotePath = tempFolder.newFolder("remote.git");
-    try (Git remoteGit = Git.init().setDirectory(remotePath).setBare(true).call()) {
+    try (Git remoteGit = Git.init().setDirectory(remotePath).setBare(true)
+        .setInitialBranch("main").call()) {
       File tempClonePath = tempFolder.newFolder("tempClone");
       try (Git tempCloneGit = Git.cloneRepository().setURI(remotePath.toURI().toString())
-          .setDirectory(tempClonePath).setBranch("main").call()) {
+          .setDirectory(tempClonePath).call()) {
         File initialFile = new File(tempClonePath, "initial.txt");
         Files.write(initialFile.toPath(), "initial content".getBytes());
         tempCloneGit.add().addFilepattern("initial.txt").call();
