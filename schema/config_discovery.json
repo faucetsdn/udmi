@@ -7,7 +7,7 @@
   "additionalProperties": false,
   "properties": {
     "generation": {
-      "description": "Generational marker for controlling enumeration",
+      "description": "Generational marker for controlling self-enumeration",
       "type": "string",
       "format": "date-time"
     },
