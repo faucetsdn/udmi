@@ -6,8 +6,8 @@ source $UDMI_ROOT/etc/shell_common.sh
 in_file=out/registrar_conf.json
 out_file=out/mapper_conf.json
 
-if [[ $# != 2 ]]; then
-    usage device_id command
+if [[ $# -lt 2 ]]; then
+    usage device_id command [targets...]
 fi
 
 device_id=$1
@@ -20,4 +20,4 @@ shift 2
 
 jq .device_id=\"$device_id\" $in_file > $out_file
 
-java -cp $UDMI_JAR com.google.daq.mqtt.mapping.MappingAgent $out_file $command
+java -cp $UDMI_JAR com.google.daq.mqtt.mapping.MappingAgent $out_file $command $@

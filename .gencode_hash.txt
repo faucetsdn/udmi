@@ -55,7 +55,11 @@ fd289a9a132a880bf0a14b80ed082ab1dcd77caab54175f8d6ccfc381d2d21ab  gencode/java/u
 6869d00b063748e9995ba6940f6a323916074a7af28ab1d227772b86a39600bb  gencode/java/udmi/schema/DeviceValidationEvents.java
 ec863d0b69880bd2c3030abcdce1d2b8992a475908ead979cc30722b25c1ead2  gencode/java/udmi/schema/Dimension.java
 09c9d674ffdde05f00878924a00ef81dc18d1135d5969e8ab9a8db80038198b7  gencode/java/udmi/schema/DiscoveryCommand.java
+<<<<<<< Updated upstream
 79301624548ab84d11ae5be6fc3475001545df477a77a6056a0122dfc4ea78e1  gencode/java/udmi/schema/DiscoveryConfig.java
+=======
+011bc0d8922793f8b3da82ef079872d6cd3e2718fdd582bc6573eb77f6b017a6  gencode/java/udmi/schema/DiscoveryConfig.java
+>>>>>>> Stashed changes
 f72c9f04a8d25dc25854254eb6711040c47cd09942ed9c1ee885be4e1d729b10  gencode/java/udmi/schema/DiscoveryEvents.java
 1a04079116f4032b17108e873719bbb2c60c19f392136e7c906122199b472227  gencode/java/udmi/schema/DiscoveryModel.java
 b41f59d0c1aa74bb9abbdc7525d726f45a4ba8df3866c2dd40458601ffab60fb  gencode/java/udmi/schema/DiscoveryState.java
