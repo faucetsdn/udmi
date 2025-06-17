@@ -2,7 +2,7 @@
 package udmi.schema;
 
 import java.util.Date;
-import java.util.HashMap;
+import java.util.Map;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyDescription;
@@ -43,7 +43,7 @@ public class DiscoveryConfig {
      */
     @JsonProperty("families")
     @JsonPropertyDescription("Address family configs for discovery scans.")
-    public HashMap<String, FamilyDiscoveryConfig> families;
+    public Map<String, FamilyDiscoveryConfig> families;
 
     @Override
     public int hashCode() {
