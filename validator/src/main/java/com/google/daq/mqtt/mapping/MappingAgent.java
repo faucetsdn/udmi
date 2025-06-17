@@ -19,7 +19,6 @@ import static java.util.Objects.requireNonNull;
 import static java.util.Optional.ofNullable;
 import static java.util.stream.Collectors.toMap;
 
-import com.google.common.base.Functions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -124,7 +123,7 @@ public class MappingAgent {
   private void initiateDiscover(List<String> argsList) {
     Set<String> definedFamilies = catchToNull(
         () -> siteModel.getMetadata(deviceId).discovery.families.keySet());
-    checkNotNull(definedFamilies, "No discovery families defined");
+    checkNotNull(definedFamilies, "No metadata discovery families block defined");
     Set<String> families = argsList.isEmpty() ? definedFamilies : ImmutableSet.copyOf(argsList);
     checkState(!families.isEmpty(), "Discovery families list is empty");
     SetView<String> unknowns = Sets.difference(families, definedFamilies);
