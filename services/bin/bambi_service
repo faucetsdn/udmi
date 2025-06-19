@@ -21,11 +21,11 @@ echo Using GCP_PROJECT "$GCP_PROJECT"
 
 if [[ -n ${UDMI_NAMESPACE:-} ]]; then
     UDMI_PREFIX="${UDMI_NAMESPACE}~"
-    TARGET="//gbos/${GCP_PROJECT}/${UDMI_NAMESPACE}"
+    TARGET="//pubsub/${GCP_PROJECT}/${UDMI_NAMESPACE}"
     echo Using UDMI_PREFIX "$UDMI_PREFIX"
 else
     UDMI_PREFIX=
-    TARGET="//gbos/${GCP_PROJECT}"
+    TARGET="//pubsub/${GCP_PROJECT}"
 fi
 
 if [[ -z $LOCAL ]]; then

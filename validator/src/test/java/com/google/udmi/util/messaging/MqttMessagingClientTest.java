@@ -71,7 +71,7 @@ public class MqttMessagingClientTest {
   @Test
   public void constructor_happyPath_connectsAndSubscribes() throws MqttException {
     // Act
-    new MqttMessagingClient(TEST_BROKER, TEST_TOPIC);
+    new MqttMessagingClient(TEST_BROKER, TEST_TOPIC, null);
 
     // Assert
     assertNotNull("A mock MqttClient should have been constructed", mockMqttClient);
@@ -87,13 +87,13 @@ public class MqttMessagingClientTest {
         .when(mockMqttClient).connect(any(MqttConnectOptions.class));
 
     // Act
-    new MqttMessagingClient(TEST_BROKER, TEST_TOPIC);
+    new MqttMessagingClient(TEST_BROKER, TEST_TOPIC, null);
   }
 
   @Test
   public void receiveMessage_structuredJson_isParsedCorrectly() throws Exception {
     // Arrange
-    MqttMessagingClient client = new MqttMessagingClient(TEST_BROKER, TEST_TOPIC);
+    MqttMessagingClient client = new MqttMessagingClient(TEST_BROKER, TEST_TOPIC, null);
     String dataPayload = "{\"device_id\": \"ABC-123\"}";
     String escapedDataPayload = dataPayload.replace("\"", "\\\"");
     String fullPayload = String.format(
@@ -114,7 +114,7 @@ public class MqttMessagingClientTest {
   @Test
   public void receiveMessage_simpleString_isHandledAsFallback() throws Exception {
     // Arrange
-    MqttMessagingClient client = new MqttMessagingClient(TEST_BROKER, TEST_TOPIC);
+    MqttMessagingClient client = new MqttMessagingClient(TEST_BROKER, TEST_TOPIC, null);
     String simplePayload = "this is not a json object";
     MqttMessage mqttMessage = new MqttMessage(simplePayload.getBytes(StandardCharsets.UTF_8));
 
@@ -131,7 +131,7 @@ public class MqttMessagingClientTest {
   @Test
   public void receiveMessage_malformedJson_isHandledGracefully() throws Exception {
     // Arrange
-    MqttMessagingClient client = new MqttMessagingClient(TEST_BROKER, TEST_TOPIC);
+    MqttMessagingClient client = new MqttMessagingClient(TEST_BROKER, TEST_TOPIC, null);
     // Malformed JSON (missing closing brace)
     String malformedPayload = "{\"data\": \"some_data\"";
     MqttMessage mqttMessage = new MqttMessage(malformedPayload.getBytes(StandardCharsets.UTF_8));
@@ -148,7 +148,7 @@ public class MqttMessagingClientTest {
   @Test
   public void poll_whenQueueEmpty_returnsNullAfterTimeout() {
     // Arrange
-    MqttMessagingClient client = new MqttMessagingClient(TEST_BROKER, TEST_TOPIC);
+    MqttMessagingClient client = new MqttMessagingClient(TEST_BROKER, TEST_TOPIC, null);
 
     // Act
     PubsubMessage pubsubMessage = client.poll(50, TimeUnit.MILLISECONDS);
@@ -160,7 +160,7 @@ public class MqttMessagingClientTest {
   @Test
   public void close_whenConnected_disconnectsAndCloses() throws MqttException {
     // Arrange
-    MqttMessagingClient client = new MqttMessagingClient(TEST_BROKER, TEST_TOPIC);
+    MqttMessagingClient client = new MqttMessagingClient(TEST_BROKER, TEST_TOPIC, null);
     when(mockMqttClient.isConnected()).thenReturn(true);
 
     // Act
@@ -174,7 +174,7 @@ public class MqttMessagingClientTest {
   @Test
   public void close_whenNotConnected_onlyCloses() throws MqttException {
     // Arrange
-    MqttMessagingClient client = new MqttMessagingClient(TEST_BROKER, TEST_TOPIC);
+    MqttMessagingClient client = new MqttMessagingClient(TEST_BROKER, TEST_TOPIC, null);
     when(mockMqttClient.isConnected()).thenReturn(false);
 
     // Act

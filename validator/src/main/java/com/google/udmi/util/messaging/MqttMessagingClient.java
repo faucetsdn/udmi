@@ -6,6 +6,7 @@ import com.google.protobuf.ByteString;
 import com.google.pubsub.v1.PubsubMessage;
 import java.nio.charset.StandardCharsets;
 import java.util.Map;
+import java.util.Objects;
 import java.util.UUID;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
@@ -27,16 +28,23 @@ public class MqttMessagingClient implements MessagingClient {
 
   private final MqttClient mqttClient;
   private final BlockingQueue<PubsubMessage> messageQueue = new LinkedBlockingQueue<>();
+  private final String subscriptionTopic;
+  private final String publishTopic;
 
   /**
    * Initialize a generic MQTT Messaging client which mimics a Pub/Sub client.
    *
    * @param brokerUrl broker URL e.g. "tcp://localhost:1883"
-   * @param topic subscription topic
+   * @param subscriptionTopic subscription topic
+   * @param publishTopic topic where messages should be published
    */
-  public MqttMessagingClient(String brokerUrl, String topic) {
+  public MqttMessagingClient(String brokerUrl, String subscriptionTopic, String publishTopic) {
+    if (subscriptionTopic == null && publishTopic == null) {
+      throw new IllegalArgumentException(
+          "Either subscriptionTopic or publishTopic must be provided.");
+    }
     try {
-      String clientId = "bambi-service-client-" + UUID.randomUUID();
+      String clientId = "mqtt-client-" + UUID.randomUUID();
       mqttClient = new MqttClient(brokerUrl, clientId);
       MqttConnectOptions connOpts = new MqttConnectOptions();
       connOpts.setCleanSession(true);
@@ -44,11 +52,26 @@ public class MqttMessagingClient implements MessagingClient {
       mqttClient.connect(connOpts);
       LOGGER.info("Connected to MQTT broker.");
 
-      subscribeToTopic(topic);
+      this.subscriptionTopic = subscriptionTopic;
+      this.publishTopic = publishTopic;
+      subscribeToTopic(this.subscriptionTopic);
     } catch (MqttException e) {
       throw new RuntimeException("Failed to initialize MQTT client", e);
     }
   }
+
+  /**
+   * Get MqttMessagingClient from supplied config.
+   */
+  public static MessagingClient from(MessagingClientConfig config) {
+    Objects.requireNonNull(config.brokerUrl());
+    LOGGER.info("Creating MQTT client for broker {}, subscription {}, and topic {}",
+        config.brokerUrl(), config.subscriptionId(), config.publishTopicId());
+
+    return new MqttMessagingClient(config.brokerUrl(), config.subscriptionId(),
+        config.publishTopicId());
+  }
+
 
   private void subscribeToTopic(String topic) throws MqttException {
     IMqttMessageListener listener = (t, msg) -> {
@@ -92,8 +115,36 @@ public class MqttMessagingClient implements MessagingClient {
     LOGGER.info("Subscribed to MQTT topic: {}", topic);
   }
 
+  /**
+   * Publishes a string message with attributes to the configured topic.
+   *
+   * @param messagePayload The string payload to publish.
+   * @param attributes A map of attributes for the message.
+   */
+  @Override
+  public void publish(String messagePayload, Map<String, String> attributes) {
+    if (publishTopic == null) {
+      throw new IllegalStateException("Client is not configured with a topic to publish to.");
+    }
+    try {
+      MqttWrapper wrapper = new MqttWrapper();
+      wrapper.data = messagePayload;
+      wrapper.attributes = attributes;
+
+      String payload = GSON.toJson(wrapper);
+      mqttClient.publish(publishTopic, payload.getBytes(StandardCharsets.UTF_8), 0, false);
+      LOGGER.debug("Published message to topic {}: {}", publishTopic, payload);
+    } catch (MqttException e) {
+      LOGGER.error("Failed to publish message to topic " + publishTopic, e);
+      throw new RuntimeException("Failed to publish MQTT message", e);
+    }
+  }
+
   @Override
   public PubsubMessage poll(long timeout, TimeUnit unit) {
+    if (subscriptionTopic == null) {
+      throw new IllegalStateException("Client is not configured with a subscription to poll from.");
+    }
     try {
       return messageQueue.poll(timeout, unit);
     } catch (InterruptedException e) {

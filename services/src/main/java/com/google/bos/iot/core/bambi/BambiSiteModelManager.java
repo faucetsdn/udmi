@@ -1,6 +1,8 @@
 package com.google.bos.iot.core.bambi;
 
 
+import com.google.bos.iot.core.bambi.model.BambiSheet;
+import com.google.bos.iot.core.bambi.model.BambiSiteModel;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.udmi.util.SpreadsheetManager;
 import java.io.IOException;
@@ -294,27 +296,6 @@ public class BambiSiteModelManager {
       sheetData.add(List.of(entry.getKey(), entry.getValue()));
     }
     return sheetData;
-  }
-
-  enum BambiSheet {
-    SITE_METADATA("site_metadata"),
-    CLOUD_IOT_CONFIG("cloud_iot_config"),
-    SYSTEM("system"),
-    CLOUD("cloud"),
-    GATEWAY("gateway"),
-    LOCALNET("localnet"),
-    POINTSET("pointset"),
-    POINTS("points");
-
-    private final String name;
-
-    BambiSheet(String name) {
-      this.name = name;
-    }
-
-    public String getName() {
-      return name;
-    }
   }
 
   // Helper structure for simple table configurations

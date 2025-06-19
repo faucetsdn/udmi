@@ -17,6 +17,7 @@ import java.io.Closeable;
 import java.io.IOException;
 import java.util.Collection;
 import java.util.Map;
+import java.util.Objects;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingDeque;
 import java.util.concurrent.TimeUnit;
@@ -100,6 +101,32 @@ public final class GenericPubSubClient implements MessagingClient, Closeable {
   }
 
   /**
+   * Get GenericPubSubClient from supplied config.
+   */
+  public static MessagingClient from(MessagingClientConfig config) {
+    Objects.requireNonNull(config.projectId());
+    if (config.subscriptionId() != null && !subscriptionExists(config.projectId(),
+        config.subscriptionId())) {
+      throw new IllegalStateException(String.format(
+          "Subscription %s does not exist in project %s. Please ensure it exists and retry!",
+          config.subscriptionId(), config.projectId()));
+    }
+
+    if (config.publishTopicId() != null && !topicExists(config.projectId(),
+        config.publishTopicId())) {
+      throw new IllegalStateException(String.format(
+          "Topic %s does not exist in project %s. Please ensure it exists and retry!",
+          config.publishTopicId(), config.projectId()));
+    }
+
+    LOGGER.info("Creating GCP PubSub Client for project {}, subscription {}, and topic {}",
+        config.projectId(), config.subscriptionId(), config.publishTopicId());
+
+    return new GenericPubSubClient(config.projectId(), config.subscriptionId(),
+        config.publishTopicId());
+  }
+
+  /**
    * Checks if a Pub/Sub topic exists.
    *
    * @param projectId The GCP project ID.
@@ -149,6 +176,7 @@ public final class GenericPubSubClient implements MessagingClient, Closeable {
    * @param messagePayload The string payload to publish.
    * @param attributes A map of attributes for the message.
    */
+  @Override
   public void publish(String messagePayload, Map<String, String> attributes) {
     if (publisher == null) {
       throw new IllegalStateException("Client is not configured with a topic to publish to.");
@@ -168,6 +196,7 @@ public final class GenericPubSubClient implements MessagingClient, Closeable {
    * @param unit The time unit of the timeout argument.
    * @return The received PubsubMessage, or null if the timeout is reached before a message arrives.
    */
+  @Override
   public PubsubMessage poll(long timeout, TimeUnit unit) {
     if (subscriber == null) {
       throw new IllegalStateException("Client is not configured with a subscription to poll from.");

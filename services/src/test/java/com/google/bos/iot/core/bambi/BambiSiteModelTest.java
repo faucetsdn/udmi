@@ -8,7 +8,8 @@ import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 
-import com.google.bos.iot.core.bambi.BambiSiteModelManager.BambiSheet;
+import com.google.bos.iot.core.bambi.model.BambiSheet;
+import com.google.bos.iot.core.bambi.model.BambiSiteModel;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
