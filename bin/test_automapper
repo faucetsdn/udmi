@@ -39,13 +39,16 @@ echo Enable the gateway to auto-provision
 bin/mapper GAT-123 provision
 
 echo Kick off a discovery run for the gateway
-bin/mapper GAT-123 discover
+bin/mapper GAT-123 discover vendor
 
 echo Waiting for discovery...
 sleep 20
 
 echo Extracting results at $(date -u -Is)
 bin/registrar $site_path $project_spec
+
+echo Checking that there was no bacnet discovery...
+! ls -d sites/udmi_site_model/extras/discovered_bacnet-*
 
 status=$(fgrep discovered_vendor-281 $site_path/out/registration_summary.csv | awk '{print $3}') || true
 echo Checking vendor device status is $status
@@ -100,6 +103,9 @@ sleep 20
 
 echo Extracting updated results at $(date -u -Is)
 bin/registrar $site_path $project_spec
+
+echo Checking that there was bacnet discovery...
+ls -d sites/udmi_site_model/extras/discovered_bacnet-*
 
 second_generation=`jq -r .generation $site_path/extras/discovered_vendor-20231/cloud_metadata/udmi_discovered_with.json`
 echo Second discovered generation is $second_generation
