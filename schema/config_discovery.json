@@ -7,7 +7,7 @@
   "additionalProperties": false,
   "properties": {
     "generation": {
-      "description": "Generational marker for controlling enumeration",
+      "description": "Generational marker for controlling self-enumeration",
       "type": "string",
       "format": "date-time"
     },
@@ -32,7 +32,7 @@
     },
     "families": {
       "description": "Address family configs for discovery scans.",
-      "existingJavaType": "java.util.HashMap<String, FamilyDiscoveryConfig>",
+      "existingJavaType": "java.util.Map<String, FamilyDiscoveryConfig>",
       "additionalProperties": false,
       "patternProperties": {
         "^[a-z][a-z0-9]*(_[a-z0-9]+)*$": {
