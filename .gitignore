@@ -36,6 +36,7 @@ credentials.json
 /services/var/
 /services/.idea/libraries/
 /sites/
+/sites
 /attributes.json
 /venv/
 /venv
