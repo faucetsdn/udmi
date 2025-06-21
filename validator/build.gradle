@@ -107,6 +107,14 @@ dependencies {
 
     implementation 'com.google.oauth-client:google-oauth-client-jetty:1.20.0'
     implementation 'com.google.apis:google-api-services-sheets:v4-rev484-1.20.0'
+    implementation ('com.google.apis:google-api-services-sourcerepo:v1-rev20220429-1.32.1') {
+        exclude group: 'com.google.auth', module: 'google-auth-library-oauth2-http'
+    }
+    implementation 'ch.qos.logback:logback-classic:1.5.6'
+    implementation 'org.eclipse.jgit:org.eclipse.jgit:6.9.0.202403050737-r'
+    implementation('com.google.http-client:google-http-client-jackson2:1.43.3') {
+        exclude group: 'com.google.auth', module: 'google-auth-library-oauth2-http'
+    }
 
     testImplementation 'org.junit.jupiter:junit-jupiter-api:5.9.2'
     testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.9.2'

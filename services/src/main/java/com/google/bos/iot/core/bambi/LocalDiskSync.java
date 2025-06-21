@@ -1,8 +1,8 @@
 package com.google.bos.iot.core.bambi;
 
-import static com.google.bos.iot.core.bambi.BambiSiteModel.DEVICE_ID;
-import static com.google.bos.iot.core.bambi.BambiSiteModel.POINTS_TEMPLATE_NAME;
-import static com.google.bos.iot.core.bambi.BambiSiteModel.POINT_NAME;
+import static com.google.bos.iot.core.bambi.model.BambiSiteModel.DEVICE_ID;
+import static com.google.bos.iot.core.bambi.model.BambiSiteModel.POINTS_TEMPLATE_NAME;
+import static com.google.bos.iot.core.bambi.model.BambiSiteModel.POINT_NAME;
 
 import java.time.Instant;
 import java.util.LinkedHashMap;

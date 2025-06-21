@@ -1,6 +1,5 @@
-package com.google.bos.iot.core.bambi;
+package com.google.bos.iot.core.bambi.model;
 
-import com.google.bos.iot.core.bambi.BambiSiteModelManager.BambiSheet;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedHashMap;

@@ -15,16 +15,18 @@ LOCAL=
 NO_CHECK=
 [[ ${1:-} == "--no-check" ]] && NO_CHECK=1 && shift
 
-if [[ -n ${UDMI_NAMESPACE:-} ]]; then
-    UDMI_PREFIX="${UDMI_NAMESPACE}~"
-    echo Using UDMI_PREFIX "$UDMI_PREFIX"
-else
-    UDMI_PREFIX=
-fi
-
 # shellcheck disable=SC2155
 export GCP_PROJECT=$(gcloud config get-value project)
 echo Using GCP_PROJECT "$GCP_PROJECT"
+
+if [[ -n ${UDMI_NAMESPACE:-} ]]; then
+    UDMI_PREFIX="${UDMI_NAMESPACE}~"
+    TARGET="//pubsub/${GCP_PROJECT}/${UDMI_NAMESPACE}"
+    echo Using UDMI_PREFIX "$UDMI_PREFIX"
+else
+    UDMI_PREFIX=
+    TARGET="//pubsub/${GCP_PROJECT}"
+fi
 
 if [[ -z $LOCAL ]]; then
     GCP_SERVICE_ACCOUNT=$(curl -s -H "Metadata-Flavor: Google" http://169.254.169.254/computeMetadata/v1/instance/service-accounts/default/email)
@@ -41,8 +43,6 @@ fi
 BAMBI_REQUESTS_TOPIC=${UDMI_PREFIX}bambi-requests
 BAMBI_REQUESTS_SUBSCRIPTION=${UDMI_PREFIX}bambi-requests
 SITE_MODEL_CLONE_DIR=${UDMI_ROOT}/var/udmi/sites
-
-SLEEP_INTERVAL=0.2
 
 if [[ -z $NO_CHECK ]]; then
     echo Checking existing topics...
@@ -65,76 +65,5 @@ if [[ -z $NO_CHECK ]]; then
     fi
 fi
 
-echo Polling for messages...
-
-while true; do
-    PULL_OUTPUT=$(gcloud pubsub subscriptions pull \
-        "${BAMBI_REQUESTS_SUBSCRIPTION}" \
-        --auto-ack \
-        --limit=1 \
-        --format=json)
-
-    if [[ -z "$PULL_OUTPUT" || "$PULL_OUTPUT" == "[]" ]]; then
-        sleep ${SLEEP_INTERVAL}
-        continue
-    fi
-
-    echo "Message received. Processing..."
-    MESSAGE_ATTRIBUTES_JSON=$(echo "${PULL_OUTPUT}" | jq -c '.[0].message.attributes // {}')
-
-    # --- Handle Attributes ---
-    echo "Attributes (JSON): ${MESSAGE_ATTRIBUTES_JSON}"
-    if [[ "$MESSAGE_ATTRIBUTES_JSON" != "{}" ]]; then
-        request_type=$(echo "${MESSAGE_ATTRIBUTES_JSON}" | jq -r '.request_type')
-        source=$(echo "${MESSAGE_ATTRIBUTES_JSON}" | jq -r '.source')
-        user=$(echo "${MESSAGE_ATTRIBUTES_JSON}" | jq -r '.user')
-        registry_id=$(echo "${MESSAGE_ATTRIBUTES_JSON}" | jq -r '.registry_id')
-        import_branch=$(echo "${MESSAGE_ATTRIBUTES_JSON}" | jq -r '.import_branch')
-
-        if [[ $import_branch == "null" ]]; then
-            import_branch="main"
-        fi
-
-        spreadsheet_id=$(echo "$source" | grep -oP '(?<=/d/)[^/]+')
-        repo_dir="${SITE_MODEL_CLONE_DIR}"/"${registry_id}"
-        export_branch="proposal.${spreadsheet_id}.$(date +%Y%m%d.%H%M%S)"
-
-        (
-        echo Processing "$request_type" request from "$user"
-        if clone_gcsr_site_model "$registry_id" "$GCP_PROJECT" "$repo_dir"; then
-            cd "$repo_dir"
-            if git switch "$import_branch"; then
-                if [[ "$request_type" == "import" ]]; then
-                    echo Populating site model in bambi sheet
-                    echo sync_site_model_to_bambi "$spreadsheet_id" "$repo_dir"/udmi
-                    sync_disk_site_model_to_bambi "$spreadsheet_id" "$repo_dir"/udmi
-                elif [[ "$request_type" == "merge" ]]; then
-                    echo Merging data from BAMBI to site model on disk
-                    if git checkout -b "$export_branch"; then
-                        echo sync_bambi_site_model_to_disk "$spreadsheet_id" "$repo_dir"/udmi
-                        sync_bambi_site_model_to_disk "$spreadsheet_id" "$repo_dir"/udmi
-                        git add .
-                        if git commit -m "Merge changes from BAMBI"; then
-                            if ! git push origin "$export_branch":"$export_branch"; then
-                              warn Could not push branch "$export_branch", please try again later
-                            fi
-                        fi
-                    else
-                        echo Unable to create branch "$export_branch"
-                    fi
-                fi
-            else
-                echo Skipping import because branch $import_branch does not exist
-            fi
-            cd "$SCRIPT_ROOT"
-        else
-            warn Skipping import, could not clone repository "$registry_id"
-        fi
-        ) 2>&1 | tee /tmp/bambi_service.log | stream_to_gsheets "bambi_service.$request_type" "$spreadsheet_id"
-        echo Polling for new messages...
-    else
-        echo No attributes found on this message.
-        echo Resuming polling...
-    fi
-    sleep ${SLEEP_INTERVAL}
-done
+java -cp "$SERVICES_JAR" "com.google.bos.iot.core.bambi.BambiService" \
+    "$TARGET" "$SITE_MODEL_CLONE_DIR"
