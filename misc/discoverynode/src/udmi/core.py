@@ -187,18 +187,17 @@ class UDMICore:
       self.components["passive_discovery"] = passive_discovery
     
     if ether:
-      nmap_banner_scan = udmi.discovery.ether.EtherDiscovery(
+      ether_scan = udmi.discovery.ether.EtherDiscovery(
           self.state,
-          self.publish_discovery,
-          target_ips=self.config["nmap"]["targets"],
+          self.publish_discovery
       )
 
       self.add_config_route(
           lambda x: True,
-          nmap_banner_scan,
+          ether_scan,
       )
 
-      self.register_state_hook(nmap_banner_scan.on_state_update_hook)
+      self.register_state_hook(ether_scan.on_state_update_hook)
 
-      self.components["nmap_banner_scan"] = nmap_banner_scan
+      self.components["ether_scan"] = ether_scan
     
