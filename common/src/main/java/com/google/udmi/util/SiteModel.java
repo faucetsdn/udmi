@@ -645,8 +645,18 @@ public class SiteModel {
   public void updateDevice(String deviceId, Metadata discoveredEventMetadata) {
     File deviceMetadataFile = getDeviceFile(deviceId, METADATA_JSON);
     Metadata deviceMetadata = loadFileStrictRequired(Metadata.class, deviceMetadataFile);
-    deviceMetadata.pointset = discoveredEventMetadata.pointset;
-    deviceMetadata.timestamp = discoveredEventMetadata.timestamp;
+
+    if (discoveredEventMetadata.pointset != null &&
+        discoveredEventMetadata.pointset.points != null) {
+      deviceMetadata.pointset = discoveredEventMetadata.pointset;
+    }
+
+    // Update timestamp if the discovered one is newer
+    if (discoveredEventMetadata.timestamp != null &&
+        (deviceMetadata.timestamp == null ||
+            discoveredEventMetadata.timestamp.after(deviceMetadata.timestamp))) {
+      deviceMetadata.timestamp = discoveredEventMetadata.timestamp;
+    }
 
     if (deviceMetadata.localnet == null) {
       deviceMetadata.localnet = new LocalnetModel();
@@ -658,10 +668,7 @@ public class SiteModel {
 
     if (discoveredEventMetadata.localnet != null &&
         discoveredEventMetadata.localnet.families != null) {
-      for (Entry<String, FamilyLocalnetModel> entry
-          :discoveredEventMetadata.localnet.families.entrySet()) {
-        deviceMetadata.localnet.families.put(entry.getKey(), entry.getValue());
-      }
+      deviceMetadata.localnet.families.putAll(discoveredEventMetadata.localnet.families);
     }
 
     writeFile(deviceMetadata, deviceMetadataFile);

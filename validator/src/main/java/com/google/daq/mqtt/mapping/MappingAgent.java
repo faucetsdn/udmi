@@ -131,12 +131,12 @@ public class MappingAgent {
 
     generationDate = new Date();
     String generation = isoConvert(generationDate);
+    System.err.printf("Initiating %s discovery on %s/%s at %s%n", families,
+        siteModel.getRegistryId(), deviceId, generation);
+
     CloudModel cloudModel = new CloudModel();
     cloudModel.metadata = ImmutableMap.of(UDMI_PROVISION_GENERATION, generation);
     cloudIotManager.updateDevice(deviceId, cloudModel, ModelOperation.MODIFY);
-
-    System.err.printf("Initiating %s discovery on %s/%s at %s%n", families,
-        siteModel.getRegistryId(), deviceId, generation);
 
     DiscoveryConfig discoveryConfig = new DiscoveryConfig();
 
