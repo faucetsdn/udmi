@@ -10,7 +10,7 @@ from typing import Any, Callable
 
 import udmi.discovery
 import udmi.discovery.bacnet
-import misc.discoverynode.src.udmi.discovery.ether
+import udmi.discovery.ether
 import udmi.discovery.numbers
 import udmi.discovery.passive
 import udmi.publishers.publisher
