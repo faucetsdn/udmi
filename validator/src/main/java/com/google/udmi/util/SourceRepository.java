@@ -1,4 +1,4 @@
-package com.google.bos.iot.core.bambi.model;
+package com.google.udmi.util;
 
 import static com.google.udmi.util.git.RepositoryConfig.forRemote;
 import static com.google.udmi.util.git.RepositoryConfig.fromGoogleCloudSourceRepoName;
@@ -15,7 +15,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * This class encapsulates all interactions required by BAMBI
+ * This class encapsulates all interactions required by BAMBI and other services
  * with the site model source repositories.
  */
 public class SourceRepository {
@@ -114,7 +114,7 @@ public class SourceRepository {
         repository.add(".");
         repository.commit(commitMessage);
         repository.push();
-        LOGGER.info("Push successful.");
+        LOGGER.info("Push successful to branch {}.", repository.getCurrentBranch());
       }
     } catch (GitAPIException | IOException e) {
       LOGGER.error("Unable to commit and push", e);

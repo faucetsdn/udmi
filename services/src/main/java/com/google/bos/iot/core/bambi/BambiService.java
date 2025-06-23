@@ -4,10 +4,10 @@ import static java.util.Optional.ofNullable;
 
 import com.google.bos.iot.core.bambi.auth.IdVerificationConfig;
 import com.google.bos.iot.core.bambi.auth.IdVerifier;
-import com.google.bos.iot.core.bambi.model.SourceRepository;
 import com.google.pubsub.v1.PubsubMessage;
 import com.google.udmi.util.SheetsAppender;
 import com.google.udmi.util.SheetsOutputStream;
+import com.google.udmi.util.SourceRepository;
 import com.google.udmi.util.messaging.MessagingClient;
 import com.google.udmi.util.messaging.MessagingClientConfig;
 import java.io.IOException;
@@ -256,6 +256,7 @@ public class BambiService {
   private void handleImport(String spreadsheetId, String udmiModelPath) {
     LOGGER.info("Populating Google Sheet {} from site model at {}", spreadsheetId, udmiModelPath);
     new BambiSync(spreadsheetId, udmiModelPath).execute();
+    LOGGER.info("Import operation complete.");
   }
 
   /**
@@ -277,7 +278,7 @@ public class BambiService {
     if (!repository.commitAndPush("Merge changes from BAMBI spreadsheet")) {
       throw new RuntimeException("Unable to commit and push changes to branch " + exportBranch);
     }
-    LOGGER.info("Successfully pushed changes to {}", exportBranch);
+    LOGGER.info("Export operation complete.");
   }
 
   // --- Utility and Helper Methods ---
