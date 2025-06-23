@@ -39,6 +39,7 @@ def catch_exceptions_to_state(method: Callable):
     try:
       return method(self, *args, **kwargs)
     except Exception as err:
+      raise(err)
       self._handle_exception(err)
   return _impl
 
@@ -134,14 +135,16 @@ class DiscoveryController(abc.ABC):
     self.state = udmi.schema.state.Discovery()
     self.internal_state = None
     self.publisher = publisher
-    state.discovery.families[self.family] = self.state
-    self.config = None
+    self.config: udmi.schema.config.DiscoveryFamily = None
     self.mutex = threading.Lock()
     self.scheduler_thread = None
     self.scheduler_thread_stopped = threading.Event()
-    self.generation = None
-    self.count_events = None
+    self.generation: datetime.datetime | None  = None
+    self.count_events: int = None
     self.publisher_mutex = threading.Lock()
+
+    state.discovery.families[self.family] = self.state
+    
     atexit.register(self._stop)
 
   def _increment_event_counter_and_get(self) -> int:
@@ -162,15 +165,11 @@ class DiscoveryController(abc.ABC):
     )
     logging.exception(err)
 
-  def _start(self):
-    """ """
+  def _start(self) -> None:
     logging.info("Starting discovery for %s", type(self).__name__)
     self.state.status = None
     self._set_internal_state(states.STARTING)
     self.count_events = 0
-   
-    self.generation = datetime.datetime.now()
-    self.state.generation = self.generation
 
     try:
       self.start_discovery()
@@ -218,20 +217,26 @@ class DiscoveryController(abc.ABC):
       raise RuntimeError("scan duration or interval cannot be negative")
 
   @catch_exceptions_to_state
-  def _scheduler(self, start_time:int, config: udmi.schema.config.DiscoveryFamily):
-    """ The scheduler starts 
-    
+  def _scheduler(self, start_time:int, config: udmi.schema.config.DiscoveryFamily, initial_generation: datetime.datetime) -> None:
+    """ The scheduler runs as a dedicated thread and is used to manage
+    and schedule scans.
+
+    Args:
+      start_time: Time for the first scan. Will wait in the future, or start
+        immediately if in the past
+      
+      config: A copy of the config the scan(s) were schedulde with. Sample rate
     """
     next_action_time = start_time
     
     # Initial execution of the scheduler is always to start a discovery
+    # The scheduler should only be started when discovery is expected to start
     next_action = ACTION_START
 
     self._set_internal_state(states.SCHEDULED)
     self.state.phase = udmi.schema.state.Phase.pending
-    # initial generation is from 
-    self.state.generation = config.generation
 
+    self.set_generation(initial_generation)
 
     scan_interval_sec = config.scan_interval_sec if config.scan_interval_sec is not None else 0
     # Set the duration to match the interval duration so that the scheduled stop logic is simpler
@@ -239,14 +244,17 @@ class DiscoveryController(abc.ABC):
     scan_duration_sec = config.scan_duration_sec if config.scan_duration_sec is not None else scan_interval_sec
     
     while not self.scheduler_thread_stopped.is_set():
-      if time.monotonic() > next_action_time:
+      if time.time() > next_action_time:
         with self.mutex:
           if config != self.config:
             logging.info("config has change, exiting")
             # Check that the config has not changed whilst the scheduler was waiting to acquire the lock
+            # And a another scheduler thread may have started
             return
-          
+
           # make a copy of the current action so next_acction can be safelty mutated
+          # these are 1/-1 which do get copied (rather than referenced) by python,
+          # or at least I think they do, but it does work.
           current_action = next_action
           
           if current_action == ACTION_START:
@@ -254,7 +262,10 @@ class DiscoveryController(abc.ABC):
             
             if scan_duration_sec > 0:
               next_action = ACTION_STOP
-              next_action_time = time.monotonic() + scan_duration_sec
+              # Calcultae based of generation and current time, in case the generation is in the past
+              # Otherwise systematic error gets introduced into all repetitive measurements
+              # e.g. instead of starting "on the hour", they all start 5 seconds pst the hour
+              next_action_time = time.time() + scan_duration_sec
               logging.info("scheduled discovery stop for %s in %d seconds", type(self).__name__, scan_duration_sec)
             else:
               # the scan runs indefinitely, exit the scheduler
@@ -268,7 +279,8 @@ class DiscoveryController(abc.ABC):
             if scan_interval_sec > 0:
               next_action = ACTION_START
               sleep_interval = scan_interval_sec - scan_duration_sec
-              next_action_time = time.monotonic() + sleep_interval
+              # calculate the next generation
+              next_action_time = time.time() + sleep_interval
               logging.info("scheduled discovery start for %s in %d seconds", type(self).__name__, scan_duration_sec)
               self._set_internal_state(states.SCHEDULED)
               self.state.phase = udmi.schema.state.Phase.pending
@@ -281,7 +293,12 @@ class DiscoveryController(abc.ABC):
 
   @catch_exceptions_to_state
   def controller(self, config_dict: None | dict[str:Any]):
-    """Main discovery controller which manages discovery sub-class.
+    """Main discovery controller.
+
+    Primary function is to receieve a config message and responds accordingly.
+    Stops discovery scans as neccesary, and if discovery is demanded, 
+    determines when the first scan should start
+    and starts the scheduler with that information.
 
     Args:
       config_dict: Complete UDMI configuration as a dictionary
@@ -323,28 +340,56 @@ class DiscoveryController(abc.ABC):
       
       # Discovery config empty
       if not config:
+        # Note, the state does not get cleared, but it should be accurate
+        # e.g. phase of `stopped` and a count of messages
         logging.debug("config is now empty, do nothing")
         return
       
       self._reset_udmi_state()
-      generation_from_config = datetime.datetime.strptime(f"{config.generation}+0000", "%Y-%m-%dT%H:%M:%SZ%z")
+
+      generation_from_config = udmi.schema.util.datetime_from_iso_timestamp(config.generation)
       time_delta_from_now = generation_from_config - datetime.datetime.now(tz=datetime.timezone.utc)
+      logging.warning("generatoin: %s timedelta: %s datetime.now: %s", generation_from_config, time_delta_from_now, datetime.datetime.now(tz=datetime.timezone.utc))
       seconds_from_now = time_delta_from_now.total_seconds()
 
-      if seconds_from_now < MAX_THRESHOLD_GENERATION:
+      # I need to merge these together so that there is a tolerance on starting "now"
+
+      if seconds_from_now >= MAX_THRESHOLD_GENERATION:
+        # Generation is in the future or witihn tolerance
+        initial_generation = generation_from_config
+        scheduled_start = generation_from_config.timestamp()
+  
+      elif seconds_from_now < MAX_THRESHOLD_GENERATION and config.scan_interval_sec:
+        # Generation is in the past, but it has interval
+        # Use modular arithemtic to determine when the start time is
+        cycles_elapsed, seconds_into_cycle = divmod(abs(seconds_from_now), config.scan_interval_sec)
+
+        # determine whether to join this cycle or wait till the next
+        cycle_modifer = 1 if seconds_into_cycle > abs(MAX_THRESHOLD_GENERATION) else 0
+        logging.warning(f"scan interval: {config.scan_interval_sec}")
+        logging.warning(f"cycles_elapsed: {cycles_elapsed}, seconds_into:{seconds_into_cycle}, seconds_from:{seconds_from_now}")
+        logging.warning(f"cycle_modifer is {cycle_modifer}")
+
+        initial_generation = generation_from_config + datetime.timedelta(seconds=config.scan_interval_sec * (cycle_modifer + cycles_elapsed))
+        scheduled_start = initial_generation.timestamp()
+
+      elif seconds_from_now < MAX_THRESHOLD_GENERATION:
         raise RuntimeError(f"generation start time ({seconds_from_now} from now exceeds allowable threshold {MAX_THRESHOLD_GENERATION})")
-      logging.info(f"discovery {config} starts in {seconds_from_now} seconds")
+      
+      logging.info(f"discovery {config} starts in {scheduled_start - time.time()} seconds")
+
+      # Discovery is go
 
       self.scheduler_thread_stopped.clear()
       self.scheduler_thread = threading.Thread(
-          target=self._scheduler, args=[time.monotonic() + seconds_from_now, copy.copy(config)], daemon=True
+          target=self._scheduler, args=[scheduled_start, copy.copy(config), initial_generation], daemon=True
       )
       self.scheduler_thread.start()
 
 
-  def _set_internal_state(self, new_state: states):
-    """ Sets the internal state to the given state.
-    
+  def _set_internal_state(self, new_state: states) -> None:
+    """ Sets the internal state to the given state and logs the new state.
+
     Arguments:
       new_state
 
@@ -352,12 +397,24 @@ class DiscoveryController(abc.ABC):
     logging.info("state now %s, was %s", new_state, self.internal_state)
     self.internal_state = new_state
 
-  def _reset_udmi_state(self):
+  def _reset_udmi_state(self) -> None:
     """ Resets the UDMI state for this family by nulling all keys. """
     for field in dataclasses.fields(self.state):
       setattr(self.state, field.name, None)
 
-  def on_state_update_hook(self):
+  def on_state_update_hook(self) -> None:
     # Check that the state is not reset before setting the active count
     if self.state.phase is not None:
       self.state.active_count = self.count_events
+
+  def set_generation(self, new_generation:datetime.datetime) -> None:
+    """Updates the generation to the the given generation"""
+    current_generation = udmi.schema.util.datetime_serializer(self.generation) if self.generation else None
+    logging.info("generation now %s, was %s", 
+                 current_generation,
+                 udmi.schema.util.datetime_serializer(new_generation))
+    self.generation = new_generation
+    self.state.generation = new_generation
+
+  def __del__(self):
+    self._stop()

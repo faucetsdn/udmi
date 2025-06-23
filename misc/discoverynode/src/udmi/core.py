@@ -10,7 +10,7 @@ from typing import Any, Callable
 
 import udmi.discovery
 import udmi.discovery.bacnet
-import udmi.discovery.nmap
+import misc.discoverynode.src.udmi.discovery.ether
 import udmi.discovery.numbers
 import udmi.discovery.passive
 import udmi.publishers.publisher
@@ -187,7 +187,7 @@ class UDMICore:
       self.components["passive_discovery"] = passive_discovery
     
     if ether:
-      nmap_banner_scan = udmi.discovery.nmap.NmapBannerScan(
+      nmap_banner_scan = udmi.discovery.ether.EtherDiscovery(
           self.state,
           self.publish_discovery,
           target_ips=self.config["nmap"]["targets"],

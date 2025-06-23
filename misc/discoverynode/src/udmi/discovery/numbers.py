@@ -11,7 +11,14 @@ class NumberDiscovery(discovery.DiscoveryController):
 
   family = "vendor"
 
-  def __init__(self, state, publisher, *, range):
+  def __init__(self, state, publisher, *, range = None):
+    # Number discovery
+    # 
+    # Args:
+    #   state
+    #   publisher
+    #   (kw) range (string): Comma seperated string of the numbers to discover,
+    #      or None for infinte sequential from 1.
     self.cancelled = None
     self.task_thread = None
     self.range = range
