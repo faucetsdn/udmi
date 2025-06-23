@@ -13,7 +13,7 @@ import udmi.schema.state
 
 
 class EtherDiscovery(discovery.DiscoveryController):
-  """Passive Network Discovery."""
+  """Ether Network Discovery."""
 
   family = "ether"
 
@@ -99,7 +99,6 @@ class EtherDiscovery(discovery.DiscoveryController):
 
   def ping_start_discovery(self):
     """Start ping discovery scan."""
-    logging.info("starting ping discovery")
     self.cancel_threads.clear()
     self.ping_thread = threading.Thread(
         target=self.ping_dispatcher, args=[self.config.addrs], daemon=True
@@ -108,13 +107,11 @@ class EtherDiscovery(discovery.DiscoveryController):
 
   def ping_stop_discovery(self):
     """Stop ping discovery scan."""
-    logging.info("stopping ping discovery")
     self.cancel_threads.set()
     if self.ping_thread and self.ping_thread.is_alive():
       self.ping_thread.join()
 
   def nmap_start_discovery(self):
-    logging.error("hello its me")
     self.cancel_threads.clear()
     self.nmap_thread = threading.Thread(
         target=self.nmap_runner, args=[], daemon=True
