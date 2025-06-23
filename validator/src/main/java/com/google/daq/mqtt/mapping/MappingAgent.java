@@ -47,6 +47,9 @@ import udmi.schema.FamilyLocalnetModel;
 import udmi.schema.GatewayModel;
 import udmi.schema.LocalnetModel;
 import udmi.schema.Metadata;
+import udmi.schema.PointPointsetModel;
+import udmi.schema.PointsetModel;
+import udmi.schema.RefDiscovery;
 import udmi.schema.SystemModel;
 
 ;
@@ -157,8 +160,9 @@ public class MappingAgent {
 
       if (devicesEntriesMap.containsKey(entry.getKey())) {
         System.err.println("Skipping existing device file for family::address = " + entry.getKey());
-        devicesPresent.add(devicesFamilyAddressMap.get(entry.getKey()));
-        //TODO: update the existing device
+        String deviceId = devicesFamilyAddressMap.get(entry.getKey());
+        devicesPresent.add(deviceId);
+        siteModel.updateDevice(deviceId, entry.getValue());
       } else {
         String newDeviceId = getNextDeviceId();
         while (devicesPresent.contains(newDeviceId)) {
@@ -249,13 +253,41 @@ public class MappingAgent {
     }
     Metadata metadata = new Metadata();
     metadata.version = UDMI_VERSION;
-    metadata.timestamp = new Date();
+    metadata.timestamp = discoveryEvents.timestamp;
     metadata.system = new SystemModel();
     metadata.gateway = new GatewayModel();
+    populateMetadataPoints(discoveryEvents, metadata);
     populateMetadataLocalnet(discoveryEvents, metadata);
     metadata.gateway.gateway_id = deviceId;
     return Map.entry(generateColonKey(discoveryEvents.family,
         discoveryEvents.addr), metadata);
+  }
+
+  private void populateMetadataPoints(DiscoveryEvents discoveryEvents, Metadata metadata) {
+    HashMap<String, PointPointsetModel> points = new HashMap<>();
+
+    Map<String, RefDiscovery> refDiscoveryMap = discoveryEvents.refs;
+    if (refDiscoveryMap == null) {
+      System.err.println("No reference discovery present");
+      return;
+    }
+
+    for (Map.Entry<String, RefDiscovery> entry : refDiscoveryMap.entrySet()) {
+      String key = entry.getKey();
+      RefDiscovery refDiscovery = entry.getValue();
+
+      // Create a new PointPointsetModel
+      PointPointsetModel pointPointsetModel = new PointPointsetModel();
+      pointPointsetModel.ref = key;
+      pointPointsetModel.units = refDiscovery.units;
+
+      // Add the new PointPointsetModel to the result map
+      points.put(refDiscovery.point, pointPointsetModel);
+    }
+
+    PointsetModel pointSetModel = new PointsetModel();
+    pointSetModel.points = points;
+    metadata.pointset = pointSetModel;
   }
 
   private static void populateMetadataLocalnet(DiscoveryEvents discoveryEvents, Metadata metadata) {
