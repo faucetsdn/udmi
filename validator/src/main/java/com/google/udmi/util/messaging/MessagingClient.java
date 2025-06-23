@@ -4,21 +4,27 @@ import com.google.pubsub.v1.PubsubMessage;
 import java.io.Closeable;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
+import udmi.schema.IotAccess.IotProvider;
 
 /**
- * An interface for a generic messaging client, abstracting away the specifics
- * of the underlying technology (e.g., Google Pub/Sub, MQTT).
+ * An interface for a generic messaging client, abstracting away the specifics of the underlying
+ * technology (e.g., Google Pub/Sub, MQTT).
  */
 public interface MessagingClient extends Closeable {
-
-  String MQTT = "mqtt";
-  String PUBSUB = "pubsub";
 
   /**
    * Get appropriate messaging client from supplied config.
    */
   static MessagingClient from(MessagingClientConfig config) {
-    return switch (config.protocol()) {
+    IotProvider provider;
+    try {
+      provider = IotProvider.fromValue(config.protocol());
+    } catch (IllegalArgumentException e) {
+      throw new UnsupportedOperationException(
+          "Unsupported messaging protocol " + config.protocol(), e);
+    }
+
+    return switch (provider) {
       case MQTT -> MqttMessagingClient.from(config);
       case PUBSUB -> GenericPubSubClient.from(config);
       default -> throw new UnsupportedOperationException(
