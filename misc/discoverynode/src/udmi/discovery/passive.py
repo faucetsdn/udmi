@@ -16,12 +16,14 @@ import udmi.schema.state
 
 BACNET_BVLC_MARKER = b"\x81"
 BACNET_APDU_I_AM_START = b"\x10\x00\xc4"
-PRIVATE_IP_BPC_FILTER = (
+PRIVATE_IP_BPF_FILTER = (
     "ip and "
     "("
     "src net 10.0.0.0/8 or src net 172.16.0.0/12 or src net 192.168.0.0/16 or "
+    "src net 100.64.0.0/10"
+    ") and ("
     "dst net 10.0.0.0/8 or dst net 172.16.0.0/12 or dst net 192.168.0.0/16 or "
-    "dst net 100.64.0.0/10 or src net 100.64.0.0/10"
+    "dst net 100.64.0.0/10"
     ")"
 )
 
@@ -41,12 +43,13 @@ class PassiveNetworkDiscovery(discovery.DiscoveryController):
   def __init__(self, state, publisher, *, interface=None):
 
     self.queue = queue.SimpleQueue()
-    self.interface = interface
+    self.interface = None
     self.addresses_seen = set()
     self.device_records = set()
     self.devices_records_published = set()
     self.publish_interval = 5
     self.cancel_threads = threading.Event()
+    self.scapy_is_go_signal = threading.Event()
 
     # Configure Scapy
     scapy.all.conf.layers.filter([
@@ -70,9 +73,17 @@ class PassiveNetworkDiscovery(discovery.DiscoveryController):
     except FileNotFoundError:
       return
 
+  def scapy_is_go(self): 
+    # Signal that packet capture has started. Callback executed by scapy
+    # library on success. Necesary because exception disapears into the
+    # the aether and we never no.
+    logging.debug("SCAPY is go")
+    self.scapy_is_go_signal.set()
+
   def start_discovery(self):
     # Queue processor uses a threading event for enabling/disabling
     self.cancel_threads.clear()
+    self.scapy_is_go_signal.clear()
     rx = 0
     tx = 0
     self.packets_seen = 0
@@ -93,9 +104,12 @@ class PassiveNetworkDiscovery(discovery.DiscoveryController):
     self.service_thread.start()
 
     self.sniffer = scapy.sendrecv.AsyncSniffer(
-        prn=self.queue.put, store=False, iface=self.interface, filter=PRIVATE_IP_BPC_FILTER
+        prn=self.queue.put, store=False, iface=self.interface, started_callback=self.scapy_is_go, filter=PRIVATE_IP_BPF_FILTER
     )
+
     self.sniffer.start()
+    if not self.scapy_is_go_signal.wait(5):
+      raise Exception(f"Failed to initiate packet capture - {self.sniffer.exception}")
 
     self.packet_count_start = self._get_packet_counter_total()
 
@@ -104,7 +118,7 @@ class PassiveNetworkDiscovery(discovery.DiscoveryController):
     self.sniffer.join()
 
     packet_count_end = self._get_packet_counter_total()
-
+    
     self.cancel_threads.set()
     self.queue_thread.join()
     self.service_thread.join()
@@ -155,6 +169,8 @@ class PassiveNetworkDiscovery(discovery.DiscoveryController):
     while True:
       try:
         item = self.queue.get(True, 1)
+        if self.packets_seen % 10000 == 0:
+          logging.info("%d packets seen", self.packets_seen)
         self.packets_seen += 1
         if scapy.layers.inet.IP in item:
           self.ip_packets_seen += 1
@@ -193,3 +209,4 @@ class PassiveNetworkDiscovery(discovery.DiscoveryController):
       except queue.Empty:
         if self.cancel_threads.is_set():
           return
+

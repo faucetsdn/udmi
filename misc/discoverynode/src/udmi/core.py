@@ -10,7 +10,7 @@ from typing import Any, Callable
 
 import udmi.discovery
 import udmi.discovery.bacnet
-import udmi.discovery.nmap
+import udmi.discovery.ether
 import udmi.discovery.numbers
 import udmi.discovery.passive
 import udmi.publishers.publisher
@@ -75,8 +75,6 @@ class UDMICore:
     # Note, this depends on topic_state being set
     threading.Thread(target=self.state_monitor, args=[], daemon=True).start()
 
-  def process_config(self, config: str):
-    logging.error(f"config callback {config[:24]}")
 
   def add_config_route(self, filter: Callable, destination: Callable):
     self.callbacks[filter] = destination
@@ -88,6 +86,7 @@ class UDMICore:
       logging.info("received config %s: \n%s", config["timestamp"], textwrap.indent(config_string, "\t\t\t"))
   
     except json.JSONDecodeError as err:
+      logging.exception(err)
       self.status_from_exception(err)
       return
     for filter, destination in self.callbacks.items():
@@ -187,18 +186,17 @@ class UDMICore:
       self.components["passive_discovery"] = passive_discovery
     
     if ether:
-      nmap_banner_scan = udmi.discovery.nmap.NmapBannerScan(
+      ether_scan = udmi.discovery.ether.EtherDiscovery(
           self.state,
-          self.publish_discovery,
-          target_ips=self.config["nmap"]["targets"],
+          self.publish_discovery
       )
 
       self.add_config_route(
           lambda x: True,
-          nmap_banner_scan,
+          ether_scan,
       )
 
-      self.register_state_hook(nmap_banner_scan.on_state_update_hook)
+      self.register_state_hook(ether_scan.on_state_update_hook)
 
-      self.components["nmap_banner_scan"] = nmap_banner_scan
+      self.components["ether_scan"] = ether_scan
     

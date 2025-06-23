@@ -7,7 +7,7 @@ export DN_SITE_PATH=$(realpath $1)
 export DN_TARGET=//mqtt/localhost
 
 bash $ROOT_DIR/../docker/bacnet_device/build.sh
-bash $ROOT_DIR/../docker/discovery_node/build.sh
+bash $ROOT_DIR/../../bin/build_container test-discovery_node
 
 docker network create --subnet=192.168.12.0/24 --ip-range=192.168.12.0/24 --gateway=192.168.12.254 discovery-integration || true
 

@@ -18,7 +18,7 @@ RUN cp -r libssl.so.1.1 /usr/lib && cp -r libcrypto.so.1.1 /usr/lib
 
 WORKDIR /tmp/Python-3.12.8
 RUN ./configure --enable-optimizations --with-openssl=/usr/local --with-ensurepip=install CFLAGS="-I/usr/include" LDFLAGS="-Wl,-rpath /usr/local/lib" --enable-shared --prefix=/usr/local
-RUN make -j3
+RUN make -j6
 RUN make install
 
 RUN python3 -m pip install pyinstaller
