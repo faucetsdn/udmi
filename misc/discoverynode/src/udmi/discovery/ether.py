@@ -17,13 +17,11 @@ class EtherDiscovery(discovery.DiscoveryController):
 
   family = "ether"
 
-  def __init__(self, state, publisher, *, target_ips: list[str] = None):
+  def __init__(self, state, publisher):
     self.cancel_threads = threading.Event()
-    self.target_ips = target_ips
     self.nmap_thread = None
     self.ping_thread = None
     self.last_bathometer_reading = None
-    self.target_ips: collections.deque | None = None
     super().__init__(state, publisher)
 
   def start_discovery(self) -> None:
@@ -74,9 +72,9 @@ class EtherDiscovery(discovery.DiscoveryController):
     logging.debug("ping task %s", target_ip)
     try:
       # -c 1: expect 1 packet
-      # -W 2: wait 2 seconds for a response
+      # -w 2: wait 2 seconds for a response
       result = subprocess.run(
-          ["/usr/bin/ping", "-c", "1", "-2", "2", target_ip],
+          ["/usr/bin/ping", "-c", "1", "-W", "2", target_ip],
           stdout=subprocess.PIPE,
           stderr=subprocess.STDOUT,
           encoding="utf-8",
@@ -136,7 +134,7 @@ class EtherDiscovery(discovery.DiscoveryController):
             "-p-",
             "-T4",
             "-A",
-            self.target_ips[0],
+            *self.config.addrs,
             "-oX",
             OUTPUT_FILE,
             "--stats-every",
