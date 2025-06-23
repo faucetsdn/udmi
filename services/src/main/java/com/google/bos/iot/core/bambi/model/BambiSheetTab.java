@@ -1,9 +1,9 @@
 package com.google.bos.iot.core.bambi.model;
 
 /**
- * Enum representing the different tabs/sheets in a BAMBI spreadsheet.
+ * Enum representing the different tabs in a BAMBI spreadsheet.
  */
-public enum BambiSheet {
+public enum BambiSheetTab {
   SITE_METADATA("site_metadata"),
   CLOUD_IOT_CONFIG("cloud_iot_config"),
   SYSTEM("system"),
@@ -15,7 +15,7 @@ public enum BambiSheet {
 
   private final String name;
 
-  BambiSheet(String name) {
+  BambiSheetTab(String name) {
     this.name = name;
   }
 
