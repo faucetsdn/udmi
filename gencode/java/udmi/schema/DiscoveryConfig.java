@@ -2,7 +2,7 @@
 package udmi.schema;
 
 import java.util.Date;
-import java.util.HashMap;
+import java.util.Map;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyDescription;
@@ -24,11 +24,11 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 public class DiscoveryConfig {
 
     /**
-     * Generational marker for controlling enumeration
+     * Generational marker for controlling self-enumeration
      * 
      */
     @JsonProperty("generation")
-    @JsonPropertyDescription("Generational marker for controlling enumeration")
+    @JsonPropertyDescription("Generational marker for controlling self-enumeration")
     public Date generation;
     /**
      * Enumeration depth for self-enumerations.
@@ -43,7 +43,7 @@ public class DiscoveryConfig {
      */
     @JsonProperty("families")
     @JsonPropertyDescription("Address family configs for discovery scans.")
-    public HashMap<String, FamilyDiscoveryConfig> families;
+    public Map<String, FamilyDiscoveryConfig> families;
 
     @Override
     public int hashCode() {

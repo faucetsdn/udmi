@@ -1,6 +1,5 @@
-package com.google.bos.iot.core.bambi;
+package com.google.bos.iot.core.bambi.model;
 
-import com.google.bos.iot.core.bambi.BambiSiteModelManager.BambiSheet;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
@@ -144,12 +143,12 @@ public class BambiSiteModel {
 
   private Map<String, Map<String, String>> computeDevicesMetadata() {
     Map<String, Map<String, String>> devicesMetadata = new LinkedHashMap<>();
-    populateInDeviceMap(systemData, devicesMetadata, BambiSheet.SYSTEM.getName());
-    populateInDeviceMap(cloudData, devicesMetadata, BambiSheet.CLOUD.getName());
-    populateInDeviceMap(gatewayData, devicesMetadata, BambiSheet.GATEWAY.getName());
-    populateInDeviceMap(localnetData, devicesMetadata, BambiSheet.LOCALNET.getName());
+    populateInDeviceMap(systemData, devicesMetadata, BambiSheetTab.SYSTEM.getName());
+    populateInDeviceMap(cloudData, devicesMetadata, BambiSheetTab.CLOUD.getName());
+    populateInDeviceMap(gatewayData, devicesMetadata, BambiSheetTab.GATEWAY.getName());
+    populateInDeviceMap(localnetData, devicesMetadata, BambiSheetTab.LOCALNET.getName());
     populateInDeviceMap(mergePointsWithPointset(), devicesMetadata,
-        BambiSheet.POINTSET.getName());
+        BambiSheetTab.POINTSET.getName());
     return devicesMetadata;
   }
 
@@ -191,7 +190,7 @@ public class BambiSiteModel {
       for (Entry<String, String> cell : row.entrySet()) {
         String header = cell.getKey();
         mergedData.get(matchingIndex).put(
-            BambiSheet.POINTS.getName() + "." + pointName + "." + header,
+            BambiSheetTab.POINTS.getName() + "." + pointName + "." + header,
             cell.getValue());
       }
     }

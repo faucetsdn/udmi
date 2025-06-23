@@ -2,7 +2,7 @@
   <configuration default="false" name="MappingAgent Discover" type="Application" factoryName="Application">
     <option name="MAIN_CLASS_NAME" value="com.google.daq.mqtt.mapping.MappingAgent" />
     <module name="validator" />
-    <option name="PROGRAM_PARAMETERS" value="out/mapper_conf.json discover" />
+    <option name="PROGRAM_PARAMETERS" value="out/mapper_conf.json discover foo" />
     <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/.." />
     <extension name="coverage">
       <pattern>

@@ -1,6 +1,8 @@
 package com.google.bos.iot.core.bambi;
 
 
+import com.google.bos.iot.core.bambi.model.BambiSheetTab;
+import com.google.bos.iot.core.bambi.model.BambiSiteModel;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.udmi.util.SpreadsheetManager;
 import java.io.IOException;
@@ -33,14 +35,14 @@ public class BambiSiteModelManager {
     try {
       spreadsheetManager = new SpreadsheetManager("BAMBI", spreadsheetId);
       bambiSiteModel = new BambiSiteModel(
-          getRecordsFromSheet(BambiSheet.SITE_METADATA),
-          getRecordsFromSheet(BambiSheet.CLOUD_IOT_CONFIG),
-          getRecordsFromSheet(BambiSheet.SYSTEM),
-          getRecordsFromSheet(BambiSheet.CLOUD),
-          getRecordsFromSheet(BambiSheet.GATEWAY),
-          getRecordsFromSheet(BambiSheet.LOCALNET),
-          getRecordsFromSheet(BambiSheet.POINTSET),
-          getRecordsFromSheet(BambiSheet.POINTS)
+          getRecordsFromSheet(BambiSheetTab.SITE_METADATA),
+          getRecordsFromSheet(BambiSheetTab.CLOUD_IOT_CONFIG),
+          getRecordsFromSheet(BambiSheetTab.SYSTEM),
+          getRecordsFromSheet(BambiSheetTab.CLOUD),
+          getRecordsFromSheet(BambiSheetTab.GATEWAY),
+          getRecordsFromSheet(BambiSheetTab.LOCALNET),
+          getRecordsFromSheet(BambiSheetTab.POINTSET),
+          getRecordsFromSheet(BambiSheetTab.POINTS)
       );
     } catch (IOException e) {
       throw new RuntimeException("while initializing BambiSiteModelManager: ", e);
@@ -55,14 +57,14 @@ public class BambiSiteModelManager {
     try {
       spreadsheetManager = mockSpreadsheetManager;
       bambiSiteModel = new BambiSiteModel(
-          getRecordsFromSheet(BambiSheet.SITE_METADATA),
-          getRecordsFromSheet(BambiSheet.CLOUD_IOT_CONFIG),
-          getRecordsFromSheet(BambiSheet.SYSTEM),
-          getRecordsFromSheet(BambiSheet.CLOUD),
-          getRecordsFromSheet(BambiSheet.GATEWAY),
-          getRecordsFromSheet(BambiSheet.LOCALNET),
-          getRecordsFromSheet(BambiSheet.POINTSET),
-          getRecordsFromSheet(BambiSheet.POINTS)
+          getRecordsFromSheet(BambiSheetTab.SITE_METADATA),
+          getRecordsFromSheet(BambiSheetTab.CLOUD_IOT_CONFIG),
+          getRecordsFromSheet(BambiSheetTab.SYSTEM),
+          getRecordsFromSheet(BambiSheetTab.CLOUD),
+          getRecordsFromSheet(BambiSheetTab.GATEWAY),
+          getRecordsFromSheet(BambiSheetTab.LOCALNET),
+          getRecordsFromSheet(BambiSheetTab.POINTSET),
+          getRecordsFromSheet(BambiSheetTab.POINTS)
       );
     } catch (IOException e) {
       throw new RuntimeException("while initializing BambiSiteModelManager: ", e);
@@ -91,7 +93,7 @@ public class BambiSiteModelManager {
    * @param newSiteMetadata Map of data to write
    */
   public void writeSiteMetadata(Map<String, String> newSiteMetadata) {
-    writeKeyValueTypeMetadata(BambiSheet.SITE_METADATA, bambiSiteModel.getSiteMetadataHeaders(),
+    writeKeyValueTypeMetadata(BambiSheetTab.SITE_METADATA, bambiSiteModel.getSiteMetadataHeaders(),
         newSiteMetadata);
   }
 
@@ -101,11 +103,11 @@ public class BambiSiteModelManager {
    * @param newCloudIotConfig Map of data to write
    */
   public void writeCloudIotConfig(Map<String, String> newCloudIotConfig) {
-    writeKeyValueTypeMetadata(BambiSheet.CLOUD_IOT_CONFIG,
+    writeKeyValueTypeMetadata(BambiSheetTab.CLOUD_IOT_CONFIG,
         bambiSiteModel.getCloudIotConfigHeaders(), newCloudIotConfig);
   }
 
-  private void writeKeyValueTypeMetadata(BambiSheet sheet, List<String> headers,
+  private void writeKeyValueTypeMetadata(BambiSheetTab sheet, List<String> headers,
       Map<String, String> data) {
     LOGGER.info("writing to sheet " + sheet.getName());
     Map<String, String> newData = new LinkedHashMap<>();
@@ -128,13 +130,13 @@ public class BambiSiteModelManager {
    * @param deviceToMetadataMap Mapping of device id to the device metadata
    */
   public void writeDevicesMetadata(Map<String, Map<String, String>> deviceToMetadataMap) {
-    Map<BambiSheet, List<List<Object>>> dataToWrite = new HashMap<>();
+    Map<BambiSheetTab, List<List<Object>>> dataToWrite = new HashMap<>();
 
     List<SheetConfig> simpleTableConfigs = List.of(
-        new SheetConfig(BambiSheet.SYSTEM, bambiSiteModel.getSystemDataHeaders()),
-        new SheetConfig(BambiSheet.CLOUD, bambiSiteModel.getCloudDataHeaders()),
-        new SheetConfig(BambiSheet.GATEWAY, bambiSiteModel.getGatewayDataHeaders()),
-        new SheetConfig(BambiSheet.LOCALNET, bambiSiteModel.getLocalnetDataHeaders())
+        new SheetConfig(BambiSheetTab.SYSTEM, bambiSiteModel.getSystemDataHeaders()),
+        new SheetConfig(BambiSheetTab.CLOUD, bambiSiteModel.getCloudDataHeaders()),
+        new SheetConfig(BambiSheetTab.GATEWAY, bambiSiteModel.getGatewayDataHeaders()),
+        new SheetConfig(BambiSheetTab.LOCALNET, bambiSiteModel.getLocalnetDataHeaders())
     );
 
     for (SheetConfig config : simpleTableConfigs) {
@@ -149,11 +151,11 @@ public class BambiSiteModelManager {
         bambiSiteModel.getPointsetDataHeaders(),
         bambiSiteModel.getPointsDataHeaders()
     );
-    dataToWrite.put(BambiSheet.POINTSET, data.pointsetData());
-    dataToWrite.put(BambiSheet.POINTS, data.pointsData());
+    dataToWrite.put(BambiSheetTab.POINTSET, data.pointsetData());
+    dataToWrite.put(BambiSheetTab.POINTS, data.pointsData());
 
     try {
-      for (Map.Entry<BambiSheet, List<List<Object>>> entry : dataToWrite.entrySet()) {
+      for (Map.Entry<BambiSheetTab, List<List<Object>>> entry : dataToWrite.entrySet()) {
         LOGGER.info("writing to sheet " + entry.getKey().getName());
         spreadsheetManager.clearValuesFromRange(entry.getKey().getName());
         spreadsheetManager.writeToRange(entry.getKey().getName(), entry.getValue());
@@ -222,8 +224,8 @@ public class BambiSiteModelManager {
     List<List<Object>> pointsetOutput = new ArrayList<>();
     List<List<Object>> pointsOutput = new ArrayList<>();
 
-    final String pointsetPrefix = BambiSheet.POINTSET.getName() + ".";
-    final String pointsPrefix = pointsetPrefix + BambiSheet.POINTS.getName() + ".";
+    final String pointsetPrefix = BambiSheetTab.POINTSET.getName() + ".";
+    final String pointsPrefix = pointsetPrefix + BambiSheetTab.POINTS.getName() + ".";
 
     // Add header rows
     pointsOutput.add(new ArrayList<>(pointsDataHeaders));
@@ -278,12 +280,12 @@ public class BambiSiteModelManager {
     return new PointsetAndPointsData(pointsetOutput, pointsOutput);
   }
 
-  private List<List<Object>> getRecordsFromSheet(BambiSheet bambiSheet) throws IOException {
+  private List<List<Object>> getRecordsFromSheet(BambiSheetTab bambiSheetTab) throws IOException {
     try {
-      return spreadsheetManager.getSheetRecords(bambiSheet.getName());
+      return spreadsheetManager.getSheetRecords(bambiSheetTab.getName());
     } catch (IOException ex) {
       LOGGER.error("could not get records from tab {}, failed with exception {}",
-          bambiSheet.getName(), ex.getMessage());
+          bambiSheetTab.getName(), ex.getMessage());
       return Collections.emptyList();
     }
   }
@@ -296,29 +298,8 @@ public class BambiSiteModelManager {
     return sheetData;
   }
 
-  enum BambiSheet {
-    SITE_METADATA("site_metadata"),
-    CLOUD_IOT_CONFIG("cloud_iot_config"),
-    SYSTEM("system"),
-    CLOUD("cloud"),
-    GATEWAY("gateway"),
-    LOCALNET("localnet"),
-    POINTSET("pointset"),
-    POINTS("points");
-
-    private final String name;
-
-    BambiSheet(String name) {
-      this.name = name;
-    }
-
-    public String getName() {
-      return name;
-    }
-  }
-
   // Helper structure for simple table configurations
-  private record SheetConfig(BambiSheet sheet, List<String> headers) { }
+  private record SheetConfig(BambiSheetTab sheet, List<String> headers) { }
 
   // Helper structure for point and pointset data to be populated in BAMBI
   private record PointsetAndPointsData(List<List<Object>> pointsetData,

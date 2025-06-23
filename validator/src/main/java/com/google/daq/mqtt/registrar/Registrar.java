@@ -744,7 +744,7 @@ public class Registrar {
     int totalCount = devices.size();
     devices.forEach(id -> parallelExecute(() -> deleteSingleDevice(devices, accumulator, id)));
     System.err.println("Waiting for device deletion completion...");
-    dynamicTerminate(totalCount);
+    dynamicTerminate();
   }
 
   private void deleteSingleDevice(Set<String> allDevices, AtomicInteger count, String id) {

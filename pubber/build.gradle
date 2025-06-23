@@ -127,6 +127,7 @@ dependencies {
     implementation 'com.google.oauth-client:google-oauth-client-jetty:1.20.0'
     implementation 'com.google.apis:google-api-services-sheets:v4-rev484-1.20.0'
     implementation 'org.jetbrains:annotations:20.1.0'
+    implementation 'ch.qos.logback:logback-classic:1.5.6'
 
     testImplementation group: 'junit', name: 'junit', version: '4.13.2'
     testImplementation 'org.mockito:mockito-core:5.3.1'

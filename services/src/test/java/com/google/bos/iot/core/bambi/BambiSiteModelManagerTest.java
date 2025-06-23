@@ -13,6 +13,8 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import com.google.bos.iot.core.bambi.model.BambiSheetTab;
+import com.google.bos.iot.core.bambi.model.BambiSiteModel;
 import com.google.udmi.util.SpreadsheetManager;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -67,24 +69,24 @@ public class BambiSiteModelManagerTest {
   @Before
   public void setUp() throws Exception {
     when(mockSpreadsheetManager.getSheetRecords(
-        BambiSiteModelManager.BambiSheet.SITE_METADATA.getName()))
+        BambiSheetTab.SITE_METADATA.getName()))
         .thenReturn(createKeyValueSheetFromHeaders(SITE_METADATA_HEADERS_LIST));
     when(mockSpreadsheetManager.getSheetRecords(
-        BambiSiteModelManager.BambiSheet.CLOUD_IOT_CONFIG.getName()))
+        BambiSheetTab.CLOUD_IOT_CONFIG.getName()))
         .thenReturn(createKeyValueSheetFromHeaders(CLOUD_IOT_HEADERS_LIST));
-    when(mockSpreadsheetManager.getSheetRecords(BambiSiteModelManager.BambiSheet.SYSTEM.getName()))
+    when(mockSpreadsheetManager.getSheetRecords(BambiSheetTab.SYSTEM.getName()))
         .thenReturn(createTableSheetWithHeadersOnly(SYSTEM_HEADERS_LIST));
-    when(mockSpreadsheetManager.getSheetRecords(BambiSiteModelManager.BambiSheet.CLOUD.getName()))
+    when(mockSpreadsheetManager.getSheetRecords(BambiSheetTab.CLOUD.getName()))
         .thenReturn(createTableSheetWithHeadersOnly(CLOUD_HEADERS_LIST));
-    when(mockSpreadsheetManager.getSheetRecords(BambiSiteModelManager.BambiSheet.GATEWAY.getName()))
+    when(mockSpreadsheetManager.getSheetRecords(BambiSheetTab.GATEWAY.getName()))
         .thenReturn(createTableSheetWithHeadersOnly(GATEWAY_HEADERS_LIST));
     when(
-        mockSpreadsheetManager.getSheetRecords(BambiSiteModelManager.BambiSheet.LOCALNET.getName()))
+        mockSpreadsheetManager.getSheetRecords(BambiSheetTab.LOCALNET.getName()))
         .thenReturn(createTableSheetWithHeadersOnly(LOCALNET_HEADERS_LIST));
     when(
-        mockSpreadsheetManager.getSheetRecords(BambiSiteModelManager.BambiSheet.POINTSET.getName()))
+        mockSpreadsheetManager.getSheetRecords(BambiSheetTab.POINTSET.getName()))
         .thenReturn(createTableSheetWithHeadersOnly(POINTSET_HEADERS_LIST));
-    when(mockSpreadsheetManager.getSheetRecords(BambiSiteModelManager.BambiSheet.POINTS.getName()))
+    when(mockSpreadsheetManager.getSheetRecords(BambiSheetTab.POINTS.getName()))
         .thenReturn(createTableSheetWithHeadersOnly(POINTS_HEADERS_LIST));
   }
 
@@ -109,9 +111,9 @@ public class BambiSiteModelManagerTest {
 
     assertNotNull(bambiSiteModelManager.getBambiSiteModel());
     verify(mockSpreadsheetManager, times(1)).getSheetRecords(
-        BambiSiteModelManager.BambiSheet.SITE_METADATA.getName());
+        BambiSheetTab.SITE_METADATA.getName());
     verify(mockSpreadsheetManager, times(1)).getSheetRecords(
-        BambiSiteModelManager.BambiSheet.POINTS.getName());
+        BambiSheetTab.POINTS.getName());
     assertEquals("default_value_for_site_key1",
         bambiSiteModelManager.getSiteMetadata().get("site_key1"));
   }
@@ -119,7 +121,7 @@ public class BambiSiteModelManagerTest {
   @Test
   public void constructor_getSheetRecordsThrowsException_isHandled()
       throws IOException {
-    when(mockSpreadsheetManager.getSheetRecords(BambiSiteModelManager.BambiSheet.SYSTEM.getName()))
+    when(mockSpreadsheetManager.getSheetRecords(BambiSheetTab.SYSTEM.getName()))
         .thenThrow(new IOException("Failed to read system sheet"));
 
     BambiSiteModelManager manager = new BambiSiteModelManager(mockSpreadsheetManager);
@@ -153,7 +155,7 @@ public class BambiSiteModelManagerTest {
     List<List<Object>> systemSheetWithData = new ArrayList<>();
     systemSheetWithData.add(SYSTEM_HEADERS_LIST);
     systemSheetWithData.add(Arrays.asList("dev1", "linux", "x64"));
-    when(mockSpreadsheetManager.getSheetRecords(BambiSiteModelManager.BambiSheet.SYSTEM.getName()))
+    when(mockSpreadsheetManager.getSheetRecords(BambiSheetTab.SYSTEM.getName()))
         .thenReturn(systemSheetWithData);
 
     bambiSiteModelManager = new BambiSiteModelManager(mockSpreadsheetManager);
@@ -175,9 +177,9 @@ public class BambiSiteModelManagerTest {
     bambiSiteModelManager.writeSiteMetadata(newSiteMeta);
 
     verify(mockSpreadsheetManager).clearValuesFromRange(
-        BambiSiteModelManager.BambiSheet.SITE_METADATA.getName());
+        BambiSheetTab.SITE_METADATA.getName());
     verify(mockSpreadsheetManager).writeToRange(
-        eq(BambiSiteModelManager.BambiSheet.SITE_METADATA.getName()), sheetDataCaptor.capture());
+        eq(BambiSheetTab.SITE_METADATA.getName()), sheetDataCaptor.capture());
 
     List<List<Object>> writtenData = sheetDataCaptor.getValue();
     assertEquals(2, writtenData.size());
@@ -194,7 +196,7 @@ public class BambiSiteModelManagerTest {
 
     bambiSiteModelManager.writeSiteMetadata(newSiteMeta);
     verify(mockSpreadsheetManager).writeToRange(
-        eq(BambiSiteModelManager.BambiSheet.SITE_METADATA.getName()), sheetDataCaptor.capture());
+        eq(BambiSheetTab.SITE_METADATA.getName()), sheetDataCaptor.capture());
 
     List<List<Object>> writtenData = sheetDataCaptor.getValue();
     assertEquals(Arrays.asList("site_key1", "new_val1"), writtenData.get(0));
@@ -206,12 +208,12 @@ public class BambiSiteModelManagerTest {
   public void writeSiteMetadata_ioExceptionOnClear_handled() throws IOException {
     bambiSiteModelManager = new BambiSiteModelManager(mockSpreadsheetManager);
     doThrow(new IOException("Clear failed")).when(mockSpreadsheetManager)
-        .clearValuesFromRange(BambiSiteModelManager.BambiSheet.SITE_METADATA.getName());
+        .clearValuesFromRange(BambiSheetTab.SITE_METADATA.getName());
 
     bambiSiteModelManager.writeSiteMetadata(new HashMap<>());
 
     verify(mockSpreadsheetManager, times(1))
-        .clearValuesFromRange(BambiSiteModelManager.BambiSheet.SITE_METADATA.getName());
+        .clearValuesFromRange(BambiSheetTab.SITE_METADATA.getName());
 
     verify(mockSpreadsheetManager, never()).writeToRange(anyString(), anyList());
   }
@@ -226,9 +228,9 @@ public class BambiSiteModelManagerTest {
     bambiSiteModelManager.writeCloudIotConfig(newCloudIotConfig);
 
     verify(mockSpreadsheetManager).clearValuesFromRange(
-        BambiSiteModelManager.BambiSheet.CLOUD_IOT_CONFIG.getName());
+        BambiSheetTab.CLOUD_IOT_CONFIG.getName());
     verify(mockSpreadsheetManager).writeToRange(
-        eq(BambiSiteModelManager.BambiSheet.CLOUD_IOT_CONFIG.getName()), sheetDataCaptor.capture());
+        eq(BambiSheetTab.CLOUD_IOT_CONFIG.getName()), sheetDataCaptor.capture());
 
     List<List<Object>> writtenData = sheetDataCaptor.getValue();
     assertEquals(1, writtenData.size());
@@ -259,37 +261,37 @@ public class BambiSiteModelManagerTest {
     bambiSiteModelManager.writeDevicesMetadata(deviceToMetadataMap);
 
     verify(mockSpreadsheetManager).writeToRange(
-        eq(BambiSiteModelManager.BambiSheet.SYSTEM.getName()), sheetDataCaptor.capture());
+        eq(BambiSheetTab.SYSTEM.getName()), sheetDataCaptor.capture());
     List<List<Object>> systemData = sheetDataCaptor.getValue();
     assertEquals(SYSTEM_HEADERS_LIST, systemData.get(0));
     assertEquals(Arrays.asList("dev1", "LinuxOS", "x86_64"), systemData.get(1));
 
     verify(mockSpreadsheetManager).writeToRange(
-        eq(BambiSiteModelManager.BambiSheet.CLOUD.getName()), sheetDataCaptor.capture());
+        eq(BambiSheetTab.CLOUD.getName()), sheetDataCaptor.capture());
     List<List<Object>> cloudData = sheetDataCaptor.getValue();
     assertEquals(CLOUD_HEADERS_LIST, cloudData.get(0));
     assertEquals(Arrays.asList("dev1", "us-east1"), cloudData.get(1));
 
     verify(mockSpreadsheetManager).writeToRange(
-        eq(BambiSiteModelManager.BambiSheet.GATEWAY.getName()), sheetDataCaptor.capture());
+        eq(BambiSheetTab.GATEWAY.getName()), sheetDataCaptor.capture());
     List<List<Object>> gatewayData = sheetDataCaptor.getValue();
     assertEquals(GATEWAY_HEADERS_LIST, gatewayData.get(0));
     assertEquals(Arrays.asList("dev1", "GW100"), gatewayData.get(1));
 
     verify(mockSpreadsheetManager).writeToRange(
-        eq(BambiSiteModelManager.BambiSheet.LOCALNET.getName()), sheetDataCaptor.capture());
+        eq(BambiSheetTab.LOCALNET.getName()), sheetDataCaptor.capture());
     List<List<Object>> localnetData = sheetDataCaptor.getValue();
     assertEquals(LOCALNET_HEADERS_LIST, localnetData.get(0));
     assertEquals(Arrays.asList("dev1", "192.168.1.10"), localnetData.get(1));
 
     verify(mockSpreadsheetManager).writeToRange(
-        eq(BambiSiteModelManager.BambiSheet.POINTSET.getName()), sheetDataCaptor.capture());
+        eq(BambiSheetTab.POINTSET.getName()), sheetDataCaptor.capture());
     List<List<Object>> pointsetData = sheetDataCaptor.getValue();
     assertEquals(POINTSET_HEADERS_LIST, pointsetData.get(0));
     assertEquals(Arrays.asList("dev1", "dev1_template", "Server Room"), pointsetData.get(1));
 
     verify(mockSpreadsheetManager).writeToRange(
-        eq(BambiSiteModelManager.BambiSheet.POINTS.getName()), sheetDataCaptor.capture());
+        eq(BambiSheetTab.POINTS.getName()), sheetDataCaptor.capture());
     List<List<Object>> pointsData = sheetDataCaptor.getValue();
     assertEquals(POINTS_HEADERS_LIST, pointsData.get(0));
 
@@ -316,13 +318,13 @@ public class BambiSiteModelManagerTest {
     bambiSiteModelManager.writeDevicesMetadata(new HashMap<>());
 
     verify(mockSpreadsheetManager).writeToRange(
-        eq(BambiSiteModelManager.BambiSheet.SYSTEM.getName()), sheetDataCaptor.capture());
+        eq(BambiSheetTab.SYSTEM.getName()), sheetDataCaptor.capture());
     List<List<Object>> systemData = sheetDataCaptor.getValue();
     assertEquals(1, systemData.size());
     assertEquals(SYSTEM_HEADERS_LIST, systemData.get(0));
 
     verify(mockSpreadsheetManager).writeToRange(
-        eq(BambiSiteModelManager.BambiSheet.POINTS.getName()), sheetDataCaptor.capture());
+        eq(BambiSheetTab.POINTS.getName()), sheetDataCaptor.capture());
     List<List<Object>> pointsData = sheetDataCaptor.getValue();
     assertEquals(1, pointsData.size());
     assertEquals(POINTS_HEADERS_LIST, pointsData.get(0));
@@ -333,7 +335,7 @@ public class BambiSiteModelManagerTest {
   public void writeDevicesMetadata_ioExceptionOnWrite_isHandled() throws IOException {
     bambiSiteModelManager = new BambiSiteModelManager(mockSpreadsheetManager);
     doThrow(new IOException("Write to Gateway failed")).when(mockSpreadsheetManager)
-        .writeToRange(eq(BambiSiteModelManager.BambiSheet.GATEWAY.getName()), anyList());
+        .writeToRange(eq(BambiSheetTab.GATEWAY.getName()), anyList());
 
     Map<String, Map<String, String>> deviceToMetadataMap = new HashMap<>();
     Map<String, String> dev1Meta = new HashMap<>();
@@ -356,7 +358,7 @@ public class BambiSiteModelManagerTest {
     bambiSiteModelManager.writeDevicesMetadata(deviceToMetadataMap);
 
     verify(mockSpreadsheetManager).writeToRange(
-        eq(BambiSiteModelManager.BambiSheet.SYSTEM.getName()), sheetDataCaptor.capture());
+        eq(BambiSheetTab.SYSTEM.getName()), sheetDataCaptor.capture());
     List<List<Object>> systemData = sheetDataCaptor.getValue();
     assertEquals(Arrays.asList("dev1", "Linux,Ubuntu", ""), systemData.get(1));
   }
@@ -374,7 +376,7 @@ public class BambiSiteModelManagerTest {
     bambiSiteModelManager.writeDevicesMetadata(deviceToMetadataMap);
 
     verify(mockSpreadsheetManager).writeToRange(
-        eq(BambiSiteModelManager.BambiSheet.POINTS.getName()), sheetDataCaptor.capture());
+        eq(BambiSheetTab.POINTS.getName()), sheetDataCaptor.capture());
     List<List<Object>> pointsData = sheetDataCaptor.getValue();
     assertEquals(2, pointsData.size()); // Header + 1 valid point
     boolean foundTempPoint = false;

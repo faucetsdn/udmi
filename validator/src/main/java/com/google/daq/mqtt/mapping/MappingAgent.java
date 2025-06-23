@@ -17,9 +17,13 @@ import static com.google.udmi.util.MetadataMapKeys.UDMI_PROVISION_GENERATION;
 import static com.google.udmi.util.SiteModel.METADATA_JSON;
 import static java.util.Objects.requireNonNull;
 import static java.util.Optional.ofNullable;
+import static java.util.stream.Collectors.toMap;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Sets;
+import com.google.common.collect.Sets.SetView;
 import com.google.daq.mqtt.util.CloudIotManager;
 import com.google.daq.mqtt.util.ConfigUtil;
 import com.google.udmi.util.Common;
@@ -102,16 +106,15 @@ public class MappingAgent {
 
   void process(List<String> argsList) {
     checkState(!argsList.isEmpty(), "no arguments found, no commands given!");
-    while (!argsList.isEmpty()) {
-      String mappingCommand = removeNextArg(argsList, "mapping command");
-      switch (mappingCommand) {
-        case "provision" -> setupProvision();
-        case "discover" -> initiateDiscover();
-        case "map" -> mapDiscoveredDevices();
-        default -> throw new RuntimeException("Unknown mapping command " + mappingCommand);
-      }
-      System.err.printf("Completed mapper %s command%n", mappingCommand);
+    String mappingCommand = removeNextArg(argsList, "mapping command");
+    switch (mappingCommand) {
+      case "provision" -> setupProvision();
+      case "discover" -> initiateDiscover(argsList);
+      case "map" -> mapDiscoveredDevices();
+      default -> throw new RuntimeException("Unknown mapping command " + mappingCommand);
     }
+    System.err.printf("Completed mapper %s command%n", mappingCommand);
+    checkState(argsList.isEmpty(), "unexpected extra arguments: " + argsList);
   }
 
   private void setupProvision() {
@@ -120,10 +123,16 @@ public class MappingAgent {
     cloudIotManager.updateDevice(deviceId, cloudModel, ModelOperation.MODIFY);
   }
 
-  private void initiateDiscover() {
-    Set<String> families = catchToNull(
+  private void initiateDiscover(List<String> argsList) {
+    Set<String> definedFamilies = catchToNull(
         () -> siteModel.getMetadata(deviceId).discovery.families.keySet());
-    checkNotNull(families, "No discovery families defined");
+    checkNotNull(definedFamilies, "No metadata discovery families block defined");
+    Set<String> families = argsList.isEmpty() ? definedFamilies : ImmutableSet.copyOf(argsList);
+    checkState(!families.isEmpty(), "Discovery families list is empty");
+    SetView<String> unknowns = Sets.difference(families, definedFamilies);
+    checkState(unknowns.isEmpty(), "Unknown discovery families: " + unknowns);
+
+    argsList.clear(); // Quickly indicate all arguments are consumed.
 
     generationDate = new Date();
     String generation = isoConvert(generationDate);
@@ -136,9 +145,8 @@ public class MappingAgent {
 
     DiscoveryConfig discoveryConfig = new DiscoveryConfig();
 
-    HashMap<String, FamilyDiscoveryConfig> familiesMap = new HashMap<>();
-    discoveryConfig.families = familiesMap;
-    families.forEach(family -> familiesMap.computeIfAbsent(family, this::getFamilyDiscoveryConfig));
+    discoveryConfig.families = families.stream()
+        .collect(toMap(family -> family, this::getFamilyDiscoveryConfig));
 
     cloudIotManager.modifyConfig(deviceId, SubFolder.DISCOVERY, stringify(discoveryConfig));
   }

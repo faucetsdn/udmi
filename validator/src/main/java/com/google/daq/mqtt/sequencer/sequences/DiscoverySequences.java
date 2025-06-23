@@ -467,8 +467,8 @@ public class DiscoverySequences extends SequenceBase {
     deviceConfig.discovery = new DiscoveryConfig();
     deviceConfig.discovery.families = new HashMap<>();
     untilTrue("discovery families defined", () -> deviceState.discovery.families != null);
-    HashMap<String, FamilyDiscoveryConfig> configFamilies = deviceConfig.discovery.families;
-    HashMap<String, FamilyDiscoveryState> stateFamilies = deviceState.discovery.families;
+    Map<String, FamilyDiscoveryConfig> configFamilies = deviceConfig.discovery.families;
+    Map<String, FamilyDiscoveryState> stateFamilies = deviceState.discovery.families;
     waitUntil("discovery family keys match", () -> joinOrNull("mismatch: ",
         symmetricDifference(configFamilies.keySet(), stateFamilies.keySet())
     ));
