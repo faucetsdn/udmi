@@ -67,7 +67,7 @@ device_metadata=$site_path/devices/AHU-22/metadata.json
 jq '.localnet.families.vendor.addr = "0x68"' $device_metadata | sponge $device_metadata
 
 echo "Starting the mapping process for the extra devices"
-bin/mapper GAT-123 map
+bin/mapper GAT-123 map vendor
 
 [[ -f $site_path/devices/UNK-1/metadata.json ]] || fail "Terminating because of extra device which does not exist didn't map correctly."
 
