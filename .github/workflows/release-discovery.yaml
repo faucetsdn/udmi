@@ -3,8 +3,7 @@ name: UDMI Discovery Node Release
 on:
   push:
     branches:
-    # temp
-      - '**'
+      - 'master'
     paths: 
      - misc/discoverynode/**
      - .github/workflows/release-discovery.yaml
