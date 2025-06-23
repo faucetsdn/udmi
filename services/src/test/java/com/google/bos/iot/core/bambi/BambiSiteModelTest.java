@@ -8,7 +8,8 @@ import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 
-import com.google.bos.iot.core.bambi.BambiSiteModelManager.BambiSheet;
+import com.google.bos.iot.core.bambi.model.BambiSheetTab;
+import com.google.bos.iot.core.bambi.model.BambiSiteModel;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -21,9 +22,9 @@ import org.junit.Test;
  */
 public class BambiSiteModelTest {
 
-  private static final String PREFIX_SYSTEM = BambiSheet.SYSTEM.getName();
-  private static final String PREFIX_CLOUD = BambiSheet.CLOUD.getName();
-  private static final String PREFIX_POINTSET = BambiSheet.POINTSET.getName();
+  private static final String PREFIX_SYSTEM = BambiSheetTab.SYSTEM.getName();
+  private static final String PREFIX_CLOUD = BambiSheetTab.CLOUD.getName();
+  private static final String PREFIX_POINTSET = BambiSheetTab.POINTSET.getName();
 
 
   // Helper methods for creating sheet data
