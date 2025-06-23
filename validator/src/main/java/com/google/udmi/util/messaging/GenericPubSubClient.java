@@ -15,6 +15,7 @@ import com.google.pubsub.v1.PubsubMessage;
 import com.google.pubsub.v1.SeekRequest;
 import java.io.Closeable;
 import java.io.IOException;
+import java.time.Duration;
 import java.util.Collection;
 import java.util.Map;
 import java.util.Objects;
@@ -193,16 +194,15 @@ public final class GenericPubSubClient implements MessagingClient, Closeable {
    * Polls for a message from the subscription, waiting up to the specified timeout.
    *
    * @param timeout The maximum time to wait.
-   * @param unit The time unit of the timeout argument.
    * @return The received PubsubMessage, or null if the timeout is reached before a message arrives.
    */
   @Override
-  public PubsubMessage poll(long timeout, TimeUnit unit) {
+  public PubsubMessage poll(Duration timeout) {
     if (subscriber == null) {
       throw new IllegalStateException("Client is not configured with a subscription to poll from.");
     }
     try {
-      return messageQueue.poll(timeout, unit);
+      return messageQueue.poll(timeout.toNanos(), TimeUnit.NANOSECONDS);
     } catch (InterruptedException e) {
       Thread.currentThread().interrupt();
       throw new RuntimeException("Interrupted while polling for message", e);

@@ -2,8 +2,8 @@ package com.google.udmi.util.messaging;
 
 import com.google.pubsub.v1.PubsubMessage;
 import java.io.Closeable;
+import java.time.Duration;
 import java.util.Map;
-import java.util.concurrent.TimeUnit;
 import udmi.schema.IotAccess.IotProvider;
 
 /**
@@ -36,10 +36,9 @@ public interface MessagingClient extends Closeable {
    * Polls for a message from the subscription, waiting up to the specified timeout.
    *
    * @param timeout The maximum time to wait.
-   * @param unit The time unit of the timeout argument.
    * @return The received PubsubMessage, or null if the timeout is reached.
    */
-  PubsubMessage poll(long timeout, TimeUnit unit);
+  PubsubMessage poll(Duration timeout);
 
   /**
    * Publishes a string message with attributes to the configured topic.

@@ -13,7 +13,7 @@ import static org.mockito.Mockito.when;
 
 import com.google.pubsub.v1.PubsubMessage;
 import java.nio.charset.StandardCharsets;
-import java.util.concurrent.TimeUnit;
+import java.time.Duration;
 import org.eclipse.paho.client.mqttv3.IMqttMessageListener;
 import org.eclipse.paho.client.mqttv3.MqttClient;
 import org.eclipse.paho.client.mqttv3.MqttConnectOptions;
@@ -103,7 +103,7 @@ public class MqttMessagingClientTest {
 
     // Act: Manually trigger the listener to simulate a message arrival
     capturedListener.messageArrived(TEST_TOPIC, mqttMessage);
-    PubsubMessage pubsubMessage = client.poll(1, TimeUnit.SECONDS);
+    PubsubMessage pubsubMessage = client.poll(Duration.ofSeconds(1));
 
     // Assert
     assertNotNull(pubsubMessage);
@@ -120,7 +120,7 @@ public class MqttMessagingClientTest {
 
     // Act
     capturedListener.messageArrived(TEST_TOPIC, mqttMessage);
-    PubsubMessage pubsubMessage = client.poll(1, TimeUnit.SECONDS);
+    PubsubMessage pubsubMessage = client.poll(Duration.ofSeconds(1));
 
     // Assert
     assertNotNull(pubsubMessage);
@@ -139,7 +139,7 @@ public class MqttMessagingClientTest {
     // Act
     capturedListener.messageArrived(TEST_TOPIC, mqttMessage);
     // The error should be caught and logged, but nothing should be added to the queue
-    PubsubMessage pubsubMessage = client.poll(50, TimeUnit.MILLISECONDS);
+    PubsubMessage pubsubMessage = client.poll(Duration.ofMillis(50));
 
     // Assert
     assertNull("Message queue should be empty after a parsing error", pubsubMessage);
@@ -151,7 +151,7 @@ public class MqttMessagingClientTest {
     MqttMessagingClient client = new MqttMessagingClient(TEST_BROKER, TEST_TOPIC, null);
 
     // Act
-    PubsubMessage pubsubMessage = client.poll(50, TimeUnit.MILLISECONDS);
+    PubsubMessage pubsubMessage = client.poll(Duration.ofMillis(50));
 
     // Assert
     assertNull(pubsubMessage);

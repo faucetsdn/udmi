@@ -27,11 +27,11 @@ import com.google.pubsub.v1.ProjectSubscriptionName;
 import com.google.pubsub.v1.ProjectTopicName;
 import com.google.pubsub.v1.PubsubMessage;
 import java.io.IOException;
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.TimeUnit;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -212,7 +212,7 @@ public class GenericPubSubClientTest {
           .setData(ByteString.copyFromUtf8(TEST_PAYLOAD)).build();
       receiver.receiveMessage(testMessage, mockConsumer);
 
-      PubsubMessage receivedMessage = client.poll(1, TimeUnit.SECONDS);
+      PubsubMessage receivedMessage = client.poll(Duration.ofSeconds(1));
 
       assertNotNull(receivedMessage);
       assertEquals(TEST_PAYLOAD, receivedMessage.getData().toStringUtf8());
@@ -239,7 +239,7 @@ public class GenericPubSubClientTest {
   public void poll_whenNoMessage_returnsNull() {
     try (GenericPubSubClient client = new GenericPubSubClient(TEST_PROJECT_ID, TEST_SUB_ID,
         null)) {
-      PubsubMessage receivedMessage = client.poll(10, TimeUnit.MILLISECONDS);
+      PubsubMessage receivedMessage = client.poll(Duration.ofMillis(10));
       assertNull(receivedMessage);
     }
   }
@@ -248,7 +248,7 @@ public class GenericPubSubClientTest {
   public void poll_onPublishOnlyClient_throwsException() {
     try (GenericPubSubClient client = new GenericPubSubClient(TEST_PROJECT_ID, null,
         TEST_TOPIC_ID)) {
-      client.poll(1, TimeUnit.SECONDS);
+      client.poll(Duration.ofSeconds(1));
     }
   }
 
@@ -268,7 +268,7 @@ public class GenericPubSubClientTest {
       assertEquals(2, drainedMessages.size());
       assertEquals("1", drainedMessages.get(0).getMessageId());
 
-      assertNull(client.poll(1, TimeUnit.MILLISECONDS));
+      assertNull(client.poll(Duration.ofMillis(1)));
     }
   }
 

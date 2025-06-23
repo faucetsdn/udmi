@@ -5,6 +5,7 @@ import com.google.gson.JsonSyntaxException;
 import com.google.protobuf.ByteString;
 import com.google.pubsub.v1.PubsubMessage;
 import java.nio.charset.StandardCharsets;
+import java.time.Duration;
 import java.util.Map;
 import java.util.Objects;
 import java.util.UUID;
@@ -141,12 +142,12 @@ public class MqttMessagingClient implements MessagingClient {
   }
 
   @Override
-  public PubsubMessage poll(long timeout, TimeUnit unit) {
+  public PubsubMessage poll(Duration timeout) {
     if (subscriptionTopic == null) {
       throw new IllegalStateException("Client is not configured with a subscription to poll from.");
     }
     try {
-      return messageQueue.poll(timeout, unit);
+      return messageQueue.poll(timeout.toNanos(), TimeUnit.NANOSECONDS);
     } catch (InterruptedException e) {
       Thread.currentThread().interrupt();
       LOGGER.warn("Interrupted while polling for MQTT message");

@@ -15,6 +15,7 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.text.SimpleDateFormat;
+import java.time.Duration;
 import java.util.Date;
 import java.util.Map;
 import java.util.Optional;
@@ -43,7 +44,9 @@ public class BambiService {
   private static final String IMPORT_REQUEST = "import";
   private static final String EXPORT_REQUEST = "merge";
   private static final Pattern SPREADSHEET_ID_PATTERN = Pattern.compile("/d/([^/]+)");
-  private static final long POLL_TIMEOUT_MS = 1000;
+  private static final Duration POLL_TIMEOUT = Duration.ofMillis(1000);
+  private static final Duration SHUTDOWN_TIMEOUT = Duration.ofSeconds(10);
+  private static final Duration SLEEP_ON_ERROR_DURATION = Duration.ofSeconds(5);
   private static final String DEFAULT_MQTT_BROKER = "tcp://localhost:1883";
   private static final String PROJECT_TARGET_REGEX = "\\/\\/(mqtt|pubsub)(\\/[^\\/\\s]*){1,2}";
 
@@ -94,7 +97,7 @@ public class BambiService {
   /**
    * Primary constructor for the BambiService.
    *
-   * @param projectTarget  Target project specifier, e.g., "//pubsub/gcp-project/udmi-namespace"
+   * @param projectTarget Target project specifier, e.g., "//pubsub/gcp-project/udmi-namespace"
    * @param siteModelBaseDir Base directory for cloning site model Git repositories.
    * @param localOriginDir Optional directory for local git origins (for testing).
    */
@@ -162,8 +165,7 @@ public class BambiService {
     LOGGER.info("Polling for new messages...");
     while (running.get()) {
       try {
-        ofNullable(messagingClient.poll(POLL_TIMEOUT_MS, TimeUnit.MILLISECONDS))
-            .ifPresent(this::handleMessage);
+        ofNullable(messagingClient.poll(POLL_TIMEOUT)).ifPresent(this::handleMessage);
       } catch (Exception e) {
         LOGGER.error("Error in processing loop: {}", e.getMessage(), e);
         sleepOnError();
@@ -309,9 +311,9 @@ public class BambiService {
   private void shutdownExecutorService() {
     pollingExecutor.shutdown();
     try {
-      if (!pollingExecutor.awaitTermination(10, TimeUnit.SECONDS)) {
+      if (!pollingExecutor.awaitTermination(SHUTDOWN_TIMEOUT.toSeconds(), TimeUnit.SECONDS)) {
         pollingExecutor.shutdownNow();
-        if (!pollingExecutor.awaitTermination(5, TimeUnit.SECONDS)) {
+        if (!pollingExecutor.awaitTermination(SHUTDOWN_TIMEOUT.toSeconds() / 2, TimeUnit.SECONDS)) {
           LOGGER.error("Executor service did not terminate.");
         }
       }
@@ -333,7 +335,7 @@ public class BambiService {
 
   private void sleepOnError() {
     try {
-      TimeUnit.SECONDS.sleep(5);
+      Thread.sleep(SLEEP_ON_ERROR_DURATION.toMillis());
     } catch (InterruptedException ie) {
       Thread.currentThread().interrupt();
       LOGGER.warn("Polling loop interrupted during error backoff, stopping service.");
