@@ -39,6 +39,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
+import org.jetbrains.annotations.NotNull;
 import udmi.schema.CloudModel;
 import udmi.schema.CloudModel.ModelOperation;
 import udmi.schema.DiscoveryConfig;
@@ -110,7 +111,7 @@ public class MappingAgent {
     switch (mappingCommand) {
       case "provision" -> setupProvision();
       case "discover" -> initiateDiscover(argsList);
-      case "map" -> mapDiscoveredDevices();
+      case "map" -> mapDiscoveredDevices(argsList);
       default -> throw new RuntimeException("Unknown mapping command " + mappingCommand);
     }
     System.err.printf("Completed mapper %s command%n", mappingCommand);
@@ -124,13 +125,7 @@ public class MappingAgent {
   }
 
   private void initiateDiscover(List<String> argsList) {
-    Set<String> definedFamilies = catchToNull(
-        () -> siteModel.getMetadata(deviceId).discovery.families.keySet());
-    checkNotNull(definedFamilies, "No metadata discovery families block defined");
-    Set<String> families = argsList.isEmpty() ? definedFamilies : ImmutableSet.copyOf(argsList);
-    checkState(!families.isEmpty(), "Discovery families list is empty");
-    SetView<String> unknowns = Sets.difference(families, definedFamilies);
-    checkState(unknowns.isEmpty(), "Unknown discovery families: " + unknowns);
+    Set<String> families = getFamilies(argsList);
 
     argsList.clear(); // Quickly indicate all arguments are consumed.
 
@@ -151,6 +146,18 @@ public class MappingAgent {
     cloudIotManager.modifyConfig(deviceId, SubFolder.DISCOVERY, stringify(discoveryConfig));
   }
 
+  @NotNull
+  private Set<String> getFamilies(List<String> argsList) {
+    Set<String> definedFamilies = catchToNull(
+        () -> siteModel.getMetadata(deviceId).discovery.families.keySet());
+    checkNotNull(definedFamilies, "No metadata discovery families block defined");
+    Set<String> families = argsList.isEmpty() ? definedFamilies : ImmutableSet.copyOf(argsList);
+    checkState(!families.isEmpty(), "Discovery families list is empty");
+    SetView<String> unknowns = Sets.difference(families, definedFamilies);
+    checkState(unknowns.isEmpty(), "Unknown discovery families: " + unknowns);
+    return families;
+  }
+
   private FamilyDiscoveryConfig getFamilyDiscoveryConfig(String family) {
     FamilyDiscoveryConfig familyDiscoveryConfig = new FamilyDiscoveryConfig();
     familyDiscoveryConfig.generation = generationDate;
@@ -158,7 +165,11 @@ public class MappingAgent {
     return familyDiscoveryConfig;
   }
 
-  private void mapDiscoveredDevices() {
+  private void mapDiscoveredDevices(List<String> argsList) {
+    Set<String> families = getFamilies(argsList);
+
+    argsList.clear(); // Quickly indicate all arguments are consumed.
+
     List<Entry<String, Metadata>> mappedDiscoveredEntries = getMappedDiscoveredEntries();
     Map<String, Metadata> devicesEntriesMap = getDevicesEntries();
     Map<String, String> devicesFamilyAddressMap = getDeviceFamilyAddressMap();
@@ -166,6 +177,10 @@ public class MappingAgent {
     Set<String> devicesPresent = new HashSet<>();
     mappedDiscoveredEntries.forEach(entry -> {
 
+      String family = entry.getKey().split(Common.DOUBLE_COLON_SEPARATOR)[0];
+      if (!families.contains(family)) {
+        return;
+      }
       if (devicesEntriesMap.containsKey(entry.getKey())) {
         System.err.println("Skipping existing device file for family::address = " + entry.getKey());
         String deviceId = devicesFamilyAddressMap.get(entry.getKey());
