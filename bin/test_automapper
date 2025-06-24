@@ -66,6 +66,9 @@ echo "Changing the address for AHU-22 device to 0x68"
 device_metadata=$site_path/devices/AHU-22/metadata.json
 jq '.localnet.families.vendor.addr = "0x68"' $device_metadata | sponge $device_metadata
 
+extra_device_metadata=$site_path/extras/discovered_vendor-28179023/cloud_metadata/udmi_discovered_with.json
+jq '.refs.new_ref = {"point":"new_point","units":"new_units"}' $extra_device_metadata | sponge $extra_device_metadata
+
 echo "Starting the mapping process for the extra devices"
 bin/mapper GAT-123 map vendor
 
@@ -90,6 +93,14 @@ if [[ -d $site_path/devices/UNK-1 ]]; then
   fi
 else
   echo "Directory '$site_path/devices/UNK-1' does not exist. Nothing to remove."
+fi
+
+AHU1_metadata=$site_path/devices/AHU-1/metadata.json
+if jq '.pointset.points.new_point' "$AHU1_metadata" | grep -q "new_ref"; then
+  echo "Update successful: new_point present in device metadata."
+else
+  echo "ERROR: Device metadata was not updated with new_point!"
+  exit 1
 fi
 
 first_generation=`jq -r .generation $site_path/extras/discovered_vendor-20231/cloud_metadata/udmi_discovered_with.json`
