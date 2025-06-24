@@ -366,6 +366,7 @@ public class Registrar {
   }
 
   private void updateDeviceMetadata() {
+    checkNotNull(projectId, "can't update metadata: cloud project not defined");
     AtomicInteger updatedCount = new AtomicInteger();
     siteModel.forEachMetadata((deviceId, metadata) -> {
       CloudModel registeredDevice = cloudIotManager.getRegisteredDevice(deviceId);
