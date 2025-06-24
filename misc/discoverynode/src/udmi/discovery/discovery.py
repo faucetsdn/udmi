@@ -349,10 +349,7 @@ class DiscoveryController(abc.ABC):
 
       generation_from_config = udmi.schema.util.datetime_from_iso_timestamp(config.generation)
       time_delta_from_now = generation_from_config - datetime.datetime.now(tz=datetime.timezone.utc)
-      logging.warning("generatoin: %s timedelta: %s datetime.now: %s", generation_from_config, time_delta_from_now, datetime.datetime.now(tz=datetime.timezone.utc))
       seconds_from_now = time_delta_from_now.total_seconds()
-
-      # I need to merge these together so that there is a tolerance on starting "now"
 
       if seconds_from_now >= MAX_THRESHOLD_GENERATION:
         # Generation is in the future or witihn tolerance
@@ -366,9 +363,6 @@ class DiscoveryController(abc.ABC):
 
         # determine whether to join this cycle or wait till the next
         cycle_modifer = 1 if seconds_into_cycle > abs(MAX_THRESHOLD_GENERATION) else 0
-        logging.warning(f"scan interval: {config.scan_interval_sec}")
-        logging.warning(f"cycles_elapsed: {cycles_elapsed}, seconds_into:{seconds_into_cycle}, seconds_from:{seconds_from_now}")
-        logging.warning(f"cycle_modifer is {cycle_modifer}")
 
         initial_generation = generation_from_config + datetime.timedelta(seconds=config.scan_interval_sec * (cycle_modifer + cycles_elapsed))
         scheduled_start = initial_generation.timestamp()
