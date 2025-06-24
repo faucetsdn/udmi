@@ -200,7 +200,7 @@ class DiscoveryController(abc.ABC):
     """ Publishes the provided Discovery Event, setting event counts."""
     event_number = self._increment_event_counter_and_get()
     event.event_no = event_number
-    logging.warning("published discovery for %s:%s #%d", event.family, event.addr, event_number)
+    logging.info("published discovery for %s:%s #%d", event.family, event.addr, event_number)
     self.publisher(event)
 
   def _validate_config(config: udmi.schema.config.DiscoveryFamily):

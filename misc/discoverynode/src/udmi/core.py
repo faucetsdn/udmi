@@ -76,7 +76,7 @@ class UDMICore:
     threading.Thread(target=self.state_monitor, args=[], daemon=True).start()
 
   def process_config(self, config: str):
-    logging.error(f"config callback {config[:24]}")
+    logging.info(f"config callback {config[:24]}...")
 
   def add_config_route(self, filter: Callable, destination: Callable):
     self.callbacks[filter] = destination
@@ -88,6 +88,7 @@ class UDMICore:
       logging.info("received config %s: \n%s", config["timestamp"], textwrap.indent(config_string, "\t\t\t"))
   
     except json.JSONDecodeError as err:
+      logging.exception(err)
       self.status_from_exception(err)
       return
     for filter, destination in self.callbacks.items():

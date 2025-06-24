@@ -111,7 +111,7 @@ class EtherDiscovery(discovery.DiscoveryController):
       logging.error(f"Ping failed for %s: %s", target_ip, e.output)
       return False
     except Exception as e:
-      logging.error(f"Ping exception for %s: %s", target_ip, e)
+      logging.exception(f"Ping exception for %s", target_ip)
       return False
 
   def ping_start_discovery(self):
