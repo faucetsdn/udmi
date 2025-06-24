@@ -147,3 +147,31 @@ def test_ping_early_cancel():
         "discovery to stop",
         5,
     )
+
+
+def test_ping_completes_with_stopped_state():
+  mock_state = udmi.schema.state.State()
+  mock_publisher = mock.MagicMock()
+  ether = udmi.discovery.ether.EtherDiscovery(mock_state, mock_publisher)
+
+  with mock.patch.object(
+      ether, "ping_task", return_value=True
+  ) as mock_ping_task:
+    ether.controller({
+        "discovery": {
+            "families": {
+                "ether": {
+                    "generation": make_timestamp(),
+                    "depth": "ping",
+                    "addrs": list(range(1, 10)),
+                }
+            }
+        }
+    })
+    time.sleep(1)
+
+    until_true(
+        lambda: ether.state.phase == udmi.schema.state.Phase.stopped,
+        "discovery to stop",
+        5,
+    )

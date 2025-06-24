@@ -11,6 +11,23 @@ import udmi.discovery.utils.nmap as nmap
 import udmi.schema.discovery_event
 import udmi.schema.state
 
+from typing import Iterable
+
+
+def future_wait_and_count_outstanding(futures: Iterable[concurrent.futures.Future], timeout: int) -> int:
+  """A wrapper arround concurrent.futures.wait which returns a count of 
+  outstanding (not done or cancelled) futures.
+
+  Args:
+    futures: iteratable of futures
+    timeout: maximum time to wait
+  
+  Returns:
+    count of outstanding futures
+  """
+  _, outstanding = concurrent.futures.wait(futures, 1)
+  return len(outstanding)
+
 
 class EtherDiscovery(discovery.DiscoveryController):
   """Ether Network Discovery."""
@@ -58,13 +75,10 @@ class EtherDiscovery(discovery.DiscoveryController):
     with concurrent.futures.ThreadPoolExecutor(max_workers=4) as executor:
       futures = [executor.submit(self.ping_task, ip) for ip in target_ips]
       while (
-          concurrent.futures.wait(futures, 1)
-          != concurrent.futures.ALL_COMPLETED
+          future_wait_and_count_outstanding(futures, 1) > 0
       ):
-
         if self.cancel_threads.is_set():
           executor.shutdown(True, cancel_futures=True)
-          # cancelled futures return as not completed, so the loop must exit
           break
 
   def ping_task(self, target_ip: str) -> bool:
@@ -85,6 +99,11 @@ class EtherDiscovery(discovery.DiscoveryController):
           generation=self.generation,
           family=self.family,
           addr=target_ip,
+          families=dict(
+                  ether=udmi.schema.discovery_event.DiscoveryFamily(
+                      target_ip
+                  )
+          )
       )
       self.publish(event)
 
