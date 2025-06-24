@@ -18,6 +18,7 @@ import static com.google.udmi.util.Common.SUBTYPE_PROPERTY_KEY;
 import static com.google.udmi.util.Common.UDMI_VERSION_KEY;
 import static com.google.udmi.util.GeneralUtils.CSV_JOINER;
 import static com.google.udmi.util.GeneralUtils.catchToNull;
+import static com.google.udmi.util.GeneralUtils.deepCopy;
 import static com.google.udmi.util.GeneralUtils.friendlyStackTrace;
 import static com.google.udmi.util.GeneralUtils.getTimestamp;
 import static com.google.udmi.util.GeneralUtils.ifNotEmptyThen;
@@ -365,10 +366,22 @@ public class Registrar {
   }
 
   private void updateDeviceMetadata() {
+    AtomicInteger updatedCount = new AtomicInteger();
     siteModel.forEachMetadata((deviceId, metadata) -> {
       CloudModel registeredDevice = cloudIotManager.getRegisteredDevice(deviceId);
-      System.err.printf("Update metadata %s %s%n", deviceId, registeredDevice.num_id);
+      Metadata localMetadata = deepCopy(siteModel.getMetadata(deviceId));
+      if (localMetadata.cloud == null) {
+        localMetadata.cloud = new CloudModel();
+      }
+      String localId = localMetadata.cloud.num_id;
+      String registeredId = registeredDevice.num_id;
+      localMetadata.cloud.num_id = registeredId;
+      if (siteModel.updateMetadata(deviceId, localMetadata)) {
+        updatedCount.incrementAndGet();
+        System.err.printf("Updated num_id for %s: %s -> %s%n", deviceId, localId, registeredId);
+      }
     });
+    System.err.printf("Updated %d device metadata files.%n", updatedCount.get());
   }
 
   private boolean isMockProject() {
