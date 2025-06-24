@@ -184,6 +184,7 @@ public class Registrar {
   private boolean strictWarnings;
   private boolean doNotUpdate;
   private boolean expandDependencies;
+  private boolean updateMetadata;
 
   /**
    * Main entry point for registrar.
@@ -253,6 +254,11 @@ public class Registrar {
     ifNotNullThen(remainingArgs, this::setDeviceList);
     requireNonNull(siteModel, "siteModel not defined");
     return this;
+  }
+
+  @CommandLineOption(short_form = "-u", description = "Update metadata.json")
+  private void setUpdateMetadata() {
+    this.updateMetadata = true;
   }
 
   @CommandLineOption(short_form = "-q", description = "Query only")
@@ -345,6 +351,7 @@ public class Registrar {
       } else {
         processSiteMetadata();
         processAllDevices(modelMunger);
+        ifTrueThen(updateMetadata, this::updateDeviceMetadata);
       }
       writeErrors();
     } catch (ExceptionMap em) {
@@ -355,6 +362,13 @@ public class Registrar {
     } finally {
       shutdown();
     }
+  }
+
+  private void updateDeviceMetadata() {
+    siteModel.forEachMetadata((deviceId, metadata) -> {
+      CloudModel registeredDevice = cloudIotManager.getRegisteredDevice(deviceId);
+      System.err.printf("Update metadata %s %s%n", deviceId, registeredDevice.num_id);
+    });
   }
 
   private boolean isMockProject() {
