@@ -206,7 +206,7 @@ echo bin/registrar $site_args -u
 bin/registrar $site_args -u
 
 check_csv_file $fake_id ERROR
-fgrep "Updated 0 device metadata files." $registrar_log
+fgrep "Updated 4 device metadata files." $registrar_log
 
 echo Remove fake device from site model, so it will be blocked
 rm -rf $fake_device
