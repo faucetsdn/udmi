@@ -110,7 +110,7 @@ class GlobalBacnetDiscovery(discovery.DiscoveryController):
             )
         )
 
-        logging.info("object_name: %s vendor_name: %s firmware: %s model: %s serial: %s",  object_name, vendor_name, firmware_version, model_name, serial_number)
+        logging.debug("object_name: %s vendor_name: %s firmware: %s model: %s serial: %s",  object_name, vendor_name, firmware_version, model_name, serial_number)
 
         event.system.serial_no = serial_number
         event.system.hardware.make = vendor_name
