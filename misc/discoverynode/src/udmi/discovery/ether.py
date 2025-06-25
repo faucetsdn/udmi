@@ -88,7 +88,7 @@ class EtherDiscovery(discovery.DiscoveryController):
       # -c 1: expect 1 packet
       # -w 2: wait 2 seconds for a response
       result = subprocess.run(
-          ["/usr/bin/ping", "-c", "1", "-W", "2", target_ip],
+          ["/usr/bin/ping", "-c", "1", "-W", "4", target_ip],
           stdout=subprocess.PIPE,
           stderr=subprocess.STDOUT,
           encoding="utf-8",
