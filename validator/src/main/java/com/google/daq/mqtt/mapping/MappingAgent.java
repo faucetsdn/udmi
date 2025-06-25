@@ -127,8 +127,6 @@ public class MappingAgent {
   private void initiateDiscover(List<String> argsList) {
     Set<String> families = getFamilies(argsList);
 
-    argsList.clear(); // Quickly indicate all arguments are consumed.
-
     generationDate = new Date();
     String generation = isoConvert(generationDate);
     System.err.printf("Initiating %s discovery on %s/%s at %s%n", families,
@@ -155,6 +153,8 @@ public class MappingAgent {
     checkState(!families.isEmpty(), "Discovery families list is empty");
     SetView<String> unknowns = Sets.difference(families, definedFamilies);
     checkState(unknowns.isEmpty(), "Unknown discovery families: " + unknowns);
+
+    argsList.clear(); // Quickly indicate all arguments are consumed.
     return families;
   }
 
@@ -167,8 +167,6 @@ public class MappingAgent {
 
   private void mapDiscoveredDevices(List<String> argsList) {
     Set<String> families = getFamilies(argsList);
-
-    argsList.clear(); // Quickly indicate all arguments are consumed.
 
     List<Entry<String, Metadata>> mappedDiscoveredEntries = getMappedDiscoveredEntries();
     Map<String, Metadata> devicesEntriesMap = getDevicesEntries();
@@ -299,12 +297,10 @@ public class MappingAgent {
       String key = entry.getKey();
       RefDiscovery refDiscovery = entry.getValue();
 
-      // Create a new PointPointsetModel
       PointPointsetModel pointPointsetModel = new PointPointsetModel();
       pointPointsetModel.ref = key;
       pointPointsetModel.units = refDiscovery.units;
 
-      // Add the new PointPointsetModel to the result map
       points.put(refDiscovery.point, pointPointsetModel);
     }
 

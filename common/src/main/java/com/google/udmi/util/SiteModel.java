@@ -651,13 +651,7 @@ public class SiteModel {
       deviceMetadata.pointset = discoveredEventMetadata.pointset;
     }
 
-    // Update timestamp if the discovered one is newer
-    if (discoveredEventMetadata.timestamp != null &&
-        (deviceMetadata.timestamp == null ||
-            discoveredEventMetadata.timestamp.after(deviceMetadata.timestamp))) {
-      deviceMetadata.timestamp = discoveredEventMetadata.timestamp;
-    }
-
+    deviceMetadata.timestamp = discoveredEventMetadata.timestamp;
     if (deviceMetadata.localnet == null) {
       deviceMetadata.localnet = new LocalnetModel();
     }
