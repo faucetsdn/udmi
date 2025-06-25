@@ -91,7 +91,7 @@ if [[ -d $site_path/devices/UNK-1 ]]; then
     fail "Error: Failed to remove '$site_path/devices/UNK-1'."
   fi
 else
-  echo "Directory '$site_path/devices/UNK-1' does not exist. Nothing to remove."
+  fail "Directory '$site_path/devices/UNK-1' does not exist. Nothing to remove."
 fi
 
 AHU1_metadata=$site_path/devices/AHU-1/metadata.json
