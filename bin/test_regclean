@@ -1,4 +1,4 @@
-#!/bin/bash -ex
+#!/bin/bash -e
 
 UDMI_ROOT=$(dirname $0)/..
 cd $UDMI_ROOT
@@ -67,6 +67,10 @@ validator/bin/build
 echo Clean site out/ directory...
 rm -rf $site_path/out
 mkdir -p out $site_path/out
+
+echo Reset site_model...
+rm -rf $fake_device
+(cd $site_path; git checkout .)
 
 if [[ -n ${UDMI_REGISTRY_SUFFIX:-} ]]; then
     echo Using registry suffix $UDMI_REGISTRY_SUFFIX
@@ -206,7 +210,7 @@ echo bin/registrar $site_args -u
 bin/registrar $site_args -u
 
 check_csv_file $fake_id ERROR
-fgrep "Updated 4 device metadata files." $registrar_log
+fgrep "Updated 3 device metadata files." $registrar_log
 
 echo Remove fake device from site model, so it will be blocked
 rm -rf $fake_device
