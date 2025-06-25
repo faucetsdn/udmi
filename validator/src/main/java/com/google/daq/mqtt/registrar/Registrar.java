@@ -369,6 +369,9 @@ public class Registrar {
     AtomicInteger updatedCount = new AtomicInteger();
     siteModel.forEachMetadata((deviceId, metadata) -> {
       CloudModel registeredDevice = cloudIotManager.getRegisteredDevice(deviceId);
+      if (registeredDevice == null) {
+        return;
+      }
       Metadata localMetadata = siteModel.getMetadata(deviceId);
       if (localMetadata.cloud == null) {
         localMetadata.cloud = new CloudModel();
