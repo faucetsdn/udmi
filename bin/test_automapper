@@ -66,11 +66,8 @@ echo "Changing the address for AHU-22 device to 0x68"
 device_metadata=$site_path/devices/AHU-22/metadata.json
 jq '.localnet.families.vendor.addr = "0x68"' $device_metadata | sponge $device_metadata
 
-extra_device_metadata=$site_path/extras/discovered_vendor-28179023/cloud_metadata/udmi_discovered_with.json
-jq '.refs.new_ref = {"point":"new_point","units":"new_units"}' $extra_device_metadata | sponge $extra_device_metadata
-
 echo "Starting the mapping process for the extra devices"
-bin/mapper GAT-123 map vendor
+bin/mapper GAT-123 map
 
 [[ -f $site_path/devices/UNK-1/metadata.json ]] || fail "Terminating because of extra device which does not exist didn't map correctly."
 
@@ -88,17 +85,11 @@ if [[ -d $site_path/devices/UNK-1 ]]; then
   if rm -r "$site_path/devices/UNK-1"; then
     echo "Directory '$site_path/devices/UNK-1' removed successfully."
   else
-    fail "Error: Failed to remove '$site_path/devices/UNK-1'."
+    echo "Error: Failed to remove '$site_path/devices/UNK-1'."
+    exit 1
   fi
 else
-  fail "Directory '$site_path/devices/UNK-1' does not exist. Nothing to remove."
-fi
-
-AHU1_metadata=$site_path/devices/AHU-1/metadata.json
-if jq -e '.pointset.points | try .new_point | has("ref")' "$AHU1_metadata"; then
-  echo "Update successful: new_point present in device metadata."
-else
-  fail "ERROR: Device metadata was not updated with new_point!"
+  echo "Directory '$site_path/devices/UNK-1' does not exist. Nothing to remove."
 fi
 
 first_generation=`jq -r .generation $site_path/extras/discovered_vendor-20231/cloud_metadata/udmi_discovered_with.json`

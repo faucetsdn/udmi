@@ -39,7 +39,6 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
-import org.jetbrains.annotations.NotNull;
 import udmi.schema.CloudModel;
 import udmi.schema.CloudModel.ModelOperation;
 import udmi.schema.DiscoveryConfig;
@@ -52,9 +51,6 @@ import udmi.schema.FamilyLocalnetModel;
 import udmi.schema.GatewayModel;
 import udmi.schema.LocalnetModel;
 import udmi.schema.Metadata;
-import udmi.schema.PointPointsetModel;
-import udmi.schema.PointsetModel;
-import udmi.schema.RefDiscovery;
 import udmi.schema.SystemModel;
 
 ;
@@ -111,7 +107,7 @@ public class MappingAgent {
     switch (mappingCommand) {
       case "provision" -> setupProvision();
       case "discover" -> initiateDiscover(argsList);
-      case "map" -> mapDiscoveredDevices(argsList);
+      case "map" -> mapDiscoveredDevices();
       default -> throw new RuntimeException("Unknown mapping command " + mappingCommand);
     }
     System.err.printf("Completed mapper %s command%n", mappingCommand);
@@ -125,27 +121,6 @@ public class MappingAgent {
   }
 
   private void initiateDiscover(List<String> argsList) {
-    Set<String> families = getFamilies(argsList);
-
-    generationDate = new Date();
-    String generation = isoConvert(generationDate);
-    System.err.printf("Initiating %s discovery on %s/%s at %s%n", families,
-        siteModel.getRegistryId(), deviceId, generation);
-
-    CloudModel cloudModel = new CloudModel();
-    cloudModel.metadata = ImmutableMap.of(UDMI_PROVISION_GENERATION, generation);
-    cloudIotManager.updateDevice(deviceId, cloudModel, ModelOperation.MODIFY);
-
-    DiscoveryConfig discoveryConfig = new DiscoveryConfig();
-
-    discoveryConfig.families = families.stream()
-        .collect(toMap(family -> family, this::getFamilyDiscoveryConfig));
-
-    cloudIotManager.modifyConfig(deviceId, SubFolder.DISCOVERY, stringify(discoveryConfig));
-  }
-
-  @NotNull
-  private Set<String> getFamilies(List<String> argsList) {
     Set<String> definedFamilies = catchToNull(
         () -> siteModel.getMetadata(deviceId).discovery.families.keySet());
     checkNotNull(definedFamilies, "No metadata discovery families block defined");
@@ -155,7 +130,22 @@ public class MappingAgent {
     checkState(unknowns.isEmpty(), "Unknown discovery families: " + unknowns);
 
     argsList.clear(); // Quickly indicate all arguments are consumed.
-    return families;
+
+    generationDate = new Date();
+    String generation = isoConvert(generationDate);
+    CloudModel cloudModel = new CloudModel();
+    cloudModel.metadata = ImmutableMap.of(UDMI_PROVISION_GENERATION, generation);
+    cloudIotManager.updateDevice(deviceId, cloudModel, ModelOperation.MODIFY);
+
+    System.err.printf("Initiating %s discovery on %s/%s at %s%n", families,
+        siteModel.getRegistryId(), deviceId, generation);
+
+    DiscoveryConfig discoveryConfig = new DiscoveryConfig();
+
+    discoveryConfig.families = families.stream()
+        .collect(toMap(family -> family, this::getFamilyDiscoveryConfig));
+
+    cloudIotManager.modifyConfig(deviceId, SubFolder.DISCOVERY, stringify(discoveryConfig));
   }
 
   private FamilyDiscoveryConfig getFamilyDiscoveryConfig(String family) {
@@ -165,9 +155,7 @@ public class MappingAgent {
     return familyDiscoveryConfig;
   }
 
-  private void mapDiscoveredDevices(List<String> argsList) {
-    Set<String> families = getFamilies(argsList);
-
+  private void mapDiscoveredDevices() {
     List<Entry<String, Metadata>> mappedDiscoveredEntries = getMappedDiscoveredEntries();
     Map<String, Metadata> devicesEntriesMap = getDevicesEntries();
     Map<String, String> devicesFamilyAddressMap = getDeviceFamilyAddressMap();
@@ -175,15 +163,10 @@ public class MappingAgent {
     Set<String> devicesPresent = new HashSet<>();
     mappedDiscoveredEntries.forEach(entry -> {
 
-      String family = entry.getKey().split(Common.DOUBLE_COLON_SEPARATOR)[0];
-      if (!families.contains(family)) {
-        return;
-      }
       if (devicesEntriesMap.containsKey(entry.getKey())) {
-        System.err.println("Updating existing device file for family::address = " + entry.getKey());
-        String deviceId = devicesFamilyAddressMap.get(entry.getKey());
-        devicesPresent.add(deviceId);
-        siteModel.updateDevice(deviceId, entry.getValue());
+        System.err.println("Skipping existing device file for family::address = " + entry.getKey());
+        devicesPresent.add(devicesFamilyAddressMap.get(entry.getKey()));
+        //TODO: update the existing device
       } else {
         String newDeviceId = getNextDeviceId();
         while (devicesPresent.contains(newDeviceId)) {
@@ -274,39 +257,13 @@ public class MappingAgent {
     }
     Metadata metadata = new Metadata();
     metadata.version = UDMI_VERSION;
-    metadata.timestamp = discoveryEvents.timestamp;
+    metadata.timestamp = new Date();
     metadata.system = new SystemModel();
     metadata.gateway = new GatewayModel();
-    populateMetadataPoints(discoveryEvents, metadata);
     populateMetadataLocalnet(discoveryEvents, metadata);
     metadata.gateway.gateway_id = deviceId;
     return Map.entry(generateColonKey(discoveryEvents.family,
         discoveryEvents.addr), metadata);
-  }
-
-  private void populateMetadataPoints(DiscoveryEvents discoveryEvents, Metadata metadata) {
-    HashMap<String, PointPointsetModel> points = new HashMap<>();
-
-    Map<String, RefDiscovery> refDiscoveryMap = discoveryEvents.refs;
-    if (refDiscoveryMap == null) {
-      System.err.println("No reference discovery present");
-      return;
-    }
-
-    for (Map.Entry<String, RefDiscovery> entry : refDiscoveryMap.entrySet()) {
-      String key = entry.getKey();
-      RefDiscovery refDiscovery = entry.getValue();
-
-      PointPointsetModel pointPointsetModel = new PointPointsetModel();
-      pointPointsetModel.ref = key;
-      pointPointsetModel.units = refDiscovery.units;
-
-      points.put(refDiscovery.point, pointPointsetModel);
-    }
-
-    PointsetModel pointSetModel = new PointsetModel();
-    pointSetModel.points = points;
-    metadata.pointset = pointSetModel;
   }
 
   private static void populateMetadataLocalnet(DiscoveryEvents discoveryEvents, Metadata metadata) {
