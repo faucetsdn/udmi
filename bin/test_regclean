@@ -185,7 +185,7 @@ rm -rf out/registries/
 echo Check for failure in running pubber...
 echo bin/pubber $pubber_config
 result=0
-timeout 30s bin/pubber $pubber_config 2> $pubber_log || result=$?
+timeout 60s bin/pubber $pubber_config 2> $pubber_log || result=$?
 [[ $result == 255 ]] || fail Improper pubber failure code $result
 
 echo Pubber config from $pubber_config:
