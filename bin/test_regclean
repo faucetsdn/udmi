@@ -202,8 +202,8 @@ timeout 30s bin/pubber $pubber_config 2> $pubber_log || result=$?
 [[ $result == 0 ]] || fail Improper pubber failure code $result
 
 echo Now recreate the complete registry from scratch!
-echo bin/registrar -u $site_args
-bin/registrar -u $site_args
+echo bin/registrar $site_args -u
+bin/registrar $site_args -u
 
 check_csv_file $fake_id ERROR
 fgrep "Updated 0 device metadata files." $registrar_log
@@ -236,8 +236,8 @@ echo Munging num_id to check registrar update
 jq -r ".cloud.num_id=\"to_be_reset\"" $device_metadata | sponge $device_metadata
 
 echo Registering everything to end up with everything in place
-echo bin/registrar -u $site_args
-bin/registrar -u $site_args
+echo bin/registrar $site_args -u
+bin/registrar $site_args -u
 
 fgrep "Updated 1 device metadata files." $registrar_log
 num_id=$(jq -r ".cloud.num_id" $device_metadata)
