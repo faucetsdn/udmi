@@ -10,6 +10,7 @@ import static com.google.udmi.util.Common.UDMI_TIMEVER_ENV;
 import static com.google.udmi.util.Common.UDMI_VERSION_ENV;
 import static com.google.udmi.util.Common.getNamespacePrefix;
 import static com.google.udmi.util.GeneralUtils.OBJECT_MAPPER_RAW;
+import static com.google.udmi.util.GeneralUtils.deepCopy;
 import static com.google.udmi.util.GeneralUtils.friendlyStackTrace;
 import static com.google.udmi.util.GeneralUtils.getFileBytes;
 import static com.google.udmi.util.GeneralUtils.ifNotNullGet;
@@ -433,7 +434,9 @@ public class SiteModel {
   }
 
   public Metadata getMetadata(String deviceId) {
-    return allMetadata.get(deviceId);
+    Metadata metadata = allMetadata.get(deviceId);
+    return metadata instanceof MetadataException exception
+        ? new MetadataException(exception) : deepCopy(metadata);
   }
 
   public Collection<CloudModel> allDevices() {
@@ -661,6 +664,10 @@ public class SiteModel {
     public MetadataException(File deviceMetadataFile, Exception metadataException) {
       file = deviceMetadataFile;
       exception = metadataException;
+    }
+
+    public MetadataException(MetadataException orig) {
+      this(orig.file, orig.exception);
     }
   }
 
