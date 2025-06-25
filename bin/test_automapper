@@ -88,19 +88,17 @@ if [[ -d $site_path/devices/UNK-1 ]]; then
   if rm -r "$site_path/devices/UNK-1"; then
     echo "Directory '$site_path/devices/UNK-1' removed successfully."
   else
-    echo "Error: Failed to remove '$site_path/devices/UNK-1'."
-    exit 1
+    fail "Error: Failed to remove '$site_path/devices/UNK-1'."
   fi
 else
   echo "Directory '$site_path/devices/UNK-1' does not exist. Nothing to remove."
 fi
 
 AHU1_metadata=$site_path/devices/AHU-1/metadata.json
-if jq '.pointset.points.new_point' "$AHU1_metadata" | grep -q "new_ref"; then
+if jq -e '.pointset.points | try .new_point | has("ref")' "$AHU1_metadata"; then
   echo "Update successful: new_point present in device metadata."
 else
-  echo "ERROR: Device metadata was not updated with new_point!"
-  exit 1
+  fail "ERROR: Device metadata was not updated with new_point!"
 fi
 
 first_generation=`jq -r .generation $site_path/extras/discovered_vendor-20231/cloud_metadata/udmi_discovered_with.json`
