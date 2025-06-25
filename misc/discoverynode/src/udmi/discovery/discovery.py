@@ -39,7 +39,6 @@ def catch_exceptions_to_state(method: Callable):
     try:
       return method(self, *args, **kwargs)
     except Exception as err:
-      raise(err)
       self._handle_exception(err)
   return _impl
 
