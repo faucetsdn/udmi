@@ -12,7 +12,7 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 /**
  * Ref Discovery
  * <p>
- * Object representation for for a single point reference discovery
+ * Object representation for a single point reference discovery
  * 
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
