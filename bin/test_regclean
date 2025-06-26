@@ -69,7 +69,6 @@ rm -rf $site_path/out
 mkdir -p out $site_path/out
 
 echo Reset site_model...
-rm -rf $fake_device
 (cd $site_path; git checkout .)
 
 if [[ -n ${UDMI_REGISTRY_SUFFIX:-} ]]; then
@@ -210,7 +209,7 @@ echo bin/registrar $site_args -u
 bin/registrar $site_args -u
 
 check_csv_file $fake_id ERROR
-fgrep "Updated 3 device metadata files." $registrar_log
+fgrep "Updated 4 device metadata files." $registrar_log
 
 echo Remove fake device from site model, so it will be blocked
 rm -rf $fake_device
