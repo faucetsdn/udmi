@@ -183,7 +183,7 @@ public class MappingAgent {
         System.err.println("Updating existing device file for family::address = " + entry.getKey());
         String deviceId = devicesFamilyAddressMap.get(entry.getKey());
         devicesPresent.add(deviceId);
-        siteModel.updateDevice(deviceId, entry.getValue());
+        updateDevice(deviceId, entry.getValue());
       } else {
         String newDeviceId = getNextDeviceId();
         while (devicesPresent.contains(newDeviceId)) {
@@ -195,6 +195,34 @@ public class MappingAgent {
     });
 
     updateProxyIdsForDiscoveryNode(devicesPresent);
+  }
+
+  /**
+   * Update an existing device with discovered information.
+   */
+  public void updateDevice(String deviceId, Metadata discoveredEventMetadata) {
+    Metadata deviceMetadata = siteModel.getMetadata(deviceId);
+
+    if (discoveredEventMetadata.pointset != null
+        && discoveredEventMetadata.pointset.points != null) {
+      deviceMetadata.pointset = discoveredEventMetadata.pointset;
+    }
+
+    deviceMetadata.timestamp = discoveredEventMetadata.timestamp;
+    if (deviceMetadata.localnet == null) {
+      deviceMetadata.localnet = new LocalnetModel();
+    }
+
+    if (deviceMetadata.localnet.families == null) {
+      deviceMetadata.localnet.families = new HashMap<>();
+    }
+
+    if (discoveredEventMetadata.localnet != null
+        && discoveredEventMetadata.localnet.families != null) {
+      deviceMetadata.localnet.families.putAll(discoveredEventMetadata.localnet.families);
+    }
+
+    siteModel.updateMetadata(deviceId, deviceMetadata);
   }
 
   private Map<String, String> getDeviceFamilyAddressMap() {

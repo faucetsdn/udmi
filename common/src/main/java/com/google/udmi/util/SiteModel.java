@@ -23,11 +23,8 @@ import static com.google.udmi.util.JsonUtil.asMap;
 import static com.google.udmi.util.JsonUtil.convertTo;
 import static com.google.udmi.util.JsonUtil.convertToStrict;
 import static com.google.udmi.util.JsonUtil.loadFileRequired;
-<<<<<<< HEAD
 import static com.google.udmi.util.JsonUtil.stringifyTerse;
-=======
 import static com.google.udmi.util.JsonUtil.loadFileStrictRequired;
->>>>>>> master
 import static com.google.udmi.util.JsonUtil.writeFile;
 import static com.google.udmi.util.MessageUpgrader.METADATA_SCHEMA;
 import static java.lang.String.format;
@@ -662,32 +659,6 @@ public class SiteModel {
     metadataFile.getParentFile().mkdirs();
     writeFile(metadata, metadataFile);
     allMetadata.put(deviceId, metadata);
-  }
-
-  public void updateDevice(String deviceId, Metadata discoveredEventMetadata) {
-    File deviceMetadataFile = getDeviceFile(deviceId, METADATA_JSON);
-    Metadata deviceMetadata = loadFileStrictRequired(Metadata.class, deviceMetadataFile);
-
-    if (discoveredEventMetadata.pointset != null &&
-        discoveredEventMetadata.pointset.points != null) {
-      deviceMetadata.pointset = discoveredEventMetadata.pointset;
-    }
-
-    deviceMetadata.timestamp = discoveredEventMetadata.timestamp;
-    if (deviceMetadata.localnet == null) {
-      deviceMetadata.localnet = new LocalnetModel();
-    }
-
-    if (deviceMetadata.localnet.families == null) {
-      deviceMetadata.localnet.families = new HashMap<>();
-    }
-
-    if (discoveredEventMetadata.localnet != null &&
-        discoveredEventMetadata.localnet.families != null) {
-      deviceMetadata.localnet.families.putAll(discoveredEventMetadata.localnet.families);
-    }
-
-    writeFile(deviceMetadata, deviceMetadataFile);
   }
 
   public static class MetadataException extends Metadata {
