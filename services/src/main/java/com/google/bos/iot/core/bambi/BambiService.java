@@ -1,28 +1,23 @@
 package com.google.bos.iot.core.bambi;
 
-import static java.util.Optional.ofNullable;
+import static com.google.udmi.util.SheetsOutputStream.executeWithSheetLogging;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializationFeature;
 import com.google.bos.iot.core.bambi.auth.IdVerificationConfig;
 import com.google.bos.iot.core.bambi.auth.IdVerifier;
 import com.google.pubsub.v1.PubsubMessage;
-import com.google.udmi.util.SheetsAppender;
+import com.google.udmi.util.AbstractPollingService;
 import com.google.udmi.util.SheetsOutputStream;
 import com.google.udmi.util.SourceRepository;
-import com.google.udmi.util.messaging.MessagingClient;
-import com.google.udmi.util.messaging.MessagingClientConfig;
+import java.io.File;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.text.SimpleDateFormat;
-import java.time.Duration;
 import java.util.Date;
 import java.util.Map;
 import java.util.Optional;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import org.slf4j.Logger;
@@ -33,34 +28,24 @@ import org.slf4j.LoggerFactory;
  * to import or export data between a Git repository (the "site model") and a Google Sheet.
  * It streams its operational logs back to the requesting spreadsheet for visibility.
  */
-public class BambiService {
+public class BambiService extends AbstractPollingService {
 
-  // --- Constants ---
+  public static final String TRIGGER_FILE_NAME = "trigger-registrar.json";
+  public static final String SPREADSHEET_ID_KEY = "spreadsheet_id";
+
   private static final Logger LOGGER = LoggerFactory.getLogger(BambiService.class);
   private static final String APP_NAME = "BAMBI";
   private static final String SERVICE_NAME = "BambiService";
-  private static final String THREAD_NAME = SERVICE_NAME + "-poller";
+  private static final String SUBSCRIPTION_SUFFIX = "bambi-requests";
+
+  // --- Bambi-specific constants ---
   private static final String DEFAULT_IMPORT_BRANCH = "main";
   private static final String IMPORT_REQUEST = "import";
   private static final String EXPORT_REQUEST = "merge";
   private static final Pattern SPREADSHEET_ID_PATTERN = Pattern.compile("/d/([^/]+)");
-  private static final Duration POLL_TIMEOUT = Duration.ofMillis(1000);
-  private static final Duration SHUTDOWN_TIMEOUT = Duration.ofSeconds(10);
-  private static final Duration SLEEP_ON_ERROR_DURATION = Duration.ofSeconds(5);
-  private static final String DEFAULT_MQTT_BROKER = "tcp://localhost:1883";
-  private static final String PROJECT_TARGET_REGEX = "\\/\\/(mqtt|pubsub)(\\/[^\\/\\s]*){1,2}";
 
-  // --- Service State ---
-  private final ExecutorService pollingExecutor;
-  private final AtomicBoolean running = new AtomicBoolean(false);
-  private final MessagingClient messagingClient;
   private final IdVerifier idVerifier;
 
-  // --- Configuration ---
-  private final String gcpProject;
-  private final String udmiNamespace;
-  private final String baseCloningDir;
-  private final String localOriginDir; // For local testing
 
   /**
    * Main entry point for the BAMBI service application.
@@ -79,7 +64,7 @@ public class BambiService {
     String siteModelBaseDir = args[1];
     String localOriginDir = (args.length == 3) ? args[2] : null;
 
-    LOGGER.info("Starting BAMBI Service for target {}, cloning to {}", projectTarget,
+    LOGGER.info("Requesting BAMBI Service for target {}, cloning to {}", projectTarget,
         siteModelBaseDir);
     if (localOriginDir != null) {
       LOGGER.info("Using local git origin for testing: {}", localOriginDir);
@@ -102,82 +87,18 @@ public class BambiService {
    * @param localOriginDir Optional directory for local git origins (for testing).
    */
   public BambiService(String projectTarget, String siteModelBaseDir, String localOriginDir) {
-    if (!projectTarget.matches(PROJECT_TARGET_REGEX)) {
-      throw new IllegalArgumentException("Invalid project target format: " + projectTarget);
-    }
-
+    super(SERVICE_NAME, SUBSCRIPTION_SUFFIX, projectTarget, siteModelBaseDir, localOriginDir);
     ProjectSpec spec = getProjectSpec(projectTarget);
-    this.gcpProject = spec.project;
-    this.udmiNamespace = spec.udmiNamespace;
-    this.baseCloningDir = siteModelBaseDir;
-    this.localOriginDir = localOriginDir;
-
-    this.pollingExecutor = Executors.newSingleThreadExecutor(r -> new Thread(r, THREAD_NAME));
-
-    String udmiNamespacePrefix = ofNullable(spec.udmiNamespace).map(ns -> ns + "~").orElse("");
-    String requestsSubscription = udmiNamespacePrefix + "bambi-requests";
-
-    this.messagingClient = MessagingClient.from(new MessagingClientConfig(
-        spec.protocol, spec.project, DEFAULT_MQTT_BROKER, null, requestsSubscription));
-    this.idVerifier = IdVerifier.from(spec.protocol);
-
-    prepareCloningDirectory();
-  }
-
-  /**
-   * Convenience constructor without the local origin directory.
-   */
-  public BambiService(String projectTarget, String siteModelBaseDir) {
-    this(projectTarget, siteModelBaseDir, null);
-  }
-
-  // --- Service Lifecycle Methods ---
-
-  /**
-   * Starts the service, beginning to poll for messages in a background thread.
-   */
-  public void start() {
-    if (running.compareAndSet(false, true)) {
-      pollingExecutor.submit(this::pollForMessages);
-      LOGGER.info("{} poller started.", SERVICE_NAME);
-    }
-  }
-
-  /**
-   * Stops the service, closing the messaging client and shutting down the background thread.
-   */
-  public void stop() {
-    LOGGER.info("Attempting to stop {}...", SERVICE_NAME);
-    running.set(false);
-    if (messagingClient != null) {
-      messagingClient.close();
-    }
-    shutdownExecutorService();
-    LOGGER.info("{} stopped.", SERVICE_NAME);
-  }
-
-  // --- Message Processing ---
-
-  /**
-   * The main loop that polls the messaging client for new requests.
-   */
-  private void pollForMessages() {
-    LOGGER.info("Polling for new messages...");
-    while (running.get()) {
-      try {
-        ofNullable(messagingClient.poll(POLL_TIMEOUT)).ifPresent(this::handleMessage);
-      } catch (Exception e) {
-        LOGGER.error("Error in processing loop: {}", e.getMessage(), e);
-        sleepOnError();
-      }
-    }
-    LOGGER.info("Polling loop finished.");
+    this.idVerifier = IdVerifier.from(spec.protocol());
+    LOGGER.info("Starting BAMBI Service for target {}, cloning to {}",
+        projectTarget, siteModelBaseDir);
   }
 
   /**
    * Handles an individual message from the Pub/Sub topic.
    */
-  private void handleMessage(PubsubMessage message) {
+  @Override
+  protected void handleMessage(PubsubMessage message) {
     // Verify the message identity to ensure it's from a trusted source.
     // TODO: After the BAMBI plugin is GA, add audience id below
     if (!idVerifier.verify(new IdVerificationConfig(message.getData().toStringUtf8(), null))) {
@@ -241,6 +162,7 @@ public class BambiService {
           case EXPORT_REQUEST -> handleExport(spreadsheetId, udmiModelPath, repository, timestamp);
           default -> LOGGER.error("Invalid request type '{}'", params.requestType);
         }
+        repository.delete(); // free up space after task
       });
     } catch (Exception e) {
       LOGGER.error("Failed to process bambi request for registry {}: {}", params.registryId,
@@ -273,32 +195,40 @@ public class BambiService {
     LOGGER.info("Merging data from Google Sheet {} to local site model at {}", spreadsheetId,
         udmiModelPath);
     new LocalDiskSync(spreadsheetId, udmiModelPath).execute();
+    createTriggerRegistrarFile(udmiModelPath, spreadsheetId);
 
     LOGGER.info("Committing and pushing changes to branch {}", exportBranch);
-    if (!repository.commitAndPush("Merge changes from BAMBI spreadsheet")) {
+    if (!repository.commitAndPush("Merge changes from BAMBI spreadsheet " + spreadsheetId)) {
       throw new RuntimeException("Unable to commit and push changes to branch " + exportBranch);
     }
     LOGGER.info("Export operation complete.");
   }
 
-  // --- Utility and Helper Methods ---
-
   /**
-   * Wraps an action with Sheets logging, ensuring that all logs from the action are streamed to the
-   * provided sheet and flushed at the end.
+   * Creates a JSON file named 'trigger-registrar.json' in the site model directory.
+   * The file contains a single key-value pair with the provided spreadsheet ID.
+   * This file will be used to trigger the registrar process when the proposal branch is merged.
+   *
+   * @param spreadsheetId The ID of the Google Sheet to include in the JSON file.
+   * @throws RuntimeException if there is an error writing the file.
    */
-  private void executeWithSheetLogging(SheetsOutputStream stream, Runnable action) {
-    SheetsAppender.setSheetsOutputStream(stream);
+  private void createTriggerRegistrarFile(String udmiModelPath, String spreadsheetId) {
+    ObjectMapper mapper = new ObjectMapper();
+    mapper.enable(SerializationFeature.INDENT_OUTPUT);
+
+    Map<String, String> triggerData = Map.of(SPREADSHEET_ID_KEY, spreadsheetId);
+
     try {
-      action.run();
-    } catch (Exception e) {
-      LOGGER.error("Exception during sheet-logged execution: {}", e.getMessage(), e);
-    } finally {
-      LOGGER.info("Finished processing.");
-      stream.appendToSheet();
-      SheetsAppender.setSheetsOutputStream(null); // Reset the logger.
+      mapper.writeValue(new File(Paths.get(udmiModelPath, TRIGGER_FILE_NAME).toUri()), triggerData);
+      LOGGER.info("Successfully created trigger file '{}' with spreadsheetId {}",
+          TRIGGER_FILE_NAME, spreadsheetId);
+    } catch (IOException e) {
+      LOGGER.error("Failed to write trigger file {}", TRIGGER_FILE_NAME, e);
+      throw new RuntimeException("Could not create registrar trigger file", e);
     }
   }
+
+  // --- Utility and Helper Methods ---
 
   private BambiRequestParams getRequestParams(Map<String, String> attributes) {
     return new BambiRequestParams(
@@ -309,55 +239,12 @@ public class BambiService {
         attributes.getOrDefault("import_branch", DEFAULT_IMPORT_BRANCH));
   }
 
-  private void shutdownExecutorService() {
-    pollingExecutor.shutdown();
-    try {
-      if (!pollingExecutor.awaitTermination(SHUTDOWN_TIMEOUT.toSeconds(), TimeUnit.SECONDS)) {
-        pollingExecutor.shutdownNow();
-        if (!pollingExecutor.awaitTermination(SHUTDOWN_TIMEOUT.toSeconds() / 2, TimeUnit.SECONDS)) {
-          LOGGER.error("Executor service did not terminate.");
-        }
-      }
-    } catch (InterruptedException e) {
-      pollingExecutor.shutdownNow();
-      Thread.currentThread().interrupt();
-    }
-  }
-
-  private void prepareCloningDirectory() {
-    LOGGER.info("Ensuring cloning base directory exists: {}", baseCloningDir);
-    try {
-      Files.createDirectories(Paths.get(this.baseCloningDir));
-    } catch (IOException e) {
-      throw new IllegalStateException(
-          "Could not create site model clone directory: " + this.baseCloningDir, e);
-    }
-  }
-
-  private void sleepOnError() {
-    try {
-      Thread.sleep(SLEEP_ON_ERROR_DURATION.toMillis());
-    } catch (InterruptedException ie) {
-      Thread.currentThread().interrupt();
-      LOGGER.warn("Polling loop interrupted during error backoff, stopping service.");
-      running.set(false);
-    }
-  }
-
   private Optional<String> getSpreadsheetId(String sourceUrl) {
     Matcher matcher = SPREADSHEET_ID_PATTERN.matcher(sourceUrl);
     return matcher.find() ? Optional.of(matcher.group(1)) : Optional.empty();
   }
 
-  private ProjectSpec getProjectSpec(String target) {
-    String[] parts = target.split("/");
-    return new ProjectSpec(parts[2], parts[3], parts.length == 5 ? parts[4] : null);
-  }
-
   // --- Inner Records for Data Structuring ---
-
-  private record ProjectSpec(String protocol, String project, String udmiNamespace) {
-  }
 
   private record BambiRequestParams(String requestType, String source, String user,
                                     String registryId, String importBranch) {

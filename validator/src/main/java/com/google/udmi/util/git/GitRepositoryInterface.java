@@ -21,6 +21,8 @@ public interface GitRepositoryInterface extends AutoCloseable {
 
   void add(String filePattern) throws GitAPIException, IOException;
 
+  void remove(String filePattern) throws GitAPIException;
+
   RevCommit commit(String message) throws GitAPIException, IOException;
 
   RevCommit commit(String authorName, String authorEmail, String message)

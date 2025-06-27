@@ -138,4 +138,20 @@ public class SourceRepository {
     return true;
   }
 
+  /**
+   * Stage remove for a delete file.
+   *
+   * @param filePattern file pattern for the deleted file
+   * @return true if operation is successful, false otherwise.
+   */
+  public boolean stageRemove(String filePattern) {
+    try {
+      repository.remove(filePattern);
+      return true;
+    } catch (GitAPIException e) {
+      LOGGER.error("Could not stage rm operation for {}", filePattern);
+      return false;
+    }
+  }
+
 }

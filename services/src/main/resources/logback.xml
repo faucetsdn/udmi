@@ -1,17 +1,31 @@
 <configuration>
+  <contextListener class="ch.qos.logback.classic.jul.LevelChangePropagator">
+    <resetJUL>true</resetJUL>
+  </contextListener>
+
   <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
     <encoder>
       <pattern>%d{HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n</pattern>
     </encoder>
   </appender>
 
-  <appender name="SHEETS" class="com.google.udmi.util.SheetsAppender"> <encoder>
-    <pattern>%d{HH:mm:ss.SSS} %-5level %logger{36} - %msg%n</pattern>
-  </encoder>
+  <appender name="SHEETS" class="com.google.udmi.util.SheetsAppender">
+    <encoder>
+      <pattern>%d{HH:mm:ss.SSS} %logger{36} - %msg%n</pattern>
+    </encoder>
   </appender>
 
   <root level="INFO">
     <appender-ref ref="STDOUT" />
     <appender-ref ref="SHEETS" />
   </root>
+
+  <logger name="stdout" level="INFO" additivity="false">
+    <appender-ref ref="STDOUT" />
+    <appender-ref ref="SHEETS" />
+  </logger>
+  <logger name="stderr" level="ERROR" additivity="false">
+    <appender-ref ref="STDOUT" />
+    <appender-ref ref="SHEETS" />
+  </logger>
 </configuration>
