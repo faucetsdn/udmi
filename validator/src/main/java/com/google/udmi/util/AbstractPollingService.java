@@ -31,7 +31,7 @@ public abstract class AbstractPollingService {
   private static final Duration SLEEP_ON_ERROR_DURATION = Duration.ofSeconds(5);
   private static final String DEFAULT_MQTT_BROKER = "tcp://localhost:1883";
   private static final Pattern PROJECT_TARGET_REGEX = Pattern.compile(
-      "\\/\\/(mqtt|pubsub)(\\/[^\\/\\s]*){1,2}");
+      "\\/\\/(mqtt|pubsub|gbos|gref)(\\/[^\\/\\s]*){1,2}");
 
   // --- Configuration ---
   protected final String gcpProject;
