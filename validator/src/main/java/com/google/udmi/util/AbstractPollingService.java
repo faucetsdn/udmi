@@ -173,6 +173,14 @@ public abstract class AbstractPollingService {
   }
 
   // --- Inner Records for Data Structuring ---
+
+  /**
+   * Record to represent project spec.
+   *
+   * @param protocol e.g. mqtt
+   * @param project e.g. localhost
+   * @param udmiNamespace GKE Namespace, can be null
+   */
   protected record ProjectSpec(String protocol, String project, String udmiNamespace) { }
 
 }

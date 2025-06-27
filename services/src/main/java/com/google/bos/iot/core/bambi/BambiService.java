@@ -83,8 +83,10 @@ public class BambiService extends AbstractPollingService {
     super(SERVICE_NAME, SUBSCRIPTION_SUFFIX, projectTarget, siteModelBaseDir, localOriginDir);
     ProjectSpec spec = getProjectSpec(projectTarget);
     this.idVerifier = IdVerifier.from(spec.protocol());
-    LOGGER.info("Starting BAMBI Service for target {}, cloning to {}", projectTarget, siteModelBaseDir);
+    LOGGER.info("Starting BAMBI Service for target {}, cloning to {}",
+        projectTarget, siteModelBaseDir);
   }
+
   /**
    * Handles an individual message from the Pub/Sub topic.
    */
