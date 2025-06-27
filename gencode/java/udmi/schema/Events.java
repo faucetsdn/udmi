@@ -53,8 +53,8 @@ public class Events {
     public int hashCode() {
         int result = 1;
         result = ((result* 31)+((this.pointset == null)? 0 :this.pointset.hashCode()));
-        result = ((result* 31)+((this.system == null)? 0 :this.system.hashCode()));
         result = ((result* 31)+((this.discovery == null)? 0 :this.discovery.hashCode()));
+        result = ((result* 31)+((this.system == null)? 0 :this.system.hashCode()));
         return result;
     }
 
@@ -67,7 +67,7 @@ public class Events {
             return false;
         }
         Events rhs = ((Events) other);
-        return ((((this.pointset == rhs.pointset)||((this.pointset!= null)&&this.pointset.equals(rhs.pointset)))&&((this.system == rhs.system)||((this.system!= null)&&this.system.equals(rhs.system))))&&((this.discovery == rhs.discovery)||((this.discovery!= null)&&this.discovery.equals(rhs.discovery))));
+        return ((((this.pointset == rhs.pointset)||((this.pointset!= null)&&this.pointset.equals(rhs.pointset)))&&((this.discovery == rhs.discovery)||((this.discovery!= null)&&this.discovery.equals(rhs.discovery))))&&((this.system == rhs.system)||((this.system!= null)&&this.system.equals(rhs.system))));
     }
 
 }
