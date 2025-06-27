@@ -13,6 +13,7 @@ import java.util.List;
 import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import uk.org.lidalia.sysoutslf4j.context.SysOutOverSLF4J;
 
 
 /**
@@ -175,6 +176,7 @@ public class SheetsOutputStream extends OutputStream implements AutoCloseable {
    * provided sheet and flushed at the end.
    */
   public static void executeWithSheetLogging(SheetsOutputStream stream, Runnable action) {
+    SysOutOverSLF4J.sendSystemOutAndErrToSLF4J();
     SheetsAppender.setSheetsOutputStream(stream);
     try {
       action.run();
@@ -184,6 +186,7 @@ public class SheetsOutputStream extends OutputStream implements AutoCloseable {
       LOGGER.info("Finished processing.");
       stream.appendToSheet();
       SheetsAppender.setSheetsOutputStream(null);
+      SysOutOverSLF4J.stopSendingSystemOutAndErrToSLF4J();
     }
   }
 

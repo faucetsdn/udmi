@@ -88,6 +88,7 @@ repositories {
 
 dependencies {
     implementation group: 'org.slf4j', name: 'slf4j-simple', version:'1.7.5'
+    implementation 'uk.org.lidalia:sysout-over-slf4j:1.0.2'
     implementation group: 'com.fasterxml.jackson.core', name: 'jackson-databind', version: '2.12.4'
     implementation group: 'com.fasterxml.jackson.dataformat', name: 'jackson-dataformat-yaml', version: '2.11.0'
     implementation group: 'com.github.java-json-tools', name: 'json-schema-validator', version: '2.2.14'
