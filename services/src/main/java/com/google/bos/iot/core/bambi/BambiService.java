@@ -2,12 +2,16 @@ package com.google.bos.iot.core.bambi;
 
 import static com.google.udmi.util.SheetsOutputStream.executeWithSheetLogging;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializationFeature;
 import com.google.bos.iot.core.bambi.auth.IdVerificationConfig;
 import com.google.bos.iot.core.bambi.auth.IdVerifier;
 import com.google.pubsub.v1.PubsubMessage;
 import com.google.udmi.util.AbstractPollingService;
 import com.google.udmi.util.SheetsOutputStream;
 import com.google.udmi.util.SourceRepository;
+import java.io.File;
+import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Paths;
 import java.text.SimpleDateFormat;
@@ -25,6 +29,9 @@ import org.slf4j.LoggerFactory;
  * It streams its operational logs back to the requesting spreadsheet for visibility.
  */
 public class BambiService extends AbstractPollingService {
+
+  public static final String TRIGGER_FILE_NAME = "trigger-registrar.json";
+  public static final String SPREADSHEET_ID_KEY = "spreadsheet_id";
 
   private static final Logger LOGGER = LoggerFactory.getLogger(BambiService.class);
   private static final String APP_NAME = "BAMBI";
@@ -188,12 +195,37 @@ public class BambiService extends AbstractPollingService {
     LOGGER.info("Merging data from Google Sheet {} to local site model at {}", spreadsheetId,
         udmiModelPath);
     new LocalDiskSync(spreadsheetId, udmiModelPath).execute();
+    createTriggerRegistrarFile(udmiModelPath, spreadsheetId);
 
     LOGGER.info("Committing and pushing changes to branch {}", exportBranch);
     if (!repository.commitAndPush("Merge changes from BAMBI spreadsheet " + spreadsheetId)) {
       throw new RuntimeException("Unable to commit and push changes to branch " + exportBranch);
     }
     LOGGER.info("Export operation complete.");
+  }
+
+  /**
+   * Creates a JSON file named 'trigger-registrar.json' in the site model directory.
+   * The file contains a single key-value pair with the provided spreadsheet ID.
+   * This file will be used to trigger the registrar process when the proposal branch is merged.
+   *
+   * @param spreadsheetId The ID of the Google Sheet to include in the JSON file.
+   * @throws RuntimeException if there is an error writing the file.
+   */
+  private void createTriggerRegistrarFile(String udmiModelPath, String spreadsheetId) {
+    ObjectMapper mapper = new ObjectMapper();
+    mapper.enable(SerializationFeature.INDENT_OUTPUT);
+
+    Map<String, String> triggerData = Map.of(SPREADSHEET_ID_KEY, spreadsheetId);
+
+    try {
+      mapper.writeValue(new File(Paths.get(udmiModelPath, TRIGGER_FILE_NAME).toUri()), triggerData);
+      LOGGER.info("Successfully created trigger file '{}' with spreadsheetId {}",
+          TRIGGER_FILE_NAME, spreadsheetId);
+    } catch (IOException e) {
+      LOGGER.error("Failed to write trigger file {}", TRIGGER_FILE_NAME, e);
+      throw new RuntimeException("Could not create registrar trigger file", e);
+    }
   }
 
   // --- Utility and Helper Methods ---
