@@ -10,7 +10,7 @@ import static com.google.udmi.util.Common.UDMI_TIMEVER_ENV;
 import static com.google.udmi.util.Common.UDMI_VERSION_ENV;
 import static com.google.udmi.util.Common.getNamespacePrefix;
 import static com.google.udmi.util.GeneralUtils.OBJECT_MAPPER_RAW;
-import static com.google.udmi.util.GeneralUtils.catchToTrue;
+import static com.google.udmi.util.GeneralUtils.deepCopy;
 import static com.google.udmi.util.GeneralUtils.friendlyStackTrace;
 import static com.google.udmi.util.GeneralUtils.getFileBytes;
 import static com.google.udmi.util.GeneralUtils.ifNotNullGet;
@@ -23,7 +23,7 @@ import static com.google.udmi.util.JsonUtil.asMap;
 import static com.google.udmi.util.JsonUtil.convertTo;
 import static com.google.udmi.util.JsonUtil.convertToStrict;
 import static com.google.udmi.util.JsonUtil.loadFileRequired;
-import static com.google.udmi.util.JsonUtil.loadFileStrictRequired;
+import static com.google.udmi.util.JsonUtil.stringifyTerse;
 import static com.google.udmi.util.JsonUtil.writeFile;
 import static com.google.udmi.util.MessageUpgrader.METADATA_SCHEMA;
 import static java.lang.String.format;
@@ -39,11 +39,9 @@ import com.fasterxml.jackson.databind.util.ISO8601DateFormat;
 import com.google.common.collect.ImmutableList;
 import com.google.udmi.util.ExceptionMap.ExceptionCategory;
 import java.io.File;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -62,10 +60,8 @@ import udmi.schema.CloudModel.Auth_type;
 import udmi.schema.EndpointConfiguration;
 import udmi.schema.Envelope;
 import udmi.schema.ExecutionConfiguration;
-import udmi.schema.FamilyLocalnetModel;
 import udmi.schema.GatewayModel;
 import udmi.schema.IotAccess.IotProvider;
-import udmi.schema.LocalnetModel;
 import udmi.schema.Metadata;
 import udmi.schema.SiteMetadata;
 
@@ -157,7 +153,7 @@ public class SiteModel {
     File outFile = new File(CONFIG_OUT_DIR, format("%s_conf.json", toolName));
     System.err.println("Writing reconciled configuration file to " + outFile.getAbsolutePath());
     CONFIG_OUT_DIR.mkdirs();
-    JsonUtil.writeFile(executionConfiguration, outFile);
+    writeFile(executionConfiguration, outFile);
   }
 
   public SiteModel(ExecutionConfiguration executionConfiguration) {
@@ -438,7 +434,9 @@ public class SiteModel {
   }
 
   public Metadata getMetadata(String deviceId) {
-    return allMetadata.get(deviceId);
+    Metadata metadata = allMetadata.get(deviceId);
+    return metadata instanceof MetadataException exception
+        ? new MetadataException(exception) : deepCopy(metadata);
   }
 
   public Collection<CloudModel> allDevices() {
@@ -636,36 +634,26 @@ public class SiteModel {
   }
 
   public void createNewDevice(String deviceId, Metadata metadata) {
+    updateMetadataRaw(deviceId, metadata);
+  }
+
+  public boolean updateMetadata(String deviceId, Metadata updateTo) {
+    Metadata current = allMetadata.get(deviceId);
+    String currentString = stringifyTerse(current);
+    String updateString = stringifyTerse(updateTo);
+    if (currentString.equals(updateString)) {
+      return false;
+    }
+    updateMetadataRaw(deviceId, updateTo);
+    return true;
+  }
+
+  private void updateMetadataRaw(String deviceId, Metadata metadata) {
     File metadataFile = getDeviceFile(deviceId, METADATA_JSON);
     System.err.println("Writing device metadata file " + metadataFile);
     metadataFile.getParentFile().mkdirs();
-    JsonUtil.writeFile(metadata, metadataFile);
-  }
-
-  public void updateDevice(String deviceId, Metadata discoveredEventMetadata) {
-    File deviceMetadataFile = getDeviceFile(deviceId, METADATA_JSON);
-    Metadata deviceMetadata = loadFileStrictRequired(Metadata.class, deviceMetadataFile);
-
-    if (discoveredEventMetadata.pointset != null &&
-        discoveredEventMetadata.pointset.points != null) {
-      deviceMetadata.pointset = discoveredEventMetadata.pointset;
-    }
-
-    deviceMetadata.timestamp = discoveredEventMetadata.timestamp;
-    if (deviceMetadata.localnet == null) {
-      deviceMetadata.localnet = new LocalnetModel();
-    }
-
-    if (deviceMetadata.localnet.families == null) {
-      deviceMetadata.localnet.families = new HashMap<>();
-    }
-
-    if (discoveredEventMetadata.localnet != null &&
-        discoveredEventMetadata.localnet.families != null) {
-      deviceMetadata.localnet.families.putAll(discoveredEventMetadata.localnet.families);
-    }
-
-    writeFile(deviceMetadata, deviceMetadataFile);
+    writeFile(metadata, metadataFile);
+    allMetadata.put(deviceId, metadata);
   }
 
   public static class MetadataException extends Metadata {
@@ -676,6 +664,10 @@ public class SiteModel {
     public MetadataException(File deviceMetadataFile, Exception metadataException) {
       file = deviceMetadataFile;
       exception = metadataException;
+    }
+
+    public MetadataException(MetadataException orig) {
+      this(orig.file, orig.exception);
     }
   }
 
