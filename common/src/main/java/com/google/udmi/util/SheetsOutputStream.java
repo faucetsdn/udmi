@@ -171,6 +171,23 @@ public class SheetsOutputStream extends OutputStream implements AutoCloseable {
   }
 
   /**
+   * Wraps an action with Sheets logging, ensuring that all logs from the action are streamed to the
+   * provided sheet and flushed at the end.
+   */
+  public static void executeWithSheetLogging(SheetsOutputStream stream, Runnable action) {
+    SheetsAppender.setSheetsOutputStream(stream);
+    try {
+      action.run();
+    } catch (Exception e) {
+      LOGGER.error("Exception during sheet-logged execution: {}", e.getMessage(), e);
+    } finally {
+      LOGGER.info("Finished processing.");
+      stream.appendToSheet();
+      SheetsAppender.setSheetsOutputStream(null);
+    }
+  }
+
+  /**
    * Main method for the class. Can be used to start the logger from command line.
    *
    * @param args Command line arguments. Required: applicationName, spreadsheetId, sheetTitle.
