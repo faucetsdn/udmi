@@ -15,6 +15,7 @@
       "description": "Current phase of an active discovery process",
       "enum": [
         "stopped",
+        "trigger",
         "pending",
         "active"
       ]

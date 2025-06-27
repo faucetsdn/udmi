@@ -6,6 +6,7 @@ import static com.google.udmi.util.GeneralUtils.friendlyStackTrace;
 import static com.google.udmi.util.GeneralUtils.ifNotNullGet;
 import static com.google.udmi.util.GeneralUtils.ifNullThen;
 import static com.google.udmi.util.GeneralUtils.ifTrueGet;
+import static com.google.udmi.util.GeneralUtils.ifTrueThen;
 import static com.google.udmi.util.JsonUtil.isoConvert;
 import static com.google.udmi.util.JsonUtil.stringifyTerse;
 import static com.google.udmi.util.MetadataMapKeys.UDMI_DISCOVERED_FROM;
@@ -17,20 +18,26 @@ import static java.lang.String.format;
 import static java.util.Objects.requireNonNull;
 import static udmi.schema.CloudModel.ModelOperation.BIND;
 
+import com.google.bos.udmi.service.messaging.MessageContinuation;
+import com.google.udmi.util.JsonUtil;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 import udmi.schema.CloudModel;
 import udmi.schema.CloudModel.ModelOperation;
 import udmi.schema.CloudModel.Resource_type;
 import udmi.schema.DiscoveryEvents;
+import udmi.schema.DiscoveryState;
 import udmi.schema.EndpointConfiguration;
 import udmi.schema.Envelope;
+import udmi.schema.FamilyDiscoveryState;
+import udmi.schema.FamilyDiscoveryState.Phase;
 
 /**
  * Simple agent to process discovery events and provisionally provisions the iot provider.
@@ -91,6 +98,10 @@ public class ProvisioningEngine extends ProcessorBase {
     return catchToNull(() -> iotAccess.fetchDevice(deviceRegistryId, deviceId));
   }
 
+  private void updateDeviceModel(String deviceRegistryId, String deviceId, CloudModel model) {
+    iotAccess.modelDevice(deviceRegistryId, deviceId, model, null);
+  }
+
   private boolean isGateway(CloudModel deviceModel) {
     return deviceModel != null && deviceModel.resource_type == Resource_type.GATEWAY;
   }
@@ -113,6 +124,52 @@ public class ProvisioningEngine extends ProcessorBase {
 
   private boolean shouldProvision(Date generation, CloudModel cloudModel) {
     return TRUE_OPTION.equals(ifNotNullGet(cloudModel.metadata, m -> m.get(UDMI_PROVISION_ENABLE)));
+  }
+
+  /**
+   * Process discovery state events looking for end-of-discovery triggers.
+   */
+  @MessageHandler
+  public void discoveryState(DiscoveryState discoveryState) {
+    MessageContinuation continuation = getContinuation(discoveryState);
+    Envelope envelope = continuation.getEnvelope();
+    AtomicBoolean triggered = new AtomicBoolean();
+
+    CloudModel cloudModel = fetchDeviceModel(envelope.deviceRegistryId, envelope.deviceId);
+    Map<String, String> metadata = ifNotNullGet(cloudModel, model -> model.metadata);
+    if (metadata == null) {
+      error("Missing cloud model for %s/%s", envelope.deviceRegistryId, envelope.deviceId);
+      return;
+    }
+
+    HashMap<String, FamilyDiscoveryState> families = discoveryState.families;
+    if (families == null) {
+      return;
+    }
+
+    families.forEach((family, familyDiscoveryState) -> {
+      if (familyDiscoveryState.phase != Phase.STOPPED) {
+        return;
+      }
+      Date thisGeneration = requireNonNull(familyDiscoveryState.generation, "missing generation");
+      String discoveryStateKey = discoveryStateKey(family);
+      Date lastGeneration = JsonUtil.getDate(metadata.get(discoveryStateKey));
+      if (thisGeneration.equals(lastGeneration)) {
+        return;
+      }
+      familyDiscoveryState.phase = Phase.TRIGGER;
+      metadata.put(discoveryStateKey, JsonUtil.isoConvert(thisGeneration));
+      triggered.set(true);
+    });
+
+    ifTrueThen(triggered.get(), () -> {
+      updateDeviceModel(envelope.deviceRegistryId, envelope.deviceId, cloudModel);
+      continuation.publish(discoveryState);
+    });
+  }
+
+  private String discoveryStateKey(String discoveryFamily) {
+    return format("udmi_discovery_stopped_%s", discoveryFamily);
   }
 
   /**

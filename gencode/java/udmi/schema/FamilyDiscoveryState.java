@@ -96,6 +96,7 @@ public class FamilyDiscoveryState {
     public enum Phase {
 
         STOPPED("stopped"),
+        TRIGGER("trigger"),
         PENDING("pending"),
         ACTIVE("active");
         private final String value;
