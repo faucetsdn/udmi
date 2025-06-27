@@ -45,9 +45,9 @@ public class BridgePodConfiguration {
     @Override
     public int hashCode() {
         int result = 1;
+        result = ((result* 31)+((this.from == null)? 0 :this.from.hashCode()));
         result = ((result* 31)+((this.morf == null)? 0 :this.morf.hashCode()));
         result = ((result* 31)+((this.enabled == null)? 0 :this.enabled.hashCode()));
-        result = ((result* 31)+((this.from == null)? 0 :this.from.hashCode()));
         return result;
     }
 
@@ -60,7 +60,7 @@ public class BridgePodConfiguration {
             return false;
         }
         BridgePodConfiguration rhs = ((BridgePodConfiguration) other);
-        return ((((this.morf == rhs.morf)||((this.morf!= null)&&this.morf.equals(rhs.morf)))&&((this.enabled == rhs.enabled)||((this.enabled!= null)&&this.enabled.equals(rhs.enabled))))&&((this.from == rhs.from)||((this.from!= null)&&this.from.equals(rhs.from))));
+        return ((((this.from == rhs.from)||((this.from!= null)&&this.from.equals(rhs.from)))&&((this.morf == rhs.morf)||((this.morf!= null)&&this.morf.equals(rhs.morf))))&&((this.enabled == rhs.enabled)||((this.enabled!= null)&&this.enabled.equals(rhs.enabled))));
     }
 
 }
