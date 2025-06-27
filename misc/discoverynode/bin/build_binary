@@ -2,6 +2,14 @@
 set -x
 ROOT_DIR=$(realpath $(dirname $0)/..)
 
+if (( $# != 1 )); then
+    echo Usage: $0 BUILD_ENV_IMAGE
+    exit 1
+fi
+
+BUILD_ENV_IMAGE=$1
+shift 1
+
 TMP_DIR=$(mktemp -d)
 OUT_DIR=$ROOT_DIR/dist
 OUT_FILE=$OUT_DIR/discoverynode
@@ -17,8 +25,8 @@ cat >$TMP_DIR/build.sh <<-EOF
             mv dist/main /tmp/main
 EOF
 
-docker pull ghcr.io/noursaidi/discoverybuilder:latest 
-docker run --rm --volume $ROOT_DIR/src:/src --volume $TMP_DIR:/tmp ghcr.io/noursaidi/discoverybuilder:latest /bin/bash /tmp/build.sh
+docker pull $BUILD_ENV_IMAGE
+docker run --rm --volume $ROOT_DIR/src:/src --volume $TMP_DIR:/tmp $BUILD_ENV_IMAGE /bin/bash /tmp/build.sh
 mkdir -p $OUT_DIR
 mv $TMP_DIR/main $OUT_FILE
 chmod 7755 $OUT_FILE

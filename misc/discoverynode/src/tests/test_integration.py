@@ -1,3 +1,4 @@
+# Execute these serially from outside (e.g. -k <test name>)
 import collections
 import json
 import os
@@ -151,4 +152,45 @@ def test_nmap():
     # verify that nmap discovery completed
     assert messages[0].refs["1256"]["adjunct"]["product"] == "Postfix smtpd"
 
+
+def test_passive():
+  
+  # This is the "config.json" which is passed to `main.py` typically
+  test_config = collections.defaultdict()
+  test_config["mqtt"] = dict(device_id="THUNDERBIRD-2")
+  test_config["udmi"] = {"discovery": dict(ipv4=True,vendor=False,ether=True,bacnet=False)}
+  test_config["nmap"] = dict(targets=["192.168.12.1/24"])
+  # Container for storing all discovery messages
+  messages = []
+
+  with (
+      mock.patch.object(
+          udmi.core.UDMICore, "publish_discovery", new=messages.append
+      ) as published_discovery,
+  ):
+    mock_mqtt_client = mock.MagicMock()
+    udmi_client = udmi.core.UDMICore(publisher=mock_mqtt_client, topic_prefix="notneeded", config=test_config)
+    
+    # Start discovery
+    udmi_client.config_handler(
+        json.dumps({
+            "timestamp": timestamp_now(),
+            "discovery": {
+                "families": {
+                    "ipv4": {"generation": timestamp_now()},
+                    "ether": {"generation": timestamp_now()}
+                }
+            },
+        })
+    )
+
+    time.sleep(30)
+    
+    print(len(messages))
+    for message in messages:
+      print(message.to_json())
+      print("----")
+    
+
+    assert False
 

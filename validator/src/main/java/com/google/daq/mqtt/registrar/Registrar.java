@@ -184,6 +184,7 @@ public class Registrar {
   private boolean strictWarnings;
   private boolean doNotUpdate;
   private boolean expandDependencies;
+  private boolean updateMetadata;
 
   /**
    * Main entry point for registrar.
@@ -253,6 +254,11 @@ public class Registrar {
     ifNotNullThen(remainingArgs, this::setDeviceList);
     requireNonNull(siteModel, "siteModel not defined");
     return this;
+  }
+
+  @CommandLineOption(short_form = "-u", description = "Update metadata.json")
+  private void setUpdateMetadata() {
+    this.updateMetadata = true;
   }
 
   @CommandLineOption(short_form = "-q", description = "Query only")
@@ -345,6 +351,7 @@ public class Registrar {
       } else {
         processSiteMetadata();
         processAllDevices(modelMunger);
+        ifTrueThen(updateMetadata, this::updateDeviceMetadata);
       }
       writeErrors();
     } catch (ExceptionMap em) {
@@ -355,6 +362,29 @@ public class Registrar {
     } finally {
       shutdown();
     }
+  }
+
+  private void updateDeviceMetadata() {
+    checkNotNull(projectId, "can't update metadata: cloud project not defined");
+    AtomicInteger updatedCount = new AtomicInteger();
+    siteModel.forEachMetadata((deviceId, metadata) -> {
+      CloudModel registeredDevice = cloudIotManager.getRegisteredDevice(deviceId);
+      if (registeredDevice == null) {
+        return;
+      }
+      Metadata localMetadata = siteModel.getMetadata(deviceId);
+      if (localMetadata.cloud == null) {
+        localMetadata.cloud = new CloudModel();
+      }
+      String localId = localMetadata.cloud.num_id;
+      String registeredId = registeredDevice.num_id;
+      localMetadata.cloud.num_id = registeredId;
+      if (siteModel.updateMetadata(deviceId, localMetadata)) {
+        updatedCount.incrementAndGet();
+        System.err.printf("Updated num_id for %s: %s -> %s%n", deviceId, localId, registeredId);
+      }
+    });
+    System.err.printf("Updated %d device metadata files.%n", updatedCount.get());
   }
 
   private boolean isMockProject() {

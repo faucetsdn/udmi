@@ -10,7 +10,7 @@ import static com.google.udmi.util.Common.UDMI_TIMEVER_ENV;
 import static com.google.udmi.util.Common.UDMI_VERSION_ENV;
 import static com.google.udmi.util.Common.getNamespacePrefix;
 import static com.google.udmi.util.GeneralUtils.OBJECT_MAPPER_RAW;
-import static com.google.udmi.util.GeneralUtils.catchToTrue;
+import static com.google.udmi.util.GeneralUtils.deepCopy;
 import static com.google.udmi.util.GeneralUtils.friendlyStackTrace;
 import static com.google.udmi.util.GeneralUtils.getFileBytes;
 import static com.google.udmi.util.GeneralUtils.ifNotNullGet;
@@ -24,6 +24,7 @@ import static com.google.udmi.util.JsonUtil.convertTo;
 import static com.google.udmi.util.JsonUtil.convertToStrict;
 import static com.google.udmi.util.JsonUtil.loadFileRequired;
 import static com.google.udmi.util.JsonUtil.loadFileStrictRequired;
+import static com.google.udmi.util.JsonUtil.stringifyTerse;
 import static com.google.udmi.util.JsonUtil.writeFile;
 import static com.google.udmi.util.MessageUpgrader.METADATA_SCHEMA;
 import static java.lang.String.format;
@@ -157,7 +158,7 @@ public class SiteModel {
     File outFile = new File(CONFIG_OUT_DIR, format("%s_conf.json", toolName));
     System.err.println("Writing reconciled configuration file to " + outFile.getAbsolutePath());
     CONFIG_OUT_DIR.mkdirs();
-    JsonUtil.writeFile(executionConfiguration, outFile);
+    writeFile(executionConfiguration, outFile);
   }
 
   public SiteModel(ExecutionConfiguration executionConfiguration) {
@@ -438,7 +439,9 @@ public class SiteModel {
   }
 
   public Metadata getMetadata(String deviceId) {
-    return allMetadata.get(deviceId);
+    Metadata metadata = allMetadata.get(deviceId);
+    return metadata instanceof MetadataException exception
+        ? new MetadataException(exception) : deepCopy(metadata);
   }
 
   public Collection<CloudModel> allDevices() {
@@ -636,10 +639,26 @@ public class SiteModel {
   }
 
   public void createNewDevice(String deviceId, Metadata metadata) {
+    updateMetadataRaw(deviceId, metadata);
+  }
+
+  public boolean updateMetadata(String deviceId, Metadata updateTo) {
+    Metadata current = allMetadata.get(deviceId);
+    String currentString = stringifyTerse(current);
+    String updateString = stringifyTerse(updateTo);
+    if (currentString.equals(updateString)) {
+      return false;
+    }
+    updateMetadataRaw(deviceId, updateTo);
+    return true;
+  }
+
+  private void updateMetadataRaw(String deviceId, Metadata metadata) {
     File metadataFile = getDeviceFile(deviceId, METADATA_JSON);
     System.err.println("Writing device metadata file " + metadataFile);
     metadataFile.getParentFile().mkdirs();
-    JsonUtil.writeFile(metadata, metadataFile);
+    writeFile(metadata, metadataFile);
+    allMetadata.put(deviceId, metadata);
   }
 
   public void updateDevice(String deviceId, Metadata discoveredEventMetadata) {
@@ -676,6 +695,10 @@ public class SiteModel {
     public MetadataException(File deviceMetadataFile, Exception metadataException) {
       file = deviceMetadataFile;
       exception = metadataException;
+    }
+
+    public MetadataException(MetadataException orig) {
+      this(orig.file, orig.exception);
     }
   }
 
