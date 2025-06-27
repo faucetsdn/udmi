@@ -4,7 +4,7 @@
   "system": {
     "name": "Llama Slide #3",
     "description": "Generic test example metadata device",
-    "tags": ["energy", "lighting", "building"],
+    "tags": ["energy", "lighting", "building", "vendor_managed"],
     "location": {
       "site": "US-SFO-XYY",
       "section": "NW-2F",
