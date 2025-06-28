@@ -36,9 +36,9 @@
       "type": "array",
       "uniqueItems": true,
       "items": {
-        "pattern": "^[a-z0-9]+$"
+        "pattern": "^[a-z][_a-z0-9]+$"
       },
-      "examples": [["lighting"], ["energy", "building"]]
+      "examples": [["lighting"], ["energy", "building", "vendor_managed"]]
     },
     "location": {
       "description": "Properties of the expected physical location of the device",
