@@ -172,6 +172,11 @@ public abstract class AbstractPollingService {
     return new ProjectSpec(parts[2], parts[3], parts.length == 5 ? parts[4] : null);
   }
 
+  protected SourceRepository initRepository(String repoId) {
+    String repoDir = Paths.get(baseCloningDir, repoId).toString();
+    return new SourceRepository(repoId, repoDir, localOriginDir, gcpProject, udmiNamespace);
+  }
+
   // --- Inner Records for Data Structuring ---
 
   /**

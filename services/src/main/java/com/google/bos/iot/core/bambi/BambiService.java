@@ -1,6 +1,9 @@
 package com.google.bos.iot.core.bambi;
 
 import static com.google.udmi.util.SheetsOutputStream.executeWithSheetLogging;
+import static com.google.udmi.util.SourceRepository.AUTHOR_KEY;
+import static com.google.udmi.util.SourceRepository.SPREADSHEET_ID_KEY;
+import static com.google.udmi.util.SourceRepository.TRIGGER_FILE_NAME;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
@@ -13,7 +16,6 @@ import com.google.udmi.util.SourceRepository;
 import java.io.File;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
-import java.nio.file.Paths;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Map;
@@ -30,9 +32,6 @@ import org.slf4j.LoggerFactory;
  */
 public class BambiService extends AbstractPollingService {
 
-  public static final String TRIGGER_FILE_NAME = "trigger-registrar.json";
-  public static final String SPREADSHEET_ID_KEY = "spreadsheet_id";
-
   private static final Logger LOGGER = LoggerFactory.getLogger(BambiService.class);
   private static final String APP_NAME = "BAMBI";
   private static final String SERVICE_NAME = "BambiService";
@@ -46,6 +45,21 @@ public class BambiService extends AbstractPollingService {
 
   private final IdVerifier idVerifier;
 
+
+  /**
+   * Primary constructor for the BambiService.
+   *
+   * @param projectTarget Target project specifier, e.g., "//pubsub/gcp-project/udmi-namespace"
+   * @param siteModelBaseDir Base directory for cloning site model Git repositories.
+   * @param localOriginDir Optional directory for local git origins (for testing).
+   */
+  public BambiService(String projectTarget, String siteModelBaseDir, String localOriginDir) {
+    super(SERVICE_NAME, SUBSCRIPTION_SUFFIX, projectTarget, siteModelBaseDir, localOriginDir);
+    ProjectSpec spec = getProjectSpec(projectTarget);
+    this.idVerifier = IdVerifier.from(spec.protocol());
+    LOGGER.info("Starting BAMBI Service for target {}, cloning to {}",
+        projectTarget, siteModelBaseDir);
+  }
 
   /**
    * Main entry point for the BAMBI service application.
@@ -77,21 +91,6 @@ public class BambiService extends AbstractPollingService {
       LOGGER.info("Shutdown hook triggered for " + SERVICE_NAME);
       service.stop();
     }));
-  }
-
-  /**
-   * Primary constructor for the BambiService.
-   *
-   * @param projectTarget Target project specifier, e.g., "//pubsub/gcp-project/udmi-namespace"
-   * @param siteModelBaseDir Base directory for cloning site model Git repositories.
-   * @param localOriginDir Optional directory for local git origins (for testing).
-   */
-  public BambiService(String projectTarget, String siteModelBaseDir, String localOriginDir) {
-    super(SERVICE_NAME, SUBSCRIPTION_SUFFIX, projectTarget, siteModelBaseDir, localOriginDir);
-    ProjectSpec spec = getProjectSpec(projectTarget);
-    this.idVerifier = IdVerifier.from(spec.protocol());
-    LOGGER.info("Starting BAMBI Service for target {}, cloning to {}",
-        projectTarget, siteModelBaseDir);
   }
 
   /**
@@ -149,17 +148,14 @@ public class BambiService extends AbstractPollingService {
         LOGGER.info("Logs are streamed to spreadsheet '{}', sheet '{}'", spreadsheetId,
             outputSheetTitle);
 
-        String repoDir = Paths.get(baseCloningDir, params.registryId).toString();
-        SourceRepository repository = new SourceRepository(params.registryId, repoDir,
-            localOriginDir, gcpProject, udmiNamespace);
+        SourceRepository repository = initRepository(params.registryId());
         if (!repository.clone(params.importBranch)) {
           throw new RuntimeException("Could not clone repository " + params.registryId);
         }
 
-        String udmiModelPath = Paths.get(repository.getDirectory(), "udmi").toString();
         switch (params.requestType) {
-          case IMPORT_REQUEST -> handleImport(spreadsheetId, udmiModelPath);
-          case EXPORT_REQUEST -> handleExport(spreadsheetId, udmiModelPath, repository, timestamp);
+          case IMPORT_REQUEST -> handleImport(spreadsheetId, repository);
+          case EXPORT_REQUEST -> handleExport(spreadsheetId, repository, timestamp, params.user());
           default -> LOGGER.error("Invalid request type '{}'", params.requestType);
         }
         repository.delete(); // free up space after task
@@ -175,9 +171,10 @@ public class BambiService extends AbstractPollingService {
   /**
    * Handles an 'import' request: copies data from the Git repo to the Google Sheet.
    */
-  private void handleImport(String spreadsheetId, String udmiModelPath) {
-    LOGGER.info("Populating Google Sheet {} from site model at {}", spreadsheetId, udmiModelPath);
-    new BambiSync(spreadsheetId, udmiModelPath).execute();
+  private void handleImport(String spreadsheetId, SourceRepository repository) {
+    LOGGER.info("Populating Google Sheet {} from site model at {}", spreadsheetId,
+        repository.getUdmiModelPath());
+    new BambiSync(spreadsheetId, repository.getUdmiModelPath()).execute();
     LOGGER.info("Import operation complete.");
   }
 
@@ -185,20 +182,21 @@ public class BambiService extends AbstractPollingService {
    * Handles a 'merge' (export) request: copies data from the Google Sheet to the Git repo, then
    * commits and pushes the changes to a new branch.
    */
-  private void handleExport(String spreadsheetId, String udmiModelPath,
-      SourceRepository repository, String timestamp) {
+  private void handleExport(String spreadsheetId, SourceRepository repository, String timestamp,
+      String user) {
     String exportBranch = String.format("proposal/%s/%s", spreadsheetId, timestamp);
     if (!repository.checkoutNewBranch(exportBranch)) {
       throw new RuntimeException("Unable to create and checkout export branch " + exportBranch);
     }
 
     LOGGER.info("Merging data from Google Sheet {} to local site model at {}", spreadsheetId,
-        udmiModelPath);
-    new LocalDiskSync(spreadsheetId, udmiModelPath).execute();
-    createTriggerRegistrarFile(udmiModelPath, spreadsheetId);
+        repository.getUdmiModelPath());
+    new LocalDiskSync(spreadsheetId, repository.getUdmiModelPath()).execute();
+    createTriggerRegistrarFile(repository, spreadsheetId, user);
 
     LOGGER.info("Committing and pushing changes to branch {}", exportBranch);
-    if (!repository.commitAndPush("Merge changes from BAMBI spreadsheet " + spreadsheetId)) {
+    if (!repository.commitAndPush("Changes from " + user + " via BAMBI spreadsheet "
+        + spreadsheetId)) {
       throw new RuntimeException("Unable to commit and push changes to branch " + exportBranch);
     }
     LOGGER.info("Export operation complete.");
@@ -210,16 +208,21 @@ public class BambiService extends AbstractPollingService {
    * This file will be used to trigger the registrar process when the proposal branch is merged.
    *
    * @param spreadsheetId The ID of the Google Sheet to include in the JSON file.
+   * @param user email of the user requesting the export operation.
    * @throws RuntimeException if there is an error writing the file.
    */
-  private void createTriggerRegistrarFile(String udmiModelPath, String spreadsheetId) {
+  private void createTriggerRegistrarFile(SourceRepository repository, String spreadsheetId,
+      String user) {
     ObjectMapper mapper = new ObjectMapper();
     mapper.enable(SerializationFeature.INDENT_OUTPUT);
 
-    Map<String, String> triggerData = Map.of(SPREADSHEET_ID_KEY, spreadsheetId);
+    Map<String, String> triggerData = Map.of(
+        SPREADSHEET_ID_KEY, spreadsheetId,
+        AUTHOR_KEY, user
+    );
 
     try {
-      mapper.writeValue(new File(Paths.get(udmiModelPath, TRIGGER_FILE_NAME).toUri()), triggerData);
+      mapper.writeValue(new File(repository.getRegistrarTriggerFilePath()), triggerData);
       LOGGER.info("Successfully created trigger file '{}' with spreadsheetId {}",
           TRIGGER_FILE_NAME, spreadsheetId);
     } catch (IOException e) {

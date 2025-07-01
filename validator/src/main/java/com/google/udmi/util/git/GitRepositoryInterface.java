@@ -57,7 +57,12 @@ public interface GitRepositoryInterface extends AutoCloseable {
   void deleteLocalBranch(String branchName, boolean force) throws GitAPIException, IOException;
 
   default String createPullRequest(String title, String body, String sourceBranch,
-      String targetBranch) throws GitAPIException, IOException {
+      String targetBranch) {
+    return createPullRequest(title, body, sourceBranch, targetBranch, null);
+  }
+
+  default String createPullRequest(String title, String body, String sourceBranch,
+      String targetBranch, String author) {
     throw new UnsupportedOperationException("createPullRequest not implemented");
   }
 

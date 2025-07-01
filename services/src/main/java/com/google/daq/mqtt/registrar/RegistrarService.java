@@ -1,27 +1,23 @@
 package com.google.daq.mqtt.registrar;
 
-import static com.google.bos.iot.core.bambi.BambiService.SPREADSHEET_ID_KEY;
-import static com.google.bos.iot.core.bambi.BambiService.TRIGGER_FILE_NAME;
-import static com.google.udmi.util.JsonUtil.flattenNestedMap;
+import static com.google.bos.iot.core.reconcile.SourceRepoMessageUtils.REF_UPDATE_EVENT_FORMAT;
+import static com.google.bos.iot.core.reconcile.SourceRepoMessageUtils.extractRepoId;
+import static com.google.bos.iot.core.reconcile.SourceRepoMessageUtils.getValueFromMap;
+import static com.google.bos.iot.core.reconcile.SourceRepoMessageUtils.parseSourceRepoMessageData;
 import static com.google.udmi.util.SheetsOutputStream.executeWithSheetLogging;
+import static com.google.udmi.util.SourceRepository.AUTHOR_KEY;
+import static com.google.udmi.util.SourceRepository.SPREADSHEET_ID_KEY;
 
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.pubsub.v1.PubsubMessage;
 import com.google.udmi.util.AbstractPollingService;
 import com.google.udmi.util.SheetsOutputStream;
 import com.google.udmi.util.SourceRepository;
 import java.io.File;
 import java.io.IOException;
-import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.Set;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -35,15 +31,10 @@ public class RegistrarService extends AbstractPollingService {
   private static final String SERVICE_NAME = "RegistrarService";
   private static final String SUBSCRIPTION_SUFFIX = "source-repo-updates-registrar";
   private static final String TRIGGER_BRANCH = "main";
-  private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
-
-  private static final String REF_UPDATE_EVENT_FORMAT =
-      "refUpdateEvent.refUpdates.refs/heads/%s.%s";
   private static final String REF_NAME_KEY = String.format(REF_UPDATE_EVENT_FORMAT, TRIGGER_BRANCH,
       "refName");
   private static final String UPDATE_TYPE_KEY = String.format(REF_UPDATE_EVENT_FORMAT,
       TRIGGER_BRANCH, "updateType");
-  private static final String REPO_NAME_KEY = "name";
   private static final Set<String> TRIGGERING_UPDATE_TYPES = Set.of("CREATE",
       "UPDATE_FAST_FORWARD");
   private final String registrarTarget;
@@ -89,24 +80,26 @@ public class RegistrarService extends AbstractPollingService {
   @Override
   protected void handleMessage(PubsubMessage message) {
     try {
-      Map<String, Object> messageData = parseMessageData(message);
+      Map<String, Object> messageData = parseSourceRepoMessageData(message);
       if (!isTriggeringEvent(messageData)) {
         return;
       }
 
-      RepositoryInfo repoInfo = new RepositoryInfo(messageData);
-      SourceRepository repository = setupRepository(repoInfo);
+      String repoId = extractRepoId(messageData);
+      SourceRepository repository = initRepository(repoId);
 
       if (repository.clone(TRIGGER_BRANCH)) {
-        String udmiModelPath = Paths.get(repository.getDirectory(), "udmi").toString();
-
-        if (checkTriggerFileExists(udmiModelPath)) {
-          runRegistrar(udmiModelPath, getSpreadsheetId(udmiModelPath).orElse(null), repository);
+        Map<String, Object> triggerConfig;
+        if ((triggerConfig = repository.getRegistrarTriggerConfig()) != null) {
+          String spreadsheetId = getValueFromMap(triggerConfig, SPREADSHEET_ID_KEY).orElse(null);
+          String author = getValueFromMap(triggerConfig, AUTHOR_KEY).orElse(null);
+          runRegistrar(spreadsheetId, repository, author);
         } else {
           LOGGER.info("Skipping. Trigger file does not exist.");
         }
+        repository.delete();
       } else {
-        LOGGER.error("Failed to clone repository {}", repoInfo.id());
+        LOGGER.error("Failed to clone repository {}", repoId);
       }
 
     } catch (Exception e) {
@@ -114,34 +107,19 @@ public class RegistrarService extends AbstractPollingService {
     }
   }
 
-  private Map<String, Object> parseMessageData(PubsubMessage message) throws IOException {
-    String messageJson = message.getData().toString(StandardCharsets.UTF_8);
-    TypeReference<Map<String, Object>> typeRef = new TypeReference<>() {
-    };
-    Map<String, Object> rawMap = OBJECT_MAPPER.readValue(messageJson, typeRef);
-    return flattenNestedMap(rawMap, ".");
-  }
-
   private boolean isTriggeringEvent(Map<String, Object> messageData) {
     String refName = (String) messageData.getOrDefault(REF_NAME_KEY, "");
     String updateType = (String) messageData.getOrDefault(UPDATE_TYPE_KEY, "");
 
     if (refName.isEmpty() || !TRIGGERING_UPDATE_TYPES.contains(updateType)) {
-      LOGGER.info("Ignoring non-triggering event. Ref: '{}', Type: '{}'", refName, updateType);
       return false;
     }
     LOGGER.info("Processing triggering event. Ref: '{}', Type: '{}'", refName, updateType);
     return true;
   }
 
-  private SourceRepository setupRepository(RepositoryInfo repoInfo) {
-    String repoDir = Paths.get(baseCloningDir, repoInfo.id()).toString();
-    return new SourceRepository(repoInfo.id(), repoDir, localOriginDir, gcpProject, udmiNamespace);
-  }
-
-  private void runRegistrar(String udmiModelPath, String spreadsheetId,
-      SourceRepository repository) {
-    Runnable registrarTask = createRegistrarTask(udmiModelPath, repository);
+  private void runRegistrar(String spreadsheetId, SourceRepository repository, String author) {
+    Runnable registrarTask = createRegistrarTask(repository, author);
 
     if (spreadsheetId != null) {
       String timestamp = new SimpleDateFormat("yyyyMMdd.HHmmss").format(new Date());
@@ -166,24 +144,23 @@ public class RegistrarService extends AbstractPollingService {
   /**
    * Creates a runnable task for executing the main registrar process.
    */
-  private Runnable createRegistrarTask(String udmiModelPath, SourceRepository repository) {
+  private Runnable createRegistrarTask(SourceRepository repository, String author) {
     return () -> {
       try {
-        List<String> argList = List.of(udmiModelPath, registrarTarget);
+        List<String> argList = List.of(repository.getUdmiModelPath(), registrarTarget);
         new Registrar().processArgs(argList).execute();
-        pushRegistrationSummary(repository);
+        pushRegistrationSummary(repository, author);
       } catch (Exception e) {
         throw new RuntimeException("Registrar execution failed", e);
       }
     };
   }
 
-  private void pushRegistrationSummary(SourceRepository repository) {
+  private void pushRegistrationSummary(SourceRepository repository, String author) {
     LOGGER.info("Adding registration summary to the source repo...");
-    Path triggerFilePath = Paths.get(repository.getDirectory(), "udmi", TRIGGER_FILE_NAME);
-    File triggerFile = new File(triggerFilePath.toUri());
-    if (triggerFile.delete() && repository.stageRemove("udmi/" + TRIGGER_FILE_NAME)) {
-      if (!repository.commitAndPush("Add registration summary")) {
+    File triggerFile = new File(repository.getRegistrarTriggerFilePath());
+    if (triggerFile.delete() && repository.stageRemove(repository.getRegistrarTriggerFilePath())) {
+      if (!repository.commitAndPush("Registrar run summary for changes by " + author)) {
         LOGGER.error("Could not add registration summary");
       }
     } else {
@@ -191,51 +168,4 @@ public class RegistrarService extends AbstractPollingService {
     }
   }
 
-  private boolean checkTriggerFileExists(String udmiModelPath) {
-    Path triggerFilePath = Paths.get(udmiModelPath, TRIGGER_FILE_NAME);
-    return Files.exists(triggerFilePath);
-  }
-
-  private Optional<String> getSpreadsheetId(String udmiModelPath) {
-    Path triggerFilePath = Paths.get(udmiModelPath, TRIGGER_FILE_NAME);
-    try {
-      String jsonContent = Files.readString(triggerFilePath);
-      if (jsonContent.isBlank()) {
-        LOGGER.warn("Trigger file is empty: {}", triggerFilePath);
-        return Optional.empty();
-      }
-      Map<String, String> triggerConfig = OBJECT_MAPPER.readValue(jsonContent,
-          new TypeReference<>() {
-          });
-      String spreadsheetId = triggerConfig.get(SPREADSHEET_ID_KEY);
-
-      if (spreadsheetId == null || spreadsheetId.isEmpty()) {
-        LOGGER.warn("Spreadsheet ID key '{}' not found in {}", SPREADSHEET_ID_KEY, triggerFilePath);
-        return Optional.empty();
-      }
-
-      LOGGER.info("Extracted spreadsheetId '{}' from trigger file.", spreadsheetId);
-      return Optional.of(spreadsheetId);
-
-    } catch (IOException e) {
-      LOGGER.error("Failed to read or parse trigger file: {}", triggerFilePath, e);
-      return Optional.empty();
-    }
-  }
-
-  private record RepositoryInfo(String id, String directory) {
-
-    RepositoryInfo(Map<String, Object> messageData) {
-      this(extractRepoId(messageData), null);
-    }
-
-    private static String extractRepoId(Map<String, Object> data) {
-      String repositoryName = (String) data.get(REPO_NAME_KEY);
-      if (repositoryName == null || repositoryName.isEmpty()) {
-        throw new IllegalArgumentException("Repository name not found in message data.");
-      }
-      String[] parts = repositoryName.split("/");
-      return parts[parts.length - 1];
-    }
-  }
 }
