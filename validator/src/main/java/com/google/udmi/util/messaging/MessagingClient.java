@@ -26,7 +26,7 @@ public interface MessagingClient extends Closeable {
 
     return switch (provider) {
       case MQTT -> MqttMessagingClient.from(config);
-      case PUBSUB -> GenericPubSubClient.from(config);
+      case PUBSUB, GBOS, GREF -> GenericPubSubClient.from(config);
       default -> throw new UnsupportedOperationException(
           "Unsupported messaging protocol " + config.protocol());
     };

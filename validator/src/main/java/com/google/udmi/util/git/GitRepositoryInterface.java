@@ -21,6 +21,8 @@ public interface GitRepositoryInterface extends AutoCloseable {
 
   void add(String filePattern) throws GitAPIException, IOException;
 
+  void remove(String filePattern) throws GitAPIException;
+
   RevCommit commit(String message) throws GitAPIException, IOException;
 
   RevCommit commit(String authorName, String authorEmail, String message)
@@ -55,7 +57,12 @@ public interface GitRepositoryInterface extends AutoCloseable {
   void deleteLocalBranch(String branchName, boolean force) throws GitAPIException, IOException;
 
   default String createPullRequest(String title, String body, String sourceBranch,
-      String targetBranch) throws GitAPIException, IOException {
+      String targetBranch) {
+    return createPullRequest(title, body, sourceBranch, targetBranch, null);
+  }
+
+  default String createPullRequest(String title, String body, String sourceBranch,
+      String targetBranch, String author) {
     throw new UnsupportedOperationException("createPullRequest not implemented");
   }
 
