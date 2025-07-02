@@ -3,6 +3,7 @@ package com.google.daq.mqtt.mapping;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
 import static com.google.daq.mqtt.util.ConfigUtil.UDMI_VERSION;
+import static com.google.udmi.util.Common.NO_SITE;
 import static com.google.udmi.util.Common.UNKNOWN_DEVICE_ID_PREFIX;
 import static com.google.udmi.util.Common.generateColonKey;
 import static com.google.udmi.util.Common.removeNextArg;
@@ -24,8 +25,10 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
 import com.google.common.collect.Sets.SetView;
+import com.google.daq.mqtt.registrar.Registrar;
 import com.google.daq.mqtt.util.CloudIotManager;
 import com.google.daq.mqtt.util.ConfigUtil;
+import com.google.udmi.util.CommandLineProcessor;
 import com.google.udmi.util.Common;
 import com.google.udmi.util.SiteModel;
 import java.io.File;
@@ -66,8 +69,13 @@ public class MappingAgent {
 
   private static final String NO_DISCOVERY = "not_discovered";
   public static final String MAPPER_TOOL_NAME = "mapper";
-  private final ExecutionConfiguration executionConfiguration;
-  private final String deviceId;
+
+  private final List<String> usageForms = ImmutableList.of(
+      "bin/mapper site_model project_spec map [family]");
+  private final CommandLineProcessor commandLineProcessor = new CommandLineProcessor(this,
+      usageForms);
+  private ExecutionConfiguration executionConfiguration;
+  private String deviceId;
   private CloudIotManager cloudIotManager;
   private SiteModel siteModel;
   private Date generationDate;
@@ -88,6 +96,21 @@ public class MappingAgent {
    */
   public MappingAgent(String profilePath) {
     this(ConfigUtil.readExeConfig(new File(profilePath)));
+  }
+
+  public MappingAgent(List<String> argList) {
+    if (argList.size() == 1 && new File(argList.get(0)).isDirectory()) {
+      // Add implicit NO_SITE site spec for local-only site model processing.
+      argList.add(NO_SITE);
+    }
+    try {
+      siteModel = new SiteModel(MAPPER_TOOL_NAME, argList);
+    } catch (IllegalArgumentException e) {
+      commandLineProcessor.showUsage(e.getMessage());
+    }
+    executionConfiguration = siteModel.getExecutionConfiguration();
+    deviceId = requireNonNull(executionConfiguration.device_id, "device id not specified");
+    initialize();
   }
 
   /**

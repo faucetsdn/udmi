@@ -234,7 +234,7 @@ public class Registrar {
     return UDMI_ROOT.getAbsolutePath();
   }
 
-  Registrar processArgs(List<String> argListRaw) {
+  public Registrar processArgs(List<String> argListRaw) {
     List<String> argList = new ArrayList<>(argListRaw);
     if (argList.size() == 1 && new File(argList.get(0)).isDirectory()) {
       // Add implicit NO_SITE site spec for local-only site model processing.
@@ -329,7 +329,7 @@ public class Registrar {
     }
   }
 
-  Registrar execute() {
+  public Registrar execute() {
     execute(null);
     maybeProcessAltRegistry();
     return this;
