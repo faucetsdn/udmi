@@ -1,0 +1,39 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: registrar-service
+spec:
+  selector:
+    matchLabels:
+      app: registrar-service
+      role: master
+      tier: backend
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: registrar-service
+        role: master
+        tier: backend
+    spec:
+      containers:
+      - name: registrar-core
+        image: @IMAGE@
+        imagePullPolicy: Always
+        resources:
+          requests:
+            cpu: 500m
+            memory: 500Mi
+        env:
+        - name: UDMI_NAMESPACE
+          valueFrom:
+            configMapKeyRef:
+              name: config
+              key: UDMI_NAMESPACE
+              optional: true
+        - name: REGISTRAR_IOT_PROVIDER
+          valueFrom:
+            configMapKeyRef:
+              name: config
+              key: REGISTRAR_IOT_PROVIDER
+              optional: true
