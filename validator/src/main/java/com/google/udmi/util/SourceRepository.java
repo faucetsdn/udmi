@@ -67,7 +67,8 @@ public class SourceRepository {
   }
 
   public String getUdmiModelPath() {
-    return Paths.get(getDirectory(), "udmi").toString();
+    String udmiFolder = Paths.get(getDirectory(), "udmi").toString();
+    return Files.exists(Path.of(udmiFolder)) ? udmiFolder : getDirectory();
   }
 
   public String getRegistrarTriggerFilePath() {

@@ -48,7 +48,8 @@ public class RegistrarService extends AbstractPollingService {
    */
   public RegistrarService(String projectTarget, String siteModelBaseDir, String localOriginDir) {
     super(SERVICE_NAME, SUBSCRIPTION_SUFFIX, projectTarget, siteModelBaseDir, localOriginDir);
-    registrarTarget = projectTarget;
+    registrarTarget =
+        projectTarget.endsWith("/udmis") ? projectTarget.split("/udmis")[0] : projectTarget;
     LOGGER.info("Starting Registrar Service for project {}, cloning to {}", projectTarget,
         siteModelBaseDir);
   }
