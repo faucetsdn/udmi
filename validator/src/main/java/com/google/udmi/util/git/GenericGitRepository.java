@@ -165,6 +165,17 @@ public class GenericGitRepository implements GitRepositoryInterface {
     getGit().add().addFilepattern(filePattern).call();
   }
 
+  /**
+   * Stages the removal of a file from the repository. This is equivalent to `git rm`.
+   *
+   * @param filePattern The file pattern to remove from the index.
+   * @throws GitAPIException if there is an error executing the Git command.
+   */
+  @Override
+  public void remove(String filePattern) throws GitAPIException {
+    getGit().rm().addFilepattern(filePattern).call();
+  }
+
   @Override
   public RevCommit commit(String message) throws GitAPIException {
     return getGit().commit().setMessage(message).call();

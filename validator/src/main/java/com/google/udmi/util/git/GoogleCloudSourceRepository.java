@@ -42,11 +42,11 @@ public class GoogleCloudSourceRepository extends GenericGitRepository {
     this.subscriptionExists = subscriptionExists(config.projectId(), subscriptionId);
 
     if (!topicExists) {
-      LOGGER.warn("Pub/Sub topic {} not found. Creating PRs will only be logged locally.",
+      LOGGER.debug("Pub/Sub topic {} not found. Creating PRs will only be logged locally.",
           this.topicId);
     }
     if (!subscriptionExists) {
-      LOGGER.warn("Pub/Sub subscription {} not found. Listing PRs will not be possible.",
+      LOGGER.debug("Pub/Sub subscription {} not found. Listing PRs will not be possible.",
           this.subscriptionId);
     }
   }
@@ -57,16 +57,17 @@ public class GoogleCloudSourceRepository extends GenericGitRepository {
 
   @Override
   public String createPullRequest(String title, String body, String sourceBranch,
-      String targetBranch) {
+      String targetBranch, String author) {
     if (topicExists) {
       try (GenericPubSubClient publisher = new GenericPubSubClient(repositoryConfig.projectId(),
           null, topicId)) {
         String payload = String.format(
-            "{\"title\":\"%s\", \"body\":\"%s\", \"sourceBranch\":\"%s\", \"targetBranch\":\"%s\"}",
-            title, body, sourceBranch, targetBranch
+            "{\"title\":\"%s\", \"body\":\"%s\", \"sourceBranch\":\"%s\", "
+                + "\"targetBranch\":\"%s\", \"author\":\"%s\"}",
+            title, body, sourceBranch, targetBranch, author
         );
         publisher.publish(payload, null);
-        LOGGER.info("Published PR review request to topic {}", topicId);
+        LOGGER.info("Published PR review request from {} to topic {}", author, topicId);
         return "Pull request message published to " + topicId;
       }
     } else {
