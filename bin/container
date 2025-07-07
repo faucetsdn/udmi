@@ -12,18 +12,18 @@ cmd=$2
 shift 2
 target_tag=${target}
 
-if echo "$target" | grep -q "\."; then
-  subtarget=$(echo "$target" | cut -d '.' -f 2)
-  target=$(echo "$target" | cut -d '.' -f 1)
-  dockerfile=Dockerfile.${target}.${subtarget}
-  template_folder=etc/${subtarget}
+if [[ "$target" == *.* ]]; then
+  sub_target=${target#*.}
+  target=${target%%.*}
+  dockerfile="Dockerfile.${target}.${sub_target}"
+  template_folder="etc/${sub_target}"
 else
-  subtarget=
-  dockerfile=Dockerfile.${target}
-  template_folder=etc
+  sub_target=""
+  dockerfile="Dockerfile.${target}"
+  template_folder="etc"
 fi
-echo Processing TARGET ${target}, SUBTARGET ${subtarget:-none}
-echo Processing Dockerfile ${dockerfile}
+echo Processing TARGET "${target}", SUB_TARGET "${sub_target:-none}"
+echo Processing Dockerfile "${dockerfile}"
 
 cd ${UDMI_ROOT}/${target}
 
