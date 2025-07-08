@@ -109,7 +109,6 @@ public class MappingAgent {
       commandLineProcessor.showUsage(e.getMessage());
     }
     executionConfiguration = siteModel.getExecutionConfiguration();
-    deviceId = requireNonNull(executionConfiguration.device_id, "device id not specified");
     initialize();
   }
 
@@ -148,7 +147,7 @@ public class MappingAgent {
   }
 
   private void initiateDiscover(List<String> argsList) {
-    Set<String> families = getFamilies(argsList);
+     Set<String> families = getFamilies(argsList);
 
     generationDate = new Date();
     String generation = isoConvert(generationDate);
@@ -380,5 +379,9 @@ public class MappingAgent {
 
   public List<Object> getMockActions() {
     return cloudIotManager.getMockActions();
+  }
+
+  public void setDiscoveryNodeDeviceId(String discoveryNodeDeviceId) {
+    this.deviceId = discoveryNodeDeviceId;
   }
 }
