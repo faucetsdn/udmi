@@ -27,7 +27,6 @@ import com.google.common.collect.Sets;
 import com.google.common.collect.Sets.SetView;
 import com.google.daq.mqtt.util.CloudIotManager;
 import com.google.daq.mqtt.util.ConfigUtil;
-import com.google.udmi.util.CommandLineProcessor;
 import com.google.udmi.util.Common;
 import com.google.udmi.util.SiteModel;
 import java.io.File;
@@ -59,7 +58,6 @@ import udmi.schema.PointsetModel;
 import udmi.schema.RefDiscovery;
 import udmi.schema.SystemModel;
 
-;
 
 /**
  * Agent that maps discovery results to mapping requests.
@@ -68,11 +66,6 @@ public class MappingAgent {
 
   private static final String NO_DISCOVERY = "not_discovered";
   public static final String MAPPER_TOOL_NAME = "mapper";
-
-  private final List<String> usageForms = ImmutableList.of(
-      "bin/mapper site_model project_spec map [family]");
-  private final CommandLineProcessor commandLineProcessor = new CommandLineProcessor(this,
-      usageForms);
   private ExecutionConfiguration executionConfiguration;
   private String deviceId;
   private CloudIotManager cloudIotManager;
@@ -112,7 +105,7 @@ public class MappingAgent {
     try {
       siteModel = new SiteModel(MAPPER_TOOL_NAME, argList);
     } catch (IllegalArgumentException e) {
-      commandLineProcessor.showUsage(e.getMessage());
+      throw new IllegalArgumentException("Invalid arguments provided, please provide in argList: sitePath projectSpec");
     }
     executionConfiguration = siteModel.getExecutionConfiguration();
     initialize();

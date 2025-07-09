@@ -234,6 +234,12 @@ public class Registrar {
     return UDMI_ROOT.getAbsolutePath();
   }
 
+  /**
+   *
+   * @param argListRaw
+   * arguments includes: site_path project_spec deviceList
+   * @return Registrar Instance
+   */
   public Registrar processArgs(List<String> argListRaw) {
     List<String> argList = new ArrayList<>(argListRaw);
     if (argList.size() == 1 && new File(argList.get(0)).isDirectory()) {
@@ -329,6 +335,10 @@ public class Registrar {
     }
   }
 
+  /**
+   * runs the registrar
+   * @return registrar instance
+   */
   public Registrar execute() {
     execute(null);
     maybeProcessAltRegistry();
