@@ -31,7 +31,7 @@ spec:
               name: config
               key: UDMI_NAMESPACE
               optional: true
-        - name: REGISTRAR_IOT_PROVIDER
+        - name: IOT_PROVIDER
           valueFrom:
             configMapKeyRef:
               name: config

@@ -15,7 +15,7 @@ LOCAL=
 NO_CHECK=
 [[ ${1:-} == "--no-check" ]] && NO_CHECK=1 && shift
 
-IOT_PROVIDER=${REGISTRAR_IOT_PROVIDER:-gbos}
+IOT_PROVIDER=${IOT_PROVIDER:-gbos}
 
 # shellcheck disable=SC2155
 export GCP_PROJECT=$(gcloud config get-value project)
