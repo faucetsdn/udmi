@@ -4,7 +4,7 @@ UDMI_ROOT=$(dirname $0)/..
 source $UDMI_ROOT/etc/shell_common.sh
 
 if [[ $# -lt 5 ]]; then
-    usage registry_id project_id base_cloning_directory project_spec mapping_family
+    usage registry_id project_id base_cloning_directory project_spec mapping_family discoveryNodeDeviceId
 fi
 
 registry_id=$1
@@ -12,6 +12,7 @@ project_id=$2
 base_cloning_directory=$3
 project_spec=$4
 mapping_family=$5
+discoveryNodeDeviceId=$6
 
 shift 5
     
@@ -20,4 +21,4 @@ shift 5
     $UDMI_ROOT/validator/bin/build
 
 
-java -cp $UDMI_JAR com.google.daq.mqtt.mapping.MappingService $registry_id $project_id $base_cloning_directory $project_spec $mapping_family $@
+java -cp $UDMI_JAR com.google.daq.mqtt.mapping.MappingService $registry_id $project_id $base_cloning_directory $project_spec $mapping_family $discoveryNodeDeviceId $@
