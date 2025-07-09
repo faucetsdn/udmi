@@ -1,69 +1,89 @@
-#!/bin/bash -e
+#!/bin/bash
 #
 # Registrar backend service
 #
-SCRIPT_ROOT=$(realpath $(dirname $0))
-UDMI_ROOT=$(realpath "$SCRIPT_ROOT"/../..)
+set -euo pipefail
 
-source "$UDMI_ROOT"/etc/shell_common.sh
+SCRIPT_ROOT=$(realpath "$(dirname "$0")")
+UDMI_ROOT=$(realpath "$SCRIPT_ROOT/../..")
 
-export PS4='+(${BASH_SOURCE}:${LINENO}): ${FUNCNAME[0]:+${FUNCNAME[0]}(): }'
+source "$UDMI_ROOT/etc/shell_common.sh"
 
-LOCAL=
-[[ ${1:-} == "--local" ]] && LOCAL=1 && shift
+main() {
+    local service_name="Registrar"
+    local message_spec=""
+    local registrar_target=""
+    local cloning_dir=""
+    local local_origin_dir=""
+    local is_local=0
+    local should_create=0
 
-NO_CHECK=
-[[ ${1:-} == "--no-check" ]] && NO_CHECK=1 && shift
-
-IOT_PROVIDER=${IOT_PROVIDER:-gbos}
-
-# shellcheck disable=SC2155
-export GCP_PROJECT=$(gcloud config get-value project)
-echo Using GCP_PROJECT "$GCP_PROJECT"
-
-if [[ -n ${UDMI_NAMESPACE:-} ]]; then
-    UDMI_PREFIX="${UDMI_NAMESPACE}~"
-    TARGET="//${IOT_PROVIDER}/${GCP_PROJECT}/${UDMI_NAMESPACE}"
-    echo Using UDMI_PREFIX "$UDMI_PREFIX"
-else
-    UDMI_PREFIX=
-    TARGET="//${IOT_PROVIDER}/${GCP_PROJECT}"
-fi
-
-if [[ -z $LOCAL ]]; then
-    GCP_SERVICE_ACCOUNT=$(curl -s -H "Metadata-Flavor: Google" http://169.254.169.254/computeMetadata/v1/instance/service-accounts/default/email)
-    echo Configured with GCP service account "$GCP_SERVICE_ACCOUNT"
-    gcloud config set account "$GCP_SERVICE_ACCOUNT"
-    git config --global user.email "$GCP_SERVICE_ACCOUNT"
-    git config --global user.name "Registrar backend runner ${UDMI_PREFIX#\~}"
-else
-  [[ ! -d $UDMI_ROOT/services/src ]] ||
-      up_to_date "$SERVICES_JAR" "$UDMI_ROOT"/services/src ||
-      "$UDMI_ROOT"/services/bin/build
-fi
-
-REPO_UPDATES_TOPIC=${UDMI_PREFIX}source-repo-updates
-REPO_UPDATES_SUBSCRIPTION=${UDMI_PREFIX}source-repo-updates-registrar
-SITE_MODEL_CLONE_DIR=${UDMI_ROOT}/var/udmi/sites
-
-if [[ -z $NO_CHECK ]]; then
-    echo Checking existing topics...
-    existing_topic=$(gcloud pubsub topics list | grep -F "${REPO_UPDATES_TOPIC}" || true)
-    if [[ -n $existing_topic ]]; then
-        echo Topic "${REPO_UPDATES_TOPIC}" exists
-    else
-        echo Creating topic "${REPO_UPDATES_TOPIC}"
-        gcloud pubsub topics create "${REPO_UPDATES_TOPIC}"
+    if [[ $# -lt 3 ]]; then
+        # shellcheck disable=SC2102
+        usage message_spec registrar_target cloning_dir [--local] [--create] [local_orig_dir]
     fi
 
-    echo Checking existing subscriptions...
-    existing=$(gcloud pubsub subscriptions list | grep -F "${REPO_UPDATES_SUBSCRIPTION}" || true)
-    if [[ -n $existing ]]; then
-        echo Using existing subscription "${REPO_UPDATES_SUBSCRIPTION}"
-    else
-        gcloud pubsub subscriptions create "${REPO_UPDATES_SUBSCRIPTION}" --topic="${REPO_UPDATES_TOPIC}" --expiration-period=24h
-    fi
-fi
+    message_spec="$1"
+    registrar_target="$2"
+    cloning_dir="$3"
+    shift 3
 
-java -cp "$SERVICES_JAR" "com.google.daq.mqtt.registrar.RegistrarService" \
-    "$TARGET" "$SITE_MODEL_CLONE_DIR"
+    while [[ $# -gt 0 ]]; do
+        case "$1" in
+            --local)
+                is_local=1
+                shift
+                ;;
+            --create)
+                should_create=1
+                shift
+                ;;
+            *)
+                if [[ -z "$local_origin_dir" ]]; then
+                    local_origin_dir="$1"
+                    shift
+                else
+                    echo "Error: Unknown or duplicate argument '$1'"
+                    usage
+                fi
+                ;;
+        esac
+    done
+
+    export GCP_PROJECT
+    GCP_PROJECT=$(gcloud config get-value project)
+    echo "Using GCP Project: $GCP_PROJECT"
+
+    export UDMI_PREFIX="${UDMI_NAMESPACE:-}"
+    if [[ -n "$UDMI_PREFIX" ]]; then
+        UDMI_PREFIX="${UDMI_NAMESPACE}~"
+        echo "Using UDMI Namespace Prefix: $UDMI_PREFIX"
+    fi
+
+    if [[ $is_local -eq 1 ]]; then
+        build_services_jar
+    else
+        setup_service_gcp_environment ${service_name}
+    fi
+
+    if [[ $should_create -eq 1 ]]; then
+        local repo_updates_topic="${UDMI_PREFIX}udmi-source-repo-updates"
+        local repo_updates_subscription="${UDMI_PREFIX}udmi-registrar-source-repo-updates"
+        ensure_pubsub_subscription_exists "$repo_updates_subscription" "$repo_updates_topic" no_expiration
+    fi
+
+    # Create an as-needed subscription for this pod, and then garbage collect to clean them up (eventually).
+    if [[ $registrar_target == "//gref"* ]]; then
+        local host_suffix=${HOSTNAME##*-}
+        local udmi_topic=${UDMI_PREFIX}udmi_reply
+        local udmi_feed=${udmi_topic}+${host_suffix}
+        ensure_pubsub_subscription_exists "$udmi_feed" "$udmi_topic"
+        registrar_target=${registrar_target}+${host_suffix}
+    fi
+
+    echo "Starting ${service_name} Service..."
+    java -cp "$SERVICES_JAR" "com.google.daq.mqtt.registrar.RegistrarService" \
+        "$message_spec" "$registrar_target" "$cloning_dir" "$local_origin_dir"
+}
+
+main "$@"

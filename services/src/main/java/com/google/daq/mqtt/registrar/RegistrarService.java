@@ -4,6 +4,7 @@ import static com.google.bos.iot.core.reconcile.SourceRepoMessageUtils.REF_UPDAT
 import static com.google.bos.iot.core.reconcile.SourceRepoMessageUtils.extractRepoId;
 import static com.google.bos.iot.core.reconcile.SourceRepoMessageUtils.getValueFromMap;
 import static com.google.bos.iot.core.reconcile.SourceRepoMessageUtils.parseSourceRepoMessageData;
+import static com.google.udmi.util.GeneralUtils.isNotEmpty;
 import static com.google.udmi.util.SheetsOutputStream.executeWithSheetLogging;
 import static com.google.udmi.util.SourceRepository.AUTHOR_KEY;
 import static com.google.udmi.util.SourceRepository.SPREADSHEET_ID_KEY;
@@ -29,7 +30,7 @@ public class RegistrarService extends AbstractPollingService {
 
   private static final Logger LOGGER = LoggerFactory.getLogger(RegistrarService.class);
   private static final String SERVICE_NAME = "RegistrarService";
-  private static final String SUBSCRIPTION_SUFFIX = "source-repo-updates-registrar";
+  private static final String SUBSCRIPTION_SUFFIX = "udmi-registrar-source-repo-updates";
   private static final String TRIGGER_BRANCH = "main";
   private static final String REF_NAME_KEY = String.format(REF_UPDATE_EVENT_FORMAT, TRIGGER_BRANCH,
       "refName");
@@ -42,34 +43,50 @@ public class RegistrarService extends AbstractPollingService {
   /**
    * Constructs a RegistrarService instance.
    *
-   * @param projectTarget GCP project ID for the service.
+   * @param projectTarget Contains information about where the service receives its triggers from.
+   *     e.g. //pubsub/bos-platform-dev
+   * @param registrarTarget project spec for the registrar e.g. //gbos/bos-platform-dev
+   * @param siteModelBaseDir Base directory for cloning site models.
+   * @param localOriginDir Optional local directory to use as a git origin.
+   */
+  public RegistrarService(String projectTarget, String registrarTarget, String siteModelBaseDir,
+      String localOriginDir) {
+    super(SERVICE_NAME, SUBSCRIPTION_SUFFIX, projectTarget, siteModelBaseDir, localOriginDir);
+    this.registrarTarget = registrarTarget;
+    LOGGER.info("Starting Registrar Service for project {}, cloning to {}", projectTarget,
+        siteModelBaseDir);
+  }
+
+  /**
+   * Constructs a RegistrarService instance.
+   *
+   * @param projectTarget Contains information about where the service receives its triggers from.
+   *     e.g. //pubsub/bos-platform-dev
    * @param siteModelBaseDir Base directory for cloning site models.
    * @param localOriginDir Optional local directory to use as a git origin.
    */
   public RegistrarService(String projectTarget, String siteModelBaseDir, String localOriginDir) {
-    super(SERVICE_NAME, SUBSCRIPTION_SUFFIX, projectTarget, siteModelBaseDir, localOriginDir);
-    registrarTarget =
-        projectTarget.endsWith("/udmis") ? projectTarget.split("/udmis")[0] : projectTarget;
-    LOGGER.info("Starting Registrar Service for project {}, cloning to {}", projectTarget,
-        siteModelBaseDir);
+    this(projectTarget, projectTarget, siteModelBaseDir, localOriginDir);
   }
 
   /**
    * Main entry point for the application.
    */
   public static void main(String[] args) {
-    if (args.length < 2 || args.length > 3) {
+    if (args.length < 3 || args.length > 4) {
       System.err.println(
-          "Usage: RegistrarService <projectTarget> <siteModelCloneDir> [<localOriginDir>]");
+          "Usage: RegistrarService <projectTarget> <registrarTarget> <siteModelCloneDir> "
+              + "[<localOriginDir>]");
       System.exit(1);
     }
 
     String projectTarget = args[0];
-    String siteModelCloneDir = args[1];
-    String localOriginDir = (args.length == 3) ? args[2] : null;
+    String registrarTarget = args[1];
+    String siteModelCloneDir = args[2];
+    String localOriginDir = (args.length == 4) && isNotEmpty(args[3]) ? args[3] : null;
 
-    RegistrarService service = new RegistrarService(projectTarget, siteModelCloneDir,
-        localOriginDir);
+    RegistrarService service = new RegistrarService(projectTarget, registrarTarget,
+        siteModelCloneDir, localOriginDir);
     service.start();
 
     Runtime.getRuntime().addShutdownHook(new Thread(() -> {

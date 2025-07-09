@@ -1,5 +1,6 @@
 package com.google.udmi.util;
 
+import static com.google.udmi.util.GeneralUtils.isNotEmpty;
 import static java.util.Optional.ofNullable;
 
 import com.google.pubsub.v1.PubsubMessage;
@@ -66,6 +67,10 @@ public abstract class AbstractPollingService {
     this.udmiNamespace = spec.udmiNamespace;
     this.baseCloningDir = siteModelBaseDir;
     this.localOriginDir = localOriginDir;
+
+    if(isNotEmpty(this.localOriginDir)) {
+      LOGGER.info("Running in local origin mode.");
+    }
 
     String threadName = serviceName + "-poller";
     this.pollingExecutor = Executors.newSingleThreadExecutor(r -> new Thread(r, threadName));
