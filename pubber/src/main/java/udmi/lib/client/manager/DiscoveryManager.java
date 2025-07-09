@@ -289,8 +289,18 @@ public interface DiscoveryManager extends SubBlockManager {
     familyDiscoveryState.phase = ACTIVE;
     AtomicInteger sendCount = new AtomicInteger();
     familyDiscoveryState.active_count = sendCount.get();
+    sendMarkerDiscoveryEvent(family, familyDiscoveryState, scanGeneration);
     updateState();
     startDiscoveryForFamily(family, scanGeneration, familyDiscoveryState, sendCount);
+  }
+
+  private void sendMarkerDiscoveryEvent(String family, FamilyDiscoveryState familyDiscoveryState,
+      Date scanGeneration) {
+    DiscoveryEvents discoveryEvent = new DiscoveryEvents();
+    boolean isActive = familyDiscoveryState.phase == ACTIVE;
+    discoveryEvent.event_no = (isActive ? 1 : -1) * familyDiscoveryState.active_count;
+    info(format("Discovered %s active %s for %s", family, isActive, isoConvert(scanGeneration)));
+    publishDiscoveryEvent(family, scanGeneration, null, discoveryEvent);
   }
 
   /**
@@ -300,17 +310,21 @@ public interface DiscoveryManager extends SubBlockManager {
       FamilyDiscoveryState familyDiscoveryState, AtomicInteger sendCount) {
     discoveryProvider(family).startScan(shouldEnumerate(family), (deviceId, discoveryEvent) -> {
       ifNotNullThen(discoveryEvent.addr, addr -> {
-        info(
-            format("Discovered %s device %s for gen %s", family, addr, isoConvert(scanGeneration)));
-        discoveryEvent.family = family;
-        discoveryEvent.generation = scanGeneration;
-        postDiscoveryProcess(deviceId, discoveryEvent);
-
+        info(format("Discovered %s device %s for %s", family, addr, isoConvert(scanGeneration)));
         familyDiscoveryState.active_count = sendCount.incrementAndGet();
+        discoveryEvent.event_no = familyDiscoveryState.active_count;
+        publishDiscoveryEvent(family, scanGeneration, deviceId, discoveryEvent);
         updateState();
-        getHost().publish(discoveryEvent);
       });
     });
+  }
+
+  default void publishDiscoveryEvent(String family, Date scanGeneration, String deviceId,
+      DiscoveryEvents discoveryEvent) {
+    discoveryEvent.family = family;
+    discoveryEvent.generation = scanGeneration;
+    postDiscoveryProcess(deviceId, discoveryEvent);
+    getHost().publish(discoveryEvent);
   }
 
   /**
@@ -323,6 +337,7 @@ public interface DiscoveryManager extends SubBlockManager {
         discoveryProvider(family).stopScan();
         familyDiscoveryState.phase = STOPPED;
         updateState();
+        sendMarkerDiscoveryEvent(family, familyDiscoveryState, scanGeneration);
         scheduleDiscoveryScan(family);
       });
     } catch (Exception e) {
