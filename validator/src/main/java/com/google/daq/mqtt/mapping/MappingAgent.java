@@ -91,7 +91,7 @@ public class MappingAgent {
   }
 
   /**
-   *
+   * Create an agent with the given sitePath and projectSpec.
    * @param argList as:
    * sitePath projectSpec
    * sitePath: e.g. sites/udmi_site_model
@@ -105,7 +105,8 @@ public class MappingAgent {
     try {
       siteModel = new SiteModel(MAPPER_TOOL_NAME, argList);
     } catch (IllegalArgumentException e) {
-      throw new IllegalArgumentException("Invalid arguments provided, please provide in argList: sitePath projectSpec");
+      throw new IllegalArgumentException("Invalid arguments provided, please provide in argList: "
+          + "sitePath projectSpec");
     }
     executionConfiguration = siteModel.getExecutionConfiguration();
     initialize();
@@ -146,7 +147,7 @@ public class MappingAgent {
   }
 
   private void initiateDiscover(List<String> argsList) {
-     Set<String> families = getFamilies(argsList);
+    Set<String> families = getFamilies(argsList);
 
     generationDate = new Date();
     String generation = isoConvert(generationDate);

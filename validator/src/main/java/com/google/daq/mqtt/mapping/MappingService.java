@@ -14,7 +14,7 @@ public class MappingService {
   private static final Logger LOGGER = LoggerFactory.getLogger(MappingService.class);
   private static final String SERVICE_NAME = "MappingService";
   private SourceRepository sourceRepository;
-  private final int REQUIRED_ARGUMENT_LENGTH = 5;
+  private final int RequiredArgumentLength = 6;
   private final String registryId;
   private final String projectId;
   private final String baseCloningDirectory;
@@ -27,7 +27,6 @@ public class MappingService {
    * Mapping Service for mapping the discovery results
    * accepts commandlineArguments as
    * registryId projectId baseCloningDirectory projectSpec mappingFamily discoveryNodeDeviceId
-   *
    * registryId: e.g. ZZ-TRI-FECTA
    * projectId: GCP project id
    * baseCloningDirectory: local path for the repository
@@ -43,8 +42,12 @@ public class MappingService {
     mappingService.process();
   }
 
+  /**
+   * This initializes new Mapping Service
+   * @param args
+   */
   public MappingService(String[] args) {
-    if (args.length != REQUIRED_ARGUMENT_LENGTH) {
+    if (args.length != RequiredArgumentLength) {
       throw new IllegalArgumentException("Invalid arguments provided");
     }
 
@@ -78,7 +81,8 @@ public class MappingService {
 
     String udmiModelPath = Paths.get(sourceRepository.getDirectory(), "udmi").toString();
     (new Registrar()).processArgs(new ArrayList<>(List.of(udmiModelPath, projectSpec))).execute();
-    MappingAgent mappingAgent = new MappingAgent(new ArrayList<>(List.of(udmiModelPath, projectSpec)));
+    MappingAgent mappingAgent = new MappingAgent(new ArrayList<>(
+        List.of(udmiModelPath, projectSpec)));
     mappingAgent.setDiscoveryNodeDeviceId(this.discoveryNodeDeviceId);
     mappingAgent.process(new ArrayList<>(List.of("map", mappingFamily)));
 
