@@ -68,7 +68,7 @@ public abstract class AbstractPollingService {
     this.baseCloningDir = siteModelBaseDir;
     this.localOriginDir = localOriginDir;
 
-    if(isNotEmpty(this.localOriginDir)) {
+    if (isNotEmpty(this.localOriginDir)) {
       LOGGER.info("Running in local origin mode.");
     }
 
