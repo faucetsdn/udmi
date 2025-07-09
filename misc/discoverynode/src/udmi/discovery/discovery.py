@@ -55,6 +55,7 @@ def main_task(method: Callable):
     method(self, *args, **kwargs)
     self._set_internal_state(states.FINISHED)
     self.state.phase = udmi.schema.state.Phase.stopped
+    self._publish_marker()
 
   return _impl
 
@@ -177,6 +178,7 @@ class DiscoveryController(abc.ABC):
     else:
       self._set_internal_state(states.STARTED)
       self.state.phase = udmi.schema.state.Phase.active
+      self._publish_marker()
       logging.info("Started... %s", type(self).__name__)
 
   def _stop(self):
@@ -194,6 +196,14 @@ class DiscoveryController(abc.ABC):
       self._set_internal_state(states.CANCELLED)
     except Exception as err:
       self._handle_exception(err)
+
+  def _publish_marker(self):
+      event = udmi.schema.discovery_event.DiscoveryEvent(
+          generation=self.generation,
+          family=self.family,
+          event_no=-self.count_events
+      )
+      self.publish(event)
 
   def publish(self, event: udmi.schema.discovery_event.DiscoveryEvent):
     """ Publishes the provided Discovery Event, setting event counts."""
