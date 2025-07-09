@@ -319,6 +319,9 @@ public interface DiscoveryManager extends SubBlockManager {
     });
   }
 
+  /**
+   * Publish a discovery event with some basic augmentation.
+   */
   default void publishDiscoveryEvent(String family, Date scanGeneration, String deviceId,
       DiscoveryEvents discoveryEvent) {
     discoveryEvent.family = family;
