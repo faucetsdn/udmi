@@ -30,7 +30,7 @@ public class RegistrarService extends AbstractPollingService {
 
   private static final Logger LOGGER = LoggerFactory.getLogger(RegistrarService.class);
   private static final String SERVICE_NAME = "RegistrarService";
-  private static final String SUBSCRIPTION_SUFFIX = "udmi-registrar-source-repo-updates";
+  private static final String SUBSCRIPTION_SUFFIX = "udmi_registrar_source_repo_updates";
   private static final String TRIGGER_BRANCH = "main";
   private static final String REF_NAME_KEY = String.format(REF_UPDATE_EVENT_FORMAT, TRIGGER_BRANCH,
       "refName");

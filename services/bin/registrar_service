@@ -67,9 +67,10 @@ main() {
     fi
 
     if [[ $should_create -eq 1 ]]; then
-        local repo_updates_topic="${UDMI_PREFIX}udmi-source-repo-updates"
-        local repo_updates_subscription="${UDMI_PREFIX}udmi-registrar-source-repo-updates"
-        ensure_pubsub_subscription_exists "$repo_updates_subscription" "$repo_updates_topic" no_expiration
+        local repo_updates_topic="${UDMI_PREFIX}udmi_source_repo_updates"
+        local repo_updates_subscription="${UDMI_PREFIX}udmi_registrar_source_repo_updates"
+        ensure_pubsub_topic_exists "$repo_updates_topic"
+        ensure_pubsub_subscription_exists "$repo_updates_subscription" "$repo_updates_topic" --no-expiration
     fi
 
     # Create an as-needed subscription for this pod, and then garbage collect to clean them up (eventually).
