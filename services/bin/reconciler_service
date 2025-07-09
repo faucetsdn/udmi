@@ -2,83 +2,81 @@
 #
 # Reconciler service
 #
+set -euo pipefail
+
 SCRIPT_ROOT=$(realpath $(dirname $0))
 UDMI_ROOT=$(realpath "$SCRIPT_ROOT"/../..)
 
-source "$UDMI_ROOT"/etc/shell_common.sh
+source "$UDMI_ROOT/etc/shell_common.sh"
 
-export PS4='+(${BASH_SOURCE}:${LINENO}): ${FUNCNAME[0]:+${FUNCNAME[0]}(): }'
+main() {
+    local service_name="Reconciler"
+    local message_spec=""
+    local cloning_dir=""
+    local local_origin_dir=""
+    local is_local=0
+    local should_create=0
 
-LOCAL=
-[[ ${1:-} == "--local" ]] && LOCAL=1 && shift
-
-NO_CHECK=
-[[ ${1:-} == "--no-check" ]] && NO_CHECK=1 && shift
-
-# shellcheck disable=SC2155
-export GCP_PROJECT=$(gcloud config get-value project)
-echo Using GCP_PROJECT "$GCP_PROJECT"
-
-if [[ -n ${UDMI_NAMESPACE:-} ]]; then
-    UDMI_PREFIX="${UDMI_NAMESPACE}~"
-    TARGET="//pubsub/${GCP_PROJECT}/${UDMI_NAMESPACE}"
-    echo Using UDMI_PREFIX "$UDMI_PREFIX"
-else
-    UDMI_PREFIX=
-    TARGET="//pubsub/${GCP_PROJECT}"
-fi
-
-if [[ -z $LOCAL ]]; then
-    GCP_SERVICE_ACCOUNT=$(curl -s -H "Metadata-Flavor: Google" http://169.254.169.254/computeMetadata/v1/instance/service-accounts/default/email)
-    echo Configured with GCP service account "$GCP_SERVICE_ACCOUNT"
-    gcloud config set account "$GCP_SERVICE_ACCOUNT"
-else
-  [[ ! -d $UDMI_ROOT/services/src ]] ||
-      up_to_date "$SERVICES_JAR" "$UDMI_ROOT"/services/src ||
-      "$UDMI_ROOT"/services/bin/build
-fi
-
-REPO_UPDATES_TOPIC=${UDMI_PREFIX}source-repo-updates
-REPO_UPDATES_SUBSCRIPTION=${UDMI_PREFIX}source-repo-updates-reconciler
-PR_NOTIFY_TOPIC=${UDMI_PREFIX}pr-reviews
-PR_NOTIFY_SUBSCRIPTION=${UDMI_PREFIX}pr-reviews-subscription
-SITE_MODEL_CLONE_DIR=${UDMI_ROOT}/var/udmi/sites
-
-if [[ -z $NO_CHECK ]]; then
-    echo Checking existing topics for source repo updates...
-    existing_topic=$(gcloud pubsub topics list | grep -F "${REPO_UPDATES_TOPIC}" || true)
-    if [[ -n $existing_topic ]]; then
-        echo Topic "${REPO_UPDATES_TOPIC}" exists
-    else
-        echo Creating topic "${REPO_UPDATES_TOPIC}"
-        gcloud pubsub topics create "${REPO_UPDATES_TOPIC}"
+    if [[ $# -lt 2 ]]; then
+        # shellcheck disable=SC2102
+        usage message_spec cloning_dir [--local] [--create] [local_orig_dir]
     fi
 
-    echo Checking existing topics for PR review requests...
-    existing_topic=$(gcloud pubsub topics list | grep -F "${PR_NOTIFY_TOPIC}" || true)
-    if [[ -n $existing_topic ]]; then
-        echo Topic "${PR_NOTIFY_TOPIC}" exists
-    else
-        echo Creating topic "${PR_NOTIFY_TOPIC}"
-        gcloud pubsub topics create "${PR_NOTIFY_TOPIC}"
+    message_spec="$1"
+    cloning_dir="$2"
+    shift 2
+
+    while [[ $# -gt 0 ]]; do
+        case "$1" in
+            --local)
+                is_local=1
+                shift
+                ;;
+            --create)
+                should_create=1
+                shift
+                ;;
+            *)
+                if [[ -z "$local_origin_dir" ]]; then
+                    local_origin_dir="$1"
+                    shift
+                else
+                    echo "Error: Unknown or duplicate argument '$1'"
+                    usage
+                fi
+                ;;
+        esac
+    done
+
+    export GCP_PROJECT
+    GCP_PROJECT=$(gcloud config get-value project)
+    echo "Using GCP Project: $GCP_PROJECT"
+
+    export UDMI_PREFIX="${UDMI_NAMESPACE:-}"
+    if [[ -n "$UDMI_PREFIX" ]]; then
+        UDMI_PREFIX="${UDMI_NAMESPACE}~"
+        echo "Using UDMI Namespace Prefix: $UDMI_PREFIX"
     fi
 
-    echo Checking existing subscriptions for source repo updates...
-    existing=$(gcloud pubsub subscriptions list | grep -F "${REPO_UPDATES_SUBSCRIPTION}" || true)
-    if [[ -n $existing ]]; then
-        echo Using existing subscription "${REPO_UPDATES_SUBSCRIPTION}"
+    if [[ $is_local -eq 1 ]]; then
+        build_services_jar
     else
-        gcloud pubsub subscriptions create "${REPO_UPDATES_SUBSCRIPTION}" --topic="${REPO_UPDATES_TOPIC}" --expiration-period=24h
+        setup_service_gcp_environment ${service_name}
     fi
 
-    echo Checking existing subscriptions for PR review requests...
-    existing=$(gcloud pubsub subscriptions list | grep -F "${PR_NOTIFY_SUBSCRIPTION}" || true)
-    if [[ -n $existing ]]; then
-        echo Using existing subscription "${PR_NOTIFY_SUBSCRIPTION}"
-    else
-        gcloud pubsub subscriptions create "${PR_NOTIFY_SUBSCRIPTION}" --topic="${PR_NOTIFY_TOPIC}" --expiration-period=24h
-    fi
-fi
+    if [[ $should_create -eq 1 ]]; then
+        local repo_updates_topic="${UDMI_PREFIX}udmi_source_repo_updates"
+        local repo_updates_subscription="${UDMI_PREFIX}udmi_reconciler_source_repo_updates"
+        local pr_notify_topic="${UDMI_PREFIX}udmi_pr_reviews"
 
-java -cp "$SERVICES_JAR" "com.google.bos.iot.core.reconcile.ReconcilerService" \
-    "$TARGET" "$SITE_MODEL_CLONE_DIR"
+        ensure_pubsub_topic_exists "$repo_updates_topic"
+        ensure_pubsub_subscription_exists "$repo_updates_subscription" "$repo_updates_topic" --no-expiration
+        ensure_pubsub_topic_exists "$pr_notify_topic"
+    fi
+
+    echo "Starting ${service_name} Service..."
+    java -cp "$SERVICES_JAR" "com.google.bos.iot.core.reconcile.ReconcilerService" \
+        "$message_spec" "$cloning_dir" "$local_origin_dir"
+}
+
+main "$@"
