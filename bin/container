@@ -15,7 +15,7 @@ target_tag=${target}
 if [[ "$target" == *.* ]]; then
   sub_target=${target#*.}
   target=${target%%.*}
-  dockerfile="Dockerfile.${target}.${sub_target}"
+  dockerfile="Dockerfile.${target}_${sub_target}"
   template_folder="etc/${sub_target}"
 else
   sub_target=""
