@@ -97,6 +97,13 @@ public class MappingAgent {
     this(ConfigUtil.readExeConfig(new File(profilePath)));
   }
 
+  /**
+   *
+   * @param argList as:
+   * sitePath projectSpec
+   * sitePath: e.g. sites/udmi_site_model
+   * projectSpec: e.g. //mqtt/localhost
+   */
   public MappingAgent(List<String> argList) {
     if (argList.size() == 1 && new File(argList.get(0)).isDirectory()) {
       // Add implicit NO_SITE site spec for local-only site model processing.
