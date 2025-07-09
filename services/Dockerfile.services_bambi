@@ -20,5 +20,3 @@ RUN bin/setup_base
 
 ADD bin/ services/bin/
 ADD build/libs services/build/libs/
-
-CMD ["/root/services/bin/bambi_service"]

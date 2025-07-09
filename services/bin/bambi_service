@@ -2,68 +2,78 @@
 #
 # BAMBI backend worker
 #
+set -euo pipefail
+
 SCRIPT_ROOT=$(realpath $(dirname $0))
 UDMI_ROOT=$(realpath "$SCRIPT_ROOT"/../..)
 
-source "$UDMI_ROOT"/etc/shell_common.sh
+source "$UDMI_ROOT/etc/shell_common.sh"
 
-export PS4='+(${BASH_SOURCE}:${LINENO}): ${FUNCNAME[0]:+${FUNCNAME[0]}(): }'
+main() {
+    local service_name="Bambi"
+    local message_spec=""
+    local cloning_dir=""
+    local local_origin_dir=""
+    local is_local=0
+    local should_create=0
 
-LOCAL=
-[[ ${1:-} == "--local" ]] && LOCAL=1 && shift
-
-NO_CHECK=
-[[ ${1:-} == "--no-check" ]] && NO_CHECK=1 && shift
-
-# shellcheck disable=SC2155
-export GCP_PROJECT=$(gcloud config get-value project)
-echo Using GCP_PROJECT "$GCP_PROJECT"
-
-if [[ -n ${UDMI_NAMESPACE:-} ]]; then
-    UDMI_PREFIX="${UDMI_NAMESPACE}~"
-    TARGET="//pubsub/${GCP_PROJECT}/${UDMI_NAMESPACE}"
-    echo Using UDMI_PREFIX "$UDMI_PREFIX"
-else
-    UDMI_PREFIX=
-    TARGET="//pubsub/${GCP_PROJECT}"
-fi
-
-if [[ -z $LOCAL ]]; then
-    GCP_SERVICE_ACCOUNT=$(curl -s -H "Metadata-Flavor: Google" http://169.254.169.254/computeMetadata/v1/instance/service-accounts/default/email)
-    echo Configured with GCP service account "$GCP_SERVICE_ACCOUNT"
-    gcloud config set account "$GCP_SERVICE_ACCOUNT"
-    git config --global user.email "$GCP_SERVICE_ACCOUNT"
-    git config --global user.name "BAMBI backend runner ${UDMI_PREFIX#\~}"
-else
-  [[ ! -d $UDMI_ROOT/services/src ]] ||
-      up_to_date "$SERVICES_JAR" "$UDMI_ROOT"/services/src ||
-      "$UDMI_ROOT"/services/bin/build
-fi
-
-BAMBI_REQUESTS_TOPIC=${UDMI_PREFIX}bambi-requests
-BAMBI_REQUESTS_SUBSCRIPTION=${UDMI_PREFIX}bambi-requests
-SITE_MODEL_CLONE_DIR=${UDMI_ROOT}/var/udmi/sites
-
-if [[ -z $NO_CHECK ]]; then
-    echo Checking existing topics...
-    gcloud pubsub subscriptions list | grep -F name: || true
-    existing_topic=$(gcloud pubsub topics list | grep -F "${BAMBI_REQUESTS_TOPIC}" || true)
-    if [[ -n $existing_topic ]]; then
-        echo Topic "${BAMBI_REQUESTS_TOPIC}" exists
-    else
-        echo Creating topic "${BAMBI_REQUESTS_TOPIC}"
-        gcloud pubsub topics create "${BAMBI_REQUESTS_TOPIC}"
+    if [[ $# -lt 2 ]]; then
+        # shellcheck disable=SC2102
+        usage message_spec cloning_dir [--local] [--create] [local_orig_dir]
     fi
 
-    echo Checking existing subscriptions...
-    gcloud pubsub subscriptions list | grep -F name: || true
-    existing=$(gcloud pubsub subscriptions list | grep -F "${BAMBI_REQUESTS_SUBSCRIPTION}" || true)
-    if [[ -n $existing ]]; then
-        echo Using existing subscription "${BAMBI_REQUESTS_SUBSCRIPTION}"
-    else
-        gcloud pubsub subscriptions create "${BAMBI_REQUESTS_SUBSCRIPTION}" --topic="${BAMBI_REQUESTS_TOPIC}" --expiration-period=24h
-    fi
-fi
+    message_spec="$1"
+    cloning_dir="$2"
+    shift 2
 
-java -cp "$SERVICES_JAR" "com.google.bos.iot.core.bambi.BambiService" \
-    "$TARGET" "$SITE_MODEL_CLONE_DIR"
+    while [[ $# -gt 0 ]]; do
+        case "$1" in
+            --local)
+                is_local=1
+                shift
+                ;;
+            --create)
+                should_create=1
+                shift
+                ;;
+            *)
+                if [[ -z "$local_origin_dir" ]]; then
+                    local_origin_dir="$1"
+                    shift
+                else
+                    echo "Error: Unknown or duplicate argument '$1'"
+                    usage
+                fi
+                ;;
+        esac
+    done
+
+    export GCP_PROJECT
+    GCP_PROJECT=$(gcloud config get-value project)
+    echo "Using GCP Project: $GCP_PROJECT"
+
+    export UDMI_PREFIX="${UDMI_NAMESPACE:-}"
+    if [[ -n "$UDMI_PREFIX" ]]; then
+        UDMI_PREFIX="${UDMI_NAMESPACE}~"
+        echo "Using UDMI Namespace Prefix: $UDMI_PREFIX"
+    fi
+
+    if [[ $is_local -eq 1 ]]; then
+        build_services_jar
+    else
+        setup_service_gcp_environment ${service_name}
+    fi
+
+    if [[ $should_create -eq 1 ]]; then
+        local bambi_requests_topic="${UDMI_PREFIX}udmi_bambi_requests"
+        local bambi_requests_subscription="${UDMI_PREFIX}udmi_bambi_requests_subscribe"
+        ensure_pubsub_topic_exists "$bambi_requests_topic"
+        ensure_pubsub_subscription_exists "$bambi_requests_subscription" "$bambi_requests_topic" --no-expiration
+    fi
+
+    echo "Starting ${service_name} Service..."
+    java -cp "$SERVICES_JAR" "com.google.bos.iot.core.bambi.BambiService" \
+        "$message_spec" "$cloning_dir" "$local_origin_dir"
+}
+
+main "$@"
