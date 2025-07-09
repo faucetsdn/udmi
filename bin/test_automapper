@@ -21,7 +21,6 @@ echo Make sure changes from previous runs are not still there.
 device_metadata=$site_path/devices/AHU-22/metadata.json
 jq '.localnet.families.vendor.addr = "0x65"' $device_metadata | sponge $device_metadata
 
-
 echo "Munge the model to have just the gateway (no proxied devices)"
 metadata=$site_path/devices/GAT-123/metadata.json
 jq '.gateway.proxy_ids = []' $metadata | sponge $metadata
