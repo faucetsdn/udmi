@@ -14,7 +14,7 @@ project_spec=$4
 mapping_family=$5
 discoveryNodeDeviceId=$6
 
-shift 5
+shift 6
     
 [[ ! -d $UDMI_ROOT/validator/src ]] ||
     up_to_date $UDMI_JAR $UDMI_ROOT/validator/src ||
