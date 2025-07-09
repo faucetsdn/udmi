@@ -17,6 +17,10 @@ site_path=sites/udmi_site_model
 echo Clear out the registries to start from scratch.
 bin/registrar $site_path $project_spec -x -d
 
+echo Make sure changes from previous runs are not still there.
+device_metadata=$site_path/devices/AHU-22/metadata.json
+jq '.localnet.families.vendor.addr = "0x65"' $device_metadata | sponge $device_metadata
+
 echo "Munge the model to have just the gateway (no proxied devices)"
 metadata=$site_path/devices/GAT-123/metadata.json
 jq '.gateway.proxy_ids = []' $metadata | sponge $metadata
@@ -48,7 +52,7 @@ echo Extracting results at $(date -u -Is)
 bin/registrar $site_path $project_spec
 
 echo Checking that there was no bacnet discovery...
-! ls -d sites/udmi_site_model/extras/discovered_bacnet-*
+! ls -d $site_path/extras/discovered_bacnet-*
 
 status=$(fgrep discovered_vendor-281 $site_path/out/registration_summary.csv | awk '{print $3}') || true
 echo Checking vendor device status is $status
@@ -114,7 +118,7 @@ echo Extracting updated results at $(date -u -Is)
 bin/registrar $site_path $project_spec
 
 echo Checking that there was bacnet discovery...
-ls -d sites/udmi_site_model/extras/discovered_bacnet-*
+ls -d $site_path/extras/discovered_bacnet-*
 
 second_generation=`jq -r .generation $site_path/extras/discovered_vendor-20231/cloud_metadata/udmi_discovered_with.json`
 echo Second discovered generation is $second_generation
