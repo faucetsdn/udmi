@@ -3,7 +3,6 @@ kind: ConfigMap
 metadata:
   name: config
 data:
-  BITBOX_DISCOVERY:
   ETCD_CLUSTER:
   UDMI_NAMESPACE: @UDMI_NAMESPACE@
   REGISTRAR_IOT_PROVIDER: gbos
