@@ -172,13 +172,13 @@ class DiscoveryController(abc.ABC):
     self.count_events = 0
 
     try:
+      self._publish_marker()
       self.start_discovery()
     except Exception as err:
       self._handle_exception(err)
     else:
       self._set_internal_state(states.STARTED)
       self.state.phase = udmi.schema.state.Phase.active
-      self._publish_marker()
       logging.info("Started... %s", type(self).__name__)
 
   def _stop(self):
