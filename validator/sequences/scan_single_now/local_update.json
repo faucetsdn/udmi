@@ -1,11 +1,11 @@
 {
-  "timestamp" : "2024-12-17T05:27:06Z",
-  "version" : "@@@cloud udmi version###git-46fef59",
+  "timestamp" : "2025-07-10T06:17:49Z",
+  "version" : "@@@cloud udmi version###git-f135617",
   "system" : {
     "min_loglevel" : 100,
     "metrics_rate_sec" : 10,
     "operation" : {
-      "last_start" : "2024-12-17T05:25:35Z"
+      "last_start" : "2025-07-10T06:15:22Z"
     },
     "testing" : {
       "sequence_name" : "scan_single_now"
@@ -13,10 +13,7 @@
   },
   "discovery" : {
     "families" : {
-      "vendor" : {
-        "generation" : "2024-12-17T05:26:53Z",
-        "scan_duration_sec" : 10
-      }
+      "vendor" : { }
     }
   },
   "localnet" : {
