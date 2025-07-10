@@ -214,9 +214,8 @@ class DiscoveryController(abc.ABC):
     self.publisher(event)
 
   def _validate_config(config: udmi.schema.config.DiscoveryFamily):
-    """ Validates that the 
-    
-    
+    """ Validates that the given discovery family config is valid.
+
       Throws:
         RuntimeError: If the provided config is invalid
     """
