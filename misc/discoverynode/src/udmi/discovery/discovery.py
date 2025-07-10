@@ -203,8 +203,8 @@ class DiscoveryController(abc.ABC):
           family=self.family,
           event_no=-self.count_events
       )
-      logging.info("Sending marker event %d", -self.count_events)
-      self.publish(event)
+      logging.info("published discovery marker for %s #%d", self.family, -self.count_events)
+      self.publisher(event)
 
   def publish(self, event: udmi.schema.discovery_event.DiscoveryEvent):
     """ Publishes the provided Discovery Event, setting event counts."""
