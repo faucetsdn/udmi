@@ -17,6 +17,7 @@ import static com.google.udmi.util.GeneralUtils.ifNullElse;
 import static com.google.udmi.util.GeneralUtils.joinOrNull;
 import static com.google.udmi.util.JsonUtil.getNowInstant;
 import static com.google.udmi.util.JsonUtil.isoConvert;
+import static com.google.udmi.util.JsonUtil.safeSleep;
 import static com.google.udmi.util.JsonUtil.stringifyTerse;
 import static java.lang.String.format;
 import static java.util.Objects.nonNull;
@@ -88,6 +89,7 @@ public class DiscoverySequences extends SequenceBase {
   private static final Date LONG_TIME_AGO = Date.from(BASE_OLD_TIME.plusSeconds(RANDOM_YEAR_SEC));
   private static final int SCAN_DURATION_SEC = 10;
   private static final String DISCOVERY_TARGET = "scan_family";
+  private static final long EVENT_JITTER_SLEEP_TIME_MS = 2000;
   private Set<String> metaFamilies;
   private Instant scanGeneration;
   private String scanFamily;
@@ -297,6 +299,7 @@ public class DiscoverySequences extends SequenceBase {
       waitUntil("scan schedule initially not active", this::detailScanStopped);
       sleepFor("false start check delay", SCAN_START_DELAY);
       waitUntil("scan schedule still not active", this::detailScanStopped);
+      safeSleep(EVENT_JITTER_SLEEP_TIME_MS); // Make sure all events are captured
       List<DiscoveryEvents> receivedEvents = popReceivedEvents(DiscoveryEvents.class);
       checkThat("there were no received discovery events", receivedEvents.isEmpty());
       return;
@@ -323,6 +326,7 @@ public class DiscoverySequences extends SequenceBase {
             isoConvert(expectedFinish)));
 
     int actualCount = deviceState.discovery.families.get(scanFamily).active_count;
+    safeSleep(EVENT_JITTER_SLEEP_TIME_MS); // Make sure all events are captured
     List<DiscoveryEvents> events = popReceivedEvents(DiscoveryEvents.class);
     Date generation = deviceConfig.discovery.families.get(scanFamily).generation;
     Function<DiscoveryEvents, List<String>> invalidator = event ->
@@ -426,6 +430,10 @@ public class DiscoverySequences extends SequenceBase {
   }
 
   private String refsMatch(DiscoveryEvents discoveryEvents) {
+    if (discoveryEvents.addr == null) {
+      return null;
+    }
+
     Entry<String, Metadata> deviceEntry = targetMetadata(discoveryEvents.addr);
     HashMap<String, PointPointsetModel> devicePoints = deviceEntry.getValue().pointset.points;
     Set<String> metadataRefs = devicePoints.values().stream()
