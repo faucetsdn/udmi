@@ -1,5 +1,6 @@
 package com.google.daq.mqtt.mapping;
 
+
 import com.google.daq.mqtt.registrar.Registrar;
 import com.google.udmi.util.SourceRepository;
 import java.nio.file.Paths;
@@ -38,7 +39,7 @@ public class MappingService {
     MappingService mappingService = new MappingService(args);
     mappingService.initialize();
 
-    mappingService.cloneRepo();
+    // mappingService.cloneRepo();
     mappingService.process();
   }
 
@@ -79,12 +80,12 @@ public class MappingService {
       throw new RuntimeException("Unable to create and checkout export branch " + exportBranch);
     }
 
-    String udmiModelPath = Paths.get(sourceRepository.getDirectory(), "udmi").toString();
-    (new Registrar()).processArgs(new ArrayList<>(List.of(udmiModelPath, projectSpec))).execute();
-    MappingAgent mappingAgent = new MappingAgent(new ArrayList<>(
-        List.of(udmiModelPath, projectSpec)));
-    mappingAgent.setDiscoveryNodeDeviceId(this.discoveryNodeDeviceId);
-    mappingAgent.process(new ArrayList<>(List.of("map", mappingFamily)));
+   String udmiModelPath = Paths.get(sourceRepository.getDirectory(), "").toString();
+   (new Registrar()).processArgs(new ArrayList<>(List.of(udmiModelPath, projectSpec))).execute();
+   MappingAgent mappingAgent = new MappingAgent(new ArrayList<>(
+       List.of(udmiModelPath, projectSpec)));
+   mappingAgent.setDiscoveryNodeDeviceId(this.discoveryNodeDeviceId);
+   mappingAgent.process(new ArrayList<>(List.of("map", mappingFamily)));
 
     LOGGER.info("Committing and pushing changes to branch {}", exportBranch);
     if (!sourceRepository.commitAndPush("Merge changes from source: MappingService")) {
