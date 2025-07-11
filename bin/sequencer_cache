@@ -91,6 +91,7 @@ if [[ -n $update ]]; then
             echo Updating $cache_dir from $src_dir...
             rm -rf $cache_dir
             cp -a $src_dir $(dirname $cache_dir)
+            rm -rf $cache_dir/trace $cache_dir/stray
             ls -l $src_dir/sequence.md $cache_dir/sequence.md
         fi
 

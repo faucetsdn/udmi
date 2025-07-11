@@ -14,8 +14,12 @@ Check results of a single scan scheduled in the recent past
 1. Check that scan started at time
 1. Wait until scheduled scan complete
 1. Check that scan completed at time
-1. Check that discovery events were received
+1. Check that received expected number of discovery events
 1. Check that no events have discovered refs
+1. Check that received all unique event numbers
+1. Check that received proper discovery termination event
+1. Check that received proper discovery start event
+1. Check that received proper last discovery event
 1. Check that discovery events were valid
 1. Check that all scan addresses are unique
 1. Check that all expected addresses were found
