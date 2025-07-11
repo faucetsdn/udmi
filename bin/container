@@ -10,6 +10,20 @@ fi
 target=$1
 cmd=$2
 shift 2
+target_tag=${target}
+
+if [[ "$target" == *.* ]]; then
+  sub_target=${target#*.}
+  target=${target%%.*}
+  dockerfile="Dockerfile.${target}_${sub_target}"
+  template_folder="etc/${sub_target}"
+else
+  sub_target=""
+  dockerfile="Dockerfile.${target}"
+  template_folder="etc"
+fi
+echo Processing TARGET "${target}", SUB_TARGET "${sub_target:-none}"
+echo Processing Dockerfile "${dockerfile}"
 
 cd ${UDMI_ROOT}/${target}
 
@@ -22,7 +36,9 @@ git_repo=${git_prefix#*.com:}
 
 GCP_PROJECT=$(gcloud config get project) || true
 REPOSITORY=ghcr.io/${git_repo}
-TEMPLATES=$(cd etc; ls k8s_*.yaml) || true
+TEMPLATES=$(cd ${template_folder}; ls k8s_*.yaml) || true
+
+echo Processing templates from ${template_folder}: ${TEMPLATES}
 
 NOCHECK=
 [[ ${1:-} == "--no-check" ]] && NOCHECK=1 && shift
@@ -64,7 +80,7 @@ revparse=`git rev-parse HEAD`
 
 udmi_commit=${revparse:0:9}
 udmi_ver=g${udmi_commit}
-udmi_tag=$target-$udmi_ver
+udmi_tag=${target_tag}-$udmi_ver
 udmi_timever=$(TZ=UTC git log --date=iso-strict-local -1 --pretty=format:"%cd" ${udmi_commit})
 
 if [[ -n $PUSH_TAG ]]; then
@@ -116,9 +132,9 @@ EOF
 fi
 
 if [[ -n $build ]]; then
-    echo Building Dockerfile.$target
-    echo docker build -f Dockerfile.$target -t $udmi_ref .
-    docker build -f Dockerfile.$target -t $udmi_ref -t $target .
+    echo Building ${dockerfile}
+    echo docker build -f ${dockerfile} -t $udmi_ref .
+    docker build -f ${dockerfile} -t $udmi_ref -t "$target_tag" .
 fi
 
 if [[ -n $push ]]; then
@@ -129,8 +145,8 @@ if [[ -n $push ]]; then
     ihash=$udmi_ref@$hash
     for file in $TEMPLATES; do
         out_file=tmp/$file
-        src_file=etc/$file
-        alt_file=etc/${UDMI_NAMESPACE}~$file
+        src_file=${template_folder}/$file
+        alt_file=${template_folder}/${UDMI_NAMESPACE}~$file
         [[ -f $alt_file ]] && src_file=$alt_file
         sed < $src_file > $out_file \
             -e "s^@IMAGE@^$ihash^" \

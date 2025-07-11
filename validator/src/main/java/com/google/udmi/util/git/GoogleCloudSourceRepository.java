@@ -19,8 +19,8 @@ import org.slf4j.LoggerFactory;
 public class GoogleCloudSourceRepository extends GenericGitRepository {
 
   private static final Logger LOGGER = LoggerFactory.getLogger(GoogleCloudSourceRepository.class);
-  private static final String BASE_TOPIC = "pr-reviews";
-  private static final String BASE_SUBSCRIPTION = BASE_TOPIC + "-subscription";
+  private static final String BASE_TOPIC = "udmi_pr_reviews";
+  private static final String BASE_SUBSCRIPTION = BASE_TOPIC + "_subscription";
   private static final int PULL_REQUEST_GATHER_TIME_MS = 2000;
   private final String topicId;
   private final String subscriptionId;

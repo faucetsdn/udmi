@@ -1,30 +1,32 @@
-#!/bin/bash -e
+#!/bin/bash
 #
-# BAMBI backend worker
+# Registrar backend service
 #
 set -euo pipefail
 
-SCRIPT_ROOT=$(realpath $(dirname $0))
-UDMI_ROOT=$(realpath "$SCRIPT_ROOT"/../..)
+SCRIPT_ROOT=$(realpath "$(dirname "$0")")
+UDMI_ROOT=$(realpath "$SCRIPT_ROOT/../..")
 
 source "$UDMI_ROOT/etc/shell_common.sh"
 
 main() {
-    local service_name="Bambi"
+    local service_name="Registrar"
     local message_spec=""
+    local registrar_target=""
     local cloning_dir=""
     local local_origin_dir=""
     local is_local=0
     local should_create=0
 
-    if [[ $# -lt 2 ]]; then
+    if [[ $# -lt 3 ]]; then
         # shellcheck disable=SC2102
-        usage message_spec cloning_dir [--local] [--create] [local_orig_dir]
+        usage message_spec registrar_target cloning_dir [--local] [--create] [local_orig_dir]
     fi
 
     message_spec="$1"
-    cloning_dir="$2"
-    shift 2
+    registrar_target="$2"
+    cloning_dir="$3"
+    shift 3
 
     while [[ $# -gt 0 ]]; do
         case "$1" in
@@ -65,15 +67,24 @@ main() {
     fi
 
     if [[ $should_create -eq 1 ]]; then
-        local bambi_requests_topic="${UDMI_PREFIX}udmi_bambi_requests"
-        local bambi_requests_subscription="${UDMI_PREFIX}udmi_bambi_requests_subscribe"
-        ensure_pubsub_topic_exists "$bambi_requests_topic"
-        ensure_pubsub_subscription_exists "$bambi_requests_subscription" "$bambi_requests_topic" --no-expiration
+        local repo_updates_topic="${UDMI_PREFIX}udmi_source_repo_updates"
+        local repo_updates_subscription="${UDMI_PREFIX}udmi_registrar_source_repo_updates"
+        ensure_pubsub_topic_exists "$repo_updates_topic"
+        ensure_pubsub_subscription_exists "$repo_updates_subscription" "$repo_updates_topic" --no-expiration
+    fi
+
+    # Create an as-needed subscription for this pod, and then garbage collect to clean them up (eventually).
+    if [[ $registrar_target == "//gref"* ]]; then
+        local host_suffix=${HOSTNAME##*-}
+        local udmi_topic=${UDMI_PREFIX}udmi_reply
+        local udmi_feed=${udmi_topic}+${host_suffix}
+        ensure_pubsub_subscription_exists "$udmi_feed" "$udmi_topic"
+        registrar_target=${registrar_target}+${host_suffix}
     fi
 
     echo "Starting ${service_name} Service..."
-    java -cp "$SERVICES_JAR" "com.google.bos.iot.core.bambi.BambiService" \
-        "$message_spec" "$cloning_dir" "$local_origin_dir"
+    java -cp "$SERVICES_JAR" "com.google.daq.mqtt.registrar.RegistrarService" \
+        "$message_spec" "$registrar_target" "$cloning_dir" "$local_origin_dir"
 }
 
 main "$@"
