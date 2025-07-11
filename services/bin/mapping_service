@@ -1,0 +1,24 @@
+#!/bin/bash -e
+
+UDMI_ROOT=$(dirname $0)/../..
+source $UDMI_ROOT/etc/shell_common.sh
+
+if [[ $# -ne 6 ]]; then
+    usage registry_id project_id base_cloning_directory project_spec mapping_family discoveryNodeDeviceId
+fi
+
+registry_id=$1
+project_id=$2
+base_cloning_directory=$3
+project_spec=$4
+mapping_family=$5
+discoveryNodeDeviceId=$6
+
+shift 6
+
+[[ ! -d $UDMI_ROOT/services/src ]] ||
+    up_to_date "$SERVICES_JAR" "$UDMI_ROOT"/services/src ||
+    "$UDMI_ROOT"/services/bin/build
+
+
+java -cp "$SERVICES_JAR" com.google.daq.mqtt.mapping.MappingService $registry_id $project_id $base_cloning_directory $project_spec $mapping_family $discoveryNodeDeviceId $@

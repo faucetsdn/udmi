@@ -54,7 +54,7 @@ bin/registrar $site_path $project_spec
 echo Checking that there was no bacnet discovery...
 ! ls -d $site_path/extras/discovered_bacnet-*
 
-status=$(fgrep discovered_vendor-281 $site_path/out/registration_summary.csv | awk '{print $3}') || true
+status=$(fgrep discovered_vendor-28179023 $site_path/out/registration_summary.csv | awk '{print $3}') || true
 echo Checking vendor device status is $status
 [[ $status == BLOCK, ]] || fail Vendor device status should be BLOCK, was $status
 
