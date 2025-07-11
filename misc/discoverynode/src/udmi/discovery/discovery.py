@@ -147,15 +147,16 @@ class DiscoveryController(abc.ABC):
     
     atexit.register(self._stop)
 
-  def _increment_event_counter_and_get(self) -> int:
-    """ Incremenets the internal event counter and returns the new value.
+  def _event_counter_get_and_increment(self) -> int:
+    """ Incremenets the internal event counter and returns the old value.
 
     Returns:
       New event count
     """
     with self.publisher_mutex:
+      event_count = self.count_events
       self.count_events = self.count_events + 1
-      return self.count_events
+      return event_count
 
   def _handle_exception(self, err: Exception) -> None:
     """Helper function which updates the status when an exception is caught."""
@@ -201,14 +202,14 @@ class DiscoveryController(abc.ABC):
       event = udmi.schema.discovery_event.DiscoveryEvent(
           generation=self.generation,
           family=self.family,
-          event_no=-self.count_events
+          event_no=-self._event_counter_get_and_increment()
       )
       logging.info("publishing discovery marker for %s #%d", self.family, -self.count_events)
       self.publisher(event)
 
   def publish(self, event: udmi.schema.discovery_event.DiscoveryEvent):
     """ Publishes the provided Discovery Event, setting event counts."""
-    event_number = self._increment_event_counter_and_get()
+    event_number = self._event_counter_get_and_increment()
     event.event_no = event_number
     logging.info("publishing discovery for %s:%s #%d", event.family, event.addr, event_number)
     self.publisher(event)
