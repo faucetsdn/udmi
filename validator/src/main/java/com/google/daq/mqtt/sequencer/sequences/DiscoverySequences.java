@@ -332,7 +332,8 @@ public class DiscoverySequences extends SequenceBase {
     Function<DiscoveryEvents, List<String>> invalidator = event ->
         invalidReasons(event, generation);
     int expectedEvents = actualCount + 2;  // Includes start and stop marker events.
-    checkThat("expected number of discovery events received", events.size() == expectedEvents);
+    debug(format("Received %d events, %d indicated in state", events.size(), actualCount));
+    checkThat("received expected number of discovery events", events.size() == expectedEvents);
     List<String> reasons = events.stream().map(invalidator).flatMap(List::stream)
         .collect(Collectors.toList());
     reasons.addAll(checkEnumeration(events, shouldEnumerate));
@@ -342,7 +343,7 @@ public class DiscoverySequences extends SequenceBase {
     debug("Received discovery events " + eventNos);
     checkThat("received all unique event numbers", eventNos.size() == expectedEvents);
     checkThat("received proper discovery termination event",
-        eventNos.removeFirst() == -actualCount);
+        eventNos.removeFirst() == -(actualCount + 1));
     checkThat("received proper discovery start event", eventNos.getFirst() == 0);
     checkThat("received proper last discovery event", eventNos.getLast() == actualCount);
 
