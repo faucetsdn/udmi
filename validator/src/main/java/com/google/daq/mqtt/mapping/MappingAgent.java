@@ -92,14 +92,13 @@ public class MappingAgent {
 
   /**
    * Create an agent with the given sitePath and projectSpec.
-   *
-   * @param argList as:
-   *  sitePath projectSpec
-   *  sitePath: e.g. sites/udmi_site_model
-   *  projectSpec: e.g. //mqtt/localhost
+   * accepts argList as:
+   * sitePath projectSpec
+   * sitePath: e.g. sites/udmi_site_model
+   * projectSpec: e.g. //mqtt/localhost
    */
   public MappingAgent(List<String> argList) {
-    if (argList.size() == 1 && new File(argList.get(0)).isDirectory()) {
+    if (argList.size() != 1 && new File(argList.get(0)).isDirectory()) {
       // Add implicit NO_SITE site spec for local-only site model processing.
       argList.add(NO_SITE);
     }
@@ -382,7 +381,20 @@ public class MappingAgent {
     return cloudIotManager.getMockActions();
   }
 
-  public void setDiscoveryNodeDeviceId(String discoveryNodeDeviceId) {
+  private void setDiscoveryNodeDeviceId(String discoveryNodeDeviceId) {
     this.deviceId = discoveryNodeDeviceId;
+  }
+
+  /**
+   * Processes mapping.
+   *
+   * @param argsList
+   */
+  public void processMapping(ArrayList<String> argsList) {
+    String discoveryNodeDeviceId = removeNextArg(argsList, "discovery node deviceId");
+    setDiscoveryNodeDeviceId(discoveryNodeDeviceId);
+    mapDiscoveredDevices(argsList);
+
+    System.err.println("Mapping process is completed");
   }
 }

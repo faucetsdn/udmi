@@ -84,8 +84,7 @@ public class MappingService {
    (new Registrar()).processArgs(new ArrayList<>(List.of(udmiModelPath, projectSpec))).execute();
    MappingAgent mappingAgent = new MappingAgent(new ArrayList<>(
        List.of(udmiModelPath, projectSpec)));
-   mappingAgent.setDiscoveryNodeDeviceId(this.discoveryNodeDeviceId);
-   mappingAgent.process(new ArrayList<>(List.of("map", mappingFamily)));
+   mappingAgent.processMapping(new ArrayList<>(List.of(discoveryNodeDeviceId, mappingFamily)));
 
     LOGGER.info("Committing and pushing changes to branch {}", exportBranch);
     if (!sourceRepository.commitAndPush("Merge changes from source: MappingService")) {
