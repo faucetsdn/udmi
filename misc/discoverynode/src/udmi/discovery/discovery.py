@@ -156,6 +156,7 @@ class DiscoveryController(abc.ABC):
     with self.publisher_mutex:
       event_count = self.count_events
       self.count_events = self.count_events + 1
+      logging.info("TAP get_and_increment %d -> %d", event_count, self.count_events)
       return event_count
 
   def _handle_exception(self, err: Exception) -> None:
