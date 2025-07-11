@@ -388,7 +388,7 @@ public class MappingAgent {
   /**
    * Processes mapping.
    *
-   * @param argsList
+   * @param argsList discoveryNodeDeviceId familyName
    */
   public void processMapping(ArrayList<String> argsList) {
     String discoveryNodeDeviceId = removeNextArg(argsList, "discovery node deviceId");

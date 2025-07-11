@@ -39,7 +39,7 @@ public class MappingService {
     MappingService mappingService = new MappingService(args);
     mappingService.initialize();
 
-    // mappingService.cloneRepo();
+    mappingService.cloneRepo();
     mappingService.process();
   }
 
