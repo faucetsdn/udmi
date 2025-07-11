@@ -14,7 +14,7 @@ import org.slf4j.LoggerFactory;
 /**
  * Mapping Service: which currently runs from command line
  * fetches the site mode, internally calls registrar, then the mapping process
- * and then pushes the changes in the different proposal branch
+ * and then pushes the changes in the different proposal branch.
  */
 public class MappingService {
   private static final Logger LOGGER = LoggerFactory.getLogger(MappingService.class);
@@ -51,7 +51,7 @@ public class MappingService {
   /**
    * Initializes new Mapping Service.
    *
-   * @param args
+   * @param args commandline args as:site_path project_spec
    */
   public MappingService(String[] args) {
     if (args.length != requiredArgumentLength) {
@@ -88,8 +88,7 @@ public class MappingService {
 
     String udmiModelPath = sourceRepository.getUdmiModelPath();
     (new Registrar()).processArgs(new ArrayList<>(List.of(udmiModelPath, projectSpec))).execute();
-    MappingAgent mappingAgent = new MappingAgent(new ArrayList<>(
-       List.of(udmiModelPath, projectSpec)));
+    MappingAgent mappingAgent = new MappingAgent(new ArrayList<>(List.of(udmiModelPath, projectSpec)));
     mappingAgent.processMapping(new ArrayList<>(List.of(discoveryNodeDeviceId, mappingFamily)));
 
     LOGGER.info("Committing and pushing changes to branch {}", exportBranch);
