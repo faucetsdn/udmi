@@ -17,10 +17,12 @@ import static com.google.udmi.util.GeneralUtils.ifNullElse;
 import static com.google.udmi.util.GeneralUtils.joinOrNull;
 import static com.google.udmi.util.JsonUtil.getNowInstant;
 import static com.google.udmi.util.JsonUtil.isoConvert;
+import static com.google.udmi.util.JsonUtil.safeSleep;
 import static com.google.udmi.util.JsonUtil.stringifyTerse;
 import static java.lang.String.format;
 import static java.util.Objects.nonNull;
 import static java.util.Optional.ofNullable;
+import static java.util.stream.Collectors.toSet;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static udmi.schema.Bucket.DISCOVERY_SCAN;
@@ -55,6 +57,8 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Objects;
 import java.util.Set;
+import java.util.SortedSet;
+import java.util.TreeSet;
 import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
@@ -85,6 +89,7 @@ public class DiscoverySequences extends SequenceBase {
   private static final Date LONG_TIME_AGO = Date.from(BASE_OLD_TIME.plusSeconds(RANDOM_YEAR_SEC));
   private static final int SCAN_DURATION_SEC = 10;
   private static final String DISCOVERY_TARGET = "scan_family";
+  private static final long EVENT_JITTER_SLEEP_TIME_MS = 2000;
   private Set<String> metaFamilies;
   private Instant scanGeneration;
   private String scanFamily;
@@ -180,10 +185,10 @@ public class DiscoverySequences extends SequenceBase {
 
   private void checkFeatureDiscovery(Map<String, FeatureDiscovery> features) {
     Set<String> enumeratedFeatures = features.entrySet().stream()
-        .filter(DiscoverySequences::isActive).map(Entry::getKey).collect(Collectors.toSet());
+        .filter(DiscoverySequences::isActive).map(Entry::getKey).collect(toSet());
     checkFeatureMetadata(enumeratedFeatures);
     Set<String> unofficial = enumeratedFeatures.stream()
-        .filter(feature -> !Bucket.contains(feature)).collect(Collectors.toSet());
+        .filter(feature -> !Bucket.contains(feature)).collect(toSet());
     String format = format("unrecognized { %s }", CSV_JOINER.join(unofficial));
     checkThat("all enumerated features are official buckets", unofficial::isEmpty, format);
   }
@@ -191,7 +196,7 @@ public class DiscoverySequences extends SequenceBase {
   private void checkFeatureMetadata(Set<String> enumeratedFeatures) {
     ifNullSkipTest(deviceMetadata.features, "No metadata.features defined");
     Set<String> enabledFeatures = deviceMetadata.features.entrySet().stream()
-        .filter(DiscoverySequences::isActive).map(Entry::getKey).collect(Collectors.toSet());
+        .filter(DiscoverySequences::isActive).map(Entry::getKey).collect(toSet());
     SetView<String> extraFeatures = Sets.difference(enumeratedFeatures, enabledFeatures);
     SetView<String> missingFeatures = Sets.difference(enabledFeatures, enumeratedFeatures);
     SetView<String> difference = Sets.union(extraFeatures, missingFeatures);
@@ -294,6 +299,7 @@ public class DiscoverySequences extends SequenceBase {
       waitUntil("scan schedule initially not active", this::detailScanStopped);
       sleepFor("false start check delay", SCAN_START_DELAY);
       waitUntil("scan schedule still not active", this::detailScanStopped);
+      safeSleep(EVENT_JITTER_SLEEP_TIME_MS); // Make sure all events are captured
       List<DiscoveryEvents> receivedEvents = popReceivedEvents(DiscoveryEvents.class);
       checkThat("there were no received discovery events", receivedEvents.isEmpty());
       return;
@@ -319,29 +325,42 @@ public class DiscoverySequences extends SequenceBase {
         format("scan completed %ss different from expected %s", deltaFinish,
             isoConvert(expectedFinish)));
 
-    Integer stateEvents = deviceState.discovery.families.get(scanFamily).active_count;
+    int actualCount = deviceState.discovery.families.get(scanFamily).active_count;
+    safeSleep(EVENT_JITTER_SLEEP_TIME_MS); // Make sure all events are captured
     List<DiscoveryEvents> events = popReceivedEvents(DiscoveryEvents.class);
     Date generation = deviceConfig.discovery.families.get(scanFamily).generation;
     Function<DiscoveryEvents, List<String>> invalidator = event ->
         invalidReasons(event, generation);
-    checkThat("discovery events were received", events.size() == stateEvents);
+    int expectedEvents = actualCount + 2;  // Includes start and stop marker events.
+    debug(format("Received %d events, %d indicated in state", events.size(), actualCount));
+    checkThat("received expected number of discovery events", events.size() == expectedEvents);
     List<String> reasons = events.stream().map(invalidator).flatMap(List::stream)
         .collect(Collectors.toList());
     reasons.addAll(checkEnumeration(events, shouldEnumerate));
 
+    SortedSet<Integer> eventNos = events.stream().map(event -> event.event_no)
+        .collect(Collectors.toCollection(TreeSet::new));
+    debug("Received discovery events " + eventNos);
+    checkThat("received all unique event numbers", eventNos.size() == expectedEvents);
+    checkThat("received proper discovery termination event",
+        eventNos.removeFirst() == -(actualCount + 1));
+    checkThat("received proper discovery start event", eventNos.getFirst() == 0);
+    checkThat("received proper last discovery event", eventNos.getLast() == actualCount);
+
     checkThat("discovery events were valid", reasons.isEmpty(), CSV_JOINER.join(reasons));
 
-    Set<String> duplicates = events.stream().map(x -> x.addr)
+    Set<String> discoveredAddresses = events.stream().map(x -> x.addr).filter(Objects::nonNull)
+        .collect(toSet());
+
+    Set<String> duplicates = discoveredAddresses.stream()
         .collect(Collectors.groupingBy(Function.identity(), Collectors.counting()))
         .entrySet().stream().filter(p -> p.getValue() > 1).map(Entry::getKey)
-        .collect(Collectors.toSet());
+        .collect(toSet());
     checkThat("all scan addresses are unique", duplicates.isEmpty(),
         "duplicates: " + CSV_JOINER.join(duplicates));
 
-    Set<String> discoveredAddresses = events.stream().map(x -> x.addr)
-        .collect(Collectors.toSet());
     Set<String> expectedAddresses = siteModel.metadataStream().map(this::scanFamilyAddr)
-        .filter(Objects::nonNull).collect(Collectors.toSet());
+        .filter(Objects::nonNull).collect(toSet());
     SetView<String> differences = symmetricDifference(discoveredAddresses, expectedAddresses);
     checkThat("all expected addresses were found", differences.isEmpty(),
         format("expected %s, found %s", expectedAddresses, discoveredAddresses));
@@ -369,8 +388,10 @@ public class DiscoverySequences extends SequenceBase {
         () -> assertEquals("bad scan family", scanFamily, discoveryEvent.family));
     addIfCaught(exceptions,
         () -> assertEquals("bad generation", scanGeneration, discoveryEvent.generation));
-    addIfCaught(exceptions, () -> assertNotNull("empty scan address", discoveryEvent.addr));
-    addIfCaught(exceptions, () -> providerFamily.validateAddr(discoveryEvent.addr));
+    if (discoveryEvent.event_no > 0) {
+      addIfCaught(exceptions, () -> assertNotNull("empty scan address", discoveryEvent.addr));
+      addIfCaught(exceptions, () -> providerFamily.validateAddr(discoveryEvent.addr));
+    }
     return exceptions;
   }
 
@@ -410,10 +431,14 @@ public class DiscoverySequences extends SequenceBase {
   }
 
   private String refsMatch(DiscoveryEvents discoveryEvents) {
+    if (discoveryEvents.addr == null) {
+      return null;
+    }
+
     Entry<String, Metadata> deviceEntry = targetMetadata(discoveryEvents.addr);
     HashMap<String, PointPointsetModel> devicePoints = deviceEntry.getValue().pointset.points;
     Set<String> metadataRefs = devicePoints.values().stream()
-        .map(x -> x.ref).filter(Objects::nonNull).collect(Collectors.toSet());
+        .map(x -> x.ref).filter(Objects::nonNull).collect(toSet());
     Set<String> discoveredRefs = discoveryEvents.refs.keySet();
     SetView<String> extraMetadata = Sets.difference(metadataRefs, discoveredRefs);
     SetView<String> extraDiscovered = Sets.difference(discoveredRefs, metadataRefs);

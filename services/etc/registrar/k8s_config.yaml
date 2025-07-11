@@ -1,0 +1,8 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: config
+data:
+  ETCD_CLUSTER:
+  UDMI_NAMESPACE: @UDMI_NAMESPACE@
+  IOT_PROVIDER: gref

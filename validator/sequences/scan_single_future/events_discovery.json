@@ -1,12 +1,10 @@
 {
-  "generation" : "2024-12-17T05:26:45Z",
-  "scan_addr" : "28179023",
-  "scan_family" : "vendor",
+  "event_no" : -4,
+  "family" : "vendor",
+  "generation" : "2025-07-11T08:46:47Z",
   "system" : {
-    "ancillary" : {
-      "device-name" : "AHU-1"
-    }
+    "ancillary" : { }
   },
-  "timestamp" : "2024-12-17T05:26:45Z",
-  "version" : "1.5.2"
+  "timestamp" : "2025-07-11T08:46:57Z",
+  "version" : "1.5.3"
 }

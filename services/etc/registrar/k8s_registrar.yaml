@@ -1,0 +1,57 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: registrar-service
+spec:
+  selector:
+    matchLabels:
+      app: registrar-service
+      role: master
+      tier: backend
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: registrar-service
+        role: master
+        tier: backend
+    spec:
+      containers:
+      - name: registrar-core
+        image: @IMAGE@
+        imagePullPolicy: Always
+        resources:
+          requests:
+            cpu: 500m
+            memory: 500Mi
+        env:
+        - name: UDMI_NAMESPACE
+          valueFrom:
+            configMapKeyRef:
+              name: config
+              key: UDMI_NAMESPACE
+              optional: true
+        - name: IOT_PROVIDER
+          valueFrom:
+            configMapKeyRef:
+              name: config
+              key: IOT_PROVIDER
+        command: ["/bin/sh", "-c"]
+        args:
+        - |
+          set -eu
+
+          GCP_PROJECT=$(curl -s "http://metadata.google.internal/computeMetadata/v1/project/project-id" -H "Metadata-Flavor: Google")
+
+          echo "Starting process in project ${GCP_PROJECT} for provider $IOT_PROVIDER in namespace $UDMI_NAMESPACE"
+
+          if [ -n "$UDMI_NAMESPACE" ]; then
+            NAMESPACE_PATH="/$UDMI_NAMESPACE"
+          else
+            NAMESPACE_PATH=""
+          fi
+
+          exec /root/services/bin/registrar_service \
+            "//pubsub/${GCP_PROJECT}${NAMESPACE_PATH}" \
+            "//${IOT_PROVIDER}/${GCP_PROJECT}${NAMESPACE_PATH}" \
+            "/tmp/udmi/sites"
