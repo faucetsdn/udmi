@@ -3,7 +3,7 @@
 UDMI_ROOT=$(dirname $0)/../..
 source $UDMI_ROOT/etc/shell_common.sh
 
-if [[ $# -lt 6 ]]; then
+if [[ $# -ne 6 ]]; then
     usage registry_id project_id base_cloning_directory project_spec mapping_family discoveryNodeDeviceId
 fi
 
