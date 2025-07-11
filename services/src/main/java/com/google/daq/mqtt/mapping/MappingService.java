@@ -11,11 +11,16 @@ import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+/**
+ * Mapping Service: which currently runs from command line
+ * fetches the site mode, internally calls registrar, then the mapping process
+ * and then pushes the changes in the different proposal branch
+ */
 public class MappingService {
   private static final Logger LOGGER = LoggerFactory.getLogger(MappingService.class);
   private static final String SERVICE_NAME = "MappingService";
   private SourceRepository sourceRepository;
-  private final int RequiredArgumentLength = 6;
+  private final int requiredArgumentLength = 6;
   private final String registryId;
   private final String projectId;
   private final String baseCloningDirectory;
@@ -44,11 +49,12 @@ public class MappingService {
   }
 
   /**
-   * This initializes new Mapping Service
+   * Initializes new Mapping Service.
+   *
    * @param args
    */
   public MappingService(String[] args) {
-    if (args.length != RequiredArgumentLength) {
+    if (args.length != requiredArgumentLength) {
       throw new IllegalArgumentException("Invalid arguments provided");
     }
 
@@ -80,11 +86,11 @@ public class MappingService {
       throw new RuntimeException("Unable to create and checkout export branch " + exportBranch);
     }
 
-   String udmiModelPath = sourceRepository.getUdmiModelPath();
-   (new Registrar()).processArgs(new ArrayList<>(List.of(udmiModelPath, projectSpec))).execute();
-   MappingAgent mappingAgent = new MappingAgent(new ArrayList<>(
+    String udmiModelPath = sourceRepository.getUdmiModelPath();
+    (new Registrar()).processArgs(new ArrayList<>(List.of(udmiModelPath, projectSpec))).execute();
+    MappingAgent mappingAgent = new MappingAgent(new ArrayList<>(
        List.of(udmiModelPath, projectSpec)));
-   mappingAgent.processMapping(new ArrayList<>(List.of(discoveryNodeDeviceId, mappingFamily)));
+    mappingAgent.processMapping(new ArrayList<>(List.of(discoveryNodeDeviceId, mappingFamily)));
 
     LOGGER.info("Committing and pushing changes to branch {}", exportBranch);
     if (!sourceRepository.commitAndPush("Merge changes from source: MappingService")) {
