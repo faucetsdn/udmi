@@ -1,15 +1,10 @@
 
 package udmi.schema;
 
-import com.fasterxml.jackson.annotation.JsonAnyGetter;
-import com.fasterxml.jackson.annotation.JsonAnySetter;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Objects;
 
 
 /**
@@ -37,36 +32,24 @@ public class DevicePersistent {
     @JsonProperty("restart_count")
     public Integer restart_count;
 
-    /**
-     * Additional properties
-     * <p>
-     * additional properties stored in the device persistent data
-     *
-     */
-    private final Map<String, Object> additionalProperties = new HashMap<>();
-
-    @JsonAnyGetter
-    public Map<String, Object> getAdditionalProperties() {
-      return this.additionalProperties;
-    }
-
-    @JsonAnySetter
-    public void setAdditionalProperty(String name, Object value) {
-      this.additionalProperties.put(name, value);
-    }
-
     @Override
     public int hashCode() {
-      return Objects.hash(endpoint, restart_count, additionalProperties);
+        int result = 1;
+        result = ((result* 31)+((this.endpoint == null)? 0 :this.endpoint.hashCode()));
+        result = ((result* 31)+((this.restart_count == null)? 0 :this.restart_count.hashCode()));
+        return result;
     }
 
     @Override
-    public boolean equals(Object obj) {
-      if (this == obj) return true;
-      if (!(obj instanceof DevicePersistent devicePersistent)) return false;
-      return Objects.equals(endpoint, devicePersistent.endpoint) &&
-          Objects.equals(restart_count, devicePersistent.restart_count) &&
-          Objects.equals(additionalProperties, devicePersistent.additionalProperties);
+    public boolean equals(Object other) {
+        if (other == this) {
+            return true;
+        }
+        if ((other instanceof DevicePersistent) == false) {
+            return false;
+        }
+        DevicePersistent rhs = ((DevicePersistent) other);
+        return (((this.endpoint == rhs.endpoint)||((this.endpoint!= null)&&this.endpoint.equals(rhs.endpoint)))&&((this.restart_count == rhs.restart_count)||((this.restart_count!= null)&&this.restart_count.equals(rhs.restart_count))));
     }
 
 }
