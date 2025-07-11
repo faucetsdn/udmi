@@ -88,7 +88,8 @@ public class MappingService {
 
     String udmiModelPath = sourceRepository.getUdmiModelPath();
     (new Registrar()).processArgs(new ArrayList<>(List.of(udmiModelPath, projectSpec))).execute();
-    MappingAgent mappingAgent = new MappingAgent(new ArrayList<>(List.of(udmiModelPath, projectSpec)));
+    MappingAgent mappingAgent = new MappingAgent(new ArrayList<>(
+        List.of(udmiModelPath, projectSpec)));
     mappingAgent.processMapping(new ArrayList<>(List.of(discoveryNodeDeviceId, mappingFamily)));
 
     LOGGER.info("Committing and pushing changes to branch {}", exportBranch);
