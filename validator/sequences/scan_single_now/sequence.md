@@ -14,7 +14,7 @@ Check results of a single scan scheduled in the recent past
 1. Check that scan started at time
 1. Wait until scheduled scan complete
 1. Check that scan completed at time
-1. Check that expected number of discovery events received
+1. Check that received expected number of discovery events
 1. Check that no events have discovered refs
 1. Check that received all unique event numbers
 1. Check that received proper discovery termination event
