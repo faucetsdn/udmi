@@ -92,10 +92,11 @@ public class MappingAgent {
 
   /**
    * Create an agent with the given sitePath and projectSpec.
+   *
    * @param argList as:
-   * sitePath projectSpec
-   * sitePath: e.g. sites/udmi_site_model
-   * projectSpec: e.g. //mqtt/localhost
+   *  sitePath projectSpec
+   *  sitePath: e.g. sites/udmi_site_model
+   *  projectSpec: e.g. //mqtt/localhost
    */
   public MappingAgent(List<String> argList) {
     if (argList.size() == 1 && new File(argList.get(0)).isDirectory()) {

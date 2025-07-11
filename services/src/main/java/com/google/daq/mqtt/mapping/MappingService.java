@@ -80,7 +80,7 @@ public class MappingService {
       throw new RuntimeException("Unable to create and checkout export branch " + exportBranch);
     }
 
-   String udmiModelPath = Paths.get(sourceRepository.getDirectory(), "").toString();
+   String udmiModelPath = sourceRepository.getUdmiModelPath();
    (new Registrar()).processArgs(new ArrayList<>(List.of(udmiModelPath, projectSpec))).execute();
    MappingAgent mappingAgent = new MappingAgent(new ArrayList<>(
        List.of(udmiModelPath, projectSpec)));
