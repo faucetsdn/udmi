@@ -19,11 +19,11 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.google.gson.internal.bind.util.ISO8601Utils;
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.nio.file.Files;
 import java.nio.file.NoSuchFileException;
 import java.time.Instant;
 import java.util.Date;
+import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.TreeMap;
 
@@ -70,6 +70,18 @@ public abstract class JsonUtil {
   public static Map<String, Object> asMap(File input) {
     @SuppressWarnings("unchecked")
     Map<String, Object> map = loadFile(TreeMap.class, input);
+    return map;
+  }
+
+  /**
+   * Convert the json object to a LinkedHashMap object.
+   *
+   * @param input input file
+   * @return input as map object
+   */
+  public static Map<String, Object> asLinkedHashMap(File input) {
+    @SuppressWarnings("unchecked")
+    Map<String, Object> map = loadFile(LinkedHashMap.class, input);
     return map;
   }
 
@@ -491,7 +503,7 @@ public abstract class JsonUtil {
   }
 
   public static Map<String, Object> flattenNestedMap(Map<String, Object> map, String separator) {
-    Map<String, Object> flattenedMap = new TreeMap<>();
+    Map<String, Object> flattenedMap = new LinkedHashMap<>();
     flatten(map, "", flattenedMap, separator);
     return flattenedMap;
   }

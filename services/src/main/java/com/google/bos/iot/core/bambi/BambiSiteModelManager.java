@@ -13,6 +13,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -25,6 +26,7 @@ public class BambiSiteModelManager {
   private static final Logger LOGGER = LoggerFactory.getLogger(BambiSiteModelManager.class);
   private final SpreadsheetManager spreadsheetManager;
   private final BambiSiteModel bambiSiteModel;
+  private static final Pattern LIST_TYPE_REGEX = Pattern.compile("\\[.*]");
 
   /**
    * Site Model Manager for a BAMBI spreadsheet.
@@ -94,7 +96,7 @@ public class BambiSiteModelManager {
    */
   public void writeSiteMetadata(Map<String, String> newSiteMetadata) {
     writeKeyValueTypeMetadata(BambiSheetTab.SITE_METADATA, bambiSiteModel.getSiteMetadataHeaders(),
-        newSiteMetadata);
+        handleListValues(newSiteMetadata));
   }
 
   /**
@@ -104,7 +106,7 @@ public class BambiSiteModelManager {
    */
   public void writeCloudIotConfig(Map<String, String> newCloudIotConfig) {
     writeKeyValueTypeMetadata(BambiSheetTab.CLOUD_IOT_CONFIG,
-        bambiSiteModel.getCloudIotConfigHeaders(), newCloudIotConfig);
+        bambiSiteModel.getCloudIotConfigHeaders(), handleListValues(newCloudIotConfig));
   }
 
   private void writeKeyValueTypeMetadata(BambiSheetTab sheet, List<String> headers,
@@ -296,6 +298,19 @@ public class BambiSiteModelManager {
       sheetData.add(List.of(entry.getKey(), entry.getValue()));
     }
     return sheetData;
+  }
+
+  private Map<String, String> handleListValues(Map<String, String> map) {
+    Map<String, String> output = new LinkedHashMap<>(map);
+    for (Entry<String, String> entry: output.entrySet()) {
+      String key = entry.getKey();
+      String value = entry.getValue();
+      if (value.matches(LIST_TYPE_REGEX.pattern())) {
+        value = value.substring(1, value.length()-1);
+      }
+      output.put(key, value);
+    }
+    return output;
   }
 
   // Helper structure for simple table configurations

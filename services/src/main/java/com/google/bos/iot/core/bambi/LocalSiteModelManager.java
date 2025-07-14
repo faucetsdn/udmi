@@ -1,7 +1,7 @@
 package com.google.bos.iot.core.bambi;
 
 import static com.google.udmi.util.GeneralUtils.catchToElse;
-import static com.google.udmi.util.JsonUtil.asMap;
+import static com.google.udmi.util.JsonUtil.asLinkedHashMap;
 import static com.google.udmi.util.JsonUtil.flattenNestedMap;
 import static com.google.udmi.util.JsonUtil.nestFlattenedJson;
 import static com.google.udmi.util.JsonUtil.writeFile;
@@ -49,7 +49,7 @@ public class LocalSiteModelManager {
     Path filePath = Paths.get(pathToSiteModel, path);
     LOGGER.info("fetching data from file " + filePath.toUri());
 
-    Map<String, Object> siteModelMap = asMap(new File(filePath.toUri()));
+    Map<String, Object> siteModelMap = asLinkedHashMap(new File(filePath.toUri()));
     return catchToElse(() -> flattenNestedMap(siteModelMap, ".").entrySet().stream()
         .collect(Collectors.toMap(
             Map.Entry::getKey,
@@ -173,12 +173,37 @@ public class LocalSiteModelManager {
     }
   }
 
+  /**
+   * Populates the map, expanding comma-separated values for specific keys
+   * while preserving the order of elements.
+   *
+   * @param key the key to add or update
+   * @param newValue the new value for the key
+   * @param map the map to populate (should be an instance of LinkedHashMap or
+   *     another order-preserving map)
+   */
   private void populateMap(String key, String newValue, Map<String, String> map) {
-    if (key.equals("gateway.proxy_ids") || key.equals("system.tags")) {
-      map.remove(key); // remove old consolidated value
-      String[] arrayValues = newValue.split(",");
-      for (int i = 0; i < arrayValues.length; i++) {
-        map.put(key + "." + i, arrayValues[i].trim());
+    if ("gateway.proxy_ids".equals(key) || "system.tags".equals(key) || "tags".equals(key)) {
+      if (map.containsKey(key)) {
+        Map<String, String> tempMap = new LinkedHashMap<>();
+        String[] arrayValues = newValue.split(",");
+
+        for (Map.Entry<String, String> entry : map.entrySet()) {
+          if (entry.getKey().equals(key)) {
+            for (int i = 0; i < arrayValues.length; i++) {
+              tempMap.put(key + "." + i, arrayValues[i].trim());
+            }
+          } else {
+            tempMap.put(entry.getKey(), entry.getValue());
+          }
+        }
+        map.clear();
+        map.putAll(tempMap);
+      } else {
+        String[] arrayValues = newValue.split(",");
+        for (int i = 0; i < arrayValues.length; i++) {
+          map.put(key + "." + i, arrayValues[i].trim());
+        }
       }
     } else {
       map.put(key, newValue);
