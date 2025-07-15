@@ -11,6 +11,9 @@ import java.io.File;
 import java.net.URI;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.time.Instant;
+import java.time.ZoneOffset;
+import java.time.format.DateTimeFormatter;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -38,7 +41,6 @@ public class LocalSiteModelManager {
       "system.tags",
       "tags"
   );
-
   private final Set<Pattern> NON_NUMERIC_HEADERS_REGEX = Set.of(
       Pattern.compile("pointset\\.points\\..*\\.ref"),
       Pattern.compile("localnet\\.families\\..*\\.addr")
@@ -142,7 +144,7 @@ public class LocalSiteModelManager {
    */
   public void mergeSiteMetadataOnDisk(Map<String, String> newSiteMetadata) {
     Map<String, String> siteMetadataOnDisk = getSiteMetadata();
-    merge(siteMetadataOnDisk, newSiteMetadata);
+    merge(siteMetadataOnDisk, newSiteMetadata, false);
     writeSiteMeta(siteMetadataOnDisk);
   }
 
@@ -154,7 +156,7 @@ public class LocalSiteModelManager {
    */
   public void mergeCloudIotConfigOnDisk(Map<String, String> newCloudIotConfig) {
     Map<String, String> cloudIotConfigOnDisk = getCloudIotConfig();
-    merge(cloudIotConfigOnDisk, newCloudIotConfig);
+    merge(cloudIotConfigOnDisk, newCloudIotConfig, false);
     writeCloudIotConfig(cloudIotConfigOnDisk);
   }
 
@@ -168,20 +170,31 @@ public class LocalSiteModelManager {
     for (Entry<String, Map<String, String>> entry : newDevicesMetadata.entrySet()) {
       String deviceId = entry.getKey();
       Map<String, String> deviceMetadataOnDisk = getDeviceMetadata(deviceId);
-      merge(deviceMetadataOnDisk, entry.getValue());
+      merge(deviceMetadataOnDisk, entry.getValue(), true);
       writeDeviceMetadata(deviceMetadataOnDisk, deviceId);
     }
   }
 
-  private void merge(Map<String, String> metadataOnDisk, Map<String, String> newMetadata) {
+  private void merge(Map<String, String> metadataOnDisk, Map<String, String> newMetadata,
+      boolean shouldUpdateTimestamp) {
     for (Entry<String, String> entry : newMetadata.entrySet()) {
       String key = entry.getKey();
       String value = entry.getValue();
       if (Objects.equals(value, "__DELETE__")) {
         metadataOnDisk.remove(key);
+        updateTimestamp(metadataOnDisk, shouldUpdateTimestamp);
       } else if (!value.isEmpty() && !value.equals(metadataOnDisk.getOrDefault(key, ""))) {
         populateMap(key, value, metadataOnDisk);
+        updateTimestamp(metadataOnDisk, shouldUpdateTimestamp);
       }
+    }
+  }
+
+  private void updateTimestamp(Map<String, String> metadataMap, boolean shouldUpdateTimestamp) {
+    if (shouldUpdateTimestamp) {
+      DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss'Z'")
+          .withZone(ZoneOffset.UTC);
+      metadataMap.put("timestamp", formatter.format(Instant.now()));
     }
   }
 
