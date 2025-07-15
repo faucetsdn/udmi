@@ -26,7 +26,9 @@ import java.time.Instant;
 import java.util.Date;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.Set;
 import java.util.TreeMap;
+import java.util.regex.Pattern;
 
 /**
  * Collection of utilities for working with json things.
@@ -530,26 +532,26 @@ public abstract class JsonUtil {
   }
 
   public static JsonNode nestFlattenedJson(Map<String, String> flattenedJsonMap,
-      String separatorRegex) {
+      String separatorRegex, Set<Pattern> nonNumericKeyPatterns) {
     ObjectNode rootNode = OBJECT_MAPPER.createObjectNode();
 
     for (Map.Entry<String, String> entry : flattenedJsonMap.entrySet()) {
       String key = entry.getKey();
       String value = entry.getValue();
       String[] parts = key.split(separatorRegex);
-      nest(rootNode, parts, value, 0, OBJECT_MAPPER);
+      nest(rootNode, parts, value, 0, OBJECT_MAPPER, key, nonNumericKeyPatterns);
     }
 
     return rootNode;
   }
 
   private static void nest(JsonNode currentNode, String[] parts, String value, int index,
-      ObjectMapper mapper) {
+      ObjectMapper mapper, String fullKey, Set<Pattern> nonNumericKeyPatterns) {
 
     String currentPart = parts[index];
 
     if (index == parts.length - 1) {
-      handleSetLeafValue(currentNode, currentPart, value, mapper);
+      handleSetLeafValue(currentNode, currentPart, value, mapper, fullKey, nonNumericKeyPatterns);
       return;
     }
     JsonNode childNode;
@@ -570,14 +572,20 @@ public abstract class JsonUtil {
     childNode = ensureAndGetChildNode(currentNode, childNode, currentPart,
         numericCurrentPartIfArray, nextPart, mapper);
 
-    nest(childNode, parts, value, index + 1, mapper);
+    nest(childNode, parts, value, index + 1, mapper, fullKey, nonNumericKeyPatterns);
   }
 
-  private static JsonNode convertValueToJsonNode(String value, ObjectMapper mapper) {
+  private static JsonNode convertValueToJsonNode(String value, ObjectMapper mapper, String fullKey,
+      Set<Pattern> nonNumericKeyPatterns) {
     if (value == null) {
       return mapper.getNodeFactory().nullNode();
     }
     String trimmedValue = value.trim();
+    if (nonNumericKeyPatterns != null &&
+        nonNumericKeyPatterns.stream()
+            .anyMatch(pattern -> fullKey.matches(pattern.pattern()))) {
+      return mapper.getNodeFactory().textNode(value);
+    }
 
     if ("true".equalsIgnoreCase(trimmedValue)) {
       return mapper.getNodeFactory().booleanNode(true);
@@ -615,8 +623,8 @@ public abstract class JsonUtil {
   }
 
   private static void handleSetLeafValue(JsonNode currentNode, String part, String value,
-      ObjectMapper mapper) {
-    JsonNode valueNode = convertValueToJsonNode(value, mapper);
+      ObjectMapper mapper, String fullKey, Set<Pattern> nonNumericKeyPatterns) {
+    JsonNode valueNode = convertValueToJsonNode(value, mapper, fullKey, nonNumericKeyPatterns);
 
     if (currentNode instanceof ObjectNode) {
       ((ObjectNode) currentNode).set(part, valueNode);

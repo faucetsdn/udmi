@@ -11,14 +11,13 @@ import java.io.File;
 import java.net.URI;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Objects;
 import java.util.Set;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -38,6 +37,11 @@ public class LocalSiteModelManager {
       "gateway.proxy_ids",
       "system.tags",
       "tags"
+  );
+
+  private final Set<Pattern> NON_NUMERIC_HEADERS_REGEX = Set.of(
+      Pattern.compile("pointset\\.points\\..*\\.ref"),
+      Pattern.compile("localnet\\.families\\..*\\.addr")
   );
 
   /**
@@ -70,7 +74,7 @@ public class LocalSiteModelManager {
   private void writeJsonToDisk(Map<String, String> flattenedData, String... paths) {
     URI filePath = Paths.get(pathToSiteModel, paths).toUri();
     LOGGER.info("writing data to file {}", filePath);
-    JsonNode jsonNode = nestFlattenedJson(flattenedData, "\\.");
+    JsonNode jsonNode = nestFlattenedJson(flattenedData, "\\.", NON_NUMERIC_HEADERS_REGEX);
     File file = new File(filePath);
     file.getParentFile().mkdirs();
     writeFile(jsonNode, new File(filePath));
