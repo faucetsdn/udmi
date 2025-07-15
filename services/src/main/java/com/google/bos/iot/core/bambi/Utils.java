@@ -30,11 +30,11 @@ public class Utils {
    */
   public static Map<String, String> removeBracketsFromListValues(Map<String, String> map) {
     Map<String, String> output = new LinkedHashMap<>(map);
-    for (Entry<String, String> entry: output.entrySet()) {
+    for (Entry<String, String> entry : output.entrySet()) {
       String key = entry.getKey();
       String value = entry.getValue();
       if (LIST_TYPE_HEADERS.contains(key) && value.matches(LIST_TYPE_REGEX.pattern())) {
-        value = value.substring(1, value.length()-1);
+        value = value.substring(1, value.length() - 1);
       }
       output.put(key, value);
     }
@@ -48,7 +48,7 @@ public class Utils {
    */
   public static Map<String, String> handleArraysInMap(Map<String, String> metadataMap) {
     Map<String, String> result = new LinkedHashMap<>();
-    for (Map.Entry<String, String> entry: metadataMap.entrySet()) {
+    for (Map.Entry<String, String> entry : metadataMap.entrySet()) {
       String key = entry.getKey();
       String value = entry.getValue();
       if (LIST_TYPE_HEADERS.contains(key)) {

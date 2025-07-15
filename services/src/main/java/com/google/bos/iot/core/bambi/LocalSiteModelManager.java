@@ -164,8 +164,8 @@ public class LocalSiteModelManager {
     }
   }
 
-  private Map<String, String> merge(Map<String, String> metadataOnDisk, Map<String, String> newMetadata,
-      boolean shouldUpdateTimestamp) {
+  private Map<String, String> merge(Map<String, String> metadataOnDisk,
+      Map<String, String> newMetadata, boolean shouldUpdateTimestamp) {
     metadataOnDisk = removeBracketsFromListValues(metadataOnDisk);
     for (Entry<String, String> entry : newMetadata.entrySet()) {
       String key = entry.getKey();
