@@ -4,6 +4,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.udmi.util.GeneralUtils.OBJECT_MAPPER_STRICT;
 import static com.google.udmi.util.GeneralUtils.fromJsonString;
 import static com.google.udmi.util.GeneralUtils.ifNotNullGet;
+import static com.google.udmi.util.GeneralUtils.isNotEmpty;
 import static com.google.udmi.util.GeneralUtils.toJsonString;
 import static java.util.Objects.requireNonNull;
 
@@ -511,6 +512,10 @@ public abstract class JsonUtil {
   @SuppressWarnings("unchecked")
   private static void flatten(Map<String, Object> currentMap, String currentKey,
       Map<String, Object> flattenedMap, String separator) {
+    if (currentMap.isEmpty() && isNotEmpty(currentKey)) {
+      flattenedMap.put(currentKey, currentMap);
+      return;
+    }
     for (Map.Entry<String, Object> entry : currentMap.entrySet()) {
       String key = entry.getKey();
       Object value = entry.getValue();
@@ -583,6 +588,12 @@ public abstract class JsonUtil {
 
     if ("null".equalsIgnoreCase(trimmedValue)) {
       return mapper.getNodeFactory().nullNode();
+    }
+    if ("{}".equals(trimmedValue)) {
+      return mapper.getNodeFactory().objectNode();
+    }
+    if ("[]".equals(trimmedValue)) {
+      return mapper.getNodeFactory().arrayNode();
     }
 
     try {
