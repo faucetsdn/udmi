@@ -12,6 +12,8 @@ import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.fasterxml.jackson.core.JsonParser.Feature;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.json.JsonReadFeature;
+import com.fasterxml.jackson.core.util.DefaultIndenter;
+import com.fasterxml.jackson.core.util.DefaultPrettyPrinter;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -502,6 +504,24 @@ public abstract class JsonUtil {
       OBJECT_MAPPER.writeValue(file, theThing);
     } catch (Exception e) {
       throw new RuntimeException("While writing " + file.getAbsolutePath(), e);
+    }
+  }
+
+  /**
+   * Write json representation to a file.
+   * This method is added because the method `writeFile` does not print the array items on a newline.
+   *
+   * @param theThing object to write
+   * @param file     output file
+   */
+  public static void writeFileWithCustomIndentForArrays(Object theThing, File file) {
+    try {
+      DefaultPrettyPrinter.Indenter indenter = new DefaultIndenter("  ", DefaultIndenter.SYS_LF);
+      DefaultPrettyPrinter printer = new DefaultPrettyPrinter();
+      printer.indentArraysWith(indenter);
+      OBJECT_MAPPER.writer(printer).writeValue(file, theThing);
+    } catch (Exception e) {
+      throw new RuntimeException("While writing with custom printer " + file.getAbsolutePath(), e);
     }
   }
 
