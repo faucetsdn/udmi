@@ -11,11 +11,14 @@ import java.io.File;
 import java.net.URI;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Objects;
+import java.util.Set;
 import java.util.stream.Collectors;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -31,6 +34,11 @@ public class LocalSiteModelManager {
   private static final String CLOUD_IOT_CONFIG_FILE = "cloud_iot_config.json";
   private static final String DEVICE_METADATA_FILE = "metadata.json";
   private final String pathToSiteModel;
+  private final Set<String> LIST_TYPE_HEADERS = Set.of(
+      "gateway.proxy_ids",
+      "system.tags",
+      "tags"
+  );
 
   /**
    * Site Model Manager for a site model stored on disk.
@@ -183,7 +191,7 @@ public class LocalSiteModelManager {
    *     another order-preserving map)
    */
   private void populateMap(String key, String newValue, Map<String, String> map) {
-    if ("gateway.proxy_ids".equals(key) || "system.tags".equals(key) || "tags".equals(key)) {
+    if (LIST_TYPE_HEADERS.contains(key)) {
       if (map.containsKey(key)) {
         Map<String, String> tempMap = new LinkedHashMap<>();
         String[] arrayValues = newValue.split(",");
