@@ -55,7 +55,8 @@ public class LocalSiteModelManager {
     Path filePath = Paths.get(pathToSiteModel, path);
     LOGGER.info("fetching data from file " + filePath.toUri());
 
-    Map<String, Object> siteModelMap = asLinkedHashMap(new File(filePath.toUri()));
+    Map<String, Object> siteModelMap = catchToElse(
+        () -> asLinkedHashMap(new File(filePath.toUri())), new LinkedHashMap<>());
     return catchToElse(() -> flattenNestedMap(siteModelMap, ".").entrySet().stream()
         .collect(Collectors.toMap(
             Map.Entry::getKey,
