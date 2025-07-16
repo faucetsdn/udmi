@@ -256,18 +256,16 @@ public class BambiSiteModelManager {
         String value = rawEntry.getValue();
 
         String[] parts = combinedKey.split("\\.", 2);
+        String pointName = parts[0];
+        Map<String, String> pointMap = pointsForDevice.computeIfAbsent(pointName,
+            k -> new HashMap<>());
+        pointMap.put(BambiSiteModel.POINT_NAME, pointName);
         if (parts.length == 2) {
-          String pointName = parts[0];
           String propertyName = parts[1];
-
-          Map<String, String> pointMap = pointsForDevice.computeIfAbsent(pointName,
-              k -> new HashMap<>());
-
-          pointMap.put(BambiSiteModel.POINT_NAME, pointName);
           pointMap.put(propertyName, value);
         } else {
-          LOGGER.error(
-              "Warning: Skipping malformed point key: " + combinedKey + " for device " + deviceId);
+          LOGGER.warn(
+              "Warning: No properties for key: " + combinedKey + " for device " + deviceId);
         }
       }
 
