@@ -1,6 +1,8 @@
 package com.google.bos.iot.core.bambi;
 
 
+import static com.google.bos.iot.core.bambi.Utils.removeBracketsFromListValues;
+
 import com.google.bos.iot.core.bambi.model.BambiSheetTab;
 import com.google.bos.iot.core.bambi.model.BambiSiteModel;
 import com.google.common.annotations.VisibleForTesting;
@@ -94,7 +96,7 @@ public class BambiSiteModelManager {
    */
   public void writeSiteMetadata(Map<String, String> newSiteMetadata) {
     writeKeyValueTypeMetadata(BambiSheetTab.SITE_METADATA, bambiSiteModel.getSiteMetadataHeaders(),
-        newSiteMetadata);
+        removeBracketsFromListValues(newSiteMetadata));
   }
 
   /**
@@ -104,7 +106,7 @@ public class BambiSiteModelManager {
    */
   public void writeCloudIotConfig(Map<String, String> newCloudIotConfig) {
     writeKeyValueTypeMetadata(BambiSheetTab.CLOUD_IOT_CONFIG,
-        bambiSiteModel.getCloudIotConfigHeaders(), newCloudIotConfig);
+        bambiSiteModel.getCloudIotConfigHeaders(), removeBracketsFromListValues(newCloudIotConfig));
   }
 
   private void writeKeyValueTypeMetadata(BambiSheetTab sheet, List<String> headers,
@@ -254,18 +256,16 @@ public class BambiSiteModelManager {
         String value = rawEntry.getValue();
 
         String[] parts = combinedKey.split("\\.", 2);
+        String pointName = parts[0];
+        Map<String, String> pointMap = pointsForDevice.computeIfAbsent(pointName,
+            k -> new HashMap<>());
+        pointMap.put(BambiSiteModel.POINT_NAME, pointName);
         if (parts.length == 2) {
-          String pointName = parts[0];
           String propertyName = parts[1];
-
-          Map<String, String> pointMap = pointsForDevice.computeIfAbsent(pointName,
-              k -> new HashMap<>());
-
-          pointMap.put(BambiSiteModel.POINT_NAME, pointName);
           pointMap.put(propertyName, value);
         } else {
-          LOGGER.error(
-              "Warning: Skipping malformed point key: " + combinedKey + " for device " + deviceId);
+          LOGGER.warn(
+              "Warning: No properties for key: " + combinedKey + " for device " + deviceId);
         }
       }
 
