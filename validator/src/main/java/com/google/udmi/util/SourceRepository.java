@@ -1,5 +1,6 @@
 package com.google.udmi.util;
 
+import static com.google.udmi.util.GeneralUtils.isNotEmpty;
 import static com.google.udmi.util.JsonUtil.asMap;
 import static com.google.udmi.util.git.RepositoryConfig.forRemote;
 import static com.google.udmi.util.git.RepositoryConfig.fromGoogleCloudSourceRepoName;
@@ -43,7 +44,7 @@ public class SourceRepository {
   public SourceRepository(String repoName, String repoClonePath, String localOriginDir,
       String gcpProject, String udmiNamespace) {
     try {
-      if (localOriginDir != null) {
+      if (isNotEmpty(localOriginDir)) {
         String remotePath = Paths.get(localOriginDir, repoName).toString();
         LOGGER.info("Using local git origin at {}", remotePath);
         repository = new GenericGitRepository(forRemote(remotePath, repoClonePath));
