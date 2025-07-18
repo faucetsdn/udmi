@@ -142,3 +142,65 @@ function clone_gcsr_site_model {
         return 1
     fi
 }
+
+function setup_service_gcp_environment {
+    local service_name="$1"
+    echo "Configuring for GCP environment..."
+    local service_account
+    service_account=$(curl -s -H "Metadata-Flavor: Google" http://169.254.169.254/computeMetadata/v1/instance/service-accounts/default/email)
+
+    echo "Using GCP service account: $service_account"
+    gcloud config set account "$service_account"
+
+    git config --global user.email "$service_account"
+    git config --global user.name "${service_name} backend runner ${UDMI_PREFIX#\~}"
+}
+
+function build_services_jar {
+    if [[ -d "$UDMI_ROOT/services/src" ]]; then
+        echo "Checking for jar updates..."
+        if ! up_to_date "$SERVICES_JAR" "$UDMI_ROOT/services/src"; then
+            "$UDMI_ROOT/services/bin/build"
+        fi
+    fi
+}
+
+function ensure_pubsub_topic_exists {
+    local topic_name="$1"
+
+    echo "Checking for Pub/Sub topic: $topic_name"
+    if ! gcloud pubsub topics describe "$topic_name" &>/dev/null; then
+        echo "Creating topic: $topic_name"
+        gcloud pubsub topics create "$topic_name"
+    else
+        echo "Topic $topic_name already exists."
+    fi
+}
+
+function ensure_pubsub_subscription_exists {
+    local subscription_name="$1"
+    local topic_name="$2"
+    local no_expiration_flag="${3:-}"
+
+    echo "Checking for Pub/Sub subscription '$subscription_name'..."
+
+    if ! gcloud pubsub subscriptions describe "$subscription_name" &>/dev/null; then
+        echo "Creating subscription: $subscription_name"
+
+        local gcloud_args=(
+            "create" "$subscription_name"
+            "--topic=$topic_name"
+        )
+
+        if [[ "$no_expiration_flag" != "--no-expiration" ]]; then
+            echo "Setting a 24h expiration period."
+            gcloud_args+=("--expiration-period=24h")
+        else
+            echo "Flag '--no-expiration' used. Creating without an expiration period."
+        fi
+
+        gcloud pubsub subscriptions "${gcloud_args[@]}"
+    else
+        echo "Subscription '$subscription_name' already exists."
+    fi
+}

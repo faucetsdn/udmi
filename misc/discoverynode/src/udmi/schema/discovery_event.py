@@ -61,7 +61,7 @@ class DiscoveryPoint:
 class DiscoveryEvent:
   generation: str
   family: str
-  addr: str
+  addr: str | None = None
 
   version: str = "1.5.1"
   timestamp: datetime.datetime = dataclasses.field(

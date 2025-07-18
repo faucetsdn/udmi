@@ -35,7 +35,7 @@ public class BambiService extends AbstractPollingService {
   private static final Logger LOGGER = LoggerFactory.getLogger(BambiService.class);
   private static final String APP_NAME = "BAMBI";
   private static final String SERVICE_NAME = "BambiService";
-  private static final String SUBSCRIPTION_SUFFIX = "bambi-requests";
+  private static final String SUBSCRIPTION_SUFFIX = "udmi_bambi_requests_subscribe";
 
   // --- Bambi-specific constants ---
   private static final String DEFAULT_IMPORT_BRANCH = "main";
@@ -80,9 +80,6 @@ public class BambiService extends AbstractPollingService {
 
     LOGGER.info("Requesting BAMBI Service for target {}, cloning to {}", projectTarget,
         siteModelBaseDir);
-    if (localOriginDir != null) {
-      LOGGER.info("Using local git origin for testing: {}", localOriginDir);
-    }
 
     BambiService service = new BambiService(projectTarget, siteModelBaseDir, localOriginDir);
     service.start();
@@ -199,6 +196,7 @@ public class BambiService extends AbstractPollingService {
         + spreadsheetId)) {
       throw new RuntimeException("Unable to commit and push changes to branch " + exportBranch);
     }
+    LOGGER.info("Commit URL: {} ", repository.getCommitUrl(exportBranch));
     LOGGER.info("Export operation complete.");
   }
 

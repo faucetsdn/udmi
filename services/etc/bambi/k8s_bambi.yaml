@@ -1,0 +1,51 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: bambi-service
+spec:
+  selector:
+    matchLabels:
+      app: bambi-service
+      role: master
+      tier: backend
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: bambi-service
+        role: master
+        tier: backend
+    spec:
+      containers:
+      - name: bambi-core
+        image: @IMAGE@
+        imagePullPolicy: Always
+        resources:
+          requests:
+            cpu: 500m
+            memory: 500Mi
+        env:
+        - name: UDMI_NAMESPACE
+          valueFrom:
+            configMapKeyRef:
+              name: config
+              key: UDMI_NAMESPACE
+              optional: true
+        command: [ "/bin/sh", "-c" ]
+        args:
+        - |
+          set -eu
+
+          GCP_PROJECT=$(curl -s "http://metadata.google.internal/computeMetadata/v1/project/project-id" -H "Metadata-Flavor: Google")
+
+          echo "Starting process in project ${GCP_PROJECT} in namespace $UDMI_NAMESPACE"
+
+          if [ -n "$UDMI_NAMESPACE" ]; then
+            NAMESPACE_PATH="/$UDMI_NAMESPACE"
+          else
+            NAMESPACE_PATH=""
+          fi
+
+          exec /root/services/bin/bambi_service \
+            "//pubsub/${GCP_PROJECT}${NAMESPACE_PATH}" \
+            "/tmp/udmi/sites"

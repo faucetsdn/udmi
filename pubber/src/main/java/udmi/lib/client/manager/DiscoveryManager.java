@@ -205,7 +205,7 @@ public interface DiscoveryManager extends SubBlockManager {
   /**
    * Checks and scan for discovery.
    *
-   * @param family         family
+   * @param family         protocol family.
    * @param scanGeneration scan generation.
    */
   default void checkDiscoveryScan(String family, Date scanGeneration) {
@@ -277,20 +277,30 @@ public interface DiscoveryManager extends SubBlockManager {
   /**
    * Starts a discovery scan.
    *
-   * @param family Discovery scan family.
+   * @param family         Discovery scan family.
    * @param scanGeneration Scan generation.
    */
   default void startDiscoveryScan(String family, Date scanGeneration) {
     info(format("Discovery scan starting %s generation %s", family, isoConvert(scanGeneration)));
     Date stopTime = Date.from(getNowInstant().plusSeconds(SCAN_DURATION_SEC));
     final FamilyDiscoveryState familyDiscoveryState = ensureFamilyDiscoveryState(family);
-    scheduleFuture(stopTime, () -> discoveryScanComplete(family, scanGeneration));
+    AtomicInteger sendCount = new AtomicInteger();
+    scheduleFuture(stopTime, () -> discoveryScanComplete(family, scanGeneration, sendCount));
     familyDiscoveryState.generation = scanGeneration;
     familyDiscoveryState.phase = ACTIVE;
-    AtomicInteger sendCount = new AtomicInteger();
     familyDiscoveryState.active_count = sendCount.get();
+    sendMarkerDiscoveryEvent(family, scanGeneration, sendCount);
     updateState();
     startDiscoveryForFamily(family, scanGeneration, familyDiscoveryState, sendCount);
+  }
+
+  private void sendMarkerDiscoveryEvent(String family, Date scanGeneration,
+      AtomicInteger sendCount) {
+    DiscoveryEvents discoveryEvent = new DiscoveryEvents();
+    discoveryEvent.event_no = -sendCount.getAndIncrement();
+    info(format("Discovered %s active %d for %s", family, discoveryEvent.event_no,
+        isoConvert(scanGeneration)));
+    publishDiscoveryEvent(family, scanGeneration, null, discoveryEvent);
   }
 
   /**
@@ -300,29 +310,39 @@ public interface DiscoveryManager extends SubBlockManager {
       FamilyDiscoveryState familyDiscoveryState, AtomicInteger sendCount) {
     discoveryProvider(family).startScan(shouldEnumerate(family), (deviceId, discoveryEvent) -> {
       ifNotNullThen(discoveryEvent.addr, addr -> {
-        info(
-            format("Discovered %s device %s for gen %s", family, addr, isoConvert(scanGeneration)));
-        discoveryEvent.family = family;
-        discoveryEvent.generation = scanGeneration;
-        postDiscoveryProcess(deviceId, discoveryEvent);
-
-        familyDiscoveryState.active_count = sendCount.incrementAndGet();
+        int activeCount = sendCount.getAndIncrement();
+        familyDiscoveryState.active_count = activeCount;
+        info(format("Discovered %s device %s for %s as %d", family, addr,
+            isoConvert(scanGeneration), activeCount));
+        discoveryEvent.event_no = activeCount;
+        publishDiscoveryEvent(family, scanGeneration, deviceId, discoveryEvent);
         updateState();
-        getHost().publish(discoveryEvent);
       });
     });
   }
 
   /**
+   * Publish a discovery event with some basic augmentation.
+   */
+  default void publishDiscoveryEvent(String family, Date scanGeneration, String deviceId,
+      DiscoveryEvents discoveryEvent) {
+    discoveryEvent.family = family;
+    discoveryEvent.generation = scanGeneration;
+    postDiscoveryProcess(deviceId, discoveryEvent);
+    getHost().publish(discoveryEvent);
+  }
+
+  /**
    * Discovery scan completed.
    */
-  default void discoveryScanComplete(String family, Date scanGeneration) {
+  default void discoveryScanComplete(String family, Date scanGeneration, AtomicInteger sendCount) {
     try {
       FamilyDiscoveryState familyDiscoveryState = ensureFamilyDiscoveryState(family);
       ifTrueThen(scanGeneration.equals(familyDiscoveryState.generation), () -> {
         discoveryProvider(family).stopScan();
         familyDiscoveryState.phase = STOPPED;
         updateState();
+        sendMarkerDiscoveryEvent(family, scanGeneration, sendCount);
         scheduleDiscoveryScan(family);
       });
     } catch (Exception e) {

@@ -370,7 +370,7 @@ public class BambiSiteModelManagerTest {
     Map<String, Map<String, String>> deviceToMetadataMap = new HashMap<>();
     Map<String, String> dev1Meta = new HashMap<>();
     dev1Meta.put("pointset.points.temp.units", "C");
-    dev1Meta.put("pointset.points.malformedkeyonly", "some_value");
+    dev1Meta.put("pointset.points.keyonly", "some_value");
     deviceToMetadataMap.put("dev1", dev1Meta);
 
     bambiSiteModelManager.writeDevicesMetadata(deviceToMetadataMap);
@@ -378,14 +378,20 @@ public class BambiSiteModelManagerTest {
     verify(mockSpreadsheetManager).writeToRange(
         eq(BambiSheetTab.POINTS.getName()), sheetDataCaptor.capture());
     List<List<Object>> pointsData = sheetDataCaptor.getValue();
-    assertEquals(2, pointsData.size()); // Header + 1 valid point
+    assertEquals(3, pointsData.size()); // Header + 1 valid point + 1 point with no properties
     boolean foundTempPoint = false;
+    boolean foundKeyOnlyPoint = false;
     for (int i = 1; i < pointsData.size(); i++) {
       if ("temp".equals(pointsData.get(i).get(1))) {
         assertEquals(Arrays.asList("dev1_template", "temp", "C", ""), pointsData.get(i));
         foundTempPoint = true;
       }
+      if ("keyonly".equals(pointsData.get(i).get(1))) {
+        assertEquals(Arrays.asList("dev1_template", "keyonly", "", ""), pointsData.get(i));
+        foundKeyOnlyPoint = true;
+      }
     }
     assertTrue("Valid temp point not found", foundTempPoint);
+    assertTrue("Key only point not found", foundKeyOnlyPoint);
   }
 }

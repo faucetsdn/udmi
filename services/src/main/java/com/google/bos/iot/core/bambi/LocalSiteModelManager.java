@@ -1,16 +1,22 @@
 package com.google.bos.iot.core.bambi;
 
+import static com.google.bos.iot.core.bambi.Utils.NON_NUMERIC_HEADERS_REGEX;
+import static com.google.bos.iot.core.bambi.Utils.handleArraysInMap;
+import static com.google.bos.iot.core.bambi.Utils.removeBracketsFromListValues;
 import static com.google.udmi.util.GeneralUtils.catchToElse;
-import static com.google.udmi.util.JsonUtil.asMap;
+import static com.google.udmi.util.JsonUtil.asLinkedHashMap;
 import static com.google.udmi.util.JsonUtil.flattenNestedMap;
 import static com.google.udmi.util.JsonUtil.nestFlattenedJson;
-import static com.google.udmi.util.JsonUtil.writeFile;
+import static com.google.udmi.util.JsonUtil.writeFileWithCustomIndentForArrays;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import java.io.File;
 import java.net.URI;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.time.Instant;
+import java.time.ZoneOffset;
+import java.time.format.DateTimeFormatter;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -49,7 +55,8 @@ public class LocalSiteModelManager {
     Path filePath = Paths.get(pathToSiteModel, path);
     LOGGER.info("fetching data from file " + filePath.toUri());
 
-    Map<String, Object> siteModelMap = asMap(new File(filePath.toUri()));
+    Map<String, Object> siteModelMap = catchToElse(
+        () -> asLinkedHashMap(new File(filePath.toUri())), new LinkedHashMap<>());
     return catchToElse(() -> flattenNestedMap(siteModelMap, ".").entrySet().stream()
         .collect(Collectors.toMap(
             Map.Entry::getKey,
@@ -62,10 +69,10 @@ public class LocalSiteModelManager {
   private void writeJsonToDisk(Map<String, String> flattenedData, String... paths) {
     URI filePath = Paths.get(pathToSiteModel, paths).toUri();
     LOGGER.info("writing data to file {}", filePath);
-    JsonNode jsonNode = nestFlattenedJson(flattenedData, "\\.");
+    JsonNode jsonNode = nestFlattenedJson(flattenedData, "\\.", NON_NUMERIC_HEADERS_REGEX);
     File file = new File(filePath);
     file.getParentFile().mkdirs();
-    writeFile(jsonNode, new File(filePath));
+    writeFileWithCustomIndentForArrays(jsonNode, new File(filePath));
   }
 
   public Map<String, String> getSiteMetadata() {
@@ -130,8 +137,7 @@ public class LocalSiteModelManager {
    */
   public void mergeSiteMetadataOnDisk(Map<String, String> newSiteMetadata) {
     Map<String, String> siteMetadataOnDisk = getSiteMetadata();
-    merge(siteMetadataOnDisk, newSiteMetadata);
-    writeSiteMeta(siteMetadataOnDisk);
+    writeSiteMeta(merge(siteMetadataOnDisk, newSiteMetadata, false));
   }
 
   /**
@@ -142,8 +148,7 @@ public class LocalSiteModelManager {
    */
   public void mergeCloudIotConfigOnDisk(Map<String, String> newCloudIotConfig) {
     Map<String, String> cloudIotConfigOnDisk = getCloudIotConfig();
-    merge(cloudIotConfigOnDisk, newCloudIotConfig);
-    writeCloudIotConfig(cloudIotConfigOnDisk);
+    writeCloudIotConfig(merge(cloudIotConfigOnDisk, newCloudIotConfig, false));
   }
 
   /**
@@ -156,32 +161,33 @@ public class LocalSiteModelManager {
     for (Entry<String, Map<String, String>> entry : newDevicesMetadata.entrySet()) {
       String deviceId = entry.getKey();
       Map<String, String> deviceMetadataOnDisk = getDeviceMetadata(deviceId);
-      merge(deviceMetadataOnDisk, entry.getValue());
-      writeDeviceMetadata(deviceMetadataOnDisk, deviceId);
+      writeDeviceMetadata(merge(deviceMetadataOnDisk, entry.getValue(), true), deviceId);
     }
   }
 
-  private void merge(Map<String, String> metadataOnDisk, Map<String, String> newMetadata) {
+  private Map<String, String> merge(Map<String, String> metadataOnDisk,
+      Map<String, String> newMetadata, boolean shouldUpdateTimestamp) {
+    metadataOnDisk = removeBracketsFromListValues(metadataOnDisk);
     for (Entry<String, String> entry : newMetadata.entrySet()) {
       String key = entry.getKey();
       String value = entry.getValue();
       if (Objects.equals(value, "__DELETE__")) {
         metadataOnDisk.remove(key);
+        updateTimestamp(metadataOnDisk, shouldUpdateTimestamp);
       } else if (!value.isEmpty() && !value.equals(metadataOnDisk.getOrDefault(key, ""))) {
-        populateMap(key, value, metadataOnDisk);
+        metadataOnDisk.put(key, value);
+        updateTimestamp(metadataOnDisk, shouldUpdateTimestamp);
       }
+    }
+    return handleArraysInMap(metadataOnDisk);
+  }
+
+  private void updateTimestamp(Map<String, String> metadataMap, boolean shouldUpdateTimestamp) {
+    if (shouldUpdateTimestamp) {
+      DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss'Z'")
+          .withZone(ZoneOffset.UTC);
+      metadataMap.put("timestamp", formatter.format(Instant.now()));
     }
   }
 
-  private void populateMap(String key, String newValue, Map<String, String> map) {
-    if (key.equals("gateway.proxy_ids") || key.equals("system.tags")) {
-      map.remove(key); // remove old consolidated value
-      String[] arrayValues = newValue.split(",");
-      for (int i = 0; i < arrayValues.length; i++) {
-        map.put(key + "." + i, arrayValues[i].trim());
-      }
-    } else {
-      map.put(key, newValue);
-    }
-  }
 }

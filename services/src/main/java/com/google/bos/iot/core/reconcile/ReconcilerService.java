@@ -22,7 +22,7 @@ public class ReconcilerService extends AbstractPollingService {
 
   private static final Logger LOGGER = LoggerFactory.getLogger(ReconcilerService.class);
   private static final String SERVICE_NAME = "ReconcilerService";
-  private static final String SUBSCRIPTION_SUFFIX = "source-repo-updates-reconciler";
+  private static final String SUBSCRIPTION_SUFFIX = "udmi_reconciler_source_repo_updates";
   private static final String TRIGGER_BRANCH = "proposal";
   private static final String DEFAULT_TARGET_BRANCH = "main";
 
