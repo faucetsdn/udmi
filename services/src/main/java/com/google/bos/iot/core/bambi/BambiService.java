@@ -196,6 +196,7 @@ public class BambiService extends AbstractPollingService {
         + spreadsheetId)) {
       throw new RuntimeException("Unable to commit and push changes to branch " + exportBranch);
     }
+    LOGGER.info("Commit URL: {} ", repository.getCommitUrl(exportBranch));
     LOGGER.info("Export operation complete.");
   }
 

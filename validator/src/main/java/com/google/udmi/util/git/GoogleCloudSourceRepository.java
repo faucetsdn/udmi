@@ -57,17 +57,26 @@ public class GoogleCloudSourceRepository extends GenericGitRepository {
   }
 
   @Override
+  public String getCommitUrl(String branch) {
+    try {
+      return String.format(COMMIT_REF, repositoryConfig.projectId(), getRepoId(),
+          getCommitHashForBranch(branch));
+    } catch (Exception e) {
+      LOGGER.error("Cannot get commit URL", e);
+      return null;
+    }
+  }
+
+  @Override
   public String createPullRequest(String title, String body, String sourceBranch,
-      String targetBranch, String author, String commitHash) {
+      String targetBranch, String author) {
     if (topicExists) {
       try (GenericPubSubClient publisher = new GenericPubSubClient(repositoryConfig.projectId(),
           null, topicId)) {
-        String commitRef = String.format(COMMIT_REF, repositoryConfig.projectId(), getRepoId(),
-            commitHash);
         String payload = String.format(
             "{\"title\":\"%s\", \"body\":\"%s\", \"sourceBranch\":\"%s\", "
-                + "\"targetBranch\":\"%s\", \"author\":\"%s\", \"commitRef\":\"%s\"}",
-            title, body, sourceBranch, targetBranch, author, commitRef
+                + "\"targetBranch\":\"%s\", \"author\":\"%s\", \"commitUrl\":\"%s\"}",
+            title, body, sourceBranch, targetBranch, author, getCommitUrl(sourceBranch)
         );
         LOGGER.info("Published PR review request {}", payload);
         publisher.publish(payload, null);
