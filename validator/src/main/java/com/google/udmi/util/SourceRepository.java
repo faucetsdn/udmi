@@ -137,7 +137,7 @@ public class SourceRepository {
         repository.add(".");
         repository.commit(commitMessage);
         repository.push();
-        LOGGER.info("Push successful to branch {}.", repository.getCurrentBranch());
+        LOGGER.info("Push successful to branch {}", repository.getCurrentBranch());
       }
     } catch (GitAPIException | IOException e) {
       LOGGER.error("Unable to commit and push", e);
@@ -194,6 +194,10 @@ public class SourceRepository {
               + "targetBranch {}", title, body, sourceBranch, targetBranch, e);
       return false;
     }
+  }
+
+  public String getCommitUrl(String branch) {
+    return repository.getCommitUrl(branch);
   }
 
 }

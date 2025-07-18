@@ -65,7 +65,7 @@ main() {
     fi
 
     if [[ $should_create -eq 1 ]]; then
-        local repo_updates_topic="${UDMI_PREFIX}udmi_source_repo_updates"
+        local repo_updates_topic="udmi_reconciler_source_repo_updates"
         local repo_updates_subscription="${UDMI_PREFIX}udmi_reconciler_source_repo_updates"
         local pr_notify_topic="${UDMI_PREFIX}udmi_pr_reviews"
 
