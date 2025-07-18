@@ -58,12 +58,12 @@ public interface GitRepositoryInterface extends AutoCloseable {
 
   default String createPullRequest(String title, String body, String sourceBranch,
       String targetBranch) {
-    return createPullRequest(title, body, sourceBranch, targetBranch, null);
+    return createPullRequest(title, body, sourceBranch, targetBranch, null, null);
   }
 
   default String createPullRequest(String title, String body, String sourceBranch,
       String targetBranch, String author) {
-    throw new UnsupportedOperationException("createPullRequest not implemented");
+    return createPullRequest(title, body, sourceBranch, targetBranch, author, null);
   }
 
   default String createPullRequest(String title, String body, String sourceBranch,

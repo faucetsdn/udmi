@@ -98,8 +98,9 @@ public class GoogleCloudSourceRepositoryTest {
 
     String expectedJsonPayload = String.format(
         "{\"title\":\"%s\", \"body\":\"%s\", \"sourceBranch\":\"%s\", "
-            + "\"targetBranch\":\"%s\", \"author\":\"%s\"}",
-        PR_TITLE, PR_BODY, SOURCE_BRANCH, TARGET_BRANCH, null
+            + "\"targetBranch\":\"%s\", \"author\":\"%s\", \"commitRef\":\"%s\"}",
+        PR_TITLE, PR_BODY, SOURCE_BRANCH, TARGET_BRANCH, null,
+        "https://source.cloud.google.com/test-project/url/+/null"
     );
 
     try (MockedConstruction<GenericPubSubClient> mockConstruction = Mockito.mockConstruction(
