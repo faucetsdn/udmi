@@ -186,7 +186,8 @@ public class SourceRepository {
   public boolean createPullRequest(String title, String body, String sourceBranch,
       String targetBranch, String author) {
     try {
-      repository.createPullRequest(title, body, sourceBranch, targetBranch, author);
+      repository.createPullRequest(title, body, sourceBranch, targetBranch, author,
+          repository.getCommitHashForCurrentBranch());
       return true;
     } catch (Exception e) {
       LOGGER.error(

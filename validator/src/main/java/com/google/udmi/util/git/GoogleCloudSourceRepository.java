@@ -22,6 +22,7 @@ public class GoogleCloudSourceRepository extends GenericGitRepository {
   private static final String BASE_TOPIC = "udmi_pr_reviews";
   private static final String BASE_SUBSCRIPTION = BASE_TOPIC + "_subscription";
   private static final int PULL_REQUEST_GATHER_TIME_MS = 2000;
+  private static final String COMMIT_REF = "https://source.cloud.google.com/%s/%s/+/%s";
   private final String topicId;
   private final String subscriptionId;
   private final boolean topicExists;
@@ -57,15 +58,18 @@ public class GoogleCloudSourceRepository extends GenericGitRepository {
 
   @Override
   public String createPullRequest(String title, String body, String sourceBranch,
-      String targetBranch, String author) {
+      String targetBranch, String author, String commitHash) {
     if (topicExists) {
       try (GenericPubSubClient publisher = new GenericPubSubClient(repositoryConfig.projectId(),
           null, topicId)) {
+        String commitRef = String.format(COMMIT_REF, repositoryConfig.projectId(), getRepoId(),
+            commitHash);
         String payload = String.format(
             "{\"title\":\"%s\", \"body\":\"%s\", \"sourceBranch\":\"%s\", "
-                + "\"targetBranch\":\"%s\", \"author\":\"%s\"}",
-            title, body, sourceBranch, targetBranch, author
+                + "\"targetBranch\":\"%s\", \"author\":\"%s\", \"commitRef\":\"%s\"}",
+            title, body, sourceBranch, targetBranch, author, commitRef
         );
+        LOGGER.info("Published PR review request {}", payload);
         publisher.publish(payload, null);
         LOGGER.info("Published PR review request from {} to topic {}", author, topicId);
         return "Pull request message published to " + topicId;
@@ -105,6 +109,17 @@ public class GoogleCloudSourceRepository extends GenericGitRepository {
     } else {
       LOGGER.error("Pub/Sub subscription {} not found. Cannot list open PRs.", subscriptionId);
       return Collections.emptyList();
+    }
+  }
+
+  private String getRepoId() {
+    String remoteUrl = repositoryConfig.remoteUrl();
+    int lastSlashIndex = remoteUrl.lastIndexOf('/');
+
+    if (lastSlashIndex != -1) {
+      return remoteUrl.substring(lastSlashIndex + 1);
+    } else {
+      return "";
     }
   }
 }
