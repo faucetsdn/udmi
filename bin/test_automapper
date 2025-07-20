@@ -12,7 +12,7 @@ fi
 project_spec=$1
 shift
 
-site_path=sites/ZZ-TRI-FECTA/udmi
+site_path=site_model
 
 echo Clear out the registries to start from scratch.
 bin/registrar $site_path $project_spec -x -d
