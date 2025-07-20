@@ -1,5 +1,6 @@
 package com.google.udmi.util;
 
+import static com.google.udmi.util.GeneralUtils.isNotEmpty;
 import static com.google.udmi.util.JsonUtil.asMap;
 import static com.google.udmi.util.git.RepositoryConfig.forRemote;
 import static com.google.udmi.util.git.RepositoryConfig.fromGoogleCloudSourceRepoName;
@@ -43,7 +44,7 @@ public class SourceRepository {
   public SourceRepository(String repoName, String repoClonePath, String localOriginDir,
       String gcpProject, String udmiNamespace) {
     try {
-      if (localOriginDir != null) {
+      if (isNotEmpty(localOriginDir)) {
         String remotePath = Paths.get(localOriginDir, repoName).toString();
         LOGGER.info("Using local git origin at {}", remotePath);
         repository = new GenericGitRepository(forRemote(remotePath, repoClonePath));
@@ -136,7 +137,7 @@ public class SourceRepository {
         repository.add(".");
         repository.commit(commitMessage);
         repository.push();
-        LOGGER.info("Push successful to branch {}.", repository.getCurrentBranch());
+        LOGGER.info("Push successful to branch {}", repository.getCurrentBranch());
       }
     } catch (GitAPIException | IOException e) {
       LOGGER.error("Unable to commit and push", e);
@@ -193,6 +194,10 @@ public class SourceRepository {
               + "targetBranch {}", title, body, sourceBranch, targetBranch, e);
       return false;
     }
+  }
+
+  public String getCommitUrl(String branch) {
+    return repository.getCommitUrl(branch);
   }
 
 }

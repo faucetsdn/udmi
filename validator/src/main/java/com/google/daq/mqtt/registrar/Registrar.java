@@ -234,7 +234,15 @@ public class Registrar {
     return UDMI_ROOT.getAbsolutePath();
   }
 
-  Registrar processArgs(List<String> argListRaw) {
+  /**
+   * process the arguments and create new SiteModel.
+   * argumentListRaw includes: site_path project_spec deviceList
+   *
+   * @param argListRaw
+   *
+   * @return Registrar Instance
+   */
+  public Registrar processArgs(List<String> argListRaw) {
     List<String> argList = new ArrayList<>(argListRaw);
     if (argList.size() == 1 && new File(argList.get(0)).isDirectory()) {
       // Add implicit NO_SITE site spec for local-only site model processing.
@@ -329,7 +337,12 @@ public class Registrar {
     }
   }
 
-  Registrar execute() {
+  /**
+   * runs the registrar.
+   *
+   * @return registrar instance
+   */
+  public Registrar execute() {
     execute(null);
     maybeProcessAltRegistry();
     return this;

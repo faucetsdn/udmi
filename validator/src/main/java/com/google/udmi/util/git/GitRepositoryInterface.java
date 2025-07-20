@@ -71,6 +71,10 @@ public interface GitRepositoryInterface extends AutoCloseable {
     throw new UnsupportedOperationException("listOpenPullRequests not implemented");
   }
 
+  default String getCommitUrl(String branch) {
+    throw new UnsupportedOperationException("getCommitUrl not implemented");
+  }
+
   @Override
   void close();
 
