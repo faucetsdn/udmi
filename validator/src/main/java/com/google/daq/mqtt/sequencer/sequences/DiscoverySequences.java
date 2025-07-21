@@ -286,7 +286,8 @@ public class DiscoverySequences extends SequenceBase {
   @Summary("Check results of a single scan targeting specific devices")
   public void scan_single_targeted() {
     SortedSet<String> expectedAddresses = new TreeSet<>(expectedTargetDevices());
-    ifTrueSkipTest(expectedAddresses.size() <= SCAN_TARGET_COUNT, "Not enough targets to test targeted scan");
+    ifTrueSkipTest(expectedAddresses.size() <= SCAN_TARGET_COUNT,
+        "Not enough targets to test targeted scan");
     Set<String> targets = expectedAddresses.stream().limit(SCAN_TARGET_COUNT).collect(toSet());
     info("Testing against scan targets: " + targets);
     scanAndVerify(cleanInstantDate(Instant.now().minusSeconds(1)), NO_ENUMERATION, targets);
