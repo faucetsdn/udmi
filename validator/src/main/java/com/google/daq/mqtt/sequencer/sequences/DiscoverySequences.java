@@ -2,7 +2,7 @@ package com.google.daq.mqtt.sequencer.sequences;
 
 import static com.google.common.base.Preconditions.checkState;
 import static com.google.common.collect.Sets.symmetricDifference;
-import static com.google.daq.mqtt.sequencer.DiscoveryScanMode.NO_ENUMERATION;
+import static com.google.daq.mqtt.sequencer.DiscoveryScanMode.DEFAULT_ENUMERATION;
 import static com.google.daq.mqtt.sequencer.DiscoveryScanMode.NO_SCAN;
 import static com.google.daq.mqtt.sequencer.DiscoveryScanMode.PLEASE_ENUMERATE;
 import static com.google.daq.mqtt.util.TimePeriodConstants.TWO_MINUTES_MS;
@@ -264,7 +264,7 @@ public class DiscoverySequences extends SequenceBase {
   }
 
   private Depth enumerateIfBucketEnabled(Bucket bucket) {
-    return enumerationDepthIf(isBucketEnabled(bucket) ? PLEASE_ENUMERATE : NO_ENUMERATION);
+    return enumerationDepthIf(isBucketEnabled(bucket) ? PLEASE_ENUMERATE : DEFAULT_ENUMERATION);
   }
 
   @Test(timeout = TWO_MINUTES_MS)
@@ -278,7 +278,7 @@ public class DiscoverySequences extends SequenceBase {
   @Feature(bucket = DISCOVERY_SCAN, stage = PREVIEW)
   @Summary("Check results of a single scan scheduled in the recent past")
   public void scan_single_now() {
-    scanAndVerify(cleanInstantDate(Instant.now().minusSeconds(1)), NO_ENUMERATION);
+    scanAndVerify(cleanInstantDate(Instant.now().minusSeconds(1)), DEFAULT_ENUMERATION);
   }
 
   @Test
@@ -290,14 +290,14 @@ public class DiscoverySequences extends SequenceBase {
         "Not enough targets to test targeted scan");
     Set<String> targets = expectedAddresses.stream().limit(SCAN_TARGET_COUNT).collect(toSet());
     info("Testing against scan targets: " + targets);
-    scanAndVerify(cleanInstantDate(Instant.now().minusSeconds(1)), NO_ENUMERATION, targets);
+    scanAndVerify(cleanInstantDate(Instant.now().minusSeconds(1)), DEFAULT_ENUMERATION, targets);
   }
 
   @Test(timeout = TWO_MINUTES_MS)
   @Feature(bucket = DISCOVERY_SCAN, stage = PREVIEW)
   @Summary("Check results of a single scan scheduled soon")
   public void scan_single_future() {
-    scanAndVerify(cleanInstantDate(Instant.now().plus(SCAN_START_DELAY)), NO_ENUMERATION);
+    scanAndVerify(cleanInstantDate(Instant.now().plus(SCAN_START_DELAY)), DEFAULT_ENUMERATION);
   }
 
   private void scanAndVerify(Date scanStart, DiscoveryScanMode shouldEnumerate) {
@@ -325,6 +325,10 @@ public class DiscoverySequences extends SequenceBase {
       checkThat("there were no received discovery events", receivedEvents.isEmpty());
       return;
     }
+
+    // If targets are specified then enumeration is expected.
+    boolean explicitEnum = targets != null && shouldEnumerate == DEFAULT_ENUMERATION;
+    DiscoveryScanMode expectedEnumeration = explicitEnum ? PLEASE_ENUMERATE : shouldEnumerate;
 
     if (scheduledStart) {
       waitUntil("scheduled scan pending", WAITING_PERIOD, this::detailScanPending);
@@ -357,7 +361,7 @@ public class DiscoverySequences extends SequenceBase {
     checkThat("received expected number of discovery events", events.size() == expectedEvents);
     List<String> reasons = events.stream().map(invalidator).flatMap(List::stream)
         .collect(Collectors.toList());
-    reasons.addAll(checkEnumeration(events, shouldEnumerate));
+    reasons.addAll(checkEnumeration(events, expectedEnumeration));
 
     SortedSet<Integer> eventNos = events.stream().map(event -> event.event_no)
         .collect(Collectors.toCollection(TreeSet::new));
@@ -460,6 +464,11 @@ public class DiscoverySequences extends SequenceBase {
     }
 
     Entry<String, Metadata> deviceEntry = targetMetadata(discoveryEvents.addr);
+
+    if (discoveryEvents.refs == null) {
+      return format("Device %s is missing discovered refs", deviceEntry.getKey());
+    }
+
     HashMap<String, PointPointsetModel> devicePoints = deviceEntry.getValue().pointset.points;
     Set<String> metadataRefs = devicePoints.values().stream()
         .map(x -> x.ref).filter(Objects::nonNull).collect(toSet());
