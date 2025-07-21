@@ -34,10 +34,12 @@ import static udmi.schema.Enumerations.Depth.ENTRIES;
 import static udmi.schema.FamilyDiscoveryState.Phase.ACTIVE;
 import static udmi.schema.FamilyDiscoveryState.Phase.PENDING;
 import static udmi.schema.FamilyDiscoveryState.Phase.STOPPED;
+import static udmi.schema.FeatureDiscovery.FeatureStage.ALPHA;
 import static udmi.schema.FeatureDiscovery.FeatureStage.BETA;
 import static udmi.schema.FeatureDiscovery.FeatureStage.PREVIEW;
 import static udmi.schema.FeatureDiscovery.FeatureStage.STABLE;
 
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
 import com.google.common.collect.Sets.SetView;
@@ -56,6 +58,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.Set;
 import java.util.SortedSet;
 import java.util.TreeSet;
@@ -90,6 +93,7 @@ public class DiscoverySequences extends SequenceBase {
   private static final int SCAN_DURATION_SEC = 10;
   private static final String DISCOVERY_TARGET = "scan_family";
   private static final long EVENT_JITTER_SLEEP_TIME_MS = 2000;
+  private static final long SCAN_TARGET_COUNT = 2;
   private Set<String> metaFamilies;
   private Instant scanGeneration;
   private String scanFamily;
@@ -277,6 +281,17 @@ public class DiscoverySequences extends SequenceBase {
     scanAndVerify(cleanInstantDate(Instant.now().minusSeconds(1)), NO_ENUMERATION);
   }
 
+  @Test
+  @Feature(bucket = DISCOVERY_SCAN, stage = ALPHA)
+  @Summary("Check results of a single scan targeting specific devices")
+  public void scan_single_targeted() {
+    SortedSet<String> expectedAddresses = new TreeSet<>(expectedTargetDevices());
+    ifTrueSkipTest(expectedAddresses.size() <= SCAN_TARGET_COUNT, "Not enough targets to test targeted scan");
+    Set<String> targets = expectedAddresses.stream().limit(SCAN_TARGET_COUNT).collect(toSet());
+    info("Testing against scan targets: " + targets);
+    scanAndVerify(cleanInstantDate(Instant.now().minusSeconds(1)), NO_ENUMERATION, targets);
+  }
+
   @Test(timeout = TWO_MINUTES_MS)
   @Feature(bucket = DISCOVERY_SCAN, stage = PREVIEW)
   @Summary("Check results of a single scan scheduled soon")
@@ -285,6 +300,11 @@ public class DiscoverySequences extends SequenceBase {
   }
 
   private void scanAndVerify(Date scanStart, DiscoveryScanMode shouldEnumerate) {
+    scanAndVerify(scanStart, shouldEnumerate, null);
+  }
+
+  private void scanAndVerify(Date scanStart, DiscoveryScanMode shouldEnumerate,
+      Set<String> targets) {
     final boolean scheduledStart = scanStart.after(new Date());
 
     initializeDiscovery();
@@ -292,7 +312,7 @@ public class DiscoverySequences extends SequenceBase {
 
     scanGeneration = scanStart.toInstant();
 
-    configureScan(scanGeneration, null, shouldEnumerate);
+    configureScan(scanGeneration, null, shouldEnumerate, targets);
     Instant scanConfigured = getNowInstant();
 
     if (shouldEnumerate == NO_SCAN) {
@@ -359,12 +379,15 @@ public class DiscoverySequences extends SequenceBase {
     checkThat("all scan addresses are unique", duplicates.isEmpty(),
         "duplicates: " + CSV_JOINER.join(duplicates));
 
-    Set<String> expectedAddresses = siteModel.metadataStream().map(this::scanFamilyAddr)
-        .filter(Objects::nonNull).collect(toSet());
-    SetView<String> differences = symmetricDifference(discoveredAddresses, expectedAddresses);
+    Set<String> expected = Optional.ofNullable(targets).orElseGet(this::expectedTargetDevices);
+    SetView<String> differences = symmetricDifference(discoveredAddresses, expected);
     checkThat("all expected addresses were found", differences.isEmpty(),
-        format("expected %s, found %s", expectedAddresses, discoveredAddresses));
+        format("expected %s, found %s", expected, discoveredAddresses));
+  }
 
+  private SortedSet<String> expectedTargetDevices() {
+    return siteModel.metadataStream().map(this::scanFamilyAddr)
+        .filter(Objects::nonNull).collect(Collectors.toCollection(TreeSet::new));
   }
 
   private String detailScanPending() {
@@ -466,7 +489,7 @@ public class DiscoverySequences extends SequenceBase {
     initializeDiscovery();
     checkState(scanGeneration == null, "scanStartTime not null");
     scanGeneration = cleanDate().toInstant();
-    configureScan(scanGeneration, SCAN_START_DELAY, PLEASE_ENUMERATE);
+    configureScan(scanGeneration, SCAN_START_DELAY, PLEASE_ENUMERATE, null);
     Instant endTime = Instant.now().plusSeconds(SCAN_START_DELAY.getSeconds() * SCAN_ITERATIONS);
     untilUntrue("scan iterations", () -> Instant.now().isBefore(endTime));
     Instant finishTime = deviceState.discovery.families.get(scanFamily).generation.toInstant();
@@ -502,7 +525,7 @@ public class DiscoverySequences extends SequenceBase {
   }
 
   private void configureScan(Instant startTime, Duration scanInterval,
-      DiscoveryScanMode shouldEnumerate) {
+      DiscoveryScanMode shouldEnumerate, Set<String> targets) {
     Integer intervalSec = ofNullable(scanInterval).map(Duration::getSeconds).map(Long::intValue)
         .orElse(null);
     info(format("%s configured for family %s starting at %s evey %ss",
@@ -513,6 +536,7 @@ public class DiscoverySequences extends SequenceBase {
     configFamily.depth = enumerationDepthIf(shouldEnumerate);
     configFamily.scan_interval_sec = intervalSec;
     configFamily.scan_duration_sec = ofNullable(intervalSec).orElse(SCAN_DURATION_SEC);
+    configFamily.addrs = ImmutableList.copyOf(targets);
     popReceivedEvents(DiscoveryEvents.class);
   }
 
