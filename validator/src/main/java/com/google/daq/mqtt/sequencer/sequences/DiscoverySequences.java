@@ -276,9 +276,9 @@ public class DiscoverySequences extends SequenceBase {
 
   @Test
   @Feature(bucket = DISCOVERY_SCAN, stage = PREVIEW)
-  @Summary("Check results of a single scan scheduled in the recent past")
+  @Summary("Check results of a single scan scheduled in the recent past including enumeration")
   public void scan_single_now() {
-    scanAndVerify(cleanInstantDate(Instant.now().minusSeconds(1)), DEFAULT_ENUMERATION);
+    scanAndVerify(cleanInstantDate(Instant.now().minusSeconds(1)), PLEASE_ENUMERATE);
   }
 
   @Test
