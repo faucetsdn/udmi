@@ -328,7 +328,7 @@ public class DiscoverySequences extends SequenceBase {
 
     // If targets are specified then enumeration is expected.
     boolean explicitEnum = targets != null && shouldEnumerate == DEFAULT_ENUMERATION;
-    DiscoveryScanMode expectedEnumeration = explicitEnum ? PLEASE_ENUMERATE : shouldEnumerate;
+    final DiscoveryScanMode expectedEnumeration = explicitEnum ? PLEASE_ENUMERATE : shouldEnumerate;
 
     if (scheduledStart) {
       waitUntil("scheduled scan pending", WAITING_PERIOD, this::detailScanPending);

@@ -47,13 +47,14 @@ public interface DiscoveryManager extends SubBlockManager {
   /**
    * Determines whether enumeration to a specific depth level is required.
    *
-   * @param depth The depth level for which to determine if enumeration should occur.
+   * @param depth       The depth level for which to determine if enumeration should occur.
+   * @param ifUndefined Value to use when depth is not recognized or undefined.
    * @return True if enumeration is required at the specified depth level, false otherwise.
    */
-  private static boolean shouldEnumerateTo(Depth depth) {
+  private static boolean shouldEnumerateTo(Depth depth, boolean ifUndefined) {
     return ifNullElse(depth, false, d -> switch (d) {
       case ENTRIES, DETAILS -> true;
-      default -> false;
+      default -> ifUndefined;
     });
   }
 
@@ -92,7 +93,7 @@ public interface DiscoveryManager extends SubBlockManager {
   DeviceManager getDeviceManager();
 
   default <K, V> Map<K, V> maybeEnumerate(Depth depth, Supplier<Map<K, V>> supplier) {
-    return ifTrueGet(shouldEnumerateTo(depth), supplier);
+    return ifTrueGet(shouldEnumerateTo(depth, false), supplier);
   }
 
   /**
@@ -261,7 +262,8 @@ public interface DiscoveryManager extends SubBlockManager {
   }
 
   default boolean shouldEnumerate(String family) {
-    return shouldEnumerateTo(getFamilyDiscoveryConfig(family).depth);
+    FamilyDiscoveryConfig familyDiscoveryConfig = getFamilyDiscoveryConfig(family);
+    return shouldEnumerateTo(familyDiscoveryConfig.depth, familyDiscoveryConfig.addrs != null);
   }
 
   DiscoveryState getDiscoveryState();
