@@ -536,7 +536,7 @@ public class DiscoverySequences extends SequenceBase {
     configFamily.depth = enumerationDepthIf(shouldEnumerate);
     configFamily.scan_interval_sec = intervalSec;
     configFamily.scan_duration_sec = ofNullable(intervalSec).orElse(SCAN_DURATION_SEC);
-    configFamily.addrs = ImmutableList.copyOf(targets);
+    configFamily.addrs = ifNotNullGet(targets, ImmutableList::copyOf);
     popReceivedEvents(DiscoveryEvents.class);
   }
 
