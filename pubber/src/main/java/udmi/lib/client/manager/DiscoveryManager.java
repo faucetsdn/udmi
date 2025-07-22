@@ -48,13 +48,13 @@ public interface DiscoveryManager extends SubBlockManager {
    * Determines whether enumeration to a specific depth level is required.
    *
    * @param depth       The depth level for which to determine if enumeration should occur.
-   * @param ifUndefined Value to use when depth is not recognized or undefined.
+   * @param ifUndefined Value to use when depth is not undefined.
    * @return True if enumeration is required at the specified depth level, false otherwise.
    */
   private static boolean shouldEnumerateTo(Depth depth, boolean ifUndefined) {
-    return ifNullElse(depth, false, d -> switch (d) {
+    return ifNullElse(depth, ifUndefined, d -> switch (d) {
       case ENTRIES, DETAILS -> true;
-      default -> ifUndefined;
+      default -> false;
     });
   }
 
