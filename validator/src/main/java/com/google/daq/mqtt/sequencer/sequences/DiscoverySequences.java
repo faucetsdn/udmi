@@ -92,7 +92,7 @@ public class DiscoverySequences extends SequenceBase {
   private static final Date LONG_TIME_AGO = Date.from(BASE_OLD_TIME.plusSeconds(RANDOM_YEAR_SEC));
   private static final int SCAN_DURATION_SEC = 10;
   private static final String DISCOVERY_TARGET = "scan_family";
-  private static final long EVENT_JITTER_SLEEP_TIME_MS = 2000;
+  private static final long EVENT_JITTER_SLEEP_TIME_MS = 10000;
   private static final long SCAN_TARGET_COUNT = 2;
   private Set<String> metaFamilies;
   private Instant scanGeneration;
