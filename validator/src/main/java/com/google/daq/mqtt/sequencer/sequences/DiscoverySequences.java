@@ -352,20 +352,23 @@ public class DiscoverySequences extends SequenceBase {
 
     int actualCount = deviceState.discovery.families.get(scanFamily).active_count;
     safeSleep(EVENT_JITTER_SLEEP_TIME_MS); // Make sure all events are captured
+
     List<DiscoveryEvents> events = popReceivedEvents(DiscoveryEvents.class);
+
     Date generation = deviceConfig.discovery.families.get(scanFamily).generation;
-    Function<DiscoveryEvents, List<String>> invalidator = event ->
-        invalidReasons(event, generation);
+    SortedSet<Integer> eventNos = events.stream().map(event -> event.event_no)
+        .collect(Collectors.toCollection(TreeSet::new));
+    debug(format("Received discovery %s event_nos %s", generation, eventNos));
+
+    Function<DiscoveryEvents, List<String>> invalidator = event -> invalidReasons(event,
+        generation);
     int expectedEvents = actualCount + 2;  // Includes start and stop marker events.
-    debug(format("Received %d events, %d indicated in state", events.size(), actualCount));
+    debug(format("Received %d events, %d in state (expect +2)", events.size(), actualCount));
     checkThat("received expected number of discovery events", events.size() == expectedEvents);
     List<String> reasons = events.stream().map(invalidator).flatMap(List::stream)
         .collect(Collectors.toList());
     reasons.addAll(checkEnumeration(events, expectedEnumeration));
 
-    SortedSet<Integer> eventNos = events.stream().map(event -> event.event_no)
-        .collect(Collectors.toCollection(TreeSet::new));
-    debug("Received discovery events " + eventNos);
     checkThat("received all unique event numbers", eventNos.size() == expectedEvents);
     checkThat("received proper discovery termination event",
         eventNos.removeFirst() == -(actualCount + 1));
