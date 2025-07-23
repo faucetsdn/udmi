@@ -313,20 +313,21 @@ public interface DiscoveryManager extends SubBlockManager {
    */
   default void startDiscoveryForFamily(String family, Date scanGeneration,
       FamilyDiscoveryState familyDiscoveryState, AtomicInteger sendCount) {
+    String generation = isoConvert(scanGeneration);
     Set<String> targets = ofNullable(
         catchToNull(() -> getDiscoveryConfig().families.get(family).addrs))
         .map(ImmutableSet::copyOf).orElse(null);
+    info(format("Discovered %s starting %s (=? %s)", family, generation,
+        isoConvert(familyDiscoveryState.generation)));
     discoveryProvider(family).startScan(shouldEnumerate(family), (deviceId, discoveryEvent) -> {
       ifNotNullThen(discoveryEvent.addr, addr -> {
         if (ifNotNullGet(targets, t -> !t.contains(addr), false)) {
-          info(format("Discovered %s device %s for %s skipped", family, addr,
-              isoConvert(scanGeneration)));
+          info(format("Discovered %s device %s for %s skipped", family, addr, generation));
           return;
         }
         int activeCount = sendCount.getAndIncrement();
         familyDiscoveryState.active_count = activeCount;
-        info(format("Discovered %s device %s for %s as %d", family, addr,
-            isoConvert(scanGeneration), activeCount));
+        info(format("Discovered %s device %s for %s as %d", family, addr, generation, activeCount));
         discoveryEvent.event_no = activeCount;
         publishDiscoveryEvent(family, scanGeneration, deviceId, discoveryEvent);
         updateState();
@@ -351,6 +352,8 @@ public interface DiscoveryManager extends SubBlockManager {
   default void discoveryScanComplete(String family, Date scanGeneration, AtomicInteger sendCount) {
     try {
       FamilyDiscoveryState familyDiscoveryState = ensureFamilyDiscoveryState(family);
+      info(format("Discovered %s stopping %s (=? %s)", family, isoConvert(scanGeneration),
+          isoConvert(familyDiscoveryState.generation)));
       ifTrueThen(scanGeneration.equals(familyDiscoveryState.generation), () -> {
         discoveryProvider(family).stopScan();
         familyDiscoveryState.phase = STOPPED;
