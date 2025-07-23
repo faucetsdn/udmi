@@ -319,7 +319,6 @@ public class DiscoverySequences extends SequenceBase {
       waitUntil("scan schedule initially not active", this::detailScanStopped);
       sleepFor("false start check delay", SCAN_START_DELAY);
       waitUntil("scan schedule still not active", this::detailScanStopped);
-      debug(format("Discovery %s synchronization", scanFamily));
       sleepFor("discovery event synchronization", EVENT_JITTER_SLEEP_TIME);
       List<DiscoveryEvents> receivedEvents = popReceivedEvents(DiscoveryEvents.class);
       checkThat("there were no received discovery events", receivedEvents.isEmpty());
@@ -351,8 +350,7 @@ public class DiscoverySequences extends SequenceBase {
             isoConvert(expectedFinish)));
 
     final int actualCount = deviceState.discovery.families.get(scanFamily).active_count;
-    debug(format("Discovery %s synchronization", scanFamily));
-    sleepFor("discovery evens synchronized", EVENT_JITTER_SLEEP_TIME);
+    sleepFor("discovery events synchronized", EVENT_JITTER_SLEEP_TIME);
 
     List<DiscoveryEvents> events = popReceivedEvents(DiscoveryEvents.class);
 
