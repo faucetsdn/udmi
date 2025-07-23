@@ -85,7 +85,7 @@ public class DiscoverySequences extends SequenceBase {
   private static final Duration SCAN_START_DELAY = Duration.ofSeconds(20);
   private static final Duration WAITING_PERIOD = SCAN_START_DELAY.plus(SCAN_START_DELAY);
   private static final int SCAN_START_JITTER_SEC = 10;
-  private static final Duration EVENT_JITTER_SLEEP_TIME = Duration.ofSeconds(2);
+  private static final Duration EVENT_JITTER_SLEEP_TIME = Duration.ofSeconds(10);
   private static final int SCAN_ITERATIONS = 2;
   private static final long RANDOM_YEAR_SEC = (long) (Math.random() * 60 * 60 * 24 * 365);
   private static final Instant BASE_OLD_TIME = Instant.parse("2020-10-18T12:02:01Z");
@@ -319,6 +319,7 @@ public class DiscoverySequences extends SequenceBase {
       waitUntil("scan schedule initially not active", this::detailScanStopped);
       sleepFor("false start check delay", SCAN_START_DELAY);
       waitUntil("scan schedule still not active", this::detailScanStopped);
+      debug(format("Discovery %s synchronization", scanFamily));
       sleepFor("discovery event synchronization", EVENT_JITTER_SLEEP_TIME);
       List<DiscoveryEvents> receivedEvents = popReceivedEvents(DiscoveryEvents.class);
       checkThat("there were no received discovery events", receivedEvents.isEmpty());
@@ -350,6 +351,7 @@ public class DiscoverySequences extends SequenceBase {
             isoConvert(expectedFinish)));
 
     int actualCount = deviceState.discovery.families.get(scanFamily).active_count;
+    debug(format("Discovery %s synchronization", scanFamily));
     sleepFor("discovery evens synchronized", EVENT_JITTER_SLEEP_TIME);
 
     List<DiscoveryEvents> events = popReceivedEvents(DiscoveryEvents.class);
