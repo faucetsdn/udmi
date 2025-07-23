@@ -1,0 +1,66 @@
+{
+  "discovery" : {
+    "families" : {
+      "vendor" : {
+        "generation" : "2025-07-23T23:02:39Z",
+        "phase" : "stopped",
+        "active_count" : 2
+      }
+    }
+  },
+  "localnet" : {
+    "families" : {
+      "ether" : {
+        "addr" : "60:45:bd:06:61:51"
+      },
+      "ipv4" : {
+        "addr" : "10.1.0.193"
+      },
+      "vendor" : {
+        "addr" : "28179023"
+      },
+      "bacnet" : {
+        "addr" : "snoozle"
+      }
+    }
+  },
+  "pointset" : {
+    "points" : {
+      "filter_alarm_pressure_status" : {
+        "units" : "No-units"
+      },
+      "filter_differential_pressure_setpoint" : {
+        "units" : "Bars",
+        "value_state" : "applied"
+      },
+      "filter_differential_pressure_sensor" : {
+        "units" : "Degrees-Celsius"
+      }
+    }
+  },
+  "system" : {
+    "last_config" : "2025-07-23T23:02:53Z",
+    "operation" : {
+      "operational" : true,
+      "last_start" : "2025-07-23T23:02:13Z",
+      "restart_count" : 1,
+      "mode" : "initial"
+    },
+    "serial_no" : "sequencer-24725",
+    "hardware" : {
+      "make" : "BOS",
+      "model" : "pubber"
+    },
+    "software" : {
+      "firmware" : "v1"
+    },
+    "status" : {
+      "message" : "success",
+      "category" : "system.config.apply",
+      "timestamp" : "2025-07-23T23:02:54Z",
+      "level" : 300
+    }
+  },
+  "timestamp" : "2025-07-23T23:03:04Z",
+  "version" : "1.5.3"
+}

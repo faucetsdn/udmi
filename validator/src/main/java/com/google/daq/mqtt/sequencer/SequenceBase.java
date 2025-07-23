@@ -362,6 +362,8 @@ public class SequenceBase {
   protected boolean pretendStateUpdated;
   private Boolean stateSupported;
   private Instant lastConfigApplied = getNowInstant();
+  private Map<String, AtomicInteger> msgIndex = new HashMap<>();
+  private Map<String, String> lastBase = new HashMap<>();
 
   private static void setupSequencer() {
     exeConfig = ofNullable(exeConfig).orElseGet(SequenceRunner::ensureExecutionConfig);
@@ -1196,8 +1198,14 @@ public class SequenceBase {
     String altDir = ofNullable(envelope.gatewayId).map(x -> proxiedSubdir).orElse(TRACE_SUBDIR);
     String useDir = isFallbackRegistry ? STRAY_SUBDIR : altDir;
     File altFile = new File(testDir, useDir);
-    String timeSuffix = ifNotNullGet(envelope.publishTime, JsonUtil::isoConvert, getTimestamp());
-    File altOut = new File(altFile, messageBase + "_" + timeSuffix + fileSuffix);
+    String timestamp = ifNotNullGet(envelope.publishTime, JsonUtil::isoConvert, getTimestamp());
+
+    String fileBase = messageBase + "+" + timestamp;
+    String previous = lastBase.put(fileSuffix, fileBase);
+    AtomicInteger index = msgIndex.computeIfAbsent(fileSuffix, x -> new AtomicInteger());
+    ifTrueThen(fileBase.equals(previous), index::incrementAndGet, () -> index.set(0));
+
+    File altOut = new File(altFile, format("%s_%02d%s", fileBase, index.get(), fileSuffix));
     writeString(altOut, contents);
   }
 

@@ -1,0 +1,9 @@
+{
+  "families" : {
+    "vendor" : {
+      "generation" : "2025-07-23T23:02:39Z",
+      "scan_duration_sec" : 10,
+      "addrs" : [ "0x65", "20231" ]
+    }
+  }
+}

@@ -1,0 +1,18 @@
+{
+  "families" : {
+    "ether" : {
+      "addr" : "60:45:bd:06:61:51"
+    },
+    "ipv4" : {
+      "addr" : "10.1.0.193"
+    },
+    "vendor" : {
+      "addr" : "28179023"
+    },
+    "bacnet" : {
+      "addr" : "snoozle"
+    }
+  },
+  "timestamp" : "2025-07-23T23:02:56Z",
+  "version" : "1.5.3"
+}
