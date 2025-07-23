@@ -1,6 +1,7 @@
 package udmi.lib.client.manager;
 
 import static com.google.udmi.util.GeneralUtils.catchToNull;
+import static com.google.udmi.util.GeneralUtils.ifNotNullGet;
 import static com.google.udmi.util.GeneralUtils.ifNotNullThen;
 import static com.google.udmi.util.GeneralUtils.ifNullElse;
 import static com.google.udmi.util.GeneralUtils.ifNullThen;
@@ -15,12 +16,14 @@ import static udmi.schema.FamilyDiscoveryState.Phase.ACTIVE;
 import static udmi.schema.FamilyDiscoveryState.Phase.PENDING;
 import static udmi.schema.FamilyDiscoveryState.Phase.STOPPED;
 
+import com.google.common.collect.ImmutableSet;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Supplier;
@@ -310,8 +313,16 @@ public interface DiscoveryManager extends SubBlockManager {
    */
   default void startDiscoveryForFamily(String family, Date scanGeneration,
       FamilyDiscoveryState familyDiscoveryState, AtomicInteger sendCount) {
+    Set<String> targets = ofNullable(
+        catchToNull(() -> getDiscoveryConfig().families.get(family).addrs))
+        .map(ImmutableSet::copyOf).orElse(null);
     discoveryProvider(family).startScan(shouldEnumerate(family), (deviceId, discoveryEvent) -> {
       ifNotNullThen(discoveryEvent.addr, addr -> {
+        if (ifNotNullGet(targets, t -> !t.contains(addr), false)) {
+          info(format("Discovered %s device %s for %s skipped", family, addr,
+              isoConvert(scanGeneration)));
+          return;
+        }
         int activeCount = sendCount.getAndIncrement();
         familyDiscoveryState.active_count = activeCount;
         info(format("Discovered %s device %s for %s as %d", family, addr,

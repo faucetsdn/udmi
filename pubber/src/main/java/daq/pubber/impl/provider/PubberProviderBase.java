@@ -43,9 +43,8 @@ public class PubberProviderBase extends ManagerBase {
   }
 
   protected DiscoveryEvents augmentSend(Entry<String, Metadata> entry, boolean enumerate) {
-    String addr = catchToNull(() -> entry.getValue().localnet.families.get(family).addr);
     DiscoveryEvents event = new DiscoveryEvents();
-    event.addr = addr;
+    event.addr = catchToNull(() -> entry.getValue().localnet.families.get(family).addr);
     event.refs = ifTrueGet(enumerate, () -> getDiscoveredRefs(entry.getValue()));
     return event;
   }
