@@ -350,7 +350,7 @@ public class DiscoverySequences extends SequenceBase {
         format("scan completed %ss different from expected %s", deltaFinish,
             isoConvert(expectedFinish)));
 
-    int actualCount = deviceState.discovery.families.get(scanFamily).active_count;
+    final int actualCount = deviceState.discovery.families.get(scanFamily).active_count;
     debug(format("Discovery %s synchronization", scanFamily));
     sleepFor("discovery evens synchronized", EVENT_JITTER_SLEEP_TIME);
 
