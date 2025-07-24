@@ -1,7 +1,11 @@
 package com.google.bos.iot.core.bambi;
 
+import static com.google.bos.iot.core.bambi.Utils.DELETE_MARKER;
+import static com.google.bos.iot.core.bambi.Utils.EMPTY_MARKER;
 import static com.google.bos.iot.core.bambi.Utils.NON_NUMERIC_HEADERS_REGEX;
+import static com.google.bos.iot.core.bambi.Utils.POINTS_KEY_REGEX;
 import static com.google.bos.iot.core.bambi.Utils.handleArraysInMap;
+import static com.google.bos.iot.core.bambi.Utils.handleExplicitlyEmptyValues;
 import static com.google.bos.iot.core.bambi.Utils.removeBracketsFromListValues;
 import static com.google.udmi.util.GeneralUtils.catchToElse;
 import static com.google.udmi.util.JsonUtil.asLinkedHashMap;
@@ -17,8 +21,10 @@ import java.nio.file.Paths;
 import java.time.Instant;
 import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Objects;
@@ -161,19 +167,27 @@ public class LocalSiteModelManager {
     for (Entry<String, Map<String, String>> entry : newDevicesMetadata.entrySet()) {
       String deviceId = entry.getKey();
       Map<String, String> deviceMetadataOnDisk = getDeviceMetadata(deviceId);
-      writeDeviceMetadata(merge(deviceMetadataOnDisk, entry.getValue(), true), deviceId);
+      writeDeviceMetadata(mergeDeviceMetadata(deviceMetadataOnDisk, entry.getValue()), deviceId);
     }
   }
 
   private Map<String, String> merge(Map<String, String> metadataOnDisk,
       Map<String, String> newMetadata, boolean shouldUpdateTimestamp) {
     metadataOnDisk = removeBracketsFromListValues(metadataOnDisk);
+    handleExplicitlyEmptyValues(newMetadata);
+
     for (Entry<String, String> entry : newMetadata.entrySet()) {
       String key = entry.getKey();
       String value = entry.getValue();
-      if (Objects.equals(value, "__DELETE__")) {
+      if (Objects.equals(value, DELETE_MARKER)) {
         metadataOnDisk.remove(key);
         updateTimestamp(metadataOnDisk, shouldUpdateTimestamp);
+      } else if (Objects.equals(value, EMPTY_MARKER)) {
+        String valueOnDisk = metadataOnDisk.get(key);
+        if (valueOnDisk == null || !valueOnDisk.isEmpty()) {
+          metadataOnDisk.put(key, "");
+          updateTimestamp(metadataOnDisk, shouldUpdateTimestamp);
+        }
       } else if (!value.isEmpty() && !value.equals(metadataOnDisk.getOrDefault(key, ""))) {
         metadataOnDisk.put(key, value);
         updateTimestamp(metadataOnDisk, shouldUpdateTimestamp);
@@ -190,4 +204,28 @@ public class LocalSiteModelManager {
     }
   }
 
+  /**
+   * Merge device metadata with the received update.
+   *
+   * @param originalData Device metadata on disk.
+   * @param receivedUpdate Received Device metadata update.
+   */
+  private Map<String, String> mergeDeviceMetadata(Map<String, String> originalData,
+      Map<String, String> receivedUpdate) {
+    // Merge all data including any renamed points
+    Map<String, String> mergedData = merge(originalData, receivedUpdate, true);
+
+    // Remove any outdated points (removed or renamed to something new)
+    List<String> keysToRemove = new ArrayList<>();
+    for (String key : mergedData.keySet()) {
+      if (key.matches(POINTS_KEY_REGEX.pattern()) && !receivedUpdate.containsKey(key)) {
+        keysToRemove.add(key);
+      }
+    }
+    for (String key : keysToRemove) {
+      mergedData.remove(key);
+    }
+
+    return mergedData;
+  }
 }
