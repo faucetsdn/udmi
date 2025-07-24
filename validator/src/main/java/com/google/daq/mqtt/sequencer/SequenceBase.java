@@ -281,6 +281,7 @@ public class SequenceBase {
   public static final String STRAY_SUBDIR = "stray";
   private static final long MESSAGE_POLL_SLEEP_MS = 1000;
   private static final String MESSAGE_SOURCE_INDICATOR = "message_envelope_source_key";
+  private static final Duration WAITING_SLOP_TIME = Duration.ofSeconds(2);
   protected static Metadata deviceMetadata;
   protected static String projectId;
   protected static String cloudRegion;
@@ -1638,7 +1639,9 @@ public class SequenceBase {
 
   protected void sleepFor(String delayReason, Duration sleepTime) {
     String message = format("sleeping %ss for %s", sleepTime.getSeconds(), delayReason);
-    whileDoing(message, () -> safeSleep(sleepTime.getSeconds() * ONE_SECOND_MS));
+    Instant endTime = Instant.now().plus(sleepTime);
+    withRecordSequence(false, () -> waitUntil(message, sleepTime.plus(WAITING_SLOP_TIME),
+        () -> endTime.isAfter(Instant.now()) ? message : null));
   }
 
   protected void checkFor(String description, Supplier<String> detailer) {
