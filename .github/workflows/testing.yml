@@ -208,7 +208,7 @@ jobs:
       - name: captured messages
         if: ${{ !cancelled() }}
         run: |
-          cat /tmp/message_capture.log
+          cat out/message_capture.log
           mkdir -p out/registries && cd out/registries/
           find . -type f | sort | xargs more
       - name: output files
