@@ -356,9 +356,8 @@ public interface DiscoveryManager extends SubBlockManager {
       info(format("Discovered %s stopping %s (=? %s)", family, isoConvert(scanGeneration),
           isoConvert(familyDiscoveryState.generation)));
       ifTrueThen(scanGeneration.equals(familyDiscoveryState.generation), () -> {
-        sendMarkerDiscoveryEvent(family, scanGeneration, sendCount);
-        safeSleep(10000); // TAP hack for debugging
         discoveryProvider(family).stopScan();
+        sendMarkerDiscoveryEvent(family, scanGeneration, sendCount);
         familyDiscoveryState.phase = STOPPED;
         updateState();
         scheduleDiscoveryScan(family);
