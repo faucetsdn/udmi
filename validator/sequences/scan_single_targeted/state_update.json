@@ -2,7 +2,7 @@
   "discovery" : {
     "families" : {
       "vendor" : {
-        "generation" : "2025-07-23T23:02:39Z",
+        "generation" : "2025-07-24T06:00:23Z",
         "phase" : "stopped",
         "active_count" : 2
       }
@@ -11,10 +11,10 @@
   "localnet" : {
     "families" : {
       "ether" : {
-        "addr" : "60:45:bd:06:61:51"
+        "addr" : "7c:1e:52:18:dd:4e"
       },
       "ipv4" : {
-        "addr" : "10.1.0.193"
+        "addr" : "10.1.0.207"
       },
       "vendor" : {
         "addr" : "28179023"
@@ -39,14 +39,14 @@
     }
   },
   "system" : {
-    "last_config" : "2025-07-23T23:02:53Z",
+    "last_config" : "2025-07-24T06:00:37Z",
     "operation" : {
       "operational" : true,
-      "last_start" : "2025-07-23T23:02:13Z",
+      "last_start" : "2025-07-24T05:59:59Z",
       "restart_count" : 1,
       "mode" : "initial"
     },
-    "serial_no" : "sequencer-24725",
+    "serial_no" : "sequencer-24205",
     "hardware" : {
       "make" : "BOS",
       "model" : "pubber"
@@ -57,10 +57,10 @@
     "status" : {
       "message" : "success",
       "category" : "system.config.apply",
-      "timestamp" : "2025-07-23T23:02:54Z",
+      "timestamp" : "2025-07-24T06:00:38Z",
       "level" : 300
     }
   },
-  "timestamp" : "2025-07-23T23:03:04Z",
+  "timestamp" : "2025-07-24T06:00:58Z",
   "version" : "1.5.3"
 }
