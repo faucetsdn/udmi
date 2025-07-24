@@ -9,6 +9,7 @@ import static com.google.udmi.util.GeneralUtils.ifTrueGet;
 import static com.google.udmi.util.GeneralUtils.ifTrueThen;
 import static com.google.udmi.util.JsonUtil.getNowInstant;
 import static com.google.udmi.util.JsonUtil.isoConvert;
+import static com.google.udmi.util.JsonUtil.safeSleep;
 import static java.lang.Math.floorMod;
 import static java.lang.String.format;
 import static java.util.Optional.ofNullable;
@@ -355,10 +356,11 @@ public interface DiscoveryManager extends SubBlockManager {
       info(format("Discovered %s stopping %s (=? %s)", family, isoConvert(scanGeneration),
           isoConvert(familyDiscoveryState.generation)));
       ifTrueThen(scanGeneration.equals(familyDiscoveryState.generation), () -> {
+        sendMarkerDiscoveryEvent(family, scanGeneration, sendCount);
+        safeSleep(10000); // TAP hack for debugging
         discoveryProvider(family).stopScan();
         familyDiscoveryState.phase = STOPPED;
         updateState();
-        sendMarkerDiscoveryEvent(family, scanGeneration, sendCount);
         scheduleDiscoveryScan(family);
       });
     } catch (Exception e) {
