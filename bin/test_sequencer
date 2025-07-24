@@ -78,6 +78,7 @@ if [[ -n $clean_cache ]]; then
     rm -rf $site_path/out-seq $site_out
 fi
 
+rm -f out/sequencer.*.save out/sequencer.*.combined
 mkdir -p out/ $tests_out_base/
 
 serial_no=sequencer-$RANDOM
