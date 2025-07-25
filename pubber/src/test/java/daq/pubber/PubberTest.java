@@ -245,7 +245,7 @@ public class PubberTest extends TestBase {
 
     // Prepare test.
     testPersistentData.endpoint = null;
-    pubber.getConfig().endpoint = null;
+    pubber.getPubberConfig().endpoint = null;
 
     // Now test.
     testFeatures.put(PubberUnderTestFeatures.noInitializePersistentStore, false);
@@ -263,7 +263,7 @@ public class PubberTest extends TestBase {
 
     // Prepare test.
     testPersistentData.endpoint = null;
-    pubber.getConfig().endpoint = getEndpointConfiguration("from_config");
+    pubber.getPubberConfig().endpoint = getEndpointConfiguration("from_config");
 
     // Now test.
     testFeatures.put(PubberUnderTestFeatures.noInitializePersistentStore, false);
@@ -282,12 +282,12 @@ public class PubberTest extends TestBase {
 
     // Prepare test.
     testPersistentData.endpoint = getEndpointConfiguration("persistent");
-    pubber.getConfig().endpoint = null;
+    pubber.getPubberConfig().endpoint = null;
 
     // Now test.
     testFeatures.put(PubberUnderTestFeatures.noInitializePersistentStore, false);
     pubber.initializePersistentStore();
     assertEquals(pubber.persistentData.endpoint.hostname, "persistent");
-    assertEquals(pubber.getConfig().endpoint.hostname, "persistent");
+    assertEquals(pubber.getPubberConfig().endpoint.hostname, "persistent");
   }
 }

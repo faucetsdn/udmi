@@ -7,6 +7,7 @@ import static com.google.udmi.util.JsonUtil.isoConvert;
 
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableMap;
+import com.google.daq.mqtt.sequencer.semantic.SemanticList;
 import com.google.daq.mqtt.sequencer.semantic.SemanticValue;
 import com.google.udmi.util.DiffEntry;
 import java.lang.reflect.Field;
@@ -17,6 +18,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
+import org.jetbrains.annotations.Nullable;
 import udmi.schema.State;
 
 /**
@@ -67,6 +69,16 @@ public class ObjectDiffEngine {
     return traverseExtract(thing, false);
   }
 
+  private Object traverseObject(Object thing, boolean asValues) {
+    if (thing instanceof List<?> listThing) {
+      if (!asValues && thing instanceof SemanticList<?> semanticList) {
+        return semanticList.getDescription();
+      }
+      return listThing.stream().map(item -> convertValue(item, asValues)).toList();
+    }
+    return traverseExtract(thing, asValues);
+  }
+
   private Map<String, Object> traverseExtract(Object thing, boolean asValues) {
     if (thing == null) {
       return ImmutableMap.of();
@@ -75,7 +87,7 @@ public class ObjectDiffEngine {
       @SuppressWarnings("unchecked")
       Map<Object, Object> asMap = (Map<Object, Object>) thing;
       return asMap.keySet().stream().collect(
-          Collectors.toMap(Object::toString, key -> traverseExtract(asMap.get(key), asValues)));
+          Collectors.toMap(Object::toString, key -> traverseObject(asMap.get(key), asValues)));
     }
     return Arrays.stream(thing.getClass().getFields())
         .filter(field -> isNotNull(thing, field)).collect(
@@ -87,14 +99,19 @@ public class ObjectDiffEngine {
     try {
       Object result = field.get(thing);
       if (isBaseType(field) || isBaseType(result)) {
-        boolean useValue = asValue || !SemanticValue.isSemanticValue(result);
-        return useValue ? SemanticValue.getValue(result) : SemanticValue.getDescription(result);
+        return convertValue(result, asValue);
       } else {
-        return traverseExtract(result, asValue);
+        return traverseObject(result, asValue);
       }
     } catch (Exception e) {
       throw new RuntimeException("While converting field " + field.getName(), e);
     }
+  }
+
+  @Nullable
+  private static Object convertValue(Object result, boolean asValue) {
+    boolean useValue = asValue || !SemanticValue.isSemanticValue(result);
+    return useValue ? SemanticValue.getValue(result) : SemanticValue.getDescription(result);
   }
 
   private boolean isNotNull(Object thing, Field field) {
