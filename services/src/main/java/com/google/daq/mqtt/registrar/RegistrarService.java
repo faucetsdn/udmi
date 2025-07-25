@@ -38,7 +38,7 @@ public class RegistrarService extends AbstractPollingService {
       TRIGGER_BRANCH, "updateType");
   private static final Set<String> TRIGGERING_UPDATE_TYPES = Set.of("CREATE",
       "UPDATE_FAST_FORWARD");
-  private final String OPTIMIZE_ARG = "-o";
+  private static final String OPTIMIZE_ARG = "-o";
   private final String registrarTarget;
 
   /**
