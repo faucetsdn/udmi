@@ -38,6 +38,7 @@ public class RegistrarService extends AbstractPollingService {
       TRIGGER_BRANCH, "updateType");
   private static final Set<String> TRIGGERING_UPDATE_TYPES = Set.of("CREATE",
       "UPDATE_FAST_FORWARD");
+  private static final String OPTIMIZE_ARG = "-o";
   private final String registrarTarget;
 
   /**
@@ -96,32 +97,27 @@ public class RegistrarService extends AbstractPollingService {
   }
 
   @Override
-  protected void handleMessage(PubsubMessage message) {
-    try {
-      Map<String, Object> messageData = parseSourceRepoMessageData(message);
-      if (!isTriggeringEvent(messageData)) {
-        return;
-      }
+  protected void handleMessage(PubsubMessage message) throws Exception {
+    Map<String, Object> messageData = parseSourceRepoMessageData(message);
+    if (!isTriggeringEvent(messageData)) {
+      return;
+    }
 
-      String repoId = extractRepoId(messageData);
-      SourceRepository repository = initRepository(repoId);
+    String repoId = extractRepoId(messageData);
+    SourceRepository repository = initRepository(repoId);
 
-      if (repository.clone(TRIGGER_BRANCH)) {
-        Map<String, Object> triggerConfig;
-        if ((triggerConfig = repository.getRegistrarTriggerConfig()) != null) {
-          String spreadsheetId = getValueFromMap(triggerConfig, SPREADSHEET_ID_KEY).orElse(null);
-          String author = getValueFromMap(triggerConfig, AUTHOR_KEY).orElse(null);
-          runRegistrar(spreadsheetId, repository, author);
-        } else {
-          LOGGER.info("Skipping. Trigger file does not exist.");
-        }
-        repository.delete();
+    if (repository.clone(TRIGGER_BRANCH)) {
+      Map<String, Object> triggerConfig;
+      if ((triggerConfig = repository.getRegistrarTriggerConfig()) != null) {
+        String spreadsheetId = getValueFromMap(triggerConfig, SPREADSHEET_ID_KEY).orElse(null);
+        String author = getValueFromMap(triggerConfig, AUTHOR_KEY).orElse(null);
+        runRegistrar(spreadsheetId, repository, author);
       } else {
-        LOGGER.error("Failed to clone repository {}", repoId);
+        LOGGER.info("Skipping. Trigger file does not exist.");
       }
-
-    } catch (Exception e) {
-      LOGGER.error("Could not complete registrar run request", e);
+      repository.delete();
+    } else {
+      LOGGER.error("Failed to clone repository {}", repoId);
     }
   }
 
@@ -165,7 +161,8 @@ public class RegistrarService extends AbstractPollingService {
   private Runnable createRegistrarTask(SourceRepository repository, String author) {
     return () -> {
       try {
-        List<String> argList = List.of(repository.getUdmiModelPath(), registrarTarget);
+        List<String> argList = List.of(repository.getUdmiModelPath(), registrarTarget,
+            OPTIMIZE_ARG);
         new Registrar().processArgs(argList).execute();
         pushRegistrationSummary(repository, author);
       } catch (Exception e) {

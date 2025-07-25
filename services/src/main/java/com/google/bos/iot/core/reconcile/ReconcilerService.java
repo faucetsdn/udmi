@@ -9,7 +9,6 @@ import static com.google.udmi.util.SourceRepository.AUTHOR_KEY;
 import com.google.pubsub.v1.PubsubMessage;
 import com.google.udmi.util.AbstractPollingService;
 import com.google.udmi.util.SourceRepository;
-import java.io.IOException;
 import java.util.Map;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -70,34 +69,30 @@ public class ReconcilerService extends AbstractPollingService {
   }
 
   @Override
-  protected void handleMessage(PubsubMessage message) {
-    try {
-      Map<String, Object> messageData = parseSourceRepoMessageData(message);
-      String refName = getNewProposalBranch(messageData);
+  protected void handleMessage(PubsubMessage message) throws Exception {
+    Map<String, Object> messageData = parseSourceRepoMessageData(message);
+    String refName = getNewProposalBranch(messageData);
 
-      if (refName != null) {
-        String repoId = extractRepoId(messageData);
-        String branch = refName.substring("refs/heads/".length());
-        LOGGER.info("Processing new proposal for repository {}, branch {}", repoId, branch);
+    if (refName != null) {
+      String repoId = extractRepoId(messageData);
+      String branch = refName.substring("refs/heads/".length());
+      LOGGER.info("Processing new proposal for repository {}, branch {}", repoId, branch);
 
-        SourceRepository repository = initRepository(repoId);
-        if (repository.clone(branch)) {
-          Map<String, Object> triggerKeys = repository.getRegistrarTriggerConfig();
+      SourceRepository repository = initRepository(repoId);
+      if (repository.clone(branch)) {
+        Map<String, Object> triggerKeys = repository.getRegistrarTriggerConfig();
 
-          String author = getValueFromMap(triggerKeys, AUTHOR_KEY).orElse(null);
-          if (!repository.createPullRequest("Proposal " + branch, null, branch, "main", author)) {
-            LOGGER.error(
-                "Could not create pull request! "
-                    + "Details: \\{ sourceBranch: {}, targetBranch: {}, author: {} \\}",
-                branch, DEFAULT_TARGET_BRANCH, author);
-          }
-          repository.delete();
-        } else {
-          LOGGER.error("Could not clone repository! PR message was not published!");
+        String author = getValueFromMap(triggerKeys, AUTHOR_KEY).orElse(null);
+        if (!repository.createPullRequest("Proposal " + branch, null, branch, "main", author)) {
+          LOGGER.error(
+              "Could not create pull request! "
+                  + "Details: \\{ sourceBranch: {}, targetBranch: {}, author: {} \\}",
+              branch, DEFAULT_TARGET_BRANCH, author);
         }
+        repository.delete();
+      } else {
+        LOGGER.error("Could not clone repository! PR message was not published!");
       }
-    } catch (IOException e) {
-      throw new RuntimeException("Could not process Pub/Sub message", e);
     }
   }
 
