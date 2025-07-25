@@ -47,6 +47,7 @@ import com.google.daq.mqtt.sequencer.Feature;
 import com.google.daq.mqtt.sequencer.SequenceBase;
 import com.google.daq.mqtt.sequencer.Summary;
 import com.google.daq.mqtt.sequencer.semantic.SemanticDate;
+import com.google.daq.mqtt.sequencer.semantic.SemanticList;
 import com.google.daq.mqtt.util.providers.FamilyProvider;
 import java.time.Duration;
 import java.time.Instant;
@@ -548,7 +549,8 @@ public class DiscoverySequences extends SequenceBase {
     configFamily.depth = enumerationDepthIf(shouldEnumerate);
     configFamily.scan_interval_sec = intervalSec;
     configFamily.scan_duration_sec = ofNullable(intervalSec).orElse(SCAN_DURATION_SEC);
-    configFamily.addrs = ifNotNullGet(targets, ImmutableList::copyOf);
+    configFamily.addrs = ifNotNullGet(targets,
+        t -> new SemanticList<>("list of target devices", ImmutableList.copyOf(t)));
     popReceivedEvents(DiscoveryEvents.class);
   }
 
