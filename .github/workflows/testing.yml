@@ -188,9 +188,7 @@ jobs:
       - name: base setup
         run: bin/run_tests install_dependencies
       - name: local setup
-        run: |
-          bin/start_local sites/udmi_site_model $TARGET_PROJECT
-          bin/pull_messages //mqtt/localhost > out/message_capture.log 2>&1 &
+        run: bin/start_local sites/udmi_site_model $TARGET_PROJECT
       - name: registrar clean
         run: bin/test_regclean $TARGET_PROJECT
       - name: sequence tests clean
@@ -205,12 +203,6 @@ jobs:
       - name: itemized sequencer tests
         if: ${{ !cancelled() }}
         run: bin/test_itemized $TARGET_PROJECT
-      - name: captured messages
-        if: ${{ !cancelled() }}
-        run: |
-          cat out/message_capture.log
-          mkdir -p out/registries && cd out/registries/
-          find . -type f | sort | xargs more
       - name: output files
         if: ${{ !cancelled() }}
         run: more out/*.out* | cat
