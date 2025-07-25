@@ -2,7 +2,7 @@
   "min_loglevel" : 100,
   "metrics_rate_sec" : 10,
   "operation" : {
-    "last_start" : "2025-07-24T05:59:59Z"
+    "last_start" : "TIMESTAMP"
   },
   "testing" : {
     "sequence_name" : "scan_single_targeted"

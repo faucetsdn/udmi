@@ -1,10 +1,10 @@
 {
   "event_no" : -3,
   "family" : "vendor",
-  "generation" : "2025-07-24T06:00:23Z",
+  "generation" : "TIMESTAMP",
   "system" : {
     "ancillary" : { }
   },
-  "timestamp" : "2025-07-24T06:00:48Z",
+  "timestamp" : "TIMESTAMP",
   "version" : "1.5.3"
 }

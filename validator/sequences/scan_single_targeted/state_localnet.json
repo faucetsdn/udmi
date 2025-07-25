@@ -1,10 +1,10 @@
 {
   "families" : {
     "ether" : {
-      "addr" : "7c:1e:52:18:dd:4e"
+      "addr" : "00:0d:3a:14:80:5d"
     },
     "ipv4" : {
-      "addr" : "10.1.0.207"
+      "addr" : "10.1.0.18"
     },
     "vendor" : {
       "addr" : "28179023"
@@ -13,6 +13,6 @@
       "addr" : "snoozle"
     }
   },
-  "timestamp" : "2025-07-24T06:00:40Z",
+  "timestamp" : "TIMESTAMP",
   "version" : "1.5.3"
 }

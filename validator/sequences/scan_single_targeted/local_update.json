@@ -1,11 +1,11 @@
 {
-  "timestamp" : "2025-07-24T06:00:18Z",
-  "version" : "@@@cloud udmi version###git-2910819",
+  "timestamp" : "TIMESTAMP",
+  "version" : "@@@cloud udmi version###git-a9799fa",
   "system" : {
     "min_loglevel" : 100,
     "metrics_rate_sec" : 10,
     "operation" : {
-      "last_start" : "2025-07-24T05:59:59Z"
+      "last_start" : "TIMESTAMP"
     },
     "testing" : {
       "sequence_name" : "scan_single_targeted"
