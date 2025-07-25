@@ -10,6 +10,7 @@ import static com.google.bos.iot.core.bambi.Utils.removeBracketsFromListValues;
 import static com.google.udmi.util.GeneralUtils.catchToElse;
 import static com.google.udmi.util.JsonUtil.asLinkedHashMap;
 import static com.google.udmi.util.JsonUtil.flattenNestedMap;
+import static com.google.udmi.util.JsonUtil.isoConvert;
 import static com.google.udmi.util.JsonUtil.nestFlattenedJson;
 import static com.google.udmi.util.JsonUtil.writeFileWithCustomIndentForArrays;
 
@@ -19,8 +20,6 @@ import java.net.URI;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.Instant;
-import java.time.ZoneOffset;
-import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
@@ -198,9 +197,7 @@ public class LocalSiteModelManager {
 
   private void updateTimestamp(Map<String, String> metadataMap, boolean shouldUpdateTimestamp) {
     if (shouldUpdateTimestamp) {
-      DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss'Z'")
-          .withZone(ZoneOffset.UTC);
-      metadataMap.put("timestamp", formatter.format(Instant.now()));
+      metadataMap.put("timestamp", isoConvert(Instant.now()));
     }
   }
 
