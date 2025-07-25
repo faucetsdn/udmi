@@ -22,6 +22,7 @@ public class PubberVendorProvider extends PubberProviderBase implements PubberFa
 
   @Override
   public void startScan(boolean enumerate, BiConsumer<String, DiscoveryEvents> publisher) {
+    super.startScan(enumerate, publisher);
     getAllDevices().keySet().forEach(getResultPublisher());
   }
 
