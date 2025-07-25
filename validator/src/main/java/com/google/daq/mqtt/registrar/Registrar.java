@@ -392,7 +392,8 @@ public class Registrar {
   }
 
   private void loadSiteRegistrationTimestamps() {
-    DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss'Z'").withZone(ZoneOffset.UTC);
+    DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss'Z'")
+        .withZone(ZoneOffset.UTC);
     currentRunTimestamp = formatter.format(Instant.now());
 
     File registrationHistory = new File(siteDir, SiteModel.REGISTRATION_SUMMARY_BASE + ".json");
