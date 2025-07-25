@@ -9,7 +9,6 @@ import static com.google.udmi.util.SourceRepository.AUTHOR_KEY;
 import com.google.pubsub.v1.PubsubMessage;
 import com.google.udmi.util.AbstractPollingService;
 import com.google.udmi.util.SourceRepository;
-import java.io.IOException;
 import java.util.Map;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

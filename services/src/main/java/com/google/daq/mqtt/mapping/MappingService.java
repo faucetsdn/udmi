@@ -7,7 +7,6 @@ import com.google.daq.mqtt.registrar.Registrar;
 import com.google.pubsub.v1.PubsubMessage;
 import com.google.udmi.util.AbstractPollingService;
 import com.google.udmi.util.SourceRepository;
-import java.io.IOException;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
