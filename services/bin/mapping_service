@@ -39,7 +39,10 @@ main() {
                 shift
                 ;;
             *)
-                if [[ -z "$local_origin_dir" ]]; then
+                if [[ "$1" =~ ^- ]]; then
+                    echo "Error: Unknown command line option: '$1'"
+                    usage
+                elif [[ -z "$local_origin_dir" ]]; then
                     local_origin_dir="$1"
                     shift
                 else

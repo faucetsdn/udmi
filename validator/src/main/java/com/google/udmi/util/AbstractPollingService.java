@@ -116,7 +116,7 @@ public abstract class AbstractPollingService {
    *
    * @param message The message received from the messaging client.
    */
-  protected abstract void handleMessage(PubsubMessage message);
+  protected abstract void handleMessage(PubsubMessage message) throws IOException;
 
   /**
    * The main loop that polls the messaging client for new requests.

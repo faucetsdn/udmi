@@ -17,7 +17,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * Mapping Service basically
+ * Mapping Service that
  * fetches the site mode, internally calls registrar, then the mapping process
  * and then pushes the changes in the different discovery branch.
  */
@@ -38,7 +38,7 @@ public class MappingService extends AbstractPollingService {
    */
   public static void main(String[] args) {
     if (args.length < 3 || args.length > 4) {
-      System.err.println(
+      LOGGER.error(
           "Usage: MappingService <projectTarget> <registrarTarget> <siteModelCloneDir> "
               + "[<localOriginDir>]");
       System.exit(1);
@@ -47,7 +47,7 @@ public class MappingService extends AbstractPollingService {
     String projectTarget = args[0];
     String projectSpec = args[1];
     String siteModelCloneDir = args[2];
-    String localOriginDir =  (args.length == 4) && isNotEmpty(args[3]) ? args[3] : null;
+    String localOriginDir = (args.length == 4) && isNotEmpty(args[3]) ? args[3] : null;
 
     MappingService service = new MappingService(projectTarget, projectSpec, siteModelCloneDir,
         localOriginDir);
@@ -66,7 +66,8 @@ public class MappingService extends AbstractPollingService {
    * @param siteModelBaseDir Base directory for cloning site model Git repositories.
    * @param localOriginDir Optional directory for local git origins (for testing).
    */
-  public MappingService(String projectTarget, String projectSpec, String siteModelBaseDir, String localOriginDir) {
+  public MappingService(String projectTarget, String projectSpec, String siteModelBaseDir,
+      String localOriginDir) {
     super(SERVICE_NAME, SUBSCRIPTION_SUFFIX, projectTarget, siteModelBaseDir, localOriginDir);
     this.projectSpec = projectSpec;
     LOGGER.info("Starting Mapping Service for project {}, cloning to {}", projectTarget,
@@ -74,53 +75,57 @@ public class MappingService extends AbstractPollingService {
   }
 
   @Override
-  protected void handleMessage(PubsubMessage message) {
-    try {
-      Map<String, Object> messageData = parseSourceRepoMessageData(message);
-      Integer eventNumber = (Integer) messageData.getOrDefault(EVENT_NUMBER_FIELD, 0);
-      LOGGER.info("Received event no. from message: {}", eventNumber);
-      if (eventNumber < 0) {
-        String mappingFamily = (String) messageData.getOrDefault(FAMILY_FIELD, "");
-        String registryId = message.getAttributesOrDefault(REGISTRY_ID_FIELD, "");
+  protected void handleMessage(PubsubMessage message) throws IOException {
+    Map<String, Object> messageData = parseSourceRepoMessageData(message);
+    Integer eventNumber = (Integer) messageData.getOrDefault(EVENT_NUMBER_FIELD, 0);
+    LOGGER.info("Received event no. from message: {}", eventNumber);
+    if (eventNumber < 0) {
+      String mappingFamily = (String) messageData.getOrDefault(FAMILY_FIELD, "");
+      String registryId = message.getAttributesOrDefault(REGISTRY_ID_FIELD, "");
 
-        if (registryId.isEmpty()) {
-          LOGGER.error("Registry Id not found for the message.");
-          return;
-        }
-
-        String discoveryNodeDeviceId = message.getAttributesOrDefault(DISCOVERY_NODE_DEVICE_ID_FIELD, "");
-        if (discoveryNodeDeviceId.isEmpty()) {
-          LOGGER.error("Discovery Node device Id not found for the message received.");
-        }
-        LOGGER.info("Starting Mapping process for registry: {}, family: {}, discoverNode deviceId: {}", registryId, mappingFamily, discoveryNodeDeviceId);
-
-        SourceRepository repository = initRepository(registryId);
-        if (repository.clone(DEFAULT_TARGET_BRANCH)) {
-          String timestamp = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMdd.HHmmss"));
-
-          String exportBranch = String.format("%s/%s/%s", TRIGGER_BRANCH, SERVICE_NAME, timestamp);
-          if (!repository.checkoutNewBranch(exportBranch)) {
-            throw new RuntimeException("Unable to create and checkout export branch " + exportBranch);
-          }
-
-          String udmiModelPath = repository.getUdmiModelPath();
-          (new Registrar()).processArgs(new ArrayList<>(List.of(udmiModelPath, projectSpec))).execute();
-          MappingAgent mappingAgent = new MappingAgent(new ArrayList<>(
-              List.of(udmiModelPath, projectSpec)));
-          mappingAgent.processMapping(new ArrayList<>(List.of(discoveryNodeDeviceId, mappingFamily)));
-
-          LOGGER.info("Committing and pushing changes to branch {}", exportBranch);
-          if (!repository.commitAndPush("Merge changes from source: MappingService")) {
-            throw new RuntimeException("Unable to commit and push changes to branch " + exportBranch);
-          }
-          LOGGER.info("Export operation complete.");
-          repository.delete();
-        } else {
-          LOGGER.error("Could not clone repository! PR message was not published!");
-        }
+      if (registryId.isEmpty()) {
+        LOGGER.error("Registry Id not found for the message.");
+        return;
       }
-    } catch (IOException e) {
-      throw new RuntimeException("Could not process Pub/Sub message", e);
+
+      String discoveryNodeDeviceId = message.getAttributesOrDefault(
+          DISCOVERY_NODE_DEVICE_ID_FIELD, "");
+      if (discoveryNodeDeviceId.isEmpty()) {
+        LOGGER.error("Discovery Node device Id not found for the message received.");
+        return;
+      }
+      LOGGER.info("Starting Mapping process for registry: {}, family: {}, discoverNode deviceId:"
+          + " {}", registryId, mappingFamily, discoveryNodeDeviceId);
+
+      SourceRepository repository = initRepository(registryId);
+      if (repository.clone(DEFAULT_TARGET_BRANCH)) {
+        String timestamp = LocalDateTime.now()
+            .format(DateTimeFormatter.ofPattern("yyyyMMdd.HHmmss"));
+
+        String exportBranch = String.format("%s/%s/%s", TRIGGER_BRANCH, SERVICE_NAME, timestamp);
+        if (!repository.checkoutNewBranch(exportBranch)) {
+          throw new RuntimeException("Unable to create and checkout export branch "
+              + exportBranch);
+        }
+
+        String udmiModelPath = repository.getUdmiModelPath();
+        (new Registrar()).processArgs(new ArrayList<>(List.of(udmiModelPath, projectSpec)))
+            .execute();
+        MappingAgent mappingAgent = new MappingAgent(new ArrayList<>(
+            List.of(udmiModelPath, projectSpec)));
+        mappingAgent.processMapping(new ArrayList<>(List.of(discoveryNodeDeviceId,
+            mappingFamily)));
+
+        LOGGER.info("Committing and pushing changes to branch {}", exportBranch);
+        if (!repository.commitAndPush("Merge changes from source: MappingService")) {
+          throw new RuntimeException("Unable to commit and push changes to branch "
+              + exportBranch);
+        }
+        LOGGER.info("Export operation complete.");
+        repository.delete();
+      } else {
+        LOGGER.error("Could not clone repository! PR message was not published!");
+      }
     }
   }
 }
