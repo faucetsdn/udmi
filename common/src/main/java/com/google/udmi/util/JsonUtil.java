@@ -624,6 +624,12 @@ public abstract class JsonUtil {
       return mapper.getNodeFactory().arrayNode();
     }
 
+    // If the string contains any letters (and isn't "true" or "false"), treat it as a text node.
+    if (trimmedValue.matches(".*[a-zA-Z].*")) {
+      return mapper.getNodeFactory().textNode(value);
+    }
+
+    // Attempt to parse as a number
     try {
       int intValue = Integer.parseInt(trimmedValue);
       return mapper.getNodeFactory().numberNode(intValue);
@@ -636,6 +642,8 @@ public abstract class JsonUtil {
           double doubleValue = Double.parseDouble(trimmedValue);
           return mapper.getNodeFactory().numberNode(doubleValue);
         } catch (NumberFormatException e3) {
+          // Handle purely numeric-looking strings that still fail parsing
+          // (e.g., "1.2.3") and fall back to text.
           return mapper.getNodeFactory().textNode(value);
         }
       }
