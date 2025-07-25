@@ -15,6 +15,7 @@ import static com.google.udmi.util.Common.SEC_TO_MS;
 import static com.google.udmi.util.Common.SITE_METADATA_KEY;
 import static com.google.udmi.util.Common.SUBFOLDER_PROPERTY_KEY;
 import static com.google.udmi.util.Common.SUBTYPE_PROPERTY_KEY;
+import static com.google.udmi.util.Common.TIMESTAMP_KEY;
 import static com.google.udmi.util.Common.UDMI_VERSION_KEY;
 import static com.google.udmi.util.GeneralUtils.CSV_JOINER;
 import static com.google.udmi.util.GeneralUtils.catchToNull;
@@ -35,6 +36,8 @@ import static com.google.udmi.util.GeneralUtils.setOrSize;
 import static com.google.udmi.util.GeneralUtils.writeString;
 import static com.google.udmi.util.JsonUtil.JSON_SUFFIX;
 import static com.google.udmi.util.JsonUtil.OBJECT_MAPPER;
+import static com.google.udmi.util.JsonUtil.asMap;
+import static com.google.udmi.util.JsonUtil.isoConvert;
 import static com.google.udmi.util.JsonUtil.loadFile;
 import static com.google.udmi.util.JsonUtil.loadFileRequired;
 import static com.google.udmi.util.JsonUtil.safeSleep;
@@ -160,6 +163,7 @@ public class Registrar {
   private PubSubPusher feedPusher;
   private Map<String, LocalDevice> allDevices;
   private Map<String, LocalDevice> workingDevices;
+  private Set<String> changedDevices;
   private Set<String> extraDevices;
   private String projectId;
   private boolean updateCloudIoT;
@@ -185,6 +189,9 @@ public class Registrar {
   private boolean doNotUpdate;
   private boolean expandDependencies;
   private boolean updateMetadata;
+  private String currentRunTimestamp;
+  private String lastRunTimestamp;
+  private boolean optimizeRun;
 
   /**
    * Main entry point for registrar.
@@ -262,6 +269,12 @@ public class Registrar {
     ifNotNullThen(remainingArgs, this::setDeviceList);
     requireNonNull(siteModel, "siteModel not defined");
     return this;
+  }
+
+  @CommandLineOption(short_form = "-o", arg_name = "optimize",
+      description = "Only process devices updated after the last run")
+  private void setOptimizeRun() {
+    this.optimizeRun = true;
   }
 
   @CommandLineOption(short_form = "-u", description = "Update metadata.json")
@@ -375,6 +388,13 @@ public class Registrar {
     } finally {
       shutdown();
     }
+  }
+
+  private void loadSiteRegistrationTimestamps() {
+    currentRunTimestamp = isoConvert(Instant.now());
+
+    File registrationHistory = new File(siteDir, SiteModel.REGISTRATION_SUMMARY_BASE + ".json");
+    lastRunTimestamp = catchToNull(() -> asMap(registrationHistory).get(TIMESTAMP_KEY).toString());
   }
 
   private void updateDeviceMetadata() {
@@ -496,6 +516,7 @@ public class Registrar {
     System.err.println("Out of " + workingDevices.size() + " total.");
     // WARNING! entries inserted into `errorSummary` ABOVE this comment must have a map value ^^^^^^
     errorSummary.put(CLOUD_VERSION_KEY, getCloudVersionInfo());
+    errorSummary.put(TIMESTAMP_KEY, currentRunTimestamp);
     lastErrorSummary = errorSummary;
     errorSummary.put(UDMI_VERSION_KEY, Common.getUdmiVersion());
     ifNotNullThen(siteModel.siteMetadataExceptionMap,
@@ -539,7 +560,7 @@ public class Registrar {
     if (!parentFile.isDirectory() && !parentFile.mkdirs()) {
       throw new IllegalStateException("Could not create directory " + parentFile.getAbsolutePath());
     }
-
+    loadSiteRegistrationTimestamps();
     summarizers.addAll(SUMMARIZERS.entrySet().stream().map(factory -> {
       try {
         Summarizer summarizer = factory.getValue().getDeclaredConstructor().newInstance();
@@ -583,6 +604,7 @@ public class Registrar {
 
   private void processAllDevices(Runnable modelMunger) {
     allDevices = loadAllDevices();
+    changedDevices = loadChangedDevices();
     Set<String> explicitDevices = getExplicitDevices();
     try {
       workingDevices = instantiateExtras
@@ -651,6 +673,21 @@ public class Registrar {
       throw new RuntimeException("Not a valid directory: " + devicesDir.getAbsolutePath());
     }
     return loadDevices(SiteModel.listDevices(devicesDir));
+  }
+
+  private Set<String> loadChangedDevices() {
+    if (optimizeRun && lastRunTimestamp != null) {
+      System.err.println("Collecting devices changed after " + lastRunTimestamp);
+      return allDevices.entrySet().stream()
+          .filter(entry -> {
+            LocalDevice device = entry.getValue();
+            Metadata metadata = device.getMetadata();
+            return metadata == null || metadata.timestamp == null
+                || metadata.timestamp.toInstant().isAfter(Instant.parse(lastRunTimestamp));
+          })
+          .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue)).keySet();
+    }
+    return allDevices.keySet();
   }
 
   private int processDevices(Set<String> deviceSet) {
@@ -966,6 +1003,9 @@ public class Registrar {
   }
 
   private Set<String> getExplicitDevices() {
+    if (deviceList == null && optimizeRun) {
+      return new HashSet<>(changedDevices);
+    }
     if (deviceList == null) {
       return null;
     }
