@@ -682,8 +682,8 @@ public class Registrar {
           .filter(entry -> {
             LocalDevice device = entry.getValue();
             Metadata metadata = device.getMetadata();
-            return metadata == null || metadata.timestamp == null ||
-                metadata.timestamp.toInstant().isAfter(Instant.parse(lastRunTimestamp));
+            return metadata == null || metadata.timestamp == null
+                || metadata.timestamp.toInstant().isAfter(Instant.parse(lastRunTimestamp));
           })
           .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue)).keySet();
     }
