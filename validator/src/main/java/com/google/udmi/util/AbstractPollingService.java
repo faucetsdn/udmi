@@ -116,7 +116,7 @@ public abstract class AbstractPollingService {
    *
    * @param message The message received from the messaging client.
    */
-  protected abstract void handleMessage(PubsubMessage message) throws IOException;
+  protected abstract void handleMessage(PubsubMessage message) throws Exception;
 
   /**
    * The main loop that polls the messaging client for new requests.
@@ -125,7 +125,13 @@ public abstract class AbstractPollingService {
     LOGGER.info("Polling for new messages for {}...", serviceName);
     while (running.get()) {
       try {
-        ofNullable(messagingClient.poll(POLL_TIMEOUT)).ifPresent(this::handleMessage);
+        ofNullable(messagingClient.poll(POLL_TIMEOUT)).ifPresent(message -> {
+          try {
+            handleMessage(message);
+          } catch (Exception e) {
+            throw new RuntimeException(e);
+          }
+        });
       } catch (Exception e) {
         LOGGER.error("Error in processing loop for {}: {}", serviceName, e.getMessage(), e);
         sleepOnError();

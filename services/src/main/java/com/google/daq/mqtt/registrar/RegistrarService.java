@@ -96,32 +96,27 @@ public class RegistrarService extends AbstractPollingService {
   }
 
   @Override
-  protected void handleMessage(PubsubMessage message) {
-    try {
-      Map<String, Object> messageData = parseSourceRepoMessageData(message);
-      if (!isTriggeringEvent(messageData)) {
-        return;
-      }
+  protected void handleMessage(PubsubMessage message) throws Exception {
+    Map<String, Object> messageData = parseSourceRepoMessageData(message);
+    if (!isTriggeringEvent(messageData)) {
+      return;
+    }
 
-      String repoId = extractRepoId(messageData);
-      SourceRepository repository = initRepository(repoId);
+    String repoId = extractRepoId(messageData);
+    SourceRepository repository = initRepository(repoId);
 
-      if (repository.clone(TRIGGER_BRANCH)) {
-        Map<String, Object> triggerConfig;
-        if ((triggerConfig = repository.getRegistrarTriggerConfig()) != null) {
-          String spreadsheetId = getValueFromMap(triggerConfig, SPREADSHEET_ID_KEY).orElse(null);
-          String author = getValueFromMap(triggerConfig, AUTHOR_KEY).orElse(null);
-          runRegistrar(spreadsheetId, repository, author);
-        } else {
-          LOGGER.info("Skipping. Trigger file does not exist.");
-        }
-        repository.delete();
+    if (repository.clone(TRIGGER_BRANCH)) {
+      Map<String, Object> triggerConfig;
+      if ((triggerConfig = repository.getRegistrarTriggerConfig()) != null) {
+        String spreadsheetId = getValueFromMap(triggerConfig, SPREADSHEET_ID_KEY).orElse(null);
+        String author = getValueFromMap(triggerConfig, AUTHOR_KEY).orElse(null);
+        runRegistrar(spreadsheetId, repository, author);
       } else {
-        LOGGER.error("Failed to clone repository {}", repoId);
+        LOGGER.info("Skipping. Trigger file does not exist.");
       }
-
-    } catch (Exception e) {
-      LOGGER.error("Could not complete registrar run request", e);
+      repository.delete();
+    } else {
+      LOGGER.error("Failed to clone repository {}", repoId);
     }
   }
 

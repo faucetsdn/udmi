@@ -75,7 +75,7 @@ public class MappingService extends AbstractPollingService {
   }
 
   @Override
-  protected void handleMessage(PubsubMessage message) throws IOException {
+  protected void handleMessage(PubsubMessage message) throws Exception {
     Map<String, Object> messageData = parseSourceRepoMessageData(message);
     Integer eventNumber = (Integer) messageData.getOrDefault(EVENT_NUMBER_FIELD, 0);
     LOGGER.info("Received event no. from message: {}", eventNumber);
