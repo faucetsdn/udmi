@@ -37,6 +37,7 @@ import static com.google.udmi.util.GeneralUtils.writeString;
 import static com.google.udmi.util.JsonUtil.JSON_SUFFIX;
 import static com.google.udmi.util.JsonUtil.OBJECT_MAPPER;
 import static com.google.udmi.util.JsonUtil.asMap;
+import static com.google.udmi.util.JsonUtil.isoConvert;
 import static com.google.udmi.util.JsonUtil.loadFile;
 import static com.google.udmi.util.JsonUtil.loadFileRequired;
 import static com.google.udmi.util.JsonUtil.safeSleep;
@@ -88,8 +89,6 @@ import java.net.URI;
 import java.nio.file.Files;
 import java.time.Duration;
 import java.time.Instant;
-import java.time.ZoneOffset;
-import java.time.format.DateTimeFormatter;
 import java.util.AbstractMap.SimpleEntry;
 import java.util.ArrayList;
 import java.util.Base64;
@@ -191,7 +190,7 @@ public class Registrar {
   private boolean expandDependencies;
   private boolean updateMetadata;
   private String currentRunTimestamp;
-  private Instant lastRunInstant;
+  private String lastRunTimestamp;
   private boolean optimizeRun;
 
   /**
@@ -392,13 +391,10 @@ public class Registrar {
   }
 
   private void loadSiteRegistrationTimestamps() {
-    DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss'Z'")
-        .withZone(ZoneOffset.UTC);
-    currentRunTimestamp = formatter.format(Instant.now());
+    currentRunTimestamp = isoConvert(Instant.now());
 
     File registrationHistory = new File(siteDir, SiteModel.REGISTRATION_SUMMARY_BASE + ".json");
-    lastRunInstant = catchToNull(
-        () -> Instant.parse(asMap(registrationHistory).get(TIMESTAMP_KEY).toString()));
+    lastRunTimestamp = catchToNull(() -> asMap(registrationHistory).get(TIMESTAMP_KEY).toString());
   }
 
   private void updateDeviceMetadata() {
@@ -680,16 +676,14 @@ public class Registrar {
   }
 
   private Set<String> loadChangedDevices() {
-    if (optimizeRun && lastRunInstant != null) {
-      System.err.println("Collecting devices changed after " + lastRunInstant);
+    if (optimizeRun && lastRunTimestamp != null) {
+      System.err.println("Collecting devices changed after " + lastRunTimestamp);
       return allDevices.entrySet().stream()
           .filter(entry -> {
             LocalDevice device = entry.getValue();
             Metadata metadata = device.getMetadata();
-            if (metadata == null || metadata.timestamp == null) {
-              return true;
-            }
-            return metadata.timestamp.toInstant().isAfter(lastRunInstant);
+            return metadata == null || metadata.timestamp == null ||
+                metadata.timestamp.toInstant().isAfter(Instant.parse(lastRunTimestamp));
           })
           .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue)).keySet();
     }
