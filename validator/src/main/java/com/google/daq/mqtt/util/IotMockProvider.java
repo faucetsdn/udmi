@@ -69,7 +69,7 @@ public class IotMockProvider implements IotProvider {
 
   @Override
   public void updateConfig(String deviceId, SubFolder subFolder, String config) {
-    checkArgument(cloudDevices.containsKey(deviceId), "missing device");
+    checkArgument(cloudDevices.containsKey(deviceId), "missing device for config");
     mockAction(CONFIG_DEVICE_ACTION, deviceId, config, subFolder.value());
   }
 
@@ -80,7 +80,7 @@ public class IotMockProvider implements IotProvider {
 
   @Override
   public void updateDevice(String deviceId, CloudModel device) {
-    checkArgument(cloudDevices.containsKey(deviceId), "missing device");
+    checkArgument(cloudDevices.containsKey(deviceId), "missing device for update");
     device.num_id = populateCloudModel(deviceId).num_id;
     mockAction(UPDATE_DEVICE_ACTION, deviceId, device, null);
   }
@@ -102,7 +102,7 @@ public class IotMockProvider implements IotProvider {
 
   @Override
   public void deleteDevice(String deviceId, Set<String> unbindIds) {
-    checkArgument(cloudDevices.containsKey(deviceId), "missing device");
+    checkArgument(cloudDevices.containsKey(deviceId), "missing device for delete");
     cloudDevices.remove(deviceId);
     mockAction(DELETE_DEVICE_ACTION, deviceId, null, null);
   }
