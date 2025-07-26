@@ -103,7 +103,7 @@ public class RegistrarTest {
 
   @Test
   public void blockDevicesTest() {
-    List<MockAction> mockActions = getMockedPopulated(ImmutableList.of("-b"));
+    List<MockAction> mockActions = executeRegistrarPopulated(ImmutableList.of("-b"));
     List<MockAction> blockActions = filterActions(mockActions, BLOCK_DEVICE_ACTION);
     assertEquals("block action count", 1, blockActions.size());
     assertEquals("block action distinct devices", blockActions.size(),
@@ -127,10 +127,10 @@ public class RegistrarTest {
     ifTrueThen(useSuffix, () -> args.addAll(ImmutableList.of("-e", REGISTRY_SUFFIX)));
     Registrar registrar = getRegistrar(args);
     registrar.execute();
-    List<Object> mockActions = registrar.getMockActions();
+    List<MockAction> mockActions = registrar.getMockActions();
     String mockClientString = IotMockProvider.mockClientString(MOCK_PROJECT,
         expectedRegistry, SITE_REGION);
-    List<Object> mismatchItems = mockActions.stream().map(action -> ((MockAction) action).client)
+    List<Object> mismatchItems = mockActions.stream().map(action -> action.client)
         .filter(client -> !client.equals(mockClientString))
         .collect(Collectors.toList());
     assertEquals("clients not matching " + mockClientString, ImmutableList.of(), mismatchItems);
@@ -182,11 +182,11 @@ public class RegistrarTest {
 
   @Test
   public void transitiveUpdate() {
-    List<MockAction> baseMocked = getMockedClean(ImmutableList.of(GATEWAY_ID));
+    List<MockAction> baseMocked = executeRegistrarClean(ImmutableList.of(GATEWAY_ID));
     List<MockAction> baseCreate = filterActions(baseMocked, CREATE_DEVICE_ACTION);
     assertEquals("Devices created directly", 1, baseCreate.size());
 
-    List<MockAction> transitiveMocked = getMockedClean(ImmutableList.of("-T", GATEWAY_ID));
+    List<MockAction> transitiveMocked = executeRegistrarClean(ImmutableList.of("-T", GATEWAY_ID));
     List<MockAction> transitiveCreate = filterActions(transitiveMocked, CREATE_DEVICE_ACTION);
     assertEquals("Devices created transitively", 4, transitiveCreate.size());
 
@@ -197,7 +197,7 @@ public class RegistrarTest {
 
   @Test
   public void basicUpdates() {
-    List<MockAction> mockActions = getMockedPopulated(ImmutableList.of());
+    List<MockAction> mockActions = executeRegistrarPopulated(ImmutableList.of());
 
     List<MockAction> blockActions = filterActions(mockActions, BLOCK_DEVICE_ACTION);
     assertEquals("block action count", 0, blockActions.size());
@@ -231,19 +231,18 @@ public class RegistrarTest {
         .collect(Collectors.toList());
   }
 
-  private List<MockAction> getMockedPopulated(ImmutableList<String> optArgs) {
-    return getMockedRegistrar(false, optArgs);
+  private List<MockAction> executeRegistrarPopulated(ImmutableList<String> optArgs) {
+    return executeRegistrar(false, optArgs);
   }
 
-  private List<MockAction> getMockedClean(ImmutableList<String> optArgs) {
-    return getMockedRegistrar(true, optArgs);
+  private List<MockAction> executeRegistrarClean(ImmutableList<String> optArgs) {
+    return executeRegistrar(true, optArgs);
   }
 
   @NotNull
-  private List<MockAction> getMockedRegistrar(boolean clean, ImmutableList<String> optArgs) {
+  private List<MockAction> executeRegistrar(boolean clean, ImmutableList<String> optArgs) {
     Registrar registrar = getRegistrar(clean, optArgs);
     registrar.execute();
-    return registrar.getMockActions().stream().map(a -> (MockAction) a)
-        .collect(Collectors.toList());
+    return registrar.getMockActions();
   }
 }
