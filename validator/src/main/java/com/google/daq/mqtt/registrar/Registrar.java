@@ -68,6 +68,7 @@ import com.google.daq.mqtt.registrar.LocalDevice.DeviceKind;
 import com.google.daq.mqtt.util.CloudDeviceSettings;
 import com.google.daq.mqtt.util.CloudIotManager;
 import com.google.daq.mqtt.util.DeviceGatewayBoundException;
+import com.google.daq.mqtt.util.IotMockProvider.MockAction;
 import com.google.daq.mqtt.util.MessagePublisher.QuerySpeed;
 import com.google.daq.mqtt.util.PubSubPusher;
 import com.google.udmi.util.CommandLineOption;
@@ -1620,8 +1621,9 @@ public class Registrar {
     }
   }
 
-  public List<Object> getMockActions() {
-    return cloudIotManager.getMockActions();
+  @SuppressWarnings("unchecked")
+  public List<MockAction> getMockActions() {
+    return (List<MockAction>) (List<?>) cloudIotManager.getMockActions();
   }
 
   @CommandLineOption(short_form = "-a", arg_name = "alternate",
