@@ -24,7 +24,13 @@ main() {
     fi
 
     message_spec="$1"
+    if [[ "$message_spec" == */ ]]; then
+      message_spec="${message_spec%/}"
+    fi
     project_spec="$2"
+    if [[ "$project_spec" == */ ]]; then
+      project_spec="${project_spec%/}"
+    fi
     cloning_dir="$3"
     shift 3
 

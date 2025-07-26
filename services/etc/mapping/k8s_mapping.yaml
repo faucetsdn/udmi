@@ -1,0 +1,41 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mapping-service
+spec:
+  selector:
+    matchLabels:
+      app: mapping-service
+      role: master
+      tier: backend
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: mapping-service
+        role: master
+        tier: backend
+    spec:
+      containers:
+      - name: mapping-core
+        image: @IMAGE@
+        imagePullPolicy: Always
+        resources:
+          requests:
+            cpu: 500m
+            memory: 500Mi
+        env:
+        - name: UDMI_NAMESPACE
+          valueFrom:
+            configMapKeyRef:
+              name: config
+              key: UDMI_NAMESPACE
+              optional: true
+        - name: IOT_PROVIDER
+          valueFrom:
+            configMapKeyRef:
+              name: config
+              key: IOT_PROVIDER
+        command: ["/bin/sh", "-c"]
+        args:
+        - exec /root/services/bin/service_wrapper "mapping_service" "$UDMI_NAMESPACE" "${IOT_PROVIDER}"

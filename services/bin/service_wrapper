@@ -1,0 +1,26 @@
+#!/bin/bash -e
+
+set -euo pipefail
+
+SCRIPT_ROOT=$(realpath "$(dirname "$0")")
+UDMI_ROOT=$(realpath "$SCRIPT_ROOT/../..")
+if [[ $# != 3 ]]; then
+   usage SERVICE_NAME UDMI_NAMESPACE IOT_PROVIDER
+fi
+
+SERVICE_NAME=$1
+UDMI_NAMESPACE=$2
+IOT_PROVIDER=$3
+
+GCP_PROJECT=$(curl -s "http://metadata.google.internal/computeMetadata/v1/project/project-id" -H "Metadata-Flavor: Google")
+
+echo "Starting ${SERVICE_NAME} in project ${GCP_PROJECT} for provider $IOT_PROVIDER in namespace $UDMI_NAMESPACE"
+
+if [ "$SERVICE_NAME" = 'mapping_service' ]; then
+  echo "Starting mapping service..."
+  $UDMI_ROOT/services/bin/mapping_service  "//pubsub/${GCP_PROJECT}/$UDMI_NAMESPACE" "//${IOT_PROVIDER}/${GCP_PROJECT}/$UDMI_NAMESPACE" "/tmp/udmi/sites"
+else
+  echo "Error: Unknown service '$1'. Please provide a valid service name."
+  echo "Valid service names is: mapping_service"
+  exit 1
+fi
