@@ -994,6 +994,7 @@ public class Registrar {
       System.err.println("Deleting to incite recreation " + localName);
       cloudIotManager.deleteDevice(localName, null);
     }
+    System.err.println("TAP registering " + localName);
     return cloudIotManager.registerDevice(localName, localDeviceSettings);
   }
 
