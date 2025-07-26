@@ -113,7 +113,6 @@ public class IotMockProvider implements IotProvider {
   }
 
   private synchronized CloudModel populateCloudModel(String deviceId) {
-    System.err.println("TAP populating model for " + deviceId);
     return cloudDevices.computeIfAbsent(deviceId, id -> {
       // By design all devices are initially populated as non-gateway devices.
       CloudModel device = new CloudModel();
