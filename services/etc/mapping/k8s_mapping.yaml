@@ -40,18 +40,8 @@ spec:
         args:
         - |
           set -eu
-
           GCP_PROJECT=$(curl -s "http://metadata.google.internal/computeMetadata/v1/project/project-id" -H "Metadata-Flavor: Google")
-
-          echo "Starting process in project ${GCP_PROJECT} for provider $IOT_PROVIDER in namespace $UDMI_NAMESPACE"
-
-          if [ -n "$UDMI_NAMESPACE" ]; then
-            NAMESPACE_PATH="/$UDMI_NAMESPACE"
-          else
-            NAMESPACE_PATH=""
-          fi
-
           exec /root/services/bin/mapping_service \
-            "//pubsub/${GCP_PROJECT}${NAMESPACE_PATH}" \
-            "//${IOT_PROVIDER}/${GCP_PROJECT}${NAMESPACE_PATH}" \
+            "//pubsub/${GCP_PROJECT}/$UDMI_NAMESPACE" \
+            "//${IOT_PROVIDER}/${GCP_PROJECT}/$UDMI_NAMESPACE" \
             "/tmp/udmi/sites"
