@@ -38,10 +38,4 @@ spec:
               key: IOT_PROVIDER
         command: ["/bin/sh", "-c"]
         args:
-        - |
-          set -eu
-          GCP_PROJECT=$(curl -s "http://metadata.google.internal/computeMetadata/v1/project/project-id" -H "Metadata-Flavor: Google")
-          exec /root/services/bin/mapping_service \
-            "//pubsub/${GCP_PROJECT}/$UDMI_NAMESPACE" \
-            "//${IOT_PROVIDER}/${GCP_PROJECT}/$UDMI_NAMESPACE" \
-            "/tmp/udmi/sites"
+        - exec /root/services/bin/service_wrapper "mapping_service" "$UDMI_NAMESPACE" "${IOT_PROVIDER}"

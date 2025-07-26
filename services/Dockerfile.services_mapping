@@ -20,3 +20,4 @@ RUN bin/setup_base
 
 ADD bin/ services/bin/
 ADD build/libs services/build/libs/
+RUN chmod +x /root/services/bin/service_wrapper
