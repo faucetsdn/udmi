@@ -1,6 +1,7 @@
 package com.google.bos.iot.core.bambi;
 
 
+import static com.google.bos.iot.core.bambi.Utils.makeEmptyValuesExplicit;
 import static com.google.bos.iot.core.bambi.Utils.removeBracketsFromListValues;
 
 import com.google.bos.iot.core.bambi.model.BambiSheetTab;
@@ -112,6 +113,7 @@ public class BambiSiteModelManager {
   private void writeKeyValueTypeMetadata(BambiSheetTab sheet, List<String> headers,
       Map<String, String> data) {
     LOGGER.info("writing to sheet " + sheet.getName());
+    makeEmptyValuesExplicit(data);
     Map<String, String> newData = new LinkedHashMap<>();
     for (String header : headers) {
       newData.put(header, data.getOrDefault(header, ""));
@@ -141,6 +143,9 @@ public class BambiSiteModelManager {
         new SheetConfig(BambiSheetTab.LOCALNET, bambiSiteModel.getLocalnetDataHeaders())
     );
 
+    for (Map<String, String> value : deviceToMetadataMap.values()) {
+      makeEmptyValuesExplicit(value);
+    }
     for (SheetConfig config : simpleTableConfigs) {
       List<List<Object>> sheetData = processSimpleTableData(
           deviceToMetadataMap, config.headers(), config.sheet().getName() + "."
@@ -186,6 +191,7 @@ public class BambiSiteModelManager {
               e -> e.getKey().substring(keyPrefix.length()),
               Entry::getValue
           ));
+      makeEmptyValuesExplicit(relevantMetadata);
 
       sheetData.add(buildDataRow(deviceId, headers, relevantMetadata));
     }
