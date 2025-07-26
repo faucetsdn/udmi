@@ -411,10 +411,12 @@ public class Registrar {
       }
       String localId = localMetadata.cloud.num_id;
       String registeredId = registeredDevice.num_id;
-      localMetadata.cloud.num_id = registeredId;
-      if (siteModel.updateMetadata(deviceId, localMetadata)) {
-        updatedCount.incrementAndGet();
-        System.err.printf("Updated num_id for %s: %s -> %s%n", deviceId, localId, registeredId);
+      if (!Common.EMPTY_RETURN_RECEIPT.equals(registeredId)) {
+        localMetadata.cloud.num_id = registeredId;
+        if (siteModel.updateMetadata(deviceId, localMetadata)) {
+          updatedCount.incrementAndGet();
+          System.err.printf("Updated num_id for %s: %s -> %s%n", deviceId, localId, registeredId);
+        }
       }
     });
     System.err.printf("Updated %d device metadata files.%n", updatedCount.get());
