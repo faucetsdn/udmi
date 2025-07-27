@@ -42,7 +42,7 @@ public class SequenceBaseTest {
     Description testOne = makeTestDescription("test_one");
     baseOne.testWatcher.starting(testOne);
 
-    MessageBundle bundleOne = baseOne.nextMessageBundle();
+    MessageBundle bundleOne = waitForNextMessage(baseOne);
     System.err.println(stringify(bundleOne));
     Map<?, ?> featuresOne = (Map<?, ?>) bundleOne.message.get("features");
     assertEquals("first message contents", 0, featuresOne.size());
@@ -54,17 +54,25 @@ public class SequenceBaseTest {
     baseTwo.testWatcher.starting(testTwo);
 
     try {
-      baseOne.nextMessageBundle();
+      waitForNextMessage(baseOne);
       fail("shouldn't be a next message bundle to get!");
     } catch (RuntimeException e) {
       // This is expected, but then also preserve the message for the next call.
     }
 
-    MessageBundle bundleTwo = baseTwo.nextMessageBundle();
+    MessageBundle bundleTwo = waitForNextMessage(baseTwo);
     Map<?, ?> featuresTwo = (Map<?, ?>) bundleTwo.message.get("features");
     System.err.println(stringify(bundleTwo));
     assertEquals("second message contents", 1, featuresTwo.size());
     baseTwo.testWatcher.finished(testTwo);
+  }
+
+  private static MessageBundle waitForNextMessage(SequenceBase baseOne) {
+    MessageBundle messageBundle;
+    do {
+      messageBundle = baseOne.nextMessageBundle();
+    } while (messageBundle == null);
+    return messageBundle;
   }
 
   private Description makeTestDescription(String testName) {

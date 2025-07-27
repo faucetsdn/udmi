@@ -75,6 +75,7 @@ public abstract class Common {
   public static final String UNKNOWN_DEVICE_ID_PREFIX = "UNK-";
 
   public static final String DOUBLE_COLON_SEPARATOR = "::";
+  public static final String EMPTY_RETURN_RECEIPT = "-1";
 
   /**
    * Remove the next item from the list in an exception-safe way.

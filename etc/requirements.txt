@@ -48,7 +48,7 @@ paho-mqtt==1.6.1
 platformdirs==2.6.0
 pluggy==1.5.0
 proto-plus==1.24.0
-protobuf==5.26.1
+protobuf==5.29.5
 pyasn1==0.4.8
 pyasn1-modules==0.2.8
 pycparser==2.22
@@ -69,6 +69,6 @@ tomlkit==0.11.6
 typing-inspect==0.7.1
 typing_extensions==4.0.1
 uritemplate==4.1.1
-urllib3==1.26.19
+urllib3==2.5.0
 wrapt==1.14.1
 zipp==3.20.2

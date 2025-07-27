@@ -1,9 +1,11 @@
 #!/bin/bash -e
 
-ROOT_DIR=$(dirname $0)/..
-mkdir -p $ROOT_DIR/sites
-cd $ROOT_DIR/sites 
+ROOT_DIR=$(realpath $(dirname $0)/..)
+SITE_DIR=$ROOT_DIR/sites
+mkdir -p $SITE_DIR
+cd $SITE_DIR
 
+MODEL_LINK=site_model
 MODEL_DIR=udmi_site_model
 MODEL_VER=1.20
 TEST_SITE_GIT=https://github.com/faucetsdn/$MODEL_DIR.git
@@ -11,7 +13,7 @@ MODEL_REPO=origin
 
 echo Cloning model as $PWD/$MODEL_DIR
 if [[ -d $MODEL_DIR ]]; then
-    echo Model directory already exists, skipping.
+    echo Model directory already exists, skipping clone.
 else
     git clone $TEST_SITE_GIT
 fi
@@ -21,3 +23,8 @@ cd $MODEL_DIR
 git fetch $MODEL_REPO $MODEL_VER
 git checkout -q $MODEL_VER
 git log -n 1
+
+cd $ROOT_DIR
+
+REL_SITE=$(realpath --relative-to=$PWD $SITE_DIR/$MODEL_DIR)
+[[ -e $MODEL_LINK ]] || ln -s $REL_SITE $MODEL_LINK

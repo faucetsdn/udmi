@@ -2,7 +2,7 @@ package com.google.daq.mqtt.sequencer.sequences;
 
 import static com.google.common.base.Preconditions.checkState;
 import static com.google.common.collect.Sets.symmetricDifference;
-import static com.google.daq.mqtt.sequencer.DiscoveryScanMode.NO_ENUMERATION;
+import static com.google.daq.mqtt.sequencer.DiscoveryScanMode.DEFAULT_ENUMERATION;
 import static com.google.daq.mqtt.sequencer.DiscoveryScanMode.NO_SCAN;
 import static com.google.daq.mqtt.sequencer.DiscoveryScanMode.PLEASE_ENUMERATE;
 import static com.google.daq.mqtt.util.TimePeriodConstants.TWO_MINUTES_MS;
@@ -17,7 +17,6 @@ import static com.google.udmi.util.GeneralUtils.ifNullElse;
 import static com.google.udmi.util.GeneralUtils.joinOrNull;
 import static com.google.udmi.util.JsonUtil.getNowInstant;
 import static com.google.udmi.util.JsonUtil.isoConvert;
-import static com.google.udmi.util.JsonUtil.safeSleep;
 import static com.google.udmi.util.JsonUtil.stringifyTerse;
 import static java.lang.String.format;
 import static java.util.Objects.nonNull;
@@ -34,10 +33,12 @@ import static udmi.schema.Enumerations.Depth.ENTRIES;
 import static udmi.schema.FamilyDiscoveryState.Phase.ACTIVE;
 import static udmi.schema.FamilyDiscoveryState.Phase.PENDING;
 import static udmi.schema.FamilyDiscoveryState.Phase.STOPPED;
+import static udmi.schema.FeatureDiscovery.FeatureStage.ALPHA;
 import static udmi.schema.FeatureDiscovery.FeatureStage.BETA;
 import static udmi.schema.FeatureDiscovery.FeatureStage.PREVIEW;
 import static udmi.schema.FeatureDiscovery.FeatureStage.STABLE;
 
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
 import com.google.common.collect.Sets.SetView;
@@ -46,6 +47,7 @@ import com.google.daq.mqtt.sequencer.Feature;
 import com.google.daq.mqtt.sequencer.SequenceBase;
 import com.google.daq.mqtt.sequencer.Summary;
 import com.google.daq.mqtt.sequencer.semantic.SemanticDate;
+import com.google.daq.mqtt.sequencer.semantic.SemanticList;
 import com.google.daq.mqtt.util.providers.FamilyProvider;
 import java.time.Duration;
 import java.time.Instant;
@@ -56,6 +58,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.Set;
 import java.util.SortedSet;
 import java.util.TreeSet;
@@ -80,16 +83,17 @@ import udmi.schema.PointPointsetModel;
  */
 public class DiscoverySequences extends SequenceBase {
 
-  public static final Duration SCAN_START_DELAY = Duration.ofSeconds(20);
-  public static final Duration WAITING_PERIOD = SCAN_START_DELAY.plus(SCAN_START_DELAY);
-  public static final int SCAN_START_JITTER_SEC = 10;
+  private static final Duration SCAN_START_DELAY = Duration.ofSeconds(20);
+  private static final Duration WAITING_PERIOD = SCAN_START_DELAY.plus(SCAN_START_DELAY);
+  private static final int SCAN_START_JITTER_SEC = 10;
+  private static final Duration EVENT_JITTER_SLEEP_TIME = Duration.ofSeconds(10);
   private static final int SCAN_ITERATIONS = 2;
   private static final long RANDOM_YEAR_SEC = (long) (Math.random() * 60 * 60 * 24 * 365);
   private static final Instant BASE_OLD_TIME = Instant.parse("2020-10-18T12:02:01Z");
   private static final Date LONG_TIME_AGO = Date.from(BASE_OLD_TIME.plusSeconds(RANDOM_YEAR_SEC));
   private static final int SCAN_DURATION_SEC = 10;
   private static final String DISCOVERY_TARGET = "scan_family";
-  private static final long EVENT_JITTER_SLEEP_TIME_MS = 2000;
+  private static final long SCAN_TARGET_COUNT = 2;
   private Set<String> metaFamilies;
   private Instant scanGeneration;
   private String scanFamily;
@@ -260,7 +264,7 @@ public class DiscoverySequences extends SequenceBase {
   }
 
   private Depth enumerateIfBucketEnabled(Bucket bucket) {
-    return enumerationDepthIf(isBucketEnabled(bucket) ? PLEASE_ENUMERATE : NO_ENUMERATION);
+    return enumerationDepthIf(isBucketEnabled(bucket) ? PLEASE_ENUMERATE : DEFAULT_ENUMERATION);
   }
 
   @Test(timeout = TWO_MINUTES_MS)
@@ -272,19 +276,36 @@ public class DiscoverySequences extends SequenceBase {
 
   @Test
   @Feature(bucket = DISCOVERY_SCAN, stage = PREVIEW)
-  @Summary("Check results of a single scan scheduled in the recent past")
+  @Summary("Check results of a single scan scheduled in the recent past including enumeration")
   public void scan_single_now() {
-    scanAndVerify(cleanInstantDate(Instant.now().minusSeconds(1)), NO_ENUMERATION);
+    scanAndVerify(cleanInstantDate(Instant.now().minusSeconds(1)), PLEASE_ENUMERATE);
+  }
+
+  @Test
+  @Feature(bucket = DISCOVERY_SCAN, stage = ALPHA)
+  @Summary("Check results of a single scan targeting specific devices")
+  public void scan_single_targeted() {
+    SortedSet<String> expectedAddresses = new TreeSet<>(expectedTargetDevices());
+    ifTrueSkipTest(expectedAddresses.size() <= SCAN_TARGET_COUNT,
+        "Not enough targets to test targeted scan");
+    Set<String> targets = expectedAddresses.stream().limit(SCAN_TARGET_COUNT).collect(toSet());
+    info("Testing against scan targets: " + targets);
+    scanAndVerify(cleanInstantDate(Instant.now().minusSeconds(1)), DEFAULT_ENUMERATION, targets);
   }
 
   @Test(timeout = TWO_MINUTES_MS)
   @Feature(bucket = DISCOVERY_SCAN, stage = PREVIEW)
   @Summary("Check results of a single scan scheduled soon")
   public void scan_single_future() {
-    scanAndVerify(cleanInstantDate(Instant.now().plus(SCAN_START_DELAY)), NO_ENUMERATION);
+    scanAndVerify(cleanInstantDate(Instant.now().plus(SCAN_START_DELAY)), DEFAULT_ENUMERATION);
   }
 
   private void scanAndVerify(Date scanStart, DiscoveryScanMode shouldEnumerate) {
+    scanAndVerify(scanStart, shouldEnumerate, null);
+  }
+
+  private void scanAndVerify(Date scanStart, DiscoveryScanMode shouldEnumerate,
+      Set<String> targets) {
     final boolean scheduledStart = scanStart.after(new Date());
 
     initializeDiscovery();
@@ -292,18 +313,22 @@ public class DiscoverySequences extends SequenceBase {
 
     scanGeneration = scanStart.toInstant();
 
-    configureScan(scanGeneration, null, shouldEnumerate);
+    configureScan(scanGeneration, null, shouldEnumerate, targets);
     Instant scanConfigured = getNowInstant();
 
     if (shouldEnumerate == NO_SCAN) {
       waitUntil("scan schedule initially not active", this::detailScanStopped);
       sleepFor("false start check delay", SCAN_START_DELAY);
       waitUntil("scan schedule still not active", this::detailScanStopped);
-      safeSleep(EVENT_JITTER_SLEEP_TIME_MS); // Make sure all events are captured
+      sleepFor("discovery event synchronization", EVENT_JITTER_SLEEP_TIME);
       List<DiscoveryEvents> receivedEvents = popReceivedEvents(DiscoveryEvents.class);
       checkThat("there were no received discovery events", receivedEvents.isEmpty());
       return;
     }
+
+    // If targets are specified then enumeration is expected.
+    boolean explicitEnum = targets != null && shouldEnumerate == DEFAULT_ENUMERATION;
+    final DiscoveryScanMode expectedEnumeration = explicitEnum ? PLEASE_ENUMERATE : shouldEnumerate;
 
     if (scheduledStart) {
       waitUntil("scheduled scan pending", WAITING_PERIOD, this::detailScanPending);
@@ -325,22 +350,25 @@ public class DiscoverySequences extends SequenceBase {
         format("scan completed %ss different from expected %s", deltaFinish,
             isoConvert(expectedFinish)));
 
-    int actualCount = deviceState.discovery.families.get(scanFamily).active_count;
-    safeSleep(EVENT_JITTER_SLEEP_TIME_MS); // Make sure all events are captured
+    final int actualCount = deviceState.discovery.families.get(scanFamily).active_count;
+    sleepFor("discovery events synchronized", EVENT_JITTER_SLEEP_TIME);
+
     List<DiscoveryEvents> events = popReceivedEvents(DiscoveryEvents.class);
+
     Date generation = deviceConfig.discovery.families.get(scanFamily).generation;
-    Function<DiscoveryEvents, List<String>> invalidator = event ->
-        invalidReasons(event, generation);
+    SortedSet<Integer> eventNos = events.stream().map(event -> event.event_no)
+        .collect(Collectors.toCollection(TreeSet::new));
+    debug(format("Received discovery %s event_nos %s", generation, eventNos));
+
+    Function<DiscoveryEvents, List<String>> invalidator = event -> invalidReasons(event,
+        generation);
     int expectedEvents = actualCount + 2;  // Includes start and stop marker events.
-    debug(format("Received %d events, %d indicated in state", events.size(), actualCount));
+    debug(format("Received %d events, %d in state (expect +2)", events.size(), actualCount));
     checkThat("received expected number of discovery events", events.size() == expectedEvents);
     List<String> reasons = events.stream().map(invalidator).flatMap(List::stream)
         .collect(Collectors.toList());
-    reasons.addAll(checkEnumeration(events, shouldEnumerate));
+    reasons.addAll(checkEnumeration(events, expectedEnumeration));
 
-    SortedSet<Integer> eventNos = events.stream().map(event -> event.event_no)
-        .collect(Collectors.toCollection(TreeSet::new));
-    debug("Received discovery events " + eventNos);
     checkThat("received all unique event numbers", eventNos.size() == expectedEvents);
     checkThat("received proper discovery termination event",
         eventNos.removeFirst() == -(actualCount + 1));
@@ -359,12 +387,15 @@ public class DiscoverySequences extends SequenceBase {
     checkThat("all scan addresses are unique", duplicates.isEmpty(),
         "duplicates: " + CSV_JOINER.join(duplicates));
 
-    Set<String> expectedAddresses = siteModel.metadataStream().map(this::scanFamilyAddr)
-        .filter(Objects::nonNull).collect(toSet());
-    SetView<String> differences = symmetricDifference(discoveredAddresses, expectedAddresses);
+    Set<String> expected = Optional.ofNullable(targets).orElseGet(this::expectedTargetDevices);
+    SetView<String> differences = symmetricDifference(discoveredAddresses, expected);
     checkThat("all expected addresses were found", differences.isEmpty(),
-        format("expected %s, found %s", expectedAddresses, discoveredAddresses));
+        format("expected %s, found %s", expected, discoveredAddresses));
+  }
 
+  private SortedSet<String> expectedTargetDevices() {
+    return siteModel.metadataStream().map(this::scanFamilyAddr)
+        .filter(Objects::nonNull).collect(Collectors.toCollection(TreeSet::new));
   }
 
   private String detailScanPending() {
@@ -436,6 +467,11 @@ public class DiscoverySequences extends SequenceBase {
     }
 
     Entry<String, Metadata> deviceEntry = targetMetadata(discoveryEvents.addr);
+
+    if (discoveryEvents.refs == null) {
+      return format("Device %s is missing discovered refs", deviceEntry.getKey());
+    }
+
     HashMap<String, PointPointsetModel> devicePoints = deviceEntry.getValue().pointset.points;
     Set<String> metadataRefs = devicePoints.values().stream()
         .map(x -> x.ref).filter(Objects::nonNull).collect(toSet());
@@ -466,7 +502,7 @@ public class DiscoverySequences extends SequenceBase {
     initializeDiscovery();
     checkState(scanGeneration == null, "scanStartTime not null");
     scanGeneration = cleanDate().toInstant();
-    configureScan(scanGeneration, SCAN_START_DELAY, PLEASE_ENUMERATE);
+    configureScan(scanGeneration, SCAN_START_DELAY, PLEASE_ENUMERATE, null);
     Instant endTime = Instant.now().plusSeconds(SCAN_START_DELAY.getSeconds() * SCAN_ITERATIONS);
     untilUntrue("scan iterations", () -> Instant.now().isBefore(endTime));
     Instant finishTime = deviceState.discovery.families.get(scanFamily).generation.toInstant();
@@ -502,7 +538,7 @@ public class DiscoverySequences extends SequenceBase {
   }
 
   private void configureScan(Instant startTime, Duration scanInterval,
-      DiscoveryScanMode shouldEnumerate) {
+      DiscoveryScanMode shouldEnumerate, Set<String> targets) {
     Integer intervalSec = ofNullable(scanInterval).map(Duration::getSeconds).map(Long::intValue)
         .orElse(null);
     info(format("%s configured for family %s starting at %s evey %ss",
@@ -513,6 +549,8 @@ public class DiscoverySequences extends SequenceBase {
     configFamily.depth = enumerationDepthIf(shouldEnumerate);
     configFamily.scan_interval_sec = intervalSec;
     configFamily.scan_duration_sec = ofNullable(intervalSec).orElse(SCAN_DURATION_SEC);
+    configFamily.addrs = ifNotNullGet(targets,
+        t -> new SemanticList<>("list of target devices", ImmutableList.copyOf(t)));
     popReceivedEvents(DiscoveryEvents.class);
   }
 

@@ -1,6 +1,7 @@
 package udmi.lib.client.manager;
 
 import static com.google.udmi.util.GeneralUtils.catchToNull;
+import static com.google.udmi.util.GeneralUtils.ifNotNullGet;
 import static com.google.udmi.util.GeneralUtils.ifNotNullThen;
 import static com.google.udmi.util.GeneralUtils.ifNullElse;
 import static com.google.udmi.util.GeneralUtils.ifNullThen;
@@ -15,12 +16,14 @@ import static udmi.schema.FamilyDiscoveryState.Phase.ACTIVE;
 import static udmi.schema.FamilyDiscoveryState.Phase.PENDING;
 import static udmi.schema.FamilyDiscoveryState.Phase.STOPPED;
 
+import com.google.common.collect.ImmutableSet;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Supplier;
@@ -47,11 +50,12 @@ public interface DiscoveryManager extends SubBlockManager {
   /**
    * Determines whether enumeration to a specific depth level is required.
    *
-   * @param depth The depth level for which to determine if enumeration should occur.
+   * @param depth       The depth level for which to determine if enumeration should occur.
+   * @param ifUndefined Value to use when depth is not undefined.
    * @return True if enumeration is required at the specified depth level, false otherwise.
    */
-  private static boolean shouldEnumerateTo(Depth depth) {
-    return ifNullElse(depth, false, d -> switch (d) {
+  private static boolean shouldEnumerateTo(Depth depth, boolean ifUndefined) {
+    return ifNullElse(depth, ifUndefined, d -> switch (d) {
       case ENTRIES, DETAILS -> true;
       default -> false;
     });
@@ -92,7 +96,7 @@ public interface DiscoveryManager extends SubBlockManager {
   DeviceManager getDeviceManager();
 
   default <K, V> Map<K, V> maybeEnumerate(Depth depth, Supplier<Map<K, V>> supplier) {
-    return ifTrueGet(shouldEnumerateTo(depth), supplier);
+    return ifTrueGet(shouldEnumerateTo(depth, false), supplier);
   }
 
   /**
@@ -261,7 +265,8 @@ public interface DiscoveryManager extends SubBlockManager {
   }
 
   default boolean shouldEnumerate(String family) {
-    return shouldEnumerateTo(getFamilyDiscoveryConfig(family).depth);
+    FamilyDiscoveryConfig familyDiscoveryConfig = getFamilyDiscoveryConfig(family);
+    return shouldEnumerateTo(familyDiscoveryConfig.depth, familyDiscoveryConfig.addrs != null);
   }
 
   DiscoveryState getDiscoveryState();
@@ -308,12 +313,21 @@ public interface DiscoveryManager extends SubBlockManager {
    */
   default void startDiscoveryForFamily(String family, Date scanGeneration,
       FamilyDiscoveryState familyDiscoveryState, AtomicInteger sendCount) {
+    String generation = isoConvert(scanGeneration);
+    Set<String> targets = ofNullable(
+        catchToNull(() -> getDiscoveryConfig().families.get(family).addrs))
+        .map(ImmutableSet::copyOf).orElse(null);
+    info(format("Discovered %s starting %s (=? %s)", family, generation,
+        isoConvert(familyDiscoveryState.generation)));
     discoveryProvider(family).startScan(shouldEnumerate(family), (deviceId, discoveryEvent) -> {
       ifNotNullThen(discoveryEvent.addr, addr -> {
+        if (ifNotNullGet(targets, t -> !t.contains(addr), false)) {
+          info(format("Discovered %s device %s for %s skipped", family, addr, generation));
+          return;
+        }
         int activeCount = sendCount.getAndIncrement();
         familyDiscoveryState.active_count = activeCount;
-        info(format("Discovered %s device %s for %s as %d", family, addr,
-            isoConvert(scanGeneration), activeCount));
+        info(format("Discovered %s device %s for %s as %d", family, addr, generation, activeCount));
         discoveryEvent.event_no = activeCount;
         publishDiscoveryEvent(family, scanGeneration, deviceId, discoveryEvent);
         updateState();
@@ -338,11 +352,13 @@ public interface DiscoveryManager extends SubBlockManager {
   default void discoveryScanComplete(String family, Date scanGeneration, AtomicInteger sendCount) {
     try {
       FamilyDiscoveryState familyDiscoveryState = ensureFamilyDiscoveryState(family);
+      info(format("Discovered %s stopping %s (=? %s)", family, isoConvert(scanGeneration),
+          isoConvert(familyDiscoveryState.generation)));
       ifTrueThen(scanGeneration.equals(familyDiscoveryState.generation), () -> {
         discoveryProvider(family).stopScan();
+        sendMarkerDiscoveryEvent(family, scanGeneration, sendCount);
         familyDiscoveryState.phase = STOPPED;
         updateState();
-        sendMarkerDiscoveryEvent(family, scanGeneration, sendCount);
         scheduleDiscoveryScan(family);
       });
     } catch (Exception e) {
