@@ -1,0 +1,82 @@
+#!/bin/bash -e
+#
+# Reconciler service
+#
+set -euo pipefail
+
+SCRIPT_ROOT=$(realpath $(dirname $0))
+UDMI_ROOT=$(realpath "$SCRIPT_ROOT"/../..)
+
+source "$UDMI_ROOT/etc/shell_common.sh"
+
+main() {
+    local service_name="Reconciler"
+    local message_spec=""
+    local cloning_dir=""
+    local local_origin_dir=""
+    local is_local=0
+    local should_create=0
+
+    if [[ $# -lt 2 ]]; then
+        # shellcheck disable=SC2102
+        usage message_spec cloning_dir [--local] [--create] [local_orig_dir]
+    fi
+
+    message_spec="$1"
+    cloning_dir="$2"
+    shift 2
+
+    while [[ $# -gt 0 ]]; do
+        case "$1" in
+            --local)
+                is_local=1
+                shift
+                ;;
+            --create)
+                should_create=1
+                shift
+                ;;
+            *)
+                if [[ -z "$local_origin_dir" ]]; then
+                    local_origin_dir="$1"
+                    shift
+                else
+                    echo "Error: Unknown or duplicate argument '$1'"
+                    usage
+                fi
+                ;;
+        esac
+    done
+
+    export GCP_PROJECT
+    GCP_PROJECT=$(gcloud config get-value project)
+    echo "Using GCP Project: $GCP_PROJECT"
+
+    export UDMI_PREFIX="${UDMI_NAMESPACE:-}"
+    if [[ -n "$UDMI_PREFIX" ]]; then
+        UDMI_PREFIX="${UDMI_NAMESPACE}~"
+        echo "Using UDMI Namespace Prefix: $UDMI_PREFIX"
+    fi
+
+    if [[ $is_local -eq 1 ]]; then
+        build_services_jar
+    else
+        setup_service_gcp_environment ${service_name}
+    fi
+
+    if [[ $should_create -eq 1 ]]; then
+        local repo_updates_topic="udmi_reconciler_source_repo_updates"
+        local repo_updates_subscription="${UDMI_PREFIX}udmi_reconciler_source_repo_updates"
+        local pr_notify_topic="${UDMI_PREFIX}udmi_pr_reviews"
+
+        ensure_pubsub_topic_exists "$repo_updates_topic"
+        ensure_pubsub_subscription_exists "$repo_updates_subscription" "$repo_updates_topic" --no-expiration
+        ensure_pubsub_topic_exists "$pr_notify_topic"
+    fi
+
+    echo "Starting ${service_name} Service..."
+    java -cp "$SERVICES_JAR" "com.google.bos.iot.core.reconcile.ReconcilerService" \
+        "$message_spec" "$cloning_dir" "$local_origin_dir"
+}
+
+main "$@"

@@ -91,7 +91,12 @@ if [[ -n $update ]]; then
             echo Updating $cache_dir from $src_dir...
             rm -rf $cache_dir
             cp -a $src_dir $(dirname $cache_dir)
+            rm -rf $cache_dir/trace $cache_dir/stray
+            find $cache_dir -type f | xargs -n 1 sed -E -i \
+                                            -e 's/"transactionId.*/REDACTED_TXN_ID/' \
+                                            -e 's/202.-..-..T.*Z/TIMESTAMP/'
             ls -l $src_dir/sequence.md $cache_dir/sequence.md
+            false
         fi
 
         fgrep RESULT $src_dir/sequence.log | sed -E -e 's/.*NOTICE +RESULT/RESULT/' >> $RESULT_OUT

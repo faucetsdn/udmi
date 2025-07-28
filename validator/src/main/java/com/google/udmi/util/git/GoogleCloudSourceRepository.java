@@ -19,9 +19,10 @@ import org.slf4j.LoggerFactory;
 public class GoogleCloudSourceRepository extends GenericGitRepository {
 
   private static final Logger LOGGER = LoggerFactory.getLogger(GoogleCloudSourceRepository.class);
-  private static final String BASE_TOPIC = "pr-reviews";
-  private static final String BASE_SUBSCRIPTION = BASE_TOPIC + "-subscription";
+  private static final String BASE_TOPIC = "udmi_pr_reviews";
+  private static final String BASE_SUBSCRIPTION = BASE_TOPIC + "_subscription";
   private static final int PULL_REQUEST_GATHER_TIME_MS = 2000;
+  private static final String COMMIT_REF = "https://source.cloud.google.com/%s/%s/+/%s";
   private final String topicId;
   private final String subscriptionId;
   private final boolean topicExists;
@@ -42,11 +43,11 @@ public class GoogleCloudSourceRepository extends GenericGitRepository {
     this.subscriptionExists = subscriptionExists(config.projectId(), subscriptionId);
 
     if (!topicExists) {
-      LOGGER.warn("Pub/Sub topic {} not found. Creating PRs will only be logged locally.",
+      LOGGER.debug("Pub/Sub topic {} not found. Creating PRs will only be logged locally.",
           this.topicId);
     }
     if (!subscriptionExists) {
-      LOGGER.warn("Pub/Sub subscription {} not found. Listing PRs will not be possible.",
+      LOGGER.debug("Pub/Sub subscription {} not found. Listing PRs will not be possible.",
           this.subscriptionId);
     }
   }
@@ -56,17 +57,30 @@ public class GoogleCloudSourceRepository extends GenericGitRepository {
   }
 
   @Override
+  public String getCommitUrl(String branch) {
+    try {
+      return String.format(COMMIT_REF, repositoryConfig.projectId(), getRepoId(),
+          getCommitHashForBranch(branch));
+    } catch (Exception e) {
+      LOGGER.error("Cannot get commit URL", e);
+      return null;
+    }
+  }
+
+  @Override
   public String createPullRequest(String title, String body, String sourceBranch,
-      String targetBranch) {
+      String targetBranch, String author) {
     if (topicExists) {
       try (GenericPubSubClient publisher = new GenericPubSubClient(repositoryConfig.projectId(),
           null, topicId)) {
         String payload = String.format(
-            "{\"title\":\"%s\", \"body\":\"%s\", \"sourceBranch\":\"%s\", \"targetBranch\":\"%s\"}",
-            title, body, sourceBranch, targetBranch
+            "{\"title\":\"%s\", \"body\":\"%s\", \"sourceBranch\":\"%s\", "
+                + "\"targetBranch\":\"%s\", \"author\":\"%s\", \"commitUrl\":\"%s\"}",
+            title, body, sourceBranch, targetBranch, author, getCommitUrl(sourceBranch)
         );
+        LOGGER.info("Published PR review request {}", payload);
         publisher.publish(payload, null);
-        LOGGER.info("Published PR review request to topic {}", topicId);
+        LOGGER.info("Published PR review request from {} to topic {}", author, topicId);
         return "Pull request message published to " + topicId;
       }
     } else {
@@ -104,6 +118,17 @@ public class GoogleCloudSourceRepository extends GenericGitRepository {
     } else {
       LOGGER.error("Pub/Sub subscription {} not found. Cannot list open PRs.", subscriptionId);
       return Collections.emptyList();
+    }
+  }
+
+  private String getRepoId() {
+    String remoteUrl = repositoryConfig.remoteUrl();
+    int lastSlashIndex = remoteUrl.lastIndexOf('/');
+
+    if (lastSlashIndex != -1) {
+      return remoteUrl.substring(lastSlashIndex + 1);
+    } else {
+      return "";
     }
   }
 }

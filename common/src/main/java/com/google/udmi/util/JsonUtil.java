@@ -4,6 +4,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.udmi.util.GeneralUtils.OBJECT_MAPPER_STRICT;
 import static com.google.udmi.util.GeneralUtils.fromJsonString;
 import static com.google.udmi.util.GeneralUtils.ifNotNullGet;
+import static com.google.udmi.util.GeneralUtils.isNotEmpty;
 import static com.google.udmi.util.GeneralUtils.toJsonString;
 import static java.util.Objects.requireNonNull;
 
@@ -11,6 +12,8 @@ import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.fasterxml.jackson.core.JsonParser.Feature;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.json.JsonReadFeature;
+import com.fasterxml.jackson.core.util.DefaultIndenter;
+import com.fasterxml.jackson.core.util.DefaultPrettyPrinter;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -19,13 +22,15 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.google.gson.internal.bind.util.ISO8601Utils;
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.nio.file.Files;
 import java.nio.file.NoSuchFileException;
 import java.time.Instant;
 import java.util.Date;
+import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.Set;
 import java.util.TreeMap;
+import java.util.regex.Pattern;
 
 /**
  * Collection of utilities for working with json things.
@@ -70,6 +75,18 @@ public abstract class JsonUtil {
   public static Map<String, Object> asMap(File input) {
     @SuppressWarnings("unchecked")
     Map<String, Object> map = loadFile(TreeMap.class, input);
+    return map;
+  }
+
+  /**
+   * Convert the json object to a LinkedHashMap object.
+   *
+   * @param input input file
+   * @return input as map object
+   */
+  public static Map<String, Object> asLinkedHashMap(File input) {
+    @SuppressWarnings("unchecked")
+    Map<String, Object> map = loadFile(LinkedHashMap.class, input);
     return map;
   }
 
@@ -490,8 +507,26 @@ public abstract class JsonUtil {
     }
   }
 
+  /**
+   * Write json representation to a file.
+   * This method is added because the method `writeFile` does not print the array items on a newline.
+   *
+   * @param theThing object to write
+   * @param file     output file
+   */
+  public static void writeFileWithCustomIndentForArrays(Object theThing, File file) {
+    try {
+      DefaultPrettyPrinter.Indenter indenter = new DefaultIndenter("  ", DefaultIndenter.SYS_LF);
+      DefaultPrettyPrinter printer = new DefaultPrettyPrinter();
+      printer.indentArraysWith(indenter);
+      OBJECT_MAPPER.writer(printer).writeValue(file, theThing);
+    } catch (Exception e) {
+      throw new RuntimeException("While writing with custom printer " + file.getAbsolutePath(), e);
+    }
+  }
+
   public static Map<String, Object> flattenNestedMap(Map<String, Object> map, String separator) {
-    Map<String, Object> flattenedMap = new TreeMap<>();
+    Map<String, Object> flattenedMap = new LinkedHashMap<>();
     flatten(map, "", flattenedMap, separator);
     return flattenedMap;
   }
@@ -499,6 +534,10 @@ public abstract class JsonUtil {
   @SuppressWarnings("unchecked")
   private static void flatten(Map<String, Object> currentMap, String currentKey,
       Map<String, Object> flattenedMap, String separator) {
+    if (currentMap.isEmpty() && isNotEmpty(currentKey)) {
+      flattenedMap.put(currentKey, currentMap);
+      return;
+    }
     for (Map.Entry<String, Object> entry : currentMap.entrySet()) {
       String key = entry.getKey();
       Object value = entry.getValue();
@@ -513,26 +552,26 @@ public abstract class JsonUtil {
   }
 
   public static JsonNode nestFlattenedJson(Map<String, String> flattenedJsonMap,
-      String separatorRegex) {
+      String separatorRegex, Set<Pattern> nonNumericKeyPatterns) {
     ObjectNode rootNode = OBJECT_MAPPER.createObjectNode();
 
     for (Map.Entry<String, String> entry : flattenedJsonMap.entrySet()) {
       String key = entry.getKey();
       String value = entry.getValue();
       String[] parts = key.split(separatorRegex);
-      nest(rootNode, parts, value, 0, OBJECT_MAPPER);
+      nest(rootNode, parts, value, 0, OBJECT_MAPPER, key, nonNumericKeyPatterns);
     }
 
     return rootNode;
   }
 
   private static void nest(JsonNode currentNode, String[] parts, String value, int index,
-      ObjectMapper mapper) {
+      ObjectMapper mapper, String fullKey, Set<Pattern> nonNumericKeyPatterns) {
 
     String currentPart = parts[index];
 
     if (index == parts.length - 1) {
-      handleSetLeafValue(currentNode, currentPart, value, mapper);
+      handleSetLeafValue(currentNode, currentPart, value, mapper, fullKey, nonNumericKeyPatterns);
       return;
     }
     JsonNode childNode;
@@ -553,14 +592,20 @@ public abstract class JsonUtil {
     childNode = ensureAndGetChildNode(currentNode, childNode, currentPart,
         numericCurrentPartIfArray, nextPart, mapper);
 
-    nest(childNode, parts, value, index + 1, mapper);
+    nest(childNode, parts, value, index + 1, mapper, fullKey, nonNumericKeyPatterns);
   }
 
-  private static JsonNode convertValueToJsonNode(String value, ObjectMapper mapper) {
+  private static JsonNode convertValueToJsonNode(String value, ObjectMapper mapper, String fullKey,
+      Set<Pattern> nonNumericKeyPatterns) {
     if (value == null) {
       return mapper.getNodeFactory().nullNode();
     }
     String trimmedValue = value.trim();
+    if (nonNumericKeyPatterns != null &&
+        nonNumericKeyPatterns.stream()
+            .anyMatch(pattern -> fullKey.matches(pattern.pattern()))) {
+      return mapper.getNodeFactory().textNode(value);
+    }
 
     if ("true".equalsIgnoreCase(trimmedValue)) {
       return mapper.getNodeFactory().booleanNode(true);
@@ -572,7 +617,19 @@ public abstract class JsonUtil {
     if ("null".equalsIgnoreCase(trimmedValue)) {
       return mapper.getNodeFactory().nullNode();
     }
+    if ("{}".equals(trimmedValue)) {
+      return mapper.getNodeFactory().objectNode();
+    }
+    if ("[]".equals(trimmedValue)) {
+      return mapper.getNodeFactory().arrayNode();
+    }
 
+    // If the string contains any letters (and isn't "true" or "false"), treat it as a text node.
+    if (trimmedValue.matches(".*[a-zA-Z].*")) {
+      return mapper.getNodeFactory().textNode(value);
+    }
+
+    // Attempt to parse as a number
     try {
       int intValue = Integer.parseInt(trimmedValue);
       return mapper.getNodeFactory().numberNode(intValue);
@@ -585,6 +642,8 @@ public abstract class JsonUtil {
           double doubleValue = Double.parseDouble(trimmedValue);
           return mapper.getNodeFactory().numberNode(doubleValue);
         } catch (NumberFormatException e3) {
+          // Handle purely numeric-looking strings that still fail parsing
+          // (e.g., "1.2.3") and fall back to text.
           return mapper.getNodeFactory().textNode(value);
         }
       }
@@ -592,8 +651,8 @@ public abstract class JsonUtil {
   }
 
   private static void handleSetLeafValue(JsonNode currentNode, String part, String value,
-      ObjectMapper mapper) {
-    JsonNode valueNode = convertValueToJsonNode(value, mapper);
+      ObjectMapper mapper, String fullKey, Set<Pattern> nonNumericKeyPatterns) {
+    JsonNode valueNode = convertValueToJsonNode(value, mapper, fullKey, nonNumericKeyPatterns);
 
     if (currentNode instanceof ObjectNode) {
       ((ObjectNode) currentNode).set(part, valueNode);

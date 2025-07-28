@@ -50,7 +50,7 @@ public class PubberManager extends ManagerBase {
     return options;
   }
 
-  public PubberConfiguration getConfig() {
+  public PubberConfiguration getPubberConfig() {
     return config;
   }
 

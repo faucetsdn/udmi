@@ -1,0 +1,90 @@
+#!/bin/bash
+#
+# Mapping backend service
+#
+set -euo pipefail
+
+SCRIPT_ROOT=$(realpath "$(dirname "$0")")
+UDMI_ROOT=$(realpath "$SCRIPT_ROOT/../..")
+
+source "$UDMI_ROOT/etc/shell_common.sh"
+
+main() {
+    local service_name="Mapping"
+    local message_spec=""
+    local project_spec=""
+    local cloning_dir=""
+    local local_origin_dir=""
+    local is_local=0
+    local should_create=0
+
+    if [[ $# -lt 3 ]]; then
+        # shellcheck disable=SC2102
+        usage message_spec project_spec cloning_dir [--local] [--create] [local_orig_dir]
+    fi
+
+    message_spec="$1"
+    if [[ "$message_spec" == */ ]]; then
+      message_spec="${message_spec%/}"
+    fi
+    project_spec="$2"
+    if [[ "$project_spec" == */ ]]; then
+      project_spec="${project_spec%/}"
+    fi
+    cloning_dir="$3"
+    shift 3
+
+    while [[ $# -gt 0 ]]; do
+        case "$1" in
+            --local)
+                is_local=1
+                shift
+                ;;
+            --create)
+                should_create=1
+                shift
+                ;;
+            *)
+                if [[ "$1" =~ ^- ]]; then
+                    echo "Error: Unknown command line option: '$1'"
+                    usage
+                elif [[ -z "$local_origin_dir" ]]; then
+                    local_origin_dir="$1"
+                    shift
+                else
+                    echo "Error: Unknown or duplicate argument '$1'"
+                    usage
+                fi
+                ;;
+        esac
+    done
+
+    export GCP_PROJECT
+    GCP_PROJECT=$(gcloud config get-value project)
+    echo "Using GCP Project: $GCP_PROJECT"
+
+    export UDMI_PREFIX="${UDMI_NAMESPACE:-}"
+    if [[ -n "$UDMI_PREFIX" ]]; then
+        UDMI_PREFIX="${UDMI_NAMESPACE}~"
+        echo "Using UDMI Namespace Prefix: $UDMI_PREFIX"
+    fi
+
+    if [[ $is_local -eq 1 ]]; then
+        build_services_jar
+    else
+        setup_service_gcp_environment ${service_name}
+    fi
+
+    if [[ $should_create -eq 1 ]]; then
+        local repo_updates_topic="${UDMI_PREFIX}udmi_target"
+        local repo_updates_subscription="${UDMI_PREFIX}udmi_target_mapping_updates"
+        ensure_pubsub_topic_exists "$repo_updates_topic"
+        ensure_pubsub_subscription_exists "$repo_updates_subscription" "$repo_updates_topic" --no-expiration
+    fi
+
+    echo "Starting ${service_name} Service..."
+    java -cp "$SERVICES_JAR" "com.google.daq.mqtt.mapping.MappingService" \
+        "$message_spec" "$project_spec" "$cloning_dir" "$local_origin_dir"
+}
+
+main "$@"

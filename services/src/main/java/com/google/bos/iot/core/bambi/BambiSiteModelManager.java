@@ -1,6 +1,9 @@
 package com.google.bos.iot.core.bambi;
 
 
+import static com.google.bos.iot.core.bambi.Utils.makeEmptyValuesExplicit;
+import static com.google.bos.iot.core.bambi.Utils.removeBracketsFromListValues;
+
 import com.google.bos.iot.core.bambi.model.BambiSheetTab;
 import com.google.bos.iot.core.bambi.model.BambiSiteModel;
 import com.google.common.annotations.VisibleForTesting;
@@ -94,7 +97,7 @@ public class BambiSiteModelManager {
    */
   public void writeSiteMetadata(Map<String, String> newSiteMetadata) {
     writeKeyValueTypeMetadata(BambiSheetTab.SITE_METADATA, bambiSiteModel.getSiteMetadataHeaders(),
-        newSiteMetadata);
+        removeBracketsFromListValues(newSiteMetadata));
   }
 
   /**
@@ -104,12 +107,13 @@ public class BambiSiteModelManager {
    */
   public void writeCloudIotConfig(Map<String, String> newCloudIotConfig) {
     writeKeyValueTypeMetadata(BambiSheetTab.CLOUD_IOT_CONFIG,
-        bambiSiteModel.getCloudIotConfigHeaders(), newCloudIotConfig);
+        bambiSiteModel.getCloudIotConfigHeaders(), removeBracketsFromListValues(newCloudIotConfig));
   }
 
   private void writeKeyValueTypeMetadata(BambiSheetTab sheet, List<String> headers,
       Map<String, String> data) {
     LOGGER.info("writing to sheet " + sheet.getName());
+    makeEmptyValuesExplicit(data);
     Map<String, String> newData = new LinkedHashMap<>();
     for (String header : headers) {
       newData.put(header, data.getOrDefault(header, ""));
@@ -139,6 +143,9 @@ public class BambiSiteModelManager {
         new SheetConfig(BambiSheetTab.LOCALNET, bambiSiteModel.getLocalnetDataHeaders())
     );
 
+    for (Map<String, String> value : deviceToMetadataMap.values()) {
+      makeEmptyValuesExplicit(value);
+    }
     for (SheetConfig config : simpleTableConfigs) {
       List<List<Object>> sheetData = processSimpleTableData(
           deviceToMetadataMap, config.headers(), config.sheet().getName() + "."
@@ -184,6 +191,7 @@ public class BambiSiteModelManager {
               e -> e.getKey().substring(keyPrefix.length()),
               Entry::getValue
           ));
+      makeEmptyValuesExplicit(relevantMetadata);
 
       sheetData.add(buildDataRow(deviceId, headers, relevantMetadata));
     }
@@ -254,18 +262,16 @@ public class BambiSiteModelManager {
         String value = rawEntry.getValue();
 
         String[] parts = combinedKey.split("\\.", 2);
+        String pointName = parts[0];
+        Map<String, String> pointMap = pointsForDevice.computeIfAbsent(pointName,
+            k -> new HashMap<>());
+        pointMap.put(BambiSiteModel.POINT_NAME, pointName);
         if (parts.length == 2) {
-          String pointName = parts[0];
           String propertyName = parts[1];
-
-          Map<String, String> pointMap = pointsForDevice.computeIfAbsent(pointName,
-              k -> new HashMap<>());
-
-          pointMap.put(BambiSiteModel.POINT_NAME, pointName);
           pointMap.put(propertyName, value);
         } else {
-          LOGGER.error(
-              "Warning: Skipping malformed point key: " + combinedKey + " for device " + deviceId);
+          LOGGER.warn(
+              "Warning: No properties for key: " + combinedKey + " for device " + deviceId);
         }
       }
 

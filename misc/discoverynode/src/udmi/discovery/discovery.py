@@ -55,6 +55,7 @@ def main_task(method: Callable):
     method(self, *args, **kwargs)
     self._set_internal_state(states.FINISHED)
     self.state.phase = udmi.schema.state.Phase.stopped
+    self._publish_marker()
 
   return _impl
 
@@ -146,7 +147,7 @@ class DiscoveryController(abc.ABC):
     
     atexit.register(self._stop)
 
-  def _increment_event_counter_and_get(self) -> int:
+  def _event_counter_increment_and_get(self) -> int:
     """ Incremenets the internal event counter and returns the new value.
 
     Returns:
@@ -171,6 +172,7 @@ class DiscoveryController(abc.ABC):
     self.count_events = 0
 
     try:
+      self._publish_marker()
       self.start_discovery()
     except Exception as err:
       self._handle_exception(err)
@@ -195,17 +197,26 @@ class DiscoveryController(abc.ABC):
     except Exception as err:
       self._handle_exception(err)
 
+  def _publish_marker(self):
+    event_no = 0 if self.internal_state == states.STARTING else -(self.count_events + 1)
+    event = udmi.schema.discovery_event.DiscoveryEvent(
+      generation=self.generation,
+      family=self.family,
+      event_no=event_no
+    )
+    logging.info("publishing discovery marker for %s #%d", self.family, event_no)
+    self.publisher(event)
+
   def publish(self, event: udmi.schema.discovery_event.DiscoveryEvent):
     """ Publishes the provided Discovery Event, setting event counts."""
-    event_number = self._increment_event_counter_and_get()
+    event_number = self._event_counter_increment_and_get()
     event.event_no = event_number
-    logging.info("published discovery for %s:%s #%d", event.family, event.addr, event_number)
+    logging.info("publishing discovery for %s:%s #%d", event.family, event.addr, event_number)
     self.publisher(event)
 
   def _validate_config(config: udmi.schema.config.DiscoveryFamily):
-    """ Validates that the 
-    
-    
+    """ Validates that the given discovery family config is valid.
+
       Throws:
         RuntimeError: If the provided config is invalid
     """

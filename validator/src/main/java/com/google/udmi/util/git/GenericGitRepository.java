@@ -17,6 +17,7 @@ import org.eclipse.jgit.api.PushCommand;
 import org.eclipse.jgit.api.Status;
 import org.eclipse.jgit.api.errors.GitAPIException;
 import org.eclipse.jgit.lib.Constants;
+import org.eclipse.jgit.lib.ObjectId;
 import org.eclipse.jgit.lib.PersonIdent;
 import org.eclipse.jgit.lib.Ref;
 import org.eclipse.jgit.revwalk.RevCommit;
@@ -163,6 +164,17 @@ public class GenericGitRepository implements GitRepositoryInterface {
   @Override
   public void add(String filePattern) throws GitAPIException, IOException {
     getGit().add().addFilepattern(filePattern).call();
+  }
+
+  /**
+   * Stages the removal of a file from the repository. This is equivalent to `git rm`.
+   *
+   * @param filePattern The file pattern to remove from the index.
+   * @throws GitAPIException if there is an error executing the Git command.
+   */
+  @Override
+  public void remove(String filePattern) throws GitAPIException {
+    getGit().rm().addFilepattern(filePattern).call();
   }
 
   @Override
@@ -320,6 +332,27 @@ public class GenericGitRepository implements GitRepositoryInterface {
       }
     }
     getGit().branchDelete().setBranchNames(branchName).setForce(force).call();
+  }
+
+  /**
+   * Gets the commit hash (SHA-1) for the tip of a given branch.
+   *
+   * @param branchName The name of the branch (e.g., "main", "feature/new-login").
+   * @return The full 40-character commit hash as a String.
+   * @throws IOException if the branch cannot be found or an I/O error occurs.
+   */
+  public String getCommitHashForBranch(String branchName) throws IOException {
+    ObjectId branchId = getGit().getRepository().resolve(branchName);
+
+    if (branchId == null) {
+      throw new IOException("Could not find a branch named '" + branchName + "'");
+    }
+
+    return branchId.getName();
+  }
+
+  public String getCommitHashForCurrentBranch() throws IOException {
+    return getCommitHashForBranch(getCurrentBranch());
   }
 
   @Override

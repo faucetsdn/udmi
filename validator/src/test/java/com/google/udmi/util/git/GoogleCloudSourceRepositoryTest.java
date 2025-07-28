@@ -60,8 +60,8 @@ public class GoogleCloudSourceRepositoryTest {
   @Test
   public void constructor_withNamespace_buildsCorrectTopicAndSubscriptionNames() {
     // Arrange
-    String expectedTopic = TEST_NAMESPACE + "~pr-reviews";
-    String expectedSubscription = TEST_NAMESPACE + "~pr-reviews-subscription";
+    String expectedTopic = TEST_NAMESPACE + "~udmi_pr_reviews";
+    String expectedSubscription = TEST_NAMESPACE + "~udmi_pr_reviews_subscription";
 
     // Act
     new GoogleCloudSourceRepository(mockConfig, TEST_NAMESPACE);
@@ -76,8 +76,8 @@ public class GoogleCloudSourceRepositoryTest {
   @Test
   public void constructor_withoutNamespace_buildsCorrectTopicAndSubscriptionNames() {
     // Arrange
-    String expectedTopic = "pr-reviews";
-    String expectedSubscription = "pr-reviews-subscription";
+    String expectedTopic = "udmi_pr_reviews";
+    String expectedSubscription = "udmi_pr_reviews_subscription";
 
     // Act
     // Pass null for the namespace to test the "not set" case.
@@ -97,8 +97,9 @@ public class GoogleCloudSourceRepositoryTest {
         .thenReturn(true);
 
     String expectedJsonPayload = String.format(
-        "{\"title\":\"%s\", \"body\":\"%s\", \"sourceBranch\":\"%s\", \"targetBranch\":\"%s\"}",
-        PR_TITLE, PR_BODY, SOURCE_BRANCH, TARGET_BRANCH
+        "{\"title\":\"%s\", \"body\":\"%s\", \"sourceBranch\":\"%s\", "
+            + "\"targetBranch\":\"%s\", \"author\":\"%s\", \"commitUrl\":\"%s\"}",
+        PR_TITLE, PR_BODY, SOURCE_BRANCH, TARGET_BRANCH, null, null
     );
 
     try (MockedConstruction<GenericPubSubClient> mockConstruction = Mockito.mockConstruction(

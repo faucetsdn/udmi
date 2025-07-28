@@ -281,6 +281,7 @@ public class SequenceBase {
   public static final String STRAY_SUBDIR = "stray";
   private static final long MESSAGE_POLL_SLEEP_MS = 1000;
   private static final String MESSAGE_SOURCE_INDICATOR = "message_envelope_source_key";
+  private static final Duration WAITING_SLOP_TIME = Duration.ofSeconds(2);
   protected static Metadata deviceMetadata;
   protected static String projectId;
   protected static String cloudRegion;
@@ -362,6 +363,8 @@ public class SequenceBase {
   protected boolean pretendStateUpdated;
   private Boolean stateSupported;
   private Instant lastConfigApplied = getNowInstant();
+  private Map<String, AtomicInteger> msgIndex = new HashMap<>();
+  private Map<String, String> lastBase = new HashMap<>();
 
   private static void setupSequencer() {
     exeConfig = ofNullable(exeConfig).orElseGet(SequenceRunner::ensureExecutionConfig);
@@ -1196,8 +1199,14 @@ public class SequenceBase {
     String altDir = ofNullable(envelope.gatewayId).map(x -> proxiedSubdir).orElse(TRACE_SUBDIR);
     String useDir = isFallbackRegistry ? STRAY_SUBDIR : altDir;
     File altFile = new File(testDir, useDir);
-    String timeSuffix = ifNotNullGet(envelope.publishTime, JsonUtil::isoConvert, getTimestamp());
-    File altOut = new File(altFile, messageBase + "_" + timeSuffix + fileSuffix);
+    String timestamp = ifNotNullGet(envelope.publishTime, JsonUtil::isoConvert, getTimestamp());
+
+    String fileBase = messageBase + "+" + timestamp;
+    String previous = lastBase.put(fileSuffix, fileBase);
+    AtomicInteger index = msgIndex.computeIfAbsent(fileSuffix, x -> new AtomicInteger());
+    ifTrueThen(fileBase.equals(previous), index::incrementAndGet, () -> index.set(0));
+
+    File altOut = new File(altFile, format("%s_%02d%s", fileBase, index.get(), fileSuffix));
     writeString(altOut, contents);
   }
 
@@ -1630,7 +1639,9 @@ public class SequenceBase {
 
   protected void sleepFor(String delayReason, Duration sleepTime) {
     String message = format("sleeping %ss for %s", sleepTime.getSeconds(), delayReason);
-    whileDoing(message, () -> safeSleep(sleepTime.getSeconds() * ONE_SECOND_MS));
+    Instant endTime = Instant.now().plus(sleepTime);
+    withRecordSequence(false, () -> waitUntil(message, sleepTime.plus(WAITING_SLOP_TIME),
+        () -> endTime.isAfter(Instant.now()) ? message : null));
   }
 
   protected void checkFor(String description, Supplier<String> detailer) {

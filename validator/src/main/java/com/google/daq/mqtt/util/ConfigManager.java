@@ -241,7 +241,8 @@ public class ConfigManager {
         format("both gateway.target.addr and localnet.families.%s.addr should not be defined",
             family));
     try {
-      NAMED_FAMILIES.get(family).validateRef(pointRef);
+      String fullRef = format("%s://%s/%s", family, localAddr, pointRef);
+      NAMED_FAMILIES.get(family).validateRef(fullRef);
     } catch (Exception e) {
       schemaViolationsMap.put(String.format("%s %s: %s", family, pointRef, getCurrentContext()),
           wrapExceptionWithContext(e, false));

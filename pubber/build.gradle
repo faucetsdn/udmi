@@ -128,6 +128,7 @@ dependencies {
     implementation 'com.google.apis:google-api-services-sheets:v4-rev484-1.20.0'
     implementation 'org.jetbrains:annotations:20.1.0'
     implementation 'ch.qos.logback:logback-classic:1.5.6'
+    implementation 'uk.org.lidalia:sysout-over-slf4j:1.0.2'
 
     testImplementation group: 'junit', name: 'junit', version: '4.13.2'
     testImplementation 'org.mockito:mockito-core:5.3.1'

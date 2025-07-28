@@ -75,7 +75,6 @@ class UDMICore:
     # Note, this depends on topic_state being set
     threading.Thread(target=self.state_monitor, args=[], daemon=True).start()
 
-
   def add_config_route(self, filter: Callable, destination: Callable):
     self.callbacks[filter] = destination
 
