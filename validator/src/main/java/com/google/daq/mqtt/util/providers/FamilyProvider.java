@@ -16,6 +16,8 @@ public interface FamilyProvider {
   Set<Class<? extends FamilyProvider>> PROTOCOL_FAMILIES = ImmutableSet.of(
       IotFamilyProvider.class,
       VendorFamilyProvider.class,
+      EtherFamilyProvider.class,
+      Ipv4FamilyProvider.class,
       BacnetFamilyProvider.class);
 
   /**

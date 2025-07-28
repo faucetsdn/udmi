@@ -64,7 +64,7 @@
       },
       "bacnet": {
         "addr": "19233",
-        "network": "92888"
+        "network": "9288"
       },
       "vendor": {
         "addr": "28179023"

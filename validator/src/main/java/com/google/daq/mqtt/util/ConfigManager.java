@@ -269,8 +269,12 @@ public class ConfigManager {
     }
 
     // Just get the addr and networks to validate that they're defined properly.
-    metadata.localnet.families.keySet().forEach(this::getLocalnetAddr);
-    metadata.localnet.families.keySet().forEach(this::getLocalnetNetwork);
+    metadata.localnet.families.keySet().forEach(family -> {
+      checkState(NAMED_FAMILIES.containsKey(family),
+          "Protocol validation not supported for " + family);
+      getLocalnetAddr(family);
+      getLocalnetNetwork(family);
+    });
 
     LocalnetConfig localnetConfig = new LocalnetConfig();
     localnetConfig.families = new HashMap<>();
