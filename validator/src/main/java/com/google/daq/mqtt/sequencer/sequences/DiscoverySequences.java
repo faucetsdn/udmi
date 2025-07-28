@@ -312,7 +312,8 @@ public class DiscoverySequences extends SequenceBase {
     SortedSet<String> networks = expectedTargetNetworks();
     ifTrueSkipTest(networks.size() < 2, "not enough networks for test");
     String targetNetwork = networks.removeFirst();
-
+    scanAndVerify(cleanInstantDate(Instant.now().minusSeconds(1)), PLEASE_ENUMERATE,
+        ImmutableSet.of(targetNetwork), null);
   }
 
   private void scanAndVerify(Date scanStart, DiscoveryScanMode shouldEnumerate) {
@@ -328,7 +329,7 @@ public class DiscoverySequences extends SequenceBase {
 
     scanGeneration = scanStart.toInstant();
 
-    configureScan(scanGeneration, null, shouldEnumerate, targets);
+    configureScan(scanGeneration, null, shouldEnumerate, networks, targets);
     Instant scanConfigured = getNowInstant();
 
     if (shouldEnumerate == NO_SCAN) {
@@ -403,10 +404,17 @@ public class DiscoverySequences extends SequenceBase {
     checkThat("all scan addresses are unique", duplicates.isEmpty(),
         "duplicates: " + CSV_JOINER.join(duplicates));
 
-    Set<String> expected = Optional.ofNullable(targets).orElseGet(this::expectedTargetDevices);
-    SetView<String> differences = symmetricDifference(discoveredAddresses, expected);
-    checkThat("all expected addresses were found", differences.isEmpty(),
-        format("expected %s, found %s", expected, discoveredAddresses));
+    Set<String> expTargets = Optional.ofNullable(targets).orElseGet(this::expectedTargetDevices);
+    SetView<String> diffTargets = symmetricDifference(discoveredAddresses, expTargets);
+    checkThat("all expected addresses were found", diffTargets.isEmpty(),
+        format("expected %s, found %s", expTargets, discoveredAddresses));
+
+    Set<String> discoveredNetworks = events.stream().map(x -> x.network).filter(Objects::nonNull)
+        .collect(toSet());
+    Set<String> expNet = Optional.ofNullable(networks).orElseGet(this::expectedTargetNetworks);
+    SetView<String> diffNetworks = symmetricDifference(discoveredNetworks, expNet);
+    checkThat("all expected networks were found", diffNetworks.isEmpty(),
+        format("expected %s, found %s", expNet, discoveredNetworks));
   }
 
   private SortedSet<String> expectedTargetDevices() {
@@ -542,7 +550,7 @@ public class DiscoverySequences extends SequenceBase {
     initializeDiscovery();
     checkState(scanGeneration == null, "scanStartTime not null");
     scanGeneration = cleanDate().toInstant();
-    configureScan(scanGeneration, SCAN_START_DELAY, PLEASE_ENUMERATE, null);
+    configureScan(scanGeneration, SCAN_START_DELAY, PLEASE_ENUMERATE, null, null);
     Instant endTime = Instant.now().plusSeconds(SCAN_START_DELAY.getSeconds() * SCAN_ITERATIONS);
     untilUntrue("scan iterations", () -> Instant.now().isBefore(endTime));
     Instant finishTime = deviceState.discovery.families.get(scanFamily).generation.toInstant();
@@ -578,7 +586,7 @@ public class DiscoverySequences extends SequenceBase {
   }
 
   private void configureScan(Instant startTime, Duration scanInterval,
-      DiscoveryScanMode shouldEnumerate, Set<String> targets) {
+      DiscoveryScanMode shouldEnumerate, Set<String> networks, Set<String> targets) {
     Integer intervalSec = ofNullable(scanInterval).map(Duration::getSeconds).map(Long::intValue)
         .orElse(null);
     info(format("%s configured for family %s starting at %s evey %ss",
