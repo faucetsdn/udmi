@@ -17,6 +17,7 @@ import static java.util.Objects.requireNonNull;
 import static java.util.Optional.ofNullable;
 
 import com.google.common.collect.ImmutableList;
+import com.google.daq.mqtt.util.providers.FamilyProvider;
 import com.google.udmi.util.SiteModel;
 import java.io.File;
 import java.util.HashMap;
@@ -182,7 +183,9 @@ public class ConfigManager {
 
   private String getLocalnetAddr(String rawFamily) {
     String family = ofNullable(rawFamily).orElse(DEFAULT_FAMILY);
-    return catchToNull(() -> metadata.localnet.families.get(family).addr);
+    String addr = catchToNull(() -> metadata.localnet.families.get(family).addr);
+    NAMED_FAMILIES.get(family).validateAddr(addr);
+    return addr;
   }
 
   private PointsetConfig getDevicePointsetConfig() {

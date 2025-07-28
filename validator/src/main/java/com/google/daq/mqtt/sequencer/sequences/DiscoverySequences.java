@@ -12,6 +12,7 @@ import static com.google.udmi.util.CleanDateFormat.dateEquals;
 import static com.google.udmi.util.GeneralUtils.CSV_JOINER;
 import static com.google.udmi.util.GeneralUtils.ifNotEmptyThrow;
 import static com.google.udmi.util.GeneralUtils.ifNotNullGet;
+import static com.google.udmi.util.GeneralUtils.ifNotNullThen;
 import static com.google.udmi.util.GeneralUtils.ifNotTrueGet;
 import static com.google.udmi.util.GeneralUtils.ifNullElse;
 import static com.google.udmi.util.GeneralUtils.joinOrNull;
@@ -422,6 +423,7 @@ public class DiscoverySequences extends SequenceBase {
     if (discoveryEvent.event_no > 0) {
       addIfCaught(exceptions, () -> assertNotNull("empty scan address", discoveryEvent.addr));
       addIfCaught(exceptions, () -> providerFamily.validateAddr(discoveryEvent.addr));
+      addIfCaught(exceptions, () -> ifNotNullThen(discoveryEvent.network, network -> providerFamily.validateNetwork(network)));
     }
     return exceptions;
   }

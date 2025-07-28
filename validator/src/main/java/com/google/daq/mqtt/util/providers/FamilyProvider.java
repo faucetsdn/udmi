@@ -52,4 +52,8 @@ public interface FamilyProvider {
   void validateRef(String metadataRef);
 
   void validateAddr(String scanAddr);
+
+  default void validateNetwork(String network) {
+    throw new IllegalArgumentException("Network designator not allowed for family " + familyKey());
+  }
 }

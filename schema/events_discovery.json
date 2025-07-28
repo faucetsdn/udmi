@@ -33,6 +33,10 @@
       "description": "The primary address of the device (for indicated family)",
       "type": "string"
     },
+    "network": {
+      "description": "The family network designator of the discovered device",
+      "type": "string"
+    },
     "event_no": {
       "description": "The active or passive series number of this result (matches reported state values)",
       "type": "integer"

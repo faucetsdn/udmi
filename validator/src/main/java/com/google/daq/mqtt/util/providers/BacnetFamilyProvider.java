@@ -14,6 +14,7 @@ import java.util.regex.Pattern;
 public class BacnetFamilyProvider implements FamilyProvider {
 
   private static final Pattern BACNET_ADDR = Pattern.compile("0|[1-9][0-9]*");
+  private static final Pattern BACNET_NETWORK = Pattern.compile("[1-9][0-9]{0,4}");
   private static final Pattern BACNET_REF = Pattern.compile(
       "bacnet://(0|[1-9][0-9]*)/([A-Z]{2,4}):(0|[1-9][0-9]*)(#[_a-z]+)?");
 
@@ -37,5 +38,11 @@ public class BacnetFamilyProvider implements FamilyProvider {
   public void validateAddr(String scanAddr) {
     checkState(BACNET_ADDR.matcher(scanAddr).matches(),
         format("bacnet scan_addr %s does not match expression %s", scanAddr, BACNET_ADDR));
+  }
+
+  @Override
+  public void validateNetwork(String networkAddr) {
+    checkState(BACNET_NETWORK.matcher(networkAddr).matches(),
+        format("bacnet network %s does not match expression %s", networkAddr, BACNET_NETWORK));
   }
 }
