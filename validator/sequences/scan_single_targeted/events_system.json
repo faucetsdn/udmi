@@ -23,14 +23,14 @@
     "level" : 200
   }, {
     "message" : "State update AHU-1 (scan_single_targeted)",
-    "detail" : "{\n  \"timestamp\" : \"TIMESTAMP\",\n        \"phase\" : \"stopped\",\n        \"active_count\" : 2\n      }\n    }\n  },\n  \"localnet\" : {\n    \"families\" : {\n      \"ether\" : {\n        \"addr\" : \"00:0d:3a:14:80:5d\"\n      },\n      \"ipv4\" : {\n        \"addr\" : \"10.1.0.18\"\n      },\n      \"vendor\" : {\n        \"addr\" : \"28179023\"\n      },\n      \"bacnet\" : {\n        \"addr\" : \"snoozle\"\n      }\n    }\n  },\n  \"pointset\" : {\n    \"points\" : {\n      \"filter_alarm_pressure_status\" : {\n        \"units\" : \"No-units\"\n      },\n      \"filter_differential_pressure_setpoint\" : {\n        \"units\" : \"Bars\",\n        \"value_state\" : \"applied\"\n      },\n      \"filter_differential_pressure_sensor\" : {\n        \"units\" : \"Degrees-Celsius\"\n      }\n    }\n  }\n}",
+    "detail" : "{\n  \"timestamp\" : \"TIMESTAMP\",\n        \"phase\" : \"stopped\",\n        \"active_count\" : 2\n      }\n    }\n  },\n  \"localnet\" : {\n    \"families\" : {\n      \"ether\" : {\n        \"addr\" : \"60:45:bd:03:3a:df\"\n      },\n      \"ipv4\" : {\n        \"addr\" : \"10.1.0.156\"\n      },\n      \"vendor\" : {\n        \"addr\" : \"28179023\"\n      },\n      \"bacnet\" : {\n        \"addr\" : \"27312\"\n      }\n    }\n  },\n  \"pointset\" : {\n    \"points\" : {\n      \"filter_alarm_pressure_status\" : {\n        \"units\" : \"No-units\"\n      },\n      \"filter_differential_pressure_setpoint\" : {\n        \"units\" : \"Bars\",\n        \"value_state\" : \"applied\"\n      },\n      \"filter_differential_pressure_sensor\" : {\n        \"units\" : \"Degrees-Celsius\"\n      }\n    }\n  }\n}",
     "category" : "device.log",
     "timestamp" : "TIMESTAMP",
     "level" : 100
   } ],
   "metrics" : {
     "mem_total_mb" : 54.0,
-    "mem_free_mb" : 26.193527221679688
+    "mem_free_mb" : 26.71179962158203
   },
   "timestamp" : "TIMESTAMP",
   "version" : "1.5.3"

@@ -545,13 +545,14 @@ Check results of a single scan scheduled soon
 1. Check that scan completed at time
 1. Check that received expected number of discovery events
 1. Check that no events have discovered refs
+1. Check that discovery events were valid
 1. Check that received all unique event numbers
-1. Check that received proper discovery termination event
 1. Check that received proper discovery start event
 1. Check that received proper last discovery event
-1. Check that discovery events were valid
+1. Check that received proper discovery termination event
 1. Check that all scan addresses are unique
 1. Check that all expected addresses were found
+1. Check that all expected networks were found
 
 Test passed.
 
@@ -572,13 +573,14 @@ Check results of a single scan scheduled in the recent past including enumeratio
 1. Check that scan completed at time
 1. Check that received expected number of discovery events
 1. Check that all events have matching refs
+1. Check that discovery events were valid
 1. Check that received all unique event numbers
-1. Check that received proper discovery termination event
 1. Check that received proper discovery start event
 1. Check that received proper last discovery event
-1. Check that discovery events were valid
+1. Check that received proper discovery termination event
 1. Check that all scan addresses are unique
 1. Check that all expected addresses were found
+1. Check that all expected networks were found
 
 Test passed.
 
