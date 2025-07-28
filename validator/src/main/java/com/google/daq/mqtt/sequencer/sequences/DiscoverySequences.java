@@ -388,11 +388,11 @@ public class DiscoverySequences extends SequenceBase {
 
     checkThat("discovery events were valid", reasons.isEmpty(), CSV_JOINER.join(reasons));
 
-    final Integer firstEventNo = eventNos.removeFirst();
     checkThat("received all unique event numbers", eventNos.size() == expectedEvents);
+    final Integer endEventNo = eventNos.removeFirst();
     checkThat("received proper discovery start event", eventNos.getFirst() == 0);
     checkThat("received proper last discovery event", eventNos.getLast() == actualCount);
-    checkThat("received proper discovery termination event", firstEventNo == -(actualCount + 1));
+    checkThat("received proper discovery termination event", endEventNo == -(actualCount + 1));
 
     Set<String> discoveredAddresses = events.stream().map(x -> x.addr).filter(Objects::nonNull)
         .collect(toSet());
