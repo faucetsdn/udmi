@@ -188,6 +188,13 @@ public class ConfigManager {
     return addr;
   }
 
+  private String getLocalnetNetwork(String rawFamily) {
+    String family = ofNullable(rawFamily).orElse(DEFAULT_FAMILY);
+    String addr = catchToNull(() -> metadata.localnet.families.get(family).network);
+    ifNotNullThen(addr, a -> NAMED_FAMILIES.get(family).validateNetwork(addr));
+    return addr;
+  }
+
   private PointsetConfig getDevicePointsetConfig() {
     if (metadata.pointset == null) {
       return null;
@@ -261,6 +268,11 @@ public class ConfigManager {
     if (metadata.localnet == null) {
       return null;
     }
+
+    // Just get the addr and networks to validate that they're defined properly.
+    metadata.localnet.families.keySet().forEach(this::getLocalnetAddr);
+    metadata.localnet.families.keySet().forEach(this::getLocalnetNetwork);
+
     LocalnetConfig localnetConfig = new LocalnetConfig();
     localnetConfig.families = new HashMap<>();
     metadata.localnet.families.keySet()
