@@ -17,7 +17,6 @@ import static java.util.Objects.requireNonNull;
 import static java.util.Optional.ofNullable;
 
 import com.google.common.collect.ImmutableList;
-import com.google.daq.mqtt.util.providers.FamilyProvider;
 import com.google.udmi.util.SiteModel;
 import java.io.File;
 import java.util.HashMap;

@@ -14,7 +14,9 @@ import static com.google.udmi.util.GeneralUtils.ifNotEmptyThrow;
 import static com.google.udmi.util.GeneralUtils.ifNotNullGet;
 import static com.google.udmi.util.GeneralUtils.ifNotNullThen;
 import static com.google.udmi.util.GeneralUtils.ifNotTrueGet;
+import static com.google.udmi.util.GeneralUtils.ifNotTrueThen;
 import static com.google.udmi.util.GeneralUtils.ifNullElse;
+import static com.google.udmi.util.GeneralUtils.ifTrueThen;
 import static com.google.udmi.util.GeneralUtils.joinOrNull;
 import static com.google.udmi.util.JsonUtil.getNowInstant;
 import static com.google.udmi.util.JsonUtil.isoConvert;
@@ -75,6 +77,7 @@ import udmi.schema.Enumerations;
 import udmi.schema.Enumerations.Depth;
 import udmi.schema.FamilyDiscoveryConfig;
 import udmi.schema.FamilyDiscoveryState;
+import udmi.schema.FamilyLocalnetModel;
 import udmi.schema.FeatureDiscovery;
 import udmi.schema.Metadata;
 import udmi.schema.PointPointsetModel;
@@ -291,7 +294,8 @@ public class DiscoverySequences extends SequenceBase {
         "Not enough targets to test targeted scan");
     Set<String> targets = expectedAddresses.stream().limit(SCAN_TARGET_COUNT).collect(toSet());
     info("Testing against scan targets: " + targets);
-    scanAndVerify(cleanInstantDate(Instant.now().minusSeconds(1)), DEFAULT_ENUMERATION, targets);
+    scanAndVerify(cleanInstantDate(Instant.now().minusSeconds(1)), DEFAULT_ENUMERATION, null,
+        targets);
   }
 
   @Test(timeout = TWO_MINUTES_MS)
@@ -301,12 +305,22 @@ public class DiscoverySequences extends SequenceBase {
     scanAndVerify(cleanInstantDate(Instant.now().plus(SCAN_START_DELAY)), DEFAULT_ENUMERATION);
   }
 
+  @Test(timeout = TWO_MINUTES_MS)
+  @Feature(bucket = DISCOVERY_SCAN, stage = ALPHA)
+  @Summary("Check results of a single scan targeting specific devices")
+  public void scan_network_single() {
+    SortedSet<String> networks = expectedTargetNetworks();
+    ifTrueSkipTest(networks.size() < 2, "not enough networks for test");
+    String targetNetwork = networks.removeFirst();
+
+  }
+
   private void scanAndVerify(Date scanStart, DiscoveryScanMode shouldEnumerate) {
-    scanAndVerify(scanStart, shouldEnumerate, null);
+    scanAndVerify(scanStart, shouldEnumerate, null, null);
   }
 
   private void scanAndVerify(Date scanStart, DiscoveryScanMode shouldEnumerate,
-      Set<String> targets) {
+      Set<String> networks, Set<String> targets) {
     final boolean scheduledStart = scanStart.after(new Date());
 
     initializeDiscovery();
@@ -361,22 +375,23 @@ public class DiscoverySequences extends SequenceBase {
         .collect(Collectors.toCollection(TreeSet::new));
     debug(format("Received discovery %s event_nos %s", generation, eventNos));
 
-    Function<DiscoveryEvents, List<String>> invalidator = event -> invalidReasons(event,
-        generation);
     int expectedEvents = actualCount + 2;  // Includes start and stop marker events.
     debug(format("Received %d events, %d in state (expect +2)", events.size(), actualCount));
     checkThat("received expected number of discovery events", events.size() == expectedEvents);
+
+    Function<DiscoveryEvents, List<String>> invalidator = event -> invalidReasons(event,
+        generation);
     List<String> reasons = events.stream().map(invalidator).flatMap(List::stream)
         .collect(Collectors.toList());
     reasons.addAll(checkEnumeration(events, expectedEnumeration));
 
+    checkThat("discovery events were valid", reasons.isEmpty(), CSV_JOINER.join(reasons));
+
+    final Integer firstEventNo = eventNos.removeFirst();
     checkThat("received all unique event numbers", eventNos.size() == expectedEvents);
-    checkThat("received proper discovery termination event",
-        eventNos.removeFirst() == -(actualCount + 1));
     checkThat("received proper discovery start event", eventNos.getFirst() == 0);
     checkThat("received proper last discovery event", eventNos.getLast() == actualCount);
-
-    checkThat("discovery events were valid", reasons.isEmpty(), CSV_JOINER.join(reasons));
+    checkThat("received proper discovery termination event", firstEventNo == -(actualCount + 1));
 
     Set<String> discoveredAddresses = events.stream().map(x -> x.addr).filter(Objects::nonNull)
         .collect(toSet());
@@ -396,6 +411,11 @@ public class DiscoverySequences extends SequenceBase {
 
   private SortedSet<String> expectedTargetDevices() {
     return siteModel.metadataStream().map(this::scanFamilyAddr)
+        .filter(Objects::nonNull).collect(Collectors.toCollection(TreeSet::new));
+  }
+
+  private SortedSet<String> expectedTargetNetworks() {
+    return siteModel.metadataStream().map(this::scanFamilyNetwork)
         .filter(Objects::nonNull).collect(Collectors.toCollection(TreeSet::new));
   }
 
@@ -420,12 +440,22 @@ public class DiscoverySequences extends SequenceBase {
         () -> assertEquals("bad scan family", scanFamily, discoveryEvent.family));
     addIfCaught(exceptions,
         () -> assertEquals("bad generation", scanGeneration, discoveryEvent.generation));
-    if (discoveryEvent.event_no > 0) {
-      addIfCaught(exceptions, () -> assertNotNull("empty scan address", discoveryEvent.addr));
-      addIfCaught(exceptions, () -> providerFamily.validateAddr(discoveryEvent.addr));
-      addIfCaught(exceptions, () -> ifNotNullThen(discoveryEvent.network, network -> providerFamily.validateNetwork(network)));
-    }
+    ifTrueThen(discoveryEvent.event_no > 0, () -> validateEvent(discoveryEvent, exceptions));
     return exceptions;
+  }
+
+  private void validateEvent(DiscoveryEvents discoveryEvent, List<String> exceptions) {
+    String addr = discoveryEvent.addr;
+    addIfCaught(exceptions, () -> assertNotNull("empty scan address", addr));
+    addIfCaught(exceptions, () -> providerFamily.validateAddr(addr));
+    addIfCaught(exceptions, () -> ifNotNullThen(discoveryEvent.network,
+        network -> providerFamily.validateNetwork(network)));
+    Metadata metadata = targetMetadata(addr).getValue();
+    FamilyLocalnetModel localnetModel = metadata.localnet.families.get(scanFamily);
+    addIfFalse(exceptions, Objects.equals(localnetModel.addr, addr),
+        "discovered addr does not match");
+    addIfFalse(exceptions, Objects.equals(localnetModel.network, discoveryEvent.network),
+        "discovered network does not match");
   }
 
   private void addIfCaught(List<String> exceptions, Runnable checker) {
@@ -434,6 +464,10 @@ public class DiscoverySequences extends SequenceBase {
     } catch (Exception e) {
       exceptions.add(e.getMessage());
     }
+  }
+
+  private void addIfFalse(List<String> exceptions, boolean value, String message) {
+    ifNotTrueThen(value, () -> exceptions.add(message));
   }
 
   private String describedFamilyState() {
@@ -495,6 +529,10 @@ public class DiscoverySequences extends SequenceBase {
 
   private String scanFamilyAddr(Entry<String, Metadata> entry) {
     return catchToNull(() -> entry.getValue().localnet.families.get(scanFamily).addr);
+  }
+
+  private String scanFamilyNetwork(Entry<String, Metadata> entry) {
+    return catchToNull(() -> entry.getValue().localnet.families.get(scanFamily).network);
   }
 
   @Test(timeout = TWO_MINUTES_MS)

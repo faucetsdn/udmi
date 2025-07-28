@@ -19,10 +19,10 @@ public class BacnetFamilyProviderTest {
 
   public static final Set<String> GOOD_ADDRS = ImmutableSet.of("1", "10", "23", "4194302");
   public static final Set<String> BAD_ADDRS = ImmutableSet.of(
-      "", "0", "x", "snoop", "01293", "0x9122", "B87AC9", "87a8c");
+      "", "0", "x", "snoop", "01293", "0x9122", "B87AC9", "87a8c", "4194305");
 
-  public static final Set<String> GOOD_NETWORKS = ImmutableSet.of("1", "65535", "3242");
-  public static final Set<String> BAD_NETWORKS = ImmutableSet.of("0", "snoop", "655351");
+  public static final Set<String> GOOD_NETWORKS = ImmutableSet.of("1", "65534", "3242");
+  public static final Set<String> BAD_NETWORKS = ImmutableSet.of("0", "snoop", "655351", "65535");
 
   public static final Set<String> GOOD_REFERENCES = ImmutableSet.of(
       "bacnet://291842/AI:2#present_value",
