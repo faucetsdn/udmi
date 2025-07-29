@@ -72,6 +72,7 @@ output_file=$site_out/sequencer_${device_id}.json
 device_out_base=$site_out/devices/$device_id
 tests_out_base=$device_out_base/tests
 
+mkdir -p out
 touch $sequencer_start
 
 if [[ -n $clean_cache ]]; then
