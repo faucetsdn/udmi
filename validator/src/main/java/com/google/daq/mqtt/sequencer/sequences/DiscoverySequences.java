@@ -386,7 +386,8 @@ public class DiscoverySequences extends SequenceBase {
         .collect(Collectors.toList());
     reasons.addAll(checkEnumeration(events, expectedEnumeration));
 
-    checkThat("discovery events were valid", reasons.isEmpty(), CSV_JOINER.join(reasons));
+    List<String> condensedReasons = condenseList(reasons);
+    checkThat("discovery events were valid", reasons.isEmpty(), CSV_JOINER.join(condensedReasons));
 
     checkThat("received all unique event numbers", eventNos.size() == expectedEvents);
     final Integer endEventNo = eventNos.removeFirst();
@@ -415,6 +416,13 @@ public class DiscoverySequences extends SequenceBase {
     SetView<String> diffNetworks = symmetricDifference(discoveredNetworks, expNet);
     checkThat("all expected networks were found", diffNetworks.isEmpty(),
         format("expected %s, found %s", expNet, discoveredNetworks));
+  }
+
+  private static List<String> condenseList(List<String> reasons) {
+    return reasons.stream()
+        .collect(Collectors.groupingBy(Function.identity(), Collectors.counting()))
+        .entrySet().stream().map(entry -> format("%s%s", entry.getKey(),
+            entry.getValue() > 1 ? format(" (%d)", entry.getValue()) : "")).toList();
   }
 
   private SortedSet<String> expectedTargetDevices() {
