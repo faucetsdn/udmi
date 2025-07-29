@@ -77,6 +77,9 @@ public abstract class Common {
   public static final String DOUBLE_COLON_SEPARATOR = "::";
   public static final String EMPTY_RETURN_RECEIPT = "-1";
 
+  public static final Integer DEFAULT_EXTRAS_DELETION_DAYS = 40;
+  public static final Integer DEFAULT_DEVICES_DELETION_DAYS = 30;
+
   /**
    * Remove the next item from the list in an exception-safe way.
    */
@@ -219,5 +222,9 @@ public abstract class Common {
     Objects.requireNonNull(field1, "field1 cannot be null");
     Objects.requireNonNull(field2, "field2 cannot be null");
     return field1 + DOUBLE_COLON_SEPARATOR + field2;
+  }
+
+  public static long convertDaysToMilliSeconds(int days) {
+    return days * 24 * 60 * 60 * 1000;
   }
 }

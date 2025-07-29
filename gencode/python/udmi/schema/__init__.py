@@ -15,6 +15,7 @@ from .config_localnet import LocalnetConfig
 from .config_localnet_family import FamilyLocalnetConfig
 from .config_mapping import MappingConfig
 from .config_mapping_device import DeviceMappingConfig
+from .config_mapping_service import MappingServiceConfig
 from .config_pointset import PointsetConfig
 from .config_pointset_point import PointPointsetConfig
 from .config_system import SystemConfig

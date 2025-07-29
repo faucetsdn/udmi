@@ -3,8 +3,11 @@ package com.google.daq.mqtt.mapping;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
 import static com.google.daq.mqtt.util.ConfigUtil.UDMI_VERSION;
+import static com.google.udmi.util.Common.DEFAULT_DEVICES_DELETION_DAYS;
+import static com.google.udmi.util.Common.DEFAULT_EXTRAS_DELETION_DAYS;
 import static com.google.udmi.util.Common.NO_SITE;
 import static com.google.udmi.util.Common.UNKNOWN_DEVICE_ID_PREFIX;
+import static com.google.udmi.util.Common.convertDaysToMilliSeconds;
 import static com.google.udmi.util.Common.generateColonKey;
 import static com.google.udmi.util.Common.removeNextArg;
 import static com.google.udmi.util.GeneralUtils.catchToNull;
@@ -52,6 +55,7 @@ import udmi.schema.FamilyDiscoveryConfig;
 import udmi.schema.FamilyLocalnetModel;
 import udmi.schema.GatewayModel;
 import udmi.schema.LocalnetModel;
+import udmi.schema.MappingServiceConfig;
 import udmi.schema.Metadata;
 import udmi.schema.PointPointsetModel;
 import udmi.schema.PointsetModel;
@@ -73,6 +77,8 @@ public class MappingAgent {
   private Date generationDate;
 
   private AtomicInteger suffixToStart = new AtomicInteger(1);
+  private long extrasDeletionTimeInMillis;
+  private long devicesDeletionTimeInMillis;
 
   /**
    * Create an agent given the configuration.
@@ -110,6 +116,7 @@ public class MappingAgent {
     }
     executionConfiguration = siteModel.getExecutionConfiguration();
     initialize();
+    processMapping(new ArrayList<>(Arrays.asList("GAT-123")));
   }
 
   /**
@@ -117,14 +124,15 @@ public class MappingAgent {
    */
   public static void main(String[] args) {
     List<String> argsList = new ArrayList<>(Arrays.asList(args));
-    MappingAgent agent = new MappingAgent(removeNextArg(argsList, "execution profile"));
-    try {
-      agent.process(argsList);
-    } finally {
-      agent.shutdown();
-    }
-
-    Common.forcedDelayedShutdown();
+//    MappingAgent agent = new MappingAgent(removeNextArg(argsList, "execution profile"));
+//    try {
+//      agent.process(argsList);
+//    } finally {
+//      agent.shutdown();
+//    }
+//
+//    Common.forcedDelayedShutdown();
+    new MappingAgent(argsList);
   }
 
   void process(List<String> argsList) {
@@ -201,22 +209,45 @@ public class MappingAgent {
       if (!families.contains(family)) {
         return;
       }
+      Metadata entryValue = entry.getValue();
       if (devicesEntriesMap.containsKey(entry.getKey())) {
+        String deviceId = devicesFamilyAddressMap.get(entryValue);
+        if (isTimestampOlderThanDays(entryValue.timestamp.getTime(), devicesDeletionTimeInMillis)) {
+          siteModel.deleteFolder(siteModel.getDeviceDir(deviceId));
+          return;
+        }
         System.err.println("Updating existing device file for family::address = " + entry.getKey());
-        String deviceId = devicesFamilyAddressMap.get(entry.getKey());
         devicesPresent.add(deviceId);
         updateDevice(deviceId, entry.getValue());
-      } else {
+      } else if (!isTimestampOlderThanDays(entryValue.timestamp.getTime(),
+          devicesDeletionTimeInMillis)) {
         String newDeviceId = getNextDeviceId();
         while (devicesPresent.contains(newDeviceId)) {
           newDeviceId = getNextDeviceId();
         }
         devicesPresent.add(newDeviceId);
-        siteModel.createNewDevice(newDeviceId, entry.getValue());
+        siteModel.createNewDevice(newDeviceId, entryValue);
       }
     });
 
     updateProxyIdsForDiscoveryNode(devicesPresent);
+    removeOlderDiscoveryEventsFromExtras();
+  }
+
+  private void removeOlderDiscoveryEventsFromExtras() {
+    File extrasDir = siteModel.getExtrasDir();
+    File[] extras = extrasDir.listFiles();
+    if (extras == null || extras.length == 0) {
+      return;
+    }
+
+    for (File extraFolder: extras) {
+      DiscoveryEvents discoveryEvents = loadFileStrict(DiscoveryEvents.class,
+          new File(extraFolder, "cloud_metadata/udmi_discovered_with.json"));
+      if (isTimestampOlderThanDays(discoveryEvents.timestamp.getTime(), extrasDeletionTimeInMillis)) {
+        siteModel.deleteFolder(extraFolder);
+      }
+    }
   }
 
   /**
@@ -370,6 +401,22 @@ public class MappingAgent {
   private void initialize() {
     cloudIotManager = new CloudIotManager(executionConfiguration, MAPPER_TOOL_NAME);
     siteModel = new SiteModel(cloudIotManager.getSiteDir(), executionConfiguration);
+
+    devicesDeletionTimeInMillis = convertDaysToMilliSeconds(DEFAULT_DEVICES_DELETION_DAYS);
+    extrasDeletionTimeInMillis = convertDaysToMilliSeconds(DEFAULT_EXTRAS_DELETION_DAYS);
+    if (this.executionConfiguration != null &&
+        this.executionConfiguration.mapping_service_configuration != null) {
+      MappingServiceConfig mappingServiceConfig =
+          this.executionConfiguration.mapping_service_configuration;
+      if (mappingServiceConfig.devices_deletion_days != null) {
+        devicesDeletionTimeInMillis =
+            convertDaysToMilliSeconds(mappingServiceConfig.devices_deletion_days);
+      }
+      if (mappingServiceConfig.extras_deletion_days != null) {
+        extrasDeletionTimeInMillis =
+            convertDaysToMilliSeconds(mappingServiceConfig.extras_deletion_days);
+      }
+    }
     siteModel.initialize();
   }
 
@@ -383,6 +430,15 @@ public class MappingAgent {
 
   private void setDiscoveryNodeDeviceId(String discoveryNodeDeviceId) {
     this.deviceId = discoveryNodeDeviceId;
+  }
+
+  private boolean isTimestampOlderThanDays(long timestamp, long daysInMillis) {
+    long currentTimeMillis = System.currentTimeMillis();
+
+    if ((timestamp - currentTimeMillis) > daysInMillis) {
+      return true;
+    }
+    return false;
   }
 
   /**
