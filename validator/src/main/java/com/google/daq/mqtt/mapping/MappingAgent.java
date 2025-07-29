@@ -209,7 +209,7 @@ public class MappingAgent {
       }
       Metadata entryValue = entry.getValue();
       if (devicesEntriesMap.containsKey(entry.getKey())) {
-        String deviceId = devicesFamilyAddressMap.get(entryValue);
+        String deviceId = devicesFamilyAddressMap.get(entry.getKey());
         if (isTimestampOlderThanDays(entryValue.timestamp.getTime(), devicesDeletionTimeInMillis)) {
           siteModel.deleteFolder(siteModel.getDeviceDir(deviceId));
           return;
@@ -239,10 +239,11 @@ public class MappingAgent {
       return;
     }
 
-    for (File extraFolder: extras) {
+    for (File extraFolder : extras) {
       DiscoveryEvents discoveryEvents = loadFileStrict(DiscoveryEvents.class,
           new File(extraFolder, "cloud_metadata/udmi_discovered_with.json"));
-      if (isTimestampOlderThanDays(discoveryEvents.timestamp.getTime(), extrasDeletionTimeInMillis)) {
+      if (isTimestampOlderThanDays(discoveryEvents.timestamp.getTime(),
+          extrasDeletionTimeInMillis)) {
         siteModel.deleteFolder(extraFolder);
       }
     }
@@ -402,8 +403,8 @@ public class MappingAgent {
 
     devicesDeletionTimeInMillis = convertDaysToMilliSeconds(DEFAULT_DEVICES_DELETION_DAYS);
     extrasDeletionTimeInMillis = convertDaysToMilliSeconds(DEFAULT_EXTRAS_DELETION_DAYS);
-    if (this.executionConfiguration != null &&
-        this.executionConfiguration.mapping_service_configuration != null) {
+    if (this.executionConfiguration != null
+        && this.executionConfiguration.mapping_service_configuration != null) {
       MappingServiceConfig mappingServiceConfig =
           this.executionConfiguration.mapping_service_configuration;
       if (mappingServiceConfig.devices_deletion_days != null) {
