@@ -225,6 +225,6 @@ public abstract class Common {
   }
 
   public static long convertDaysToMilliSeconds(int days) {
-    return days * 24 * 60 * 60 * 1000;
+    return days * 24L * 60 * 60 * 1000;
   }
 }

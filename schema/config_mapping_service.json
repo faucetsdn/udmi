@@ -1,0 +1,19 @@
+{
+  "$udmi_version": "1.5.2",
+  "title": "Mapping Service Config",
+  "description": "Mapping Service Configuration",
+  "type": "object",
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "additionalProperties": false,
+  "properties": {
+    "extras_deletion_days": {
+      "type": "integer",
+      "description": "extras discovery event garbage collection time"
+    },
+    "devices_deletion_days": {
+      "type": "integer",
+      "description": "devices garbage collection time"
+    }
+  }
+}
+
