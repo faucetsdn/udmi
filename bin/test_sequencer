@@ -117,7 +117,7 @@ echo Writing pubber output to $PUBBER_LOG
 echo bin/pubber $site_path $project_id $device_id $serial_no $pubber_opts
 bin/pubber $site_path $project_id $device_id $serial_no $pubber_opts > $PUBBER_LOG 2>&1 &
 
-WAITING=20
+WAITING=30
 for i in `seq 1 $WAITING`; do
     echo Waiting for pubber startup $((WAITING - i))...
     sleep 1
