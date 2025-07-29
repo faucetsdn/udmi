@@ -116,7 +116,6 @@ public class MappingAgent {
     }
     executionConfiguration = siteModel.getExecutionConfiguration();
     initialize();
-    processMapping(new ArrayList<>(Arrays.asList("GAT-123")));
   }
 
   /**
@@ -124,15 +123,14 @@ public class MappingAgent {
    */
   public static void main(String[] args) {
     List<String> argsList = new ArrayList<>(Arrays.asList(args));
-//    MappingAgent agent = new MappingAgent(removeNextArg(argsList, "execution profile"));
-//    try {
-//      agent.process(argsList);
-//    } finally {
-//      agent.shutdown();
-//    }
-//
-//    Common.forcedDelayedShutdown();
-    new MappingAgent(argsList);
+    MappingAgent agent = new MappingAgent(removeNextArg(argsList, "execution profile"));
+    try {
+      agent.process(argsList);
+    } finally {
+      agent.shutdown();
+    }
+
+    Common.forcedDelayedShutdown();
   }
 
   void process(List<String> argsList) {
