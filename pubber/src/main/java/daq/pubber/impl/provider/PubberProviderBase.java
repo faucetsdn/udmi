@@ -54,6 +54,7 @@ public class PubberProviderBase extends ManagerBase {
   private DiscoveryEvents augmentSend(String deviceId, boolean enumerate) {
     DiscoveryEvents event = new DiscoveryEvents();
     event.addr = getFamilyAddr(deviceId);
+    event.network = getFamilyNetwork(deviceId);
     try {
       event.refs = ifTrueGet(enumerate, () -> getDiscoveredRefs(getAllDevices().get(deviceId)));
     } catch (Exception e) {
@@ -114,6 +115,10 @@ public class PubberProviderBase extends ManagerBase {
       debug(format("Sending %s result for %s@%s", family, deviceId, getFamilyAddr(deviceId)));
       publisher.accept(deviceId, augmentSend(deviceId, enumerate));
     };
+  }
+
+  private String getFamilyNetwork(String deviceId) {
+    return catchToNull(() -> siteModel.getMetadata(deviceId).localnet.families.get(family).network);
   }
 
   private String getFamilyAddr(String deviceId) {
