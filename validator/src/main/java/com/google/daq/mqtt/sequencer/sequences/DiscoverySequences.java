@@ -23,6 +23,7 @@ import static com.google.udmi.util.JsonUtil.isoConvert;
 import static com.google.udmi.util.JsonUtil.stringifyTerse;
 import static java.lang.String.format;
 import static java.util.Objects.nonNull;
+import static java.util.Objects.requireNonNull;
 import static java.util.Optional.ofNullable;
 import static java.util.stream.Collectors.toSet;
 import static org.junit.Assert.assertEquals;
@@ -156,7 +157,7 @@ public class DiscoverySequences extends SequenceBase {
           .orElse(ImmutableSet.of());
 
       String detail = models.size() == events.size() ? null
-          : format("received %s, expected %s", CSV_JOINER.join(events), CSV_JOINER.join(models));
+          : format("received %s, expected %s", events, models);
       checkThat("family enumeration size matches", detail);
     } else {
       checkThat("no family enumeration exists", event.families == null);
@@ -192,6 +193,7 @@ public class DiscoverySequences extends SequenceBase {
   }
 
   private void checkFeatureDiscovery(Map<String, FeatureDiscovery> features) {
+    requireNonNull(features, "missing feature discovery map");
     Set<String> enumeratedFeatures = features.entrySet().stream()
         .filter(DiscoverySequences::isActive).map(Entry::getKey).collect(toSet());
     checkFeatureMetadata(enumeratedFeatures);
