@@ -39,6 +39,7 @@ public class PubberProviderBase extends ManagerBase {
   private BiConsumer<String, DiscoveryEvents> publisher;
   private Map<String, Metadata> allDevices;
   private SiteModel siteModel;
+  private FamilyDiscoveryConfig config;
 
   /**
    * Create a new instance of a generic family provider.
@@ -51,8 +52,12 @@ public class PubberProviderBase extends ManagerBase {
 
   protected void startScan(FamilyDiscoveryConfig config,
       BiConsumer<String, DiscoveryEvents> publisher) {
+    this.config = config;
     this.publisher = publisher;
     this.enumerate = depthDeeperThan(config.depth, Depth.DETAILS);
+    allDevices = siteModel.allMetadata().entrySet().stream()
+        .filter(this::isValidTargetDevice)
+        .collect(toMap(Entry::getKey, Entry::getValue));
   }
 
   private DiscoveryEvents augmentSend(String deviceId, boolean enumerate) {
@@ -102,15 +107,13 @@ public class PubberProviderBase extends ManagerBase {
   public void setSiteModel(SiteModel siteModel) {
     this.siteModel = siteModel;
     selfAddr = getFamilyAddr(deviceId);
-    allDevices = siteModel.allMetadata().entrySet().stream()
-        .filter(this::isValidTargetDevice)
-        .collect(toMap(Entry::getKey, Entry::getValue));
     addStateMapEntry();
   }
 
   private boolean isValidTargetDevice(Entry<String, Metadata> entry) {
-    localnetHost.getLocalnetConfig();
-    return nonNull(getFamilyAddr(entry.getKey()));
+    String deviceId = entry.getKey();
+    return nonNull(getFamilyAddr(deviceId))
+        && (config.networks == null || config.networks.contains(getFamilyNetwork(deviceId)));
   }
 
   private void addStateMapEntry() {
