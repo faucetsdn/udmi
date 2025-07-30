@@ -3,7 +3,6 @@ package udmi.lib.client.manager;
 import static com.google.udmi.util.GeneralUtils.catchToNull;
 import static com.google.udmi.util.GeneralUtils.ifNotNullGet;
 import static com.google.udmi.util.GeneralUtils.ifNotNullThen;
-import static com.google.udmi.util.GeneralUtils.ifNullElse;
 import static com.google.udmi.util.GeneralUtils.ifNullThen;
 import static com.google.udmi.util.GeneralUtils.ifTrueGet;
 import static com.google.udmi.util.GeneralUtils.ifTrueThen;
@@ -23,6 +22,7 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -46,20 +46,6 @@ import udmi.schema.PointPointsetModel;
 public interface DiscoveryManager extends SubBlockManager {
 
   int SCAN_DURATION_SEC = 10;
-
-  /**
-   * Determines whether enumeration to a specific depth level is required.
-   *
-   * @param depth       The depth level for which to determine if enumeration should occur.
-   * @param ifUndefined Value to use when depth is not undefined.
-   * @return True if enumeration is required at the specified depth level, false otherwise.
-   */
-  private static boolean shouldEnumerateTo(Depth depth, boolean ifUndefined) {
-    return ifNullElse(depth, ifUndefined, d -> switch (d) {
-      case ENTRIES, DETAILS -> true;
-      default -> false;
-    });
-  }
 
   /**
    * Updates discovery enumeration.
@@ -95,8 +81,12 @@ public interface DiscoveryManager extends SubBlockManager {
 
   DeviceManager getDeviceManager();
 
+  static boolean depthDeeperThan(Depth config, Depth target) {
+    return config == Depth.ENTRIES || (config == Depth.DETAILS && target == Depth.DETAILS);
+  }
+
   default <K, V> Map<K, V> maybeEnumerate(Depth depth, Supplier<Map<K, V>> supplier) {
-    return ifTrueGet(shouldEnumerateTo(depth, false), supplier);
+    return ifTrueGet(depthDeeperThan(depth, Depth.ENTRIES), supplier);
   }
 
   /**
@@ -264,11 +254,6 @@ public interface DiscoveryManager extends SubBlockManager {
     ).orElse(SCAN_DURATION_SEC);
   }
 
-  default boolean shouldEnumerate(String family) {
-    FamilyDiscoveryConfig familyDiscoveryConfig = getFamilyDiscoveryConfig(family);
-    return shouldEnumerateTo(familyDiscoveryConfig.depth, familyDiscoveryConfig.addrs != null);
-  }
-
   DiscoveryState getDiscoveryState();
 
   void setDiscoveryState(DiscoveryState discoveryState);
@@ -319,7 +304,10 @@ public interface DiscoveryManager extends SubBlockManager {
         .map(ImmutableSet::copyOf).orElse(null);
     info(format("Discovered %s starting %s (=? %s)", family, generation,
         isoConvert(familyDiscoveryState.generation)));
-    discoveryProvider(family).startScan(shouldEnumerate(family), (deviceId, discoveryEvent) -> {
+    FamilyDiscoveryConfig config = getFamilyDiscoveryConfig(family);
+    config.depth = Optional.ofNullable(config.depth)
+        .orElse(config.addrs != null ? Depth.DETAILS : Depth.ENTRIES);
+    discoveryProvider(family).startScan(config, (deviceId, discoveryEvent) -> {
       ifNotNullThen(discoveryEvent.addr, addr -> {
         if (ifNotNullGet(targets, t -> !t.contains(addr), false)) {
           info(format("Discovered %s device %s for %s skipped", family, addr, generation));

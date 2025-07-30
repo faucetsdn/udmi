@@ -6,6 +6,7 @@ import static java.lang.String.format;
 import static java.util.Objects.nonNull;
 import static java.util.Optional.ofNullable;
 import static java.util.stream.Collectors.toMap;
+import static udmi.lib.client.manager.DiscoveryManager.depthDeeperThan;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.udmi.util.SiteModel;
@@ -18,6 +19,8 @@ import udmi.lib.base.ManagerBase;
 import udmi.lib.client.manager.LocalnetManager;
 import udmi.lib.intf.ManagerHost;
 import udmi.schema.DiscoveryEvents;
+import udmi.schema.Enumerations.Depth;
+import udmi.schema.FamilyDiscoveryConfig;
 import udmi.schema.FamilyLocalnetState;
 import udmi.schema.Level;
 import udmi.schema.Metadata;
@@ -46,9 +49,10 @@ public class PubberProviderBase extends ManagerBase {
     localnetHost = ((LocalnetManager) host);
   }
 
-  protected void startScan(boolean enumerate, BiConsumer<String, DiscoveryEvents> publisher) {
+  protected void startScan(FamilyDiscoveryConfig config,
+      BiConsumer<String, DiscoveryEvents> publisher) {
     this.publisher = publisher;
-    this.enumerate = enumerate;
+    this.enumerate = depthDeeperThan(config.depth, Depth.DETAILS);
   }
 
   private DiscoveryEvents augmentSend(String deviceId, boolean enumerate) {
@@ -99,9 +103,14 @@ public class PubberProviderBase extends ManagerBase {
     this.siteModel = siteModel;
     selfAddr = getFamilyAddr(deviceId);
     allDevices = siteModel.allMetadata().entrySet().stream()
-        .filter(entry -> nonNull(getFamilyAddr(entry.getKey())))
+        .filter(this::isValidTargetDevice)
         .collect(toMap(Entry::getKey, Entry::getValue));
     addStateMapEntry();
+  }
+
+  private boolean isValidTargetDevice(Entry<String, Metadata> entry) {
+    localnetHost.getLocalnetConfig();
+    return nonNull(getFamilyAddr(entry.getKey()));
   }
 
   private void addStateMapEntry() {
