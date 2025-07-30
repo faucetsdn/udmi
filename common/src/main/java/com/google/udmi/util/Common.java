@@ -237,6 +237,9 @@ public abstract class Common {
     } catch (Exception e) {
       throw new RuntimeException("Error deleting the directory", e);
     }
+  }
 
+  public static boolean isDifferenceGreaterThan(long startTimeMillis, long endTimeMillis, long durationMillis) {
+    return (endTimeMillis - startTimeMillis) > durationMillis;
   }
 }

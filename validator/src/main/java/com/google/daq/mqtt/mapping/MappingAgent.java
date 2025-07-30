@@ -10,6 +10,7 @@ import static com.google.udmi.util.Common.UNKNOWN_DEVICE_ID_PREFIX;
 import static com.google.udmi.util.Common.convertDaysToMilliSeconds;
 import static com.google.udmi.util.Common.deleteFolder;
 import static com.google.udmi.util.Common.generateColonKey;
+import static com.google.udmi.util.Common.isDifferenceGreaterThan;
 import static com.google.udmi.util.Common.removeNextArg;
 import static com.google.udmi.util.GeneralUtils.catchToNull;
 import static com.google.udmi.util.JsonUtil.isoConvert;
@@ -35,6 +36,7 @@ import com.google.udmi.util.Common;
 import com.google.udmi.util.SiteModel;
 import java.io.File;
 import java.io.IOException;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
@@ -81,6 +83,7 @@ public class MappingAgent {
   private AtomicInteger suffixToStart = new AtomicInteger(1);
   private long extrasDeletionTimeInMillis;
   private long devicesDeletionTimeInMillis;
+  private long discoveryEventCompletionTimeInMillis;
 
   /**
    * Create an agent given the configuration.
@@ -212,15 +215,16 @@ public class MappingAgent {
       Metadata entryValue = entry.getValue();
       if (devicesEntriesMap.containsKey(entry.getKey())) {
         String deviceId = devicesFamilyAddressMap.get(entry.getKey());
-        if (isTimestampOlderThanDays(entryValue.timestamp.getTime(), devicesDeletionTimeInMillis)) {
+        if (isDifferenceGreaterThan(entryValue.timestamp.getTime(),
+            discoveryEventCompletionTimeInMillis, devicesDeletionTimeInMillis)) {
           deleteFolder(siteModel.getDeviceDir(deviceId));
           return;
         }
         System.err.println("Updating existing device file for family::address = " + entry.getKey());
         devicesPresent.add(deviceId);
         updateDevice(deviceId, entry.getValue());
-      } else if (!isTimestampOlderThanDays(entryValue.timestamp.getTime(),
-          devicesDeletionTimeInMillis)) {
+      } else if (!isDifferenceGreaterThan(entryValue.timestamp.getTime(),
+          discoveryEventCompletionTimeInMillis, devicesDeletionTimeInMillis)) {
         String newDeviceId = getNextDeviceId();
         while (devicesPresent.contains(newDeviceId)) {
           newDeviceId = getNextDeviceId();
@@ -244,8 +248,8 @@ public class MappingAgent {
     for (File extraFolder : extras) {
       DiscoveryEvents discoveryEvents = loadFileStrict(DiscoveryEvents.class,
           new File(extraFolder, "cloud_metadata/udmi_discovered_with.json"));
-      if (isTimestampOlderThanDays(discoveryEvents.timestamp.getTime(),
-          extrasDeletionTimeInMillis)) {
+      if (isDifferenceGreaterThan(discoveryEvents.timestamp.getTime(),
+          discoveryEventCompletionTimeInMillis, extrasDeletionTimeInMillis)) {
         deleteFolder(extraFolder);
       }
     }
@@ -405,6 +409,7 @@ public class MappingAgent {
 
     devicesDeletionTimeInMillis = convertDaysToMilliSeconds(DEFAULT_DEVICES_DELETION_DAYS);
     extrasDeletionTimeInMillis = convertDaysToMilliSeconds(DEFAULT_EXTRAS_DELETION_DAYS);
+    discoveryEventCompletionTimeInMillis = System.currentTimeMillis();
     if (this.executionConfiguration != null
         && this.executionConfiguration.mapping_configuration != null) {
       MappingConfig mappingConfig =
@@ -432,12 +437,6 @@ public class MappingAgent {
     this.deviceId = discoveryNodeDeviceId;
   }
 
-  private boolean isTimestampOlderThanDays(long timestamp, long daysInMillis) {
-    long currentTimeMillis = System.currentTimeMillis();
-
-    return (currentTimeMillis - timestamp) > daysInMillis;
-  }
-
   /**
    * Processes mapping.
    *
@@ -446,6 +445,10 @@ public class MappingAgent {
   public void processMapping(ArrayList<String> argsList) {
     String discoveryNodeDeviceId = removeNextArg(argsList, "discovery node deviceId");
     setDiscoveryNodeDeviceId(discoveryNodeDeviceId);
+    String discoveryCompleteTimestamp = removeNextArg(argsList, "discovery completion time");
+    Date discoveryCompletionDate = Date.from(Instant.parse(discoveryCompleteTimestamp));
+    discoveryEventCompletionTimeInMillis = discoveryCompletionDate.getTime();
+
     mapDiscoveredDevices(argsList);
 
     System.err.println("Mapping process is completed");

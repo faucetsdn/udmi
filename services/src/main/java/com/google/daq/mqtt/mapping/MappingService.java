@@ -7,6 +7,7 @@ import com.google.daq.mqtt.registrar.Registrar;
 import com.google.pubsub.v1.PubsubMessage;
 import com.google.udmi.util.AbstractPollingService;
 import com.google.udmi.util.SourceRepository;
+import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
@@ -28,6 +29,7 @@ public class MappingService extends AbstractPollingService {
   private static final String FAMILY_FIELD = "family";
   private static final String REGISTRY_ID_FIELD = "deviceRegistryId";
   private static final String DISCOVERY_NODE_DEVICE_ID_FIELD = "deviceId";
+  private static final String DISCOVERY_TIMESTAMP = "timestamp";
   private static final String TRIGGER_BRANCH = "discovery";
   private static final String DEFAULT_TARGET_BRANCH = "main";
   private final String projectSpec;
@@ -87,6 +89,9 @@ public class MappingService extends AbstractPollingService {
         return;
       }
 
+      Instant now = Instant.now();
+      String currentTimestamp = DateTimeFormatter.ISO_INSTANT.format(now);
+      String discoveryTimestamp = (String) messageData.getOrDefault(DISCOVERY_TIMESTAMP, currentTimestamp);
       String discoveryNodeDeviceId = message.getAttributesOrDefault(
           DISCOVERY_NODE_DEVICE_ID_FIELD, "");
       if (discoveryNodeDeviceId.isEmpty()) {
@@ -113,7 +118,7 @@ public class MappingService extends AbstractPollingService {
         MappingAgent mappingAgent = new MappingAgent(new ArrayList<>(
             List.of(udmiModelPath, projectSpec)));
         mappingAgent.processMapping(new ArrayList<>(List.of(discoveryNodeDeviceId,
-            mappingFamily)));
+            discoveryTimestamp, mappingFamily)));
 
         LOGGER.info("Committing and pushing changes to branch {}", exportBranch);
         if (!repository.commitAndPush("Merge changes from source: MappingService")) {
