@@ -29,7 +29,7 @@ public class MappingService extends AbstractPollingService {
   private static final String FAMILY_FIELD = "family";
   private static final String REGISTRY_ID_FIELD = "deviceRegistryId";
   private static final String DISCOVERY_NODE_DEVICE_ID_FIELD = "deviceId";
-  private static final String DISCOVERY_TIMESTAMP = "timestamp";
+  private static final String DISCOVERY_TIMESTAMP = "generation";
   private static final String TRIGGER_BRANCH = "discovery";
   private static final String DEFAULT_TARGET_BRANCH = "main";
   private final String projectSpec;
