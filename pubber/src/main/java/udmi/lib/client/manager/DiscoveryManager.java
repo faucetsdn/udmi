@@ -315,7 +315,9 @@ public interface DiscoveryManager extends SubBlockManager {
         }
         int activeCount = sendCount.getAndIncrement();
         familyDiscoveryState.active_count = activeCount;
-        info(format("Discovered %s device %s for %s as %d", family, addr, generation, activeCount));
+        String network = discoveryEvent.network;
+        info(format("Discovered %s device %s %s for %s as %s", family, network, addr, generation,
+            activeCount));
         discoveryEvent.event_no = activeCount;
         publishDiscoveryEvent(family, scanGeneration, deviceId, discoveryEvent);
         updateState();

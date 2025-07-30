@@ -112,6 +112,8 @@ public class PubberProviderBase extends ManagerBase {
 
   private boolean isValidTargetDevice(Entry<String, Metadata> entry) {
     String deviceId = entry.getKey();
+    info(format("TAP %s %s %s %s", deviceId, config.networks, getFamilyAddr(deviceId),
+        getFamilyNetwork(deviceId)));
     return nonNull(getFamilyAddr(deviceId))
         && (config.networks == null || config.networks.contains(getFamilyNetwork(deviceId)));
   }
@@ -124,7 +126,8 @@ public class PubberProviderBase extends ManagerBase {
 
   protected Consumer<String> getResultPublisher() {
     return deviceId -> {
-      debug(format("Sending %s result for %s@%s", family, deviceId, getFamilyAddr(deviceId)));
+      debug(format("Sending %s result for %s "
+          + "%s", family, deviceId, getFamilyAddr(deviceId)));
       publisher.accept(deviceId, augmentSend(deviceId, enumerate));
     };
   }
