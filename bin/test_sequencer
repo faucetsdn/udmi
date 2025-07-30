@@ -186,11 +186,9 @@ else
 fi
 
 echo Sanity check for completed tests...
-result_count=$(fgrep RESULT out/sequencer$suffix.out.save | wc -l) || true
+result_count=$(fgrep RESULT out/sequencer$suffix.out.save | fgrep -v " schemas " | wc -l) || true
 target_count=$(fgrep "Running target" out/sequencer$suffix.log.save | wc -l) || true
 if [[ $result_count != $target_count ]]; then
-    fgrep RESULT out/sequencer$suffix.out.save
-    fgrep "Running target" out/sequencer$suffix.log.save
     fail Found $result_count results for $target_count targets.
 fi
 
