@@ -23,7 +23,6 @@
 ## Other
 * [**commands_discovery**](commands_discovery.html) - [Discovery command](../../docs/specs/discovery.md) for provisioning
 * [**commands_mapping**](commands_mapping.html) - [Mapping command](../../docs/specs/mapping.md) for provisioning
-* [**config_mapping**](config_mapping.html) - Configuration for [mapping](../../docs/specs/mapping.md)
 * [**configuration_execution**](configuration_execution.html) - Parameters for configuring the execution run of a UDMI tool
 * [**configuration_pod**](configuration_pod.html) - Parameters for configuring the execution run of a UDMIS pod
 * [**configuration_pubber**](configuration_pubber.html) - Parameters to define a pubber runtime instance

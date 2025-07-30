@@ -8,6 +8,7 @@ import static com.google.udmi.util.Common.DEFAULT_EXTRAS_DELETION_DAYS;
 import static com.google.udmi.util.Common.NO_SITE;
 import static com.google.udmi.util.Common.UNKNOWN_DEVICE_ID_PREFIX;
 import static com.google.udmi.util.Common.convertDaysToMilliSeconds;
+import static com.google.udmi.util.Common.deleteFolder;
 import static com.google.udmi.util.Common.generateColonKey;
 import static com.google.udmi.util.Common.removeNextArg;
 import static com.google.udmi.util.GeneralUtils.catchToNull;
@@ -33,6 +34,7 @@ import com.google.daq.mqtt.util.ConfigUtil;
 import com.google.udmi.util.Common;
 import com.google.udmi.util.SiteModel;
 import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
@@ -55,7 +57,7 @@ import udmi.schema.FamilyDiscoveryConfig;
 import udmi.schema.FamilyLocalnetModel;
 import udmi.schema.GatewayModel;
 import udmi.schema.LocalnetModel;
-import udmi.schema.MappingServiceConfig;
+import udmi.schema.MappingConfig;
 import udmi.schema.Metadata;
 import udmi.schema.PointPointsetModel;
 import udmi.schema.PointsetModel;
@@ -211,7 +213,7 @@ public class MappingAgent {
       if (devicesEntriesMap.containsKey(entry.getKey())) {
         String deviceId = devicesFamilyAddressMap.get(entry.getKey());
         if (isTimestampOlderThanDays(entryValue.timestamp.getTime(), devicesDeletionTimeInMillis)) {
-          siteModel.deleteFolder(siteModel.getDeviceDir(deviceId));
+          deleteFolder(siteModel.getDeviceDir(deviceId));
           return;
         }
         System.err.println("Updating existing device file for family::address = " + entry.getKey());
@@ -244,7 +246,7 @@ public class MappingAgent {
           new File(extraFolder, "cloud_metadata/udmi_discovered_with.json"));
       if (isTimestampOlderThanDays(discoveryEvents.timestamp.getTime(),
           extrasDeletionTimeInMillis)) {
-        siteModel.deleteFolder(extraFolder);
+        deleteFolder(extraFolder);
       }
     }
   }
@@ -404,16 +406,15 @@ public class MappingAgent {
     devicesDeletionTimeInMillis = convertDaysToMilliSeconds(DEFAULT_DEVICES_DELETION_DAYS);
     extrasDeletionTimeInMillis = convertDaysToMilliSeconds(DEFAULT_EXTRAS_DELETION_DAYS);
     if (this.executionConfiguration != null
-        && this.executionConfiguration.mapping_service_configuration != null) {
-      MappingServiceConfig mappingServiceConfig =
-          this.executionConfiguration.mapping_service_configuration;
-      if (mappingServiceConfig.devices_deletion_days != null) {
+        && this.executionConfiguration.mapping_configuration != null) {
+      MappingConfig mappingConfig =
+          this.executionConfiguration.mapping_configuration;
+      if (mappingConfig.devices_deletion_days != null) {
         devicesDeletionTimeInMillis =
-            convertDaysToMilliSeconds(mappingServiceConfig.devices_deletion_days);
+            convertDaysToMilliSeconds(mappingConfig.devices_deletion_days);
       }
-      if (mappingServiceConfig.extras_deletion_days != null) {
-        extrasDeletionTimeInMillis =
-            convertDaysToMilliSeconds(mappingServiceConfig.extras_deletion_days);
+      if (mappingConfig.extras_deletion_days != null) {
+        extrasDeletionTimeInMillis = convertDaysToMilliSeconds(mappingConfig.extras_deletion_days);
       }
     }
     siteModel.initialize();
@@ -434,16 +435,13 @@ public class MappingAgent {
   private boolean isTimestampOlderThanDays(long timestamp, long daysInMillis) {
     long currentTimeMillis = System.currentTimeMillis();
 
-    if ((timestamp - currentTimeMillis) > daysInMillis) {
-      return true;
-    }
-    return false;
+    return (currentTimeMillis - timestamp) > daysInMillis;
   }
 
   /**
    * Processes mapping.
    *
-   * @param argsList discoveryNodeDeviceId familyName
+   * @param argsList discoveryNodeDeviceId timestamp familyName
    */
   public void processMapping(ArrayList<String> argsList) {
     String discoveryNodeDeviceId = removeNextArg(argsList, "discovery node deviceId");

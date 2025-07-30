@@ -648,45 +648,6 @@ public class SiteModel {
     return true;
   }
 
-  /**
-   * Recursively deletes a directory or file.
-   * @param folder directory to be deleted
-   * @return true if deletion is successful, false otherwise.
-   */
-  public boolean deleteFolder(File folder) {
-    if (!folder.exists()) {
-      System.out.println("Folder does not exist: " + folder.getAbsolutePath());
-      return true;
-    }
-
-    if (folder.isDirectory()) {
-      File[] contents = folder.listFiles();
-      if (contents != null) {
-        for (File file : contents) {
-          if (!deleteFolder(file)) {
-            System.err.println("Failed to delete content: " + file.getAbsolutePath());
-            return false;
-          }
-        }
-      }
-      if (folder.delete()) {
-        System.out.println("Deleted directory: " + folder.getAbsolutePath());
-        return true;
-      } else {
-        System.err.println("Failed to delete directory: " + folder.getAbsolutePath());
-        return false;
-      }
-    } else {
-      if (folder.delete()) {
-        System.out.println("Deleted file: " + folder.getAbsolutePath());
-        return true;
-      } else {
-        System.err.println("Failed to delete file: " + folder.getAbsolutePath());
-        return false;
-      }
-    }
-  }
-
   private void updateMetadataRaw(String deviceId, Metadata metadata) {
     File metadataFile = getDeviceFile(deviceId, METADATA_JSON);
     System.err.println("Writing device metadata file " + metadataFile);

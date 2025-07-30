@@ -117,8 +117,8 @@
         "type": "string"
       }
     },
-    "mapping_service_configuration": {
-      "$ref": "file:config_mapping_service.json"
+    "mapping_configuration": {
+      "$ref": "file:config_mapping.json"
     }
   }
 }

@@ -1,7 +1,7 @@
 """Generated class for configuration_execution.json"""
 from .configuration_endpoint import EndpointConfiguration
 from .configuration_endpoint import EndpointConfiguration
-from .config_mapping_service import MappingServiceConfig
+from .config_mapping import MappingConfig
 
 
 class ExecutionConfiguration:
@@ -42,7 +42,7 @@ class ExecutionConfiguration:
     self.alt_registry = None
     self.block_unknown = None
     self.sequences = None
-    self.mapping_service_configuration = None
+    self.mapping_configuration = None
 
   @staticmethod
   def from_dict(source):
@@ -83,7 +83,7 @@ class ExecutionConfiguration:
     result.alt_registry = source.get('alt_registry')
     result.block_unknown = source.get('block_unknown')
     result.sequences = source.get('sequences')
-    result.mapping_service_configuration = MappingServiceConfig.from_dict(source.get('mapping_service_configuration'))
+    result.mapping_configuration = MappingConfig.from_dict(source.get('mapping_configuration'))
     return result
 
   @staticmethod
@@ -172,6 +172,6 @@ class ExecutionConfiguration:
       result['block_unknown'] = self.block_unknown # 5
     if self.sequences:
       result['sequences'] = self.sequences # 1
-    if self.mapping_service_configuration:
-      result['mapping_service_configuration'] = self.mapping_service_configuration.to_dict() # 4
+    if self.mapping_configuration:
+      result['mapping_configuration'] = self.mapping_configuration.to_dict() # 4
     return result

@@ -25,6 +25,14 @@
           "$ref": "file:config_mapping_device.json"
         }
       }
+    },
+    "extras_deletion_days": {
+      "type": "integer",
+      "description": "extras discovery event garbage collection time"
+    },
+    "devices_deletion_days": {
+      "type": "integer",
+      "description": "devices garbage collection time"
     }
   }
 }

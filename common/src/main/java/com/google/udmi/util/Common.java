@@ -10,6 +10,8 @@ import com.google.common.base.Strings;
 import com.google.common.reflect.ClassPath;
 import com.google.common.reflect.ClassPath.ClassInfo;
 import com.google.udmi.util.ExceptionMap.ExceptionCategory;
+import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.MissingFormatArgumentException;
@@ -19,6 +21,7 @@ import java.util.Set;
 import java.util.TreeSet;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
+import org.apache.commons.io.FileUtils;
 import udmi.schema.State;
 
 /**
@@ -226,5 +229,14 @@ public abstract class Common {
 
   public static long convertDaysToMilliSeconds(int days) {
     return days * 24L * 60 * 60 * 1000;
+  }
+
+  public static void deleteFolder(File directory) {
+    try {
+      FileUtils.deleteDirectory(directory);
+    } catch (Exception e) {
+      throw new RuntimeException("Error deleting the directory", e);
+    }
+
   }
 }
