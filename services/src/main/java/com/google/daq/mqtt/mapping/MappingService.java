@@ -91,7 +91,8 @@ public class MappingService extends AbstractPollingService {
 
       Instant now = Instant.now();
       String currentTimestamp = DateTimeFormatter.ISO_INSTANT.format(now);
-      String discoveryTimestamp = (String) messageData.getOrDefault(DISCOVERY_TIMESTAMP, currentTimestamp);
+      String discoveryTimestamp = (String) messageData.getOrDefault(DISCOVERY_TIMESTAMP,
+          currentTimestamp);
       String discoveryNodeDeviceId = message.getAttributesOrDefault(
           DISCOVERY_NODE_DEVICE_ID_FIELD, "");
       if (discoveryNodeDeviceId.isEmpty()) {
