@@ -6,7 +6,7 @@ import static java.lang.String.format;
 import static java.util.Objects.nonNull;
 import static java.util.Optional.ofNullable;
 import static java.util.stream.Collectors.toMap;
-import static udmi.lib.client.manager.DiscoveryManager.depthDeeperThan;
+import static udmi.lib.client.manager.DiscoveryManager.shouldEnumerate;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.udmi.util.SiteModel;
@@ -19,7 +19,6 @@ import udmi.lib.base.ManagerBase;
 import udmi.lib.client.manager.LocalnetManager;
 import udmi.lib.intf.ManagerHost;
 import udmi.schema.DiscoveryEvents;
-import udmi.schema.Enumerations.Depth;
 import udmi.schema.FamilyDiscoveryConfig;
 import udmi.schema.FamilyLocalnetState;
 import udmi.schema.Level;
@@ -54,7 +53,7 @@ public class PubberProviderBase extends ManagerBase {
       BiConsumer<String, DiscoveryEvents> publisher) {
     this.config = config;
     this.publisher = publisher;
-    this.enumerate = depthDeeperThan(config.depth, Depth.DETAILS);
+    this.enumerate = shouldEnumerate(config.depth);
     allDevices = siteModel.allMetadata().entrySet().stream()
         .filter(this::isValidTargetDevice)
         .collect(toMap(Entry::getKey, Entry::getValue));

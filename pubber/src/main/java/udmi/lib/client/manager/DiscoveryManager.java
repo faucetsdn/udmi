@@ -81,12 +81,12 @@ public interface DiscoveryManager extends SubBlockManager {
 
   DeviceManager getDeviceManager();
 
-  static boolean depthDeeperThan(Depth config, Depth target) {
-    return config == Depth.ENTRIES || (config == Depth.DETAILS && target == Depth.DETAILS);
+  static boolean shouldEnumerate(Depth config) {
+    return config == Depth.DETAILS || config == Depth.PARTS;
   }
 
   default <K, V> Map<K, V> maybeEnumerate(Depth depth, Supplier<Map<K, V>> supplier) {
-    return ifTrueGet(depthDeeperThan(depth, Depth.ENTRIES), supplier);
+    return ifTrueGet(shouldEnumerate(depth), supplier);
   }
 
   /**
@@ -306,7 +306,7 @@ public interface DiscoveryManager extends SubBlockManager {
         isoConvert(familyDiscoveryState.generation)));
     FamilyDiscoveryConfig config = getFamilyDiscoveryConfig(family);
     config.depth = Optional.ofNullable(config.depth)
-        .orElse(config.addrs != null ? Depth.DETAILS : Depth.ENTRIES);
+        .orElse(config.addrs == null ? Depth.ENTRIES : Depth.DETAILS);
     discoveryProvider(family).startScan(config, (deviceId, discoveryEvent) -> {
       ifNotNullThen(discoveryEvent.addr, addr -> {
         if (ifNotNullGet(targets, t -> !t.contains(addr), false)) {

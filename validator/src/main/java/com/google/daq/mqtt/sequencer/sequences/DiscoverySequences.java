@@ -343,8 +343,9 @@ public class DiscoverySequences extends SequenceBase {
     }
 
     // If targets are specified then enumeration is expected.
-    boolean explicitEnum = targets != null && shouldEnumerate == DEFAULT_ENUMERATION;
-    final DiscoveryScanMode expectedEnumeration = explicitEnum ? PLEASE_ENUMERATE : shouldEnumerate;
+    boolean targetEnum = targets != null && shouldEnumerate == DEFAULT_ENUMERATION;
+    boolean requestedEnum = shouldEnumerate == PLEASE_ENUMERATE;
+    final boolean expectedEnumeration = requestedEnum || targetEnum;
 
     if (scheduledStart) {
       waitUntil("scheduled scan pending", WAITING_PERIOD, this::detailScanPending);
@@ -495,9 +496,9 @@ public class DiscoverySequences extends SequenceBase {
   }
 
   private List<String> checkEnumeration(List<DiscoveryEvents> receivedEvents,
-      DiscoveryScanMode shouldEnumerate) {
+      boolean shouldEnumerate) {
     List<String> exceptions = new ArrayList<>();
-    if (shouldEnumerate == PLEASE_ENUMERATE) {
+    if (shouldEnumerate) {
       addIfCaught(exceptions, () ->
           checkThat("all events have matching refs", mismatchedDetail(receivedEvents)));
     } else {
@@ -569,7 +570,7 @@ public class DiscoverySequences extends SequenceBase {
     Date generation = receivedEvents.get(receivedEvents.size() - 1).generation;
     List<DiscoveryEvents> lastGenerationEvents = receivedEvents.stream()
         .filter(event -> event.generation.equals(generation)).toList();
-    ifNotEmptyThrow(checkEnumeration(lastGenerationEvents, PLEASE_ENUMERATE), CSV_JOINER::join);
+    ifNotEmptyThrow(checkEnumeration(lastGenerationEvents, true), CSV_JOINER::join);
   }
 
   private void initializeDiscovery() {
