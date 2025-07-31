@@ -1,11 +1,6 @@
 c21266e8de23b6e8acfac16a177db782375bf71df470c343c3f8eb8b822ef56a  gencode/docs/commands_discovery.html
 7bd462fd9b31a1a35b27f069194051161c484600161d7ef3fa7a4f8efa4e65fb  gencode/docs/commands_mapping.html
-<<<<<<< HEAD
 421c826446d61f22787bd3e6f8f94e3edf14cfe290654b0d11ff4f319e804197  gencode/docs/config.html
-284b682ff2388abdeddf30fb88d15501b2fa22e36c8161a8373cfb7651530817  gencode/docs/config_mapping.html
-=======
-00bf54959c8da13b5f0bcbab32434b9e00ddd10019ac04279d587cfb09d21a19  gencode/docs/config.html
->>>>>>> master
 0bb798c8db6be37266946569a096e2f0b7520ee54d65e7e8d37675ef17820f14  gencode/docs/configuration_endpoint.html
 7caf6f29bff7c358536444c0d8502169f708bcc6f32a3d0a8aae155708b2cd04  gencode/docs/configuration_execution.html
 11b21f73b6a4065102968a4c09979639b8a7ea6efb20e40d52cd21b2a60167bb  gencode/docs/configuration_pod.html
