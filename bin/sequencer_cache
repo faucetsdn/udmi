@@ -83,7 +83,6 @@ if [[ -n $update ]]; then
     for test in $all_tests; do
         src_dir=$TEST_ROOT/tests/$test
         cache_dir=$CACHE_ROOT/$test
-        pwd
         if ! test -f $src_dir/sequence.md; then
             echo Missing $src_dir/sequence.md
         elif diff -q $src_dir/sequence.md $cache_dir/sequence.md; then
