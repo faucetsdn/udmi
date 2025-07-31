@@ -54,6 +54,7 @@ public class PubberProviderBase extends ManagerBase {
     this.config = config;
     this.publisher = publisher;
     this.enumerate = config.addrs != null || shouldEnumerate(config.depth);
+    debug(format("TAP startScan %s %s %s", enumerate, config.addrs != null, config.depth));
     allDevices = siteModel.allMetadata().entrySet().stream()
         .filter(this::isValidTargetDevice)
         .collect(toMap(Entry::getKey, Entry::getValue));
@@ -111,7 +112,7 @@ public class PubberProviderBase extends ManagerBase {
 
   private boolean isValidTargetDevice(Entry<String, Metadata> entry) {
     String deviceId = entry.getKey();
-    info(format("TAP %s %s %s %s", deviceId, config.networks, getFamilyAddr(deviceId),
+    info(format("TAP target %s %s %s %s", deviceId, config.networks, getFamilyAddr(deviceId),
         getFamilyNetwork(deviceId)));
     return nonNull(getFamilyAddr(deviceId))
         && (config.networks == null || config.networks.contains(getFamilyNetwork(deviceId)));

@@ -305,24 +305,24 @@ public interface DiscoveryManager extends SubBlockManager {
     info(format("Discovered %s starting %s (=? %s)", family, generation,
         isoConvert(familyDiscoveryState.generation)));
     FamilyDiscoveryConfig config = getFamilyDiscoveryConfig(family);
+    debug(format("TAP config %s %s", config.depth, config.addrs != null));
     config.depth = Optional.ofNullable(config.depth)
-        .orElse(config.addrs == null ? Depth.DETAILS : Depth.ENTRIES);
-    discoveryProvider(family).startScan(config, (deviceId, discoveryEvent) -> {
-      ifNotNullThen(discoveryEvent.addr, addr -> {
-        if (ifNotNullGet(targets, t -> !t.contains(addr), false)) {
-          info(format("Discovered %s device %s for %s skipped", family, addr, generation));
-          return;
-        }
-        int activeCount = sendCount.getAndIncrement();
-        familyDiscoveryState.active_count = activeCount;
-        String network = discoveryEvent.network;
-        info(format("Discovered %s device %s %s for %s as %s", family, network, addr, generation,
-            activeCount));
-        discoveryEvent.event_no = activeCount;
-        publishDiscoveryEvent(family, scanGeneration, deviceId, discoveryEvent);
-        updateState();
-      });
-    });
+        .orElse(config.addrs != null ? Depth.DETAILS : Depth.ENTRIES);
+    discoveryProvider(family).startScan(config, (deviceId, discoveryEvent) ->
+        ifNotNullThen(discoveryEvent.addr, addr -> {
+          if (ifNotNullGet(targets, t -> !t.contains(addr), false)) {
+            info(format("Discovered %s device %s for %s skipped", family, addr, generation));
+            return;
+          }
+          int activeCount = sendCount.getAndIncrement();
+          familyDiscoveryState.active_count = activeCount;
+          String network = discoveryEvent.network;
+          info(format("Discovered %s device %s %s for %s as %s", family, network, addr, generation,
+              activeCount));
+          discoveryEvent.event_no = activeCount;
+          publishDiscoveryEvent(family, scanGeneration, deviceId, discoveryEvent);
+          updateState();
+        }));
   }
 
   /**
