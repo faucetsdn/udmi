@@ -26,7 +26,6 @@ import dataclasses
 BAC0.log_level(log_file=None, stdout=None, stderr=None)
 BAC0.log_level("silence")
 
-
 class BacnetObjectAcronyms(enum.StrEnum):
   """ Mapping of object names to accepted aronyms"""
   analogInput = "AI"
@@ -101,7 +100,7 @@ class GlobalBacnetDiscovery(discovery.DiscoveryController):
 
     ### Basic Properties
     ###################################################################
-    if self.config.depth in ["system", "device"]:
+    if self.config.depth in ["system", "refs"]:
       try:
         object_name, vendor_name, firmware_version, model_name, serial_number = (
             self.bacnet.readMultiple(
@@ -125,7 +124,7 @@ class GlobalBacnetDiscovery(discovery.DiscoveryController):
 
     ### Points
     ###################################################################
-    if self.config.depth in ["refs", "system", "device"]:
+    if self.config.depth in ["refs"]:
       try:
         device = BAC0.device(device_address, device_id, self.bacnet, poll=0)
 

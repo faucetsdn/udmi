@@ -1,0 +1,5 @@
+#!/bin/bash -ex
+ROOT_DIR=$(dirname $(realpath $0 ))
+
+bash $ROOT_DIR/build_container $@
+docker push $1

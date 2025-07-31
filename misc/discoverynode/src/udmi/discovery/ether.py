@@ -98,9 +98,10 @@ class EtherDiscovery(discovery.DiscoveryController):
       event = udmi.schema.discovery_event.DiscoveryEvent(
           generation=self.generation,
           family=self.family,
-          addr=target_ip,
+          # hacky because the mac address is unknown to the ping
+          addr=None,
           families=dict(
-                  ether=udmi.schema.discovery_event.DiscoveryFamily(
+                  ipv4=udmi.schema.discovery_event.DiscoveryFamily(
                       target_ip
                   )
           )

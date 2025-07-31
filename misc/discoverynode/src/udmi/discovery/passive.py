@@ -16,12 +16,14 @@ import udmi.schema.state
 
 BACNET_BVLC_MARKER = b"\x81"
 BACNET_APDU_I_AM_START = b"\x10\x00\xc4"
-PRIVATE_IP_BPC_FILTER = (
+PRIVATE_IP_BPF_FILTER = (
     "ip and "
     "("
     "src net 10.0.0.0/8 or src net 172.16.0.0/12 or src net 192.168.0.0/16 or "
+    "src net 100.64.0.0/10"
+    ") and ("
     "dst net 10.0.0.0/8 or dst net 172.16.0.0/12 or dst net 192.168.0.0/16 or "
-    "dst net 100.64.0.0/10 or src net 100.64.0.0/10"
+    "dst net 100.64.0.0/10"
     ")"
 )
 
@@ -102,7 +104,7 @@ class PassiveNetworkDiscovery(discovery.DiscoveryController):
     self.service_thread.start()
 
     self.sniffer = scapy.sendrecv.AsyncSniffer(
-        prn=self.queue.put, store=False, iface=self.interface, started_callback=self.scapy_is_go
+        prn=self.queue.put, store=False, iface=self.interface, started_callback=self.scapy_is_go, filter=PRIVATE_IP_BPF_FILTER
     )
 
     self.sniffer.start()
@@ -207,3 +209,4 @@ class PassiveNetworkDiscovery(discovery.DiscoveryController):
       except queue.Empty:
         if self.cancel_threads.is_set():
           return
+
