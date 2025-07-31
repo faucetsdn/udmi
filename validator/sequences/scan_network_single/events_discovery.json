@@ -1,0 +1,10 @@
+{
+  "event_no" : -2,
+  "family" : "vendor",
+  "generation" : "TIMESTAMP",
+  "system" : {
+    "ancillary" : { }
+  },
+  "timestamp" : "TIMESTAMP",
+  "version" : "1.5.3"
+}

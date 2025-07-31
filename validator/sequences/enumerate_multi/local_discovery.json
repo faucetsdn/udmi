@@ -1,8 +1,8 @@
 {
   "enumerations" : {
-    "families" : "entries",
-    "points" : "entries",
-    "features" : "entries"
+    "families" : "details",
+    "points" : "details",
+    "features" : "details"
   },
   "families" : {
     "vendor" : { }
