@@ -81,12 +81,12 @@ public interface DiscoveryManager extends SubBlockManager {
 
   DeviceManager getDeviceManager();
 
-  static boolean shouldEnumerate(Depth config) {
-    return config == Depth.DETAILS || config == Depth.PARTS;
+  static boolean shouldEnumerate(Depth config, Depth threshold) {
+    return config.ordinal() >= threshold.ordinal();
   }
 
   default <K, V> Map<K, V> maybeEnumerate(Depth depth, Supplier<Map<K, V>> supplier) {
-    return ifTrueGet(shouldEnumerate(depth), supplier);
+    return ifTrueGet(shouldEnumerate(depth, Depth.ENTRIES), supplier);
   }
 
   /**
@@ -299,7 +299,7 @@ public interface DiscoveryManager extends SubBlockManager {
   default void startDiscoveryForFamily(String family, Date scanGeneration,
       FamilyDiscoveryState familyDiscoveryState, AtomicInteger sendCount) {
     String generation = isoConvert(scanGeneration);
-    Set<String> targets = ofNullable(
+    final Set<String> targets = ofNullable(
         catchToNull(() -> getDiscoveryConfig().families.get(family).addrs))
         .map(ImmutableSet::copyOf).orElse(null);
     info(format("Discovered %s starting %s (=? %s)", family, generation,

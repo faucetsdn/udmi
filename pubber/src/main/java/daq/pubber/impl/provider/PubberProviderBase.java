@@ -19,6 +19,7 @@ import udmi.lib.base.ManagerBase;
 import udmi.lib.client.manager.LocalnetManager;
 import udmi.lib.intf.ManagerHost;
 import udmi.schema.DiscoveryEvents;
+import udmi.schema.Enumerations.Depth;
 import udmi.schema.FamilyDiscoveryConfig;
 import udmi.schema.FamilyLocalnetState;
 import udmi.schema.Level;
@@ -53,7 +54,7 @@ public class PubberProviderBase extends ManagerBase {
       BiConsumer<String, DiscoveryEvents> publisher) {
     this.config = config;
     this.publisher = publisher;
-    this.enumerate = config.addrs != null || shouldEnumerate(config.depth);
+    this.enumerate = config.addrs != null || shouldEnumerate(config.depth, Depth.DETAILS);
     debug(format("TAP startScan %s %s %s", enumerate, config.addrs != null, config.depth));
     allDevices = siteModel.allMetadata().entrySet().stream()
         .filter(this::isValidTargetDevice)
