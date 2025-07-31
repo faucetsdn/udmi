@@ -333,7 +333,7 @@ public class DiscoverySequences extends SequenceBase {
     scanGeneration = scanStart.toInstant();
 
     configureScan(scanGeneration, null, shouldEnumerate, networks, targets);
-    Instant scanConfigured = getNowInstant();
+    final Instant scanConfigured = getNowInstant();
 
     if (shouldEnumerate == NO_SCAN) {
       waitUntil("scan schedule initially not active", this::detailScanStopped);
