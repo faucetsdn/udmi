@@ -285,6 +285,10 @@ class MQTT(udmi.publishers.publisher.Publisher):
       if not self.public_key:
         with open(self.public_key_file, "r") as f:
           self.public_key = f.read()
-      logging.warning("public key: %s", self.public_key.encode("utf-8"))
-      print(self.public_key)
+      logging.warning(
+        "%s/%s not authenticated. Public key: %s",
+        self.registry_id,
+        self.device_id, 
+        self.public_key.encode("utf-8")
+      )
       self.public_key_printed_last_time = time.monotonic()
