@@ -292,7 +292,7 @@ public class DiscoverySequences extends SequenceBase {
   @Feature(bucket = DISCOVERY_SCAN, stage = ALPHA)
   @Summary("Check results of a single scan targeting specific devices")
   public void scan_single_targeted() {
-    SortedSet<String> expectedAddresses = new TreeSet<>(expectedTargetDevices());
+    SortedSet<String> expectedAddresses = new TreeSet<>(expectedTargetDevices(null));
     ifTrueSkipTest(expectedAddresses.size() <= SCAN_TARGET_COUNT,
         "Not enough targets to test targeted scan");
     Set<String> targets = expectedAddresses.stream().limit(SCAN_TARGET_COUNT).collect(toSet());
@@ -409,7 +409,8 @@ public class DiscoverySequences extends SequenceBase {
     checkThat("all scan addresses are unique", duplicates.isEmpty(),
         "duplicates: " + CSV_JOINER.join(duplicates));
 
-    Set<String> expTargets = Optional.ofNullable(targets).orElseGet(this::expectedTargetDevices);
+    Set<String> expTargets = Optional.ofNullable(targets)
+        .orElseGet(() -> expectedTargetDevices(networks));
     SetView<String> diffTargets = symmetricDifference(discoveredAddresses, expTargets);
     checkThat("all expected addresses were found", diffTargets.isEmpty(),
         format("expected %s, found %s", expTargets, discoveredAddresses));
@@ -429,9 +430,16 @@ public class DiscoverySequences extends SequenceBase {
             entry.getValue() > 1 ? format(" (%d)", entry.getValue()) : "")).toList();
   }
 
-  private SortedSet<String> expectedTargetDevices() {
-    return siteModel.metadataStream().map(this::scanFamilyAddr)
+  private SortedSet<String> expectedTargetDevices(Set<String> networks) {
+    return siteModel.metadataStream()
+        .filter(entry -> onExpectedNetwork(entry, networks))
+        .map(this::scanFamilyAddr)
         .filter(Objects::nonNull).collect(Collectors.toCollection(TreeSet::new));
+  }
+
+  private boolean onExpectedNetwork(Entry<String, Metadata> entry, Set<String> networks) {
+    return networks == null || networks.contains(catchToNull(() ->
+        entry.getValue().localnet.families.get(scanFamily).network));
   }
 
   private SortedSet<String> expectedTargetNetworks() {
@@ -611,6 +619,8 @@ public class DiscoverySequences extends SequenceBase {
     configFamily.scan_duration_sec = ofNullable(intervalSec).orElse(SCAN_DURATION_SEC);
     configFamily.addrs = ifNotNullGet(targets,
         t -> new SemanticList<>("list of target devices", ImmutableList.copyOf(t)));
+    configFamily.networks = ifNotNullGet(networks,
+        t -> new SemanticList<>("list of target networks", ImmutableList.copyOf(t)));
     popReceivedEvents(DiscoveryEvents.class);
   }
 
