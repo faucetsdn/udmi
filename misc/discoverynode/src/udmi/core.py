@@ -75,9 +75,6 @@ class UDMICore:
     # Note, this depends on topic_state being set
     threading.Thread(target=self.state_monitor, args=[], daemon=True).start()
 
-  def process_config(self, config: str):
-    logging.info(f"config callback {config[:24]}...")
-
   def add_config_route(self, filter: Callable, destination: Callable):
     self.callbacks[filter] = destination
 

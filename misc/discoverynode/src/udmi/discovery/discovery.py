@@ -182,9 +182,9 @@ class DiscoveryController(abc.ABC):
       logging.info("Started... %s", type(self).__name__)
 
   def _stop(self):
-    logging.info("Stopping discovery for %s", type(self).__name__)
+    logging.debug("Stopping discovery for %s", type(self).__name__)
     if self.internal_state not in [states.STARTING, states.STARTED]:
-      logging.info("Not stopping because state was %s", self.internal_state)
+      logging.debug("Not stopping because state was %s", self.internal_state)
       return
     logging.info("Stopped %s", type(self).__name__)
 

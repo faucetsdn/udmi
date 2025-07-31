@@ -9,6 +9,8 @@ class MappingConfig:
     self.timestamp = None
     self.version = None
     self.devices = None
+    self.extras_deletion_days = None
+    self.devices_deletion_days = None
 
   @staticmethod
   def from_dict(source):
@@ -18,6 +20,8 @@ class MappingConfig:
     result.timestamp = source.get('timestamp')
     result.version = source.get('version')
     result.devices = DeviceMappingConfig.map_from(source.get('devices'))
+    result.extras_deletion_days = source.get('extras_deletion_days')
+    result.devices_deletion_days = source.get('devices_deletion_days')
     return result
 
   @staticmethod
@@ -44,4 +48,8 @@ class MappingConfig:
       result['version'] = self.version # 5
     if self.devices:
       result['devices'] = DeviceMappingConfig.expand_dict(self.devices) # 2
+    if self.extras_deletion_days:
+      result['extras_deletion_days'] = self.extras_deletion_days # 5
+    if self.devices_deletion_days:
+      result['devices_deletion_days'] = self.devices_deletion_days # 5
     return result

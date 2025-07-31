@@ -3,9 +3,14 @@ package com.google.daq.mqtt.mapping;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
 import static com.google.daq.mqtt.util.ConfigUtil.UDMI_VERSION;
+import static com.google.udmi.util.Common.DEFAULT_DEVICES_DELETION_DAYS;
+import static com.google.udmi.util.Common.DEFAULT_EXTRAS_DELETION_DAYS;
 import static com.google.udmi.util.Common.NO_SITE;
 import static com.google.udmi.util.Common.UNKNOWN_DEVICE_ID_PREFIX;
+import static com.google.udmi.util.Common.convertDaysToMilliSeconds;
+import static com.google.udmi.util.Common.deleteFolder;
 import static com.google.udmi.util.Common.generateColonKey;
+import static com.google.udmi.util.Common.isDifferenceGreaterThan;
 import static com.google.udmi.util.Common.removeNextArg;
 import static com.google.udmi.util.GeneralUtils.catchToNull;
 import static com.google.udmi.util.JsonUtil.isoConvert;
@@ -30,6 +35,7 @@ import com.google.daq.mqtt.util.ConfigUtil;
 import com.google.udmi.util.Common;
 import com.google.udmi.util.SiteModel;
 import java.io.File;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
@@ -52,6 +58,7 @@ import udmi.schema.FamilyDiscoveryConfig;
 import udmi.schema.FamilyLocalnetModel;
 import udmi.schema.GatewayModel;
 import udmi.schema.LocalnetModel;
+import udmi.schema.MappingConfig;
 import udmi.schema.Metadata;
 import udmi.schema.PointPointsetModel;
 import udmi.schema.PointsetModel;
@@ -73,6 +80,9 @@ public class MappingAgent {
   private Date generationDate;
 
   private AtomicInteger suffixToStart = new AtomicInteger(1);
+  private long extrasDeletionTimeInMillis;
+  private long devicesDeletionTimeInMillis;
+  private long discoveryEventCompletionTimeInMillis;
 
   /**
    * Create an agent given the configuration.
@@ -201,22 +211,47 @@ public class MappingAgent {
       if (!families.contains(family)) {
         return;
       }
+      Metadata entryValue = entry.getValue();
       if (devicesEntriesMap.containsKey(entry.getKey())) {
-        System.err.println("Updating existing device file for family::address = " + entry.getKey());
         String deviceId = devicesFamilyAddressMap.get(entry.getKey());
+        if (isDifferenceGreaterThan(entryValue.timestamp.getTime(),
+            discoveryEventCompletionTimeInMillis, devicesDeletionTimeInMillis)) {
+          deleteFolder(siteModel.getDeviceDir(deviceId));
+          return;
+        }
+        System.err.println("Updating existing device file for family::address = " + entry.getKey());
         devicesPresent.add(deviceId);
         updateDevice(deviceId, entry.getValue());
-      } else {
+      } else if (!isDifferenceGreaterThan(entryValue.timestamp.getTime(),
+          discoveryEventCompletionTimeInMillis, devicesDeletionTimeInMillis)) {
         String newDeviceId = getNextDeviceId();
         while (devicesPresent.contains(newDeviceId)) {
           newDeviceId = getNextDeviceId();
         }
         devicesPresent.add(newDeviceId);
-        siteModel.createNewDevice(newDeviceId, entry.getValue());
+        siteModel.createNewDevice(newDeviceId, entryValue);
       }
     });
 
     updateProxyIdsForDiscoveryNode(devicesPresent);
+    removeOlderDiscoveryEventsFromExtras();
+  }
+
+  private void removeOlderDiscoveryEventsFromExtras() {
+    File extrasDir = siteModel.getExtrasDir();
+    File[] extras = extrasDir.listFiles();
+    if (extras == null || extras.length == 0) {
+      return;
+    }
+
+    for (File extraFolder : extras) {
+      DiscoveryEvents discoveryEvents = loadFileStrict(DiscoveryEvents.class,
+          new File(extraFolder, "cloud_metadata/udmi_discovered_with.json"));
+      if (isDifferenceGreaterThan(discoveryEvents.timestamp.getTime(),
+          discoveryEventCompletionTimeInMillis, extrasDeletionTimeInMillis)) {
+        deleteFolder(extraFolder);
+      }
+    }
   }
 
   /**
@@ -370,6 +405,22 @@ public class MappingAgent {
   private void initialize() {
     cloudIotManager = new CloudIotManager(executionConfiguration, MAPPER_TOOL_NAME);
     siteModel = new SiteModel(cloudIotManager.getSiteDir(), executionConfiguration);
+
+    devicesDeletionTimeInMillis = convertDaysToMilliSeconds(DEFAULT_DEVICES_DELETION_DAYS);
+    extrasDeletionTimeInMillis = convertDaysToMilliSeconds(DEFAULT_EXTRAS_DELETION_DAYS);
+    discoveryEventCompletionTimeInMillis = System.currentTimeMillis();
+    if (this.executionConfiguration != null
+        && this.executionConfiguration.mapping_configuration != null) {
+      MappingConfig mappingConfig =
+          this.executionConfiguration.mapping_configuration;
+      if (mappingConfig.devices_deletion_days != null) {
+        devicesDeletionTimeInMillis =
+            convertDaysToMilliSeconds(mappingConfig.devices_deletion_days);
+      }
+      if (mappingConfig.extras_deletion_days != null) {
+        extrasDeletionTimeInMillis = convertDaysToMilliSeconds(mappingConfig.extras_deletion_days);
+      }
+    }
     siteModel.initialize();
   }
 
@@ -388,11 +439,15 @@ public class MappingAgent {
   /**
    * Processes mapping.
    *
-   * @param argsList discoveryNodeDeviceId familyName
+   * @param argsList discoveryNodeDeviceId timestamp familyName
    */
   public void processMapping(ArrayList<String> argsList) {
     String discoveryNodeDeviceId = removeNextArg(argsList, "discovery node deviceId");
     setDiscoveryNodeDeviceId(discoveryNodeDeviceId);
+    String discoveryCompleteTimestamp = removeNextArg(argsList, "discovery completion time");
+    Date discoveryCompletionDate = Date.from(Instant.parse(discoveryCompleteTimestamp));
+    discoveryEventCompletionTimeInMillis = discoveryCompletionDate.getTime();
+
     mapDiscoveredDevices(argsList);
 
     System.err.println("Mapping process is completed");
