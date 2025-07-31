@@ -1,22 +1,17 @@
 {
-  "timestamp" : "2024-12-11T05:45:00Z",
-  "version" : "@@@cloud udmi version###git-85bdd38",
+  "timestamp" : "TIMESTAMP",
+  "version" : "@@@cloud udmi version###git-b7ad9cd",
   "system" : {
     "min_loglevel" : 100,
     "metrics_rate_sec" : 10,
     "operation" : {
-      "last_start" : "2024-12-11T05:44:10Z"
+      "last_start" : "TIMESTAMP"
     },
     "testing" : {
       "sequence_name" : "enumerate_multi"
     }
   },
   "discovery" : {
-    "enumerations" : {
-      "families" : "entries",
-      "points" : "entries",
-      "features" : "entries"
-    },
     "families" : {
       "vendor" : { }
     }

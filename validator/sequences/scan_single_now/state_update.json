@@ -4,17 +4,17 @@
       "vendor" : {
         "generation" : "TIMESTAMP",
         "phase" : "stopped",
-        "active_count" : 3
+        "active_count" : 4
       }
     }
   },
   "localnet" : {
     "families" : {
       "ether" : {
-        "addr" : "60:45:bd:03:3a:df"
+        "addr" : "7c:1e:52:80:4e:50"
       },
       "ipv4" : {
-        "addr" : "10.1.0.156"
+        "addr" : "10.1.0.67"
       },
       "vendor" : {
         "addr" : "28179023"
@@ -46,7 +46,7 @@
       "restart_count" : 1,
       "mode" : "initial"
     },
-    "serial_no" : "sequencer-29373",
+    "serial_no" : "sequencer-17236",
     "hardware" : {
       "make" : "BOS",
       "model" : "pubber"
