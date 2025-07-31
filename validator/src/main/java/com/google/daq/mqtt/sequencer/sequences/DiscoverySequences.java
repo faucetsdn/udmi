@@ -349,8 +349,6 @@ public class DiscoverySequences extends SequenceBase {
     boolean targetEnum = targets != null && shouldEnumerate == DEFAULT_ENUMERATION;
     boolean requestedEnum = shouldEnumerate == PLEASE_ENUMERATE;
     final boolean expectedEnumeration = requestedEnum || targetEnum;
-    debug(format(
-        "TAP expectedEnumeration %s %s %s", targetEnum, requestedEnum, expectedEnumeration));
 
     if (scheduledStart) {
       waitUntil("scheduled scan pending", WAITING_PERIOD, this::detailScanPending);
