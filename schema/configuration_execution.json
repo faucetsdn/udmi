@@ -116,6 +116,9 @@
       "items": {
         "type": "string"
       }
+    },
+    "mapping_configuration": {
+      "$ref": "file:config_mapping.json"
     }
   }
 }
