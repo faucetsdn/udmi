@@ -82,7 +82,7 @@ public interface DiscoveryManager extends SubBlockManager {
   DeviceManager getDeviceManager();
 
   static boolean shouldEnumerate(Depth config, Depth threshold) {
-    return config.ordinal() >= threshold.ordinal();
+    return config != null && config.ordinal() >= threshold.ordinal();
   }
 
   default <K, V> Map<K, V> maybeEnumerate(Depth depth, Supplier<Map<K, V>> supplier) {
