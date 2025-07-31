@@ -186,18 +186,18 @@ else
 fi
 
 echo Sanity check for completed tests...
-result_count=$(fgrep RESULT out/sequencer$suffix.out.save | fgrep -v " schemas " | wc -l) || true
+fgrep RESULT out/sequencer$suffix.out.save | fgrep -v " schemas " > out/expected.out || true
+result_count=$(cat out/expected.out | wc -l)
 target_count=$(fgrep "Running target" out/sequencer$suffix.log.save | wc -l) || true
 if [[ $result_count != $target_count ]]; then
     fail Found $result_count results for $target_count targets.
 fi
 
 GOLDEN_FILE=etc/sequencer${suffix}.out
-echo Checking for correctness of completed tests in $GOLDEN_FILE...
-cat out/sequencer${suffix}.out.save
+echo Checking for completed tests in $GOLDEN_FILE...
 while read result; do
     echo Checking $GOLDEN_FILE for expected result: $result
     fgrep "$result" $GOLDEN_FILE || fail Expected result not found: $result
-done < out/sequencer${suffix}.out.save
+done < out/expected.out
 
 echo Done with $suffix test_sequencer run.

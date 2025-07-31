@@ -53,7 +53,7 @@ public class PubberProviderBase extends ManagerBase {
       BiConsumer<String, DiscoveryEvents> publisher) {
     this.config = config;
     this.publisher = publisher;
-    this.enumerate = shouldEnumerate(config.depth);
+    this.enumerate = config.addrs != null || shouldEnumerate(config.depth);
     allDevices = siteModel.allMetadata().entrySet().stream()
         .filter(this::isValidTargetDevice)
         .collect(toMap(Entry::getKey, Entry::getValue));
