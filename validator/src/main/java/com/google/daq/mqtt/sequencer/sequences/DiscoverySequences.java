@@ -33,6 +33,7 @@ import static udmi.schema.Bucket.ENUMERATION;
 import static udmi.schema.Bucket.ENUMERATION_FAMILIES;
 import static udmi.schema.Bucket.ENUMERATION_FEATURES;
 import static udmi.schema.Bucket.ENUMERATION_POINTSET;
+import static udmi.schema.Enumerations.Depth.DETAILS;
 import static udmi.schema.Enumerations.Depth.ENTRIES;
 import static udmi.schema.FamilyDiscoveryState.Phase.ACTIVE;
 import static udmi.schema.FamilyDiscoveryState.Phase.PENDING;
@@ -109,7 +110,7 @@ public class DiscoverySequences extends SequenceBase {
   }
 
   private static Depth enumerationDepthIf(DiscoveryScanMode shouldEnumerate) {
-    return shouldEnumerate == PLEASE_ENUMERATE ? ENTRIES : null;
+    return shouldEnumerate == PLEASE_ENUMERATE ? DETAILS : null;
   }
 
   /**

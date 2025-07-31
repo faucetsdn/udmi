@@ -306,7 +306,7 @@ public interface DiscoveryManager extends SubBlockManager {
         isoConvert(familyDiscoveryState.generation)));
     FamilyDiscoveryConfig config = getFamilyDiscoveryConfig(family);
     config.depth = Optional.ofNullable(config.depth)
-        .orElse(config.addrs == null ? Depth.ENTRIES : Depth.DETAILS);
+        .orElse(config.addrs == null ? Depth.DETAILS : Depth.ENTRIES);
     discoveryProvider(family).startScan(config, (deviceId, discoveryEvent) -> {
       ifNotNullThen(discoveryEvent.addr, addr -> {
         if (ifNotNullGet(targets, t -> !t.contains(addr), false)) {
