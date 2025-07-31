@@ -1,16 +1,9 @@
-import dataclasses
+
 import ipaddress
 import logging
-import os
-import queue
-import re
-import shlex
-import socket
-import subprocess
 import threading
 import time
 from typing import Any, Callable
-import xml.etree.ElementTree
 import BAC0
 import BAC0.core.io.IOExceptions
 import udmi.discovery.discovery as discovery
@@ -20,11 +13,11 @@ from udmi.schema.discovery_event import DiscoveryPoint
 import udmi.schema.state
 import ipaddress
 import enum
-import copy
-import dataclasses
 
-BAC0.log_level(log_file=None, stdout=None, stderr=None)
 BAC0.log_level("silence")
+for name in logging.getLogger().manager.loggerDict:
+  if name.startswith("BAC0"):
+    logging.getLogger(name).setLevel(logging.CRITICAL)
 
 class BacnetObjectAcronyms(enum.StrEnum):
   """ Mapping of object names to accepted aronyms"""
@@ -61,9 +54,9 @@ class GlobalBacnetDiscovery(discovery.DiscoveryController):
     self.devices_published = set()
     self.cancelled = None
     self.result_producer_thread = None
-
+   
     self.bacnet = BAC0.lite(ip=bacnet_ip, port=bacnet_port)
-
+    
     super().__init__(state, publisher)
 
   def start_discovery(self):
@@ -102,24 +95,40 @@ class GlobalBacnetDiscovery(discovery.DiscoveryController):
     ###################################################################
     if self.config.depth in ["system", "refs"]:
       try:
-        object_name, vendor_name, firmware_version, model_name, serial_number = (
+        (object_name, 
+         vendor_name, 
+         firmware_version,
+         model_name,
+         serial_number, 
+         description, 
+         location, 
+         application_version) = (
             self.bacnet.readMultiple(
-                f"{device_address} device {device_id} objectName vendorName"
-                " firmwareRevision modelName serialNumber"
+                f"{device_address} device {device_id}"
+                 " objectName"
+                 " vendorName"
+                " firmwareRevision"
+                " modelName"
+                " serialNumber" 
+                " description"
+                " location"
+                " applicationSoftwareVersion"
             )
         )
-
-        logging.debug("object_name: %s vendor_name: %s firmware: %s model: %s serial: %s",  object_name, vendor_name, firmware_version, model_name, serial_number)
-
+    
         event.system.serial_no = serial_number
         event.system.hardware.make = vendor_name
         event.system.hardware.model = model_name
-    
+
+        event.system.ancillary["description"] = description
+        event.system.ancillary["location"] = location
+        event.system.ancillary["application_version"] = application_version
         event.system.ancillary["firmware"] = firmware_version
         event.system.ancillary["name"] = object_name
 
       except (BAC0.core.io.IOExceptions.SegmentationNotSupported, Exception) as err:
         logging.exception(f"error reading from {device_address}/{device_id}")
+        event.status = udmi.schema.discovery_event.Status("discovery.error", 500, str(err))
         return event
 
     ### Points
