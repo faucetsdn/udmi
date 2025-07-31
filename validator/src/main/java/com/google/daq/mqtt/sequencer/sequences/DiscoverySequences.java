@@ -312,7 +312,7 @@ public class DiscoverySequences extends SequenceBase {
   @Feature(bucket = DISCOVERY_SCAN, stage = ALPHA)
   @Summary("Check results of a single scan targeting specific devices")
   public void scan_network_single() {
-    SortedSet<String> networks = expectedTargetNetworks();
+    SortedSet<String> networks = expectedTargetNetworks(null);
     ifTrueSkipTest(networks.size() < 2, "not enough networks for test");
     String targetNetwork = networks.removeFirst();
     scanAndVerify(cleanInstantDate(Instant.now().minusSeconds(1)), PLEASE_ENUMERATE,
@@ -419,7 +419,8 @@ public class DiscoverySequences extends SequenceBase {
 
     Set<String> discoveredNetworks = events.stream().map(x -> x.network).filter(Objects::nonNull)
         .collect(toSet());
-    Set<String> expNet = Optional.ofNullable(networks).orElseGet(this::expectedTargetNetworks);
+    Set<String> expNet = Optional.ofNullable(networks)
+        .orElseGet(() -> expectedTargetNetworks(targets));
     SetView<String> diffNetworks = symmetricDifference(discoveredNetworks, expNet);
     checkThat("all expected networks were found", diffNetworks.isEmpty(),
         format("expected %s, found %s", expNet, discoveredNetworks));
@@ -444,9 +445,15 @@ public class DiscoverySequences extends SequenceBase {
         entry.getValue().localnet.families.get(scanFamily).network));
   }
 
-  private SortedSet<String> expectedTargetNetworks() {
-    return siteModel.metadataStream().map(this::scanFamilyNetwork)
+  private SortedSet<String> expectedTargetNetworks(Set<String> targets) {
+    return siteModel.metadataStream()
+        .filter(entry -> targets == null || targets.contains(getLocalnetAddr(entry)))
+        .map(this::scanFamilyNetwork)
         .filter(Objects::nonNull).collect(Collectors.toCollection(TreeSet::new));
+  }
+
+  private String getLocalnetAddr(Entry<String, Metadata> entry) {
+    return catchToNull(() -> entry.getValue().localnet.families.get(scanFamily).addr);
   }
 
   private String detailScanPending() {
