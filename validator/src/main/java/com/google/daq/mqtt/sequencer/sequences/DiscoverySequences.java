@@ -100,6 +100,7 @@ public class DiscoverySequences extends SequenceBase {
   private static final int SCAN_DURATION_SEC = 10;
   private static final String DISCOVERY_TARGET = "scan_family";
   private static final long SCAN_TARGET_COUNT = 2;
+  public static final int EVENT_MARKERS = 2;
   private Set<String> metaFamilies;
   private Instant scanGeneration;
   private String scanFamily;
@@ -380,8 +381,9 @@ public class DiscoverySequences extends SequenceBase {
         .collect(Collectors.toCollection(TreeSet::new));
     debug(format("Received discovery %s event_nos %s", generation, eventNos));
 
-    int expectedEvents = actualCount + 2;  // Includes start and stop marker events.
-    debug(format("Received %d events, %d in state (expect +2)", events.size(), actualCount));
+    int expectedEvents = actualCount + EVENT_MARKERS;  // Includes start and stop marker events.
+    debug(format("Received %d events, %d in state (expect +%d)", events.size(), actualCount,
+        EVENT_MARKERS));
     checkThat("received expected number of discovery events", events.size() == expectedEvents);
 
     Function<DiscoveryEvents, List<String>> invalidator = event -> invalidReasons(event,

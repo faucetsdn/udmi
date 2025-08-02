@@ -32,10 +32,10 @@
     },
     "parent_id": {
       "type": "string",
-      "description": "The device id of the network parent"
+      "description": "The device id of the node's parent"
     },
     "family": {
-      "description": "The network family, used only when the entry is not keyed in a family map",
+      "description": "The family designator, used only when the entry is not keyed in a family map",
       "type": "string",
       "examples": ["ipv4", "bacnet"]
     }

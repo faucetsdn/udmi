@@ -183,7 +183,7 @@ public class ConfigManager {
   private String getLocalnetAddr(String rawFamily) {
     String family = ofNullable(rawFamily).orElse(DEFAULT_FAMILY);
     String addr = catchToNull(() -> metadata.localnet.families.get(family).addr);
-    NAMED_FAMILIES.get(family).validateAddr(addr);
+    ifNotNullThen(addr, a -> NAMED_FAMILIES.get(family).validateAddr(a));
     return addr;
   }
 

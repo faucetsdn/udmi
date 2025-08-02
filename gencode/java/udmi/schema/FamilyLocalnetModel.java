@@ -49,18 +49,18 @@ public class FamilyLocalnetModel {
     @JsonPropertyDescription("Specifies that this is a shadow of the indicated device")
     public java.lang.String shadow_id;
     /**
-     * The device id of the network parent
+     * The device id of the node's parent
      * 
      */
     @JsonProperty("parent_id")
-    @JsonPropertyDescription("The device id of the network parent")
+    @JsonPropertyDescription("The device id of the node's parent")
     public java.lang.String parent_id;
     /**
-     * The network family, used only when the entry is not keyed in a family map
+     * The family designator, used only when the entry is not keyed in a family map
      * 
      */
     @JsonProperty("family")
-    @JsonPropertyDescription("The network family, used only when the entry is not keyed in a family map")
+    @JsonPropertyDescription("The family designator, used only when the entry is not keyed in a family map")
     public java.lang.String family;
 
     @Override
