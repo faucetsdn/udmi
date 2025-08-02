@@ -9,6 +9,7 @@ import java.util.Deque;
 import java.util.function.BiConsumer;
 import udmi.lib.intf.ManagerHost;
 import udmi.schema.DiscoveryEvents;
+import udmi.schema.FamilyDiscoveryConfig;
 
 /**
  * Provides for the bacnet family of stuffs.
@@ -32,9 +33,9 @@ public class PubberBacnetProvider extends PubberProviderBase implements PubberFa
   }
 
   @Override
-  public synchronized void startScan(boolean enumerate,
+  public synchronized void startScan(FamilyDiscoveryConfig discoveryConfig,
       BiConsumer<String, DiscoveryEvents> publisher) {
-    super.startScan(enumerate, publisher);
+    super.startScan(discoveryConfig, publisher);
     toReport.clear();
     toReport.addAll(getAllDevices().keySet());
     updateInterval(BACNET_DISCOVERY_RATE_SEC);

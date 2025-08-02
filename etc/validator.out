@@ -39,6 +39,7 @@ sites/udmi_site_model/out/devices/SNS-4/events_pointset.json
 sites/udmi_site_model/out/devices/SNS-4/events_system.json
 sites/udmi_site_model/out/devices/SNS-4/state_gateway.json
 sites/udmi_site_model/out/devices/SNS-4/state.json
+sites/udmi_site_model/out/devices/SNS-4/state_localnet.json
 sites/udmi_site_model/out/devices/SNS-4/state_pointset.json
 sites/udmi_site_model/out/devices/SNS-4/state_system.json
 sites/udmi_site_model/out/devices/SNS-4/validation_report.json
@@ -776,6 +777,22 @@ sites/udmi_site_model/out/devices/SNS-4/state_gateway.out
   "timestamp" : "REDACTED_TIMESTAMP",
   "version" : "1.5.2",
   "sub_folder" : "gateway",
+  "sub_type" : "state",
+  "status" : {
+    "message" : "Successful validation",
+    "category" : "validation.device.receive",
+    "timestamp" : "REDACTED_TIMESTAMP",
+    "level" : 200
+  },
+  "errors" : [ ]
+}
+::::::::::::::
+sites/udmi_site_model/out/devices/SNS-4/state_localnet.out
+::::::::::::::
+{
+  "timestamp" : "REDACTED_TIMESTAMP",
+  "version" : "1.5.2",
+  "sub_folder" : "localnet",
   "sub_type" : "state",
   "status" : {
     "message" : "Successful validation",

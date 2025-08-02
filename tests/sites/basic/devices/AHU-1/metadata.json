@@ -62,6 +62,10 @@
       "ether": {
         "addr": "00:50:b6:ed:5f:77"
       },
+      "bacnet": {
+        "addr": "19233",
+        "network": "9288"
+      },
       "vendor": {
         "addr": "28179023"
       }

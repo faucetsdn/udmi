@@ -336,7 +336,7 @@ Test passed.
 Check enumeration of multiple categories
 
 1. Update config before enumeration not active
-    * Add `discovery.enumerations` = { "features": `entries`, "families": `entries`, "points": `entries` }
+    * Add `discovery.enumerations` = { "features": `details`, "families": `details`, "points": `details` }
 1. Wait for enumeration not active
 1. Update config before matching enumeration generation
     * Add `discovery.generation` = `generation start time`
@@ -520,7 +520,7 @@ Check periodic scan on a fixed schedule and enumeration
 1. Wait until discovery family keys match
 1. Wait for no scans active
 1. Update config before scan iterations
-    * Add `discovery.families.vendor` = { "generation": `family generation`, "scan_interval_sec": `20`, "depth": `entries`, "scan_duration_sec": `20` }
+    * Add `discovery.families.vendor` = { "generation": `family generation`, "scan_interval_sec": `20`, "depth": `details`, "scan_duration_sec": `20` }
 1. Wait for scan iterations
 1. Check that scan did not terminate prematurely
 1. Check that all events have matching refs
@@ -545,13 +545,14 @@ Check results of a single scan scheduled soon
 1. Check that scan completed at time
 1. Check that received expected number of discovery events
 1. Check that no events have discovered refs
+1. Check that discovery events were valid
 1. Check that received all unique event numbers
-1. Check that received proper discovery termination event
 1. Check that received proper discovery start event
 1. Check that received proper last discovery event
-1. Check that discovery events were valid
+1. Check that received proper discovery termination event
 1. Check that all scan addresses are unique
 1. Check that all expected addresses were found
+1. Check that all expected networks were found
 
 Test passed.
 
@@ -565,20 +566,21 @@ Check results of a single scan scheduled in the recent past including enumeratio
 1. Wait until discovery family keys match
 1. Wait for no scans active
 1. Update config before scheduled scan active
-    * Add `discovery.families.vendor` = { "generation": `family generation`, "depth": `entries`, "scan_duration_sec": `10` }
+    * Add `discovery.families.vendor` = { "generation": `family generation`, "depth": `details`, "scan_duration_sec": `10` }
 1. Wait until scheduled scan active
 1. Check that scan started at time
 1. Wait until scheduled scan complete
 1. Check that scan completed at time
 1. Check that received expected number of discovery events
 1. Check that all events have matching refs
+1. Check that discovery events were valid
 1. Check that received all unique event numbers
-1. Check that received proper discovery termination event
 1. Check that received proper discovery start event
 1. Check that received proper last discovery event
-1. Check that discovery events were valid
+1. Check that received proper discovery termination event
 1. Check that all scan addresses are unique
 1. Check that all expected addresses were found
+1. Check that all expected networks were found
 
 Test passed.
 

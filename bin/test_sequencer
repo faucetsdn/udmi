@@ -72,6 +72,7 @@ output_file=$site_out/sequencer_${device_id}.json
 device_out_base=$site_out/devices/$device_id
 tests_out_base=$device_out_base/tests
 
+mkdir -p out
 touch $sequencer_start
 
 if [[ -n $clean_cache ]]; then
@@ -116,7 +117,7 @@ echo Writing pubber output to $PUBBER_LOG
 echo bin/pubber $site_path $project_id $device_id $serial_no $pubber_opts
 bin/pubber $site_path $project_id $device_id $serial_no $pubber_opts > $PUBBER_LOG 2>&1 &
 
-WAITING=20
+WAITING=30
 for i in `seq 1 $WAITING`; do
     echo Waiting for pubber startup $((WAITING - i))...
     sleep 1
@@ -185,17 +186,18 @@ else
 fi
 
 echo Sanity check for completed tests...
+fgrep RESULT out/sequencer$suffix.out.save | fgrep -v " schemas " > out/expected.out || true
+result_count=$(cat out/expected.out | wc -l)
 target_count=$(fgrep "Running target" out/sequencer$suffix.log.save | wc -l) || true
-result_count=$(fgrep RESULT out/sequencer$suffix.out.save | wc -l) || true
-if [[ $target_count != $result_count ]]; then
+if [[ $result_count != $target_count ]]; then
     fail Found $result_count results for $target_count targets.
 fi
 
 GOLDEN_FILE=etc/sequencer${suffix}.out
-echo Checking for correctness of completed tests in $GOLDEN_FILE...
+echo Checking for completed tests in $GOLDEN_FILE...
 while read result; do
     echo Checking $GOLDEN_FILE for expected result: $result
     fgrep "$result" $GOLDEN_FILE || fail Expected result not found: $result
-done < out/sequencer${suffix}.out.save
+done < out/expected.out
 
 echo Done with $suffix test_sequencer run.

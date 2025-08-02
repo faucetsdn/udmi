@@ -4,7 +4,7 @@
 Check enumeration of multiple categories
 
 1. Update config before enumeration not active
-    * Add `discovery.enumerations` = { "features": `entries`, "families": `entries`, "points": `entries` }
+    * Add `discovery.enumerations` = { "features": `details`, "families": `details`, "points": `details` }
 1. Wait for enumeration not active
 1. Update config before matching enumeration generation
     * Add `discovery.generation` = `generation start time`

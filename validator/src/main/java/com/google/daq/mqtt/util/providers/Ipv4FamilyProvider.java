@@ -1,16 +1,16 @@
 package com.google.daq.mqtt.util.providers;
 
 
-import static udmi.lib.ProtocolFamily.VENDOR;
+import static udmi.lib.ProtocolFamily.IPV_4;
 
 /**
  * No-validation family with no semantics, available for open use.
  */
-public class VendorFamilyProvider implements FamilyProvider {
+public class Ipv4FamilyProvider implements FamilyProvider {
 
   @Override
   public String familyKey() {
-    return VENDOR;
+    return IPV_4;
   }
 
   @Override
@@ -20,11 +20,6 @@ public class VendorFamilyProvider implements FamilyProvider {
 
   @Override
   public void validateAddr(String scanAddr) {
-    // Always passes, no restrictions!
-  }
-
-  @Override
-  public void validateNetwork(String network) {
     // Always passes, no restrictions!
   }
 }

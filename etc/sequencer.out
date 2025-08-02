@@ -1,3 +1,4 @@
+RESULT pass discovery.scan scan_network_single ALPHA 10/10 Sequence complete
 RESULT pass discovery.scan scan_periodic_now_enumerate PREVIEW 10/10 Sequence complete
 RESULT pass discovery.scan scan_single_future PREVIEW 10/10 Sequence complete
 RESULT pass discovery.scan scan_single_now PREVIEW 10/10 Sequence complete

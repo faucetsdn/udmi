@@ -6,6 +6,7 @@ import static java.lang.String.format;
 import static java.util.Objects.nonNull;
 import static java.util.Optional.ofNullable;
 import static java.util.stream.Collectors.toMap;
+import static udmi.lib.client.manager.DiscoveryManager.shouldEnumerate;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.udmi.util.SiteModel;
@@ -18,6 +19,8 @@ import udmi.lib.base.ManagerBase;
 import udmi.lib.client.manager.LocalnetManager;
 import udmi.lib.intf.ManagerHost;
 import udmi.schema.DiscoveryEvents;
+import udmi.schema.Enumerations.Depth;
+import udmi.schema.FamilyDiscoveryConfig;
 import udmi.schema.FamilyLocalnetState;
 import udmi.schema.Level;
 import udmi.schema.Metadata;
@@ -36,6 +39,7 @@ public class PubberProviderBase extends ManagerBase {
   private BiConsumer<String, DiscoveryEvents> publisher;
   private Map<String, Metadata> allDevices;
   private SiteModel siteModel;
+  private FamilyDiscoveryConfig config;
 
   /**
    * Create a new instance of a generic family provider.
@@ -46,14 +50,21 @@ public class PubberProviderBase extends ManagerBase {
     localnetHost = ((LocalnetManager) host);
   }
 
-  protected void startScan(boolean enumerate, BiConsumer<String, DiscoveryEvents> publisher) {
+  protected void startScan(FamilyDiscoveryConfig config,
+      BiConsumer<String, DiscoveryEvents> publisher) {
+    this.config = config;
     this.publisher = publisher;
-    this.enumerate = enumerate;
+    this.enumerate = config.addrs != null || shouldEnumerate(config.depth, Depth.DETAILS);
+
+    allDevices = siteModel.allMetadata().entrySet().stream()
+        .filter(this::isValidTargetDevice)
+        .collect(toMap(Entry::getKey, Entry::getValue));
   }
 
   private DiscoveryEvents augmentSend(String deviceId, boolean enumerate) {
     DiscoveryEvents event = new DiscoveryEvents();
     event.addr = getFamilyAddr(deviceId);
+    event.network = getFamilyNetwork(deviceId);
     try {
       event.refs = ifTrueGet(enumerate, () -> getDiscoveredRefs(getAllDevices().get(deviceId)));
     } catch (Exception e) {
@@ -97,10 +108,13 @@ public class PubberProviderBase extends ManagerBase {
   public void setSiteModel(SiteModel siteModel) {
     this.siteModel = siteModel;
     selfAddr = getFamilyAddr(deviceId);
-    allDevices = siteModel.allMetadata().entrySet().stream()
-        .filter(entry -> nonNull(getFamilyAddr(entry.getKey())))
-        .collect(toMap(Entry::getKey, Entry::getValue));
     addStateMapEntry();
+  }
+
+  private boolean isValidTargetDevice(Entry<String, Metadata> entry) {
+    String deviceId = entry.getKey();
+    return nonNull(getFamilyAddr(deviceId))
+        && (config.networks == null || config.networks.contains(getFamilyNetwork(deviceId)));
   }
 
   private void addStateMapEntry() {
@@ -111,9 +125,14 @@ public class PubberProviderBase extends ManagerBase {
 
   protected Consumer<String> getResultPublisher() {
     return deviceId -> {
-      debug(format("Sending %s result for %s@%s", family, deviceId, getFamilyAddr(deviceId)));
+      debug(format("Sending %s result for %s "
+          + "%s", family, deviceId, getFamilyAddr(deviceId)));
       publisher.accept(deviceId, augmentSend(deviceId, enumerate));
     };
+  }
+
+  private String getFamilyNetwork(String deviceId) {
+    return catchToNull(() -> siteModel.getMetadata(deviceId).localnet.families.get(family).network);
   }
 
   private String getFamilyAddr(String deviceId) {

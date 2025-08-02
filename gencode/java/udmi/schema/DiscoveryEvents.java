@@ -23,6 +23,7 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
     "status",
     "family",
     "addr",
+    "network",
     "event_no",
     "families",
     "registries",
@@ -73,6 +74,13 @@ public class DiscoveryEvents {
     @JsonProperty("addr")
     @JsonPropertyDescription("The primary address of the device (for indicated family)")
     public java.lang.String addr;
+    /**
+     * The family network designator of the discovered device
+     * 
+     */
+    @JsonProperty("network")
+    @JsonPropertyDescription("The family network designator of the discovered device")
+    public java.lang.String network;
     /**
      * The active or passive series number of this result (matches reported state values)
      * 
@@ -148,6 +156,7 @@ public class DiscoveryEvents {
         result = ((result* 31)+((this.registries == null)? 0 :this.registries.hashCode()));
         result = ((result* 31)+((this.families == null)? 0 :this.families.hashCode()));
         result = ((result* 31)+((this.version == null)? 0 :this.version.hashCode()));
+        result = ((result* 31)+((this.network == null)? 0 :this.network.hashCode()));
         result = ((result* 31)+((this.points == null)? 0 :this.points.hashCode()));
         result = ((result* 31)+((this.features == null)? 0 :this.features.hashCode()));
         result = ((result* 31)+((this.system == null)? 0 :this.system.hashCode()));
@@ -170,7 +179,7 @@ public class DiscoveryEvents {
             return false;
         }
         DiscoveryEvents rhs = ((DiscoveryEvents) other);
-        return ((((((((((((((((this.generation == rhs.generation)||((this.generation!= null)&&this.generation.equals(rhs.generation)))&&((this.devices == rhs.devices)||((this.devices!= null)&&this.devices.equals(rhs.devices))))&&((this.registries == rhs.registries)||((this.registries!= null)&&this.registries.equals(rhs.registries))))&&((this.families == rhs.families)||((this.families!= null)&&this.families.equals(rhs.families))))&&((this.version == rhs.version)||((this.version!= null)&&this.version.equals(rhs.version))))&&((this.points == rhs.points)||((this.points!= null)&&this.points.equals(rhs.points))))&&((this.features == rhs.features)||((this.features!= null)&&this.features.equals(rhs.features))))&&((this.system == rhs.system)||((this.system!= null)&&this.system.equals(rhs.system))))&&((this.event_no == rhs.event_no)||((this.event_no!= null)&&this.event_no.equals(rhs.event_no))))&&((this.refs == rhs.refs)||((this.refs!= null)&&this.refs.equals(rhs.refs))))&&((this.family == rhs.family)||((this.family!= null)&&this.family.equals(rhs.family))))&&((this.addr == rhs.addr)||((this.addr!= null)&&this.addr.equals(rhs.addr))))&&((this.cloud_model == rhs.cloud_model)||((this.cloud_model!= null)&&this.cloud_model.equals(rhs.cloud_model))))&&((this.timestamp == rhs.timestamp)||((this.timestamp!= null)&&this.timestamp.equals(rhs.timestamp))))&&((this.status == rhs.status)||((this.status!= null)&&this.status.equals(rhs.status))));
+        return (((((((((((((((((this.generation == rhs.generation)||((this.generation!= null)&&this.generation.equals(rhs.generation)))&&((this.devices == rhs.devices)||((this.devices!= null)&&this.devices.equals(rhs.devices))))&&((this.registries == rhs.registries)||((this.registries!= null)&&this.registries.equals(rhs.registries))))&&((this.families == rhs.families)||((this.families!= null)&&this.families.equals(rhs.families))))&&((this.version == rhs.version)||((this.version!= null)&&this.version.equals(rhs.version))))&&((this.network == rhs.network)||((this.network!= null)&&this.network.equals(rhs.network))))&&((this.points == rhs.points)||((this.points!= null)&&this.points.equals(rhs.points))))&&((this.features == rhs.features)||((this.features!= null)&&this.features.equals(rhs.features))))&&((this.system == rhs.system)||((this.system!= null)&&this.system.equals(rhs.system))))&&((this.event_no == rhs.event_no)||((this.event_no!= null)&&this.event_no.equals(rhs.event_no))))&&((this.refs == rhs.refs)||((this.refs!= null)&&this.refs.equals(rhs.refs))))&&((this.family == rhs.family)||((this.family!= null)&&this.family.equals(rhs.family))))&&((this.addr == rhs.addr)||((this.addr!= null)&&this.addr.equals(rhs.addr))))&&((this.cloud_model == rhs.cloud_model)||((this.cloud_model!= null)&&this.cloud_model.equals(rhs.cloud_model))))&&((this.timestamp == rhs.timestamp)||((this.timestamp!= null)&&this.timestamp.equals(rhs.timestamp))))&&((this.status == rhs.status)||((this.status!= null)&&this.status.equals(rhs.status))));
     }
 
 }

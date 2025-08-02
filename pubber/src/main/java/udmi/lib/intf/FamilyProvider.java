@@ -3,6 +3,7 @@ package udmi.lib.intf;
 import java.util.Map;
 import java.util.function.BiConsumer;
 import udmi.schema.DiscoveryEvents;
+import udmi.schema.FamilyDiscoveryConfig;
 import udmi.schema.RefDiscovery;
 
 /**
@@ -10,7 +11,8 @@ import udmi.schema.RefDiscovery;
  */
 public interface FamilyProvider {
 
-  default void startScan(boolean enumerate, BiConsumer<String, DiscoveryEvents> publish) {
+  default void startScan(FamilyDiscoveryConfig discoveryConfig,
+      BiConsumer<String, DiscoveryEvents> publish) {
     throw new RuntimeException("Not yet implemented");
   }
 
