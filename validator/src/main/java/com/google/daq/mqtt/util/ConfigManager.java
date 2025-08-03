@@ -182,7 +182,16 @@ public class ConfigManager {
 
   private String getLocalnetAddr(String rawFamily) {
     String family = ofNullable(rawFamily).orElse(DEFAULT_FAMILY);
-    return catchToNull(() -> metadata.localnet.families.get(family).addr);
+    String addr = catchToNull(() -> metadata.localnet.families.get(family).addr);
+    ifNotNullThen(addr, a -> NAMED_FAMILIES.get(family).validateAddr(a));
+    return addr;
+  }
+
+  private String getLocalnetNetwork(String rawFamily) {
+    String family = ofNullable(rawFamily).orElse(DEFAULT_FAMILY);
+    String addr = catchToNull(() -> metadata.localnet.families.get(family).network);
+    ifNotNullThen(addr, a -> NAMED_FAMILIES.get(family).validateNetwork(addr));
+    return addr;
   }
 
   private PointsetConfig getDevicePointsetConfig() {
@@ -258,6 +267,15 @@ public class ConfigManager {
     if (metadata.localnet == null) {
       return null;
     }
+
+    // Just get the addr and networks to validate that they're defined properly.
+    metadata.localnet.families.keySet().forEach(family -> {
+      checkState(NAMED_FAMILIES.containsKey(family),
+          "Protocol validation not supported for " + family);
+      getLocalnetAddr(family);
+      getLocalnetNetwork(family);
+    });
+
     LocalnetConfig localnetConfig = new LocalnetConfig();
     localnetConfig.families = new HashMap<>();
     metadata.localnet.families.keySet()

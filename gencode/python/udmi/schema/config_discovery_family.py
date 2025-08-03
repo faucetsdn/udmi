@@ -9,6 +9,7 @@ class FamilyDiscoveryConfig:
     self.scan_interval_sec = None
     self.scan_duration_sec = None
     self.addrs = None
+    self.networks = None
     self.passive_sec = None
     self.depth = None
 
@@ -21,6 +22,7 @@ class FamilyDiscoveryConfig:
     result.scan_interval_sec = source.get('scan_interval_sec')
     result.scan_duration_sec = source.get('scan_duration_sec')
     result.addrs = source.get('addrs')
+    result.networks = source.get('networks')
     result.passive_sec = source.get('passive_sec')
     result.depth = source.get('depth')
     return result
@@ -51,6 +53,8 @@ class FamilyDiscoveryConfig:
       result['scan_duration_sec'] = self.scan_duration_sec # 5
     if self.addrs:
       result['addrs'] = self.addrs # 1
+    if self.networks:
+      result['networks'] = self.networks # 1
     if self.passive_sec:
       result['passive_sec'] = self.passive_sec # 5
     if self.depth:

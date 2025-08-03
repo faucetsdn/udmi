@@ -17,6 +17,7 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
     "addr",
+    "network",
     "adjunct",
     "shadow_id",
     "parent_id",
@@ -31,6 +32,13 @@ public class FamilyLocalnetModel {
     @JsonProperty("addr")
     @JsonPropertyDescription("The address of a device on the fieldbus/local network")
     public java.lang.String addr;
+    /**
+     * The network designator for this device in the family-defined format
+     * 
+     */
+    @JsonProperty("network")
+    @JsonPropertyDescription("The network designator for this device in the family-defined format")
+    public java.lang.String network;
     @JsonProperty("adjunct")
     public Map<String, String> adjunct;
     /**
@@ -41,13 +49,18 @@ public class FamilyLocalnetModel {
     @JsonPropertyDescription("Specifies that this is a shadow of the indicated device")
     public java.lang.String shadow_id;
     /**
-     * The device id of the network parent
+     * The device id of the node's parent
      * 
      */
     @JsonProperty("parent_id")
-    @JsonPropertyDescription("The device id of the network parent")
+    @JsonPropertyDescription("The device id of the node's parent")
     public java.lang.String parent_id;
+    /**
+     * The family designator, used only when the entry is not keyed in a family map
+     * 
+     */
     @JsonProperty("family")
+    @JsonPropertyDescription("The family designator, used only when the entry is not keyed in a family map")
     public java.lang.String family;
 
     @Override
@@ -58,6 +71,7 @@ public class FamilyLocalnetModel {
         result = ((result* 31)+((this.family == null)? 0 :this.family.hashCode()));
         result = ((result* 31)+((this.shadow_id == null)? 0 :this.shadow_id.hashCode()));
         result = ((result* 31)+((this.parent_id == null)? 0 :this.parent_id.hashCode()));
+        result = ((result* 31)+((this.network == null)? 0 :this.network.hashCode()));
         return result;
     }
 
@@ -70,7 +84,7 @@ public class FamilyLocalnetModel {
             return false;
         }
         FamilyLocalnetModel rhs = ((FamilyLocalnetModel) other);
-        return ((((((this.addr == rhs.addr)||((this.addr!= null)&&this.addr.equals(rhs.addr)))&&((this.adjunct == rhs.adjunct)||((this.adjunct!= null)&&this.adjunct.equals(rhs.adjunct))))&&((this.family == rhs.family)||((this.family!= null)&&this.family.equals(rhs.family))))&&((this.shadow_id == rhs.shadow_id)||((this.shadow_id!= null)&&this.shadow_id.equals(rhs.shadow_id))))&&((this.parent_id == rhs.parent_id)||((this.parent_id!= null)&&this.parent_id.equals(rhs.parent_id))));
+        return (((((((this.addr == rhs.addr)||((this.addr!= null)&&this.addr.equals(rhs.addr)))&&((this.adjunct == rhs.adjunct)||((this.adjunct!= null)&&this.adjunct.equals(rhs.adjunct))))&&((this.family == rhs.family)||((this.family!= null)&&this.family.equals(rhs.family))))&&((this.shadow_id == rhs.shadow_id)||((this.shadow_id!= null)&&this.shadow_id.equals(rhs.shadow_id))))&&((this.parent_id == rhs.parent_id)||((this.parent_id!= null)&&this.parent_id.equals(rhs.parent_id))))&&((this.network == rhs.network)||((this.network!= null)&&this.network.equals(rhs.network))));
     }
 
 }

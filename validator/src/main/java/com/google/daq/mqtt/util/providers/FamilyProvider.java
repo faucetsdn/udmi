@@ -16,6 +16,8 @@ public interface FamilyProvider {
   Set<Class<? extends FamilyProvider>> PROTOCOL_FAMILIES = ImmutableSet.of(
       IotFamilyProvider.class,
       VendorFamilyProvider.class,
+      EtherFamilyProvider.class,
+      Ipv4FamilyProvider.class,
       BacnetFamilyProvider.class);
 
   /**
@@ -52,4 +54,8 @@ public interface FamilyProvider {
   void validateRef(String metadataRef);
 
   void validateAddr(String scanAddr);
+
+  default void validateNetwork(String network) {
+    throw new IllegalArgumentException("Network designator not allowed for family " + familyKey());
+  }
 }

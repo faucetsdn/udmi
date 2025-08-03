@@ -28,6 +28,13 @@
         "type": "string"
       }
     },
+    "networks": {
+      "descritpion": "List of networks for discovery scans",
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
     "passive_sec": {
       "description": "Holdoff time for passively discovered devices",
       "type": "integer",

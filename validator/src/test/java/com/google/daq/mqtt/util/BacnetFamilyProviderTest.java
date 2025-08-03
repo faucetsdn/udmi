@@ -17,9 +17,12 @@ import org.junit.Test;
  */
 public class BacnetFamilyProviderTest {
 
-  public static final Set<String> GOOD_ADDRS = ImmutableSet.of("0", "10", "23", "4194302");
+  public static final Set<String> GOOD_ADDRS = ImmutableSet.of("1", "10", "23", "4194302");
   public static final Set<String> BAD_ADDRS = ImmutableSet.of(
-      "", "x", "snoop", "01293", "0x9122", "B87AC9", "87a8c");
+      "", "0", "x", "snoop", "01293", "0x9122", "B87AC9", "87a8c", "4194305");
+
+  public static final Set<String> GOOD_NETWORKS = ImmutableSet.of("1", "65534", "3242");
+  public static final Set<String> BAD_NETWORKS = ImmutableSet.of("0", "snoop", "655351", "65535");
 
   public static final Set<String> GOOD_REFERENCES = ImmutableSet.of(
       "bacnet://291842/AI:2#present_value",
@@ -53,6 +56,10 @@ public class BacnetFamilyProviderTest {
     return catchToMessage(() -> provider.validateAddr(addr));
   }
 
+  private String validateNetwork(String network) {
+    return catchToMessage(() -> provider.validateNetwork(network));
+  }
+
   @Test
   public void bacnet_ref_validation() {
     List<String> goodErrors = GOOD_REFERENCES.stream().map(this::validateRef)
@@ -71,5 +78,15 @@ public class BacnetFamilyProviderTest {
     List<String> badErrors = BAD_ADDRS.stream().map(this::validateAddr)
         .filter(GeneralUtils::isNotEmpty).toList();
     assertEquals("Not enough validation errors", BAD_ADDRS.size(), badErrors.size());
+  }
+
+  @Test
+  public void bacnet_network_validation() {
+    List<String> goodErrors = GOOD_NETWORKS.stream().map(this::validateNetwork)
+        .filter(GeneralUtils::isNotEmpty).toList();
+    assertTrue("Unexpected ref errors: " + CSV_JOINER.join(goodErrors), goodErrors.isEmpty());
+    List<String> badErrors = BAD_NETWORKS.stream().map(this::validateNetwork)
+        .filter(GeneralUtils::isNotEmpty).toList();
+    assertEquals("Not enough validation errors", BAD_NETWORKS.size(), badErrors.size());
   }
 }

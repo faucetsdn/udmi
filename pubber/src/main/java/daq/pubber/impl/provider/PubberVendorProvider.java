@@ -6,6 +6,7 @@ import static udmi.lib.ProtocolFamily.VENDOR;
 import java.util.function.BiConsumer;
 import udmi.lib.intf.ManagerHost;
 import udmi.schema.DiscoveryEvents;
+import udmi.schema.FamilyDiscoveryConfig;
 
 /**
  * Basic provider for the Vendor protocol family.
@@ -21,8 +22,9 @@ public class PubberVendorProvider extends PubberProviderBase implements PubberFa
   }
 
   @Override
-  public void startScan(boolean enumerate, BiConsumer<String, DiscoveryEvents> publisher) {
-    super.startScan(enumerate, publisher);
+  public void startScan(FamilyDiscoveryConfig discoveryConfig,
+      BiConsumer<String, DiscoveryEvents> publisher) {
+    super.startScan(discoveryConfig, publisher);
     getAllDevices().keySet().forEach(getResultPublisher());
   }
 
