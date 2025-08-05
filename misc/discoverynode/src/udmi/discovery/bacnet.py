@@ -13,6 +13,7 @@ from udmi.schema.discovery_event import DiscoveryPoint
 import udmi.schema.state
 import ipaddress
 import enum
+import copy
 
 BAC0.log_level("silence")
 for name in logging.getLogger().manager.loggerDict:
@@ -86,7 +87,7 @@ class GlobalBacnetDiscovery(discovery.DiscoveryController):
 
     if not self.config.addrs:
       self.bacnet.discover(global_broadcast=True)
-      device_list_function = self.devices_from_bacnet_discoery
+      device_list_function = self.bacnet_discovery_producer
     else:
       # addrs could in thory be a device IP + address
       # for now, it's assumed to be an IP address which will be sent
@@ -100,32 +101,33 @@ class GlobalBacnetDiscovery(discovery.DiscoveryController):
             RuntimeError("only IP addresses currently supported for targetted bacnet scan")
           )
         # TODO: does addrs need to be copied? check how self.config is mutated.
-        self.bacnet_scan_executor_thread = threading.Thread(
-            target=self.serial_bacnet_scan_executor, args=[self.config.addrs], daemon=True
-        )
-        self.bacnet_scan_executor_thread.start()
-        device_list_function = self.devices_from_targetted_scan
+      self.bacnet_scan_executor_thread = threading.Thread(
+          target=self.serial_bacnet_scan_executor, args=[copy.copy(self.config.addrs)], daemon=True
+      )
+      self.bacnet_scan_executor_thread.start()
+      device_list_function = self.targetted_scan_producer
 
     self.result_producer_thread = threading.Thread(
-        target=self.result_producer, args=[device_list_function], daemon=True
+        target=self.devices_consumer, args=[device_list_function], daemon=True
     )
     self.result_producer_thread.start()
 
       # start a serial thread
-  def serial_bacnet_scan_executor(self, target_addrs: list[str], wait: float = 0.3) -> None:
+  def serial_bacnet_scan_executor(self, target_addrs: list[str], wait_ms: int = 300) -> None:
     """Sends a Who/Is request to a given list of IP addresses.
 
     Args:
       target_addrs: list of IP addresses
       wait: seconds to wait between requests
     """
+    logging.info("thread %s", threading.get_ident())
     for addr in target_addrs:
+      time.sleep(wait_ms * 0.001)
       if self.cancelled:
         return
       result = self.bacnet.whois(addr)
       if result:
         self.targetted_devices_found.add(tuple(*result))
-      time.sleep(wait)
 
 
   def stop_discovery(self):
@@ -168,8 +170,8 @@ class GlobalBacnetDiscovery(discovery.DiscoveryController):
          application_version) = (
             self.bacnet.readMultiple(
                 f"{device_address} device {device_id}"
-                 " objectName"
-                 " vendorName"
+                " objectName"
+                " vendorName"
                 " firmwareRevision"
                 " modelName"
                 " serialNumber" 
@@ -220,12 +222,12 @@ class GlobalBacnetDiscovery(discovery.DiscoveryController):
     
     return event
   
-  def devices_from_targetted_scan(self) -> set[tuple[str, str]]:
-    print("target")
+  def targetted_scan_producer(self) -> set[tuple[str, str]]:
+    """Returns the list of discovered devices from a targetted bacnet scan."""
     return self.targetted_devices_found
   
-  def devices_from_bacnet_discoery(self) -> set[tuple[str, str]]:
-    print("global")
+  def bacnet_discovery_producer(self) -> set[tuple[str, str]]:
+    """Returns the list of discovered devices from a global bacnet scan."""
     if self.bacnet.discoveredDevices is not None:
       return (
           set(self.bacnet.discoveredDevices.keys()) - self.devices_published
@@ -235,7 +237,7 @@ class GlobalBacnetDiscovery(discovery.DiscoveryController):
 
   @discovery.main_task
   @discovery.catch_exceptions_to_state
-  def result_producer(self, devices_source = Callable):
+  def devices_consumer(self, producer = Callable[[], set[tuple[str, str]]]) -> None:
     # used to determine when a scan is complete
     # in reality to a who/is scan devices will respond very quickly (seconds)
     unchanged_device_count_seconds:int = 0
@@ -246,7 +248,7 @@ class GlobalBacnetDiscovery(discovery.DiscoveryController):
     while not self.cancelled:
       try:
         new_devices = (
-            devices_source() - self.devices_published
+            producer() - self.devices_published
         )
         
         if not new_devices:
