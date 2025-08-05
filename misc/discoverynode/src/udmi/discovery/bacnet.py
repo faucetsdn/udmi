@@ -49,28 +49,91 @@ class GlobalBacnetDiscovery(discovery.DiscoveryController):
       *,
       bacnet_ip: str = None,
       bacnet_port: int = None,
-      bacnet_intf: str = None,
   ):
     self.devices_published = set()
+    self.targetted_devices_found = set()
     self.cancelled = None
     self.result_producer_thread = None
+    self.bacnet_scan_executor_thread = None
    
     self.bacnet = BAC0.lite(ip=bacnet_ip, port=bacnet_port)
     
     super().__init__(state, publisher)
 
+  def validate_ip_set(ip_addresses: list[str]) -> bool:
+    """
+    Validates that all items in a set are valid IP addresses with optional CIDR.
+
+    Args:
+      ip_strings: A list of strings to validate.
+
+    Returns:
+      True if all strings are valid IP addresses, False otherwise.
+    """
+    for maybe_ip in ip_addresses:
+      try:
+        ipaddress.ip_interface(maybe_ip)
+      except ValueError:
+        return False
+    return True
+  
+
   def start_discovery(self):
     self.devices_published.clear()
+    self.targetted_devices_found.clear()
+
     self.cancelled = False
+
+    if not self.config.addrs:
+      self.bacnet.discover(global_broadcast=True)
+      device_list_function = self.devices_from_bacnet_discoery
+    else:
+      # addrs could in thory be a device IP + address
+      # for now, it's assumed to be an IP address which will be sent
+      # a who/is packet. In the event of the former, it should preopulate
+      # a structure similar to self.bacnet.discoveredDevices dict.
+      for addr in self.config.addrs:
+        try:
+          ipaddress.ip_interface(addr)
+        except ValueError:
+          raise(
+            RuntimeError("only IP addresses currently supported for targetted bacnet scan")
+          )
+        # TODO: does addrs need to be copied? check how self.config is mutated.
+        self.bacnet_scan_executor_thread = threading.Thread(
+            target=self.serial_bacnet_scan_executor, args=[self.config.addrs], daemon=True
+        )
+        self.bacnet_scan_executor_thread.start()
+        device_list_function = self.devices_from_targetted_scan
+
     self.result_producer_thread = threading.Thread(
-        target=self.result_producer, args=[], daemon=True
+        target=self.result_producer, args=[device_list_function], daemon=True
     )
     self.result_producer_thread.start()
-    self.bacnet.discover(global_broadcast=True)
+
+      # start a serial thread
+  def serial_bacnet_scan_executor(self, target_addrs: list[str], wait: float = 0.3) -> None:
+    """Sends a Who/Is request to a given list of IP addresses.
+
+    Args:
+      target_addrs: list of IP addresses
+      wait: seconds to wait between requests
+    """
+    for addr in target_addrs:
+      if self.cancelled:
+        return
+      result = self.bacnet.whois(addr)
+      if result:
+        self.targetted_devices_found.add(tuple(*result))
+      time.sleep(wait)
+
 
   def stop_discovery(self):
     self.cancelled = True
+    if self.bacnet_scan_executor_thread:
+      self.bacnet_scan_executor_thread.join()
     self.result_producer_thread.join()
+
 
   def discover_device(self, device_address, device_id) -> DiscoveryEvent:
   
@@ -157,34 +220,59 @@ class GlobalBacnetDiscovery(discovery.DiscoveryController):
     
     return event
   
+  def devices_from_targetted_scan(self) -> set[tuple[str, str]]:
+    print("target")
+    return self.targetted_devices_found
+  
+  def devices_from_bacnet_discoery(self) -> set[tuple[str, str]]:
+    print("global")
+    if self.bacnet.discoveredDevices is not None:
+      return (
+          set(self.bacnet.discoveredDevices.keys()) - self.devices_published
+      )
+    return set()
+
+
   @discovery.main_task
   @discovery.catch_exceptions_to_state
-  def result_producer(self):
+  def result_producer(self, devices_source = Callable):
+    # used to determine when a scan is complete
+    # in reality to a who/is scan devices will respond very quickly (seconds)
+    unchanged_device_count_seconds:int = 0
+
+    # when to determine done
+    UNCHANGED_COUNT_THRESHOLD:int = 300
+
     while not self.cancelled:
       try:
-        # discoveredDevices is "None" before initialised
-        if self.bacnet.discoveredDevices is not None:
-          new_devices = (
-              set(self.bacnet.discoveredDevices.keys()) - self.devices_published
-          )
-          for device in new_devices:
-            # Check that it is not cancelled in the inner loop too because this
-            # can take a long time to enumerate through all found devices.
-            if self.cancelled:
-              break
-            
-            address, id = device
-            start = time.monotonic()
-            event = self.discover_device(address, id)
-            end = time.monotonic() 
-            logging.info(f"discovery for {device} in {end - start} seconds")
+        new_devices = (
+            devices_source() - self.devices_published
+        )
+        
+        if not new_devices:
+          unchanged_device_count_seconds += 1
+          continue
+        unchanged_device_count_seconds = 0
 
-            self.publish(event)
-            self.devices_published.add(device)
-
+        for device in new_devices:
+          # Check that it is not cancelled in the inner loop too because this
+          # can take a long time to enumerate through all found devices.
           if self.cancelled:
-            return
+            break
+          
+          address, id = device
+          start = time.monotonic()
+          event = self.discover_device(address, id)
+          end = time.monotonic() 
+          logging.info(f"discovery for {device} in {end - start} seconds")
+
+          self.publish(event)
+          self.devices_published.add(device)
       except AttributeError as err:
         logging.exception(err)
       finally:
+        if self.cancelled:
+          return
+        if unchanged_device_count_seconds > UNCHANGED_COUNT_THRESHOLD:
+          return
         time.sleep(1)
