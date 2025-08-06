@@ -113,7 +113,7 @@ class GlobalBacnetDiscovery(discovery.DiscoveryController):
     self.result_producer_thread.start()
 
       # start a serial thread
-  def serial_bacnet_scan_executor(self, target_addrs: list[str], wait_ms: int = 300) -> None:
+  def serial_bacnet_scan_executor(self, target_addrs: list[str], wait_ms: int = 11) -> None:
     """Sends a Who/Is request to a given list of IP addresses.
 
     Args:

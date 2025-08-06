@@ -8,6 +8,8 @@ RUN apt-get update && \
 FROM build AS build-venv
 COPY requirements.txt /requirements.txt
 RUN /venv/bin/pip install --disable-pip-version-check -r /requirements.txt
+RUN sed -i 's#for each in range(100):#for each in range(13):#' /venv/lib/python3.11/site-packages/BAC0/core/functions/Discover.py
+RUN sed -i 's#time.sleep(1 / 1000)#time.sleep(1 / 10)#' /venv/lib/python3.11/site-packages/BAC0/core/functions/Discover.py
 
 FROM debian:12-slim
 RUN apt-get update && \
