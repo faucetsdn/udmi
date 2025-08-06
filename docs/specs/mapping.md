@@ -48,11 +48,6 @@ sequenceDiagram
 * **[Discovery Complete Event](../../validator/sequences/scan_single_future/events_discovery.json)** having `event_no` as negative value, with related [attributes](../../validator/sequences/scan_single_now/events_discovery.attr) 
 
 
-Mapping Service, having the subscription for the `udmi_target` topic, on Consuming the Discovery Complete event, starts the mapping process.
-If the discovery event received doesn't maps to existing devices in the source repo, new device with the convention "UNK-X", where X is in an increasing number starting from 1 and UNK, stands for "Unknown".
-If there is an existing device, device gets updated with the new pointset event details getting appended to the existing device.
-All these changes are then pushed to the discovery branch, from where the modeling phase starts.
-
 The Mapping Service subscribes to the udmi_target topic. When it receives a Discovery Complete event, it initiates the mapping process.
 
 ### Key Workflow Steps
