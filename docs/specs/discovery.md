@@ -40,7 +40,7 @@ sequenceDiagram
   participant Provisioning Engine
   participant Mapping Agent
   participant Pipeline
-  Note over Devices, c: Discovery Start
+  Note over Devices, Provisioning Engine: Discovery Start
   activate Provisioning Engine
   Mapping Agent->>Registry: DISCOVERY CONFIG<br/>for Spotter<br/>()
   Registry->>Spotter: DISCOVERY CONFIG
