@@ -2699,7 +2699,7 @@ public class SequenceBase {
   }
 
   protected String getFacetValue(SubFolder facetKey) {
-    requireNonNull(activeFacet, "no sequencer facet active for requested " + facetKey);
+    checkNotNull(activeFacet, "no sequencer facet active for requested " + facetKey);
     checkState(facetKey == activeFacet.getKey(), format(
         "Requested facet %s does not match active facet %s", facetKey, activeFacet.getKey()));
     return activeFacet.getValue();

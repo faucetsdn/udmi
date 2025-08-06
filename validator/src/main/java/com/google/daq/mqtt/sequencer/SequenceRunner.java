@@ -2,6 +2,7 @@ package com.google.daq.mqtt.sequencer;
 
 import static com.google.common.base.Preconditions.checkState;
 import static com.google.daq.mqtt.sequencer.SequenceBase.getSequencerStateFile;
+import static com.google.daq.mqtt.sequencer.SequenceBase.siteModel;
 import static com.google.udmi.util.GeneralUtils.CSV_JOINER;
 import static com.google.udmi.util.GeneralUtils.friendlyStackTrace;
 import static com.google.udmi.util.GeneralUtils.ifNotNullGet;
@@ -11,8 +12,10 @@ import static java.util.Optional.ofNullable;
 import static udmi.schema.FeatureDiscovery.FeatureStage.ALPHA;
 import static udmi.schema.FeatureDiscovery.FeatureStage.BETA;
 
+import com.fasterxml.jackson.databind.deser.BeanDeserializerBase;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.daq.mqtt.WebServerRunner;
 import com.google.daq.mqtt.sequencer.sequences.ConfigSequences;
 import com.google.daq.mqtt.util.ConfigUtil;
@@ -65,7 +68,8 @@ public class SequenceRunner {
   private static final List<String> failures = new ArrayList<>();
   private static final Map<String, SequenceResult> allTestResults = new TreeMap<>();
   private static final List<String> SHARD_LIST = new ArrayList<>();
-  private static final String NO_FACETS_MARKER = "no_facets_for_target";
+  private static final Map<SubFolder, FacetResolver> FACET_RESOLVERS = ImmutableMap.of(
+      SubFolder.DISCOVERY, new DiscoveryFacetResolver());
   private final Set<String> sequenceClasses = new TreeSet<>(
       Common.allClassesInPackage(ConfigSequences.class));
   private List<String> targets = List.of();
@@ -336,8 +340,7 @@ public class SequenceRunner {
       listOfNull.add(null);
       return listOfNull;
     }
-    // TODO: Make this calculate the list of target facets!h
-    return ImmutableList.of("bacnet");
+    return FACET_RESOLVERS.get(facetKind).resolve(siteModel);
   }
 
   private static SubFolder getTargetFacetKind(Entry<Class<?>, String> target) {
