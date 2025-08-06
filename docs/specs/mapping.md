@@ -16,7 +16,7 @@ scopes of device data:
 The overall mapping sequence involves multiple components that work together to provide the overall flow:
 * **Devices**: The target things that need to be discovered, configured, and ultimately communicate point data.
 * **Provisioning Engine**: Cloud-based agent/Provisioning Engine responsible for managing the overall _discovery_ and _mapping_ process (how often, what color, etc...).
-* **Registry**: Digital Twin of the on-prem devices on the cloud for the particular site, which have the current state of the actual site.
+* **UDMIS**: UDMIS (Universal Device Management Interface Services) is a cloud infrastructure which in required for other application and tooling e.g. Registrar, Validator, etc.
 * **Mapping Service**: Mapping service that uses heuristics, ML, or a UI to convert discovery information into a concrete device/pipeline mapping.
 * **Source Repo**: Ultimate source of truth for the particular site, having all the devices and Gateways part of the site in the Cloud Source Repository.
 * **Modeling Phase**: Managing and maintaining the site model data, manually or by automated change-detection process.
@@ -27,15 +27,15 @@ sequenceDiagram
   %%{wrap}%%
   participant Devices as Devices<br/>(w/ Spotter)
   participant Provisioning Engine
-  participant Registry as Registry<br/>(w/ Internal DB)
+  participant UDMIS
   participant Mapping Service
   participant Source Repo 
   participant Modeling Phase
-  Devices->>Provisioning Engine: Incemental Results<br/>(Discovery Events)
-  Provisioning Engine->>Registry: Incremental Results
+  Devices->>Provisioning Engine: Incremental Results<br/>(Discovery Events)
+  Provisioning Engine->>UDMIS: Incremental Results
   Devices->>Mapping Service: Discovery Complete Event
   Source Repo->>Mapping Service: Base Model Import
-  Registry->>Mapping Service: All Results
+  UDMIS->>Mapping Service: All Results
   Note over Mapping Service: Map Results
   Mapping Service->>Source Repo: 'discovery' branch
   Source Repo-->>Modeling Phase: Notify branch updated
