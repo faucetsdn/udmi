@@ -348,7 +348,7 @@ public class SequenceRunner {
   private static SubFolder getTargetFacetKind(Entry<Class<?>, String> target) {
     try {
       Method method = target.getKey().getMethod(target.getValue());
-      SubFolder facets = method.getAnnotation(Feature.class).facet();
+      SubFolder facets = method.getAnnotation(Feature.class).facets();
       return facets == SubFolder.INVALID ? null : facets;
     } catch (Exception e) {
       throw new RuntimeException("Could not find target method " + target, e);
