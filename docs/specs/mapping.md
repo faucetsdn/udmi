@@ -48,10 +48,19 @@ sequenceDiagram
 * **[Discovery Complete Event](../../validator/sequences/scan_single_future/events_discovery.json)** having `event_no` as negative value, with related [attributes](../../validator/sequences/scan_single_now/events_discovery.attr) 
 
 
-Maping Service, having the subscription for the `udmi_target` topic, on Consuming the Discovery Complete event, starts the mapping process.
-If the discovery event received doesn't maps to existing devices in the source repo, new device witht the convention "UNK-X", where X is in an increasing number starting from 1 and UNK, stands for "Unknown".
+Mapping Service, having the subscription for the `udmi_target` topic, on Consuming the Discovery Complete event, starts the mapping process.
+If the discovery event received doesn't maps to existing devices in the source repo, new device with the convention "UNK-X", where X is in an increasing number starting from 1 and UNK, stands for "Unknown".
 If there is an existing device, device gets updated with the new pointset event details getting appended to the existing device.
-All thse changes are then pushed to the discovery branch, from where the modelling phase starts.
+All these changes are then pushed to the discovery branch, from where the modeling phase starts.
+
+The Mapping Service subscribes to the udmi_target topic. When it receives a Discovery Complete event, it initiates the mapping process.
+
+### Key Workflow Steps
+* Device Mapping: The service first checks if the received discovery data corresponds to an existing device in the source repository.
+* Handling New Devices: If no matching device is found based on the family (bacnet/vendor, etc.) and address combination, a new device is created. The new device is named using the convention UNK-X, where UNK stands for "Unknown" and X is an increasing number starting from 1.
+* Updating Existing Devices: If a match is found, the service updates the existing device. New details from the Pointset Complete event are appended to the device's existing data.
+* Pushing Changes: All these updates and new device creations are then pushed to the discovery branch, which triggers the subsequent modeling phase.
+
 ## Example Test Setup
 
 A standalone test-setup can be used to emulate all the requisite parts of the system.

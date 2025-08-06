@@ -171,6 +171,7 @@ UI
 unconfigured
 underspecified
 uniqs
+UNK
 unprocessable
 unwriteable
 uplink
