@@ -1,24 +1,10 @@
 {
-  "generation" : "2024-12-11T05:44:46Z",
-  "refs" : {
-    "BV11.present_value" : {
-      "point" : "filter_alarm_pressure_status",
-      "possible_values" : [ ],
-      "units" : "No-units"
-    },
-    "AV12.present_value" : {
-      "point" : "filter_differential_pressure_sensor",
-      "possible_values" : [ ],
-      "units" : "Degrees-Celsius"
-    }
-  },
-  "scan_addr" : "28179023",
-  "scan_family" : "vendor",
+  "event_no" : -5,
+  "family" : "vendor",
+  "generation" : "TIMESTAMP",
   "system" : {
-    "ancillary" : {
-      "device-name" : "AHU-1"
-    }
+    "ancillary" : { }
   },
-  "timestamp" : "2024-12-11T05:44:46Z",
-  "version" : "1.5.2"
+  "timestamp" : "TIMESTAMP",
+  "version" : "1.5.3"
 }

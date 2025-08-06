@@ -22,4 +22,9 @@ public class VendorFamilyProvider implements FamilyProvider {
   public void validateAddr(String scanAddr) {
     // Always passes, no restrictions!
   }
+
+  @Override
+  public void validateNetwork(String network) {
+    // Always passes, no restrictions!
+  }
 }

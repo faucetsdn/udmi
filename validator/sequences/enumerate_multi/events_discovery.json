@@ -1,36 +1,40 @@
 {
   "families" : {
     "ether" : {
-      "addr" : "60:45:bd:04:84:e2"
+      "addr" : "7c:1e:52:f8:06:ec"
     },
     "ipv4" : {
-      "addr" : "10.1.0.119"
-    },
-    "ipv6" : {
-      "addr" : "fe80::6245:bdff:fe04:84e2"
+      "addr" : "10.1.0.46"
     },
     "vendor" : {
       "addr" : "28179023"
+    },
+    "bacnet" : {
+      "addr" : "27312"
     }
   },
+  "family" : "iot",
   "features" : {
-    "endpoint.config" : {
-      "stage" : "beta"
-    },
     "enumeration.families" : {
       "stage" : "preview"
     },
-    "enumeration.features" : {
+    "endpoint.config" : {
       "stage" : "beta"
     },
     "system" : {
       "stage" : "beta"
     },
-    "enumeration.pointset" : {
-      "stage" : "preview"
+    "enumeration.features" : {
+      "stage" : "beta"
+    },
+    "system.mode" : {
+      "stage" : "beta"
     },
     "pointset" : {
       "stage" : "beta"
+    },
+    "enumeration.pointset" : {
+      "stage" : "preview"
     },
     "enumeration" : {
       "stage" : "stable"
@@ -39,28 +43,24 @@
       "stage" : "preview"
     }
   },
-  "generation" : "2024-12-11T05:44:57Z",
+  "generation" : "TIMESTAMP",
   "points" : {
     "filter_alarm_pressure_status" : {
       "units" : "No-units",
-      "ref" : "BV11.present_value",
-      "tags" : [ ]
+      "ref" : "BV11.present_value"
     },
     "filter_differential_pressure_setpoint" : {
       "units" : "Bars",
       "writable" : true,
-      "baseline_value" : 98,
-      "tags" : [ ]
+      "baseline_value" : 98
     },
     "filter_differential_pressure_sensor" : {
       "units" : "Degrees-Celsius",
       "baseline_value" : 10,
       "baseline_tolerance" : 2.0,
-      "ref" : "AV12.present_value",
-      "tags" : [ ]
+      "ref" : "AV12.present_value"
     }
   },
-  "scan_family" : "iot",
-  "timestamp" : "2024-12-11T05:44:58Z",
-  "version" : "1.5.2"
+  "timestamp" : "TIMESTAMP",
+  "version" : "1.5.3"
 }

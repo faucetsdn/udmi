@@ -1,27 +1,47 @@
 {
-  "event_no" : 11,
-  "last_config" : "2024-12-11T05:44:08Z",
+  "event_no" : 21,
+  "last_config" : "TIMESTAMP",
   "logentries" : [ {
-    "message" : "State update defer -5996ms",
+    "message" : "Discovered vendor stopping TIMESTAMP)",
     "category" : "device.log",
-    "timestamp" : "2024-12-11T05:44:36Z",
+    "timestamp" : "TIMESTAMP",
+    "level" : 200
+  }, {
+    "message" : "Discovered vendor active -5 for TIMESTAMP",
+    "category" : "device.log",
+    "timestamp" : "TIMESTAMP",
+    "level" : 200
+  }, {
+    "message" : "Discovery scan generation vendor pending at TIMESTAMP",
+    "category" : "device.log",
+    "timestamp" : "TIMESTAMP",
+    "level" : 200
+  }, {
+    "message" : "Scheduling future in 10000ms",
+    "category" : "device.log",
+    "timestamp" : "TIMESTAMP",
     "level" : 100
   }, {
-    "message" : "Update state 2024-12-11T05:44:36Z last_config 2024-12-11T05:44:08Z",
+    "message" : "State update defer -5986ms",
     "category" : "device.log",
-    "timestamp" : "2024-12-11T05:44:36Z",
+    "timestamp" : "TIMESTAMP",
+    "level" : 100
+  }, {
+    "message" : "Update state TIMESTAMP",
+    "category" : "device.log",
+    "timestamp" : "TIMESTAMP",
     "level" : 200
   }, {
     "message" : "State update AHU-1 (scan_periodic_now_enumerate)",
-    "detail" : "{\n  \"timestamp\" : \"2024-12-11T05:44:36Z\",\n  \"version\" : \"1.5.2\",\n  \"system\" : {\n    \"last_config\" : \"2024-12-11T05:44:08Z\",\n    \"operation\" : {\n      \"operational\" : true,\n      \"last_start\" : \"2024-12-11T05:43:02Z\",\n      \"restart_count\" : 1,\n      \"mode\" : \"initial\"\n    },\n    \"serial_no\" : \"sequencer-19457\",\n    \"hardware\" : {\n      \"make\" : \"BOS\",\n      \"model\" : \"pubber\"\n    },\n    \"software\" : {\n      \"firmware\" : \"v1\"\n    },\n    \"status\" : {\n      \"message\" : \"success\",\n      \"category\" : \"system.config.apply\",\n      \"timestamp\" : \"2024-12-11T05:44:08Z\",\n      \"level\" : 300\n    }\n  },\n  \"discovery\" : {\n    \"families\" : {\n      \"vendor\" : {\n        \"generation\" : \"2024-12-11T05:44:46Z\",\n        \"phase\" : \"pending\",\n        \"active_count\" : 3\n      }\n    }\n  },\n  \"localnet\" : {\n    \"families\" : {\n      \"ether\" : {\n        \"addr\" : \"00:22:48:55:12:7e\"\n      },\n      \"ipv4\" : {\n        \"addr\" : \"10.1.0.44\"\n      },\n      \"ipv6\" : {\n        \"addr\" : \"fe80::222:48ff:fe55:127e\"\n      },\n      \"vendor\" : {\n        \"addr\" : \"28179023\"\n      }\n    }\n  },\n  \"pointset\" : {\n    \"points\" : {\n      \"filter_alarm_pressure_status\" : {\n        \"units\" : \"No-units\"\n      },\n      \"filter_differential_pressure_setpoint\" : {\n        \"units\" : \"Bars\",\n        \"value_state\" : \"applied\"\n      },\n      \"filter_differential_pressure_sensor\" : {\n        \"units\" : \"Degrees-Celsius\"\n      }\n    }\n  }\n}",
+    "detail" : "{\n  \"timestamp\" : \"TIMESTAMP\",\n        \"phase\" : \"pending\",\n        \"active_count\" : 4\n      }\n    }\n  },\n  \"localnet\" : {\n    \"families\" : {\n      \"ether\" : {\n        \"addr\" : \"7c:1e:52:05:17:a4\"\n      },\n      \"ipv4\" : {\n        \"addr\" : \"10.1.0.78\"\n      },\n      \"vendor\" : {\n        \"addr\" : \"28179023\"\n      },\n      \"bacnet\" : {\n        \"addr\" : \"27312\"\n      }\n    }\n  },\n  \"pointset\" : {\n    \"points\" : {\n      \"filter_alarm_pressure_status\" : {\n        \"units\" : \"No-units\"\n      },\n      \"filter_differential_pressure_setpoint\" : {\n        \"units\" : \"Bars\",\n        \"value_state\" : \"applied\"\n      },\n      \"filter_differential_pressure_sensor\" : {\n        \"units\" : \"Degrees-Celsius\"\n      }\n    }\n  }\n}",
     "category" : "device.log",
-    "timestamp" : "2024-12-11T05:44:36Z",
+    "timestamp" : "TIMESTAMP",
     "level" : 100
   } ],
   "metrics" : {
-    "mem_total_mb" : 254.0,
-    "mem_free_mb" : 203.7119140625
+    "mem_total_mb" : 66.0,
+    "mem_free_mb" : 40.23130798339844
   },
-  "timestamp" : "2024-12-11T05:44:43Z",
-  "version" : "1.5.2"
+  "timestamp" : "TIMESTAMP",
+  "version" : "1.5.3"
 }
