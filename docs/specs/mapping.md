@@ -15,10 +15,12 @@ scopes of device data:
 
 The overall mapping sequence involves multiple components that work together to provide the overall flow:
 * **Devices**: The target things that need to be discovered, configured, and ultimately communicate point data.
-* **Registry**: Digital Twin of the on-prem devices on the cloud for the particular site, which have the current state of the actual site.
 * **Provisioning Engine**: Cloud-based agent/Provisioning Engine responsible for managing the overall _discovery_ and _mapping_ process (how often, what color, etc...).
-* **Mapper**: Mapping service that uses heuristics, ML, or a UI to convert discovery information into a concrete device/pipeline mapping.
+* **Registry**: Digital Twin of the on-prem devices on the cloud for the particular site, which have the current state of the actual site.
+* **Mapping Service**: Mapping service that uses heuristics, ML, or a UI to convert discovery information into a concrete device/pipeline mapping.
 * **Source Repo**: Ultimate source of truth for the particular site, having all the devices and Gateways part of the site in the Cloud Source Repository.
+* **Modeling Phase**: Managing and maintaining the site model data, manually or by automated change-detection process.
+
 
 ```mermaid
 sequenceDiagram
@@ -31,7 +33,7 @@ sequenceDiagram
   participant Modeling Phase
   Devices->>Provisioning Engine: Incemental Results<br/>(Discovery Events)
   Provisioning Engine->>Registry: Incremental Results
-  Devices->>Mapping Service: DISCOVERY COMPLETE EVENT
+  Devices->>Mapping Service: Discovery Complete Event
   Source Repo->>Mapping Service: Base Model Import
   Registry->>Mapping Service: All Results
   Note over Mapping Service: Map Results
@@ -40,15 +42,13 @@ sequenceDiagram
 ```
 
 
-* **(Fieldbus Discovery)** scan for fieldbus _device_ information from devices (e.g. BACnet, format out of scope for UDMI):
-  "I am device `78F936` with points { `room_temp`, `step_size`, and `operation_count` }"
 * **[Discovery Events](../../tests/schemas/events_discovery/enumeration.json)** wraps the device info from the discovery
   into a UDMI-normalized format, e.g.:
   "Device `78F936` has points { }, with a public key `XYZZYZ`"
-* **[Discovery Complete Event](../../validator/sequences/scan_single_future/events_discovery.json)** with related [attributes](../../validator/sequences/scan_single_now/events_discovery.attr) 
+* **[Discovery Complete Event](../../validator/sequences/scan_single_future/events_discovery.json)** having `event_no` as negative value, with related [attributes](../../validator/sequences/scan_single_now/events_discovery.attr) 
 
 
-Containerized Maping Service, having the subscription for the `udmi_target` topic, on Consuming the Discovery Complete event, starts the mapping process.
+Maping Service, having the subscription for the `udmi_target` topic, on Consuming the Discovery Complete event, starts the mapping process.
 If the discovery event received doesn't maps to existing devices in the source repo, new device witht the convention "UNK-X", where X is in an increasing number starting from 1 and UNK, stands for "Unknown".
 If there is an existing device, device gets updated with the new pointset event details getting appended to the existing device.
 All thse changes are then pushed to the discovery branch, from where the modelling phase starts.
@@ -57,7 +57,6 @@ All thse changes are then pushed to the discovery branch, from where the modelli
 A standalone test-setup can be used to emulate all the requisite parts of the system.
 
 Cloud PubSub subscriptions (the defaults) on the `udmi_target` topic (need to be manually added):
-* `mapping-agent`: Used at the spotter to coordinate on-prem discovery.
 * `mapping-service`: To process discovery complete event and complete mapping process.
 
 Local environment setup (e.g.):
