@@ -322,11 +322,6 @@ public class DiscoverySequences extends SequenceBase {
 
   private void scanAndVerify(Date scanStart, DiscoveryScanMode shouldEnumerate,
       Set<String> networks, Set<String> targets) {
-    scanFamily = getFacetValue(SubFolder.DISCOVERY);
-    checkState(scanFamily != null, "No scan family defined for discovery");
-    providerFamily = FamilyProvider.NAMED_FAMILIES.get(scanFamily);
-    checkState(providerFamily != null, "No provider family found for scan family " + scanFamily);
-
     final boolean scheduledStart = scanStart.after(new Date());
 
     initializeDiscovery();
@@ -616,6 +611,11 @@ public class DiscoverySequences extends SequenceBase {
 
   private void configureScan(Instant startTime, Duration scanInterval,
       DiscoveryScanMode shouldEnumerate, Set<String> networks, Set<String> targets) {
+    scanFamily = getFacetValue(SubFolder.DISCOVERY);
+    checkState(scanFamily != null, "No scan family defined for discovery");
+    providerFamily = FamilyProvider.NAMED_FAMILIES.get(scanFamily);
+    checkState(providerFamily != null, "No provider family found for scan family " + scanFamily);
+
     Integer intervalSec = ofNullable(scanInterval).map(Duration::getSeconds).map(Long::intValue)
         .orElse(null);
     info(format("%s configured for family %s starting at %s evey %ss",
