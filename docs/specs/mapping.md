@@ -16,7 +16,7 @@ scopes of device data:
 The overall mapping sequence involves multiple components that work together to provide the overall flow:
 * **Devices**: The target things that need to be discovered, configured, and ultimately communicate point data.
 * **Provisioning Engine**: Cloud-based agent/Provisioning Engine responsible for managing the overall _discovery_ and _mapping_ process (how often, what color, etc...).
-* **UDMIS**: UDMIS (Universal Device Management Interface Services) is a cloud infrastructure which in required for other application and tooling e.g. Registrar, Validator, etc.
+* **UDMIS**: The Universal Device Management Interface Services, or UDMIS, is a cloud-based infrastructure that serves as the foundation for various tools, including the Registrar and Validator.
 * **Mapping Service**: Mapping service that uses heuristics, ML, or a UI to convert discovery information into a concrete device/pipeline mapping.
 * **Source Repo**: Ultimate source of truth for the particular site, having all the devices and Gateways part of the site in the Cloud Source Repository.
 * **Modeling Phase**: Managing and maintaining the site model data, manually or by automated change-detection process.
