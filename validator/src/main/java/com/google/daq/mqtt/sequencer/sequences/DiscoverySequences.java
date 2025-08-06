@@ -120,9 +120,6 @@ public class DiscoverySequences extends SequenceBase {
   @Before
   public void setupExpectedParameters() {
     allowDeviceStateChange("discovery");
-    scanFamily = getFacetValue(SubFolder.DISCOVERY);
-    providerFamily = FamilyProvider.NAMED_FAMILIES.get(scanFamily);
-    checkState(providerFamily != null, "No provider family found for scan family " + scanFamily);
   }
 
   private DiscoveryEvents runEnumeration(Enumerations depths) {
@@ -275,21 +272,21 @@ public class DiscoverySequences extends SequenceBase {
   }
 
   @Test(timeout = TWO_MINUTES_MS)
-  @Feature(bucket = DISCOVERY_SCAN, stage = PREVIEW)
+  @Feature(bucket = DISCOVERY_SCAN, stage = PREVIEW, facets = SubFolder.DISCOVERY)
   @Summary("Check that a scan scheduled in the past never starts")
   public void scan_single_past() {
     scanAndVerify(LONG_TIME_AGO, NO_SCAN);
   }
 
   @Test
-  @Feature(bucket = DISCOVERY_SCAN, stage = PREVIEW)
+  @Feature(bucket = DISCOVERY_SCAN, stage = PREVIEW, facets = SubFolder.DISCOVERY)
   @Summary("Check results of a single scan scheduled in the recent past including enumeration")
   public void scan_single_now() {
     scanAndVerify(cleanInstantDate(Instant.now().minusSeconds(1)), PLEASE_ENUMERATE);
   }
 
   @Test
-  @Feature(bucket = DISCOVERY_SCAN, stage = ALPHA)
+  @Feature(bucket = DISCOVERY_SCAN, stage = ALPHA, facets = SubFolder.DISCOVERY)
   @Summary("Check results of a single scan targeting specific devices")
   public void scan_single_targeted() {
     SortedSet<String> expectedAddresses = new TreeSet<>(expectedTargetDevices(null));
@@ -302,7 +299,7 @@ public class DiscoverySequences extends SequenceBase {
   }
 
   @Test(timeout = TWO_MINUTES_MS)
-  @Feature(bucket = DISCOVERY_SCAN, stage = PREVIEW)
+  @Feature(bucket = DISCOVERY_SCAN, stage = PREVIEW, facets = SubFolder.DISCOVERY)
   @Summary("Check results of a single scan scheduled soon")
   public void scan_single_future() {
     scanAndVerify(cleanInstantDate(Instant.now().plus(SCAN_START_DELAY)), DEFAULT_ENUMERATION);
@@ -325,6 +322,11 @@ public class DiscoverySequences extends SequenceBase {
 
   private void scanAndVerify(Date scanStart, DiscoveryScanMode shouldEnumerate,
       Set<String> networks, Set<String> targets) {
+    scanFamily = getFacetValue(SubFolder.DISCOVERY);
+    checkState(scanFamily != null, "No scan family defined for discovery");
+    providerFamily = FamilyProvider.NAMED_FAMILIES.get(scanFamily);
+    checkState(providerFamily != null, "No provider family found for scan family " + scanFamily);
+
     final boolean scheduledStart = scanStart.after(new Date());
 
     initializeDiscovery();
@@ -572,7 +574,7 @@ public class DiscoverySequences extends SequenceBase {
   }
 
   @Test(timeout = TWO_MINUTES_MS)
-  @Feature(bucket = DISCOVERY_SCAN, stage = PREVIEW)
+  @Feature(bucket = DISCOVERY_SCAN, stage = PREVIEW, facets = SubFolder.DISCOVERY)
   @Summary("Check periodic scan on a fixed schedule and enumeration")
   public void scan_periodic_now_enumerate() {
     initializeDiscovery();
