@@ -24,7 +24,8 @@ follow the appropriate [_discovery event schema_](../../gencode/docs/events_disc
 The overall discovery sequence involves multiple components that work together to provide the overall flow:
 * **Devices**: The target things that need to be discovered, configured, and ultimately communicate point data.
 * **Spotter**: Operative node that performs _discovery_, scanning local networks and producing observations.
-* **Agent**: Cloud-based agent responsible for managing the overall _discovery_ and _mapping_ process (how often, what color, etc...).
+* **Registry**: Digital Twin of the on-prem devices on the cloud for the particular site.
+* **Agent**: Cloud-based agent/Provisioning Engine responsible for managing the overall _discovery_ and _mapping_ process (how often, what color, etc...).
 * **Pipeline**: Ultimate recipient of pointset information, The thing that cares about 'temperature' in a room.
 
 (The `*` prefixing a `*term` means that this id/property is being sourced/created at that step.)
@@ -34,18 +35,20 @@ sequenceDiagram
   %%{wrap}%%
   participant Devices
   participant Spotter
-  participant Agent as Agent<br/>(w/ Mapping)
+  participant Registry
+  participant Provisioning Engine
   participant Pipeline
-  Note over Devices, Agent: Discovery Start
-  activate Agent
-  Agent->>Spotter: DISCOVERY CONFIG<br/>()
+  Note over Devices, c: Discovery Start
+  activate Provisioning Engine
+  Provisioning Engine->>Registry: DISCOVERY CONFIG<br/>for Spotter<br/>()
+  Registry->>Spotter: DISCOVERY CONFIG
   loop
     Devices-->Spotter: fieldbus
-    Spotter->>Agent: DISCOVERY EVENT<br/>(*scan_id)<br/><properties: *uniqs>
+    Spotter->>Provisioning Engine: DISCOVERY EVENT<br/>(*scan_id)<br/><properties: *uniqs>
   end
-  Note over Agent: Provisioning<br/>& Mapping
-  Agent ->> Pipeline: (config device)
-  deactivate Agent
+  Note over Provisioning Engine: Provisioning<br/>& Mapping
+  Provisioning Engine ->> Pipeline: (POINTSET EVENT<br/>After Mapping)
+  deactivate Provisioning Engine
   Devices->>Pipeline: POINTSET EVENT<br/>(device_id, device_num_id, points)<br/><pointset>
 ```
 

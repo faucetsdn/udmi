@@ -10,64 +10,53 @@ scopes of device data:
 * **(Native)**: Device communication using some non-UDMI native protocol (e.g. BACnet, Modbus, etc...)
 * **[Discovery](discovery.md)**: Messages relating to the discovery (and provisioning) of devices (e.g. messy BACnet info)
 * **[Mapping](mapping.md)**: Messages relating to a 'resolved' device type and ID (e.g. the device is an `AHU` called `AHU-1`)
-* **[Pointset](../messages/pointset.md)**: Messages relating to actual data flow (e.g. temperature reading), essentially the interesting stuff
-* **(Onboard)**: Interactions with an external (non-UDMI) entity of some kind to facilitate onboarding of devices
 
 ## Sequence Diagram
 
 The overall mapping sequence involves multiple components that work together to provide the overall flow:
 * **Devices**: The target things that need to be discovered, configured, and ultimately communicate point data.
-* **Agent**: Cloud-based agent responsible for managing the overall _discovery_ and _mapping_ process (how often, what color, etc...).
-* **Mapper**: Mapping engine that uses heuristics, ML, or a UI to convert discovery information into a concrete device/pipeline mapping.
-* **Pipeline**: Ultimate recipient of pointset information, The thing that cares about 'temperature' in a room.
+* **Registry**: Digital Twin of the on-prem devices on the cloud for the particular site, which have the current state of the actual site.
+* **Provisioning Engine**: Cloud-based agent/Provisioning Engine responsible for managing the overall _discovery_ and _mapping_ process (how often, what color, etc...).
+* **Mapper**: Mapping service that uses heuristics, ML, or a UI to convert discovery information into a concrete device/pipeline mapping.
+* **Source Repo**: Ultimate source of truth for the particular site, having all the devices and Gateways part of the site in the Cloud Source Repository.
 
 ```mermaid
 sequenceDiagram
   %%{wrap}%%
   participant Devices as Devices<br/>(w/ Spotter)
-  participant Agent
-  participant Mapper
-  participant Pipeline
-  Note over Devices, Agent: Discovery Start
-  activate Agent
-  loop Devices
-    Devices->>Mapper: DISCOVERY EVENT<br/>(*scan_id)<br/><properties: *uniqs>
-  end
-  deactivate Agent
-  Note over Agent, Mapper: Mapping Start
-  activate Mapper
-  Agent->>Mapper: MAPPING CONFIG
-  Mapper->>Agent: MAPPING STATE
-  loop Devices
-    Mapper->>Agent: MAPPING EVENT<br/>(*guid, scan_id, *device_id)<br/><translations>
-    Agent->>Mapper: MAPPING COMMAND<br/>(device_id, *device_num_id)
-    Agent-->>Pipeline: Onboard RPC<br/>(guid, device_id, device_num_id)<br/><translations>
-  end
-  deactivate Mapper
-  Devices->>Pipeline: POINTSET EVENT<br/>(device_id, device_num_id)<br/><pointset>
+  participant Provisioning Engine
+  participant Registry as Registry<br/>(w/ Internal DB)
+  participant Mapping Service
+  participant Source Repo 
+  participant Modeling Phase
+  Devices->>Provisioning Engine: Incemental Results<br/>(Discovery Events)
+  Provisioning Engine->>Registry: Incremental Results
+  Devices->>Mapping Service: DISCOVERY COMPLETE EVENT
+  Source Repo->>Mapping Service: Base Model Import
+  Registry->>Mapping Service: All Results
+  Note over Mapping Service: Map Results
+  Mapping Service->>Source Repo: 'discovery' branch
+  Source Repo-->>Modeling Phase: Notify branch updated
 ```
+
 
 1. *(Fieldbus Discovery)* scan for fieldbus _device_ information from devices (e.g. BACnet, format out of scope for UDMI):
   * "I am device `78F936` with points { `room_temp`, `step_size`, and `operation_count` }"
 2. **[Discovery Events](../../tests/schemas/events_discovery/enumeration.json)** wraps the device info from the discovery
    into a UDMI-normalized format, e.g.:
   * "Device `78F936` has points { }, with a public key `XYZZYZ`"
-3. **[Mapping Config](../../tests/schemas/config_mapping/mapping.json)** from the _agent_ indicates that the _mapper_ should export responses.
-3. **[Mapping Events](../../tests/schemas/events_mapping/mapping.json)** from the _mapper_ contain actual calculated point mappings:
-  * "Device `78F936` is an `AHU` called `AHU-183`, and `room_temp` is really a `flow_temperatue`"
-3. **[Mapping Command](../../tests/schemas/commands_mapping/mapping.json)** to the _mapper_ contain results of initial provisioning:
-  * "Device `78F936` has a numerical id `2198372198752`
-4. *(Onboard Info)* are sent to the _pipeline_ to onboard a device (contents are defined by _pipeline_ and out of scope for UDMI).
-8. **[Telemetry Events](../../tests/schemas/events_pointset/example.json)** are data events from _device_ to _pipeline_... business as usual:
-  * "I am `AHU-183`, and my `room_temp` is `73`"
-
+3. **[Discovery Complete Event](../../validator/sequences/scan_single_future/events_discovery.json) with related [attributes](../../validator/sequences/scan_single_now/events_discovery.attr) 
+Containerized Maping Service, having the subscription for the `udmi_target` topic, on Consuming the Discovery Complete event, starts the mapping process.
+If the discovery event received doesn't maps to existing devices in the source repo, new device witht the convention "UNK-X", where X is in an increasing number starting from 1 and UNK, stands for "Unknown".
+If there is an existing device, device gets updated with the new pointset event details getting appended to the existing device.
+All thse changes are then pushed to the discovery branch, from where the modelling phase starts.
 ## Example Test Setup
 
 A standalone test-setup can be used to emulate all the requisite parts of the system.
 
 Cloud PubSub subscriptions (the defaults) on the `udmi_target` topic (need to be manually added):
 * `mapping-agent`: Used by the agent to coordinate on-prem discovery and mapping engine activities.
-* `mapping-engine`: Used by the engine to process discovery and mapping information.
+* `mapping-service`: To process discovery complete event and complete mapping process.
 
 Local environment setup (e.g.):
 * <code>project_id=<i>test-gcp-project</i></code>
@@ -96,12 +85,12 @@ Received new family virtual generation Mon Aug 29 18:47:43 PDT 2022
 ...
 ```
 
-### Mock Mapping Engine
+### Mapping Service
 
-The mapping `engine` receives discovery and mapping events to perform the mapping function.
+The mapping `service` receives discovery complete and mapping events to perform the mapping process.
 
 ```
-$ validator/bin/mapping engine sites/udmi_site_model/ $project_id
+$ services/bin/mapping_service //pubsub/bos-platform-dev/namespace //gbos/bos-platform-dev/namespace tmp/udmi/sites/ --local
 ...
 Received discovery event for generation Mon Aug 29 18:48:43 PDT 2022
 ...
