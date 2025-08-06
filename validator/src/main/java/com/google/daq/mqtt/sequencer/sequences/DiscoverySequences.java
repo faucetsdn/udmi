@@ -77,6 +77,7 @@ import udmi.schema.DiscoveryConfig;
 import udmi.schema.DiscoveryEvents;
 import udmi.schema.Enumerations;
 import udmi.schema.Enumerations.Depth;
+import udmi.schema.Envelope.SubFolder;
 import udmi.schema.FamilyDiscoveryConfig;
 import udmi.schema.FamilyDiscoveryState;
 import udmi.schema.FamilyLocalnetModel;
@@ -98,7 +99,6 @@ public class DiscoverySequences extends SequenceBase {
   private static final Instant BASE_OLD_TIME = Instant.parse("2020-10-18T12:02:01Z");
   private static final Date LONG_TIME_AGO = Date.from(BASE_OLD_TIME.plusSeconds(RANDOM_YEAR_SEC));
   private static final int SCAN_DURATION_SEC = 10;
-  private static final String DISCOVERY_TARGET = "scan_family";
   private static final long SCAN_TARGET_COUNT = 2;
   public static final int EVENT_MARKERS = 2;
   private Set<String> metaFamilies;
@@ -120,8 +120,7 @@ public class DiscoverySequences extends SequenceBase {
   @Before
   public void setupExpectedParameters() {
     allowDeviceStateChange("discovery");
-    scanFamily = catchToNull(() ->
-        (String) deviceMetadata.testing.targets.get(DISCOVERY_TARGET).target_value);
+    scanFamily = getFacetValue(SubFolder.DISCOVERY);
     providerFamily = FamilyProvider.NAMED_FAMILIES.get(scanFamily);
     checkState(providerFamily != null, "No provider family found for scan family " + scanFamily);
   }
@@ -310,7 +309,7 @@ public class DiscoverySequences extends SequenceBase {
   }
 
   @Test(timeout = TWO_MINUTES_MS)
-  @Feature(bucket = DISCOVERY_SCAN, stage = ALPHA)
+  @Feature(bucket = DISCOVERY_SCAN, stage = ALPHA, facets = SubFolder.DISCOVERY)
   @Summary("Check results of a single scan targeting specific devices")
   public void scan_network_single() {
     SortedSet<String> networks = expectedTargetNetworks(null);
@@ -594,8 +593,7 @@ public class DiscoverySequences extends SequenceBase {
   }
 
   private void initializeDiscovery() {
-    ifNullSkipTest(scanFamily,
-        format("metadata.testing.targets.%s.target_value not defined", DISCOVERY_TARGET));
+    requireNonNull(scanFamily, "scan family not defined");
     metaFamilies = catchToNull(() -> deviceMetadata.discovery.families.keySet());
     if (metaFamilies == null || metaFamilies.isEmpty()) {
       skipTest("No discovery families configured");

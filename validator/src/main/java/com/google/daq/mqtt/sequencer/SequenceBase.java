@@ -359,6 +359,7 @@ public class SequenceBase {
   private final AtomicBoolean waitingForConfigSync = new AtomicBoolean();
   private static String sessionPrefix;
   private static Scoring scoringResult;
+  static Map.Entry<SubFolder, String> activeFacet;
   private Date configStateStart;
   protected boolean pretendStateUpdated;
   private Boolean stateSupported;
@@ -2695,6 +2696,13 @@ public class SequenceBase {
 
   protected boolean isBackupSource(Map<String, Object> message) {
     return FALLBACK_REGISTRY_MARK.equals(message.get(MESSAGE_SOURCE_INDICATOR));
+  }
+
+  protected String getFacetValue(SubFolder facetKey) {
+    requireNonNull(activeFacet, "no sequencer facet active for requested " + facetKey);
+    checkState(facetKey == activeFacet.getKey(), format(
+        "Requested facet %s does not match active facet %s", facetKey, activeFacet.getKey()));
+    return activeFacet.getValue();
   }
 
   /**
