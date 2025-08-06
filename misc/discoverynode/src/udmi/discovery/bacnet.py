@@ -260,7 +260,7 @@ class GlobalBacnetDiscovery(discovery.DiscoveryController):
           # Check that it is not cancelled in the inner loop too because this
           # can take a long time to enumerate through all found devices.
           if self.cancelled:
-            break
+            return
           
           address, id = device
           start = time.monotonic()
