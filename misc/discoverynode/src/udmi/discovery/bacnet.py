@@ -93,16 +93,21 @@ class GlobalBacnetDiscovery(discovery.DiscoveryController):
       # for now, it's assumed to be an IP address which will be sent
       # a who/is packet. In the event of the former, it should preopulate
       # a structure similar to self.bacnet.discoveredDevices dict.
+      target_ips_to_scan = []
       for addr in self.config.addrs:
-        try:
-          ipaddress.ip_interface(addr)
-        except ValueError:
-          raise(
-            RuntimeError("only IP addresses currently supported for targetted bacnet scan")
-          )
+        if ':' in addr:
+          self.targetted_devices_found.add(tuple(addr.split(':')))
+        else:
+          try:
+            ipaddress.ip_interface(addr)
+            target_ips_to_scan.append(addr)
+          except ValueError:
+            raise(
+              RuntimeError("bad IP addess")
+            )
         # TODO: does addrs need to be copied? check how self.config is mutated.
       self.bacnet_scan_executor_thread = threading.Thread(
-          target=self.serial_bacnet_scan_executor, args=[copy.copy(self.config.addrs)], daemon=True
+          target=self.serial_bacnet_scan_executor, args=[target_ips_to_scan], daemon=True
       )
       self.bacnet_scan_executor_thread.start()
       device_list_function = self.targetted_scan_producer
@@ -125,9 +130,11 @@ class GlobalBacnetDiscovery(discovery.DiscoveryController):
       time.sleep(wait_ms * 0.001)
       if self.cancelled:
         return
-      result = self.bacnet.whois(addr)
-      if result:
-        self.targetted_devices_found.add(tuple(*result))
+      results = self.bacnet.whois(addr)
+      for result in results:
+        found_addr, found_id = tuple(result)
+        if addr == found_id:
+          self.targetted_devices_found.add((found_addr, found_id))
 
 
   def stop_discovery(self):
