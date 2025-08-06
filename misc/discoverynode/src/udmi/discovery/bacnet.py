@@ -167,7 +167,9 @@ class GlobalBacnetDiscovery(discovery.DiscoveryController):
     ###################################################################
     if self.config.depth in ["system", "refs"]:
       try:
-        (object_name, 
+        (
+         object_identifier,
+         object_name, 
          vendor_name, 
          firmware_version,
          model_name,
@@ -177,6 +179,7 @@ class GlobalBacnetDiscovery(discovery.DiscoveryController):
          application_version) = (
             self.bacnet.readMultiple(
                 f"{device_address} device {device_id}"
+                " objectIdentifier"
                 " objectName"
                 " vendorName"
                 " firmwareRevision"
@@ -187,7 +190,8 @@ class GlobalBacnetDiscovery(discovery.DiscoveryController):
                 " applicationSoftwareVersion"
             )
         )
-    
+
+        event.addr = object_identifier
         event.system.serial_no = serial_number
         event.system.hardware.make = vendor_name
         event.system.hardware.model = model_name
