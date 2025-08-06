@@ -45,7 +45,7 @@ sequenceDiagram
 * **[Discovery Events](../../tests/schemas/events_discovery/enumeration.json)** wraps the device info from the discovery
   into a UDMI-normalized format, e.g.:
   "Device `78F936` has points { }, with a public key `XYZZYZ`"
-* **[Discovery Complete Event](../../validator/sequences/scan_single_future/events_discovery.json)** having `event_no` as negative value, with related [attributes](../../validator/sequences/scan_single_now/events_discovery.attr) 
+* **[Discovery Complete Event](../../validator/sequences/scan_single_future/events_discovery.json)** having `event_no` as negative value.
 
 
 The Mapping Service subscribes to the udmi_target topic. When it receives a Discovery Complete event, it initiates the mapping process.
