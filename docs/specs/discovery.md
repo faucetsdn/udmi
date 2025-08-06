@@ -25,7 +25,8 @@ The overall discovery sequence involves multiple components that work together t
 * **Devices**: The target things that need to be discovered, configured, and ultimately communicate point data.
 * **Spotter**: Operative node that performs _discovery_, scanning local networks and producing observations.
 * **Registry**: Digital Twin of the on-prem devices on the cloud for the particular site.
-* **Agent**: Cloud-based agent/Provisioning Engine responsible for managing the overall _discovery_ and _mapping_ process (how often, what color, etc...).
+* **Provisioning Engine**: Cloud-based agent/Provisioning Engine responsible for managing the overall _discovery_ and _mapping_ process (how often, what color, etc...).
+* **Mapping Agent**: Used at the spotter to coordinate on-prem discovery.
 * **Pipeline**: Ultimate recipient of pointset information, The thing that cares about 'temperature' in a room.
 
 (The `*` prefixing a `*term` means that this id/property is being sourced/created at that step.)
@@ -37,10 +38,11 @@ sequenceDiagram
   participant Spotter
   participant Registry
   participant Provisioning Engine
+  participant Mapping Agent
   participant Pipeline
   Note over Devices, c: Discovery Start
   activate Provisioning Engine
-  Provisioning Engine->>Registry: DISCOVERY CONFIG<br/>for Spotter<br/>()
+  Mapping Agent->>Registry: DISCOVERY CONFIG<br/>for Spotter<br/>()
   Registry->>Spotter: DISCOVERY CONFIG
   loop
     Devices-->Spotter: fieldbus

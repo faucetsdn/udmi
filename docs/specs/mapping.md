@@ -40,12 +40,14 @@ sequenceDiagram
 ```
 
 
-1. *(Fieldbus Discovery)* scan for fieldbus _device_ information from devices (e.g. BACnet, format out of scope for UDMI):
-  * "I am device `78F936` with points { `room_temp`, `step_size`, and `operation_count` }"
-2. **[Discovery Events](../../tests/schemas/events_discovery/enumeration.json)** wraps the device info from the discovery
-   into a UDMI-normalized format, e.g.:
-  * "Device `78F936` has points { }, with a public key `XYZZYZ`"
-3. **[Discovery Complete Event](../../validator/sequences/scan_single_future/events_discovery.json) with related [attributes](../../validator/sequences/scan_single_now/events_discovery.attr) 
+* **(Fieldbus Discovery)** scan for fieldbus _device_ information from devices (e.g. BACnet, format out of scope for UDMI):
+  "I am device `78F936` with points { `room_temp`, `step_size`, and `operation_count` }"
+* **[Discovery Events](../../tests/schemas/events_discovery/enumeration.json)** wraps the device info from the discovery
+  into a UDMI-normalized format, e.g.:
+  "Device `78F936` has points { }, with a public key `XYZZYZ`"
+* **[Discovery Complete Event](../../validator/sequences/scan_single_future/events_discovery.json)** with related [attributes](../../validator/sequences/scan_single_now/events_discovery.attr) 
+
+
 Containerized Maping Service, having the subscription for the `udmi_target` topic, on Consuming the Discovery Complete event, starts the mapping process.
 If the discovery event received doesn't maps to existing devices in the source repo, new device witht the convention "UNK-X", where X is in an increasing number starting from 1 and UNK, stands for "Unknown".
 If there is an existing device, device gets updated with the new pointset event details getting appended to the existing device.
@@ -55,7 +57,7 @@ All thse changes are then pushed to the discovery branch, from where the modelli
 A standalone test-setup can be used to emulate all the requisite parts of the system.
 
 Cloud PubSub subscriptions (the defaults) on the `udmi_target` topic (need to be manually added):
-* `mapping-agent`: Used by the agent to coordinate on-prem discovery and mapping engine activities.
+* `mapping-agent`: Used at the spotter to coordinate on-prem discovery.
 * `mapping-service`: To process discovery complete event and complete mapping process.
 
 Local environment setup (e.g.):
