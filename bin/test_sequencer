@@ -190,7 +190,7 @@ fgrep RESULT out/sequencer$suffix.out.save | fgrep -v " schemas " > out/expected
 result_count=$(cat out/expected.out | wc -l)
 target_count=$(fgrep "Running target" out/sequencer$suffix.log.save | wc -l) || true
 if [[ $result_count != $target_count ]]; then
-    fail Found $result_count results for $target_count targets.
+    echo fail Found $result_count results for $target_count targets.
 fi
 
 GOLDEN_FILE=etc/sequencer${suffix}.out

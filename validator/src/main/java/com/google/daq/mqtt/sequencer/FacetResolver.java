@@ -1,8 +1,15 @@
 package com.google.daq.mqtt.sequencer;
 
 import com.google.udmi.util.SiteModel;
-import java.util.List;
+import java.util.Set;
 
+/**
+ * Generic resolver for a discovery facet.
+ */
 public interface FacetResolver {
-  List<String> resolve(SiteModel siteModel);
+
+  /**
+   * Resolve a facet set for the given site model and device.
+   */
+  Set<String> resolve(SiteModel siteModel, String deviceId);
 }

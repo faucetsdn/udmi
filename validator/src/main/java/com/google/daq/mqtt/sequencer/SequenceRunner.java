@@ -1,6 +1,7 @@
 package com.google.daq.mqtt.sequencer;
 
 import static com.google.common.base.Preconditions.checkState;
+import static com.google.daq.mqtt.sequencer.SequenceBase.getDeviceId;
 import static com.google.daq.mqtt.sequencer.SequenceBase.getSequencerStateFile;
 import static com.google.daq.mqtt.sequencer.SequenceBase.siteModel;
 import static com.google.udmi.util.GeneralUtils.CSV_JOINER;
@@ -12,7 +13,6 @@ import static java.util.Optional.ofNullable;
 import static udmi.schema.FeatureDiscovery.FeatureStage.ALPHA;
 import static udmi.schema.FeatureDiscovery.FeatureStage.BETA;
 
-import com.fasterxml.jackson.databind.deser.BeanDeserializerBase;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -263,7 +263,7 @@ public class SequenceRunner {
       for (Entry<Class<?>, String> target : targets) {
         Request request = Request.method(target.getKey(), target.getValue());
         SubFolder kind = getTargetFacetKind(target);
-        List<String> targetFacets = getTargetFacets(kind, target);
+        Set<String> targetFacets = getTargetFacets(kind, target);
         for (String targetFacet : targetFacets) {
           SequenceBase.activeFacet = ifNotNullGet(kind, f -> new SimpleEntry<>(f, targetFacet));
           runCount += runOneTarget(request);
@@ -334,19 +334,21 @@ public class SequenceRunner {
     return methods.stream().filter(this::shouldShardMethod).filter(this::isTargetMethod).toList();
   }
 
-  private List<String> getTargetFacets(SubFolder facetKind, Entry<Class<?>, String> target) {
+  private Set<String> getTargetFacets(SubFolder facetKind, Entry<Class<?>, String> target) {
     if (facetKind == null) {
-      ArrayList<String> listOfNull = new ArrayList<>();
-      listOfNull.add(null);
-      return listOfNull;
+      Set<String> setOfNull = new HashSet<>();
+      setOfNull.add(null);
+      return setOfNull;
     }
-    return FACET_RESOLVERS.get(facetKind).resolve(siteModel);
+    Set<String> resolved = FACET_RESOLVERS.get(facetKind).resolve(siteModel, getDeviceId());
+    System.err.printf("Resolved facet %s to %s%n", facetKind, resolved);
+    return resolved;
   }
 
   private static SubFolder getTargetFacetKind(Entry<Class<?>, String> target) {
     try {
       Method method = target.getKey().getMethod(target.getValue());
-      SubFolder facets = method.getAnnotation(Feature.class).facets();
+      SubFolder facets = method.getAnnotation(Feature.class).facet();
       return facets == SubFolder.INVALID ? null : facets;
     } catch (Exception e) {
       throw new RuntimeException("Could not find target method " + target, e);

@@ -1,12 +1,17 @@
 package com.google.daq.mqtt.sequencer;
 
-import com.google.udmi.util.SiteModel;
-import java.util.List;
+import static com.google.udmi.util.GeneralUtils.catchToNull;
 
+import com.google.udmi.util.SiteModel;
+import java.util.Set;
+
+/**
+ * Resolve the DISCOVERY facet.
+ */
 public class DiscoveryFacetResolver implements FacetResolver {
 
   @Override
-  public List<String> resolve(SiteModel siteModel) {
-    throw new RuntimeException("Not yet implemented");
+  public Set<String> resolve(SiteModel siteModel, String deviceId) {
+    return catchToNull(() -> siteModel.getMetadata(deviceId).discovery.families.keySet());
   }
 }

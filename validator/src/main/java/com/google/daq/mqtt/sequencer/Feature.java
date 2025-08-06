@@ -41,7 +41,7 @@ public @interface Feature {
   /**
    * Default value is INVALID indicating there are no facets to process.
    *
-   * @return annotated set of facets that need to be considered
+   * @return indicator for the facets that need to be processed
    */
   SubFolder facets() default SubFolder.INVALID;
 
