@@ -15,16 +15,16 @@ sequenceDiagram
   %%{wrap}%%
   participant Devices as Devices<br/>(w/ Spotter)
   participant Registry
-  participant Agent as Agent<br/>(w/ Mapping)
+  participant Provisioning Engine
   participant Pipeline
-  Devices->>Agent: DISCOVERY EVENT
-  Note over Agent: Mapping
-  activate Agent
+  Devices->>Provisioning Engine: DISCOVERY EVENT
+  Note over Provisioning Engine: Mapping
+  activate Provisioning Engine
   loop Devices
-    Agent->>Registry: (*device_id)
-    Registry->>Agent: (*device_num_id)
-    Agent->>Pipeline: (*guid, device_id, device_num_id)
+    Provisioning Engine->>Registry: (*device_id)
+    Registry->>Provisioning Engine: (*device_num_id)
+    Provisioning Engine->>Pipeline: (*guid, device_id, device_num_id)
   end
-  deactivate Agent
+  deactivate Provisioning Engine
   Devices->>Pipeline: TELEMETRY EVENT<br/>(device_id, device_num_id)
 ```

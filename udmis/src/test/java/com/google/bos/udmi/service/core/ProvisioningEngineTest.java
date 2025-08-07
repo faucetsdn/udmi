@@ -37,7 +37,7 @@ import udmi.schema.Envelope;
 import udmi.schema.GatewayModel;
 
 /**
- * Simple tests for the auto-mapping provisioning agent.
+ * Simple tests for the auto-mapping provisioning engine.
  */
 public class ProvisioningEngineTest extends ProcessorTestBase {
 
