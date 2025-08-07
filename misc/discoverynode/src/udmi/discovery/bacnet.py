@@ -14,11 +14,30 @@ import udmi.schema.state
 import ipaddress
 import enum
 import copy
+import re
+import concurrent.futures
+from typing import Iterable
 
 BAC0.log_level("silence")
 for name in logging.getLogger().manager.loggerDict:
   if name.startswith("BAC0"):
     logging.getLogger(name).setLevel(logging.CRITICAL)
+
+_IP_ADDRESS_REGEX = r"([0-9]{1,3})\.([0-9]{1,3})\.([0-9]{1,3})\.([0-9]{1,3})"
+
+def future_wait_and_count_outstanding(futures: Iterable[concurrent.futures.Future], timeout: int) -> int:
+  """A wrapper arround concurrent.futures.wait which returns a count of 
+  outstanding (not done or cancelled) futures.
+
+  Args:
+    futures: iteratable of futures
+    timeout: maximum time to wait
+  
+  Returns:
+    count of outstanding futures
+  """
+  _, outstanding = concurrent.futures.wait(futures, 1)
+  return len(outstanding)
 
 class BacnetObjectAcronyms(enum.StrEnum):
   """ Mapping of object names to accepted aronyms"""
@@ -55,29 +74,37 @@ class GlobalBacnetDiscovery(discovery.DiscoveryController):
     self.targetted_devices_found = set()
     self.cancelled = None
     self.result_producer_thread = None
-    self.bacnet_scan_executor_thread = None
+    self.resolver_dispatcher_thread = None
    
     self.bacnet = BAC0.lite(ip=bacnet_ip, port=bacnet_port)
     
     super().__init__(state, publisher)
 
-  def validate_ip_set(ip_addresses: list[str]) -> bool:
-    """
-    Validates that all items in a set are valid IP addresses with optional CIDR.
-
-    Args:
-      ip_strings: A list of strings to validate.
-
-    Returns:
-      True if all strings are valid IP addresses, False otherwise.
-    """
-    for maybe_ip in ip_addresses:
-      try:
-        ipaddress.ip_interface(maybe_ip)
-      except ValueError:
-        return False
-    return True
+  def resolve_task_dispatcher(self, target_ips: list[str]):
+    """Dispatches ip->bacnet resolv tasks across simulateous workers"""
+    with concurrent.futures.ThreadPoolExecutor(max_workers=3) as executor:
+      futures = [executor.submit(self.resolve_task, ip) for ip in target_ips]
+      while (
+          future_wait_and_count_outstanding(futures, 1) > 0
+      ):
+        if self.cancelled:
+          executor.shutdown(True, cancel_futures=True)
+          break
   
+  def resolve_task(self, ip_address: str) -> None:
+    print(f"resolving {ip_address}")
+    if id := self.get_bacnet_id_from_ip(ip_address):
+        print(f"resolving {ip_address} found: {id}")
+        self.targetted_devices_found.add((ip_address, id))
+
+  def get_bacnet_id_from_ip(self, ip_address: str) -> int | bool:
+    try:
+      _, addr = self.bacnet.read(f"{ip_address} device 4194303 objectIdentifier")
+      return addr
+    except BAC0.core.io.IOExceptions.NoResponseFromController:
+      return False
+    except Exception:
+      return False
 
   def start_discovery(self):
     self.devices_published.clear()
@@ -87,60 +114,30 @@ class GlobalBacnetDiscovery(discovery.DiscoveryController):
 
     if not self.config.addrs:
       self.bacnet.discover(global_broadcast=True)
-      device_list_function = self.bacnet_discovery_producer
+      device_list_function = self.discovery_device_list_producer
     else:
       # addrs could in thory be a device IP + address
-      # for now, it's assumed to be an IP address which will be sent
-      # a who/is packet. In the event of the former, it should preopulate
-      # a structure similar to self.bacnet.discoveredDevices dict.
-      target_ips_to_scan = []
+      # or an MSTP address, but currently only IP addresses are supported.
       for addr in self.config.addrs:
-        if ':' in addr:
-          self.targetted_devices_found.add(tuple(addr.split(':')))
-        else:
-          try:
-            ipaddress.ip_interface(addr)
-            target_ips_to_scan.append(addr)
-          except ValueError:
-            raise(
-              RuntimeError("bad IP addess")
-            )
-        # TODO: does addrs need to be copied? check how self.config is mutated.
-      self.bacnet_scan_executor_thread = threading.Thread(
-          target=self.serial_bacnet_scan_executor, args=[target_ips_to_scan], daemon=True
+        if not re.match(_IP_ADDRESS_REGEX, addr):
+          raise RuntimeError("Only IP adress supported")
+        
+      self.resolver_dispatcher_thread = threading.Thread(
+          target=self.resolve_task_dispatcher, args=[copy.copy(self.config.addrs)], daemon=True
       )
-      self.bacnet_scan_executor_thread.start()
-      device_list_function = self.targetted_scan_producer
+      self.resolver_dispatcher_thread.start()
+      device_list_function = self.targetted_scan_device_list_producer
 
     self.result_producer_thread = threading.Thread(
         target=self.devices_consumer, args=[device_list_function], daemon=True
     )
     self.result_producer_thread.start()
 
-      # start a serial thread
-  def serial_bacnet_scan_executor(self, target_addrs: list[str], wait_ms: int = 11) -> None:
-    """Sends a Who/Is request to a given list of IP addresses.
-
-    Args:
-      target_addrs: list of IP addresses
-      wait: seconds to wait between requests
-    """
-    logging.info("thread %s", threading.get_ident())
-    for addr in target_addrs:
-      time.sleep(wait_ms * 0.001)
-      if self.cancelled:
-        return
-      results = self.bacnet.whois(addr)
-      for result in results:
-        found_addr, found_id = tuple(result)
-        if addr == found_id:
-          self.targetted_devices_found.add((found_addr, found_id))
-
 
   def stop_discovery(self):
     self.cancelled = True
-    if self.bacnet_scan_executor_thread:
-      self.bacnet_scan_executor_thread.join()
+    if self.resolver_dispatcher_thread:
+      self.resolver_dispatcher_thread.join()
     self.result_producer_thread.join()
 
 
@@ -233,11 +230,11 @@ class GlobalBacnetDiscovery(discovery.DiscoveryController):
     
     return event
   
-  def targetted_scan_producer(self) -> set[tuple[str, str]]:
+  def targetted_scan_device_list_producer(self) -> set[tuple[str, str]]:
     """Returns the list of discovered devices from a targetted bacnet scan."""
     return self.targetted_devices_found
   
-  def bacnet_discovery_producer(self) -> set[tuple[str, str]]:
+  def discovery_device_list_producer(self) -> set[tuple[str, str]]:
     """Returns the list of discovered devices from a global bacnet scan."""
     if self.bacnet.discoveredDevices is not None:
       return (
