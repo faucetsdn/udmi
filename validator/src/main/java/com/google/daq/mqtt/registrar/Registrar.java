@@ -652,6 +652,8 @@ public class Registrar {
         bindGatewayDevices(targetLocals);
       }
 
+      finalizeLocalDevices();
+
       if (cloudModels != null && !isTargeted && !instantiateExtras) {
         extraDevices = processExtraDevices(difference(cloudModels.keySet(), targetDevices));
       }
@@ -1444,6 +1446,9 @@ public class Registrar {
     preprocessMetadata(workingDevices);
     expandDependencies(workingDevices);
     initializeSettings(workingDevices);
+  }
+
+  private void finalizeLocalDevices() {
     writeNormalized(workingDevices);
     previewModels(workingDevices);
     validateExpected(workingDevices);
