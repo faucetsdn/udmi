@@ -913,7 +913,6 @@ public class Registrar {
     int count = processedDeviceCount.incrementAndGet();
     boolean created = false;
     try {
-      ifTrueThen(updateMetadata, () -> updateDeviceMetadata(localName));
       localDevice.writeConfigFile();
       if (cloudModels != null && updateCloudIoT) {
         created = pushToCloudIoT(localName, localDevice);
@@ -926,6 +925,7 @@ public class Registrar {
         System.err.printf("Processed %s (%d/%d) in %.03fs (%s)%n", localName, count, totalCount,
             seconds, created ? "add" : "update");
       }
+      ifTrueThen(updateMetadata, () -> updateDeviceMetadata(localName));
     } catch (Exception e) {
       System.err.printf("Error processing %s: %s%n", localDevice.getDeviceId(), e);
       localDevice.captureError(ExceptionCategory.registering, e);
