@@ -247,7 +247,7 @@ public class Registrar {
    * process the arguments and create new SiteModel. argumentListRaw includes: site_path
    * project_spec deviceList
    *
-   * @param argListRaw
+   * @param argListRaw raw list of arguments to process
    * @return Registrar Instance
    */
   public Registrar processArgs(List<String> argListRaw) {
