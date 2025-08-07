@@ -6,5 +6,5 @@
   REDACTED_TXN_ID
   "publishTime" : "TIMESTAMP",
   "subFolder" : "discovery",
-  "subType" : "state"
+  "subType" : "config"
 }

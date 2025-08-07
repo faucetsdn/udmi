@@ -5,6 +5,6 @@
   "projectId" : "localhost",
   REDACTED_TXN_ID
   "publishTime" : "TIMESTAMP",
-  "subFolder" : "discovery",
-  "subType" : "state"
+  "subFolder" : "system",
+  "subType" : "config"
 }
