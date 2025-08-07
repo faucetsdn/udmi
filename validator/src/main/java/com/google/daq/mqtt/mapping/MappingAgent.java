@@ -25,7 +25,6 @@ import static java.util.Objects.requireNonNull;
 import static java.util.Optional.ofNullable;
 import static java.util.stream.Collectors.toMap;
 
-import com.google.common.base.Functions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -172,7 +171,7 @@ public class MappingAgent {
     DiscoveryConfig discoveryConfig = new DiscoveryConfig();
 
     discoveryConfig.families = families.stream()
-        .collect(toMap(Functions::identity, this::getFamilyDiscoveryConfig));
+        .collect(toMap(family -> family, this::getFamilyDiscoveryConfig));
 
     cloudIotManager.modifyConfig(deviceId, SubFolder.DISCOVERY, stringify(discoveryConfig));
   }
