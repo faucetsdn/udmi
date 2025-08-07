@@ -263,7 +263,8 @@ public class SequenceRunner {
       for (Entry<Class<?>, String> target : targets) {
         Request request = Request.method(target.getKey(), target.getValue());
         SubFolder kind = getTargetFacetKind(target);
-        Set<String> targetFacets = getTargetFacets(kind, target);
+        SequenceBase.activePrimary = getTargetPrimary(target);
+        Set<String> targetFacets = getTargetFacets(kind);
         for (String targetFacet : targetFacets) {
           SequenceBase.activeFacet = ifNotNullGet(kind, f -> new SimpleEntry<>(f, targetFacet));
           runCount += runOneTarget(request);
@@ -334,7 +335,7 @@ public class SequenceRunner {
     return methods.stream().filter(this::shouldShardMethod).filter(this::isTargetMethod).toList();
   }
 
-  private Set<String> getTargetFacets(SubFolder facetKind, Entry<Class<?>, String> target) {
+  private Set<String> getTargetFacets(SubFolder facetKind) {
     if (facetKind == null) {
       Set<String> setOfNull = new HashSet<>();
       setOfNull.add(null);
@@ -343,6 +344,16 @@ public class SequenceRunner {
     Set<String> resolved = FACET_RESOLVERS.get(facetKind).resolve(siteModel, getDeviceId());
     System.err.printf("Resolved facet %s to %s%n", facetKind, resolved);
     return resolved;
+  }
+
+  private static String getTargetPrimary(Entry<Class<?>, String> target) {
+    try {
+      Method method = target.getKey().getMethod(target.getValue());
+      SubFolder facets = method.getAnnotation(Feature.class).facets();
+      return ifNotNullGet(FACET_RESOLVERS.get(facets), FacetResolver::primary);
+    } catch (Exception e) {
+      throw new RuntimeException("Could not find target method " + target, e);
+    }
   }
 
   private static SubFolder getTargetFacetKind(Entry<Class<?>, String> target) {

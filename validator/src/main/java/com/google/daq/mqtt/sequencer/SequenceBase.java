@@ -361,6 +361,7 @@ public class SequenceBase {
   private static String sessionPrefix;
   private static Scoring scoringResult;
   static Map.Entry<SubFolder, String> activeFacet;
+  static String activePrimary;
   private Date configStateStart;
   protected boolean pretendStateUpdated;
   private Boolean stateSupported;
@@ -2789,6 +2790,8 @@ public class SequenceBase {
         startCaptureTime = 0;
         startTestTimeMs = System.currentTimeMillis();
         notice("Starting test " + testName + " " + START_END_MARKER);
+        ifTrueThen(activeFacet != null && Objects.equals(activeFacet.getValue(), activePrimary),
+            () -> notice("This test is primary for facet " + activeFacet.getKey()));
       } catch (IllegalArgumentException e) {
         putSequencerResult(description, ERRR);
         recordCompletion(ERRR, description, friendlyStackTrace(e));

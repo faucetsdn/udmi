@@ -12,4 +12,9 @@ public interface FacetResolver {
    * Resolve a facet set for the given site model and device.
    */
   Set<String> resolve(SiteModel siteModel, String deviceId);
+
+  /**
+   * Returns the primary value for this facet, which is used for testing simplification.
+   */
+  String primary();
 }
