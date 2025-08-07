@@ -590,7 +590,11 @@ public class DiscoverySequences extends SequenceBase {
   }
 
   private void initializeDiscovery() {
-    requireNonNull(scanFamily, "scan family not defined");
+    scanFamily = getFacetValue(SubFolder.DISCOVERY);
+    checkState(scanFamily != null, "No scan family defined for discovery");
+    providerFamily = FamilyProvider.NAMED_FAMILIES.get(scanFamily);
+    checkState(providerFamily != null, "No provider family found for scan family " + scanFamily);
+
     metaFamilies = catchToNull(() -> deviceMetadata.discovery.families.keySet());
     if (metaFamilies == null || metaFamilies.isEmpty()) {
       skipTest("No discovery families configured");
@@ -611,11 +615,7 @@ public class DiscoverySequences extends SequenceBase {
 
   private void configureScan(Instant startTime, Duration scanInterval,
       DiscoveryScanMode shouldEnumerate, Set<String> networks, Set<String> targets) {
-    scanFamily = getFacetValue(SubFolder.DISCOVERY);
-    checkState(scanFamily != null, "No scan family defined for discovery");
-    providerFamily = FamilyProvider.NAMED_FAMILIES.get(scanFamily);
-    checkState(providerFamily != null, "No provider family found for scan family " + scanFamily);
-
+    requireNonNull(scanFamily, "scan family not defined");
     Integer intervalSec = ofNullable(scanInterval).map(Duration::getSeconds).map(Long::intValue)
         .orElse(null);
     info(format("%s configured for family %s starting at %s evey %ss",
