@@ -170,7 +170,7 @@
                     "constant": 0,
                     "name": "Temperature Sensor 123",
                     "description": "My very special temperature sensor",
-                    "family": "modbus",
+                    "family": "modbus"
                 }
             }
         }
