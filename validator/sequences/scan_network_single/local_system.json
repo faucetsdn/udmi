@@ -1,0 +1,10 @@
+{
+  "min_loglevel" : 100,
+  "metrics_rate_sec" : 10,
+  "operation" : {
+    "last_start" : "TIMESTAMP"
+  },
+  "testing" : {
+    "sequence_name" : "scan_network_single+vendor"
+  }
+}
