@@ -1,8 +1,14 @@
+RESULT skip discovery.scan scan_network_single+bacnet ALPHA 0/0 not enough networks for test
 RESULT skip discovery.scan scan_network_single+vendor ALPHA 0/0 not enough networks for test
+RESULT pass discovery.scan scan_periodic_now_enumerate+bacnet PREVIEW 10/10 Sequence complete
 RESULT pass discovery.scan scan_periodic_now_enumerate+vendor PREVIEW 10/10 Sequence complete
+RESULT pass discovery.scan scan_single_future+bacnet PREVIEW 10/10 Sequence complete
 RESULT pass discovery.scan scan_single_future+vendor PREVIEW 10/10 Sequence complete
+RESULT pass discovery.scan scan_single_now+bacnet PREVIEW 10/10 Sequence complete
 RESULT pass discovery.scan scan_single_now+vendor PREVIEW 10/10 Sequence complete
+RESULT pass discovery.scan scan_single_past+bacnet PREVIEW 10/10 Sequence complete
 RESULT pass discovery.scan scan_single_past+vendor PREVIEW 10/10 Sequence complete
+RESULT skip discovery.scan scan_single_targeted+bacnet ALPHA 0/0 Not enough targets to test targeted scan
 RESULT skip discovery.scan scan_single_targeted+vendor ALPHA 0/0 Not enough targets to test targeted scan
 RESULT pass endpoint.config endpoint_connection_bad_alternate PREVIEW 10/10 Sequence complete
 RESULT pass endpoint.config endpoint_connection_bad_hash PREVIEW 10/10 Sequence complete
@@ -28,6 +34,8 @@ RESULT pass pointset pointset_publish_interval STABLE 10/10 Sequence complete
 RESULT pass pointset pointset_remove_point STABLE 10/10 Sequence complete
 RESULT pass pointset pointset_request_extraneous STABLE 10/10 Sequence complete
 RESULT pass system broken_config STABLE 10/10 Sequence complete
+CPBLTY pass system broken_config.logging ALPHA 1/1 Capability supported
+CPBLTY pass system broken_config.status ALPHA 1/1 Capability supported
 RESULT pass system config_logging STABLE 10/10 Sequence complete
 RESULT pass system device_config_acked STABLE 10/10 Sequence complete
 RESULT pass system extra_config STABLE 10/10 Sequence complete
