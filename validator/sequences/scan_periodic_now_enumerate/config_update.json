@@ -1,6 +1,6 @@
 {
   "timestamp" : "TIMESTAMP",
-  "version" : "@@@cloud udmi version###git-b7ad9cd",
+  "version" : "@@@cloud udmi version###git-250ce5e",
   "system" : {
     "min_loglevel" : 100,
     "metrics_rate_sec" : 10,
@@ -8,7 +8,7 @@
       "last_start" : "TIMESTAMP"
     },
     "testing" : {
-      "sequence_name" : "scan_periodic_now_enumerate"
+      "sequence_name" : "scan_periodic_now_enumerate+vendor"
     }
   },
   "discovery" : {

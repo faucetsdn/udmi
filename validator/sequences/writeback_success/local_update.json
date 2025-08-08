@@ -1,11 +1,11 @@
 {
-  "timestamp" : "2024-12-18T15:34:15Z",
-  "version" : "@@@cloud udmi version###git-f59a297",
+  "timestamp" : "TIMESTAMP",
+  "version" : "@@@cloud udmi version###git-250ce5e",
   "system" : {
     "min_loglevel" : 100,
     "metrics_rate_sec" : 10,
     "operation" : {
-      "last_start" : "2024-12-18T15:33:43Z"
+      "last_start" : "TIMESTAMP"
     },
     "testing" : {
       "sequence_name" : "writeback_success"
@@ -13,7 +13,8 @@
   },
   "discovery" : {
     "families" : {
-      "vendor" : { }
+      "vendor" : { },
+      "bacnet" : { }
     }
   },
   "localnet" : {
@@ -28,7 +29,7 @@
     "points" : {
       "filter_differential_pressure_setpoint" : {
         "units" : "Bars",
-        "set_value" : 60
+        "set_value" : 98
       },
       "filter_alarm_pressure_status" : {
         "ref" : "BV11.present_value",

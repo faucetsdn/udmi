@@ -3,7 +3,7 @@
     "vendor" : {
       "generation" : "TIMESTAMP",
       "phase" : "stopped",
-      "active_count" : 3
+      "active_count" : 4
     }
   },
   "timestamp" : "TIMESTAMP",

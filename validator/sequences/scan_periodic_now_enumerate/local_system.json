@@ -5,6 +5,6 @@
     "last_start" : "TIMESTAMP"
   },
   "testing" : {
-    "sequence_name" : "scan_periodic_now_enumerate"
+    "sequence_name" : "scan_periodic_now_enumerate+vendor"
   }
 }

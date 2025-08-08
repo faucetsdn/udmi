@@ -1,135 +1,146 @@
-2024-12-11T05:43:41Z DEBUG   device.log             State update defer 0ms
-2024-12-11T05:43:41Z INFO    device.log             Update state 2024-12-11T05:43:41Z last_config 2024-12-11T05:43:39Z
-2024-12-11T05:43:41Z DEBUG   device.log             State update AHU-1 (endpoint_connection_success_reconnect)
-2024-12-11T05:43:51Z DEBUG   system.config.receive  success
-2024-12-11T05:43:51Z DEBUG   device.log             State update defer -8139ms
-2024-12-11T05:43:51Z INFO    device.log             Update state 2024-12-11T05:43:51Z last_config 2024-12-11T05:43:39Z
-2024-12-11T05:43:51Z DEBUG   system.config.parse    success
-2024-12-11T05:43:51Z INFO    device.log             Device AHU-1 config handler
-2024-12-11T05:43:51Z DEBUG   device.log             Config update AHU-1 (endpoint_connection_success_reconnect)
-2024-12-11T05:43:51Z DEBUG   device.log             State update defer 2000ms
-2024-12-11T05:43:51Z INFO    device.log             2024-12-11T05:43:51Z received config 2024-12-11T05:43:51Z
-2024-12-11T05:43:51Z NOTICE  system.config.apply    success
-2024-12-11T05:43:51Z DEBUG   device.log             State update defer 1999ms
-2024-12-11T05:43:51Z DEBUG   device.log             State update defer 1999ms
-2024-12-11T05:43:51Z DEBUG   device.log             State update defer 1999ms
-2024-12-11T05:43:51Z DEBUG   device.log             State update defer 1999ms
-2024-12-11T05:43:51Z DEBUG   device.log             State update defer 1998ms
-2024-12-11T05:43:51Z DEBUG   device.log             State update defer 1997ms
-2024-12-11T05:43:51Z DEBUG   device.log             State update defer 1997ms
-2024-12-11T05:43:51Z DEBUG   system.config.receive  success
-2024-12-11T05:43:51Z DEBUG   system.config.parse    success
-2024-12-11T05:43:51Z DEBUG   device.log             State update defer 1932ms
-2024-12-11T05:43:51Z INFO    device.log             Device AHU-1 config handler
-2024-12-11T05:43:51Z DEBUG   device.log             State update defer 1932ms
-2024-12-11T05:43:51Z DEBUG   device.log             Config update AHU-1 (enumerate_features)
-2024-12-11T05:43:51Z INFO    device.log             2024-12-11T05:43:51Z received config 2024-12-11T05:43:51Z
-2024-12-11T05:43:51Z NOTICE  system.config.apply    success
-2024-12-11T05:43:51Z DEBUG   device.log             State update defer 1931ms
-2024-12-11T05:43:51Z DEBUG   device.log             State update defer 1930ms
-2024-12-11T05:43:51Z DEBUG   device.log             State update defer 1930ms
-2024-12-11T05:43:51Z DEBUG   device.log             State update defer 1930ms
-2024-12-11T05:43:51Z DEBUG   device.log             State update defer 1930ms
-2024-12-11T05:43:51Z DEBUG   device.log             State update defer 1930ms
-2024-12-11T05:43:51Z DEBUG   device.log             State update defer 1930ms
-2024-12-11T05:43:53Z DEBUG   device.log             State update defer 0ms
-2024-12-11T05:43:53Z INFO    device.log             Update state 2024-12-11T05:43:53Z last_config 2024-12-11T05:43:51Z
-2024-12-11T05:43:53Z DEBUG   device.log             State update AHU-1 (enumerate_features)
-2024-12-11T05:43:54Z DEBUG   system.config.receive  success
-2024-12-11T05:43:54Z DEBUG   device.log             State update defer 904ms
-2024-12-11T05:43:54Z DEBUG   system.config.parse    success
-2024-12-11T05:43:54Z INFO    device.log             Device AHU-1 config handler
-2024-12-11T05:43:54Z DEBUG   device.log             Config update AHU-1 (enumerate_features)
-2024-12-11T05:43:54Z INFO    device.log             2024-12-11T05:43:54Z received config 2024-12-11T05:43:54Z
-2024-12-11T05:43:54Z NOTICE  system.config.apply    success
-2024-12-11T05:43:54Z DEBUG   device.log             State update defer 901ms
-2024-12-11T05:43:54Z DEBUG   device.log             State update defer 901ms
-2024-12-11T05:43:54Z DEBUG   device.log             State update defer 900ms
-2024-12-11T05:43:54Z DEBUG   device.log             State update defer 900ms
-2024-12-11T05:43:54Z DEBUG   device.log             State update defer 900ms
-2024-12-11T05:43:54Z DEBUG   device.log             State update defer 900ms
-2024-12-11T05:43:54Z DEBUG   device.log             State update defer 900ms
-2024-12-11T05:43:54Z DEBUG   device.log             State update defer 900ms
-2024-12-11T05:43:55Z DEBUG   device.log             State update defer 0ms
-2024-12-11T05:43:55Z INFO    device.log             Update state 2024-12-11T05:43:55Z last_config 2024-12-11T05:43:54Z
-2024-12-11T05:43:55Z DEBUG   device.log             State update AHU-1 (enumerate_features)
-2024-12-11T05:43:56Z DEBUG   system.config.receive  success
-2024-12-11T05:43:56Z DEBUG   device.log             State update defer 887ms
-2024-12-11T05:43:56Z DEBUG   system.config.parse    success
-2024-12-11T05:43:56Z INFO    device.log             Device AHU-1 config handler
-2024-12-11T05:43:56Z DEBUG   device.log             Config update AHU-1 (enumerate_features)
-2024-12-11T05:43:56Z INFO    device.log             2024-12-11T05:43:56Z received config 2024-12-11T05:43:56Z
-2024-12-11T05:43:56Z NOTICE  system.config.apply    success
-2024-12-11T05:43:56Z DEBUG   device.log             State update defer 885ms
-2024-12-11T05:43:56Z DEBUG   device.log             State update defer 885ms
-2024-12-11T05:43:57Z DEBUG   device.log             State update defer 0ms
-2024-12-11T05:43:57Z INFO    device.log             Update state 2024-12-11T05:43:57Z last_config 2024-12-11T05:43:56Z
-2024-12-11T05:43:57Z DEBUG   device.log             State update AHU-1 (enumerate_features)
-2024-12-11T05:43:58Z DEBUG   system.config.receive  success
-2024-12-11T05:43:58Z DEBUG   device.log             State update defer 893ms
-2024-12-11T05:43:58Z DEBUG   system.config.parse    success
-2024-12-11T05:43:58Z DEBUG   device.log             State update defer 893ms
-2024-12-11T05:43:58Z DEBUG   device.log             Config update AHU-1 (enumerate_features)
-2024-12-11T05:43:58Z INFO    device.log             2024-12-11T05:43:58Z received config 2024-12-11T05:43:58Z
-2024-12-11T05:43:58Z NOTICE  system.config.apply    success
-2024-12-11T05:43:58Z DEBUG   device.log             State update defer 891ms
-2024-12-11T05:43:58Z DEBUG   device.log             State update defer 891ms
-2024-12-11T05:43:58Z DEBUG   device.log             State update defer 891ms
-2024-12-11T05:43:59Z DEBUG   device.log             State update defer 0ms
-2024-12-11T05:43:59Z INFO    device.log             Update state 2024-12-11T05:43:59Z last_config 2024-12-11T05:43:58Z
-2024-12-11T05:43:59Z DEBUG   device.log             State update AHU-1 (enumerate_features)
-2024-12-11T05:43:59Z DEBUG   system.config.receive  success
-2024-12-11T05:43:59Z DEBUG   device.log             State update defer 1689ms
-2024-12-11T05:43:59Z DEBUG   system.config.parse    success
-2024-12-11T05:43:59Z DEBUG   device.log             State update defer 1688ms
-2024-12-11T05:43:59Z DEBUG   device.log             Config update AHU-1 (enumerate_features)
-2024-12-11T05:43:59Z INFO    device.log             2024-12-11T05:43:59Z received config 2024-12-11T05:43:59Z
-2024-12-11T05:43:59Z NOTICE  system.config.apply    success
-2024-12-11T05:43:59Z DEBUG   device.log             State update defer 1687ms
-2024-12-11T05:43:59Z DEBUG   device.log             State update defer 1687ms
-2024-12-11T05:44:00Z DEBUG   system.config.receive  success
-2024-12-11T05:44:00Z DEBUG   device.log             State update defer 585ms
-2024-12-11T05:44:00Z DEBUG   system.config.parse    success
-2024-12-11T05:44:00Z INFO    device.log             Device AHU-1 config handler
-2024-12-11T05:44:00Z DEBUG   device.log             State update defer 585ms
-2024-12-11T05:44:00Z DEBUG   device.log             Config update AHU-1 (enumerate_features)
-2024-12-11T05:44:00Z INFO    device.log             2024-12-11T05:44:00Z received config 2024-12-11T05:44:00Z
-2024-12-11T05:44:00Z NOTICE  system.config.apply    success
-2024-12-11T05:44:00Z DEBUG   device.log             State update defer 584ms
-2024-12-11T05:44:00Z DEBUG   device.log             State update defer 584ms
-2024-12-11T05:44:01Z DEBUG   device.log             State update defer 0ms
-2024-12-11T05:44:01Z INFO    device.log             Update state 2024-12-11T05:44:01Z last_config 2024-12-11T05:44:00Z
-2024-12-11T05:44:01Z DEBUG   device.log             State update AHU-1 (enumerate_features)
-2024-12-11T05:44:01Z DEBUG   system.config.receive  success
-2024-12-11T05:44:01Z DEBUG   device.log             State update defer 1483ms
-2024-12-11T05:44:01Z DEBUG   system.config.parse    success
-2024-12-11T05:44:01Z INFO    device.log             Device AHU-1 config handler
-2024-12-11T05:44:01Z DEBUG   device.log             State update defer 1482ms
-2024-12-11T05:44:01Z DEBUG   device.log             Config update AHU-1 (enumerate_features)
-2024-12-11T05:44:01Z INFO    device.log             2024-12-11T05:44:01Z received config 2024-12-11T05:44:01Z
-2024-12-11T05:44:01Z NOTICE  system.config.apply    success
-2024-12-11T05:44:01Z DEBUG   device.log             State update defer 1481ms
-2024-12-11T05:44:01Z DEBUG   device.log             State update defer 1480ms
-2024-12-11T05:44:01Z DEBUG   device.log             State update defer 1480ms
-2024-12-11T05:44:01Z DEBUG   device.log             State update defer 1480ms
-2024-12-11T05:44:01Z DEBUG   device.log             State update defer 1480ms
-2024-12-11T05:44:01Z DEBUG   device.log             State update defer 1480ms
-2024-12-11T05:44:01Z DEBUG   device.log             State update defer 1480ms
-2024-12-11T05:44:03Z DEBUG   device.log             State update defer 0ms
-2024-12-11T05:44:03Z INFO    device.log             Update state 2024-12-11T05:44:03Z last_config 2024-12-11T05:44:01Z
-2024-12-11T05:44:03Z DEBUG   device.log             State update AHU-1 (enumerate_features)
-2024-12-11T05:44:04Z DEBUG   system.config.receive  success
-2024-12-11T05:44:04Z DEBUG   device.log             State update defer 942ms
-2024-12-11T05:44:04Z DEBUG   system.config.parse    success
-2024-12-11T05:44:04Z INFO    device.log             Device AHU-1 config handler
-2024-12-11T05:44:04Z DEBUG   device.log             Config update AHU-1 (enumerate_features)
-2024-12-11T05:44:04Z INFO    device.log             2024-12-11T05:44:04Z received config 2024-12-11T05:44:04Z
-2024-12-11T05:44:04Z INFO    device.log             Discovery enumeration at 2024-12-11T05:44:03Z
-2024-12-11T05:44:04Z DEBUG   device.log             State update defer 929ms
-2024-12-11T05:44:04Z DEBUG   device.log             State update defer 928ms
-2024-12-11T05:44:04Z NOTICE  system.config.apply    success
-2024-12-11T05:44:04Z DEBUG   device.log             State update defer 926ms
-2024-12-11T05:44:05Z DEBUG   device.log             State update defer 0ms
-2024-12-11T05:44:05Z INFO    device.log             Update state 2024-12-11T05:44:05Z last_config 2024-12-11T05:44:04Z
-2024-12-11T05:44:05Z DEBUG   device.log             State update AHU-1 (enumerate_features)
-2024-12-11T05:44:08Z NOTICE  validation.feature.sequence Sequence complete
+TIMESTAMP DEBUG   device.log             State update defer -2989ms
+TIMESTAMP
+TIMESTAMP DEBUG   device.log             State update AHU-1 (endpoint_failure_and_restart)
+TIMESTAMP DEBUG   system.config.receive  success
+TIMESTAMP DEBUG   device.log             State update defer 631ms
+TIMESTAMP DEBUG   system.config.parse    success
+TIMESTAMP INFO    device.log             Device AHU-1 config handler
+TIMESTAMP DEBUG   device.log             State update defer 630ms
+TIMESTAMP DEBUG   device.log             Config update AHU-1 (endpoint_failure_and_restart)
+TIMESTAMP
+TIMESTAMP NOTICE  system.config.apply    success
+TIMESTAMP DEBUG   device.log             State update defer 628ms
+TIMESTAMP DEBUG   device.log             State update defer 628ms
+TIMESTAMP DEBUG   device.log             State update defer 0ms
+TIMESTAMP
+TIMESTAMP DEBUG   device.log             State update AHU-1 (endpoint_failure_and_restart)
+TIMESTAMP DEBUG   device.log             State update defer -987ms
+TIMESTAMP
+TIMESTAMP DEBUG   device.log             State update AHU-1 (endpoint_failure_and_restart)
+TIMESTAMP DEBUG   system.config.receive  success
+TIMESTAMP DEBUG   device.log             State update defer -6453ms
+TIMESTAMP DEBUG   system.config.parse    success
+TIMESTAMP
+TIMESTAMP INFO    device.log             Device AHU-1 config handler
+TIMESTAMP DEBUG   device.log             State update AHU-1 (endpoint_failure_and_restart)
+TIMESTAMP DEBUG   device.log             Config update AHU-1 (endpoint_failure_and_restart)
+TIMESTAMP DEBUG   device.log             State update defer 2000ms
+TIMESTAMP
+TIMESTAMP NOTICE  system.config.apply    success
+TIMESTAMP DEBUG   device.log             State update defer 1999ms
+TIMESTAMP DEBUG   device.log             State update defer 1998ms
+TIMESTAMP DEBUG   device.log             State update defer 1998ms
+TIMESTAMP DEBUG   device.log             State update defer 1998ms
+TIMESTAMP DEBUG   device.log             State update defer 1998ms
+TIMESTAMP DEBUG   device.log             State update defer 1997ms
+TIMESTAMP DEBUG   device.log             State update defer 1997ms
+TIMESTAMP DEBUG   system.config.receive  success
+TIMESTAMP DEBUG   device.log             State update defer 1941ms
+TIMESTAMP DEBUG   system.config.parse    success
+TIMESTAMP INFO    device.log             Device AHU-1 config handler
+TIMESTAMP DEBUG   device.log             State update defer 1941ms
+TIMESTAMP DEBUG   device.log             Config update AHU-1 (enumerate_features)
+TIMESTAMP
+TIMESTAMP NOTICE  system.config.apply    success
+TIMESTAMP DEBUG   device.log             State update defer 1940ms
+TIMESTAMP DEBUG   device.log             State update defer 1939ms
+TIMESTAMP DEBUG   device.log             State update defer 1939ms
+TIMESTAMP DEBUG   device.log             State update defer 1939ms
+TIMESTAMP DEBUG   device.log             State update defer 1939ms
+TIMESTAMP DEBUG   device.log             State update defer 1939ms
+TIMESTAMP DEBUG   device.log             State update defer 1939ms
+TIMESTAMP DEBUG   device.log             State update defer 461ms
+TIMESTAMP DEBUG   device.log             State update defer 0ms
+TIMESTAMP
+TIMESTAMP DEBUG   device.log             State update AHU-1 (enumerate_features)
+TIMESTAMP DEBUG   system.config.receive  success
+TIMESTAMP DEBUG   device.log             State update defer -2054ms
+TIMESTAMP DEBUG   system.config.parse    success
+TIMESTAMP
+TIMESTAMP INFO    device.log             Device AHU-1 config handler
+TIMESTAMP DEBUG   device.log             State update AHU-1 (enumerate_features)
+TIMESTAMP DEBUG   device.log             Config update AHU-1 (enumerate_features)
+TIMESTAMP DEBUG   device.log             State update defer 2000ms
+TIMESTAMP
+TIMESTAMP DEBUG   device.log             State update defer 1998ms
+TIMESTAMP DEBUG   device.log             State update defer 1998ms
+TIMESTAMP NOTICE  system.config.apply    success
+TIMESTAMP DEBUG   device.log             State update defer 1998ms
+TIMESTAMP DEBUG   device.log             State update defer 1998ms
+TIMESTAMP DEBUG   device.log             State update defer 0ms
+TIMESTAMP
+TIMESTAMP DEBUG   device.log             State update AHU-1 (enumerate_features)
+TIMESTAMP DEBUG   system.config.receive  success
+TIMESTAMP DEBUG   device.log             State update defer -1013ms
+TIMESTAMP DEBUG   system.config.parse    success
+TIMESTAMP
+TIMESTAMP INFO    device.log             Device AHU-1 config handler
+TIMESTAMP DEBUG   device.log             State update AHU-1 (enumerate_features)
+TIMESTAMP DEBUG   device.log             Config update AHU-1 (enumerate_features)
+TIMESTAMP DEBUG   device.log             State update defer 2000ms
+TIMESTAMP
+TIMESTAMP NOTICE  system.config.apply    success
+TIMESTAMP DEBUG   device.log             State update defer 1999ms
+TIMESTAMP DEBUG   device.log             State update defer 1999ms
+TIMESTAMP DEBUG   device.log             State update defer 1538ms
+TIMESTAMP DEBUG   device.log             State update defer 0ms
+TIMESTAMP
+TIMESTAMP DEBUG   device.log             State update AHU-1 (enumerate_features)
+TIMESTAMP DEBUG   system.config.receive  success
+TIMESTAMP DEBUG   system.config.parse    success
+TIMESTAMP INFO    device.log             Device AHU-1 config handler
+TIMESTAMP
+TIMESTAMP DEBUG   device.log             State update AHU-1 (enumerate_features)
+TIMESTAMP DEBUG   device.log             Config update AHU-1 (enumerate_features)
+TIMESTAMP
+TIMESTAMP NOTICE  system.config.apply    success
+TIMESTAMP DEBUG   device.log             State update defer 1999ms
+TIMESTAMP DEBUG   device.log             State update defer 1999ms
+TIMESTAMP DEBUG   device.log             State update defer 1999ms
+TIMESTAMP DEBUG   device.log             State update defer 1998ms
+TIMESTAMP DEBUG   device.log             State update defer 1998ms
+TIMESTAMP DEBUG   system.config.receive  success
+TIMESTAMP DEBUG   system.config.parse    success
+TIMESTAMP INFO    device.log             Device AHU-1 config handler
+TIMESTAMP DEBUG   device.log             State update defer 801ms
+TIMESTAMP DEBUG   device.log             Config update AHU-1 (enumerate_features)
+TIMESTAMP
+TIMESTAMP NOTICE  system.config.apply    success
+TIMESTAMP DEBUG   device.log             State update defer 799ms
+TIMESTAMP DEBUG   device.log             State update defer 799ms
+TIMESTAMP DEBUG   device.log             State update defer 799ms
+TIMESTAMP DEBUG   device.log             State update defer 799ms
+TIMESTAMP DEBUG   device.log             State update defer 799ms
+TIMESTAMP DEBUG   device.log             State update defer 0ms
+TIMESTAMP
+TIMESTAMP DEBUG   device.log             State update AHU-1 (enumerate_features)
+TIMESTAMP DEBUG   system.config.receive  success
+TIMESTAMP DEBUG   device.log             State update defer 1788ms
+TIMESTAMP DEBUG   system.config.parse    success
+TIMESTAMP INFO    device.log             Device AHU-1 config handler
+TIMESTAMP DEBUG   device.log             State update defer 1787ms
+TIMESTAMP DEBUG   device.log             Config update AHU-1 (enumerate_features)
+TIMESTAMP
+TIMESTAMP NOTICE  system.config.apply    success
+TIMESTAMP DEBUG   device.log             State update defer 1786ms
+TIMESTAMP DEBUG   device.log             State update defer 1786ms
+TIMESTAMP DEBUG   device.log             State update defer 1786ms
+TIMESTAMP DEBUG   device.log             State update defer 1786ms
+TIMESTAMP DEBUG   system.config.receive  success
+TIMESTAMP DEBUG   device.log             State update defer 1697ms
+TIMESTAMP DEBUG   system.config.parse    success
+TIMESTAMP INFO    device.log             Device AHU-1 config handler
+TIMESTAMP DEBUG   device.log             Config update AHU-1 (enumerate_features)
+TIMESTAMP
+TIMESTAMP NOTICE  system.config.apply    success
+TIMESTAMP DEBUG   device.log             State update defer 1694ms
+TIMESTAMP DEBUG   device.log             State update defer 1694ms
+TIMESTAMP DEBUG   device.log             State update defer 1693ms
+TIMESTAMP DEBUG   device.log             State update defer 1693ms
+TIMESTAMP DEBUG   device.log             State update defer 1693ms
+TIMESTAMP DEBUG   device.log             State update defer 1693ms
+TIMESTAMP DEBUG   device.log             State update defer 1693ms
+TIMESTAMP DEBUG   device.log             State update defer 0ms
+TIMESTAMP
+TIMESTAMP DEBUG   device.log             State update AHU-1 (enumerate_features)
+TIMESTAMP NOTICE  validation.feature.sequence Sequence complete

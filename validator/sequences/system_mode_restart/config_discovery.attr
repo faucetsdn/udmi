@@ -1,10 +1,10 @@
 {
   "deviceId" : "AHU-1",
   "deviceNumId" : "123456789101112",
-  "deviceRegistryId" : "ZZ-TRI-FECTA_8",
+  "deviceRegistryId" : "ZZ-TRI-FECTA",
   "projectId" : "localhost",
-  "transactionId" : "CU:d3d5ee.0000000e",
-  "publishTime" : "2025-06-10T19:54:48Z",
+  REDACTED_TXN_ID
+  "publishTime" : "TIMESTAMP",
   "subFolder" : "discovery",
   "subType" : "config"
 }

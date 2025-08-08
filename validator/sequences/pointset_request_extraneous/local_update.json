@@ -1,11 +1,11 @@
 {
-  "timestamp" : "2024-12-17T05:27:56Z",
-  "version" : "@@@cloud udmi version###git-46fef59",
+  "timestamp" : "TIMESTAMP",
+  "version" : "@@@cloud udmi version###git-250ce5e",
   "system" : {
     "min_loglevel" : 100,
     "metrics_rate_sec" : 10,
     "operation" : {
-      "last_start" : "2024-12-17T05:25:35Z"
+      "last_start" : "TIMESTAMP"
     },
     "testing" : {
       "sequence_name" : "pointset_request_extraneous"
@@ -13,7 +13,8 @@
   },
   "discovery" : {
     "families" : {
-      "vendor" : { }
+      "vendor" : { },
+      "bacnet" : { }
     }
   },
   "localnet" : {
@@ -25,7 +26,6 @@
     }
   },
   "pointset" : {
-    "sample_rate_sec" : 10,
     "points" : {
       "filter_differential_pressure_setpoint" : {
         "units" : "Bars",

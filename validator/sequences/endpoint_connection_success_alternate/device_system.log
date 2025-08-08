@@ -1,358 +1,349 @@
-2024-12-20T09:54:41Z INFO    device.log             Configured with auth_type RS256
-2024-12-20T09:54:42Z INFO    device.log             Using addresses from default interface: eth0 for family: ether
-2024-12-20T09:54:42Z INFO    device.log             Family ether address is 60:45:bd:03:f7:6c
-2024-12-20T09:54:42Z INFO    device.log             Using addresses from default interface: eth0 for family: ipv4
-2024-12-20T09:54:42Z INFO    device.log             Family ipv4 address is 10.1.0.15
-2024-12-20T09:54:42Z INFO    device.log             Resetting persistent store /home/runner/work/udmi/udmi/sites/udmi_site_model/out/devices/AHU-1/persistent_data.json
-2024-12-20T09:54:42Z INFO    device.log             Loading endpoint into persistent data from configuration
-2024-12-20T09:54:42Z WARNING device.log             Updating persistent store:
+TIMESTAMP INFO    device.log             Configured with auth_type RS256
+TIMESTAMP INFO    device.log             Using addresses from default interface: eth0 for family: ether
+TIMESTAMP INFO    device.log             Family ether address is 00:0d:3a:59:8d:d4
+TIMESTAMP INFO    device.log             Using addresses from default interface: eth0 for family: ipv4
+TIMESTAMP INFO    device.log             Family ipv4 address is 10.1.0.192
+TIMESTAMP INFO    device.log             Resetting persistent store /home/runner/work/udmi/udmi/sites/udmi_site_model/out/devices/AHU-1/persistent_data.json
+TIMESTAMP INFO    device.log             Loading endpoint into persistent data from configuration
+TIMESTAMP WARNING device.log             Updating persistent store:
 {
   "endpoint" : {
     "protocol" : "mqtt",
     "transport" : "ssl",
     "hostname" : "localhost",
-    "client_id" : "/r/ZZ-TRI-FECTA_2/d/AHU-1",
-    "topic_prefix" : "/r/ZZ-TRI-FECTA_2/d/AHU-1",
+    "client_id" : "/r/ZZ-TRI-FECTA/d/AHU-1",
+    "topic_prefix" : "/r/ZZ-TRI-FECTA/d/AHU-1",
     "auth_provider" : {
       "basic" : {
-        "username" : "/r/ZZ-TRI-FECTA_2/d/AHU-1",
+        "username" : "/r/ZZ-TRI-FECTA/d/AHU-1",
         "password" : "38269d11"
       }
     }
   },
   "restart_count" : 1
 }
-2024-12-20T09:54:42Z INFO    device.log             Starting pubber AHU-1, serial sequencer-18531, mac null, gateway null, options noPersist
-2024-12-20T09:54:42Z INFO    device.log             Loading device key bytes from /home/runner/work/udmi/udmi/sites/udmi_site_model/devices/AHU-1/rsa_private.pkcs8
-2024-12-20T09:54:42Z INFO    device.log             CA cert file: /home/runner/work/udmi/udmi/sites/udmi_site_model/reflector/ca.crt
-2024-12-20T09:54:42Z INFO    device.log             Device cert file: /home/runner/work/udmi/udmi/sites/udmi_site_model/devices/AHU-1/rsa_private.crt
-2024-12-20T09:54:42Z INFO    device.log             Private key file: /home/runner/work/udmi/udmi/sites/udmi_site_model/devices/AHU-1/rsa_private.pem
-2024-12-20T09:54:42Z INFO    device.log             Password sha256 6b5344e1
-2024-12-20T09:54:42Z WARNING device.log             Starting connection 1734688482157 with 10
-2024-12-20T09:54:42Z INFO    device.log             Update state 2024-12-20T09:54:42Z last_config 1970-01-01T00:00:00Z
-2024-12-20T09:54:42Z WARNING device.log             Dropping state update until config received...
-2024-12-20T09:54:42Z WARNING device.log             Creating new config latch for AHU-1
-2024-12-20T09:54:42Z INFO    device.log             Update state 2024-12-20T09:54:42Z last_config 1970-01-01T00:00:00Z
-2024-12-20T09:54:42Z WARNING device.log             Dropping state update until config received...
-2024-12-20T09:54:42Z INFO    device.log             Update state 2024-12-20T09:54:42Z last_config 1970-01-01T00:00:00Z
-2024-12-20T09:54:42Z WARNING device.log             Dropping state update until config received...
-2024-12-20T09:54:42Z INFO    device.log             Device AHU-1 config handler
-2024-12-20T09:54:42Z WARNING device.log             Received config for config latch AHU-1
-2024-12-20T09:54:42Z WARNING device.log             Starting AHU-1 Pubber sender with delay 10s
-2024-12-20T09:54:42Z INFO    device.log             2024-12-20T09:54:42Z received config 2024-12-20T09:54:27Z
-2024-12-20T09:54:42Z WARNING device.log             Starting AHU-1 PubberSystemManager sender with delay 10s
-2024-12-20T09:54:42Z WARNING device.log             Starting AHU-1 PubberPointsetManager sender with delay 10s
-2024-12-20T09:54:42Z WARNING device.log             Start waiting 10s for config latch for AHU-1
-2024-12-20T09:54:42Z WARNING device.log             Ending connection 1734688482157 with 9
-2024-12-20T09:54:42Z NOTICE  system.config.apply    success
-2024-12-20T09:54:42Z NOTICE  system.config.apply    success
-2024-12-20T09:54:54Z NOTICE  system.config.apply    success
-2024-12-20T09:54:54Z DEBUG   device.log             State update defer -7828ms
-2024-12-20T09:54:54Z INFO    device.log             Update state 2024-12-20T09:54:54Z last_config 2024-12-20T09:54:54Z
-2024-12-20T09:54:54Z DEBUG   device.log             State update AHU-1 (endpoint_connection_success_alternate)
-2024-12-20T09:54:54Z DEBUG   system.config.receive  success
-2024-12-20T09:54:54Z DEBUG   device.log             State update defer 1917ms
-2024-12-20T09:54:54Z DEBUG   system.config.parse    success
-2024-12-20T09:54:54Z DEBUG   device.log             State update defer 1916ms
-2024-12-20T09:54:54Z INFO    device.log             Device AHU-1 config handler
-2024-12-20T09:54:54Z DEBUG   device.log             Config update AHU-1 (endpoint_connection_success_alternate)
-2024-12-20T09:54:54Z INFO    device.log             2024-12-20T09:54:54Z received config 2024-12-20T09:54:54Z
-2024-12-20T09:54:54Z NOTICE  system.config.apply    success
-2024-12-20T09:54:54Z DEBUG   device.log             State update defer 1911ms
-2024-12-20T09:54:54Z DEBUG   device.log             State update defer 1911ms
-2024-12-20T09:54:56Z DEBUG   device.log             State update defer 0ms
-2024-12-20T09:54:56Z INFO    device.log             Update state 2024-12-20T09:54:56Z last_config 2024-12-20T09:54:54Z
-2024-12-20T09:54:56Z DEBUG   device.log             State update AHU-1 (endpoint_connection_success_alternate)
-2024-12-20T09:54:58Z DEBUG   system.config.receive  success
-2024-12-20T09:54:58Z DEBUG   device.log             State update defer -74ms
-2024-12-20T09:54:58Z INFO    device.log             Update state 2024-12-20T09:54:58Z last_config 2024-12-20T09:54:54Z
-2024-12-20T09:54:58Z DEBUG   system.config.parse    success
-2024-12-20T09:54:58Z INFO    device.log             Device AHU-1 config handler
-2024-12-20T09:54:58Z DEBUG   device.log             State update AHU-1 (endpoint_connection_success_alternate)
-2024-12-20T09:54:58Z DEBUG   device.log             Config update AHU-1 (endpoint_connection_success_alternate)
-2024-12-20T09:54:58Z DEBUG   device.log             State update defer 2000ms
-2024-12-20T09:54:58Z INFO    device.log             2024-12-20T09:54:58Z received config 2024-12-20T09:54:58Z
-2024-12-20T09:54:58Z NOTICE  system.config.apply    success
-2024-12-20T09:54:58Z DEBUG   device.log             State update defer 1998ms
-2024-12-20T09:54:58Z DEBUG   device.log             State update defer 1998ms
-2024-12-20T09:54:58Z DEBUG   device.log             State update defer 1998ms
-2024-12-20T09:54:58Z DEBUG   device.log             State update defer 1998ms
-2024-12-20T09:54:58Z DEBUG   device.log             State update defer 1997ms
-2024-12-20T09:54:58Z DEBUG   device.log             State update defer 1997ms
-2024-12-20T09:54:58Z DEBUG   device.log             State update defer 1997ms
-2024-12-20T09:55:00Z DEBUG   device.log             State update defer 0ms
-2024-12-20T09:55:00Z INFO    device.log             Update state 2024-12-20T09:55:00Z last_config 2024-12-20T09:54:58Z
-2024-12-20T09:55:00Z DEBUG   device.log             State update AHU-1 (endpoint_connection_success_alternate)
-2024-12-20T09:55:02Z DEBUG   system.config.receive  success
-2024-12-20T09:55:02Z DEBUG   device.log             State update defer -92ms
-2024-12-20T09:55:02Z INFO    device.log             Update state 2024-12-20T09:55:02Z last_config 2024-12-20T09:54:58Z
-2024-12-20T09:55:02Z DEBUG   system.config.parse    success
-2024-12-20T09:55:02Z INFO    device.log             Device AHU-1 config handler
-2024-12-20T09:55:02Z DEBUG   device.log             Config update AHU-1 (endpoint_connection_success_alternate)
-2024-12-20T09:55:02Z DEBUG   device.log             State update defer 1999ms
-2024-12-20T09:55:02Z INFO    device.log             2024-12-20T09:55:02Z received config 2024-12-20T09:55:02Z
-2024-12-20T09:55:02Z NOTICE  system.config.apply    success
-2024-12-20T09:55:02Z DEBUG   device.log             State update defer 1997ms
-2024-12-20T09:55:02Z DEBUG   device.log             State update defer 1997ms
-2024-12-20T09:55:02Z DEBUG   device.log             State update defer 1996ms
-2024-12-20T09:55:02Z DEBUG   device.log             State update defer 1996ms
-2024-12-20T09:55:02Z DEBUG   device.log             State update defer 1996ms
-2024-12-20T09:55:02Z DEBUG   device.log             State update defer 1996ms
-2024-12-20T09:55:02Z DEBUG   device.log             State update defer 1995ms
-2024-12-20T09:55:04Z DEBUG   device.log             State update defer 0ms
-2024-12-20T09:55:04Z INFO    device.log             Update state 2024-12-20T09:55:04Z last_config 2024-12-20T09:55:02Z
-2024-12-20T09:55:04Z DEBUG   device.log             State update AHU-1 (endpoint_connection_success_alternate)
-2024-12-20T09:55:07Z DEBUG   system.config.receive  success
-2024-12-20T09:55:07Z DEBUG   device.log             State update defer -96ms
-2024-12-20T09:55:07Z DEBUG   system.config.parse    success
-2024-12-20T09:55:07Z INFO    device.log             Device AHU-1 config handler
-2024-12-20T09:55:07Z INFO    device.log             Update state 2024-12-20T09:55:07Z last_config 2024-12-20T09:55:02Z
-2024-12-20T09:55:07Z DEBUG   device.log             State update AHU-1 (endpoint_connection_success_alternate)
-2024-12-20T09:55:07Z DEBUG   device.log             Config update AHU-1 (endpoint_connection_success_alternate)
-2024-12-20T09:55:07Z DEBUG   device.log             State update defer 2000ms
-2024-12-20T09:55:07Z INFO    device.log             2024-12-20T09:55:07Z received config 2024-12-20T09:55:07Z
-2024-12-20T09:55:07Z NOTICE  system.config.apply    success
-2024-12-20T09:55:07Z DEBUG   device.log             State update defer 1998ms
-2024-12-20T09:55:07Z DEBUG   device.log             State update defer 1998ms
-2024-12-20T09:55:07Z DEBUG   device.log             State update defer 1998ms
-2024-12-20T09:55:08Z DEBUG   system.config.receive  success
-2024-12-20T09:55:08Z DEBUG   system.config.parse    success
-2024-12-20T09:55:08Z INFO    device.log             Device AHU-1 config handler
-2024-12-20T09:55:08Z DEBUG   device.log             State update defer 810ms
-2024-12-20T09:55:08Z DEBUG   device.log             State update defer 809ms
-2024-12-20T09:55:08Z DEBUG   device.log             Config update AHU-1 (endpoint_connection_success_alternate)
-2024-12-20T09:55:08Z INFO    device.log             2024-12-20T09:55:08Z received config 2024-12-20T09:55:08Z
-2024-12-20T09:55:08Z NOTICE  system.config.apply    success
-2024-12-20T09:55:08Z DEBUG   device.log             State update defer 807ms
-2024-12-20T09:55:08Z DEBUG   device.log             State update defer 806ms
-2024-12-20T09:55:08Z DEBUG   device.log             State update defer 806ms
-2024-12-20T09:55:08Z DEBUG   device.log             State update defer 805ms
-2024-12-20T09:55:08Z DEBUG   device.log             State update defer 805ms
-2024-12-20T09:55:08Z DEBUG   device.log             State update defer 805ms
-2024-12-20T09:55:08Z DEBUG   device.log             State update defer 805ms
-2024-12-20T09:55:09Z DEBUG   device.log             State update defer 0ms
-2024-12-20T09:55:09Z INFO    device.log             Update state 2024-12-20T09:55:09Z last_config 2024-12-20T09:55:08Z
-2024-12-20T09:55:09Z DEBUG   device.log             State update AHU-1 (endpoint_connection_success_alternate)
-2024-12-20T09:55:09Z DEBUG   system.config.receive  success
-2024-12-20T09:55:09Z DEBUG   device.log             State update defer 1708ms
-2024-12-20T09:55:09Z DEBUG   system.config.parse    success
-2024-12-20T09:55:09Z INFO    device.log             Device AHU-1 config handler
-2024-12-20T09:55:09Z DEBUG   device.log             State update defer 1707ms
-2024-12-20T09:55:09Z DEBUG   device.log             Config update AHU-1 (endpoint_connection_success_alternate)
-2024-12-20T09:55:09Z INFO    device.log             2024-12-20T09:55:09Z received config 2024-12-20T09:55:09Z
-2024-12-20T09:55:09Z DEBUG   device.log             State update defer 1705ms
-2024-12-20T09:55:09Z DEBUG   device.log             State update defer 1705ms
-2024-12-20T09:55:09Z NOTICE  system.config.apply    success
-2024-12-20T09:55:09Z DEBUG   device.log             State update defer 1705ms
-2024-12-20T09:55:09Z DEBUG   device.log             State update defer 1703ms
-2024-12-20T09:55:10Z DEBUG   system.config.receive  success
-2024-12-20T09:55:10Z DEBUG   device.log             State update defer 686ms
-2024-12-20T09:55:10Z DEBUG   system.config.parse    success
-2024-12-20T09:55:10Z INFO    device.log             Device AHU-1 config handler
-2024-12-20T09:55:10Z DEBUG   device.log             State update defer 685ms
-2024-12-20T09:55:10Z DEBUG   device.log             Config update AHU-1 (endpoint_connection_success_alternate)
-2024-12-20T09:55:10Z INFO    device.log             2024-12-20T09:55:10Z received config 2024-12-20T09:55:10Z
-2024-12-20T09:55:10Z NOTICE  system.config.apply    success
-2024-12-20T09:55:10Z DEBUG   device.log             State update defer 683ms
-2024-12-20T09:55:10Z DEBUG   device.log             State update defer 682ms
-2024-12-20T09:55:10Z DEBUG   device.log             State update defer 682ms
-2024-12-20T09:55:10Z DEBUG   device.log             State update defer 682ms
-2024-12-20T09:55:10Z DEBUG   device.log             State update defer 682ms
-2024-12-20T09:55:10Z DEBUG   device.log             State update defer 682ms
-2024-12-20T09:55:11Z DEBUG   device.log             State update defer 0ms
-2024-12-20T09:55:11Z INFO    device.log             Update state 2024-12-20T09:55:11Z last_config 2024-12-20T09:55:10Z
-2024-12-20T09:55:11Z DEBUG   device.log             State update AHU-1 (endpoint_connection_success_alternate)
-2024-12-20T09:55:22Z DEBUG   device.log             State update AHU-1 (endpoint_connection_success_alternate)
-2024-12-20T09:55:22Z DEBUG   device.log             Extracted device password from /home/runner/work/udmi/udmi/sites/udmi_site_model/devices/AHU-1/rsa_private.pkcs8
-2024-12-20T09:55:22Z INFO    device.log             CA cert file: /home/runner/work/udmi/udmi/sites/udmi_site_model/reflector/ca.crt
-2024-12-20T09:55:22Z INFO    device.log             Device cert file: /home/runner/work/udmi/udmi/sites/udmi_site_model/devices/AHU-1/rsa_private.crt
-2024-12-20T09:55:22Z INFO    device.log             Private key file: /home/runner/work/udmi/udmi/sites/udmi_site_model/devices/AHU-1/rsa_private.pem
-2024-12-20T09:55:22Z INFO    device.log             Password sha256 6b5344e1
-2024-12-20T09:55:22Z WARNING device.log             Starting connection 1734688522934 with 10
-2024-12-20T09:55:22Z WARNING device.log             Terminating AHU-1 PubberPointsetManager sender
-2024-12-20T09:55:22Z WARNING device.log             Terminating AHU-1 PubberSystemManager sender
-2024-12-20T09:55:22Z WARNING device.log             Terminating AHU-1 Pubber sender
-2024-12-20T09:55:22Z WARNING device.log             Creating new config latch for AHU-1
-2024-12-20T09:55:23Z DEBUG   system.config.receive  success
-2024-12-20T09:55:23Z DEBUG   system.config.parse    success
-2024-12-20T09:55:23Z INFO    device.log             Device AHU-1 config handler
-2024-12-20T09:55:23Z DEBUG   device.log             Config update AHU-1 (endpoint_connection_success_alternate)
-2024-12-20T09:55:23Z WARNING device.log             Received config for config latch AHU-1
-2024-12-20T09:55:23Z WARNING device.log             Starting AHU-1 Pubber sender with delay 10s
-2024-12-20T09:55:23Z INFO    device.log             2024-12-20T09:55:23Z received config 2024-12-20T09:55:23Z
-2024-12-20T09:55:23Z WARNING device.log             Starting AHU-1 PubberSystemManager sender with delay 10s
-2024-12-20T09:55:23Z WARNING device.log             Starting AHU-1 PubberPointsetManager sender with delay 10s
-2024-12-20T09:55:23Z NOTICE  system.config.apply    success
-2024-12-20T09:55:23Z DEBUG   device.log             State update defer 1536ms
-2024-12-20T09:55:23Z INFO    device.log             Connection complete.
-2024-12-20T09:55:23Z WARNING device.log             Start waiting 10s for config latch for AHU-1
-2024-12-20T09:55:23Z WARNING device.log             Ending connection 1734688522934 with 9
-2024-12-20T09:55:23Z NOTICE  device.log             Persisting connection endpoint
-2024-12-20T09:55:23Z WARNING device.log             Updating persistent store:
-{
-  "endpoint" : {
-    "protocol" : "mqtt",
-    "transport" : "ssl",
-    "hostname" : "localhost",
-    "client_id" : "/r/ZZ-REDIRECT-NA_2/d/AHU-1",
-    "topic_prefix" : "/r/ZZ-REDIRECT-NA_2/d/AHU-1",
-    "auth_provider" : {
-      "basic" : {
-        "username" : "/r/ZZ-REDIRECT-NA_2/d/AHU-1",
-        "password" : "38269d11"
-      }
-    },
-    "generation" : "2024-12-20T09:55:11Z"
-  },
-  "restart_count" : 1
-}
-2024-12-20T09:55:23Z DEBUG   device.log             State update defer 1533ms
-2024-12-20T09:55:23Z DEBUG   device.log             State update defer 1533ms
-2024-12-20T09:55:23Z DEBUG   device.log             State update defer 1533ms
-2024-12-20T09:55:23Z DEBUG   device.log             State update defer 1532ms
-2024-12-20T09:55:23Z DEBUG   device.log             State update defer 1532ms
-2024-12-20T09:55:23Z DEBUG   device.log             State update defer 1532ms
-2024-12-20T09:55:23Z DEBUG   device.log             State update defer 1532ms
-2024-12-20T09:55:23Z DEBUG   device.log             State update defer 1532ms
-2024-12-20T09:55:23Z DEBUG   device.log             State update defer 1532ms
-2024-12-20T09:55:23Z DEBUG   device.log             State update defer 1531ms
-2024-12-20T09:55:24Z DEBUG   device.log             State update defer 0ms
-2024-12-20T09:55:24Z INFO    device.log             Update state 2024-12-20T09:55:24Z last_config 2024-12-20T09:55:23Z
-2024-12-20T09:55:24Z DEBUG   device.log             State update AHU-1 (endpoint_connection_success_alternate)
-2024-12-20T09:55:28Z DEBUG   system.config.receive  success
-2024-12-20T09:55:28Z DEBUG   device.log             State update defer -2057ms
-2024-12-20T09:55:28Z INFO    device.log             Update state 2024-12-20T09:55:28Z last_config 2024-12-20T09:55:23Z
-2024-12-20T09:55:28Z DEBUG   system.config.parse    success
-2024-12-20T09:55:28Z INFO    device.log             Device AHU-1 config handler
-2024-12-20T09:55:28Z DEBUG   device.log             State update AHU-1 (endpoint_connection_success_alternate)
-2024-12-20T09:55:28Z DEBUG   device.log             Config update AHU-1 (endpoint_connection_success_alternate)
-2024-12-20T09:55:28Z DEBUG   device.log             State update defer 2000ms
-2024-12-20T09:55:28Z INFO    device.log             2024-12-20T09:55:28Z received config 2024-12-20T09:55:28Z
-2024-12-20T09:55:28Z NOTICE  system.config.apply    success
-2024-12-20T09:55:28Z DEBUG   device.log             State update defer 1999ms
-2024-12-20T09:55:28Z DEBUG   device.log             State update defer 1999ms
-2024-12-20T09:55:28Z DEBUG   device.log             State update defer 1999ms
-2024-12-20T09:55:28Z DEBUG   device.log             State update defer 1999ms
-2024-12-20T09:55:28Z DEBUG   device.log             State update defer 1999ms
-2024-12-20T09:55:28Z DEBUG   device.log             State update defer 1999ms
-2024-12-20T09:55:28Z DEBUG   device.log             State update defer 1998ms
-2024-12-20T09:55:30Z DEBUG   device.log             State update defer 0ms
-2024-12-20T09:55:30Z INFO    device.log             Update state 2024-12-20T09:55:30Z last_config 2024-12-20T09:55:28Z
-2024-12-20T09:55:30Z DEBUG   device.log             State update AHU-1 (endpoint_connection_success_alternate)
-2024-12-20T09:55:13Z DEBUG   system.config.receive  success
-2024-12-20T09:55:13Z DEBUG   device.log             State update defer -57ms
-2024-12-20T09:55:13Z INFO    device.log             Update state 2024-12-20T09:55:13Z last_config 2024-12-20T09:55:10Z
-2024-12-20T09:55:13Z DEBUG   device.log             State update AHU-1 (endpoint_connection_success_alternate)
-2024-12-20T09:55:13Z DEBUG   system.config.parse    success
-2024-12-20T09:55:13Z INFO    device.log             Device AHU-1 config handler
-2024-12-20T09:55:13Z DEBUG   device.log             Config update AHU-1 (endpoint_connection_success_alternate)
-2024-12-20T09:55:13Z INFO    device.log             2024-12-20T09:55:13Z received config 2024-12-20T09:55:13Z
-2024-12-20T09:55:13Z NOTICE  system.config.apply    success
-2024-12-20T09:55:13Z DEBUG   device.log             State update defer 1995ms
-2024-12-20T09:55:13Z DEBUG   device.log             State update defer 1995ms
-2024-12-20T09:55:15Z DEBUG   device.log             State update defer 0ms
-2024-12-20T09:55:15Z INFO    device.log             Update state 2024-12-20T09:55:15Z last_config 2024-12-20T09:55:13Z
-2024-12-20T09:55:15Z DEBUG   device.log             State update AHU-1 (endpoint_connection_success_alternate)
-2024-12-20T09:55:22Z NOTICE  device.log             Starting new endpoint generation
-2024-12-20T09:55:22Z INFO    device.log             New config blob endpoint detected:
+TIMESTAMP INFO    device.log             Starting pubber AHU-1, serial sequencer-7929, mac null, gateway null, options noPersist
+TIMESTAMP WARNING device.log             Starting connection 1754632141775 with 0
+TIMESTAMP INFO    device.log             Loading device key bytes from /home/runner/work/udmi/udmi/sites/udmi_site_model/devices/AHU-1/rsa_private.pkcs8
+TIMESTAMP INFO    device.log             CA cert file: /home/runner/work/udmi/udmi/sites/udmi_site_model/reflector/ca.crt
+TIMESTAMP INFO    device.log             Device cert file: /home/runner/work/udmi/udmi/sites/udmi_site_model/devices/AHU-1/rsa_private.crt
+TIMESTAMP INFO    device.log             Private key file: /home/runner/work/udmi/udmi/sites/udmi_site_model/devices/AHU-1/rsa_private.pem
+TIMESTAMP INFO    device.log             Password sha256 6b5344e1
+TIMESTAMP WARNING device.log             Creating new config latch for AHU-1
+TIMESTAMP
+TIMESTAMP WARNING device.log             Dropping state update until config received...
+TIMESTAMP
+TIMESTAMP WARNING device.log             Dropping state update until config received...
+TIMESTAMP INFO    device.log             Device AHU-1 config handler
+TIMESTAMP
+TIMESTAMP WARNING device.log             Dropping state update until config received...
+TIMESTAMP INFO    device.log             Connection complete.
+TIMESTAMP WARNING device.log             Received config for config latch AHU-1
+TIMESTAMP WARNING device.log             Starting AHU-1 PubberPublisherHost sender with delay 10s
+TIMESTAMP
+TIMESTAMP WARNING device.log             Ending connection 1754632141775 with 1
+TIMESTAMP WARNING device.log             Starting AHU-1 PubberSystemManager sender with delay 10s
+TIMESTAMP WARNING device.log             Starting AHU-1 PubberPointsetManager sender with delay 10s
+TIMESTAMP NOTICE  system.config.apply    success
+TIMESTAMP NOTICE  system.config.apply    success
+TIMESTAMP NOTICE  system.config.apply    success
+TIMESTAMP DEBUG   device.log             State update defer 1988ms
+TIMESTAMP DEBUG   device.log             State update defer 1988ms
+TIMESTAMP DEBUG   device.log             State update defer 1988ms
+TIMESTAMP DEBUG   device.log             State update defer 1988ms
+TIMESTAMP DEBUG   system.config.receive  success
+TIMESTAMP DEBUG   system.config.parse    success
+TIMESTAMP INFO    device.log             Device AHU-1 config handler
+TIMESTAMP DEBUG   device.log             State update defer 1921ms
+TIMESTAMP DEBUG   device.log             Config update AHU-1 (endpoint_connection_success_alternate)
+TIMESTAMP
+TIMESTAMP NOTICE  system.config.apply    success
+TIMESTAMP DEBUG   device.log             State update defer 1917ms
+TIMESTAMP DEBUG   device.log             State update defer 0ms
+TIMESTAMP
+TIMESTAMP DEBUG   device.log             State update AHU-1 (endpoint_connection_success_alternate)
+TIMESTAMP DEBUG   system.config.receive  success
+TIMESTAMP DEBUG   device.log             State update defer -3393ms
+TIMESTAMP
+TIMESTAMP DEBUG   system.config.parse    success
+TIMESTAMP INFO    device.log             Device AHU-1 config handler
+TIMESTAMP DEBUG   device.log             State update AHU-1 (endpoint_connection_success_alternate)
+TIMESTAMP DEBUG   device.log             Config update AHU-1 (endpoint_connection_success_alternate)
+TIMESTAMP DEBUG   device.log             State update defer 2000ms
+TIMESTAMP
+TIMESTAMP NOTICE  system.config.apply    success
+TIMESTAMP DEBUG   device.log             State update defer 1998ms
+TIMESTAMP DEBUG   device.log             State update defer 1998ms
+TIMESTAMP DEBUG   device.log             State update defer 1998ms
+TIMESTAMP DEBUG   device.log             State update defer 1997ms
+TIMESTAMP DEBUG   device.log             State update defer 1997ms
+TIMESTAMP DEBUG   device.log             State update defer 1997ms
+TIMESTAMP DEBUG   device.log             State update defer 1997ms
+TIMESTAMP DEBUG   device.log             State update defer 0ms
+TIMESTAMP
+TIMESTAMP DEBUG   device.log             State update AHU-1 (endpoint_connection_success_alternate)
+TIMESTAMP DEBUG   system.config.receive  success
+TIMESTAMP DEBUG   device.log             State update defer -1036ms
+TIMESTAMP DEBUG   system.config.parse    success
+TIMESTAMP
+TIMESTAMP DEBUG   device.log             State update AHU-1 (endpoint_connection_success_alternate)
+TIMESTAMP DEBUG   device.log             Config update AHU-1 (endpoint_connection_success_alternate)
+TIMESTAMP
+TIMESTAMP NOTICE  system.config.apply    success
+TIMESTAMP DEBUG   device.log             State update defer 1999ms
+TIMESTAMP DEBUG   device.log             State update defer 1999ms
+TIMESTAMP DEBUG   device.log             State update defer 1999ms
+TIMESTAMP DEBUG   device.log             State update defer 1998ms
+TIMESTAMP DEBUG   device.log             State update defer 1998ms
+TIMESTAMP DEBUG   device.log             State update defer 1997ms
+TIMESTAMP DEBUG   device.log             State update defer 0ms
+TIMESTAMP
+TIMESTAMP DEBUG   device.log             State update AHU-1 (endpoint_connection_success_alternate)
+TIMESTAMP DEBUG   system.config.receive  success
+TIMESTAMP DEBUG   device.log             State update defer -1077ms
+TIMESTAMP DEBUG   system.config.parse    success
+TIMESTAMP INFO    device.log             Device AHU-1 config handler
+TIMESTAMP DEBUG   device.log             State update AHU-1 (endpoint_connection_success_alternate)
+TIMESTAMP DEBUG   device.log             Config update AHU-1 (endpoint_connection_success_alternate)
+TIMESTAMP DEBUG   device.log             State update defer 2000ms
+TIMESTAMP
+TIMESTAMP NOTICE  system.config.apply    success
+TIMESTAMP DEBUG   device.log             State update defer 1999ms
+TIMESTAMP DEBUG   device.log             State update defer 1998ms
+TIMESTAMP DEBUG   device.log             State update defer 1998ms
+TIMESTAMP DEBUG   device.log             State update defer 1998ms
+TIMESTAMP DEBUG   device.log             State update defer 1998ms
+TIMESTAMP DEBUG   device.log             State update defer 1998ms
+TIMESTAMP DEBUG   device.log             State update defer 1997ms
+TIMESTAMP DEBUG   system.config.receive  success
+TIMESTAMP DEBUG   system.config.parse    success
+TIMESTAMP INFO    device.log             Device AHU-1 config handler
+TIMESTAMP DEBUG   device.log             State update defer 796ms
+TIMESTAMP DEBUG   device.log             Config update AHU-1 (endpoint_connection_success_alternate)
+TIMESTAMP
+TIMESTAMP NOTICE  system.config.apply    success
+TIMESTAMP DEBUG   device.log             State update defer 794ms
+TIMESTAMP DEBUG   device.log             State update defer 794ms
+TIMESTAMP DEBUG   device.log             State update defer 794ms
+TIMESTAMP DEBUG   device.log             State update defer 794ms
+TIMESTAMP DEBUG   device.log             State update defer 36ms
+TIMESTAMP DEBUG   device.log             State update defer 0ms
+TIMESTAMP
+TIMESTAMP DEBUG   device.log             State update AHU-1 (endpoint_connection_success_alternate)
+TIMESTAMP DEBUG   system.config.receive  success
+TIMESTAMP DEBUG   device.log             State update defer 1654ms
+TIMESTAMP DEBUG   system.config.parse    success
+TIMESTAMP INFO    device.log             Device AHU-1 config handler
+TIMESTAMP DEBUG   device.log             Config update AHU-1 (endpoint_connection_success_alternate)
+TIMESTAMP
+TIMESTAMP NOTICE  system.config.apply    success
+TIMESTAMP DEBUG   device.log             State update defer 1651ms
+TIMESTAMP DEBUG   device.log             State update defer 1651ms
+TIMESTAMP DEBUG   device.log             State update defer 1650ms
+TIMESTAMP DEBUG   device.log             State update defer 1650ms
+TIMESTAMP DEBUG   device.log             State update defer 1650ms
+TIMESTAMP DEBUG   device.log             State update defer 1649ms
+TIMESTAMP DEBUG   device.log             State update defer 1649ms
+TIMESTAMP DEBUG   system.config.receive  success
+TIMESTAMP DEBUG   device.log             State update defer 546ms
+TIMESTAMP DEBUG   system.config.parse    success
+TIMESTAMP INFO    device.log             Device AHU-1 config handler
+TIMESTAMP DEBUG   device.log             State update defer 545ms
+TIMESTAMP DEBUG   device.log             Config update AHU-1 (endpoint_connection_success_alternate)
+TIMESTAMP
+TIMESTAMP NOTICE  system.config.apply    success
+TIMESTAMP DEBUG   device.log             State update defer 543ms
+TIMESTAMP DEBUG   device.log             State update defer 543ms
+TIMESTAMP DEBUG   device.log             State update defer 543ms
+TIMESTAMP DEBUG   device.log             State update defer 543ms
+TIMESTAMP DEBUG   device.log             State update defer 543ms
+TIMESTAMP DEBUG   device.log             State update defer 542ms
+TIMESTAMP DEBUG   device.log             State update defer 0ms
+TIMESTAMP
+TIMESTAMP DEBUG   device.log             State update AHU-1 (endpoint_connection_success_alternate)
+TIMESTAMP DEBUG   system.config.receive  success
+TIMESTAMP DEBUG   device.log             State update defer -966ms
+TIMESTAMP
+TIMESTAMP DEBUG   device.log             State update AHU-1 (endpoint_connection_success_alternate)
+TIMESTAMP DEBUG   system.config.parse    success
+TIMESTAMP INFO    device.log             Device AHU-1 config handler
+TIMESTAMP DEBUG   device.log             Config update AHU-1 (endpoint_connection_success_alternate)
+TIMESTAMP DEBUG   device.log             State update defer 2000ms
+TIMESTAMP
+TIMESTAMP NOTICE  system.config.apply    success
+TIMESTAMP DEBUG   device.log             State update defer 1995ms
+TIMESTAMP DEBUG   device.log             State update defer 1994ms
+TIMESTAMP DEBUG   device.log             State update defer -1ms
+TIMESTAMP
+TIMESTAMP DEBUG   device.log             State update AHU-1 (endpoint_connection_success_alternate)
+TIMESTAMP NOTICE  device.log             Starting new endpoint generation
+TIMESTAMP INFO    device.log             New config blob endpoint detected:
 {
   "protocol" : "mqtt",
   "transport" : "ssl",
   "hostname" : "localhost",
-  "client_id" : "/r/ZZ-REDIRECT-NA_2/d/AHU-1",
-  "topic_prefix" : "/r/ZZ-REDIRECT-NA_2/d/AHU-1",
+  "client_id" : "/r/ZZ-REDIRECT-NA_4/d/AHU-1",
+  "topic_prefix" : "/r/ZZ-REDIRECT-NA_4/d/AHU-1",
   "auth_provider" : {
     "basic" : {
-      "username" : "/r/ZZ-REDIRECT-NA_2/d/AHU-1",
+      "username" : "/r/ZZ-REDIRECT-NA_4/d/AHU-1",
       "password" : "38269d11"
     }
   },
-  "generation" : "2024-12-20T09:55:11Z"
+  "generation" : "TIMESTAMP"
 }
-2024-12-20T09:55:22Z INFO    device.log             Update state 2024-12-20T09:55:22Z last_config 2024-12-20T09:55:13Z
-2024-12-20T09:55:43Z NOTICE  device.log             Starting new endpoint generation
-2024-12-20T09:55:43Z INFO    device.log             New config blob endpoint detected:
-{
-  "protocol" : "mqtt",
-  "transport" : "ssl",
-  "hostname" : "localhost",
-  "client_id" : "/r/ZZ-TRI-FECTA_2/d/AHU-1",
-  "topic_prefix" : "/r/ZZ-TRI-FECTA_2/d/AHU-1",
-  "auth_provider" : {
-    "basic" : {
-      "username" : "/r/ZZ-TRI-FECTA_2/d/AHU-1",
-      "password" : "38269d11"
-    }
-  },
-  "generation" : "2024-12-20T09:55:33Z"
-}
-2024-12-20T09:55:43Z INFO    device.log             Update state 2024-12-20T09:55:43Z last_config 2024-12-20T09:55:34Z
-2024-12-20T09:55:43Z DEBUG   device.log             State update AHU-1 (endpoint_connection_success_alternate)
-2024-12-20T09:55:43Z DEBUG   device.log             Extracted device password from /home/runner/work/udmi/udmi/sites/udmi_site_model/devices/AHU-1/rsa_private.pkcs8
-2024-12-20T09:55:43Z INFO    device.log             CA cert file: /home/runner/work/udmi/udmi/sites/udmi_site_model/reflector/ca.crt
-2024-12-20T09:55:43Z INFO    device.log             Device cert file: /home/runner/work/udmi/udmi/sites/udmi_site_model/devices/AHU-1/rsa_private.crt
-2024-12-20T09:55:43Z INFO    device.log             Private key file: /home/runner/work/udmi/udmi/sites/udmi_site_model/devices/AHU-1/rsa_private.pem
-2024-12-20T09:55:43Z INFO    device.log             Password sha256 6b5344e1
-2024-12-20T09:55:43Z WARNING device.log             Starting connection 1734688543400 with 10
-2024-12-20T09:55:43Z WARNING device.log             Terminating AHU-1 PubberPointsetManager sender
-2024-12-20T09:55:43Z WARNING device.log             Terminating AHU-1 PubberSystemManager sender
-2024-12-20T09:55:43Z WARNING device.log             Terminating AHU-1 Pubber sender
-2024-12-20T09:55:43Z WARNING device.log             Creating new config latch for AHU-1
-2024-12-20T09:55:43Z DEBUG   system.config.receive  success
-2024-12-20T09:55:43Z DEBUG   system.config.parse    success
-2024-12-20T09:55:43Z INFO    device.log             Device AHU-1 config handler
-2024-12-20T09:55:43Z DEBUG   device.log             Config update AHU-1 (endpoint_connection_success_alternate)
-2024-12-20T09:55:43Z WARNING device.log             Received config for config latch AHU-1
-2024-12-20T09:55:43Z WARNING device.log             Starting AHU-1 Pubber sender with delay 10s
-2024-12-20T09:55:43Z INFO    device.log             2024-12-20T09:55:43Z received config 2024-12-20T09:55:35Z
-2024-12-20T09:55:43Z WARNING device.log             Starting AHU-1 PubberSystemManager sender with delay 10s
-2024-12-20T09:55:43Z WARNING device.log             Starting AHU-1 PubberPointsetManager sender with delay 10s
-2024-12-20T09:55:43Z NOTICE  system.config.apply    success
-2024-12-20T09:55:43Z DEBUG   device.log             State update defer 1578ms
-2024-12-20T09:55:43Z INFO    device.log             Connection complete.
-2024-12-20T09:55:43Z WARNING device.log             Start waiting 10s for config latch for AHU-1
-2024-12-20T09:55:43Z WARNING device.log             Ending connection 1734688543400 with 9
-2024-12-20T09:55:43Z NOTICE  device.log             Persisting connection endpoint
-2024-12-20T09:55:43Z WARNING device.log             Updating persistent store:
+TIMESTAMP
+TIMESTAMP DEBUG   device.log             State update AHU-1 (endpoint_connection_success_alternate)
+TIMESTAMP WARNING device.log             Starting connection 1754632182732 with 0
+TIMESTAMP WARNING device.log             Terminating AHU-1 PubberPointsetManager sender
+TIMESTAMP WARNING device.log             Terminating AHU-1 PubberSystemManager sender
+TIMESTAMP WARNING device.log             Terminating AHU-1 PubberPublisherHost sender
+TIMESTAMP DEBUG   device.log             Extracted device password from /home/runner/work/udmi/udmi/sites/udmi_site_model/devices/AHU-1/rsa_private.pkcs8
+TIMESTAMP INFO    device.log             CA cert file: /home/runner/work/udmi/udmi/sites/udmi_site_model/reflector/ca.crt
+TIMESTAMP INFO    device.log             Device cert file: /home/runner/work/udmi/udmi/sites/udmi_site_model/devices/AHU-1/rsa_private.crt
+TIMESTAMP INFO    device.log             Private key file: /home/runner/work/udmi/udmi/sites/udmi_site_model/devices/AHU-1/rsa_private.pem
+TIMESTAMP INFO    device.log             Password sha256 6b5344e1
+TIMESTAMP WARNING device.log             Creating new config latch for AHU-1
+TIMESTAMP DEBUG   system.config.receive  success
+TIMESTAMP DEBUG   system.config.parse    success
+TIMESTAMP INFO    device.log             Device AHU-1 config handler
+TIMESTAMP DEBUG   device.log             Config update AHU-1 (endpoint_connection_success_alternate)
+TIMESTAMP WARNING device.log             Received config for config latch AHU-1
+TIMESTAMP INFO    device.log             Connection complete.
+TIMESTAMP WARNING device.log             Start waiting 10s for config latch for AHU-1
+TIMESTAMP WARNING device.log             Ending connection 1754632182732 with 1
+TIMESTAMP NOTICE  device.log             Persisting connection endpoint
+TIMESTAMP WARNING device.log             Updating persistent store:
 {
   "endpoint" : {
     "protocol" : "mqtt",
     "transport" : "ssl",
     "hostname" : "localhost",
-    "client_id" : "/r/ZZ-TRI-FECTA_2/d/AHU-1",
-    "topic_prefix" : "/r/ZZ-TRI-FECTA_2/d/AHU-1",
+    "client_id" : "/r/ZZ-REDIRECT-NA_4/d/AHU-1",
+    "topic_prefix" : "/r/ZZ-REDIRECT-NA_4/d/AHU-1",
     "auth_provider" : {
       "basic" : {
-        "username" : "/r/ZZ-TRI-FECTA_2/d/AHU-1",
+        "username" : "/r/ZZ-REDIRECT-NA_4/d/AHU-1",
         "password" : "38269d11"
       }
     },
-    "generation" : "2024-12-20T09:55:33Z"
+    "generation" : "TIMESTAMP"
   },
   "restart_count" : 1
 }
-2024-12-20T09:55:43Z DEBUG   device.log             State update defer 1576ms
-2024-12-20T09:55:43Z DEBUG   device.log             State update defer 1576ms
-2024-12-20T09:55:43Z DEBUG   device.log             State update defer 1576ms
-2024-12-20T09:55:43Z DEBUG   device.log             State update defer 1576ms
-2024-12-20T09:55:43Z DEBUG   device.log             State update defer 1576ms
-2024-12-20T09:55:43Z DEBUG   device.log             State update defer 1576ms
-2024-12-20T09:55:43Z DEBUG   device.log             State update defer 1576ms
-2024-12-20T09:55:43Z DEBUG   device.log             State update defer 1575ms
-2024-12-20T09:55:43Z DEBUG   device.log             State update defer 1575ms
-2024-12-20T09:55:43Z DEBUG   device.log             State update defer 1575ms
-2024-12-20T09:55:44Z DEBUG   system.config.receive  success
-2024-12-20T09:55:44Z DEBUG   device.log             State update defer 1302ms
-2024-12-20T09:55:44Z DEBUG   system.config.parse    success
-2024-12-20T09:55:44Z INFO    device.log             Device AHU-1 config handler
-2024-12-20T09:55:44Z DEBUG   device.log             State update defer 1299ms
-2024-12-20T09:55:44Z INFO    device.log             2024-12-20T09:55:44Z received config 2024-12-20T09:55:44Z
-2024-12-20T09:55:44Z NOTICE  system.config.apply    success
-2024-12-20T09:55:44Z DEBUG   device.log             State update defer 1298ms
-2024-12-20T09:55:44Z DEBUG   device.log             State update defer 1298ms
-2024-12-20T09:55:44Z DEBUG   device.log             State update defer 1298ms
-2024-12-20T09:55:44Z DEBUG   device.log             State update defer 1298ms
-2024-12-20T09:55:45Z DEBUG   device.log             State update defer 0ms
-2024-12-20T09:55:45Z INFO    device.log             Update state 2024-12-20T09:55:45Z last_config 2024-12-20T09:55:44Z
-2024-12-20T09:55:45Z DEBUG   device.log             State update AHU-1 (endpoint_connection_success_alternate)
-2024-12-20T09:55:53Z NOTICE  validation.feature.sequence Sequence complete
+TIMESTAMP WARNING device.log             Starting AHU-1 PubberPublisherHost sender with delay 10s
+TIMESTAMP
+TIMESTAMP WARNING device.log             Starting AHU-1 PubberSystemManager sender with delay 10s
+TIMESTAMP WARNING device.log             Starting AHU-1 PubberPointsetManager sender with delay 10s
+TIMESTAMP NOTICE  system.config.apply    success
+TIMESTAMP DEBUG   device.log             State update defer -8433ms
+TIMESTAMP
+TIMESTAMP DEBUG   device.log             State update AHU-1 (endpoint_connection_success_alternate)
+TIMESTAMP DEBUG   system.config.receive  success
+TIMESTAMP DEBUG   system.config.parse    success
+TIMESTAMP INFO    device.log             Device AHU-1 config handler
+TIMESTAMP DEBUG   device.log             State update defer -2602ms
+TIMESTAMP
+TIMESTAMP DEBUG   device.log             Config update AHU-1 (endpoint_connection_success_alternate)
+TIMESTAMP
+TIMESTAMP NOTICE  system.config.apply    success
+TIMESTAMP DEBUG   device.log             State update defer 2000ms
+TIMESTAMP DEBUG   device.log             State update defer 1999ms
+TIMESTAMP DEBUG   device.log             State update defer 1999ms
+TIMESTAMP DEBUG   device.log             State update defer 1999ms
+TIMESTAMP DEBUG   device.log             State update defer 1999ms
+TIMESTAMP DEBUG   device.log             State update defer 1998ms
+TIMESTAMP DEBUG   device.log             State update defer 1998ms
+TIMESTAMP DEBUG   device.log             State update defer 1616ms
+TIMESTAMP DEBUG   device.log             State update defer 1616ms
+TIMESTAMP DEBUG   device.log             State update defer 0ms
+TIMESTAMP
+TIMESTAMP DEBUG   device.log             State update AHU-1 (endpoint_connection_success_alternate)
+TIMESTAMP DEBUG   system.config.receive  success
+TIMESTAMP DEBUG   system.config.parse    success
+TIMESTAMP DEBUG   device.log             State update defer -1040ms
+TIMESTAMP INFO    device.log             Device AHU-1 config handler
+TIMESTAMP
+TIMESTAMP DEBUG   device.log             State update AHU-1 (endpoint_connection_success_alternate)
+TIMESTAMP DEBUG   device.log             Config update AHU-1 (endpoint_connection_success_alternate)
+TIMESTAMP
+TIMESTAMP NOTICE  system.config.apply    success
+TIMESTAMP DEBUG   device.log             State update defer 1998ms
+TIMESTAMP NOTICE  device.log             Starting new endpoint generation
+TIMESTAMP INFO    device.log             New config blob endpoint detected:
+{
+  "protocol" : "mqtt",
+  "transport" : "ssl",
+  "hostname" : "localhost",
+  "client_id" : "/r/ZZ-TRI-FECTA/d/AHU-1",
+  "topic_prefix" : "/r/ZZ-TRI-FECTA/d/AHU-1",
+  "auth_provider" : {
+    "basic" : {
+      "username" : "/r/ZZ-TRI-FECTA/d/AHU-1",
+      "password" : "38269d11"
+    }
+  },
+  "generation" : "TIMESTAMP"
+}
+TIMESTAMP
+TIMESTAMP WARNING device.log             State update delay 1661ms
+TIMESTAMP DEBUG   device.log             State update AHU-1 (endpoint_connection_success_alternate)
+TIMESTAMP WARNING device.log             Starting connection 1754632204827 with 0
+TIMESTAMP WARNING device.log             Terminating AHU-1 PubberPointsetManager sender
+TIMESTAMP WARNING device.log             Terminating AHU-1 PubberSystemManager sender
+TIMESTAMP WARNING device.log             Terminating AHU-1 PubberPublisherHost sender
+TIMESTAMP DEBUG   device.log             Extracted device password from /home/runner/work/udmi/udmi/sites/udmi_site_model/devices/AHU-1/rsa_private.pkcs8
+TIMESTAMP INFO    device.log             CA cert file: /home/runner/work/udmi/udmi/sites/udmi_site_model/reflector/ca.crt
+TIMESTAMP INFO    device.log             Device cert file: /home/runner/work/udmi/udmi/sites/udmi_site_model/devices/AHU-1/rsa_private.crt
+TIMESTAMP INFO    device.log             Private key file: /home/runner/work/udmi/udmi/sites/udmi_site_model/devices/AHU-1/rsa_private.pem
+TIMESTAMP INFO    device.log             Password sha256 6b5344e1
+TIMESTAMP WARNING device.log             Creating new config latch for AHU-1
+TIMESTAMP DEBUG   system.config.receive  success
+TIMESTAMP DEBUG   system.config.parse    success
+TIMESTAMP INFO    device.log             Device AHU-1 config handler
+TIMESTAMP DEBUG   device.log             Config update AHU-1 (endpoint_connection_success_alternate)
+TIMESTAMP WARNING device.log             Received config for config latch AHU-1
+TIMESTAMP INFO    device.log             Connection complete.
+TIMESTAMP WARNING device.log             Start waiting 10s for config latch for AHU-1
+TIMESTAMP WARNING device.log             Ending connection 1754632204827 with 1
+TIMESTAMP NOTICE  device.log             Persisting connection endpoint
+TIMESTAMP WARNING device.log             Updating persistent store:
+{
+  "endpoint" : {
+    "protocol" : "mqtt",
+    "transport" : "ssl",
+    "hostname" : "localhost",
+    "client_id" : "/r/ZZ-TRI-FECTA/d/AHU-1",
+    "topic_prefix" : "/r/ZZ-TRI-FECTA/d/AHU-1",
+    "auth_provider" : {
+      "basic" : {
+        "username" : "/r/ZZ-TRI-FECTA/d/AHU-1",
+        "password" : "38269d11"
+      }
+    },
+    "generation" : "TIMESTAMP"
+  },
+  "restart_count" : 1
+}
+TIMESTAMP WARNING device.log             Starting AHU-1 PubberPublisherHost sender with delay 10s
+TIMESTAMP
+TIMESTAMP WARNING device.log             Starting AHU-1 PubberSystemManager sender with delay 10s
+TIMESTAMP WARNING device.log             Starting AHU-1 PubberPointsetManager sender with delay 10s
+TIMESTAMP NOTICE  system.config.apply    success
+TIMESTAMP DEBUG   device.log             State update defer -8421ms
+TIMESTAMP
+TIMESTAMP DEBUG   device.log             State update AHU-1 (endpoint_connection_success_alternate)
+TIMESTAMP DEBUG   system.config.receive  success
+TIMESTAMP DEBUG   device.log             State update defer -2623ms
+TIMESTAMP
+TIMESTAMP DEBUG   system.config.parse    success
+TIMESTAMP INFO    device.log             Device AHU-1 config handler
+TIMESTAMP DEBUG   device.log             State update AHU-1 (endpoint_connection_success_alternate)
+TIMESTAMP DEBUG   device.log             Config update AHU-1 (endpoint_connection_success_alternate)
+TIMESTAMP DEBUG   device.log             State update defer 2000ms
+TIMESTAMP
+TIMESTAMP NOTICE  system.config.apply    success
+TIMESTAMP DEBUG   device.log             State update defer 1999ms
+TIMESTAMP DEBUG   device.log             State update defer 1999ms
+TIMESTAMP DEBUG   device.log             State update defer 1999ms
+TIMESTAMP NOTICE  validation.feature.sequence Sequence complete

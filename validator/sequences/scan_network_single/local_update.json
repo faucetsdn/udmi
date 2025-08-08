@@ -1,6 +1,6 @@
 {
   "timestamp" : "TIMESTAMP",
-  "version" : "@@@cloud udmi version###git-b7ad9cd",
+  "version" : "@@@cloud udmi version###git-250ce5e",
   "system" : {
     "min_loglevel" : 100,
     "metrics_rate_sec" : 10,
@@ -8,12 +8,13 @@
       "last_start" : "TIMESTAMP"
     },
     "testing" : {
-      "sequence_name" : "scan_network_single"
+      "sequence_name" : "scan_network_single+vendor"
     }
   },
   "discovery" : {
     "families" : {
-      "vendor" : { }
+      "vendor" : { },
+      "bacnet" : { }
     }
   },
   "localnet" : {

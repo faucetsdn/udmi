@@ -1,11 +1,11 @@
 {
-  "timestamp" : "2024-12-18T15:32:35Z",
-  "version" : "@@@cloud udmi version###git-f59a297",
+  "timestamp" : "TIMESTAMP",
+  "version" : "@@@cloud udmi version###git-250ce5e",
   "system" : {
     "min_loglevel" : 100,
     "metrics_rate_sec" : 10,
     "operation" : {
-      "last_start" : "2024-12-18T15:32:03Z"
+      "last_start" : "TIMESTAMP"
     },
     "testing" : {
       "sequence_name" : "writeback_invalid"
@@ -13,7 +13,8 @@
   },
   "discovery" : {
     "families" : {
-      "vendor" : { }
+      "vendor" : { },
+      "bacnet" : { }
     }
   },
   "localnet" : {
@@ -36,8 +37,7 @@
       },
       "filter_differential_pressure_sensor" : {
         "ref" : "AV12.present_value",
-        "units" : "Degrees-Celsius",
-        "set_value" : 15
+        "units" : "Degrees-Celsius"
       }
     }
   }

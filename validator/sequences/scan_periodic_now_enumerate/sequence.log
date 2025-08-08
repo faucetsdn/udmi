@@ -1,772 +1,61 @@
-TIMESTAMP NOTICE  Starting test scan_periodic_now_enumerate ################################
+TIMESTAMP NOTICE  Starting test scan_periodic_now_enumerate+vendor ################################
+TIMESTAMP NOTICE  This test is primary for facet discovery
 TIMESTAMP INFO    Stage start waiting for starting test wrapper at @0s
 TIMESTAMP DEBUG   Clear configTransactions and reset device config
-TIMESTAMP TRACE   Suppressing exception: java.lang.NullPointerException: Cannot read field "system" because "this.deviceState" is null, 	at com.google.daq.mqtt.sequencer.SequenceBase.lambda$resetDeviceConfig$13(SequenceBase.java:788)
+TIMESTAMP TRACE   Suppressing exception: java.lang.NullPointerException: Cannot read field "system" because "this.deviceState" is null, 	at com.google.daq.mqtt.sequencer.SequenceBase.lambda$resetDeviceConfig$13(SequenceBase.java:791)
 TIMESTAMP
 TIMESTAMP
 TIMESTAMP DEBUG   Set extraFieldChanged false because extra_field null
 TIMESTAMP DEBUG   Allowing device state change (everything)
 TIMESTAMP DEBUG   Starting reset_config full reset true
 TIMESTAMP DEBUG   Clear configTransactions and reset device config
-TIMESTAMP TRACE   Suppressing exception: java.lang.NullPointerException: Cannot read field "system" because "this.deviceState" is null, 	at com.google.daq.mqtt.sequencer.SequenceBase.lambda$resetDeviceConfig$13(SequenceBase.java:788)
+TIMESTAMP TRACE   Suppressing exception: java.lang.NullPointerException: Cannot read field "system" because "this.deviceState" is null, 	at com.google.daq.mqtt.sequencer.SequenceBase.lambda$resetDeviceConfig$13(SequenceBase.java:791)
 TIMESTAMP
 TIMESTAMP
 TIMESTAMP DEBUG   Set extraFieldChanged false because extra_field null
 TIMESTAMP DEBUG   Set extraFieldChanged true because extra_field reset_config
 TIMESTAMP DEBUG   Clear configTransactions and reset device config
-TIMESTAMP TRACE   Suppressing exception: java.lang.NullPointerException: Cannot read field "system" because "this.deviceState" is null, 	at com.google.daq.mqtt.sequencer.SequenceBase.lambda$resetDeviceConfig$13(SequenceBase.java:788)
+TIMESTAMP TRACE   Suppressing exception: java.lang.NullPointerException: Cannot read field "system" because "this.deviceState" is null, 	at com.google.daq.mqtt.sequencer.SequenceBase.lambda$resetDeviceConfig$13(SequenceBase.java:791)
 TIMESTAMP
 TIMESTAMP
 TIMESTAMP DEBUG   Set extraFieldChanged true because extra_field null
-TIMESTAMP TRACE   Suppressing exception: java.lang.NullPointerException: Cannot read field "timestamp" because "this.deviceState" is null, 	at com.google.daq.mqtt.sequencer.SequenceBase.lambda$ensureStateConfigHoldoff$48(SequenceBase.java:1404)
+TIMESTAMP TRACE   Suppressing exception: java.lang.NullPointerException: Cannot read field "timestamp" because "this.deviceState" is null, 	at com.google.daq.mqtt.sequencer.SequenceBase.lambda$ensureStateConfigHoldoff$48(SequenceBase.java:1407)
 TIMESTAMP is -6005ms
 TIMESTAMP TRACE   Updated check config_update: true
-TIMESTAMP DEBUG   Update config_update, adding configTransaction RC:3739a3.0000002f
-TIMESTAMP TRACE   Suppressing exception: java.lang.NullPointerException: Cannot read field "system" because "this.deviceState" is null, 	at com.google.daq.mqtt.sequencer.SequenceBase.lambda$configIsPending$105(SequenceBase.java:2247)
-TIMESTAMP TRACE   Suppressing exception: java.lang.NullPointerException: Cannot read field "system" because "this.deviceState" is null, 	at com.google.daq.mqtt.sequencer.SequenceBase.lambda$configIsPending$107(SequenceBase.java:2251)
-TIMESTAMP TRACE   Suppressing exception: java.lang.NullPointerException: Cannot read field "timestamp" because "this.deviceState" is null, 	at com.google.daq.mqtt.sequencer.SequenceBase.lambda$configIsPending$109(SequenceBase.java:2258)
-TIMESTAMP TRACE   Suppressing exception: java.lang.NullPointerException: Cannot read field "system" because "this.deviceState" is null, 	at com.google.daq.mqtt.sequencer.SequenceBase.lambda$configIsPending$105(SequenceBase.java:2247)
-TIMESTAMP TRACE   Suppressing exception: java.lang.NullPointerException: Cannot read field "system" because "this.deviceState" is null, 	at com.google.daq.mqtt.sequencer.SequenceBase.lambda$configIsPending$107(SequenceBase.java:2251)
-TIMESTAMP TRACE   Suppressing exception: java.lang.NullPointerException: Cannot read field "timestamp" because "this.deviceState" is null, 	at com.google.daq.mqtt.sequencer.SequenceBase.lambda$configIsPending$109(SequenceBase.java:2258)
+TIMESTAMP DEBUG   Update config_update, adding configTransaction RC:51d528.0000002f
+TIMESTAMP TRACE   Suppressing exception: java.lang.NullPointerException: Cannot read field "system" because "this.deviceState" is null, 	at com.google.daq.mqtt.sequencer.SequenceBase.lambda$configIsPending$105(SequenceBase.java:2250)
+TIMESTAMP TRACE   Suppressing exception: java.lang.NullPointerException: Cannot read field "system" because "this.deviceState" is null, 	at com.google.daq.mqtt.sequencer.SequenceBase.lambda$configIsPending$107(SequenceBase.java:2254)
+TIMESTAMP TRACE   Suppressing exception: java.lang.NullPointerException: Cannot read field "timestamp" because "this.deviceState" is null, 	at com.google.daq.mqtt.sequencer.SequenceBase.lambda$configIsPending$109(SequenceBase.java:2261)
+TIMESTAMP TRACE   Suppressing exception: java.lang.NullPointerException: Cannot read field "system" because "this.deviceState" is null, 	at com.google.daq.mqtt.sequencer.SequenceBase.lambda$configIsPending$105(SequenceBase.java:2250)
+TIMESTAMP TRACE   Suppressing exception: java.lang.NullPointerException: Cannot read field "system" because "this.deviceState" is null, 	at com.google.daq.mqtt.sequencer.SequenceBase.lambda$configIsPending$107(SequenceBase.java:2254)
+TIMESTAMP TRACE   Suppressing exception: java.lang.NullPointerException: Cannot read field "timestamp" because "this.deviceState" is null, 	at com.google.daq.mqtt.sequencer.SequenceBase.lambda$configIsPending$109(SequenceBase.java:2261)
 TIMESTAMP
 TIMESTAMP, because soft reset
 TIMESTAMP TRACE   Stage suspend waiting for starting test wrapper at @8s
 TIMESTAMP INFO    Stage start waiting for config update synchronized at @8s
-TIMESTAMP DEBUG   Received command AHU-1/state/discovery as MP:aa972f4c-1
-TIMESTAMP TRACE   Received state_discovery: {
-TIMESTAMP TRACE   Received state_discovery:   "families" : { },
-TIMESTAMP",
-TIMESTAMP TRACE   Received state_discovery:   "version" : "1.5.3"
-TIMESTAMP TRACE   Received state_discovery: }
-TIMESTAMP DEBUG   Handling device message state_discovery MP:aa972f4c-1
-TIMESTAMP TRACE   Ignoring partial state update
-TIMESTAMP TRACE   Suppressing exception: java.lang.NullPointerException: Cannot read field "system" because "this.deviceState" is null, 	at com.google.daq.mqtt.sequencer.SequenceBase.lambda$configIsPending$105(SequenceBase.java:2247)
-TIMESTAMP TRACE   Suppressing exception: java.lang.NullPointerException: Cannot read field "system" because "this.deviceState" is null, 	at com.google.daq.mqtt.sequencer.SequenceBase.lambda$configIsPending$107(SequenceBase.java:2251)
-TIMESTAMP TRACE   Suppressing exception: java.lang.NullPointerException: Cannot read field "timestamp" because "this.deviceState" is null, 	at com.google.daq.mqtt.sequencer.SequenceBase.lambda$configIsPending$109(SequenceBase.java:2258)
-TIMESTAMP DEBUG   Received command AHU-1/state/localnet as MP:aa972f4c-2
-TIMESTAMP TRACE   Received state_localnet: {
-TIMESTAMP TRACE   Received state_localnet:   "families" : {
-TIMESTAMP TRACE   Received state_localnet:     "ether" : {
-TIMESTAMP TRACE   Received state_localnet:       "addr" : "7c:1e:52:05:17:a4"
-TIMESTAMP TRACE   Received state_localnet:     },
-TIMESTAMP TRACE   Received state_localnet:     "ipv4" : {
-TIMESTAMP TRACE   Received state_localnet:       "addr" : "10.1.0.78"
-TIMESTAMP TRACE   Received state_localnet:     },
-TIMESTAMP TRACE   Received state_localnet:     "vendor" : {
-TIMESTAMP TRACE   Received state_localnet:       "addr" : "28179023"
-TIMESTAMP TRACE   Received state_localnet:     },
-TIMESTAMP TRACE   Received state_localnet:     "bacnet" : {
-TIMESTAMP TRACE   Received state_localnet:       "addr" : "27312"
-TIMESTAMP TRACE   Received state_localnet:     }
-TIMESTAMP TRACE   Received state_localnet:   },
-TIMESTAMP",
-TIMESTAMP TRACE   Received state_localnet:   "version" : "1.5.3"
-TIMESTAMP TRACE   Received state_localnet: }
-TIMESTAMP DEBUG   Handling device message state_localnet MP:aa972f4c-2
-TIMESTAMP TRACE   Ignoring partial state update
-TIMESTAMP TRACE   Suppressing exception: java.lang.NullPointerException: Cannot read field "system" because "this.deviceState" is null, 	at com.google.daq.mqtt.sequencer.SequenceBase.lambda$configIsPending$105(SequenceBase.java:2247)
-TIMESTAMP TRACE   Suppressing exception: java.lang.NullPointerException: Cannot read field "system" because "this.deviceState" is null, 	at com.google.daq.mqtt.sequencer.SequenceBase.lambda$configIsPending$107(SequenceBase.java:2251)
-TIMESTAMP TRACE   Suppressing exception: java.lang.NullPointerException: Cannot read field "timestamp" because "this.deviceState" is null, 	at com.google.daq.mqtt.sequencer.SequenceBase.lambda$configIsPending$109(SequenceBase.java:2258)
-TIMESTAMP DEBUG   Received command AHU-1/state/pointset as MP:aa972f4c-3
-TIMESTAMP TRACE   Received state_pointset: {
-TIMESTAMP TRACE   Received state_pointset:   "points" : {
-TIMESTAMP TRACE   Received state_pointset:     "filter_alarm_pressure_status" : {
-TIMESTAMP TRACE   Received state_pointset:       "units" : "No-units"
-TIMESTAMP TRACE   Received state_pointset:     },
-TIMESTAMP TRACE   Received state_pointset:     "filter_differential_pressure_setpoint" : {
-TIMESTAMP TRACE   Received state_pointset:       "units" : "Bars",
-TIMESTAMP TRACE   Received state_pointset:       "value_state" : "applied"
-TIMESTAMP TRACE   Received state_pointset:     },
-TIMESTAMP TRACE   Received state_pointset:     "filter_differential_pressure_sensor" : {
-TIMESTAMP TRACE   Received state_pointset:       "units" : "Degrees-Celsius"
-TIMESTAMP TRACE   Received state_pointset:     }
-TIMESTAMP TRACE   Received state_pointset:   },
-TIMESTAMP",
-TIMESTAMP TRACE   Received state_pointset:   "version" : "1.5.3"
-TIMESTAMP TRACE   Received state_pointset: }
-TIMESTAMP DEBUG   Handling device message state_pointset MP:aa972f4c-3
-TIMESTAMP TRACE   Ignoring partial state update
-TIMESTAMP DEBUG   Received command AHU-1/state/validation as RC:3739a3.0000002c
+TIMESTAMP DEBUG   Received command AHU-1/state/validation as RC:51d528.0000002c
 TIMESTAMP TRACE   Received state_validation: {
 TIMESTAMP TRACE   Received state_validation:   "operation" : "REPLY"
 TIMESTAMP TRACE   Received state_validation: }
-TIMESTAMP DEBUG   Handling device message state_validation RC:3739a3.0000002c
+TIMESTAMP DEBUG   Handling device message state_validation RC:51d528.0000002c
 TIMESTAMP TRACE   Ignoring partial state update
-TIMESTAMP TRACE   Suppressing exception: java.lang.NullPointerException: Cannot read field "system" because "this.deviceState" is null, 	at com.google.daq.mqtt.sequencer.SequenceBase.lambda$configIsPending$105(SequenceBase.java:2247)
-TIMESTAMP TRACE   Suppressing exception: java.lang.NullPointerException: Cannot read field "system" because "this.deviceState" is null, 	at com.google.daq.mqtt.sequencer.SequenceBase.lambda$configIsPending$107(SequenceBase.java:2251)
-TIMESTAMP TRACE   Suppressing exception: java.lang.NullPointerException: Cannot read field "timestamp" because "this.deviceState" is null, 	at com.google.daq.mqtt.sequencer.SequenceBase.lambda$configIsPending$109(SequenceBase.java:2258)
-TIMESTAMP DEBUG   Received command AHU-1/state/validation as RC:3739a3.0000002e
+TIMESTAMP TRACE   Suppressing exception: java.lang.NullPointerException: Cannot read field "system" because "this.deviceState" is null, 	at com.google.daq.mqtt.sequencer.SequenceBase.lambda$configIsPending$105(SequenceBase.java:2250)
+TIMESTAMP TRACE   Suppressing exception: java.lang.NullPointerException: Cannot read field "system" because "this.deviceState" is null, 	at com.google.daq.mqtt.sequencer.SequenceBase.lambda$configIsPending$107(SequenceBase.java:2254)
+TIMESTAMP TRACE   Suppressing exception: java.lang.NullPointerException: Cannot read field "timestamp" because "this.deviceState" is null, 	at com.google.daq.mqtt.sequencer.SequenceBase.lambda$configIsPending$109(SequenceBase.java:2261)
+TIMESTAMP DEBUG   Received command AHU-1/state/validation as RC:51d528.0000002e
 TIMESTAMP TRACE   Received state_validation: {
 TIMESTAMP TRACE   Received state_validation:   "operation" : "REPLY"
 TIMESTAMP TRACE   Received state_validation: }
-TIMESTAMP DEBUG   Handling device message state_validation RC:3739a3.0000002e
+TIMESTAMP DEBUG   Handling device message state_validation RC:51d528.0000002e
 TIMESTAMP TRACE   Ignoring partial state update
-TIMESTAMP DEBUG   Received command AHU-1/events/pointset as MP:e58456c1
-TIMESTAMP TRACE   Received events_pointset: {
-TIMESTAMP TRACE   Received events_pointset:   "points" : {
-TIMESTAMP TRACE   Received events_pointset:     "filter_alarm_pressure_status" : {
-TIMESTAMP TRACE   Received events_pointset:       "present_value" : true
-TIMESTAMP TRACE   Received events_pointset:     },
-TIMESTAMP TRACE   Received events_pointset:     "filter_differential_pressure_setpoint" : {
-TIMESTAMP TRACE   Received events_pointset:       "present_value" : 98
-TIMESTAMP TRACE   Received events_pointset:     },
-TIMESTAMP TRACE   Received events_pointset:     "filter_differential_pressure_sensor" : {
-TIMESTAMP TRACE   Received events_pointset:       "present_value" : 12
-TIMESTAMP TRACE   Received events_pointset:     }
-TIMESTAMP TRACE   Received events_pointset:   },
-TIMESTAMP",
-TIMESTAMP TRACE   Received events_pointset:   "version" : "1.5.3"
-TIMESTAMP TRACE   Received events_pointset: }
-TIMESTAMP DEBUG   Handling device message events_pointset MP:e58456c1
-TIMESTAMP DEBUG   Capturing AHU-1 message events_pointset
-TIMESTAMP TRACE   Suppressing exception: java.lang.NullPointerException: Cannot read field "system" because "this.deviceState" is null, 	at com.google.daq.mqtt.sequencer.SequenceBase.lambda$configIsPending$105(SequenceBase.java:2247)
-TIMESTAMP TRACE   Suppressing exception: java.lang.NullPointerException: Cannot read field "system" because "this.deviceState" is null, 	at com.google.daq.mqtt.sequencer.SequenceBase.lambda$configIsPending$107(SequenceBase.java:2251)
-TIMESTAMP TRACE   Suppressing exception: java.lang.NullPointerException: Cannot read field "timestamp" because "this.deviceState" is null, 	at com.google.daq.mqtt.sequencer.SequenceBase.lambda$configIsPending$109(SequenceBase.java:2258)
-TIMESTAMP DEBUG   Received command AHU-1/events/system as MP:8a99d645
-TIMESTAMP DEBUG device.log: State update defer 1630ms
-TIMESTAMP DEBUG device.log: State update defer 0ms
-TIMESTAMP
-TIMESTAMP DEBUG device.log: State update AHU-1 (config_logging)
-TIMESTAMP DEBUG   Handling device message events_system MP:8a99d645
+TIMESTAMP TRACE   Suppressing exception: java.lang.NullPointerException: Cannot read field "system" because "this.deviceState" is null, 	at com.google.daq.mqtt.sequencer.SequenceBase.lambda$configIsPending$105(SequenceBase.java:2250)
+TIMESTAMP TRACE   Suppressing exception: java.lang.NullPointerException: Cannot read field "system" because "this.deviceState" is null, 	at com.google.daq.mqtt.sequencer.SequenceBase.lambda$configIsPending$107(SequenceBase.java:2254)
+TIMESTAMP TRACE   Suppressing exception: java.lang.NullPointerException: Cannot read field "timestamp" because "this.deviceState" is null, 	at com.google.daq.mqtt.sequencer.SequenceBase.lambda$configIsPending$109(SequenceBase.java:2261)
+TIMESTAMP DEBUG   Received command AHU-1/events/system as MP:0fd6ccc8
+TIMESTAMP DEBUG   Received events_system (no logs)
+TIMESTAMP DEBUG   Handling device message events_system MP:0fd6ccc8
 TIMESTAMP DEBUG   Capturing AHU-1 message events_system
-TIMESTAMP TRACE   Suppressing exception: java.lang.NullPointerException: Cannot read field "system" because "this.deviceState" is null, 	at com.google.daq.mqtt.sequencer.SequenceBase.lambda$configIsPending$105(SequenceBase.java:2247)
-TIMESTAMP TRACE   Suppressing exception: java.lang.NullPointerException: Cannot read field "system" because "this.deviceState" is null, 	at com.google.daq.mqtt.sequencer.SequenceBase.lambda$configIsPending$107(SequenceBase.java:2251)
-TIMESTAMP TRACE   Suppressing exception: java.lang.NullPointerException: Cannot read field "timestamp" because "this.deviceState" is null, 	at com.google.daq.mqtt.sequencer.SequenceBase.lambda$configIsPending$109(SequenceBase.java:2258)
-TIMESTAMP DEBUG   Received command AHU-1/state/update as MP:a4793e7c
-TIMESTAMP DEBUG   Received state_update
-TIMESTAMP DEBUG   Handling update message state_update MP:a4793e7c
-TIMESTAMP DEBUG   Capturing AHU-1 message state_update
-TIMESTAMP MP:a4793e7c
-TIMESTAMP INFO    Updated state #036: Changed 4 fields:
-TIMESTAMP INFO    Updated state #036:   Set `system.status.level` = `100`
-TIMESTAMP INFO    Updated state #036:   Set `system.status.category` = `system.config.parse`
-TIMESTAMP`
-TIMESTAMP`
-TIMESTAMP NOTICE  Received serial number sequencer-27902
-TIMESTAMP (expecting null)
-TIMESTAMP DEBUG   Received command AHU-1/config/update as RC:3739a3.0000002f
-TIMESTAMP DEBUG   Received config_update
-TIMESTAMP DEBUG   Handling update message config_update RC:3739a3.0000002f
-TIMESTAMP DEBUG   Removed configTransaction RC:3739a3.0000002f
-TIMESTAMP
-TIMESTAMP RC:3739a3.0000002f
-TIMESTAMP INFO    Updated config #026: Changed 1 fields:
-TIMESTAMP INFO    Updated config #026:   Set `system.testing.sequence_name` = `scan_periodic_now_enumerate`
-TIMESTAMP
-TIMESTAMP DEBUG   Detail config update synchronized is now: last_start not synced in config, last_config not synced in state
-TIMESTAMP DEBUG   Received command AHU-1/config/update as CU:3739a3.0000002f
-TIMESTAMP DEBUG   Received config_update
-TIMESTAMP DEBUG   Handling update message config_update CU:3739a3.0000002f
-TIMESTAMP DEBUG   Ignoring operation reply CU:3739a3.0000002f
-TIMESTAMP DEBUG   Received command AHU-1/state/system as MP:a4793e7c-0
-TIMESTAMP TRACE   Received state_system: {
-TIMESTAMP TRACE   Received state_system:   "hardware" : {
-TIMESTAMP TRACE   Received state_system:     "make" : "BOS",
-TIMESTAMP TRACE   Received state_system:     "model" : "pubber"
-TIMESTAMP TRACE   Received state_system:   },
-TIMESTAMP",
-TIMESTAMP TRACE   Received state_system:   "operation" : {
-TIMESTAMP TRACE   Received state_system:     "operational" : true,
-TIMESTAMP",
-TIMESTAMP TRACE   Received state_system:     "restart_count" : 1,
-TIMESTAMP TRACE   Received state_system:     "mode" : "initial"
-TIMESTAMP TRACE   Received state_system:   },
-TIMESTAMP TRACE   Received state_system:   "serial_no" : "sequencer-27902",
-TIMESTAMP TRACE   Received state_system:   "software" : {
-TIMESTAMP TRACE   Received state_system:     "firmware" : "v1"
-TIMESTAMP TRACE   Received state_system:   },
-TIMESTAMP TRACE   Received state_system:   "status" : {
-TIMESTAMP TRACE   Received state_system:     "message" : "success",
-TIMESTAMP TRACE   Received state_system:     "category" : "system.config.parse",
-TIMESTAMP",
-TIMESTAMP TRACE   Received state_system:     "level" : 100
-TIMESTAMP TRACE   Received state_system:   },
-TIMESTAMP",
-TIMESTAMP TRACE   Received state_system:   "version" : "1.5.3"
-TIMESTAMP TRACE   Received state_system: }
-TIMESTAMP DEBUG   Handling device message state_system MP:a4793e7c-0
-TIMESTAMP TRACE   Ignoring partial state update
-TIMESTAMP DEBUG   Received command AHU-1/state/discovery as MP:a4793e7c-1
-TIMESTAMP TRACE   Received state_discovery: {
-TIMESTAMP TRACE   Received state_discovery:   "families" : { },
-TIMESTAMP",
-TIMESTAMP TRACE   Received state_discovery:   "version" : "1.5.3"
-TIMESTAMP TRACE   Received state_discovery: }
-TIMESTAMP DEBUG   Handling device message state_discovery MP:a4793e7c-1
-TIMESTAMP TRACE   Ignoring partial state update
-TIMESTAMP DEBUG   Received command AHU-1/state/localnet as MP:a4793e7c-2
-TIMESTAMP TRACE   Received state_localnet: {
-TIMESTAMP TRACE   Received state_localnet:   "families" : {
-TIMESTAMP TRACE   Received state_localnet:     "ether" : {
-TIMESTAMP TRACE   Received state_localnet:       "addr" : "7c:1e:52:05:17:a4"
-TIMESTAMP TRACE   Received state_localnet:     },
-TIMESTAMP TRACE   Received state_localnet:     "ipv4" : {
-TIMESTAMP TRACE   Received state_localnet:       "addr" : "10.1.0.78"
-TIMESTAMP TRACE   Received state_localnet:     },
-TIMESTAMP TRACE   Received state_localnet:     "vendor" : {
-TIMESTAMP TRACE   Received state_localnet:       "addr" : "28179023"
-TIMESTAMP TRACE   Received state_localnet:     },
-TIMESTAMP TRACE   Received state_localnet:     "bacnet" : {
-TIMESTAMP TRACE   Received state_localnet:       "addr" : "27312"
-TIMESTAMP TRACE   Received state_localnet:     }
-TIMESTAMP TRACE   Received state_localnet:   },
-TIMESTAMP",
-TIMESTAMP TRACE   Received state_localnet:   "version" : "1.5.3"
-TIMESTAMP TRACE   Received state_localnet: }
-TIMESTAMP DEBUG   Handling device message state_localnet MP:a4793e7c-2
-TIMESTAMP TRACE   Ignoring partial state update
-TIMESTAMP DEBUG   Received command AHU-1/state/pointset as MP:a4793e7c-3
-TIMESTAMP TRACE   Received state_pointset: {
-TIMESTAMP TRACE   Received state_pointset:   "points" : {
-TIMESTAMP TRACE   Received state_pointset:     "filter_alarm_pressure_status" : {
-TIMESTAMP TRACE   Received state_pointset:       "units" : "No-units"
-TIMESTAMP TRACE   Received state_pointset:     },
-TIMESTAMP TRACE   Received state_pointset:     "filter_differential_pressure_setpoint" : {
-TIMESTAMP TRACE   Received state_pointset:       "units" : "Bars",
-TIMESTAMP TRACE   Received state_pointset:       "value_state" : "applied"
-TIMESTAMP TRACE   Received state_pointset:     },
-TIMESTAMP TRACE   Received state_pointset:     "filter_differential_pressure_sensor" : {
-TIMESTAMP TRACE   Received state_pointset:       "units" : "Degrees-Celsius"
-TIMESTAMP TRACE   Received state_pointset:     }
-TIMESTAMP TRACE   Received state_pointset:   },
-TIMESTAMP",
-TIMESTAMP TRACE   Received state_pointset:   "version" : "1.5.3"
-TIMESTAMP TRACE   Received state_pointset: }
-TIMESTAMP DEBUG   Handling device message state_pointset MP:a4793e7c-3
-TIMESTAMP TRACE   Ignoring partial state update
-TIMESTAMP DEBUG   Received command AHU-1/config/update as MP:a4793e7c
-TIMESTAMP DEBUG   Received config_update
-TIMESTAMP DEBUG   Handling update message config_update MP:a4793e7c
-TIMESTAMP
-TIMESTAMP MP:a4793e7c
-TIMESTAMP INFO    Updated config #027: Changed 0 fields.
-TIMESTAMP
-TIMESTAMP DEBUG   Detail config update synchronized is now: last_config not synced in state
-TIMESTAMP DEBUG   Received command AHU-1/state/update as MP:089d5bc2
-TIMESTAMP DEBUG   Received state_update
-TIMESTAMP DEBUG   Handling update message state_update MP:089d5bc2
-TIMESTAMP DEBUG   Capturing AHU-1 message state_update
-TIMESTAMP MP:089d5bc2
-TIMESTAMP INFO    Updated state #037: Changed 5 fields:
-TIMESTAMP`
-TIMESTAMP INFO    Updated state #037:   Set `system.status.level` = `300`
-TIMESTAMP INFO    Updated state #037:   Set `system.status.category` = `system.config.apply`
-TIMESTAMP`
-TIMESTAMP`
-TIMESTAMP)
-TIMESTAMP DEBUG   Received command AHU-1/state/system as MP:089d5bc2-0
-TIMESTAMP TRACE   Received state_system: {
-TIMESTAMP TRACE   Received state_system:   "hardware" : {
-TIMESTAMP TRACE   Received state_system:     "make" : "BOS",
-TIMESTAMP TRACE   Received state_system:     "model" : "pubber"
-TIMESTAMP TRACE   Received state_system:   },
-TIMESTAMP",
-TIMESTAMP TRACE   Received state_system:   "operation" : {
-TIMESTAMP TRACE   Received state_system:     "operational" : true,
-TIMESTAMP",
-TIMESTAMP TRACE   Received state_system:     "restart_count" : 1,
-TIMESTAMP TRACE   Received state_system:     "mode" : "initial"
-TIMESTAMP TRACE   Received state_system:   },
-TIMESTAMP TRACE   Received state_system:   "serial_no" : "sequencer-27902",
-TIMESTAMP TRACE   Received state_system:   "software" : {
-TIMESTAMP TRACE   Received state_system:     "firmware" : "v1"
-TIMESTAMP TRACE   Received state_system:   },
-TIMESTAMP TRACE   Received state_system:   "status" : {
-TIMESTAMP TRACE   Received state_system:     "message" : "success",
-TIMESTAMP TRACE   Received state_system:     "category" : "system.config.apply",
-TIMESTAMP",
-TIMESTAMP TRACE   Received state_system:     "level" : 300
-TIMESTAMP TRACE   Received state_system:   },
-TIMESTAMP",
-TIMESTAMP TRACE   Received state_system:   "version" : "1.5.3"
-TIMESTAMP TRACE   Received state_system: }
-TIMESTAMP DEBUG   Handling device message state_system MP:089d5bc2-0
-TIMESTAMP TRACE   Ignoring partial state update
-TIMESTAMP DEBUG   Detail config update synchronized is now: null
-TIMESTAMP DEBUG   Stage finished waiting for config update synchronized at @11s after 3s
-TIMESTAMP TRACE   Stage resume waiting for starting test wrapper at @11s
-TIMESTAMP DEBUG   Config sync took 3s
-TIMESTAMP DEBUG   Finished wait for config sync pending: null
-TIMESTAMP
-TIMESTAMP
-TIMESTAMP TRACE   Update config soft reset: Add `discovery` = { "families": { "vendor": {  } } }
-TIMESTAMP TRACE   Update config soft reset: Add `pointset` = { "points": { "filter_differential_pressure_setpoint": { "set_value": `98`, "units": `Bars` }, "filter_alarm_pressure_status": { "ref": `BV11.present_value`, "units": `No-units` }, "filter_differential_pressure_sensor": { "ref": `AV12.present_value`, "units": `Degrees-Celsius` } } }
-TIMESTAMP TRACE   Update config soft reset: Add `localnet` = { "families": { "ether": {  }, "ipv4": {  }, "vendor": {  }, "bacnet": {  } } }
-TIMESTAMP TRACE   Update config soft reset: Add `timestamp` = `generated timestamp`
-TIMESTAMP DEBUG   Done with reset_config
-TIMESTAMP TRACE   Stage suspend waiting for starting test wrapper at @11s
-TIMESTAMP INFO    Stage start waiting for config update synchronized at @11s
-TIMESTAMP DEBUG   Received command AHU-1/state/discovery as MP:089d5bc2-1
-TIMESTAMP TRACE   Received state_discovery: {
-TIMESTAMP TRACE   Received state_discovery:   "families" : { },
-TIMESTAMP",
-TIMESTAMP TRACE   Received state_discovery:   "version" : "1.5.3"
-TIMESTAMP TRACE   Received state_discovery: }
-TIMESTAMP DEBUG   Handling device message state_discovery MP:089d5bc2-1
-TIMESTAMP TRACE   Ignoring partial state update
-TIMESTAMP DEBUG   Received command AHU-1/state/localnet as MP:089d5bc2-2
-TIMESTAMP TRACE   Received state_localnet: {
-TIMESTAMP TRACE   Received state_localnet:   "families" : {
-TIMESTAMP TRACE   Received state_localnet:     "ether" : {
-TIMESTAMP TRACE   Received state_localnet:       "addr" : "7c:1e:52:05:17:a4"
-TIMESTAMP TRACE   Received state_localnet:     },
-TIMESTAMP TRACE   Received state_localnet:     "ipv4" : {
-TIMESTAMP TRACE   Received state_localnet:       "addr" : "10.1.0.78"
-TIMESTAMP TRACE   Received state_localnet:     },
-TIMESTAMP TRACE   Received state_localnet:     "vendor" : {
-TIMESTAMP TRACE   Received state_localnet:       "addr" : "28179023"
-TIMESTAMP TRACE   Received state_localnet:     },
-TIMESTAMP TRACE   Received state_localnet:     "bacnet" : {
-TIMESTAMP TRACE   Received state_localnet:       "addr" : "27312"
-TIMESTAMP TRACE   Received state_localnet:     }
-TIMESTAMP TRACE   Received state_localnet:   },
-TIMESTAMP",
-TIMESTAMP TRACE   Received state_localnet:   "version" : "1.5.3"
-TIMESTAMP TRACE   Received state_localnet: }
-TIMESTAMP DEBUG   Handling device message state_localnet MP:089d5bc2-2
-TIMESTAMP TRACE   Ignoring partial state update
-TIMESTAMP DEBUG   Stage finished waiting for config update synchronized at @11s after 0s
-TIMESTAMP TRACE   Stage resume waiting for starting test wrapper at @11s
-TIMESTAMP DEBUG   Config sync took 3s
-TIMESTAMP DEBUG   Finished wait for config sync pending: null
-TIMESTAMP DEBUG   Disallowing device state change (everything)
-TIMESTAMP WARNING Now using alternate connection client!
-TIMESTAMP TRACE   Stage suspend waiting for starting test wrapper at @11s
-TIMESTAMP INFO    Stage start waiting for using alternate client at @11s
-TIMESTAMP is 1996ms
-TIMESTAMP DEBUG   Rate-limiting config by 1996ms
-TIMESTAMP DEBUG   Forcing config update
-TIMESTAMP TRACE   Updated check config_update: true
-TIMESTAMP DEBUG   Update config_update, adding configTransaction RC:3739a3.00000032
-TIMESTAMP DEBUG   Received command AHU-1/state/pointset as MP:089d5bc2-3
-TIMESTAMP","version":"1.5.3"}
-TIMESTAMP TRACE   Received state_pointset: {
-TIMESTAMP TRACE   Received state_pointset:   "points" : {
-TIMESTAMP TRACE   Received state_pointset:     "filter_alarm_pressure_status" : {
-TIMESTAMP TRACE   Received state_pointset:       "units" : "No-units"
-TIMESTAMP TRACE   Received state_pointset:     },
-TIMESTAMP TRACE   Received state_pointset:     "filter_differential_pressure_setpoint" : {
-TIMESTAMP TRACE   Received state_pointset:       "units" : "Bars",
-TIMESTAMP TRACE   Received state_pointset:       "value_state" : "applied"
-TIMESTAMP TRACE   Received state_pointset:     },
-TIMESTAMP TRACE   Received state_pointset:     "filter_differential_pressure_sensor" : {
-TIMESTAMP TRACE   Received state_pointset:       "units" : "Degrees-Celsius"
-TIMESTAMP TRACE   Received state_pointset:     }
-TIMESTAMP TRACE   Received state_pointset:   },
-TIMESTAMP",
-TIMESTAMP TRACE   Received state_pointset:   "version" : "1.5.3"
-TIMESTAMP TRACE   Received state_pointset: }
-TIMESTAMP DEBUG   Handling device message state_pointset MP:089d5bc2-3
-TIMESTAMP TRACE   Ignoring partial state update
-TIMESTAMP DEBUG   Received command AHU-1/events/pointset as MP:6df34cb4
-TIMESTAMP","version":"1.5.3"}
-TIMESTAMP TRACE   Received events_pointset: {
-TIMESTAMP TRACE   Received events_pointset:   "points" : {
-TIMESTAMP TRACE   Received events_pointset:     "filter_alarm_pressure_status" : {
-TIMESTAMP TRACE   Received events_pointset:       "present_value" : true
-TIMESTAMP TRACE   Received events_pointset:     },
-TIMESTAMP TRACE   Received events_pointset:     "filter_differential_pressure_setpoint" : {
-TIMESTAMP TRACE   Received events_pointset:       "present_value" : 98
-TIMESTAMP TRACE   Received events_pointset:     },
-TIMESTAMP TRACE   Received events_pointset:     "filter_differential_pressure_sensor" : {
-TIMESTAMP TRACE   Received events_pointset:       "present_value" : 9
-TIMESTAMP TRACE   Received events_pointset:     }
-TIMESTAMP TRACE   Received events_pointset:   },
-TIMESTAMP",
-TIMESTAMP TRACE   Received events_pointset:   "version" : "1.5.3"
-TIMESTAMP TRACE   Received events_pointset: }
-TIMESTAMP DEBUG   Handling device message events_pointset MP:6df34cb4
-TIMESTAMP DEBUG   Capturing AHU-1 message events_pointset
-TIMESTAMP DEBUG   Received command AHU-1/events/system as MP:cd3ddb57
-TIMESTAMP","version":"1.5.3"}
-TIMESTAMP DEBUG system.config.receive: success
-TIMESTAMP DEBUG device.log: State update defer -13045ms
-TIMESTAMP DEBUG system.config.parse: success
-TIMESTAMP
-TIMESTAMP INFO device.log: Device AHU-1 config handler
-TIMESTAMP DEBUG device.log: State update AHU-1 (config_logging)
-TIMESTAMP DEBUG device.log: State update defer 2000ms
-TIMESTAMP DEBUG device.log: Config update AHU-1 (config_logging)
-TIMESTAMP
-TIMESTAMP NOTICE system.config.apply: success
-TIMESTAMP DEBUG device.log: State update defer 1998ms
-TIMESTAMP DEBUG device.log: State update defer 1997ms
-TIMESTAMP DEBUG device.log: State update defer 1997ms
-TIMESTAMP DEBUG device.log: State update defer 1997ms
-TIMESTAMP DEBUG device.log: State update defer 1996ms
-TIMESTAMP DEBUG device.log: State update defer 1996ms
-TIMESTAMP DEBUG system.config.receive: success
-TIMESTAMP DEBUG device.log: State update defer 1944ms
-TIMESTAMP DEBUG system.config.parse: success
-TIMESTAMP INFO device.log: Device AHU-1 config handler
-TIMESTAMP DEBUG device.log: Config update AHU-1 (scan_periodic_now_enumerate)
-TIMESTAMP
-TIMESTAMP NOTICE system.config.apply: success
-TIMESTAMP DEBUG device.log: State update defer 1943ms
-TIMESTAMP DEBUG device.log: State update defer 1942ms
-TIMESTAMP DEBUG device.log: State update defer 1942ms
-TIMESTAMP DEBUG device.log: State update defer 1942ms
-TIMESTAMP DEBUG device.log: State update defer 0ms
-TIMESTAMP
-TIMESTAMP DEBUG device.log: State update AHU-1 (scan_periodic_now_enumerate)
-TIMESTAMP DEBUG   Handling device message events_system MP:cd3ddb57
-TIMESTAMP DEBUG   Capturing AHU-1 message events_system
-TIMESTAMP DEBUG   Received command AHU-1/config/update as RC:3739a3.00000032
-TIMESTAMP DEBUG   Received config_update
-TIMESTAMP DEBUG   Handling update message config_update RC:3739a3.00000032
-TIMESTAMP DEBUG   Removed configTransaction RC:3739a3.00000032
-TIMESTAMP
-TIMESTAMP RC:3739a3.00000032
-TIMESTAMP INFO    Updated config #028: Changed 2 fields:
-TIMESTAMP INFO    Updated config #028:   Add `system.testing.endpoint_type` = `alternate`
-TIMESTAMP INFO    Updated config #028:   Add `blobset` = { "blobs": { "_iot_endpoint_config": { "phase": `final`, "generation": `blob generation`, "sha256": `blob data hash`, "url": `endpoint data` } } }
-TIMESTAMP
-TIMESTAMP DEBUG   Detail pending config transaction is now: null
-TIMESTAMP
-TIMESTAMP
-TIMESTAMP TRACE   Update config reset alternate registry: Add `blobset` = { "blobs": { "_iot_endpoint_config": { "phase": `final`, "generation": `blob generation`, "sha256": `blob data hash`, "url": `endpoint data` } } }
-TIMESTAMP DEBUG   Stage finished waiting for using alternate client at @14s after 3s
-TIMESTAMP TRACE   Stage resume waiting for starting test wrapper at @14s
-TIMESTAMP WARNING Done with alternate connection client!
-TIMESTAMP is 2000ms
-TIMESTAMP DEBUG   Rate-limiting config by 2000ms
-TIMESTAMP TRACE   Updated check config_update: true
-TIMESTAMP DEBUG   Update config_update, adding configTransaction RC:3739a3.00000033
-TIMESTAMP
-TIMESTAMP, because initial setup
-TIMESTAMP TRACE   Stage suspend waiting for starting test wrapper at @16s
-TIMESTAMP INFO    Stage start waiting for config update synchronized at @16s
-TIMESTAMP DEBUG   Received command AHU-1/config/update as CU:3739a3.00000032
-TIMESTAMP DEBUG   Received backup message AHU-1/config/update: {"operation":"REPLY"}
-TIMESTAMP DEBUG   Received config_update
-TIMESTAMP DEBUG   Handling update message config_update CU:3739a3.00000032
-TIMESTAMP DEBUG   Ignoring operation reply CU:3739a3.00000032
-TIMESTAMP DEBUG   Received command AHU-1/state/update as MP:43b79013
-TIMESTAMP DEBUG   Received state_update
-TIMESTAMP DEBUG   Handling update message state_update MP:43b79013
-TIMESTAMP DEBUG   Capturing AHU-1 message state_update
-TIMESTAMP MP:43b79013
-TIMESTAMP INFO    Updated state #038: Changed 4 fields:
-TIMESTAMP INFO    Updated state #038:   Set `system.status.level` = `100`
-TIMESTAMP INFO    Updated state #038:   Set `system.status.category` = `system.config.parse`
-TIMESTAMP`
-TIMESTAMP`
-TIMESTAMP)
-TIMESTAMP DEBUG   Received command AHU-1/config/update as RC:3739a3.00000033
-TIMESTAMP DEBUG   Received config_update
-TIMESTAMP DEBUG   Handling update message config_update RC:3739a3.00000033
-TIMESTAMP DEBUG   Removed configTransaction RC:3739a3.00000033
-TIMESTAMP
-TIMESTAMP RC:3739a3.00000033
-TIMESTAMP INFO    Updated config #029: Changed 2 fields:
-TIMESTAMP INFO    Updated config #029:   Remove `system.testing.endpoint_type`
-TIMESTAMP INFO    Updated config #029:   Remove `blobset`
-TIMESTAMP
-TIMESTAMP DEBUG   Detail config update synchronized is now: last_config not synced in state
-TIMESTAMP DEBUG   Received command AHU-1/config/update as CU:3739a3.00000033
-TIMESTAMP DEBUG   Received config_update
-TIMESTAMP DEBUG   Handling update message config_update CU:3739a3.00000033
-TIMESTAMP DEBUG   Ignoring operation reply CU:3739a3.00000033
-TIMESTAMP DEBUG   Received command AHU-1/state/system as MP:43b79013-0
-TIMESTAMP TRACE   Received state_system: {
-TIMESTAMP TRACE   Received state_system:   "hardware" : {
-TIMESTAMP TRACE   Received state_system:     "make" : "BOS",
-TIMESTAMP TRACE   Received state_system:     "model" : "pubber"
-TIMESTAMP TRACE   Received state_system:   },
-TIMESTAMP",
-TIMESTAMP TRACE   Received state_system:   "operation" : {
-TIMESTAMP TRACE   Received state_system:     "operational" : true,
-TIMESTAMP",
-TIMESTAMP TRACE   Received state_system:     "restart_count" : 1,
-TIMESTAMP TRACE   Received state_system:     "mode" : "initial"
-TIMESTAMP TRACE   Received state_system:   },
-TIMESTAMP TRACE   Received state_system:   "serial_no" : "sequencer-27902",
-TIMESTAMP TRACE   Received state_system:   "software" : {
-TIMESTAMP TRACE   Received state_system:     "firmware" : "v1"
-TIMESTAMP TRACE   Received state_system:   },
-TIMESTAMP TRACE   Received state_system:   "status" : {
-TIMESTAMP TRACE   Received state_system:     "message" : "success",
-TIMESTAMP TRACE   Received state_system:     "category" : "system.config.parse",
-TIMESTAMP",
-TIMESTAMP TRACE   Received state_system:     "level" : 100
-TIMESTAMP TRACE   Received state_system:   },
-TIMESTAMP",
-TIMESTAMP TRACE   Received state_system:   "version" : "1.5.3"
-TIMESTAMP TRACE   Received state_system: }
-TIMESTAMP DEBUG   Handling device message state_system MP:43b79013-0
-TIMESTAMP TRACE   Ignoring partial state update
-TIMESTAMP DEBUG   Received command AHU-1/state/discovery as MP:43b79013-1
-TIMESTAMP TRACE   Received state_discovery: {
-TIMESTAMP TRACE   Received state_discovery:   "families" : { },
-TIMESTAMP",
-TIMESTAMP TRACE   Received state_discovery:   "version" : "1.5.3"
-TIMESTAMP TRACE   Received state_discovery: }
-TIMESTAMP DEBUG   Handling device message state_discovery MP:43b79013-1
-TIMESTAMP TRACE   Ignoring partial state update
-TIMESTAMP DEBUG   Received command AHU-1/state/localnet as MP:43b79013-2
-TIMESTAMP TRACE   Received state_localnet: {
-TIMESTAMP TRACE   Received state_localnet:   "families" : {
-TIMESTAMP TRACE   Received state_localnet:     "ether" : {
-TIMESTAMP TRACE   Received state_localnet:       "addr" : "7c:1e:52:05:17:a4"
-TIMESTAMP TRACE   Received state_localnet:     },
-TIMESTAMP TRACE   Received state_localnet:     "ipv4" : {
-TIMESTAMP TRACE   Received state_localnet:       "addr" : "10.1.0.78"
-TIMESTAMP TRACE   Received state_localnet:     },
-TIMESTAMP TRACE   Received state_localnet:     "vendor" : {
-TIMESTAMP TRACE   Received state_localnet:       "addr" : "28179023"
-TIMESTAMP TRACE   Received state_localnet:     },
-TIMESTAMP TRACE   Received state_localnet:     "bacnet" : {
-TIMESTAMP TRACE   Received state_localnet:       "addr" : "27312"
-TIMESTAMP TRACE   Received state_localnet:     }
-TIMESTAMP TRACE   Received state_localnet:   },
-TIMESTAMP",
-TIMESTAMP TRACE   Received state_localnet:   "version" : "1.5.3"
-TIMESTAMP TRACE   Received state_localnet: }
-TIMESTAMP DEBUG   Handling device message state_localnet MP:43b79013-2
-TIMESTAMP TRACE   Ignoring partial state update
-TIMESTAMP DEBUG   Received command AHU-1/state/pointset as MP:43b79013-3
-TIMESTAMP TRACE   Received state_pointset: {
-TIMESTAMP TRACE   Received state_pointset:   "points" : {
-TIMESTAMP TRACE   Received state_pointset:     "filter_alarm_pressure_status" : {
-TIMESTAMP TRACE   Received state_pointset:       "units" : "No-units"
-TIMESTAMP TRACE   Received state_pointset:     },
-TIMESTAMP TRACE   Received state_pointset:     "filter_differential_pressure_setpoint" : {
-TIMESTAMP TRACE   Received state_pointset:       "units" : "Bars",
-TIMESTAMP TRACE   Received state_pointset:       "value_state" : "applied"
-TIMESTAMP TRACE   Received state_pointset:     },
-TIMESTAMP TRACE   Received state_pointset:     "filter_differential_pressure_sensor" : {
-TIMESTAMP TRACE   Received state_pointset:       "units" : "Degrees-Celsius"
-TIMESTAMP TRACE   Received state_pointset:     }
-TIMESTAMP TRACE   Received state_pointset:   },
-TIMESTAMP",
-TIMESTAMP TRACE   Received state_pointset:   "version" : "1.5.3"
-TIMESTAMP TRACE   Received state_pointset: }
-TIMESTAMP DEBUG   Handling device message state_pointset MP:43b79013-3
-TIMESTAMP TRACE   Ignoring partial state update
-TIMESTAMP DEBUG   Received command AHU-1/state/update as MP:1b7657a1
-TIMESTAMP DEBUG   Received state_update
-TIMESTAMP DEBUG   Handling update message state_update MP:1b7657a1
-TIMESTAMP DEBUG   Capturing AHU-1 message state_update
-TIMESTAMP MP:1b7657a1
-TIMESTAMP INFO    Updated state #039: Changed 4 fields:
-TIMESTAMP`
-TIMESTAMP INFO    Updated state #039:   Set `system.status.level` = `300`
-TIMESTAMP INFO    Updated state #039:   Set `system.status.category` = `system.config.apply`
-TIMESTAMP`
-TIMESTAMP)
-TIMESTAMP DEBUG   Detail config update synchronized is now: null
-TIMESTAMP DEBUG   Stage finished waiting for config update synchronized at @19s after 3s
-TIMESTAMP TRACE   Stage resume waiting for starting test wrapper at @19s
-TIMESTAMP DEBUG   Config sync took 4s
-TIMESTAMP DEBUG   Finished wait for config sync pending: null
-TIMESTAMP
-TIMESTAMP
-TIMESTAMP TRACE   Update config initial setup: Remove `blobset`
-TIMESTAMP
-TIMESTAMP DEBUG   Waiting for device stateTransaction RC:3739a3.00000034 (was null)
-TIMESTAMP TRACE   Stage suspend waiting for starting test wrapper at @19s
-TIMESTAMP INFO    Stage start waiting for state query at @19s
-TIMESTAMP DEBUG   Received command AHU-1/state/system as MP:1b7657a1-0
-TIMESTAMP TRACE   Received state_system: {
-TIMESTAMP TRACE   Received state_system:   "hardware" : {
-TIMESTAMP TRACE   Received state_system:     "make" : "BOS",
-TIMESTAMP TRACE   Received state_system:     "model" : "pubber"
-TIMESTAMP TRACE   Received state_system:   },
-TIMESTAMP",
-TIMESTAMP TRACE   Received state_system:   "operation" : {
-TIMESTAMP TRACE   Received state_system:     "operational" : true,
-TIMESTAMP",
-TIMESTAMP TRACE   Received state_system:     "restart_count" : 1,
-TIMESTAMP TRACE   Received state_system:     "mode" : "initial"
-TIMESTAMP TRACE   Received state_system:   },
-TIMESTAMP TRACE   Received state_system:   "serial_no" : "sequencer-27902",
-TIMESTAMP TRACE   Received state_system:   "software" : {
-TIMESTAMP TRACE   Received state_system:     "firmware" : "v1"
-TIMESTAMP TRACE   Received state_system:   },
-TIMESTAMP TRACE   Received state_system:   "status" : {
-TIMESTAMP TRACE   Received state_system:     "message" : "success",
-TIMESTAMP TRACE   Received state_system:     "category" : "system.config.apply",
-TIMESTAMP",
-TIMESTAMP TRACE   Received state_system:     "level" : 300
-TIMESTAMP TRACE   Received state_system:   },
-TIMESTAMP",
-TIMESTAMP TRACE   Received state_system:   "version" : "1.5.3"
-TIMESTAMP TRACE   Received state_system: }
-TIMESTAMP DEBUG   Handling device message state_system MP:1b7657a1-0
-TIMESTAMP TRACE   Ignoring partial state update
-TIMESTAMP DEBUG   Received command AHU-1/state/discovery as MP:1b7657a1-1
-TIMESTAMP TRACE   Received state_discovery: {
-TIMESTAMP TRACE   Received state_discovery:   "families" : { },
-TIMESTAMP",
-TIMESTAMP TRACE   Received state_discovery:   "version" : "1.5.3"
-TIMESTAMP TRACE   Received state_discovery: }
-TIMESTAMP DEBUG   Handling device message state_discovery MP:1b7657a1-1
-TIMESTAMP TRACE   Ignoring partial state update
-TIMESTAMP DEBUG   Received command AHU-1/state/localnet as MP:1b7657a1-2
-TIMESTAMP TRACE   Received state_localnet: {
-TIMESTAMP TRACE   Received state_localnet:   "families" : {
-TIMESTAMP TRACE   Received state_localnet:     "ether" : {
-TIMESTAMP TRACE   Received state_localnet:       "addr" : "7c:1e:52:05:17:a4"
-TIMESTAMP TRACE   Received state_localnet:     },
-TIMESTAMP TRACE   Received state_localnet:     "ipv4" : {
-TIMESTAMP TRACE   Received state_localnet:       "addr" : "10.1.0.78"
-TIMESTAMP TRACE   Received state_localnet:     },
-TIMESTAMP TRACE   Received state_localnet:     "vendor" : {
-TIMESTAMP TRACE   Received state_localnet:       "addr" : "28179023"
-TIMESTAMP TRACE   Received state_localnet:     },
-TIMESTAMP TRACE   Received state_localnet:     "bacnet" : {
-TIMESTAMP TRACE   Received state_localnet:       "addr" : "27312"
-TIMESTAMP TRACE   Received state_localnet:     }
-TIMESTAMP TRACE   Received state_localnet:   },
-TIMESTAMP",
-TIMESTAMP TRACE   Received state_localnet:   "version" : "1.5.3"
-TIMESTAMP TRACE   Received state_localnet: }
-TIMESTAMP DEBUG   Handling device message state_localnet MP:1b7657a1-2
-TIMESTAMP TRACE   Ignoring partial state update
-TIMESTAMP DEBUG   Received command AHU-1/state/pointset as MP:1b7657a1-3
-TIMESTAMP TRACE   Received state_pointset: {
-TIMESTAMP TRACE   Received state_pointset:   "points" : {
-TIMESTAMP TRACE   Received state_pointset:     "filter_alarm_pressure_status" : {
-TIMESTAMP TRACE   Received state_pointset:       "units" : "No-units"
-TIMESTAMP TRACE   Received state_pointset:     },
-TIMESTAMP TRACE   Received state_pointset:     "filter_differential_pressure_setpoint" : {
-TIMESTAMP TRACE   Received state_pointset:       "units" : "Bars",
-TIMESTAMP TRACE   Received state_pointset:       "value_state" : "applied"
-TIMESTAMP TRACE   Received state_pointset:     },
-TIMESTAMP TRACE   Received state_pointset:     "filter_differential_pressure_sensor" : {
-TIMESTAMP TRACE   Received state_pointset:       "units" : "Degrees-Celsius"
-TIMESTAMP TRACE   Received state_pointset:     }
-TIMESTAMP TRACE   Received state_pointset:   },
-TIMESTAMP",
-TIMESTAMP TRACE   Received state_pointset:   "version" : "1.5.3"
-TIMESTAMP TRACE   Received state_pointset: }
-TIMESTAMP DEBUG   Handling device message state_pointset MP:1b7657a1-3
-TIMESTAMP TRACE   Ignoring partial state update
-TIMESTAMP DEBUG   Received command null/config/udmi as null
-TIMESTAMP DEBUG   Received command null/config/udmi as null
-TIMESTAMP DEBUG   Received command AHU-1/state/update as RC:3739a3.00000034
-TIMESTAMP DEBUG   Received state_update
-TIMESTAMP INFO    Received device configAcked
-TIMESTAMP DEBUG   Handling update message state_update RC:3739a3.00000034
-TIMESTAMP DEBUG   Removed stateTransaction RC:3739a3.00000034
-TIMESTAMP DEBUG   Capturing AHU-1 message state_update
-TIMESTAMP RC:3739a3.00000034
-TIMESTAMP INFO    Updated state #040: Changed 0 fields.
-TIMESTAMP)
-TIMESTAMP DEBUG   Stage finished waiting for state query at @20s after 1s
-TIMESTAMP TRACE   Stage resume waiting for starting test wrapper at @20s
-TIMESTAMP TRACE   Stage suspend waiting for starting test wrapper at @20s
-TIMESTAMP INFO    Stage start waiting for initial device state at @20s
-TIMESTAMP is 990ms
-TIMESTAMP DEBUG   Rate-limiting config by 990ms
-TIMESTAMP TRACE   Updated check config_update: true
-TIMESTAMP DEBUG   Update config_update, adding configTransaction RC:3739a3.00000035
-TIMESTAMP
-TIMESTAMP, because before initial device state
-TIMESTAMP TRACE   Stage suspend waiting for initial device state at @21s
-TIMESTAMP INFO    Stage start waiting for config update synchronized at @21s
-TIMESTAMP DEBUG   Received command AHU-1/reply/update as RC:3739a3.00000034
-TIMESTAMP DEBUG   Received command AHU-1/state/update as MP:0287d36d
-TIMESTAMP DEBUG   Received state_update
-TIMESTAMP DEBUG   Handling update message state_update MP:0287d36d
-TIMESTAMP DEBUG   Capturing AHU-1 message state_update
-TIMESTAMP MP:0287d36d
-TIMESTAMP INFO    Updated state #041: Changed 4 fields:
-TIMESTAMP INFO    Updated state #041:   Set `system.status.level` = `100`
-TIMESTAMP INFO    Updated state #041:   Set `system.status.category` = `system.config.parse`
-TIMESTAMP`
-TIMESTAMP`
-TIMESTAMP)
-TIMESTAMP DEBUG   Received command AHU-1/config/update as RC:3739a3.00000035
-TIMESTAMP DEBUG   Received config_update
-TIMESTAMP DEBUG   Handling update message config_update RC:3739a3.00000035
-TIMESTAMP DEBUG   Removed configTransaction RC:3739a3.00000035
-TIMESTAMP
-TIMESTAMP RC:3739a3.00000035
-TIMESTAMP INFO    Updated config #030: Changed 0 fields.
-TIMESTAMP
-TIMESTAMP DEBUG   Detail config update synchronized is now: last_config not synced in state
-TIMESTAMP DEBUG   Received command AHU-1/config/update as CU:3739a3.00000035
-TIMESTAMP DEBUG   Received config_update
-TIMESTAMP DEBUG   Handling update message config_update CU:3739a3.00000035
-TIMESTAMP DEBUG   Ignoring operation reply CU:3739a3.00000035
-TIMESTAMP DEBUG   Received command AHU-1/state/system as MP:0287d36d-0
-TIMESTAMP TRACE   Received state_system: {
-TIMESTAMP TRACE   Received state_system:   "hardware" : {
-TIMESTAMP TRACE   Received state_system:     "make" : "BOS",
-TIMESTAMP TRACE   Received state_system:     "model" : "pubber"
-TIMESTAMP TRACE   Received state_system:   },
-TIMESTAMP",
-TIMESTAMP TRACE   Received state_system:   "operation" : {
-TIMESTAMP TRACE   Received state_system:     "operational" : true,
-TIMESTAMP",
-TIMESTAMP TRACE   Received state_system:     "restart_count" : 1,
-TIMESTAMP TRACE   Received state_system:     "mode" : "initial"
-TIMESTAMP TRACE   Received state_system:   },
-TIMESTAMP TRACE   Received state_system:   "serial_no" : "sequencer-27902",
-TIMESTAMP TRACE   Received state_system:   "software" : {
-TIMESTAMP TRACE   Received state_system:     "firmware" : "v1"
-TIMESTAMP TRACE   Received state_system:   },
-TIMESTAMP TRACE   Received state_system:   "status" : {
-TIMESTAMP TRACE   Received state_system:     "message" : "success",
-TIMESTAMP TRACE   Received state_system:     "category" : "system.config.parse",
-TIMESTAMP",
-TIMESTAMP TRACE   Received state_system:     "level" : 100
-TIMESTAMP TRACE   Received state_system:   },
-TIMESTAMP",
-TIMESTAMP TRACE   Received state_system:   "version" : "1.5.3"
-TIMESTAMP TRACE   Received state_system: }
-TIMESTAMP DEBUG   Handling device message state_system MP:0287d36d-0
-TIMESTAMP TRACE   Ignoring partial state update
-TIMESTAMP DEBUG   Received command AHU-1/state/discovery as MP:0287d36d-1
-TIMESTAMP TRACE   Received state_discovery: {
-TIMESTAMP TRACE   Received state_discovery:   "families" : { },
-TIMESTAMP",
-TIMESTAMP TRACE   Received state_discovery:   "version" : "1.5.3"
-TIMESTAMP TRACE   Received state_discovery: }
-TIMESTAMP DEBUG   Handling device message state_discovery MP:0287d36d-1
-TIMESTAMP TRACE   Ignoring partial state update
-TIMESTAMP DEBUG   Received command AHU-1/state/localnet as MP:0287d36d-2
-TIMESTAMP TRACE   Received state_localnet: {
-TIMESTAMP TRACE   Received state_localnet:   "families" : {
-TIMESTAMP TRACE   Received state_localnet:     "ether" : {
-TIMESTAMP TRACE   Received state_localnet:       "addr" : "7c:1e:52:05:17:a4"
-TIMESTAMP TRACE   Received state_localnet:     },
-TIMESTAMP TRACE   Received state_localnet:     "ipv4" : {
-TIMESTAMP TRACE   Received state_localnet:       "addr" : "10.1.0.78"
-TIMESTAMP TRACE   Received state_localnet:     },
-TIMESTAMP TRACE   Received state_localnet:     "vendor" : {
-TIMESTAMP TRACE   Received state_localnet:       "addr" : "28179023"
-TIMESTAMP TRACE   Received state_localnet:     },
-TIMESTAMP TRACE   Received state_localnet:     "bacnet" : {
-TIMESTAMP TRACE   Received state_localnet:       "addr" : "27312"
-TIMESTAMP TRACE   Received state_localnet:     }
-TIMESTAMP TRACE   Received state_localnet:   },
-TIMESTAMP",
-TIMESTAMP TRACE   Received state_localnet:   "version" : "1.5.3"
-TIMESTAMP TRACE   Received state_localnet: }
-TIMESTAMP DEBUG   Handling device message state_localnet MP:0287d36d-2
-TIMESTAMP TRACE   Ignoring partial state update
-TIMESTAMP DEBUG   Received command AHU-1/state/pointset as MP:0287d36d-3
-TIMESTAMP TRACE   Received state_pointset: {
-TIMESTAMP TRACE   Received state_pointset:   "points" : {
-TIMESTAMP TRACE   Received state_pointset:     "filter_alarm_pressure_status" : {
-TIMESTAMP TRACE   Received state_pointset:       "units" : "No-units"
-TIMESTAMP TRACE   Received state_pointset:     },
-TIMESTAMP TRACE   Received state_pointset:     "filter_differential_pressure_setpoint" : {
-TIMESTAMP TRACE   Received state_pointset:       "units" : "Bars",
-TIMESTAMP TRACE   Received state_pointset:       "value_state" : "applied"
-TIMESTAMP TRACE   Received state_pointset:     },
-TIMESTAMP TRACE   Received state_pointset:     "filter_differential_pressure_sensor" : {
-TIMESTAMP TRACE   Received state_pointset:       "units" : "Degrees-Celsius"
-TIMESTAMP TRACE   Received state_pointset:     }
-TIMESTAMP TRACE   Received state_pointset:   },
-TIMESTAMP",
-TIMESTAMP TRACE   Received state_pointset:   "version" : "1.5.3"
-TIMESTAMP TRACE   Received state_pointset: }
-TIMESTAMP DEBUG   Handling device message state_pointset MP:0287d36d-3
-TIMESTAMP TRACE   Ignoring partial state update
-TIMESTAMP DEBUG   Received command AHU-1/events/pointset as MP:e994847e
+TIMESTAMP DEBUG   Received command AHU-1/events/pointset as MP:d9e10061
 TIMESTAMP TRACE   Received events_pointset: {
 TIMESTAMP TRACE   Received events_pointset:   "points" : {
 TIMESTAMP TRACE   Received events_pointset:     "filter_alarm_pressure_status" : {
@@ -782,201 +71,39 @@ TIMESTAMP TRACE   Received events_pointset:   },
 TIMESTAMP",
 TIMESTAMP TRACE   Received events_pointset:   "version" : "1.5.3"
 TIMESTAMP TRACE   Received events_pointset: }
-TIMESTAMP DEBUG   Handling device message events_pointset MP:e994847e
+TIMESTAMP DEBUG   Handling device message events_pointset MP:d9e10061
 TIMESTAMP DEBUG   Capturing AHU-1 message events_pointset
-TIMESTAMP DEBUG   Received command AHU-1/events/system as MP:2ac8521e
-TIMESTAMP DEBUG system.config.receive: success
-TIMESTAMP DEBUG device.log: State update defer -4044ms
-TIMESTAMP
-TIMESTAMP DEBUG system.config.parse: success
-TIMESTAMP INFO device.log: Device AHU-1 config handler
-TIMESTAMP DEBUG device.log: State update AHU-1 (scan_periodic_now_enumerate)
-TIMESTAMP DEBUG device.log: Config update AHU-1 (scan_periodic_now_enumerate)
-TIMESTAMP DEBUG device.log: State update defer 2000ms
-TIMESTAMP
-TIMESTAMP NOTICE system.config.apply: success
-TIMESTAMP DEBUG device.log: State update defer 1998ms
-TIMESTAMP DEBUG device.log: State update defer 1998ms
-TIMESTAMP DEBUG device.log: State update defer 1998ms
-TIMESTAMP DEBUG device.log: State update defer 1998ms
-TIMESTAMP DEBUG device.log: State update defer 1998ms
-TIMESTAMP DEBUG device.log: State update defer 1998ms
-TIMESTAMP DEBUG device.log: State update defer 1997ms
-TIMESTAMP DEBUG device.log: State update defer 0ms
-TIMESTAMP
-TIMESTAMP DEBUG device.log: State update AHU-1 (scan_periodic_now_enumerate)
-TIMESTAMP DEBUG system.config.receive: success
-TIMESTAMP DEBUG device.log: State update defer -1018ms
-TIMESTAMP
-TIMESTAMP DEBUG system.config.parse: success
-TIMESTAMP INFO device.log: Device AHU-1 config handler
-TIMESTAMP DEBUG device.log: State update AHU-1 (scan_periodic_now_enumerate)
-TIMESTAMP DEBUG device.log: Config update AHU-1 (scan_periodic_now_enumerate)
-TIMESTAMP DEBUG device.log: State update defer 2000ms
-TIMESTAMP
-TIMESTAMP NOTICE system.config.apply: success
-TIMESTAMP DEBUG device.log: State update defer 1999ms
-TIMESTAMP DEBUG device.log: State update defer 1999ms
-TIMESTAMP DEBUG device.log: State update defer 1999ms
-TIMESTAMP DEBUG device.log: State update defer 1999ms
-TIMESTAMP DEBUG device.log: State update defer 1999ms
-TIMESTAMP DEBUG device.log: State update defer 1998ms
-TIMESTAMP DEBUG   Handling device message events_system MP:2ac8521e
-TIMESTAMP DEBUG   Capturing AHU-1 message events_system
-TIMESTAMP DEBUG   Received command AHU-1/state/update as MP:91d26621
+TIMESTAMP TRACE   Suppressing exception: java.lang.NullPointerException: Cannot read field "system" because "this.deviceState" is null, 	at com.google.daq.mqtt.sequencer.SequenceBase.lambda$configIsPending$105(SequenceBase.java:2250)
+TIMESTAMP TRACE   Suppressing exception: java.lang.NullPointerException: Cannot read field "system" because "this.deviceState" is null, 	at com.google.daq.mqtt.sequencer.SequenceBase.lambda$configIsPending$107(SequenceBase.java:2254)
+TIMESTAMP TRACE   Suppressing exception: java.lang.NullPointerException: Cannot read field "timestamp" because "this.deviceState" is null, 	at com.google.daq.mqtt.sequencer.SequenceBase.lambda$configIsPending$109(SequenceBase.java:2261)
+TIMESTAMP DEBUG   Received command AHU-1/state/update as MP:e435f431
 TIMESTAMP DEBUG   Received state_update
-TIMESTAMP DEBUG   Handling update message state_update MP:91d26621
+TIMESTAMP DEBUG   Handling update message state_update MP:e435f431
 TIMESTAMP DEBUG   Capturing AHU-1 message state_update
-TIMESTAMP MP:91d26621
-TIMESTAMP INFO    Updated state #042: Changed 4 fields:
-TIMESTAMP`
-TIMESTAMP INFO    Updated state #042:   Set `system.status.level` = `300`
-TIMESTAMP INFO    Updated state #042:   Set `system.status.category` = `system.config.apply`
-TIMESTAMP`
-TIMESTAMP)
-TIMESTAMP DEBUG   Detail config update synchronized is now: null
-TIMESTAMP DEBUG   Stage finished waiting for config update synchronized at @24s after 3s
-TIMESTAMP TRACE   Stage resume waiting for initial device state at @24s
-TIMESTAMP DEBUG   Config sync took 3s
-TIMESTAMP DEBUG   Finished wait for config sync pending: null
-TIMESTAMP
-TIMESTAMP
-TIMESTAMP DEBUG   Stage finished waiting for initial device state at @24s after 4s
-TIMESTAMP TRACE   Stage resume waiting for starting test wrapper at @24s
-TIMESTAMP DEBUG   Device state system status level is now 300
-TIMESTAMP TRACE   Stage suspend waiting for starting test wrapper at @24s
-TIMESTAMP INFO    Stage start waiting for config update synchronized at @24s
-TIMESTAMP DEBUG   Received command AHU-1/state/system as MP:91d26621-0
-TIMESTAMP TRACE   Received state_system: {
-TIMESTAMP TRACE   Received state_system:   "hardware" : {
-TIMESTAMP TRACE   Received state_system:     "make" : "BOS",
-TIMESTAMP TRACE   Received state_system:     "model" : "pubber"
-TIMESTAMP TRACE   Received state_system:   },
-TIMESTAMP",
-TIMESTAMP TRACE   Received state_system:   "operation" : {
-TIMESTAMP TRACE   Received state_system:     "operational" : true,
-TIMESTAMP",
-TIMESTAMP TRACE   Received state_system:     "restart_count" : 1,
-TIMESTAMP TRACE   Received state_system:     "mode" : "initial"
-TIMESTAMP TRACE   Received state_system:   },
-TIMESTAMP TRACE   Received state_system:   "serial_no" : "sequencer-27902",
-TIMESTAMP TRACE   Received state_system:   "software" : {
-TIMESTAMP TRACE   Received state_system:     "firmware" : "v1"
-TIMESTAMP TRACE   Received state_system:   },
-TIMESTAMP TRACE   Received state_system:   "status" : {
-TIMESTAMP TRACE   Received state_system:     "message" : "success",
-TIMESTAMP TRACE   Received state_system:     "category" : "system.config.apply",
-TIMESTAMP",
-TIMESTAMP TRACE   Received state_system:     "level" : 300
-TIMESTAMP TRACE   Received state_system:   },
-TIMESTAMP",
-TIMESTAMP TRACE   Received state_system:   "version" : "1.5.3"
-TIMESTAMP TRACE   Received state_system: }
-TIMESTAMP DEBUG   Handling device message state_system MP:91d26621-0
-TIMESTAMP TRACE   Ignoring partial state update
-TIMESTAMP DEBUG   Received command AHU-1/state/discovery as MP:91d26621-1
-TIMESTAMP TRACE   Received state_discovery: {
-TIMESTAMP TRACE   Received state_discovery:   "families" : { },
-TIMESTAMP",
-TIMESTAMP TRACE   Received state_discovery:   "version" : "1.5.3"
-TIMESTAMP TRACE   Received state_discovery: }
-TIMESTAMP DEBUG   Handling device message state_discovery MP:91d26621-1
-TIMESTAMP TRACE   Ignoring partial state update
-TIMESTAMP DEBUG   Stage finished waiting for config update synchronized at @24s after 0s
-TIMESTAMP TRACE   Stage resume waiting for starting test wrapper at @24s
-TIMESTAMP DEBUG   Config sync took 3s
-TIMESTAMP DEBUG   Finished wait for config sync pending: null
-TIMESTAMP TRACE   Stage suspend waiting for starting test wrapper at @24s
-TIMESTAMP INFO    Stage start waiting for executing test at @24s
-TIMESTAMP DEBUG   stage begin waiting for executing test at @24s
-TIMESTAMP DEBUG   Allowing device state change discovery
-TIMESTAMP TRACE   Stage suspend waiting for executing test at @24s
-TIMESTAMP INFO    Stage start waiting for discovery families defined at @24s
-TIMESTAMP is 1997ms
-TIMESTAMP DEBUG   Rate-limiting config by 1997ms
-TIMESTAMP DEBUG   System config extra field null
-TIMESTAMP TRACE   Updated check config_system: true
-TIMESTAMP DEBUG   Update config_system, adding configTransaction RC:3739a3.00000036
-TIMESTAMP TRACE   Updated check config_pointset: true
-TIMESTAMP DEBUG   Update config_pointset, adding configTransaction RC:3739a3.00000037
-TIMESTAMP TRACE   Updated check config_gateway: false
-TIMESTAMP TRACE   Updated check config_localnet: true
-TIMESTAMP DEBUG   Update config_localnet, adding configTransaction RC:3739a3.00000038
-TIMESTAMP TRACE   Updated check config_blobset: false
-TIMESTAMP TRACE   Updated check config_discovery: true
-TIMESTAMP DEBUG   Update config_discovery, adding configTransaction RC:3739a3.00000039
-TIMESTAMP
-TIMESTAMP, because before discovery families defined
-TIMESTAMP TRACE   Stage suspend waiting for discovery families defined at @26s
-TIMESTAMP INFO    Stage start waiting for config update synchronized at @26s
-TIMESTAMP DEBUG   Received command AHU-1/state/localnet as MP:91d26621-2
-TIMESTAMP TRACE   Received state_localnet: {
-TIMESTAMP TRACE   Received state_localnet:   "families" : {
-TIMESTAMP TRACE   Received state_localnet:     "ether" : {
-TIMESTAMP TRACE   Received state_localnet:       "addr" : "7c:1e:52:05:17:a4"
-TIMESTAMP TRACE   Received state_localnet:     },
-TIMESTAMP TRACE   Received state_localnet:     "ipv4" : {
-TIMESTAMP TRACE   Received state_localnet:       "addr" : "10.1.0.78"
-TIMESTAMP TRACE   Received state_localnet:     },
-TIMESTAMP TRACE   Received state_localnet:     "vendor" : {
-TIMESTAMP TRACE   Received state_localnet:       "addr" : "28179023"
-TIMESTAMP TRACE   Received state_localnet:     },
-TIMESTAMP TRACE   Received state_localnet:     "bacnet" : {
-TIMESTAMP TRACE   Received state_localnet:       "addr" : "27312"
-TIMESTAMP TRACE   Received state_localnet:     }
-TIMESTAMP TRACE   Received state_localnet:   },
-TIMESTAMP",
-TIMESTAMP TRACE   Received state_localnet:   "version" : "1.5.3"
-TIMESTAMP TRACE   Received state_localnet: }
-TIMESTAMP DEBUG   Handling device message state_localnet MP:91d26621-2
-TIMESTAMP TRACE   Ignoring partial state update
-TIMESTAMP DEBUG   Received command AHU-1/state/pointset as MP:91d26621-3
-TIMESTAMP TRACE   Received state_pointset: {
-TIMESTAMP TRACE   Received state_pointset:   "points" : {
-TIMESTAMP TRACE   Received state_pointset:     "filter_alarm_pressure_status" : {
-TIMESTAMP TRACE   Received state_pointset:       "units" : "No-units"
-TIMESTAMP TRACE   Received state_pointset:     },
-TIMESTAMP TRACE   Received state_pointset:     "filter_differential_pressure_setpoint" : {
-TIMESTAMP TRACE   Received state_pointset:       "units" : "Bars",
-TIMESTAMP TRACE   Received state_pointset:       "value_state" : "applied"
-TIMESTAMP TRACE   Received state_pointset:     },
-TIMESTAMP TRACE   Received state_pointset:     "filter_differential_pressure_sensor" : {
-TIMESTAMP TRACE   Received state_pointset:       "units" : "Degrees-Celsius"
-TIMESTAMP TRACE   Received state_pointset:     }
-TIMESTAMP TRACE   Received state_pointset:   },
-TIMESTAMP",
-TIMESTAMP TRACE   Received state_pointset:   "version" : "1.5.3"
-TIMESTAMP TRACE   Received state_pointset: }
-TIMESTAMP DEBUG   Handling device message state_pointset MP:91d26621-3
-TIMESTAMP TRACE   Ignoring partial state update
-TIMESTAMP DEBUG   Received command AHU-1/state/update as MP:772d560a
-TIMESTAMP DEBUG   Received state_update
-TIMESTAMP DEBUG   Handling update message state_update MP:772d560a
-TIMESTAMP DEBUG   Capturing AHU-1 message state_update
-TIMESTAMP MP:772d560a
-TIMESTAMP INFO    Updated state #043: Changed 4 fields:
-TIMESTAMP INFO    Updated state #043:   Set `system.status.level` = `100`
-TIMESTAMP INFO    Updated state #043:   Set `system.status.category` = `system.config.parse`
+TIMESTAMP MP:e435f431
+TIMESTAMP INFO    Updated state #036: Changed 4 fields:
+TIMESTAMP INFO    Updated state #036:   Set `system.status.level` = `100`
+TIMESTAMP INFO    Updated state #036:   Set `system.status.category` = `system.config.parse`
 TIMESTAMP`
 TIMESTAMP`
-TIMESTAMP)
-TIMESTAMP DEBUG   Received command AHU-1/config/update as RC:3739a3.00000036
+TIMESTAMP NOTICE  Received serial number sequencer-19868
+TIMESTAMP (expecting null)
+TIMESTAMP DEBUG   Detail config update synchronized is now: last_start not synced in config, config transactions not cleared, last_config not synced in state
+TIMESTAMP DEBUG   Received command AHU-1/config/update as RC:51d528.0000002f
 TIMESTAMP DEBUG   Received config_update
-TIMESTAMP DEBUG   Handling update message config_update RC:3739a3.00000036
-TIMESTAMP DEBUG   Removed configTransaction RC:3739a3.00000036
+TIMESTAMP DEBUG   Handling update message config_update RC:51d528.0000002f
+TIMESTAMP DEBUG   Removed configTransaction RC:51d528.0000002f
 TIMESTAMP
-TIMESTAMP RC:3739a3.00000036
-TIMESTAMP INFO    Updated config #031: Changed 1 fields:
-TIMESTAMP INFO    Updated config #031:   Remove `discovery.families.vendor`
+TIMESTAMP RC:51d528.0000002f
+TIMESTAMP INFO    Updated config #026: Changed 1 fields:
+TIMESTAMP INFO    Updated config #026:   Set `system.testing.sequence_name` = `scan_periodic_now_enumerate+vendor`
 TIMESTAMP
-TIMESTAMP DEBUG   Received command AHU-1/config/system as CU:3739a3.00000036
-TIMESTAMP TRACE   Received config_system: {
-TIMESTAMP TRACE   Received config_system:   "operation" : "REPLY"
-TIMESTAMP TRACE   Received config_system: }
-TIMESTAMP DEBUG   Handling device message config_system CU:3739a3.00000036
-TIMESTAMP TRACE   Ignoring echo configTransaction CU:3739a3.00000036
-TIMESTAMP DEBUG   Detail config update synchronized is now: config transactions not cleared, last_config not synced in state
-TIMESTAMP DEBUG   Received command AHU-1/state/system as MP:772d560a-0
+TIMESTAMP DEBUG   Received command AHU-1/config/update as CU:51d528.0000002f
+TIMESTAMP DEBUG   Received config_update
+TIMESTAMP DEBUG   Handling update message config_update CU:51d528.0000002f
+TIMESTAMP DEBUG   Ignoring operation reply CU:51d528.0000002f
+TIMESTAMP DEBUG   Detail config update synchronized is now: last_start not synced in config, last_config not synced in state
+TIMESTAMP DEBUG   Received command AHU-1/state/system as MP:e435f431-0
 TIMESTAMP TRACE   Received state_system: {
 TIMESTAMP TRACE   Received state_system:   "hardware" : {
 TIMESTAMP TRACE   Received state_system:     "make" : "BOS",
@@ -989,7 +116,7 @@ TIMESTAMP",
 TIMESTAMP TRACE   Received state_system:     "restart_count" : 1,
 TIMESTAMP TRACE   Received state_system:     "mode" : "initial"
 TIMESTAMP TRACE   Received state_system:   },
-TIMESTAMP TRACE   Received state_system:   "serial_no" : "sequencer-27902",
+TIMESTAMP TRACE   Received state_system:   "serial_no" : "sequencer-19868",
 TIMESTAMP TRACE   Received state_system:   "software" : {
 TIMESTAMP TRACE   Received state_system:     "firmware" : "v1"
 TIMESTAMP TRACE   Received state_system:   },
@@ -1002,24 +129,24 @@ TIMESTAMP TRACE   Received state_system:   },
 TIMESTAMP",
 TIMESTAMP TRACE   Received state_system:   "version" : "1.5.3"
 TIMESTAMP TRACE   Received state_system: }
-TIMESTAMP DEBUG   Handling device message state_system MP:772d560a-0
+TIMESTAMP DEBUG   Handling device message state_system MP:e435f431-0
 TIMESTAMP TRACE   Ignoring partial state update
-TIMESTAMP DEBUG   Received command AHU-1/state/discovery as MP:772d560a-1
+TIMESTAMP DEBUG   Received command AHU-1/state/discovery as MP:e435f431-1
 TIMESTAMP TRACE   Received state_discovery: {
 TIMESTAMP TRACE   Received state_discovery:   "families" : { },
 TIMESTAMP",
 TIMESTAMP TRACE   Received state_discovery:   "version" : "1.5.3"
 TIMESTAMP TRACE   Received state_discovery: }
-TIMESTAMP DEBUG   Handling device message state_discovery MP:772d560a-1
+TIMESTAMP DEBUG   Handling device message state_discovery MP:e435f431-1
 TIMESTAMP TRACE   Ignoring partial state update
-TIMESTAMP DEBUG   Received command AHU-1/state/localnet as MP:772d560a-2
+TIMESTAMP DEBUG   Received command AHU-1/state/localnet as MP:e435f431-2
 TIMESTAMP TRACE   Received state_localnet: {
 TIMESTAMP TRACE   Received state_localnet:   "families" : {
 TIMESTAMP TRACE   Received state_localnet:     "ether" : {
-TIMESTAMP TRACE   Received state_localnet:       "addr" : "7c:1e:52:05:17:a4"
+TIMESTAMP TRACE   Received state_localnet:       "addr" : "7c:1e:52:17:b3:35"
 TIMESTAMP TRACE   Received state_localnet:     },
 TIMESTAMP TRACE   Received state_localnet:     "ipv4" : {
-TIMESTAMP TRACE   Received state_localnet:       "addr" : "10.1.0.78"
+TIMESTAMP TRACE   Received state_localnet:       "addr" : "10.1.0.118"
 TIMESTAMP TRACE   Received state_localnet:     },
 TIMESTAMP TRACE   Received state_localnet:     "vendor" : {
 TIMESTAMP TRACE   Received state_localnet:       "addr" : "28179023"
@@ -1031,9 +158,9 @@ TIMESTAMP TRACE   Received state_localnet:   },
 TIMESTAMP",
 TIMESTAMP TRACE   Received state_localnet:   "version" : "1.5.3"
 TIMESTAMP TRACE   Received state_localnet: }
-TIMESTAMP DEBUG   Handling device message state_localnet MP:772d560a-2
+TIMESTAMP DEBUG   Handling device message state_localnet MP:e435f431-2
 TIMESTAMP TRACE   Ignoring partial state update
-TIMESTAMP DEBUG   Received command AHU-1/state/pointset as MP:772d560a-3
+TIMESTAMP DEBUG   Received command AHU-1/state/pointset as MP:e435f431-3
 TIMESTAMP TRACE   Received state_pointset: {
 TIMESTAMP TRACE   Received state_pointset:   "points" : {
 TIMESTAMP TRACE   Received state_pointset:     "filter_alarm_pressure_status" : {
@@ -1050,35 +177,43 @@ TIMESTAMP TRACE   Received state_pointset:   },
 TIMESTAMP",
 TIMESTAMP TRACE   Received state_pointset:   "version" : "1.5.3"
 TIMESTAMP TRACE   Received state_pointset: }
-TIMESTAMP DEBUG   Handling device message state_pointset MP:772d560a-3
+TIMESTAMP DEBUG   Handling device message state_pointset MP:e435f431-3
 TIMESTAMP TRACE   Ignoring partial state update
-TIMESTAMP DEBUG   Received command AHU-1/config/update as RC:3739a3.00000037
+TIMESTAMP DEBUG   Received command AHU-1/config/update as MP:e435f431
 TIMESTAMP DEBUG   Received config_update
-TIMESTAMP DEBUG   Handling update message config_update RC:3739a3.00000037
-TIMESTAMP DEBUG   Removed configTransaction RC:3739a3.00000037
+TIMESTAMP DEBUG   Handling update message config_update MP:e435f431
 TIMESTAMP
-TIMESTAMP RC:3739a3.00000037
-TIMESTAMP INFO    Updated config #032: Changed 0 fields.
+TIMESTAMP MP:e435f431
+TIMESTAMP INFO    Updated config #027: Changed 0 fields.
 TIMESTAMP
-TIMESTAMP DEBUG   Received command AHU-1/config/pointset as CU:3739a3.00000037
-TIMESTAMP TRACE   Received config_pointset: {
-TIMESTAMP TRACE   Received config_pointset:   "operation" : "REPLY"
-TIMESTAMP TRACE   Received config_pointset: }
-TIMESTAMP DEBUG   Handling device message config_pointset CU:3739a3.00000037
-TIMESTAMP TRACE   Ignoring echo configTransaction CU:3739a3.00000037
-TIMESTAMP DEBUG   Received command AHU-1/state/update as MP:49c1cc2e
+TIMESTAMP DEBUG   Detail config update synchronized is now: last_config not synced in state
+TIMESTAMP DEBUG   Received command AHU-1/state/update as MP:0fe7b7b4
 TIMESTAMP DEBUG   Received state_update
-TIMESTAMP DEBUG   Handling update message state_update MP:49c1cc2e
+TIMESTAMP DEBUG   Handling update message state_update MP:0fe7b7b4
 TIMESTAMP DEBUG   Capturing AHU-1 message state_update
-TIMESTAMP MP:49c1cc2e
-TIMESTAMP INFO    Updated state #044: Changed 5 fields:
+TIMESTAMP MP:0fe7b7b4
+TIMESTAMP INFO    Updated state #037: Changed 5 fields:
 TIMESTAMP`
-TIMESTAMP INFO    Updated state #044:   Set `system.status.level` = `300`
-TIMESTAMP INFO    Updated state #044:   Set `system.status.category` = `system.config.apply`
+TIMESTAMP INFO    Updated state #037:   Set `system.status.level` = `300`
+TIMESTAMP INFO    Updated state #037:   Set `system.status.category` = `system.config.apply`
 TIMESTAMP`
 TIMESTAMP`
 TIMESTAMP)
-TIMESTAMP DEBUG   Received command AHU-1/state/system as MP:49c1cc2e-0
+TIMESTAMP DEBUG   Detail config update synchronized is now: null
+TIMESTAMP DEBUG   Stage finished waiting for config update synchronized at @11s after 3s
+TIMESTAMP TRACE   Stage resume waiting for starting test wrapper at @11s
+TIMESTAMP DEBUG   Config sync took 3s
+TIMESTAMP DEBUG   Finished wait for config sync pending: null
+TIMESTAMP
+TIMESTAMP
+TIMESTAMP TRACE   Update config soft reset: Add `discovery` = { "families": { "vendor": {  }, "bacnet": {  } } }
+TIMESTAMP TRACE   Update config soft reset: Add `pointset` = { "points": { "filter_differential_pressure_setpoint": { "set_value": `98`, "units": `Bars` }, "filter_alarm_pressure_status": { "ref": `BV11.present_value`, "units": `No-units` }, "filter_differential_pressure_sensor": { "ref": `AV12.present_value`, "units": `Degrees-Celsius` } } }
+TIMESTAMP TRACE   Update config soft reset: Add `localnet` = { "families": { "ether": {  }, "ipv4": {  }, "vendor": {  }, "bacnet": {  } } }
+TIMESTAMP TRACE   Update config soft reset: Add `timestamp` = `generated timestamp`
+TIMESTAMP DEBUG   Done with reset_config
+TIMESTAMP TRACE   Stage suspend waiting for starting test wrapper at @11s
+TIMESTAMP INFO    Stage start waiting for config update synchronized at @11s
+TIMESTAMP DEBUG   Received command AHU-1/state/system as MP:0fe7b7b4-0
 TIMESTAMP TRACE   Received state_system: {
 TIMESTAMP TRACE   Received state_system:   "hardware" : {
 TIMESTAMP TRACE   Received state_system:     "make" : "BOS",
@@ -1091,7 +226,7 @@ TIMESTAMP",
 TIMESTAMP TRACE   Received state_system:     "restart_count" : 1,
 TIMESTAMP TRACE   Received state_system:     "mode" : "initial"
 TIMESTAMP TRACE   Received state_system:   },
-TIMESTAMP TRACE   Received state_system:   "serial_no" : "sequencer-27902",
+TIMESTAMP TRACE   Received state_system:   "serial_no" : "sequencer-19868",
 TIMESTAMP TRACE   Received state_system:   "software" : {
 TIMESTAMP TRACE   Received state_system:     "firmware" : "v1"
 TIMESTAMP TRACE   Received state_system:   },
@@ -1104,25 +239,38 @@ TIMESTAMP TRACE   Received state_system:   },
 TIMESTAMP",
 TIMESTAMP TRACE   Received state_system:   "version" : "1.5.3"
 TIMESTAMP TRACE   Received state_system: }
-TIMESTAMP DEBUG   Handling device message state_system MP:49c1cc2e-0
+TIMESTAMP DEBUG   Handling device message state_system MP:0fe7b7b4-0
 TIMESTAMP TRACE   Ignoring partial state update
-TIMESTAMP DEBUG   Detail config update synchronized is now: config transactions not cleared
-TIMESTAMP DEBUG   Received command AHU-1/state/discovery as MP:49c1cc2e-1
+TIMESTAMP DEBUG   Received command AHU-1/state/discovery as MP:0fe7b7b4-1
 TIMESTAMP TRACE   Received state_discovery: {
 TIMESTAMP TRACE   Received state_discovery:   "families" : { },
 TIMESTAMP",
 TIMESTAMP TRACE   Received state_discovery:   "version" : "1.5.3"
 TIMESTAMP TRACE   Received state_discovery: }
-TIMESTAMP DEBUG   Handling device message state_discovery MP:49c1cc2e-1
+TIMESTAMP DEBUG   Handling device message state_discovery MP:0fe7b7b4-1
 TIMESTAMP TRACE   Ignoring partial state update
-TIMESTAMP DEBUG   Received command AHU-1/state/localnet as MP:49c1cc2e-2
+TIMESTAMP DEBUG   Stage finished waiting for config update synchronized at @11s after 0s
+TIMESTAMP TRACE   Stage resume waiting for starting test wrapper at @11s
+TIMESTAMP DEBUG   Config sync took 3s
+TIMESTAMP DEBUG   Finished wait for config sync pending: null
+TIMESTAMP DEBUG   Disallowing device state change (everything)
+TIMESTAMP WARNING Now using alternate connection client!
+TIMESTAMP TRACE   Stage suspend waiting for starting test wrapper at @11s
+TIMESTAMP INFO    Stage start waiting for using alternate client at @11s
+TIMESTAMP is 1996ms
+TIMESTAMP DEBUG   Rate-limiting config by 1996ms
+TIMESTAMP DEBUG   Forcing config update
+TIMESTAMP TRACE   Updated check config_update: true
+TIMESTAMP DEBUG   Update config_update, adding configTransaction RC:51d528.00000032
+TIMESTAMP DEBUG   Received command AHU-1/state/localnet as MP:0fe7b7b4-2
+TIMESTAMP","version":"1.5.3"}
 TIMESTAMP TRACE   Received state_localnet: {
 TIMESTAMP TRACE   Received state_localnet:   "families" : {
 TIMESTAMP TRACE   Received state_localnet:     "ether" : {
-TIMESTAMP TRACE   Received state_localnet:       "addr" : "7c:1e:52:05:17:a4"
+TIMESTAMP TRACE   Received state_localnet:       "addr" : "7c:1e:52:17:b3:35"
 TIMESTAMP TRACE   Received state_localnet:     },
 TIMESTAMP TRACE   Received state_localnet:     "ipv4" : {
-TIMESTAMP TRACE   Received state_localnet:       "addr" : "10.1.0.78"
+TIMESTAMP TRACE   Received state_localnet:       "addr" : "10.1.0.118"
 TIMESTAMP TRACE   Received state_localnet:     },
 TIMESTAMP TRACE   Received state_localnet:     "vendor" : {
 TIMESTAMP TRACE   Received state_localnet:       "addr" : "28179023"
@@ -1134,9 +282,10 @@ TIMESTAMP TRACE   Received state_localnet:   },
 TIMESTAMP",
 TIMESTAMP TRACE   Received state_localnet:   "version" : "1.5.3"
 TIMESTAMP TRACE   Received state_localnet: }
-TIMESTAMP DEBUG   Handling device message state_localnet MP:49c1cc2e-2
+TIMESTAMP DEBUG   Handling device message state_localnet MP:0fe7b7b4-2
 TIMESTAMP TRACE   Ignoring partial state update
-TIMESTAMP DEBUG   Received command AHU-1/state/pointset as MP:49c1cc2e-3
+TIMESTAMP DEBUG   Received command AHU-1/state/pointset as MP:0fe7b7b4-3
+TIMESTAMP","version":"1.5.3"}
 TIMESTAMP TRACE   Received state_pointset: {
 TIMESTAMP TRACE   Received state_pointset:   "points" : {
 TIMESTAMP TRACE   Received state_pointset:     "filter_alarm_pressure_status" : {
@@ -1153,43 +302,831 @@ TIMESTAMP TRACE   Received state_pointset:   },
 TIMESTAMP",
 TIMESTAMP TRACE   Received state_pointset:   "version" : "1.5.3"
 TIMESTAMP TRACE   Received state_pointset: }
-TIMESTAMP DEBUG   Handling device message state_pointset MP:49c1cc2e-3
+TIMESTAMP DEBUG   Handling device message state_pointset MP:0fe7b7b4-3
 TIMESTAMP TRACE   Ignoring partial state update
-TIMESTAMP DEBUG   Received command AHU-1/config/update as RC:3739a3.00000038
-TIMESTAMP DEBUG   Received config_update
-TIMESTAMP DEBUG   Handling update message config_update RC:3739a3.00000038
-TIMESTAMP DEBUG   Removed configTransaction RC:3739a3.00000038
+TIMESTAMP DEBUG   Received command AHU-1/events/pointset as MP:55148d91
+TIMESTAMP","version":"1.5.3"}
+TIMESTAMP TRACE   Received events_pointset: {
+TIMESTAMP TRACE   Received events_pointset:   "points" : {
+TIMESTAMP TRACE   Received events_pointset:     "filter_alarm_pressure_status" : {
+TIMESTAMP TRACE   Received events_pointset:       "present_value" : true
+TIMESTAMP TRACE   Received events_pointset:     },
+TIMESTAMP TRACE   Received events_pointset:     "filter_differential_pressure_setpoint" : {
+TIMESTAMP TRACE   Received events_pointset:       "present_value" : 98
+TIMESTAMP TRACE   Received events_pointset:     },
+TIMESTAMP TRACE   Received events_pointset:     "filter_differential_pressure_sensor" : {
+TIMESTAMP TRACE   Received events_pointset:       "present_value" : 8
+TIMESTAMP TRACE   Received events_pointset:     }
+TIMESTAMP TRACE   Received events_pointset:   },
+TIMESTAMP",
+TIMESTAMP TRACE   Received events_pointset:   "version" : "1.5.3"
+TIMESTAMP TRACE   Received events_pointset: }
+TIMESTAMP DEBUG   Handling device message events_pointset MP:55148d91
+TIMESTAMP DEBUG   Capturing AHU-1 message events_pointset
+TIMESTAMP DEBUG   Received command AHU-1/events/system as MP:5c57d668
+TIMESTAMP","version":"1.5.3"}
+TIMESTAMP DEBUG system.config.receive: success
+TIMESTAMP DEBUG device.log: State update defer -13040ms
+TIMESTAMP DEBUG system.config.parse: success
 TIMESTAMP
-TIMESTAMP RC:3739a3.00000038
+TIMESTAMP INFO device.log: Device AHU-1 config handler
+TIMESTAMP DEBUG device.log: State update AHU-1 (config_logging)
+TIMESTAMP DEBUG device.log: State update defer 2000ms
+TIMESTAMP DEBUG device.log: Config update AHU-1 (config_logging)
+TIMESTAMP
+TIMESTAMP DEBUG device.log: State update defer 1997ms
+TIMESTAMP DEBUG device.log: State update defer 1997ms
+TIMESTAMP NOTICE system.config.apply: success
+TIMESTAMP DEBUG device.log: State update defer 1997ms
+TIMESTAMP DEBUG device.log: State update defer 1997ms
+TIMESTAMP DEBUG system.config.receive: success
+TIMESTAMP DEBUG device.log: State update defer 1943ms
+TIMESTAMP DEBUG system.config.parse: success
+TIMESTAMP INFO device.log: Device AHU-1 config handler
+TIMESTAMP DEBUG device.log: State update defer 1942ms
+TIMESTAMP
+TIMESTAMP NOTICE system.config.apply: success
+TIMESTAMP DEBUG device.log: State update defer 1941ms
+TIMESTAMP DEBUG device.log: State update defer 0ms
+TIMESTAMP
+TIMESTAMP DEBUG device.log: State update AHU-1 (scan_periodic_now_enumerate+vendor)
+TIMESTAMP DEBUG   Handling device message events_system MP:5c57d668
+TIMESTAMP DEBUG   Capturing AHU-1 message events_system
+TIMESTAMP DEBUG   Received command AHU-1/config/update as RC:51d528.00000032
+TIMESTAMP DEBUG   Received config_update
+TIMESTAMP DEBUG   Handling update message config_update RC:51d528.00000032
+TIMESTAMP DEBUG   Removed configTransaction RC:51d528.00000032
+TIMESTAMP
+TIMESTAMP RC:51d528.00000032
+TIMESTAMP INFO    Updated config #028: Changed 2 fields:
+TIMESTAMP INFO    Updated config #028:   Add `system.testing.endpoint_type` = `alternate`
+TIMESTAMP INFO    Updated config #028:   Add `blobset` = { "blobs": { "_iot_endpoint_config": { "phase": `final`, "generation": `blob generation`, "sha256": `blob data hash`, "url": `endpoint data` } } }
+TIMESTAMP
+TIMESTAMP DEBUG   Detail pending config transaction is now: null
+TIMESTAMP
+TIMESTAMP
+TIMESTAMP TRACE   Update config reset alternate registry: Add `blobset` = { "blobs": { "_iot_endpoint_config": { "phase": `final`, "generation": `blob generation`, "sha256": `blob data hash`, "url": `endpoint data` } } }
+TIMESTAMP DEBUG   Stage finished waiting for using alternate client at @14s after 3s
+TIMESTAMP TRACE   Stage resume waiting for starting test wrapper at @14s
+TIMESTAMP WARNING Done with alternate connection client!
+TIMESTAMP is 2000ms
+TIMESTAMP DEBUG   Rate-limiting config by 2000ms
+TIMESTAMP TRACE   Updated check config_update: true
+TIMESTAMP DEBUG   Update config_update, adding configTransaction RC:51d528.00000033
+TIMESTAMP
+TIMESTAMP, because initial setup
+TIMESTAMP TRACE   Stage suspend waiting for starting test wrapper at @16s
+TIMESTAMP INFO    Stage start waiting for config update synchronized at @16s
+TIMESTAMP DEBUG   Received command AHU-1/config/update as CU:51d528.00000032
+TIMESTAMP DEBUG   Received backup message AHU-1/config/update: {"operation":"REPLY"}
+TIMESTAMP DEBUG   Received config_update
+TIMESTAMP DEBUG   Handling update message config_update CU:51d528.00000032
+TIMESTAMP DEBUG   Ignoring operation reply CU:51d528.00000032
+TIMESTAMP DEBUG   Received command AHU-1/config/update as RC:51d528.00000033
+TIMESTAMP DEBUG   Received config_update
+TIMESTAMP DEBUG   Handling update message config_update RC:51d528.00000033
+TIMESTAMP DEBUG   Removed configTransaction RC:51d528.00000033
+TIMESTAMP
+TIMESTAMP RC:51d528.00000033
+TIMESTAMP INFO    Updated config #029: Changed 2 fields:
+TIMESTAMP INFO    Updated config #029:   Remove `system.testing.endpoint_type`
+TIMESTAMP INFO    Updated config #029:   Remove `blobset`
+TIMESTAMP
+TIMESTAMP DEBUG   Received command AHU-1/state/update as MP:1e4773a4
+TIMESTAMP DEBUG   Received state_update
+TIMESTAMP DEBUG   Handling update message state_update MP:1e4773a4
+TIMESTAMP DEBUG   Capturing AHU-1 message state_update
+TIMESTAMP MP:1e4773a4
+TIMESTAMP INFO    Updated state #038: Changed 4 fields:
+TIMESTAMP INFO    Updated state #038:   Set `system.status.level` = `100`
+TIMESTAMP INFO    Updated state #038:   Set `system.status.category` = `system.config.parse`
+TIMESTAMP`
+TIMESTAMP`
+TIMESTAMP)
+TIMESTAMP DEBUG   Detail config update synchronized is now: last_config not synced in state
+TIMESTAMP DEBUG   Received command AHU-1/config/update as CU:51d528.00000033
+TIMESTAMP DEBUG   Received config_update
+TIMESTAMP DEBUG   Handling update message config_update CU:51d528.00000033
+TIMESTAMP DEBUG   Ignoring operation reply CU:51d528.00000033
+TIMESTAMP DEBUG   Received command AHU-1/state/system as MP:1e4773a4-0
+TIMESTAMP TRACE   Received state_system: {
+TIMESTAMP TRACE   Received state_system:   "hardware" : {
+TIMESTAMP TRACE   Received state_system:     "make" : "BOS",
+TIMESTAMP TRACE   Received state_system:     "model" : "pubber"
+TIMESTAMP TRACE   Received state_system:   },
+TIMESTAMP",
+TIMESTAMP TRACE   Received state_system:   "operation" : {
+TIMESTAMP TRACE   Received state_system:     "operational" : true,
+TIMESTAMP",
+TIMESTAMP TRACE   Received state_system:     "restart_count" : 1,
+TIMESTAMP TRACE   Received state_system:     "mode" : "initial"
+TIMESTAMP TRACE   Received state_system:   },
+TIMESTAMP TRACE   Received state_system:   "serial_no" : "sequencer-19868",
+TIMESTAMP TRACE   Received state_system:   "software" : {
+TIMESTAMP TRACE   Received state_system:     "firmware" : "v1"
+TIMESTAMP TRACE   Received state_system:   },
+TIMESTAMP TRACE   Received state_system:   "status" : {
+TIMESTAMP TRACE   Received state_system:     "message" : "success",
+TIMESTAMP TRACE   Received state_system:     "category" : "system.config.parse",
+TIMESTAMP",
+TIMESTAMP TRACE   Received state_system:     "level" : 100
+TIMESTAMP TRACE   Received state_system:   },
+TIMESTAMP",
+TIMESTAMP TRACE   Received state_system:   "version" : "1.5.3"
+TIMESTAMP TRACE   Received state_system: }
+TIMESTAMP DEBUG   Handling device message state_system MP:1e4773a4-0
+TIMESTAMP TRACE   Ignoring partial state update
+TIMESTAMP DEBUG   Received command AHU-1/state/discovery as MP:1e4773a4-1
+TIMESTAMP TRACE   Received state_discovery: {
+TIMESTAMP TRACE   Received state_discovery:   "families" : { },
+TIMESTAMP",
+TIMESTAMP TRACE   Received state_discovery:   "version" : "1.5.3"
+TIMESTAMP TRACE   Received state_discovery: }
+TIMESTAMP DEBUG   Handling device message state_discovery MP:1e4773a4-1
+TIMESTAMP TRACE   Ignoring partial state update
+TIMESTAMP DEBUG   Received command AHU-1/state/localnet as MP:1e4773a4-2
+TIMESTAMP TRACE   Received state_localnet: {
+TIMESTAMP TRACE   Received state_localnet:   "families" : {
+TIMESTAMP TRACE   Received state_localnet:     "ether" : {
+TIMESTAMP TRACE   Received state_localnet:       "addr" : "7c:1e:52:17:b3:35"
+TIMESTAMP TRACE   Received state_localnet:     },
+TIMESTAMP TRACE   Received state_localnet:     "ipv4" : {
+TIMESTAMP TRACE   Received state_localnet:       "addr" : "10.1.0.118"
+TIMESTAMP TRACE   Received state_localnet:     },
+TIMESTAMP TRACE   Received state_localnet:     "vendor" : {
+TIMESTAMP TRACE   Received state_localnet:       "addr" : "28179023"
+TIMESTAMP TRACE   Received state_localnet:     },
+TIMESTAMP TRACE   Received state_localnet:     "bacnet" : {
+TIMESTAMP TRACE   Received state_localnet:       "addr" : "27312"
+TIMESTAMP TRACE   Received state_localnet:     }
+TIMESTAMP TRACE   Received state_localnet:   },
+TIMESTAMP",
+TIMESTAMP TRACE   Received state_localnet:   "version" : "1.5.3"
+TIMESTAMP TRACE   Received state_localnet: }
+TIMESTAMP DEBUG   Handling device message state_localnet MP:1e4773a4-2
+TIMESTAMP TRACE   Ignoring partial state update
+TIMESTAMP DEBUG   Received command AHU-1/state/pointset as MP:1e4773a4-3
+TIMESTAMP TRACE   Received state_pointset: {
+TIMESTAMP TRACE   Received state_pointset:   "points" : {
+TIMESTAMP TRACE   Received state_pointset:     "filter_alarm_pressure_status" : {
+TIMESTAMP TRACE   Received state_pointset:       "units" : "No-units"
+TIMESTAMP TRACE   Received state_pointset:     },
+TIMESTAMP TRACE   Received state_pointset:     "filter_differential_pressure_setpoint" : {
+TIMESTAMP TRACE   Received state_pointset:       "units" : "Bars",
+TIMESTAMP TRACE   Received state_pointset:       "value_state" : "applied"
+TIMESTAMP TRACE   Received state_pointset:     },
+TIMESTAMP TRACE   Received state_pointset:     "filter_differential_pressure_sensor" : {
+TIMESTAMP TRACE   Received state_pointset:       "units" : "Degrees-Celsius"
+TIMESTAMP TRACE   Received state_pointset:     }
+TIMESTAMP TRACE   Received state_pointset:   },
+TIMESTAMP",
+TIMESTAMP TRACE   Received state_pointset:   "version" : "1.5.3"
+TIMESTAMP TRACE   Received state_pointset: }
+TIMESTAMP DEBUG   Handling device message state_pointset MP:1e4773a4-3
+TIMESTAMP TRACE   Ignoring partial state update
+TIMESTAMP DEBUG   Received command AHU-1/state/update as MP:3f433bfd
+TIMESTAMP DEBUG   Received state_update
+TIMESTAMP DEBUG   Handling update message state_update MP:3f433bfd
+TIMESTAMP DEBUG   Capturing AHU-1 message state_update
+TIMESTAMP MP:3f433bfd
+TIMESTAMP INFO    Updated state #039: Changed 4 fields:
+TIMESTAMP`
+TIMESTAMP INFO    Updated state #039:   Set `system.status.level` = `300`
+TIMESTAMP INFO    Updated state #039:   Set `system.status.category` = `system.config.apply`
+TIMESTAMP`
+TIMESTAMP)
+TIMESTAMP DEBUG   Detail config update synchronized is now: null
+TIMESTAMP DEBUG   Stage finished waiting for config update synchronized at @19s after 3s
+TIMESTAMP TRACE   Stage resume waiting for starting test wrapper at @19s
+TIMESTAMP DEBUG   Config sync took 3s
+TIMESTAMP DEBUG   Finished wait for config sync pending: null
+TIMESTAMP
+TIMESTAMP
+TIMESTAMP TRACE   Update config initial setup: Remove `blobset`
+TIMESTAMP
+TIMESTAMP DEBUG   Waiting for device stateTransaction RC:51d528.00000034 (was null)
+TIMESTAMP TRACE   Stage suspend waiting for starting test wrapper at @19s
+TIMESTAMP INFO    Stage start waiting for state query at @19s
+TIMESTAMP DEBUG   Received command AHU-1/state/system as MP:3f433bfd-0
+TIMESTAMP TRACE   Received state_system: {
+TIMESTAMP TRACE   Received state_system:   "hardware" : {
+TIMESTAMP TRACE   Received state_system:     "make" : "BOS",
+TIMESTAMP TRACE   Received state_system:     "model" : "pubber"
+TIMESTAMP TRACE   Received state_system:   },
+TIMESTAMP",
+TIMESTAMP TRACE   Received state_system:   "operation" : {
+TIMESTAMP TRACE   Received state_system:     "operational" : true,
+TIMESTAMP",
+TIMESTAMP TRACE   Received state_system:     "restart_count" : 1,
+TIMESTAMP TRACE   Received state_system:     "mode" : "initial"
+TIMESTAMP TRACE   Received state_system:   },
+TIMESTAMP TRACE   Received state_system:   "serial_no" : "sequencer-19868",
+TIMESTAMP TRACE   Received state_system:   "software" : {
+TIMESTAMP TRACE   Received state_system:     "firmware" : "v1"
+TIMESTAMP TRACE   Received state_system:   },
+TIMESTAMP TRACE   Received state_system:   "status" : {
+TIMESTAMP TRACE   Received state_system:     "message" : "success",
+TIMESTAMP TRACE   Received state_system:     "category" : "system.config.apply",
+TIMESTAMP",
+TIMESTAMP TRACE   Received state_system:     "level" : 300
+TIMESTAMP TRACE   Received state_system:   },
+TIMESTAMP",
+TIMESTAMP TRACE   Received state_system:   "version" : "1.5.3"
+TIMESTAMP TRACE   Received state_system: }
+TIMESTAMP DEBUG   Handling device message state_system MP:3f433bfd-0
+TIMESTAMP TRACE   Ignoring partial state update
+TIMESTAMP DEBUG   Received command AHU-1/state/discovery as MP:3f433bfd-1
+TIMESTAMP TRACE   Received state_discovery: {
+TIMESTAMP TRACE   Received state_discovery:   "families" : { },
+TIMESTAMP",
+TIMESTAMP TRACE   Received state_discovery:   "version" : "1.5.3"
+TIMESTAMP TRACE   Received state_discovery: }
+TIMESTAMP DEBUG   Handling device message state_discovery MP:3f433bfd-1
+TIMESTAMP TRACE   Ignoring partial state update
+TIMESTAMP DEBUG   Received command AHU-1/state/localnet as MP:3f433bfd-2
+TIMESTAMP TRACE   Received state_localnet: {
+TIMESTAMP TRACE   Received state_localnet:   "families" : {
+TIMESTAMP TRACE   Received state_localnet:     "ether" : {
+TIMESTAMP TRACE   Received state_localnet:       "addr" : "7c:1e:52:17:b3:35"
+TIMESTAMP TRACE   Received state_localnet:     },
+TIMESTAMP TRACE   Received state_localnet:     "ipv4" : {
+TIMESTAMP TRACE   Received state_localnet:       "addr" : "10.1.0.118"
+TIMESTAMP TRACE   Received state_localnet:     },
+TIMESTAMP TRACE   Received state_localnet:     "vendor" : {
+TIMESTAMP TRACE   Received state_localnet:       "addr" : "28179023"
+TIMESTAMP TRACE   Received state_localnet:     },
+TIMESTAMP TRACE   Received state_localnet:     "bacnet" : {
+TIMESTAMP TRACE   Received state_localnet:       "addr" : "27312"
+TIMESTAMP TRACE   Received state_localnet:     }
+TIMESTAMP TRACE   Received state_localnet:   },
+TIMESTAMP",
+TIMESTAMP TRACE   Received state_localnet:   "version" : "1.5.3"
+TIMESTAMP TRACE   Received state_localnet: }
+TIMESTAMP DEBUG   Handling device message state_localnet MP:3f433bfd-2
+TIMESTAMP TRACE   Ignoring partial state update
+TIMESTAMP DEBUG   Received command AHU-1/state/pointset as MP:3f433bfd-3
+TIMESTAMP TRACE   Received state_pointset: {
+TIMESTAMP TRACE   Received state_pointset:   "points" : {
+TIMESTAMP TRACE   Received state_pointset:     "filter_alarm_pressure_status" : {
+TIMESTAMP TRACE   Received state_pointset:       "units" : "No-units"
+TIMESTAMP TRACE   Received state_pointset:     },
+TIMESTAMP TRACE   Received state_pointset:     "filter_differential_pressure_setpoint" : {
+TIMESTAMP TRACE   Received state_pointset:       "units" : "Bars",
+TIMESTAMP TRACE   Received state_pointset:       "value_state" : "applied"
+TIMESTAMP TRACE   Received state_pointset:     },
+TIMESTAMP TRACE   Received state_pointset:     "filter_differential_pressure_sensor" : {
+TIMESTAMP TRACE   Received state_pointset:       "units" : "Degrees-Celsius"
+TIMESTAMP TRACE   Received state_pointset:     }
+TIMESTAMP TRACE   Received state_pointset:   },
+TIMESTAMP",
+TIMESTAMP TRACE   Received state_pointset:   "version" : "1.5.3"
+TIMESTAMP TRACE   Received state_pointset: }
+TIMESTAMP DEBUG   Handling device message state_pointset MP:3f433bfd-3
+TIMESTAMP TRACE   Ignoring partial state update
+TIMESTAMP DEBUG   Received command AHU-1/state/update as RC:51d528.00000034
+TIMESTAMP DEBUG   Received state_update
+TIMESTAMP INFO    Received device configAcked
+TIMESTAMP DEBUG   Handling update message state_update RC:51d528.00000034
+TIMESTAMP DEBUG   Removed stateTransaction RC:51d528.00000034
+TIMESTAMP DEBUG   Capturing AHU-1 message state_update
+TIMESTAMP RC:51d528.00000034
+TIMESTAMP INFO    Updated state #040: Changed 0 fields.
+TIMESTAMP)
+TIMESTAMP DEBUG   Stage finished waiting for state query at @20s after 1s
+TIMESTAMP TRACE   Stage resume waiting for starting test wrapper at @20s
+TIMESTAMP TRACE   Stage suspend waiting for starting test wrapper at @20s
+TIMESTAMP INFO    Stage start waiting for initial device state at @20s
+TIMESTAMP is 989ms
+TIMESTAMP DEBUG   Rate-limiting config by 989ms
+TIMESTAMP TRACE   Updated check config_update: true
+TIMESTAMP DEBUG   Update config_update, adding configTransaction RC:51d528.00000035
+TIMESTAMP
+TIMESTAMP, because before initial device state
+TIMESTAMP TRACE   Stage suspend waiting for initial device state at @21s
+TIMESTAMP INFO    Stage start waiting for config update synchronized at @21s
+TIMESTAMP DEBUG   Received command AHU-1/reply/update as RC:51d528.00000034
+TIMESTAMP DEBUG   Received command null/config/udmi as null
+TIMESTAMP DEBUG   Received command null/config/udmi as null
+TIMESTAMP DEBUG   Received command AHU-1/state/update as MP:6cbee493
+TIMESTAMP DEBUG   Received state_update
+TIMESTAMP DEBUG   Handling update message state_update MP:6cbee493
+TIMESTAMP DEBUG   Capturing AHU-1 message state_update
+TIMESTAMP MP:6cbee493
+TIMESTAMP INFO    Updated state #041: Changed 4 fields:
+TIMESTAMP INFO    Updated state #041:   Set `system.status.level` = `100`
+TIMESTAMP INFO    Updated state #041:   Set `system.status.category` = `system.config.parse`
+TIMESTAMP`
+TIMESTAMP`
+TIMESTAMP)
+TIMESTAMP DEBUG   Received command AHU-1/config/update as RC:51d528.00000035
+TIMESTAMP DEBUG   Received config_update
+TIMESTAMP DEBUG   Handling update message config_update RC:51d528.00000035
+TIMESTAMP DEBUG   Removed configTransaction RC:51d528.00000035
+TIMESTAMP
+TIMESTAMP RC:51d528.00000035
+TIMESTAMP INFO    Updated config #030: Changed 0 fields.
+TIMESTAMP
+TIMESTAMP DEBUG   Detail config update synchronized is now: last_config not synced in state
+TIMESTAMP DEBUG   Received command AHU-1/config/update as CU:51d528.00000035
+TIMESTAMP DEBUG   Received config_update
+TIMESTAMP DEBUG   Handling update message config_update CU:51d528.00000035
+TIMESTAMP DEBUG   Ignoring operation reply CU:51d528.00000035
+TIMESTAMP DEBUG   Received command AHU-1/state/system as MP:6cbee493-0
+TIMESTAMP TRACE   Received state_system: {
+TIMESTAMP TRACE   Received state_system:   "hardware" : {
+TIMESTAMP TRACE   Received state_system:     "make" : "BOS",
+TIMESTAMP TRACE   Received state_system:     "model" : "pubber"
+TIMESTAMP TRACE   Received state_system:   },
+TIMESTAMP",
+TIMESTAMP TRACE   Received state_system:   "operation" : {
+TIMESTAMP TRACE   Received state_system:     "operational" : true,
+TIMESTAMP",
+TIMESTAMP TRACE   Received state_system:     "restart_count" : 1,
+TIMESTAMP TRACE   Received state_system:     "mode" : "initial"
+TIMESTAMP TRACE   Received state_system:   },
+TIMESTAMP TRACE   Received state_system:   "serial_no" : "sequencer-19868",
+TIMESTAMP TRACE   Received state_system:   "software" : {
+TIMESTAMP TRACE   Received state_system:     "firmware" : "v1"
+TIMESTAMP TRACE   Received state_system:   },
+TIMESTAMP TRACE   Received state_system:   "status" : {
+TIMESTAMP TRACE   Received state_system:     "message" : "success",
+TIMESTAMP TRACE   Received state_system:     "category" : "system.config.parse",
+TIMESTAMP",
+TIMESTAMP TRACE   Received state_system:     "level" : 100
+TIMESTAMP TRACE   Received state_system:   },
+TIMESTAMP",
+TIMESTAMP TRACE   Received state_system:   "version" : "1.5.3"
+TIMESTAMP TRACE   Received state_system: }
+TIMESTAMP DEBUG   Handling device message state_system MP:6cbee493-0
+TIMESTAMP TRACE   Ignoring partial state update
+TIMESTAMP DEBUG   Received command AHU-1/state/discovery as MP:6cbee493-1
+TIMESTAMP TRACE   Received state_discovery: {
+TIMESTAMP TRACE   Received state_discovery:   "families" : { },
+TIMESTAMP",
+TIMESTAMP TRACE   Received state_discovery:   "version" : "1.5.3"
+TIMESTAMP TRACE   Received state_discovery: }
+TIMESTAMP DEBUG   Handling device message state_discovery MP:6cbee493-1
+TIMESTAMP TRACE   Ignoring partial state update
+TIMESTAMP DEBUG   Received command AHU-1/state/localnet as MP:6cbee493-2
+TIMESTAMP TRACE   Received state_localnet: {
+TIMESTAMP TRACE   Received state_localnet:   "families" : {
+TIMESTAMP TRACE   Received state_localnet:     "ether" : {
+TIMESTAMP TRACE   Received state_localnet:       "addr" : "7c:1e:52:17:b3:35"
+TIMESTAMP TRACE   Received state_localnet:     },
+TIMESTAMP TRACE   Received state_localnet:     "ipv4" : {
+TIMESTAMP TRACE   Received state_localnet:       "addr" : "10.1.0.118"
+TIMESTAMP TRACE   Received state_localnet:     },
+TIMESTAMP TRACE   Received state_localnet:     "vendor" : {
+TIMESTAMP TRACE   Received state_localnet:       "addr" : "28179023"
+TIMESTAMP TRACE   Received state_localnet:     },
+TIMESTAMP TRACE   Received state_localnet:     "bacnet" : {
+TIMESTAMP TRACE   Received state_localnet:       "addr" : "27312"
+TIMESTAMP TRACE   Received state_localnet:     }
+TIMESTAMP TRACE   Received state_localnet:   },
+TIMESTAMP",
+TIMESTAMP TRACE   Received state_localnet:   "version" : "1.5.3"
+TIMESTAMP TRACE   Received state_localnet: }
+TIMESTAMP DEBUG   Handling device message state_localnet MP:6cbee493-2
+TIMESTAMP TRACE   Ignoring partial state update
+TIMESTAMP DEBUG   Received command AHU-1/state/pointset as MP:6cbee493-3
+TIMESTAMP TRACE   Received state_pointset: {
+TIMESTAMP TRACE   Received state_pointset:   "points" : {
+TIMESTAMP TRACE   Received state_pointset:     "filter_alarm_pressure_status" : {
+TIMESTAMP TRACE   Received state_pointset:       "units" : "No-units"
+TIMESTAMP TRACE   Received state_pointset:     },
+TIMESTAMP TRACE   Received state_pointset:     "filter_differential_pressure_setpoint" : {
+TIMESTAMP TRACE   Received state_pointset:       "units" : "Bars",
+TIMESTAMP TRACE   Received state_pointset:       "value_state" : "applied"
+TIMESTAMP TRACE   Received state_pointset:     },
+TIMESTAMP TRACE   Received state_pointset:     "filter_differential_pressure_sensor" : {
+TIMESTAMP TRACE   Received state_pointset:       "units" : "Degrees-Celsius"
+TIMESTAMP TRACE   Received state_pointset:     }
+TIMESTAMP TRACE   Received state_pointset:   },
+TIMESTAMP",
+TIMESTAMP TRACE   Received state_pointset:   "version" : "1.5.3"
+TIMESTAMP TRACE   Received state_pointset: }
+TIMESTAMP DEBUG   Handling device message state_pointset MP:6cbee493-3
+TIMESTAMP TRACE   Ignoring partial state update
+TIMESTAMP DEBUG   Received command AHU-1/events/pointset as MP:73ac4e65
+TIMESTAMP TRACE   Received events_pointset: {
+TIMESTAMP TRACE   Received events_pointset:   "points" : {
+TIMESTAMP TRACE   Received events_pointset:     "filter_alarm_pressure_status" : {
+TIMESTAMP TRACE   Received events_pointset:       "present_value" : true
+TIMESTAMP TRACE   Received events_pointset:     },
+TIMESTAMP TRACE   Received events_pointset:     "filter_differential_pressure_setpoint" : {
+TIMESTAMP TRACE   Received events_pointset:       "present_value" : 98
+TIMESTAMP TRACE   Received events_pointset:     },
+TIMESTAMP TRACE   Received events_pointset:     "filter_differential_pressure_sensor" : {
+TIMESTAMP TRACE   Received events_pointset:       "present_value" : 12
+TIMESTAMP TRACE   Received events_pointset:     }
+TIMESTAMP TRACE   Received events_pointset:   },
+TIMESTAMP",
+TIMESTAMP TRACE   Received events_pointset:   "version" : "1.5.3"
+TIMESTAMP TRACE   Received events_pointset: }
+TIMESTAMP DEBUG   Handling device message events_pointset MP:73ac4e65
+TIMESTAMP DEBUG   Capturing AHU-1 message events_pointset
+TIMESTAMP DEBUG   Received command AHU-1/events/system as MP:5882d5d5
+TIMESTAMP DEBUG system.config.receive: success
+TIMESTAMP DEBUG device.log: State update defer -4039ms
+TIMESTAMP
+TIMESTAMP DEBUG system.config.parse: success
+TIMESTAMP INFO device.log: Device AHU-1 config handler
+TIMESTAMP DEBUG device.log: State update AHU-1 (scan_periodic_now_enumerate+vendor)
+TIMESTAMP DEBUG device.log: Config update AHU-1 (scan_periodic_now_enumerate+vendor)
+TIMESTAMP DEBUG device.log: State update defer 2000ms
+TIMESTAMP
+TIMESTAMP NOTICE system.config.apply: success
+TIMESTAMP DEBUG device.log: State update defer 1999ms
+TIMESTAMP DEBUG device.log: State update defer 1999ms
+TIMESTAMP DEBUG device.log: State update defer 1999ms
+TIMESTAMP DEBUG device.log: State update defer 1999ms
+TIMESTAMP DEBUG device.log: State update defer 1999ms
+TIMESTAMP DEBUG device.log: State update defer 1999ms
+TIMESTAMP DEBUG device.log: State update defer 0ms
+TIMESTAMP
+TIMESTAMP DEBUG device.log: State update AHU-1 (scan_periodic_now_enumerate+vendor)
+TIMESTAMP DEBUG system.config.receive: success
+TIMESTAMP DEBUG device.log: State update defer -1017ms
+TIMESTAMP
+TIMESTAMP DEBUG system.config.parse: success
+TIMESTAMP INFO device.log: Device AHU-1 config handler
+TIMESTAMP DEBUG device.log: State update AHU-1 (scan_periodic_now_enumerate+vendor)
+TIMESTAMP DEBUG device.log: Config update AHU-1 (scan_periodic_now_enumerate+vendor)
+TIMESTAMP DEBUG device.log: State update defer 2000ms
+TIMESTAMP
+TIMESTAMP NOTICE system.config.apply: success
+TIMESTAMP DEBUG device.log: State update defer 1999ms
+TIMESTAMP DEBUG device.log: State update defer 1999ms
+TIMESTAMP DEBUG   Handling device message events_system MP:5882d5d5
+TIMESTAMP DEBUG   Capturing AHU-1 message events_system
+TIMESTAMP DEBUG   Received command AHU-1/state/update as MP:df46bad6
+TIMESTAMP DEBUG   Received state_update
+TIMESTAMP DEBUG   Handling update message state_update MP:df46bad6
+TIMESTAMP DEBUG   Capturing AHU-1 message state_update
+TIMESTAMP MP:df46bad6
+TIMESTAMP INFO    Updated state #042: Changed 4 fields:
+TIMESTAMP`
+TIMESTAMP INFO    Updated state #042:   Set `system.status.level` = `300`
+TIMESTAMP INFO    Updated state #042:   Set `system.status.category` = `system.config.apply`
+TIMESTAMP`
+TIMESTAMP)
+TIMESTAMP DEBUG   Detail config update synchronized is now: null
+TIMESTAMP DEBUG   Stage finished waiting for config update synchronized at @24s after 3s
+TIMESTAMP TRACE   Stage resume waiting for initial device state at @24s
+TIMESTAMP DEBUG   Config sync took 4s
+TIMESTAMP DEBUG   Finished wait for config sync pending: null
+TIMESTAMP
+TIMESTAMP
+TIMESTAMP DEBUG   Stage finished waiting for initial device state at @24s after 4s
+TIMESTAMP TRACE   Stage resume waiting for starting test wrapper at @24s
+TIMESTAMP DEBUG   Device state system status level is now 300
+TIMESTAMP TRACE   Stage suspend waiting for starting test wrapper at @24s
+TIMESTAMP INFO    Stage start waiting for config update synchronized at @24s
+TIMESTAMP DEBUG   Received command AHU-1/state/system as MP:df46bad6-0
+TIMESTAMP TRACE   Received state_system: {
+TIMESTAMP TRACE   Received state_system:   "hardware" : {
+TIMESTAMP TRACE   Received state_system:     "make" : "BOS",
+TIMESTAMP TRACE   Received state_system:     "model" : "pubber"
+TIMESTAMP TRACE   Received state_system:   },
+TIMESTAMP",
+TIMESTAMP TRACE   Received state_system:   "operation" : {
+TIMESTAMP TRACE   Received state_system:     "operational" : true,
+TIMESTAMP",
+TIMESTAMP TRACE   Received state_system:     "restart_count" : 1,
+TIMESTAMP TRACE   Received state_system:     "mode" : "initial"
+TIMESTAMP TRACE   Received state_system:   },
+TIMESTAMP TRACE   Received state_system:   "serial_no" : "sequencer-19868",
+TIMESTAMP TRACE   Received state_system:   "software" : {
+TIMESTAMP TRACE   Received state_system:     "firmware" : "v1"
+TIMESTAMP TRACE   Received state_system:   },
+TIMESTAMP TRACE   Received state_system:   "status" : {
+TIMESTAMP TRACE   Received state_system:     "message" : "success",
+TIMESTAMP TRACE   Received state_system:     "category" : "system.config.apply",
+TIMESTAMP",
+TIMESTAMP TRACE   Received state_system:     "level" : 300
+TIMESTAMP TRACE   Received state_system:   },
+TIMESTAMP",
+TIMESTAMP TRACE   Received state_system:   "version" : "1.5.3"
+TIMESTAMP TRACE   Received state_system: }
+TIMESTAMP DEBUG   Handling device message state_system MP:df46bad6-0
+TIMESTAMP TRACE   Ignoring partial state update
+TIMESTAMP DEBUG   Received command AHU-1/state/discovery as MP:df46bad6-1
+TIMESTAMP TRACE   Received state_discovery: {
+TIMESTAMP TRACE   Received state_discovery:   "families" : { },
+TIMESTAMP",
+TIMESTAMP TRACE   Received state_discovery:   "version" : "1.5.3"
+TIMESTAMP TRACE   Received state_discovery: }
+TIMESTAMP DEBUG   Handling device message state_discovery MP:df46bad6-1
+TIMESTAMP TRACE   Ignoring partial state update
+TIMESTAMP DEBUG   Stage finished waiting for config update synchronized at @24s after 0s
+TIMESTAMP TRACE   Stage resume waiting for starting test wrapper at @24s
+TIMESTAMP DEBUG   Config sync took 4s
+TIMESTAMP DEBUG   Finished wait for config sync pending: null
+TIMESTAMP TRACE   Stage suspend waiting for starting test wrapper at @24s
+TIMESTAMP INFO    Stage start waiting for executing test at @24s
+TIMESTAMP DEBUG   stage begin waiting for executing test at @24s
+TIMESTAMP DEBUG   Allowing device state change discovery
+TIMESTAMP TRACE   Stage suspend waiting for executing test at @24s
+TIMESTAMP INFO    Stage start waiting for discovery families defined at @24s
+TIMESTAMP is 1996ms
+TIMESTAMP DEBUG   Rate-limiting config by 1996ms
+TIMESTAMP DEBUG   System config extra field null
+TIMESTAMP TRACE   Updated check config_system: true
+TIMESTAMP DEBUG   Update config_system, adding configTransaction RC:51d528.00000036
+TIMESTAMP TRACE   Updated check config_pointset: true
+TIMESTAMP DEBUG   Update config_pointset, adding configTransaction RC:51d528.00000037
+TIMESTAMP TRACE   Updated check config_gateway: false
+TIMESTAMP TRACE   Updated check config_localnet: true
+TIMESTAMP DEBUG   Update config_localnet, adding configTransaction RC:51d528.00000038
+TIMESTAMP TRACE   Updated check config_blobset: false
+TIMESTAMP TRACE   Updated check config_discovery: true
+TIMESTAMP DEBUG   Update config_discovery, adding configTransaction RC:51d528.00000039
+TIMESTAMP
+TIMESTAMP, because before discovery families defined
+TIMESTAMP TRACE   Stage suspend waiting for discovery families defined at @26s
+TIMESTAMP INFO    Stage start waiting for config update synchronized at @26s
+TIMESTAMP DEBUG   Received command AHU-1/state/localnet as MP:df46bad6-2
+TIMESTAMP TRACE   Received state_localnet: {
+TIMESTAMP TRACE   Received state_localnet:   "families" : {
+TIMESTAMP TRACE   Received state_localnet:     "ether" : {
+TIMESTAMP TRACE   Received state_localnet:       "addr" : "7c:1e:52:17:b3:35"
+TIMESTAMP TRACE   Received state_localnet:     },
+TIMESTAMP TRACE   Received state_localnet:     "ipv4" : {
+TIMESTAMP TRACE   Received state_localnet:       "addr" : "10.1.0.118"
+TIMESTAMP TRACE   Received state_localnet:     },
+TIMESTAMP TRACE   Received state_localnet:     "vendor" : {
+TIMESTAMP TRACE   Received state_localnet:       "addr" : "28179023"
+TIMESTAMP TRACE   Received state_localnet:     },
+TIMESTAMP TRACE   Received state_localnet:     "bacnet" : {
+TIMESTAMP TRACE   Received state_localnet:       "addr" : "27312"
+TIMESTAMP TRACE   Received state_localnet:     }
+TIMESTAMP TRACE   Received state_localnet:   },
+TIMESTAMP",
+TIMESTAMP TRACE   Received state_localnet:   "version" : "1.5.3"
+TIMESTAMP TRACE   Received state_localnet: }
+TIMESTAMP DEBUG   Handling device message state_localnet MP:df46bad6-2
+TIMESTAMP TRACE   Ignoring partial state update
+TIMESTAMP DEBUG   Received command AHU-1/state/pointset as MP:df46bad6-3
+TIMESTAMP TRACE   Received state_pointset: {
+TIMESTAMP TRACE   Received state_pointset:   "points" : {
+TIMESTAMP TRACE   Received state_pointset:     "filter_alarm_pressure_status" : {
+TIMESTAMP TRACE   Received state_pointset:       "units" : "No-units"
+TIMESTAMP TRACE   Received state_pointset:     },
+TIMESTAMP TRACE   Received state_pointset:     "filter_differential_pressure_setpoint" : {
+TIMESTAMP TRACE   Received state_pointset:       "units" : "Bars",
+TIMESTAMP TRACE   Received state_pointset:       "value_state" : "applied"
+TIMESTAMP TRACE   Received state_pointset:     },
+TIMESTAMP TRACE   Received state_pointset:     "filter_differential_pressure_sensor" : {
+TIMESTAMP TRACE   Received state_pointset:       "units" : "Degrees-Celsius"
+TIMESTAMP TRACE   Received state_pointset:     }
+TIMESTAMP TRACE   Received state_pointset:   },
+TIMESTAMP",
+TIMESTAMP TRACE   Received state_pointset:   "version" : "1.5.3"
+TIMESTAMP TRACE   Received state_pointset: }
+TIMESTAMP DEBUG   Handling device message state_pointset MP:df46bad6-3
+TIMESTAMP TRACE   Ignoring partial state update
+TIMESTAMP DEBUG   Received command AHU-1/state/update as MP:bdfc5d8b
+TIMESTAMP DEBUG   Received state_update
+TIMESTAMP DEBUG   Handling update message state_update MP:bdfc5d8b
+TIMESTAMP DEBUG   Capturing AHU-1 message state_update
+TIMESTAMP MP:bdfc5d8b
+TIMESTAMP INFO    Updated state #043: Changed 4 fields:
+TIMESTAMP INFO    Updated state #043:   Set `system.status.level` = `100`
+TIMESTAMP INFO    Updated state #043:   Set `system.status.category` = `system.config.parse`
+TIMESTAMP`
+TIMESTAMP`
+TIMESTAMP)
+TIMESTAMP DEBUG   Received command AHU-1/config/update as RC:51d528.00000037
+TIMESTAMP DEBUG   Received config_update
+TIMESTAMP DEBUG   Handling update message config_update RC:51d528.00000037
+TIMESTAMP DEBUG   Removed configTransaction RC:51d528.00000037
+TIMESTAMP
+TIMESTAMP RC:51d528.00000037
+TIMESTAMP INFO    Updated config #031: Changed 2 fields:
+TIMESTAMP INFO    Updated config #031:   Remove `discovery.families.vendor`
+TIMESTAMP INFO    Updated config #031:   Remove `discovery.families.bacnet`
+TIMESTAMP
+TIMESTAMP DEBUG   Received command AHU-1/config/pointset as CU:51d528.00000037
+TIMESTAMP TRACE   Received config_pointset: {
+TIMESTAMP TRACE   Received config_pointset:   "operation" : "REPLY"
+TIMESTAMP TRACE   Received config_pointset: }
+TIMESTAMP DEBUG   Handling device message config_pointset CU:51d528.00000037
+TIMESTAMP TRACE   Ignoring echo configTransaction CU:51d528.00000037
+TIMESTAMP DEBUG   Detail config update synchronized is now: config transactions not cleared, last_config not synced in state
+TIMESTAMP DEBUG   Received command AHU-1/state/system as MP:bdfc5d8b-0
+TIMESTAMP TRACE   Received state_system: {
+TIMESTAMP TRACE   Received state_system:   "hardware" : {
+TIMESTAMP TRACE   Received state_system:     "make" : "BOS",
+TIMESTAMP TRACE   Received state_system:     "model" : "pubber"
+TIMESTAMP TRACE   Received state_system:   },
+TIMESTAMP",
+TIMESTAMP TRACE   Received state_system:   "operation" : {
+TIMESTAMP TRACE   Received state_system:     "operational" : true,
+TIMESTAMP",
+TIMESTAMP TRACE   Received state_system:     "restart_count" : 1,
+TIMESTAMP TRACE   Received state_system:     "mode" : "initial"
+TIMESTAMP TRACE   Received state_system:   },
+TIMESTAMP TRACE   Received state_system:   "serial_no" : "sequencer-19868",
+TIMESTAMP TRACE   Received state_system:   "software" : {
+TIMESTAMP TRACE   Received state_system:     "firmware" : "v1"
+TIMESTAMP TRACE   Received state_system:   },
+TIMESTAMP TRACE   Received state_system:   "status" : {
+TIMESTAMP TRACE   Received state_system:     "message" : "success",
+TIMESTAMP TRACE   Received state_system:     "category" : "system.config.parse",
+TIMESTAMP",
+TIMESTAMP TRACE   Received state_system:     "level" : 100
+TIMESTAMP TRACE   Received state_system:   },
+TIMESTAMP",
+TIMESTAMP TRACE   Received state_system:   "version" : "1.5.3"
+TIMESTAMP TRACE   Received state_system: }
+TIMESTAMP DEBUG   Handling device message state_system MP:bdfc5d8b-0
+TIMESTAMP TRACE   Ignoring partial state update
+TIMESTAMP DEBUG   Received command AHU-1/state/discovery as MP:bdfc5d8b-1
+TIMESTAMP TRACE   Received state_discovery: {
+TIMESTAMP TRACE   Received state_discovery:   "families" : { },
+TIMESTAMP",
+TIMESTAMP TRACE   Received state_discovery:   "version" : "1.5.3"
+TIMESTAMP TRACE   Received state_discovery: }
+TIMESTAMP DEBUG   Handling device message state_discovery MP:bdfc5d8b-1
+TIMESTAMP TRACE   Ignoring partial state update
+TIMESTAMP DEBUG   Received command AHU-1/state/localnet as MP:bdfc5d8b-2
+TIMESTAMP TRACE   Received state_localnet: {
+TIMESTAMP TRACE   Received state_localnet:   "families" : {
+TIMESTAMP TRACE   Received state_localnet:     "ether" : {
+TIMESTAMP TRACE   Received state_localnet:       "addr" : "7c:1e:52:17:b3:35"
+TIMESTAMP TRACE   Received state_localnet:     },
+TIMESTAMP TRACE   Received state_localnet:     "ipv4" : {
+TIMESTAMP TRACE   Received state_localnet:       "addr" : "10.1.0.118"
+TIMESTAMP TRACE   Received state_localnet:     },
+TIMESTAMP TRACE   Received state_localnet:     "vendor" : {
+TIMESTAMP TRACE   Received state_localnet:       "addr" : "28179023"
+TIMESTAMP TRACE   Received state_localnet:     },
+TIMESTAMP TRACE   Received state_localnet:     "bacnet" : {
+TIMESTAMP TRACE   Received state_localnet:       "addr" : "27312"
+TIMESTAMP TRACE   Received state_localnet:     }
+TIMESTAMP TRACE   Received state_localnet:   },
+TIMESTAMP",
+TIMESTAMP TRACE   Received state_localnet:   "version" : "1.5.3"
+TIMESTAMP TRACE   Received state_localnet: }
+TIMESTAMP DEBUG   Handling device message state_localnet MP:bdfc5d8b-2
+TIMESTAMP TRACE   Ignoring partial state update
+TIMESTAMP DEBUG   Received command AHU-1/state/pointset as MP:bdfc5d8b-3
+TIMESTAMP TRACE   Received state_pointset: {
+TIMESTAMP TRACE   Received state_pointset:   "points" : {
+TIMESTAMP TRACE   Received state_pointset:     "filter_alarm_pressure_status" : {
+TIMESTAMP TRACE   Received state_pointset:       "units" : "No-units"
+TIMESTAMP TRACE   Received state_pointset:     },
+TIMESTAMP TRACE   Received state_pointset:     "filter_differential_pressure_setpoint" : {
+TIMESTAMP TRACE   Received state_pointset:       "units" : "Bars",
+TIMESTAMP TRACE   Received state_pointset:       "value_state" : "applied"
+TIMESTAMP TRACE   Received state_pointset:     },
+TIMESTAMP TRACE   Received state_pointset:     "filter_differential_pressure_sensor" : {
+TIMESTAMP TRACE   Received state_pointset:       "units" : "Degrees-Celsius"
+TIMESTAMP TRACE   Received state_pointset:     }
+TIMESTAMP TRACE   Received state_pointset:   },
+TIMESTAMP",
+TIMESTAMP TRACE   Received state_pointset:   "version" : "1.5.3"
+TIMESTAMP TRACE   Received state_pointset: }
+TIMESTAMP DEBUG   Handling device message state_pointset MP:bdfc5d8b-3
+TIMESTAMP TRACE   Ignoring partial state update
+TIMESTAMP DEBUG   Received command AHU-1/config/update as RC:51d528.00000036
+TIMESTAMP DEBUG   Received config_update
+TIMESTAMP DEBUG   Handling update message config_update RC:51d528.00000036
+TIMESTAMP DEBUG   Removed configTransaction RC:51d528.00000036
+TIMESTAMP
+TIMESTAMP RC:51d528.00000036
+TIMESTAMP INFO    Updated config #032: Changed 0 fields.
+TIMESTAMP
+TIMESTAMP DEBUG   Received command AHU-1/config/system as CU:51d528.00000036
+TIMESTAMP TRACE   Received config_system: {
+TIMESTAMP TRACE   Received config_system:   "operation" : "REPLY"
+TIMESTAMP TRACE   Received config_system: }
+TIMESTAMP DEBUG   Handling device message config_system CU:51d528.00000036
+TIMESTAMP TRACE   Ignoring echo configTransaction CU:51d528.00000036
+TIMESTAMP DEBUG   Received command AHU-1/state/update as MP:14ab4256
+TIMESTAMP DEBUG   Received state_update
+TIMESTAMP DEBUG   Handling update message state_update MP:14ab4256
+TIMESTAMP DEBUG   Capturing AHU-1 message state_update
+TIMESTAMP MP:14ab4256
+TIMESTAMP INFO    Updated state #044: Changed 5 fields:
+TIMESTAMP`
+TIMESTAMP INFO    Updated state #044:   Set `system.status.level` = `300`
+TIMESTAMP INFO    Updated state #044:   Set `system.status.category` = `system.config.apply`
+TIMESTAMP`
+TIMESTAMP`
+TIMESTAMP)
+TIMESTAMP DEBUG   Received command AHU-1/state/system as MP:14ab4256-0
+TIMESTAMP TRACE   Received state_system: {
+TIMESTAMP TRACE   Received state_system:   "hardware" : {
+TIMESTAMP TRACE   Received state_system:     "make" : "BOS",
+TIMESTAMP TRACE   Received state_system:     "model" : "pubber"
+TIMESTAMP TRACE   Received state_system:   },
+TIMESTAMP",
+TIMESTAMP TRACE   Received state_system:   "operation" : {
+TIMESTAMP TRACE   Received state_system:     "operational" : true,
+TIMESTAMP",
+TIMESTAMP TRACE   Received state_system:     "restart_count" : 1,
+TIMESTAMP TRACE   Received state_system:     "mode" : "initial"
+TIMESTAMP TRACE   Received state_system:   },
+TIMESTAMP TRACE   Received state_system:   "serial_no" : "sequencer-19868",
+TIMESTAMP TRACE   Received state_system:   "software" : {
+TIMESTAMP TRACE   Received state_system:     "firmware" : "v1"
+TIMESTAMP TRACE   Received state_system:   },
+TIMESTAMP TRACE   Received state_system:   "status" : {
+TIMESTAMP TRACE   Received state_system:     "message" : "success",
+TIMESTAMP TRACE   Received state_system:     "category" : "system.config.apply",
+TIMESTAMP",
+TIMESTAMP TRACE   Received state_system:     "level" : 300
+TIMESTAMP TRACE   Received state_system:   },
+TIMESTAMP",
+TIMESTAMP TRACE   Received state_system:   "version" : "1.5.3"
+TIMESTAMP TRACE   Received state_system: }
+TIMESTAMP DEBUG   Handling device message state_system MP:14ab4256-0
+TIMESTAMP TRACE   Ignoring partial state update
+TIMESTAMP DEBUG   Detail config update synchronized is now: config transactions not cleared
+TIMESTAMP DEBUG   Received command AHU-1/state/discovery as MP:14ab4256-1
+TIMESTAMP TRACE   Received state_discovery: {
+TIMESTAMP TRACE   Received state_discovery:   "families" : { },
+TIMESTAMP",
+TIMESTAMP TRACE   Received state_discovery:   "version" : "1.5.3"
+TIMESTAMP TRACE   Received state_discovery: }
+TIMESTAMP DEBUG   Handling device message state_discovery MP:14ab4256-1
+TIMESTAMP TRACE   Ignoring partial state update
+TIMESTAMP DEBUG   Received command AHU-1/state/localnet as MP:14ab4256-2
+TIMESTAMP TRACE   Received state_localnet: {
+TIMESTAMP TRACE   Received state_localnet:   "families" : {
+TIMESTAMP TRACE   Received state_localnet:     "ether" : {
+TIMESTAMP TRACE   Received state_localnet:       "addr" : "7c:1e:52:17:b3:35"
+TIMESTAMP TRACE   Received state_localnet:     },
+TIMESTAMP TRACE   Received state_localnet:     "ipv4" : {
+TIMESTAMP TRACE   Received state_localnet:       "addr" : "10.1.0.118"
+TIMESTAMP TRACE   Received state_localnet:     },
+TIMESTAMP TRACE   Received state_localnet:     "vendor" : {
+TIMESTAMP TRACE   Received state_localnet:       "addr" : "28179023"
+TIMESTAMP TRACE   Received state_localnet:     },
+TIMESTAMP TRACE   Received state_localnet:     "bacnet" : {
+TIMESTAMP TRACE   Received state_localnet:       "addr" : "27312"
+TIMESTAMP TRACE   Received state_localnet:     }
+TIMESTAMP TRACE   Received state_localnet:   },
+TIMESTAMP",
+TIMESTAMP TRACE   Received state_localnet:   "version" : "1.5.3"
+TIMESTAMP TRACE   Received state_localnet: }
+TIMESTAMP DEBUG   Handling device message state_localnet MP:14ab4256-2
+TIMESTAMP TRACE   Ignoring partial state update
+TIMESTAMP DEBUG   Received command AHU-1/state/pointset as MP:14ab4256-3
+TIMESTAMP TRACE   Received state_pointset: {
+TIMESTAMP TRACE   Received state_pointset:   "points" : {
+TIMESTAMP TRACE   Received state_pointset:     "filter_alarm_pressure_status" : {
+TIMESTAMP TRACE   Received state_pointset:       "units" : "No-units"
+TIMESTAMP TRACE   Received state_pointset:     },
+TIMESTAMP TRACE   Received state_pointset:     "filter_differential_pressure_setpoint" : {
+TIMESTAMP TRACE   Received state_pointset:       "units" : "Bars",
+TIMESTAMP TRACE   Received state_pointset:       "value_state" : "applied"
+TIMESTAMP TRACE   Received state_pointset:     },
+TIMESTAMP TRACE   Received state_pointset:     "filter_differential_pressure_sensor" : {
+TIMESTAMP TRACE   Received state_pointset:       "units" : "Degrees-Celsius"
+TIMESTAMP TRACE   Received state_pointset:     }
+TIMESTAMP TRACE   Received state_pointset:   },
+TIMESTAMP",
+TIMESTAMP TRACE   Received state_pointset:   "version" : "1.5.3"
+TIMESTAMP TRACE   Received state_pointset: }
+TIMESTAMP DEBUG   Handling device message state_pointset MP:14ab4256-3
+TIMESTAMP TRACE   Ignoring partial state update
+TIMESTAMP DEBUG   Received command AHU-1/config/update as RC:51d528.00000039
+TIMESTAMP DEBUG   Received config_update
+TIMESTAMP DEBUG   Handling update message config_update RC:51d528.00000039
+TIMESTAMP DEBUG   Removed configTransaction RC:51d528.00000039
+TIMESTAMP
+TIMESTAMP RC:51d528.00000039
 TIMESTAMP INFO    Updated config #033: Changed 0 fields.
 TIMESTAMP
 TIMESTAMP DEBUG   Detail config update synchronized is now: config transactions not cleared, last_config not synced in state
-TIMESTAMP DEBUG   Received command AHU-1/config/localnet as CU:3739a3.00000038
-TIMESTAMP TRACE   Received config_localnet: {
-TIMESTAMP TRACE   Received config_localnet:   "operation" : "REPLY"
-TIMESTAMP TRACE   Received config_localnet: }
-TIMESTAMP DEBUG   Handling device message config_localnet CU:3739a3.00000038
-TIMESTAMP TRACE   Ignoring echo configTransaction CU:3739a3.00000038
-TIMESTAMP DEBUG   Received command AHU-1/config/update as RC:3739a3.00000039
-TIMESTAMP DEBUG   Received config_update
-TIMESTAMP DEBUG   Handling update message config_update RC:3739a3.00000039
-TIMESTAMP DEBUG   Removed configTransaction RC:3739a3.00000039
-TIMESTAMP
-TIMESTAMP RC:3739a3.00000039
-TIMESTAMP INFO    Updated config #034: Changed 0 fields.
-TIMESTAMP
-TIMESTAMP DEBUG   Detail config update synchronized is now: last_config not synced in state
-TIMESTAMP DEBUG   Received command AHU-1/config/discovery as CU:3739a3.00000039
+TIMESTAMP DEBUG   Received command AHU-1/config/discovery as CU:51d528.00000039
 TIMESTAMP TRACE   Received config_discovery: {
 TIMESTAMP TRACE   Received config_discovery:   "operation" : "REPLY"
 TIMESTAMP TRACE   Received config_discovery: }
-TIMESTAMP DEBUG   Handling device message config_discovery CU:3739a3.00000039
-TIMESTAMP TRACE   Ignoring echo configTransaction CU:3739a3.00000039
-TIMESTAMP DEBUG   Received command AHU-1/state/update as MP:f7b6856d
+TIMESTAMP DEBUG   Handling device message config_discovery CU:51d528.00000039
+TIMESTAMP TRACE   Ignoring echo configTransaction CU:51d528.00000039
+TIMESTAMP DEBUG   Received command AHU-1/config/update as RC:51d528.00000038
+TIMESTAMP DEBUG   Received config_update
+TIMESTAMP DEBUG   Handling update message config_update RC:51d528.00000038
+TIMESTAMP DEBUG   Removed configTransaction RC:51d528.00000038
+TIMESTAMP
+TIMESTAMP RC:51d528.00000038
+TIMESTAMP INFO    Updated config #034: Changed 0 fields.
+TIMESTAMP
+TIMESTAMP DEBUG   Received command AHU-1/config/localnet as CU:51d528.00000038
+TIMESTAMP TRACE   Received config_localnet: {
+TIMESTAMP TRACE   Received config_localnet:   "operation" : "REPLY"
+TIMESTAMP TRACE   Received config_localnet: }
+TIMESTAMP DEBUG   Handling device message config_localnet CU:51d528.00000038
+TIMESTAMP TRACE   Ignoring echo configTransaction CU:51d528.00000038
+TIMESTAMP DEBUG   Detail config update synchronized is now: last_config not synced in state
+TIMESTAMP DEBUG   Received command AHU-1/state/update as MP:0c47b31f
 TIMESTAMP DEBUG   Received state_update
-TIMESTAMP DEBUG   Handling update message state_update MP:f7b6856d
+TIMESTAMP DEBUG   Handling update message state_update MP:0c47b31f
 TIMESTAMP DEBUG   Capturing AHU-1 message state_update
-TIMESTAMP MP:f7b6856d
+TIMESTAMP MP:0c47b31f
 TIMESTAMP INFO    Updated state #045: Changed 3 fields:
 TIMESTAMP`
 TIMESTAMP`
@@ -1204,7 +1141,9 @@ TIMESTAMP
 TIMESTAMP
 TIMESTAMP DEBUG   Recorded sequence: 1. Update config before discovery families defined
 TIMESTAMP INFO    Device config Remove `discovery.families.vendor`
+TIMESTAMP INFO    Device config Remove `discovery.families.bacnet`
 TIMESTAMP TRACE   Update config before discovery families defined: Remove `discovery.families.vendor`
+TIMESTAMP TRACE   Update config before discovery families defined: Remove `discovery.families.bacnet`
 TIMESTAMP DEBUG   Recorded sequence: 1. Wait for discovery families defined
 TIMESTAMP DEBUG   Stage finished waiting for discovery families defined at @31s after 7s
 TIMESTAMP TRACE   Stage resume waiting for executing test at @31s
@@ -1252,12 +1191,12 @@ TIMESTAMP TRACE   Updated check config_gateway: false
 TIMESTAMP TRACE   Updated check config_localnet: false
 TIMESTAMP TRACE   Updated check config_blobset: false
 TIMESTAMP TRACE   Updated check config_discovery: true
-TIMESTAMP DEBUG   Update config_discovery, adding configTransaction RC:3739a3.0000003a
+TIMESTAMP DEBUG   Update config_discovery, adding configTransaction RC:51d528.0000003a
 TIMESTAMP
 TIMESTAMP, because before scan iterations
 TIMESTAMP TRACE   Stage suspend waiting for scan iterations at @37s
 TIMESTAMP INFO    Stage start waiting for config update synchronized at @37s
-TIMESTAMP DEBUG   Received command AHU-1/state/system as MP:f7b6856d-0
+TIMESTAMP DEBUG   Received command AHU-1/state/system as MP:0c47b31f-0
 TIMESTAMP TRACE   Received state_system: {
 TIMESTAMP TRACE   Received state_system:   "hardware" : {
 TIMESTAMP TRACE   Received state_system:     "make" : "BOS",
@@ -1270,7 +1209,7 @@ TIMESTAMP",
 TIMESTAMP TRACE   Received state_system:     "restart_count" : 1,
 TIMESTAMP TRACE   Received state_system:     "mode" : "initial"
 TIMESTAMP TRACE   Received state_system:   },
-TIMESTAMP TRACE   Received state_system:   "serial_no" : "sequencer-27902",
+TIMESTAMP TRACE   Received state_system:   "serial_no" : "sequencer-19868",
 TIMESTAMP TRACE   Received state_system:   "software" : {
 TIMESTAMP TRACE   Received state_system:     "firmware" : "v1"
 TIMESTAMP TRACE   Received state_system:   },
@@ -1283,24 +1222,24 @@ TIMESTAMP TRACE   Received state_system:   },
 TIMESTAMP",
 TIMESTAMP TRACE   Received state_system:   "version" : "1.5.3"
 TIMESTAMP TRACE   Received state_system: }
-TIMESTAMP DEBUG   Handling device message state_system MP:f7b6856d-0
+TIMESTAMP DEBUG   Handling device message state_system MP:0c47b31f-0
 TIMESTAMP TRACE   Ignoring partial state update
-TIMESTAMP DEBUG   Received command AHU-1/state/discovery as MP:f7b6856d-1
+TIMESTAMP DEBUG   Received command AHU-1/state/discovery as MP:0c47b31f-1
 TIMESTAMP TRACE   Received state_discovery: {
 TIMESTAMP TRACE   Received state_discovery:   "families" : { },
 TIMESTAMP",
 TIMESTAMP TRACE   Received state_discovery:   "version" : "1.5.3"
 TIMESTAMP TRACE   Received state_discovery: }
-TIMESTAMP DEBUG   Handling device message state_discovery MP:f7b6856d-1
+TIMESTAMP DEBUG   Handling device message state_discovery MP:0c47b31f-1
 TIMESTAMP TRACE   Ignoring partial state update
-TIMESTAMP DEBUG   Received command AHU-1/state/localnet as MP:f7b6856d-2
+TIMESTAMP DEBUG   Received command AHU-1/state/localnet as MP:0c47b31f-2
 TIMESTAMP TRACE   Received state_localnet: {
 TIMESTAMP TRACE   Received state_localnet:   "families" : {
 TIMESTAMP TRACE   Received state_localnet:     "ether" : {
-TIMESTAMP TRACE   Received state_localnet:       "addr" : "7c:1e:52:05:17:a4"
+TIMESTAMP TRACE   Received state_localnet:       "addr" : "7c:1e:52:17:b3:35"
 TIMESTAMP TRACE   Received state_localnet:     },
 TIMESTAMP TRACE   Received state_localnet:     "ipv4" : {
-TIMESTAMP TRACE   Received state_localnet:       "addr" : "10.1.0.78"
+TIMESTAMP TRACE   Received state_localnet:       "addr" : "10.1.0.118"
 TIMESTAMP TRACE   Received state_localnet:     },
 TIMESTAMP TRACE   Received state_localnet:     "vendor" : {
 TIMESTAMP TRACE   Received state_localnet:       "addr" : "28179023"
@@ -1312,9 +1251,9 @@ TIMESTAMP TRACE   Received state_localnet:   },
 TIMESTAMP",
 TIMESTAMP TRACE   Received state_localnet:   "version" : "1.5.3"
 TIMESTAMP TRACE   Received state_localnet: }
-TIMESTAMP DEBUG   Handling device message state_localnet MP:f7b6856d-2
+TIMESTAMP DEBUG   Handling device message state_localnet MP:0c47b31f-2
 TIMESTAMP TRACE   Ignoring partial state update
-TIMESTAMP DEBUG   Received command AHU-1/state/pointset as MP:f7b6856d-3
+TIMESTAMP DEBUG   Received command AHU-1/state/pointset as MP:0c47b31f-3
 TIMESTAMP TRACE   Received state_pointset: {
 TIMESTAMP TRACE   Received state_pointset:   "points" : {
 TIMESTAMP TRACE   Received state_pointset:     "filter_alarm_pressure_status" : {
@@ -1331,111 +1270,109 @@ TIMESTAMP TRACE   Received state_pointset:   },
 TIMESTAMP",
 TIMESTAMP TRACE   Received state_pointset:   "version" : "1.5.3"
 TIMESTAMP TRACE   Received state_pointset: }
-TIMESTAMP DEBUG   Handling device message state_pointset MP:f7b6856d-3
+TIMESTAMP DEBUG   Handling device message state_pointset MP:0c47b31f-3
 TIMESTAMP TRACE   Ignoring partial state update
-TIMESTAMP DEBUG   Received command AHU-1/events/pointset as MP:99f6d367
+TIMESTAMP DEBUG   Received command AHU-1/events/pointset as MP:52e7d60c
 TIMESTAMP TRACE   Received events_pointset: {
 TIMESTAMP TRACE   Received events_pointset:   "points" : {
 TIMESTAMP TRACE   Received events_pointset:     "filter_alarm_pressure_status" : {
-TIMESTAMP TRACE   Received events_pointset:       "present_value" : true
+TIMESTAMP TRACE   Received events_pointset:       "present_value" : false
 TIMESTAMP TRACE   Received events_pointset:     },
 TIMESTAMP TRACE   Received events_pointset:     "filter_differential_pressure_setpoint" : {
 TIMESTAMP TRACE   Received events_pointset:       "present_value" : 98
 TIMESTAMP TRACE   Received events_pointset:     },
 TIMESTAMP TRACE   Received events_pointset:     "filter_differential_pressure_sensor" : {
-TIMESTAMP TRACE   Received events_pointset:       "present_value" : 9
+TIMESTAMP TRACE   Received events_pointset:       "present_value" : 10
 TIMESTAMP TRACE   Received events_pointset:     }
 TIMESTAMP TRACE   Received events_pointset:   },
 TIMESTAMP",
 TIMESTAMP TRACE   Received events_pointset:   "version" : "1.5.3"
 TIMESTAMP TRACE   Received events_pointset: }
-TIMESTAMP DEBUG   Handling device message events_pointset MP:99f6d367
+TIMESTAMP DEBUG   Handling device message events_pointset MP:52e7d60c
 TIMESTAMP DEBUG   Capturing AHU-1 message events_pointset
-TIMESTAMP DEBUG   Received command AHU-1/events/system as MP:49c3cccb
-TIMESTAMP DEBUG device.log: State update defer 1749ms
+TIMESTAMP DEBUG   Received command AHU-1/events/system as MP:1c2bcc7c
+TIMESTAMP DEBUG device.log: State update defer 89ms
 TIMESTAMP INFO device.log: sending AHU-1 message #10 with 3 points
 TIMESTAMP DEBUG device.log: State update defer 0ms
 TIMESTAMP
-TIMESTAMP DEBUG device.log: State update AHU-1 (scan_periodic_now_enumerate)
+TIMESTAMP DEBUG device.log: State update AHU-1 (scan_periodic_now_enumerate+vendor)
 TIMESTAMP DEBUG system.config.receive: success
-TIMESTAMP DEBUG device.log: State update defer -1054ms
-TIMESTAMP
 TIMESTAMP DEBUG system.config.parse: success
+TIMESTAMP DEBUG device.log: State update defer -1047ms
 TIMESTAMP INFO device.log: Device AHU-1 config handler
-TIMESTAMP DEBUG device.log: State update AHU-1 (scan_periodic_now_enumerate)
-TIMESTAMP DEBUG device.log: Config update AHU-1 (scan_periodic_now_enumerate)
+TIMESTAMP
+TIMESTAMP DEBUG device.log: State update AHU-1 (scan_periodic_now_enumerate+vendor)
+TIMESTAMP DEBUG device.log: Config update AHU-1 (scan_periodic_now_enumerate+vendor)
 TIMESTAMP
 TIMESTAMP NOTICE system.config.apply: success
 TIMESTAMP DEBUG device.log: State update defer 1997ms
-TIMESTAMP DEBUG device.log: State update defer 1997ms
-TIMESTAMP DEBUG device.log: State update defer 1997ms
-TIMESTAMP DEBUG device.log: State update defer 1997ms
-TIMESTAMP DEBUG device.log: State update defer 1997ms
-TIMESTAMP DEBUG device.log: State update defer 1997ms
+TIMESTAMP DEBUG device.log: State update defer 1996ms
 TIMESTAMP DEBUG system.config.receive: success
+TIMESTAMP DEBUG device.log: State update defer 800ms
+TIMESTAMP DEBUG system.config.parse: success
+TIMESTAMP INFO device.log: Device AHU-1 config handler
+TIMESTAMP DEBUG device.log: Config update AHU-1 (scan_periodic_now_enumerate+vendor)
+TIMESTAMP
+TIMESTAMP NOTICE system.config.apply: success
 TIMESTAMP DEBUG device.log: State update defer 799ms
-TIMESTAMP DEBUG system.config.parse: success
-TIMESTAMP INFO device.log: Device AHU-1 config handler
-TIMESTAMP DEBUG device.log: Config update AHU-1 (scan_periodic_now_enumerate)
-TIMESTAMP
-TIMESTAMP NOTICE system.config.apply: success
-TIMESTAMP DEBUG device.log: State update defer 797ms
+TIMESTAMP DEBUG device.log: State update defer 798ms
+TIMESTAMP DEBUG device.log: State update defer 798ms
+TIMESTAMP DEBUG device.log: State update defer 798ms
+TIMESTAMP DEBUG device.log: State update defer 798ms
 TIMESTAMP DEBUG device.log: State update defer 0ms
 TIMESTAMP
-TIMESTAMP DEBUG device.log: State update AHU-1 (scan_periodic_now_enumerate)
-TIMESTAMP DEBUG system.config.receive: success
-TIMESTAMP DEBUG system.config.parse: success
-TIMESTAMP INFO device.log: Device AHU-1 config handler
-TIMESTAMP DEBUG device.log: State update defer 1786ms
-TIMESTAMP DEBUG device.log: State update defer 1786ms
-TIMESTAMP DEBUG device.log: Config update AHU-1 (scan_periodic_now_enumerate)
-TIMESTAMP
-TIMESTAMP NOTICE system.config.apply: success
-TIMESTAMP DEBUG device.log: State update defer 1785ms
-TIMESTAMP DEBUG device.log: State update defer 1785ms
+TIMESTAMP DEBUG device.log: State update AHU-1 (scan_periodic_now_enumerate+vendor)
 TIMESTAMP DEBUG system.config.receive: success
 TIMESTAMP DEBUG device.log: State update defer 1694ms
 TIMESTAMP DEBUG system.config.parse: success
 TIMESTAMP INFO device.log: Device AHU-1 config handler
-TIMESTAMP DEBUG device.log: State update defer 1694ms
-TIMESTAMP DEBUG device.log: Config update AHU-1 (scan_periodic_now_enumerate)
+TIMESTAMP DEBUG device.log: Config update AHU-1 (scan_periodic_now_enumerate+vendor)
 TIMESTAMP
 TIMESTAMP NOTICE system.config.apply: success
-TIMESTAMP DEBUG device.log: State update defer 1692ms
-TIMESTAMP DEBUG device.log: State update defer 1692ms
+TIMESTAMP DEBUG device.log: State update defer 1693ms
+TIMESTAMP DEBUG system.config.receive: success
+TIMESTAMP DEBUG device.log: State update defer 591ms
+TIMESTAMP DEBUG system.config.parse: success
+TIMESTAMP INFO device.log: Device AHU-1 config handler
+TIMESTAMP DEBUG device.log: State update defer 590ms
+TIMESTAMP DEBUG device.log: Config update AHU-1 (scan_periodic_now_enumerate+vendor)
+TIMESTAMP
+TIMESTAMP NOTICE system.config.apply: success
+TIMESTAMP DEBUG device.log: State update defer 589ms
+TIMESTAMP DEBUG device.log: State update defer 589ms
 TIMESTAMP DEBUG device.log: State update defer 0ms
 TIMESTAMP
-TIMESTAMP DEBUG device.log: State update AHU-1 (scan_periodic_now_enumerate)
-TIMESTAMP DEBUG   Handling device message events_system MP:49c3cccb
+TIMESTAMP DEBUG device.log: State update AHU-1 (scan_periodic_now_enumerate+vendor)
+TIMESTAMP DEBUG   Handling device message events_system MP:1c2bcc7c
 TIMESTAMP DEBUG   Capturing AHU-1 message events_system
-TIMESTAMP DEBUG   Received command AHU-1/state/update as MP:df261c22
+TIMESTAMP DEBUG   Received command AHU-1/state/update as MP:8e0fe3da
 TIMESTAMP DEBUG   Received state_update
-TIMESTAMP DEBUG   Handling update message state_update MP:df261c22
+TIMESTAMP DEBUG   Handling update message state_update MP:8e0fe3da
 TIMESTAMP DEBUG   Capturing AHU-1 message state_update
-TIMESTAMP MP:df261c22
+TIMESTAMP MP:8e0fe3da
 TIMESTAMP INFO    Updated state #046: Changed 4 fields:
 TIMESTAMP INFO    Updated state #046:   Set `system.status.level` = `100`
 TIMESTAMP INFO    Updated state #046:   Set `system.status.category` = `system.config.parse`
 TIMESTAMP`
 TIMESTAMP`
 TIMESTAMP)
-TIMESTAMP DEBUG   Received command AHU-1/config/update as RC:3739a3.0000003a
+TIMESTAMP DEBUG   Received command AHU-1/config/update as RC:51d528.0000003a
 TIMESTAMP DEBUG   Received config_update
-TIMESTAMP DEBUG   Handling update message config_update RC:3739a3.0000003a
-TIMESTAMP DEBUG   Removed configTransaction RC:3739a3.0000003a
+TIMESTAMP DEBUG   Handling update message config_update RC:51d528.0000003a
+TIMESTAMP DEBUG   Removed configTransaction RC:51d528.0000003a
 TIMESTAMP
-TIMESTAMP RC:3739a3.0000003a
+TIMESTAMP RC:51d528.0000003a
 TIMESTAMP INFO    Updated config #035: Changed 1 fields:
 TIMESTAMP INFO    Updated config #035:   Add `discovery.families.vendor` = { "generation": `family generation`, "scan_interval_sec": `20`, "depth": `details`, "scan_duration_sec": `20` }
 TIMESTAMP
-TIMESTAMP DEBUG   Received command AHU-1/config/discovery as CU:3739a3.0000003a
+TIMESTAMP DEBUG   Received command AHU-1/config/discovery as CU:51d528.0000003a
 TIMESTAMP TRACE   Received config_discovery: {
 TIMESTAMP TRACE   Received config_discovery:   "operation" : "REPLY"
 TIMESTAMP TRACE   Received config_discovery: }
-TIMESTAMP DEBUG   Handling device message config_discovery CU:3739a3.0000003a
-TIMESTAMP TRACE   Ignoring echo configTransaction CU:3739a3.0000003a
+TIMESTAMP DEBUG   Handling device message config_discovery CU:51d528.0000003a
+TIMESTAMP TRACE   Ignoring echo configTransaction CU:51d528.0000003a
 TIMESTAMP DEBUG   Detail config update synchronized is now: last_config not synced in state
-TIMESTAMP DEBUG   Received command AHU-1/state/system as MP:df261c22-0
+TIMESTAMP DEBUG   Received command AHU-1/state/system as MP:8e0fe3da-0
 TIMESTAMP TRACE   Received state_system: {
 TIMESTAMP TRACE   Received state_system:   "hardware" : {
 TIMESTAMP TRACE   Received state_system:     "make" : "BOS",
@@ -1448,7 +1385,7 @@ TIMESTAMP",
 TIMESTAMP TRACE   Received state_system:     "restart_count" : 1,
 TIMESTAMP TRACE   Received state_system:     "mode" : "initial"
 TIMESTAMP TRACE   Received state_system:   },
-TIMESTAMP TRACE   Received state_system:   "serial_no" : "sequencer-27902",
+TIMESTAMP TRACE   Received state_system:   "serial_no" : "sequencer-19868",
 TIMESTAMP TRACE   Received state_system:   "software" : {
 TIMESTAMP TRACE   Received state_system:     "firmware" : "v1"
 TIMESTAMP TRACE   Received state_system:   },
@@ -1461,24 +1398,24 @@ TIMESTAMP TRACE   Received state_system:   },
 TIMESTAMP",
 TIMESTAMP TRACE   Received state_system:   "version" : "1.5.3"
 TIMESTAMP TRACE   Received state_system: }
-TIMESTAMP DEBUG   Handling device message state_system MP:df261c22-0
+TIMESTAMP DEBUG   Handling device message state_system MP:8e0fe3da-0
 TIMESTAMP TRACE   Ignoring partial state update
-TIMESTAMP DEBUG   Received command AHU-1/state/discovery as MP:df261c22-1
+TIMESTAMP DEBUG   Received command AHU-1/state/discovery as MP:8e0fe3da-1
 TIMESTAMP TRACE   Received state_discovery: {
 TIMESTAMP TRACE   Received state_discovery:   "families" : { },
 TIMESTAMP",
 TIMESTAMP TRACE   Received state_discovery:   "version" : "1.5.3"
 TIMESTAMP TRACE   Received state_discovery: }
-TIMESTAMP DEBUG   Handling device message state_discovery MP:df261c22-1
+TIMESTAMP DEBUG   Handling device message state_discovery MP:8e0fe3da-1
 TIMESTAMP TRACE   Ignoring partial state update
-TIMESTAMP DEBUG   Received command AHU-1/state/localnet as MP:df261c22-2
+TIMESTAMP DEBUG   Received command AHU-1/state/localnet as MP:8e0fe3da-2
 TIMESTAMP TRACE   Received state_localnet: {
 TIMESTAMP TRACE   Received state_localnet:   "families" : {
 TIMESTAMP TRACE   Received state_localnet:     "ether" : {
-TIMESTAMP TRACE   Received state_localnet:       "addr" : "7c:1e:52:05:17:a4"
+TIMESTAMP TRACE   Received state_localnet:       "addr" : "7c:1e:52:17:b3:35"
 TIMESTAMP TRACE   Received state_localnet:     },
 TIMESTAMP TRACE   Received state_localnet:     "ipv4" : {
-TIMESTAMP TRACE   Received state_localnet:       "addr" : "10.1.0.78"
+TIMESTAMP TRACE   Received state_localnet:       "addr" : "10.1.0.118"
 TIMESTAMP TRACE   Received state_localnet:     },
 TIMESTAMP TRACE   Received state_localnet:     "vendor" : {
 TIMESTAMP TRACE   Received state_localnet:       "addr" : "28179023"
@@ -1490,9 +1427,9 @@ TIMESTAMP TRACE   Received state_localnet:   },
 TIMESTAMP",
 TIMESTAMP TRACE   Received state_localnet:   "version" : "1.5.3"
 TIMESTAMP TRACE   Received state_localnet: }
-TIMESTAMP DEBUG   Handling device message state_localnet MP:df261c22-2
+TIMESTAMP DEBUG   Handling device message state_localnet MP:8e0fe3da-2
 TIMESTAMP TRACE   Ignoring partial state update
-TIMESTAMP DEBUG   Received command AHU-1/state/pointset as MP:df261c22-3
+TIMESTAMP DEBUG   Received command AHU-1/state/pointset as MP:8e0fe3da-3
 TIMESTAMP TRACE   Received state_pointset: {
 TIMESTAMP TRACE   Received state_pointset:   "points" : {
 TIMESTAMP TRACE   Received state_pointset:     "filter_alarm_pressure_status" : {
@@ -1509,13 +1446,13 @@ TIMESTAMP TRACE   Received state_pointset:   },
 TIMESTAMP",
 TIMESTAMP TRACE   Received state_pointset:   "version" : "1.5.3"
 TIMESTAMP TRACE   Received state_pointset: }
-TIMESTAMP DEBUG   Handling device message state_pointset MP:df261c22-3
+TIMESTAMP DEBUG   Handling device message state_pointset MP:8e0fe3da-3
 TIMESTAMP TRACE   Ignoring partial state update
-TIMESTAMP DEBUG   Received command AHU-1/state/update as MP:39a7faf8
+TIMESTAMP DEBUG   Received command AHU-1/state/update as MP:1512704c
 TIMESTAMP DEBUG   Received state_update
-TIMESTAMP DEBUG   Handling update message state_update MP:39a7faf8
+TIMESTAMP DEBUG   Handling update message state_update MP:1512704c
 TIMESTAMP DEBUG   Capturing AHU-1 message state_update
-TIMESTAMP MP:39a7faf8
+TIMESTAMP MP:1512704c
 TIMESTAMP INFO    Updated state #047: Changed 5 fields:
 TIMESTAMP`
 TIMESTAMP INFO    Updated state #047:   Set `system.status.level` = `300`
@@ -1523,7 +1460,7 @@ TIMESTAMP INFO    Updated state #047:   Set `system.status.category` = `system.c
 TIMESTAMP`, "phase": `pending` }
 TIMESTAMP`
 TIMESTAMP)
-TIMESTAMP DEBUG   Received command AHU-1/state/system as MP:39a7faf8-0
+TIMESTAMP DEBUG   Received command AHU-1/state/system as MP:1512704c-0
 TIMESTAMP TRACE   Received state_system: {
 TIMESTAMP TRACE   Received state_system:   "hardware" : {
 TIMESTAMP TRACE   Received state_system:     "make" : "BOS",
@@ -1536,7 +1473,7 @@ TIMESTAMP",
 TIMESTAMP TRACE   Received state_system:     "restart_count" : 1,
 TIMESTAMP TRACE   Received state_system:     "mode" : "initial"
 TIMESTAMP TRACE   Received state_system:   },
-TIMESTAMP TRACE   Received state_system:   "serial_no" : "sequencer-27902",
+TIMESTAMP TRACE   Received state_system:   "serial_no" : "sequencer-19868",
 TIMESTAMP TRACE   Received state_system:   "software" : {
 TIMESTAMP TRACE   Received state_system:     "firmware" : "v1"
 TIMESTAMP TRACE   Received state_system:   },
@@ -1549,7 +1486,7 @@ TIMESTAMP TRACE   Received state_system:   },
 TIMESTAMP",
 TIMESTAMP TRACE   Received state_system:   "version" : "1.5.3"
 TIMESTAMP TRACE   Received state_system: }
-TIMESTAMP DEBUG   Handling device message state_system MP:39a7faf8-0
+TIMESTAMP DEBUG   Handling device message state_system MP:1512704c-0
 TIMESTAMP TRACE   Ignoring partial state update
 TIMESTAMP DEBUG   Detail config update synchronized is now: null
 TIMESTAMP DEBUG   Stage finished waiting for config update synchronized at @40s after 3s
@@ -1562,7 +1499,7 @@ TIMESTAMP DEBUG   Recorded sequence: 1. Update config before scan iterations
 TIMESTAMP INFO    Device config Add `discovery.families.vendor` = { "generation": `family generation`, "scan_interval_sec": `20`, "depth": `details`, "scan_duration_sec": `20` }
 TIMESTAMP TRACE   Update config before scan iterations: Add `discovery.families.vendor` = { "generation": `family generation`, "scan_interval_sec": `20`, "depth": `details`, "scan_duration_sec": `20` }
 TIMESTAMP DEBUG   Recorded sequence: 1. Wait for scan iterations
-TIMESTAMP DEBUG   Received command AHU-1/state/discovery as MP:39a7faf8-1
+TIMESTAMP DEBUG   Received command AHU-1/state/discovery as MP:1512704c-1
 TIMESTAMP TRACE   Received state_discovery: {
 TIMESTAMP TRACE   Received state_discovery:   "families" : {
 TIMESTAMP TRACE   Received state_discovery:     "vendor" : {
@@ -1573,16 +1510,16 @@ TIMESTAMP TRACE   Received state_discovery:   },
 TIMESTAMP",
 TIMESTAMP TRACE   Received state_discovery:   "version" : "1.5.3"
 TIMESTAMP TRACE   Received state_discovery: }
-TIMESTAMP DEBUG   Handling device message state_discovery MP:39a7faf8-1
+TIMESTAMP DEBUG   Handling device message state_discovery MP:1512704c-1
 TIMESTAMP TRACE   Ignoring partial state update
-TIMESTAMP DEBUG   Received command AHU-1/state/localnet as MP:39a7faf8-2
+TIMESTAMP DEBUG   Received command AHU-1/state/localnet as MP:1512704c-2
 TIMESTAMP TRACE   Received state_localnet: {
 TIMESTAMP TRACE   Received state_localnet:   "families" : {
 TIMESTAMP TRACE   Received state_localnet:     "ether" : {
-TIMESTAMP TRACE   Received state_localnet:       "addr" : "7c:1e:52:05:17:a4"
+TIMESTAMP TRACE   Received state_localnet:       "addr" : "7c:1e:52:17:b3:35"
 TIMESTAMP TRACE   Received state_localnet:     },
 TIMESTAMP TRACE   Received state_localnet:     "ipv4" : {
-TIMESTAMP TRACE   Received state_localnet:       "addr" : "10.1.0.78"
+TIMESTAMP TRACE   Received state_localnet:       "addr" : "10.1.0.118"
 TIMESTAMP TRACE   Received state_localnet:     },
 TIMESTAMP TRACE   Received state_localnet:     "vendor" : {
 TIMESTAMP TRACE   Received state_localnet:       "addr" : "28179023"
@@ -1594,9 +1531,9 @@ TIMESTAMP TRACE   Received state_localnet:   },
 TIMESTAMP",
 TIMESTAMP TRACE   Received state_localnet:   "version" : "1.5.3"
 TIMESTAMP TRACE   Received state_localnet: }
-TIMESTAMP DEBUG   Handling device message state_localnet MP:39a7faf8-2
+TIMESTAMP DEBUG   Handling device message state_localnet MP:1512704c-2
 TIMESTAMP TRACE   Ignoring partial state update
-TIMESTAMP DEBUG   Received command AHU-1/state/pointset as MP:39a7faf8-3
+TIMESTAMP DEBUG   Received command AHU-1/state/pointset as MP:1512704c-3
 TIMESTAMP TRACE   Received state_pointset: {
 TIMESTAMP TRACE   Received state_pointset:   "points" : {
 TIMESTAMP TRACE   Received state_pointset:     "filter_alarm_pressure_status" : {
@@ -1613,69 +1550,79 @@ TIMESTAMP TRACE   Received state_pointset:   },
 TIMESTAMP",
 TIMESTAMP TRACE   Received state_pointset:   "version" : "1.5.3"
 TIMESTAMP TRACE   Received state_pointset: }
-TIMESTAMP DEBUG   Handling device message state_pointset MP:39a7faf8-3
+TIMESTAMP DEBUG   Handling device message state_pointset MP:1512704c-3
 TIMESTAMP TRACE   Ignoring partial state update
-TIMESTAMP DEBUG   Received command AHU-1/events/pointset as MP:2d48c4f7
+TIMESTAMP DEBUG   Received command AHU-1/events/pointset as MP:2e5b0f13
 TIMESTAMP TRACE   Received events_pointset: {
 TIMESTAMP TRACE   Received events_pointset:   "points" : {
 TIMESTAMP TRACE   Received events_pointset:     "filter_alarm_pressure_status" : {
-TIMESTAMP TRACE   Received events_pointset:       "present_value" : true
+TIMESTAMP TRACE   Received events_pointset:       "present_value" : false
 TIMESTAMP TRACE   Received events_pointset:     },
 TIMESTAMP TRACE   Received events_pointset:     "filter_differential_pressure_setpoint" : {
 TIMESTAMP TRACE   Received events_pointset:       "present_value" : 98
 TIMESTAMP TRACE   Received events_pointset:     },
 TIMESTAMP TRACE   Received events_pointset:     "filter_differential_pressure_sensor" : {
-TIMESTAMP TRACE   Received events_pointset:       "present_value" : 11
+TIMESTAMP TRACE   Received events_pointset:       "present_value" : 8
 TIMESTAMP TRACE   Received events_pointset:     }
 TIMESTAMP TRACE   Received events_pointset:   },
 TIMESTAMP",
 TIMESTAMP TRACE   Received events_pointset:   "version" : "1.5.3"
 TIMESTAMP TRACE   Received events_pointset: }
-TIMESTAMP DEBUG   Handling device message events_pointset MP:2d48c4f7
+TIMESTAMP DEBUG   Handling device message events_pointset MP:2e5b0f13
 TIMESTAMP DEBUG   Capturing AHU-1 message events_pointset
-TIMESTAMP DEBUG   Received command AHU-1/events/system as MP:49978085
+TIMESTAMP DEBUG   Received command AHU-1/events/system as MP:a838fdf1
 TIMESTAMP DEBUG system.config.receive: success
-TIMESTAMP DEBUG device.log: State update defer -5004ms
+TIMESTAMP DEBUG device.log: State update defer -5007ms
 TIMESTAMP
-TIMESTAMP DEBUG device.log: State update AHU-1 (scan_periodic_now_enumerate)
+TIMESTAMP DEBUG device.log: State update AHU-1 (scan_periodic_now_enumerate+vendor)
 TIMESTAMP DEBUG system.config.parse: success
 TIMESTAMP INFO device.log: Device AHU-1 config handler
-TIMESTAMP DEBUG device.log: Config update AHU-1 (scan_periodic_now_enumerate)
-TIMESTAMP DEBUG device.log: State update defer 2000ms
+TIMESTAMP DEBUG device.log: Config update AHU-1 (scan_periodic_now_enumerate+vendor)
+TIMESTAMP DEBUG device.log: State update defer 1999ms
 TIMESTAMP
 TIMESTAMP
 TIMESTAMP DEBUG device.log: Scheduling future in 17999ms
 TIMESTAMP NOTICE system.config.apply: success
-TIMESTAMP DEBUG device.log: State update defer 1997ms
-TIMESTAMP DEBUG device.log: State update defer 1997ms
+TIMESTAMP DEBUG device.log: State update defer 1996ms
+TIMESTAMP DEBUG device.log: State update defer 1996ms
 TIMESTAMP DEBUG device.log: State update defer 0ms
 TIMESTAMP
-TIMESTAMP DEBUG device.log: State update AHU-1 (scan_periodic_now_enumerate)
-TIMESTAMP DEBUG   Handling device message events_system MP:49978085
+TIMESTAMP DEBUG device.log: State update AHU-1 (scan_periodic_now_enumerate+vendor)
+TIMESTAMP DEBUG   Handling device message events_system MP:a838fdf1
 TIMESTAMP DEBUG   Capturing AHU-1 message events_system
-TIMESTAMP DEBUG   Received command AHU-1/events/system as MP:4ecdc0bf
+TIMESTAMP DEBUG   Received command AHU-1/events/system as MP:3d53fdaf
 TIMESTAMP DEBUG   Received events_system (no logs)
-TIMESTAMP DEBUG   Handling device message events_system MP:4ecdc0bf
+TIMESTAMP DEBUG   Handling device message events_system MP:3d53fdaf
 TIMESTAMP DEBUG   Capturing AHU-1 message events_system
-TIMESTAMP DEBUG   Received command AHU-1/events/pointset as MP:e5a94e7a
+TIMESTAMP DEBUG   Received command AHU-1/events/pointset as MP:444a8758
 TIMESTAMP TRACE   Received events_pointset: {
 TIMESTAMP TRACE   Received events_pointset:   "points" : {
 TIMESTAMP TRACE   Received events_pointset:     "filter_alarm_pressure_status" : {
-TIMESTAMP TRACE   Received events_pointset:       "present_value" : true
+TIMESTAMP TRACE   Received events_pointset:       "present_value" : false
 TIMESTAMP TRACE   Received events_pointset:     },
 TIMESTAMP TRACE   Received events_pointset:     "filter_differential_pressure_setpoint" : {
 TIMESTAMP TRACE   Received events_pointset:       "present_value" : 98
 TIMESTAMP TRACE   Received events_pointset:     },
 TIMESTAMP TRACE   Received events_pointset:     "filter_differential_pressure_sensor" : {
-TIMESTAMP TRACE   Received events_pointset:       "present_value" : 11
+TIMESTAMP TRACE   Received events_pointset:       "present_value" : 10
 TIMESTAMP TRACE   Received events_pointset:     }
 TIMESTAMP TRACE   Received events_pointset:   },
 TIMESTAMP",
 TIMESTAMP TRACE   Received events_pointset:   "version" : "1.5.3"
 TIMESTAMP TRACE   Received events_pointset: }
-TIMESTAMP DEBUG   Handling device message events_pointset MP:e5a94e7a
+TIMESTAMP DEBUG   Handling device message events_pointset MP:444a8758
 TIMESTAMP DEBUG   Capturing AHU-1 message events_pointset
-TIMESTAMP DEBUG   Received command AHU-1/events/discovery as MP:57e23884
+TIMESTAMP DEBUG   Received command AHU-1/state/update as MP:4518e72a
+TIMESTAMP DEBUG   Received state_update
+TIMESTAMP DEBUG   Handling update message state_update MP:4518e72a
+TIMESTAMP DEBUG   Capturing AHU-1 message state_update
+TIMESTAMP MP:4518e72a
+TIMESTAMP INFO    Updated state #048: Changed 3 fields:
+TIMESTAMP INFO    Updated state #048:   Set `discovery.families.vendor.phase` = `active`
+TIMESTAMP INFO    Updated state #048:   Add `discovery.families.vendor.active_count` = `0`
+TIMESTAMP`
+TIMESTAMP)
+TIMESTAMP DEBUG   Received command AHU-1/events/discovery as MP:27732a07
 TIMESTAMP TRACE   Received events_discovery: {
 TIMESTAMP TRACE   Received events_discovery:   "event_no" : 0,
 TIMESTAMP TRACE   Received events_discovery:   "family" : "vendor",
@@ -1686,19 +1633,9 @@ TIMESTAMP TRACE   Received events_discovery:   },
 TIMESTAMP",
 TIMESTAMP TRACE   Received events_discovery:   "version" : "1.5.3"
 TIMESTAMP TRACE   Received events_discovery: }
-TIMESTAMP DEBUG   Handling device message events_discovery MP:57e23884
+TIMESTAMP DEBUG   Handling device message events_discovery MP:27732a07
 TIMESTAMP DEBUG   Capturing AHU-1 message events_discovery
-TIMESTAMP DEBUG   Received command AHU-1/state/update as MP:347395b7
-TIMESTAMP DEBUG   Received state_update
-TIMESTAMP DEBUG   Handling update message state_update MP:347395b7
-TIMESTAMP DEBUG   Capturing AHU-1 message state_update
-TIMESTAMP MP:347395b7
-TIMESTAMP INFO    Updated state #048: Changed 3 fields:
-TIMESTAMP INFO    Updated state #048:   Set `discovery.families.vendor.phase` = `active`
-TIMESTAMP INFO    Updated state #048:   Add `discovery.families.vendor.active_count` = `0`
-TIMESTAMP`
-TIMESTAMP)
-TIMESTAMP DEBUG   Received command AHU-1/events/discovery as MP:f35fea17
+TIMESTAMP DEBUG   Received command AHU-1/events/discovery as MP:c8d395c7
 TIMESTAMP TRACE   Received events_discovery: {
 TIMESTAMP TRACE   Received events_discovery:   "addr" : "20231",
 TIMESTAMP TRACE   Received events_discovery:   "event_no" : 1,
@@ -1714,36 +1651,9 @@ TIMESTAMP TRACE   Received events_discovery:   },
 TIMESTAMP",
 TIMESTAMP TRACE   Received events_discovery:   "version" : "1.5.3"
 TIMESTAMP TRACE   Received events_discovery: }
-TIMESTAMP DEBUG   Handling device message events_discovery MP:f35fea17
+TIMESTAMP DEBUG   Handling device message events_discovery MP:c8d395c7
 TIMESTAMP DEBUG   Capturing AHU-1 message events_discovery
-TIMESTAMP DEBUG   Received command AHU-1/events/discovery as MP:18eaa802
-TIMESTAMP TRACE   Received events_discovery: {
-TIMESTAMP TRACE   Received events_discovery:   "addr" : "28179023",
-TIMESTAMP TRACE   Received events_discovery:   "event_no" : 2,
-TIMESTAMP TRACE   Received events_discovery:   "family" : "vendor",
-TIMESTAMP",
-TIMESTAMP TRACE   Received events_discovery:   "network" : "1",
-TIMESTAMP TRACE   Received events_discovery:   "refs" : {
-TIMESTAMP TRACE   Received events_discovery:     "BV11.present_value" : {
-TIMESTAMP TRACE   Received events_discovery:       "point" : "filter_alarm_pressure_status",
-TIMESTAMP TRACE   Received events_discovery:       "units" : "No-units"
-TIMESTAMP TRACE   Received events_discovery:     },
-TIMESTAMP TRACE   Received events_discovery:     "AV12.present_value" : {
-TIMESTAMP TRACE   Received events_discovery:       "point" : "filter_differential_pressure_sensor",
-TIMESTAMP TRACE   Received events_discovery:       "units" : "Degrees-Celsius"
-TIMESTAMP TRACE   Received events_discovery:     }
-TIMESTAMP TRACE   Received events_discovery:   },
-TIMESTAMP TRACE   Received events_discovery:   "system" : {
-TIMESTAMP TRACE   Received events_discovery:     "ancillary" : {
-TIMESTAMP TRACE   Received events_discovery:       "device-name" : "AHU-1"
-TIMESTAMP TRACE   Received events_discovery:     }
-TIMESTAMP TRACE   Received events_discovery:   },
-TIMESTAMP",
-TIMESTAMP TRACE   Received events_discovery:   "version" : "1.5.3"
-TIMESTAMP TRACE   Received events_discovery: }
-TIMESTAMP DEBUG   Handling device message events_discovery MP:18eaa802
-TIMESTAMP DEBUG   Capturing AHU-1 message events_discovery
-TIMESTAMP DEBUG   Received command AHU-1/events/discovery as MP:614be68a
+TIMESTAMP DEBUG   Received command AHU-1/events/discovery as MP:d11fd37b
 TIMESTAMP TRACE   Received events_discovery: {
 TIMESTAMP TRACE   Received events_discovery:   "addr" : "0x65",
 TIMESTAMP TRACE   Received events_discovery:   "event_no" : 3,
@@ -1768,9 +1678,9 @@ TIMESTAMP TRACE   Received events_discovery:   },
 TIMESTAMP",
 TIMESTAMP TRACE   Received events_discovery:   "version" : "1.5.3"
 TIMESTAMP TRACE   Received events_discovery: }
-TIMESTAMP DEBUG   Handling device message events_discovery MP:614be68a
+TIMESTAMP DEBUG   Handling device message events_discovery MP:d11fd37b
 TIMESTAMP DEBUG   Capturing AHU-1 message events_discovery
-TIMESTAMP DEBUG   Received command AHU-1/events/discovery as MP:fa5c7881
+TIMESTAMP DEBUG   Received command AHU-1/events/discovery as MP:53ef4f05
 TIMESTAMP TRACE   Received events_discovery: {
 TIMESTAMP TRACE   Received events_discovery:   "addr" : "171",
 TIMESTAMP TRACE   Received events_discovery:   "event_no" : 4,
@@ -1786,9 +1696,36 @@ TIMESTAMP TRACE   Received events_discovery:   },
 TIMESTAMP",
 TIMESTAMP TRACE   Received events_discovery:   "version" : "1.5.3"
 TIMESTAMP TRACE   Received events_discovery: }
-TIMESTAMP DEBUG   Handling device message events_discovery MP:fa5c7881
+TIMESTAMP DEBUG   Handling device message events_discovery MP:53ef4f05
 TIMESTAMP DEBUG   Capturing AHU-1 message events_discovery
-TIMESTAMP DEBUG   Received command AHU-1/state/system as MP:347395b7-0
+TIMESTAMP DEBUG   Received command AHU-1/events/discovery as MP:5f1eaab6
+TIMESTAMP TRACE   Received events_discovery: {
+TIMESTAMP TRACE   Received events_discovery:   "addr" : "28179023",
+TIMESTAMP TRACE   Received events_discovery:   "event_no" : 2,
+TIMESTAMP TRACE   Received events_discovery:   "family" : "vendor",
+TIMESTAMP",
+TIMESTAMP TRACE   Received events_discovery:   "network" : "1",
+TIMESTAMP TRACE   Received events_discovery:   "refs" : {
+TIMESTAMP TRACE   Received events_discovery:     "BV11.present_value" : {
+TIMESTAMP TRACE   Received events_discovery:       "point" : "filter_alarm_pressure_status",
+TIMESTAMP TRACE   Received events_discovery:       "units" : "No-units"
+TIMESTAMP TRACE   Received events_discovery:     },
+TIMESTAMP TRACE   Received events_discovery:     "AV12.present_value" : {
+TIMESTAMP TRACE   Received events_discovery:       "point" : "filter_differential_pressure_sensor",
+TIMESTAMP TRACE   Received events_discovery:       "units" : "Degrees-Celsius"
+TIMESTAMP TRACE   Received events_discovery:     }
+TIMESTAMP TRACE   Received events_discovery:   },
+TIMESTAMP TRACE   Received events_discovery:   "system" : {
+TIMESTAMP TRACE   Received events_discovery:     "ancillary" : {
+TIMESTAMP TRACE   Received events_discovery:       "device-name" : "AHU-1"
+TIMESTAMP TRACE   Received events_discovery:     }
+TIMESTAMP TRACE   Received events_discovery:   },
+TIMESTAMP",
+TIMESTAMP TRACE   Received events_discovery:   "version" : "1.5.3"
+TIMESTAMP TRACE   Received events_discovery: }
+TIMESTAMP DEBUG   Handling device message events_discovery MP:5f1eaab6
+TIMESTAMP DEBUG   Capturing AHU-1 message events_discovery
+TIMESTAMP DEBUG   Received command AHU-1/state/system as MP:4518e72a-0
 TIMESTAMP TRACE   Received state_system: {
 TIMESTAMP TRACE   Received state_system:   "hardware" : {
 TIMESTAMP TRACE   Received state_system:     "make" : "BOS",
@@ -1801,7 +1738,7 @@ TIMESTAMP",
 TIMESTAMP TRACE   Received state_system:     "restart_count" : 1,
 TIMESTAMP TRACE   Received state_system:     "mode" : "initial"
 TIMESTAMP TRACE   Received state_system:   },
-TIMESTAMP TRACE   Received state_system:   "serial_no" : "sequencer-27902",
+TIMESTAMP TRACE   Received state_system:   "serial_no" : "sequencer-19868",
 TIMESTAMP TRACE   Received state_system:   "software" : {
 TIMESTAMP TRACE   Received state_system:     "firmware" : "v1"
 TIMESTAMP TRACE   Received state_system:   },
@@ -1814,9 +1751,9 @@ TIMESTAMP TRACE   Received state_system:   },
 TIMESTAMP",
 TIMESTAMP TRACE   Received state_system:   "version" : "1.5.3"
 TIMESTAMP TRACE   Received state_system: }
-TIMESTAMP DEBUG   Handling device message state_system MP:347395b7-0
+TIMESTAMP DEBUG   Handling device message state_system MP:4518e72a-0
 TIMESTAMP TRACE   Ignoring partial state update
-TIMESTAMP DEBUG   Received command AHU-1/state/discovery as MP:347395b7-1
+TIMESTAMP DEBUG   Received command AHU-1/state/discovery as MP:4518e72a-1
 TIMESTAMP TRACE   Received state_discovery: {
 TIMESTAMP TRACE   Received state_discovery:   "families" : {
 TIMESTAMP TRACE   Received state_discovery:     "vendor" : {
@@ -1828,16 +1765,16 @@ TIMESTAMP TRACE   Received state_discovery:   },
 TIMESTAMP",
 TIMESTAMP TRACE   Received state_discovery:   "version" : "1.5.3"
 TIMESTAMP TRACE   Received state_discovery: }
-TIMESTAMP DEBUG   Handling device message state_discovery MP:347395b7-1
+TIMESTAMP DEBUG   Handling device message state_discovery MP:4518e72a-1
 TIMESTAMP TRACE   Ignoring partial state update
-TIMESTAMP DEBUG   Received command AHU-1/state/localnet as MP:347395b7-2
+TIMESTAMP DEBUG   Received command AHU-1/state/localnet as MP:4518e72a-2
 TIMESTAMP TRACE   Received state_localnet: {
 TIMESTAMP TRACE   Received state_localnet:   "families" : {
 TIMESTAMP TRACE   Received state_localnet:     "ether" : {
-TIMESTAMP TRACE   Received state_localnet:       "addr" : "7c:1e:52:05:17:a4"
+TIMESTAMP TRACE   Received state_localnet:       "addr" : "7c:1e:52:17:b3:35"
 TIMESTAMP TRACE   Received state_localnet:     },
 TIMESTAMP TRACE   Received state_localnet:     "ipv4" : {
-TIMESTAMP TRACE   Received state_localnet:       "addr" : "10.1.0.78"
+TIMESTAMP TRACE   Received state_localnet:       "addr" : "10.1.0.118"
 TIMESTAMP TRACE   Received state_localnet:     },
 TIMESTAMP TRACE   Received state_localnet:     "vendor" : {
 TIMESTAMP TRACE   Received state_localnet:       "addr" : "28179023"
@@ -1849,9 +1786,9 @@ TIMESTAMP TRACE   Received state_localnet:   },
 TIMESTAMP",
 TIMESTAMP TRACE   Received state_localnet:   "version" : "1.5.3"
 TIMESTAMP TRACE   Received state_localnet: }
-TIMESTAMP DEBUG   Handling device message state_localnet MP:347395b7-2
+TIMESTAMP DEBUG   Handling device message state_localnet MP:4518e72a-2
 TIMESTAMP TRACE   Ignoring partial state update
-TIMESTAMP DEBUG   Received command AHU-1/state/pointset as MP:347395b7-3
+TIMESTAMP DEBUG   Received command AHU-1/state/pointset as MP:4518e72a-3
 TIMESTAMP TRACE   Received state_pointset: {
 TIMESTAMP TRACE   Received state_pointset:   "points" : {
 TIMESTAMP TRACE   Received state_pointset:     "filter_alarm_pressure_status" : {
@@ -1868,18 +1805,18 @@ TIMESTAMP TRACE   Received state_pointset:   },
 TIMESTAMP",
 TIMESTAMP TRACE   Received state_pointset:   "version" : "1.5.3"
 TIMESTAMP TRACE   Received state_pointset: }
-TIMESTAMP DEBUG   Handling device message state_pointset MP:347395b7-3
+TIMESTAMP DEBUG   Handling device message state_pointset MP:4518e72a-3
 TIMESTAMP TRACE   Ignoring partial state update
-TIMESTAMP DEBUG   Received command AHU-1/state/update as MP:4988d2b8
+TIMESTAMP DEBUG   Received command AHU-1/state/update as MP:c78977da
 TIMESTAMP DEBUG   Received state_update
-TIMESTAMP DEBUG   Handling update message state_update MP:4988d2b8
+TIMESTAMP DEBUG   Handling update message state_update MP:c78977da
 TIMESTAMP DEBUG   Capturing AHU-1 message state_update
-TIMESTAMP MP:4988d2b8
+TIMESTAMP MP:c78977da
 TIMESTAMP INFO    Updated state #049: Changed 2 fields:
 TIMESTAMP INFO    Updated state #049:   Set `discovery.families.vendor.active_count` = `4`
 TIMESTAMP`
 TIMESTAMP)
-TIMESTAMP DEBUG   Received command AHU-1/state/system as MP:4988d2b8-0
+TIMESTAMP DEBUG   Received command AHU-1/state/system as MP:c78977da-0
 TIMESTAMP TRACE   Received state_system: {
 TIMESTAMP TRACE   Received state_system:   "hardware" : {
 TIMESTAMP TRACE   Received state_system:     "make" : "BOS",
@@ -1892,7 +1829,7 @@ TIMESTAMP",
 TIMESTAMP TRACE   Received state_system:     "restart_count" : 1,
 TIMESTAMP TRACE   Received state_system:     "mode" : "initial"
 TIMESTAMP TRACE   Received state_system:   },
-TIMESTAMP TRACE   Received state_system:   "serial_no" : "sequencer-27902",
+TIMESTAMP TRACE   Received state_system:   "serial_no" : "sequencer-19868",
 TIMESTAMP TRACE   Received state_system:   "software" : {
 TIMESTAMP TRACE   Received state_system:     "firmware" : "v1"
 TIMESTAMP TRACE   Received state_system:   },
@@ -1905,9 +1842,9 @@ TIMESTAMP TRACE   Received state_system:   },
 TIMESTAMP",
 TIMESTAMP TRACE   Received state_system:   "version" : "1.5.3"
 TIMESTAMP TRACE   Received state_system: }
-TIMESTAMP DEBUG   Handling device message state_system MP:4988d2b8-0
+TIMESTAMP DEBUG   Handling device message state_system MP:c78977da-0
 TIMESTAMP TRACE   Ignoring partial state update
-TIMESTAMP DEBUG   Received command AHU-1/state/discovery as MP:4988d2b8-1
+TIMESTAMP DEBUG   Received command AHU-1/state/discovery as MP:c78977da-1
 TIMESTAMP TRACE   Received state_discovery: {
 TIMESTAMP TRACE   Received state_discovery:   "families" : {
 TIMESTAMP TRACE   Received state_discovery:     "vendor" : {
@@ -1919,16 +1856,16 @@ TIMESTAMP TRACE   Received state_discovery:   },
 TIMESTAMP",
 TIMESTAMP TRACE   Received state_discovery:   "version" : "1.5.3"
 TIMESTAMP TRACE   Received state_discovery: }
-TIMESTAMP DEBUG   Handling device message state_discovery MP:4988d2b8-1
+TIMESTAMP DEBUG   Handling device message state_discovery MP:c78977da-1
 TIMESTAMP TRACE   Ignoring partial state update
-TIMESTAMP DEBUG   Received command AHU-1/state/localnet as MP:4988d2b8-2
+TIMESTAMP DEBUG   Received command AHU-1/state/localnet as MP:c78977da-2
 TIMESTAMP TRACE   Received state_localnet: {
 TIMESTAMP TRACE   Received state_localnet:   "families" : {
 TIMESTAMP TRACE   Received state_localnet:     "ether" : {
-TIMESTAMP TRACE   Received state_localnet:       "addr" : "7c:1e:52:05:17:a4"
+TIMESTAMP TRACE   Received state_localnet:       "addr" : "7c:1e:52:17:b3:35"
 TIMESTAMP TRACE   Received state_localnet:     },
 TIMESTAMP TRACE   Received state_localnet:     "ipv4" : {
-TIMESTAMP TRACE   Received state_localnet:       "addr" : "10.1.0.78"
+TIMESTAMP TRACE   Received state_localnet:       "addr" : "10.1.0.118"
 TIMESTAMP TRACE   Received state_localnet:     },
 TIMESTAMP TRACE   Received state_localnet:     "vendor" : {
 TIMESTAMP TRACE   Received state_localnet:       "addr" : "28179023"
@@ -1940,9 +1877,9 @@ TIMESTAMP TRACE   Received state_localnet:   },
 TIMESTAMP",
 TIMESTAMP TRACE   Received state_localnet:   "version" : "1.5.3"
 TIMESTAMP TRACE   Received state_localnet: }
-TIMESTAMP DEBUG   Handling device message state_localnet MP:4988d2b8-2
+TIMESTAMP DEBUG   Handling device message state_localnet MP:c78977da-2
 TIMESTAMP TRACE   Ignoring partial state update
-TIMESTAMP DEBUG   Received command AHU-1/state/pointset as MP:4988d2b8-3
+TIMESTAMP DEBUG   Received command AHU-1/state/pointset as MP:c78977da-3
 TIMESTAMP TRACE   Received state_pointset: {
 TIMESTAMP TRACE   Received state_pointset:   "points" : {
 TIMESTAMP TRACE   Received state_pointset:     "filter_alarm_pressure_status" : {
@@ -1959,60 +1896,52 @@ TIMESTAMP TRACE   Received state_pointset:   },
 TIMESTAMP",
 TIMESTAMP TRACE   Received state_pointset:   "version" : "1.5.3"
 TIMESTAMP TRACE   Received state_pointset: }
-TIMESTAMP DEBUG   Handling device message state_pointset MP:4988d2b8-3
+TIMESTAMP DEBUG   Handling device message state_pointset MP:c78977da-3
 TIMESTAMP TRACE   Ignoring partial state update
-TIMESTAMP DEBUG   Received command AHU-1/events/pointset as MP:c86a57af
+TIMESTAMP DEBUG   Received command AHU-1/events/pointset as MP:b939cc55
 TIMESTAMP TRACE   Received events_pointset: {
 TIMESTAMP TRACE   Received events_pointset:   "points" : {
 TIMESTAMP TRACE   Received events_pointset:     "filter_alarm_pressure_status" : {
-TIMESTAMP TRACE   Received events_pointset:       "present_value" : true
+TIMESTAMP TRACE   Received events_pointset:       "present_value" : false
 TIMESTAMP TRACE   Received events_pointset:     },
 TIMESTAMP TRACE   Received events_pointset:     "filter_differential_pressure_setpoint" : {
 TIMESTAMP TRACE   Received events_pointset:       "present_value" : 98
 TIMESTAMP TRACE   Received events_pointset:     },
 TIMESTAMP TRACE   Received events_pointset:     "filter_differential_pressure_sensor" : {
-TIMESTAMP TRACE   Received events_pointset:       "present_value" : 12
+TIMESTAMP TRACE   Received events_pointset:       "present_value" : 11
 TIMESTAMP TRACE   Received events_pointset:     }
 TIMESTAMP TRACE   Received events_pointset:   },
 TIMESTAMP",
 TIMESTAMP TRACE   Received events_pointset:   "version" : "1.5.3"
 TIMESTAMP TRACE   Received events_pointset: }
-TIMESTAMP DEBUG   Handling device message events_pointset MP:c86a57af
+TIMESTAMP DEBUG   Handling device message events_pointset MP:b939cc55
 TIMESTAMP DEBUG   Capturing AHU-1 message events_pointset
-TIMESTAMP DEBUG   Received command AHU-1/events/system as MP:8225961b
+TIMESTAMP DEBUG   Received command AHU-1/events/system as MP:6665dcdd
 TIMESTAMP
 TIMESTAMP DEBUG device.log: Scheduling future in 10000ms
 TIMESTAMP
-TIMESTAMP DEBUG device.log: State update defer -14003ms
+TIMESTAMP DEBUG device.log: State update defer -14005ms
 TIMESTAMP
-TIMESTAMP DEBUG device.log: State update AHU-1 (scan_periodic_now_enumerate)
 TIMESTAMP)
-TIMESTAMP DEBUG device.log: TAP config details false
-TIMESTAMP DEBUG device.log: TAP startScan true false details
-TIMESTAMP INFO device.log: TAP target GAT-123 null 20231 3
-TIMESTAMP INFO device.log: TAP target AHU-1 null 28179023 1
-TIMESTAMP INFO device.log: TAP target AHU-22 null 0x65 22
-TIMESTAMP INFO device.log: TAP target SNS-4 null 171 3
-TIMESTAMP INFO device.log: TAP target XXX-2 null null null
-TIMESTAMP INFO device.log: TAP target XXX-1 null null null
+TIMESTAMP DEBUG device.log: State update AHU-1 (scan_periodic_now_enumerate+vendor)
 TIMESTAMP DEBUG device.log: Sending vendor result for GAT-123 20231
 TIMESTAMP as 1
-TIMESTAMP DEBUG device.log: State update defer 1992ms
+TIMESTAMP DEBUG device.log: State update defer 1995ms
 TIMESTAMP DEBUG device.log: Sending vendor result for AHU-1 28179023
 TIMESTAMP as 2
-TIMESTAMP DEBUG device.log: State update defer 1988ms
+TIMESTAMP DEBUG device.log: State update defer 1991ms
 TIMESTAMP DEBUG device.log: Sending vendor result for AHU-22 0x65
 TIMESTAMP as 3
 TIMESTAMP DEBUG device.log: Sending vendor result for SNS-4 171
-TIMESTAMP DEBUG device.log: State update defer 1983ms
+TIMESTAMP DEBUG device.log: State update defer 1989ms
 TIMESTAMP as 4
-TIMESTAMP DEBUG device.log: State update defer 1982ms
+TIMESTAMP DEBUG device.log: State update defer 1988ms
 TIMESTAMP DEBUG device.log: State update defer 0ms
 TIMESTAMP
-TIMESTAMP DEBUG device.log: State update AHU-1 (scan_periodic_now_enumerate)
-TIMESTAMP DEBUG   Handling device message events_system MP:8225961b
+TIMESTAMP DEBUG device.log: State update AHU-1 (scan_periodic_now_enumerate+vendor)
+TIMESTAMP DEBUG   Handling device message events_system MP:6665dcdd
 TIMESTAMP DEBUG   Capturing AHU-1 message events_system
-TIMESTAMP DEBUG   Received command AHU-1/events/discovery as MP:9b849f08
+TIMESTAMP DEBUG   Received command AHU-1/events/discovery as MP:7f63f9f2
 TIMESTAMP TRACE   Received events_discovery: {
 TIMESTAMP TRACE   Received events_discovery:   "event_no" : -5,
 TIMESTAMP TRACE   Received events_discovery:   "family" : "vendor",
@@ -2023,19 +1952,19 @@ TIMESTAMP TRACE   Received events_discovery:   },
 TIMESTAMP",
 TIMESTAMP TRACE   Received events_discovery:   "version" : "1.5.3"
 TIMESTAMP TRACE   Received events_discovery: }
-TIMESTAMP DEBUG   Handling device message events_discovery MP:9b849f08
+TIMESTAMP DEBUG   Handling device message events_discovery MP:7f63f9f2
 TIMESTAMP DEBUG   Capturing AHU-1 message events_discovery
-TIMESTAMP DEBUG   Received command AHU-1/state/update as MP:5cdbdd1a
+TIMESTAMP DEBUG   Received command AHU-1/state/update as MP:b69466d4
 TIMESTAMP DEBUG   Received state_update
-TIMESTAMP DEBUG   Handling update message state_update MP:5cdbdd1a
+TIMESTAMP DEBUG   Handling update message state_update MP:b69466d4
 TIMESTAMP DEBUG   Capturing AHU-1 message state_update
-TIMESTAMP MP:5cdbdd1a
+TIMESTAMP MP:b69466d4
 TIMESTAMP INFO    Updated state #050: Changed 3 fields:
 TIMESTAMP`
 TIMESTAMP INFO    Updated state #050:   Set `discovery.families.vendor.phase` = `pending`
 TIMESTAMP`
 TIMESTAMP)
-TIMESTAMP DEBUG   Received command AHU-1/state/system as MP:5cdbdd1a-0
+TIMESTAMP DEBUG   Received command AHU-1/state/system as MP:b69466d4-0
 TIMESTAMP TRACE   Received state_system: {
 TIMESTAMP TRACE   Received state_system:   "hardware" : {
 TIMESTAMP TRACE   Received state_system:     "make" : "BOS",
@@ -2048,7 +1977,7 @@ TIMESTAMP",
 TIMESTAMP TRACE   Received state_system:     "restart_count" : 1,
 TIMESTAMP TRACE   Received state_system:     "mode" : "initial"
 TIMESTAMP TRACE   Received state_system:   },
-TIMESTAMP TRACE   Received state_system:   "serial_no" : "sequencer-27902",
+TIMESTAMP TRACE   Received state_system:   "serial_no" : "sequencer-19868",
 TIMESTAMP TRACE   Received state_system:   "software" : {
 TIMESTAMP TRACE   Received state_system:     "firmware" : "v1"
 TIMESTAMP TRACE   Received state_system:   },
@@ -2061,9 +1990,9 @@ TIMESTAMP TRACE   Received state_system:   },
 TIMESTAMP",
 TIMESTAMP TRACE   Received state_system:   "version" : "1.5.3"
 TIMESTAMP TRACE   Received state_system: }
-TIMESTAMP DEBUG   Handling device message state_system MP:5cdbdd1a-0
+TIMESTAMP DEBUG   Handling device message state_system MP:b69466d4-0
 TIMESTAMP TRACE   Ignoring partial state update
-TIMESTAMP DEBUG   Received command AHU-1/state/discovery as MP:5cdbdd1a-1
+TIMESTAMP DEBUG   Received command AHU-1/state/discovery as MP:b69466d4-1
 TIMESTAMP TRACE   Received state_discovery: {
 TIMESTAMP TRACE   Received state_discovery:   "families" : {
 TIMESTAMP TRACE   Received state_discovery:     "vendor" : {
@@ -2075,16 +2004,16 @@ TIMESTAMP TRACE   Received state_discovery:   },
 TIMESTAMP",
 TIMESTAMP TRACE   Received state_discovery:   "version" : "1.5.3"
 TIMESTAMP TRACE   Received state_discovery: }
-TIMESTAMP DEBUG   Handling device message state_discovery MP:5cdbdd1a-1
+TIMESTAMP DEBUG   Handling device message state_discovery MP:b69466d4-1
 TIMESTAMP TRACE   Ignoring partial state update
-TIMESTAMP DEBUG   Received command AHU-1/state/localnet as MP:5cdbdd1a-2
+TIMESTAMP DEBUG   Received command AHU-1/state/localnet as MP:b69466d4-2
 TIMESTAMP TRACE   Received state_localnet: {
 TIMESTAMP TRACE   Received state_localnet:   "families" : {
 TIMESTAMP TRACE   Received state_localnet:     "ether" : {
-TIMESTAMP TRACE   Received state_localnet:       "addr" : "7c:1e:52:05:17:a4"
+TIMESTAMP TRACE   Received state_localnet:       "addr" : "7c:1e:52:17:b3:35"
 TIMESTAMP TRACE   Received state_localnet:     },
 TIMESTAMP TRACE   Received state_localnet:     "ipv4" : {
-TIMESTAMP TRACE   Received state_localnet:       "addr" : "10.1.0.78"
+TIMESTAMP TRACE   Received state_localnet:       "addr" : "10.1.0.118"
 TIMESTAMP TRACE   Received state_localnet:     },
 TIMESTAMP TRACE   Received state_localnet:     "vendor" : {
 TIMESTAMP TRACE   Received state_localnet:       "addr" : "28179023"
@@ -2096,9 +2025,9 @@ TIMESTAMP TRACE   Received state_localnet:   },
 TIMESTAMP",
 TIMESTAMP TRACE   Received state_localnet:   "version" : "1.5.3"
 TIMESTAMP TRACE   Received state_localnet: }
-TIMESTAMP DEBUG   Handling device message state_localnet MP:5cdbdd1a-2
+TIMESTAMP DEBUG   Handling device message state_localnet MP:b69466d4-2
 TIMESTAMP TRACE   Ignoring partial state update
-TIMESTAMP DEBUG   Received command AHU-1/state/pointset as MP:5cdbdd1a-3
+TIMESTAMP DEBUG   Received command AHU-1/state/pointset as MP:b69466d4-3
 TIMESTAMP TRACE   Received state_pointset: {
 TIMESTAMP TRACE   Received state_pointset:   "points" : {
 TIMESTAMP TRACE   Received state_pointset:     "filter_alarm_pressure_status" : {
@@ -2115,9 +2044,99 @@ TIMESTAMP TRACE   Received state_pointset:   },
 TIMESTAMP",
 TIMESTAMP TRACE   Received state_pointset:   "version" : "1.5.3"
 TIMESTAMP TRACE   Received state_pointset: }
-TIMESTAMP DEBUG   Handling device message state_pointset MP:5cdbdd1a-3
+TIMESTAMP DEBUG   Handling device message state_pointset MP:b69466d4-3
 TIMESTAMP TRACE   Ignoring partial state update
-TIMESTAMP DEBUG   Received command AHU-1/events/pointset as MP:3c1dec8e
+TIMESTAMP DEBUG   Received command AHU-1/state/update as MP:fa853016
+TIMESTAMP DEBUG   Received state_update
+TIMESTAMP DEBUG   Handling update message state_update MP:fa853016
+TIMESTAMP DEBUG   Capturing AHU-1 message state_update
+TIMESTAMP MP:fa853016
+TIMESTAMP INFO    Updated state #051: Changed 1 fields:
+TIMESTAMP`
+TIMESTAMP)
+TIMESTAMP DEBUG   Received command AHU-1/state/system as MP:fa853016-0
+TIMESTAMP TRACE   Received state_system: {
+TIMESTAMP TRACE   Received state_system:   "hardware" : {
+TIMESTAMP TRACE   Received state_system:     "make" : "BOS",
+TIMESTAMP TRACE   Received state_system:     "model" : "pubber"
+TIMESTAMP TRACE   Received state_system:   },
+TIMESTAMP",
+TIMESTAMP TRACE   Received state_system:   "operation" : {
+TIMESTAMP TRACE   Received state_system:     "operational" : true,
+TIMESTAMP",
+TIMESTAMP TRACE   Received state_system:     "restart_count" : 1,
+TIMESTAMP TRACE   Received state_system:     "mode" : "initial"
+TIMESTAMP TRACE   Received state_system:   },
+TIMESTAMP TRACE   Received state_system:   "serial_no" : "sequencer-19868",
+TIMESTAMP TRACE   Received state_system:   "software" : {
+TIMESTAMP TRACE   Received state_system:     "firmware" : "v1"
+TIMESTAMP TRACE   Received state_system:   },
+TIMESTAMP TRACE   Received state_system:   "status" : {
+TIMESTAMP TRACE   Received state_system:     "message" : "success",
+TIMESTAMP TRACE   Received state_system:     "category" : "system.config.apply",
+TIMESTAMP",
+TIMESTAMP TRACE   Received state_system:     "level" : 300
+TIMESTAMP TRACE   Received state_system:   },
+TIMESTAMP",
+TIMESTAMP TRACE   Received state_system:   "version" : "1.5.3"
+TIMESTAMP TRACE   Received state_system: }
+TIMESTAMP DEBUG   Handling device message state_system MP:fa853016-0
+TIMESTAMP TRACE   Ignoring partial state update
+TIMESTAMP DEBUG   Received command AHU-1/state/discovery as MP:fa853016-1
+TIMESTAMP TRACE   Received state_discovery: {
+TIMESTAMP TRACE   Received state_discovery:   "families" : {
+TIMESTAMP TRACE   Received state_discovery:     "vendor" : {
+TIMESTAMP",
+TIMESTAMP TRACE   Received state_discovery:       "phase" : "pending",
+TIMESTAMP TRACE   Received state_discovery:       "active_count" : 4
+TIMESTAMP TRACE   Received state_discovery:     }
+TIMESTAMP TRACE   Received state_discovery:   },
+TIMESTAMP",
+TIMESTAMP TRACE   Received state_discovery:   "version" : "1.5.3"
+TIMESTAMP TRACE   Received state_discovery: }
+TIMESTAMP DEBUG   Handling device message state_discovery MP:fa853016-1
+TIMESTAMP TRACE   Ignoring partial state update
+TIMESTAMP DEBUG   Received command AHU-1/state/localnet as MP:fa853016-2
+TIMESTAMP TRACE   Received state_localnet: {
+TIMESTAMP TRACE   Received state_localnet:   "families" : {
+TIMESTAMP TRACE   Received state_localnet:     "ether" : {
+TIMESTAMP TRACE   Received state_localnet:       "addr" : "7c:1e:52:17:b3:35"
+TIMESTAMP TRACE   Received state_localnet:     },
+TIMESTAMP TRACE   Received state_localnet:     "ipv4" : {
+TIMESTAMP TRACE   Received state_localnet:       "addr" : "10.1.0.118"
+TIMESTAMP TRACE   Received state_localnet:     },
+TIMESTAMP TRACE   Received state_localnet:     "vendor" : {
+TIMESTAMP TRACE   Received state_localnet:       "addr" : "28179023"
+TIMESTAMP TRACE   Received state_localnet:     },
+TIMESTAMP TRACE   Received state_localnet:     "bacnet" : {
+TIMESTAMP TRACE   Received state_localnet:       "addr" : "27312"
+TIMESTAMP TRACE   Received state_localnet:     }
+TIMESTAMP TRACE   Received state_localnet:   },
+TIMESTAMP",
+TIMESTAMP TRACE   Received state_localnet:   "version" : "1.5.3"
+TIMESTAMP TRACE   Received state_localnet: }
+TIMESTAMP DEBUG   Handling device message state_localnet MP:fa853016-2
+TIMESTAMP TRACE   Ignoring partial state update
+TIMESTAMP DEBUG   Received command AHU-1/state/pointset as MP:fa853016-3
+TIMESTAMP TRACE   Received state_pointset: {
+TIMESTAMP TRACE   Received state_pointset:   "points" : {
+TIMESTAMP TRACE   Received state_pointset:     "filter_alarm_pressure_status" : {
+TIMESTAMP TRACE   Received state_pointset:       "units" : "No-units"
+TIMESTAMP TRACE   Received state_pointset:     },
+TIMESTAMP TRACE   Received state_pointset:     "filter_differential_pressure_setpoint" : {
+TIMESTAMP TRACE   Received state_pointset:       "units" : "Bars",
+TIMESTAMP TRACE   Received state_pointset:       "value_state" : "applied"
+TIMESTAMP TRACE   Received state_pointset:     },
+TIMESTAMP TRACE   Received state_pointset:     "filter_differential_pressure_sensor" : {
+TIMESTAMP TRACE   Received state_pointset:       "units" : "Degrees-Celsius"
+TIMESTAMP TRACE   Received state_pointset:     }
+TIMESTAMP TRACE   Received state_pointset:   },
+TIMESTAMP",
+TIMESTAMP TRACE   Received state_pointset:   "version" : "1.5.3"
+TIMESTAMP TRACE   Received state_pointset: }
+TIMESTAMP DEBUG   Handling device message state_pointset MP:fa853016-3
+TIMESTAMP TRACE   Ignoring partial state update
+TIMESTAMP DEBUG   Received command AHU-1/events/pointset as MP:039288bc
 TIMESTAMP TRACE   Received events_pointset: {
 TIMESTAMP TRACE   Received events_pointset:   "points" : {
 TIMESTAMP TRACE   Received events_pointset:     "filter_alarm_pressure_status" : {
@@ -2127,23 +2146,25 @@ TIMESTAMP TRACE   Received events_pointset:     "filter_differential_pressure_se
 TIMESTAMP TRACE   Received events_pointset:       "present_value" : 98
 TIMESTAMP TRACE   Received events_pointset:     },
 TIMESTAMP TRACE   Received events_pointset:     "filter_differential_pressure_sensor" : {
-TIMESTAMP TRACE   Received events_pointset:       "present_value" : 10
+TIMESTAMP TRACE   Received events_pointset:       "present_value" : 9
 TIMESTAMP TRACE   Received events_pointset:     }
 TIMESTAMP TRACE   Received events_pointset:   },
 TIMESTAMP",
 TIMESTAMP TRACE   Received events_pointset:   "version" : "1.5.3"
 TIMESTAMP TRACE   Received events_pointset: }
-TIMESTAMP DEBUG   Handling device message events_pointset MP:3c1dec8e
+TIMESTAMP DEBUG   Handling device message events_pointset MP:039288bc
 TIMESTAMP DEBUG   Capturing AHU-1 message events_pointset
-TIMESTAMP DEBUG   Received command AHU-1/events/system as MP:ecf6b9c9
+TIMESTAMP DEBUG   Received command AHU-1/events/system as MP:e4e5d5e3
 TIMESTAMP)
 TIMESTAMP
 TIMESTAMP
 TIMESTAMP DEBUG device.log: Scheduling future in 10000ms
-TIMESTAMP DEBUG device.log: State update defer -5986ms
+TIMESTAMP DEBUG device.log: State update AHU-1 (scan_periodic_now_enumerate+vendor)
+TIMESTAMP DEBUG device.log: State update defer 2000ms
+TIMESTAMP DEBUG device.log: State update defer -1ms
 TIMESTAMP
-TIMESTAMP DEBUG device.log: State update AHU-1 (scan_periodic_now_enumerate)
-TIMESTAMP DEBUG   Handling device message events_system MP:ecf6b9c9
+TIMESTAMP DEBUG device.log: State update AHU-1 (scan_periodic_now_enumerate+vendor)
+TIMESTAMP DEBUG   Handling device message events_system MP:e4e5d5e3
 TIMESTAMP DEBUG   Capturing AHU-1 message events_system
 TIMESTAMP DEBUG   Stage finished waiting for scan iterations at @75s after 40s
 TIMESTAMP TRACE   Stage resume waiting for executing test at @75s
@@ -2151,6 +2172,6 @@ TIMESTAMP DEBUG   Recorded sequence: 1. Check that scan did not terminate premat
 TIMESTAMP DEBUG   Recorded sequence: 1. Check that all events have matching refs
 TIMESTAMP DEBUG   stage done waiting for executing test at @75s
 TIMESTAMP DEBUG   Removing implicit system capability LAST_CONFIG
-TIMESTAMP NOTICE  RESULT pass discovery.scan scan_periodic_now_enumerate PREVIEW 10/10 Sequence complete
+TIMESTAMP NOTICE  RESULT pass discovery.scan scan_periodic_now_enumerate+vendor PREVIEW 10/10 Sequence complete
 TIMESTAMP NOTICE  Sequence complete
-TIMESTAMP NOTICE  Ending test scan_periodic_now_enumerate after @75s ################################
+TIMESTAMP NOTICE  Ending test scan_periodic_now_enumerate+vendor after @75s ################################
