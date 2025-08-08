@@ -54,6 +54,7 @@
           <package name="" withSubpackages="true" static="false" />
         </value>
       </option>
+      <option name="JD_P_AT_EMPTY_LINES" value="false" />
     </JavaCodeStyleSettings>
     <Objective-C>
       <option name="INDENT_NAMESPACE_MEMBERS" value="0" />
