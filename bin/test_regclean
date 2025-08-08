@@ -62,6 +62,7 @@ echo bin/keygen CERT $device_dir
 bin/keygen CERT $device_dir || true
 
 pubber/bin/build
+sleep 2
 validator/bin/build
 
 echo Clean site out/ directory...
@@ -235,16 +236,12 @@ timeout 30s bin/pubber $pubber_config 2> $pubber_log || result=$?
 
 echo Successful pubber check passed on clean registry.
 
-echo Munging num_id to check registrar update
-jq -r ".cloud.num_id=\"to_be_reset\"" $device_metadata | sponge $device_metadata
-
 echo Registering everything to end up with everything in place
 echo bin/registrar $site_args -u
 bin/registrar $site_args -u
 
-fgrep "Updated 1 device metadata files." $registrar_log
-num_id=$(jq -r ".cloud.num_id" $device_metadata)
-[[ $num_id != to_be_reset ]] || fail Device num_id was not reset.
+echo Checking that only un-specificed devices have num_id updates...
+fgrep "Updated 3 device metadata files." $registrar_log
 
 if [[ -n $solo_arg ]]; then
     echo Deleting singular entry $solo_arg...

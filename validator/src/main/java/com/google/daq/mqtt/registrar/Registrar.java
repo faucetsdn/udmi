@@ -158,6 +158,7 @@ public class Registrar {
       "bin/registrar site_spec [options] [devices...]");
   private final CommandLineProcessor commandLineProcessor = new CommandLineProcessor(this,
       usageForms);
+  private final AtomicInteger updatedDevices = new AtomicInteger();
   private CloudIotManager cloudIotManager;
   private File schemaBase;
   private PubSubPusher updatePusher;
@@ -244,10 +245,10 @@ public class Registrar {
 
   /**
    * process the arguments and create new SiteModel.
-   * argumentListRaw includes: site_path project_spec deviceList
    *
-   * @param argListRaw
+   * <p/>argumentListRaw includes: site_path project_spec deviceList
    *
+   * @param argListRaw raw list of arguments to process
    * @return Registrar Instance
    */
   public Registrar processArgs(List<String> argListRaw) {
@@ -378,7 +379,6 @@ public class Registrar {
       } else {
         processSiteMetadata();
         processAllDevices(modelMunger);
-        ifTrueThen(updateMetadata, this::updateDeviceMetadata);
       }
       writeErrors();
     } catch (ExceptionMap em) {
@@ -398,29 +398,25 @@ public class Registrar {
     lastRunTimestamp = catchToNull(() -> asMap(registrationHistory).get(TIMESTAMP_KEY).toString());
   }
 
-  private void updateDeviceMetadata() {
+  private void updateDeviceMetadata(String deviceId) {
     checkNotNull(projectId, "can't update metadata: cloud project not defined");
-    AtomicInteger updatedCount = new AtomicInteger();
-    siteModel.forEachMetadata((deviceId, metadata) -> {
-      CloudModel registeredDevice = cloudIotManager.getRegisteredDevice(deviceId);
-      if (registeredDevice == null) {
-        return;
-      }
-      Metadata localMetadata = siteModel.getMetadata(deviceId);
-      if (localMetadata.cloud == null) {
-        localMetadata.cloud = new CloudModel();
-      }
-      String localId = localMetadata.cloud.num_id;
-      String registeredId = registeredDevice.num_id;
-      if (!Common.EMPTY_RETURN_RECEIPT.equals(registeredId)) {
-        localMetadata.cloud.num_id = registeredId;
-        if (siteModel.updateMetadata(deviceId, localMetadata)) {
-          updatedCount.incrementAndGet();
-          System.err.printf("Updated num_id for %s: %s -> %s%n", deviceId, localId, registeredId);
-        }
-      }
-    });
-    System.err.printf("Updated %d device metadata files.%n", updatedCount.get());
+
+    CloudModel registeredDevice = cloudModels.get(deviceId);
+    if (registeredDevice == null) {
+      return;
+    }
+    Metadata localMetadata = workingDevices.get(deviceId).getMetadata();
+    if (localMetadata.cloud == null) {
+      localMetadata.cloud = new CloudModel();
+    }
+    String registeredId = registeredDevice.num_id;
+    if (!Common.EMPTY_RETURN_RECEIPT.equals(registeredId)
+        && !registeredId.equals(localMetadata.cloud.num_id)) {
+      System.err.printf("Updating device %s num_id %s -> %s%n",
+          deviceId, localMetadata.cloud.num_id, registeredId);
+      localMetadata.cloud.num_id = registeredId;
+      updatedDevices.incrementAndGet();
+    }
   }
 
   private boolean isMockProject() {
@@ -650,11 +646,14 @@ public class Registrar {
         total += processDevices(targetDevices);
       }
 
+      System.err.printf("Updated %d device metadata files.%n", updatedDevices.get());
       System.err.printf("Finished processing %d/%d devices.%n", total, targetDevices.size());
 
       if (updateCloudIoT) {
         bindGatewayDevices(targetLocals);
       }
+
+      finalizeLocalDevices();
 
       if (cloudModels != null && !isTargeted && !instantiateExtras) {
         extraDevices = processExtraDevices(difference(cloudModels.keySet(), targetDevices));
@@ -927,6 +926,7 @@ public class Registrar {
         System.err.printf("Processed %s (%d/%d) in %.03fs (%s)%n", localName, count, totalCount,
             seconds, created ? "add" : "update");
       }
+      ifTrueThen(updateMetadata, () -> updateDeviceMetadata(localName));
     } catch (Exception e) {
       System.err.printf("Error processing %s: %s%n", localDevice.getDeviceId(), e);
       localDevice.captureError(ExceptionCategory.registering, e);
@@ -1447,6 +1447,9 @@ public class Registrar {
     preprocessMetadata(workingDevices);
     expandDependencies(workingDevices);
     initializeSettings(workingDevices);
+  }
+
+  private void finalizeLocalDevices() {
     writeNormalized(workingDevices);
     previewModels(workingDevices);
     validateExpected(workingDevices);
