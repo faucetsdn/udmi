@@ -99,6 +99,7 @@ if [[ -n $update ]]; then
             cp -a $src_dir $cache_dir
             rm -rf $cache_dir/trace $cache_dir/stray
             find $cache_dir -type f | xargs -n 1 sed -E -i \
+                                            -e 's/ZZ-TRI-FECTA_./ZZ-TRI-FECTA/' \
                                             -e 's/"transactionId.*/REDACTED_TXN_ID/' \
                                             -e 's/202.-..-..T.*Z/TIMESTAMP/'
             ls -l $src_dir/sequence.md $cache_dir/sequence.md
