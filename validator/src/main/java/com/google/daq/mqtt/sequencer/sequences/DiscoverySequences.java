@@ -290,6 +290,7 @@ public class DiscoverySequences extends SequenceBase {
   @Summary("Check results of a single scan targeting specific devices")
   public void scan_single_targeted() {
     SortedSet<String> expectedAddresses = new TreeSet<>(expectedTargetDevices(null));
+    info("Found target addresses " + expectedAddresses);
     ifTrueSkipTest(expectedAddresses.size() <= SCAN_TARGET_COUNT,
         "Not enough targets to test targeted scan");
     Set<String> targets = expectedAddresses.stream().limit(SCAN_TARGET_COUNT).collect(toSet());
@@ -310,6 +311,7 @@ public class DiscoverySequences extends SequenceBase {
   @Summary("Check results of a single scan targeting specific devices")
   public void scan_network_single() {
     SortedSet<String> networks = expectedTargetNetworks(null);
+    info("Found target networks " + networks);
     ifTrueSkipTest(networks.size() < 2, "not enough networks for test");
     String targetNetwork = networks.removeFirst();
     scanAndVerify(cleanInstantDate(Instant.now().minusSeconds(1)), PLEASE_ENUMERATE,
@@ -430,6 +432,7 @@ public class DiscoverySequences extends SequenceBase {
   }
 
   private SortedSet<String> expectedTargetDevices(Set<String> networks) {
+    initializeFamilies();
     return siteModel.metadataStream()
         .filter(entry -> onExpectedNetwork(entry, networks))
         .map(this::scanFamilyAddr)
@@ -437,11 +440,13 @@ public class DiscoverySequences extends SequenceBase {
   }
 
   private boolean onExpectedNetwork(Entry<String, Metadata> entry, Set<String> networks) {
+    requireNonNull(scanFamily, "no scan family defined");
     return networks == null || networks.contains(catchToNull(() ->
         entry.getValue().localnet.families.get(scanFamily).network));
   }
 
   private SortedSet<String> expectedTargetNetworks(Set<String> targets) {
+    initializeFamilies();
     return siteModel.metadataStream()
         .filter(entry -> targets == null || targets.contains(getLocalnetAddr(entry)))
         .map(this::scanFamilyNetwork)
@@ -565,6 +570,7 @@ public class DiscoverySequences extends SequenceBase {
   }
 
   private String scanFamilyNetwork(Entry<String, Metadata> entry) {
+    requireNonNull(scanFamily, "no scan family defined");
     return catchToNull(() -> entry.getValue().localnet.families.get(scanFamily).network);
   }
 
@@ -590,6 +596,20 @@ public class DiscoverySequences extends SequenceBase {
   }
 
   private void initializeDiscovery() {
+    initializeFamilies();
+    deviceConfig.discovery = new DiscoveryConfig();
+    deviceConfig.discovery.families = new HashMap<>();
+    untilTrue("discovery families defined", () -> deviceState.discovery.families != null);
+    Map<String, FamilyDiscoveryConfig> configFamilies = deviceConfig.discovery.families;
+    Map<String, FamilyDiscoveryState> stateFamilies = deviceState.discovery.families;
+    waitUntil("discovery family keys match", () -> joinOrNull("mismatch: ",
+        symmetricDifference(configFamilies.keySet(), stateFamilies.keySet())
+    ));
+    untilTrue("no scans active",
+        () -> stateFamilies.keySet().stream().noneMatch(scanActive()));
+  }
+
+  private void initializeFamilies() {
     scanFamily = getFacetValue(SubFolder.DISCOVERY);
     checkState(scanFamily != null, "No scan family defined for discovery");
     providerFamily = FamilyProvider.NAMED_FAMILIES.get(scanFamily);
@@ -601,16 +621,6 @@ public class DiscoverySequences extends SequenceBase {
     }
     checkState(metaFamilies.contains(scanFamily),
         format("Discovery scan family %s not specified in metadata", scanFamily));
-    deviceConfig.discovery = new DiscoveryConfig();
-    deviceConfig.discovery.families = new HashMap<>();
-    untilTrue("discovery families defined", () -> deviceState.discovery.families != null);
-    Map<String, FamilyDiscoveryConfig> configFamilies = deviceConfig.discovery.families;
-    Map<String, FamilyDiscoveryState> stateFamilies = deviceState.discovery.families;
-    waitUntil("discovery family keys match", () -> joinOrNull("mismatch: ",
-        symmetricDifference(configFamilies.keySet(), stateFamilies.keySet())
-    ));
-    untilTrue("no scans active",
-        () -> stateFamilies.keySet().stream().noneMatch(scanActive()));
   }
 
   private void configureScan(Instant startTime, Duration scanInterval,
