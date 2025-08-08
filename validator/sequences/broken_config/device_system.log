@@ -1,95 +1,150 @@
-2024-12-01T09:19:19Z WARNING device.log             Start waiting 10s for config latch for AHU-1
-2024-12-01T09:19:19Z WARNING device.log             Starting AHU-1 Pubber sender with delay 10s
-2024-12-01T09:19:19Z WARNING device.log             Dropping state update until config received...
-2024-12-01T09:19:19Z WARNING device.log             Received config for config latch AHU-1
-2024-12-01T09:19:19Z WARNING device.log             Ending connection 1733044758867 with 9
-2024-12-01T09:19:19Z NOTICE  system.config.apply    success
-2024-12-01T09:19:19Z NOTICE  system.config.apply    success
-2024-12-01T09:19:31Z NOTICE  system.config.apply    success
-2024-12-01T09:19:31Z INFO    device.log             Update state 2024-12-01T09:19:31Z last_config 2024-12-01T09:19:31Z
-2024-12-01T09:19:31Z INFO    device.log             Device AHU-1 config handler
-2024-12-01T09:19:31Z INFO    device.log             2024-12-01T09:19:31Z received config 2024-12-01T09:19:31Z
-2024-12-01T09:19:31Z NOTICE  system.config.apply    success
-2024-12-01T09:19:33Z INFO    device.log             Update state 2024-12-01T09:19:33Z last_config 2024-12-01T09:19:31Z
-2024-12-01T09:19:34Z INFO    device.log             Device AHU-1 config handler
-2024-12-01T09:19:34Z INFO    device.log             2024-12-01T09:19:34Z received config 2024-12-01T09:19:34Z
-2024-12-01T09:19:34Z NOTICE  system.config.apply    success
-2024-12-01T09:19:35Z INFO    device.log             Update state 2024-12-01T09:19:35Z last_config 2024-12-01T09:19:34Z
-2024-12-01T09:19:36Z INFO    device.log             Device AHU-1 config handler
-2024-12-01T09:19:36Z INFO    device.log             2024-12-01T09:19:36Z received config 2024-12-01T09:19:36Z
-2024-12-01T09:19:36Z NOTICE  system.config.apply    success
-2024-12-01T09:19:37Z INFO    device.log             Update state 2024-12-01T09:19:37Z last_config 2024-12-01T09:19:36Z
-2024-12-01T09:19:38Z INFO    device.log             Device AHU-1 config handler
-2024-12-01T09:19:38Z INFO    device.log             2024-12-01T09:19:38Z received config 2024-12-01T09:19:38Z
-2024-12-01T09:19:38Z DEBUG   device.log             State update defer 898ms
-2024-12-01T09:19:38Z DEBUG   device.log             State update defer 898ms
-2024-12-01T09:19:38Z DEBUG   device.log             State update defer 898ms
-2024-12-01T09:19:38Z DEBUG   device.log             State update defer 897ms
-2024-12-01T09:19:38Z DEBUG   device.log             State update defer 897ms
-2024-12-01T09:19:38Z NOTICE  system.config.apply    success
-2024-12-01T09:19:38Z DEBUG   device.log             State update defer 897ms
-2024-12-01T09:19:38Z DEBUG   device.log             State update defer 896ms
-2024-12-01T09:19:39Z DEBUG   device.log             State update defer 164ms
-2024-12-01T09:19:39Z DEBUG   device.log             State update defer 0ms
-2024-12-01T09:19:39Z INFO    device.log             Update state 2024-12-01T09:19:39Z last_config 2024-12-01T09:19:38Z
-2024-12-01T09:19:39Z DEBUG   device.log             State update AHU-1 (broken_config)
-2024-12-01T09:19:40Z DEBUG   system.config.receive  success
-2024-12-01T09:19:40Z DEBUG   device.log             State update defer 1709ms
-2024-12-01T09:19:40Z DEBUG   system.config.parse    success
-2024-12-01T09:19:40Z INFO    device.log             Device AHU-1 config handler
-2024-12-01T09:19:40Z DEBUG   device.log             State update defer 1708ms
-2024-12-01T09:19:40Z DEBUG   device.log             Config update AHU-1 (broken_config)
-2024-12-01T09:19:40Z INFO    device.log             2024-12-01T09:19:40Z received config 2024-12-01T09:19:39Z
-2024-12-01T09:19:40Z NOTICE  system.config.apply    success
-2024-12-01T09:19:40Z DEBUG   device.log             State update defer 1706ms
-2024-12-01T09:19:41Z DEBUG   system.config.receive  success
-2024-12-01T09:19:41Z DEBUG   device.log             State update defer 599ms
-2024-12-01T09:19:41Z DEBUG   system.config.parse    success
-2024-12-01T09:19:41Z DEBUG   device.log             State update defer 598ms
-2024-12-01T09:19:41Z DEBUG   device.log             Config update AHU-1 (broken_config)
-2024-12-01T09:19:41Z INFO    device.log             2024-12-01T09:19:41Z received config 2024-12-01T09:19:41Z
-2024-12-01T09:19:41Z NOTICE  system.config.apply    success
-2024-12-01T09:19:41Z DEBUG   device.log             State update defer 596ms
-2024-12-01T09:19:41Z DEBUG   device.log             State update defer 595ms
-2024-12-01T09:19:41Z DEBUG   device.log             State update defer 595ms
-2024-12-01T09:19:41Z DEBUG   device.log             State update defer 595ms
-2024-12-01T09:19:41Z DEBUG   device.log             State update defer 595ms
-2024-12-01T09:19:41Z DEBUG   device.log             State update defer 594ms
-2024-12-01T09:19:41Z DEBUG   device.log             State update defer 0ms
-2024-12-01T09:19:41Z INFO    device.log             Update state 2024-12-01T09:19:41Z last_config 2024-12-01T09:19:41Z
-2024-12-01T09:19:41Z DEBUG   device.log             State update AHU-1 (broken_config)
-2024-12-01T09:19:44Z DEBUG   system.config.receive  success
-2024-12-01T09:19:44Z DEBUG   device.log             State update defer -1110ms
-2024-12-01T09:19:44Z INFO    device.log             Update state 2024-12-01T09:19:44Z last_config 2024-12-01T09:19:41Z
-2024-12-01T09:19:44Z ERROR   device.log             Error receiving message config: Unexpected character ('b' (code 98)): was expecting double-quote to start field name
+TIMESTAMP INFO    device.log             Configured with auth_type RS256
+TIMESTAMP INFO    device.log             Using addresses from default interface: eth0 for family: ipv4
+TIMESTAMP INFO    device.log             Family ipv4 address is 10.1.0.233
+TIMESTAMP INFO    device.log             Using addresses from default interface: eth0 for family: ether
+TIMESTAMP INFO    device.log             Family ether address is 7c:ed:8d:7b:00:49
+TIMESTAMP INFO    device.log             Loading endpoint into persistent data from configuration
+TIMESTAMP WARNING device.log             Updating persistent store:
+{
+  "endpoint" : {
+    "protocol" : "mqtt",
+    "transport" : "ssl",
+    "hostname" : "localhost",
+    "client_id" : "/r/ZZ-TRI-FECTA/d/AHU-1",
+    "topic_prefix" : "/r/ZZ-TRI-FECTA/d/AHU-1",
+    "auth_provider" : {
+      "basic" : {
+        "username" : "/r/ZZ-TRI-FECTA/d/AHU-1",
+        "password" : "38269d11"
+      }
+    }
+  },
+  "restart_count" : 1
+}
+TIMESTAMP INFO    device.log             Starting pubber AHU-1, serial sequencer-17770, mac null, gateway null, options noPersist
+TIMESTAMP WARNING device.log             Starting connection 1754632117938 with 0
+TIMESTAMP INFO    device.log             Loading device key bytes from /home/runner/work/udmi/udmi/sites/udmi_site_model/devices/AHU-1/rsa_private.pkcs8
+TIMESTAMP INFO    device.log             CA cert file: /home/runner/work/udmi/udmi/sites/udmi_site_model/reflector/ca.crt
+TIMESTAMP INFO    device.log             Device cert file: /home/runner/work/udmi/udmi/sites/udmi_site_model/devices/AHU-1/rsa_private.crt
+TIMESTAMP INFO    device.log             Private key file: /home/runner/work/udmi/udmi/sites/udmi_site_model/devices/AHU-1/rsa_private.pem
+TIMESTAMP INFO    device.log             Password sha256 6b5344e1
+TIMESTAMP WARNING device.log             Creating new config latch for AHU-1
+TIMESTAMP
+TIMESTAMP WARNING device.log             Dropping state update until config received...
+TIMESTAMP
+TIMESTAMP WARNING device.log             Dropping state update until config received...
+TIMESTAMP INFO    device.log             Device AHU-1 config handler
+TIMESTAMP
+TIMESTAMP WARNING device.log             Dropping state update until config received...
+TIMESTAMP INFO    device.log             Connection complete.
+TIMESTAMP WARNING device.log             Received config for config latch AHU-1
+TIMESTAMP WARNING device.log             Starting AHU-1 PubberPublisherHost sender with delay 10s
+TIMESTAMP
+TIMESTAMP WARNING device.log             Starting AHU-1 PubberSystemManager sender with delay 10s
+TIMESTAMP WARNING device.log             Start waiting 10s for config latch for AHU-1
+TIMESTAMP WARNING device.log             Ending connection 1754632117938 with 1
+TIMESTAMP WARNING device.log             Starting AHU-1 PubberPointsetManager sender with delay 10s
+TIMESTAMP NOTICE  system.config.apply    success
+TIMESTAMP NOTICE  system.config.apply    success
+TIMESTAMP NOTICE  system.config.apply    success
+TIMESTAMP INFO    device.log             Device AHU-1 config handler
+TIMESTAMP
+TIMESTAMP NOTICE  system.config.apply    success
+TIMESTAMP
+TIMESTAMP
+TIMESTAMP INFO    device.log             Device AHU-1 config handler
+TIMESTAMP
+TIMESTAMP NOTICE  system.config.apply    success
+TIMESTAMP
+TIMESTAMP INFO    device.log             Device AHU-1 config handler
+TIMESTAMP
+TIMESTAMP NOTICE  system.config.apply    success
+TIMESTAMP
+TIMESTAMP
+TIMESTAMP INFO    device.log             Device AHU-1 config handler
+TIMESTAMP
+TIMESTAMP NOTICE  system.config.apply    success
+TIMESTAMP
+TIMESTAMP NOTICE  system.config.apply    success
+TIMESTAMP DEBUG   device.log             State update defer 800ms
+TIMESTAMP DEBUG   device.log             State update defer 800ms
+TIMESTAMP DEBUG   device.log             State update defer 800ms
+TIMESTAMP DEBUG   device.log             State update defer 799ms
+TIMESTAMP DEBUG   device.log             State update defer 0ms
+TIMESTAMP
+TIMESTAMP DEBUG   device.log             State update AHU-1 (broken_config)
+TIMESTAMP DEBUG   system.config.receive  success
+TIMESTAMP DEBUG   device.log             State update defer 1600ms
+TIMESTAMP DEBUG   system.config.parse    success
+TIMESTAMP INFO    device.log             Device AHU-1 config handler
+TIMESTAMP DEBUG   device.log             Config update AHU-1 (broken_config)
+TIMESTAMP
+TIMESTAMP NOTICE  system.config.apply    success
+TIMESTAMP DEBUG   device.log             State update defer 1597ms
+TIMESTAMP DEBUG   device.log             State update defer 1596ms
+TIMESTAMP DEBUG   device.log             State update defer 1596ms
+TIMESTAMP DEBUG   device.log             State update defer 1595ms
+TIMESTAMP DEBUG   device.log             State update defer 1595ms
+TIMESTAMP DEBUG   device.log             State update defer 1595ms
+TIMESTAMP DEBUG   device.log             State update defer 1595ms
+TIMESTAMP DEBUG   system.config.receive  success
+TIMESTAMP DEBUG   device.log             State update defer 492ms
+TIMESTAMP DEBUG   system.config.parse    success
+TIMESTAMP INFO    device.log             Device AHU-1 config handler
+TIMESTAMP DEBUG   device.log             State update defer 491ms
+TIMESTAMP DEBUG   device.log             Config update AHU-1 (broken_config)
+TIMESTAMP
+TIMESTAMP NOTICE  system.config.apply    success
+TIMESTAMP DEBUG   device.log             State update defer 490ms
+TIMESTAMP DEBUG   device.log             State update defer 490ms
+TIMESTAMP DEBUG   device.log             State update defer 489ms
+TIMESTAMP DEBUG   device.log             State update defer 489ms
+TIMESTAMP DEBUG   device.log             State update defer 489ms
+TIMESTAMP DEBUG   device.log             State update defer 489ms
+TIMESTAMP DEBUG   device.log             State update defer 489ms
+TIMESTAMP DEBUG   device.log             State update defer 0ms
+TIMESTAMP
+TIMESTAMP DEBUG   device.log             State update AHU-1 (broken_config)
+TIMESTAMP DEBUG   system.config.receive  success
+TIMESTAMP DEBUG   device.log             State update defer -3064ms
+TIMESTAMP
+TIMESTAMP DEBUG   device.log             State update AHU-1 (broken_config)
+TIMESTAMP ERROR   device.log             Error receiving message config: Unexpected character ('b' (code 98)): was expecting double-quote to start field name
  at [Source: (String)"{ broken by extra_field == break_json"; line: 1, column: 4]
-2024-12-01T09:19:44Z DEBUG   device.log             State update AHU-1 (broken_config)
-2024-12-01T09:19:44Z ERROR   system.config.parse    Unexpected character ('b' (code 98)): was expecting double-quote to start field name
+TIMESTAMP ERROR   system.config.parse    Unexpected character ('b' (code 98)): was expecting double-quote to start field name
  at [Source: (String)"{ broken by extra_field == break_json"; line: 1, column: 4]
-2024-12-01T09:19:44Z DEBUG   device.log             State update defer 2000ms
-2024-12-01T09:19:46Z DEBUG   device.log             State update defer -1ms
-2024-12-01T09:19:46Z INFO    device.log             Update state 2024-12-01T09:19:46Z last_config 2024-12-01T09:19:41Z
-2024-12-01T09:19:46Z DEBUG   device.log             State update AHU-1 (broken_config)
-2024-12-01T09:20:03Z DEBUG   system.config.receive  success
-2024-12-01T09:20:03Z DEBUG   device.log             State update defer -14149ms
-2024-12-01T09:20:03Z INFO    device.log             Update state 2024-12-01T09:20:03Z last_config 2024-12-01T09:19:41Z
-2024-12-01T09:20:03Z DEBUG   device.log             State update AHU-1 (broken_config)
-2024-12-01T09:20:03Z DEBUG   system.config.parse    success
-2024-12-01T09:20:03Z INFO    device.log             Device AHU-1 config handler
-2024-12-01T09:20:03Z DEBUG   device.log             Config update AHU-1 (broken_config)
-2024-12-01T09:20:03Z DEBUG   device.log             State update defer 2000ms
-2024-12-01T09:20:03Z INFO    device.log             2024-12-01T09:20:03Z received config 2024-12-01T09:20:03Z
-2024-12-01T09:20:03Z NOTICE  system.config.apply    success
-2024-12-01T09:20:05Z INFO    device.log             Update state 2024-12-01T09:20:05Z last_config 2024-12-01T09:20:03Z
-2024-12-01T09:20:06Z INFO    device.log             Device AHU-1 config handler
-2024-12-01T09:20:06Z INFO    device.log             2024-12-01T09:20:06Z received config 2024-12-01T09:20:06Z
-2024-12-01T09:20:06Z NOTICE  system.config.apply    success
-2024-12-01T09:20:07Z INFO    device.log             Update state 2024-12-01T09:20:07Z last_config 2024-12-01T09:20:06Z
-2024-12-01T09:20:08Z INFO    device.log             Device AHU-1 config handler
-2024-12-01T09:20:08Z INFO    device.log             2024-12-01T09:20:08Z received config 2024-12-01T09:20:08Z
-2024-12-01T09:20:08Z NOTICE  system.config.apply    success
-2024-12-01T09:20:09Z INFO    device.log             Update state 2024-12-01T09:20:09Z last_config 2024-12-01T09:20:08Z
-2024-12-01T09:20:09Z INFO    device.log             Device AHU-1 config handler
-2024-12-01T09:20:09Z INFO    device.log             2024-12-01T09:20:09Z received config 2024-12-01T09:20:09Z
-2024-12-01T09:20:09Z NOTICE  system.config.apply    success
-2024-12-01T09:20:18Z NOTICE  validation.feature.sequence Sequence complete
+TIMESTAMP DEBUG   device.log             State update defer 2000ms
+TIMESTAMP DEBUG   device.log             State update defer 0ms
+TIMESTAMP
+TIMESTAMP DEBUG   device.log             State update AHU-1 (broken_config)
+TIMESTAMP DEBUG   system.config.receive  success
+TIMESTAMP DEBUG   device.log             State update defer -15029ms
+TIMESTAMP DEBUG   system.config.parse    success
+TIMESTAMP
+TIMESTAMP INFO    device.log             Device AHU-1 config handler
+TIMESTAMP DEBUG   device.log             State update AHU-1 (broken_config)
+TIMESTAMP DEBUG   device.log             Config update AHU-1 (broken_config)
+TIMESTAMP DEBUG   device.log             State update defer 1999ms
+TIMESTAMP
+TIMESTAMP NOTICE  system.config.apply    success
+TIMESTAMP
+TIMESTAMP INFO    device.log             Device AHU-1 config handler
+TIMESTAMP
+TIMESTAMP NOTICE  system.config.apply    success
+TIMESTAMP
+TIMESTAMP INFO    device.log             Device AHU-1 config handler
+TIMESTAMP
+TIMESTAMP
+TIMESTAMP NOTICE  system.config.apply    success
+TIMESTAMP INFO    device.log             Device AHU-1 config handler
+TIMESTAMP
+TIMESTAMP NOTICE  system.config.apply    success
+TIMESTAMP
+TIMESTAMP INFO    device.log             Device AHU-1 config handler
+TIMESTAMP
+TIMESTAMP NOTICE  system.config.apply    success
+TIMESTAMP INFO    device.log             Device AHU-1 config handler
+TIMESTAMP
+TIMESTAMP NOTICE  system.config.apply    success
+TIMESTAMP
+TIMESTAMP NOTICE  validation.feature.sequence Sequence complete

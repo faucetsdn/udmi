@@ -1,11 +1,11 @@
 {
-  "timestamp" : "2024-12-20T09:56:18Z",
-  "version" : "@@@cloud udmi version###git-61cf36e",
+  "timestamp" : "TIMESTAMP",
+  "version" : "@@@cloud udmi version###git-250ce5e",
   "system" : {
     "min_loglevel" : 100,
     "metrics_rate_sec" : 10,
     "operation" : {
-      "last_start" : "2024-12-20T09:54:40Z"
+      "last_start" : "TIMESTAMP"
     },
     "testing" : {
       "sequence_name" : "family_ether_addr"
@@ -13,7 +13,8 @@
   },
   "discovery" : {
     "families" : {
-      "vendor" : { }
+      "vendor" : { },
+      "bacnet" : { }
     }
   },
   "localnet" : {

@@ -1,20 +1,37 @@
 {
+  "timestamp" : "TIMESTAMP",
+  "version" : "@@@cloud udmi version###git-250ce5e",
+  "system" : {
+    "min_loglevel" : 100,
+    "metrics_rate_sec" : 10,
+    "operation" : {
+      "last_start" : "TIMESTAMP"
+    },
+    "testing" : {
+      "sequence_name" : "enumerate_nothing"
+    }
+  },
   "discovery" : {
     "enumerations" : { },
     "families" : {
-      "vendor" : { }
+      "vendor" : { },
+      "bacnet" : { }
     }
   },
   "localnet" : {
     "families" : {
-      "bacnet" : { },
       "ether" : { },
       "ipv4" : { },
-      "vendor" : { }
+      "vendor" : { },
+      "bacnet" : { }
     }
   },
   "pointset" : {
     "points" : {
+      "filter_differential_pressure_setpoint" : {
+        "units" : "Bars",
+        "set_value" : 98
+      },
       "filter_alarm_pressure_status" : {
         "ref" : "BV11.present_value",
         "units" : "No-units"
@@ -22,25 +39,7 @@
       "filter_differential_pressure_sensor" : {
         "ref" : "AV12.present_value",
         "units" : "Degrees-Celsius"
-      },
-      "filter_differential_pressure_setpoint" : {
-        "set_value" : 98,
-        "units" : "Bars"
       }
     }
-  },
-  "system" : {
-    "metrics_rate_sec" : 10,
-    "min_loglevel" : 100,
-    "operation" : {
-      "last_start" : "2024-12-11T05:43:51Z"
-    },
-    "testing" : {
-      "config_base" : 27,
-      "sequence_name" : "enumerate_nothing",
-      "transaction_id" : "RC:d82bb1.0000002e"
-    }
-  },
-  "timestamp" : "2024-12-11T05:44:45Z",
-  "version" : "git-85bdd38"
+  }
 }

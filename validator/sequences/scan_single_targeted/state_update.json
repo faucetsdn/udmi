@@ -1,20 +1,14 @@
 {
   "discovery" : {
-    "families" : {
-      "vendor" : {
-        "generation" : "TIMESTAMP",
-        "phase" : "stopped",
-        "active_count" : 2
-      }
-    }
+    "families" : { }
   },
   "localnet" : {
     "families" : {
       "ether" : {
-        "addr" : "60:45:bd:03:3a:df"
+        "addr" : "7c:ed:8d:56:4a:eb"
       },
       "ipv4" : {
-        "addr" : "10.1.0.156"
+        "addr" : "10.1.0.24"
       },
       "vendor" : {
         "addr" : "28179023"
@@ -46,7 +40,7 @@
       "restart_count" : 1,
       "mode" : "initial"
     },
-    "serial_no" : "sequencer-19342",
+    "serial_no" : "sequencer-23217",
     "hardware" : {
       "make" : "BOS",
       "model" : "pubber"

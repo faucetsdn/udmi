@@ -2,7 +2,7 @@
   "min_loglevel" : 200,
   "metrics_rate_sec" : 10,
   "operation" : {
-    "last_start" : "2024-12-01T09:19:18Z"
+    "last_start" : "TIMESTAMP"
   },
   "testing" : {
     "sequence_name" : "broken_config"

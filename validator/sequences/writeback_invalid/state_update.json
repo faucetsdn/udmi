@@ -5,16 +5,16 @@
   "localnet" : {
     "families" : {
       "ether" : {
-        "addr" : "7c:1e:52:09:18:d9"
+        "addr" : "7c:1e:52:b8:5b:89"
       },
       "ipv4" : {
-        "addr" : "10.1.0.94"
+        "addr" : "10.1.0.142"
       },
       "vendor" : {
         "addr" : "28179023"
       },
       "bacnet" : {
-        "addr" : "snoozle"
+        "addr" : "27312"
       }
     }
   },
@@ -34,21 +34,21 @@
           "message" : "Written value is not valid",
           "detail" : "Point filter_differential_pressure_sensor (writable false)",
           "category" : "pointset.point.invalid",
-          "timestamp" : "2024-12-18T15:32:35Z",
+          "timestamp" : "TIMESTAMP",
           "level" : 500
         }
       }
     }
   },
   "system" : {
-    "last_config" : "2024-12-18T15:32:35Z",
+    "last_config" : "TIMESTAMP",
     "operation" : {
       "operational" : true,
-      "last_start" : "2024-12-18T15:32:03Z",
+      "last_start" : "TIMESTAMP",
       "restart_count" : 1,
       "mode" : "initial"
     },
-    "serial_no" : "sequencer-24048",
+    "serial_no" : "sequencer-20687",
     "hardware" : {
       "make" : "BOS",
       "model" : "pubber"
@@ -59,10 +59,10 @@
     "status" : {
       "message" : "success",
       "category" : "system.config.apply",
-      "timestamp" : "2024-12-18T15:32:35Z",
+      "timestamp" : "TIMESTAMP",
       "level" : 300
     }
   },
-  "timestamp" : "2024-12-18T15:32:37Z",
-  "version" : "1.5.2"
+  "timestamp" : "TIMESTAMP",
+  "version" : "1.5.3"
 }

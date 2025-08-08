@@ -1,92 +1,88 @@
 {
-  "event_no" : 6,
-  "last_config" : "2024-12-17T05:26:24Z",
+  "event_no" : 12,
+  "last_config" : "TIMESTAMP",
   "logentries" : [ {
+    "message" : "sending AHU-1 message #10 with 3 points",
+    "category" : "device.log",
+    "timestamp" : "TIMESTAMP",
+    "level" : 200
+  }, {
     "message" : "success",
     "category" : "system.config.receive",
-    "timestamp" : "2024-12-17T05:26:24Z",
+    "timestamp" : "TIMESTAMP",
     "level" : 100
   }, {
-    "message" : "State update defer -13072ms",
+    "message" : "State update defer -9035ms",
     "category" : "device.log",
-    "timestamp" : "2024-12-17T05:26:24Z",
+    "timestamp" : "TIMESTAMP",
     "level" : 100
   }, {
-    "message" : "Update state 2024-12-17T05:26:24Z last_config 2024-12-17T05:26:09Z",
+    "message" : "Update state TIMESTAMP",
     "category" : "device.log",
-    "timestamp" : "2024-12-17T05:26:24Z",
+    "timestamp" : "TIMESTAMP",
     "level" : 200
   }, {
     "message" : "success",
     "category" : "system.config.parse",
-    "timestamp" : "2024-12-17T05:26:24Z",
+    "timestamp" : "TIMESTAMP",
     "level" : 100
   }, {
     "message" : "Device AHU-1 config handler",
     "category" : "device.log",
-    "timestamp" : "2024-12-17T05:26:24Z",
+    "timestamp" : "TIMESTAMP",
     "level" : 200
   }, {
     "message" : "Config update AHU-1 (extra_config)",
-    "detail" : "{\n  \"timestamp\" : \"2024-12-17T05:26:24Z\",\n  \"version\" : \"git-46fef59\",\n  \"system\" : {\n    \"min_loglevel\" : 100,\n    \"metrics_rate_sec\" : 10,\n    \"operation\" : {\n      \"last_start\" : \"2024-12-17T05:25:35Z\"\n    },\n    \"testing\" : {\n      \"sequence_name\" : \"extra_config\",\n      \"transaction_id\" : \"RC:bc7efb.00000012\",\n      \"config_base\" : 14\n    }\n  },\n  \"discovery\" : {\n    \"families\" : {\n      \"vendor\" : { }\n    }\n  },\n  \"localnet\" : {\n    \"families\" : {\n      \"ether\" : { },\n      \"ipv4\" : { },\n      \"vendor\" : { },\n      \"bacnet\" : { }\n    }\n  },\n  \"pointset\" : {\n    \"points\" : {\n      \"filter_alarm_pressure_status\" : {\n        \"ref\" : \"BV11.present_value\",\n        \"units\" : \"No-units\"\n      },\n      \"filter_differential_pressure_setpoint\" : {\n        \"units\" : \"Bars\",\n        \"set_value\" : 98\n      },\n      \"filter_differential_pressure_sensor\" : {\n        \"ref\" : \"AV12.present_value\",\n        \"units\" : \"Degrees-Celsius\"\n      }\n    }\n  }\n}",
+    "detail" : "{\n  \"timestamp\" : \"TIMESTAMP\"\n    },\n    \"testing\" : {\n      \"sequence_name\" : \"extra_config\",\n      \"transaction_id\" : \"RC:8e81e0.00000024\",\n      \"config_base\" : 27\n    }\n  },\n  \"discovery\" : {\n    \"families\" : {\n      \"bacnet\" : { },\n      \"vendor\" : { }\n    }\n  },\n  \"localnet\" : {\n    \"families\" : {\n      \"ether\" : { },\n      \"ipv4\" : { },\n      \"vendor\" : { },\n      \"bacnet\" : { }\n    }\n  },\n  \"pointset\" : {\n    \"points\" : {\n      \"filter_alarm_pressure_status\" : {\n        \"ref\" : \"BV11.present_value\",\n        \"units\" : \"No-units\"\n      },\n      \"filter_differential_pressure_setpoint\" : {\n        \"units\" : \"Bars\",\n        \"set_value\" : 98\n      },\n      \"filter_differential_pressure_sensor\" : {\n        \"ref\" : \"AV12.present_value\",\n        \"units\" : \"Degrees-Celsius\"\n      }\n    }\n  }\n}",
     "category" : "device.log",
-    "timestamp" : "2024-12-17T05:26:24Z",
+    "timestamp" : "TIMESTAMP",
     "level" : 100
   }, {
     "message" : "State update defer 2000ms",
     "category" : "device.log",
-    "timestamp" : "2024-12-17T05:26:24Z",
+    "timestamp" : "TIMESTAMP",
     "level" : 100
   }, {
-    "message" : "2024-12-17T05:26:24Z received config 2024-12-17T05:26:24Z",
+    "message" : "TIMESTAMP",
     "category" : "device.log",
-    "timestamp" : "2024-12-17T05:26:24Z",
+    "timestamp" : "TIMESTAMP",
     "level" : 200
   }, {
     "message" : "success",
     "category" : "system.config.apply",
-    "timestamp" : "2024-12-17T05:26:24Z",
+    "timestamp" : "TIMESTAMP",
     "level" : 300
   }, {
-    "message" : "State update defer 2000ms",
+    "message" : "State update defer 1998ms",
     "category" : "device.log",
-    "timestamp" : "2024-12-17T05:26:24Z",
+    "timestamp" : "TIMESTAMP",
     "level" : 100
   }, {
-    "message" : "State update defer 1999ms",
+    "message" : "State update defer 1998ms",
     "category" : "device.log",
-    "timestamp" : "2024-12-17T05:26:24Z",
+    "timestamp" : "TIMESTAMP",
     "level" : 100
   }, {
-    "message" : "State update defer 1999ms",
+    "message" : "State update defer 0ms",
     "category" : "device.log",
-    "timestamp" : "2024-12-17T05:26:24Z",
+    "timestamp" : "TIMESTAMP",
     "level" : 100
   }, {
-    "message" : "State update defer 1999ms",
+    "message" : "Update state TIMESTAMP",
     "category" : "device.log",
-    "timestamp" : "2024-12-17T05:26:24Z",
-    "level" : 100
+    "timestamp" : "TIMESTAMP",
+    "level" : 200
   }, {
-    "message" : "State update defer 1999ms",
+    "message" : "State update AHU-1 (extra_config)",
+    "detail" : "{\n  \"timestamp\" : \"TIMESTAMP\",\n      \"level\" : 300\n    }\n  },\n  \"discovery\" : {\n    \"families\" : { }\n  },\n  \"localnet\" : {\n    \"families\" : {\n      \"ether\" : {\n        \"addr\" : \"7c:ed:8d:56:4a:eb\"\n      },\n      \"ipv4\" : {\n        \"addr\" : \"10.1.0.24\"\n      },\n      \"vendor\" : {\n        \"addr\" : \"28179023\"\n      },\n      \"bacnet\" : {\n        \"addr\" : \"27312\"\n      }\n    }\n  },\n  \"pointset\" : {\n    \"points\" : {\n      \"filter_alarm_pressure_status\" : {\n        \"units\" : \"No-units\"\n      },\n      \"filter_differential_pressure_setpoint\" : {\n        \"units\" : \"Bars\",\n        \"value_state\" : \"applied\"\n      },\n      \"filter_differential_pressure_sensor\" : {\n        \"units\" : \"Degrees-Celsius\"\n      }\n    }\n  }\n}",
     "category" : "device.log",
-    "timestamp" : "2024-12-17T05:26:24Z",
-    "level" : 100
-  }, {
-    "message" : "State update defer 1999ms",
-    "category" : "device.log",
-    "timestamp" : "2024-12-17T05:26:24Z",
-    "level" : 100
-  }, {
-    "message" : "State update defer 65ms",
-    "category" : "device.log",
-    "timestamp" : "2024-12-17T05:26:26Z",
+    "timestamp" : "TIMESTAMP",
     "level" : 100
   } ],
   "metrics" : {
-    "mem_total_mb" : 254.0,
-    "mem_free_mb" : 209.7373046875
+    "mem_total_mb" : 64.0,
+    "mem_free_mb" : 25.77239227294922
   },
-  "timestamp" : "2024-12-17T05:26:26Z",
-  "version" : "1.5.2"
+  "timestamp" : "TIMESTAMP",
+  "version" : "1.5.3"
 }

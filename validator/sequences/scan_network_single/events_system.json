@@ -7,42 +7,37 @@
     "timestamp" : "TIMESTAMP",
     "level" : 300
   }, {
-    "message" : "State update defer 1999ms",
+    "message" : "State update defer 1995ms",
     "category" : "device.log",
     "timestamp" : "TIMESTAMP",
     "level" : 100
   }, {
-    "message" : "State update defer 1999ms",
+    "message" : "State update defer 1995ms",
     "category" : "device.log",
     "timestamp" : "TIMESTAMP",
     "level" : 100
   }, {
-    "message" : "State update defer 1998ms",
+    "message" : "State update defer 1994ms",
     "category" : "device.log",
     "timestamp" : "TIMESTAMP",
     "level" : 100
   }, {
-    "message" : "State update defer 1998ms",
+    "message" : "State update defer 1994ms",
     "category" : "device.log",
     "timestamp" : "TIMESTAMP",
     "level" : 100
   }, {
-    "message" : "State update defer 1998ms",
+    "message" : "State update defer 1994ms",
     "category" : "device.log",
     "timestamp" : "TIMESTAMP",
     "level" : 100
   }, {
-    "message" : "State update defer 1998ms",
+    "message" : "State update defer 1994ms",
     "category" : "device.log",
     "timestamp" : "TIMESTAMP",
     "level" : 100
   }, {
-    "message" : "State update defer 1997ms",
-    "category" : "device.log",
-    "timestamp" : "TIMESTAMP",
-    "level" : 100
-  }, {
-    "message" : "State update defer 1997ms",
+    "message" : "State update defer 1993ms",
     "category" : "device.log",
     "timestamp" : "TIMESTAMP",
     "level" : 100
@@ -52,8 +47,18 @@
     "timestamp" : "TIMESTAMP",
     "level" : 100
   }, {
+    "message" : "State update defer 1929ms",
+    "category" : "device.log",
+    "timestamp" : "TIMESTAMP",
+    "level" : 100
+  }, {
     "message" : "success",
     "category" : "system.config.parse",
+    "timestamp" : "TIMESTAMP",
+    "level" : 100
+  }, {
+    "message" : "State update defer 1927ms",
+    "category" : "device.log",
     "timestamp" : "TIMESTAMP",
     "level" : 100
   }, {
@@ -63,7 +68,7 @@
     "level" : 200
   }, {
     "message" : "Config update AHU-1 (scan_network_single+vendor)",
-    "detail" : "{\n  \"timestamp\" : \"TIMESTAMP\"\n    },\n    \"testing\" : {\n      \"sequence_name\" : \"scan_network_single+vendor\",\n      \"transaction_id\" : \"MP:cfac5efe\",\n      \"config_base\" : 56\n    }\n  },\n  \"discovery\" : {\n    \"families\" : {\n      \"bacnet\" : { },\n      \"vendor\" : { }\n    }\n  },\n  \"localnet\" : {\n    \"families\" : {\n      \"ether\" : { },\n      \"ipv4\" : { },\n      \"vendor\" : { },\n      \"bacnet\" : { }\n    }\n  },\n  \"pointset\" : {\n    \"points\" : {\n      \"filter_alarm_pressure_status\" : {\n        \"ref\" : \"BV11.present_value\",\n        \"units\" : \"No-units\"\n      },\n      \"filter_differential_pressure_setpoint\" : {\n        \"units\" : \"Bars\",\n        \"set_value\" : 98\n      },\n      \"filter_differential_pressure_sensor\" : {\n        \"ref\" : \"AV12.present_value\",\n        \"units\" : \"Degrees-Celsius\"\n      }\n    }\n  }\n}",
+    "detail" : "{\n  \"timestamp\" : \"TIMESTAMP\"\n    },\n    \"testing\" : {\n      \"sequence_name\" : \"scan_network_single+vendor\",\n      \"transaction_id\" : \"MP:b4e0fd4d\",\n      \"config_base\" : 56\n    }\n  },\n  \"discovery\" : {\n    \"families\" : {\n      \"bacnet\" : { },\n      \"vendor\" : { }\n    }\n  },\n  \"localnet\" : {\n    \"families\" : {\n      \"ether\" : { },\n      \"ipv4\" : { },\n      \"vendor\" : { },\n      \"bacnet\" : { }\n    }\n  },\n  \"pointset\" : {\n    \"points\" : {\n      \"filter_alarm_pressure_status\" : {\n        \"ref\" : \"BV11.present_value\",\n        \"units\" : \"No-units\"\n      },\n      \"filter_differential_pressure_setpoint\" : {\n        \"units\" : \"Bars\",\n        \"set_value\" : 98\n      },\n      \"filter_differential_pressure_sensor\" : {\n        \"ref\" : \"AV12.present_value\",\n        \"units\" : \"Degrees-Celsius\"\n      }\n    }\n  }\n}",
     "category" : "device.log",
     "timestamp" : "TIMESTAMP",
     "level" : 100
@@ -73,47 +78,42 @@
     "timestamp" : "TIMESTAMP",
     "level" : 200
   }, {
-    "message" : "State update defer 1931ms",
-    "category" : "device.log",
-    "timestamp" : "TIMESTAMP",
-    "level" : 100
-  }, {
-    "message" : "State update defer 1931ms",
-    "category" : "device.log",
-    "timestamp" : "TIMESTAMP",
-    "level" : 100
-  }, {
-    "message" : "State update defer 1931ms",
-    "category" : "device.log",
-    "timestamp" : "TIMESTAMP",
-    "level" : 100
-  }, {
-    "message" : "State update defer 1930ms",
-    "category" : "device.log",
-    "timestamp" : "TIMESTAMP",
-    "level" : 100
-  }, {
-    "message" : "State update defer 1930ms",
-    "category" : "device.log",
-    "timestamp" : "TIMESTAMP",
-    "level" : 100
-  }, {
-    "message" : "State update defer 1930ms",
-    "category" : "device.log",
-    "timestamp" : "TIMESTAMP",
-    "level" : 100
-  }, {
     "message" : "success",
     "category" : "system.config.apply",
     "timestamp" : "TIMESTAMP",
     "level" : 300
   }, {
-    "message" : "State update defer 1929ms",
+    "message" : "State update defer 1922ms",
     "category" : "device.log",
     "timestamp" : "TIMESTAMP",
     "level" : 100
   }, {
-    "message" : "State update defer 1928ms",
+    "message" : "State update defer 1921ms",
+    "category" : "device.log",
+    "timestamp" : "TIMESTAMP",
+    "level" : 100
+  }, {
+    "message" : "State update defer 1921ms",
+    "category" : "device.log",
+    "timestamp" : "TIMESTAMP",
+    "level" : 100
+  }, {
+    "message" : "State update defer 1920ms",
+    "category" : "device.log",
+    "timestamp" : "TIMESTAMP",
+    "level" : 100
+  }, {
+    "message" : "State update defer 1920ms",
+    "category" : "device.log",
+    "timestamp" : "TIMESTAMP",
+    "level" : 100
+  }, {
+    "message" : "State update defer 1919ms",
+    "category" : "device.log",
+    "timestamp" : "TIMESTAMP",
+    "level" : 100
+  }, {
+    "message" : "State update defer 1919ms",
     "category" : "device.log",
     "timestamp" : "TIMESTAMP",
     "level" : 100
@@ -129,7 +129,7 @@
     "level" : 200
   }, {
     "message" : "State update AHU-1 (scan_network_single+vendor)",
-    "detail" : "{\n  \"timestamp\" : \"TIMESTAMP\",\n      \"level\" : 300\n    }\n  },\n  \"discovery\" : {\n    \"families\" : { }\n  },\n  \"localnet\" : {\n    \"families\" : {\n      \"ether\" : {\n        \"addr\" : \"7c:1e:52:e2:67:ba\"\n      },\n      \"ipv4\" : {\n        \"addr\" : \"10.1.0.175\"\n      },\n      \"vendor\" : {\n        \"addr\" : \"28179023\"\n      },\n      \"bacnet\" : {\n        \"addr\" : \"27312\"\n      }\n    }\n  },\n  \"pointset\" : {\n    \"points\" : {\n      \"filter_alarm_pressure_status\" : {\n        \"units\" : \"No-units\"\n      },\n      \"filter_differential_pressure_setpoint\" : {\n        \"units\" : \"Bars\",\n        \"value_state\" : \"applied\"\n      },\n      \"filter_differential_pressure_sensor\" : {\n        \"units\" : \"Degrees-Celsius\"\n      }\n    }\n  }\n}",
+    "detail" : "{\n  \"timestamp\" : \"TIMESTAMP\",\n      \"level\" : 300\n    }\n  },\n  \"discovery\" : {\n    \"families\" : { }\n  },\n  \"localnet\" : {\n    \"families\" : {\n      \"ether\" : {\n        \"addr\" : \"7c:1e:52:ff:0a:df\"\n      },\n      \"ipv4\" : {\n        \"addr\" : \"10.1.0.174\"\n      },\n      \"vendor\" : {\n        \"addr\" : \"28179023\"\n      },\n      \"bacnet\" : {\n        \"addr\" : \"27312\"\n      }\n    }\n  },\n  \"pointset\" : {\n    \"points\" : {\n      \"filter_alarm_pressure_status\" : {\n        \"units\" : \"No-units\"\n      },\n      \"filter_differential_pressure_setpoint\" : {\n        \"units\" : \"Bars\",\n        \"value_state\" : \"applied\"\n      },\n      \"filter_differential_pressure_sensor\" : {\n        \"units\" : \"Degrees-Celsius\"\n      }\n    }\n  }\n}",
     "category" : "device.log",
     "timestamp" : "TIMESTAMP",
     "level" : 100
@@ -139,8 +139,13 @@
     "timestamp" : "TIMESTAMP",
     "level" : 100
   }, {
-    "message" : "State update defer -1348ms",
+    "message" : "State update defer -2048ms",
     "category" : "device.log",
+    "timestamp" : "TIMESTAMP",
+    "level" : 100
+  }, {
+    "message" : "success",
+    "category" : "system.config.parse",
     "timestamp" : "TIMESTAMP",
     "level" : 100
   }, {
@@ -149,29 +154,24 @@
     "timestamp" : "TIMESTAMP",
     "level" : 200
   }, {
-    "message" : "success",
-    "category" : "system.config.parse",
-    "timestamp" : "TIMESTAMP",
-    "level" : 100
-  }, {
     "message" : "Device AHU-1 config handler",
     "category" : "device.log",
     "timestamp" : "TIMESTAMP",
     "level" : 200
   }, {
     "message" : "State update AHU-1 (scan_network_single+vendor)",
-    "detail" : "{\n  \"timestamp\" : \"TIMESTAMP\",\n      \"level\" : 100\n    }\n  },\n  \"discovery\" : {\n    \"families\" : { }\n  },\n  \"localnet\" : {\n    \"families\" : {\n      \"ether\" : {\n        \"addr\" : \"7c:1e:52:e2:67:ba\"\n      },\n      \"ipv4\" : {\n        \"addr\" : \"10.1.0.175\"\n      },\n      \"vendor\" : {\n        \"addr\" : \"28179023\"\n      },\n      \"bacnet\" : {\n        \"addr\" : \"27312\"\n      }\n    }\n  },\n  \"pointset\" : {\n    \"points\" : {\n      \"filter_alarm_pressure_status\" : {\n        \"units\" : \"No-units\"\n      },\n      \"filter_differential_pressure_setpoint\" : {\n        \"units\" : \"Bars\",\n        \"value_state\" : \"applied\"\n      },\n      \"filter_differential_pressure_sensor\" : {\n        \"units\" : \"Degrees-Celsius\"\n      }\n    }\n  }\n}",
+    "detail" : "{\n  \"timestamp\" : \"TIMESTAMP\",\n      \"level\" : 100\n    }\n  },\n  \"discovery\" : {\n    \"families\" : { }\n  },\n  \"localnet\" : {\n    \"families\" : {\n      \"ether\" : {\n        \"addr\" : \"7c:1e:52:ff:0a:df\"\n      },\n      \"ipv4\" : {\n        \"addr\" : \"10.1.0.174\"\n      },\n      \"vendor\" : {\n        \"addr\" : \"28179023\"\n      },\n      \"bacnet\" : {\n        \"addr\" : \"27312\"\n      }\n    }\n  },\n  \"pointset\" : {\n    \"points\" : {\n      \"filter_alarm_pressure_status\" : {\n        \"units\" : \"No-units\"\n      },\n      \"filter_differential_pressure_setpoint\" : {\n        \"units\" : \"Bars\",\n        \"value_state\" : \"applied\"\n      },\n      \"filter_differential_pressure_sensor\" : {\n        \"units\" : \"Degrees-Celsius\"\n      }\n    }\n  }\n}",
     "category" : "device.log",
     "timestamp" : "TIMESTAMP",
     "level" : 100
   }, {
     "message" : "Config update AHU-1 (scan_network_single+vendor)",
-    "detail" : "{\n  \"timestamp\" : \"TIMESTAMP\"\n    },\n    \"testing\" : {\n      \"sequence_name\" : \"scan_network_single+vendor\",\n      \"transaction_id\" : \"RC:492ce8.00000008\",\n      \"config_base\" : 57\n    }\n  },\n  \"discovery\" : {\n    \"families\" : {\n      \"bacnet\" : { },\n      \"vendor\" : { }\n    }\n  },\n  \"localnet\" : {\n    \"families\" : {\n      \"ether\" : { },\n      \"ipv4\" : { },\n      \"vendor\" : { },\n      \"bacnet\" : { }\n    }\n  },\n  \"pointset\" : {\n    \"points\" : {\n      \"filter_alarm_pressure_status\" : {\n        \"ref\" : \"BV11.present_value\",\n        \"units\" : \"No-units\"\n      },\n      \"filter_differential_pressure_setpoint\" : {\n        \"units\" : \"Bars\",\n        \"set_value\" : 98\n      },\n      \"filter_differential_pressure_sensor\" : {\n        \"ref\" : \"AV12.present_value\",\n        \"units\" : \"Degrees-Celsius\"\n      }\n    }\n  }\n}",
+    "detail" : "{\n  \"timestamp\" : \"TIMESTAMP\"\n    },\n    \"testing\" : {\n      \"sequence_name\" : \"scan_network_single+vendor\",\n      \"transaction_id\" : \"RC:53e416.00000008\",\n      \"config_base\" : 57\n    }\n  },\n  \"discovery\" : {\n    \"families\" : {\n      \"bacnet\" : { },\n      \"vendor\" : { }\n    }\n  },\n  \"localnet\" : {\n    \"families\" : {\n      \"ether\" : { },\n      \"ipv4\" : { },\n      \"vendor\" : { },\n      \"bacnet\" : { }\n    }\n  },\n  \"pointset\" : {\n    \"points\" : {\n      \"filter_alarm_pressure_status\" : {\n        \"ref\" : \"BV11.present_value\",\n        \"units\" : \"No-units\"\n      },\n      \"filter_differential_pressure_setpoint\" : {\n        \"units\" : \"Bars\",\n        \"set_value\" : 98\n      },\n      \"filter_differential_pressure_sensor\" : {\n        \"ref\" : \"AV12.present_value\",\n        \"units\" : \"Degrees-Celsius\"\n      }\n    }\n  }\n}",
     "category" : "device.log",
     "timestamp" : "TIMESTAMP",
     "level" : 100
   }, {
-    "message" : "State update defer 1999ms",
+    "message" : "State update defer 2000ms",
     "category" : "device.log",
     "timestamp" : "TIMESTAMP",
     "level" : 100
@@ -196,7 +196,32 @@
     "timestamp" : "TIMESTAMP",
     "level" : 100
   }, {
-    "message" : "State update defer -1ms",
+    "message" : "State update defer 1997ms",
+    "category" : "device.log",
+    "timestamp" : "TIMESTAMP",
+    "level" : 100
+  }, {
+    "message" : "State update defer 1997ms",
+    "category" : "device.log",
+    "timestamp" : "TIMESTAMP",
+    "level" : 100
+  }, {
+    "message" : "State update defer 1997ms",
+    "category" : "device.log",
+    "timestamp" : "TIMESTAMP",
+    "level" : 100
+  }, {
+    "message" : "State update defer 1997ms",
+    "category" : "device.log",
+    "timestamp" : "TIMESTAMP",
+    "level" : 100
+  }, {
+    "message" : "State update defer 1997ms",
+    "category" : "device.log",
+    "timestamp" : "TIMESTAMP",
+    "level" : 100
+  }, {
+    "message" : "State update defer 0ms",
     "category" : "device.log",
     "timestamp" : "TIMESTAMP",
     "level" : 100
@@ -207,14 +232,14 @@
     "level" : 200
   }, {
     "message" : "State update AHU-1 (scan_network_single+vendor)",
-    "detail" : "{\n  \"timestamp\" : \"TIMESTAMP\",\n      \"level\" : 300\n    }\n  },\n  \"discovery\" : {\n    \"families\" : { }\n  },\n  \"localnet\" : {\n    \"families\" : {\n      \"ether\" : {\n        \"addr\" : \"7c:1e:52:e2:67:ba\"\n      },\n      \"ipv4\" : {\n        \"addr\" : \"10.1.0.175\"\n      },\n      \"vendor\" : {\n        \"addr\" : \"28179023\"\n      },\n      \"bacnet\" : {\n        \"addr\" : \"27312\"\n      }\n    }\n  },\n  \"pointset\" : {\n    \"points\" : {\n      \"filter_alarm_pressure_status\" : {\n        \"units\" : \"No-units\"\n      },\n      \"filter_differential_pressure_setpoint\" : {\n        \"units\" : \"Bars\",\n        \"value_state\" : \"applied\"\n      },\n      \"filter_differential_pressure_sensor\" : {\n        \"units\" : \"Degrees-Celsius\"\n      }\n    }\n  }\n}",
+    "detail" : "{\n  \"timestamp\" : \"TIMESTAMP\",\n      \"level\" : 300\n    }\n  },\n  \"discovery\" : {\n    \"families\" : { }\n  },\n  \"localnet\" : {\n    \"families\" : {\n      \"ether\" : {\n        \"addr\" : \"7c:1e:52:ff:0a:df\"\n      },\n      \"ipv4\" : {\n        \"addr\" : \"10.1.0.174\"\n      },\n      \"vendor\" : {\n        \"addr\" : \"28179023\"\n      },\n      \"bacnet\" : {\n        \"addr\" : \"27312\"\n      }\n    }\n  },\n  \"pointset\" : {\n    \"points\" : {\n      \"filter_alarm_pressure_status\" : {\n        \"units\" : \"No-units\"\n      },\n      \"filter_differential_pressure_setpoint\" : {\n        \"units\" : \"Bars\",\n        \"value_state\" : \"applied\"\n      },\n      \"filter_differential_pressure_sensor\" : {\n        \"units\" : \"Degrees-Celsius\"\n      }\n    }\n  }\n}",
     "category" : "device.log",
     "timestamp" : "TIMESTAMP",
     "level" : 100
   } ],
   "metrics" : {
     "mem_total_mb" : 54.0,
-    "mem_free_mb" : 30.407493591308594
+    "mem_free_mb" : 30.784873962402344
   },
   "timestamp" : "TIMESTAMP",
   "version" : "1.5.3"

@@ -1,237 +1,556 @@
-2024-11-06T17:31:40Z WARNING device.log             Start waiting 10s for config latch for AHU-1
-2024-11-06T17:31:40Z WARNING device.log             Starting AHU-1 Pubber sender with delay 10s
-2024-11-06T17:31:40Z WARNING device.log             Dropping state update until config received...
-2024-11-06T17:31:40Z WARNING device.log             Received config for config latch AHU-1
-2024-11-06T17:31:40Z NOTICE  system.config.apply    success
-2024-11-06T17:31:40Z WARNING device.log             Ending connection 1730914299736 with 9
-2024-11-06T17:31:40Z NOTICE  system.config.apply    success
-2024-11-06T17:31:51Z NOTICE  system.config.apply    success
-2024-11-06T17:31:51Z INFO    device.log             Device AHU-1 config handler
-2024-11-06T17:31:51Z INFO    device.log             2024-11-06T17:31:51Z received config 2024-11-06T17:31:51Z
-2024-11-06T17:31:51Z NOTICE  system.config.apply    success
-2024-11-06T17:31:53Z INFO    device.log             Update state 2024-11-06T17:31:53Z last_config 2024-11-06T17:31:51Z
-2024-11-06T17:31:54Z INFO    device.log             Device AHU-1 config handler
-2024-11-06T17:31:54Z INFO    device.log             2024-11-06T17:31:54Z received config 2024-11-06T17:31:54Z
-2024-11-06T17:31:54Z NOTICE  system.config.apply    success
-2024-11-06T17:31:55Z INFO    device.log             Update state 2024-11-06T17:31:55Z last_config 2024-11-06T17:31:54Z
-2024-11-06T17:31:57Z INFO    device.log             Device AHU-1 config handler
-2024-11-06T17:31:57Z INFO    device.log             2024-11-06T17:31:57Z received config 2024-11-06T17:31:56Z
-2024-11-06T17:31:57Z NOTICE  system.config.apply    success
-2024-11-06T17:31:57Z INFO    device.log             Update state 2024-11-06T17:31:57Z last_config 2024-11-06T17:31:56Z
-2024-11-06T17:31:58Z INFO    device.log             Device AHU-1 config handler
-2024-11-06T17:31:58Z INFO    device.log             2024-11-06T17:31:58Z received config 2024-11-06T17:31:58Z
-2024-11-06T17:31:58Z NOTICE  system.config.apply    success
-2024-11-06T17:31:59Z INFO    device.log             Update state 2024-11-06T17:31:59Z last_config 2024-11-06T17:31:58Z
-2024-11-06T17:32:00Z INFO    device.log             Device AHU-1 config handler
-2024-11-06T17:32:00Z INFO    device.log             2024-11-06T17:32:00Z received config 2024-11-06T17:32:00Z
-2024-11-06T17:32:00Z NOTICE  system.config.apply    success
-2024-11-06T17:32:01Z INFO    device.log             Device AHU-1 config handler
-2024-11-06T17:32:01Z INFO    device.log             2024-11-06T17:32:01Z received config 2024-11-06T17:32:01Z
-2024-11-06T17:32:01Z NOTICE  system.config.apply    success
-2024-11-06T17:32:01Z INFO    device.log             Update state 2024-11-06T17:32:01Z last_config 2024-11-06T17:32:01Z
-2024-11-06T17:32:02Z INFO    device.log             Device AHU-1 config handler
-2024-11-06T17:32:02Z INFO    device.log             2024-11-06T17:32:02Z received config 2024-11-06T17:32:02Z
-2024-11-06T17:32:02Z NOTICE  system.config.apply    success
-2024-11-06T17:32:03Z INFO    device.log             Update state 2024-11-06T17:32:03Z last_config 2024-11-06T17:32:02Z
-2024-11-06T17:32:10Z NOTICE  device.log             Starting new endpoint generation
-2024-11-06T17:32:10Z INFO    device.log             New config blob endpoint detected:
-{
-  "protocol" : "mqtt",
-  "transport" : "ssl",
-  "hostname" : "twiddily.fiddily.fog",
-  "client_id" : "/r/ZZ-TRI-FECTA_4/d/AHU-1",
-  "topic_prefix" : "/r/ZZ-TRI-FECTA_4/d/AHU-1",
-  "auth_provider" : {
-    "basic" : {
-      "username" : "/r/ZZ-TRI-FECTA_4/d/AHU-1",
-      "password" : "38269d11"
-    }
-  },
-  "generation" : "2024-11-06T17:31:57Z"
-}
-2024-11-06T17:32:10Z INFO    device.log             Update state 2024-11-06T17:32:10Z last_config 2024-11-06T17:32:02Z
-2024-11-06T17:32:10Z INFO    device.log             CA cert file: /home/runner/work/udmi/udmi/sites/udmi_site_model/reflector/ca.crt
-2024-11-06T17:32:10Z INFO    device.log             Device cert file: /home/runner/work/udmi/udmi/sites/udmi_site_model/devices/AHU-1/rsa_private.crt
-2024-11-06T17:32:10Z INFO    device.log             Private key file: /home/runner/work/udmi/udmi/sites/udmi_site_model/devices/AHU-1/rsa_private.pem
-2024-11-06T17:32:10Z INFO    device.log             Password sha256 6b5344e1
-2024-11-06T17:32:10Z WARNING device.log             Starting connection 1730914330530 with 10
-2024-11-06T17:32:10Z WARNING device.log             Terminating AHU-1 PubberPointsetManager sender
-2024-11-06T17:32:10Z WARNING device.log             Terminating AHU-1 PubberSystemManager sender
-2024-11-06T17:32:10Z WARNING device.log             Creating new config latch for AHU-1
-2024-11-06T17:32:10Z ERROR   device.log             While waiting for connection start: Connection error
-2024-11-06T17:32:10Z ERROR   device.log             Attempt failed, retries remaining: 9
-2024-11-06T17:32:11Z WARNING device.log             Creating new config latch for AHU-1
-2024-11-06T17:32:11Z ERROR   device.log             While waiting for connection start: Connection error
-2024-11-06T17:32:11Z ERROR   device.log             Attempt failed, retries remaining: 8
-2024-11-06T17:32:12Z WARNING device.log             Creating new config latch for AHU-1
-2024-11-06T17:32:12Z ERROR   device.log             While waiting for connection start: Connection error
-2024-11-06T17:32:12Z ERROR   device.log             Attempt failed, retries remaining: 7
-2024-11-06T17:32:13Z WARNING device.log             Creating new config latch for AHU-1
-2024-11-06T17:32:13Z ERROR   device.log             While waiting for connection start: Connection error
-2024-11-06T17:32:13Z ERROR   device.log             Attempt failed, retries remaining: 6
-2024-11-06T17:32:14Z WARNING device.log             Creating new config latch for AHU-1
-2024-11-06T17:32:14Z ERROR   device.log             While waiting for connection start: Connection error
-2024-11-06T17:32:14Z ERROR   device.log             Attempt failed, retries remaining: 5
-2024-11-06T17:32:15Z WARNING device.log             Creating new config latch for AHU-1
-2024-11-06T17:32:15Z ERROR   device.log             While waiting for connection start: Connection error
-2024-11-06T17:32:15Z ERROR   device.log             Attempt failed, retries remaining: 4
-2024-11-06T17:32:16Z WARNING device.log             Creating new config latch for AHU-1
-2024-11-06T17:32:16Z ERROR   device.log             While waiting for connection start: Connection error
-2024-11-06T17:32:16Z ERROR   device.log             Attempt failed, retries remaining: 3
-2024-11-06T17:32:17Z WARNING device.log             Creating new config latch for AHU-1
-2024-11-06T17:32:17Z ERROR   device.log             While waiting for connection start: Connection error
-2024-11-06T17:32:17Z ERROR   device.log             Attempt failed, retries remaining: 2
-2024-11-06T17:32:18Z WARNING device.log             Creating new config latch for AHU-1
-2024-11-06T17:32:18Z ERROR   device.log             While waiting for connection start: Connection error
-2024-11-06T17:32:18Z ERROR   device.log             Attempt failed, retries remaining: 1
-2024-11-06T17:32:19Z WARNING device.log             Creating new config latch for AHU-1
-2024-11-06T17:32:19Z ERROR   device.log             While waiting for connection start: Connection error
-2024-11-06T17:32:19Z ERROR   device.log             Attempt failed, retries remaining: 0
-2024-11-06T17:32:20Z WARNING device.log             Ending connection 1730914330530 with -1
-2024-11-06T17:32:20Z ERROR   device.log             Reconfigure failed, attempting connection to last working endpoint: While resetting connection
-2024-11-06T17:32:20Z INFO    device.log             CA cert file: /home/runner/work/udmi/udmi/sites/udmi_site_model/reflector/ca.crt
-2024-11-06T17:32:20Z INFO    device.log             Device cert file: /home/runner/work/udmi/udmi/sites/udmi_site_model/devices/AHU-1/rsa_private.crt
-2024-11-06T17:32:20Z INFO    device.log             Private key file: /home/runner/work/udmi/udmi/sites/udmi_site_model/devices/AHU-1/rsa_private.pem
-2024-11-06T17:32:20Z INFO    device.log             Password sha256 6b5344e1
-2024-11-06T17:32:20Z WARNING device.log             Starting connection 1730914340901 with 10
-2024-11-06T17:32:20Z WARNING device.log             Creating new config latch for AHU-1
-2024-11-06T17:32:21Z INFO    device.log             Device AHU-1 config handler
-2024-11-06T17:32:21Z INFO    device.log             2024-11-06T17:32:21Z received config 2024-11-06T17:32:02Z
-2024-11-06T17:32:21Z WARNING device.log             Starting AHU-1 PubberPointsetManager sender with delay 10s
-2024-11-06T17:32:21Z WARNING device.log             Starting AHU-1 PubberSystemManager sender with delay 10s
-2024-11-06T17:32:21Z WARNING device.log             Received config for config latch AHU-1
-2024-11-06T17:32:21Z NOTICE  system.config.apply    success
-2024-11-06T17:32:21Z INFO    device.log             Update state 2024-11-06T17:32:21Z last_config 2024-11-06T17:32:02Z
-2024-11-06T17:32:21Z INFO    device.log             Connection complete.
-2024-11-06T17:32:21Z WARNING device.log             Start waiting 10s for config latch for AHU-1
-2024-11-06T17:32:21Z WARNING device.log             Ending connection 1730914340901 with 9
-2024-11-06T17:32:21Z NOTICE  device.log             Endpoint connection restored to last working endpoint
-2024-11-06T17:32:21Z ERROR   device.log             While redirecting connection endpoint: While resetting connection
-2024-11-06T17:32:23Z INFO    device.log             Update state 2024-11-06T17:32:23Z last_config 2024-11-06T17:32:02Z
-2024-11-06T17:32:23Z INFO    device.log             2024-11-06T17:32:23Z received config 2024-11-06T17:32:23Z
-2024-11-06T17:32:23Z NOTICE  system.config.apply    success
-2024-11-06T17:32:25Z INFO    device.log             Update state 2024-11-06T17:32:25Z last_config 2024-11-06T17:32:23Z
-2024-11-06T17:32:30Z INFO    device.log             Update state 2024-11-06T17:32:30Z last_config 2024-11-06T17:32:23Z
-2024-11-06T17:32:41Z INFO    device.log             Configured with auth_type RS256
-2024-11-06T17:32:41Z INFO    device.log             Initializing from persistent store /home/runner/work/udmi/udmi/sites/udmi_site_model/out/devices/AHU-1/persistent_data.json
-2024-11-06T17:32:41Z INFO    device.log             Loading endpoint from persistent data
-2024-11-06T17:32:41Z WARNING device.log             Updating persistent store:
+TIMESTAMP INFO    device.log             Configured with auth_type RS256
+TIMESTAMP INFO    device.log             Using addresses from default interface: eth0 for family: ipv4
+TIMESTAMP INFO    device.log             Family ipv4 address is 10.1.0.142
+TIMESTAMP INFO    device.log             Using addresses from default interface: eth0 for family: ether
+TIMESTAMP INFO    device.log             Family ether address is 7c:1e:52:b8:5b:89
+TIMESTAMP INFO    device.log             Resetting persistent store /home/runner/work/udmi/udmi/sites/udmi_site_model/out/devices/AHU-1/persistent_data.json
+TIMESTAMP INFO    device.log             Loading endpoint into persistent data from configuration
+TIMESTAMP WARNING device.log             Updating persistent store:
 {
   "endpoint" : {
     "protocol" : "mqtt",
     "transport" : "ssl",
     "hostname" : "localhost",
-    "client_id" : "/r/ZZ-TRI-FECTA_4/d/AHU-1",
-    "topic_prefix" : "/r/ZZ-TRI-FECTA_4/d/AHU-1",
+    "client_id" : "/r/ZZ-TRI-FECTA/d/AHU-1",
+    "topic_prefix" : "/r/ZZ-TRI-FECTA/d/AHU-1",
     "auth_provider" : {
       "basic" : {
-        "username" : "/r/ZZ-TRI-FECTA_4/d/AHU-1",
+        "username" : "/r/ZZ-TRI-FECTA/d/AHU-1",
+        "password" : "38269d11"
+      }
+    }
+  },
+  "restart_count" : 1
+}
+TIMESTAMP INFO    device.log             Starting pubber AHU-1, serial sequencer-29579, mac null, gateway null, options noPersist
+TIMESTAMP WARNING device.log             Starting connection 1754632181647 with 0
+TIMESTAMP INFO    device.log             Loading device key bytes from /home/runner/work/udmi/udmi/sites/udmi_site_model/devices/AHU-1/rsa_private.pkcs8
+TIMESTAMP INFO    device.log             CA cert file: /home/runner/work/udmi/udmi/sites/udmi_site_model/reflector/ca.crt
+TIMESTAMP INFO    device.log             Device cert file: /home/runner/work/udmi/udmi/sites/udmi_site_model/devices/AHU-1/rsa_private.crt
+TIMESTAMP INFO    device.log             Private key file: /home/runner/work/udmi/udmi/sites/udmi_site_model/devices/AHU-1/rsa_private.pem
+TIMESTAMP INFO    device.log             Password sha256 6b5344e1
+TIMESTAMP WARNING device.log             Creating new config latch for AHU-1
+TIMESTAMP
+TIMESTAMP WARNING device.log             Dropping state update until config received...
+TIMESTAMP
+TIMESTAMP WARNING device.log             Dropping state update until config received...
+TIMESTAMP INFO    device.log             Device AHU-1 config handler
+TIMESTAMP
+TIMESTAMP WARNING device.log             Dropping state update until config received...
+TIMESTAMP INFO    device.log             Connection complete.
+TIMESTAMP WARNING device.log             Received config for config latch AHU-1
+TIMESTAMP WARNING device.log             Starting AHU-1 PubberPublisherHost sender with delay 10s
+TIMESTAMP WARNING device.log             Start waiting 10s for config latch for AHU-1
+TIMESTAMP WARNING device.log             Ending connection 1754632181647 with 1
+TIMESTAMP WARNING device.log             Starting AHU-1 PubberSystemManager sender with delay 10s
+TIMESTAMP WARNING device.log             Starting AHU-1 PubberPointsetManager sender with delay 10s
+TIMESTAMP NOTICE  system.config.apply    success
+TIMESTAMP NOTICE  system.config.apply    success
+TIMESTAMP NOTICE  system.config.apply    success
+TIMESTAMP DEBUG   device.log             State update defer 1995ms
+TIMESTAMP DEBUG   device.log             State update defer 1994ms
+TIMESTAMP DEBUG   device.log             State update defer 1993ms
+TIMESTAMP DEBUG   device.log             State update defer 1992ms
+TIMESTAMP DEBUG   device.log             State update defer 1991ms
+TIMESTAMP DEBUG   device.log             State update defer 1991ms
+TIMESTAMP DEBUG   system.config.receive  success
+TIMESTAMP DEBUG   system.config.parse    success
+TIMESTAMP INFO    device.log             Device AHU-1 config handler
+TIMESTAMP DEBUG   device.log             Config update AHU-1 (endpoint_failure_and_restart)
+TIMESTAMP
+TIMESTAMP NOTICE  system.config.apply    success
+TIMESTAMP DEBUG   device.log             State update defer 1927ms
+TIMESTAMP DEBUG   device.log             State update defer 1927ms
+TIMESTAMP DEBUG   device.log             State update defer 0ms
+TIMESTAMP
+TIMESTAMP DEBUG   device.log             State update AHU-1 (endpoint_failure_and_restart)
+TIMESTAMP DEBUG   system.config.receive  success
+TIMESTAMP DEBUG   device.log             State update defer -3412ms
+TIMESTAMP
+TIMESTAMP DEBUG   system.config.parse    success
+TIMESTAMP DEBUG   device.log             State update AHU-1 (endpoint_failure_and_restart)
+TIMESTAMP INFO    device.log             Device AHU-1 config handler
+TIMESTAMP DEBUG   device.log             Config update AHU-1 (endpoint_failure_and_restart)
+TIMESTAMP DEBUG   device.log             State update defer 2000ms
+TIMESTAMP
+TIMESTAMP NOTICE  system.config.apply    success
+TIMESTAMP DEBUG   device.log             State update defer 1999ms
+TIMESTAMP DEBUG   device.log             State update defer 1998ms
+TIMESTAMP DEBUG   device.log             State update defer 1998ms
+TIMESTAMP DEBUG   device.log             State update defer 1998ms
+TIMESTAMP DEBUG   device.log             State update defer 1998ms
+TIMESTAMP DEBUG   device.log             State update defer 1997ms
+TIMESTAMP DEBUG   device.log             State update defer 1997ms
+TIMESTAMP DEBUG   device.log             State update defer 0ms
+TIMESTAMP
+TIMESTAMP DEBUG   device.log             State update AHU-1 (endpoint_failure_and_restart)
+TIMESTAMP DEBUG   system.config.receive  success
+TIMESTAMP DEBUG   device.log             State update defer -1041ms
+TIMESTAMP DEBUG   system.config.parse    success
+TIMESTAMP
+TIMESTAMP INFO    device.log             Device AHU-1 config handler
+TIMESTAMP DEBUG   device.log             State update AHU-1 (endpoint_failure_and_restart)
+TIMESTAMP DEBUG   device.log             Config update AHU-1 (endpoint_failure_and_restart)
+TIMESTAMP DEBUG   device.log             State update defer 2000ms
+TIMESTAMP
+TIMESTAMP NOTICE  system.config.apply    success
+TIMESTAMP DEBUG   device.log             State update defer 1999ms
+TIMESTAMP DEBUG   device.log             State update defer 1999ms
+TIMESTAMP DEBUG   device.log             State update defer 1998ms
+TIMESTAMP DEBUG   device.log             State update defer 1998ms
+TIMESTAMP DEBUG   device.log             State update defer 1998ms
+TIMESTAMP DEBUG   device.log             State update defer 1998ms
+TIMESTAMP DEBUG   device.log             State update defer 1997ms
+TIMESTAMP DEBUG   device.log             State update defer 0ms
+TIMESTAMP
+TIMESTAMP DEBUG   device.log             State update AHU-1 (endpoint_failure_and_restart)
+TIMESTAMP DEBUG   system.config.receive  success
+TIMESTAMP DEBUG   system.config.parse    success
+TIMESTAMP INFO    device.log             Device AHU-1 config handler
+TIMESTAMP DEBUG   device.log             State update defer -1059ms
+TIMESTAMP
+TIMESTAMP DEBUG   device.log             Config update AHU-1 (endpoint_failure_and_restart)
+TIMESTAMP DEBUG   device.log             State update AHU-1 (endpoint_failure_and_restart)
+TIMESTAMP
+TIMESTAMP NOTICE  system.config.apply    success
+TIMESTAMP DEBUG   device.log             State update defer 1997ms
+TIMESTAMP DEBUG   device.log             State update defer 1996ms
+TIMESTAMP DEBUG   system.config.receive  success
+TIMESTAMP DEBUG   device.log             State update defer 1908ms
+TIMESTAMP DEBUG   system.config.parse    success
+TIMESTAMP INFO    device.log             Device AHU-1 config handler
+TIMESTAMP DEBUG   device.log             State update defer 1907ms
+TIMESTAMP DEBUG   device.log             Config update AHU-1 (endpoint_failure_and_restart)
+TIMESTAMP
+TIMESTAMP NOTICE  system.config.apply    success
+TIMESTAMP DEBUG   device.log             State update defer 1905ms
+TIMESTAMP DEBUG   device.log             State update defer 1905ms
+TIMESTAMP DEBUG   device.log             State update defer 1904ms
+TIMESTAMP DEBUG   device.log             State update defer 1904ms
+TIMESTAMP DEBUG   device.log             State update defer 1902ms
+TIMESTAMP DEBUG   device.log             State update defer 1901ms
+TIMESTAMP DEBUG   device.log             State update defer 1901ms
+TIMESTAMP DEBUG   system.config.receive  success
+TIMESTAMP DEBUG   device.log             State update defer 808ms
+TIMESTAMP DEBUG   system.config.parse    success
+TIMESTAMP INFO    device.log             Device AHU-1 config handler
+TIMESTAMP DEBUG   device.log             Config update AHU-1 (endpoint_failure_and_restart)
+TIMESTAMP
+TIMESTAMP NOTICE  system.config.apply    success
+TIMESTAMP DEBUG   device.log             State update defer 806ms
+TIMESTAMP DEBUG   device.log             State update defer 806ms
+TIMESTAMP DEBUG   device.log             State update defer 0ms
+TIMESTAMP
+TIMESTAMP DEBUG   device.log             State update AHU-1 (endpoint_failure_and_restart)
+TIMESTAMP DEBUG   system.config.receive  success
+TIMESTAMP DEBUG   device.log             State update defer 1605ms
+TIMESTAMP DEBUG   system.config.parse    success
+TIMESTAMP INFO    device.log             Device AHU-1 config handler
+TIMESTAMP DEBUG   device.log             State update defer 1604ms
+TIMESTAMP DEBUG   device.log             Config update AHU-1 (endpoint_failure_and_restart)
+TIMESTAMP
+TIMESTAMP NOTICE  system.config.apply    success
+TIMESTAMP DEBUG   device.log             State update defer 1602ms
+TIMESTAMP DEBUG   device.log             State update defer 1602ms
+TIMESTAMP DEBUG   device.log             State update defer 1602ms
+TIMESTAMP DEBUG   device.log             State update defer 1601ms
+TIMESTAMP DEBUG   device.log             State update defer 1601ms
+TIMESTAMP DEBUG   system.config.receive  success
+TIMESTAMP DEBUG   device.log             State update defer 497ms
+TIMESTAMP DEBUG   system.config.parse    success
+TIMESTAMP INFO    device.log             Device AHU-1 config handler
+TIMESTAMP DEBUG   device.log             Config update AHU-1 (endpoint_failure_and_restart)
+TIMESTAMP
+TIMESTAMP NOTICE  system.config.apply    success
+TIMESTAMP DEBUG   device.log             State update defer 489ms
+TIMESTAMP DEBUG   device.log             State update defer 0ms
+TIMESTAMP
+TIMESTAMP DEBUG   device.log             State update AHU-1 (endpoint_failure_and_restart)
+TIMESTAMP NOTICE  device.log             Starting new endpoint generation
+TIMESTAMP INFO    device.log             New config blob endpoint detected:
+{
+  "protocol" : "mqtt",
+  "transport" : "ssl",
+  "hostname" : "twiddily.fiddily.fog",
+  "client_id" : "/r/ZZ-TRI-FECTA/d/AHU-1",
+  "topic_prefix" : "/r/ZZ-TRI-FECTA/d/AHU-1",
+  "auth_provider" : {
+    "basic" : {
+      "username" : "/r/ZZ-TRI-FECTA/d/AHU-1",
+      "password" : "38269d11"
+    }
+  },
+  "generation" : "TIMESTAMP"
+}
+TIMESTAMP
+TIMESTAMP DEBUG   device.log             State update AHU-1 (endpoint_failure_and_restart)
+TIMESTAMP WARNING device.log             Starting connection 1754632222531 with 0
+TIMESTAMP WARNING device.log             Terminating AHU-1 PubberPointsetManager sender
+TIMESTAMP WARNING device.log             Terminating AHU-1 PubberSystemManager sender
+TIMESTAMP WARNING device.log             Terminating AHU-1 PubberPublisherHost sender
+TIMESTAMP DEBUG   device.log             Extracted device password from /home/runner/work/udmi/udmi/sites/udmi_site_model/devices/AHU-1/rsa_private.pkcs8
+TIMESTAMP INFO    device.log             CA cert file: /home/runner/work/udmi/udmi/sites/udmi_site_model/reflector/ca.crt
+TIMESTAMP INFO    device.log             Device cert file: /home/runner/work/udmi/udmi/sites/udmi_site_model/devices/AHU-1/rsa_private.crt
+TIMESTAMP INFO    device.log             Private key file: /home/runner/work/udmi/udmi/sites/udmi_site_model/devices/AHU-1/rsa_private.pem
+TIMESTAMP INFO    device.log             Password sha256 6b5344e1
+TIMESTAMP WARNING device.log             Creating new config latch for AHU-1
+TIMESTAMP ERROR   device.log             While waiting for connection start: Connection error
+TIMESTAMP ERROR   device.log             Attempt #1 failed
+TIMESTAMP DEBUG   device.log             Extracted device password from /home/runner/work/udmi/udmi/sites/udmi_site_model/devices/AHU-1/rsa_private.pkcs8
+TIMESTAMP INFO    device.log             CA cert file: /home/runner/work/udmi/udmi/sites/udmi_site_model/reflector/ca.crt
+TIMESTAMP INFO    device.log             Device cert file: /home/runner/work/udmi/udmi/sites/udmi_site_model/devices/AHU-1/rsa_private.crt
+TIMESTAMP INFO    device.log             Private key file: /home/runner/work/udmi/udmi/sites/udmi_site_model/devices/AHU-1/rsa_private.pem
+TIMESTAMP INFO    device.log             Password sha256 6b5344e1
+TIMESTAMP WARNING device.log             Creating new config latch for AHU-1
+TIMESTAMP ERROR   device.log             While waiting for connection start: Connection error
+TIMESTAMP ERROR   device.log             Attempt #2 failed
+TIMESTAMP DEBUG   device.log             Extracted device password from /home/runner/work/udmi/udmi/sites/udmi_site_model/devices/AHU-1/rsa_private.pkcs8
+TIMESTAMP INFO    device.log             CA cert file: /home/runner/work/udmi/udmi/sites/udmi_site_model/reflector/ca.crt
+TIMESTAMP INFO    device.log             Device cert file: /home/runner/work/udmi/udmi/sites/udmi_site_model/devices/AHU-1/rsa_private.crt
+TIMESTAMP INFO    device.log             Private key file: /home/runner/work/udmi/udmi/sites/udmi_site_model/devices/AHU-1/rsa_private.pem
+TIMESTAMP INFO    device.log             Password sha256 6b5344e1
+TIMESTAMP WARNING device.log             Creating new config latch for AHU-1
+TIMESTAMP ERROR   device.log             While waiting for connection start: Connection error
+TIMESTAMP ERROR   device.log             Attempt #3 failed
+TIMESTAMP DEBUG   device.log             Extracted device password from /home/runner/work/udmi/udmi/sites/udmi_site_model/devices/AHU-1/rsa_private.pkcs8
+TIMESTAMP INFO    device.log             CA cert file: /home/runner/work/udmi/udmi/sites/udmi_site_model/reflector/ca.crt
+TIMESTAMP INFO    device.log             Device cert file: /home/runner/work/udmi/udmi/sites/udmi_site_model/devices/AHU-1/rsa_private.crt
+TIMESTAMP INFO    device.log             Private key file: /home/runner/work/udmi/udmi/sites/udmi_site_model/devices/AHU-1/rsa_private.pem
+TIMESTAMP INFO    device.log             Password sha256 6b5344e1
+TIMESTAMP WARNING device.log             Creating new config latch for AHU-1
+TIMESTAMP ERROR   device.log             While waiting for connection start: Connection error
+TIMESTAMP ERROR   device.log             Attempt #4 failed
+TIMESTAMP DEBUG   device.log             Extracted device password from /home/runner/work/udmi/udmi/sites/udmi_site_model/devices/AHU-1/rsa_private.pkcs8
+TIMESTAMP INFO    device.log             CA cert file: /home/runner/work/udmi/udmi/sites/udmi_site_model/reflector/ca.crt
+TIMESTAMP INFO    device.log             Device cert file: /home/runner/work/udmi/udmi/sites/udmi_site_model/devices/AHU-1/rsa_private.crt
+TIMESTAMP INFO    device.log             Private key file: /home/runner/work/udmi/udmi/sites/udmi_site_model/devices/AHU-1/rsa_private.pem
+TIMESTAMP INFO    device.log             Password sha256 6b5344e1
+TIMESTAMP WARNING device.log             Creating new config latch for AHU-1
+TIMESTAMP ERROR   device.log             While waiting for connection start: Connection error
+TIMESTAMP ERROR   device.log             Attempt #5 failed
+TIMESTAMP DEBUG   device.log             Extracted device password from /home/runner/work/udmi/udmi/sites/udmi_site_model/devices/AHU-1/rsa_private.pkcs8
+TIMESTAMP INFO    device.log             CA cert file: /home/runner/work/udmi/udmi/sites/udmi_site_model/reflector/ca.crt
+TIMESTAMP INFO    device.log             Device cert file: /home/runner/work/udmi/udmi/sites/udmi_site_model/devices/AHU-1/rsa_private.crt
+TIMESTAMP INFO    device.log             Private key file: /home/runner/work/udmi/udmi/sites/udmi_site_model/devices/AHU-1/rsa_private.pem
+TIMESTAMP INFO    device.log             Password sha256 6b5344e1
+TIMESTAMP WARNING device.log             Creating new config latch for AHU-1
+TIMESTAMP ERROR   device.log             While waiting for connection start: Connection error
+TIMESTAMP ERROR   device.log             Attempt #6 failed
+TIMESTAMP DEBUG   device.log             Extracted device password from /home/runner/work/udmi/udmi/sites/udmi_site_model/devices/AHU-1/rsa_private.pkcs8
+TIMESTAMP INFO    device.log             CA cert file: /home/runner/work/udmi/udmi/sites/udmi_site_model/reflector/ca.crt
+TIMESTAMP INFO    device.log             Device cert file: /home/runner/work/udmi/udmi/sites/udmi_site_model/devices/AHU-1/rsa_private.crt
+TIMESTAMP INFO    device.log             Private key file: /home/runner/work/udmi/udmi/sites/udmi_site_model/devices/AHU-1/rsa_private.pem
+TIMESTAMP INFO    device.log             Password sha256 6b5344e1
+TIMESTAMP WARNING device.log             Creating new config latch for AHU-1
+TIMESTAMP ERROR   device.log             While waiting for connection start: Connection error
+TIMESTAMP ERROR   device.log             Attempt #7 failed
+TIMESTAMP DEBUG   device.log             Extracted device password from /home/runner/work/udmi/udmi/sites/udmi_site_model/devices/AHU-1/rsa_private.pkcs8
+TIMESTAMP INFO    device.log             CA cert file: /home/runner/work/udmi/udmi/sites/udmi_site_model/reflector/ca.crt
+TIMESTAMP INFO    device.log             Device cert file: /home/runner/work/udmi/udmi/sites/udmi_site_model/devices/AHU-1/rsa_private.crt
+TIMESTAMP INFO    device.log             Private key file: /home/runner/work/udmi/udmi/sites/udmi_site_model/devices/AHU-1/rsa_private.pem
+TIMESTAMP INFO    device.log             Password sha256 6b5344e1
+TIMESTAMP WARNING device.log             Creating new config latch for AHU-1
+TIMESTAMP ERROR   device.log             While waiting for connection start: Connection error
+TIMESTAMP ERROR   device.log             Attempt #8 failed
+TIMESTAMP DEBUG   device.log             Extracted device password from /home/runner/work/udmi/udmi/sites/udmi_site_model/devices/AHU-1/rsa_private.pkcs8
+TIMESTAMP INFO    device.log             CA cert file: /home/runner/work/udmi/udmi/sites/udmi_site_model/reflector/ca.crt
+TIMESTAMP INFO    device.log             Device cert file: /home/runner/work/udmi/udmi/sites/udmi_site_model/devices/AHU-1/rsa_private.crt
+TIMESTAMP INFO    device.log             Private key file: /home/runner/work/udmi/udmi/sites/udmi_site_model/devices/AHU-1/rsa_private.pem
+TIMESTAMP INFO    device.log             Password sha256 6b5344e1
+TIMESTAMP WARNING device.log             Creating new config latch for AHU-1
+TIMESTAMP ERROR   device.log             While waiting for connection start: Connection error
+TIMESTAMP ERROR   device.log             Attempt #9 failed
+TIMESTAMP DEBUG   device.log             Extracted device password from /home/runner/work/udmi/udmi/sites/udmi_site_model/devices/AHU-1/rsa_private.pkcs8
+TIMESTAMP INFO    device.log             CA cert file: /home/runner/work/udmi/udmi/sites/udmi_site_model/reflector/ca.crt
+TIMESTAMP INFO    device.log             Device cert file: /home/runner/work/udmi/udmi/sites/udmi_site_model/devices/AHU-1/rsa_private.crt
+TIMESTAMP INFO    device.log             Private key file: /home/runner/work/udmi/udmi/sites/udmi_site_model/devices/AHU-1/rsa_private.pem
+TIMESTAMP INFO    device.log             Password sha256 6b5344e1
+TIMESTAMP WARNING device.log             Creating new config latch for AHU-1
+TIMESTAMP ERROR   device.log             While waiting for connection start: Connection error
+TIMESTAMP ERROR   device.log             Attempt #10 failed
+TIMESTAMP WARNING device.log             Ending connection 1754632222531 with 11
+TIMESTAMP ERROR   device.log             Reconfigure failed, attempting connection to last working endpoint: While resetting connection
+TIMESTAMP WARNING device.log             Starting connection 1754632242793 with 0
+TIMESTAMP DEBUG   device.log             Extracted device password from /home/runner/work/udmi/udmi/sites/udmi_site_model/devices/AHU-1/rsa_private.pkcs8
+TIMESTAMP INFO    device.log             CA cert file: /home/runner/work/udmi/udmi/sites/udmi_site_model/reflector/ca.crt
+TIMESTAMP INFO    device.log             Device cert file: /home/runner/work/udmi/udmi/sites/udmi_site_model/devices/AHU-1/rsa_private.crt
+TIMESTAMP INFO    device.log             Private key file: /home/runner/work/udmi/udmi/sites/udmi_site_model/devices/AHU-1/rsa_private.pem
+TIMESTAMP INFO    device.log             Password sha256 6b5344e1
+TIMESTAMP WARNING device.log             Creating new config latch for AHU-1
+TIMESTAMP DEBUG   system.config.receive  success
+TIMESTAMP DEBUG   system.config.parse    success
+TIMESTAMP INFO    device.log             Device AHU-1 config handler
+TIMESTAMP DEBUG   device.log             Config update AHU-1 (endpoint_failure_and_restart)
+TIMESTAMP WARNING device.log             Received config for config latch AHU-1
+TIMESTAMP INFO    device.log             Connection complete.
+TIMESTAMP WARNING device.log             Start waiting 10s for config latch for AHU-1
+TIMESTAMP WARNING device.log             Ending connection 1754632242793 with 1
+TIMESTAMP NOTICE  device.log             Endpoint connection restored to last working endpoint
+TIMESTAMP ERROR   device.log             While redirecting connection endpoint: While resetting connection
+TIMESTAMP WARNING device.log             Starting AHU-1 PubberPublisherHost sender with delay 10s
+TIMESTAMP
+TIMESTAMP WARNING device.log             Starting AHU-1 PubberSystemManager sender with delay 10s
+TIMESTAMP WARNING device.log             Starting AHU-1 PubberPointsetManager sender with delay 10s
+TIMESTAMP NOTICE  system.config.apply    success
+TIMESTAMP DEBUG   device.log             State update defer -18677ms
+TIMESTAMP
+TIMESTAMP DEBUG   device.log             State update AHU-1 (endpoint_failure_and_restart)
+TIMESTAMP DEBUG   system.config.receive  success
+TIMESTAMP DEBUG   system.config.parse    success
+TIMESTAMP DEBUG   device.log             State update defer -833ms
+TIMESTAMP INFO    device.log             Device AHU-1 config handler
+TIMESTAMP
+TIMESTAMP DEBUG   device.log             Config update AHU-1 (endpoint_failure_and_restart)
+TIMESTAMP DEBUG   device.log             State update AHU-1 (endpoint_failure_and_restart)
+TIMESTAMP
+TIMESTAMP NOTICE  system.config.apply    success
+TIMESTAMP DEBUG   device.log             State update defer 1999ms
+TIMESTAMP DEBUG   device.log             State update defer 1999ms
+TIMESTAMP DEBUG   device.log             State update defer 1999ms
+TIMESTAMP DEBUG   device.log             State update defer 1998ms
+TIMESTAMP DEBUG   device.log             State update defer 1998ms
+TIMESTAMP DEBUG   device.log             State update defer 1998ms
+TIMESTAMP DEBUG   device.log             State update defer 1998ms
+TIMESTAMP DEBUG   device.log             State update defer 0ms
+TIMESTAMP
+TIMESTAMP DEBUG   device.log             State update AHU-1 (endpoint_failure_and_restart)
+TIMESTAMP DEBUG   device.log             State update defer 1851ms
+TIMESTAMP DEBUG   device.log             State update defer 1851ms
+TIMESTAMP DEBUG   device.log             State update defer 0ms
+TIMESTAMP
+TIMESTAMP DEBUG   device.log             State update AHU-1 (endpoint_failure_and_restart)
+TIMESTAMP DEBUG   system.config.receive  success
+TIMESTAMP DEBUG   device.log             State update defer 965ms
+TIMESTAMP DEBUG   system.config.parse    success
+TIMESTAMP INFO    device.log             Device AHU-1 config handler
+TIMESTAMP DEBUG   device.log             Config update AHU-1 (endpoint_failure_and_restart)
+TIMESTAMP
+TIMESTAMP NOTICE  system.config.apply    success
+TIMESTAMP DEBUG   device.log             State update defer 963ms
+TIMESTAMP DEBUG   device.log             State update defer 963ms
+TIMESTAMP DEBUG   device.log             State update defer 962ms
+TIMESTAMP DEBUG   device.log             State update defer 0ms
+TIMESTAMP
+TIMESTAMP DEBUG   device.log             State update AHU-1 (endpoint_failure_and_restart)
+TIMESTAMP ERROR   device.log             System mode requesting device restart
+TIMESTAMP
+TIMESTAMP WARNING device.log             State update delay 857ms
+TIMESTAMP INFO    device.log             Configured with auth_type RS256
+TIMESTAMP INFO    device.log             Using addresses from default interface: eth0 for family: ipv4
+TIMESTAMP INFO    device.log             Family ipv4 address is 10.1.0.142
+TIMESTAMP INFO    device.log             Using addresses from default interface: eth0 for family: ether
+TIMESTAMP INFO    device.log             Family ether address is 7c:1e:52:b8:5b:89
+TIMESTAMP INFO    device.log             Initializing from persistent store /home/runner/work/udmi/udmi/sites/udmi_site_model/out/devices/AHU-1/persistent_data.json
+TIMESTAMP INFO    device.log             Loading endpoint from persistent data
+TIMESTAMP WARNING device.log             Updating persistent store:
+{
+  "endpoint" : {
+    "protocol" : "mqtt",
+    "transport" : "ssl",
+    "hostname" : "localhost",
+    "client_id" : "/r/ZZ-TRI-FECTA/d/AHU-1",
+    "topic_prefix" : "/r/ZZ-TRI-FECTA/d/AHU-1",
+    "auth_provider" : {
+      "basic" : {
+        "username" : "/r/ZZ-TRI-FECTA/d/AHU-1",
         "password" : "38269d11"
       }
     }
   },
   "restart_count" : 2
 }
-2024-11-06T17:32:41Z INFO    device.log             Starting pubber AHU-1, serial null, mac null, gateway null, options 
-2024-11-06T17:32:41Z INFO    device.log             Loading device key bytes from /home/runner/work/udmi/udmi/sites/udmi_site_model/devices/AHU-1/rsa_private.pkcs8
-2024-11-06T17:32:41Z INFO    device.log             CA cert file: /home/runner/work/udmi/udmi/sites/udmi_site_model/reflector/ca.crt
-2024-11-06T17:32:41Z INFO    device.log             Device cert file: /home/runner/work/udmi/udmi/sites/udmi_site_model/devices/AHU-1/rsa_private.crt
-2024-11-06T17:32:41Z INFO    device.log             Private key file: /home/runner/work/udmi/udmi/sites/udmi_site_model/devices/AHU-1/rsa_private.pem
-2024-11-06T17:32:41Z INFO    device.log             Password sha256 6b5344e1
-2024-11-06T17:32:41Z WARNING device.log             Starting connection 1730914361468 with 10
-2024-11-06T17:32:41Z INFO    device.log             Update state 2024-11-06T17:32:41Z last_config 1970-01-01T00:00:00Z
-2024-11-06T17:32:41Z WARNING device.log             Creating new config latch for AHU-1
-2024-11-06T17:32:42Z INFO    device.log             Update state 2024-11-06T17:32:42Z last_config 1970-01-01T00:00:00Z
-2024-11-06T17:32:42Z WARNING device.log             Dropping state update until config received...
-2024-11-06T17:32:42Z INFO    device.log             Update state 2024-11-06T17:32:42Z last_config 1970-01-01T00:00:00Z
-2024-11-06T17:32:42Z WARNING device.log             Dropping state update until config received...
-2024-11-06T17:32:42Z INFO    device.log             2024-11-06T17:32:42Z received config 2024-11-06T17:32:31Z
-2024-11-06T17:32:42Z WARNING device.log             Starting AHU-1 PubberPointsetManager sender with delay 10s
-2024-11-06T17:32:42Z INFO    device.log             Connection complete.
-2024-11-06T17:32:42Z WARNING device.log             Start waiting 10s for config latch for AHU-1
-2024-11-06T17:32:42Z WARNING device.log             Starting AHU-1 PubberSystemManager sender with delay 10s
-2024-11-06T17:32:42Z WARNING device.log             Starting AHU-1 Pubber sender with delay 10s
-2024-11-06T17:32:42Z INFO    device.log             Update state 2024-11-06T17:32:42Z last_config 2024-11-06T17:32:31Z
-2024-11-06T17:32:42Z WARNING device.log             Dropping state update until config received...
-2024-11-06T17:32:42Z WARNING device.log             Received config for config latch AHU-1
-2024-11-06T17:32:42Z WARNING device.log             Ending connection 1730914361468 with 9
-2024-11-06T17:32:42Z NOTICE  system.config.apply    success
-2024-11-06T17:32:42Z INFO    device.log             Update state 2024-11-06T17:32:42Z last_config 2024-11-06T17:32:31Z
-2024-11-06T17:32:42Z INFO    device.log             2024-11-06T17:32:42Z received config 2024-11-06T17:32:31Z
-2024-11-06T17:32:42Z NOTICE  system.config.apply    success
-2024-11-06T17:32:43Z INFO    device.log             Device AHU-1 config handler
-2024-11-06T17:32:43Z INFO    device.log             2024-11-06T17:32:43Z received config 2024-11-06T17:32:43Z
-2024-11-06T17:32:43Z NOTICE  system.config.apply    success
-2024-11-06T17:32:44Z INFO    device.log             Update state 2024-11-06T17:32:44Z last_config 2024-11-06T17:32:43Z
-2024-11-06T17:32:44Z INFO    device.log             Device AHU-1 config handler
-2024-11-06T17:32:44Z INFO    device.log             2024-11-06T17:32:44Z received config 2024-11-06T17:32:43Z
-2024-11-06T17:32:44Z NOTICE  system.config.apply    success
-2024-11-06T17:32:46Z INFO    device.log             Update state 2024-11-06T17:32:46Z last_config 2024-11-06T17:32:43Z
-2024-11-06T17:32:52Z INFO    device.log             2024-11-06T17:32:52Z sending AHU-1 message #0 with 3 points
-2024-11-06T17:32:52Z NOTICE  device.log             Starting new endpoint generation
-2024-11-06T17:32:52Z INFO    device.log             New config blob endpoint detected:
+TIMESTAMP INFO    device.log             Starting pubber AHU-1, serial sequencer-29579, mac null, gateway null, options 
+TIMESTAMP INFO    device.log             Loading device key bytes from /home/runner/work/udmi/udmi/sites/udmi_site_model/devices/AHU-1/rsa_private.pkcs8
+TIMESTAMP INFO    device.log             CA cert file: /home/runner/work/udmi/udmi/sites/udmi_site_model/reflector/ca.crt
+TIMESTAMP INFO    device.log             Device cert file: /home/runner/work/udmi/udmi/sites/udmi_site_model/devices/AHU-1/rsa_private.crt
+TIMESTAMP INFO    device.log             Private key file: /home/runner/work/udmi/udmi/sites/udmi_site_model/devices/AHU-1/rsa_private.pem
+TIMESTAMP INFO    device.log             Password sha256 6b5344e1
+TIMESTAMP WARNING device.log             Creating new config latch for AHU-1
+TIMESTAMP
+TIMESTAMP WARNING device.log             Dropping state update until config received...
+TIMESTAMP
+TIMESTAMP WARNING device.log             Dropping state update until config received...
+TIMESTAMP INFO    device.log             Device AHU-1 config handler
+TIMESTAMP
+TIMESTAMP WARNING device.log             Dropping state update until config received...
+TIMESTAMP INFO    device.log             Connection complete.
+TIMESTAMP WARNING device.log             Start waiting 10s for config latch for AHU-1
+TIMESTAMP WARNING device.log             Starting AHU-1 PubberPublisherHost sender with delay 10s
+TIMESTAMP WARNING device.log             Ending connection 1754632255138 with 1
+TIMESTAMP
+TIMESTAMP WARNING device.log             Starting AHU-1 PubberSystemManager sender with delay 10s
+TIMESTAMP WARNING device.log             Starting AHU-1 PubberPointsetManager sender with delay 10s
+TIMESTAMP DEBUG   device.log             Restoring unknown point filter_alarm_pressure_status
+TIMESTAMP DEBUG   device.log             Restoring unknown point filter_differential_pressure_setpoint
+TIMESTAMP DEBUG   device.log             Restoring unknown point filter_differential_pressure_sensor
+TIMESTAMP NOTICE  system.config.apply    success
+TIMESTAMP DEBUG   device.log             State update defer -1754632253993ms
+TIMESTAMP
+TIMESTAMP DEBUG   device.log             State update AHU-1 (endpoint_failure_and_restart)
+TIMESTAMP DEBUG   system.config.receive  success
+TIMESTAMP DEBUG   device.log             State update defer 1937ms
+TIMESTAMP DEBUG   system.config.parse    success
+TIMESTAMP INFO    device.log             Device AHU-1 config handler
+TIMESTAMP DEBUG   device.log             Config update AHU-1 (endpoint_failure_and_restart)
+TIMESTAMP
+TIMESTAMP NOTICE  system.config.apply    success
+TIMESTAMP DEBUG   device.log             State update defer 1931ms
+TIMESTAMP DEBUG   device.log             State update defer 1931ms
+TIMESTAMP DEBUG   system.config.receive  success
+TIMESTAMP DEBUG   device.log             State update defer 990ms
+TIMESTAMP DEBUG   system.config.parse    success
+TIMESTAMP INFO    device.log             Device AHU-1 config handler
+TIMESTAMP DEBUG   device.log             State update defer 989ms
+TIMESTAMP DEBUG   device.log             Config update AHU-1 (endpoint_failure_and_restart)
+TIMESTAMP
+TIMESTAMP NOTICE  system.config.apply    success
+TIMESTAMP DEBUG   device.log             State update defer 985ms
+TIMESTAMP DEBUG   device.log             State update defer 985ms
+TIMESTAMP DEBUG   device.log             State update defer 0ms
+TIMESTAMP
+TIMESTAMP DEBUG   device.log             State update AHU-1 (endpoint_failure_and_restart)
+TIMESTAMP DEBUG   system.config.receive  success
+TIMESTAMP DEBUG   device.log             State update defer 1943ms
+TIMESTAMP DEBUG   system.config.parse    success
+TIMESTAMP INFO    device.log             Device AHU-1 config handler
+TIMESTAMP DEBUG   device.log             State update defer 1942ms
+TIMESTAMP DEBUG   device.log             Config update AHU-1 (endpoint_failure_and_restart)
+TIMESTAMP
+TIMESTAMP NOTICE  system.config.apply    success
+TIMESTAMP DEBUG   device.log             State update defer 1939ms
+TIMESTAMP DEBUG   device.log             State update defer 1938ms
+TIMESTAMP DEBUG   device.log             State update defer 0ms
+TIMESTAMP
+TIMESTAMP DEBUG   device.log             State update AHU-1 (endpoint_failure_and_restart)
+TIMESTAMP NOTICE  device.log             Starting new endpoint generation
+TIMESTAMP INFO    device.log             New config blob endpoint detected:
 {
   "protocol" : "mqtt",
   "transport" : "ssl",
   "hostname" : "twiddily.fiddily.fog",
-  "client_id" : "/r/ZZ-TRI-FECTA_4/d/AHU-1",
-  "topic_prefix" : "/r/ZZ-TRI-FECTA_4/d/AHU-1",
+  "client_id" : "/r/ZZ-TRI-FECTA/d/AHU-1",
+  "topic_prefix" : "/r/ZZ-TRI-FECTA/d/AHU-1",
   "auth_provider" : {
     "basic" : {
-      "username" : "/r/ZZ-TRI-FECTA_4/d/AHU-1",
+      "username" : "/r/ZZ-TRI-FECTA/d/AHU-1",
       "password" : "38269d11"
     }
   },
-  "generation" : "2024-11-06T17:31:57Z"
+  "generation" : "TIMESTAMP"
 }
-2024-11-06T17:32:52Z INFO    device.log             Update state 2024-11-06T17:32:52Z last_config 2024-11-06T17:32:43Z
-2024-11-06T17:32:52Z INFO    device.log             CA cert file: /home/runner/work/udmi/udmi/sites/udmi_site_model/reflector/ca.crt
-2024-11-06T17:32:52Z INFO    device.log             Device cert file: /home/runner/work/udmi/udmi/sites/udmi_site_model/devices/AHU-1/rsa_private.crt
-2024-11-06T17:32:52Z INFO    device.log             Private key file: /home/runner/work/udmi/udmi/sites/udmi_site_model/devices/AHU-1/rsa_private.pem
-2024-11-06T17:32:52Z INFO    device.log             Password sha256 6b5344e1
-2024-11-06T17:32:52Z WARNING device.log             Starting connection 1730914372248 with 10
-2024-11-06T17:32:52Z WARNING device.log             Terminating AHU-1 PubberPointsetManager sender
-2024-11-06T17:32:52Z WARNING device.log             Terminating AHU-1 PubberSystemManager sender
-2024-11-06T17:32:52Z WARNING device.log             Creating new config latch for AHU-1
-2024-11-06T17:32:52Z ERROR   device.log             While waiting for connection start: Connection error
-2024-11-06T17:32:52Z ERROR   device.log             Attempt failed, retries remaining: 9
-2024-11-06T17:32:53Z WARNING device.log             Creating new config latch for AHU-1
-2024-11-06T17:32:53Z ERROR   device.log             While waiting for connection start: Connection error
-2024-11-06T17:32:53Z ERROR   device.log             Attempt failed, retries remaining: 8
-2024-11-06T17:32:54Z WARNING device.log             Creating new config latch for AHU-1
-2024-11-06T17:32:54Z ERROR   device.log             While waiting for connection start: Connection error
-2024-11-06T17:32:54Z ERROR   device.log             Attempt failed, retries remaining: 7
-2024-11-06T17:32:55Z WARNING device.log             Creating new config latch for AHU-1
-2024-11-06T17:32:55Z ERROR   device.log             While waiting for connection start: Connection error
-2024-11-06T17:32:55Z ERROR   device.log             Attempt failed, retries remaining: 6
-2024-11-06T17:32:56Z WARNING device.log             Creating new config latch for AHU-1
-2024-11-06T17:32:56Z ERROR   device.log             While waiting for connection start: Connection error
-2024-11-06T17:32:56Z ERROR   device.log             Attempt failed, retries remaining: 5
-2024-11-06T17:32:57Z WARNING device.log             Creating new config latch for AHU-1
-2024-11-06T17:32:57Z ERROR   device.log             While waiting for connection start: Connection error
-2024-11-06T17:32:57Z ERROR   device.log             Attempt failed, retries remaining: 4
-2024-11-06T17:32:58Z WARNING device.log             Creating new config latch for AHU-1
-2024-11-06T17:32:58Z ERROR   device.log             While waiting for connection start: Connection error
-2024-11-06T17:32:58Z ERROR   device.log             Attempt failed, retries remaining: 3
-2024-11-06T17:32:59Z WARNING device.log             Creating new config latch for AHU-1
-2024-11-06T17:32:59Z ERROR   device.log             While waiting for connection start: Connection error
-2024-11-06T17:32:59Z ERROR   device.log             Attempt failed, retries remaining: 2
-2024-11-06T17:33:00Z WARNING device.log             Creating new config latch for AHU-1
-2024-11-06T17:33:00Z ERROR   device.log             While waiting for connection start: Connection error
-2024-11-06T17:33:00Z ERROR   device.log             Attempt failed, retries remaining: 1
-2024-11-06T17:33:01Z WARNING device.log             Creating new config latch for AHU-1
-2024-11-06T17:33:01Z ERROR   device.log             While waiting for connection start: Connection error
-2024-11-06T17:33:01Z ERROR   device.log             Attempt failed, retries remaining: 0
-2024-11-06T17:33:02Z WARNING device.log             Ending connection 1730914372248 with -1
-2024-11-06T17:33:02Z ERROR   device.log             Reconfigure failed, attempting connection to last working endpoint: While resetting connection
-2024-11-06T17:33:02Z INFO    device.log             CA cert file: /home/runner/work/udmi/udmi/sites/udmi_site_model/reflector/ca.crt
-2024-11-06T17:33:02Z INFO    device.log             Device cert file: /home/runner/work/udmi/udmi/sites/udmi_site_model/devices/AHU-1/rsa_private.crt
-2024-11-06T17:33:02Z INFO    device.log             Private key file: /home/runner/work/udmi/udmi/sites/udmi_site_model/devices/AHU-1/rsa_private.pem
-2024-11-06T17:33:02Z INFO    device.log             Password sha256 6b5344e1
-2024-11-06T17:33:02Z WARNING device.log             Starting connection 1730914382510 with 10
-2024-11-06T17:33:02Z WARNING device.log             Creating new config latch for AHU-1
-2024-11-06T17:33:02Z INFO    device.log             Device AHU-1 config handler
-2024-11-06T17:33:02Z INFO    device.log             2024-11-06T17:33:02Z received config 2024-11-06T17:32:53Z
-2024-11-06T17:33:02Z WARNING device.log             Starting AHU-1 PubberPointsetManager sender with delay 10s
-2024-11-06T17:33:02Z WARNING device.log             Starting AHU-1 PubberSystemManager sender with delay 10s
-2024-11-06T17:33:12Z NOTICE  validation.feature.sequence Sequence complete
+TIMESTAMP
+TIMESTAMP WARNING device.log             State update delay 1065ms
+TIMESTAMP INFO    device.log             sending AHU-1 message #0 with 3 points
+TIMESTAMP DEBUG   device.log             State update AHU-1 (endpoint_failure_and_restart)
+TIMESTAMP WARNING device.log             Starting connection 1754632262053 with 0
+TIMESTAMP WARNING device.log             Terminating AHU-1 PubberPointsetManager sender
+TIMESTAMP WARNING device.log             Terminating AHU-1 PubberSystemManager sender
+TIMESTAMP WARNING device.log             Terminating AHU-1 PubberPublisherHost sender
+TIMESTAMP DEBUG   device.log             Extracted device password from /home/runner/work/udmi/udmi/sites/udmi_site_model/devices/AHU-1/rsa_private.pkcs8
+TIMESTAMP INFO    device.log             CA cert file: /home/runner/work/udmi/udmi/sites/udmi_site_model/reflector/ca.crt
+TIMESTAMP INFO    device.log             Device cert file: /home/runner/work/udmi/udmi/sites/udmi_site_model/devices/AHU-1/rsa_private.crt
+TIMESTAMP INFO    device.log             Private key file: /home/runner/work/udmi/udmi/sites/udmi_site_model/devices/AHU-1/rsa_private.pem
+TIMESTAMP INFO    device.log             Password sha256 6b5344e1
+TIMESTAMP WARNING device.log             Creating new config latch for AHU-1
+TIMESTAMP ERROR   device.log             While waiting for connection start: Connection error
+TIMESTAMP ERROR   device.log             Attempt #1 failed
+TIMESTAMP DEBUG   device.log             Extracted device password from /home/runner/work/udmi/udmi/sites/udmi_site_model/devices/AHU-1/rsa_private.pkcs8
+TIMESTAMP INFO    device.log             CA cert file: /home/runner/work/udmi/udmi/sites/udmi_site_model/reflector/ca.crt
+TIMESTAMP INFO    device.log             Device cert file: /home/runner/work/udmi/udmi/sites/udmi_site_model/devices/AHU-1/rsa_private.crt
+TIMESTAMP INFO    device.log             Private key file: /home/runner/work/udmi/udmi/sites/udmi_site_model/devices/AHU-1/rsa_private.pem
+TIMESTAMP INFO    device.log             Password sha256 6b5344e1
+TIMESTAMP WARNING device.log             Creating new config latch for AHU-1
+TIMESTAMP ERROR   device.log             While waiting for connection start: Connection error
+TIMESTAMP ERROR   device.log             Attempt #2 failed
+TIMESTAMP DEBUG   device.log             Extracted device password from /home/runner/work/udmi/udmi/sites/udmi_site_model/devices/AHU-1/rsa_private.pkcs8
+TIMESTAMP INFO    device.log             CA cert file: /home/runner/work/udmi/udmi/sites/udmi_site_model/reflector/ca.crt
+TIMESTAMP INFO    device.log             Device cert file: /home/runner/work/udmi/udmi/sites/udmi_site_model/devices/AHU-1/rsa_private.crt
+TIMESTAMP INFO    device.log             Private key file: /home/runner/work/udmi/udmi/sites/udmi_site_model/devices/AHU-1/rsa_private.pem
+TIMESTAMP INFO    device.log             Password sha256 6b5344e1
+TIMESTAMP WARNING device.log             Creating new config latch for AHU-1
+TIMESTAMP ERROR   device.log             While waiting for connection start: Connection error
+TIMESTAMP ERROR   device.log             Attempt #3 failed
+TIMESTAMP DEBUG   device.log             Extracted device password from /home/runner/work/udmi/udmi/sites/udmi_site_model/devices/AHU-1/rsa_private.pkcs8
+TIMESTAMP INFO    device.log             CA cert file: /home/runner/work/udmi/udmi/sites/udmi_site_model/reflector/ca.crt
+TIMESTAMP INFO    device.log             Device cert file: /home/runner/work/udmi/udmi/sites/udmi_site_model/devices/AHU-1/rsa_private.crt
+TIMESTAMP INFO    device.log             Private key file: /home/runner/work/udmi/udmi/sites/udmi_site_model/devices/AHU-1/rsa_private.pem
+TIMESTAMP INFO    device.log             Password sha256 6b5344e1
+TIMESTAMP WARNING device.log             Creating new config latch for AHU-1
+TIMESTAMP ERROR   device.log             While waiting for connection start: Connection error
+TIMESTAMP ERROR   device.log             Attempt #4 failed
+TIMESTAMP DEBUG   device.log             Extracted device password from /home/runner/work/udmi/udmi/sites/udmi_site_model/devices/AHU-1/rsa_private.pkcs8
+TIMESTAMP INFO    device.log             CA cert file: /home/runner/work/udmi/udmi/sites/udmi_site_model/reflector/ca.crt
+TIMESTAMP INFO    device.log             Device cert file: /home/runner/work/udmi/udmi/sites/udmi_site_model/devices/AHU-1/rsa_private.crt
+TIMESTAMP INFO    device.log             Private key file: /home/runner/work/udmi/udmi/sites/udmi_site_model/devices/AHU-1/rsa_private.pem
+TIMESTAMP INFO    device.log             Password sha256 6b5344e1
+TIMESTAMP WARNING device.log             Creating new config latch for AHU-1
+TIMESTAMP ERROR   device.log             While waiting for connection start: Connection error
+TIMESTAMP ERROR   device.log             Attempt #5 failed
+TIMESTAMP DEBUG   device.log             Extracted device password from /home/runner/work/udmi/udmi/sites/udmi_site_model/devices/AHU-1/rsa_private.pkcs8
+TIMESTAMP INFO    device.log             CA cert file: /home/runner/work/udmi/udmi/sites/udmi_site_model/reflector/ca.crt
+TIMESTAMP INFO    device.log             Device cert file: /home/runner/work/udmi/udmi/sites/udmi_site_model/devices/AHU-1/rsa_private.crt
+TIMESTAMP INFO    device.log             Private key file: /home/runner/work/udmi/udmi/sites/udmi_site_model/devices/AHU-1/rsa_private.pem
+TIMESTAMP INFO    device.log             Password sha256 6b5344e1
+TIMESTAMP WARNING device.log             Creating new config latch for AHU-1
+TIMESTAMP ERROR   device.log             While waiting for connection start: Connection error
+TIMESTAMP ERROR   device.log             Attempt #6 failed
+TIMESTAMP DEBUG   device.log             Extracted device password from /home/runner/work/udmi/udmi/sites/udmi_site_model/devices/AHU-1/rsa_private.pkcs8
+TIMESTAMP INFO    device.log             CA cert file: /home/runner/work/udmi/udmi/sites/udmi_site_model/reflector/ca.crt
+TIMESTAMP INFO    device.log             Device cert file: /home/runner/work/udmi/udmi/sites/udmi_site_model/devices/AHU-1/rsa_private.crt
+TIMESTAMP INFO    device.log             Private key file: /home/runner/work/udmi/udmi/sites/udmi_site_model/devices/AHU-1/rsa_private.pem
+TIMESTAMP INFO    device.log             Password sha256 6b5344e1
+TIMESTAMP WARNING device.log             Creating new config latch for AHU-1
+TIMESTAMP ERROR   device.log             While waiting for connection start: Connection error
+TIMESTAMP ERROR   device.log             Attempt #7 failed
+TIMESTAMP DEBUG   device.log             Extracted device password from /home/runner/work/udmi/udmi/sites/udmi_site_model/devices/AHU-1/rsa_private.pkcs8
+TIMESTAMP INFO    device.log             CA cert file: /home/runner/work/udmi/udmi/sites/udmi_site_model/reflector/ca.crt
+TIMESTAMP INFO    device.log             Device cert file: /home/runner/work/udmi/udmi/sites/udmi_site_model/devices/AHU-1/rsa_private.crt
+TIMESTAMP INFO    device.log             Private key file: /home/runner/work/udmi/udmi/sites/udmi_site_model/devices/AHU-1/rsa_private.pem
+TIMESTAMP INFO    device.log             Password sha256 6b5344e1
+TIMESTAMP WARNING device.log             Creating new config latch for AHU-1
+TIMESTAMP ERROR   device.log             While waiting for connection start: Connection error
+TIMESTAMP ERROR   device.log             Attempt #8 failed
+TIMESTAMP DEBUG   device.log             Extracted device password from /home/runner/work/udmi/udmi/sites/udmi_site_model/devices/AHU-1/rsa_private.pkcs8
+TIMESTAMP INFO    device.log             CA cert file: /home/runner/work/udmi/udmi/sites/udmi_site_model/reflector/ca.crt
+TIMESTAMP INFO    device.log             Device cert file: /home/runner/work/udmi/udmi/sites/udmi_site_model/devices/AHU-1/rsa_private.crt
+TIMESTAMP INFO    device.log             Private key file: /home/runner/work/udmi/udmi/sites/udmi_site_model/devices/AHU-1/rsa_private.pem
+TIMESTAMP INFO    device.log             Password sha256 6b5344e1
+TIMESTAMP WARNING device.log             Creating new config latch for AHU-1
+TIMESTAMP ERROR   device.log             While waiting for connection start: Connection error
+TIMESTAMP ERROR   device.log             Attempt #9 failed
+TIMESTAMP DEBUG   device.log             Extracted device password from /home/runner/work/udmi/udmi/sites/udmi_site_model/devices/AHU-1/rsa_private.pkcs8
+TIMESTAMP INFO    device.log             CA cert file: /home/runner/work/udmi/udmi/sites/udmi_site_model/reflector/ca.crt
+TIMESTAMP INFO    device.log             Device cert file: /home/runner/work/udmi/udmi/sites/udmi_site_model/devices/AHU-1/rsa_private.crt
+TIMESTAMP INFO    device.log             Private key file: /home/runner/work/udmi/udmi/sites/udmi_site_model/devices/AHU-1/rsa_private.pem
+TIMESTAMP INFO    device.log             Password sha256 6b5344e1
+TIMESTAMP WARNING device.log             Creating new config latch for AHU-1
+TIMESTAMP ERROR   device.log             While waiting for connection start: Connection error
+TIMESTAMP ERROR   device.log             Attempt #10 failed
+TIMESTAMP WARNING device.log             Ending connection 1754632262053 with 11
+TIMESTAMP ERROR   device.log             Reconfigure failed, attempting connection to last working endpoint: While resetting connection
+TIMESTAMP WARNING device.log             Starting connection 1754632282345 with 0
+TIMESTAMP DEBUG   device.log             Extracted device password from /home/runner/work/udmi/udmi/sites/udmi_site_model/devices/AHU-1/rsa_private.pkcs8
+TIMESTAMP INFO    device.log             CA cert file: /home/runner/work/udmi/udmi/sites/udmi_site_model/reflector/ca.crt
+TIMESTAMP INFO    device.log             Device cert file: /home/runner/work/udmi/udmi/sites/udmi_site_model/devices/AHU-1/rsa_private.crt
+TIMESTAMP INFO    device.log             Private key file: /home/runner/work/udmi/udmi/sites/udmi_site_model/devices/AHU-1/rsa_private.pem
+TIMESTAMP INFO    device.log             Password sha256 6b5344e1
+TIMESTAMP WARNING device.log             Creating new config latch for AHU-1
+TIMESTAMP DEBUG   system.config.receive  success
+TIMESTAMP DEBUG   system.config.parse    success
+TIMESTAMP INFO    device.log             Device AHU-1 config handler
+TIMESTAMP DEBUG   device.log             Config update AHU-1 (endpoint_failure_and_restart)
+TIMESTAMP WARNING device.log             Received config for config latch AHU-1
+TIMESTAMP INFO    device.log             Connection complete.
+TIMESTAMP WARNING device.log             Start waiting 10s for config latch for AHU-1
+TIMESTAMP WARNING device.log             Ending connection 1754632282345 with 1
+TIMESTAMP NOTICE  device.log             Endpoint connection restored to last working endpoint
+TIMESTAMP ERROR   device.log             While redirecting connection endpoint: While resetting connection
+TIMESTAMP WARNING device.log             Starting AHU-1 PubberPublisherHost sender with delay 10s
+TIMESTAMP
+TIMESTAMP WARNING device.log             Starting AHU-1 PubberSystemManager sender with delay 10s
+TIMESTAMP WARNING device.log             Starting AHU-1 PubberPointsetManager sender with delay 10s
+TIMESTAMP NOTICE  system.config.apply    success
+TIMESTAMP DEBUG   device.log             State update defer -18701ms
+TIMESTAMP
+TIMESTAMP DEBUG   device.log             State update AHU-1 (endpoint_failure_and_restart)
+TIMESTAMP NOTICE  validation.feature.sequence Sequence complete

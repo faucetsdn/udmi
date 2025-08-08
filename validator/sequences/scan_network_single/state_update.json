@@ -5,10 +5,10 @@
   "localnet" : {
     "families" : {
       "ether" : {
-        "addr" : "7c:1e:52:e2:67:ba"
+        "addr" : "7c:1e:52:ff:0a:df"
       },
       "ipv4" : {
-        "addr" : "10.1.0.175"
+        "addr" : "10.1.0.174"
       },
       "vendor" : {
         "addr" : "28179023"
@@ -40,7 +40,7 @@
       "restart_count" : 1,
       "mode" : "initial"
     },
-    "serial_no" : "sequencer-30819",
+    "serial_no" : "sequencer-21973",
     "hardware" : {
       "make" : "BOS",
       "model" : "pubber"

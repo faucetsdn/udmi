@@ -1,18 +1,18 @@
 {
   "families" : {
     "ether" : {
-      "addr" : "7c:1e:52:14:69:d9"
+      "addr" : "7c:1e:52:b8:5b:89"
     },
     "ipv4" : {
-      "addr" : "10.1.0.144"
-    },
-    "ipv6" : {
-      "addr" : "fe80::7e1e:52ff:fe14:69d9"
+      "addr" : "10.1.0.142"
     },
     "vendor" : {
       "addr" : "28179023"
+    },
+    "bacnet" : {
+      "addr" : "27312"
     }
   },
-  "timestamp" : "2024-11-06T17:33:07Z",
-  "version" : "1.5.2"
+  "timestamp" : "TIMESTAMP",
+  "version" : "1.5.3"
 }

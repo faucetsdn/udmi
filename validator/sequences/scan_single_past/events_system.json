@@ -1,10 +1,10 @@
 {
-  "event_no" : 19,
+  "event_no" : 20,
   "last_config" : "TIMESTAMP",
   "logentries" : [ ],
   "metrics" : {
     "mem_total_mb" : 64.0,
-    "mem_free_mb" : 47.184898376464844
+    "mem_free_mb" : 45.494163513183594
   },
   "timestamp" : "TIMESTAMP",
   "version" : "1.5.3"

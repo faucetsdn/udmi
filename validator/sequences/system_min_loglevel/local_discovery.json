@@ -1,5 +1,6 @@
 {
   "families" : {
-    "vendor" : { }
+    "vendor" : { },
+    "bacnet" : { }
   }
 }

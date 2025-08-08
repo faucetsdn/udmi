@@ -1,9 +1,0 @@
-{
-  "families" : {
-    "vendor" : {
-      "generation" : "TIMESTAMP",
-      "scan_duration_sec" : 10,
-      "addrs" : [ "0x65", "20231" ]
-    }
-  }
-}
