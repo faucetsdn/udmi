@@ -81,7 +81,6 @@ if [[ -n $update ]]; then
     rm -f $RESULT_OUT
 
     for test in $all_tests; do
-        echo TAP $test
         src_dir=$TEST_ROOT/tests/$test
         cache_dir=$CACHE_ROOT/${test%+*}
 
