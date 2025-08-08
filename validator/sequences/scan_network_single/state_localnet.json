@@ -1,10 +1,10 @@
 {
   "families" : {
     "ether" : {
-      "addr" : "7c:1e:52:22:fd:6b"
+      "addr" : "7c:1e:52:e2:67:ba"
     },
     "ipv4" : {
-      "addr" : "10.1.0.47"
+      "addr" : "10.1.0.175"
     },
     "vendor" : {
       "addr" : "28179023"

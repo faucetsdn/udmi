@@ -81,11 +81,14 @@ if [[ -n $update ]]; then
     rm -f $RESULT_OUT
 
     for test in $all_tests; do
+        echo TAP $test
         src_dir=$TEST_ROOT/tests/$test
+        cache_dir=$CACHE_ROOT/${test%+*}
+
         if [[ $test =~ \+ ]]; then
             fgrep "test is primary" $src_dir/sequence.log || continue
         fi
-        cache_dir=$CACHE_ROOT/${test%+*}
+
         if ! test -f $src_dir/sequence.md; then
             echo Missing $src_dir/sequence.md
         elif diff -q $src_dir/sequence.md $cache_dir/sequence.md; then
@@ -118,10 +121,14 @@ if [[ -n $validate_saved ]]; then
     echo Verifying sequencer cache against generated files
     tests=$(ls -1 $TEST_ROOT/tests/)
     for test in $tests; do
-        diff -u $TEST_ROOT/tests/${test}/sequence.md $CACHE_ROOT/${test%+*}/sequence.md
+        src_dir=$TEST_ROOT/tests/${test}
+        if [[ $test =~ \+ ]]; then
+            fgrep "test is primary" $src_dir/sequence.log || continue
+        fi
+        diff -u $src_dir/sequence.md $CACHE_ROOT/${test%+*}/sequence.md
     done
     ls $CACHE_ROOT/ > out/cached_sequences.out
-    ls $TEST_ROOT/tests/ > out/device_sequences.out
+    ls $TEST_ROOT/tests/ | sed -e 's/+.*//' | uniq > out/device_sequences.out
     diff -u out/cached_sequences.out out/device_sequences.out || fail Unexpected difference with cached results.
 fi
 

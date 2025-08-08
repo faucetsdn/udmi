@@ -1,9 +1,9 @@
-RESULT pass discovery.scan scan_network_single ALPHA 10/10 Sequence complete
-RESULT pass discovery.scan scan_periodic_now_enumerate PREVIEW 10/10 Sequence complete
-RESULT pass discovery.scan scan_single_future PREVIEW 10/10 Sequence complete
-RESULT pass discovery.scan scan_single_now PREVIEW 10/10 Sequence complete
-RESULT pass discovery.scan scan_single_past PREVIEW 10/10 Sequence complete
-RESULT pass discovery.scan scan_single_targeted ALPHA 10/10 Sequence complete
+RESULT skip discovery.scan scan_network_single+vendor ALPHA 0/0 not enough networks for test
+RESULT pass discovery.scan scan_periodic_now_enumerate+vendor PREVIEW 10/10 Sequence complete
+RESULT pass discovery.scan scan_single_future+vendor PREVIEW 10/10 Sequence complete
+RESULT pass discovery.scan scan_single_now+vendor PREVIEW 10/10 Sequence complete
+RESULT pass discovery.scan scan_single_past+vendor PREVIEW 10/10 Sequence complete
+RESULT skip discovery.scan scan_single_targeted+vendor ALPHA 0/0 Not enough targets to test targeted scan
 RESULT pass endpoint.config endpoint_connection_bad_alternate PREVIEW 10/10 Sequence complete
 RESULT pass endpoint.config endpoint_connection_bad_hash PREVIEW 10/10 Sequence complete
 RESULT pass endpoint.config endpoint_connection_error PREVIEW 10/10 Sequence complete
@@ -28,8 +28,6 @@ RESULT pass pointset pointset_publish_interval STABLE 10/10 Sequence complete
 RESULT pass pointset pointset_remove_point STABLE 10/10 Sequence complete
 RESULT pass pointset pointset_request_extraneous STABLE 10/10 Sequence complete
 RESULT pass system broken_config STABLE 10/10 Sequence complete
-CPBLTY pass system broken_config.logging ALPHA 1/1 Capability supported
-CPBLTY pass system broken_config.status ALPHA 1/1 Capability supported
 RESULT pass system config_logging STABLE 10/10 Sequence complete
 RESULT pass system device_config_acked STABLE 10/10 Sequence complete
 RESULT pass system extra_config STABLE 10/10 Sequence complete
@@ -40,7 +38,6 @@ RESULT pass system.mode system_mode_restart PREVIEW 10/10 Sequence complete
 RESULT pass system state_make_model STABLE 10/10 Sequence complete
 RESULT pass system state_software STABLE 10/10 Sequence complete
 RESULT pass system system_last_update STABLE 11/11 Sequence complete
-CPBLTY pass system system_last_update.subblocks ALPHA 1/1 Capability supported
 RESULT pass system system_min_loglevel ALPHA 10/10 Sequence complete
 RESULT pass system too_much_state ALPHA 10/10 Sequence complete
 RESULT pass system valid_serial_no STABLE 10/10 Sequence complete
