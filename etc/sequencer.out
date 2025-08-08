@@ -46,6 +46,7 @@ RESULT pass system.mode system_mode_restart PREVIEW 10/10 Sequence complete
 RESULT pass system state_make_model STABLE 10/10 Sequence complete
 RESULT pass system state_software STABLE 10/10 Sequence complete
 RESULT pass system system_last_update STABLE 11/11 Sequence complete
+CPBLTY pass system system_last_update.subblocks ALPHA 1/1 Capability supported
 RESULT pass system system_min_loglevel ALPHA 10/10 Sequence complete
 RESULT pass system too_much_state ALPHA 10/10 Sequence complete
 RESULT pass system valid_serial_no STABLE 10/10 Sequence complete
