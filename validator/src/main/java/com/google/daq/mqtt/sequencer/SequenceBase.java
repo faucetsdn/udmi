@@ -282,6 +282,7 @@ public class SequenceBase {
   private static final long MESSAGE_POLL_SLEEP_MS = 1000;
   private static final String MESSAGE_SOURCE_INDICATOR = "message_envelope_source_key";
   private static final Duration WAITING_SLOP_TIME = Duration.ofSeconds(2);
+  private static final String FACET_SUFFIX_SEPARATOR = "+";
   protected static Metadata deviceMetadata;
   protected static String projectId;
   protected static String cloudRegion;
@@ -359,6 +360,8 @@ public class SequenceBase {
   private final AtomicBoolean waitingForConfigSync = new AtomicBoolean();
   private static String sessionPrefix;
   private static Scoring scoringResult;
+  static Map.Entry<SubFolder, String> activeFacet;
+  static String activePrimary;
   private Date configStateStart;
   protected boolean pretendStateUpdated;
   private Boolean stateSupported;
@@ -660,7 +663,7 @@ public class SequenceBase {
       return list.stream()
           .collect(Collectors.toMap(WithCapability::value, cap -> cap));
     } catch (Exception e) {
-      throw new RuntimeException("While extracting capabilities for " + desc.getMethodName(), e);
+      throw new RuntimeException("While extracting capabilities for " + getTestName(desc), e);
     }
   }
 
@@ -979,7 +982,7 @@ public class SequenceBase {
     ifTrueThen(isPass, () -> assertEquals("executed test capabilities",
         capabilities.keySet(), capExcept.keySet()));
 
-    String method = description.getMethodName();
+    String method = getTestName(description);
     capabilities.keySet().stream()
         .map(key -> emitCapabilityResult(key, capExcept.get(key),
             capabilities.get(key), bucket, method))
@@ -1040,7 +1043,7 @@ public class SequenceBase {
 
   private void collectSchemaResult(Description description, String schemaName,
       SequenceResult result, String detail) {
-    String name = description.getMethodName();
+    String name = getTestName(description);
     Feature feature = description.getAnnotation(Feature.class);
     String bucket = getBucket(feature).value();
     String stage = (feature == null ? DEFAULT_STAGE : feature.stage()).name();
@@ -2525,7 +2528,7 @@ public class SequenceBase {
   }
 
   private void putSequencerResult(Description description, SequenceResult result) {
-    String resultId = getDeviceId() + "/" + description.getMethodName();
+    String resultId = getDeviceId() + "/" + getTestName(description);
     SequenceRunner.getAllTests().put(resultId, result);
   }
 
@@ -2542,7 +2545,7 @@ public class SequenceBase {
 
   private void setSequenceStatus(Description description, SequenceResult result, Entry logEntry) {
     String bucket = getBucket(description).value();
-    String sequence = description.getMethodName();
+    String sequence = getTestName(description);
     SequenceValidationState sequenceValidationState = getValidationState().features.computeIfAbsent(
         bucket, this::newFeatureValidationState).sequences.computeIfAbsent(
         sequence, key -> new SequenceValidationState());
@@ -2697,6 +2700,15 @@ public class SequenceBase {
     return FALLBACK_REGISTRY_MARK.equals(message.get(MESSAGE_SOURCE_INDICATOR));
   }
 
+  protected String getFacetValue(SubFolder facetKey) {
+    if (activeFacet == null) {
+      return null;
+    }
+    checkState(facetKey == activeFacet.getKey(), format(
+        "Requested facet %s does not match active facet %s", facetKey, activeFacet.getKey()));
+    return activeFacet.getValue();
+  }
+
   /**
    * Capability indicating if the target implements last_config state reporting.
    */
@@ -2736,7 +2748,7 @@ public class SequenceBase {
 
     @Override
     protected void starting(@NotNull Description description) {
-      testName = description.getMethodName();
+      testName = getTestName(description);
       try {
         testDescription = description;
         testSummary = getTestSummary(description);
@@ -2778,6 +2790,8 @@ public class SequenceBase {
         startCaptureTime = 0;
         startTestTimeMs = System.currentTimeMillis();
         notice("Starting test " + testName + " " + START_END_MARKER);
+        ifTrueThen(activeFacet != null && Objects.equals(activeFacet.getValue(), activePrimary),
+            () -> notice("This test is primary for facet " + activeFacet.getKey()));
       } catch (IllegalArgumentException e) {
         putSequencerResult(description, ERRR);
         recordCompletion(ERRR, description, friendlyStackTrace(e));
@@ -2796,7 +2810,7 @@ public class SequenceBase {
         return;
       }
 
-      if (!testName.equals(description.getMethodName())) {
+      if (!testName.equals(getTestName(description))) {
         throw new IllegalStateException("Unexpected test method name");
       }
 
@@ -2886,5 +2900,11 @@ public class SequenceBase {
         e.printStackTrace();
       }
     }
+  }
+
+  private static String getTestName(@NotNull Description description) {
+    String suffix = ifNotNullGet(activeFacet, facet -> FACET_SUFFIX_SEPARATOR + facet.getValue(),
+        "");
+    return description.getMethodName() + suffix;
   }
 }

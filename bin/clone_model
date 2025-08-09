@@ -7,7 +7,7 @@ cd $SITE_DIR
 
 MODEL_LINK=site_model
 MODEL_DIR=udmi_site_model
-MODEL_VER=1.21
+MODEL_VER=1.22
 TEST_SITE_GIT=https://github.com/faucetsdn/$MODEL_DIR.git
 MODEL_REPO=origin
 

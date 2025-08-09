@@ -82,7 +82,12 @@ if [[ -n $update ]]; then
 
     for test in $all_tests; do
         src_dir=$TEST_ROOT/tests/$test
-        cache_dir=$CACHE_ROOT/$test
+        cache_dir=$CACHE_ROOT/${test%+*}
+
+        if [[ $test =~ \+ ]]; then
+            fgrep "test is primary" $src_dir/sequence.log || continue
+        fi
+
         if ! test -f $src_dir/sequence.md; then
             echo Missing $src_dir/sequence.md
         elif diff -q $src_dir/sequence.md $cache_dir/sequence.md; then
@@ -90,16 +95,16 @@ if [[ -n $update ]]; then
         else
             echo Updating $cache_dir from $src_dir...
             rm -rf $cache_dir
-            cp -a $src_dir $(dirname $cache_dir)
+            cp -a $src_dir $cache_dir
             rm -rf $cache_dir/trace $cache_dir/stray
             find $cache_dir -type f | xargs -n 1 sed -E -i \
+                                            -e 's/ZZ-TRI-FECTA_./ZZ-TRI-FECTA/' \
                                             -e 's/"transactionId.*/REDACTED_TXN_ID/' \
                                             -e 's/202.-..-..T.*Z/TIMESTAMP/'
             ls -l $src_dir/sequence.md $cache_dir/sequence.md
-            false
         fi
 
-        fgrep RESULT $src_dir/sequence.log | sed -E -e 's/.*NOTICE +RESULT/RESULT/' >> $RESULT_OUT
+        fgrep RESULT $src_dir/sequence.log | sed -E -e 's/.*NOTICE +RESULT/RESULT/' >> $RESULT_OUT || true
     done
 
     sort -k 3 < $RESULT_OUT | fgrep -v " DISABLED " | sponge $RESULT_OUT
@@ -114,12 +119,16 @@ fi
 
 if [[ -n $validate_saved ]]; then
     echo Verifying sequencer cache against generated files
-    ls -1 $TEST_ROOT/tests/ \
-        | xargs -I% diff -u \
-            $TEST_ROOT/tests/%/sequence.md \
-            $CACHE_ROOT/%/sequence.md
+    tests=$(ls -1 $TEST_ROOT/tests/)
+    for test in $tests; do
+        src_dir=$TEST_ROOT/tests/${test}
+        if [[ $test =~ \+ ]]; then
+            fgrep "test is primary" $src_dir/sequence.log || continue
+        fi
+        diff -u $src_dir/sequence.md $CACHE_ROOT/${test%+*}/sequence.md
+    done
     ls $CACHE_ROOT/ > out/cached_sequences.out
-    ls $TEST_ROOT/tests/ > out/device_sequences.out
+    ls $TEST_ROOT/tests/ | sed -e 's/+.*//' | uniq > out/device_sequences.out
     diff -u out/cached_sequences.out out/device_sequences.out || fail Unexpected difference with cached results.
 fi
 
@@ -132,10 +141,10 @@ fi
 
 if [[ -n $validate_archive ]]; then
     echo Verifying archived sequencer cache against generated files
-    ls -1 $TEST_ROOT/tests/ \
-        | xargs -I% diff -u \
-            $TEST_ROOT/tests/%/sequence.md \
-            $ARCHIVE_ROOT/%/sequence.md
+    tests=$(ls -1 $TEST_ROOT/tests/)
+    for test in $tests; do
+        diff -u $TEST_ROOT/tests/${test}/sequence.md $ARCHIVE_ROOT/${test%+*}/sequence.md
+    done
     echo Verification successful    
 fi
 

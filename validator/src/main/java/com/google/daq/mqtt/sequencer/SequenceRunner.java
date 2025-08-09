@@ -1,9 +1,12 @@
 package com.google.daq.mqtt.sequencer;
 
 import static com.google.common.base.Preconditions.checkState;
+import static com.google.daq.mqtt.sequencer.SequenceBase.getDeviceId;
 import static com.google.daq.mqtt.sequencer.SequenceBase.getSequencerStateFile;
+import static com.google.daq.mqtt.sequencer.SequenceBase.siteModel;
 import static com.google.udmi.util.GeneralUtils.CSV_JOINER;
 import static com.google.udmi.util.GeneralUtils.friendlyStackTrace;
+import static com.google.udmi.util.GeneralUtils.ifNotNullGet;
 import static com.google.udmi.util.GeneralUtils.ifTrueGet;
 import static java.lang.String.format;
 import static java.util.Optional.ofNullable;
@@ -12,6 +15,7 @@ import static udmi.schema.FeatureDiscovery.FeatureStage.BETA;
 
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.daq.mqtt.WebServerRunner;
 import com.google.daq.mqtt.sequencer.sequences.ConfigSequences;
 import com.google.daq.mqtt.util.ConfigUtil;
@@ -20,6 +24,8 @@ import com.google.udmi.util.SiteModel;
 import com.google.udmi.util.SiteModel.MetadataException;
 import java.io.File;
 import java.lang.reflect.Method;
+import java.util.AbstractMap;
+import java.util.AbstractMap.SimpleEntry;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -39,6 +45,7 @@ import org.junit.runner.JUnitCore;
 import org.junit.runner.Request;
 import org.junit.runner.Result;
 import org.junit.runner.notification.Failure;
+import udmi.schema.Envelope.SubFolder;
 import udmi.schema.ExecutionConfiguration;
 import udmi.schema.FeatureDiscovery.FeatureStage;
 import udmi.schema.Level;
@@ -61,6 +68,8 @@ public class SequenceRunner {
   private static final List<String> failures = new ArrayList<>();
   private static final Map<String, SequenceResult> allTestResults = new TreeMap<>();
   private static final List<String> SHARD_LIST = new ArrayList<>();
+  private static final Map<SubFolder, FacetResolver> FACET_RESOLVERS = ImmutableMap.of(
+      SubFolder.DISCOVERY, new DiscoveryFacetResolver());
   private final Set<String> sequenceClasses = new TreeSet<>(
       Common.allClassesInPackage(ConfigSequences.class));
   private List<String> targets = List.of();
@@ -238,7 +247,7 @@ public class SequenceRunner {
     int runCount = 0;
     for (String className : sequenceClasses) {
       Class<?> clazz = Common.classForName(className);
-      List<Request> requests = new ArrayList<>();
+      List<Map.Entry<Class<?>, String>> targets = new ArrayList<>();
       List<String> runMethods = getRunMethods(clazz);
       if (runMethods.isEmpty()) {
         System.err.println("Found target methods: none for class " + className);
@@ -246,19 +255,20 @@ public class SequenceRunner {
       }
       System.err.printf("Found target methods: %s%n", CSV_JOINER.join(runMethods));
       for (String method : runMethods) {
+        SequenceBase.activeFacet = null;
         System.err.println("Running target " + clazz.getName() + "#" + method);
-        requests.add(Request.method(clazz, method));
+        targets.add(new AbstractMap.SimpleEntry<>(clazz, method));
         remainingMethods.remove(method);
       }
-      for (Request request : requests) {
-        Result result = new JUnitCore().run(request);
-        List<Failure> theseFailures = result.getFailures();
-        failures.addAll(summarizeFailures(theseFailures));
-        runCount += result.getRunCount();
-        List<String> failures = theseFailures.stream().map(Failure::getException)
-            .filter(failure -> failure instanceof IllegalArgumentException)
-            .map(Throwable::getMessage).toList();
-        checkState(failures.isEmpty(), "Fatal system errors: " + CSV_JOINER.join(failures));
+      for (Entry<Class<?>, String> target : targets) {
+        Request request = Request.method(target.getKey(), target.getValue());
+        SubFolder kind = getTargetFacetKind(target);
+        SequenceBase.activePrimary = getTargetPrimary(target);
+        Set<String> targetFacets = getTargetFacets(kind);
+        for (String targetFacet : targetFacets) {
+          SequenceBase.activeFacet = ifNotNullGet(kind, f -> new SimpleEntry<>(f, targetFacet));
+          runCount += runOneTarget(request);
+        }
       }
     }
 
@@ -279,6 +289,17 @@ public class SequenceRunner {
         (key, value) -> System.err.println("Sequencer result count " + key.name() + " = " + value));
     String stateAbsolutePath = getSequencerStateFile().getAbsolutePath();
     System.err.println("Sequencer state summary in " + stateAbsolutePath);
+  }
+
+  private int runOneTarget(Request request) {
+    Result result = new JUnitCore().run(request);
+    List<Failure> theseFailures = result.getFailures();
+    failures.addAll(summarizeFailures(theseFailures));
+    List<String> failures = theseFailures.stream().map(Failure::getException)
+        .filter(failure -> failure instanceof IllegalArgumentException)
+        .map(Throwable::getMessage).toList();
+    checkState(failures.isEmpty(), "Fatal system errors: " + CSV_JOINER.join(failures));
+    return result.getRunCount();
   }
 
   private Collection<String> summarizeFailures(List<Failure> failures) {
@@ -312,6 +333,37 @@ public class SequenceRunner {
     methods.stream().sorted().forEach(this::shouldShardMethod);
 
     return methods.stream().filter(this::shouldShardMethod).filter(this::isTargetMethod).toList();
+  }
+
+  private Set<String> getTargetFacets(SubFolder facetKind) {
+    if (facetKind == null) {
+      Set<String> setOfNull = new HashSet<>();
+      setOfNull.add(null);
+      return setOfNull;
+    }
+    Set<String> resolved = FACET_RESOLVERS.get(facetKind).resolve(siteModel, getDeviceId());
+    System.err.printf("Resolved facet %s to %s%n", facetKind, resolved);
+    return resolved;
+  }
+
+  private static String getTargetPrimary(Entry<Class<?>, String> target) {
+    try {
+      Method method = target.getKey().getMethod(target.getValue());
+      SubFolder facets = method.getAnnotation(Feature.class).facets();
+      return ifNotNullGet(FACET_RESOLVERS.get(facets), FacetResolver::primary);
+    } catch (Exception e) {
+      throw new RuntimeException("Could not find target method " + target, e);
+    }
+  }
+
+  private static SubFolder getTargetFacetKind(Entry<Class<?>, String> target) {
+    try {
+      Method method = target.getKey().getMethod(target.getValue());
+      SubFolder facets = method.getAnnotation(Feature.class).facets();
+      return facets == SubFolder.INVALID ? null : facets;
+    } catch (Exception e) {
+      throw new RuntimeException("Could not find target method " + target, e);
+    }
   }
 
   private boolean isTestMethod(Method method) {

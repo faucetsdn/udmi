@@ -1,9 +1,15 @@
-RESULT pass discovery.scan scan_network_single ALPHA 10/10 Sequence complete
-RESULT pass discovery.scan scan_periodic_now_enumerate PREVIEW 10/10 Sequence complete
-RESULT pass discovery.scan scan_single_future PREVIEW 10/10 Sequence complete
-RESULT pass discovery.scan scan_single_now PREVIEW 10/10 Sequence complete
-RESULT pass discovery.scan scan_single_past PREVIEW 10/10 Sequence complete
-RESULT pass discovery.scan scan_single_targeted ALPHA 10/10 Sequence complete
+RESULT skip discovery.scan scan_network_single+bacnet ALPHA 0/0 not enough networks for test
+RESULT pass discovery.scan scan_network_single+vendor ALPHA 10/10 Sequence complete
+RESULT pass discovery.scan scan_periodic_now_enumerate+bacnet PREVIEW 10/10 Sequence complete
+RESULT pass discovery.scan scan_periodic_now_enumerate+vendor PREVIEW 10/10 Sequence complete
+RESULT pass discovery.scan scan_single_future+bacnet PREVIEW 10/10 Sequence complete
+RESULT pass discovery.scan scan_single_future+vendor PREVIEW 10/10 Sequence complete
+RESULT pass discovery.scan scan_single_now+bacnet PREVIEW 10/10 Sequence complete
+RESULT pass discovery.scan scan_single_now+vendor PREVIEW 10/10 Sequence complete
+RESULT pass discovery.scan scan_single_past+bacnet PREVIEW 10/10 Sequence complete
+RESULT pass discovery.scan scan_single_past+vendor PREVIEW 10/10 Sequence complete
+RESULT skip discovery.scan scan_single_targeted+bacnet ALPHA 0/0 Not enough targets to test targeted scan
+RESULT pass discovery.scan scan_single_targeted+vendor ALPHA 10/10 Sequence complete
 RESULT pass endpoint.config endpoint_connection_bad_alternate PREVIEW 10/10 Sequence complete
 RESULT pass endpoint.config endpoint_connection_bad_hash PREVIEW 10/10 Sequence complete
 RESULT pass endpoint.config endpoint_connection_error PREVIEW 10/10 Sequence complete

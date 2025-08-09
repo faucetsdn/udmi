@@ -5,6 +5,7 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 import udmi.schema.Bucket;
+import udmi.schema.Envelope.SubFolder;
 import udmi.schema.FeatureDiscovery.FeatureStage;
 
 /**
@@ -36,6 +37,13 @@ public @interface Feature {
    * @return annotated release stage of this test
    */
   FeatureStage stage() default FeatureStage.ALPHA;
+
+  /**
+   * Default value is INVALID indicating there are no facets to process.
+   *
+   * @return indicator for the facets that need to be processed
+   */
+  SubFolder facets() default SubFolder.INVALID;
 
   /**
    * Defines the feature score for this test, in AU.

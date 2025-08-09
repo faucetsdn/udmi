@@ -510,12 +510,13 @@ Check error when pointset configuration contains extraneous point
 
 Test passed.
 
-## scan_periodic_now_enumerate (PREVIEW)
+## scan_periodic_now_enumerate+vendor (PREVIEW)
 
 Check periodic scan on a fixed schedule and enumeration
 
 1. Update config before discovery families defined
     * Remove `discovery.families.vendor`
+    * Remove `discovery.families.bacnet`
 1. Wait for discovery families defined
 1. Wait until discovery family keys match
 1. Wait for no scans active
@@ -527,12 +528,13 @@ Check periodic scan on a fixed schedule and enumeration
 
 Test passed.
 
-## scan_single_future (PREVIEW)
+## scan_single_future+vendor (PREVIEW)
 
 Check results of a single scan scheduled soon
 
 1. Update config before discovery families defined
     * Remove `discovery.families.vendor`
+    * Remove `discovery.families.bacnet`
 1. Wait for discovery families defined
 1. Wait until discovery family keys match
 1. Wait for no scans active
@@ -556,12 +558,13 @@ Check results of a single scan scheduled soon
 
 Test passed.
 
-## scan_single_now (PREVIEW)
+## scan_single_now+vendor (PREVIEW)
 
 Check results of a single scan scheduled in the recent past including enumeration
 
 1. Update config before discovery families defined
     * Remove `discovery.families.vendor`
+    * Remove `discovery.families.bacnet`
 1. Wait for discovery families defined
 1. Wait until discovery family keys match
 1. Wait for no scans active
@@ -584,12 +587,13 @@ Check results of a single scan scheduled in the recent past including enumeratio
 
 Test passed.
 
-## scan_single_past (PREVIEW)
+## scan_single_past+vendor (PREVIEW)
 
 Check that a scan scheduled in the past never starts
 
 1. Update config before discovery families defined
     * Remove `discovery.families.vendor`
+    * Remove `discovery.families.bacnet`
 1. Wait for discovery families defined
 1. Wait until discovery family keys match
 1. Wait for no scans active
