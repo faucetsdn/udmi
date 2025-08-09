@@ -1,8 +1,8 @@
 TIMESTAMP INFO    device.log             Configured with auth_type RS256
-TIMESTAMP INFO    device.log             Using addresses from default interface: eth0 for family: ipv4
-TIMESTAMP INFO    device.log             Family ipv4 address is 10.1.0.174
 TIMESTAMP INFO    device.log             Using addresses from default interface: eth0 for family: ether
-TIMESTAMP INFO    device.log             Family ether address is 7c:1e:52:ff:0a:df
+TIMESTAMP INFO    device.log             Family ether address is 00:22:48:08:5e:97
+TIMESTAMP INFO    device.log             Using addresses from default interface: eth0 for family: ipv4
+TIMESTAMP INFO    device.log             Family ipv4 address is 10.1.0.155
 TIMESTAMP INFO    device.log             Resetting persistent store /home/runner/work/udmi/udmi/sites/udmi_site_model/out/devices/AHU-1/persistent_data.json
 TIMESTAMP INFO    device.log             Loading endpoint into persistent data from configuration
 TIMESTAMP WARNING device.log             Updating persistent store:
@@ -22,8 +22,8 @@ TIMESTAMP WARNING device.log             Updating persistent store:
   },
   "restart_count" : 1
 }
-TIMESTAMP INFO    device.log             Starting pubber AHU-1, serial sequencer-21973, mac null, gateway null, options noPersist
-TIMESTAMP WARNING device.log             Starting connection 1754632441554 with 0
+TIMESTAMP INFO    device.log             Starting pubber AHU-1, serial sequencer-24620, mac null, gateway null, options noPersist
+TIMESTAMP WARNING device.log             Starting connection 1754679231601 with 0
 TIMESTAMP INFO    device.log             Loading device key bytes from /home/runner/work/udmi/udmi/sites/udmi_site_model/devices/AHU-1/rsa_private.pkcs8
 TIMESTAMP INFO    device.log             CA cert file: /home/runner/work/udmi/udmi/sites/udmi_site_model/reflector/ca.crt
 TIMESTAMP INFO    device.log             Device cert file: /home/runner/work/udmi/udmi/sites/udmi_site_model/devices/AHU-1/rsa_private.crt
@@ -38,45 +38,40 @@ TIMESTAMP INFO    device.log             Device AHU-1 config handler
 TIMESTAMP
 TIMESTAMP WARNING device.log             Dropping state update until config received...
 TIMESTAMP INFO    device.log             Connection complete.
+TIMESTAMP WARNING device.log             Start waiting 10s for config latch for AHU-1
 TIMESTAMP WARNING device.log             Received config for config latch AHU-1
 TIMESTAMP WARNING device.log             Starting AHU-1 PubberPublisherHost sender with delay 10s
-TIMESTAMP WARNING device.log             Start waiting 10s for config latch for AHU-1
+TIMESTAMP WARNING device.log             Ending connection 1754679231601 with 1
 TIMESTAMP
-TIMESTAMP WARNING device.log             Ending connection 1754632441554 with 1
 TIMESTAMP WARNING device.log             Starting AHU-1 PubberSystemManager sender with delay 10s
 TIMESTAMP WARNING device.log             Starting AHU-1 PubberPointsetManager sender with delay 10s
 TIMESTAMP NOTICE  system.config.apply    success
 TIMESTAMP NOTICE  system.config.apply    success
 TIMESTAMP NOTICE  system.config.apply    success
-TIMESTAMP DEBUG   device.log             State update defer 1995ms
-TIMESTAMP DEBUG   device.log             State update defer 1995ms
-TIMESTAMP DEBUG   device.log             State update defer 1994ms
-TIMESTAMP DEBUG   device.log             State update defer 1994ms
-TIMESTAMP DEBUG   device.log             State update defer 1994ms
-TIMESTAMP DEBUG   device.log             State update defer 1994ms
-TIMESTAMP DEBUG   device.log             State update defer 1993ms
+TIMESTAMP DEBUG   device.log             State update defer 1998ms
+TIMESTAMP DEBUG   device.log             State update defer 1998ms
+TIMESTAMP DEBUG   device.log             State update defer 1998ms
+TIMESTAMP DEBUG   device.log             State update defer 1997ms
 TIMESTAMP DEBUG   system.config.receive  success
-TIMESTAMP DEBUG   device.log             State update defer 1929ms
 TIMESTAMP DEBUG   system.config.parse    success
-TIMESTAMP DEBUG   device.log             State update defer 1927ms
 TIMESTAMP INFO    device.log             Device AHU-1 config handler
+TIMESTAMP DEBUG   device.log             State update defer 1935ms
+TIMESTAMP DEBUG   device.log             State update defer 1933ms
 TIMESTAMP DEBUG   device.log             Config update AHU-1 (scan_network_single+vendor)
 TIMESTAMP
 TIMESTAMP NOTICE  system.config.apply    success
-TIMESTAMP DEBUG   device.log             State update defer 1922ms
-TIMESTAMP DEBUG   device.log             State update defer 1921ms
-TIMESTAMP DEBUG   device.log             State update defer 1921ms
-TIMESTAMP DEBUG   device.log             State update defer 1920ms
-TIMESTAMP DEBUG   device.log             State update defer 1920ms
-TIMESTAMP DEBUG   device.log             State update defer 1919ms
-TIMESTAMP DEBUG   device.log             State update defer 1919ms
+TIMESTAMP DEBUG   device.log             State update defer 1932ms
+TIMESTAMP DEBUG   device.log             State update defer 1931ms
+TIMESTAMP DEBUG   device.log             State update defer 1931ms
+TIMESTAMP DEBUG   device.log             State update defer 1931ms
+TIMESTAMP DEBUG   device.log             State update defer 1930ms
 TIMESTAMP DEBUG   device.log             State update defer 0ms
 TIMESTAMP
 TIMESTAMP DEBUG   device.log             State update AHU-1 (scan_network_single+vendor)
 TIMESTAMP DEBUG   system.config.receive  success
-TIMESTAMP DEBUG   device.log             State update defer -2048ms
-TIMESTAMP DEBUG   system.config.parse    success
+TIMESTAMP DEBUG   device.log             State update defer -3396ms
 TIMESTAMP
+TIMESTAMP DEBUG   system.config.parse    success
 TIMESTAMP INFO    device.log             Device AHU-1 config handler
 TIMESTAMP DEBUG   device.log             State update AHU-1 (scan_network_single+vendor)
 TIMESTAMP DEBUG   device.log             Config update AHU-1 (scan_network_single+vendor)
@@ -84,13 +79,115 @@ TIMESTAMP DEBUG   device.log             State update defer 2000ms
 TIMESTAMP
 TIMESTAMP NOTICE  system.config.apply    success
 TIMESTAMP DEBUG   device.log             State update defer 1998ms
-TIMESTAMP DEBUG   device.log             State update defer 1998ms
 TIMESTAMP DEBUG   device.log             State update defer 1997ms
 TIMESTAMP DEBUG   device.log             State update defer 1997ms
 TIMESTAMP DEBUG   device.log             State update defer 1997ms
-TIMESTAMP DEBUG   device.log             State update defer 1997ms
-TIMESTAMP DEBUG   device.log             State update defer 1997ms
+TIMESTAMP DEBUG   device.log             State update defer 1996ms
+TIMESTAMP DEBUG   device.log             State update defer 1996ms
+TIMESTAMP DEBUG   device.log             State update defer 1996ms
 TIMESTAMP DEBUG   device.log             State update defer 0ms
 TIMESTAMP
 TIMESTAMP DEBUG   device.log             State update AHU-1 (scan_network_single+vendor)
-TIMESTAMP WARNING validation.feature.sequence not enough networks for test
+TIMESTAMP DEBUG   system.config.receive  success
+TIMESTAMP DEBUG   device.log             State update defer -1036ms
+TIMESTAMP
+TIMESTAMP DEBUG   system.config.parse    success
+TIMESTAMP INFO    device.log             Device AHU-1 config handler
+TIMESTAMP DEBUG   device.log             State update AHU-1 (scan_network_single+vendor)
+TIMESTAMP DEBUG   device.log             Config update AHU-1 (scan_network_single+vendor)
+TIMESTAMP DEBUG   device.log             State update defer 2000ms
+TIMESTAMP
+TIMESTAMP NOTICE  system.config.apply    success
+TIMESTAMP DEBUG   device.log             State update defer 1997ms
+TIMESTAMP DEBUG   device.log             State update defer 1996ms
+TIMESTAMP DEBUG   device.log             State update defer -1ms
+TIMESTAMP
+TIMESTAMP DEBUG   device.log             State update AHU-1 (scan_network_single+vendor)
+TIMESTAMP DEBUG   system.config.receive  success
+TIMESTAMP DEBUG   device.log             State update defer -1085ms
+TIMESTAMP
+TIMESTAMP DEBUG   system.config.parse    success
+TIMESTAMP INFO    device.log             Device AHU-1 config handler
+TIMESTAMP DEBUG   device.log             State update AHU-1 (scan_network_single+vendor)
+TIMESTAMP DEBUG   device.log             Config update AHU-1 (scan_network_single+vendor)
+TIMESTAMP DEBUG   device.log             State update defer 1999ms
+TIMESTAMP
+TIMESTAMP NOTICE  system.config.apply    success
+TIMESTAMP DEBUG   device.log             State update defer 1997ms
+TIMESTAMP DEBUG   device.log             State update defer 1997ms
+TIMESTAMP DEBUG   system.config.receive  success
+TIMESTAMP DEBUG   device.log             State update defer 801ms
+TIMESTAMP DEBUG   system.config.parse    success
+TIMESTAMP INFO    device.log             Device AHU-1 config handler
+TIMESTAMP DEBUG   device.log             State update defer 800ms
+TIMESTAMP DEBUG   device.log             Config update AHU-1 (scan_network_single+vendor)
+TIMESTAMP
+TIMESTAMP NOTICE  system.config.apply    success
+TIMESTAMP DEBUG   device.log             State update defer 799ms
+TIMESTAMP DEBUG   device.log             State update defer 798ms
+TIMESTAMP DEBUG   device.log             State update defer 798ms
+TIMESTAMP DEBUG   device.log             State update defer 797ms
+TIMESTAMP DEBUG   device.log             State update defer 797ms
+TIMESTAMP DEBUG   device.log             State update defer 797ms
+TIMESTAMP DEBUG   device.log             State update defer 0ms
+TIMESTAMP
+TIMESTAMP DEBUG   device.log             State update AHU-1 (scan_network_single+vendor)
+TIMESTAMP DEBUG   system.config.receive  success
+TIMESTAMP DEBUG   device.log             State update defer 1602ms
+TIMESTAMP DEBUG   system.config.parse    success
+TIMESTAMP INFO    device.log             Device AHU-1 config handler
+TIMESTAMP DEBUG   device.log             State update defer 1602ms
+TIMESTAMP DEBUG   device.log             Config update AHU-1 (scan_network_single+vendor)
+TIMESTAMP
+TIMESTAMP NOTICE  system.config.apply    success
+TIMESTAMP DEBUG   device.log             State update defer 1599ms
+TIMESTAMP DEBUG   system.config.receive  success
+TIMESTAMP DEBUG   device.log             State update defer 494ms
+TIMESTAMP DEBUG   system.config.parse    success
+TIMESTAMP INFO    device.log             Device AHU-1 config handler
+TIMESTAMP DEBUG   device.log             State update defer 493ms
+TIMESTAMP DEBUG   device.log             Config update AHU-1 (scan_network_single+vendor)
+TIMESTAMP
+TIMESTAMP NOTICE  system.config.apply    success
+TIMESTAMP DEBUG   device.log             State update defer 491ms
+TIMESTAMP DEBUG   device.log             State update defer 491ms
+TIMESTAMP DEBUG   device.log             State update defer 491ms
+TIMESTAMP DEBUG   device.log             State update defer 491ms
+TIMESTAMP DEBUG   device.log             State update defer 491ms
+TIMESTAMP DEBUG   device.log             State update defer 490ms
+TIMESTAMP DEBUG   device.log             State update defer 490ms
+TIMESTAMP DEBUG   device.log             State update defer 0ms
+TIMESTAMP
+TIMESTAMP DEBUG   device.log             State update AHU-1 (scan_network_single+vendor)
+TIMESTAMP DEBUG   system.config.receive  success
+TIMESTAMP DEBUG   device.log             State update defer -5016ms
+TIMESTAMP
+TIMESTAMP DEBUG   device.log             State update AHU-1 (scan_network_single+vendor)
+TIMESTAMP DEBUG   system.config.parse    success
+TIMESTAMP INFO    device.log             Device AHU-1 config handler
+TIMESTAMP DEBUG   device.log             Config update AHU-1 (scan_network_single+vendor)
+TIMESTAMP DEBUG   device.log             State update defer 2000ms
+TIMESTAMP
+TIMESTAMP
+TIMESTAMP DEBUG   device.log             Scheduling future in 0ms
+TIMESTAMP DEBUG   device.log             State update defer 1996ms
+TIMESTAMP NOTICE  system.config.apply    success
+TIMESTAMP
+TIMESTAMP DEBUG   device.log             State update defer 1996ms
+TIMESTAMP DEBUG   device.log             Scheduling future in 9999ms
+TIMESTAMP
+TIMESTAMP DEBUG   device.log             State update defer 1989ms
+TIMESTAMP)
+TIMESTAMP DEBUG   device.log             Sending vendor result for AHU-1 28179023
+TIMESTAMP as 1
+TIMESTAMP DEBUG   device.log             State update defer 1978ms
+TIMESTAMP DEBUG   device.log             State update defer 966ms
+TIMESTAMP DEBUG   device.log             State update defer 0ms
+TIMESTAMP
+TIMESTAMP DEBUG   device.log             State update AHU-1 (scan_network_single+vendor)
+TIMESTAMP)
+TIMESTAMP
+TIMESTAMP DEBUG   device.log             State update defer -6001ms
+TIMESTAMP
+TIMESTAMP DEBUG   device.log             State update AHU-1 (scan_network_single+vendor)
+TIMESTAMP NOTICE  validation.feature.sequence Sequence complete
