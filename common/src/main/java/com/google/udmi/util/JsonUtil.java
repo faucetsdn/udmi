@@ -21,6 +21,7 @@ import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.google.gson.internal.bind.util.ISO8601Utils;
+import com.google.udmi.util.ProperPrinter.OutputFormat;
 import java.io.File;
 import java.nio.file.Files;
 import java.nio.file.NoSuchFileException;
@@ -534,7 +535,7 @@ public abstract class JsonUtil {
    */
   public static void writeFormattedFile(Object theThing, File file) {
     try {
-      ProperPrinter printer = new ProperPrinter(ProperPrinter.OutputFormat.VERBOSE);
+      ProperPrinter printer = new ProperPrinter(OutputFormat.VERBOSE_ARRAY_ON_NEW_LINE);
       OBJECT_MAPPER.writer(printer).writeValue(file, theThing);
     } catch (Exception e) {
       throw new RuntimeException("While writing formatted file " + file.getAbsolutePath(), e);

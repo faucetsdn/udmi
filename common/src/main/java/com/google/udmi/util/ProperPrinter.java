@@ -21,14 +21,20 @@ class ProperPrinter extends DefaultPrettyPrinter {
     super();
     this.indent = indent;
     isCompressed = indent == COMPRESSED;
-    if (isCompressed) {
-      Indenter indenter = new DefaultIndenter("", "");
-      indentObjectsWith(indenter);
-      indentArraysWith(indenter);
-    } else {
-      // Print each array element on a new line
-      Indenter arrayIndenter = new DefaultIndenter("  ", DefaultIndenter.SYS_LF);
-      indentArraysWith(arrayIndenter);
+
+    switch (indent) {
+      case COMPRESSED -> {
+        Indenter indenter = new DefaultIndenter("", "");
+        indentObjectsWith(indenter);
+        indentArraysWith(indenter);
+      }
+      case VERBOSE_ARRAY_ON_NEW_LINE -> {
+        indentArraysWith(new DefaultIndenter("  ", DefaultIndenter.SYS_LF));
+      }
+      case VERBOSE -> {
+        // No action is needed. We rely on the default behavior from the
+        // superclass for standard pretty-printing.
+      }
     }
   }
 
@@ -36,6 +42,7 @@ class ProperPrinter extends DefaultPrettyPrinter {
   public void writeObjectFieldValueSeparator(JsonGenerator generator) throws IOException {
     generator.writeRaw(isCompressed ? ":" : ": ");
   }
+
   @Override
   public DefaultPrettyPrinter createInstance() {
     return new ProperPrinter(this.indent);
@@ -43,6 +50,7 @@ class ProperPrinter extends DefaultPrettyPrinter {
 
   enum OutputFormat {
     VERBOSE,
+    VERBOSE_ARRAY_ON_NEW_LINE,
     COMPRESSED
   }
 }
