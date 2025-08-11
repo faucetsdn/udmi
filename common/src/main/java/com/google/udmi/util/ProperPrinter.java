@@ -14,21 +14,31 @@ class ProperPrinter extends DefaultPrettyPrinter {
   static final PrettyPrinter INDENT_PRINTER = new ProperPrinter(VERBOSE);
   static final PrettyPrinter NO_INDENT_PRINTER = new ProperPrinter(COMPRESSED);
 
+  private final OutputFormat indent;
   private final boolean isCompressed;
 
-  private ProperPrinter(OutputFormat indent) {
+  ProperPrinter(OutputFormat indent) {
     super();
+    this.indent = indent;
     isCompressed = indent == COMPRESSED;
     if (isCompressed) {
       Indenter indenter = new DefaultIndenter("", "");
       indentObjectsWith(indenter);
       indentArraysWith(indenter);
+    } else {
+      // Print each array element on a new line
+      Indenter arrayIndenter = new DefaultIndenter("  ", DefaultIndenter.SYS_LF);
+      indentArraysWith(arrayIndenter);
     }
   }
 
   @Override
   public void writeObjectFieldValueSeparator(JsonGenerator generator) throws IOException {
     generator.writeRaw(isCompressed ? ":" : ": ");
+  }
+  @Override
+  public DefaultPrettyPrinter createInstance() {
+    return new ProperPrinter(this.indent);
   }
 
   enum OutputFormat {

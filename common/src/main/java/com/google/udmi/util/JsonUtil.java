@@ -525,6 +525,22 @@ public abstract class JsonUtil {
     }
   }
 
+  /**
+   * Writes a JSON representation to a file using the custom ProperPrinter
+   * to ensure correct colon spacing (e.g., "key": "value") and array item indentation.
+   *
+   * @param theThing object to write
+   * @param file     output file
+   */
+  public static void writeFormattedFile(Object theThing, File file) {
+    try {
+      ProperPrinter printer = new ProperPrinter(ProperPrinter.OutputFormat.VERBOSE);
+      OBJECT_MAPPER.writer(printer).writeValue(file, theThing);
+    } catch (Exception e) {
+      throw new RuntimeException("While writing formatted file " + file.getAbsolutePath(), e);
+    }
+  }
+
   public static Map<String, Object> flattenNestedMap(Map<String, Object> map, String separator) {
     Map<String, Object> flattenedMap = new LinkedHashMap<>();
     flatten(map, "", flattenedMap, separator);
