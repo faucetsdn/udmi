@@ -48,30 +48,14 @@
       },
       "examples": ["bacnet", "modbus", "mbus", "ether", "ipv4", "ipv6", "iot"],
       "$presentation": {
-        "generator": {
-          "mapping": {
-            "bacnet": {
-              "$ref": "file:model_localnet_bacnet_family.json"
-            },
-            "modbus": {
-              "$ref": "file:model_localnet_modbus_family.json"
-            },
-            "mbus": {
-              "$ref": "file:model_localnet_mbus_family.json"
-            },
-            "ether": {
-              "$ref": "file:model_localnet_family.json"
-            },
-            "ipv4": {
-              "$ref": "file:model_localnet_family.json"
-            },
-            "ipv6": {
-              "$ref": "file:model_localnet_family.json"
-            },
-            "fqdn": {
-              "$ref": "file:model_localnet_family.json"
-            }
-          }
+        "presentationProperties": {
+          "bacnet": { "$ref": "file:model_localnet_family.json" },
+          "modbus": { "$ref": "file:model_localnet_family.json" },
+          "mbus":   { "$ref": "file:model_localnet_family.json" },
+          "ether":  { "$ref": "file:model_localnet_family.json" },
+          "ipv4":   { "$ref": "file:model_localnet_family.json" },
+          "ipv6":   { "$ref": "file:model_localnet_family.json" },
+          "fqdn":   { "$ref": "file:model_localnet_family.json" }
         }
       }
     }

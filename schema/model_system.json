@@ -269,16 +269,27 @@
         }
       },
       "$presentation": {
-        "paths": {
-          "$this": {
-            "section": "system"
-          }
-        },
-        "generator": {
-          "mapping": {
-            "firmware": { "type": "string" },
-            "os": { "type": "string" },
-            "driver": { "type": "string" }
+        "presentationProperties": {
+          "firmware": {
+            "type": "string",
+            "description": "Version of the device firmware",
+            "$presentation": {
+              "paths": { "$this": { "section": "system" } }
+            }
+          },
+          "os": {
+            "type": "string",
+            "description": "Version of the operating system",
+            "$presentation": {
+              "paths": { "$this": { "section": "system" } }
+            }
+          },
+          "driver": {
+            "type": "string",
+            "description": "Version of a specific driver",
+            "$presentation": {
+              "paths": { "$this": { "section": "system" } }
+            }
           }
         }
       }
