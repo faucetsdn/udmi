@@ -1,8 +1,8 @@
-[**UDMI**](../../) / [**Docs**](../) / [**Tools**](./) / [BAMBI Backend Service](#)
+[**UDMI**](../../) / [**Docs**](../) / [**Tools**](./) / [Reconciler Service](#)
 
-# BAMBI: BOS Automated Management Building Interface
+# Reconciler Service
 
-BAMBI is the backend service responsible for automating the management of Building Operating System (BOS) device and site models within the UDMI framework. It primarily listens for messages, typically from a Google Sheet, and then handles the import, export, and synchronization of site configuration data.
+The Reconciler Service automates the initial steps of the code review process within UDMI. It actively monitors Google Cloud Source Repositories for new branches prefixed with `proposal/`. When a new proposal branch is created, the service automatically generates a pull request to merge the changes into the `main` branch, streamlining the workflow for submitting and reviewing configuration changes.
 
 ---
 
@@ -12,7 +12,7 @@ Before running the service, ensure you have the [Google Cloud SDK](https://cloud
 
 ---
 
-## 2. Running the BAMBI Service
+## 2. Running the Reconciler Service
 
 ### 2.1. Authentication
 
@@ -22,7 +22,7 @@ First, you'll need to authenticate with your Google Cloud account. This command 
 gcloud auth login
 ```
 
-Next, obtain application-default credentials. These credentials allow the BAMBI service to authenticate with Google Cloud APIs, such as Pub/Sub and Google Sheets, on your behalf.
+Next, obtain application-default credentials. These credentials allow the Reconciler service to authenticate with Google Cloud APIs, such as Pub/Sub and Google Sheets, on your behalf.
 
 ```shell
 gcloud auth application-default login \
@@ -31,12 +31,12 @@ gcloud auth application-default login \
 
 ### 2.2. Starting the Service
 
-To start the BAMBI service, navigate to your UDMI project's root directory and run the `bambi_service` script with the required arguments.
+To start the Reconciler service, navigate to your UDMI project's root directory and run the `reconciler_service` script with the required arguments.
 
 #### Command syntax:
 
 ```shell
-services/bin/bambi_service ${message_spec} ${cloning_dir} [options]
+services/bin/reconciler_service ${message_spec} ${cloning_dir} [options]
 ```
 
 #### Arguments & Options:
@@ -48,62 +48,36 @@ services/bin/bambi_service ${message_spec} ${cloning_dir} [options]
 | `--create`          | **(Optional)** A flag that attempts to create the necessary Google Cloud Pub/Sub topics and subscriptions if they don't already exist. This is useful for initial setup.                | N/A                                                   |
 | `local_origin_dir`  | **(Optional)** Provides an absolute path to a local directory containing git repositories. This is used for testing to simulate a remote origin without making actual network requests. | `/home/user/udmi_test_repos`                          |
 
-### 2.3. Message Format
+### 2.3. Message Format and Triggering
 
-The BAMBI service expects incoming messages to be in a specific JSON format. The data field contains a base64 encoded JWT, while the attributes provide the context for the request.
+The Reconciler Service is triggered by standard notifications from Google Cloud Source Repositories sent over Pub/Sub.
 
+The service specifically filters for messages that indicate a `CREATE` event for any branch whose name begins with the prefix `proposal/`. When such a branch is detected, the service initiates the process to create a pull request against the `main` branch. All other repository events are ignored.
+
+Here is a sample message:
 ```json
 {
-  "data": "base64_encoded_identity_token",
-  "attributes": {
-    "project_id": "bos-platform-dev",
-    "registry_id": "ZZ-TRI-FECTA",
-    "request_type": "export",
-    "source": "https://docs.google.com/spreadsheets/d/1a2b3c...",
-    "user": "user@example.com",
-    "import_branch": "main"
+  "name": "projects/bos-platform-dev/repos/ZZ-TRI-FECTA-1",
+  "url": "https://source.developers.google.com/p/bos-platform-dev/r/ZZ-TRI-FECTA-1",
+  "eventTime": "2025-06-24T07:09:38.818511Z",
+  "refUpdateEvent": {
+    "email": "user@example.com",
+    "refUpdates": {
+      "refs/heads/proposal/1-Ne0K56ngkAsk7nKlVRAY2qI6Fm9gpj0zPwwp6pdnho/20250624.070925": {
+        "refName": "refs/heads/proposal/1-Ne0K56ngkAsk7nKlVRAY2qI6Fm9gpj0zPwwp6pdnho/20250624.070925",
+        "updateType": "CREATE",
+        "newId": "36aaaf00bef44d301469e2dc9a8b757f05aad55e"
+      }
+    }
   }
 }
 ```
-* `data`: An identity token (JWT) is required for authentication when using Pub/Sub but is optional for local MQTT testing. The token is used to verify that the request is from an expected Google Apps Script client.
-* `attributes`: A map of key-value pairs that define the requested operation. All attributes are required. `request_type` can be one of `["import", "export"]`
 
 ---
 
-### 3. Standalone Import/Merge
+### 3. Building and Deploying the Container
 
-You can also run the import and merge functions as standalone scripts, which is useful for one-off tasks or debugging without starting the full service.
-
-First, navigate to your UDMI root and source the common shell functions:
-
-```shell
-cd ${UDMI_ROOT}
-source etc/shell_common.sh
-```
-
-#### Sync from Google Sheet to a local file (disk)
-
-This command pulls the site model from the specified Google Sheet and saves it to a local file path.
-
-```shell
-# Usage: sync_bambi_site_model_to_disk <spreadsheet_id> <path_to_site_model>
-sync_bambi_site_model_to_disk "1a2b3c..." "/home/user/site_models/site-A.json"
-```
-
-#### Sync from a local file (disk) to Google Sheet
-
-This command takes a local site model file and pushes its contents to the specified Google Sheet where data templates are already populated.
-
-```shell
-# Usage: sync_disk_site_model_to_bambi <spreadsheet_id> <path_to_site_model>
-sync_disk_site_model_to_bambi "1a2b3c..." "/home/user/site_models/site-A.json"
-```
-
----
-
-### 4. Building and Deploying the Container
-
-To package the BAMBI service into a Docker container for deployment, use the provided `container` script.
+To package the Reconciler service into a Docker container for deployment, use the provided `container` script.
 
 First, set your target GCP project and optional UDMI namespace:
 
@@ -113,8 +87,8 @@ bin/set_project gcp_project[/udmi_namespace]
 
 Then, navigate to the UDMI root and use the container script with one of the following commands:
 ```shell
-# General Syntax: bin/container services.bambi {command} [repo]
-bin/container services.bambi push
+# General Syntax: bin/container services.reconciler {command} [repo]
+bin/container services.reconciler push
 ```
 | Command   | Action                                                                                                |
 |-----------|-------------------------------------------------------------------------------------------------------|
