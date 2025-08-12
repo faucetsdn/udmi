@@ -5,6 +5,6 @@
     "last_start" : "TIMESTAMP"
   },
   "testing" : {
-    "sequence_name" : "scan_network_single"
+    "sequence_name" : "scan_network_single+vendor"
   }
 }

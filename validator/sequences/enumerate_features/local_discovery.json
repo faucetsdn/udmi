@@ -3,6 +3,7 @@
     "features" : "entries"
   },
   "families" : {
-    "vendor" : { }
+    "vendor" : { },
+    "bacnet" : { }
   }
 }

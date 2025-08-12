@@ -1,46 +1,45 @@
 {
+  "timestamp" : "TIMESTAMP",
+  "version" : "@@@cloud udmi version###git-250ce5e",
+  "system" : {
+    "min_loglevel" : 100,
+    "metrics_rate_sec" : 10,
+    "operation" : {
+      "last_start" : "TIMESTAMP"
+    },
+    "testing" : {
+      "sequence_name" : "writeback_failure"
+    }
+  },
   "discovery" : {
     "families" : {
-      "vendor" : { }
+      "vendor" : { },
+      "bacnet" : { }
     }
   },
   "localnet" : {
     "families" : {
-      "bacnet" : { },
       "ether" : { },
       "ipv4" : { },
-      "vendor" : { }
+      "vendor" : { },
+      "bacnet" : { }
     }
   },
   "pointset" : {
     "points" : {
+      "filter_differential_pressure_setpoint" : {
+        "units" : "Bars",
+        "set_value" : 98
+      },
       "filter_alarm_pressure_status" : {
         "ref" : "BV11.present_value",
-        "set_value" : false,
-        "units" : "No-units"
+        "units" : "No-units",
+        "set_value" : false
       },
       "filter_differential_pressure_sensor" : {
         "ref" : "AV12.present_value",
         "units" : "Degrees-Celsius"
-      },
-      "filter_differential_pressure_setpoint" : {
-        "set_value" : 98,
-        "units" : "Bars"
       }
     }
-  },
-  "system" : {
-    "metrics_rate_sec" : 10,
-    "min_loglevel" : 100,
-    "operation" : {
-      "last_start" : "2024-12-18T15:32:27Z"
-    },
-    "testing" : {
-      "config_base" : 42,
-      "sequence_name" : "writeback_failure",
-      "transaction_id" : "RC:3dbec6.0000000f"
-    }
-  },
-  "timestamp" : "2024-12-18T15:32:59Z",
-  "version" : "git-f59a297"
+  }
 }

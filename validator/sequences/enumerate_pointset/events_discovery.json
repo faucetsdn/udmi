@@ -1,26 +1,23 @@
 {
-  "generation" : "2024-12-11T05:44:35Z",
+  "family" : "iot",
+  "generation" : "TIMESTAMP",
   "points" : {
     "filter_alarm_pressure_status" : {
       "units" : "No-units",
-      "ref" : "BV11.present_value",
-      "tags" : [ ]
+      "ref" : "BV11.present_value"
     },
     "filter_differential_pressure_setpoint" : {
       "units" : "Bars",
       "writable" : true,
-      "baseline_value" : 98,
-      "tags" : [ ]
+      "baseline_value" : 98
     },
     "filter_differential_pressure_sensor" : {
       "units" : "Degrees-Celsius",
       "baseline_value" : 10,
       "baseline_tolerance" : 2.0,
-      "ref" : "AV12.present_value",
-      "tags" : [ ]
+      "ref" : "AV12.present_value"
     }
   },
-  "scan_family" : "iot",
-  "timestamp" : "2024-12-11T05:44:37Z",
-  "version" : "1.5.2"
+  "timestamp" : "TIMESTAMP",
+  "version" : "1.5.3"
 }

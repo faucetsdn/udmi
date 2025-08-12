@@ -3,6 +3,7 @@
     "points" : "entries"
   },
   "families" : {
-    "vendor" : { }
+    "vendor" : { },
+    "bacnet" : { }
   }
 }

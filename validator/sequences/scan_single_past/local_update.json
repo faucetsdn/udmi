@@ -1,22 +1,20 @@
 {
-  "timestamp" : "2024-12-17T05:27:29Z",
-  "version" : "@@@cloud udmi version###git-46fef59",
+  "timestamp" : "TIMESTAMP",
+  "version" : "@@@cloud udmi version###git-250ce5e",
   "system" : {
     "min_loglevel" : 100,
     "metrics_rate_sec" : 10,
     "operation" : {
-      "last_start" : "2024-12-17T05:25:25Z"
+      "last_start" : "TIMESTAMP"
     },
     "testing" : {
-      "sequence_name" : "scan_single_past"
+      "sequence_name" : "scan_single_past+vendor"
     }
   },
   "discovery" : {
     "families" : {
-      "vendor" : {
-        "generation" : "2021-01-28T20:42:28Z",
-        "scan_duration_sec" : 10
-      }
+      "vendor" : { },
+      "bacnet" : { }
     }
   },
   "localnet" : {

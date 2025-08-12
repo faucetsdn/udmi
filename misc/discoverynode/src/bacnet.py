@@ -20,6 +20,7 @@ def main():
   parser = argparse.ArgumentParser(description="BACnet scan sample")
   parser.add_argument("ip", help="bacnet ip address")
   parser.add_argument("--depth", default="system", help="scan depth, one of: device,system,points")
+  parser.add_argument("--addrs", default=None, help="comma seperated ip address targets" )
   args = parser.parse_args()
 
   state = mock.MagicMock()
@@ -36,6 +37,7 @@ def main():
               udmi.schema.util.current_time_utc()
               + datetime.timedelta(seconds=1)),
             "depth":  args.depth,
+            "addrs": args.addrs.split(",") if args.addrs else None
           }
         }
       }

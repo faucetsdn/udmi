@@ -4,14 +4,14 @@
       "phase" : "final",
       "status" : {
         "message" : "While resetting connection",
-        "detail" : "java.lang.RuntimeException: While resetting connection\n\tat daq.pubber.Pubber.resetConnection(Pubber.java:550)\n\tat daq.pubber.PubberUdmiPublisher.maybeRedirectEndpoint(PubberUdmiPublisher.java:667)\n\tat daq.pubber.PubberUdmiPublisher.deferredConfigActions(PubberUdmiPublisher.java:500)\n\tat daq.pubber.Pubber.periodicUpdate(Pubber.java:402)\n\tat java.base/java.util.concurrent.Executors$RunnableAdapter.call(Executors.java:539)\n\tat java.base/java.util.concurrent.FutureTask.runAndReset(FutureTask.java:305)\n\tat java.base/java.util.concurrent.ScheduledThreadPoolExecutor$ScheduledFutureTask.run(ScheduledThreadPoolExecutor.java:305)\n\tat java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1136)\n\tat java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:635)\n\tat java.base/java.lang.Thread.run(Thread.java:840)\nCaused by: java.lang.RuntimeException: While attempting to start connection\n\tat daq.pubber.Pubber.startConnection(Pubber.java:424)\n\tat daq.pubber.Pubber.resetConnection(Pubber.java:548)\n\t... 9 more\nCaused by: java.lang.RuntimeException: Failed connection attempt after retries\n\tat daq.pubber.Pubber.startConnection(Pubber.java:422)\n\t... 10 more\n",
+        "detail" : "java.lang.RuntimeException: While resetting connection\n\tat udmi.lib.client.host.PublisherHost.resetConnection(PublisherHost.java:1015)\n\tat udmi.lib.client.host.PublisherHost.maybeRedirectEndpoint(PublisherHost.java:721)\n\tat udmi.lib.client.host.PublisherHost.deferredConfigActions(PublisherHost.java:556)\n\tat udmi.lib.client.host.PublisherHost.periodicUpdate(PublisherHost.java:231)\n\tat daq.pubber.impl.host.PubberPublisherHost.periodicUpdate(PubberPublisherHost.java:311)\n\tat java.base/java.util.concurrent.Executors$RunnableAdapter.call(Executors.java:572)\n\tat java.base/java.util.concurrent.FutureTask.run(FutureTask.java:317)\n\tat java.base/java.util.concurrent.ScheduledThreadPoolExecutor$ScheduledFutureTask.run(ScheduledThreadPoolExecutor.java:304)\n\tat java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1144)\n\tat java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:642)\n\tat java.base/java.lang.Thread.run(Thread.java:1583)\nCaused by: java.lang.RuntimeException: While attempting to start connection\n\tat daq.pubber.impl.host.PubberPublisherHost.startConnection(PubberPublisherHost.java:194)\n\tat udmi.lib.client.host.PublisherHost.resetConnection(PublisherHost.java:1013)\n\t... 10 more\nCaused by: java.lang.RuntimeException: Failed connection attempt after retries\n\tat daq.pubber.impl.host.PubberPublisherHost.startConnection(PubberPublisherHost.java:192)\n\t... 11 more\n",
         "category" : "blobset.blob.apply",
-        "timestamp" : "2024-11-06T17:32:42Z",
+        "timestamp" : "TIMESTAMP",
         "level" : 500
       },
-      "generation" : "2024-11-06T17:32:22Z"
+      "generation" : "TIMESTAMP"
     }
   },
-  "timestamp" : "2024-11-06T17:32:44Z",
-  "version" : "1.5.2"
+  "timestamp" : "TIMESTAMP",
+  "version" : "1.5.3"
 }

@@ -1,29 +1,27 @@
-2024-11-06T17:33:12Z NOTICE  starting test bad_target_address ################################
-2024-11-06T17:33:12Z TRACE   Suppressing exception: Cannot read field "gateway_id" because "com.google.daq.mqtt.sequencer.sequences.ProxiedSequences.deviceMetadata.gateway" is null
-2024-11-06T17:33:12Z DEBUG   stage done initialize at 0s
-2024-11-06T17:33:12Z DEBUG   exception message: Not a proxied device
-2024-11-06T17:33:12Z TRACE   ending stack trace: org.junit.AssumptionViolatedException: Not a proxied device
-2024-11-06T17:33:12Z TRACE   ending stack trace: 	at com.google.daq.mqtt.sequencer.SequenceBase.skipTest(SequenceBase.java:2359)
-2024-11-06T17:33:12Z TRACE   ending stack trace: 	at com.google.daq.mqtt.sequencer.SequenceBase.lambda$ifTrueSkipTest$107(SequenceBase.java:2363)
-2024-11-06T17:33:12Z TRACE   ending stack trace: 	at com.google.udmi.util.GeneralUtils.ifTrueThen(GeneralUtils.java:397)
-2024-11-06T17:33:12Z TRACE   ending stack trace: 	at com.google.udmi.util.GeneralUtils.ifTrueThen(GeneralUtils.java:392)
-2024-11-06T17:33:12Z TRACE   ending stack trace: 	at com.google.daq.mqtt.sequencer.SequenceBase.ifTrueSkipTest(SequenceBase.java:2363)
-2024-11-06T17:33:12Z TRACE   ending stack trace: 	at com.google.daq.mqtt.sequencer.sequences.ProxiedSequences.setUp(ProxiedSequences.java:33)
-2024-11-06T17:33:12Z TRACE   ending stack trace: 	at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke0(Native Method)
-2024-11-06T17:33:12Z TRACE   ending stack trace: 	at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:77)
-2024-11-06T17:33:12Z TRACE   ending stack trace: 	at java.base/jdk.internal.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)
-2024-11-06T17:33:12Z TRACE   ending stack trace: 	at java.base/java.lang.reflect.Method.invoke(Method.java:569)
-2024-11-06T17:33:12Z TRACE   ending stack trace: 	at org.junit.runners.model.FrameworkMethod$1.runReflectiveCall(FrameworkMethod.java:59)
-2024-11-06T17:33:12Z TRACE   ending stack trace: 	at org.junit.internal.runners.model.ReflectiveCallable.run(ReflectiveCallable.java:12)
-2024-11-06T17:33:12Z TRACE   ending stack trace: 	at org.junit.runners.model.FrameworkMethod.invokeExplosively(FrameworkMethod.java:56)
-2024-11-06T17:33:12Z TRACE   ending stack trace: 	at org.junit.internal.runners.statements.RunBefores.invokeMethod(RunBefores.java:33)
-2024-11-06T17:33:12Z TRACE   ending stack trace: 	at org.junit.internal.runners.statements.RunBefores.evaluate(RunBefores.java:24)
-2024-11-06T17:33:12Z TRACE   ending stack trace: 	at org.junit.internal.runners.statements.RunAfters.evaluate(RunAfters.java:27)
-2024-11-06T17:33:12Z TRACE   ending stack trace: 	at org.junit.internal.runners.statements.FailOnTimeout$CallableStatement.call(FailOnTimeout.java:299)
-2024-11-06T17:33:12Z TRACE   ending stack trace: 	at org.junit.internal.runners.statements.FailOnTimeout$CallableStatement.call(FailOnTimeout.java:293)
-2024-11-06T17:33:12Z TRACE   ending stack trace: 	at java.base/java.util.concurrent.FutureTask.run(FutureTask.java:264)
-2024-11-06T17:33:12Z TRACE   ending stack trace: 	at java.base/java.lang.Thread.run(Thread.java:840)
-2024-11-06T17:33:12Z DEBUG   Removing implicit system capability LAST_CONFIG
-2024-11-06T17:33:12Z NOTICE  RESULT skip gateway bad_target_address PREVIEW 0/0 Not a proxied device
-2024-11-06T17:33:12Z WARNING Not a proxied device
-2024-11-06T17:33:12Z NOTICE  ending test bad_target_address after 0s ################################
+TIMESTAMP NOTICE  Starting test bad_target_address ################################
+TIMESTAMP TRACE   Suppressing exception: java.lang.NullPointerException: Cannot read field "gateway_id" because "com.google.daq.mqtt.sequencer.sequences.ProxiedSequences.deviceMetadata.gateway" is null, 	at com.google.daq.mqtt.sequencer.sequences.ProxiedSequences.lambda$setUp$0(ProxiedSequences.java:31)
+TIMESTAMP DEBUG   stage done initialize at @0s
+TIMESTAMP DEBUG   exception message: Not a proxied device
+TIMESTAMP TRACE   ending stack trace: org.junit.AssumptionViolatedException: Not a proxied device
+TIMESTAMP TRACE   ending stack trace: 	at com.google.daq.mqtt.sequencer.SequenceBase.skipTest(SequenceBase.java:2588)
+TIMESTAMP TRACE   ending stack trace: 	at com.google.daq.mqtt.sequencer.SequenceBase.lambda$ifTrueSkipTest$122(SequenceBase.java:2592)
+TIMESTAMP TRACE   ending stack trace: 	at com.google.udmi.util.GeneralUtils.ifTrueThen(GeneralUtils.java:435)
+TIMESTAMP TRACE   ending stack trace: 	at com.google.udmi.util.GeneralUtils.ifTrueThen(GeneralUtils.java:430)
+TIMESTAMP TRACE   ending stack trace: 	at com.google.daq.mqtt.sequencer.SequenceBase.ifTrueSkipTest(SequenceBase.java:2592)
+TIMESTAMP TRACE   ending stack trace: 	at com.google.daq.mqtt.sequencer.sequences.ProxiedSequences.setUp(ProxiedSequences.java:31)
+TIMESTAMP TRACE   ending stack trace: 	at java.base/jdk.internal.reflect.DirectMethodHandleAccessor.invoke(DirectMethodHandleAccessor.java:103)
+TIMESTAMP TRACE   ending stack trace: 	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+TIMESTAMP TRACE   ending stack trace: 	at org.junit.runners.model.FrameworkMethod$1.runReflectiveCall(FrameworkMethod.java:59)
+TIMESTAMP TRACE   ending stack trace: 	at org.junit.internal.runners.model.ReflectiveCallable.run(ReflectiveCallable.java:12)
+TIMESTAMP TRACE   ending stack trace: 	at org.junit.runners.model.FrameworkMethod.invokeExplosively(FrameworkMethod.java:56)
+TIMESTAMP TRACE   ending stack trace: 	at org.junit.internal.runners.statements.RunBefores.invokeMethod(RunBefores.java:33)
+TIMESTAMP TRACE   ending stack trace: 	at org.junit.internal.runners.statements.RunBefores.evaluate(RunBefores.java:24)
+TIMESTAMP TRACE   ending stack trace: 	at org.junit.internal.runners.statements.RunAfters.evaluate(RunAfters.java:27)
+TIMESTAMP TRACE   ending stack trace: 	at org.junit.internal.runners.statements.FailOnTimeout$CallableStatement.call(FailOnTimeout.java:299)
+TIMESTAMP TRACE   ending stack trace: 	at org.junit.internal.runners.statements.FailOnTimeout$CallableStatement.call(FailOnTimeout.java:293)
+TIMESTAMP TRACE   ending stack trace: 	at java.base/java.util.concurrent.FutureTask.run(FutureTask.java:317)
+TIMESTAMP TRACE   ending stack trace: 	at java.base/java.lang.Thread.run(Thread.java:1583)
+TIMESTAMP DEBUG   Removing implicit system capability LAST_CONFIG
+TIMESTAMP NOTICE  RESULT skip gateway bad_target_address PREVIEW 0/0 Not a proxied device
+TIMESTAMP WARNING Not a proxied device
+TIMESTAMP NOTICE  Ending test bad_target_address after @0s ################################

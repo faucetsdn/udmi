@@ -1,14 +1,20 @@
 {
-  "timestamp" : "2024-11-06T17:33:58Z",
-  "version" : "@@@cloud udmi version###git-b2a557d",
+  "timestamp" : "TIMESTAMP",
+  "version" : "@@@cloud udmi version###git-250ce5e",
   "system" : {
-    "min_loglevel" : 200,
+    "min_loglevel" : 100,
     "metrics_rate_sec" : 10,
     "operation" : {
-      "last_start" : "2024-11-06T17:31:41Z"
+      "last_start" : "TIMESTAMP"
     },
     "testing" : {
       "sequence_name" : "pointset_remove_point"
+    }
+  },
+  "discovery" : {
+    "families" : {
+      "vendor" : { },
+      "bacnet" : { }
     }
   },
   "localnet" : {
@@ -16,18 +22,18 @@
       "ether" : { },
       "ipv4" : { },
       "vendor" : { },
-      "ipv6" : { }
+      "bacnet" : { }
     }
   },
   "pointset" : {
     "points" : {
-      "filter_alarm_pressure_status" : {
-        "ref" : "BV11.present_value",
-        "units" : "No-units"
-      },
       "filter_differential_pressure_setpoint" : {
         "units" : "Bars",
         "set_value" : 98
+      },
+      "filter_alarm_pressure_status" : {
+        "ref" : "BV11.present_value",
+        "units" : "No-units"
       },
       "filter_differential_pressure_sensor" : {
         "ref" : "AV12.present_value",

@@ -1,0 +1,23 @@
+{
+  "addr" : "27312",
+  "event_no" : 2,
+  "family" : "bacnet",
+  "generation" : "TIMESTAMP",
+  "refs" : {
+    "BV11.present_value" : {
+      "point" : "filter_alarm_pressure_status",
+      "units" : "No-units"
+    },
+    "AV12.present_value" : {
+      "point" : "filter_differential_pressure_sensor",
+      "units" : "Degrees-Celsius"
+    }
+  },
+  "system" : {
+    "ancillary" : {
+      "device-name" : "AHU-1"
+    }
+  },
+  "timestamp" : "TIMESTAMP",
+  "version" : "1.5.3"
+}

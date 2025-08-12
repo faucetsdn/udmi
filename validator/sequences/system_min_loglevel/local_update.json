@@ -1,11 +1,11 @@
 {
-  "timestamp" : "2024-12-17T05:28:32Z",
-  "version" : "@@@cloud udmi version###git-46fef59",
+  "timestamp" : "TIMESTAMP",
+  "version" : "@@@cloud udmi version###git-250ce5e",
   "system" : {
     "min_loglevel" : 100,
     "metrics_rate_sec" : 10,
     "operation" : {
-      "last_start" : "2024-12-17T05:27:51Z"
+      "last_start" : "TIMESTAMP"
     },
     "testing" : {
       "sequence_name" : "system_min_loglevel"
@@ -13,7 +13,8 @@
   },
   "discovery" : {
     "families" : {
-      "vendor" : { }
+      "vendor" : { },
+      "bacnet" : { }
     }
   },
   "localnet" : {

@@ -1,10 +1,5 @@
 {
-  "families" : {
-    "vendor" : {
-      "phase" : "stopped",
-      "active_count" : 3
-    }
-  },
-  "timestamp" : "2024-12-17T05:27:58Z",
-  "version" : "1.5.2"
+  "families" : { },
+  "timestamp" : "TIMESTAMP",
+  "version" : "1.5.3"
 }

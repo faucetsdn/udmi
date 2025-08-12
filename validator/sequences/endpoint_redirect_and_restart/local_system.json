@@ -3,7 +3,7 @@
   "metrics_rate_sec" : 10,
   "operation" : {
     "mode" : "active",
-    "last_start" : "2024-12-20T09:55:34Z"
+    "last_start" : "TIMESTAMP"
   },
   "testing" : {
     "sequence_name" : "endpoint_redirect_and_restart"

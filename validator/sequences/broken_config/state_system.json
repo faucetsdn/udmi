@@ -3,23 +3,23 @@
     "make" : "BOS",
     "model" : "pubber"
   },
-  "last_config" : "2024-12-01T09:20:10Z",
+  "last_config" : "TIMESTAMP",
   "operation" : {
     "operational" : true,
-    "last_start" : "2024-12-01T09:19:18Z",
+    "last_start" : "TIMESTAMP",
     "restart_count" : 1,
     "mode" : "initial"
   },
-  "serial_no" : "sequencer-4379",
+  "serial_no" : "sequencer-17770",
   "software" : {
     "firmware" : "v1"
   },
   "status" : {
     "message" : "success",
     "category" : "system.config.apply",
-    "timestamp" : "2024-12-01T09:20:10Z",
+    "timestamp" : "TIMESTAMP",
     "level" : 300
   },
-  "timestamp" : "2024-12-01T09:20:11Z",
-  "version" : "1.5.2"
+  "timestamp" : "TIMESTAMP",
+  "version" : "1.5.3"
 }
