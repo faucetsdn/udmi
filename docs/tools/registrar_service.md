@@ -38,6 +38,7 @@ services/bin/registrar_service ${message_spec} ${registrar_target} ${cloning_dir
 ```
 
 #### Arguments & Options:
+
 | Argument/Option        | Description                                                                                                                                                                             | Example                                               |
 |------------------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|-------------------------------------------------------|
 | `${message_spec}`      | **(Required)** Defines the message source. For a production environment, this will be a Google Cloud Pub/Sub topic. For local testing, you can use an MQTT broker.                      | `//pubsub/bos-platform-dev/udmis`, `//mqtt/localhost` |
@@ -90,6 +91,7 @@ Then, navigate to the UDMI root and use the container script with one of the fol
 # General Syntax: bin/container services.registrar {command} [repo]
 bin/container services.registrar push
 ```
+
 | Command   | Action                                                                                                |
 |-----------|-------------------------------------------------------------------------------------------------------|
 | `prep`    | Prepares dependencies and prerequisites for the container build.                                      |
