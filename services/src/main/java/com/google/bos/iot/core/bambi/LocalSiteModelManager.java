@@ -12,7 +12,7 @@ import static com.google.udmi.util.JsonUtil.asLinkedHashMap;
 import static com.google.udmi.util.JsonUtil.flattenNestedMap;
 import static com.google.udmi.util.JsonUtil.isoConvert;
 import static com.google.udmi.util.JsonUtil.nestFlattenedJson;
-import static com.google.udmi.util.JsonUtil.writeFileWithCustomIndentForArrays;
+import static com.google.udmi.util.JsonUtil.writeFormattedFile;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import java.io.File;
@@ -77,7 +77,7 @@ public class LocalSiteModelManager {
     JsonNode jsonNode = nestFlattenedJson(flattenedData, "\\.", NON_NUMERIC_HEADERS_REGEX);
     File file = new File(filePath);
     file.getParentFile().mkdirs();
-    writeFileWithCustomIndentForArrays(jsonNode, new File(filePath));
+    writeFormattedFile(jsonNode, new File(filePath));
   }
 
   public Map<String, String> getSiteMetadata() {
