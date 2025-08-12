@@ -7,7 +7,14 @@
     "additionalProperties": false,
     "properties": {
       "value": {
-        "type": "number"
+        "type": "number",
+        "$presentation": {
+          "paths": {
+            "site_metadata.parameters.*": {
+              "section": "site_metadata"
+            }
+          }
+        }
       },
       "unit": {
         "type": "string",
@@ -19,7 +26,14 @@
             {"title": "$/gal", "pattern": "^\\$\/gal"},
             {"title": "£/kWh", "pattern": "^£\/kWh$"},
             {"title": "$/kWh", "pattern": "^\\$\/kWh$"}
-        ]
+        ],
+        "$presentation": {
+          "paths": {
+            "site_metadata.parameters.*": {
+              "section": "site_metadata"
+            }
+          }
+        }
     }
   }
 }

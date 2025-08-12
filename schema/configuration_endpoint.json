@@ -9,7 +9,14 @@
   "properties": {
     "name": {
       "description": "Friendly name for this flow (debugging and diagnostics)",
-      "type": "string"
+      "type": "string",
+      "$presentation": {
+        "paths": {
+          "configuration_execution.*": {
+            "section": "cloud_iot_config"
+          }
+        }
+      }
     },
     "protocol": {
       "enum": [
@@ -18,86 +25,233 @@
         "file",
         "trace",
         "mqtt"
-      ]
+      ],
+      "$presentation": {
+        "paths": {
+          "configuration_execution.*": {
+            "section": "cloud_iot_config"
+          }
+        }
+      }
     },
     "transport": {
       "enum": [
         "ssl",
         "tcp"
-      ]
+      ],
+      "$presentation": {
+        "paths": {
+          "configuration_execution.*": {
+            "section": "cloud_iot_config"
+          }
+        }
+      }
     },
     "hostname": {
-      "type": "string"
+      "type": "string",
+      "$presentation": {
+        "paths": {
+          "configuration_execution.*": {
+            "section": "cloud_iot_config"
+          }
+        }
+      }
     },
     "payload": {
       "description": "Simple payload template for simple injection use cases",
-      "type": "string"
+      "type": "string",
+      "$presentation": {
+        "paths": {
+          "configuration_execution.*": {
+            "section": "cloud_iot_config"
+          }
+        }
+      }
     },
     "error": {
       "description": "Error message container for capturing errors during parsing/handling",
-      "type": "string"
+      "type": "string",
+      "$presentation": {
+        "paths": {
+          "configuration_execution.*": {
+            "section": "cloud_iot_config"
+          }
+        }
+      }
     },
     "port": {
-      "type": "integer"
+      "type": "integer",
+      "$presentation": {
+        "paths": {
+          "configuration_execution.*": {
+            "section": "cloud_iot_config"
+          }
+        }
+      }
     },
     "config_sync_sec": {
       "description": "Delay waiting for config message on start, 0 for default, <0 to disable",
-      "type": "integer"
+      "type": "integer",
+      "$presentation": {
+        "paths": {
+          "configuration_execution.*": {
+            "section": "cloud_iot_config"
+          }
+        }
+      }
     },
     "client_id": {
-      "type": "string"
+      "type": "string",
+      "$presentation": {
+        "paths": {
+          "configuration_execution.*": {
+            "section": "cloud_iot_config"
+          }
+        }
+      }
     },
     "topic_prefix": {
       "description": "Prefix for message topics",
       "type": "string",
-      "pattern": "^[-_/a-zA-Z0-9]+$"
+      "pattern": "^[-_/a-zA-Z0-9]+$",
+      "$presentation": {
+        "paths": {
+          "configuration_execution.*": {
+            "section": "cloud_iot_config"
+          }
+        }
+      }
     },
     "recv_id": {
       "description": "Id for the receiving message channel",
       "type": "string",
-      "pattern": "^[-_/a-zA-Z0-9#]+$"
+      "pattern": "^[-_/a-zA-Z0-9#]+$",
+      "$presentation": {
+        "paths": {
+          "configuration_execution.*": {
+            "section": "cloud_iot_config"
+          }
+        }
+      }
     },
     "send_id": {
       "description": "Id for the sending messages channel",
       "type": "string",
-      "pattern": "^[-_/a-zA-Z0-9#]+$"
+      "pattern": "^[-_/a-zA-Z0-9#]+$",
+      "$presentation": {
+        "paths": {
+          "configuration_execution.*": {
+            "section": "cloud_iot_config"
+          }
+        }
+      }
     },
     "side_id": {
       "description": "Id for a side-car message channel",
       "type": "string",
-      "pattern": "^[-_/a-zA-Z0-9#]+$"
+      "pattern": "^[-_/a-zA-Z0-9#]+$",
+      "$presentation": {
+        "paths": {
+          "configuration_execution.*": {
+            "section": "cloud_iot_config"
+          }
+        }
+      }
     },
     "gatewayId": {
-      "type": "string"
+      "type": "string",
+      "$presentation": {
+        "paths": {
+          "configuration_execution.*": {
+            "section": "cloud_iot_config"
+          }
+        }
+      }
     },
     "deviceId": {
-      "type": "string"
+      "type": "string",
+      "$presentation": {
+        "paths": {
+          "configuration_execution.*": {
+            "section": "cloud_iot_config"
+          }
+        }
+      }
     },
     "enabled": {
       "description": "Indicator if this endpoint should be active (null or non-empty)",
-      "type": "string"
+      "type": "string",
+      "$presentation": {
+        "paths": {
+          "configuration_execution.*": {
+            "section": "cloud_iot_config"
+          }
+        }
+      }
     },
     "noConfigAck": {
       "description": "True if config messages should not be acked (lower QOS)",
-      "type": "boolean"
+      "type": "boolean",
+      "$presentation": {
+        "paths": {
+          "configuration_execution.*": {
+            "section": "cloud_iot_config"
+          }
+        }
+      }
     },
     "capacity": {
       "description": "Queue capacity for limiting pipes",
-      "type": "integer"
+      "type": "integer",
+      "$presentation": {
+        "paths": {
+          "configuration_execution.*": {
+            "section": "cloud_iot_config"
+          }
+        }
+      }
     },
     "publish_delay_sec": {
       "description": "Artifical publish delay for testing",
-      "type": "integer"
+      "type": "integer",
+      "$presentation": {
+        "paths": {
+          "configuration_execution.*": {
+            "section": "cloud_iot_config"
+          }
+        }
+      }
     },
     "periodic_sec": {
       "description": "Rate for periodic task execution",
-      "type": "integer"
+      "type": "integer",
+      "$presentation": {
+        "paths": {
+          "configuration_execution.*": {
+            "section": "cloud_iot_config"
+          }
+        }
+      }
     },
     "keyBytes": {
-      "note": "Should be type byte[], which is not supported, so fall-back to generic default object"
+      "note": "Should be type byte[], which is not supported, so fall-back to generic default object",
+      "$presentation": {
+        "paths": {
+          "configuration_execution.*": {
+            "section": "cloud_iot_config"
+          }
+        }
+      }
     },
     "algorithm": {
-      "type": "string"
+      "type": "string",
+      "$presentation": {
+        "paths": {
+          "configuration_execution.*": {
+            "section": "cloud_iot_config"
+          }
+        }
+      }
     },
     "auth_provider": {
       "type": "object",
@@ -107,10 +261,24 @@
           "additionalProperties": false,
           "properties": {
             "username": {
-              "type": "string"
+              "type": "string",
+              "$presentation": {
+                "paths": {
+                  "configuration_execution.*": {
+                    "section": "cloud_iot_config"
+                  }
+                }
+              }
             },
             "password": {
-              "type": "string"
+              "type": "string",
+              "$presentation": {
+                "paths": {
+                  "configuration_execution.*": {
+                    "section": "cloud_iot_config"
+                  }
+                }
+              }
             }
           }
         },
@@ -118,7 +286,14 @@
           "additionalProperties": false,
           "properties": {
             "audience": {
-              "type": "string"
+              "type": "string",
+              "$presentation": {
+                "paths": {
+                  "configuration_execution.*": {
+                    "section": "cloud_iot_config"
+                  }
+                }
+              }
             }
           }
         }
@@ -128,7 +303,14 @@
       "description": "The timestamp of the endpoint generation",
       "type": "string",
       "format": "date-time",
-      "examples": ["2019-01-17T14:02:29.364Z"]
+      "examples": ["2019-01-17T14:02:29.364Z"],
+      "$presentation": {
+        "paths": {
+          "configuration_execution.*": {
+            "section": "cloud_iot_config"
+          }
+        }
+      }
     }
   },
   "required": [

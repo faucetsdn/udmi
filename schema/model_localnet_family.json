@@ -9,7 +9,14 @@
     "addr": {
       "type": "string",
       "description": "The address of a device on the fieldbus/local network",
-      "examples": ["192.168.1.3", "41489"]
+      "examples": ["192.168.1.3", "41489"],
+      "$presentation": {
+        "paths": {
+          "model_localnet.families.*": {
+            "section": "localnet"
+          }
+        }
+      }
     },
     "network": {
       "type": "string",
@@ -24,6 +31,133 @@
         "^[a-z_]+$": {
           "type": "string"
         }
+      },
+      "$presentation": {
+        "presentationProperties": {
+          "name": {
+            "type": "string",
+            "description": "The name of the BACnet device.",
+            "$presentation": {
+              "paths": {
+                "model_localnet.families.bacnet.adjunct": {
+                  "section": "localnet"
+                }
+              }
+            }
+          },
+          "description": {
+            "type": "string",
+            "description": "A description for the BACnet device.",
+            "$presentation": {
+              "paths": {
+                "model_localnet.families.bacnet.adjunct": {
+                  "section": "localnet"
+                }
+              }
+            }
+          },
+          "serial_port": {
+            "type": "string",
+            "examples": [
+              "/dev/USB0",
+              "COM1:"
+            ],
+            "$presentation": {
+              "paths": {
+                "model_localnet.families.modbus.adjunct": {
+                  "section": "localnet"
+                },
+                "model_localnet.families.mbus.adjunct": {
+                  "section": "localnet"
+                }
+              }
+            }
+          },
+          "bit_rate": {
+            "type": "integer",
+            "examples": [
+              9600
+            ],
+            "$presentation": {
+              "paths": {
+                "model_localnet.families.modbus.adjunct": {
+                  "section": "localnet"
+                },
+                "model_localnet.families.mbus.adjunct": {
+                  "section": "localnet"
+                }
+              }
+            }
+          },
+          "secondary_addr": {
+            "type": "string",
+            "examples": [
+              "181129145F1D0102"
+            ],
+            "$presentation": {
+              "paths": {
+                "model_localnet.families.mbus.adjunct": {
+                  "section": "localnet"
+                }
+              }
+            }
+          },
+          "data_bits": {
+            "type": "string",
+            "examples": [
+              "5|6|7|8"
+            ],
+            "$presentation": {
+              "paths": {
+                "model_localnet.families.modbus.adjunct": {
+                  "section": "localnet"
+                }
+              }
+            }
+          },
+          "stop_bits": {
+            "type": "string",
+            "examples": [
+              "1|1.5|2"
+            ],
+            "$presentation": {
+              "paths": {
+                "model_localnet.families.modbus.adjunct": {
+                  "section": "localnet"
+                }
+              }
+            }
+          },
+          "parity": {
+            "type": "string",
+            "examples": [
+              "none",
+              "odd",
+              "even"
+            ],
+            "$presentation": {
+              "paths": {
+                "model_localnet.families.modbus.adjunct": {
+                  "section": "localnet"
+                }
+              }
+            }
+          },
+          "encoding": {
+            "type": "string",
+            "examples": [
+              "rtu",
+              "ascii"
+            ],
+            "$presentation": {
+              "paths": {
+                "model_localnet.families.modbus.adjunct": {
+                  "section": "localnet"
+                }
+              }
+            }
+          }
+        }
       }
     },
     "shadow_id": {
@@ -37,7 +171,14 @@
     "family": {
       "description": "The family designator, used only when the entry is not keyed in a family map",
       "type": "string",
-      "examples": ["ipv4", "bacnet"]
+      "examples": ["ipv4", "bacnet"],
+      "$presentation": {
+        "paths": {
+          "model_gateway.target": {
+            "section": "gateway"
+          }
+        }
+      }
     }
   }
 }
