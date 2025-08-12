@@ -51,8 +51,10 @@
 1 RESULT fail gateway gateway_proxy_events BETA 0/10 Failed waiting until All proxy devices received pointset: Missing pointset from AHU-22
 1 RESULT pass gateway gateway_proxy_state PREVIEW 10/10 Sequence complete
 1 RESULT fail gateway gateway_proxy_state PREVIEW 0/10 Failed waiting until All proxy devices received update: Missing update from AHU-22
-1 RESULT pass discovery.scan scan_single_future PREVIEW 10/10 Sequence complete
-1 RESULT pass discovery.scan scan_periodic_now_enumerate PREVIEW 10/10 Sequence complete
+1 RESULT pass discovery.scan scan_single_future+bacnet PREVIEW 10/10 Sequence complete
+0 RESULT pass discovery.scan scan_single_future+vendor PREVIEW 10/10 Sequence complete
+1 RESULT pass discovery.scan scan_periodic_now_enumerate+bacnet PREVIEW 10/10 Sequence complete
+0 RESULT pass discovery.scan scan_periodic_now_enumerate+vendor PREVIEW 10/10 Sequence complete
 4 RESULT pass gateway gateway_proxy_events BETA 10/10 Sequence complete
 1 RESULT pass gateway gateway_proxy_events BETA 10/10 Sequence complete
 1 RESULT fail gateway gateway_proxy_state PREVIEW 0/10 Failed waiting until All proxy devices received update: Missing update from SNS-4, AHU-22

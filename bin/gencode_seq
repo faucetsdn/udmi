@@ -18,8 +18,8 @@ echo Updating $SEQUENCE_MD:
 sed -i '/<!-- START GENERATED,/q' $SEQUENCE_MD
 
 TEST_LIST=/tmp/sequence.txt
-find $altfix -name sequence.log | xargs fgrep -H RESULT | awk '{print $6}' > $TEST_LIST
-find $prefix -name sequence.log | xargs fgrep -H RESULT | awk '{print $6}'>> $TEST_LIST
+find $altfix $prefix -name sequence.log \
+    | xargs fgrep -H RESULT | awk '{print $6}' | sed -e 's/+.*//' > $TEST_LIST
 cat $TEST_LIST | sort | uniq > $TEST_LIST.sorted
 sequences=$(cat $TEST_LIST.sorted)
 
