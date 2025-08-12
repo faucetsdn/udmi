@@ -53,10 +53,7 @@ from .model_discovery_family import FamilyDiscoveryModel
 from .model_features import TestingModel
 from .model_gateway import GatewayModel
 from .model_localnet import LocalnetModel
-from .model_localnet_bacnet_family import BACnetFamilyLocalnetModel
 from .model_localnet_family import FamilyLocalnetModel
-from .model_localnet_mbus_family import MBusFamilyLocalnetModel
-from .model_localnet_modbus_family import ModbusFamilyLocalnetModel
 from .model_pointset import PointsetModel
 from .model_pointset_point import PointPointsetModel
 from .model_system import SystemModel
