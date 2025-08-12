@@ -15,12 +15,26 @@
             "description": "ID of the parent device to which the device is physically connected",
             "type": "string",
             "pattern": "^[A-Z]{2,6}-[1-9][0-9]*$",
-            "examples": ["DDC-1", "CGW-2"]
+            "examples": ["DDC-1", "CGW-2"],
+            "$presentation": {
+              "paths": {
+                "$this": {
+                  "section": "localnet"
+                }
+              }
+            }
         },
         "family": {
             "description": "Connection family/protocol of the parent device to which the device is physically connected",
             "type": "string",
-            "examples": ["bacnet_mstp", "modbus_tcp", "mqtt"]
+            "examples": ["bacnet_mstp", "modbus_tcp", "mqtt"],
+            "$presentation": {
+              "paths": {
+                "$this": {
+                  "section": "localnet"
+                }
+              }
+            }
         }
       }
     },
@@ -32,7 +46,34 @@
           "$ref": "file:model_localnet_family.json"
         }
       },
-      "examples": ["bacnet", "modbus", "mbus", "ether", "ipv4", "ipv6", "iot"]
+      "examples": ["bacnet", "modbus", "mbus", "ether", "ipv4", "ipv6", "iot"],
+      "$presentation": {
+        "generator": {
+          "mapping": {
+            "bacnet": {
+              "$ref": "file:model_localnet_bacnet_family.json"
+            },
+            "modbus": {
+              "$ref": "file:model_localnet_modbus_family.json"
+            },
+            "mbus": {
+              "$ref": "file:model_localnet_mbus_family.json"
+            },
+            "ether": {
+              "$ref": "file:model_localnet_family.json"
+            },
+            "ipv4": {
+              "$ref": "file:model_localnet_family.json"
+            },
+            "ipv6": {
+              "$ref": "file:model_localnet_family.json"
+            },
+            "fqdn": {
+              "$ref": "file:model_localnet_family.json"
+            }
+          }
+        }
+      }
     }
   },
   "required": [

@@ -1,0 +1,58 @@
+{
+  "$udmi_version": "1.5.2",
+  "title": "MBus Family Localnet Model",
+  "type": "object",
+  "description": "The type of network",
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "additionalProperties": false,
+  "properties": {
+    "addr": {
+      "$ref": "file:model_localnet_family.json#/properties/addr"
+    },
+    "mbus_adjunct": {
+      "type": "object",
+      "properties": {
+        "serial_port": {
+          "type": "string",
+          "examples": [
+            "/dev/USB0",
+            "COM1:"
+          ],
+          "$presentation": {
+            "paths": {
+              "model_localnet.families.mbus.adjunct": {
+                "section": "localnet"
+              }
+            }
+          }
+        },
+        "bit_rate": {
+          "type": "integer",
+          "examples": [
+            9600
+          ],
+          "$presentation": {
+            "paths": {
+              "model_localnet.families.mbus.adjunct": {
+                "section": "localnet"
+              }
+            }
+          }
+        },
+        "secondary_addr": {
+          "type": "string",
+          "examples": [
+            "181129145F1D0102"
+          ],
+          "$presentation": {
+            "paths": {
+              "model_localnet.families.mbus.adjunct": {
+                "section": "localnet"
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

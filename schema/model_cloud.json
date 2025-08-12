@@ -27,7 +27,14 @@
         "ES256_X509",
         "RS256",
         "RS256_X509"
-      ]
+      ],
+      "$presentation": {
+        "paths": {
+          "$this": {
+            "section": "cloud"
+          }
+        }
+      }
     },
     "device_key": {
       "type": "boolean",
@@ -41,7 +48,14 @@
         "FUNNEL",
         "PROXIED",
         "REGISTRY"
-      ]
+      ],
+      "$presentation": {
+        "paths": {
+          "$this": {
+            "section": "cloud"
+          }
+        }
+      }
     },
     "gateway": {
       "$ref": "file:model_gateway.json#"
@@ -50,7 +64,14 @@
       "$ref": "file:model_cloud_config.json#"
     },
     "blocked": {
-      "type": "boolean"
+      "type": "boolean",
+      "$presentation": {
+        "paths": {
+          "$this": {
+            "section": "cloud"
+          }
+        }
+      }
     },
     "detail": {
       "type": "string"
@@ -100,7 +121,14 @@
       "format": "date-time"
     },
     "num_id": {
-      "type": "string"
+      "type": "string",
+      "$presentation": {
+        "paths": {
+          "$this": {
+            "section": "cloud"
+          }
+        }
+      }
     },
     "operation": {
       "$ref": "file:common.json#/definitions/operation"

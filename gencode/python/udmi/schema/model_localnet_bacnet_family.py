@@ -1,20 +1,20 @@
-"""Generated class for model_localnet.json"""
+"""Generated class for model_localnet_bacnet_family.json"""
 
 
-class Object7528DDBA:
+class ObjectDC14E5DB:
   """Generated schema class"""
 
   def __init__(self):
-    self.target = None
-    self.family = None
+    self.name = None
+    self.description = None
 
   @staticmethod
   def from_dict(source):
     if not source:
       return None
-    result = Object7528DDBA()
-    result.target = source.get('target')
-    result.family = source.get('family')
+    result = ObjectDC14E5DB()
+    result.name = source.get('name')
+    result.description = source.get('description')
     return result
 
   @staticmethod
@@ -23,7 +23,7 @@ class Object7528DDBA:
       return None
     result = {}
     for key in source:
-      result[key] = Object7528DDBA.from_dict(source[key])
+      result[key] = ObjectDC14E5DB.from_dict(source[key])
     return result
 
   @staticmethod
@@ -35,28 +35,27 @@ class Object7528DDBA:
 
   def to_dict(self):
     result = {}
-    if self.target:
-      result['target'] = self.target # 5
-    if self.family:
-      result['family'] = self.family # 5
+    if self.name:
+      result['name'] = self.name # 5
+    if self.description:
+      result['description'] = self.description # 5
     return result
-from .model_localnet_family import FamilyLocalnetModel
 
 
-class LocalnetModel:
+class BACnetFamilyLocalnetModel:
   """Generated schema class"""
 
   def __init__(self):
-    self.parent = None
-    self.families = None
+    self.addr = None
+    self.bacnet_adjunct = None
 
   @staticmethod
   def from_dict(source):
     if not source:
       return None
-    result = LocalnetModel()
-    result.parent = Object7528DDBA.from_dict(source.get('parent'))
-    result.families = FamilyLocalnetModel.map_from(source.get('families'))
+    result = BACnetFamilyLocalnetModel()
+    result.addr = source.get('addr')
+    result.bacnet_adjunct = ObjectDC14E5DB.from_dict(source.get('bacnet_adjunct'))
     return result
 
   @staticmethod
@@ -65,7 +64,7 @@ class LocalnetModel:
       return None
     result = {}
     for key in source:
-      result[key] = LocalnetModel.from_dict(source[key])
+      result[key] = BACnetFamilyLocalnetModel.from_dict(source[key])
     return result
 
   @staticmethod
@@ -77,8 +76,8 @@ class LocalnetModel:
 
   def to_dict(self):
     result = {}
-    if self.parent:
-      result['parent'] = self.parent.to_dict() # 4
-    if self.families:
-      result['families'] = FamilyLocalnetModel.expand_dict(self.families) # 2
+    if self.addr:
+      result['addr'] = self.addr # 5
+    if self.bacnet_adjunct:
+      result['bacnet_adjunct'] = self.bacnet_adjunct.to_dict() # 4
     return result
