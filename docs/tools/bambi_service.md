@@ -40,13 +40,13 @@ services/bin/bambi_service ${message_spec} ${cloning_dir} [options]
 ```
 
 #### Arguments & Options:
-| Argument/Option     | Description                                                                                                                                                                             | Example                                               |
-|---------------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|-------------------------------------------------------|
-| `${message_spec}`   | **(Required)** Defines the message source. For a production environment, this will be a Google Cloud Pub/Sub topic. For local testing, you can use an MQTT broker.                      | `//pubsub/bos-platform-dev/udmis`, `//mqtt/localhost` |
-| `${cloning_dir}`    | **(Required)** An absolute path to a local directory where the service will temporarily clone git repositories for import and export operations.                                        | `/tmp/udmi/sites`                                     | 
-| `--local`           | **(Optional)** A flag to run the service in a local-only mode, often used with an MQTT message_spec for development.                                                                    | N/A                                                   |
-| `--create`          | **(Optional)** A flag that attempts to create the necessary Google Cloud Pub/Sub topics and subscriptions if they don't already exist. This is useful for initial setup.                | N/A                                                   |
-| `local_origin_dir`  | **(Optional)** Provides an absolute path to a local directory containing git repositories. This is used for testing to simulate a remote origin without making actual network requests. | `/home/user/udmi_test_repos`                          |
+| Argument/Option | Description | Example |
+|---|---|---|
+| `${message_spec}` | **(Required)** Defines the message source. For a production environment, this will be a Google Cloud Pub/Sub topic. For local testing, you can use an MQTT broker. | `//pubsub/bos-platform-dev/udmis`, `//mqtt/localhost` |
+| `${cloning_dir}` | **(Required)** An absolute path to a local directory where the service will temporarily clone git repositories for import and export operations. | `/tmp/udmi/sites` |
+| `--local` | **(Optional)** A flag to run the service in a local-only mode, often used with an MQTT message_spec for development. | N/A |
+| `--create` | **(Optional)** A flag that attempts to create the necessary Google Cloud Pub/Sub topics and subscriptions if they don't already exist. This is useful for initial setup. | N/A |
+| `local_origin_dir` | **(Optional)** Provides an absolute path to a local directory containing git repositories. This is used for testing to simulate a remote origin without making actual network requests. | `/home/user/udmi_test_repos` |
 
 ### 2.3. Message Format
 
@@ -116,9 +116,9 @@ Then, navigate to the UDMI root and use the container script with one of the fol
 # General Syntax: bin/container services.bambi {command} [repo]
 bin/container services.bambi push
 ```
-| Command   | Action                                                                                                |
-|-----------|-------------------------------------------------------------------------------------------------------|
-| `prep`    | Prepares dependencies and prerequisites for the container build.                                      |
-| `build`   | Builds the Docker container image locally.                                                            |
-| `push`    | Pushes the built container image to a container registry (pushes to GHCR if `repo` is not specified). |
-| `apply`   | Applies the container to GKE cluster                                                                  |
+| Command | Action |
+|---|---|
+| `prep` | Prepares dependencies and prerequisites for the container build. |
+| `build` | Builds the Docker container image locally. |
+| `push` | Pushes the built container image to a container registry (pushes to GHCR if `repo` is not specified). |
+| `apply` | Applies the container to GKE cluster |
