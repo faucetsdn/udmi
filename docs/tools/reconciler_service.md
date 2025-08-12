@@ -40,6 +40,7 @@ services/bin/reconciler_service ${message_spec} ${cloning_dir} [options]
 ```
 
 #### Arguments & Options:
+
 | Argument/Option     | Description                                                                                                                                                                             | Example                                               |
 |---------------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|-------------------------------------------------------|
 | `${message_spec}`   | **(Required)** Defines the message source. For a production environment, this will be a Google Cloud Pub/Sub topic. For local testing, you can use an MQTT broker.                      | `//pubsub/bos-platform-dev/udmis`, `//mqtt/localhost` |
@@ -90,6 +91,7 @@ Then, navigate to the UDMI root and use the container script with one of the fol
 # General Syntax: bin/container services.reconciler {command} [repo]
 bin/container services.reconciler push
 ```
+
 | Command   | Action                                                                                                |
 |-----------|-------------------------------------------------------------------------------------------------------|
 | `prep`    | Prepares dependencies and prerequisites for the container build.                                      |
