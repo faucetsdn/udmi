@@ -5,6 +5,7 @@ import static java.lang.String.format;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Sets;
+import java.util.concurrent.TimeUnit;
 import daq.pubber.impl.PubberManager;
 import daq.pubber.impl.point.PubberRandomBoolean;
 import daq.pubber.impl.point.PubberRandomPoint;
@@ -21,7 +22,6 @@ import udmi.schema.PointPointsetModel;
 import udmi.schema.PointPointsetState.Value_state;
 import udmi.schema.PointsetConfig;
 import udmi.schema.PointsetState;
-import java.util.concurrent.TimeUnit;
 import udmi.schema.PubberConfiguration;
 
 /**
@@ -163,7 +163,8 @@ public class PubberPointsetManager extends PubberManager implements PointsetMana
   }
 
   private void handleSlowWriteback(AbstractPoint point, PointPointsetConfig pointConfig) {
-    info(format("Applying slow writeback for point %s with %ds delay", point.getName(), SLOW_DEVICE_DELAY_SEC));
+    info(format("Applying slow writeback for point %s with %ds delay", point.getName(),
+        SLOW_DEVICE_DELAY_SEC));
 
     getPointsetState().points.get(point.getName()).value_state = Value_state.UPDATING;
     updateState();
