@@ -5,7 +5,6 @@ import static com.google.daq.mqtt.util.TimePeriodConstants.TWO_MINUTES_MS;
 import static java.lang.String.format;
 import static udmi.schema.Bucket.WRITEBACK;
 import static udmi.schema.FeatureDiscovery.FeatureStage.ALPHA;
-import static udmi.schema.PointPointsetState.Value_state.APPLIED;
 import static udmi.schema.PointPointsetState.Value_state.UPDATING;
 
 import com.google.daq.mqtt.sequencer.Feature;
@@ -17,9 +16,7 @@ import org.junit.Before;
 import org.junit.Test;
 import udmi.schema.PointPointsetState.Value_state;
 import udmi.schema.PointsetEvents;
-import udmi.schema.SystemConfig;
 import udmi.schema.TargetTestingModel;
-import udmi.schema.TestingSystemConfig;
 
 /**
  * Validate UDMI writeback capabilities.
@@ -128,11 +125,13 @@ public class WritebackSequences extends PointsetBase {
 
     deviceConfig.pointset.points.get(targetPoint).set_value = targetValue;
 
-    waitUntil(expectedValueState(UPDATING.value()), () -> valueStateIs(targetPoint, UPDATING.value()));
+    waitUntil(expectedValueState(UPDATING.value()),
+        () -> valueStateIs(targetPoint, UPDATING.value()));
 
     waitUntil(expectedValueState(APPLIED_STATE), () -> valueStateIs(targetPoint, APPLIED_STATE));
 
-    waitUntil("target point to have target expected value", () -> presentValueIs(targetModel));
+    waitUntil("target point to have target expected value",
+        () -> presentValueIs(targetModel));
   }
 }
 
