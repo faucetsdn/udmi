@@ -1,9 +1,12 @@
 package com.google.daq.mqtt.sequencer.sequences;
 
+import static com.google.daq.mqtt.util.TimePeriodConstants.FOUR_MINUTES_MS;
 import static com.google.daq.mqtt.util.TimePeriodConstants.TWO_MINUTES_MS;
 import static java.lang.String.format;
 import static udmi.schema.Bucket.WRITEBACK;
 import static udmi.schema.FeatureDiscovery.FeatureStage.ALPHA;
+import static udmi.schema.PointPointsetState.Value_state.APPLIED;
+import static udmi.schema.PointPointsetState.Value_state.UPDATING;
 
 import com.google.daq.mqtt.sequencer.Feature;
 import com.google.daq.mqtt.sequencer.PointsetBase;
@@ -14,7 +17,9 @@ import org.junit.Before;
 import org.junit.Test;
 import udmi.schema.PointPointsetState.Value_state;
 import udmi.schema.PointsetEvents;
+import udmi.schema.SystemConfig;
 import udmi.schema.TargetTestingModel;
+import udmi.schema.TestingSystemConfig;
 
 /**
  * Validate UDMI writeback capabilities.
@@ -108,6 +113,26 @@ public class WritebackSequences extends PointsetBase {
   @Feature(stage = ALPHA, bucket = WRITEBACK)
   public void writeback_failure() {
     testTargetState(FAILURE_STATE);
+  }
+
+  @Test(timeout = FOUR_MINUTES_MS)
+  @Feature(stage = ALPHA, bucket = WRITEBACK)
+  @Summary("Tests a slow writeback operation by checking for an intermediate 'updating' state.")
+  public void writeback_slow() {
+    TargetTestingModel targetModel = getTarget(APPLIED_STATE);
+    String targetPoint = targetModel.target_point;
+    Object targetValue = targetModel.target_value;
+
+    deviceConfig.pointset.points.get(targetPoint).set_value = null;
+    waitUntil(expectedValueState(DEFAULT_STATE), () -> valueStateIs(targetPoint, DEFAULT_STATE));
+
+    deviceConfig.pointset.points.get(targetPoint).set_value = targetValue;
+
+    waitUntil(expectedValueState(UPDATING.value()), () -> valueStateIs(targetPoint, UPDATING.value()));
+
+    waitUntil(expectedValueState(APPLIED_STATE), () -> valueStateIs(targetPoint, APPLIED_STATE));
+
+    waitUntil("target point to have target expected value", () -> presentValueIs(targetModel));
   }
 }
 

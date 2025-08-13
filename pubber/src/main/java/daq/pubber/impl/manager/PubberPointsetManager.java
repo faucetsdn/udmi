@@ -11,12 +11,17 @@ import daq.pubber.impl.point.PubberRandomPoint;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
 import udmi.lib.client.manager.PointsetManager;
 import udmi.lib.intf.AbstractPoint;
 import udmi.lib.intf.ManagerHost;
 import udmi.schema.PointPointsetConfig;
 import udmi.schema.PointPointsetModel;
+import udmi.schema.PointPointsetState.Value_state;
+import udmi.schema.PointsetConfig;
 import udmi.schema.PointsetState;
+import java.util.concurrent.TimeUnit;
 import udmi.schema.PubberConfiguration;
 
 /**
@@ -26,6 +31,8 @@ public class PubberPointsetManager extends PubberManager implements PointsetMana
 
   private final ExtraPointsetEvent pointsetEvent = new ExtraPointsetEvent();
   private final Map<String, AbstractPoint> managedPoints = new HashMap<>();
+  private final ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(1);
+  private static final int SLOW_DEVICE_DELAY_SEC = 90;
 
   private int pointsetUpdateCount = -1;
   private PointsetState pointsetState;
@@ -127,4 +134,54 @@ public class PubberPointsetManager extends PubberManager implements PointsetMana
     pointMetadata.units = units;
     return pointMetadata;
   }
+
+  @Override
+  public void updatePointsetPointsConfig(PointsetConfig config) {
+    if (config == null) {
+      setPointsetState(null);
+      updateState();
+      return;
+    }
+
+    boolean slowDevice = getOptions().slowDevice != null && getOptions().slowDevice;
+
+    getManagedPoints().forEach((pointName, point) -> {
+      PointPointsetConfig pointConfig = config.points == null ? null : config.points.get(pointName);
+      if (pointConfig != null && pointConfig.set_value != null) {
+        if (slowDevice) {
+          handleSlowWriteback(point, pointConfig);
+        } else {
+          applyAndAckWriteback(point, pointConfig);
+        }
+      }
+    });
+
+    if (syncPoints(config.points)) {
+      updateState();
+    }
+    getPointsetState().state_etag = config.state_etag;
+  }
+
+  private void handleSlowWriteback(AbstractPoint point, PointPointsetConfig pointConfig) {
+    info(format("Applying slow writeback for point %s with %ds delay", point.getName(), SLOW_DEVICE_DELAY_SEC));
+
+    getPointsetState().points.get(point.getName()).value_state = Value_state.UPDATING;
+    updateState();
+
+    scheduler.schedule(() -> {
+      try {
+        info(format("Completing slow writeback for %s", point.getName()));
+        applyAndAckWriteback(point, pointConfig);
+      } catch (Exception e) {
+        error("Error during scheduled writeback for " + point.getName(), e);
+      }
+    }, SLOW_DEVICE_DELAY_SEC, TimeUnit.SECONDS);
+  }
+
+  private void applyAndAckWriteback(AbstractPoint point, PointPointsetConfig pointConfig) {
+    point.setConfig(pointConfig);
+    getPointsetState().points.get(point.getName()).value_state = Value_state.APPLIED;
+    updateState();
+  }
+
 }

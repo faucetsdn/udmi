@@ -117,6 +117,10 @@
     "fixedLogLevel": {
       "type": "integer"
     },
+    "slowDevice": {
+      "type": "boolean",
+      "description": "If true, the pubber will simulate a 90-second delay for writeback operations."
+    },
     "softwareFirmwareValue": {
       "type": "string"
     }

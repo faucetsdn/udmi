@@ -42,6 +42,7 @@ class PubberOptions:
     self.disableWriteback = None
     self.noWriteback = None
     self.fixedLogLevel = None
+    self.slowDevice = None
     self.softwareFirmwareValue = None
 
   @staticmethod
@@ -86,6 +87,7 @@ class PubberOptions:
     result.disableWriteback = source.get('disableWriteback')
     result.noWriteback = source.get('noWriteback')
     result.fixedLogLevel = source.get('fixedLogLevel')
+    result.slowDevice = source.get('slowDevice')
     result.softwareFirmwareValue = source.get('softwareFirmwareValue')
     return result
 
@@ -181,6 +183,8 @@ class PubberOptions:
       result['noWriteback'] = self.noWriteback # 5
     if self.fixedLogLevel:
       result['fixedLogLevel'] = self.fixedLogLevel # 5
+    if self.slowDevice:
+      result['slowDevice'] = self.slowDevice # 5
     if self.softwareFirmwareValue:
       result['softwareFirmwareValue'] = self.softwareFirmwareValue # 5
     return result
