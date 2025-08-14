@@ -39,6 +39,8 @@ import com.fasterxml.jackson.databind.util.ISO8601DateFormat;
 import com.google.common.collect.ImmutableList;
 import com.google.udmi.util.ExceptionMap.ExceptionCategory;
 import java.io.File;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
@@ -275,12 +277,13 @@ public class SiteModel {
       return ImmutableList.of();
     }
     String[] devices = requireNonNull(devicesDir.list());
-    return Arrays.stream(devices).filter(SiteModel::validDeviceDirectory)
+    return Arrays.stream(devices).filter(device -> validDeviceDirectory(devicesDir, device))
         .collect(Collectors.toList());
   }
 
-  private static boolean validDeviceDirectory(String dirName) {
-    return !(dirName.startsWith(".") || dirName.endsWith("~"));
+  private static boolean validDeviceDirectory(File baseDir, String dirName) {
+    return !(dirName.startsWith(".") || dirName.endsWith("~")) &&
+        Files.isDirectory(Path.of(baseDir.getPath(), dirName));
   }
 
   public static String getRegistryActual(ExecutionConfiguration iotConfig) {
@@ -335,8 +338,8 @@ public class SiteModel {
     File devicesFile = getDevicesDir();
     File[] files = Objects.requireNonNull(devicesFile.listFiles(),
         "no files in " + devicesFile.getAbsolutePath());
-    return Arrays.stream(files).map(File::getName).filter(SiteModel::validDeviceDirectory)
-        .collect(Collectors.toSet());
+    return Arrays.stream(files).map(File::getName)
+        .filter(device -> validDeviceDirectory(devicesFile, device)).collect(Collectors.toSet());
   }
 
   public SiteMetadata loadSiteMetadata() {
