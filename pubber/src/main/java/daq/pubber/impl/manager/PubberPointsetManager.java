@@ -32,7 +32,9 @@ public class PubberPointsetManager extends PubberManager implements PointsetMana
   private final ExtraPointsetEvent pointsetEvent = new ExtraPointsetEvent();
   private final Map<String, AbstractPoint> managedPoints = new HashMap<>();
   private final ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(1);
-  private static final int SLOW_DEVICE_DELAY_SEC = 90;
+  private static final int SLOW_WRITE_DELAY_SEC = 5;
+  private static final int TIMEOUT_WRITE_DELAY_SEC = 90;
+
 
   private int pointsetUpdateCount = -1;
   private PointsetState pointsetState;
@@ -143,13 +145,16 @@ public class PubberPointsetManager extends PubberManager implements PointsetMana
       return;
     }
 
-    boolean slowDevice = getOptions().slowDevice != null && getOptions().slowDevice;
+    boolean slowWrite = getOptions().slowWrite != null && getOptions().slowWrite;
+    boolean delayWrite = getOptions().delayWrite != null && getOptions().delayWrite;
 
     getManagedPoints().forEach((pointName, point) -> {
       PointPointsetConfig pointConfig = config.points == null ? null : config.points.get(pointName);
       if (pointConfig != null && pointConfig.set_value != null) {
-        if (slowDevice) {
-          handleSlowWriteback(point, pointConfig);
+        if (delayWrite) {
+          handleDelayWriteback(point, pointConfig, TIMEOUT_WRITE_DELAY_SEC);
+        } else if (slowWrite) {
+          handleSlowWriteback(point, pointConfig, SLOW_WRITE_DELAY_SEC);
         } else {
           applyAndAckWriteback(point, pointConfig);
         }
@@ -162,13 +167,22 @@ public class PubberPointsetManager extends PubberManager implements PointsetMana
     getPointsetState().state_etag = config.state_etag;
   }
 
-  private void handleSlowWriteback(AbstractPoint point, PointPointsetConfig pointConfig) {
-    info(format("Applying slow writeback for point %s with %ds delay", point.getName(),
-        SLOW_DEVICE_DELAY_SEC));
+  private void handleDelayWriteback(AbstractPoint point, PointPointsetConfig pointConfig, int delay) {
+    info(format("Applying delayed writeback for point %s with %ds delay", point.getName(), delay));
+    scheduler.schedule(() -> {
+      try {
+        info(format("Completing delayed writeback for %s", point.getName()));
+        applyAndAckWriteback(point, pointConfig);
+      } catch (Exception e) {
+        error("Error during scheduled writeback for " + point.getName(), e);
+      }
+    }, delay, TimeUnit.SECONDS);
+  }
 
+  private void handleSlowWriteback(AbstractPoint point, PointPointsetConfig pointConfig, int delay) {
+    info(format("Applying slow writeback for point %s with %ds delay", point.getName(), delay));
     getPointsetState().points.get(point.getName()).value_state = Value_state.UPDATING;
     updateState();
-
     scheduler.schedule(() -> {
       try {
         info(format("Completing slow writeback for %s", point.getName()));
@@ -176,9 +190,8 @@ public class PubberPointsetManager extends PubberManager implements PointsetMana
       } catch (Exception e) {
         error("Error during scheduled writeback for " + point.getName(), e);
       }
-    }, SLOW_DEVICE_DELAY_SEC, TimeUnit.SECONDS);
+    }, delay, TimeUnit.SECONDS);
   }
-
   private void applyAndAckWriteback(AbstractPoint point, PointPointsetConfig pointConfig) {
     point.setConfig(pointConfig);
     getPointsetState().points.get(point.getName()).value_state = Value_state.APPLIED;

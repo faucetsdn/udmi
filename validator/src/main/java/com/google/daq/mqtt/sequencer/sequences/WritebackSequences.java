@@ -114,8 +114,8 @@ public class WritebackSequences extends PointsetBase {
 
   @Test(timeout = FOUR_MINUTES_MS)
   @Feature(stage = ALPHA, bucket = WRITEBACK)
-  @Summary("Tests a slow writeback operation by checking for an intermediate 'updating' state.")
-  public void writeback_slow() {
+  @Summary("Tests fast, slow, and timeout writeback operations based on pubber options.")
+  public void writeback_operation() {
     TargetTestingModel targetModel = getTarget(APPLIED_STATE);
     String targetPoint = targetModel.target_point;
     Object targetValue = targetModel.target_value;
@@ -125,13 +125,10 @@ public class WritebackSequences extends PointsetBase {
 
     deviceConfig.pointset.points.get(targetPoint).set_value = targetValue;
 
-    waitUntil(expectedValueState(UPDATING.value()),
-        () -> valueStateIs(targetPoint, UPDATING.value()));
-
+    waitUntil(expectedValueState(UPDATING.value()), () -> valueStateIs(targetPoint, UPDATING.value()));
     waitUntil(expectedValueState(APPLIED_STATE), () -> valueStateIs(targetPoint, APPLIED_STATE));
+    waitUntil("target point to have target expected value", () -> presentValueIs(targetModel));
 
-    waitUntil("target point to have target expected value",
-        () -> presentValueIs(targetModel));
   }
 }
 

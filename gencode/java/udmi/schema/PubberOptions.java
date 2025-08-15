@@ -52,7 +52,8 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
     "disableWriteback",
     "noWriteback",
     "fixedLogLevel",
-    "slowDevice",
+    "slowWrite",
+    "delayWrite",
     "softwareFirmwareValue"
 })
 public class PubberOptions {
@@ -142,12 +143,19 @@ public class PubberOptions {
     @JsonProperty("fixedLogLevel")
     public Integer fixedLogLevel;
     /**
-     * If true, the pubber will simulate a 90-second delay for writeback operations.
+     * If true, the pubber will simulate a 10-second slow writeback operations.
      * 
      */
-    @JsonProperty("slowDevice")
-    @JsonPropertyDescription("If true, the pubber will simulate a 90-second delay for writeback operations.")
-    public Boolean slowDevice;
+    @JsonProperty("slowWrite")
+    @JsonPropertyDescription("If true, the pubber will simulate a 10-second slow writeback operations.")
+    public Boolean slowWrite;
+    /**
+     * If true, the pubber will simulate a very slow (90 second) writeback operations.
+     * 
+     */
+    @JsonProperty("delayWrite")
+    @JsonPropertyDescription("If true, the pubber will simulate a very slow (90 second) writeback operations.")
+    public Boolean delayWrite;
     @JsonProperty("softwareFirmwareValue")
     public String softwareFirmwareValue;
 
@@ -181,17 +189,18 @@ public class PubberOptions {
         result = ((result* 31)+((this.redirectRegistry == null)? 0 :this.redirectRegistry.hashCode()));
         result = ((result* 31)+((this.noPointState == null)? 0 :this.noPointState.hashCode()));
         result = ((result* 31)+((this.disableWriteback == null)? 0 :this.disableWriteback.hashCode()));
-        result = ((result* 31)+((this.slowDevice == null)? 0 :this.slowDevice.hashCode()));
         result = ((result* 31)+((this.barfConfig == null)? 0 :this.barfConfig.hashCode()));
         result = ((result* 31)+((this.extraField == null)? 0 :this.extraField.hashCode()));
         result = ((result* 31)+((this.emptyMissing == null)? 0 :this.emptyMissing.hashCode()));
         result = ((result* 31)+((this.fixedSampleRate == null)? 0 :this.fixedSampleRate.hashCode()));
         result = ((result* 31)+((this.dupeState == null)? 0 :this.dupeState.hashCode()));
         result = ((result* 31)+((this.featureEnableSwap == null)? 0 :this.featureEnableSwap.hashCode()));
+        result = ((result* 31)+((this.delayWrite == null)? 0 :this.delayWrite.hashCode()));
         result = ((result* 31)+((this.extraDevice == null)? 0 :this.extraDevice.hashCode()));
         result = ((result* 31)+((this.noConfigAck == null)? 0 :this.noConfigAck.hashCode()));
         result = ((result* 31)+((this.badVersion == null)? 0 :this.badVersion.hashCode()));
         result = ((result* 31)+((this.fixedLogLevel == null)? 0 :this.fixedLogLevel.hashCode()));
+        result = ((result* 31)+((this.slowWrite == null)? 0 :this.slowWrite.hashCode()));
         result = ((result* 31)+((this.configStateDelay == null)? 0 :this.configStateDelay.hashCode()));
         return result;
     }
@@ -205,7 +214,7 @@ public class PubberOptions {
             return false;
         }
         PubberOptions rhs = ((PubberOptions) other);
-        return ((((((((((((((((((((((((((((((((((((((((this.skewClock == rhs.skewClock)||((this.skewClock!= null)&&this.skewClock.equals(rhs.skewClock)))&&((this.noPersist == rhs.noPersist)||((this.noPersist!= null)&&this.noPersist.equals(rhs.noPersist))))&&((this.noLastConfig == rhs.noLastConfig)||((this.noLastConfig!= null)&&this.noLastConfig.equals(rhs.noLastConfig))))&&((this.noLog == rhs.noLog)||((this.noLog!= null)&&this.noLog.equals(rhs.noLog))))&&((this.noHardware == rhs.noHardware)||((this.noHardware!= null)&&this.noHardware.equals(rhs.noHardware))))&&((this.messageTrace == rhs.messageTrace)||((this.messageTrace!= null)&&this.messageTrace.equals(rhs.messageTrace))))&&((this.softwareFirmwareValue == rhs.softwareFirmwareValue)||((this.softwareFirmwareValue!= null)&&this.softwareFirmwareValue.equals(rhs.softwareFirmwareValue))))&&((this.noWriteback == rhs.noWriteback)||((this.noWriteback!= null)&&this.noWriteback.equals(rhs.noWriteback))))&&((this.msTimestamp == rhs.msTimestamp)||((this.msTimestamp!= null)&&this.msTimestamp.equals(rhs.msTimestamp))))&&((this.noLastStart == rhs.noLastStart)||((this.noLastStart!= null)&&this.noLastStart.equals(rhs.noLastStart))))&&((this.badLevel == rhs.badLevel)||((this.badLevel!= null)&&this.badLevel.equals(rhs.badLevel))))&&((this.tweakState == rhs.tweakState)||((this.tweakState!= null)&&this.tweakState.equals(rhs.tweakState))))&&((this.spamState == rhs.spamState)||((this.spamState!= null)&&this.spamState.equals(rhs.spamState))))&&((this.noState == rhs.noState)||((this.noState!= null)&&this.noState.equals(rhs.noState))))&&((this.badState == rhs.badState)||((this.badState!= null)&&this.badState.equals(rhs.badState))))&&((this.baseState == rhs.baseState)||((this.baseState!= null)&&this.baseState.equals(rhs.baseState))))&&((this.noStatus == rhs.noStatus)||((this.noStatus!= null)&&this.noStatus.equals(rhs.noStatus))))&&((this.noFolder == rhs.noFolder)||((this.noFolder!= null)&&this.noFolder.equals(rhs.noFolder))))&&((this.noProxy == rhs.noProxy)||((this.noProxy!= null)&&this.noProxy.equals(rhs.noProxy))))&&((this.missingPoint == rhs.missingPoint)||((this.missingPoint!= null)&&this.missingPoint.equals(rhs.missingPoint))))&&((this.badCategory == rhs.badCategory)||((this.badCategory!= null)&&this.badCategory.equals(rhs.badCategory))))&&((this.extraPoint == rhs.extraPoint)||((this.extraPoint!= null)&&this.extraPoint.equals(rhs.extraPoint))))&&((this.badAddr == rhs.badAddr)||((this.badAddr!= null)&&this.badAddr.equals(rhs.badAddr))))&&((this.smokeCheck == rhs.smokeCheck)||((this.smokeCheck!= null)&&this.smokeCheck.equals(rhs.smokeCheck))))&&((this.redirectRegistry == rhs.redirectRegistry)||((this.redirectRegistry!= null)&&this.redirectRegistry.equals(rhs.redirectRegistry))))&&((this.noPointState == rhs.noPointState)||((this.noPointState!= null)&&this.noPointState.equals(rhs.noPointState))))&&((this.disableWriteback == rhs.disableWriteback)||((this.disableWriteback!= null)&&this.disableWriteback.equals(rhs.disableWriteback))))&&((this.slowDevice == rhs.slowDevice)||((this.slowDevice!= null)&&this.slowDevice.equals(rhs.slowDevice))))&&((this.barfConfig == rhs.barfConfig)||((this.barfConfig!= null)&&this.barfConfig.equals(rhs.barfConfig))))&&((this.extraField == rhs.extraField)||((this.extraField!= null)&&this.extraField.equals(rhs.extraField))))&&((this.emptyMissing == rhs.emptyMissing)||((this.emptyMissing!= null)&&this.emptyMissing.equals(rhs.emptyMissing))))&&((this.fixedSampleRate == rhs.fixedSampleRate)||((this.fixedSampleRate!= null)&&this.fixedSampleRate.equals(rhs.fixedSampleRate))))&&((this.dupeState == rhs.dupeState)||((this.dupeState!= null)&&this.dupeState.equals(rhs.dupeState))))&&((this.featureEnableSwap == rhs.featureEnableSwap)||((this.featureEnableSwap!= null)&&this.featureEnableSwap.equals(rhs.featureEnableSwap))))&&((this.extraDevice == rhs.extraDevice)||((this.extraDevice!= null)&&this.extraDevice.equals(rhs.extraDevice))))&&((this.noConfigAck == rhs.noConfigAck)||((this.noConfigAck!= null)&&this.noConfigAck.equals(rhs.noConfigAck))))&&((this.badVersion == rhs.badVersion)||((this.badVersion!= null)&&this.badVersion.equals(rhs.badVersion))))&&((this.fixedLogLevel == rhs.fixedLogLevel)||((this.fixedLogLevel!= null)&&this.fixedLogLevel.equals(rhs.fixedLogLevel))))&&((this.configStateDelay == rhs.configStateDelay)||((this.configStateDelay!= null)&&this.configStateDelay.equals(rhs.configStateDelay))));
+        return (((((((((((((((((((((((((((((((((((((((((this.skewClock == rhs.skewClock)||((this.skewClock!= null)&&this.skewClock.equals(rhs.skewClock)))&&((this.noPersist == rhs.noPersist)||((this.noPersist!= null)&&this.noPersist.equals(rhs.noPersist))))&&((this.noLastConfig == rhs.noLastConfig)||((this.noLastConfig!= null)&&this.noLastConfig.equals(rhs.noLastConfig))))&&((this.noLog == rhs.noLog)||((this.noLog!= null)&&this.noLog.equals(rhs.noLog))))&&((this.noHardware == rhs.noHardware)||((this.noHardware!= null)&&this.noHardware.equals(rhs.noHardware))))&&((this.messageTrace == rhs.messageTrace)||((this.messageTrace!= null)&&this.messageTrace.equals(rhs.messageTrace))))&&((this.softwareFirmwareValue == rhs.softwareFirmwareValue)||((this.softwareFirmwareValue!= null)&&this.softwareFirmwareValue.equals(rhs.softwareFirmwareValue))))&&((this.noWriteback == rhs.noWriteback)||((this.noWriteback!= null)&&this.noWriteback.equals(rhs.noWriteback))))&&((this.msTimestamp == rhs.msTimestamp)||((this.msTimestamp!= null)&&this.msTimestamp.equals(rhs.msTimestamp))))&&((this.noLastStart == rhs.noLastStart)||((this.noLastStart!= null)&&this.noLastStart.equals(rhs.noLastStart))))&&((this.badLevel == rhs.badLevel)||((this.badLevel!= null)&&this.badLevel.equals(rhs.badLevel))))&&((this.tweakState == rhs.tweakState)||((this.tweakState!= null)&&this.tweakState.equals(rhs.tweakState))))&&((this.spamState == rhs.spamState)||((this.spamState!= null)&&this.spamState.equals(rhs.spamState))))&&((this.noState == rhs.noState)||((this.noState!= null)&&this.noState.equals(rhs.noState))))&&((this.badState == rhs.badState)||((this.badState!= null)&&this.badState.equals(rhs.badState))))&&((this.baseState == rhs.baseState)||((this.baseState!= null)&&this.baseState.equals(rhs.baseState))))&&((this.noStatus == rhs.noStatus)||((this.noStatus!= null)&&this.noStatus.equals(rhs.noStatus))))&&((this.noFolder == rhs.noFolder)||((this.noFolder!= null)&&this.noFolder.equals(rhs.noFolder))))&&((this.noProxy == rhs.noProxy)||((this.noProxy!= null)&&this.noProxy.equals(rhs.noProxy))))&&((this.missingPoint == rhs.missingPoint)||((this.missingPoint!= null)&&this.missingPoint.equals(rhs.missingPoint))))&&((this.badCategory == rhs.badCategory)||((this.badCategory!= null)&&this.badCategory.equals(rhs.badCategory))))&&((this.extraPoint == rhs.extraPoint)||((this.extraPoint!= null)&&this.extraPoint.equals(rhs.extraPoint))))&&((this.badAddr == rhs.badAddr)||((this.badAddr!= null)&&this.badAddr.equals(rhs.badAddr))))&&((this.smokeCheck == rhs.smokeCheck)||((this.smokeCheck!= null)&&this.smokeCheck.equals(rhs.smokeCheck))))&&((this.redirectRegistry == rhs.redirectRegistry)||((this.redirectRegistry!= null)&&this.redirectRegistry.equals(rhs.redirectRegistry))))&&((this.noPointState == rhs.noPointState)||((this.noPointState!= null)&&this.noPointState.equals(rhs.noPointState))))&&((this.disableWriteback == rhs.disableWriteback)||((this.disableWriteback!= null)&&this.disableWriteback.equals(rhs.disableWriteback))))&&((this.barfConfig == rhs.barfConfig)||((this.barfConfig!= null)&&this.barfConfig.equals(rhs.barfConfig))))&&((this.extraField == rhs.extraField)||((this.extraField!= null)&&this.extraField.equals(rhs.extraField))))&&((this.emptyMissing == rhs.emptyMissing)||((this.emptyMissing!= null)&&this.emptyMissing.equals(rhs.emptyMissing))))&&((this.fixedSampleRate == rhs.fixedSampleRate)||((this.fixedSampleRate!= null)&&this.fixedSampleRate.equals(rhs.fixedSampleRate))))&&((this.dupeState == rhs.dupeState)||((this.dupeState!= null)&&this.dupeState.equals(rhs.dupeState))))&&((this.featureEnableSwap == rhs.featureEnableSwap)||((this.featureEnableSwap!= null)&&this.featureEnableSwap.equals(rhs.featureEnableSwap))))&&((this.delayWrite == rhs.delayWrite)||((this.delayWrite!= null)&&this.delayWrite.equals(rhs.delayWrite))))&&((this.extraDevice == rhs.extraDevice)||((this.extraDevice!= null)&&this.extraDevice.equals(rhs.extraDevice))))&&((this.noConfigAck == rhs.noConfigAck)||((this.noConfigAck!= null)&&this.noConfigAck.equals(rhs.noConfigAck))))&&((this.badVersion == rhs.badVersion)||((this.badVersion!= null)&&this.badVersion.equals(rhs.badVersion))))&&((this.fixedLogLevel == rhs.fixedLogLevel)||((this.fixedLogLevel!= null)&&this.fixedLogLevel.equals(rhs.fixedLogLevel))))&&((this.slowWrite == rhs.slowWrite)||((this.slowWrite!= null)&&this.slowWrite.equals(rhs.slowWrite))))&&((this.configStateDelay == rhs.configStateDelay)||((this.configStateDelay!= null)&&this.configStateDelay.equals(rhs.configStateDelay))));
     }
 
 }

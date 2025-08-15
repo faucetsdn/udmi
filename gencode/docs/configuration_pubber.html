@@ -3183,18 +3183,18 @@
         </div>
     </div>
 </div>
-<div class="accordion" id="accordionoptions_slowDevice">
+<div class="accordion" id="accordionoptions_slowWrite">
     <div class="card">
-        <div class="card-header" id="headingoptions_slowDevice">
+        <div class="card-header" id="headingoptions_slowWrite">
             <h2 class="mb-0">
-                <button class="btn btn-link property-name-button" type="button" data-toggle="collapse" data-target="#options_slowDevice"
-                        aria-expanded="" aria-controls="options_slowDevice" onclick="setAnchor('#options_slowDevice')"><span class="property-name">slowDevice</span></button>
+                <button class="btn btn-link property-name-button" type="button" data-toggle="collapse" data-target="#options_slowWrite"
+                        aria-expanded="" aria-controls="options_slowWrite" onclick="setAnchor('#options_slowWrite')"><span class="property-name">slowWrite</span></button>
             </h2>
         </div>
 
-        <div id="options_slowDevice"
-             class="collapse property-definition-div" aria-labelledby="headingoptions_slowDevice"
-             data-parent="#accordionoptions_slowDevice">
+        <div id="options_slowWrite"
+             class="collapse property-definition-div" aria-labelledby="headingoptions_slowWrite"
+             data-parent="#accordionoptions_slowWrite">
             <div class="card-body pl-5">
 
     <div class="breadcrumbs">root
@@ -3211,8 +3211,49 @@
                 d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
             />
         </svg>
-    <a href="#options_slowDevice" onclick="anchorLink('options_slowDevice')">slowDevice</a></div><span class="badge badge-dark value-type">Type: boolean</span><br/>
-<span class="description"><p>If true, the pubber will simulate a 90-second delay for writeback operations.</p>
+    <a href="#options_slowWrite" onclick="anchorLink('options_slowWrite')">slowWrite</a></div><span class="badge badge-dark value-type">Type: boolean</span><br/>
+<span class="description"><p>If true, the pubber will simulate a 10-second slow writeback operations.</p>
+</span>
+        
+
+        
+        
+
+        
+            </div>
+        </div>
+    </div>
+</div>
+<div class="accordion" id="accordionoptions_delayWrite">
+    <div class="card">
+        <div class="card-header" id="headingoptions_delayWrite">
+            <h2 class="mb-0">
+                <button class="btn btn-link property-name-button" type="button" data-toggle="collapse" data-target="#options_delayWrite"
+                        aria-expanded="" aria-controls="options_delayWrite" onclick="setAnchor('#options_delayWrite')"><span class="property-name">delayWrite</span></button>
+            </h2>
+        </div>
+
+        <div id="options_delayWrite"
+             class="collapse property-definition-div" aria-labelledby="headingoptions_delayWrite"
+             data-parent="#accordionoptions_delayWrite">
+            <div class="card-body pl-5">
+
+    <div class="breadcrumbs">root
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#options" onclick="anchorLink('options')">options</a>
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#options_delayWrite" onclick="anchorLink('options_delayWrite')">delayWrite</a></div><span class="badge badge-dark value-type">Type: boolean</span><br/>
+<span class="description"><p>If true, the pubber will simulate a very slow (90 second) writeback operations.</p>
 </span>
         
 
