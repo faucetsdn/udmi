@@ -138,64 +138,50 @@ public class PubberPointsetManager extends PubberManager implements PointsetMana
   }
 
   @Override
-  public void updatePointsetPointsConfig(PointsetConfig config) {
-    if (config == null) {
-      setPointsetState(null);
-      updateState();
+  public void updatePointConfig(AbstractPoint point, PointPointsetConfig pointConfig) {
+    if (pointConfig == null || pointConfig.set_value == null) {
       return;
     }
 
     boolean slowWrite = getOptions().slowWrite != null && getOptions().slowWrite;
     boolean delayWrite = getOptions().delayWrite != null && getOptions().delayWrite;
 
-    getManagedPoints().forEach((pointName, point) -> {
-      PointPointsetConfig pointConfig = config.points == null ? null : config.points.get(pointName);
-      if (pointConfig != null && pointConfig.set_value != null) {
-        if (delayWrite) {
-          handleDelayWriteback(point, pointConfig, TIMEOUT_WRITE_DELAY_SEC);
-        } else if (slowWrite) {
-          handleSlowWriteback(point, pointConfig, SLOW_WRITE_DELAY_SEC);
-        } else {
-          applyAndAckWriteback(point, pointConfig);
-        }
-      }
-    });
-
-    if (syncPoints(config.points)) {
-      updateState();
+    if (delayWrite) {
+      handleDelayWriteback(point, pointConfig, TIMEOUT_WRITE_DELAY_SEC);
+    } else if (slowWrite) {
+      handleSlowWriteback(point, pointConfig, SLOW_WRITE_DELAY_SEC);
+    } else {
+      // default implementation from the interface, ensuring we don't impact existing functionality.
+      PointsetManager.super.updatePointConfig(point, pointConfig);
     }
-    getPointsetState().state_etag = config.state_etag;
-  }
-
-  private void handleDelayWriteback(AbstractPoint point, PointPointsetConfig pointConfig, int delay) {
-    info(format("Applying delayed writeback for point %s with %ds delay", point.getName(), delay));
-    scheduler.schedule(() -> {
-      try {
-        info(format("Completing delayed writeback for %s", point.getName()));
-        applyAndAckWriteback(point, pointConfig);
-      } catch (Exception e) {
-        error("Error during scheduled writeback for " + point.getName(), e);
-      }
-    }, delay, TimeUnit.SECONDS);
   }
 
   private void handleSlowWriteback(AbstractPoint point, PointPointsetConfig pointConfig, int delay) {
     info(format("Applying slow writeback for point %s with %ds delay", point.getName(), delay));
+
     getPointsetState().points.get(point.getName()).value_state = Value_state.UPDATING;
     updateState();
+
     scheduler.schedule(() -> {
       try {
         info(format("Completing slow writeback for %s", point.getName()));
-        applyAndAckWriteback(point, pointConfig);
+        // Use the default interface method to apply the final state.
+        PointsetManager.super.updatePointConfig(point, pointConfig);
       } catch (Exception e) {
         error("Error during scheduled writeback for " + point.getName(), e);
       }
     }, delay, TimeUnit.SECONDS);
   }
-  private void applyAndAckWriteback(AbstractPoint point, PointPointsetConfig pointConfig) {
-    point.setConfig(pointConfig);
-    getPointsetState().points.get(point.getName()).value_state = Value_state.APPLIED;
-    updateState();
-  }
 
+  private void handleDelayWriteback(AbstractPoint point, PointPointsetConfig pointConfig, int delay) {
+    scheduler.schedule(() -> {
+      try {
+        info(format("Completing delayed writeback for %s", point.getName()));
+        // Use the default interface method to apply the final state.
+        PointsetManager.super.updatePointConfig(point, pointConfig);
+      } catch (Exception e) {
+        error("Error during scheduled writeback for " + point.getName(), e);
+      }
+    }, delay, TimeUnit.SECONDS);
+  }
 }

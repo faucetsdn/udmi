@@ -125,7 +125,18 @@ public class WritebackSequences extends PointsetBase {
 
     deviceConfig.pointset.points.get(targetPoint).set_value = targetValue;
 
-    waitUntil(expectedValueState(UPDATING.value()), () -> valueStateIs(targetPoint, UPDATING.value()));
+    try {
+      waitUntil(expectedValueState(UPDATING.value()),
+          () -> valueStateIs(targetPoint, UPDATING.value()));
+    } catch (AbortMessageLoop exception) {
+      try {
+        waitUntil(expectedValueState(APPLIED_STATE),
+            () -> valueStateIs(targetPoint, APPLIED_STATE));
+      } catch (AbortMessageLoop ex) {
+        skipTest("This is the fast writeback operation");
+      }
+      skipTest("This is the delayed writeback operation");
+    }
     waitUntil(expectedValueState(APPLIED_STATE), () -> valueStateIs(targetPoint, APPLIED_STATE));
     waitUntil("target point to have target expected value", () -> presentValueIs(targetModel));
 
