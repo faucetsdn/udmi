@@ -117,6 +117,14 @@
     "fixedLogLevel": {
       "type": "integer"
     },
+    "slowWrite": {
+      "type": "boolean",
+      "description": "If true, the pubber will simulate a slow writeback operations."
+    },
+    "delayWrite": {
+      "type": "boolean",
+      "description": "If true, the pubber will simulate a delayed writeback operations, leading to timeout."
+    },
     "softwareFirmwareValue": {
       "type": "string"
     }

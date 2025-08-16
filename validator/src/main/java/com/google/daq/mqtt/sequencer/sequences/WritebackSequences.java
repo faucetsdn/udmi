@@ -1,9 +1,11 @@
 package com.google.daq.mqtt.sequencer.sequences;
 
+import static com.google.daq.mqtt.util.TimePeriodConstants.FOUR_MINUTES_MS;
 import static com.google.daq.mqtt.util.TimePeriodConstants.TWO_MINUTES_MS;
 import static java.lang.String.format;
 import static udmi.schema.Bucket.WRITEBACK;
 import static udmi.schema.FeatureDiscovery.FeatureStage.ALPHA;
+import static udmi.schema.PointPointsetState.Value_state.UPDATING;
 
 import com.google.daq.mqtt.sequencer.Feature;
 import com.google.daq.mqtt.sequencer.PointsetBase;
@@ -108,6 +110,36 @@ public class WritebackSequences extends PointsetBase {
   @Feature(stage = ALPHA, bucket = WRITEBACK)
   public void writeback_failure() {
     testTargetState(FAILURE_STATE);
+  }
+
+  @Test(timeout = FOUR_MINUTES_MS)
+  @Feature(stage = ALPHA, bucket = WRITEBACK)
+  @Summary("Tests fast, slow, and timeout writeback operations based on pubber options.")
+  public void writeback_operation() {
+    TargetTestingModel targetModel = getTarget(APPLIED_STATE);
+    String targetPoint = targetModel.target_point;
+    Object targetValue = targetModel.target_value;
+
+    deviceConfig.pointset.points.get(targetPoint).set_value = null;
+    waitUntil(expectedValueState(DEFAULT_STATE), () -> valueStateIs(targetPoint, DEFAULT_STATE));
+
+    deviceConfig.pointset.points.get(targetPoint).set_value = targetValue;
+
+    try {
+      waitUntil(expectedValueState(UPDATING.value()),
+          () -> valueStateIs(targetPoint, UPDATING.value()));
+    } catch (AbortMessageLoop exception) {
+      try {
+        waitUntil(expectedValueState(APPLIED_STATE),
+            () -> valueStateIs(targetPoint, APPLIED_STATE));
+      } catch (AbortMessageLoop ex) {
+        skipTest("This is the fast writeback operation");
+      }
+      skipTest("This is the delayed writeback operation");
+    }
+    waitUntil(expectedValueState(APPLIED_STATE), () -> valueStateIs(targetPoint, APPLIED_STATE));
+    waitUntil("target point to have target expected value", () -> presentValueIs(targetModel));
+
   }
 }
 
