@@ -5,7 +5,6 @@ import static java.lang.String.format;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Sets;
-import java.util.concurrent.TimeUnit;
 import daq.pubber.impl.PubberManager;
 import daq.pubber.impl.point.PubberRandomBoolean;
 import daq.pubber.impl.point.PubberRandomPoint;
@@ -14,13 +13,13 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 import udmi.lib.client.manager.PointsetManager;
 import udmi.lib.intf.AbstractPoint;
 import udmi.lib.intf.ManagerHost;
 import udmi.schema.PointPointsetConfig;
 import udmi.schema.PointPointsetModel;
 import udmi.schema.PointPointsetState.Value_state;
-import udmi.schema.PointsetConfig;
 import udmi.schema.PointsetState;
 import udmi.schema.PubberConfiguration;
 
@@ -156,7 +155,8 @@ public class PubberPointsetManager extends PubberManager implements PointsetMana
     }
   }
 
-  private void handleSlowWriteback(AbstractPoint point, PointPointsetConfig pointConfig, int delay) {
+  private void handleSlowWriteback(AbstractPoint point,
+      PointPointsetConfig pointConfig,int delay) {
     info(format("Applying slow writeback for point %s with %ds delay", point.getName(), delay));
 
     getPointsetState().points.get(point.getName()).value_state = Value_state.UPDATING;
@@ -173,7 +173,8 @@ public class PubberPointsetManager extends PubberManager implements PointsetMana
     }, delay, TimeUnit.SECONDS);
   }
 
-  private void handleDelayWriteback(AbstractPoint point, PointPointsetConfig pointConfig, int delay) {
+  private void handleDelayWriteback(AbstractPoint point,
+      PointPointsetConfig pointConfig, int delay) {
     scheduler.schedule(() -> {
       try {
         info(format("Completing delayed writeback for %s", point.getName()));

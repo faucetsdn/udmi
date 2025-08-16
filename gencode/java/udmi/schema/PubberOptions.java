@@ -143,18 +143,18 @@ public class PubberOptions {
     @JsonProperty("fixedLogLevel")
     public Integer fixedLogLevel;
     /**
-     * If true, the pubber will simulate a 10-second slow writeback operations.
+     * If true, the pubber will simulate a slow writeback operations.
      * 
      */
     @JsonProperty("slowWrite")
-    @JsonPropertyDescription("If true, the pubber will simulate a 10-second slow writeback operations.")
+    @JsonPropertyDescription("If true, the pubber will simulate a slow writeback operations.")
     public Boolean slowWrite;
     /**
-     * If true, the pubber will simulate a very slow (90 second) writeback operations.
+     * If true, the pubber will simulate a delayed writeback operations, leading to timeout.
      * 
      */
     @JsonProperty("delayWrite")
-    @JsonPropertyDescription("If true, the pubber will simulate a very slow (90 second) writeback operations.")
+    @JsonPropertyDescription("If true, the pubber will simulate a delayed writeback operations, leading to timeout.")
     public Boolean delayWrite;
     @JsonProperty("softwareFirmwareValue")
     public String softwareFirmwareValue;
