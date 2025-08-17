@@ -224,6 +224,7 @@ public class PubberManager extends ManagerBase {
     return isTrue(options.extraDevice);
   }
   // </editor-fold>
+
   protected boolean isSlowWrite() {
     return isTrue(options.slowWrite);
   }
