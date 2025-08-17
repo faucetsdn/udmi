@@ -138,10 +138,6 @@ public class PubberPointsetManager extends PubberManager implements PointsetMana
 
   @Override
   public void updatePointConfig(AbstractPoint point, PointPointsetConfig pointConfig) {
-    if (pointConfig == null || pointConfig.set_value == null) {
-      return;
-    }
-
     boolean slowWrite = getOptions().slowWrite != null && getOptions().slowWrite;
     boolean delayWrite = getOptions().delayWrite != null && getOptions().delayWrite;
 
@@ -156,7 +152,7 @@ public class PubberPointsetManager extends PubberManager implements PointsetMana
   }
 
   private void handleSlowWriteback(AbstractPoint point,
-      PointPointsetConfig pointConfig,int delay) {
+      PointPointsetConfig pointConfig, int delay) {
     info(format("Applying slow writeback for point %s with %ds delay", point.getName(), delay));
 
     getPointsetState().points.get(point.getName()).value_state = Value_state.UPDATING;
