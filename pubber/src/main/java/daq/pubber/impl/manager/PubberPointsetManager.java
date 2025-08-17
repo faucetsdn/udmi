@@ -141,6 +141,7 @@ public class PubberPointsetManager extends PubberManager implements PointsetMana
     boolean slowWrite = isSlowWrite();
     boolean delayWrite = isDelayWrite();
 
+    info("slowWrite : " + slowWrite);
     if (delayWrite) {
       handleDelayWriteback(point, pointConfig, TIMEOUT_WRITE_DELAY_SEC);
     } else if (slowWrite) {
