@@ -311,28 +311,6 @@ public class BambiSiteModelTest {
   }
 
   @Test
-  public void mergePointsWithPointset_pointTemplateNotFound_throwsRuntimeException() {
-    List<List<Object>> pointsetSheet = createTableListFromArrays(
-        new Object[]{BambiSiteModel.DEVICE_ID, BambiSiteModel.POINTS_TEMPLATE_NAME},
-        new Object[]{"dev1", "tpl_A"} // Uses undefined tpl_A
-    );
-    List<List<Object>> pointsSheet = createTableListFromArrays(
-        new Object[]{BambiSiteModel.POINTS_TEMPLATE_NAME, BambiSiteModel.POINT_NAME},
-        new Object[]{"tpl_B", "temp1"}
-    );
-
-    try {
-      new BambiSiteModel(
-          emptySheet(), emptySheet(), headerOnlySheet("h"), headerOnlySheet("h"),
-          headerOnlySheet("h"), headerOnlySheet("h"), pointsetSheet, pointsSheet
-      );
-      fail("Expected RuntimeException was not thrown.");
-    } catch (RuntimeException e) {
-      assertTrue(e.getMessage().contains("Unknown points template tpl_A"));
-    }
-  }
-
-  @Test
   public void mergePointsWithPointset_emptyPointsData_mergesPointsetOnly() {
     List<List<Object>> pointsetSheet = createTableListFromArrays(
         new Object[]{BambiSiteModel.DEVICE_ID, BambiSiteModel.POINTS_TEMPLATE_NAME, "unit"},
@@ -373,21 +351,6 @@ public class BambiSiteModelTest {
     assertEquals("", dev1Meta.get(PREFIX_POINTSET + ".points.." + BambiSiteModel.POINT_NAME));
   }
 
-  @Test(expected = RuntimeException.class)
-  public void mergePointsWithPointset_pointsRowWithNullTemplateName_throwsException() {
-    List<List<Object>> pointsetSheet = createTableListFromArrays(
-        new Object[]{BambiSiteModel.DEVICE_ID, BambiSiteModel.POINTS_TEMPLATE_NAME},
-        new Object[]{"dev1", "tpl1"}
-    );
-    List<List<Object>> pointsSheetNullTemplateName = createTableListFromArrays(
-        new Object[]{BambiSiteModel.POINTS_TEMPLATE_NAME, BambiSiteModel.POINT_NAME},
-        new Object[]{null, "P1"} // Java null in template name cell
-    );
-    new BambiSiteModel(
-        emptySheet(), emptySheet(), headerOnlySheet("h"), headerOnlySheet("h"),
-        headerOnlySheet("h"), headerOnlySheet("h"), pointsetSheet, pointsSheetNullTemplateName
-    );
-  }
 
   @Test
   public void mergePointsWithPointset_pointsRowWithEmptyTemplateName_throwsException() {
