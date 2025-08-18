@@ -314,11 +314,11 @@ public class BambiSiteModelTest {
   public void mergePointsWithPointset_pointTemplateNotFound_throwsRuntimeException() {
     List<List<Object>> pointsetSheet = createTableListFromArrays(
         new Object[]{BambiSiteModel.DEVICE_ID, BambiSiteModel.POINTS_TEMPLATE_NAME},
-        new Object[]{"dev1", "tpl_A"}
+        new Object[]{"dev1", "tpl_A"} // Uses undefined tpl_A
     );
     List<List<Object>> pointsSheet = createTableListFromArrays(
         new Object[]{BambiSiteModel.POINTS_TEMPLATE_NAME, BambiSiteModel.POINT_NAME},
-        new Object[]{"tpl_B", "temp1"} // Uses undefined tpl_B
+        new Object[]{"tpl_B", "temp1"}
     );
 
     try {
@@ -328,8 +328,7 @@ public class BambiSiteModelTest {
       );
       fail("Expected RuntimeException was not thrown.");
     } catch (RuntimeException e) {
-      assertTrue(e.getMessage()
-          .contains("points use a template name which is not defined in the pointset: tpl_B"));
+      assertTrue(e.getMessage().contains("Unknown points template tpl_A"));
     }
   }
 
@@ -337,7 +336,7 @@ public class BambiSiteModelTest {
   public void mergePointsWithPointset_emptyPointsData_mergesPointsetOnly() {
     List<List<Object>> pointsetSheet = createTableListFromArrays(
         new Object[]{BambiSiteModel.DEVICE_ID, BambiSiteModel.POINTS_TEMPLATE_NAME, "unit"},
-        new Object[]{"dev1", "tpl_A", "Celsius"}
+        new Object[]{"dev1", "", "Celsius"}
     );
     List<List<Object>> pointsSheetEmpty = headerOnlySheet(BambiSiteModel.POINTS_TEMPLATE_NAME,
         BambiSiteModel.POINT_NAME);
@@ -351,27 +350,6 @@ public class BambiSiteModelTest {
     assertEquals("Celsius", dev1Meta.get(PREFIX_POINTSET + ".unit"));
     for (String key : dev1Meta.keySet()) {
       assertFalse("No points data should be present", key.startsWith(PREFIX_POINTSET + ".points."));
-    }
-  }
-
-  @Test
-  public void mergePointsWithPointset_emptyPointsetData_withPoints_throwsRuntimeException() {
-    List<List<Object>> pointsetSheetEmpty = headerOnlySheet(BambiSiteModel.DEVICE_ID,
-        BambiSiteModel.POINTS_TEMPLATE_NAME);
-    List<List<Object>> pointsSheet = createTableListFromArrays(
-        new Object[]{BambiSiteModel.POINTS_TEMPLATE_NAME, BambiSiteModel.POINT_NAME},
-        new Object[]{"tpl_A", "temp1"}
-    );
-
-    try {
-      new BambiSiteModel(
-          emptySheet(), emptySheet(), headerOnlySheet("h"), headerOnlySheet("h"),
-          headerOnlySheet("h"), headerOnlySheet("h"), pointsetSheetEmpty, pointsSheet
-      );
-      fail("Expected RuntimeException was not thrown.");
-    } catch (RuntimeException e) {
-      assertTrue(e.getMessage()
-          .contains("points use a template name which is not defined in the pointset: tpl_A"));
     }
   }
 
@@ -412,14 +390,14 @@ public class BambiSiteModelTest {
   }
 
   @Test
-  public void mergePointsWithPointset_pointsRowWithStringValueNullTemplateName_throwsException() {
+  public void mergePointsWithPointset_pointsRowWithEmptyTemplateName_throwsException() {
     List<List<Object>> pointsetSheet = createTableListFromArrays(
         new Object[]{BambiSiteModel.DEVICE_ID, BambiSiteModel.POINTS_TEMPLATE_NAME},
         new Object[]{"dev1", "tpl1"}
     );
     List<List<Object>> pointsSheetStringNullTemplateName = createTableListFromArrays(
         new Object[]{BambiSiteModel.POINTS_TEMPLATE_NAME, BambiSiteModel.POINT_NAME},
-        new Object[]{"null", "P1"} // String "null" as template name
+        new Object[]{"", "P1"} // Empty String as template name
     );
     try {
       new BambiSiteModel(
@@ -429,8 +407,7 @@ public class BambiSiteModelTest {
       );
       fail("Expected RuntimeException");
     } catch (RuntimeException e) {
-      assertTrue(e.getMessage()
-          .contains("points use a template name which is not defined in the pointset: null"));
+      assertTrue(e.getMessage().contains("Template name must not be empty!"));
     }
   }
 
@@ -443,7 +420,7 @@ public class BambiSiteModelTest {
         new Object[]{BambiSiteModel.DEVICE_ID, "cloud_prop"}, new Object[]{"dev1", "CloudVal"});
     List<List<Object>> pointsetSheet = createTableListFromArrays(
         new Object[]{BambiSiteModel.DEVICE_ID, BambiSiteModel.POINTS_TEMPLATE_NAME, "ps_prop"},
-        new Object[]{"dev1", "tpl", "PsVal"});
+        new Object[]{"dev1", "", "PsVal"});
     List<List<Object>> pointsSheet = headerOnlySheet(BambiSiteModel.POINTS_TEMPLATE_NAME,
         BambiSiteModel.POINT_NAME);
 
