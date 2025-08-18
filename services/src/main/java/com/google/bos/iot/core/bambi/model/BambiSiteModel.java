@@ -187,11 +187,8 @@ public class BambiSiteModel {
       String templateName = pointsetRow.get(POINTS_TEMPLATE_NAME);
 
       if (isNotEmpty(templateName)) {
-        if (!pointsTemplates.containsKey(templateName)) {
-          throw new RuntimeException("Unknown points template " + templateName);
-        }
-
-        for (Map<String, String> pointRow : pointsTemplates.get(templateName)) {
+        for (Map<String, String> pointRow : pointsTemplates.getOrDefault(templateName,
+            new ArrayList<>())) {
           String pointName = pointRow.get(POINT_NAME);
           for (Entry<String, String> cell : pointRow.entrySet()) {
             String header = cell.getKey();
