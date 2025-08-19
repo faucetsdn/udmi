@@ -11,6 +11,13 @@
       }
     }
   },
+  "localnet": {
+    "families": {
+      "fqdn": {
+        "addr": "uk-lon-whatever.goog.in."
+      }
+    }
+  },
   "gateway": {
     "gateway_id": "GAT-123"
   },
