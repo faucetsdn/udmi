@@ -14,7 +14,7 @@ import java.util.regex.Pattern;
 public class FqdnFamilyProvider implements FamilyProvider {
 
   private static final String FQDN_REGEX_STRING =
-      "^(?!-)(?:[a-zA-Z0-9-]{1,63}(?<!-)\\.)+[a-zA-Z]{2,63}$";
+      "(?!-)(?:[a-zA-Z0-9-]{1,63}(?<!-)\\.)+[a-zA-Z]{2,63}\\.?";
   private static final Pattern FQDN_ADDR = Pattern.compile(FQDN_REGEX_STRING);
   private static final Pattern FQDN_NETWORK = FQDN_ADDR;
   private static final Pattern FQDN_REF = Pattern.compile(
