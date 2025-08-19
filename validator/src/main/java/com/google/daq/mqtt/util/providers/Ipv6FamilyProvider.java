@@ -9,7 +9,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
- * General family of IPv6 addresses with validation.
+ * General family of IPv6 addresses.
  */
 public class Ipv6FamilyProvider implements FamilyProvider {
 

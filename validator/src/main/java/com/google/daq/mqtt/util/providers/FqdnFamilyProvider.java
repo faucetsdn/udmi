@@ -9,7 +9,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
- * General family of Fully Qualified Domain Names (FQDN) with validation.
+ * General family of Fully Qualified Domain Names (FQDN).
  */
 public class FqdnFamilyProvider implements FamilyProvider {
 
