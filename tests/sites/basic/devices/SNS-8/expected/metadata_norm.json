@@ -2,11 +2,11 @@
   "gateway": {
     "gateway_id": "GAT-123"
   },
-  "hash": "450873c3",
+  "hash": "4d76d369",
   "localnet": {
     "families": {
       "fqdn": {
-        "addr": "uk-lon-whatever.goog.in."
+        "addr": "uk-lon-whatever.goog.in"
       }
     }
   },
