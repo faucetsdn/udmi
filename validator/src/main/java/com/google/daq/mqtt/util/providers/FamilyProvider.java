@@ -18,6 +18,7 @@ public interface FamilyProvider {
       VendorFamilyProvider.class,
       EtherFamilyProvider.class,
       Ipv4FamilyProvider.class,
+      Ipv6FamilyProvider.class,
       BacnetFamilyProvider.class);
 
   /**
