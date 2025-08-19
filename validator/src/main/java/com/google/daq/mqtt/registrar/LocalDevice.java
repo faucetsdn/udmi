@@ -573,6 +573,7 @@ class LocalDevice {
   private String deviceConfigString() {
     return runInContext("While converting device config", () -> {
       Object fromValue = config.deviceConfigJson();
+      captureError(ExceptionCategory.schema, config.warningsAsException());
 
       ifNotNullThen(config.getSchemaViolationsMap(), map -> ifNotTrueThen(map.isEmpty(), () -> {
         ErrorMap schemaValidationErrors = new ErrorMap("schema validation errors");
@@ -794,6 +795,10 @@ class LocalDevice {
   }
 
   public void captureError(ExceptionCategory exceptionType, Exception exception) {
+    if (exception == null) {
+      return;
+    }
+
     exceptionMap.put(exceptionType, exception);
     File exceptionLog = new File(outDir, EXCEPTION_LOG_FILE);
     try {

@@ -2,7 +2,14 @@
   "gateway": {
     "gateway_id": "GAT-123"
   },
-  "hash": "d1a93ccf",
+  "hash": "450873c3",
+  "localnet": {
+    "families": {
+      "fqdn": {
+        "addr": "uk-lon-whatever.goog.in."
+      }
+    }
+  },
   "system": {
     "location": {
       "section": "2-3N8C",

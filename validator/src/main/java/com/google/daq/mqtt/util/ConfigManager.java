@@ -17,8 +17,10 @@ import static java.util.Objects.requireNonNull;
 import static java.util.Optional.ofNullable;
 
 import com.google.common.collect.ImmutableList;
+import com.google.udmi.util.ExceptionList;
 import com.google.udmi.util.SiteModel;
 import java.io.File;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -52,6 +54,7 @@ public class ConfigManager {
   private final String deviceId;
   private final SiteModel siteModel;
   private final Map<String, Exception> schemaViolationsMap = new HashMap<>();
+  private final List<String> warnings = new ArrayList<>();
 
   /**
    * Initiates ConfigManager for the given device at the given file location.
@@ -270,10 +273,12 @@ public class ConfigManager {
 
     // Just get the addr and networks to validate that they're defined properly.
     metadata.localnet.families.keySet().forEach(family -> {
-      checkState(NAMED_FAMILIES.containsKey(family),
-          "Protocol validation not supported for " + family);
-      getLocalnetAddr(family);
-      getLocalnetNetwork(family);
+      if (NAMED_FAMILIES.containsKey(family)) {
+        getLocalnetAddr(family);
+        getLocalnetNetwork(family);
+      } else {
+        addWarning("Unrecognized localnet protocol family " + family);
+      }
     });
 
     LocalnetConfig localnetConfig = new LocalnetConfig();
@@ -281,6 +286,10 @@ public class ConfigManager {
     metadata.localnet.families.keySet()
         .forEach(family -> localnetConfig.families.put(family, new FamilyLocalnetConfig()));
     return localnetConfig;
+  }
+
+  private void addWarning(String warning) {
+    warnings.add(warning);
   }
 
   /**
@@ -368,5 +377,10 @@ public class ConfigManager {
 
   public Map<String, Exception> getSchemaViolationsMap() {
     return schemaViolationsMap;
+  }
+
+  public Exception warningsAsException() {
+    return warnings.isEmpty() ? null : new ExceptionList(warnings.stream()
+        .map(warning -> (Exception) new IllegalArgumentException(warning)).toList());
   }
 }
