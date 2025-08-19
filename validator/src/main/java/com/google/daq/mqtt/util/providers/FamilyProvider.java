@@ -19,7 +19,9 @@ public interface FamilyProvider {
       EtherFamilyProvider.class,
       Ipv4FamilyProvider.class,
       Ipv6FamilyProvider.class,
-      BacnetFamilyProvider.class);
+      BacnetFamilyProvider.class,
+      FqdnFamilyProvider.class
+  );
 
   /**
    * Map of family name to instance.
