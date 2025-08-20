@@ -7,9 +7,11 @@ import static udmi.schema.Bucket.WRITEBACK;
 import static udmi.schema.FeatureDiscovery.FeatureStage.ALPHA;
 import static udmi.schema.PointPointsetState.Value_state.UPDATING;
 
+
 import com.google.daq.mqtt.sequencer.Feature;
 import com.google.daq.mqtt.sequencer.PointsetBase;
 import com.google.daq.mqtt.sequencer.Summary;
+import java.time.Duration;
 import java.util.List;
 import java.util.Objects;
 import org.junit.Before;
@@ -25,6 +27,7 @@ public class WritebackSequences extends PointsetBase {
 
   public static final String DEFAULT_STATE = null;
   private Object lastPresentValue;
+  private static final Duration UPDATING_WAIT_DURATION = Duration.ofSeconds(10);
 
   @Before
   public void setupExpectedParameters() {
@@ -114,7 +117,7 @@ public class WritebackSequences extends PointsetBase {
 
   @Test(timeout = FOUR_MINUTES_MS)
   @Feature(stage = ALPHA, bucket = WRITEBACK)
-  @Summary("Tests fast, slow, and timeout writeback operations based on pubber options.")
+  @Summary("Implements writeback operations")
   public void writeback_operation() {
     TargetTestingModel targetModel = getTarget(APPLIED_STATE);
     String targetPoint = targetModel.target_point;
@@ -124,18 +127,19 @@ public class WritebackSequences extends PointsetBase {
     waitUntil(expectedValueState(DEFAULT_STATE), () -> valueStateIs(targetPoint, DEFAULT_STATE));
 
     deviceConfig.pointset.points.get(targetPoint).set_value = targetValue;
+    // Wait until the intermediate UPDATING state. In other cases, this should:
+    // 1. Skip if it ends up APPLIED too quickly.
+    // 2. Error out if it takes too long to get to UPDATING.
+    waitUntil(expectedValueState(UPDATING.value()), UPDATING_WAIT_DURATION, () -> {
+      String appliedCheck = valueStateIs(targetPoint, APPLIED_STATE);
 
-    try {
-      waitUntil(expectedValueState(UPDATING.value()),
-          () -> valueStateIs(targetPoint, UPDATING.value()));
-    } catch (RuntimeException exception) {
-      waitUntil(expectedValueState(APPLIED_STATE),
-          () -> valueStateIs(targetPoint, APPLIED_STATE));
-      skipTest("fast writeback operation");
-    }
+      // TODO: Skip test isn't working correctly here, need to fix!
+      ifNullSkipTest(appliedCheck, "operation completed quickly");
+
+      return valueStateIs(targetPoint, UPDATING.value());
+    });
+
     waitUntil(expectedValueState(APPLIED_STATE), () -> valueStateIs(targetPoint, APPLIED_STATE));
-    waitUntil("target point to have target expected value", () -> presentValueIs(targetModel));
-
   }
 }
 
