@@ -7,7 +7,6 @@ import static udmi.schema.Bucket.WRITEBACK;
 import static udmi.schema.FeatureDiscovery.FeatureStage.ALPHA;
 import static udmi.schema.PointPointsetState.Value_state.UPDATING;
 
-
 import com.google.daq.mqtt.sequencer.Feature;
 import com.google.daq.mqtt.sequencer.PointsetBase;
 import com.google.daq.mqtt.sequencer.Summary;
@@ -99,7 +98,8 @@ public class WritebackSequences extends PointsetBase {
 
     deviceConfig.pointset.points.get(targetPoint).set_value = targetValue;
 
-    waitUntil(expectedValueState(targetState), MAX_WAIT_TIME, () -> valueStateIs(targetPoint, targetState));
+    waitUntil(expectedValueState(targetState), MAX_WAIT_TIME,
+        () -> valueStateIs(targetPoint, targetState));
 
     return targetModel;
   }
