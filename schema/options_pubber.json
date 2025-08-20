@@ -117,9 +117,9 @@
     "fixedLogLevel": {
       "type": "integer"
     },
-    "slowWrite": {
+    "fastWrite": {
       "type": "boolean",
-      "description": "If true, the pubber will simulate a slow writeback operations."
+      "description": "If true, the pubber will simulate a fast writeback operations."
     },
     "delayWrite": {
       "type": "boolean",

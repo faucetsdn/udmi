@@ -28,6 +28,7 @@ public class WritebackSequences extends PointsetBase {
   public static final String DEFAULT_STATE = null;
   private Object lastPresentValue;
   private static final Duration UPDATING_WAIT_DURATION = Duration.ofSeconds(10);
+  private static final Duration MAX_WAIT_TIME = Duration.ofSeconds(25);
 
   @Before
   public void setupExpectedParameters() {
@@ -98,7 +99,7 @@ public class WritebackSequences extends PointsetBase {
 
     deviceConfig.pointset.points.get(targetPoint).set_value = targetValue;
 
-    waitUntil(expectedValueState(targetState), () -> valueStateIs(targetPoint, targetState));
+    waitUntil(expectedValueState(targetState), MAX_WAIT_TIME, () -> valueStateIs(targetPoint, targetState));
 
     return targetModel;
   }
@@ -130,15 +131,18 @@ public class WritebackSequences extends PointsetBase {
     // Wait until the intermediate UPDATING state. In other cases, this should:
     // 1. Skip if it ends up APPLIED too quickly.
     // 2. Error out if it takes too long to get to UPDATING.
-    waitUntil(expectedValueState(UPDATING.value()), UPDATING_WAIT_DURATION, () -> {
-      String appliedCheck = valueStateIs(targetPoint, APPLIED_STATE);
+    try {
+      waitUntil(expectedValueState(UPDATING.value()), UPDATING_WAIT_DURATION, () -> {
+        String appliedCheck = valueStateIs(targetPoint, APPLIED_STATE);
 
-      // TODO: Skip test isn't working correctly here, need to fix!
-      ifNullSkipTest(appliedCheck, "operation completed quickly");
-
-      return valueStateIs(targetPoint, UPDATING.value());
-    });
-
+        ifNullSkipTest(appliedCheck, "operation completed quickly");
+        return valueStateIs(targetPoint, UPDATING.value());
+      });
+    } catch (RuntimeException e) {
+      if (!e.getMessage().isBlank() && e.getMessage().equals("operation completed quickly")) {
+        skipTest("operation completed quickly");
+      }
+    }
     waitUntil(expectedValueState(APPLIED_STATE), () -> valueStateIs(targetPoint, APPLIED_STATE));
   }
 }

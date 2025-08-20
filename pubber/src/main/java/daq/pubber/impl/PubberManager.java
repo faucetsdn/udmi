@@ -225,8 +225,8 @@ public class PubberManager extends ManagerBase {
   }
   // </editor-fold>
 
-  protected boolean isSlowWrite() {
-    return options.slowWrite != null;
+  protected boolean isFastWrite() {
+    return options.fastWrite != null;
   }
 
   protected boolean isDelayWrite() {
