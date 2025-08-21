@@ -145,7 +145,8 @@ public class WritebackSequences extends PointsetBase {
       // The operation was too fast; this is a valid outcome, so we skip the test.
       skipTest(e.getMessage());
     }
-    waitUntil(expectedValueState(APPLIED.value()), () -> valueStateIs(targetPoint, APPLIED.value()));
+    waitUntil(expectedValueState(APPLIED.value()),
+        () -> valueStateIs(targetPoint, APPLIED.value()));
   }
 }
 

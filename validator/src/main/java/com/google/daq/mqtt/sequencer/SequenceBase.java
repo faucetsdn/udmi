@@ -2732,6 +2732,10 @@ public class SequenceBase {
     }
   }
 
+  /**
+   * Exception to indicate that the point transitioned to the final state
+   * before the intermediate state was observed.
+   */
   protected static class AppliedTooQuicklyException extends RuntimeException {
     public AppliedTooQuicklyException(String message) {
       super(message);
