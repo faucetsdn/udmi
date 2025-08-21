@@ -123,7 +123,7 @@
     },
     "delayWrite": {
       "type": "boolean",
-      "description": "If true, the pubber will simulate a delayed writeback operations, leading to timeout."
+      "description": "If true, the pubber will simulate a delayed writeback operations, leading to slow writeback without an intermediate updating state."
     },
     "softwareFirmwareValue": {
       "type": "string"

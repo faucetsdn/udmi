@@ -1596,6 +1596,9 @@ public class SequenceBase {
         waitEvaluateLoop(sanitizedDescription, maxWait, evaluator, detail);
         recordSequence("Wait until", description);
       }, detail::get);
+    } catch (AssumptionViolatedException e) {
+      // Re-throw to allow the test framework to handle the skip.
+      throw e;
     } catch (Exception e) {
       String message = format("Failed waiting until %s: %s", sanitizedDescription, detail.get());
       recordSequence(message);
@@ -1740,6 +1743,8 @@ public class SequenceBase {
         // This is some fundamental problem, so just pass it along without the waiting detail.
         catcher.accept(e);
         throw e;
+      } catch (AssumptionViolatedException e) {
+        throw e;
       } catch (Exception e) {
         catcher.accept(e);
         String detail = ifNotNullGet(detailer, Supplier::get);
@@ -1747,6 +1752,8 @@ public class SequenceBase {
         throw ifNotNullGet(detail,
             message -> new RuntimeException(e.getMessage() + " because " + message), e);
       }
+    } catch (AssumptionViolatedException e) {
+      throw e;
     } catch (Exception e) {
       throw new RuntimeException("While " + description, e);
     }
@@ -2729,16 +2736,6 @@ public class SequenceBase {
 
     public CapabilitySuccess(Class<? extends Capability> capability) {
       super("Capability supported");
-    }
-  }
-
-  /**
-   * Exception to indicate that the point transitioned to the final state
-   * before the intermediate state was observed.
-   */
-  protected static class AppliedTooQuicklyException extends RuntimeException {
-    public AppliedTooQuicklyException(String message) {
-      super(message);
     }
   }
 

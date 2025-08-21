@@ -1,7 +1,7 @@
 
 ## writeback_operation (ALPHA)
 
-Implements writeback operations
+Tests intermediate UPDATING state of a writeback operation
 
 1. Update config before target point has value_state default (null)
     * Remove `pointset.points.filter_differential_pressure_setpoint.set_value`
