@@ -32,7 +32,7 @@ public class PubberPointsetManager extends PubberManager implements PointsetMana
   private final Map<String, AbstractPoint> managedPoints = new HashMap<>();
   private final ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(1);
   private static final int WRITE_DELAY_SEC = 3;
-  private static final int WRITE_DELAY_WITHOUT_UPDATING_STATE_SEC= 60;
+  private static final int WRITE_DELAY_WITHOUT_UPDATING_STATE_SEC = 60;
 
 
   private int pointsetUpdateCount = -1;
