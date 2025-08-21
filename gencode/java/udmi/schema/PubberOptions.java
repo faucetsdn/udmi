@@ -150,11 +150,11 @@ public class PubberOptions {
     @JsonPropertyDescription("If true, the pubber will simulate a fast writeback operations.")
     public Boolean fastWrite;
     /**
-     * If true, the pubber will simulate a delayed writeback operations, leading to timeout.
+     * If true, the pubber will simulate a delayed writeback operations, leading to slow writeback without an intermediate updating state.
      * 
      */
     @JsonProperty("delayWrite")
-    @JsonPropertyDescription("If true, the pubber will simulate a delayed writeback operations, leading to timeout.")
+    @JsonPropertyDescription("If true, the pubber will simulate a delayed writeback operations, leading to slow writeback without an intermediate updating state.")
     public Boolean delayWrite;
     @JsonProperty("softwareFirmwareValue")
     public String softwareFirmwareValue;

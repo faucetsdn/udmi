@@ -5,8 +5,6 @@ import static com.google.daq.mqtt.util.TimePeriodConstants.TWO_MINUTES_MS;
 import static java.lang.String.format;
 import static udmi.schema.Bucket.WRITEBACK;
 import static udmi.schema.FeatureDiscovery.FeatureStage.ALPHA;
-import static udmi.schema.PointPointsetState.Value_state.APPLIED;
-import static udmi.schema.PointPointsetState.Value_state.UPDATING;
 
 import com.google.daq.mqtt.sequencer.Feature;
 import com.google.daq.mqtt.sequencer.PointsetBase;
@@ -28,7 +26,7 @@ public class WritebackSequences extends PointsetBase {
 
   public static final String DEFAULT_STATE = null;
   private Object lastPresentValue;
-  private static final Duration UPDATING_WAIT_DURATION = Duration.ofSeconds(10);
+  private static final Duration UPDATING_WAIT_DURATION = Duration.ofSeconds(15);
   private static final Duration MAX_WAIT_TIME = Duration.ofSeconds(25);
 
   @Before
@@ -85,7 +83,7 @@ public class WritebackSequences extends PointsetBase {
   @Feature(stage = ALPHA, bucket = WRITEBACK)
   @Summary("Implements UDMI writeback and can successfully writeback to a point")
   public void writeback_success() {
-    TargetTestingModel targetModel = testTargetState(APPLIED.value());
+    TargetTestingModel targetModel = testTargetState(APPLIED_STATE);
     waitUntil("target point to have target expected value", () -> presentValueIs(targetModel));
   }
 
@@ -120,12 +118,11 @@ public class WritebackSequences extends PointsetBase {
 
   @Test(timeout = FOUR_MINUTES_MS)
   @Feature(stage = ALPHA, bucket = WRITEBACK)
-  @Summary("Implements writeback operations")
+  @Summary("Tests intermediate UPDATING state of a writeback operation")
   public void writeback_operation() {
-    TargetTestingModel targetModel = getTarget(APPLIED.value());
+    TargetTestingModel targetModel = getTarget(APPLIED_STATE);
     String targetPoint = targetModel.target_point;
     Object targetValue = targetModel.target_value;
-    AtomicReference<String> appliedCheck = new AtomicReference<>("");
 
     deviceConfig.pointset.points.get(targetPoint).set_value = null;
     waitUntil(expectedValueState(DEFAULT_STATE), () -> valueStateIs(targetPoint, DEFAULT_STATE));
@@ -134,19 +131,13 @@ public class WritebackSequences extends PointsetBase {
     // Wait until the intermediate UPDATING state. In other cases, this should:
     // 1. Skip if it ends up APPLIED too quickly.
     // 2. Error out if it takes too long to get to UPDATING.
-    try {
-      waitUntil(expectedValueState(UPDATING.value()), UPDATING_WAIT_DURATION, () -> {
-        if (valueStateIs(targetPoint, APPLIED.value()) == null) {
-          throw new AppliedTooQuicklyException("Operation completed quickly.");
-        }
-        return valueStateIs(targetPoint, UPDATING.value());
-      });
-    } catch (AppliedTooQuicklyException e) {
-      // The operation was too fast; this is a valid outcome, so we skip the test.
-      skipTest(e.getMessage());
-    }
-    waitUntil(expectedValueState(APPLIED.value()),
-        () -> valueStateIs(targetPoint, APPLIED.value()));
+    waitUntil(expectedValueState(UPDATING_STATE), UPDATING_WAIT_DURATION, () -> {
+      String appliedCheck = valueStateIs(targetPoint, APPLIED_STATE);
+      ifNullSkipTest(appliedCheck, "operation completed quickly");
+
+      return valueStateIs(targetPoint, UPDATING_STATE);
+    });
+    waitUntil(expectedValueState(APPLIED_STATE), () -> valueStateIs(targetPoint, APPLIED_STATE));
   }
 }
 
