@@ -31,7 +31,7 @@ public class PubberPointsetManager extends PubberManager implements PointsetMana
   private final ExtraPointsetEvent pointsetEvent = new ExtraPointsetEvent();
   private final Map<String, AbstractPoint> managedPoints = new HashMap<>();
   private final ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(1);
-  private static final int SLOW_WRITE_DELAY_SEC = 3;
+  private static final int WRITE_DELAY_SEC = 3;
   private static final int TIMEOUT_WRITE_DELAY_SEC = 60;
 
 
@@ -146,7 +146,7 @@ public class PubberPointsetManager extends PubberManager implements PointsetMana
     } else if (isDelayWrite) {
       handleDelayWriteback(point, pointConfig, TIMEOUT_WRITE_DELAY_SEC);
     } else {
-      handleSlowWriteback(point, pointConfig, SLOW_WRITE_DELAY_SEC);
+      handleSlowWriteback(point, pointConfig, WRITE_DELAY_SEC);
     }
   }
 
@@ -156,16 +156,7 @@ public class PubberPointsetManager extends PubberManager implements PointsetMana
 
     getPointsetState().points.get(point.getName()).value_state = Value_state.UPDATING;
     updateState();
-
-    scheduler.schedule(() -> {
-      try {
-        info(format("Completing slow writeback for %s", point.getName()));
-        // Use the default interface method to apply the final state.
-        PointsetManager.super.updatePointConfig(point, pointConfig);
-      } catch (Exception e) {
-        error("Error during scheduled writeback for " + point.getName(), e);
-      }
-    }, delaySec, TimeUnit.SECONDS);
+    handleDelayWriteback(point, pointConfig, delaySec);
   }
 
   private void handleDelayWriteback(AbstractPoint point,

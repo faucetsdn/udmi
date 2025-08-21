@@ -5,6 +5,7 @@ import static com.google.daq.mqtt.util.TimePeriodConstants.TWO_MINUTES_MS;
 import static java.lang.String.format;
 import static udmi.schema.Bucket.WRITEBACK;
 import static udmi.schema.FeatureDiscovery.FeatureStage.ALPHA;
+import static udmi.schema.PointPointsetState.Value_state.APPLIED;
 import static udmi.schema.PointPointsetState.Value_state.UPDATING;
 
 import com.google.daq.mqtt.sequencer.Feature;
@@ -13,6 +14,7 @@ import com.google.daq.mqtt.sequencer.Summary;
 import java.time.Duration;
 import java.util.List;
 import java.util.Objects;
+import java.util.concurrent.atomic.AtomicReference;
 import org.junit.Before;
 import org.junit.Test;
 import udmi.schema.PointPointsetState.Value_state;
@@ -83,7 +85,7 @@ public class WritebackSequences extends PointsetBase {
   @Feature(stage = ALPHA, bucket = WRITEBACK)
   @Summary("Implements UDMI writeback and can successfully writeback to a point")
   public void writeback_success() {
-    TargetTestingModel targetModel = testTargetState(APPLIED_STATE);
+    TargetTestingModel targetModel = testTargetState(APPLIED.value());
     waitUntil("target point to have target expected value", () -> presentValueIs(targetModel));
   }
 
@@ -120,9 +122,10 @@ public class WritebackSequences extends PointsetBase {
   @Feature(stage = ALPHA, bucket = WRITEBACK)
   @Summary("Implements writeback operations")
   public void writeback_operation() {
-    TargetTestingModel targetModel = getTarget(APPLIED_STATE);
+    TargetTestingModel targetModel = getTarget(APPLIED.value());
     String targetPoint = targetModel.target_point;
     Object targetValue = targetModel.target_value;
+    AtomicReference<String> appliedCheck = new AtomicReference<>("");
 
     deviceConfig.pointset.points.get(targetPoint).set_value = null;
     waitUntil(expectedValueState(DEFAULT_STATE), () -> valueStateIs(targetPoint, DEFAULT_STATE));
@@ -133,17 +136,17 @@ public class WritebackSequences extends PointsetBase {
     // 2. Error out if it takes too long to get to UPDATING.
     try {
       waitUntil(expectedValueState(UPDATING.value()), UPDATING_WAIT_DURATION, () -> {
-        String appliedCheck = valueStateIs(targetPoint, APPLIED_STATE);
+        appliedCheck.set(valueStateIs(targetPoint, APPLIED.value()));
 
         ifNullSkipTest(appliedCheck, "operation completed quickly");
         return valueStateIs(targetPoint, UPDATING.value());
       });
     } catch (RuntimeException e) {
-      if (!e.getMessage().isBlank() && e.getMessage().equals("operation completed quickly")) {
+      if (appliedCheck.get() == null) {
         skipTest("operation completed quickly");
       }
     }
-    waitUntil(expectedValueState(APPLIED_STATE), () -> valueStateIs(targetPoint, APPLIED_STATE));
+    waitUntil(expectedValueState(APPLIED.value()), () -> valueStateIs(targetPoint, APPLIED.value()));
   }
 }
 
