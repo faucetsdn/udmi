@@ -2732,6 +2732,12 @@ public class SequenceBase {
     }
   }
 
+  protected static class AppliedTooQuicklyException extends RuntimeException {
+    public AppliedTooQuicklyException(String message) {
+      super(message);
+    }
+  }
+
   class SequenceTestWatcher extends TestWatcher {
 
     @Override

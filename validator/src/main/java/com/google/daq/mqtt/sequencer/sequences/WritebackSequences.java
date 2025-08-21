@@ -136,15 +136,14 @@ public class WritebackSequences extends PointsetBase {
     // 2. Error out if it takes too long to get to UPDATING.
     try {
       waitUntil(expectedValueState(UPDATING.value()), UPDATING_WAIT_DURATION, () -> {
-        appliedCheck.set(valueStateIs(targetPoint, APPLIED.value()));
-
-        ifNullSkipTest(appliedCheck, "operation completed quickly");
+        if (valueStateIs(targetPoint, APPLIED.value()) == null) {
+          throw new AppliedTooQuicklyException("Operation completed quickly.");
+        }
         return valueStateIs(targetPoint, UPDATING.value());
       });
-    } catch (RuntimeException e) {
-      if (appliedCheck.get() == null) {
-        skipTest("operation completed quickly");
-      }
+    } catch (AppliedTooQuicklyException e) {
+      // The operation was too fast; this is a valid outcome, so we skip the test.
+      skipTest(e.getMessage());
     }
     waitUntil(expectedValueState(APPLIED.value()), () -> valueStateIs(targetPoint, APPLIED.value()));
   }
