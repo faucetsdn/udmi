@@ -1,0 +1,10 @@
+{
+  "deviceId" : "AHU-1",
+  "deviceNumId" : "123456789101112",
+  "deviceRegistryId" : "ZZ-TRI-FECTA",
+  "projectId" : "localhost",
+  "transactionId" : "MP:9b90253e",
+  "publishTime" : "2025-08-21T06:57:01Z",
+  "subFolder" : "system",
+  "subType" : "events"
+}
