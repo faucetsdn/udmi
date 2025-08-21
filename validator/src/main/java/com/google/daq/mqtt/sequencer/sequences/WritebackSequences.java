@@ -12,7 +12,6 @@ import com.google.daq.mqtt.sequencer.Summary;
 import java.time.Duration;
 import java.util.List;
 import java.util.Objects;
-import java.util.concurrent.atomic.AtomicReference;
 import org.junit.Before;
 import org.junit.Test;
 import udmi.schema.PointPointsetState.Value_state;
