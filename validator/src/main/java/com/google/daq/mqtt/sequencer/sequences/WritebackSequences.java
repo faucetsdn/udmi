@@ -1,6 +1,5 @@
 package com.google.daq.mqtt.sequencer.sequences;
 
-import static com.google.daq.mqtt.util.TimePeriodConstants.FOUR_MINUTES_MS;
 import static com.google.daq.mqtt.util.TimePeriodConstants.TWO_MINUTES_MS;
 import static java.lang.String.format;
 import static udmi.schema.Bucket.WRITEBACK;
@@ -25,8 +24,8 @@ public class WritebackSequences extends PointsetBase {
 
   public static final String DEFAULT_STATE = null;
   private Object lastPresentValue;
-  private static final Duration UPDATING_WAIT_DURATION = Duration.ofSeconds(15);
-  private static final Duration MAX_WAIT_TIME = Duration.ofSeconds(25);
+  private static final Duration UPDATING_WAIT_DURATION = Duration.ofSeconds(3);
+  private static final Duration MAX_WAIT_TIME = Duration.ofSeconds(15);
 
   @Before
   public void setupExpectedParameters() {
@@ -115,7 +114,7 @@ public class WritebackSequences extends PointsetBase {
     testTargetState(FAILURE_STATE);
   }
 
-  @Test(timeout = FOUR_MINUTES_MS)
+  @Test(timeout = TWO_MINUTES_MS)
   @Feature(stage = ALPHA, bucket = WRITEBACK)
   @Summary("Tests intermediate UPDATING state of a writeback operation")
   public void writeback_operation() {
