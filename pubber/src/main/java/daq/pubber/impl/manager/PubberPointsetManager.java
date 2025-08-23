@@ -31,7 +31,7 @@ public class PubberPointsetManager extends PubberManager implements PointsetMana
   private final ExtraPointsetEvent pointsetEvent = new ExtraPointsetEvent();
   private final Map<String, AbstractPoint> managedPoints = new HashMap<>();
   private final ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(1);
-  private static final int WRITE_DELAY_SEC = 3;
+  private static final int WRITE_DELAY_SEC = 10;
 
   private int pointsetUpdateCount = -1;
   private PointsetState pointsetState;
@@ -138,8 +138,8 @@ public class PubberPointsetManager extends PubberManager implements PointsetMana
   public void updatePointConfig(AbstractPoint point, PointPointsetConfig pointConfig) {
     boolean isFastWrite = isFastWrite();
     boolean isDelayWrite = isDelayWrite();
-    
-    if (isFastWrite) {
+
+    if (isFastWrite || pointConfig == null || pointConfig.set_value == null) {
       PointsetManager.super.updatePointConfig(point, pointConfig);
     } else if (isDelayWrite) {
       handleDelayWriteback(point, pointConfig, WRITE_DELAY_SEC);
