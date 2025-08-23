@@ -49,7 +49,7 @@ bin/registrar $site_path
 bin/reset_config $site_path $project_spec $device_id
 
 log Running pubber with redirectRegistry on timeout
-timeout 1m unbuffer bin/pubber $site_path $project_spec $device_id $serial_no redirectRegistry=missing > $PUBBER_LOG.1 2>&1 || true
+timeout 1m unbuffer bin/pubber $site_path $project_spec $device_id $serial_no redirectRegistry=missing fastWrite > $PUBBER_LOG.1 2>&1 || true
 
 log Checks that a redirect happened and failed...
 egrep -q '/r(egistries)?/(.*~)?ZZ-TRI-FECTA(_.*)?/d(evices)?/' $PUBBER_LOG.1 || bin/fail no ZZ-TRI-FECTA registry reference
@@ -58,7 +58,7 @@ fgrep -q 'While waiting for connection start: Connection error' $PUBBER_LOG.1 ||
 fgrep -q 'Endpoint connection restored to last working endpoint' $PUBBER_LOG.1 || bin/fail no restore log message
 
 log Done with timeout, running pubber in background...
-bin/pubber $site_path $project_spec $device_id $serial_no > $PUBBER_LOG.2 2>&1 &
+bin/pubber $site_path $project_spec $device_id $serial_no fastWrite > $PUBBER_LOG.2 2>&1 &
 
 # Wait for initial connection, then reset config to redirect
 sleep 20
