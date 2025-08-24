@@ -81,7 +81,8 @@ cat <<EOF > /tmp/pubber_config.json
     "deviceId": "$device_id",
     "serialNo": "$serial_no",
     "options": {
-      "smokeCheck": true
+      "smokeCheck": true,
+      "fastWrite"
     }
 }
 EOF
