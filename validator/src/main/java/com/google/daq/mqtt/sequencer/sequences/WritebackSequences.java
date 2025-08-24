@@ -24,7 +24,7 @@ public class WritebackSequences extends PointsetBase {
 
   public static final String DEFAULT_STATE = null;
   private Object lastPresentValue;
-  private static final Duration UPDATING_WAIT_DURATION = Duration.ofSeconds(12);
+  private static final Duration UPDATING_WAIT_DURATION = Duration.ofSeconds(8);
   private static final Duration MAX_WAIT_TIME = Duration.ofSeconds(15);
 
   @Before
@@ -82,7 +82,8 @@ public class WritebackSequences extends PointsetBase {
   @Summary("Implements UDMI writeback and can successfully writeback to a point")
   public void writeback_success() {
     TargetTestingModel targetModel = testTargetState(APPLIED_STATE);
-    waitUntil("target point to have target expected value", () -> presentValueIs(targetModel));
+    waitUntil("target point to have target expected value", MAX_WAIT_TIME,
+        () -> presentValueIs(targetModel));
   }
 
   private TargetTestingModel testTargetState(String targetState) {
