@@ -14,8 +14,8 @@ import java.util.regex.Pattern;
 public class FqdnFamilyProvider implements FamilyProvider {
 
   private static final String FQDN_REGEX_STRING =
-      "(?!-)(?:[a-zA-Z0-9-]{1,63}(?<!-)\\.)+[a-zA-Z]{2,63}\\.?";
-  private static final Pattern FQDN_ADDR = Pattern.compile(FQDN_REGEX_STRING);
+      "(?!-)(?:[a-z0-9-]{1,63}(?<!-)\\.)+[a-z]{2,63}\\.?";
+  private static final Pattern FQDN_ADDR = Pattern.compile("^" + FQDN_REGEX_STRING + "$");
   private static final Pattern FQDN_NETWORK = FQDN_ADDR;
   private static final Pattern FQDN_REF = Pattern.compile(
       "^fqdn://(" + FQDN_REGEX_STRING + "):([0-9]{1,5})$");
@@ -46,9 +46,9 @@ public class FqdnFamilyProvider implements FamilyProvider {
 
   @Override
   public void validateNetwork(String networkAddr) {
-    requireNonNull(networkAddr, "missing required fqdn network (parent domain)");
+    requireNonNull(networkAddr, "missing required fqdn network");
     checkState(FQDN_NETWORK.matcher(networkAddr).matches(),
-        format("fqdn network (parent domain) %s does not match expression %s", networkAddr,
+        format("fqdn network %s does not match expression %s", networkAddr,
             FQDN_NETWORK.pattern()));
   }
 }

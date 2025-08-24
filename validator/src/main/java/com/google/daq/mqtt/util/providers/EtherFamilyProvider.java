@@ -13,13 +13,12 @@ import java.util.regex.Pattern;
 public class EtherFamilyProvider implements FamilyProvider {
 
   private static final String ETHER_ADDR_REGEX_STRING =
-      "(?:[0-9a-fA-F]{2}[:-]){5}(?:[0-9a-fA-F]{2})";
-  private static final Pattern ETHER_ADDR = Pattern.compile("^" + ETHER_ADDR_REGEX_STRING + "$",
-      Pattern.CASE_INSENSITIVE);
+      "(?:[0-9a-f]{2}[:]){5}(?:[0-9a-f]{2})";
+  private static final Pattern ETHER_ADDR = Pattern.compile("^" + ETHER_ADDR_REGEX_STRING + "$");
   private static final Pattern ETHER_REF = Pattern.compile(
-      "^ether://(" + ETHER_ADDR_REGEX_STRING + ")$", Pattern.CASE_INSENSITIVE);
-  private static final Pattern ETHER_NETWORK = Pattern.compile(
-      "^(409[0-4]|40[0-8][0-9]|[1-3][0-9]{3}|[1-9][0-9]{0,2})$");
+      "^ether://(" + ETHER_ADDR_REGEX_STRING + ")$");
+  private static final Pattern ETHER_NETWORK = Pattern.compile("^[0-9]{1,4}$");
+  private static final int MIN_VLAN_ID = 1;
   private static final int MAX_VLAN_ID = 4094;
 
 
@@ -45,9 +44,12 @@ public class EtherFamilyProvider implements FamilyProvider {
 
   @Override
   public void validateNetwork(String networkAddr) {
-    requireNonNull(networkAddr, "missing required ether network (VLAN ID)");
+    requireNonNull(networkAddr, "missing required ether network addr");
     checkState(ETHER_NETWORK.matcher(networkAddr).matches(),
-        format("ether network (VLAN ID) %s must be a number between 1 and %d", networkAddr,
-            MAX_VLAN_ID));
+        format("ether network addr %s is not a valid number", networkAddr));
+    int vlanId = Integer.parseInt(networkAddr);
+    checkState(vlanId >= MIN_VLAN_ID && vlanId <= MAX_VLAN_ID,
+        format("ether network addr %s must be a number between %d and %d", networkAddr,
+            MIN_VLAN_ID, MAX_VLAN_ID));
   }
 }

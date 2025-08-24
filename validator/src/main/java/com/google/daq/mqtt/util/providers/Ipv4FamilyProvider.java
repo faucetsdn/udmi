@@ -18,10 +18,11 @@ public class Ipv4FamilyProvider implements FamilyProvider {
       "(?:" + IPV4_OCTET_REGEX + "\\.){3}" + IPV4_OCTET_REGEX;
   private static final Pattern IPV4_ADDR = Pattern.compile("^" + IPV4_ADDR_REGEX_STRING + "$");
   private static final Pattern IPV4_NETWORK = Pattern.compile(
-      "^" + IPV4_ADDR_REGEX_STRING + "/(3[0-2]|[12]?[0-9])$");
+      "^(" + IPV4_ADDR_REGEX_STRING + ")/([0-9]{1,2})$");
   private static final Pattern IPV4_REF = Pattern.compile(
       "^ipv4://(" + IPV4_ADDR_REGEX_STRING + "):([0-9]{1,5})$");
   private static final int MAX_PORT_VALUE = 65535;
+  private static final int MAX_PREFIX_LENGTH = 32;
 
   @Override
   public String familyKey() {
@@ -49,8 +50,12 @@ public class Ipv4FamilyProvider implements FamilyProvider {
   @Override
   public void validateNetwork(String networkAddr) {
     requireNonNull(networkAddr, "missing required ipv4 network");
-    checkState(IPV4_NETWORK.matcher(networkAddr).matches(),
+    Matcher matcher = IPV4_NETWORK.matcher(networkAddr);
+    checkState(matcher.matches(),
         format("ipv4 network %s does not match expression %s", networkAddr,
             IPV4_NETWORK.pattern()));
+    String prefix = matcher.group(2);
+    checkState(Integer.parseInt(prefix) <= MAX_PREFIX_LENGTH,
+        format("ipv4 network prefix %s exceeds maximum %d", prefix, MAX_PREFIX_LENGTH));
   }
 }
