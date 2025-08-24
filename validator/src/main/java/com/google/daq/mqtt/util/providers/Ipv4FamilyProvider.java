@@ -5,22 +5,14 @@ import static java.lang.String.format;
 import static java.util.Objects.requireNonNull;
 import static udmi.lib.ProtocolFamily.IPV_4;
 
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
+import com.google.common.net.InetAddresses;
+import java.net.Inet4Address;
 
 /**
  * General family of IPv4 addresses.
  */
 public class Ipv4FamilyProvider implements FamilyProvider {
 
-  private static final String IPV4_OCTET_REGEX = "(?:25[0-5]|2[0-4][0-9]|1[0-9]{2}|[1-9]?[0-9])";
-  private static final String IPV4_ADDR_REGEX_STRING =
-      "(?:" + IPV4_OCTET_REGEX + "\\.){3}" + IPV4_OCTET_REGEX;
-  private static final Pattern IPV4_ADDR = Pattern.compile("^" + IPV4_ADDR_REGEX_STRING + "$");
-  private static final Pattern IPV4_NETWORK = Pattern.compile(
-      "^(" + IPV4_ADDR_REGEX_STRING + ")/([0-9]{1,2})$");
-  private static final Pattern IPV4_REF = Pattern.compile(
-      "^ipv4://(" + IPV4_ADDR_REGEX_STRING + "):([0-9]{1,5})$");
   private static final int MAX_PORT_VALUE = 65535;
   private static final int MAX_PREFIX_LENGTH = 32;
 
@@ -32,30 +24,37 @@ public class Ipv4FamilyProvider implements FamilyProvider {
   @Override
   public void validateRef(String refValue) {
     requireNonNull(refValue, "missing required ipv4 point ref");
-    Matcher matcher = IPV4_REF.matcher(refValue);
-    checkState(matcher.matches(),
-        format("protocol ref %s does not match expression %s", refValue, IPV4_REF.pattern()));
-    String port = matcher.group(2);
-    checkState(Integer.parseInt(port) <= MAX_PORT_VALUE,
+    checkState(refValue.startsWith("ipv4://"), "ipv4 ref must start with 'ipv4://'");
+
+    String[] parts = refValue.substring("ipv4://".length()).split(":", 2);
+    checkState(parts.length == 2,
+        "ipv4 ref must be in format ipv4://<address>:<port>");
+    validateAddr(parts[0]);
+
+    int port = Integer.parseInt(parts[1]);
+    checkState(port >= 0 && port <= MAX_PORT_VALUE,
         format("ipv4 ref port %s exceeds maximum %d", port, MAX_PORT_VALUE));
   }
 
   @Override
   public void validateAddr(String scanAddr) {
     requireNonNull(scanAddr, "missing required ipv4 scan_addr");
-    checkState(IPV4_ADDR.matcher(scanAddr).matches(),
-        format("ipv4 scan_addr %s does not match expression %s", scanAddr, IPV4_ADDR.pattern()));
+    checkState(InetAddresses.isInetAddress(scanAddr)
+            && InetAddresses.forString(scanAddr) instanceof Inet4Address,
+        format("ipv4 scan_addr %s is not a valid IPv4 address", scanAddr));
   }
 
   @Override
   public void validateNetwork(String networkAddr) {
     requireNonNull(networkAddr, "missing required ipv4 network");
-    Matcher matcher = IPV4_NETWORK.matcher(networkAddr);
-    checkState(matcher.matches(),
-        format("ipv4 network %s does not match expression %s", networkAddr,
-            IPV4_NETWORK.pattern()));
-    String prefix = matcher.group(2);
-    checkState(Integer.parseInt(prefix) <= MAX_PREFIX_LENGTH,
+    String[] parts = networkAddr.split("/", 2);
+    checkState(parts.length == 2,
+        "ipv4 network must be in CIDR format (address/prefix)");
+
+    validateAddr(parts[0]);
+
+    int prefix = Integer.parseInt(parts[1]);
+    checkState(prefix >= 0 && prefix <= MAX_PREFIX_LENGTH,
         format("ipv4 network prefix %s exceeds maximum %d", prefix, MAX_PREFIX_LENGTH));
   }
 }
