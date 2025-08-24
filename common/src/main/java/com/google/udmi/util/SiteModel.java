@@ -44,6 +44,7 @@ import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -106,6 +107,9 @@ public class SiteModel {
   private static final File CONFIG_OUT_DIR = new File("out/");
   private static final String RSA_PRIVATE_KEY = "rsa_private.pkcs8";
   private static final String EC_PRIVATE_KEY = "ec_private.pkcs8";
+  private static final Set<String> ALLOWED_FILES_IN_DEVICES_DIR = new HashSet<>(List.of(
+      "README.md"
+  ));
 
   private final String sitePath;
   private final Map<String, Object> siteDefaults;
@@ -282,8 +286,21 @@ public class SiteModel {
   }
 
   private static boolean validDeviceDirectory(File baseDir, String dirName) {
-    return !(dirName.startsWith(".") || dirName.endsWith("~")) &&
-        Files.isDirectory(Path.of(baseDir.getPath(), dirName));
+    File file = new File(baseDir, dirName);
+
+    if (!file.isDirectory()) {
+      if (ALLOWED_FILES_IN_DEVICES_DIR.contains(dirName)) {
+        return false;
+      }
+      throw new RuntimeException("Unexpected file in devices directory: " + file.getAbsolutePath());
+    }
+
+    if (dirName.startsWith(".") || dirName.endsWith("~")) {
+      System.err.println("Warning: Skipping invalid device directory: " + dirName);
+      return false;
+    }
+
+    return true;
   }
 
   public static String getRegistryActual(ExecutionConfiguration iotConfig) {
