@@ -1,12 +1,26 @@
 package com.google.daq.mqtt.util.providers;
 
-
+import static com.google.common.base.Preconditions.checkState;
+import static java.lang.String.format;
+import static java.util.Objects.requireNonNull;
 import static udmi.lib.ProtocolFamily.ETHER;
 
+import java.util.regex.Pattern;
+
 /**
- * No-validation family with no semantics, available for open use.
+ * General family of Ethernet addresses.
  */
 public class EtherFamilyProvider implements FamilyProvider {
+
+  private static final String ETHER_ADDR_REGEX_STRING =
+      "(?:[0-9a-f]{2}[:]){5}(?:[0-9a-f]{2})";
+  private static final Pattern ETHER_ADDR = Pattern.compile("^" + ETHER_ADDR_REGEX_STRING + "$");
+  private static final Pattern ETHER_REF = Pattern.compile(
+      "^ether://(" + ETHER_ADDR_REGEX_STRING + ")$");
+  private static final Pattern ETHER_NETWORK = Pattern.compile("^[0-9]{1,4}$");
+  private static final int MIN_VLAN_ID = 1;
+  private static final int MAX_VLAN_ID = 4094;
+
 
   @Override
   public String familyKey() {
@@ -14,12 +28,28 @@ public class EtherFamilyProvider implements FamilyProvider {
   }
 
   @Override
-  public void validateRef(String metadataRef) {
-    // Always passes, no restrictions!
+  public void validateRef(String refValue) {
+    requireNonNull(refValue, "missing required ether point ref");
+    checkState(ETHER_REF.matcher(refValue).matches(),
+        format("protocol ref %s does not match expression %s", refValue, ETHER_REF.pattern()));
   }
 
   @Override
   public void validateAddr(String scanAddr) {
-    // Always passes, no restrictions!
+    requireNonNull(scanAddr, "missing required ether scan_addr");
+    checkState(ETHER_ADDR.matcher(scanAddr).matches(),
+        format("ether scan_addr %s does not match expression %s", scanAddr,
+            ETHER_ADDR.pattern()));
+  }
+
+  @Override
+  public void validateNetwork(String networkAddr) {
+    requireNonNull(networkAddr, "missing required ether network addr");
+    checkState(ETHER_NETWORK.matcher(networkAddr).matches(),
+        format("ether network addr %s is not a valid number", networkAddr));
+    int vlanId = Integer.parseInt(networkAddr);
+    checkState(vlanId >= MIN_VLAN_ID && vlanId <= MAX_VLAN_ID,
+        format("ether network addr %s must be a number between %d and %d", networkAddr,
+            MIN_VLAN_ID, MAX_VLAN_ID));
   }
 }
