@@ -37,6 +37,7 @@ import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.fasterxml.jackson.databind.util.ISO8601DateFormat;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
 import com.google.udmi.util.ExceptionMap.ExceptionCategory;
 import java.io.File;
 import java.util.Arrays;
@@ -104,6 +105,9 @@ public class SiteModel {
   private static final File CONFIG_OUT_DIR = new File("out/");
   private static final String RSA_PRIVATE_KEY = "rsa_private.pkcs8";
   private static final String EC_PRIVATE_KEY = "ec_private.pkcs8";
+  private static final Set<String> ALLOWED_FILES_IN_DEVICES_DIR = ImmutableSet.of(
+      "README.md"
+  );
 
   private final String sitePath;
   private final Map<String, Object> siteDefaults;
@@ -275,12 +279,26 @@ public class SiteModel {
       return ImmutableList.of();
     }
     String[] devices = requireNonNull(devicesDir.list());
-    return Arrays.stream(devices).filter(SiteModel::validDeviceDirectory)
+    return Arrays.stream(devices).filter(device -> validDeviceDirectory(devicesDir, device))
         .collect(Collectors.toList());
   }
 
-  private static boolean validDeviceDirectory(String dirName) {
-    return !(dirName.startsWith(".") || dirName.endsWith("~"));
+  private static boolean validDeviceDirectory(File baseDir, String dirName) {
+    File file = new File(baseDir, dirName);
+
+    if (!file.isDirectory()) {
+      if (ALLOWED_FILES_IN_DEVICES_DIR.contains(dirName)) {
+        return false;
+      }
+      throw new RuntimeException("Unexpected file in devices directory: " + file.getAbsolutePath());
+    }
+
+    if (dirName.startsWith(".") || dirName.endsWith("~")) {
+      System.err.println("Warning: Skipping invalid device directory: " + dirName);
+      return false;
+    }
+
+    return true;
   }
 
   public static String getRegistryActual(ExecutionConfiguration iotConfig) {
@@ -335,8 +353,8 @@ public class SiteModel {
     File devicesFile = getDevicesDir();
     File[] files = Objects.requireNonNull(devicesFile.listFiles(),
         "no files in " + devicesFile.getAbsolutePath());
-    return Arrays.stream(files).map(File::getName).filter(SiteModel::validDeviceDirectory)
-        .collect(Collectors.toSet());
+    return Arrays.stream(files).map(File::getName)
+        .filter(device -> validDeviceDirectory(devicesFile, device)).collect(Collectors.toSet());
   }
 
   public SiteMetadata loadSiteMetadata() {
