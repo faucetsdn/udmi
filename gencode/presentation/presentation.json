@@ -1,0 +1,915 @@
+{
+  "gateway": {
+    "model_gateway.gateway_id": {
+      "label": "gateway_id",
+      "expectedType": "string",
+      "description": "The device ID of the gateway the device is bound to",
+      "examples": "['GAT-100']"
+    },
+    "model_gateway.target.family": {
+      "label": "target.family",
+      "expectedType": "string",
+      "description": "The family designator, used only when the entry is not keyed in a family map",
+      "examples": "['ipv4', 'bacnet']"
+    }
+  },
+  "system": {
+    "model_system.name": {
+      "label": "name",
+      "expectedType": "string",
+      "description": "Friendly name describing this device"
+    },
+    "model_system.description": {
+      "label": "description",
+      "expectedType": "string",
+      "description": "Generic human-readable text describing the device"
+    },
+    "model_system.device_version": {
+      "label": "device_version",
+      "expectedType": "string",
+      "description": "Version of schema supported by the device",
+      "examples": "['1.5.0']"
+    },
+    "model_system.zone": {
+      "label": "zone",
+      "expectedType": "string",
+      "description": "Aggregation of spaces, partial spaces or other zones that the device is serving",
+      "examples": "['Zone1', 'Kitchen_101']"
+    },
+    "model_system.node_type": {
+      "label": "node_type",
+      "expectedType": "string",
+      "description": "The description of what kind of node this is.",
+      "examples": "['vitual_device', 'field_group', 'field_controller', 'network_scan_agent']"
+    },
+    "model_system.tags": {
+      "label": "tags",
+      "expectedType": "array",
+      "description": "Tags associated with the device",
+      "examples": "[['lighting'], ['energy', 'building', 'vendor_managed']]"
+    },
+    "model_system.location.site": {
+      "label": "location.site",
+      "expectedType": "string",
+      "description": "The site name according to the site model in which the device is installed in",
+      "examples": "['US-SFO-XYY']"
+    },
+    "model_system.location.panel": {
+      "label": "location.panel",
+      "expectedType": "string",
+      "description": "The reference of the panel where the device is installed in",
+      "examples": "['Panel123', 'CTRP-567']"
+    },
+    "model_system.location.section": {
+      "label": "location.section",
+      "expectedType": "string"
+    },
+    "model_system.location.room": {
+      "label": "location.room",
+      "expectedType": "string"
+    },
+    "model_system.location.floor": {
+      "label": "location.floor",
+      "expectedType": "string",
+      "description": "Name of floor level",
+      "examples": "['1', '1A', 'G', 'B1M', 'RF']"
+    },
+    "model_system.location.floor_seq": {
+      "label": "location.floor_seq",
+      "expectedType": "integer",
+      "description": "Sequential integer representation for a floor, primarily for comparisons when non integer floors are used, e.g. 1 and 1M"
+    },
+    "model_system.location.position.x": {
+      "label": "location.position.x",
+      "expectedType": "number",
+      "description": "The `x` coordinate of the device location in a project specific coordinate system"
+    },
+    "model_system.location.position.y": {
+      "label": "location.position.y",
+      "expectedType": "number",
+      "description": "The `y` coordinate of the device location in a project specific coordinate system"
+    },
+    "model_system.location.position.z": {
+      "label": "location.position.z",
+      "expectedType": "number",
+      "description": "The `z` (height) coordinate of the device location in a project specific coordinate system"
+    },
+    "model_system.location.coordinates.lat": {
+      "label": "location.coordinates.lat",
+      "expectedType": "number",
+      "description": "The `latitude` coordinate of the device in the WGS84 coordinate system"
+    },
+    "model_system.location.coordinates.long": {
+      "label": "location.coordinates.long",
+      "expectedType": "number",
+      "description": "The `longitude` coordinate of the device in the WGS84 coordinate system"
+    },
+    "model_system.location.coordinates.alt_m": {
+      "label": "location.coordinates.alt_m",
+      "expectedType": "number",
+      "description": "The `altitude` coordinate of the device in meters"
+    },
+    "model_system.serial_no": {
+      "label": "serial_no",
+      "expectedType": "string",
+      "description": "The serial number of the physical device",
+      "examples": "['A1B2C3D4', '00001']"
+    },
+    "model_system.hardware.make": {
+      "label": "hardware.make",
+      "expectedType": "string",
+      "description": "The manufacturer of the device",
+      "examples": "['Google']"
+    },
+    "model_system.hardware.model": {
+      "label": "hardware.model",
+      "expectedType": "string",
+      "description": "The model of the device",
+      "examples": "['Pixel 5', 'Pixel 6', 'Pixel 6 Pro']"
+    },
+    "model_system.hardware.sku": {
+      "label": "hardware.sku",
+      "expectedType": "string",
+      "description": "A stock keeping unit which identifies the unique composition of a device, for example those with different hardware configurations",
+      "examples": "['GF5KQ', '4215612']"
+    },
+    "model_system.hardware.rev": {
+      "label": "hardware.rev",
+      "expectedType": "string",
+      "description": "Hardware revision of the device",
+      "examples": "['A', 'B', '1']"
+    },
+    "model_system.software.firmware": {
+      "label": "software.firmware",
+      "expectedType": "string",
+      "description": "Version of the device firmware"
+    },
+    "model_system.software.os": {
+      "label": "software.os",
+      "expectedType": "string",
+      "description": "Version of the operating system"
+    },
+    "model_system.software.driver": {
+      "label": "software.driver",
+      "expectedType": "string",
+      "description": "Version of a specific driver"
+    },
+    "model_system.physical_tag.asset.guid": {
+      "label": "physical_tag.asset.guid",
+      "expectedType": "string"
+    },
+    "model_system.physical_tag.asset.site": {
+      "label": "physical_tag.asset.site",
+      "expectedType": "string"
+    },
+    "model_system.physical_tag.asset.name": {
+      "label": "physical_tag.asset.name",
+      "expectedType": "string"
+    },
+    "model_system.min_loglevel": {
+      "label": "min_loglevel",
+      "expectedType": "integer",
+      "description": "The minimum loglevel for reporting log messages below which log entries should not be sent. Default to 300."
+    },
+    "model_system.metrics_rate_sec": {
+      "label": "metrics_rate_sec",
+      "expectedType": "integer",
+      "description": "The rate at which the system should send system event updates. 0 indicates no updates."
+    }
+  },
+  "localnet": {
+    "model_localnet.parent.target": {
+      "label": "parent.target",
+      "expectedType": "string",
+      "description": "ID of the parent device to which the device is physically connected",
+      "examples": "['DDC-1', 'CGW-2']"
+    },
+    "model_localnet.parent.family": {
+      "label": "parent.family",
+      "expectedType": "string",
+      "description": "Connection family/protocol of the parent device to which the device is physically connected",
+      "examples": "['bacnet_mstp', 'modbus_tcp', 'mqtt']"
+    },
+    "model_localnet.families.bacnet.addr": {
+      "label": "families.bacnet.addr",
+      "expectedType": "string",
+      "description": "The address of a device on the fieldbus/local network",
+      "examples": "['192.168.1.3', '41489']"
+    },
+    "model_localnet.families.bacnet.adjunct.name": {
+      "label": "families.bacnet.adjunct.name",
+      "expectedType": "string",
+      "description": "The name of the BACnet device."
+    },
+    "model_localnet.families.bacnet.adjunct.description": {
+      "label": "families.bacnet.adjunct.description",
+      "expectedType": "string",
+      "description": "A description for the BACnet device."
+    },
+    "model_localnet.families.modbus.addr": {
+      "label": "families.modbus.addr",
+      "expectedType": "string",
+      "description": "The address of a device on the fieldbus/local network",
+      "examples": "['192.168.1.3', '41489']"
+    },
+    "model_localnet.families.modbus.adjunct.serial_port": {
+      "label": "families.modbus.adjunct.serial_port",
+      "expectedType": "string",
+      "examples": "['/dev/USB0', 'COM1:']"
+    },
+    "model_localnet.families.modbus.adjunct.bit_rate": {
+      "label": "families.modbus.adjunct.bit_rate",
+      "expectedType": "integer",
+      "examples": "[9600]"
+    },
+    "model_localnet.families.modbus.adjunct.data_bits": {
+      "label": "families.modbus.adjunct.data_bits",
+      "expectedType": "string",
+      "examples": "['5|6|7|8']"
+    },
+    "model_localnet.families.modbus.adjunct.stop_bits": {
+      "label": "families.modbus.adjunct.stop_bits",
+      "expectedType": "string",
+      "examples": "['1|1.5|2']"
+    },
+    "model_localnet.families.modbus.adjunct.parity": {
+      "label": "families.modbus.adjunct.parity",
+      "expectedType": "string",
+      "examples": "['none', 'odd', 'even']"
+    },
+    "model_localnet.families.modbus.adjunct.encoding": {
+      "label": "families.modbus.adjunct.encoding",
+      "expectedType": "string",
+      "examples": "['rtu', 'ascii']"
+    },
+    "model_localnet.families.mbus.addr": {
+      "label": "families.mbus.addr",
+      "expectedType": "string",
+      "description": "The address of a device on the fieldbus/local network",
+      "examples": "['192.168.1.3', '41489']"
+    },
+    "model_localnet.families.mbus.adjunct.serial_port": {
+      "label": "families.mbus.adjunct.serial_port",
+      "expectedType": "string",
+      "examples": "['/dev/USB0', 'COM1:']"
+    },
+    "model_localnet.families.mbus.adjunct.bit_rate": {
+      "label": "families.mbus.adjunct.bit_rate",
+      "expectedType": "integer",
+      "examples": "[9600]"
+    },
+    "model_localnet.families.mbus.adjunct.secondary_addr": {
+      "label": "families.mbus.adjunct.secondary_addr",
+      "expectedType": "string",
+      "examples": "['181129145F1D0102']"
+    },
+    "model_localnet.families.ether.addr": {
+      "label": "families.ether.addr",
+      "expectedType": "string",
+      "description": "The address of a device on the fieldbus/local network",
+      "examples": "['192.168.1.3', '41489']"
+    },
+    "model_localnet.families.ipv4.addr": {
+      "label": "families.ipv4.addr",
+      "expectedType": "string",
+      "description": "The address of a device on the fieldbus/local network",
+      "examples": "['192.168.1.3', '41489']"
+    },
+    "model_localnet.families.ipv6.addr": {
+      "label": "families.ipv6.addr",
+      "expectedType": "string",
+      "description": "The address of a device on the fieldbus/local network",
+      "examples": "['192.168.1.3', '41489']"
+    },
+    "model_localnet.families.fqdn.addr": {
+      "label": "families.fqdn.addr",
+      "expectedType": "string",
+      "description": "The address of a device on the fieldbus/local network",
+      "examples": "['192.168.1.3', '41489']"
+    }
+  },
+  "cloud_iot_config": {
+    "configuration_execution.registry_id": {
+      "label": "registry_id",
+      "expectedType": "string"
+    },
+    "configuration_execution.cloud_region": {
+      "label": "cloud_region",
+      "expectedType": "string"
+    },
+    "configuration_execution.site_name": {
+      "label": "site_name",
+      "expectedType": "string"
+    },
+    "configuration_execution.update_topic": {
+      "label": "update_topic",
+      "expectedType": "string"
+    },
+    "configuration_execution.feed_name": {
+      "label": "feed_name",
+      "expectedType": "string"
+    },
+    "configuration_execution.reflect_region": {
+      "label": "reflect_region",
+      "expectedType": "string"
+    },
+    "configuration_execution.site_model": {
+      "label": "site_model",
+      "expectedType": "string"
+    },
+    "configuration_execution.src_file": {
+      "label": "src_file",
+      "expectedType": "string"
+    },
+    "configuration_execution.registry_suffix": {
+      "label": "registry_suffix",
+      "expectedType": "string"
+    },
+    "configuration_execution.shard_count": {
+      "label": "shard_count",
+      "expectedType": "integer"
+    },
+    "configuration_execution.shard_index": {
+      "label": "shard_index",
+      "expectedType": "integer"
+    },
+    "configuration_execution.device_id": {
+      "label": "device_id",
+      "expectedType": "string"
+    },
+    "configuration_execution.reflector_endpoint.name": {
+      "label": "reflector_endpoint.name",
+      "expectedType": "string",
+      "description": "Friendly name for this flow (debugging and diagnostics)"
+    },
+    "configuration_execution.reflector_endpoint.protocol": {
+      "label": "reflector_endpoint.protocol",
+      "expectedType": "string"
+    },
+    "configuration_execution.reflector_endpoint.transport": {
+      "label": "reflector_endpoint.transport",
+      "expectedType": "string"
+    },
+    "configuration_execution.reflector_endpoint.hostname": {
+      "label": "reflector_endpoint.hostname",
+      "expectedType": "string"
+    },
+    "configuration_execution.reflector_endpoint.payload": {
+      "label": "reflector_endpoint.payload",
+      "expectedType": "string",
+      "description": "Simple payload template for simple injection use cases"
+    },
+    "configuration_execution.reflector_endpoint.error": {
+      "label": "reflector_endpoint.error",
+      "expectedType": "string",
+      "description": "Error message container for capturing errors during parsing/handling"
+    },
+    "configuration_execution.reflector_endpoint.port": {
+      "label": "reflector_endpoint.port",
+      "expectedType": "integer"
+    },
+    "configuration_execution.reflector_endpoint.config_sync_sec": {
+      "label": "reflector_endpoint.config_sync_sec",
+      "expectedType": "integer",
+      "description": "Delay waiting for config message on start, 0 for default, <0 to disable"
+    },
+    "configuration_execution.reflector_endpoint.client_id": {
+      "label": "reflector_endpoint.client_id",
+      "expectedType": "string"
+    },
+    "configuration_execution.reflector_endpoint.topic_prefix": {
+      "label": "reflector_endpoint.topic_prefix",
+      "expectedType": "string",
+      "description": "Prefix for message topics"
+    },
+    "configuration_execution.reflector_endpoint.recv_id": {
+      "label": "reflector_endpoint.recv_id",
+      "expectedType": "string",
+      "description": "Id for the receiving message channel"
+    },
+    "configuration_execution.reflector_endpoint.send_id": {
+      "label": "reflector_endpoint.send_id",
+      "expectedType": "string",
+      "description": "Id for the sending messages channel"
+    },
+    "configuration_execution.reflector_endpoint.side_id": {
+      "label": "reflector_endpoint.side_id",
+      "expectedType": "string",
+      "description": "Id for a side-car message channel"
+    },
+    "configuration_execution.reflector_endpoint.gatewayId": {
+      "label": "reflector_endpoint.gatewayId",
+      "expectedType": "string"
+    },
+    "configuration_execution.reflector_endpoint.deviceId": {
+      "label": "reflector_endpoint.deviceId",
+      "expectedType": "string"
+    },
+    "configuration_execution.reflector_endpoint.enabled": {
+      "label": "reflector_endpoint.enabled",
+      "expectedType": "string",
+      "description": "Indicator if this endpoint should be active (null or non-empty)"
+    },
+    "configuration_execution.reflector_endpoint.noConfigAck": {
+      "label": "reflector_endpoint.noConfigAck",
+      "expectedType": "boolean",
+      "description": "True if config messages should not be acked (lower QOS)"
+    },
+    "configuration_execution.reflector_endpoint.capacity": {
+      "label": "reflector_endpoint.capacity",
+      "expectedType": "integer",
+      "description": "Queue capacity for limiting pipes"
+    },
+    "configuration_execution.reflector_endpoint.publish_delay_sec": {
+      "label": "reflector_endpoint.publish_delay_sec",
+      "expectedType": "integer",
+      "description": "Artifical publish delay for testing"
+    },
+    "configuration_execution.reflector_endpoint.periodic_sec": {
+      "label": "reflector_endpoint.periodic_sec",
+      "expectedType": "integer",
+      "description": "Rate for periodic task execution"
+    },
+    "configuration_execution.reflector_endpoint.keyBytes": {
+      "label": "reflector_endpoint.keyBytes",
+      "expectedType": "string"
+    },
+    "configuration_execution.reflector_endpoint.algorithm": {
+      "label": "reflector_endpoint.algorithm",
+      "expectedType": "string"
+    },
+    "configuration_execution.reflector_endpoint.auth_provider.basic.username": {
+      "label": "reflector_endpoint.auth_provider.basic.username",
+      "expectedType": "string"
+    },
+    "configuration_execution.reflector_endpoint.auth_provider.basic.password": {
+      "label": "reflector_endpoint.auth_provider.basic.password",
+      "expectedType": "string"
+    },
+    "configuration_execution.reflector_endpoint.auth_provider.jwt.audience": {
+      "label": "reflector_endpoint.auth_provider.jwt.audience",
+      "expectedType": "string"
+    },
+    "configuration_execution.reflector_endpoint.generation": {
+      "label": "reflector_endpoint.generation",
+      "expectedType": "string",
+      "description": "The timestamp of the endpoint generation",
+      "examples": "['2019-01-17T14:02:29.364Z']",
+      "expectedFormat": "date-time"
+    },
+    "configuration_execution.device_endpoint.name": {
+      "label": "device_endpoint.name",
+      "expectedType": "string",
+      "description": "Friendly name for this flow (debugging and diagnostics)"
+    },
+    "configuration_execution.device_endpoint.protocol": {
+      "label": "device_endpoint.protocol",
+      "expectedType": "string"
+    },
+    "configuration_execution.device_endpoint.transport": {
+      "label": "device_endpoint.transport",
+      "expectedType": "string"
+    },
+    "configuration_execution.device_endpoint.hostname": {
+      "label": "device_endpoint.hostname",
+      "expectedType": "string"
+    },
+    "configuration_execution.device_endpoint.payload": {
+      "label": "device_endpoint.payload",
+      "expectedType": "string",
+      "description": "Simple payload template for simple injection use cases"
+    },
+    "configuration_execution.device_endpoint.error": {
+      "label": "device_endpoint.error",
+      "expectedType": "string",
+      "description": "Error message container for capturing errors during parsing/handling"
+    },
+    "configuration_execution.device_endpoint.port": {
+      "label": "device_endpoint.port",
+      "expectedType": "integer"
+    },
+    "configuration_execution.device_endpoint.config_sync_sec": {
+      "label": "device_endpoint.config_sync_sec",
+      "expectedType": "integer",
+      "description": "Delay waiting for config message on start, 0 for default, <0 to disable"
+    },
+    "configuration_execution.device_endpoint.client_id": {
+      "label": "device_endpoint.client_id",
+      "expectedType": "string"
+    },
+    "configuration_execution.device_endpoint.topic_prefix": {
+      "label": "device_endpoint.topic_prefix",
+      "expectedType": "string",
+      "description": "Prefix for message topics"
+    },
+    "configuration_execution.device_endpoint.recv_id": {
+      "label": "device_endpoint.recv_id",
+      "expectedType": "string",
+      "description": "Id for the receiving message channel"
+    },
+    "configuration_execution.device_endpoint.send_id": {
+      "label": "device_endpoint.send_id",
+      "expectedType": "string",
+      "description": "Id for the sending messages channel"
+    },
+    "configuration_execution.device_endpoint.side_id": {
+      "label": "device_endpoint.side_id",
+      "expectedType": "string",
+      "description": "Id for a side-car message channel"
+    },
+    "configuration_execution.device_endpoint.gatewayId": {
+      "label": "device_endpoint.gatewayId",
+      "expectedType": "string"
+    },
+    "configuration_execution.device_endpoint.deviceId": {
+      "label": "device_endpoint.deviceId",
+      "expectedType": "string"
+    },
+    "configuration_execution.device_endpoint.enabled": {
+      "label": "device_endpoint.enabled",
+      "expectedType": "string",
+      "description": "Indicator if this endpoint should be active (null or non-empty)"
+    },
+    "configuration_execution.device_endpoint.noConfigAck": {
+      "label": "device_endpoint.noConfigAck",
+      "expectedType": "boolean",
+      "description": "True if config messages should not be acked (lower QOS)"
+    },
+    "configuration_execution.device_endpoint.capacity": {
+      "label": "device_endpoint.capacity",
+      "expectedType": "integer",
+      "description": "Queue capacity for limiting pipes"
+    },
+    "configuration_execution.device_endpoint.publish_delay_sec": {
+      "label": "device_endpoint.publish_delay_sec",
+      "expectedType": "integer",
+      "description": "Artifical publish delay for testing"
+    },
+    "configuration_execution.device_endpoint.periodic_sec": {
+      "label": "device_endpoint.periodic_sec",
+      "expectedType": "integer",
+      "description": "Rate for periodic task execution"
+    },
+    "configuration_execution.device_endpoint.keyBytes": {
+      "label": "device_endpoint.keyBytes",
+      "expectedType": "string"
+    },
+    "configuration_execution.device_endpoint.algorithm": {
+      "label": "device_endpoint.algorithm",
+      "expectedType": "string"
+    },
+    "configuration_execution.device_endpoint.auth_provider.basic.username": {
+      "label": "device_endpoint.auth_provider.basic.username",
+      "expectedType": "string"
+    },
+    "configuration_execution.device_endpoint.auth_provider.basic.password": {
+      "label": "device_endpoint.auth_provider.basic.password",
+      "expectedType": "string"
+    },
+    "configuration_execution.device_endpoint.auth_provider.jwt.audience": {
+      "label": "device_endpoint.auth_provider.jwt.audience",
+      "expectedType": "string"
+    },
+    "configuration_execution.device_endpoint.generation": {
+      "label": "device_endpoint.generation",
+      "expectedType": "string",
+      "description": "The timestamp of the endpoint generation",
+      "examples": "['2019-01-17T14:02:29.364Z']",
+      "expectedFormat": "date-time"
+    },
+    "configuration_execution.project_id": {
+      "label": "project_id",
+      "expectedType": "string"
+    },
+    "configuration_execution.user_name": {
+      "label": "user_name",
+      "expectedType": "string"
+    },
+    "configuration_execution.udmi_namespace": {
+      "label": "udmi_namespace",
+      "expectedType": "string"
+    },
+    "configuration_execution.bridge_host": {
+      "label": "bridge_host",
+      "expectedType": "string"
+    },
+    "configuration_execution.key_file": {
+      "label": "key_file",
+      "expectedType": "string"
+    },
+    "configuration_execution.serial_no": {
+      "label": "serial_no",
+      "expectedType": "string"
+    },
+    "configuration_execution.log_level": {
+      "label": "log_level",
+      "expectedType": "string"
+    },
+    "configuration_execution.min_stage": {
+      "label": "min_stage",
+      "expectedType": "string"
+    },
+    "configuration_execution.udmi_version": {
+      "label": "udmi_version",
+      "expectedType": "string",
+      "description": "Semantic tagged version of udmis install"
+    },
+    "configuration_execution.udmi_commit": {
+      "label": "udmi_commit",
+      "expectedType": "string",
+      "description": "Commit hash of this udmis install"
+    },
+    "configuration_execution.udmi_ref": {
+      "label": "udmi_ref",
+      "expectedType": "string",
+      "description": "Complete reference of udmis install"
+    },
+    "configuration_execution.udmi_timever": {
+      "label": "udmi_timever",
+      "expectedType": "string",
+      "description": "Timestamp version id of udmis install"
+    },
+    "configuration_execution.enforce_version": {
+      "label": "enforce_version",
+      "expectedType": "boolean"
+    },
+    "configuration_execution.udmi_root": {
+      "label": "udmi_root",
+      "expectedType": "string"
+    },
+    "configuration_execution.update_to": {
+      "label": "update_to",
+      "expectedType": "string",
+      "description": "Optional version for a udmis update trigger"
+    },
+    "configuration_execution.alt_project": {
+      "label": "alt_project",
+      "expectedType": "string"
+    },
+    "configuration_execution.alt_registry": {
+      "label": "alt_registry",
+      "expectedType": "string"
+    },
+    "configuration_execution.block_unknown": {
+      "label": "block_unknown",
+      "expectedType": "boolean"
+    },
+    "configuration_execution.sequences": {
+      "label": "sequences",
+      "expectedType": "array"
+    }
+  },
+  "cloud": {
+    "model_cloud.auth_type": {
+      "label": "auth_type",
+      "expectedType": "string",
+      "description": "The key type used for cloud communication."
+    },
+    "model_cloud.resource_type": {
+      "label": "resource_type",
+      "expectedType": "string",
+      "description": "The cloud resource type"
+    },
+    "model_cloud.config.static_file": {
+      "label": "config.static_file",
+      "expectedType": "string",
+      "description": "Config file to use. Within the `config` directory in the device's metadata directory"
+    },
+    "model_cloud.blocked": {
+      "label": "blocked",
+      "expectedType": "boolean"
+    },
+    "model_cloud.num_id": {
+      "label": "num_id",
+      "expectedType": "string"
+    }
+  },
+  "site_metadata": {
+    "site_metadata.site": {
+      "label": "site",
+      "expectedType": "string",
+      "description": "Identifier for the site or building",
+      "examples": "['UK-LON-ABC', 'US-NYC-DEF2']"
+    },
+    "site_metadata.name": {
+      "label": "name",
+      "expectedType": "string",
+      "description": "Name of the site or building",
+      "examples": "['Cheesegrater', 'Colosseum']"
+    },
+    "site_metadata.tags": {
+      "label": "tags",
+      "expectedType": "array",
+      "description": "Tags associated with the site",
+      "examples": "[['new_construction'], ['existing', 'brownfield']]"
+    },
+    "site_metadata.strict_warnings": {
+      "label": "strict_warnings",
+      "expectedType": "boolean",
+      "description": "Enable strict checking and treat warnings as errors"
+    },
+    "site_metadata.location.address": {
+      "label": "location.address",
+      "expectedType": "string",
+      "description": "Postal address of the site",
+      "examples": "['1600 Amphitheatre Parkway, Mountain View, CA 94043, United States', 'Piazza del Colosseo, 1, 00184 Roma RM, Italy']"
+    },
+    "site_metadata.location.lat": {
+      "label": "location.lat",
+      "expectedType": "number",
+      "description": "Latitude of the site in WGS84 coordinates, North of the equator, as indicated by a map marker",
+      "examples": "[41.8902]"
+    },
+    "site_metadata.location.long": {
+      "label": "location.long",
+      "expectedType": "number",
+      "description": "Longitude of the site in WGS84 coordinates, East of Greenwich, as indicated by a map marker",
+      "examples": "[12.4922]"
+    },
+    "site_metadata.links.dashboard": {
+      "label": "links.dashboard",
+      "expectedType": "string",
+      "description": "Site dashboard link",
+      "examples": "['https://example.com/dashboard']"
+    },
+    "site_metadata.links.docs": {
+      "label": "links.docs",
+      "expectedType": "string",
+      "description": "Folder where the project documentation is stored",
+      "examples": "['file://home/user/docs', 'https://drive.google.com/corp/drive/folders/iamadrivelocation']"
+    },
+    "site_metadata.links.folder": {
+      "label": "links.folder",
+      "expectedType": "string",
+      "description": "Folder where the UDMI site model is stored",
+      "examples": "['file://home/user/udmi_site_model', 'https://drive.google.com/corp/drive/folders/iamadrivelocation']"
+    },
+    "site_metadata.links.image": {
+      "label": "links.image",
+      "expectedType": "string",
+      "description": "Image of the site",
+      "examples": "['file://home/user/image.png', 'https://drive.google.com/corp/drive/folders/iamadrivelocation']"
+    },
+    "site_metadata.links.repo": {
+      "label": "links.repo",
+      "expectedType": "string",
+      "description": "Source repository where the UDMI site model is stored",
+      "examples": "['https://github.com/faucetsdn/udmi_site_model', 'git@github.com:faucetsdn/udmi_site_model.git']"
+    },
+    "site_metadata.links.sheet": {
+      "label": "links.sheet",
+      "expectedType": "string",
+      "description": "Link to a spreadsheet to observe real-time output from any tool",
+      "examples": "['https://docs.google.com/spreadsheets/d/<spreadsheet_id>']"
+    },
+    "site_metadata.parameters.area.net_occupied_area.value": {
+      "label": "parameters.area.net_occupied_area.value",
+      "expectedType": "number"
+    },
+    "site_metadata.parameters.area.net_occupied_area.unit": {
+      "label": "parameters.area.net_occupied_area.unit",
+      "expectedType": "string"
+    },
+    "site_metadata.parameters.area.gross_internal_area.value": {
+      "label": "parameters.area.gross_internal_area.value",
+      "expectedType": "number"
+    },
+    "site_metadata.parameters.area.gross_internal_area.unit": {
+      "label": "parameters.area.gross_internal_area.unit",
+      "expectedType": "string"
+    },
+    "site_metadata.parameters.electricity.carbon_factor.value": {
+      "label": "parameters.electricity.carbon_factor.value",
+      "expectedType": "number"
+    },
+    "site_metadata.parameters.electricity.carbon_factor.unit": {
+      "label": "parameters.electricity.carbon_factor.unit",
+      "expectedType": "string"
+    },
+    "site_metadata.parameters.electricity.unit_cost.value": {
+      "label": "parameters.electricity.unit_cost.value",
+      "expectedType": "number"
+    },
+    "site_metadata.parameters.electricity.unit_cost.unit": {
+      "label": "parameters.electricity.unit_cost.unit",
+      "expectedType": "string"
+    },
+    "site_metadata.parameters.gas.carbon_factor.value": {
+      "label": "parameters.gas.carbon_factor.value",
+      "expectedType": "number"
+    },
+    "site_metadata.parameters.gas.carbon_factor.unit": {
+      "label": "parameters.gas.carbon_factor.unit",
+      "expectedType": "string"
+    },
+    "site_metadata.parameters.gas.unit_cost.value": {
+      "label": "parameters.gas.unit_cost.value",
+      "expectedType": "number"
+    },
+    "site_metadata.parameters.gas.unit_cost.unit": {
+      "label": "parameters.gas.unit_cost.unit",
+      "expectedType": "string"
+    },
+    "site_metadata.parameters.water.unit_cost.value": {
+      "label": "parameters.water.unit_cost.value",
+      "expectedType": "number"
+    },
+    "site_metadata.parameters.water.unit_cost.unit": {
+      "label": "parameters.water.unit_cost.unit",
+      "expectedType": "string"
+    }
+  },
+  "points": {
+    "model_pointset.points.*.units": {
+      "label": "units",
+      "expectedType": "string",
+      "description": "Expected unit configuration for the point"
+    },
+    "model_pointset.points.*.description": {
+      "label": "description",
+      "expectedType": "string",
+      "description": "Detailed description of this point"
+    },
+    "model_pointset.points.*.writable": {
+      "label": "writable",
+      "expectedType": "boolean",
+      "description": "Indicates if this point is writable (else read-only)"
+    },
+    "model_pointset.points.*.baseline_value": {
+      "label": "baseline_value",
+      "expectedType": "string",
+      "description": "Represents the expected baseline value of the point",
+      "examples": "[22]"
+    },
+    "model_pointset.points.*.baseline_tolerance": {
+      "label": "baseline_tolerance",
+      "expectedType": "number",
+      "description": "Maximum deviation from `baseline_value`",
+      "examples": "[2]"
+    },
+    "model_pointset.points.*.baseline_state": {
+      "label": "baseline_state",
+      "expectedType": "string",
+      "description": "Expected state when `baseline_value` is set as the `set_value` for this point the config message"
+    },
+    "model_pointset.points.*.range_min": {
+      "label": "range_min",
+      "expectedType": "number",
+      "description": "Represents the lower bound of the error threshold for a point",
+      "examples": "[0]"
+    },
+    "model_pointset.points.*.range_max": {
+      "label": "range_max",
+      "expectedType": "number",
+      "description": "Represents the upper bound of the error threshold for a point",
+      "examples": "[100]"
+    },
+    "model_pointset.points.*.cov_increment": {
+      "label": "cov_increment",
+      "expectedType": "number",
+      "description": "Triggering threshold for partial cov update publishing",
+      "examples": "[1]"
+    },
+    "model_pointset.points.*.ref": {
+      "label": "ref",
+      "expectedType": "string",
+      "description": "Mapping for the point to an internal resource (e.g. BACnet object reference)",
+      "examples": "['AI3', '400070']"
+    },
+    "model_pointset.points.*.adjunct": {
+      "label": "points.*.adjunct",
+      "expectedType": "object"
+    },
+    "model_pointset.points.*.tags": {
+      "label": "tags",
+      "expectedType": "array",
+      "description": "Tags assosciated with the point",
+      "examples": "[['lighting'], ['energy', 'hvac']]"
+    },
+    "model_pointset.points.*.structure": {
+      "label": "points.*.structure",
+      "expectedType": "string",
+      "description": "Collection of family point information"
+    }
+  },
+  "pointset": {
+    "model_pointset.exclude_units_from_config": {
+      "label": "exclude_units_from_config",
+      "expectedType": "boolean"
+    },
+    "model_pointset.exclude_points_from_config": {
+      "label": "exclude_points_from_config",
+      "expectedType": "boolean"
+    },
+    "model_pointset.sample_limit_sec": {
+      "label": "sample_limit_sec",
+      "expectedType": "integer",
+      "description": "Minimum time between sample updates for the device (including complete and COV updates). Updates more frequent than this should be coalesced into one update."
+    },
+    "model_pointset.sample_rate_sec": {
+      "label": "sample_rate_sec",
+      "expectedType": "integer",
+      "description": "Maximum time between samples for the device to send out a complete update. It can send out updates more frequently than this. Default to 600."
+    }
+  }
+}
