@@ -7,6 +7,7 @@ import static udmi.lib.ProtocolFamily.IPV_6;
 
 import com.google.common.net.InetAddresses;
 import java.net.Inet6Address;
+import java.net.InetAddress;
 
 /**
  * General family of IPv6 addresses.
@@ -27,7 +28,6 @@ public class Ipv6FamilyProvider implements FamilyProvider {
     checkState(refValue.startsWith("ipv6://"), "ipv6 ref must start with 'ipv6://'");
     String core = refValue.substring("ipv6://".length());
 
-    // IPv6 addresses in URIs must be bracketed.
     int closingBracketIndex = core.lastIndexOf(']');
     checkState(core.startsWith("[") && closingBracketIndex != -1,
         "IPv6 address in ref must be bracketed, e.g., [::1]");
@@ -46,9 +46,18 @@ public class Ipv6FamilyProvider implements FamilyProvider {
   @Override
   public void validateAddr(String scanAddr) {
     requireNonNull(scanAddr, "missing required ipv6 scan_addr");
-    checkState(InetAddresses.isInetAddress(scanAddr)
-            && InetAddresses.forString(scanAddr) instanceof Inet6Address,
-        format("ipv6 scan_addr %s is not a valid IPv6 address", scanAddr));
+
+    try {
+      InetAddress addr = InetAddresses.forString(scanAddr);
+      checkState(addr instanceof Inet6Address, "Address is not IPv6");
+
+      String canonicalAddr = InetAddresses.toAddrString(addr);
+      checkState(scanAddr.equals(canonicalAddr),
+          "Address is not in canonical form. Expected: " + canonicalAddr);
+    } catch (IllegalArgumentException e) {
+      throw new IllegalStateException(
+          format("ipv6 scan_addr %s is not a valid IPv6 address", scanAddr));
+    }
   }
 
   @Override

@@ -5,21 +5,15 @@ import static java.lang.String.format;
 import static java.util.Objects.requireNonNull;
 import static udmi.lib.ProtocolFamily.FQDN;
 
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
+import org.apache.commons.validator.routines.DomainValidator;
 
 /**
  * General family of Fully Qualified Domain Names (FQDN).
  */
 public class FqdnFamilyProvider implements FamilyProvider {
 
-  private static final String FQDN_REGEX_STRING =
-      "(?!-)(?:[a-z0-9-]{1,63}(?<!-)\\.)+[a-z]{2,63}\\.?";
-  private static final Pattern FQDN_ADDR = Pattern.compile("^" + FQDN_REGEX_STRING + "$");
-  private static final Pattern FQDN_NETWORK = FQDN_ADDR;
-  private static final Pattern FQDN_REF = Pattern.compile(
-      "^fqdn://(" + FQDN_REGEX_STRING + "):([0-9]{1,5})$");
   private static final int MAX_PORT_VALUE = 65535;
+  private static final DomainValidator DOMAIN_VALIDATOR = DomainValidator.getInstance();
 
   @Override
   public String familyKey() {
@@ -29,26 +23,39 @@ public class FqdnFamilyProvider implements FamilyProvider {
   @Override
   public void validateRef(String refValue) {
     requireNonNull(refValue, "missing required fqdn point ref");
-    Matcher matcher = FQDN_REF.matcher(refValue);
-    checkState(matcher.matches(),
-        format("protocol ref %s does not match expression %s", refValue, FQDN_REF.pattern()));
-    String port = matcher.group(2);
-    checkState(Integer.parseInt(port) <= MAX_PORT_VALUE,
-        format("fqdn ref port %s exceeds maximum %d", port, MAX_PORT_VALUE));
+    checkState(refValue.startsWith("fqdn://"), "fqdn ref must start with 'fqdn://'");
+    String core = refValue.substring("fqdn://".length());
+
+    int lastColonIndex = core.lastIndexOf(':');
+    checkState(lastColonIndex > 0 && lastColonIndex < core.length() - 1,
+        "fqdn ref must be in format fqdn://<hostname>:<port>");
+
+    String host = core.substring(0, lastColonIndex);
+    String portStr = core.substring(lastColonIndex + 1);
+
+    validateAddr(host);
+
+    try {
+      int port = Integer.parseInt(portStr);
+      checkState(port >= 0 && port <= MAX_PORT_VALUE,
+          format("fqdn ref port %s exceeds maximum %d", port, MAX_PORT_VALUE));
+    } catch (NumberFormatException e) {
+      throw new IllegalStateException(format("fqdn ref port %s is not a valid number", portStr));
+    }
   }
 
   @Override
   public void validateAddr(String scanAddr) {
     requireNonNull(scanAddr, "missing required fqdn scan_addr");
-    checkState(FQDN_ADDR.matcher(scanAddr).matches(),
-        format("fqdn scan_addr %s does not match expression %s", scanAddr, FQDN_ADDR.pattern()));
+
+    boolean isLowercase = scanAddr.equals(scanAddr.toLowerCase());
+
+    checkState(DOMAIN_VALIDATOR.isValid(scanAddr) && isLowercase,
+        format("fqdn scan_addr %s is not a valid lowercase FQDN", scanAddr));
   }
 
   @Override
   public void validateNetwork(String networkAddr) {
-    requireNonNull(networkAddr, "missing required fqdn network");
-    checkState(FQDN_NETWORK.matcher(networkAddr).matches(),
-        format("fqdn network %s does not match expression %s", networkAddr,
-            FQDN_NETWORK.pattern()));
+    validateAddr(networkAddr);
   }
 }
