@@ -1,0 +1,60 @@
+{
+  "discovery" : {
+    "families" : { }
+  },
+  "localnet" : {
+    "families" : {
+      "ether" : {
+        "addr" : "42:01:ac:10:83:22"
+      },
+      "ipv4" : {
+        "addr" : "172.16.131.34"
+      },
+      "vendor" : {
+        "addr" : "28179023"
+      },
+      "bacnet" : {
+        "addr" : "27312"
+      }
+    }
+  },
+  "pointset" : {
+    "points" : {
+      "filter_alarm_pressure_status" : {
+        "units" : "No-units"
+      },
+      "filter_differential_pressure_setpoint" : {
+        "units" : "Bars",
+        "value_state" : "applied"
+      },
+      "filter_differential_pressure_sensor" : {
+        "units" : "Degrees-Celsius"
+      }
+    }
+  },
+  "system" : {
+    "last_config" : "2025-08-21T14:03:02Z",
+    "operation" : {
+      "operational" : true,
+      "last_start" : "2025-08-21T14:02:13Z",
+      "restart_count" : 1,
+      "mode" : "initial"
+    },
+    "serial_no" : "742178",
+    "hardware" : {
+      "make" : "BOS",
+      "model" : "pubber"
+    },
+    "software" : {
+      "firmware" : "v1"
+    },
+    "status" : {
+      "message" : "success",
+      "category" : "system.config.apply",
+      "timestamp" : "2025-08-21T14:03:02Z",
+      "level" : 300
+    }
+  },
+  "timestamp" : "2025-08-21T14:03:05Z",
+  "version" : "1.5.3"
+}

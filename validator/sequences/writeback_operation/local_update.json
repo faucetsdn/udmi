@@ -1,0 +1,44 @@
+{
+  "timestamp" : "2025-08-21T14:02:47Z",
+  "version" : "@@@cloud udmi version###1.5.1-265-gf6769c13-dirty",
+  "system" : {
+    "min_loglevel" : 200,
+    "metrics_rate_sec" : 10,
+    "operation" : {
+      "last_start" : "2025-08-21T14:02:13Z"
+    },
+    "testing" : {
+      "sequence_name" : "writeback_operation"
+    }
+  },
+  "discovery" : {
+    "families" : {
+      "vendor" : { },
+      "bacnet" : { }
+    }
+  },
+  "localnet" : {
+    "families" : {
+      "ether" : { },
+      "ipv4" : { },
+      "vendor" : { },
+      "bacnet" : { }
+    }
+  },
+  "pointset" : {
+    "points" : {
+      "filter_differential_pressure_setpoint" : {
+        "units" : "Bars",
+        "set_value" : 98
+      },
+      "filter_alarm_pressure_status" : {
+        "ref" : "BV11.present_value",
+        "units" : "No-units"
+      },
+      "filter_differential_pressure_sensor" : {
+        "ref" : "AV12.present_value",
+        "units" : "Degrees-Celsius"
+      }
+    }
+  }
+}

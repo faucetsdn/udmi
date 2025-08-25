@@ -42,6 +42,8 @@ class PubberOptions:
     self.disableWriteback = None
     self.noWriteback = None
     self.fixedLogLevel = None
+    self.fastWrite = None
+    self.delayWrite = None
     self.softwareFirmwareValue = None
 
   @staticmethod
@@ -86,6 +88,8 @@ class PubberOptions:
     result.disableWriteback = source.get('disableWriteback')
     result.noWriteback = source.get('noWriteback')
     result.fixedLogLevel = source.get('fixedLogLevel')
+    result.fastWrite = source.get('fastWrite')
+    result.delayWrite = source.get('delayWrite')
     result.softwareFirmwareValue = source.get('softwareFirmwareValue')
     return result
 
@@ -181,6 +185,10 @@ class PubberOptions:
       result['noWriteback'] = self.noWriteback # 5
     if self.fixedLogLevel:
       result['fixedLogLevel'] = self.fixedLogLevel # 5
+    if self.fastWrite:
+      result['fastWrite'] = self.fastWrite # 5
+    if self.delayWrite:
+      result['delayWrite'] = self.delayWrite # 5
     if self.softwareFirmwareValue:
       result['softwareFirmwareValue'] = self.softwareFirmwareValue # 5
     return result

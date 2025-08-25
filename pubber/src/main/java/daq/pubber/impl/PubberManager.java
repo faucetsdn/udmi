@@ -224,4 +224,12 @@ public class PubberManager extends ManagerBase {
     return isTrue(options.extraDevice);
   }
   // </editor-fold>
+
+  protected boolean isFastWrite() {
+    return options.fastWrite != null;
+  }
+
+  protected boolean isDelayWrite() {
+    return options.delayWrite != null;
+  }
 }
