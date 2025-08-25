@@ -7,9 +7,9 @@ TEST enumerate_features featureEnableSwap
 TEST valid_serial_no noLastStart
 TEST valid_serial_no noFolder
 TEST valid_serial_no msTimestamp
-TEST writeback_success fastWrite extraPoint=filter_differential_pressure_setpoint
-TEST writeback_success fastWrite noWriteback
-TEST writeback_success fastWrite noPointState
+TEST writeback_success extraPoint=filter_differential_pressure_setpoint
+TEST writeback_success noWriteback
+TEST writeback_success noPointState
 TEST writeback_operation fastWrite
 TEST writeback_operation delayWrite
 TEST pointset_publish_interval fixedSampleRate=10
@@ -24,7 +24,7 @@ TEST broken_config noLog
 TEST broken_config badCategory
 TEST broken_config badLevel
 TEST system_last_update extraField=fnooz
-TEST system_last_update fastWrite dupeState
+TEST system_last_update dupeState
 TEST system_last_update badLevel
 TEST state_make_model badState
 
