@@ -3,129 +3,46 @@
   "title": "Execution Configuration",
   "description": "Parameters for configuring the execution run of a UDMI tool",
   "$section": "Tool Configuration",
+  "$defaultPresentation": "cloud_iot_config",
   "type": "object",
   "$schema": "http://json-schema.org/draft-07/schema#",
   "additionalProperties": false,
   "properties": {
     "registry_id": {
-      "type": "string",
-      "$presentation": {
-        "paths": {
-          "$this": {
-            "section": "cloud_iot_config"
-          }
-        }
-      }
+      "type": "string"
     },
     "cloud_region": {
-      "type": "string",
-      "$presentation": {
-        "paths": {
-          "$this": {
-            "section": "cloud_iot_config"
-          }
-        }
-      }
+      "type": "string"
     },
     "site_name": {
-      "type": "string",
-      "$presentation": {
-        "paths": {
-          "$this": {
-            "section": "cloud_iot_config"
-          }
-        }
-      }
+      "type": "string"
     },
     "update_topic": {
-      "type": "string",
-      "$presentation": {
-        "paths": {
-          "$this": {
-            "section": "cloud_iot_config"
-          }
-        }
-      }
+      "type": "string"
     },
     "feed_name": {
-      "type": "string",
-      "$presentation": {
-        "paths": {
-          "$this": {
-            "section": "cloud_iot_config"
-          }
-        }
-      }
+      "type": "string"
     },
     "reflect_region": {
-      "type": "string",
-      "$presentation": {
-        "paths": {
-          "$this": {
-            "section": "cloud_iot_config"
-          }
-        }
-      }
+      "type": "string"
     },
     "site_model": {
-      "type": "string",
-      "$presentation": {
-        "paths": {
-          "$this": {
-            "section": "cloud_iot_config"
-          }
-        }
-      }
+      "type": "string"
     },
     "src_file": {
-      "type": "string",
-      "$presentation": {
-        "paths": {
-          "$this": {
-            "section": "cloud_iot_config"
-          }
-        }
-      }
+      "type": "string"
     },
     "registry_suffix": {
-      "type": "string",
-      "$presentation": {
-        "paths": {
-          "$this": {
-            "section": "cloud_iot_config"
-          }
-        }
-      }
+      "type": "string"
     },
     "shard_count": {
-      "type": "integer",
-      "$presentation": {
-        "paths": {
-          "$this": {
-            "section": "cloud_iot_config"
-          }
-        }
-      }
+      "type": "integer"
     },
     "shard_index": {
-      "type": "integer",
-      "$presentation": {
-        "paths": {
-          "$this": {
-            "section": "cloud_iot_config"
-          }
-        }
-      }
+      "type": "integer"
     },
     "device_id": {
-      "type": "string",
-      "$presentation": {
-        "paths": {
-          "$this": {
-            "section": "cloud_iot_config"
-          }
-        }
-      }
+      "type": "string"
     },
     "iot_provider": {
       "$ref": "file:common.json#/definitions/iot_provider"
@@ -137,201 +54,68 @@
       "$ref": "file:configuration_endpoint.json"
     },
     "project_id": {
-      "type": "string",
-      "$presentation": {
-        "paths": {
-          "$this": {
-            "section": "cloud_iot_config"
-          }
-        }
-      }
+      "type": "string"
     },
     "user_name": {
-      "type": "string",
-      "$presentation": {
-        "paths": {
-          "$this": {
-            "section": "cloud_iot_config"
-          }
-        }
-      }
+      "type": "string"
     },
     "udmi_namespace": {
-      "type": "string",
-      "$presentation": {
-        "paths": {
-          "$this": {
-            "section": "cloud_iot_config"
-          }
-        }
-      }
+      "type": "string"
     },
     "bridge_host": {
-      "type": "string",
-      "$presentation": {
-        "paths": {
-          "$this": {
-            "section": "cloud_iot_config"
-          }
-        }
-      }
+      "type": "string"
     },
     "key_file": {
-      "type": "string",
-      "$presentation": {
-        "paths": {
-          "$this": {
-            "section": "cloud_iot_config"
-          }
-        }
-      }
+      "type": "string"
     },
     "serial_no": {
-      "type": "string",
-      "$presentation": {
-        "paths": {
-          "$this": {
-            "section": "cloud_iot_config"
-          }
-        }
-      }
+      "type": "string"
     },
     "log_level": {
-      "type": "string",
-      "$presentation": {
-        "paths": {
-          "$this": {
-            "section": "cloud_iot_config"
-          }
-        }
-      }
+      "type": "string"
     },
     "min_stage": {
-      "type": "string",
-      "$presentation": {
-        "paths": {
-          "$this": {
-            "section": "cloud_iot_config"
-          }
-        }
-      }
+      "type": "string"
     },
     "udmi_version": {
       "type": "string",
-      "description": "Semantic tagged version of udmis install",
-      "$presentation": {
-        "paths": {
-          "$this": {
-            "section": "cloud_iot_config"
-          }
-        }
-      }
+      "description": "Semantic tagged version of udmis install"
     },
     "udmi_commit": {
       "type": "string",
-      "description": "Commit hash of this udmis install",
-      "$presentation": {
-        "paths": {
-          "$this": {
-            "section": "cloud_iot_config"
-          }
-        }
-      }
+      "description": "Commit hash of this udmis install"
     },
     "udmi_ref": {
       "type": "string",
-      "description": "Complete reference of udmis install",
-      "$presentation": {
-        "paths": {
-          "$this": {
-            "section": "cloud_iot_config"
-          }
-        }
-      }
+      "description": "Complete reference of udmis install"
     },
     "udmi_timever": {
       "type": "string",
-      "description": "Timestamp version id of udmis install",
-      "$presentation": {
-        "paths": {
-          "$this": {
-            "section": "cloud_iot_config"
-          }
-        }
-      }
+      "description": "Timestamp version id of udmis install"
     },
     "enforce_version": {
-      "type": "boolean",
-      "$presentation": {
-        "paths": {
-          "$this": {
-            "section": "cloud_iot_config"
-          }
-        }
-      }
+      "type": "boolean"
     },
     "udmi_root": {
-      "type": "string",
-      "$presentation": {
-        "paths": {
-          "$this": {
-            "section": "cloud_iot_config"
-          }
-        }
-      }
+      "type": "string"
     },
     "update_to": {
       "type": "string",
-      "description": "Optional version for a udmis update trigger",
-      "$presentation": {
-        "paths": {
-          "$this": {
-            "section": "cloud_iot_config"
-          }
-        }
-      }
+      "description": "Optional version for a udmis update trigger"
     },
     "alt_project": {
-      "type": "string",
-      "$presentation": {
-        "paths": {
-          "$this": {
-            "section": "cloud_iot_config"
-          }
-        }
-      }
+      "type": "string"
     },
     "alt_registry": {
-      "type": "string",
-      "$presentation": {
-        "paths": {
-          "$this": {
-            "section": "cloud_iot_config"
-          }
-        }
-      }
+      "type": "string"
     },
     "block_unknown": {
-      "type": "boolean",
-      "$presentation": {
-        "paths": {
-          "$this": {
-            "section": "cloud_iot_config"
-          }
-        }
-      }
+      "type": "boolean"
     },
     "sequences": {
       "type": "array",
       "items": {
         "type": "string"
-      },
-      "$presentation": {
-        "paths": {
-          "$this": {
-            "section": "cloud_iot_config"
-          }
-        }
       }
     },
     "mapping_configuration": {

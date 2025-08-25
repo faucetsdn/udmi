@@ -15,6 +15,7 @@ OUTPUT_DIR = os.path.join(os.path.dirname(os.path.dirname(__file__)),
 
 # --- Constants ---
 PRESENTATION = '$presentation'
+DEFAULT_SECTION_KEY = '$defaultPresentation'
 PRESENTATION_PROPS = 'presentationProperties'
 REFERENCE = '$ref'
 CURRENT = '$this'
@@ -46,7 +47,7 @@ def load_json_file(filename, base_dir=SCHEMA_DIR):
 
 
 def find_presentation_properties(schema, path_prefix, collected_properties,
-    origin_file_ref):
+    origin_file_ref, default_section=None):
   """
   Recursively processes a schema, collecting properties with
   '$presentation' tags.
@@ -64,62 +65,72 @@ def find_presentation_properties(schema, path_prefix, collected_properties,
 
     current_path = path_prefix + [key]
     find_presentation_properties(prop_details, current_path,
-                                 collected_properties, origin_file_ref)
+                                 collected_properties, origin_file_ref,
+                                 default_section)
 
 
 def process_property(prop_details, current_path, collected_properties,
-    origin_file_ref):
+    origin_file_ref, default_section=None):
   """
-  Processes a single property, handling refs, presentationProperties, and
-  standard presentation tags.
+  Processes a single property. It first checks if the property itself should be
+  added to the output, then handles recursion for nested structures.
   """
-  # 1. Handle `presentationProperties` for map-like objects.
-  if presentation_props := prop_details.get(PRESENTATION,
-                                            {}).get(PRESENTATION_PROPS):
-    for key, value_schema in presentation_props.items():
-      specific_path = current_path + [key]
-      find_presentation_properties(value_schema, specific_path,
-                                   collected_properties, origin_file_ref)
+  full_path_str = '.'.join(current_path)
+  presentation_config = prop_details.get(PRESENTATION)
 
-  # 2. Resolve a standard $ref if it exists.
+  # --- Part 1: Add the current property to output if applicable ---
+  if len(current_path) > 1:
+    is_opt_out = isinstance(presentation_config, dict) and not presentation_config
+    if not is_opt_out:
+      if isinstance(presentation_config, str):
+        add_property_to_section(collected_properties, presentation_config,
+                                full_path_str, prop_details)
+      elif isinstance(presentation_config, dict) and 'paths' in presentation_config:
+        presentation_paths = presentation_config.get(PATHS, {})
+        parent_path_str = '.'.join(current_path[:-1])
+        for required_path, details in presentation_paths.items():
+          section_name, label = details.get(SECTION), details.get(LABEL)
+          if not section_name: continue
+          if (required_path == CURRENT and full_path_str.startswith(origin_file_ref)) or \
+              (required_path != CURRENT and fnmatch.fnmatch(parent_path_str, required_path)):
+            add_property_to_section(collected_properties, section_name,
+                                    full_path_str, prop_details, label)
+            break
+      elif presentation_config is None and default_section:
+        if 'properties' not in prop_details and '$ref' not in prop_details and full_path_str.startswith(origin_file_ref):
+          add_property_to_section(collected_properties, default_section,
+                                  full_path_str, prop_details)
+
+  # --- Part 2: Recurse into nested structures ---
+  if isinstance(presentation_config, dict):
+    if presentation_props := presentation_config.get(PRESENTATION_PROPS):
+      for key, value_schema in presentation_props.items():
+        specific_path = current_path + [key]
+        find_presentation_properties(value_schema, specific_path,
+                                     collected_properties, origin_file_ref,
+                                     default_section)
   if ref_value := prop_details.get(REFERENCE):
     if ref_value.startswith('file:'):
       ref_path, _, ref_pointer_str = ref_value.partition('#')
       ref_filename = ref_path.split(':')[1]
-      if ref_schema := load_json_file(ref_filename):
+      ref_schema = load_json_file(ref_filename)
+      if ref_schema:
+        top_level_pres = ref_schema.get(DEFAULT_SECTION_KEY)
+        new_default_section = top_level_pres if isinstance(top_level_pres,
+                                                           str) else None
+
         if ref_pointer_str:
           try:
             for part in ref_pointer_str.strip('/').split('/'):
               ref_schema = ref_schema[part]
-          except (KeyError, TypeError):
-            ref_schema = None
+          except (KeyError, TypeError): ref_schema = None
+
         if ref_schema:
           new_origin_ref = ref_filename.replace('.json', '')
           find_presentation_properties(ref_schema, current_path,
                                        collected_properties,
-                                       new_origin_ref)
-
-  # 3. Check for a standard presentation tag on the property itself.
-  if PRESENTATION in prop_details:
-    parent_path_str = '.'.join(current_path[:-1]) if len(
-        current_path) > 1 else ''
-    full_path_str = '.'.join(current_path)
-    presentation_paths = prop_details[PRESENTATION].get(PATHS, {})
-    for required_path, details in presentation_paths.items():
-      section_name, label = details.get(SECTION), details.get(LABEL)
-      if not section_name:
-        continue
-
-      if required_path == CURRENT and \
-          full_path_str.startswith(origin_file_ref):
-        add_property_to_section(collected_properties, section_name,
-                                full_path_str, prop_details, label)
-        break
-      elif required_path != CURRENT and fnmatch.fnmatch(parent_path_str,
-                                                        required_path):
-        add_property_to_section(collected_properties, section_name,
-                                full_path_str, prop_details, label)
-        break
+                                       new_origin_ref,
+                                       new_default_section)
 
 
 def add_property_to_section(collected_properties, section_name, schema_key,
@@ -130,10 +141,14 @@ def add_property_to_section(collected_properties, section_name, schema_key,
   if schema_key in collected_properties[section_name]:
     return
 
+  fallback_label = schema_key[schema_key.find('.') + 1:]
   field_info = {
-      LABEL: label or schema_key[schema_key.find('.') + 1:],
+      LABEL: label or fallback_label,
       EXPECTED_TYPE: prop_details.get('type', 'string')
   }
+  if 'type' in prop_details:
+    field_info[EXPECTED_TYPE] = prop_details['type']
+
   if prop_details.get(DESCRIPTION):
     field_info[DESCRIPTION] = prop_details[DESCRIPTION]
   if prop_details.get(EXAMPLES):
@@ -163,10 +178,14 @@ def generate_view_files():
     if not schema:
       continue
 
+    top_level_presentation = schema.get(DEFAULT_SECTION_KEY)
+    default_section = top_level_presentation if isinstance(
+      top_level_presentation, str) else None
+
     origin_file_ref = filename.replace('.json', '')
     path_prefix = [origin_file_ref]
     find_presentation_properties(schema, path_prefix, collected_properties,
-                                 origin_file_ref)
+                                 origin_file_ref, default_section)
 
   print(f"\nFound {len(collected_properties)} sections. "
         f"Generating presentation files...")
