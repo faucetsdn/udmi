@@ -37,14 +37,12 @@ import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.fasterxml.jackson.databind.util.ISO8601DateFormat;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
 import com.google.udmi.util.ExceptionMap.ExceptionCategory;
 import java.io.File;
-import java.nio.file.Files;
-import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -107,9 +105,9 @@ public class SiteModel {
   private static final File CONFIG_OUT_DIR = new File("out/");
   private static final String RSA_PRIVATE_KEY = "rsa_private.pkcs8";
   private static final String EC_PRIVATE_KEY = "ec_private.pkcs8";
-  private static final Set<String> ALLOWED_FILES_IN_DEVICES_DIR = new HashSet<>(List.of(
+  private static final Set<String> ALLOWED_FILES_IN_DEVICES_DIR = ImmutableSet.of(
       "README.md"
-  ));
+  );
 
   private final String sitePath;
   private final Map<String, Object> siteDefaults;
