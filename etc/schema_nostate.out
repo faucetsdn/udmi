@@ -1,3 +1,2 @@
 RESULT pass schemas device_state_stable STABLE 10/10 Schema validation passed
 RESULT pass schemas events_pointset_stable STABLE 10/10 Schema validation passed
-RESULT skip endpoint.config endpoint_connection_bad_alternate PREVIEW 0/0 State testing disabled
