@@ -1,7 +1,7 @@
 """Generated class for configuration_endpoint.json"""
 
 
-class ObjectF2C4937C:
+class ObjectA90DCC28:
   """Generated schema class"""
 
   def __init__(self):
@@ -12,7 +12,7 @@ class ObjectF2C4937C:
   def from_dict(source):
     if not source:
       return None
-    result = ObjectF2C4937C()
+    result = ObjectA90DCC28()
     result.basic = source.get('basic')
     result.jwt = source.get('jwt')
     return result
@@ -23,7 +23,7 @@ class ObjectF2C4937C:
       return None
     result = {}
     for key in source:
-      result[key] = ObjectF2C4937C.from_dict(source[key])
+      result[key] = ObjectA90DCC28.from_dict(source[key])
     return result
 
   @staticmethod
@@ -98,7 +98,7 @@ class EndpointConfiguration:
     result.periodic_sec = source.get('periodic_sec')
     result.keyBytes = source.get('keyBytes')
     result.algorithm = source.get('algorithm')
-    result.auth_provider = ObjectF2C4937C.from_dict(source.get('auth_provider'))
+    result.auth_provider = ObjectA90DCC28.from_dict(source.get('auth_provider'))
     result.generation = source.get('generation')
     return result
 

@@ -5,54 +5,33 @@
     "type": "object",
     "$schema": "http://json-schema.org/draft-07/schema#",
     "additionalProperties": false,
+    "$defaultPresentation": {
+      "paths": {
+        "model_system.hardware": {
+          "section": "system"
+        }
+      }
+    },
     "properties": {
       "make": {
         "description": "The manufacturer of the device",
         "type": "string",
-        "examples": ["Google"],
-        "$presentation": {
-          "paths": {
-            "model_system.hardware": {
-              "section": "system"
-            }
-          }
-        }
+        "examples": ["Google"]
       },
       "model": {
         "description": "The model of the device",
         "examples" : ["Pixel 5", "Pixel 6", "Pixel 6 Pro"],
-        "type": "string",
-        "$presentation": {
-          "paths": {
-            "model_system.hardware": {
-              "section": "system"
-            }
-          }
-        }
+        "type": "string"
       },
       "sku": {
         "description": "A stock keeping unit which identifies the unique composition of a device, for example those with different hardware configurations",
         "type": "string",
-        "examples": ["GF5KQ", "4215612"],
-        "$presentation": {
-          "paths": {
-            "model_system.hardware": {
-              "section": "system"
-            }
-          }
-        }
+        "examples": ["GF5KQ", "4215612"]
       },
       "rev": {
         "description": "Hardware revision of the device",
         "type": "string",
-        "examples": ["A", "B", "1"],
-        "$presentation": {
-          "paths": {
-            "model_system.hardware": {
-              "section": "system"
-            }
-          }
-        }
+        "examples": ["A", "B", "1"]
       }
     },
     "required": [

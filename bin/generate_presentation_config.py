@@ -45,9 +45,8 @@ def load_json_file(filename, base_dir=SCHEMA_DIR):
     print(f"Error decoding JSON from {path}: {e}")
     return None
 
-
 def find_presentation_properties(schema, path_prefix, collected_properties,
-    origin_file_ref, default_section=None):
+    origin_file_ref, default_config=None):
   """
   Recursively processes a schema, collecting properties with
   '$presentation' tags.
@@ -55,10 +54,9 @@ def find_presentation_properties(schema, path_prefix, collected_properties,
   if not isinstance(schema, dict):
     return
 
-  # Process properties defined at the current level
-  process_property(schema, path_prefix, collected_properties, origin_file_ref)
+  process_property(schema, path_prefix, collected_properties, origin_file_ref,
+                   default_config)
 
-  # Recurse into any nested properties
   for key, prop_details in schema.get('properties', {}).items():
     if not isinstance(prop_details, dict):
       continue
@@ -66,11 +64,11 @@ def find_presentation_properties(schema, path_prefix, collected_properties,
     current_path = path_prefix + [key]
     find_presentation_properties(prop_details, current_path,
                                  collected_properties, origin_file_ref,
-                                 default_section)
+                                 default_config)
 
 
 def process_property(prop_details, current_path, collected_properties,
-    origin_file_ref, default_section=None):
+    origin_file_ref, default_config=None):
   """
   Processes a single property. It first checks if the property itself should be
   added to the output, then handles recursion for nested structures.
@@ -96,10 +94,26 @@ def process_property(prop_details, current_path, collected_properties,
             add_property_to_section(collected_properties, section_name,
                                     full_path_str, prop_details, label)
             break
-      elif presentation_config is None and default_section:
-        if 'properties' not in prop_details and '$ref' not in prop_details and full_path_str.startswith(origin_file_ref):
-          add_property_to_section(collected_properties, default_section,
-                                  full_path_str, prop_details)
+      elif presentation_config is None and default_config:
+        # Check if this property is a "leaf" (not a container)
+        is_leaf_node = 'properties' not in prop_details and '$ref' not in prop_details
+        if is_leaf_node:
+          # Handle simple string default
+          if isinstance(default_config, str):
+            if full_path_str.startswith(origin_file_ref):
+              add_property_to_section(collected_properties, default_config,
+                                      full_path_str, prop_details)
+          # Handle new path-based default
+          elif isinstance(default_config, dict):
+            default_paths = default_config.get(PATHS, {})
+            parent_path_str = '.'.join(current_path[:-1])
+            for required_path, details in default_paths.items():
+              section_name, label = details.get(SECTION), details.get(LABEL)
+              if not section_name: continue
+              if fnmatch.fnmatch(parent_path_str, required_path):
+                add_property_to_section(collected_properties, section_name,
+                                        full_path_str, prop_details, label)
+                break
 
   # --- Part 2: Recurse into nested structures ---
   if isinstance(presentation_config, dict):
@@ -108,16 +122,14 @@ def process_property(prop_details, current_path, collected_properties,
         specific_path = current_path + [key]
         find_presentation_properties(value_schema, specific_path,
                                      collected_properties, origin_file_ref,
-                                     default_section)
+                                     default_config)
   if ref_value := prop_details.get(REFERENCE):
     if ref_value.startswith('file:'):
       ref_path, _, ref_pointer_str = ref_value.partition('#')
       ref_filename = ref_path.split(':')[1]
       ref_schema = load_json_file(ref_filename)
       if ref_schema:
-        top_level_pres = ref_schema.get(DEFAULT_SECTION_KEY)
-        new_default_section = top_level_pres if isinstance(top_level_pres,
-                                                           str) else None
+        new_default_config = ref_schema.get(DEFAULT_SECTION_KEY) # Can be str or dict
 
         if ref_pointer_str:
           try:
@@ -130,7 +142,7 @@ def process_property(prop_details, current_path, collected_properties,
           find_presentation_properties(ref_schema, current_path,
                                        collected_properties,
                                        new_origin_ref,
-                                       new_default_section)
+                                       new_default_config)
 
 
 def add_property_to_section(collected_properties, section_name, schema_key,
@@ -178,14 +190,12 @@ def generate_view_files():
     if not schema:
       continue
 
-    top_level_presentation = schema.get(DEFAULT_SECTION_KEY)
-    default_section = top_level_presentation if isinstance(
-      top_level_presentation, str) else None
+    default_config = schema.get(DEFAULT_SECTION_KEY)
 
     origin_file_ref = filename.replace('.json', '')
     path_prefix = [origin_file_ref]
     find_presentation_properties(schema, path_prefix, collected_properties,
-                                 origin_file_ref, default_section)
+                                 origin_file_ref, default_config)
 
   print(f"\nFound {len(collected_properties)} sections. "
         f"Generating presentation files...")
