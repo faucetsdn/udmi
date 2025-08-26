@@ -19,7 +19,6 @@ import udmi.lib.intf.AbstractPoint;
 import udmi.lib.intf.ManagerHost;
 import udmi.schema.PointPointsetConfig;
 import udmi.schema.PointPointsetModel;
-import udmi.schema.PointPointsetState.Value_state;
 import udmi.schema.PointsetState;
 import udmi.schema.PubberConfiguration;
 
@@ -146,7 +145,7 @@ public class PubberPointsetManager extends PubberManager implements PointsetMana
     } else {
       info(format("Applying slow writeback for point %s with %ds delay", point.getName(),
           WRITE_DELAY_SEC));
-      PointsetManager.super.updatePointIntermediateState(point, pointConfig);
+      PointsetManager.super.updatePointIntermediateState(point);
       handleDelayWriteback(point, pointConfig, WRITE_DELAY_SEC);
     }
   }

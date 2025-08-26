@@ -26,7 +26,6 @@ import udmi.schema.PointPointsetConfig;
 import udmi.schema.PointPointsetEvents;
 import udmi.schema.PointPointsetModel;
 import udmi.schema.PointPointsetState;
-import udmi.schema.PointPointsetState.Value_state;
 import udmi.schema.PointsetConfig;
 import udmi.schema.PointsetEvents;
 import udmi.schema.PointsetModel;
@@ -289,11 +288,10 @@ public interface PointsetManager extends ManagerLog {
   }
 
   /**
-   * Update Point Intermediate State
+   * Update Point Intermediate State.
    * @param point
-   * @param pointConfig
    */
-  default void updatePointIntermediateState(AbstractPoint point, PointPointsetConfig pointConfig) {
+  default void updatePointIntermediateState(AbstractPoint point) {
     ifNotTrueThen(isNoWriteback(), () -> {
       try {
         point.setIntermediateState();

@@ -1,10 +1,8 @@
 package udmi.lib.intf;
 
-import udmi.schema.Entry;
 import udmi.schema.PointPointsetConfig;
 import udmi.schema.PointPointsetEvents;
 import udmi.schema.PointPointsetState;
-import udmi.schema.PointPointsetState.Value_state;
 import udmi.schema.RefDiscovery;
 
 /**
@@ -23,6 +21,7 @@ public interface AbstractPoint {
   PointPointsetState getState();
 
   void setConfig(PointPointsetConfig config);
+
   void setIntermediateState();
 
   RefDiscovery enumerate();

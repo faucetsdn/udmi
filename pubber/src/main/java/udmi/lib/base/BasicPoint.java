@@ -90,7 +90,7 @@ public abstract class BasicPoint implements AbstractPoint {
   }
 
   /**
-   * Set the Intermediate State of the PointSet and update Dirty State if needed
+   * Set the Intermediate State of the PointSet and update Dirty State if needed.
    */
   public void setIntermediateState() {
     Value_state previousValueState = state.value_state;
