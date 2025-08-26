@@ -93,77 +93,143 @@ advanced.
    *Result*: When this schema is approached from parent `configuration_execution`, both `hostname` and `port` will be placed in the `cloud_iot_config` section.
 
 
-4. **Handling Complex Context-Aware Properties**:
-   For the most complex cases where a generic schema's presentation depends on
-   its specific use (like the `adjunct` property), the logic should be defined
-   in the parent schema.
+4. **Handling Simple Context-Aware Properties**:
+   For cases where a property is a simple map (like the `model_system.software`
+   property is a `Map<String, String>`) and certain keys need to be presented
+   for this property, the `presentationProperties` keyword can be used.
+   
+   Example (`schema/model_system.json`):
 
-   The parent schema acts as an orchestrator, layering specific presentation
-   rules on top of the generic child schema it references. This is done by
-   defining `$presentation` and `presentationProperties` within the parent's
-   definition of the relevant property.
-
-   Example (`schema/model_localnet.json` orchestrating `adjunct` properties):
-
-    ```json
-    {
-      "$defaultPresentation": "localnet",
-      "families": {
-        "$presentation": {
-          "presentationProperties": {
-            "bacnet": {
-              "$ref": "file:model_localnet_family.json",
-              "properties": {
-                "adjunct": {
-                  "$presentation": {
-                    "presentationProperties": {
-                      "name": {},
-                      "description": {}
-                    }
-                  }
-                }
-              }
-            },
-            "modbus": {
-              "$ref": "file:model_localnet_family.json",
-              "properties": {
-                "adjunct": {
-                  "$presentation": {
-                    "presentationProperties": {
-                      "serial_port": {}
-                    }
-                  }
-                }
-              }
+   ```json
+   {
+      "$defaultPresentation": "system",
+      "properties": {
+         "software": {
+            "$presentation": {
+               "presentationProperties": {
+                  "firmware": {},
+                  "os": {},
+                  "driver": {}
+               }
             }
-          }
-        }
+         }
       }
-    }
-    ```
-    
-    *Result*: `bacnet` and `modbus` will be added as specific keys
-    under `model_localnet.families`, The `name` property will be presented in
-    the `adjunct` property when the family is `bacnet`, and `serial_port` will be
-    presented when the family is `modbus`, correctly handling the context.
-    
-    ```json
-    {
-      "localnet": {
-        "model_localnet.families.bacnet.name": {
-          "label": "model_localnet.families.bacnet.name",
-          "type": "string"
-        },
-        "model_localnet.families.bacnet.description": {
-          "label": "model_localnet.families.bacnet.description",
-          "type": "string"
-        },
-        "model_localnet.families.modbus.serial_port": {
-          "label": "model_localnet.families.modbus.serial_port",
-          "type": "string"
-        }
-      }
-    }
-    ```
+   }
+   ```
+   
+   *Result*: `firmware`, `os` and `driver` keys are added as keys to the `model_system.software` property.
 
----
+   ```json
+   {
+      "system": {
+         "model_system.software.firmware": {
+            "label": "software.firmware",
+            "expectedType": "string"
+         },
+         "model_system.software.os": {
+            "label": "software.os",
+            "expectedType": "string"
+         },
+         "model_system.software.driver": {
+            "label": "software.driver",
+            "expectedType": "string"
+         }
+      }
+   }
+   ```
+
+
+5. **Handling Complex Context-Aware Properties**:
+   For the most complex cases where a property is a generic map and the 
+   schema's presentation depends on its specific use (like the `adjunct` 
+   property), the logic is defined using the nesting of keywords 
+   `$presentation`, `paths` and `presentationProperties` in the leaf node.
+
+   Example: 
+
+   - Define parent keys in `schema/model_localnet.json`:
+
+   ```json
+   {
+      "properties": {
+         "families": {
+            "$presentation": {
+               "presentationProperties": {
+                  "bacnet": { "$ref": "file:model_localnet_family.json" },
+                  "modbus": { "$ref": "file:model_localnet_family.json" },
+                  "ether":  { "$ref": "file:model_localnet_family.json" }
+               }
+            }
+         }
+      }
+   }
+   ```
+   
+   - Define specific presentation in leaf node in `schema/model_localnet_family.json`
+   
+   ```json
+   {
+      "properties": {
+         "addr": {
+            "$presentation": {
+               "paths": {
+                  "model_localnet.families.*": {
+                     "section": "localnet"
+                  }
+               }
+            }
+         },
+         "adjunct": {
+            "type": "object",
+            "existingJavaType": "java.util.Map<String, String>",
+            "$presentation": {
+               "paths": {
+                  "model_localnet.families.bacnet.adjunct": {
+                     "section": "localnet",
+                     "presentationProperties": {
+                        "name": { }
+                     }
+                  },
+                  "model_localnet.families.modbus.adjunct": {
+                     "section": "localnet",
+                     "presentationProperties": {
+                        "serial_port": { }
+                     }
+                  }
+               }
+            }
+         }
+      }   
+   }
+   ```
+   *Result*: `bacnet`, `modbus` and `ether` will be added as specific keys
+   under `model_localnet.families`. `addr` property will be added for all 3
+   families, while `name` will only be added for `bacnet`, and `serial_port` 
+   will only be added for `modbus`.
+
+   ```json
+   {
+      "localnet": {
+         "model_localnet.families.bacnet.addr": {
+            "label": "model_localnet.families.bacnet.addr",
+            "type": "string"
+         },
+         "model_localnet.families.bacnet.name": {
+            "label": "model_localnet.families.bacnet.name",
+            "type": "string"
+         },
+         "model_localnet.families.modbus.addr": {
+            "label": "model_localnet.families.modbus.addr",
+            "type": "string"
+         },
+         "model_localnet.families.modbus.serial_port": {
+            "label": "model_localnet.families.modbus.serial_port",
+            "type": "string"
+         },
+         "model_localnet.families.ether.addr": {
+            "label": "model_localnet.families.ether.addr",
+            "type": "string"
+         }
+      }
+   }
+   ```

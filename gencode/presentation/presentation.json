@@ -1,4 +1,92 @@
 {
+  "localnet": {
+    "model_localnet.families.bacnet.adjunct.name": {
+      "label": "families.bacnet.adjunct.name",
+      "expectedType": "string"
+    },
+    "model_localnet.families.bacnet.adjunct.description": {
+      "label": "families.bacnet.adjunct.description",
+      "expectedType": "string"
+    },
+    "model_localnet.families.modbus.adjunct.serial_port": {
+      "label": "families.modbus.adjunct.serial_port",
+      "expectedType": "string"
+    },
+    "model_localnet.families.modbus.adjunct.bit_rate": {
+      "label": "families.modbus.adjunct.bit_rate",
+      "expectedType": "integer"
+    },
+    "model_localnet.families.modbus.adjunct.data_bits": {
+      "label": "families.modbus.adjunct.data_bits",
+      "expectedType": "string"
+    },
+    "model_localnet.families.modbus.adjunct.stop_bits": {
+      "label": "families.modbus.adjunct.stop_bits",
+      "expectedType": "string"
+    },
+    "model_localnet.families.modbus.adjunct.parity": {
+      "label": "families.modbus.adjunct.parity",
+      "expectedType": "string"
+    },
+    "model_localnet.families.modbus.adjunct.encoding": {
+      "label": "families.modbus.adjunct.encoding",
+      "expectedType": "string"
+    },
+    "model_localnet.parent.target": {
+      "label": "parent.target",
+      "expectedType": "string",
+      "description": "ID of the parent device to which the device is physically connected",
+      "examples": "['DDC-1', 'CGW-2']"
+    },
+    "model_localnet.parent.family": {
+      "label": "parent.family",
+      "expectedType": "string",
+      "description": "Connection family/protocol of the parent device to which the device is physically connected",
+      "examples": "['bacnet_mstp', 'modbus_tcp', 'mqtt']"
+    },
+    "model_localnet.families.bacnet.addr": {
+      "label": "families.bacnet.addr",
+      "expectedType": "string",
+      "description": "The address of a device on the fieldbus/local network",
+      "examples": "['192.168.1.3', '41489']"
+    },
+    "model_localnet.families.modbus.addr": {
+      "label": "families.modbus.addr",
+      "expectedType": "string",
+      "description": "The address of a device on the fieldbus/local network",
+      "examples": "['192.168.1.3', '41489']"
+    },
+    "model_localnet.families.mbus.addr": {
+      "label": "families.mbus.addr",
+      "expectedType": "string",
+      "description": "The address of a device on the fieldbus/local network",
+      "examples": "['192.168.1.3', '41489']"
+    },
+    "model_localnet.families.ether.addr": {
+      "label": "families.ether.addr",
+      "expectedType": "string",
+      "description": "The address of a device on the fieldbus/local network",
+      "examples": "['192.168.1.3', '41489']"
+    },
+    "model_localnet.families.ipv4.addr": {
+      "label": "families.ipv4.addr",
+      "expectedType": "string",
+      "description": "The address of a device on the fieldbus/local network",
+      "examples": "['192.168.1.3', '41489']"
+    },
+    "model_localnet.families.ipv6.addr": {
+      "label": "families.ipv6.addr",
+      "expectedType": "string",
+      "description": "The address of a device on the fieldbus/local network",
+      "examples": "['192.168.1.3', '41489']"
+    },
+    "model_localnet.families.fqdn.addr": {
+      "label": "families.fqdn.addr",
+      "expectedType": "string",
+      "description": "The address of a device on the fieldbus/local network",
+      "examples": "['192.168.1.3', '41489']"
+    }
+  },
   "gateway": {
     "model_gateway.gateway_id": {
       "label": "gateway_id",
@@ -172,106 +260,6 @@
       "label": "metrics_rate_sec",
       "expectedType": "integer",
       "description": "The rate at which the system should send system event updates. 0 indicates no updates."
-    }
-  },
-  "localnet": {
-    "model_localnet.parent.target": {
-      "label": "parent.target",
-      "expectedType": "string",
-      "description": "ID of the parent device to which the device is physically connected",
-      "examples": "['DDC-1', 'CGW-2']"
-    },
-    "model_localnet.parent.family": {
-      "label": "parent.family",
-      "expectedType": "string",
-      "description": "Connection family/protocol of the parent device to which the device is physically connected",
-      "examples": "['bacnet_mstp', 'modbus_tcp', 'mqtt']"
-    },
-    "model_localnet.families.bacnet.addr": {
-      "label": "families.bacnet.addr",
-      "expectedType": "string",
-      "description": "The address of a device on the fieldbus/local network",
-      "examples": "['192.168.1.3', '41489']"
-    },
-    "model_localnet.families.bacnet.adjunct.name": {
-      "label": "families.bacnet.adjunct.name",
-      "expectedType": "string"
-    },
-    "model_localnet.families.bacnet.adjunct.description": {
-      "label": "families.bacnet.adjunct.description",
-      "expectedType": "string"
-    },
-    "model_localnet.families.modbus.addr": {
-      "label": "families.modbus.addr",
-      "expectedType": "string",
-      "description": "The address of a device on the fieldbus/local network",
-      "examples": "['192.168.1.3', '41489']"
-    },
-    "model_localnet.families.modbus.adjunct.serial_port": {
-      "label": "families.modbus.adjunct.serial_port",
-      "expectedType": "string"
-    },
-    "model_localnet.families.modbus.adjunct.bit_rate": {
-      "label": "families.modbus.adjunct.bit_rate",
-      "expectedType": "integer"
-    },
-    "model_localnet.families.modbus.adjunct.data_bits": {
-      "label": "families.modbus.adjunct.data_bits",
-      "expectedType": "string"
-    },
-    "model_localnet.families.modbus.adjunct.stop_bits": {
-      "label": "families.modbus.adjunct.stop_bits",
-      "expectedType": "string"
-    },
-    "model_localnet.families.modbus.adjunct.parity": {
-      "label": "families.modbus.adjunct.parity",
-      "expectedType": "string"
-    },
-    "model_localnet.families.modbus.adjunct.encoding": {
-      "label": "families.modbus.adjunct.encoding",
-      "expectedType": "string"
-    },
-    "model_localnet.families.mbus.addr": {
-      "label": "families.mbus.addr",
-      "expectedType": "string",
-      "description": "The address of a device on the fieldbus/local network",
-      "examples": "['192.168.1.3', '41489']"
-    },
-    "model_localnet.families.mbus.adjunct.serial_port": {
-      "label": "families.mbus.adjunct.serial_port",
-      "expectedType": "string"
-    },
-    "model_localnet.families.mbus.adjunct.bit_rate": {
-      "label": "families.mbus.adjunct.bit_rate",
-      "expectedType": "integer"
-    },
-    "model_localnet.families.mbus.adjunct.secondary_addr": {
-      "label": "families.mbus.adjunct.secondary_addr",
-      "expectedType": "string"
-    },
-    "model_localnet.families.ether.addr": {
-      "label": "families.ether.addr",
-      "expectedType": "string",
-      "description": "The address of a device on the fieldbus/local network",
-      "examples": "['192.168.1.3', '41489']"
-    },
-    "model_localnet.families.ipv4.addr": {
-      "label": "families.ipv4.addr",
-      "expectedType": "string",
-      "description": "The address of a device on the fieldbus/local network",
-      "examples": "['192.168.1.3', '41489']"
-    },
-    "model_localnet.families.ipv6.addr": {
-      "label": "families.ipv6.addr",
-      "expectedType": "string",
-      "description": "The address of a device on the fieldbus/local network",
-      "examples": "['192.168.1.3', '41489']"
-    },
-    "model_localnet.families.fqdn.addr": {
-      "label": "families.fqdn.addr",
-      "expectedType": "string",
-      "description": "The address of a device on the fieldbus/local network",
-      "examples": "['192.168.1.3', '41489']"
     }
   },
   "cloud_iot_config": {

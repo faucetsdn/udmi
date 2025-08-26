@@ -31,6 +31,28 @@
         "^[a-z_]+$": {
           "type": "string"
         }
+      },
+      "$presentation": {
+        "paths": {
+          "model_localnet.families.bacnet.adjunct": {
+            "section": "localnet",
+            "presentationProperties": {
+              "name": { },
+              "description": { }
+            }
+          },
+          "model_localnet.families.modbus.adjunct": {
+            "section": "localnet",
+            "presentationProperties": {
+              "serial_port": { },
+              "bit_rate": { "type": "integer" },
+              "data_bits": { },
+              "stop_bits": { },
+              "parity": { },
+              "encoding": { }
+            }
+          }
+        }
       }
     },
     "shadow_id": {

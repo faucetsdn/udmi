@@ -88,15 +88,26 @@ def process_property(prop_details, current_path, collected_properties,
         if 'paths' in presentation_config:
           presentation_paths = presentation_config.get(PATHS, {})
           parent_path_str = '.'.join(current_path[:-1])
+          has_processed_contextual = False
           for required_path, details in presentation_paths.items():
-            section_name, label = details.get(SECTION), details.get(LABEL)
-            if not section_name: continue
-            if (required_path == CURRENT and full_path_str.startswith(
-                origin_file_ref)) or \
-                (required_path != CURRENT and fnmatch.fnmatch(parent_path_str,
-                                                              required_path)):
-              add_property_to_section(collected_properties, section_name,
-                                      full_path_str, prop_details, label)
+            if presentation_props := details.get(PRESENTATION_PROPS):
+              has_processed_contextual = True
+              section_name = details.get(SECTION)
+              if not section_name: continue
+              for sub_key, sub_prop_details in presentation_props.items():
+                final_schema_key = f"{required_path}.{sub_key}"
+                add_property_to_section(collected_properties, section_name,
+                                        final_schema_key, sub_prop_details)
+
+          # If not a contextual block, process as a normal paths block
+          if not has_processed_contextual:
+            for required_path, details in presentation_paths.items():
+              section_name, label = details.get(SECTION), details.get(LABEL)
+              if not section_name: continue
+              if (required_path == CURRENT and full_path_str.startswith(origin_file_ref)) or \
+                  (required_path != CURRENT and fnmatch.fnmatch(parent_path_str, required_path)):
+                add_property_to_section(collected_properties, section_name,
+                                        full_path_str, prop_details, label)
         elif 'label' in presentation_config:
           custom_label = presentation_config.get(LABEL)
           default_section = None
