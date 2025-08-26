@@ -31,19 +31,6 @@ echo '####################' Finished schema.out tests: $failures
 
 [[ -n ${suffix} ]] && echo Done with suffix test checks. && exit 0
 
-echo '####################' Starting gencode tests
-cp $UDMI_ROOT/docs/specs/sequences/generated.md out/generated.tmp  # Save for test/comparison
-$UDMI_ROOT/bin/gencode_seq || failures+="gencode "
-echo '####################' Finished gencode tests: $failures
-
-echo '####################' Starting gencode_seq tests
-mv $UDMI_ROOT/docs/specs/sequences/generated.md out/generated${suffix}.out
-mv out/generated.tmp $UDMI_ROOT/docs/specs/sequences/generated.md
-
-echo Comparing diff out/generated${suffix}.out $UDMI_ROOT/docs/specs/sequences/generated.md
-diff -u out/generated${suffix}.out $UDMI_ROOT/docs/specs/sequences/generated.md || failures+="gencode_seq "
-echo '####################' Finished gencode_seq tests: $failures
-
 echo '####################' Starting expected tests
 targets=sites/udmi_site_model*/out*/devices/AHU-1/results.md
 cat $targets > out/all_results.md
@@ -56,6 +43,21 @@ echo '####################' Starting plan tests
 echo Checking for duplication in out/sequencer${suffix}.out and etc/sequencer_planning.txt
 $UDMI_ROOT/bin/test_sequencer_plan || failures+="plan "
 echo '####################' Finished plan tests: $failures
+
+echo '####################' Starting gencode tests
+cp $UDMI_ROOT/docs/specs/sequences/generated.md out/generated.tmp  # Save for test/comparison
+$UDMI_ROOT/bin/gencode_seq || failures+="gencode "
+echo '####################' Finished gencode tests: $failures
+
+[[ -z $failures ]] || fail Ending tests prematurely because of { $failures }
+
+echo '####################' Starting gencode_seq tests
+mv $UDMI_ROOT/docs/specs/sequences/generated.md out/generated${suffix}.out
+mv out/generated.tmp $UDMI_ROOT/docs/specs/sequences/generated.md
+
+echo Comparing diff out/generated${suffix}.out $UDMI_ROOT/docs/specs/sequences/generated.md
+diff -u out/generated${suffix}.out $UDMI_ROOT/docs/specs/sequences/generated.md || failures+="gencode_seq "
+echo '####################' Finished gencode_seq tests: $failures
 
 [[ -z $failures ]] || fail sequencer checks failed because of { $failures }
 
