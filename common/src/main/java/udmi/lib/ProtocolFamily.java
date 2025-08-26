@@ -13,6 +13,7 @@ public interface ProtocolFamily {
   String BACNET = "bacnet";
   String MODBUS = "modbus";
   String INVALID = "invalid";
+  String FQDN = "fqdn";
 
-  Set<String> FAMILIES = ImmutableSet.of(VENDOR, IPV_4, IPV_6, ETHER, IOT, BACNET, MODBUS);
+  Set<String> FAMILIES = ImmutableSet.of(VENDOR, IPV_4, IPV_6, ETHER, IOT, BACNET, MODBUS, FQDN);
 }

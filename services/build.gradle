@@ -118,6 +118,7 @@ dependencies {
     implementation('com.google.http-client:google-http-client-jackson2:1.43.3') {
         exclude group: 'com.google.auth', module: 'google-auth-library-oauth2-http'
     }
+    implementation 'commons-validator:commons-validator:1.8.0'
 
     testImplementation 'org.junit.jupiter:junit-jupiter-api:5.9.2'
     testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.9.2'
