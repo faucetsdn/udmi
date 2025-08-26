@@ -45,6 +45,7 @@ def load_json_file(filename, base_dir=SCHEMA_DIR):
     print(f"Error decoding JSON from {path}: {e}")
     return None
 
+
 def find_presentation_properties(schema, path_prefix, collected_properties,
     origin_file_ref, default_config=None):
   """
@@ -76,34 +77,47 @@ def process_property(prop_details, current_path, collected_properties,
   full_path_str = '.'.join(current_path)
   presentation_config = prop_details.get(PRESENTATION)
 
-  # --- Part 1: Add the current property to output if applicable ---
   if len(current_path) > 1:
     is_opt_out = isinstance(presentation_config, dict) and not presentation_config
     if not is_opt_out:
       if isinstance(presentation_config, str):
         add_property_to_section(collected_properties, presentation_config,
                                 full_path_str, prop_details)
-      elif isinstance(presentation_config, dict) and 'paths' in presentation_config:
-        presentation_paths = presentation_config.get(PATHS, {})
-        parent_path_str = '.'.join(current_path[:-1])
-        for required_path, details in presentation_paths.items():
-          section_name, label = details.get(SECTION), details.get(LABEL)
-          if not section_name: continue
-          if (required_path == CURRENT and full_path_str.startswith(origin_file_ref)) or \
-              (required_path != CURRENT and fnmatch.fnmatch(parent_path_str, required_path)):
-            add_property_to_section(collected_properties, section_name,
-                                    full_path_str, prop_details, label)
-            break
+      elif isinstance(presentation_config, dict):
+        if 'paths' in presentation_config:
+          presentation_paths = presentation_config.get(PATHS, {})
+          parent_path_str = '.'.join(current_path[:-1])
+          for required_path, details in presentation_paths.items():
+            section_name, label = details.get(SECTION), details.get(LABEL)
+            if not section_name: continue
+            if (required_path == CURRENT and full_path_str.startswith(origin_file_ref)) or \
+                (required_path != CURRENT and fnmatch.fnmatch(parent_path_str, required_path)):
+              add_property_to_section(collected_properties, section_name,
+                                      full_path_str, prop_details, label)
+        elif 'label' in presentation_config:
+          custom_label = presentation_config.get(LABEL)
+          default_section = None
+          if default_config:
+            if isinstance(default_config, str):
+              default_section = default_config
+            elif isinstance(default_config, dict):
+              default_paths = default_config.get(PATHS, {})
+              parent_path_str = '.'.join(current_path[:-1])
+              for required_path, details in default_paths.items():
+                if fnmatch.fnmatch(parent_path_str, required_path):
+                  default_section = details.get(SECTION)
+                  break
+          if default_section:
+            add_property_to_section(collected_properties, default_section,
+                                    full_path_str, prop_details, custom_label)
+
       elif presentation_config is None and default_config:
-        # Check if this property is a "leaf" (not a container)
         is_leaf_node = 'properties' not in prop_details and '$ref' not in prop_details
         if is_leaf_node:
-          # Handle simple string default
           if isinstance(default_config, str):
             if full_path_str.startswith(origin_file_ref):
               add_property_to_section(collected_properties, default_config,
                                       full_path_str, prop_details)
-          # Handle new path-based default
           elif isinstance(default_config, dict):
             default_paths = default_config.get(PATHS, {})
             parent_path_str = '.'.join(current_path[:-1])
@@ -115,7 +129,6 @@ def process_property(prop_details, current_path, collected_properties,
                                         full_path_str, prop_details, label)
                 break
 
-  # --- Part 2: Recurse into nested structures ---
   if isinstance(presentation_config, dict):
     if presentation_props := presentation_config.get(PRESENTATION_PROPS):
       for key, value_schema in presentation_props.items():
@@ -129,7 +142,7 @@ def process_property(prop_details, current_path, collected_properties,
       ref_filename = ref_path.split(':')[1]
       ref_schema = load_json_file(ref_filename)
       if ref_schema:
-        new_default_config = ref_schema.get(DEFAULT_SECTION_KEY) # Can be str or dict
+        new_default_config = ref_schema.get(DEFAULT_SECTION_KEY)
 
         if ref_pointer_str:
           try:

@@ -19,7 +19,7 @@
       },
       "$presentation": {
         "presentationProperties": {
-          "*": {
+          "points_template_name": {
             "$ref": "file:model_pointset_point.json#"
           }
         }

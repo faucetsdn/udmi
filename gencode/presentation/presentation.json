@@ -809,76 +809,67 @@
     }
   },
   "points": {
-    "model_pointset.points.*.units": {
+    "model_pointset.points.points_template_name.units": {
       "label": "units",
       "expectedType": "string",
       "description": "Expected unit configuration for the point"
     },
-    "model_pointset.points.*.description": {
+    "model_pointset.points.points_template_name.description": {
       "label": "description",
       "expectedType": "string",
       "description": "Detailed description of this point"
     },
-    "model_pointset.points.*.writable": {
+    "model_pointset.points.points_template_name.writable": {
       "label": "writable",
       "expectedType": "boolean",
       "description": "Indicates if this point is writable (else read-only)"
     },
-    "model_pointset.points.*.baseline_value": {
+    "model_pointset.points.points_template_name.baseline_value": {
       "label": "baseline_value",
       "expectedType": "string",
       "description": "Represents the expected baseline value of the point",
       "examples": "[22]"
     },
-    "model_pointset.points.*.baseline_tolerance": {
+    "model_pointset.points.points_template_name.baseline_tolerance": {
       "label": "baseline_tolerance",
       "expectedType": "number",
       "description": "Maximum deviation from `baseline_value`",
       "examples": "[2]"
     },
-    "model_pointset.points.*.baseline_state": {
+    "model_pointset.points.points_template_name.baseline_state": {
       "label": "baseline_state",
       "expectedType": "string",
       "description": "Expected state when `baseline_value` is set as the `set_value` for this point the config message"
     },
-    "model_pointset.points.*.range_min": {
+    "model_pointset.points.points_template_name.range_min": {
       "label": "range_min",
       "expectedType": "number",
       "description": "Represents the lower bound of the error threshold for a point",
       "examples": "[0]"
     },
-    "model_pointset.points.*.range_max": {
+    "model_pointset.points.points_template_name.range_max": {
       "label": "range_max",
       "expectedType": "number",
       "description": "Represents the upper bound of the error threshold for a point",
       "examples": "[100]"
     },
-    "model_pointset.points.*.cov_increment": {
+    "model_pointset.points.points_template_name.cov_increment": {
       "label": "cov_increment",
       "expectedType": "number",
       "description": "Triggering threshold for partial cov update publishing",
       "examples": "[1]"
     },
-    "model_pointset.points.*.ref": {
+    "model_pointset.points.points_template_name.ref": {
       "label": "ref",
       "expectedType": "string",
       "description": "Mapping for the point to an internal resource (e.g. BACnet object reference)",
       "examples": "['AI3', '400070']"
     },
-    "model_pointset.points.*.adjunct": {
-      "label": "points.*.adjunct",
-      "expectedType": "object"
-    },
-    "model_pointset.points.*.tags": {
+    "model_pointset.points.points_template_name.tags": {
       "label": "tags",
       "expectedType": "array",
       "description": "Tags assosciated with the point",
       "examples": "[['lighting'], ['energy', 'hvac']]"
-    },
-    "model_pointset.points.*.structure": {
-      "label": "points.*.structure",
-      "expectedType": "string",
-      "description": "Collection of family point information"
     }
   },
   "pointset": {
