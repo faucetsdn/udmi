@@ -26,6 +26,7 @@ import udmi.schema.PointPointsetConfig;
 import udmi.schema.PointPointsetEvents;
 import udmi.schema.PointPointsetModel;
 import udmi.schema.PointPointsetState;
+import udmi.schema.PointPointsetState.Value_state;
 import udmi.schema.PointsetConfig;
 import udmi.schema.PointsetEvents;
 import udmi.schema.PointsetModel;
@@ -282,6 +283,22 @@ public interface PointsetManager extends ManagerLog {
         point.setConfig(pointConfig);
       } catch (Exception ex) {
         error("Unable to set point config", ex);
+      }
+      updatePoint(point);
+    });
+  }
+
+  /**
+   * Update Point Intermediate State
+   * @param point
+   * @param pointConfig
+   */
+  default void updatePointIntermediateState(AbstractPoint point, PointPointsetConfig pointConfig) {
+    ifNotTrueThen(isNoWriteback(), () -> {
+      try {
+        point.setIntermediateState();
+      } catch (Exception e) {
+        error("Unable to set intermediate state", e);
       }
       updatePoint(point);
     });

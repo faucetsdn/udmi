@@ -80,9 +80,23 @@ public abstract class BasicPoint implements AbstractPoint {
     Value_state previousValueState = state.value_state;
     Entry previousStatus = deepCopy(state.status);
     updateStateConfig(config);
+    updateDirtyState(previousValueState, previousStatus);
+  }
+
+  private void updateDirtyState(Value_state previousValueState, Entry previousStatus) {
     dirty = dirty
         || state.value_state != previousValueState
         || !Objects.equals(state.status, previousStatus);
+  }
+
+  /**
+   * Set the Intermediate State of the PointSet and update Dirty State if needed
+   */
+  public void setIntermediateState() {
+    Value_state previousValueState = state.value_state;
+    Entry previousStatus = deepCopy(state.status);
+    state.value_state  = Value_state.UPDATING;
+    updateDirtyState(previousValueState, previousStatus);
   }
 
   /**
