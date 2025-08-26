@@ -21,8 +21,7 @@
     },
     "functions_ver": {
       "description": "Function version of this request",
-      "type": "integer",
-      "$presentation": {}
+      "type": "integer"
     },
     "auth_type": {
       "description": "The key type used for cloud communication.",
@@ -35,8 +34,7 @@
     },
     "device_key": {
       "type": "boolean",
-      "description": "Indicates if the device private key is provided in the site model.",
-      "$presentation": {}
+      "description": "Indicates if the device private key is provided in the site model."
     },
     "resource_type": {
       "description": "The cloud resource type",
@@ -58,8 +56,7 @@
       "type": "boolean"
     },
     "detail": {
-      "type": "string",
-      "$presentation": {}
+      "type": "string"
     },
     "credentials": {
       "type": "array",
@@ -79,38 +76,31 @@
             "type": "string"
           }
         }
-      },
-      "$presentation": {}
+      }
     },
     "updated_time": {
       "type": "string",
-      "format": "date-time",
-      "$presentation": {}
+      "format": "date-time"
     },
     "last_event_time": {
       "type": "string",
-      "format": "date-time",
-      "$presentation": {}
+      "format": "date-time"
     },
     "last_state_time": {
       "type": "string",
-      "format": "date-time",
-      "$presentation": {}
+      "format": "date-time"
     },
     "last_config_time": {
       "type": "string",
-      "format": "date-time",
-      "$presentation": {}
+      "format": "date-time"
     },
     "last_error_time": {
       "type": "string",
-      "format": "date-time",
-      "$presentation": {}
+      "format": "date-time"
     },
     "last_config_ack": {
       "type": "string",
-      "format": "date-time",
-      "$presentation": {}
+      "format": "date-time"
     },
     "num_id": {
       "type": "string"
@@ -126,13 +116,11 @@
           "additionalProperties": false,
           "type": "string"
         }
-      },
-      "$presentation": {}
+      }
     },
     "metadata_str": {
       "type": "string",
-      "description": "Strigified version of the metadata object, used for internal backend processing",
-      "$presentation": {}
+      "description": "Strigified version of the metadata object, used for internal backend processing"
     },
     "device_ids": {
       "description": "If operating on the entire registry, then this contains results for multiple devices (batched operation).",
@@ -142,8 +130,7 @@
           "additionalProperties": false,
           "type": "object"
         }
-      },
-      "$presentation": {}
+      }
     }
   }
 }

@@ -141,18 +141,15 @@
     },
     "model_system.software.firmware": {
       "label": "software.firmware",
-      "expectedType": "string",
-      "description": "Version of the device firmware"
+      "expectedType": "string"
     },
     "model_system.software.os": {
       "label": "software.os",
-      "expectedType": "string",
-      "description": "Version of the operating system"
+      "expectedType": "string"
     },
     "model_system.software.driver": {
       "label": "software.driver",
-      "expectedType": "string",
-      "description": "Version of a specific driver"
+      "expectedType": "string"
     },
     "model_system.physical_tag.asset.guid": {
       "label": "physical_tag.asset.guid",
@@ -649,10 +646,20 @@
     }
   },
   "cloud": {
+    "model_cloud.functions_ver": {
+      "label": "functions_ver",
+      "expectedType": "integer",
+      "description": "Function version of this request"
+    },
     "model_cloud.auth_type": {
       "label": "auth_type",
       "expectedType": "string",
       "description": "The key type used for cloud communication."
+    },
+    "model_cloud.device_key": {
+      "label": "device_key",
+      "expectedType": "boolean",
+      "description": "Indicates if the device private key is provided in the site model."
     },
     "model_cloud.resource_type": {
       "label": "resource_type",
@@ -668,9 +675,61 @@
       "label": "blocked",
       "expectedType": "boolean"
     },
+    "model_cloud.detail": {
+      "label": "detail",
+      "expectedType": "string"
+    },
+    "model_cloud.credentials": {
+      "label": "credentials",
+      "expectedType": "array"
+    },
+    "model_cloud.updated_time": {
+      "label": "updated_time",
+      "expectedType": "string",
+      "expectedFormat": "date-time"
+    },
+    "model_cloud.last_event_time": {
+      "label": "last_event_time",
+      "expectedType": "string",
+      "expectedFormat": "date-time"
+    },
+    "model_cloud.last_state_time": {
+      "label": "last_state_time",
+      "expectedType": "string",
+      "expectedFormat": "date-time"
+    },
+    "model_cloud.last_config_time": {
+      "label": "last_config_time",
+      "expectedType": "string",
+      "expectedFormat": "date-time"
+    },
+    "model_cloud.last_error_time": {
+      "label": "last_error_time",
+      "expectedType": "string",
+      "expectedFormat": "date-time"
+    },
+    "model_cloud.last_config_ack": {
+      "label": "last_config_ack",
+      "expectedType": "string",
+      "expectedFormat": "date-time"
+    },
     "model_cloud.num_id": {
       "label": "num_id",
       "expectedType": "string"
+    },
+    "model_cloud.metadata": {
+      "label": "metadata",
+      "expectedType": "object"
+    },
+    "model_cloud.metadata_str": {
+      "label": "metadata_str",
+      "expectedType": "string",
+      "description": "Strigified version of the metadata object, used for internal backend processing"
+    },
+    "model_cloud.device_ids": {
+      "label": "device_ids",
+      "expectedType": "string",
+      "description": "If operating on the entire registry, then this contains results for multiple devices (batched operation)."
     }
   },
   "site_metadata": {
@@ -810,63 +869,63 @@
   },
   "points": {
     "model_pointset.points.points_template_name.units": {
-      "label": "units",
+      "label": "points.points_template_name.units",
       "expectedType": "string",
       "description": "Expected unit configuration for the point"
     },
     "model_pointset.points.points_template_name.description": {
-      "label": "description",
+      "label": "points.points_template_name.description",
       "expectedType": "string",
       "description": "Detailed description of this point"
     },
     "model_pointset.points.points_template_name.writable": {
-      "label": "writable",
+      "label": "points.points_template_name.writable",
       "expectedType": "boolean",
       "description": "Indicates if this point is writable (else read-only)"
     },
     "model_pointset.points.points_template_name.baseline_value": {
-      "label": "baseline_value",
+      "label": "points.points_template_name.baseline_value",
       "expectedType": "string",
       "description": "Represents the expected baseline value of the point",
       "examples": "[22]"
     },
     "model_pointset.points.points_template_name.baseline_tolerance": {
-      "label": "baseline_tolerance",
+      "label": "points.points_template_name.baseline_tolerance",
       "expectedType": "number",
       "description": "Maximum deviation from `baseline_value`",
       "examples": "[2]"
     },
     "model_pointset.points.points_template_name.baseline_state": {
-      "label": "baseline_state",
+      "label": "points.points_template_name.baseline_state",
       "expectedType": "string",
       "description": "Expected state when `baseline_value` is set as the `set_value` for this point the config message"
     },
     "model_pointset.points.points_template_name.range_min": {
-      "label": "range_min",
+      "label": "points.points_template_name.range_min",
       "expectedType": "number",
       "description": "Represents the lower bound of the error threshold for a point",
       "examples": "[0]"
     },
     "model_pointset.points.points_template_name.range_max": {
-      "label": "range_max",
+      "label": "points.points_template_name.range_max",
       "expectedType": "number",
       "description": "Represents the upper bound of the error threshold for a point",
       "examples": "[100]"
     },
     "model_pointset.points.points_template_name.cov_increment": {
-      "label": "cov_increment",
+      "label": "points.points_template_name.cov_increment",
       "expectedType": "number",
       "description": "Triggering threshold for partial cov update publishing",
       "examples": "[1]"
     },
     "model_pointset.points.points_template_name.ref": {
-      "label": "ref",
+      "label": "points.points_template_name.ref",
       "expectedType": "string",
       "description": "Mapping for the point to an internal resource (e.g. BACnet object reference)",
       "examples": "['AI3', '400070']"
     },
     "model_pointset.points.points_template_name.tags": {
-      "label": "tags",
+      "label": "points.points_template_name.tags",
       "expectedType": "array",
       "description": "Tags assosciated with the point",
       "examples": "[['lighting'], ['energy', 'hvac']]"

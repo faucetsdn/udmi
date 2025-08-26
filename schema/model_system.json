@@ -138,18 +138,9 @@
       },
       "$presentation": {
         "presentationProperties": {
-          "firmware": {
-            "type": "string",
-            "description": "Version of the device firmware"
-          },
-          "os": {
-            "type": "string",
-            "description": "Version of the operating system"
-          },
-          "driver": {
-            "type": "string",
-            "description": "Version of a specific driver"
-          }
+          "firmware": { },
+          "os": { },
+          "driver": { }
         }
       }
     },    

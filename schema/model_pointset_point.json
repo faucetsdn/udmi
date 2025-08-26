@@ -15,29 +15,24 @@
   "properties": {
     "units": {
       "description": "Expected unit configuration for the point",
-      "type": "string",
-      "$presentation": { "label": "units" }
+      "type": "string"
     },
     "description": {
       "description": "Detailed description of this point",
-      "type": "string",
-      "$presentation": { "label": "description" }
+      "type": "string"
     },
     "writable": {
       "description": "Indicates if this point is writable (else read-only)",
-      "type": "boolean",
-      "$presentation": { "label": "writable" }
+      "type": "boolean"
     },
     "baseline_value": {
       "description": "Represents the expected baseline value of the point",
-      "examples": [22],
-      "$presentation": { "label": "baseline_value" }
+      "examples": [22]
     },
     "baseline_tolerance": {
       "type": "number",
       "description": "Maximum deviation from `baseline_value`",
-      "examples": [2],
-      "$presentation": { "label": "baseline_tolerance" }
+      "examples": [2]
     },
     "baseline_state": {
       "description": "Expected state when `baseline_value` is set as the `set_value` for this point the config message",
@@ -47,32 +42,27 @@
         "overridden",
         "invalid",
         "failure"
-      ],
-      "$presentation": { "label": "baseline_state" }
+      ]
     },
     "range_min": {
       "description": "Represents the lower bound of the error threshold for a point",
       "type": "number",
-      "examples": [0],
-      "$presentation": { "label": "range_min" }
+      "examples": [0]
     },
     "range_max": {
       "description": "Represents the upper bound of the error threshold for a point",
       "type": "number",
-      "examples": [100],
-      "$presentation": { "label": "range_max" }
+      "examples": [100]
     },
     "cov_increment": {
       "description": "Triggering threshold for partial cov update publishing",
       "examples": [1],  
-      "type": "number",
-      "$presentation": { "label": "cov_increment" }
+      "type": "number"
     },
     "ref": {
       "description": "Mapping for the point to an internal resource (e.g. BACnet object reference)",
       "type": "string",
-      "examples": ["AI3", "400070"],
-      "$presentation": { "label": "ref" }
+      "examples": ["AI3", "400070"]
     },
     "adjunct": {
       "type": "object",
@@ -92,8 +82,7 @@
       "items": {
         "pattern": "^[a-z0-9]+$"
       },
-      "examples": [["lighting"], ["energy", "hvac"]],
-      "$presentation": { "label": "tags" }
+      "examples": [["lighting"], ["energy", "hvac"]]
     },
     "structure": {
       "description": "Collection of family point information",
