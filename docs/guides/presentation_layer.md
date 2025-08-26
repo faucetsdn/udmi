@@ -40,6 +40,7 @@ advanced.
     ```
    *Result*: Both properties `name` and `serial_no` will appear in the "system"
    section in the output `gencode/presentation/presentation.json`.
+
 ---
 
 2. **Overriding the Default for Specific Properties**:
@@ -69,6 +70,7 @@ advanced.
     }
     ```
    *Result*: `name` appears in the "system" section with the label "Device Name," and `hardware_id` is omitted from the presentation config.
+
 ---
 
 3. **Advanced Path-Based Defaults**:
@@ -91,6 +93,7 @@ advanced.
     }
     ```
    *Result*: When this schema is approached from parent `configuration_execution`, both `hostname` and `port` will be placed in the `cloud_iot_config` section.
+
 ---
 
 4. **Handling Complex Context-Aware Properties**:
