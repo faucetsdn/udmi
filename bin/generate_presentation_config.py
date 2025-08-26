@@ -36,13 +36,13 @@ EXPECTED_FORMAT = 'expectedFormat'
 def load_json_file(filename, base_dir=SCHEMA_DIR):
   path = os.path.join(base_dir, filename)
   if not os.path.exists(path):
-    print(f"Warning: Schema file not found: {path}")
+    print(f'Warning: Schema file not found: {path}')
     return None
   try:
     with open(path, 'r', encoding='utf-8') as f:
       return json.load(f)
   except json.JSONDecodeError as e:
-    print(f"Error decoding JSON from {path}: {e}")
+    print(f'Error decoding JSON from {path}: {e}')
     return None
 
 
@@ -78,7 +78,8 @@ def process_property(prop_details, current_path, collected_properties,
   presentation_config = prop_details.get(PRESENTATION)
 
   if len(current_path) > 1:
-    is_opt_out = isinstance(presentation_config, dict) and not presentation_config
+    is_opt_out = isinstance(presentation_config,
+                            dict) and not presentation_config
     if not is_opt_out:
       if isinstance(presentation_config, str):
         add_property_to_section(collected_properties, presentation_config,
@@ -90,8 +91,10 @@ def process_property(prop_details, current_path, collected_properties,
           for required_path, details in presentation_paths.items():
             section_name, label = details.get(SECTION), details.get(LABEL)
             if not section_name: continue
-            if (required_path == CURRENT and full_path_str.startswith(origin_file_ref)) or \
-                (required_path != CURRENT and fnmatch.fnmatch(parent_path_str, required_path)):
+            if (required_path == CURRENT and full_path_str.startswith(
+                origin_file_ref)) or \
+                (required_path != CURRENT and fnmatch.fnmatch(parent_path_str,
+                                                              required_path)):
               add_property_to_section(collected_properties, section_name,
                                       full_path_str, prop_details, label)
         elif 'label' in presentation_config:
@@ -112,7 +115,8 @@ def process_property(prop_details, current_path, collected_properties,
                                     full_path_str, prop_details, custom_label)
 
       elif presentation_config is None and default_config:
-        is_leaf_node = 'properties' not in prop_details and '$ref' not in prop_details
+        is_leaf_node = ('properties' not in prop_details
+                        and '$ref' not in prop_details)
         if is_leaf_node:
           if isinstance(default_config, str):
             if full_path_str.startswith(origin_file_ref):
@@ -148,7 +152,8 @@ def process_property(prop_details, current_path, collected_properties,
           try:
             for part in ref_pointer_str.strip('/').split('/'):
               ref_schema = ref_schema[part]
-          except (KeyError, TypeError): ref_schema = None
+          except (KeyError, TypeError):
+            ref_schema = None
 
         if ref_schema:
           new_origin_ref = ref_filename.replace('.json', '')
@@ -186,11 +191,11 @@ def add_property_to_section(collected_properties, section_name, schema_key,
 
 def generate_view_files():
   if not os.path.exists(SCHEMA_DIR):
-    print(f"Error: Schema directory not found at '{SCHEMA_DIR}'")
+    print(f'Error: Schema directory not found at "{SCHEMA_DIR}"')
     return
   if not os.path.exists(OUTPUT_DIR):
     os.makedirs(OUTPUT_DIR)
-    print(f"Created output directory: {OUTPUT_DIR}")
+    print(f'Created output directory: {OUTPUT_DIR}')
 
   shutil.rmtree(OUTPUT_DIR)
   os.makedirs(OUTPUT_DIR)
@@ -198,7 +203,7 @@ def generate_view_files():
   schema_files = [x for x in os.listdir(SCHEMA_DIR) if
                   os.path.isfile(os.path.join(SCHEMA_DIR, x))]
   for filename in schema_files:
-    print(f"Scanning root schema: {filename}")
+    print(f'Scanning root schema: {filename}')
     schema = load_json_file(filename)
     if not schema:
       continue
@@ -210,15 +215,15 @@ def generate_view_files():
     find_presentation_properties(schema, path_prefix, collected_properties,
                                  origin_file_ref, default_config)
 
-  print(f"\nFound {len(collected_properties)} sections. "
-        f"Generating presentation files...")
+  print(f'\nFound {len(collected_properties)} sections. '
+        f'Generating presentation files...')
 
   output_path = os.path.join(OUTPUT_DIR, 'presentation.json')
   with open(output_path, 'w', encoding='utf-8') as f:
     json.dump(collected_properties, f, indent=2)
 
-  print(f"\nSuccessfully generated presentation configuration file at "
-        f"'{output_path}/'")
+  print(f'\nSuccessfully generated presentation configuration file at '
+        f'"{output_path}"')
 
 
 if __name__ == '__main__':
