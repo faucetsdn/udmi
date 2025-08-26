@@ -198,13 +198,11 @@
     },
     "model_localnet.families.bacnet.adjunct.name": {
       "label": "families.bacnet.adjunct.name",
-      "expectedType": "string",
-      "description": "The name of the BACnet device."
+      "expectedType": "string"
     },
     "model_localnet.families.bacnet.adjunct.description": {
       "label": "families.bacnet.adjunct.description",
-      "expectedType": "string",
-      "description": "A description for the BACnet device."
+      "expectedType": "string"
     },
     "model_localnet.families.modbus.addr": {
       "label": "families.modbus.addr",
@@ -214,33 +212,27 @@
     },
     "model_localnet.families.modbus.adjunct.serial_port": {
       "label": "families.modbus.adjunct.serial_port",
-      "expectedType": "string",
-      "examples": "['/dev/USB0', 'COM1:']"
+      "expectedType": "string"
     },
     "model_localnet.families.modbus.adjunct.bit_rate": {
       "label": "families.modbus.adjunct.bit_rate",
-      "expectedType": "integer",
-      "examples": "[9600]"
+      "expectedType": "integer"
     },
     "model_localnet.families.modbus.adjunct.data_bits": {
       "label": "families.modbus.adjunct.data_bits",
-      "expectedType": "string",
-      "examples": "['5|6|7|8']"
+      "expectedType": "string"
     },
     "model_localnet.families.modbus.adjunct.stop_bits": {
       "label": "families.modbus.adjunct.stop_bits",
-      "expectedType": "string",
-      "examples": "['1|1.5|2']"
+      "expectedType": "string"
     },
     "model_localnet.families.modbus.adjunct.parity": {
       "label": "families.modbus.adjunct.parity",
-      "expectedType": "string",
-      "examples": "['none', 'odd', 'even']"
+      "expectedType": "string"
     },
     "model_localnet.families.modbus.adjunct.encoding": {
       "label": "families.modbus.adjunct.encoding",
-      "expectedType": "string",
-      "examples": "['rtu', 'ascii']"
+      "expectedType": "string"
     },
     "model_localnet.families.mbus.addr": {
       "label": "families.mbus.addr",
@@ -250,18 +242,15 @@
     },
     "model_localnet.families.mbus.adjunct.serial_port": {
       "label": "families.mbus.adjunct.serial_port",
-      "expectedType": "string",
-      "examples": "['/dev/USB0', 'COM1:']"
+      "expectedType": "string"
     },
     "model_localnet.families.mbus.adjunct.bit_rate": {
       "label": "families.mbus.adjunct.bit_rate",
-      "expectedType": "integer",
-      "examples": "[9600]"
+      "expectedType": "integer"
     },
     "model_localnet.families.mbus.adjunct.secondary_addr": {
       "label": "families.mbus.adjunct.secondary_addr",
-      "expectedType": "string",
-      "examples": "['181129145F1D0102']"
+      "expectedType": "string"
     },
     "model_localnet.families.ether.addr": {
       "label": "families.ether.addr",

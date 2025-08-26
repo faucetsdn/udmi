@@ -36,9 +36,50 @@
       "examples": ["bacnet", "modbus", "mbus", "ether", "ipv4", "ipv6", "iot"],
       "$presentation": {
         "presentationProperties": {
-          "bacnet": { "$ref": "file:model_localnet_family.json" },
-          "modbus": { "$ref": "file:model_localnet_family.json" },
-          "mbus":   { "$ref": "file:model_localnet_family.json" },
+          "bacnet": {
+            "$ref": "file:model_localnet_family.json",
+            "properties": {
+              "adjunct": {
+                "$presentation": {
+                  "presentationProperties": {
+                    "name": { },
+                    "description": { }
+                  }
+                }
+              }
+            }
+          },
+          "modbus": {
+            "$ref": "file:model_localnet_family.json",
+            "properties": {
+              "adjunct": {
+                "$presentation": {
+                  "presentationProperties": {
+                    "serial_port": { },
+                    "bit_rate": { "type": "integer"},
+                    "data_bits": { },
+                    "stop_bits": { },
+                    "parity": { },
+                    "encoding": { }
+                  }
+                }
+              }
+            }
+          },
+          "mbus":   {
+            "$ref": "file:model_localnet_family.json",
+            "properties": {
+              "adjunct": {
+                "$presentation": {
+                  "presentationProperties": {
+                    "serial_port": { },
+                    "bit_rate": { "type": "integer"},
+                    "secondary_addr": { }
+                  }
+                }
+              }
+            }
+          },
           "ether":  { "$ref": "file:model_localnet_family.json" },
           "ipv4":   { "$ref": "file:model_localnet_family.json" },
           "ipv6":   { "$ref": "file:model_localnet_family.json" },
