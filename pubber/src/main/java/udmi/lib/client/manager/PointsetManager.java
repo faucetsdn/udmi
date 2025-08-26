@@ -289,7 +289,8 @@ public interface PointsetManager extends ManagerLog {
 
   /**
    * Update Point Intermediate State.
-   * @param point
+   *
+   * @param point PointSet Point.
    */
   default void updatePointIntermediateState(AbstractPoint point) {
     ifNotTrueThen(isNoWriteback(), () -> {
