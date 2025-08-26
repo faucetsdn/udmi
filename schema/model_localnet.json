@@ -56,7 +56,7 @@
                 "$presentation": {
                   "presentationProperties": {
                     "serial_port": { },
-                    "bit_rate": { "type": "integer"},
+                    "bit_rate": { "type": "integer" },
                     "data_bits": { },
                     "stop_bits": { },
                     "parity": { },
@@ -73,7 +73,7 @@
                 "$presentation": {
                   "presentationProperties": {
                     "serial_port": { },
-                    "bit_rate": { "type": "integer"},
+                    "bit_rate": { "type": "integer" },
                     "secondary_addr": { }
                   }
                 }
