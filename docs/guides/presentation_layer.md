@@ -41,7 +41,6 @@ advanced.
    *Result*: Both properties `name` and `serial_no` will appear in the "system"
    section in the output `gencode/presentation/presentation.json`.
 
----
 
 2. **Overriding the Default for Specific Properties**:
    You can override the $defaultPresentation on any property using
@@ -71,7 +70,6 @@ advanced.
     ```
    *Result*: `name` appears in the "system" section with the label "Device Name," and `hardware_id` is omitted from the presentation config.
 
----
 
 3. **Advanced Path-Based Defaults**:
    For schemas used in multiple contexts (like `schema/configuration_endpoint.json`), you can make the `$defaultPresentation` apply rules based on a property's path.
@@ -94,7 +92,6 @@ advanced.
     ```
    *Result*: When this schema is approached from parent `configuration_execution`, both `hostname` and `port` will be placed in the `cloud_iot_config` section.
 
----
 
 4. **Handling Complex Context-Aware Properties**:
    For the most complex cases where a generic schema's presentation depends on
