@@ -23,6 +23,7 @@ import udmi.lib.intf.AbstractPoint;
 import udmi.lib.intf.ManagerHost;
 import udmi.schema.PointPointsetConfig;
 import udmi.schema.PointPointsetModel;
+import udmi.schema.PointPointsetState.Value_state;
 import udmi.schema.PointsetState;
 import udmi.schema.PubberConfiguration;
 
@@ -145,7 +146,7 @@ public class PubberPointsetManager extends PubberManager implements PointsetMana
     String newPointValue = stringify(catchToNull(() -> pointConfig.set_value));
     String prevPointValue = setValueCache.put(point.getName(), newPointValue);
     boolean isUnmodified = Objects.equals(newPointValue, prevPointValue);
-
+    
     if (isFastWrite || isUnmodified) {
       PointsetManager.super.updatePointConfig(point, pointConfig);
     } else if (isDelayWrite) {
@@ -155,6 +156,7 @@ public class PubberPointsetManager extends PubberManager implements PointsetMana
     } else {
       debug(format("Applying slow writeback for point %s with %ds delay", point.getName(),
           WRITE_DELAY_SEC));
+      getPointsetState().points.get(point.getName()).value_state = Value_state.UPDATING;
       updateState();
       handleDelayWriteback(point, pointConfig, WRITE_DELAY_SEC);
     }

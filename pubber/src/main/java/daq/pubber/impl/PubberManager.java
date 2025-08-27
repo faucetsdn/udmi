@@ -226,10 +226,10 @@ public class PubberManager extends ManagerBase {
   // </editor-fold>
 
   protected boolean isFastWrite() {
-    return options.fastWrite != null;
+    return isTrue(options.fastWrite);
   }
 
   protected boolean isDelayWrite() {
-    return options.delayWrite != null;
+    return isTrue(options.delayWrite);
   }
 }
