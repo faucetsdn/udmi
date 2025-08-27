@@ -77,6 +77,7 @@ import udmi.schema.DiscoveryConfig;
 import udmi.schema.DiscoveryEvents;
 import udmi.schema.Enumerations;
 import udmi.schema.Enumerations.Depth;
+import udmi.schema.Envelope.SubFolder;
 import udmi.schema.FamilyDiscoveryConfig;
 import udmi.schema.FamilyDiscoveryState;
 import udmi.schema.FamilyLocalnetModel;
@@ -98,7 +99,6 @@ public class DiscoverySequences extends SequenceBase {
   private static final Instant BASE_OLD_TIME = Instant.parse("2020-10-18T12:02:01Z");
   private static final Date LONG_TIME_AGO = Date.from(BASE_OLD_TIME.plusSeconds(RANDOM_YEAR_SEC));
   private static final int SCAN_DURATION_SEC = 10;
-  private static final String DISCOVERY_TARGET = "scan_family";
   private static final long SCAN_TARGET_COUNT = 2;
   public static final int EVENT_MARKERS = 2;
   private Set<String> metaFamilies;
@@ -120,10 +120,6 @@ public class DiscoverySequences extends SequenceBase {
   @Before
   public void setupExpectedParameters() {
     allowDeviceStateChange("discovery");
-    scanFamily = catchToNull(() ->
-        (String) deviceMetadata.testing.targets.get(DISCOVERY_TARGET).target_value);
-    providerFamily = FamilyProvider.NAMED_FAMILIES.get(scanFamily);
-    checkState(providerFamily != null, "No provider family found for scan family " + scanFamily);
   }
 
   private DiscoveryEvents runEnumeration(Enumerations depths) {
@@ -276,24 +272,25 @@ public class DiscoverySequences extends SequenceBase {
   }
 
   @Test(timeout = TWO_MINUTES_MS)
-  @Feature(bucket = DISCOVERY_SCAN, stage = PREVIEW)
+  @Feature(bucket = DISCOVERY_SCAN, stage = PREVIEW, facets = SubFolder.DISCOVERY)
   @Summary("Check that a scan scheduled in the past never starts")
   public void scan_single_past() {
     scanAndVerify(LONG_TIME_AGO, NO_SCAN);
   }
 
   @Test
-  @Feature(bucket = DISCOVERY_SCAN, stage = PREVIEW)
+  @Feature(bucket = DISCOVERY_SCAN, stage = PREVIEW, facets = SubFolder.DISCOVERY)
   @Summary("Check results of a single scan scheduled in the recent past including enumeration")
   public void scan_single_now() {
     scanAndVerify(cleanInstantDate(Instant.now().minusSeconds(1)), PLEASE_ENUMERATE);
   }
 
   @Test
-  @Feature(bucket = DISCOVERY_SCAN, stage = ALPHA)
+  @Feature(bucket = DISCOVERY_SCAN, stage = ALPHA, facets = SubFolder.DISCOVERY)
   @Summary("Check results of a single scan targeting specific devices")
   public void scan_single_targeted() {
     SortedSet<String> expectedAddresses = new TreeSet<>(expectedTargetDevices(null));
+    info("Found target addresses " + expectedAddresses);
     ifTrueSkipTest(expectedAddresses.size() <= SCAN_TARGET_COUNT,
         "Not enough targets to test targeted scan");
     Set<String> targets = expectedAddresses.stream().limit(SCAN_TARGET_COUNT).collect(toSet());
@@ -303,17 +300,18 @@ public class DiscoverySequences extends SequenceBase {
   }
 
   @Test(timeout = TWO_MINUTES_MS)
-  @Feature(bucket = DISCOVERY_SCAN, stage = PREVIEW)
+  @Feature(bucket = DISCOVERY_SCAN, stage = PREVIEW, facets = SubFolder.DISCOVERY)
   @Summary("Check results of a single scan scheduled soon")
   public void scan_single_future() {
     scanAndVerify(cleanInstantDate(Instant.now().plus(SCAN_START_DELAY)), DEFAULT_ENUMERATION);
   }
 
   @Test(timeout = TWO_MINUTES_MS)
-  @Feature(bucket = DISCOVERY_SCAN, stage = ALPHA)
+  @Feature(bucket = DISCOVERY_SCAN, stage = ALPHA, facets = SubFolder.DISCOVERY)
   @Summary("Check results of a single scan targeting specific devices")
   public void scan_network_single() {
     SortedSet<String> networks = expectedTargetNetworks(null);
+    info("Found target networks " + networks);
     ifTrueSkipTest(networks.size() < 2, "not enough networks for test");
     String targetNetwork = networks.removeFirst();
     scanAndVerify(cleanInstantDate(Instant.now().minusSeconds(1)), PLEASE_ENUMERATE,
@@ -434,6 +432,7 @@ public class DiscoverySequences extends SequenceBase {
   }
 
   private SortedSet<String> expectedTargetDevices(Set<String> networks) {
+    initializeFamilies();
     return siteModel.metadataStream()
         .filter(entry -> onExpectedNetwork(entry, networks))
         .map(this::scanFamilyAddr)
@@ -441,11 +440,13 @@ public class DiscoverySequences extends SequenceBase {
   }
 
   private boolean onExpectedNetwork(Entry<String, Metadata> entry, Set<String> networks) {
+    requireNonNull(scanFamily, "no scan family defined");
     return networks == null || networks.contains(catchToNull(() ->
         entry.getValue().localnet.families.get(scanFamily).network));
   }
 
   private SortedSet<String> expectedTargetNetworks(Set<String> targets) {
+    initializeFamilies();
     return siteModel.metadataStream()
         .filter(entry -> targets == null || targets.contains(getLocalnetAddr(entry)))
         .map(this::scanFamilyNetwork)
@@ -569,11 +570,12 @@ public class DiscoverySequences extends SequenceBase {
   }
 
   private String scanFamilyNetwork(Entry<String, Metadata> entry) {
+    requireNonNull(scanFamily, "no scan family defined");
     return catchToNull(() -> entry.getValue().localnet.families.get(scanFamily).network);
   }
 
   @Test(timeout = TWO_MINUTES_MS)
-  @Feature(bucket = DISCOVERY_SCAN, stage = PREVIEW)
+  @Feature(bucket = DISCOVERY_SCAN, stage = PREVIEW, facets = SubFolder.DISCOVERY)
   @Summary("Check periodic scan on a fixed schedule and enumeration")
   public void scan_periodic_now_enumerate() {
     initializeDiscovery();
@@ -594,14 +596,7 @@ public class DiscoverySequences extends SequenceBase {
   }
 
   private void initializeDiscovery() {
-    ifNullSkipTest(scanFamily,
-        format("metadata.testing.targets.%s.target_value not defined", DISCOVERY_TARGET));
-    metaFamilies = catchToNull(() -> deviceMetadata.discovery.families.keySet());
-    if (metaFamilies == null || metaFamilies.isEmpty()) {
-      skipTest("No discovery families configured");
-    }
-    checkState(metaFamilies.contains(scanFamily),
-        format("Discovery scan family %s not specified in metadata", scanFamily));
+    initializeFamilies();
     deviceConfig.discovery = new DiscoveryConfig();
     deviceConfig.discovery.families = new HashMap<>();
     untilTrue("discovery families defined", () -> deviceState.discovery.families != null);
@@ -614,8 +609,23 @@ public class DiscoverySequences extends SequenceBase {
         () -> stateFamilies.keySet().stream().noneMatch(scanActive()));
   }
 
+  private void initializeFamilies() {
+    scanFamily = getFacetValue(SubFolder.DISCOVERY);
+    checkState(scanFamily != null, "No scan family defined for discovery");
+    providerFamily = FamilyProvider.NAMED_FAMILIES.get(scanFamily);
+    checkState(providerFamily != null, "No provider family found for scan family " + scanFamily);
+
+    metaFamilies = catchToNull(() -> deviceMetadata.discovery.families.keySet());
+    if (metaFamilies == null || metaFamilies.isEmpty()) {
+      skipTest("No discovery families configured");
+    }
+    checkState(metaFamilies.contains(scanFamily),
+        format("Discovery scan family %s not specified in metadata", scanFamily));
+  }
+
   private void configureScan(Instant startTime, Duration scanInterval,
       DiscoveryScanMode shouldEnumerate, Set<String> networks, Set<String> targets) {
+    requireNonNull(scanFamily, "scan family not defined");
     Integer intervalSec = ofNullable(scanInterval).map(Duration::getSeconds).map(Long::intValue)
         .orElse(null);
     info(format("%s configured for family %s starting at %s evey %ss",

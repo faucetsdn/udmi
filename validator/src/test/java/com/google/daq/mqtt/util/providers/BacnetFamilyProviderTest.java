@@ -1,4 +1,4 @@
-package com.google.daq.mqtt.util;
+package com.google.daq.mqtt.util.providers;
 
 import static com.google.udmi.util.GeneralUtils.CSV_JOINER;
 import static com.google.udmi.util.GeneralUtils.catchToMessage;
@@ -6,7 +6,6 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 import com.google.common.collect.ImmutableSet;
-import com.google.daq.mqtt.util.providers.BacnetFamilyProvider;
 import com.google.udmi.util.GeneralUtils;
 import java.util.List;
 import java.util.Set;

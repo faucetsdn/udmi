@@ -1,7 +1,8 @@
 package com.google.bos.iot.core.bambi.model;
 
+import static com.google.udmi.util.GeneralUtils.isNotEmpty;
+
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -169,30 +170,34 @@ public class BambiSiteModel {
   }
 
   private List<Map<String, String>> mergePointsWithPointset() {
-    List<Map<String, String>> mergedData = new ArrayList<>();
-    Map<String, Integer> templateNameToIndexMap = new HashMap<>();
-
-    for (int i = 0; i < pointsetData.size(); i++) {
-      mergedData.add(new LinkedHashMap<>(pointsetData.get(i)));
-      templateNameToIndexMap.put(pointsetData.get(i).get(POINTS_TEMPLATE_NAME), i);
+    Map<String, List<Map<String, String>>> pointsTemplates = new LinkedHashMap<>();
+    for (Map<String, String> row : pointsData) {
+      String templateName = row.get(POINTS_TEMPLATE_NAME);
+      if (isNotEmpty(templateName)) {
+        pointsTemplates.putIfAbsent(templateName, new ArrayList<>());
+        pointsTemplates.get(templateName).add(row);
+      } else {
+        throw new RuntimeException("Template name must not be empty!");
+      }
     }
 
-    for (Map<String, String> row : pointsData) {
-      String pointTemplateName = row.get(POINTS_TEMPLATE_NAME);
-      String pointName = row.get(POINT_NAME);
+    List<Map<String, String>> mergedData = new ArrayList<>();
+    for (Map<String, String> pointsetDatum : pointsetData) {
+      Map<String, String> pointsetRow = new LinkedHashMap<>(pointsetDatum);
+      String templateName = pointsetRow.get(POINTS_TEMPLATE_NAME);
 
-      int matchingIndex = templateNameToIndexMap.getOrDefault(pointTemplateName, -1);
-      if (matchingIndex == -1) {
-        throw new RuntimeException(
-            "points use a template name which is not defined in the pointset: "
-                + pointTemplateName);
+      if (isNotEmpty(templateName)) {
+        for (Map<String, String> pointRow : pointsTemplates.getOrDefault(templateName,
+            new ArrayList<>())) {
+          String pointName = pointRow.get(POINT_NAME);
+          for (Entry<String, String> cell : pointRow.entrySet()) {
+            String header = cell.getKey();
+            String val = cell.getValue();
+            pointsetRow.put(BambiSheetTab.POINTS.getName() + "." + pointName + "." + header, val);
+          }
+        }
       }
-      for (Entry<String, String> cell : row.entrySet()) {
-        String header = cell.getKey();
-        mergedData.get(matchingIndex).put(
-            BambiSheetTab.POINTS.getName() + "." + pointName + "." + header,
-            cell.getValue());
-      }
+      mergedData.add(pointsetRow);
     }
 
     return mergedData;
