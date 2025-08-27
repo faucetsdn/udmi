@@ -1,6 +1,8 @@
 package daq.pubber.impl.manager;
 
 import static com.google.common.base.Preconditions.checkState;
+import static com.google.udmi.util.GeneralUtils.catchToNull;
+import static com.google.udmi.util.JsonUtil.stringify;
 import static java.lang.String.format;
 
 import com.google.common.collect.ImmutableMap;
@@ -10,7 +12,9 @@ import daq.pubber.impl.point.PubberRandomBoolean;
 import daq.pubber.impl.point.PubberRandomPoint;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
@@ -30,6 +34,7 @@ public class PubberPointsetManager extends PubberManager implements PointsetMana
   private final ExtraPointsetEvent pointsetEvent = new ExtraPointsetEvent();
   private final Map<String, AbstractPoint> managedPoints = new HashMap<>();
   private final ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(1);
+  private final Map<String, String> setValueCache = new ConcurrentHashMap<>();
   private static final int WRITE_DELAY_SEC = 10;
 
   private int pointsetUpdateCount = -1;
@@ -137,13 +142,18 @@ public class PubberPointsetManager extends PubberManager implements PointsetMana
   public void updatePointConfig(AbstractPoint point, PointPointsetConfig pointConfig) {
     boolean isFastWrite = isFastWrite();
     boolean isDelayWrite = isDelayWrite();
+    String newPointValue = stringify(catchToNull(() -> pointConfig.set_value));
+    String prevPointValue = setValueCache.put(point.getName(), newPointValue);
+    boolean isUnmodified = Objects.equals(newPointValue, prevPointValue);
 
-    if (isFastWrite || pointConfig == null || pointConfig.set_value == null) {
+    if (isFastWrite || isUnmodified) {
       PointsetManager.super.updatePointConfig(point, pointConfig);
     } else if (isDelayWrite) {
+      debug(format("Applying delayed writeback for point %s with %ds delay", point.getName(),
+          WRITE_DELAY_SEC));
       handleDelayWriteback(point, pointConfig, WRITE_DELAY_SEC);
     } else {
-      info(format("Applying slow writeback for point %s with %ds delay", point.getName(),
+      debug(format("Applying slow writeback for point %s with %ds delay", point.getName(),
           WRITE_DELAY_SEC));
       PointsetManager.super.updatePointIntermediateState(point);
       handleDelayWriteback(point, pointConfig, WRITE_DELAY_SEC);
