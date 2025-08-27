@@ -48,7 +48,7 @@ advanced.
 
     - **To change the section**: `"$presentation": "new_section_name"`
 
-    - **To provide a custom label** (while inheriting the default section): "$presentation": { "label": "Your Custom Label" }`
+    - **To provide a custom label** (while inheriting the default section): `"$presentation": { "label": "Your Custom Label" }`
 
     - **To exclude a property from the UI**: `"$presentation": {}`
 
@@ -71,7 +71,7 @@ advanced.
    *Result*: `name` appears in the "system" section with the label "Device Name," and `hardware_id` is omitted from the presentation config.
 
 
-3. **Advanced Path-Based Defaults**:
+3. **Path-Based Defaults**:
    For schemas used in multiple contexts (like `schema/configuration_endpoint.json`), you can make the `$defaultPresentation` apply rules based on a property's path.
 
    Example (`schema/configuration_endpoint.json`):
@@ -93,7 +93,7 @@ advanced.
    *Result*: When this schema is approached from parent `configuration_execution`, both `hostname` and `port` will be placed in the `cloud_iot_config` section.
 
 
-4. **Handling Simple Context-Aware Properties**:
+4. **Handling Simple Map Properties with default keys**:
    For cases where a property is a simple map (like the `model_system.software`
    property is a `Map<String, String>`) and certain keys need to be presented
    for this property, the `presentationProperties` keyword can be used.
@@ -139,7 +139,7 @@ advanced.
    ```
 
 
-5. **Handling Complex Context-Aware Properties**:
+5. **Handling Complex Context-Aware Map Properties**:
    For the most complex cases where a property is a generic map and the 
    schema's presentation depends on its specific use (like the `adjunct` 
    property), the logic is defined using the nesting of keywords 
