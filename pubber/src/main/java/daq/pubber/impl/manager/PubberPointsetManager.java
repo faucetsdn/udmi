@@ -1,8 +1,6 @@
 package daq.pubber.impl.manager;
 
 import static com.google.common.base.Preconditions.checkState;
-import static com.google.udmi.util.GeneralUtils.catchToNull;
-import static com.google.udmi.util.JsonUtil.stringify;
 import static java.lang.String.format;
 
 import com.google.common.collect.ImmutableMap;
@@ -12,7 +10,6 @@ import daq.pubber.impl.point.PubberRandomBoolean;
 import daq.pubber.impl.point.PubberRandomPoint;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Executors;
@@ -23,7 +20,6 @@ import udmi.lib.intf.AbstractPoint;
 import udmi.lib.intf.ManagerHost;
 import udmi.schema.PointPointsetConfig;
 import udmi.schema.PointPointsetModel;
-import udmi.schema.PointPointsetState.Value_state;
 import udmi.schema.PointsetState;
 import udmi.schema.PubberConfiguration;
 
