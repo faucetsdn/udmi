@@ -143,13 +143,14 @@ public class PubberPointsetManager extends PubberManager implements PointsetMana
   public void updatePointConfig(AbstractPoint point, PointPointsetConfig pointConfig) {
     boolean isFastWrite = isFastWrite();
     boolean isDelayWrite = isDelayWrite();
-    boolean isNoWriteback = isNoWriteback();
+//    boolean isNoWriteback = isNoWriteback();
 
+//    debug(format("value of noWriteback: %s", isNoWriteback));
     String newPointValue = stringify(catchToNull(() -> pointConfig.set_value));
-    String prevPointValue = setValueCache.put(point.getName(), newPointValue);
-    boolean isUnmodified = Objects.equals(newPointValue, prevPointValue);
+//    String prevPointValue = setValueCache.put(point.getName(), newPointValue);
+//    boolean isUnmodified = Objects.equals(newPointValue, prevPointValue);
 
-    if (isFastWrite || isUnmodified || isNoWriteback) {
+    if (isFastWrite || newPointValue == null) {
       PointsetManager.super.updatePointConfig(point, pointConfig);
     } else if (isDelayWrite) {
       debug(format("Applying delayed writeback for point %s with %ds delay", point.getName(),
@@ -158,8 +159,9 @@ public class PubberPointsetManager extends PubberManager implements PointsetMana
     } else {
       debug(format("Applying slow writeback for point %s with %ds delay", point.getName(),
           WRITE_DELAY_SEC));
-      getPointsetState().points.get(point.getName()).value_state = Value_state.UPDATING;
-      updatePoint(point);
+//      getPointsetState().points.get(point.getName()).value_state = Value_state.UPDATING;
+//      updatePoint(point);
+      PointsetManager.super.updatePointIntermediateState(point);
       handleDelayWriteback(point, pointConfig, WRITE_DELAY_SEC);
     }
   }
