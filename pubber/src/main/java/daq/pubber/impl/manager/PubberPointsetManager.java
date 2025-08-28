@@ -146,11 +146,11 @@ public class PubberPointsetManager extends PubberManager implements PointsetMana
 //    boolean isNoWriteback = isNoWriteback();
 
 //    debug(format("value of noWriteback: %s", isNoWriteback));
-    String newPointValue = stringify(catchToNull(() -> pointConfig.set_value));
+//    String newPointValue = stringify(catchToNull(() -> pointConfig.set_value));
 //    String prevPointValue = setValueCache.put(point.getName(), newPointValue);
 //    boolean isUnmodified = Objects.equals(newPointValue, prevPointValue);
 
-    if (isFastWrite || newPointValue == null) {
+    if (isFastWrite || pointConfig == null || pointConfig.set_value == null) {
       PointsetManager.super.updatePointConfig(point, pointConfig);
     } else if (isDelayWrite) {
       debug(format("Applying delayed writeback for point %s with %ds delay", point.getName(),
