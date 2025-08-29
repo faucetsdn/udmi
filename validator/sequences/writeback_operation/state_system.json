@@ -1,0 +1,25 @@
+{
+  "hardware" : {
+    "make" : "BOS",
+    "model" : "pubber"
+  },
+  "last_config" : "2025-08-21T14:03:02Z",
+  "operation" : {
+    "operational" : true,
+    "last_start" : "2025-08-21T14:02:13Z",
+    "restart_count" : 1,
+    "mode" : "initial"
+  },
+  "serial_no" : "742178",
+  "software" : {
+    "firmware" : "v1"
+  },
+  "status" : {
+    "message" : "success",
+    "category" : "system.config.apply",
+    "timestamp" : "2025-08-21T14:03:02Z",
+    "level" : 300
+  },
+  "timestamp" : "2025-08-21T14:03:03Z",
+  "version" : "1.5.3"
+}

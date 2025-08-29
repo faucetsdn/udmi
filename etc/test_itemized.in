@@ -10,6 +10,8 @@ TEST valid_serial_no msTimestamp
 TEST writeback_success extraPoint=filter_differential_pressure_setpoint
 TEST writeback_success noWriteback
 TEST writeback_success noPointState
+TEST writeback_operation fastWrite
+TEST writeback_operation delayWrite
 TEST pointset_publish_interval fixedSampleRate=10
 TEST system_min_loglevel fixedLogLevel=100
 TEST system_mode_restart noPersist
