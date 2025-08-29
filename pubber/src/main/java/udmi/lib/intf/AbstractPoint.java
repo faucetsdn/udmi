@@ -22,7 +22,5 @@ public interface AbstractPoint {
 
   void setConfig(PointPointsetConfig config);
 
-  void setIntermediateState();
-
   RefDiscovery enumerate();
 }

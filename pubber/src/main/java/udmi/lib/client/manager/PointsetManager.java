@@ -287,22 +287,6 @@ public interface PointsetManager extends ManagerLog {
     });
   }
 
-  /**
-   * Update Point Intermediate State.
-   *
-   * @param point PointSet Point.
-   */
-  default void updatePointIntermediateState(AbstractPoint point) {
-    ifNotTrueThen(isNoWriteback(), () -> {
-      try {
-        point.setIntermediateState();
-      } catch (Exception e) {
-        error("Unable to set intermediate state", e);
-      }
-      updatePoint(point);
-    });
-  }
-
   default boolean isNoWriteback() {
     return false;
   }
