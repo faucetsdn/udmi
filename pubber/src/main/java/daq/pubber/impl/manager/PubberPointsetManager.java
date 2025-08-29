@@ -160,7 +160,7 @@ public class PubberPointsetManager extends PubberManager implements PointsetMana
       debug(format("Applying slow writeback for point %s with %ds delay", point.getName(),
           WRITE_DELAY_SEC));
       getPointsetState().points.get(point.getName()).value_state = Value_state.UPDATING;
-      updatePoint(point);
+      updateState();
       handleDelayWriteback(point, pointConfig, WRITE_DELAY_SEC);
     }
   }
