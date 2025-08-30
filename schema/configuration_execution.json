@@ -3,6 +3,7 @@
   "title": "Execution Configuration",
   "description": "Parameters for configuring the execution run of a UDMI tool",
   "$section": "Tool Configuration",
+  "$defaultPresentation": "cloud_iot_config",
   "type": "object",
   "$schema": "http://json-schema.org/draft-07/schema#",
   "additionalProperties": false,

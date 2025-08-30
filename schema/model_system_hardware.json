@@ -5,6 +5,13 @@
     "type": "object",
     "$schema": "http://json-schema.org/draft-07/schema#",
     "additionalProperties": false,
+    "$defaultPresentation": {
+      "paths": {
+        "model_system.hardware": {
+          "section": "system"
+        }
+      }
+    },
     "properties": {
       "make": {
         "description": "The manufacturer of the device",

@@ -11,4 +11,5 @@
 - [GCP Cloud Setup](../cloud/gcp)
 - [Tools Usage and Setup](../tools)
 - [Debugging Config Nonce](config_nonce.md)
+- [Define Presentation Attributes](presentation_layer.md) - A guide on how to define presentation related attributes in the UDMI Schema
 
