@@ -1,6 +1,8 @@
 package daq.pubber.impl.manager;
 
 import static com.google.common.base.Preconditions.checkState;
+import static com.google.udmi.util.GeneralUtils.catchToNull;
+import static com.google.udmi.util.JsonUtil.stringify;
 import static java.lang.String.format;
 
 import com.google.common.collect.ImmutableMap;
@@ -10,12 +12,18 @@ import daq.pubber.impl.point.PubberRandomBoolean;
 import daq.pubber.impl.point.PubberRandomPoint;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 import udmi.lib.client.manager.PointsetManager;
 import udmi.lib.intf.AbstractPoint;
 import udmi.lib.intf.ManagerHost;
 import udmi.schema.PointPointsetConfig;
 import udmi.schema.PointPointsetModel;
+import udmi.schema.PointPointsetState.Value_state;
 import udmi.schema.PointsetState;
 import udmi.schema.PubberConfiguration;
 
@@ -26,6 +34,9 @@ public class PubberPointsetManager extends PubberManager implements PointsetMana
 
   private final ExtraPointsetEvent pointsetEvent = new ExtraPointsetEvent();
   private final Map<String, AbstractPoint> managedPoints = new HashMap<>();
+  private final ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(1);
+  private final Map<String, String> setValueCache = new ConcurrentHashMap<>();
+  private static final int WRITE_DELAY_SEC = 10;
 
   private int pointsetUpdateCount = -1;
   private PointsetState pointsetState;
@@ -126,5 +137,45 @@ public class PubberPointsetManager extends PubberManager implements PointsetMana
     pointMetadata.baseline_tolerance = tolerance;
     pointMetadata.units = units;
     return pointMetadata;
+  }
+
+  @Override
+  public void updatePointConfig(AbstractPoint point, PointPointsetConfig pointConfig) {
+    boolean isFastWrite = isFastWrite();
+    boolean isDelayWrite = isDelayWrite();
+    boolean isNoWriteback = isNoWriteback();
+
+    debug(format("value of noWriteback: %s", isNoWriteback));
+    String newPointValue = stringify(catchToNull(() -> pointConfig.set_value));
+    String prevPointValue = setValueCache.put(point.getName(), newPointValue);
+    boolean isUnmodified = Objects.equals(newPointValue, prevPointValue);
+
+    if (isFastWrite || isUnmodified) {
+      PointsetManager.super.updatePointConfig(point, pointConfig);
+    } else if (isDelayWrite) {
+      debug(format("Applying delayed writeback for point %s with %ds delay", point.getName(),
+          WRITE_DELAY_SEC));
+      handleDelayWriteback(point, pointConfig, WRITE_DELAY_SEC);
+    } else {
+      debug(format("Applying slow writeback for point %s with %ds delay", point.getName(),
+          WRITE_DELAY_SEC));
+      getPointsetState().points.get(point.getName()).value_state = Value_state.UPDATING;
+      updateState();
+      handleDelayWriteback(point, pointConfig, WRITE_DELAY_SEC);
+    }
+  }
+
+  private void handleDelayWriteback(AbstractPoint point,
+      PointPointsetConfig pointConfig, int delaySec) {
+    scheduler.schedule(() -> {
+      try {
+        info(format("Completing delayed writeback for %s", point.getName()));
+        // Use the default interface method to apply the final state.
+        debug(format("setting value state as %s", pointConfig.set_value));
+        PointsetManager.super.updatePointConfig(point, pointConfig);
+      } catch (Exception e) {
+        error("Error during scheduled writeback for " + point.getName(), e);
+      }
+    }, delaySec, TimeUnit.SECONDS);
   }
 }

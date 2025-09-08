@@ -8,6 +8,7 @@ import static udmi.schema.FeatureDiscovery.FeatureStage.ALPHA;
 import com.google.daq.mqtt.sequencer.Feature;
 import com.google.daq.mqtt.sequencer.PointsetBase;
 import com.google.daq.mqtt.sequencer.Summary;
+import java.time.Duration;
 import java.util.List;
 import java.util.Objects;
 import org.junit.Before;
@@ -23,6 +24,8 @@ public class WritebackSequences extends PointsetBase {
 
   public static final String DEFAULT_STATE = null;
   private Object lastPresentValue;
+  private static final Duration UPDATING_WAIT_DURATION = Duration.ofSeconds(8);
+  private static final Duration MAX_WAIT_TIME = Duration.ofSeconds(20);
 
   @Before
   public void setupExpectedParameters() {
@@ -79,7 +82,8 @@ public class WritebackSequences extends PointsetBase {
   @Summary("Implements UDMI writeback and can successfully writeback to a point")
   public void writeback_success() {
     TargetTestingModel targetModel = testTargetState(APPLIED_STATE);
-    waitUntil("target point to have target expected value", () -> presentValueIs(targetModel));
+    waitUntil("target point to have target expected value", MAX_WAIT_TIME,
+        () -> presentValueIs(targetModel));
   }
 
   private TargetTestingModel testTargetState(String targetState) {
@@ -93,7 +97,8 @@ public class WritebackSequences extends PointsetBase {
 
     deviceConfig.pointset.points.get(targetPoint).set_value = targetValue;
 
-    waitUntil(expectedValueState(targetState), () -> valueStateIs(targetPoint, targetState));
+    waitUntil(expectedValueState(targetState), MAX_WAIT_TIME,
+        () -> valueStateIs(targetPoint, targetState));
 
     return targetModel;
   }
@@ -108,6 +113,32 @@ public class WritebackSequences extends PointsetBase {
   @Feature(stage = ALPHA, bucket = WRITEBACK)
   public void writeback_failure() {
     testTargetState(FAILURE_STATE);
+  }
+
+  @Test(timeout = TWO_MINUTES_MS)
+  @Feature(stage = ALPHA, bucket = WRITEBACK)
+  @Summary("Tests intermediate UPDATING state of a writeback operation")
+  public void writeback_operation() {
+    TargetTestingModel targetModel = getTarget(APPLIED_STATE);
+    String targetPoint = targetModel.target_point;
+    Object targetValue = targetModel.target_value;
+
+    deviceConfig.pointset.points.get(targetPoint).set_value = null;
+    waitUntil(expectedValueState(DEFAULT_STATE), () -> valueStateIs(targetPoint, DEFAULT_STATE));
+
+    deviceConfig.pointset.points.get(targetPoint).set_value = targetValue;
+    // Wait until the intermediate UPDATING state. In other cases, this should:
+    // 1. Skip if it ends up APPLIED too quickly.
+    // 2. Error out if it takes too long to get to UPDATING.
+    waitUntil(expectedValueState(UPDATING_STATE), UPDATING_WAIT_DURATION, () -> {
+      String appliedStateCheck = valueStateIs(targetPoint, APPLIED_STATE);
+      String appliedValueCheck = presentValueIs(targetModel);
+      ifTrueSkipTest(appliedStateCheck == null && appliedValueCheck == null,
+          "operation completed quickly");
+
+      return valueStateIs(targetPoint, UPDATING_STATE);
+    });
+    waitUntil(expectedValueState(APPLIED_STATE), () -> valueStateIs(targetPoint, APPLIED_STATE));
   }
 }
 

@@ -81,8 +81,8 @@ fi
 
 echo Reported cloud version: $(jq .cloud_version.udmi_ref $report_file)
 
-pubber_bg AHU-1 extraField=prlagle skewClock
-pubber_bg GAT-123 emptyMissing extraPoint=llama fixedSampleRate=2
+pubber_bg AHU-1 extraField=prlagle skewClock fastWrite
+pubber_bg GAT-123 emptyMissing extraPoint=llama fixedSampleRate=2 fastWrite
 
 echo Waiting for system to run for a bit...
 cat $VALIDATOR_LOG && timeout 60s tail -f $VALIDATOR_LOG || true

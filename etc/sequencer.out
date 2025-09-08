@@ -52,4 +52,5 @@ RESULT pass system too_much_state ALPHA 10/10 Sequence complete
 RESULT pass system valid_serial_no STABLE 10/10 Sequence complete
 RESULT pass writeback writeback_failure ALPHA 10/10 Sequence complete
 RESULT pass writeback writeback_invalid ALPHA 10/10 Sequence complete
+RESULT pass writeback writeback_operation ALPHA 10/10 Sequence complete
 RESULT pass writeback writeback_success ALPHA 10/10 Sequence complete
