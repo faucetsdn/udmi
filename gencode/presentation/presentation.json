@@ -829,6 +829,279 @@
       "section": "cloud",
       "description": "If operating on the entire registry, then this contains results for multiple devices (batched operation)."
     },
+    "system.name": {
+      "display": "show",
+      "style": "bold",
+      "section": "system",
+      "type": "string",
+      "description": "Friendly name describing this device"
+    },
+    "system.description": {
+      "display": "show",
+      "style": "bold",
+      "section": "system",
+      "type": "string",
+      "description": "Generic human-readable text describing the device"
+    },
+    "system.device_version": {
+      "display": "show",
+      "style": "bold",
+      "section": "system",
+      "type": "string",
+      "description": "Version of schema supported by the device",
+      "examples": [
+        "1.5.0"
+      ]
+    },
+    "system.zone": {
+      "display": "show",
+      "style": "bold",
+      "section": "system",
+      "type": "string",
+      "description": "Aggregation of spaces, partial spaces or other zones that the device is serving",
+      "examples": [
+        "Zone1",
+        "Kitchen_101"
+      ]
+    },
+    "system.node_type": {
+      "display": "show",
+      "style": "bold",
+      "section": "system",
+      "type": "string",
+      "description": "The description of what kind of node this is.",
+      "examples": [
+        "vitual_device",
+        "field_group",
+        "field_controller",
+        "network_scan_agent"
+      ]
+    },
+    "system.tags": {
+      "display": "show",
+      "style": "bold",
+      "section": "system",
+      "type": "array",
+      "description": "Tags associated with the device",
+      "examples": [
+        [
+          "lighting"
+        ],
+        [
+          "energy",
+          "building",
+          "vendor_managed"
+        ]
+      ]
+    },
+    "system.location.site": {
+      "display": "show",
+      "style": "bold",
+      "section": "system",
+      "type": "string",
+      "description": "The site name according to the site model in which the device is installed in",
+      "examples": [
+        "US-SFO-XYY"
+      ]
+    },
+    "system.location.panel": {
+      "display": "show",
+      "style": "bold",
+      "section": "system",
+      "type": "string",
+      "description": "The reference of the panel where the device is installed in",
+      "examples": [
+        "Panel123",
+        "CTRP-567"
+      ]
+    },
+    "system.location.section": {
+      "display": "show",
+      "style": "bold",
+      "section": "system",
+      "type": "string"
+    },
+    "system.location.room": {
+      "display": "show",
+      "style": "bold",
+      "section": "system",
+      "type": "string"
+    },
+    "system.location.floor": {
+      "display": "show",
+      "style": "bold",
+      "section": "system",
+      "type": "string",
+      "description": "Name of floor level",
+      "examples": [
+        "1",
+        "1A",
+        "G",
+        "B1M",
+        "RF"
+      ]
+    },
+    "system.location.floor_seq": {
+      "display": "show",
+      "style": "bold",
+      "section": "system",
+      "type": "integer",
+      "description": "Sequential integer representation for a floor, primarily for comparisons when non integer floors are used, e.g. 1 and 1M"
+    },
+    "system.location.position.x": {
+      "display": "show",
+      "style": "bold",
+      "section": "system",
+      "type": "number",
+      "description": "The `x` coordinate of the device location in a project specific coordinate system"
+    },
+    "system.location.position.y": {
+      "display": "show",
+      "style": "bold",
+      "section": "system",
+      "type": "number",
+      "description": "The `y` coordinate of the device location in a project specific coordinate system"
+    },
+    "system.location.position.z": {
+      "display": "show",
+      "style": "bold",
+      "section": "system",
+      "type": "number",
+      "description": "The `z` (height) coordinate of the device location in a project specific coordinate system"
+    },
+    "system.location.coordinates.lat": {
+      "display": "show",
+      "style": "bold",
+      "section": "system",
+      "type": "number",
+      "description": "The `latitude` coordinate of the device in the WGS84 coordinate system"
+    },
+    "system.location.coordinates.long": {
+      "display": "show",
+      "style": "bold",
+      "section": "system",
+      "type": "number",
+      "description": "The `longitude` coordinate of the device in the WGS84 coordinate system"
+    },
+    "system.location.coordinates.alt_m": {
+      "display": "show",
+      "style": "bold",
+      "section": "system",
+      "type": "number",
+      "description": "The `altitude` coordinate of the device in meters"
+    },
+    "system.serial_no": {
+      "display": "show",
+      "style": "bold",
+      "section": "system",
+      "type": "string",
+      "description": "The serial number of the physical device",
+      "examples": [
+        "A1B2C3D4",
+        "00001"
+      ]
+    },
+    "system.hardware.make": {
+      "display": "show",
+      "style": "bold",
+      "section": "system",
+      "type": "string",
+      "description": "The manufacturer of the device",
+      "examples": [
+        "Google"
+      ]
+    },
+    "system.hardware.model": {
+      "display": "show",
+      "style": "bold",
+      "section": "system",
+      "type": "string",
+      "description": "The model of the device",
+      "examples": [
+        "Pixel 5",
+        "Pixel 6",
+        "Pixel 6 Pro"
+      ]
+    },
+    "system.hardware.sku": {
+      "display": "show",
+      "style": "bold",
+      "section": "system",
+      "type": "string",
+      "description": "A stock keeping unit which identifies the unique composition of a device, for example those with different hardware configurations",
+      "examples": [
+        "GF5KQ",
+        "4215612"
+      ]
+    },
+    "system.hardware.rev": {
+      "display": "show",
+      "style": "bold",
+      "section": "system",
+      "type": "string",
+      "description": "Hardware revision of the device",
+      "examples": [
+        "A",
+        "B",
+        "1"
+      ]
+    },
+    "system.software.firmware": {
+      "style": "bold",
+      "display": "show",
+      "section": "system",
+      "type": "string"
+    },
+    "system.software.os": {
+      "style": "bold",
+      "display": "show",
+      "section": "system",
+      "type": "string"
+    },
+    "system.software.driver": {
+      "style": "bold",
+      "display": "show",
+      "section": "system",
+      "type": "string"
+    },
+    "system.physical_tag.asset.guid": {
+      "display": "show",
+      "style": "bold",
+      "section": "system",
+      "type": "string"
+    },
+    "system.physical_tag.asset.site": {
+      "display": "show",
+      "style": "bold",
+      "section": "system",
+      "type": "string"
+    },
+    "system.physical_tag.asset.name": {
+      "display": "show",
+      "style": "bold",
+      "section": "system",
+      "type": "string"
+    },
+    "system.adjunct": {
+      "display": "show",
+      "style": "bold",
+      "section": "system",
+      "type": "object"
+    },
+    "system.min_loglevel": {
+      "display": "show",
+      "style": "bold",
+      "section": "system",
+      "type": "integer",
+      "description": "The minimum loglevel for reporting log messages below which log entries should not be sent. Default to 300."
+    },
+    "system.metrics_rate_sec": {
+      "display": "show",
+      "style": "bold",
+      "section": "system",
+      "type": "integer",
+      "description": "The rate at which the system should send system event updates. 0 indicates no updates."
+    },
     "gateway.gateway_id": {
       "display": "show",
       "style": "bold",

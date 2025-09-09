@@ -42,7 +42,10 @@
       }
     },
     "system": {
-      "$ref": "file:model_system.json#"
+      "$ref": "file:model_system.json#",
+      "$presentation": {
+        "section": "system"
+      }
     },
     "gateway": {
       "$ref": "file:model_gateway.json#",

@@ -74,7 +74,7 @@ def traverse_schema(schema_obj, all_schemas, path_prefix="",
   fields_to_capture = ['type', 'description', 'examples']
 
   # This handler is for when the schema_obj *itself* is a map defined
-  # by patternProperties, and its parent is injecting configuration.
+  # by patternProperties AND has a $presentation.paths block.
   if ('patternProperties' in schema_obj and
       '$presentation' in schema_obj and 'paths' in schema_obj['$presentation']):
 
@@ -85,7 +85,6 @@ def traverse_schema(schema_obj, all_schemas, path_prefix="",
           f"Skipping.")
       return {}
 
-    # Get the generic schema definition for the pattern (it's probably a $ref)
     pattern_schema_def = next(iter(schema_obj['patternProperties'].values()))
 
     # Resolve the $ref, exactly like we do in the main properties loop
@@ -113,30 +112,52 @@ def traverse_schema(schema_obj, all_schemas, path_prefix="",
         resolved = resolved_pointer
       else:
         resolved = resolved_base
-
-      # Combine the resolved base schema with any local overrides from the
-      # $ref object
       resolved_pattern_schema = {**resolved, **pattern_schema_def}
 
-    # Now, iterate the path *object* (key and config) and RECURSE
-    for path_key, path_config in paths_obj.items():
-      current_path = f"{path_prefix}.{path_key}" if path_prefix else path_key
+    # Check if the resolved schema is complex (and needs recursion) or simple.
+    is_complex_object = (
+        resolved_pattern_schema.get('type') == 'object' or
+        'properties' in resolved_pattern_schema or
+        'patternProperties' in resolved_pattern_schema
+    )
 
-      # Recurse into the resolved schema (e.g., model_localnet_family.json)
-      # and pass the config (e.g., {"adjunct.paths":...}) as the new
-      # injected_config
-      child_config = traverse_schema(
-          resolved_pattern_schema,
-          all_schemas,
-          current_path,
-          inherited_section,
-          force_hide,
-          injected_config=path_config
-      )
-      presentation_config.update(child_config)
+    if is_complex_object:
+      # --- COMPLEX RECURSION CASE (e.g., families) ---
+      # Iterate the path *object* (key and config) and RECURSE
+      for path_key, path_config in paths_obj.items():
+        current_path = f"{path_prefix}.{path_key}" if path_prefix else path_key
+        child_config = traverse_schema(
+            resolved_pattern_schema,
+            all_schemas,
+            current_path,
+            inherited_section,
+            force_hide,
+            injected_config=path_config
+        )
+        presentation_config.update(child_config)
+    else:
+      # --- SIMPLE TERMINAL MAP CASE (e.g., software) ---
+      # Do NOT recurse. Build the properties directly.
+      pattern_schema = resolved_pattern_schema
+      for path_key, path_config in paths_obj.items():
+        # path_key = "firmware", path_config = {"style": "bold"}
+        current_path = f"{path_prefix}.{path_key}" if path_prefix else path_key
 
-    # We have fully processed this schema object. Return the results
-    # and prevent falling through to the 'properties' handler below.
+        # Build the config entry directly
+        final_prop_config = path_config.copy()  # Starts with {"style": "bold"}
+        final_prop_config['display'] = 'show'  # If it's in paths, we show it
+        final_prop_config['section'] = inherited_section  # Inherit section
+
+        # Copy fields from the pattern_schema ({"type": "string"})
+        for field in fields_to_capture:
+          if field in pattern_schema and field not in final_prop_config:
+            final_prop_config[field] = pattern_schema[field]
+
+        if not force_hide:
+          presentation_config[current_path] = final_prop_config
+
+
+    # We have fully processed this schema object. Return the results.
     return presentation_config
 
   # Handle regular properties.
@@ -178,9 +199,9 @@ def traverse_schema(schema_obj, all_schemas, path_prefix="",
       new_force_hide = force_hide or current_presentation.get(
           'display') == 'hide'
 
-      # Check if the injected_config (from the parent) has instructions
-      # for this specific property key.
+      # Check if injected_config has instructions for this property key.
       injected_key_name = f"{key}.paths"  # e.g., "adjunct.paths"
+
       if injected_config and injected_key_name in injected_config:
 
         injected_paths_obj = injected_config[injected_key_name]
@@ -191,28 +212,17 @@ def traverse_schema(schema_obj, all_schemas, path_prefix="",
               f"but no patternProperties in its schema.")
           continue
 
-        # Get the generic schema for the items in this map (e.g., the base
-        # "string" schema)
         pattern_schema = next(
             iter(effective_prop_schema['patternProperties'].values()))
 
         # Loop over the *injected keys* (e.g., "name", "serial_port")
         for injected_key, injected_prop_config in injected_paths_obj.items():
-          # injected_key = "name"
-          # injected_prop_config = { "style": "bold", "description": "..." }
-
-          # e.g., "families.bacnet.adjunct.name"
           injected_path = f"{current_path}.{injected_key}"
 
-          # Start building the config from the injected data
           final_prop_config = injected_prop_config.copy()
-          final_prop_config[
-            'display'] = 'show'  # If it's injected, we must show it
-          final_prop_config[
-            'section'] = section_for_this_level  # Inherit section
+          final_prop_config['display'] = 'show'
+          final_prop_config['section'] = section_for_this_level
 
-          # Add data from the generic pattern_schema (like 'type')
-          # if it wasn't already specified in the injected config
           for field in fields_to_capture:
             if field in pattern_schema and field not in final_prop_config:
               final_prop_config[field] = pattern_schema[field]
@@ -220,8 +230,7 @@ def traverse_schema(schema_obj, all_schemas, path_prefix="",
           if not force_hide:
             presentation_config[injected_path] = final_prop_config
 
-        # We have manually processed this property and its injected children.
-        # Do NOT recurse or process it further.
+        # We have manually processed this property. Do NOT recurse.
         continue
 
       if effective_prop_schema.get(
