@@ -4,13 +4,6 @@
   "description": "Information about a specific point name of the device.",
   "type": "object",
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$defaultPresentation": {
-    "paths": {
-      "model_pointset.points.points_template_name": {
-        "section": "points"
-      }
-    }
-  },
   "additionalProperties": false,
   "properties": {
     "units": {
@@ -72,8 +65,7 @@
         "^[a-z_]+$": {
           "type": "string"
         }
-      },
-      "$presentation": { }
+      }
     },
     "tags":{
       "description": "Tags assosciated with the point",
@@ -92,8 +84,7 @@
         "^[-_.:/a-zA-Z0-9]+$": {
           "$ref": "file:discovery_ref.json#"
         }
-      },
-      "$presentation": { }
+      }
     }
   }
 }

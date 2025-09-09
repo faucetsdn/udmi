@@ -48,11 +48,8 @@
         "clearblade"
       ],
       "$presentation": {
-        "paths": {
-          "configuration_execution.iot_provider": {
-            "section": "cloud_iot_config"
-          }
-        }
+        "display": "show",
+        "style": "bold"
       }
     },
     "operation": {

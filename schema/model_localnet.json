@@ -4,7 +4,6 @@
   "description": "Used to describe device local network parameters",
   "type": "object",
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$defaultPresentation": "localnet",
   "additionalProperties": false,
   "properties": {
     "parent": {
@@ -16,12 +15,20 @@
             "description": "ID of the parent device to which the device is physically connected",
             "type": "string",
             "pattern": "^[A-Z]{2,6}-[1-9][0-9]*$",
-            "examples": ["DDC-1", "CGW-2"]
+            "examples": ["DDC-1", "CGW-2"],
+            "$presentation": {
+              "display": "show",
+              "style": "bold"
+            }
         },
         "family": {
             "description": "Connection family/protocol of the parent device to which the device is physically connected",
             "type": "string",
-            "examples": ["bacnet_mstp", "modbus_tcp", "mqtt"]
+            "examples": ["bacnet_mstp", "modbus_tcp", "mqtt"],
+            "$presentation": {
+              "display": "show",
+              "style": "bold"
+            }
         }
       }
     },
@@ -35,14 +42,35 @@
       },
       "examples": ["bacnet", "modbus", "mbus", "ether", "ipv4", "ipv6", "iot"],
       "$presentation": {
-        "presentationProperties": {
-          "bacnet": { "$ref": "file:model_localnet_family.json" },
-          "modbus": { "$ref": "file:model_localnet_family.json" },
-          "mbus":   { "$ref": "file:model_localnet_family.json" },
-          "ether":  { "$ref": "file:model_localnet_family.json" },
-          "ipv4":   { "$ref": "file:model_localnet_family.json" },
-          "ipv6":   { "$ref": "file:model_localnet_family.json" },
-          "fqdn":   { "$ref": "file:model_localnet_family.json" }
+        "paths": {
+          "bacnet": {
+            "adjunct.paths": {
+              "name": { "style": "bold", "description": "BACnet device name" },
+              "description": { "style": "bold", "description": "BACnet device description" }
+            }
+          },
+          "modbus": {
+            "adjunct.paths": {
+              "serial_port": { "style": "bold" },
+              "bit_rate": { "style": "bold" },
+              "data_bits": { "style": "bold" },
+              "stop_bits": { "style": "bold" },
+              "parity": { "style": "bold" },
+              "encoding": { "style": "bold" }
+            }
+          },
+          "mbus": {
+            "adjunct.paths": {
+              "serial_port": { "style": "bold" },
+              "bit_rate": { "style": "bold" },
+              "secondary_addr": { "style": "bold" }
+            }
+          },
+          "ether": { },
+          "ipv4": { },
+          "ipv6": { },
+          "fqdn": { },
+          "iot": { }
         }
       }
     }

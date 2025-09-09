@@ -12,11 +12,8 @@
       "pattern": "^[A-Z]{2,6}-[1-9][0-9]*$",
       "examples": ["GAT-100"],
       "$presentation": {
-        "paths": {
-          "$this": {
-            "section": "gateway"
-          }
-        }
+        "display": "show",
+        "style": "bold"
       }
     },
     "target": {
@@ -29,7 +26,11 @@
         "type": "string",
         "pattern": "^[A-Z]{2,6}-[1-9][0-9]*$"
       },
-      "examples": [["AHU-22"]]
+      "examples": [["AHU-22"]],
+      "$presentation": {
+        "display": "show",
+        "style": "bold"
+      }
     }
   }
 }

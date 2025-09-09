@@ -4,17 +4,14 @@
     "description": "Dimensions with a value and a unit",
     "type": "object",
     "$schema": "http://json-schema.org/draft-07/schema#",
-    "$defaultPresentation": {
-      "paths": {
-        "site_metadata.parameters.*": {
-          "section": "site_metadata"
-        }
-      }
-    },
     "additionalProperties": false,
     "properties": {
       "value": {
-        "type": "number"
+        "type": "number",
+        "$presentation": {
+          "display": "show",
+          "style": "bold"
+        }
       },
       "unit": {
         "type": "string",
@@ -26,7 +23,11 @@
             {"title": "$/gal", "pattern": "^\\$\/gal"},
             {"title": "£/kWh", "pattern": "^£\/kWh$"},
             {"title": "$/kWh", "pattern": "^\\$\/kWh$"}
-        ]
+        ],
+        "$presentation": {
+          "display": "show",
+          "style": "bold"
+        }
     }
   }
 }

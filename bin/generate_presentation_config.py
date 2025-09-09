@@ -4,238 +4,278 @@ defined in schema.
 """
 import json
 import os
-import fnmatch
-import shutil
-from collections import OrderedDict, defaultdict
+import re
 
-# --- Configuration ---
 SCHEMA_DIR = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'schema')
-OUTPUT_DIR = os.path.join(os.path.dirname(os.path.dirname(__file__)),
-                          'gencode', 'presentation')
-
-# --- Constants ---
-PRESENTATION = '$presentation'
-DEFAULT_SECTION_KEY = '$defaultPresentation'
-PRESENTATION_PROPS = 'presentationProperties'
-REFERENCE = '$ref'
-CURRENT = '$this'
-PATHS = 'paths'
-SECTION = 'section'
-LABEL = 'label'
-SCHEMA_KEY = 'schemaKey'
-EXPECTED_TYPE = 'expectedType'
-DESCRIPTION = 'description'
-EXAMPLES = 'examples'
-FORMAT = 'format'
-EXPECTED_FORMAT = 'expectedFormat'
+ROOT_CONFIG_FILE = os.path.join(os.path.dirname(os.path.dirname(__file__)),
+                                'docs', 'guides', 'presentation_layer.md')
+OUTPUT_FILE = os.path.join(os.path.dirname(os.path.dirname(__file__)),
+                           'gencode', 'presentation', 'presentation.json')
 
 
-# --- Helper Functions ---
-
-
-def load_json_file(filename, base_dir=SCHEMA_DIR):
-  path = os.path.join(base_dir, filename)
-  if not os.path.exists(path):
-    print(f'Warning: Schema file not found: {path}')
-    return None
+def get_root_schemas(file_path):
+  """
+  Parses the Markdown file to find the JSON code block
+  and extract the list of root schema filenames.
+  """
+  print(f"Reading root schemas from {file_path}...")
   try:
-    with open(path, 'r', encoding='utf-8') as f:
-      return json.load(f)
-  except json.JSONDecodeError as e:
-    print(f'Error decoding JSON from {path}: {e}')
-    return None
+    with open(file_path, 'r') as f:
+      content = f.read()
+      json_block_match = re.search(r'```json\s*([\s\S]*?)\s*```', content)
+      if not json_block_match:
+        raise ValueError("No JSON code block found in the markdown file.")
+
+      json_content = json.loads(json_block_match.group(1))
+      roots = json_content.get("roots")
+      if not roots or not isinstance(roots, list):
+        raise ValueError("JSON block must contain a 'roots' array.")
+
+      print(f"Found root schemas: {', '.join(roots)}")
+      return roots
+  except FileNotFoundError:
+    print(f"Error: {file_path} not found.")
+    exit(1)
+  except (json.JSONDecodeError, ValueError) as e:
+    print(f"Error parsing {file_path}: {e}")
+    exit(1)
 
 
-def find_presentation_properties(schema, path_prefix, collected_properties,
-    origin_file_ref, default_config=None):
+def load_all_schemas(schema_dir):
   """
-  Recursively processes a schema, collecting properties with
-  '$presentation' tags.
+  Loads all .json files from the schema directory into a dictionary.
   """
-  if not isinstance(schema, dict):
-    return
+  print(f"Loading all schemas from directory '{schema_dir}'...")
+  all_schemas = {}
+  try:
+    for filename in os.listdir(schema_dir):
+      if filename.endswith('.json'):
+        file_path = os.path.join(schema_dir, filename)
+        with open(file_path, 'r') as f:
+          all_schemas[filename] = json.load(f)
+    print(f"Successfully loaded {len(all_schemas)} schemas.")
+    return all_schemas
+  except FileNotFoundError:
+    print(f"Error: Schema directory '{schema_dir}' not found.")
+    exit(1)
 
-  process_property(schema, path_prefix, collected_properties, origin_file_ref,
-                   default_config)
 
-  for key, prop_details in schema.get('properties', {}).items():
-    if not isinstance(prop_details, dict):
+def traverse_schema(schema_obj, all_schemas, path_prefix="",
+    inherited_section="", force_hide=False,
+    injected_config=None):
+  """
+  Recursively traverses a schema object and its references to build a
+  flattened presentation configuration.
+  """
+  if not schema_obj:
+    return {}
+
+  presentation_config = {}
+  fields_to_capture = ['type', 'description', 'examples']
+
+  # This handler is for when the schema_obj *itself* is a map defined
+  # by patternProperties, and its parent is injecting configuration.
+  if ('patternProperties' in schema_obj and
+      '$presentation' in schema_obj and 'paths' in schema_obj['$presentation']):
+
+    paths_obj = schema_obj['$presentation'].get('paths', {})
+    if not isinstance(paths_obj, dict):
+      print(
+          f"Warning: $presentation.paths for {path_prefix} is not an object. "
+          f"Skipping.")
+      return {}
+
+    # Get the generic schema definition for the pattern (it's probably a $ref)
+    pattern_schema_def = next(iter(schema_obj['patternProperties'].values()))
+
+    # Resolve the $ref, exactly like we do in the main properties loop
+    resolved_pattern_schema = pattern_schema_def
+    if '$ref' in pattern_schema_def:
+      ref_string = pattern_schema_def['$ref'].replace('file:', '')
+      if '#' in ref_string:
+        ref_name, json_pointer = ref_string.split('#', 1)
+      else:
+        ref_name, json_pointer = ref_string, None
+
+      resolved_base = all_schemas.get(ref_name)
+      if not resolved_base:
+        raise FileNotFoundError(
+            f"Schema file '{ref_name}' not found for ref '{ref_string}'.")
+
+      if json_pointer:
+        path_parts = json_pointer.strip('/').split('/')
+        resolved_pointer = resolved_base
+        for part in path_parts:
+          resolved_pointer = resolved_pointer.get(part)
+          if resolved_pointer is None:
+            raise ValueError(
+                f"JSON pointer path '{json_pointer}' not found in {ref_name}.")
+        resolved = resolved_pointer
+      else:
+        resolved = resolved_base
+
+      # Combine the resolved base schema with any local overrides from the
+      # $ref object
+      resolved_pattern_schema = {**resolved, **pattern_schema_def}
+
+    # Now, iterate the path *object* (key and config) and RECURSE
+    for path_key, path_config in paths_obj.items():
+      current_path = f"{path_prefix}.{path_key}" if path_prefix else path_key
+
+      # Recurse into the resolved schema (e.g., model_localnet_family.json)
+      # and pass the config (e.g., {"adjunct.paths":...}) as the new
+      # injected_config
+      child_config = traverse_schema(
+          resolved_pattern_schema,
+          all_schemas,
+          current_path,
+          inherited_section,
+          force_hide,
+          injected_config=path_config
+      )
+      presentation_config.update(child_config)
+
+    # We have fully processed this schema object. Return the results
+    # and prevent falling through to the 'properties' handler below.
+    return presentation_config
+
+  # Handle regular properties.
+  if 'properties' in schema_obj:
+    for key, prop_schema in schema_obj['properties'].items():
+      current_path = f"{path_prefix}.{key}" if path_prefix else key
+
+      effective_prop_schema = prop_schema
+      if '$ref' in prop_schema:
+        ref_string = prop_schema['$ref'].replace('file:', '')
+        if '#' in ref_string:
+          ref_name, json_pointer = ref_string.split('#', 1)
+        else:
+          ref_name, json_pointer = ref_string, None
+
+        resolved_base = all_schemas.get(ref_name)
+        if not resolved_base:
+          raise FileNotFoundError(
+              f"Schema file '{ref_name}' not found for ref '{ref_string}'.")
+
+        if json_pointer:
+          path_parts = json_pointer.strip('/').split('/')
+          resolved_pointer = resolved_base
+          for part in path_parts:
+            resolved_pointer = resolved_pointer.get(part)
+            if resolved_pointer is None:
+              raise ValueError(
+                  f"JSON pointer path '{json_pointer}' not "
+                  f"found in {ref_name}.")
+          resolved = resolved_pointer
+        else:
+          resolved = resolved_base
+        effective_prop_schema = {**resolved, **prop_schema}
+
+      current_presentation = prop_schema.get('$presentation', {})
+      section_for_this_level = current_presentation.get('section',
+                                                        inherited_section)
+
+      new_force_hide = force_hide or current_presentation.get(
+          'display') == 'hide'
+
+      # Check if the injected_config (from the parent) has instructions
+      # for this specific property key.
+      injected_key_name = f"{key}.paths"  # e.g., "adjunct.paths"
+      if injected_config and injected_key_name in injected_config:
+
+        injected_paths_obj = injected_config[injected_key_name]
+
+        if 'patternProperties' not in effective_prop_schema:
+          print(
+              f"Warning: Injected paths found for '{key}', "
+              f"but no patternProperties in its schema.")
+          continue
+
+        # Get the generic schema for the items in this map (e.g., the base
+        # "string" schema)
+        pattern_schema = next(
+            iter(effective_prop_schema['patternProperties'].values()))
+
+        # Loop over the *injected keys* (e.g., "name", "serial_port")
+        for injected_key, injected_prop_config in injected_paths_obj.items():
+          # injected_key = "name"
+          # injected_prop_config = { "style": "bold", "description": "..." }
+
+          # e.g., "families.bacnet.adjunct.name"
+          injected_path = f"{current_path}.{injected_key}"
+
+          # Start building the config from the injected data
+          final_prop_config = injected_prop_config.copy()
+          final_prop_config[
+            'display'] = 'show'  # If it's injected, we must show it
+          final_prop_config[
+            'section'] = section_for_this_level  # Inherit section
+
+          # Add data from the generic pattern_schema (like 'type')
+          # if it wasn't already specified in the injected config
+          for field in fields_to_capture:
+            if field in pattern_schema and field not in final_prop_config:
+              final_prop_config[field] = pattern_schema[field]
+
+          if not force_hide:
+            presentation_config[injected_path] = final_prop_config
+
+        # We have manually processed this property and its injected children.
+        # Do NOT recurse or process it further.
+        continue
+
+      if effective_prop_schema.get(
+          'type') == 'object' or effective_prop_schema.get('existingJavaType',
+                                                           None):
+        child_config = traverse_schema(effective_prop_schema, all_schemas,
+                                       current_path, section_for_this_level,
+                                       new_force_hide,
+                                       injected_config=injected_config)
+        presentation_config.update(child_config)
+
+      if current_presentation.get('display') == 'show' and not force_hide:
+        prop_config = current_presentation.copy()
+        prop_config['section'] = section_for_this_level
+
+        for field in fields_to_capture:
+          if field in effective_prop_schema:
+            prop_config[field] = effective_prop_schema[field]
+
+        presentation_config[current_path] = prop_config
+
+  return presentation_config
+
+
+def main():
+  """
+  Main function to drive the presentation config generation.
+  (This function is unchanged)
+  """
+  root_schemas = get_root_schemas(ROOT_CONFIG_FILE)
+  all_schemas = load_all_schemas(SCHEMA_DIR)
+
+  final_config = {}
+
+  for root in root_schemas:
+    print(f"Processing root schema: {root}...")
+    root_schema_obj = all_schemas.get(root)
+    if not root_schema_obj:
+      print(f"Warning: Root schema {root} not found. Skipping.")
       continue
 
-    current_path = path_prefix + [key]
-    find_presentation_properties(prop_details, current_path,
-                                 collected_properties, origin_file_ref,
-                                 default_config)
+    presentation_info = root_schema_obj.get('$presentation', {})
+    root_section = presentation_info.get('section', root.replace('.json', ''))
 
+    properties = traverse_schema(root_schema_obj, all_schemas,
+                                 inherited_section=root_section)
+    final_config[root] = properties
 
-def process_property(prop_details, current_path, collected_properties,
-    origin_file_ref, default_config=None):
-  """
-  Processes a single property. It first checks if the property itself should be
-  added to the output, then handles recursion for nested structures.
-  """
-  full_path_str = '.'.join(current_path)
-  presentation_config = prop_details.get(PRESENTATION)
+  print(f"Writing final configuration to {OUTPUT_FILE}...")
+  with open(OUTPUT_FILE, 'w') as f:
+    json.dump(final_config, f, indent=2)
 
-  if len(current_path) > 1:
-    is_opt_out = isinstance(presentation_config,
-                            dict) and not presentation_config
-    if not is_opt_out:
-      if isinstance(presentation_config, str):
-        add_property_to_section(collected_properties, presentation_config,
-                                full_path_str, prop_details)
-      elif isinstance(presentation_config, dict):
-        if 'paths' in presentation_config:
-          presentation_paths = presentation_config.get(PATHS, {})
-          parent_path_str = '.'.join(current_path[:-1])
-          has_processed_contextual = False
-          for required_path, details in presentation_paths.items():
-            if presentation_props := details.get(PRESENTATION_PROPS):
-              has_processed_contextual = True
-              section_name = details.get(SECTION)
-              if not section_name: continue
-              for sub_key, sub_prop_details in presentation_props.items():
-                final_schema_key = f"{required_path}.{sub_key}"
-                add_property_to_section(collected_properties, section_name,
-                                        final_schema_key, sub_prop_details)
-
-          # If not a contextual block, process as a normal paths block
-          if not has_processed_contextual:
-            for required_path, details in presentation_paths.items():
-              section_name, label = details.get(SECTION), details.get(LABEL)
-              if not section_name: continue
-              if (required_path == CURRENT and full_path_str.startswith(origin_file_ref)) or \
-                  (required_path != CURRENT and fnmatch.fnmatch(parent_path_str, required_path)):
-                add_property_to_section(collected_properties, section_name,
-                                        full_path_str, prop_details, label)
-        elif 'label' in presentation_config:
-          custom_label = presentation_config.get(LABEL)
-          default_section = None
-          if default_config:
-            if isinstance(default_config, str):
-              default_section = default_config
-            elif isinstance(default_config, dict):
-              default_paths = default_config.get(PATHS, {})
-              parent_path_str = '.'.join(current_path[:-1])
-              for required_path, details in default_paths.items():
-                if fnmatch.fnmatch(parent_path_str, required_path):
-                  default_section = details.get(SECTION)
-                  break
-          if default_section:
-            add_property_to_section(collected_properties, default_section,
-                                    full_path_str, prop_details, custom_label)
-
-      elif presentation_config is None and default_config:
-        is_leaf_node = ('properties' not in prop_details
-                        and '$ref' not in prop_details)
-        if is_leaf_node:
-          if isinstance(default_config, str):
-            if full_path_str.startswith(origin_file_ref):
-              add_property_to_section(collected_properties, default_config,
-                                      full_path_str, prop_details)
-          elif isinstance(default_config, dict):
-            default_paths = default_config.get(PATHS, {})
-            parent_path_str = '.'.join(current_path[:-1])
-            for required_path, details in default_paths.items():
-              section_name, label = details.get(SECTION), details.get(LABEL)
-              if not section_name: continue
-              if fnmatch.fnmatch(parent_path_str, required_path):
-                add_property_to_section(collected_properties, section_name,
-                                        full_path_str, prop_details, label)
-                break
-
-  if isinstance(presentation_config, dict):
-    if presentation_props := presentation_config.get(PRESENTATION_PROPS):
-      for key, value_schema in presentation_props.items():
-        specific_path = current_path + [key]
-        find_presentation_properties(value_schema, specific_path,
-                                     collected_properties, origin_file_ref,
-                                     default_config)
-  if ref_value := prop_details.get(REFERENCE):
-    if ref_value.startswith('file:'):
-      ref_path, _, ref_pointer_str = ref_value.partition('#')
-      ref_filename = ref_path.split(':')[1]
-      ref_schema = load_json_file(ref_filename)
-      if ref_schema:
-        new_default_config = ref_schema.get(DEFAULT_SECTION_KEY)
-
-        if ref_pointer_str:
-          try:
-            for part in ref_pointer_str.strip('/').split('/'):
-              ref_schema = ref_schema[part]
-          except (KeyError, TypeError):
-            ref_schema = None
-
-        if ref_schema:
-          new_origin_ref = ref_filename.replace('.json', '')
-          find_presentation_properties(ref_schema, current_path,
-                                       collected_properties,
-                                       new_origin_ref,
-                                       new_default_config)
-
-
-def add_property_to_section(collected_properties, section_name, schema_key,
-    prop_details, label=None):
-  """
-  Helper function to create and add a field entry.
-  """
-  if schema_key in collected_properties[section_name]:
-    return
-
-  fallback_label = schema_key[schema_key.find('.') + 1:]
-  field_info = {
-      LABEL: label or fallback_label,
-      EXPECTED_TYPE: prop_details.get('type', 'string')
-  }
-  if 'type' in prop_details:
-    field_info[EXPECTED_TYPE] = prop_details['type']
-
-  if prop_details.get(DESCRIPTION):
-    field_info[DESCRIPTION] = prop_details[DESCRIPTION]
-  if prop_details.get(EXAMPLES):
-    field_info[EXAMPLES] = str(prop_details[EXAMPLES])
-  if FORMAT in prop_details:
-    field_info[EXPECTED_FORMAT] = prop_details[FORMAT]
-
-  collected_properties[section_name][schema_key] = field_info
-
-
-def generate_view_files():
-  if not os.path.exists(SCHEMA_DIR):
-    print(f'Error: Schema directory not found at "{SCHEMA_DIR}"')
-    return
-  if not os.path.exists(OUTPUT_DIR):
-    os.makedirs(OUTPUT_DIR)
-    print(f'Created output directory: {OUTPUT_DIR}')
-
-  shutil.rmtree(OUTPUT_DIR)
-  os.makedirs(OUTPUT_DIR)
-  collected_properties = defaultdict(OrderedDict)
-  schema_files = [x for x in os.listdir(SCHEMA_DIR) if
-                  os.path.isfile(os.path.join(SCHEMA_DIR, x))]
-  for filename in schema_files:
-    print(f'Scanning root schema: {filename}')
-    schema = load_json_file(filename)
-    if not schema:
-      continue
-
-    default_config = schema.get(DEFAULT_SECTION_KEY)
-
-    origin_file_ref = filename.replace('.json', '')
-    path_prefix = [origin_file_ref]
-    find_presentation_properties(schema, path_prefix, collected_properties,
-                                 origin_file_ref, default_config)
-
-  print(f'\nFound {len(collected_properties)} sections. '
-        f'Generating presentation files...')
-
-  output_path = os.path.join(OUTPUT_DIR, 'presentation.json')
-  with open(output_path, 'w', encoding='utf-8') as f:
-    json.dump(collected_properties, f, indent=2)
-
-  print(f'\nSuccessfully generated presentation configuration file at '
-        f'"{output_path}"')
+  print("Done.")
 
 
 if __name__ == '__main__':
-  generate_view_files()
+  main()
