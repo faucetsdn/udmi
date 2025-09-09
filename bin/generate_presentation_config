@@ -1,3 +1,5 @@
+#!/usr/bin/env python3
+
 """
 Script to generate presentation config from presentation attributes
 defined in schema.
