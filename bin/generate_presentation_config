@@ -12,7 +12,7 @@ from dataclasses import dataclass
 
 SCHEMA_DIR = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'schema')
 ROOT_CONFIG_FILE = os.path.join(os.path.dirname(os.path.dirname(__file__)),
-                                'docs', 'guides', 'presentation_layer.md')
+                                'docs', 'guides', 'presentation_roots.md')
 OUTPUT_FILE = os.path.join(os.path.dirname(os.path.dirname(__file__)),
                            'gencode', 'presentation', 'presentation.json')
 
