@@ -34,8 +34,5 @@
       },
       "examples": ["bacnet", "modbus", "mbus", "ether", "ipv4", "ipv6", "iot"]
     }
-  },
-  "required": [
-    "families"
-  ]
+  }
 }
