@@ -1,0 +1,1344 @@
+{
+  "site_metadata.json": {
+    "site": {
+      "display": "show",
+      "style": "bold",
+      "section": "site_metadata",
+      "type": "string",
+      "description": "Identifier for the site or building",
+      "examples": [
+        "UK-LON-ABC",
+        "US-NYC-DEF2"
+      ]
+    },
+    "name": {
+      "display": "show",
+      "style": "bold",
+      "section": "site_metadata",
+      "type": "string",
+      "description": "Name of the site or building",
+      "examples": [
+        "Cheesegrater",
+        "Colosseum"
+      ]
+    },
+    "tags": {
+      "display": "show",
+      "style": "bold",
+      "section": "site_metadata",
+      "type": "array",
+      "description": "Tags associated with the site",
+      "examples": [
+        [
+          "new_construction"
+        ],
+        [
+          "existing",
+          "brownfield"
+        ]
+      ]
+    },
+    "strict_warnings": {
+      "display": "show",
+      "style": "bold",
+      "section": "site_metadata",
+      "type": "boolean",
+      "description": "Enable strict checking and treat warnings as errors"
+    },
+    "location.address": {
+      "display": "show",
+      "style": "bold",
+      "section": "site_metadata",
+      "type": "string",
+      "description": "Postal address of the site",
+      "examples": [
+        "1600 Amphitheatre Parkway, Mountain View, CA 94043, United States",
+        "Piazza del Colosseo, 1, 00184 Roma RM, Italy"
+      ]
+    },
+    "location.lat": {
+      "display": "show",
+      "style": "bold",
+      "section": "site_metadata",
+      "type": "number",
+      "description": "Latitude of the site in WGS84 coordinates, North of the equator, as indicated by a map marker",
+      "examples": [
+        41.8902
+      ]
+    },
+    "location.long": {
+      "display": "show",
+      "style": "bold",
+      "section": "site_metadata",
+      "type": "number",
+      "description": "Longitude of the site in WGS84 coordinates, East of Greenwich, as indicated by a map marker",
+      "examples": [
+        12.4922
+      ]
+    },
+    "links.dashboard": {
+      "display": "show",
+      "style": "bold",
+      "section": "site_metadata",
+      "type": "string",
+      "description": "Site dashboard link",
+      "examples": [
+        "https://example.com/dashboard"
+      ]
+    },
+    "links.docs": {
+      "display": "show",
+      "style": "bold",
+      "section": "site_metadata",
+      "type": "string",
+      "description": "Folder where the project documentation is stored",
+      "examples": [
+        "file://home/user/docs",
+        "https://drive.google.com/corp/drive/folders/iamadrivelocation"
+      ]
+    },
+    "links.folder": {
+      "display": "show",
+      "style": "bold",
+      "section": "site_metadata",
+      "type": "string",
+      "description": "Folder where the UDMI site model is stored",
+      "examples": [
+        "file://home/user/udmi_site_model",
+        "https://drive.google.com/corp/drive/folders/iamadrivelocation"
+      ]
+    },
+    "links.image": {
+      "display": "show",
+      "style": "bold",
+      "section": "site_metadata",
+      "type": "string",
+      "description": "Image of the site",
+      "examples": [
+        "file://home/user/image.png",
+        "https://drive.google.com/corp/drive/folders/iamadrivelocation"
+      ]
+    },
+    "links.repo": {
+      "display": "show",
+      "style": "bold",
+      "section": "site_metadata",
+      "type": "string",
+      "description": "Source repository where the UDMI site model is stored",
+      "examples": [
+        "https://github.com/faucetsdn/udmi_site_model",
+        "git@github.com:faucetsdn/udmi_site_model.git"
+      ]
+    },
+    "links.sheet": {
+      "display": "show",
+      "style": "bold",
+      "section": "site_metadata",
+      "type": "string",
+      "description": "Link to a spreadsheet to observe real-time output from any tool",
+      "examples": [
+        "https://docs.google.com/spreadsheets/d/<spreadsheet_id>"
+      ]
+    },
+    "parameters.area.net_occupied_area.value": {
+      "display": "show",
+      "style": "bold",
+      "section": "site_metadata",
+      "type": "number"
+    },
+    "parameters.area.net_occupied_area.unit": {
+      "display": "show",
+      "style": "bold",
+      "section": "site_metadata",
+      "type": "string"
+    },
+    "parameters.area.gross_internal_area.value": {
+      "display": "show",
+      "style": "bold",
+      "section": "site_metadata",
+      "type": "number"
+    },
+    "parameters.area.gross_internal_area.unit": {
+      "display": "show",
+      "style": "bold",
+      "section": "site_metadata",
+      "type": "string"
+    },
+    "parameters.electricity.carbon_factor.value": {
+      "display": "show",
+      "style": "bold",
+      "section": "site_metadata",
+      "type": "number"
+    },
+    "parameters.electricity.carbon_factor.unit": {
+      "display": "show",
+      "style": "bold",
+      "section": "site_metadata",
+      "type": "string"
+    },
+    "parameters.electricity.unit_cost.value": {
+      "display": "show",
+      "style": "bold",
+      "section": "site_metadata",
+      "type": "number"
+    },
+    "parameters.electricity.unit_cost.unit": {
+      "display": "show",
+      "style": "bold",
+      "section": "site_metadata",
+      "type": "string"
+    },
+    "parameters.gas.carbon_factor.value": {
+      "display": "show",
+      "style": "bold",
+      "section": "site_metadata",
+      "type": "number"
+    },
+    "parameters.gas.carbon_factor.unit": {
+      "display": "show",
+      "style": "bold",
+      "section": "site_metadata",
+      "type": "string"
+    },
+    "parameters.gas.unit_cost.value": {
+      "display": "show",
+      "style": "bold",
+      "section": "site_metadata",
+      "type": "number"
+    },
+    "parameters.gas.unit_cost.unit": {
+      "display": "show",
+      "style": "bold",
+      "section": "site_metadata",
+      "type": "string"
+    },
+    "parameters.water.unit_cost.value": {
+      "display": "show",
+      "style": "bold",
+      "section": "site_metadata",
+      "type": "number"
+    },
+    "parameters.water.unit_cost.unit": {
+      "display": "show",
+      "style": "bold",
+      "section": "site_metadata",
+      "type": "string"
+    }
+  },
+  "configuration_execution.json": {
+    "registry_id": {
+      "display": "show",
+      "style": "bold",
+      "section": "cloud_iot_config",
+      "type": "string"
+    },
+    "cloud_region": {
+      "display": "show",
+      "style": "bold",
+      "section": "cloud_iot_config",
+      "type": "string"
+    },
+    "site_name": {
+      "display": "show",
+      "style": "bold",
+      "section": "cloud_iot_config",
+      "type": "string"
+    },
+    "update_topic": {
+      "display": "show",
+      "style": "bold",
+      "section": "cloud_iot_config",
+      "type": "string"
+    },
+    "feed_name": {
+      "display": "show",
+      "style": "bold",
+      "section": "cloud_iot_config",
+      "type": "string"
+    },
+    "reflect_region": {
+      "display": "show",
+      "style": "bold",
+      "section": "cloud_iot_config",
+      "type": "string"
+    },
+    "site_model": {
+      "display": "show",
+      "style": "bold",
+      "section": "cloud_iot_config",
+      "type": "string"
+    },
+    "src_file": {
+      "display": "show",
+      "style": "bold",
+      "section": "cloud_iot_config",
+      "type": "string"
+    },
+    "registry_suffix": {
+      "display": "show",
+      "style": "bold",
+      "section": "cloud_iot_config",
+      "type": "string"
+    },
+    "shard_count": {
+      "display": "show",
+      "style": "bold",
+      "section": "cloud_iot_config",
+      "type": "integer"
+    },
+    "shard_index": {
+      "display": "show",
+      "style": "bold",
+      "section": "cloud_iot_config",
+      "type": "integer"
+    },
+    "device_id": {
+      "display": "show",
+      "style": "bold",
+      "section": "cloud_iot_config",
+      "type": "string"
+    },
+    "reflector_endpoint.name": {
+      "display": "show",
+      "style": "bold",
+      "section": "cloud_iot_config",
+      "type": "string",
+      "description": "Friendly name for this flow (debugging and diagnostics)"
+    },
+    "reflector_endpoint.protocol": {
+      "display": "show",
+      "style": "bold",
+      "section": "cloud_iot_config"
+    },
+    "reflector_endpoint.transport": {
+      "display": "show",
+      "style": "bold",
+      "section": "cloud_iot_config"
+    },
+    "reflector_endpoint.hostname": {
+      "display": "show",
+      "style": "bold",
+      "section": "cloud_iot_config",
+      "type": "string"
+    },
+    "reflector_endpoint.payload": {
+      "display": "show",
+      "style": "bold",
+      "section": "cloud_iot_config",
+      "type": "string",
+      "description": "Simple payload template for simple injection use cases"
+    },
+    "reflector_endpoint.error": {
+      "display": "show",
+      "style": "bold",
+      "section": "cloud_iot_config",
+      "type": "string",
+      "description": "Error message container for capturing errors during parsing/handling"
+    },
+    "reflector_endpoint.port": {
+      "display": "show",
+      "style": "bold",
+      "section": "cloud_iot_config",
+      "type": "integer"
+    },
+    "reflector_endpoint.config_sync_sec": {
+      "display": "show",
+      "style": "bold",
+      "section": "cloud_iot_config",
+      "type": "integer",
+      "description": "Delay waiting for config message on start, 0 for default, <0 to disable"
+    },
+    "reflector_endpoint.client_id": {
+      "display": "show",
+      "style": "bold",
+      "section": "cloud_iot_config",
+      "type": "string"
+    },
+    "reflector_endpoint.topic_prefix": {
+      "display": "show",
+      "style": "bold",
+      "section": "cloud_iot_config",
+      "type": "string",
+      "description": "Prefix for message topics"
+    },
+    "reflector_endpoint.recv_id": {
+      "display": "show",
+      "style": "bold",
+      "section": "cloud_iot_config",
+      "type": "string",
+      "description": "Id for the receiving message channel"
+    },
+    "reflector_endpoint.send_id": {
+      "display": "show",
+      "style": "bold",
+      "section": "cloud_iot_config",
+      "type": "string",
+      "description": "Id for the sending messages channel"
+    },
+    "reflector_endpoint.side_id": {
+      "display": "show",
+      "style": "bold",
+      "section": "cloud_iot_config",
+      "type": "string",
+      "description": "Id for a side-car message channel"
+    },
+    "reflector_endpoint.gatewayId": {
+      "display": "show",
+      "style": "bold",
+      "section": "cloud_iot_config",
+      "type": "string"
+    },
+    "reflector_endpoint.deviceId": {
+      "display": "show",
+      "style": "bold",
+      "section": "cloud_iot_config",
+      "type": "string"
+    },
+    "reflector_endpoint.enabled": {
+      "display": "show",
+      "style": "bold",
+      "section": "cloud_iot_config",
+      "type": "string",
+      "description": "Indicator if this endpoint should be active (null or non-empty)"
+    },
+    "reflector_endpoint.noConfigAck": {
+      "display": "show",
+      "style": "bold",
+      "section": "cloud_iot_config",
+      "type": "boolean",
+      "description": "True if config messages should not be acked (lower QOS)"
+    },
+    "reflector_endpoint.capacity": {
+      "display": "show",
+      "style": "bold",
+      "section": "cloud_iot_config",
+      "type": "integer",
+      "description": "Queue capacity for limiting pipes"
+    },
+    "reflector_endpoint.publish_delay_sec": {
+      "display": "show",
+      "style": "bold",
+      "section": "cloud_iot_config",
+      "type": "integer",
+      "description": "Artifical publish delay for testing"
+    },
+    "reflector_endpoint.periodic_sec": {
+      "display": "show",
+      "style": "bold",
+      "section": "cloud_iot_config",
+      "type": "integer",
+      "description": "Rate for periodic task execution"
+    },
+    "reflector_endpoint.keyBytes": {
+      "display": "show",
+      "style": "bold",
+      "section": "cloud_iot_config"
+    },
+    "reflector_endpoint.algorithm": {
+      "display": "show",
+      "style": "bold",
+      "section": "cloud_iot_config",
+      "type": "string"
+    },
+    "reflector_endpoint.generation": {
+      "display": "show",
+      "style": "bold",
+      "section": "cloud_iot_config",
+      "type": "string",
+      "description": "The timestamp of the endpoint generation",
+      "examples": [
+        "2019-01-17T14:02:29.364Z"
+      ]
+    },
+    "device_endpoint.name": {
+      "display": "show",
+      "style": "bold",
+      "section": "cloud_iot_config",
+      "type": "string",
+      "description": "Friendly name for this flow (debugging and diagnostics)"
+    },
+    "device_endpoint.protocol": {
+      "display": "show",
+      "style": "bold",
+      "section": "cloud_iot_config"
+    },
+    "device_endpoint.transport": {
+      "display": "show",
+      "style": "bold",
+      "section": "cloud_iot_config"
+    },
+    "device_endpoint.hostname": {
+      "display": "show",
+      "style": "bold",
+      "section": "cloud_iot_config",
+      "type": "string"
+    },
+    "device_endpoint.payload": {
+      "display": "show",
+      "style": "bold",
+      "section": "cloud_iot_config",
+      "type": "string",
+      "description": "Simple payload template for simple injection use cases"
+    },
+    "device_endpoint.error": {
+      "display": "show",
+      "style": "bold",
+      "section": "cloud_iot_config",
+      "type": "string",
+      "description": "Error message container for capturing errors during parsing/handling"
+    },
+    "device_endpoint.port": {
+      "display": "show",
+      "style": "bold",
+      "section": "cloud_iot_config",
+      "type": "integer"
+    },
+    "device_endpoint.config_sync_sec": {
+      "display": "show",
+      "style": "bold",
+      "section": "cloud_iot_config",
+      "type": "integer",
+      "description": "Delay waiting for config message on start, 0 for default, <0 to disable"
+    },
+    "device_endpoint.client_id": {
+      "display": "show",
+      "style": "bold",
+      "section": "cloud_iot_config",
+      "type": "string"
+    },
+    "device_endpoint.topic_prefix": {
+      "display": "show",
+      "style": "bold",
+      "section": "cloud_iot_config",
+      "type": "string",
+      "description": "Prefix for message topics"
+    },
+    "device_endpoint.recv_id": {
+      "display": "show",
+      "style": "bold",
+      "section": "cloud_iot_config",
+      "type": "string",
+      "description": "Id for the receiving message channel"
+    },
+    "device_endpoint.send_id": {
+      "display": "show",
+      "style": "bold",
+      "section": "cloud_iot_config",
+      "type": "string",
+      "description": "Id for the sending messages channel"
+    },
+    "device_endpoint.side_id": {
+      "display": "show",
+      "style": "bold",
+      "section": "cloud_iot_config",
+      "type": "string",
+      "description": "Id for a side-car message channel"
+    },
+    "device_endpoint.gatewayId": {
+      "display": "show",
+      "style": "bold",
+      "section": "cloud_iot_config",
+      "type": "string"
+    },
+    "device_endpoint.deviceId": {
+      "display": "show",
+      "style": "bold",
+      "section": "cloud_iot_config",
+      "type": "string"
+    },
+    "device_endpoint.enabled": {
+      "display": "show",
+      "style": "bold",
+      "section": "cloud_iot_config",
+      "type": "string",
+      "description": "Indicator if this endpoint should be active (null or non-empty)"
+    },
+    "device_endpoint.noConfigAck": {
+      "display": "show",
+      "style": "bold",
+      "section": "cloud_iot_config",
+      "type": "boolean",
+      "description": "True if config messages should not be acked (lower QOS)"
+    },
+    "device_endpoint.capacity": {
+      "display": "show",
+      "style": "bold",
+      "section": "cloud_iot_config",
+      "type": "integer",
+      "description": "Queue capacity for limiting pipes"
+    },
+    "device_endpoint.publish_delay_sec": {
+      "display": "show",
+      "style": "bold",
+      "section": "cloud_iot_config",
+      "type": "integer",
+      "description": "Artifical publish delay for testing"
+    },
+    "device_endpoint.periodic_sec": {
+      "display": "show",
+      "style": "bold",
+      "section": "cloud_iot_config",
+      "type": "integer",
+      "description": "Rate for periodic task execution"
+    },
+    "device_endpoint.keyBytes": {
+      "display": "show",
+      "style": "bold",
+      "section": "cloud_iot_config"
+    },
+    "device_endpoint.algorithm": {
+      "display": "show",
+      "style": "bold",
+      "section": "cloud_iot_config",
+      "type": "string"
+    },
+    "device_endpoint.generation": {
+      "display": "show",
+      "style": "bold",
+      "section": "cloud_iot_config",
+      "type": "string",
+      "description": "The timestamp of the endpoint generation",
+      "examples": [
+        "2019-01-17T14:02:29.364Z"
+      ]
+    },
+    "project_id": {
+      "display": "show",
+      "style": "bold",
+      "section": "cloud_iot_config",
+      "type": "string"
+    },
+    "user_name": {
+      "display": "show",
+      "style": "bold",
+      "section": "cloud_iot_config",
+      "type": "string"
+    },
+    "udmi_namespace": {
+      "display": "show",
+      "style": "bold",
+      "section": "cloud_iot_config",
+      "type": "string"
+    },
+    "bridge_host": {
+      "display": "show",
+      "style": "bold",
+      "section": "cloud_iot_config",
+      "type": "string"
+    },
+    "key_file": {
+      "display": "show",
+      "style": "bold",
+      "section": "cloud_iot_config",
+      "type": "string"
+    },
+    "serial_no": {
+      "display": "show",
+      "style": "bold",
+      "section": "cloud_iot_config",
+      "type": "string"
+    },
+    "log_level": {
+      "display": "show",
+      "style": "bold",
+      "section": "cloud_iot_config",
+      "type": "string"
+    },
+    "min_stage": {
+      "display": "show",
+      "style": "bold",
+      "section": "cloud_iot_config",
+      "type": "string"
+    },
+    "udmi_version": {
+      "display": "show",
+      "style": "bold",
+      "section": "cloud_iot_config",
+      "type": "string",
+      "description": "Semantic tagged version of udmis install"
+    },
+    "udmi_commit": {
+      "display": "show",
+      "style": "bold",
+      "section": "cloud_iot_config",
+      "type": "string",
+      "description": "Commit hash of this udmis install"
+    },
+    "udmi_ref": {
+      "display": "show",
+      "style": "bold",
+      "section": "cloud_iot_config",
+      "type": "string",
+      "description": "Complete reference of udmis install"
+    },
+    "udmi_timever": {
+      "display": "show",
+      "style": "bold",
+      "section": "cloud_iot_config",
+      "type": "string",
+      "description": "Timestamp version id of udmis install"
+    },
+    "enforce_version": {
+      "display": "show",
+      "style": "bold",
+      "section": "cloud_iot_config",
+      "type": "boolean"
+    },
+    "udmi_root": {
+      "display": "show",
+      "style": "bold",
+      "section": "cloud_iot_config",
+      "type": "string"
+    },
+    "update_to": {
+      "display": "show",
+      "style": "bold",
+      "section": "cloud_iot_config",
+      "type": "string",
+      "description": "Optional version for a udmis update trigger"
+    },
+    "alt_project": {
+      "display": "show",
+      "style": "bold",
+      "section": "cloud_iot_config",
+      "type": "string"
+    },
+    "alt_registry": {
+      "display": "show",
+      "style": "bold",
+      "section": "cloud_iot_config",
+      "type": "string"
+    },
+    "block_unknown": {
+      "display": "show",
+      "style": "bold",
+      "section": "cloud_iot_config",
+      "type": "boolean"
+    },
+    "sequences": {
+      "display": "show",
+      "style": "bold",
+      "section": "cloud_iot_config",
+      "type": "array"
+    }
+  },
+  "metadata.json": {
+    "cloud.functions_ver": {
+      "display": "show",
+      "style": "bold",
+      "section": "cloud",
+      "type": "integer",
+      "description": "Function version of this request"
+    },
+    "cloud.auth_type": {
+      "display": "show",
+      "style": "bold",
+      "section": "cloud",
+      "description": "The key type used for cloud communication."
+    },
+    "cloud.device_key": {
+      "display": "show",
+      "style": "bold",
+      "section": "cloud",
+      "type": "boolean",
+      "description": "Indicates if the device private key is provided in the site model."
+    },
+    "cloud.resource_type": {
+      "display": "show",
+      "style": "bold",
+      "section": "cloud",
+      "description": "The cloud resource type"
+    },
+    "cloud.config.static_file": {
+      "display": "show",
+      "style": "bold",
+      "section": "cloud",
+      "type": "string",
+      "description": "Config file to use. Within the `config` directory in the device's metadata directory"
+    },
+    "cloud.blocked": {
+      "display": "show",
+      "style": "bold",
+      "section": "cloud",
+      "type": "boolean"
+    },
+    "cloud.detail": {
+      "display": "show",
+      "style": "bold",
+      "section": "cloud",
+      "type": "string"
+    },
+    "cloud.updated_time": {
+      "display": "show",
+      "style": "bold",
+      "section": "cloud",
+      "type": "string"
+    },
+    "cloud.last_event_time": {
+      "display": "show",
+      "style": "bold",
+      "section": "cloud",
+      "type": "string"
+    },
+    "cloud.last_state_time": {
+      "display": "show",
+      "style": "bold",
+      "section": "cloud",
+      "type": "string"
+    },
+    "cloud.last_config_time": {
+      "display": "show",
+      "style": "bold",
+      "section": "cloud",
+      "type": "string"
+    },
+    "cloud.last_error_time": {
+      "display": "show",
+      "style": "bold",
+      "section": "cloud",
+      "type": "string"
+    },
+    "cloud.last_config_ack": {
+      "display": "show",
+      "style": "bold",
+      "section": "cloud",
+      "type": "string"
+    },
+    "cloud.num_id": {
+      "display": "show",
+      "style": "bold",
+      "section": "cloud",
+      "type": "string"
+    },
+    "cloud.metadata": {
+      "display": "show",
+      "style": "bold",
+      "section": "cloud",
+      "type": "object"
+    },
+    "cloud.metadata_str": {
+      "display": "show",
+      "style": "bold",
+      "section": "cloud",
+      "type": "string",
+      "description": "Strigified version of the metadata object, used for internal backend processing"
+    },
+    "cloud.device_ids": {
+      "display": "show",
+      "style": "bold",
+      "section": "cloud",
+      "description": "If operating on the entire registry, then this contains results for multiple devices (batched operation)."
+    },
+    "system.name": {
+      "display": "show",
+      "style": "bold",
+      "section": "system",
+      "type": "string",
+      "description": "Friendly name describing this device"
+    },
+    "system.description": {
+      "display": "show",
+      "style": "bold",
+      "section": "system",
+      "type": "string",
+      "description": "Generic human-readable text describing the device"
+    },
+    "system.device_version": {
+      "display": "show",
+      "style": "bold",
+      "section": "system",
+      "type": "string",
+      "description": "Version of schema supported by the device",
+      "examples": [
+        "1.5.0"
+      ]
+    },
+    "system.zone": {
+      "display": "show",
+      "style": "bold",
+      "section": "system",
+      "type": "string",
+      "description": "Aggregation of spaces, partial spaces or other zones that the device is serving",
+      "examples": [
+        "Zone1",
+        "Kitchen_101"
+      ]
+    },
+    "system.node_type": {
+      "display": "show",
+      "style": "bold",
+      "section": "system",
+      "type": "string",
+      "description": "The description of what kind of node this is.",
+      "examples": [
+        "vitual_device",
+        "field_group",
+        "field_controller",
+        "network_scan_agent"
+      ]
+    },
+    "system.tags": {
+      "display": "show",
+      "style": "bold",
+      "section": "system",
+      "type": "array",
+      "description": "Tags associated with the device",
+      "examples": [
+        [
+          "lighting"
+        ],
+        [
+          "energy",
+          "building",
+          "vendor_managed"
+        ]
+      ]
+    },
+    "system.location.site": {
+      "display": "show",
+      "style": "bold",
+      "section": "system",
+      "type": "string",
+      "description": "The site name according to the site model in which the device is installed in",
+      "examples": [
+        "US-SFO-XYY"
+      ]
+    },
+    "system.location.panel": {
+      "display": "show",
+      "style": "bold",
+      "section": "system",
+      "type": "string",
+      "description": "The reference of the panel where the device is installed in",
+      "examples": [
+        "Panel123",
+        "CTRP-567"
+      ]
+    },
+    "system.location.section": {
+      "display": "show",
+      "style": "bold",
+      "section": "system",
+      "type": "string"
+    },
+    "system.location.room": {
+      "display": "show",
+      "style": "bold",
+      "section": "system",
+      "type": "string"
+    },
+    "system.location.floor": {
+      "display": "show",
+      "style": "bold",
+      "section": "system",
+      "type": "string",
+      "description": "Name of floor level",
+      "examples": [
+        "1",
+        "1A",
+        "G",
+        "B1M",
+        "RF"
+      ]
+    },
+    "system.location.floor_seq": {
+      "display": "show",
+      "style": "bold",
+      "section": "system",
+      "type": "integer",
+      "description": "Sequential integer representation for a floor, primarily for comparisons when non integer floors are used, e.g. 1 and 1M"
+    },
+    "system.location.position.x": {
+      "display": "show",
+      "style": "bold",
+      "section": "system",
+      "type": "number",
+      "description": "The `x` coordinate of the device location in a project specific coordinate system"
+    },
+    "system.location.position.y": {
+      "display": "show",
+      "style": "bold",
+      "section": "system",
+      "type": "number",
+      "description": "The `y` coordinate of the device location in a project specific coordinate system"
+    },
+    "system.location.position.z": {
+      "display": "show",
+      "style": "bold",
+      "section": "system",
+      "type": "number",
+      "description": "The `z` (height) coordinate of the device location in a project specific coordinate system"
+    },
+    "system.location.coordinates.lat": {
+      "display": "show",
+      "style": "bold",
+      "section": "system",
+      "type": "number",
+      "description": "The `latitude` coordinate of the device in the WGS84 coordinate system"
+    },
+    "system.location.coordinates.long": {
+      "display": "show",
+      "style": "bold",
+      "section": "system",
+      "type": "number",
+      "description": "The `longitude` coordinate of the device in the WGS84 coordinate system"
+    },
+    "system.location.coordinates.alt_m": {
+      "display": "show",
+      "style": "bold",
+      "section": "system",
+      "type": "number",
+      "description": "The `altitude` coordinate of the device in meters"
+    },
+    "system.serial_no": {
+      "display": "show",
+      "style": "bold",
+      "section": "system",
+      "type": "string",
+      "description": "The serial number of the physical device",
+      "examples": [
+        "A1B2C3D4",
+        "00001"
+      ]
+    },
+    "system.hardware.make": {
+      "display": "show",
+      "style": "bold",
+      "section": "system",
+      "type": "string",
+      "description": "The manufacturer of the device",
+      "examples": [
+        "Google"
+      ]
+    },
+    "system.hardware.model": {
+      "display": "show",
+      "style": "bold",
+      "section": "system",
+      "type": "string",
+      "description": "The model of the device",
+      "examples": [
+        "Pixel 5",
+        "Pixel 6",
+        "Pixel 6 Pro"
+      ]
+    },
+    "system.hardware.sku": {
+      "display": "show",
+      "style": "bold",
+      "section": "system",
+      "type": "string",
+      "description": "A stock keeping unit which identifies the unique composition of a device, for example those with different hardware configurations",
+      "examples": [
+        "GF5KQ",
+        "4215612"
+      ]
+    },
+    "system.hardware.rev": {
+      "display": "show",
+      "style": "bold",
+      "section": "system",
+      "type": "string",
+      "description": "Hardware revision of the device",
+      "examples": [
+        "A",
+        "B",
+        "1"
+      ]
+    },
+    "system.software.firmware": {
+      "style": "bold",
+      "display": "show",
+      "section": "system",
+      "type": "string"
+    },
+    "system.software.os": {
+      "style": "bold",
+      "display": "show",
+      "section": "system",
+      "type": "string"
+    },
+    "system.software.driver": {
+      "style": "bold",
+      "display": "show",
+      "section": "system",
+      "type": "string"
+    },
+    "system.physical_tag.asset.guid": {
+      "display": "show",
+      "style": "bold",
+      "section": "system",
+      "type": "string"
+    },
+    "system.physical_tag.asset.site": {
+      "display": "show",
+      "style": "bold",
+      "section": "system",
+      "type": "string"
+    },
+    "system.physical_tag.asset.name": {
+      "display": "show",
+      "style": "bold",
+      "section": "system",
+      "type": "string"
+    },
+    "system.adjunct": {
+      "display": "show",
+      "style": "bold",
+      "section": "system",
+      "type": "object"
+    },
+    "system.min_loglevel": {
+      "display": "show",
+      "style": "bold",
+      "section": "system",
+      "type": "integer",
+      "description": "The minimum loglevel for reporting log messages below which log entries should not be sent. Default to 300."
+    },
+    "system.metrics_rate_sec": {
+      "display": "show",
+      "style": "bold",
+      "section": "system",
+      "type": "integer",
+      "description": "The rate at which the system should send system event updates. 0 indicates no updates."
+    },
+    "gateway.gateway_id": {
+      "display": "show",
+      "style": "bold",
+      "section": "gateway",
+      "type": "string",
+      "description": "The device ID of the gateway the device is bound to",
+      "examples": [
+        "GAT-100"
+      ]
+    },
+    "gateway.target.addr": {
+      "display": "show",
+      "style": "bold",
+      "section": "gateway",
+      "type": "string",
+      "description": "The address of a device on the fieldbus/local network",
+      "examples": [
+        "192.168.1.3",
+        "41489"
+      ]
+    },
+    "gateway.proxy_ids": {
+      "display": "show",
+      "style": "bold",
+      "section": "gateway",
+      "type": "array",
+      "description": "An array of all the device IDs which are bound to the device",
+      "examples": [
+        [
+          "AHU-22"
+        ]
+      ]
+    },
+    "localnet.parent.target": {
+      "display": "show",
+      "style": "bold",
+      "section": "localnet",
+      "type": "string",
+      "description": "ID of the parent device to which the device is physically connected",
+      "examples": [
+        "DDC-1",
+        "CGW-2"
+      ]
+    },
+    "localnet.parent.family": {
+      "display": "show",
+      "style": "bold",
+      "section": "localnet",
+      "type": "string",
+      "description": "Connection family/protocol of the parent device to which the device is physically connected",
+      "examples": [
+        "bacnet_mstp",
+        "modbus_tcp",
+        "mqtt"
+      ]
+    },
+    "localnet.families.bacnet.addr": {
+      "display": "show",
+      "style": "bold",
+      "section": "localnet",
+      "type": "string",
+      "description": "The address of a device on the fieldbus/local network",
+      "examples": [
+        "192.168.1.3",
+        "41489"
+      ]
+    },
+    "localnet.families.bacnet.adjunct.name": {
+      "style": "bold",
+      "description": "BACnet device name",
+      "display": "show",
+      "section": "localnet",
+      "type": "string"
+    },
+    "localnet.families.bacnet.adjunct.description": {
+      "style": "bold",
+      "description": "BACnet device description",
+      "display": "show",
+      "section": "localnet",
+      "type": "string"
+    },
+    "localnet.families.modbus.addr": {
+      "display": "show",
+      "style": "bold",
+      "section": "localnet",
+      "type": "string",
+      "description": "The address of a device on the fieldbus/local network",
+      "examples": [
+        "192.168.1.3",
+        "41489"
+      ]
+    },
+    "localnet.families.modbus.adjunct.serial_port": {
+      "style": "bold",
+      "display": "show",
+      "section": "localnet",
+      "type": "string"
+    },
+    "localnet.families.modbus.adjunct.bit_rate": {
+      "style": "bold",
+      "display": "show",
+      "section": "localnet",
+      "type": "string"
+    },
+    "localnet.families.modbus.adjunct.data_bits": {
+      "style": "bold",
+      "display": "show",
+      "section": "localnet",
+      "type": "string"
+    },
+    "localnet.families.modbus.adjunct.stop_bits": {
+      "style": "bold",
+      "display": "show",
+      "section": "localnet",
+      "type": "string"
+    },
+    "localnet.families.modbus.adjunct.parity": {
+      "style": "bold",
+      "display": "show",
+      "section": "localnet",
+      "type": "string"
+    },
+    "localnet.families.modbus.adjunct.encoding": {
+      "style": "bold",
+      "display": "show",
+      "section": "localnet",
+      "type": "string"
+    },
+    "localnet.families.mbus.addr": {
+      "display": "show",
+      "style": "bold",
+      "section": "localnet",
+      "type": "string",
+      "description": "The address of a device on the fieldbus/local network",
+      "examples": [
+        "192.168.1.3",
+        "41489"
+      ]
+    },
+    "localnet.families.mbus.adjunct.serial_port": {
+      "style": "bold",
+      "display": "show",
+      "section": "localnet",
+      "type": "string"
+    },
+    "localnet.families.mbus.adjunct.bit_rate": {
+      "style": "bold",
+      "display": "show",
+      "section": "localnet",
+      "type": "string"
+    },
+    "localnet.families.mbus.adjunct.secondary_addr": {
+      "style": "bold",
+      "display": "show",
+      "section": "localnet",
+      "type": "string"
+    },
+    "localnet.families.ether.addr": {
+      "display": "show",
+      "style": "bold",
+      "section": "localnet",
+      "type": "string",
+      "description": "The address of a device on the fieldbus/local network",
+      "examples": [
+        "192.168.1.3",
+        "41489"
+      ]
+    },
+    "localnet.families.ipv4.addr": {
+      "display": "show",
+      "style": "bold",
+      "section": "localnet",
+      "type": "string",
+      "description": "The address of a device on the fieldbus/local network",
+      "examples": [
+        "192.168.1.3",
+        "41489"
+      ]
+    },
+    "localnet.families.ipv6.addr": {
+      "display": "show",
+      "style": "bold",
+      "section": "localnet",
+      "type": "string",
+      "description": "The address of a device on the fieldbus/local network",
+      "examples": [
+        "192.168.1.3",
+        "41489"
+      ]
+    },
+    "localnet.families.fqdn.addr": {
+      "display": "show",
+      "style": "bold",
+      "section": "localnet",
+      "type": "string",
+      "description": "The address of a device on the fieldbus/local network",
+      "examples": [
+        "192.168.1.3",
+        "41489"
+      ]
+    },
+    "localnet.families.iot.addr": {
+      "display": "show",
+      "style": "bold",
+      "section": "localnet",
+      "type": "string",
+      "description": "The address of a device on the fieldbus/local network",
+      "examples": [
+        "192.168.1.3",
+        "41489"
+      ]
+    },
+    "pointset.exclude_units_from_config": {
+      "display": "show",
+      "style": "bold",
+      "section": "pointset",
+      "type": "boolean"
+    },
+    "pointset.exclude_points_from_config": {
+      "display": "show",
+      "style": "bold",
+      "section": "pointset",
+      "type": "boolean"
+    },
+    "pointset.sample_limit_sec": {
+      "display": "show",
+      "style": "bold",
+      "section": "pointset",
+      "type": "integer",
+      "description": "Minimum time between sample updates for the device (including complete and COV updates). Updates more frequent than this should be coalesced into one update."
+    },
+    "pointset.sample_rate_sec": {
+      "display": "show",
+      "style": "bold",
+      "section": "pointset",
+      "type": "integer",
+      "description": "Maximum time between samples for the device to send out a complete update. It can send out updates more frequently than this. Default to 600."
+    }
+  }
+}

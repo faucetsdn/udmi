@@ -1,7 +1,7 @@
 """Generated class for model_system.json"""
 
 
-class Object11D8FD30:
+class Object550AB2BD:
   """Generated schema class"""
 
   def __init__(self):
@@ -13,7 +13,7 @@ class Object11D8FD30:
   def from_dict(source):
     if not source:
       return None
-    result = Object11D8FD30()
+    result = Object550AB2BD()
     result.x = source.get('x')
     result.y = source.get('y')
     result.z = source.get('z')
@@ -25,7 +25,7 @@ class Object11D8FD30:
       return None
     result = {}
     for key in source:
-      result[key] = Object11D8FD30.from_dict(source[key])
+      result[key] = Object550AB2BD.from_dict(source[key])
     return result
 
   @staticmethod
@@ -46,7 +46,7 @@ class Object11D8FD30:
     return result
 
 
-class Object88B5177A:
+class Object7706BE2B:
   """Generated schema class"""
 
   def __init__(self):
@@ -58,7 +58,7 @@ class Object88B5177A:
   def from_dict(source):
     if not source:
       return None
-    result = Object88B5177A()
+    result = Object7706BE2B()
     result.lat = source.get('lat')
     result.long = source.get('long')
     result.alt_m = source.get('alt_m')
@@ -70,7 +70,7 @@ class Object88B5177A:
       return None
     result = {}
     for key in source:
-      result[key] = Object88B5177A.from_dict(source[key])
+      result[key] = Object7706BE2B.from_dict(source[key])
     return result
 
   @staticmethod
@@ -91,7 +91,7 @@ class Object88B5177A:
     return result
 
 
-class Object466A2796:
+class Object1F5E34A2:
   """Generated schema class"""
 
   def __init__(self):
@@ -108,15 +108,15 @@ class Object466A2796:
   def from_dict(source):
     if not source:
       return None
-    result = Object8B23C514()
+    result = Object124F4486()
     result.site = source.get('site')
     result.panel = source.get('panel')
     result.section = source.get('section')
     result.room = source.get('room')
     result.floor = source.get('floor')
     result.floor_seq = source.get('floor_seq')
-    result.position = Object11D8FD30.from_dict(source.get('position'))
-    result.coordinates = Object88B5177A.from_dict(source.get('coordinates'))
+    result.position = Object550AB2BD.from_dict(source.get('position'))
+    result.coordinates = Object7706BE2B.from_dict(source.get('coordinates'))
     return result
 
   @staticmethod
@@ -125,7 +125,7 @@ class Object466A2796:
       return None
     result = {}
     for key in source:
-      result[key] = Object8B23C514.from_dict(source[key])
+      result[key] = Object124F4486.from_dict(source[key])
     return result
 
   @staticmethod
@@ -157,7 +157,7 @@ class Object466A2796:
 from .model_system_hardware import SystemHardware
 
 
-class Object171F6738:
+class Object89CC9E24:
   """Generated schema class"""
 
   def __init__(self):
@@ -169,7 +169,7 @@ class Object171F6738:
   def from_dict(source):
     if not source:
       return None
-    result = Object171F6738()
+    result = Object89CC9E24()
     result.guid = source.get('guid')
     result.site = source.get('site')
     result.name = source.get('name')
@@ -181,7 +181,7 @@ class Object171F6738:
       return None
     result = {}
     for key in source:
-      result[key] = Object171F6738.from_dict(source[key])
+      result[key] = Object89CC9E24.from_dict(source[key])
     return result
 
   @staticmethod
@@ -202,7 +202,7 @@ class Object171F6738:
     return result
 
 
-class ObjectDCD5CB93:
+class Object9C9C9D9B:
   """Generated schema class"""
 
   def __init__(self):
@@ -212,8 +212,8 @@ class ObjectDCD5CB93:
   def from_dict(source):
     if not source:
       return None
-    result = Object30AFA53A()
-    result.asset = Object171F6738.from_dict(source.get('asset'))
+    result = Object3960F11E()
+    result.asset = Object89CC9E24.from_dict(source.get('asset'))
     return result
 
   @staticmethod
@@ -222,7 +222,7 @@ class ObjectDCD5CB93:
       return None
     result = {}
     for key in source:
-      result[key] = Object30AFA53A.from_dict(source[key])
+      result[key] = Object3960F11E.from_dict(source[key])
     return result
 
   @staticmethod
@@ -269,11 +269,11 @@ class SystemModel:
     result.zone = source.get('zone')
     result.node_type = source.get('node_type')
     result.tags = source.get('tags')
-    result.location = Object8B23C514.from_dict(source.get('location'))
+    result.location = Object124F4486.from_dict(source.get('location'))
     result.serial_no = source.get('serial_no')
     result.hardware = SystemHardware.from_dict(source.get('hardware'))
     result.software = source.get('software')
-    result.physical_tag = Object30AFA53A.from_dict(source.get('physical_tag'))
+    result.physical_tag = Object3960F11E.from_dict(source.get('physical_tag'))
     result.adjunct = source.get('adjunct')
     result.min_loglevel = source.get('min_loglevel')
     result.metrics_rate_sec = source.get('metrics_rate_sec')
