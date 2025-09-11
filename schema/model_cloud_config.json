@@ -8,7 +8,11 @@
   "properties": {
     "static_file": {
       "description": "Config file to use. Within the `config` directory in the device's metadata directory",
-      "type": "string"
+      "type": "string",
+      "$presentation": {
+        "display": "show",
+        "style": "bold"
+      }
     }
   }
 }

@@ -46,7 +46,11 @@
         "etcd",
         "jwt",
         "clearblade"
-      ]
+      ],
+      "$presentation": {
+        "display": "show",
+        "style": "bold"
+      }
     },
     "operation": {
       "title": "Model Operation",
