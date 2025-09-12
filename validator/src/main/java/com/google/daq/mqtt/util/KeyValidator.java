@@ -5,7 +5,6 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.security.KeyFactory;
 import java.security.PrivateKey;
 import java.security.PublicKey;
@@ -141,18 +140,6 @@ public class KeyValidator {
 
   /**
    * Checks if the private key and public key in SEPARATE PEM files form a valid pair.
-   * Accepts String paths.
-   *
-   * @param privateKeyPath Path to the private key PEM file.
-   * @param publicKeyPath  Path to the public key PEM file.
-   * @return true if the keys match, false otherwise.
-   */
-  public boolean keysMatch(String privateKeyPath, String publicKeyPath) {
-    return keysMatch(Paths.get(privateKeyPath), Paths.get(publicKeyPath));
-  }
-
-  /**
-   * Checks if the private key and public key in SEPARATE PEM files form a valid pair.
    * Accepts File objects.
    *
    * @param privateKeyFile File object for the private key PEM file.
@@ -176,7 +163,8 @@ public class KeyValidator {
       PublicKey publicKey = loadPublicKey(publicKeyPath);
       return checkKeyPairMatch(privateKey, publicKey);
     } catch (Exception e) {
-      System.err.println("Error during key matching: " + e.getClass().getSimpleName() + " - " + e.getMessage());
+      System.err.println("Error during key matching: " + e.getClass().getSimpleName() + " - "
+          + e.getMessage());
       return false;
     }
   }
