@@ -464,7 +464,7 @@ class LocalDevice {
             " found, but corresponding public key " + publicKeyFileName + " is missing.");
       }
 
-      if (!keyValidator.keysMatch(privateKeyFile, publicKeyFile)) {
+      if (!keyValidator.keysMatch(privateKeyFile, publicKeyFile, keyAlgorithm)) {
         throw new RuntimeException("CRITICAL: Key pair mismatch for " + publicKeyFile.getName() +
             " and " + privateKeyFile.getName());
       }
