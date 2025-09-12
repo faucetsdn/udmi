@@ -45,6 +45,7 @@ import com.google.daq.mqtt.util.CloudDeviceSettings;
 import com.google.daq.mqtt.util.CloudIotManager;
 import com.google.daq.mqtt.util.ConfigManager;
 import com.google.daq.mqtt.util.DeviceExceptionManager;
+import com.google.daq.mqtt.util.KeyValidator;
 import com.google.udmi.util.ErrorMap;
 import com.google.udmi.util.ErrorMap.ErrorMapException;
 import com.google.udmi.util.ExceptionMap;
@@ -191,6 +192,8 @@ class LocalDevice {
   private ConfigManager config;
   private final DeviceExceptionManager exceptionManager;
   private final SiteModel siteModel;
+  // In LocalDevice.java, add with other member variables.
+  private final KeyValidator keyValidator = new KeyValidator();
 
   private String deviceNumId;
 
@@ -228,6 +231,8 @@ class LocalDevice {
   public void initialize() {
     prepareOutDir();
     ifTrueThen(deviceKind == DeviceKind.LOCAL && metadata != null, this::validateMetadata);
+    ifTrueThen(deviceKind == DeviceKind.LOCAL && metadata != null, this::validateKeyPair);
+
     configure();
   }
 
@@ -427,6 +432,45 @@ class LocalDevice {
             RSA_CERT_TYPE));
     return addCertFile ? Sets.union(combined, certFile) : combined;
   }
+
+  /**
+   * Validates that if a private key is provided, the corresponding public key
+   * exists and they form a valid cryptographic pair.
+   */
+  private void validateKeyPair() {
+    try {
+      String authType = getAuthType();
+      if (authType == null || !(authType.startsWith("RS") || authType.startsWith("ES"))) {
+        return;
+      }
+
+      String keyAlgorithm = authType.startsWith("RS") ? "rsa" : "ec";
+      String pemFileName = keyAlgorithm + "_private.pem";
+      File privateKeyFile = new File(deviceDir, pemFileName);
+
+      if (!privateKeyFile.exists()) {
+        return;
+      }
+
+      String publicKeyFileName = getPublicKeyFile();
+      if (publicKeyFileName == null) {
+        throw new RuntimeException("Private key " + privateKeyFile.getName() + " found, but no public key is defined for auth_type " + authType);
+      }
+
+      File publicKeyFile = new File(deviceDir, publicKeyFileName);
+      if (!publicKeyFile.exists()) {
+        throw new RuntimeException("Private key " + privateKeyFile.getName() + " found, but corresponding public key " + publicKeyFileName + " is missing.");
+      }
+
+      if (!keyValidator.keysMatch(privateKeyFile, publicKeyFile)) {
+        throw new RuntimeException("CRITICAL: Key pair mismatch for " + publicKeyFile.getName() + " and " + privateKeyFile.getName());
+      }
+    } catch (Exception e) {
+      captureError(ExceptionCategory.credentials, e);
+      throw new RuntimeException("Aborting due to key validation failure for device " + deviceId, e);
+    }
+  }
+
 
   private Set<String> getPrivateKeyFiles() {
     if (isDeviceKeySource() || !hasAuthType()) {
