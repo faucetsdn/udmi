@@ -465,7 +465,7 @@ class LocalDevice {
       }
 
       if (!keyValidator.keysMatch(privateKeyFile, publicKeyFile, keyAlgorithm)) {
-        throw new RuntimeException("CRITICAL: Key pair mismatch for " + publicKeyFile.getName() +
+        throw new RuntimeException("Key pair mismatch for " + publicKeyFile.getName() +
             " and " + privateKeyFile.getName());
       }
     } catch (Exception e) {
