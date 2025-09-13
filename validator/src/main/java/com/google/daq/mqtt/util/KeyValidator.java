@@ -16,6 +16,9 @@ import org.bouncycastle.openssl.PEMParser;
 import org.bouncycastle.openssl.jcajce.JcaPEMKeyConverter;
 import org.bouncycastle.pkcs.PKCS8EncryptedPrivateKeyInfo;
 
+/**
+ * A helper class to validate cryptographic key pairs.
+ */
 public class KeyValidator {
 
   private static final BouncyCastleProvider BC_PROVIDER = new BouncyCastleProvider();
@@ -51,20 +54,20 @@ public class KeyValidator {
       } else if (pemObject instanceof PrivateKeyInfo) {
         privateKey = converter.getPrivateKey((PrivateKeyInfo) pemObject);
       } else if (pemObject instanceof PKCS8EncryptedPrivateKeyInfo) {
-        throw new IllegalArgumentException("Private key in " + path.getFileName() +
-            " is encrypted. Please provide a decrypted key.");
+        throw new IllegalArgumentException("Private key in " + path.getFileName()
+            + " is encrypted. Please provide a decrypted key.");
       } else {
-        throw new IllegalArgumentException("Unsupported PEM object type for private key: " +
-            pemObject.getClass().getName());
+        throw new IllegalArgumentException("Unsupported PEM object type for private key: "
+            + pemObject.getClass().getName());
       }
     } catch (Exception e) {
-      throw new Exception("Failed to convert PEM object to PrivateKey for " + path.getFileName() +
-          ": " + e.getMessage(), e);
+      throw new Exception("Failed to convert PEM object to PrivateKey for " + path.getFileName()
+          + ": " + e.getMessage(), e);
     }
 
     if (privateKey == null) {
-      throw new Exception("JcaPEMKeyConverter returned null private key from " +
-          path.getFileName());
+      throw new Exception("JcaPEMKeyConverter returned null private key from "
+          + path.getFileName());
     }
     return privateKey;
   }
@@ -80,12 +83,12 @@ public class KeyValidator {
       } else if (pemObject instanceof PEMKeyPair) {
         publicKey = converter.getPublicKey(((PEMKeyPair) pemObject).getPublicKeyInfo());
       } else {
-        throw new IllegalArgumentException("Unsupported PEM object type for public key: " +
-            pemObject.getClass().getName());
+        throw new IllegalArgumentException("Unsupported PEM object type for public key: "
+            + pemObject.getClass().getName());
       }
     } catch (Exception e) {
-      throw new Exception("Failed to convert PEM object to PublicKey for " + path.getFileName() +
-          ": " + e.getMessage(), e);
+      throw new Exception("Failed to convert PEM object to PublicKey for " + path.getFileName()
+          + ": " + e.getMessage(), e);
     }
 
     if (publicKey == null) {
@@ -102,8 +105,8 @@ public class KeyValidator {
     } else if ("EC".equalsIgnoreCase(keyAlgorithm)) {
       signatureAlgorithm = "SHA256withECDSA";
     } else {
-      throw new IllegalArgumentException("Unsupported key algorithm for signature: " +
-          keyAlgorithm);
+      throw new IllegalArgumentException("Unsupported key algorithm for signature: "
+          + keyAlgorithm);
     }
 
     byte[] challenge = new byte[1024];
@@ -119,6 +122,16 @@ public class KeyValidator {
     return isValid;
   }
 
+  /**
+   * Checks if the provided private and public key files form a valid cryptographic pair
+   * for the specified key algorithm.
+   *
+   * @param privateKeyFile the {@link File} object for the private key PEM file.
+   * @param publicKeyFile the {@link File} object for the public key PEM file.
+   * @param keyAlgorithm the expected key algorithm, either "RSA" or "EC" (case-insensitive).
+   * @return {@code true} if the keys match and are valid for the algorithm, else {@code false}.
+   *         Errors during loading or validation also result in {@code false}.
+   */
   public boolean keysMatch(File privateKeyFile, File publicKeyFile, String keyAlgorithm) {
     if (privateKeyFile == null || publicKeyFile == null) {
       return false;

@@ -454,19 +454,19 @@ class LocalDevice {
 
       String publicKeyFileName = getPublicKeyFile();
       if (publicKeyFileName == null) {
-        throw new RuntimeException("Private key " + privateKeyFile.getName() +
-            " found, but no public key is defined for auth_type " + authType);
+        throw new RuntimeException("Private key " + privateKeyFile.getName()
+            + " found, but no public key is defined for auth_type " + authType);
       }
 
       File publicKeyFile = new File(deviceDir, publicKeyFileName);
       if (!publicKeyFile.exists()) {
-        throw new RuntimeException("Private key " + privateKeyFile.getName() +
-            " found, but corresponding public key " + publicKeyFileName + " is missing.");
+        throw new RuntimeException("Private key " + privateKeyFile.getName()
+            + " found, but corresponding public key " + publicKeyFileName + " is missing.");
       }
 
       if (!keyValidator.keysMatch(privateKeyFile, publicKeyFile, keyAlgorithm)) {
-        throw new RuntimeException("Key pair mismatch for " + publicKeyFile.getName() +
-            " and " + privateKeyFile.getName());
+        throw new RuntimeException("Key pair mismatch for " + publicKeyFile.getName()
+            + " and " + privateKeyFile.getName());
       }
     } catch (Exception e) {
       captureError(ExceptionCategory.credentials, e);
