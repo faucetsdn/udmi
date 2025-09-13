@@ -36,19 +36,31 @@
       "$ref": "file:common.json#/definitions/operation"
     },
     "cloud": {
-      "$ref": "file:model_cloud.json#"
+      "$ref": "file:model_cloud.json#",
+      "$presentation": {
+        "section": "cloud"
+      }
     },
     "system": {
-      "$ref": "file:model_system.json#"
+      "$ref": "file:model_system.json#",
+      "$presentation": {
+        "section": "system"
+      }
     },
     "gateway": {
-      "$ref": "file:model_gateway.json#"
+      "$ref": "file:model_gateway.json#",
+      "$presentation": {
+        "section": "gateway"
+      }
     },
     "discovery": {
       "$ref": "file:model_discovery.json#"
     },
     "localnet": {
-      "$ref": "file:model_localnet.json#"
+      "$ref": "file:model_localnet.json#",
+      "$presentation": {
+        "section": "localnet"
+      }
     },
     "testing": {
       "$ref": "file:model_testing.json#"
@@ -57,7 +69,10 @@
       "$ref": "file:model_features.json#"
     },
     "pointset": {
-      "$ref": "file:model_pointset.json#"
+      "$ref": "file:model_pointset.json#",
+      "$presentation": {
+        "section": "pointset"
+      }
     },
     "structure": {
       "existingJavaType": "java.util.HashMap<String, DiscoveryEvents>",

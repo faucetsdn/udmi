@@ -13,6 +13,7 @@ import static com.google.udmi.util.JsonUtil.flattenNestedMap;
 import static com.google.udmi.util.JsonUtil.isoConvert;
 import static com.google.udmi.util.JsonUtil.nestFlattenedJson;
 import static com.google.udmi.util.JsonUtil.writeFormattedFile;
+import static udmi.util.SchemaVersion.VERSION_1_5_2;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import java.io.File;
@@ -41,6 +42,8 @@ public class LocalSiteModelManager {
   private static final String SITE_METADATA_FILE = "site_metadata.json";
   private static final String CLOUD_IOT_CONFIG_FILE = "cloud_iot_config.json";
   private static final String DEVICE_METADATA_FILE = "metadata.json";
+  private static final String TIMESTAMP_KEY = "timestamp";
+  private static final String VERSION_KEY = "version";
   private final String pathToSiteModel;
 
   /**
@@ -197,7 +200,7 @@ public class LocalSiteModelManager {
 
   private void updateTimestamp(Map<String, String> metadataMap, boolean shouldUpdateTimestamp) {
     if (shouldUpdateTimestamp) {
-      metadataMap.put("timestamp", isoConvert(Instant.now()));
+      metadataMap.put(TIMESTAMP_KEY, isoConvert(Instant.now()));
     }
   }
 
@@ -209,6 +212,12 @@ public class LocalSiteModelManager {
    */
   private Map<String, String> mergeDeviceMetadata(Map<String, String> originalData,
       Map<String, String> receivedUpdate) {
+    if (!originalData.containsKey(TIMESTAMP_KEY)) {
+      updateTimestamp(originalData, true);
+    }
+    if (!originalData.containsKey(VERSION_KEY)) {
+      originalData.put(VERSION_KEY, VERSION_1_5_2.key());
+    }
     // Merge all data including any renamed points
     Map<String, String> mergedData = merge(originalData, receivedUpdate, true);
 

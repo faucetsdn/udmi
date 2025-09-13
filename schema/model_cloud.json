@@ -18,7 +18,11 @@
     },
     "functions_ver": {
       "description": "Function version of this request",
-      "type": "integer"
+      "type": "integer",
+      "$presentation": {
+        "display": "show",
+        "style": "bold"
+      }
     },
     "auth_type": {
       "description": "The key type used for cloud communication.",
@@ -27,11 +31,19 @@
         "ES256_X509",
         "RS256",
         "RS256_X509"
-      ]
+      ],
+      "$presentation": {
+        "display": "show",
+        "style": "bold"
+      }
     },
     "device_key": {
       "type": "boolean",
-      "description": "Indicates if the device private key is provided in the site model."
+      "description": "Indicates if the device private key is provided in the site model.",
+      "$presentation": {
+        "display": "show",
+        "style": "bold"
+      }
     },
     "resource_type": {
       "description": "The cloud resource type",
@@ -41,19 +53,34 @@
         "FUNNEL",
         "PROXIED",
         "REGISTRY"
-      ]
+      ],
+      "$presentation": {
+        "display": "show",
+        "style": "bold"
+      }
     },
     "gateway": {
-      "$ref": "file:model_gateway.json#"
+      "$ref": "file:model_gateway.json#",
+      "$presentation": {
+        "display": "hide"
+      }
     },
     "config": {
       "$ref": "file:model_cloud_config.json#"
     },
     "blocked": {
-      "type": "boolean"
+      "type": "boolean",
+      "$presentation": {
+        "display": "show",
+        "style": "bold"
+      }
     },
     "detail": {
-      "type": "string"
+      "type": "string",
+      "$presentation": {
+        "display": "show",
+        "style": "bold"
+      }
     },
     "credentials": {
       "type": "array",
@@ -77,33 +104,64 @@
     },
     "updated_time": {
       "type": "string",
-      "format": "date-time"
+      "format": "date-time",
+      "$presentation": {
+        "display": "show",
+        "style": "bold"
+      }
     },
     "last_event_time": {
       "type": "string",
-      "format": "date-time"
+      "format": "date-time",
+      "$presentation": {
+        "display": "show",
+        "style": "bold"
+      }
     },
     "last_state_time": {
       "type": "string",
-      "format": "date-time"
+      "format": "date-time",
+      "$presentation": {
+        "display": "show",
+        "style": "bold"
+      }
     },
     "last_config_time": {
       "type": "string",
-      "format": "date-time"
+      "format": "date-time",
+      "$presentation": {
+        "display": "show",
+        "style": "bold"
+      }
     },
     "last_error_time": {
       "type": "string",
-      "format": "date-time"
+      "format": "date-time",
+      "$presentation": {
+        "display": "show",
+        "style": "bold"
+      }
     },
     "last_config_ack": {
       "type": "string",
-      "format": "date-time"
+      "format": "date-time",
+      "$presentation": {
+        "display": "show",
+        "style": "bold"
+      }
     },
     "num_id": {
-      "type": "string"
+      "type": "string",
+      "$presentation": {
+        "display": "show",
+        "style": "bold"
+      }
     },
     "operation": {
-      "$ref": "file:common.json#/definitions/operation"
+      "$ref": "file:common.json#/definitions/operation",
+      "$presentation": {
+        "display": "hide"
+      }
     },
     "metadata": {
       "type": "object",
@@ -113,11 +171,19 @@
           "additionalProperties": false,
           "type": "string"
         }
+      },
+      "$presentation": {
+        "display": "show",
+        "style": "bold"
       }
     },
     "metadata_str": {
       "type": "string",
-      "description": "Strigified version of the metadata object, used for internal backend processing"
+      "description": "Strigified version of the metadata object, used for internal backend processing",
+      "$presentation": {
+        "display": "show",
+        "style": "bold"
+      }
     },
     "device_ids": {
       "description": "If operating on the entire registry, then this contains results for multiple devices (batched operation).",
@@ -127,6 +193,10 @@
           "additionalProperties": false,
           "type": "object"
         }
+      },
+      "$presentation": {
+        "display": "show",
+        "style": "bold"
       }
     }
   }

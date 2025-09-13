@@ -4,6 +4,7 @@
   "description": "Pointset representing the abstract system expectation for what the device should be doing, and how it should be configured and operated. This block specifies the expected points that a device holds",
   "type": "object",
   "$schema": "http://json-schema.org/draft-07/schema#",
+  "$defaultPresentation": "pointset",
   "additionalProperties": false,
   "properties": {
     "points": {
@@ -15,25 +16,48 @@
         "^[a-z][a-z0-9]*(_[a-z0-9]+)*$": {
           "$ref": "file:model_pointset_point.json#"
         }
+      },
+      "$presentation": {
+        "presentationProperties": {
+          "points_template_name": {
+            "$ref": "file:model_pointset_point.json#"
+          }
+        }
       }
     },
     "exclude_units_from_config": {
-      "type": "boolean"
+      "type": "boolean",
+      "$presentation": {
+        "display": "show",
+        "style": "bold"
+      }
     },
     "exclude_points_from_config": {
-      "type": "boolean"
+      "type": "boolean",
+      "$presentation": {
+        "display": "show",
+        "style": "bold"
+      }
     },
     "sample_limit_sec": {
       "description": "Minimum time between sample updates for the device (including complete and COV updates). Updates more frequent than this should be coalesced into one update.",
       "type": "integer",
       "minimum": 0,
-      "maximum": 86400
+      "maximum": 86400,
+      "$presentation": {
+        "display": "show",
+        "style": "bold"
+      }
     },
     "sample_rate_sec": {
       "description": "Maximum time between samples for the device to send out a complete update. It can send out updates more frequently than this. Default to 600.",
       "type": "integer",
       "minimum": 1,
-      "maximum": 86400
+      "maximum": 86400,
+      "$presentation": {
+        "display": "show",
+        "style": "bold"
+      }
     }
   },
   "required": [

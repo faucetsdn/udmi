@@ -15,12 +15,20 @@
             "description": "ID of the parent device to which the device is physically connected",
             "type": "string",
             "pattern": "^[A-Z]{2,6}-[1-9][0-9]*$",
-            "examples": ["DDC-1", "CGW-2"]
+            "examples": ["DDC-1", "CGW-2"],
+            "$presentation": {
+              "display": "show",
+              "style": "bold"
+            }
         },
         "family": {
             "description": "Connection family/protocol of the parent device to which the device is physically connected",
             "type": "string",
-            "examples": ["bacnet_mstp", "modbus_tcp", "mqtt"]
+            "examples": ["bacnet_mstp", "modbus_tcp", "mqtt"],
+            "$presentation": {
+              "display": "show",
+              "style": "bold"
+            }
         }
       }
     },
@@ -32,7 +40,39 @@
           "$ref": "file:model_localnet_family.json"
         }
       },
-      "examples": ["bacnet", "modbus", "mbus", "ether", "ipv4", "ipv6", "iot"]
+      "examples": ["bacnet", "modbus", "mbus", "ether", "ipv4", "ipv6", "iot"],
+      "$presentation": {
+        "paths": {
+          "bacnet": {
+            "adjunct.paths": {
+              "name": { "style": "bold", "description": "BACnet device name" },
+              "description": { "style": "bold", "description": "BACnet device description" }
+            }
+          },
+          "modbus": {
+            "adjunct.paths": {
+              "serial_port": { "style": "bold" },
+              "bit_rate": { "style": "bold" },
+              "data_bits": { "style": "bold" },
+              "stop_bits": { "style": "bold" },
+              "parity": { "style": "bold" },
+              "encoding": { "style": "bold" }
+            }
+          },
+          "mbus": {
+            "adjunct.paths": {
+              "serial_port": { "style": "bold" },
+              "bit_rate": { "style": "bold" },
+              "secondary_addr": { "style": "bold" }
+            }
+          },
+          "ether": { },
+          "ipv4": { },
+          "ipv6": { },
+          "fqdn": { },
+          "iot": { }
+        }
+      }
     }
   },
   "required": [

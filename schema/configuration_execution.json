@@ -3,45 +3,96 @@
   "title": "Execution Configuration",
   "description": "Parameters for configuring the execution run of a UDMI tool",
   "$section": "Tool Configuration",
+  "$presentation": {
+    "section": "cloud_iot_config"
+  },
   "type": "object",
   "$schema": "http://json-schema.org/draft-07/schema#",
   "additionalProperties": false,
   "properties": {
     "registry_id": {
-      "type": "string"
+      "type": "string",
+      "$presentation": {
+        "display": "show",
+        "style": "bold"
+      }
     },
     "cloud_region": {
-      "type": "string"
+      "type": "string",
+      "$presentation": {
+        "display": "show",
+        "style": "bold"
+      }
     },
     "site_name": {
-      "type": "string"
+      "type": "string",
+      "$presentation": {
+        "display": "show",
+        "style": "bold"
+      }
     },
     "update_topic": {
-      "type": "string"
+      "type": "string",
+      "$presentation": {
+        "display": "show",
+        "style": "bold"
+      }
     },
     "feed_name": {
-      "type": "string"
+      "type": "string",
+      "$presentation": {
+        "display": "show",
+        "style": "bold"
+      }
     },
     "reflect_region": {
-      "type": "string"
+      "type": "string",
+      "$presentation": {
+        "display": "show",
+        "style": "bold"
+      }
     },
     "site_model": {
-      "type": "string"
+      "type": "string",
+      "$presentation": {
+        "display": "show",
+        "style": "bold"
+      }
     },
     "src_file": {
-      "type": "string"
+      "type": "string",
+      "$presentation": {
+        "display": "show",
+        "style": "bold"
+      }
     },
     "registry_suffix": {
-      "type": "string"
+      "type": "string",
+      "$presentation": {
+        "display": "show",
+        "style": "bold"
+      }
     },
     "shard_count": {
-      "type": "integer"
+      "type": "integer",
+      "$presentation": {
+        "display": "show",
+        "style": "bold"
+      }
     },
     "shard_index": {
-      "type": "integer"
+      "type": "integer",
+      "$presentation": {
+        "display": "show",
+        "style": "bold"
+      }
     },
     "device_id": {
-      "type": "string"
+      "type": "string",
+      "$presentation": {
+        "display": "show",
+        "style": "bold"
+      }
     },
     "iot_provider": {
       "$ref": "file:common.json#/definitions/iot_provider"
@@ -53,68 +104,144 @@
       "$ref": "file:configuration_endpoint.json"
     },
     "project_id": {
-      "type": "string"
+      "type": "string",
+      "$presentation": {
+        "display": "show",
+        "style": "bold"
+      }
     },
     "user_name": {
-      "type": "string"
+      "type": "string",
+      "$presentation": {
+        "display": "show",
+        "style": "bold"
+      }
     },
     "udmi_namespace": {
-      "type": "string"
+      "type": "string",
+      "$presentation": {
+        "display": "show",
+        "style": "bold"
+      }
     },
     "bridge_host": {
-      "type": "string"
+      "type": "string",
+      "$presentation": {
+        "display": "show",
+        "style": "bold"
+      }
     },
     "key_file": {
-      "type": "string"
+      "type": "string",
+      "$presentation": {
+        "display": "show",
+        "style": "bold"
+      }
     },
     "serial_no": {
-      "type": "string"
+      "type": "string",
+      "$presentation": {
+        "display": "show",
+        "style": "bold"
+      }
     },
     "log_level": {
-      "type": "string"
+      "type": "string",
+      "$presentation": {
+        "display": "show",
+        "style": "bold"
+      }
     },
     "min_stage": {
-      "type": "string"
+      "type": "string",
+      "$presentation": {
+        "display": "show",
+        "style": "bold"
+      }
     },
     "udmi_version": {
       "type": "string",
-      "description": "Semantic tagged version of udmis install"
+      "description": "Semantic tagged version of udmis install",
+      "$presentation": {
+        "display": "show",
+        "style": "bold"
+      }
     },
     "udmi_commit": {
       "type": "string",
-      "description": "Commit hash of this udmis install"
+      "description": "Commit hash of this udmis install",
+      "$presentation": {
+        "display": "show",
+        "style": "bold"
+      }
     },
     "udmi_ref": {
       "type": "string",
-      "description": "Complete reference of udmis install"
+      "description": "Complete reference of udmis install",
+      "$presentation": {
+        "display": "show",
+        "style": "bold"
+      }
     },
     "udmi_timever": {
       "type": "string",
-      "description": "Timestamp version id of udmis install"
+      "description": "Timestamp version id of udmis install",
+      "$presentation": {
+        "display": "show",
+        "style": "bold"
+      }
     },
     "enforce_version": {
-      "type": "boolean"
+      "type": "boolean",
+      "$presentation": {
+        "display": "show",
+        "style": "bold"
+      }
     },
     "udmi_root": {
-      "type": "string"
+      "type": "string",
+      "$presentation": {
+        "display": "show",
+        "style": "bold"
+      }
     },
     "update_to": {
       "type": "string",
-      "description": "Optional version for a udmis update trigger"
+      "description": "Optional version for a udmis update trigger",
+      "$presentation": {
+        "display": "show",
+        "style": "bold"
+      }
     },
     "alt_project": {
-      "type": "string"
+      "type": "string",
+      "$presentation": {
+        "display": "show",
+        "style": "bold"
+      }
     },
     "alt_registry": {
-      "type": "string"
+      "type": "string",
+      "$presentation": {
+        "display": "show",
+        "style": "bold"
+      }
     },
     "block_unknown": {
-      "type": "boolean"
+      "type": "boolean",
+      "$presentation": {
+        "display": "show",
+        "style": "bold"
+      }
     },
     "sequences": {
       "type": "array",
       "items": {
         "type": "string"
+      },
+      "$presentation": {
+        "display": "show",
+        "style": "bold"
       }
     },
     "mapping_configuration": {
