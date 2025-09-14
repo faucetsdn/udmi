@@ -8,7 +8,7 @@
 
 # Please populate this array with the list of your site models.
 # For example: SITE_MODELS=("US-SVL-BRGUP1" "US-SVL-OTHER" "etc")
-SITE_MODELS=(UK-LON-AVLAB)
+SITE_MODELS=()
 
 UDMI_ROOT=$(dirname $0)/..
 cd $UDMI_ROOT
