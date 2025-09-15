@@ -1,7 +1,6 @@
 #!/bin/bash -e
 
 # This script automates the process of updating num_ids for a list of site models
-# as requested in b/435662022.
 
 # --- USER ACTION REQUIRED ---
 # The script will now prompt for the project specification.
