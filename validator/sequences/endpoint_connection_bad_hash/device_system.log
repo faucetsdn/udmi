@@ -1,169 +1,141 @@
-2025-06-10T17:07:52Z INFO    device.log             Configured with auth_type RS256
-2025-06-10T17:07:52Z INFO    device.log             Using addresses from default interface: eth0 for family: ipv4
-2025-06-10T17:07:52Z INFO    device.log             Family ipv4 address is 10.1.1.172
-2025-06-10T17:07:52Z INFO    device.log             Using addresses from default interface: eth0 for family: ether
-2025-06-10T17:07:52Z INFO    device.log             Family ether address is 7c:1e:52:3f:0b:d8
-2025-06-10T17:07:52Z INFO    device.log             Resetting persistent store /home/runner/work/udmi/udmi/sites/udmi_site_model/out/devices/AHU-1/persistent_data.json
-2025-06-10T17:07:52Z INFO    device.log             Loading endpoint into persistent data from configuration
-2025-06-10T17:07:52Z WARNING device.log             Updating persistent store:
+TIMESTAMP INFO    device.log             Configured with auth_type RS256
+TIMESTAMP INFO    device.log             Using addresses from default interface: eth0 for family: ipv4
+TIMESTAMP INFO    device.log             Family ipv4 address is 10.1.0.174
+TIMESTAMP INFO    device.log             Using addresses from default interface: eth0 for family: ether
+TIMESTAMP INFO    device.log             Family ether address is 7c:1e:52:ff:0a:df
+TIMESTAMP INFO    device.log             Loading endpoint into persistent data from configuration
+TIMESTAMP WARNING device.log             Updating persistent store:
 {
   "endpoint" : {
     "protocol" : "mqtt",
     "transport" : "ssl",
     "hostname" : "localhost",
-    "client_id" : "/r/ZZ-TRI-FECTA_1/d/AHU-1",
-    "topic_prefix" : "/r/ZZ-TRI-FECTA_1/d/AHU-1",
+    "client_id" : "/r/ZZ-TRI-FECTA/d/AHU-1",
+    "topic_prefix" : "/r/ZZ-TRI-FECTA/d/AHU-1",
     "auth_provider" : {
       "basic" : {
-        "username" : "/r/ZZ-TRI-FECTA_1/d/AHU-1",
+        "username" : "/r/ZZ-TRI-FECTA/d/AHU-1",
         "password" : "38269d11"
       }
     }
   },
   "restart_count" : 1
 }
-2025-06-10T17:07:52Z INFO    device.log             Starting pubber AHU-1, serial sequencer-16735, mac null, gateway null, options noPersist
-2025-06-10T17:07:52Z WARNING device.log             Starting connection 1749575272921 with 0
-2025-06-10T17:07:52Z INFO    device.log             Loading device key bytes from /home/runner/work/udmi/udmi/sites/udmi_site_model/devices/AHU-1/rsa_private.pkcs8
-2025-06-10T17:07:53Z INFO    device.log             CA cert file: /home/runner/work/udmi/udmi/sites/udmi_site_model/reflector/ca.crt
-2025-06-10T17:07:53Z INFO    device.log             Device cert file: /home/runner/work/udmi/udmi/sites/udmi_site_model/devices/AHU-1/rsa_private.crt
-2025-06-10T17:07:53Z INFO    device.log             Private key file: /home/runner/work/udmi/udmi/sites/udmi_site_model/devices/AHU-1/rsa_private.pem
-2025-06-10T17:07:53Z INFO    device.log             Password sha256 6b5344e1
-2025-06-10T17:07:53Z INFO    device.log             Update state 2025-06-10T17:07:53Z last_config 1970-01-01T00:00:00Z
-2025-06-10T17:07:53Z WARNING device.log             Dropping state update until config received...
-2025-06-10T17:07:53Z INFO    device.log             Update state 2025-06-10T17:07:53Z last_config 1970-01-01T00:00:00Z
-2025-06-10T17:07:53Z WARNING device.log             Dropping state update until config received...
-2025-06-10T17:07:53Z INFO    device.log             Device AHU-1 config handler
-2025-06-10T17:07:53Z INFO    device.log             Update state 2025-06-10T17:07:53Z last_config 1970-01-01T00:00:00Z
-2025-06-10T17:07:53Z WARNING device.log             Dropping state update until config received...
-2025-06-10T17:07:53Z WARNING device.log             Received config for config latch AHU-1
-2025-06-10T17:07:53Z WARNING device.log             Starting AHU-1 PubberPublisherHost sender with delay 10s
-2025-06-10T17:07:53Z INFO    device.log             2025-06-10T17:07:53Z received config 2025-06-10T17:07:38Z
-2025-06-10T17:07:53Z WARNING device.log             Starting AHU-1 PubberSystemManager sender with delay 10s
-2025-06-10T17:07:53Z WARNING device.log             Starting AHU-1 PubberPointsetManager sender with delay 10s
-2025-06-10T17:07:53Z NOTICE  system.config.apply    success
-2025-06-10T17:07:53Z WARNING device.log             Start waiting 10s for config latch for AHU-1
-2025-06-10T17:07:53Z WARNING device.log             Ending connection 1749575272921 with 1
-2025-06-10T17:07:53Z NOTICE  system.config.apply    success
-2025-06-10T17:08:04Z NOTICE  system.config.apply    success
-2025-06-10T17:08:04Z DEBUG   device.log             State update defer 1998ms
-2025-06-10T17:08:04Z DEBUG   device.log             State update defer 1998ms
-2025-06-10T17:08:04Z DEBUG   device.log             State update defer 1998ms
-2025-06-10T17:08:04Z DEBUG   device.log             State update defer 1997ms
-2025-06-10T17:08:04Z DEBUG   device.log             State update defer 1997ms
-2025-06-10T17:08:04Z DEBUG   device.log             State update defer 1997ms
-2025-06-10T17:08:04Z DEBUG   device.log             State update defer 1997ms
-2025-06-10T17:08:04Z DEBUG   system.config.receive  success
-2025-06-10T17:08:04Z DEBUG   system.config.parse    success
-2025-06-10T17:08:04Z INFO    device.log             Device AHU-1 config handler
-2025-06-10T17:08:04Z DEBUG   device.log             State update defer 1897ms
-2025-06-10T17:08:04Z DEBUG   device.log             State update defer 1897ms
-2025-06-10T17:08:04Z DEBUG   device.log             Config update AHU-1 (endpoint_connection_bad_hash)
-2025-06-10T17:08:04Z INFO    device.log             2025-06-10T17:08:04Z received config 2025-06-10T17:08:04Z
-2025-06-10T17:08:04Z NOTICE  system.config.apply    success
-2025-06-10T17:08:04Z DEBUG   device.log             State update defer 1895ms
-2025-06-10T17:08:04Z DEBUG   device.log             State update defer 1892ms
-2025-06-10T17:08:04Z DEBUG   device.log             State update defer 1891ms
-2025-06-10T17:08:04Z DEBUG   device.log             State update defer 1891ms
-2025-06-10T17:08:04Z DEBUG   device.log             State update defer 1891ms
-2025-06-10T17:08:04Z DEBUG   device.log             State update defer 1891ms
-2025-06-10T17:08:04Z DEBUG   device.log             State update defer 1890ms
-2025-06-10T17:08:06Z DEBUG   device.log             State update defer 0ms
-2025-06-10T17:08:06Z INFO    device.log             Update state 2025-06-10T17:08:06Z last_config 2025-06-10T17:08:04Z
-2025-06-10T17:08:06Z DEBUG   device.log             State update AHU-1 (endpoint_connection_bad_hash)
-2025-06-10T17:08:10Z DEBUG   system.config.receive  success
-2025-06-10T17:08:10Z DEBUG   device.log             State update defer -1709ms
-2025-06-10T17:08:10Z INFO    device.log             Update state 2025-06-10T17:08:10Z last_config 2025-06-10T17:08:04Z
-2025-06-10T17:08:10Z DEBUG   system.config.parse    success
-2025-06-10T17:08:10Z INFO    device.log             Device AHU-1 config handler
-2025-06-10T17:08:10Z DEBUG   device.log             State update AHU-1 (endpoint_connection_bad_hash)
-2025-06-10T17:08:10Z DEBUG   device.log             Config update AHU-1 (endpoint_connection_bad_hash)
-2025-06-10T17:08:10Z DEBUG   device.log             State update defer 2000ms
-2025-06-10T17:08:10Z INFO    device.log             2025-06-10T17:08:10Z received config 2025-06-10T17:08:10Z
-2025-06-10T17:08:10Z NOTICE  system.config.apply    success
-2025-06-10T17:08:10Z DEBUG   device.log             State update defer 1999ms
-2025-06-10T17:08:12Z DEBUG   device.log             State update defer 0ms
-2025-06-10T17:08:12Z INFO    device.log             Update state 2025-06-10T17:08:12Z last_config 2025-06-10T17:08:10Z
-2025-06-10T17:08:12Z DEBUG   device.log             State update AHU-1 (endpoint_connection_bad_hash)
-2025-06-10T17:08:15Z DEBUG   system.config.receive  success
-2025-06-10T17:08:15Z DEBUG   device.log             State update defer -1042ms
-2025-06-10T17:08:15Z INFO    device.log             Update state 2025-06-10T17:08:15Z last_config 2025-06-10T17:08:10Z
-2025-06-10T17:08:15Z DEBUG   device.log             State update AHU-1 (endpoint_connection_bad_hash)
-2025-06-10T17:08:15Z DEBUG   system.config.parse    success
-2025-06-10T17:08:15Z INFO    device.log             Device AHU-1 config handler
-2025-06-10T17:08:15Z DEBUG   device.log             Config update AHU-1 (endpoint_connection_bad_hash)
-2025-06-10T17:08:15Z DEBUG   device.log             State update defer 1998ms
-2025-06-10T17:08:15Z INFO    device.log             2025-06-10T17:08:15Z received config 2025-06-10T17:08:15Z
-2025-06-10T17:08:15Z DEBUG   device.log             State update defer 1996ms
-2025-06-10T17:08:15Z DEBUG   device.log             State update defer 1996ms
-2025-06-10T17:08:15Z DEBUG   device.log             State update defer 1995ms
-2025-06-10T17:08:15Z DEBUG   device.log             State update defer 1994ms
-2025-06-10T17:08:15Z DEBUG   device.log             State update defer 1994ms
-2025-06-10T17:08:15Z NOTICE  system.config.apply    success
-2025-06-10T17:08:15Z DEBUG   device.log             State update defer 1991ms
-2025-06-10T17:08:15Z DEBUG   device.log             State update defer 1991ms
-2025-06-10T17:08:17Z DEBUG   device.log             State update defer 0ms
-2025-06-10T17:08:17Z INFO    device.log             Update state 2025-06-10T17:08:17Z last_config 2025-06-10T17:08:15Z
-2025-06-10T17:08:17Z DEBUG   device.log             State update AHU-1 (endpoint_connection_bad_hash)
-2025-06-10T17:08:20Z DEBUG   system.config.receive  success
-2025-06-10T17:08:20Z DEBUG   device.log             State update defer -1079ms
-2025-06-10T17:08:20Z INFO    device.log             Update state 2025-06-10T17:08:20Z last_config 2025-06-10T17:08:15Z
-2025-06-10T17:08:20Z DEBUG   system.config.parse    success
-2025-06-10T17:08:20Z INFO    device.log             Device AHU-1 config handler
-2025-06-10T17:08:20Z DEBUG   device.log             State update AHU-1 (endpoint_connection_bad_hash)
-2025-06-10T17:08:20Z DEBUG   device.log             Config update AHU-1 (endpoint_connection_bad_hash)
-2025-06-10T17:08:20Z DEBUG   device.log             State update defer 1999ms
-2025-06-10T17:08:20Z INFO    device.log             2025-06-10T17:08:20Z received config 2025-06-10T17:08:20Z
-2025-06-10T17:08:20Z NOTICE  system.config.apply    success
-2025-06-10T17:08:20Z DEBUG   device.log             State update defer 1992ms
-2025-06-10T17:08:20Z DEBUG   device.log             State update defer 1992ms
-2025-06-10T17:08:20Z DEBUG   device.log             State update defer 1991ms
-2025-06-10T17:08:20Z DEBUG   device.log             State update defer 1991ms
-2025-06-10T17:08:20Z DEBUG   device.log             State update defer 1991ms
-2025-06-10T17:08:20Z DEBUG   device.log             State update defer 1990ms
-2025-06-10T17:08:20Z DEBUG   device.log             State update defer 1990ms
-2025-06-10T17:08:20Z DEBUG   system.config.receive  success
-2025-06-10T17:08:20Z DEBUG   device.log             State update defer 1904ms
-2025-06-10T17:08:20Z DEBUG   system.config.parse    success
-2025-06-10T17:08:20Z INFO    device.log             Device AHU-1 config handler
-2025-06-10T17:08:20Z DEBUG   device.log             Config update AHU-1 (endpoint_connection_bad_hash)
-2025-06-10T17:08:20Z INFO    device.log             2025-06-10T17:08:20Z received config 2025-06-10T17:08:20Z
-2025-06-10T17:08:20Z NOTICE  system.config.apply    success
-2025-06-10T17:08:20Z DEBUG   device.log             State update defer 1901ms
-2025-06-10T17:08:21Z DEBUG   system.config.receive  success
-2025-06-10T17:08:21Z DEBUG   device.log             State update defer 805ms
-2025-06-10T17:08:21Z DEBUG   system.config.parse    success
-2025-06-10T17:08:21Z INFO    device.log             Device AHU-1 config handler
-2025-06-10T17:08:21Z DEBUG   device.log             Config update AHU-1 (endpoint_connection_bad_hash)
-2025-06-10T17:08:21Z INFO    device.log             2025-06-10T17:08:21Z received config 2025-06-10T17:08:21Z
-2025-06-10T17:08:21Z NOTICE  system.config.apply    success
-2025-06-10T17:08:21Z DEBUG   device.log             State update defer 795ms
-2025-06-10T17:08:21Z DEBUG   device.log             State update defer 794ms
-2025-06-10T17:08:22Z DEBUG   device.log             State update defer 0ms
-2025-06-10T17:08:22Z INFO    device.log             Update state 2025-06-10T17:08:22Z last_config 2025-06-10T17:08:21Z
-2025-06-10T17:08:22Z DEBUG   device.log             State update AHU-1 (endpoint_connection_bad_hash)
-2025-06-10T17:08:22Z DEBUG   system.config.receive  success
-2025-06-10T17:08:22Z DEBUG   device.log             State update defer 1787ms
-2025-06-10T17:08:22Z DEBUG   system.config.parse    success
-2025-06-10T17:08:22Z INFO    device.log             Device AHU-1 config handler
-2025-06-10T17:08:22Z DEBUG   device.log             Config update AHU-1 (endpoint_connection_bad_hash)
-2025-06-10T17:08:22Z INFO    device.log             2025-06-10T17:08:22Z received config 2025-06-10T17:08:22Z
-2025-06-10T17:08:22Z NOTICE  system.config.apply    success
-2025-06-10T17:08:22Z DEBUG   device.log             State update defer 1784ms
-2025-06-10T17:08:22Z DEBUG   device.log             State update defer 1783ms
-2025-06-10T17:08:22Z DEBUG   device.log             State update defer 1783ms
-2025-06-10T17:08:22Z DEBUG   device.log             State update defer 1783ms
-2025-06-10T17:08:22Z DEBUG   device.log             State update defer 1783ms
-2025-06-10T17:08:22Z DEBUG   device.log             State update defer 1782ms
-2025-06-10T17:08:22Z DEBUG   device.log             State update defer 1781ms
-2025-06-10T17:08:22Z DEBUG   system.config.receive  success
-2025-06-10T17:08:22Z DEBUG   system.config.parse    success
-2025-06-10T17:08:22Z DEBUG   device.log             State update defer 1701ms
-2025-06-10T17:08:22Z DEBUG   device.log             State update defer 1701ms
-2025-06-10T17:08:22Z DEBUG   device.log             Config update AHU-1 (endpoint_connection_bad_hash)
-2025-06-10T17:08:22Z INFO    device.log             2025-06-10T17:08:22Z received config 2025-06-10T17:08:22Z
-2025-06-10T17:08:22Z NOTICE  system.config.apply    success
-2025-06-10T17:08:22Z DEBUG   device.log             State update defer 1699ms
-2025-06-10T17:08:22Z DEBUG   device.log             State update defer 1698ms
-2025-06-10T17:08:23Z NOTICE  device.log             Starting new endpoint generation
-2025-06-10T17:08:25Z NOTICE  validation.feature.sequence Sequence complete
+TIMESTAMP INFO    device.log             Starting pubber AHU-1, serial sequencer-5676, mac null, gateway null, options noPersist
+TIMESTAMP WARNING device.log             Starting connection 1754632173606 with 0
+TIMESTAMP INFO    device.log             Loading device key bytes from /home/runner/work/udmi/udmi/sites/udmi_site_model/devices/AHU-1/rsa_private.pkcs8
+TIMESTAMP INFO    device.log             CA cert file: /home/runner/work/udmi/udmi/sites/udmi_site_model/reflector/ca.crt
+TIMESTAMP INFO    device.log             Device cert file: /home/runner/work/udmi/udmi/sites/udmi_site_model/devices/AHU-1/rsa_private.crt
+TIMESTAMP INFO    device.log             Private key file: /home/runner/work/udmi/udmi/sites/udmi_site_model/devices/AHU-1/rsa_private.pem
+TIMESTAMP INFO    device.log             Password sha256 6b5344e1
+TIMESTAMP WARNING device.log             Creating new config latch for AHU-1
+TIMESTAMP
+TIMESTAMP WARNING device.log             Dropping state update until config received...
+TIMESTAMP
+TIMESTAMP WARNING device.log             Dropping state update until config received...
+TIMESTAMP INFO    device.log             Device AHU-1 config handler
+TIMESTAMP
+TIMESTAMP WARNING device.log             Dropping state update until config received...
+TIMESTAMP WARNING device.log             Received config for config latch AHU-1
+TIMESTAMP WARNING device.log             Starting AHU-1 PubberPublisherHost sender with delay 10s
+TIMESTAMP INFO    device.log             Connection complete.
+TIMESTAMP
+TIMESTAMP WARNING device.log             Starting AHU-1 PubberSystemManager sender with delay 10s
+TIMESTAMP WARNING device.log             Starting AHU-1 PubberPointsetManager sender with delay 10s
+TIMESTAMP WARNING device.log             Start waiting 10s for config latch for AHU-1
+TIMESTAMP WARNING device.log             Ending connection 1754632173606 with 1
+TIMESTAMP NOTICE  system.config.apply    success
+TIMESTAMP NOTICE  system.config.apply    success
+TIMESTAMP NOTICE  system.config.apply    success
+TIMESTAMP DEBUG   device.log             State update defer 1992ms
+TIMESTAMP DEBUG   device.log             State update defer 1989ms
+TIMESTAMP DEBUG   system.config.receive  success
+TIMESTAMP DEBUG   device.log             State update defer 1928ms
+TIMESTAMP DEBUG   system.config.parse    success
+TIMESTAMP DEBUG   device.log             State update defer 1927ms
+TIMESTAMP INFO    device.log             Device AHU-1 config handler
+TIMESTAMP DEBUG   device.log             Config update AHU-1 (endpoint_connection_bad_hash)
+TIMESTAMP
+TIMESTAMP NOTICE  system.config.apply    success
+TIMESTAMP DEBUG   device.log             State update defer 1917ms
+TIMESTAMP DEBUG   device.log             State update defer 1916ms
+TIMESTAMP DEBUG   device.log             State update defer 1915ms
+TIMESTAMP DEBUG   device.log             State update defer 1915ms
+TIMESTAMP DEBUG   device.log             State update defer 1915ms
+TIMESTAMP DEBUG   device.log             State update defer 0ms
+TIMESTAMP
+TIMESTAMP DEBUG   device.log             State update AHU-1 (endpoint_connection_bad_hash)
+TIMESTAMP DEBUG   system.config.receive  success
+TIMESTAMP DEBUG   system.config.parse    success
+TIMESTAMP DEBUG   device.log             State update defer -3370ms
+TIMESTAMP
+TIMESTAMP DEBUG   device.log             State update AHU-1 (endpoint_connection_bad_hash)
+TIMESTAMP DEBUG   device.log             Config update AHU-1 (endpoint_connection_bad_hash)
+TIMESTAMP
+TIMESTAMP DEBUG   device.log             State update defer 1998ms
+TIMESTAMP NOTICE  system.config.apply    success
+TIMESTAMP DEBUG   device.log             State update defer 1998ms
+TIMESTAMP DEBUG   device.log             State update defer 1996ms
+TIMESTAMP DEBUG   device.log             State update defer 0ms
+TIMESTAMP
+TIMESTAMP DEBUG   device.log             State update AHU-1 (endpoint_connection_bad_hash)
+TIMESTAMP DEBUG   system.config.receive  success
+TIMESTAMP DEBUG   device.log             State update defer -1042ms
+TIMESTAMP DEBUG   system.config.parse    success
+TIMESTAMP
+TIMESTAMP INFO    device.log             Device AHU-1 config handler
+TIMESTAMP DEBUG   device.log             State update AHU-1 (endpoint_connection_bad_hash)
+TIMESTAMP DEBUG   device.log             Config update AHU-1 (endpoint_connection_bad_hash)
+TIMESTAMP DEBUG   device.log             State update defer 1999ms
+TIMESTAMP
+TIMESTAMP NOTICE  system.config.apply    success
+TIMESTAMP DEBUG   device.log             State update defer 1998ms
+TIMESTAMP DEBUG   device.log             State update defer 1998ms
+TIMESTAMP DEBUG   device.log             State update defer 1998ms
+TIMESTAMP DEBUG   device.log             State update defer 1997ms
+TIMESTAMP DEBUG   device.log             State update defer 1997ms
+TIMESTAMP DEBUG   device.log             State update defer 1997ms
+TIMESTAMP DEBUG   device.log             State update defer 1995ms
+TIMESTAMP DEBUG   device.log             State update defer 0ms
+TIMESTAMP
+TIMESTAMP DEBUG   device.log             State update AHU-1 (endpoint_connection_bad_hash)
+TIMESTAMP DEBUG   system.config.receive  success
+TIMESTAMP DEBUG   system.config.parse    success
+TIMESTAMP DEBUG   device.log             State update defer -1055ms
+TIMESTAMP
+TIMESTAMP INFO    device.log             Device AHU-1 config handler
+TIMESTAMP DEBUG   device.log             State update AHU-1 (endpoint_connection_bad_hash)
+TIMESTAMP DEBUG   device.log             Config update AHU-1 (endpoint_connection_bad_hash)
+TIMESTAMP
+TIMESTAMP NOTICE  system.config.apply    success
+TIMESTAMP DEBUG   device.log             State update defer 1999ms
+TIMESTAMP DEBUG   device.log             State update defer 1999ms
+TIMESTAMP DEBUG   device.log             State update defer 1999ms
+TIMESTAMP DEBUG   device.log             State update defer 1998ms
+TIMESTAMP DEBUG   device.log             State update defer 1998ms
+TIMESTAMP DEBUG   device.log             State update defer 1998ms
+TIMESTAMP DEBUG   device.log             State update defer 1998ms
+TIMESTAMP DEBUG   system.config.receive  success
+TIMESTAMP DEBUG   device.log             State update defer 1902ms
+TIMESTAMP DEBUG   system.config.parse    success
+TIMESTAMP INFO    device.log             Device AHU-1 config handler
+TIMESTAMP DEBUG   device.log             Config update AHU-1 (endpoint_connection_bad_hash)
+TIMESTAMP
+TIMESTAMP NOTICE  system.config.apply    success
+TIMESTAMP DEBUG   device.log             State update defer 1899ms
+TIMESTAMP DEBUG   device.log             State update defer 1899ms
+TIMESTAMP DEBUG   device.log             State update defer 1898ms
+TIMESTAMP DEBUG   device.log             State update defer 1898ms
+TIMESTAMP DEBUG   device.log             State update defer 1898ms
+TIMESTAMP DEBUG   device.log             State update defer 1897ms
+TIMESTAMP DEBUG   system.config.receive  success
+TIMESTAMP DEBUG   device.log             State update defer 802ms
+TIMESTAMP DEBUG   system.config.parse    success
+TIMESTAMP DEBUG   device.log             State update defer 802ms
+TIMESTAMP INFO    device.log             Device AHU-1 config handler
+TIMESTAMP DEBUG   device.log             Config update AHU-1 (endpoint_connection_bad_hash)
+TIMESTAMP
+TIMESTAMP NOTICE  system.config.apply    success
+TIMESTAMP DEBUG   device.log             State update defer 800ms
+TIMESTAMP DEBUG   device.log             State update defer 60ms
+TIMESTAMP NOTICE  validation.feature.sequence Sequence complete

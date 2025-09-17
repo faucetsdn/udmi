@@ -3,6 +3,7 @@
     "families" : "entries"
   },
   "families" : {
-    "vendor" : { }
+    "vendor" : { },
+    "bacnet" : { }
   }
 }

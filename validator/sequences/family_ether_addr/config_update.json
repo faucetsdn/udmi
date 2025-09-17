@@ -1,19 +1,36 @@
 {
+  "timestamp" : "TIMESTAMP",
+  "version" : "@@@cloud udmi version###git-250ce5e",
+  "system" : {
+    "min_loglevel" : 100,
+    "metrics_rate_sec" : 10,
+    "operation" : {
+      "last_start" : "TIMESTAMP"
+    },
+    "testing" : {
+      "sequence_name" : "family_ether_addr"
+    }
+  },
   "discovery" : {
     "families" : {
-      "vendor" : { }
+      "vendor" : { },
+      "bacnet" : { }
     }
   },
   "localnet" : {
     "families" : {
-      "bacnet" : { },
       "ether" : { },
       "ipv4" : { },
-      "vendor" : { }
+      "vendor" : { },
+      "bacnet" : { }
     }
   },
   "pointset" : {
     "points" : {
+      "filter_differential_pressure_setpoint" : {
+        "units" : "Bars",
+        "set_value" : 98
+      },
       "filter_alarm_pressure_status" : {
         "ref" : "BV11.present_value",
         "units" : "No-units"
@@ -21,25 +38,7 @@
       "filter_differential_pressure_sensor" : {
         "ref" : "AV12.present_value",
         "units" : "Degrees-Celsius"
-      },
-      "filter_differential_pressure_setpoint" : {
-        "set_value" : 98,
-        "units" : "Bars"
       }
     }
-  },
-  "system" : {
-    "metrics_rate_sec" : 10,
-    "min_loglevel" : 100,
-    "operation" : {
-      "last_start" : "2024-12-20T09:54:40Z"
-    },
-    "testing" : {
-      "config_base" : 32,
-      "sequence_name" : "family_ether_addr",
-      "transaction_id" : "RC:f39498.00000031"
-    }
-  },
-  "timestamp" : "2024-12-20T09:56:18Z",
-  "version" : "git-61cf36e"
+  }
 }

@@ -1,152 +1,144 @@
-2024-12-17T05:27:16Z INFO    device.log             sending AHU-1 message #10 with 3 points
-2024-12-17T05:27:16Z DEBUG   device.log             State update defer -6003ms
-2024-12-17T05:27:16Z INFO    device.log             Update state 2024-12-17T05:27:16Z last_config 2024-12-17T05:27:06Z
-2024-12-17T05:27:16Z DEBUG   device.log             State update AHU-1 (scan_single_now)
-2024-12-17T05:27:26Z DEBUG   system.config.receive  success
-2024-12-17T05:27:26Z DEBUG   device.log             State update defer -8125ms
-2024-12-17T05:27:26Z INFO    device.log             Update state 2024-12-17T05:27:26Z last_config 2024-12-17T05:27:06Z
-2024-12-17T05:27:26Z DEBUG   system.config.parse    success
-2024-12-17T05:27:26Z INFO    device.log             Device AHU-1 config handler
-2024-12-17T05:27:26Z DEBUG   device.log             Config update AHU-1 (scan_single_now)
-2024-12-17T05:27:26Z DEBUG   device.log             State update defer 2000ms
-2024-12-17T05:27:26Z INFO    device.log             2024-12-17T05:27:26Z received config 2024-12-17T05:27:26Z
-2024-12-17T05:27:26Z INFO    device.log             Discovery scan vendor phase stopped as null
-2024-12-17T05:27:26Z NOTICE  system.config.apply    success
-2024-12-17T05:27:26Z DEBUG   device.log             State update defer 1999ms
-2024-12-17T05:27:26Z DEBUG   device.log             State update defer 1999ms
-2024-12-17T05:27:26Z DEBUG   device.log             State update defer 1999ms
-2024-12-17T05:27:26Z DEBUG   device.log             State update defer 1998ms
-2024-12-17T05:27:26Z DEBUG   device.log             State update defer 1998ms
-2024-12-17T05:27:26Z DEBUG   device.log             State update defer 1998ms
-2024-12-17T05:27:26Z DEBUG   device.log             State update defer 1998ms
-2024-12-17T05:27:26Z DEBUG   device.log             State update defer 1998ms
-2024-12-17T05:27:26Z DEBUG   system.config.receive  success
-2024-12-17T05:27:26Z DEBUG   device.log             State update defer 1940ms
-2024-12-17T05:27:26Z DEBUG   system.config.parse    success
-2024-12-17T05:27:26Z INFO    device.log             Device AHU-1 config handler
-2024-12-17T05:27:26Z DEBUG   device.log             Config update AHU-1 (pointset_request_extraneous)
-2024-12-17T05:27:26Z INFO    device.log             2024-12-17T05:27:26Z received config 2024-12-17T05:27:26Z
-2024-12-17T05:27:26Z INFO    device.log             Discovery scan vendor phase stopped as null
-2024-12-17T05:27:26Z NOTICE  system.config.apply    success
-2024-12-17T05:27:26Z DEBUG   device.log             State update defer 1938ms
-2024-12-17T05:27:26Z DEBUG   device.log             State update defer 1938ms
-2024-12-17T05:27:26Z DEBUG   device.log             State update defer 1938ms
-2024-12-17T05:27:26Z DEBUG   device.log             State update defer 1938ms
-2024-12-17T05:27:26Z DEBUG   device.log             State update defer 1938ms
-2024-12-17T05:27:28Z DEBUG   device.log             State update defer 0ms
-2024-12-17T05:27:28Z INFO    device.log             Update state 2024-12-17T05:27:28Z last_config 2024-12-17T05:27:26Z
-2024-12-17T05:27:28Z DEBUG   device.log             State update AHU-1 (pointset_request_extraneous)
-2024-12-17T05:27:30Z DEBUG   system.config.receive  success
-2024-12-17T05:27:30Z DEBUG   device.log             State update defer -51ms
-2024-12-17T05:27:30Z INFO    device.log             Update state 2024-12-17T05:27:30Z last_config 2024-12-17T05:27:26Z
-2024-12-17T05:27:30Z DEBUG   system.config.parse    success
-2024-12-17T05:27:30Z INFO    device.log             Device AHU-1 config handler
-2024-12-17T05:27:30Z DEBUG   device.log             State update AHU-1 (pointset_request_extraneous)
-2024-12-17T05:27:30Z DEBUG   device.log             Config update AHU-1 (pointset_request_extraneous)
-2024-12-17T05:27:30Z DEBUG   device.log             State update defer 2000ms
-2024-12-17T05:27:30Z INFO    device.log             2024-12-17T05:27:30Z received config 2024-12-17T05:27:30Z
-2024-12-17T05:27:30Z INFO    device.log             Discovery scan vendor phase stopped as null
-2024-12-17T05:27:30Z NOTICE  system.config.apply    success
-2024-12-17T05:27:30Z DEBUG   device.log             State update defer 1999ms
-2024-12-17T05:27:30Z DEBUG   device.log             State update defer 1999ms
-2024-12-17T05:27:30Z DEBUG   device.log             State update defer 1999ms
-2024-12-17T05:27:30Z DEBUG   device.log             State update defer 1999ms
-2024-12-17T05:27:30Z DEBUG   device.log             State update defer 1998ms
-2024-12-17T05:27:32Z DEBUG   device.log             State update defer 0ms
-2024-12-17T05:27:32Z INFO    device.log             Update state 2024-12-17T05:27:32Z last_config 2024-12-17T05:27:30Z
-2024-12-17T05:27:32Z DEBUG   device.log             State update AHU-1 (pointset_request_extraneous)
-2024-12-17T05:27:35Z DEBUG   system.config.receive  success
-2024-12-17T05:27:35Z DEBUG   device.log             State update defer -91ms
-2024-12-17T05:27:35Z INFO    device.log             Update state 2024-12-17T05:27:35Z last_config 2024-12-17T05:27:30Z
-2024-12-17T05:27:35Z DEBUG   system.config.parse    success
-2024-12-17T05:27:35Z INFO    device.log             Device AHU-1 config handler
-2024-12-17T05:27:35Z DEBUG   device.log             Config update AHU-1 (pointset_request_extraneous)
-2024-12-17T05:27:35Z DEBUG   device.log             State update defer 2000ms
-2024-12-17T05:27:35Z INFO    device.log             2024-12-17T05:27:35Z received config 2024-12-17T05:27:34Z
-2024-12-17T05:27:35Z INFO    device.log             Discovery scan vendor phase stopped as null
-2024-12-17T05:27:35Z NOTICE  system.config.apply    success
-2024-12-17T05:27:35Z DEBUG   device.log             State update defer 1999ms
-2024-12-17T05:27:35Z DEBUG   device.log             State update defer 1998ms
-2024-12-17T05:27:35Z DEBUG   device.log             State update defer 1998ms
-2024-12-17T05:27:35Z DEBUG   device.log             State update defer 1998ms
-2024-12-17T05:27:35Z DEBUG   device.log             State update defer 1998ms
-2024-12-17T05:27:35Z DEBUG   device.log             State update defer 1998ms
-2024-12-17T05:27:35Z DEBUG   device.log             State update defer 1998ms
-2024-12-17T05:27:35Z DEBUG   device.log             State update defer 1998ms
-2024-12-17T05:27:36Z DEBUG   device.log             State update defer 867ms
-2024-12-17T05:27:37Z DEBUG   device.log             State update defer 0ms
-2024-12-17T05:27:37Z INFO    device.log             Update state 2024-12-17T05:27:37Z last_config 2024-12-17T05:27:34Z
-2024-12-17T05:27:37Z DEBUG   device.log             State update AHU-1 (pointset_request_extraneous)
-2024-12-17T05:27:39Z DEBUG   system.config.receive  success
-2024-12-17T05:27:39Z DEBUG   device.log             State update defer -103ms
-2024-12-17T05:27:39Z INFO    device.log             Update state 2024-12-17T05:27:39Z last_config 2024-12-17T05:27:34Z
-2024-12-17T05:27:39Z DEBUG   system.config.parse    success
-2024-12-17T05:27:39Z DEBUG   device.log             State update AHU-1 (pointset_request_extraneous)
-2024-12-17T05:27:39Z DEBUG   device.log             Config update AHU-1 (pointset_request_extraneous)
-2024-12-17T05:27:39Z DEBUG   device.log             State update defer 2000ms
-2024-12-17T05:27:39Z INFO    device.log             2024-12-17T05:27:39Z received config 2024-12-17T05:27:39Z
-2024-12-17T05:27:39Z INFO    device.log             Discovery scan vendor phase stopped as null
-2024-12-17T05:27:39Z NOTICE  system.config.apply    success
-2024-12-17T05:27:39Z DEBUG   device.log             State update defer 1999ms
-2024-12-17T05:27:40Z DEBUG   system.config.receive  success
-2024-12-17T05:27:40Z DEBUG   device.log             State update defer 797ms
-2024-12-17T05:27:40Z DEBUG   system.config.parse    success
-2024-12-17T05:27:40Z INFO    device.log             Device AHU-1 config handler
-2024-12-17T05:27:40Z DEBUG   device.log             Config update AHU-1 (pointset_request_extraneous)
-2024-12-17T05:27:40Z INFO    device.log             2024-12-17T05:27:40Z received config 2024-12-17T05:27:40Z
-2024-12-17T05:27:40Z INFO    device.log             Discovery scan vendor phase stopped as null
-2024-12-17T05:27:40Z NOTICE  system.config.apply    success
-2024-12-17T05:27:40Z DEBUG   device.log             State update defer 795ms
-2024-12-17T05:27:40Z DEBUG   device.log             State update defer 795ms
-2024-12-17T05:27:40Z DEBUG   device.log             State update defer 794ms
-2024-12-17T05:27:40Z DEBUG   device.log             State update defer 794ms
-2024-12-17T05:27:40Z DEBUG   device.log             State update defer 794ms
-2024-12-17T05:27:40Z DEBUG   device.log             State update defer 794ms
-2024-12-17T05:27:41Z DEBUG   device.log             State update defer 0ms
-2024-12-17T05:27:41Z INFO    device.log             Update state 2024-12-17T05:27:41Z last_config 2024-12-17T05:27:40Z
-2024-12-17T05:27:41Z DEBUG   device.log             State update AHU-1 (pointset_request_extraneous)
-2024-12-17T05:27:41Z DEBUG   system.config.receive  success
-2024-12-17T05:27:41Z DEBUG   device.log             State update defer 1596ms
-2024-12-17T05:27:41Z DEBUG   system.config.parse    success
-2024-12-17T05:27:41Z INFO    device.log             Device AHU-1 config handler
-2024-12-17T05:27:41Z DEBUG   device.log             Config update AHU-1 (pointset_request_extraneous)
-2024-12-17T05:27:41Z INFO    device.log             2024-12-17T05:27:41Z received config 2024-12-17T05:27:41Z
-2024-12-17T05:27:41Z INFO    device.log             Discovery scan vendor phase stopped as null
-2024-12-17T05:27:41Z NOTICE  system.config.apply    success
-2024-12-17T05:27:41Z DEBUG   device.log             State update defer 1595ms
-2024-12-17T05:27:41Z DEBUG   device.log             State update defer 1594ms
-2024-12-17T05:27:41Z DEBUG   device.log             State update defer 1594ms
-2024-12-17T05:27:42Z DEBUG   system.config.receive  success
-2024-12-17T05:27:42Z DEBUG   device.log             State update defer 487ms
-2024-12-17T05:27:42Z DEBUG   system.config.parse    success
-2024-12-17T05:27:42Z INFO    device.log             Device AHU-1 config handler
-2024-12-17T05:27:42Z DEBUG   device.log             Config update AHU-1 (pointset_request_extraneous)
-2024-12-17T05:27:42Z INFO    device.log             2024-12-17T05:27:42Z received config 2024-12-17T05:27:42Z
-2024-12-17T05:27:42Z INFO    device.log             Discovery scan vendor phase stopped as null
-2024-12-17T05:27:42Z NOTICE  system.config.apply    success
-2024-12-17T05:27:42Z DEBUG   device.log             State update defer 485ms
-2024-12-17T05:27:42Z DEBUG   device.log             State update defer 484ms
-2024-12-17T05:27:43Z DEBUG   device.log             State update defer 0ms
-2024-12-17T05:27:43Z INFO    device.log             Update state 2024-12-17T05:27:43Z last_config 2024-12-17T05:27:42Z
-2024-12-17T05:27:43Z DEBUG   device.log             State update AHU-1 (pointset_request_extraneous)
-2024-12-17T05:27:47Z DEBUG   system.config.receive  success
-2024-12-17T05:27:47Z DEBUG   device.log             State update defer -2051ms
-2024-12-17T05:27:47Z INFO    device.log             Update state 2024-12-17T05:27:47Z last_config 2024-12-17T05:27:42Z
-2024-12-17T05:27:47Z DEBUG   system.config.parse    success
-2024-12-17T05:27:47Z DEBUG   device.log             State update AHU-1 (pointset_request_extraneous)
-2024-12-17T05:27:47Z INFO    device.log             Device AHU-1 config handler
-2024-12-17T05:27:47Z DEBUG   device.log             Config update AHU-1 (pointset_request_extraneous)
-2024-12-17T05:27:47Z DEBUG   device.log             State update defer 2000ms
-2024-12-17T05:27:47Z INFO    device.log             2024-12-17T05:27:47Z received config 2024-12-17T05:27:47Z
-2024-12-17T05:27:47Z DEBUG   device.log             Restoring unknown point extraneous_point
-2024-12-17T05:27:47Z INFO    device.log             Discovery scan vendor phase stopped as null
-2024-12-17T05:27:47Z NOTICE  system.config.apply    success
-2024-12-17T05:27:47Z DEBUG   device.log             State update defer 1999ms
-2024-12-17T05:27:47Z DEBUG   device.log             State update defer 1999ms
-2024-12-17T05:27:47Z DEBUG   device.log             State update defer 1999ms
-2024-12-17T05:27:47Z DEBUG   device.log             State update defer 1999ms
-2024-12-17T05:27:47Z DEBUG   device.log             State update defer 1999ms
-2024-12-17T05:27:49Z DEBUG   device.log             State update defer 0ms
-2024-12-17T05:27:49Z INFO    device.log             Update state 2024-12-17T05:27:49Z last_config 2024-12-17T05:27:47Z
-2024-12-17T05:27:49Z DEBUG   device.log             State update AHU-1 (pointset_request_extraneous)
-2024-12-17T05:28:06Z NOTICE  validation.feature.sequence Sequence complete
+TIMESTAMP DEBUG   system.config.receive  success
+TIMESTAMP DEBUG   system.config.parse    success
+TIMESTAMP INFO    device.log             Device AHU-1 config handler
+TIMESTAMP DEBUG   device.log             State update defer -17065ms
+TIMESTAMP DEBUG   device.log             Config update AHU-1 (scan_single_now+bacnet)
+TIMESTAMP
+TIMESTAMP DEBUG   device.log             State update AHU-1 (scan_single_now+bacnet)
+TIMESTAMP
+TIMESTAMP INFO    device.log             Discovery scan bacnet phase stopped as null
+TIMESTAMP NOTICE  system.config.apply    success
+TIMESTAMP DEBUG   device.log             State update defer 1998ms
+TIMESTAMP DEBUG   device.log             State update defer 1997ms
+TIMESTAMP DEBUG   system.config.receive  success
+TIMESTAMP DEBUG   device.log             State update defer 1948ms
+TIMESTAMP DEBUG   system.config.parse    success
+TIMESTAMP DEBUG   device.log             State update defer 1947ms
+TIMESTAMP DEBUG   device.log             Config update AHU-1 (pointset_request_extraneous)
+TIMESTAMP
+TIMESTAMP DEBUG   device.log             State update defer 1946ms
+TIMESTAMP NOTICE  system.config.apply    success
+TIMESTAMP DEBUG   device.log             State update defer 1946ms
+TIMESTAMP DEBUG   device.log             State update defer 0ms
+TIMESTAMP
+TIMESTAMP DEBUG   device.log             State update AHU-1 (pointset_request_extraneous)
+TIMESTAMP DEBUG   system.config.receive  success
+TIMESTAMP DEBUG   device.log             State update defer -2033ms
+TIMESTAMP
+TIMESTAMP DEBUG   system.config.parse    success
+TIMESTAMP INFO    device.log             Device AHU-1 config handler
+TIMESTAMP DEBUG   device.log             State update AHU-1 (pointset_request_extraneous)
+TIMESTAMP DEBUG   device.log             Config update AHU-1 (pointset_request_extraneous)
+TIMESTAMP DEBUG   device.log             State update defer 2000ms
+TIMESTAMP
+TIMESTAMP NOTICE  system.config.apply    success
+TIMESTAMP DEBUG   device.log             State update defer 1999ms
+TIMESTAMP DEBUG   device.log             State update defer 1999ms
+TIMESTAMP DEBUG   device.log             State update defer 1999ms
+TIMESTAMP DEBUG   device.log             State update defer 1999ms
+TIMESTAMP DEBUG   device.log             State update defer 1999ms
+TIMESTAMP DEBUG   device.log             State update defer 1998ms
+TIMESTAMP DEBUG   device.log             State update defer 1998ms
+TIMESTAMP DEBUG   device.log             State update defer 0ms
+TIMESTAMP
+TIMESTAMP DEBUG   device.log             State update AHU-1 (pointset_request_extraneous)
+TIMESTAMP DEBUG   system.config.receive  success
+TIMESTAMP DEBUG   device.log             State update defer -1013ms
+TIMESTAMP DEBUG   system.config.parse    success
+TIMESTAMP
+TIMESTAMP INFO    device.log             Device AHU-1 config handler
+TIMESTAMP DEBUG   device.log             State update AHU-1 (pointset_request_extraneous)
+TIMESTAMP DEBUG   device.log             Config update AHU-1 (pointset_request_extraneous)
+TIMESTAMP DEBUG   device.log             State update defer 1999ms
+TIMESTAMP
+TIMESTAMP NOTICE  system.config.apply    success
+TIMESTAMP DEBUG   device.log             State update defer 1999ms
+TIMESTAMP DEBUG   device.log             State update defer 1999ms
+TIMESTAMP DEBUG   device.log             State update defer 1999ms
+TIMESTAMP DEBUG   device.log             State update defer 1999ms
+TIMESTAMP DEBUG   device.log             State update defer 1999ms
+TIMESTAMP DEBUG   device.log             State update defer 1998ms
+TIMESTAMP DEBUG   device.log             State update defer 1998ms
+TIMESTAMP DEBUG   device.log             State update defer 461ms
+TIMESTAMP DEBUG   device.log             State update defer 0ms
+TIMESTAMP
+TIMESTAMP DEBUG   device.log             State update AHU-1 (pointset_request_extraneous)
+TIMESTAMP DEBUG   system.config.receive  success
+TIMESTAMP DEBUG   device.log             State update defer -1021ms
+TIMESTAMP
+TIMESTAMP DEBUG   system.config.parse    success
+TIMESTAMP INFO    device.log             Device AHU-1 config handler
+TIMESTAMP DEBUG   device.log             State update AHU-1 (pointset_request_extraneous)
+TIMESTAMP DEBUG   device.log             Config update AHU-1 (pointset_request_extraneous)
+TIMESTAMP DEBUG   device.log             State update defer 2000ms
+TIMESTAMP
+TIMESTAMP NOTICE  system.config.apply    success
+TIMESTAMP DEBUG   device.log             State update defer 1999ms
+TIMESTAMP DEBUG   device.log             State update defer 1999ms
+TIMESTAMP DEBUG   device.log             State update defer 1999ms
+TIMESTAMP DEBUG   device.log             State update defer 1999ms
+TIMESTAMP DEBUG   device.log             State update defer 1999ms
+TIMESTAMP DEBUG   device.log             State update defer 1998ms
+TIMESTAMP DEBUG   device.log             State update defer 1998ms
+TIMESTAMP DEBUG   system.config.receive  success
+TIMESTAMP DEBUG   device.log             State update defer 818ms
+TIMESTAMP DEBUG   system.config.parse    success
+TIMESTAMP INFO    device.log             Device AHU-1 config handler
+TIMESTAMP DEBUG   device.log             State update defer 817ms
+TIMESTAMP DEBUG   device.log             Config update AHU-1 (pointset_request_extraneous)
+TIMESTAMP
+TIMESTAMP NOTICE  system.config.apply    success
+TIMESTAMP DEBUG   device.log             State update defer 816ms
+TIMESTAMP DEBUG   device.log             State update defer 816ms
+TIMESTAMP DEBUG   device.log             State update defer 816ms
+TIMESTAMP DEBUG   device.log             State update defer 816ms
+TIMESTAMP DEBUG   device.log             State update defer 816ms
+TIMESTAMP DEBUG   device.log             State update defer 816ms
+TIMESTAMP DEBUG   device.log             State update defer 816ms
+TIMESTAMP DEBUG   device.log             State update defer 0ms
+TIMESTAMP
+TIMESTAMP DEBUG   device.log             State update AHU-1 (pointset_request_extraneous)
+TIMESTAMP DEBUG   system.config.receive  success
+TIMESTAMP DEBUG   device.log             State update defer 1717ms
+TIMESTAMP DEBUG   system.config.parse    success
+TIMESTAMP INFO    device.log             Device AHU-1 config handler
+TIMESTAMP DEBUG   device.log             State update defer 1717ms
+TIMESTAMP DEBUG   device.log             Config update AHU-1 (pointset_request_extraneous)
+TIMESTAMP
+TIMESTAMP NOTICE  system.config.apply    success
+TIMESTAMP DEBUG   device.log             State update defer 1716ms
+TIMESTAMP DEBUG   device.log             State update defer 1716ms
+TIMESTAMP DEBUG   system.config.receive  success
+TIMESTAMP DEBUG   device.log             State update defer 611ms
+TIMESTAMP DEBUG   system.config.parse    success
+TIMESTAMP INFO    device.log             Device AHU-1 config handler
+TIMESTAMP DEBUG   device.log             State update defer 611ms
+TIMESTAMP DEBUG   device.log             Config update AHU-1 (pointset_request_extraneous)
+TIMESTAMP
+TIMESTAMP NOTICE  system.config.apply    success
+TIMESTAMP DEBUG   device.log             State update defer 610ms
+TIMESTAMP DEBUG   device.log             State update defer 0ms
+TIMESTAMP
+TIMESTAMP DEBUG   device.log             State update AHU-1 (pointset_request_extraneous)
+TIMESTAMP DEBUG   system.config.receive  success
+TIMESTAMP DEBUG   device.log             State update defer -3028ms
+TIMESTAMP
+TIMESTAMP DEBUG   system.config.parse    success
+TIMESTAMP INFO    device.log             Device AHU-1 config handler
+TIMESTAMP DEBUG   device.log             State update AHU-1 (pointset_request_extraneous)
+TIMESTAMP DEBUG   device.log             Config update AHU-1 (pointset_request_extraneous)
+TIMESTAMP DEBUG   device.log             State update defer 2000ms
+TIMESTAMP
+TIMESTAMP DEBUG   device.log             Restoring unknown point extraneous_point
+TIMESTAMP NOTICE  system.config.apply    success
+TIMESTAMP DEBUG   device.log             State update defer 1999ms
+TIMESTAMP DEBUG   device.log             State update defer 1999ms
+TIMESTAMP DEBUG   device.log             State update defer 1999ms
+TIMESTAMP DEBUG   device.log             State update defer 1998ms
+TIMESTAMP DEBUG   device.log             State update defer 1998ms
+TIMESTAMP DEBUG   device.log             State update defer 1998ms
+TIMESTAMP DEBUG   device.log             State update defer 1998ms
+TIMESTAMP DEBUG   device.log             State update defer 0ms
+TIMESTAMP
+TIMESTAMP DEBUG   device.log             State update AHU-1 (pointset_request_extraneous)
+TIMESTAMP NOTICE  validation.feature.sequence Sequence complete

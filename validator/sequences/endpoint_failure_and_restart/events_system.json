@@ -1,271 +1,594 @@
 {
-  "event_no" : 3,
-  "last_config" : "2024-11-06T17:32:43Z",
+  "event_no" : 2,
+  "last_config" : "TIMESTAMP",
   "logentries" : [ {
-    "message" : "Starting new endpoint generation",
+    "message" : "New config blob endpoint detected:\n{\n  \"protocol\" : \"mqtt\",\n  \"transport\" : \"ssl\",\n  \"hostname\" : \"twiddily.fiddily.fog\",\n  \"client_id\" : \"/r/ZZ-TRI-FECTA/d/AHU-1\",\n  \"topic_prefix\" : \"/r/ZZ-TRI-FECTA_6/d/AHU-1\",\n  \"auth_provider\" : {\n    \"basic\" : {\n      \"username\" : \"/r/ZZ-TRI-FECTA_6/d/AHU-1\",\n      \"password\" : \"38269d11\"\n    }\n  },\n  \"generation\" : \"TIMESTAMP\"\n}",
     "category" : "device.log",
-    "timestamp" : "2024-11-06T17:32:52Z",
-    "level" : 300
-  }, {
-    "message" : "New config blob endpoint detected:\n{\n  \"protocol\" : \"mqtt\",\n  \"transport\" : \"ssl\",\n  \"hostname\" : \"twiddily.fiddily.fog\",\n  \"client_id\" : \"/r/ZZ-TRI-FECTA_4/d/AHU-1\",\n  \"topic_prefix\" : \"/r/ZZ-TRI-FECTA_4/d/AHU-1\",\n  \"auth_provider\" : {\n    \"basic\" : {\n      \"username\" : \"/r/ZZ-TRI-FECTA_4/d/AHU-1\",\n      \"password\" : \"38269d11\"\n    }\n  },\n  \"generation\" : \"2024-11-06T17:31:57Z\"\n}",
-    "category" : "device.log",
-    "timestamp" : "2024-11-06T17:32:52Z",
+    "timestamp" : "TIMESTAMP",
     "level" : 200
   }, {
-    "message" : "Update state 2024-11-06T17:32:52Z last_config 2024-11-06T17:32:43Z",
+    "message" : "Update state TIMESTAMP",
     "category" : "device.log",
-    "timestamp" : "2024-11-06T17:32:52Z",
+    "timestamp" : "TIMESTAMP",
     "level" : 200
   }, {
-    "message" : "CA cert file: /home/runner/work/udmi/udmi/sites/udmi_site_model/reflector/ca.crt",
+    "message" : "State update delay 1065ms",
     "category" : "device.log",
-    "timestamp" : "2024-11-06T17:32:52Z",
+    "timestamp" : "TIMESTAMP",
+    "level" : 400
+  }, {
+    "message" : "sending AHU-1 message #0 with 3 points",
+    "category" : "device.log",
+    "timestamp" : "TIMESTAMP",
     "level" : 200
   }, {
-    "message" : "Device cert file: /home/runner/work/udmi/udmi/sites/udmi_site_model/devices/AHU-1/rsa_private.crt",
+    "message" : "State update AHU-1 (endpoint_failure_and_restart)",
+    "detail" : "{\n  \"timestamp\" : \"TIMESTAMP\"\n      }\n    }\n  },\n  \"pointset\" : {\n    \"points\" : {\n      \"filter_alarm_pressure_status\" : {\n        \"units\" : \"No-units\"\n      },\n      \"filter_differential_pressure_setpoint\" : {\n        \"units\" : \"Bars\",\n        \"value_state\" : \"applied\"\n      },\n      \"filter_differential_pressure_sensor\" : {\n        \"units\" : \"Degrees-Celsius\"\n      }\n    }\n  }\n}",
     "category" : "device.log",
-    "timestamp" : "2024-11-06T17:32:52Z",
-    "level" : 200
+    "timestamp" : "TIMESTAMP",
+    "level" : 100
   }, {
-    "message" : "Private key file: /home/runner/work/udmi/udmi/sites/udmi_site_model/devices/AHU-1/rsa_private.pem",
+    "message" : "Starting connection 1754632262053 with 0",
     "category" : "device.log",
-    "timestamp" : "2024-11-06T17:32:52Z",
-    "level" : 200
-  }, {
-    "message" : "Password sha256 6b5344e1",
-    "category" : "device.log",
-    "timestamp" : "2024-11-06T17:32:52Z",
-    "level" : 200
-  }, {
-    "message" : "Starting connection 1730914372248 with 10",
-    "category" : "device.log",
-    "timestamp" : "2024-11-06T17:32:52Z",
+    "timestamp" : "TIMESTAMP",
     "level" : 400
   }, {
     "message" : "Terminating AHU-1 PubberPointsetManager sender",
     "category" : "device.log",
-    "timestamp" : "2024-11-06T17:32:52Z",
+    "timestamp" : "TIMESTAMP",
     "level" : 400
   }, {
     "message" : "Terminating AHU-1 PubberSystemManager sender",
     "category" : "device.log",
-    "timestamp" : "2024-11-06T17:32:52Z",
+    "timestamp" : "TIMESTAMP",
     "level" : 400
   }, {
-    "message" : "Creating new config latch for AHU-1",
+    "message" : "Terminating AHU-1 PubberPublisherHost sender",
     "category" : "device.log",
-    "timestamp" : "2024-11-06T17:32:52Z",
+    "timestamp" : "TIMESTAMP",
     "level" : 400
   }, {
-    "message" : "While waiting for connection start: Connection error",
+    "message" : "Extracted device password from /home/runner/work/udmi/udmi/sites/udmi_site_model/devices/AHU-1/rsa_private.pkcs8",
     "category" : "device.log",
-    "timestamp" : "2024-11-06T17:32:52Z",
-    "level" : 500
-  }, {
-    "message" : "Attempt failed, retries remaining: 9",
-    "category" : "device.log",
-    "timestamp" : "2024-11-06T17:32:52Z",
-    "level" : 500
-  }, {
-    "message" : "Creating new config latch for AHU-1",
-    "category" : "device.log",
-    "timestamp" : "2024-11-06T17:32:53Z",
-    "level" : 400
-  }, {
-    "message" : "While waiting for connection start: Connection error",
-    "category" : "device.log",
-    "timestamp" : "2024-11-06T17:32:53Z",
-    "level" : 500
-  }, {
-    "message" : "Attempt failed, retries remaining: 8",
-    "category" : "device.log",
-    "timestamp" : "2024-11-06T17:32:53Z",
-    "level" : 500
-  }, {
-    "message" : "Creating new config latch for AHU-1",
-    "category" : "device.log",
-    "timestamp" : "2024-11-06T17:32:54Z",
-    "level" : 400
-  }, {
-    "message" : "While waiting for connection start: Connection error",
-    "category" : "device.log",
-    "timestamp" : "2024-11-06T17:32:54Z",
-    "level" : 500
-  }, {
-    "message" : "Attempt failed, retries remaining: 7",
-    "category" : "device.log",
-    "timestamp" : "2024-11-06T17:32:54Z",
-    "level" : 500
-  }, {
-    "message" : "Creating new config latch for AHU-1",
-    "category" : "device.log",
-    "timestamp" : "2024-11-06T17:32:55Z",
-    "level" : 400
-  }, {
-    "message" : "While waiting for connection start: Connection error",
-    "category" : "device.log",
-    "timestamp" : "2024-11-06T17:32:55Z",
-    "level" : 500
-  }, {
-    "message" : "Attempt failed, retries remaining: 6",
-    "category" : "device.log",
-    "timestamp" : "2024-11-06T17:32:55Z",
-    "level" : 500
-  }, {
-    "message" : "Creating new config latch for AHU-1",
-    "category" : "device.log",
-    "timestamp" : "2024-11-06T17:32:56Z",
-    "level" : 400
-  }, {
-    "message" : "While waiting for connection start: Connection error",
-    "category" : "device.log",
-    "timestamp" : "2024-11-06T17:32:56Z",
-    "level" : 500
-  }, {
-    "message" : "Attempt failed, retries remaining: 5",
-    "category" : "device.log",
-    "timestamp" : "2024-11-06T17:32:56Z",
-    "level" : 500
-  }, {
-    "message" : "Creating new config latch for AHU-1",
-    "category" : "device.log",
-    "timestamp" : "2024-11-06T17:32:57Z",
-    "level" : 400
-  }, {
-    "message" : "While waiting for connection start: Connection error",
-    "category" : "device.log",
-    "timestamp" : "2024-11-06T17:32:57Z",
-    "level" : 500
-  }, {
-    "message" : "Attempt failed, retries remaining: 4",
-    "category" : "device.log",
-    "timestamp" : "2024-11-06T17:32:57Z",
-    "level" : 500
-  }, {
-    "message" : "Creating new config latch for AHU-1",
-    "category" : "device.log",
-    "timestamp" : "2024-11-06T17:32:58Z",
-    "level" : 400
-  }, {
-    "message" : "While waiting for connection start: Connection error",
-    "category" : "device.log",
-    "timestamp" : "2024-11-06T17:32:58Z",
-    "level" : 500
-  }, {
-    "message" : "Attempt failed, retries remaining: 3",
-    "category" : "device.log",
-    "timestamp" : "2024-11-06T17:32:58Z",
-    "level" : 500
-  }, {
-    "message" : "Creating new config latch for AHU-1",
-    "category" : "device.log",
-    "timestamp" : "2024-11-06T17:32:59Z",
-    "level" : 400
-  }, {
-    "message" : "While waiting for connection start: Connection error",
-    "category" : "device.log",
-    "timestamp" : "2024-11-06T17:32:59Z",
-    "level" : 500
-  }, {
-    "message" : "Attempt failed, retries remaining: 2",
-    "category" : "device.log",
-    "timestamp" : "2024-11-06T17:32:59Z",
-    "level" : 500
-  }, {
-    "message" : "Creating new config latch for AHU-1",
-    "category" : "device.log",
-    "timestamp" : "2024-11-06T17:33:00Z",
-    "level" : 400
-  }, {
-    "message" : "While waiting for connection start: Connection error",
-    "category" : "device.log",
-    "timestamp" : "2024-11-06T17:33:00Z",
-    "level" : 500
-  }, {
-    "message" : "Attempt failed, retries remaining: 1",
-    "category" : "device.log",
-    "timestamp" : "2024-11-06T17:33:00Z",
-    "level" : 500
-  }, {
-    "message" : "Creating new config latch for AHU-1",
-    "category" : "device.log",
-    "timestamp" : "2024-11-06T17:33:01Z",
-    "level" : 400
-  }, {
-    "message" : "While waiting for connection start: Connection error",
-    "category" : "device.log",
-    "timestamp" : "2024-11-06T17:33:01Z",
-    "level" : 500
-  }, {
-    "message" : "Attempt failed, retries remaining: 0",
-    "category" : "device.log",
-    "timestamp" : "2024-11-06T17:33:01Z",
-    "level" : 500
-  }, {
-    "message" : "Ending connection 1730914372248 with -1",
-    "category" : "device.log",
-    "timestamp" : "2024-11-06T17:33:02Z",
-    "level" : 400
-  }, {
-    "message" : "Reconfigure failed, attempting connection to last working endpoint: While resetting connection",
-    "category" : "device.log",
-    "timestamp" : "2024-11-06T17:33:02Z",
-    "level" : 500
+    "timestamp" : "TIMESTAMP",
+    "level" : 100
   }, {
     "message" : "CA cert file: /home/runner/work/udmi/udmi/sites/udmi_site_model/reflector/ca.crt",
     "category" : "device.log",
-    "timestamp" : "2024-11-06T17:33:02Z",
+    "timestamp" : "TIMESTAMP",
     "level" : 200
   }, {
     "message" : "Device cert file: /home/runner/work/udmi/udmi/sites/udmi_site_model/devices/AHU-1/rsa_private.crt",
     "category" : "device.log",
-    "timestamp" : "2024-11-06T17:33:02Z",
+    "timestamp" : "TIMESTAMP",
     "level" : 200
   }, {
     "message" : "Private key file: /home/runner/work/udmi/udmi/sites/udmi_site_model/devices/AHU-1/rsa_private.pem",
     "category" : "device.log",
-    "timestamp" : "2024-11-06T17:33:02Z",
+    "timestamp" : "TIMESTAMP",
     "level" : 200
   }, {
     "message" : "Password sha256 6b5344e1",
     "category" : "device.log",
-    "timestamp" : "2024-11-06T17:33:02Z",
+    "timestamp" : "TIMESTAMP",
     "level" : 200
-  }, {
-    "message" : "Starting connection 1730914382510 with 10",
-    "category" : "device.log",
-    "timestamp" : "2024-11-06T17:33:02Z",
-    "level" : 400
   }, {
     "message" : "Creating new config latch for AHU-1",
     "category" : "device.log",
-    "timestamp" : "2024-11-06T17:33:02Z",
+    "timestamp" : "TIMESTAMP",
     "level" : 400
+  }, {
+    "message" : "While waiting for connection start: Connection error",
+    "category" : "device.log",
+    "timestamp" : "TIMESTAMP",
+    "level" : 500
+  }, {
+    "message" : "Attempt #1 failed",
+    "category" : "device.log",
+    "timestamp" : "TIMESTAMP",
+    "level" : 500
+  }, {
+    "message" : "Extracted device password from /home/runner/work/udmi/udmi/sites/udmi_site_model/devices/AHU-1/rsa_private.pkcs8",
+    "category" : "device.log",
+    "timestamp" : "TIMESTAMP",
+    "level" : 100
+  }, {
+    "message" : "CA cert file: /home/runner/work/udmi/udmi/sites/udmi_site_model/reflector/ca.crt",
+    "category" : "device.log",
+    "timestamp" : "TIMESTAMP",
+    "level" : 200
+  }, {
+    "message" : "Device cert file: /home/runner/work/udmi/udmi/sites/udmi_site_model/devices/AHU-1/rsa_private.crt",
+    "category" : "device.log",
+    "timestamp" : "TIMESTAMP",
+    "level" : 200
+  }, {
+    "message" : "Private key file: /home/runner/work/udmi/udmi/sites/udmi_site_model/devices/AHU-1/rsa_private.pem",
+    "category" : "device.log",
+    "timestamp" : "TIMESTAMP",
+    "level" : 200
+  }, {
+    "message" : "Password sha256 6b5344e1",
+    "category" : "device.log",
+    "timestamp" : "TIMESTAMP",
+    "level" : 200
+  }, {
+    "message" : "Creating new config latch for AHU-1",
+    "category" : "device.log",
+    "timestamp" : "TIMESTAMP",
+    "level" : 400
+  }, {
+    "message" : "While waiting for connection start: Connection error",
+    "category" : "device.log",
+    "timestamp" : "TIMESTAMP",
+    "level" : 500
+  }, {
+    "message" : "Attempt #2 failed",
+    "category" : "device.log",
+    "timestamp" : "TIMESTAMP",
+    "level" : 500
+  }, {
+    "message" : "Extracted device password from /home/runner/work/udmi/udmi/sites/udmi_site_model/devices/AHU-1/rsa_private.pkcs8",
+    "category" : "device.log",
+    "timestamp" : "TIMESTAMP",
+    "level" : 100
+  }, {
+    "message" : "CA cert file: /home/runner/work/udmi/udmi/sites/udmi_site_model/reflector/ca.crt",
+    "category" : "device.log",
+    "timestamp" : "TIMESTAMP",
+    "level" : 200
+  }, {
+    "message" : "Device cert file: /home/runner/work/udmi/udmi/sites/udmi_site_model/devices/AHU-1/rsa_private.crt",
+    "category" : "device.log",
+    "timestamp" : "TIMESTAMP",
+    "level" : 200
+  }, {
+    "message" : "Private key file: /home/runner/work/udmi/udmi/sites/udmi_site_model/devices/AHU-1/rsa_private.pem",
+    "category" : "device.log",
+    "timestamp" : "TIMESTAMP",
+    "level" : 200
+  }, {
+    "message" : "Password sha256 6b5344e1",
+    "category" : "device.log",
+    "timestamp" : "TIMESTAMP",
+    "level" : 200
+  }, {
+    "message" : "Creating new config latch for AHU-1",
+    "category" : "device.log",
+    "timestamp" : "TIMESTAMP",
+    "level" : 400
+  }, {
+    "message" : "While waiting for connection start: Connection error",
+    "category" : "device.log",
+    "timestamp" : "TIMESTAMP",
+    "level" : 500
+  }, {
+    "message" : "Attempt #3 failed",
+    "category" : "device.log",
+    "timestamp" : "TIMESTAMP",
+    "level" : 500
+  }, {
+    "message" : "Extracted device password from /home/runner/work/udmi/udmi/sites/udmi_site_model/devices/AHU-1/rsa_private.pkcs8",
+    "category" : "device.log",
+    "timestamp" : "TIMESTAMP",
+    "level" : 100
+  }, {
+    "message" : "CA cert file: /home/runner/work/udmi/udmi/sites/udmi_site_model/reflector/ca.crt",
+    "category" : "device.log",
+    "timestamp" : "TIMESTAMP",
+    "level" : 200
+  }, {
+    "message" : "Device cert file: /home/runner/work/udmi/udmi/sites/udmi_site_model/devices/AHU-1/rsa_private.crt",
+    "category" : "device.log",
+    "timestamp" : "TIMESTAMP",
+    "level" : 200
+  }, {
+    "message" : "Private key file: /home/runner/work/udmi/udmi/sites/udmi_site_model/devices/AHU-1/rsa_private.pem",
+    "category" : "device.log",
+    "timestamp" : "TIMESTAMP",
+    "level" : 200
+  }, {
+    "message" : "Password sha256 6b5344e1",
+    "category" : "device.log",
+    "timestamp" : "TIMESTAMP",
+    "level" : 200
+  }, {
+    "message" : "Creating new config latch for AHU-1",
+    "category" : "device.log",
+    "timestamp" : "TIMESTAMP",
+    "level" : 400
+  }, {
+    "message" : "While waiting for connection start: Connection error",
+    "category" : "device.log",
+    "timestamp" : "TIMESTAMP",
+    "level" : 500
+  }, {
+    "message" : "Attempt #4 failed",
+    "category" : "device.log",
+    "timestamp" : "TIMESTAMP",
+    "level" : 500
+  }, {
+    "message" : "Extracted device password from /home/runner/work/udmi/udmi/sites/udmi_site_model/devices/AHU-1/rsa_private.pkcs8",
+    "category" : "device.log",
+    "timestamp" : "TIMESTAMP",
+    "level" : 100
+  }, {
+    "message" : "CA cert file: /home/runner/work/udmi/udmi/sites/udmi_site_model/reflector/ca.crt",
+    "category" : "device.log",
+    "timestamp" : "TIMESTAMP",
+    "level" : 200
+  }, {
+    "message" : "Device cert file: /home/runner/work/udmi/udmi/sites/udmi_site_model/devices/AHU-1/rsa_private.crt",
+    "category" : "device.log",
+    "timestamp" : "TIMESTAMP",
+    "level" : 200
+  }, {
+    "message" : "Private key file: /home/runner/work/udmi/udmi/sites/udmi_site_model/devices/AHU-1/rsa_private.pem",
+    "category" : "device.log",
+    "timestamp" : "TIMESTAMP",
+    "level" : 200
+  }, {
+    "message" : "Password sha256 6b5344e1",
+    "category" : "device.log",
+    "timestamp" : "TIMESTAMP",
+    "level" : 200
+  }, {
+    "message" : "Creating new config latch for AHU-1",
+    "category" : "device.log",
+    "timestamp" : "TIMESTAMP",
+    "level" : 400
+  }, {
+    "message" : "While waiting for connection start: Connection error",
+    "category" : "device.log",
+    "timestamp" : "TIMESTAMP",
+    "level" : 500
+  }, {
+    "message" : "Attempt #5 failed",
+    "category" : "device.log",
+    "timestamp" : "TIMESTAMP",
+    "level" : 500
+  }, {
+    "message" : "Extracted device password from /home/runner/work/udmi/udmi/sites/udmi_site_model/devices/AHU-1/rsa_private.pkcs8",
+    "category" : "device.log",
+    "timestamp" : "TIMESTAMP",
+    "level" : 100
+  }, {
+    "message" : "CA cert file: /home/runner/work/udmi/udmi/sites/udmi_site_model/reflector/ca.crt",
+    "category" : "device.log",
+    "timestamp" : "TIMESTAMP",
+    "level" : 200
+  }, {
+    "message" : "Device cert file: /home/runner/work/udmi/udmi/sites/udmi_site_model/devices/AHU-1/rsa_private.crt",
+    "category" : "device.log",
+    "timestamp" : "TIMESTAMP",
+    "level" : 200
+  }, {
+    "message" : "Private key file: /home/runner/work/udmi/udmi/sites/udmi_site_model/devices/AHU-1/rsa_private.pem",
+    "category" : "device.log",
+    "timestamp" : "TIMESTAMP",
+    "level" : 200
+  }, {
+    "message" : "Password sha256 6b5344e1",
+    "category" : "device.log",
+    "timestamp" : "TIMESTAMP",
+    "level" : 200
+  }, {
+    "message" : "Creating new config latch for AHU-1",
+    "category" : "device.log",
+    "timestamp" : "TIMESTAMP",
+    "level" : 400
+  }, {
+    "message" : "While waiting for connection start: Connection error",
+    "category" : "device.log",
+    "timestamp" : "TIMESTAMP",
+    "level" : 500
+  }, {
+    "message" : "Attempt #6 failed",
+    "category" : "device.log",
+    "timestamp" : "TIMESTAMP",
+    "level" : 500
+  }, {
+    "message" : "Extracted device password from /home/runner/work/udmi/udmi/sites/udmi_site_model/devices/AHU-1/rsa_private.pkcs8",
+    "category" : "device.log",
+    "timestamp" : "TIMESTAMP",
+    "level" : 100
+  }, {
+    "message" : "CA cert file: /home/runner/work/udmi/udmi/sites/udmi_site_model/reflector/ca.crt",
+    "category" : "device.log",
+    "timestamp" : "TIMESTAMP",
+    "level" : 200
+  }, {
+    "message" : "Device cert file: /home/runner/work/udmi/udmi/sites/udmi_site_model/devices/AHU-1/rsa_private.crt",
+    "category" : "device.log",
+    "timestamp" : "TIMESTAMP",
+    "level" : 200
+  }, {
+    "message" : "Private key file: /home/runner/work/udmi/udmi/sites/udmi_site_model/devices/AHU-1/rsa_private.pem",
+    "category" : "device.log",
+    "timestamp" : "TIMESTAMP",
+    "level" : 200
+  }, {
+    "message" : "Password sha256 6b5344e1",
+    "category" : "device.log",
+    "timestamp" : "TIMESTAMP",
+    "level" : 200
+  }, {
+    "message" : "Creating new config latch for AHU-1",
+    "category" : "device.log",
+    "timestamp" : "TIMESTAMP",
+    "level" : 400
+  }, {
+    "message" : "While waiting for connection start: Connection error",
+    "category" : "device.log",
+    "timestamp" : "TIMESTAMP",
+    "level" : 500
+  }, {
+    "message" : "Attempt #7 failed",
+    "category" : "device.log",
+    "timestamp" : "TIMESTAMP",
+    "level" : 500
+  }, {
+    "message" : "Extracted device password from /home/runner/work/udmi/udmi/sites/udmi_site_model/devices/AHU-1/rsa_private.pkcs8",
+    "category" : "device.log",
+    "timestamp" : "TIMESTAMP",
+    "level" : 100
+  }, {
+    "message" : "CA cert file: /home/runner/work/udmi/udmi/sites/udmi_site_model/reflector/ca.crt",
+    "category" : "device.log",
+    "timestamp" : "TIMESTAMP",
+    "level" : 200
+  }, {
+    "message" : "Device cert file: /home/runner/work/udmi/udmi/sites/udmi_site_model/devices/AHU-1/rsa_private.crt",
+    "category" : "device.log",
+    "timestamp" : "TIMESTAMP",
+    "level" : 200
+  }, {
+    "message" : "Private key file: /home/runner/work/udmi/udmi/sites/udmi_site_model/devices/AHU-1/rsa_private.pem",
+    "category" : "device.log",
+    "timestamp" : "TIMESTAMP",
+    "level" : 200
+  }, {
+    "message" : "Password sha256 6b5344e1",
+    "category" : "device.log",
+    "timestamp" : "TIMESTAMP",
+    "level" : 200
+  }, {
+    "message" : "Creating new config latch for AHU-1",
+    "category" : "device.log",
+    "timestamp" : "TIMESTAMP",
+    "level" : 400
+  }, {
+    "message" : "While waiting for connection start: Connection error",
+    "category" : "device.log",
+    "timestamp" : "TIMESTAMP",
+    "level" : 500
+  }, {
+    "message" : "Attempt #8 failed",
+    "category" : "device.log",
+    "timestamp" : "TIMESTAMP",
+    "level" : 500
+  }, {
+    "message" : "Extracted device password from /home/runner/work/udmi/udmi/sites/udmi_site_model/devices/AHU-1/rsa_private.pkcs8",
+    "category" : "device.log",
+    "timestamp" : "TIMESTAMP",
+    "level" : 100
+  }, {
+    "message" : "CA cert file: /home/runner/work/udmi/udmi/sites/udmi_site_model/reflector/ca.crt",
+    "category" : "device.log",
+    "timestamp" : "TIMESTAMP",
+    "level" : 200
+  }, {
+    "message" : "Device cert file: /home/runner/work/udmi/udmi/sites/udmi_site_model/devices/AHU-1/rsa_private.crt",
+    "category" : "device.log",
+    "timestamp" : "TIMESTAMP",
+    "level" : 200
+  }, {
+    "message" : "Private key file: /home/runner/work/udmi/udmi/sites/udmi_site_model/devices/AHU-1/rsa_private.pem",
+    "category" : "device.log",
+    "timestamp" : "TIMESTAMP",
+    "level" : 200
+  }, {
+    "message" : "Password sha256 6b5344e1",
+    "category" : "device.log",
+    "timestamp" : "TIMESTAMP",
+    "level" : 200
+  }, {
+    "message" : "Creating new config latch for AHU-1",
+    "category" : "device.log",
+    "timestamp" : "TIMESTAMP",
+    "level" : 400
+  }, {
+    "message" : "While waiting for connection start: Connection error",
+    "category" : "device.log",
+    "timestamp" : "TIMESTAMP",
+    "level" : 500
+  }, {
+    "message" : "Attempt #9 failed",
+    "category" : "device.log",
+    "timestamp" : "TIMESTAMP",
+    "level" : 500
+  }, {
+    "message" : "Extracted device password from /home/runner/work/udmi/udmi/sites/udmi_site_model/devices/AHU-1/rsa_private.pkcs8",
+    "category" : "device.log",
+    "timestamp" : "TIMESTAMP",
+    "level" : 100
+  }, {
+    "message" : "CA cert file: /home/runner/work/udmi/udmi/sites/udmi_site_model/reflector/ca.crt",
+    "category" : "device.log",
+    "timestamp" : "TIMESTAMP",
+    "level" : 200
+  }, {
+    "message" : "Device cert file: /home/runner/work/udmi/udmi/sites/udmi_site_model/devices/AHU-1/rsa_private.crt",
+    "category" : "device.log",
+    "timestamp" : "TIMESTAMP",
+    "level" : 200
+  }, {
+    "message" : "Private key file: /home/runner/work/udmi/udmi/sites/udmi_site_model/devices/AHU-1/rsa_private.pem",
+    "category" : "device.log",
+    "timestamp" : "TIMESTAMP",
+    "level" : 200
+  }, {
+    "message" : "Password sha256 6b5344e1",
+    "category" : "device.log",
+    "timestamp" : "TIMESTAMP",
+    "level" : 200
+  }, {
+    "message" : "Creating new config latch for AHU-1",
+    "category" : "device.log",
+    "timestamp" : "TIMESTAMP",
+    "level" : 400
+  }, {
+    "message" : "While waiting for connection start: Connection error",
+    "category" : "device.log",
+    "timestamp" : "TIMESTAMP",
+    "level" : 500
+  }, {
+    "message" : "Attempt #10 failed",
+    "category" : "device.log",
+    "timestamp" : "TIMESTAMP",
+    "level" : 500
+  }, {
+    "message" : "Ending connection 1754632262053 with 11",
+    "category" : "device.log",
+    "timestamp" : "TIMESTAMP",
+    "level" : 400
+  }, {
+    "message" : "Reconfigure failed, attempting connection to last working endpoint: While resetting connection",
+    "category" : "device.log",
+    "timestamp" : "TIMESTAMP",
+    "level" : 500
+  }, {
+    "message" : "Starting connection 1754632282345 with 0",
+    "category" : "device.log",
+    "timestamp" : "TIMESTAMP",
+    "level" : 400
+  }, {
+    "message" : "Extracted device password from /home/runner/work/udmi/udmi/sites/udmi_site_model/devices/AHU-1/rsa_private.pkcs8",
+    "category" : "device.log",
+    "timestamp" : "TIMESTAMP",
+    "level" : 100
+  }, {
+    "message" : "CA cert file: /home/runner/work/udmi/udmi/sites/udmi_site_model/reflector/ca.crt",
+    "category" : "device.log",
+    "timestamp" : "TIMESTAMP",
+    "level" : 200
+  }, {
+    "message" : "Device cert file: /home/runner/work/udmi/udmi/sites/udmi_site_model/devices/AHU-1/rsa_private.crt",
+    "category" : "device.log",
+    "timestamp" : "TIMESTAMP",
+    "level" : 200
+  }, {
+    "message" : "Private key file: /home/runner/work/udmi/udmi/sites/udmi_site_model/devices/AHU-1/rsa_private.pem",
+    "category" : "device.log",
+    "timestamp" : "TIMESTAMP",
+    "level" : 200
+  }, {
+    "message" : "Password sha256 6b5344e1",
+    "category" : "device.log",
+    "timestamp" : "TIMESTAMP",
+    "level" : 200
+  }, {
+    "message" : "Creating new config latch for AHU-1",
+    "category" : "device.log",
+    "timestamp" : "TIMESTAMP",
+    "level" : 400
+  }, {
+    "message" : "success",
+    "category" : "system.config.receive",
+    "timestamp" : "TIMESTAMP",
+    "level" : 100
+  }, {
+    "message" : "success",
+    "category" : "system.config.parse",
+    "timestamp" : "TIMESTAMP",
+    "level" : 100
   }, {
     "message" : "Device AHU-1 config handler",
     "category" : "device.log",
-    "timestamp" : "2024-11-06T17:33:02Z",
+    "timestamp" : "TIMESTAMP",
     "level" : 200
   }, {
-    "message" : "2024-11-06T17:33:02Z received config 2024-11-06T17:32:53Z",
+    "message" : "Config update AHU-1 (endpoint_failure_and_restart)",
+    "detail" : "{\n  \"timestamp\" : \"TIMESTAMP\"\n      }\n    }\n  },\n  \"pointset\" : {\n    \"points\" : {\n      \"filter_alarm_pressure_status\" : {\n        \"ref\" : \"BV11.present_value\",\n        \"units\" : \"No-units\"\n      },\n      \"filter_differential_pressure_setpoint\" : {\n        \"units\" : \"Bars\",\n        \"set_value\" : 98\n      },\n      \"filter_differential_pressure_sensor\" : {\n        \"ref\" : \"AV12.present_value\",\n        \"units\" : \"Degrees-Celsius\"\n      }\n    }\n  }\n}",
     "category" : "device.log",
-    "timestamp" : "2024-11-06T17:33:02Z",
-    "level" : 200
+    "timestamp" : "TIMESTAMP",
+    "level" : 100
   }, {
-    "message" : "Starting AHU-1 PubberPointsetManager sender with delay 10s",
+    "message" : "Received config for config latch AHU-1",
     "category" : "device.log",
-    "timestamp" : "2024-11-06T17:33:02Z",
+    "timestamp" : "TIMESTAMP",
     "level" : 400
+  }, {
+    "message" : "Connection complete.",
+    "category" : "device.log",
+    "timestamp" : "TIMESTAMP",
+    "level" : 200
+  }, {
+    "message" : "Start waiting 10s for config latch for AHU-1",
+    "category" : "device.log",
+    "timestamp" : "TIMESTAMP",
+    "level" : 400
+  }, {
+    "message" : "Ending connection 1754632282345 with 1",
+    "category" : "device.log",
+    "timestamp" : "TIMESTAMP",
+    "level" : 400
+  }, {
+    "message" : "Endpoint connection restored to last working endpoint",
+    "category" : "device.log",
+    "timestamp" : "TIMESTAMP",
+    "level" : 300
+  }, {
+    "message" : "While redirecting connection endpoint: While resetting connection",
+    "category" : "device.log",
+    "timestamp" : "TIMESTAMP",
+    "level" : 500
+  }, {
+    "message" : "Starting AHU-1 PubberPublisherHost sender with delay 10s",
+    "category" : "device.log",
+    "timestamp" : "TIMESTAMP",
+    "level" : 400
+  }, {
+    "message" : "TIMESTAMP",
+    "category" : "device.log",
+    "timestamp" : "TIMESTAMP",
+    "level" : 200
   }, {
     "message" : "Starting AHU-1 PubberSystemManager sender with delay 10s",
     "category" : "device.log",
-    "timestamp" : "2024-11-06T17:33:02Z",
+    "timestamp" : "TIMESTAMP",
     "level" : 400
+  }, {
+    "message" : "Starting AHU-1 PubberPointsetManager sender with delay 10s",
+    "category" : "device.log",
+    "timestamp" : "TIMESTAMP",
+    "level" : 400
+  }, {
+    "message" : "success",
+    "category" : "system.config.apply",
+    "timestamp" : "TIMESTAMP",
+    "level" : 300
+  }, {
+    "message" : "State update defer -18701ms",
+    "category" : "device.log",
+    "timestamp" : "TIMESTAMP",
+    "level" : 100
+  }, {
+    "message" : "Update state TIMESTAMP",
+    "category" : "device.log",
+    "timestamp" : "TIMESTAMP",
+    "level" : 200
+  }, {
+    "message" : "State update AHU-1 (endpoint_failure_and_restart)",
+    "detail" : "{\n  \"timestamp\" : \"TIMESTAMP\"\n      }\n    }\n  },\n  \"pointset\" : {\n    \"points\" : {\n      \"filter_alarm_pressure_status\" : {\n        \"units\" : \"No-units\"\n      },\n      \"filter_differential_pressure_setpoint\" : {\n        \"units\" : \"Bars\",\n        \"value_state\" : \"applied\"\n      },\n      \"filter_differential_pressure_sensor\" : {\n        \"units\" : \"Degrees-Celsius\"\n      }\n    }\n  }\n}",
+    "category" : "device.log",
+    "timestamp" : "TIMESTAMP",
+    "level" : 100
   } ],
   "metrics" : {
-    "mem_total_mb" : 254.0,
-    "mem_free_mb" : 190.8911895751953
+    "mem_total_mb" : 64.0,
+    "mem_free_mb" : 36.50897979736328
   },
-  "timestamp" : "2024-11-06T17:33:02Z",
-  "version" : "1.5.2"
+  "timestamp" : "TIMESTAMP",
+  "version" : "1.5.3"
 }

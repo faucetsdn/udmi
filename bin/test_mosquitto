@@ -98,7 +98,7 @@ mosquitto_pub $CLIENT_OPTS -r -t /r/$registry_id/d/$device_id/config -f $DEV_CON
 
 echo Running pubber smoke check
 # TODO: Replace this with proper smoke check when backend is working.
-timeout 20s pubber/bin/run /tmp/pubber_config.json || true
+timeout 30s pubber/bin/run /tmp/pubber_config.json || true
 
 echo Publishing ending test message
 mosquitto_pub $CLIENT_OPTS -t $topic -m "Hello Rudolph"

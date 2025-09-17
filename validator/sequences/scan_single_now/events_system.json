@@ -1,5 +1,5 @@
 {
-  "event_no" : 17,
+  "event_no" : 18,
   "last_config" : "TIMESTAMP",
   "logentries" : [ {
     "message" : "Discovered vendor stopping TIMESTAMP)",
@@ -12,7 +12,7 @@
     "timestamp" : "TIMESTAMP",
     "level" : 200
   }, {
-    "message" : "State update defer -6003ms",
+    "message" : "State update defer -6001ms",
     "category" : "device.log",
     "timestamp" : "TIMESTAMP",
     "level" : 100
@@ -22,15 +22,15 @@
     "timestamp" : "TIMESTAMP",
     "level" : 200
   }, {
-    "message" : "State update AHU-1 (scan_single_now)",
-    "detail" : "{\n  \"timestamp\" : \"TIMESTAMP\",\n        \"phase\" : \"stopped\",\n        \"active_count\" : 4\n      }\n    }\n  },\n  \"localnet\" : {\n    \"families\" : {\n      \"ether\" : {\n        \"addr\" : \"7c:1e:52:80:4e:50\"\n      },\n      \"ipv4\" : {\n        \"addr\" : \"10.1.0.67\"\n      },\n      \"vendor\" : {\n        \"addr\" : \"28179023\"\n      },\n      \"bacnet\" : {\n        \"addr\" : \"27312\"\n      }\n    }\n  },\n  \"pointset\" : {\n    \"points\" : {\n      \"filter_alarm_pressure_status\" : {\n        \"units\" : \"No-units\"\n      },\n      \"filter_differential_pressure_setpoint\" : {\n        \"units\" : \"Bars\",\n        \"value_state\" : \"applied\"\n      },\n      \"filter_differential_pressure_sensor\" : {\n        \"units\" : \"Degrees-Celsius\"\n      }\n    }\n  }\n}",
+    "message" : "State update AHU-1 (scan_single_now+vendor)",
+    "detail" : "{\n  \"timestamp\" : \"TIMESTAMP\",\n        \"phase\" : \"stopped\",\n        \"active_count\" : 4\n      }\n    }\n  },\n  \"localnet\" : {\n    \"families\" : {\n      \"ether\" : {\n        \"addr\" : \"7c:ed:8d:56:4a:eb\"\n      },\n      \"ipv4\" : {\n        \"addr\" : \"10.1.0.24\"\n      },\n      \"vendor\" : {\n        \"addr\" : \"28179023\"\n      },\n      \"bacnet\" : {\n        \"addr\" : \"27312\"\n      }\n    }\n  },\n  \"pointset\" : {\n    \"points\" : {\n      \"filter_alarm_pressure_status\" : {\n        \"units\" : \"No-units\"\n      },\n      \"filter_differential_pressure_setpoint\" : {\n        \"units\" : \"Bars\",\n        \"value_state\" : \"applied\"\n      },\n      \"filter_differential_pressure_sensor\" : {\n        \"units\" : \"Degrees-Celsius\"\n      }\n    }\n  }\n}",
     "category" : "device.log",
     "timestamp" : "TIMESTAMP",
     "level" : 100
   } ],
   "metrics" : {
-    "mem_total_mb" : 66.0,
-    "mem_free_mb" : 47.953102111816406
+    "mem_total_mb" : 64.0,
+    "mem_free_mb" : 18.306129455566406
   },
   "timestamp" : "TIMESTAMP",
   "version" : "1.5.3"

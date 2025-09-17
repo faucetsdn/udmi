@@ -1,0 +1,256 @@
+{
+  "event_no" : 6,
+  "last_config" : "2025-08-21T14:03:02Z",
+  "logentries" : [ {
+    "message" : "Completing delayed writeback for filter_alarm_pressure_status",
+    "category" : "device.log",
+    "timestamp" : "2025-08-21T14:02:54Z",
+    "level" : 200
+  }, {
+    "message" : "Completing delayed writeback for filter_differential_pressure_sensor",
+    "category" : "device.log",
+    "timestamp" : "2025-08-21T14:02:54Z",
+    "level" : 200
+  }, {
+    "message" : "Update state 2025-08-21T14:02:55Z last_config 2025-08-21T14:02:51Z",
+    "category" : "device.log",
+    "timestamp" : "2025-08-21T14:02:55Z",
+    "level" : 200
+  }, {
+    "message" : "Device AHU-1 config handler",
+    "category" : "device.log",
+    "timestamp" : "2025-08-21T14:02:55Z",
+    "level" : 200
+  }, {
+    "message" : "2025-08-21T14:02:55Z received config 2025-08-21T14:02:55Z",
+    "category" : "device.log",
+    "timestamp" : "2025-08-21T14:02:55Z",
+    "level" : 200
+  }, {
+    "message" : "Applying slow writeback for point filter_alarm_pressure_status with 3s delay",
+    "category" : "device.log",
+    "timestamp" : "2025-08-21T14:02:55Z",
+    "level" : 200
+  }, {
+    "message" : "Applying slow writeback for point filter_differential_pressure_setpoint with 3s delay",
+    "category" : "device.log",
+    "timestamp" : "2025-08-21T14:02:55Z",
+    "level" : 200
+  }, {
+    "message" : "Applying slow writeback for point filter_differential_pressure_sensor with 3s delay",
+    "category" : "device.log",
+    "timestamp" : "2025-08-21T14:02:55Z",
+    "level" : 200
+  }, {
+    "message" : "success",
+    "category" : "system.config.apply",
+    "timestamp" : "2025-08-21T14:02:55Z",
+    "level" : 300
+  }, {
+    "message" : "Device AHU-1 config handler",
+    "category" : "device.log",
+    "timestamp" : "2025-08-21T14:02:56Z",
+    "level" : 200
+  }, {
+    "message" : "2025-08-21T14:02:56Z received config 2025-08-21T14:02:56Z",
+    "category" : "device.log",
+    "timestamp" : "2025-08-21T14:02:56Z",
+    "level" : 200
+  }, {
+    "message" : "Applying slow writeback for point filter_alarm_pressure_status with 3s delay",
+    "category" : "device.log",
+    "timestamp" : "2025-08-21T14:02:56Z",
+    "level" : 200
+  }, {
+    "message" : "Applying slow writeback for point filter_differential_pressure_setpoint with 3s delay",
+    "category" : "device.log",
+    "timestamp" : "2025-08-21T14:02:56Z",
+    "level" : 200
+  }, {
+    "message" : "Applying slow writeback for point filter_differential_pressure_sensor with 3s delay",
+    "category" : "device.log",
+    "timestamp" : "2025-08-21T14:02:56Z",
+    "level" : 200
+  }, {
+    "message" : "success",
+    "category" : "system.config.apply",
+    "timestamp" : "2025-08-21T14:02:56Z",
+    "level" : 300
+  }, {
+    "message" : "Update state 2025-08-21T14:02:57Z last_config 2025-08-21T14:02:56Z",
+    "category" : "device.log",
+    "timestamp" : "2025-08-21T14:02:57Z",
+    "level" : 200
+  }, {
+    "message" : "Device AHU-1 config handler",
+    "category" : "device.log",
+    "timestamp" : "2025-08-21T14:02:57Z",
+    "level" : 200
+  }, {
+    "message" : "2025-08-21T14:02:57Z received config 2025-08-21T14:02:57Z",
+    "category" : "device.log",
+    "timestamp" : "2025-08-21T14:02:57Z",
+    "level" : 200
+  }, {
+    "message" : "Applying slow writeback for point filter_alarm_pressure_status with 3s delay",
+    "category" : "device.log",
+    "timestamp" : "2025-08-21T14:02:57Z",
+    "level" : 200
+  }, {
+    "message" : "Applying slow writeback for point filter_differential_pressure_setpoint with 3s delay",
+    "category" : "device.log",
+    "timestamp" : "2025-08-21T14:02:57Z",
+    "level" : 200
+  }, {
+    "message" : "Applying slow writeback for point filter_differential_pressure_sensor with 3s delay",
+    "category" : "device.log",
+    "timestamp" : "2025-08-21T14:02:57Z",
+    "level" : 200
+  }, {
+    "message" : "success",
+    "category" : "system.config.apply",
+    "timestamp" : "2025-08-21T14:02:57Z",
+    "level" : 300
+  }, {
+    "message" : "Completing delayed writeback for filter_alarm_pressure_status",
+    "category" : "device.log",
+    "timestamp" : "2025-08-21T14:02:58Z",
+    "level" : 200
+  }, {
+    "message" : "Completing delayed writeback for filter_differential_pressure_setpoint",
+    "category" : "device.log",
+    "timestamp" : "2025-08-21T14:02:58Z",
+    "level" : 200
+  }, {
+    "message" : "Completing delayed writeback for filter_differential_pressure_sensor",
+    "category" : "device.log",
+    "timestamp" : "2025-08-21T14:02:58Z",
+    "level" : 200
+  }, {
+    "message" : "Device AHU-1 config handler",
+    "category" : "device.log",
+    "timestamp" : "2025-08-21T14:02:58Z",
+    "level" : 200
+  }, {
+    "message" : "2025-08-21T14:02:58Z received config 2025-08-21T14:02:58Z",
+    "category" : "device.log",
+    "timestamp" : "2025-08-21T14:02:58Z",
+    "level" : 200
+  }, {
+    "message" : "Applying slow writeback for point filter_alarm_pressure_status with 3s delay",
+    "category" : "device.log",
+    "timestamp" : "2025-08-21T14:02:58Z",
+    "level" : 200
+  }, {
+    "message" : "Applying slow writeback for point filter_differential_pressure_setpoint with 3s delay",
+    "category" : "device.log",
+    "timestamp" : "2025-08-21T14:02:58Z",
+    "level" : 200
+  }, {
+    "message" : "Applying slow writeback for point filter_differential_pressure_sensor with 3s delay",
+    "category" : "device.log",
+    "timestamp" : "2025-08-21T14:02:58Z",
+    "level" : 200
+  }, {
+    "message" : "success",
+    "category" : "system.config.apply",
+    "timestamp" : "2025-08-21T14:02:58Z",
+    "level" : 300
+  }, {
+    "message" : "Update state 2025-08-21T14:02:59Z last_config 2025-08-21T14:02:58Z",
+    "category" : "device.log",
+    "timestamp" : "2025-08-21T14:02:59Z",
+    "level" : 200
+  }, {
+    "message" : "Completing delayed writeback for filter_alarm_pressure_status",
+    "category" : "device.log",
+    "timestamp" : "2025-08-21T14:02:59Z",
+    "level" : 200
+  }, {
+    "message" : "Completing delayed writeback for filter_differential_pressure_setpoint",
+    "category" : "device.log",
+    "timestamp" : "2025-08-21T14:02:59Z",
+    "level" : 200
+  }, {
+    "message" : "Completing delayed writeback for filter_differential_pressure_sensor",
+    "category" : "device.log",
+    "timestamp" : "2025-08-21T14:02:59Z",
+    "level" : 200
+  }, {
+    "message" : "Completing delayed writeback for filter_alarm_pressure_status",
+    "category" : "device.log",
+    "timestamp" : "2025-08-21T14:03:00Z",
+    "level" : 200
+  }, {
+    "message" : "Completing delayed writeback for filter_differential_pressure_setpoint",
+    "category" : "device.log",
+    "timestamp" : "2025-08-21T14:03:00Z",
+    "level" : 200
+  }, {
+    "message" : "Completing delayed writeback for filter_differential_pressure_sensor",
+    "category" : "device.log",
+    "timestamp" : "2025-08-21T14:03:00Z",
+    "level" : 200
+  }, {
+    "message" : "Update state 2025-08-21T14:03:01Z last_config 2025-08-21T14:02:58Z",
+    "category" : "device.log",
+    "timestamp" : "2025-08-21T14:03:01Z",
+    "level" : 200
+  }, {
+    "message" : "Completing delayed writeback for filter_alarm_pressure_status",
+    "category" : "device.log",
+    "timestamp" : "2025-08-21T14:03:01Z",
+    "level" : 200
+  }, {
+    "message" : "Completing delayed writeback for filter_differential_pressure_setpoint",
+    "category" : "device.log",
+    "timestamp" : "2025-08-21T14:03:01Z",
+    "level" : 200
+  }, {
+    "message" : "Completing delayed writeback for filter_differential_pressure_sensor",
+    "category" : "device.log",
+    "timestamp" : "2025-08-21T14:03:01Z",
+    "level" : 200
+  }, {
+    "message" : "Device AHU-1 config handler",
+    "category" : "device.log",
+    "timestamp" : "2025-08-21T14:03:02Z",
+    "level" : 200
+  }, {
+    "message" : "2025-08-21T14:03:02Z received config 2025-08-21T14:03:02Z",
+    "category" : "device.log",
+    "timestamp" : "2025-08-21T14:03:02Z",
+    "level" : 200
+  }, {
+    "message" : "Applying slow writeback for point filter_alarm_pressure_status with 3s delay",
+    "category" : "device.log",
+    "timestamp" : "2025-08-21T14:03:02Z",
+    "level" : 200
+  }, {
+    "message" : "Applying slow writeback for point filter_differential_pressure_setpoint with 3s delay",
+    "category" : "device.log",
+    "timestamp" : "2025-08-21T14:03:02Z",
+    "level" : 200
+  }, {
+    "message" : "Applying slow writeback for point filter_differential_pressure_sensor with 3s delay",
+    "category" : "device.log",
+    "timestamp" : "2025-08-21T14:03:02Z",
+    "level" : 200
+  }, {
+    "message" : "success",
+    "category" : "system.config.apply",
+    "timestamp" : "2025-08-21T14:03:02Z",
+    "level" : 300
+  }, {
+    "message" : "Update state 2025-08-21T14:03:03Z last_config 2025-08-21T14:03:02Z",
+    "category" : "device.log",
+    "timestamp" : "2025-08-21T14:03:03Z",
+    "level" : 200
+  } ],
+  "metrics" : {
+    "mem_total_mb" : 112.0,
+    "mem_free_mb" : 82.58006286621094
+  },
+  "timestamp" : "2025-08-21T14:03:04Z",
+  "version" : "1.5.3"
+}

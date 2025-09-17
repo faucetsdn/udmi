@@ -1,14 +1,20 @@
 {
-  "timestamp" : "2024-12-09T01:27:52Z",
-  "version" : "@@@cloud udmi version###git-dee7a47",
+  "timestamp" : "TIMESTAMP",
+  "version" : "@@@cloud udmi version###git-250ce5e",
   "system" : {
     "min_loglevel" : 100,
     "metrics_rate_sec" : 10,
     "operation" : {
-      "last_start" : "2024-12-09T01:27:13Z"
+      "last_start" : "TIMESTAMP"
     },
     "testing" : {
       "sequence_name" : "family_ipv6_addr"
+    }
+  },
+  "discovery" : {
+    "families" : {
+      "vendor" : { },
+      "bacnet" : { }
     }
   },
   "localnet" : {

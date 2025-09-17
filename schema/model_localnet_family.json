@@ -9,7 +9,11 @@
     "addr": {
       "type": "string",
       "description": "The address of a device on the fieldbus/local network",
-      "examples": ["192.168.1.3", "41489"]
+      "examples": ["192.168.1.3", "41489"],
+      "$presentation": {
+        "display": "show",
+        "style": "bold"
+      }
     },
     "network": {
       "type": "string",

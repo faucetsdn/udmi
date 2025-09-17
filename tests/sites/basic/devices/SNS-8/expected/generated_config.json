@@ -1,5 +1,10 @@
 {
   "gateway": {},
+  "localnet": {
+    "families": {
+      "fqdn": {}
+    }
+  },
   "system": {
     "metrics_rate_sec": 10,
     "min_loglevel": 300,

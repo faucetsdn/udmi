@@ -1,6 +1,7 @@
 {
   "enumerations" : { },
   "families" : {
-    "vendor" : { }
+    "vendor" : { },
+    "bacnet" : { }
   }
 }

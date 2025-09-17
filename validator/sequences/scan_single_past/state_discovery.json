@@ -1,5 +1,10 @@
 {
-  "families" : { },
-  "timestamp" : "2024-12-17T05:27:29Z",
-  "version" : "1.5.2"
+  "families" : {
+    "vendor" : {
+      "generation" : "TIMESTAMP",
+      "phase" : "stopped"
+    }
+  },
+  "timestamp" : "TIMESTAMP",
+  "version" : "1.5.3"
 }

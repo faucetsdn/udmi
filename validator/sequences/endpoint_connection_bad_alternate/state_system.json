@@ -3,23 +3,23 @@
     "make" : "BOS",
     "model" : "pubber"
   },
-  "last_config" : "2025-06-10T17:08:10Z",
+  "last_config" : "TIMESTAMP",
   "operation" : {
     "operational" : true,
-    "last_start" : "2025-06-10T17:06:52Z",
+    "last_start" : "TIMESTAMP",
     "restart_count" : 1,
     "mode" : "initial"
   },
-  "serial_no" : "sequencer-2751",
+  "serial_no" : "sequencer-19868",
   "software" : {
     "firmware" : "v1"
   },
   "status" : {
     "message" : "success",
     "category" : "system.config.parse",
-    "timestamp" : "2025-06-10T17:08:32Z",
+    "timestamp" : "TIMESTAMP",
     "level" : 100
   },
-  "timestamp" : "2025-06-10T17:08:32Z",
+  "timestamp" : "TIMESTAMP",
   "version" : "1.5.3"
 }

@@ -1,6 +1,6 @@
 {
-  "generation" : "2024-12-11T05:44:42Z",
-  "scan_family" : "iot",
-  "timestamp" : "2024-12-11T05:44:43Z",
-  "version" : "1.5.2"
+  "family" : "iot",
+  "generation" : "TIMESTAMP",
+  "timestamp" : "TIMESTAMP",
+  "version" : "1.5.3"
 }

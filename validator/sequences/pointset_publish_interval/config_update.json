@@ -1,14 +1,38 @@
 {
+  "timestamp" : "TIMESTAMP",
+  "version" : "@@@cloud udmi version###git-250ce5e",
+  "system" : {
+    "min_loglevel" : 100,
+    "metrics_rate_sec" : 10,
+    "operation" : {
+      "last_start" : "TIMESTAMP"
+    },
+    "testing" : {
+      "sequence_name" : "pointset_publish_interval"
+    }
+  },
+  "discovery" : {
+    "families" : {
+      "vendor" : { },
+      "bacnet" : { }
+    }
+  },
   "localnet" : {
     "families" : {
       "ether" : { },
       "ipv4" : { },
-      "ipv6" : { },
-      "vendor" : { }
+      "vendor" : { },
+      "bacnet" : { }
     }
   },
   "pointset" : {
+    "sample_limit_sec" : 15,
+    "sample_rate_sec" : 18,
     "points" : {
+      "filter_differential_pressure_setpoint" : {
+        "units" : "Bars",
+        "set_value" : 98
+      },
       "filter_alarm_pressure_status" : {
         "ref" : "BV11.present_value",
         "units" : "No-units"
@@ -16,27 +40,7 @@
       "filter_differential_pressure_sensor" : {
         "ref" : "AV12.present_value",
         "units" : "Degrees-Celsius"
-      },
-      "filter_differential_pressure_setpoint" : {
-        "set_value" : 98,
-        "units" : "Bars"
       }
-    },
-    "sample_limit_sec" : 15,
-    "sample_rate_sec" : 18
-  },
-  "system" : {
-    "metrics_rate_sec" : 10,
-    "min_loglevel" : 200,
-    "operation" : {
-      "last_start" : "2024-11-06T17:31:48Z"
-    },
-    "testing" : {
-      "config_base" : 30,
-      "sequence_name" : "pointset_publish_interval",
-      "transaction_id" : "RC:b00e38.0000002d"
     }
-  },
-  "timestamp" : "2024-11-06T17:34:02Z",
-  "version" : "git-b2a557d"
+  }
 }

@@ -21,6 +21,7 @@ import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.google.gson.internal.bind.util.ISO8601Utils;
+import com.google.udmi.util.ProperPrinter.OutputFormat;
 import java.io.File;
 import java.nio.file.Files;
 import java.nio.file.NoSuchFileException;
@@ -522,6 +523,22 @@ public abstract class JsonUtil {
       OBJECT_MAPPER.writer(printer).writeValue(file, theThing);
     } catch (Exception e) {
       throw new RuntimeException("While writing with custom printer " + file.getAbsolutePath(), e);
+    }
+  }
+
+  /**
+   * Writes a JSON representation to a file using the custom ProperPrinter
+   * to ensure correct colon spacing (e.g., "key": "value") and array item indentation.
+   *
+   * @param theThing object to write
+   * @param file     output file
+   */
+  public static void writeFormattedFile(Object theThing, File file) {
+    try {
+      ProperPrinter printer = new ProperPrinter(OutputFormat.VERBOSE_ARRAY_ON_NEW_LINE);
+      OBJECT_MAPPER.writer(printer).writeValue(file, theThing);
+    } catch (Exception e) {
+      throw new RuntimeException("While writing formatted file " + file.getAbsolutePath(), e);
     }
   }
 

@@ -1,48 +1,152 @@
-2024-11-06T17:33:00Z INFO    device.log             Update state 2024-11-06T17:33:00Z last_config 2024-11-06T17:32:58Z
-2024-11-06T17:33:00Z INFO    device.log             Device AHU-1 config handler
-2024-11-06T17:33:00Z INFO    device.log             2024-11-06T17:33:00Z received config 2024-11-06T17:33:00Z
-2024-11-06T17:33:00Z NOTICE  system.config.apply    success
-2024-11-06T17:33:02Z INFO    device.log             Update state 2024-11-06T17:33:02Z last_config 2024-11-06T17:33:00Z
-2024-11-06T17:33:06Z INFO    device.log             Update state 2024-11-06T17:33:06Z last_config 2024-11-06T17:33:00Z
-2024-11-06T17:33:06Z INFO    device.log             Device AHU-1 config handler
-2024-11-06T17:33:06Z INFO    device.log             2024-11-06T17:33:06Z received config 2024-11-06T17:33:06Z
-2024-11-06T17:33:06Z NOTICE  system.config.apply    success
-2024-11-06T17:33:08Z INFO    device.log             Update state 2024-11-06T17:33:08Z last_config 2024-11-06T17:33:06Z
-2024-11-06T17:33:19Z INFO    device.log             Update state 2024-11-06T17:33:19Z last_config 2024-11-06T17:33:06Z
-2024-11-06T17:33:19Z INFO    device.log             2024-11-06T17:33:19Z received config 2024-11-06T17:33:19Z
-2024-11-06T17:33:19Z NOTICE  system.config.apply    success
-2024-11-06T17:33:19Z INFO    device.log             Device AHU-1 config handler
-2024-11-06T17:33:19Z INFO    device.log             2024-11-06T17:33:19Z received config 2024-11-06T17:33:19Z
-2024-11-06T17:33:19Z NOTICE  system.config.apply    success
-2024-11-06T17:33:21Z INFO    device.log             Update state 2024-11-06T17:33:21Z last_config 2024-11-06T17:33:19Z
-2024-11-06T17:33:22Z INFO    device.log             Device AHU-1 config handler
-2024-11-06T17:33:22Z INFO    device.log             2024-11-06T17:33:22Z received config 2024-11-06T17:33:22Z
-2024-11-06T17:33:22Z NOTICE  system.config.apply    success
-2024-11-06T17:33:23Z INFO    device.log             Update state 2024-11-06T17:33:23Z last_config 2024-11-06T17:33:22Z
-2024-11-06T17:33:24Z INFO    device.log             Device AHU-1 config handler
-2024-11-06T17:33:24Z INFO    device.log             2024-11-06T17:33:24Z received config 2024-11-06T17:33:24Z
-2024-11-06T17:33:24Z NOTICE  system.config.apply    success
-2024-11-06T17:33:25Z INFO    device.log             Update state 2024-11-06T17:33:25Z last_config 2024-11-06T17:33:24Z
-2024-11-06T17:33:27Z INFO    device.log             Device AHU-1 config handler
-2024-11-06T17:33:27Z INFO    device.log             2024-11-06T17:33:27Z received config 2024-11-06T17:33:27Z
-2024-11-06T17:33:27Z WARNING device.log             Terminating AHU-1 PubberPointsetManager sender
-2024-11-06T17:33:27Z WARNING device.log             Starting AHU-1 PubberPointsetManager sender with delay 8s
-2024-11-06T17:33:27Z NOTICE  system.config.apply    success
-2024-11-06T17:33:27Z INFO    device.log             Update state 2024-11-06T17:33:27Z last_config 2024-11-06T17:33:27Z
-2024-11-06T17:33:28Z INFO    device.log             Device AHU-1 config handler
-2024-11-06T17:33:28Z INFO    device.log             2024-11-06T17:33:28Z received config 2024-11-06T17:33:28Z
-2024-11-06T17:33:28Z NOTICE  system.config.apply    success
-2024-11-06T17:33:29Z INFO    device.log             Update state 2024-11-06T17:33:29Z last_config 2024-11-06T17:33:28Z
-2024-11-06T17:33:29Z INFO    device.log             Device AHU-1 config handler
-2024-11-06T17:33:29Z INFO    device.log             2024-11-06T17:33:29Z received config 2024-11-06T17:33:29Z
-2024-11-06T17:33:29Z NOTICE  system.config.apply    success
-2024-11-06T17:33:31Z INFO    device.log             Update state 2024-11-06T17:33:31Z last_config 2024-11-06T17:33:29Z
-2024-11-06T17:33:35Z INFO    device.log             2024-11-06T17:33:35Z sending AHU-1 message #10 with 3 points
-2024-11-06T17:34:02Z INFO    device.log             Update state 2024-11-06T17:34:02Z last_config 2024-11-06T17:33:29Z
-2024-11-06T17:34:02Z INFO    device.log             Device AHU-1 config handler
-2024-11-06T17:34:02Z INFO    device.log             2024-11-06T17:34:02Z received config 2024-11-06T17:34:02Z
-2024-11-06T17:34:02Z WARNING device.log             Terminating AHU-1 PubberPointsetManager sender
-2024-11-06T17:34:02Z WARNING device.log             Starting AHU-1 PubberPointsetManager sender with delay 18s
-2024-11-06T17:34:02Z NOTICE  system.config.apply    success
-2024-11-06T17:34:04Z INFO    device.log             Update state 2024-11-06T17:34:04Z last_config 2024-11-06T17:34:02Z
-2024-11-06T17:35:15Z NOTICE  validation.feature.sequence Sequence complete
+TIMESTAMP
+TIMESTAMP DEBUG   device.log             Scheduling future in 10000ms
+TIMESTAMP
+TIMESTAMP)
+TIMESTAMP
+TIMESTAMP DEBUG   device.log             State update AHU-1 (scan_periodic_now_enumerate+bacnet)
+TIMESTAMP WARNING device.log             Starting AHU-1 PubberBacnetProvider sender with delay 1s
+TIMESTAMP DEBUG   device.log             Sending bacnet result for GAT-123 217321
+TIMESTAMP as 1
+TIMESTAMP DEBUG   device.log             State update defer 999ms
+TIMESTAMP DEBUG   device.log             Sending bacnet result for AHU-1 27312
+TIMESTAMP
+TIMESTAMP DEBUG   device.log             State update AHU-1 (scan_periodic_now_enumerate+bacnet)
+TIMESTAMP as 2
+TIMESTAMP DEBUG   device.log             State update defer 1997ms
+TIMESTAMP DEBUG   device.log             State update defer 1388ms
+TIMESTAMP DEBUG   device.log             State update defer 0ms
+TIMESTAMP
+TIMESTAMP DEBUG   device.log             State update AHU-1 (scan_periodic_now_enumerate+bacnet)
+TIMESTAMP DEBUG   system.config.receive  success
+TIMESTAMP DEBUG   system.config.parse    success
+TIMESTAMP INFO    device.log             Device AHU-1 config handler
+TIMESTAMP DEBUG   device.log             Config update AHU-1 (scan_periodic_now_enumerate+bacnet)
+TIMESTAMP
+TIMESTAMP INFO    device.log             Discovery scan bacnet phase stopped as null
+TIMESTAMP NOTICE  system.config.apply    success
+TIMESTAMP DEBUG   device.log             State update defer -2075ms
+TIMESTAMP
+TIMESTAMP DEBUG   device.log             State update AHU-1 (pointset_publish_interval)
+TIMESTAMP DEBUG   system.config.receive  success
+TIMESTAMP DEBUG   device.log             State update defer 1948ms
+TIMESTAMP DEBUG   system.config.parse    success
+TIMESTAMP INFO    device.log             Device AHU-1 config handler
+TIMESTAMP DEBUG   device.log             Config update AHU-1 (pointset_publish_interval)
+TIMESTAMP
+TIMESTAMP NOTICE  system.config.apply    success
+TIMESTAMP DEBUG   device.log             State update defer 1946ms
+TIMESTAMP DEBUG   device.log             State update defer 1946ms
+TIMESTAMP DEBUG   device.log             State update defer 1946ms
+TIMESTAMP DEBUG   device.log             State update defer 1946ms
+TIMESTAMP DEBUG   device.log             State update defer 1946ms
+TIMESTAMP DEBUG   device.log             State update defer 1946ms
+TIMESTAMP DEBUG   device.log             State update defer 1946ms
+TIMESTAMP (=? null)
+TIMESTAMP DEBUG   device.log             State update defer 0ms
+TIMESTAMP
+TIMESTAMP DEBUG   device.log             State update AHU-1 (pointset_publish_interval)
+TIMESTAMP DEBUG   system.config.receive  success
+TIMESTAMP DEBUG   device.log             State update defer -3011ms
+TIMESTAMP
+TIMESTAMP DEBUG   system.config.parse    success
+TIMESTAMP INFO    device.log             Device AHU-1 config handler
+TIMESTAMP DEBUG   device.log             State update AHU-1 (pointset_publish_interval)
+TIMESTAMP DEBUG   device.log             Config update AHU-1 (pointset_publish_interval)
+TIMESTAMP DEBUG   device.log             State update defer 1999ms
+TIMESTAMP
+TIMESTAMP INFO    device.log             Discovery scan bacnet phase stopped as null
+TIMESTAMP NOTICE  system.config.apply    success
+TIMESTAMP DEBUG   device.log             State update defer 1999ms
+TIMESTAMP DEBUG   device.log             State update defer 1999ms
+TIMESTAMP DEBUG   device.log             State update defer 0ms
+TIMESTAMP
+TIMESTAMP DEBUG   device.log             State update AHU-1 (pointset_publish_interval)
+TIMESTAMP DEBUG   system.config.receive  success
+TIMESTAMP DEBUG   device.log             State update defer -1016ms
+TIMESTAMP
+TIMESTAMP DEBUG   device.log             State update AHU-1 (pointset_publish_interval)
+TIMESTAMP DEBUG   system.config.parse    success
+TIMESTAMP INFO    device.log             Device AHU-1 config handler
+TIMESTAMP DEBUG   device.log             Config update AHU-1 (pointset_publish_interval)
+TIMESTAMP DEBUG   device.log             State update defer 2000ms
+TIMESTAMP
+TIMESTAMP NOTICE  system.config.apply    success
+TIMESTAMP DEBUG   device.log             State update defer 2000ms
+TIMESTAMP DEBUG   device.log             State update defer 0ms
+TIMESTAMP
+TIMESTAMP DEBUG   device.log             State update AHU-1 (pointset_publish_interval)
+TIMESTAMP DEBUG   system.config.receive  success
+TIMESTAMP DEBUG   device.log             State update defer -1086ms
+TIMESTAMP
+TIMESTAMP DEBUG   system.config.parse    success
+TIMESTAMP INFO    device.log             Device AHU-1 config handler
+TIMESTAMP DEBUG   device.log             State update AHU-1 (pointset_publish_interval)
+TIMESTAMP DEBUG   device.log             Config update AHU-1 (pointset_publish_interval)
+TIMESTAMP DEBUG   device.log             State update defer 2000ms
+TIMESTAMP
+TIMESTAMP NOTICE  system.config.apply    success
+TIMESTAMP DEBUG   device.log             State update defer 1999ms
+TIMESTAMP DEBUG   device.log             State update defer 1999ms
+TIMESTAMP DEBUG   device.log             State update defer 1999ms
+TIMESTAMP DEBUG   device.log             State update defer 1999ms
+TIMESTAMP DEBUG   device.log             State update defer 1999ms
+TIMESTAMP DEBUG   device.log             State update defer 1999ms
+TIMESTAMP DEBUG   device.log             State update defer 1999ms
+TIMESTAMP DEBUG   system.config.receive  success
+TIMESTAMP DEBUG   device.log             State update defer 798ms
+TIMESTAMP DEBUG   system.config.parse    success
+TIMESTAMP INFO    device.log             Device AHU-1 config handler
+TIMESTAMP DEBUG   device.log             State update defer 797ms
+TIMESTAMP DEBUG   device.log             Config update AHU-1 (pointset_publish_interval)
+TIMESTAMP
+TIMESTAMP WARNING device.log             Terminating AHU-1 PubberPointsetManager sender
+TIMESTAMP WARNING device.log             Starting AHU-1 PubberPointsetManager sender with delay 8s
+TIMESTAMP NOTICE  system.config.apply    success
+TIMESTAMP DEBUG   device.log             State update defer 796ms
+TIMESTAMP DEBUG   device.log             State update defer 796ms
+TIMESTAMP DEBUG   device.log             State update defer 0ms
+TIMESTAMP
+TIMESTAMP DEBUG   device.log             State update AHU-1 (pointset_publish_interval)
+TIMESTAMP DEBUG   system.config.receive  success
+TIMESTAMP DEBUG   device.log             State update defer 1693ms
+TIMESTAMP DEBUG   system.config.parse    success
+TIMESTAMP INFO    device.log             Device AHU-1 config handler
+TIMESTAMP DEBUG   device.log             State update defer 1692ms
+TIMESTAMP DEBUG   device.log             Config update AHU-1 (pointset_publish_interval)
+TIMESTAMP
+TIMESTAMP NOTICE  system.config.apply    success
+TIMESTAMP DEBUG   device.log             State update defer 1692ms
+TIMESTAMP DEBUG   system.config.receive  success
+TIMESTAMP DEBUG   device.log             State update defer 587ms
+TIMESTAMP DEBUG   system.config.parse    success
+TIMESTAMP INFO    device.log             Device AHU-1 config handler
+TIMESTAMP DEBUG   device.log             Config update AHU-1 (pointset_publish_interval)
+TIMESTAMP
+TIMESTAMP NOTICE  system.config.apply    success
+TIMESTAMP DEBUG   device.log             State update defer 585ms
+TIMESTAMP DEBUG   device.log             State update defer 585ms
+TIMESTAMP DEBUG   device.log             State update defer 585ms
+TIMESTAMP DEBUG   device.log             State update defer 0ms
+TIMESTAMP
+TIMESTAMP DEBUG   device.log             State update AHU-1 (pointset_publish_interval)
+TIMESTAMP DEBUG   system.config.receive  success
+TIMESTAMP DEBUG   device.log             State update defer -19984ms
+TIMESTAMP
+TIMESTAMP DEBUG   system.config.parse    success
+TIMESTAMP INFO    device.log             Device AHU-1 config handler
+TIMESTAMP DEBUG   device.log             State update AHU-1 (pointset_publish_interval)
+TIMESTAMP DEBUG   device.log             Config update AHU-1 (pointset_publish_interval)
+TIMESTAMP DEBUG   device.log             State update defer 2000ms
+TIMESTAMP
+TIMESTAMP WARNING device.log             Terminating AHU-1 PubberPointsetManager sender
+TIMESTAMP WARNING device.log             Starting AHU-1 PubberPointsetManager sender with delay 18s
+TIMESTAMP NOTICE  system.config.apply    success
+TIMESTAMP DEBUG   device.log             State update defer 2000ms
+TIMESTAMP DEBUG   device.log             State update defer 1999ms
+TIMESTAMP DEBUG   device.log             State update defer 1999ms
+TIMESTAMP DEBUG   device.log             State update defer 616ms
+TIMESTAMP DEBUG   device.log             State update defer 0ms
+TIMESTAMP
+TIMESTAMP DEBUG   device.log             State update AHU-1 (pointset_publish_interval)
+TIMESTAMP INFO    device.log             sending AHU-1 message #30 with 3 points
+TIMESTAMP NOTICE  validation.feature.sequence Sequence complete

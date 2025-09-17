@@ -1,9 +1,9 @@
 {
-  "min_loglevel" : 200,
+  "min_loglevel" : 100,
   "metrics_rate_sec" : 10,
   "operation" : {
     "mode" : "active",
-    "last_start" : "2024-11-06T17:32:41Z"
+    "last_start" : "TIMESTAMP"
   },
   "testing" : {
     "sequence_name" : "endpoint_failure_and_restart"

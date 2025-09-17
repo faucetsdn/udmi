@@ -5,6 +5,7 @@
     "features" : "details"
   },
   "families" : {
-    "vendor" : { }
+    "vendor" : { },
+    "bacnet" : { }
   }
 }

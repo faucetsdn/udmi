@@ -18,6 +18,7 @@ public abstract class PointsetBase extends SequenceBase {
   public static final String FAILURE_STATE = "failure";
   public static final String APPLIED_STATE = "applied";
   public static final String TWEAKED_REF = "tweaked_ref";
+  public static final String UPDATING_STATE = "updating";
 
   @Override
   public void setUp() {

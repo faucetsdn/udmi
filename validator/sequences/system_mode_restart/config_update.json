@@ -1,12 +1,12 @@
 {
-  "timestamp" : "2025-06-10T19:55:14Z",
-  "version" : "@@@cloud udmi version###git-7902183",
+  "timestamp" : "TIMESTAMP",
+  "version" : "@@@cloud udmi version###git-250ce5e",
   "system" : {
     "min_loglevel" : 100,
     "metrics_rate_sec" : 10,
     "operation" : {
       "mode" : "active",
-      "last_start" : "2025-06-10T19:55:06Z"
+      "last_start" : "TIMESTAMP"
     },
     "testing" : {
       "sequence_name" : "system_mode_restart"
@@ -14,7 +14,8 @@
   },
   "discovery" : {
     "families" : {
-      "vendor" : { }
+      "vendor" : { },
+      "bacnet" : { }
     }
   },
   "localnet" : {
