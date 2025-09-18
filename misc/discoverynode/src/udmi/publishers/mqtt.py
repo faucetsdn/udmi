@@ -56,7 +56,7 @@ class MQTT(udmi.publishers.publisher.Publisher):
 
     self.public_key_printed_last_time = 0
     self.public_key_print_interval_seconds: int = 3600 #s
-    self.public_key_file: str | None = None
+    self.public_key_file: str = None
     self.public_key: str | None = None
 
     self.logger = logging.getLogger("mqtt_client")

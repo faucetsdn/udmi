@@ -78,7 +78,7 @@ class GlobalBacnetDiscovery(discovery.DiscoveryController):
    
     self.bacnet = BAC0.lite(ip=bacnet_ip, port=bacnet_port)
     
-    super().__init__(sta  te, publisher)
+    super().__init__(state, publisher)
 
   def resolve_task_dispatcher(self, target_ips: list[str]):
     """Dispatches ip->bacnet resolv tasks across simulateous workers"""
@@ -93,7 +93,7 @@ class GlobalBacnetDiscovery(discovery.DiscoveryController):
   
   def resolve_task(self, ip_address: str) -> None:
     if id := self.get_bacnet_id_from_ip(ip_address):
-      logging.info("found bacnet %s at ip %s", id, ip_address)
+      logging.debug("found bacnet %s at ip %s", id, ip_address)
       self.targetted_devices_found.add((ip_address, id))
 
   def get_bacnet_id_from_ip(self, ip_address: str) -> int | bool:

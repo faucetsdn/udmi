@@ -61,6 +61,7 @@ class StateSystem:
       default_factory=StateSystemOperation
   )
   serial_no: str | None = None
+  status: Status | None = None
 
 @dataclasses.dataclass
 class LocalnetFamily:
