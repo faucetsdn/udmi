@@ -24,7 +24,7 @@ class Phase(enum.StrEnum):
 
 @dataclasses.dataclass
 class Discovery:
-  generation: datetime | None = None
+  generation: datetime.datetime | None = None
   phase: Phase | None = None
   status: Status | None = None
   active_count: int | None = None
