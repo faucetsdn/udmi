@@ -57,10 +57,10 @@ def test_bacnet_system():
       print("----")
    
     expected_bacnet_ids = set(["1"])
-    seen_bacnet_ids_toplevel = set(m.addr for m in messages if m.family == "bacnet")
+    seen_bacnet_ids_toplevel = set(m.addr for m in messages[1:] if m.family == "bacnet")
     
     assert expected_bacnet_ids == seen_bacnet_ids_toplevel 
-    assert messages[0].refs is None
+    assert len(messages[1].refs) == 0
     # no points
     
 
@@ -102,10 +102,10 @@ def test_bacnet_refs():
       print("----")
    
     expected_bacnet_ids = set(["1"])
-    seen_bacnet_ids_toplevel = set(m.addr for m in messages if m.family == "bacnet")
+    seen_bacnet_ids_toplevel = set(m.addr for m in messages[1:] if m.family == "bacnet")
 
     assert expected_bacnet_ids == seen_bacnet_ids_toplevel 
-    assert len(messages[0].refs) > 0
+    assert len(messages[1].refs) > 0
 
 
 def test_nmap():
@@ -135,7 +135,7 @@ def test_nmap():
             "timestamp": timestamp_now(),
             "discovery": {
                 "families": {
-                    "ether": {"generation": timestamp_now()}
+                    "ether": {"generation": timestamp_now(), "depth": "ports", "addrs": ["192.168.12.1/24"]}
                 }
             },
         })
@@ -150,47 +150,6 @@ def test_nmap():
     
 
     # verify that nmap discovery completed
-    assert messages[0].refs["1256"]["adjunct"]["product"] == "Postfix smtpd"
-
-
-def test_passive():
-  
-  # This is the "config.json" which is passed to `main.py` typically
-  test_config = collections.defaultdict()
-  test_config["mqtt"] = dict(device_id="THUNDERBIRD-2")
-  test_config["udmi"] = {"discovery": dict(ipv4=True,vendor=False,ether=True,bacnet=False)}
-  test_config["nmap"] = dict(targets=["192.168.12.1/24"])
-  # Container for storing all discovery messages
-  messages = []
-
-  with (
-      mock.patch.object(
-          udmi.core.UDMICore, "publish_discovery", new=messages.append
-      ) as published_discovery,
-  ):
-    mock_mqtt_client = mock.MagicMock()
-    udmi_client = udmi.core.UDMICore(publisher=mock_mqtt_client, topic_prefix="notneeded", config=test_config)
-    
-    # Start discovery
-    udmi_client.config_handler(
-        json.dumps({
-            "timestamp": timestamp_now(),
-            "discovery": {
-                "families": {
-                    "ipv4": {"generation": timestamp_now()},
-                    "ether": {"generation": timestamp_now()}
-                }
-            },
-        })
-    )
-
-    time.sleep(30)
-    
-    print(len(messages))
-    for message in messages:
-      print(message.to_json())
-      print("----")
-    
-
-    assert False
+    #1 because 0 is the publish marker
+    assert messages[1].refs["1256"]["adjunct"]["product"] == "Postfix smtpd"
 

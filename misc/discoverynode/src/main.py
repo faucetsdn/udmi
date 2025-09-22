@@ -63,6 +63,7 @@ def main():
 
   logging.info("Loading config from %s", args.config_file)
   config = local_config.read_config(args.config_file)
+  logging.warning("Started with config: %s", config)
 
   # TODO: Should probably set this in the config with basic templating
   if config["mqtt"].get("authentication_mechanism", "jwt_gcp") == "jwt_gcp":

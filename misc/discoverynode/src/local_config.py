@@ -65,11 +65,6 @@ def merge_dicts(base: dict, override: dict) -> dict:
   return base
 
 
-def load_config_from_file(file_name: str) -> dict[str, Any]:
-  """"""
- 
-
-
 def read_config(file_name: str) -> LocalConfig:
   """ Reads config from all files.
 

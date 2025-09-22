@@ -178,7 +178,6 @@ class EtherDiscovery(discovery.DiscoveryController):
             return
 
     logging.info("nmap scan complete, parsing results")
-
     for host in nmap.results_reader(OUTPUT_FILE):
       event = udmi.schema.discovery_event.DiscoveryEvent(
           generation=self.generation,

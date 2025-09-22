@@ -282,3 +282,7 @@ class GlobalBacnetDiscovery(discovery.DiscoveryController):
         if unchanged_device_count_seconds > UNCHANGED_COUNT_THRESHOLD:
           return
         time.sleep(1)
+
+  def __del__(self):
+    self.bacnet.disconnect()
+    super().__del__()
