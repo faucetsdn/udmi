@@ -379,12 +379,10 @@ jobs:
           docker network create udminet --subnet 192.168.99.0/24
       - name: Unit Tests
         run: |
-          export SAVE_PATH=$PATH
-          sudo -E bash -c 'PATH=$SAVE_PATH misc/discoverynode/testing/unit/unit_tests.sh'
+          misc/discoverynode/testing/unit/unit_tests.sh
       - name: Integration Tests
         run: |
-          export SAVE_PATH=$PATH
-          sudo -E bash -c 'PATH=$SAVE_PATH misc/discoverynode/testing/integration/integration_test.sh'
+          misc/discoverynode/testing/integration/integration_test.sh
       - name: Build UDMIS container
         run: |
           udmis/bin/build check
