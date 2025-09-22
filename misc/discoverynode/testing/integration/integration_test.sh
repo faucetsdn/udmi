@@ -20,7 +20,7 @@ for i in $(seq 1); do
     test-bacnet-device
 done
 
-docker run -it --rm \
+docker run --rm \
   --entrypoint=/venv/bin/python3 \
   --network=discovery-integration \
   -e I_AM_INTEGRATION_TEST=1 \
