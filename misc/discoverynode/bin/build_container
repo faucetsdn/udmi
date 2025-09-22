@@ -12,4 +12,4 @@ echo $VERSION_REF > $SRCPATH/udmi/installed_version.txt
 
 
 cd $SRCPATH
-docker build --no-cache --progress=plain -t $IMAGE_REF -f $ROOT_DIR/../Dockerfile .
+docker build --progress=plain -t $IMAGE_REF -f $ROOT_DIR/../Dockerfile .
