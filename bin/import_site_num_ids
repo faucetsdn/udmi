@@ -1,18 +1,33 @@
 #!/bin/bash -e
 
 # This script automates the process of updating num_ids for a list of site models
+# as requested in b/435662022 and incorporating review comments from PR #1186.
 
-# --- USER ACTION REQUIRED ---
-# The script will now prompt for the project specification.
+# --- Script Usage ---
+# The script now accepts project_spec and the list of site models as command-line arguments.
+#
+# Usage:
+# ./import_site_num_ids <project_spec> <site_model_1> <site_model_2> ...
+#
+# Example:
+# ./import_site_num_ids //gbos/bos-platform-prod US-SVL-BRGUP1 US-SVL-OTHER
 
-# Please populate this array with the list of your site models.
-# For example: SITE_MODELS=("US-SVL-BRGUP1" "US-SVL-OTHER" "etc")
 SITE_MODELS=()
 
 UDMI_ROOT=$(dirname $0)/..
 cd $UDMI_ROOT
 
 # ==============================================================================
+
+if [ "$#" -lt 2 ]; then
+    echo "Usage: $0 <project_spec> <site_model_1> <site_model_2> ..."
+    echo "Example: $0 //gbos/bos-platform-prod US-SVL-BRGUP1"
+    exit 1
+fi
+
+project_spec=$1
+shift # Removes the first argument, so the rest are site models
+SITE_MODELS=("$@") # Assigns the remaining arguments to the SITE_MODELS array
 
 # Get the gcloud email address.
 GCLOUD_EMAIL=$(gcloud config get-value account 2>/dev/null)
@@ -24,9 +39,6 @@ if [ -z "$GCLOUD_EMAIL" ]; then
 fi
 
 echo "Using gcloud email: $GCLOUD_EMAIL"
-
-# Prompt user for the project specification.
-read -p "Enter the project_spec (e.g., //gbos/bos-platform-prod or //gbos/bos-platform-dev/namespace): " project_spec
 
 # Validate the project_spec format and extract the project ID.
 # The project ID is expected to be the component after "//gbos/".
@@ -45,10 +57,11 @@ if [ -z "$project_id" ]; then
 fi
 
 echo "Using Project ID: $project_id"
+echo "Processing site models: ${SITE_MODELS[@]}"
 
 # Check if the SITE_MODELS array is empty.
 if [ ${#SITE_MODELS[@]} -eq 0 ]; then
-    echo "Please edit this script and populate the SITE_MODELS array with your site models."
+    echo "Please provide site models for which num_ids to be imported."
     exit 1
 fi
 
@@ -68,6 +81,7 @@ for site_model in "${SITE_MODELS[@]}"; do
             git reset --hard origin/main
             git clean -fdx
             git pull origin main
+            git checkout main
         )
     else
         echo "Repository not found. Cloning a new one."
@@ -75,13 +89,6 @@ for site_model in "${SITE_MODELS[@]}"; do
         GIT_CLONE_URL="ssh://${GCLOUD_EMAIL}@source.developers.google.com:2022/p/${project_id}/r/${site_model}"
         git clone "$GIT_CLONE_URL" "$SITE_PATH"
     fi
-
-    # Create a new branch for this site model's changes
-    BRANCH_NAME="feat/import-numids-${site_model}-$(date +%s)"
-    (
-        cd "$SITE_PATH" || exit
-        git checkout -b "$BRANCH_NAME"
-    )
 
     DEVICES_PATH="$SITE_PATH/udmi/devices"
 
@@ -112,7 +119,6 @@ for site_model in "${SITE_MODELS[@]}"; do
     )
 
     # Step B: Run the registrar utility to update from IoT Core.
-    cd $UDMI_ROOT
     echo "Running registrar for $site_model..."
     "$UDMI_ROOT/bin/registrar" "$SITE_PATH/udmi" "$project_spec" -u
 
@@ -140,11 +146,11 @@ for site_model in "${SITE_MODELS[@]}"; do
         git commit -m "Import num_ids for site model $site_model"
     )
 
-    # Push the new feature branch to the remote repository
-    echo "Pushing changes to new branch: $BRANCH_NAME"
+    # Push the main branch to the remote repository
+    echo "Pushing changes to main branch"
     (
         cd "$SITE_PATH" || exit
-        git push origin "$BRANCH_NAME"
+        git push origin main
     )
 
 
