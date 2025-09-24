@@ -92,14 +92,13 @@ class GlobalBacnetDiscovery(discovery.DiscoveryController):
           break
   
   def resolve_task(self, ip_address: str) -> None:
-    print(f"resolving {ip_address}")
     if id := self.get_bacnet_id_from_ip(ip_address):
-        print(f"resolving {ip_address} found: {id}")
-        self.targetted_devices_found.add((ip_address, id))
+      logging.debug("found bacnet %s at ip %s", id, ip_address)
+      self.targetted_devices_found.add((ip_address, id))
 
   def get_bacnet_id_from_ip(self, ip_address: str) -> int | bool:
     try:
-      _, addr = self.bacnet.read(f"{ip_address} device 4194303 objectIdentifier")
+      _, addr = self.bacnet.read(f"{ip_address} device 4194303 objectIdentifier", None, 0, None, 3)
       return addr
     except BAC0.core.io.IOExceptions.NoResponseFromController:
       return False
@@ -165,7 +164,6 @@ class GlobalBacnetDiscovery(discovery.DiscoveryController):
     if self.config.depth in ["system", "refs"]:
       try:
         (
-         object_identifier,
          object_name, 
          vendor_name, 
          firmware_version,
@@ -176,7 +174,6 @@ class GlobalBacnetDiscovery(discovery.DiscoveryController):
          application_version) = (
             self.bacnet.readMultiple(
                 f"{device_address} device {device_id}"
-                " objectIdentifier"
                 " objectName"
                 " vendorName"
                 " firmwareRevision"
@@ -188,7 +185,6 @@ class GlobalBacnetDiscovery(discovery.DiscoveryController):
             )
         )
 
-        event.addr = object_identifier
         event.system.serial_no = serial_number
         event.system.hardware.make = vendor_name
         event.system.hardware.model = model_name
@@ -286,3 +282,7 @@ class GlobalBacnetDiscovery(discovery.DiscoveryController):
         if unchanged_device_count_seconds > UNCHANGED_COUNT_THRESHOLD:
           return
         time.sleep(1)
+
+  def __del__(self):
+    self.bacnet.disconnect()
+    super().__del__()
