@@ -28,11 +28,6 @@ public class LocalnetModel {
     @JsonProperty("parent")
     @JsonPropertyDescription("Parent device to which the device is physically connected")
     public Parent parent;
-    /**
-     * 
-     * (Required)
-     * 
-     */
     @JsonProperty("families")
     public HashMap<String, FamilyLocalnetModel> families;
 
