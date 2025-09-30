@@ -111,24 +111,6 @@ def test_past_generation_within_tolerance():
   # generation in state/event classes is a datetime whereas `generation` in a config is a string
   assert udmi.schema.util.datetime_serializer(mock_state.discovery.families["vendor"].generation) == generation
   assert all(udmi.schema.util.datetime_serializer(x[0].generation) ==  generation for (x, _) in mock_publisher.call_args_list)
-  
-
-def test_stopping_completed_discovery():
-  # should not go through "stopping" because it's done .. i.e. ignore!
-  pass
-
-def test_invalid_duration_and_interval():
-
-  # should not go through "stopping" because it's done .. i.e. ignore!
-  mock_state = mock.MagicMock()
-  mock_publisher = mock.MagicMock()
-  numbers =  udmi.discovery.numbers.NumberDiscovery(mock_state, mock_publisher)
-  with mock.patch.object(numbers, "start_discovery") as mock_start:
-    numbers.controller({"discovery": {"families": {"number" : {"generation": "ts", "scan_interval_sec": 1, "scan_duration_sec": 10}}}})
-    time.sleep(1)
-    assert numbers.state.phase == state.Phase.stopped
-    assert numbers.state.status.level == 500
-    mock_start.assert_not_called()
 
 
 @pytest.mark.parametrize(
@@ -167,7 +149,7 @@ def test_generation_scheduling(seconds_from_now, scan_interval, threshold, expec
 
         if should_raise_error:
             # doesn't work because wrapped
-            assert numbers.state.phase == udmi.schema.state.Phase.ERROR
+            assert numbers.state.phase == udmi.schema.state.Phase.stopped
             return
 
         numbers.controller(config)

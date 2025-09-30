@@ -24,7 +24,7 @@ class Phase(enum.StrEnum):
 
 @dataclasses.dataclass
 class Discovery:
-  generation: str | None = None
+  generation: datetime.datetime | None = None
   phase: Phase | None = None
   status: Status | None = None
   active_count: int | None = None
@@ -61,20 +61,13 @@ class StateSystem:
       default_factory=StateSystemOperation
   )
   serial_no: str | None = None
+  status: Status | None = None
 
 @dataclasses.dataclass
 class LocalnetFamily:
   """State of the localnet."""
 
   addr: str | None = None
-
-
-@dataclasses.dataclass
-class StateLocalnet:
-  """State of the localnet."""
-
-  families: dict[str, LocalnetFamily] = dataclasses.field(default_factory=dict)
-
 
 @dataclasses.dataclass
 class StateLocalnet:
@@ -87,7 +80,7 @@ class StateLocalnet:
 class State:
   """State of the device."""
 
-  timestamp = None
+  timestamp: None | datetime.datetime = None
   version: str = '1.5.1'
   system: StateSystem = dataclasses.field(default_factory=StateSystem)
   localnet: StateLocalnet = dataclasses.field(default_factory=StateLocalnet)

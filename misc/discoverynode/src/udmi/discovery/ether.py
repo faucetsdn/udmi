@@ -34,11 +34,12 @@ class EtherDiscovery(discovery.DiscoveryController):
 
   family = "ether"
 
-  def __init__(self, state, publisher):
+  def __init__(self, state, publisher, *, ping_concurrency: int | None = None):
     self.cancel_threads = threading.Event()
     self.nmap_thread = None
     self.ping_thread = None
     self.last_bathometer_reading = None
+    self.ping_concurrency = ping_concurrency or 4
     super().__init__(state, publisher)
 
   def start_discovery(self) -> None:
@@ -72,7 +73,7 @@ class EtherDiscovery(discovery.DiscoveryController):
     if not target_ips:
       logging.warning("no targets given for ping scan")
       return
-    with concurrent.futures.ThreadPoolExecutor(max_workers=4) as executor:
+    with concurrent.futures.ThreadPoolExecutor(max_workers=self.ping_concurrency) as executor:
       futures = [executor.submit(self.ping_task, ip) for ip in target_ips]
       while (
           future_wait_and_count_outstanding(futures, 1) > 0
@@ -177,7 +178,6 @@ class EtherDiscovery(discovery.DiscoveryController):
             return
 
     logging.info("nmap scan complete, parsing results")
-
     for host in nmap.results_reader(OUTPUT_FILE):
       event = udmi.schema.discovery_event.DiscoveryEvent(
           generation=self.generation,
