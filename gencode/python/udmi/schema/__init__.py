@@ -50,12 +50,16 @@ from .model_cloud import CloudModel
 from .model_cloud_config import CloudConfigModel
 from .model_discovery import DiscoveryModel
 from .model_discovery_family import FamilyDiscoveryModel
+from .model_externals import ExternalsModel
+from .model_externals_link import LinkExternalsModel
 from .model_features import TestingModel
 from .model_gateway import GatewayModel
 from .model_localnet import LocalnetModel
 from .model_localnet_family import FamilyLocalnetModel
 from .model_pointset import PointsetModel
 from .model_pointset_point import PointPointsetModel
+from .model_relationships import RelationshipsModel
+from .model_relationships_link import LinkRelationshipsModel
 from .model_system import SystemModel
 from .model_system_hardware import SystemHardware
 from .model_testing import TestingModel

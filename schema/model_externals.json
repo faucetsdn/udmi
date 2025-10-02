@@ -1,0 +1,14 @@
+{
+  "$udmi_version": "1.5.3",
+  "title": "Externals Model",
+  "description": "Information specific to how the device links with external models",
+  "type": "object",
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "additionalProperties": false,
+  "existingJavaType": "java.util.Map<String, LinkExternalsModel>",
+  "patternProperties": {
+    "^[a-z]+(_[a-z]+)*$": {
+      "$ref": "file:model_externals_link.json"
+    }
+  }
+}
