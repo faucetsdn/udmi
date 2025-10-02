@@ -36,6 +36,7 @@
     },
     "ifc": {
       "entity_id": "a87a9b4b-e9e5-424b-9a4e-22378987dddd",
+      "etag": "98bac980",
       "entity_type": "IfcDoor"
     },
     "json_ld": {

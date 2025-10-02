@@ -7,7 +7,8 @@
     },
     "ifc": {
       "entity_id": "a87a9b4b-e9e5-424b-9a4e-22378987dddd",
-      "entity_type": "IfcDoor"
+      "entity_type": "IfcDoor",
+      "etag": "98bac980"
     },
     "json_ld": {
       "entity_id": "https://dbpedia.org/page/John_Lennon",
@@ -17,11 +18,12 @@
   "gateway": {
     "gateway_id": "GAT-123"
   },
-  "hash": "87373df9",
+  "hash": "bbaa3721",
   "pointset": {
     "exclude_points_from_config": true,
     "points": {
       "split_threshold": {
+        "ref": "iot://SNS-22/split_threshold",
         "units": "Imperial-gallons-per-minute"
       },
       "triangulating_axis": {

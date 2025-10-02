@@ -7,6 +7,7 @@ class LinkExternalsModel:
   def __init__(self):
     self.entity_id = None
     self.entity_type = None
+    self.etag = None
     self.description = None
 
   @staticmethod
@@ -16,6 +17,7 @@ class LinkExternalsModel:
     result = LinkExternalsModel()
     result.entity_id = source.get('entity_id')
     result.entity_type = source.get('entity_type')
+    result.etag = source.get('etag')
     result.description = source.get('description')
     return result
 
@@ -41,6 +43,8 @@ class LinkExternalsModel:
       result['entity_id'] = self.entity_id # 5
     if self.entity_type:
       result['entity_type'] = self.entity_type # 5
+    if self.etag:
+      result['etag'] = self.etag # 5
     if self.description:
       result['description'] = self.description # 5
     return result

@@ -17,6 +17,7 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 @JsonPropertyOrder({
     "entity_id",
     "entity_type",
+    "etag",
     "description"
 })
 public class LinkExternalsModel {
@@ -36,6 +37,13 @@ public class LinkExternalsModel {
     @JsonPropertyDescription("Type of this device in the external model namespace")
     public String entity_type;
     /**
+     * Etag for referencing this external entity
+     * 
+     */
+    @JsonProperty("etag")
+    @JsonPropertyDescription("Etag for referencing this external entity")
+    public String etag;
+    /**
      * Description of this device in the external model namespace
      * 
      */
@@ -46,9 +54,10 @@ public class LinkExternalsModel {
     @Override
     public int hashCode() {
         int result = 1;
-        result = ((result* 31)+((this.entity_id == null)? 0 :this.entity_id.hashCode()));
         result = ((result* 31)+((this.description == null)? 0 :this.description.hashCode()));
+        result = ((result* 31)+((this.etag == null)? 0 :this.etag.hashCode()));
         result = ((result* 31)+((this.entity_type == null)? 0 :this.entity_type.hashCode()));
+        result = ((result* 31)+((this.entity_id == null)? 0 :this.entity_id.hashCode()));
         return result;
     }
 
@@ -61,7 +70,7 @@ public class LinkExternalsModel {
             return false;
         }
         LinkExternalsModel rhs = ((LinkExternalsModel) other);
-        return ((((this.entity_id == rhs.entity_id)||((this.entity_id!= null)&&this.entity_id.equals(rhs.entity_id)))&&((this.description == rhs.description)||((this.description!= null)&&this.description.equals(rhs.description))))&&((this.entity_type == rhs.entity_type)||((this.entity_type!= null)&&this.entity_type.equals(rhs.entity_type))));
+        return (((((this.description == rhs.description)||((this.description!= null)&&this.description.equals(rhs.description)))&&((this.etag == rhs.etag)||((this.etag!= null)&&this.etag.equals(rhs.etag))))&&((this.entity_type == rhs.entity_type)||((this.entity_type!= null)&&this.entity_type.equals(rhs.entity_type))))&&((this.entity_id == rhs.entity_id)||((this.entity_id!= null)&&this.entity_id.equals(rhs.entity_id))));
     }
 
 }
