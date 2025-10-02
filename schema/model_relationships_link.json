@@ -7,7 +7,7 @@
   "additionalProperties": false,
   "properties": {
     "kind": {
-      "description": "The kind of relationsihp between the two nodes",
+      "description": "The kind of relationship between the two nodes",
       "pattern": "^[a-z]+$",
       "type": "string"
     }

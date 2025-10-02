@@ -20,12 +20,12 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 public class LinkRelationshipsModel {
 
     /**
-     * The kind of relationsihp between the two nodes
+     * The kind of relationship between the two nodes
      * (Required)
      * 
      */
     @JsonProperty("kind")
-    @JsonPropertyDescription("The kind of relationsihp between the two nodes")
+    @JsonPropertyDescription("The kind of relationship between the two nodes")
     public String kind;
 
     @Override
