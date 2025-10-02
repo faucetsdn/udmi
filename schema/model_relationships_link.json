@@ -1,0 +1,15 @@
+{
+  "$udmi_version": "1.5.3",
+  "title": "Link Relationships Model",
+  "description": "Information about how this device links relationships to other devices",
+  "type": "object",
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "additionalProperties": false,
+  "properties": {
+    "kind": {
+      "description": "The kind of relationsihp between the two nodes",
+      "pattern": "^[a-z]+$",
+      "type": "string"
+    }
+  }
+}

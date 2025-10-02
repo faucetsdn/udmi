@@ -1,8 +1,23 @@
 {
+  "externals": {
+    "dbo": {
+      "description": "VAV CO 1-2-37",
+      "entity_id": "0060917f-8c21-47c4-b011-52521085fdc3",
+      "entity_type": "HVAC/VAV_SD_DSP"
+    },
+    "ifc": {
+      "entity_id": "a87a9b4b-e9e5-424b-9a4e-22378987dddd",
+      "entity_type": "IfcDoor"
+    },
+    "json_ld": {
+      "entity_id": "https://dbpedia.org/page/John_Lennon",
+      "entity_type": "person"
+    }
+  },
   "gateway": {
     "gateway_id": "GAT-123"
   },
-  "hash": "539a2745",
+  "hash": "87373df9",
   "pointset": {
     "exclude_points_from_config": true,
     "points": {
@@ -14,6 +29,15 @@
       }
     },
     "sample_rate_sec": 30
+  },
+  "relationships": {
+    "AHU-1": {
+      "kind": "feeds"
+    },
+    "AHU-22": {},
+    "SNS-4": {
+      "kind": "contains"
+    }
   },
   "system": {
     "location": {

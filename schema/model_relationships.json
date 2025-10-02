@@ -1,0 +1,14 @@
+{
+  "$udmi_version": "1.5.3",
+  "title": "Relationships Model",
+  "description": "Information for modeling noun-verb-noun relationships between devices",
+  "type": "object",
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "additionalProperties": false,
+  "existingJavaType": "java.util.Map<String, LinkRelationshipsModel>",
+  "patternProperties": {
+    "^[A-Z]{2,6}-[1-9][0-9]*$": {
+      "$ref": "file:model_relationships_link.json"
+    }
+  }
+}
