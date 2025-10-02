@@ -10,7 +10,7 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 /**
  * Link Relationships Model
  * <p>
- * Information about how this device links relationships to other devices
+ * Information about how this device relates to another device
  * 
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
@@ -21,6 +21,7 @@ public class LinkRelationshipsModel {
 
     /**
      * The kind of relationsihp between the two nodes
+     * (Required)
      * 
      */
     @JsonProperty("kind")

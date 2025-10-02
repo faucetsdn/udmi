@@ -1,9 +1,9 @@
 {
   "$udmi_version": "1.5.3",
   "title": "Link Relationships Model",
-  "description": "Information about how this device links relationships to other devices",
-  "type": "object",
+  "description": "Information about how this device relates to another device",
   "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
   "additionalProperties": false,
   "properties": {
     "kind": {
@@ -11,5 +11,8 @@
       "pattern": "^[a-z]+$",
       "type": "string"
     }
-  }
+  },
+  "required": [
+    "kind"
+  ]
 }

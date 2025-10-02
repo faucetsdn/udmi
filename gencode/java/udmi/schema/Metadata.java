@@ -3,6 +3,7 @@ package udmi.schema;
 
 import java.util.Date;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -102,7 +103,7 @@ public class Metadata {
      */
     @JsonProperty("relationships")
     @JsonPropertyDescription("Information for modeling noun-verb-noun relationships between devices")
-    public Map<String, LinkRelationshipsModel> relationships;
+    public Map<String, List<LinkRelationshipsModel>> relationships;
     /**
      * Externals Model
      * <p>

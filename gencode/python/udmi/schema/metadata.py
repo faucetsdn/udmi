@@ -45,7 +45,7 @@ class Metadata:
     result.operation = source.get('operation')
     result.cloud = CloudModel.from_dict(source.get('cloud'))
     result.system = SystemModel.from_dict(source.get('system'))
-    result.relationships = LinkRelationshipsModel.map_from(source.get('relationships'))
+    result.relationships = source.get('relationships')
     result.externals = LinkExternalsModel.map_from(source.get('externals'))
     result.gateway = GatewayModel.from_dict(source.get('gateway'))
     result.discovery = DiscoveryModel.from_dict(source.get('discovery'))
@@ -89,7 +89,7 @@ class Metadata:
     if self.system:
       result['system'] = self.system.to_dict() # 4
     if self.relationships:
-      result['relationships'] = LinkRelationshipsModel.expand_dict(self.relationships) # 2
+      result['relationships'] = self.relationships # 1
     if self.externals:
       result['externals'] = LinkExternalsModel.expand_dict(self.externals) # 2
     if self.gateway:
