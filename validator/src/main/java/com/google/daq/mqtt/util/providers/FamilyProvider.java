@@ -62,7 +62,7 @@ public interface FamilyProvider {
     checkState(familyPrefix.equals(parts[0]), format("Given family %s does not match expectd %s",
         familyPrefix, parts[0]));
     ifTrueThen(parts[1].length() > 0, () -> validateNetwork(parts[1]));
-    validateAddr(parts[2]);
+    validateAddrUrl(parts[2]);
     ifTrueThen(parts.length > 3, () -> validatePoint(parts[3]));
   }
 
@@ -82,6 +82,13 @@ public interface FamilyProvider {
    * Validate a family address.
    */
   void validateAddr(String scanAddr);
+
+  /**
+   * Validate a family address as part of a URL.
+   */
+  default void validateAddrUrl(String urlAddr) {
+    validateAddr(urlAddr); // By default do nothing different, since that's the common case.
+  }
 
   /**
    * Validate the given point ref for the address family.

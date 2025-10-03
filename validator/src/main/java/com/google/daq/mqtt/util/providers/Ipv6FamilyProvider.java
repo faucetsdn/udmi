@@ -23,15 +23,7 @@ public class Ipv6FamilyProvider implements FamilyProvider {
   }
 
   @Override
-  public void validateAddr(String fullAddr) {
-    requireNonNull(fullAddr, "missing required ipv6 scan_addr");
-
-    int closingBracketIndex = fullAddr.lastIndexOf(']');
-    checkState(fullAddr.startsWith("[") && closingBracketIndex != -1,
-        "IPv6 address in ref must be bracketed, e.g., [::1]");
-
-    String address = fullAddr.substring(1, closingBracketIndex);
-
+  public void validateAddr(String address) {
     try {
       InetAddress addr = InetAddresses.forString(address);
       checkState(addr instanceof Inet6Address, "Address is not IPv6");
@@ -43,10 +35,23 @@ public class Ipv6FamilyProvider implements FamilyProvider {
       throw new IllegalStateException(
           format("ipv6 scan_addr %s is not a valid IPv6 address", address));
     }
+  }
 
-    if (fullAddr.length() > closingBracketIndex) {
-      checkState(fullAddr.charAt(closingBracketIndex + 1) == ':',
-          "Missing port designator after brackets");
+  @Override
+  public void validateAddrUrl(String fullAddr) {
+    requireNonNull(fullAddr, "missing required ipv6 scan_addr");
+
+    int closingBracketIndex = fullAddr.lastIndexOf(']');
+    checkState(closingBracketIndex > 0, "Missing encompassing brackets");
+
+    String address = fullAddr.substring(1, closingBracketIndex);
+
+    validateAddr(address);
+
+    int afterBracket = closingBracketIndex + 1;
+    if (fullAddr.length() > afterBracket) {
+      checkState(fullAddr.charAt(afterBracket) == ':',
+          "Missing port designator affullAddr.lengthter brackets");
       String portStr = fullAddr.substring(closingBracketIndex + 2);
       int port = Integer.parseInt(portStr);
       checkState(port >= 0 && port <= MAX_PORT_VALUE,
@@ -63,8 +68,8 @@ public class Ipv6FamilyProvider implements FamilyProvider {
 
     validateAddr(parts[0]);
 
-    int prefix = Integer.parseInt(parts[1]);
-    checkState(prefix >= 0 && prefix <= MAX_PREFIX_LENGTH,
-        format("ipv6 network prefix %s exceeds maximum %d", prefix, MAX_PREFIX_LENGTH));
+    int prefixLen = Integer.parseInt(parts[1]);
+    checkState(prefixLen >= 0 && prefixLen <= MAX_PREFIX_LENGTH,
+        format("ipv6 network prefix %s exceeds maximum %d", prefixLen, MAX_PREFIX_LENGTH));
   }
 }
