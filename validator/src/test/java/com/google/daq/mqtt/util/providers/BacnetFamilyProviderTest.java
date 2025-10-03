@@ -47,8 +47,8 @@ public class BacnetFamilyProviderTest {
 
   BacnetFamilyProvider provider = new BacnetFamilyProvider();
 
-  private String validateRef(String ref) {
-    return catchToMessage(() -> provider.validateRef(ref));
+  private String validateUrl(String ref) {
+    return catchToMessage(() -> provider.validateUrl(ref));
   }
 
   private String validateAddr(String addr) {
@@ -61,10 +61,10 @@ public class BacnetFamilyProviderTest {
 
   @Test
   public void bacnet_ref_validation() {
-    List<String> goodErrors = GOOD_REFERENCES.stream().map(this::validateRef)
+    List<String> goodErrors = GOOD_REFERENCES.stream().map(this::validateUrl)
         .filter(GeneralUtils::isNotEmpty).toList();
     assertTrue("Unexpected ref errors: " + CSV_JOINER.join(goodErrors), goodErrors.isEmpty());
-    List<String> badErrors = BAD_REFERENCES.stream().map(this::validateRef)
+    List<String> badErrors = BAD_REFERENCES.stream().map(this::validateUrl)
         .filter(GeneralUtils::isNotEmpty).toList();
     assertEquals("Not enough validation errors", BAD_REFERENCES.size(), badErrors.size());
   }

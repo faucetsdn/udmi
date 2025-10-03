@@ -86,12 +86,12 @@ public class FqdnFamilyProviderTest {
   @Test
   public void fqdn_ref_validation() {
     List<String> goodErrors = GOOD_REFERENCES.stream()
-        .map(ref -> validate(() -> provider.validateRef(ref)))
+        .map(ref -> validate(() -> provider.validateUrl(ref)))
         .filter(GeneralUtils::isNotEmpty).toList();
     assertTrue("Unexpected ref errors: " + CSV_JOINER.join(goodErrors), goodErrors.isEmpty());
 
     List<String> badErrors = BAD_REFERENCES.stream()
-        .map(ref -> validate(() -> provider.validateRef(ref)))
+        .map(ref -> validate(() -> provider.validateUrl(ref)))
         .filter(GeneralUtils::isNotEmpty).toList();
     assertEquals("Not enough validation errors for refs", BAD_REFERENCES.size(), badErrors.size());
   }

@@ -23,40 +23,34 @@ public class Ipv6FamilyProvider implements FamilyProvider {
   }
 
   @Override
-  public void validateRef(String refValue) {
-    requireNonNull(refValue, "missing required ipv6 point ref");
-    checkState(refValue.startsWith("ipv6://"), "ipv6 ref must start with 'ipv6://'");
-    String core = refValue.substring("ipv6://".length());
+  public void validateAddr(String fullAddr) {
+    requireNonNull(fullAddr, "missing required ipv6 scan_addr");
 
-    int closingBracketIndex = core.lastIndexOf(']');
-    checkState(core.startsWith("[") && closingBracketIndex != -1,
+    int closingBracketIndex = fullAddr.lastIndexOf(']');
+    checkState(fullAddr.startsWith("[") && closingBracketIndex != -1,
         "IPv6 address in ref must be bracketed, e.g., [::1]");
 
-    String address = core.substring(1, closingBracketIndex);
-    validateAddr(address);
-
-    checkState(core.charAt(closingBracketIndex + 1) == ':',
-        "Missing port after brackets");
-    String portStr = core.substring(closingBracketIndex + 2);
-    int port = Integer.parseInt(portStr);
-    checkState(port >= 0 && port <= MAX_PORT_VALUE,
-        format("ipv6 ref port %s exceeds maximum %d", port, MAX_PORT_VALUE));
-  }
-
-  @Override
-  public void validateAddr(String scanAddr) {
-    requireNonNull(scanAddr, "missing required ipv6 scan_addr");
+    String address = fullAddr.substring(1, closingBracketIndex);
 
     try {
-      InetAddress addr = InetAddresses.forString(scanAddr);
+      InetAddress addr = InetAddresses.forString(address);
       checkState(addr instanceof Inet6Address, "Address is not IPv6");
 
       String canonicalAddr = InetAddresses.toAddrString(addr);
-      checkState(scanAddr.equals(canonicalAddr),
+      checkState(address.equals(canonicalAddr),
           "Address is not in canonical form. Expected: " + canonicalAddr);
     } catch (IllegalArgumentException e) {
       throw new IllegalStateException(
-          format("ipv6 scan_addr %s is not a valid IPv6 address", scanAddr));
+          format("ipv6 scan_addr %s is not a valid IPv6 address", address));
+    }
+
+    if (fullAddr.length() > closingBracketIndex) {
+      checkState(fullAddr.charAt(closingBracketIndex + 1) == ':',
+          "Missing port designator after brackets");
+      String portStr = fullAddr.substring(closingBracketIndex + 2);
+      int port = Integer.parseInt(portStr);
+      checkState(port >= 0 && port <= MAX_PORT_VALUE,
+          format("ipv6 ref port %s exceeds maximum %d", port, MAX_PORT_VALUE));
     }
   }
 

@@ -28,13 +28,6 @@ public class EtherFamilyProvider implements FamilyProvider {
   }
 
   @Override
-  public void validateRef(String refValue) {
-    requireNonNull(refValue, "missing required ether point ref");
-    checkState(ETHER_REF.matcher(refValue).matches(),
-        format("protocol ref %s does not match expression %s", refValue, ETHER_REF.pattern()));
-  }
-
-  @Override
   public void validateAddr(String scanAddr) {
     requireNonNull(scanAddr, "missing required ether scan_addr");
     checkState(ETHER_ADDR.matcher(scanAddr).matches(),
