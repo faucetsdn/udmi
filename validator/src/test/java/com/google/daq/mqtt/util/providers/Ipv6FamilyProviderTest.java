@@ -89,10 +89,10 @@ public class Ipv6FamilyProviderTest {
 
   @Test
   public void ipv6_ref_validation() {
-//    List<String> goodErrors = GOOD_REFERENCES.stream()
-//        .map(ref -> validate(() -> provider.validateUrl(ref)))
-//        .filter(GeneralUtils::isNotEmpty).toList();
-//    assertTrue("Unexpected ref errors: " + CSV_JOINER.join(goodErrors), goodErrors.isEmpty());
+    List<String> goodErrors = GOOD_REFERENCES.stream()
+        .map(ref -> validate(() -> provider.validateUrl(ref)))
+        .filter(GeneralUtils::isNotEmpty).toList();
+    assertTrue("Unexpected ref errors: " + CSV_JOINER.join(goodErrors), goodErrors.isEmpty());
 
     List<String> badErrors = BAD_REFERENCES.stream()
         .map(ref -> validate(() -> provider.validateUrl(ref)))

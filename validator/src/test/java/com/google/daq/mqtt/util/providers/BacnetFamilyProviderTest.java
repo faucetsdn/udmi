@@ -26,12 +26,13 @@ public class BacnetFamilyProviderTest {
   public static final Set<String> GOOD_REFERENCES = ImmutableSet.of(
       "bacnet://291842/AI:2#present_value",
       "bacnet://29212/AI:2#something_else",
-      "bacnet://0/DO:0",
+      "bacnet://3/DO:0",
       "bacnet://1/AI:2",
       "bacnet://291842/BO:21");
 
   public static final Set<String> BAD_REFERENCES = ImmutableSet.of(
       "bacnet://-82/AI:2#present_value",
+      "bacnet://0/DO:2",
       "bacnet://091842/AI:2#present_value",
       "bacnet://other/AI:2#present_value",
       "bacnet://291842/AI:2#something-else",
