@@ -13,7 +13,6 @@ import java.net.Inet4Address;
  */
 public class Ipv4FamilyProvider implements FamilyProvider {
 
-  private static final int MAX_PORT_VALUE = 65535;
   private static final int MAX_PREFIX_LENGTH = 32;
   public static final String CIDR_SEPARATOR = "/";
 
@@ -25,18 +24,10 @@ public class Ipv4FamilyProvider implements FamilyProvider {
   @Override
   public void validateAddr(String fullAddr) {
     requireNonNull(fullAddr, "missing required ipv4 scan_addr");
-    String[] parts = fullAddr.split(":", 2);
 
-    String baseAddr = parts[0];
-    checkState(InetAddresses.isInetAddress(baseAddr)
-            && InetAddresses.forString(baseAddr) instanceof Inet4Address,
-        format("ipv4 scan_addr %s is not a valid IPv4 address", baseAddr));
-
-    if (parts.length > 1) {
-      int port = Integer.parseInt(parts[1]);
-      checkState(port >= 0 && port <= MAX_PORT_VALUE,
-          format("ipv4 ref port %s exceeds maximum %d", port, MAX_PORT_VALUE));
-    }
+    checkState(InetAddresses.isInetAddress(fullAddr)
+            && InetAddresses.forString(fullAddr) instanceof Inet4Address,
+        format("ipv4 scan_addr %s is not a valid IPv4 address", fullAddr));
   }
 
   @Override

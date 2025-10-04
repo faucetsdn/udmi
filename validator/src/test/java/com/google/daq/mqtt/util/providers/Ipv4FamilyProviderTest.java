@@ -44,11 +44,11 @@ public class Ipv4FamilyProviderTest {
   );
 
   public static final Set<String> GOOD_REFERENCES = ImmutableSet.of(
+      "ipv4://192.168.1.1",
       "ipv4://192.168.1.1:8080",
       "ipv4://8.8.8.8:53"
   );
   public static final Set<String> BAD_REFERENCES = ImmutableSet.of(
-      "ipv4://192.168.1.1",         // No port
       "ipv4://192.168.1.256:80",    // Invalid address
       "ipv4://192.168.1.1:99999",   // Invalid port
       "http://192.168.1.1:80"       // Wrong scheme

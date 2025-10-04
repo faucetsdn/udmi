@@ -14,7 +14,8 @@ import java.util.stream.Collectors;
  */
 public interface FamilyProvider {
 
-  public static final String ALTERNATE_CIDR_SEPARATOR = "#";
+  int MAX_PORT_VALUE = 65535;
+  String PORT_SEPARATOR = ":";
 
   /**
    * Set of all the supported protocol families.
@@ -59,7 +60,7 @@ public interface FamilyProvider {
     String[] parts = url.split("/", 4);
     checkState(parts.length >= 3, "Expected at least 3 parts, had " + parts.length);
     String familyPrefix = familyKey() + ":";
-    checkState(familyPrefix.equals(parts[0]), format("Given family %s does not match expectd %s",
+    checkState(familyPrefix.equals(parts[0]), format("Given family %s does not match expected %s",
         familyPrefix, parts[0]));
     ifTrueThen(parts[1].length() > 0, () -> validateNetwork(parts[1]));
     validateAddrUrl(parts[2]);
@@ -79,15 +80,29 @@ public interface FamilyProvider {
   }
 
   /**
-   * Validate a family address.
+   * Validate a standalone family address.
    */
   void validateAddr(String scanAddr);
 
   /**
-   * Validate a family address as part of a URL.
+   * Validate a family address as part of a URL, which may have an associated port with it.
    */
   default void validateAddrUrl(String urlAddr) {
-    validateAddr(urlAddr); // By default do nothing different, since that's the common case.
+    validateAddr(validatePort(urlAddr));
+  }
+
+  /**
+   * Validate and remove the port (if present), from a URL hostname designator.
+   */
+  default String validatePort(String urlAddr) {
+    int separatorIndex = urlAddr.lastIndexOf(PORT_SEPARATOR);
+    if (separatorIndex >= 0) {
+      int port = Integer.parseInt(urlAddr.substring(separatorIndex + 1));
+      checkState(port >= 0 && port <= MAX_PORT_VALUE,
+          format("ipv4 ref port %s exceeds maximum %d", port, MAX_PORT_VALUE));
+      return urlAddr.substring(0, separatorIndex);
+    }
+    return urlAddr;
   }
 
   /**

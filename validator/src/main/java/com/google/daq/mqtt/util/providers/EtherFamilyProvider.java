@@ -27,6 +27,11 @@ public class EtherFamilyProvider implements FamilyProvider {
     return ETHER;
   }
 
+  public String validatePort(String urlAddr) {
+    // Ethernet addresses don't support ports, so always assume it's just a raw address.
+    return urlAddr;
+  }
+
   @Override
   public void validateAddr(String scanAddr) {
     requireNonNull(scanAddr, "missing required ether scan_addr");

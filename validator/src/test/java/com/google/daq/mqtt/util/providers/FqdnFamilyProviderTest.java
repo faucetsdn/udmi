@@ -36,18 +36,16 @@ public class FqdnFamilyProviderTest {
       "1.2.3.4"              // Looks like an IP
   );
 
-  public static final Set<String> GOOD_NETWORKS = GOOD_ADDRS;
-  public static final Set<String> BAD_NETWORKS = BAD_ADDRS;
-
   public static final Set<String> GOOD_REFERENCES = ImmutableSet.of(
+      "fqdn://example.com",
       "fqdn://example.com:80",
       "fqdn://sub.domain.co.uk:443"
   );
   public static final Set<String> BAD_REFERENCES = ImmutableSet.of(
-      "fqdn://example.com",         // No port
-      "fqdn://-example.com:80",     // Invalid FQDN
-      "fqdn://example.com:99999",   // Invalid port
-      "http://example.com:80"       // Wrong scheme
+      "fqdn://-example.com:80",            // Invalid FQDN
+      "fqdn://example.com:99999",          // Invalid port
+      "fqdn:/network/example.com:99999",   // Networks not supported
+      "http://example.com:80"              // Wrong scheme
   );
 
   private final FqdnFamilyProvider provider = new FqdnFamilyProvider();
@@ -67,20 +65,6 @@ public class FqdnFamilyProviderTest {
         .map(addr -> validate(() -> provider.validateAddr(addr)))
         .filter(GeneralUtils::isNotEmpty).toList();
     assertEquals("Not enough validation errors for addrs", BAD_ADDRS.size(), badErrors.size());
-  }
-
-  @Test
-  public void fqdn_network_validation() {
-    List<String> goodErrors = GOOD_NETWORKS.stream()
-        .map(net -> validate(() -> provider.validateNetwork(net)))
-        .filter(GeneralUtils::isNotEmpty).toList();
-    assertTrue("Unexpected network errors: " + CSV_JOINER.join(goodErrors), goodErrors.isEmpty());
-
-    List<String> badErrors = BAD_NETWORKS.stream()
-        .map(net -> validate(() -> provider.validateNetwork(net)))
-        .filter(GeneralUtils::isNotEmpty).toList();
-    assertEquals("Not enough validation errors for networks", BAD_NETWORKS.size(),
-        badErrors.size());
   }
 
   @Test

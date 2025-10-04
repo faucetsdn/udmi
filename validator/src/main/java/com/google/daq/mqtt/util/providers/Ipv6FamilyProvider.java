@@ -14,8 +14,9 @@ import java.net.InetAddress;
  */
 public class Ipv6FamilyProvider implements FamilyProvider {
 
-  private static final int MAX_PORT_VALUE = 65535;
   private static final int MAX_PREFIX_LENGTH = 128;
+  private static final String STARTING_BRACKET = "[";
+  private static final String ENDING_BRACKET = "]";
 
   @Override
   public String familyKey() {
@@ -38,25 +39,20 @@ public class Ipv6FamilyProvider implements FamilyProvider {
   }
 
   @Override
-  public void validateAddrUrl(String fullAddr) {
-    requireNonNull(fullAddr, "missing required ipv6 scan_addr");
+  public void validateAddrUrl(String urlAddr) {
+    requireNonNull(urlAddr, "missing required ipv6 scan_addr");
 
-    int closingBracketIndex = fullAddr.lastIndexOf(']');
-    checkState(closingBracketIndex > 0, "Missing encompassing brackets");
+    int lastBracket = urlAddr.lastIndexOf(ENDING_BRACKET);
+    int lastColon = urlAddr.lastIndexOf(PORT_SEPARATOR);
 
-    String address = fullAddr.substring(1, closingBracketIndex);
+    // Don't rely on the default port detection logic, because it gets confused with IPv6 colons.
+    String fullAddr = lastColon == lastBracket + 1 ? validatePort(urlAddr) : urlAddr;
 
+    checkState(fullAddr.startsWith(STARTING_BRACKET), "URL missing starting " + STARTING_BRACKET);
+    checkState(fullAddr.endsWith(ENDING_BRACKET), "URL missing ending " + ENDING_BRACKET);
+
+    String address = fullAddr.substring(1, fullAddr.length() - 1);
     validateAddr(address);
-
-    int afterBracket = closingBracketIndex + 1;
-    if (fullAddr.length() > afterBracket) {
-      checkState(fullAddr.charAt(afterBracket) == ':',
-          "Missing port designator affullAddr.lengthter brackets");
-      String portStr = fullAddr.substring(closingBracketIndex + 2);
-      int port = Integer.parseInt(portStr);
-      checkState(port >= 0 && port <= MAX_PORT_VALUE,
-          format("ipv6 ref port %s exceeds maximum %d", port, MAX_PORT_VALUE));
-    }
   }
 
   @Override
