@@ -26,12 +26,13 @@ public class BacnetFamilyProviderTest {
   public static final Set<String> GOOD_REFERENCES = ImmutableSet.of(
       "bacnet://291842/AI:2#present_value",
       "bacnet://29212/AI:2#something_else",
-      "bacnet://0/DO:0",
+      "bacnet://3/DO:0",
       "bacnet://1/AI:2",
       "bacnet://291842/BO:21");
 
   public static final Set<String> BAD_REFERENCES = ImmutableSet.of(
       "bacnet://-82/AI:2#present_value",
+      "bacnet://0/DO:2",
       "bacnet://091842/AI:2#present_value",
       "bacnet://other/AI:2#present_value",
       "bacnet://291842/AI:2#something-else",
@@ -47,8 +48,8 @@ public class BacnetFamilyProviderTest {
 
   BacnetFamilyProvider provider = new BacnetFamilyProvider();
 
-  private String validateRef(String ref) {
-    return catchToMessage(() -> provider.validateRef(ref));
+  private String validateUrl(String ref) {
+    return catchToMessage(() -> provider.validateUrl(ref));
   }
 
   private String validateAddr(String addr) {
@@ -61,10 +62,10 @@ public class BacnetFamilyProviderTest {
 
   @Test
   public void bacnet_ref_validation() {
-    List<String> goodErrors = GOOD_REFERENCES.stream().map(this::validateRef)
+    List<String> goodErrors = GOOD_REFERENCES.stream().map(this::validateUrl)
         .filter(GeneralUtils::isNotEmpty).toList();
     assertTrue("Unexpected ref errors: " + CSV_JOINER.join(goodErrors), goodErrors.isEmpty());
-    List<String> badErrors = BAD_REFERENCES.stream().map(this::validateRef)
+    List<String> badErrors = BAD_REFERENCES.stream().map(this::validateUrl)
         .filter(GeneralUtils::isNotEmpty).toList();
     assertEquals("Not enough validation errors", BAD_REFERENCES.size(), badErrors.size());
   }

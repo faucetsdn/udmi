@@ -27,11 +27,9 @@ public class EtherFamilyProvider implements FamilyProvider {
     return ETHER;
   }
 
-  @Override
-  public void validateRef(String refValue) {
-    requireNonNull(refValue, "missing required ether point ref");
-    checkState(ETHER_REF.matcher(refValue).matches(),
-        format("protocol ref %s does not match expression %s", refValue, ETHER_REF.pattern()));
+  public String validatePort(String urlAddr) {
+    // Ethernet addresses don't support ports, so always assume it's just a raw address.
+    return urlAddr;
   }
 
   @Override

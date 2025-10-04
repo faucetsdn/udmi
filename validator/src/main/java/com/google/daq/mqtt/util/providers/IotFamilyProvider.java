@@ -14,12 +14,7 @@ public class IotFamilyProvider implements FamilyProvider {
   }
 
   @Override
-  public void validateRef(String metadataRef) {
-    // Always passes, no restrictions!
-  }
-
-  @Override
-  public void validateAddr(String scanAddr) {
-    // Always passes, no restrictions!
+  public void validateAddr(String addr) {
+    // TODO: Make this lookup the address as a device in the siteModel.
   }
 }

@@ -44,11 +44,11 @@ public class Ipv4FamilyProviderTest {
   );
 
   public static final Set<String> GOOD_REFERENCES = ImmutableSet.of(
+      "ipv4://192.168.1.1",
       "ipv4://192.168.1.1:8080",
       "ipv4://8.8.8.8:53"
   );
   public static final Set<String> BAD_REFERENCES = ImmutableSet.of(
-      "ipv4://192.168.1.1",         // No port
       "ipv4://192.168.1.256:80",    // Invalid address
       "ipv4://192.168.1.1:99999",   // Invalid port
       "http://192.168.1.1:80"       // Wrong scheme
@@ -90,12 +90,12 @@ public class Ipv4FamilyProviderTest {
   @Test
   public void ipv4_ref_validation() {
     List<String> goodErrors = GOOD_REFERENCES.stream()
-        .map(ref -> validate(() -> provider.validateRef(ref)))
+        .map(ref -> validate(() -> provider.validateUrl(ref)))
         .filter(GeneralUtils::isNotEmpty).toList();
     assertTrue("Unexpected ref errors: " + CSV_JOINER.join(goodErrors), goodErrors.isEmpty());
 
     List<String> badErrors = BAD_REFERENCES.stream()
-        .map(ref -> validate(() -> provider.validateRef(ref)))
+        .map(ref -> validate(() -> provider.validateUrl(ref)))
         .filter(GeneralUtils::isNotEmpty).toList();
     assertEquals("Not enough validation errors for refs", BAD_REFERENCES.size(), badErrors.size());
   }

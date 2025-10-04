@@ -38,19 +38,20 @@ public class Ipv6FamilyProviderTest {
   );
   public static final Set<String> BAD_NETWORKS = ImmutableSet.of(
       "2001:db8::",              // No prefix
-      "2001:db8::/129",           // Prefix out of range
-      "2001:DB8::/32"             // Non-canonical address part
+      "2001:db8::/129",          // Prefix out of range
+      "2001:DB8::/32"            // Non-canonical address part
   );
 
   public static final Set<String> GOOD_REFERENCES = ImmutableSet.of(
       "ipv6://[2001:db8::1]:8080",
+      "ipv6://[2001:db8::1]",
       "ipv6://[::1]:443"
   );
   public static final Set<String> BAD_REFERENCES = ImmutableSet.of(
       "ipv6://2001:db8::1:8080",      // No brackets
       "ipv6://[2001:DB8::1]:8080",    // Non-canonical address
       "ipv6://[::1]:99999",           // Invalid port
-      "http://[::1]:80"              // Wrong scheme
+      "http://[::1]:80"               // Wrong scheme
   );
 
   private final Ipv6FamilyProvider provider = new Ipv6FamilyProvider();
@@ -89,12 +90,12 @@ public class Ipv6FamilyProviderTest {
   @Test
   public void ipv6_ref_validation() {
     List<String> goodErrors = GOOD_REFERENCES.stream()
-        .map(ref -> validate(() -> provider.validateRef(ref)))
+        .map(ref -> validate(() -> provider.validateUrl(ref)))
         .filter(GeneralUtils::isNotEmpty).toList();
     assertTrue("Unexpected ref errors: " + CSV_JOINER.join(goodErrors), goodErrors.isEmpty());
 
     List<String> badErrors = BAD_REFERENCES.stream()
-        .map(ref -> validate(() -> provider.validateRef(ref)))
+        .map(ref -> validate(() -> provider.validateUrl(ref)))
         .filter(GeneralUtils::isNotEmpty).toList();
     assertEquals("Not enough validation errors for refs", BAD_REFERENCES.size(), badErrors.size());
   }
