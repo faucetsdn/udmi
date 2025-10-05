@@ -47,9 +47,6 @@
         "section": "system"
       }
     },
-    "relationships": {
-      "$ref": "file:model_relationships.json#"
-    },
     "externals": {
       "$ref": "file:model_externals.json#"
     },

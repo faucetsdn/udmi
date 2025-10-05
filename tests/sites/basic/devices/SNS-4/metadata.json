@@ -23,11 +23,6 @@
       }
     }
   },
-  "relationships": {
-    "AHU-1": [{ "kind": "feeds" }],
-    "AHU-22": [],
-    "SNS-4": [{ "kind": "contains" }]
-  },
   "externals": {
     "dbo": {
       "entity_id": "0060917f-8c21-47c4-b011-52521085fdc3",
