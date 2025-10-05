@@ -1,0 +1,47 @@
+{
+  "gateway": {
+    "gateway_id": "GAT-123"
+  },
+  "hash": "560d4018",
+  "pointset": {
+    "exclude_points_from_config": true,
+    "points": {
+      "split_threshold": {
+        "units": "Imperial-gallons-per-minute"
+      },
+      "triangulating_axis": {
+        "units": "Degrees-phase"
+      }
+    },
+    "sample_rate_sec": 30
+  },
+  "relationships": {
+    "AHU-1": [
+      {
+        "kind": "feeds"
+      }
+    ],
+    "AHU-22": [],
+    "SNS-4": [
+      {
+        "kind": "contains"
+      }
+    ]
+  },
+  "system": {
+    "location": {
+      "section": "2-3N8C",
+      "site": "ZZ-TRI-FECTA"
+    },
+    "min_loglevel": 300,
+    "physical_tag": {
+      "asset": {
+        "guid": "drw://TBA",
+        "name": "SNS-4",
+        "site": "ZZ-TRI-FECTA"
+      }
+    }
+  },
+  "timestamp": "2020-05-01T13:39:07Z",
+  "version": "1.5.2"
+}
