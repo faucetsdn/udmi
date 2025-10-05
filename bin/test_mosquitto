@@ -1,4 +1,4 @@
-#!/bin/bash -eux
+#!/bin/bash -eu
 
 UDMI_ROOT=$(dirname $0)/..
 cd $UDMI_ROOT
@@ -116,23 +116,8 @@ echo Checking received end message
 fgrep Rudolph out/mosquitto.sub || fail did not find expected message
 
 echo Checking messages for matching serial no $serial_no
-fgrep operational out/mosquitto.sub | wc -l 
-fgrep operational out/mosquitto.sub | head -n 1
-echo mark A && sleep 1
-fgrep operational out/mosquitto.sub | head -n 1 | sed -E 's/^[^{]+//'
-echo mark B && sleep 1
-fgrep operational out/mosquitto.sub | head -n 1 | sed -E 's/^[^{]+//' > foo.json
-echo mark C && sleep 1
-jq -r .system.serial_no foo.json || true
-echo mark D && sleep 1
-fgrep operational out/mosquitto.sub | head -n 1 | sed -E 's/^[^{]+//' | jq -r .system.serial_no
-echo mark E && sleep 1
 received_no=$(fgrep operational out/mosquitto.sub | head -n 1 | sed -E 's/^[^{]+//' | jq -r .system.serial_no)
-echo mark F && sleep 1
-echo received_no $received_no
-echo mark G && sleep 1
 received_topic=$(fgrep operational out/mosquitto.sub | head -n 1 | awk '{ print $1 }')
-echo received_topic $received_topic
 [[ -z $received_topic ]] && fail No matching receive message found.
 
 expected_topic=/r/$registry_id/d/$device_id/state

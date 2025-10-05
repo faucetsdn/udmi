@@ -18,12 +18,11 @@
   "gateway": {
     "gateway_id": "GAT-123"
   },
-  "hash": "fb37d53c",
+  "hash": "013a595b",
   "pointset": {
     "exclude_points_from_config": true,
     "points": {
       "split_threshold": {
-        "ref": "iot://SNS-22/split_threshold",
         "units": "Imperial-gallons-per-minute"
       },
       "triangulating_axis": {
