@@ -2,6 +2,7 @@
   "gateway": {
     "proxy_ids": [
       "AHU-22",
+      "SNS-4",
       "SNS-8"
     ]
   },
