@@ -6,7 +6,6 @@
         "units": "Degrees-phase"
       },
       "split_threshold": {
-        "ref": "iot://SNS-22/split_threshold",
         "units": "Imperial-gallons-per-minute"
       }
     }
