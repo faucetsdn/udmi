@@ -1,2 +1,5 @@
 Exceptions for SNS-4
-  gateway_id mismatch for SNS-4: GAT-123 != GAT-72
+  While loading device metadata for SNS-4
+    While converting strict to udmi.schema.Metadata
+      While converting string/string to udmi.schema.Metadata
+        Unrecognized field "relationships" (class udmi.schema.Metadata), not marked as ignorable (15 known properties: "upgraded_from", "gateway", "operation", "externals", "hash", "system", "discovery", "localnet", "structure", "cloud", "timestamp", "version", "features", "testing", "pointset"]) at [Source: (String)"{ "gateway" : { "gateway_id" : "GAT-123" }, "pointset" : { "exclude_points_from_config" : true, "points" : { "split_threshold" : { "units" : "Imperial-gallons-per-minute" }, "triangulating_axis" : { "units" : "Degrees-phase" } }, "sample_rate_sec" : 30 }, "relationships" : { "AHU-1" : [ { "kind" : "feeds" } ], "AHU-22" : [ ], "SNS-4" : [ { "kind" : "contains" } ] }, "system" : { "locatio"[truncated 283 chars]; line: 17, column: 22] (through reference chain: udmi.schema.Metadata["relationships"])

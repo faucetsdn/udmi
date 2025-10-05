@@ -6,11 +6,10 @@
   "gateway": {
     "proxy_ids": [
       "AHU-22",
-      "SNS-4",
       "SNS-8"
     ]
   },
-  "hash": "6bdf3f23",
+  "hash": "51f5948a",
   "localnet": {
     "families": {
       "vendor": {
