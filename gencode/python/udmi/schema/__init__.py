@@ -50,8 +50,6 @@ from .model_cloud import CloudModel
 from .model_cloud_config import CloudConfigModel
 from .model_discovery import DiscoveryModel
 from .model_discovery_family import FamilyDiscoveryModel
-from .model_externals import ExternalsModel
-from .model_externals_link import LinkExternalsModel
 from .model_features import TestingModel
 from .model_gateway import GatewayModel
 from .model_localnet import LocalnetModel

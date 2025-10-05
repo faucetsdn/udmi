@@ -47,12 +47,6 @@
         "section": "system"
       }
     },
-    "relationships": {
-      "$ref": "file:model_relationships.json#"
-    },
-    "externals": {
-      "$ref": "file:model_externals.json#"
-    },
     "gateway": {
       "$ref": "file:model_gateway.json#",
       "$presentation": {
@@ -61,6 +55,9 @@
     },
     "discovery": {
       "$ref": "file:model_discovery.json#"
+    },
+    "relationships": {
+      "$ref": "file:model_relationships.json#"
     },
     "localnet": {
       "$ref": "file:model_localnet.json#",
