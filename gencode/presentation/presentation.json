@@ -1314,6 +1314,120 @@
         "41489"
       ]
     },
+    "pointset.points_template.points.*.units": {
+      "display": "show",
+      "style": "bold",
+      "label": "units",
+      "section": "points",
+      "type": "string",
+      "description": "Expected unit configuration for the point"
+    },
+    "pointset.points_template.points.*.description": {
+      "display": "show",
+      "style": "bold",
+      "label": "units",
+      "section": "points",
+      "type": "string",
+      "description": "Detailed description of this point"
+    },
+    "pointset.points_template.points.*.writable": {
+      "display": "show",
+      "style": "bold",
+      "label": "units",
+      "section": "points",
+      "type": "boolean",
+      "description": "Indicates if this point is writable (else read-only)"
+    },
+    "pointset.points_template.points.*.baseline_value": {
+      "display": "show",
+      "style": "bold",
+      "label": "units",
+      "section": "points",
+      "description": "Represents the expected baseline value of the point",
+      "examples": [
+        22
+      ]
+    },
+    "pointset.points_template.points.*.baseline_tolerance": {
+      "display": "show",
+      "style": "bold",
+      "label": "units",
+      "section": "points",
+      "type": "number",
+      "description": "Maximum deviation from `baseline_value`",
+      "examples": [
+        2
+      ]
+    },
+    "pointset.points_template.points.*.baseline_state": {
+      "display": "show",
+      "style": "bold",
+      "label": "units",
+      "section": "points",
+      "description": "Expected state when `baseline_value` is set as the `set_value` for this point the config message"
+    },
+    "pointset.points_template.points.*.range_min": {
+      "display": "show",
+      "style": "bold",
+      "label": "units",
+      "section": "points",
+      "type": "number",
+      "description": "Represents the lower bound of the error threshold for a point",
+      "examples": [
+        0
+      ]
+    },
+    "pointset.points_template.points.*.range_max": {
+      "display": "show",
+      "style": "bold",
+      "label": "units",
+      "section": "points",
+      "type": "number",
+      "description": "Represents the upper bound of the error threshold for a point",
+      "examples": [
+        100
+      ]
+    },
+    "pointset.points_template.points.*.cov_increment": {
+      "display": "show",
+      "style": "bold",
+      "label": "units",
+      "section": "points",
+      "type": "number",
+      "description": "Triggering threshold for partial cov update publishing",
+      "examples": [
+        1
+      ]
+    },
+    "pointset.points_template.points.*.ref": {
+      "display": "show",
+      "style": "bold",
+      "label": "units",
+      "section": "points",
+      "type": "string",
+      "description": "Mapping for the point to an internal resource (e.g. BACnet object reference)",
+      "examples": [
+        "AI3",
+        "400070"
+      ]
+    },
+    "pointset.points_template.points.*.tags": {
+      "display": "show",
+      "style": "bold",
+      "label": "units",
+      "section": "points",
+      "type": "array",
+      "description": "Tags assosciated with the point",
+      "examples": [
+        [
+          "lighting"
+        ],
+        [
+          "energy",
+          "hvac"
+        ]
+      ]
+    },
     "pointset.exclude_units_from_config": {
       "display": "show",
       "style": "bold",

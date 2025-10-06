@@ -16,14 +16,10 @@
         "^[a-z][a-z0-9]*(_[a-z0-9]+)*$": {
           "$ref": "file:model_pointset_point.json#"
         }
-      },
-      "$presentation": {
-        "presentationProperties": {
-          "points_template_name": {
-            "$ref": "file:model_pointset_point.json#"
-          }
-        }
       }
+    },
+    "points_template": {
+      "$ref": "file:model_points_template.json#"
     },
     "exclude_units_from_config": {
       "type": "boolean",

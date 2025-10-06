@@ -17,6 +17,7 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
     "points",
+    "points_template",
     "exclude_units_from_config",
     "exclude_points_from_config",
     "sample_limit_sec",
@@ -32,6 +33,15 @@ public class PointsetModel {
     @JsonProperty("points")
     @JsonPropertyDescription("Information about a specific point name of the device.")
     public HashMap<String, PointPointsetModel> points;
+    /**
+     * Pointset Model
+     * <p>
+     * Pointset representing the abstract system expectation for what the device should be doing, and how it should be configured and operated. This block specifies the expected points that a device holds
+     * 
+     */
+    @JsonProperty("points_template")
+    @JsonPropertyDescription("Pointset representing the abstract system expectation for what the device should be doing, and how it should be configured and operated. This block specifies the expected points that a device holds")
+    public PointsetModel points_template;
     @JsonProperty("exclude_units_from_config")
     public Boolean exclude_units_from_config;
     @JsonProperty("exclude_points_from_config")
@@ -56,6 +66,7 @@ public class PointsetModel {
         int result = 1;
         result = ((result* 31)+((this.sample_rate_sec == null)? 0 :this.sample_rate_sec.hashCode()));
         result = ((result* 31)+((this.exclude_units_from_config == null)? 0 :this.exclude_units_from_config.hashCode()));
+        result = ((result* 31)+((this.points_template == null)? 0 :this.points_template.hashCode()));
         result = ((result* 31)+((this.sample_limit_sec == null)? 0 :this.sample_limit_sec.hashCode()));
         result = ((result* 31)+((this.points == null)? 0 :this.points.hashCode()));
         result = ((result* 31)+((this.exclude_points_from_config == null)? 0 :this.exclude_points_from_config.hashCode()));
@@ -71,7 +82,7 @@ public class PointsetModel {
             return false;
         }
         PointsetModel rhs = ((PointsetModel) other);
-        return ((((((this.sample_rate_sec == rhs.sample_rate_sec)||((this.sample_rate_sec!= null)&&this.sample_rate_sec.equals(rhs.sample_rate_sec)))&&((this.exclude_units_from_config == rhs.exclude_units_from_config)||((this.exclude_units_from_config!= null)&&this.exclude_units_from_config.equals(rhs.exclude_units_from_config))))&&((this.sample_limit_sec == rhs.sample_limit_sec)||((this.sample_limit_sec!= null)&&this.sample_limit_sec.equals(rhs.sample_limit_sec))))&&((this.points == rhs.points)||((this.points!= null)&&this.points.equals(rhs.points))))&&((this.exclude_points_from_config == rhs.exclude_points_from_config)||((this.exclude_points_from_config!= null)&&this.exclude_points_from_config.equals(rhs.exclude_points_from_config))));
+        return (((((((this.sample_rate_sec == rhs.sample_rate_sec)||((this.sample_rate_sec!= null)&&this.sample_rate_sec.equals(rhs.sample_rate_sec)))&&((this.exclude_units_from_config == rhs.exclude_units_from_config)||((this.exclude_units_from_config!= null)&&this.exclude_units_from_config.equals(rhs.exclude_units_from_config))))&&((this.points_template == rhs.points_template)||((this.points_template!= null)&&this.points_template.equals(rhs.points_template))))&&((this.sample_limit_sec == rhs.sample_limit_sec)||((this.sample_limit_sec!= null)&&this.sample_limit_sec.equals(rhs.sample_limit_sec))))&&((this.points == rhs.points)||((this.points!= null)&&this.points.equals(rhs.points))))&&((this.exclude_points_from_config == rhs.exclude_points_from_config)||((this.exclude_points_from_config!= null)&&this.exclude_points_from_config.equals(rhs.exclude_points_from_config))));
     }
 
 }

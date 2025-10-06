@@ -1,0 +1,16 @@
+{
+  "points": {
+    "points_template_name": {
+      "room_temperature_sensor": {
+        "range_min": 0
+      },
+      "room_humidity_sensor": {
+        "range_min": 0,
+        "range_max": 100
+      },
+      "room_co2_sensor": {
+        "range_max": 1200
+      }
+    }
+  }
+}

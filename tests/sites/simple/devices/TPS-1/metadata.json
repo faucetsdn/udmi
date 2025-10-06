@@ -1,0 +1,31 @@
+{
+  "pointset": {
+    "points_template_name": "tps_template"
+  },
+  "system": {
+    "hardware": {
+      "make": "BOS",
+      "model": "pubber"
+    },
+    "software": {
+      "firmware": "v1"
+    },
+    "location": {
+      "site": "ZZ-TRI-FECTA-AHU",
+      "section": "2-3N8C",
+      "position": {
+        "x": 111.0,
+        "y": 102.3
+      }
+    },
+    "physical_tag": {
+      "asset": {
+        "guid": "drw://TBC",
+        "site": "ZZ-TRI-FECTA",
+        "name": "TPS-1"
+      }
+    }
+  },
+  "version": "1.5.2",
+  "timestamp": "2020-05-01T13:39:07Z"
+}
