@@ -135,7 +135,7 @@ class DiscoveryController(abc.ABC):
     self.state = udmi.schema.state.Discovery()
     self.internal_state = None
     self.publisher = publisher
-    self.config: udmi.schema.config.DiscoveryFamily = None
+    self.config: udmi.schema.config.Config = None
     self.mutex = threading.Lock()
     self.scheduler_thread = None
     self.scheduler_thread_stopped = threading.Event()

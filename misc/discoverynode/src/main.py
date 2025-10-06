@@ -10,9 +10,12 @@ import os
 # filter deprecation notice from SCAPY import
 warnings.filterwarnings(action="ignore", module=".*ipsec.*")
 
+import local_config
 import udmi.core
 import udmi.publishers.mqtt
 
+import typing
+from typing import TypedDict, Any
 
 def or_required_from_env(key: str) -> dict[str, str | int | bool]:
   """Used in argparse to return a non-optional value from env vars.
@@ -42,11 +45,6 @@ def get_arguments():
   return parser.parse_args()
 
 
-def load_config_from_file(file_name: str):
-  with open(file_name, "rb") as f:
-    return json.load(f)
-
-
 def main():
 
   stdout = logging.StreamHandler(sys.stdout)
@@ -64,7 +62,8 @@ def main():
   args = get_arguments()
 
   logging.info("Loading config from %s", args.config_file)
-  config = load_config_from_file(args.config_file)
+  config = local_config.read_config(args.config_file)
+  logging.warning("Started with config: %s", config)
 
   # TODO: Should probably set this in the config with basic templating
   if config["mqtt"].get("authentication_mechanism", "jwt_gcp") == "jwt_gcp":
@@ -92,6 +91,8 @@ def main():
   udmi_client = udmi.core.UDMICore(
       publisher=mclient,
       topic_prefix=topic_prefix,
+      # TODO: Needs to be a different config, because reusing this
+      # violates the assumption that "udmi" module is independent.
       config=config,
   )
 

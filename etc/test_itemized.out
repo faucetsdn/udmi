@@ -11,7 +11,7 @@
 1 RESULT fail writeback writeback_success ALPHA 0/10 Failed waiting until target point has value_state default (null): point filter_differential_pressure_setpoint is updating, expected null
 1 RESULT fail writeback writeback_success ALPHA 0/10 Failed waiting until target point has value_state applied: point filter_differential_pressure_setpoint is null, expected applied
 1 RESULT skip writeback writeback_operation ALPHA 0/0 operation completed quickly
-1 RESULT fail writeback writeback_operation ALPHA 0/10 Failed waiting until target point has value_state updating: point filter_differential_pressure_setpoint is applied, expected updating
+1 RESULT fail writeback writeback_operation ALPHA 0/10 Failed waiting until target point has value_state updating: point filter_differential_pressure_setpoint is null, expected updating
 1 RESULT fail pointset pointset_publish_interval STABLE 0/10 Failed check that time period between successive pointset events is between 5 and 8 seconds
 1 RESULT fail system system_min_loglevel ALPHA 0/10 Failed check that log level `NOTICE` (or greater) category `system.config.apply` was not logged
 1 RESULT fail system.mode system_mode_restart PREVIEW 0/10 Failed check that restart count increased by one

@@ -377,6 +377,12 @@ jobs:
           ln -s sites/udmi_site_model/ site_model
           (cd site_model; git log -n 1)
           docker network create udminet --subnet 192.168.99.0/24
+      - name: Unit Tests
+        run: |
+          misc/discoverynode/testing/unit/unit_tests.sh
+      - name: Integration Tests
+        run: |
+          misc/discoverynode/testing/integration/integration_test.sh
       - name: Build UDMIS container
         run: |
           udmis/bin/build check
@@ -397,7 +403,7 @@ jobs:
             sleep 1
           done
           ls -l var/tmp/pod_ready.txt 2>&1
-      - name: Run Tests
+      - name: E2E Tests
         # This runs as sudo because docker containers in Github CI run as root.
         # So, when the UDMIS container runs `keygen`, the CSR and SRL files are
         # owned by root, and cannot be ovewritten by system calls to keygen,
