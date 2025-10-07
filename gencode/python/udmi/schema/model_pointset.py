@@ -1,6 +1,6 @@
 """Generated class for model_pointset.json"""
 from .model_pointset_point import PointPointsetModel
-from .model_points_template import PointsetModel
+from .model_points_template import PointsTemplateModel
 
 
 class PointsetModel:
@@ -20,7 +20,7 @@ class PointsetModel:
       return None
     result = PointsetModel()
     result.points = PointPointsetModel.map_from(source.get('points'))
-    result.points_template = PointsetModel.from_dict(source.get('points_template'))
+    result.points_template = PointsTemplateModel.from_dict(source.get('points_template'))
     result.exclude_units_from_config = source.get('exclude_units_from_config')
     result.exclude_points_from_config = source.get('exclude_points_from_config')
     result.sample_limit_sec = source.get('sample_limit_sec')

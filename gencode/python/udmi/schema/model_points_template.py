@@ -2,7 +2,7 @@
 from .model_pointset_point import PointPointsetModel
 
 
-class PointsetModel:
+class PointsTemplateModel:
   """Generated schema class"""
 
   def __init__(self):
@@ -12,7 +12,7 @@ class PointsetModel:
   def from_dict(source):
     if not source:
       return None
-    result = PointsetModel()
+    result = PointsTemplateModel()
     result.points = PointPointsetModel.map_from(source.get('points'))
     return result
 
@@ -22,7 +22,7 @@ class PointsetModel:
       return None
     result = {}
     for key in source:
-      result[key] = PointsetModel.from_dict(source[key])
+      result[key] = PointsTemplateModel.from_dict(source[key])
     return result
 
   @staticmethod

@@ -34,14 +34,14 @@ public class PointsetModel {
     @JsonPropertyDescription("Information about a specific point name of the device.")
     public HashMap<String, PointPointsetModel> points;
     /**
-     * Pointset Model
+     * Points Template Model
      * <p>
-     * Pointset representing the abstract system expectation for what the device should be doing, and how it should be configured and operated. This block specifies the expected points that a device holds
+     * Points template representing a collection of points which can be reused by multiple devices
      * 
      */
     @JsonProperty("points_template")
-    @JsonPropertyDescription("Pointset representing the abstract system expectation for what the device should be doing, and how it should be configured and operated. This block specifies the expected points that a device holds")
-    public PointsetModel points_template;
+    @JsonPropertyDescription("Points template representing a collection of points which can be reused by multiple devices")
+    public PointsTemplateModel points_template;
     @JsonProperty("exclude_units_from_config")
     public Boolean exclude_units_from_config;
     @JsonProperty("exclude_points_from_config")
