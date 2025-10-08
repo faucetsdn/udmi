@@ -1,7 +1,4 @@
 {
-  "pointset": {
-    "points_template_name": "tps_template"
-  },
   "system": {
     "hardware": {
       "make": "BOS",
@@ -11,8 +8,7 @@
       "firmware": "v1"
     },
     "location": {
-      "site": "ZZ-TRI-FECTA-AHU",
-      "section": "2-3N8C",
+      "site": "ZZ-TRI-FECTA",
       "position": {
         "x": 111.0,
         "y": 102.3
@@ -27,5 +23,6 @@
     }
   },
   "version": "1.5.2",
-  "timestamp": "2020-05-01T13:39:07Z"
+  "timestamp": "2020-05-01T13:39:07Z",
+  "template": "tps_template"
 }

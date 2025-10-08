@@ -14,6 +14,7 @@ import static com.google.udmi.util.GeneralUtils.deepCopy;
 import static com.google.udmi.util.GeneralUtils.friendlyStackTrace;
 import static com.google.udmi.util.GeneralUtils.getFileBytes;
 import static com.google.udmi.util.GeneralUtils.ifNotNullGet;
+import static com.google.udmi.util.GeneralUtils.ifNotNullGetElse;
 import static com.google.udmi.util.GeneralUtils.ifNotNullThen;
 import static com.google.udmi.util.GeneralUtils.ifNullThen;
 import static com.google.udmi.util.GeneralUtils.isTrue;
@@ -32,6 +33,7 @@ import static java.util.Optional.ofNullable;
 import static java.util.stream.Collectors.toMap;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.databind.node.ObjectNode;
@@ -42,6 +44,7 @@ import com.google.udmi.util.ExceptionMap.ExceptionCategory;
 import java.io.File;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -75,6 +78,7 @@ public class SiteModel {
   public static final String MOCK_CLEAN = "mock-clean";
   public static final String LOCALHOST_HOSTNAME = "localhost";
   public static final String DEVICES_DIR = "devices";
+  public static final String TEMPLATES_DIR = "templates";
   public static final String REFLECTOR_DIR = "reflector";
   public static final String METADATA_JSON = "metadata.json";
   public static final String EXTRAS_DIR = "extras";
@@ -120,6 +124,7 @@ public class SiteModel {
   public ExceptionMap siteMetadataExceptionMap;
   private boolean warningsAsErrors;
   private SiteMetadata siteMetadata;
+  private final Map<String, Map<String, Object>> allTemplates;
 
   public SiteModel(String specPath) {
     this(specPath, null, null);
@@ -144,6 +149,7 @@ public class SiteModel {
     exeConfig.site_model = new File(sitePath).getAbsolutePath();
     loadVersionInfo(exeConfig);
     siteDefaults = ofNullable(asMap(getSiteFile(SITE_DEFAULTS_FILE))).orElseGet(HashMap::new);
+    allTemplates = loadAllTemplates();
     if (overrides != null && overrides.project_id != null) {
       exeConfig.iot_provider = overrides.iot_provider;
       exeConfig.project_id = overrides.project_id;
@@ -357,6 +363,17 @@ public class SiteModel {
         .filter(device -> validDeviceDirectory(devicesFile, device)).collect(Collectors.toSet());
   }
 
+  public Set<String> getTemplateIds() {
+    checkState(sitePath != null, "sitePath not defined");
+    File templatesDir = getTemplatesDir();
+    File[] files = templatesDir.listFiles();
+
+    return ifNotNullGetElse(files,
+        (templates) -> Arrays.stream(templates)
+            .map((template) -> template.getName().split(".json")[0]).collect(Collectors.toSet()),
+        Collections::emptySet);
+  }
+
   public SiteMetadata loadSiteMetadata() {
     if (siteMetadata != null) {
       return siteMetadata;
@@ -389,6 +406,12 @@ public class SiteModel {
 
       ObjectNode rawMetadata = loadFileRequired(ObjectNode.class, deviceMetadataFile);
       Map<String, Object> mergedMetadata = GeneralUtils.deepCopy(siteDefaults);
+      JsonNode usedTemplate = rawMetadata.remove("template");
+      if (usedTemplate != null) {
+        Map<String, Object> templateData = allTemplates.getOrDefault(usedTemplate.asText(),
+            new HashMap<>());
+        GeneralUtils.mergeObject(mergedMetadata, templateData);
+      }
       GeneralUtils.mergeObject(mergedMetadata, asMap(rawMetadata));
 
       ObjectNode metadataObject = OBJECT_MAPPER_RAW.valueToTree(mergedMetadata);
@@ -427,6 +450,13 @@ public class SiteModel {
     allDevices = deviceIds.stream().collect(toMap(key -> key, this::newCloudModel));
   }
 
+  private Map<String, Map<String, Object>> loadAllTemplates() {
+    Set<String> templateIds = getTemplateIds();
+    return templateIds.stream().collect(toMap(
+        id -> id,
+        id -> ofNullable(asMap(getTemplateFile(id))).orElseGet(HashMap::new)));
+  }
+
   private CloudModel newCloudModel(String deviceId) {
     return new CloudModel();
   }
@@ -447,8 +477,16 @@ public class SiteModel {
     return new File(new File(sitePath), "devices");
   }
 
+  public File getTemplatesDir() {
+    return new File(new File(sitePath), TEMPLATES_DIR);
+  }
+
   public File getDeviceFile(String deviceId, String path) {
     return new File(getDeviceDir(deviceId), path);
+  }
+
+  public File getTemplateFile(String templateId) {
+    return new File(getTemplatesDir(), templateId + ".json");
   }
 
   public Metadata getMetadata(String deviceId) {

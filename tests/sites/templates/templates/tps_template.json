@@ -1,6 +1,11 @@
 {
-  "points": {
-    "points_template_name": {
+  "system": {
+    "location": {
+      "section": "2-3N8C"
+    }
+  },
+  "pointset": {
+    "points": {
       "room_temperature_sensor": {
         "range_min": 0
       },

@@ -1,0 +1,44 @@
+{
+  "hash": "93af7ba4",
+  "pointset": {
+    "points": {
+      "room_co2_sensor": {
+        "range_max": 1200.0
+      },
+      "room_humidity_sensor": {
+        "range_max": 100.0,
+        "range_min": 0.0
+      },
+      "room_temperature_sensor": {
+        "range_min": 0.0
+      }
+    }
+  },
+  "system": {
+    "hardware": {
+      "make": "BOS",
+      "model": "pubber"
+    },
+    "location": {
+      "position": {
+        "x": 111.0,
+        "y": 102.3
+      },
+      "section": "2-3N8C",
+      "site": "ZZ-TRI-FECTA"
+    },
+    "min_loglevel": 300,
+    "physical_tag": {
+      "asset": {
+        "guid": "drw://TBC",
+        "name": "TPS-1",
+        "site": "ZZ-TRI-FECTA"
+      }
+    },
+    "software": {
+      "firmware": "v1"
+    }
+  },
+  "timestamp": "2020-05-01T13:39:07Z",
+  "version": "1.5.2"
+}
