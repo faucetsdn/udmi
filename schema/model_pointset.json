@@ -4,6 +4,7 @@
   "description": "Pointset representing the abstract system expectation for what the device should be doing, and how it should be configured and operated. This block specifies the expected points that a device holds",
   "type": "object",
   "$schema": "http://json-schema.org/draft-07/schema#",
+  "$defaultPresentation": "pointset",
   "additionalProperties": false,
   "properties": {
     "points": {
@@ -14,6 +15,13 @@
       "patternProperties": {
         "^[a-z][a-z0-9]*(_[a-z0-9]+)*$": {
           "$ref": "file:model_pointset_point.json#"
+        }
+      },
+      "$presentation": {
+        "presentationProperties": {
+          "points_template_name": {
+            "$ref": "file:model_pointset_point.json#"
+          }
         }
       }
     },
