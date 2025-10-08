@@ -17,9 +17,6 @@
         }
       }
     },
-    "points_template": {
-      "$ref": "file:model_points_template.json#"
-    },
     "exclude_units_from_config": {
       "type": "boolean",
       "$presentation": {
