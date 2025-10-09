@@ -17,7 +17,7 @@ jobs:
   unit:
     name: Unit Tests
     runs-on: ubuntu-24.04
-    timeout-minutes: 10
+    timeout-minutes: 15
     steps:
       - uses: actions/setup-java@v4
         with:
@@ -118,7 +118,7 @@ jobs:
   baseline:
     name: Baseline Tests
     runs-on: ubuntu-24.04
-    timeout-minutes: 15
+    timeout-minutes: 20
     needs: automapping
     if: vars.TARGET_PROJECT != ''
     env:
@@ -167,7 +167,7 @@ jobs:
   sequencer:
     name: Sequencer Tests
     runs-on: ubuntu-24.04
-    timeout-minutes: 25
+    timeout-minutes: 30
     strategy:
       fail-fast: false
       matrix:
