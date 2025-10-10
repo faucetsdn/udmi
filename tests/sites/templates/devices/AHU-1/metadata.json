@@ -62,5 +62,5 @@
   },
   "version": "1.5.2",
   "timestamp": "2020-05-01T13:39:07Z",
-  "extend": "ahu_template"
+  "extend": "unknown_template"
 }
