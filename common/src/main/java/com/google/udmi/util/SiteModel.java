@@ -17,6 +17,7 @@ import static com.google.udmi.util.GeneralUtils.ifNotNullGet;
 import static com.google.udmi.util.GeneralUtils.ifNotNullGetElse;
 import static com.google.udmi.util.GeneralUtils.ifNotNullThen;
 import static com.google.udmi.util.GeneralUtils.ifNullThen;
+import static com.google.udmi.util.GeneralUtils.isNotEmpty;
 import static com.google.udmi.util.GeneralUtils.isTrue;
 import static com.google.udmi.util.GeneralUtils.removeStringArg;
 import static com.google.udmi.util.GeneralUtils.sha256;
@@ -112,6 +113,7 @@ public class SiteModel {
   private static final Set<String> ALLOWED_FILES_IN_DEVICES_DIR = ImmutableSet.of(
       "README.md"
   );
+  private static final String TEMPLATE_KEY = "extend";
 
   private final String sitePath;
   private final Map<String, Object> siteDefaults;
@@ -364,7 +366,7 @@ public class SiteModel {
   }
 
   public Set<String> getTemplateIds() {
-    checkState(sitePath != null, "sitePath not defined");
+    requireNonNull(sitePath, "sitePath not defined");
     File templatesDir = getTemplatesDir();
     File[] files = templatesDir.listFiles();
 
@@ -406,10 +408,12 @@ public class SiteModel {
 
       ObjectNode rawMetadata = loadFileRequired(ObjectNode.class, deviceMetadataFile);
       Map<String, Object> mergedMetadata = GeneralUtils.deepCopy(siteDefaults);
-      JsonNode usedTemplate = rawMetadata.remove("template");
+      JsonNode usedTemplate = rawMetadata.remove(TEMPLATE_KEY);
       if (usedTemplate != null) {
-        Map<String, Object> templateData = allTemplates.getOrDefault(usedTemplate.asText(),
-            new HashMap<>());
+        String templateName = usedTemplate.asText();
+        Map<String, Object> templateData = allTemplates.get(templateName);
+        requireNonNull(templateData, String.format("template %s not found in %s",
+            templateName, getTemplatesDir()));
         GeneralUtils.mergeObject(mergedMetadata, templateData);
       }
       GeneralUtils.mergeObject(mergedMetadata, asMap(rawMetadata));
