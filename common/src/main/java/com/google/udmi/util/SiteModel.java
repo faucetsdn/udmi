@@ -43,6 +43,8 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.udmi.util.ExceptionMap.ExceptionCategory;
 import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.UncheckedIOException;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
@@ -372,8 +374,9 @@ public class SiteModel {
 
     return ifNotNullGetElse(files,
         (templates) -> Arrays.stream(templates)
-            .map((template) -> template.getName().split(".json")[0]).collect(Collectors.toSet()),
-        Collections::emptySet);
+            .filter(template -> template.getName().endsWith(".json"))
+            .map(template -> template.getName().split(".json")[0])
+            .collect(Collectors.toSet()), Collections::emptySet);
   }
 
   public SiteMetadata loadSiteMetadata() {
@@ -456,9 +459,22 @@ public class SiteModel {
 
   private Map<String, Map<String, Object>> loadAllTemplates() {
     Set<String> templateIds = getTemplateIds();
-    return templateIds.stream().collect(toMap(
-        id -> id,
-        id -> ofNullable(asMap(getTemplateFile(id))).orElseGet(HashMap::new)));
+    return templateIds.stream().collect(toMap(id -> id, this::loadSingleTemplate));
+  }
+
+  /**
+   * Loads a single template, throwing an exception if it's not found or invalid.
+   */
+  private Map<String, Object> loadSingleTemplate(String templateId) {
+    File templateFile = getTemplateFile(templateId);
+    Map<String, Object> templateMap = asMap(templateFile);
+
+    if (templateMap == null) {
+      throw new UncheckedIOException(
+          new FileNotFoundException("Template file not found: " + templateFile.getAbsolutePath()));
+    }
+
+    return templateMap;
   }
 
   private CloudModel newCloudModel(String deviceId) {
