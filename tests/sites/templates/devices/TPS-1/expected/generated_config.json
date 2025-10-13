@@ -1,0 +1,17 @@
+{
+  "pointset": {
+    "points": {
+      "room_co2_sensor_from_template": {},
+      "room_humidity_sensor_from_template": {},
+      "room_temperature_sensor_from_device": {},
+      "room_temperature_sensor_from_template": {}
+    }
+  },
+  "system": {
+    "metrics_rate_sec": 10,
+    "min_loglevel": 300,
+    "operation": {}
+  },
+  "timestamp": "2020-05-01T13:39:07Z",
+  "version": "1.5.3"
+}
