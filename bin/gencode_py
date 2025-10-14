@@ -25,7 +25,7 @@ PYTHON_OUTPUT_DIR="$GEN_PYTHON_DIR/udmi/schema"
 python3 -m venv "$VENV_DIR"
 source "$VENV_DIR"/bin/activate
 
-pip install "datamodel-code-generator==0.27.1" "poetry==2.0.1"
+pip install "datamodel-code-generator==0.27.1" "pydantic<3" "poetry==2.0.1"
 
 # Clean up previous output directories
 rm -rf "$SCHEMA_OUTPUT_DIR"
