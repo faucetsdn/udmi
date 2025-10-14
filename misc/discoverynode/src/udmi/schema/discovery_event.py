@@ -20,7 +20,7 @@ class Status:
 
 @dataclasses.dataclass
 class DiscoverySystemSoftware:
-  firmware: str = None
+  firmware: str | None = None
 
 
 @dataclasses.dataclass

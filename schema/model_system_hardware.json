@@ -9,22 +9,38 @@
       "make": {
         "description": "The manufacturer of the device",
         "type": "string",
-        "examples": ["Google"]
+        "examples": ["Google"],
+        "$presentation": {
+          "display": "show",
+          "style": "bold"
+        }
       },
       "model": {
         "description": "The model of the device",
         "examples" : ["Pixel 5", "Pixel 6", "Pixel 6 Pro"],
-        "type": "string"
+        "type": "string",
+        "$presentation": {
+          "display": "show",
+          "style": "bold"
+        }
       },
       "sku": {
         "description": "A stock keeping unit which identifies the unique composition of a device, for example those with different hardware configurations",
         "type": "string",
-        "examples": ["GF5KQ", "4215612"]
+        "examples": ["GF5KQ", "4215612"],
+        "$presentation": {
+          "display": "show",
+          "style": "bold"
+        }
       },
       "rev": {
         "description": "Hardware revision of the device",
         "type": "string",
-        "examples": ["A", "B", "1"]
+        "examples": ["A", "B", "1"],
+        "$presentation": {
+          "display": "show",
+          "style": "bold"
+        }
       }
     },
     "required": [

@@ -1,0 +1,306 @@
+#!/usr/bin/env python3
+
+"""
+Script to generate presentation config from presentation attributes
+defined in schema.
+"""
+import json
+import os
+import re
+import sys
+from dataclasses import dataclass
+
+SCHEMA_DIR = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'schema')
+ROOT_CONFIG_FILE = os.path.join(os.path.dirname(os.path.dirname(__file__)),
+                                'docs', 'guides', 'presentation_roots.md')
+OUTPUT_FILE = os.path.join(os.path.dirname(os.path.dirname(__file__)),
+                           'gencode', 'presentation', 'presentation.json')
+
+
+@dataclass
+class TraversalState:
+  """Holds the state for the recursive schema traversal."""
+  path_prefix: str = ''
+  inherited_section: str = ''
+  force_hide: bool = False
+  injected_config: dict = None
+
+
+def get_root_schemas(file_path):
+  """
+  Parses the Markdown file to find the JSON code block
+  and extract the list of root schema filenames.
+  """
+  print(f'Reading root schemas from {file_path}...')
+  try:
+    with open(file_path, 'r', encoding='utf-8') as f:
+      content = f.read()
+      json_block_match = re.search(r'```json\s*([\s\S]*?)\s*```', content)
+      if not json_block_match:
+        raise ValueError('No JSON code block found in the markdown file.')
+
+      json_content = json.loads(json_block_match.group(1))
+      roots = json_content.get('roots')
+      if not roots or not isinstance(roots, list):
+        raise ValueError('JSON block must contain a "roots" array.')
+
+      print(f'Found root schemas: {", ".join(roots)}')
+      return roots
+  except FileNotFoundError:
+    print(f'Error: {file_path} not found.')
+    sys.exit(1)
+  except (json.JSONDecodeError, ValueError) as e:
+    print(f'Error parsing {file_path}: {e}')
+    sys.exit(1)
+
+
+def load_all_schemas(schema_dir):
+  """
+  Loads all .json files from the schema directory into a dictionary.
+  """
+  print(f'Loading all schemas from directory "{schema_dir}"...')
+  all_schemas = {}
+  try:
+    for filename in os.listdir(schema_dir):
+      if filename.endswith('.json'):
+        file_path = os.path.join(schema_dir, filename)
+        with open(file_path, 'r', encoding='utf-8') as f:
+          all_schemas[filename] = json.load(f)
+    print(f'Successfully loaded {len(all_schemas)} schemas.')
+    return all_schemas
+  except FileNotFoundError:
+    print(f'Error: Schema directory "{schema_dir}" not found.')
+    sys.exit(1)
+
+
+def traverse_schema(schema_obj, all_schemas, state: TraversalState):
+  """
+  Recursively traverses a schema object and its references to build a
+  flattened presentation configuration.
+  """
+  if not schema_obj:
+    return {}
+
+  presentation_config = {}
+  fields_to_capture = ['type', 'description', 'examples']
+
+  # This handler is for when the schema_obj *itself* is a map defined
+  # by patternProperties AND has a $presentation.paths block.
+  if ('patternProperties' in schema_obj and
+      '$presentation' in schema_obj and 'paths' in schema_obj['$presentation']):
+
+    paths_obj = schema_obj['$presentation'].get('paths', {})
+    if not isinstance(paths_obj, dict):
+      print(
+          f'Warning: $presentation.paths for {state.path_prefix} is not '
+          f'an object. Skipping.')
+      return {}
+
+    pattern_schema_def = next(iter(schema_obj['patternProperties'].values()))
+
+    # Resolve the $ref, exactly like we do in the main properties loop
+    resolved_pattern_schema = pattern_schema_def
+    if '$ref' in pattern_schema_def:
+      ref_string = pattern_schema_def['$ref'].replace('file:', '')
+      if '#' in ref_string:
+        ref_name, json_pointer = ref_string.split('#', 1)
+      else:
+        ref_name, json_pointer = ref_string, None
+
+      resolved_base = all_schemas.get(ref_name)
+      if not resolved_base:
+        raise FileNotFoundError(
+            f'Schema file "{ref_name}" not found for ref "{ref_string}".')
+
+      if json_pointer:
+        path_parts = json_pointer.strip('/').split('/')
+        resolved_pointer = resolved_base
+        for part in path_parts:
+          resolved_pointer = resolved_pointer.get(part)
+          if resolved_pointer is None:
+            raise ValueError(
+                f'JSON pointer path "{json_pointer}" not found in {ref_name}.')
+        resolved = resolved_pointer
+      else:
+        resolved = resolved_base
+      resolved_pattern_schema = {**resolved, **pattern_schema_def}
+
+    # Check if the resolved schema is complex (and needs recursion) or simple.
+    is_complex_object = (
+        resolved_pattern_schema.get('type') == 'object' or
+        'properties' in resolved_pattern_schema or
+        'patternProperties' in resolved_pattern_schema
+    )
+
+    if is_complex_object:
+      # --- COMPLEX RECURSION CASE (e.g., families) ---
+      # Iterate the path *object* (key and config) and RECURSE
+      for path_key, path_config in paths_obj.items():
+        current_path = \
+          f'{state.path_prefix}.{path_key}' if state.path_prefix else path_key
+        new_state = TraversalState(
+            path_prefix=current_path,
+            inherited_section=state.inherited_section,
+            force_hide=state.force_hide,
+            injected_config=path_config
+        )
+        child_config = traverse_schema(
+            resolved_pattern_schema,
+            all_schemas,
+            new_state
+        )
+        presentation_config.update(child_config)
+    else:
+      # --- SIMPLE TERMINAL MAP CASE (e.g., software) ---
+      # Do NOT recurse. Build the properties directly.
+      pattern_schema = resolved_pattern_schema
+      for path_key, path_config in paths_obj.items():
+        current_path = \
+          f'{state.path_prefix}.{path_key}' if state.path_prefix else path_key
+
+        # Build the config entry directly
+        final_prop_config = path_config.copy()
+        final_prop_config['display'] = 'show'
+        final_prop_config['section'] = state.inherited_section
+
+        # Copy fields from the pattern_schema
+        for field in fields_to_capture:
+          if field in pattern_schema and field not in final_prop_config:
+            final_prop_config[field] = pattern_schema[field]
+
+        if not state.force_hide:
+          presentation_config[current_path] = final_prop_config
+
+    # We have fully processed this schema object. Return the results.
+    return presentation_config
+
+  # Handle regular properties.
+  if 'properties' in schema_obj:
+    for key, prop_schema in schema_obj['properties'].items():
+      current_path = f'{state.path_prefix}.{key}' if state.path_prefix else key
+
+      effective_prop_schema = prop_schema
+      if '$ref' in prop_schema:
+        ref_string = prop_schema['$ref'].replace('file:', '')
+        if '#' in ref_string:
+          ref_name, json_pointer = ref_string.split('#', 1)
+        else:
+          ref_name, json_pointer = ref_string, None
+
+        resolved_base = all_schemas.get(ref_name)
+        if not resolved_base:
+          raise FileNotFoundError(
+              f'Schema file "{ref_name}" not found for ref "{ref_string}".')
+
+        if json_pointer:
+          path_parts = json_pointer.strip('/').split('/')
+          resolved_pointer = resolved_base
+          for part in path_parts:
+            resolved_pointer = resolved_pointer.get(part)
+            if resolved_pointer is None:
+              raise ValueError(
+                  f'JSON pointer path "{json_pointer}" not '
+                  f'found in {ref_name}.')
+          resolved = resolved_pointer
+        else:
+          resolved = resolved_base
+        effective_prop_schema = {**resolved, **prop_schema}
+
+      current_presentation = prop_schema.get('$presentation', {})
+      section_for_this_level = current_presentation.get(
+          'section', state.inherited_section)
+
+      new_force_hide = state.force_hide or current_presentation.get(
+          'display') == 'hide'
+
+      # Check if injected_config has instructions for this property key.
+      injected_key_name = f'{key}.paths'
+
+      if state.injected_config and injected_key_name in state.injected_config:
+
+        injected_paths_obj = state.injected_config[injected_key_name]
+
+        if 'patternProperties' not in effective_prop_schema:
+          print(
+              f'Warning: Injected paths found for "{key}", '
+              f'but no patternProperties in its schema.')
+          continue
+
+        pattern_schema = next(
+            iter(effective_prop_schema['patternProperties'].values()))
+
+        # Loop over the *injected keys*
+        for injected_key, injected_prop_config in injected_paths_obj.items():
+          injected_path = f'{current_path}.{injected_key}'
+
+          final_prop_config = injected_prop_config.copy()
+          final_prop_config['display'] = 'show'
+          final_prop_config['section'] = section_for_this_level
+
+          for field in fields_to_capture:
+            if field in pattern_schema and field not in final_prop_config:
+              final_prop_config[field] = pattern_schema[field]
+
+          if not state.force_hide:
+            presentation_config[injected_path] = final_prop_config
+
+        # We have manually processed this property. Do NOT recurse.
+        continue
+
+      if (effective_prop_schema.get('type') == 'object' or
+          effective_prop_schema.get('existingJavaType', None)):
+        new_state = TraversalState(
+            path_prefix=current_path,
+            inherited_section=section_for_this_level,
+            force_hide=new_force_hide,
+            injected_config=state.injected_config
+        )
+        child_config = traverse_schema(
+            effective_prop_schema, all_schemas, new_state)
+        presentation_config.update(child_config)
+
+      if current_presentation.get('display') == 'show' and not state.force_hide:
+        prop_config = current_presentation.copy()
+        prop_config['section'] = section_for_this_level
+
+        for field in fields_to_capture:
+          if field in effective_prop_schema:
+            prop_config[field] = effective_prop_schema[field]
+
+        presentation_config[current_path] = prop_config
+
+  return presentation_config
+
+
+def main():
+  """
+  Main function to drive the presentation config generation.
+  """
+  root_schemas = get_root_schemas(ROOT_CONFIG_FILE)
+  all_schemas = load_all_schemas(SCHEMA_DIR)
+
+  final_config = {}
+
+  for root in root_schemas:
+    print(f'Processing root schema: {root}...')
+    root_schema_obj = all_schemas.get(root)
+    if not root_schema_obj:
+      print(f'Warning: Root schema {root} not found. Skipping.')
+      continue
+
+    presentation_info = root_schema_obj.get('$presentation', {})
+    root_section = presentation_info.get('section', root.replace('.json', ''))
+
+    initial_state = TraversalState(inherited_section=root_section)
+    properties = traverse_schema(root_schema_obj, all_schemas, initial_state)
+    final_config[root] = properties
+
+  print(f'Writing final configuration to {OUTPUT_FILE}...;')
+  with open(OUTPUT_FILE, 'w', encoding='utf-8') as f:
+    json.dump(final_config, f, indent=2)
+
+  print('Done.')
+
+
+if __name__ == '__main__':
+  main()

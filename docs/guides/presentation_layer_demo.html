@@ -1,0 +1,538 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>UDMI Presentation Layer Demo</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    body {
+      font-family: 'Inter', sans-serif;
+      background-color: #f3f4f6;
+    }
+    .code-editor {
+      font-family: 'Fira Code', 'Courier New', Courier, monospace;
+      font-size: 0.875rem;
+      background-color: #1e1e1e;
+      color: #d4d4d4;
+      border: 1px solid #333;
+      border-radius: 8px;
+      padding: 1rem;
+      height: 100%;
+      outline: none;
+      resize: none;
+    }
+    .rendered-ui, .hierarchy-view, .presentation-config-view {
+      background-color: #ffffff;
+      border-radius: 8px;
+      padding: 1.5rem; /* Adjusted padding */
+      box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+      height: 100%;
+      overflow-y: auto;
+    }
+    .form-group {
+      margin-bottom: 1.5rem;
+    }
+    .form-label {
+      display: block;
+      font-weight: 500;
+      color: #4b5563;
+      margin-bottom: 0.5rem;
+      text-transform: capitalize;
+    }
+    .form-input {
+      width: 100%;
+      padding: 0.75rem;
+      border: 1px solid #d1d5db;
+      border-radius: 6px;
+      background-color: #f9fafb;
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+    .form-input:focus {
+      outline: none;
+      border-color: #3b82f6;
+      box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.4);
+    }
+    .error-message {
+      color: #ef4444;
+      background-color: #fee2e2;
+      border: 1px solid #fca5a5;
+      padding: 0.75rem;
+      border-radius: 6px;
+      margin-top: 1rem;
+      font-family: 'Courier New', Courier, monospace;
+      white-space: pre-wrap;
+    }
+    h2 {
+      border-bottom: 2px solid #e5e7eb;
+      padding-bottom: 0.5rem;
+      margin-bottom: 1.5rem;
+      font-size: 1.25rem; /* Adjusted font size */
+    }
+    .rendered-ui fieldset {
+      border: 1px solid #e5e7eb;
+      padding: 1.5rem;
+      border-radius: 8px;
+      margin-top: 1rem;
+    }
+    .rendered-ui legend {
+      font-weight: 600;
+      padding: 0 0.5rem;
+      color: #1f2937;
+      text-transform: capitalize;
+    }
+    .tree ul {
+      margin-left: 1rem;
+      padding-left: 1rem;
+      border-left: 1px solid #d1d5db;
+    }
+    .tree li {
+      list-style: none;
+      margin: 0.25rem 0;
+      position: relative;
+    }
+    .tree span {
+      cursor: pointer;
+      padding: 2px 5px;
+      border-radius: 4px;
+      display: inline-block;
+    }
+    .tree-file::before {
+      content: '📄';
+      margin-right: 0.5rem;
+    }
+    .tree-folder::before {
+      content: '📁';
+      margin-right: 0.5rem;
+    }
+    .tree span:hover {
+      background-color: #eef2ff;
+    }
+    .tree span.active {
+      background-color: #3b82f6;
+      color: white;
+    }
+    /* Style for sub-groups within a fieldset */
+    .point-group {
+      margin-top: 1.5rem;
+      padding-left: 0.5rem;
+    }
+    .point-group-title {
+      font-weight: 600;
+      color: #374151;
+      margin-bottom: 1rem;
+      text-transform: capitalize;
+    }
+  </style>
+</head>
+<body class="p-4 md:p-8">
+<div class="max-w-screen-2xl mx-auto">
+  <header class="text-center mb-8">
+    <h1 class="text-4xl font-bold text-gray-800">UDMI Presentation Layer Demo</h1>
+    <p class="text-lg text-gray-600 mt-2">Edit schemas and see the rendered UI and presentation config update in real-time.</p>
+  </header>
+
+  <!-- Changed to 3-column layout -->
+  <div class="grid grid-cols-1 lg:grid-cols-3 gap-8" style="height: 75vh;">
+
+    <!-- Column 1: Vertically Split -->
+    <div class="flex flex-col gap-6">
+      <!-- Top Part: Hierarchy -->
+      <div class="flex-1 flex flex-col min-h-0">
+        <h2 class="font-semibold text-gray-700 flex-shrink-0">Schema Hierarchy</h2>
+        <div id="schemaHierarchy" class="hierarchy-view flex-grow tree"></div>
+      </div>
+      <!-- Bottom Part: Generated Config -->
+      <div class="flex-1 flex flex-col min-h-0">
+        <h2 class="font-semibold text-gray-700 flex-shrink-0">Generated Config</h2>
+        <div class="presentation-config-view flex-grow">
+          <pre><code id="presentationConfig" class="language-json text-sm"></code></pre>
+        </div>
+      </div>
+    </div>
+
+    <!-- Column 2: Editor -->
+    <div class="flex flex-col">
+      <h2 id="editorTitle" class="font-semibold text-gray-700 flex-shrink-0">Editable Schema</h2>
+      <textarea id="schemaEditor" class="code-editor w-full flex-grow"></textarea>
+      <div id="errorContainer" class="flex-shrink-0"></div>
+    </div>
+
+    <!-- Column 3: Rendered UI -->
+    <div class="flex flex-col">
+      <h2 class="font-semibold text-gray-700 flex-shrink-0">Rendered UI</h2>
+      <div id="renderedUI" class="rendered-ui flex-grow"></div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+  const schemaEditor = document.getElementById('schemaEditor');
+  const renderedUI = document.getElementById('renderedUI');
+  const presentationConfig = document.getElementById('presentationConfig');
+  const errorContainer = document.getElementById('errorContainer');
+  const schemaHierarchy = document.getElementById('schemaHierarchy');
+  const editorTitle = document.getElementById('editorTitle');
+
+  let currentSchema = 'metadata.json';
+  const rootSchema = 'metadata.json';
+
+  // Restored and updated multi-file schema example
+  const allSchemas = {
+    "metadata.json": {
+      "title": "Device Metadata",
+      "type": "object",
+      "properties": {
+        "system": {
+          "$ref": "model_system.json",
+          "$presentation": { "section": "System" }
+        },
+        "pointset": {
+          "$ref": "model_pointset.json",
+          "$presentation": { "section": "Pointset" }
+        }
+      }
+    },
+    "model_system.json": {
+      "title": "System Model",
+      "type": "object",
+      "properties": {
+        "serial_no": {
+          "description": "The unique serial number of the device.",
+          "type": "string",
+          "$presentation": { "display": "show" }
+        },
+        "hardware": {
+          "$ref": "model_system_hardware.json",
+          "$presentation": { "section": "Hardware" }
+        },
+        "software": {
+          "type": "object",
+          "description": "A map of software component versions.",
+          "patternProperties": { "^[a-z_]+$": { "type": "string" } },
+          "$presentation": {
+            "section": "Software",
+            "paths": {
+              "firmware": { "style": "bold" },
+              "os": { "style": "bold" },
+              "driver": {}
+            }
+          }
+        }
+      }
+    },
+    "model_system_hardware.json": {
+      "title": "Hardware Model",
+      "type": "object",
+      "properties": {
+        "make": { "type": "string", "$presentation": { "display": "show" } },
+        "model": { "type": "string", "$presentation": { "display": "show" } }
+      }
+    },
+    "model_pointset.json": {
+      "title": "Device Pointset",
+      "type": "object",
+      "properties": {
+        "points": {
+          "type": "object",
+          "patternProperties": {
+            "^[a-z_]+$": { "$ref": "model_pointset_point.json" }
+          },
+          "$presentation": {
+            "paths": {
+              "filter_differential_pressure_setpoint": {},
+              "filter_alarm_pressure_status": {},
+              "supply_fan_speed_percentage_command": {}
+            }
+          }
+        }
+      }
+    },
+    "model_pointset_point.json": {
+      "title": "Point",
+      "type": "object",
+      "properties": {
+        "units": { "type": "string", "$presentation": { "display": "show" } },
+        "ref": { "type": "string", "$presentation": { "display": "show" } }
+      }
+    }
+  };
+
+  function resolveRef(ref) {
+    if (allSchemas[ref]) {
+      return JSON.parse(JSON.stringify(allSchemas[ref]));
+    }
+    throw new Error(`Schema reference "${ref}" not found.`);
+  }
+
+  // --- Core Presentation Config Generation Logic ---
+  function generatePresentationConfig(rootSchemaName) {
+    const finalConfig = {};
+    const fieldsToCapture = ['type', 'description', 'examples', 'style'];
+
+    function traverse(schemaObj, state) {
+      if (!schemaObj) return;
+
+      if (schemaObj.patternProperties && schemaObj.$presentation?.paths) {
+        const pathsObj = schemaObj.$presentation.paths;
+        const patternSchemaDef = Object.values(schemaObj.patternProperties)[0];
+        let resolvedPatternSchema = patternSchemaDef;
+        if (patternSchemaDef.$ref) {
+          const resolved = resolveRef(patternSchemaDef.$ref);
+          resolvedPatternSchema = { ...resolved, ...patternSchemaDef };
+        }
+        const isComplex = resolvedPatternSchema.type === 'object' || resolvedPatternSchema.properties || resolvedPatternSchema.patternProperties;
+        for (const [pathKey, pathConfig] of Object.entries(pathsObj)) {
+          const currentPath = state.pathPrefix ? `${state.pathPrefix}.${pathKey}` : pathKey;
+          const newSection = pathConfig.section || schemaObj.$presentation?.section || state.inheritedSection;
+          if (isComplex) {
+            traverse(resolvedPatternSchema, {
+              pathPrefix: currentPath,
+              inheritedSection: newSection,
+              forceHide: state.forceHide,
+              injectedConfig: pathConfig
+            });
+          } else if (!state.forceHide) {
+            const propConfig = { ...pathConfig, display: 'show', section: newSection };
+            for (const field of fieldsToCapture) {
+              if (resolvedPatternSchema[field] && !propConfig[field]) {
+                propConfig[field] = resolvedPatternSchema[field];
+              }
+            }
+            finalConfig[currentPath] = propConfig;
+          }
+        }
+        return;
+      }
+
+      if (schemaObj.properties) {
+        for (const [key, propSchema] of Object.entries(schemaObj.properties)) {
+          const currentPath = state.pathPrefix ? `${state.pathPrefix}.${key}` : key;
+          let effectivePropSchema = propSchema;
+          if (propSchema.$ref) {
+            const resolved = resolveRef(propSchema.$ref);
+            effectivePropSchema = { ...resolved, ...propSchema };
+          }
+          const presentation = effectivePropSchema.$presentation || {};
+          const sectionForThisLevel = presentation.section || state.inheritedSection;
+          const newForceHide = state.forceHide || presentation.display === 'hide';
+
+          const injectedKeyName = `${key}.paths`;
+          if (state.injectedConfig && state.injectedConfig[injectedKeyName]) {
+            const injectedPaths = state.injectedConfig[injectedKeyName];
+            const patternSchema = Object.values(effectivePropSchema.patternProperties)[0];
+            for (const [injectedKey, injectedPropConfig] of Object.entries(injectedPaths)) {
+              if (!newForceHide) {
+                const finalProp = { ...injectedPropConfig, display: 'show', section: sectionForThisLevel };
+                for (const field of fieldsToCapture) {
+                  if (patternSchema[field] && !finalProp[field]) finalProp[field] = patternSchema[field];
+                }
+                finalConfig[`${currentPath}.${injectedKey}`] = finalProp;
+              }
+            }
+            continue;
+          }
+
+          if ((effectivePropSchema.type === 'object' || effectivePropSchema.patternProperties) && !newForceHide) {
+            traverse(effectivePropSchema, {
+              pathPrefix: currentPath,
+              inheritedSection: sectionForThisLevel,
+              forceHide: newForceHide,
+              injectedConfig: state.injectedConfig
+            });
+          }
+
+          if (presentation.display === 'show' && !state.forceHide) {
+            const propConfig = { ...presentation, section: sectionForThisLevel };
+            for (const field of fieldsToCapture) {
+              if (effectivePropSchema[field]) propConfig[field] = effectivePropSchema[field];
+            }
+            finalConfig[currentPath] = propConfig;
+          }
+        }
+      }
+    }
+
+    const root = resolveRef(rootSchemaName);
+    const rootSection = root.$presentation?.section || rootSchemaName.replace('.json', '');
+    traverse(root, { pathPrefix: '', inheritedSection: rootSection, forceHide: false, injectedConfig: null });
+    return finalConfig;
+  }
+
+  // --- UI Rendering Functions ---
+  function renderUiFromConfig(config, parentElement) {
+    const sections = {};
+    Object.entries(config).forEach(([path, prop]) => {
+      const section = prop.section || 'General';
+      if (!sections[section]) sections[section] = { simpleProps: [], pointGroups: {} };
+
+      const pathParts = path.split('.');
+      if (pathParts.length > 2 && section === 'Pointset') {
+        const groupName = pathParts.slice(0, -1).join('.');
+        if (!sections[section].pointGroups[groupName]) {
+          sections[section].pointGroups[groupName] = [];
+        }
+        sections[section].pointGroups[groupName].push({ path, ...prop });
+      } else {
+        sections[section].simpleProps.push({ path, ...prop });
+      }
+    });
+
+    Object.entries(sections).forEach(([sectionName, content]) => {
+      const fieldset = document.createElement('fieldset');
+      const legend = document.createElement('legend');
+      legend.textContent = sectionName.replace(/_/g, ' ');
+      fieldset.appendChild(legend);
+
+      content.simpleProps.forEach(prop => {
+        fieldset.appendChild(createFormGroup(prop));
+      });
+
+      Object.entries(content.pointGroups).forEach(([groupName, props]) => {
+        const groupDiv = document.createElement('div');
+        groupDiv.className = 'point-group';
+        const groupTitle = document.createElement('div');
+        groupTitle.className = 'point-group-title';
+        groupTitle.textContent = groupName.split('.').pop().replace(/_/g, ' ');
+        groupDiv.appendChild(groupTitle);
+
+        props.forEach(prop => {
+          groupDiv.appendChild(createFormGroup(prop, true));
+        });
+        fieldset.appendChild(groupDiv);
+      });
+
+      parentElement.appendChild(fieldset);
+    });
+  }
+
+  function createFormGroup(prop, isGrouped = false) {
+    const div = document.createElement('div');
+    div.className = 'form-group';
+    const label = document.createElement('label');
+    label.className = 'form-label';
+    const labelText = isGrouped ? prop.path.split('.').pop() : prop.path.split('.').pop();
+    label.textContent = labelText.replace(/_/g, ' ');
+    if (prop.description) label.title = prop.description;
+
+    const input = document.createElement('input');
+    input.type = prop.type === 'number' ? 'number' : 'text';
+    input.className = 'form-input';
+    if (prop.style === 'bold') input.classList.add('font-bold');
+    input.placeholder = `Enter ${label.textContent}`;
+
+    div.append(label, input);
+    return div;
+  }
+
+  // --- HIERARCHY VIEW: CORRECTED LOGIC ---
+  function buildSchemaTree(schema, parentElement, processedRefs) {
+    // Helper function to recursively find all unique $refs in a schema object
+    const findRefsInObject = (obj, foundRefs) => {
+      if (!obj || typeof obj !== 'object') return;
+
+      if (obj.$ref) {
+        foundRefs.add(obj.$ref);
+      }
+
+      // Recursively search in properties and patternProperties
+      Object.values(obj).forEach(value => findRefsInObject(value, foundRefs));
+    };
+
+    const directRefs = new Set();
+    findRefsInObject(schema, directRefs);
+
+    directRefs.forEach(ref => {
+      if (processedRefs.has(ref)) return;
+      processedRefs.add(ref);
+
+      const li = document.createElement('li');
+      const span = document.createElement('span');
+      span.textContent = ref;
+      span.onclick = (e) => { e.stopPropagation(); loadSchemaInEditor(ref); };
+
+      const ul = document.createElement('ul');
+      const resolvedSchema = resolveRef(ref);
+      buildSchemaTree(resolvedSchema, ul, processedRefs); // Recurse
+
+      span.className = ul.hasChildNodes() ? 'tree-folder' : 'tree-file';
+      li.append(span, ul);
+      parentElement.appendChild(li);
+    });
+  }
+
+  function updateActiveFileInHierarchy() {
+    document.querySelectorAll('#schemaHierarchy span').forEach(span => {
+      span.classList.toggle('active', span.textContent === currentSchema);
+    });
+  }
+
+  function loadSchemaInEditor(schemaName) {
+    currentSchema = schemaName;
+    schemaEditor.value = JSON.stringify(allSchemas[schemaName], null, 2);
+    editorTitle.textContent = `Editing: ${schemaName}`;
+    updateActiveFileInHierarchy();
+  }
+
+  // --- Main Application Flow ---
+  function parseAndRender() {
+    try {
+      const config = generatePresentationConfig(rootSchema);
+      presentationConfig.textContent = JSON.stringify(config, null, 2);
+      renderedUI.innerHTML = '';
+      renderUiFromConfig(config, renderedUI);
+
+      schemaHierarchy.innerHTML = '';
+      const rootUl = document.createElement('ul');
+      const rootLi = document.createElement('li');
+      const rootSpan = document.createElement('span');
+      rootSpan.textContent = rootSchema;
+      rootSpan.onclick = () => loadSchemaInEditor(rootSchema);
+      rootLi.appendChild(rootSpan);
+
+      const childUl = document.createElement('ul');
+      // Start traversal from the root schema
+      buildSchemaTree(allSchemas[rootSchema], childUl, new Set([rootSchema]));
+
+      rootSpan.className = childUl.hasChildNodes() ? 'tree-folder' : 'tree-file';
+      rootLi.appendChild(childUl);
+      rootUl.appendChild(rootLi);
+      schemaHierarchy.appendChild(rootUl);
+
+      updateActiveFileInHierarchy();
+      errorContainer.innerHTML = '';
+    } catch (error) {
+      const errorDiv = document.createElement('div');
+      errorDiv.className = 'error-message';
+      errorDiv.textContent = `Error: ${error.message}\n${error.stack}`;
+      errorContainer.appendChild(errorDiv);
+      console.error(error);
+    }
+  }
+
+  let debounceTimer;
+  schemaEditor.addEventListener('input', () => {
+    clearTimeout(debounceTimer);
+    try {
+      allSchemas[currentSchema] = JSON.parse(schemaEditor.value);
+      errorContainer.innerHTML = '';
+      debounceTimer = setTimeout(parseAndRender, 500);
+    } catch (e) {
+      const errorDiv = document.createElement('div');
+      errorDiv.className = 'error-message';
+      errorDiv.textContent = `Invalid JSON: ${e.message}`;
+      errorContainer.innerHTML = '';
+      errorContainer.appendChild(errorDiv);
+    }
+  });
+
+  // Initial load
+  loadSchemaInEditor(rootSchema);
+  parseAndRender();
+
+</script>
+</body>
+</html>
+

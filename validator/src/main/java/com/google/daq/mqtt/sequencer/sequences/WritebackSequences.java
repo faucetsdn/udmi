@@ -24,7 +24,7 @@ public class WritebackSequences extends PointsetBase {
 
   public static final String DEFAULT_STATE = null;
   private Object lastPresentValue;
-  private static final Duration UPDATING_WAIT_DURATION = Duration.ofSeconds(8);
+  private static final Duration UPDATING_WAIT_DURATION = Duration.ofSeconds(4);
   private static final Duration MAX_WAIT_TIME = Duration.ofSeconds(20);
 
   @Before

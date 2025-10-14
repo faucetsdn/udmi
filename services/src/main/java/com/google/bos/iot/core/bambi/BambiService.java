@@ -1,5 +1,6 @@
 package com.google.bos.iot.core.bambi;
 
+import static com.google.udmi.util.GeneralUtils.isNotEmpty;
 import static com.google.udmi.util.SheetsOutputStream.executeWithSheetLogging;
 import static com.google.udmi.util.SourceRepository.AUTHOR_KEY;
 import static com.google.udmi.util.SourceRepository.SPREADSHEET_ID_KEY;
@@ -152,7 +153,7 @@ public class BambiService extends AbstractPollingService {
 
         switch (params.requestType) {
           case IMPORT_REQUEST -> handleImport(spreadsheetId, repository);
-          case EXPORT_REQUEST -> handleExport(spreadsheetId, repository, timestamp, params.user());
+          case EXPORT_REQUEST -> handleExport(spreadsheetId, repository, timestamp, params);
           default -> LOGGER.error("Invalid request type '{}'", params.requestType);
         }
         repository.delete(); // free up space after task
@@ -180,8 +181,14 @@ public class BambiService extends AbstractPollingService {
    * commits and pushes the changes to a new branch.
    */
   private void handleExport(String spreadsheetId, SourceRepository repository, String timestamp,
-      String user) {
+      BambiRequestParams params) {
+    String user = params.user();
     String exportBranch = String.format("proposal/%s/%s", spreadsheetId, timestamp);
+    String commitMessage = params.commitMessage();
+    if (!isNotEmpty(commitMessage)) {
+      commitMessage = "Changes from " + user + " via BAMBI spreadsheet " + spreadsheetId;
+    }
+
     if (!repository.checkoutNewBranch(exportBranch)) {
       throw new RuntimeException("Unable to create and checkout export branch " + exportBranch);
     }
@@ -192,8 +199,7 @@ public class BambiService extends AbstractPollingService {
     createTriggerRegistrarFile(repository, spreadsheetId, user);
 
     LOGGER.info("Committing and pushing changes to branch {}", exportBranch);
-    if (!repository.commitAndPush("Changes from " + user + " via BAMBI spreadsheet "
-        + spreadsheetId)) {
+    if (!repository.commitAndPush(commitMessage)) {
       throw new RuntimeException("Unable to commit and push changes to branch " + exportBranch);
     }
     LOGGER.info("Commit URL: {}\n", repository.getCommitUrl(exportBranch));
@@ -237,7 +243,8 @@ public class BambiService extends AbstractPollingService {
         attributes.get("source"),
         attributes.get("user"),
         attributes.get("registry_id"),
-        attributes.getOrDefault("import_branch", DEFAULT_IMPORT_BRANCH));
+        attributes.getOrDefault("import_branch", DEFAULT_IMPORT_BRANCH),
+        attributes.getOrDefault("commit_message", null));
   }
 
   private Optional<String> getSpreadsheetId(String sourceUrl) {
@@ -248,7 +255,7 @@ public class BambiService extends AbstractPollingService {
   // --- Inner Records for Data Structuring ---
 
   private record BambiRequestParams(String requestType, String source, String user,
-                                    String registryId, String importBranch) {
+                                    String registryId, String importBranch, String commitMessage) {
     /**
      * Helper to validate that all required parameters are present.
      */

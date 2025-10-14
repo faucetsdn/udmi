@@ -1,0 +1,38 @@
+{
+  "system": {
+    "hardware": {
+      "make": "BOS",
+      "model": "pubber"
+    },
+    "software": {
+      "firmware": "v1 (overrides_the_template)"
+    },
+    "location": {
+      "position": {
+        "x": 111.0,
+        "y": 102.3
+      }
+    },
+    "physical_tag": {
+      "asset": {
+        "guid": "drw://TBC",
+        "site": "ZZ-TRI-FECTA",
+        "name": "TPS-1"
+      }
+    }
+  },
+  "pointset": {
+    "points": {
+      "room_temperature_sensor_from_device": {
+        "range_min": 0
+      },
+      "room_humidity_sensor_from_template": {
+        "range_min": 0,
+        "range_max": 90  // overrides the template range_max
+      }
+    }
+  },
+  "version": "1.5.2",
+  "timestamp": "2020-05-01T13:39:07Z",
+  "extend": "tps_template"
+}

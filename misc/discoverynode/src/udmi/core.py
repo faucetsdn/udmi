@@ -146,6 +146,9 @@ class UDMICore:
       )
 
       self.add_config_route(
+          # True so that the complete config is always passed
+          # Otherwise, when a block is removed, it never gets triggered
+          # Should probably be refactored out
           lambda x: True,
           number_discovery,
       )
@@ -187,7 +190,8 @@ class UDMICore:
     if ether:
       ether_scan = udmi.discovery.ether.EtherDiscovery(
           self.state,
-          self.publish_discovery
+          self.publish_discovery,
+          ping_concurrency = self.config.get("ether", {}).get("ping_concurrency")
       )
 
       self.add_config_route(
