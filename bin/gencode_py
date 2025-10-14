@@ -20,7 +20,7 @@ VENV_DIR="$ROOT_DIR/codegen/venv"
 SCHEMA_INPUT_DIR="$ROOT_DIR/schema"
 SCHEMA_OUTPUT_DIR="$ROOT_DIR/codegen/pyschema"
 GEN_PYTHON_DIR="$ROOT_DIR/gencode/python"
-PYTHON_OUTPUT_DIR="$GEN_PYTHON_DIR/src/udmi/schema"
+PYTHON_OUTPUT_DIR="$GEN_PYTHON_DIR/udmi/schema"
 
 python3 -m venv "$VENV_DIR"
 source "$VENV_DIR"/bin/activate
