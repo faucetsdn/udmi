@@ -103,7 +103,20 @@ timeout 30s pubber/bin/run /tmp/pubber_config.json || true
 echo Publishing ending test message
 mosquitto_pub $CLIENT_OPTS -t $topic -m "Hello Rudolph"
 
-sleep 1
+echo "Waiting up to 20s for operational state message from pubber..."
+for i in {1..20}; do
+    operational_line=$(sed '/operational/!d;q' out/mosquitto.sub)
+    if [[ -n "$operational_line" ]]; then
+        echo "Found operational message."
+        break
+    fi
+    echo "Still waiting..."
+    sleep 1
+done
+
+if [[ -z "$operational_line" ]]; then
+    fail "FATAL: Timed out waiting for operational state message."
+fi
 
 echo Cleanup subscribers and clients...
 killall mosquitto_sub || true
@@ -116,7 +129,7 @@ echo Checking received end message
 fgrep Rudolph out/mosquitto.sub || fail did not find expected message
 
 echo Checking messages for matching serial no $serial_no
-received_no=$(fgrep operational out/mosquitto.sub | head -n 1 | sed -E 's/^[^{]+//' | jq -r .system.serial_no)
+received_no=$(echo "$operational_line" | sed -E 's/^[^{]+//' | jq -r .system.serial_no)
 received_topic=$(fgrep operational out/mosquitto.sub | head -n 1 | awk '{ print $1 }')
 [[ -z $received_topic ]] && fail No matching receive message found.
 
