@@ -1,0 +1,6 @@
+{
+  "site_metadata" : [ "Required file not found: /usr/local/google/home/heykhyati/Projects/udmi/tests/sites/simple/site_metadata.json" ],
+  "status" : {
+    "TPS-1" : "CLEAN"
+  }
+}

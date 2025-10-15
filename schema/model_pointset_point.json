@@ -49,7 +49,7 @@
     },
     "cov_increment": {
       "description": "Triggering threshold for partial cov update publishing",
-      "examples": [1],  
+      "examples": [1],
       "type": "number"
     },
     "ref": {

@@ -1,0 +1,162 @@
+#!/bin/bash -e
+
+# This script automates the process of updating num_ids for a list of site models
+# as requested in b/435662022 and incorporating review comments from PR #1186.
+
+# --- Script Usage ---
+# The script now accepts project_spec and the list of site models as command-line arguments.
+#
+# Usage:
+# ./import_site_num_ids <project_spec> <site_model_1> <site_model_2> ...
+#
+# Example:
+# ./import_site_num_ids //gbos/bos-platform-prod US-SVL-BRGUP1 US-SVL-OTHER
+
+SITE_MODELS=()
+
+UDMI_ROOT=$(dirname $0)/..
+cd $UDMI_ROOT
+
+# ==============================================================================
+
+if [ "$#" -lt 2 ]; then
+    echo "Usage: $0 <project_spec> <site_model_1> <site_model_2> ..."
+    echo "Example: $0 //gbos/bos-platform-prod US-SVL-BRGUP1"
+    exit 1
+fi
+
+project_spec=$1
+shift # Removes the first argument, so the rest are site models
+SITE_MODELS=("$@") # Assigns the remaining arguments to the SITE_MODELS array
+
+# Get the gcloud email address.
+GCLOUD_EMAIL=$(gcloud config get-value account 2>/dev/null)
+
+if [ -z "$GCLOUD_EMAIL" ]; then
+    echo "Error: Could not get gcloud email address."
+    echo "Please make sure you are authenticated with gcloud ('gcloud auth login')."
+    exit 1
+fi
+
+echo "Using gcloud email: $GCLOUD_EMAIL"
+
+# Validate the project_spec format and extract the project ID.
+# The project ID is expected to be the component after "//gbos/".
+if [[ ! "$project_spec" =~ ^//gbos/ ]]; then
+    echo "Error: project_spec must start with //gbos/"
+    exit 1
+fi
+
+# Extracts the part like 'bos-platform-prod' or 'bos-platform-dev'
+project_id=$(echo "$project_spec" | cut -d'/' -f4)
+
+if [ -z "$project_id" ]; then
+    echo "Error: Could not extract project ID from project_spec '$project_spec'."
+    echo "Ensure it has at least one component after //gbos/ (e.g., //gbos/project-id)."
+    exit 1
+fi
+
+echo "Using Project ID: $project_id"
+echo "Processing site models: ${SITE_MODELS[@]}"
+
+# Check if the SITE_MODELS array is empty.
+if [ ${#SITE_MODELS[@]} -eq 0 ]; then
+    echo "Please provide site models for which num_ids to be imported."
+    exit 1
+fi
+
+# Loop through each site model provided in the array.
+for site_model in "${SITE_MODELS[@]}"; do
+    echo "-----------------------------------------------------"
+    echo "Processing site model: $site_model"
+    echo "-----------------------------------------------------"
+
+    SITE_PATH="$UDMI_ROOT/sites/$site_model"
+
+    # Prepare a clean directory for the site model.
+    if [ -d "$SITE_PATH/.git" ]; then
+        echo "Repository exists. Cleaning and pulling latest changes."
+        (
+            cd "$SITE_PATH" || exit
+            git reset --hard origin/main
+            git clean -fdx
+            git pull origin main
+            git checkout main
+        )
+    else
+        echo "Repository not found. Cloning a new one."
+        rm -rf "$SITE_PATH"
+        GIT_CLONE_URL="ssh://${GCLOUD_EMAIL}@source.developers.google.com:2022/p/${project_id}/r/${site_model}"
+        git clone "$GIT_CLONE_URL" "$SITE_PATH"
+    fi
+
+    DEVICES_PATH="$SITE_PATH/udmi/devices"
+
+    if [ ! -d "$DEVICES_PATH" ]; then
+        echo "  WARNING: Devices directory not found at '$DEVICES_PATH'. Skipping device-level operations."
+        continue
+    fi
+    
+    # Step A: Normalize metadata.json files in the devices directory.
+    echo "Normalizing metadata for $site_model..."
+    (
+        cd "$DEVICES_PATH" || exit
+        for device in */; do
+            device_name=${device%/}
+            if [ -f "$device_name/metadata.json" ]; then
+                echo "  Normalizing $device_name/metadata.json"
+                jq -S . "$device_name/metadata.json" | sponge "$device_name/metadata.json"
+            fi
+        done
+    )
+
+    # --- Commit ---
+    echo "Committing normalized files for $site_model..."
+    (
+        cd "$SITE_PATH" || exit
+        git add .
+        git commit -m "Normalize metadata for $site_model"
+    )
+
+    # Step B: Run the registrar utility to update from IoT Core.
+    echo "Running registrar for $site_model..."
+    "$UDMI_ROOT/bin/registrar" "$SITE_PATH/udmi" "$project_spec" -u
+
+    # Step C: Update the num_id in metadata.json from the registrar's output.
+    echo "Updating num_id for $site_model..."
+    (
+        cd "$DEVICES_PATH" || exit
+        for device in */; do
+            device_name=${device%/}
+            echo "  Updating num_id for $device_name"
+            if [ -f "$device_name/out/metadata_norm.json" ]; then
+                id=$(jq .cloud.num_id "$device_name/out/metadata_norm.json")
+                jq -S ".cloud.num_id = $id" "$device_name/metadata.json" | sponge "$device_name/metadata.json"
+            else
+                echo "  WARNING: metadata_norm.json not found for $device_name. Skipping num_id update."
+            fi
+        done
+    )
+
+    # Step D: Commit and Push the num_id changes to git for Review.
+    echo "Committing and pushing num_id changes for $site_model..."
+    (
+        cd "$SITE_PATH" || exit
+        git add .
+        git commit -m "Import num_ids for site model $site_model"
+    )
+
+    # Push the main branch to the remote repository
+    echo "Pushing changes to main branch"
+    (
+        cd "$SITE_PATH" || exit
+        git push origin main
+    )
+
+
+    echo "Done processing $site_model."
+done
+
+echo "====================================================="
+echo "All site models processed."
+echo "====================================================="

@@ -1,0 +1,15 @@
+{
+  "system": {
+    "location": {
+      "site": "ZZ-SITE-DEFAULT"
+    },
+    "physical_tag": {
+      "asset": {
+        "site": "ZZ-SITE-DEFAULT"
+      }
+    }
+  },
+  "cloud": {
+    "detail": "site_default detail"
+  }
+}

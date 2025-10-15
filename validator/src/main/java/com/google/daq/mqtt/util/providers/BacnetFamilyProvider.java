@@ -17,8 +17,8 @@ public class BacnetFamilyProvider implements FamilyProvider {
   private static final int MAX_ADDR_VALUE = 4194303;
   private static final Pattern BACNET_NETWORK = Pattern.compile("[1-9][0-9]{0,4}");
   private static final int MAX_NETWORK_VALUE = 65534;
-  private static final Pattern BACNET_REF = Pattern.compile(
-      "bacnet://(0|[1-9][0-9]*)/([A-Z]{2,4}):(0|[1-9][0-9]*)(#[_a-z]+)?");
+  private static final Pattern BACNET_POINT = Pattern.compile(
+      "([A-Z]{2,4}):(0|[1-9][0-9]*)(#[_a-z]+)?");
 
   @Override
   public String familyKey() {
@@ -26,13 +26,13 @@ public class BacnetFamilyProvider implements FamilyProvider {
   }
 
   @Override
-  public void validateRef(String refValue) {
-    requireNonNull(refValue, "missing required bacnet point ref");
-    Matcher matcher = BACNET_REF.matcher(refValue);
+  public void validatePoint(String pointRef) {
+    requireNonNull(pointRef, "missing required bacnet point ref");
+    Matcher matcher = BACNET_POINT.matcher(pointRef);
     boolean matches = matcher.matches();
     if (!matches) {
       throw new RuntimeException(
-          format("protocol ref %s does not match expression %s", refValue, BACNET_REF));
+          format("protocol ref %s does not match expression %s", pointRef, BACNET_POINT));
     }
   }
 

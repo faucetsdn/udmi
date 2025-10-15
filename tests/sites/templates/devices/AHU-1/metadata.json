@@ -1,0 +1,66 @@
+{
+  "pointset": {
+    "points": {
+      "filter_alarm_pressure_status": {
+        "units": "No-units",
+        "ref": "BV11.present_value"
+      },
+      "filter_differential_pressure_sensor": {
+        "units": "Degrees-Celsius",
+        "ref": "AV12.present_value",
+        "baseline_value": 10,
+        "baseline_tolerance": 2
+      },
+      "filter_differential_pressure_setpoint": {
+        "units": "Bars",
+        "writable": true,
+        "baseline_value": 98
+      }
+    }
+  },
+  "system": {
+    "hardware": {
+      "make": "BOS",
+      "model": "pubber"
+    },
+    "software": {
+      "firmware": "v1"
+    },
+    "location": {
+      "section": "2-3N8C",
+      "position": {
+        "x": 111.0,
+        "y": 102.3
+      }
+    },
+    "physical_tag": {
+      "asset": {
+        "guid": "drw://TBC",
+        "name": "AHU-1"
+      }
+    }
+  },
+  "cloud": {
+    "auth_type": "RS256"
+  },
+  "localnet": {
+    "families": {
+      "ipv4": {
+        "addr": "192.168.2.1"
+      },
+      "ether": {
+        "addr": "00:50:b6:ed:5f:77"
+      },
+      "bacnet": {
+        "addr": "19233",
+        "network": "9288"
+      },
+      "vendor": {
+        "addr": "28179023"
+      }
+    }
+  },
+  "version": "1.5.2",
+  "timestamp": "2020-05-01T13:39:07Z",
+  "extend": "unknown_template"
+}
