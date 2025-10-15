@@ -3,6 +3,7 @@ from .model_cloud import CloudModel
 from .model_system import SystemModel
 from .model_gateway import GatewayModel
 from .model_discovery import DiscoveryModel
+from .model_relationships import RelationshipsModel
 from .model_localnet import LocalnetModel
 from .model_testing import TestingModel
 from .model_features import TestingModel
@@ -23,6 +24,7 @@ class Metadata:
     self.system = None
     self.gateway = None
     self.discovery = None
+    self.relationships = None
     self.localnet = None
     self.testing = None
     self.features = None
@@ -43,6 +45,7 @@ class Metadata:
     result.system = SystemModel.from_dict(source.get('system'))
     result.gateway = GatewayModel.from_dict(source.get('gateway'))
     result.discovery = DiscoveryModel.from_dict(source.get('discovery'))
+    result.relationships = source.get('relationships')
     result.localnet = LocalnetModel.from_dict(source.get('localnet'))
     result.testing = TestingModel.from_dict(source.get('testing'))
     result.features = FeatureDiscovery.map_from(source.get('features'))
@@ -86,6 +89,8 @@ class Metadata:
       result['gateway'] = self.gateway.to_dict() # 4
     if self.discovery:
       result['discovery'] = self.discovery.to_dict() # 4
+    if self.relationships:
+      result['relationships'] = self.relationships # 1
     if self.localnet:
       result['localnet'] = self.localnet.to_dict() # 4
     if self.testing:
