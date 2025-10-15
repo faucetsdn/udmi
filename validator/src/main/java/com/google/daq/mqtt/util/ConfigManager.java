@@ -2,6 +2,7 @@ package com.google.daq.mqtt.util;
 
 import static com.google.common.base.Preconditions.checkState;
 import static com.google.daq.mqtt.util.providers.FamilyProvider.NAMED_FAMILIES;
+import static com.google.daq.mqtt.util.providers.FamilyProvider.constructUrl;
 import static com.google.udmi.util.ContextWrapper.getCurrentContext;
 import static com.google.udmi.util.ContextWrapper.runInContext;
 import static com.google.udmi.util.ContextWrapper.wrapExceptionWithContext;
@@ -253,8 +254,8 @@ public class ConfigManager {
         format("both gateway.target.addr and localnet.families.%s.addr should not be defined",
             family));
     try {
-      String fullRef = format("%s://%s/%s", family, localAddr, pointRef);
-      NAMED_FAMILIES.get(family).validateRef(fullRef);
+      String fullRef = constructUrl(family, localAddr, pointRef);
+      NAMED_FAMILIES.get(family).validateUrl(fullRef);
     } catch (Exception e) {
       schemaViolationsMap.put(String.format("%s %s: %s", family, pointRef, getCurrentContext()),
           wrapExceptionWithContext(e, false));

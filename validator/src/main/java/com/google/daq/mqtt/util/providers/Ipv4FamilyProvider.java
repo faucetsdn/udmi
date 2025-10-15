@@ -13,8 +13,8 @@ import java.net.Inet4Address;
  */
 public class Ipv4FamilyProvider implements FamilyProvider {
 
-  private static final int MAX_PORT_VALUE = 65535;
   private static final int MAX_PREFIX_LENGTH = 32;
+  public static final String CIDR_SEPARATOR = "/";
 
   @Override
   public String familyKey() {
@@ -22,34 +22,20 @@ public class Ipv4FamilyProvider implements FamilyProvider {
   }
 
   @Override
-  public void validateRef(String refValue) {
-    requireNonNull(refValue, "missing required ipv4 point ref");
-    checkState(refValue.startsWith("ipv4://"), "ipv4 ref must start with 'ipv4://'");
+  public void validateAddr(String fullAddr) {
+    requireNonNull(fullAddr, "missing required ipv4 scan_addr");
 
-    String[] parts = refValue.substring("ipv4://".length()).split(":", 2);
-    checkState(parts.length == 2,
-        "ipv4 ref must be in format ipv4://<address>:<port>");
-    validateAddr(parts[0]);
-
-    int port = Integer.parseInt(parts[1]);
-    checkState(port >= 0 && port <= MAX_PORT_VALUE,
-        format("ipv4 ref port %s exceeds maximum %d", port, MAX_PORT_VALUE));
-  }
-
-  @Override
-  public void validateAddr(String scanAddr) {
-    requireNonNull(scanAddr, "missing required ipv4 scan_addr");
-    checkState(InetAddresses.isInetAddress(scanAddr)
-            && InetAddresses.forString(scanAddr) instanceof Inet4Address,
-        format("ipv4 scan_addr %s is not a valid IPv4 address", scanAddr));
+    checkState(InetAddresses.isInetAddress(fullAddr)
+            && InetAddresses.forString(fullAddr) instanceof Inet4Address,
+        format("ipv4 scan_addr %s is not a valid IPv4 address", fullAddr));
   }
 
   @Override
   public void validateNetwork(String networkAddr) {
     requireNonNull(networkAddr, "missing required ipv4 network");
-    String[] parts = networkAddr.split("/", 2);
+    String[] parts = networkAddr.split(CIDR_SEPARATOR, 2);
     checkState(parts.length == 2,
-        "ipv4 network must be in CIDR format (address/prefix)");
+        "ipv4 network must be in CIDR format (address/size)");
 
     validateAddr(parts[0]);
 
