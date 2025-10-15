@@ -376,8 +376,8 @@ public class DiscoverySequences extends SequenceBase {
 
     Date generation = deviceConfig.discovery.families.get(scanFamily).generation;
     SortedSet<Integer> eventNos = events.stream().map(event -> event.event_no)
-        .collect(Collectors.toCollection(TreeSet::new));
-    debug(format("Received discovery %s event_nos %s", generation, eventNos));
+        .filter(Objects::nonNull).collect(Collectors.toCollection(TreeSet::new));
+    debug(format("Received discovery %s events with event_nos %s", generation, eventNos));
 
     int expectedEvents = actualCount + EVENT_MARKERS;  // Includes start and stop marker events.
     debug(format("Received %d events, %d in state (expect +%d)", events.size(), actualCount,
