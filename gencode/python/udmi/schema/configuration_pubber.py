@@ -6,12 +6,13 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Any, Optional
 
+from ._base import DataModel
 from .configuration_endpoint import EndpointConfiguration
 from .options_pubber import PubberOptions
 
 
 @dataclass
-class PubberConfiguration:
+class PubberConfiguration(DataModel):
     """
     Parameters to define a pubber runtime instance
     """

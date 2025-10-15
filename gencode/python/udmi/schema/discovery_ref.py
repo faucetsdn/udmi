@@ -6,19 +6,20 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Dict, List, Optional
 
+from ._base import DataModel
 from .ancillary_properties import AncillaryProperties
 from .discovery_family import FamilyDiscovery
 from .entry import Entry
 
 
 @dataclass
-class Structure:
+class Structure(DataModel):
     point: Optional[FamilyDiscovery] = None
     families: Optional[Dict[str, FamilyDiscovery]] = None
 
 
 @dataclass
-class RefDiscovery:
+class RefDiscovery(DataModel):
     """
     Object representation for for a single point reference discovery
     """

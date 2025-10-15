@@ -6,10 +6,11 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Optional
 
+from ._base import DataModel
 from .entry import Entry
 
 
 @dataclass
-class FamilyLocalnetState:
+class FamilyLocalnetState(DataModel):
     addr: Optional[str] = None
     status: Optional[Entry] = None

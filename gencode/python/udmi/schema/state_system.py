@@ -6,13 +6,14 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Dict, Optional
 
+from ._base import DataModel
 from .entry import Entry
 from .state_system_hardware import StateSystemHardware
 from .state_system_operation import StateSystemOperation
 
 
 @dataclass
-class SystemState:
+class SystemState(DataModel):
     """
     [System State Documentation](../docs/messages/system.md#state)
     """

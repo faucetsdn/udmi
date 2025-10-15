@@ -5,7 +5,9 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
+from ._base import DataModel
+
 
 @dataclass
-class FamilyLocalnetConfig:
+class FamilyLocalnetConfig(DataModel):
     pass

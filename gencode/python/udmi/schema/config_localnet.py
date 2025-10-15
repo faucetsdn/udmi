@@ -6,11 +6,12 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Dict, Optional
 
+from ._base import DataModel
 from .config_localnet_family import FamilyLocalnetConfig
 
 
 @dataclass
-class LocalnetConfig:
+class LocalnetConfig(DataModel):
     """
     Currently unused: request local network configuration
     """

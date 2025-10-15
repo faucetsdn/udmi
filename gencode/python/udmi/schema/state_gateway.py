@@ -6,11 +6,12 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Optional
 
+from ._base import DataModel
 from .entry import Entry
 
 
 @dataclass
-class GatewayState:
+class GatewayState(DataModel):
     """
     [Gateway Documentation](../docs/specs/gateway.md)
     """

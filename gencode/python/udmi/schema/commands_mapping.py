@@ -6,12 +6,13 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Optional
 
+from ._base import DataModel
 from .entry import Entry
 from .equipment_translation import BuildingConfig
 
 
 @dataclass
-class MappingCommand:
+class MappingCommand(DataModel):
     """
     [Mapping command](../docs/specs/mapping.md) for provisioning
     """

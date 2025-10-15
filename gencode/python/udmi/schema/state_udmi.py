@@ -6,9 +6,11 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Dict, Optional
 
+from ._base import DataModel
+
 
 @dataclass
-class Setup:
+class Setup(DataModel):
     user: Optional[str] = None
     udmi_version: Optional[str] = None
     functions_ver: Optional[int] = None
@@ -22,7 +24,7 @@ class Setup:
 
 
 @dataclass
-class UdmiState:
+class UdmiState(DataModel):
     """
     State of a UDMI reflector client
     """

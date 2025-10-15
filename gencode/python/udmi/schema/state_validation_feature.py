@@ -6,11 +6,12 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Dict, Optional
 
+from ._base import DataModel
 from .state_validation_sequence import SequenceValidationState
 
 
 @dataclass
-class FeatureValidationState:
+class FeatureValidationState(DataModel):
     """
     Feature validation state
     """

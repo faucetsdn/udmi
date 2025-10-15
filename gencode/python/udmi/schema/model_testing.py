@@ -6,11 +6,12 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Dict, Optional
 
+from ._base import DataModel
 from .model_testing_target import TargetTestingModel
 
 
 @dataclass
-class TestingModel:
+class TestingModel(DataModel):
     """
     Testing target parameters
     """

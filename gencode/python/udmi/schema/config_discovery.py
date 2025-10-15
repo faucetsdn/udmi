@@ -6,12 +6,13 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Dict, Optional
 
+from ._base import DataModel
 from .common import Depth
 from .config_discovery_family import FamilyDiscoveryConfig
 
 
 @dataclass
-class Enumerations:
+class Enumerations(DataModel):
     """
     Enumeration depth for self-enumerations.
     """
@@ -23,7 +24,7 @@ class Enumerations:
 
 
 @dataclass
-class DiscoveryConfig:
+class DiscoveryConfig(DataModel):
     """
     Configuration for [discovery](../docs/specs/discovery.md)
     """

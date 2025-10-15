@@ -6,11 +6,12 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Optional
 
+from ._base import DataModel
 from .common import Stage
 
 
 @dataclass
-class FeatureDiscovery:
+class FeatureDiscovery(DataModel):
     """
     Object representation for for a single feature
     """

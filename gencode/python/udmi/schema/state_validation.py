@@ -6,6 +6,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Dict, List, Optional
 
+from ._base import DataModel
 from .config_udmi import Setup
 from .entry import Entry
 from .events_validation_device import DeviceValidationEvents
@@ -14,7 +15,7 @@ from .state_validation_schema import SchemaValidationState
 
 
 @dataclass
-class Summary:
+class Summary(DataModel):
     correct_devices: Optional[List[str]] = None
     extra_devices: Optional[List[str]] = None
     missing_devices: Optional[List[str]] = None
@@ -22,7 +23,7 @@ class Summary:
 
 
 @dataclass
-class ValidationState:
+class ValidationState(DataModel):
     """
     Validation state summary
     """

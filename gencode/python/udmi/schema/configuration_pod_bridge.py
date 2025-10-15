@@ -6,11 +6,12 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Optional
 
+from ._base import DataModel
 from .configuration_endpoint import EndpointConfiguration
 
 
 @dataclass
-class BridgePodConfiguration:
+class BridgePodConfiguration(DataModel):
     """
     Parameters to define a bridge between message domains
     """

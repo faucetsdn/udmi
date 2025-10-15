@@ -6,11 +6,12 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Optional
 
+from ._base import DataModel
 from .category import Category
 
 
 @dataclass
-class Entry:
+class Entry(DataModel):
     message: Optional[str] = None
     detail: Optional[str] = None
     category: Optional[Category] = None

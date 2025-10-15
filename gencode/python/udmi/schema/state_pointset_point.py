@@ -7,6 +7,7 @@ from dataclasses import dataclass
 from enum import Enum
 from typing import Optional
 
+from ._base import DataModel
 from .entry import Entry
 
 
@@ -24,7 +25,7 @@ class ValueState(Enum):
 
 
 @dataclass
-class PointPointsetState:
+class PointPointsetState(DataModel):
     """
     Object representation for for a single point
     """

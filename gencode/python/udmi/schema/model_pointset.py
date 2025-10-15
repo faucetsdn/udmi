@@ -6,11 +6,12 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Dict, Optional
 
+from ._base import DataModel
 from .model_pointset_point import PointPointsetModel
 
 
 @dataclass
-class PointsetModel:
+class PointsetModel(DataModel):
     """
     Pointset representing the abstract system expectation for what the device should be doing, and how it should be configured and operated. This block specifies the expected points that a device holds
     """

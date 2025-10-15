@@ -7,6 +7,8 @@ from dataclasses import dataclass
 from enum import Enum
 from typing import Optional
 
+from ._base import DataModel
+
 
 class SubFolder(Enum):
     udmi = 'udmi'
@@ -41,7 +43,7 @@ class SubType(Enum):
 
 
 @dataclass
-class Envelope:
+class Envelope(DataModel):
     """
     The UDMI `envelope` is not a message itself, per se, but the attributes and other information that is delivered along with a message. [Message Envelope Documentation](../docs/messages/envelope.md)
     """

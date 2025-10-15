@@ -6,18 +6,19 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Optional
 
+from ._base import DataModel
 from .common import Mode
 from .config_system_testing import TestingSystemConfig
 
 
 @dataclass
-class Operation:
+class Operation(DataModel):
     mode: Optional[Mode] = None
     last_start: Optional[str] = None
 
 
 @dataclass
-class SystemConfig:
+class SystemConfig(DataModel):
     """
     [System Config Documentation](../docs/messages/system.md#config)
     """

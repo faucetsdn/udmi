@@ -7,6 +7,7 @@ from dataclasses import dataclass
 from enum import Enum
 from typing import Any, Dict, List, Optional
 
+from ._base import DataModel
 from .discovery_ref import RefDiscovery
 
 
@@ -26,7 +27,7 @@ Tag = Optional[Any]
 
 
 @dataclass
-class PointPointsetModel:
+class PointPointsetModel(DataModel):
     """
     Information about a specific point name of the device.
     """

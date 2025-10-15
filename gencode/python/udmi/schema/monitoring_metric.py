@@ -6,12 +6,13 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Optional
 
+from ._base import DataModel
 from .envelope import Envelope
 from .events_system import SystemEvents
 
 
 @dataclass
-class MonitoringMetric:
+class MonitoringMetric(DataModel):
     """
     One metric
     """

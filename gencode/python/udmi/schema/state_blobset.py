@@ -6,9 +6,10 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Dict, Optional
 
+from ._base import DataModel
 from .state_blobset_blob import BlobBlobsetState
 
 
 @dataclass
-class BlobsetState:
+class BlobsetState(DataModel):
     blobs: Optional[Dict[str, BlobBlobsetState]] = None

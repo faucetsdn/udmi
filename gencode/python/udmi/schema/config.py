@@ -6,6 +6,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Optional
 
+from ._base import DataModel
 from .config_blobset import BlobsetConfig
 from .config_discovery import DiscoveryConfig
 from .config_gateway import GatewayConfig
@@ -15,7 +16,7 @@ from .config_system import SystemConfig
 
 
 @dataclass
-class Config:
+class Config(DataModel):
     """
     The config block controls a device's intended behavior. [Config Documentation](../docs/messages/config.md)
     """

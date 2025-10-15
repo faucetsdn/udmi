@@ -6,6 +6,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Optional
 
+from ._base import DataModel
 from .state_blobset import BlobsetState
 from .state_discovery import DiscoveryState
 from .state_gateway import GatewayState
@@ -15,7 +16,7 @@ from .state_system import SystemState
 
 
 @dataclass
-class State:
+class State(DataModel):
     """
     [State](../docs/messages/state.md) message, defined by [`state.json`]
     """

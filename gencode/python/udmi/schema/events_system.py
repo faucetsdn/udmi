@@ -6,11 +6,12 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import List, Optional
 
+from ._base import DataModel
 from .entry import Entry
 
 
 @dataclass
-class Metrics:
+class Metrics(DataModel):
     mem_total_mb: Optional[float] = None
     mem_free_mb: Optional[float] = None
     store_total_mb: Optional[float] = None
@@ -19,7 +20,7 @@ class Metrics:
 
 
 @dataclass
-class SystemEvents:
+class SystemEvents(DataModel):
     """
     Used for system events such as logging. [System Event Documentation](../docs/messages/system.md#event)
     """

@@ -6,6 +6,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Any, Dict, Optional
 
+from ._base import DataModel
 from .ancillary_properties import AncillaryProperties
 from .discovery_family import FamilyDiscovery
 from .discovery_feature import FeatureDiscovery
@@ -17,7 +18,7 @@ from .state_system_hardware import StateSystemHardware
 
 
 @dataclass
-class System:
+class System(DataModel):
     description: Optional[str] = None
     name: Optional[str] = None
     serial_no: Optional[str] = None
@@ -26,7 +27,7 @@ class System:
 
 
 @dataclass
-class DiscoveryEvents:
+class DiscoveryEvents(DataModel):
     """
     [Discovery result](../docs/specs/discovery.md) with implicit discovery
     """

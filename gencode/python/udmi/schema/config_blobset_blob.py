@@ -6,11 +6,12 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Optional
 
+from ._base import DataModel
 from .common import Phase
 
 
 @dataclass
-class BlobBlobsetConfig:
+class BlobBlobsetConfig(DataModel):
     phase: Optional[Phase] = None
     url: Optional[str] = None
     sha256: Optional[str] = None

@@ -6,9 +6,11 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Any, Optional
 
+from ._base import DataModel
+
 
 @dataclass
-class PointPointsetEvents:
+class PointPointsetEvents(DataModel):
     """
     Object representation for for a single point
     """

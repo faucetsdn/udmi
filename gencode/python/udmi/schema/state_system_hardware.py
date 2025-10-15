@@ -6,9 +6,11 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Optional
 
+from ._base import DataModel
+
 
 @dataclass
-class StateSystemHardware:
+class StateSystemHardware(DataModel):
     """
     A collection of fields which describe the physical hardware of the device.
     """

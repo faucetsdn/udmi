@@ -5,4 +5,6 @@ from __future__ import annotations
 
 from typing import Dict, Optional
 
+from ._base import DataModel
+
 VirtualEquipmentLinks = Optional[Dict[str, Dict[str, str]]]

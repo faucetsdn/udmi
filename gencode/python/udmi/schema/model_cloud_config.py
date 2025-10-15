@@ -6,9 +6,11 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Optional
 
+from ._base import DataModel
+
 
 @dataclass
-class CloudConfigModel:
+class CloudConfigModel(DataModel):
     """
     Information specific to how the device communicates with the cloud.
     """

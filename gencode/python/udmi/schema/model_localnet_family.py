@@ -6,9 +6,11 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Dict, Optional
 
+from ._base import DataModel
+
 
 @dataclass
-class FamilyLocalnetModel:
+class FamilyLocalnetModel(DataModel):
     """
     The type of network
     """

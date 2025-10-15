@@ -7,6 +7,7 @@ from dataclasses import dataclass
 from enum import Enum
 from typing import Dict, List, Optional
 
+from ._base import DataModel
 from .equipment_translation import BuildingConfig
 from .virtual_links import VirtualEquipmentLinks
 
@@ -16,7 +17,7 @@ class Connections(Enum):
 
 
 @dataclass
-class MappingEventEntity:
+class MappingEventEntity(DataModel):
     code: Optional[str] = None
     type: Optional[str] = None
     cloud_device_id: Optional[str] = None

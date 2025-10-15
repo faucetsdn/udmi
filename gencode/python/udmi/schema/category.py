@@ -5,4 +5,6 @@ from __future__ import annotations
 
 from typing import Optional
 
+from ._base import DataModel
+
 Category = Optional[str]

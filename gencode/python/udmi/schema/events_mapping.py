@@ -6,12 +6,13 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Optional
 
+from ._base import DataModel
 from .entry import Entry
 from .events_mapping_entities import MappingEventsEntities
 
 
 @dataclass
-class MappingEvents:
+class MappingEvents(DataModel):
     """
     [Mapping result](../docs/specs/mapping.md) with implicit enumeration
     """

@@ -6,12 +6,13 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Dict, Optional
 
+from ._base import DataModel
 from .entry import Entry
 from .state_pointset_point import PointPointsetState
 
 
 @dataclass
-class PointsetState:
+class PointsetState(DataModel):
     """
     A set of points reporting telemetry data.
     """

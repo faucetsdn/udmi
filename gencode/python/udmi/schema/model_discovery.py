@@ -6,11 +6,12 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Dict, Optional
 
+from ._base import DataModel
 from .model_discovery_family import FamilyDiscoveryModel
 
 
 @dataclass
-class DiscoveryModel:
+class DiscoveryModel(DataModel):
     """
     Discovery target parameters
     """

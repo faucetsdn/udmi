@@ -6,11 +6,12 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import List, Optional
 
+from ._base import DataModel
 from .model_localnet_family import FamilyLocalnetModel
 
 
 @dataclass
-class GatewayConfig:
+class GatewayConfig(DataModel):
     """
     Configuration for gateways. Only required for devices which are acting as [gateways](../docs/specs/gateway.md)
     """

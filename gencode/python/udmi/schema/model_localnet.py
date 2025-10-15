@@ -6,11 +6,12 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Dict, Optional
 
+from ._base import DataModel
 from .model_localnet_family import FamilyLocalnetModel
 
 
 @dataclass
-class Parent:
+class Parent(DataModel):
     """
     Parent device to which the device is physically connected
     """
@@ -20,7 +21,7 @@ class Parent:
 
 
 @dataclass
-class LocalnetModel:
+class LocalnetModel(DataModel):
     """
     Used to describe device local network parameters
     """

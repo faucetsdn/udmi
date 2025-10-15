@@ -6,11 +6,12 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Dict, Optional
 
+from ._base import DataModel
 from .config_pointset_point import PointPointsetConfig
 
 
 @dataclass
-class PointsetConfig:
+class PointsetConfig(DataModel):
     """
     [Pointset Config Documentation](../docs/messages/pointset.md#config)
     """

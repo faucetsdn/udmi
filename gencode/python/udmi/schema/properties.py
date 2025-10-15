@@ -7,6 +7,8 @@ from dataclasses import dataclass
 from enum import Enum
 from typing import Optional
 
+from ._base import DataModel
+
 
 class KeyType(Enum):
     RSA_PEM = 'RSA_PEM'
@@ -18,7 +20,7 @@ class Connect(Enum):
 
 
 @dataclass
-class Properties:
+class Properties(DataModel):
     key_type: Optional[KeyType] = None
     version: Optional[str] = None
     connect: Optional[Connect] = None

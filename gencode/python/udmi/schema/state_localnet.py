@@ -6,11 +6,12 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Dict, Optional
 
+from ._base import DataModel
 from .state_localnet_family import FamilyLocalnetState
 
 
 @dataclass
-class LocalnetState:
+class LocalnetState(DataModel):
     timestamp: Optional[str] = None
     version: Optional[str] = None
     families: Optional[Dict[str, FamilyLocalnetState]] = None

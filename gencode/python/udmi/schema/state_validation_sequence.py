@@ -7,6 +7,7 @@ from dataclasses import dataclass
 from enum import Enum
 from typing import Dict, Optional
 
+from ._base import DataModel
 from .common import Stage
 from .entry import Entry
 from .state_validation_capability import CapabilityValidationState
@@ -21,13 +22,13 @@ class Result(Enum):
 
 
 @dataclass
-class Scoring:
+class Scoring(DataModel):
     value: Optional[int] = None
     total: Optional[int] = None
 
 
 @dataclass
-class SequenceValidationState:
+class SequenceValidationState(DataModel):
     """
     Sequence Validation State
     """

@@ -6,11 +6,12 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Dict, Optional
 
+from ._base import DataModel
 from .events_pointset_point import PointPointsetEvents
 
 
 @dataclass
-class PointsetEvents:
+class PointsetEvents(DataModel):
     """
     A set of points reporting telemetry data. [Pointset Events Documentation](../docs/messages/pointset.md#telemetry)
     """

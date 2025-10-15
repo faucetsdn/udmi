@@ -6,11 +6,12 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Optional
 
+from ._base import DataModel
 from .monitoring_metric import MonitoringMetric
 
 
 @dataclass
-class Monitoring:
+class Monitoring(DataModel):
     """
     Output from UDMIS monitoring
     """

@@ -6,13 +6,14 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import List, Optional
 
+from ._base import DataModel
 from .common import IotProvider
 from .config_mapping import MappingConfig
 from .configuration_endpoint import EndpointConfiguration
 
 
 @dataclass
-class ExecutionConfiguration:
+class ExecutionConfiguration(DataModel):
     """
     Parameters for configuring the execution run of a UDMI tool
     """

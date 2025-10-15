@@ -6,11 +6,12 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import List, Optional
 
+from ._base import DataModel
 from .entry import Entry
 
 
 @dataclass
-class Pointset:
+class Pointset(DataModel):
     """
     Errors specific to pointset handling
     """
@@ -20,7 +21,7 @@ class Pointset:
 
 
 @dataclass
-class ValidationEvents:
+class ValidationEvents(DataModel):
     """
     Validation device result
     """

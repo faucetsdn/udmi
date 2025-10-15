@@ -6,20 +6,21 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Any, List, Optional
 
+from ._base import DataModel
 from .dimension import Dimension
 
 Tag = Optional[Any]
 
 
 @dataclass
-class Location:
+class Location(DataModel):
     address: Optional[str] = None
     lat: Optional[float] = None
     long: Optional[float] = None
 
 
 @dataclass
-class Links:
+class Links(DataModel):
     dashboard: Optional[str] = None
     docs: Optional[str] = None
     folder: Optional[str] = None
@@ -29,13 +30,13 @@ class Links:
 
 
 @dataclass
-class Area:
+class Area(DataModel):
     net_occupied_area: Optional[Dimension] = None
     gross_internal_area: Optional[Dimension] = None
 
 
 @dataclass
-class Electricity:
+class Electricity(DataModel):
     carbon_factor: Optional[Dimension] = None
     unit_cost: Optional[Dimension] = None
 
@@ -46,12 +47,12 @@ class Gas(Electricity):
 
 
 @dataclass
-class Water:
+class Water(DataModel):
     unit_cost: Optional[Dimension] = None
 
 
 @dataclass
-class Parameters:
+class Parameters(DataModel):
     area: Optional[Area] = None
     electricity: Optional[Electricity] = None
     gas: Optional[Gas] = None
@@ -59,7 +60,7 @@ class Parameters:
 
 
 @dataclass
-class SiteMetadata:
+class SiteMetadata(DataModel):
     timestamp: Optional[str] = None
     version: Optional[str] = None
     site: Optional[str] = None

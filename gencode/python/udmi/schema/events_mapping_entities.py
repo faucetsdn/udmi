@@ -5,6 +5,7 @@ from __future__ import annotations
 
 from typing import Dict, Optional
 
+from ._base import DataModel
 from .events_mapping_entity import MappingEventEntity
 
 MappingEventsEntities = Optional[Dict[str, MappingEventEntity]]

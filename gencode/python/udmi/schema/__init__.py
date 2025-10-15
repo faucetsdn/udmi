@@ -1,5 +1,6 @@
 from .access_iot import *
 from .ancillary_properties import *
+from ._base import *
 from .building_translation import *
 from .category import *
 from .commands_discovery import *

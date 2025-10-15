@@ -7,6 +7,8 @@ from dataclasses import dataclass
 from enum import Enum
 from typing import Any, Optional
 
+from ._base import DataModel
+
 
 class Protocol(Enum):
     local = 'local'
@@ -22,24 +24,24 @@ class Transport(Enum):
 
 
 @dataclass
-class Basic:
+class Basic(DataModel):
     username: Optional[str] = None
     password: Optional[str] = None
 
 
 @dataclass
-class Jwt:
+class Jwt(DataModel):
     audience: Optional[str] = None
 
 
 @dataclass
-class AuthProvider:
+class AuthProvider(DataModel):
     basic: Optional[Basic] = None
     jwt: Optional[Jwt] = None
 
 
 @dataclass
-class EndpointConfiguration:
+class EndpointConfiguration(DataModel):
     """
     Parameters to define a message endpoint
     """

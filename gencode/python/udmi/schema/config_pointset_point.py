@@ -6,9 +6,11 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Any, Optional
 
+from ._base import DataModel
+
 
 @dataclass
-class PointPointsetConfig:
+class PointPointsetConfig(DataModel):
     ref: Optional[str] = None
     units: Optional[str] = None
     set_value: Optional[Any] = None

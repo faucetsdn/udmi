@@ -6,12 +6,13 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Optional
 
+from ._base import DataModel
 from .common import Phase
 from .entry import Entry
 
 
 @dataclass
-class BlobBlobsetState:
+class BlobBlobsetState(DataModel):
     phase: Optional[Phase] = None
     status: Optional[Entry] = None
     generation: Optional[str] = None

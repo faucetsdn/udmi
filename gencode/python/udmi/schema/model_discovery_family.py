@@ -6,9 +6,11 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Optional
 
+from ._base import DataModel
+
 
 @dataclass
-class FamilyDiscoveryModel:
+class FamilyDiscoveryModel(DataModel):
     generation: Optional[str] = None
     scan_interval_sec: Optional[int] = None
     scan_duration_sec: Optional[int] = None

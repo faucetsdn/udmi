@@ -6,11 +6,12 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Optional
 
+from ._base import DataModel
 from .state_udmi import Setup as Setup_1
 
 
 @dataclass
-class Setup:
+class Setup(DataModel):
     hostname: Optional[str] = None
     functions_min: Optional[int] = None
     functions_max: Optional[int] = None
@@ -25,7 +26,7 @@ class Setup:
 
 
 @dataclass
-class UdmiConfig:
+class UdmiConfig(DataModel):
     """
     Config for a UDMI reflector client
     """

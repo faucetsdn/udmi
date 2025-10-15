@@ -6,9 +6,11 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Any, Optional
 
+from ._base import DataModel
+
 
 @dataclass
-class BuildingTranslation:
+class BuildingTranslation(DataModel):
     """
     [Discovery result](../docs/specs/discovery.md) with implicit enumeration
     """

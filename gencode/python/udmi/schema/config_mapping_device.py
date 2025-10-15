@@ -6,11 +6,12 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Optional
 
+from ._base import DataModel
 from .entry import Entry
 
 
 @dataclass
-class DeviceMappingConfig:
+class DeviceMappingConfig(DataModel):
     """
     Configuration for [mapping](../docs/specs/mapping.md)
     """

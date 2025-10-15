@@ -7,6 +7,7 @@ from dataclasses import dataclass
 from enum import Enum
 from typing import Optional
 
+from ._base import DataModel
 from .entry import Entry
 
 
@@ -21,7 +22,7 @@ class Phase(Enum):
 
 
 @dataclass
-class FamilyDiscoveryState:
+class FamilyDiscoveryState(DataModel):
     """
     State for [discovery](../docs/specs/discovery.md)
     """

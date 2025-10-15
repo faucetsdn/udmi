@@ -7,6 +7,8 @@ from dataclasses import dataclass
 from enum import Enum
 from typing import Optional
 
+from ._base import DataModel
+
 
 class Mode(Enum):
     """
@@ -90,5 +92,5 @@ class Blobsets(Enum):
 
 
 @dataclass
-class Common:
+class Common(DataModel):
     family: Optional[Family] = None

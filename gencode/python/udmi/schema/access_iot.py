@@ -6,11 +6,12 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Optional
 
+from ._base import DataModel
 from .common import IotProvider
 
 
 @dataclass
-class IotAccess:
+class IotAccess(DataModel):
     name: Optional[str] = None
     provider: Optional[IotProvider] = None
     project_id: Optional[str] = None

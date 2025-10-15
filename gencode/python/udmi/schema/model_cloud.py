@@ -7,6 +7,7 @@ from dataclasses import dataclass
 from enum import Enum
 from typing import Any, Dict, List, Optional
 
+from ._base import DataModel
 from .common import Operation
 from .model_cloud_config import CloudConfigModel
 from .model_gateway import GatewayModel
@@ -48,13 +49,13 @@ class KeyFormat(Enum):
 
 
 @dataclass
-class Credential:
+class Credential(DataModel):
     key_format: Optional[KeyFormat] = None
     key_data: Optional[str] = None
 
 
 @dataclass
-class CloudModel:
+class CloudModel(DataModel):
     """
     Information specific to how the device communicates with the cloud.
     """

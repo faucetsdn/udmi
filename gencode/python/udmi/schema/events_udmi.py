@@ -6,11 +6,12 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import List, Optional
 
+from ._base import DataModel
 from .entry import Entry
 
 
 @dataclass
-class UdmiEvents:
+class UdmiEvents(DataModel):
     """
     Used for udmi events such as logging.
     """

@@ -7,6 +7,7 @@ from dataclasses import dataclass
 from enum import Enum
 from typing import Optional
 
+from ._base import DataModel
 from .common import Stage
 from .entry import Entry
 
@@ -17,7 +18,7 @@ class Result(Enum):
 
 
 @dataclass
-class CapabilityValidationState:
+class CapabilityValidationState(DataModel):
     """
     Capability validation state
     """

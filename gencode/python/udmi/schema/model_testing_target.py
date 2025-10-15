@@ -6,8 +6,10 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Any, Optional
 
+from ._base import DataModel
+
 
 @dataclass
-class TargetTestingModel:
+class TargetTestingModel(DataModel):
     target_point: Optional[str] = None
     target_value: Optional[Any] = None

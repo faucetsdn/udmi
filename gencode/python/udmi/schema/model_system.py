@@ -6,27 +6,28 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Any, Dict, List, Optional
 
+from ._base import DataModel
 from .model_system_hardware import SystemHardware
 
 Tag = Optional[Any]
 
 
 @dataclass
-class Position:
+class Position(DataModel):
     x: Optional[float] = None
     y: Optional[float] = None
     z: Optional[float] = None
 
 
 @dataclass
-class Coordinates:
+class Coordinates(DataModel):
     lat: Optional[float] = None
     long: Optional[float] = None
     alt_m: Optional[float] = None
 
 
 @dataclass
-class Location:
+class Location(DataModel):
     """
     Properties of the expected physical location of the device
     """
@@ -42,14 +43,14 @@ class Location:
 
 
 @dataclass
-class Asset:
+class Asset(DataModel):
     guid: Optional[str] = None
     site: Optional[str] = None
     name: Optional[str] = None
 
 
 @dataclass
-class PhysicalTag:
+class PhysicalTag(DataModel):
     """
     Information used to print a physical QR code label.
     """
@@ -58,7 +59,7 @@ class PhysicalTag:
 
 
 @dataclass
-class SystemModel:
+class SystemModel(DataModel):
     """
     High-level system information about the device. [System Model Documentation](../docs/messages/system.md)
     """

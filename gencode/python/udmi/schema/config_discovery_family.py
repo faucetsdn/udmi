@@ -6,11 +6,12 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import List, Optional
 
+from ._base import DataModel
 from .common import Depth
 
 
 @dataclass
-class FamilyDiscoveryConfig:
+class FamilyDiscoveryConfig(DataModel):
     """
     Configuration for [discovery](../docs/specs/discovery.md)
     """

@@ -6,6 +6,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Dict, Optional
 
+from ._base import DataModel
 from .common import Operation
 from .events_discovery import DiscoveryEvents
 from .model_cloud import CloudModel
@@ -19,7 +20,7 @@ from .model_testing import TestingModel
 
 
 @dataclass
-class Metadata:
+class Metadata(DataModel):
     """
     [Metadata](../docs/specs/metadata.md) is a description about the device: a specification about how the device should be configured and expectations about what the device should be doing. Defined by `metadata.json`
     """

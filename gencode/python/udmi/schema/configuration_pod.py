@@ -6,6 +6,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Dict, Optional
 
+from ._base import DataModel
 from .access_iot import IotAccess
 from .configuration_endpoint import EndpointConfiguration
 from .configuration_pod_base import BasePodConfiguration
@@ -13,7 +14,7 @@ from .configuration_pod_bridge import BridgePodConfiguration
 
 
 @dataclass
-class PodConfiguration:
+class PodConfiguration(DataModel):
     """
     Parameters for configuring the execution run of a UDMIS pod
     """

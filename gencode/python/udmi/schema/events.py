@@ -6,13 +6,14 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Optional
 
+from ._base import DataModel
 from .events_discovery import DiscoveryEvents
 from .events_pointset import PointsetEvents
 from .events_system import SystemEvents
 
 
 @dataclass
-class Events:
+class Events(DataModel):
     """
     Container object for all event schemas, not directly used.
     """

@@ -6,11 +6,12 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Dict, Optional
 
+from ._base import DataModel
 from .state_discovery_family import FamilyDiscoveryState
 
 
 @dataclass
-class DiscoveryState:
+class DiscoveryState(DataModel):
     """
     State for [discovery](../docs/specs/discovery.md)
     """

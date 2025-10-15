@@ -6,9 +6,11 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Optional
 
+from ._base import DataModel
+
 
 @dataclass
-class Dimension:
+class Dimension(DataModel):
     """
     Dimensions with a value and a unit
     """

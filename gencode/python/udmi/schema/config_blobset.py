@@ -6,11 +6,12 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Dict, Optional
 
+from ._base import DataModel
 from .common import Blobsets
 from .config_blobset_blob import BlobBlobsetConfig
 
 
 @dataclass
-class BlobsetConfig:
+class BlobsetConfig(DataModel):
     blobsets: Optional[Blobsets] = None
     blobs: Optional[Dict[str, BlobBlobsetConfig]] = None
