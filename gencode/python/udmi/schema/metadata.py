@@ -1,6 +1,7 @@
 """Generated class for metadata.json"""
 from .model_cloud import CloudModel
 from .model_system import SystemModel
+from .model_externals import ExternalsModel
 from .model_gateway import GatewayModel
 from .model_discovery import DiscoveryModel
 from .model_localnet import LocalnetModel
@@ -21,6 +22,7 @@ class Metadata:
     self.operation = None
     self.cloud = None
     self.system = None
+    self.externals = None
     self.gateway = None
     self.discovery = None
     self.localnet = None
@@ -41,6 +43,7 @@ class Metadata:
     result.operation = source.get('operation')
     result.cloud = CloudModel.from_dict(source.get('cloud'))
     result.system = SystemModel.from_dict(source.get('system'))
+    result.externals = LinkExternalsModel.map_from(source.get('externals'))
     result.gateway = GatewayModel.from_dict(source.get('gateway'))
     result.discovery = DiscoveryModel.from_dict(source.get('discovery'))
     result.localnet = LocalnetModel.from_dict(source.get('localnet'))
@@ -82,6 +85,8 @@ class Metadata:
       result['cloud'] = self.cloud.to_dict() # 4
     if self.system:
       result['system'] = self.system.to_dict() # 4
+    if self.externals:
+      result['externals'] = LinkExternalsModel.expand_dict(self.externals) # 2
     if self.gateway:
       result['gateway'] = self.gateway.to_dict() # 4
     if self.discovery:
