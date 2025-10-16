@@ -53,6 +53,9 @@ jobs:
       - name: site test output
         if: ${{ !cancelled() }}
         run: more out/test_bin+test_sites
+      - name: python generated classes test output
+        if: ${{ !cancelled() }}
+        run: more out/test_bin+test_generated_classes_py
 
   spelling:
     name: Docs Spelling Checks

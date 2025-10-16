@@ -1,0 +1,77 @@
+#!/bin/bash -e
+
+ROOT_DIR=$(realpath $(dirname $0)/..)
+cd "$ROOT_DIR"
+
+if [[ -n $(which apt-get) ]]; then
+    update_cmd="apt-get install -y"
+    extra_packages=""
+else
+    update_cmd="apk add"
+    # Some extra packages are necessary for alpine based docker builds.
+    extra_packages="${NO_CACHE_DIR:+--no-cache} linux-headers g++ gcc"
+fi
+
+sudo $update_cmd $extra_packages moreutils expect python3 python3-pip python3-venv
+
+python3 --version
+
+VENV_DIR="$ROOT_DIR/codegen/venv"
+SCHEMA_INPUT_DIR="$ROOT_DIR/schema"
+SCHEMA_OUTPUT_DIR="$ROOT_DIR/codegen/pyschema"
+GEN_PYTHON_DIR="$ROOT_DIR/gencode/python"
+PYTHON_OUTPUT_DIR="$GEN_PYTHON_DIR/udmi/schema"
+
+python3 -m venv "$VENV_DIR"
+source "$VENV_DIR"/bin/activate
+
+pip install "datamodel-code-generator==0.35.0" "poetry==2.0.1" "dataclasses-json==0.6.7"
+
+# Clean up previous output directories
+rm -rf "$SCHEMA_OUTPUT_DIR"
+rm -rf "$GEN_PYTHON_DIR"
+
+mkdir -p "$SCHEMA_OUTPUT_DIR"
+mkdir -p "$PYTHON_OUTPUT_DIR"
+
+# Copy poetry configuration file
+cp "$ROOT_DIR/etc/pyschema.toml" "$GEN_PYTHON_DIR/pyproject.toml"
+cp "$ROOT_DIR/etc/_schema_base.py" "$PYTHON_OUTPUT_DIR/_base.py"
+
+# Transform schemas by removing 'file:' prefix.
+# datamodel-codegen does not work with paths with 'file:' prefix
+find "$SCHEMA_INPUT_DIR" -type f -print0 | while IFS= read -r -d $'\0' file; do
+  FILENAME=$(basename "$file")
+  OUTPUT_FILE="$SCHEMA_OUTPUT_DIR/$FILENAME"
+  sed 's/file://' "$file" > "$OUTPUT_FILE" || {
+    echo "Error: Failed to process schema file '$file'" >&2
+    exit 1
+  }
+done
+echo "Generated pyschema in '$SCHEMA_OUTPUT_DIR'"
+
+# Generate python code from schemas
+datamodel-codegen --input "$SCHEMA_OUTPUT_DIR" --input-file-type jsonschema \
+--output "$PYTHON_OUTPUT_DIR" --use-default --force-optional \
+--use-schema-description --reuse-model --use-exact-imports \
+--output-model-type dataclasses.dataclass --disable-timestamp \
+--base-class ._base.DataModel
+
+# add import statements to udmi/schema/__init__.py
+find "$PYTHON_OUTPUT_DIR" -name "*.py" -not -name "__init__.py" -print0 | while IFS= read -r -d $'\0' file; do
+  module_name=$(basename "$file" .py)
+  echo "from .$module_name import *"
+done | sort > "$PYTHON_OUTPUT_DIR"/__init__.py.tmp
+mv "$PYTHON_OUTPUT_DIR"/__init__.py.tmp "$PYTHON_OUTPUT_DIR"/__init__.py
+
+echo "Generated python code in '$PYTHON_OUTPUT_DIR'"
+
+# Build python wheel using poetry
+echo "Building a wheel out of the generated python module"
+cd "$GEN_PYTHON_DIR"
+poetry build --output "$ROOT_DIR"/gencode/python/dist
+echo Wheel built successfully in "$ROOT_DIR"/gencode/python/dist
+
+deactivate
+
+echo "Done with python gencode."
