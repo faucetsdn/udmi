@@ -5,21 +5,21 @@
   "gateway": {
     "gateway_id": "GAT-123",
     "target": {
-      "family": "vendor"
+      "family": "bacnet"
     }
   },
-  "hash": "3792824a",
+  "hash": "ce66ce47",
   "localnet": {
     "families": {
-      "vendor": {
-        "addr": "0x65"
+      "bacnet": {
+        "addr": "582312"
       }
     }
   },
   "pointset": {
     "points": {
       "filter_alarm_pressure_status": {
-        "ref": "BV11.present_value",
+        "ref": "BV:11#present_value",
         "units": "No-units"
       },
       "filter_differential_pressure": {
