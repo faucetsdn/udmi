@@ -1,0 +1,133 @@
+import logging
+
+import pytest
+import json
+from unittest.mock import MagicMock
+
+from src.udmi.core.messaging import MessageDispatcher
+
+
+@pytest.fixture
+def mock_client():
+    """Mocks the AbstractMessagingClient."""
+    client = MagicMock()
+    client.set_on_message_handler = MagicMock()
+    return client
+
+
+@pytest.fixture
+def dispatcher(mock_client):
+    """Returns a MessageDispatcher instance with a mocked client."""
+    return MessageDispatcher(client=mock_client)
+
+
+@pytest.fixture
+def handlers():
+    """Provides a dictionary of mock handlers."""
+    return {
+        "config": MagicMock(),
+        "command_reboot": MagicMock(),
+        "commands_wildcard": MagicMock(),
+        "pointset_wildcard": MagicMock()
+    }
+
+
+def test_dispatcher_registers_handlers(dispatcher, mock_client, handlers):
+    """
+    Test that the dispatcher correctly registers handlers and
+    sets the client's on_message callback during __init__.
+    """
+    # Verify the dispatcher set its callback on the client
+    mock_client.set_on_message_handler.assert_called_once_with(
+        dispatcher._on_message)
+
+    # Register handlers
+    dispatcher.register_handler("config", handlers["config"])
+    dispatcher.register_handler("commands/reboot", handlers["command_reboot"])
+    dispatcher.register_handler("commands/#", handlers["commands_wildcard"])
+    dispatcher.register_handler("pointset/+/config",
+                                handlers["pointset_wildcard"])
+
+    assert "config" in dispatcher._handlers
+    assert "commands/reboot" in dispatcher._handlers
+    assert len(dispatcher._wildcard_handlers) == 2
+
+
+def test_dispatcher_routes_exact_match(dispatcher, handlers):
+    """Test that an exact channel match is routed correctly."""
+    dispatcher.register_handler("config", handlers["config"])
+    payload_dict = {"system": {}}
+
+    # Simulate an incoming message
+    dispatcher._on_message(channel="config", payload=json.dumps(payload_dict))
+
+    handlers["config"].assert_called_once_with("config", payload_dict)
+
+
+def test_dispatcher_routes_multi_level_wildcard(dispatcher, handlers):
+    """Test that a 'commands/#' wildcard works."""
+    dispatcher.register_handler("commands/#", handlers["commands_wildcard"])
+    payload_dict = {"arg": 1}
+
+    channel = "commands/my/custom/sub/command"
+    dispatcher._on_message(channel=channel, payload=json.dumps(payload_dict))
+
+    handlers["commands_wildcard"].assert_called_once_with(channel, payload_dict)
+
+
+def test_dispatcher_routes_single_level_wildcard(dispatcher, handlers):
+    """Test that a 'pointset/+/config' wildcard works."""
+    dispatcher.register_handler("pointset/+/config",
+                                handlers["pointset_wildcard"])
+    payload_dict = {"set_value": 10}
+
+    channel = "pointset/zone_1/config"
+    dispatcher._on_message(channel=channel, payload=json.dumps(payload_dict))
+
+    handlers["pointset_wildcard"].assert_called_once_with(channel, payload_dict)
+
+
+def test_dispatcher_prefers_exact_over_wildcard(dispatcher, handlers):
+    """Test that an exact match is preferred over a wildcard."""
+    dispatcher.register_handler("commands/reboot", handlers["command_reboot"])
+    dispatcher.register_handler("commands/#", handlers["commands_wildcard"])
+    payload_dict = {}
+
+    dispatcher._on_message(channel="commands/reboot",
+                           payload=json.dumps(payload_dict))
+
+    # The exact handler should be called
+    handlers["command_reboot"].assert_called_once_with("commands/reboot",
+                                                       payload_dict)
+    # The wildcard handler should NOT be called
+    handlers["commands_wildcard"].assert_not_called()
+
+
+def test_dispatcher_handles_json_decode_error(dispatcher, handlers, caplog):
+    """Test that bad JSON is caught and logged, but doesn't crash."""
+    dispatcher.register_handler("config", handlers["config"])
+
+    # No exception should be raised
+    with caplog.at_level(logging.ERROR):
+        dispatcher._on_message(channel="config", payload="this is not json")
+
+    # The handler should not be called
+    handlers["config"].assert_not_called()
+    # We should have logged the error
+    assert "Failed to decode JSON payload" in caplog.text
+
+
+def test_dispatcher_handles_handler_exception(dispatcher, handlers, caplog):
+    """Test that an exception in a handler is caught and logged."""
+    # Make the handler raise an exception when called
+    handlers["config"].side_effect = ValueError("Something broke!")
+    dispatcher.register_handler("config", handlers["config"])
+
+    # No exception should be raised from the dispatcher itself
+    with caplog.at_level(logging.ERROR):
+        dispatcher._on_message(channel="config", payload="{}")
+
+    # The handler should have been called
+    handlers["config"].assert_called_once()
+    # We should have logged the error
+    assert "Handler for channel config failed" in caplog.text
