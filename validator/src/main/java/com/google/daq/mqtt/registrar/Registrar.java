@@ -1311,10 +1311,6 @@ public class Registrar {
         .collect(Collectors.toMap(Entry::getKey, Entry::getValue));
   }
 
-  private void initializeSettings(Map<String, LocalDevice> localDevices) {
-    localDevices.values().forEach(LocalDevice::initializeSettings);
-  }
-
   private void preprocessMetadata(Map<String, LocalDevice> workingDevices) {
     preprocessSiteMetadata();
     preprocessDeviceMetadata(workingDevices);
@@ -1414,7 +1410,7 @@ public class Registrar {
     initializeDevices(workingDevices);
     preprocessMetadata(workingDevices);
     expandDependencies(workingDevices);
-    initializeSettings(workingDevices);
+    allWorking(LocalDevice::initializeSettings, "initialize settings", ExceptionCategory.settings);
   }
 
   private void finalizeLocalDevices() {
