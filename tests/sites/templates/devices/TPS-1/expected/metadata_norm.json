@@ -2,7 +2,6 @@
   "cloud": {
     "detail": "template overrides site_default"
   },
-  "hash": "29ce3268",
   "pointset": {
     "points": {
       "room_co2_sensor_from_template": {

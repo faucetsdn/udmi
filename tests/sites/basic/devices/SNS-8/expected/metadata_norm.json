@@ -2,7 +2,6 @@
   "gateway": {
     "gateway_id": "GAT-123"
   },
-  "hash": "450873c3",
   "localnet": {
     "families": {
       "fqdn": {
