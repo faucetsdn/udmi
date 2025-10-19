@@ -1472,8 +1472,9 @@ public class Registrar {
   }
 
   private void previewModel(LocalDevice device) {
-    cloudIotManager.updateDevice(device.getDeviceId(), device.getSettings(),
-        ModelOperation.PREVIEW);
+    ifTrueThen(metadataModelOut,
+        () -> cloudIotManager.updateDevice(device.getDeviceId(), device.getSettings(),
+            ModelOperation.PREVIEW));
   }
 
   private void initializeDevices(Map<String, LocalDevice> localDevices) {
