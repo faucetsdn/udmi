@@ -1,0 +1,8 @@
+Exceptions for AHU-22
+  schema validation errors
+    While converting device config
+      While converting point filter_differential_pressure_sensor
+        protocol ref AV12.present_value does not match expression ([A-Z]{2,4}):(0|[1-9][0-9]*)(#[_a-z]+)?
+    While converting device config
+      While converting point filter_differential_pressure
+        protocol ref null does not match expression ([A-Z]{2,4}):(0|[1-9][0-9]*)(#[_a-z]+)?
