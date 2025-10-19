@@ -57,6 +57,7 @@ case "$1" in
     test_wrap udmis/bin/build check
     test_wrap bin/test_pylint
     test_wrap services/bin/build check
+    test_wrap bin/test_generated_classes_py
     ;;
   schema_tests)
     test_wrap bin/test_schema

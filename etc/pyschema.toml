@@ -1,0 +1,15 @@
+[tool.poetry]
+name = "udmi_schema"
+version = "0.1.0"
+description = "Generated UDMI schema classes"
+packages = [
+    { include = "udmi" }
+]
+
+[tool.poetry.dependencies]
+python = ">=3.8,<4.0"
+dataclasses-json = "^0.6.7"
+
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"

@@ -27,7 +27,7 @@ if ! diff $tmpfile etc/requirements.txt; then
 fi
 
 bin/gencode_java
-bin/gencode_python
+bin/gencode_py
 bin/gencode_docs
 bin/generate_presentation_config
 
