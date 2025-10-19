@@ -27,7 +27,7 @@
       "type": "string"
     },
     "hash": {
-      "description": "Automatically generated field that contains the hash of file contents.",
+      "description": "DEPRECATED",
       "type": "string",
       "pattern": "^[0-9a-z]{8}$"
     },
