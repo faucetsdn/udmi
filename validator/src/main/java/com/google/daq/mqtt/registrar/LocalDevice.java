@@ -15,6 +15,7 @@ import static com.google.udmi.util.GeneralUtils.OBJECT_MAPPER_STRICT;
 import static com.google.udmi.util.GeneralUtils.catchToFalse;
 import static com.google.udmi.util.GeneralUtils.catchToNull;
 import static com.google.udmi.util.GeneralUtils.compressJsonString;
+import static com.google.udmi.util.GeneralUtils.deepCopy;
 import static com.google.udmi.util.GeneralUtils.ifNotNullGet;
 import static com.google.udmi.util.GeneralUtils.ifNotNullThen;
 import static com.google.udmi.util.GeneralUtils.ifNotTrueThen;
@@ -334,25 +335,6 @@ class LocalDevice {
       return OBJECT_MAPPER_STRICT.readValue(metadataFile, Metadata.class);
     } catch (Exception e) {
       return new Metadata();
-    }
-  }
-
-  private String metadataHash() {
-    if (metadata == null) {
-      return INVALID_METADATA_HASH;
-    }
-    String savedHash = metadata.hash;
-    Date savedTimestamp = metadata.timestamp;
-    try {
-      metadata.hash = null;
-      metadata.timestamp = null;
-      String json = deviceMetadataString();
-      return format("%08x", Objects.hash(json));
-    } catch (Exception e) {
-      throw new RuntimeException("Converting object to string", e);
-    } finally {
-      metadata.hash = savedHash;
-      metadata.timestamp = savedTimestamp;
     }
   }
 
@@ -714,20 +696,26 @@ class LocalDevice {
       metadataFile.delete();
       return;
     }
-    metadata.timestamp = metadata.timestamp != null ? metadata.timestamp : new Date();
+    metadata.timestamp = ofNullable(metadata.timestamp).orElseGet(Date::new);
     Metadata normalized = readNormalized();
-    String metadataHash = metadataHash();
-    if (normalized.hash != null && normalized.hash.equals(metadataHash)) {
+    if (semanticallyEquals(normalized, metadata)) {
       metadata.timestamp = normalized.timestamp;
       return;
     }
-    metadata.hash = metadataHash;
     System.err.println("Writing normalized " + metadataFile.getAbsolutePath());
     try {
       writeString(metadataFile, compressJsonString(metadata, MAX_JSON_LENGTH));
     } catch (Exception e) {
       exceptionMap.put(ExceptionCategory.writing, e);
     }
+  }
+
+  private boolean semanticallyEquals(Metadata one, Metadata two) {
+    Metadata copyOne = deepCopy(one);
+    copyOne.timestamp = null;
+    Metadata copyTwo = deepCopy(two);
+    copyTwo.timestamp = null;
+    return copyOne.equals(copyTwo);
   }
 
   private void validateConsistency() {

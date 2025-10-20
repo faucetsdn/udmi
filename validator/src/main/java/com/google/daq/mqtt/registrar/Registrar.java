@@ -149,6 +149,7 @@ public class Registrar {
   private static final long DELETE_FLUSH_DELAY_MS = 10 * SEC_TO_MS;
   public static final String REGISTRAR_TOOL_NAME = "registrar";
   private static final int UNBIND_SET_SIZE = 1000;
+  public static final int BATCH_REPORT_SIZE = 100;
   private boolean autoAltRegistry;
   private final Map<String, JsonSchema> schemas = new HashMap<>();
   private final String generation = JsonUtil.isoConvert();
@@ -159,6 +160,7 @@ public class Registrar {
   private final CommandLineProcessor commandLineProcessor = new CommandLineProcessor(this,
       usageForms);
   private final AtomicInteger updatedDevices = new AtomicInteger();
+  private final Map<Credential, String> usedCredentials = new ConcurrentHashMap<>();
   private CloudIotManager cloudIotManager;
   private File schemaBase;
   private PubSubPusher updatePusher;
@@ -1233,7 +1235,7 @@ public class Registrar {
     }
   }
 
-  private synchronized void dynamicTerminate(int expected) throws InterruptedException {
+  private synchronized void dynamicTerminate(int expected) {
     try {
       if (executor == null) {
         return;
@@ -1244,6 +1246,8 @@ public class Registrar {
       if (!executor.awaitTermination(timeout, TimeUnit.SECONDS)) {
         throw new RuntimeException("Incomplete executor termination after " + timeout + "s");
       }
+    } catch (InterruptedException e) {
+      throw new RuntimeException("Interrupted while waiting for termination", e);
     } finally {
       executor = null;
       executing = null;
@@ -1305,20 +1309,6 @@ public class Registrar {
     return allDevices.entrySet().stream()
         .filter(entry -> specifiedDevices == null || specifiedDevices.contains(entry.getKey()))
         .collect(Collectors.toMap(Entry::getKey, Entry::getValue));
-  }
-
-  private void initializeSettings(Map<String, LocalDevice> localDevices) {
-    localDevices.values().forEach(LocalDevice::initializeSettings);
-  }
-
-  private void validateSamples(Map<String, LocalDevice> localDevices) {
-    for (LocalDevice device : localDevices.values()) {
-      try {
-        device.validateSamples();
-      } catch (Exception e) {
-        device.captureError(ExceptionCategory.samples, e);
-      }
-    }
   }
 
   private void preprocessMetadata(Map<String, LocalDevice> workingDevices) {
@@ -1394,45 +1384,19 @@ public class Registrar {
     });
   }
 
-  private void validateExpected(Map<String, LocalDevice> localDevices) {
-    for (LocalDevice device : localDevices.values()) {
-      try {
-        device.validateExpectedFiles();
-      } catch (Exception e) {
-        device.captureError(ExceptionCategory.files, e);
+  private void validateKeys(LocalDevice localDevice) {
+    if (!localDevice.isDirect()) {
+      return;
+    }
+    CloudDeviceSettings settings = localDevice.getSettings();
+    String deviceName = localDevice.getDeviceId();
+    for (Credential credential : settings.credentials) {
+      String previous = usedCredentials.put(credential, deviceName);
+      if (previous != null) {
+        throw new RuntimeException(format(
+            "Duplicate credentials found for %s & %s", previous, deviceName));
       }
     }
-  }
-
-  private void writeNormalized(Map<String, LocalDevice> localDevices) {
-    for (String deviceName : localDevices.keySet()) {
-      try {
-        localDevices.get(deviceName).writeNormalized();
-      } catch (Exception e) {
-        throw new RuntimeException("While writing normalized " + deviceName, e);
-      }
-    }
-  }
-
-  private void validateKeys(Map<String, LocalDevice> localDevices) {
-    Map<Credential, String> usedCredentials = new HashMap<>();
-    localDevices.values().stream()
-        .filter(LocalDevice::isDirect)
-        .forEach(
-            localDevice -> {
-              CloudDeviceSettings settings = localDevice.getSettings();
-              String deviceName = localDevice.getDeviceId();
-              for (Credential credential : settings.credentials) {
-                String previous = usedCredentials.put(credential, deviceName);
-                if (previous != null) {
-                  RuntimeException exception =
-                      new RuntimeException(
-                          format(
-                              "Duplicate credentials found for %s & %s", previous, deviceName));
-                  localDevice.captureError(ExceptionCategory.credentials, exception);
-                }
-              }
-            });
   }
 
   private Map<String, LocalDevice> loadDevices(List<String> devices) {
@@ -1446,15 +1410,38 @@ public class Registrar {
     initializeDevices(workingDevices);
     preprocessMetadata(workingDevices);
     expandDependencies(workingDevices);
-    initializeSettings(workingDevices);
+    allWorking(LocalDevice::initializeSettings, "initialize settings", ExceptionCategory.settings);
   }
 
   private void finalizeLocalDevices() {
-    writeNormalized(workingDevices);
-    previewModels(workingDevices);
-    validateExpected(workingDevices);
-    validateSamples(workingDevices);
-    validateKeys(workingDevices);
+    previewModelRegistry();
+
+    allWorking(LocalDevice::writeNormalized, "writing normalized", ExceptionCategory.metadata);
+    allWorking(this::previewModel, "previewing model", ExceptionCategory.updating);
+    allWorking(LocalDevice::validateExpectedFiles, "validating expected", ExceptionCategory.files);
+    allWorking(LocalDevice::validateSamples, "validate samples", ExceptionCategory.samples);
+    allWorking(this::validateKeys, "validating keys", ExceptionCategory.credentials);
+  }
+
+  private void allWorking(Consumer<LocalDevice> action, String message,
+      ExceptionCategory category) {
+    AtomicInteger actionCount = new AtomicInteger();
+    int setSize = workingDevices.size();
+    System.err.printf("Starting %s for %d devices...%n", message, setSize);
+    workingDevices.values().forEach(localDevice -> parallelExecute(() -> {
+      int baseCount = actionCount.incrementAndGet();
+      ifTrueThen(baseCount % BATCH_REPORT_SIZE == 0, () -> System.err.printf(
+          "Execute %s for device %d/%d...%n", message, baseCount, setSize));
+      try {
+        action.accept(localDevice);
+      } catch (Exception e) {
+        localDevice.captureError(category, e);
+      }
+    }));
+
+    dynamicTerminate(setSize);
+    ifTrueThen(setSize > BATCH_REPORT_SIZE,
+        () -> System.err.printf("Finished %s for %d devices.%n", message, setSize));
   }
 
   @CommandLineOption(short_form = "-T", description = "Expand transitive dependencies")
@@ -1479,27 +1466,15 @@ public class Registrar {
     System.err.printf("Added %d transitive devices to working set.%n", newDevices.size());
   }
 
-  private void previewModels(Map<String, LocalDevice> localDevices) {
-    if (!metadataModelOut) {
-      return;
-    }
+  private void previewModelRegistry() {
+    ifTrueThen(metadataModelOut,
+        () -> cloudIotManager.updateRegistry(getSiteMetadata(), ModelOperation.PREVIEW));
+  }
 
-    cloudIotManager.updateRegistry(getSiteMetadata(), ModelOperation.PREVIEW);
-
-    try {
-      AtomicInteger previewCount = new AtomicInteger();
-      localDevices.forEach((id, device) -> parallelExecute(() -> {
-        int baseCount = previewCount.getAndIncrement();
-        ifTrueThen(baseCount % 100 == 0,
-            () -> System.err.printf("Sending preview for device %d/%d...%n", baseCount + 1,
-                localDevices.size()));
-        cloudIotManager.updateDevice(id, device.getSettings(), ModelOperation.PREVIEW);
-      }));
-      dynamicTerminate(localDevices.size());
-      System.err.printf("Finished sending device preview for %d devices.%n", localDevices.size());
-    } catch (Exception e) {
-      throw new RuntimeException("While previewing local devices", e);
-    }
+  private void previewModel(LocalDevice device) {
+    ifTrueThen(metadataModelOut,
+        () -> cloudIotManager.updateDevice(device.getDeviceId(), device.getSettings(),
+            ModelOperation.PREVIEW));
   }
 
   private void initializeDevices(Map<String, LocalDevice> localDevices) {
