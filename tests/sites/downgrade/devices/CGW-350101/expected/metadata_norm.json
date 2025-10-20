@@ -5,7 +5,6 @@
   "gateway": {
     "gateway_id": "DDC-35"
   },
-  "hash": "0a14502a",
   "localnet": {
     "families": {
       "bacnet": {
