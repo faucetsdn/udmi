@@ -78,6 +78,7 @@ import com.google.udmi.util.ExceptionList;
 import com.google.udmi.util.ExceptionMap;
 import com.google.udmi.util.ExceptionMap.ErrorTree;
 import com.google.udmi.util.ExceptionMap.ExceptionCategory;
+import com.google.daq.mqtt.external.ExternalProcessor;
 import com.google.udmi.util.JsonUtil;
 import com.google.udmi.util.SiteModel;
 import com.google.udmi.util.ValidationError;
@@ -161,6 +162,7 @@ public class Registrar {
       usageForms);
   private final AtomicInteger updatedDevices = new AtomicInteger();
   private final Map<Credential, String> usedCredentials = new ConcurrentHashMap<>();
+  private final Map<String, ExternalProcessor> processors = new ConcurrentHashMap<>();
   private CloudIotManager cloudIotManager;
   private File schemaBase;
   private PubSubPusher updatePusher;
@@ -546,16 +548,32 @@ public class Registrar {
   }
 
   private void setSiteModel(SiteModel siteModel) {
+    checkState(this.siteModel == null, "site model already defined");
     siteModel.loadSiteMetadata();
     this.siteModel = siteModel;
     ifTrueThen(strictWarnings, siteModel::setStrictWarnings);
+    initializeExternalProcessors(siteModel);
+  }
+
+  private synchronized void initializeExternalProcessors(SiteModel siteModel) {
+    Map<String, ? extends ExternalProcessor> created = ExternalProcessor.PROCESSORS.stream()
+        .map(p -> {
+          try {
+            return p.getConstructor(SiteModel.class).newInstance(siteModel);
+          } catch (Exception e) {
+            throw new RuntimeException("While initializing " + p, e);
+          }
+        }).collect(Collectors.toMap(ExternalProcessor::getName, Function.identity()));
+    checkState(created.size() == ExternalProcessor.PROCESSORS.size(), "size mismatch");
+    ifNotEmptyThrow(processors.keySet(), p -> "Processors already initialized!");
+    processors.putAll(created);
   }
 
   @CommandLineOption(short_form = "-s", arg_name = "site_path", description = "Set site path")
   private void setSitePath(String sitePath) {
     checkNotNull(SCHEMA_NAME, "schemaName not set yet");
     siteDir = new File(sitePath);
-    setSiteModel(ofNullable(siteModel).orElseGet(() -> new SiteModel(sitePath)));
+    ifNullThen(siteModel, () -> setSiteModel(new SiteModel(sitePath)));
     File summaryBase = new File(siteDir, SiteModel.REGISTRATION_SUMMARY_BASE);
     File parentFile = summaryBase.getParentFile();
     if (!parentFile.isDirectory() && !parentFile.mkdirs()) {
@@ -1421,6 +1439,12 @@ public class Registrar {
     allWorking(LocalDevice::validateExpectedFiles, "validating expected", ExceptionCategory.files);
     allWorking(LocalDevice::validateSamples, "validate samples", ExceptionCategory.samples);
     allWorking(this::validateKeys, "validating keys", ExceptionCategory.credentials);
+    allWorking(this::processExternals, "process externals", ExceptionCategory.externals);
+  }
+
+  private void processExternals(LocalDevice localDevice) {
+    ifNotNullThen(localDevice.getMetadata().externals, map -> map.forEach((key, value) ->
+        requireNonNull(processors.get(key), "Missing external processor " + key).process(localDevice)));
   }
 
   private void allWorking(Consumer<LocalDevice> action, String message,

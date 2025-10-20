@@ -10,7 +10,7 @@ from ._base import DataModel
 
 
 @dataclass
-class CloudConfigModel(DataModel):
+class ConfigCloudModel(DataModel):
     """
     Information specific to how the device communicates with the cloud.
     """

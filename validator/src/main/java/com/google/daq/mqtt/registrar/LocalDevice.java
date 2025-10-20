@@ -97,7 +97,7 @@ import udmi.schema.Metadata;
 import udmi.schema.PointPointsetModel;
 
 
-class LocalDevice {
+public class LocalDevice {
 
   public static final String INVALID_METADATA_HASH = "INVALID";
   private static final String RSA_PUBLIC_PEM = "rsa_public.pem";
@@ -858,6 +858,10 @@ class LocalDevice {
 
   public List<String> getProxyIds() {
     return getMetadata().gateway.proxy_ids;
+  }
+
+  public File getOutDir() {
+    return outDir;
   }
 
   public enum DeviceStatus {

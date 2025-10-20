@@ -1,0 +1,10 @@
+{
+  "title": "Building Config Entity",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "description": {
+      "type": "string"
+    }
+  }
+}
