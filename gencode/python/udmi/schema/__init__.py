@@ -69,6 +69,7 @@ from .options_pubber import *
 from .persistent_device import *
 from .properties import *
 from .query_cloud import *
+from .site_externals_link import *
 from .site_metadata import *
 from .state import *
 from .state_blobset import *
