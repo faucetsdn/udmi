@@ -2,7 +2,6 @@
   "gateway": {
     "gateway_id": "GAT-123"
   },
-  "hash": "560d4018",
   "pointset": {
     "exclude_points_from_config": true,
     "points": {
@@ -14,19 +13,6 @@
       }
     },
     "sample_rate_sec": 30
-  },
-  "relationships": {
-    "AHU-1": [
-      {
-        "kind": "feeds"
-      }
-    ],
-    "AHU-22": [],
-    "SNS-4": [
-      {
-        "kind": "contains"
-      }
-    ]
   },
   "system": {
     "location": {
