@@ -6,11 +6,11 @@
   "$schema": "http://json-schema.org/draft-07/schema#",
   "additionalProperties": false,
   "properties": {
-    "entity_id": {
+    "ext_id": {
       "description": "Id of this device in the external model namespace",
       "type": "string"
     },
-    "entity_type": {
+    "type": {
       "description": "Type of this device in the external model namespace",
       "type": "string"
     },
@@ -19,8 +19,8 @@
       "pattern": "^[0-9a-f]+$",
       "type": "string"
     },
-    "description": {
-      "description": "Description of this device in the external model namespace",
+    "label": {
+      "description": "Descriptive label for this entity",
       "type": "string"
     }
   }

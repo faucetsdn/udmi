@@ -15,10 +15,10 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
-    "entity_id",
-    "entity_type",
+    "ext_id",
+    "type",
     "etag",
-    "description"
+    "label"
 })
 public class LinkExternalsModel {
 
@@ -26,16 +26,16 @@ public class LinkExternalsModel {
      * Id of this device in the external model namespace
      * 
      */
-    @JsonProperty("entity_id")
+    @JsonProperty("ext_id")
     @JsonPropertyDescription("Id of this device in the external model namespace")
-    public String entity_id;
+    public String ext_id;
     /**
      * Type of this device in the external model namespace
      * 
      */
-    @JsonProperty("entity_type")
+    @JsonProperty("type")
     @JsonPropertyDescription("Type of this device in the external model namespace")
-    public String entity_type;
+    public String type;
     /**
      * Etag for referencing this external entity
      * 
@@ -44,20 +44,20 @@ public class LinkExternalsModel {
     @JsonPropertyDescription("Etag for referencing this external entity")
     public String etag;
     /**
-     * Description of this device in the external model namespace
+     * Descriptive label for this entity
      * 
      */
-    @JsonProperty("description")
-    @JsonPropertyDescription("Description of this device in the external model namespace")
-    public String description;
+    @JsonProperty("label")
+    @JsonPropertyDescription("Descriptive label for this entity")
+    public String label;
 
     @Override
     public int hashCode() {
         int result = 1;
-        result = ((result* 31)+((this.description == null)? 0 :this.description.hashCode()));
         result = ((result* 31)+((this.etag == null)? 0 :this.etag.hashCode()));
-        result = ((result* 31)+((this.entity_type == null)? 0 :this.entity_type.hashCode()));
-        result = ((result* 31)+((this.entity_id == null)? 0 :this.entity_id.hashCode()));
+        result = ((result* 31)+((this.ext_id == null)? 0 :this.ext_id.hashCode()));
+        result = ((result* 31)+((this.label == null)? 0 :this.label.hashCode()));
+        result = ((result* 31)+((this.type == null)? 0 :this.type.hashCode()));
         return result;
     }
 
@@ -70,7 +70,7 @@ public class LinkExternalsModel {
             return false;
         }
         LinkExternalsModel rhs = ((LinkExternalsModel) other);
-        return (((((this.description == rhs.description)||((this.description!= null)&&this.description.equals(rhs.description)))&&((this.etag == rhs.etag)||((this.etag!= null)&&this.etag.equals(rhs.etag))))&&((this.entity_type == rhs.entity_type)||((this.entity_type!= null)&&this.entity_type.equals(rhs.entity_type))))&&((this.entity_id == rhs.entity_id)||((this.entity_id!= null)&&this.entity_id.equals(rhs.entity_id))));
+        return (((((this.etag == rhs.etag)||((this.etag!= null)&&this.etag.equals(rhs.etag)))&&((this.ext_id == rhs.ext_id)||((this.ext_id!= null)&&this.ext_id.equals(rhs.ext_id))))&&((this.label == rhs.label)||((this.label!= null)&&this.label.equals(rhs.label))))&&((this.type == rhs.type)||((this.type!= null)&&this.type.equals(rhs.type))));
     }
 
 }

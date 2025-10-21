@@ -15,7 +15,7 @@ class LinkExternalsModel(DataModel):
     Information about how this device links to a specific external model
     """
 
-    entity_id: Optional[str] = None
-    entity_type: Optional[str] = None
+    ext_id: Optional[str] = None
+    type: Optional[str] = None
     etag: Optional[str] = None
-    description: Optional[str] = None
+    label: Optional[str] = None

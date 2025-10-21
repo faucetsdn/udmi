@@ -2,13 +2,16 @@ package com.google.daq.mqtt.external;
 
 import static java.util.Objects.requireNonNull;
 
-import com.google.daq.mqtt.registrar.LocalDevice;
 import com.google.udmi.util.JsonUtil;
+import com.google.udmi.util.SiteDevice;
 import com.google.udmi.util.SiteModel;
 import java.io.File;
 import udmi.schema.BuildingConfigEntity;
 import udmi.schema.LinkExternalsModel;
 
+/**
+ * Processor to generate externally-linked DBO building config files.
+ */
 public class DboExternalProcessor implements ExternalProcessor {
 
   private static final String DBO_OUT_FILE = "building_config.json";
@@ -24,19 +27,19 @@ public class DboExternalProcessor implements ExternalProcessor {
   }
 
   @Override
-  public void process(LocalDevice localDevice) {
-    LinkExternalsModel linkExternalsModel = localDevice.getMetadata().externals.get(getName());
-    String entityId = requireNonNull(linkExternalsModel.entity_id, "missing external entity_id");
+  public void process(SiteDevice device) {
+    LinkExternalsModel linkExternalsModel = device.getMetadata().externals.get(getName());
+    String entityId = requireNonNull(linkExternalsModel.ext_id, "missing external id");
 
     BuildingConfig buildingConfig = new BuildingConfig();
     BuildingConfigEntity buildingConfigEntity = buildingConfig.computeIfAbsent(entityId,
         id -> new BuildingConfigEntity());
 
-    buildingConfigEntity.code = linkExternalsModel.description;
-    buildingConfigEntity.type = linkExternalsModel.entity_type;
+    buildingConfigEntity.code = linkExternalsModel.label;
+    buildingConfigEntity.type = linkExternalsModel.type;
     buildingConfigEntity.etag = linkExternalsModel.etag;
 
-    File dboOut = new File(localDevice.getOutDir(), DBO_OUT_FILE);
+    File dboOut = new File(device.getOutDir(), DBO_OUT_FILE);
     JsonUtil.writeFile(buildingConfig, dboOut);
   }
 }
