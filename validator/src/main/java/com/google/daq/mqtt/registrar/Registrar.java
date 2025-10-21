@@ -64,6 +64,7 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
 import com.google.common.collect.Sets.SetView;
+import com.google.daq.mqtt.external.ExternalProcessor;
 import com.google.daq.mqtt.registrar.LocalDevice.DeviceKind;
 import com.google.daq.mqtt.util.CloudDeviceSettings;
 import com.google.daq.mqtt.util.CloudIotManager;
@@ -78,7 +79,6 @@ import com.google.udmi.util.ExceptionList;
 import com.google.udmi.util.ExceptionMap;
 import com.google.udmi.util.ExceptionMap.ErrorTree;
 import com.google.udmi.util.ExceptionMap.ExceptionCategory;
-import com.google.daq.mqtt.external.ExternalProcessor;
 import com.google.udmi.util.JsonUtil;
 import com.google.udmi.util.SiteModel;
 import com.google.udmi.util.ValidationError;
@@ -121,6 +121,7 @@ import udmi.schema.Credential;
 import udmi.schema.Envelope.SubFolder;
 import udmi.schema.ExecutionConfiguration;
 import udmi.schema.GatewayModel;
+import udmi.schema.LinkExternalsModel;
 import udmi.schema.Metadata;
 import udmi.schema.SetupUdmiConfig;
 import udmi.schema.SiteMetadata;
@@ -1444,7 +1445,8 @@ public class Registrar {
 
   private void processExternals(LocalDevice localDevice) {
     List<Exception> exceptionList = new ArrayList<>();
-    ifNotNullThen(localDevice.getMetadata().externals, map -> map.forEach((key, value) -> {
+    Map<String, LinkExternalsModel> ext = catchToNull(() -> localDevice.getMetadata().externals);
+    ifNotNullThen(ext, map -> map.forEach((key, value) -> {
       try {
         requireNonNull(processors.get(key), "Missing external processor " + key).process(
             localDevice);
