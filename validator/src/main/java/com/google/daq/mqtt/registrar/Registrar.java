@@ -1443,8 +1443,16 @@ public class Registrar {
   }
 
   private void processExternals(LocalDevice localDevice) {
-    ifNotNullThen(localDevice.getMetadata().externals, map -> map.forEach((key, value) ->
-        requireNonNull(processors.get(key), "Missing external processor " + key).process(localDevice)));
+    List<Exception> exceptionList = new ArrayList<>();
+    ifNotNullThen(localDevice.getMetadata().externals, map -> map.forEach((key, value) -> {
+      try {
+        requireNonNull(processors.get(key), "Missing external processor " + key).process(
+            localDevice);
+      } catch (Exception e) {
+        exceptionList.add(e);
+      }
+    }));
+    ExceptionList.throwIfNotEmpty(exceptionList);
   }
 
   private void allWorking(Consumer<LocalDevice> action, String message,
