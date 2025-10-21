@@ -11,4 +11,6 @@ from ._base import DataModel
 
 @dataclass
 class BuildingConfigEntity(DataModel):
-    description: Optional[str] = None
+    code: Optional[str] = None
+    etag: Optional[str] = None
+    type: Optional[str] = None

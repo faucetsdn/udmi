@@ -1,2 +1,3 @@
 Exceptions for SNS-4
   gateway_id mismatch for SNS-4: GAT-123 != GAT-72
+  Missing external processor ifc
