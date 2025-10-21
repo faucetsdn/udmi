@@ -24,18 +24,18 @@
   },
   "externals": {
     "dbo": {
-      "entity_id": "0060917f-8c21-47c4-b011-52521085fdc3",
-      "entity_type": "HVAC/VAV_SD_DSP",
-      "description": "VAV CO 1-2-37"
+      "ext_id": "0060917f-8c21-47c4-b011-52521085fdc3",
+      "type": "HVAC/VAV_SD_DSP",
+      "label": "VAV CO 1-2-37"
     },
     "ifc": {
-      "entity_id": "a87a9b4b-e9e5-424b-9a4e-22378987dddd",
+      "ext_id": "a87a9b4b-e9e5-424b-9a4e-22378987dddd",
       "etag": "98bac980",
-      "entity_type": "IfcDoor"
+      "type": "IfcDoor"
     },
     "json_ld": {
-      "entity_id": "https://dbpedia.org/page/John_Lennon",
-      "entity_type": "person"
+      "ext_id": "https://dbpedia.org/page/John_Lennon",
+      "type": "person"
     }
   },
   "gateway": {
