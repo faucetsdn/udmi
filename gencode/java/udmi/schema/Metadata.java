@@ -130,7 +130,7 @@ public class Metadata {
      */
     @JsonProperty("relationships")
     @JsonPropertyDescription("Information for modeling noun-verb-noun relationships between devices")
-    public Map<String, List<LinkRelationshipsModel>> relationships;
+    public Map<String, Map<String, List<DetailRelationshipsModel>>> relationships;
     /**
      * Localnet Model
      * <p>

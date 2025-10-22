@@ -61,7 +61,7 @@ from .model_localnet_family import *
 from .model_pointset import *
 from .model_pointset_point import *
 from .model_relationships import *
-from .model_relationships_link import *
+from .model_relationships_detail import *
 from .model_system import *
 from .model_system_hardware import *
 from .model_testing import *

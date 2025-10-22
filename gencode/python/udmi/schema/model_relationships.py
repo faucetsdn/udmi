@@ -6,6 +6,6 @@ from __future__ import annotations
 from typing import Dict, List, Optional
 
 from ._base import DataModel
-from .model_relationships_link import LinkRelationshipsModel
+from .model_relationships_detail import DetailRelationshipsModel
 
-RelationshipsModel = Optional[Dict[str, List[LinkRelationshipsModel]]]
+RelationshipsModel = Optional[Dict[str, Dict[str, List[DetailRelationshipsModel]]]]
