@@ -2,6 +2,23 @@
   "$udmi_version": "1.5.3",
   "title": "Detail Relationships Model",
   "description": "Information for modeling noun-verb-noun relationships between devices",
+  "$schema": "http://json-schema.org/draft-07/schema#",
   "type": "object",
-  "$schema": "http://json-schema.org/draft-07/schema#"
+  "additionalProperties": false,
+  "properties": {
+    "tags":{
+      "description": "Tags associated with the device",
+      "type": "array",
+      "uniqueItems": true,
+      "items": {
+        "type": "string",
+        "pattern": "^[a-z][_a-z0-9]+$"
+      },
+      "examples": [["lighting"], ["energy", "building", "vendor_managed"]],
+      "$presentation": {
+        "display": "show",
+        "style": "bold"
+      }
+    }
+  }
 }

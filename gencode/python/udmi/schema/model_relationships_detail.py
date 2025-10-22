@@ -4,8 +4,11 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from typing import List, Optional
 
 from ._base import DataModel
+
+Tag = Optional[str]
 
 
 @dataclass
@@ -13,3 +16,5 @@ class DetailRelationshipsModel(DataModel):
     """
     Information for modeling noun-verb-noun relationships between devices
     """
+
+    tags: Optional[List[Tag]] = None

@@ -1,8 +1,12 @@
 
 package udmi.schema;
 
+import java.util.Set;
 import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 
 
 /**
@@ -13,14 +17,23 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
-
+    "tags"
 })
 public class DetailRelationshipsModel {
 
+    /**
+     * Tags associated with the device
+     * 
+     */
+    @JsonProperty("tags")
+    @JsonDeserialize(as = java.util.LinkedHashSet.class)
+    @JsonPropertyDescription("Tags associated with the device")
+    public Set<String> tags;
 
     @Override
     public int hashCode() {
         int result = 1;
+        result = ((result* 31)+((this.tags == null)? 0 :this.tags.hashCode()));
         return result;
     }
 
@@ -33,7 +46,7 @@ public class DetailRelationshipsModel {
             return false;
         }
         DetailRelationshipsModel rhs = ((DetailRelationshipsModel) other);
-        return true;
+        return ((this.tags == rhs.tags)||((this.tags!= null)&&this.tags.equals(rhs.tags)));
     }
 
 }
