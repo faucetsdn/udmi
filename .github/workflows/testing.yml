@@ -448,4 +448,6 @@ jobs:
           cd pyudmi
           poetry install --with dev
       - name: Run tests with pytest
-        run: poetry run pytest -v tests/
+        run: |
+          cd pyudmi
+          poetry run pytest -v tests/
