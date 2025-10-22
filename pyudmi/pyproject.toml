@@ -2,9 +2,6 @@
 name = "pyudmi"
 version = "0.1.0"
 description = "A Python library for UDMI"
-authors = [
-    { name = "Your Name", email = "you@example.com" }
-]
 readme = "README.md"
 
 [tool.poetry.dependencies]
