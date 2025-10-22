@@ -5,7 +5,7 @@ import pytest
 from udmi.schema import EndpointConfiguration
 
 from src.udmi.core import Device
-from src.udmi.core import create_device_instance
+from src.udmi.core import create_mqtt_device_instance
 
 
 @pytest.fixture
@@ -29,7 +29,7 @@ def test_device(mock_paho_client_class, mock_auth_provider):
         port=8883
     )
 
-    device = create_device_instance(
+    device = create_mqtt_device_instance(
         device_class=Device,
         endpoint_config=endpoint_config,
         auth_provider=mock_auth_provider

@@ -20,7 +20,7 @@ from .messaging.mqtt_messaging_client import MqttMessagingClient
 LOGGER = logging.getLogger(__name__)
 
 
-def create_device_instance(
+def create_mqtt_device_instance(
     device_class: Type[Device],
     endpoint_config: EndpointConfiguration,
     auth_provider: Optional[AuthProvider] = None,

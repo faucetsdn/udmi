@@ -2,7 +2,7 @@ import pytest
 import json
 from unittest.mock import MagicMock
 
-from src.udmi.core import Device, create_device_instance
+from src.udmi.core import Device, create_mqtt_device_instance
 from udmi.schema import EndpointConfiguration, Config
 
 
@@ -53,7 +53,7 @@ def test_device_subclass(mock_paho_client_class, mock_auth_provider):
         port=8883
     )
 
-    device = create_device_instance(
+    device = create_mqtt_device_instance(
         device_class=MockableDevice,
         endpoint_config=endpoint_config,
         auth_provider=mock_auth_provider
