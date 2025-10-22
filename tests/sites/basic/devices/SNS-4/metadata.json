@@ -25,7 +25,7 @@
   "relationships": {
     "AHU-1": { "feeds": [{}] },
     "AHU-22": { },
-    "SNS-4": { "contains": [{ "tags": "daily" }] }
+    "SNS-4": { "contains": [{ "tags": ["daily"] }] }
   },
   "externals": {
     "dbo": {
