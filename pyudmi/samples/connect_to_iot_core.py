@@ -1,16 +1,12 @@
 import logging
-import os
 import sys
 
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
-
-from src.udmi.core import Device, create_mqtt_device_instance
-from src.udmi.core.auth import JwtAuthProvider
-
+from udmi.core import Device, create_mqtt_device_instance
+from udmi.core.auth import JwtAuthProvider
 from udmi.schema import EndpointConfiguration
 
 # --- Configuration Constants ---
-PROJECT_ID = "bos-platform-dev"
+PROJECT_ID = "gcp-project-id"
 REGION = "us-central1"
 REGISTRY_ID = "ZZ-TRI-FECTA"
 DEVICE_ID = "AHU-1"

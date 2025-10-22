@@ -1,12 +1,8 @@
-import os
 import sys
 import logging
 
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
-
-from src.udmi.core import Device, create_mqtt_device_instance
-from src.udmi.core.auth import BasicAuthProvider
-
+from udmi.core import Device, create_mqtt_device_instance
+from udmi.core.auth import BasicAuthProvider
 from udmi.schema import EndpointConfiguration
 
 DEVICE_ID = "AHU-1"
