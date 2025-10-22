@@ -2,6 +2,7 @@
 package udmi.schema;
 
 import java.util.Date;
+import java.util.Map;
 import java.util.Set;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -26,6 +27,7 @@ import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
     "strict_warnings",
     "location",
     "links",
+    "externals",
     "parameters"
 })
 public class SiteMetadata {
@@ -45,21 +47,21 @@ public class SiteMetadata {
      */
     @JsonProperty("version")
     @JsonPropertyDescription("Version of the UDMI schema")
-    public String version;
+    public java.lang.String version;
     /**
      * Identifier for the site or building
      * 
      */
     @JsonProperty("site")
     @JsonPropertyDescription("Identifier for the site or building")
-    public String site;
+    public java.lang.String site;
     /**
      * Name of the site or building
      * 
      */
     @JsonProperty("name")
     @JsonPropertyDescription("Name of the site or building")
-    public String name;
+    public java.lang.String name;
     /**
      * Tags associated with the site
      * 
@@ -91,6 +93,13 @@ public class SiteMetadata {
      */
     @JsonProperty("links")
     public SiteLinks links;
+    /**
+     * Information specific to how links to external systems are handled
+     * 
+     */
+    @JsonProperty("externals")
+    @JsonPropertyDescription("Information specific to how links to external systems are handled")
+    public Map<String, LinkExternalsSite> externals;
     @JsonProperty("parameters")
     public Parameters parameters;
 
@@ -101,6 +110,7 @@ public class SiteMetadata {
         result = ((result* 31)+((this.name == null)? 0 :this.name.hashCode()));
         result = ((result* 31)+((this.location == null)? 0 :this.location.hashCode()));
         result = ((result* 31)+((this.links == null)? 0 :this.links.hashCode()));
+        result = ((result* 31)+((this.externals == null)? 0 :this.externals.hashCode()));
         result = ((result* 31)+((this.version == null)? 0 :this.version.hashCode()));
         result = ((result* 31)+((this.parameters == null)? 0 :this.parameters.hashCode()));
         result = ((result* 31)+((this.strict_warnings == null)? 0 :this.strict_warnings.hashCode()));
@@ -118,7 +128,7 @@ public class SiteMetadata {
             return false;
         }
         SiteMetadata rhs = ((SiteMetadata) other);
-        return ((((((((((this.site == rhs.site)||((this.site!= null)&&this.site.equals(rhs.site)))&&((this.name == rhs.name)||((this.name!= null)&&this.name.equals(rhs.name))))&&((this.location == rhs.location)||((this.location!= null)&&this.location.equals(rhs.location))))&&((this.links == rhs.links)||((this.links!= null)&&this.links.equals(rhs.links))))&&((this.version == rhs.version)||((this.version!= null)&&this.version.equals(rhs.version))))&&((this.parameters == rhs.parameters)||((this.parameters!= null)&&this.parameters.equals(rhs.parameters))))&&((this.strict_warnings == rhs.strict_warnings)||((this.strict_warnings!= null)&&this.strict_warnings.equals(rhs.strict_warnings))))&&((this.timestamp == rhs.timestamp)||((this.timestamp!= null)&&this.timestamp.equals(rhs.timestamp))))&&((this.tags == rhs.tags)||((this.tags!= null)&&this.tags.equals(rhs.tags))));
+        return (((((((((((this.site == rhs.site)||((this.site!= null)&&this.site.equals(rhs.site)))&&((this.name == rhs.name)||((this.name!= null)&&this.name.equals(rhs.name))))&&((this.location == rhs.location)||((this.location!= null)&&this.location.equals(rhs.location))))&&((this.links == rhs.links)||((this.links!= null)&&this.links.equals(rhs.links))))&&((this.externals == rhs.externals)||((this.externals!= null)&&this.externals.equals(rhs.externals))))&&((this.version == rhs.version)||((this.version!= null)&&this.version.equals(rhs.version))))&&((this.parameters == rhs.parameters)||((this.parameters!= null)&&this.parameters.equals(rhs.parameters))))&&((this.strict_warnings == rhs.strict_warnings)||((this.strict_warnings!= null)&&this.strict_warnings.equals(rhs.strict_warnings))))&&((this.timestamp == rhs.timestamp)||((this.timestamp!= null)&&this.timestamp.equals(rhs.timestamp))))&&((this.tags == rhs.tags)||((this.tags!= null)&&this.tags.equals(rhs.tags))));
     }
 
 }

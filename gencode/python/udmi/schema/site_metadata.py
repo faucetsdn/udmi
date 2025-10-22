@@ -4,10 +4,11 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Any, List, Optional
+from typing import Any, Dict, List, Optional
 
 from ._base import DataModel
 from .dimension import Dimension
+from .site_externals_link import LinkExternalsSite
 
 Tag = Optional[Any]
 
@@ -69,4 +70,5 @@ class SiteMetadata(DataModel):
     strict_warnings: Optional[bool] = None
     location: Optional[Location] = None
     links: Optional[Links] = None
+    externals: Optional[Dict[str, LinkExternalsSite]] = None
     parameters: Optional[Parameters] = None

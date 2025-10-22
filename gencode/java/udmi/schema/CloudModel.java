@@ -98,14 +98,14 @@ public class CloudModel {
     @JsonPropertyDescription("[Gateway Documentation](../docs/specs/gateway.md)")
     public GatewayModel gateway;
     /**
-     * Cloud Config Model
+     * Config Cloud Model
      * <p>
      * Information specific to how the device communicates with the cloud.
      * 
      */
     @JsonProperty("config")
     @JsonPropertyDescription("Information specific to how the device communicates with the cloud.")
-    public CloudConfigModel config;
+    public ConfigCloudModel config;
     @JsonProperty("blocked")
     public Boolean blocked;
     @JsonProperty("detail")

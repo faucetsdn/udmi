@@ -159,6 +159,17 @@
         }
       }
     },
+    "externals": {
+      "description": "Information specific to how links to external systems are handled",
+      "type": "object",
+      "additionalProperties": false,
+      "existingJavaType": "java.util.Map<String, LinkExternalsSite>",
+      "patternProperties": {
+        "^[a-z]+(_[a-z]+)*$": {
+          "$ref": "file:site_externals_link.json"
+        }
+      }
+    },
     "parameters": {
       "type": "object",
       "additionalProperties": false,

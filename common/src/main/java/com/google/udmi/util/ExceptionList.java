@@ -16,4 +16,10 @@ public class ExceptionList extends RuntimeException {
   public List<Exception> exceptions() {
     return list;
   }
+
+  public static void throwIfNotEmpty(List<Exception> list) {
+    if (!list.isEmpty()) {
+      throw new ExceptionList(list);
+    }
+  }
 }
