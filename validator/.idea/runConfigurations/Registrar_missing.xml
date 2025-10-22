@@ -6,7 +6,7 @@
     <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/.." />
     <extension name="coverage">
       <pattern>
-        <option name="PATTERN" value="com.google.udmi.util.*" />
+        <option name="PATTERN" value="com.google.daq.mqtt.external.*" />
         <option name="ENABLED" value="true" />
       </pattern>
     </extension>
