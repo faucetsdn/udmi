@@ -92,7 +92,6 @@
       "family": "bacnet"
     }
   },
-  "hash": "68efa6be",
   "localnet": {
     "families": {
       "bacnet": {

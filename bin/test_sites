@@ -87,7 +87,7 @@ done
 
 if [[ -s $FAILURES ]]; then
     echo
-    echo :::::: Failures found, to fix execute $FAILURES:
+    echo :::::: Failures found, to fix execute source $FAILURES:
     sed -i -E \
         -e 's/^Files (.*) and (.*) differ$/diff \1 \2/' \
         -e 's-^Only in (.*)/out: (.*)$-echo \1/expected/\2-' \
