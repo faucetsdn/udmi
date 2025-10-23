@@ -1,9 +1,8 @@
 services:
   mosquitto:
-    image: eclipse-mosquitto:2.0.22 
     build:
       context: ./
-    container_name: bridgehead
+    container_name: mosquitto
     volumes:
       - ./mosquitto/config:/mosquitto/config
       - ./mosquitto/data:/mosquitto/data

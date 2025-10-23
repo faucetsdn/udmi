@@ -2,7 +2,7 @@
 
 TOPIC="test/status"
 MESSAGE="hello_world"
-BROKER="localhost"
+BROKER="mosquitto"
 PORT="1883"
 
 echo "--- Starting MQTT connectivity check ---"
