@@ -13,7 +13,7 @@ The configuration is designed for connections without client credentials.
 
 1.  **Install docker engine:** Ensure Docker is installed and running on your system: `https://docs.docker.com/engine/install/`
 
-2.  **Navigate to project directory:** Open your terminal and change the directory to the project root containing the `docker-compose.yml` file (`bridgehead/mqtt-mosquitto/`).
+2.  **Navigate to project directory:** Open your terminal and change the directory to the project root containing the `docker-compose.yml` file (`bridgehead/`).
 
 3.  **Deploy the service:** Execute the following command to build the custom image (if needed) and start the Mosquitto container in detached mode.
     * **First time/after changes:** Run `sudo docker compose up -d --build`
@@ -21,4 +21,6 @@ The configuration is designed for connections without client credentials.
 
 4.  **Run connectivity check:** Confirm the broker is up and running by executing `sudo docker compose exec mosquitto /usr/local/bin/check_mqtt.sh`. This script performs an internal publish/subscribe self-test. A successful output confirms the broker is fully operational and accepting client connections.
 
-**Stop and remove:** To gracefully stop and remove the container, run: `sudo docker compose down`
+### Shutting down the docker environment
+
+To gracefully stop and remove the container, run: `sudo docker compose down`
