@@ -13,12 +13,19 @@ class JwtAuthProvider(AuthProvider):
     An AuthProvider for JWT-based authentication, common for cloud platforms.
     Caches the token and handles proactive refresh.
     """
-    DEFAULT_TOKEN_LIFETIME_MINUTES = 60 * 24
-    TOKEN_REFRESH_BUFFER_MINUTES = 5
 
-    def __init__(self, project_id: str, private_key_file: str, algorithm: str):
+    def __init__(
+        self,
+        project_id: str,
+        private_key_file: str,
+        algorithm: str,
+        token_lifetime_minutes: int = 60 * 24,
+        token_refresh_buffer_minutes: int = 5
+    ):
         self.audience = project_id
         self.algorithm = algorithm
+        self.token_lifetime_minutes = token_lifetime_minutes
+        self.token_refresh_buffer_minutes = token_refresh_buffer_minutes
         self._cached_token: str | None = None
         self._token_expiry: datetime.datetime | None = None
         try:
@@ -39,7 +46,7 @@ class JwtAuthProvider(AuthProvider):
 
         now_utc = datetime.datetime.now(tz=datetime.timezone.utc)
         refresh_threshold = self._token_expiry - datetime.timedelta(
-            minutes=self.TOKEN_REFRESH_BUFFER_MINUTES
+            minutes=self.token_refresh_buffer_minutes
         )
 
         return now_utc >= refresh_threshold
@@ -53,7 +60,7 @@ class JwtAuthProvider(AuthProvider):
             LOGGER.info("Generating new JWT...")
             token_iat = datetime.datetime.now(tz=datetime.timezone.utc)
             token_exp = token_iat + datetime.timedelta(
-                minutes=self.DEFAULT_TOKEN_LIFETIME_MINUTES
+                minutes=self.token_lifetime_minutes
             )
             payload = {"iat": token_iat, "exp": token_exp, "aud": self.audience}
 

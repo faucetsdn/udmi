@@ -26,7 +26,7 @@ class MqttMessagingClient(AbstractMessagingClient):
         ca_certs: str = None,
         cert_file: str = None,
         key_file: str = None,
-        enable_tls: bool | None = None,
+        enable_tls: Optional[bool] = None,
         min_reconnect_delay_sec: int = 1,
         max_reconnect_delay_sec: int = 60):
         """
