@@ -59,11 +59,11 @@ public class Metadata {
     @JsonPropertyDescription("Original version of the UDMI schema for this file")
     public java.lang.String upgraded_from;
     /**
-     * Automatically generated field that contains the hash of file contents.
+     * DEPRECATED
      * 
      */
     @JsonProperty("hash")
-    @JsonPropertyDescription("Automatically generated field that contains the hash of file contents.")
+    @JsonPropertyDescription("DEPRECATED")
     public java.lang.String hash;
     /**
      * Model Operation

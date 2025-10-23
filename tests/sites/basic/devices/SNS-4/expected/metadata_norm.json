@@ -2,7 +2,6 @@
   "gateway": {
     "gateway_id": "GAT-123"
   },
-  "hash": "539a2745",
   "pointset": {
     "exclude_points_from_config": true,
     "points": {

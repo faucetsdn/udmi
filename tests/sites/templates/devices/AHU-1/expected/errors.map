@@ -1,0 +1,3 @@
+Exceptions for AHU-1
+  While loading device metadata for AHU-1
+    template unknown_template not found in tests/sites/templates/templates

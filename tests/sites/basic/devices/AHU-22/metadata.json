@@ -3,7 +3,7 @@
     "points": {
       "filter_alarm_pressure_status": {
         "units": "No-units",
-        "ref": "BV11.present_value"
+        "ref": "BV:11#present_value"
       },
       "filter_differential_pressure_sensor": {
         "units": "Degrees-Celsius",
@@ -36,13 +36,13 @@
   "gateway": {
     "gateway_id": "GAT-123",
     "target": {
-      "family": "vendor"
+      "family": "bacnet"
     }
   },
   "localnet": {
     "families": {
-      "vendor": {
-        "addr": "0x65"
+      "bacnet": {
+        "addr": "582312"
       }
     }
   },

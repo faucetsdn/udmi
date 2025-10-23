@@ -1,0 +1,49 @@
+{
+  "cloud": {
+    "detail": "template overrides site_default"
+  },
+  "pointset": {
+    "points": {
+      "room_co2_sensor_from_template": {
+        "range_max": 1200.0
+      },
+      "room_humidity_sensor_from_template": {
+        "range_max": 90.0,
+        "range_min": 0.0
+      },
+      "room_temperature_sensor_from_device": {
+        "range_min": 0.0
+      },
+      "room_temperature_sensor_from_template": {
+        "range_min": 0.0
+      }
+    }
+  },
+  "system": {
+    "hardware": {
+      "make": "BOS",
+      "model": "pubber"
+    },
+    "location": {
+      "position": {
+        "x": 111.0,
+        "y": 102.3
+      },
+      "section": "FROM-TEMPLATE",
+      "site": "ZZ-SITE-DEFAULT"
+    },
+    "min_loglevel": 300,
+    "physical_tag": {
+      "asset": {
+        "guid": "drw://TBC",
+        "name": "TPS-1",
+        "site": "ZZ-TRI-FECTA"
+      }
+    },
+    "software": {
+      "firmware": "v1 (overrides_the_template)"
+    }
+  },
+  "timestamp": "2020-05-01T13:39:07Z",
+  "version": "1.5.2"
+}

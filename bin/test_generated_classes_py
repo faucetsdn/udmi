@@ -1,0 +1,40 @@
+#!/bin/bash -e
+
+set -e
+
+echo "--- Setting up test environment ---"
+
+ROOT_DIR=$(realpath $(dirname $0)/..)
+VENV_DIR="$ROOT_DIR/codegen/test_venv"
+WHEEL_DIR="$ROOT_DIR/gencode/python/dist"
+
+if [ ! -d "$WHEEL_DIR" ]; then
+    echo "Error: Wheel directory '$WHEEL_DIR' not found. Please run the bin/gencode first." >&2
+    exit 1
+fi
+
+WHEEL_FILE=$(find "$WHEEL_DIR" -name "*.whl" -print -quit)
+
+if [ -z "$WHEEL_FILE" ]; then
+    echo "Error: No .whl file found in '$WHEEL_DIR'. Build the package first." >&2
+    exit 1
+fi
+
+echo "Found package to test: $WHEEL_FILE"
+
+echo "Creating virtual environment in '$VENV_DIR'..."
+python3 -m venv "$VENV_DIR"
+source "$VENV_DIR/bin/activate"
+
+echo "Installing testing dependencies..."
+pip install --upgrade pip > /dev/null
+pip install pytest pydantic > /dev/null
+
+echo "Installing the wheel..."
+pip install --force-reinstall "$WHEEL_FILE" > /dev/null
+
+echo "--- Running tests ---"
+pytest -v -rA "$ROOT_DIR"/bin/test_generated_classes.py
+
+deactivate
+echo "--- Test run complete ---"
