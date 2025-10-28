@@ -8,260 +8,216 @@ application's lifecycle, state, and message handling logic.
 import datetime
 import logging
 import time
+from threading import Event
+from typing import Any
 from typing import Dict
+from typing import List
+from typing import Optional
 
 from udmi.schema import Config
-from udmi.schema import Events
 from udmi.schema import State
+from udmi.schema import SystemState
 
+from .managers import BaseManager
 from .messaging import AbstractMessageDispatcher
+from ..constants import UDMI_VERSION
 
 LOGGER = logging.getLogger(__name__)
 
 
 class Device:
     """
-    Represents a core UDMI device.
+    Core Device Orchestrator.
 
-    This class is the main entry point for a pyudmi application.
-    It manages the connection, handles the config/state loop, dispatches
-    commands, and runs the main application loop, which includes
-    periodic tasks like authentication refresh.
+    This class composes all services (dispatcher, managers) and runs
+    the main device loop. It delegates all UDMI logic (Config, State, Command)
+    to a list of registered managers.
+
+    This class is NOT intended to be subclassed.
     """
-
     AUTH_CHECK_INTERVAL_SEC = 15 * 60
 
-    def __init__(self, dispatcher: AbstractMessageDispatcher):
+    def __init__(self, managers: List[BaseManager]):
         """
         Initializes the Device.
 
         Args:
-            :param dispatcher: An object that implements
-                              `AbstractMessageDispatcher`.
+             managers: A list of initialized BaseManager subclasses.
         """
         LOGGER.info("Initializing device...")
-        self.dispatcher = dispatcher
-
-        self.state: State = self._create_initial_state()
-        self.config: Config = Config()
-
-        self._running = False
+        self.managers = managers
+        self.dispatcher: Optional[AbstractMessageDispatcher] = None
+        self._stop_event = Event()
         self._last_auth_check = 0.0
+        self._last_state_publish_time: float = 0
+        self.publish_state_interval_sec: int = 600
+        self.state: State = State(
+            timestamp=datetime.datetime.now(datetime.timezone.utc).isoformat(),
+            version=UDMI_VERSION,
+            system=SystemState(last_config=None)
+        )
+        self.config: Config = Config()
+        LOGGER.info(f"Device initialized with {len(self.managers)} managers.")
 
+    def wire_up_dispatcher(self, dispatcher: AbstractMessageDispatcher) -> None:
+        """
+        Connects the device to its message dispatcher and finalizes setup.
+        This must be called before .run()
+        """
+        LOGGER.debug("Wiring up dispatcher...")
+        if self.dispatcher is not None:
+            LOGGER.warning("Dispatcher already wired. Overwriting.")
+        self.dispatcher = dispatcher
+        for manager in self.managers:
+            manager.set_device_context(self, self.dispatcher)
         self._setup_message_handlers()
 
     def _setup_message_handlers(self) -> None:
         """Registers handlers with the message dispatcher."""
+        if not self.dispatcher:
+            LOGGER.error("Cannot set up handlers; dispatcher is not wired.")
+            return
         self.dispatcher.register_handler("config", self.handle_config)
         self.dispatcher.register_handler("commands/#", self.handle_command)
         LOGGER.debug("Registered config and command handlers.")
 
     # --- Connection Callbacks ---
 
-    def _on_connect(self) -> None:
+    def on_ready(self) -> None:
         """
-        Internal callback for when the client successfully connects.
-
-        This method is wired to the client by the factory.
-        It sets the device to operational and publishes the initial state.
+        Callback for when the dispatcher confirms connection and subscriptions.
         """
         LOGGER.info("Connection successful. Publishing initial state.")
-        self.state.system.operation.operational = True
-        self.publish_state()
+        self._publish_state()
 
-    def _on_disconnect(self, rc: int) -> None:
+    def on_disconnect(self, rc: int) -> None:
         """
-        Internal callback for when the client disconnects.
-
-        This method is wired to the client by the factory.
-        It sets the device to non-operational.
-
+        Callback for when the client disconnects.
         Args:
-            :param rc: The reason code for the disconnection.
+             rc: The reason code for the disconnection.
         """
         LOGGER.warning("Client disconnected with code: %s", rc)
-        self.state.system.operation.operational = False
 
     # --- Message Handlers ---
 
     def handle_config(self, channel: str, payload: Dict) -> None:
         """
-        Handles an incoming config message.
-
-        This method is registered with the dispatcher.
-        It parses the config, updates the last_config timestamp,
-        applies device-specific logic, and publishes the new state.
+        Orchestration method to handle a new config.
+        Deserializes the config and delegates to all managers.
 
         Args:
-            :param channel: The channel the message came from (e.g., 'config').
-            :param payload: The pre-parsed dictionary of the JSON payload.
+             channel: The channel the message came from (e.g., 'config').
+             payload: The pre-parsed dictionary of the JSON payload.
         """
-        LOGGER.info("Received new config message.")
+        LOGGER.info("New config received, deserializing and delegating...")
         try:
             self.config = Config.from_dict(payload)
-            LOGGER.debug("Config parsed successfully. Timestamp: %s",
-                         self.config.timestamp)
-
-            if self.config.timestamp:
-                self.state.system.last_config = self.config.timestamp
-
-            self._apply_config(self.config)
-
-            self.publish_state()
         except Exception as e:
-            LOGGER.error("Failed to handle config message: %s", e)
+            LOGGER.error("Failed to parse config message: %s", e)
+            return
 
-    def handle_command(self, channel: str, payload: Dict) -> None:
+        for manager in self.managers:
+            try:
+                manager.handle_config(self.config)
+            except Exception as e:
+                LOGGER.error(
+                    f"Error in {manager.__class__.__name__}.handle_config: {e}")
+
+        self._publish_state()
+
+    def handle_command(self, channel: str, payload: Dict[str, Any]) -> None:
         """
-        Handles an incoming command message.
-
-        This method is registered with the dispatcher.
-        It logs the command and passes it to the _execute_command hook.
+        Orchestration method to handle a new command.
+        Delegates to all managers.
 
         Args:
-            :param channel: The full command channel (e.g., 'commands/reboot').
-            :param payload: The pre-parsed dictionary of the JSON payload.
+             channel: The full command channel (e.g., 'commands/reboot').
+             payload: The pre-parsed dictionary of the JSON payload.
         """
-        LOGGER.info("Received command on channel %s", channel)
-        try:
-            self._execute_command(channel, payload)
-        except Exception as e:
-            LOGGER.error("Failed to handle command on channel %s: %s",
-                         channel, e)
+        command_name = channel.split('/')[-1]
+        LOGGER.info(
+            f"Command '{command_name}' received, delegating to managers...")
+        for manager in self.managers:
+            try:
+                manager.handle_command(command_name, payload)
+            except Exception as e:
+                LOGGER.error(
+                    f"Error in {manager.__class__.__name__}.handle_command: {e}")
 
-    # --- Public API Methods ---
+    # --- Public API Methods & Main Loop ---
 
-    def publish_state(self) -> None:
+    def _publish_state(self) -> None:
         """
-        Publishes the current device state.
-
-        This method first calls the `_update_state_before_publish` hook
-        to allow the application to inject live data (e.g., sensor
-        readings) before serializing and sending the state.
+        Orchestration method to build and publish the State message.
+        Gathers contributions from all managers.
         """
-        LOGGER.info("Updating state before publish...")
-        try:
-            # Call the hook for subclasses to inject sensor data, etc.
-            self._update_state_before_publish()
-        except Exception as e:
-            LOGGER.error("Failed during _update_state_before_publish hook: %s",
-                         e)
+        LOGGER.debug("Assembling state message...")
+        # initialize state before assembling
+        self.state = State(
+            timestamp=datetime.datetime.now(datetime.timezone.utc).isoformat(),
+            version=UDMI_VERSION,
+            system=self.state.system
+        )
+        for manager in self.managers:
+            try:
+                manager.update_state(self.state)
+            except Exception as e:
+                LOGGER.error(
+                    f"Error in {manager.__class__.__name__}.update_state: {e}")
 
-        LOGGER.info("Publishing state...")
         self.dispatcher.publish_state(self.state)
-
-    def publish_event(self, channel: str, event: Events) -> None:
-        """
-        Publishes a device event (e.g., pointset update, system event).
-
-        Args:
-            :param channel: The event channel (e.g., 'pointset', 'system').
-            :param event: The Events instance to serialize and publish.
-        """
-        LOGGER.debug("Publishing event to %s", channel)
-        self.dispatcher.publish_event(channel, event)
+        self._last_state_publish_time = time.time()
+        LOGGER.debug("State message published.")
 
     def run(self) -> None:
         """
         Starts the device and enters the main blocking application loop.
-
-        This loop is responsible for:
-        1. Connecting the client.
-        2. Starting the client's non-blocking network loop.
-        3. Periodically checking for authentication refresh (e.g., JWT).
-        4. Gracefully shutting down on exit.
         """
         LOGGER.info("Connecting and starting device run loop...")
-        self._running = True
-        self.dispatcher.connect()
-        self.dispatcher.start_loop()
-        self._last_auth_check = time.time()
+        self._stop_event.clear()
 
         try:
-            while self._running:
+            self.dispatcher.connect()
+            self.dispatcher.start_loop()
+            self._last_auth_check = time.time()
+
+            for manager in self.managers:
+                manager.start()
+
+            LOGGER.info("Device is running. Waiting for events...")
+            while not self._stop_event.is_set():
                 now = time.time()
-                if (now - self._last_auth_check) > self.AUTH_CHECK_INTERVAL_SEC:
+
+                # publish state periodically
+                if (now - self._last_state_publish_time >
+                    self.publish_state_interval_sec):
+                    self._publish_state()
+
+                # check for auth token refresh
+                if now - self._last_auth_check > self.AUTH_CHECK_INTERVAL_SEC:
                     LOGGER.debug("Checking for auth token refresh...")
                     self.dispatcher.check_authentication()
                     self._last_auth_check = now
+
                 time.sleep(1)
         except KeyboardInterrupt:
-            LOGGER.info("Device loop interrupted by user.")
-        except Exception as e:
-            LOGGER.error("Device loop failed: %s", e, exc_info=True)
+            LOGGER.info("Keyboard interrupt received.")
         finally:
-            self.close()
+            self.stop()
 
-    def close(self) -> None:
-        """Shuts down the device and disconnects the client."""
-        LOGGER.info("Closing device connection...")
-        self._running = False
-        self.dispatcher.close()
+    def stop(self) -> None:
+        """Stops the device loop and disconnects."""
+        if not self._stop_event.is_set():
+            LOGGER.info("Stopping device...")
+            self._stop_event.set()
 
-    # --- EXTERNAL APPLICATION HOOKS ---
-    # These methods are intended to be overridden by a subclass
+            LOGGER.debug("Stopping all managers...")
+            for manager in self.managers:
+                try:
+                    manager.stop()
+                except Exception as e:
+                    LOGGER.error(
+                        f"Error stopping {manager.__class__.__name__}: {e}")
 
-    def _apply_config(self, config: Config) -> None:
-        """
-        **HOOK for subclasses.**
-
-        Override this method to apply device-specific config logic.
-        This is called *after* a new config is received and parsed.
-
-        Args:
-            :param config: The newly parsed Config object.
-        """
-        LOGGER.debug("No custom _apply_config logic implemented.")
-        pass
-
-    def _execute_command(self, channel: str, payload: Dict) -> None:
-        """
-        **HOOK for subclasses.**
-
-        Override this method to implement device-specific commands.
-
-        Args:
-            :param channel: The full command channel (e.g., 'commands/reboot').
-            :param payload: The dictionary payload for the command.
-        """
-        LOGGER.debug("No custom _execute_command logic for %s.", channel)
-        pass
-
-    def _update_state_before_publish(self) -> None:
-        """
-        **HOOK for subclasses.**
-
-        Override this method to update `self.state` with application-specific
-        data (e.g., current sensor readings) just before it is published.
-        This is called every time `publish_state()` is invoked.
-        """
-        LOGGER.debug(
-            "No custom _update_state_before_publish logic implemented.")
-        pass
-
-    def _create_initial_state(self) -> State:
-        """
-        **HOOK for subclasses.**
-
-        Override this to provide a more detailed initial state, including
-        device-specific hardware/pointset info.
-        This is called once during __init__.
-
-        Returns:
-            The initial State object for the device.
-        """
-        LOGGER.debug("Creating base device state.")
-        return State.from_dict({
-            "system": {
-                "last_config": datetime.datetime.now(
-                    datetime.timezone.utc
-                ).isoformat(),
-                "hardware": {
-                    "make": "pyudmi",
-                    "model": "GenericDevice"
-                },
-                "operation": {
-                    "operational": False
-                }
-            }
-        })
+            self.dispatcher.close()
+            LOGGER.info("Device stopped.")

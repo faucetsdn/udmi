@@ -11,12 +11,10 @@ class AuthProvider(ABC):
     @abstractmethod
     def get_username(self) -> str:
         """Returns the username for the MQTT connection."""
-        pass
 
     @abstractmethod
     def get_password(self) -> str:
         """Returns the password for the MQTT connection."""
-        pass
 
     @abstractmethod
     def needs_refresh(self) -> bool:
@@ -24,4 +22,3 @@ class AuthProvider(ABC):
         Returns True if the auth credentials (e.g., token) are
         expired or will expire soon and require a client refresh.
         """
-        pass

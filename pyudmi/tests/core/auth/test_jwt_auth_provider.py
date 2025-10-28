@@ -67,9 +67,15 @@ def test_jwt_provider_token_caching(jwt_provider):
 
 
 @freeze_time("2025-10-17 12:00:00")
-def test_jwt_provider_needs_refresh_logic(jwt_provider):
+def test_jwt_provider_needs_refresh_logic():
     """Test the time-based refresh logic."""
-    jwt_provider.DEFAULT_TOKEN_LIFETIME_MINUTES = 60
+    with patch("builtins.open", mock_open(read_data=MOCK_PRIVATE_KEY)):
+        jwt_provider = JwtAuthProvider(
+            project_id="test-project",
+            private_key_file="fake/path/key.pem",
+            algorithm="RS256",
+            token_lifetime_minutes=60
+        )
 
     # 1. Get initial token
     token1 = jwt_provider.get_password()
@@ -87,3 +93,50 @@ def test_jwt_provider_needs_refresh_logic(jwt_provider):
         assert token2 is not None
         assert token1 != token2  # New token generated
         assert jwt_provider.needs_refresh() == False  # Cached again
+
+
+def test_init_raises_file_not_found():
+    """
+    Tests that the constructor correctly raises FileNotFoundError
+    if the private key file is missing.
+    """
+    with patch("builtins.open") as mock_open_fn:
+        mock_open_fn.side_effect = FileNotFoundError("File not found")
+        with pytest.raises(FileNotFoundError):
+            JwtAuthProvider(
+                project_id="test-project",
+                private_key_file="fake/path/key.pem",
+                algorithm="RS256"
+            )
+
+
+def test_jwt_encoding_failure(jwt_provider, caplog):
+    """
+    Tests that if jwt.encode() fails, it logs an error and
+    returns a safe empty string.
+    """
+    with patch("src.udmi.core.auth.jwt_auth_provider.jwt.encode",
+               side_effect=Exception("Mock encode error")):
+        password = jwt_provider.get_password()
+
+    assert "Failed to generate new JWT: Mock encode error" in caplog.text
+    assert "No valid JWT token available to return" in caplog.text
+    assert password == ""
+
+
+def test_default_token_lifetime_is_60_minutes():
+    """
+    Tests that the default token_lifetime_minutes is 60.
+    """
+    with patch("builtins.open", mock_open(read_data=MOCK_PRIVATE_KEY)):
+        with freeze_time("2025-10-17 12:00:00") as ft:
+            provider = JwtAuthProvider(
+                project_id="test-project",
+                private_key_file="fake/path/key.pem",
+                algorithm="RS256"
+            )
+            provider.get_password()
+            assert provider.needs_refresh() == False  # Should be cached
+
+            ft.move_to("2025-10-17 12:55:01")
+            assert provider.needs_refresh() == True

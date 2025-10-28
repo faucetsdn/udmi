@@ -1,8 +1,8 @@
+import logging
 import os
 import sys
-import logging
 
-from udmi.core import Device, create_mqtt_device_instance
+from udmi.core.factory import create_device_with_auth_provider
 from udmi.schema import EndpointConfiguration
 
 DEVICE_ID = "AHU-1"
@@ -13,7 +13,6 @@ CERT_DIR = "/path/to/certs"
 CA_CERT_FILE = os.path.join(CERT_DIR, "ca.crt")
 CLIENT_CERT_FILE = os.path.join(CERT_DIR, "client.crt")
 CLIENT_KEY_FILE = os.path.join(CERT_DIR, "client.key")
-
 
 if __name__ == "__main__":
     logging.basicConfig(level=logging.DEBUG,
@@ -31,9 +30,9 @@ if __name__ == "__main__":
         )
 
         logging.info("Creating mTLS device instance using the factory...")
-        device = create_mqtt_device_instance(
-            device_class=Device,
+        device = create_device_with_auth_provider(
             endpoint_config=endpoint_config,
+            auth_provider=None,
             ca_certs=CA_CERT_FILE,
             cert_file=CLIENT_CERT_FILE,
             key_file=CLIENT_KEY_FILE

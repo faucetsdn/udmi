@@ -1,8 +1,7 @@
 import logging
 import sys
 
-from udmi.core import Device, create_mqtt_device_instance
-from udmi.core.auth import JwtAuthProvider
+from udmi.core.factory import create_device_with_jwt
 from udmi.schema import EndpointConfiguration
 
 # --- Configuration Constants ---
@@ -25,24 +24,19 @@ if __name__ == "__main__":
                         format='%(asctime)s - %(levelname)s - %(message)s')
 
     try:
-        auth_provider = JwtAuthProvider(
-            project_id=PROJECT_ID,
-            private_key_file=PRIVATE_KEY_FILE,
-            algorithm=ALGORITHM
-        )
-
         endpoint_config = EndpointConfiguration(
             client_id=CLIENT_ID,
             hostname=MQTT_HOST,
             port=MQTT_PORT
         )
 
-        logging.info("Creating device instance using the factory...")
+        logging.info("Creating device instance using the JWT factory...")
 
-        device = create_mqtt_device_instance(
-            device_class=Device,
+        device = create_device_with_jwt(
             endpoint_config=endpoint_config,
-            auth_provider=auth_provider
+            project_id=PROJECT_ID,
+            key_file=PRIVATE_KEY_FILE,
+            algorithm=ALGORITHM
         )
         device.run()
     except Exception as e:
