@@ -10,9 +10,10 @@ import json
 import logging
 import re
 from typing import Any
+from typing import Callable
 from typing import Dict
 
-from udmi.schema import Events
+from udmi.schema import DataModel
 from udmi.schema import State
 
 from .abstract_client import AbstractMessagingClient
@@ -32,22 +33,30 @@ class MessageDispatcher(AbstractMessageDispatcher):
     understands the network protocol).
     """
 
-    def __init__(self, client: AbstractMessagingClient):
+    def __init__(self, client: AbstractMessagingClient,
+        on_ready_callback: Callable[[], None],
+        on_disconnect_callback: Callable[[int], None], ):
         """
         Initializes the MessageDispatcher.
 
         Args:
-            :param client: A concrete instance of AbstractMessagingClient (e.g.,
-                           MqttMessagingClient). The dispatcher will set the
-                           client's message handler to its own internal router.
+            client: A concrete instance of AbstractMessagingClient (e.g.,
+                   MqttMessagingClient). The dispatcher will set the
+                   client's message handler to its own internal router.
+            on_ready_callback: The function to call when the client is connected.
+            on_disconnect_callback: The function to call when the client
+                                     disconnects.
         """
         self.client = client
         self._handlers: Dict[str, MessageHandler] = {}
         self._wildcard_handlers: Dict[re.Pattern, MessageHandler] = {}
 
-        # Set the client's message handler to our internal _on_message router
-        # This uses the client's public setter for good encapsulation.
+        self._on_ready_callback = on_ready_callback
+        self._on_disconnect_callback = on_disconnect_callback
+
         self.client.set_on_message_handler(self._on_message)
+        self.client.set_on_connect_handler(self._on_connect)
+        self.client.set_on_disconnect_handler(self._on_disconnect)
 
     def register_handler(self, channel: str, handler: MessageHandler) -> None:
         """
@@ -58,12 +67,13 @@ class MessageDispatcher(AbstractMessageDispatcher):
         - '#' (multi-level): e.g., 'commands/#'
 
         Args:
-            :param channel: The channel to subscribe to (e.g., 'config',
+            channel: The channel to subscribe to (e.g., 'config',
                             'commands/#').
-            :param handler: The function to call when a message arrives on that
+            handler: The function to call when a message arrives on that
                             channel. The function must accept (channel,
                             payload_dict).
         """
+        self.client.register_channel_subscription(channel)
         if '#' in channel or '+' in channel:
             pattern_str = channel.replace('+', '[^/]+').replace('/#', '/.+')
             if pattern_str.endswith('#'):  # Handle '#' at the end
@@ -84,8 +94,8 @@ class MessageDispatcher(AbstractMessageDispatcher):
         It deserializes the JSON payload and routes it to the correct handler.
 
         Args:
-            :param channel: The raw channel the message arrived on.
-            :param payload: The raw string payload (expected to be JSON).
+            channel: The raw channel the message arrived on.
+            payload: The raw string payload (expected to be JSON).
         """
         try:
             payload_dict: Dict[str, Any] = json.loads(payload)
@@ -118,26 +128,26 @@ class MessageDispatcher(AbstractMessageDispatcher):
         Serializes and publishes the device State message.
 
         Args:
-            :param state: The State data model instance to publish.
+            state: The State data model instance to publish.
         """
         LOGGER.debug("Publishing 'state' message...")
         try:
-            payload = state.to_json(indent=2)
+            payload = state.to_json()
             self.client.publish("state", payload)
         except Exception as e:
             LOGGER.error("Failed to serialize and publish state: %s", e)
 
-    def publish_event(self, channel: str, event: Events) -> None:
+    def publish_event(self, channel: str, event: DataModel) -> None:
         """
         Serializes and publishes a device Event message to a sub-channel.
 
         Args:
-            :param channel: The event sub-channel (e.g., 'pointset', 'system').
-            :param event: The event data model instance to publish.
+            channel: The event sub-channel (e.g., 'pointset', 'system').
+            event: The event data model instance to publish.
         """
         LOGGER.debug("Publishing event to '%s' channel...", channel)
         try:
-            payload = event.to_json(indent=2)
+            payload = event.to_json()
             self.client.publish(channel, payload)
         except Exception as e:
             LOGGER.error("Failed to serialize and publish event %s: %s",
@@ -172,3 +182,17 @@ class MessageDispatcher(AbstractMessageDispatcher):
         """
         LOGGER.debug("Dispatcher telling client to close...")
         self.client.close()
+
+    def _on_connect(self) -> None:
+        """
+        Callback for when the client connects and has subscribed.
+        Notifies the device that it is ready.
+        """
+        LOGGER.info(
+            "Dispatcher: Client connected and subscriptions are active.")
+        self._on_ready_callback()
+
+    def _on_disconnect(self, rc: int) -> None:
+        """Callback for when the client disconnects."""
+        LOGGER.warning("Dispatcher: Client disconnected (rc: %s)", rc)
+        self._on_disconnect_callback(rc)

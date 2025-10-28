@@ -1,8 +1,7 @@
-import sys
 import logging
+import sys
 
-from udmi.core import Device, create_mqtt_device_instance
-from udmi.core.auth import BasicAuthProvider
+from udmi.core.factory import create_device_with_basic_auth
 from udmi.schema import EndpointConfiguration
 
 DEVICE_ID = "AHU-1"
@@ -17,11 +16,6 @@ if __name__ == "__main__":
                         format='%(asctime)s - %(levelname)s - %(message)s')
 
     try:
-        auth_provider = BasicAuthProvider(
-            username=BROKER_USERNAME,
-            password=BROKER_PASSWORD
-        )
-
         topic_prefix = "/r/ZZ-TRI-FECTA/d/"
         client_id = f"{topic_prefix}{DEVICE_ID}"
 
@@ -31,11 +25,12 @@ if __name__ == "__main__":
             port=MQTT_PORT,
             topic_prefix=topic_prefix
         )
-        logging.info("Creating device instance using the factory...")
-        device = create_mqtt_device_instance(
-            device_class=Device,
+
+        logging.info("Creating device instance using the basic auth factory...")
+        device = create_device_with_basic_auth(
             endpoint_config=endpoint_config,
-            auth_provider=auth_provider
+            username=BROKER_USERNAME,
+            password=BROKER_PASSWORD
         )
         device.run()
     except Exception as e:

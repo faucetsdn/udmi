@@ -24,7 +24,6 @@ class AbstractMessagingClient(ABC):
         happens in the background, and the 'on_connect' or 'on_disconnect'
         callback will be triggered upon completion.
         """
-        pass
 
     @abstractmethod
     def publish(self, channel: str, payload: str) -> None:
@@ -32,10 +31,16 @@ class AbstractMessagingClient(ABC):
         Publishes a raw string payload to a generic channel.
 
         Args:
-            :param channel: The logical channel to publish to.
-            :param payload: The raw string data to send.
+            channel: The logical channel to publish to.
+            payload: The raw string data to send.
         """
-        pass
+
+    @abstractmethod
+    def register_channel_subscription(self, channel: str) -> None:
+        """
+        Registers interest in a generic channel.
+        The client will handle the protocol-specific subscription.
+        """
 
     @abstractmethod
     def run(self) -> None:
@@ -45,14 +50,12 @@ class AbstractMessagingClient(ABC):
         This should typically start a background thread to handle
         network I/O, allowing the main application thread to continue.
         """
-        pass
 
     @abstractmethod
     def close(self) -> None:
         """
         Stops the network loop and gracefully disconnects the client.
         """
-        pass
 
     @abstractmethod
     def check_authentication(self) -> None:
@@ -62,7 +65,6 @@ class AbstractMessagingClient(ABC):
 
         This is intended to be called periodically by the main application loop.
         """
-        pass
 
     @abstractmethod
     def set_on_message_handler(self,
@@ -71,9 +73,8 @@ class AbstractMessagingClient(ABC):
         Sets the external callback for incoming messages.
 
         Args:
-            :param handler: A callable that accepts (channel: str, payload: str)
+            handler: A callable that accepts (channel: str, payload: str)
         """
-        pass
 
     @abstractmethod
     def set_on_connect_handler(self, handler: Callable[[], None]) -> None:
@@ -81,9 +82,8 @@ class AbstractMessagingClient(ABC):
         Sets the external callback for successful connection events.
 
         Args:
-            :param handler: A callable that takes no arguments.
+            handler: A callable that takes no arguments.
         """
-        pass
 
     @abstractmethod
     def set_on_disconnect_handler(self, handler: Callable[[int], None]) -> None:
@@ -91,7 +91,6 @@ class AbstractMessagingClient(ABC):
         Sets the external callback for disconnect events.
 
         Args:
-            :param handler: A callable that accepts (rc: int), where 'rc' is
+            handler: A callable that accepts (rc: int), where 'rc' is
                             the reason code for the disconnection.
         """
-        pass

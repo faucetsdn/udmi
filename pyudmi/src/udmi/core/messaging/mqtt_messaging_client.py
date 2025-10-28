@@ -3,7 +3,6 @@ A concrete implementation of the AbstractMessagingClient for the MQTT protocol.
 """
 
 import logging
-import ssl
 from typing import Callable
 from typing import Optional
 
@@ -33,22 +32,22 @@ class MqttMessagingClient(AbstractMessagingClient):
         Initializes the MQTT Client.
 
         Args:
-            :param endpoint_config: The EndpointConfiguration dataclass
+            endpoint_config: The EndpointConfiguration dataclass
                                     containing all connection
                                     parameters (host, port, certs, etc.)
-            :param auth_provider: The authentication provider (e.g., JWT or
+            auth_provider: The authentication provider (e.g., JWT or
                                   basic). This is used if mTLS is not.
-            :param ca_certs: Path to the root CA certificate file for server
+            ca_certs: Path to the root CA certificate file for server
                              TLS verification. If None, the system trust store
                              is used.
-            :param cert_file: Path to the client's public certificate file for
+            cert_file: Path to the client's public certificate file for
                               mTLS.
-            :param key_file: Path to the client's private key file for mTLS.
-            :param enable_tls: Explicitly enable/disable TLS. If None,
+            key_file: Path to the client's private key file for mTLS.
+            enable_tls: Explicitly enable/disable TLS. If None,
                                inferred from port and certs.
-            :param min_reconnect_delay_sec: Initial delay for reconnection
+            min_reconnect_delay_sec: Initial delay for reconnection
                                             attempts.
-            :param max_reconnect_delay_sec: Max delay for exponential backoff.
+            max_reconnect_delay_sec: Max delay for exponential backoff.
         """
         super().__init__()
         self._config = endpoint_config
@@ -98,6 +97,7 @@ class MqttMessagingClient(AbstractMessagingClient):
         self._mqtt_client.on_connect = self._on_connect
         self._mqtt_client.on_message = self._on_message
         self._mqtt_client.on_disconnect = self._on_disconnect
+        self._subscribed_channels = set()
 
     # --- Public API Methods ---
 
@@ -153,8 +153,8 @@ class MqttMessagingClient(AbstractMessagingClient):
         (e.g., "/devices/my-device/state") and publishes.
 
         Args:
-            :param channel: The UDMI channel.
-            :param payload: The JSON string payload to send.
+            channel: The UDMI channel.
+            payload: The JSON string payload to send.
         """
         topic = f"{self._topic_prefix}/{self._device_id}/{channel}"
 
@@ -174,6 +174,15 @@ class MqttMessagingClient(AbstractMessagingClient):
         self._mqtt_client.disconnect()
         LOGGER.info("MQTT client disconnected.")
 
+    def register_channel_subscription(self, channel: str) -> None:
+        """
+        Implements the abstract method.
+        Stores the channel interest to be acted upon during connection.
+        """
+        LOGGER.debug("Registering channel subscription interest for: %s",
+                     channel)
+        self._subscribed_channels.add(channel)
+
     # --- Public Callback Setters ---
 
     def set_on_message_handler(self,
@@ -183,7 +192,7 @@ class MqttMessagingClient(AbstractMessagingClient):
         This is typically called by the MessageDispatcher.
 
         Args:
-            :param handler: A callable that accepts (channel: str, payload: str)
+            handler: A callable that accepts (channel: str, payload: str)
         """
         LOGGER.debug("Setting on_message handler")
         self._on_message_callback = handler
@@ -193,7 +202,7 @@ class MqttMessagingClient(AbstractMessagingClient):
         Sets the external callback for successful connection events.
 
         Args:
-            :param handler: A callable that takes no arguments.
+            handler: A callable that takes no arguments.
         """
         LOGGER.debug("Setting on_connect handler")
         self._on_connect_callback = handler
@@ -203,7 +212,7 @@ class MqttMessagingClient(AbstractMessagingClient):
         Sets the external callback for disconnect events.
 
         Args:
-            :param handler: A callable that accepts (rc: int)
+            handler: A callable that accepts (rc: int)
         """
         LOGGER.debug("Setting on_disconnect handler")
         self._on_disconnect_callback = handler
@@ -217,8 +226,7 @@ class MqttMessagingClient(AbstractMessagingClient):
             self._mqtt_client.tls_set(
                 ca_certs=self._ca_certs,
                 certfile=self._cert_file,
-                keyfile=self._key_file,
-                tls_version=ssl.PROTOCOL_TLS
+                keyfile=self._key_file
             )
             LOGGER.debug("TLS context set. ca_certs=%s, cert_file=%s",
                          self._ca_certs, self._cert_file)
@@ -246,29 +254,27 @@ class MqttMessagingClient(AbstractMessagingClient):
 
     # --- Internal Paho Callbacks ---
 
-    def _on_connect(self, client, userdata, flags, rc):
+    def _on_connect(self, client, _userdata, _flags, rc):
         """
         Internal Paho callback for connection events.
         Calls the external on_connect_callback.
         """
         if rc == 0:
-            LOGGER.info("Successfully connected to MQTT broker.")
-
-            # Subscribe to topics using the dynamic prefix
-            config_topic = f"{self._topic_prefix}/{self._device_id}/config"
-            commands_topic = f"{self._topic_prefix}/{self._device_id}/commands/#"
-
-            client.subscribe([(config_topic, 1), (commands_topic, 1)])
-            LOGGER.info("Subscribed to config and commands topics.")
-
+            LOGGER.info("Subscribing to registered channels...")
+            for channel in self._subscribed_channels:
+                topic = f"{self._topic_prefix}/{self._device_id}/{channel}"
+                try:
+                    client.subscribe(topic, 1)
+                    LOGGER.debug("Subscribed to topic: %s", topic)
+                except Exception as e:
+                    LOGGER.error("Failed to subscribe to topic %s: %s",
+                                 topic, e)
             if self._on_connect_callback:
                 self._on_connect_callback()
         else:
             LOGGER.error("MQTT connection failed with code: %s", rc)
-            if self._on_disconnect_callback:
-                self._on_disconnect_callback(rc)
 
-    def _on_message(self, client, userdata, msg):
+    def _on_message(self, _client, _userdata, msg):
         """
         Internal Paho callback for message events.
         Parses the topic into a channel and calls the external on_message
@@ -288,7 +294,7 @@ class MqttMessagingClient(AbstractMessagingClient):
             LOGGER.warning("Received message on an unexpected topic format: %s",
                            msg.topic)
 
-    def _on_disconnect(self, client, userdata, rc):
+    def _on_disconnect(self, _client, _userdata, rc):
         """
         Internal Paho callback for disconnect events.
         Calls the external on_disconnect handler.

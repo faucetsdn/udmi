@@ -1,8 +1,10 @@
+import json
 import logging
+from unittest.mock import MagicMock
 
 import pytest
-import json
-from unittest.mock import MagicMock
+from udmi.schema import State
+from udmi.schema import SystemEvents
 
 from src.udmi.core.messaging import MessageDispatcher
 
@@ -18,7 +20,11 @@ def mock_client():
 @pytest.fixture
 def dispatcher(mock_client):
     """Returns a MessageDispatcher instance with a mocked client."""
-    return MessageDispatcher(client=mock_client)
+    return MessageDispatcher(
+        client=mock_client,
+        on_ready_callback=MagicMock(),
+        on_disconnect_callback=MagicMock()
+    )
 
 
 @pytest.fixture
@@ -58,7 +64,6 @@ def test_dispatcher_routes_exact_match(dispatcher, handlers):
     dispatcher.register_handler("config", handlers["config"])
     payload_dict = {"system": {}}
 
-    # Simulate an incoming message
     dispatcher._on_message(channel="config", payload=json.dumps(payload_dict))
 
     handlers["config"].assert_called_once_with("config", payload_dict)
@@ -131,3 +136,73 @@ def test_dispatcher_handles_handler_exception(dispatcher, handlers, caplog):
     handlers["config"].assert_called_once()
     # We should have logged the error
     assert "Handler for channel config failed" in caplog.text
+
+
+def test_publish_state(dispatcher, mock_client):
+    """
+    Verifies that publish_state sends a compact JSON payload.
+    """
+    state = State(version="1")
+    dispatcher.publish_state(state)
+
+    mock_client.publish.assert_called_once_with(
+        "state",
+        '{"timestamp": null, "version": "1", "upgraded_from": null, '
+        '"system": null, "gateway": null, "discovery": null, "localnet": null, '
+        '"blobset": null, "pointset": null}'
+    )
+
+
+def test_publish_event(dispatcher, mock_client):
+    """
+    Verifies it accepts any DataModel (like SystemEvents)
+    and publishes the compact JSON.
+    """
+    event = SystemEvents(version="1")
+    dispatcher.publish_event("system", event)
+
+    mock_client.publish.assert_called_once_with(
+        "system",
+        '{"timestamp": null, "version": "1", "upgraded_from": null, '
+        '"last_config": null, "logentries": null, "event_no": null, '
+        '"metrics": null}'
+    )
+
+
+def test_lifecycle_passthrough_connect(dispatcher, mock_client):
+    """Test Lifecycle Passthrough (connect)"""
+    dispatcher.connect()
+    mock_client.connect.assert_called_once()
+
+
+def test_lifecycle_passthrough_start_loop(dispatcher, mock_client):
+    """Test Lifecycle Passthrough (start_loop)"""
+    dispatcher.start_loop()
+    mock_client.run.assert_called_once()
+
+
+def test_lifecycle_passthrough_close(dispatcher, mock_client):
+    """Test Lifecycle Passthrough (close)"""
+    dispatcher.close()
+    mock_client.close.assert_called_once()
+
+
+def test_lifecycle_passthrough_check_authentication(dispatcher, mock_client):
+    """Test Lifecycle Passthrough (check_authentication)"""
+    dispatcher.check_authentication()
+    mock_client.check_authentication.assert_called_once()
+
+
+def test_unhandled_message_logs_warning(dispatcher, handlers, caplog):
+    """
+    Verifies that a message to an unknown channel is logged
+    and no handlers are called.
+    """
+    dispatcher.register_handler("config", handlers["config"])
+
+    with caplog.at_level(logging.WARNING):
+        dispatcher._on_message(channel="unknown/channel", payload="{}")
+
+    handlers["config"].assert_not_called()
+    assert "No handler found for message" in caplog.text
+    assert "unknown/channel" in caplog.text
