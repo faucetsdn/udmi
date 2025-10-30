@@ -66,11 +66,11 @@ public class FamilyLocalnetModel {
     @Override
     public int hashCode() {
         int result = 1;
+        result = ((result* 31)+((this.shadow_id == null)? 0 :this.shadow_id.hashCode()));
+        result = ((result* 31)+((this.parent_id == null)? 0 :this.parent_id.hashCode()));
         result = ((result* 31)+((this.addr == null)? 0 :this.addr.hashCode()));
         result = ((result* 31)+((this.adjunct == null)? 0 :this.adjunct.hashCode()));
         result = ((result* 31)+((this.family == null)? 0 :this.family.hashCode()));
-        result = ((result* 31)+((this.shadow_id == null)? 0 :this.shadow_id.hashCode()));
-        result = ((result* 31)+((this.parent_id == null)? 0 :this.parent_id.hashCode()));
         result = ((result* 31)+((this.network == null)? 0 :this.network.hashCode()));
         return result;
     }
@@ -84,7 +84,7 @@ public class FamilyLocalnetModel {
             return false;
         }
         FamilyLocalnetModel rhs = ((FamilyLocalnetModel) other);
-        return (((((((this.addr == rhs.addr)||((this.addr!= null)&&this.addr.equals(rhs.addr)))&&((this.adjunct == rhs.adjunct)||((this.adjunct!= null)&&this.adjunct.equals(rhs.adjunct))))&&((this.family == rhs.family)||((this.family!= null)&&this.family.equals(rhs.family))))&&((this.shadow_id == rhs.shadow_id)||((this.shadow_id!= null)&&this.shadow_id.equals(rhs.shadow_id))))&&((this.parent_id == rhs.parent_id)||((this.parent_id!= null)&&this.parent_id.equals(rhs.parent_id))))&&((this.network == rhs.network)||((this.network!= null)&&this.network.equals(rhs.network))));
+        return (((((((this.shadow_id == rhs.shadow_id)||((this.shadow_id!= null)&&this.shadow_id.equals(rhs.shadow_id)))&&((this.parent_id == rhs.parent_id)||((this.parent_id!= null)&&this.parent_id.equals(rhs.parent_id))))&&((this.addr == rhs.addr)||((this.addr!= null)&&this.addr.equals(rhs.addr))))&&((this.adjunct == rhs.adjunct)||((this.adjunct!= null)&&this.adjunct.equals(rhs.adjunct))))&&((this.family == rhs.family)||((this.family!= null)&&this.family.equals(rhs.family))))&&((this.network == rhs.network)||((this.network!= null)&&this.network.equals(rhs.network))));
     }
 
 }
