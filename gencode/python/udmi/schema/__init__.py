@@ -60,6 +60,7 @@ from .model_localnet import *
 from .model_localnet_family import *
 from .model_pointset import *
 from .model_pointset_point import *
+from .model_policies import *
 from .model_system import *
 from .model_system_hardware import *
 from .model_testing import *
