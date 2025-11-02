@@ -1,7 +1,7 @@
 services:
   mosquitto:
     build:
-      context: ./
+      context: ./mosquitto
     container_name: mosquitto
     volumes:
       - ./mosquitto/config:/mosquitto/config
