@@ -8,7 +8,7 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 
 
 /**
- * Cloud Config Model
+ * Config Cloud Model
  * <p>
  * Information specific to how the device communicates with the cloud.
  * 
@@ -17,7 +17,7 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 @JsonPropertyOrder({
     "static_file"
 })
-public class CloudConfigModel {
+public class ConfigCloudModel {
 
     /**
      * Config file to use. Within the `config` directory in the device's metadata directory
@@ -39,10 +39,10 @@ public class CloudConfigModel {
         if (other == this) {
             return true;
         }
-        if ((other instanceof CloudConfigModel) == false) {
+        if ((other instanceof ConfigCloudModel) == false) {
             return false;
         }
-        CloudConfigModel rhs = ((CloudConfigModel) other);
+        ConfigCloudModel rhs = ((ConfigCloudModel) other);
         return ((this.static_file == rhs.static_file)||((this.static_file!= null)&&this.static_file.equals(rhs.static_file)));
     }
 

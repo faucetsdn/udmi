@@ -21,6 +21,7 @@
 * [**configuration_endpoint**](configuration_endpoint.html) - Parameters to define a message endpoint
 
 ## Other
+* [**building_config_entity**](building_config_entity.html)
 * [**commands_discovery**](commands_discovery.html) - [Discovery command](../../docs/specs/discovery.md) for provisioning
 * [**commands_mapping**](commands_mapping.html) - [Mapping command](../../docs/specs/mapping.md) for provisioning
 * [**configuration_execution**](configuration_execution.html) - Parameters for configuring the execution run of a UDMI tool
