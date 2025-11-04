@@ -54,6 +54,7 @@ import com.google.udmi.util.ExceptionMap.ExceptionCategory;
 import com.google.udmi.util.JsonUtil;
 import com.google.udmi.util.MessageDowngrader;
 import com.google.udmi.util.MessageValidator;
+import com.google.udmi.util.SiteDevice;
 import com.google.udmi.util.SiteModel;
 import com.google.udmi.util.SiteModel.MetadataException;
 import com.google.udmi.util.ValidationError;
@@ -97,9 +98,8 @@ import udmi.schema.Metadata;
 import udmi.schema.PointPointsetModel;
 
 
-class LocalDevice {
+class LocalDevice implements SiteDevice {
 
-  public static final String INVALID_METADATA_HASH = "INVALID";
   private static final String RSA_PUBLIC_PEM = "rsa_public.pem";
   private static final String RSA2_PUBLIC_PEM = "rsa2_public.pem";
   private static final String RSA3_PUBLIC_PEM = "rsa3_public.pem";
@@ -858,6 +858,10 @@ class LocalDevice {
 
   public List<String> getProxyIds() {
     return getMetadata().gateway.proxy_ids;
+  }
+
+  public File getOutDir() {
+    return outDir;
   }
 
   public enum DeviceStatus {

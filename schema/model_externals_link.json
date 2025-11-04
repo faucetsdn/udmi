@@ -1,0 +1,27 @@
+{
+  "$udmi_version": "1.5.3",
+  "title": "Link Externals Model",
+  "description": "Information about how this device links to a specific external model",
+  "type": "object",
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "additionalProperties": false,
+  "properties": {
+    "ext_id": {
+      "description": "Id of this device in the external model namespace",
+      "type": "string"
+    },
+    "type": {
+      "description": "Type of this device in the external model namespace",
+      "type": "string"
+    },
+    "etag": {
+      "description": "Etag for referencing this external entity",
+      "pattern": "^[0-9a-f]+$",
+      "type": "string"
+    },
+    "label": {
+      "description": "Descriptive label for this entity",
+      "type": "string"
+    }
+  }
+}

@@ -9,7 +9,7 @@ from typing import Any, Dict, List, Optional
 
 from ._base import DataModel
 from .common import Operation
-from .model_cloud_config import CloudConfigModel
+from .model_cloud_config import ConfigCloudModel
 from .model_gateway import GatewayModel
 
 
@@ -67,7 +67,7 @@ class CloudModel(DataModel):
     device_key: Optional[bool] = None
     resource_type: Optional[ResourceType] = None
     gateway: Optional[GatewayModel] = None
-    config: Optional[CloudConfigModel] = None
+    config: Optional[ConfigCloudModel] = None
     blocked: Optional[bool] = None
     detail: Optional[str] = None
     credentials: Optional[List[Credential]] = None

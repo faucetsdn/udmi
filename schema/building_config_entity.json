@@ -1,0 +1,16 @@
+{
+  "title": "Building Config Entity",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "code": {
+      "type": "string"
+    },
+    "etag": {
+      "type": "string"
+    },
+    "type": {
+      "type": "string"
+    }
+  }
+}

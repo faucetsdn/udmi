@@ -1,6 +1,6 @@
 {
   "$udmi_version": "1.5.2",
-  "title": "Cloud Config Model",
+  "title": "Config Cloud Model",
   "description": "Information specific to how the device communicates with the cloud.",
   "type": "object",
   "$schema": "http://json-schema.org/draft-07/schema#",
