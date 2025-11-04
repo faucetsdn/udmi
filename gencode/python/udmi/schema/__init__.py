@@ -1,6 +1,7 @@
 from ._base import *
 from .access_iot import *
 from .ancillary_properties import *
+from .building_config_entity import *
 from .building_translation import *
 from .category import *
 from .commands_discovery import *
@@ -51,6 +52,8 @@ from .model_cloud import *
 from .model_cloud_config import *
 from .model_discovery import *
 from .model_discovery_family import *
+from .model_externals import *
+from .model_externals_link import *
 from .model_features import *
 from .model_gateway import *
 from .model_localnet import *
@@ -67,6 +70,7 @@ from .options_pubber import *
 from .persistent_device import *
 from .properties import *
 from .query_cloud import *
+from .site_externals_link import *
 from .site_metadata import *
 from .state import *
 from .state_blobset import *

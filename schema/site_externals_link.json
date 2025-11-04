@@ -1,0 +1,14 @@
+{
+  "$udmi_version": "1.5.3",
+  "title": "Link Externals Site",
+  "description": "Information about how this site links to a specific external model",
+  "type": "object",
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "additionalProperties": false,
+  "properties": {
+    "description": {
+      "description": "Description of this external link for this site",
+      "type": "string"
+    }
+  }
+}

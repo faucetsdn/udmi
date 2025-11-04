@@ -433,7 +433,6 @@ jobs:
       - name: Install Poetry
         run: |
           pip install poetry
-          # Configure poetry to create the .venv in the project root
           poetry config virtualenvs.in-project true
       - name: Cache poetry venv
         id: cache-deps
@@ -445,9 +444,13 @@ jobs:
             ${{ runner.os }}-${{ matrix.python-version }}-venv-
       - name: Install dependencies
         run: |
-          cd pyudmi
           poetry install --with dev
       - name: Run tests with pytest
         run: |
-          cd pyudmi
+          cd clientlib/python
           poetry run pytest -v tests/
+      - name: Run pylint
+        if: matrix.python-version == '3.13'
+        run: |
+          cd clientlib/python
+          poetry run pylint src tests

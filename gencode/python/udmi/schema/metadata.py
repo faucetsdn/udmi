@@ -11,6 +11,7 @@ from .common import Operation
 from .events_discovery import DiscoveryEvents
 from .model_cloud import CloudModel
 from .model_discovery import DiscoveryModel
+from .model_externals import ExternalsModel
 from .model_features import TestingModel as TestingModel_1
 from .model_gateway import GatewayModel
 from .model_localnet import LocalnetModel
@@ -32,6 +33,7 @@ class Metadata(DataModel):
     operation: Optional[Operation] = None
     cloud: Optional[CloudModel] = None
     system: Optional[SystemModel] = None
+    externals: Optional[ExternalsModel] = None
     gateway: Optional[GatewayModel] = None
     discovery: Optional[DiscoveryModel] = None
     localnet: Optional[LocalnetModel] = None
