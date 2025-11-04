@@ -26,6 +26,15 @@ functionalities like connectivity, telemetry, and message handling.
 
 ## Usage Examples
 
+### Local Setup
+
+To install and build the library locally use the build script
+```shell
+${UDMI_ROOT}/clientlib/python/bin/build
+```
+
+---
+
 Here are a few samples demonstrating how to connect a device using different
 authentication methods.
 
