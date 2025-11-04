@@ -13,12 +13,11 @@ from typing import Any
 from typing import Callable
 from typing import Dict
 
+from udmi.core.messaging.abstract_client import AbstractMessagingClient
+from udmi.core.messaging.abstract_dispatcher import AbstractMessageDispatcher
+from udmi.core.messaging.abstract_dispatcher import MessageHandler
 from udmi.schema import DataModel
 from udmi.schema import State
-
-from .abstract_client import AbstractMessagingClient
-from .abstract_dispatcher import AbstractMessageDispatcher
-from .abstract_dispatcher import MessageHandler
 
 LOGGER = logging.getLogger(__name__)
 
@@ -108,7 +107,7 @@ class MessageDispatcher(AbstractMessageDispatcher):
         if handler:
             try:
                 handler(channel, payload_dict)
-            except Exception as e:
+            except (TypeError, KeyError, AttributeError) as e:
                 LOGGER.error("Handler for channel %s failed: %s", channel, e)
             return
 
@@ -116,7 +115,7 @@ class MessageDispatcher(AbstractMessageDispatcher):
             if pattern.match(channel):
                 try:
                     wildcard_handler(channel, payload_dict)
-                except Exception as e:
+                except (TypeError, KeyError, AttributeError) as e:
                     LOGGER.error("Wildcard handler for %s failed: %s",
                                  channel, e)
                 return
@@ -134,7 +133,7 @@ class MessageDispatcher(AbstractMessageDispatcher):
         try:
             payload = state.to_json()
             self.client.publish("state", payload)
-        except Exception as e:
+        except (TypeError, AttributeError) as e:
             LOGGER.error("Failed to serialize and publish state: %s", e)
 
     def publish_event(self, channel: str, event: DataModel) -> None:
@@ -149,7 +148,7 @@ class MessageDispatcher(AbstractMessageDispatcher):
         try:
             payload = event.to_json()
             self.client.publish(channel, payload)
-        except Exception as e:
+        except (TypeError, AttributeError) as e:
             LOGGER.error("Failed to serialize and publish event %s: %s",
                          channel, e)
 

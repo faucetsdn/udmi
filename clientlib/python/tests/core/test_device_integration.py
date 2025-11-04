@@ -1,44 +1,56 @@
+"""
+Integration tests for the core UDMI device's MQTT logic.
+
+This module tests the MQTT-level functionality of the device instance
+created by the factory, specifically focusing on the
+device's internal dispatcher and default managers.
+
+Key behaviors verified:
+- The full connection sequence: `connect`, `on_connect` callback,
+  topic subscriptions, and initial state publish.
+- The config-receive -> state-publish acknowledgment loop.
+- Correct routing of command messages.
+- Robustness against connection failures, malformed JSON, and
+  invalid UDMI schemas.
+- The periodic authentication refresh loop.
+- The `start` lifecycle event hook.
+"""
+
 import json
 import logging
 from unittest.mock import MagicMock
 from unittest.mock import call
 
 import pytest
-from udmi.schema import EndpointConfiguration
 
-from src.udmi.core import create_device_with_auth_provider
+from src.udmi.core import create_mqtt_device_instance
 
 
-@pytest.fixture
-def mock_auth_provider():
-    provider = MagicMock()
-    provider.get_username.return_value = "unused"
-    provider.get_password.return_value = "mock_password"
-    provider.needs_refresh.return_value = False
-    return provider
+# pylint: disable=redefined-outer-name,protected-access,unused-argument
 
 
 @pytest.fixture
-def test_device(mock_paho_client_class, mock_auth_provider):
+def test_device(
+    mock_paho_client_class,
+    mock_auth_provider,
+    mock_endpoint_config
+):
     """
     Creates a full Device instance using the factory,
     with the Paho client completely mocked.
     """
-    endpoint_config = EndpointConfiguration(
-        client_id="projects/p/l/r/d",
-        hostname="mock.host",
-        port=8883
-    )
-
-    device = create_device_with_auth_provider(
-        endpoint_config=endpoint_config,
+    device = create_mqtt_device_instance(
+        endpoint_config=mock_endpoint_config,
         auth_provider=mock_auth_provider
     )
     return device
 
 
 @pytest.fixture
-def connected_test_device(test_device, mock_paho_client_instance):
+def connected_test_device(
+    test_device,
+    mock_paho_client_instance
+):
     """
     A helper fixture to get a device in the 'connected' state
     and reset mocks, so we only test post-connection events.
@@ -50,8 +62,10 @@ def connected_test_device(test_device, mock_paho_client_instance):
     return test_device
 
 
-def test_device_connect_and_initial_state(test_device,
-    mock_paho_client_instance):
+def test_device_connect_and_initial_state(
+    test_device,
+    mock_paho_client_instance
+):
     """
     Test the full connection and initial state publish sequence.
     """
@@ -83,10 +97,13 @@ def test_device_connect_and_initial_state(test_device,
     payload = json.loads(publish_call.args[1])
 
     assert topic == "/devices/d/state"
-    assert payload["system"]["operation"]["operational"] == True
+    assert payload["system"]["operation"]["operational"] is True
 
 
-def test_device_config_state_loop(test_device, mock_paho_client_instance):
+def test_device_config_state_loop(
+    test_device,
+    mock_paho_client_instance
+):
     """
     Test the full config -> state acknowledgement loop.
     """
@@ -131,13 +148,16 @@ def test_device_config_state_loop(test_device, mock_paho_client_instance):
     assert payload["system"]["last_config"] == "2025-10-17T12:00:00Z"
 
 
-def test_device_connection_failed(test_device, mock_paho_client_instance):
+def test_device_connection_failed(
+    test_device,
+    mock_paho_client_instance
+):
     """
     Test what happens if on_connect reports an error.
     """
     client_instance = test_device.dispatcher.client
     mock_disconnect_callback = MagicMock()
-    client_instance._on_disconnect_callback = mock_disconnect_callback
+    client_instance._callbacks.on_disconnect = mock_disconnect_callback
 
     on_connect_callback = mock_paho_client_instance.on_connect
     on_connect_callback(mock_paho_client_instance, None, None, 5)
@@ -151,8 +171,11 @@ def test_device_connection_failed(test_device, mock_paho_client_instance):
     mock_disconnect_callback.assert_called_with(5)
 
 
-def test_device_receives_bad_json(connected_test_device,
-    mock_paho_client_instance, caplog):
+def test_device_receives_bad_json(
+    connected_test_device,
+    mock_paho_client_instance,
+    caplog
+):
     """
     Test that malformed JSON is caught, logged, and doesn't crash.
     """
@@ -168,8 +191,11 @@ def test_device_receives_bad_json(connected_test_device,
     mock_paho_client_instance.publish.assert_not_called()
 
 
-def test_device_receives_bad_config_schema(connected_test_device,
-    mock_paho_client_instance, caplog):
+def test_device_receives_bad_config_schema(
+    connected_test_device,
+    mock_paho_client_instance,
+    caplog
+):
     """
     Test that valid JSON with an invalid schema is caught and logged.
     """
@@ -185,8 +211,11 @@ def test_device_receives_bad_config_schema(connected_test_device,
     mock_paho_client_instance.publish.assert_not_called()
 
 
-def test_device_handles_command(connected_test_device,
-    mock_paho_client_instance, caplog):
+def test_device_handles_command(
+    connected_test_device,
+    mock_paho_client_instance,
+    caplog
+):
     """
     Test that a command is routed to the SystemManager, which logs a warning.
     """
@@ -203,7 +232,9 @@ def test_device_handles_command(connected_test_device,
     mock_paho_client_instance.publish.assert_not_called()
 
 
-def test_device_auth_refresh_loop(test_device, mock_auth_provider,
+def test_device_auth_refresh_loop(
+    test_device,
+    mock_auth_provider,
     mock_paho_client_instance):
     """
     Test the periodic auth refresh check logic.
@@ -217,8 +248,10 @@ def test_device_auth_refresh_loop(test_device, mock_auth_provider,
     mock_paho_client_instance.reconnect.assert_called_once()
 
 
-def test_system_manager_start_event(connected_test_device,
-    mock_paho_client_instance):
+def test_system_manager_start_event(
+    connected_test_device,
+    mock_paho_client_instance
+):
     """
     Test that the manager's 'start' hook is called and publishes an event.
     """

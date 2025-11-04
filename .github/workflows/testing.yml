@@ -449,3 +449,8 @@ jobs:
         run: |
           cd clientlib/python
           poetry run pytest -v tests/
+      - name: Run pylint
+        if: matrix.python-version == '3.13'
+        run: |
+          cd clientlib/python
+          poetry run pylint src tests

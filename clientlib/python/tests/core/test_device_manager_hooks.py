@@ -1,25 +1,32 @@
+"""
+Tests for the Device-Manager integration within the UDMI core.
+
+This module verifies that the core device orchestrator, created via
+the factory, correctly interacts with its registered `BaseManager` components.
+
+The tests simulate a connected device and check the following key interactions:
+1.  When the device publishes its state, it first calls the manager's
+    `update_state` method to populate the state object.
+2.  When the device receives an MQTT config message, it correctly parses
+    it and calls the manager's `handle_config` method.
+3.  When the device receives an MQTT command message, it correctly parses
+    the topic and payload and calls the manager's `handle_command` method.
+"""
+
 import json
 from unittest.mock import MagicMock
 
 import pytest
+
+from src.udmi.core import create_mqtt_device_instance
+from src.udmi.core.managers import BaseManager
 from udmi.schema import Config
-from udmi.schema import EndpointConfiguration
 from udmi.schema import State
 from udmi.schema import StateSystemHardware
 from udmi.schema import SystemState
 
-from src.udmi.core import create_device_with_auth_provider
-from src.udmi.core.managers import BaseManager
 
-
-@pytest.fixture
-def mock_auth_provider():
-    """Provides a mock AuthProvider."""
-    provider = MagicMock()
-    provider.get_username.return_value = "unused"
-    provider.get_password.return_value = "mock_password"
-    provider.needs_refresh.return_value = False
-    return provider
+# pylint: disable=redefined-outer-name,protected-access,unused-argument
 
 
 @pytest.fixture
@@ -42,18 +49,17 @@ def mock_manager():
 
 
 @pytest.fixture
-def test_device(mock_paho_client_class, mock_auth_provider, mock_manager):
+def test_device(
+    mock_paho_client_class,
+    mock_auth_provider,
+    mock_manager,
+    mock_endpoint_config
+):
     """
     Creates a full instance of the Device orchestrator.
     """
-    endpoint_config = EndpointConfiguration(
-        client_id="projects/p/l/r/d",
-        hostname="mock.host",
-        port=8883
-    )
-
-    device = create_device_with_auth_provider(
-        endpoint_config=endpoint_config,
+    device = create_mqtt_device_instance(
+        endpoint_config=mock_endpoint_config,
         auth_provider=mock_auth_provider,
         managers=[mock_manager]
     )
@@ -61,7 +67,11 @@ def test_device(mock_paho_client_class, mock_auth_provider, mock_manager):
 
 
 @pytest.fixture
-def connected_device(test_device, mock_paho_client_instance, mock_manager):
+def connected_device(
+    test_device,
+    mock_paho_client_instance,
+    mock_manager
+):
     """
     A helper fixture to get a device in the 'connected' state.
     """
@@ -77,8 +87,11 @@ def connected_device(test_device, mock_paho_client_instance, mock_manager):
     return test_device
 
 
-def test_manager_update_state_called(connected_device,
-    mock_paho_client_instance, mock_manager):
+def test_manager_update_state_called(
+    connected_device,
+    mock_paho_client_instance,
+    mock_manager
+):
     """
     Test that the manager's 'update_state' method is called
     by the device's internal '_publish_state()'.
@@ -93,8 +106,11 @@ def test_manager_update_state_called(connected_device,
     assert payload["system"]["hardware"]["make"] == "TestMake"
 
 
-def test_manager_handle_config_called(connected_device,
-    mock_paho_client_instance, mock_manager):
+def test_manager_handle_config_called(
+    connected_device,
+    mock_paho_client_instance,
+    mock_manager
+):
     """
     Test that the manager's 'handle_config' method is called
     by the device's 'handle_config()' orchestrator.
@@ -114,8 +130,11 @@ def test_manager_handle_config_called(connected_device,
     assert mock_paho_client_instance.publish.call_count == 1
 
 
-def test_manager_handle_command_called(connected_device,
-    mock_paho_client_instance, mock_manager):
+def test_manager_handle_command_called(
+    connected_device,
+    mock_paho_client_instance,
+    mock_manager
+):
     """
     Test that the manager's 'handle_command' method is called
     by the device's 'handle_command()' orchestrator.

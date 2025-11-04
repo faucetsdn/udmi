@@ -1,12 +1,46 @@
+"""
+Unit tests for the `MessageDispatcher` class.
+
+This module tests the `MessageDispatcher` in isolation by mocking the
+underlying `AbstractMessagingClient`.
+
+Key behaviors verified:
+- Handler Registration: Ensures `register_handler` correctly separates
+  exact-match handlers from wildcard (MQTT-style '+' and '#') handlers.
+- Message Routing Logic:
+    - Verifies routing to exact-match handlers.
+    - Verifies routing to single-level (`+`) wildcard handlers.
+    - Verifies routing to multi-level (`#`) wildcard handlers.
+    - Confirms that an exact-match handler is always preferred over a
+      competing wildcard match for the same topic.
+- Robustness:
+    - Ensures that a malformed JSON payload is caught, logged,
+      and does not crash the dispatcher's `_on_message` callback.
+    - Ensures that an exception raised from *within* a message handler
+      is caught, logged, and does not crash the dispatcher.
+    - Ensures a message for an unhandled topic is safely logged as a warning.
+- Outbound Publishing:
+    - Verifies `publish_state` correctly serializes the `State` object
+      to a compact JSON string and publishes to the 'state' channel.
+    - Verifies `publish_event` serializes any `DataModel` (e.g.,
+      `SystemEvents`) to compact JSON and publishes to the specified channel.
+- Lifecycle Passthrough: Confirms that core lifecycle methods
+  (`connect`, `start_loop`, `close`, `check_authentication`) are
+  passed through to the underlying client.
+"""
+
 import json
 import logging
 from unittest.mock import MagicMock
 
 import pytest
+
+from src.udmi.core.messaging import MessageDispatcher
 from udmi.schema import State
 from udmi.schema import SystemEvents
 
-from src.udmi.core.messaging import MessageDispatcher
+
+# pylint: disable=redefined-outer-name,protected-access
 
 
 @pytest.fixture
@@ -125,7 +159,7 @@ def test_dispatcher_handles_json_decode_error(dispatcher, handlers, caplog):
 def test_dispatcher_handles_handler_exception(dispatcher, handlers, caplog):
     """Test that an exception in a handler is caught and logged."""
     # Make the handler raise an exception when called
-    handlers["config"].side_effect = ValueError("Something broke!")
+    handlers["config"].side_effect = TypeError("Something broke!")
     dispatcher.register_handler("config", handlers["config"])
 
     # No exception should be raised from the dispatcher itself

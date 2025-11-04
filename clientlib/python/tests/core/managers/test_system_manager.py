@@ -1,3 +1,20 @@
+"""
+Unit tests for the `SystemManager` class.
+
+This module tests the `SystemManager` in isolation by mocking the
+`AbstractMessageDispatcher` and other dependencies.
+
+Key behaviors verified:
+- Start Hook: `start()` correctly publishes a `SystemEvents` message
+  with the "Device has started" log entry.
+- Config Handling: `handle_config()` correctly captures and stores the
+  `timestamp` from the received `Config` object.
+- State Update: `update_state()` correctly populates the `state.system`
+  field with default hardware, software, and operation sub-objects.
+- Command Handling: `handle_command()` logs a warning for
+  unimplemented commands (like 'reboot'), as expected.
+"""
+
 import logging
 from unittest.mock import MagicMock
 
@@ -8,6 +25,9 @@ from udmi.schema import SystemEvents
 
 from src.udmi.core.managers.system_manager import SystemManager
 from src.udmi.core.messaging import AbstractMessageDispatcher
+
+
+# pylint: disable=redefined-outer-name,protected-access
 
 
 @pytest.fixture

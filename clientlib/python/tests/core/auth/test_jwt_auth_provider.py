@@ -1,10 +1,31 @@
+"""
+Unit tests for the `JwtAuthProvider` class.
+
+This module verifies the functionality of the `JwtAuthProvider` by mocking
+the private key file.
+
+Key behaviors verified:
+- Token Generation: Ensures a JWT is created correctly.
+- Token Caching: Confirms that a generated token is cached and reused.
+- Refresh Logic: Uses `freezegun` to test the time-based refresh
+  logic, ensuring `needs_refresh()` returns True only after the
+  refresh buffer period has passed.
+- Error Handling:
+    - Checks for `FileNotFoundError` if the key file is missing.
+    - Checks for `PyJWTError` (or other lib-specific errors) if
+      JWT encoding fails, ensuring it returns a safe value.
+- Defaults: Verifies the default token lifetime is 60 minutes.
+"""
+
 from unittest.mock import mock_open
 from unittest.mock import patch
 
 import pytest
 from freezegun import freeze_time
+from jwt.exceptions import PyJWTError
 
 from src.udmi.core.auth import JwtAuthProvider
+from udmi.core.auth.jwt_auth_provider import JwtTokenConfig
 
 MOCK_PRIVATE_KEY = """-----BEGIN PRIVATE KEY-----
 MIIEugIBADANBgkqhkiG9w0BAQEFAASCBKQwggSgAgEAAoIBAQCe5RIBonQNXte4
@@ -36,6 +57,9 @@ Xqv7JfZZmBIAC2MzlgE=
 -----END PRIVATE KEY-----"""
 
 
+# pylint: disable=redefined-outer-name,protected-access
+
+
 @pytest.fixture
 def jwt_provider():
     """Returns a JwtAuthProvider instance with a mocked private key file."""
@@ -50,7 +74,7 @@ def jwt_provider():
 
 def test_jwt_provider_initial_state(jwt_provider):
     """Test that the provider needs a refresh immediately upon creation."""
-    assert jwt_provider.needs_refresh() == True
+    assert jwt_provider.needs_refresh() is True
 
 
 def test_jwt_provider_token_caching(jwt_provider):
@@ -59,7 +83,7 @@ def test_jwt_provider_token_caching(jwt_provider):
         # First call generates a token
         token1 = jwt_provider.get_password()
         assert token1 is not None
-        assert jwt_provider.needs_refresh() == False  # Should be cached
+        assert jwt_provider.needs_refresh() is False  # Should be cached
 
         # Second call should return the exact same cached token
         token2 = jwt_provider.get_password()
@@ -74,25 +98,25 @@ def test_jwt_provider_needs_refresh_logic():
             project_id="test-project",
             private_key_file="fake/path/key.pem",
             algorithm="RS256",
-            token_lifetime_minutes=60
+            token_config=JwtTokenConfig(lifetime_minutes=60)
         )
 
     # 1. Get initial token
     token1 = jwt_provider.get_password()
-    assert jwt_provider.needs_refresh() == False
+    assert jwt_provider.needs_refresh() is False
 
     # 2. Move time forward, but not past the refresh buffer
     with freeze_time("2025-10-17 12:54:00"):
-        assert jwt_provider.needs_refresh() == False
+        assert jwt_provider.needs_refresh() is False
         assert jwt_provider.get_password() == token1  # Still cached
 
     # 3. Move time past the refresh buffer
     with freeze_time("2025-10-17 12:55:01"):
-        assert jwt_provider.needs_refresh() == True
+        assert jwt_provider.needs_refresh() is True
         token2 = jwt_provider.get_password()
         assert token2 is not None
         assert token1 != token2  # New token generated
-        assert jwt_provider.needs_refresh() == False  # Cached again
+        assert jwt_provider.needs_refresh() is False  # Cached again
 
 
 def test_init_raises_file_not_found():
@@ -116,7 +140,7 @@ def test_jwt_encoding_failure(jwt_provider, caplog):
     returns a safe empty string.
     """
     with patch("src.udmi.core.auth.jwt_auth_provider.jwt.encode",
-               side_effect=Exception("Mock encode error")):
+               side_effect=PyJWTError("Mock encode error")):
         password = jwt_provider.get_password()
 
     assert "Failed to generate new JWT: Mock encode error" in caplog.text
@@ -136,7 +160,7 @@ def test_default_token_lifetime_is_60_minutes():
                 algorithm="RS256"
             )
             provider.get_password()
-            assert provider.needs_refresh() == False  # Should be cached
+            assert provider.needs_refresh() is False  # Should be cached
 
             ft.move_to("2025-10-17 12:55:01")
-            assert provider.needs_refresh() == True
+            assert provider.needs_refresh() is True

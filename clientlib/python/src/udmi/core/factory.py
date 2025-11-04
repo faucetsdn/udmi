@@ -7,22 +7,41 @@ wire them together.
 """
 
 import logging
+from dataclasses import dataclass, field
 from typing import List
 from typing import Optional
 
+from udmi.core.auth.auth_provider import AuthProvider
+from udmi.core.auth.basic_auth_provider import BasicAuthProvider
+from udmi.core.auth.jwt_auth_provider import JwtAuthProvider, JwtTokenConfig
+from udmi.core.device import Device
+from udmi.core.managers.base_manager import BaseManager
+from udmi.core.managers.system_manager import SystemManager
+from udmi.core.messaging.message_dispatcher import MessageDispatcher
+from udmi.core.messaging.mqtt_messaging_client import MqttMessagingClient
+from udmi.core.messaging.mqtt_messaging_client import ReconnectConfig
+from udmi.core.messaging.mqtt_messaging_client import TlsConfig
 from udmi.schema import EndpointConfiguration
-
-from .auth import AuthProvider
-from .auth import BasicAuthProvider
-from .auth import JwtAuthProvider
-from .managers import BaseManager
-from .managers import SystemManager
-from .messaging import MessageDispatcher
-from .messaging import MqttMessagingClient
-from ..core.device import Device
 
 LOGGER = logging.getLogger(__name__)
 
+
+@dataclass
+class ClientConfig:
+    """Groups all client-level (TLS, Reconnect) configurations."""
+    tls_config: TlsConfig = field(default_factory=TlsConfig)
+    reconnect_config: ReconnectConfig = field(default_factory=ReconnectConfig)
+
+
+@dataclass
+class JwtAuthArgs:
+    """Groups arguments specific to creating a JWT Auth Provider."""
+    project_id: str
+    key_file: str
+    algorithm: str
+
+
+# --- Internal Wiring Function ---
 
 def _wire_device(
     mqtt_client: MqttMessagingClient,
@@ -57,16 +76,11 @@ def _wire_device(
 
 # --- Public Factory Functions ---
 
-def create_device_with_auth_provider(
+def create_mqtt_device_instance(
     endpoint_config: EndpointConfiguration,
     auth_provider: Optional[AuthProvider],
     managers: Optional[List[BaseManager]] = None,
-    ca_certs: Optional[str] = None,
-    cert_file: Optional[str] = None,
-    key_file: Optional[str] = None,
-    enable_tls: Optional[bool] = None,
-    min_reconnect_delay_sec: int = 1,
-    max_reconnect_delay_sec: int = 60
+    client_config: ClientConfig = ClientConfig()
 ) -> Device:
     """
     Creates a UDMI device with a user-provided AuthProvider instance.
@@ -78,12 +92,7 @@ def create_device_with_auth_provider(
         endpoint_config: The EndpointConfiguration dataclass.
         auth_provider: A pre-initialized AuthProvider instance.
         managers: (Optional) A list of managers. Uses SystemManager if None.
-        ca_certs: Path to the root CA certificate file for server TLS.
-        cert_file: Path to the client's public certificate file for mTLS.
-        key_file: Path to the client's private key file for mTLS.
-        enable_tls: Explicitly enable/disable TLS. If None, it's inferred.
-        min_reconnect_delay_sec: Initial delay for reconnection attempts.
-        max_reconnect_delay_sec: Max delay for exponential backoff.
+        client_config: (Optional) Configuration for TLS and reconnection.
 
     Returns:
         :return: A fully wired, ready-to-run Device instance.
@@ -93,12 +102,8 @@ def create_device_with_auth_provider(
     client = MqttMessagingClient(
         endpoint_config=endpoint_config,
         auth_provider=auth_provider,
-        ca_certs=ca_certs,
-        cert_file=cert_file,
-        key_file=key_file,
-        enable_tls=enable_tls,
-        min_reconnect_delay_sec=min_reconnect_delay_sec,
-        max_reconnect_delay_sec=max_reconnect_delay_sec
+        tls_config=client_config.tls_config,
+        reconnect_config=client_config.reconnect_config
     )
 
     return _wire_device(
@@ -109,14 +114,10 @@ def create_device_with_auth_provider(
 
 def create_device_with_jwt(
     endpoint_config: EndpointConfiguration,
-    project_id: str,
-    key_file: str,
-    algorithm: str,
+    jwt_auth_args: JwtAuthArgs,
     managers: Optional[List[BaseManager]] = None,
-    ca_certs: Optional[str] = None,
-    token_lifetime_minutes: int = JwtAuthProvider.DEFAULT_TOKEN_LIFETIME_MINUTES,
-    min_reconnect_delay_sec: int = 1,
-    max_reconnect_delay_sec: int = 60
+    token_config: JwtTokenConfig = JwtTokenConfig(),
+    client_config: ClientConfig = ClientConfig()
 ) -> Device:
     """
     Convenience factory to create a device using JWT authentication.
@@ -126,14 +127,10 @@ def create_device_with_jwt(
 
     Args:
         endpoint_config: The EndpointConfiguration dataclass.
-        project_id: The cloud project ID.
-        key_file: Path to the device's private key file (e.g., rsa_private.pem).
-        algorithm: The signing algorithm (e.g., "RS256").
+        jwt_auth_args: Dataclass with project_id, key_file, and algorithm.
         managers: (Optional) A list of managers. Uses SystemManager if None.
-        ca_certs: Path to the root CA certificate file (e.g., roots.pem).
-        token_lifetime_minutes: Lifetime for the generated JWTs.
-        min_reconnect_delay_sec: Initial delay for reconnection attempts.
-        max_reconnect_delay_sec: Max delay for exponential backoff.
+        token_config: (Optional) Configuration for JWT lifetime/refresh.
+        client_config: (Optional) Configuration for TLS and reconnection.
 
     Returns:
         :return: A fully wired, ready-to-run Device instance.
@@ -141,19 +138,17 @@ def create_device_with_jwt(
     LOGGER.info("Creating device with JWT authentication...")
 
     auth_provider = JwtAuthProvider(
-        project_id=project_id,
-        private_key_file=key_file,
-        algorithm=algorithm,
-        token_lifetime_minutes=token_lifetime_minutes
+        project_id=jwt_auth_args.project_id,
+        private_key_file=jwt_auth_args.key_file,
+        algorithm=jwt_auth_args.algorithm,
+        token_config=token_config
     )
 
-    return create_device_with_auth_provider(
+    return create_mqtt_device_instance(
         endpoint_config=endpoint_config,
         auth_provider=auth_provider,
         managers=managers,
-        ca_certs=ca_certs,
-        min_reconnect_delay_sec=min_reconnect_delay_sec,
-        max_reconnect_delay_sec=max_reconnect_delay_sec
+        client_config=client_config
     )
 
 
@@ -162,10 +157,7 @@ def create_device_with_basic_auth(
     username: str,
     password: str,
     managers: Optional[List[BaseManager]] = None,
-    ca_certs: Optional[str] = None,
-    enable_tls: Optional[bool] = None,
-    min_reconnect_delay_sec: int = 1,
-    max_reconnect_delay_sec: int = 60
+    client_config: ClientConfig = ClientConfig()
 ) -> Device:
     """
     Convenience factory to create a device using Basic (username/password) auth.
@@ -175,10 +167,7 @@ def create_device_with_basic_auth(
         username: The MQTT username.
         password: The MQTT password.
         managers: (Optional) A list of managers. Uses SystemManager if None.
-        ca_certs: Path to the root CA certificate file for server TLS.
-        enable_tls: Explicitly enable/disable TLS. If None, it's inferred.
-        min_reconnect_delay_sec: Initial delay for reconnection attempts.
-        max_reconnect_delay_sec: Max delay for exponential backoff.
+        client_config: (Optional) Configuration for TLS and reconnection.
 
     Returns:
         :return: A fully wired, ready-to-run Device instance.
@@ -188,12 +177,9 @@ def create_device_with_basic_auth(
 
     auth_provider = BasicAuthProvider(username=username, password=password)
 
-    return create_device_with_auth_provider(
+    return create_mqtt_device_instance(
         endpoint_config=endpoint_config,
         auth_provider=auth_provider,
         managers=managers,
-        ca_certs=ca_certs,
-        enable_tls=enable_tls,
-        min_reconnect_delay_sec=min_reconnect_delay_sec,
-        max_reconnect_delay_sec=max_reconnect_delay_sec
+        client_config=client_config
     )

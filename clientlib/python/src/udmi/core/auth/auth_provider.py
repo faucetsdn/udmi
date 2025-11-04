@@ -1,3 +1,11 @@
+"""
+Defines the abstract base class (ABC) for authentication providers.
+
+This module provides the core `AuthProvider` interface that all
+authentication strategies (e.g., Basic Auth, JWT) must implement
+to be used by messaging clients.
+"""
+
 from abc import ABC
 from abc import abstractmethod
 
@@ -5,7 +13,7 @@ from abc import abstractmethod
 class AuthProvider(ABC):
     """
     Abstract base class for all authentication providers.
-    Defines an interface for transports to retrieve credentials.
+    Defines an interface for message clients to retrieve credentials.
     """
 
     @abstractmethod

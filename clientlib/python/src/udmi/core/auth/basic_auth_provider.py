@@ -1,4 +1,8 @@
-from .auth_provider import AuthProvider
+"""
+Provides a username/password based authentication provider.
+"""
+
+from udmi.core.auth.auth_provider import AuthProvider
 
 
 class BasicAuthProvider(AuthProvider):

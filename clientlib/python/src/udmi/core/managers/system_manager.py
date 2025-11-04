@@ -1,18 +1,24 @@
+"""
+Provides the concrete implementation for the SystemManager.
+
+This manager is responsible for handling the 'system' block of the
+config and state, and for reporting system-level events like startup.
+"""
+
 import logging
 from datetime import datetime
 from datetime import timezone
 from typing import Dict
 from typing import Optional
 
+from udmi.constants import UDMI_VERSION
+from udmi.core.managers.base_manager import BaseManager
 from udmi.schema import Config
 from udmi.schema import Entry
 from udmi.schema import State
 from udmi.schema import StateSystemOperation
 from udmi.schema import SystemEvents
 from udmi.schema import SystemState
-
-from ..managers import BaseManager
-from ...constants import UDMI_VERSION
 
 LOGGER = logging.getLogger(__name__)
 
@@ -57,8 +63,8 @@ class SystemManager(BaseManager):
 
             self.publish_event(startup_event_message, "system")
 
-        except Exception as e:
-            LOGGER.error(f"Failed to publish startup event: {e}")
+        except (TypeError, AttributeError) as e:
+            LOGGER.error("Failed to publish startup event: %s", e)
 
     def handle_config(self, config: Config) -> None:
         """
@@ -69,7 +75,7 @@ class SystemManager(BaseManager):
 
         if config.timestamp:
             self._last_config_ts = config.timestamp
-            LOGGER.debug(f"Captured config.timestamp: {self._last_config_ts}")
+            LOGGER.debug("Captured config.timestamp: %s", self._last_config_ts)
 
         if not config.system:
             LOGGER.debug(
@@ -77,9 +83,8 @@ class SystemManager(BaseManager):
             return
 
         if config.system.min_loglevel is not None:
-            # In a real app, you'd update the logger level
-            LOGGER.info(
-                f"Setting system min_loglevel to: {config.system.min_loglevel}")
+            LOGGER.info("Setting system min_loglevel to: %s",
+                        config.system.min_loglevel)
 
     def handle_command(self, command_name: str, payload: dict) -> None:
         """
@@ -88,11 +93,9 @@ class SystemManager(BaseManager):
         """
         # For now, we don't implement any system commands
         if command_name in ["reboot", "shutdown"]:
-            LOGGER.warning(
-                f"Received '{command_name}' command, but it is not implemented.")
-
+            LOGGER.warning("Received '%s' command, but it is not implemented.",
+                           command_name)
         # This manager doesn't handle other commands
-        pass
 
     def update_state(self, state: State) -> None:
         """

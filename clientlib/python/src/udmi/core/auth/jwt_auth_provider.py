@@ -1,14 +1,29 @@
+"""
+Provides a JWT (JSON Web Token) based authentication provider.
+"""
+
 import logging
+from dataclasses import dataclass
 from datetime import datetime
 from datetime import timedelta
 from datetime import timezone
 from typing import Optional
 
 import jwt
+from jwt.exceptions import PyJWTError
 
-from .auth_provider import AuthProvider
+from udmi.core.auth.auth_provider import AuthProvider
 
 LOGGER = logging.getLogger(__name__)
+DEFAULT_TOKEN_LIFETIME_MINUTES = 60
+DEFAULT_TOKEN_REFRESH_BUFFER_MINUTES = 5
+
+
+@dataclass
+class JwtTokenConfig:
+    """Configuration for JWT token lifetime and refresh."""
+    lifetime_minutes: int = DEFAULT_TOKEN_LIFETIME_MINUTES
+    refresh_buffer_minutes: int = DEFAULT_TOKEN_REFRESH_BUFFER_MINUTES
 
 
 class JwtAuthProvider(AuthProvider):
@@ -17,25 +32,21 @@ class JwtAuthProvider(AuthProvider):
     Caches the token and handles proactive refresh.
     """
 
-    DEFAULT_TOKEN_LIFETIME_MINUTES = 60
-    DEFAULT_REFRESH_BUFFER_MINUTES = 5
-
     def __init__(
         self,
         project_id: str,
         private_key_file: str,
         algorithm: str,
-        token_lifetime_minutes: int = DEFAULT_TOKEN_LIFETIME_MINUTES,
-        token_refresh_buffer_minutes: int = DEFAULT_REFRESH_BUFFER_MINUTES
+        token_config: JwtTokenConfig = JwtTokenConfig()
     ):
         self.audience = project_id
         self.algorithm = algorithm
-        self.token_lifetime_minutes = token_lifetime_minutes
-        self.token_refresh_buffer_minutes = token_refresh_buffer_minutes
+        self.token_lifetime_minutes = token_config.lifetime_minutes
+        self.token_refresh_buffer_minutes = token_config.refresh_buffer_minutes
         self._cached_token: Optional[str] = None
         self._token_expiry: Optional[datetime] = None
         try:
-            with open(private_key_file, "r") as f:
+            with open(private_key_file, "r", encoding="utf-8") as f:
                 self._private_key = f.read()
         except FileNotFoundError:
             LOGGER.error("Private key file not found at: %s", private_key_file)
@@ -77,7 +88,7 @@ class JwtAuthProvider(AuthProvider):
                 )
                 self._token_expiry = token_exp
                 LOGGER.info("Generated new JWT, valid until %s UTC", token_exp)
-            except Exception as e:
+            except (PyJWTError, TypeError) as e:
                 LOGGER.error("Failed to generate new JWT: %s", e)
         else:
             LOGGER.debug("Reusing cached JWT.")

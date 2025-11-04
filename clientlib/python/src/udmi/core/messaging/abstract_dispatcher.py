@@ -1,3 +1,12 @@
+"""
+Defines the abstract base class (ABC) for a message dispatcher.
+
+This module provides the core `AbstractMessageDispatcher` interface
+and defines the `MessageHandler` type alias. This abstract class
+defines the contract that the main Device class uses to interact with
+a concrete dispatcher implementation.
+"""
+
 import logging
 from abc import ABC
 from abc import abstractmethod
@@ -6,9 +15,8 @@ from typing import Callable
 from typing import Dict
 from typing import Optional
 
+from udmi.core.messaging.abstract_client import AbstractMessagingClient
 from udmi.schema import DataModel
-
-from .abstract_client import AbstractMessagingClient
 
 LOGGER = logging.getLogger(__name__)
 

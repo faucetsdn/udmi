@@ -1,11 +1,38 @@
+"""
+Unit tests for the `MqttMessagingClient` class.
+
+This module tests the `MqttMessagingClient` in isolation by mocking the
+underlying `paho.mqtt.client` library.
+
+Key behaviors verified:
+- Initialization: Ensures `__init__` correctly instantiates and configures
+  the Paho client with the correct client_id and internal callbacks.
+-TLS Logic: Verifies the `_should_enable_tls` logic correctly
+  infers whether TLS should be enabled based on port, certs, and flags.
+- Auth Logic: Confirms the correct auth method is chosen, prioritizing
+  mTLS (client certs) over the `AuthProvider` (username/password).
+- Topic Formatting:
+    - `publish`: Ensures the simple channel ('state') is correctly
+      expanded to the full MQTT topic.
+    - `_on_message`: Ensures the full MQTT topic is correctly parsed
+      back into a simple channel.
+- Subscriptions: Verifies `_on_connect` subscribes to all registered
+  channels with the correctly formatted full MQTT topics.
+"""
+
 from unittest.mock import MagicMock
 from unittest.mock import call
 
 import pytest
-from udmi.schema import EndpointConfiguration
 
 from src.udmi.core.auth.auth_provider import AuthProvider
 from src.udmi.core.messaging.mqtt_messaging_client import MqttMessagingClient
+from udmi.core.messaging.mqtt_messaging_client import TlsConfig
+from udmi.schema import EndpointConfiguration
+
+
+# pylint: disable=redefined-outer-name,protected-access,unused-argument
+# pylint: disable=comparison-with-callable,too-many-arguments,too-many-positional-arguments
 
 
 @pytest.fixture
@@ -80,16 +107,16 @@ def test_tls_inference_logic(port, cert_file, enable_tls, should_be_called,
     """
     config = base_endpoint_config
     config.port = port
+    tls_config = TlsConfig(cert_file=cert_file, enable_tls=enable_tls)
 
     client = MqttMessagingClient(
         endpoint_config=config,
-        cert_file=cert_file,
-        enable_tls=enable_tls
+        tls_config=tls_config
     )
 
     try:
         client.connect()
-    except Exception:
+    except FileNotFoundError:
         pass
 
     if should_be_called:
@@ -109,8 +136,8 @@ def test_auth_configuration_priority(mock_paho_client_instance,
     client_mtls = MqttMessagingClient(
         endpoint_config=base_endpoint_config,
         auth_provider=mock_auth_provider,
-        cert_file="client.crt",  # mTLS certs
-        key_file="client.key"
+        tls_config=TlsConfig(cert_file="client.crt",  # mTLS certs
+                             key_file="client.key")
     )
 
     try:
@@ -127,8 +154,7 @@ def test_auth_configuration_priority(mock_paho_client_instance,
     client_auth = MqttMessagingClient(
         endpoint_config=base_endpoint_config,
         auth_provider=mock_auth_provider,
-        cert_file=None,
-        key_file=None
+        tls_config=TlsConfig(cert_file=None, key_file=None)
     )
 
     client_auth.connect()

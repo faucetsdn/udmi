@@ -1,3 +1,11 @@
+"""
+Defines the abstract base class (ABC) for feature managers.
+
+This module provides the core `BaseManager` interface that all
+feature-specific managers (e.g., SystemManager, PointsetManager) must
+implement to be orchestrated by the main Device class.
+"""
+
 import abc
 import logging
 from typing import Optional
@@ -9,8 +17,8 @@ from udmi.schema import State
 
 if TYPE_CHECKING:
     # To avoid circular import error
-    from .. import Device
-    from ..messaging import AbstractMessageDispatcher
+    from udmi.core import Device
+    from udmi.core.messaging import AbstractMessageDispatcher
 
 LOGGER = logging.getLogger(__name__)
 
@@ -52,7 +60,6 @@ class BaseManager(abc.ABC):
         Called by the Device when the main loop starts.
         Optional to implement; for managers that need an init process.
         """
-        pass
 
     def stop(self) -> None:
         """
@@ -60,7 +67,6 @@ class BaseManager(abc.ABC):
         Optional to implement; for managers that need a cleanup process
         (e.g., stopping threads).
         """
-        pass
 
     @abc.abstractmethod
     def handle_config(self, config: Config) -> None:

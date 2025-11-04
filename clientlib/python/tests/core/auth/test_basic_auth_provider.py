@@ -1,3 +1,11 @@
+"""
+Unit tests for the `BasicAuthProvider` class.
+
+This module verifies the functionality of the `BasicAuthProvider`, ensuring
+it correctly stores and returns static credentials and reports that
+it never needs to refresh.
+"""
+
 from src.udmi.core.auth import BasicAuthProvider
 
 
