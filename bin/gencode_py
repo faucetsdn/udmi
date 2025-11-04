@@ -25,7 +25,7 @@ PYTHON_OUTPUT_DIR="$GEN_PYTHON_DIR/udmi/schema"
 python3 -m venv "$VENV_DIR"
 source "$VENV_DIR"/bin/activate
 
-pip install "datamodel-code-generator==0.35.0" "poetry==2.0.1" "dataclasses-json==0.6.7"
+pip install "datamodel-code-generator==0.35.0" "dataclasses-json==0.6.7"
 
 # Clean up previous output directories
 rm -rf "$SCHEMA_OUTPUT_DIR"
@@ -65,12 +65,6 @@ done | sort > "$PYTHON_OUTPUT_DIR"/__init__.py.tmp
 mv "$PYTHON_OUTPUT_DIR"/__init__.py.tmp "$PYTHON_OUTPUT_DIR"/__init__.py
 
 echo "Generated python code in '$PYTHON_OUTPUT_DIR'"
-
-# Build python wheel using poetry
-echo "Building a wheel out of the generated python module"
-cd "$GEN_PYTHON_DIR"
-poetry build --output "$ROOT_DIR"/gencode/python/dist
-echo Wheel built successfully in "$ROOT_DIR"/gencode/python/dist
 
 deactivate
 
