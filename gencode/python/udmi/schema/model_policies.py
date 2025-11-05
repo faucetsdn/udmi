@@ -15,4 +15,4 @@ class PoliciesModel(DataModel):
     Device policies
     """
 
-    named_policies: Optional[List[str]] = None
+    rule_sets: Optional[List[str]] = None

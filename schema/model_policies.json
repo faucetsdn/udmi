@@ -6,8 +6,8 @@
   "$schema": "http://json-schema.org/draft-04/schema#",
   "additionalProperties": false,
   "properties": {
-    "named_policies": {
-      "description": "An array of policies which are applicable to the device",
+    "rule_sets": {
+      "description": "An array of rule sets which are applicable to the device",
       "type": "array",
       "items": {
         "type": "string",

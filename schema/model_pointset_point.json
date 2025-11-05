@@ -47,8 +47,8 @@
       "type": "number",
       "examples": [100]
     },
-    "stale_threshold_sec": {
-      "description": "Represents the limit in seconds that a point can be stagnant/unchanged for",
+    "unchanged_limit_sec": {
+      "description": "Represents the limit in seconds that a point can be unchanged for",
       "type": "integer",
       "examples": [3600]
     },

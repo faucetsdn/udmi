@@ -31,7 +31,6 @@
 * [**events**](events.html) - Container object for all event schemas, not directly used.
 * [**events_mapping**](events_mapping.html) - [Mapping result](../../docs/specs/mapping.md) with implicit enumeration
 * [**events_validation**](events_validation.html) - Validation device result
-* [**model_policies**](model_policies.html) - Device policies
 * [**monitoring**](monitoring.html) - Output from UDMIS monitoring
 * [**persistent_device**](persistent_device.html) - Device persistent data
 * [**properties**](properties.html)

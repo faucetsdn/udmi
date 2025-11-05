@@ -16,22 +16,22 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
-    "named_policies"
+    "rule_sets"
 })
 public class PoliciesModel {
 
     /**
-     * An array of policies which are applicable to the device
+     * An array of rule sets which are applicable to the device
      * 
      */
-    @JsonProperty("named_policies")
-    @JsonPropertyDescription("An array of policies which are applicable to the device")
-    public List<String> named_policies;
+    @JsonProperty("rule_sets")
+    @JsonPropertyDescription("An array of rule sets which are applicable to the device")
+    public List<String> rule_sets;
 
     @Override
     public int hashCode() {
         int result = 1;
-        result = ((result* 31)+((this.named_policies == null)? 0 :this.named_policies.hashCode()));
+        result = ((result* 31)+((this.rule_sets == null)? 0 :this.rule_sets.hashCode()));
         return result;
     }
 
@@ -44,7 +44,7 @@ public class PoliciesModel {
             return false;
         }
         PoliciesModel rhs = ((PoliciesModel) other);
-        return ((this.named_policies == rhs.named_policies)||((this.named_policies!= null)&&this.named_policies.equals(rhs.named_policies)));
+        return ((this.rule_sets == rhs.rule_sets)||((this.rule_sets!= null)&&this.rule_sets.equals(rhs.rule_sets)));
     }
 
 }
