@@ -24,7 +24,8 @@
       "HOLDING_REGISTER_53": {
         "ref": "181"
       }
-    }
+    },
+    "sample_rate_sec": 300
   },
   "system": {
     "metrics_rate_sec": 10,
