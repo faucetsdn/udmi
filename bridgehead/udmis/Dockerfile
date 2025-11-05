@@ -7,4 +7,7 @@ COPY --from=etcd-client-builder /usr/local/bin/etcdctl /usr/local/bin/etcdctl
 COPY startup/mosquitto_ctrl.sh /root/udmi/etc/
 COPY startup/udmis_startup.sh /usr/local/bin/startup/
 
-CMD [ "/usr/local/bin/startup/udmis_startup.sh"]
+RUN chmod +x /usr/local/bin/startup/udmis_startup.sh
+RUN chmod +x /root/udmi/etc/mosquitto_ctrl.sh
+
+CMD ["/usr/local/bin/startup/udmis_startup.sh"]
