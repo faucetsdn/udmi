@@ -1,23 +1,8 @@
 """
-Advanced example script for creating a custom UDMI device manager.
+Custom Manager with event publish support.
 
-This script demonstrates the extensibility of the `udmi` library by
-defining a new manager (`HeartbeatManager`) that inherits from `BaseManager`.
-
-Key concepts illustrated:
-
-1.  Inheritance: Creating a class that implements the `BaseManager` interface.
-2.  Lifecycle Hooks: Using the `start()` and `stop()` methods, which are
-    called by the main `Device` orchestrator.
-3.  Custom Logic: Running a separate thread for periodic tasks
-    (in this case, publishing a heartbeat event).
-4.  State Injection via standard `SystemManager` - easily inject device info
-    (make, model, firmware) using the built-in SystemManager without writing
-    any custom state logic.
-5.  Event Publishing: Using the manager's `publish_event` method to send
-    UDMI-compliant event messages.
-6.  Factory Integration: Passing a custom list of managers to the factory,
-    showing how to combine default and custom behaviors.
+This sample demonstrates how to create a completely new, custom manager
+that runs its own background thread to publish ad-hoc UDMI events.
 """
 
 import logging
@@ -30,7 +15,6 @@ from datetime import timezone
 from udmi.constants import UDMI_VERSION
 from udmi.core.factory import create_device_with_basic_auth
 from udmi.core.managers import BaseManager
-from udmi.core.managers import SystemManager
 from udmi.core.managers.base_manager import LOGGER
 from udmi.schema import Config
 from udmi.schema import EndpointConfiguration
@@ -52,13 +36,12 @@ class HeartbeatManager(BaseManager):
     A custom manager that logs a 'heartbeat' event every 60 seconds.
     This demonstrates adding new, periodic logic to the device.
     """
-    HEARTBEAT_INTERVAL_SEC = 60
+    DEFAULT_HEARTBEAT_INTERVAL_SEC = 10
 
-    def __init__(self):
+    def __init__(self, interval_sec=DEFAULT_HEARTBEAT_INTERVAL_SEC):
         super().__init__()
+        self.interval_sec = interval_sec
         self._stop_event = threading.Event()
-        # We create a thread to run our long-running logic without
-        # blocking the main device loop.
         self._thread = threading.Thread(target=self.run, daemon=True)
 
     def start(self) -> None:
@@ -85,14 +68,11 @@ class HeartbeatManager(BaseManager):
         """
         while not self._stop_event.is_set():
             try:
-                # Perform our periodic action
                 self._send_heartbeat()
-                # Wait for the interval, or until `stop()` is called
-                self._stop_event.wait(self.HEARTBEAT_INTERVAL_SEC)
+                self._stop_event.wait(self.interval_sec)
             except Exception as e:
                 LOGGER.error(f"Error in HeartbeatManager loop: {e}")
-                # Wait a bit before retrying to avoid spamming errors
-                time.sleep(self.HEARTBEAT_INTERVAL_SEC)
+                time.sleep(self.interval_sec)
 
     def _send_heartbeat(self):
         """
@@ -102,7 +82,7 @@ class HeartbeatManager(BaseManager):
         try:
             # Create a UDMI-compliant log entry
             log_entry = Entry(
-                message="Device heartbeat operational",
+                message="Heartbeat OK",
                 level=200,  # INFO
                 timestamp=datetime.now(timezone.utc).isoformat()
             )
@@ -157,17 +137,9 @@ if __name__ == "__main__":
         logging.info("Creating device with SystemManager + HeartbeatManager...")
 
         # --- 2. Create Manager List ---
-        # This is the key step. Instead of letting the factory create the
-        # default [SystemManager()], we provide our own list.
-        # We include SystemManager to keep all the default UDMI behaviors
-        # (like config/state handling) and add our new manager.
-        managers_list = [
-            SystemManager(
-                hardware_info={"make": "GenericDevice", "model": "SomeModel"},
-                software_info={"firmware": "v2.4.5-stable", "os": "Linux"}
-            ),  # Keeps default UDMI state/config logic with configured
-                # hardware and software info
-            HeartbeatManager()  # Adds our custom heartbeat event publish logic
+        custom_managers_list = [
+            HeartbeatManager(interval_sec=5)
+            # Adds our custom heartbeat event publish logic
         ]
         # --- End Manager List ---
 
@@ -178,7 +150,8 @@ if __name__ == "__main__":
             endpoint_config=endpoint_config,
             username=BROKER_USERNAME,
             password=BROKER_PASSWORD,
-            managers=managers_list  # Pass our custom list here
+            additional_managers=custom_managers_list
+            # Pass our custom list here
         )
 
         # 4. Start the device

@@ -7,13 +7,15 @@ wire them together.
 """
 
 import logging
-from dataclasses import dataclass, field
+from dataclasses import dataclass
+from dataclasses import field
 from typing import List
 from typing import Optional
 
 from udmi.core.auth.auth_provider import AuthProvider
 from udmi.core.auth.basic_auth_provider import BasicAuthProvider
-from udmi.core.auth.jwt_auth_provider import JwtAuthProvider, JwtTokenConfig
+from udmi.core.auth.jwt_auth_provider import JwtAuthProvider
+from udmi.core.auth.jwt_auth_provider import JwtTokenConfig
 from udmi.core.device import Device
 from udmi.core.managers.base_manager import BaseManager
 from udmi.core.managers.system_manager import SystemManager
@@ -25,6 +27,7 @@ from udmi.schema import EndpointConfiguration
 
 LOGGER = logging.getLogger(__name__)
 
+# pylint: disable=too-many-arguments,too-many-positional-arguments
 
 @dataclass
 class ClientConfig:
@@ -53,9 +56,7 @@ def _wire_device(
     managers: Optional[List[BaseManager]] = None,
     additional_managers: Optional[List[BaseManager]] = None
 ) -> Device:
-    """
-    Internal private function to handle the final wiring of components.
-    """
+    """Internal private function to handle the final wiring of components."""
     LOGGER.debug("Wiring device components...")
 
     # 1. Determine the base list of managers
@@ -67,11 +68,11 @@ def _wire_device(
 
     # 2. Add any additional managers
     if additional_managers:
-        LOGGER.debug(f"Adding {len(additional_managers)} additional managers.")
+        LOGGER.debug("Adding %s additional managers.", len(additional_managers))
         final_managers.extend(additional_managers)
 
-    LOGGER.info(f"Device configured with {len(final_managers)} managers: "
-                f"{[m.__class__.__name__ for m in final_managers]}")
+    LOGGER.info("Device configured with %s managers: %s", len(final_managers),
+                [m.__class__.__name__ for m in final_managers])
 
     # 3. Instantiate the Device Orchestrator (in its initial state)
     device = Device(managers=final_managers)
@@ -99,11 +100,9 @@ def create_mqtt_device_instance(
     additional_managers: Optional[List[BaseManager]] = None,
     client_config: ClientConfig = ClientConfig()
 ) -> Device:
-    """
-    Creates a UDMI device with a user-provided AuthProvider instance.
+    """Creates a UDMI device with a user-provided AuthProvider instance.
 
-    Use this function when you have a custom or pre-configured
-    AuthProvider.
+    Use this function when you have a custom or pre-configured AuthProvider.
 
     Args:
         endpoint_config: The EndpointConfiguration dataclass.
@@ -120,7 +119,7 @@ def create_mqtt_device_instance(
         client_config: (Optional) Configuration for TLS and reconnection.
 
     Returns:
-        :return: A fully wired, ready-to-run Device instance.
+        A fully wired, ready-to-run Device instance.
     """
     LOGGER.info("Creating device with custom AuthProvider...")
 
@@ -146,8 +145,7 @@ def create_device_with_jwt(
     token_config: JwtTokenConfig = JwtTokenConfig(),
     client_config: ClientConfig = ClientConfig()
 ) -> Device:
-    """
-    Convenience factory to create a device using JWT authentication.
+    """Convenience factory to create a device using JWT authentication.
 
     This is the typical method for connecting to cloud platforms
     like GCP IoT Core.
@@ -168,7 +166,7 @@ def create_device_with_jwt(
         client_config: (Optional) Configuration for TLS and reconnection.
 
     Returns:
-        :return: A fully wired, ready-to-run Device instance.
+        A fully wired, ready-to-run Device instance.
     """
     LOGGER.info("Creating device with JWT authentication...")
 
@@ -196,8 +194,7 @@ def create_device_with_basic_auth(
     additional_managers: Optional[List[BaseManager]] = None,
     client_config: ClientConfig = ClientConfig()
 ) -> Device:
-    """
-    Convenience factory to create a device using Basic (username/password) auth.
+    """Convenience factory to create a device using Basic (username/password) auth.
 
     Args:
         endpoint_config: The EndpointConfiguration dataclass.
@@ -215,7 +212,7 @@ def create_device_with_basic_auth(
         client_config: (Optional) Configuration for TLS and reconnection.
 
     Returns:
-        :return: A fully wired, ready-to-run Device instance.
+        A fully wired, ready-to-run Device instance.
     """
     LOGGER.info(
         "Creating device with Basic (username/password) authentication...")
