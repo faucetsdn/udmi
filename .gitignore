@@ -43,6 +43,7 @@ credentials.json
 /local/
 .pubber.pid
 __pycache__/
+.pytest_cache
 /tests/sites/*/out/
 /tests/sites/*/devices/*/out/
 /tests/sites/basic/extras/
@@ -57,3 +58,8 @@ cloud/gcp/udmi-sites.tf
 cloud/gcp/main.tf
 cloud/gcp/auth/credentials.json
 cloud/gcp/.terraform*
+
+.python-version
+dist
+gencode/python/dist
+venv

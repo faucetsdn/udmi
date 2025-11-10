@@ -1,0 +1,29 @@
+[project]
+name = "udmi"
+version = "0.1.0"
+description = "A Python library for UDMI"
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = ">=3.9,<4.0"
+paho-mqtt = ">=2.1.0,<3.0.0"
+PyJWT = "^2.8.0"
+cryptography = "^41.0.4"
+dataclasses-json = "^0.6.7"
+
+[build-system]
+requires = ["poetry-core>=2.0.0,<3.0.0"]
+build-backend = "poetry.core.masonry.api"
+
+[tool.poetry.group.dev.dependencies]
+pytest = "^8.3.4"
+pytest-mock = "^3.15.1"
+freezegun = "^1.5.5"
+pylint = "^3.0.0"
+
+[tool.poetry]
+packages = [
+    { include = "udmi", from = "gencode/python" },
+    { include = "udmi", from = "clientlib/python/src" },
+]
+
