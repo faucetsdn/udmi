@@ -11,9 +11,12 @@ Key concepts illustrated:
     called by the main `Device` orchestrator.
 3.  Custom Logic: Running a separate thread for periodic tasks
     (in this case, publishing a heartbeat event).
-4.  Event Publishing: Using the manager's `publish_event` method to send
+4.  State Injection via standard `SystemManager` - easily inject device info
+    (make, model, firmware) using the built-in SystemManager without writing
+    any custom state logic.
+5.  Event Publishing: Using the manager's `publish_event` method to send
     UDMI-compliant event messages.
-5.  Factory Integration: Passing a custom list of managers to the factory,
+6.  Factory Integration: Passing a custom list of managers to the factory,
     showing how to combine default and custom behaviors.
 """
 
@@ -34,7 +37,6 @@ from udmi.schema import EndpointConfiguration
 from udmi.schema import Entry
 from udmi.schema import State
 from udmi.schema import SystemEvents
-
 
 # --- Configuration Constants ---
 DEVICE_ID = "AHU-1"
@@ -132,6 +134,7 @@ class HeartbeatManager(BaseManager):
         """This manager doesn't contribute to the device state."""
         pass
 
+
 # --- End Custom Manager ---
 
 
@@ -159,8 +162,12 @@ if __name__ == "__main__":
         # We include SystemManager to keep all the default UDMI behaviors
         # (like config/state handling) and add our new manager.
         managers_list = [
-            SystemManager(),    # Keeps default UDMI state/config logic
-            HeartbeatManager()  # Adds our custom heartbeat logic
+            SystemManager(
+                hardware_info={"make": "GenericDevice", "model": "SomeModel"},
+                software_info={"firmware": "v2.4.5-stable", "os": "Linux"}
+            ),  # Keeps default UDMI state/config logic with configured
+                # hardware and software info
+            HeartbeatManager()  # Adds our custom heartbeat event publish logic
         ]
         # --- End Manager List ---
 
