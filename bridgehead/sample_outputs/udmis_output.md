@@ -1,6 +1,6 @@
 ### Sample udmis service output for bridgehead docker setup 
 
-The udmis service first waits 15 seconds for the mosquitto container to setup, and then takes under 60 seconds to set itself up. You'll know the service is up and running when you see the line: `udmis running in the background, pid XX log in /tmp/udmis.log`. Look for that exact line and no big errors above it (The process ID, or PID, shown as XX, will be a different number every time you run the service). Bellow shows the command you should run to see your log, as well as a sample successful udmis log output.
+The udmis service first waits 15 seconds for the mosquitto container to setup, and then takes under 60 seconds to set itself up. You'll know the service is up and running when you see the line: `udmis running in the background, pid XX log in /tmp/udmis.log`. Look for that exact line and no big errors above it (The process ID, or PID, shown as XX, will be a different number every time you run the service). Below shows the command you should run to see your log, as well as a sample successful udmis log output.
 
 You should run the following command in the same directory (`/bridgehead`) where you ran the initial docker compose command: `sudo docker logs udmis -f`
 
