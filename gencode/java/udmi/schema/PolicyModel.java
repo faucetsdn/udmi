@@ -9,16 +9,16 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 
 
 /**
- * Policies Model
+ * Policy Model
  * <p>
- * Device policies
+ * 
  * 
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
     "rule_sets"
 })
-public class PoliciesModel {
+public class PolicyModel {
 
     /**
      * An array of rule sets which are applicable to the device
@@ -40,10 +40,10 @@ public class PoliciesModel {
         if (other == this) {
             return true;
         }
-        if ((other instanceof PoliciesModel) == false) {
+        if ((other instanceof PolicyModel) == false) {
             return false;
         }
-        PoliciesModel rhs = ((PoliciesModel) other);
+        PolicyModel rhs = ((PolicyModel) other);
         return ((this.rule_sets == rhs.rule_sets)||((this.rule_sets!= null)&&this.rule_sets.equals(rhs.rule_sets)));
     }
 

@@ -1,7 +1,6 @@
 {
   "$udmi_version": "1.5.2",
-  "title": "Policies Model",
-  "description": "Device policies",
+  "title": "Policy Model",
   "type": "object",
   "$schema": "http://json-schema.org/draft-04/schema#",
   "additionalProperties": false,

@@ -86,7 +86,7 @@
       }
     }
   },
-  "policies": {
-      "$ref": "file:model_policies.json#"
+  "policy": {
+      "$ref": "file:model_policy.json#"
   }
 }
