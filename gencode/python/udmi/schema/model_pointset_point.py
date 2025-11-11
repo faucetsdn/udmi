@@ -40,6 +40,7 @@ class PointPointsetModel(DataModel):
     baseline_state: Optional[BaselineState] = None
     range_min: Optional[float] = None
     range_max: Optional[float] = None
+    unchanged_limit_sec: Optional[int] = None
     cov_increment: Optional[float] = None
     ref: Optional[str] = None
     adjunct: Optional[Dict[str, str]] = None
