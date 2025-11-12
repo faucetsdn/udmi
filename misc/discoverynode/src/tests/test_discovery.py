@@ -13,6 +13,7 @@ import udmi.schema.state
 import udmi.schema.util 
 import logging
 import sys
+import collections
 
 stdout = logging.StreamHandler(sys.stdout)
 stdout.addFilter(lambda log: log.levelno < logging.WARNING)
@@ -160,3 +161,28 @@ def test_generation_scheduling(seconds_from_now, scan_interval, threshold, expec
     # hacky because timestamps are generted from datetime and timestamp
     # needs to mock all the objects to make it work
     assert pytest.approx(expected_delay + 1000, abs=1) == start_time
+
+@pytest.mark.parametrize(
+  "scan_duration, scan_interval",
+  [
+    # Set to more than one second to avoid issues with state message publishing
+    (None, 1)
+  
+  ]
+)
+def test_generation_is_incremented(scan_duration, scan_interval):
+  mock_state = state.State()
+  
+  mock_publisher = mock.MagicMock()
+  numbers =  udmi.discovery.numbers.NumberDiscovery(mock_state, mock_publisher)
+  with (
+    mock.patch.object(numbers, "start_discovery") as mock_start,
+  ):
+    numbers.controller({"discovery": {"families": {"vendor" : {"generation": make_timestamp(), "scan_interval_sec": scan_interval, "scan_duration_sec": scan_duration}}}})
+    generation_set
+    for x in range(55):
+      print(mock_state.discovery.families["vendor"].generation)
+      time.sleep(0.1)
+    assert mock_start.call_count == 5
+    assert False
+  
