@@ -275,7 +275,8 @@ class DiscoveryController(abc.ABC):
               # Calculate based of generation and current time, in case the generation is in the past
               # Otherwise systematic error gets introduced into all repetitive measurements
               # e.g. instead of starting "on the hour", they all start 5 seconds pst the hour
-              next_action_time = time.time() + scan_duration_sec
+              scheduled_stop_time = self.generation + datetime.timedelta(seconds=scan_interval_sec)
+              next_action_time = scheduled_stop_time.timestamp()
               logging.info("scheduled discovery stop for %s in %d seconds", type(self).__name__, scan_duration_sec)
             else:
               # the scan runs indefinitely, exit the scheduler
