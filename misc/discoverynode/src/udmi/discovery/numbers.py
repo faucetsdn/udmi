@@ -51,4 +51,5 @@ class NumberDiscovery(discovery.DiscoveryController):
 
   def stop_discovery(self):
     self.cancelled = True
-    self.task_thread.join()
+    if self.task_thread:
+      self.task_thread.join()
