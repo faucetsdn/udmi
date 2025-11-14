@@ -40,6 +40,7 @@ fi
 
 if [[ ${1:-} == 'full' ]]; then
     shift
+    pubber_opts+=" fixedSampleRate=10"
     debug_opts=
 fi
 
