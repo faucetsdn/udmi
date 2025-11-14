@@ -173,7 +173,7 @@ public class PointsetSequences extends PointsetBase {
   @ValidateSchema(SubFolder.POINTSET)
   public void pointset_publish() {
     ifNullSkipTest(deviceConfig.pointset, "no pointset found in config");
-
+    deviceConfig.pointset.sample_rate_sec = 10;
     untilTrue("receive a pointset event",
         () -> (countReceivedEvents(PointsetEvents.class) > 1));
   }
