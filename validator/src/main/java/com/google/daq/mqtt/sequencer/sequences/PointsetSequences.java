@@ -140,6 +140,7 @@ public class PointsetSequences extends PointsetBase {
   @Summary("Check that pointset state does not report an unconfigured point")
   @Feature(stage = STABLE, bucket = POINTSET)
   public void pointset_remove_point() {
+    deviceConfig.pointset.sample_rate_sec = 10;
     untilPointsetSanity();
 
     List<String> candidatePoints = new ArrayList<>(deviceConfig.pointset.points.keySet());
