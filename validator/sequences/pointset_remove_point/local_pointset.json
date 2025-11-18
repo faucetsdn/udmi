@@ -1,4 +1,5 @@
 {
+  "sample_rate_sec" : 10,
   "points" : {
     "filter_differential_pressure_setpoint" : {
       "units" : "Bars",

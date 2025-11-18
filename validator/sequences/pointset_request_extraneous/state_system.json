@@ -10,15 +10,15 @@
     "restart_count" : 1,
     "mode" : "initial"
   },
-  "serial_no" : "sequencer-12269",
+  "serial_no" : "sequencer-5469",
   "software" : {
     "firmware" : "v1"
   },
   "status" : {
     "message" : "success",
-    "category" : "system.config.apply",
+    "category" : "system.config.parse",
     "timestamp" : "TIMESTAMP",
-    "level" : 300
+    "level" : 100
   },
   "timestamp" : "TIMESTAMP",
   "version" : "1.5.3"
