@@ -60,6 +60,7 @@ update_if_available ether $ether_addr
 update_if_available ipv4 $ipv4_addr
 update_if_available ipv6 $ipv6_addr
 jq ".testing.nostate = $nostate" $metadata_out | sponge $metadata_out
+jq ".pointset.sample_rate_sec = 10" $metadata_out | sponge $metadata_out
 
 # Dynamically update the site model based off of dynamic pubber output.
 pubber_features=$(< $site_dir/out/pubber_features.json)
