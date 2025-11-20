@@ -1,6 +1,6 @@
 {
   "timestamp" : "TIMESTAMP",
-  "version" : "@@@cloud udmi version###git-250ce5e",
+  "version" : "@@@cloud udmi version###git-c14cf1a",
   "system" : {
     "min_loglevel" : 100,
     "metrics_rate_sec" : 10,

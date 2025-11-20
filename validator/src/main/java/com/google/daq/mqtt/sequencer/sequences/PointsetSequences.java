@@ -140,6 +140,7 @@ public class PointsetSequences extends PointsetBase {
   @Summary("Check that pointset state does not report an unconfigured point")
   @Feature(stage = STABLE, bucket = POINTSET)
   public void pointset_remove_point() {
+    deviceConfig.pointset.sample_rate_sec = 10;
     untilPointsetSanity();
 
     List<String> candidatePoints = new ArrayList<>(deviceConfig.pointset.points.keySet());
@@ -173,7 +174,7 @@ public class PointsetSequences extends PointsetBase {
   @ValidateSchema(SubFolder.POINTSET)
   public void pointset_publish() {
     ifNullSkipTest(deviceConfig.pointset, "no pointset found in config");
-
+    deviceConfig.pointset.sample_rate_sec = 10;
     untilTrue("receive a pointset event",
         () -> (countReceivedEvents(PointsetEvents.class) > 1));
   }

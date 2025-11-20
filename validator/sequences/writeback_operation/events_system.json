@@ -1,256 +1,298 @@
 {
-  "event_no" : 6,
-  "last_config" : "2025-08-21T14:03:02Z",
+  "event_no" : 5,
+  "last_config" : "TIMESTAMP",
   "logentries" : [ {
-    "message" : "Completing delayed writeback for filter_alarm_pressure_status",
+    "message" : "success",
+    "category" : "system.config.receive",
+    "timestamp" : "TIMESTAMP",
+    "level" : 100
+  }, {
+    "message" : "State update defer 1702ms",
     "category" : "device.log",
-    "timestamp" : "2025-08-21T14:02:54Z",
+    "timestamp" : "TIMESTAMP",
+    "level" : 100
+  }, {
+    "message" : "success",
+    "category" : "system.config.parse",
+    "timestamp" : "TIMESTAMP",
+    "level" : 100
+  }, {
+    "message" : "State update defer 1702ms",
+    "category" : "device.log",
+    "timestamp" : "TIMESTAMP",
+    "level" : 100
+  }, {
+    "message" : "Config update AHU-1 (writeback_operation)",
+    "detail" : "{\n  \"timestamp\" : \"TIMESTAMP\"\n    },\n    \"testing\" : {\n      \"sequence_name\" : \"writeback_operation\",\n      \"transaction_id\" : \"RC:524999.0000000d\",\n      \"config_base\" : 51\n    }\n  },\n  \"discovery\" : {\n    \"families\" : {\n      \"bacnet\" : { },\n      \"vendor\" : { }\n    }\n  },\n  \"localnet\" : {\n    \"families\" : {\n      \"ether\" : { },\n      \"ipv4\" : { },\n      \"vendor\" : { },\n      \"bacnet\" : { }\n    }\n  },\n  \"pointset\" : {\n    \"sample_rate_sec\" : 10,\n    \"points\" : {\n      \"filter_alarm_pressure_status\" : {\n        \"ref\" : \"BV11.present_value\",\n        \"units\" : \"No-units\"\n      },\n      \"filter_differential_pressure_setpoint\" : {\n        \"units\" : \"Bars\"\n      },\n      \"filter_differential_pressure_sensor\" : {\n        \"ref\" : \"AV12.present_value\",\n        \"units\" : \"Degrees-Celsius\"\n      }\n    }\n  }\n}",
+    "category" : "device.log",
+    "timestamp" : "TIMESTAMP",
+    "level" : 100
+  }, {
+    "message" : "TIMESTAMP",
+    "category" : "device.log",
+    "timestamp" : "TIMESTAMP",
     "level" : 200
   }, {
-    "message" : "Completing delayed writeback for filter_differential_pressure_sensor",
+    "message" : "value of noWriteback: false",
     "category" : "device.log",
-    "timestamp" : "2025-08-21T14:02:54Z",
-    "level" : 200
+    "timestamp" : "TIMESTAMP",
+    "level" : 100
   }, {
-    "message" : "Update state 2025-08-21T14:02:55Z last_config 2025-08-21T14:02:51Z",
+    "message" : "value of noWriteback: false",
     "category" : "device.log",
-    "timestamp" : "2025-08-21T14:02:55Z",
-    "level" : 200
+    "timestamp" : "TIMESTAMP",
+    "level" : 100
   }, {
-    "message" : "Device AHU-1 config handler",
+    "message" : "value of noWriteback: false",
     "category" : "device.log",
-    "timestamp" : "2025-08-21T14:02:55Z",
-    "level" : 200
-  }, {
-    "message" : "2025-08-21T14:02:55Z received config 2025-08-21T14:02:55Z",
-    "category" : "device.log",
-    "timestamp" : "2025-08-21T14:02:55Z",
-    "level" : 200
-  }, {
-    "message" : "Applying slow writeback for point filter_alarm_pressure_status with 3s delay",
-    "category" : "device.log",
-    "timestamp" : "2025-08-21T14:02:55Z",
-    "level" : 200
-  }, {
-    "message" : "Applying slow writeback for point filter_differential_pressure_setpoint with 3s delay",
-    "category" : "device.log",
-    "timestamp" : "2025-08-21T14:02:55Z",
-    "level" : 200
-  }, {
-    "message" : "Applying slow writeback for point filter_differential_pressure_sensor with 3s delay",
-    "category" : "device.log",
-    "timestamp" : "2025-08-21T14:02:55Z",
-    "level" : 200
+    "timestamp" : "TIMESTAMP",
+    "level" : 100
   }, {
     "message" : "success",
     "category" : "system.config.apply",
-    "timestamp" : "2025-08-21T14:02:55Z",
+    "timestamp" : "TIMESTAMP",
     "level" : 300
+  }, {
+    "message" : "State update defer 1698ms",
+    "category" : "device.log",
+    "timestamp" : "TIMESTAMP",
+    "level" : 100
+  }, {
+    "message" : "State update defer 1697ms",
+    "category" : "device.log",
+    "timestamp" : "TIMESTAMP",
+    "level" : 100
+  }, {
+    "message" : "success",
+    "category" : "system.config.receive",
+    "timestamp" : "TIMESTAMP",
+    "level" : 100
+  }, {
+    "message" : "State update defer 597ms",
+    "category" : "device.log",
+    "timestamp" : "TIMESTAMP",
+    "level" : 100
+  }, {
+    "message" : "success",
+    "category" : "system.config.parse",
+    "timestamp" : "TIMESTAMP",
+    "level" : 100
   }, {
     "message" : "Device AHU-1 config handler",
     "category" : "device.log",
-    "timestamp" : "2025-08-21T14:02:56Z",
+    "timestamp" : "TIMESTAMP",
     "level" : 200
   }, {
-    "message" : "2025-08-21T14:02:56Z received config 2025-08-21T14:02:56Z",
+    "message" : "State update defer 596ms",
     "category" : "device.log",
-    "timestamp" : "2025-08-21T14:02:56Z",
+    "timestamp" : "TIMESTAMP",
+    "level" : 100
+  }, {
+    "message" : "Config update AHU-1 (writeback_operation)",
+    "detail" : "{\n  \"timestamp\" : \"TIMESTAMP\"\n    },\n    \"testing\" : {\n      \"sequence_name\" : \"writeback_operation\",\n      \"transaction_id\" : \"RC:524999.0000000e\",\n      \"config_base\" : 52\n    }\n  },\n  \"discovery\" : {\n    \"families\" : {\n      \"bacnet\" : { },\n      \"vendor\" : { }\n    }\n  },\n  \"localnet\" : {\n    \"families\" : {\n      \"ether\" : { },\n      \"ipv4\" : { },\n      \"vendor\" : { },\n      \"bacnet\" : { }\n    }\n  },\n  \"pointset\" : {\n    \"sample_rate_sec\" : 10,\n    \"points\" : {\n      \"filter_alarm_pressure_status\" : {\n        \"ref\" : \"BV11.present_value\",\n        \"units\" : \"No-units\"\n      },\n      \"filter_differential_pressure_setpoint\" : {\n        \"units\" : \"Bars\"\n      },\n      \"filter_differential_pressure_sensor\" : {\n        \"ref\" : \"AV12.present_value\",\n        \"units\" : \"Degrees-Celsius\"\n      }\n    }\n  }\n}",
+    "category" : "device.log",
+    "timestamp" : "TIMESTAMP",
+    "level" : 100
+  }, {
+    "message" : "TIMESTAMP",
+    "category" : "device.log",
+    "timestamp" : "TIMESTAMP",
     "level" : 200
   }, {
-    "message" : "Applying slow writeback for point filter_alarm_pressure_status with 3s delay",
+    "message" : "value of noWriteback: false",
     "category" : "device.log",
-    "timestamp" : "2025-08-21T14:02:56Z",
-    "level" : 200
+    "timestamp" : "TIMESTAMP",
+    "level" : 100
   }, {
-    "message" : "Applying slow writeback for point filter_differential_pressure_setpoint with 3s delay",
+    "message" : "value of noWriteback: false",
     "category" : "device.log",
-    "timestamp" : "2025-08-21T14:02:56Z",
-    "level" : 200
+    "timestamp" : "TIMESTAMP",
+    "level" : 100
   }, {
-    "message" : "Applying slow writeback for point filter_differential_pressure_sensor with 3s delay",
+    "message" : "value of noWriteback: false",
     "category" : "device.log",
-    "timestamp" : "2025-08-21T14:02:56Z",
-    "level" : 200
+    "timestamp" : "TIMESTAMP",
+    "level" : 100
   }, {
     "message" : "success",
     "category" : "system.config.apply",
-    "timestamp" : "2025-08-21T14:02:56Z",
+    "timestamp" : "TIMESTAMP",
     "level" : 300
   }, {
-    "message" : "Update state 2025-08-21T14:02:57Z last_config 2025-08-21T14:02:56Z",
+    "message" : "State update defer 594ms",
     "category" : "device.log",
-    "timestamp" : "2025-08-21T14:02:57Z",
+    "timestamp" : "TIMESTAMP",
+    "level" : 100
+  }, {
+    "message" : "State update defer 594ms",
+    "category" : "device.log",
+    "timestamp" : "TIMESTAMP",
+    "level" : 100
+  }, {
+    "message" : "State update defer 594ms",
+    "category" : "device.log",
+    "timestamp" : "TIMESTAMP",
+    "level" : 100
+  }, {
+    "message" : "State update defer 593ms",
+    "category" : "device.log",
+    "timestamp" : "TIMESTAMP",
+    "level" : 100
+  }, {
+    "message" : "State update defer 593ms",
+    "category" : "device.log",
+    "timestamp" : "TIMESTAMP",
+    "level" : 100
+  }, {
+    "message" : "State update defer 593ms",
+    "category" : "device.log",
+    "timestamp" : "TIMESTAMP",
+    "level" : 100
+  }, {
+    "message" : "State update defer 593ms",
+    "category" : "device.log",
+    "timestamp" : "TIMESTAMP",
+    "level" : 100
+  }, {
+    "message" : "State update defer 0ms",
+    "category" : "device.log",
+    "timestamp" : "TIMESTAMP",
+    "level" : 100
+  }, {
+    "message" : "Update state TIMESTAMP",
+    "category" : "device.log",
+    "timestamp" : "TIMESTAMP",
     "level" : 200
+  }, {
+    "message" : "State update AHU-1 (writeback_operation)",
+    "detail" : "{\n  \"timestamp\" : \"TIMESTAMP\",\n      \"level\" : 300\n    }\n  },\n  \"discovery\" : {\n    \"families\" : { }\n  },\n  \"localnet\" : {\n    \"families\" : {\n      \"ether\" : {\n        \"addr\" : \"7c:1e:52:2b:a6:b9\"\n      },\n      \"ipv4\" : {\n        \"addr\" : \"10.1.0.124\"\n      },\n      \"vendor\" : {\n        \"addr\" : \"28179023\"\n      },\n      \"bacnet\" : {\n        \"addr\" : \"27312\"\n      }\n    }\n  },\n  \"pointset\" : {\n    \"points\" : {\n      \"filter_alarm_pressure_status\" : {\n        \"units\" : \"No-units\"\n      },\n      \"filter_differential_pressure_setpoint\" : {\n        \"units\" : \"Bars\"\n      },\n      \"filter_differential_pressure_sensor\" : {\n        \"units\" : \"Degrees-Celsius\"\n      }\n    }\n  }\n}",
+    "category" : "device.log",
+    "timestamp" : "TIMESTAMP",
+    "level" : 100
+  }, {
+    "message" : "success",
+    "category" : "system.config.receive",
+    "timestamp" : "TIMESTAMP",
+    "level" : 100
+  }, {
+    "message" : "State update defer -63ms",
+    "category" : "device.log",
+    "timestamp" : "TIMESTAMP",
+    "level" : 100
+  }, {
+    "message" : "Update state TIMESTAMP",
+    "category" : "device.log",
+    "timestamp" : "TIMESTAMP",
+    "level" : 200
+  }, {
+    "message" : "success",
+    "category" : "system.config.parse",
+    "timestamp" : "TIMESTAMP",
+    "level" : 100
   }, {
     "message" : "Device AHU-1 config handler",
     "category" : "device.log",
-    "timestamp" : "2025-08-21T14:02:57Z",
+    "timestamp" : "TIMESTAMP",
     "level" : 200
   }, {
-    "message" : "2025-08-21T14:02:57Z received config 2025-08-21T14:02:57Z",
+    "message" : "State update AHU-1 (writeback_operation)",
+    "detail" : "{\n  \"timestamp\" : \"TIMESTAMP\",\n      \"level\" : 100\n    }\n  },\n  \"discovery\" : {\n    \"families\" : { }\n  },\n  \"localnet\" : {\n    \"families\" : {\n      \"ether\" : {\n        \"addr\" : \"7c:1e:52:2b:a6:b9\"\n      },\n      \"ipv4\" : {\n        \"addr\" : \"10.1.0.124\"\n      },\n      \"vendor\" : {\n        \"addr\" : \"28179023\"\n      },\n      \"bacnet\" : {\n        \"addr\" : \"27312\"\n      }\n    }\n  },\n  \"pointset\" : {\n    \"points\" : {\n      \"filter_alarm_pressure_status\" : {\n        \"units\" : \"No-units\"\n      },\n      \"filter_differential_pressure_setpoint\" : {\n        \"units\" : \"Bars\"\n      },\n      \"filter_differential_pressure_sensor\" : {\n        \"units\" : \"Degrees-Celsius\"\n      }\n    }\n  }\n}",
     "category" : "device.log",
-    "timestamp" : "2025-08-21T14:02:57Z",
+    "timestamp" : "TIMESTAMP",
+    "level" : 100
+  }, {
+    "message" : "Config update AHU-1 (writeback_operation)",
+    "detail" : "{\n  \"timestamp\" : \"TIMESTAMP\"\n    },\n    \"testing\" : {\n      \"sequence_name\" : \"writeback_operation\",\n      \"transaction_id\" : \"RC:524999.00000011\",\n      \"config_base\" : 53\n    }\n  },\n  \"discovery\" : {\n    \"families\" : {\n      \"bacnet\" : { },\n      \"vendor\" : { }\n    }\n  },\n  \"localnet\" : {\n    \"families\" : {\n      \"ether\" : { },\n      \"ipv4\" : { },\n      \"vendor\" : { },\n      \"bacnet\" : { }\n    }\n  },\n  \"pointset\" : {\n    \"sample_rate_sec\" : 10,\n    \"points\" : {\n      \"filter_alarm_pressure_status\" : {\n        \"ref\" : \"BV11.present_value\",\n        \"units\" : \"No-units\"\n      },\n      \"filter_differential_pressure_setpoint\" : {\n        \"units\" : \"Bars\",\n        \"set_value\" : 60\n      },\n      \"filter_differential_pressure_sensor\" : {\n        \"ref\" : \"AV12.present_value\",\n        \"units\" : \"Degrees-Celsius\"\n      }\n    }\n  }\n}",
+    "category" : "device.log",
+    "timestamp" : "TIMESTAMP",
+    "level" : 100
+  }, {
+    "message" : "State update defer 2000ms",
+    "category" : "device.log",
+    "timestamp" : "TIMESTAMP",
+    "level" : 100
+  }, {
+    "message" : "TIMESTAMP",
+    "category" : "device.log",
+    "timestamp" : "TIMESTAMP",
     "level" : 200
   }, {
-    "message" : "Applying slow writeback for point filter_alarm_pressure_status with 3s delay",
+    "message" : "value of noWriteback: false",
     "category" : "device.log",
-    "timestamp" : "2025-08-21T14:02:57Z",
-    "level" : 200
+    "timestamp" : "TIMESTAMP",
+    "level" : 100
   }, {
-    "message" : "Applying slow writeback for point filter_differential_pressure_setpoint with 3s delay",
+    "message" : "value of noWriteback: false",
     "category" : "device.log",
-    "timestamp" : "2025-08-21T14:02:57Z",
-    "level" : 200
+    "timestamp" : "TIMESTAMP",
+    "level" : 100
   }, {
-    "message" : "Applying slow writeback for point filter_differential_pressure_sensor with 3s delay",
+    "message" : "Applying slow writeback for point filter_differential_pressure_setpoint with 10s delay",
     "category" : "device.log",
-    "timestamp" : "2025-08-21T14:02:57Z",
-    "level" : 200
+    "timestamp" : "TIMESTAMP",
+    "level" : 100
+  }, {
+    "message" : "value of noWriteback: false",
+    "category" : "device.log",
+    "timestamp" : "TIMESTAMP",
+    "level" : 100
   }, {
     "message" : "success",
     "category" : "system.config.apply",
-    "timestamp" : "2025-08-21T14:02:57Z",
+    "timestamp" : "TIMESTAMP",
     "level" : 300
   }, {
-    "message" : "Completing delayed writeback for filter_alarm_pressure_status",
+    "message" : "State update defer 1998ms",
     "category" : "device.log",
-    "timestamp" : "2025-08-21T14:02:58Z",
+    "timestamp" : "TIMESTAMP",
+    "level" : 100
+  }, {
+    "message" : "State update defer 0ms",
+    "category" : "device.log",
+    "timestamp" : "TIMESTAMP",
+    "level" : 100
+  }, {
+    "message" : "Update state TIMESTAMP",
+    "category" : "device.log",
+    "timestamp" : "TIMESTAMP",
     "level" : 200
+  }, {
+    "message" : "State update AHU-1 (writeback_operation)",
+    "detail" : "{\n  \"timestamp\" : \"TIMESTAMP\",\n      \"level\" : 300\n    }\n  },\n  \"discovery\" : {\n    \"families\" : { }\n  },\n  \"localnet\" : {\n    \"families\" : {\n      \"ether\" : {\n        \"addr\" : \"7c:1e:52:2b:a6:b9\"\n      },\n      \"ipv4\" : {\n        \"addr\" : \"10.1.0.124\"\n      },\n      \"vendor\" : {\n        \"addr\" : \"28179023\"\n      },\n      \"bacnet\" : {\n        \"addr\" : \"27312\"\n      }\n    }\n  },\n  \"pointset\" : {\n    \"points\" : {\n      \"filter_alarm_pressure_status\" : {\n        \"units\" : \"No-units\"\n      },\n      \"filter_differential_pressure_setpoint\" : {\n        \"units\" : \"Bars\",\n        \"value_state\" : \"updating\"\n      },\n      \"filter_differential_pressure_sensor\" : {\n        \"units\" : \"Degrees-Celsius\"\n      }\n    }\n  }\n}",
+    "category" : "device.log",
+    "timestamp" : "TIMESTAMP",
+    "level" : 100
   }, {
     "message" : "Completing delayed writeback for filter_differential_pressure_setpoint",
     "category" : "device.log",
-    "timestamp" : "2025-08-21T14:02:58Z",
+    "timestamp" : "TIMESTAMP",
     "level" : 200
   }, {
-    "message" : "Completing delayed writeback for filter_differential_pressure_sensor",
+    "message" : "setting value state as null",
     "category" : "device.log",
-    "timestamp" : "2025-08-21T14:02:58Z",
-    "level" : 200
+    "timestamp" : "TIMESTAMP",
+    "level" : 100
   }, {
-    "message" : "Device AHU-1 config handler",
+    "message" : "State update defer -1126ms",
     "category" : "device.log",
-    "timestamp" : "2025-08-21T14:02:58Z",
-    "level" : 200
+    "timestamp" : "TIMESTAMP",
+    "level" : 100
   }, {
-    "message" : "2025-08-21T14:02:58Z received config 2025-08-21T14:02:58Z",
+    "message" : "Update state TIMESTAMP",
     "category" : "device.log",
-    "timestamp" : "2025-08-21T14:02:58Z",
+    "timestamp" : "TIMESTAMP",
     "level" : 200
   }, {
-    "message" : "Applying slow writeback for point filter_alarm_pressure_status with 3s delay",
+    "message" : "State update AHU-1 (writeback_operation)",
+    "detail" : "{\n  \"timestamp\" : \"TIMESTAMP\",\n      \"level\" : 300\n    }\n  },\n  \"discovery\" : {\n    \"families\" : { }\n  },\n  \"localnet\" : {\n    \"families\" : {\n      \"ether\" : {\n        \"addr\" : \"7c:1e:52:2b:a6:b9\"\n      },\n      \"ipv4\" : {\n        \"addr\" : \"10.1.0.124\"\n      },\n      \"vendor\" : {\n        \"addr\" : \"28179023\"\n      },\n      \"bacnet\" : {\n        \"addr\" : \"27312\"\n      }\n    }\n  },\n  \"pointset\" : {\n    \"points\" : {\n      \"filter_alarm_pressure_status\" : {\n        \"units\" : \"No-units\"\n      },\n      \"filter_differential_pressure_setpoint\" : {\n        \"units\" : \"Bars\"\n      },\n      \"filter_differential_pressure_sensor\" : {\n        \"units\" : \"Degrees-Celsius\"\n      }\n    }\n  }\n}",
     "category" : "device.log",
-    "timestamp" : "2025-08-21T14:02:58Z",
-    "level" : 200
-  }, {
-    "message" : "Applying slow writeback for point filter_differential_pressure_setpoint with 3s delay",
-    "category" : "device.log",
-    "timestamp" : "2025-08-21T14:02:58Z",
-    "level" : 200
-  }, {
-    "message" : "Applying slow writeback for point filter_differential_pressure_sensor with 3s delay",
-    "category" : "device.log",
-    "timestamp" : "2025-08-21T14:02:58Z",
-    "level" : 200
-  }, {
-    "message" : "success",
-    "category" : "system.config.apply",
-    "timestamp" : "2025-08-21T14:02:58Z",
-    "level" : 300
-  }, {
-    "message" : "Update state 2025-08-21T14:02:59Z last_config 2025-08-21T14:02:58Z",
-    "category" : "device.log",
-    "timestamp" : "2025-08-21T14:02:59Z",
-    "level" : 200
-  }, {
-    "message" : "Completing delayed writeback for filter_alarm_pressure_status",
-    "category" : "device.log",
-    "timestamp" : "2025-08-21T14:02:59Z",
-    "level" : 200
-  }, {
-    "message" : "Completing delayed writeback for filter_differential_pressure_setpoint",
-    "category" : "device.log",
-    "timestamp" : "2025-08-21T14:02:59Z",
-    "level" : 200
-  }, {
-    "message" : "Completing delayed writeback for filter_differential_pressure_sensor",
-    "category" : "device.log",
-    "timestamp" : "2025-08-21T14:02:59Z",
-    "level" : 200
-  }, {
-    "message" : "Completing delayed writeback for filter_alarm_pressure_status",
-    "category" : "device.log",
-    "timestamp" : "2025-08-21T14:03:00Z",
-    "level" : 200
-  }, {
-    "message" : "Completing delayed writeback for filter_differential_pressure_setpoint",
-    "category" : "device.log",
-    "timestamp" : "2025-08-21T14:03:00Z",
-    "level" : 200
-  }, {
-    "message" : "Completing delayed writeback for filter_differential_pressure_sensor",
-    "category" : "device.log",
-    "timestamp" : "2025-08-21T14:03:00Z",
-    "level" : 200
-  }, {
-    "message" : "Update state 2025-08-21T14:03:01Z last_config 2025-08-21T14:02:58Z",
-    "category" : "device.log",
-    "timestamp" : "2025-08-21T14:03:01Z",
-    "level" : 200
-  }, {
-    "message" : "Completing delayed writeback for filter_alarm_pressure_status",
-    "category" : "device.log",
-    "timestamp" : "2025-08-21T14:03:01Z",
-    "level" : 200
-  }, {
-    "message" : "Completing delayed writeback for filter_differential_pressure_setpoint",
-    "category" : "device.log",
-    "timestamp" : "2025-08-21T14:03:01Z",
-    "level" : 200
-  }, {
-    "message" : "Completing delayed writeback for filter_differential_pressure_sensor",
-    "category" : "device.log",
-    "timestamp" : "2025-08-21T14:03:01Z",
-    "level" : 200
-  }, {
-    "message" : "Device AHU-1 config handler",
-    "category" : "device.log",
-    "timestamp" : "2025-08-21T14:03:02Z",
-    "level" : 200
-  }, {
-    "message" : "2025-08-21T14:03:02Z received config 2025-08-21T14:03:02Z",
-    "category" : "device.log",
-    "timestamp" : "2025-08-21T14:03:02Z",
-    "level" : 200
-  }, {
-    "message" : "Applying slow writeback for point filter_alarm_pressure_status with 3s delay",
-    "category" : "device.log",
-    "timestamp" : "2025-08-21T14:03:02Z",
-    "level" : 200
-  }, {
-    "message" : "Applying slow writeback for point filter_differential_pressure_setpoint with 3s delay",
-    "category" : "device.log",
-    "timestamp" : "2025-08-21T14:03:02Z",
-    "level" : 200
-  }, {
-    "message" : "Applying slow writeback for point filter_differential_pressure_sensor with 3s delay",
-    "category" : "device.log",
-    "timestamp" : "2025-08-21T14:03:02Z",
-    "level" : 200
-  }, {
-    "message" : "success",
-    "category" : "system.config.apply",
-    "timestamp" : "2025-08-21T14:03:02Z",
-    "level" : 300
-  }, {
-    "message" : "Update state 2025-08-21T14:03:03Z last_config 2025-08-21T14:03:02Z",
-    "category" : "device.log",
-    "timestamp" : "2025-08-21T14:03:03Z",
-    "level" : 200
+    "timestamp" : "TIMESTAMP",
+    "level" : 100
   } ],
   "metrics" : {
-    "mem_total_mb" : 112.0,
-    "mem_free_mb" : 82.58006286621094
+    "mem_total_mb" : 54.0,
+    "mem_free_mb" : 28.272109985351562
   },
-  "timestamp" : "2025-08-21T14:03:04Z",
+  "timestamp" : "TIMESTAMP",
   "version" : "1.5.3"
 }

@@ -1,11 +1,11 @@
 {
-  "timestamp" : "2025-08-21T14:03:02Z",
-  "version" : "@@@cloud udmi version###1.5.1-265-gf6769c13-dirty",
+  "timestamp" : "TIMESTAMP",
+  "version" : "@@@cloud udmi version###git-c14cf1a",
   "system" : {
-    "min_loglevel" : 200,
+    "min_loglevel" : 100,
     "metrics_rate_sec" : 10,
     "operation" : {
-      "last_start" : "2025-08-21T14:02:13Z"
+      "last_start" : "TIMESTAMP"
     },
     "testing" : {
       "sequence_name" : "writeback_operation"
@@ -26,6 +26,7 @@
     }
   },
   "pointset" : {
+    "sample_rate_sec" : 10,
     "points" : {
       "filter_differential_pressure_setpoint" : {
         "units" : "Bars",
