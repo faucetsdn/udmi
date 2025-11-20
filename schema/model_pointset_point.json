@@ -47,6 +47,11 @@
       "type": "number",
       "examples": [100]
     },
+    "unchanged_limit_sec": {
+      "description": "Represents the limit in seconds that a point can be unchanged for",
+      "type": "integer",
+      "examples": [3600]
+    },
     "cov_increment": {
       "description": "Triggering threshold for partial cov update publishing",
       "examples": [1],

@@ -449,6 +449,8 @@ Test skipped: Not a gateway
 
 Check that a device publishes pointset events
 
+1. Update config before receive a pointset event
+    * Set `pointset.sample_rate_sec` = `10`
 1. Wait for receive a pointset event
 
 Test passed.
@@ -458,7 +460,7 @@ Test passed.
 Check handling of sample_rate_sec and sample_limit_sec
 
 1. Update config before receive at least 4 pointset events
-    * Add `pointset.sample_rate_sec` = `8`
+    * Set `pointset.sample_rate_sec` = `8`
     * Add `pointset.sample_limit_sec` = `5`
 1. Wait for receive at least 4 pointset events
 1. Check that time period between successive pointset events is between 5 and 8 seconds
@@ -474,6 +476,8 @@ Test passed.
 
 Check that pointset state does not report an unconfigured point
 
+1. Update config before pointset state matches config
+    * Set `pointset.sample_rate_sec` = `10`
 1. Wait until pointset state matches config
 1. Wait until pointset event contains correct points
 1. Update config before pointset state does not contain removed point
@@ -494,7 +498,7 @@ Test passed.
 Check error when pointset configuration contains extraneous point
 
 1. Update config before pointset state matches config
-    * Add `pointset.sample_rate_sec` = `10`
+    * Set `pointset.sample_rate_sec` = `10`
 1. Wait until pointset state matches config
 1. Wait until pointset event contains correct points
 1. Update config before pointset state contains extraneous point error

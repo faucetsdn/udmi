@@ -20,7 +20,8 @@
         "ref": "anything-goes!",
         "units": "Degrees-phase"
       }
-    }
+    },
+    "sample_rate_sec": 300
   },
   "system": {
     "metrics_rate_sec": 10,
