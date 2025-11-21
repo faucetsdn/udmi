@@ -33,7 +33,12 @@ CA_SRL=$CA_DIR/ca.srl
 CA_KEY=$CA_DIR/rsa_private.pem
 OPTS_509=/tmp/x509opts.txt
 
-echo "subjectAltName=DNS:${TARGET_HOST}, IP:127.0.0.1, DNS:localhost" > $OPTS_509
+if [[ -n "$HOST_IP" ]]; then
+    echo "subjectAltName=DNS:${TARGET_HOST}, IP:127.0.0.1, IP:${HOST_IP}, DNS:localhost" > $OPTS_509
+else
+    echo "subjectAltName=DNS:${TARGET_HOST}, IP:127.0.0.1, DNS:localhost" > $OPTS_509
+fi
+
 x509opts="-days 3650 -extfile $OPTS_509"
 
 if [[ $type == CA ]]; then
