@@ -1,29 +1,41 @@
 TIMESTAMP DEBUG   system.config.receive  success
+TIMESTAMP DEBUG   device.log             State update defer -17069ms
+TIMESTAMP
 TIMESTAMP DEBUG   system.config.parse    success
 TIMESTAMP INFO    device.log             Device AHU-1 config handler
-TIMESTAMP DEBUG   device.log             State update defer -17065ms
+TIMESTAMP DEBUG   device.log             State update AHU-1 (scan_single_now+bacnet)
 TIMESTAMP DEBUG   device.log             Config update AHU-1 (scan_single_now+bacnet)
 TIMESTAMP
-TIMESTAMP DEBUG   device.log             State update AHU-1 (scan_single_now+bacnet)
-TIMESTAMP
+TIMESTAMP DEBUG   device.log             value of noWriteback: false
+TIMESTAMP DEBUG   device.log             value of noWriteback: false
+TIMESTAMP DEBUG   device.log             value of noWriteback: false
 TIMESTAMP INFO    device.log             Discovery scan bacnet phase stopped as null
 TIMESTAMP NOTICE  system.config.apply    success
-TIMESTAMP DEBUG   device.log             State update defer 1998ms
 TIMESTAMP DEBUG   device.log             State update defer 1997ms
+TIMESTAMP DEBUG   device.log             State update defer 1997ms
+TIMESTAMP DEBUG   device.log             State update defer 1997ms
+TIMESTAMP DEBUG   device.log             State update defer 1997ms
+TIMESTAMP DEBUG   device.log             State update defer 1996ms
 TIMESTAMP DEBUG   system.config.receive  success
-TIMESTAMP DEBUG   device.log             State update defer 1948ms
+TIMESTAMP DEBUG   device.log             State update defer 1944ms
 TIMESTAMP DEBUG   system.config.parse    success
-TIMESTAMP DEBUG   device.log             State update defer 1947ms
+TIMESTAMP INFO    device.log             Device AHU-1 config handler
 TIMESTAMP DEBUG   device.log             Config update AHU-1 (pointset_request_extraneous)
 TIMESTAMP
-TIMESTAMP DEBUG   device.log             State update defer 1946ms
+TIMESTAMP DEBUG   device.log             value of noWriteback: false
+TIMESTAMP DEBUG   device.log             value of noWriteback: false
+TIMESTAMP DEBUG   device.log             value of noWriteback: false
 TIMESTAMP NOTICE  system.config.apply    success
-TIMESTAMP DEBUG   device.log             State update defer 1946ms
+TIMESTAMP DEBUG   device.log             State update defer 1942ms
+TIMESTAMP DEBUG   device.log             State update defer 1942ms
+TIMESTAMP DEBUG   device.log             State update defer 1942ms
+TIMESTAMP DEBUG   device.log             State update defer 1942ms
+TIMESTAMP DEBUG   device.log             State update defer 1942ms
 TIMESTAMP DEBUG   device.log             State update defer 0ms
 TIMESTAMP
 TIMESTAMP DEBUG   device.log             State update AHU-1 (pointset_request_extraneous)
 TIMESTAMP DEBUG   system.config.receive  success
-TIMESTAMP DEBUG   device.log             State update defer -2033ms
+TIMESTAMP DEBUG   device.log             State update defer -4028ms
 TIMESTAMP
 TIMESTAMP DEBUG   system.config.parse    success
 TIMESTAMP INFO    device.log             Device AHU-1 config handler
@@ -31,108 +43,110 @@ TIMESTAMP DEBUG   device.log             State update AHU-1 (pointset_request_ex
 TIMESTAMP DEBUG   device.log             Config update AHU-1 (pointset_request_extraneous)
 TIMESTAMP DEBUG   device.log             State update defer 2000ms
 TIMESTAMP
+TIMESTAMP DEBUG   device.log             value of noWriteback: false
+TIMESTAMP DEBUG   device.log             value of noWriteback: false
+TIMESTAMP DEBUG   device.log             value of noWriteback: false
 TIMESTAMP NOTICE  system.config.apply    success
 TIMESTAMP DEBUG   device.log             State update defer 1999ms
-TIMESTAMP DEBUG   device.log             State update defer 1999ms
-TIMESTAMP DEBUG   device.log             State update defer 1999ms
-TIMESTAMP DEBUG   device.log             State update defer 1999ms
-TIMESTAMP DEBUG   device.log             State update defer 1999ms
-TIMESTAMP DEBUG   device.log             State update defer 1998ms
-TIMESTAMP DEBUG   device.log             State update defer 1998ms
 TIMESTAMP DEBUG   device.log             State update defer 0ms
 TIMESTAMP
 TIMESTAMP DEBUG   device.log             State update AHU-1 (pointset_request_extraneous)
 TIMESTAMP DEBUG   system.config.receive  success
-TIMESTAMP DEBUG   device.log             State update defer -1013ms
-TIMESTAMP DEBUG   system.config.parse    success
-TIMESTAMP
-TIMESTAMP INFO    device.log             Device AHU-1 config handler
-TIMESTAMP DEBUG   device.log             State update AHU-1 (pointset_request_extraneous)
-TIMESTAMP DEBUG   device.log             Config update AHU-1 (pointset_request_extraneous)
-TIMESTAMP DEBUG   device.log             State update defer 1999ms
-TIMESTAMP
-TIMESTAMP NOTICE  system.config.apply    success
-TIMESTAMP DEBUG   device.log             State update defer 1999ms
-TIMESTAMP DEBUG   device.log             State update defer 1999ms
-TIMESTAMP DEBUG   device.log             State update defer 1999ms
-TIMESTAMP DEBUG   device.log             State update defer 1999ms
-TIMESTAMP DEBUG   device.log             State update defer 1999ms
-TIMESTAMP DEBUG   device.log             State update defer 1998ms
-TIMESTAMP DEBUG   device.log             State update defer 1998ms
-TIMESTAMP DEBUG   device.log             State update defer 461ms
-TIMESTAMP DEBUG   device.log             State update defer 0ms
-TIMESTAMP
-TIMESTAMP DEBUG   device.log             State update AHU-1 (pointset_request_extraneous)
-TIMESTAMP DEBUG   system.config.receive  success
-TIMESTAMP DEBUG   device.log             State update defer -1021ms
+TIMESTAMP DEBUG   device.log             State update defer -1019ms
 TIMESTAMP
 TIMESTAMP DEBUG   system.config.parse    success
 TIMESTAMP INFO    device.log             Device AHU-1 config handler
-TIMESTAMP DEBUG   device.log             State update AHU-1 (pointset_request_extraneous)
 TIMESTAMP DEBUG   device.log             Config update AHU-1 (pointset_request_extraneous)
 TIMESTAMP DEBUG   device.log             State update defer 2000ms
 TIMESTAMP
+TIMESTAMP DEBUG   device.log             value of noWriteback: false
+TIMESTAMP DEBUG   device.log             value of noWriteback: false
+TIMESTAMP DEBUG   device.log             value of noWriteback: false
 TIMESTAMP NOTICE  system.config.apply    success
 TIMESTAMP DEBUG   device.log             State update defer 1999ms
-TIMESTAMP DEBUG   device.log             State update defer 1999ms
-TIMESTAMP DEBUG   device.log             State update defer 1999ms
-TIMESTAMP DEBUG   device.log             State update defer 1999ms
-TIMESTAMP DEBUG   device.log             State update defer 1999ms
-TIMESTAMP DEBUG   device.log             State update defer 1998ms
-TIMESTAMP DEBUG   device.log             State update defer 1998ms
-TIMESTAMP DEBUG   system.config.receive  success
-TIMESTAMP DEBUG   device.log             State update defer 818ms
-TIMESTAMP DEBUG   system.config.parse    success
-TIMESTAMP INFO    device.log             Device AHU-1 config handler
-TIMESTAMP DEBUG   device.log             State update defer 817ms
-TIMESTAMP DEBUG   device.log             Config update AHU-1 (pointset_request_extraneous)
-TIMESTAMP
-TIMESTAMP NOTICE  system.config.apply    success
-TIMESTAMP DEBUG   device.log             State update defer 816ms
-TIMESTAMP DEBUG   device.log             State update defer 816ms
-TIMESTAMP DEBUG   device.log             State update defer 816ms
-TIMESTAMP DEBUG   device.log             State update defer 816ms
-TIMESTAMP DEBUG   device.log             State update defer 816ms
-TIMESTAMP DEBUG   device.log             State update defer 816ms
-TIMESTAMP DEBUG   device.log             State update defer 816ms
 TIMESTAMP DEBUG   device.log             State update defer 0ms
 TIMESTAMP
 TIMESTAMP DEBUG   device.log             State update AHU-1 (pointset_request_extraneous)
 TIMESTAMP DEBUG   system.config.receive  success
-TIMESTAMP DEBUG   device.log             State update defer 1717ms
+TIMESTAMP DEBUG   device.log             State update defer -1068ms
+TIMESTAMP
+TIMESTAMP DEBUG   device.log             State update AHU-1 (pointset_request_extraneous)
 TIMESTAMP DEBUG   system.config.parse    success
 TIMESTAMP INFO    device.log             Device AHU-1 config handler
-TIMESTAMP DEBUG   device.log             State update defer 1717ms
 TIMESTAMP DEBUG   device.log             Config update AHU-1 (pointset_request_extraneous)
+TIMESTAMP DEBUG   device.log             State update defer 2000ms
 TIMESTAMP
+TIMESTAMP WARNING device.log             Terminating AHU-1 PubberPointsetManager sender
+TIMESTAMP WARNING device.log             Starting AHU-1 PubberPointsetManager sender with delay 10s
+TIMESTAMP DEBUG   device.log             value of noWriteback: false
+TIMESTAMP DEBUG   device.log             value of noWriteback: false
+TIMESTAMP DEBUG   device.log             value of noWriteback: false
 TIMESTAMP NOTICE  system.config.apply    success
-TIMESTAMP DEBUG   device.log             State update defer 1716ms
-TIMESTAMP DEBUG   device.log             State update defer 1716ms
+TIMESTAMP DEBUG   device.log             State update defer 1999ms
+TIMESTAMP DEBUG   device.log             State update defer 1998ms
+TIMESTAMP DEBUG   device.log             State update defer 1998ms
+TIMESTAMP DEBUG   device.log             State update defer 1998ms
+TIMESTAMP DEBUG   device.log             State update defer 1998ms
+TIMESTAMP DEBUG   device.log             State update defer 1998ms
+TIMESTAMP DEBUG   device.log             State update defer 1998ms
 TIMESTAMP DEBUG   system.config.receive  success
-TIMESTAMP DEBUG   device.log             State update defer 611ms
+TIMESTAMP DEBUG   device.log             State update defer 800ms
 TIMESTAMP DEBUG   system.config.parse    success
-TIMESTAMP INFO    device.log             Device AHU-1 config handler
-TIMESTAMP DEBUG   device.log             State update defer 611ms
+TIMESTAMP DEBUG   device.log             State update defer 799ms
 TIMESTAMP DEBUG   device.log             Config update AHU-1 (pointset_request_extraneous)
 TIMESTAMP
+TIMESTAMP DEBUG   device.log             value of noWriteback: false
+TIMESTAMP DEBUG   device.log             value of noWriteback: false
+TIMESTAMP DEBUG   device.log             value of noWriteback: false
 TIMESTAMP NOTICE  system.config.apply    success
-TIMESTAMP DEBUG   device.log             State update defer 610ms
+TIMESTAMP DEBUG   device.log             State update defer 798ms
 TIMESTAMP DEBUG   device.log             State update defer 0ms
 TIMESTAMP
 TIMESTAMP DEBUG   device.log             State update AHU-1 (pointset_request_extraneous)
 TIMESTAMP DEBUG   system.config.receive  success
-TIMESTAMP DEBUG   device.log             State update defer -3028ms
+TIMESTAMP DEBUG   device.log             State update defer 1598ms
+TIMESTAMP DEBUG   system.config.parse    success
+TIMESTAMP INFO    device.log             Device AHU-1 config handler
+TIMESTAMP DEBUG   device.log             State update defer 1598ms
+TIMESTAMP DEBUG   device.log             Config update AHU-1 (pointset_request_extraneous)
+TIMESTAMP
+TIMESTAMP DEBUG   device.log             value of noWriteback: false
+TIMESTAMP DEBUG   device.log             value of noWriteback: false
+TIMESTAMP DEBUG   device.log             value of noWriteback: false
+TIMESTAMP NOTICE  system.config.apply    success
+TIMESTAMP DEBUG   device.log             State update defer 1597ms
+TIMESTAMP DEBUG   device.log             State update defer 1597ms
+TIMESTAMP DEBUG   system.config.receive  success
+TIMESTAMP DEBUG   device.log             State update defer 493ms
+TIMESTAMP DEBUG   system.config.parse    success
+TIMESTAMP INFO    device.log             Device AHU-1 config handler
+TIMESTAMP DEBUG   device.log             Config update AHU-1 (pointset_request_extraneous)
+TIMESTAMP
+TIMESTAMP DEBUG   device.log             value of noWriteback: false
+TIMESTAMP DEBUG   device.log             value of noWriteback: false
+TIMESTAMP DEBUG   device.log             value of noWriteback: false
+TIMESTAMP NOTICE  system.config.apply    success
+TIMESTAMP DEBUG   device.log             State update defer 491ms
+TIMESTAMP DEBUG   device.log             State update defer 491ms
+TIMESTAMP DEBUG   device.log             State update defer 491ms
+TIMESTAMP DEBUG   device.log             State update defer 491ms
+TIMESTAMP DEBUG   device.log             State update defer 491ms
+TIMESTAMP DEBUG   device.log             State update defer 0ms
+TIMESTAMP
+TIMESTAMP DEBUG   device.log             State update AHU-1 (pointset_request_extraneous)
+TIMESTAMP DEBUG   system.config.receive  success
+TIMESTAMP DEBUG   device.log             State update defer -2990ms
 TIMESTAMP
 TIMESTAMP DEBUG   system.config.parse    success
 TIMESTAMP INFO    device.log             Device AHU-1 config handler
-TIMESTAMP DEBUG   device.log             State update AHU-1 (pointset_request_extraneous)
 TIMESTAMP DEBUG   device.log             Config update AHU-1 (pointset_request_extraneous)
 TIMESTAMP DEBUG   device.log             State update defer 2000ms
 TIMESTAMP
 TIMESTAMP DEBUG   device.log             Restoring unknown point extraneous_point
+TIMESTAMP DEBUG   device.log             value of noWriteback: false
+TIMESTAMP DEBUG   device.log             value of noWriteback: false
+TIMESTAMP DEBUG   device.log             value of noWriteback: false
 TIMESTAMP NOTICE  system.config.apply    success
-TIMESTAMP DEBUG   device.log             State update defer 1999ms
-TIMESTAMP DEBUG   device.log             State update defer 1999ms
 TIMESTAMP DEBUG   device.log             State update defer 1999ms
 TIMESTAMP DEBUG   device.log             State update defer 1998ms
 TIMESTAMP DEBUG   device.log             State update defer 1998ms

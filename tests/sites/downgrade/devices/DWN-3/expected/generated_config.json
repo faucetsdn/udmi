@@ -14,7 +14,8 @@
       "filter_differential_pressure_sensor": {
         "ref": "AV12.present_value"
       }
-    }
+    },
+    "sample_rate_sec": 300
   },
   "system": {
     "metrics_rate_sec": 10,

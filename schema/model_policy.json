@@ -1,0 +1,18 @@
+{
+  "$udmi_version": "1.5.2",
+  "title": "Policy Model",
+  "type": "object",
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "additionalProperties": false,
+  "properties": {
+    "rule_sets": {
+      "description": "An array of rule sets which are applicable to the device",
+      "type": "array",
+      "items": {
+        "type": "string",
+        "pattern": "^[a-z_0-9]*$"
+      },
+      "examples": [["ip", "mqtt"]]
+    }
+  }
+}

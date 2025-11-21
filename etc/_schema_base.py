@@ -1,9 +1,8 @@
 """gencode/python/udmi/schema/_base.py"""
 from dataclasses import dataclass
-from dataclasses_json import dataclass_json
+from dataclasses_json import DataClassJsonMixin
 
-@dataclass_json
 @dataclass
-class DataModel:
+class DataModel(DataClassJsonMixin):
   """Base class for all generated UDMI models."""
   pass

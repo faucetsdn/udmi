@@ -7,6 +7,14 @@
       "units" : "Bars",
       "value_state" : "applied"
     },
+    "extraneous_point" : {
+      "status" : {
+        "message" : "Unknown configured point extraneous_point",
+        "category" : "pointset.point.invalid",
+        "timestamp" : "TIMESTAMP",
+        "level" : 500
+      }
+    },
     "filter_differential_pressure_sensor" : {
       "units" : "Degrees-Celsius"
     }
