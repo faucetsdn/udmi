@@ -37,20 +37,20 @@ In your terminal, execute `sudo docker exec validator bin/registrar site_model/ 
 
 ### Pubber
 
-The pubber tool will only have a successful output after the registrar tool has been executed. This is done by default in compose settup. 
+The pubber tool will only have a successful output after the registrar tool has been executed. This is done by default in compose setup. 
 
 #### Local (docker compose) 
 - In your terminal, run `sudo docker exec pubber bin/pubber site_model/ //mqtt/mosquitto AHU-1 123456` (`123456` can be replaced with any serial number). 
 
-#### Running pubber on seperate machine
-- On your external computer, clone th udmi site model: `https://github.com/faucetsdn/udmi.git`.
+#### Running pubber on separate machine
+- On your external computer, clone the udmi site model: `sudo git clone https://github.com/faucetsdn/udmi.git`.
 - Export your host ip (the same one we set in the docker compose): `EXPORT HOST_IP=<YOUR_HOST_IP>`
 - Pull your udmi site model, the default is the same we used earlier: `sudo git clone https://github.com/faucetsdn/udmi_site_model.git`
 - Generate keys: `udmi/bin/keygen CA/<YOUR_HOST_IP> udmi_site_model/reflector` and `udmi/bin/keygen CERT/<YOUR_HOST_IP> udmi_site_model/reflector`.
 - Run pubber container: `sudo docker run -d --rm --name externalPubber -v $(realpath udmi_site_model):/root/site_model ghcr.io/faucetsdn/udmi:pubber-latest /bin/bash -c "tail -f /dev/null"`
 - Run pubber: `sudo docker exec externalPubber bin/pubber site_model/ //mqtt/<YOUR_HOST_IP> AHU-1 123456`
 
-    *Note:* You can name the external pubber container anything, as long is it doesnt match of of your other containers. I this case, its assumed you will still have the pubber container in the docker compose file, therfore the new container cannot also be called pubber.  
+    *Note:* You can name the external pubber container anything, as long as it doesn't match of your other containers. I this case, its assumed you will still have the pubber container in the docker compose file, therefore the new container cannot also be called pubber.  
 
 Pubber is running successfully if there are no obvious error messages or retries. An **unsuccessful** run will retry multiple times, will see messages like `Attempt #10 failed`. 
 
@@ -59,3 +59,4 @@ A successful run will not end on its own, you can press `Ctrl` + `C` on your key
 ## Shutting down the docker environment
 
 To gracefully stop and remove the container, run: `sudo docker compose down`
+
