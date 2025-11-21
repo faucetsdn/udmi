@@ -4,7 +4,7 @@
 Check handling of sample_rate_sec and sample_limit_sec
 
 1. Update config before receive at least 4 pointset events
-    * Add `pointset.sample_rate_sec` = `8`
+    * Set `pointset.sample_rate_sec` = `8`
     * Add `pointset.sample_limit_sec` = `5`
 1. Wait for receive at least 4 pointset events
 1. Check that time period between successive pointset events is between 5 and 8 seconds

@@ -5,7 +5,8 @@
       "room_humidity_sensor_from_template": {},
       "room_temperature_sensor_from_device": {},
       "room_temperature_sensor_from_template": {}
-    }
+    },
+    "sample_rate_sec": 300
   },
   "system": {
     "metrics_rate_sec": 10,

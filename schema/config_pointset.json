@@ -33,10 +33,11 @@
       "maximum": 86400
     },
     "sample_rate_sec": {
-      "description": "Maximum time between samples for the device to send out a complete update. It can send out updates more frequently than this. Default to 600.",
+      "description": "Maximum time between samples for the device to send out a complete update. It can send out updates more frequently than this. Default to 300.",
       "type": "integer",
       "minimum": 1,
-      "maximum": 86400
+      "maximum": 86400,
+      "default": 300
     },
     "points": {
       "description": "The points defined in this dictionary is the authoritative source indicating the representative points for the device (in both `telemetry` and `state` messages). [Pointset doumentation](../docs/messages/pointset.md)",
