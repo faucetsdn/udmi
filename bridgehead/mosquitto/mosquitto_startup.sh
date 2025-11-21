@@ -7,7 +7,8 @@ function fail {
 }
 
 echo "persistence true
-persistence_location /var/lib/mosquitto/
+persistence_file mosquitto.db
+persistence_location /mosquitto/data/ 
 
 include_dir /etc/mosquitto/conf.d" > /etc/mosquitto/mosquitto.conf
 
@@ -19,6 +20,10 @@ registry_id=$(jq -r .registry_id $site_config)
 
 source $UDMI_ROOT/etc/mosquitto_ctrl.sh
 mkdir -p $CERT_DIR
+
+if [[ -n "$HOST_IP" ]]; then
+    sed -i -e "s|IP:127.0.0.1,|IP:127.0.0.1, IP:${HOST_IP},|" bin/keygen
+fi
 
 bin/setup_ca $site_model mosquitto  
 bin/start_mosquitto

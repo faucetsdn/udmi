@@ -5,13 +5,16 @@ services:
     container_name: mosquitto
     volumes:
       - ./udmi_site_model:/site_model
-      - ./var/mosquitto/certs:/etc/mosquitto/certs
-      - ./var/mosquitto/data:/etc/mosquitto/data
-      - ./var/mosquitto/log:/var/log/mosquitto
+      - ./var/mosquitto:/etc/mosquitto
+      - ./var/mosquitto/data:/mosquitto/data
+      - ./var/mosquitto/log:/var/log/mosquitto/
     ports:
       - "8883:8883"
+    restart: always
     networks:
       - udminet
+    environment:
+      HOST_IP: <YOUR_IP>
 
   etcd:
     image: quay.io/coreos/etcd:v3.5.13
@@ -22,6 +25,7 @@ services:
       - "2379:2379"
     networks:
       - udminet
+    restart: always
     command: ["etcd", "-listen-client-urls=http://0.0.0.0:2379", "-advertise-client-urls=http://etcd:2379", "--data-dir", "/var/etcd"]
 
   udmis:
@@ -39,6 +43,7 @@ services:
         condition: service_started
       mosquitto:
         condition: service_started
+    restart: always
     networks:
       - udminet
     environment:
@@ -47,18 +52,20 @@ services:
       MQTT_PORT: 8883
 
   validator:
-    image: ghcr.io/faucetsdn/udmi:validator-latest
+    build: 
+      context: ./validator
     container_name: validator
     volumes:
       - ./udmi_site_model:/root/site_model
       - ./var/mosquitto/log:/var/log/mosquitto
       - ./var/mosquitto/certs:/etc/mosquitto/certs
+      - ./var/tmp:/usr/local/bin/udmis
     depends_on:
       udmis:
         condition: service_started
+    restart: always
     networks:
       - udminet
-    command: ["tail", "-f", "/dev/null"]
 
   pubber:
     image: ghcr.io/faucetsdn/udmi:pubber-latest
@@ -69,6 +76,7 @@ services:
       udmis:
         condition: service_started
     command: ["tail", "-f", "/dev/null"]
+    restart: always
     networks:
       - udminet
 

@@ -1,4 +1,6 @@
 #!/bin/bash -e
+UDMIS_LOG=/tmp/udmis.log
+rm -rf $UDMIS_LOG
 
 echo Waiting 15s for mqtt to setup
 sleep 15
@@ -10,7 +12,6 @@ site_config=$(realpath $site_model/cloud_iot_config.json)
 project_spec=//mqtt/mosquitto
 
 cd $UDMI_ROOT
-UDMIS_LOG=/tmp/udmis.log
 mkdir -p out
 
 echo Starting local services at $(sudo date -u -Is) | tee $UDMIS_LOG

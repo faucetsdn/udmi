@@ -1,7 +1,7 @@
 FROM ghcr.io/faucetsdn/udmi:udmis-latest AS udmi 
 FROM eclipse-mosquitto:latest
 
-RUN apk add --no-cache bash jq sudo git mosquitto mosquitto-clients openssl
+RUN apk add --no-cache bash jq sudo git mosquitto mosquitto-clients openssl sed
 
 COPY --from=udmi /root/udmi/bin /root/udmi/bin  
 COPY --from=udmi /root/udmi/etc /root/udmi/etc  
