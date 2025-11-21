@@ -56,6 +56,30 @@ Pubber is running successfully if there are no obvious error messages or retries
 
 A successful run will not end on its own, you can press `Ctrl` + `C` on your keyboard to exit. 
 
+### Discovery
+
+Run the following commands to complete a discovery sequence:
+```
+sudo docker exec validator /bin/bash -c "bin/registrar site_model/ //mqtt/mosquitto -x -d && bin/registrar site_model/ //mqtt/mosquitto GAT-123"
+
+sudo docker exec -d pubber /bin/bash -c "bin/pubber site_model/ //mqtt/mosquitto GAT-123 852649" 
+
+sudo docker exec validator /root/discovery.sh
+
+sudo docker exec validator bin/registrar site_model/ //mqtt/mosquitto
+```
+
+A successful run using the default udmi_site_model should produce the following on the final registry output:
+```
+Summary:
+  Device envelope: 1
+  Device extra: 6
+  Device proxy: 2
+  Device status: 4
+  Device validation: 1
+Out of 4 total.
+```
+
 ## Shutting down the docker environment
 
 To gracefully stop and remove the container, run: `sudo docker compose down`
