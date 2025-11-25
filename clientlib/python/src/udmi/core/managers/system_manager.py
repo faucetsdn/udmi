@@ -6,21 +6,28 @@ config and state, and for reporting system-level events like startup.
 """
 
 import logging
+import threading
 from datetime import datetime
 from datetime import timezone
 from typing import Dict
 from typing import Optional
 
+import psutil
+
 from udmi.constants import UDMI_VERSION
 from udmi.core.managers.base_manager import BaseManager
 from udmi.schema import Config
 from udmi.schema import Entry
+from udmi.schema import Metrics
 from udmi.schema import State
 from udmi.schema import StateSystemOperation
 from udmi.schema import SystemEvents
 from udmi.schema import SystemState
 
 LOGGER = logging.getLogger(__name__)
+
+BYTES_PER_MEGABYTE = 1024 * 1024
+DEFAULT_METRICS_RATE_SEC = 60
 
 
 class SystemManager(BaseManager):
@@ -41,6 +48,12 @@ class SystemManager(BaseManager):
         self._hardware = hardware_info or {"make": "pyudmi",
                                            "model": "device-v1"}
         self._software = software_info or {"firmware": "1.0.0"}
+
+        # --- Metrics Loop Setup ---
+        self._metrics_rate_sec = DEFAULT_METRICS_RATE_SEC
+        self._stop_event = threading.Event()
+        self._metrics_thread: Optional[threading.Thread] = None
+
         LOGGER.info("SystemManager initialized.")
 
     def start(self) -> None:
@@ -48,23 +61,25 @@ class SystemManager(BaseManager):
         Called when the device starts. We'll publish a startup event.
         """
         LOGGER.info("SystemManager starting, publishing system startup event.")
-        try:
-            log_entry = Entry(
-                message="Device has started",
-                level=200,  # INFO
-                timestamp=datetime.now(timezone.utc).isoformat()
-            )
+        self._publish_startup_event()
+        self._stop_event.clear()
+        self._metrics_thread = threading.Thread(target=self._metrics_loop,
+                                                name="SystemMetricsThread",
+                                                daemon=True)
+        self._metrics_thread.start()
+        LOGGER.info("System metrics loop started (rate: %ss).",
+                    self._metrics_rate_sec)
 
-            startup_event_message = SystemEvents(
-                timestamp=datetime.now(timezone.utc).isoformat(),
-                version=UDMI_VERSION,
-                logentries=[log_entry]
-            )
-
-            self.publish_event(startup_event_message, "system")
-
-        except (TypeError, AttributeError) as e:
-            LOGGER.error("Failed to publish startup event: %s", e)
+    def stop(self) -> None:
+        """
+        Called when the device stops.
+        Stops the background metrics thread.
+        """
+        LOGGER.info("Stopping SystemManager...")
+        self._stop_event.set()
+        if self._metrics_thread and self._metrics_thread.is_alive():
+            self._metrics_thread.join(timeout=2.0)
+        LOGGER.info("SystemManager stopped.")
 
     def handle_config(self, config: Config) -> None:
         """
@@ -85,6 +100,13 @@ class SystemManager(BaseManager):
         if config.system.min_loglevel is not None:
             LOGGER.info("Setting system min_loglevel to: %s",
                         config.system.min_loglevel)
+
+        if config.system.metrics_rate_sec is not None:
+            new_rate = config.system.metrics_rate_sec
+            if new_rate != self._metrics_rate_sec:
+                LOGGER.info("Updating metrics rate from %s to %s",
+                            self._metrics_rate_sec, new_rate)
+                self._metrics_rate_sec = new_rate
 
     def handle_command(self, command_name: str, payload: dict) -> None:
         """
@@ -108,3 +130,64 @@ class SystemManager(BaseManager):
             software=self._software
         )
         LOGGER.debug("Populated state.system block.")
+
+    def _publish_startup_event(self):
+        """Helper to publish the startup event."""
+        try:
+            log_entry = Entry(
+                message="Device has started",
+                level=200,
+                timestamp=datetime.now(timezone.utc).isoformat()
+            )
+            startup_event = SystemEvents(
+                timestamp=datetime.now(timezone.utc).isoformat(),
+                version=UDMI_VERSION,
+                logentries=[log_entry]
+            )
+            self.publish_event(startup_event, "system")
+        except (TypeError, AttributeError) as e:
+            LOGGER.error("Failed to publish startup event: %s", e)
+
+    def _metrics_loop(self) -> None:
+        """
+        Background loop that publishes metrics periodically.
+        """
+        while not self._stop_event.is_set():
+            self.publish_metrics()
+            self._stop_event.wait(timeout=self._metrics_rate_sec)
+
+    def publish_metrics(self) -> None:
+        """
+        Gathers system metrics and publishes a SystemEvent by populating the
+        'metrics' field.
+        """
+        LOGGER.debug("Collecting and publishing system metrics...")
+        try:
+            vm = psutil.virtual_memory()
+
+            mem_total_mb = vm.total / BYTES_PER_MEGABYTE
+            mem_free_mb = vm.available / BYTES_PER_MEGABYTE
+
+            metrics = Metrics(
+                mem_total_mb=round(mem_total_mb, 2),
+                mem_free_mb=round(mem_free_mb, 2),
+                store_total_mb=None
+            )
+
+            system_event = SystemEvents(
+                timestamp=datetime.now(timezone.utc).isoformat(),
+                version=UDMI_VERSION,
+                metrics=metrics
+            )
+
+            self.publish_event(system_event, "system")
+            LOGGER.info(
+                "Published metrics: Total=%.0fMB, Free=%.0fMB",
+                mem_total_mb,
+                mem_free_mb
+            )
+
+        except ImportError:
+            LOGGER.error("psutil not installed. Cannot collect metrics.")
+        except Exception as e:  # pylint:disable=broad-exception-caught
+            LOGGER.error("Failed to publish metrics: %s", e)

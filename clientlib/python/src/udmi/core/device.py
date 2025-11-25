@@ -15,6 +15,8 @@ from typing import Any
 from typing import Dict
 from typing import List
 from typing import Optional
+from typing import Type
+from typing import TypeVar
 
 from udmi.constants import UDMI_VERSION
 from udmi.core.managers import BaseManager
@@ -25,12 +27,14 @@ from udmi.schema import SystemState
 
 LOGGER = logging.getLogger(__name__)
 
+T = TypeVar("T", bound=BaseManager)
+
 
 @dataclass
 class _LoopConfig:
     """Configuration for the device's main loop timing."""
     auth_check_interval_sec: int = 15 * 60  # 15 minutes
-    publish_state_interval_sec: int = 600   # 10 minutes
+    publish_state_interval_sec: int = 600  # 10 minutes
 
 
 @dataclass
@@ -152,7 +156,7 @@ class Device:
         """
         command_name = channel.split('/')[-1]
         LOGGER.info("Command '%s' received, delegating to managers...",
-                     command_name)
+                    command_name)
         for manager in self.managers:
             try:
                 manager.handle_command(command_name, payload)
@@ -206,12 +210,12 @@ class Device:
 
                 # publish state periodically
                 if (now - self._loop_state.last_state_publish_time >
-                        self._loop_config.publish_state_interval_sec):
+                    self._loop_config.publish_state_interval_sec):
                     self._publish_state()
 
                 # check for auth token refresh
                 if (now - self._loop_state.last_auth_check >
-                        self._loop_config.auth_check_interval_sec):
+                    self._loop_config.auth_check_interval_sec):
                     LOGGER.debug("Checking for auth token refresh...")
                     self.dispatcher.check_authentication()
                     self._loop_state.last_auth_check = now
@@ -238,3 +242,18 @@ class Device:
 
             self.dispatcher.close()
             LOGGER.info("Device stopped.")
+
+    def get_manager(self, manager_type: Type[T]) -> Optional[T]:
+        """
+        Retrieves the first registered manager of the specified type.
+
+        Args:
+            manager_type: The class type of the manager to retrieve.
+
+        Returns:
+            The manager instance if found, otherwise None.
+        """
+        for manager in self.managers:
+            if isinstance(manager, manager_type):
+                return manager
+        return None

@@ -17,10 +17,12 @@ Key behaviors verified:
 
 import logging
 from unittest.mock import MagicMock
+from unittest.mock import patch
 
 import pytest
 from udmi.schema import Config
 from udmi.schema import State
+from udmi.schema import SystemConfig
 from udmi.schema import SystemEvents
 
 from src.udmi.core.managers.system_manager import SystemManager
@@ -101,3 +103,103 @@ def test_handle_command_logs_warning(system_manager, caplog):
 
     assert "Received 'reboot' command" in caplog.text
     assert "not implemented" in caplog.text
+
+
+def test_handle_config_updates_metrics_rate(system_manager):
+    """
+    test_handle_config_updates_metrics_rate
+    Verify that providing a system config with metrics_rate_sec updates
+    the internal rate.
+    """
+    assert system_manager._metrics_rate_sec == 60
+
+    new_rate = 120
+    config_obj = Config(system=SystemConfig(metrics_rate_sec=new_rate))
+
+    system_manager.handle_config(config_obj)
+
+    assert system_manager._metrics_rate_sec == new_rate
+
+
+@patch("src.udmi.core.managers.system_manager.psutil")
+def test_publish_metrics_success(mock_psutil, system_manager, mock_dispatcher):
+    """
+    test_publish_metrics_success
+    Mocks psutil to return known memory values, then verifies that
+    publish_event is called with the correctly calculated MB values.
+    """
+    bytes_in_mb = 1024 * 1024
+    mock_vm = MagicMock()
+    mock_vm.total = 100 * bytes_in_mb
+    mock_vm.available = 40 * bytes_in_mb
+    mock_psutil.virtual_memory.return_value = mock_vm
+
+    system_manager.set_device_context(device=None, dispatcher=mock_dispatcher)
+    system_manager.publish_metrics()
+
+    mock_psutil.virtual_memory.assert_called_once()
+    assert mock_dispatcher.publish_event.called
+
+    call_args = mock_dispatcher.publish_event.call_args
+    topic = call_args.args[0]
+    event = call_args.args[1]
+
+    assert topic == "events/system"
+    assert isinstance(event, SystemEvents)
+    assert event.metrics is not None
+
+    assert event.metrics.mem_total_mb == 100.0
+    assert event.metrics.mem_free_mb == 40.0
+
+
+@patch("src.udmi.core.managers.system_manager.psutil")
+def test_publish_metrics_handles_import_error(mock_psutil, system_manager,
+    caplog):
+    """
+    test_publish_metrics_handles_import_error
+    Verify that if psutil raises ImportError (simulating not installed),
+    it logs an error and does not crash.
+    """
+    mock_psutil.virtual_memory.side_effect = ImportError(
+        "No module named psutil")
+
+    with caplog.at_level(logging.ERROR):
+        system_manager.publish_metrics()
+
+    assert "psutil not installed" in caplog.text
+
+
+@patch("src.udmi.core.managers.system_manager.psutil")
+def test_publish_metrics_handles_generic_exception(mock_psutil, system_manager,
+    caplog):
+    """
+    test_publish_metrics_handles_generic_exception
+    Verify that generic exceptions during metric collection are caught and
+    logged.
+    """
+    mock_psutil.virtual_memory.side_effect = ValueError(
+        "Something weird happened")
+
+    with caplog.at_level(logging.ERROR):
+        system_manager.publish_metrics()
+
+    assert "Failed to publish metrics" in caplog.text
+    assert "Something weird happened" in caplog.text
+
+
+def test_stop_cleans_up_thread(system_manager, mock_dispatcher):
+    """
+    test_stop_cleans_up_thread
+    Start the manager (which spawns a thread) and ensure stop() joins it
+    correctly.
+    """
+    system_manager.set_device_context(device=None, dispatcher=mock_dispatcher)
+
+    system_manager.start()
+    assert system_manager._metrics_thread.is_alive()
+    assert not system_manager._stop_event.is_set()
+
+    system_manager.stop()
+
+    assert system_manager._stop_event.is_set()
+    assert not system_manager._metrics_thread.is_alive()
