@@ -13,6 +13,7 @@ Key behaviors verified:
   field with default hardware, software, and operation sub-objects.
 - Command Handling: `handle_command()` logs a warning for
   unimplemented commands (like 'reboot'), as expected.
+- Persistence: Verifies restart counts are loaded, incremented, and saved.
 """
 
 import logging
@@ -203,3 +204,56 @@ def test_stop_cleans_up_thread(system_manager, mock_dispatcher):
 
     assert system_manager._stop_event.is_set()
     assert not system_manager._metrics_thread.is_alive()
+
+
+def test_start_increments_restart_count(system_manager, mock_dispatcher):
+    """
+    test_start_increments_restart_count
+    Verify that start() loads the previous count from persistence,
+    increments it, and saves it.
+    """
+    system_manager.persistence = MagicMock()
+    system_manager.persistence.get.return_value = 5
+
+    system_manager.set_device_context(device=None, dispatcher=mock_dispatcher)
+    system_manager.start()
+
+    system_manager.persistence.get.assert_called_with("restart_count", 0)
+    system_manager.persistence.set.assert_called_with("restart_count", 6)
+    assert system_manager._restart_count == 6
+
+
+def test_start_handles_persistence_error(system_manager, mock_dispatcher,
+    caplog):
+    """
+    test_start_handles_persistence_error
+    Verify that if persistence fails (raises Exception), start() catches it,
+    logs an error, and continues startup.
+    """
+    system_manager.persistence = MagicMock()
+    system_manager.persistence.get.side_effect = RuntimeError("Disk full")
+
+    system_manager.set_device_context(device=None, dispatcher=mock_dispatcher)
+
+    with caplog.at_level(logging.ERROR):
+        system_manager.start()
+
+    assert "Failed to handle persistence" in caplog.text
+    assert "Disk full" in caplog.text
+
+    mock_dispatcher.publish_event.assert_called_once()
+
+
+def test_update_state_includes_restart_count(system_manager):
+    """
+    test_update_state_includes_restart_count
+    Verify that update_state includes the internal restart_count in the
+    StateSystemOperation block.
+    """
+    system_manager._restart_count = 101
+
+    state = State()
+    system_manager.update_state(state)
+
+    assert state.system is not None
+    assert state.system.operation.restart_count == 101

@@ -16,6 +16,7 @@ import psutil
 
 from udmi.constants import UDMI_VERSION
 from udmi.core.managers.base_manager import BaseManager
+from udmi.core.persistence import DevicePersistence
 from udmi.schema import Config
 from udmi.schema import Entry
 from udmi.schema import Metrics
@@ -35,7 +36,10 @@ class SystemManager(BaseManager):
     Manages the 'system' block of the config and state.
     """
 
-    def __init__(self, hardware_info: Dict = None, software_info: Dict = None):
+    # pylint: disable=too-many-instance-attributes
+
+    def __init__(self, hardware_info: Dict = None, software_info: Dict = None,
+        persistence_path: Optional[str] = ".udmi_persistence.json"):
         """
         Initializes the SystemManager.
 
@@ -49,6 +53,10 @@ class SystemManager(BaseManager):
                                            "model": "device-v1"}
         self._software = software_info or {"firmware": "1.0.0"}
 
+        # --- Persistence Setup ---
+        self.persistence = DevicePersistence(filepath=persistence_path)
+        self._restart_count = 0
+
         # --- Metrics Loop Setup ---
         self._metrics_rate_sec = DEFAULT_METRICS_RATE_SEC
         self._stop_event = threading.Event()
@@ -58,8 +66,18 @@ class SystemManager(BaseManager):
 
     def start(self) -> None:
         """
-        Called when the device starts. We'll publish a startup event.
+        Called when the device starts.
+        Increments restart count and publishes startup event.
         """
+        try:
+            saved_count = self.persistence.get("restart_count", 0)
+            self._restart_count = saved_count + 1
+            self.persistence.set("restart_count", self._restart_count)
+            LOGGER.info("Device restart count incremented to: %s",
+                        self._restart_count)
+        except Exception as e:  # pylint: disable=broad-exception-caught
+            LOGGER.error("Failed to handle persistence: %s", e)
+
         LOGGER.info("SystemManager starting, publishing system startup event.")
         self._publish_startup_event()
         self._stop_event.clear()
@@ -125,7 +143,10 @@ class SystemManager(BaseManager):
         """
         state.system = SystemState(
             last_config=self._last_config_ts,
-            operation=StateSystemOperation(operational=True),
+            operation=StateSystemOperation(
+                operational=True,
+                restart_count=self._restart_count,
+            ),
             hardware=self._hardware,
             software=self._software
         )
