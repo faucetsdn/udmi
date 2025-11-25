@@ -30,6 +30,23 @@
     },
     "sample_rate_sec": 30
   },
+  "relationships": {
+    "AHU-1": {
+      "feeds": [
+        {}
+      ]
+    },
+    "AHU-22": {},
+    "SNS-4": {
+      "contains": [
+        {
+          "tags": [
+            "daily"
+          ]
+        }
+      ]
+    }
+  },
   "system": {
     "location": {
       "section": "2-3N8C",

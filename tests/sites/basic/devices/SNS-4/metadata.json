@@ -22,6 +22,11 @@
       }
     }
   },
+  "relationships": {
+    "AHU-1": { "feeds": [{}] },
+    "AHU-22": { },
+    "SNS-4": { "contains": [{ "tags": ["daily"] }] }
+  },
   "externals": {
     "dbo": {
       "ext_id": "0060917f-8c21-47c4-b011-52521085fdc3",
