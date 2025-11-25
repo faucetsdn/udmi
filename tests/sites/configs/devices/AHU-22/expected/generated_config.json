@@ -24,7 +24,8 @@
         "ref": "AI1.present_value",
         "units": "Degrees-Celsius"
       }
-    }
+    },
+    "sample_rate_sec": 300
   },
   "system": {
     "metrics_rate_sec": 300,

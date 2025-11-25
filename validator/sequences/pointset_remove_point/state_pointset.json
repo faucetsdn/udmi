@@ -1,8 +1,5 @@
 {
   "points" : {
-    "filter_alarm_pressure_status" : {
-      "units" : "No-units"
-    },
     "filter_differential_pressure_setpoint" : {
       "units" : "Bars",
       "value_state" : "applied"
