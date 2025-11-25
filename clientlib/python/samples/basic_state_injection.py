@@ -1,8 +1,9 @@
 """
 This sample demonstrates how to inject static device information (Make, Model,
-Firmware, etc.) into the UDMI State message using the standard SystemManager.
+Firmware, etc.) into the UDMI State message using the SystemManager.
 
-No custom manager classes are required for this common task.
+Refactored to use the typed SystemState injection instead of the specific
+hardware_info and software_info dicts.
 """
 
 import logging
@@ -11,6 +12,8 @@ import sys
 from udmi.core.factory import create_device_with_basic_auth
 from udmi.core.managers import SystemManager
 from udmi.schema import EndpointConfiguration
+from udmi.schema import SystemState
+from udmi.schema import StateSystemHardware
 
 # --- Configuration ---
 DEVICE_ID = "AHU-1"
@@ -35,17 +38,24 @@ if __name__ == "__main__":
         )
 
         # 2. CONFIGURE SYSTEM MANAGER
-        # We pre-configure the standard SystemManager with our device's details.
-        # These will automatically appear in the 'system.hardware' and
-        # 'system.software' sections of the published State message.
-        my_system_manager = SystemManager(
-            hardware_info={"make": "GenericDevice", "model": "SomeModel"},
-            software_info={"firmware": "v2.4.5-stable", "os": "Linux"}
+        # We create a strongly typed SystemState object.
+        # This allows us to define any static field supported by the UDMI schema.
+        static_state = SystemState(
+            hardware=StateSystemHardware(
+                make="GenericDevice",
+                model="SomeModel"
+            ),
+            software={
+                "firmware": "v2.4.5-stable",
+                "os": "Linux"
+            },
+            serial_no="SN-88392-X",
         )
 
+        # Initialize the manager with our custom state
+        my_system_manager = SystemManager(system_state=static_state)
+
         # 3. Create Device
-        # We pass our configured manager to the 'managers' argument, which
-        # replaces the default empty SystemManager.
         device = create_device_with_basic_auth(
             endpoint_config=endpoint,
             username=BROKER_USERNAME,

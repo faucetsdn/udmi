@@ -9,7 +9,6 @@ import logging
 import threading
 from datetime import datetime
 from datetime import timezone
-from typing import Dict
 from typing import Optional
 
 import psutil
@@ -22,6 +21,7 @@ from udmi.schema import Entry
 from udmi.schema import Metrics
 from udmi.schema import State
 from udmi.schema import StateSystemOperation
+from udmi.schema import StateSystemHardware
 from udmi.schema import SystemEvents
 from udmi.schema import SystemState
 
@@ -38,20 +38,26 @@ class SystemManager(BaseManager):
 
     # pylint: disable=too-many-instance-attributes
 
-    def __init__(self, hardware_info: Dict = None, software_info: Dict = None,
+    def __init__(self,
+        system_state: Optional[SystemState] = None,
         persistence_path: Optional[str] = ".udmi_persistence.json"):
         """
         Initializes the SystemManager.
 
         Args:
-            hardware_info: A dict to populate 'state.system.hardware'
-            software_info: A dict to populate 'state.system.software'
+            system_state: A pre-populated SystemState object containing static
+                          device info (hardware, software, serial_no, etc.).
+            persistence_path: Path to the persistence file.
         """
         super().__init__()
         self._last_config_ts: Optional[str] = None
-        self._hardware = hardware_info or {"make": "pyudmi",
-                                           "model": "device-v1"}
-        self._software = software_info or {"firmware": "1.0.0"}
+        if system_state:
+            self._system_state = system_state
+        else:
+            self._system_state = SystemState(
+                hardware=StateSystemHardware(make="pyudmi", model="device-v1"),
+                software={"firmware": "1.0.0"}
+            )
 
         # --- Persistence Setup ---
         self.persistence = DevicePersistence(filepath=persistence_path)
@@ -141,15 +147,13 @@ class SystemManager(BaseManager):
         """
         Contributes the 'system' block to the state message.
         """
-        state.system = SystemState(
-            last_config=self._last_config_ts,
-            operation=StateSystemOperation(
-                operational=True,
-                restart_count=self._restart_count,
-            ),
-            hardware=self._hardware,
-            software=self._software
-        )
+        self._system_state.last_config = self._last_config_ts
+        if self._system_state.operation is None:
+            self._system_state.operation = StateSystemOperation()
+        self._system_state.operation.operational = True
+        self._system_state.operation.restart_count = self._restart_count
+
+        state.system = self._system_state
         LOGGER.debug("Populated state.system block.")
 
     def _publish_startup_event(self):

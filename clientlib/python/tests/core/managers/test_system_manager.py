@@ -23,6 +23,7 @@ from unittest.mock import patch
 import pytest
 from udmi.schema import Config
 from udmi.schema import State
+from udmi.schema import StateSystemHardware
 from udmi.schema import SystemConfig
 from udmi.schema import SystemEvents
 
@@ -87,7 +88,9 @@ def test_update_state_populates_all_fields(system_manager):
     system_manager.update_state(state)
 
     assert state.system is not None
-    assert state.system.hardware == {"make": "pyudmi", "model": "device-v1"}
+    assert state.system.hardware == StateSystemHardware(make='pyudmi',
+                                                        model='device-v1',
+                                                        sku=None, rev=None)
     assert state.system.software == {"firmware": "1.0.0"}
     assert state.system.operation is not None
     assert state.system.operation.operational is True
