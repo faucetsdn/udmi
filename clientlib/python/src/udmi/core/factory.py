@@ -17,6 +17,7 @@ from udmi.core.auth.basic_auth_provider import BasicAuthProvider
 from udmi.core.auth.jwt_auth_provider import JwtAuthProvider
 from udmi.core.auth.jwt_auth_provider import JwtTokenConfig
 from udmi.core.device import Device
+from udmi.core.managers import PointsetManager
 from udmi.core.managers.base_manager import BaseManager
 from udmi.core.managers.system_manager import SystemManager
 from udmi.core.messaging.message_dispatcher import MessageDispatcher
@@ -48,7 +49,10 @@ class JwtAuthArgs:
 
 def _get_default_managers() -> List[BaseManager]:
     """Returns the standard set of managers for a default device."""
-    return [SystemManager()]
+    return [
+        SystemManager(),
+        PointsetManager(),
+    ]
 
 
 def _wire_device(
