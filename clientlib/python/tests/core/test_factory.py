@@ -158,9 +158,11 @@ def test_create_device_with_basic_auth(
 
 @patch('src.udmi.core.factory.MessageDispatcher')
 @patch('src.udmi.core.factory.Device')
+@patch('src.udmi.core.factory.PointsetManager')
 @patch('src.udmi.core.factory.SystemManager')
 def test_wire_device_with_defaults(
     mock_system_manager,
+    mock_pointset_manager,
     mock_device,
     mock_message_dispatcher,
     mock_mqtt_client
@@ -170,6 +172,7 @@ def test_wire_device_with_defaults(
     default SystemManager when managers=None.
     """
     mock_system_manager_instance = mock_system_manager.return_value
+    mock_pointset_manager_instance = mock_pointset_manager.return_value
     mock_device_instance = mock_device.return_value
     mock_dispatcher_instance = mock_message_dispatcher.return_value
 
@@ -182,7 +185,8 @@ def test_wire_device_with_defaults(
 
     mock_device.assert_called_once()
     device_call_args = mock_device.call_args
-    assert device_call_args.kwargs['managers'] == [mock_system_manager_instance]
+    assert device_call_args.kwargs['managers'] == [mock_system_manager_instance,
+                                                   mock_pointset_manager_instance]
 
     mock_message_dispatcher.assert_called_once_with(
         client=mock_mqtt_client,
