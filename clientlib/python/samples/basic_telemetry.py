@@ -12,7 +12,9 @@ import sys
 import threading
 
 from udmi.core.factory import create_device_with_basic_auth
+from udmi.core.factory import get_default_managers
 from udmi.core.managers import PointsetManager
+from udmi.core.managers import SystemManager
 from udmi.schema import EndpointConfiguration
 
 # --- Config ---
@@ -59,13 +61,14 @@ if __name__ == "__main__":
 
         # 2. Instantiate PointsetManager
         my_pointset_manager = PointsetManager(sample_rate_sec=5)
+        managers = [SystemManager(), my_pointset_manager]
 
         # 3. Create Device
         device = create_device_with_basic_auth(
             endpoint_config=endpoint,
             username=BROKER_USERNAME,
             password=BROKER_PASSWORD,
-            additional_managers=[my_pointset_manager]  # our custom manager
+            managers=managers
         )
 
         # 4. Start Device in a background thread

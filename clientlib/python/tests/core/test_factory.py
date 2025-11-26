@@ -99,7 +99,6 @@ def test_create_device_with_jwt(
     mock_wire_device.assert_called_once_with(
         mqtt_client=mock_client_instance,
         managers=None,
-        additional_managers=None
     )
 
 
@@ -152,7 +151,6 @@ def test_create_device_with_basic_auth(
     mock_wire_device.assert_called_once_with(
         mqtt_client=mock_client_instance,
         managers=None,
-        additional_managers=None
     )
 
 

@@ -28,6 +28,7 @@ from udmi.schema import EndpointConfiguration
 
 LOGGER = logging.getLogger(__name__)
 
+
 # pylint: disable=too-many-arguments,too-many-positional-arguments
 
 @dataclass
@@ -45,9 +46,9 @@ class JwtAuthArgs:
     algorithm: str
 
 
-# --- Internal Wiring Functions ---
+# --- Public Helper Functions ---
 
-def _get_default_managers() -> List[BaseManager]:
+def get_default_managers() -> List[BaseManager]:
     """Returns the standard set of managers for a default device."""
     return [
         SystemManager(),
@@ -55,42 +56,31 @@ def _get_default_managers() -> List[BaseManager]:
     ]
 
 
+# --- Internal Wiring Functions ---
+
 def _wire_device(
     mqtt_client: MqttMessagingClient,
-    managers: Optional[List[BaseManager]] = None,
-    additional_managers: Optional[List[BaseManager]] = None
+    managers: Optional[List[BaseManager]] = None
 ) -> Device:
-    """Internal private function to handle the final wiring of components."""
+    """
+    Internal private function to handle the final wiring of components.
+    Args:
+        mqtt_client: MqttMessagingClient instance
+        managers: list of BaseManager instances
+    """
     LOGGER.debug("Wiring device components...")
-
-    # 1. Determine the base list of managers
-    if managers is not None:
-        # User provided an explicit list, overriding defaults entirely.
-        final_managers = managers
-    else:
-        final_managers = _get_default_managers()
-
-    # 2. Add any additional managers
-    if additional_managers:
-        LOGGER.debug("Adding %s additional managers.", len(additional_managers))
-        final_managers.extend(additional_managers)
-
-    LOGGER.info("Device configured with %s managers: %s", len(final_managers),
+    final_managers = managers or get_default_managers()
+    LOGGER.info("Device configured with %s managers: %s",
+                len(final_managers),
                 [m.__class__.__name__ for m in final_managers])
 
-    # 3. Instantiate the Device Orchestrator (in its initial state)
     device = Device(managers=final_managers)
-
-    # 4. Instantiate the Dispatcher, giving it the client and the device
     dispatcher = MessageDispatcher(
         client=mqtt_client,
         on_ready_callback=device.on_ready,
         on_disconnect_callback=device.on_disconnect
     )
-
-    # 5. Use the public method to finalize the device's setup
     device.wire_up_dispatcher(dispatcher)
-
     LOGGER.info("Device instance created and wired successfully.")
     return device
 
@@ -101,7 +91,6 @@ def create_mqtt_device_instance(
     endpoint_config: EndpointConfiguration,
     auth_provider: Optional[AuthProvider],
     managers: Optional[List[BaseManager]] = None,
-    additional_managers: Optional[List[BaseManager]] = None,
     client_config: ClientConfig = ClientConfig()
 ) -> Device:
     """Creates a UDMI device with a user-provided AuthProvider instance.
@@ -111,15 +100,8 @@ def create_mqtt_device_instance(
     Args:
         endpoint_config: The EndpointConfiguration dataclass.
         auth_provider: A pre-initialized AuthProvider instance.
-        managers: (Optional) A completely custom list of managers. If provided,
-            this list REPLACES the default managers (e.g., SystemManager).
-            Use this only if you need full control over the device's internal
-            logic and want to omit standard UDMI behaviors.
-        additional_managers: (Optional) A list of extra managers to add to
-            the device. These are appended to the standard defaults (or
-            to the custom `managers` list if one is provided). This is the
-            recommended way to add custom application logic while keeping
-            standard UDMI functionality.
+        managers: (Optional) List of managers. If not provided, this defaults
+                   to the list of default managers.
         client_config: (Optional) Configuration for TLS and reconnection.
 
     Returns:
@@ -137,7 +119,6 @@ def create_mqtt_device_instance(
     return _wire_device(
         mqtt_client=client,
         managers=managers,
-        additional_managers=additional_managers
     )
 
 
@@ -145,7 +126,6 @@ def create_device_with_jwt(
     endpoint_config: EndpointConfiguration,
     jwt_auth_args: JwtAuthArgs,
     managers: Optional[List[BaseManager]] = None,
-    additional_managers: Optional[List[BaseManager]] = None,
     token_config: JwtTokenConfig = JwtTokenConfig(),
     client_config: ClientConfig = ClientConfig()
 ) -> Device:
@@ -157,15 +137,8 @@ def create_device_with_jwt(
     Args:
         endpoint_config: The EndpointConfiguration dataclass.
         jwt_auth_args: Dataclass with project_id, key_file, and algorithm.
-        managers: (Optional) A completely custom list of managers. If provided,
-            this list REPLACES the default managers (e.g., SystemManager).
-            Use this only if you need full control over the device's internal
-            logic and want to omit standard UDMI behaviors.
-        additional_managers: (Optional) A list of extra managers to add to
-            the device. These are appended to the standard defaults (or
-            to the custom `managers` list if one is provided). This is the
-            recommended way to add custom application logic while keeping
-            standard UDMI functionality.
+        managers: (Optional) List of managers. If not provided, this defaults
+                   to the list of default managers.
         token_config: (Optional) Configuration for JWT lifetime/refresh.
         client_config: (Optional) Configuration for TLS and reconnection.
 
@@ -185,7 +158,6 @@ def create_device_with_jwt(
         endpoint_config=endpoint_config,
         auth_provider=auth_provider,
         managers=managers,
-        additional_managers=additional_managers,
         client_config=client_config
     )
 
@@ -195,7 +167,6 @@ def create_device_with_basic_auth(
     username: str,
     password: str,
     managers: Optional[List[BaseManager]] = None,
-    additional_managers: Optional[List[BaseManager]] = None,
     client_config: ClientConfig = ClientConfig()
 ) -> Device:
     """Convenience factory to create a device using Basic (username/password) auth.
@@ -204,15 +175,8 @@ def create_device_with_basic_auth(
         endpoint_config: The EndpointConfiguration dataclass.
         username: The MQTT username.
         password: The MQTT password.
-        managers: (Optional) A completely custom list of managers. If provided,
-            this list REPLACES the default managers (e.g., SystemManager).
-            Use this only if you need full control over the device's internal
-            logic and want to omit standard UDMI behaviors.
-        additional_managers: (Optional) A list of extra managers to add to
-            the device. These are appended to the standard defaults (or
-            to the custom `managers` list if one is provided). This is the
-            recommended way to add custom application logic while keeping
-            standard UDMI functionality.
+        managers: (Optional) List of managers. If not provided, this defaults
+                   to the list of default managers.
         client_config: (Optional) Configuration for TLS and reconnection.
 
     Returns:
@@ -227,6 +191,5 @@ def create_device_with_basic_auth(
         endpoint_config=endpoint_config,
         auth_provider=auth_provider,
         managers=managers,
-        additional_managers=additional_managers,
         client_config=client_config
     )

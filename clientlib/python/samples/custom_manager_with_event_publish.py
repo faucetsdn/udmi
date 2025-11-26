@@ -15,6 +15,7 @@ from datetime import timezone
 from udmi.constants import UDMI_VERSION
 from udmi.core.factory import create_device_with_basic_auth
 from udmi.core.managers import BaseManager
+from udmi.core.managers import SystemManager
 from udmi.core.managers.base_manager import LOGGER
 from udmi.schema import Config
 from udmi.schema import EndpointConfiguration
@@ -138,6 +139,7 @@ if __name__ == "__main__":
 
         # --- 2. Create Manager List ---
         custom_managers_list = [
+            SystemManager(),
             HeartbeatManager(interval_sec=5)
             # Adds our custom heartbeat event publish logic
         ]
@@ -150,7 +152,7 @@ if __name__ == "__main__":
             endpoint_config=endpoint_config,
             username=BROKER_USERNAME,
             password=BROKER_PASSWORD,
-            additional_managers=custom_managers_list
+            managers=custom_managers_list
             # Pass our custom list here
         )
 
