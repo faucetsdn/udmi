@@ -4,7 +4,6 @@ ACTIVATION_STRING="UdmiServicePod Finished activation of container components"
 MAX_ATTEMPTS=9 
 SLEEP_SECONDS=10
 
-
 echo waiting for udmis...
 sleep $SLEEP_SECONDS
 

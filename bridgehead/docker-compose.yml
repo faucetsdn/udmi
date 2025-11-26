@@ -66,20 +66,7 @@ services:
     restart: always
     networks:
       - udminet
-
-  pubber:
-    image: ghcr.io/faucetsdn/udmi:pubber-latest
-    container_name: pubber
-    volumes:
-      - ./udmi_site_model:/root/site_model
-    depends_on:
-      udmis:
-        condition: service_started
-    command: ["tail", "-f", "/dev/null"]
-    restart: always
-    networks:
-      - udminet
-
+      
 networks:
   udminet:
     name: udminet
