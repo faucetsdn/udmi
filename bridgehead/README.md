@@ -6,6 +6,8 @@ This guide provides instructions for deploying the core UDMI services bundle. Th
 - udmis service 
 - validator service (includes registrar tool)
 
+*Note: docker logs display file paths as seen inside the container. These are internal paths and do not match your local machine's file system. Files with local access exist via volume mapping; check your docker-compose.yml for the corresponding host path. Example: The common container path /root/site_model/ exists locally under bridgehead/udmi_site_model*
+
 ## Setting up the Docker environment
 
 1. **Install docker engine:** Ensure Docker is installed and running on your system: `https://docs.docker.com/engine/install/`
@@ -59,17 +61,23 @@ Run pubber: `sudo docker exec pubber bin/pubber site_model/ //mqtt/<YOUR_HOST_IP
 Pubber is running successfully if there are no obvious error messages or retries. An **unsuccessful** run will retry multiple times, will see messages like `Attempt #10 failed`. 
 
 A successful run will not end on its own, you can press `Ctrl` + `C` on your keyboard to exit. 
+
+You can stop the pubber container by running `sudo docker stop pubber`
 ### Discovery
 
 Run the following commands to complete a discovery sequence:
 ```
 sudo docker exec validator /bin/bash -c "bin/registrar site_model/ //mqtt/mosquitto -x -d && bin/registrar site_model/ //mqtt/mosquitto GAT-123"
 
-sudo docker exec -d pubber /bin/bash -c "bin/pubber site_model/ //mqtt/mosquitto GAT-123 852649" 
+sudo docker run -d --rm --name pubber -v $(realpath udmi_site_model):/root/site_model ghcr.io/faucetsdn/udmi:pubber-latest /bin/bash -c "tail -f /dev/null"
+
+sudo docker exec -d pubber /bin/bash -c "bin/pubber site_model/ //mqtt/<YOUR_HOST_IP> GAT-123 852649" 
 
 sudo docker exec validator /root/discovery.sh
 
 sudo docker exec validator bin/registrar site_model/ //mqtt/mosquitto
+
+sudo docker stop pubber
 ```
 
 A successful run using the default udmi_site_model should produce the following on the final registry output:
@@ -86,4 +94,3 @@ Out of 4 total.
 ## Shutting down the docker environment
 
 To gracefully stop and remove the container, run: `sudo docker compose down`
-
