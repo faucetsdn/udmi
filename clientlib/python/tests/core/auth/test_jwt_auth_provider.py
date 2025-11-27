@@ -137,15 +137,14 @@ def test_init_raises_file_not_found():
 def test_jwt_encoding_failure(jwt_provider, caplog):
     """
     Tests that if jwt.encode() fails, it logs an error and
-    returns a safe empty string.
+    propagates the exception.
     """
-    with patch("src.udmi.core.auth.jwt_auth_provider.jwt.encode",
+    with patch("udmi.core.auth.jwt_auth_provider.jwt.encode",
                side_effect=PyJWTError("Mock encode error")):
-        password = jwt_provider.get_password()
+        with pytest.raises(PyJWTError):
+            jwt_provider.get_password()
 
     assert "Failed to generate new JWT: Mock encode error" in caplog.text
-    assert "No valid JWT token available to return" in caplog.text
-    assert password == ""
 
 
 def test_default_token_lifetime_is_60_minutes():

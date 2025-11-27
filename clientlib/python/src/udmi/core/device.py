@@ -18,10 +18,13 @@ from typing import Optional
 from typing import Type
 from typing import TypeVar
 
+from udmi.constants import PERSISTENT_STORE_PATH
 from udmi.constants import UDMI_VERSION
 from udmi.core.managers import BaseManager
 from udmi.core.messaging import AbstractMessageDispatcher
+from udmi.core.persistence import DevicePersistence
 from udmi.schema import Config
+from udmi.schema import EndpointConfiguration
 from udmi.schema import State
 from udmi.schema import SystemState
 
@@ -55,8 +58,13 @@ class Device:
 
     This class is NOT intended to be subclassed.
     """
+    # pylint:disable=too-many-instance-attributes
 
-    def __init__(self, managers: List[BaseManager]):
+    def __init__(self,
+        managers: List[BaseManager],
+        endpoint_config: Optional[EndpointConfiguration] = None,
+        persistence_path: Optional[str] = PERSISTENT_STORE_PATH,
+    ):
         """
         Initializes the Device.
 
@@ -65,8 +73,11 @@ class Device:
         """
         LOGGER.info("Initializing device...")
         self.managers = managers
-        self.dispatcher: Optional[AbstractMessageDispatcher] = None
+        self.persistence = DevicePersistence(persistence_path, endpoint_config)
+        self.current_endpoint = self.persistence.get_effective_endpoint()
+        LOGGER.info("Endpoint set to: %s", self.current_endpoint.hostname)
 
+        self.dispatcher: Optional[AbstractMessageDispatcher] = None
         self._loop_config = _LoopConfig()
         self._loop_state = _LoopState()
 
@@ -164,7 +175,25 @@ class Device:
                 LOGGER.error("Error in %s.handle_command: %s",
                              manager.__class__.__name__, e)
 
-    # --- Public API Methods & Main Loop ---
+    # --- Main Run Loop ---
+
+    def run(self) -> None:
+        """
+        Starts the device and enters the main blocking application loop.
+        Handles ConnectionResetException to allow dynamic reloading of the connection.
+        """
+        LOGGER.info("Starting device run loop...")
+
+        while True:
+            try:
+                self._run_internal()
+            except KeyboardInterrupt:
+                LOGGER.info("Keyboard interrupt.")
+            except Exception as e:  #pylint:disable=broad-exception-caught
+                LOGGER.critical("Unexpected crash in run loop: %s", e,
+                                exc_info=True)
+            finally:
+                self.stop()
 
     def _publish_state(self) -> None:
         """
@@ -189,42 +218,39 @@ class Device:
         self._loop_state.last_state_publish_time = time.time()
         LOGGER.debug("State message published.")
 
-    def run(self) -> None:
+    def _run_internal(self) -> None:
         """
         Starts the device and enters the main blocking application loop.
         """
         LOGGER.info("Connecting and starting device run loop...")
         self._loop_state.stop_event.clear()
+        if not self.dispatcher:
+            raise RuntimeError("Dispatcher not wired.")
 
-        try:
-            self.dispatcher.connect()
-            self.dispatcher.start_loop()
-            self._loop_state.last_auth_check = time.time()
+        self.dispatcher.connect()
+        self.dispatcher.start_loop()
+        self._loop_state.last_auth_check = time.time()
 
-            for manager in self.managers:
-                manager.start()
+        for manager in self.managers:
+            manager.start()
 
-            LOGGER.info("Device is running. Waiting for events...")
-            while not self._loop_state.stop_event.is_set():
-                now = time.time()
+        LOGGER.info("Device is running. Waiting for events...")
+        while not self._loop_state.stop_event.is_set():
+            now = time.time()
 
-                # publish state periodically
-                if (now - self._loop_state.last_state_publish_time >
-                    self._loop_config.publish_state_interval_sec):
-                    self._publish_state()
+            # publish state periodically
+            if (now - self._loop_state.last_state_publish_time >
+                self._loop_config.publish_state_interval_sec):
+                self._publish_state()
 
-                # check for auth token refresh
-                if (now - self._loop_state.last_auth_check >
-                    self._loop_config.auth_check_interval_sec):
-                    LOGGER.debug("Checking for auth token refresh...")
-                    self.dispatcher.check_authentication()
-                    self._loop_state.last_auth_check = now
+            # check for auth token refresh
+            if (now - self._loop_state.last_auth_check >
+                self._loop_config.auth_check_interval_sec):
+                LOGGER.debug("Checking for auth token refresh...")
+                self.dispatcher.check_authentication()
+                self._loop_state.last_auth_check = now
 
-                time.sleep(1)
-        except KeyboardInterrupt:
-            LOGGER.info("Keyboard interrupt received.")
-        finally:
-            self.stop()
+            self._loop_state.stop_event.wait(timeout=1)
 
     def stop(self) -> None:
         """Stops the device loop and disconnects."""

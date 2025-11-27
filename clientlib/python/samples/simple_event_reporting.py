@@ -6,18 +6,19 @@ to send ad-hoc events (like alarms, logs, or status updates).
 """
 
 import logging
-import time
 import sys
 import threading
+import time
 from datetime import datetime
 from datetime import timezone
 
-from udmi.core.factory import create_device_with_basic_auth
+from udmi.constants import UDMI_VERSION
+from udmi.core.factory import create_device
 from udmi.core.managers import BaseManager
 from udmi.core.managers import SystemManager
 from udmi.schema import EndpointConfiguration
-from udmi.schema import SystemEvents, Entry
-from udmi.constants import UDMI_VERSION
+from udmi.schema import Entry
+from udmi.schema import SystemEvents
 
 # --- Config ---
 DEVICE_ID = "AHU-1"
@@ -68,21 +69,23 @@ def monitor_for_alarms(manager: BaseManager) -> None:
 if __name__ == "__main__":
     try:
         # 1. Configure Connection
-        endpoint = EndpointConfiguration(
-            client_id=f"/r/ZZ-TRI-FECTA/d/{DEVICE_ID}",
-            hostname=MQTT_HOSTNAME,
-            port=MQTT_PORT,
-            topic_prefix="/r/ZZ-TRI-FECTA/d/"
-        )
+        endpoint = EndpointConfiguration.from_dict({
+            "client_id": f"/r/ZZ-TRI-FECTA/{DEVICE_ID}",
+            "hostname": MQTT_HOSTNAME,
+            "port": MQTT_PORT,
+            "topic_prefix": "/r/ZZ-TRI-FECTA/d/",
+            "auth_provider": {
+                "basic": {
+                    "username": BROKER_USERNAME,
+                    "password": BROKER_PASSWORD
+                }
+            }
+        })
 
         # 2. Create Device
         # We don't need extra managers for this; the default SystemManager
         # is sufficient to send system events.
-        device = create_device_with_basic_auth(
-            endpoint_config=endpoint,
-            username=BROKER_USERNAME,
-            password=BROKER_PASSWORD
-        )
+        device = create_device(endpoint)
 
         # 3. Get a handle to the manager
         # We need a manager instance to call `publish_event`.

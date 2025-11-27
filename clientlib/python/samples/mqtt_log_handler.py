@@ -21,14 +21,14 @@ Use Cases Demonstrated:
 """
 
 import logging
+import random
 import sys
 import threading
 import time
-import random
 
-from udmi.core.factory import create_device_with_basic_auth
-from udmi.core.managers import SystemManager
+from udmi.core.factory import create_device
 from udmi.core.logging.mqtt_handler import UDMIMqttLogHandler
+from udmi.core.managers import SystemManager
 from udmi.schema import EndpointConfiguration
 
 # --- Configuration Constants ---
@@ -83,20 +83,22 @@ if __name__ == "__main__":
         topic_prefix = "/r/ZZ-TRI-FECTA/d/"
         client_id = f"{topic_prefix}{DEVICE_ID}"
 
-        endpoint_config = EndpointConfiguration(
-            client_id=client_id,
-            hostname=MQTT_HOSTNAME,
-            port=MQTT_PORT,
-            topic_prefix=topic_prefix
-        )
+        endpoint_config = EndpointConfiguration.from_dict({
+            "client_id": client_id,
+            "hostname": MQTT_HOSTNAME,
+            "port": MQTT_PORT,
+            "topic_prefix": topic_prefix,
+            "auth_provider": {
+                "basic": {
+                    "username": BROKER_USERNAME,
+                    "password": BROKER_PASSWORD
+                }
+            }
+        })
 
         logging.info("Initializing UDMI Device...")
 
-        device = create_device_with_basic_auth(
-            endpoint_config=endpoint_config,
-            username=BROKER_USERNAME,
-            password=BROKER_PASSWORD
-        )
+        device = create_device(endpoint_config)
 
         # Retrieve the SystemManager
         # We need this to initialize the log handler because SystemManager

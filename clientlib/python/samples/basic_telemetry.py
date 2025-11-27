@@ -6,13 +6,12 @@ telemetry data (sensor readings).
 """
 
 import logging
-import time
 import random
 import sys
 import threading
+import time
 
-from udmi.core.factory import create_device_with_basic_auth
-from udmi.core.factory import get_default_managers
+from udmi.core.factory import create_device
 from udmi.core.managers import PointsetManager
 from udmi.core.managers import SystemManager
 from udmi.schema import EndpointConfiguration
@@ -52,24 +51,25 @@ def update_sensors_loop(pointset_manager):
 if __name__ == "__main__":
     try:
         # 1. Configure Connection
-        endpoint = EndpointConfiguration(
-            client_id=f"/r/ZZ-TRI-FECTA/d/{DEVICE_ID}",
-            hostname=MQTT_HOSTNAME,
-            port=MQTT_PORT,
-            topic_prefix="/r/ZZ-TRI-FECTA/d/"
-        )
+        endpoint = EndpointConfiguration.from_dict({
+            "client_id": f"/r/ZZ-TRI-FECTA/d/{DEVICE_ID}",
+            "hostname": MQTT_HOSTNAME,
+            "port": MQTT_PORT,
+            "topic_prefix": "/r/ZZ-TRI-FECTA/d/",
+            "auth_provider": {
+                "basic": {
+                    "username": BROKER_USERNAME,
+                    "password": BROKER_PASSWORD
+                }
+            }
+        })
 
         # 2. Instantiate PointsetManager
         my_pointset_manager = PointsetManager(sample_rate_sec=5)
         managers = [SystemManager(), my_pointset_manager]
 
         # 3. Create Device
-        device = create_device_with_basic_auth(
-            endpoint_config=endpoint,
-            username=BROKER_USERNAME,
-            password=BROKER_PASSWORD,
-            managers=managers
-        )
+        device = create_device(endpoint, managers)
 
         # 4. Start Device in a background thread
         # This allows the main thread to run our sensor loop.

@@ -9,11 +9,11 @@ hardware_info and software_info dicts.
 import logging
 import sys
 
-from udmi.core.factory import create_device_with_basic_auth
+from udmi.core.factory import create_device
 from udmi.core.managers import SystemManager
 from udmi.schema import EndpointConfiguration
-from udmi.schema import SystemState
 from udmi.schema import StateSystemHardware
+from udmi.schema import SystemState
 
 # --- Configuration ---
 DEVICE_ID = "AHU-1"
@@ -30,12 +30,18 @@ if __name__ == "__main__":
     try:
         # 1. Configure Connection
         topic_prefix = "/r/ZZ-TRI-FECTA/d/"
-        endpoint = EndpointConfiguration(
-            client_id=f"{topic_prefix}{DEVICE_ID}",
-            hostname=MQTT_HOSTNAME,
-            port=MQTT_PORT,
-            topic_prefix=topic_prefix
-        )
+        endpoint = EndpointConfiguration.from_dict({
+            "client_id": f"{topic_prefix}{DEVICE_ID}",
+            "hostname": MQTT_HOSTNAME,
+            "port": MQTT_PORT,
+            "topic_prefix": topic_prefix,
+            "auth_provider": {
+                "basic": {
+                    "username": BROKER_USERNAME,
+                    "password": BROKER_PASSWORD
+                }
+            }
+        })
 
         # 2. CONFIGURE SYSTEM MANAGER
         # We create a strongly typed SystemState object.
@@ -56,12 +62,8 @@ if __name__ == "__main__":
         my_system_manager = SystemManager(system_state=static_state)
 
         # 3. Create Device
-        device = create_device_with_basic_auth(
-            endpoint_config=endpoint,
-            username=BROKER_USERNAME,
-            password=BROKER_PASSWORD,
-            managers=[my_system_manager]
-        )
+        device = create_device(endpoint_config=endpoint,
+                               managers=[my_system_manager])
 
         device.run()
 

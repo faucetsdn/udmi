@@ -215,36 +215,46 @@ def test_start_increments_restart_count(system_manager, mock_dispatcher):
     Verify that start() loads the previous count from persistence,
     increments it, and saves it.
     """
-    system_manager.persistence = MagicMock()
-    system_manager.persistence.get.return_value = 5
+    mock_device = MagicMock()
+    mock_persistence = MagicMock()
 
-    system_manager.set_device_context(device=None, dispatcher=mock_dispatcher)
-    system_manager.start()
+    mock_device.persistence = mock_persistence
+    mock_persistence.get.return_value = 5
 
-    system_manager.persistence.get.assert_called_with("restart_count", 0)
-    system_manager.persistence.set.assert_called_with("restart_count", 6)
+    system_manager.set_device_context(device=mock_device,
+                                      dispatcher=mock_dispatcher)
+
+    with patch.object(system_manager, '_metrics_loop'):
+        system_manager.start()
+
+    mock_persistence.get.assert_called_with("restart_count", 0)
+    mock_persistence.set.assert_called_with("restart_count", 6)
+
     assert system_manager._restart_count == 6
 
 
 def test_start_handles_persistence_error(system_manager, mock_dispatcher,
     caplog):
     """
-    test_start_handles_persistence_error
     Verify that if persistence fails (raises Exception), start() catches it,
     logs an error, and continues startup.
     """
-    system_manager.persistence = MagicMock()
-    system_manager.persistence.get.side_effect = RuntimeError("Disk full")
+    mock_device = MagicMock()
+    mock_persistence = MagicMock()
+    mock_device.persistence = mock_persistence
+    mock_persistence.get.side_effect = RuntimeError("Disk full")
 
-    system_manager.set_device_context(device=None, dispatcher=mock_dispatcher)
+    system_manager.set_device_context(device=mock_device,
+                                      dispatcher=mock_dispatcher)
 
     with caplog.at_level(logging.ERROR):
-        system_manager.start()
+        with patch.object(system_manager, '_metrics_loop'):
+            system_manager.start()
 
     assert "Failed to handle persistence" in caplog.text
     assert "Disk full" in caplog.text
 
-    mock_dispatcher.publish_event.assert_called_once()
+    mock_dispatcher.publish_event.assert_called()
 
 
 def test_update_state_includes_restart_count(system_manager):

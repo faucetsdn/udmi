@@ -12,6 +12,7 @@ from dataclasses import field
 from typing import List
 from typing import Optional
 
+from udmi.core.auth import CertManager
 from udmi.core.auth.auth_provider import AuthProvider
 from udmi.core.auth.basic_auth_provider import BasicAuthProvider
 from udmi.core.auth.jwt_auth_provider import JwtAuthProvider
@@ -20,6 +21,7 @@ from udmi.core.device import Device
 from udmi.core.managers import PointsetManager
 from udmi.core.managers.base_manager import BaseManager
 from udmi.core.managers.system_manager import SystemManager
+from udmi.core.messaging import create_client_from_endpoint_config
 from udmi.core.messaging.message_dispatcher import MessageDispatcher
 from udmi.core.messaging.mqtt_messaging_client import MqttMessagingClient
 from udmi.core.messaging.mqtt_messaging_client import ReconnectConfig
@@ -60,7 +62,8 @@ def get_default_managers() -> List[BaseManager]:
 
 def _wire_device(
     mqtt_client: MqttMessagingClient,
-    managers: Optional[List[BaseManager]] = None
+    managers: Optional[List[BaseManager]] = None,
+    endpoint_config: Optional[EndpointConfiguration] = None
 ) -> Device:
     """
     Internal private function to handle the final wiring of components.
@@ -74,7 +77,7 @@ def _wire_device(
                 len(final_managers),
                 [m.__class__.__name__ for m in final_managers])
 
-    device = Device(managers=final_managers)
+    device = Device(managers=final_managers, endpoint_config=endpoint_config)
     dispatcher = MessageDispatcher(
         client=mqtt_client,
         on_ready_callback=device.on_ready,
@@ -86,6 +89,27 @@ def _wire_device(
 
 
 # --- Public Factory Functions ---
+
+def create_device(
+    endpoint_config: EndpointConfiguration,
+    managers: Optional[List[BaseManager]] = None,
+    client_config: ClientConfig = ClientConfig(),
+    key_file: Optional[str] = None
+) -> Device:
+    """
+    **[Recommended]** Unified Smart Factory.
+    """
+    LOGGER.info("Determining auth strategy for %s...",
+                endpoint_config.client_id)
+
+    client = create_client_from_endpoint_config(
+        endpoint_config, key_file,
+        client_config.tls_config, client_config.reconnect_config
+    )
+
+    return _wire_device(mqtt_client=client, managers=managers,
+                        endpoint_config=endpoint_config)
+
 
 def create_mqtt_device_instance(
     endpoint_config: EndpointConfiguration,
@@ -119,6 +143,7 @@ def create_mqtt_device_instance(
     return _wire_device(
         mqtt_client=client,
         managers=managers,
+        endpoint_config=endpoint_config
     )
 
 
@@ -146,6 +171,8 @@ def create_device_with_jwt(
         A fully wired, ready-to-run Device instance.
     """
     LOGGER.info("Creating device with JWT authentication...")
+    CertManager(jwt_auth_args.key_file).ensure_keys_exist(
+        jwt_auth_args.algorithm)
 
     auth_provider = JwtAuthProvider(
         project_id=jwt_auth_args.project_id,

@@ -11,18 +11,29 @@ import tempfile
 import threading
 from typing import Any, Dict, Optional
 
+from udmi.constants import PERSISTENT_STORE_PATH
+from udmi.schema import EndpointConfiguration
+
 LOGGER = logging.getLogger(__name__)
 
 
 class DevicePersistence:
     """
-    Manages persistent data storage with thread safety and atomic writes.
+    Manages persistent data storage with thread safety and atomic writes, and
+    the hierarchy of endpoint configurations: Active -> Backup -> Site.
     If filepath is provided, saves to disk.
     If filepath is None, operates in-memory only (for testing/read-only).
     """
+    ACTIVE_KEY = "active_endpoint"
+    BACKUP_KEY = "backup_endpoint"
+    GENERATION_KEY = "active_generation"
 
-    def __init__(self, filepath: Optional[str] = ".udmi_persistence.json"):
+    def __init__(self,
+        filepath: Optional[str] = PERSISTENT_STORE_PATH,
+        site_config: Optional[EndpointConfiguration] = None
+    ):
         self.filepath = filepath
+        self.site_config = site_config
         self._data: Dict[str, Any] = {}
         self._lock = threading.RLock()
 
@@ -78,6 +89,76 @@ class DevicePersistence:
 
             except (IOError, OSError) as e:
                 LOGGER.error("Failed to save persistence file: %s", e)
+
+    # --- Endpoint Management ---
+
+    def get_active_endpoint(self) -> Optional[EndpointConfiguration]:
+        """Returns the Active Endpoint Blob if valid, else None."""
+        with self._lock:
+            data = self._data.get(self.ACTIVE_KEY)
+            if data:
+                return EndpointConfiguration.from_dict(data)
+            return None
+
+    def get_backup_endpoint(self) -> Optional[EndpointConfiguration]:
+        """Returns the Backup Endpoint Blob if valid, else None."""
+        with self._lock:
+            data = self._data.get(self.BACKUP_KEY)
+            if data:
+                return EndpointConfiguration.from_dict(data)
+            return None
+
+    def get_effective_endpoint(self) -> EndpointConfiguration:
+        """
+        Resolution hierarchy: Active -> Backup -> Site.
+        """
+        active = self.get_active_endpoint()
+        if active:
+            LOGGER.info("Using ACTIVE endpoint configuration from persistence.")
+            return active
+
+        backup = self.get_backup_endpoint()
+        if backup:
+            LOGGER.warning(
+                "Using BACKUP endpoint configuration (Active missing or invalid).")
+            return backup
+
+        if self.site_config:
+            LOGGER.warning("Using SITE endpoint configuration (Baseline).")
+            return self.site_config
+
+        raise ValueError(
+            "No Active, Backup, or Site endpoint configuration available.")
+
+    def save_active_endpoint(self, config: EndpointConfiguration,
+        generation: str) -> None:
+        """Saves the new Active Endpoint Blob."""
+        with self._lock:
+            self._data[self.ACTIVE_KEY] = config.to_dict()
+            self._data[self.GENERATION_KEY] = generation
+            self.save()
+
+    def save_backup_endpoint(self, config: EndpointConfiguration) -> None:
+        """Saves the Backup Endpoint Blob."""
+        with self._lock:
+            self._data[self.BACKUP_KEY] = config.to_dict()
+            self.save()
+
+    def get_active_generation(self) -> Optional[str]:
+        """Get the active generation."""
+        with self._lock:
+            return self._data.get(self.GENERATION_KEY)
+
+    def clear_active_endpoint(self) -> None:
+        """Wipes active endpoint (e.g. after repeated failures)."""
+        with self._lock:
+            if self.ACTIVE_KEY in self._data:
+                del self._data[self.ACTIVE_KEY]
+            if self.GENERATION_KEY in self._data:
+                del self._data[self.GENERATION_KEY]
+            self.save()
+
+    # --- Generic Get/Set ---
 
     def get(self, key: str, default: Any = None) -> Any:
         """Retrieves a value by key."""

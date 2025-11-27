@@ -51,8 +51,8 @@ class MqttMessagingClient(AbstractMessagingClient):
 
     def __init__(self, endpoint_config: EndpointConfiguration,
                  auth_provider: Optional[AuthProvider] = None,
-                 tls_config: TlsConfig = TlsConfig(),
-                 reconnect_config: ReconnectConfig = ReconnectConfig()):
+                 tls_config: TlsConfig = None,
+                 reconnect_config: ReconnectConfig = None):
         """
         Initializes the MQTT Client.
 
@@ -68,8 +68,8 @@ class MqttMessagingClient(AbstractMessagingClient):
         super().__init__()
         self._config = endpoint_config
         self._auth_provider = auth_provider
-        self._tls_config = tls_config
-        self._reconnect_config = reconnect_config
+        self._tls_config = tls_config or TlsConfig()
+        self._reconnect_config = reconnect_config or ReconnectConfig()
 
         # --- Callbacks ---
         self._callbacks = MqttClientCallbacks()
@@ -277,6 +277,8 @@ class MqttMessagingClient(AbstractMessagingClient):
         """
         if rc == 0:
             LOGGER.info("Subscribing to registered channels...")
+            subscription_failed = False
+
             for channel in self._subscribed_channels:
                 topic = f"{self._topic_prefix}/{self._device_id}/{channel}"
                 try:
@@ -285,6 +287,14 @@ class MqttMessagingClient(AbstractMessagingClient):
                 except (ValueError, socket.error) as e:
                     LOGGER.error("Failed to subscribe to topic %s: %s",
                                  topic, e)
+                    subscription_failed = True
+
+            if subscription_failed:
+                LOGGER.error(
+                    "Subscription failed. Disconnecting to trigger retry...")
+                client.disconnect()
+                return
+
             if self._callbacks.on_connect:
                 self._callbacks.on_connect()
         else:
@@ -301,7 +311,12 @@ class MqttMessagingClient(AbstractMessagingClient):
 
         if len(topic_parts) > channel_start_index:
             channel = '/'.join(topic_parts[channel_start_index:])
-            payload = msg.payload.decode('utf-8')
+            try:
+                payload = msg.payload.decode('utf-8')
+            except UnicodeDecodeError as e:
+                LOGGER.error("Failed to decode message payload on %s: %s",
+                             msg.topic, e)
+                return
             LOGGER.debug("Received message on channel '%s'", channel)
 
             if self._callbacks.on_message:

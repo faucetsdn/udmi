@@ -12,16 +12,14 @@ from datetime import timezone
 from typing import Optional
 
 import psutil
-
 from udmi.constants import UDMI_VERSION
 from udmi.core.managers.base_manager import BaseManager
-from udmi.core.persistence import DevicePersistence
 from udmi.schema import Config
 from udmi.schema import Entry
 from udmi.schema import Metrics
 from udmi.schema import State
-from udmi.schema import StateSystemOperation
 from udmi.schema import StateSystemHardware
+from udmi.schema import StateSystemOperation
 from udmi.schema import SystemEvents
 from udmi.schema import SystemState
 
@@ -38,16 +36,13 @@ class SystemManager(BaseManager):
 
     # pylint: disable=too-many-instance-attributes
 
-    def __init__(self,
-        system_state: Optional[SystemState] = None,
-        persistence_path: Optional[str] = ".udmi_persistence.json"):
+    def __init__(self, system_state: Optional[SystemState] = None):
         """
         Initializes the SystemManager.
 
         Args:
             system_state: A pre-populated SystemState object containing static
                           device info (hardware, software, serial_no, etc.).
-            persistence_path: Path to the persistence file.
         """
         super().__init__()
         self._last_config_ts: Optional[str] = None
@@ -60,7 +55,6 @@ class SystemManager(BaseManager):
             )
 
         # --- Persistence Setup ---
-        self.persistence = DevicePersistence(filepath=persistence_path)
         self._restart_count = 0
 
         # --- Metrics Loop Setup ---
@@ -76,11 +70,16 @@ class SystemManager(BaseManager):
         Increments restart count and publishes startup event.
         """
         try:
-            saved_count = self.persistence.get("restart_count", 0)
-            self._restart_count = saved_count + 1
-            self.persistence.set("restart_count", self._restart_count)
-            LOGGER.info("Device restart count incremented to: %s",
-                        self._restart_count)
+            if self._device and self._device.persistence:
+                saved_count = self._device.persistence.get("restart_count", 0)
+                self._restart_count = saved_count + 1
+                self._device.persistence.set("restart_count",
+                                             self._restart_count)
+                LOGGER.info("Device restart count incremented to: %s",
+                            self._restart_count)
+            else:
+                LOGGER.warning(
+                    "Device context not set; cannot manage persistence.")
         except Exception as e:  # pylint: disable=broad-exception-caught
             LOGGER.error("Failed to handle persistence: %s", e)
 
