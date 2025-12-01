@@ -3,17 +3,28 @@ Provides the concrete implementation for the SystemManager.
 
 This manager is responsible for handling the 'system' block of the
 config and state, and for reporting system-level events like startup.
+It also handles Generic Blobset management (OTA).
 """
 
 import logging
+import sys
 import threading
+import traceback
 from datetime import datetime
 from datetime import timezone
+from typing import Callable
+from typing import Dict
 from typing import Optional
 
 import psutil
+
 from udmi.constants import UDMI_VERSION
+from udmi.core.blob import get_verified_blob_bytes
 from udmi.core.managers.base_manager import BaseManager
+from udmi.schema import BlobBlobsetConfig
+from udmi.schema import BlobBlobsetState
+from udmi.schema import BlobsetConfig
+from udmi.schema import BlobsetState
 from udmi.schema import Config
 from udmi.schema import Entry
 from udmi.schema import Metrics
@@ -22,16 +33,26 @@ from udmi.schema import StateSystemHardware
 from udmi.schema import StateSystemOperation
 from udmi.schema import SystemEvents
 from udmi.schema import SystemState
+from udmi.schema.common import Phase
 
 LOGGER = logging.getLogger(__name__)
 
 BYTES_PER_MEGABYTE = 1024 * 1024
 DEFAULT_METRICS_RATE_SEC = 60
 
+# UDMI Lifecycle Exit Codes
+EXIT_CODE_SHUTDOWN = 0
+EXIT_CODE_RESTART = 192
+EXIT_CODE_TERMINATE = 193
+
+# Blob Handler Signature: (blob_id: str, data: bytes) -> None
+BlobHandler = Callable[[str, bytes], None]
+
 
 class SystemManager(BaseManager):
     """
     Manages the 'system' block of the config and state.
+    Also manages 'blobset' for OTA/File updates.
     """
 
     # pylint: disable=too-many-instance-attributes
@@ -57,12 +78,28 @@ class SystemManager(BaseManager):
         # --- Persistence Setup ---
         self._restart_count = 0
 
+        # --- Blobset Setup ---
+        self._blob_handlers: Dict[str, BlobHandler] = {}
+        self._applied_blob_generations: Dict[str, str] = {}
+        self._blob_states: Dict[str, BlobBlobsetState] = {}
+
         # --- Metrics Loop Setup ---
         self._metrics_rate_sec = DEFAULT_METRICS_RATE_SEC
         self._stop_event = threading.Event()
         self._metrics_thread: Optional[threading.Thread] = None
 
         LOGGER.info("SystemManager initialized.")
+
+    def register_blob_handler(self, blob_key: str,
+        handler: BlobHandler) -> None:
+        """
+        Registers a callback to handle a specific blob key.
+        Args:
+            blob_key: The identifier in the blobset (e.g., 'firmware').
+            handler: A function that accepts (blob_key, data_bytes).
+        """
+        self._blob_handlers[blob_key] = handler
+        LOGGER.info("Registered handler for blob key: '%s'", blob_key)
 
     def start(self) -> None:
         """
@@ -77,6 +114,11 @@ class SystemManager(BaseManager):
                                              self._restart_count)
                 LOGGER.info("Device restart count incremented to: %s",
                             self._restart_count)
+
+                saved_blobs = self._device.persistence.get("applied_blobs", {})
+                if saved_blobs:
+                    self._applied_blob_generations = saved_blobs
+                    LOGGER.info("Restored blob states: %s", saved_blobs.keys())
             else:
                 LOGGER.warning(
                     "Device context not set; cannot manage persistence.")
@@ -106,7 +148,7 @@ class SystemManager(BaseManager):
 
     def handle_config(self, config: Config) -> None:
         """
-        Handles the 'system' portion of a new config message.
+        Handles the 'system' and 'blobset' portions of a new config message.
         """
         if not config:
             return
@@ -115,36 +157,132 @@ class SystemManager(BaseManager):
             self._last_config_ts = config.timestamp
             LOGGER.debug("Captured config.timestamp: %s", self._last_config_ts)
 
-        if not config.system:
-            LOGGER.debug(
-                "No 'system' block in config, skipping system-specific config.")
+        if config.system:
+            if config.system.min_loglevel is not None:
+                LOGGER.info("Setting system min_loglevel to: %s",
+                            config.system.min_loglevel)
+
+            if config.system.metrics_rate_sec is not None:
+                new_rate = config.system.metrics_rate_sec
+                if new_rate != self._metrics_rate_sec:
+                    LOGGER.info("Updating metrics rate from %s to %s",
+                                self._metrics_rate_sec, new_rate)
+                    self._metrics_rate_sec = new_rate
+
+        if config.blobset:
+            self._process_blobset_config(config.blobset)
+
+    def _process_blobset_config(self, blobset: BlobsetConfig) -> None:
+        """
+        Iterates through blobs, checks for updates, and invokes handlers.
+        """
+        if not blobset.blobs:
             return
 
-        if config.system.min_loglevel is not None:
-            LOGGER.info("Setting system min_loglevel to: %s",
-                        config.system.min_loglevel)
+        for key, blob_config in blobset.blobs.items():
+            if key not in self._blob_handlers:
+                continue
 
-        if config.system.metrics_rate_sec is not None:
-            new_rate = config.system.metrics_rate_sec
-            if new_rate != self._metrics_rate_sec:
-                LOGGER.info("Updating metrics rate from %s to %s",
-                            self._metrics_rate_sec, new_rate)
-                self._metrics_rate_sec = new_rate
+            current_gen = self._applied_blob_generations.get(key)
+            if blob_config.generation and blob_config.generation == current_gen:
+                continue
+
+            LOGGER.info("New generation detected for blob '%s': %s",
+                        key, blob_config.generation)
+
+            self._apply_blob(key, blob_config)
+
+    def _apply_blob(self, key: str, config: BlobBlobsetConfig) -> None:
+        """
+        Downloads, verifies, and hands off the blob.
+        """
+        self._update_blob_state(key, Phase.apply, config.generation)
+
+        # Force a state publish via dirty bit
+        # For now, the next loop cycle will pick up the state change.
+
+        try:
+            LOGGER.info("Fetching blob '%s' from %s...", key, config.url)
+            data = get_verified_blob_bytes(config)
+            LOGGER.info("Blob '%s' verified successfully.", key)
+
+            handler = self._blob_handlers[key]
+            LOGGER.info("Invoking handler for blob '%s'...", key)
+            handler(key, data)
+
+            LOGGER.info("Blob '%s' applied successfully.", key)
+            self._applied_blob_generations[key] = config.generation
+
+            self._update_blob_state(key, Phase.final, config.generation)
+
+            if self._device and self._device.persistence:
+                self._device.persistence.set("applied_blobs",
+                                             self._applied_blob_generations)
+
+        except Exception as e:
+            LOGGER.error("Failed to apply blob '%s': %s", key, e)
+            LOGGER.debug(traceback.format_exc())
+            self._update_blob_state(key, Phase.final, config.generation, str(e))
+
+    def _update_blob_state(self, key: str, phase: Phase, generation: str,
+        error_message: str = None) -> None:
+        """
+        Helper to update the internal state map for blobs.
+        """
+        status_entry = None
+        if error_message:
+            status_entry = Entry(
+                message=error_message,
+                level=500,
+                timestamp=datetime.now(timezone.utc).isoformat()
+            )
+
+        self._blob_states[key] = BlobBlobsetState(
+            phase=phase,
+            status=status_entry,
+            generation=generation
+        )
 
     def handle_command(self, command_name: str, payload: dict) -> None:
         """
-        Handles 'system' related commands.
-        (e.g., reboot, shutdown)
+        Handles 'system' related commands (reboot, shutdown).
         """
-        # For now, we don't implement any system commands
-        if command_name in ["reboot", "shutdown"]:
-            LOGGER.warning("Received '%s' command, but it is not implemented.",
+        LOGGER.info("SystemManager received command: %s", command_name)
+
+        if command_name == "reboot":
+            self._system_lifecycle(EXIT_CODE_RESTART)
+        elif command_name == "shutdown":
+            self._system_lifecycle(EXIT_CODE_SHUTDOWN)
+        elif command_name == "terminate":
+            self._system_lifecycle(EXIT_CODE_TERMINATE)
+        else:
+            LOGGER.warning("Command '%s' not implemented in SystemManager.",
                            command_name)
-        # This manager doesn't handle other commands
+
+    def _system_lifecycle(self, exit_code: int) -> None:
+        """
+        Executes a system lifecycle change by exiting the process.
+        """
+        if exit_code == EXIT_CODE_RESTART:
+            action = "RESTART"
+        elif exit_code == EXIT_CODE_TERMINATE:
+            action = "TERMINATE"
+        else:
+            action = "SHUTDOWN"
+        LOGGER.warning("Initiating System %s (Exit Code: %s)...", action,
+                       exit_code)
+
+        sys.stdout.flush()
+        sys.stderr.flush()
+
+        if self._device:
+            self._device.stop()
+
+        sys.exit(exit_code)
 
     def update_state(self, state: State) -> None:
         """
-        Contributes the 'system' block to the state message.
+        Contributes system and blobset blocks to the state.
         """
         self._system_state.last_config = self._last_config_ts
         if self._system_state.operation is None:
@@ -153,7 +291,11 @@ class SystemManager(BaseManager):
         self._system_state.operation.restart_count = self._restart_count
 
         state.system = self._system_state
-        LOGGER.debug("Populated state.system block.")
+
+        if self._blob_states:
+            state.blobset = BlobsetState(blobs=self._blob_states)
+
+        LOGGER.debug("Populated state.system and state.blobset blocks.")
 
     def _publish_startup_event(self):
         """Helper to publish the startup event."""
@@ -182,8 +324,7 @@ class SystemManager(BaseManager):
 
     def publish_metrics(self) -> None:
         """
-        Gathers system metrics and publishes a SystemEvent by populating the
-        'metrics' field.
+        Gathers system metrics and publishes a SystemEvent.
         """
         LOGGER.debug("Collecting and publishing system metrics...")
         try:
