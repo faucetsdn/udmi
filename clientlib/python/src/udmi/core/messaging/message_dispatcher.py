@@ -12,6 +12,7 @@ import re
 from typing import Any
 from typing import Callable
 from typing import Dict
+from typing import Optional
 
 from udmi.core.messaging.abstract_client import AbstractMessagingClient
 from udmi.core.messaging.abstract_dispatcher import AbstractMessageDispatcher
@@ -85,7 +86,7 @@ class MessageDispatcher(AbstractMessageDispatcher):
             self._handlers[channel] = handler
             LOGGER.debug("Registered handler for %s", channel)
 
-    def _on_message(self, channel: str, payload: str) -> None:
+    def _on_message(self, device_id: str, channel: str, payload: str) -> None:
         """
         Internal callback given to the MessagingClient.
 
@@ -93,20 +94,22 @@ class MessageDispatcher(AbstractMessageDispatcher):
         It deserializes the JSON payload and routes it to the correct handler.
 
         Args:
+            device_id: The device identifier.
             channel: The raw channel the message arrived on.
             payload: The raw string payload (expected to be JSON).
         """
         try:
             payload_dict: Dict[str, Any] = json.loads(payload)
         except json.JSONDecodeError as e:
-            LOGGER.error("Failed to decode JSON payload on channel %s: %s",
-                         channel, e)
+            LOGGER.error(
+                "Failed to decode JSON payload for %s on channel %s: %s",
+                device_id, channel, e)
             return
 
         handler = self._handlers.get(channel)
         if handler:
             try:
-                handler(channel, payload_dict)
+                handler(device_id, channel, payload_dict)
             except (TypeError, KeyError, AttributeError) as e:
                 LOGGER.error("Handler for channel %s failed: %s", channel, e)
             return
@@ -114,7 +117,7 @@ class MessageDispatcher(AbstractMessageDispatcher):
         for pattern, wildcard_handler in self._wildcard_handlers.items():
             if pattern.match(channel):
                 try:
-                    wildcard_handler(channel, payload_dict)
+                    wildcard_handler(device_id, channel, payload_dict)
                 except (TypeError, KeyError, AttributeError) as e:
                     LOGGER.error("Wildcard handler for %s failed: %s",
                                  channel, e)
@@ -122,32 +125,38 @@ class MessageDispatcher(AbstractMessageDispatcher):
 
         LOGGER.warning("No handler found for message on channel: %s", channel)
 
-    def publish_state(self, state: State) -> None:
+    def publish_state(self, state: State,
+        device_id: Optional[str] = None) -> None:
         """
         Serializes and publishes the device State message.
 
         Args:
             state: The State data model instance to publish.
+            device_id: The device identifier.
         """
-        LOGGER.debug("Publishing 'state' message...")
+        LOGGER.debug("Publishing 'state' message for %s...",
+                     device_id or "self")
         try:
             payload = state.to_json()
-            self.client.publish("state", payload)
+            self.client.publish("state", payload, device_id)
         except (TypeError, AttributeError) as e:
             LOGGER.error("Failed to serialize and publish state: %s", e)
 
-    def publish_event(self, channel: str, event: DataModel) -> None:
+    def publish_event(self, channel: str, event: DataModel,
+        device_id: Optional[str] = None) -> None:
         """
         Serializes and publishes a device Event message to a sub-channel.
 
         Args:
             channel: The event sub-channel (e.g., 'pointset', 'system').
             event: The event data model instance to publish.
+            device_id: The device identifier.
         """
-        LOGGER.debug("Publishing event to '%s' channel...", channel)
+        LOGGER.debug("Publishing event to '%s' channel for %s...", channel,
+                     device_id or "self")
         try:
             payload = event.to_json()
-            self.client.publish(channel, payload)
+            self.client.publish(channel, payload, device_id)
         except (TypeError, AttributeError) as e:
             LOGGER.error("Failed to serialize and publish event %s: %s",
                          channel, e)
@@ -155,7 +164,7 @@ class MessageDispatcher(AbstractMessageDispatcher):
     # --- Lifecycle Methods ---
 
     def connect(self) -> None:
-        """Connects the underlying client. (Helper for Device class)"""
+        """Connects the underlying client."""
         LOGGER.debug("Dispatcher telling client to connect...")
         self.client.connect()
 
@@ -165,20 +174,12 @@ class MessageDispatcher(AbstractMessageDispatcher):
         self.client.run()
 
     def check_authentication(self) -> None:
-        """
-        Triggers the client's auth check.
-
-        This is used for periodic JWT refresh.
-        """
+        """Triggers the client's auth check."""
         LOGGER.debug("Dispatcher telling client to check authentication...")
         self.client.check_authentication()
 
     def close(self) -> None:
-        """
-        Shuts down the underlying client connection.
-
-        Implements the abstract method.
-        """
+        """Shuts down the underlying client connection."""
         LOGGER.debug("Dispatcher telling client to close...")
         self.client.close()
 

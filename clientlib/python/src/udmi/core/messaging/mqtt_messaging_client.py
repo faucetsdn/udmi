@@ -8,6 +8,8 @@ import ssl
 from dataclasses import dataclass
 from typing import Callable
 from typing import Optional
+from typing import Set
+from typing import Tuple
 
 import paho.mqtt.client as mqtt
 from jwt.exceptions import PyJWTError
@@ -38,7 +40,7 @@ class ReconnectConfig:
 @dataclass
 class MqttClientCallbacks:
     """Dataclass to hold external callbacks for the MQTT client."""
-    on_message: Optional[Callable[[str, str], None]] = None
+    on_message: Optional[Callable[[str, str, str], None]] = None
     on_connect: Optional[Callable[[], None]] = None
     on_disconnect: Optional[Callable[[int], None]] = None
 
@@ -46,6 +48,7 @@ class MqttClientCallbacks:
 class MqttMessagingClient(AbstractMessagingClient):
     """
     Manages the connection to an MQTT broker using the paho-mqtt library.
+    Supports Gateway functionality (publishing/subscribing for proxies).
     """
     _callbacks: MqttClientCallbacks
 
@@ -79,7 +82,7 @@ class MqttMessagingClient(AbstractMessagingClient):
         self._mqtt_client.on_connect = self._on_connect
         self._mqtt_client.on_message = self._on_message
         self._mqtt_client.on_disconnect = self._on_disconnect
-        self._subscribed_channels = set()
+        self._subscribed_channels: Set[Tuple[str, str]] = set()
 
     # --- Properties to derive values from config ---
 
@@ -161,7 +164,7 @@ class MqttMessagingClient(AbstractMessagingClient):
             except (PyJWTError, TypeError, ValueError, socket.error) as e:
                 LOGGER.error("Failed during auth token refresh: %s", e)
 
-    def publish(self, channel: str, payload: str) -> None:
+    def publish(self, channel: str, payload: str, device_id: Optional[str] = None) -> None:
         """
         Publishes a payload to a UDMI channel.
 
@@ -171,11 +174,12 @@ class MqttMessagingClient(AbstractMessagingClient):
         Args:
             channel: The UDMI channel.
             payload: The JSON string payload to send.
+            device_id: (Optional) The target device ID. Defaults to self.
         """
-        topic = f"{self._topic_prefix}/{self._device_id}/{channel}"
+        target_id = device_id if device_id else self._device_id
+        topic = f"{self._topic_prefix}/{target_id}/{channel}"
 
-        LOGGER.debug("Publishing %d bytes to MQTT topic %s", len(payload),
-                     topic)
+        LOGGER.debug("Publishing %d bytes to MQTT topic %s", len(payload), topic)
         self._mqtt_client.publish(topic, payload, qos=1)
 
     def run(self) -> None:
@@ -190,25 +194,25 @@ class MqttMessagingClient(AbstractMessagingClient):
         self._mqtt_client.disconnect()
         LOGGER.info("MQTT client disconnected.")
 
-    def register_channel_subscription(self, channel: str) -> None:
+    def register_channel_subscription(self, channel: str, device_id: Optional[str] = None) -> None:
         """
-        Implements the abstract method.
         Stores the channel interest to be acted upon during connection.
         """
-        LOGGER.debug("Registering channel subscription interest for: %s",
-                     channel)
-        self._subscribed_channels.add(channel)
+        target_id = device_id if device_id else self._device_id
+        LOGGER.debug("Registering subscription: Device=%s, Channel=%s",
+                     target_id, channel)
+        self._subscribed_channels.add((target_id, channel))
 
     # --- Public Callback Setters ---
 
     def set_on_message_handler(self,
-                               handler: Callable[[str, str], None]) -> None:
+                               handler: Callable[[str, str, str], None]) -> None:
         """
         Sets the external callback for incoming messages.
         This is typically called by the MessageDispatcher.
 
         Args:
-            handler: A callable that accepts (channel: str, payload: str)
+            handler: Callable accepting (device_id, channel, payload)
         """
         LOGGER.debug("Setting on_message handler")
         self._callbacks.on_message = handler
@@ -279,8 +283,8 @@ class MqttMessagingClient(AbstractMessagingClient):
             LOGGER.info("Subscribing to registered channels...")
             subscription_failed = False
 
-            for channel in self._subscribed_channels:
-                topic = f"{self._topic_prefix}/{self._device_id}/{channel}"
+            for device_id, channel in self._subscribed_channels:
+                topic = f"{self._topic_prefix}/{device_id}/{channel}"
                 try:
                     client.subscribe(topic, 1)
                     LOGGER.debug("Subscribed to topic: %s", topic)
@@ -303,13 +307,15 @@ class MqttMessagingClient(AbstractMessagingClient):
     def _on_message(self, _client, _userdata, msg):
         """
         Internal Paho callback for message events.
-        Parses the topic into a channel and calls the external on_message
-        handler.
+        Parses the topic to extract Device ID and Channel.
+        Format: /prefix/DEVICE_ID/channel...
         """
         topic_parts = msg.topic.strip("/").split('/')
-        channel_start_index = self._prefix_segments + 1
+        device_id_index = self._prefix_segments
+        channel_start_index = device_id_index + 1
 
         if len(topic_parts) > channel_start_index:
+            device_id = topic_parts[device_id_index]
             channel = '/'.join(topic_parts[channel_start_index:])
             try:
                 payload = msg.payload.decode('utf-8')
@@ -317,10 +323,10 @@ class MqttMessagingClient(AbstractMessagingClient):
                 LOGGER.error("Failed to decode message payload on %s: %s",
                              msg.topic, e)
                 return
-            LOGGER.debug("Received message on channel '%s'", channel)
+            LOGGER.debug("Received message for %s on channel '%s'", device_id, channel)
 
             if self._callbacks.on_message:
-                self._callbacks.on_message(channel, payload)
+                self._callbacks.on_message(device_id, channel, payload)
         else:
             LOGGER.warning("Received message on an unexpected topic format: %s",
                            msg.topic)

@@ -219,7 +219,7 @@ class SystemManager(BaseManager):
                 self._device.persistence.set("applied_blobs",
                                              self._applied_blob_generations)
 
-        except Exception as e:
+        except Exception as e:  # pylint:disable=broad-exception-caught
             LOGGER.error("Failed to apply blob '%s': %s", key, e)
             LOGGER.debug(traceback.format_exc())
             self._update_blob_state(key, Phase.final, config.generation, str(e))
