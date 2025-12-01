@@ -9,6 +9,8 @@ wire them together.
 import logging
 from dataclasses import dataclass
 from dataclasses import field
+from functools import partial
+from typing import Callable
 from typing import List
 from typing import Optional
 
@@ -21,6 +23,7 @@ from udmi.core.device import Device
 from udmi.core.managers import PointsetManager
 from udmi.core.managers.base_manager import BaseManager
 from udmi.core.managers.system_manager import SystemManager
+from udmi.core.messaging import AbstractMessageDispatcher
 from udmi.core.messaging import create_client_from_endpoint_config
 from udmi.core.messaging.message_dispatcher import MessageDispatcher
 from udmi.core.messaging.mqtt_messaging_client import MqttMessagingClient
@@ -63,13 +66,17 @@ def get_default_managers() -> List[BaseManager]:
 def _wire_device(
     mqtt_client: MqttMessagingClient,
     managers: Optional[List[BaseManager]] = None,
-    endpoint_config: Optional[EndpointConfiguration] = None
+    endpoint_config: Optional[EndpointConfiguration] = None,
+    connection_factory: Optional[Callable] = None
 ) -> Device:
     """
     Internal private function to handle the final wiring of components.
     Args:
-        mqtt_client: MqttMessagingClient instance
+        mqtt_client: MqttMessagingClient instance (for the initial connection)
         managers: list of BaseManager instances
+        endpoint_config: The initial endpoint configuration
+        connection_factory: A callable (factory) used to create NEW dispatchers
+                            during a connection reset.
     """
     LOGGER.debug("Wiring device components...")
     final_managers = managers or get_default_managers()
@@ -77,7 +84,12 @@ def _wire_device(
                 len(final_managers),
                 [m.__class__.__name__ for m in final_managers])
 
-    device = Device(managers=final_managers, endpoint_config=endpoint_config)
+    device = Device(
+        managers=final_managers,
+        endpoint_config=endpoint_config,
+        connection_factory=connection_factory
+    )
+
     dispatcher = MessageDispatcher(
         client=mqtt_client,
         on_ready_callback=device.on_ready,
@@ -86,6 +98,59 @@ def _wire_device(
     device.wire_up_dispatcher(dispatcher)
     LOGGER.info("Device instance created and wired successfully.")
     return device
+
+
+def _create_dispatcher_stack(
+    endpoint_config: EndpointConfiguration,
+    on_ready: Callable[[], None],
+    on_disconnect: Callable[[int], None],
+    key_file: str,
+    client_config: ClientConfig = None,
+) -> AbstractMessageDispatcher:
+    """
+    Helper that builds the full Client -> Dispatcher stack based on
+    config inference.
+    """
+    client = create_client_from_endpoint_config(
+        config=endpoint_config,
+        key_file=key_file,
+        tls_config=client_config.tls_config if client_config else None,
+        reconnect_config=client_config.reconnect_config if client_config else None
+    )
+
+    dispatcher = MessageDispatcher(
+        client=client,
+        on_ready_callback=on_ready,
+        on_disconnect_callback=on_disconnect,
+    )
+
+    return dispatcher
+
+
+def _create_dispatcher_stack_with_auth(
+    endpoint_config: EndpointConfiguration,
+    on_ready: Callable[[], None],
+    on_disconnect: Callable[[int], None],
+    auth_provider: AuthProvider,
+    client_config: ClientConfig = None,
+) -> AbstractMessageDispatcher:
+    """
+    Helper that builds the stack using an explicit AuthProvider
+    """
+    client = MqttMessagingClient(
+        endpoint_config=endpoint_config,
+        auth_provider=auth_provider,
+        tls_config=client_config.tls_config if client_config else None,
+        reconnect_config=client_config.reconnect_config if client_config else None
+    )
+
+    dispatcher = MessageDispatcher(
+        client=client,
+        on_ready_callback=on_ready,
+        on_disconnect_callback=on_disconnect,
+    )
+
+    return dispatcher
 
 
 # --- Public Factory Functions ---
@@ -107,8 +172,18 @@ def create_device(
         client_config.tls_config, client_config.reconnect_config
     )
 
-    return _wire_device(mqtt_client=client, managers=managers,
-                        endpoint_config=endpoint_config)
+    connection_factory = partial(
+        _create_dispatcher_stack,
+        key_file=key_file,
+        client_config=client_config
+    )
+
+    return _wire_device(
+        mqtt_client=client,
+        managers=managers,
+        endpoint_config=endpoint_config,
+        connection_factory=connection_factory
+    )
 
 
 def create_mqtt_device_instance(
@@ -140,10 +215,17 @@ def create_mqtt_device_instance(
         reconnect_config=client_config.reconnect_config
     )
 
+    connection_factory = partial(
+        _create_dispatcher_stack_with_auth,
+        auth_provider=auth_provider,
+        client_config=client_config
+    )
+
     return _wire_device(
         mqtt_client=client,
         managers=managers,
-        endpoint_config=endpoint_config
+        endpoint_config=endpoint_config,
+        connection_factory=connection_factory
     )
 
 

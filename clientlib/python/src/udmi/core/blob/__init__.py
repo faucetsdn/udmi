@@ -4,10 +4,18 @@ used in UDMI configuration.
 """
 
 import hashlib
+import json
+from typing import Tuple
+from typing import Type
+from typing import TypeVar
 
 from udmi.core.blob.fetcher import BlobFetchError
 from udmi.core.blob.registry import BlobFetcherRegistry
 from udmi.schema import BlobBlobsetConfig
+from udmi.schema import BlobsetConfig
+from udmi.schema import DataModel
+
+T = TypeVar("T", bound=DataModel)
 
 
 def get_verified_blob_bytes(blob_config: BlobBlobsetConfig) -> bytes:
@@ -39,3 +47,31 @@ def get_verified_blob_bytes(blob_config: BlobBlobsetConfig) -> bytes:
             f"Blob hash mismatch! Expected {sha256_expected}, got {sha256_actual}")
 
     return data_bytes
+
+
+def parse_blob_as_object(
+    blobset_config: BlobsetConfig,
+    blob_key: str,
+    object_type: Type[T]
+) -> Tuple[T, str]:
+    """
+    Obtains blob data from the URL specified in the config, validates the
+    SHA256 hash, and returns the blob data as a UDMI Schema object along with
+    its generation.
+    """
+    if not blobset_config.blobs:
+        raise ValueError("blobset configuration has no blobs.")
+    if blob_key not in blobset_config.blobs:
+        raise KeyError(
+            f"blob key {blob_key} not found in blobset config {blobset_config}.")
+
+    blob_config = blobset_config.blobs[blob_key]
+    try:
+        data_bytes = get_verified_blob_bytes(blob_config)
+        json_str = data_bytes.decode("utf-8")
+        obj_dict = json.loads(json_str)
+        return object_type.from_dict(obj_dict), blob_config.generation
+    except (BlobFetchError, ValueError) as e:
+        raise BlobFetchError(f"Blob fetch failed: {e}") from e
+    except Exception as e:
+        raise ValueError(f"Failed to parse endpoint config JSON: {e}") from e
