@@ -67,4 +67,8 @@ tail -n 30 $LOGFILE
 
 echo udmis running in the background, pid $PID log in $(realpath $LOGFILE)
 
+echo starting up telegraf
+
+telegraf --config /usr/local/bin/startup/telegraf.conf
+
 (echo Blocking until termination. && tail -f /dev/null)
