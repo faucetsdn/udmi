@@ -31,7 +31,10 @@ public class MappingService extends AbstractPollingService {
   private static final String DISCOVERY_NODE_DEVICE_ID_FIELD = "deviceId";
   private static final String DISCOVERY_TIMESTAMP = "generation";
   private static final String TRIGGER_BRANCH = "discovery";
+  private static final String TRIGGER_BRANCH_IoT = "discovery_iot";
   private static final String DEFAULT_TARGET_BRANCH = "main";
+  private static final String GATEWAY_ID_FIELD = "gatewayId";
+  private static final String DEVICE_NUM_ID_FIELD = "num_id";
   private final String projectSpec;
 
   /**
@@ -79,8 +82,8 @@ public class MappingService extends AbstractPollingService {
   protected void handleMessage(PubsubMessage message) throws Exception {
     Map<String, Object> messageData = parseSourceRepoMessageData(message);
     Integer eventNumber = (Integer) messageData.getOrDefault(EVENT_NUMBER_FIELD, 0);
-    LOGGER.info("Received event no. from message: {}", eventNumber);
     if (eventNumber < 0) {
+      LOGGER.info("Received event no. from message: {}", eventNumber);
       String mappingFamily = (String) messageData.getOrDefault(FAMILY_FIELD, "");
       String registryId = message.getAttributesOrDefault(REGISTRY_ID_FIELD, "");
 
@@ -131,6 +134,49 @@ public class MappingService extends AbstractPollingService {
       } else {
         LOGGER.error("Could not clone repository! PR message was not published!");
       }
+    } else if (message.getAttributesMap().containsKey(GATEWAY_ID_FIELD)) {
+      processGatewayUpdate(message, messageData);
+    }
+  }
+
+  private void processGatewayUpdate(PubsubMessage message, Map<String, Object> messageData)
+      throws Exception {
+    String registryId = message.getAttributesOrDefault(REGISTRY_ID_FIELD, "");
+
+    if (registryId.isEmpty()) {
+      LOGGER.error("Registry Id not found for the message.");
+      return;
+    }
+
+    LOGGER.info("Starting Mapping process for registry: {}", registryId);
+
+    SourceRepository repository = initRepository(registryId);
+    if (repository.clone(DEFAULT_TARGET_BRANCH)) {
+      String timestamp =
+          LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMdd.HHmmss"));
+
+      String exportBranch = String.format("%s/%s/%s", TRIGGER_BRANCH_IoT, SERVICE_NAME, timestamp);
+      if (!repository.checkoutNewBranch(exportBranch)) {
+        throw new RuntimeException("Unable to create and checkout export branch " + exportBranch);
+      }
+
+      String udmiModelPath = repository.getUdmiModelPath();
+      Map<String, Map<String, Object>> devices =
+          (Map<String, Map<String, Object>>) messageData.get("devices");
+      MappingAgent mappingAgent =
+          new MappingAgent(new ArrayList<>(List.of(udmiModelPath, projectSpec)));
+
+      mappingAgent.stitchNumId(devices);
+
+      LOGGER.info("Committing and pushing changes to branch {}", exportBranch);
+      if (!repository.commitAndPush("Merge changes from source: MappingService")) {
+        throw new RuntimeException(
+            "Unable to commit and push changes to branch " + exportBranch);
+      }
+      LOGGER.info("Export operation complete.");
+      repository.delete();
+    } else {
+      LOGGER.error("Could not clone repository! PR message was not published!");
     }
   }
 }

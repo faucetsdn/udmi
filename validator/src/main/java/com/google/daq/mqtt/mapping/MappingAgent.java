@@ -452,4 +452,7 @@ public class MappingAgent {
 
     System.err.println("Mapping process is completed");
   }
+
+  public void stitchNumId(Map<String, Map<String, Object>> devices) {
+  }
 }
