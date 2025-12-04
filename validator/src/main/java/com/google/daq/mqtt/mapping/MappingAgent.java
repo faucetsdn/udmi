@@ -455,8 +455,9 @@ public class MappingAgent {
 
   /**
    * Stitches the properties from the pub/sub message received from udmis, created from clearblade
-   * as datasource
-   * @param devices
+   * as datasource.
+   * @param devices devices with properties from clearblade
+   *
    */
   public void stitchProperties(Map<String, Map<String, Object>> devices) {
     for (Map.Entry<String, Map<String, Object>> device : devices.entrySet()) {
