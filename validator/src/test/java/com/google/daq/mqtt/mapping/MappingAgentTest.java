@@ -4,13 +4,18 @@ import static com.google.daq.mqtt.TestCommon.GATEWAY_ID;
 import static com.google.daq.mqtt.TestCommon.REGISTRY_ID;
 import static com.google.udmi.util.SiteModel.MOCK_PROJECT;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 
 import com.google.common.collect.ImmutableList;
 import com.google.daq.mqtt.util.IotMockProvider.MockAction;
+import com.google.udmi.util.SiteModel;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import org.junit.Test;
 import udmi.schema.ExecutionConfiguration;
+import udmi.schema.Metadata;
 
 /**
  * Test the mapping agent.
@@ -39,5 +44,25 @@ public class MappingAgentTest {
     executionConfiguration.src_file = CONFIG_SOURCE;
     executionConfiguration.site_name = REGISTRY_ID;
     return executionConfiguration;
+  }
+  @Test
+  public void stitchProperties_happyPath() {
+    MappingAgent mappingAgent = new MappingAgent(getExecutionConfig());
+
+    // Create the mock device data that would come from a Pub/Sub message.
+    Map<String, Map<String, Object>> devices = new HashMap<>();
+    Map<String, Object> deviceData = new HashMap<>();
+    String testNumId = "987654321";
+    deviceData.put("num_id", testNumId);
+    devices.put(GATEWAY_ID, deviceData);
+
+    mappingAgent.stitchProperties(devices);
+
+    // Check that the site model was updated correctly.
+    SiteModel siteModel = mappingAgent.getSiteModel();
+    Metadata metadata = siteModel.getMetadata(GATEWAY_ID);
+
+    assertNotNull("Cloud model should have been created.", metadata.cloud);
+    assertEquals("The num_id was not stitched correctly.", testNumId, metadata.cloud.num_id);
   }
 }

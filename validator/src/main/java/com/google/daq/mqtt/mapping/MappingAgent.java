@@ -477,4 +477,8 @@ public class MappingAgent {
       }
     }
   }
+
+  public SiteModel getSiteModel() {
+    return this.siteModel;
+  }
 }
