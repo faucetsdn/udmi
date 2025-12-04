@@ -27,6 +27,7 @@ public class MappingAgentTest {
 
   private static final String CONFIG_SOURCE = "../tests/sites/mapping/testing_placeholder.json";
   private static final String testNumId = "987654321";
+
   @Test
   public void initiate_discovery() {
     List<String> argsList = new ArrayList<>(ImmutableList.of("discover"));
@@ -99,7 +100,9 @@ public class MappingAgentTest {
 
     Metadata updatedMetadata = siteModel.getMetadata(GATEWAY_ID);
     assertNotNull(updatedMetadata.cloud);
-    assertEquals("The num_id was not stitched correctly.", testNumId, updatedMetadata.cloud.num_id);
-    assertEquals("Existing cloud data should be preserved.", "RS256", updatedMetadata.cloud.auth_type.toString());
+    assertEquals("The num_id was not stitched correctly.", testNumId,
+        updatedMetadata.cloud.num_id);
+    assertEquals("Existing cloud data should be preserved.", "RS256",
+        updatedMetadata.cloud.auth_type.toString());
   }
 }
