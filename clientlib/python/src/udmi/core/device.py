@@ -77,7 +77,6 @@ class Device:
 
     This class is NOT intended to be subclassed.
     """
-
     # pylint:disable=too-many-instance-attributes
 
     def __init__(self,
@@ -97,7 +96,10 @@ class Device:
         self.connection_factory = connection_factory
         self.persistence = DevicePersistence(persistence_path, endpoint_config)
         self.current_endpoint = self.persistence.get_effective_endpoint()
-        LOGGER.info("Endpoint set to: %s", self.current_endpoint.hostname)
+
+        self.device_id = self.current_endpoint.client_id.split('/')[-1]
+        LOGGER.info("Device ID: %s", self.device_id)
+        LOGGER.info("Endpoint Host: %s", self.current_endpoint.hostname)
 
         self.dispatcher: Optional[AbstractMessageDispatcher] = None
         self._loop_config = _LoopConfig()
@@ -160,16 +162,21 @@ class Device:
 
     # --- Message Handlers ---
 
-    def handle_config(self, _channel: str, payload: Dict) -> None:
+    def handle_config(self, device_id: str, _channel: str, payload: Dict) -> None:
         """
         Orchestration method to handle a new config.
         Deserializes the config and delegates to all managers.
 
         Args:
-              _channel: The channel the message came from (e.g., 'config').
-              payload: The pre-parsed dictionary of the JSON payload.
+            device_id: The ID of the device this config is for.
+            _channel: The raw channel (e.g. 'config').
+            payload: The parsed JSON payload.
         """
-        LOGGER.info("New config received, deserializing and delegating...")
+        if device_id != self.device_id:
+            self._route_proxy_config(device_id, payload)
+            return
+
+        LOGGER.info("New config received for Device %s...", self.device_id)
         try:
             config_obj = Config.from_dict(payload)
         except (TypeError, ValueError) as e:
@@ -178,6 +185,7 @@ class Device:
 
         if self._has_new_endpoint_config(config_obj):
             self._try_redirect_endpoint(config_obj)
+            return
 
         self.config = config_obj
         for manager in self.managers:
@@ -190,24 +198,66 @@ class Device:
 
         self._publish_state()
 
-    def handle_command(self, channel: str, payload: Dict[str, Any]) -> None:
+    def handle_command(self, device_id: str, channel: str, payload: Dict[str, Any]) -> None:
         """
         Orchestration method to handle a new command.
         Delegates to all managers.
 
         Args:
-              channel: The full command channel (e.g., 'commands/reboot').
-              payload: The pre-parsed dictionary of the JSON payload.
+            device_id: The ID of the device this command is for.
+            channel: The full command channel (e.g., 'commands/reboot').
+            payload: The pre-parsed dictionary of the JSON payload.
         """
         command_name = channel.split('/')[-1]
-        LOGGER.info("Command '%s' received, delegating to managers...",
-                    command_name)
+
+        if device_id != self.device_id:
+            self._route_proxy_command(device_id, command_name, payload)
+            return
+
+        LOGGER.info("Command '%s' received for Device, delegating to managers...", command_name)
         for manager in self.managers:
             try:
                 manager.handle_command(command_name, payload)
             except (AttributeError, TypeError, KeyError, ValueError) as e:
                 LOGGER.error("Error in %s.handle_command: %s",
                              manager.__class__.__name__, e)
+
+    # --- Proxy Routing Helpers ---
+
+    def _route_proxy_config(self, device_id: str, payload: Dict) -> None:
+        """
+        Routes a config message meant for a proxy device to the GatewayManager.
+        """
+        handled = False
+        for manager in self.managers:
+            if hasattr(manager, "handle_proxy_config"):
+                try:
+                    config_obj = Config.from_dict(payload)
+                    manager.handle_proxy_config(device_id, config_obj)
+                    handled = True
+                except Exception as e:
+                    LOGGER.error("Error routing proxy config to %s: %s",
+                                 manager.__class__.__name__, e)
+
+        if not handled:
+            LOGGER.debug("Received config for proxy '%s' but no GatewayManager found.", device_id)
+
+    def _route_proxy_command(self, device_id: str, command_name: str, payload: Dict) -> None:
+        """
+        Routes a command message meant for a proxy device to the GatewayManager.
+        """
+        handled = False
+        for manager in self.managers:
+            if hasattr(manager, "handle_proxy_command"):
+                try:
+                    manager.handle_proxy_command(device_id, command_name, payload)
+                    handled = True
+                except Exception as e:
+                    LOGGER.error("Error routing proxy command to %s: %s",
+                                 manager.__class__.__name__, e)
+
+        if not handled:
+            LOGGER.debug("Received command for proxy '%s' but no GatewayManager found.", device_id)
 
     # --- Device lifecycle and endpoint management ---
 
@@ -244,9 +294,11 @@ class Device:
 
             self.persistence.save_active_endpoint(new_endpoint, generation)
             self.current_endpoint = new_endpoint
+            self.device_id = self.current_endpoint.client_id.split('/')[-1]
 
             LOGGER.info("Signaling main loop to trigger connection reset...")
             self._loop_state.reset_event.set()
+
         except Exception as e:  # pylint:disable=broad-exception-caught
             LOGGER.error("Failed to process endpoint redirect: %s", e)
 
@@ -309,24 +361,7 @@ class Device:
             self._attempt_connection_setup()
         except Exception as e:  # pylint:disable=broad-exception-caught
             LOGGER.error("Failed to connect to current endpoint: %s", e)
-            if self.persistence.get_active_endpoint():
-                LOGGER.warning(
-                    "Active endpoint failed. Reverting to fallback configuration...")
-                self.persistence.clear_active_endpoint()
-
-                self.current_endpoint = self.persistence.get_effective_endpoint()
-                LOGGER.info("Fallback endpoint is: %s",
-                            self.current_endpoint.hostname)
-
-                LOGGER.info("Retrying connection with fallback...")
-                try:
-                    self._attempt_connection_setup()
-                except Exception as fatal_e:
-                    LOGGER.critical("Fallback connection also failed: %s",
-                                    fatal_e)
-                    raise fatal_e
-            else:
-                raise e
+            self._trigger_fallback_or_raise(e)
 
     def _attempt_connection_setup(self):
         """Helper to create dispatcher and connect."""
@@ -349,6 +384,7 @@ class Device:
             self.persistence.clear_active_endpoint()
 
             self.current_endpoint = self.persistence.get_effective_endpoint()
+            self.device_id = self.current_endpoint.client_id.split('/')[-1]
             LOGGER.info("Fallback endpoint will be: %s",
                         self.current_endpoint.hostname)
 
@@ -361,7 +397,6 @@ class Device:
         Gathers contributions from all managers.
         """
         LOGGER.debug("Assembling state message...")
-        # initialize state before assembling
         self.state = State(
             timestamp=datetime.datetime.now(datetime.timezone.utc).isoformat(),
             version=UDMI_VERSION,
@@ -404,6 +439,7 @@ class Device:
         while not self._loop_state.stop_event.is_set():
             if self._loop_state.reset_event.is_set():
                 raise ConnectionResetException()
+
             if self._loop_state.consecutive_failures >= MAX_CONNECTION_RETRIES:
                 LOGGER.error("Max connection failures (%s) reached.",
                              MAX_CONNECTION_RETRIES)
