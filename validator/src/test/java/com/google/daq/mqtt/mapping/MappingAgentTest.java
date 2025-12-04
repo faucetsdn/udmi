@@ -14,6 +14,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import org.junit.BeforeClass;
 import org.junit.Test;
 import udmi.schema.CloudModel;
 import udmi.schema.CloudModel.Auth_type;
@@ -26,12 +27,21 @@ import udmi.schema.Metadata;
 public class MappingAgentTest {
 
   private static final String CONFIG_SOURCE = "../tests/sites/mapping/testing_placeholder.json";
-  private static final String testNumId = "987654321";
+  private static final String TEST_NUM_ID = "987654321";
+  private static final String TEST_DEVICE_ID = "test-device-1";
+  private static MappingAgent mappingAgent;
+  private static SiteModel siteModel;
+
+  @BeforeClass
+  public static void setup() {
+    mappingAgent = new MappingAgent(getExecutionConfig());
+    siteModel = mappingAgent.getSiteModel();
+    siteModel.createNewDevice(TEST_DEVICE_ID, new Metadata());
+  }
 
   @Test
   public void initiate_discovery() {
     List<String> argsList = new ArrayList<>(ImmutableList.of("discover"));
-    MappingAgent mappingAgent = new MappingAgent(getExecutionConfig());
     mappingAgent.process(argsList);
     List<MockAction> actions = mappingAgent.getMockActions().stream().map(a -> (MockAction) a)
         .toList();
@@ -40,7 +50,7 @@ public class MappingAgentTest {
     MockAction metadataAction = actions.get(1);
   }
 
-  private ExecutionConfiguration getExecutionConfig() {
+  private static ExecutionConfiguration getExecutionConfig() {
     ExecutionConfiguration executionConfiguration = new ExecutionConfiguration();
     executionConfiguration.project_id = MOCK_PROJECT;
     executionConfiguration.device_id = GATEWAY_ID;
@@ -63,44 +73,38 @@ public class MappingAgentTest {
 
   @Test
   public void stitchProperties_happyPath() {
-    MappingAgent mappingAgent = new MappingAgent(getExecutionConfig());
-    mappingAgent.stitchProperties(createDevicesMap(GATEWAY_ID, testNumId));
+    mappingAgent.stitchProperties(createDevicesMap(TEST_DEVICE_ID, TEST_NUM_ID));
 
-    SiteModel siteModel = mappingAgent.getSiteModel();
-    Metadata metadata = siteModel.getMetadata(GATEWAY_ID);
+    Metadata metadata = siteModel.getMetadata(TEST_DEVICE_ID);
 
     assertNotNull("Cloud model should have been created.", metadata.cloud);
-    assertEquals("The num_id was not stitched correctly.", testNumId, metadata.cloud.num_id);
+    assertEquals("The num_id was not stitched correctly.", TEST_NUM_ID,
+        metadata.cloud.num_id);
   }
 
   @Test
   public void stitchProperties_deviceNotInSiteModel() {
-    MappingAgent mappingAgent = new MappingAgent(getExecutionConfig());
     String unknownTest = "unknown-device";
-    mappingAgent.stitchProperties(createDevicesMap(unknownTest, "987654321"));
+    mappingAgent.stitchProperties(createDevicesMap(unknownTest, TEST_NUM_ID));
 
-    SiteModel siteModel = mappingAgent.getSiteModel();
     Metadata metadata = siteModel.getMetadata(unknownTest);
     assertNull(metadata);
   }
 
   @Test
   public void stitchProperties_preservesExistingCloudData() {
-    MappingAgent mappingAgent = new MappingAgent(getExecutionConfig());
-
     // Manually add existing cloud data to the site model before the test.
-    SiteModel siteModel = mappingAgent.getSiteModel();
-    Metadata metadata = siteModel.getMetadata(GATEWAY_ID);
+    Metadata metadata = siteModel.getMetadata(TEST_DEVICE_ID);
     metadata.cloud = new CloudModel();
     metadata.cloud.auth_type = Auth_type.RS_256; // Some pre-existing data
-    siteModel.updateMetadata(GATEWAY_ID, metadata);
+    siteModel.updateMetadata(TEST_DEVICE_ID, metadata);
 
-    Map<String, Map<String, Object>> devices = createDevicesMap(GATEWAY_ID, testNumId);
+    Map<String, Map<String, Object>> devices = createDevicesMap(TEST_DEVICE_ID, TEST_NUM_ID);
     mappingAgent.stitchProperties(devices);
 
-    Metadata updatedMetadata = siteModel.getMetadata(GATEWAY_ID);
+    Metadata updatedMetadata = siteModel.getMetadata(TEST_DEVICE_ID);
     assertNotNull(updatedMetadata.cloud);
-    assertEquals("The num_id was not stitched correctly.", testNumId,
+    assertEquals("The num_id was not stitched correctly.", TEST_NUM_ID,
         updatedMetadata.cloud.num_id);
     assertEquals("Existing cloud data should be preserved.", "RS256",
         updatedMetadata.cloud.auth_type.toString());
