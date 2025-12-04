@@ -453,6 +453,11 @@ public class MappingAgent {
     System.err.println("Mapping process is completed");
   }
 
+  /**
+   * Stitches the properties from the pub/sub message received from udmis, created from clearblade
+   * as datasource
+   * @param devices
+   */
   public void stitchProperties(Map<String, Map<String, Object>> devices) {
     for (Map.Entry<String, Map<String, Object>> device : devices.entrySet()) {
       String deviceId = device.getKey();
