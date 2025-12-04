@@ -10,6 +10,7 @@ import logging
 import sys
 
 from udmi.core.factory import create_device
+from udmi.core.factory import get_default_managers
 from udmi.core.managers import SystemManager
 from udmi.schema import EndpointConfiguration
 from udmi.schema import StateSystemHardware
@@ -58,12 +59,12 @@ if __name__ == "__main__":
             serial_no="SN-88392-X",
         )
 
-        # Initialize the manager with our custom state
-        my_system_manager = SystemManager(system_state=static_state)
+        # Initialize the managers with our custom state
+        managers = get_default_managers(system_state=static_state)
 
         # 3. Create Device
         device = create_device(endpoint_config=endpoint,
-                               managers=[my_system_manager])
+                               managers=managers)
 
         device.run()
 

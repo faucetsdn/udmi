@@ -100,6 +100,7 @@ def test_create_device_with_jwt(
         mqtt_client=mock_client_instance,
         managers=None,
         endpoint_config=mock_endpoint_config,
+        persistence_path=None
     )
 
 
@@ -153,6 +154,7 @@ def test_create_device_with_basic_auth(
         mqtt_client=mock_client_instance,
         managers=None,
         endpoint_config=mock_endpoint_config,
+        persistence_path=None
     )
 
 
@@ -181,7 +183,7 @@ def test_wire_device_with_defaults(
         managers=None
     )
 
-    mock_system_manager.assert_called_once_with()
+    mock_system_manager.assert_called_once()
 
     mock_device.assert_called_once()
     device_call_args = mock_device.call_args
