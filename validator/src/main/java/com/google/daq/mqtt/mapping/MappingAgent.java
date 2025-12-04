@@ -453,13 +453,20 @@ public class MappingAgent {
     System.err.println("Mapping process is completed");
   }
 
-  public void stitchNumId(Map<String, Map<String, Object>> devices) {
+  public void stitchProperties(Map<String, Map<String, Object>> devices) {
     for (Map.Entry<String, Map<String, Object>> device : devices.entrySet()) {
       String deviceId = device.getKey();
       Map<String, Object> deviceData = device.getValue();
       if (deviceData.containsKey("num_id")) {
         String numId = (String) deviceData.get("num_id");
-        File deviceDirectory = siteModel.getDeviceDir(deviceId);
+        if (siteModel.deviceExists(deviceId)) {
+          Metadata metadata = siteModel.getMetadata(deviceId);
+          if (metadata.cloud == null) {
+            metadata.cloud = new CloudModel();
+          }
+          metadata.cloud.num_id = numId;
+          siteModel.updateMetadata(deviceId, metadata);
+        }
       }
     }
   }

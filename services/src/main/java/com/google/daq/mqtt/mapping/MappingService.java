@@ -166,7 +166,7 @@ public class MappingService extends AbstractPollingService {
       MappingAgent mappingAgent =
           new MappingAgent(new ArrayList<>(List.of(udmiModelPath, projectSpec)));
 
-      mappingAgent.stitchNumId(devices);
+      mappingAgent.stitchProperties(devices);
 
       LOGGER.info("Committing and pushing changes to branch {}", exportBranch);
       if (!repository.commitAndPush("Merge changes from source: MappingService")) {
