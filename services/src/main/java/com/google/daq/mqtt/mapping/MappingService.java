@@ -34,7 +34,6 @@ public class MappingService extends AbstractPollingService {
   private static final String TRIGGER_BRANCH_IoT = "discovery_iot";
   private static final String DEFAULT_TARGET_BRANCH = "main";
   private static final String GATEWAY_ID_FIELD = "gatewayId";
-  private static final String DEVICE_NUM_ID_FIELD = "num_id";
   private final String projectSpec;
 
   /**

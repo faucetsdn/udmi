@@ -83,6 +83,7 @@ public class MappingAgent {
   private long extrasDeletionTimeInMillis;
   private long devicesDeletionTimeInMillis;
   private long discoveryEventCompletionTimeInMillis;
+  private static final String DEVICE_NUM_ID_FIELD = "num_id";
 
   /**
    * Create an agent given the configuration.
@@ -456,16 +457,16 @@ public class MappingAgent {
   /**
    * Stitches the properties from the pub/sub message received from udmis, created from clearblade
    * as datasource.
-   * 
+   *
    * @param devices devices with properties from clearblade
    */
   public void stitchProperties(Map<String, Map<String, Object>> devices) {
     for (Map.Entry<String, Map<String, Object>> device : devices.entrySet()) {
       String deviceId = device.getKey();
       Map<String, Object> deviceData = device.getValue();
-      if (deviceData.containsKey("num_id")) {
-        String numId = (String) deviceData.get("num_id");
-        if (siteModel.deviceExists(deviceId)) {
+      if (deviceData.containsKey(DEVICE_NUM_ID_FIELD)) {
+        String numId = (String) deviceData.get(DEVICE_NUM_ID_FIELD);
+        if (numId != null && !numId.isBlank() && siteModel.deviceExists(deviceId)) {
           Metadata metadata = siteModel.getMetadata(deviceId);
           if (metadata.cloud == null) {
             metadata.cloud = new CloudModel();
