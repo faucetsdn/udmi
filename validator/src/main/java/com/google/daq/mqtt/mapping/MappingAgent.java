@@ -454,5 +454,13 @@ public class MappingAgent {
   }
 
   public void stitchNumId(Map<String, Map<String, Object>> devices) {
+    for (Map.Entry<String, Map<String, Object>> device : devices.entrySet()) {
+      String deviceId = device.getKey();
+      Map<String, Object> deviceData = device.getValue();
+      if (deviceData.containsKey("num_id")) {
+        String numId = (String) deviceData.get("num_id");
+        File deviceDirectory = siteModel.getDeviceDir(deviceId);
+      }
+    }
   }
 }
