@@ -69,6 +69,6 @@ echo udmis running in the background, pid $PID log in $(realpath $LOGFILE)
 
 echo starting up telegraf
 
-telegraf --config /usr/local/bin/startup/telegraf.conf
+telegraf --config /usr/local/bin/startup/telegraf.conf > /tmp/telegraf.log 2>&1 &
 
 (echo Blocking until termination. && tail -f /dev/null)
