@@ -20,7 +20,7 @@ This guide provides instructions for deploying the core UDMI services bundle. Th
 
 4. **Edit compose file:** Open the docker-compose.yml file in your chosen editor.
     1. **Add Host IP:** Locate the line `HOST_IP: <YOUR_IP>` inside the **mosquitto** service block. Replace `<YOUR_IP>` with your hosts ip address. You can find this by running `sudo hostname -I`. This is required in order tp allow connections to the broker externally from the docker compose environment. 
-    2. **Update InfluxDB Credentials:** Under the **influxdb** service, under the environment variables, set the values of `DOCKER_INFLUXDB_INIT_USERNAME`, `DOCKER_INFLUXDB_INIT_PASSWORD` and `DOCKER_INFLUXDB_INIT_ADMIN_TOKEN`. For `DOCKER_INFLUXDB_INIT_ADMIN_TOKEN`, run `openssl rand -hex 32`.
+    2. **Update InfluxDB Credentials:** Under the **influxdb** service, under the environment variables, set the values of `DOCKER_INFLUXDB_INIT_USERNAME`, `DOCKER_INFLUXDB_INIT_PASSWORD` and `DOCKER_INFLUXDB_INIT_ADMIN_TOKEN`. For `DOCKER_INFLUXDB_INIT_ADMIN_TOKEN`, run `openssl rand -hex 32`. *Note: The password for influx must be between 8-72 characters.*
     3. **Update Grafana credentials:** Under the **grafana** service, set the values of `GF_SECURITY_ADMIN_USER` and `GF_SECURITY_ADMIN_USER`. Update the value of `INFLUXDB_TOKEN` with the token generated in step 2.
     4. **Update udmis credentials:** Under the **udmis** service, set the value of `INFLUXDB_TOKEN` with the token generated in step 2.
 
