@@ -127,7 +127,8 @@ public class MappingService extends AbstractPollingService {
         });
   }
 
-  private void processRegistryFetchFromClearBlade(PubsubMessage message, Map<String, Object> messageData)
+  private void processRegistryFetchFromClearBlade(PubsubMessage message,
+      Map<String, Object> messageData)
       throws Exception {
     String registryId = message.getAttributesOrDefault(REGISTRY_ID_FIELD, "");
 
