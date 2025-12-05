@@ -82,63 +82,53 @@ public class MappingService extends AbstractPollingService {
     Map<String, Object> messageData = parseSourceRepoMessageDataToRawMap(message);
     Integer eventNumber = (Integer) messageData.getOrDefault(EVENT_NUMBER_FIELD, 0);
     if (eventNumber < 0) {
-      LOGGER.info("Received event no. from message: {}", eventNumber);
-      String mappingFamily = (String) messageData.getOrDefault(FAMILY_FIELD, "");
-      String registryId = message.getAttributesOrDefault(REGISTRY_ID_FIELD, "");
-
-      if (registryId.isEmpty()) {
-        LOGGER.error("Registry Id not found for the message.");
-        return;
-      }
-
-      Instant now = Instant.now();
-      String currentTimestamp = DateTimeFormatter.ISO_INSTANT.format(now);
-      String discoveryTimestamp = (String) messageData.getOrDefault(DISCOVERY_TIMESTAMP,
-          currentTimestamp);
-      String discoveryNodeDeviceId = message.getAttributesOrDefault(
-          DISCOVERY_NODE_DEVICE_ID_FIELD, "");
-      if (discoveryNodeDeviceId.isEmpty()) {
-        LOGGER.error("Discovery Node device Id not found for the message received.");
-        return;
-      }
-      LOGGER.info("Starting Mapping process for registry: {}, family: {}, discoverNode deviceId:"
-          + " {}", registryId, mappingFamily, discoveryNodeDeviceId);
-
-      SourceRepository repository = initRepository(registryId);
-      if (repository.clone(DEFAULT_TARGET_BRANCH)) {
-        String timestamp = LocalDateTime.now()
-            .format(DateTimeFormatter.ofPattern("yyyyMMdd.HHmmss"));
-
-        String exportBranch = String.format("%s/%s/%s", TRIGGER_BRANCH, SERVICE_NAME, timestamp);
-        if (!repository.checkoutNewBranch(exportBranch)) {
-          throw new RuntimeException("Unable to create and checkout export branch "
-              + exportBranch);
-        }
-
-        String udmiModelPath = repository.getUdmiModelPath();
-        (new Registrar()).processArgs(new ArrayList<>(List.of(udmiModelPath, projectSpec)))
-            .execute();
-        MappingAgent mappingAgent = new MappingAgent(new ArrayList<>(
-            List.of(udmiModelPath, projectSpec)));
-        mappingAgent.processMapping(new ArrayList<>(List.of(discoveryNodeDeviceId,
-            discoveryTimestamp, mappingFamily)));
-
-        LOGGER.info("Committing and pushing changes to branch {}", exportBranch);
-        if (!repository.commitAndPush("Merge changes from source: MappingService")) {
-          throw new RuntimeException("Unable to commit and push changes to branch "
-              + exportBranch);
-        }
-        LOGGER.info("Export operation complete.");
-        repository.delete();
-      } else {
-        LOGGER.error("Could not clone repository! PR message was not published!");
-      }
+      processDiscoveryCompleteEvent(message, messageData);
     } else if (message.getAttributesMap().containsKey(GATEWAY_ID_FIELD)) {
-      processGatewayUpdate(message, messageData);
+      processRegistryFetchFromClearBlade(message, messageData);
     }
   }
 
-  private void processGatewayUpdate(PubsubMessage message, Map<String, Object> messageData) {
+  private void processDiscoveryCompleteEvent(PubsubMessage message, Map<String, Object> messageData)
+      throws Exception {
+    LOGGER.info(
+        "Received event no. from message: {}", messageData.getOrDefault(EVENT_NUMBER_FIELD, 0));
+    String mappingFamily = (String) messageData.getOrDefault(FAMILY_FIELD, "");
+    String registryId = message.getAttributesOrDefault(REGISTRY_ID_FIELD, "");
+
+    if (registryId.isEmpty()) {
+      LOGGER.error("Registry Id not found for the message.");
+      return;
+    }
+
+    Instant now = Instant.now();
+    String currentTimestamp = DateTimeFormatter.ISO_INSTANT.format(now);
+    String discoveryTimestamp =
+        (String) messageData.getOrDefault(DISCOVERY_TIMESTAMP, currentTimestamp);
+    String discoveryNodeDeviceId =
+        message.getAttributesOrDefault(DISCOVERY_NODE_DEVICE_ID_FIELD, "");
+    if (discoveryNodeDeviceId.isEmpty()) {
+      LOGGER.error("Discovery Node device Id not found for the message received.");
+      return;
+    }
+    LOGGER.info(
+        "Starting Mapping process for registry: {}, family: {}, discoverNode deviceId:" + " {}",
+        registryId, mappingFamily, discoveryNodeDeviceId);
+
+    withRepository(registryId, TRIGGER_BRANCH,
+        repository -> {
+          String udmiModelPath = repository.getUdmiModelPath();
+          (new Registrar())
+              .processArgs(new ArrayList<>(List.of(udmiModelPath, projectSpec)))
+              .execute();
+          MappingAgent mappingAgent =
+              new MappingAgent(new ArrayList<>(List.of(udmiModelPath, projectSpec)));
+          mappingAgent.processMapping(
+              new ArrayList<>(List.of(discoveryNodeDeviceId, discoveryTimestamp, mappingFamily)));
+        });
+  }
+
+  private void processRegistryFetchFromClearBlade(PubsubMessage message, Map<String, Object> messageData)
+      throws Exception {
     String registryId = message.getAttributesOrDefault(REGISTRY_ID_FIELD, "");
 
     if (registryId.isEmpty()) {
@@ -147,38 +137,54 @@ public class MappingService extends AbstractPollingService {
     }
     LOGGER.info("Starting Stitching process for registry: {}", registryId);
 
+    withRepository(registryId, TRIGGER_BRANCH_IoT,
+        repository -> {
+          Object devicesObject = messageData.get("devices");
+          if (!(devicesObject instanceof Map)) {
+            LOGGER.warn("Skipping Processing : Received message without a valid 'devices' map.");
+            return;
+          }
+          String udmiModelPath = repository.getUdmiModelPath();
+          @SuppressWarnings("unchecked")
+          Map<String, Map<String, Object>> devices =
+              (Map<String, Map<String, Object>>) devicesObject;
+          MappingAgent mappingAgent =
+              new MappingAgent(new ArrayList<>(List.of(udmiModelPath, projectSpec)));
+
+          mappingAgent.stitchProperties(devices);
+        });
+  }
+
+  private void withRepository(String registryId, String branchPrefix, RepositoryConsumer work)
+      throws Exception {
     SourceRepository repository = initRepository(registryId);
     if (repository.clone(DEFAULT_TARGET_BRANCH)) {
-      String timestamp =
-          LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMdd.HHmmss"));
+      try {
+        String timestamp = LocalDateTime.now()
+            .format(DateTimeFormatter.ofPattern("yyyyMMdd.HHmmss"));
 
-      String exportBranch = String.format("%s/%s/%s", TRIGGER_BRANCH_IoT, SERVICE_NAME, timestamp);
-      if (!repository.checkoutNewBranch(exportBranch)) {
-        throw new RuntimeException("Unable to create and checkout export branch " + exportBranch);
+        String exportBranch = String.format("%s/%s/%s", branchPrefix, SERVICE_NAME, timestamp);
+        if (!repository.checkoutNewBranch(exportBranch)) {
+          throw new RuntimeException("Unable to create and checkout export branch " + exportBranch);
+        }
+
+        work.accept(repository);
+
+        LOGGER.info("Committing and pushing changes to branch {}", exportBranch);
+        if (!repository.commitAndPush("Merge changes from source: MappingService")) {
+          throw new RuntimeException("Unable to commit and push changes to branch " + exportBranch);
+        }
+        LOGGER.info("Export operation complete.");
+      } finally {
+        repository.delete();
       }
-
-      Object devicesObject = messageData.get("devices");
-      if (!(devicesObject instanceof Map)) {
-        LOGGER.warn("Skipping Processing : Received message without a valid 'devices' map.");
-        return;
-      }
-      String udmiModelPath = repository.getUdmiModelPath();
-      Map<String, Map<String, Object>> devices =
-          (Map<String, Map<String, Object>>) devicesObject;
-      MappingAgent mappingAgent =
-          new MappingAgent(new ArrayList<>(List.of(udmiModelPath, projectSpec)));
-
-      mappingAgent.stitchProperties(devices);
-
-      LOGGER.info("Committing and pushing changes to branch {}", exportBranch);
-      if (!repository.commitAndPush("Merge changes from source: MappingService")) {
-        throw new RuntimeException(
-            "Unable to commit and push changes to branch " + exportBranch);
-      }
-      LOGGER.info("Export operation complete.");
-      repository.delete();
     } else {
       LOGGER.error("Could not clone repository! PR message was not published!");
     }
+  }
+
+  @FunctionalInterface
+  private interface RepositoryConsumer {
+    void accept(SourceRepository repository) throws Exception;
   }
 }
