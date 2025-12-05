@@ -82,13 +82,13 @@ public class MappingService extends AbstractPollingService {
     Map<String, Object> messageData = parseSourceRepoMessageDataToRawMap(message);
     Integer eventNumber = (Integer) messageData.getOrDefault(EVENT_NUMBER_FIELD, 0);
     if (eventNumber < 0) {
-      processDiscoveryCompleteEvent(message, messageData);
+      processDiscoveryComplete(message, messageData);
     } else if (message.getAttributesMap().containsKey(GATEWAY_ID_FIELD)) {
-      processRegistryFetchFromClearBlade(message, messageData);
+      stitchDeviceProperties(message, messageData);
     }
   }
 
-  private void processDiscoveryCompleteEvent(PubsubMessage message, Map<String, Object> messageData)
+  private void processDiscoveryComplete(PubsubMessage message, Map<String, Object> messageData)
       throws Exception {
     LOGGER.info(
         "Received event no. from message: {}", messageData.getOrDefault(EVENT_NUMBER_FIELD, 0));
@@ -127,7 +127,7 @@ public class MappingService extends AbstractPollingService {
         });
   }
 
-  private void processRegistryFetchFromClearBlade(PubsubMessage message,
+  private void stitchDeviceProperties(PubsubMessage message,
       Map<String, Object> messageData)
       throws Exception {
     String registryId = message.getAttributesOrDefault(REGISTRY_ID_FIELD, "");
