@@ -113,13 +113,17 @@ Out of 4 total.
 
 1. **Access:** Navigate to the InfluxDB endpoint at `http://localhost:8086`.
 2. **Login:** Use the credentials specified in the Docker Compose file.
-3. **Query:** Go to the Data Explorer (left panel). Locate the bridgehead bucket at the bottom to begin querying data.
+3. **Query:** Go to the Data Explorer (left panel). Locate the home bucket at the bottom to begin querying data.
+
+Although InfluxDB is available and accessible, there should be no need to directly interact with it.
 
 ### Grafana 
 
 1. **Access:** Navigate to the InfluxDB endpoint at `http://localhost:3000`.
 2. **Login:** Use the credentials specified in the Docker Compose file.
 3. **View Dashboard:**  Select Dashboards from the left-hand menu. The pre-configured `bridgehead` dashboard includes a basic overview of the running services.
+
+Note about the default dashboard: The MQTT graphs only display data that falls within the currently selected time range. For instance, if the connection count has been stable for the last hour, but the dashboard time range is set to the last five minutes, the graphs will remain empty.T o see the history, simply expand the grafana time range to include the last time activity was recorded.
 
 #### Alerts
 
