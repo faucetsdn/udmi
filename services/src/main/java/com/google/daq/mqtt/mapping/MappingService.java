@@ -1,6 +1,6 @@
 package com.google.daq.mqtt.mapping;
 
-import static com.google.bos.iot.core.reconcile.SourceRepoMessageUtils.parseSourceRepoMessageData;
+import static com.google.bos.iot.core.reconcile.SourceRepoMessageUtils.parseSourceRepoMessageDataToRawMap;
 import static com.google.udmi.util.GeneralUtils.isNotEmpty;
 
 import com.google.daq.mqtt.registrar.Registrar;
@@ -79,7 +79,7 @@ public class MappingService extends AbstractPollingService {
 
   @Override
   protected void handleMessage(PubsubMessage message) throws Exception {
-    Map<String, Object> messageData = parseSourceRepoMessageData(message);
+    Map<String, Object> messageData = parseSourceRepoMessageDataToRawMap(message);
     Integer eventNumber = (Integer) messageData.getOrDefault(EVENT_NUMBER_FIELD, 0);
     if (eventNumber < 0) {
       LOGGER.info("Received event no. from message: {}", eventNumber);
@@ -138,16 +138,14 @@ public class MappingService extends AbstractPollingService {
     }
   }
 
-  private void processGatewayUpdate(PubsubMessage message, Map<String, Object> messageData)
-      throws Exception {
+  private void processGatewayUpdate(PubsubMessage message, Map<String, Object> messageData) {
     String registryId = message.getAttributesOrDefault(REGISTRY_ID_FIELD, "");
 
     if (registryId.isEmpty()) {
       LOGGER.error("Registry Id not found for the message.");
       return;
     }
-
-    LOGGER.info("Starting Mapping process for registry: {}", registryId);
+    LOGGER.info("Starting Stitching process for registry: {}", registryId);
 
     SourceRepository repository = initRepository(registryId);
     if (repository.clone(DEFAULT_TARGET_BRANCH)) {
@@ -159,9 +157,14 @@ public class MappingService extends AbstractPollingService {
         throw new RuntimeException("Unable to create and checkout export branch " + exportBranch);
       }
 
+      Object devicesObject = messageData.get("devices");
+      if (!(devicesObject instanceof Map)) {
+        LOGGER.warn("Skipping Processing : Received message without a valid 'devices' map.");
+        return;
+      }
       String udmiModelPath = repository.getUdmiModelPath();
       Map<String, Map<String, Object>> devices =
-          (Map<String, Map<String, Object>>) messageData.get("devices");
+          (Map<String, Map<String, Object>>) devicesObject;
       MappingAgent mappingAgent =
           new MappingAgent(new ArrayList<>(List.of(udmiModelPath, projectSpec)));
 
