@@ -12,6 +12,7 @@ import threading
 import time
 
 from udmi.core.factory import create_device
+from udmi.core.factory import get_default_managers
 from udmi.core.managers import PointsetManager
 from udmi.core.managers import SystemManager
 from udmi.schema import EndpointConfiguration
@@ -64,9 +65,8 @@ if __name__ == "__main__":
             }
         })
 
-        # 2. Instantiate PointsetManager
-        my_pointset_manager = PointsetManager(sample_rate_sec=5)
-        managers = [SystemManager(), my_pointset_manager]
+        # 2. Instantiate managers
+        managers = get_default_managers(sample_rate_sec=5)
 
         # 3. Create Device
         device = create_device(endpoint, managers)
@@ -77,7 +77,7 @@ if __name__ == "__main__":
         device_thread.start()
 
         # 5. Run the main application logic
-        update_sensors_loop(my_pointset_manager)
+        update_sensors_loop(device.get_manager(PointsetManager))
 
     except KeyboardInterrupt:
         LOGGER.info("Stopping...")
