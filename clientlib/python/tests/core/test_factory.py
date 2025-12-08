@@ -51,8 +51,10 @@ def mock_manager():
 @patch('udmi.core.messaging.MqttMessagingClient')
 @patch('udmi.core.messaging.JwtAuthProvider')
 @patch('udmi.core.messaging.CertManager')
+@patch('udmi.core.factory.CertManager')
 def test_create_device_with_jwt(
-    mock_cert_manager,
+    mock_factory_cert_manager,
+    mock_messaging_cert_manager,
     mock_jwt_auth_provider,
     mock_mqtt_messaging_client,
     mock_wire_device,
@@ -64,13 +66,24 @@ def test_create_device_with_jwt(
     mock_provider_instance = mock_jwt_auth_provider.return_value
     mock_client_instance = mock_mqtt_messaging_client.return_value
 
+    # Setup mocks
+    mock_factory_instance = mock_factory_cert_manager.return_value
+    mock_messaging_instance = mock_messaging_cert_manager.return_value
+
     create_device(
         endpoint_config=mock_jwt_endpoint_config,
         key_file="test-key.pem"
     )
 
-    mock_cert_manager.assert_called_with("test-key.pem")
-    mock_cert_manager.return_value.ensure_keys_exist.assert_called_with("RS256")
+    # Check factory CertManager usage
+    # It is instantiated with key_file and cert_file=None (default in client_config)
+    mock_factory_cert_manager.assert_called_with(key_file="test-key.pem",
+                                                 cert_file=None)
+
+    # Check messaging CertManager usage (inside create_client...)
+    # It is instantiated with key_file only (positional)
+    mock_messaging_cert_manager.assert_called_with("test-key.pem")
+    mock_messaging_instance.ensure_keys_exist.assert_called_with("RS256")
 
     mock_jwt_auth_provider.assert_called_once_with(
         project_id="test-project",
@@ -98,8 +111,11 @@ def test_create_device_with_jwt(
         managers=None,
         endpoint_config=mock_jwt_endpoint_config,
         persistence_path=None,
-        connection_factory=mock_wire_device.call_args.kwargs.get('connection_factory')
+        connection_factory=mock_wire_device.call_args.kwargs.get(
+            'connection_factory'),
+        cert_manager=mock_factory_instance
     )
+
 
 @patch('udmi.core.factory._wire_device')
 @patch('udmi.core.messaging.MqttMessagingClient')
@@ -150,7 +166,9 @@ def test_create_device_with_basic_auth(
         managers=None,
         endpoint_config=mock_basic_auth_endpoint_config,
         persistence_path=None,
-        connection_factory=mock_wire_device.call_args.kwargs.get('connection_factory')
+        connection_factory=mock_wire_device.call_args.kwargs.get(
+            'connection_factory'),
+        cert_manager=None
     )
 
 

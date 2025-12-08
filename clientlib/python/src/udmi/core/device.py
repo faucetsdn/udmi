@@ -22,6 +22,7 @@ from typing import TypeVar
 from udmi.constants import IOT_ENDPOINT_CONFIG_BLOB_KEY
 from udmi.constants import PERSISTENT_STORE_PATH
 from udmi.constants import UDMI_VERSION
+from udmi.core.auth import CertManager
 from udmi.core.blob import parse_blob_as_object
 from udmi.core.managers import BaseManager
 from udmi.core.messaging import AbstractMessageDispatcher
@@ -84,6 +85,7 @@ class Device:
         endpoint_config: Optional[EndpointConfiguration] = None,
         connection_factory: ConnectionFactory = None,
         persistence_path: Optional[str] = PERSISTENT_STORE_PATH,
+        cert_manager: Optional[CertManager] = None,
     ):
         """
         Initializes the Device.
@@ -95,8 +97,9 @@ class Device:
         self.managers = managers
         self.connection_factory = connection_factory
         self.persistence = DevicePersistence(persistence_path, endpoint_config)
-        self.current_endpoint = self.persistence.get_effective_endpoint()
+        self.cert_manager = cert_manager
 
+        self.current_endpoint = self.persistence.get_effective_endpoint()
         self.device_id = self.current_endpoint.client_id.split('/')[-1]
         LOGGER.info("Device ID: %s", self.device_id)
         LOGGER.info("Endpoint Host: %s", self.current_endpoint.hostname)

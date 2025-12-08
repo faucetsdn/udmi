@@ -14,6 +14,7 @@ from typing import Callable
 from typing import List
 from typing import Optional
 
+from udmi.core.auth import CertManager
 from udmi.core.auth.auth_provider import AuthProvider
 from udmi.core.device import Device
 from udmi.core.managers import PointsetManager
@@ -77,7 +78,8 @@ def _wire_device(
     managers: Optional[List[BaseManager]] = None,
     endpoint_config: Optional[EndpointConfiguration] = None,
     persistence_path: str = None,
-    connection_factory: Optional[Callable] = None
+    connection_factory: Optional[Callable] = None,
+    cert_manager: Optional["CertManager"] = None
 ) -> Device:
     """
     Internal private function to handle the final wiring of components.
@@ -99,7 +101,8 @@ def _wire_device(
         managers=final_managers,
         endpoint_config=endpoint_config,
         persistence_path=persistence_path,
-        connection_factory=connection_factory
+        connection_factory=connection_factory,
+        cert_manager=cert_manager
     )
 
     dispatcher = MessageDispatcher(
@@ -181,6 +184,11 @@ def create_device(
                 endpoint_config.client_id)
     client_config = client_config or ClientConfig()
 
+    cert_manager = None
+    if key_file:
+        cert_file = client_config.tls_config.cert_file if client_config.tls_config else None
+        cert_manager = CertManager(key_file=key_file, cert_file=cert_file)
+
     client = create_client_from_endpoint_config(
         endpoint_config, key_file,
         client_config.tls_config, client_config.reconnect_config
@@ -197,5 +205,6 @@ def create_device(
         managers=managers,
         endpoint_config=endpoint_config,
         persistence_path=persistence_path,
-        connection_factory=connection_factory
+        connection_factory=connection_factory,
+        cert_manager=cert_manager,
     )
