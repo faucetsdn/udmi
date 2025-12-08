@@ -24,7 +24,7 @@ from unittest.mock import patch
 
 import pytest
 
-from src.udmi.core import create_mqtt_device_instance
+from src.udmi.core import create_device
 from udmi.core.managers import SystemManager
 
 
@@ -41,9 +41,8 @@ def test_device(
     Creates a full Device instance using the factory,
     with the Paho client completely mocked.
     """
-    device = create_mqtt_device_instance(
+    device = create_device(
         endpoint_config=mock_endpoint_config,
-        auth_provider=mock_auth_provider
     )
     return device
 
@@ -213,13 +212,16 @@ def test_device_receives_bad_config_schema(
     mock_paho_client_instance.publish.assert_not_called()
 
 
+@patch("sys.exit")
 def test_device_handles_command(
+    mock_exit,
     connected_test_device,
     mock_paho_client_instance,
     caplog
 ):
     """
-    Test that a command is routed to the SystemManager, which logs a warning.
+    Test that a command is routed to the SystemManager, which executes the
+    lifecycle command.
     """
     on_message_callback = mock_paho_client_instance.on_message
     mock_msg = MagicMock()
@@ -229,8 +231,9 @@ def test_device_handles_command(
     with caplog.at_level(logging.WARNING):
         on_message_callback(mock_paho_client_instance, None, mock_msg)
 
-    assert "Received 'reboot' command" in caplog.text
-    assert "not implemented" in caplog.text
+    assert "Initiating System RESTART" in caplog.text
+    mock_exit.assert_called_once_with(192)
+
     mock_paho_client_instance.publish.assert_not_called()
 
 
@@ -241,6 +244,8 @@ def test_device_auth_refresh_loop(
     """
     Test the periodic auth refresh check logic.
     """
+    test_device.dispatcher.client._auth_provider = mock_auth_provider
+
     mock_auth_provider.get_password.reset_mock()
     mock_auth_provider.needs_refresh.return_value = True
 

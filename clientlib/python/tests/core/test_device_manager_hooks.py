@@ -18,8 +18,8 @@ from unittest.mock import MagicMock
 
 import pytest
 
-from src.udmi.core import create_mqtt_device_instance
 from src.udmi.core.managers import BaseManager
+from udmi.core import create_device
 from udmi.schema import Config
 from udmi.schema import State
 from udmi.schema import StateSystemHardware
@@ -58,9 +58,8 @@ def test_device(
     """
     Creates a full instance of the Device orchestrator.
     """
-    device = create_mqtt_device_instance(
+    device = create_device(
         endpoint_config=mock_endpoint_config,
-        auth_provider=mock_auth_provider,
         managers=[mock_manager]
     )
     return device

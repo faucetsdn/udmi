@@ -196,6 +196,7 @@ def test_on_message_topic_parsing(mqtt_client):
     mqtt_client._on_message(None, None, mock_msg)
 
     mock_callback.assert_called_once_with(
+        "d",
         "commands/reboot",
         '{"delay": 10}'
     )

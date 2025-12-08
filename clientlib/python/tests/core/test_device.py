@@ -148,7 +148,7 @@ def test_handle_config_bad_schema(
     """
     with caplog.at_level(logging.ERROR):
         bad_payload = {"system": {"min_loglevel": "this_should_be_an_int"}}
-        test_device.handle_config("config", bad_payload)
+        test_device.handle_config(test_device.device_id, "config", bad_payload)
 
     assert "Failed to parse config message" in caplog.text
 
