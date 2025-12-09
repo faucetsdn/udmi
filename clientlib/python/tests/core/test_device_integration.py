@@ -20,10 +20,12 @@ import json
 import logging
 from unittest.mock import MagicMock
 from unittest.mock import call
+from unittest.mock import patch
 
 import pytest
 
 from src.udmi.core import create_mqtt_device_instance
+from udmi.core.managers import SystemManager
 
 
 # pylint: disable=redefined-outer-name,protected-access,unused-argument
@@ -255,8 +257,9 @@ def test_system_manager_start_event(
     """
     Test that the manager's 'start' hook is called and publishes an event.
     """
-    for manager in connected_test_device.managers:
-        manager.start()
+    with patch.object(SystemManager, '_metrics_loop'):
+        for manager in connected_test_device.managers:
+            manager.start()
 
     mock_paho_client_instance.publish.assert_called_once()
     publish_call = mock_paho_client_instance.publish.call_args
