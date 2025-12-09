@@ -69,6 +69,6 @@ tomlkit==0.11.6
 typing-inspect==0.7.1
 typing_extensions==4.0.1
 uritemplate==4.1.1
-urllib3==2.5.0
+urllib3==2.6.0
 wrapt==1.14.1
 zipp==3.20.2
