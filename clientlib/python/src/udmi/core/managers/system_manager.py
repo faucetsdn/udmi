@@ -41,11 +41,6 @@ LOGGER = logging.getLogger(__name__)
 BYTES_PER_MEGABYTE = 1024 * 1024
 DEFAULT_METRICS_RATE_SEC = 60
 
-# UDMI Lifecycle Exit Codes
-EXIT_CODE_SHUTDOWN = 0
-EXIT_CODE_RESTART = 192
-EXIT_CODE_TERMINATE = 193
-
 # Blob Handler Signature: (blob_id: str, data: bytes) -> None
 BlobHandler = Callable[[str, bytes], None]
 
