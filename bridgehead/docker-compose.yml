@@ -4,8 +4,73 @@ services:
       context: ./mosquitto
     container_name: mosquitto
     volumes:
-      - ./mosquitto/config:/mosquitto/config
-      - ./mosquitto/data:/mosquitto/data
-      - ./mosquitto/log:/mosquitto/log
+      - ./udmi_site_model:/site_model
+      - ./var/mosquitto:/etc/mosquitto
+      - ./var/mosquitto/data:/mosquitto/data
+      - ./var/mosquitto/log:/var/log/mosquitto/
     ports:
-      - 1883:1883
+      - "8883:8883"
+    restart: always
+    networks:
+      - udminet
+    environment:
+      HOST_IP: <YOUR_IP>
+
+  etcd:
+    image: quay.io/coreos/etcd:v3.5.13
+    container_name: etcd
+    volumes:
+      - ./var/etcd:/var/etcd
+    ports:
+      - "2379:2379"
+    networks:
+      - udminet
+    restart: always
+    command: ["etcd", "-listen-client-urls=http://0.0.0.0:2379", "-advertise-client-urls=http://etcd:2379", "--data-dir", "/var/etcd"]
+
+  udmis:
+    build:
+      context: ./udmis
+    container_name: udmis
+    volumes:
+      - ./udmi_site_model:/root/site_model
+      - ./var/tmp:/tmp
+      - ./var/etcd:/root/udmi/var/etcd
+      - ./var/mosquitto/log:/var/log/mosquitto
+      - ./var/mosquitto/certs:/etc/mosquitto/certs
+    depends_on:
+      etcd:
+        condition: service_started
+      mosquitto:
+        condition: service_started
+    restart: always
+    networks:
+      - udminet
+    environment:
+      ETCD_CLUSTER: etcd
+      MQTT_HOST: mosquitto
+      MQTT_PORT: 8883
+
+  validator:
+    build: 
+      context: ./validator
+    container_name: validator
+    volumes:
+      - ./udmi_site_model:/root/site_model
+      - ./var/mosquitto/log:/var/log/mosquitto
+      - ./var/mosquitto/certs:/etc/mosquitto/certs
+      - ./var/tmp:/usr/local/bin/udmis
+    depends_on:
+      udmis:
+        condition: service_started
+    restart: always
+    networks:
+      - udminet
+      
+networks:
+  udminet:
+    name: udminet
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 192.168.99.0/24
