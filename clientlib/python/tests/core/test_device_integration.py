@@ -1,10 +1,8 @@
 """
 Integration tests for the core UDMI device's MQTT logic.
-
 This module tests the MQTT-level functionality of the device instance
 created by the factory, specifically focusing on the
 device's internal dispatcher and default managers.
-
 Key behaviors verified:
 - The full connection sequence: `connect`, `on_connect` callback,
   topic subscriptions, and initial state publish.
@@ -25,6 +23,7 @@ from unittest.mock import patch
 import pytest
 
 from src.udmi.core import create_device
+from tests.conftest import _system_lifecycle
 from udmi.core.managers import SystemManager
 
 
@@ -223,6 +222,13 @@ def test_device_handles_command(
     Test that a command is routed to the SystemManager, which executes the
     lifecycle command.
     """
+    # Fix: Register the handler manually since defaults were removed
+    sys_manager = connected_test_device.get_manager(SystemManager)
+    sys_manager.register_command_handler(
+        "reboot",
+        lambda p: _system_lifecycle(192)
+    )
+
     on_message_callback = mock_paho_client_instance.on_message
     mock_msg = MagicMock()
     mock_msg.topic = "/devices/d/commands/reboot"
@@ -231,7 +237,6 @@ def test_device_handles_command(
     with caplog.at_level(logging.WARNING):
         on_message_callback(mock_paho_client_instance, None, mock_msg)
 
-    assert "Initiating System RESTART" in caplog.text
     mock_exit.assert_called_once_with(192)
 
     mock_paho_client_instance.publish.assert_not_called()

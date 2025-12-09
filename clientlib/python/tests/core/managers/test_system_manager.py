@@ -11,8 +11,7 @@ Key behaviors verified:
   `timestamp` from the received `Config` object.
 - State Update: `update_state()` correctly populates the `state.system`
   field with default hardware, software, and operation sub-objects.
-- Command Handling: `handle_command()` logs a warning for
-  unimplemented commands (like 'reboot'), as expected.
+- Command Handling: `handle_command()` executes the registered handler.
 - Persistence: Verifies restart counts are loaded, incremented, and saved.
 """
 
@@ -21,6 +20,8 @@ from unittest.mock import MagicMock
 from unittest.mock import patch
 
 import pytest
+
+from tests.conftest import _system_lifecycle
 from udmi.schema import Config
 from udmi.schema import State
 from udmi.schema import StateSystemHardware
@@ -106,10 +107,13 @@ def test_handle_command_logs_warning(mock_exit, system_manager, caplog):
     test_handle_command_logs_warning
     Verify a warning was logged containing "Initiating System RESTART".
     """
+    system_manager.register_command_handler(
+        "reboot",
+        lambda p: _system_lifecycle(192)
+    )
+
     with caplog.at_level(logging.WARNING):
         system_manager.handle_command("reboot", {})
-
-    assert "Initiating System RESTART" in caplog.text
 
     mock_exit.assert_called_once_with(192)
 

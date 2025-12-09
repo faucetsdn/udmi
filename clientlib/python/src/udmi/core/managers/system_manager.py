@@ -12,6 +12,7 @@ import threading
 import traceback
 from datetime import datetime
 from datetime import timezone
+from typing import Any
 from typing import Callable
 from typing import Dict
 from typing import Optional
@@ -48,6 +49,8 @@ EXIT_CODE_TERMINATE = 193
 # Blob Handler Signature: (blob_id: str, data: bytes) -> None
 BlobHandler = Callable[[str, bytes], None]
 
+# Command Handler Signature: (payload: dict) -> None
+CommandHandler = Callable[[Dict[str, Any]], None]
 
 class SystemManager(BaseManager):
     """
@@ -83,6 +86,9 @@ class SystemManager(BaseManager):
         self._applied_blob_generations: Dict[str, str] = {}
         self._blob_states: Dict[str, BlobBlobsetState] = {}
 
+        # --- Command Handling Setup ---
+        self._command_handlers: Dict[str, CommandHandler] = {}
+
         # --- Metrics Loop Setup ---
         self._metrics_rate_sec = DEFAULT_METRICS_RATE_SEC
         self._stop_event = threading.Event()
@@ -100,6 +106,18 @@ class SystemManager(BaseManager):
         """
         self._blob_handlers[blob_key] = handler
         LOGGER.info("Registered handler for blob key: '%s'", blob_key)
+
+    def register_command_handler(self, command_name: str,
+        handler: CommandHandler) -> None:
+        """
+        Registers a callback handler for a specific system command.
+
+        Args:
+            command_name: The command name (e.g., 'reboot', 'custom_cmd').
+            handler: A callable accepting the command payload dict.
+        """
+        self._command_handlers[command_name] = handler
+        LOGGER.info("Registered handler for system command: '%s'", command_name)
 
     def start(self) -> None:
         """
@@ -245,40 +263,22 @@ class SystemManager(BaseManager):
 
     def handle_command(self, command_name: str, payload: dict) -> None:
         """
-        Handles 'system' related commands (reboot, shutdown).
+        Handles 'system' related commands by delegating to registered handlers.
         """
         LOGGER.info("SystemManager received command: %s", command_name)
 
-        if command_name == "reboot":
-            self._system_lifecycle(EXIT_CODE_RESTART)
-        elif command_name == "shutdown":
-            self._system_lifecycle(EXIT_CODE_SHUTDOWN)
-        elif command_name == "terminate":
-            self._system_lifecycle(EXIT_CODE_TERMINATE)
+        handler = self._command_handlers.get(command_name)
+        if handler:
+            try:
+                handler(payload)
+            except Exception as e:  # pylint: disable=broad-exception-caught
+                LOGGER.error("Error executing handler for command '%s': %s",
+                             command_name, e)
+                LOGGER.debug(traceback.format_exc())
         else:
-            LOGGER.warning("Command '%s' not implemented in SystemManager.",
+            LOGGER.warning("Unknown command '%s' received. No handler registered.",
                            command_name)
 
-    def _system_lifecycle(self, exit_code: int) -> None:
-        """
-        Executes a system lifecycle change by exiting the process.
-        """
-        if exit_code == EXIT_CODE_RESTART:
-            action = "RESTART"
-        elif exit_code == EXIT_CODE_TERMINATE:
-            action = "TERMINATE"
-        else:
-            action = "SHUTDOWN"
-        LOGGER.warning("Initiating System %s (Exit Code: %s)...", action,
-                       exit_code)
-
-        sys.stdout.flush()
-        sys.stderr.flush()
-
-        if self._device:
-            self._device.stop()
-
-        sys.exit(exit_code)
 
     def update_state(self, state: State) -> None:
         """
