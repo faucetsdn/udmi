@@ -14,7 +14,6 @@ import time
 from udmi.core.factory import create_device
 from udmi.core.factory import get_default_managers
 from udmi.core.managers import PointsetManager
-from udmi.core.managers import SystemManager
 from udmi.schema import EndpointConfiguration
 
 # --- Config ---
