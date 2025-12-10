@@ -29,11 +29,22 @@ public class SourceRepoMessageUtils {
    */
   public static Map<String, Object> parseSourceRepoMessageData(PubsubMessage message)
       throws IOException {
+    Map<String, Object> rawMap = parseSourceRepoMessageDataToRawMap(message);
+    return flattenNestedMap(rawMap, ".");
+  }
+
+  /**
+   * Parse the received message to get a raw map.
+   *
+   * @param message Pub Sub message
+   */
+  public static Map<String, Object> parseSourceRepoMessageDataToRawMap(PubsubMessage message)
+      throws IOException {
     String messageJson = message.getData().toString(StandardCharsets.UTF_8);
     TypeReference<Map<String, Object>> typeRef = new TypeReference<>() {
     };
     Map<String, Object> rawMap = OBJECT_MAPPER.readValue(messageJson, typeRef);
-    return flattenNestedMap(rawMap, ".");
+    return rawMap;
   }
 
   /**
