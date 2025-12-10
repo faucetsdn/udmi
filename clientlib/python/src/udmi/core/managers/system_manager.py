@@ -210,8 +210,7 @@ class SystemManager(BaseManager):
         """
         self._update_blob_state(key, Phase.apply, config.generation)
 
-        # Force a state publish via dirty bit
-        # For now, the next loop cycle will pick up the state change.
+        self.trigger_state_update()
 
         try:
             LOGGER.info("Fetching blob '%s' from %s...", key, config.url)

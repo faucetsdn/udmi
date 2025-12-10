@@ -63,6 +63,19 @@ class BaseManager(abc.ABC):
         self._dispatcher.publish_event(f"events/{subfolder}", event_model,
                                        device_id)
 
+    def trigger_state_update(self) -> None:
+        """
+        Requests the device to publish its state immediately (throttled).
+        Useful for when a manager changes state outside the normal periodic cycle
+        (e.g. applying a blob, updating routing tables).
+        """
+        if self._device:
+            self._device.trigger_state_update()
+        else:
+            LOGGER.warning(
+                "Manager %s cannot trigger update: Device context not set.",
+                self.__class__.__name__)
+
     def start(self) -> None:
         """
         Called by the Device when the main loop starts.

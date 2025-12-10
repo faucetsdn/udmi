@@ -528,3 +528,11 @@ class Device:
             if isinstance(manager, manager_type):
                 return manager
         return None
+
+    def trigger_state_update(self):
+        """
+        Public API for managers to request an immediate state publish.
+        Sets the dirty bit, which the main loop picks up on its next short cycle.
+        """
+        LOGGER.debug("Manager requested immediate state update.")
+        self._loop_state.state_dirty = True
