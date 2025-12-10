@@ -98,9 +98,11 @@ def test_dispatcher_routes_exact_match(dispatcher, handlers):
     dispatcher.register_handler("config", handlers["config"])
     payload_dict = {"system": {}}
 
-    dispatcher._on_message(channel="config", payload=json.dumps(payload_dict))
+    dispatcher._on_message(device_id="test_device", channel="config",
+                           payload=json.dumps(payload_dict))
 
-    handlers["config"].assert_called_once_with("config", payload_dict)
+    handlers["config"].assert_called_once_with("test_device",
+                                               "config", payload_dict)
 
 
 def test_dispatcher_routes_multi_level_wildcard(dispatcher, handlers):
@@ -109,9 +111,11 @@ def test_dispatcher_routes_multi_level_wildcard(dispatcher, handlers):
     payload_dict = {"arg": 1}
 
     channel = "commands/my/custom/sub/command"
-    dispatcher._on_message(channel=channel, payload=json.dumps(payload_dict))
+    dispatcher._on_message(device_id="test_device", channel=channel,
+                           payload=json.dumps(payload_dict))
 
-    handlers["commands_wildcard"].assert_called_once_with(channel, payload_dict)
+    handlers["commands_wildcard"].assert_called_once_with("test_device",
+                                                          channel, payload_dict)
 
 
 def test_dispatcher_routes_single_level_wildcard(dispatcher, handlers):
@@ -121,9 +125,11 @@ def test_dispatcher_routes_single_level_wildcard(dispatcher, handlers):
     payload_dict = {"set_value": 10}
 
     channel = "pointset/zone_1/config"
-    dispatcher._on_message(channel=channel, payload=json.dumps(payload_dict))
+    dispatcher._on_message(device_id="test_device", channel=channel,
+                           payload=json.dumps(payload_dict))
 
-    handlers["pointset_wildcard"].assert_called_once_with(channel, payload_dict)
+    handlers["pointset_wildcard"].assert_called_once_with("test_device",
+                                                          channel, payload_dict)
 
 
 def test_dispatcher_prefers_exact_over_wildcard(dispatcher, handlers):
@@ -132,12 +138,13 @@ def test_dispatcher_prefers_exact_over_wildcard(dispatcher, handlers):
     dispatcher.register_handler("commands/#", handlers["commands_wildcard"])
     payload_dict = {}
 
-    dispatcher._on_message(channel="commands/reboot",
+    dispatcher._on_message(device_id="test_device", channel="commands/reboot",
                            payload=json.dumps(payload_dict))
 
     # The exact handler should be called
-    handlers["command_reboot"].assert_called_once_with("commands/reboot",
-                                                       payload_dict)
+    handlers["command_reboot"].assert_called_once_with(
+        "test_device", "commands/reboot", payload_dict
+    )
     # The wildcard handler should NOT be called
     handlers["commands_wildcard"].assert_not_called()
 
@@ -148,7 +155,8 @@ def test_dispatcher_handles_json_decode_error(dispatcher, handlers, caplog):
 
     # No exception should be raised
     with caplog.at_level(logging.ERROR):
-        dispatcher._on_message(channel="config", payload="this is not json")
+        dispatcher._on_message(device_id="test_device", channel="config",
+                               payload="this is not json")
 
     # The handler should not be called
     handlers["config"].assert_not_called()
@@ -164,7 +172,8 @@ def test_dispatcher_handles_handler_exception(dispatcher, handlers, caplog):
 
     # No exception should be raised from the dispatcher itself
     with caplog.at_level(logging.ERROR):
-        dispatcher._on_message(channel="config", payload="{}")
+        dispatcher._on_message(device_id="test_device", channel="config",
+                               payload="{}")
 
     # The handler should have been called
     handlers["config"].assert_called_once()
@@ -183,7 +192,8 @@ def test_publish_state(dispatcher, mock_client):
         "state",
         '{"timestamp": null, "version": "1", "upgraded_from": null, '
         '"system": null, "gateway": null, "discovery": null, "localnet": null, '
-        '"blobset": null, "pointset": null}'
+        '"blobset": null, "pointset": null}',
+        None
     )
 
 
@@ -199,7 +209,8 @@ def test_publish_event(dispatcher, mock_client):
         "system",
         '{"timestamp": null, "version": "1", "upgraded_from": null, '
         '"last_config": null, "logentries": null, "event_no": null, '
-        '"metrics": null}'
+        '"metrics": null}',
+        None
     )
 
 
@@ -235,7 +246,8 @@ def test_unhandled_message_logs_warning(dispatcher, handlers, caplog):
     dispatcher.register_handler("config", handlers["config"])
 
     with caplog.at_level(logging.WARNING):
-        dispatcher._on_message(channel="unknown/channel", payload="{}")
+        dispatcher._on_message(device_id="test_device",
+                               channel="unknown/channel", payload="{}")
 
     handlers["config"].assert_not_called()
     assert "No handler found for message" in caplog.text

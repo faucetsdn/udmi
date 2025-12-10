@@ -45,15 +45,23 @@ class BaseManager(abc.ABC):
         self._device = device
         self._dispatcher = dispatcher
 
-    def publish_event(self, event_model: DataModel, subfolder: str) -> None:
+    def publish_event(self, event_model: DataModel, subfolder: str,
+        device_id: Optional[str] = None) -> None:
         """
         Helper method for managers to publish events.
+        Args:
+            event_model: The UDMI data model to publish.
+            subfolder: The event subfolder (e.g., 'system', 'pointset').
+            device_id: (Optional) The device ID to publish for.
+                       If None, publishes for the main device.
         """
         if not self._dispatcher:
             LOGGER.error("Manager %s cannot publish event: dispatcher not set.",
                          self.__class__.__name__)
+            return
 
-        self._dispatcher.publish_event(f"events/{subfolder}", event_model)
+        self._dispatcher.publish_event(f"events/{subfolder}", event_model,
+                                       device_id)
 
     def start(self) -> None:
         """

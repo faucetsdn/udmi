@@ -20,7 +20,8 @@ from udmi.schema import DataModel
 
 LOGGER = logging.getLogger(__name__)
 
-MessageHandler = Callable[[str, Dict[str, Any]], None]
+# Handler Signature: (device_id, channel, payload_dict)
+MessageHandler = Callable[[str, str, Dict[str, Any]], None]
 
 
 class AbstractMessageDispatcher(ABC):
@@ -36,11 +37,11 @@ class AbstractMessageDispatcher(ABC):
         """Register a handler for a specific channel."""
 
     @abstractmethod
-    def publish_state(self, state: DataModel) -> None:
+    def publish_state(self, state: DataModel, device_id: Optional[str] = None) -> None:
         """Serializes and publishes the device State message."""
 
     @abstractmethod
-    def publish_event(self, channel: str, event: DataModel) -> None:
+    def publish_event(self, channel: str, event: DataModel, device_id: Optional[str] = None) -> None:
         """Serializes and publishes a device Event message."""
 
     @abstractmethod

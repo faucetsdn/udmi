@@ -8,6 +8,7 @@ import os
 import datetime
 import ssl
 from typing import Optional
+from typing import Tuple
 
 from cryptography.hazmat.primitives import serialization
 from cryptography.hazmat.primitives.asymmetric import rsa
@@ -27,10 +28,17 @@ class CertManager:
     """
 
     def __init__(self,
-        key_file: str,
-        cert_file: Optional[str] = None,
-        ca_file: Optional[str] = None
-    ):
+                 key_file: str,
+                 cert_file: Optional[str] = None,
+                 ca_file: Optional[str] = None):
+        """
+        Initializes the CertManager.
+
+        Args:
+            key_file: Path to the private key file.
+            cert_file: (Optional) Path to the client certificate file.
+            ca_file: (Optional) Path to the CA certificate file.
+        """
         self.key_file = key_file
         self.cert_file = cert_file
         self.ca_file = ca_file
@@ -44,6 +52,7 @@ class CertManager:
             raise ValueError(
                 f"Unsupported algorithm '{algorithm}'. "
                 f"Only 'RS256' is currently supported.")
+
         if not os.path.exists(self.key_file):
             LOGGER.info(
                 "Key file not found at %s. Generating new %s key pair...",
@@ -83,6 +92,43 @@ class CertManager:
                 "Both cert_file and key_file must be provided for mTLS.")
 
         return context
+
+    def get_public_key_pem(self) -> str:
+        """
+        Reads the private key from disk and derives the Public Key in PEM format.
+
+        This allows the device to expose its public key for registration
+        with the cloud (Cloud IoT Core or similar) to verify JWT signatures.
+
+        Returns:
+            The public key as a PEM-encoded string.
+
+        Raises:
+            FileNotFoundError: If the private key file does not exist.
+        """
+        if not os.path.exists(self.key_file):
+            raise FileNotFoundError(f"Key file not found at {self.key_file}. "
+                                    f"Cannot derive public key.")
+
+        try:
+            with open(self.key_file, "rb") as f:
+                private_key = serialization.load_pem_private_key(
+                    f.read(),
+                    password=None
+                )
+
+            public_key = private_key.public_key()
+
+            pem_bytes = public_key.public_bytes(
+                encoding=serialization.Encoding.PEM,
+                format=serialization.PublicFormat.SubjectPublicKeyInfo
+            )
+
+            return pem_bytes.decode('utf-8')
+
+        except Exception as e:
+            LOGGER.error("Failed to derive public key from private key: %s", e)
+            raise
 
     def _generate_private_key(self) -> None:
         """Generates an RSA private key and saves it to disk."""
@@ -147,3 +193,20 @@ class CertManager:
         except Exception as e:
             LOGGER.error("Failed to generate certificate: %s", e)
             raise
+
+    def rotate_key(self, algorithm: str = "RS256") -> Tuple[str, str]:
+        """
+        Generates a NEW private key, backs up the old one, and returns the
+        new public key (PEM) and the backup path for the old one.
+        """
+        timestamp = datetime.datetime.now().strftime("%Y%m%d%H%M%S")
+        backup_path = f"{self.key_file}.{timestamp}.bak"
+
+        if os.path.exists(self.key_file):
+            LOGGER.info("Backing up current key to %s", backup_path)
+            os.rename(self.key_file, backup_path)
+
+        LOGGER.info("Rotating key: Generating new %s key pair...", algorithm)
+        self.ensure_keys_exist(algorithm)
+
+        return self.get_public_key_pem(), backup_path

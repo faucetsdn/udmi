@@ -1,13 +1,16 @@
 """
 Pytest fixtures for testing the MQTT messaging client.
 """
-
+import sys
 from unittest.mock import MagicMock
 from unittest.mock import patch
 
 import pytest
 
+from udmi.schema import AuthProvider
+from udmi.schema import Basic
 from udmi.schema import EndpointConfiguration
+from udmi.schema import Jwt
 
 
 @pytest.fixture
@@ -58,3 +61,38 @@ def mock_endpoint_config():
         hostname="mock.host",
         port=8883
     )
+
+
+@pytest.fixture
+def mock_jwt_endpoint_config():
+    """A mock EndpointConfiguration object."""
+    return EndpointConfiguration(
+        client_id="projects/p/l/r/d",
+        hostname="mock.host",
+        port=8883,
+        auth_provider=AuthProvider(
+            jwt=Jwt(
+                audience="test-project"
+            )
+        )
+    )
+
+
+@pytest.fixture
+def mock_basic_auth_endpoint_config():
+    """A mock EndpointConfiguration object."""
+    return EndpointConfiguration(
+        client_id="projects/p/l/r/d",
+        hostname="mock.host",
+        port=8883,
+        auth_provider=AuthProvider(
+            basic=Basic(
+                username="user",
+                password="pass"
+            )
+        )
+    )
+
+
+def _system_lifecycle(exit_code: int) -> None:
+    sys.exit(exit_code)
