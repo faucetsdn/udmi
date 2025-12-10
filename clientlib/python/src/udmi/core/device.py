@@ -36,6 +36,8 @@ LOGGER = logging.getLogger(__name__)
 
 T = TypeVar("T", bound=BaseManager)
 MAX_CONNECTION_RETRIES = 3
+STATE_THROTTLE_SEC = 2.0
+CONFIG_SYNC_TIMEOUT_SEC = 10.0
 
 
 class ConnectionResetException(Exception):
@@ -57,8 +59,9 @@ class _LoopState:
     """Holds the dynamic state of the device's main loop."""
     stop_event: Event = field(default_factory=Event)
     reset_event: Event = field(default_factory=Event)
-    last_auth_check: float = 0.0
+    state_dirty: bool = False
     last_state_publish_time: float = 0.0
+    last_auth_check: float = 0.0
     consecutive_failures: int = 0  # Track auth failures
 
 
@@ -321,6 +324,21 @@ class Device:
                     self._initialize_connection_robustly()
                     just_connected = True
 
+                LOGGER.info(
+                    "Waiting for initial configuration (Timeout: %ss)...",
+                    CONFIG_SYNC_TIMEOUT_SEC)
+                start_wait = time.time()
+                while not self._loop_state.stop_event.is_set():
+                    if self.config and self.config.timestamp:
+                        LOGGER.info("Initial config received. Proceeding.")
+                        break
+
+                    if time.time() - start_wait > CONFIG_SYNC_TIMEOUT_SEC:
+                        LOGGER.warning(
+                            "Config Sync Timeout! Proceeding with default state.")
+                        break
+                    time.sleep(0.1)
+
                 self._run_internal(skip_connect=just_connected)
                 break
             except ConnectionResetException:
@@ -394,11 +412,19 @@ class Device:
             raise ConnectionResetException("Triggering Fallback Reset")
         raise error
 
-    def _publish_state(self) -> None:
+    def _publish_state(self, force: bool = False) -> None:
         """
         Orchestration method to build and publish the State message.
         Gathers contributions from all managers.
         """
+        now = time.time()
+        time_since_last = now - self._loop_state.last_state_publish_time
+
+        if not force and time_since_last < STATE_THROTTLE_SEC:
+            self._loop_state.state_dirty = True
+            LOGGER.debug("State update throttled (coalescing). Dirty=True")
+            return
+
         LOGGER.debug("Assembling state message...")
         self.state = State(
             timestamp=datetime.datetime.now(datetime.timezone.utc).isoformat(),
@@ -414,6 +440,7 @@ class Device:
 
         self.dispatcher.publish_state(self.state)
         self._loop_state.last_state_publish_time = time.time()
+        self._loop_state.state_dirty = False
         LOGGER.debug("State message published.")
 
     def _run_internal(self, skip_connect: bool = False) -> None:
@@ -452,10 +479,13 @@ class Device:
 
             now = time.time()
 
-            # publish state periodically
-            if (now - self._loop_state.last_state_publish_time >
-                self._loop_config.publish_state_interval_sec):
-                self._publish_state()
+            # throttled state flush.
+            if self._loop_state.state_dirty:
+                if (
+                    now - self._loop_state.last_state_publish_time) >= STATE_THROTTLE_SEC:
+                    LOGGER.debug(
+                        "Throttle window passed. Flushing dirty state.")
+                    self._publish_state(force=True)
 
             # check for auth token refresh
             if (now - self._loop_state.last_auth_check >
@@ -464,7 +494,7 @@ class Device:
                 self.dispatcher.check_authentication()
                 self._loop_state.last_auth_check = now
 
-            self._loop_state.stop_event.wait(timeout=1)
+            self._loop_state.stop_event.wait(timeout=0.5)
 
     def stop(self) -> None:
         """Stops the device loop and disconnects."""

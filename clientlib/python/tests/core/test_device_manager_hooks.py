@@ -15,6 +15,7 @@ The tests simulate a connected device and check the following key interactions:
 
 import json
 from unittest.mock import MagicMock
+from unittest.mock import patch
 
 import pytest
 
@@ -95,14 +96,15 @@ def test_manager_update_state_called(
     Test that the manager's 'update_state' method is called
     by the device's internal '_publish_state()'.
     """
-    connected_device._publish_state()
+    with patch("udmi.core.device.STATE_THROTTLE_SEC", 0):
+        connected_device._publish_state()
 
-    mock_manager.update_state.assert_called_once()
-    assert mock_paho_client_instance.publish.call_count == 1
+        mock_manager.update_state.assert_called_once()
+        assert mock_paho_client_instance.publish.call_count == 1
 
-    payload_str = mock_paho_client_instance.publish.call_args[0][1]
-    payload = json.loads(payload_str)
-    assert payload["system"]["hardware"]["make"] == "TestMake"
+        payload_str = mock_paho_client_instance.publish.call_args[0][1]
+        payload = json.loads(payload_str)
+        assert payload["system"]["hardware"]["make"] == "TestMake"
 
 
 def test_manager_handle_config_called(
@@ -114,19 +116,20 @@ def test_manager_handle_config_called(
     Test that the manager's 'handle_config' method is called
     by the device's 'handle_config()' orchestrator.
     """
-    config_topic = "/devices/d/config"
-    config_payload = {"timestamp": "2025-10-17T12:00:00Z", "system": {}}
+    with patch("udmi.core.device.STATE_THROTTLE_SEC", 0):
+        config_topic = "/devices/d/config"
+        config_payload = {"timestamp": "2025-10-17T12:00:00Z", "system": {}}
 
-    config_obj = Config.from_dict(config_payload)
-    on_message_callback = mock_paho_client_instance.on_message
-    mock_msg = MagicMock(
-        topic=config_topic,
-        payload=json.dumps(config_payload).encode('utf-8')
-    )
-    on_message_callback(mock_paho_client_instance, None, mock_msg)
+        config_obj = Config.from_dict(config_payload)
+        on_message_callback = mock_paho_client_instance.on_message
+        mock_msg = MagicMock(
+            topic=config_topic,
+            payload=json.dumps(config_payload).encode('utf-8')
+        )
+        on_message_callback(mock_paho_client_instance, None, mock_msg)
 
-    mock_manager.handle_config.assert_called_once_with(config_obj)
-    assert mock_paho_client_instance.publish.call_count == 1
+        mock_manager.handle_config.assert_called_once_with(config_obj)
+        assert mock_paho_client_instance.publish.call_count == 1
 
 
 def test_manager_handle_command_called(

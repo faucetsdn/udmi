@@ -7,7 +7,6 @@ It also handles Generic Blobset management (OTA).
 """
 
 import logging
-import sys
 import threading
 import traceback
 from datetime import datetime

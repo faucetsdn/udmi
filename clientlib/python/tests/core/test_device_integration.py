@@ -107,45 +107,46 @@ def test_device_config_state_loop(
     """
     Test the full config -> state acknowledgement loop.
     """
-    # --- 1. SIMULATE CONNECTION ---
-    on_connect_callback = mock_paho_client_instance.on_connect
-    on_connect_callback(mock_paho_client_instance, None, None, 0)
+    with patch("udmi.core.device.STATE_THROTTLE_SEC", 0):
+        # --- 1. SIMULATE CONNECTION ---
+        on_connect_callback = mock_paho_client_instance.on_connect
+        on_connect_callback(mock_paho_client_instance, None, None, 0)
 
-    # Reset the mock to ignore the initial state publish
-    mock_paho_client_instance.publish.reset_mock()
+        # Reset the mock to ignore the initial state publish
+        mock_paho_client_instance.publish.reset_mock()
 
-    # --- 2. SIMULATE CONFIG MESSAGE ---
-    config_topic = "/devices/d/config"
-    config_payload = {
-        "timestamp": "2025-10-17T12:00:00Z",
-        "system": {"min_loglevel": 300}
-    }
+        # --- 2. SIMULATE CONFIG MESSAGE ---
+        config_topic = "/devices/d/config"
+        config_payload = {
+            "timestamp": "2025-10-17T12:00:00Z",
+            "system": {"min_loglevel": 300}
+        }
 
-    # Get the on_message callback
-    on_message_callback = mock_paho_client_instance.on_message
+        # Get the on_message callback
+        on_message_callback = mock_paho_client_instance.on_message
 
-    # Create a mock Paho message object
-    mock_msg = MagicMock()
-    mock_msg.topic = config_topic
-    mock_msg.payload = json.dumps(config_payload).encode('utf-8')
+        # Create a mock Paho message object
+        mock_msg = MagicMock()
+        mock_msg.topic = config_topic
+        mock_msg.payload = json.dumps(config_payload).encode('utf-8')
 
-    # Manually trigger the on_message callback
-    on_message_callback(mock_paho_client_instance, None, mock_msg)
+        # Manually trigger the on_message callback
+        on_message_callback(mock_paho_client_instance, None, mock_msg)
 
-    # --- 3. VERIFY BEHAVIOR ---
-    # Verify the device updated its internal state
-    assert test_device.config.system.min_loglevel == 300
-    assert test_device.state.system.last_config == "2025-10-17T12:00:00Z"
+        # --- 3. VERIFY BEHAVIOR ---
+        # Verify the device updated its internal state
+        assert test_device.config.system.min_loglevel == 300
+        assert test_device.state.system.last_config == "2025-10-17T12:00:00Z"
 
-    # Verify a new state message was published
-    assert mock_paho_client_instance.publish.call_count == 1
-    publish_call = mock_paho_client_instance.publish.call_args
+        # Verify a new state message was published
+        assert mock_paho_client_instance.publish.call_count == 1
+        publish_call = mock_paho_client_instance.publish.call_args
 
-    topic = publish_call.args[0]
-    payload = json.loads(publish_call.args[1])
+        topic = publish_call.args[0]
+        payload = json.loads(publish_call.args[1])
 
-    assert topic == "/devices/d/state"
-    assert payload["system"]["last_config"] == "2025-10-17T12:00:00Z"
+        assert topic == "/devices/d/state"
+        assert payload["system"]["last_config"] == "2025-10-17T12:00:00Z"
 
 
 def test_device_connection_failed(
