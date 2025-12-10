@@ -8,6 +8,7 @@ import os
 import datetime
 import ssl
 from typing import Optional
+from typing import Tuple
 
 from cryptography.hazmat.primitives import serialization
 from cryptography.hazmat.primitives.asymmetric import rsa
@@ -192,3 +193,20 @@ class CertManager:
         except Exception as e:
             LOGGER.error("Failed to generate certificate: %s", e)
             raise
+
+    def rotate_key(self, algorithm: str = "RS256") -> Tuple[str, str]:
+        """
+        Generates a NEW private key, backs up the old one, and returns the
+        new public key (PEM) and the backup path for the old one.
+        """
+        timestamp = datetime.datetime.now().strftime("%Y%m%d%H%M%S")
+        backup_path = f"{self.key_file}.{timestamp}.bak"
+
+        if os.path.exists(self.key_file):
+            LOGGER.info("Backing up current key to %s", backup_path)
+            os.rename(self.key_file, backup_path)
+
+        LOGGER.info("Rotating key: Generating new %s key pair...", algorithm)
+        self.ensure_keys_exist(algorithm)
+
+        return self.get_public_key_pem(), backup_path
