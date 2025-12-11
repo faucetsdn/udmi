@@ -24,16 +24,13 @@ from unittest.mock import patch
 import pytest
 
 from src.udmi.core.factory import _wire_device
-from src.udmi.core.factory import create_device_with_basic_auth
-from src.udmi.core.factory import create_device_with_jwt
-from udmi.core.auth.jwt_auth_provider import JwtTokenConfig
+from udmi.core import create_device
 from udmi.core.factory import ClientConfig
-from udmi.core.factory import JwtAuthArgs
 from udmi.core.messaging.mqtt_messaging_client import ReconnectConfig
 from udmi.core.messaging.mqtt_messaging_client import TlsConfig
 
 
-# pylint: disable=redefined-outer-name
+# pylint: disable=redefined-outer-name,too-many-arguments,too-many-positional-arguments
 
 
 @pytest.fixture
@@ -48,14 +45,16 @@ def mock_manager():
     return MagicMock(name="mock_manager")
 
 
-@patch('src.udmi.core.factory._wire_device')
-@patch('src.udmi.core.factory.MqttMessagingClient')
-@patch('src.udmi.core.factory.JwtAuthProvider')
+@patch('udmi.core.factory._wire_device')
+@patch('udmi.core.messaging.MqttMessagingClient')
+@patch('udmi.core.messaging.JwtAuthProvider')
+@patch('udmi.core.messaging.CertManager')
 def test_create_device_with_jwt(
+    mock_messaging_cert_manager,
     mock_jwt_auth_provider,
     mock_mqtt_messaging_client,
     mock_wire_device,
-    mock_endpoint_config
+    mock_jwt_endpoint_config
 ):
     """
     Asserts that the factory creates and passes the JwtAuthProvider.
@@ -63,34 +62,32 @@ def test_create_device_with_jwt(
     mock_provider_instance = mock_jwt_auth_provider.return_value
     mock_client_instance = mock_mqtt_messaging_client.return_value
 
-    create_device_with_jwt(
-        endpoint_config=mock_endpoint_config,
-        jwt_auth_args=JwtAuthArgs(
-            project_id="test-project",
-            key_file="test-key.pem",
-            algorithm="RS256"
-        )
+    mock_messaging_instance = mock_messaging_cert_manager.return_value
+
+    create_device(
+        endpoint_config=mock_jwt_endpoint_config,
+        key_file="test-key.pem"
     )
+
+    mock_messaging_cert_manager.assert_called_with("test-key.pem")
+    mock_messaging_instance.ensure_keys_exist.assert_called_with("RS256")
 
     mock_jwt_auth_provider.assert_called_once_with(
         project_id="test-project",
         private_key_file="test-key.pem",
-        algorithm="RS256",
-        token_config=JwtTokenConfig(
-            lifetime_minutes=60,
-            refresh_buffer_minutes=5)  # We trust the default value
+        algorithm="RS256"
     )
 
     mock_mqtt_messaging_client.assert_called_once_with(
-        endpoint_config=mock_endpoint_config,
-        auth_provider=mock_provider_instance,
-        tls_config=TlsConfig(
+        mock_jwt_endpoint_config,
+        mock_provider_instance,
+        TlsConfig(
             ca_certs=None,
             cert_file=None,
             key_file=None,
             enable_tls=None
         ),
-        reconnect_config=ReconnectConfig(
+        ReconnectConfig(
             min_delay_sec=1,
             max_delay_sec=60
         )
@@ -99,19 +96,21 @@ def test_create_device_with_jwt(
     mock_wire_device.assert_called_once_with(
         mqtt_client=mock_client_instance,
         managers=None,
-        endpoint_config=mock_endpoint_config,
-        persistence_path=None
+        endpoint_config=mock_jwt_endpoint_config,
+        persistence_path=None,
+        connection_factory=mock_wire_device.call_args.kwargs.get(
+            'connection_factory')
     )
 
 
-@patch('src.udmi.core.factory._wire_device')
-@patch('src.udmi.core.factory.MqttMessagingClient')
-@patch('src.udmi.core.factory.BasicAuthProvider')
+@patch('udmi.core.factory._wire_device')
+@patch('udmi.core.messaging.MqttMessagingClient')
+@patch('udmi.core.messaging.BasicAuthProvider')
 def test_create_device_with_basic_auth(
     mock_basic_auth_provider,
     mock_mqtt_messaging_client,
     mock_wire_device,
-    mock_endpoint_config
+    mock_basic_auth_endpoint_config
 ):
     """
     Asserts that the factory creates and passes the BasicAuthProvider
@@ -120,10 +119,8 @@ def test_create_device_with_basic_auth(
     mock_provider_instance = mock_basic_auth_provider.return_value
     mock_client_instance = mock_mqtt_messaging_client.return_value
 
-    create_device_with_basic_auth(
-        endpoint_config=mock_endpoint_config,
-        username="user",
-        password="pass",
+    create_device(
+        endpoint_config=mock_basic_auth_endpoint_config,
         managers=None,
         client_config=ClientConfig(
             tls_config=TlsConfig(ca_certs="test-ca.pem")
@@ -136,15 +133,15 @@ def test_create_device_with_basic_auth(
     )
 
     mock_mqtt_messaging_client.assert_called_once_with(
-        endpoint_config=mock_endpoint_config,
-        auth_provider=mock_provider_instance,
-        tls_config=TlsConfig(
+        mock_basic_auth_endpoint_config,
+        mock_provider_instance,
+        TlsConfig(
             ca_certs="test-ca.pem",
             cert_file=None,
             key_file=None,
             enable_tls=None
         ),
-        reconnect_config=ReconnectConfig(
+        ReconnectConfig(
             min_delay_sec=1,
             max_delay_sec=60
         )
@@ -153,8 +150,10 @@ def test_create_device_with_basic_auth(
     mock_wire_device.assert_called_once_with(
         mqtt_client=mock_client_instance,
         managers=None,
-        endpoint_config=mock_endpoint_config,
-        persistence_path=None
+        endpoint_config=mock_basic_auth_endpoint_config,
+        persistence_path=None,
+        connection_factory=mock_wire_device.call_args.kwargs.get(
+            'connection_factory')
     )
 
 
