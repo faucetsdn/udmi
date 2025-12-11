@@ -74,7 +74,7 @@ public class MqttSecurity {
                 certObj = certFactory.generateCertificate(bis);
             }
         } catch (IllegalArgumentException e){
-            logMessage(e.getMessage());
+            logMessage("Error extracting mqtt certificate: " + e.getMessage());
         } catch (Exception certException) {
             // noinspection CallToPrintStackTrace
             certException.printStackTrace();
@@ -94,9 +94,8 @@ public class MqttSecurity {
             PrivateKey privateKey = converter.getPrivateKey((PrivateKeyInfo) pemObject);
             keyObj = new KeyPair(null, privateKey);
             pemParser.close();
-
         } catch (Exception keyException) {
-            logMessage(keyException.getMessage());
+            logMessage("Error extracting key: " + keyException.getMessage());
         }
 
         return keyObj;

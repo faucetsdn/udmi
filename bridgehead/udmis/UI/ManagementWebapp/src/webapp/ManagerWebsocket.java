@@ -46,7 +46,6 @@ public class ManagerWebsocket {
     }
 
     public static void sendWebsocketMessage(String subject, String data){
-
         JsonObject message = new JsonObject();
         message.addProperty("subject", subject);
         message.addProperty("data", data);

@@ -1,126 +1,271 @@
-/* Basic */
+  /* Basic */
 
-body {
-  font-family: Arial, sans-serif;
-  background-color: #f4f4f4;
-  margin: 0;
-  padding: 20px;
-}
+  body {
+    font-family: Arial, sans-serif;
+    background-color: #fffceb;
+    margin: 0;
+  }
 
-h2 {
+  h2 {
     margin-top: 0;
-    font-size: 1.5em; 
+    font-size: 1.5em;
     color: #333;
-    border-bottom: 2px solid #f4f4f4; 
+    border-bottom: 2px solid #f4f4f4;
     padding-bottom: 10px;
     margin-bottom: 15px;
-}
+  }
 
-/* Stat Panel */
+  /* Stat Panel */
 
-.stats-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-  gap: 20px;
-  margin-bottom: 30px;
-}
+  .stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 20px;
+    margin-bottom: 30px;
+    text-align: center;
+  }
 
-.stat-panel {
-  background-color: #fff;
-  padding: 20px;
-  border-radius: 8px;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-}
-
-.stat-panel h3 {
-  margin-top: 0;
-  font-size: 1.1em;
-  color: #555;
-}
-
-.stat-value {
-  font-size: 2.5em;
-  font-weight: bold;
-}
-
-/* Badge */
-
-.badge {
-  display: inline-block;
-  padding: 5px 10px;
-  border-radius: 4px;
-  font-weight: bold;
-}
-
-.badge-green {
-  background-color: #d4edda;
-  color: #155724;
-}
-
-.badge-red {
-  background-color: #f8d7da;
-  color: #721c24;
-}
-
-.badge-yellow {
-  background-color: #fff3cd;
-  color: #856404;
-}
-
-.device-status-panel {
+  .stat-panel {
     background-color: #fff;
     padding: 20px;
     border-radius: 8px;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-    margin-top: 20px; 
-}
+  }
 
-.device-list-container {
-    overflow-x: auto; 
-}
+  .stat-panel h3 {
+    margin-top: 0;
+    font-size: 1.1em;
+    color: #555;
+  }
 
-.device-status-panel table {
+  .stat-value {
+    font-size: 2.5em;
+    font-weight: bold;
+  }
+
+  /* Badge */
+
+  .badge {
+    display: inline-block;
+    padding: 5px 10px;
+    border-radius: 4px;
+    font-weight: bold;
+  }
+
+  .badge-green {
+    background-color: #d4edda;
+    color: #155724;
+  }
+
+  .badge-red {
+    background-color: #f8d7da;
+    color: #721c24;
+  }
+
+  .badge-yellow {
+    background-color: #fff3cd;
+    color: #856404;
+  }
+
+  .device-list-container {
+    overflow: auto;
+  }
+
+  .device-status-panel {
+    background-color: #fff;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    margin-top: 20px;
+    display: flex;
+    flex-direction: column;
+    height: fit-content;
+    max-height: 250px;
+  }
+
+  .device-status-panel table {
     width: 100%;
     border-collapse: collapse;
-}
+  }
 
-.device-status-panel th,
-.device-status-panel td {
+   .device-status-panel td.small {
+      padding: 6px 15px;
+      }
+
+  .device-status-panel th,
+  .device-status-panel td {
     padding: 12px 15px;
     text-align: left;
-    border-bottom: 1px solid #eee; 
-}
+    border-bottom: 1px solid #eee;
+  }
 
-.device-status-panel th {
+  .device-status-panel th {
     background-color: #f9f9f9;
     color: #555;
     font-weight: bold;
     text-transform: uppercase;
     font-size: 0.9em;
-}
+  }
 
-.device-status-panel tbody tr:nth-child(even) {
+  .device-status-panel tbody tr:nth-child(even) {
     background-color: #fafafa;
-}
+  }
 
-.device-status-panel tbody tr:hover {
+  .device-status-panel tbody tr:hover {
     background-color: #f0f0f0;
-}
+  }
 
+  /* Text Input */
+  .text-input {
+    display: grid;
+    grid-template-columns: 1fr min-content min-content;
+    gap: 10px;
+    align-items: center;
+    margin-bottom: 10px;
+  }
 
-/* Id specific */
+    .small-button{
+		width: fit-content;
+        height: min-content;
+        padding: 5px 10px;
+	  }
 
-#dashboard-header {
-  text-align: center;
-  margin-bottom: 30px;
-}
+  button {
+    width: 100%;
+    height: min-content;
+    padding: 10px 10px;
+    background-color: #f0f0f0;
+    color: #333;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 0.9em;
+    font-weight: bold;
+    transition: background-color 0.2s, border-color 0.2s;
+    box-sizing: border-box;
+  }
 
-#deviceSearch {
+  button:hover {
+    background-color: #e0e0e0;
+    border-color: #999;
+  }
+
+  button:active {
+    background-color: #d0d0d0;
+  }
+
+  button:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+
+  /* top tab */
+  .tabs {
+    display: flex;
+    width: 100%;
+    background: #ffce73;
+    align-items: center;
+  }
+
+  .tab {
+    padding: 10px 10px;
+    cursor: pointer;
+    border: none;
+    background: #ffce73;
+    color: black;
+    font-size: 16px;
+    width: auto;
+  }
+
+  .tab-button {
+    background-color: #ffe2ab;
+    border: none;
+    color: black;
+    text-decoration: none;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    cursor: pointer;
+    border-radius: 8px;
+    width: auto;
+    height: 25px;
+    font-weight: normal;
+    font-size: 0.8em;
+  }
+
+  .tab:hover,
+  .tab-button:hover {
+    background-color: #ffeecf
+  }
+
+  .tab-button-container {
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    height: 100%;
+    padding-left: 10px;
+  }
+
+  .small-text {
+    font-size: 0.5em;
+    color: #6a6a6a;
+    margin-top: -10px;
+    margin-bottom: 15px;
+    font-weight: normal;
+  }
+
+  .page {
+    padding: 20px;
+    display: none;
+  }
+
+  .page.active {
+    padding: 20px;
+    display: block;
+    height: calc(100vh - 82px);
+  }
+
+  textarea.fullscreen-input {
+    width: 100%;
+    height: 100%;
+    box-sizing: border-box;
+  }
+
+  input {
     width: 100%;
     padding: 10px;
     border: 1px solid #ccc;
     border-radius: 4px;
-    box-sizing: border-box; 
+    box-sizing: border-box;
     font-size: 1em;
-    margin: 10px; 
-}
+  }
+
+  input:focus {
+    outline: none;
+    border-color: #ccc;
+    box-shadow: 0 0 0 3px rgba(204, 204, 204, 0.25);
+  }
+
+  /* Id specific */
+
+  #dashboard-header {
+    text-align: center;
+    margin-bottom: 30px;
+  }
+
+  #empty-table-message {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 10px;
+    font-style: italic;
+    color: #6c757d;
+    background-color: #f8f9fa;
+  }
+
+  #edit-page-layout {
+    display: grid;
+    gap: 10px;
+    height: 100%;
+    grid-template-rows: min-content 1fr;
+  }

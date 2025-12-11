@@ -13,7 +13,6 @@ import static webapp.ManagerWebsocket.sendWebsocketMessage;
 public class MqttConnection implements MqttCallback {
 
     private synchronized void checkConnection() {
-
         if (client != null && client.isConnected()) {
             return;
         }
@@ -37,6 +36,7 @@ public class MqttConnection implements MqttCallback {
                 }
 
                 sendConnectionStatus(CONNECTED);
+                logMessage("Connected to mqtt broker");
                 return;
             } catch (MqttException mqttException) {
                 String errorMsg;
@@ -63,7 +63,6 @@ public class MqttConnection implements MqttCallback {
 
     public String getConnectionStatus() {
         checkConnection();
-        logMessage("Connection Status: " + connectionStatus);
         return connectionStatus;
     }
 
