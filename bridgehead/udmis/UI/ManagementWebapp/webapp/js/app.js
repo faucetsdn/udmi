@@ -1,4 +1,3 @@
-
 /* Websocket */
 const socket = new WebSocket('ws://localhost:8080/bridgeheadManager/agent');
 socket.onopen = function (e) {
@@ -10,7 +9,6 @@ const activeCount = document.getElementById("active-client-count");
 const subCount = document.getElementById("subscription-count");
 const mqttStatus = document.getElementById('broker-status');
 socket.onmessage = function (event) {
-  console.log(`Received data ${event.data}`);
   const data = JSON.parse(event.data);
 
   if (data && data.subject && data.data) {
@@ -100,16 +98,15 @@ function searchFunction(input) {
           const deviceTable = document.getElementById('device-table-body');
           deviceTable.innerHTML = html;
           const getMetadataButtons = document.querySelectorAll('.get-metadata');
-          const deviceMetadata = document.getElementById('deviceJson');
           getMetadataButtons.forEach(button => {
             button.addEventListener("click", () => {
-              fetch(`?action=getMetadata&path=${button.dataset.path}`)
-                .then(response => response.text())
-                .then(metadataJson => {
-                  const metadataObject = JSON.parse(metadataJson);                  
-                  const prettyJsonString = JSON.stringify(metadataObject, null, 2); 
-                  deviceMetadata.textContent = prettyJsonString;
-                });
+              const path = button.dataset.path;
+              if (deviceJson.hasAttribute('disabled')) {
+                deviceJson.removeAttribute('disabled');
+                saveJson.removeAttribute('disabled');
+                resetJson.removeAttribute('disabled');
+              }
+              getMetadataJson(path);
             })
           })
         } break;
@@ -123,18 +120,123 @@ const editBtn = document.getElementById('edit-tab');
 const summaryPage = document.getElementById('summary-page');
 const editPage = document.getElementById('edit-device-page');
 summaryBtn.addEventListener("click", () => {
-  console.log("summary tab clicked");
   editPage.classList.remove('active');
   summaryPage.classList.add('active');
+  editBtn.classList.remove('active');
+  summaryBtn.classList.add('active');
 })
 
 editBtn.addEventListener("click", () => {
-  console.log("edit tab clicked");
   summaryPage.classList.remove('active');
   editPage.classList.add('active');
+  editBtn.classList.add('active');
+  summaryBtn.classList.remove('active');
   const deviceList = document.getElementById('device-search');
   searchFunction(deviceList);
 })
 
 
+const deviceJson = document.getElementById('device-json');
+deviceJson.addEventListener("keydown", function (e) {
+  if (e.key === "Tab") {
+    e.preventDefault();
 
+    const start = this.selectionStart;
+    const end = this.selectionEnd;
+
+    this.value = this.value.substring(0, start) + "  " + this.value.substring(end);
+    this.selectionStart = this.selectionEnd = start + 2;
+  }
+});
+
+
+const saveJson = document.getElementById('save-metadata');
+saveJson.addEventListener("click", () => {
+  try {
+    JSON.parse(deviceJson.value);
+  } catch (error) {
+    showErrorMessage("Not a valid json object: " + error);
+    return;
+  }
+
+  fetch(`?action=saveMetadata&path=${deviceJson.dataset.path}`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json'
+    },
+    body: deviceJson.value
+  }).then(response => {
+    if (!response.ok) {
+      throw new Error('Bad repsonse whilst daving metadata file: ' + response.statusText);
+    }
+    return response.json();
+  })
+    .then(data => {
+      const message = data.message;
+      if (data.messgeType === 'error') {
+        showErrorMessage(message);
+      } else {
+        showInfoMessage(message);
+      }
+    })
+    .catch(error => {
+      showErrorMessage("Error occured whilst attempting save, file may not have been saved successfully")
+      console.error('There was a problem with the fetch operation:', error);
+    });
+})
+
+
+const resetJson = document.getElementById('reset-metadata');
+resetJson.addEventListener("click", () => {
+  getMetadataJson(deviceJson.dataset.path);
+})
+
+
+function getMetadataJson(path) {
+  fetch(`?action=getMetadata&path=${path}`)
+    .then(response => response.text())
+    .then(metadataJson => {
+      const metadataObject = JSON.parse(metadataJson);
+      const prettyJsonString = JSON.stringify(metadataObject, null, 2);
+      deviceJson.value = prettyJsonString;
+      deviceJson.dataset.path = path;
+    });
+}
+
+let timeoutId;
+function showInfoMessage(message) {
+  showMessage(message, "white")
+}
+
+function showErrorMessage(message, element = null) {
+  showMessage(message, "#ff3030")
+}
+
+function showMessage(message, colour) {
+  clearTimeout(timeoutId);
+  messageBox.textContent = message;
+  messageBox.style.color = colour;
+  messageBox.classList.add("show");
+
+  timeoutId = setTimeout(() => {
+    messageBox.classList.remove("show");
+    messageBox.textContent = "";
+  }, 5000);
+}
+
+const registrarBtn = document.getElementById('registrar-btn');
+registrarBtn.addEventListener("click", () => {
+  fetch('?action=runRegistrar')
+   .then(response => response.text())
+   .then(html => {
+    console.log(html);
+    const registrarTime = document.getElementById('registrar-time');
+    registrarTime.innerHTML=html;
+
+   })
+})
+
+const validatorBtn = document.getElementById('validator-btn');
+validatorBtn.addEventListener("click", () => {
+  fetch('?action=runValidator');
+})

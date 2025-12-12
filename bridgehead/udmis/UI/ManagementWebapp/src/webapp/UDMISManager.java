@@ -8,13 +8,10 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.text.SimpleDateFormat;
 import java.time.Instant;
-import java.time.ZoneId;
-import java.time.format.DateTimeFormatter;
-import java.time.format.FormatStyle;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Optional;
 import java.util.stream.Collectors;
 
 import static webapp.ManagerServlet.logMessage;
@@ -56,11 +53,12 @@ public class UDMISManager {
         return new JsonArray();
     }
 
-    private String getString(String key, JsonObject parent){
-        if(key != null && parent != null && parent.has(key)){
-            try{
+    private String getString(String key, JsonObject parent) {
+        if (key != null && parent != null && parent.has(key)) {
+            try {
                 return parent.get(key).getAsString();
-            } catch (Exception ignore) {}
+            } catch (Exception ignore) {
+            }
         }
         return null;
     }
@@ -89,14 +87,14 @@ public class UDMISManager {
         StringBuilder stringBuilder = new StringBuilder();
 
         String statusFormat = """
-            <tr>
-                <td>%s</td>
-                <td>%s</td>
-                <td class="badge-%s">%s</td>
-            </tr>
-            """;
+                <tr>
+                    <td>%s</td>
+                    <td>%s</td>
+                    <td class="badge-%s">%s</td>
+                </tr>
+                """;
 
-        for (String name : matchingKeys){
+        for (String name : matchingKeys) {
             JsonObject deviceReport = getJsonObject(name, devices);
             JsonObject status = getJsonObject("status", deviceReport);
 
@@ -127,7 +125,7 @@ public class UDMISManager {
         StringBuilder tableContents = new StringBuilder();
 
         if (devices != null) {
-            if (deviceName != null && !deviceName.isEmpty() && !deviceName.isBlank()) {
+            if (isValidString(deviceName)) {
                 tableContents.append(getHTMLDeviceStatus(deviceName));
             } else {
                 Iterator<String> names = devices.keySet().iterator();
@@ -139,23 +137,15 @@ public class UDMISManager {
             }
         }
 
-        if(tableContents.isEmpty()){
-            return """
-                    <tr>
-                        <td colspan="3">
-                            <div id="empty-table-message">
-                                No results to show
-                            </div>
-                        </td>
-                    </tr>
-                    """;
+        if (tableContents.isEmpty()) {
+            return getEmptyTableRow();
         }
         return tableContents.toString();
     }
 
-    public String getLastRegistrarRun(){
-        if (registrarSummary == null || registrarSummary.isEmpty()){
-            try (Reader reader = new FileReader("/root/site_model/out/registration_summary.json")){
+    public String getLastRegistrarRun() {
+        if (registrarSummary == null || registrarSummary.isEmpty()) {
+            try (Reader reader = new FileReader("/root/site_model/out/registration_summary.json")) {
                 JsonElement jsonElement = JsonParser.parseReader(reader);
                 registrarSummary = jsonElement.getAsJsonObject();
             } catch (Exception e) {
@@ -167,19 +157,25 @@ public class UDMISManager {
         return getFormattedTimestamp(getString("timestamp", registrarSummary));
     }
 
-    public String getValidatorStatus(){
+    public String getValidatorStatus() {
         return NOT_STARTED;
     }
 
-    public String getDevices(){
+    public String getDevices(String deviceName) {
         StringBuilder deviceOptions = new StringBuilder();
         Path startPath = Paths.get("/root/site_model/devices");
         try (var stream = Files.list(startPath)) {
             String htmlContent = stream
                     .filter(Files::isDirectory)
-                    .map(path -> {
+                    .filter(path -> {
                         String name = path.getFileName().toString();
+                        if (isValidString(deviceName) && !name.toLowerCase().contains(deviceName.toLowerCase())) {
+                            return false;
+                        }
+                        return true;
+                    }).map(path -> {
                         String fullPath = path.toString();
+                        String name = path.getFileName().toString();
                         return String.format(
                                 "<tr><td class=\"small\"><button class=\"small-button get-metadata\"  data-path=\"%s\">%s</button></td></tr>",
                                 fullPath,
@@ -191,33 +187,86 @@ public class UDMISManager {
         } catch (IOException e) {
             logMessage("Error getting device list: " + e.getMessage());
         }
+
+        if (deviceOptions.isEmpty()) {
+            return getEmptyTableRow();
+        }
         return deviceOptions.toString();
     }
 
-    public JsonObject getDeviceMetadata(String path){
-        String metadataPath = path + File.separator+ "metadata.json";
+    public JsonObject getDeviceMetadata(String path) {
+        String metadataPath = path + File.separator + "metadata.json";
         String error;
-        try(Reader reader = new FileReader(metadataPath)){
+        try (Reader reader = new FileReader(metadataPath)) {
             JsonElement jsonElement = JsonParser.parseReader(reader);
             return jsonElement.getAsJsonObject();
         } catch (IOException e) {
             error = "Error getting metadata file for given path: " + path + ", Error: " + e.getMessage();
             logMessage(error);
-        } catch (Exception e){
+        } catch (Exception e) {
             error = "Error parsing metadata file for given path: " + path + ", Error: " + e.getMessage();
             logMessage(error);
         }
         JsonObject returnObject = new JsonObject();
         returnObject.addProperty("Error", error);
-        returnObject.addProperty("Message", "You can use this space to save a new json at path: "+ metadataPath);
+        returnObject.addProperty("Message", "You can use this space to save a new json at path: " + metadataPath);
         return returnObject;
     }
 
-    private String getFormattedTimestamp(String ISOString){
+    public JsonObject updateMetadata(String path, JsonObject metadata) {
+
+        JsonObject reply = new JsonObject();
+        reply.addProperty("message", "Saved Successfully!");
+
+        try (PrintWriter writer = new PrintWriter(path + File.separator + "metadata.json", "UTF-8")) {
+            Gson gson = new GsonBuilder()
+                    .setPrettyPrinting()
+                    .create();
+            gson.toJson(metadata, writer);
+        } catch (IOException e) {
+            String errorMsg = "Error saving metadata file: " + e.getMessage();
+            reply.addProperty("message", errorMsg);
+            reply.addProperty("messageType", "error");
+            logMessage(errorMsg);
+        }
+        return reply;
+    }
+
+    public void runRegistrar(){
+        List<String> commandList = new ArrayList<>();
+        commandList.add("ssh");
+        commandList.add("-i");
+        commandList.add("/root/.ssh/id_ed25519");
+        commandList.add("root@validator");
+        commandList.add("-p");
+        commandList.add("22");
+        commandList.add("-o");
+        commandList.add("StrictHostKeyChecking=no");
+        commandList.add("-o");
+        commandList.add("UserKnownHostsFile=/dev/null");
+        commandList.add("/root/bin/registrar site_model/ //mqtt/mosquitto");
+
+        try {
+            ProcessBuilder processBuilder = new ProcessBuilder(commandList);
+            processBuilder.redirectErrorStream(true);
+
+            Process process = processBuilder.start();
+            int exitCode = process.waitFor();
+
+            if (exitCode != 0) {
+                System.err.println("Command failed with exit code: " + exitCode);
+                logMessage("Failed to run registrar, failed with exit code: " + exitCode);
+            }
+        } catch (Exception e) {
+            logMessage("Error whilst executing registrar: " + e.getMessage());
+        }
+    }
+
+    private String getFormattedTimestamp(String ISOString) {
         String formattedLastSeen;
-        if (ISOString == null || ISOString.isEmpty()){
+        if (ISOString == null || ISOString.isEmpty()) {
             formattedLastSeen = " --- ";
-        }else{
+        } else {
             try {
                 SimpleDateFormat sdf = new SimpleDateFormat("HH:mm:ss, dd MMM yyyy");
                 Instant instant = Instant.parse(ISOString);
@@ -227,6 +276,22 @@ public class UDMISManager {
             }
         }
         return formattedLastSeen;
+    }
+
+    private boolean isValidString(String string) {
+        return string != null && !string.isEmpty() && !string.isBlank();
+    }
+
+    private String getEmptyTableRow() {
+        return """
+                <tr>
+                    <td colspan="3">
+                        <div id="empty-table-message">
+                            No results to show
+                        </div>
+                    </td>
+                </tr>
+                """;
     }
 
     /********************************************************************************/

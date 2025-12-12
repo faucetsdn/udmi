@@ -9,7 +9,7 @@
 
 <div class="tabs" id="mainNav" style="display:flex; align-items:center; justify-content:space-between;">
     <div style="display:flex; gap:10px; align-items:center;">
-        <button class="tab" id="summary-tab">Summary</button>
+        <button class="tab active" id="summary-tab">Summary</button>
         <button class="tab" id="edit-tab">Edit Device</button>
         <div class="tab-button-container">
             <button id="registrar-btn" class="tab-button">Run Registrar</button>
@@ -18,13 +18,16 @@
             <button id="validator-btn" class="tab-button">Start Validator</button>
         </div>
     </div>
+    <span id="message" style="color:white; padding-right:50px;"></span>
 </div>
 
 <div id="summary-page" class="page${(page == 'summary')?then(' active','')}">
     <div id="dashboard-header">
-        <h1>MQTT Monitor</h1>
-        <h3>Broker Status: <span id="broker-status" class="badge badge-${brokerStatusColour}">${mqttConnectionStatus}</span>
-         --- Validator Status: <span id="validator-status" class="badge badge-${validatorStatusColour}">${validatorStatus}</span></h3>
+        <h1>Bridgehead Monitor</h1>
+        <h3>Broker Status: <span id="broker-status"
+                                 class="badge badge-${brokerStatusColour}">${mqttConnectionStatus}</span>
+            --- Validator Status: <span id="validator-status" class="badge badge-${validatorStatusColour}">${validatorStatus}</span>
+        </h3>
     </div>
 
     <div class="stats-grid">
@@ -40,20 +43,16 @@
 
         <div class="stat-panel">
             <h3>Last Registrar Run </h3>
-            <div class="stat-value" style="font-size: 1.8em;">${registrarRun}</div>
+            <div id="registrar-time" class="stat-value" style="font-size: 1.8em;">${registrarRun}</div>
         </div>
     </div>
 
-    <!--<div class="stats-grid">-->
-    <!--    <button id="run-registrar">Run Registrar</button>-->
-    <!--    <button id="start-validator">Start Validator</button>-->
-    <!--</div>-->
-
-    <div class="device-status-panel">
-        <h2>Device Status <span class="small-text">Showing first 100 devices.</span> </h2>
+    <div class="device-status-panel" style="max-height: 400px;">
+        <h2>Device Status <span class="small-text">Showing first 100 devices.</span></h2>
 
         <div class="text-input search-group">
-            <input type="text" id="device-status-search" name="deviceStatusSearch" placeholder="Search by Device Name...">
+            <input type="text" id="device-status-search" name="deviceStatusSearch"
+                   placeholder="Search by Device Name...">
             <button id="device-status-search-submit" class="submit">Submit</button>
             <button id="device-status-search-clear" class="clear">Clear</button>
         </div>
@@ -75,13 +74,14 @@
     </div>
 </div>
 
-<div id="edit-device-page" class="page">
+<div id="edit-device-page" class="page active">
     <div id="edit-page-layout">
 
-        <div class="device-status-panel">
+        <div class="device-status-panel" style="height: calc(100vh  - 80px); box-sizing: border-box;">
 
             <div class="text-input search-group">
-                <input type="text" id="device-search" name="deviceMetadataSearch" placeholder="Search by Device Name...">
+                <input type="text" id="device-search" name="deviceMetadataSearch"
+                       placeholder="Search by Device Name...">
                 <button id="device-search-submit" class="submit">Submit</button>
                 <button id="device-search-clear" class="clear">Clear</button>
             </div>
@@ -92,13 +92,18 @@
                 </table>
             </div>
         </div>
-
-        <div id="textArea">
-            <textarea class="fullscreen-input" id="deviceJson">heyyy</textarea>
+        <div id="left-pane">
+            <div id="edit-bottom-layout">
+                <button id="save-metadata" disabled>Save</button>
+                <button id="reset-metadata" disabled>Reset</button>
+            </div>
+            <div id="text-area">
+                <textarea class="fullscreen-input" id="device-json" disabled></textarea>
+            </div>
         </div>
     </div>
-
 </div>
+
 <script src="js/app.js"></script>
 </body>
 </html>

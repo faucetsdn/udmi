@@ -1,6 +1,8 @@
 package webapp;
 
+import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
 import freemarker.template.Configuration;
 import freemarker.template.Template;
 import jakarta.servlet.http.HttpServlet;
@@ -9,6 +11,7 @@ import jakarta.servlet.http.HttpServletResponse;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import webapp.mqtt.MqttConnection;
 
+import java.io.IOException;
 import java.security.Security;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
@@ -39,6 +42,42 @@ public class ManagerServlet extends HttpServlet {
     }
 
     @Override
+    protected void doPost(HttpServletRequest request, HttpServletResponse response){
+        UDMISManager udmisManager = new UDMISManager();
+        String action = request.getParameter("action");
+
+        if(Objects.equals(action, "saveMetadata")){
+            JsonObject metadata = null;
+            JsonObject reply = new JsonObject();
+            reply.addProperty("messageType", "success");
+
+            try{
+                JsonElement jsonElement = JsonParser.parseReader(request.getReader());
+                metadata = jsonElement.getAsJsonObject();
+                logMessage("received metadata : " + metadata.toString());
+            } catch (IOException e) {
+                reply.addProperty("messageType", "error");
+                reply.addProperty("message", "Unable to save file: Invalid json");
+                logMessage("Error parsing request body: " + e.getMessage());
+            }
+
+            if( metadata != null){
+                String path = request.getParameter("path");
+                reply = udmisManager.updateMetadata(path, metadata);
+            }
+
+            logMessage(reply.toString());
+
+            try {
+                response.setContentType("application/json");
+                response.getWriter().write(String.valueOf(reply));
+            } catch (Exception e) {
+                logMessage("Error returning save file reply': " + e.getMessage());
+            }
+        }
+    }
+
+    @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response) {
         UDMISManager udmisManager = new UDMISManager();
 
@@ -61,7 +100,8 @@ public class ManagerServlet extends HttpServlet {
             }
             break;
             case DEVICE_METADATA_SEARCH:{
-                String deviceList = udmisManager.getDevices();
+                String deviceName = request.getParameter("deviceName");
+                String deviceList = udmisManager.getDevices(deviceName);
                 try {
                     response.getWriter().write(deviceList);
                 } catch (Exception e) {
@@ -76,6 +116,17 @@ public class ManagerServlet extends HttpServlet {
                 } catch (Exception e) {
                     logMessage("Error return device list': " + e.getMessage());
                 }
+            }break;
+            case RUN_REGISTRAR:{
+                udmisManager.runRegistrar();
+                try {
+                    response.getWriter().write( udmisManager.getLastRegistrarRun());
+                } catch (Exception e) {
+                    logMessage("Error returning registrar result': " + e.getMessage());
+                }
+            }break;
+            case RUN_VALIDATOR:{
+
             }break;
             default: {
                 String brokerStatus = mqttConnection.getConnectionStatus();
@@ -124,5 +175,7 @@ public class ManagerServlet extends HttpServlet {
     private static final String DEVICE_STATUS_SEARCH = "deviceStatusSearch";
     private static final String DEVICE_METADATA_SEARCH = "deviceMetadataSearch";
     private static final String GET_DEVICE_METADATA = "getMetadata";
+    private static final String RUN_REGISTRAR = "runRegistrar";
+    private static final String RUN_VALIDATOR = "runValidator";
 }
 

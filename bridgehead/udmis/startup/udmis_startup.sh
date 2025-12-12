@@ -1,9 +1,11 @@
 #!/bin/bash -e
+mkdir -p /root/.ssh 
+ssh-keygen -t ed25519 -N "" -f /root/.ssh/id_ed25519 && chmod 600 /root/.ssh/id_ed25519
+echo starting up tomcat server
+exec /usr/local/tomcat/bin/catalina.sh run > /tmp/tomcat.log 2>&1 &
+
 UDMIS_LOG=/tmp/udmis.log
 rm -rf $UDMIS_LOG
-
-echo Waiting 15s for mqtt to setup
-sleep 15
 
 UDMI_ROOT=/root/udmi
 source $UDMI_ROOT/etc/shell_common.sh
@@ -69,6 +71,6 @@ echo udmis running in the background, pid $PID log in $(realpath $LOGFILE)
 
 echo starting up telegraf
 
-telegraf --config /usr/local/bin/startup/telegraf.conf
+telegraf --config /usr/local/bin/startup/telegraf.conf > /tmp/telegraf.log 2>&1 &
 
 (echo Blocking until termination. && tail -f /dev/null)

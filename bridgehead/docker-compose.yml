@@ -39,19 +39,22 @@ services:
       - ./var/mosquitto/log:/var/log/mosquitto
       - ./var/mosquitto/certs:/etc/mosquitto/certs
       - /var/run/docker.sock:/var/run/docker.sock:ro
+      - ./var/sshKeys:/root/.ssh
     depends_on:
       etcd:
         condition: service_started
       mosquitto:
         condition: service_started
     restart: always
+    ports:
+      - "8080:8080"
     networks:
       - udminet
     environment:
       - ETCD_CLUSTER=etcd
       - MQTT_HOST=mosquitto
       - MQTT_PORT=8883
-      - INFLUXDB_TOKEN=
+      - INFLUXDB_TOKEN=<token>
       - INFLUXDB_ORG=bridgehead
       - INFLUXDB_BUCKET=home
 
@@ -64,6 +67,7 @@ services:
       - ./var/mosquitto/log:/var/log/mosquitto
       - ./var/mosquitto/certs:/etc/mosquitto/certs
       - ./var/tmp:/usr/local/bin/udmis
+      - ./var/sshKeys:/tmp/ssh_public_key
     depends_on:
       udmis:
         condition: service_started
@@ -86,7 +90,7 @@ services:
       - DOCKER_INFLUXDB_INIT_PASSWORD=password
       - DOCKER_INFLUXDB_INIT_BUCKET=home
       - DOCKER_INFLUXDB_INIT_ORG=bridgehead
-      - DOCKER_INFLUXDB_INIT_ADMIN_TOKEN=
+      - DOCKER_INFLUXDB_INIT_ADMIN_TOKEN=<token>
     restart: always
     ports:
       - "8086:8086"
@@ -104,7 +108,7 @@ services:
     environment:
       - INFLUXDB_ORGANISATION=bridgehead
       - INFLUXDB_BUCKET=home
-      - INFLUXDB_TOKEN=
+      - INFLUXDB_TOKEN=<token>
       - GF_SECURITY_ADMIN_USER=bridgehead
       - GF_SECURITY_ADMIN_PASSWORD=password
     restart: always
