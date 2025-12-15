@@ -32,7 +32,7 @@ from udmi.core.messaging.mqtt_messaging_client import ReconnectConfig
 from udmi.core.messaging.mqtt_messaging_client import TlsConfig
 
 
-# pylint: disable=redefined-outer-name
+# pylint: disable=redefined-outer-name,too-many-arguments,too-many-positional-arguments
 
 
 @pytest.fixture

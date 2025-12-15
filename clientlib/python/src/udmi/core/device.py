@@ -81,6 +81,7 @@ class Device:
 
     This class is NOT intended to be subclassed.
     """
+
     # pylint:disable=too-many-instance-attributes
 
     def __init__(self,
@@ -469,7 +470,6 @@ class Device:
         while not self._loop_state.stop_event.is_set():
             if self._loop_state.reset_event.is_set():
                 raise ConnectionResetException()
-
             if self._loop_state.consecutive_failures >= MAX_CONNECTION_RETRIES:
                 LOGGER.error("Max connection failures (%s) reached.",
                              MAX_CONNECTION_RETRIES)
