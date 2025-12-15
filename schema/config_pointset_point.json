@@ -15,7 +15,12 @@
       "type": "string"
     },
     "set_value": {
-      "description": "Used for cloud writeback functionality, this field specifies the value for a given point in the device's current units.",
+      "description": "Used for cloud writeback functionality, this field specifies the value for a given point in the device's current units. If the value is numeric, then the type must be integer or number.  If the value is an integer, it should be represented as type integer",",
+       "oneOf": [
+       		{ "type": "string" },
+       		{ "type": "integer" }
+       		{ "type": "number" }		
+       ],
       "examples": [22.4]
     },
     "stop_time": {
