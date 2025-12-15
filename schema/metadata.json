@@ -84,9 +84,9 @@
           "$ref": "file:events_discovery.json"
         }
       }
-    }
-  },
-  "policy": {
+    },
+    "policy": {
       "$ref": "file:model_policy.json#"
+  }
   }
 }

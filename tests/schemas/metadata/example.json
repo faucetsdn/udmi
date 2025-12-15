@@ -75,5 +75,8 @@
     "system": { },
     "enumeration": { "stage": "beta" },
     "enumeration.pointset": { "stage": "alpha" }
+  },
+  "policy": {
+    "rule_sets": ["ip", "mqtt"]
   }
 }
