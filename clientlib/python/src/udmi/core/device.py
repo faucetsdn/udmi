@@ -529,10 +529,16 @@ class Device:
                 return manager
         return None
 
-    def trigger_state_update(self):
+    def trigger_state_update(self, immediate: bool = False) -> None:
         """
-        Public API for managers to request an immediate state publish.
-        Sets the dirty bit, which the main loop picks up on its next short cycle.
+        Public API for managers to request a state publish.
+        Args:
+            immediate: If True, forces a publish immediately (blocking).
+                       If False, schedules it for the next loop cycle.
         """
-        LOGGER.debug("Manager requested immediate state update.")
-        self._loop_state.state_dirty = True
+        if immediate:
+            LOGGER.debug("Manager requested IMMEDIATE state update.")
+            self._publish_state(force=True)
+        else:
+            LOGGER.debug("Manager requested immediate state update.")
+            self._loop_state.state_dirty = True

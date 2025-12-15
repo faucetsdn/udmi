@@ -20,6 +20,9 @@ import psutil
 
 from udmi.constants import UDMI_VERSION
 from udmi.core.blob import get_verified_blob_bytes
+from udmi.core.blob.handlers import BlobPipelineHandlers
+from udmi.core.blob.handlers import PostProcessHandler
+from udmi.core.blob.handlers import ProcessHandler
 from udmi.core.managers.base_manager import BaseManager
 from udmi.schema import BlobBlobsetConfig
 from udmi.schema import BlobBlobsetState
@@ -39,9 +42,6 @@ LOGGER = logging.getLogger(__name__)
 
 BYTES_PER_MEGABYTE = 1024 * 1024
 DEFAULT_METRICS_RATE_SEC = 60
-
-# Blob Handler Signature: (blob_id: str, data: bytes) -> None
-BlobHandler = Callable[[str, bytes], None]
 
 # Command Handler Signature: (payload: dict) -> None
 CommandHandler = Callable[[Dict[str, Any]], None]
@@ -76,7 +76,7 @@ class SystemManager(BaseManager):
         self._restart_count = 0
 
         # --- Blobset Setup ---
-        self._blob_handlers: Dict[str, BlobHandler] = {}
+        self._blob_handlers: Dict[str, BlobPipelineHandlers] = {}
         self._applied_blob_generations: Dict[str, str] = {}
         self._blob_states: Dict[str, BlobBlobsetState] = {}
 
@@ -91,14 +91,16 @@ class SystemManager(BaseManager):
         LOGGER.info("SystemManager initialized.")
 
     def register_blob_handler(self, blob_key: str,
-        handler: BlobHandler) -> None:
+        process: ProcessHandler,
+        post_process: Optional[PostProcessHandler] = None
+    ) -> None:
         """
-        Registers a callback to handle a specific blob key.
-        Args:
-            blob_key: The identifier in the blobset (e.g., 'firmware').
-            handler: A function that accepts (blob_key, data_bytes).
-        """
-        self._blob_handlers[blob_key] = handler
+    Registers the pipeline handlers for a specific blob key.
+    """
+        self._blob_handlers[blob_key] = BlobPipelineHandlers(
+            process=process,
+            post_process=post_process
+        )
         LOGGER.info("Registered handler for blob key: '%s'", blob_key)
 
     def register_command_handler(self, command_name: str,
@@ -219,16 +221,21 @@ class SystemManager(BaseManager):
 
             handler = self._blob_handlers[key]
             LOGGER.info("Invoking handler for blob '%s'...", key)
-            handler(key, data)
+            process_output = handler.process(key, data)
 
             LOGGER.info("Blob '%s' applied successfully.", key)
             self._applied_blob_generations[key] = config.generation
 
+            LOGGER.info(f"Blob {key} applied. Flushing state...")
             self._update_blob_state(key, Phase.final, config.generation)
+            self.trigger_state_update(immediate=True)
 
             if self._device and self._device.persistence:
                 self._device.persistence.set("applied_blobs",
                                              self._applied_blob_generations)
+            if handler.post_process:
+                LOGGER.info(f"Running post-process for {key}...")
+                handler.post_process(key, process_output)
 
         except Exception as e:  # pylint:disable=broad-exception-caught
             LOGGER.error("Failed to apply blob '%s': %s", key, e)
