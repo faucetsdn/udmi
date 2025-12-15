@@ -3,22 +3,17 @@ package webapp;
 import com.google.gson.JsonObject;
 import jakarta.websocket.*;
 import jakarta.websocket.server.ServerEndpoint;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.util.Queue;
 import java.util.Set;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicBoolean;
-
-import static webapp.ManagerServlet.logMessage;
+import java.util.logging.Logger;
 
 
 @ServerEndpoint(value = "/agent")
 public class ManagerWebsocket {
-
-    private static final Logger log = LoggerFactory.getLogger(ManagerWebsocket.class);
 
     @OnOpen
     public void onOpen(Session session, EndpointConfig config) {
@@ -31,18 +26,17 @@ public class ManagerWebsocket {
         try {
             session.close();
         } catch (IOException e) {
-            logMessage("Failed to close session: " + e.getMessage());
+            LOGGER.severe("Failed to close session: " + e.getMessage());
         }
     }
 
     @OnError
     public void onError(Session session, Throwable throwable) {
-        logMessage("Websocket Error: " + throwable.getMessage());
+        LOGGER.severe("Websocket Error: " + throwable.getMessage());
     }
 
     @OnMessage
     public void onMessage(String message, Session session) {
-        logMessage("Message received: " + message);
     }
 
     public static void sendWebsocketMessage(String subject, String data){
@@ -68,7 +62,7 @@ public class ManagerWebsocket {
                     try {
                         session.getBasicRemote().sendText(message.toString());
                     } catch (IOException e) {
-                        logMessage("Error sending websocket message: " + e.getMessage());
+                        LOGGER.severe("Error sending websocket message: " + e.getMessage());
                         messageQueue.offer(message);
                         session = null;
                         break;
@@ -87,5 +81,6 @@ public class ManagerWebsocket {
     public static final Set<Session> sessions = new CopyOnWriteArraySet<>();
     private static final Queue<JsonObject> messageQueue = new ConcurrentLinkedQueue<>();
     private static final ScheduledExecutorService messageScheduler = Executors.newSingleThreadScheduledExecutor();
-    private static AtomicBoolean messageScheduled = new AtomicBoolean(false);;
+    private static final AtomicBoolean messageScheduled = new AtomicBoolean(false);
+    private final static Logger LOGGER = Logger.getLogger(ManagerWebsocket.class.getName());
 }

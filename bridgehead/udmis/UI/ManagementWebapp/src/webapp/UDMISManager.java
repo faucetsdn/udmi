@@ -12,9 +12,10 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
+import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
-import static webapp.ManagerServlet.logMessage;
+import static java.lang.Thread.sleep;
 
 public class UDMISManager {
 
@@ -33,7 +34,7 @@ public class UDMISManager {
             extraDevices = getJsonArray("extra_devices", summary);
 
         } catch (Exception e) {
-            logMessage("Error setting up udmis manager object: " + e.getMessage());
+            LOGGER.severe("Error setting up udmis manager object: " + e.getMessage());
         }
     }
 
@@ -149,16 +150,12 @@ public class UDMISManager {
                 JsonElement jsonElement = JsonParser.parseReader(reader);
                 registrarSummary = jsonElement.getAsJsonObject();
             } catch (Exception e) {
-                logMessage("Error getting registrar summary: " + e.getMessage());
+                LOGGER.severe("Error getting registrar summary: " + e.getMessage());
                 return "";
             }
         }
 
         return getFormattedTimestamp(getString("timestamp", registrarSummary));
-    }
-
-    public String getValidatorStatus() {
-        return NOT_STARTED;
     }
 
     public String getDevices(String deviceName) {
@@ -185,7 +182,7 @@ public class UDMISManager {
                     .collect(Collectors.joining("\n"));
             deviceOptions.append(htmlContent);
         } catch (IOException e) {
-            logMessage("Error getting device list: " + e.getMessage());
+            LOGGER.severe("Error getting device list: " + e.getMessage());
         }
 
         if (deviceOptions.isEmpty()) {
@@ -202,10 +199,10 @@ public class UDMISManager {
             return jsonElement.getAsJsonObject();
         } catch (IOException e) {
             error = "Error getting metadata file for given path: " + path + ", Error: " + e.getMessage();
-            logMessage(error);
+            LOGGER.severe(error);
         } catch (Exception e) {
             error = "Error parsing metadata file for given path: " + path + ", Error: " + e.getMessage();
-            logMessage(error);
+            LOGGER.severe(error);
         }
         JsonObject returnObject = new JsonObject();
         returnObject.addProperty("Error", error);
@@ -227,40 +224,40 @@ public class UDMISManager {
             String errorMsg = "Error saving metadata file: " + e.getMessage();
             reply.addProperty("message", errorMsg);
             reply.addProperty("messageType", "error");
-            logMessage(errorMsg);
+            LOGGER.severe(errorMsg);
         }
         return reply;
     }
 
-    public void runRegistrar(){
-        List<String> commandList = new ArrayList<>();
-        commandList.add("ssh");
-        commandList.add("-i");
-        commandList.add("/root/.ssh/id_ed25519");
-        commandList.add("root@validator");
-        commandList.add("-p");
-        commandList.add("22");
-        commandList.add("-o");
-        commandList.add("StrictHostKeyChecking=no");
-        commandList.add("-o");
-        commandList.add("UserKnownHostsFile=/dev/null");
-        commandList.add("/root/bin/registrar site_model/ //mqtt/mosquitto");
-
-        try {
-            ProcessBuilder processBuilder = new ProcessBuilder(commandList);
-            processBuilder.redirectErrorStream(true);
-
-            Process process = processBuilder.start();
-            int exitCode = process.waitFor();
-
-            if (exitCode != 0) {
-                System.err.println("Command failed with exit code: " + exitCode);
-                logMessage("Failed to run registrar, failed with exit code: " + exitCode);
-            }
-        } catch (Exception e) {
-            logMessage("Error whilst executing registrar: " + e.getMessage());
-        }
+    public String runRegistrar(){
+        executeCommandOnValidatorContainer("/root/bin/registrar site_model/ //mqtt/mosquitto", true);
+        return getLastRegistrarRun();
     }
+
+    public String startValidator(){
+        if(!isValidatorRunning()) {
+            executeCommandOnValidatorContainer("/root/bin/validator site_model/ //mqtt/mosquitto", false);
+            try {
+                sleep(500);
+            } catch (InterruptedException e) {
+                LOGGER.severe("Error waiting validator start delay");
+            }
+        }
+        return getValidatorStatus();
+    }
+
+    public String getValidatorStatus() {
+        if (isValidatorRunning()){
+            return RUNNING;
+        }
+        return NOT_STARTED;
+    }
+
+    public boolean isValidatorRunning(){
+        return executeCommandOnValidatorContainer("ps aux", "validator-1.0-SNAPSHOT-all.jar", true);
+    }
+
+    /** Private functions **/
 
     private String getFormattedTimestamp(String ISOString) {
         String formattedLastSeen;
@@ -294,6 +291,66 @@ public class UDMISManager {
                 """;
     }
 
+    private List<String> getSSHCommandList(){
+        List<String> commandList = new ArrayList<>();
+        commandList.add("ssh");
+        commandList.add("-i");
+        commandList.add("/root/.ssh/id_ed25519");
+        commandList.add("root@validator");
+        commandList.add("-p");
+        commandList.add("22");
+        commandList.add("-o");
+        commandList.add("StrictHostKeyChecking=no");
+        commandList.add("-o");
+        commandList.add("UserKnownHostsFile=/dev/null");
+        return commandList;
+    }
+
+    private void executeCommandOnValidatorContainer(String command, boolean waitForReturn){
+        executeCommandOnValidatorContainer(command, null, waitForReturn);
+    }
+
+    private boolean executeCommandOnValidatorContainer(String command, String lineToFind, boolean waitForReturn){
+        List<String> commandList = getSSHCommandList();
+        commandList.add(command);
+
+        String errMsg = null;
+        boolean found = false;
+
+        try {
+            ProcessBuilder processBuilder = new ProcessBuilder(commandList);
+            processBuilder.redirectErrorStream(true);
+            Process process = processBuilder.start();
+            BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()));
+
+            if(lineToFind != null) {
+                String line;
+                while ((line = reader.readLine()) != null && !found) {
+                    if (line.contains(lineToFind)) {
+                        found = true;
+                    }
+                }
+            }
+
+            if(waitForReturn) {
+                int exitCode = process.waitFor();
+
+                if (exitCode != 0) {
+                    errMsg = "failed with exit code: " + exitCode;
+                }
+            }
+        } catch (Exception e) {
+            errMsg = e.getMessage();
+        }
+
+        if( errMsg != null) {
+            LOGGER.severe("Failed to execute command on validator container: " + errMsg);
+        }
+
+        return found;
+    }
+
+
     /********************************************************************************/
 
     JsonObject validationReport;
@@ -306,4 +363,6 @@ public class UDMISManager {
 
     public static final String RUNNING = "Running";
     public static final String NOT_STARTED = "Not Started";
+
+    private final static Logger LOGGER = Logger.getLogger(UDMISManager.class.getName());
 }

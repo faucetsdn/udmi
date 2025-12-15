@@ -5,9 +5,9 @@ import org.eclipse.paho.client.mqttv3.persist.MemoryPersistence;
 
 import java.util.Map;
 import java.util.Objects;
+import java.util.logging.Logger;
 
 import static java.lang.Thread.sleep;
-import static webapp.ManagerServlet.logMessage;
 import static webapp.ManagerWebsocket.sendWebsocketMessage;
 
 public class MqttConnection implements MqttCallback {
@@ -36,7 +36,7 @@ public class MqttConnection implements MqttCallback {
                 }
 
                 sendConnectionStatus(CONNECTED);
-                logMessage("Connected to mqtt broker");
+                LOGGER.info ("Connected to mqtt broker");
                 return;
             } catch (MqttException mqttException) {
                 String errorMsg;
@@ -46,9 +46,9 @@ public class MqttConnection implements MqttCallback {
                 } else {
                     errorMsg = "[" + mqttException.getReasonCode() + "] " + mqttException.getMessage();
                 }
-                logMessage("MQTT Connect failed: " + errorMsg);
+                LOGGER.info("MQTT Connect failed: " + errorMsg);
             } catch (Exception e) {
-                logMessage("Error whilst trying to connect to mqtt broker: " + e.getMessage());
+                LOGGER.severe("Error whilst trying to connect to mqtt broker: " + e.getMessage());
             }
             sendConnectionStatus(CONNECTING);
             try {
@@ -68,7 +68,7 @@ public class MqttConnection implements MqttCallback {
 
     @Override
     public void connectionLost(Throwable cause) {
-        logMessage("Connection lost: " + cause.getMessage());
+        LOGGER.info("Connection lost: " + cause.getMessage());
         sendConnectionStatus(DISCONNECTED);
     }
 
@@ -107,6 +107,7 @@ public class MqttConnection implements MqttCallback {
 
     /**********************************************************************************************/
     private volatile MqttClient client;
+    private final static Logger LOGGER = Logger.getLogger(MqttConnection.class.getName());
 
     private volatile String subscriptionCount = "0";
     private volatile String clientCount = "0";

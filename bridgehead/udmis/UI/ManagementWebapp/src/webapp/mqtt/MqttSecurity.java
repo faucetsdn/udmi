@@ -17,8 +17,8 @@ import java.security.KeyStore;
 import java.security.PrivateKey;
 import java.security.cert.Certificate;
 import java.security.cert.CertificateFactory;
+import java.util.logging.Logger;
 
-import static webapp.ManagerServlet.logMessage;
 
 public class MqttSecurity {
 
@@ -74,7 +74,7 @@ public class MqttSecurity {
                 certObj = certFactory.generateCertificate(bis);
             }
         } catch (IllegalArgumentException e){
-            logMessage("Error extracting mqtt certificate: " + e.getMessage());
+            LOGGER.severe("Error extracting mqtt certificate: " + e.getMessage());
         } catch (Exception certException) {
             // noinspection CallToPrintStackTrace
             certException.printStackTrace();
@@ -95,7 +95,7 @@ public class MqttSecurity {
             keyObj = new KeyPair(null, privateKey);
             pemParser.close();
         } catch (Exception keyException) {
-            logMessage("Error extracting key: " + keyException.getMessage());
+            LOGGER.severe("Error extracting key: " + keyException.getMessage());
         }
 
         return keyObj;
@@ -122,4 +122,6 @@ public class MqttSecurity {
 
         return certFileInstance;
     }
+
+    private final static Logger LOGGER = Logger.getLogger(MqttSecurity.class.getName());
 }

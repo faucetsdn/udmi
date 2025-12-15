@@ -212,6 +212,7 @@ function showErrorMessage(message, element = null) {
   showMessage(message, "#ff3030")
 }
 
+const messageBox = document.getElementById('message-box');
 function showMessage(message, colour) {
   clearTimeout(timeoutId);
   messageBox.textContent = message;
@@ -225,18 +226,44 @@ function showMessage(message, colour) {
 }
 
 const registrarBtn = document.getElementById('registrar-btn');
+const registrarTime = document.getElementById('registrar-time');
+const registrarLoading = document.getElementById('registrar-loading');
 registrarBtn.addEventListener("click", () => {
+  show(registrarLoading);
+  hide(registrarTime);
   fetch('?action=runRegistrar')
-   .then(response => response.text())
-   .then(html => {
-    console.log(html);
-    const registrarTime = document.getElementById('registrar-time');
-    registrarTime.innerHTML=html;
-
-   })
+    .then(response => response.text())
+    .then(html => {
+      const registrarTime = document.getElementById('registrar-time');
+      registrarTime.innerHTML = html;
+      hide(registrarLoading);
+      show(registrarTime);
+    })
 })
 
 const validatorBtn = document.getElementById('validator-btn');
+const validatorStatus = document.getElementById('validator-status');
 validatorBtn.addEventListener("click", () => {
-  fetch('?action=runValidator');
+  fetch('?action=runValidator')
+    .then(response => response.text())
+    .then(status => {
+      validatorStatus.className = 'badge';
+      if (status === "Running") {
+        validatorStatus.textContent = status;
+        validatorStatus.classList.add('badge-green');
+      } else {
+        validatorStatus.textContent = status;
+        validatorStatus.classList.add('badge-red');
+      }
+    })
 })
+
+function hide(element) {
+  element.style.visibility = 'hidden';
+  element.style.display = 'none';
+}
+
+function show(element) {
+  element.style.visibility = 'visible';
+  element.style.display = 'block';
+}

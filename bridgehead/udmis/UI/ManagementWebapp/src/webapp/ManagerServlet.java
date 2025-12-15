@@ -13,20 +13,16 @@ import webapp.mqtt.MqttConnection;
 
 import java.io.IOException;
 import java.security.Security;
-import java.time.ZoneId;
-import java.time.ZonedDateTime;
-import java.time.format.DateTimeFormatter;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
+import java.util.logging.Logger;
 
 import static webapp.UDMISManager.NOT_STARTED;
 import static webapp.UDMISManager.RUNNING;
 import static webapp.mqtt.MqttConnection.*;
 
 public class ManagerServlet extends HttpServlet {
-
-    MqttConnection mqttConnection = new MqttConnection();
 
     @Override
     public void init() {
@@ -37,7 +33,7 @@ public class ManagerServlet extends HttpServlet {
             cfg.setServletContextForTemplateLoading(getServletContext(), "WEB-INF/templates");
             cfg.setDefaultEncoding("UTF-8");
         } catch (Exception e) {
-            logMessage("Error when initialising configuration: " + e.getMessage());
+            LOGGER.severe("Error when initialising configuration: " + e.getMessage());
         }
     }
 
@@ -54,11 +50,10 @@ public class ManagerServlet extends HttpServlet {
             try{
                 JsonElement jsonElement = JsonParser.parseReader(request.getReader());
                 metadata = jsonElement.getAsJsonObject();
-                logMessage("received metadata : " + metadata.toString());
             } catch (IOException e) {
                 reply.addProperty("messageType", "error");
                 reply.addProperty("message", "Unable to save file: Invalid json");
-                logMessage("Error parsing request body: " + e.getMessage());
+                LOGGER.severe("Error parsing request body: " + e.getMessage());
             }
 
             if( metadata != null){
@@ -66,13 +61,11 @@ public class ManagerServlet extends HttpServlet {
                 reply = udmisManager.updateMetadata(path, metadata);
             }
 
-            logMessage(reply.toString());
-
             try {
                 response.setContentType("application/json");
                 response.getWriter().write(String.valueOf(reply));
             } catch (Exception e) {
-                logMessage("Error returning save file reply': " + e.getMessage());
+                LOGGER.severe("Error returning save file reply': " + e.getMessage());
             }
         }
     }
@@ -86,47 +79,27 @@ public class ManagerServlet extends HttpServlet {
             action = "";
         }
 
-        response.setContentType("text/html");
+        String reply = null;
         switch (action) {
             case DEVICE_STATUS_SEARCH: {
                 String deviceName = request.getParameter("deviceName");
-                String tableData = udmisManager.getDeviceStatus(deviceName);
-
-                try {
-                    response.getWriter().write(tableData);
-                } catch (Exception e) {
-                    logMessage("Error return device status': " + e.getMessage());
-                }
+                reply = udmisManager.getDeviceStatus(deviceName);
             }
             break;
             case DEVICE_METADATA_SEARCH:{
                 String deviceName = request.getParameter("deviceName");
-                String deviceList = udmisManager.getDevices(deviceName);
-                try {
-                    response.getWriter().write(deviceList);
-                } catch (Exception e) {
-                    logMessage("Error return device list': " + e.getMessage());
-                }
+                reply = udmisManager.getDevices(deviceName);
             }break;
             case GET_DEVICE_METADATA:{
                 String devicePath = request.getParameter("path");
                 JsonObject deviceMetadata = udmisManager.getDeviceMetadata(devicePath);
-                try {
-                    response.getWriter().write(deviceMetadata.toString());
-                } catch (Exception e) {
-                    logMessage("Error return device list': " + e.getMessage());
-                }
+                reply = deviceMetadata.toString();
             }break;
             case RUN_REGISTRAR:{
-                udmisManager.runRegistrar();
-                try {
-                    response.getWriter().write( udmisManager.getLastRegistrarRun());
-                } catch (Exception e) {
-                    logMessage("Error returning registrar result': " + e.getMessage());
-                }
+                reply = udmisManager.runRegistrar();
             }break;
             case RUN_VALIDATOR:{
-
+                reply = udmisManager.startValidator();
             }break;
             default: {
                 String brokerStatus = mqttConnection.getConnectionStatus();
@@ -142,23 +115,21 @@ public class ManagerServlet extends HttpServlet {
                 model.put("deviceStatusBody", udmisManager.getDeviceStatus());
                 model.put("registrarRun", udmisManager.getLastRegistrarRun());
                 model.put("page", "summary");
-
-                try {
-                    Template template = cfg.getTemplate("home-page.ftl");
-                    template.process(model, response.getWriter());
-                } catch (Exception e) {
-                    logMessage("Error setting default model: " + e.getMessage());
-                }
             }
         }
-    }
 
-    public static void logMessage(String message) {
-        DateTimeFormatter sdf = DateTimeFormatter.ofPattern("HH:mm:ss dd/MM/yyyy");
-        ZonedDateTime now = ZonedDateTime.now(ZoneId.systemDefault());
-        System.out.println("[TOMCAT] [" + now.format(sdf) + "] " + message);
+        try{
+            if (reply == null) {
+                Template template = cfg.getTemplate("home-page.ftl");
+                template.process(model, response.getWriter());
+            }else {
+                response.setContentType("text/html");
+                response.getWriter().write(reply);
+            }
+        }catch (Exception e){
+            LOGGER.severe("Error returning get request: " + e.getMessage());
+        }
     }
-
 
     private String getBadgeColour(String status){
         if(Objects.equals(status, RUNNING) || Objects.equals(status, CONNECTED)){
@@ -171,6 +142,8 @@ public class ManagerServlet extends HttpServlet {
 
     private Configuration cfg;
     public Map<String, Object> model = new HashMap<>();
+    MqttConnection mqttConnection = new MqttConnection();
+    private final static Logger LOGGER = Logger.getLogger(ManagerServlet.class.getName());
 
     private static final String DEVICE_STATUS_SEARCH = "deviceStatusSearch";
     private static final String DEVICE_METADATA_SEARCH = "deviceMetadataSearch";

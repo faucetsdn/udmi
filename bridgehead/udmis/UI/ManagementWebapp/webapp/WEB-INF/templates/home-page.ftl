@@ -18,13 +18,13 @@
             <button id="validator-btn" class="tab-button">Start Validator</button>
         </div>
     </div>
-    <span id="message" style="color:white; padding-right:50px;"></span>
+    <span id="message-box" style="color:white; padding-right:50px;"></span>
 </div>
 
 <div id="summary-page" class="page${(page == 'summary')?then(' active','')}">
     <div id="dashboard-header">
         <h1>Bridgehead Monitor</h1>
-        <h3>Broker Status: <span id="broker-status"
+        <h3>MQTT Broker Status: <span id="broker-status"
                                  class="badge badge-${brokerStatusColour}">${mqttConnectionStatus}</span>
             --- Validator Status: <span id="validator-status" class="badge badge-${validatorStatusColour}">${validatorStatus}</span>
         </h3>
@@ -43,6 +43,7 @@
 
         <div class="stat-panel">
             <h3>Last Registrar Run </h3>
+            <div id="registrar-loading" style="visibility: hidden; display: none;" class="loader"></div>
             <div id="registrar-time" class="stat-value" style="font-size: 1.8em;">${registrarRun}</div>
         </div>
     </div>
@@ -74,7 +75,7 @@
     </div>
 </div>
 
-<div id="edit-device-page" class="page active">
+<div id="edit-device-page" class="page${(page == 'edit')?then(' active','')}">
     <div id="edit-page-layout">
 
         <div class="device-status-panel" style="height: calc(100vh  - 80px); box-sizing: border-box;">
