@@ -7,6 +7,7 @@ This guide provides instructions for deploying the core UDMI services bundle. Th
 - validator service (includes registrar tool)
 - InfluxDB timeseries database
 - Grafana visualisation tool
+- Graphical UI
 
 *Note: docker logs display file paths as seen inside the container. These are internal paths and do not match your local machine's file system. Files with local access exist via volume mapping; check your docker-compose.yml for the corresponding host path. Example: The common container path /root/site_model/ exists locally under bridgehead/udmi_site_model*
 
@@ -19,10 +20,23 @@ This guide provides instructions for deploying the core UDMI services bundle. Th
 3. **Get default site model:** In you terminal, run `sudo git clone https://github.com/faucetsdn/udmi_site_model.git`.
 
 4. **Edit compose file:** Open the docker-compose.yml file in your chosen editor.
-    1. **Add Host IP:** Locate the line `HOST_IP: <YOUR_IP>` inside the **mosquitto** service block. Replace `<YOUR_IP>` with your hosts ip address. You can find this by running `sudo hostname -I`. This is required in order tp allow connections to the broker externally from the docker compose environment. 
-    2. **Update InfluxDB Credentials:** Under the **influxdb** service, under the environment variables, set the values of `DOCKER_INFLUXDB_INIT_USERNAME`, `DOCKER_INFLUXDB_INIT_PASSWORD` and `DOCKER_INFLUXDB_INIT_ADMIN_TOKEN`. For `DOCKER_INFLUXDB_INIT_ADMIN_TOKEN`, run `openssl rand -hex 32`.
-    3. **Update Grafana credentials:** Under the **grafana** service, set the values of `GF_SECURITY_ADMIN_USER` and `GF_SECURITY_ADMIN_USER`. Update the value of `INFLUXDB_TOKEN` with the token generated in step 2.
-    4. **Update udmis credentials:** Under the **udmis** service, set the value of `INFLUXDB_TOKEN` with the token generated in step 2.
+    1. **Add Host IP:** This is required in order to allow connections to the broker externally from the docker compose environment. 
+        1. Get host ip address: `sudo hostname -I`
+        2. Inside the **mosquitto** service block locate the line `HOST_IP: <YOUR_IP>`. Replace `<YOUR_IP>` with your hosts ip address.
+    2. **Generate random token**: `openssl rand -hex 32`.
+    3. **Update InfluxDB Credentials:** 
+        1. Inside the **influxdb** service, under the environment variables, set the values of:
+            - `DOCKER_INFLUXDB_INIT_USERNAME`
+            - `DOCKER_INFLUXDB_INIT_PASSWORD`
+            - `DOCKER_INFLUXDB_INIT_ADMIN_TOKEN` (token generated in step 2) 
+    4. **Update Grafana credentials:**
+        1. Under the **grafana** service, set the values of:
+           - `GF_SECURITY_ADMIN_USER`
+           - `GF_SECURITY_ADMIN_PASSWORD`
+           - `INFLUXDB_TOKEN` (token generated in step 2) 
+    5. **Update udmis credentials:** 
+        1. Under the **udmis** service, set the value of:
+           - `INFLUXDB_TOKEN` (token generated in step 2) 
 
 5. **Deploy the service:** Execute the following command to build the custom images (if needed) and start the containers in detached mode.
     * **First time/after changes:** Run `sudo docker compose up -d --build`
@@ -44,7 +58,7 @@ The UDMI tools should only be run after the udmis service has completed setup. Y
 
 The following commands should be run in the same directory as the Docker Compose (`bridgehead/`).
 
-In your terminal, execute `sudo docker exec validator bin/registrar site_model/ //mqtt/mosquitto`. To confirm a successful execution, take a look at the [sample registrar output](sample_outputs/registrar_output.md)
+In your terminal, execute `sudo docker exec validator bin/registrar site_model/ //mqtt/mosquitto`. To confirm a successful execution, look at the [sample registrar output](sample_outputs/registrar_output.md)
 
 ### Pubber
 
@@ -108,6 +122,23 @@ Out of 4 total.
 ```
 
 ## Diagnostics
+
+### UI
+
+Access the web-based Management UI by navigating to: `http://localhost:8080/bridgeheadManager/`.
+
+The UI allows you to:
+
+#### 1. Monitor
+- View MQTT broker status (including real-time connection counts).
+- Check if the validator service is currently running.
+- See last time the registrar tool was run.
+- View individual device status, as reported by the validator service.
+
+#### 2. Interact
+ - Start the validator Service
+ - Execute the registrar tool
+ - Edit device metadata
 
 ### InfluxDB
 
