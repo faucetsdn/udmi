@@ -59,6 +59,9 @@
     "discovery": {
       "$ref": "file:model_discovery.json#"
     },
+    "relationships": {
+      "$ref": "file:model_relationships.json#"
+    },
     "localnet": {
       "$ref": "file:model_localnet.json#",
       "$presentation": {

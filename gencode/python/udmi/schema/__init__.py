@@ -60,7 +60,12 @@ from .model_localnet import *
 from .model_localnet_family import *
 from .model_pointset import *
 from .model_pointset_point import *
+<<<<<<< HEAD
+from .model_relationships import *
+from .model_relationships_detail import *
+=======
 from .model_policy import *
+>>>>>>> master
 from .model_system import *
 from .model_system_hardware import *
 from .model_testing import *

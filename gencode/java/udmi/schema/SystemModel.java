@@ -77,7 +77,7 @@ public class SystemModel {
     @JsonProperty("tags")
     @JsonDeserialize(as = java.util.LinkedHashSet.class)
     @JsonPropertyDescription("Tags associated with the device")
-    public Set<Object> tags;
+    public Set<java.lang.String> tags;
     /**
      * Properties of the expected physical location of the device
      * 

@@ -4,12 +4,12 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Any, Dict, List, Optional
+from typing import Dict, List, Optional
 
 from ._base import DataModel
 from .model_system_hardware import SystemHardware
 
-Tag = Optional[Any]
+Tag = Optional[str]
 
 
 @dataclass

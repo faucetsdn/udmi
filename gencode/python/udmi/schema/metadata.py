@@ -16,6 +16,7 @@ from .model_features import TestingModel as TestingModel_1
 from .model_gateway import GatewayModel
 from .model_localnet import LocalnetModel
 from .model_pointset import PointsetModel
+from .model_relationships import RelationshipsModel
 from .model_system import SystemModel
 from .model_testing import TestingModel
 
@@ -36,6 +37,7 @@ class Metadata(DataModel):
     externals: Optional[ExternalsModel] = None
     gateway: Optional[GatewayModel] = None
     discovery: Optional[DiscoveryModel] = None
+    relationships: Optional[RelationshipsModel] = None
     localnet: Optional[LocalnetModel] = None
     testing: Optional[TestingModel] = None
     features: Optional[TestingModel_1] = None
