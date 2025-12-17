@@ -11,6 +11,8 @@ import static java.util.Optional.ofNullable;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.core.JsonParser.Feature;
+import com.fasterxml.jackson.core.PrettyPrinter;
+import com.fasterxml.jackson.core.util.DefaultPrettyPrinter;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
@@ -292,8 +294,7 @@ public class GeneralUtils {
       return OBJECT_MAPPER_STRICT
           .getFactory()
           .createGenerator(outputStream)
-          .setPrettyPrinter(
-              indent == VERBOSE ? ProperPrinter.INDENT_PRINTER : ProperPrinter.NO_INDENT_PRINTER);
+          .setPrettyPrinter(new ProperPrinter(indent));
     } catch (Exception e) {
       throw new RuntimeException("While creating pretty printer", e);
     }

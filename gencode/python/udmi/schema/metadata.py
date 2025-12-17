@@ -16,6 +16,7 @@ from .model_features import TestingModel as TestingModel_1
 from .model_gateway import GatewayModel
 from .model_localnet import LocalnetModel
 from .model_pointset import PointsetModel
+from .model_policy import PolicyModel
 from .model_system import SystemModel
 from .model_testing import TestingModel
 
@@ -41,3 +42,4 @@ class Metadata(DataModel):
     features: Optional[TestingModel_1] = None
     pointset: Optional[PointsetModel] = None
     structure: Optional[Dict[str, DiscoveryEvents]] = None
+    policy: Optional[PolicyModel] = None
