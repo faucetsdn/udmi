@@ -142,7 +142,7 @@ public class MappingService extends AbstractPollingService {
         repository -> {
           Object devicesObject = messageData.get("devices");
           if (!(devicesObject instanceof Map)) {
-            LOGGER.warn("Skipping Processing : Received message without a valid 'devices' map.");
+            LOGGER.warn("Skipping Processing: Received message without a valid 'devices' map.");
             return;
           }
           String udmiModelPath = repository.getUdmiModelPath();

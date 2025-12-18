@@ -455,8 +455,7 @@ public class MappingAgent {
   }
 
   /**
-   * Stitches the properties from the pub/sub message received from udmis, created from clearblade
-   * as datasource.
+   * Stitches the properties from a discovery pub/sub message into the site model.
    *
    * @param devices devices with properties from clearblade
    */
