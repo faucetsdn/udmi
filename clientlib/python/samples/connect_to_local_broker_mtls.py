@@ -13,7 +13,7 @@ import os
 import sys
 
 from udmi.core.factory import ClientConfig
-from udmi.core.factory import create_mqtt_device_instance
+from udmi.core.factory import create_device
 from udmi.core.messaging.mqtt_messaging_client import TlsConfig
 from udmi.schema import EndpointConfiguration
 
@@ -36,7 +36,6 @@ CLIENT_CERT_FILE = os.path.join(CERT_DIR, "client.crt")
 # The client's private key
 CLIENT_KEY_FILE = os.path.join(CERT_DIR, "client.key")
 
-
 if __name__ == "__main__":
     # Set up basic logging to see device activity in the console
     logging.basicConfig(level=logging.DEBUG,
@@ -48,33 +47,30 @@ if __name__ == "__main__":
 
     try:
         # 1. Create the UDMI EndpointConfiguration object
-        endpoint_config = EndpointConfiguration(
-            client_id=client_id,
-            hostname=MQTT_HOSTNAME,
-            port=MQTT_PORT,
-            topic_prefix=topic_prefix
-        )
+        endpoint_config = EndpointConfiguration.from_dict({
+            "client_id": client_id,
+            "hostname": MQTT_HOSTNAME,
+            "port": MQTT_PORT,
+            "topic_prefix": topic_prefix,
+        })
 
         logging.info("Creating mTLS device instance using the factory...")
 
         # 2. Use the base `create_mqtt_device_instance` factory.
         # We pass `auth_provider=None` because authentication is handled
         # by the TLS layer (mTLS), not by sending a username/password.
-        device = create_mqtt_device_instance(
+        device = create_device(
             endpoint_config=endpoint_config,
-            auth_provider=None,  # Auth is handled by mTLS
             client_config=ClientConfig(
-                # Pass the certificate paths to the client
                 tls_config=TlsConfig(
                     ca_certs=CA_CERT_FILE,
                     cert_file=CLIENT_CERT_FILE,
-                    key_file=CLIENT_KEY_FILE
+                    key_file=CLIENT_KEY_FILE,
                 )
-            )
+            ),
         )
 
         # 3. Start the device's main loop.
-        # This will connect, perform the mTLS handshake, subscribe, and publish.
         device.run()
     except FileNotFoundError as e:
         # Add a specific error for this common configuration issue

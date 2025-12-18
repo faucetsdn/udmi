@@ -13,8 +13,9 @@ from datetime import datetime
 from datetime import timezone
 
 from udmi.constants import UDMI_VERSION
-from udmi.core.factory import create_device_with_basic_auth
+from udmi.core.factory import create_device
 from udmi.core.managers import BaseManager
+from udmi.core.managers import SystemManager
 from udmi.core.managers.base_manager import LOGGER
 from udmi.schema import Config
 from udmi.schema import EndpointConfiguration
@@ -126,18 +127,24 @@ if __name__ == "__main__":
         # Standard setup for a local broker
         topic_prefix = "/r/ZZ-TRI-FECTA/d/"
         client_id = f"{topic_prefix}{DEVICE_ID}"
-
-        endpoint_config = EndpointConfiguration(
-            client_id=client_id,
-            hostname=MQTT_HOSTNAME,
-            port=MQTT_PORT,
-            topic_prefix=topic_prefix
-        )
+        endpoint_config = EndpointConfiguration.from_dict({
+            "client_id": client_id,
+            "hostname": MQTT_HOSTNAME,
+            "port": MQTT_PORT,
+            "topic_prefix": topic_prefix,
+            "auth_provider": {
+                "basic": {
+                    "username": BROKER_USERNAME,
+                    "password": BROKER_PASSWORD
+                }
+            }
+        })
 
         logging.info("Creating device with SystemManager + HeartbeatManager...")
 
         # --- 2. Create Manager List ---
         custom_managers_list = [
+            SystemManager(),
             HeartbeatManager(interval_sec=5)
             # Adds our custom heartbeat event publish logic
         ]
@@ -146,12 +153,9 @@ if __name__ == "__main__":
         # 3. Pass the list to the factory.
         # The factory will give each manager a reference to the dispatcher
         # and then call `start()` on each one.
-        device = create_device_with_basic_auth(
+        device = create_device(
             endpoint_config=endpoint_config,
-            username=BROKER_USERNAME,
-            password=BROKER_PASSWORD,
-            additional_managers=custom_managers_list
-            # Pass our custom list here
+            managers=custom_managers_list,
         )
 
         # 4. Start the device

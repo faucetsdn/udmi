@@ -11,8 +11,7 @@ The device will authenticate using a JWT generated from an RS256 private key.
 import logging
 import sys
 
-from udmi.core.factory import JwtAuthArgs
-from udmi.core.factory import create_device_with_jwt
+from udmi.core.factory import create_device
 from udmi.schema import EndpointConfiguration
 
 # --- Configuration Constants ---
@@ -41,44 +40,21 @@ if __name__ == "__main__":
     try:
         # 1. Create the UDMI EndpointConfiguration object
         # This tells the client where to connect
-        endpoint_config = EndpointConfiguration(
-            client_id=CLIENT_ID,
-            hostname=MQTT_HOST,
-            port=MQTT_PORT
-        )
-        logging.info("Creating device instance using the JWT factory...")
+        endpoint_config = EndpointConfiguration.from_dict({
+            "client_id": CLIENT_ID,
+            "hostname": MQTT_HOST,
+            "port": MQTT_PORT,
+            "auth_provider": {
+                "jwt": {
+                    "audience": PROJECT_ID,
+                }
+            }
+        })
 
         # 2. Use the factory to create the device instance.
-        # This factory wires up all the necessary components:
-        # - MqttMessagingClient: Handles the Paho MQTT connection
-        # - JwtAuthProvider: Generates new JWTs when needed
-        # - MessageDispatcher: Routes MQTT messages to/from the device
-        # - Device: The main orchestrator
-        # - SystemManager: The default manager for state/config
-        device = create_device_with_jwt(
-            endpoint_config=endpoint_config,
-            jwt_auth_args=JwtAuthArgs(
-                project_id=PROJECT_ID,
-                key_file=PRIVATE_KEY_FILE,
-                algorithm=ALGORITHM
-            )
-        )
-
-        # 3. Start the device's main loop.
-        # This will:
-        #   a. Connect to the MQTT bridge
-        #   b. Handle the JWT authentication
-        #   c. Subscribe to config/command topics
-        #   d. Publish the initial state
-        #   e. Enter the continuous run loop
+        device = create_device(endpoint_config, key_file=PRIVATE_KEY_FILE)
         device.run()
-    except FileNotFoundError:
-        # Add a specific error for this common configuration issue
-        logging.error(
-            f"Critical Error: Private key file not found at {PRIVATE_KEY_FILE}")
-        logging.error(
-            "Please update the PRIVATE_KEY_FILE constant in this script.")
-        sys.exit(1)
+
     except Exception as e:
         # Catch-all for other critical errors (e.g., network, auth failures)
         logging.error(f"A critical error occurred: {e}", exc_info=True)

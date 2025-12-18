@@ -11,4 +11,5 @@ from the `udmi.core.auth` namespace for easier use.
 
 from udmi.core.auth.auth_provider import AuthProvider
 from udmi.core.auth.basic_auth_provider import BasicAuthProvider
+from udmi.core.auth.cert_manager import CertManager
 from udmi.core.auth.jwt_auth_provider import JwtAuthProvider

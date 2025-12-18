@@ -50,12 +50,13 @@ def mock_dispatcher():
 
 
 @pytest.fixture
-def test_device(mock_manager, mock_dispatcher):
+def test_device(mock_manager, mock_dispatcher, mock_endpoint_config):
     """
     Provides a real Device instance, unit-tested in isolation by
     injecting mock managers and a mock dispatcher.
     """
-    device = Device(managers=[mock_manager])
+    device = Device(managers=[mock_manager],
+                    endpoint_config=mock_endpoint_config)
 
     device.wire_up_dispatcher(mock_dispatcher)
 
