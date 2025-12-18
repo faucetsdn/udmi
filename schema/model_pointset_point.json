@@ -10,6 +10,10 @@
       "description": "Expected unit configuration for the point",
       "type": "string"
     },
+    "type": {
+      "description": "Expected data type for the point",
+      "enum": ["string", "integer", "number"]
+    },
     "description": {
       "description": "Detailed description of this point",
       "type": "string"
