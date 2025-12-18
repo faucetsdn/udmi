@@ -12,33 +12,59 @@ from dataclasses import dataclass
 from dataclasses import field
 from threading import Event
 from typing import Any
+from typing import Callable
 from typing import Dict
 from typing import List
 from typing import Optional
+from typing import Type
+from typing import TypeVar
 
+from udmi.constants import IOT_ENDPOINT_CONFIG_BLOB_KEY
+from udmi.constants import PERSISTENT_STORE_PATH
 from udmi.constants import UDMI_VERSION
+from udmi.core.blob import parse_blob_as_object
 from udmi.core.managers import BaseManager
 from udmi.core.messaging import AbstractMessageDispatcher
+from udmi.core.persistence import DevicePersistence
 from udmi.schema import Config
+from udmi.schema import EndpointConfiguration
 from udmi.schema import State
 from udmi.schema import SystemState
 
 LOGGER = logging.getLogger(__name__)
+
+T = TypeVar("T", bound=BaseManager)
+MAX_CONNECTION_RETRIES = 3
+
+
+class ConnectionResetException(Exception):
+    """
+    Raised when the device needs to tear down the current connection
+    and re-initialize (e.g., due to an endpoint change).
+    """
 
 
 @dataclass
 class _LoopConfig:
     """Configuration for the device's main loop timing."""
     auth_check_interval_sec: int = 15 * 60  # 15 minutes
-    publish_state_interval_sec: int = 600   # 10 minutes
+    publish_state_interval_sec: int = 600  # 10 minutes
 
 
 @dataclass
 class _LoopState:
     """Holds the dynamic state of the device's main loop."""
     stop_event: Event = field(default_factory=Event)
+    reset_event: Event = field(default_factory=Event)
     last_auth_check: float = 0.0
     last_state_publish_time: float = 0.0
+    consecutive_failures: int = 0  # Track auth failures
+
+
+ConnectionFactory = Callable[
+    [EndpointConfiguration, Callable[[], None], Callable[[int], None]],
+    AbstractMessageDispatcher
+]
 
 
 class Device:
@@ -52,7 +78,14 @@ class Device:
     This class is NOT intended to be subclassed.
     """
 
-    def __init__(self, managers: List[BaseManager]):
+    # pylint:disable=too-many-instance-attributes
+
+    def __init__(self,
+        managers: List[BaseManager],
+        endpoint_config: Optional[EndpointConfiguration] = None,
+        connection_factory: ConnectionFactory = None,
+        persistence_path: Optional[str] = PERSISTENT_STORE_PATH,
+    ):
         """
         Initializes the Device.
 
@@ -61,8 +94,12 @@ class Device:
         """
         LOGGER.info("Initializing device...")
         self.managers = managers
-        self.dispatcher: Optional[AbstractMessageDispatcher] = None
+        self.connection_factory = connection_factory
+        self.persistence = DevicePersistence(persistence_path, endpoint_config)
+        self.current_endpoint = self.persistence.get_effective_endpoint()
+        LOGGER.info("Endpoint set to: %s", self.current_endpoint.hostname)
 
+        self.dispatcher: Optional[AbstractMessageDispatcher] = None
         self._loop_config = _LoopConfig()
         self._loop_state = _LoopState()
 
@@ -102,7 +139,8 @@ class Device:
         """
         Callback for when the dispatcher confirms connection and subscriptions.
         """
-        LOGGER.info("Connection successful. Publishing initial state.")
+        LOGGER.info("Connection successful. Resetting failure counter.")
+        self._loop_state.consecutive_failures = 0
         self._publish_state()
 
     def on_disconnect(self, rc: int) -> None:
@@ -111,7 +149,14 @@ class Device:
         Args:
               rc: The reason code for the disconnection.
         """
-        LOGGER.warning("Client disconnected with code: %s", rc)
+        if rc != 0:
+            self._loop_state.consecutive_failures += 1
+            LOGGER.warning(
+                "Client disconnected with code: %s. Failure count: %s/%s",
+                rc, self._loop_state.consecutive_failures,
+                MAX_CONNECTION_RETRIES)
+        else:
+            LOGGER.info("Client disconnected cleanly.")
 
     # --- Message Handlers ---
 
@@ -126,11 +171,15 @@ class Device:
         """
         LOGGER.info("New config received, deserializing and delegating...")
         try:
-            self.config = Config.from_dict(payload)
+            config_obj = Config.from_dict(payload)
         except (TypeError, ValueError) as e:
             LOGGER.error("Failed to parse config message: %s", e)
             return
 
+        if self._has_new_endpoint_config(config_obj):
+            self._try_redirect_endpoint(config_obj)
+
+        self.config = config_obj
         for manager in self.managers:
             try:
                 manager.handle_config(self.config)
@@ -152,7 +201,7 @@ class Device:
         """
         command_name = channel.split('/')[-1]
         LOGGER.info("Command '%s' received, delegating to managers...",
-                     command_name)
+                    command_name)
         for manager in self.managers:
             try:
                 manager.handle_command(command_name, payload)
@@ -160,7 +209,151 @@ class Device:
                 LOGGER.error("Error in %s.handle_command: %s",
                              manager.__class__.__name__, e)
 
-    # --- Public API Methods & Main Loop ---
+    # --- Device lifecycle and endpoint management ---
+
+    def _has_new_endpoint_config(self, config: Config) -> bool:
+        """Checks if the config contains a new, different endpoint blob."""
+        if not config.blobset or not config.blobset.blobs:
+            return False
+
+        blob_config = config.blobset.blobs.get(IOT_ENDPOINT_CONFIG_BLOB_KEY)
+        if not blob_config:
+            return False
+
+        current_gen = self.persistence.get_active_generation()
+        if blob_config.generation and blob_config.generation != current_gen:
+            return True
+
+        return False
+
+    def _try_redirect_endpoint(self, config: Config) -> None:
+        """
+        Fetches, parses, and stages a new endpoint configuration.
+        """
+        LOGGER.info(
+            "New endpoint configuration detected. Attempting redirect...")
+        try:
+            new_endpoint, generation = parse_blob_as_object(
+                config.blobset,
+                IOT_ENDPOINT_CONFIG_BLOB_KEY,
+                EndpointConfiguration
+            )
+
+            LOGGER.info("Endpoint blob fetched. Generation: %s. Saving...",
+                        generation)
+
+            self.persistence.save_active_endpoint(new_endpoint, generation)
+            self.current_endpoint = new_endpoint
+
+            LOGGER.info("Signaling main loop to trigger connection reset...")
+            self._loop_state.reset_event.set()
+        except Exception as e:  # pylint:disable=broad-exception-caught
+            LOGGER.error("Failed to process endpoint redirect: %s", e)
+
+    # --- Main Run Loop ---
+
+    def run(self) -> None:
+        """
+        Starts the device and enters the main blocking application loop.
+        Handles ConnectionResetException to allow dynamic reloading of the connection.
+        """
+        LOGGER.info("Starting device run loop...")
+
+        while True:
+            try:
+                just_connected = False
+                if not self.dispatcher:
+                    self._initialize_connection_robustly()
+                    just_connected = True
+
+                self._run_internal(skip_connect=just_connected)
+                break
+            except ConnectionResetException:
+                LOGGER.warning(
+                    "Connection Reset requested. Re-initializing network stack...")
+                self._loop_state.reset_event.clear()
+                self._loop_state.consecutive_failures = 0
+
+                if self.dispatcher:
+                    try:
+                        self.dispatcher.close()
+                    except Exception as e:  # pylint:disable=broad-exception-caught
+                        LOGGER.warning("Error closing dispatcher: %s", e)
+                    self.dispatcher = None
+                continue
+            except KeyboardInterrupt:
+                LOGGER.info("Keyboard interrupt.")
+                break
+            except Exception as e:  # pylint:disable=broad-exception-caught
+                LOGGER.critical("Unexpected crash in run loop: %s", e,
+                                exc_info=True)
+                break
+            finally:
+                self.stop()
+
+    def _initialize_connection_robustly(self) -> None:
+        """
+        Attempts to build and connect the dispatcher.
+        Implements Fallback Logic:
+        If the current (Active) endpoint fails to initialize (e.g. invalid keys,
+        dns failure), it clears the active endpoint and falls back to Backup/Site.
+        """
+        LOGGER.info("Initializing connection to %s...",
+                    self.current_endpoint.hostname)
+
+        if not self.connection_factory:
+            raise RuntimeError(
+                "Cannot initialize connection: No connection_factory provided.")
+
+        try:
+            self._attempt_connection_setup()
+        except Exception as e:  # pylint:disable=broad-exception-caught
+            LOGGER.error("Failed to connect to current endpoint: %s", e)
+            if self.persistence.get_active_endpoint():
+                LOGGER.warning(
+                    "Active endpoint failed. Reverting to fallback configuration...")
+                self.persistence.clear_active_endpoint()
+
+                self.current_endpoint = self.persistence.get_effective_endpoint()
+                LOGGER.info("Fallback endpoint is: %s",
+                            self.current_endpoint.hostname)
+
+                LOGGER.info("Retrying connection with fallback...")
+                try:
+                    self._attempt_connection_setup()
+                except Exception as fatal_e:
+                    LOGGER.critical("Fallback connection also failed: %s",
+                                    fatal_e)
+                    raise fatal_e
+            else:
+                raise e
+
+    def _attempt_connection_setup(self):
+        """Helper to create dispatcher and connect."""
+        dispatcher = self.connection_factory(
+            self.current_endpoint,
+            self.on_ready,
+            self.on_disconnect
+        )
+        self.wire_up_dispatcher(dispatcher)
+        self.dispatcher.connect()
+
+    def _trigger_fallback_or_raise(self, error: Exception):
+        """
+        Checks if we have an active endpoint to fallback from.
+        If yes, clears it and triggers a full reset. If no, re-raises the error.
+        """
+        if self.persistence.get_active_endpoint():
+            LOGGER.warning(
+                "Active endpoint failed. Clearing bad config and resetting...")
+            self.persistence.clear_active_endpoint()
+
+            self.current_endpoint = self.persistence.get_effective_endpoint()
+            LOGGER.info("Fallback endpoint will be: %s",
+                        self.current_endpoint.hostname)
+
+            raise ConnectionResetException("Triggering Fallback Reset")
+        raise error
 
     def _publish_state(self) -> None:
         """
@@ -185,42 +378,54 @@ class Device:
         self._loop_state.last_state_publish_time = time.time()
         LOGGER.debug("State message published.")
 
-    def run(self) -> None:
+    def _run_internal(self, skip_connect: bool = False) -> None:
         """
-        Starts the device and enters the main blocking application loop.
+        The inner loop that handles periodic tasks.
+        Args:
+            skip_connect: If True, assumes the dispatcher is already connected.
         """
-        LOGGER.info("Connecting and starting device run loop...")
+        LOGGER.info("Network stack initialized. Starting main event loop...")
         self._loop_state.stop_event.clear()
+        self._loop_state.reset_event.clear()
 
-        try:
+        if not self.dispatcher:
+            raise RuntimeError("Dispatcher not wired.")
+
+        if not skip_connect:
             self.dispatcher.connect()
-            self.dispatcher.start_loop()
-            self._loop_state.last_auth_check = time.time()
 
-            for manager in self.managers:
-                manager.start()
+        self.dispatcher.start_loop()
+        self._loop_state.last_auth_check = time.time()
 
-            LOGGER.info("Device is running. Waiting for events...")
-            while not self._loop_state.stop_event.is_set():
-                now = time.time()
+        for manager in self.managers:
+            manager.start()
 
-                # publish state periodically
-                if (now - self._loop_state.last_state_publish_time >
-                        self._loop_config.publish_state_interval_sec):
-                    self._publish_state()
+        LOGGER.info("Device is running. Waiting for events...")
+        while not self._loop_state.stop_event.is_set():
+            if self._loop_state.reset_event.is_set():
+                raise ConnectionResetException()
+            if self._loop_state.consecutive_failures >= MAX_CONNECTION_RETRIES:
+                LOGGER.error("Max connection failures (%s) reached.",
+                             MAX_CONNECTION_RETRIES)
+                self._trigger_fallback_or_raise(
+                    RuntimeError("Connection unstable."))
+                raise ConnectionResetException()
 
-                # check for auth token refresh
-                if (now - self._loop_state.last_auth_check >
-                        self._loop_config.auth_check_interval_sec):
-                    LOGGER.debug("Checking for auth token refresh...")
-                    self.dispatcher.check_authentication()
-                    self._loop_state.last_auth_check = now
+            now = time.time()
 
-                time.sleep(1)
-        except KeyboardInterrupt:
-            LOGGER.info("Keyboard interrupt received.")
-        finally:
-            self.stop()
+            # publish state periodically
+            if (now - self._loop_state.last_state_publish_time >
+                self._loop_config.publish_state_interval_sec):
+                self._publish_state()
+
+            # check for auth token refresh
+            if (now - self._loop_state.last_auth_check >
+                self._loop_config.auth_check_interval_sec):
+                LOGGER.debug("Checking for auth token refresh...")
+                self.dispatcher.check_authentication()
+                self._loop_state.last_auth_check = now
+
+            self._loop_state.stop_event.wait(timeout=1)
 
     def stop(self) -> None:
         """Stops the device loop and disconnects."""
@@ -236,5 +441,21 @@ class Device:
                     LOGGER.error("Error stopping %s: %s",
                                  manager.__class__.__name__, e)
 
-            self.dispatcher.close()
+            if self.dispatcher:
+                self.dispatcher.close()
             LOGGER.info("Device stopped.")
+
+    def get_manager(self, manager_type: Type[T]) -> Optional[T]:
+        """
+        Retrieves the first registered manager of the specified type.
+
+        Args:
+            manager_type: The class type of the manager to retrieve.
+
+        Returns:
+            The manager instance if found, otherwise None.
+        """
+        for manager in self.managers:
+            if isinstance(manager, manager_type):
+                return manager
+        return None

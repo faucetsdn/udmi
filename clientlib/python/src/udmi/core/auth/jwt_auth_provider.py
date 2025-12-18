@@ -90,12 +90,12 @@ class JwtAuthProvider(AuthProvider):
                 LOGGER.info("Generated new JWT, valid until %s UTC", token_exp)
             except (PyJWTError, TypeError) as e:
                 LOGGER.error("Failed to generate new JWT: %s", e)
+                raise
         else:
             LOGGER.debug("Reusing cached JWT.")
 
         if self._cached_token is None:
-            LOGGER.error("No valid JWT token available to return.")
-            return ""
+            raise RuntimeError("No valid JWT token available.")
 
         return self._cached_token
 

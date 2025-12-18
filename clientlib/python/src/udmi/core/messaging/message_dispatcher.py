@@ -74,11 +74,11 @@ class MessageDispatcher(AbstractMessageDispatcher):
         """
         self.client.register_channel_subscription(channel)
         if '#' in channel or '+' in channel:
-            pattern_str = channel.replace('+', '[^/]+').replace('/#', '/.+')
-            if pattern_str.endswith('#'):  # Handle '#' at the end
-                pattern_str = pattern_str[:-1] + '.+'
+            safe_pattern = re.escape(channel)
+            safe_pattern = safe_pattern.replace(r'\+', '[^/]+').replace(r'\#',
+                                                                        '.+')
+            pattern = re.compile(f"^{safe_pattern}$")
 
-            pattern = re.compile(f"^{pattern_str}$")
             self._wildcard_handlers[pattern] = handler
             LOGGER.debug("Registered wildcard handler for %s", channel)
         else:
