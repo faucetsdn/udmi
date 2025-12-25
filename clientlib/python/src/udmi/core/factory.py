@@ -16,9 +16,6 @@ from typing import Optional
 
 from udmi.core.auth import CertManager
 from udmi.core.auth.auth_provider import AuthProvider
-from udmi.core.auth.basic_auth_provider import BasicAuthProvider
-from udmi.core.auth.jwt_auth_provider import JwtAuthProvider
-from udmi.core.auth.jwt_auth_provider import JwtTokenConfig
 from udmi.core.device import Device
 from udmi.core.managers import PointsetManager
 from udmi.core.managers.base_manager import BaseManager
@@ -81,14 +78,16 @@ def _wire_device(
     managers: Optional[List[BaseManager]] = None,
     endpoint_config: Optional[EndpointConfiguration] = None,
     persistence_path: str = None,
-    connection_factory: Optional[Callable] = None
+    connection_factory: Optional[Callable] = None,
+    cert_manager: Optional["CertManager"] = None
 ) -> Device:
     """
     Internal private function to handle the final wiring of components.
     Args:
-        mqtt_client: MqttMessagingClient instance (for the initial connection)
+        mqtt_client: MqttMessagingClient instance
         managers: list of BaseManager instances
         endpoint_config: The initial endpoint configuration
+        persistence_path: Path to persistent file store.
         connection_factory: A callable (factory) used to create NEW dispatchers
                             during a connection reset.
     """
@@ -102,7 +101,8 @@ def _wire_device(
         managers=final_managers,
         endpoint_config=endpoint_config,
         persistence_path=persistence_path,
-        connection_factory=connection_factory
+        connection_factory=connection_factory,
+        cert_manager=cert_manager
     )
 
     dispatcher = MessageDispatcher(
@@ -184,6 +184,11 @@ def create_device(
                 endpoint_config.client_id)
     client_config = client_config or ClientConfig()
 
+    cert_manager = None
+    if key_file:
+        cert_file = client_config.tls_config.cert_file if client_config.tls_config else None
+        cert_manager = CertManager(key_file=key_file, cert_file=cert_file)
+
     client = create_client_from_endpoint_config(
         endpoint_config, key_file,
         client_config.tls_config, client_config.reconnect_config
@@ -200,136 +205,6 @@ def create_device(
         managers=managers,
         endpoint_config=endpoint_config,
         persistence_path=persistence_path,
-        connection_factory=connection_factory
-    )
-
-
-def create_mqtt_device_instance(
-    endpoint_config: EndpointConfiguration,
-    auth_provider: Optional[AuthProvider],
-    managers: Optional[List[BaseManager]] = None,
-    client_config: ClientConfig = None,
-    persistence_path: str = None
-) -> Device:
-    """Creates a UDMI device with a user-provided AuthProvider instance.
-
-    Use this function when you have a custom or pre-configured AuthProvider.
-
-    Args:
-        endpoint_config: The EndpointConfiguration dataclass.
-        auth_provider: A pre-initialized AuthProvider instance.
-        managers: (Optional) List of managers. If not provided, this defaults
-                   to the list of default managers.
-        client_config: (Optional) Configuration for TLS and reconnection.
-        persistence_path: (Optional) Path to the persistence directory.
-
-    Returns:
-        A fully wired, ready-to-run Device instance.
-    """
-    LOGGER.info("Creating device with custom AuthProvider...")
-    client_config = client_config or ClientConfig()
-
-    client = MqttMessagingClient(
-        endpoint_config=endpoint_config,
-        auth_provider=auth_provider,
-        tls_config=client_config.tls_config,
-        reconnect_config=client_config.reconnect_config
-    )
-
-    connection_factory = partial(
-        _create_dispatcher_stack_with_auth,
-        auth_provider=auth_provider,
-        client_config=client_config
-    )
-
-    return _wire_device(
-        mqtt_client=client,
-        managers=managers,
-        endpoint_config=endpoint_config,
-        persistence_path=persistence_path,
-        connection_factory=connection_factory
-    )
-
-
-def create_device_with_jwt(
-    endpoint_config: EndpointConfiguration,
-    jwt_auth_args: JwtAuthArgs,
-    managers: Optional[List[BaseManager]] = None,
-    token_config: JwtTokenConfig = None,
-    client_config: ClientConfig = None,
-    persistence_path: str = None
-) -> Device:
-    """Convenience factory to create a device using JWT authentication.
-
-    This is the typical method for connecting to cloud platforms
-    like GCP IoT Core.
-
-    Args:
-        endpoint_config: The EndpointConfiguration dataclass.
-        jwt_auth_args: Dataclass with project_id, key_file, and algorithm.
-        managers: (Optional) List of managers. If not provided, this defaults
-                   to the list of default managers.
-        token_config: (Optional) Configuration for JWT lifetime/refresh.
-        client_config: (Optional) Configuration for TLS and reconnection.
-        persistence_path: (Optional) Path to the persistence directory.
-
-    Returns:
-        A fully wired, ready-to-run Device instance.
-    """
-    LOGGER.info("Creating device with JWT authentication...")
-    token_config = token_config or JwtTokenConfig()
-    client_config = client_config or ClientConfig()
-    CertManager(jwt_auth_args.key_file).ensure_keys_exist(
-        jwt_auth_args.algorithm)
-
-    auth_provider = JwtAuthProvider(
-        project_id=jwt_auth_args.project_id,
-        private_key_file=jwt_auth_args.key_file,
-        algorithm=jwt_auth_args.algorithm,
-        token_config=token_config
-    )
-
-    return create_mqtt_device_instance(
-        endpoint_config=endpoint_config,
-        auth_provider=auth_provider,
-        managers=managers,
-        client_config=client_config,
-        persistence_path=persistence_path
-    )
-
-
-def create_device_with_basic_auth(
-    endpoint_config: EndpointConfiguration,
-    username: str,
-    password: str,
-    managers: Optional[List[BaseManager]] = None,
-    client_config: ClientConfig = None,
-    persistence_path: str = None
-) -> Device:
-    """Convenience factory to create a device using Basic (username/password) auth.
-
-    Args:
-        endpoint_config: The EndpointConfiguration dataclass.
-        username: The MQTT username.
-        password: The MQTT password.
-        managers: (Optional) List of managers. If not provided, this defaults
-                   to the list of default managers.
-        client_config: (Optional) Configuration for TLS and reconnection.
-        persistence_path: (Optional) Path to the persistence file.
-
-    Returns:
-        A fully wired, ready-to-run Device instance.
-    """
-    LOGGER.info(
-        "Creating device with Basic (username/password) authentication...")
-    client_config = client_config or ClientConfig()
-
-    auth_provider = BasicAuthProvider(username=username, password=password)
-
-    return create_mqtt_device_instance(
-        endpoint_config=endpoint_config,
-        auth_provider=auth_provider,
-        managers=managers,
-        client_config=client_config,
-        persistence_path=persistence_path
+        connection_factory=connection_factory,
+        cert_manager=cert_manager,
     )

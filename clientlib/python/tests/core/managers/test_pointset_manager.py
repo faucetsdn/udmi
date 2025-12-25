@@ -58,7 +58,7 @@ def test_point_value_update():
     point = Point("temp_sensor")
     assert point.present_value is None
 
-    point.set_value(25.5)
+    point.set_present_value(25.5)
     assert point.present_value == 25.5
 
     event = point.get_event()

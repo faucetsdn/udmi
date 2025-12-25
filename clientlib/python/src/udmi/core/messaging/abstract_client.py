@@ -5,6 +5,7 @@ Abstract interface for a generic, protocol-agnostic messaging client.
 from abc import ABC
 from abc import abstractmethod
 from typing import Callable
+from typing import Optional
 
 
 class AbstractMessagingClient(ABC):
@@ -26,20 +27,29 @@ class AbstractMessagingClient(ABC):
         """
 
     @abstractmethod
-    def publish(self, channel: str, payload: str) -> None:
+    def publish(self, channel: str, payload: str,
+        device_id: Optional[str] = None) -> None:
         """
         Publishes a raw string payload to a generic channel.
 
         Args:
             channel: The logical channel to publish to.
             payload: The raw string data to send.
+            device_id: (Optional) The device ID to publish on behalf of.
+                       If None, uses the primary device ID.
         """
 
     @abstractmethod
-    def register_channel_subscription(self, channel: str) -> None:
+    def register_channel_subscription(self, channel: str,
+        device_id: Optional[str] = None) -> None:
         """
         Registers interest in a generic channel.
         The client will handle the protocol-specific subscription.
+
+        Args:
+            channel: The channel to subscribe to.
+            device_id: (Optional) The device ID to subscribe for.
+                       If None, uses the primary device ID.
         """
 
     @abstractmethod
@@ -68,12 +78,12 @@ class AbstractMessagingClient(ABC):
 
     @abstractmethod
     def set_on_message_handler(self,
-        handler: Callable[[str, str], None]) -> None:
+        handler: Callable[[str, str, str], None]) -> None:
         """
         Sets the external callback for incoming messages.
 
         Args:
-            handler: A callable that accepts (channel: str, payload: str)
+            handler: A callable that accepts (device_id: str, channel: str, payload: str)
         """
 
     @abstractmethod

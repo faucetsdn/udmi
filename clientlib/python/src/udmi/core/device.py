@@ -22,6 +22,7 @@ from typing import TypeVar
 from udmi.constants import IOT_ENDPOINT_CONFIG_BLOB_KEY
 from udmi.constants import PERSISTENT_STORE_PATH
 from udmi.constants import UDMI_VERSION
+from udmi.core.auth import CertManager
 from udmi.core.blob import parse_blob_as_object
 from udmi.core.managers import BaseManager
 from udmi.core.messaging import AbstractMessageDispatcher
@@ -35,6 +36,8 @@ LOGGER = logging.getLogger(__name__)
 
 T = TypeVar("T", bound=BaseManager)
 MAX_CONNECTION_RETRIES = 3
+STATE_THROTTLE_SEC = 2.0
+CONFIG_SYNC_TIMEOUT_SEC = 10.0
 
 
 class ConnectionResetException(Exception):
@@ -56,8 +59,9 @@ class _LoopState:
     """Holds the dynamic state of the device's main loop."""
     stop_event: Event = field(default_factory=Event)
     reset_event: Event = field(default_factory=Event)
-    last_auth_check: float = 0.0
+    state_dirty: bool = False
     last_state_publish_time: float = 0.0
+    last_auth_check: float = 0.0
     consecutive_failures: int = 0  # Track auth failures
 
 
@@ -85,6 +89,7 @@ class Device:
         endpoint_config: Optional[EndpointConfiguration] = None,
         connection_factory: ConnectionFactory = None,
         persistence_path: Optional[str] = PERSISTENT_STORE_PATH,
+        cert_manager: Optional[CertManager] = None,
     ):
         """
         Initializes the Device.
@@ -96,8 +101,12 @@ class Device:
         self.managers = managers
         self.connection_factory = connection_factory
         self.persistence = DevicePersistence(persistence_path, endpoint_config)
+        self.cert_manager = cert_manager
+
         self.current_endpoint = self.persistence.get_effective_endpoint()
-        LOGGER.info("Endpoint set to: %s", self.current_endpoint.hostname)
+        self.device_id = self.current_endpoint.client_id.split('/')[-1]
+        LOGGER.info("Device ID: %s", self.device_id)
+        LOGGER.info("Endpoint Host: %s", self.current_endpoint.hostname)
 
         self.dispatcher: Optional[AbstractMessageDispatcher] = None
         self._loop_config = _LoopConfig()
@@ -160,16 +169,21 @@ class Device:
 
     # --- Message Handlers ---
 
-    def handle_config(self, _channel: str, payload: Dict) -> None:
+    def handle_config(self, device_id: str, _channel: str, payload: Dict) -> None:
         """
         Orchestration method to handle a new config.
         Deserializes the config and delegates to all managers.
 
         Args:
-              _channel: The channel the message came from (e.g., 'config').
-              payload: The pre-parsed dictionary of the JSON payload.
+            device_id: The ID of the device this config is for.
+            _channel: The raw channel (e.g. 'config').
+            payload: The parsed JSON payload.
         """
-        LOGGER.info("New config received, deserializing and delegating...")
+        if device_id != self.device_id:
+            self._route_proxy_config(device_id, payload)
+            return
+
+        LOGGER.info("New config received for Device %s...", self.device_id)
         try:
             config_obj = Config.from_dict(payload)
         except (TypeError, ValueError) as e:
@@ -178,6 +192,7 @@ class Device:
 
         if self._has_new_endpoint_config(config_obj):
             self._try_redirect_endpoint(config_obj)
+            return
 
         self.config = config_obj
         for manager in self.managers:
@@ -190,24 +205,66 @@ class Device:
 
         self._publish_state()
 
-    def handle_command(self, channel: str, payload: Dict[str, Any]) -> None:
+    def handle_command(self, device_id: str, channel: str, payload: Dict[str, Any]) -> None:
         """
         Orchestration method to handle a new command.
         Delegates to all managers.
 
         Args:
-              channel: The full command channel (e.g., 'commands/reboot').
-              payload: The pre-parsed dictionary of the JSON payload.
+            device_id: The ID of the device this command is for.
+            channel: The full command channel (e.g., 'commands/reboot').
+            payload: The pre-parsed dictionary of the JSON payload.
         """
         command_name = channel.split('/')[-1]
-        LOGGER.info("Command '%s' received, delegating to managers...",
-                    command_name)
+
+        if device_id != self.device_id:
+            self._route_proxy_command(device_id, command_name, payload)
+            return
+
+        LOGGER.info("Command '%s' received for Device, delegating to managers...", command_name)
         for manager in self.managers:
             try:
                 manager.handle_command(command_name, payload)
             except (AttributeError, TypeError, KeyError, ValueError) as e:
                 LOGGER.error("Error in %s.handle_command: %s",
                              manager.__class__.__name__, e)
+
+    # --- Proxy Routing Helpers ---
+
+    def _route_proxy_config(self, device_id: str, payload: Dict) -> None:
+        """
+        Routes a config message meant for a proxy device to the GatewayManager.
+        """
+        handled = False
+        for manager in self.managers:
+            if hasattr(manager, "handle_proxy_config"):
+                try:
+                    config_obj = Config.from_dict(payload)
+                    manager.handle_proxy_config(device_id, config_obj)
+                    handled = True
+                except Exception as e:
+                    LOGGER.error("Error routing proxy config to %s: %s",
+                                 manager.__class__.__name__, e)
+
+        if not handled:
+            LOGGER.debug("Received config for proxy '%s' but no GatewayManager found.", device_id)
+
+    def _route_proxy_command(self, device_id: str, command_name: str, payload: Dict) -> None:
+        """
+        Routes a command message meant for a proxy device to the GatewayManager.
+        """
+        handled = False
+        for manager in self.managers:
+            if hasattr(manager, "handle_proxy_command"):
+                try:
+                    manager.handle_proxy_command(device_id, command_name, payload)
+                    handled = True
+                except Exception as e:
+                    LOGGER.error("Error routing proxy command to %s: %s",
+                                 manager.__class__.__name__, e)
+
+        if not handled:
+            LOGGER.debug("Received command for proxy '%s' but no GatewayManager found.", device_id)
 
     # --- Device lifecycle and endpoint management ---
 
@@ -244,9 +301,11 @@ class Device:
 
             self.persistence.save_active_endpoint(new_endpoint, generation)
             self.current_endpoint = new_endpoint
+            self.device_id = self.current_endpoint.client_id.split('/')[-1]
 
             LOGGER.info("Signaling main loop to trigger connection reset...")
             self._loop_state.reset_event.set()
+
         except Exception as e:  # pylint:disable=broad-exception-caught
             LOGGER.error("Failed to process endpoint redirect: %s", e)
 
@@ -265,6 +324,21 @@ class Device:
                 if not self.dispatcher:
                     self._initialize_connection_robustly()
                     just_connected = True
+
+                LOGGER.info(
+                    "Waiting for initial configuration (Timeout: %ss)...",
+                    CONFIG_SYNC_TIMEOUT_SEC)
+                start_wait = time.time()
+                while not self._loop_state.stop_event.is_set():
+                    if self.config and self.config.timestamp:
+                        LOGGER.info("Initial config received. Proceeding.")
+                        break
+
+                    if time.time() - start_wait > CONFIG_SYNC_TIMEOUT_SEC:
+                        LOGGER.warning(
+                            "Config Sync Timeout! Proceeding with default state.")
+                        break
+                    time.sleep(0.1)
 
                 self._run_internal(skip_connect=just_connected)
                 break
@@ -309,24 +383,7 @@ class Device:
             self._attempt_connection_setup()
         except Exception as e:  # pylint:disable=broad-exception-caught
             LOGGER.error("Failed to connect to current endpoint: %s", e)
-            if self.persistence.get_active_endpoint():
-                LOGGER.warning(
-                    "Active endpoint failed. Reverting to fallback configuration...")
-                self.persistence.clear_active_endpoint()
-
-                self.current_endpoint = self.persistence.get_effective_endpoint()
-                LOGGER.info("Fallback endpoint is: %s",
-                            self.current_endpoint.hostname)
-
-                LOGGER.info("Retrying connection with fallback...")
-                try:
-                    self._attempt_connection_setup()
-                except Exception as fatal_e:
-                    LOGGER.critical("Fallback connection also failed: %s",
-                                    fatal_e)
-                    raise fatal_e
-            else:
-                raise e
+            self._trigger_fallback_or_raise(e)
 
     def _attempt_connection_setup(self):
         """Helper to create dispatcher and connect."""
@@ -349,19 +406,27 @@ class Device:
             self.persistence.clear_active_endpoint()
 
             self.current_endpoint = self.persistence.get_effective_endpoint()
+            self.device_id = self.current_endpoint.client_id.split('/')[-1]
             LOGGER.info("Fallback endpoint will be: %s",
                         self.current_endpoint.hostname)
 
             raise ConnectionResetException("Triggering Fallback Reset")
         raise error
 
-    def _publish_state(self) -> None:
+    def _publish_state(self, force: bool = False) -> None:
         """
         Orchestration method to build and publish the State message.
         Gathers contributions from all managers.
         """
+        now = time.time()
+        time_since_last = now - self._loop_state.last_state_publish_time
+
+        if not force and time_since_last < STATE_THROTTLE_SEC:
+            self._loop_state.state_dirty = True
+            LOGGER.debug("State update throttled (coalescing). Dirty=True")
+            return
+
         LOGGER.debug("Assembling state message...")
-        # initialize state before assembling
         self.state = State(
             timestamp=datetime.datetime.now(datetime.timezone.utc).isoformat(),
             version=UDMI_VERSION,
@@ -376,6 +441,7 @@ class Device:
 
         self.dispatcher.publish_state(self.state)
         self._loop_state.last_state_publish_time = time.time()
+        self._loop_state.state_dirty = False
         LOGGER.debug("State message published.")
 
     def _run_internal(self, skip_connect: bool = False) -> None:
@@ -413,10 +479,13 @@ class Device:
 
             now = time.time()
 
-            # publish state periodically
-            if (now - self._loop_state.last_state_publish_time >
-                self._loop_config.publish_state_interval_sec):
-                self._publish_state()
+            # throttled state flush.
+            if self._loop_state.state_dirty:
+                if (
+                    now - self._loop_state.last_state_publish_time) >= STATE_THROTTLE_SEC:
+                    LOGGER.debug(
+                        "Throttle window passed. Flushing dirty state.")
+                    self._publish_state(force=True)
 
             # check for auth token refresh
             if (now - self._loop_state.last_auth_check >
@@ -425,7 +494,7 @@ class Device:
                 self.dispatcher.check_authentication()
                 self._loop_state.last_auth_check = now
 
-            self._loop_state.stop_event.wait(timeout=1)
+            self._loop_state.stop_event.wait(timeout=0.5)
 
     def stop(self) -> None:
         """Stops the device loop and disconnects."""
@@ -459,3 +528,17 @@ class Device:
             if isinstance(manager, manager_type):
                 return manager
         return None
+
+    def trigger_state_update(self, immediate: bool = False) -> None:
+        """
+        Public API for managers to request a state publish.
+        Args:
+            immediate: If True, forces a publish immediately (blocking).
+                       If False, schedules it for the next loop cycle.
+        """
+        if immediate:
+            LOGGER.debug("Manager requested IMMEDIATE state update.")
+            self._publish_state(force=True)
+        else:
+            LOGGER.debug("Manager requested immediate state update.")
+            self._loop_state.state_dirty = True
