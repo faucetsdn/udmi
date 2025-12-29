@@ -12,6 +12,7 @@ import threading
 from typing import Any, Dict, Optional
 
 from udmi.constants import PERSISTENT_STORE_PATH
+from udmi.core.utils.file_ops import atomic_write
 from udmi.schema import EndpointConfiguration
 
 LOGGER = logging.getLogger(__name__)
@@ -69,26 +70,8 @@ class DevicePersistence:
             return
 
         with self._lock:
-            try:
-                dirname = os.path.dirname(self.filepath) or "."
-                fd, temp_path = tempfile.mkstemp(dir=dirname, text=True)
-
-                try:
-                    with os.fdopen(fd, 'w', encoding='utf-8') as f:
-                        json.dump(self._data, f, indent=2)
-                        f.flush()
-                        os.fsync(f.fileno())
-
-                    os.replace(temp_path, self.filepath)
-                    LOGGER.debug("Persistence data saved to %s.", self.filepath)
-
-                except Exception:
-                    if os.path.exists(temp_path):
-                        os.remove(temp_path)
-                    raise
-
-            except (IOError, OSError) as e:
-                LOGGER.error("Failed to save persistence file: %s", e)
+            data = json.dumps(self._data, indent=2)
+            atomic_write(self.filepath, data, mode=0o600)
 
     # --- Endpoint Management ---
 
