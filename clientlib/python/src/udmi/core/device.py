@@ -7,6 +7,7 @@ application's lifecycle, state, and message handling logic.
 
 import datetime
 import logging
+import threading
 import time
 from dataclasses import dataclass
 from dataclasses import field
@@ -22,7 +23,7 @@ from typing import TypeVar
 from udmi.constants import IOT_ENDPOINT_CONFIG_BLOB_KEY
 from udmi.constants import PERSISTENT_STORE_PATH
 from udmi.constants import UDMI_VERSION
-from udmi.core.auth import CertManager
+from udmi.core.auth import CredentialManager
 from udmi.core.blob import parse_blob_as_object
 from udmi.core.managers import BaseManager
 from udmi.core.messaging import AbstractMessageDispatcher
@@ -89,7 +90,7 @@ class Device:
         endpoint_config: Optional[EndpointConfiguration] = None,
         connection_factory: ConnectionFactory = None,
         persistence_path: Optional[str] = PERSISTENT_STORE_PATH,
-        cert_manager: Optional[CertManager] = None,
+        credential_manager: Optional[CredentialManager] = None,
     ):
         """
         Initializes the Device.
@@ -101,7 +102,7 @@ class Device:
         self.managers = managers
         self.connection_factory = connection_factory
         self.persistence = DevicePersistence(persistence_path, endpoint_config)
-        self.cert_manager = cert_manager
+        self.credential_manager = credential_manager
 
         self.current_endpoint = self.persistence.get_effective_endpoint()
         self.device_id = self.current_endpoint.client_id.split('/')[-1]
@@ -118,6 +119,7 @@ class Device:
             system=SystemState(last_config=None)
         )
         self.config: Config = Config()
+        self._state_lock = threading.RLock()
         LOGGER.info("Device initialized with %s managers.", len(self.managers))
 
     def wire_up_dispatcher(self, dispatcher: AbstractMessageDispatcher) -> None:
@@ -418,31 +420,31 @@ class Device:
         Orchestration method to build and publish the State message.
         Gathers contributions from all managers.
         """
-        now = time.time()
-        time_since_last = now - self._loop_state.last_state_publish_time
+        with self._state_lock:
+            now = time.time()
+            time_since_last = now - self._loop_state.last_state_publish_time
 
-        if not force and time_since_last < STATE_THROTTLE_SEC:
-            self._loop_state.state_dirty = True
-            LOGGER.debug("State update throttled (coalescing). Dirty=True")
-            return
+            if not force and time_since_last < STATE_THROTTLE_SEC:
+                self._loop_state.state_dirty = True
+                LOGGER.debug("State update throttled (coalescing). Dirty=True")
+                return
 
-        LOGGER.debug("Assembling state message...")
-        self.state = State(
-            timestamp=datetime.datetime.now(datetime.timezone.utc).isoformat(),
-            version=UDMI_VERSION,
-            system=self.state.system
-        )
-        for manager in self.managers:
-            try:
-                manager.update_state(self.state)
-            except (AttributeError, TypeError, KeyError, ValueError) as e:
-                LOGGER.error("Error in %s.update_state: %s",
-                             manager.__class__.__name__, e)
-
-        self.dispatcher.publish_state(self.state)
-        self._loop_state.last_state_publish_time = time.time()
-        self._loop_state.state_dirty = False
-        LOGGER.debug("State message published.")
+            LOGGER.debug("Assembling state message...")
+            self.state = State(
+                timestamp=datetime.datetime.now(datetime.timezone.utc).isoformat(),
+                version=UDMI_VERSION,
+                system=self.state.system
+            )
+            for manager in self.managers:
+                try:
+                    manager.update_state(self.state)
+                except (AttributeError, TypeError, KeyError, ValueError) as e:
+                    LOGGER.error("Error in %s.update_state: %s",
+                                 manager.__class__.__name__, e)
+            self.dispatcher.publish_state(self.state)
+            self._loop_state.last_state_publish_time = time.time()
+            self._loop_state.state_dirty = False
+            LOGGER.debug("State message published.")
 
     def _run_internal(self, skip_connect: bool = False) -> None:
         """
@@ -538,7 +540,17 @@ class Device:
         """
         if immediate:
             LOGGER.debug("Manager requested IMMEDIATE state update.")
-            self._publish_state(force=True)
+            with self._state_lock:
+                self._publish_state(force=True)
         else:
             LOGGER.debug("Manager requested immediate state update.")
-            self._loop_state.state_dirty = True
+            with self._state_lock:
+                self._loop_state.state_dirty = True
+
+    def request_connection_reset(self, reason: str = "Manager Request") -> None:
+        """
+        Public API for managers to request a full network stack reset.
+        Useful for key rotation or endpoint redirection.
+        """
+        LOGGER.warning("Connection reset requested: %s", reason)
+        self._loop_state.reset_event.set()
