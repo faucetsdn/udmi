@@ -60,6 +60,8 @@ class _LoopState:
     """Holds the dynamic state of the device's main loop."""
     stop_event: Event = field(default_factory=Event)
     reset_event: Event = field(default_factory=Event)
+    config_received_event: Event = field(default_factory=Event)
+
     state_dirty: bool = False
     last_state_publish_time: float = 0.0
     last_auth_check: float = 0.0
@@ -196,6 +198,7 @@ class Device:
             self._try_redirect_endpoint(config_obj)
             return
 
+        self._loop_state.config_received_event.set()
         self.config = config_obj
         for manager in self.managers:
             try:
@@ -323,6 +326,7 @@ class Device:
         while True:
             try:
                 just_connected = False
+                self._loop_state.config_received_event.clear()
                 if not self.dispatcher:
                     self._initialize_connection_robustly()
                     just_connected = True
@@ -330,17 +334,15 @@ class Device:
                 LOGGER.info(
                     "Waiting for initial configuration (Timeout: %ss)...",
                     CONFIG_SYNC_TIMEOUT_SEC)
-                start_wait = time.time()
-                while not self._loop_state.stop_event.is_set():
-                    if self.config and self.config.timestamp:
-                        LOGGER.info("Initial config received. Proceeding.")
-                        break
 
-                    if time.time() - start_wait > CONFIG_SYNC_TIMEOUT_SEC:
-                        LOGGER.warning(
-                            "Config Sync Timeout! Proceeding with default state.")
-                        break
-                    time.sleep(0.1)
+                config_arrived = self._loop_state.config_received_event.wait(
+                    timeout=CONFIG_SYNC_TIMEOUT_SEC
+                )
+                if config_arrived:
+                    LOGGER.info("Initial config received. Proceeding.")
+                else:
+                    LOGGER.warning(
+                        "Config Sync Timeout! Proceeding with default state.")
 
                 self._run_internal(skip_connect=just_connected)
                 break
