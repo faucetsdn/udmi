@@ -2,10 +2,7 @@
 KeyStore implementations for different storage backends.
 """
 import os
-import platform
-import stat
 import logging
-import shutil
 from typing import Optional
 
 from udmi.core.auth.intf.key_store import KeyStore
@@ -47,9 +44,12 @@ class FileKeyStore(KeyStore):
             raise FileNotFoundError("Cannot backup: Key file does not exist.")
 
         backup_path = f"{self.file_path}{suffix}"
-        shutil.copy2(self.file_path, backup_path)
-        LOGGER.info("Backed up key to %s", backup_path)
-        return backup_path
+        try:
+            current_key = self.load()
+            atomic_write(backup_path, current_key, mode=0o600)
+            return backup_path
+        except Exception as e:
+            raise OSError(f"Failed to backup key to {backup_path}: {e}") from e
 
     def restore_from_backup(self, suffix: str = ".bak") -> None:
         """Restores the key from the backup file."""
