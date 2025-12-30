@@ -3,7 +3,7 @@ Provides the concrete implementation for the SystemManager.
 
 This manager is responsible for handling the 'system' block of the
 config and state, and for reporting system-level events like startup.
-It also handles Generic Blobset management (OTA).
+It also handles Generic Blobset management (OTA) and Key Rotation.
 """
 
 import logging
@@ -46,10 +46,15 @@ DEFAULT_METRICS_RATE_SEC = 60
 # Command Handler Signature: (payload: dict) -> None
 CommandHandler = Callable[[Dict[str, Any]], None]
 
+# Key Rotation Callback Signature: (new_public_key_pem, backup_identifier) -> bool (success)
+# The callback should return True if the key was successfully uploaded/processed, False otherwise.
+KeyRotationCallback = Callable[[str, str], bool]
+
+
 class SystemManager(BaseManager):
     """
     Manages the 'system' block of the config and state.
-    Also manages 'blobset' for OTA/File updates.
+    Also manages 'blobset' for OTA/File updates and Key Rotation orchestration.
     """
 
     # pylint: disable=too-many-instance-attributes
@@ -81,12 +86,16 @@ class SystemManager(BaseManager):
         self._blob_states: Dict[str, BlobBlobsetState] = {}
 
         # --- Command Handling Setup ---
-        self._command_handlers: Dict[str, CommandHandler] = {}
+        self._command_handlers: Dict[str, CommandHandler] = {
+            "rotate_key": self.trigger_key_rotation
+        }
+
+        # --- Key Rotation Setup ---
+        self._key_rotation_callback: Optional[KeyRotationCallback] = None
 
         # --- Metrics Loop Setup ---
         self._metrics_rate_sec = DEFAULT_METRICS_RATE_SEC
-        self._stop_event = threading.Event()
-        self._metrics_thread: Optional[threading.Thread] = None
+        self._metrics_wake_event: Optional[threading.Event] = None
 
         LOGGER.info("SystemManager initialized.")
 
@@ -95,8 +104,8 @@ class SystemManager(BaseManager):
         post_process: Optional[PostProcessHandler] = None
     ) -> None:
         """
-    Registers the pipeline handlers for a specific blob key.
-    """
+        Registers the pipeline handlers for a specific blob key.
+        """
         self._blob_handlers[blob_key] = BlobPipelineHandlers(
             process=process,
             post_process=post_process
@@ -114,6 +123,21 @@ class SystemManager(BaseManager):
         """
         self._command_handlers[command_name] = handler
         LOGGER.info("Registered handler for system command: '%s'", command_name)
+
+    def register_key_rotation_callback(self,
+        callback: KeyRotationCallback) -> None:
+        """
+        Registers a callback to be invoked during key rotation.
+        The callback is responsible for uploading the new public key to the cloud.
+        """
+        self._key_rotation_callback = callback
+
+    def rotate_key(self) -> None:
+        """
+        Public API to manually trigger key rotation.
+        Equivalent to receiving a 'rotate_key' command.
+        """
+        self.trigger_key_rotation({})
 
     def start(self) -> None:
         """
@@ -141,11 +165,11 @@ class SystemManager(BaseManager):
 
         LOGGER.info("SystemManager starting, publishing system startup event.")
         self._publish_startup_event()
-        self._stop_event.clear()
-        self._metrics_thread = threading.Thread(target=self._metrics_loop,
-                                                name="SystemMetricsThread",
-                                                daemon=True)
-        self._metrics_thread.start()
+        self._metrics_wake_event = self.start_periodic_task(
+            interval_getter=lambda: self._metrics_rate_sec,
+            task=self.publish_metrics,
+            name="SystemMetrics"
+        )
         LOGGER.info("System metrics loop started (rate: %ss).",
                     self._metrics_rate_sec)
 
@@ -154,10 +178,7 @@ class SystemManager(BaseManager):
         Called when the device stops.
         Stops the background metrics thread.
         """
-        LOGGER.info("Stopping SystemManager...")
-        self._stop_event.set()
-        if self._metrics_thread and self._metrics_thread.is_alive():
-            self._metrics_thread.join(timeout=2.0)
+        super().stop()
         LOGGER.info("SystemManager stopped.")
 
     def handle_config(self, config: Config) -> None:
@@ -182,6 +203,8 @@ class SystemManager(BaseManager):
                     LOGGER.info("Updating metrics rate from %s to %s",
                                 self._metrics_rate_sec, new_rate)
                     self._metrics_rate_sec = new_rate
+                    if self._metrics_wake_event:
+                        self._metrics_wake_event.set()
 
         if config.blobset:
             self._process_blobset_config(config.blobset)
@@ -276,9 +299,9 @@ class SystemManager(BaseManager):
                              command_name, e)
                 LOGGER.debug(traceback.format_exc())
         else:
-            LOGGER.warning("Unknown command '%s' received. No handler registered.",
-                           command_name)
-
+            LOGGER.warning(
+                "Unknown command '%s' received. No handler registered.",
+                command_name)
 
     def update_state(self, state: State) -> None:
         """
@@ -314,13 +337,13 @@ class SystemManager(BaseManager):
         except (TypeError, AttributeError) as e:
             LOGGER.error("Failed to publish startup event: %s", e)
 
-    def _metrics_loop(self) -> None:
-        """
-        Background loop that publishes metrics periodically.
-        """
-        while not self._stop_event.is_set():
-            self.publish_metrics()
-            self._stop_event.wait(timeout=self._metrics_rate_sec)
+    def _report_status(self, level: int, message: str):
+        """Helper to update system status in the state."""
+        self._system_state.status = Entry(
+            message=message,
+            level=level,
+            timestamp=datetime.now(timezone.utc).isoformat()
+        )
 
     def publish_metrics(self) -> None:
         """
@@ -356,3 +379,89 @@ class SystemManager(BaseManager):
             LOGGER.error("psutil not installed. Cannot collect metrics.")
         except Exception as e:  # pylint:disable=broad-exception-caught
             LOGGER.error("Failed to publish metrics: %s", e)
+
+    # --- Key Rotation Logic ---
+
+    def trigger_key_rotation(self,
+        _payload: Optional[Dict[str, Any]] = None) -> None:
+        """
+        Orchestrates the key rotation process:
+        1. Backs up current key.
+        2. Generates new key (atomic replace).
+        3. Invokes callback (to upload new key to cloud).
+        4. Reconnects device (using new key).
+        5. Reverts if callback fails.
+        """
+        cred_manager = getattr(self._device, 'credential_manager', None)
+
+        if not cred_manager:
+            LOGGER.error(
+                "Cannot rotate key: CredentialManager not available on Device.")
+            self._report_status(500,
+                                "Key rotation unavailable (No CredentialManager)")
+            self.trigger_state_update()
+            return
+
+        LOGGER.info("Initiating Key Rotation...")
+        self._report_status(200, "Key rotation started")
+        self.trigger_state_update()
+
+        backup_path = None
+        try:
+            if hasattr(cred_manager.store, 'backup'):
+                try:
+                    backup_path = cred_manager.store.backup()
+                    LOGGER.info("Backup created at: %s", backup_path)
+                except Exception as e:
+                    LOGGER.error("Backup failed: %s", e)
+                    raise RuntimeError(
+                        "Backup failed, aborting rotation") from e
+            else:
+                LOGGER.warning(
+                    "KeyStore does not support backup. Rotation is risky.")
+
+            new_pem = cred_manager.rotate_credentials()
+            LOGGER.info("New key pair generated and saved.")
+
+            success = True
+            if self._key_rotation_callback:
+                LOGGER.info("Invoking rotation callback...")
+                try:
+                    success = self._key_rotation_callback(new_pem,
+                                                          backup_path or "unknown")
+                except Exception as e:
+                    LOGGER.error("Rotation callback raised exception: %s", e)
+                    success = False
+            else:
+                LOGGER.warning(
+                    "No key rotation callback registered! New key is on disk but not in cloud.")
+
+            if success:
+                LOGGER.info("Callback success. Committing rotation.")
+                self._report_status(200,
+                                    "Key rotation complete. New key active.")
+
+                if self._device and hasattr(self._device, '_loop_state'):
+                    LOGGER.info(
+                        "Triggering connection reset to apply new credentials...")
+                    self._device.request_connection_reset("Key Rotation")
+            else:
+                raise RuntimeError("Rotation callback reported failure")
+
+        except Exception as e:
+            LOGGER.error("Key rotation sequence failed: %s", e)
+            self._report_status(500, f"Key rotation failed: {e}")
+
+            if backup_path:
+                LOGGER.warning("Attempting to revert to backup key...")
+                try:
+                    if hasattr(cred_manager.store, 'restore_from_backup'):
+                        cred_manager.store.restore_from_backup()
+                        LOGGER.info("Successfully reverted to old key.")
+                    else:
+                        LOGGER.critical(
+                            "KeyStore cannot restore backup! Device may be bricked.")
+                except Exception as revert_e:
+                    LOGGER.critical("FATAL: Failed to revert key: %s", revert_e)
+        finally:
+            self.trigger_state_update(immediate=True)

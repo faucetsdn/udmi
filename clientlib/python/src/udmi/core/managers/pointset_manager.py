@@ -40,12 +40,14 @@ class Point:
     Tracks its own reporting state (last reported value/time) for COV logic.
     """
 
-    def __init__(self, name: str):
+    def __init__(self, name: str, min_value: float = None, max_value: float = None):
         self.name = name
         self.present_value: Any = None
         self.units: Optional[str] = None
         self.status: Optional[Any] = None
         self.value_state: Optional[str] = None
+        self.min_value: Optional[float] = min_value
+        self.max_value: Optional[float] = max_value
 
         # Writeback
         self.set_value: Any = None
@@ -67,18 +69,24 @@ class Point:
         Returns True if a writeback (set_present_value) occurred.
         """
         dirty = False
-
-        if config.units:
+        if config.units is not None:
             self.units = config.units
         if config.cov_increment is not None:
             self.cov_increment = config.cov_increment
-
         if config.set_value is not None:
             if config.set_value != self.set_value:
                 self.set_value = config.set_value
                 dirty = True
-
         return dirty
+
+    def _is_valid_value(self, value: Any) -> bool:
+        """Internal validation logic."""
+        if isinstance(value, (int, float)):
+            if self.min_value is not None and value < self.min_value:
+                return False
+            if self.max_value is not None and value > self.max_value:
+                return False
+        return True
 
     def get_state(self) -> PointPointsetState:
         """Returns the state representation of this point."""
@@ -143,9 +151,7 @@ class PointsetManager(BaseManager):
 
         self._writeback_handler: Optional[WritebackHandler] = None
 
-        # Telemetry Loop Controls
-        self._stop_event = threading.Event()
-        self._telemetry_thread: Optional[threading.Thread] = None
+        self._telemetry_wake_event: Optional[threading.Event] = None
 
         LOGGER.info("PointsetManager initialized.")
 
@@ -157,10 +163,11 @@ class PointsetManager(BaseManager):
         """
         self._writeback_handler = handler
 
-    def add_point(self, name: str) -> None:
+    def add_point(self, name: str, min_value: float = None,
+        max_value: float = None) -> None:
         """Register a point to be managed."""
         if name not in self._points:
-            self._points[name] = Point(name)
+            self._points[name] = Point(name, min_value, max_value)
             LOGGER.debug("Added point '%s' to manager.", name)
 
     def set_point_value(self, name: str, value: Any) -> None:
@@ -178,20 +185,17 @@ class PointsetManager(BaseManager):
         Starts the background telemetry reporting loop.
         """
         LOGGER.info("Starting PointsetManager telemetry loop...")
-        self._stop_event.clear()
-        self._telemetry_thread = threading.Thread(target=self._telemetry_loop,
-                                                  name="PointsetTelemetryThread",
-                                                  daemon=True)
-        self._telemetry_thread.start()
+        self._telemetry_wake_event = self.start_periodic_task(
+            interval_getter=lambda: self._sample_rate_sec,
+            task=self.publish_telemetry,
+            name="PointsetTelemetry"
+        )
 
     def stop(self) -> None:
         """
         Stops the background telemetry loop.
         """
-        LOGGER.info("Stopping PointsetManager...")
-        self._stop_event.set()
-        if self._telemetry_thread and self._telemetry_thread.is_alive():
-            self._telemetry_thread.join(timeout=2.0)
+        super().stop()
         LOGGER.info("PointsetManager stopped.")
 
     def handle_config(self, config: Config) -> None:
@@ -209,6 +213,8 @@ class PointsetManager(BaseManager):
                             self._sample_rate_sec,
                             config.pointset.sample_rate_sec)
                 self._sample_rate_sec = config.pointset.sample_rate_sec
+                if self._telemetry_wake_event:
+                    self._telemetry_wake_event.set()
 
         # Update Etag
         self._state_etag = config.pointset.state_etag
@@ -247,21 +253,6 @@ class PointsetManager(BaseManager):
             state_etag=self._state_etag,
             points=points_state_map
         )
-
-    def _telemetry_loop(self) -> None:
-        """
-        Background loop to publish telemetry events.
-        It runs frequently (every 1s) to check if any points need reporting
-        based on their individual rules (COV), while ensuring a fallback heartbeat.
-        """
-        while not self._stop_event.is_set():
-            start_time = time.time()
-            self.publish_telemetry()
-
-            elapsed = time.time() - start_time
-            sleep_time = min(float(self._sample_rate_sec), 1.0)
-            sleep_time = max(0.1, sleep_time - elapsed)
-            self._stop_event.wait(timeout=sleep_time)
 
     def publish_telemetry(self) -> None:
         """
