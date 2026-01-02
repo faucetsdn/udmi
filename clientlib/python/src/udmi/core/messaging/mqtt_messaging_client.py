@@ -3,6 +3,7 @@ A concrete implementation of the AbstractMessagingClient for the MQTT protocol.
 """
 
 import logging
+import re
 import socket
 import ssl
 from dataclasses import dataclass
@@ -71,6 +72,8 @@ class MqttMessagingClient(AbstractMessagingClient):
         """
         super().__init__()
         self._config = endpoint_config
+        clean_prefix = self._topic_prefix.strip("/")
+        self._topic_pattern = re.compile(rf"^/?{clean_prefix}/([^/]+)/(.+)$")
         self._auth_provider = auth_provider
         self._tls_config = tls_config or TlsConfig()
         self._reconnect_config = reconnect_config or ReconnectConfig()
@@ -315,26 +318,27 @@ class MqttMessagingClient(AbstractMessagingClient):
         Parses the topic to extract Device ID and Channel.
         Format: /prefix/DEVICE_ID/channel...
         """
-        topic_parts = msg.topic.strip("/").split('/')
-        device_id_index = self._prefix_segments
-        channel_start_index = device_id_index + 1
+        topic = msg.topic
+        match = self._topic_pattern.match(topic)
+        if match:
+            device_id = match.group(1)
+            channel = match.group(2)
 
-        if len(topic_parts) > channel_start_index:
-            device_id = topic_parts[device_id_index]
-            channel = '/'.join(topic_parts[channel_start_index:])
             try:
                 payload = msg.payload.decode('utf-8')
             except UnicodeDecodeError as e:
                 LOGGER.error("Failed to decode message payload on %s: %s",
-                             msg.topic, e)
+                             topic, e)
                 return
-            LOGGER.debug("Received message for %s on channel '%s'", device_id, channel)
+
+            LOGGER.debug("Received message for %s on channel '%s'", device_id,
+                         channel)
 
             if self._callbacks.on_message:
                 self._callbacks.on_message(device_id, channel, payload)
         else:
             LOGGER.warning("Received message on an unexpected topic format: %s",
-                           msg.topic)
+                           topic)
 
     def _on_disconnect(self, _client, _userdata, rc):
         """
