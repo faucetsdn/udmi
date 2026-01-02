@@ -38,6 +38,7 @@ services:
       - ./var/etcd:/root/udmi/var/etcd
       - ./var/mosquitto/log:/var/log/mosquitto
       - ./var/mosquitto/certs:/etc/mosquitto/certs
+      - /var/run/docker.sock:/var/run/docker.sock:ro
     depends_on:
       etcd:
         condition: service_started
@@ -47,9 +48,12 @@ services:
     networks:
       - udminet
     environment:
-      ETCD_CLUSTER: etcd
-      MQTT_HOST: mosquitto
-      MQTT_PORT: 8883
+      - ETCD_CLUSTER=etcd
+      - MQTT_HOST=mosquitto
+      - MQTT_PORT=8883
+      - INFLUXDB_TOKEN=
+      - INFLUXDB_ORG=bridgehead
+      - INFLUXDB_BUCKET=home
 
   validator:
     build: 
@@ -66,7 +70,49 @@ services:
     restart: always
     networks:
       - udminet
-      
+
+  influxdb:
+    container_name: influxdb
+    image: influxdb:2
+    depends_on:
+      udmis:
+        condition: service_started
+    volumes:
+      - ./var/influxdb-storage:/var/lib/influxdb
+      - ./var/mosquitto/certs:/etc/mosquitto/certs
+    environment:
+      - DOCKER_INFLUXDB_INIT_MODE=setup
+      - DOCKER_INFLUXDB_INIT_USERNAME=bridgehead
+      - DOCKER_INFLUXDB_INIT_PASSWORD=password
+      - DOCKER_INFLUXDB_INIT_BUCKET=home
+      - DOCKER_INFLUXDB_INIT_ORG=bridgehead
+      - DOCKER_INFLUXDB_INIT_ADMIN_TOKEN=
+    restart: always
+    ports:
+      - "8086:8086"
+    networks:
+      - udminet
+
+  grafana:
+    container_name: grafana
+    image: grafana/grafana:12.3
+    volumes:
+      - ./grafana/datasources:/etc/grafana/provisioning/datasources
+      - ./grafana/dashboards:/etc/grafana/provisioning/dashboards
+    depends_on:
+      - influxdb
+    environment:
+      - INFLUXDB_ORGANISATION=bridgehead
+      - INFLUXDB_BUCKET=home
+      - INFLUXDB_TOKEN=
+      - GF_SECURITY_ADMIN_USER=bridgehead
+      - GF_SECURITY_ADMIN_PASSWORD=password
+    restart: always
+    ports:
+      - "3000:3000"
+    networks:
+      - udminet
+  
 networks:
   udminet:
     name: udminet
