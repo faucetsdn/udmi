@@ -65,9 +65,12 @@ A successful run will not end on its own, you can press `Ctrl` + `C` on your key
 You can stop the pubber container by running `sudo docker stop pubber`
 ### Discovery
 
+In the following example we are using GAT-123 as the discovery node ip.
+
 Run the following commands to complete a discovery sequence: 
 
 *Note: Make sure to update <YOUR_HOST_IP> with the ip we set in the compose file.*
+
 ```
 sudo docker exec validator /bin/bash -c "bin/registrar site_model/ //mqtt/mosquitto -x -d && bin/registrar site_model/ //mqtt/mosquitto GAT-123"
 
