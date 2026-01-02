@@ -44,7 +44,7 @@ while the `pointset` typing is applied as part of the [message envelope](envelop
 
 * `points`: Collection of point names.
   * _{`point_name`}_: Point name.
-    * `present_value`: The specific point data reading.
+    * `present_value`: The specific point data reading. If the value represents a number, then this must be serialized as a JSON number, not a quoted string.
 * `partial_update`: Optional indicator if this is an incremental update (not all points included).
 
 Event telemetry messages should be sent "as needed" or according to specific requirements as
@@ -97,7 +97,7 @@ block with the following structure:e
   * `points`: Collection of point names, defining the representative point set for this device.
     * _{`point_name`}_: Point name.
       * `units`: Set as-operating units for this point.
-      * (`set_value`): Optional setting to control the specified device point. See [writeback documentation](../specs/sequences/writeback.md).
+      * (`set_value`): Optional setting to control the specified device point. If the set_value represents a number, then this must be serialized as a JSON number, not a quoted string. See [writeback documentation](../specs/sequences/writeback.md).
       * (`cov_threshold`): Optional threshold for triggering a COV event update.
 
 The points defined in the `config.pointset.points` dictionary is the authoritative source

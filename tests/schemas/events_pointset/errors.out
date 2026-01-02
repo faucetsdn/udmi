@@ -1,5 +1,6 @@
-8 schema violations found
+9 schema violations found
   /points/guid: instance type (string) does not match any allowed primitive type (allowed: ["object"])
+  /points/magic_voice_recognizer/present_value: instance failed to match exactly one schema (matched 0 out of 3)
   /points/missing_present_value: object has missing required properties (["present_value"])
   /points/old_properties: object has missing required properties (["present_value"])
   /points/old_properties: object instance has properties which are not allowed by the schema: ["properties"]
