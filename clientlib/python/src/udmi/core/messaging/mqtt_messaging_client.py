@@ -15,6 +15,7 @@ import paho.mqtt.client as mqtt
 from jwt.exceptions import PyJWTError
 
 from udmi.core.auth import AuthProvider
+from udmi.core.auth.no_auth_provider import NoAuthProvider
 from udmi.core.messaging.abstract_client import AbstractMessagingClient
 from udmi.schema import EndpointConfiguration
 
@@ -138,7 +139,7 @@ class MqttMessagingClient(AbstractMessagingClient):
             max_delay=self._reconnect_config.max_delay_sec
         )
 
-        self._mqtt_client.connect(self._config.hostname, self._config.port)
+        self._mqtt_client.connect_async(self._config.hostname, self._config.port)
 
     def check_authentication(self) -> None:
         """
@@ -261,6 +262,10 @@ class MqttMessagingClient(AbstractMessagingClient):
         """Sets the authentication method on the Paho client."""
         if self._tls_config.cert_file and self._tls_config.key_file:
             LOGGER.info("Using client certificate (mTLS) for authentication.")
+        elif isinstance(self._auth_provider, NoAuthProvider):
+            LOGGER.info(
+                "Authentication explicitly disabled (NoAuth Configured).")
+            return
         elif self._auth_provider:
             LOGGER.info("Using %s for authentication.",
                         self._auth_provider.__class__.__name__)

@@ -2,7 +2,7 @@
 Provides a username/password based authentication provider.
 """
 
-from udmi.core.auth.auth_provider import AuthProvider
+from udmi.core.auth.intf import AuthProvider
 
 
 class BasicAuthProvider(AuthProvider):

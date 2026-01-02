@@ -13,6 +13,7 @@ The imports in this file make these key classes directly available
 from the `udmi.core.messaging` namespace for easier use.
 """
 import logging
+import os
 from typing import Optional
 
 from udmi.core.auth import BasicAuthProvider
@@ -20,6 +21,7 @@ from udmi.core.auth import CredentialManager
 from udmi.core.auth import JwtAuthProvider
 from udmi.core.auth.crypto_algo import get_algorithm_strategy
 from udmi.core.auth.key_store import FileKeyStore
+from udmi.core.auth.no_auth_provider import NoAuthProvider
 from udmi.core.messaging.abstract_client import AbstractMessagingClient
 from udmi.core.messaging.abstract_dispatcher import AbstractMessageDispatcher
 from udmi.core.messaging.message_dispatcher import MessageDispatcher
@@ -64,15 +66,22 @@ def create_client_from_endpoint_config(
 ) -> MqttMessagingClient:
     """
     Helper to build an mqtt client from an endpoint config object.
+
+    Logic:
+    1. If config has 'auth_provider' (Basic/JWT), use it.
+    2. If 'key_file' exists, assume mTLS or JWT (via credential_manager).
+    3. If 'key_file' MISSING and no 'auth_provider', fallback to NoAuthProvider.
     """
     auth_provider = None
-    key_file = key_file or "rsa_private.pem"
+    target_key_file = key_file or "rsa_private.pem"
+    key_exists = os.path.exists(target_key_file)
+
     tls_config = tls_config or TlsConfig()
     is_mtls = (config.auth_provider is None)
 
-    if not credential_manager and key_file:
+    if not credential_manager and key_exists:
         credential_manager = initialize_credential_manager(
-            key_file=key_file,
+            key_file=target_key_file,
             algorithm=config.algorithm or "RS256",
             tls_config=tls_config,
             is_mtls=is_mtls
@@ -86,17 +95,26 @@ def create_client_from_endpoint_config(
             )
         elif config.auth_provider.jwt:
             if not credential_manager:
-                raise ValueError("CredentialManager required for JWT Auth")
+                raise ValueError(
+                    "CredentialManager required for JWT Auth (Key file missing?)")
 
             auth_provider = JwtAuthProvider(
                 project_id=config.auth_provider.jwt.audience,
                 signer=credential_manager,
                 algorithm=credential_manager.get_algorithm_name()
             )
+
+    elif not key_exists:
+        LOGGER.info(
+            "No private key found at '%s' and no AuthProvider in config. "
+            "Configuring for No-Auth mode.", target_key_file
+        )
+        auth_provider = NoAuthProvider()
+
     else:
         LOGGER.info("No AuthProvider found in config. Assuming mTLS strategy.")
         if not tls_config.key_file:
-            tls_config.key_file = key_file
+            tls_config.key_file = target_key_file
         if not tls_config.cert_file:
             tls_config.cert_file = "client_cert.pem"
         # if not credential_manager:
