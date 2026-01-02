@@ -7,6 +7,8 @@ It also handles Generic Blobset management (OTA) and Key Rotation.
 """
 
 import logging
+import os
+import tempfile
 import threading
 import traceback
 from datetime import datetime
@@ -19,7 +21,7 @@ from typing import Optional
 import psutil
 
 from udmi.constants import UDMI_VERSION
-from udmi.core.blob import get_verified_blob_bytes
+from udmi.core.blob import get_verified_blob_file
 from udmi.core.blob.handlers import BlobPipelineHandlers
 from udmi.core.blob.handlers import PostProcessHandler
 from udmi.core.blob.handlers import ProcessHandler
@@ -101,14 +103,21 @@ class SystemManager(BaseManager):
 
     def register_blob_handler(self, blob_key: str,
         process: ProcessHandler,
-        post_process: Optional[PostProcessHandler] = None
+        post_process: Optional[PostProcessHandler] = None,
+        expects_file: bool = False
     ) -> None:
         """
         Registers the pipeline handlers for a specific blob key.
+        Args:
+            process: The pipeline handler to register.
+            post_process: The pipeline handler to post_process.
+            expects_file: If True, 'process' receives a file path (str).
+                          If False, 'process' receives raw bytes.
         """
         self._blob_handlers[blob_key] = BlobPipelineHandlers(
             process=process,
-            post_process=post_process
+            post_process=post_process,
+            expects_file=expects_file
         )
         LOGGER.info("Registered handler for blob key: '%s'", blob_key)
 
@@ -231,39 +240,68 @@ class SystemManager(BaseManager):
 
     def _apply_blob(self, key: str, config: BlobBlobsetConfig) -> None:
         """
-        Downloads, verifies, and hands off the blob.
+        Downloads, verifies, and hands off the blob to the registered handlers.
         """
         self._update_blob_state(key, Phase.apply, config.generation)
 
         self.trigger_state_update()
 
-        try:
-            LOGGER.info("Fetching blob '%s' from %s...", key, config.url)
-            data = get_verified_blob_bytes(config)
-            LOGGER.info("Blob '%s' verified successfully.", key)
+        def _blob_worker():
+            LOGGER.info("Starting background blob worker for '%s'...", key)
+            tmp_fd, tmp_path = tempfile.mkstemp()
+            os.close(tmp_fd)
 
-            handler = self._blob_handlers[key]
-            LOGGER.info("Invoking handler for blob '%s'...", key)
-            process_output = handler.process(key, data)
+            try:
+                LOGGER.info("Streaming blob '%s' to %s...", key, tmp_path)
+                get_verified_blob_file(config, tmp_path)
+                LOGGER.info("Blob '%s' verified successfully on disk.", key)
 
-            LOGGER.info("Blob '%s' applied successfully.", key)
-            self._applied_blob_generations[key] = config.generation
+                handler = self._blob_handlers[key]
 
-            LOGGER.info(f"Blob {key} applied. Flushing state...")
-            self._update_blob_state(key, Phase.final, config.generation)
-            self.trigger_state_update(immediate=True)
+                payload = None
+                if handler.expects_file:
+                    LOGGER.info("Handler expects file path. Passing %s",
+                                tmp_path)
+                    payload = tmp_path
+                else:
+                    LOGGER.info(
+                        "Handler expects bytes. Loading file into RAM...")
+                    with open(tmp_path, 'rb') as f:
+                        payload = f.read()
 
-            if self._device and self._device.persistence:
-                self._device.persistence.set("applied_blobs",
-                                             self._applied_blob_generations)
-            if handler.post_process:
-                LOGGER.info(f"Running post-process for {key}...")
-                handler.post_process(key, process_output)
+                LOGGER.info("Invoking handler for blob '%s'...", key)
+                process_output = handler.process(key, payload)
 
-        except Exception as e:  # pylint:disable=broad-exception-caught
-            LOGGER.error("Failed to apply blob '%s': %s", key, e)
-            LOGGER.debug(traceback.format_exc())
-            self._update_blob_state(key, Phase.final, config.generation, str(e))
+                LOGGER.info("Blob '%s' applied successfully.", key)
+                self._applied_blob_generations[key] = config.generation
+
+                LOGGER.info(f"Blob {key} applied. Flushing state...")
+                self._update_blob_state(key, Phase.final, config.generation)
+                self.trigger_state_update(immediate=True)
+
+                if self._device and self._device.persistence:
+                    self._device.persistence.set("applied_blobs",
+                                                 self._applied_blob_generations)
+                if handler.post_process:
+                    LOGGER.info(f"Running post-process for {key}...")
+                    handler.post_process(key, process_output)
+
+            except Exception as e:  # pylint:disable=broad-exception-caught
+                LOGGER.error("Failed to apply blob '%s': %s", key, e)
+                LOGGER.debug(traceback.format_exc())
+                self._update_blob_state(key, Phase.final, config.generation,
+                                        str(e))
+                self.trigger_state_update()
+            finally:
+                if os.path.exists(tmp_path):
+                    os.remove(tmp_path)
+
+        thread_name = f"BlobWorker-{key}"
+        worker_thread = threading.Thread(target=_blob_worker, name=thread_name,
+                                         daemon=True)
+        worker_thread.start()
+        LOGGER.info("Spawned worker thread '%s' for blob processing.",
+                    thread_name)
 
     def _update_blob_state(self, key: str, phase: Phase, generation: str,
         error_message: str = None) -> None:

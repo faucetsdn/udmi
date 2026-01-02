@@ -6,6 +6,7 @@ from urllib.parse import urlparse
 
 from udmi.core.blob.fetcher import AbstractBlobFetcher
 from udmi.core.blob.fetcher import DataUriFetcher
+from udmi.core.blob.fetcher import FileFetcher
 from udmi.core.blob.fetcher import HttpFetcher
 
 
@@ -59,6 +60,7 @@ class BlobFetcherRegistry:
         cls.register("data", DataUriFetcher())
         cls.register("http", HttpFetcher())
         cls.register("https", HttpFetcher())
+        cls.register("file", FileFetcher())
 
 
 BlobFetcherRegistry.initialize_defaults()
