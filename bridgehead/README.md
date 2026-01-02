@@ -19,8 +19,8 @@ This guide provides instructions for deploying the core UDMI services bundle. Th
 3. **Get default site model:** In you terminal, run `sudo git clone https://github.com/faucetsdn/udmi_site_model.git`.
 
 4. **Edit compose file:** Open the docker-compose.yml file in your chosen editor.
-    1. **Add Host IP:** Locate the line `HOST_IP: <YOUR_IP>` inside the **mosquitto** service block. Replace `<YOUR_IP>` with your hosts ip address. You can find this by running `sudo hostname -I`. This is required in order tp allow connections to the broker externally from the docker compose environment. 
-    2. **Update InfluxDB Credentials:** Under the **influxdb** service, under the environment variables, set the values of `DOCKER_INFLUXDB_INIT_USERNAME`, `DOCKER_INFLUXDB_INIT_PASSWORD` and `DOCKER_INFLUXDB_INIT_ADMIN_TOKEN`. For `DOCKER_INFLUXDB_INIT_ADMIN_TOKEN`, run `openssl rand -hex 32`. *Note: The password for influx must be between 8-72 characters.*
+    1. **Add Host IP:** Locate the line `HOST_IP: <YOUR_IP>` inside the **mosquitto** service block. Replace `<YOUR_IP>` with your hosts ip address. You can find this by running `sudo hostname -I`. This is required in order to allow connections to the broker externally from the docker compose environment. 
+    2. **Update InfluxDB Credentials:** Under the **influxdb** service, in environment variables, set the values of `DOCKER_INFLUXDB_INIT_USERNAME`, `DOCKER_INFLUXDB_INIT_PASSWORD` and `DOCKER_INFLUXDB_INIT_ADMIN_TOKEN`. For `DOCKER_INFLUXDB_INIT_ADMIN_TOKEN`, run `openssl rand -hex 32`. *Note: The password for influx must be between 8-72 characters.*
     3. **Update Grafana credentials:** Under the **grafana** service, set the values of `GF_SECURITY_ADMIN_USER` and `GF_SECURITY_ADMIN_USER`. Update the value of `INFLUXDB_TOKEN` with the token generated in step 2.
     4. **Update udmis credentials:** Under the **udmis** service, set the value of `INFLUXDB_TOKEN` with the token generated in step 2.
 
@@ -77,11 +77,14 @@ You can stop the pubber container by running `sudo docker stop pubber`
 
 To run the validator service in the background, execute `sudo docker exec -d validator bin/validator site_model/ //mqtt/mosquitto`
 
-## Discovery
+### Discovery
+
+In the following example we are passing GAT-123 as the discovery node ip to discovery.sh.
 
 Run the following commands to complete a discovery sequence: 
 
 *Note: Make sure to update <YOUR_HOST_IP> with the ip we set in the compose file.*
+
 ```
 sudo docker exec validator /bin/bash -c "bin/registrar site_model/ //mqtt/mosquitto -x -d && bin/registrar site_model/ //mqtt/mosquitto GAT-123"
 
@@ -89,7 +92,7 @@ sudo docker run -d --rm --name pubber -v $(realpath udmi_site_model):/root/site_
 
 sudo docker exec -d pubber /bin/bash -c "bin/pubber site_model/ //mqtt/<YOUR_HOST_IP> GAT-123 852649" 
 
-sudo docker exec validator /root/discovery.sh
+sudo docker exec validator /root/discovery.sh GAT-123
 
 sudo docker exec validator bin/registrar site_model/ //mqtt/mosquitto
 
@@ -119,11 +122,11 @@ Although InfluxDB is available and accessible, there should be no need to direct
 
 ### Grafana 
 
-1. **Access:** Navigate to the InfluxDB endpoint at `http://localhost:3000`.
+1. **Access:** Navigate to the Grafana endpoint at `http://localhost:3000`.
 2. **Login:** Use the credentials specified in the Docker Compose file.
 3. **View Dashboard:**  Select Dashboards from the left-hand menu. The pre-configured `bridgehead` dashboard includes a basic overview of the running services.
 
-Note about the default dashboard: The MQTT graphs only display data that falls within the currently selected time range. For instance, if the connection count has been stable for the last hour, but the dashboard time range is set to the last five minutes, the graphs will remain empty.T o see the history, simply expand the grafana time range to include the last time activity was recorded.
+Note about the default dashboard: The MQTT graphs only display data that falls within the currently selected time range. For instance, if the connection count has been stable for the last hour, but the dashboard time range is set to the last five minutes, the graphs will remain empty. To see the history, simply expand the grafana time range to include the last time activity was recorded.
 
 #### Alerts
 
@@ -167,7 +170,6 @@ The following instructions will setup an alert in Grafana for when a container g
 
 Use the same method to setup any number of alerts, you can find useful information here: https://grafana.com/docs/grafana/latest/alerting/
     
-
 ## Shutting down the docker environment
 
 To gracefully stop and remove the container, run: `sudo docker compose down`
