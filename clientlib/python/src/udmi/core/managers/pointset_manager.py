@@ -18,10 +18,13 @@ from typing import Optional
 from udmi.constants import UDMI_VERSION
 from udmi.core.managers.base_manager import BaseManager
 from udmi.schema import Config
+from udmi.schema import Entry
 from udmi.schema import PointPointsetConfig
 from udmi.schema import PointPointsetEvents
+from udmi.schema import PointPointsetModel
 from udmi.schema import PointPointsetState
 from udmi.schema import PointsetEvents
+from udmi.schema import PointsetModel
 from udmi.schema import PointsetState
 from udmi.schema import State
 
@@ -40,14 +43,14 @@ class Point:
     Tracks its own reporting state (last reported value/time) for COV logic.
     """
 
-    def __init__(self, name: str, min_value: float = None, max_value: float = None):
+    def __init__(self, name: str):
         self.name = name
         self.present_value: Any = None
         self.units: Optional[str] = None
         self.status: Optional[Any] = None
         self.value_state: Optional[str] = None
-        self.min_value: Optional[float] = min_value
-        self.max_value: Optional[float] = max_value
+        self.min_value: Optional[float] = None
+        self.max_value: Optional[float] = None
 
         # Writeback
         self.set_value: Any = None
@@ -59,24 +62,61 @@ class Point:
         self.last_reported_value: Any = None
         self.last_reported_time: float = 0.0
 
+    def set_model(self, model: PointPointsetModel) -> None:
+        """
+        Applies static definition from Metadata.
+        """
+        if model.range_min:
+            self.min_value = model.range_min
+        if model.range_max:
+            self.max_value = model.range_max
+        if model.units:
+            self.units = model.units
+
     def set_present_value(self, value: Any) -> None:
         """Updates the current reading of the point."""
         self.present_value = value
+        if not self._is_valid_value(value):
+            msg = f"Value {value} out of range ({self.min_value}, {self.max_value})"
+            LOGGER.warning(f"Point '{self.name}': {msg}")
+            self.status = Entry(
+                message=msg,
+                level=500,
+                timestamp=datetime.now(timezone.utc).isoformat()
+            )
+        else:
+            if self.status and self.status.level >= 500:
+                self.status = None
 
     def update_config(self, config: PointPointsetConfig) -> bool:
         """
         Updates point metadata based on config.
         Returns True if a writeback (set_present_value) occurred.
         """
-        dirty = False
         if config.units is not None:
             self.units = config.units
         if config.cov_increment is not None:
             self.cov_increment = config.cov_increment
+
+        dirty = False
         if config.set_value is not None:
-            if config.set_value != self.set_value:
-                self.set_value = config.set_value
-                dirty = True
+            if self._is_valid_value(config.set_value):
+                if config.set_value != self.set_value:
+                    self.set_value = config.set_value
+                    dirty = True
+
+                if self.status and self.status.level >= 500:
+                    self.status = None
+            else:
+                msg = f"set_value {config.set_value} out of range"
+                LOGGER.error(f"Point '{self.name}': {msg}")
+                self.status = Entry(
+                    message=msg,
+                    level=500,
+                    timestamp=datetime.now(timezone.utc).isoformat()
+                )
+                dirty = False
+
         return dirty
 
     def _is_valid_value(self, value: Any) -> bool:
@@ -120,7 +160,8 @@ class Point:
                     self.cov_increment):
 
                 delta = abs(self.present_value - self.last_reported_value)
-                LOGGER.debug(f"delta: {delta} for present {self.present_value} and last reported {self.last_reported_value}")
+                LOGGER.debug(f"delta: {delta} for present {self.present_value} "
+                             f"and last reported {self.last_reported_value}")
                 if delta >= self.cov_increment:
                     return True
                 return False
@@ -155,6 +196,21 @@ class PointsetManager(BaseManager):
 
         LOGGER.info("PointsetManager initialized.")
 
+    def set_pointset_model(self, model: PointsetModel) -> None:
+        """
+        Applies the Pointset Metadata (Model) to the manager.
+        This is where validation rules (min/max) are defined.
+        """
+        if not model or not model.points:
+            return
+
+        LOGGER.info("Applying Pointset Metadata Model...")
+        for name, point_model in model.points.items():
+            if name not in self._points:
+                self.add_point(name)
+
+            self._points[name].set_model(point_model)
+
     def set_writeback_handler(self, handler: WritebackHandler) -> None:
         """
         Registers a callback that is triggered when the cloud sends a 'set_value'.
@@ -163,11 +219,10 @@ class PointsetManager(BaseManager):
         """
         self._writeback_handler = handler
 
-    def add_point(self, name: str, min_value: float = None,
-        max_value: float = None) -> None:
+    def add_point(self, name: str) -> None:
         """Register a point to be managed."""
         if name not in self._points:
-            self._points[name] = Point(name, min_value, max_value)
+            self._points[name] = Point(name)
             LOGGER.debug("Added point '%s' to manager.", name)
 
     def set_point_value(self, name: str, value: Any) -> None:
