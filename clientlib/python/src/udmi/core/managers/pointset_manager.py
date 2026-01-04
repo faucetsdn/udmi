@@ -32,6 +32,7 @@ from udmi.schema import State
 LOGGER = logging.getLogger(__name__)
 
 DEFAULT_SAMPLE_RATE_SEC = 10
+DEFAULT_HEARTBEAT_SEC = 600
 
 # Callback signature: function(point_name, value)
 WritebackHandler = Callable[[str, Any], None]
@@ -148,7 +149,7 @@ class Point:
             present_value=self.present_value
         )
 
-    def should_report(self) -> bool:
+    def should_report(self, sample_rate_sec: int) -> bool:
         """
         Determines if this point needs to be reported based on Change of Value (COV).
 
@@ -160,6 +161,8 @@ class Point:
         if self.last_reported_value is None:
             return True
 
+        now = time.time()
+
         if self.present_value != self.last_reported_value:
             if (isinstance(self.present_value, (int, float)) and
                     isinstance(self.last_reported_value, (int, float)) and
@@ -170,8 +173,12 @@ class Point:
                              f"and last reported {self.last_reported_value}")
                 if delta >= self.cov_increment:
                     return True
-                return False
+            else:
+                return True
 
+        heartbeat_interval = max(DEFAULT_HEARTBEAT_SEC, sample_rate_sec)
+
+        if (now - self.last_reported_time) >= heartbeat_interval:
             return True
 
         return False
@@ -350,12 +357,7 @@ class PointsetManager(BaseManager):
 
         points_map = {}
         for name, point in self._points.items():
-            if point.present_value is None:
-                continue
-
-            is_global_heartbeat = (time.time() - point.last_reported_time) >= self._sample_rate_sec
-
-            if point.should_report() or is_global_heartbeat:
+            if point.should_report(self._sample_rate_sec):
                 points_map[name] = point.get_event()
                 point.mark_reported()
 
