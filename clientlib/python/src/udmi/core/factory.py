@@ -28,6 +28,8 @@ from udmi.core.messaging.message_dispatcher import MessageDispatcher
 from udmi.core.messaging.mqtt_messaging_client import MqttMessagingClient
 from udmi.core.messaging.mqtt_messaging_client import ReconnectConfig
 from udmi.core.messaging.mqtt_messaging_client import TlsConfig
+from udmi.core.persistence import DevicePersistence
+from udmi.core.persistence.file_backend import FilePersistenceBackend
 from udmi.schema import EndpointConfiguration
 
 LOGGER = logging.getLogger(__name__)
@@ -93,6 +95,9 @@ def _wire_device(
                             during a connection reset.
     """
     LOGGER.debug("Wiring device components...")
+    backend = FilePersistenceBackend(persistence_path)
+    persistence = DevicePersistence(backend, endpoint_config)
+
     final_managers = managers or get_default_managers()
     LOGGER.info("Device configured with %s managers: %s",
                 len(final_managers),
@@ -101,7 +106,7 @@ def _wire_device(
     device = Device(
         managers=final_managers,
         endpoint_config=endpoint_config,
-        persistence_path=persistence_path,
+        persistence_manager=persistence,
         connection_factory=connection_factory,
         credential_manager=credential_manager
     )

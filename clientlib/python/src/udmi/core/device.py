@@ -28,6 +28,7 @@ from udmi.core.blob import parse_blob_as_object
 from udmi.core.managers import BaseManager
 from udmi.core.messaging import AbstractMessageDispatcher
 from udmi.core.persistence import DevicePersistence
+from udmi.core.persistence.file_backend import FilePersistenceBackend
 from udmi.schema import Config
 from udmi.schema import EndpointConfiguration
 from udmi.schema import State
@@ -92,7 +93,7 @@ class Device:
         managers: List[BaseManager],
         endpoint_config: Optional[EndpointConfiguration] = None,
         connection_factory: ConnectionFactory = None,
-        persistence_path: Optional[str] = PERSISTENT_STORE_PATH,
+        persistence_manager: DevicePersistence = None,
         credential_manager: Optional[CredentialManager] = None,
     ):
         """
@@ -104,7 +105,11 @@ class Device:
         LOGGER.info("Initializing device...")
         self.managers = managers
         self.connection_factory = connection_factory
-        self.persistence = DevicePersistence(persistence_path, endpoint_config)
+        if persistence_manager:
+            self.persistence = persistence_manager
+        else:
+            backend = FilePersistenceBackend(PERSISTENT_STORE_PATH)
+            self.persistence = DevicePersistence(backend, endpoint_config)
         self.credential_manager = credential_manager
 
         self.current_endpoint = self.persistence.get_effective_endpoint()
