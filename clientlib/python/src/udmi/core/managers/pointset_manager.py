@@ -36,6 +36,8 @@ DEFAULT_SAMPLE_RATE_SEC = 10
 # Callback signature: function(point_name, value)
 WritebackHandler = Callable[[str, Any], None]
 
+PollCallback = Callable[[], None]
+
 
 class Point:
     """
@@ -198,6 +200,8 @@ class PointsetManager(BaseManager):
 
         self._telemetry_wake_event: Optional[threading.Event] = None
 
+        self._poll_callback: Optional[PollCallback] = None
+
         LOGGER.info("PointsetManager initialized.")
 
     @property
@@ -230,6 +234,14 @@ class PointsetManager(BaseManager):
             handler: function taking (point_name, value)
         """
         self._writeback_handler = handler
+
+    def set_poll_callback(self, callback: PollCallback) -> None:
+        """
+        Registers a callback that is invoked immediately before telemetry generation.
+        This allows the application to fetch fresh sensor readings just-in-time.
+        """
+        self._poll_callback = callback
+        LOGGER.info("Registered telemetry poll callback.")
 
     def add_point(self, name: str) -> None:
         """Register a point to be managed."""
@@ -326,6 +338,13 @@ class PointsetManager(BaseManager):
         Generates and publishes a PointsetEvents message containing
         only the points that are 'due' for reporting.
         """
+        if self._poll_callback:
+            try:
+                self._poll_callback()
+            except Exception as e:
+                LOGGER.error("Error in telemetry poll callback: %s", e,
+                             exc_info=True)
+
         if not self._points:
             return
 
