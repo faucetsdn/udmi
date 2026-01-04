@@ -5,6 +5,7 @@ Adds validation, error reporting, and command handling to the baseline.
 import logging
 from datetime import datetime, timezone
 from typing import Any, Dict, Optional
+from typing import List
 
 from udmi.core.managers.base_manager import BaseManager
 from udmi.core.managers.providers.family_provider import FamilyProvider
@@ -27,7 +28,6 @@ class LocalnetManager(BaseManager):
         self._providers: Dict[str, FamilyProvider] = {}
 
         self._localnet_config: Optional[LocalnetConfig] = None
-        # Initialize state with empty families map
         self._localnet_state: LocalnetState = LocalnetState(families={})
 
         LOGGER.info("LocalnetManager initialized.")
@@ -86,15 +86,11 @@ class LocalnetManager(BaseManager):
         if self._localnet_state and self._localnet_state.families:
             state.localnet = self._localnet_state
 
+    def get_registered_families(self) -> List[str]:
+        return list(self._providers.keys())
+
     def handle_command(self, command_name: str, payload: dict) -> None:
-        """
-        Handles localnet commands like 'discovery'.
-        """
-        if command_name == "discovery":
-            self._handle_discovery_command(payload)
-        else:
-            LOGGER.warning("Unknown command for LocalnetManager: %s",
-                           command_name)
+        pass
 
     # --- Robust Processing Logic ---
 
@@ -149,27 +145,6 @@ class LocalnetManager(BaseManager):
             )
 
         return family_state
-
-    def _handle_discovery_command(self, payload: dict) -> None:
-        """
-        Orchestrates a scan using the registered providers.
-        Payload expectation: { "families": ["bacnet", "ethernet"] }
-        """
-        families_to_scan = payload.get("families", self._providers.keys())
-        LOGGER.info("Starting discovery scan for: %s", families_to_scan)
-
-        for family in families_to_scan:
-            provider = self.get_provider(family)
-            if provider:
-                try:
-                    # Assuming Provider has a scan method (added to interface)
-                    if hasattr(provider, "scan"):
-                        provider.scan()
-                    else:
-                        LOGGER.warning(
-                            "Provider for %s does not support scanning", family)
-                except Exception as e:
-                    LOGGER.error("Scan failed for %s: %s", family, e)
 
     # --- Public API ---
 
