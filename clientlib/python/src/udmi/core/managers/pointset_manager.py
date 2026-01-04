@@ -196,6 +196,7 @@ class PointsetManager(BaseManager):
     Handles configuration of points, reporting of point states, and
     periodic publishing of telemetry events based on global rate OR per-point COV.
     """
+    PERSISTENCE_KEY = "pointset_state"
 
     def __init__(self, sample_rate_sec: int = DEFAULT_SAMPLE_RATE_SEC):
         super().__init__()
@@ -271,6 +272,7 @@ class PointsetManager(BaseManager):
         Starts the background telemetry reporting loop.
         """
         LOGGER.info("Starting PointsetManager telemetry loop...")
+        self._load_persisted_state()
         self._telemetry_wake_event = self.start_periodic_task(
             interval_getter=lambda: self._sample_rate_sec,
             task=self.publish_telemetry,
@@ -326,6 +328,36 @@ class PointsetManager(BaseManager):
         Handles pointset commands.
         """
 
+    def _load_persisted_state(self) -> None:
+        """
+        Loads the last known point values from persistence.
+        """
+        if not self._device or not self._device.persistence:
+            LOGGER.warning("Cannot load state: Persistence not available.")
+            return
+
+        try:
+            saved_state = self._device.persistence.get(self.PERSISTENCE_KEY, {})
+            if not saved_state:
+                LOGGER.info("No persisted pointset state found.")
+                return
+
+            restored_count = 0
+            for point_name, point_data in saved_state.items():
+                if point_name not in self._points:
+                    continue
+
+                point = self._points[point_name]
+
+                if "present_value" in point_data:
+                    point.present_value = point_data["present_value"]
+                    restored_count += 1
+
+            LOGGER.info("Restored state for %s points.", restored_count)
+
+        except Exception as e:
+            LOGGER.error("Failed to load persisted pointset state: %s", e)
+
     def update_state(self, state: State) -> None:
         """
         Populates state.pointset with status of all managed points.
@@ -339,6 +371,27 @@ class PointsetManager(BaseManager):
             state_etag=self._state_etag,
             points=points_state_map
         )
+        self._persist_state()
+
+    def _persist_state(self) -> None:
+        """
+        Saves the current values of all points to persistence.
+        """
+        if not self._device or not self._device.persistence:
+            return
+
+        try:
+            data_to_save = {}
+            for name, point in self._points.items():
+                if point.present_value is not None:
+                    data_to_save[name] = {
+                        "present_value": point.present_value
+                    }
+
+            self._device.persistence.set(self.PERSISTENCE_KEY, data_to_save)
+
+        except Exception as e:
+            LOGGER.error("Failed to persist pointset state: %s", e)
 
     def publish_telemetry(self) -> None:
         """
