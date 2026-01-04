@@ -13,6 +13,7 @@ from datetime import timezone
 from typing import Any
 from typing import Callable
 from typing import Dict
+from typing import Mapping
 from typing import Optional
 
 from udmi.constants import UDMI_VERSION
@@ -47,7 +48,7 @@ class Point:
         self.name = name
         self.present_value: Any = None
         self.units: Optional[str] = None
-        self.status: Optional[Any] = None
+        self.status: Optional[Entry] = None
         self.value_state: Optional[str] = None
         self.min_value: Optional[float] = None
         self.max_value: Optional[float] = None
@@ -100,16 +101,19 @@ class Point:
 
         dirty = False
         if config.set_value is not None:
+            self.value_state = None
+            self.status = None
+
             if self._is_valid_value(config.set_value):
                 if config.set_value != self.set_value:
                     self.set_value = config.set_value
                     dirty = True
 
-                if self.status and self.status.level >= 500:
-                    self.status = None
+                self.value_state = "applied"
             else:
                 msg = f"set_value {config.set_value} out of range"
                 LOGGER.error(f"Point '{self.name}': {msg}")
+                self.value_state = "failure"
                 self.status = Entry(
                     message=msg,
                     level=500,
@@ -195,6 +199,14 @@ class PointsetManager(BaseManager):
         self._telemetry_wake_event: Optional[threading.Event] = None
 
         LOGGER.info("PointsetManager initialized.")
+
+    @property
+    def points(self) -> Mapping[str, Point]:
+        """
+        Returns a read-only view of the currently managed points.
+        Client applications can iterate over this to know which points need data.
+        """
+        return self._points
 
     def set_pointset_model(self, model: PointsetModel) -> None:
         """
