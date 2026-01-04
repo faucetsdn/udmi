@@ -3,6 +3,8 @@ Common file operations utility for atomic and secure writes.
 """
 import os
 import tempfile
+from typing import Any
+from typing import List
 from typing import Union
 
 
@@ -44,3 +46,32 @@ def atomic_write(path: str, data: Union[str, bytes], mode: int = 0o600) -> None:
             if os.path.exists(tmp_file.name):
                 os.unlink(tmp_file.name)
             raise
+
+
+def mask_secrets(data: Any, sensitive_keys: List[str] = None) -> Any:
+    """
+    Recursively masks values for keys that match sensitive terms.
+    Returns a deep copy of the data with secrets masked.
+
+    Args:
+        data: The input dictionary or list to sanitise.
+        sensitive_keys: List of key names to mask (default: password, secret, key, token).
+    """
+    if sensitive_keys is None:
+        sensitive_keys = ["password", "secret", "key_data", "private_key",
+                          "token", "auth"]
+
+    if isinstance(data, dict):
+        new_data = {}
+        for k, v in data.items():
+            is_sensitive = any(s in k.lower() for s in sensitive_keys)
+
+            if is_sensitive:
+                new_data[k] = "********"
+            else:
+                new_data[k] = mask_secrets(v, sensitive_keys)
+        return new_data
+    elif isinstance(data, list):
+        return [mask_secrets(item, sensitive_keys) for item in data]
+    else:
+        return data

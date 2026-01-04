@@ -29,6 +29,7 @@ from udmi.core.managers import BaseManager
 from udmi.core.messaging import AbstractMessageDispatcher
 from udmi.core.persistence import DevicePersistence
 from udmi.core.persistence.file_backend import FilePersistenceBackend
+from udmi.core.utils.file_ops import mask_secrets
 from udmi.schema import Config
 from udmi.schema import EndpointConfiguration
 from udmi.schema import State
@@ -206,6 +207,12 @@ class Device:
             return
 
         LOGGER.info("New config received for Device %s...", self.device_id)
+        if LOGGER.isEnabledFor(logging.DEBUG):
+            try:
+                masked = mask_secrets(payload)
+                LOGGER.debug("Config payload (masked): %s", masked)
+            except Exception as e:
+                LOGGER.warning("Failed to mask/log config payload: %s", e)
         try:
             config_obj = Config.from_dict(payload)
         except (TypeError, ValueError) as e:
