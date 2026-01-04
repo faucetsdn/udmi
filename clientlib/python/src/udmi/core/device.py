@@ -72,6 +72,7 @@ ConnectionFactory = Callable[
     [EndpointConfiguration, Callable[[], None], Callable[[int], None]],
     AbstractMessageDispatcher
 ]
+RedirectionHandler = Callable[[EndpointConfiguration], None]
 
 
 class Device:
@@ -122,7 +123,19 @@ class Device:
         )
         self.config: Config = Config()
         self._state_lock = threading.RLock()
+        self._redirection_handler: Optional[RedirectionHandler] = None
         LOGGER.info("Device initialized with %s managers.", len(self.managers))
+
+    def register_redirection_handler(self, handler: RedirectionHandler) -> None:
+        """
+        Registers a callback that is invoked when the device successfully
+        receives and parses a new endpoint configuration (redirection).
+
+        Args:
+            handler: A function accepting the new EndpointConfiguration.
+        """
+        self._redirection_handler = handler
+        LOGGER.info("Registered endpoint redirection handler.")
 
     def wire_up_dispatcher(self, dispatcher: AbstractMessageDispatcher) -> None:
         """
@@ -307,6 +320,13 @@ class Device:
             self.persistence.save_active_endpoint(new_endpoint, generation)
             self.current_endpoint = new_endpoint
             self.device_id = self.current_endpoint.client_id.split('/')[-1]
+
+            if self._redirection_handler:
+                try:
+                    LOGGER.info("Invoking redirection handler...")
+                    self._redirection_handler(new_endpoint)
+                except Exception as e:
+                    LOGGER.error("Error in redirection handler: %s", e)
 
             LOGGER.info("Signaling main loop to trigger connection reset...")
             self._loop_state.reset_event.set()
