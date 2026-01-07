@@ -26,7 +26,6 @@ from udmi.schema import PointPointsetEvents
 from udmi.schema import PointPointsetModel
 from udmi.schema import PointPointsetState
 from udmi.schema import PointsetEvents
-from udmi.schema import PointsetModel
 from udmi.schema import PointsetState
 from udmi.schema import State
 
@@ -54,8 +53,6 @@ class Point:
         self.units: Optional[str] = None
         self.status: Optional[Entry] = None
         self.value_state: Optional[str] = None
-        self.min_value: Optional[float] = None
-        self.max_value: Optional[float] = None
 
         # Writeback
         self.set_value: Any = None
@@ -71,27 +68,14 @@ class Point:
         """
         Applies static definition from Metadata.
         """
-        if model.range_min:
-            self.min_value = model.range_min
-        if model.range_max:
-            self.max_value = model.range_max
         if model.units:
             self.units = model.units
 
     def set_present_value(self, value: Any) -> None:
         """Updates the current reading of the point."""
         self.present_value = value
-        if not self._is_valid_value(value):
-            msg = f"Value {value} out of range ({self.min_value}, {self.max_value})"
-            LOGGER.warning(f"Point '{self.name}': {msg}")
-            self.status = Entry(
-                message=msg,
-                level=500,
-                timestamp=datetime.now(timezone.utc).isoformat()
-            )
-        else:
-            if self.status and self.status.level >= 500:
-                self.status = None
+        if self.status and self.status.level >= 500:
+            self.status = None
 
     def update_config(self, config: PointPointsetConfig) -> bool:
         """
@@ -108,33 +92,13 @@ class Point:
             self.value_state = None
             self.status = None
 
-            if self._is_valid_value(config.set_value):
-                if config.set_value != self.set_value:
-                    self.set_value = config.set_value
-                    dirty = True
+            if config.set_value != self.set_value:
+                self.set_value = config.set_value
+                dirty = True
 
-                self.value_state = "applied"
-            else:
-                msg = f"set_value {config.set_value} out of range"
-                LOGGER.error(f"Point '{self.name}': {msg}")
-                self.value_state = "failure"
-                self.status = Entry(
-                    message=msg,
-                    level=500,
-                    timestamp=datetime.now(timezone.utc).isoformat()
-                )
-                dirty = False
+            self.value_state = "applied"
 
         return dirty
-
-    def _is_valid_value(self, value: Any) -> bool:
-        """Internal validation logic."""
-        if isinstance(value, (int, float)):
-            if self.min_value is not None and value < self.min_value:
-                return False
-            if self.max_value is not None and value > self.max_value:
-                return False
-        return True
 
     def get_state(self) -> PointPointsetState:
         """Returns the state representation of this point."""
@@ -153,7 +117,6 @@ class Point:
     def should_report(self, sample_rate_sec: int) -> bool:
         """
         Determines if this point needs to be reported based on Change of Value (COV).
-
         Returns: True if the point should be included in the next telemetry event.
         """
         if self.present_value is None:
@@ -228,7 +191,6 @@ class PointsetManager(BaseManager):
     def set_model(self, model: Metadata) -> None:
         """
         Applies the Pointset Metadata (Model) to the manager.
-        This is where validation rules (min/max) are defined.
         """
         super().set_model(model)
         if not self.model or not self.model.points:
