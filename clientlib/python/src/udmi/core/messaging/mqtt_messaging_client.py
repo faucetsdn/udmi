@@ -164,7 +164,13 @@ class MqttMessagingClient(AbstractMessagingClient):
                 self._mqtt_client.username_pw_set(username=username,
                                                   password=password)
 
-                self._mqtt_client.reconnect()
+                if self._mqtt_client.is_connected():
+                    LOGGER.info(
+                        "Client connected. Forcing reconnect to apply new creds.")
+                    self._mqtt_client.reconnect()
+                else:
+                    LOGGER.info(
+                        "Client currently disconnected. New creds will apply on next connect.")
             except (PyJWTError, TypeError, ValueError, socket.error) as e:
                 LOGGER.error("Failed during auth token refresh: %s", e)
 

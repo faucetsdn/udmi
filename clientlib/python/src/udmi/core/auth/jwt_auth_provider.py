@@ -102,7 +102,7 @@ class JwtAuthProvider(AuthProvider):
         """
         now_utc = datetime.now(tz=timezone.utc)
         token_iat = now_utc - timedelta(seconds=self.clock_skew_seconds)
-        token_exp = now_utc + timedelta(minutes=self.token_lifetime_minutes)
+        token_exp = token_iat + timedelta(minutes=self.token_lifetime_minutes)
 
         self._token_expiry = token_exp
 
