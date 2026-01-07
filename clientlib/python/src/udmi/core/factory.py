@@ -32,6 +32,7 @@ from udmi.core.messaging.mqtt_messaging_client import MqttMessagingClient
 from udmi.core.messaging.mqtt_messaging_client import ReconnectConfig
 from udmi.core.messaging.mqtt_messaging_client import TlsConfig
 from udmi.core.persistence import DevicePersistence
+from udmi.core.persistence import PersistenceBackend
 from udmi.core.persistence.file_backend import FilePersistenceBackend
 from udmi.schema import EndpointConfiguration
 from udmi.schema import Metadata
@@ -91,19 +92,26 @@ def _wire_device(
     connection_factory: Optional[Callable] = None,
     credential_manager: Optional["CredentialManager"] = None,
     initial_model: Optional[Metadata] = None,
+    persistence_backend: Optional[PersistenceBackend] = None,
 ) -> Device:
     """
     Internal private function to handle the final wiring of components.
+
     Args:
-        mqtt_client: MqttMessagingClient instance
-        managers: list of BaseManager instances
-        endpoint_config: The initial endpoint configuration
-        persistence_path: Path to persistent file store.
+        mqtt_client: MqttMessagingClient instance used for communication.
+        managers: List of BaseManager instances to handle device logic.
+                  If None, default managers are created.
+        endpoint_config: The initial endpoint configuration.
+        persistence_path: Path to the persistent file store (used if persistence_backend is None).
         connection_factory: A callable (factory) used to create NEW dispatchers
                             during a connection reset.
+        credential_manager: Manager for handling device credentials and keys.
+        initial_model: Initial Metadata model for the device.
+        persistence_backend: Custom backend for persistence (e.g., database, specialized file store).
+                             If None, a FilePersistenceBackend at persistence_path is used.
     """
     LOGGER.debug("Wiring device components...")
-    backend = FilePersistenceBackend(persistence_path)
+    backend = persistence_backend or FilePersistenceBackend(persistence_path)
     persistence = DevicePersistence(backend, endpoint_config)
 
     final_managers = managers or get_default_managers()
@@ -167,10 +175,27 @@ def create_device(
     client_config: ClientConfig = None,
     key_file: Optional[str] = None,
     persistence_path: str = PERSISTENT_STORE_PATH,
-    initial_model: Optional[Metadata] = None
+    initial_model: Optional[Metadata] = None,
+    persistence_backend: Optional[PersistenceBackend] = None,
 ) -> Device:
     """
-    **[Recommended]** Unified Smart Factory.
+    Unified Smart Factory for creating a UDMI Device.
+
+    This function orchestrates the creation of a fully functional UDMI Device, including
+    setting up the MQTT client, authentication (auto-detecting strategy), managers,
+    and persistence layer.
+
+    Args:
+        endpoint_config: Configuration for the connection endpoint (host, port, client_id, etc.).
+        managers: Optional list of custom managers to use. If None, default managers (System, Pointset, etc.) are used.
+        client_config: Optional configuration for TLS and reconnection settings.
+        key_file: Optional path to the private key file. Required for JWT and mTLS auth if credentials are not otherwise provided.
+        persistence_path: Path to the file used for default persistence. Defaults to '.udmi_persistence.json'.
+        initial_model: Optional initial Metadata model to seed the device state.
+        persistence_backend: Optional custom backend for data persistence. Overrides persistence_path if provided.
+
+    Returns:
+        A configured and wired `Device` instance ready to run.
     """
     LOGGER.info("Determining auth strategy for %s...",
                 endpoint_config.client_id)
@@ -205,5 +230,6 @@ def create_device(
         persistence_path=persistence_path,
         connection_factory=connection_factory,
         credential_manager=credential_manager,
-        initial_model=initial_model
+        initial_model=initial_model,
+        persistence_backend=persistence_backend
     )
