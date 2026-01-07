@@ -61,9 +61,9 @@ if __name__ == "__main__":
         device = create_device(endpoint_config, key_file=PRIVATE_KEY_FILE)
 
         # 3. Retrieve and Print the Public Key
-        if device.cert_manager:
+        if device.credential_manager:
             try:
-                public_key_pem = device.cert_manager.get_public_key_pem()
+                public_key_pem = device.credential_manager.get_public_key_pem()
 
                 print("\n" + "=" * 60)
                 print(f"DEVICE PUBLIC KEY ({ALGORITHM})")
