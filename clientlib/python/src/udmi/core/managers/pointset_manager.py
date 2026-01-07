@@ -37,7 +37,8 @@ DEFAULT_HEARTBEAT_SEC = 600
 # Callback signature: function(point_name, value)
 WritebackHandler = Callable[[str, Any], None]
 
-PollCallback = Callable[[], None]
+# Poll Callback now returns a dictionary of {point_name: value}
+PollCallback = Callable[[], Dict[str, Any]]
 
 
 class Point:
@@ -376,7 +377,14 @@ class PointsetManager(BaseManager):
         """
         if self._poll_callback:
             try:
-                self._poll_callback()
+                new_values = self._poll_callback()
+                if new_values and isinstance(new_values, dict):
+                    for point_name, value in new_values.items():
+                        self.set_point_value(point_name, value)
+                elif new_values is not None:
+                    LOGGER.warning("Poll callback returned non-dict type: %s",
+                                   type(new_values))
+
             except Exception as e:
                 LOGGER.error("Error in telemetry poll callback: %s", e,
                              exc_info=True)
