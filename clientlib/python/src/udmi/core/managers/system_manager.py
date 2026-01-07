@@ -59,6 +59,10 @@ class SystemManager(BaseManager):
     Also manages 'blobset' for OTA/File updates and Key Rotation orchestration.
     """
 
+    @property
+    def model_field_name(self) -> str:
+        return "system"
+
     # pylint: disable=too-many-instance-attributes
 
     def __init__(self, system_state: Optional[SystemState] = None):

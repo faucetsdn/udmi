@@ -20,6 +20,10 @@ class LocalnetManager(BaseManager):
     Manages the 'localnet' functional block with enhanced validation and status reporting.
     """
 
+    @property
+    def model_field_name(self) -> str:
+        return "localnet"
+
     def __init__(self):
         super().__init__()
         # Routing Table: family -> { device_id -> physical_address }

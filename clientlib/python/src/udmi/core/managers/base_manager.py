@@ -17,6 +17,7 @@ from typing import TYPE_CHECKING
 
 from udmi.schema import Config
 from udmi.schema import DataModel
+from udmi.schema import Metadata
 from udmi.schema import State
 
 if TYPE_CHECKING:
@@ -36,6 +37,7 @@ class BaseManager(abc.ABC):
     """
 
     def __init__(self) -> None:
+        self.model = None
         self._device: Optional["Device"] = None
         self._dispatcher: Optional["AbstractMessageDispatcher"] = None
 
@@ -52,6 +54,17 @@ class BaseManager(abc.ABC):
         """
         self._device = device
         self._dispatcher = dispatcher
+
+    @property
+    @abc.abstractmethod
+    def model_field_name(self) -> str:
+        """
+        The field from the Metadata object this manager corresponds to.
+        """
+
+    def set_model(self, model: Metadata) -> None:
+        self.model = getattr(model, self.model_field_name)
+
 
     def publish_event(self, event_model: DataModel, subfolder: str,
         device_id: Optional[str] = None) -> None:

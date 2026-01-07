@@ -20,6 +20,7 @@ from udmi.constants import UDMI_VERSION
 from udmi.core.managers.base_manager import BaseManager
 from udmi.schema import Config
 from udmi.schema import Entry
+from udmi.schema import Metadata
 from udmi.schema import PointPointsetConfig
 from udmi.schema import PointPointsetEvents
 from udmi.schema import PointPointsetModel
@@ -198,6 +199,10 @@ class PointsetManager(BaseManager):
     """
     PERSISTENCE_KEY = "pointset_state"
 
+    @property
+    def model_field_name(self) -> str:
+        return "pointset"
+
     def __init__(self, sample_rate_sec: int = DEFAULT_SAMPLE_RATE_SEC):
         super().__init__()
         self._points: Dict[str, Point] = {}
@@ -220,16 +225,17 @@ class PointsetManager(BaseManager):
         """
         return self._points
 
-    def set_pointset_model(self, model: PointsetModel) -> None:
+    def set_model(self, model: Metadata) -> None:
         """
         Applies the Pointset Metadata (Model) to the manager.
         This is where validation rules (min/max) are defined.
         """
-        if not model or not model.points:
+        super().set_model(model)
+        if not self.model or not self.model.points:
             return
 
         LOGGER.info("Applying Pointset Metadata Model...")
-        for name, point_model in model.points.items():
+        for name, point_model in self.model.points.items():
             if name not in self._points:
                 self.add_point(name)
 
@@ -308,20 +314,28 @@ class PointsetManager(BaseManager):
         self._state_etag = config.pointset.state_etag
 
         # Update Points (Dynamic Provisioning)
-        if config.pointset.points:
-            for point_name, point_config in config.pointset.points.items():
-                if point_name not in self._points:
-                    LOGGER.info("Provisioning new point from config: %s",
-                                point_name)
-                    self.add_point(point_name)
+        new_point_configs = config.pointset.points or {}
+        current_point_names = set(self._points.keys())
+        new_point_names = set(new_point_configs.keys())
 
-                point = self._points[point_name]
-                is_writeback = point.update_config(point_config)
-                if is_writeback and self._writeback_handler is not None:
-                    try:
-                        self._writeback_handler(point_name, point.set_value)
-                    except Exception as e:
-                        LOGGER.error(f"Error in writeback handler for {point_name}: {e}")
+        for name in current_point_names - new_point_names:
+            LOGGER.info("Removing point '%s' not present in received config",
+                        name)
+            del self._points[name]
+
+        for point_name, point_config in new_point_configs.items():
+            if point_name not in self._points:
+                LOGGER.info("Provisioning new point from config: %s",
+                            point_name)
+                self.add_point(point_name)
+
+            point = self._points[point_name]
+            is_writeback = point.update_config(point_config)
+            if is_writeback and self._writeback_handler is not None:
+                try:
+                    self._writeback_handler(point_name, point.set_value)
+                except Exception as e:
+                    LOGGER.error(f"Error in writeback handler for {point_name}: {e}")
 
     def handle_command(self, command_name: str, payload: dict) -> None:
         """

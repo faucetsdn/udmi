@@ -17,6 +17,9 @@ from typing import Optional
 from udmi.constants import PERSISTENT_STORE_PATH
 from udmi.core.auth import CredentialManager
 from udmi.core.device import Device
+from udmi.core.managers import DiscoveryManager
+from udmi.core.managers import GatewayManager
+from udmi.core.managers import LocalnetManager
 from udmi.core.managers import PointsetManager
 from udmi.core.managers.base_manager import BaseManager
 from udmi.core.managers.pointset_manager import DEFAULT_SAMPLE_RATE_SEC
@@ -31,6 +34,7 @@ from udmi.core.messaging.mqtt_messaging_client import TlsConfig
 from udmi.core.persistence import DevicePersistence
 from udmi.core.persistence.file_backend import FilePersistenceBackend
 from udmi.schema import EndpointConfiguration
+from udmi.schema import Metadata
 
 LOGGER = logging.getLogger(__name__)
 
@@ -71,6 +75,9 @@ def get_default_managers(**kwargs) -> List[BaseManager]:
     return [
         SystemManager(system_state=system_state),
         PointsetManager(sample_rate_sec=sample_rate_sec),
+        LocalnetManager(),
+        GatewayManager(),
+        DiscoveryManager()
     ]
 
 
@@ -82,7 +89,8 @@ def _wire_device(
     endpoint_config: Optional[EndpointConfiguration] = None,
     persistence_path: str = PERSISTENT_STORE_PATH,
     connection_factory: Optional[Callable] = None,
-    credential_manager: Optional["CredentialManager"] = None
+    credential_manager: Optional["CredentialManager"] = None,
+    initial_model: Optional[Metadata] = None,
 ) -> Device:
     """
     Internal private function to handle the final wiring of components.
@@ -108,7 +116,8 @@ def _wire_device(
         endpoint_config=endpoint_config,
         persistence_manager=persistence,
         connection_factory=connection_factory,
-        credential_manager=credential_manager
+        credential_manager=credential_manager,
+        initial_model=initial_model
     )
 
     dispatcher = MessageDispatcher(
@@ -157,7 +166,8 @@ def create_device(
     managers: Optional[List[BaseManager]] = None,
     client_config: ClientConfig = None,
     key_file: Optional[str] = None,
-    persistence_path: str = PERSISTENT_STORE_PATH
+    persistence_path: str = PERSISTENT_STORE_PATH,
+    initial_model: Optional[Metadata] = None
 ) -> Device:
     """
     **[Recommended]** Unified Smart Factory.
@@ -195,4 +205,5 @@ def create_device(
         persistence_path=persistence_path,
         connection_factory=connection_factory,
         credential_manager=credential_manager,
+        initial_model=initial_model
     )

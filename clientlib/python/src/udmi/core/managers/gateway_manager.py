@@ -28,6 +28,10 @@ class GatewayManager(BaseManager):
     Allows this device to act as a gateway for other 'proxy' devices.
     """
 
+    @property
+    def model_field_name(self) -> str:
+        return "gateway"
+
     PERSISTENCE_KEY = "gateway_proxies"
 
     def __init__(self):

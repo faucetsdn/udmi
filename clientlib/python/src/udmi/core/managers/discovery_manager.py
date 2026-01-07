@@ -25,6 +25,10 @@ class DiscoveryManager(BaseManager):
     Orchestrates scanning via FamilyProviders registered in the LocalnetManager.
     """
 
+    @property
+    def model_field_name(self) -> str:
+        return "discovery"
+
     def __init__(self):
         super().__init__()
         self._discovery_state = DiscoveryState(families={})

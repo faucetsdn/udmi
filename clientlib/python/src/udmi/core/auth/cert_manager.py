@@ -196,17 +196,40 @@ class CertManager:
 
     def rotate_key(self, algorithm: str = "RS256") -> Tuple[str, str]:
         """
-        Generates a NEW private key, backs up the old one, and returns the
-        new public key (PEM) and the backup path for the old one.
+        Generates a NEW private key, backs up the old one to disk.
+        Returns: (new_public_key_pem, path_to_backup_file)
         """
         timestamp = datetime.datetime.now().strftime("%Y%m%d%H%M%S")
         backup_path = f"{self.key_file}.{timestamp}.bak"
 
         if os.path.exists(self.key_file):
             LOGGER.info("Backing up current key to %s", backup_path)
-            os.rename(self.key_file, backup_path)
+            os.replace(self.key_file, backup_path)
 
-        LOGGER.info("Rotating key: Generating new %s key pair...", algorithm)
-        self.ensure_keys_exist(algorithm)
+        try:
+            LOGGER.info("Rotating key: Generating new %s key pair...",
+                        algorithm)
+            self.ensure_keys_exist(algorithm)
+            return self.get_public_key_pem(), backup_path
+        except Exception as e:
+            self.revert_key(backup_path)
+            raise e
 
-        return self.get_public_key_pem(), backup_path
+    def revert_key(self, backup_identifier: str) -> None:
+        """
+        Restores the private key from the backup file on disk.
+        Args:
+            backup_identifier: The file path to the backup.
+        """
+        if not os.path.exists(backup_identifier):
+            LOGGER.error("Cannot revert key: Backup file not found at %s",
+                         backup_identifier)
+            return
+
+        LOGGER.warning("Reverting key from backup: %s", backup_identifier)
+        try:
+            os.replace(backup_identifier, self.key_file)
+            LOGGER.info("Key reverted successfully.")
+        except OSError as e:
+            LOGGER.error("Failed to revert key: %s", e)
+            raise

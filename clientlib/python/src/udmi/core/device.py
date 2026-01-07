@@ -32,6 +32,7 @@ from udmi.core.persistence.file_backend import FilePersistenceBackend
 from udmi.core.utils.file_ops import mask_secrets
 from udmi.schema import Config
 from udmi.schema import EndpointConfiguration
+from udmi.schema import Metadata
 from udmi.schema import State
 from udmi.schema import SystemState
 
@@ -96,6 +97,7 @@ class Device:
         connection_factory: ConnectionFactory = None,
         persistence_manager: DevicePersistence = None,
         credential_manager: Optional[CredentialManager] = None,
+        initial_model: Optional[Metadata] = None
     ):
         """
         Initializes the Device.
@@ -105,6 +107,8 @@ class Device:
         """
         LOGGER.info("Initializing device...")
         self.managers = managers
+        if initial_model is not None:
+            self._init_model(initial_model)
         self.connection_factory = connection_factory
         if persistence_manager:
             self.persistence = persistence_manager
@@ -131,6 +135,11 @@ class Device:
         self._state_lock = threading.RLock()
         self._redirection_handler: Optional[RedirectionHandler] = None
         LOGGER.info("Device initialized with %s managers.", len(self.managers))
+
+    def _init_model(self, model: Metadata):
+        for manager in self.managers:
+            if hasattr(manager, 'set_model'):
+                manager.set_model(model)
 
     def register_redirection_handler(self, handler: RedirectionHandler) -> None:
         """
