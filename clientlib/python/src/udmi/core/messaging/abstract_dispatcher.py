@@ -1,13 +1,12 @@
 """
 Defines the abstract base class (ABC) for a message dispatcher.
 
-This module provides the core `AbstractMessageDispatcher` interface
-and defines the `MessageHandler` type alias. This abstract class
-defines the contract that the main Device class uses to interact with
-a concrete dispatcher implementation.
+This module provides the core `AbstractMessageDispatcher` interface.
+The Dispatcher sits between the raw Messaging Client and the application logic,
+handling serialization (Object -> JSON) and deserialization (JSON -> Dict)
+so the rest of the application deals with Data Models, not raw strings.
 """
 
-import logging
 from abc import ABC
 from abc import abstractmethod
 from typing import Any
@@ -18,31 +17,58 @@ from typing import Optional
 from udmi.core.messaging.abstract_client import AbstractMessagingClient
 from udmi.schema import DataModel
 
-LOGGER = logging.getLogger(__name__)
-
-# Handler Signature: (device_id, channel, payload_dict)
+# Handler Signature: (device_id: str, channel: str, payload: Dict[str, Any]) -> None
 MessageHandler = Callable[[str, str, Dict[str, Any]], None]
 
 
 class AbstractMessageDispatcher(ABC):
     """
     Abstract interface for a UDMI message dispatcher.
-    Defines the contract for the Device class.
+
+    Responsibilities:
+    1.  Wraps an AbstractMessagingClient.
+    2.  Serializes DataModel objects to JSON strings for publishing.
+    3.  Deserializes incoming JSON strings to Dictionaries for handlers.
+    4.  Routes incoming messages to registered callbacks based on channel.
     """
 
-    client: Optional[AbstractMessagingClient] = None
+    @property
+    @abstractmethod
+    def client(self) -> AbstractMessagingClient:
+        """Accessor for the underlying messaging client."""
 
     @abstractmethod
     def register_handler(self, channel: str, handler: MessageHandler) -> None:
-        """Register a handler for a specific channel."""
+        """
+        Registers a callback for a specific UDMI channel (e.g., 'config').
+
+        Args:
+            channel: The channel name.
+            handler: A function accepting (device_id, channel, payload_dict).
+        """
 
     @abstractmethod
-    def publish_state(self, state: DataModel, device_id: Optional[str] = None) -> None:
-        """Serializes and publishes the device State message."""
+    def publish_state(self, state: DataModel,
+        device_id: Optional[str] = None) -> None:
+        """
+        Serializes and publishes the device State message.
+
+        Args:
+            state: The UDMI State object (schema-derived).
+            device_id: (Optional) Target device ID (for gateways).
+        """
 
     @abstractmethod
-    def publish_event(self, channel: str, event: DataModel, device_id: Optional[str] = None) -> None:
-        """Serializes and publishes a device Event message."""
+    def publish_event(self, channel: str, event: DataModel,
+        device_id: Optional[str] = None) -> None:
+        """
+        Serializes and publishes a device Event message.
+
+        Args:
+            channel: The specific event sub-channel (e.g., 'system', 'pointset').
+            event: The UDMI Event object (schema-derived).
+            device_id: (Optional) Target device ID.
+        """
 
     @abstractmethod
     def connect(self) -> None:

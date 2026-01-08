@@ -8,6 +8,7 @@ signatures for JWTs using the managed private key.
 import datetime
 import logging
 import os
+import ssl
 from typing import Any
 from typing import Optional
 
@@ -211,3 +212,46 @@ class CredentialManager(Signer):
         """Delegates to store to restore backup."""
         self.store.restore_from_backup()
         self._cached_key = None  # Invalidate cache after restore
+
+    def get_ssl_context(self, cert_file: str,
+        ca_file: Optional[str] = None) -> ssl.SSLContext:
+        """
+        Creates an SSLContext for mTLS, compatible with Python's ssl module.
+
+        Args:
+            cert_file: Path to the public certificate file.
+            ca_file: Optional path to the CA certificate file.
+
+        Returns:
+            A configured ssl.SSLContext.
+
+        Raises:
+            FileNotFoundError: If keys or certs are missing.
+            ValueError: If the underlying KeyStore is not file-based (ssl module requirement).
+        """
+        # Python's ssl.load_cert_chain REQUIRES a file path for the private key.
+        # We must ensure our KeyStore is actually a FileKeyStore.
+        if not hasattr(self.store, "_file_path"):
+            raise ValueError(
+                "SSL Context requires a FileKeyStore to load keys from disk.")
+
+        key_file = getattr(self.store, "_file_path")
+
+        if not os.path.exists(key_file):
+            raise FileNotFoundError(f"Private key file not found at {key_file}")
+
+        if not os.path.exists(cert_file):
+            raise FileNotFoundError(
+                f"Certificate file not found at {cert_file}")
+
+        context = ssl.create_default_context(ssl.Purpose.SERVER_AUTH)
+
+        if ca_file:
+            if not os.path.exists(ca_file):
+                raise FileNotFoundError(f"CA file not found at {ca_file}")
+            context.load_verify_locations(cafile=ca_file)
+
+        context.load_cert_chain(certfile=cert_file, keyfile=key_file)
+        LOGGER.info("Loaded mTLS certificate chain.")
+
+        return context

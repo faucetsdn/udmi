@@ -1,11 +1,20 @@
 """
 Abstract interface for a generic, protocol-agnostic messaging client.
-"""
 
+This module defines the contract for sending and receiving messages (payloads)
+over named channels, abstracting away the underlying protocol (e.g., MQTT).
+"""
 from abc import ABC
 from abc import abstractmethod
 from typing import Callable
 from typing import Optional
+
+# Signature: (device_id: str, channel: str, payload: str) -> None
+OnMessageHandler = Callable[[str, str, str], None]
+# Signature: () -> None
+OnConnectHandler = Callable[[], None]
+# Signature: (reason_code: int) -> None
+OnDisconnectHandler = Callable[[int], None]
 
 
 class AbstractMessagingClient(ABC):
@@ -33,7 +42,7 @@ class AbstractMessagingClient(ABC):
         Publishes a raw string payload to a generic channel.
 
         Args:
-            channel: The logical channel to publish to.
+            channel: The logical channel to publish to (e.g., 'state', 'event').
             payload: The raw string data to send.
             device_id: (Optional) The device ID to publish on behalf of.
                        If None, uses the primary device ID.
@@ -77,17 +86,16 @@ class AbstractMessagingClient(ABC):
         """
 
     @abstractmethod
-    def set_on_message_handler(self,
-        handler: Callable[[str, str, str], None]) -> None:
+    def set_on_message_handler(self, handler: OnMessageHandler) -> None:
         """
         Sets the external callback for incoming messages.
 
         Args:
-            handler: A callable that accepts (device_id: str, channel: str, payload: str)
+            handler: A callable that accepts (device_id, channel, payload).
         """
 
     @abstractmethod
-    def set_on_connect_handler(self, handler: Callable[[], None]) -> None:
+    def set_on_connect_handler(self, handler: OnConnectHandler) -> None:
         """
         Sets the external callback for successful connection events.
 
@@ -96,11 +104,11 @@ class AbstractMessagingClient(ABC):
         """
 
     @abstractmethod
-    def set_on_disconnect_handler(self, handler: Callable[[int], None]) -> None:
+    def set_on_disconnect_handler(self, handler: OnDisconnectHandler) -> None:
         """
         Sets the external callback for disconnect events.
 
         Args:
             handler: A callable that accepts (rc: int), where 'rc' is
-                            the reason code for the disconnection.
+                     the reason code for the disconnection.
         """
