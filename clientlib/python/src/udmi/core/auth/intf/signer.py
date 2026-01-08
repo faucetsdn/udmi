@@ -1,14 +1,34 @@
-from abc import ABC
-from abc import abstractmethod
+"""
+Interface for Signing capabilities.
+
+This module defines the contract for any component capable of cryptographic
+signing, primarily used for generating JWT signatures.
+"""
+import abc
 
 
-class Signer(ABC):
-    """Protocol for any object that can sign data."""
+class Signer(abc.ABC):
+    """
+    Protocol for any object that can sign data.
+    """
 
-    @abstractmethod
+    @abc.abstractmethod
     def sign(self, payload: bytes) -> bytes:
-        """Sign the payload and return the signature bytes."""
+        """
+        Cryptographically signs the payload.
 
-    @abstractmethod
+        Args:
+            payload: The raw bytes to sign (e.g., the JWT header+payload).
+
+        Returns:
+            The signature as raw bytes.
+        """
+
+    @abc.abstractmethod
     def get_algorithm_name(self) -> str:
-        """Returns the JWT algorithm name (e.g., 'RS256', 'ES256')."""
+        """
+        Returns the JWT algorithm identifier.
+
+        Returns:
+            A string representing the algorithm (e.g., 'RS256', 'ES256').
+        """
