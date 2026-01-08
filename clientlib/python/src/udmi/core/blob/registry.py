@@ -1,5 +1,8 @@
 """
 Provides a registry for managing blob fetchers based on URL schemes.
+
+This module implements the Registry pattern to decouple the logic of *how*
+to fetch a blob from the logic of *determining* which fetcher to use.
 """
 from typing import Dict
 from urllib.parse import urlparse
@@ -15,6 +18,7 @@ class BlobFetcherRegistry:
     Registry to map URL schemes (http, data, etc.) to specific fetcher implementations.
     """
     _registry: Dict[str, AbstractBlobFetcher] = {}
+    _initialized: bool = False
 
     @classmethod
     def register(cls, scheme: str, fetcher: AbstractBlobFetcher) -> None:
@@ -31,6 +35,7 @@ class BlobFetcherRegistry:
     def get_fetcher(cls, url: str) -> AbstractBlobFetcher:
         """
         Retrieves the appropriate fetcher for a given URL based on its scheme.
+        Automatically initializes defaults if the registry is empty.
 
         Args:
             url: The full URL (e.g., 'http://example.com/file').
@@ -41,6 +46,9 @@ class BlobFetcherRegistry:
         Raises:
             ValueError: If no fetcher is registered for the scheme.
         """
+        if not cls._initialized:
+            cls.initialize_defaults()
+
         if url.startswith("data:"):
             scheme = "data"
         else:
@@ -53,14 +61,23 @@ class BlobFetcherRegistry:
         return fetcher
 
     @classmethod
-    def initialize_defaults(cls):
+    def initialize_defaults(cls) -> None:
         """
-        Registers the default supported fetchers (data, http, https).
+        Registers the default supported fetchers (data, http, https, file).
         """
+        if cls._initialized:
+            return
+
         cls.register("data", DataUriFetcher())
         cls.register("http", HttpFetcher())
         cls.register("https", HttpFetcher())
         cls.register("file", FileFetcher())
+        cls._initialized = True
 
-
-BlobFetcherRegistry.initialize_defaults()
+    @classmethod
+    def reset(cls) -> None:
+        """
+        Resets the registry. Useful for unit testing.
+        """
+        cls._registry.clear()
+        cls._initialized = False
