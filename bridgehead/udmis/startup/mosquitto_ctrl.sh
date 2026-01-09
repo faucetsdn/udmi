@@ -1,5 +1,3 @@
-# Common setup for running mosquitto_ctrl
-
 ETC_DIR=/etc/mosquitto
 CERT_DIR=$ETC_DIR/certs
 CA_CERT=$CERT_DIR/ca.crt
