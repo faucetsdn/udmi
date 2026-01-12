@@ -6,6 +6,9 @@ import logging
 import threading
 from datetime import datetime
 from datetime import timezone
+from typing import Any
+from typing import Dict
+from typing import List
 
 from udmi.core.managers.base_manager import BaseManager
 from udmi.core.managers.localnet_manager import LocalnetManager
@@ -29,10 +32,11 @@ class DiscoveryManager(BaseManager):
     def model_field_name(self) -> str:
         return "discovery"
 
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__()
         self._discovery_state = DiscoveryState(families={})
-        self._config_families = {}  # Cache of family configs
+        self._config_families: Dict[str, Any] = {}  # Cache of family configs
+        self._active_providers: List[FamilyProvider] = []
         LOGGER.info("DiscoveryManager initialized.")
 
     def handle_config(self, config: Config) -> None:
@@ -54,6 +58,17 @@ class DiscoveryManager(BaseManager):
         if self._discovery_state:
             state.discovery = self._discovery_state
 
+    def stop(self) -> None:
+        """Stops all active scans."""
+        super().stop()
+        LOGGER.info("Stopping active discovery scans...")
+        for provider in self._active_providers:
+            try:
+                provider.stop_scan()
+            except Exception as e:
+                LOGGER.error("Error stopping scan provider: %s", e)
+        self._active_providers.clear()
+
     def _handle_discovery_command(self, payload: dict) -> None:
         """
         Orchestrates a scan using providers registered in LocalnetManager.
@@ -72,12 +87,13 @@ class DiscoveryManager(BaseManager):
         for family in families_to_scan:
             provider = localnet_manager.get_provider(family)
             if not provider:
-                LOGGER.warning("No provider registered for family '%s'.",
-                               family)
+                LOGGER.warning("No provider registered for family '%s'.", family)
                 continue
 
             self._update_family_state(family, True)
             self.trigger_state_update()
+
+            self._active_providers.append(provider)
 
             thread = threading.Thread(
                 target=self._run_scan,
@@ -87,7 +103,7 @@ class DiscoveryManager(BaseManager):
             )
             thread.start()
 
-    def _run_scan(self, family: str, provider: FamilyProvider):
+    def _run_scan(self, family: str, provider: FamilyProvider) -> None:
         """
         Executes the provider's start_scan method.
         """
@@ -102,11 +118,12 @@ class DiscoveryManager(BaseManager):
         except Exception as e:
             LOGGER.error("Scan failed for '%s': %s", family, e, exc_info=True)
         finally:
+            if provider in self._active_providers:
+                self._active_providers.remove(provider)
             self._update_family_state(family, False)
             self.trigger_state_update()
 
-    def _handle_scan_result(self, device_id: str,
-        event: DiscoveryEvents) -> None:
+    def _handle_scan_result(self, device_id: str, event: DiscoveryEvents) -> None:
         """
         Callback passed to FamilyProvider.
         Called whenever a device/entity is discovered.
