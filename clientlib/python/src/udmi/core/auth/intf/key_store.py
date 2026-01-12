@@ -6,6 +6,7 @@ cryptographic keys. It supports both read and write operations to facilitate
 key rotation and lifecycle management.
 """
 import abc
+from typing import Optional
 
 
 class KeyStore(abc.ABC):
@@ -43,12 +44,12 @@ class KeyStore(abc.ABC):
             True if the key exists, False otherwise.
         """
 
-    def backup(self, suffix: str = ".bak") -> str:
+    def backup(self, backup_path: Optional[str] = None) -> str:
         """
         Creates a backup of the current key.
 
         Args:
-            suffix: An identifier to append for the backup (e.g., file extension).
+            backup_path: Path to create the backup.
 
         Returns:
             The identifier/path of the created backup.
@@ -58,12 +59,12 @@ class KeyStore(abc.ABC):
         """
         raise NotImplementedError("Backup not supported by this KeyStore.")
 
-    def restore_from_backup(self, suffix: str = ".bak") -> None:
+    def restore_from_backup(self, backup_path: str) -> None:
         """
         Restores the key from a backup.
 
         Args:
-            suffix: The identifier used to find the backup.
+            backup_path: The path to restore from.
 
         Raises:
             NotImplementedError: If the backend does not support restoration.

@@ -18,7 +18,10 @@ from typing import Callable
 from typing import Dict
 from typing import Optional
 
-import psutil
+try:
+    import psutil
+except ImportError:
+    psutil = None
 
 from udmi.constants import UDMI_VERSION
 from udmi.core.blob import get_verified_blob_file
@@ -108,8 +111,7 @@ class SystemManager(BaseManager):
     def register_blob_handler(self, blob_key: str,
         process: ProcessHandler,
         post_process: Optional[PostProcessHandler] = None,
-        expects_file: bool = False
-    ) -> None:
+        expects_file: bool = False) -> None:
         """
         Registers the pipeline handlers for a specific blob key.
         Args:
@@ -139,17 +141,11 @@ class SystemManager(BaseManager):
 
     def register_key_rotation_callback(self,
         callback: KeyRotationCallback) -> None:
-        """
-        Registers a callback to be invoked during key rotation.
-        The callback is responsible for uploading the new public key to the cloud.
-        """
+        """Registers a callback to be invoked during key rotation."""
         self._key_rotation_callback = callback
 
     def rotate_key(self) -> None:
-        """
-        Public API to manually trigger key rotation.
-        Equivalent to receiving a 'rotate_key' command.
-        """
+        """Public API to manually trigger key rotation."""
         self.trigger_key_rotation({})
 
     def start(self) -> None:
@@ -187,10 +183,6 @@ class SystemManager(BaseManager):
                     self._metrics_rate_sec)
 
     def stop(self) -> None:
-        """
-        Called when the device stops.
-        Stops the background metrics thread.
-        """
         super().stop()
         LOGGER.info("SystemManager stopped.")
 
@@ -203,11 +195,11 @@ class SystemManager(BaseManager):
 
         if config.timestamp:
             self._last_config_ts = config.timestamp
-            LOGGER.debug("Captured config.timestamp: %s", self._last_config_ts)
 
         if config.system:
             if config.system.min_loglevel is not None:
-                LOGGER.info("Setting system min_loglevel to: %s",
+                # TODO: this could reconfigure the root logger
+                LOGGER.info("Config requested min_loglevel: %s",
                             config.system.min_loglevel)
 
             if config.system.metrics_rate_sec is not None:
@@ -223,9 +215,6 @@ class SystemManager(BaseManager):
             self._process_blobset_config(config.blobset)
 
     def _process_blobset_config(self, blobset: BlobsetConfig) -> None:
-        """
-        Iterates through blobs, checks for updates, and invokes handlers.
-        """
         if not blobset.blobs:
             return
 
@@ -239,79 +228,78 @@ class SystemManager(BaseManager):
 
             LOGGER.info("New generation detected for blob '%s': %s",
                         key, blob_config.generation)
-
             self._apply_blob(key, blob_config)
 
     def _apply_blob(self, key: str, config: BlobBlobsetConfig) -> None:
         """
-        Downloads, verifies, and hands off the blob to the registered handlers.
+        Initiates the blob application process in a background thread.
         """
         self._update_blob_state(key, Phase.apply, config.generation)
-
         self.trigger_state_update()
 
-        def _blob_worker():
-            LOGGER.info("Starting background blob worker for '%s'...", key)
-            tmp_fd, tmp_path = tempfile.mkstemp()
-            os.close(tmp_fd)
-
-            try:
-                LOGGER.info("Streaming blob '%s' to %s...", key, tmp_path)
-                get_verified_blob_file(config, tmp_path)
-                LOGGER.info("Blob '%s' verified successfully on disk.", key)
-
-                handler = self._blob_handlers[key]
-
-                payload = None
-                if handler.expects_file:
-                    LOGGER.info("Handler expects file path. Passing %s",
-                                tmp_path)
-                    payload = tmp_path
-                else:
-                    LOGGER.info(
-                        "Handler expects bytes. Loading file into RAM...")
-                    with open(tmp_path, 'rb') as f:
-                        payload = f.read()
-
-                LOGGER.info("Invoking handler for blob '%s'...", key)
-                process_output = handler.process(key, payload)
-
-                LOGGER.info("Blob '%s' applied successfully.", key)
-                self._applied_blob_generations[key] = config.generation
-
-                LOGGER.info(f"Blob {key} applied. Flushing state...")
-                self._update_blob_state(key, Phase.final, config.generation)
-                self.trigger_state_update(immediate=True)
-
-                if self._device and self._device.persistence:
-                    self._device.persistence.set("applied_blobs",
-                                                 self._applied_blob_generations)
-                if handler.post_process:
-                    LOGGER.info(f"Running post-process for {key}...")
-                    handler.post_process(key, process_output)
-
-            except Exception as e:  # pylint:disable=broad-exception-caught
-                LOGGER.error("Failed to apply blob '%s': %s", key, e)
-                LOGGER.debug(traceback.format_exc())
-                self._update_blob_state(key, Phase.final, config.generation,
-                                        str(e))
-                self.trigger_state_update()
-            finally:
-                if os.path.exists(tmp_path):
-                    os.remove(tmp_path)
-
         thread_name = f"BlobWorker-{key}"
-        worker_thread = threading.Thread(target=_blob_worker, name=thread_name,
-                                         daemon=True)
+        worker_thread = threading.Thread(
+            target=self._run_blob_worker,
+            args=(key, config),
+            name=thread_name,
+            daemon=True
+        )
         worker_thread.start()
         LOGGER.info("Spawned worker thread '%s' for blob processing.",
                     thread_name)
 
+    def _run_blob_worker(self, key: str, config: BlobBlobsetConfig) -> None:
+        """Background worker to download and process the blob."""
+        LOGGER.info("Starting background blob worker for '%s'...", key)
+        tmp_fd, tmp_path = tempfile.mkstemp()
+        os.close(tmp_fd)
+
+        try:
+            LOGGER.info("Streaming blob '%s' to %s...", key, tmp_path)
+            get_verified_blob_file(config, tmp_path)
+            LOGGER.info("Blob '%s' verified successfully on disk.", key)
+
+            handler = self._blob_handlers[key]
+            payload = None
+
+            if handler.expects_file:
+                LOGGER.info("Handler expects file path. Passing %s", tmp_path)
+                payload = tmp_path
+            else:
+                LOGGER.info("Handler expects bytes. Loading file into RAM...")
+                with open(tmp_path, 'rb') as f:
+                    payload = f.read()
+
+            LOGGER.info("Invoking handler for blob '%s'...", key)
+            process_output = handler.process(key, payload)
+
+            LOGGER.info("Blob '%s' applied successfully.", key)
+            self._applied_blob_generations[key] = config.generation
+
+            LOGGER.info(f"Blob {key} applied. Flushing state...")
+            self._update_blob_state(key, Phase.final, config.generation)
+            self.trigger_state_update(immediate=True)
+
+            if self._device and self._device.persistence:
+                self._device.persistence.set("applied_blobs",
+                                             self._applied_blob_generations)
+
+            if handler.post_process:
+                LOGGER.info(f"Running post-process for {key}...")
+                handler.post_process(key, process_output)
+
+        except Exception as e:  # pylint:disable=broad-exception-caught
+            LOGGER.error("Failed to apply blob '%s': %s", key, e)
+            LOGGER.debug(traceback.format_exc())
+            self._update_blob_state(key, Phase.final, config.generation, str(e))
+            self.trigger_state_update()
+
+        finally:
+            if os.path.exists(tmp_path):
+                os.remove(tmp_path)
+
     def _update_blob_state(self, key: str, phase: Phase, generation: str,
-        error_message: str = None) -> None:
-        """
-        Helper to update the internal state map for blobs.
-        """
+        error_message: Optional[str] = None) -> None:
         status_entry = None
         if error_message:
             status_entry = Entry(
@@ -331,7 +319,6 @@ class SystemManager(BaseManager):
         Handles 'system' related commands by delegating to registered handlers.
         """
         LOGGER.info("SystemManager received command: %s", command_name)
-
         handler = self._command_handlers.get(command_name)
         if handler:
             try:
@@ -341,9 +328,7 @@ class SystemManager(BaseManager):
                              command_name, e)
                 LOGGER.debug(traceback.format_exc())
         else:
-            LOGGER.warning(
-                "Unknown command '%s' received. No handler registered.",
-                command_name)
+            LOGGER.warning("Unknown command '%s' received.", command_name)
 
     def update_state(self, state: State) -> None:
         """
@@ -360,10 +345,7 @@ class SystemManager(BaseManager):
         if self._blob_states:
             state.blobset = BlobsetState(blobs=self._blob_states)
 
-        LOGGER.debug("Populated state.system and state.blobset blocks.")
-
-    def _publish_startup_event(self):
-        """Helper to publish the startup event."""
+    def _publish_startup_event(self) -> None:
         try:
             log_entry = Entry(
                 message="Device has started",
@@ -376,11 +358,10 @@ class SystemManager(BaseManager):
                 logentries=[log_entry]
             )
             self.publish_event(startup_event, "system")
-        except (TypeError, AttributeError) as e:
+        except Exception as e:
             LOGGER.error("Failed to publish startup event: %s", e)
 
-    def _report_status(self, level: int, message: str):
-        """Helper to update system status in the state."""
+    def _report_status(self, level: int, message: str) -> None:
         self._system_state.status = Entry(
             message=message,
             level=level,
@@ -388,13 +369,13 @@ class SystemManager(BaseManager):
         )
 
     def publish_metrics(self) -> None:
-        """
-        Gathers system metrics and publishes a SystemEvent.
-        """
         LOGGER.debug("Collecting and publishing system metrics...")
+        if psutil is None:
+            LOGGER.warning("psutil not installed. Cannot collect metrics.")
+            return
+
         try:
             vm = psutil.virtual_memory()
-
             mem_total_mb = vm.total / BYTES_PER_MEGABYTE
             mem_free_mb = vm.available / BYTES_PER_MEGABYTE
 
@@ -411,15 +392,9 @@ class SystemManager(BaseManager):
             )
 
             self.publish_event(system_event, "system")
-            LOGGER.info(
-                "Published metrics: Total=%.0fMB, Free=%.0fMB",
-                mem_total_mb,
-                mem_free_mb
-            )
-
-        except ImportError:
-            LOGGER.error("psutil not installed. Cannot collect metrics.")
-        except Exception as e:  # pylint:disable=broad-exception-caught
+            LOGGER.info("Published metrics: Total=%.0fMB, Free=%.0fMB",
+                        mem_total_mb, mem_free_mb)
+        except Exception as e:
             LOGGER.error("Failed to publish metrics: %s", e)
 
     # --- Key Rotation Logic ---
@@ -437,8 +412,7 @@ class SystemManager(BaseManager):
         cred_manager = getattr(self._device, 'credential_manager', None)
 
         if not cred_manager:
-            LOGGER.error(
-                "Cannot rotate key: CredentialManager not available on Device.")
+            LOGGER.error("Cannot rotate key: CredentialManager not available.")
             self._report_status(500,
                                 "Key rotation unavailable (No CredentialManager)")
             self.trigger_state_update()
@@ -448,12 +422,12 @@ class SystemManager(BaseManager):
         self._report_status(200, "Key rotation started")
         self.trigger_state_update()
 
-        backup_path = None
+        backup_identifier = None
         try:
             if hasattr(cred_manager.store, 'backup'):
                 try:
-                    backup_path = cred_manager.store.backup()
-                    LOGGER.info("Backup created at: %s", backup_path)
+                    backup_identifier = cred_manager.store.backup()
+                    LOGGER.info("Backup created: %s", backup_identifier)
                 except Exception as e:
                     LOGGER.error("Backup failed: %s", e)
                     raise RuntimeError(
@@ -462,7 +436,7 @@ class SystemManager(BaseManager):
                 LOGGER.warning(
                     "KeyStore does not support backup. Rotation is risky.")
 
-            new_pem = cred_manager.rotate_credentials()
+            new_pem = cred_manager.rotate_credentials(backup=False)
             LOGGER.info("New key pair generated and saved.")
 
             success = True
@@ -470,22 +444,21 @@ class SystemManager(BaseManager):
                 LOGGER.info("Invoking rotation callback...")
                 try:
                     success = self._key_rotation_callback(new_pem,
-                                                          backup_path or "unknown")
+                                                          backup_identifier or "unknown")
                 except Exception as e:
-                    LOGGER.error("Rotation callback raised exception: %s", e)
+                    LOGGER.error("Rotation callback exception: %s", e)
                     success = False
             else:
-                LOGGER.warning(
-                    "No key rotation callback registered! New key is on disk but not in cloud.")
+                LOGGER.warning("No key rotation callback registered!")
 
             if success:
                 LOGGER.info("Callback success. Committing rotation.")
                 self._report_status(200,
                                     "Key rotation complete. New key active.")
 
-                if self._device and hasattr(self._device, '_loop_state'):
-                    LOGGER.info(
-                        "Triggering connection reset to apply new credentials...")
+                if self._device and hasattr(self._device,
+                                            'request_connection_reset'):
+                    LOGGER.info("Triggering connection reset...")
                     self._device.request_connection_reset("Key Rotation")
             else:
                 raise RuntimeError("Rotation callback reported failure")
@@ -494,15 +467,15 @@ class SystemManager(BaseManager):
             LOGGER.error("Key rotation sequence failed: %s", e)
             self._report_status(500, f"Key rotation failed: {e}")
 
-            if backup_path:
-                LOGGER.warning("Attempting to revert to backup key...")
+            if backup_identifier:
+                LOGGER.warning("Attempting to revert to backup key: %s",
+                               backup_identifier)
                 try:
                     if hasattr(cred_manager.store, 'restore_from_backup'):
-                        cred_manager.store.restore_from_backup()
+                        cred_manager.store.restore_from_backup(backup_path=backup_identifier)
                         LOGGER.info("Successfully reverted to old key.")
                     else:
-                        LOGGER.critical(
-                            "KeyStore cannot restore backup! Device may be bricked.")
+                        LOGGER.critical("KeyStore cannot restore backup!")
                 except Exception as revert_e:
                     LOGGER.critical("FATAL: Failed to revert key: %s", revert_e)
         finally:

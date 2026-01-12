@@ -47,21 +47,29 @@ class MemoryKeyStore(KeyStore):
         """
         return self._data is not None
 
-    def backup(self, suffix: str = ".bak") -> str:
+    def backup(self, backup_name: Optional[str] = None) -> str:
         """
         Creates an in-memory backup copy.
+
+        Args:
+            backup_name: Optional backup name.
+
+        Returns:
+            Identifier of the backup.
         """
         if self._data is None:
             raise FileNotFoundError("Cannot backup empty store.")
+        if backup_name is None:
+            backup_name = ".bak"
 
-        self._backups[suffix] = self._data
-        return f"memory:{suffix}"
+        self._backups[backup_name] = self._data
+        return f"memory:{backup_name}"
 
-    def restore_from_backup(self, suffix: str = ".bak") -> None:
+    def restore_from_backup(self, backup_name: str) -> None:
         """
         Restores data from the in-memory backup.
         """
-        if suffix not in self._backups:
-            raise FileNotFoundError(f"Backup '{suffix}' not found in memory.")
+        if not backup_name or backup_name not in self._backups:
+            raise FileNotFoundError(f"Backup {backup_name} not found in memory.")
 
-        self._data = self._backups[suffix]
+        self._data = self._backups[backup_name]

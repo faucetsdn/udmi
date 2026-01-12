@@ -6,6 +6,8 @@ cryptographic keys, ensuring atomic writes and proper file permissions.
 """
 import os
 import shutil
+from datetime import datetime
+from typing import Optional
 
 from udmi.core.auth.intf.key_store import KeyStore
 from udmi.core.utils.file_ops import atomic_write
@@ -56,12 +58,12 @@ class FileKeyStore(KeyStore):
         """
         return os.path.exists(self._file_path)
 
-    def backup(self, suffix: str = ".bak") -> str:
+    def backup(self, backup_path: Optional[str] = None) -> str:
         """
         Creates a backup of the current key file.
 
         Args:
-            suffix: The extension suffix for the backup file.
+            backup_path: Path to create the backup.
 
         Returns:
             The path to the backup file.
@@ -71,26 +73,25 @@ class FileKeyStore(KeyStore):
         """
         if not self.exists():
             raise FileNotFoundError(f"Cannot backup missing key: {self._file_path}")
-
-        backup_path = f"{self._file_path}{suffix}"
+        if not backup_path:
+            ts = datetime.now().strftime("%Y%m%d%H%M%S")
+            backup_path = f"{self._file_path}{ts}.bak"
         shutil.copy2(self._file_path, backup_path)
         return backup_path
 
-    def restore_from_backup(self, suffix: str = ".bak") -> None:
+    def restore_from_backup(self, backup_path: str) -> None:
         """
         Restores the key from a backup file.
 
         Args:
-            suffix: The extension suffix of the backup to restore from.
+            backup_path: The path of the backup to restore from.
 
         Raises:
             FileNotFoundError: If the backup file does not exist.
         """
-        backup_path = f"{self._file_path}{suffix}"
         if not os.path.exists(backup_path):
             raise FileNotFoundError(f"Backup file not found: {backup_path}")
 
-        # Atomic restore to ensure we don't end up with a partial file
         with open(backup_path, "rb") as f:
             content = f.read()
 
