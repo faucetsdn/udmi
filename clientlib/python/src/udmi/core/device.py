@@ -23,10 +23,10 @@ from typing import TypeVar
 from udmi.constants import IOT_ENDPOINT_CONFIG_BLOB_KEY
 from udmi.constants import PERSISTENT_STORE_PATH
 from udmi.constants import UDMI_VERSION
-from udmi.core.auth import CredentialManager
+from udmi.core.auth.credential_manager import CredentialManager
 from udmi.core.blob import parse_blob_as_object
-from udmi.core.managers import BaseManager
-from udmi.core.messaging import AbstractMessageDispatcher
+from udmi.core.managers.base_manager import BaseManager
+from udmi.core.messaging.abstract_dispatcher import AbstractMessageDispatcher
 from udmi.core.persistence import DevicePersistence
 from udmi.core.persistence.file_backend import FilePersistenceBackend
 from udmi.core.utils.file_ops import mask_secrets
@@ -92,18 +92,18 @@ class Device:
     # pylint:disable=too-many-instance-attributes
 
     def __init__(self,
-        managers: List[BaseManager],
-        endpoint_config: Optional[EndpointConfiguration] = None,
-        connection_factory: ConnectionFactory = None,
-        persistence_manager: DevicePersistence = None,
-        credential_manager: Optional[CredentialManager] = None,
-        initial_model: Optional[Metadata] = None
-    ):
+                 managers: List[BaseManager],
+                 endpoint_config: Optional[EndpointConfiguration] = None,
+                 connection_factory: Optional[ConnectionFactory] = None,
+                 persistence_manager: Optional[DevicePersistence] = None,
+                 credential_manager: Optional[CredentialManager] = None,
+                 initial_model: Optional[Metadata] = None
+                 ):
         """
         Initializes the Device.
 
         Args:
-              managers: A list of initialized BaseManager subclasses.
+             managers: A list of initialized BaseManager subclasses.
         """
         LOGGER.info("Initializing device...")
         self.managers = managers
@@ -136,7 +136,7 @@ class Device:
         self._redirection_handler: Optional[RedirectionHandler] = None
         LOGGER.info("Device initialized with %s managers.", len(self.managers))
 
-    def _init_model(self, model: Metadata):
+    def _init_model(self, model: Metadata) -> None:
         for manager in self.managers:
             if hasattr(manager, 'set_model'):
                 manager.set_model(model)
@@ -430,7 +430,7 @@ class Device:
             LOGGER.error("Failed to connect to current endpoint: %s", e)
             self._trigger_fallback_or_raise(e)
 
-    def _attempt_connection_setup(self):
+    def _attempt_connection_setup(self) -> None:
         """Helper to create dispatcher and connect."""
         dispatcher = self.connection_factory(
             self.current_endpoint,
@@ -440,7 +440,7 @@ class Device:
         self.wire_up_dispatcher(dispatcher)
         self.dispatcher.connect()
 
-    def _trigger_fallback_or_raise(self, error: Exception):
+    def _trigger_fallback_or_raise(self, error: Exception) -> None:
         """
         Checks if we have an active endpoint to fallback from.
         If yes, clears it and triggers a full reset. If no, re-raises the error.
@@ -526,15 +526,13 @@ class Device:
 
             # throttled state flush.
             if self._loop_state.state_dirty:
-                if (
-                    now - self._loop_state.last_state_publish_time) >= STATE_THROTTLE_SEC:
-                    LOGGER.debug(
-                        "Throttle window passed. Flushing dirty state.")
+                if (now - self._loop_state.last_state_publish_time) >= STATE_THROTTLE_SEC:
+                    LOGGER.debug("Throttle window passed. Flushing dirty state.")
                     self._publish_state(force=True)
 
             # check for auth token refresh
             if (now - self._loop_state.last_auth_check >
-                self._loop_config.auth_check_interval_sec):
+                    self._loop_config.auth_check_interval_sec):
                 LOGGER.debug("Checking for auth token refresh...")
                 self.dispatcher.check_authentication()
                 self._loop_state.last_auth_check = now
@@ -586,7 +584,7 @@ class Device:
             with self._state_lock:
                 self._publish_state(force=True)
         else:
-            LOGGER.debug("Manager requested immediate state update.")
+            LOGGER.debug("Manager requested scheduled state update.")
             with self._state_lock:
                 self._loop_state.state_dirty = True
 
