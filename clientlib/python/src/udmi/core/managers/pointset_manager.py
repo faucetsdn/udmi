@@ -66,9 +66,7 @@ class Point:
         self.last_reported_time: float = 0.0
 
     def set_model(self, model: PointPointsetModel) -> None:
-        """
-        Applies static definition from Metadata.
-        """
+        """Applies static definition from Metadata."""
         if model.units:
             self.units = model.units
 
@@ -81,7 +79,7 @@ class Point:
     def update_config(self, config: PointPointsetConfig) -> bool:
         """
         Updates point metadata based on config.
-        Returns True if a writeback (set_present_value) occurred.
+        Returns True if a writeback (set_value change) occurred.
         """
         if config.units is not None:
             self.units = config.units
@@ -117,32 +115,36 @@ class Point:
 
     def should_report(self, sample_rate_sec: int) -> bool:
         """
-        Determines if this point needs to be reported based on Change of Value (COV).
-        Returns: True if the point should be included in the next telemetry event.
+        Determines if this point needs to be reported based on Change of Value (COV)
+        and Heartbeat logic.
         """
         if self.present_value is None:
             return False
 
+        # Always report if never reported before
         if self.last_reported_value is None:
             return True
 
         now = time.time()
+        should_report_cov = False
 
+        # Check Change of Value (COV)
         if self.present_value != self.last_reported_value:
-            if (isinstance(self.present_value, (int, float)) and
-                    isinstance(self.last_reported_value, (int, float)) and
-                    self.cov_increment):
+            is_numeric = (isinstance(self.present_value, (int, float)) and
+                          isinstance(self.last_reported_value, (int, float)))
 
+            if is_numeric and self.cov_increment is not None:
                 delta = abs(self.present_value - self.last_reported_value)
-                LOGGER.debug(f"delta: {delta} for present {self.present_value} "
-                             f"and last reported {self.last_reported_value}")
                 if delta >= self.cov_increment:
-                    return True
+                    should_report_cov = True
             else:
-                return True
+                # Non-numeric or no COV threshold set -> Report any change
+                should_report_cov = True
+
+        if should_report_cov:
+            return True
 
         heartbeat_interval = max(DEFAULT_HEARTBEAT_SEC, sample_rate_sec)
-
         if (now - self.last_reported_time) >= heartbeat_interval:
             return True
 
@@ -152,7 +154,6 @@ class Point:
         """Updates the reporting state after a successful publish."""
         self.last_reported_value = self.present_value
         self.last_reported_time = time.time()
-        LOGGER.info(f"last reported value: {self.last_reported_value}, at time {self.last_reported_time}")
 
 
 class PointsetManager(BaseManager):
@@ -174,49 +175,33 @@ class PointsetManager(BaseManager):
         self._state_etag: Optional[str] = None
 
         self._writeback_handler: Optional[WritebackHandler] = None
-
         self._telemetry_wake_event: Optional[threading.Event] = None
-
         self._poll_callback: Optional[PollCallback] = None
 
         LOGGER.info("PointsetManager initialized.")
 
     @property
     def points(self) -> Mapping[str, Point]:
-        """
-        Returns a read-only view of the currently managed points.
-        Client applications can iterate over this to know which points need data.
-        """
         return self._points
 
     def set_model(self, model: Metadata) -> None:
-        """
-        Applies the Pointset Metadata (Model) to the manager.
-        """
+        """Applies the Pointset Metadata (Model) to the manager."""
         super().set_model(model)
-        if not self.model or not self.model.points:
+        if not self.model or not hasattr(self.model, 'points') or not self.model.points:
             return
 
         LOGGER.info("Applying Pointset Metadata Model...")
         for name, point_model in self.model.points.items():
             if name not in self._points:
                 self.add_point(name)
-
             self._points[name].set_model(point_model)
 
     def set_writeback_handler(self, handler: WritebackHandler) -> None:
-        """
-        Registers a callback that is triggered when the cloud sends a 'set_value'.
-        Args:
-            handler: function taking (point_name, value)
-        """
+        """Registers a callback for 'set_value' requests from cloud."""
         self._writeback_handler = handler
 
     def set_poll_callback(self, callback: PollCallback) -> None:
-        """
-        Registers a callback that is invoked immediately before telemetry generation.
-        This allows the application to fetch fresh sensor readings just-in-time.
-        """
+        """Registers a callback invoked immediately before telemetry generation."""
         self._poll_callback = callback
         LOGGER.info("Registered telemetry poll callback.")
 
@@ -228,18 +213,14 @@ class PointsetManager(BaseManager):
 
     def set_point_value(self, name: str, value: Any) -> None:
         """
-        API for Client Application.
-        Updates the value of a point.
+        API for Client Application to update a point's value.
         """
         if name not in self._points:
             self.add_point(name)
-
         self._points[name].set_present_value(value)
 
     def start(self) -> None:
-        """
-        Starts the background telemetry reporting loop.
-        """
+        """Starts the background telemetry reporting loop."""
         LOGGER.info("Starting PointsetManager telemetry loop...")
         self._load_persisted_state()
         self._telemetry_wake_event = self.start_periodic_task(
@@ -249,9 +230,6 @@ class PointsetManager(BaseManager):
         )
 
     def stop(self) -> None:
-        """
-        Stops the background telemetry loop.
-        """
         super().stop()
         LOGGER.info("PointsetManager stopped.")
 
@@ -282,41 +260,36 @@ class PointsetManager(BaseManager):
         new_point_names = set(new_point_configs.keys())
 
         for name in current_point_names - new_point_names:
-            LOGGER.info("Removing point '%s' not present in received config",
-                        name)
+            LOGGER.info("Removing point '%s' not present in received config", name)
             del self._points[name]
 
         for point_name, point_config in new_point_configs.items():
             if point_name not in self._points:
-                LOGGER.info("Provisioning new point from config: %s",
-                            point_name)
+                LOGGER.info("Provisioning new point from config: %s", point_name)
                 self.add_point(point_name)
 
             point = self._points[point_name]
             is_writeback = point.update_config(point_config)
+
             if is_writeback and self._writeback_handler is not None:
                 try:
                     self._writeback_handler(point_name, point.set_value)
                 except Exception as e:
-                    LOGGER.error(f"Error in writeback handler for {point_name}: {e}")
+                    LOGGER.error("Error in writeback handler for %s: %s",
+                                 point_name, e)
 
     def handle_command(self, command_name: str, payload: dict) -> None:
-        """
-        Handles pointset commands.
-        """
+        # Pointset currently does not handle specific commands
+        pass
 
     def _load_persisted_state(self) -> None:
-        """
-        Loads the last known point values from persistence.
-        """
+        """Loads the last known point values from persistence."""
         if not self._device or not self._device.persistence:
-            LOGGER.warning("Cannot load state: Persistence not available.")
             return
 
         try:
             saved_state = self._device.persistence.get(self.PERSISTENCE_KEY, {})
             if not saved_state:
-                LOGGER.info("No persisted pointset state found.")
                 return
 
             restored_count = 0
@@ -325,7 +298,6 @@ class PointsetManager(BaseManager):
                     continue
 
                 point = self._points[point_name]
-
                 if "present_value" in point_data:
                     point.present_value = point_data["present_value"]
                     restored_count += 1
@@ -336,9 +308,7 @@ class PointsetManager(BaseManager):
             LOGGER.error("Failed to load persisted pointset state: %s", e)
 
     def update_state(self, state: State) -> None:
-        """
-        Populates state.pointset with status of all managed points.
-        """
+        """Populates state.pointset with status of all managed points."""
         points_state_map = {
             name: point.get_state()
             for name, point in self._points.items()
@@ -351,9 +321,7 @@ class PointsetManager(BaseManager):
         self._persist_state()
 
     def _persist_state(self) -> None:
-        """
-        Saves the current values of all points to persistence.
-        """
+        """Saves the current values of all points to persistence."""
         if not self._device or not self._device.persistence:
             return
 
@@ -366,7 +334,6 @@ class PointsetManager(BaseManager):
                     }
 
             self._device.persistence.set(self.PERSISTENCE_KEY, data_to_save)
-
         except Exception as e:
             LOGGER.error("Failed to persist pointset state: %s", e)
 
@@ -378,13 +345,12 @@ class PointsetManager(BaseManager):
         if self._poll_callback:
             try:
                 new_values = self._poll_callback()
-                if new_values and isinstance(new_values, dict):
+                if isinstance(new_values, dict):
                     for point_name, value in new_values.items():
                         self.set_point_value(point_name, value)
-                elif new_values is not None:
+                else:
                     LOGGER.warning("Poll callback returned non-dict type: %s",
                                    type(new_values))
-
             except Exception as e:
                 LOGGER.error("Error in telemetry poll callback: %s", e,
                              exc_info=True)

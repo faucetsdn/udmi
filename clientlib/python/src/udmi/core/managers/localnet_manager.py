@@ -1,30 +1,40 @@
 """
 Robust LocalnetManager Implementation.
-Adds validation, error reporting, and command handling to the baseline.
+
+This manager handles the 'localnet' functional block, responsible for
+mapping logical UDMI device IDs to physical network addresses (e.g.,
+Modbus Slave ID, BACnet Instance ID) and coordinating protocol drivers.
 """
 import logging
-from datetime import datetime, timezone
-from typing import Any, Dict, Optional
+from datetime import datetime
+from datetime import timezone
+from typing import Any
+from typing import Dict
 from typing import List
+from typing import Optional
 
 from udmi.core.managers.base_manager import BaseManager
 from udmi.core.managers.providers.family_provider import FamilyProvider
-from udmi.schema import Config, State, Entry
-from udmi.schema import LocalnetConfig, LocalnetState, FamilyLocalnetState
+from udmi.schema import Config
+from udmi.schema import Entry
+from udmi.schema import FamilyLocalnetState
+from udmi.schema import LocalnetConfig
+from udmi.schema import LocalnetState
+from udmi.schema import State
 
 LOGGER = logging.getLogger(__name__)
 
 
 class LocalnetManager(BaseManager):
     """
-    Manages the 'localnet' functional block with enhanced validation and status reporting.
+    Manages the 'localnet' block with enhanced validation and status reporting.
     """
 
     @property
     def model_field_name(self) -> str:
         return "localnet"
 
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__()
         # Routing Table: family -> { device_id -> physical_address }
         self._routing_table: Dict[str, Dict[str, str]] = {}
@@ -41,7 +51,10 @@ class LocalnetManager(BaseManager):
     def register_provider(self, family: str, provider: FamilyProvider) -> None:
         """
         Registers a protocol driver (Provider) for a specific family.
-        Example: register_provider('bacnet', BacnetProvider())
+
+        Args:
+            family: The protocol family string (e.g., 'bacnet', 'modbus').
+            provider: The concrete FamilyProvider implementation.
         """
         self._providers[family] = provider
         LOGGER.info("Registered FamilyProvider for '%s'", family)
@@ -105,9 +118,9 @@ class LocalnetManager(BaseManager):
         Returns the FamilyLocalnetState with appropriate Status (OK or Error).
         """
         family_state = FamilyLocalnetState()
-        family_state.addr = family_config.addr
+        family_state.addr = getattr(family_config, 'addr', None)
 
-        # 1. Provider Verification
+        # Provider Verification
         provider = self.get_provider(family)
         if not provider:
             LOGGER.error("Configuration received for unknown family: '%s'",
@@ -119,19 +132,19 @@ class LocalnetManager(BaseManager):
             )
             return family_state
 
-        # 2. Build Routing Table
+        # Build Routing Table
         if family not in self._routing_table:
             self._routing_table[family] = {}
 
         if hasattr(family_config, 'devices') and family_config.devices:
             for device_id, phys_addr in family_config.devices.items():
-                # 3. Address Validation (Delegated to Provider)
-                if hasattr(provider, "validate_address"):
-                    is_valid = provider.validate_address(phys_addr)
+                # Address Validation (Delegated to Provider)
+                validator = getattr(provider, "validate_address", None)
+                if validator and callable(validator):
+                    is_valid = validator(phys_addr)
                     if not is_valid:
                         LOGGER.warning("Invalid address format for %s: %s",
                                        family, phys_addr)
-                        # Report a warning but typically we still load the table
                         family_state.status = Entry(
                             message=f"Invalid address format detected: {phys_addr}",
                             level=300,  # 300 = Warning

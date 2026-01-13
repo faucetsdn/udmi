@@ -10,6 +10,7 @@ import abc
 import logging
 import threading
 import time
+from typing import Any
 from typing import Callable
 from typing import List
 from typing import Optional
@@ -22,8 +23,9 @@ from udmi.schema import State
 
 if TYPE_CHECKING:
     # To avoid circular import error
-    from udmi.core import Device
-    from udmi.core.messaging import AbstractMessageDispatcher
+    from udmi.core.device import Device
+    from udmi.core.messaging.abstract_dispatcher import \
+        AbstractMessageDispatcher
 
 LOGGER = logging.getLogger(__name__)
 
@@ -33,11 +35,12 @@ class BaseManager(abc.ABC):
     Abstract base class for all feature Managers.
 
     A manager implements a specific slice of UDMI logic (e.g., Pointset, Gateway).
-    The Device class will orchestrate multiple managers.
+    The Device class orchestrates multiple managers by routing config/commands
+    to them and collecting state updates from them.
     """
 
     def __init__(self) -> None:
-        self.model = None
+        self.model: Optional[Any] = None
         self._device: Optional["Device"] = None
         self._dispatcher: Optional["AbstractMessageDispatcher"] = None
 
@@ -46,8 +49,8 @@ class BaseManager(abc.ABC):
 
         LOGGER.debug("Initialized manager: %s", self.__class__.__name__)
 
-    def set_device_context(self, device: Optional["Device"],
-        dispatcher: Optional["AbstractMessageDispatcher"]) -> None:
+    def set_device_context(self, device: "Device",
+        dispatcher: "AbstractMessageDispatcher") -> None:
         """
         Provides the manager with a handle to the core device components.
         This is called by the Device during initialization.
@@ -60,21 +63,26 @@ class BaseManager(abc.ABC):
     def model_field_name(self) -> str:
         """
         The field from the Metadata object this manager corresponds to.
+        Returns None if the manager does not use metadata.
         """
 
     def set_model(self, model: Metadata) -> None:
-        self.model = getattr(model, self.model_field_name)
-
+        """
+        Extracts the manager-specific metadata from the global Metadata object.
+        """
+        field = self.model_field_name
+        if field:
+            self.model = getattr(model, field, None)
 
     def publish_event(self, event_model: DataModel, subfolder: str,
         device_id: Optional[str] = None) -> None:
         """
         Helper method for managers to publish events.
+
         Args:
             event_model: The UDMI data model to publish.
             subfolder: The event subfolder (e.g., 'system', 'pointset').
             device_id: (Optional) The device ID to publish for.
-                       If None, publishes for the main device.
         """
         if not self._dispatcher:
             LOGGER.error("Manager %s cannot publish event: dispatcher not set.",
@@ -123,18 +131,18 @@ class BaseManager(abc.ABC):
         name: str = "periodic_task") -> threading.Event:
         """
         Starts a background thread that executes 'task' periodically.
+
         Args:
-            interval_getter: A function that returns the current interval in seconds.
-                             Used to dynamically adjust rate without restarting.
+            interval_getter: Function returning current interval in seconds.
             task: The function to execute.
             name: Name of the thread for debugging.
+
         Returns:
-            threading.Event: An event that the subclass can set() to wake up
-                             the loop immediately (e.g., on config change).
+            threading.Event: An event to wake up the loop immediately.
         """
         wake_event = threading.Event()
 
-        def _loop():
+        def _loop() -> None:
             LOGGER.info("Starting periodic task: %s", name)
             while not self._shutdown_event.is_set():
                 start_time = time.time()
@@ -168,8 +176,6 @@ class BaseManager(abc.ABC):
     def handle_config(self, config: Config) -> None:
         """
         Handle a newly received config message.
-        The manager should only act on the parts of the config
-        it is responsible for (e.g., config.system, config.pointset).
         """
         raise NotImplementedError
 
@@ -177,8 +183,6 @@ class BaseManager(abc.ABC):
     def handle_command(self, command_name: str, payload: dict) -> None:
         """
         Handle a newly received command.
-        The manager should check if the command_name (e.g., 'pointset.writeback')
-        is one that it should process.
         """
         raise NotImplementedError
 
@@ -186,7 +190,5 @@ class BaseManager(abc.ABC):
     def update_state(self, state: State) -> None:
         """
         Contribute to the state object before it is published.
-        The manager should only modify the parts of the state
-        it is responsible for (e.g., state.pointset).
         """
         raise NotImplementedError

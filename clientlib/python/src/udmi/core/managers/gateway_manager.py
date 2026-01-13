@@ -5,15 +5,25 @@ and routes proxy-specific config/commands to registered handlers.
 """
 
 import logging
+from datetime import datetime
+from datetime import timezone
 from typing import Callable
 from typing import Dict
 from typing import List
 from typing import Optional
+from typing import Set
+from typing import TYPE_CHECKING
 
 from udmi.core.managers.base_manager import BaseManager
 from udmi.schema import Config
+from udmi.schema import DataModel
+from udmi.schema import Entry
+from udmi.schema import GatewayConfig
 from udmi.schema import GatewayState
 from udmi.schema import State
+
+if TYPE_CHECKING:
+    from udmi.core.managers.localnet_manager import LocalnetManager
 
 LOGGER = logging.getLogger(__name__)
 
@@ -40,10 +50,9 @@ class GatewayManager(BaseManager):
         self._proxies: List[str] = []
         self._proxy_config_handlers: Dict[str, ProxyConfigHandler] = {}
         self._proxy_command_handlers: Dict[str, ProxyCommandHandler] = {}
-
-        # Default catch-all handlers
         self._default_config_handler: Optional[ProxyConfigHandler] = None
         self._default_command_handler: Optional[ProxyCommandHandler] = None
+        self._gateway_state = GatewayState()
 
         LOGGER.info("GatewayManager initialized.")
 
@@ -52,7 +61,7 @@ class GatewayManager(BaseManager):
         Called when the device loop starts.
         Restores attached proxies from persistence and re-sends attach messages.
         """
-        # 1. Load persisted proxies to ensure we don't forget any across reboots
+        # Load persisted proxies
         if self._device and self._device.persistence:
             saved_proxies = self._device.persistence.get(self.PERSISTENCE_KEY, [])
             count_loaded = 0
@@ -64,8 +73,7 @@ class GatewayManager(BaseManager):
             if count_loaded > 0:
                 LOGGER.info("Restored %s proxies from persistence.", count_loaded)
 
-        # 2. Re-attach everyone
-        # This ensures the broker knows we are acting for these devices
+        # Re-attach everyone to ensure broker state is consistent
         if self._proxies:
             LOGGER.info("Re-attaching %s proxy devices...", len(self._proxies))
             for device_id in self._proxies:
@@ -74,9 +82,67 @@ class GatewayManager(BaseManager):
     def handle_config(self, config: Config) -> None:
         """
         Handles the 'gateway' block of the *Gateway's* own config.
+        Syncs the active proxy list with the cloud configuration.
         """
-        if config.gateway:
-            pass
+        if not config.gateway:
+            return
+
+        self._validate_gateway_config(config.gateway)
+        self._sync_proxies(config.gateway)
+
+    def _validate_gateway_config(self, gateway_config: GatewayConfig) -> None:
+        """
+        Validates that the requested gateway target family is supported by
+        the registered Localnet providers.
+        """
+        if not gateway_config.target or not gateway_config.target.family:
+            return
+
+        target_family = gateway_config.target.family
+
+        localnet_manager: Optional[LocalnetManager] = None
+        if self._device:
+            localnet_manager = self._device.get_manager(LocalnetManager)
+
+        if not localnet_manager:
+            LOGGER.warning("Gateway validation skipped: LocalnetManager not active.")
+            return
+
+        supported_families = localnet_manager.get_registered_families()
+
+        if target_family not in supported_families:
+            msg = f"Gateway target family '{target_family}' is not supported. " \
+                  f"Available: {supported_families}"
+            LOGGER.error(msg)
+
+            self._gateway_state.status = Entry(
+                message=msg,
+                level=500,
+                timestamp=datetime.now(timezone.utc).isoformat()
+            )
+            self.trigger_state_update()
+        else:
+            LOGGER.info("Gateway target family '%s' is valid.", target_family)
+            if self._gateway_state.status and self._gateway_state.status.level >= 500:
+                self._gateway_state.status = None
+                self.trigger_state_update()
+
+    def _sync_proxies(self, gateway_config: GatewayConfig) -> None:
+        """
+        Reconciles the list of proxies in the config with the active proxies.
+        """
+        config_proxies: Set[str] = set(gateway_config.proxy_ids or [])
+        current_proxies: Set[str] = set(self._proxies)
+
+        to_add = config_proxies - current_proxies
+        for device_id in to_add:
+            LOGGER.info("Config requests new proxy: %s", device_id)
+            self.add_proxy(device_id)
+
+        to_remove = current_proxies - config_proxies
+        for device_id in to_remove:
+            LOGGER.info("Config removed proxy: %s", device_id)
+            self.remove_proxy(device_id)
 
     def handle_command(self, command_name: str, payload: dict) -> None:
         pass
@@ -84,9 +150,9 @@ class GatewayManager(BaseManager):
     def update_state(self, state: State) -> None:
         """Populates the 'gateway' state block."""
         if not state.gateway:
-            state.gateway = GatewayState()
+            state.gateway = self._gateway_state
 
-    # --- Public API for Client Applications ---
+    # --- Public API ---
 
     def add_proxy(self, device_id: str,
                   config_handler: Optional[ProxyConfigHandler] = None,
@@ -96,18 +162,15 @@ class GatewayManager(BaseManager):
         """
         if device_id not in self._proxies:
             self._proxies.append(device_id)
-            LOGGER.info("Added proxy device: %s", device_id)
+            LOGGER.info("Attached proxy device: %s", device_id)
             self._save_proxies()
+            if self._dispatcher:
+                self._send_attach_message(device_id)
 
         if config_handler:
             self._proxy_config_handlers[device_id] = config_handler
         if command_handler:
             self._proxy_command_handlers[device_id] = command_handler
-
-        # If the dispatcher is running, send immediately.
-        # If not, start() will handle it.
-        if self._dispatcher:
-            self._send_attach_message(device_id)
 
     def remove_proxy(self, device_id: str) -> None:
         """
@@ -117,39 +180,10 @@ class GatewayManager(BaseManager):
             self._proxies.remove(device_id)
             self._proxy_config_handlers.pop(device_id, None)
             self._proxy_command_handlers.pop(device_id, None)
-            LOGGER.info("Removed proxy device: %s", device_id)
+            LOGGER.info("Detached proxy device: %s", device_id)
             self._save_proxies()
-
             if self._dispatcher:
                 self._send_detach_message(device_id)
-
-    def publish_proxy_state(self, device_id: str, state: State) -> None:
-        """Publishes a State message on behalf of a proxy device."""
-        if not self._dispatcher:
-            LOGGER.error("Cannot publish proxy state: dispatcher not set")
-            return
-
-        if device_id not in self._proxies:
-            LOGGER.warning("Publishing state for unknown proxy: %s", device_id)
-
-        self._dispatcher.publish_state(state, device_id=device_id)
-
-    def publish_proxy_event(self, device_id: str, event_model: object,
-                            subfolder: str) -> None:
-        """Publishes an Event message on behalf of a proxy device."""
-        if not self._dispatcher:
-            LOGGER.error("Cannot publish proxy event: dispatcher not set")
-            return
-
-        self._dispatcher.publish_event(f"events/{subfolder}", event_model,
-                                       device_id=device_id)
-
-    def set_default_handlers(self,
-                             config_handler: Optional[ProxyConfigHandler] = None,
-                             command_handler: Optional[ProxyCommandHandler] = None) -> None:
-        """Sets handlers for any proxy that doesn't have a specific callback."""
-        self._default_config_handler = config_handler
-        self._default_command_handler = command_handler
 
     # --- Internal Helpers ---
 
@@ -158,50 +192,39 @@ class GatewayManager(BaseManager):
         if self._device and self._device.persistence:
             self._device.persistence.set(self.PERSISTENCE_KEY, self._proxies)
 
-    # --- Internal Routing Hooks (Called by Device) ---
-
     def handle_proxy_config(self, device_id: str, config: Config) -> None:
-        """Routed method: Handles a config message meant for a proxy."""
-        LOGGER.info("Gateway received config for proxy: %s", device_id)
-
-        handler = self._proxy_config_handlers.get(device_id,
-                                                  self._default_config_handler)
+        handler = self._proxy_config_handlers.get(device_id, self._default_config_handler)
         if handler:
             try:
                 handler(device_id, config)
             except Exception as e:
-                LOGGER.error("Error in proxy config handler for %s: %s",
-                             device_id, e)
-        else:
-            LOGGER.warning("No handler registered for proxy config: %s", device_id)
+                LOGGER.error("Error in proxy config handler for %s: %s", device_id, e)
 
-    def handle_proxy_command(self, device_id: str, command_name: str,
-                             payload: dict) -> None:
-        """Routed method: Handles a command message meant for a proxy."""
-        LOGGER.info("Gateway received command '%s' for proxy: %s",
-                    command_name, device_id)
-
-        handler = self._proxy_command_handlers.get(device_id,
-                                                   self._default_command_handler)
+    def handle_proxy_command(self, device_id: str, command_name: str, payload: dict) -> None:
+        handler = self._proxy_command_handlers.get(device_id, self._default_command_handler)
         if handler:
             try:
                 handler(device_id, command_name, payload)
             except Exception as e:
-                LOGGER.error("Error in proxy command handler for %s: %s",
-                             device_id, e)
-        else:
-            LOGGER.warning("No handler registered for proxy command: %s", device_id)
-
-    # --- Protocol Actions ---
+                LOGGER.error("Error in proxy command handler for %s: %s", device_id, e)
 
     def _send_attach_message(self, device_id: str) -> None:
-        if not self._dispatcher:
-            return
-        LOGGER.info("Sending ATTACH for %s", device_id)
-        self._dispatcher.client.publish("attach", "", device_id=device_id)
+        if self._dispatcher:
+            self._dispatcher.client.publish("attach", "", device_id=device_id)
 
     def _send_detach_message(self, device_id: str) -> None:
-        if not self._dispatcher:
-            return
-        LOGGER.info("Sending DETACH for %s", device_id)
-        self._dispatcher.client.publish("detach", "", device_id=device_id)
+        if self._dispatcher:
+            self._dispatcher.client.publish("detach", "", device_id=device_id)
+
+    def publish_proxy_state(self, device_id: str, state: DataModel) -> None:
+        if self._dispatcher:
+            self._dispatcher.publish_state(state, device_id=device_id)
+
+    def publish_proxy_event(self, device_id: str, event_model: DataModel, subfolder: str) -> None:
+        if self._dispatcher:
+            self._dispatcher.publish_event(f"events/{subfolder}", event_model, device_id=device_id)
+
+    def set_default_handlers(self, config_handler: Optional[ProxyConfigHandler] = None,
+                             command_handler: Optional[ProxyCommandHandler] = None) -> None:
+        self._default_config_handler = config_handler
+        self._default_command_handler = command_handler
