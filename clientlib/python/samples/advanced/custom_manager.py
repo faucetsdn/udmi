@@ -2,13 +2,17 @@
 Custom Manager with event publish support.
 
 This sample demonstrates how to create a completely new, custom manager
-that runs its own background thread to publish ad-hoc UDMI events.
+that runs its own background task to publish ad-hoc UDMI events.
+
+Key Features Demonstrated:
+1.  Inheriting from `BaseManager`.
+2.  Using `start_periodic_task` for background logic.
+3.  Publishing custom events using `publish_event`.
+4.  Handling configuration updates for the custom manager.
 """
 
 import logging
 import sys
-import threading
-import time
 from datetime import datetime
 from datetime import timezone
 
@@ -16,7 +20,6 @@ from udmi.constants import UDMI_VERSION
 from udmi.core.factory import create_device
 from udmi.core.managers import BaseManager
 from udmi.core.managers import SystemManager
-from udmi.core.managers.base_manager import LOGGER
 from udmi.schema import Config
 from udmi.schema import EndpointConfiguration
 from udmi.schema import Entry
@@ -30,82 +33,90 @@ MQTT_PORT = 1883
 BROKER_USERNAME = "pyudmi-device"
 BROKER_PASSWORD = "somesecureword"
 
+LOGGER = logging.getLogger("CustomManagerSample")
+
 
 # --- 1. Define a Custom Manager ---
+
 class HeartbeatManager(BaseManager):
     """
-    A custom manager that logs a 'heartbeat' event every 60 seconds.
+    A custom manager that logs a 'heartbeat' event periodically.
+
     This demonstrates adding new, periodic logic to the device.
     """
-    DEFAULT_HEARTBEAT_INTERVAL_SEC = 10
+    DEFAULT_INTERVAL_SEC = 10
 
-    def __init__(self, interval_sec=DEFAULT_HEARTBEAT_INTERVAL_SEC):
+    @property
+    def model_field_name(self) -> str:
+        # If we wanted to read metadata, we would define the field name here.
+        # e.g. return "heartbeat_config"
+        return "custom"
+
+    def __init__(self, interval_sec=DEFAULT_INTERVAL_SEC):
         super().__init__()
         self.interval_sec = interval_sec
-        self._stop_event = threading.Event()
-        self._thread = threading.Thread(target=self.run, daemon=True)
+        # We store a reference to the wake event so we can trigger immediate runs
+        self._wake_event = None
 
     def start(self) -> None:
         """
         Lifecycle hook: Called by the Device when `device.run()` is initiated.
-        This is where we start our manager's background thread.
         """
-        LOGGER.info("HeartbeatManager starting its own thread...")
-        self._thread.start()
+        LOGGER.info("HeartbeatManager starting...")
 
-    def stop(self) -> None:
-        """
-        Lifecycle hook: Called by the Device when `device.stop()` is initiated.
-        This signals our thread to stop and waits for it to exit.
-        """
-        LOGGER.info("HeartbeatManager stopping...")
-        self._stop_event.set()
-        self._thread.join(timeout=2)
-
-    def run(self) -> None:
-        """
-        This is the main loop for our manager, running in its own thread.
-        It will loop until the `_stop_event` is set by the `stop()` method.
-        """
-        while not self._stop_event.is_set():
-            try:
-                self._send_heartbeat()
-                self._stop_event.wait(self.interval_sec)
-            except Exception as e:
-                LOGGER.error(f"Error in HeartbeatManager loop: {e}")
-                time.sleep(self.interval_sec)
+        # Use the BaseManager's helper to run a periodic task.
+        # This handles threading, exception catching, and graceful shutdown automatically.
+        self._wake_event = self.start_periodic_task(
+            interval_getter=lambda: self.interval_sec,
+            task=self._send_heartbeat,
+            name="HeartbeatTask"
+        )
 
     def _send_heartbeat(self):
         """
-        Builds and publishes a UDMI SystemEvents message.
+        The task function. Builds and publishes a UDMI SystemEvents message.
         """
-        LOGGER.info("Sending device heartbeat event...")
-        try:
-            # Create a UDMI-compliant log entry
-            log_entry = Entry(
-                message="Heartbeat OK",
-                level=200,  # INFO
-                timestamp=datetime.now(timezone.utc).isoformat()
-            )
-            # Create the SystemEvents message
-            event = SystemEvents(
-                timestamp=datetime.now(timezone.utc).isoformat(),
-                version=UDMI_VERSION,
-                logentries=[log_entry]
-            )
-            # Use the BaseManager's publish_event method.
-            # This handles topic formatting and JSON serialization.
-            self.publish_event(event, "system")
-        except Exception as e:
-            # Don't crash the loop if publishing fails (e.g., disconnected)
-            LOGGER.error(f"Failed to send heartbeat: {e}")
+        LOGGER.info(f"Sending heartbeat (Interval: {self.interval_sec}s)...")
 
-    # --- Required BaseManager Methods ---
-    # We must implement these abstract methods, even if we don't use them.
+        # Create a UDMI-compliant log entry
+        log_entry = Entry(
+            message="Heartbeat OK",
+            level=200,  # INFO
+            timestamp=datetime.now(timezone.utc).isoformat()
+        )
+
+        # Create the SystemEvents message
+        event = SystemEvents(
+            timestamp=datetime.now(timezone.utc).isoformat(),
+            version=UDMI_VERSION,
+            logentries=[log_entry]
+        )
+
+        # Use the BaseManager's publish_event method.
+        # This handles topic formatting ("events/system") and JSON serialization.
+        self.publish_event(event, "system")
+
+    # --- Handling Config Updates ---
 
     def handle_config(self, config: Config) -> None:
-        """This manager doesn't act on config updates."""
-        pass
+        """
+        Optional: React to configuration changes.
+        Here we demonstrate checking a custom field in the 'system' config
+        to dynamically change the heartbeat rate.
+        """
+        # In a real scenario, you might have your own config block (e.g. config.heartbeat)
+        # For this demo, we'll check system.metrics_rate_sec as a proxy,
+        # or just log that we saw a config.
+        if config.system and config.system.metrics_rate_sec:
+            new_rate = config.system.metrics_rate_sec
+            if new_rate != self.interval_sec:
+                LOGGER.info(f"Updating heartbeat interval: {self.interval_sec} -> {new_rate}")
+                self.interval_sec = new_rate
+                # Wake up the thread immediately to apply the new rate
+                if self._wake_event:
+                    self._wake_event.set()
+
+    # --- Required Abstract Methods ---
 
     def handle_command(self, command_name: str, payload: dict) -> None:
         """This manager doesn't handle any commands."""
@@ -120,13 +131,14 @@ class HeartbeatManager(BaseManager):
 
 
 if __name__ == "__main__":
-    logging.basicConfig(level=logging.DEBUG,
+    logging.basicConfig(level=logging.INFO,
                         format='%(asctime)s - %(levelname)s - %(message)s')
 
     try:
         # Standard setup for a local broker
         topic_prefix = "/r/ZZ-TRI-FECTA/d/"
         client_id = f"{topic_prefix}{DEVICE_ID}"
+
         endpoint_config = EndpointConfiguration.from_dict({
             "client_id": client_id,
             "hostname": MQTT_HOSTNAME,
@@ -140,19 +152,18 @@ if __name__ == "__main__":
             }
         })
 
-        logging.info("Creating device with SystemManager + HeartbeatManager...")
+        LOGGER.info("Creating device with SystemManager + HeartbeatManager...")
 
         # --- 2. Create Manager List ---
+        # We explicitly list the managers we want.
+        # We include SystemManager for basic device health/lifecycle.
+        # We include our HeartbeatManager for the custom logic.
         custom_managers_list = [
             SystemManager(),
             HeartbeatManager(interval_sec=5)
-            # Adds our custom heartbeat event publish logic
         ]
-        # --- End Manager List ---
 
-        # 3. Pass the list to the factory.
-        # The factory will give each manager a reference to the dispatcher
-        # and then call `start()` on each one.
+        # 3. Create the Device
         device = create_device(
             endpoint_config=endpoint_config,
             managers=custom_managers_list,
@@ -160,10 +171,13 @@ if __name__ == "__main__":
 
         # 4. Start the device
         # This will start the device's main loop, which in turn calls
-        # `start()` on both SystemManager and HeartbeatManager.
+        # `start()` on all registered managers.
         device.run()
+
+    except KeyboardInterrupt:
+        LOGGER.info("Stopped by user.")
     except Exception as e:
-        logging.error(f"A critical error occurred: {e}", exc_info=True)
+        LOGGER.error(f"A critical error occurred: {e}", exc_info=True)
         sys.exit(1)
 
-    logging.info("Device shut down gracefully. Exiting.")
+    LOGGER.info("Device shut down gracefully. Exiting.")

@@ -24,13 +24,20 @@ from udmi.schema import AuthProvider
 from udmi.schema import EndpointConfiguration
 from udmi.schema import Jwt
 
-PROJECT_ID = "bos-platform-dev"
+# --- CONFIGURATION ---
+# ! UPDATE THESE TO MATCH YOUR REAL GCP RESOURCES !
+PROJECT_ID = "your-gcp-project"
 REGION = "us-central1"
 REGISTRY_ID = "ZZ-TRI-FECTA"
 DEVICE_ID = "AHU-1"
-MQTT_HOST = "mqtt.bos.goog"
+MQTT_HOST = "mqtt.googleapis.com"
 MQTT_PORT = 8883
-PRIVATE_KEY_FILE = "/usr/local/google/home/heykhyati/Projects/udmi/sites/udmi_site_model/devices/AHU-1/rsa_private.pem"
+
+# Path to the private key.
+# NOTE: If this file does not exist, the library will GENERATE it automatically.
+PRIVATE_KEY_FILE = "rsa_private.pem"
+
+# The full client ID string required by Cloud IoT Core's MQTT bridge
 CLIENT_ID = (
     f"projects/{PROJECT_ID}/locations/{REGION}/"
     f"registries/{REGISTRY_ID}/devices/{DEVICE_ID}"
@@ -56,7 +63,10 @@ if __name__ == "__main__":
 
         logger.info(
             f"Initializing device {DEVICE_ID} for project {PROJECT_ID}...")
+
+        # We pass key_file so the factory can initialize the CredentialManager for signing.
         device = create_device(endpoint_config, key_file=PRIVATE_KEY_FILE)
+
         logger.info("Connecting to Cloud IoT Core...")
         device.run()
 

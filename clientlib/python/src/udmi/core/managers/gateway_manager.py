@@ -100,6 +100,7 @@ class GatewayManager(BaseManager):
 
         target_family = gateway_config.target.family
 
+        from udmi.core.managers.localnet_manager import LocalnetManager
         localnet_manager: Optional[LocalnetManager] = None
         if self._device:
             localnet_manager = self._device.get_manager(LocalnetManager)
@@ -166,6 +167,10 @@ class GatewayManager(BaseManager):
             self._save_proxies()
             if self._dispatcher:
                 self._send_attach_message(device_id)
+                self._dispatcher.client.register_channel_subscription("config",
+                                                                      device_id)
+                self._dispatcher.client.register_channel_subscription("commands/#",
+                                                                      device_id)
 
         if config_handler:
             self._proxy_config_handlers[device_id] = config_handler

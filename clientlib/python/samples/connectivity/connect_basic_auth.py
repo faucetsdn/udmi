@@ -4,10 +4,16 @@ Sample: Connect to Generic Broker (Basic Auth)
 This script demonstrates how to connect a UDMI device to a standard MQTT broker
 (like Mosquitto, HiveMQ, or RabbitMQ) using Username/Password authentication.
 
-This is the primary method used for:
-1. Local Development (testing against a local Mosquitto container).
-2. On-Premise Deployments (connecting to a local aggregator/gateway).
-3. Non-GCP Cloud Platforms that utilize Basic Auth.
+Use Cases:
+1.  **Local Development**: Testing against a local Mosquitto container.
+2.  **On-Premise**: Connecting to a local aggregator or gateway.
+3.  **Non-GCP Clouds**: Connecting to platforms that use standard MQTT Auth.
+
+Behavior:
+- The presence of `auth_provider.basic` tells the library to use those credentials.
+- It skips looking for or generating 'rsa_private.pem'.
+- If Port is 1883, it connects via TCP.
+- If Port is 8883, it connects via TLS (Server Auth only) + Basic Auth.
 """
 
 import logging
@@ -18,6 +24,7 @@ from udmi.schema import AuthProvider
 from udmi.schema import Basic
 from udmi.schema import EndpointConfiguration
 
+# --- Configuration ---
 DEVICE_ID = "AHU-1"
 MQTT_HOSTNAME = "localhost"
 MQTT_PORT = 1883
@@ -33,7 +40,7 @@ if __name__ == "__main__":
         topic_prefix = "/r/ZZ-TRI-FECTA/d/"
         client_id = f"{topic_prefix}{DEVICE_ID}"
 
-        # Create the UDMI EndpointConfiguration object - we explicitly define the 'auth_provider' block with 'basic' credentials.
+        # 1. Define Endpoint with Basic Auth
         endpoint_config = EndpointConfiguration(
             client_id=client_id,
             hostname=MQTT_HOSTNAME,
@@ -50,8 +57,11 @@ if __name__ == "__main__":
         logger.info(
             f"Initializing device {DEVICE_ID} connecting to {MQTT_HOSTNAME}:{MQTT_PORT}...")
 
+        # 2. Create Device
+        # The factory detects 'basic' auth and configures the client accordingly.
         device = create_device(endpoint_config)
 
+        # 3. Run
         logger.info("Starting main event loop (Ctrl+C to stop)...")
         device.run()
 

@@ -184,6 +184,16 @@ class MqttMessagingClient(AbstractMessagingClient):
         LOGGER.debug("Registering subscription: Device=%s, Channel=%s",
                      target_id, channel)
         self._subscribed_channels.add((target_id, channel))
+        if self._mqtt_client.is_connected():
+            topic = f"{self._topic_prefix_str}/{target_id}/{channel}"
+            if not topic.startswith("/"):
+                topic = "/" + topic
+
+            LOGGER.info("Dynamic subscription to: %s", topic)
+            try:
+                self._mqtt_client.subscribe(topic, qos=1)
+            except Exception as e:
+                LOGGER.error("Subscribe failed for %s: %s", topic, e)
 
     # --- Callback Setters ---
 

@@ -4,23 +4,16 @@ Sample: Pointset Writeback (Actuation)
 This script demonstrates how to handle "Set Value" commands from the cloud.
 
 SCENARIO:
-1. The device connects and listens for configuration updates.
-2. The Cloud (or user via MQTT) sends a config with `"set_value": 24.0` for 'thermostat_target'.
-3. The UDMI library parses this change.
-4. The library triggers the registered `on_writeback` callback.
-5. You (the developer) use this callback to send the signal to your actual hardware.
+1.  **Connection**: The device connects and listens for configuration updates.
+2.  **Trigger**: You send a config with `"set_value": 24.0` for 'thermostat_target'.
+3.  **Parsing**: The UDMI library detects the `set_value` field has changed.
+4.  **Callback**: The library triggers the registered `on_writeback` callback.
+5.  **Actuation**: The callback (your code) sends the signal to the "hardware".
 
 INSTRUCTIONS:
-1. Run this script.
-2. Publish this JSON to the device config topic: /devices/{DEVICE_ID}/config
-   {
-     "pointset": {
-       "points": {
-         "thermostat_target": { "set_value": 24.0 }
-       }
-     }
-   }
-3. Watch the logs for the "HARDWARE ACTUATION" message.
+1.  Run this script.
+2.  Publish the JSON config payload printed below.
+3.  Watch the logs for the "HARDWARE ACTUATION REQUIRED" message.
 """
 
 import logging
@@ -29,7 +22,8 @@ import threading
 import time
 from typing import Any
 
-from udmi.core.factory import create_device, get_default_managers
+from udmi.core.factory import create_device
+from udmi.core.factory import get_default_managers
 from udmi.core.managers import PointsetManager
 from udmi.schema import AuthProvider
 from udmi.schema import Basic
@@ -42,8 +36,9 @@ MQTT_HOSTNAME = "localhost"
 MQTT_PORT = 1883
 BROKER_USERNAME = "pyudmi-device"
 BROKER_PASSWORD = "somesecureword"
+TOPIC_PREFIX = "/r/ZZ-TRI-FECTA/d/"
 
-logging.basicConfig(level=logging.DEBUG,
+logging.basicConfig(level=logging.INFO,
                     format='%(asctime)s - %(levelname)s - %(message)s')
 LOGGER = logging.getLogger("WritebackSample")
 
@@ -68,12 +63,12 @@ def on_writeback(point_name: str, value: Any):
 
 if __name__ == "__main__":
     try:
-        topic_prefix = f"/r/{REGISTRY_ID}/d/"
+        client_id = f"{TOPIC_PREFIX}{DEVICE_ID}"
         endpoint = EndpointConfiguration(
-            client_id=f"{topic_prefix}{DEVICE_ID}",
+            client_id=client_id,
             hostname=MQTT_HOSTNAME,
             port=MQTT_PORT,
-            topic_prefix=topic_prefix,
+            topic_prefix=TOPIC_PREFIX,
             auth_provider=AuthProvider(
                 basic=Basic(
                     username=BROKER_USERNAME,
@@ -98,7 +93,17 @@ if __name__ == "__main__":
         t.start()
 
         LOGGER.info(f"Device {DEVICE_ID} is running.")
-        LOGGER.info("Waiting for 'set_value' config updates...")
+
+        print("\n" + "=" * 60)
+        print("DEMO INSTRUCTIONS:")
+        print("To trigger actuation, publish this JSON config:")
+        print("-" * 20)
+        json_payload = ('{ "pointset": { "points": { "thermostat_target": { "set_value": 24.0 } } } }')
+        print(json_payload)
+        print("-" * 20)
+        print("mosquitto_pub command:")
+        print(f"mosquitto_pub -h {MQTT_HOSTNAME} -p {MQTT_PORT} -u {BROKER_USERNAME} -P {BROKER_PASSWORD} -t '{TOPIC_PREFIX}{DEVICE_ID}/config' -m '{json_payload}'")
+        print("=" * 60 + "\n")
 
         while True:
             time.sleep(1)

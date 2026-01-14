@@ -3,7 +3,7 @@ Sample: Zero-Config mTLS with Auto-Generated Keys
 
 This script demonstrates the "Just-in-Time" Provisioning capability.
 
-Workflow:
+SCENARIO:
 1.  **Configuration**: We provide an EndpointConfiguration *without* an `auth_provider`.
 2.  **Inference**: The library detects the missing auth and infers **mTLS** is required.
 3.  **Detection**: It checks the current directory for default keys:
@@ -12,7 +12,7 @@ Workflow:
 4.  **Generation**: If these files are missing, the library **GENERATES** them automatically.
 5.  **Connection**: It attempts to connect using these new credentials.
 
-Usage:
+USAGE:
     - Run this script once to generate keys.
     - If connecting to a strict broker (like Mosquitto with `require_certificate true`),
       you must take the generated `client_cert.pem` and register/trust it on the server side.
@@ -22,7 +22,8 @@ import logging
 import os
 import sys
 
-from udmi.core.factory import ClientConfig, create_device
+from udmi.core.factory import ClientConfig
+from udmi.core.factory import create_device
 from udmi.core.messaging import TlsConfig
 from udmi.schema import EndpointConfiguration
 
@@ -30,6 +31,7 @@ from udmi.schema import EndpointConfiguration
 DEVICE_ID = "AHU-AUTO-1"
 MQTT_HOSTNAME = "localhost"
 MQTT_PORT = 8883
+TOPIC_PREFIX = "/r/ZZ-TRI-FECTA/d/"
 
 # Optional: Path to the Broker's CA Certificate.
 # Required if the broker uses a self-signed server certificate (common in local tests).
@@ -43,10 +45,13 @@ if __name__ == "__main__":
     try:
         # 1. Define Endpoint Config (No Auth Provider specified!)
         # The absence of 'auth_provider' triggers the auto-detection logic.
+        client_id = f"{TOPIC_PREFIX}{DEVICE_ID}"
+
         endpoint = EndpointConfiguration.from_dict({
-            "client_id": f"projects/local/locations/region/registries/reg/devices/{DEVICE_ID}",
+            "client_id": client_id,
             "hostname": MQTT_HOSTNAME,
             "port": MQTT_PORT,
+            "topic_prefix": TOPIC_PREFIX
             # "auth_provider": ...  <-- OMITTED INTENTIONALLY
         })
 

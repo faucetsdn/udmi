@@ -230,6 +230,7 @@ class PointsetManager(BaseManager):
         )
 
     def stop(self) -> None:
+        self._persist_state()
         super().stop()
         LOGGER.info("PointsetManager stopped.")
 

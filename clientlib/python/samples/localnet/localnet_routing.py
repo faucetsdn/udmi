@@ -2,51 +2,42 @@
 Sample: Localnet Routing & Validation Demo
 
 This script demonstrates how to use the enhanced LocalnetManager to:
-1. Register a protocol provider (Mock BACnet).
-2. Receive a Localnet configuration from the cloud.
-3. Validate the configuration against the provider.
-4. Report the status (Active/Error) back to the cloud.
+1.  **Register** a protocol provider (Mock BACnet).
+2.  **Receive** a Localnet configuration from the cloud.
+3.  **Validate** the configuration against the provider.
+4.  **Report** the status (Active/Error) back to the cloud.
 
-INSTRUCTIONS:
-1. Run this script.
-2. Publish a valid or invalid localnet config to the device config topic.
+SCENARIO:
+- A Gateway device starts up.
+- It registers a driver for the "bacnet" protocol family.
+- The driver enforces that addresses must be numeric digits.
+- You send a config with valid and invalid addresses to see the validation logic.
 
-   Example Valid Config:
-   {
-     "localnet": {
-       "families": {
-         "bacnet": {
-           "addr": "192.168.1.10",
-           "devices": {
-             "ahu-1": "1001",
-             "vav-1": "1002"
-           }
-         }
-       }
-     }
-   }
-
-3. Watch the logs to see the validation logic and state updates.
+USAGE:
+1.  Run the script.
+2.  Publish the JSON config payload printed in the instructions.
+3.  Watch the logs to see validation success/failure.
 """
 
 import logging
 import sys
 import threading
 import time
-from typing import Dict, Optional
+from typing import Dict
 
 from udmi.core.factory import create_device
 from udmi.core.managers import LocalnetManager
 from udmi.core.managers.providers.family_provider import FamilyProvider
-from udmi.schema import DiscoveryEvents, RefDiscovery
 from udmi.schema import EndpointConfiguration
+from udmi.schema import RefDiscovery
 
 # --- CONFIGURATION ---
 DEVICE_ID = "GATEWAY-1"
 MQTT_HOSTNAME = "localhost"
 MQTT_PORT = 1883
-BROKER_USERNAME = "pyudmi-gateway"
+BROKER_USERNAME = "pyudmi-device"
 BROKER_PASSWORD = "somesecureword"
+TOPIC_PREFIX = "/r/ZZ-TRI-FECTA/d/"
 
 logging.basicConfig(level=logging.INFO,
                     format='%(asctime)s - %(name)s - %(message)s')
@@ -64,35 +55,34 @@ class MockBacnetProvider(FamilyProvider):
         Validates that the physical address is a numeric ID string.
         Real BACnet logic would be more complex (e.g., checking range).
         """
-        LOGGER.info(f"Validating BACnet address: {addr}")
+        LOGGER.info(f"Validating BACnet address: '{addr}'")
         # In this mock, we only accept digits (e.g., "1001" is valid, "1001-A" is invalid)
-        return addr.isdigit()
+        if addr.isdigit():
+            LOGGER.info("  -> Valid")
+            return True
+        else:
+            LOGGER.warning("  -> Invalid (Must be numeric)")
+            return False
 
     def start_scan(self, discovery_config, publish_func) -> None:
-        LOGGER.info("Starting mock BACnet scan...")
-        # Simulate finding a device
-        time.sleep(1)
-        # In a real app, you would publish valid DiscoveryEvents here
-        LOGGER.info("Scan complete (simulated).")
+        pass
 
     def stop_scan(self) -> None:
-        LOGGER.info("Stopping scan.")
+        pass
 
     def enumerate_refs(self, addr: str) -> Dict[str, RefDiscovery]:
         return {}
-
-    def scan(self) -> None:
-        LOGGER.info("Manual scan triggered via 'discovery' command.")
 
 
 if __name__ == "__main__":
     try:
         # 1. Configure Connection
+        client_id = f"{TOPIC_PREFIX}{DEVICE_ID}"
         endpoint = EndpointConfiguration.from_dict({
-            "client_id": f"/r/ZZ-TRI-FECTA/d/{DEVICE_ID}",
+            "client_id": client_id,
             "hostname": MQTT_HOSTNAME,
             "port": MQTT_PORT,
-            "topic_prefix": "/r/ZZ-TRI-FECTA/d/",
+            "topic_prefix": TOPIC_PREFIX,
             "auth_provider": {
                 "basic": {"username": BROKER_USERNAME,
                           "password": BROKER_PASSWORD}
@@ -116,9 +106,19 @@ if __name__ == "__main__":
         t = threading.Thread(target=device.run, daemon=True)
         t.start()
 
-        LOGGER.info("Device running. Waiting for 'localnet' config...")
-        LOGGER.info(
-            "Try sending a config with family 'bacnet' (valid) or 'modbus' (invalid/missing provider).")
+        LOGGER.info(f"Gateway {DEVICE_ID} running.")
+
+        print("\n" + "=" * 60)
+        print("DEMO INSTRUCTIONS:")
+        print("1. To test validation, publish this 'localnet' config:")
+        print("-" * 20)
+        json_payload = ('{ "localnet": { "families": { "bacnet": { "addr": "192.168.1.10", '
+                        '"devices": { "ahu-valid": "1001", "vav-invalid": "2002-A" } } } } }')
+        print(json_payload)
+        print("-" * 20)
+        print("mosquitto_pub command:")
+        print(f"mosquitto_pub -h {MQTT_HOSTNAME} -p {MQTT_PORT} -u {BROKER_USERNAME} -P {BROKER_PASSWORD} -t '{TOPIC_PREFIX}{DEVICE_ID}/config' -m '{json_payload}'")
+        print("=" * 60 + "\n")
 
         # Keep the script alive
         while True:

@@ -2,38 +2,51 @@
 Sample: Command-Driven Key Rotation for ClearBlade / Cloud IoT Core.
 
 This script demonstrates the "Zero-Downtime" Key Rotation capability.
-1. Connects to the cloud using the initial key.
-2. Registers a callback to handle 'rotate_key' commands.
-3. When the command is received:
-   a. Backs up the old key.
-   b. Generates a NEW key pair.
-   c. Pauses to allow you to upload the NEW Public Key to the Cloud Console.
-   d. Automatically reconnects using the new credentials.
 
-Usage:
-  1. Run this script.
-  2. Send a command to the device topic: /devices/{DEVICE_ID}/commands/rotate_key
-     (Payload can be empty JSON: {})
+SCENARIO:
+1.  **Connect**: The device connects using its initial private key.
+2.  **Command**: The user sends a `rotate_key` command to the device.
+3.  **Rotation Logic (Library)**:
+    a.  Backs up the old key to `rsa_private.pem.<timestamp>.bak`.
+    b.  Generates a NEW RSA key pair and overwrites `rsa_private.pem`.
+    c.  Calls the registered `on_rotate_key` callback with the NEW Public Key.
+4.  **Cloud Update (Application)**:
+    a.  The callback prints the new public key.
+    b.  It waits for the user (or an API script) to register this key with the Cloud.
+    c.  It returns `True` to signal success.
+5.  **Reconnect (Library)**:
+    a.  The library disconnects the MQTT client.
+    b.  It generates a new JWT using the NEW private key.
+    c.  It reconnects to the cloud.
+
+USAGE:
+1.  Run the script.
+2.  Send a command to the device topic: `/devices/{DEVICE_ID}/commands/rotate_key`
+    (Payload can be empty JSON: `{}`).
+3.  Follow the instructions printed in the console to update the cloud key.
 """
 
 import logging
 import sys
 import time
-import threading
 
-# Import the SystemManager to register our callback
-from udmi.core.managers import SystemManager
 from udmi.core.factory import create_device
+from udmi.core.managers import SystemManager
+from udmi.schema import AuthProvider
 from udmi.schema import EndpointConfiguration
+from udmi.schema import Jwt
 
 # --- Configuration Constants ---
-PROJECT_ID = "bos-platform-dev"
+# ! UPDATE THESE TO MATCH YOUR REAL GCP RESOURCES !
+PROJECT_ID = "your-gcp-project"
 REGION = "us-central1"
 REGISTRY_ID = "ZZ-TRI-FECTA"
 DEVICE_ID = "AHU-1"
-MQTT_HOST = "mqtt.bos.goog"
+MQTT_HOST = "mqtt.googleapis.com"
 MQTT_PORT = 8883
-PRIVATE_KEY_FILE = "/usr/local/google/home/heykhyati/Projects/udmi/sites/udmi_site_model/devices/AHU-1/rsa_private.pem"
+
+# Path to the private key.
+KEY_FILE = "rsa_private.pem"
 
 # Construct Client ID
 CLIENT_ID = (
@@ -49,65 +62,68 @@ LOGGER = logging.getLogger("RotationSample")
 
 # --- Key Rotation Callback ---
 
-def on_rotate_key(new_public_key_pem: str, backup_path: str) -> bool:
+def on_rotate_key(new_public_key_pem: str, backup_identifier: str) -> bool:
     """
-    This function is called by the SystemManager AFTER the new key is generated
-    but BEFORE the device reconnects.
+    Callback invoked by SystemManager AFTER generating a new key but BEFORE reconnecting.
 
-    In a fully automated system, this function would use the ClearBlade REST API
-    to upload 'new_public_key_pem' to the registry.
+    Args:
+        new_public_key_pem: The PEM-encoded string of the NEW public key.
+        backup_identifier: The path/ID of the backup for the OLD key.
 
-    Here, we simulate that by asking the user to do it manually.
+    Returns:
+        True if the cloud update was successful (proceed to reconnect).
+        False if the update failed (trigger rollback to old key).
     """
     print("\n" + "=" * 80)
     print(" [ACTION REQUIRED] KEY ROTATION STARTED ")
     print("=" * 80)
     print(f"1. A new key pair has been generated and saved to disk.")
-    print(f"2. The OLD key has been backed up to: {backup_path}")
+    print(f"2. The OLD key has been backed up to: {backup_identifier}")
     print(f"3. COPY the NEW Public Key below and add it to the Cloud Console:")
     print("-" * 80)
     print(new_public_key_pem)
     print("-" * 80)
 
     # Simulate waiting for API upload or manual entry
-    # We use a loop here to 'block' the rotation flow until you are ready.
-    # In production, this would be an API call like: client.add_device_key(DEVICE_ID, new_public_key_pem)
+    # In a fully automated production app, you would make a REST API call here
+    # to your cloud provider (e.g. Google Cloud Asset Inventory or IoT Core Admin API)
+    # to register the new key.
     print(">>> Waiting 30 seconds for you to update the Cloud Console...")
-    print(
-        ">>> (If you don't update the cloud, the reconnection will fail and revert!)")
+    print(">>> (If you don't update the cloud, the reconnection will fail!)")
 
-    for i in range(30, 0, -5):
-        print(f"Resuming in {i} seconds...")
-        time.sleep(5)
+    try:
+        for i in range(30, 0, -5):
+            print(f"Resuming in {i} seconds...")
+            time.sleep(5)
+    except KeyboardInterrupt:
+        print("Aborting...")
+        return False
 
     print("Resuming... Assuming Cloud is updated.")
 
     # Return True to signal that the upload "succeeded" and we should proceed to reconnect.
-    # Return False to trigger a Rollback to the old key.
     return True
 
 
 if __name__ == "__main__":
     try:
         # 1. Endpoint Configuration
-        endpoint_config = EndpointConfiguration.from_dict({
-            "client_id": CLIENT_ID,
-            "hostname": MQTT_HOST,
-            "port": MQTT_PORT,
-            "auth_provider": {
-                "jwt": {
-                    "audience": PROJECT_ID,
-                }
-            }
-        })
+        endpoint_config = EndpointConfiguration(
+            client_id=CLIENT_ID,
+            hostname=MQTT_HOST,
+            port=MQTT_PORT,
+            auth_provider=AuthProvider(
+                jwt=Jwt(
+                    audience=PROJECT_ID
+                )
+            )
+        )
 
         # 2. Create the Device
         # The factory will initialize the CredentialManager (loading 'rsa_private.pem')
-        device = create_device(endpoint_config, key_file=PRIVATE_KEY_FILE)
+        device = create_device(endpoint_config, key_file=KEY_FILE)
 
         # 3. Register the Rotation Callback
-        # We need to access the SystemManager instance inside the device.
-        # The factory creates default managers, so we look for SystemManager in the list.
         system_manager = device.get_manager(SystemManager)
 
         if system_manager:

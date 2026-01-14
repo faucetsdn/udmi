@@ -379,6 +379,9 @@ class Device:
                 config_arrived = self._loop_state.config_received_event.wait(
                     timeout=CONFIG_SYNC_TIMEOUT_SEC
                 )
+                if self._loop_state.stop_event.is_set():
+                    LOGGER.info("Stop event received during config wait.")
+                    break
                 if config_arrived:
                     LOGGER.info("Initial config received. Proceeding.")
                 else:

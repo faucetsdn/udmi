@@ -162,6 +162,7 @@ class DiscoveryManager(BaseManager):
 
     def _trigger_scan(self, family: str) -> None:
         """Helper to initiate the thread for a specific family scan."""
+        from udmi.core.managers.localnet_manager import LocalnetManager
         localnet_manager = self._device.get_manager(LocalnetManager)
 
         if not localnet_manager:
