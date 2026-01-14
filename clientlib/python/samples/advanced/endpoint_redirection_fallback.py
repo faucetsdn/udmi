@@ -1,20 +1,36 @@
 """
 Sample: Endpoint Redirection Fallback (Local Broker -> GCP IoT Core -> Local Broker)
 
-This script demonstrates what happens when "Dynamic Reconfiguration" fails.
-1. Starts connected to a Local Broker (Basic Auth).
-2. Prints a "Trigger Payload" (Config message) to the console.
-3. When you publish that payload to the local broker, the device will:
-   a. Detect the new endpoint configuration in the blobset.
-   b. Verify the blob's SHA256 hash.
-   c. Disconnect from Local Broker.
-   d. Re-initialize the network stack using JWT Auth.
-   e. Try to connect to GCP IoT Core.
-4. If connection fails after retries, the device falls back to the original
-endpoint configuration and connects to the Local Broker.
+This script demonstrates the "Safe Migration" capability:
+If a device is redirected to a new endpoint but cannot connect, it automatically
+reverts to its last known good configuration.
+
+SCENARIO:
+1.  **Bootstrap**: Device connects to Local Broker (Factory Mode).
+2.  **Trigger**: You publish a Config redirecting it to GCP IoT Core.
+3.  **Failure**: The device generates a new key pair (or uses an existing one),
+    but because this specific key is NOT registered in the Cloud Console,
+    authentication fails.
+4.  **Fallback**:
+    a. The device attempts to connect to GCP 3 times.
+    b. After max retries, it declares the new endpoint "Unreachable".
+    c. It clears the new config from persistence.
+    d. It reconnects to the Local Broker.
+
+USAGE:
+1.  Run the script.
+2.  Publish the JSON trigger to the local broker.
+3.  Watch the logs:
+    - "New endpoint configuration detected..."
+    - "Connecting to mqtt.googleapis.com..."
+    - "Client disconnected with code: 5" (Auth Error)
+    - "Max connection failures reached."
+    - "Fallback endpoint will be: localhost"
+    - "Connection successful."
 """
 
 import base64
+import datetime
 import hashlib
 import json
 import logging
@@ -33,31 +49,30 @@ LOCAL_USERNAME = "pyudmi-device"
 LOCAL_PASSWORD = "somesecureword"
 LOCAL_TOPIC_PREFIX = "/r/ZZ-TRI-FECTA/d/"
 
-# --- 2. CONFIGURATION: TARGET (GCP IoT Core) ---
-# Update these with your actual GCP details
-GCP_PROJECT_ID = "gcp-project-id"
+# --- 2. CONFIGURATION: TARGET (GCP IoT Core - Intended to Fail) ---
+# We use real GCP params so the device *tries* to connect,
+# but since we won't upload the key, it will fail auth.
+GCP_PROJECT_ID = "your-gcp-project"
 GCP_REGION = "us-central1"
 GCP_REGISTRY = "ZZ-TRI-FECTA"
 GCP_DEVICE_ID = "AHU-1"
-GCP_HOSTNAME = "mqtt.bos.goog"
+GCP_HOSTNAME = "mqtt.googleapis.com"
 GCP_PORT = 8883
 
-logging.basicConfig(level=logging.DEBUG, format='%(asctime)s - %(message)s')
+# We provide a key file so the device CAN initialize the JWT stack.
+# Since we won't register this key in the cloud, auth will fail.
+KEY_FILE = "rsa_private_fallback.pem"
+
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(message)s')
 LOGGER = logging.getLogger("RedirectFallbackDemo")
 
 
 def generate_trigger_payload(target_endpoint: Dict[str, Any]) -> str:
-    """
-    Generates the UDMI Config message containing the blobset
-    that points to the new endpoint.
-    """
+    """Generates the UDMI Config message with the new endpoint blob."""
     target_json = json.dumps(target_endpoint)
     target_bytes = target_json.encode('utf-8')
-
     sha256_hash = hashlib.sha256(target_bytes).hexdigest()
-
     b64_data = base64.b64encode(target_bytes).decode('utf-8')
-
     data_uri = f"data:application/json;base64,{b64_data}"
 
     config_payload = {
@@ -77,13 +92,13 @@ def generate_trigger_payload(target_endpoint: Dict[str, Any]) -> str:
     return json.dumps(config_payload, indent=2)
 
 
-import datetime
-
 if __name__ == "__main__":
     try:
         # --- PREPARE TARGET CONFIG ---
-        # This is the config for GCP IoT Core
-        gcp_client_id = f"projects/{GCP_PROJECT_ID}/locations/{GCP_REGION}/registries/{GCP_REGISTRY}/devices/{GCP_DEVICE_ID}"
+        gcp_client_id = (
+            f"projects/{GCP_PROJECT_ID}/locations/{GCP_REGION}/"
+            f"registries/{GCP_REGISTRY}/devices/{GCP_DEVICE_ID}"
+        )
 
         target_endpoint_dict = {
             "client_id": gcp_client_id,
@@ -96,24 +111,20 @@ if __name__ == "__main__":
             }
         }
 
-        # --- GENERATE & PRINT TRIGGER ---
         trigger_json = generate_trigger_payload(target_endpoint_dict)
 
         print("\n" + "=" * 80)
         print("DEMO INSTRUCTIONS:")
-        print("1. The device is connecting to LOCALHOST.")
-        print(
-            "2. To trigger the redirect to GCP, publish the following JSON to:")
+        print("1. The device connects to LOCALHOST.")
+        print("2. Publish this trigger to redirect it to GCP (where it will fail):")
         print(f"   Topic: {LOCAL_TOPIC_PREFIX}{LOCAL_DEVICE_ID}/config")
         print("-" * 20)
         print(trigger_json)
         print("-" * 20)
-        print("You can use mosquitto_pub:")
-        print(
-            f"mosquitto_pub -h {LOCAL_HOSTNAME} -t '{LOCAL_TOPIC_PREFIX}{LOCAL_DEVICE_ID}/config' -m '{trigger_json}'")
+        print(f"mosquitto_pub -h {LOCAL_HOSTNAME} -p {LOCAL_PORT} -u {LOCAL_USERNAME} -P {LOCAL_PASSWORD} -t '{LOCAL_TOPIC_PREFIX}{LOCAL_DEVICE_ID}/config' -m '{trigger_json}'")
         print("=" * 80 + "\n")
 
-        # --- START DEVICE WITH SOURCE CONFIG ---
+        # --- START DEVICE ---
         source_endpoint = EndpointConfiguration.from_dict({
             "client_id": f"{LOCAL_TOPIC_PREFIX}{LOCAL_DEVICE_ID}",
             "hostname": LOCAL_HOSTNAME,
@@ -127,10 +138,8 @@ if __name__ == "__main__":
             }
         })
 
-        # We do not pass key_file - the factory creates a private key for the
-        # device but since the public key is not configured in the IoT Core,
-        # the connection would fail.
-        device = create_device(source_endpoint)
+        # We must provide key_file so the device *can* attempt JWT auth later.
+        device = create_device(source_endpoint, key_file=KEY_FILE)
 
         LOGGER.info("Starting Device on Local Broker...")
         device.run()
