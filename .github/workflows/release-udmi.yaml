@@ -3,7 +3,7 @@ name: UDMI Container Image Release
 on:
   push:
     branches:
-      - master
+      - '**'
 
 jobs:
 

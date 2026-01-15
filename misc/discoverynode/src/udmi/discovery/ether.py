@@ -61,7 +61,7 @@ class EtherDiscovery(discovery.DiscoveryController):
     match depth:
       case "ping":
         return "ping"
-      case "ports":
+      case "ports" | "services":
         return "nmap"
       case _:
         raise RuntimeError(f"unmatched depth {depth}")
@@ -147,20 +147,15 @@ class EtherDiscovery(discovery.DiscoveryController):
   def nmap_runner(self):
     OUTPUT_FILE = "nmaplocalhost.xml"
 
+    cmd = ["/usr/bin/nmap"]
+    if self.config.depth == "services":
+      cmd.extend(["--script", "banner", "-A"])
+    cmd.extend(["-p-", "-T4"])
+    cmd.extend(self.config.addrs)
+    cmd.extend(["-oX", OUTPUT_FILE, "--stats-every", "5s"])
+
     with subprocess.Popen(
-        [
-            "/usr/bin/nmap",
-            "--script",
-            "banner",
-            "-p-",
-            "-T4",
-            "-A",
-            *self.config.addrs,
-            "-oX",
-            OUTPUT_FILE,
-            "--stats-every",
-            "5s",
-        ],
+        cmd,
         stdout=subprocess.PIPE,
         stderr=subprocess.STDOUT,
         encoding="utf-8",
@@ -178,6 +173,7 @@ class EtherDiscovery(discovery.DiscoveryController):
             return
 
     logging.info("nmap scan complete, parsing results")
+
     for host in nmap.results_reader(OUTPUT_FILE):
       event = udmi.schema.discovery_event.DiscoveryEvent(
           generation=self.generation,

@@ -40,10 +40,11 @@ class PassiveNetworkDiscovery(discovery.DiscoveryController):
 
   family = "ipv4"
 
-  def __init__(self, state, publisher, *, interface=None):
+  def __init__(self, state, publisher, *, interface=None, subet_filter=None):
 
     self.queue = queue.SimpleQueue()
-    self.interface = None
+    self.interface = interface
+    self.subet_filter = subnet_filter
     self.addresses_seen = set()
     self.device_records = set()
     self.devices_records_published = set()
@@ -103,8 +104,18 @@ class PassiveNetworkDiscovery(discovery.DiscoveryController):
     )
     self.service_thread.start()
 
+    if subnet := self.subnet_filter:
+      bpf_filter = f"ip and src net {subnet} and (dst net {subnet} or broadcast or multicast)"
+    else:
+      bpf_filter = PRIVATE_IP_BPF_FILTER
+    logging.info("Using BPF filter: %s", bpf_filter)
+
     self.sniffer = scapy.sendrecv.AsyncSniffer(
-        prn=self.queue.put, store=False, iface=self.interface, started_callback=self.scapy_is_go, filter=PRIVATE_IP_BPF_FILTER
+        prn=self.queue.put,
+        store=False,
+        iface=self.interface,
+        started_callback=self.scapy_is_go,
+        filter=bpf_filter,
     )
 
     self.sniffer.start()

@@ -175,7 +175,9 @@ class UDMICore:
     
     if ipv4:
       passive_discovery = udmi.discovery.passive.PassiveNetworkDiscovery(
-          self.state, self.publish_discovery
+          self.state,
+          self.publish_discovery,
+          subet_filter = self.config.get("ip", {}).get("subet_filter")
       )
 
       self.add_config_route(
