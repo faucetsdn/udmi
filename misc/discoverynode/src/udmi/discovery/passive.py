@@ -43,7 +43,7 @@ class PassiveNetworkDiscovery(discovery.DiscoveryController):
   def __init__(self, state, publisher, *, interface=None):
 
     self.queue = queue.SimpleQueue()
-    self.interface = None
+    self.interface = interface
     self.addresses_seen = set()
     self.device_records = set()
     self.devices_records_published = set()
@@ -80,6 +80,41 @@ class PassiveNetworkDiscovery(discovery.DiscoveryController):
     logging.debug("SCAPY is go")
     self.scapy_is_go_signal.set()
 
+  def get_interface_network(self, interface):
+    if not interface:
+      interface = scapy.all.conf.iface
+    try:
+      if_addr_str = scapy.all.get_if_addr(interface)
+      if_addr = ipaddress.ip_address(if_addr_str)
+      candidates = []
+      for network, netmask, gw, iface, addr, metric in scapy.all.conf.route.routes:
+        if iface == interface and addr == if_addr_str:
+          network_str = (
+              str(ipaddress.IPv4Address(network))
+              if isinstance(network, int)
+              else network
+          )
+          netmask_str = (
+              str(ipaddress.IPv4Address(netmask))
+              if isinstance(netmask, int)
+              else netmask
+          )
+          if network_str == "0.0.0.0" and netmask_str == "0.0.0.0":
+            continue  # Skip default route
+          net = ipaddress.ip_network(f"{network_str}/{netmask_str}", strict=False)
+          if if_addr in net:
+            candidates.append(net)
+
+      # Filter out /32 (host) networks, and sort by prefix length (descending)
+      # to find the most specific subnet.
+      candidates = [n for n in candidates if n.prefixlen < 32]
+      candidates.sort(key=lambda n: n.prefixlen, reverse=True)
+      if candidates:
+        return str(candidates[0])
+    except Exception as e:
+      logging.warning("Could not get interface network for %s: %s", interface, e)
+    return None
+
   def start_discovery(self):
     # Queue processor uses a threading event for enabling/disabling
     self.cancel_threads.clear()
@@ -103,8 +138,22 @@ class PassiveNetworkDiscovery(discovery.DiscoveryController):
     )
     self.service_thread.start()
 
+    if_network_str = self.get_interface_network(self.interface)
+    if if_network_str:
+       bpf_filter = f"ip and src net {if_network_str} and (dst net {if_network_str} or broadcast or multicast)"
+      logging.info("Using BPF filter: %s", bpf_filter)
+    else:
+      logging.warning(
+          "Could not determine interface network, using default filter."
+      )
+      bpf_filter = PRIVATE_IP_BPF_FILTER
+
     self.sniffer = scapy.sendrecv.AsyncSniffer(
-        prn=self.queue.put, store=False, iface=self.interface, started_callback=self.scapy_is_go, filter=PRIVATE_IP_BPF_FILTER
+        prn=self.queue.put,
+        store=False,
+        iface=self.interface,
+        started_callback=self.scapy_is_go,
+        filter=bpf_filter,
     )
 
     self.sniffer.start()
