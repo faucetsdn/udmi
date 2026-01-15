@@ -272,10 +272,11 @@ class DiscoveryController(abc.ABC):
             
             if scan_duration_sec > 0:
               next_action = ACTION_STOP
-              # Calcultae based of generation and current time, in case the generation is in the past
+              # Calculate based of generation and current time, in case the generation is in the past
               # Otherwise systematic error gets introduced into all repetitive measurements
               # e.g. instead of starting "on the hour", they all start 5 seconds pst the hour
-              next_action_time = time.time() + scan_duration_sec
+              scheduled_stop_time = self.generation + datetime.timedelta(seconds=scan_duration_sec)
+              next_action_time = scheduled_stop_time.timestamp()
               logging.info("scheduled discovery stop for %s in %d seconds", type(self).__name__, scan_duration_sec)
             else:
               # the scan runs indefinitely, exit the scheduler
@@ -288,9 +289,9 @@ class DiscoveryController(abc.ABC):
             # If the scan is repetitive, schedule the next start
             if scan_interval_sec > 0:
               next_action = ACTION_START
-              sleep_interval = scan_interval_sec - scan_duration_sec
-              # calculate the next generation
-              next_action_time = time.time() + sleep_interval
+              next_generation = self.generation + datetime.timedelta(seconds=scan_interval_sec)
+              next_action_time = next_generation.timestamp()
+              self.set_generation(next_generation)
               logging.info("scheduled discovery start for %s in %d seconds", type(self).__name__, scan_duration_sec)
               self._set_internal_state(states.SCHEDULED)
               self.state.phase = udmi.schema.state.Phase.pending
@@ -415,8 +416,8 @@ class DiscoveryController(abc.ABC):
     """Updates the generation to the the given generation"""
     current_generation = udmi.schema.util.datetime_serializer(self.generation) if self.generation else None
     logging.info("generation now %s, was %s", 
-                 current_generation,
-                 udmi.schema.util.datetime_serializer(new_generation))
+                 udmi.schema.util.datetime_serializer(new_generation),
+                 current_generation)
     self.generation = new_generation
     self.state.generation = new_generation
 
