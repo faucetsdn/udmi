@@ -199,7 +199,10 @@ def test_generation_is_incremented(scan_duration, scan_interval):
     })
 
     for x in range(300):
-      got.add(udmi.schema.util.datetime_serializer(mock_state.discovery.families["vendor"].generation))
+      # In Github Actions this may catch the initial uninitialized state
+      # Ignore it instead of adding an arbitrary delay.
+      if generation := mock_state.discovery.families["vendor"].generation:
+        got.add(udmi.schema.util.datetime_serializer(generation))
       if len(got) == cycles:
         break
       time.sleep(0.1)
