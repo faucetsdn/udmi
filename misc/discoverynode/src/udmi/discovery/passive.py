@@ -40,7 +40,7 @@ class PassiveNetworkDiscovery(discovery.DiscoveryController):
 
   family = "ipv4"
 
-  def __init__(self, state, publisher, *, interface=None, subet_filter=None):
+  def __init__(self, state, publisher, *, interface=None, subnet_filter=None):
 
     self.queue = queue.SimpleQueue()
     self.interface = interface
