@@ -44,7 +44,7 @@ class PassiveNetworkDiscovery(discovery.DiscoveryController):
 
     self.queue = queue.SimpleQueue()
     self.interface = interface
-    self.subet_filter = subnet_filter
+    self.subnet_filter = subnet_filter
     self.addresses_seen = set()
     self.device_records = set()
     self.devices_records_published = set()
