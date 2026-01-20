@@ -150,7 +150,7 @@ class EtherDiscovery(discovery.DiscoveryController):
     cmd = ["/usr/bin/nmap"]
     if self.config.depth == "services":
       cmd.extend(["--script", "banner", "-A"])
-    cmd.extend(["-p-", "-T2"])
+    cmd.extend(["-p-", "-T3"])
     cmd.extend(self.config.addrs)
     cmd.extend(["-oX", OUTPUT_FILE, "--stats-every", "5s"])
 
