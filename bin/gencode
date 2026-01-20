@@ -40,6 +40,11 @@ if [[ -n $check ]]; then
     echo Checking gencode hash: diff /tmp/gencode.hash .gencode_hash.txt
     diff /tmp/gencode.hash .gencode_hash.txt
 
+    echo Comparing manually curated files - level.py with Level.java
+    diff -s \
+      <(grep -E '^\s*[A-Z_]+\(-?[0-9]+\)' gencode/java/udmi/schema/Level.java | sed -E 's/^[[:space:]]*//; s/\(/ /; s/\)[,;]//' | sort) \
+      <(grep -E '^\s*[A-Z_]+\s*=\s*-?[0-9]+' gencode/python/udmi/schema/level.py  | sed -E 's/^[[:space:]]*//; s/\s*=\s*/ /'      | sort)
+
     echo Checking presentation: diff misc/bambi/presentation.gld.json gencode/presentation/presentation.json
     diff misc/bambi/presentation.gld.json gencode/presentation/presentation.json
 else
