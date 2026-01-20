@@ -91,7 +91,6 @@ class PassiveNetworkDiscovery(discovery.DiscoveryController):
     self.devices_records_published.clear()
     self.device_records.clear()
     self.addresses_seen.clear()
-
     # Turn-on the queue worker to consume sniffed packets
     self.queue_thread = threading.Thread(
         target=self.queue_worker, args=[], daemon=True
@@ -105,7 +104,23 @@ class PassiveNetworkDiscovery(discovery.DiscoveryController):
     self.service_thread.start()
 
     if subnet := self.subnet_filter:
-      bpf_filter = f"ip and src net {subnet} and (dst net {subnet} or broadcast or multicast)"
+      try:
+        iface = ipaddress.ip_interface(subnet)
+        network = iface.network
+        bpf_filter = f"ip and src net {network} and (dst net {network} or broadcast or multicast)"
+        # Exclude network and broadcast addresses from being discovered as source
+        bpf_filter += f" and not src host {network.network_address}"
+        if network.broadcast_address:
+          bpf_filter += f" and not src host {network.broadcast_address}"
+        # Assume first host is gateway and exclude it
+        if first_host := next(network.hosts(), None):
+          bpf_filter += f" and not src host {first_host}"
+        # Exclude our own IP if provided in the subnet filter
+        if iface.ip != network.network_address:
+          bpf_filter += f" and not src host {iface.ip}"
+      except ValueError:
+        logging.warning("Invalid subnet filter: %s", subnet)
+        bpf_filter = f"ip and src net {subnet} and (dst net {subnet} or broadcast or multicast)"
     else:
       bpf_filter = PRIVATE_IP_BPF_FILTER
     logging.info("Using BPF filter: %s", bpf_filter)
@@ -186,8 +201,10 @@ class PassiveNetworkDiscovery(discovery.DiscoveryController):
         if scapy.layers.inet.IP in item:
           self.ip_packets_seen += 1
 
-          # A packet "sees" two devices - the source and the destination
-          for x in ["src", "dst"]:
+          # A packet "sees" two devices - the source and the destination.
+          # However, we only care about the source, as the destination may
+          # not be online (e.g. if we are pinging it).
+          for x in ["src"]:
 
             if x == "src":
               if scapy.layers.inet.UDP in item and (
