@@ -1,3 +1,7 @@
+"""
+This module defines the Level enum, representing logging severity levels
+aligned with a subset of StackDriver LogSeverity levels.
+"""
 from enum import IntEnum, unique
 
 @unique
@@ -23,5 +27,5 @@ class Level(IntEnum):
     """
     try:
       return cls(value)
-    except ValueError:
-      raise ValueError(str(value))
+    except ValueError as exc:
+      raise ValueError(str(value)) from exc
