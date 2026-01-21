@@ -1,0 +1,96 @@
+#!/usr/bin/env python3
+""" Gencode generator for categories """
+import re
+import sys
+import os
+
+INPUT_FILE = "docs/specs/categories.md"
+OUTPUT_FILE = "gencode/python/udmi/schema/category.py"
+
+REGEX = re.compile(
+  r"^(\s*)\*\s+_([a-zA-Z0-9]+)_:\s*(?:\(\*\*([A-Z]+)\*\*\))?\s*(.*)")
+
+def generate_header():
+  return [
+    "from dataclasses import dataclass",
+    "from typing import ClassVar, Dict",
+    "",
+    "from ._base import DataModel",
+    "from .level import Level",
+    "",
+    "@dataclass",
+    "class Category(DataModel):",
+    "  \"\"\"",
+    "  This class is manually curated, auto-generated, and then copied into "
+    "the directory.",
+    "  Look for the proper source and don't be fooled! Ultimately sourced "
+    "from docs/specs/categories.md",
+    "  \"\"\"",
+    "  LEVEL: ClassVar[Dict[str, Level]] = {}",
+    ""
+  ]
+
+def process_file():
+  if not os.path.exists(INPUT_FILE):
+    print(f"Error: Could not find {INPUT_FILE}")
+    sys.exit(1)
+
+  with open(INPUT_FILE, "r", encoding="utf-8") as f:
+    lines = f.readlines()
+
+  path_stack = []
+  entries = []
+
+  for line in lines:
+    match = REGEX.match(line)
+    if match:
+      indent_str = match.group(1)
+      name = match.group(2)
+      level = match.group(3)
+      description = match.group(4).strip()
+
+      current_indent = len(indent_str)
+
+      while path_stack and path_stack[-1][0] >= current_indent:
+        path_stack.pop()
+
+      path_stack.append((current_indent, name))
+
+      if level:
+        full_path = ".".join([item[1] for item in path_stack])
+        const_name = full_path.upper().replace(".", "_")
+
+        entries.append({
+          "const": const_name,
+          "val": full_path,
+          "level": level,
+          "desc": description
+        })
+
+  return entries
+
+def write_output(entries):
+  os.makedirs(os.path.dirname(OUTPUT_FILE), exist_ok=True)
+
+  with open(OUTPUT_FILE, "w", encoding="utf-8") as f:
+    for line in generate_header():
+      f.write(line + "\n")
+
+    for entry in entries:
+      c_name = entry["const"]
+      c_val = entry["val"]
+      lvl = entry["level"]
+      desc = entry["desc"]
+
+      f.write(f"  # {desc}\n")
+      f.write(f"  {c_name}: ClassVar[str] = \"{c_val}\"\n")
+      f.write(f"  {c_name}_LEVEL: ClassVar[Level] = Level.{lvl}\n")
+      f.write(f"  {c_name}_VALUE: ClassVar[int] = Level.{lvl}.value\n")
+      f.write(f"  LEVEL[{c_name}] = Level.{lvl}\n")
+      f.write("\n")
+
+  print(f"Generated {len(entries)} categories into {OUTPUT_FILE}")
+
+if __name__ == "__main__":
+  file_entries = process_file()
+  write_output(file_entries)

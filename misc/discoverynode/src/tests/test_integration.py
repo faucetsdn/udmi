@@ -135,7 +135,7 @@ def test_nmap():
             "timestamp": timestamp_now(),
             "discovery": {
                 "families": {
-                    "ether": {"generation": timestamp_now(), "depth": "ports", "addrs": ["192.168.12.1/24"]}
+                    "ether": {"generation": timestamp_now(), "depth": "services", "addrs": ["192.168.12.1/24"]}
                 }
             },
         })

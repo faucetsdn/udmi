@@ -4,7 +4,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Any, Optional
+from typing import Optional, Union
 
 from ._base import DataModel
 
@@ -15,4 +15,4 @@ class PointPointsetEvents(DataModel):
     Object representation for for a single point
     """
 
-    present_value: Optional[Any] = None
+    present_value: Optional[Union[str, bool, float]] = None
