@@ -1,0 +1,103 @@
+#!/usr/bin/env python3
+""" Gencode generator for buckets """
+import re
+import sys
+import os
+
+INPUT_FILE = "docs/specs/buckets.md"
+OUTPUT_FILE = "gencode/python/udmi/schema/bucket.py"
+
+REGEX = re.compile(r"^\s*\*\s+_([a-z]+)_:\s*(.*)")
+DEVICE_PREFIX = "device"
+
+def generate_header():
+  return [
+    "from dataclasses import dataclass",
+    "from typing import ClassVar, Set",
+    "",
+    "from ._base import DataModel",
+    "",
+    "@dataclass",
+    "class Bucket(DataModel):",
+    "  \"\"\"",
+    "  This class is manually curated, auto-generated, and then copied "
+    "into the directory.",
+    "  Look for the proper source and don't be fooled! Ultimately sourced "
+    "from docs/specs/buckets.md",
+    "  \"\"\"",
+    ""
+  ]
+
+def process_file():
+  if not os.path.exists(INPUT_FILE):
+    print(f"Error: Could not find {INPUT_FILE}")
+    sys.exit(1)
+
+  with open(INPUT_FILE, "r", encoding="utf-8") as f:
+    lines = f.readlines()
+
+  path_stack = []
+  entries = []
+
+  for line in lines:
+    match = REGEX.match(line)
+    if match:
+      leading_spaces = len(line) - len(line.lstrip())
+      indent_level = leading_spaces // 2
+
+      name = match.group(1)
+      description = match.group(2).strip()
+
+      while len(path_stack) > indent_level:
+        path_stack.pop()
+
+      path_stack.append(name)
+
+      full_path = ".".join(path_stack)
+
+      if full_path.startswith(DEVICE_PREFIX):
+        continue
+
+      const_name = full_path.upper().replace(".", "_")
+
+      entries.append({
+        "const": const_name,
+        "val": full_path,
+        "desc": description
+      })
+
+  return entries
+
+def write_output(entries):
+  os.makedirs(os.path.dirname(OUTPUT_FILE), exist_ok=True)
+
+  with open(OUTPUT_FILE, "w", encoding="utf-8") as f:
+    for line in generate_header():
+      f.write(line + "\n")
+
+    for entry in entries:
+      c_name = entry["const"]
+      c_val = entry["val"]
+      desc = entry["desc"]
+
+      f.write(f"  # {desc}\n")
+      f.write(f"  {c_name}: ClassVar[str] = \"{c_val}\"\n\n")
+
+    f.write("  # unknown default value\n")
+    f.write("  UNKNOWN_DEFAULT: ClassVar[str] = \"unknown\"\n\n")
+
+    f.write("  _values: ClassVar[Set[str]] = {\n")
+    for entry in entries:
+      f.write(f"    {entry['const']},\n")
+    f.write("    UNKNOWN_DEFAULT\n")
+    f.write("  }\n\n")
+
+    f.write("  @classmethod\n")
+    f.write("  def contains(cls, value: str) -> bool:\n")
+    f.write("    return value in cls._values\n")
+
+  print(f"Generated {len(entries)} buckets into {OUTPUT_FILE}")
+
+if __name__ == "__main__":
+  file_entries = process_file()
+  write_output(file_entries)
