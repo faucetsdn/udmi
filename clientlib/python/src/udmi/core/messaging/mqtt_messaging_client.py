@@ -58,6 +58,8 @@ class MqttMessagingClient(AbstractMessagingClient):
     Supports Gateway functionality (publishing/subscribing for proxies).
     """
 
+    # pylint: disable=too-many-instance-attributes
+
     def __init__(self, endpoint_config: EndpointConfiguration,
         auth_provider: Optional[AuthProvider] = None,
         tls_config: Optional[TlsConfig] = None,
@@ -192,7 +194,7 @@ class MqttMessagingClient(AbstractMessagingClient):
             LOGGER.info("Dynamic subscription to: %s", topic)
             try:
                 self._mqtt_client.subscribe(topic, qos=1)
-            except Exception as e:
+            except Exception as e: # pylint: disable=broad-exception-caught
                 LOGGER.error("Subscribe failed for %s: %s", topic, e)
 
     # --- Callback Setters ---
@@ -249,7 +251,7 @@ class MqttMessagingClient(AbstractMessagingClient):
                     topic = "/" + topic
                 try:
                     client.subscribe(topic, qos=1)
-                except Exception as e:
+                except Exception as e: # pylint: disable=broad-exception-caught
                     LOGGER.error("Subscribe failed for %s: %s", topic, e)
 
             if self._callbacks.on_connect:
@@ -267,7 +269,7 @@ class MqttMessagingClient(AbstractMessagingClient):
                 payload = msg.payload.decode('utf-8')
                 if self._callbacks.on_message:
                     self._callbacks.on_message(device_id, channel, payload)
-            except Exception as e:
+            except Exception as e: # pylint: disable=broad-exception-caught
                 LOGGER.error("Error processing message on %s: %s", topic, e)
         else:
             LOGGER.warning("Unexpected topic format: %s", topic)

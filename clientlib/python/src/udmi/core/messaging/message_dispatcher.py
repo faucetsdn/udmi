@@ -106,7 +106,7 @@ class MessageDispatcher(AbstractMessageDispatcher):
         """Executes a handler, catching and logging any exceptions."""
         try:
             handler(device_id, channel, payload)
-        except Exception as e:
+        except Exception as e: # pylint: disable=broad-exception-caught
             LOGGER.error("Handler exception for %s/%s: %s",
                          device_id, channel, e, exc_info=True)
 
@@ -116,7 +116,7 @@ class MessageDispatcher(AbstractMessageDispatcher):
         try:
             payload = state.to_json()
             self._client.publish("state", payload, device_id)
-        except Exception as e:
+        except Exception as e: # pylint: disable=broad-exception-caught
             LOGGER.error("Failed to publish state: %s", e)
 
     def publish_event(self, channel: str, event: DataModel,
@@ -125,7 +125,7 @@ class MessageDispatcher(AbstractMessageDispatcher):
         try:
             payload = event.to_json()
             self._client.publish(channel, payload, device_id)
-        except Exception as e:
+        except Exception as e: # pylint: disable=broad-exception-caught
             LOGGER.error("Failed to publish event %s: %s", channel, e)
 
     # --- Lifecycle Methods ---

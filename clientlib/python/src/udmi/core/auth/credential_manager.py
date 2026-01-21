@@ -139,19 +139,19 @@ class CredentialManager(Signer):
         private_key = self._get_private_key_obj()
 
         if isinstance(private_key, rsa.RSAPrivateKey):
+            # pylint: disable=import-outside-toplevel
             from cryptography.hazmat.primitives.asymmetric import padding
             return private_key.sign(
                 payload,
                 padding.PKCS1v15(),
                 hashes.SHA256()
             )
-        elif isinstance(private_key, ec.EllipticCurvePrivateKey):
+        if isinstance(private_key, ec.EllipticCurvePrivateKey):
             return private_key.sign(
                 payload,
                 ec.ECDSA(hashes.SHA256())
             )
-        else:
-            raise ValueError(f"Unsupported key type: {type(private_key)}")
+        raise ValueError(f"Unsupported key type: {type(private_key)}")
 
     def get_public_key_pem(self) -> str:
         """
@@ -177,7 +177,7 @@ class CredentialManager(Signer):
                 LOGGER.info("Backing up existing credentials...")
                 self.store.backup()
             except Exception as e:
-                LOGGER.error(f"Backup failed: {e}. Aborting rotation.")
+                LOGGER.error("Backup failed: %s. Aborting rotation.", e)
                 raise RuntimeError(
                     "Credential rotation aborted due to backup failure.") from e
 

@@ -17,8 +17,6 @@ from typing import Callable
 from typing import Dict
 from typing import Optional
 
-from udmi.schema import Mode
-
 try:
     import psutil
 except ImportError:
@@ -38,6 +36,7 @@ from udmi.schema import Config
 from udmi.schema import Entry
 from udmi.schema import Metadata
 from udmi.schema import Metrics
+from udmi.schema import Mode
 from udmi.schema import State
 from udmi.schema import StateSystemHardware
 from udmi.schema import StateSystemOperation
@@ -56,7 +55,6 @@ DEFAULT_METRICS_RATE_SEC = 60
 CommandHandler = Callable[[Dict[str, Any]], None]
 
 # Key Rotation Callback Signature: (new_public_key_pem, backup_identifier) -> bool (success)
-# The callback should return True if the key was successfully uploaded/processed, False otherwise.
 KeyRotationCallback = Callable[[str, str], bool]
 
 # Lifecycle Handler Signature: () -> None
@@ -69,11 +67,11 @@ class SystemManager(BaseManager):
     Also manages 'blobset' for OTA/File updates and Key Rotation orchestration.
     """
 
+    # pylint: disable=too-many-instance-attributes
+
     @property
     def model_field_name(self) -> str:
         return "system"
-
-    # pylint: disable=too-many-instance-attributes
 
     def __init__(self, system_state: Optional[SystemState] = None):
         """
@@ -124,6 +122,9 @@ class SystemManager(BaseManager):
     def handle_config(self, config: Config) -> None:
         """
         Handles the 'system' and 'blobset' portions of a new config message.
+
+        Args:
+            config: The full device configuration.
         """
         if not config:
             return
@@ -138,8 +139,12 @@ class SystemManager(BaseManager):
             self._process_blobset_config(config.blobset)
 
     def _handle_system_config(self, system_config: SystemConfig) -> None:
-        """Applies system-level configuration."""
+        """
+        Applies system-level configuration updates.
 
+        Updates log levels, metrics reporting rates, and handles system
+        operations like reboot or shutdown.
+        """
         # Log Level
         if system_config.min_loglevel is not None:
             self._update_log_level(system_config.min_loglevel)
@@ -153,7 +158,12 @@ class SystemManager(BaseManager):
             self._handle_operation_config(system_config.operation)
 
     def _update_log_level(self, min_loglevel: int) -> None:
-        """Updates the root logger level based on config."""
+        """
+        Updates the root logger level based on config.
+
+        Args:
+            min_loglevel: The UDMI log level (e.g., 500=Error, 200=Info).
+        """
         # Map UDMI levels (100-500) to Python levels (10-50)
         python_level = max(10, min_loglevel // 10)
         current_level = logging.getLogger().getEffectiveLevel()
@@ -163,6 +173,12 @@ class SystemManager(BaseManager):
             logging.getLogger().setLevel(python_level)
 
     def _update_metrics_rate(self, new_rate: int) -> None:
+        """
+        Updates the rate at which system metrics are published.
+
+        Args:
+            new_rate: The interval in seconds.
+        """
         if new_rate != self._metrics_rate_sec:
             LOGGER.info("Updating metrics rate from %s to %s",
                         self._metrics_rate_sec, new_rate)
@@ -173,6 +189,9 @@ class SystemManager(BaseManager):
     def _handle_operation_config(self, operation: Operation) -> None:
         """
         Handles system operation requests (Restart, Shutdown, Start Time Sync).
+
+        Args:
+            operation: The system operation configuration object.
         """
         # Mode Check (Active vs Restart/Shutdown)
         if operation.mode:
@@ -224,7 +243,7 @@ class SystemManager(BaseManager):
         if self._restart_handler:
             try:
                 self._restart_handler()
-            except Exception as e:
+            except Exception as e: # pylint: disable=broad-exception-caught
                 LOGGER.error("Error executing restart handler: %s", e)
         else:
             LOGGER.warning("No restart handler registered. Ignoring restart request.")
@@ -239,7 +258,7 @@ class SystemManager(BaseManager):
         if self._shutdown_handler:
             try:
                 self._shutdown_handler()
-            except Exception as e:
+            except Exception as e: # pylint: disable=broad-exception-caught
                 LOGGER.error("Error executing shutdown handler: %s", e)
         else:
             LOGGER.warning("No shutdown handler registered. Ignoring shutdown request.")
@@ -247,19 +266,34 @@ class SystemManager(BaseManager):
     # --- Lifecycle Callback Registration ---
 
     def register_restart_handler(self, handler: LifecycleHandler) -> None:
-        """Registers a callback for system restart requests."""
+        """
+        Registers a callback for system restart requests.
+
+        Args:
+            handler: Function to call to reboot the physical device.
+        """
         self._restart_handler = handler
         LOGGER.info("Registered system restart handler.")
 
     def register_shutdown_handler(self, handler: LifecycleHandler) -> None:
-        """Registers a callback for system shutdown requests."""
+        """
+        Registers a callback for system shutdown requests.
+
+        Args:
+            handler: Function to call to shutdown the physical device.
+        """
         self._shutdown_handler = handler
         LOGGER.info("Registered system shutdown handler.")
 
     # --- Metadata Handling ---
 
     def set_model(self, model: Metadata) -> None:
-        """Applies Metadata to System State (Hardware/Software info)."""
+        """
+        Applies Metadata to System State (Hardware/Software info).
+
+        Args:
+            model: The device metadata.
+        """
         super().set_model(model)
         if not self.model:
             return
@@ -282,6 +316,15 @@ class SystemManager(BaseManager):
                               process: ProcessHandler,
                               post_process: Optional[PostProcessHandler] = None,
                               expects_file: bool = False) -> None:
+        """
+        Registers a handler for a specific blob ID (e.g., 'firmware').
+
+        Args:
+            blob_key: The ID of the blob (e.g., 'firmware', 'credentials').
+            process: The function to process the blob data.
+            post_process: Optional function to run after successful processing.
+            expects_file: If True, 'process' receives a file path instead of bytes.
+        """
         self._blob_handlers[blob_key] = BlobPipelineHandlers(
             process=process,
             post_process=post_process,
@@ -290,6 +333,9 @@ class SystemManager(BaseManager):
         LOGGER.info("Registered handler for blob key: '%s'", blob_key)
 
     def _process_blobset_config(self, blobset: BlobsetConfig) -> None:
+        """
+        Iterates through blobset config and triggers updates for new generations.
+        """
         if not blobset.blobs:
             return
 
@@ -306,6 +352,9 @@ class SystemManager(BaseManager):
             self._apply_blob(key, blob_config)
 
     def _apply_blob(self, key: str, config: BlobBlobsetConfig) -> None:
+        """
+        Initiates the background worker to fetch and apply a specific blob.
+        """
         self._update_blob_state(key, Phase.apply, config.generation)
         self.trigger_state_update()
 
@@ -319,6 +368,13 @@ class SystemManager(BaseManager):
         worker_thread.start()
 
     def _run_blob_worker(self, key: str, config: BlobBlobsetConfig) -> None:
+        """
+        Worker thread that downloads, verifies, and applies the blob.
+
+        Args:
+            key: The blob identifier.
+            config: The configuration for this specific blob.
+        """
         LOGGER.info("Starting background blob worker for '%s'...", key)
         tmp_fd, tmp_path = tempfile.mkstemp()
         os.close(tmp_fd)
@@ -362,6 +418,9 @@ class SystemManager(BaseManager):
 
     def _update_blob_state(self, key: str, phase: Phase, generation: str,
                            error_message: Optional[str] = None) -> None:
+        """
+        Updates the internal state for a specific blob and prepares it for reporting.
+        """
         status_entry = None
         if error_message:
             status_entry = Entry(
@@ -379,15 +438,24 @@ class SystemManager(BaseManager):
     # --- Standard Manager Methods ---
 
     def register_command_handler(self, command_name: str, handler: CommandHandler) -> None:
+        """Registers a handler for a custom device command."""
         self._command_handlers[command_name] = handler
 
     def register_key_rotation_callback(self, callback: KeyRotationCallback) -> None:
+        """Registers the callback that handles the physical key rotation."""
         self._key_rotation_callback = callback
 
     def rotate_key(self) -> None:
+        """Manually triggers key rotation (convenience method)."""
         self.trigger_key_rotation({})
 
     def start(self) -> None:
+        """
+        Starts the SystemManager.
+
+        Restores persistent state (restart counts, applied blobs), sends the
+        startup event, and begins the metrics reporting loop.
+        """
         try:
             if self._device and self._device.persistence:
                 saved_count = self._device.persistence.get("restart_count", 0)
@@ -397,7 +465,7 @@ class SystemManager(BaseManager):
                 saved_blobs = self._device.persistence.get("applied_blobs", {})
                 if saved_blobs:
                     self._applied_blob_generations = saved_blobs
-        except Exception as e:
+        except Exception as e: # pylint: disable=broad-exception-caught
             LOGGER.error("Failed to handle persistence: %s", e)
 
         self._publish_startup_event()
@@ -407,10 +475,10 @@ class SystemManager(BaseManager):
             name="SystemMetrics"
         )
 
-    def stop(self) -> None:
-        super().stop()
-
     def handle_command(self, command_name: str, payload: dict) -> None:
+        """
+        Routes a command to the appropriate registered handler.
+        """
         handler = self._command_handlers.get(command_name)
         if handler:
             try:
@@ -421,6 +489,9 @@ class SystemManager(BaseManager):
             LOGGER.warning("Unknown command '%s' received.", command_name)
 
     def update_state(self, state: State) -> None:
+        """
+        Updates the system and blobset blocks in the state object.
+        """
         self._system_state.last_config = self._last_config_ts
         if self._system_state.operation is None:
             self._system_state.operation = StateSystemOperation()
@@ -434,6 +505,7 @@ class SystemManager(BaseManager):
             state.blobset = BlobsetState(blobs=self._blob_states)
 
     def _publish_startup_event(self) -> None:
+        """Publishes the system startup event log."""
         try:
             log_entry = Entry(
                 message="Device has started",
@@ -446,10 +518,11 @@ class SystemManager(BaseManager):
                 logentries=[log_entry]
             )
             self.publish_event(startup_event, "system")
-        except Exception as e:
+        except Exception as e: # pylint: disable=broad-exception-caught
             LOGGER.error("Failed to publish startup event: %s", e)
 
     def _report_status(self, level: int, message: str) -> None:
+        """Updates the system status entry."""
         self._system_state.status = Entry(
             message=message,
             level=level,
@@ -457,6 +530,9 @@ class SystemManager(BaseManager):
         )
 
     def publish_metrics(self) -> None:
+        """
+        Collects system metrics using psutil and publishes them.
+        """
         if psutil is None:
             return
 
@@ -476,10 +552,18 @@ class SystemManager(BaseManager):
                 metrics=metrics
             )
             self.publish_event(system_event, "system")
-        except Exception as e:
+        except Exception as e: # pylint: disable=broad-exception-caught
             LOGGER.error("Failed to publish metrics: %s", e)
 
     def trigger_key_rotation(self, _payload: Optional[Dict[str, Any]] = None) -> None:
+        """
+        Orchestrates the key rotation process.
+
+        1. Backs up current keys (if supported).
+        2. Generates new keys via CredentialManager.
+        3. Invokes the callback to upload/notify the cloud.
+        4. Requests a connection reset on success.
+        """
         cred_manager = getattr(self._device, 'credential_manager', None)
         if not cred_manager:
             LOGGER.error("Cannot rotate key: CredentialManager not available.")
@@ -503,7 +587,7 @@ class SystemManager(BaseManager):
             if self._key_rotation_callback:
                 try:
                     success = self._key_rotation_callback(new_pem, backup_identifier or "")
-                except Exception:
+                except Exception: # pylint: disable=broad-exception-caught
                     success = False
 
             if success:
@@ -513,7 +597,7 @@ class SystemManager(BaseManager):
             else:
                 raise RuntimeError("Rotation callback reported failure")
 
-        except Exception as e:
+        except Exception as e: # pylint: disable=broad-exception-caught
             LOGGER.error("Key rotation failed: %s", e)
             self._report_status(500, f"Key rotation failed: {e}")
             if backup_identifier and hasattr(cred_manager.store, 'restore_from_backup'):

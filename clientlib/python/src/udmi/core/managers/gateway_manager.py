@@ -46,6 +46,12 @@ class GatewayManager(BaseManager):
     PERSISTENCE_KEY = "gateway_proxies"
 
     def __init__(self) -> None:
+        """
+        Initializes the GatewayManager.
+
+        Sets up internal storage for proxy IDs, handlers, and the initial
+        gateway state.
+        """
         super().__init__()
         self._proxies: List[str] = []
         self._proxy_config_handlers: Dict[str, ProxyConfigHandler] = {}
@@ -100,6 +106,7 @@ class GatewayManager(BaseManager):
 
         target_family = gateway_config.target.family
 
+        # pylint: disable=import-outside-toplevel
         from udmi.core.managers.localnet_manager import LocalnetManager
         localnet_manager: Optional[LocalnetManager] = None
         if self._device:
@@ -146,7 +153,13 @@ class GatewayManager(BaseManager):
             self.remove_proxy(device_id)
 
     def handle_command(self, command_name: str, payload: dict) -> None:
-        pass
+        """
+        Handles commands directed at the gateway device itself.
+
+        Args:
+            command_name: The name of the command.
+            payload: The command payload.
+        """
 
     def update_state(self, state: State) -> None:
         """Populates the 'gateway' state block."""
@@ -160,6 +173,11 @@ class GatewayManager(BaseManager):
                   command_handler: Optional[ProxyCommandHandler] = None) -> None:
         """
         Registers a proxy device, persists it, and sends the 'attach' message.
+
+        Args:
+            device_id: The unique ID of the proxy device.
+            config_handler: Optional callback for this proxy's config updates.
+            command_handler: Optional callback for this proxy's commands.
         """
         if device_id not in self._proxies:
             self._proxies.append(device_id)
@@ -180,6 +198,9 @@ class GatewayManager(BaseManager):
     def remove_proxy(self, device_id: str) -> None:
         """
         Unregisters a proxy device, removes from persistence, and sends 'detach'.
+
+        Args:
+            device_id: The unique ID of the proxy device to remove.
         """
         if device_id in self._proxies:
             self._proxies.remove(device_id)
@@ -198,38 +219,87 @@ class GatewayManager(BaseManager):
             self._device.persistence.set(self.PERSISTENCE_KEY, self._proxies)
 
     def handle_proxy_config(self, device_id: str, config: Config) -> None:
+        """
+        Routes configuration updates to the specific proxy handler.
+
+        Args:
+            device_id: The ID of the proxy device receiving config.
+            config: The parsed configuration object.
+        """
         handler = self._proxy_config_handlers.get(device_id, self._default_config_handler)
         if handler:
             try:
                 handler(device_id, config)
-            except Exception as e:
+            except Exception as e: # pylint: disable=broad-exception-caught
                 LOGGER.error("Error in proxy config handler for %s: %s", device_id, e)
 
     def handle_proxy_command(self, device_id: str, command_name: str, payload: dict) -> None:
+        """
+        Routes commands to the specific proxy handler.
+
+        Args:
+            device_id: The ID of the proxy device receiving the command.
+            command_name: The name of the command.
+            payload: The command payload dictionary.
+        """
         handler = self._proxy_command_handlers.get(device_id, self._default_command_handler)
         if handler:
             try:
                 handler(device_id, command_name, payload)
-            except Exception as e:
+            except Exception as e: # pylint: disable=broad-exception-caught
                 LOGGER.error("Error in proxy command handler for %s: %s", device_id, e)
 
     def _send_attach_message(self, device_id: str) -> None:
+        """
+        Publishes an MQTT 'attach' message to the broker for the given device.
+
+        Args:
+            device_id: The ID of the proxy device to attach.
+        """
         if self._dispatcher:
             self._dispatcher.client.publish("attach", "", device_id=device_id)
 
     def _send_detach_message(self, device_id: str) -> None:
+        """
+        Publishes an MQTT 'detach' message to the broker for the given device.
+
+        Args:
+            device_id: The ID of the proxy device to detach.
+        """
         if self._dispatcher:
             self._dispatcher.client.publish("detach", "", device_id=device_id)
 
     def publish_proxy_state(self, device_id: str, state: DataModel) -> None:
+        """
+        Publishes a state update on behalf of a proxy device.
+
+        Args:
+            device_id: The ID of the proxy device.
+            state: The state object to publish.
+        """
         if self._dispatcher:
             self._dispatcher.publish_state(state, device_id=device_id)
 
     def publish_proxy_event(self, device_id: str, event_model: DataModel, subfolder: str) -> None:
+        """
+        Publishes an event (telemetry) on behalf of a proxy device.
+
+        Args:
+            device_id: The ID of the proxy device.
+            event_model: The event data model to publish.
+            subfolder: The event subfolder (e.g., 'system', 'pointset').
+        """
         if self._dispatcher:
             self._dispatcher.publish_event(f"events/{subfolder}", event_model, device_id=device_id)
 
     def set_default_handlers(self, config_handler: Optional[ProxyConfigHandler] = None,
                              command_handler: Optional[ProxyCommandHandler] = None) -> None:
+        """
+        Sets the default handlers for proxies that don't have specific ones registered.
+
+        Args:
+            config_handler: The default callback for config updates.
+            command_handler: The default callback for commands.
+        """
         self._default_config_handler = config_handler
         self._default_command_handler = command_handler

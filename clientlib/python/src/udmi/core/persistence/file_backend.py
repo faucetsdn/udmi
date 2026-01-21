@@ -75,7 +75,7 @@ class FilePersistenceBackend(PersistenceBackend):
             LOGGER.warning("Backing up corrupt persistence file to %s",
                            corrupt_path)
             shutil.copy2(self.file_path, corrupt_path)
-        except Exception as e:
+        except Exception as e: # pylint: disable=broad-exception-caught
             LOGGER.error("Failed to backup corrupt file: %s", e)
 
     def _flush_to_disk(self) -> None:
@@ -84,7 +84,7 @@ class FilePersistenceBackend(PersistenceBackend):
             try:
                 data = json.dumps(self._cache, indent=2)
                 atomic_write(self.file_path, data)
-            except Exception as e:
+            except Exception as e: # pylint: disable=broad-exception-caught
                 LOGGER.critical("FATAL: Failed to save persistence file: %s", e)
 
     def load(self, key: str) -> Optional[Any]:

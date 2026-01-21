@@ -89,7 +89,8 @@ class Device:
     This class is NOT intended to be subclassed.
     """
 
-    # pylint:disable=too-many-instance-attributes
+    # pylint: disable=too-many-instance-attributes,too-many-arguments
+    # pylint: disable=too-many-positional-arguments
 
     def __init__(self,
                  managers: List[BaseManager],
@@ -220,7 +221,7 @@ class Device:
             try:
                 masked = mask_secrets(payload)
                 LOGGER.debug("Config payload (masked): %s", masked)
-            except Exception as e:
+            except Exception as e: # pylint: disable=broad-exception-caught
                 LOGGER.warning("Failed to mask/log config payload: %s", e)
         try:
             config_obj = Config.from_dict(payload)
@@ -281,7 +282,7 @@ class Device:
                     config_obj = Config.from_dict(payload)
                     manager.handle_proxy_config(device_id, config_obj)
                     handled = True
-                except Exception as e:
+                except Exception as e: # pylint: disable=broad-exception-caught
                     LOGGER.error("Error routing proxy config to %s: %s",
                                  manager.__class__.__name__, e)
 
@@ -298,7 +299,7 @@ class Device:
                 try:
                     manager.handle_proxy_command(device_id, command_name, payload)
                     handled = True
-                except Exception as e:
+                except Exception as e: # pylint: disable=broad-exception-caught
                     LOGGER.error("Error routing proxy command to %s: %s",
                                  manager.__class__.__name__, e)
 
@@ -346,7 +347,7 @@ class Device:
                 try:
                     LOGGER.info("Invoking redirection handler...")
                     self._redirection_handler(new_endpoint)
-                except Exception as e:
+                except Exception as e: # pylint: disable=broad-exception-caught
                     LOGGER.error("Error in redirection handler: %s", e)
 
             LOGGER.info("Signaling main loop to trigger connection reset...")

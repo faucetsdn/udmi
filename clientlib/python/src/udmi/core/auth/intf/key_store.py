@@ -44,12 +44,12 @@ class KeyStore(abc.ABC):
             True if the key exists, False otherwise.
         """
 
-    def backup(self, backup_path: Optional[str] = None) -> str:
+    def backup(self, backup_identifier: Optional[str] = None) -> str:
         """
         Creates a backup of the current key.
 
         Args:
-            backup_path: Path to create the backup.
+            backup_identifier: Identifier for the backup.
 
         Returns:
             The identifier/path of the created backup.
@@ -59,12 +59,12 @@ class KeyStore(abc.ABC):
         """
         raise NotImplementedError("Backup not supported by this KeyStore.")
 
-    def restore_from_backup(self, backup_path: str) -> None:
+    def restore_from_backup(self, backup_identifier: str) -> None:
         """
         Restores the key from a backup.
 
         Args:
-            backup_path: The path to restore from.
+            backup_identifier: The identifier for the backup to restore from.
 
         Raises:
             NotImplementedError: If the backend does not support restoration.

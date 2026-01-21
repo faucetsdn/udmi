@@ -48,7 +48,15 @@ class Point:
     Tracks its own reporting state (last reported value/time) for COV logic.
     """
 
+    # pylint: disable=too-many-instance-attributes
+
     def __init__(self, name: str):
+        """
+        Initializes a new Point.
+
+        Args:
+            name: The unique identifier for this point (e.g., 'temp_sensor_1').
+        """
         self.name = name
         self.present_value: Any = None
         self.units: Optional[str] = None
@@ -66,12 +74,25 @@ class Point:
         self.last_reported_time: float = 0.0
 
     def set_model(self, model: PointPointsetModel) -> None:
-        """Applies static definition from Metadata."""
+        """
+        Applies static definition from Metadata.
+
+        Args:
+            model: The metadata model defining static properties like units.
+        """
         if model.units:
             self.units = model.units
 
     def set_present_value(self, value: Any) -> None:
-        """Updates the current reading of the point."""
+        """
+        Updates the current reading of the point.
+
+        This updates the internal state but does not trigger immediate reporting.
+        Reporting is handled by the `should_report` check during the telemetry loop.
+
+        Args:
+            value: The new value reading.
+        """
         self.present_value = value
         if self.status and self.status.level >= 500:
             self.status = None
@@ -79,7 +100,13 @@ class Point:
     def update_config(self, config: PointPointsetConfig) -> bool:
         """
         Updates point metadata based on config.
-        Returns True if a writeback (set_value change) occurred.
+
+        Args:
+            config: The configuration object for this specific point.
+
+        Returns:
+            True if a writeback (set_value change) occurred, requiring external handling.
+            False otherwise.
         """
         if config.units is not None:
             self.units = config.units
@@ -100,7 +127,12 @@ class Point:
         return dirty
 
     def get_state(self) -> PointPointsetState:
-        """Returns the state representation of this point."""
+        """
+        Returns the state representation of this point.
+
+        Returns:
+            A PointPointsetState object suitable for serialization in the state block.
+        """
         return PointPointsetState(
             status=self.status,
             value_state=self.value_state,
@@ -108,7 +140,12 @@ class Point:
         )
 
     def get_event(self) -> PointPointsetEvents:
-        """Returns the telemetry event representation of this point."""
+        """
+        Returns the telemetry event representation of this point.
+
+        Returns:
+            A PointPointsetEvents object containing the present value.
+        """
         return PointPointsetEvents(
             present_value=self.present_value
         )
@@ -117,6 +154,17 @@ class Point:
         """
         Determines if this point needs to be reported based on Change of Value (COV)
         and Heartbeat logic.
+
+        Logic:
+        1. If never reported, report immediately.
+        2. If value changed > cov_increment, report immediately.
+        3. If time since last report > heartbeat_interval, report immediately.
+
+        Args:
+            sample_rate_sec: The global sample rate (used to calculate heartbeat).
+
+        Returns:
+            True if the point should be included in the next telemetry message.
         """
         if self.present_value is None:
             return False
@@ -151,7 +199,12 @@ class Point:
         return False
 
     def mark_reported(self) -> None:
-        """Updates the reporting state after a successful publish."""
+        """
+        Updates the reporting state after a successful publish.
+
+        Syncs `last_reported_value` with `present_value` and updates
+        `last_reported_time` to the current time.
+        """
         self.last_reported_value = self.present_value
         self.last_reported_time = time.time()
 
@@ -169,6 +222,12 @@ class PointsetManager(BaseManager):
         return "pointset"
 
     def __init__(self, sample_rate_sec: int = DEFAULT_SAMPLE_RATE_SEC):
+        """
+        Initializes the PointsetManager.
+
+        Args:
+            sample_rate_sec: The default interval between telemetry checks.
+        """
         super().__init__()
         self._points: Dict[str, Point] = {}
         self._sample_rate_sec = sample_rate_sec
@@ -182,10 +241,19 @@ class PointsetManager(BaseManager):
 
     @property
     def points(self) -> Mapping[str, Point]:
+        """Returns a read-only mapping of the managed points."""
         return self._points
 
     def set_model(self, model: Metadata) -> None:
-        """Applies the Pointset Metadata (Model) to the manager."""
+        """
+        Applies the Pointset Metadata (Model) to the manager.
+
+        This iterates through the metadata model and initializes points
+        defined therein.
+
+        Args:
+            model: The device metadata object.
+        """
         super().set_model(model)
         if not self.model or not hasattr(self.model, 'points') or not self.model.points:
             return
@@ -197,16 +265,34 @@ class PointsetManager(BaseManager):
             self._points[name].set_model(point_model)
 
     def set_writeback_handler(self, handler: WritebackHandler) -> None:
-        """Registers a callback for 'set_value' requests from cloud."""
+        """
+        Registers a callback for 'set_value' requests from cloud.
+
+        Args:
+            handler: A callable taking (point_name, value).
+        """
         self._writeback_handler = handler
 
     def set_poll_callback(self, callback: PollCallback) -> None:
-        """Registers a callback invoked immediately before telemetry generation."""
+        """
+        Registers a callback invoked immediately before telemetry generation.
+
+        This allows the application to perform a "just-in-time" read of
+        sensor data before the manager checks for COV.
+
+        Args:
+            callback: A callable returning a dict of {point_name: value}.
+        """
         self._poll_callback = callback
         LOGGER.info("Registered telemetry poll callback.")
 
     def add_point(self, name: str) -> None:
-        """Register a point to be managed."""
+        """
+        Registers a point to be managed.
+
+        Args:
+            name: The name of the point to add.
+        """
         if name not in self._points:
             self._points[name] = Point(name)
             LOGGER.debug("Added point '%s' to manager.", name)
@@ -214,13 +300,21 @@ class PointsetManager(BaseManager):
     def set_point_value(self, name: str, value: Any) -> None:
         """
         API for Client Application to update a point's value.
+
+        Args:
+            name: The name of the point.
+            value: The new value.
         """
         if name not in self._points:
             self.add_point(name)
         self._points[name].set_present_value(value)
 
     def start(self) -> None:
-        """Starts the background telemetry reporting loop."""
+        """
+        Starts the background telemetry reporting loop.
+
+        Restores persisted state and launches the periodic task.
+        """
         LOGGER.info("Starting PointsetManager telemetry loop...")
         self._load_persisted_state()
         self._telemetry_wake_event = self.start_periodic_task(
@@ -230,6 +324,9 @@ class PointsetManager(BaseManager):
         )
 
     def stop(self) -> None:
+        """
+        Stops the telemetry loop and persists current state.
+        """
         self._persist_state()
         super().stop()
         LOGGER.info("PointsetManager stopped.")
@@ -238,6 +335,9 @@ class PointsetManager(BaseManager):
         """
         Handles 'pointset' block of config.
         Updates sample rates and dynamic point configurations.
+
+        Args:
+            config: The full device configuration.
         """
         if not config.pointset:
             return
@@ -275,13 +375,14 @@ class PointsetManager(BaseManager):
             if is_writeback and self._writeback_handler is not None:
                 try:
                     self._writeback_handler(point_name, point.set_value)
-                except Exception as e:
+                except Exception as e: # pylint: disable=broad-exception-caught
                     LOGGER.error("Error in writeback handler for %s: %s",
                                  point_name, e)
 
     def handle_command(self, command_name: str, payload: dict) -> None:
-        # Pointset currently does not handle specific commands
-        pass
+        """
+        Handles commands directed at the pointset (currently none).
+        """
 
     def _load_persisted_state(self) -> None:
         """Loads the last known point values from persistence."""
@@ -305,11 +406,16 @@ class PointsetManager(BaseManager):
 
             LOGGER.info("Restored state for %s points.", restored_count)
 
-        except Exception as e:
+        except Exception as e: # pylint: disable=broad-exception-caught
             LOGGER.error("Failed to load persisted pointset state: %s", e)
 
     def update_state(self, state: State) -> None:
-        """Populates state.pointset with status of all managed points."""
+        """
+        Populates state.pointset with status of all managed points.
+
+        Args:
+            state: The state object to update.
+        """
         points_state_map = {
             name: point.get_state()
             for name, point in self._points.items()
@@ -335,13 +441,19 @@ class PointsetManager(BaseManager):
                     }
 
             self._device.persistence.set(self.PERSISTENCE_KEY, data_to_save)
-        except Exception as e:
+        except Exception as e: # pylint: disable=broad-exception-caught
             LOGGER.error("Failed to persist pointset state: %s", e)
 
     def publish_telemetry(self) -> None:
         """
         Generates and publishes a PointsetEvents message containing
         only the points that are 'due' for reporting.
+
+        This method:
+        1. Invokes the Poll Callback (if registered) to refresh values.
+        2. Iterates over all points to check `should_report()` (COV/Heartbeat).
+        3. Constructs a payload of only the reporting points.
+        4. Publishes to MQTT via the dispatcher.
         """
         if self._poll_callback:
             try:
@@ -352,7 +464,7 @@ class PointsetManager(BaseManager):
                 else:
                     LOGGER.warning("Poll callback returned non-dict type: %s",
                                    type(new_values))
-            except Exception as e:
+            except Exception as e: # pylint: disable=broad-exception-caught
                 LOGGER.error("Error in telemetry poll callback: %s", e,
                              exc_info=True)
 

@@ -98,11 +98,12 @@ def _wire_device(
                             during a connection reset.
         credential_manager: Manager for handling device credentials and keys.
         initial_model: Initial Metadata model for the device.
-        persistence_backend: Custom backend for persistence (e.g., database, specialized file store).
-                             If None, a FilePersistenceBackend at persistence_path is used.
+        persistence_backend: Custom backend for persistence (e.g., database,
+                             specialized file store). If None, a
+                             FilePersistenceBackend at persistence_path is used.
     """
     LOGGER.debug("Wiring device components...")
-    
+
     backend = persistence_backend or FilePersistenceBackend(persistence_path)
     persistence = DevicePersistence(backend, endpoint_config)
 
@@ -126,7 +127,7 @@ def _wire_device(
         on_disconnect_callback=device.on_disconnect
     )
     device.wire_up_dispatcher(dispatcher)
-    
+
     LOGGER.info("Device instance created and wired successfully.")
     return device
 
@@ -195,7 +196,7 @@ def create_device(
     """
     LOGGER.info("Determining auth strategy for %s...",
                 endpoint_config.client_id)
-    
+
     client_config = client_config or ClientConfig()
 
     credential_manager = None

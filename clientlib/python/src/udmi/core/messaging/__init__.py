@@ -88,7 +88,7 @@ def create_client_from_endpoint_config(
 
     tls_config = tls_config or TlsConfig()
 
-    is_mtls = (config.auth_provider is None)
+    is_mtls = config.auth_provider is None
 
     # Initialize CredentialManager if needed (for JWT signing OR mTLS gen)
     # We do this if:

@@ -4,59 +4,67 @@ Common file operations utility for atomic and secure writes.
 This module provides helpers for writing files in a way that prevents data
 corruption during power failures (atomic_write) and for sanitizing logs (mask_secrets).
 """
+import contextlib
 import os
 import tempfile
 from typing import Any
 from typing import Dict
 from typing import Iterable
+from typing import IO
 from typing import Union
 
 
-def atomic_write(path: str, data: Union[str, bytes], mode: int = 0o600) -> None:
+@contextlib.contextmanager
+def atomic_file_context(path: str, mode: int = 0o600, open_mode: str = "wb") -> Iterable[IO]:
     """
-    Writes data to a file atomically and securely.
+    Context manager that creates a temporary file in the destination directory.
 
-    This function prevents partial writes (corruption) by:
-    1. Writing to a temporary file in the same directory (ensuring same filesystem).
-    2. Flushing and fsyncing to ensure data is physically on disk.
-    3. Setting file permissions (default 600: Owner Read/Write).
-    4. Atomically renaming the temporary file to the target path.
+    On success (exiting context), it atomically moves the temp file to the target path.
+    On failure (exception), it cleans up the temp file.
 
     Args:
         path: The target file path.
-        data: The content to write (str or bytes).
-        mode: The file permissions (default 0o600).
+        mode: File permissions to apply (default 0o600).
+        open_mode: Mode to open the file with (default "wb").
     """
     directory = os.path.dirname(path) or "."
-
-    # Ensure target directory exists
     os.makedirs(directory, exist_ok=True)
 
-    open_mode = "w" if isinstance(data, str) else "wb"
-
     # Create temp file in the same directory to allow atomic rename
-    with tempfile.NamedTemporaryFile(mode=open_mode, dir=directory,
-                                     delete=False) as tmp_file:
+    with tempfile.NamedTemporaryFile(mode=open_mode, dir=directory, delete=False) as tmp_file:
         tmp_name = tmp_file.name
         try:
-            tmp_file.write(data)
-            tmp_file.flush()
-            os.fsync(tmp_file.fileno())  # Force write to physical disk
+            yield tmp_file
 
-            # Apply permissions before moving into place
+            # Flush and sync to disk
+            tmp_file.flush()
+            os.fsync(tmp_file.fileno())
+
+            # Apply permissions
             os.chmod(tmp_name, mode)
 
-            # Close the file descriptor before moving
+            # Close before moving
             tmp_file.close()
 
             # Atomic replace
             os.replace(tmp_name, path)
+
         except Exception:
             # Cleanup on failure
             tmp_file.close()
             if os.path.exists(tmp_name):
                 os.unlink(tmp_name)
             raise
+
+
+def atomic_write(path: str, data: Union[str, bytes], mode: int = 0o600) -> None:
+    """
+    Writes data to a file atomically and securely.
+    """
+    open_mode = "w" if isinstance(data, str) else "wb"
+
+    with atomic_file_context(path, mode=mode, open_mode=open_mode) as f:
+        f.write(data)
 
 
 def mask_secrets(data: Any, sensitive_keys: Iterable[str] = None) -> Any:
@@ -67,7 +75,8 @@ def mask_secrets(data: Any, sensitive_keys: Iterable[str] = None) -> Any:
     Args:
         data: The input dictionary or list to sanitize.
         sensitive_keys: Iterable of key names to mask.
-                        Defaults to: ["password", "secret", "key_data", "private_key", "token", "auth"]
+                        Defaults to: ["password", "secret", "key_data",
+                        "private_key", "token", "auth"]
 
     Returns:
         A new structure with sensitive values replaced by '********'.

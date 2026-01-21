@@ -14,6 +14,7 @@ from urllib.parse import urlparse
 import requests
 
 from udmi.core.utils.file_ops import atomic_write
+from udmi.core.utils.file_ops import atomic_file_context
 
 LOGGER = logging.getLogger(__name__)
 
@@ -105,32 +106,12 @@ class HttpFetcher(AbstractBlobFetcher):
             LOGGER.info("Streaming blob to file: %s", url)
             headers = {'User-Agent': 'udmi-python-device/1.0'}
 
-            import os
-            import tempfile
-
-            dest_dir = os.path.dirname(dest_path) or "."
-            os.makedirs(dest_dir, exist_ok=True)
-
             with requests.get(url, stream=True, timeout=(10, self.timeout),
                               headers=headers) as r:
                 r.raise_for_status()
-                with tempfile.NamedTemporaryFile(mode='wb', dir=dest_dir,
-                                                 delete=False) as tmp_file:
-                    tmp_name = tmp_file.name
-                    try:
-                        shutil.copyfileobj(r.raw, tmp_file)
-                        tmp_file.flush()
-                        os.fsync(tmp_file.fileno())
-                        tmp_file.close()
 
-                        os.chmod(tmp_name, 0o600)
-
-                        os.replace(tmp_name, dest_path)
-                    except Exception:
-                        tmp_file.close()
-                        if os.path.exists(tmp_name):
-                            os.unlink(tmp_name)
-                        raise
+                with atomic_file_context(dest_path) as tmp_file:
+                    shutil.copyfileobj(r.raw, tmp_file)
 
         except Exception as e:
             raise BlobFetchError(f"HTTP stream failed: {e}") from e

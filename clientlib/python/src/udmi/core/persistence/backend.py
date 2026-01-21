@@ -27,7 +27,6 @@ class PersistenceBackend(ABC):
         Returns:
             The stored value, or None if the key does not exist.
         """
-        pass
 
     @abstractmethod
     def save(self, key: str, value: Any) -> None:
@@ -39,7 +38,6 @@ class PersistenceBackend(ABC):
             value: The data to store. Must be serializable by the backend
                    (typically JSON-serializable).
         """
-        pass
 
     @abstractmethod
     def delete(self, key: str) -> None:
@@ -49,7 +47,6 @@ class PersistenceBackend(ABC):
         Args:
             key: The identifier for the data to remove.
         """
-        pass
 
     def load_all(self) -> Dict[str, Any]:
         """

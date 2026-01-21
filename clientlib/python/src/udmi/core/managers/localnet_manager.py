@@ -28,6 +28,9 @@ LOGGER = logging.getLogger(__name__)
 class LocalnetManager(BaseManager):
     """
     Manages the 'localnet' block with enhanced validation and status reporting.
+
+    This manager acts as the translation layer between logical UDMI device IDs
+    and physical fieldbus addresses.
     """
 
     @property
@@ -35,6 +38,12 @@ class LocalnetManager(BaseManager):
         return "localnet"
 
     def __init__(self) -> None:
+        """
+        Initializes the LocalnetManager.
+
+        Sets up the internal routing tables (Device ID -> Address) and the
+        provider registry for different protocol families.
+        """
         super().__init__()
         # Routing Table: family -> { device_id -> physical_address }
         self._routing_table: Dict[str, Dict[str, str]] = {}
@@ -54,20 +63,37 @@ class LocalnetManager(BaseManager):
 
         Args:
             family: The protocol family string (e.g., 'bacnet', 'modbus').
-            provider: The concrete FamilyProvider implementation.
+            provider: The concrete FamilyProvider implementation used to
+                      validate addresses and handle family-specific logic.
         """
         self._providers[family] = provider
         LOGGER.info("Registered FamilyProvider for '%s'", family)
 
     def get_provider(self, family: str) -> Optional[FamilyProvider]:
+        """
+        Retrieves the registered provider for a given family.
+
+        Args:
+            family: The protocol family identifier.
+
+        Returns:
+            The registered FamilyProvider instance, or None if not found.
+        """
         return self._providers.get(family)
 
     # --- Core Manager Hooks ---
 
     def handle_config(self, config: Config) -> None:
         """
-        Parses 'localnet' config, validates against registered providers,
-        and updates the routing table.
+        Parses the 'localnet' configuration block.
+
+        This method:
+        1. Validates the configuration against registered providers.
+        2. Rebuilds the internal routing table.
+        3. Generates the status state (OK/Error) for each family.
+
+        Args:
+            config: The full device configuration object.
         """
         if not config.localnet:
             return
@@ -98,24 +124,49 @@ class LocalnetManager(BaseManager):
 
     def update_state(self, state: State) -> None:
         """
-        Publishes the validation results and status of the local network.
+        Populates the 'localnet' state block.
+
+        Publishes the validation results and status of the local network
+        to the state message.
+
+        Args:
+            state: The state object to update.
         """
         if self._localnet_state and self._localnet_state.families:
             state.localnet = self._localnet_state
 
     def get_registered_families(self) -> List[str]:
+        """
+        Returns a list of all currently registered protocol families.
+
+        Returns:
+            A list of strings (e.g., ['modbus', 'bacnet']).
+        """
         return list(self._providers.keys())
 
     def handle_command(self, command_name: str, payload: dict) -> None:
-        pass
+        """
+        Handles commands directed at the localnet manager.
+        (Currently unused/pass-through).
+        """
 
     # --- Robust Processing Logic ---
 
     def _process_family_config(self, family: str,
-        family_config: Any) -> FamilyLocalnetState:
+                               family_config: Any) -> FamilyLocalnetState:
         """
         Validates configuration and builds the routing table for a single family.
-        Returns the FamilyLocalnetState with appropriate Status (OK or Error).
+
+        This internal method checks if the provider exists and delegates
+        address validation to that provider. It returns a state object
+        indicating whether the configuration for this family is valid.
+
+        Args:
+            family: The protocol family name.
+            family_config: The configuration object for this family.
+
+        Returns:
+            A FamilyLocalnetState object containing the status (Active, Error, Warning).
         """
         family_state = FamilyLocalnetState()
         family_state.addr = getattr(family_config, 'addr', None)
@@ -166,6 +217,15 @@ class LocalnetManager(BaseManager):
     # --- Public API ---
 
     def get_physical_address(self, family: str, device_id: str) -> Optional[
-        str]:
-        """Resolves logical ID to physical address."""
+            str]:
+        """
+        Resolves a logical UDMI device ID to its physical network address.
+
+        Args:
+            family: The protocol family to look up (e.g., 'modbus').
+            device_id: The logical device ID.
+
+        Returns:
+            The physical address string if found, otherwise None.
+        """
         return self._routing_table.get(family, {}).get(device_id)

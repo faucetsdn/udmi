@@ -59,7 +59,7 @@ class DevicePersistence:
         if saved_dict:
             try:
                 return EndpointConfiguration.from_dict(saved_dict)
-            except Exception as e:
+            except Exception as e: # pylint: disable=broad-exception-caught
                 LOGGER.error("Failed to parse saved endpoint for key '%s': %s",
                              key, e)
         return None

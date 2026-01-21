@@ -83,6 +83,7 @@ class DiscoveryManager(BaseManager):
         """
         Publishes a DiscoveryEvent containing static capabilities of this device.
         """
+        # pylint: disable=import-outside-toplevel
         from udmi.core.managers.localnet_manager import LocalnetManager
         localnet: Optional[LocalnetManager] = None
         if self._device:
@@ -141,12 +142,13 @@ class DiscoveryManager(BaseManager):
         for provider in self._active_providers:
             try:
                 provider.stop_scan()
-            except Exception as e:
+            except Exception as e: # pylint: disable=broad-exception-caught
                 LOGGER.error("Error stopping scan provider: %s", e)
         self._active_providers.clear()
 
     def _handle_discovery_command(self, payload: dict) -> None:
         """Manual trigger via command."""
+        # pylint: disable=import-outside-toplevel
         from udmi.core.managers.localnet_manager import LocalnetManager
         localnet_manager = self._device.get_manager(LocalnetManager)
 
@@ -163,6 +165,7 @@ class DiscoveryManager(BaseManager):
 
     def _trigger_scan(self, family: str) -> None:
         """Helper to initiate the thread for a specific family scan."""
+        # pylint: disable=import-outside-toplevel
         from udmi.core.managers.localnet_manager import LocalnetManager
         localnet_manager = self._device.get_manager(LocalnetManager)
 
@@ -201,7 +204,7 @@ class DiscoveryManager(BaseManager):
             provider.start_scan(fam_config, self._handle_scan_result)
             LOGGER.info("Scan finished for '%s'.", family)
 
-        except Exception as e:
+        except Exception as e: # pylint: disable=broad-exception-caught
             LOGGER.error("Scan failed for '%s': %s", family, e, exc_info=True)
         finally:
             if provider in self._active_providers:
@@ -227,6 +230,6 @@ class DiscoveryManager(BaseManager):
         f_state.active = active
 
         if not active and self._config and self._config.families:
-             fam_config = self._config.families.get(family)
-             if fam_config and fam_config.generation:
-                 f_state.generation = fam_config.generation
+            fam_config = self._config.families.get(family)
+            if fam_config and fam_config.generation:
+                f_state.generation = fam_config.generation

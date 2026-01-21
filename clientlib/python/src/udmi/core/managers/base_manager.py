@@ -149,7 +149,7 @@ class BaseManager(abc.ABC):
 
                 try:
                     task()
-                except Exception as e:
+                except Exception as e: # pylint: disable=broad-exception-caught
                     LOGGER.error("Error in task '%s': %s", name, e,
                                  exc_info=True)
 
