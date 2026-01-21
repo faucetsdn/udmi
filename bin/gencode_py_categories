@@ -12,22 +12,41 @@ REGEX = re.compile(
 
 def generate_header():
   return [
-    "from dataclasses import dataclass",
-    "from typing import ClassVar, Dict",
-    "",
-    "from ._base import DataModel",
-    "from .level import Level",
-    "",
-    "@dataclass",
-    "class Category(DataModel):",
-    "  \"\"\"",
-    "  This class is manually curated, auto-generated, and then copied into "
-    "the directory.",
-    "  Look for the proper source and don't be fooled! Ultimately sourced "
-    "from docs/specs/categories.md",
-    "  \"\"\"",
-    "  LEVEL: ClassVar[Dict[str, Level]] = {}",
-    ""
+      "\"\"\"",
+      "This module defines the Category enum, representing system event "
+      "categories",
+      "and their default logging levels.",
+      "\"\"\"",
+      "from enum import Enum",
+      "from .level import Level",
+      "",
+      "class Category(Enum):",
+      "    \"\"\"",
+      "    This class is manually curated, auto-generated, and then copied "
+      "into the directory.",
+      "    Look for the proper source and don't be fooled! Ultimately sourced"
+      " from docs/specs/categories.md",
+      "    \"\"\"",
+      ""
+  ]
+
+def generate_footer():
+  return [
+      "",
+      "    def __init__(self, value_str: str, default_level: Level):",
+      "        self._value_str = value_str",
+      "        self.default_level = default_level",
+      "",
+      "    @property",
+      "    def value(self) -> str:",
+      "        return self._value_str",
+      "",
+      "    @property",
+      "    def level(self) -> int:",
+      "        return self.default_level.value",
+      "",
+      "    def __str__(self) -> str:",
+      "        return self._value_str"
   ]
 
 def process_file():
@@ -61,10 +80,10 @@ def process_file():
         const_name = full_path.upper().replace(".", "_")
 
         entries.append({
-          "const": const_name,
-          "val": full_path,
-          "level": level,
-          "desc": description
+            "const": const_name,
+            "val": full_path,
+            "level": level,
+            "desc": description
         })
 
   return entries
@@ -82,12 +101,12 @@ def write_output(entries):
       lvl = entry["level"]
       desc = entry["desc"]
 
-      f.write(f"  # {desc}\n")
-      f.write(f"  {c_name}: ClassVar[str] = \"{c_val}\"\n")
-      f.write(f"  {c_name}_LEVEL: ClassVar[Level] = Level.{lvl}\n")
-      f.write(f"  {c_name}_VALUE: ClassVar[int] = Level.{lvl}.value\n")
-      f.write(f"  LEVEL[{c_name}] = Level.{lvl}\n")
-      f.write("\n")
+      f.write(f"    # {desc}\n")
+      # Enum member definition: NAME = ("value", Level.CONST)
+      f.write(f"    {c_name} = (\"{c_val}\", Level.{lvl})\n\n")
+
+    for line in generate_footer():
+      f.write(line + "\n")
 
   print(f"Generated {len(entries)} categories into {OUTPUT_FILE}")
 
