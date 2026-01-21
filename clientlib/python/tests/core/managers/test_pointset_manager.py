@@ -2,27 +2,11 @@
 Unit tests for the `PointsetManager` class.
 
 This module tests the `PointsetManager` and its helper `Point` class in isolation.
-
-Key behaviors verified:
-- Point Logic:
-    - Value updates are reflected in telemetry events.
-    - Config updates (units) are reflected in state.
-- Manager Config Handling:
-    - Sample rate updates are applied.
-    - State Etag is captured.
-    - New points defined in config are added to the manager.
-- State Generation:
-    - `update_state` correctly populates the `state.pointset` block with
-      metadata from all managed points.
-- Telemetry Publishing:
-    - `publish_telemetry` generates a `PointsetEvents` object.
-    - Only points with set values are included in the event.
-    - Events are published to the 'pointset' channel.
-- Lifecycle:
-    - Start/Stop correctly manages the background thread.
 """
 
 from unittest.mock import MagicMock
+from unittest.mock import patch
+import time
 
 import pytest
 from udmi.schema import Config
@@ -77,6 +61,28 @@ def test_point_config_update():
 
     state = point.get_state()
     assert state.units == "Celsius"
+
+
+def test_point_should_report_cov_logic():
+    """
+    Test the Change of Value (COV) logic.
+    """
+    point = Point("test_point")
+    point.cov_increment = 1.0
+
+    point.set_present_value(10.0)
+    assert point.should_report(sample_rate_sec=10) is True
+    point.mark_reported()
+
+    point.set_present_value(10.5)
+    assert point.should_report(sample_rate_sec=10) is False
+
+    point.set_present_value(11.1)
+    assert point.should_report(sample_rate_sec=10) is True
+    point.mark_reported()
+
+    with patch("time.time", return_value=point.last_reported_time + 601):
+        assert point.should_report(sample_rate_sec=10) is True
 
 
 # --- PointsetManager Tests ---
@@ -209,13 +215,61 @@ def test_lifecycle_start_stop(manager):
     """
     Test that start/stop manages the thread correctly.
     """
-    assert manager._telemetry_thread is None
+    assert len(manager._active_threads) == 0
 
-    manager.start()
-    assert manager._telemetry_thread is not None
-    assert manager._telemetry_thread.is_alive()
-    assert not manager._stop_event.is_set()
+    with patch('udmi.core.managers.pointset_manager.PointsetManager._load_persisted_state'):
+        manager.start()
 
-    manager.stop()
-    assert manager._stop_event.is_set()
-    assert not manager._telemetry_thread.is_alive()
+    assert len(manager._active_threads) == 1
+    thread = manager._active_threads[0]
+    assert thread.is_alive()
+    assert not manager._shutdown_event.is_set()
+
+    with patch('udmi.core.managers.pointset_manager.PointsetManager._persist_state'):
+        manager.stop()
+
+    assert manager._shutdown_event.is_set()
+    assert len(manager._active_threads) == 0
+
+
+def test_handle_config_triggers_writeback_handler(manager):
+    """
+    Verifies that if a config contains 'set_value', the registered
+    writeback handler is called.
+    """
+    mock_handler = MagicMock()
+    manager.set_writeback_handler(mock_handler)
+
+    config = Config(
+        pointset=PointsetConfig(
+            points={
+                "setpoint": PointPointsetConfig(set_value=22.5)
+            }
+        )
+    )
+
+    manager.handle_config(config)
+
+    mock_handler.assert_called_once_with("setpoint", 22.5)
+    assert manager._points["setpoint"].set_value == 22.5
+
+
+def test_publish_telemetry_invokes_poll_callback(manager, mock_dispatcher):
+    """
+    Verifies that if a poll callback is registered, it is called
+    before telemetry generation, and its results are included.
+    """
+    manager.set_device_context(device=None, dispatcher=mock_dispatcher)
+
+    def mock_poll():
+        return {"polled_point": 123}
+
+    manager.set_poll_callback(mock_poll)
+
+    manager.publish_telemetry()
+
+    call_args = mock_dispatcher.publish_event.call_args
+    payload = call_args[0][1]
+
+    assert "polled_point" in payload.points
+    assert payload.points["polled_point"].present_value == 123

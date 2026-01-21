@@ -3,30 +3,6 @@ Unit tests for the `MessageDispatcher` class.
 
 This module tests the `MessageDispatcher` in isolation by mocking the
 underlying `AbstractMessagingClient`.
-
-Key behaviors verified:
-- Handler Registration: Ensures `register_handler` correctly separates
-  exact-match handlers from wildcard (MQTT-style '+' and '#') handlers.
-- Message Routing Logic:
-    - Verifies routing to exact-match handlers.
-    - Verifies routing to single-level (`+`) wildcard handlers.
-    - Verifies routing to multi-level (`#`) wildcard handlers.
-    - Confirms that an exact-match handler is always preferred over a
-      competing wildcard match for the same topic.
-- Robustness:
-    - Ensures that a malformed JSON payload is caught, logged,
-      and does not crash the dispatcher's `_on_message` callback.
-    - Ensures that an exception raised from *within* a message handler
-      is caught, logged, and does not crash the dispatcher.
-    - Ensures a message for an unhandled topic is safely logged as a warning.
-- Outbound Publishing:
-    - Verifies `publish_state` correctly serializes the `State` object
-      to a compact JSON string and publishes to the 'state' channel.
-    - Verifies `publish_event` serializes any `DataModel` (e.g.,
-      `SystemEvents`) to compact JSON and publishes to the specified channel.
-- Lifecycle Passthrough: Confirms that core lifecycle methods
-  (`connect`, `start_loop`, `close`, `check_authentication`) are
-  passed through to the underlying client.
 """
 
 import json
@@ -77,11 +53,9 @@ def test_dispatcher_registers_handlers(dispatcher, mock_client, handlers):
     Test that the dispatcher correctly registers handlers and
     sets the client's on_message callback during __init__.
     """
-    # Verify the dispatcher set its callback on the client
     mock_client.set_on_message_handler.assert_called_once_with(
         dispatcher._on_message)
 
-    # Register handlers
     dispatcher.register_handler("config", handlers["config"])
     dispatcher.register_handler("commands/reboot", handlers["command_reboot"])
     dispatcher.register_handler("commands/#", handlers["commands_wildcard"])
@@ -141,11 +115,9 @@ def test_dispatcher_prefers_exact_over_wildcard(dispatcher, handlers):
     dispatcher._on_message(device_id="test_device", channel="commands/reboot",
                            payload=json.dumps(payload_dict))
 
-    # The exact handler should be called
     handlers["command_reboot"].assert_called_once_with(
         "test_device", "commands/reboot", payload_dict
     )
-    # The wildcard handler should NOT be called
     handlers["commands_wildcard"].assert_not_called()
 
 
@@ -153,32 +125,25 @@ def test_dispatcher_handles_json_decode_error(dispatcher, handlers, caplog):
     """Test that bad JSON is caught and logged, but doesn't crash."""
     dispatcher.register_handler("config", handlers["config"])
 
-    # No exception should be raised
     with caplog.at_level(logging.ERROR):
         dispatcher._on_message(device_id="test_device", channel="config",
                                payload="this is not json")
 
-    # The handler should not be called
     handlers["config"].assert_not_called()
-    # We should have logged the error
-    assert "Failed to decode JSON payload" in caplog.text
+    assert "Failed to decode JSON from" in caplog.text
 
 
 def test_dispatcher_handles_handler_exception(dispatcher, handlers, caplog):
     """Test that an exception in a handler is caught and logged."""
-    # Make the handler raise an exception when called
     handlers["config"].side_effect = TypeError("Something broke!")
     dispatcher.register_handler("config", handlers["config"])
 
-    # No exception should be raised from the dispatcher itself
     with caplog.at_level(logging.ERROR):
         dispatcher._on_message(device_id="test_device", channel="config",
                                payload="{}")
 
-    # The handler should have been called
     handlers["config"].assert_called_once()
-    # We should have logged the error
-    assert "Handler for channel config failed" in caplog.text
+    assert "Handler exception for" in caplog.text
 
 
 def test_publish_state(dispatcher, mock_client):

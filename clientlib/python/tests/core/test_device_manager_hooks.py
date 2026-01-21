@@ -1,19 +1,9 @@
 """
 Tests for the Device-Manager integration within the UDMI core.
-
-This module verifies that the core device orchestrator, created via
-the factory, correctly interacts with its registered `BaseManager` components.
-
-The tests simulate a connected device and check the following key interactions:
-1.  When the device publishes its state, it first calls the manager's
-    `update_state` method to populate the state object.
-2.  When the device receives an MQTT config message, it correctly parses
-    it and calls the manager's `handle_config` method.
-3.  When the device receives an MQTT command message, it correctly parses
-    the topic and payload and calls the manager's `handle_command` method.
 """
 
 import json
+import logging
 from unittest.mock import MagicMock
 from unittest.mock import patch
 
@@ -75,13 +65,10 @@ def connected_device(
     """
     A helper fixture to get a device in the 'connected' state.
     """
-    # Get the internal callback that MqttMessagingClient registered with paho
     on_connect_callback = mock_paho_client_instance.on_connect
 
-    # Simulate a successful connection (rc=0)
     on_connect_callback(mock_paho_client_instance, None, None, 0)
 
-    # Reset mocks after the initial connection-related publish
     mock_paho_client_instance.publish.reset_mock()
     mock_manager.update_state.reset_mock()
     return test_device
@@ -156,3 +143,111 @@ def test_manager_handle_command_called(
         command_payload
     )
     mock_paho_client_instance.publish.assert_not_called()
+
+
+def test_manager_handle_config_exception_is_caught(
+    connected_device,
+    mock_paho_client_instance,
+    mock_manager,
+    caplog
+):
+    """
+    Verifies that if a manager raises an exception during config handling,
+    it is caught, logged, and the device continues.
+    """
+    mock_manager.handle_config.side_effect = ValueError("Config Boom!")
+
+    with patch("udmi.core.device.STATE_THROTTLE_SEC", 0):
+        config_topic = "/devices/d/config"
+        config_payload = {"timestamp": "2025-01-01T00:00:00Z", "system": {}}
+
+        on_message_callback = mock_paho_client_instance.on_message
+        mock_msg = MagicMock(
+            topic=config_topic,
+            payload=json.dumps(config_payload).encode('utf-8')
+        )
+
+        with caplog.at_level(logging.ERROR):
+            on_message_callback(mock_paho_client_instance, None, mock_msg)
+
+        mock_manager.handle_config.assert_called_once()
+
+        assert "Error in BaseManager.handle_config: Config Boom!" in caplog.text
+
+
+def test_manager_handle_command_exception_is_caught(
+    connected_device,
+    mock_paho_client_instance,
+    mock_manager,
+    caplog
+):
+    """
+    Verifies that if a manager raises an exception during command handling,
+    it is caught and logged.
+    """
+    mock_manager.handle_command.side_effect = KeyError("Command Missing Key")
+
+    command_topic = "/devices/d/commands/reset"
+    mock_msg = MagicMock(topic=command_topic, payload=b'{}')
+
+    with caplog.at_level(logging.ERROR):
+        mock_paho_client_instance.on_message(mock_paho_client_instance, None,
+                                             mock_msg)
+
+    assert "Error in BaseManager.handle_command: 'Command Missing Key'" in caplog.text
+
+
+def test_manager_update_state_exception_is_caught(
+    connected_device,
+    mock_manager,
+    caplog
+):
+    """
+    Verifies that if a manager fails to update state, the error is logged
+    and the device attempts to continue publishing (or at least doesn't crash).
+    """
+    mock_manager.update_state.side_effect = ValueError("State Build Fail")
+
+    with patch("udmi.core.device.STATE_THROTTLE_SEC", 0):
+        with caplog.at_level(logging.ERROR):
+            connected_device._publish_state()
+
+    assert "Error in BaseManager.update_state: State Build Fail" in caplog.text
+
+
+def test_multiple_managers_isolation(
+    mock_endpoint_config,
+    mock_paho_client_class
+):
+    """
+    Verifies that with multiple managers, an error in one does not stop
+    the others from receiving the update.
+    """
+    manager_good = MagicMock(spec=BaseManager)
+    manager_bad = MagicMock(spec=BaseManager)
+    manager_bad.handle_config.side_effect = ValueError("Fail")
+
+    device = create_device(
+        endpoint_config=mock_endpoint_config,
+        managers=[manager_bad, manager_good]
+    )
+
+    config_payload = {"timestamp": "2025-01-01T00:00:00Z"}
+
+    target_id = device.device_id
+
+    device.handle_config(target_id, "config", config_payload)
+
+    manager_bad.handle_config.assert_called_once()
+    manager_good.handle_config.assert_called_once()
+
+
+def test_lifecycle_stop_propagates(
+    connected_device,
+    mock_manager
+):
+    """
+    Verifies that device.stop() calls stop() on all managers.
+    """
+    connected_device.stop()
+    mock_manager.stop.assert_called_once()

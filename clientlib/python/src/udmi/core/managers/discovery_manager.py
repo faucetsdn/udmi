@@ -83,6 +83,7 @@ class DiscoveryManager(BaseManager):
         """
         Publishes a DiscoveryEvent containing static capabilities of this device.
         """
+        from udmi.core.managers.localnet_manager import LocalnetManager
         localnet: Optional[LocalnetManager] = None
         if self._device:
             localnet = self._device.get_manager(LocalnetManager)

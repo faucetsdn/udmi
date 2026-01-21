@@ -1,17 +1,5 @@
 """
 Integration tests for the core UDMI device's MQTT logic.
-This module tests the MQTT-level functionality of the device instance
-created by the factory, specifically focusing on the
-device's internal dispatcher and default managers.
-Key behaviors verified:
-- The full connection sequence: `connect`, `on_connect` callback,
-  topic subscriptions, and initial state publish.
-- The config-receive -> state-publish acknowledgment loop.
-- Correct routing of command messages.
-- Robustness against connection failures, malformed JSON, and
-  invalid UDMI schemas.
-- The periodic authentication refresh loop.
-- The `start` lifecycle event hook.
 """
 
 import json
@@ -24,6 +12,7 @@ import pytest
 
 from src.udmi.core import create_device
 from tests.conftest import _system_lifecycle
+from udmi.core.managers import BaseManager
 from udmi.core.managers import SystemManager
 
 
@@ -40,6 +29,8 @@ def test_device(
     Creates a full Device instance using the factory,
     with the Paho client completely mocked.
     """
+    mock_paho_client_class.mock_instance.is_connected.return_value = False
+
     device = create_device(
         endpoint_config=mock_endpoint_config,
     )
@@ -55,6 +46,8 @@ def connected_test_device(
     A helper fixture to get a device in the 'connected' state
     and reset mocks, so we only test post-connection events.
     """
+    mock_paho_client_instance.is_connected.return_value = True
+
     on_connect_callback = mock_paho_client_instance.on_connect
     on_connect_callback(mock_paho_client_instance, None, None, 0)
 
@@ -69,27 +62,24 @@ def test_device_connect_and_initial_state(
     """
     Test the full connection and initial state publish sequence.
     """
-    # Start the device
     test_device.dispatcher.connect()
     test_device.dispatcher.start_loop()
 
-    # 1. Verify connect() was called correctly
-    mock_paho_client_instance.connect.assert_called_with("mock.host", 8883)
+    mock_paho_client_instance.connect_async.assert_called_with("mock.host",
+                                                               8883)
     mock_paho_client_instance.loop_start.assert_called_once()
 
-    # 2. --- SIMULATE CONNECTION ---
-    # Manually trigger the on_connect callback
     on_connect_callback = mock_paho_client_instance.on_connect
-    on_connect_callback(mock_paho_client_instance, None, None, 0)  # rc=0
+    on_connect_callback(mock_paho_client_instance, None, None, 0)
 
-    # 3. --- VERIFY SUBSCRIPTIONS ---
     expected_subs_list = [
-        call.mock_paho_client_instance.subscribe('/devices/d/config', 1),
-        call.mock_paho_client_instance.subscribe('/devices/d/commands/#', 1)]
+        call.mock_paho_client_instance.subscribe('/devices/d/config', qos=1),
+        call.mock_paho_client_instance.subscribe('/devices/d/commands/#',
+                                                 qos=1)]
+
     mock_paho_client_instance.subscribe.assert_has_calls(expected_subs_list,
                                                          any_order=True)
 
-    # 4. Verify initial state was published
     assert mock_paho_client_instance.publish.call_count == 1
     publish_call = mock_paho_client_instance.publish.call_args
 
@@ -108,37 +98,28 @@ def test_device_config_state_loop(
     Test the full config -> state acknowledgement loop.
     """
     with patch("udmi.core.device.STATE_THROTTLE_SEC", 0):
-        # --- 1. SIMULATE CONNECTION ---
         on_connect_callback = mock_paho_client_instance.on_connect
         on_connect_callback(mock_paho_client_instance, None, None, 0)
 
-        # Reset the mock to ignore the initial state publish
         mock_paho_client_instance.publish.reset_mock()
 
-        # --- 2. SIMULATE CONFIG MESSAGE ---
         config_topic = "/devices/d/config"
         config_payload = {
             "timestamp": "2025-10-17T12:00:00Z",
             "system": {"min_loglevel": 300}
         }
 
-        # Get the on_message callback
         on_message_callback = mock_paho_client_instance.on_message
 
-        # Create a mock Paho message object
         mock_msg = MagicMock()
         mock_msg.topic = config_topic
         mock_msg.payload = json.dumps(config_payload).encode('utf-8')
 
-        # Manually trigger the on_message callback
         on_message_callback(mock_paho_client_instance, None, mock_msg)
 
-        # --- 3. VERIFY BEHAVIOR ---
-        # Verify the device updated its internal state
         assert test_device.config.system.min_loglevel == 300
         assert test_device.state.system.last_config == "2025-10-17T12:00:00Z"
 
-        # Verify a new state message was published
         assert mock_paho_client_instance.publish.call_count == 1
         publish_call = mock_paho_client_instance.publish.call_args
 
@@ -188,7 +169,7 @@ def test_device_receives_bad_json(
     with caplog.at_level(logging.ERROR):
         on_message_callback(mock_paho_client_instance, None, mock_msg)
 
-    assert "Failed to decode JSON payload" in caplog.text
+    assert "Failed to decode JSON" in caplog.text
     mock_paho_client_instance.publish.assert_not_called()
 
 
@@ -223,7 +204,6 @@ def test_device_handles_command(
     Test that a command is routed to the SystemManager, which executes the
     lifecycle command.
     """
-    # Fix: Register the handler manually since defaults were removed
     sys_manager = connected_test_device.get_manager(SystemManager)
     sys_manager.register_command_handler(
         "reboot",
@@ -255,10 +235,12 @@ def test_device_auth_refresh_loop(
     mock_auth_provider.get_password.reset_mock()
     mock_auth_provider.needs_refresh.return_value = True
 
+    mock_paho_client_instance.is_connected.return_value = True
+
     test_device.dispatcher.check_authentication()
 
     mock_auth_provider.get_password.assert_called_once()
-    mock_paho_client_instance.reconnect.assert_called_once()
+    mock_paho_client_instance.disconnect.assert_called_once()
 
 
 def test_system_manager_start_event(
@@ -268,15 +250,22 @@ def test_system_manager_start_event(
     """
     Test that the manager's 'start' hook is called and publishes an event.
     """
-    with patch.object(SystemManager, '_metrics_loop'):
+    with patch.object(BaseManager, 'start_periodic_task'):
         for manager in connected_test_device.managers:
             manager.start()
 
-    mock_paho_client_instance.publish.assert_called_once()
+    mock_paho_client_instance.publish.assert_called()
     publish_call = mock_paho_client_instance.publish.call_args
-
     topic = publish_call.args[0]
     payload = json.loads(publish_call.args[1])
 
-    assert topic == "/devices/d/events/system"
+    if topic != "/devices/d/events/system":
+        found = False
+        for call_args in mock_paho_client_instance.publish.call_args_list:
+            if call_args.args[0] == "/devices/d/events/system":
+                payload = json.loads(call_args.args[1])
+                found = True
+                break
+        assert found
+
     assert payload["logentries"][0]["message"] == "Device has started"
