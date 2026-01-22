@@ -48,16 +48,16 @@ This is worth being cognisant of for target systems that make decisions based on
 
 UDMI does not prescribe the order of messages in this scenario, but it could be considered beneficial to ensure that `/state` messages are sent prior to any corresponding `/events/pointset` messages, so that the target system can correctly contextualise upcoming *values*.
 
-## MQTT topic structure
-UDMI [stipulates](../specs/tech_stack.md#mqtt-topic-suffix-table) the topic suffixes that devices must use when publishing messages. It does not stipulate what the preceding part of the topic should be.
+## MQTT topic structure and naming
+UDMI [stipulates](../specs/tech_stack.md#mqtt-topic-suffix-table) the names for the lower topic levels that a device must use when publishing messages. It does not stipulate the names to use for the higher topic levels, nor its structure.
 
-Some MQTT implementations, such as ClearBlade IoT Core's MQTT bridge, [stipulate](https://docs.clearblade.com/iotcore/publishing-over-mqtt#PublishingoverMQTT-Publishingtelemetryevents) what the complete topic structure must be. In the case of ClearBlade IoT Core, for an `/events/pointset` message from device FCU-1 it would mandate the topic structure below.
+Some MQTT implementations, such as ClearBlade IoT Core's MQTT bridge, [stipulate](https://docs.clearblade.com/iotcore/publishing-over-mqtt#PublishingoverMQTT-Publishingtelemetryevents) what the complete topic structure and naming must be. In the case of ClearBlade IoT Core, for an `/events/pointset` message from device FCU-1 it would mandate the topic structure and naming below.
 
 ```
 /devices/FCU-1/events/pointset
 ```
 
-Using this topic structure may not be possible if an installation is using a regular MQTT broker that is shared across multiple sites. In this case it may warrant introducing a site code at the top of the topic structure to provide namespace isolation for devices across different sites, such as the example below.
+Using this topic structure and naming may not be possible if an installation is using a regular MQTT broker that is shared across multiple sites. In this case it may warrant introducing a site code in the first level of the topic structure to provide namespace isolation for devices across different sites, such as the example below.
 
 ```
 GB-LON-HQ/devices/FCU-1/events/pointset
