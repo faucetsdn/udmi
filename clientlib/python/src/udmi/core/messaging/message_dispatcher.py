@@ -12,12 +12,12 @@ import re
 from typing import Any
 from typing import Callable
 from typing import Dict
+from typing import Optional
 
 from udmi.core.messaging.abstract_client import AbstractMessagingClient
 from udmi.core.messaging.abstract_dispatcher import AbstractMessageDispatcher
 from udmi.core.messaging.abstract_dispatcher import MessageHandler
 from udmi.schema import DataModel
-from udmi.schema import State
 
 LOGGER = logging.getLogger(__name__)
 
@@ -26,172 +26,126 @@ class MessageDispatcher(AbstractMessageDispatcher):
     """
     Dispatches incoming messages to registered handlers based on channel
     patterns. Also serializes and publishes outgoing messages.
-
-    This class acts as the "glue" layer between the Device (which
-    understands UDMI logic) and the AbstractMessagingClient (which
-    understands the network protocol).
     """
 
     def __init__(self, client: AbstractMessagingClient,
         on_ready_callback: Callable[[], None],
-        on_disconnect_callback: Callable[[int], None], ):
+        on_disconnect_callback: Callable[[int], None]):
         """
         Initializes the MessageDispatcher.
 
         Args:
-            client: A concrete instance of AbstractMessagingClient (e.g.,
-                   MqttMessagingClient). The dispatcher will set the
-                   client's message handler to its own internal router.
-            on_ready_callback: The function to call when the client is connected.
-            on_disconnect_callback: The function to call when the client
-                                     disconnects.
+            client: A concrete instance of AbstractMessagingClient.
+            on_ready_callback: Called when the client is fully connected.
+            on_disconnect_callback: Called when the client disconnects.
         """
-        self.client = client
+        self._client = client
         self._handlers: Dict[str, MessageHandler] = {}
         self._wildcard_handlers: Dict[re.Pattern, MessageHandler] = {}
 
         self._on_ready_callback = on_ready_callback
         self._on_disconnect_callback = on_disconnect_callback
 
-        self.client.set_on_message_handler(self._on_message)
-        self.client.set_on_connect_handler(self._on_connect)
-        self.client.set_on_disconnect_handler(self._on_disconnect)
+        # Wire up internal handlers to the client
+        self._client.set_on_message_handler(self._on_message)
+        self._client.set_on_connect_handler(self._on_connect)
+        self._client.set_on_disconnect_handler(self._on_disconnect)
+
+    @property
+    def client(self) -> AbstractMessagingClient:
+        return self._client
 
     def register_handler(self, channel: str, handler: MessageHandler) -> None:
         """
         Registers a handler function for a specific message channel.
-
-        Supports MQTT-style wildcards:
-        - '+' (single-level): e.g., 'commands/+/sub'
-        - '#' (multi-level): e.g., 'commands/#'
-
-        Args:
-            channel: The channel to subscribe to (e.g., 'config',
-                            'commands/#').
-            handler: The function to call when a message arrives on that
-                            channel. The function must accept (channel,
-                            payload_dict).
+        Supports MQTT-style wildcards ('+' and '#').
         """
-        self.client.register_channel_subscription(channel)
+        self._client.register_channel_subscription(channel)
+
         if '#' in channel or '+' in channel:
             safe_pattern = re.escape(channel)
-            safe_pattern = safe_pattern.replace(r'\+', '[^/]+').replace(r'\#',
-                                                                        '.+')
-            pattern = re.compile(f"^{safe_pattern}$")
+            safe_pattern = safe_pattern.replace(r'\+', '[^/]+')
+            safe_pattern = safe_pattern.replace(r'\#', '.+')
 
+            pattern = re.compile(f"^{safe_pattern}$")
             self._wildcard_handlers[pattern] = handler
             LOGGER.debug("Registered wildcard handler for %s", channel)
         else:
             self._handlers[channel] = handler
             LOGGER.debug("Registered handler for %s", channel)
 
-    def _on_message(self, channel: str, payload: str) -> None:
+    def _on_message(self, device_id: str, channel: str, payload: str) -> None:
         """
-        Internal callback given to the MessagingClient.
-
-        This method is the single entry point for all messages from the client.
-        It deserializes the JSON payload and routes it to the correct handler.
-
-        Args:
-            channel: The raw channel the message arrived on.
-            payload: The raw string payload (expected to be JSON).
+        Internal callback: Deserializes JSON and routes to handler.
         """
         try:
             payload_dict: Dict[str, Any] = json.loads(payload)
         except json.JSONDecodeError as e:
-            LOGGER.error("Failed to decode JSON payload on channel %s: %s",
-                         channel, e)
+            LOGGER.error("Failed to decode JSON from %s/%s: %s",
+                         device_id, channel, e)
             return
 
+        # 1. Exact Match
         handler = self._handlers.get(channel)
         if handler:
-            try:
-                handler(channel, payload_dict)
-            except (TypeError, KeyError, AttributeError) as e:
-                LOGGER.error("Handler for channel %s failed: %s", channel, e)
+            self._safe_invoke(handler, device_id, channel, payload_dict)
             return
 
+        # 2. Wildcard Match
         for pattern, wildcard_handler in self._wildcard_handlers.items():
             if pattern.match(channel):
-                try:
-                    wildcard_handler(channel, payload_dict)
-                except (TypeError, KeyError, AttributeError) as e:
-                    LOGGER.error("Wildcard handler for %s failed: %s",
-                                 channel, e)
+                self._safe_invoke(wildcard_handler, device_id, channel,
+                                  payload_dict)
                 return
 
         LOGGER.warning("No handler found for message on channel: %s", channel)
 
-    def publish_state(self, state: State) -> None:
-        """
-        Serializes and publishes the device State message.
+    @staticmethod
+    def _safe_invoke(handler: MessageHandler, device_id: str,
+        channel: str, payload: Dict[str, Any]) -> None:
+        """Executes a handler, catching and logging any exceptions."""
+        try:
+            handler(device_id, channel, payload)
+        except Exception as e: # pylint: disable=broad-exception-caught
+            LOGGER.error("Handler exception for %s/%s: %s",
+                         device_id, channel, e, exc_info=True)
 
-        Args:
-            state: The State data model instance to publish.
-        """
+    def publish_state(self, state: DataModel,
+        device_id: Optional[str] = None) -> None:
         LOGGER.debug("Publishing 'state' message...")
         try:
             payload = state.to_json()
-            self.client.publish("state", payload)
-        except (TypeError, AttributeError) as e:
-            LOGGER.error("Failed to serialize and publish state: %s", e)
+            self._client.publish("state", payload, device_id)
+        except Exception as e: # pylint: disable=broad-exception-caught
+            LOGGER.error("Failed to publish state: %s", e)
 
-    def publish_event(self, channel: str, event: DataModel) -> None:
-        """
-        Serializes and publishes a device Event message to a sub-channel.
-
-        Args:
-            channel: The event sub-channel (e.g., 'pointset', 'system').
-            event: The event data model instance to publish.
-        """
-        LOGGER.debug("Publishing event to '%s' channel...", channel)
+    def publish_event(self, channel: str, event: DataModel,
+        device_id: Optional[str] = None) -> None:
+        LOGGER.debug("Publishing event to '%s'...", channel)
         try:
             payload = event.to_json()
-            self.client.publish(channel, payload)
-        except (TypeError, AttributeError) as e:
-            LOGGER.error("Failed to serialize and publish event %s: %s",
-                         channel, e)
+            self._client.publish(channel, payload, device_id)
+        except Exception as e: # pylint: disable=broad-exception-caught
+            LOGGER.error("Failed to publish event %s: %s", channel, e)
 
     # --- Lifecycle Methods ---
 
     def connect(self) -> None:
-        """Connects the underlying client. (Helper for Device class)"""
-        LOGGER.debug("Dispatcher telling client to connect...")
-        self.client.connect()
+        self._client.connect()
 
     def start_loop(self) -> None:
-        """Starts the client's non-blocking loop."""
-        LOGGER.debug("Dispatcher telling client to start loop...")
-        self.client.run()
+        self._client.run()
 
     def check_authentication(self) -> None:
-        """
-        Triggers the client's auth check.
-
-        This is used for periodic JWT refresh.
-        """
-        LOGGER.debug("Dispatcher telling client to check authentication...")
-        self.client.check_authentication()
+        self._client.check_authentication()
 
     def close(self) -> None:
-        """
-        Shuts down the underlying client connection.
-
-        Implements the abstract method.
-        """
-        LOGGER.debug("Dispatcher telling client to close...")
-        self.client.close()
+        self._client.close()
 
     def _on_connect(self) -> None:
-        """
-        Callback for when the client connects and has subscribed.
-        Notifies the device that it is ready.
-        """
-        LOGGER.info(
-            "Dispatcher: Client connected and subscriptions are active.")
+        LOGGER.info("Dispatcher: Client connected.")
         self._on_ready_callback()
 
     def _on_disconnect(self, rc: int) -> None:
-        """Callback for when the client disconnects."""
         LOGGER.warning("Dispatcher: Client disconnected (rc: %s)", rc)
         self._on_disconnect_callback(rc)

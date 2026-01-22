@@ -10,5 +10,8 @@ from the `udmi.core.managers` namespace for easier use.
 """
 
 from udmi.core.managers.base_manager import BaseManager
+from udmi.core.managers.discovery_manager import DiscoveryManager
+from udmi.core.managers.gateway_manager import GatewayManager
+from udmi.core.managers.localnet_manager import LocalnetManager
 from udmi.core.managers.pointset_manager import PointsetManager
 from udmi.core.managers.system_manager import SystemManager
