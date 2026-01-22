@@ -1,5 +1,5 @@
 """
-Sample: Large File Firmware Update (Streaming to Disk)
+Sample: Large File Module Update (Streaming to Disk)
 
 This script demonstrates handling large blob updates that exceed available RAM.
 Instead of receiving the raw bytes in memory, the application receives a
@@ -43,15 +43,15 @@ BROKER_PASSWORD = "somesecureword"
 TOPIC_PREFIX = "/r/ZZ-TRI-FECTA/d/"
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(message)s')
-LOGGER = logging.getLogger("FirmwareStreamDemo")
+LOGGER = logging.getLogger("ModuleStreamDemo")
 
 
-def large_firmware_handler(blob_key: str, file_path: str):
+def large_module_handler(blob_key: str, file_path: str):
     """
     Callback for processing a large blob from disk.
 
     Args:
-        blob_key: The config key (e.g. "firmware").
+        blob_key: The config key (e.g. "udmi_module").
         file_path: The absolute path to the verified file on disk.
     """
     LOGGER.info("------------------------------------------------")
@@ -75,7 +75,7 @@ def large_firmware_handler(blob_key: str, file_path: str):
 
     LOGGER.info("Simulating installation from disk... (3 seconds)")
     time.sleep(3)
-    LOGGER.info("FIRMWARE INSTALLED SUCCESSFULLY.")
+    LOGGER.info("UDMI MODULE INSTALLED SUCCESSFULLY.")
     LOGGER.info("------------------------------------------------")
 
 
@@ -85,7 +85,7 @@ def generate_large_payload() -> str:
     """
     # Create a dummy "large" content (e.g. ~10KB for this demo)
     # In a real scenario, the URL would point to a multi-MB file on a server.
-    content = "FIRMWARE_BINARY_DATA_" * 500
+    content = "UDMI_MODULE_BINARY_DATA_" * 500
     data_bytes = content.encode('utf-8')
     sha256_hash = hashlib.sha256(data_bytes).hexdigest()
     b64_data = base64.b64encode(data_bytes).decode('utf-8')
@@ -98,7 +98,7 @@ def generate_large_payload() -> str:
         "version": UDMI_VERSION,
         "blobset": {
             "blobs": {
-                "firmware_large": {
+                "udmi_module": {
                     "phase": "final",
                     "url": data_uri,
                     "sha256": sha256_hash,
@@ -135,16 +135,16 @@ if __name__ == "__main__":
 
         # CRITICAL: expects_file=True tells the library to stream to disk
         sys_manager.register_blob_handler(
-            "firmware_large",
-            large_firmware_handler,
+            "udmi_module",
+            large_module_handler,
             expects_file=True
         )
-        LOGGER.info("Registered 'firmware_large' blob handler (File Mode).")
+        LOGGER.info("Registered 'udmi_module' blob handler (File Mode).")
 
         trigger_json = generate_large_payload()
 
         print("\n" + "=" * 80)
-        print("STREAMING FIRMWARE DEMO INSTRUCTIONS:")
+        print("STREAMING MODULE DEMO INSTRUCTIONS:")
         print("1. The device is running.")
         print("2. Publish this JSON to:")
         print(f"   Topic: {TOPIC_PREFIX}{DEVICE_ID}/config")

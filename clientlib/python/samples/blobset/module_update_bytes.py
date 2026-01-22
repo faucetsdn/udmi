@@ -1,21 +1,21 @@
 """
-Sample: Blobset Firmware Update (OTA)
+Sample: Blobset Module Update (OTA)
 
 This script demonstrates how to use the SystemManager's blobset capabilities
 to handle Over-The-Air (OTA) updates or arbitrary file downloads.
 
 SCENARIO:
-1.  **Callback**: The device registers a handler for the blob key "firmware".
+1.  **Callback**: The device registers a handler for the blob key "udmi_module".
 2.  **Trigger**: The operator publishes a Config message containing a 'blobset'.
-    This includes a Data URI (Base64 firmware) and its SHA256 hash.
+    This includes a Data URI (Base64 module) and its SHA256 hash.
 3.  **Library Logic**:
     a.  Detects the new `generation` ID.
     b.  Updates State: `phase` -> `apply`.
     c.  Downloads the blob content.
     d.  Verifies the SHA256 hash matches the config.
-    e.  Invokes the registered `firmware_update_handler` with the valid data.
+    e.  Invokes the registered `udmi_module_update_handler` with the valid data.
     f.  Updates State: `phase` -> `final`.
-4.  **Application Logic**: The handler simulates "installing" the firmware.
+4.  **Application Logic**: The handler simulates "installing" the module.
 
 USAGE:
 1.  Run the script.
@@ -48,10 +48,10 @@ BROKER_PASSWORD = "somesecureword"
 TOPIC_PREFIX = "/r/ZZ-TRI-FECTA/d/"
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(message)s')
-LOGGER = logging.getLogger("FirmwareDemo")
+LOGGER = logging.getLogger("ModuleUpdateDemo")
 
 
-def firmware_update_handler(blob_key: str, data: bytes):
+def udmi_module_update_handler(blob_key: str, data: bytes):
     """
     Callback for processing the verified blob data.
 
@@ -59,7 +59,7 @@ def firmware_update_handler(blob_key: str, data: bytes):
     before calling this function.
     """
     LOGGER.info("------------------------------------------------")
-    LOGGER.info(f"FIRMWARE UPDATE RECEIVED for key: '{blob_key}'")
+    LOGGER.info(f"MODULE UPDATE RECEIVED for key: '{blob_key}'")
     LOGGER.info(f"Size: {len(data)} bytes")
 
     try:
@@ -70,16 +70,16 @@ def firmware_update_handler(blob_key: str, data: bytes):
 
     LOGGER.info("Simulating installation process... (2 seconds)")
     time.sleep(2)
-    LOGGER.info("FIRMWARE INSTALLED SUCCESSFULLY.")
+    LOGGER.info("MODULE INSTALLED SUCCESSFULLY.")
     LOGGER.info("------------------------------------------------")
 
 
-def generate_ota_trigger_payload(firmware_content: str) -> str:
+def generate_ota_trigger_payload(module_content: str) -> str:
     """
     Helper to generate a valid UDMI Config message with a blobset
-    containing the firmware as a Data URI.
+    containing the module as a Data URI.
     """
-    data_bytes = firmware_content.encode('utf-8')
+    data_bytes = module_content.encode('utf-8')
     sha256_hash = hashlib.sha256(data_bytes).hexdigest()
     b64_data = base64.b64encode(data_bytes).decode('utf-8')
     data_uri = f"data:application/octet-stream;base64,{b64_data}"
@@ -91,7 +91,7 @@ def generate_ota_trigger_payload(firmware_content: str) -> str:
         "version": UDMI_VERSION,
         "blobset": {
             "blobs": {
-                "firmware": {
+                "udmi_module": {
                     "phase": "final",
                     "url": data_uri,
                     "sha256": sha256_hash,
@@ -127,14 +127,15 @@ if __name__ == "__main__":
                 "SystemManager not found. Cannot register OTA handler.")
             sys.exit(1)
 
-        sys_manager.register_blob_handler("firmware", firmware_update_handler)
-        LOGGER.info("Registered 'firmware' blob handler.")
+        sys_manager.register_blob_handler("udmi_module",
+                                          udmi_module_update_handler)
+        LOGGER.info("Registered 'udmi_module' blob handler.")
 
         trigger_json = generate_ota_trigger_payload(
-            "FIRMWARE-V2.5-STABLE-BUILD-99")
+            "UDMI_MODULE-V2.5-STABLE-BUILD-99")
 
         print("\n" + "=" * 80)
-        print("OTA FIRMWARE DEMO INSTRUCTIONS:")
+        print("OTA MODULE DEMO INSTRUCTIONS:")
         print("1. The device is running.")
         print("2. To simulate an OTA update, publish this JSON to:")
         print(f"   Topic: {TOPIC_PREFIX}{DEVICE_ID}/config")
