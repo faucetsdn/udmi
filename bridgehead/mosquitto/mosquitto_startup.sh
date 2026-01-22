@@ -9,6 +9,7 @@ function fail {
 echo "persistence true
 persistence_file mosquitto.db
 persistence_location /mosquitto/data/ 
+sys_interval 10
 
 include_dir /etc/mosquitto/conf.d" > /etc/mosquitto/mosquitto.conf
 
