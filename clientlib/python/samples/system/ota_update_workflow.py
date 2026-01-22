@@ -5,7 +5,7 @@ This script demonstrates the secure two-stage pipeline for self-updates.
 
 SCENARIO:
 1.  **Trigger**: Cloud sends a blobset config for key `ota_module_loader`.
-2.  **Stage 1 (Process)**: The `process_firmware` callback writes the bytes to disk.
+2.  **Stage 1 (Process)**: The `process_module` callback writes the bytes to disk.
 3.  **Intermediate**: The library automatically updates the state to 'final' and flushes it to MQTT.
 4.  **Stage 2 (Post-Process)**: The `restart_device` callback is invoked to actually kill/restart the app.
 
@@ -39,7 +39,7 @@ logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(message)s')
 LOGGER = logging.getLogger("OTASample")
 
 
-def process_firmware(blob_key: str, data: bytes) -> str:
+def process_module(blob_key: str, data: bytes) -> str:
     """
     STAGE 1: PROCESS
     This runs while the device is still 'Online' and 'Apply'.
@@ -110,7 +110,7 @@ if __name__ == "__main__":
         # 'post_process': Restarting the device.
         sys_manager.register_blob_handler(
             "ota_module_loader",
-            process=process_firmware,
+            process=process_module,
             post_process=restart_device
         )
 
