@@ -124,6 +124,7 @@ public class ManagerServlet extends HttpServlet {
                 model.put("brokerStatusColour", getBadgeColour(brokerStatus));
 
                 String validatorStatus = validatorManager.getStatus();
+                model.put("validatorBtnText", Objects.equals(validatorStatus, RUNNING) ? "Restart Validator" : "Start Validator");
                 model.put("validatorStatus", validatorStatus);
                 model.put("validatorStatusColour", getBadgeColour(validatorStatus));
 

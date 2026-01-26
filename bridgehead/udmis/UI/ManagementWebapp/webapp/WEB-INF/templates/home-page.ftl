@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+    <link rel="icon" href="data:,">
     <meta charset="UTF-8">
     <title>Bridgehead Monitor</title>
     <link rel="stylesheet" href="css/styles.css">
@@ -15,7 +16,7 @@
             <button id="registrar-btn" class="tab-button">Run Registrar</button>
         </div>
         <div class="tab-button-container">
-            <button id="validator-btn" class="tab-button">Start Validator</button>
+            <button id="validator-btn" class="tab-button">${validatorBtnText}</button>
         </div>
     </div>
     <span id="message-box" style="color:white; padding-right:50px;"></span>
@@ -51,7 +52,13 @@
     <div class="status-grid">
 
         <div class="device-status-panel" style="max-height: 400px;">
-            <h2>Validated Device Status<span class="small-text">Showing first 100 devices.</span></h2>
+            <h2 class="panel-title">
+                Validated Device Status
+                <span class="small-text">Showing first 100 devices.</span>
+                <button id="refresh-validation" class="refresh-btn" title="Refresh Data">
+                    &#8635;
+                </button>
+            </h2>
 
             <div class="text-input search-group">
                 <input type="text" id="validator-device-status-search" name="validatorDeviceStatusSearch"
@@ -77,7 +84,13 @@
         </div>
 
         <div class="device-status-panel" style="max-height: 400px;">
-            <h2>Registered Device Status<span class="small-text">Showing first 100 devices.</span></h2>
+            <h2 class="panel-title">
+                Registered Device Status
+                <span class="small-text">Showing first 100 devices.</span>
+                <button id="refresh-registration" class="refresh-btn" title="Refresh Data">
+                    &#8635;
+                </button>
+            </h2>
 
             <div class="text-input search-group">
                 <input type="text" id="registrar-device-status-search" name="registrarDeviceStatusSearch"

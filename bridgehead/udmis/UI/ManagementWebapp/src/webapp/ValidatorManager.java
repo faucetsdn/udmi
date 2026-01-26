@@ -137,15 +137,19 @@ public class ValidatorManager {
     /**********************************************************************/
 
     public String startValidator() {
+        boolean canStart = true;
         if (isRunning()) {
             String pid = getValidatorPid();
-            executeCommandOnContainer("kill -9 " + pid, null);
+            canStart = executeCommandOnContainer("kill -9 " + pid, null);
         }
-        executeCommandOnContainer("/root/bin/validator site_model/ //mqtt/mosquitto", null);
-        try {
-            sleep(500);
-        } catch (InterruptedException e) {
-            LOGGER.severe("Error waiting validator start delay");
+
+        if(canStart){
+            executeCommandOnContainer("/root/bin/validator site_model/ //mqtt/mosquitto", null);
+            try {
+                sleep(500);
+            } catch (InterruptedException e) {
+                LOGGER.severe("Error waiting validator start delay");
+            }
         }
         return getStatus();
     }
@@ -162,26 +166,30 @@ public class ValidatorManager {
     /**********************************************************************/
 
     public boolean isRunning() {
-        return executeCommandOnContainer("ps aux", VALIDATOR_JAR);
+        return getValidatorPid() != null;
     }
 
     /**********************************************************************/
 
     private String getValidatorPid() {
         try {
-            ProcessBuilder processBuilder = new ProcessBuilder("ps aux");
+            List<String> commandList = getSSHCommandList();
+            String remoteCommand = String.format("pgrep -f '%s'", VALIDATOR_TASK);
+            commandList.add(remoteCommand);
+
+            ProcessBuilder processBuilder = new ProcessBuilder(commandList);
             processBuilder.redirectErrorStream(true);
             Process process = processBuilder.start();
-
             try (BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()))) {
                 String line;
                 while ((line = reader.readLine()) != null) {
-                    if (line.contains(VALIDATOR_JAR)) {
-                        String[] parts = line.trim().split("\\s+");
-                        return parts[0];
+                    String trimmedLine = line.trim();
+                    if (trimmedLine.matches("\\d+")) {
+                        return trimmedLine;
                     }
                 }
             }
+            process.waitFor();
         } catch (Exception e) {
             LOGGER.severe("Error finding PID: " + e.getMessage());
         }
@@ -229,8 +237,6 @@ public class ValidatorManager {
             BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()));
 
             if (lineToFind != null) {
-                int exitCode = process.waitFor();
-
                 String line;
                 while ((line = reader.readLine()) != null && !found) {
                     if (line.contains(lineToFind)) {
@@ -238,9 +244,12 @@ public class ValidatorManager {
                     }
                 }
 
+                int exitCode = process.waitFor();
                 if (exitCode != 0) {
                     errMsg = "failed with exit code: " + exitCode;
                 }
+            }else{
+                return true;
             }
         } catch (Exception e) {
             errMsg = e.getMessage();
@@ -266,7 +275,7 @@ public class ValidatorManager {
 
     public static final String RUNNING = "Running";
     public static final String NOT_STARTED = "Not Started";
-    public static final String VALIDATOR_JAR = "validator-1.0-SNAPSHOT-all.jar";
+    public static final String VALIDATOR_TASK = "validator-1.0-SNAPSHOT-all.jar.*Dispatcher validator";
 
     /********************************************************************************/
 

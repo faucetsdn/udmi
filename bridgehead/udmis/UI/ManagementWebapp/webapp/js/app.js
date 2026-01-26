@@ -83,6 +83,21 @@ document.addEventListener('DOMContentLoaded', function () {
 
 });
 
+const validatorRefresh = document.getElementById('refresh-validation');
+const registrarRefresh = document.getElementById('refresh-registration');
+
+validatorRefresh.addEventListener('click', () => {
+  valInput = document.getElementById('validator-device-status-search');
+  valInput.value = "";
+  searchFunction(valInput);
+}); 
+
+registrarRefresh.addEventListener('click', () => {
+  regInput = document.getElementById('registrar-device-status-search');
+  regInput.value = "";
+  searchFunction(regInput);
+});
+
 function searchFunction(input) {
   const name = input.name;
   fetch(`?action=${name}&deviceName=${input.value}`)
@@ -94,7 +109,7 @@ function searchFunction(input) {
           const statusTable = document.getElementById('registrar-device-status-table-body');
           statusTable.innerHTML = html;
         } break;
-        case "validationDeviceStatusSearch": {
+        case "validatorDeviceStatusSearch": {
           const statusTable = document.getElementById('validator-device-status-table-body');
           statusTable.innerHTML = html;
         } break;
