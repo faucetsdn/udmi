@@ -48,29 +48,57 @@
         </div>
     </div>
 
-    <div class="device-status-panel" style="max-height: 400px;">
-        <h2>Device Status <span class="small-text">Showing first 100 devices.</span></h2>
+    <div class="status-grid">
 
-        <div class="text-input search-group">
-            <input type="text" id="device-status-search" name="deviceStatusSearch"
-                   placeholder="Search by Device Name...">
-            <button id="device-status-search-submit" class="submit">Submit</button>
-            <button id="device-status-search-clear" class="clear">Clear</button>
+        <div class="device-status-panel" style="max-height: 400px;">
+            <h2>Validated Device Status<span class="small-text">Showing first 100 devices.</span></h2>
+
+            <div class="text-input search-group">
+                <input type="text" id="validator-device-status-search" name="validatorDeviceStatusSearch"
+                       placeholder="Search by Device Name...">
+                <button id="validator-device-status-search-submit" class="submit">Submit</button>
+                <button id="validator-device-status-search-clear" class="clear">Clear</button>
+            </div>
+
+            <div class="device-list-container">
+                <table>
+                    <thead>
+                    <tr>
+                        <th>Device Name</th>
+                        <th>Last Seen</th>
+                        <th>Status</th>
+                    </tr>
+                    </thead>
+                    <tbody id="validator-device-status-table-body">
+                    ${validatorDeviceStatusBody}
+                    </tbody>
+                </table>
+            </div>
         </div>
 
-        <div class="device-list-container">
-            <table>
-                <thead>
-                <tr>
-                    <th>Device Name</th>
-                    <th>Last Seen</th>
-                    <th>Status</th>
-                </tr>
-                </thead>
-                <tbody id="device-status-table-body">
-                ${deviceStatusBody}
-                </tbody>
-            </table>
+        <div class="device-status-panel" style="max-height: 400px;">
+            <h2>Registered Device Status<span class="small-text">Showing first 100 devices.</span></h2>
+
+            <div class="text-input search-group">
+                <input type="text" id="registrar-device-status-search" name="registrarDeviceStatusSearch"
+                       placeholder="Search by Device Name...">
+                <button id="registrar-device-status-search-submit" class="submit">Submit</button>
+                <button id="registrar-device-status-search-clear" class="clear">Clear</button>
+            </div>
+
+            <div class="device-list-container">
+                <table>
+                    <thead>
+                    <tr>
+                        <th>Device Name</th>
+                        <th>Status</th>
+                    </tr>
+                    </thead>
+                    <tbody id="registrar-device-status-table-body">
+                    ${registrarDeviceStatusBody}
+                    </tbody>
+                </table>
+            </div>
         </div>
     </div>
 </div>

@@ -90,8 +90,12 @@ function searchFunction(input) {
     .then(html => {
 
       switch (name) {
-        case "deviceStatusSearch": {
-          const statusTable = document.getElementById('device-status-table-body');
+        case "registrarDeviceStatusSearch": {
+          const statusTable = document.getElementById('registrar-device-status-table-body');
+          statusTable.innerHTML = html;
+        } break;
+        case "validationDeviceStatusSearch": {
+          const statusTable = document.getElementById('validator-device-status-table-body');
           statusTable.innerHTML = html;
         } break;
         case "deviceMetadataSearch": {
@@ -167,7 +171,7 @@ saveJson.addEventListener("click", () => {
     body: deviceJson.value
   }).then(response => {
     if (!response.ok) {
-      throw new Error('Bad repsonse whilst daving metadata file: ' + response.statusText);
+      throw new Error('Bad response whilst having metadata file: ' + response.statusText);
     }
     return response.json();
   })
@@ -180,7 +184,7 @@ saveJson.addEventListener("click", () => {
       }
     })
     .catch(error => {
-      showErrorMessage("Error occured whilst attempting save, file may not have been saved successfully")
+      showErrorMessage("Error occurred whilst attempting save, file may not have been saved successfully")
       console.error('There was a problem with the fetch operation:', error);
     });
 })
@@ -233,9 +237,12 @@ registrarBtn.addEventListener("click", () => {
   hide(registrarTime);
   fetch('?action=runRegistrar')
     .then(response => response.text())
-    .then(html => {
+    .then(replyJson => {
+      const data = JSON.parse(replyJson);
       const registrarTime = document.getElementById('registrar-time');
-      registrarTime.innerHTML = html;
+      registrarTime.innerHTML = data.time;
+      const registrarDevices = document.getElementById('registrar-device-status-table-body');
+      registrarDevices.innerHTML = data.devices;
       hide(registrarLoading);
       show(registrarTime);
     })
@@ -244,6 +251,13 @@ registrarBtn.addEventListener("click", () => {
 const validatorBtn = document.getElementById('validator-btn');
 const validatorStatus = document.getElementById('validator-status');
 validatorBtn.addEventListener("click", () => {
+  validatorStatus.classList.add('badge-yellow');
+  if(validatorBtn.textContent == "Start Validator"){
+    validatorStatus.textContent = "Starting";
+  }else{
+    validatorStatus.textContent = "Restarting";
+  }
+
   fetch('?action=runValidator')
     .then(response => response.text())
     .then(status => {
@@ -251,6 +265,7 @@ validatorBtn.addEventListener("click", () => {
       if (status === "Running") {
         validatorStatus.textContent = status;
         validatorStatus.classList.add('badge-green');
+        validatorBtn.textContent = "Restart Validator";
       } else {
         validatorStatus.textContent = status;
         validatorStatus.classList.add('badge-red');

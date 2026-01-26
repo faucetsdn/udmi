@@ -23,8 +23,8 @@ public class MqttConnection implements MqttCallback {
                 String host = "ssl://mosquitto:8883";
 
                 MqttConnectOptions connectOptions = new MqttConnectOptions();
-                connectOptions.setUserName("scrumptious");
-                connectOptions.setPassword(("aardvark").toCharArray());
+                connectOptions.setUserName(System.getenv("AUTH_USER"));
+                connectOptions.setPassword(System.getenv("AUTH_PASS").toCharArray());
                 connectOptions.setCleanSession(true);
                 connectOptions.setSocketFactory(security.getSocketFactory());
 

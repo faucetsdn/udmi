@@ -6,10 +6,10 @@ RUN apk add --no-cache bash openjdk21 gcompat curl jq sudo git python3 moreutils
 
 COPY --from=etcd-client-builder /usr/local/bin/etcdctl /usr/local/bin/etcdctl
 COPY --from=tomcat /usr/local/tomcat /usr/local/tomcat
-COPY startup/mosquitto_ctrl.sh /root/udmi/etc/
-COPY startup/udmis_startup.sh /usr/local/bin/startup/
-COPY startup/telegraf.conf /usr/local/bin/startup/
-COPY bridgeheadManager.war /usr/local/tomcat/webapps/
+COPY mosquitto/mosquitto_ctrl.sh /root/udmi/etc/
+COPY udmis/startup/udmis_startup.sh /usr/local/bin/startup/
+COPY udmis/startup/telegraf.conf /usr/local/bin/startup/
+COPY udmis/bridgeheadManager.war /usr/local/tomcat/webapps/
 
 RUN chmod +x /root/udmi/etc/mosquitto_ctrl.sh
 RUN chmod +x /usr/local/bin/startup/udmis_startup.sh

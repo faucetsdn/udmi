@@ -20,7 +20,7 @@ echo Starting local services at $(sudo date -u -Is) | tee $UDMIS_LOG
 
 iot_provider=$(jq -r .iot_provider $site_config)
 if [[ -n ${project_spec:-} ]]; then
-    project_target=${project_spec##*/}
+    project_target=${project_spec##*/}+
     iot_provider=${project_spec%/*}
     iot_provider=${iot_provider#//}
 fi
@@ -48,7 +48,11 @@ export SSL_SECRETS_DIR=/etc/mosquitto/certs
 UDMIS_DIR=udmis
 [[ -d $UDMIS_DIR ]] || UDMIS_DIR=..
 
-jq --arg host_var "$MQTT_HOST" '.flow_defaults.hostname=$host_var' /root/var/local_pod.json > /root/var/local_pod.tmp && mv /root/var/local_pod.tmp /root/var/local_pod.json
+
+jq --arg u "$SERV_USER" --arg p "$SERV_PASS" --arg host_var "$MQTT_HOST" \
+'.flow_defaults.auth_provider.basic.username = $u | .flow_defaults.auth_provider.basic.password = $p | .flow_defaults.hostname=$host_var' \
+/root/var/local_pod.json > /root/var/local_pod.tmp && mv /root/var/local_pod.tmp /root/var/local_pod.json
+
 $UDMIS_DIR/bin/run /root/var/local_pod.json >> $LOGFILE 2>&1 &
 
 PID=$!

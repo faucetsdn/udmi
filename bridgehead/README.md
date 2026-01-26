@@ -19,25 +19,14 @@ This guide provides instructions for deploying the core UDMI services bundle. Th
 
 3. **Get default site model:** In you terminal, run `sudo git clone https://github.com/faucetsdn/udmi_site_model.git`.
 
-4. **Edit compose file:** Open the docker-compose.yml file in your chosen editor.
-    1. **Add Host IP:** This is required in order to allow connections to the broker externally from the docker compose environment. 
-        1. Get host ip address: `sudo hostname -I`
-        2. Inside the **mosquitto** service block locate the line `HOST_IP: <YOUR_IP>`. Replace `<YOUR_IP>` with your hosts ip address.
-    2. **Generate random token**: `openssl rand -hex 32`.
-    3. **Update InfluxDB Credentials:** 
-        1. Inside the **influxdb** service, under the environment variables, set the values of:
-            - `DOCKER_INFLUXDB_INIT_USERNAME`
-            - `DOCKER_INFLUXDB_INIT_PASSWORD`
-            - `DOCKER_INFLUXDB_INIT_ADMIN_TOKEN` (token generated in step 2) 
-    4. **Update Grafana credentials:**
-        1. Under the **grafana** service, set the values of:
-           - `GF_SECURITY_ADMIN_USER`
-           - `GF_SECURITY_ADMIN_PASSWORD`
-           - `INFLUXDB_TOKEN` (token generated in step 2) 
-    5. **Update udmis credentials:** 
-        1. Under the **udmis** service, set the value of:
-           - `INFLUXDB_TOKEN` (token generated in step 2) 
-
+4. **Edit Environment Variables:** Open the `.env` file in your chosen editor.
+   1. AUTH_USER & AUTH_PASS: This client is configured to allow you to administer the dynamic security plugin only. It does not have access to publish messages to normal topics.
+   2. SERV_USER & SERV_PASS: Service User.
+   3. HOST_IP: This is required in order to allow connections to the broker externally from the docker compose environment. You can get your host ip address using: `sudo hostname -I`.
+   4. INFLUXDB_TOKEN: You can generate a random token using: `openssl rand -hex 32`.
+   5. INFLUX_USER & INFLUX_PASSWORD: Credentials for accessing InfluxDB.
+   6. GRAFANA_USER & GRAFANA_PASSWORD: Credentials for accessing Grafana.
+   
 5. **Deploy the service:** Execute the following command to build the custom images (if needed) and start the containers in detached mode.
     * **First time/after changes:** Run `sudo docker compose up -d --build`
     * **Standard run:** Run `sudo docker compose up -d`

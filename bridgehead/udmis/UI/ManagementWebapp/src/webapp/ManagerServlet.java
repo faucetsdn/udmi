@@ -1,8 +1,6 @@
 package webapp;
 
-import com.google.gson.JsonElement;
-import com.google.gson.JsonObject;
-import com.google.gson.JsonParser;
+import com.google.gson.*;
 import freemarker.template.Configuration;
 import freemarker.template.Template;
 import jakarta.servlet.http.HttpServlet;
@@ -10,16 +8,20 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import webapp.mqtt.MqttConnection;
+import webapp.mqtt.SiteModelManager;
 
 import java.io.IOException;
 import java.security.Security;
+import java.text.SimpleDateFormat;
+import java.time.Instant;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
 import java.util.logging.Logger;
 
-import static webapp.UDMISManager.NOT_STARTED;
-import static webapp.UDMISManager.RUNNING;
+import static webapp.ValidatorManager.NOT_STARTED;
+import static webapp.ValidatorManager.RUNNING;
 import static webapp.mqtt.MqttConnection.*;
 
 public class ManagerServlet extends HttpServlet {
@@ -37,12 +39,14 @@ public class ManagerServlet extends HttpServlet {
         }
     }
 
+    /**********************************************************************/
+
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response){
-        UDMISManager udmisManager = new UDMISManager();
         String action = request.getParameter("action");
 
         if(Objects.equals(action, "saveMetadata")){
+            SiteModelManager modelManager = new SiteModelManager();
             JsonObject metadata = null;
             JsonObject reply = new JsonObject();
             reply.addProperty("messageType", "success");
@@ -58,7 +62,7 @@ public class ManagerServlet extends HttpServlet {
 
             if( metadata != null){
                 String path = request.getParameter("path");
-                reply = udmisManager.updateMetadata(path, metadata);
+                reply = modelManager.updateMetadata(path, metadata);
             }
 
             try {
@@ -70,9 +74,13 @@ public class ManagerServlet extends HttpServlet {
         }
     }
 
+    /**********************************************************************/
+
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response) {
-        UDMISManager udmisManager = new UDMISManager();
+        ValidatorManager validatorManager = new ValidatorManager();
+        SiteModelManager modelManager = new SiteModelManager();
+        RegistrarManager registrarManager = new RegistrarManager();
 
         String action = request.getParameter("action");
         if (action == null) {
@@ -81,39 +89,49 @@ public class ManagerServlet extends HttpServlet {
 
         String reply = null;
         switch (action) {
-            case DEVICE_STATUS_SEARCH: {
+            case VALIDATION_DEVICE_STATUS_SEARCH: {
                 String deviceName = request.getParameter("deviceName");
-                reply = udmisManager.getDeviceStatus(deviceName);
+                reply = validatorManager.getDeviceStatus(deviceName);
+            }
+            break;
+            case REGISTRAR_DEVICE_STATUS_SEARCH: {
+                String deviceName = request.getParameter("deviceName");
+                reply = registrarManager.getDeviceStatus(deviceName);
             }
             break;
             case DEVICE_METADATA_SEARCH:{
                 String deviceName = request.getParameter("deviceName");
-                reply = udmisManager.getDevices(deviceName);
+                reply = modelManager.getDevices(deviceName);
             }break;
             case GET_DEVICE_METADATA:{
                 String devicePath = request.getParameter("path");
-                JsonObject deviceMetadata = udmisManager.getDeviceMetadata(devicePath);
+                JsonObject deviceMetadata = modelManager.getDeviceMetadata(devicePath);
                 reply = deviceMetadata.toString();
             }break;
             case RUN_REGISTRAR:{
-                reply = udmisManager.runRegistrar();
+                validatorManager.runRegistrar();
+                JsonObject registrarResponse = new JsonObject();
+                registrarResponse.addProperty("time", registrarManager.getLastRegistrarRun());
+                registrarResponse.addProperty("devices", registrarManager.getDeviceStatus());
+                reply = registrarResponse.toString();
             }break;
             case RUN_VALIDATOR:{
-                reply = udmisManager.startValidator();
+                reply = validatorManager.startValidator();
             }break;
             default: {
                 String brokerStatus = mqttConnection.getConnectionStatus();
                 model.put(BROKER_STATUS, brokerStatus);
                 model.put("brokerStatusColour", getBadgeColour(brokerStatus));
 
-                String validatorStatus = udmisManager.getValidatorStatus();
+                String validatorStatus = validatorManager.getStatus();
                 model.put("validatorStatus", validatorStatus);
                 model.put("validatorStatusColour", getBadgeColour(validatorStatus));
 
                 model.put(CONNECTED_CLIENT_COUNT, mqttConnection.getClientCount());
                 model.put(SUBSCRIPTION_COUNT, mqttConnection.getSubscriptionCount());
-                model.put("deviceStatusBody", udmisManager.getDeviceStatus());
-                model.put("registrarRun", udmisManager.getLastRegistrarRun());
+                model.put("validatorDeviceStatusBody", validatorManager.getDeviceStatus());
+                model.put("registrarDeviceStatusBody", registrarManager.getDeviceStatus());
+                model.put("registrarRun", registrarManager.getLastRegistrarRun());
                 model.put("page", "summary");
             }
         }
@@ -131,6 +149,8 @@ public class ManagerServlet extends HttpServlet {
         }
     }
 
+    /**********************************************************************/
+
     private String getBadgeColour(String status){
         if(Objects.equals(status, RUNNING) || Objects.equals(status, CONNECTED)){
             return "green";
@@ -140,12 +160,84 @@ public class ManagerServlet extends HttpServlet {
         return "yellow";
     }
 
+    /**********************************************************************/
+
+    // region Json Helpers
+    public static JsonObject getJsonObject(String key, JsonObject parent) {
+
+        if (key != null && parent != null && parent.has(key) && parent.get(key).isJsonObject()) {
+            return parent.getAsJsonObject(key);
+        }
+        return new JsonObject();
+    }
+
+    public static JsonArray getJsonArray(String key, JsonObject parent) {
+        if (key != null && parent != null && parent.has(key) && parent.get(key).isJsonArray()) {
+            return parent.getAsJsonArray(key);
+        }
+        return new JsonArray();
+    }
+
+    public static String getString(String key, JsonObject parent) {
+        if (key != null && parent != null && parent.has(key)) {
+            try {
+                return parent.get(key).getAsString();
+            } catch (Exception ignore) {
+            }
+        }
+        return null;
+    }
+    // endregion Json Helpers
+
+    /**********************************************************************/
+
+    public static String getFormattedTimestamp(String ISOString) {
+        String formattedLastSeen;
+        if (ISOString == null || ISOString.isEmpty()) {
+            formattedLastSeen = " --- ";
+        } else {
+            try {
+                SimpleDateFormat sdf = new SimpleDateFormat("HH:mm:ss, dd MMM yyyy");
+                Instant instant = Instant.parse(ISOString);
+                formattedLastSeen = sdf.format(new Date(instant.toEpochMilli()));
+            } catch (Exception ignore) {
+                formattedLastSeen = " --- ";
+            }
+        }
+        return formattedLastSeen;
+    }
+
+    /**********************************************************************/
+
+    public static boolean isValidString(String string) {
+        return string != null && !string.isEmpty() && !string.isBlank();
+    }
+
+    /**********************************************************************/
+
+    public static String getEmptyTableRow() {
+        return """
+                <tr>
+                    <td colspan="3">
+                        <div id="empty-table-message">
+                            No results to show
+                        </div>
+                    </td>
+                </tr>
+                """;
+    }
+
+    /**********************************************************************/
+
     private Configuration cfg;
     public Map<String, Object> model = new HashMap<>();
     MqttConnection mqttConnection = new MqttConnection();
     private final static Logger LOGGER = Logger.getLogger(ManagerServlet.class.getName());
 
-    private static final String DEVICE_STATUS_SEARCH = "deviceStatusSearch";
+    /**********************************************************************/
+
+    private static final String VALIDATION_DEVICE_STATUS_SEARCH = "validatorDeviceStatusSearch";
+    private static final String REGISTRAR_DEVICE_STATUS_SEARCH = "registrarDeviceStatusSearch";
     private static final String DEVICE_METADATA_SEARCH = "deviceMetadataSearch";
     private static final String GET_DEVICE_METADATA = "getMetadata";
     private static final String RUN_REGISTRAR = "runRegistrar";
