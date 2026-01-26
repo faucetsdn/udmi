@@ -39,8 +39,6 @@ This guide provides instructions for deploying the core UDMI services bundle. Th
    - etcd
    - grafana
    - influxdb
-   - grafana
-   - influxdb
 
 ## Tools
 
@@ -125,24 +123,25 @@ The UI allows you to:
 - View MQTT broker status (including real-time connection counts).
 - Check if the validator service is currently running.
 - See last time the registrar tool was run.
-- View individual device status, as reported by the validator service.
+- View the validation status of devices.
+- View the registration status of devices.
 
 #### 2. Interact
- - Start the validator Service
+ - Start/restart the validator Service
  - Execute the registrar tool
  - Edit device metadata
 
 ### InfluxDB
 
 1. **Access:** Navigate to the InfluxDB endpoint at `http://localhost:8086`.
-2. **Login:** Use the credentials specified in the Docker Compose file.
+2. **Login:** Use the credentials specified in the `.env` file.
 3. **Query:** Go to the Data Explorer (left panel). Locate the bridgehead bucket at the bottom to begin querying data.
 
 ### Grafana 
 
-1. **Access:** Navigate to the InfluxDB endpoint at `http://localhost:3000`.
-2. **Login:** Use the credentials specified in the Docker Compose file.
-3. **View Dashboard:**  Select Dashboards from the left-hand menu. The pre-configured `bridgehead` dashboard includes a basic overview of the running services.
+1. **Access:** Navigate to the Grafana endpoint at `http://localhost:3000`.
+2. **Login:** Use the credentials specified in the `.env` file.
+3. **View Dashboard:** Select Dashboards from the left-hand menu. The pre-configured `bridgehead` dashboard includes a basic overview of the running services.
 
 #### Alerts
 
