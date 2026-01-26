@@ -9,6 +9,8 @@ The imports in this file make these key classes directly available
 from the `udmi.core.auth` namespace for easier use.
 """
 
-from udmi.core.auth.auth_provider import AuthProvider
 from udmi.core.auth.basic_auth_provider import BasicAuthProvider
+from udmi.core.auth.credential_manager import CredentialManager
+from udmi.core.auth.intf.auth_provider import AuthProvider
 from udmi.core.auth.jwt_auth_provider import JwtAuthProvider
+from udmi.core.auth.no_auth_provider import NoAuthProvider

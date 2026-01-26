@@ -14,5 +14,6 @@ COPY udmis/bridgeheadManager.war /usr/local/tomcat/webapps/
 RUN chmod +x /root/udmi/etc/mosquitto_ctrl.sh
 RUN chmod +x /usr/local/bin/startup/udmis_startup.sh
 RUN chmod +x /usr/local/bin/startup/telegraf.conf 
+RUN chmod +x /usr/local/bin/startup/telegraf.conf 
 
 CMD ["/usr/local/bin/startup/udmis_startup.sh"]

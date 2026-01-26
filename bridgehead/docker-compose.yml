@@ -83,7 +83,7 @@ services:
     restart: always
     networks:
       - udminet
-
+      
   influxdb:
     container_name: influxdb
     image: influxdb:2

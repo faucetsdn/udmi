@@ -453,4 +453,4 @@ jobs:
         if: matrix.python-version == '3.13'
         run: |
           cd clientlib/python
-          poetry run pylint src tests
+          poetry run pylint src

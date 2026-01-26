@@ -8,6 +8,7 @@ import sys
 import logging
 import datetime
 import argparse
+import json
 
 state = mock.MagicMock()
 
@@ -22,7 +23,7 @@ parser = argparse.ArgumentParser(description="ping targets")
 parser.add_argument("targets", help="nmap target", type=str)
 args = parser.parse_args()
 
-a = udmi.discovery.ether.EtherDiscovery(state, print)
+a = udmi.discovery.ether.EtherDiscovery(state, lambda x: print(x.to_json()))
 a.controller(
   {
     "discovery": {

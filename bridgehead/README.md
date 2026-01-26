@@ -31,11 +31,14 @@ This guide provides instructions for deploying the core UDMI services bundle. Th
     * **First time/after changes:** Run `sudo docker compose up -d --build`
     * **Standard run:** Run `sudo docker compose up -d`
     
+    
 6. **Confirm all containers are running:** Run `sudo docker ps` in the terminal, you should see the following containers in any order:
    - validator
    - udmis
    - mosquitto
    - etcd
+   - grafana
+   - influxdb
    - grafana
    - influxdb
 
