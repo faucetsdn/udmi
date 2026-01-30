@@ -1,9 +1,11 @@
 #!/bin/bash -e
+mkdir -p /root/.ssh 
+ssh-keygen -t ed25519 -N "" -f /root/.ssh/id_ed25519 && chmod 600 /root/.ssh/id_ed25519
+echo starting up tomcat server
+exec /usr/local/tomcat/bin/catalina.sh run > /tmp/tomcat.log 2>&1 &
+
 UDMIS_LOG=/tmp/udmis.log
 rm -rf $UDMIS_LOG
-
-echo Waiting 15s for mqtt to setup
-sleep 15
 
 UDMI_ROOT=/root/udmi
 source $UDMI_ROOT/etc/shell_common.sh
@@ -18,7 +20,7 @@ echo Starting local services at $(sudo date -u -Is) | tee $UDMIS_LOG
 
 iot_provider=$(jq -r .iot_provider $site_config)
 if [[ -n ${project_spec:-} ]]; then
-    project_target=${project_spec##*/}
+    project_target=${project_spec##*/}+
     iot_provider=${project_spec%/*}
     iot_provider=${iot_provider#//}
 fi
@@ -46,7 +48,11 @@ export SSL_SECRETS_DIR=/etc/mosquitto/certs
 UDMIS_DIR=udmis
 [[ -d $UDMIS_DIR ]] || UDMIS_DIR=..
 
-jq --arg host_var "$MQTT_HOST" '.flow_defaults.hostname=$host_var' /root/var/local_pod.json > /root/var/local_pod.tmp && mv /root/var/local_pod.tmp /root/var/local_pod.json
+
+jq --arg u "$SERV_USER" --arg p "$SERV_PASS" --arg host_var "$MQTT_HOST" \
+'.flow_defaults.auth_provider.basic.username = $u | .flow_defaults.auth_provider.basic.password = $p | .flow_defaults.hostname=$host_var' \
+/root/var/local_pod.json > /root/var/local_pod.tmp && mv /root/var/local_pod.tmp /root/var/local_pod.json
+
 $UDMIS_DIR/bin/run /root/var/local_pod.json >> $LOGFILE 2>&1 &
 
 PID=$!
