@@ -48,7 +48,7 @@ paho-mqtt==1.6.1
 platformdirs==2.6.0
 pluggy==1.5.0
 proto-plus==1.24.0
-protobuf==5.29.5
+protobuf==6.33.5
 pyasn1==0.4.8
 pyasn1-modules==0.2.8
 pycparser==2.22
