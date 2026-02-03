@@ -9,7 +9,7 @@ UDMI offers a lot of flexibility for the messages associated with telemetry. The
 UDMI [stipulates](../messages/pointset.md#metadata) that units of measure must be provided if the telemetry value is numeric, but does not prescribe what system to use to represent them. There are a number of systems that could be considered that offer unambiguous fixed numeric or fixed string codes for units of measure.
 
 ### UCUM
-The Unified Code for Units of Measure (UCUM) is a system of codes for unambiguously representing units. Its focus is on machine-to-machine communication, and various tools exist to aid with validation and conversion.
+The Unified Code for Units of Measure (UCUM) is a system of codes for unambiguously representing units of measure. Its focus is on machine-to-machine communication, and various tools exist to aid with validation and conversion.
 
 ### BACnet
 The BACnetEngineeringUnits enumeration from the BACnet protocol specification provides a standardised numeric identifier for the unit of measure associated with a BACnet property value, ensuring that BACnet devices can unambiguously interpret engineering units without relying on free-text strings.
@@ -28,7 +28,7 @@ If a target system requires just 1 point from a device, and a separate target sy
 Further, if the former target system requires the 1 point to be sent every minute, and the latter target system requires all 10 points to be sent once every 24 hours, then both target systems will receive all 11 points every minute.
 
 ## Serialisation of boolean and enumerated points
-UDMI [stipulates](../messages/pointset.md#event) that numeric values must be serialised as a JSON [number](https://datatracker.ietf.org/doc/html/rfc8259#section-6), and the associated units must be provided separately in [metadata](../messages/pointset.md#metadata). That is, numeric values are sent on the wire as numbers only in the events/pointset message. It is up to the target systems to apply or suffix the meaning (the units of measure) when displaying the number.
+UDMI [stipulates](../messages/pointset.md#event) that numeric values must be serialised as a JSON [number](https://datatracker.ietf.org/doc/html/rfc8259#section-6), and the associated units must be provided separately in [metadata](../messages/pointset.md#metadata). That is, numeric values are sent on the wire as numbers only in the events/pointset message. It is up to the target systems to apply or suffix the meaning (the units of measure) when interpreting or displaying the number.
 
 A similar stipulation is not explicitly made for boolean values, although it could be encouraged to serialise boolean values using the `true` and `false` JSON [literals](https://datatracker.ietf.org/doc/html/rfc8259#section-3). This may appear to work well for boolean points such as 'pump run status' (where it could be presumed that `true` means 'pump running'), but the interpretation could be less clear for boolean points such as 'door open status' (where it may not be clear if `true` means 'open' or 'not open'). UDMI does not have a dedicated construct to store the fixed meanings of `true` and `false` within [metadata](../messages/pointset.md#metadata) currently, and so it would be up to the target systems to capture and apply the meaning when displaying the boolean value.
 
@@ -47,6 +47,11 @@ In UDMI the *status* of a point is conveyed in a separate message to the *value*
 This is worth being cognisant of for target systems that make decisions based on the *value* of points. If a `/state` message isn't received before an associated `/events/pointset` message, the target system could make decisions based on a potentially invalid *value*.
 
 UDMI does not prescribe the order of messages in this scenario, but it could be considered beneficial to ensure that `/state` messages are sent prior to any corresponding `/events/pointset` messages, so that the target system can correctly contextualise upcoming *values*.
+
+## MQTT message features
+UDMI [stipulates](../specs/compliance.md) that a device must subscribe to its associated `/config` topic with QoS 1. UDMI does not stipulate what QoS a device should use when publishing messages.
+
+UDMI does not stipulate other features of MQTT such as LWT, retained messages, or persistent or clean sessions.
 
 ## MQTT topic structure and naming
 UDMI [stipulates](../specs/tech_stack.md#mqtt-topic-suffix-table) the names for the lower topic levels that a device must use when publishing messages. It does not stipulate the names to use for the higher topic levels, nor its structure.
