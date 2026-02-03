@@ -98,7 +98,7 @@ jobs:
           find sites/udmi_site_model/extras/ -type f | xargs more
       - name: udmis log
         if: ${{ !cancelled() }}
-        run: cat /tmp/udmis.log
+        run: cat out/udmis.log
       - name: pubber log
         if: ${{ !cancelled() }}
         run: cat out/pubber.log.GAT-123
@@ -214,7 +214,7 @@ jobs:
         run: more out/pubber.log* pubber/out/*.json | cat
       - name: udmis log
         if: ${{ !cancelled() }}
-        run: cat /tmp/udmis.log
+        run: cat out/udmis.log
       - name: itemized test post-process
         if: ${{ !cancelled() }}
         run: egrep ' test .* after .*s ' out/sequencer.log-* | tee out/timing_itemized.out
@@ -268,7 +268,7 @@ jobs:
           sudo more /etc/mosquitto/* /etc/mosquitto/conf.d/* || true
       - name: udmis log
         if: ${{ !cancelled() }}
-        run: cat /tmp/udmis.log
+        run: cat out/udmis.log
       - name: mosquitto logs
         if: ${{ !cancelled() }}
         run: cat /var/log/mosquitto/mosquitto.log || true
