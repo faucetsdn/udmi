@@ -155,7 +155,7 @@ jobs:
         if: ${{ !cancelled() }}
         run: |
           docker logs udmis
-          more var/tmp/udmis.log
+          more out/udmis.log
       - name: Registrar logs
         if: ${{ !cancelled() }}
         run: docker logs registrar

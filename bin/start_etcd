@@ -2,9 +2,10 @@
 
 IMAGE=quay.io/coreos/etcd:v3.5.13
 BINDIR=/tmp/etcd
-ETCD_LOG=/tmp/etcd.log
+ETCD_LOG=out/etcd.log
 
 echo pwd: $(pwd)
+mkdir -p out
 
 old_pid=$(ps ax | fgrep /tmp/etcd/etcd | fgrep listen | awk '{print $1}') || true
 if [[ -n $old_pid ]]; then
