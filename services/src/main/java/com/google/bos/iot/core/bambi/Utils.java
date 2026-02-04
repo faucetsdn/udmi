@@ -17,7 +17,8 @@ public class Utils {
   public static final Set<String> LIST_TYPE_HEADERS = Set.of(
       "gateway.proxy_ids",
       "system.tags",
-      "tags"
+      "tags",
+      "policy.rule_sets"
   );
   public static final Set<Pattern> NON_NUMERIC_HEADERS_REGEX = Set.of(
       Pattern.compile("pointset\\.points\\..*\\.ref"),
