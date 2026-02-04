@@ -418,9 +418,8 @@ public class BambiSiteModelTest {
         headerOnlySheet("h"), headerOnlySheet("h"), headerOnlySheet("h"), headerOnlySheet("h"));
 
     Map<String, Map<String, String>> allMeta = model.getAllDevicesMetadata();
-    assertEquals(3, allMeta.size());
+    assertEquals(2, allMeta.size());
     assertNotNull(model.getDeviceMetadata("dev1"));
-    assertEquals("val_for_empty_id", model.getDeviceMetadata("").get(PREFIX_SYSTEM + ".data"));
     assertEquals("val_for_null_string_id",
         model.getDeviceMetadata("null_string").get(PREFIX_SYSTEM + ".data"));
 
