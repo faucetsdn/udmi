@@ -250,29 +250,17 @@ jobs:
           bin/start_local sites/udmi_site_model //mqtt/localhost
           bin/pull_messages //mqtt/localhost > out/message_capture.log 2>&1 &
       - name: bin/test_etcd
-        run: |
-          ls -l out/
-          bin/test_etcd
+        run: bin/test_etcd
       - name: bin/test_mosquitto
-        run: |
-          ls -l out/
-          bin/test_mosquitto
+        run: bin/test_mosquitto
       - name: bin/test_regclean
-        run: |
-          ls -l out/
-          bin/test_regclean //mqtt/localhost
+        run: bin/test_regclean //mqtt/localhost
       - name: bin/test_runlocal
-        run: |
-          ls -l out/
-          bin/test_runlocal
+        run: bin/test_runlocal
       - name: bin/test_sequencer
-        run: |
-          ls -l out/
-          bin/test_sequencer local full //mqtt/localhost $(< etc/local_tests.txt)
+        run: bin/test_sequencer local full //mqtt/localhost $(< etc/local_tests.txt)
       - name: bin/test_udmis
-        run: |
-          ls -l out/
-          bin/test_udmis
+        run: bin/test_udmis
       - name: mosquitto debug
         if: ${{ !cancelled() }}
         run: |
@@ -280,9 +268,7 @@ jobs:
           sudo more /etc/mosquitto/* /etc/mosquitto/conf.d/* || true
       - name: udmis log
         if: ${{ !cancelled() }}
-        run: |
-          ls -l out/
-          cat out/udmis.log
+        run: cat out/udmis.log
       - name: mosquitto logs
         if: ${{ !cancelled() }}
         run: cat /var/log/mosquitto/mosquitto.log || true
