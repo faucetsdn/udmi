@@ -268,7 +268,7 @@ jobs:
           sudo more /etc/mosquitto/* /etc/mosquitto/conf.d/* || true
       - name: udmis log
         if: ${{ !cancelled() }}
-        run: cat out/udmis.log
+        run: cat out/udmis*.log
       - name: mosquitto logs
         if: ${{ !cancelled() }}
         run: cat /var/log/mosquitto/mosquitto.log || true
