@@ -129,9 +129,10 @@ echo Checking received end message
 fgrep Rudolph out/mosquitto.sub || fail did not find expected message
 
 echo Checking messages for matching serial no $serial_no
-echo Magic statement 1 that prevents race condition
+received_no=$(echo "$operational_line")
 received_no=$(echo "$operational_line" | sed -E 's/^[^{]+//' | jq -r .system.serial_no)
-echo Magic statement 2 that prevents race condition
+received_topic=$(fgrep operational out/mosquitto.sub)
+received_topic=$(fgrep operational out/mosquitto.sub | head -n 1)
 received_topic=$(fgrep operational out/mosquitto.sub | head -n 1 | awk '{ print $1 }')
 [[ -z $received_topic ]] && fail No matching receive message found.
 
