@@ -129,11 +129,11 @@ echo Checking received end message
 fgrep Rudolph out/mosquitto.sub || fail did not find expected message
 
 echo Checking messages for matching serial no $serial_no
-echo 1
+#echo 1
 received_no=$(echo "$operational_line")
-echo 2 -- $received_no
+#echo 2 -- $received_no
 received_no=$(echo "$operational_line" | sed -E 's/^[^{]+//' | jq -r .system.serial_no)
-echo 3 -- $received_no
+#echo 3 -- $received_no
 received_topic=$(fgrep operational out/mosquitto.sub)
 echo 4 -- $received_topic
 received_topic=$(fgrep operational out/mosquitto.sub | head -n 1)
