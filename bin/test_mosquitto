@@ -136,9 +136,9 @@ received_no=$(echo "$operational_line" | sed -E 's/^[^{]+//' | jq -r .system.ser
 #echo 3 -- $received_no
 received_topic=$(fgrep operational out/mosquitto.sub)
 echo 4 -- $received_topic
-received_topic=$(fgrep operational out/mosquitto.sub | head -n 1)
+received_topic=$(fgrep -m 1 operational out/mosquitto.sub)
 echo 5 -- $received_topic
-received_topic=$(fgrep operational out/mosquitto.sub | head -n 1 | awk '{ print $1 }')
+received_topic=$(fgrep -m 1 operational out/mosquitto.sub | awk '{ print $1 }')
 echo 6 -- $received_topic
 [[ -z $received_topic ]] && fail No matching receive message found.
 
