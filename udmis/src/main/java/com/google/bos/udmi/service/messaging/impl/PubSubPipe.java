@@ -168,7 +168,7 @@ public class PubSubPipe extends MessageBase implements MessageReceiver {
           stringMap.get(SUBTYPE_PROPERTY_KEY), stringMap.get(SUBFOLDER_PROPERTY_KEY),
           topicId, envelope.deviceRegistryId, envelope.deviceId, envelope.transactionId,
           publishedTransactionId));
-      debug(format("PubSub Message %s published with GCP Ack Latency %s ms",
+      debug(format("PubSub Message %s published with GCP Ack Latency %dms",
           publishedTransactionId, gcpAckLatencyMs));
     } catch (Exception e) {
       throw new RuntimeException("While publishing bundle to " + publisher.getTopicNameString(), e);
@@ -218,7 +218,7 @@ public class PubSubPipe extends MessageBase implements MessageReceiver {
         message.getPublishTime().getNanos()
     );
     long latencyMs = Duration.between(publishTime, Instant.now()).toMillis();
-    debug(format("PubSub message %s received. Processing latency from publish time %s: %d ms",
+    debug(format("PubSub message %s received. Processing latency from publish time %s: %dms",
         messageTransactionId, publishTime, latencyMs));
 
     Map<String, String> attributesMap = new HashMap<>(message.getAttributesMap());
