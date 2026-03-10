@@ -128,6 +128,9 @@ class MessageDispatcher(AbstractMessageDispatcher):
         except Exception as e: # pylint: disable=broad-exception-caught
             LOGGER.error("Failed to publish event %s: %s", channel, e)
 
+    def is_connected(self) -> bool:
+        return self._client.is_connected()
+
     # --- Lifecycle Methods ---
 
     def connect(self) -> None:

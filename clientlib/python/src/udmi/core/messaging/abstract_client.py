@@ -112,3 +112,12 @@ class AbstractMessagingClient(ABC):
             handler: A callable that accepts (rc: int), where 'rc' is
                      the reason code for the disconnection.
         """
+
+    @abstractmethod
+    def is_connected(self) -> bool:
+        """
+        Returns the current connection status of the client.
+
+        Returns:
+            True if connected to the broker, False otherwise.
+        """

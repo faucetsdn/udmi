@@ -88,3 +88,7 @@ class AbstractMessageDispatcher(ABC):
     @abstractmethod
     def close(self) -> None:
         """Shuts down the connection."""
+
+    @abstractmethod
+    def is_connected(self) -> bool:
+        """Returns True if the client is currently connected."""

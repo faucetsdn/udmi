@@ -58,6 +58,7 @@ class Point:
             name: The unique identifier for this point (e.g., 'temp_sensor_1').
         """
         self.name = name
+        self.ref = None
         self.present_value: Any = None
         self.units: Optional[str] = None
         self.status: Optional[Entry] = None

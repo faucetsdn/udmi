@@ -197,6 +197,10 @@ class MqttMessagingClient(AbstractMessagingClient):
             except Exception as e: # pylint: disable=broad-exception-caught
                 LOGGER.error("Subscribe failed for %s: %s", topic, e)
 
+    def is_connected(self) -> bool:
+        """Returns True if the Paho client is currently connected."""
+        return self._mqtt_client.is_connected()
+
     # --- Callback Setters ---
 
     def set_on_message_handler(self, handler: OnMessageHandler) -> None:

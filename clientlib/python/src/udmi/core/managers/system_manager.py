@@ -166,11 +166,11 @@ class SystemManager(BaseManager):
         """
         # Map UDMI levels (100-500) to Python levels (10-50)
         python_level = max(10, min_loglevel // 10)
-        current_level = logging.getLogger().getEffectiveLevel()
+        root_logger = logging.getLogger()
+        root_logger.setLevel(python_level)
 
-        if python_level != current_level:
-            LOGGER.info("Updating log level from %s to %s", current_level, python_level)
-            logging.getLogger().setLevel(python_level)
+        for handler in root_logger.handlers:
+            handler.setLevel(python_level)
 
     def _update_metrics_rate(self, new_rate: int) -> None:
         """

@@ -44,6 +44,8 @@ class UDMIMqttLogHandler(logging.Handler):
         # This prevents infinite loops when the MQTT client logs debug messages.
         if getattr(self._local, "emitting", False):
             return
+        if not self.system_manager.is_connected:
+            return
 
         try:
             self._local.emitting = True
