@@ -39,11 +39,11 @@ public class PointPointsetConfig {
     @JsonPropertyDescription("If specified, indicates the units the device should report the data in.")
     public String units;
     /**
-     * Used for cloud writeback functionality, this field specifies the value for a given point in the device's current units.
+     * Used for cloud writeback functionality, this field specifies the value for a given point in the device's current units. If the value is numeric, then the type must be integer or number.  If the value is an integer, it should be represented as type integer
      * 
      */
     @JsonProperty("set_value")
-    @JsonPropertyDescription("Used for cloud writeback functionality, this field specifies the value for a given point in the device's current units.")
+    @JsonPropertyDescription("Used for cloud writeback functionality, this field specifies the value for a given point in the device's current units. If the value is numeric, then the type must be integer or number.  If the value is an integer, it should be represented as type integer")
     public Object set_value;
     /**
      * RFC 3339 timestamp for the specified point write easing to stop

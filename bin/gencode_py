@@ -57,6 +57,14 @@ datamodel-codegen --input "$SCHEMA_OUTPUT_DIR" --input-file-type jsonschema \
 --output-model-type dataclasses.dataclass --disable-timestamp \
 --base-class ._base.DataModel
 
+# handle manually curated enums
+# copy level.py from etc/level.py
+cp "$ROOT_DIR/etc/level.py" "$PYTHON_OUTPUT_DIR/level.py"
+# create category.py from docs/specs/categories.md
+bin/gencode_py_categories
+# create bucket.py from docs/specs/buckets.md
+bin/gencode_py_buckets
+
 # add import statements to udmi/schema/__init__.py
 find "$PYTHON_OUTPUT_DIR" -name "*.py" -not -name "__init__.py" -print0 | while IFS= read -r -d $'\0' file; do
   module_name=$(basename "$file" .py)

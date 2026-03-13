@@ -1,4 +1,8 @@
 Exceptions for GAT-123
+  While loading credentials for local device GAT-123
+    Found 0 credentials
+  expected files mismatch
+    Missing files: [rsa_private.pem, rsa_private.pkcs8, rsa_public.pem]
   While converting device config
     unrecognized schema version null
   1 schema violations found

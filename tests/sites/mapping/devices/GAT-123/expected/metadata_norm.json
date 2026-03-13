@@ -1,4 +1,8 @@
 {
+  "cloud": {
+    "auth_type": "RS256",
+    "num_id": "987654321"
+  },
   "discovery": {
     "families": {
       "vendor": {}

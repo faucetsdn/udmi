@@ -1,10 +1,13 @@
 {
-  "timestamp": "2024-04-02T17:30:04Z",
-  "hash": "0001d237",
-  "discovery": {
-    "families": {
-      "vendor": {
-      }
+  "timestamp" : "2024-04-02T17:30:04Z",
+  "hash" : "0001d237",
+  "cloud" : {
+    "auth_type" : "RS256",
+    "num_id" : "987654321"
+  },
+  "discovery" : {
+    "families" : {
+      "vendor" : { }
     }
   }
 }

@@ -1,6 +1,6 @@
 package com.google.daq.mqtt.mapping;
 
-import static com.google.bos.iot.core.reconcile.SourceRepoMessageUtils.parseSourceRepoMessageData;
+import static com.google.bos.iot.core.reconcile.SourceRepoMessageUtils.parseSourceRepoMessageDataToRawMap;
 import static com.google.udmi.util.GeneralUtils.isNotEmpty;
 
 import com.google.daq.mqtt.registrar.Registrar;
@@ -31,7 +31,9 @@ public class MappingService extends AbstractPollingService {
   private static final String DISCOVERY_NODE_DEVICE_ID_FIELD = "deviceId";
   private static final String DISCOVERY_TIMESTAMP = "generation";
   private static final String TRIGGER_BRANCH = "discovery";
+  private static final String TRIGGER_BRANCH_IoT = "discovery_iot";
   private static final String DEFAULT_TARGET_BRANCH = "main";
+  private static final String GATEWAY_ID_FIELD = "gatewayId";
   private final String projectSpec;
 
   /**
@@ -77,60 +79,113 @@ public class MappingService extends AbstractPollingService {
 
   @Override
   protected void handleMessage(PubsubMessage message) throws Exception {
-    Map<String, Object> messageData = parseSourceRepoMessageData(message);
+    Map<String, Object> messageData = parseSourceRepoMessageDataToRawMap(message);
     Integer eventNumber = (Integer) messageData.getOrDefault(EVENT_NUMBER_FIELD, 0);
-    LOGGER.info("Received event no. from message: {}", eventNumber);
     if (eventNumber < 0) {
-      String mappingFamily = (String) messageData.getOrDefault(FAMILY_FIELD, "");
-      String registryId = message.getAttributesOrDefault(REGISTRY_ID_FIELD, "");
+      processDiscoveryComplete(message, messageData);
+    } else if (message.getAttributesMap().containsKey(GATEWAY_ID_FIELD)) {
+      stitchDeviceProperties(message, messageData);
+    }
+  }
 
-      if (registryId.isEmpty()) {
-        LOGGER.error("Registry Id not found for the message.");
-        return;
-      }
+  private void processDiscoveryComplete(PubsubMessage message, Map<String, Object> messageData)
+      throws Exception {
+    LOGGER.info(
+        "Received event no. from message: {}", messageData.getOrDefault(EVENT_NUMBER_FIELD, 0));
+    String mappingFamily = (String) messageData.getOrDefault(FAMILY_FIELD, "");
+    String registryId = message.getAttributesOrDefault(REGISTRY_ID_FIELD, "");
 
-      Instant now = Instant.now();
-      String currentTimestamp = DateTimeFormatter.ISO_INSTANT.format(now);
-      String discoveryTimestamp = (String) messageData.getOrDefault(DISCOVERY_TIMESTAMP,
-          currentTimestamp);
-      String discoveryNodeDeviceId = message.getAttributesOrDefault(
-          DISCOVERY_NODE_DEVICE_ID_FIELD, "");
-      if (discoveryNodeDeviceId.isEmpty()) {
-        LOGGER.error("Discovery Node device Id not found for the message received.");
-        return;
-      }
-      LOGGER.info("Starting Mapping process for registry: {}, family: {}, discoverNode deviceId:"
-          + " {}", registryId, mappingFamily, discoveryNodeDeviceId);
+    if (registryId.isEmpty()) {
+      LOGGER.error("Registry Id not found for the message.");
+      return;
+    }
 
-      SourceRepository repository = initRepository(registryId);
-      if (repository.clone(DEFAULT_TARGET_BRANCH)) {
+    Instant now = Instant.now();
+    String currentTimestamp = DateTimeFormatter.ISO_INSTANT.format(now);
+    String discoveryTimestamp =
+        (String) messageData.getOrDefault(DISCOVERY_TIMESTAMP, currentTimestamp);
+    String discoveryNodeDeviceId =
+        message.getAttributesOrDefault(DISCOVERY_NODE_DEVICE_ID_FIELD, "");
+    if (discoveryNodeDeviceId.isEmpty()) {
+      LOGGER.error("Discovery Node device Id not found for the message received.");
+      return;
+    }
+    LOGGER.info(
+        "Starting Mapping process for registry: {}, family: {}, discoverNode deviceId:" + " {}",
+        registryId, mappingFamily, discoveryNodeDeviceId);
+
+    withRepository(registryId, TRIGGER_BRANCH,
+        repository -> {
+          String udmiModelPath = repository.getUdmiModelPath();
+          (new Registrar())
+              .processArgs(new ArrayList<>(List.of(udmiModelPath, projectSpec)))
+              .execute();
+          MappingAgent mappingAgent =
+              new MappingAgent(new ArrayList<>(List.of(udmiModelPath, projectSpec)));
+          mappingAgent.processMapping(
+              new ArrayList<>(List.of(discoveryNodeDeviceId, discoveryTimestamp, mappingFamily)));
+        });
+  }
+
+  private void stitchDeviceProperties(PubsubMessage message,
+      Map<String, Object> messageData)
+      throws Exception {
+    String registryId = message.getAttributesOrDefault(REGISTRY_ID_FIELD, "");
+
+    if (registryId.isEmpty()) {
+      LOGGER.error("Registry Id not found for the message.");
+      return;
+    }
+    LOGGER.info("Starting Stitching process for registry: {}", registryId);
+
+    withRepository(registryId, TRIGGER_BRANCH_IoT,
+        repository -> {
+          Object devicesObject = messageData.get("devices");
+          if (!(devicesObject instanceof Map)) {
+            LOGGER.warn("Skipping Processing: Received message without a valid 'devices' map.");
+            return;
+          }
+          String udmiModelPath = repository.getUdmiModelPath();
+          @SuppressWarnings("unchecked")
+          Map<String, Map<String, Object>> devices =
+              (Map<String, Map<String, Object>>) devicesObject;
+          MappingAgent mappingAgent =
+              new MappingAgent(new ArrayList<>(List.of(udmiModelPath, projectSpec)));
+
+          mappingAgent.stitchProperties(devices);
+        });
+  }
+
+  private void withRepository(String registryId, String branchPrefix, RepositoryConsumer work)
+      throws Exception {
+    SourceRepository repository = initRepository(registryId);
+    if (repository.clone(DEFAULT_TARGET_BRANCH)) {
+      try {
         String timestamp = LocalDateTime.now()
             .format(DateTimeFormatter.ofPattern("yyyyMMdd.HHmmss"));
 
-        String exportBranch = String.format("%s/%s/%s", TRIGGER_BRANCH, SERVICE_NAME, timestamp);
+        String exportBranch = String.format("%s/%s/%s", branchPrefix, SERVICE_NAME, timestamp);
         if (!repository.checkoutNewBranch(exportBranch)) {
-          throw new RuntimeException("Unable to create and checkout export branch "
-              + exportBranch);
+          throw new RuntimeException("Unable to create and checkout export branch " + exportBranch);
         }
 
-        String udmiModelPath = repository.getUdmiModelPath();
-        (new Registrar()).processArgs(new ArrayList<>(List.of(udmiModelPath, projectSpec)))
-            .execute();
-        MappingAgent mappingAgent = new MappingAgent(new ArrayList<>(
-            List.of(udmiModelPath, projectSpec)));
-        mappingAgent.processMapping(new ArrayList<>(List.of(discoveryNodeDeviceId,
-            discoveryTimestamp, mappingFamily)));
+        work.accept(repository);
 
         LOGGER.info("Committing and pushing changes to branch {}", exportBranch);
         if (!repository.commitAndPush("Merge changes from source: MappingService")) {
-          throw new RuntimeException("Unable to commit and push changes to branch "
-              + exportBranch);
+          throw new RuntimeException("Unable to commit and push changes to branch " + exportBranch);
         }
         LOGGER.info("Export operation complete.");
+      } finally {
         repository.delete();
-      } else {
-        LOGGER.error("Could not clone repository! PR message was not published!");
       }
+    } else {
+      LOGGER.error("Could not clone repository! PR message was not published!");
     }
+  }
+
+  @FunctionalInterface
+  private interface RepositoryConsumer {
+    void accept(SourceRepository repository) throws Exception;
   }
 }

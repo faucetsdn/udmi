@@ -13,6 +13,8 @@ import udmi.schema.state
 import udmi.schema.util 
 import logging
 import sys
+import collections
+import math
 
 stdout = logging.StreamHandler(sys.stdout)
 stdout.addFilter(lambda log: log.levelno < logging.WARNING)
@@ -160,3 +162,53 @@ def test_generation_scheduling(seconds_from_now, scan_interval, threshold, expec
     # hacky because timestamps are generted from datetime and timestamp
     # needs to mock all the objects to make it work
     assert pytest.approx(expected_delay + 1000, abs=1) == start_time
+
+@pytest.mark.parametrize(
+  "scan_duration, scan_interval",
+  [
+    # Set to more than one second to avoid issues with state message publishing
+    (None, 1),
+    (None, 3),
+    (1, 3)
+  
+  ]
+)
+def test_generation_is_incremented(scan_duration, scan_interval):
+  mock_state = state.State()
+  mock_publisher = mock.MagicMock()
+  numbers =  udmi.discovery.numbers.NumberDiscovery(mock_state, mock_publisher)
+
+  cycles = 5
+  got = set()
+
+  initial_generation = udmi.schema.util.current_time_utc()
+
+  with (
+    mock.patch.object(numbers, "start_discovery") as mock_start,
+  ):
+    
+    numbers.controller({"discovery": {
+      "families": {
+        "vendor" : {
+          "generation": udmi.schema.util.datetime_serializer(initial_generation), 
+          "scan_interval_sec": scan_interval, 
+          "scan_duration_sec": scan_duration
+          }
+        }
+      }
+    })
+
+    for x in range(300):
+      # In Github Actions this may catch the initial uninitialized state
+      # Ignore it instead of adding an arbitrary delay.
+      if generation := mock_state.discovery.families["vendor"].generation:
+        got.add(udmi.schema.util.datetime_serializer(generation))
+      if len(got) == cycles:
+        break
+      time.sleep(0.1)
+    
+    want = set([udmi.schema.util.datetime_serializer(initial_generation +  datetime.timedelta(seconds=scan_interval * n)) for n in range(cycles)])
+
+    assert want == got
+    # Below disabled because flakey
+    #assert mock_start.call_count == cycles

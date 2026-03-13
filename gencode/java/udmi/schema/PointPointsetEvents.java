@@ -20,12 +20,12 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 public class PointPointsetEvents {
 
     /**
-     * The specific point data reading
+     * The specific point data reading.  If the value is numeric, then the type must be integer or number.  If the value is an integer, it should be represented as type integer
      * (Required)
      * 
      */
     @JsonProperty("present_value")
-    @JsonPropertyDescription("The specific point data reading")
+    @JsonPropertyDescription("The specific point data reading.  If the value is numeric, then the type must be integer or number.  If the value is an integer, it should be represented as type integer")
     public Object present_value;
 
     @Override

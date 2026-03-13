@@ -25,13 +25,19 @@ Key behaviors verified:
 import logging
 import time
 from unittest.mock import MagicMock
+from unittest.mock import patch
 
 import pytest
 from freezegun import freeze_time
 
+from src.udmi.constants import IOT_ENDPOINT_CONFIG_BLOB_KEY
+from src.udmi.core.device import ConnectionResetException
 from src.udmi.core.device import Device
 from src.udmi.core.managers import BaseManager
 from src.udmi.core.messaging import AbstractMessageDispatcher
+from udmi.schema import BlobBlobsetConfig
+from udmi.schema import BlobsetConfig
+from udmi.schema import Config
 
 
 # pylint: disable=redefined-outer-name,protected-access
@@ -50,12 +56,13 @@ def mock_dispatcher():
 
 
 @pytest.fixture
-def test_device(mock_manager, mock_dispatcher):
+def test_device(mock_manager, mock_dispatcher, mock_endpoint_config):
     """
     Provides a real Device instance, unit-tested in isolation by
     injecting mock managers and a mock dispatcher.
     """
-    device = Device(managers=[mock_manager])
+    device = Device(managers=[mock_manager],
+                    endpoint_config=mock_endpoint_config)
 
     device.wire_up_dispatcher(mock_dispatcher)
 
@@ -147,8 +154,119 @@ def test_handle_config_bad_schema(
     """
     with caplog.at_level(logging.ERROR):
         bad_payload = {"system": {"min_loglevel": "this_should_be_an_int"}}
-        test_device.handle_config("config", bad_payload)
+        test_device.handle_config(test_device.device_id, "config", bad_payload)
 
     assert "Failed to parse config message" in caplog.text
 
     mock_manager.handle_config.assert_not_called()
+
+
+# --- Gateway / Proxy Routing Tests ---
+
+def test_handle_config_routes_to_proxy_manager(test_device, mock_manager):
+    """
+    Ensures that config messages for a different device_id are routed
+    to the manager's handle_proxy_config method.
+    """
+    mock_manager.handle_proxy_config = MagicMock()
+
+    proxy_id = "proxy-device-1"
+    payload = {"pointset": {"sample_rate_sec": 60}}
+
+    test_device.handle_config(proxy_id, "config", payload)
+
+    mock_manager.handle_config.assert_not_called()
+
+    mock_manager.handle_proxy_config.assert_called_once()
+    args = mock_manager.handle_proxy_config.call_args
+    assert args[0][0] == proxy_id
+    assert isinstance(args[0][1], Config)
+
+
+def test_handle_command_routes_to_proxy_manager(test_device, mock_manager):
+    """
+    Ensures that command messages for a different device_id are routed
+    to the manager's handle_proxy_command method.
+    """
+    mock_manager.handle_proxy_command = MagicMock()
+
+    proxy_id = "proxy-device-1"
+    payload = {"some_arg": 123}
+
+    test_device.handle_command(proxy_id, "commands/custom", payload)
+
+    mock_manager.handle_command.assert_not_called()
+    mock_manager.handle_proxy_command.assert_called_once_with(
+        proxy_id, "custom", payload
+    )
+
+
+# --- Endpoint Redirection Tests ---
+
+@patch("src.udmi.core.device.parse_blob_as_object")
+def test_redirection_trigger(mock_parse_blob, test_device):
+    """
+    Verifies that receiving a new endpoint config blob triggers
+    persistence save and a connection reset.
+    """
+    mock_persistence = MagicMock()
+    test_device.persistence = mock_persistence
+    mock_persistence.get_active_generation.return_value = "old-gen"
+
+    new_endpoint = MagicMock()
+    mock_parse_blob.return_value = (new_endpoint, "new-gen")
+
+    blob_config = BlobBlobsetConfig(generation="new-gen")
+    config = Config(
+        blobset=BlobsetConfig(
+            blobs={IOT_ENDPOINT_CONFIG_BLOB_KEY: blob_config}
+        )
+    )
+
+    test_device.handle_config(test_device.device_id, "config", config.to_dict())
+
+    mock_parse_blob.assert_called_once()
+
+    mock_persistence.save_active_endpoint.assert_called_once_with(new_endpoint,
+                                                                  "new-gen")
+
+    assert test_device._loop_state.reset_event.is_set()
+
+
+# --- Resilience / Fallback Tests ---
+
+def test_connection_fallback_clears_active_endpoint(test_device):
+    """
+    Verifies that if connection initialization fails, and we have an
+    active endpoint (implying we are redirected), we clear it and reset.
+    """
+    mock_persistence = MagicMock()
+    mock_persistence.get_active_endpoint.return_value = MagicMock()
+    test_device.persistence = mock_persistence
+
+    test_device.connection_factory = MagicMock(
+        side_effect=RuntimeError("Connection Refused"))
+
+    with pytest.raises(ConnectionResetException):
+        test_device._initialize_connection_robustly()
+
+    mock_persistence.clear_active_endpoint.assert_called_once()
+
+
+def test_connection_failure_propagates_if_no_fallback(test_device):
+    """
+    Verifies that if connection fails and we are ALREADY on the
+    baseline config (no active endpoint), we just crash/retry standardly
+    instead of triggering a reset loop.
+    """
+    mock_persistence = MagicMock()
+    mock_persistence.get_active_endpoint.return_value = None
+    test_device.persistence = mock_persistence
+
+    test_device.connection_factory = MagicMock(
+        side_effect=RuntimeError("Network Down"))
+
+    with pytest.raises(RuntimeError, match="Network Down"):
+        test_device._initialize_connection_robustly()
+
+    mock_persistence.clear_active_endpoint.assert_not_called()

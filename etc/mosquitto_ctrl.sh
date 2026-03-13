@@ -7,7 +7,7 @@ CA_CERT=$CERT_DIR/ca.crt
 AUTH_USER=scrumptious
 AUTH_PASS=aardvark
 
-CTRL_OPTS="-u $AUTH_USER -P $AUTH_PASS --cafile $CA_CERT --cert $CERT_DIR/rsa_private.crt --key $CERT_DIR/rsa_private.pem"
+CTRL_OPTS="-h ${MQTT_HOST:-localhost} -p ${MQTT_PORT:-8883} -u $AUTH_USER -P $AUTH_PASS --cafile $CA_CERT --cert $CERT_DIR/rsa_private.crt --key $CERT_DIR/rsa_private.pem"
 
 NEED_SUDO=
 md5sum $CERT_DIR/rsa_private.pem || NEED_SUDO=sudo
