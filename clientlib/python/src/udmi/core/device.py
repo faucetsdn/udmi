@@ -61,6 +61,7 @@ class _LoopConfig:
 @dataclass
 class _LoopState:
     """Holds the dynamic state of the device's main loop."""
+    # pylint: disable=too-many-instance-attributes
     stop_event: Event = field(default_factory=Event)
     reset_event: Event = field(default_factory=Event)
     config_received_event: Event = field(default_factory=Event)
