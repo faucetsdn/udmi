@@ -83,6 +83,8 @@ class Point:
         """
         if model.units:
             self.units = model.units
+        if model.ref:
+            self.ref = model.ref
 
     def set_present_value(self, value: Any) -> None:
         """

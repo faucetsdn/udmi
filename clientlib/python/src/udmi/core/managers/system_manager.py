@@ -172,6 +172,13 @@ class SystemManager(BaseManager):
         for handler in root_logger.handlers:
             handler.setLevel(python_level)
 
+        # Also update any UDMIMqttLogHandler attached to other loggers
+        for logger_obj in logging.Logger.manager.loggerDict.values():
+            if isinstance(logger_obj, logging.Logger):
+                for h in logger_obj.handlers:
+                    if h.__class__.__name__ == 'UDMIMqttLogHandler':
+                        h.setLevel(python_level)
+
     def _update_metrics_rate(self, new_rate: int) -> None:
         """
         Updates the rate at which system metrics are published.

@@ -66,6 +66,7 @@ class _LoopState:
     config_received_event: Event = field(default_factory=Event)
 
     state_dirty: bool = False
+    is_ready: bool = False
     last_state_publish_time: float = 0.0
     last_auth_check: float = 0.0
     consecutive_failures: int = 0  # Track auth failures
@@ -137,6 +138,11 @@ class Device:
         self._redirection_handler: Optional[RedirectionHandler] = None
         LOGGER.info("Device initialized with %s managers.", len(self.managers))
 
+    @property
+    def is_ready(self) -> bool:
+        """Returns True if the device is fully connected and ready."""
+        return self._loop_state.is_ready
+
     def _init_model(self, model: Metadata) -> None:
         for manager in self.managers:
             if hasattr(manager, 'set_model'):
@@ -183,6 +189,7 @@ class Device:
         """
         LOGGER.info("Connection successful. Resetting failure counter.")
         self._loop_state.consecutive_failures = 0
+        self._loop_state.is_ready = True
         self._publish_state()
 
     def on_disconnect(self, rc: int) -> None:
@@ -191,6 +198,7 @@ class Device:
         Args:
               rc: The reason code for the disconnection.
         """
+        self._loop_state.is_ready = False
         if rc != 0:
             self._loop_state.consecutive_failures += 1
             LOGGER.warning(

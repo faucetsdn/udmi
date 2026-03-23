@@ -85,6 +85,18 @@ def test_point_should_report_cov_logic():
         assert point.should_report(sample_rate_sec=10) is True
 
 
+def test_point_set_model_syncs_ref():
+    """Test that set_model syncs the ref property."""
+    from udmi.schema import PointPointsetModel
+    point = Point("temp_sensor")
+    assert point.ref is None
+
+    model = PointPointsetModel(ref="point_ref_123")
+    point.set_model(model)
+
+    assert point.ref == "point_ref_123"
+
+
 # --- PointsetManager Tests ---
 
 def test_initialization(manager):
