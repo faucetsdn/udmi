@@ -16,7 +16,7 @@ from udmi.schema import PointsetEvents
 from udmi.schema import PointsetState
 from udmi.schema import State
 
-from src.udmi.core.managers.pointset_manager import Point
+from udmi.core.managers.point.concrete_point import Point
 from src.udmi.core.managers.pointset_manager import PointsetManager
 from src.udmi.core.messaging import AbstractMessageDispatcher
 
@@ -40,24 +40,19 @@ def manager():
 def test_point_value_update():
     """Test that setting a value updates the internal state for events."""
     point = Point("temp_sensor")
-    assert point.present_value is None
-
     point.set_present_value(25.5)
-    assert point.present_value == 25.5
-
-    event = point.get_event()
+    point.update_data() # Sync value to event
+    
+    event = point.get_data()
     assert event.present_value == 25.5
 
 
 def test_point_config_update():
     """Test that updating config updates the internal state for reporting."""
     point = Point("temp_sensor")
-    assert point.units is None
 
     config = PointPointsetConfig(units="Celsius")
-    point.update_config(config)
-
-    assert point.units == "Celsius"
+    point.set_config(config)
 
     state = point.get_state()
     assert state.units == "Celsius"
@@ -68,33 +63,43 @@ def test_point_should_report_cov_logic():
     Test the Change of Value (COV) logic.
     """
     point = Point("test_point")
-    point.cov_increment = 1.0
+    config = PointPointsetConfig(cov_increment=1.0)
+    point.set_config(config)
 
     point.set_present_value(10.0)
+    point.update_data()
     assert point.should_report(sample_rate_sec=10) is True
     point.mark_reported()
 
     point.set_present_value(10.5)
+    point.update_data()
     assert point.should_report(sample_rate_sec=10) is False
 
     point.set_present_value(11.1)
+    point.update_data()
     assert point.should_report(sample_rate_sec=10) is True
     point.mark_reported()
 
-    with patch("time.time", return_value=point.last_reported_time + 601):
+    with patch("time.time", return_value=point._last_reported_time + 601):
         assert point.should_report(sample_rate_sec=10) is True
 
 
 def test_point_set_model_syncs_ref():
-    """Test that set_model syncs the ref property."""
+    """Test that model limits and values behave correctly with metadata."""
+    from udmi.schema import Category
     from udmi.schema import PointPointsetModel
-    point = Point("temp_sensor")
-    assert point.ref is None
+    model = PointPointsetModel(ref="point_ref_123", writable=True)
+    point = Point("temp_sensor", model=model)
 
-    model = PointPointsetModel(ref="point_ref_123")
-    point.set_model(model)
+    config_good = PointPointsetConfig(ref="point_ref_123")
+    point.set_config(config_good)
+    assert point.get_state().status is None
 
-    assert point.ref == "point_ref_123"
+    config_bad = PointPointsetConfig(ref="bad_ref")
+    point.set_config(config_bad)
+    state = point.get_state()
+    assert state.status is not None
+    assert state.status.category == Category.POINTSET_POINT_FAILURE
 
 
 # --- PointsetManager Tests ---
@@ -110,7 +115,8 @@ def test_add_point_and_set_value(manager):
     manager.set_point_value("pressure", 101.3)
 
     assert "pressure" in manager._points
-    assert manager._points["pressure"].present_value == 101.3
+    manager._points["pressure"].update_data()
+    assert manager._points["pressure"].get_data().present_value == 101.3
 
 
 def test_handle_config_updates_sample_rate(manager):
@@ -138,9 +144,9 @@ def test_handle_config_adds_points(manager):
     manager.handle_config(config)
 
     assert "room_temp" in manager._points
-    assert manager._points["room_temp"].units == "C"
+    assert manager._points["room_temp"].get_state().units == "C"
     assert "humidity" in manager._points
-    assert manager._points["humidity"].units == "%"
+    assert manager._points["humidity"].get_state().units == "%"
 
 
 def test_handle_config_updates_state_etag(manager):
@@ -156,7 +162,7 @@ def test_handle_config_updates_state_etag(manager):
 def test_update_state_populates_state_block(manager):
     """Test that update_state populates the state object correctly."""
     manager.add_point("temp")
-    manager._points["temp"].units = "C"
+    manager._points["temp"].set_config(PointPointsetConfig(units="C"))
     manager._state_etag = "etag_value"
 
     state = State()
@@ -263,7 +269,6 @@ def test_handle_config_triggers_writeback_handler(manager):
     manager.handle_config(config)
 
     mock_handler.assert_called_once_with("setpoint", 22.5)
-    assert manager._points["setpoint"].set_value == 22.5
 
 
 def test_publish_telemetry_invokes_poll_callback(manager, mock_dispatcher):

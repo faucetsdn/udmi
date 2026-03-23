@@ -29,6 +29,9 @@ from udmi.schema import PointsetEvents
 from udmi.schema import PointsetState
 from udmi.schema import State
 
+from udmi.core.managers.point.abstract_point import AbstractPoint
+from udmi.core.managers.point.concrete_point import Point
+
 LOGGER = logging.getLogger(__name__)
 
 DEFAULT_SAMPLE_RATE_SEC = 10
@@ -41,175 +44,6 @@ WritebackHandler = Callable[[str, Any], None]
 PollCallback = Callable[[], Dict[str, Any]]
 
 
-class Point:
-    """
-    Represents a single data point within the Pointset.
-    Acts as a container for value, configuration, and status.
-    Tracks its own reporting state (last reported value/time) for COV logic.
-    """
-
-    # pylint: disable=too-many-instance-attributes
-
-    def __init__(self, name: str):
-        """
-        Initializes a new Point.
-
-        Args:
-            name: The unique identifier for this point (e.g., 'temp_sensor_1').
-        """
-        self.name = name
-        self.ref = None
-        self.present_value: Any = None
-        self.units: Optional[str] = None
-        self.status: Optional[Entry] = None
-        self.value_state: Optional[str] = None
-
-        # Writeback
-        self.set_value: Any = None
-
-        # Reporting Configuration
-        self.cov_increment: Optional[float] = None
-
-        # Reporting State
-        self.last_reported_value: Any = None
-        self.last_reported_time: float = 0.0
-
-    def set_model(self, model: PointPointsetModel) -> None:
-        """
-        Applies static definition from Metadata.
-
-        Args:
-            model: The metadata model defining static properties like units.
-        """
-        if model.units:
-            self.units = model.units
-        if model.ref:
-            self.ref = model.ref
-
-    def set_present_value(self, value: Any) -> None:
-        """
-        Updates the current reading of the point.
-
-        This updates the internal state but does not trigger immediate reporting.
-        Reporting is handled by the `should_report` check during the telemetry loop.
-
-        Args:
-            value: The new value reading.
-        """
-        self.present_value = value
-        if self.status and self.status.level >= 500:
-            self.status = None
-
-    def update_config(self, config: PointPointsetConfig) -> bool:
-        """
-        Updates point metadata based on config.
-
-        Args:
-            config: The configuration object for this specific point.
-
-        Returns:
-            True if a writeback (set_value change) occurred, requiring external handling.
-            False otherwise.
-        """
-        if config.units is not None:
-            self.units = config.units
-        if config.cov_increment is not None:
-            self.cov_increment = config.cov_increment
-
-        dirty = False
-        if config.set_value is not None:
-            self.value_state = None
-            self.status = None
-
-            if config.set_value != self.set_value:
-                self.set_value = config.set_value
-                dirty = True
-
-            self.value_state = "applied"
-
-        return dirty
-
-    def get_state(self) -> PointPointsetState:
-        """
-        Returns the state representation of this point.
-
-        Returns:
-            A PointPointsetState object suitable for serialization in the state block.
-        """
-        return PointPointsetState(
-            status=self.status,
-            value_state=self.value_state,
-            units=self.units
-        )
-
-    def get_event(self) -> PointPointsetEvents:
-        """
-        Returns the telemetry event representation of this point.
-
-        Returns:
-            A PointPointsetEvents object containing the present value.
-        """
-        return PointPointsetEvents(
-            present_value=self.present_value
-        )
-
-    def should_report(self, sample_rate_sec: int) -> bool:
-        """
-        Determines if this point needs to be reported based on Change of Value (COV)
-        and Heartbeat logic.
-
-        Logic:
-        1. If never reported, report immediately.
-        2. If value changed > cov_increment, report immediately.
-        3. If time since last report > heartbeat_interval, report immediately.
-
-        Args:
-            sample_rate_sec: The global sample rate (used to calculate heartbeat).
-
-        Returns:
-            True if the point should be included in the next telemetry message.
-        """
-        if self.present_value is None:
-            return False
-
-        # Always report if never reported before
-        if self.last_reported_value is None:
-            return True
-
-        now = time.time()
-        should_report_cov = False
-
-        # Check Change of Value (COV)
-        if self.present_value != self.last_reported_value:
-            is_numeric = (isinstance(self.present_value, (int, float)) and
-                          isinstance(self.last_reported_value, (int, float)))
-
-            if is_numeric and self.cov_increment is not None:
-                delta = abs(self.present_value - self.last_reported_value)
-                if delta >= self.cov_increment:
-                    should_report_cov = True
-            else:
-                # Non-numeric or no COV threshold set -> Report any change
-                should_report_cov = True
-
-        if should_report_cov:
-            return True
-
-        heartbeat_interval = max(DEFAULT_HEARTBEAT_SEC, sample_rate_sec)
-        if (now - self.last_reported_time) >= heartbeat_interval:
-            return True
-
-        return False
-
-    def mark_reported(self) -> None:
-        """
-        Updates the reporting state after a successful publish.
-
-        Syncs `last_reported_value` with `present_value` and updates
-        `last_reported_time` to the current time.
-        """
-        self.last_reported_value = self.present_value
-        self.last_reported_time = time.time()
 
 
 class PointsetManager(BaseManager):
@@ -224,15 +58,18 @@ class PointsetManager(BaseManager):
     def model_field_name(self) -> str:
         return "pointset"
 
-    def __init__(self, sample_rate_sec: int = DEFAULT_SAMPLE_RATE_SEC):
+    def __init__(self, sample_rate_sec: int = DEFAULT_SAMPLE_RATE_SEC, point_factory: Optional[Callable] = None):
         """
         Initializes the PointsetManager.
 
         Args:
             sample_rate_sec: The default interval between telemetry checks.
+            point_factory: Optional factory to create points. Defaults to Point.
         """
         super().__init__()
-        self._points: Dict[str, Point] = {}
+        self._point_factory = point_factory or Point
+        self._points: Dict[str, AbstractPoint] = {}
+        self._last_set_values: Dict[str, Any] = {}
         self._sample_rate_sec = sample_rate_sec
         self._state_etag: Optional[str] = None
 
@@ -243,7 +80,7 @@ class PointsetManager(BaseManager):
         LOGGER.info("PointsetManager initialized.")
 
     @property
-    def points(self) -> Mapping[str, Point]:
+    def points(self) -> Mapping[str, AbstractPoint]:
         """Returns a read-only mapping of the managed points."""
         return self._points
 
@@ -265,7 +102,6 @@ class PointsetManager(BaseManager):
         for name, point_model in self.model.points.items():
             if name not in self._points:
                 self.add_point(name)
-            self._points[name].set_model(point_model)
 
     def set_writeback_handler(self, handler: WritebackHandler) -> None:
         """
@@ -297,9 +133,13 @@ class PointsetManager(BaseManager):
             name: The name of the point to add.
         """
         if name not in self._points:
-            self._points[name] = Point(name)
-            LOGGER.debug("Added point '%s' to manager.", name)
+            point_model = None
+            if self.model and hasattr(self.model, "points") and self.model.points:
+                point_model = self.model.points.get(name)
 
+            self._points[name] = self._point_factory(name, model=point_model)
+            LOGGER.debug("Added point '%s' to manager.", name)
+            
     def set_point_value(self, name: str, value: Any) -> None:
         """
         API for Client Application to update a point's value.
@@ -310,7 +150,12 @@ class PointsetManager(BaseManager):
         """
         if name not in self._points:
             self.add_point(name)
-        self._points[name].set_present_value(value)
+            
+        point = self._points[name]
+        if hasattr(point, "set_present_value"):
+            point.set_present_value(value)
+        else:
+            LOGGER.debug("Point '%s' does not support set_present_value", name)
 
     def start(self) -> None:
         """
@@ -373,14 +218,18 @@ class PointsetManager(BaseManager):
                 self.add_point(point_name)
 
             point = self._points[point_name]
-            is_writeback = point.update_config(point_config)
+            point.set_config(point_config)
 
-            if is_writeback and self._writeback_handler is not None:
-                try:
-                    self._writeback_handler(point_name, point.set_value)
-                except Exception as e: # pylint: disable=broad-exception-caught
-                    LOGGER.error("Error in writeback handler for %s: %s",
-                                 point_name, e)
+            # Backward compatibility writeback triggering
+            if self._writeback_handler is not None and point_config.set_value is not None:
+                previous_set = self._last_set_values.get(point_name)
+                if point_config.set_value != previous_set:
+                    self._last_set_values[point_name] = point_config.set_value
+                    try:
+                        self._writeback_handler(point_name, point_config.set_value)
+                    except Exception as e:
+                        LOGGER.error("Error in writeback handler for %s: %s",
+                                     point_name, e)
 
     def handle_command(self, command_name: str, payload: dict) -> None:
         """
@@ -476,8 +325,9 @@ class PointsetManager(BaseManager):
 
         points_map = {}
         for name, point in self._points.items():
+            point.update_data()
             if point.should_report(self._sample_rate_sec):
-                points_map[name] = point.get_event()
+                points_map[name] = point.get_data()
                 point.mark_reported()
 
         if not points_map:
