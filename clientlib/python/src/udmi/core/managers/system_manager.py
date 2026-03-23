@@ -332,6 +332,13 @@ class SystemManager(BaseManager):
             post_process: Optional function to run after successful processing.
             expects_file: If True, 'process' receives a file path instead of bytes.
         """
+        if blob_key.startswith('_'):
+            LOGGER.warning(
+                "Blob key '%s' cannot be registered; leading underscores "
+                "are reserved for system keys.", blob_key
+            )
+            return
+
         self._blob_handlers[blob_key] = BlobPipelineHandlers(
             process=process,
             post_process=post_process,

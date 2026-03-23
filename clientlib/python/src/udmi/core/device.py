@@ -524,7 +524,7 @@ class Device:
                 except (AttributeError, TypeError, KeyError, ValueError) as e:
                     LOGGER.error("Error in %s.update_state: %s",
                                  manager.__class__.__name__, e)
-            self.dispatcher.publish_state(self.state)
+            self.dispatcher.publish_state(self.state, wait=force)
             self._loop_state.last_state_publish_time = time.time()
             self._loop_state.state_dirty = False
             LOGGER.debug("State message published.")

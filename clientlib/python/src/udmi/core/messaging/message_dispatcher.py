@@ -111,11 +111,11 @@ class MessageDispatcher(AbstractMessageDispatcher):
                          device_id, channel, e, exc_info=True)
 
     def publish_state(self, state: DataModel,
-        device_id: Optional[str] = None) -> None:
+        device_id: Optional[str] = None, wait: bool = False) -> None:
         LOGGER.debug("Publishing 'state' message...")
         try:
             payload = state.to_json()
-            self._client.publish("state", payload, device_id)
+            self._client.publish("state", payload, device_id, wait=wait)
         except Exception as e: # pylint: disable=broad-exception-caught
             LOGGER.error("Failed to publish state: %s", e)
 

@@ -155,7 +155,7 @@ class MqttMessagingClient(AbstractMessagingClient):
                 LOGGER.error("Failed during auth token refresh: %s", e)
 
     def publish(self, channel: str, payload: str,
-        device_id: Optional[str] = None) -> None:
+        device_id: Optional[str] = None, wait: bool = False) -> None:
         """Publishes a payload to a UDMI channel."""
         target_id = device_id if device_id else self._device_id
         # Construct topic: /prefix/device_id/channel
@@ -167,6 +167,9 @@ class MqttMessagingClient(AbstractMessagingClient):
         info = self._mqtt_client.publish(topic, payload, qos=1)
         if info.rc != mqtt.MQTT_ERR_SUCCESS:
             LOGGER.warning("Publish failed with code %s", info.rc)
+        elif wait:
+            LOGGER.debug("Waiting for publish acknowledgement...")
+            info.wait_for_publish()
 
     def run(self) -> None:
         """Starts the non-blocking network loop."""
