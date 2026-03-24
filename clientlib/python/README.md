@@ -36,6 +36,17 @@ You can find a few samples demonstrating how to connect a device using different
 authentication methods as well as other features of the library in
 `$UDMI/ROOT/clientlib/python/samples`.
 
+### Running Samples
+To run the included examples properly within the setup environment:
+
+```shell
+# 1. Activate the Poetry virtual environment
+source venv/bin/activate
+
+# 2. Execute any sample file
+python3 samples/connectivity/simple_connect.py
+```
+
 ---
 
 ## Comprehensive Feature List
@@ -225,3 +236,43 @@ class MyBacnetProvider(FamilyProvider):
   * **Sample usage: [`custom_persistence_backend.py`](https://github.com/faucetsdn/udmi/tree/master/clientlib/python/samples/advanced/custom_persistence_backend.py)**
 
 ## 
+
+## 8\. Extensibility: Custom Managers
+
+The device architecture is designed to allow developers to create fully isolated, threaded loops simply by subclassing `BaseManager` and declaring background tasks.
+
+**Subclassing example:**
+
+```python
+from udmi.core.managers import BaseManager
+from udmi.core.factory import create_device
+
+class CustomHeartbeatManager(BaseManager):
+    def start(self):
+        # Automatically manages threading, exceptions, and graceful shutdown
+        self.start_periodic_task(interval_getter=lambda: 10, task=self._pulse)
+
+    def _pulse(self):
+        print("Pulse Log Event...")
+
+    def handle_config(self, config): pass
+    def handle_command(self, cmd, payload): pass
+    def update_state(self, state): pass
+
+# Injecting into Device orchestration
+device = create_device(endpoint_config, managers=[CustomHeartbeatManager()])
+```
+
+*   **Sample usage: [`custom_manager.py`](https://github.com/faucetsdn/udmi/tree/master/clientlib/python/samples/advanced/custom_manager.py)**
+
+## 9\. Hardware-Specific Binding (Lifecycle Hooks)
+
+The library interprets cloud synchronization protocols. Developers can orchestrate absolute process operations (like OTA node restarts, rotate actions) by carrying native calls down into hardware operations directly:
+
+```python
+sys_manager = device.get_manager(SystemManager)
+
+# Registers process actions
+sys_manager.register_restart_handler(physical_board_reboot)
+sys_manager.register_shutdown_handler(physical_power_down)
+```

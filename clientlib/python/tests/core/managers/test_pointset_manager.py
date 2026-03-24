@@ -84,7 +84,13 @@ def test_point_should_report_cov_logic():
     assert point.should_report(sample_rate_sec=10) is True
     point.mark_reported()
 
-    with patch("time.time", return_value=point.last_reported_time + 601):
+    # Test periodic reporting without COV (Steady State)
+    # 5 seconds - Should not report
+    with patch("time.time", return_value=point.last_reported_time + 5):
+        assert point.should_report(sample_rate_sec=10) is False
+
+    # 11 seconds (exceeds sample_rate_sec=10) - Should report
+    with patch("time.time", return_value=point.last_reported_time + 11):
         assert point.should_report(sample_rate_sec=10) is True
 
 

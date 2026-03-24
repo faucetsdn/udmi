@@ -207,7 +207,7 @@ class Point:
         if should_report_cov:
             return True
 
-        heartbeat_interval = max(DEFAULT_HEARTBEAT_SEC, sample_rate_sec)
+        heartbeat_interval = sample_rate_sec if sample_rate_sec > 0 else DEFAULT_HEARTBEAT_SEC
         if (now - self.last_reported_time) >= heartbeat_interval:
             return True
 
