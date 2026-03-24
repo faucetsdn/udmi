@@ -270,3 +270,31 @@ def test_connection_failure_propagates_if_no_fallback(test_device):
         test_device._initialize_connection_robustly()
 
     mock_persistence.clear_active_endpoint.assert_not_called()
+
+
+def test_on_ready_saves_backup_and_calls_handler(test_device):
+    """
+    Verifies that on_ready saves the backup endpoint and calls the registered
+    connection handler.
+    """
+    mock_persistence = MagicMock()
+    test_device.persistence = mock_persistence
+
+    handler_called = False
+    received_endpoint = None
+
+    def my_handler(endpoint):
+        nonlocal handler_called, received_endpoint
+        handler_called = True
+        received_endpoint = endpoint
+
+    test_device.register_connection_handler(my_handler)
+
+    test_device.on_ready()
+
+    mock_persistence.save_backup_endpoint.assert_called_once_with(
+        test_device.current_endpoint
+    )
+
+    assert handler_called
+    assert received_endpoint == test_device.current_endpoint

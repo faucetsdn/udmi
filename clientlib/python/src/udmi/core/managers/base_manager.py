@@ -66,6 +66,16 @@ class BaseManager(abc.ABC):
         Returns None if the manager does not use metadata.
         """
 
+    @property
+    def is_connected(self) -> bool:
+        """Checks if the underlying dispatcher and client are connected."""
+        return self._dispatcher is not None and self._dispatcher.is_connected()
+
+    @property
+    def is_ready(self) -> bool:
+        """Checks if the device is connected and ready."""
+        return self._device is not None and self._device.is_ready
+
     def set_model(self, model: Metadata) -> None:
         """
         Extracts the manager-specific metadata from the global Metadata object.

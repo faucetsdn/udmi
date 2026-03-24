@@ -63,3 +63,10 @@ cloud/gcp/.terraform*
 dist
 gencode/python/dist
 venv
+clientlib/python/.idea
+clientlib/python/rsa_private.crt
+clientlib/python/rsa_private.pem
+clientlib/python/.udmi_persistence.json
+clientlib/python/*/rsa_private.crt
+clientlib/python/*/rsa_private.pem
+clientlib/python/*/.udmi_persistence.json

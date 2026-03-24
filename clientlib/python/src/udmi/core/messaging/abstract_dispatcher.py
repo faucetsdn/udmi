@@ -49,13 +49,14 @@ class AbstractMessageDispatcher(ABC):
 
     @abstractmethod
     def publish_state(self, state: DataModel,
-        device_id: Optional[str] = None) -> None:
+        device_id: Optional[str] = None, wait: bool = False) -> None:
         """
         Serializes and publishes the device State message.
 
         Args:
             state: The UDMI State object (schema-derived).
             device_id: (Optional) Target device ID (for gateways).
+            wait: (Optional) If True, blocks until the state is published.
         """
 
     @abstractmethod
@@ -88,3 +89,7 @@ class AbstractMessageDispatcher(ABC):
     @abstractmethod
     def close(self) -> None:
         """Shuts down the connection."""
+
+    @abstractmethod
+    def is_connected(self) -> bool:
+        """Returns True if the client is currently connected."""
