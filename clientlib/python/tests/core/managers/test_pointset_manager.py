@@ -10,14 +10,17 @@ import time
 
 import pytest
 from udmi.schema import Config
+from udmi.schema import Entry
 from udmi.schema import PointPointsetConfig
 from udmi.schema import PointsetConfig
 from udmi.schema import PointsetEvents
 from udmi.schema import PointsetState
 from udmi.schema import State
+from udmi.schema import ValueState
 
 from udmi.core.managers.point.concrete_point import Point
 from src.udmi.core.managers.pointset_manager import PointsetManager
+from src.udmi.core.managers.pointset_manager import WritebackResult
 from src.udmi.core.messaging import AbstractMessageDispatcher
 
 
@@ -80,7 +83,13 @@ def test_point_should_report_cov_logic():
     assert point.should_report(sample_rate_sec=10) is True
     point.mark_reported()
 
-    with patch("time.time", return_value=point._last_reported_time + 601):
+    # Test periodic reporting without COV (Steady State)
+    # 5 seconds - Should not report
+    with patch("time.time", return_value=point._last_reported_time + 5):
+        assert point.should_report(sample_rate_sec=10) is False
+
+    # 11 seconds (exceeds sample_rate_sec=10) - Should report
+    with patch("time.time", return_value=point._last_reported_time + 11):
         assert point.should_report(sample_rate_sec=10) is True
 
 
@@ -290,3 +299,77 @@ def test_publish_telemetry_invokes_poll_callback(manager, mock_dispatcher):
 
     assert "polled_point" in payload.points
     assert payload.points["polled_point"].present_value == 123
+
+
+def test_handle_config_writeback_returns_valuestate(manager):
+    """
+    Verifies that if a writeback handler returns ValueState, 
+    the point's value_state is updated.
+    """
+    def mock_handler(point_name, value):
+        return ValueState.overridden
+
+    manager.set_writeback_handler(mock_handler)
+
+    config = Config(
+        pointset=PointsetConfig(
+            points={"setpoint": PointPointsetConfig(set_value=22.5)}
+        )
+    )
+
+    manager.handle_config(config)
+
+    assert manager._points["setpoint"].set_value == 22.5
+    assert manager._points["setpoint"].value_state == ValueState.overridden
+
+
+def test_handle_config_writeback_returns_result(manager):
+    """
+    Verifies that if a writeback handler returns WritebackResult,
+    the point's value_state and status are updated.
+    """
+    custom_entry = Entry(message="Invalid setting", level=500)
+    
+    def mock_handler(point_name, value):
+        return WritebackResult(value_state=ValueState.invalid, status=custom_entry)
+
+    manager.set_writeback_handler(mock_handler)
+
+    config = Config(
+        pointset=PointsetConfig(
+            points={"setpoint": PointPointsetConfig(set_value=22.5)}
+        )
+    )
+
+    manager.handle_config(config)
+
+    point = manager._points["setpoint"]
+    assert point.set_value == 22.5
+    assert point.value_state == ValueState.invalid
+    assert point.status == custom_entry
+
+
+def test_handle_config_writeback_exception_sets_failure(manager):
+    """
+    Verifies that if a writeback handler raises an exception,
+    the point's value_state is set to failure and status is populated.
+    """
+    def mock_handler(point_name, value):
+        raise ValueError("Hardware communication failed")
+
+    manager.set_writeback_handler(mock_handler)
+
+    config = Config(
+        pointset=PointsetConfig(
+            points={"setpoint": PointPointsetConfig(set_value=22.5)}
+        )
+    )
+
+    manager.handle_config(config)
+
+    point = manager._points["setpoint"]
+    assert point.set_value == 22.5
+    assert point.value_state == ValueState.failure
+    assert point.status is not None
+    assert point.status.level == 500
+    assert "Hardware communication failed" in point.status.message

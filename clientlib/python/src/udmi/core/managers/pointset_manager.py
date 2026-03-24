@@ -15,6 +15,8 @@ from typing import Callable
 from typing import Dict
 from typing import Mapping
 from typing import Optional
+from typing import Union
+from dataclasses import dataclass
 
 from udmi.constants import UDMI_VERSION
 from udmi.core.managers.base_manager import BaseManager
@@ -28,6 +30,7 @@ from udmi.schema import PointPointsetState
 from udmi.schema import PointsetEvents
 from udmi.schema import PointsetState
 from udmi.schema import State
+from udmi.schema import ValueState
 
 from udmi.core.managers.point.abstract_point import AbstractPoint
 from udmi.core.managers.point.concrete_point import Point
@@ -37,8 +40,17 @@ LOGGER = logging.getLogger(__name__)
 DEFAULT_SAMPLE_RATE_SEC = 10
 DEFAULT_HEARTBEAT_SEC = 600
 
-# Callback signature: function(point_name, value)
-WritebackHandler = Callable[[str, Any], None]
+@dataclass
+class WritebackResult:
+    """
+    Result of a point writeback operation.
+    """
+    value_state: ValueState
+    status: Optional[Entry] = None
+
+
+# Callback signature: function(point_name, value) -> Optional[ValueState | WritebackResult]
+WritebackHandler = Callable[[str, Any], Union[None, ValueState, WritebackResult]]
 
 # Poll Callback now returns a dictionary of {point_name: value}
 PollCallback = Callable[[], Dict[str, Any]]
@@ -220,16 +232,23 @@ class PointsetManager(BaseManager):
             point = self._points[point_name]
             point.set_config(point_config)
 
-            # Backward compatibility writeback triggering
             if self._writeback_handler is not None and point_config.set_value is not None:
                 previous_set = self._last_set_values.get(point_name)
                 if point_config.set_value != previous_set:
                     self._last_set_values[point_name] = point_config.set_value
                     try:
-                        self._writeback_handler(point_name, point_config.set_value)
-                    except Exception as e:
+                        result = self._writeback_handler(point_name, point_config.set_value)
+                        if isinstance(result, ValueState):
+                            point.value_state = result
+                        elif isinstance(result, WritebackResult):
+                            point.value_state = result.value_state
+                            if result.status:
+                                point.status = result.status
+                    except Exception as e: # pylint: disable=broad-exception-caught
                         LOGGER.error("Error in writeback handler for %s: %s",
-                                     point_name, e)
+                                    point_name, e)
+                        point.value_state = ValueState.failure
+                        point.status = Entry(message=str(e), level=500)
 
     def handle_command(self, command_name: str, payload: dict) -> None:
         """

@@ -158,7 +158,8 @@ def test_publish_state(dispatcher, mock_client):
         '{"timestamp": null, "version": "1", "upgraded_from": null, '
         '"system": null, "gateway": null, "discovery": null, "localnet": null, '
         '"blobset": null, "pointset": null}',
-        None
+        None,
+        wait=False
     )
 
 
