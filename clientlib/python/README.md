@@ -121,7 +121,7 @@ device = create_device(system_state=static_info,
 * **System Metrics:** The `SystemManager` automatically collects and reports system health metrics (e.g., RAM usage) in the `system` event stream.
 
 **Sample Usage:**   
-[**`telemetry_basic.py`](https://github.com/faucetsdn/udmi/tree/master/clientlib/python/samples/pointset/telemetry_basic.py)**
+* **[`telemetry_basic.py`](https://github.com/faucetsdn/udmi/tree/master/clientlib/python/samples/pointset/telemetry_basic.py)**
 
 ```py
 # Update the PointsetManager (Internal Cache)
@@ -130,7 +130,7 @@ pointset_manager.set_point_value("supply_temp", 22.5)
 # The background thread automatically publishes this at the configured 'sample_rate_sec'. 
 ```
 
-[**`logging_integration.py`](https://github.com/faucetsdn/udmi/tree/master/clientlib/python/samples/events/logging_integration.py)**
+* **[`logging_integration.py`](https://github.com/faucetsdn/udmi/tree/master/clientlib/python/samples/events/logging_integration.py)**
 
 ```py
 import logging
@@ -156,7 +156,7 @@ logger.warning("High CPU usage detected!")
 * **Polling Support:** Supports a "pull" model via set\_poll\_callback for just-in-time data retrieval.
 
 **Sample Usage:**   
-[**`point_writeback.py`](https://github.com/faucetsdn/udmi/tree/master/clientlib/python/samples/pointset/point_writeback.py)**, 
+* **[`point_writeback.py`](https://github.com/faucetsdn/udmi/tree/master/clientlib/python/samples/pointset/point_writeback.py)** 
 
 ```py
 def on_writeback(point_name: str, value: Any):
@@ -167,9 +167,9 @@ def on_writeback(point_name: str, value: Any):
 pointset_manager.set_writeback_handler(on_writeback)
 ```
 
-[**`pointset_dynamic_configuration.py`](https://github.com/faucetsdn/udmi/tree/master/clientlib/python/samples/pointset/pointset_dynamic_provisioning.py)**, 
+* **[`pointset_dynamic_configuration.py`](https://github.com/faucetsdn/udmi/tree/master/clientlib/python/samples/pointset/pointset_dynamic_provisioning.py)** 
 
-[**`telemetry_poll_callback.py`](https://github.com/faucetsdn/udmi/tree/master/clientlib/python/samples/pointset/telemetry_poll_callback.py)**
+* **[`telemetry_poll_callback.py`](https://github.com/faucetsdn/udmi/tree/master/clientlib/python/samples/pointset/telemetry_poll_callback.py)**
 
 ```py
 pointset_manager.set_poll_callback(my_sensor_poll)
@@ -206,8 +206,8 @@ sys_manager.register_blob_handler(
 * **Discovery Manager:** Implementation of the discovery block to support active scanning using registered `FamilyProvider` drivers and reporting `DiscoveryEvents`.
 
 **Sample Usage:**   
-[**`gateway_proxy.py`**](https://github.com/faucetsdn/udmi/tree/master/clientlib/python/samples/gateway/gateway_proxy.py),**  
-[**`discovery_scan.py`](https://github.com/faucetsdn/udmi/tree/master/clientlib/python/samples/gateway/discovery_scan.py)**
+* **[`gateway_proxy.py`](https://github.com/faucetsdn/udmi/tree/master/clientlib/python/samples/gateway/gateway_proxy.py)**
+* **[`discovery_scan.py`](https://github.com/faucetsdn/udmi/tree/master/clientlib/python/samples/gateway/discovery_scan.py)**
 
 ```py
 # Triggered by cloud 'discovery' command
@@ -239,6 +239,8 @@ class MyBacnetProvider(FamilyProvider):
 
 ## 8\. Extensibility: Custom Managers
 
+**Status:** Available
+
 The device architecture is designed to allow developers to create fully isolated, threaded loops simply by subclassing `BaseManager` and declaring background tasks.
 
 **Subclassing example:**
@@ -267,6 +269,8 @@ device = create_device(endpoint_config, managers=[CustomHeartbeatManager()])
 
 ## 9\. Hardware-Specific Binding (Lifecycle Hooks)
 
+**Status:** Available
+
 The library interprets cloud synchronization protocols. Developers can orchestrate absolute process operations (like OTA node restarts, rotate actions) by carrying native calls down into hardware operations directly:
 
 ```python
@@ -276,3 +280,5 @@ sys_manager = device.get_manager(SystemManager)
 sys_manager.register_restart_handler(physical_board_reboot)
 sys_manager.register_shutdown_handler(physical_power_down)
 ```
+
+*   **Sample usage: [`lifecycle_commands.py`](https://github.com/faucetsdn/udmi/tree/master/clientlib/python/samples/system/lifecycle_commands.py)**  
