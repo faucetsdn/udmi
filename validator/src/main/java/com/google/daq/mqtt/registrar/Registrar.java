@@ -174,6 +174,7 @@ public class Registrar {
   private Set<String> extraDevices;
   private String projectId;
   private boolean updateCloudIoT;
+  private boolean dryRun;
   private Duration idleLimit;
   private Metadata siteDefaults;
   private Map<String, CloudModel> cloudModels;
@@ -293,6 +294,11 @@ public class Registrar {
   private void setQueryOnly() {
     this.queryOnly = true;
     this.updateCloudIoT = false;
+  }
+
+  @CommandLineOption(short_form = "-y", description = "Dry run: log what would happen without making changes")
+  private void setDryRun() {
+    this.dryRun = true;
   }
 
   @CommandLineOption(short_form = "-b", description = "Block unknown devices")
@@ -864,20 +870,32 @@ public class Registrar {
     try {
       Set<String> unbindIds = catchToNull(
           () -> new HashSet<>(workingDevices.get(deviceId).getMetadata().gateway.proxy_ids));
-      cloudIotManager.deleteDevice(deviceId, unbindIds);
+      if (dryRun) {
+        System.err.println("Dry run: would delete device " + deviceId);
+      } else {
+        cloudIotManager.deleteDevice(deviceId, unbindIds);
+      }
     } catch (DeviceGatewayBoundException boundException) {
       CloudModel cloudModel = boundException.getCloudModel();
       if (cloudModel.resource_type == Resource_type.GATEWAY) {
         Set<String> proxyIds = new HashSet<>(cloudModel.gateway.proxy_ids);
         System.err.printf("Retrying delete %s with bound devices: %s%n", deviceId,
             setOrSize(proxyIds));
-        cloudIotManager.deleteDevice(deviceId, proxyIds);
+        if (dryRun) {
+          System.err.println("Dry run: would delete device " + deviceId);
+        } else {
+          cloudIotManager.deleteDevice(deviceId, proxyIds);
+        }
       } else if (cloudModel.resource_type == Resource_type.DIRECT) {
         Set<String> gatewayIds = ImmutableSet.of(cloudModel.gateway.gateway_id);
         System.err.printf("Unbinding %s from bound gateways: %s%n", deviceId, gatewayIds);
         unbindDevicesFromGateways(allDevices, gatewayIds);
         System.err.printf("Retrying delete %s%n", deviceId);
-        cloudIotManager.deleteDevice(deviceId, null);
+        if (dryRun) {
+          System.err.println("Dry run: would delete device " + deviceId);
+        } else {
+          cloudIotManager.deleteDevice(deviceId, null);
+        }
       } else {
         throw new RuntimeException("Unknown cloud model resource type", boundException);
       }
@@ -904,7 +922,11 @@ public class Registrar {
           Set<String> limitedSet = limitSetSize(toUnbind, UNBIND_SET_SIZE);
           ifTrueThen(multiple, () -> System.err.printf("Unbinding subset from %s: %s%n", gatewayId,
               setOrSize(limitedSet)));
-          cloudIotManager.bindDevices(limitedSet, gatewayId, false);
+          if (dryRun) {
+            System.err.printf("Dry run: would unbind %s from %s%n", setOrSize(limitedSet), gatewayId);
+          } else {
+            cloudIotManager.bindDevices(limitedSet, gatewayId, false);
+          }
           toUnbind.removeAll(limitedSet);
         }
       }
@@ -1013,7 +1035,15 @@ public class Registrar {
     CloudDeviceSettings localDeviceSettings = localDevice.getSettings();
     if (preDeleteDevice(localName)) {
       System.err.println("Deleting to incite recreation " + localName);
-      cloudIotManager.deleteDevice(localName, null);
+      if (dryRun) {
+        System.err.println("Dry run: would delete device " + localName);
+      } else {
+        cloudIotManager.deleteDevice(localName, null);
+      }
+    }
+    if (dryRun) {
+      System.err.println("Dry run: would register device " + localName);
+      return true;
     }
     return cloudIotManager.registerDevice(localName, localDeviceSettings);
   }
@@ -1076,7 +1106,11 @@ public class Registrar {
     try {
       if (blockUnknown && !isBlocked) {
         System.err.println("Blocking device " + extraName);
-        cloudIotManager.blockDevice(extraName, true);
+        if (dryRun) {
+          System.err.println("Dry run: would block device " + extraName);
+        } else {
+          cloudIotManager.blockDevice(extraName, true);
+        }
         cloudModel.blocked = true;
       }
       cloudModel.operation = ifTrueGet(cloudModel.blocked, ModelOperation.BLOCK,
@@ -1215,7 +1249,11 @@ public class Registrar {
             int count = bindingCount.incrementAndGet();
             System.err.printf("Binding %s to %s (%d/%d)%n", setOrSize(toBind), gatewayId, count,
                 gatewayBindings.size());
-            cloudIotManager.bindDevices(toBind, gatewayId, true);
+            if (dryRun) {
+              System.err.printf("Dry run: would bind %s to %s%n", setOrSize(toBind), gatewayId);
+            } else {
+              cloudIotManager.bindDevices(toBind, gatewayId, true);
+            }
           } catch (Exception e) {
             proxiedDevices.forEach(localDevice ->
                 localDevice.captureError(ExceptionCategory.binding, e));
@@ -1502,13 +1540,25 @@ public class Registrar {
 
   private void previewModelRegistry() {
     ifTrueThen(metadataModelOut,
-        () -> cloudIotManager.updateRegistry(getSiteMetadata(), ModelOperation.PREVIEW));
+        () -> {
+          if (dryRun) {
+            System.err.println("Dry run: would update registry (PREVIEW)");
+          } else {
+            cloudIotManager.updateRegistry(getSiteMetadata(), ModelOperation.PREVIEW);
+          }
+        });
   }
 
   private void previewModel(LocalDevice device) {
     ifTrueThen(metadataModelOut,
-        () -> cloudIotManager.updateDevice(device.getDeviceId(), device.getSettings(),
-            ModelOperation.PREVIEW));
+        () -> {
+          if (dryRun) {
+            System.err.println("Dry run: would update device (PREVIEW)");
+          } else {
+            cloudIotManager.updateDevice(device.getDeviceId(), device.getSettings(),
+                ModelOperation.PREVIEW);
+          }
+        });
   }
 
   private void initializeDevices(Map<String, LocalDevice> localDevices) {
