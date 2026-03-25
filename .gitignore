@@ -50,7 +50,7 @@ __pycache__/
 /udmi_*.log
 
 .vscode
-.class
+*.class
 
 # Terraform authentication and template files.
 cloud/gcp/terraform.tfvars
@@ -70,3 +70,6 @@ clientlib/python/.udmi_persistence.json
 clientlib/python/*/rsa_private.crt
 clientlib/python/*/rsa_private.pem
 clientlib/python/*/.udmi_persistence.json
+
+# Java compiled classes
+*.class
