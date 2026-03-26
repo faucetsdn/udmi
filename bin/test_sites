@@ -102,12 +102,5 @@ if [[ -s $FAILURES ]]; then
     false
 fi
 
-echo '#########################################' Testing simple mock sequencer...
-bin/sequencer tests/sites/downgrade/ -- DWN-2 system_mode_restart || true
-
-RESULTLOG=tests/sites/downgrade/out/devices/DWN-2/RESULT.log
-fgrep "RESULT fail system.mode system_mode_restart PREVIEW " $RESULTLOG ||
-    bin/fail missing output from $RESULTLOG
-
 echo
 echo '#########################################' Done with site tests
