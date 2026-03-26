@@ -23,6 +23,8 @@ public class ModbusFamilyProviderTest {
   public static final Set<String> GOOD_NETWORKS = ImmutableSet.of("1", "65534", "3242");
   public static final Set<String> BAD_NETWORKS = ImmutableSet.of("0", "snoop", "655351", "65535");
 
+  // PROVISIONAL: these are blatantly stolen from BACnet and not really modbus.
+  // They are meant as placeholders and need to be updated as appropriate to properly handle modbus needs.
   public static final Set<String> GOOD_REFERENCES = ImmutableSet.of(
       "modbus://291842/AI:2#present_value",
       "modbus://29212/AI:2#something_else",
