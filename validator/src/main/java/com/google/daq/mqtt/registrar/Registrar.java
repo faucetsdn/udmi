@@ -296,8 +296,8 @@ public class Registrar {
     this.updateCloudIoT = false;
   }
 
-  @CommandLineOption(short_form = "-y", description = "Dry run: log what would happen without "
-      + "making changes")
+  @CommandLineOption(short_form = "-j", description = "Dry run (just check): log what would "
+      + "happen without making changes")
   private void setDryRun() {
     this.dryRun = true;
   }
