@@ -1,0 +1,7 @@
+# Flaky Tests Summary
+
+Based on the execution of the sequencer test suite, the following flaky tests were identified:
+
+* **`system_last_update`**: This test passed 10 times but required 11 attempts (`11/11` reported in the output), indicating an intermittent failure/flakiness.
+
+All other evaluated tests completed their runs successfully without any flaky behavior (e.g., `10/10` pass rate). Note that `bin/test_sites` was explicitly ignored per instructions.
