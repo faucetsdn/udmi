@@ -3,6 +3,7 @@ from typing import Optional
 
 from udmi.core.managers.point.basic_point import BasicPoint
 from udmi.schema import PointPointsetModel
+from udmi.schema import RefDiscovery
 
 
 class Point(BasicPoint):
@@ -34,5 +35,12 @@ class Point(BasicPoint):
     def set_present_value(self, value: Any) -> None:
         """
         API for manual injection of values (e.g., from sample scripts).
+        Resets status if it was a failure.
         """
         self._present_value = value
+        if self.status and self.status.level >= 500:
+            self.status = None
+
+    def _populate_enumeration(self, point: RefDiscovery) -> None:
+        """Concrete implementation doing nothing by default."""
+        pass

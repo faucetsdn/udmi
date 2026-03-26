@@ -4,7 +4,8 @@ Provides the concrete implementation for the PointsetManager.
 This manager is responsible for handling the 'pointset' block of the config
 and state, and for reporting pointset telemetry events.
 """
-
+import hashlib
+import json
 import logging
 import threading
 import time
@@ -33,12 +34,13 @@ from udmi.schema import State
 from udmi.schema import ValueState
 
 from udmi.core.managers.point.abstract_point import AbstractPoint
-from udmi.core.managers.point.concrete_point import Point
+from udmi.core.managers.point.virtual_point import Point
 
 LOGGER = logging.getLogger(__name__)
 
 DEFAULT_SAMPLE_RATE_SEC = 10
 DEFAULT_HEARTBEAT_SEC = 600
+
 
 @dataclass
 class WritebackResult:
@@ -50,12 +52,11 @@ class WritebackResult:
 
 
 # Callback signature: function(point_name, value) -> Optional[ValueState | WritebackResult]
-WritebackHandler = Callable[[str, Any], Union[None, ValueState, WritebackResult]]
+WritebackHandler = Callable[
+    [str, Any], Union[None, ValueState, WritebackResult]]
 
 # Poll Callback now returns a dictionary of {point_name: value}
 PollCallback = Callable[[], Dict[str, Any]]
-
-
 
 
 class PointsetManager(BaseManager):
@@ -70,7 +71,8 @@ class PointsetManager(BaseManager):
     def model_field_name(self) -> str:
         return "pointset"
 
-    def __init__(self, sample_rate_sec: int = DEFAULT_SAMPLE_RATE_SEC, point_factory: Optional[Callable] = None):
+    def __init__(self, sample_rate_sec: int = DEFAULT_SAMPLE_RATE_SEC,
+        point_factory: Optional[Callable] = None):
         """
         Initializes the PointsetManager.
 
@@ -80,10 +82,17 @@ class PointsetManager(BaseManager):
         """
         super().__init__()
         self._point_factory = point_factory or Point
-        self._points: Dict[str, AbstractPoint] = {}
+        self._all_points: Dict[str, AbstractPoint] = {}
         self._last_set_values: Dict[str, Any] = {}
         self._sample_rate_sec = sample_rate_sec
         self._state_etag: Optional[str] = None
+        self._active_points: set = set()
+        self._last_active_points: set = set()
+
+        self._sample_limit_sec: Optional[int] = None
+        self._last_publish_time: float = 0.0
+
+        self._last_full_publish_time: float = 0.0
 
         self._writeback_handler: Optional[WritebackHandler] = None
         self._telemetry_wake_event: Optional[threading.Event] = None
@@ -93,8 +102,17 @@ class PointsetManager(BaseManager):
 
     @property
     def points(self) -> Mapping[str, AbstractPoint]:
-        """Returns a read-only mapping of the managed points."""
-        return self._points
+        """Returns a read-only mapping of the active points."""
+        return {
+            name: self._all_points[name]
+            for name in self._active_points
+            if name in self._all_points
+        }
+
+    @property
+    def all_points(self) -> Mapping[str, AbstractPoint]:
+        """Returns a read-only mapping of all points."""
+        return self._all_points
 
     def set_model(self, model: Metadata) -> None:
         """
@@ -107,13 +125,16 @@ class PointsetManager(BaseManager):
             model: The device metadata object.
         """
         super().set_model(model)
-        if not self.model or not hasattr(self.model, 'points') or not self.model.points:
+        if not self.model or not hasattr(self.model,
+                                         'points') or not self.model.points:
             return
 
         LOGGER.info("Applying Pointset Metadata Model...")
         for name, point_model in self.model.points.items():
-            if name not in self._points:
+            if name not in self._all_points:
                 self.add_point(name)
+            else:
+                self._all_points[name].set_model(point_model)
 
     def set_writeback_handler(self, handler: WritebackHandler) -> None:
         """
@@ -144,14 +165,16 @@ class PointsetManager(BaseManager):
         Args:
             name: The name of the point to add.
         """
-        if name not in self._points:
+        if name not in self._all_points:
             point_model = None
-            if self.model and hasattr(self.model, "points") and self.model.points:
+            if self.model and hasattr(self.model,
+                                      "points") and self.model.points:
                 point_model = self.model.points.get(name)
 
-            self._points[name] = self._point_factory(name, model=point_model)
+            self._all_points[name] = self._point_factory(name,
+                                                         model=point_model)
             LOGGER.debug("Added point '%s' to manager.", name)
-            
+
     def set_point_value(self, name: str, value: Any) -> None:
         """
         API for Client Application to update a point's value.
@@ -160,10 +183,10 @@ class PointsetManager(BaseManager):
             name: The name of the point.
             value: The new value.
         """
-        if name not in self._points:
+        if name not in self._all_points:
             self.add_point(name)
-            
-        point = self._points[name]
+
+        point = self._all_points[name]
         if hasattr(point, "set_present_value"):
             point.set_present_value(value)
         else:
@@ -211,49 +234,74 @@ class PointsetManager(BaseManager):
                 self._sample_rate_sec = config.pointset.sample_rate_sec
                 if self._telemetry_wake_event:
                     self._telemetry_wake_event.set()
-
-        # Update Etag
-        self._state_etag = config.pointset.state_etag
+        self._sample_limit_sec = config.pointset.sample_limit_sec
 
         # Update Points (Dynamic Provisioning)
         new_point_configs = config.pointset.points or {}
-        current_point_names = set(self._points.keys())
-        new_point_names = set(new_point_configs.keys())
+        self._active_points = set(new_point_configs.keys())
 
-        for name in current_point_names - new_point_names:
-            LOGGER.info("Removing point '%s' not present in received config", name)
-            del self._points[name]
+        incoming_etag = config.pointset.state_etag
+        etag_mismatch = False
+        if incoming_etag and self._state_etag and incoming_etag != self._state_etag:
+            LOGGER.warning(
+                "state_etag mismatch! Cloud: %s | Device: %s. Rejecting writebacks.",
+                incoming_etag, self._state_etag
+            )
+            etag_mismatch = True
 
-        for point_name, point_config in new_point_configs.items():
-            if point_name not in self._points:
-                LOGGER.info("Provisioning new point from config: %s", point_name)
+        for point_name in new_point_configs:
+            if point_name not in self._all_points:
+                LOGGER.info("Provisioning new point from config: %s",
+                            point_name)
                 self.add_point(point_name)
 
-            point = self._points[point_name]
+        for point_name, point in self._all_points.items():
+            point_config = new_point_configs.get(point_name)
             point.set_config(point_config)
 
-            if self._writeback_handler is not None and point_config.set_value is not None:
+            if point_config and point_config.set_value is not None:
+                if etag_mismatch:
+                    point.value_state = ValueState.invalid
+                    point.status = Entry(
+                        message="state_etag mismatch. Stale writeback prevented.",
+                        level=500
+                    )
+                    self.trigger_state_update()
+                    continue
+
                 previous_set = self._last_set_values.get(point_name)
                 if point_config.set_value != previous_set:
                     self._last_set_values[point_name] = point_config.set_value
-                    try:
-                        result = self._writeback_handler(point_name, point_config.set_value)
-                        if isinstance(result, ValueState):
-                            point.value_state = result
-                        elif isinstance(result, WritebackResult):
-                            point.value_state = result.value_state
-                            if result.status:
-                                point.status = result.status
-                    except Exception as e: # pylint: disable=broad-exception-caught
-                        LOGGER.error("Error in writeback handler for %s: %s",
-                                    point_name, e)
-                        point.value_state = ValueState.failure
-                        point.status = Entry(message=str(e), level=500)
+                    if self._writeback_handler is not None:
+                        try:
+                            result = self._writeback_handler(point_name,
+                                                             point_config.set_value)
+                            if isinstance(result, ValueState):
+                                point.value_state = result
+                            elif isinstance(result, WritebackResult):
+                                point.value_state = result.value_state
+                                if result.status:
+                                    point.status = result.status
+                        except Exception as e:  # pylint: disable=broad-exception-caught
+                            LOGGER.error(
+                                "Error in writeback handler for %s: %s",
+                                point_name, e)
+                            point.value_state = ValueState.failure
+                            point.status = Entry(message=str(e), level=500)
 
     def handle_command(self, command_name: str, payload: dict) -> None:
         """
         Handles commands directed at the pointset (currently none).
         """
+
+    def _generate_state_etag(self, points_state_dict: dict) -> str:
+        """
+        Generates a unique SHA-256 hash representing the current pointset state.
+        """
+        # Ensure deterministic JSON serialization by sorting keys
+        state_str = json.dumps(points_state_dict, sort_keys=True,
+                               separators=(',', ':'))
+        return hashlib.sha256(state_str.encode('utf-8')).hexdigest()
 
     def _load_persisted_state(self) -> None:
         """Loads the last known point values from persistence."""
@@ -267,17 +315,17 @@ class PointsetManager(BaseManager):
 
             restored_count = 0
             for point_name, point_data in saved_state.items():
-                if point_name not in self._points:
+                if point_name not in self._all_points:
                     continue
 
-                point = self._points[point_name]
                 if "present_value" in point_data:
-                    point.present_value = point_data["present_value"]
+                    self.set_point_value(point_name,
+                                         point_data["present_value"])
                     restored_count += 1
 
             LOGGER.info("Restored state for %s points.", restored_count)
 
-        except Exception as e: # pylint: disable=broad-exception-caught
+        except Exception as e:  # pylint: disable=broad-exception-caught
             LOGGER.error("Failed to load persisted pointset state: %s", e)
 
     def update_state(self, state: State) -> None:
@@ -287,10 +335,27 @@ class PointsetManager(BaseManager):
         Args:
             state: The state object to update.
         """
-        points_state_map = {
-            name: point.get_state()
-            for name, point in self._points.items()
-        }
+        is_state_dirty = False
+
+        if self._active_points != self._last_active_points:
+            is_state_dirty = True
+            self._last_active_points = self._active_points.copy()
+
+        points_state_map = {}
+        for name in self._active_points:
+            if name in self._all_points:
+                point = self._all_points[name]
+
+                if point.is_dirty():
+                    is_state_dirty = True
+
+                points_state_map[name] = point.get_state()
+
+        if is_state_dirty or self._state_etag is None:
+            dict_map = {k: v.to_dict() for k, v in points_state_map.items()}
+            self._state_etag = self._generate_state_etag(dict_map)
+            LOGGER.debug("Pointset state changed. Recalculated state_etag: %s",
+                         self._state_etag)
 
         state.pointset = PointsetState(
             state_etag=self._state_etag,
@@ -305,27 +370,26 @@ class PointsetManager(BaseManager):
 
         try:
             data_to_save = {}
-            for name, point in self._points.items():
-                if point.present_value is not None:
+            for name, point in self._all_points.items():
+                current_data = point.get_data()
+                if current_data.present_value is not None:
                     data_to_save[name] = {
-                        "present_value": point.present_value
+                        "present_value": current_data.present_value
                     }
 
             self._device.persistence.set(self.PERSISTENCE_KEY, data_to_save)
-        except Exception as e: # pylint: disable=broad-exception-caught
+        except Exception as e:  # pylint: disable=broad-exception-caught
             LOGGER.error("Failed to persist pointset state: %s", e)
 
     def publish_telemetry(self) -> None:
         """
         Generates and publishes a PointsetEvents message containing
         only the points that are 'due' for reporting.
-
-        This method:
-        1. Invokes the Poll Callback (if registered) to refresh values.
-        2. Iterates over all points to check `should_report()` (COV/Heartbeat).
-        3. Constructs a payload of only the reporting points.
-        4. Publishes to MQTT via the dispatcher.
         """
+        now = time.time()
+        if self._sample_limit_sec is not None:
+            if (now - self._last_publish_time) < self._sample_limit_sec:
+                return
         if self._poll_callback:
             try:
                 new_values = self._poll_callback()
@@ -335,30 +399,62 @@ class PointsetManager(BaseManager):
                 else:
                     LOGGER.warning("Poll callback returned non-dict type: %s",
                                    type(new_values))
-            except Exception as e: # pylint: disable=broad-exception-caught
+            except Exception as e:  # pylint: disable=broad-exception-caught
                 LOGGER.error("Error in telemetry poll callback: %s", e,
                              exc_info=True)
 
-        if not self._points:
+        if not self._all_points:
             return
 
         points_map = {}
-        for name, point in self._points.items():
-            point.update_data()
-            if point.should_report(self._sample_rate_sec):
-                points_map[name] = point.get_data()
-                point.mark_reported()
+
+        valid_active_points = [
+            name for name in self._active_points if name in self._all_points
+        ]
+
+        force_full_update = (
+                                now - self._last_full_publish_time) >= self._sample_rate_sec
+
+        for name in valid_active_points:
+            point = self._all_points[name]
+            try:
+                point.update_data()
+            except Exception as e:  # pylint: disable=broad-exception-caught
+                LOGGER.error("Unable to update point data for '%s': %s", name,
+                             e)
+                continue
+
+            try:
+                if force_full_update or point.should_report(
+                    self._sample_rate_sec):
+                    points_map[name] = point.get_data()
+                    point.mark_reported()
+            except Exception as e:  # pylint: disable=broad-exception-caught
+                LOGGER.error("Unable to process reporting for '%s': %s", name,
+                             e)
 
         if not points_map:
             return
+
+        is_partial = len(points_map) < len(valid_active_points)
 
         try:
             event = PointsetEvents(
                 timestamp=datetime.now(timezone.utc).isoformat(),
                 version=UDMI_VERSION,
-                points=points_map
+                points=points_map,
+                partial_update=True if is_partial else None
             )
             self.publish_event(event, "pointset")
-            LOGGER.debug("Published telemetry for %s points.", len(points_map))
-        except Exception as e:  # pylint:disable=broad-exception-caught
+            LOGGER.debug(
+                "Published telemetry for %s points (Partial: %s, Forced Full: %s).",
+                len(points_map),
+                is_partial,
+                force_full_update
+            )
+
+            self._last_publish_time = now
+            if force_full_update:
+                self._last_full_publish_time = now
+        except Exception as e:
             LOGGER.error("Failed to publish telemetry: %s", e)

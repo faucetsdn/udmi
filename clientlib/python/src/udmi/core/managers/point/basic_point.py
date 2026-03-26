@@ -13,7 +13,9 @@ from udmi.schema import PointPointsetEvents
 from udmi.schema import PointPointsetModel
 from udmi.schema import PointPointsetState
 from udmi.schema import ValueState
+from udmi.schema import RefDiscovery
 
+DEFAULT_HEARTBEAT_SEC = 600
 
 class BasicPoint(AbstractPoint):
     """
@@ -33,6 +35,8 @@ class BasicPoint(AbstractPoint):
 
         self._written = False
         self._dirty = True
+
+        self._expiry_time: Optional[float] = None
 
         # Store full model for subclass extensibility
         self._model = model
@@ -55,12 +59,40 @@ class BasicPoint(AbstractPoint):
         self._dirty = False
         return self._state
 
+    @property
+    def value_state(self):
+        return self._state.value_state
+
+    @value_state.setter
+    def value_state(self, value):
+        self._state.value_state = value
+        self._dirty = True
+
+    @property
+    def status(self):
+        return self._state.status
+
+    @status.setter
+    def status(self, value):
+        self._state.status = value
+        self._dirty = True
+
     def update_data(self) -> None:
         """
         Updates the telemetry data from the implementation source.
         """
         if not self._written:
             self._data.present_value = self.get_value()
+
+    def set_model(self, model: PointPointsetModel) -> None:
+        """Applies static definition from Metadata."""
+        if not model:
+            return
+        if model.units:
+            self._state.units = model.units
+        if model.ref:
+            self._ref = model.ref
+        self._dirty = True
 
     def set_config(self, config: PointPointsetConfig) -> None:
         """
@@ -91,7 +123,7 @@ class BasicPoint(AbstractPoint):
                 self._state.units = config.units
 
         # 1. Validate Ref
-        if config and self._ref and config.ref != self._ref:
+        if config is not None and config.ref != self._ref:
             self._state.status = self._create_entry(
                 Category.POINTSET_POINT_FAILURE, "Invalid point ref"
             )
@@ -165,6 +197,25 @@ class BasicPoint(AbstractPoint):
         """Check if the value is valid for this point."""
         pass
 
+    @abc.abstractmethod
+    def _populate_enumeration(self, point: RefDiscovery) -> None:
+        """Hook for subclasses to populate extra enumeration fields."""
+        pass
+
+    def enumerate(self) -> RefDiscovery:
+        """
+        Returns discovery information for this point.
+        """
+        point = RefDiscovery()
+        point.description = f"{self.__class__.__name__} {self.get_name()}"
+        point.writable = True if self._writable else None
+        if self._state.units:
+            point.units = self._state.units
+        if self._ref:
+            point.ref = self._ref
+        self._populate_enumeration(point)
+        return point
+
     def should_report(self, sample_rate_sec: int) -> bool:
         """
         Determines if this point needs to be reported based on Change of Value (COV)
@@ -183,7 +234,9 @@ class BasicPoint(AbstractPoint):
 
         if self._data.present_value != self._last_reported_value:
             is_numeric = (isinstance(self._data.present_value, (int, float)) and
-                          isinstance(self._last_reported_value, (int, float)))
+                          not isinstance(self._data.present_value, bool) and
+                          isinstance(self._last_reported_value, (int, float)) and
+                          not isinstance(self._last_reported_value, bool))
 
             if is_numeric and self._cov_increment is not None:
                 delta = abs(self._data.present_value - self._last_reported_value)
@@ -196,8 +249,8 @@ class BasicPoint(AbstractPoint):
         if should_report_cov:
             return True
 
-        # Default heartbeat 600 or sample rate
-        heartbeat_interval = max(600, sample_rate_sec)
+        # Default heartbeat or sample rate
+        heartbeat_interval = sample_rate_sec if sample_rate_sec > 0 else DEFAULT_HEARTBEAT_SEC
         if (now - self._last_reported_time) >= heartbeat_interval:
             return True
 

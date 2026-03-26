@@ -18,7 +18,7 @@ from udmi.schema import PointsetState
 from udmi.schema import State
 from udmi.schema import ValueState
 
-from udmi.core.managers.point.concrete_point import Point
+from udmi.core.managers.point.virtual_point import Point
 from src.udmi.core.managers.pointset_manager import PointsetManager
 from src.udmi.core.managers.pointset_manager import WritebackResult
 from src.udmi.core.messaging import AbstractMessageDispatcher
@@ -173,6 +173,7 @@ def test_update_state_populates_state_block(manager):
     manager.add_point("temp")
     manager._points["temp"].set_config(PointPointsetConfig(units="C"))
     manager._state_etag = "etag_value"
+    manager._configured_points = {"temp"}
 
     state = State()
     manager.update_state(state)
@@ -193,6 +194,7 @@ def test_publish_telemetry_sends_events(manager, mock_dispatcher):
 
     manager.set_point_value("temp", 22.0)
     manager.set_point_value("pressure", 1000)
+    manager._configured_points = {"temp", "pressure"}
 
     manager.publish_telemetry()
 
@@ -216,6 +218,7 @@ def test_publish_telemetry_ignores_points_without_values(manager,
 
     manager.set_point_value("valid_point", 10)
     manager.add_point("empty_point")
+    manager._configured_points = {"valid_point", "empty_point"}
 
     manager.publish_telemetry()
 
@@ -291,6 +294,7 @@ def test_publish_telemetry_invokes_poll_callback(manager, mock_dispatcher):
         return {"polled_point": 123}
 
     manager.set_poll_callback(mock_poll)
+    manager._configured_points = {"polled_point"}
 
     manager.publish_telemetry()
 
@@ -311,6 +315,9 @@ def test_handle_config_writeback_returns_valuestate(manager):
 
     manager.set_writeback_handler(mock_handler)
 
+    manager.add_point("setpoint")
+    manager._points["setpoint"]._writable = True
+
     config = Config(
         pointset=PointsetConfig(
             points={"setpoint": PointPointsetConfig(set_value=22.5)}
@@ -319,7 +326,7 @@ def test_handle_config_writeback_returns_valuestate(manager):
 
     manager.handle_config(config)
 
-    assert manager._points["setpoint"].set_value == 22.5
+    assert manager._points["setpoint"].get_data().present_value == 22.5
     assert manager._points["setpoint"].value_state == ValueState.overridden
 
 
@@ -335,6 +342,9 @@ def test_handle_config_writeback_returns_result(manager):
 
     manager.set_writeback_handler(mock_handler)
 
+    manager.add_point("setpoint")
+    manager._points["setpoint"]._writable = True
+
     config = Config(
         pointset=PointsetConfig(
             points={"setpoint": PointPointsetConfig(set_value=22.5)}
@@ -344,7 +354,7 @@ def test_handle_config_writeback_returns_result(manager):
     manager.handle_config(config)
 
     point = manager._points["setpoint"]
-    assert point.set_value == 22.5
+    assert point.get_data().present_value == 22.5
     assert point.value_state == ValueState.invalid
     assert point.status == custom_entry
 
@@ -359,6 +369,9 @@ def test_handle_config_writeback_exception_sets_failure(manager):
 
     manager.set_writeback_handler(mock_handler)
 
+    manager.add_point("setpoint")
+    manager._points["setpoint"]._writable = True
+
     config = Config(
         pointset=PointsetConfig(
             points={"setpoint": PointPointsetConfig(set_value=22.5)}
@@ -368,7 +381,7 @@ def test_handle_config_writeback_exception_sets_failure(manager):
     manager.handle_config(config)
 
     point = manager._points["setpoint"]
-    assert point.set_value == 22.5
+    assert point.get_data().present_value == 22.5
     assert point.value_state == ValueState.failure
     assert point.status is not None
     assert point.status.level == 500

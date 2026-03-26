@@ -3,6 +3,8 @@ import abc
 from udmi.schema import PointPointsetConfig
 from udmi.schema import PointPointsetEvents
 from udmi.schema import PointPointsetState
+from udmi.schema import PointPointsetModel
+from udmi.schema import RefDiscovery
 
 
 class AbstractPoint(abc.ABC):
@@ -55,6 +57,14 @@ class AbstractPoint(abc.ABC):
 
     @abc.abstractmethod
     def mark_reported(self) -> None:
+        """Updates the reporting state state after a successful publish."""
+
+    @abc.abstractmethod
+    def set_model(self, model: PointPointsetModel) -> None:
+        """Applies static definition from Metadata."""
+
+    @abc.abstractmethod
+    def enumerate(self) -> RefDiscovery:
         """
-        Updates the reporting state after a successful publish.
+        Returns discovery information for this point.
         """
