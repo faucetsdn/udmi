@@ -296,7 +296,8 @@ public class Registrar {
     this.updateCloudIoT = false;
   }
 
-  @CommandLineOption(short_form = "-y", description = "Dry run: log what would happen without making changes")
+  @CommandLineOption(short_form = "-y", description = "Dry run: log what would happen without "
+      + "making changes")
   private void setDryRun() {
     this.dryRun = true;
   }
@@ -923,7 +924,8 @@ public class Registrar {
           ifTrueThen(multiple, () -> System.err.printf("Unbinding subset from %s: %s%n", gatewayId,
               setOrSize(limitedSet)));
           if (dryRun) {
-            System.err.printf("Dry run: would unbind %s from %s%n", setOrSize(limitedSet), gatewayId);
+            System.err.printf("Dry run: would unbind %s from %s%n", setOrSize(limitedSet),
+                gatewayId);
           } else {
             cloudIotManager.bindDevices(limitedSet, gatewayId, false);
           }
