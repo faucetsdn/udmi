@@ -8,6 +8,7 @@ import daq.pubber.impl.PubberManager;
 import daq.pubber.impl.provider.PubberBacnetProvider;
 import daq.pubber.impl.provider.PubberFamilyProvider;
 import daq.pubber.impl.provider.PubberIpProvider;
+import daq.pubber.impl.provider.PubberModbusProvider;
 import daq.pubber.impl.provider.PubberVendorProvider;
 import java.util.HashMap;
 import java.util.Map;
@@ -37,7 +38,8 @@ public class PubberLocalnetManager extends PubberManager implements LocalnetMana
       ProtocolFamily.IPV_4, PubberIpProvider.class,
       ProtocolFamily.IPV_6, PubberIpProvider.class,
       ProtocolFamily.ETHER, PubberIpProvider.class,
-      ProtocolFamily.BACNET, PubberBacnetProvider.class);
+      ProtocolFamily.BACNET, PubberBacnetProvider.class,
+      ProtocolFamily.MODBUS, PubberModbusProvider.class);
 
   /**
    * Create a new container with the given host.
@@ -91,6 +93,10 @@ public class PubberLocalnetManager extends PubberManager implements LocalnetMana
   public void setSiteModel(SiteModel siteModel) {
     LOCALNET_PROVIDERS.forEach((family, providerClass) -> {
       if (providerClass == PubberVendorProvider.class) {
+        localnetProviders.put(family, instantiateProvider(family));
+        return;
+      }
+      if (providerClass == PubberModbusProvider.class && host instanceof PublisherHost) {
         localnetProviders.put(family, instantiateProvider(family));
         return;
       }
