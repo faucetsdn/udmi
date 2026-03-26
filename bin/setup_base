@@ -4,6 +4,7 @@ ROOT_DIR=$(realpath $(dirname $0)/..)
 cd $ROOT_DIR
 
 if [[ -n $(which apt-get) ]]; then
+    sudo apt-get update -y
     update_cmd="apt-get install -y"
     extra_packages=""
 else
