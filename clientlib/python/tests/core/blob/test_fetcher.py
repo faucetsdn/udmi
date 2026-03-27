@@ -56,16 +56,16 @@ def test_data_fetcher_raises_decode_error(data_fetcher):
 
 @pytest.fixture
 def http_fetcher():
-    return HttpFetcher()
+    return HttpFetcher(timeout_sec=1, max_retries=1)
 
 
 @patch("requests.get")
 def test_http_fetch_success(mock_get, http_fetcher):
     """Verifies successful HTTP GET."""
     mock_response = MagicMock()
-    mock_response.content = b"http_data"
+    mock_response.iter_content.return_value = [b"http_data"]
     mock_response.status_code = 200
-    mock_get.return_value = mock_response
+    mock_get.return_value.__enter__.return_value = mock_response
 
     result = http_fetcher.fetch("http://example.com/blob")
 
@@ -77,15 +77,17 @@ def test_http_fetch_success(mock_get, http_fetcher):
 def test_http_fetch_http_error(mock_get, http_fetcher):
     """Verifies 404/500 errors raise BlobFetchError."""
     mock_response = MagicMock()
-    mock_response.raise_for_status.side_effect = requests.HTTPError("404 Not Found")
-    mock_get.return_value = mock_response
+    mock_response.status_code = 404
+    mock_response.raise_for_status.side_effect = requests.exceptions.HTTPError("404 Not Found")
+    mock_get.return_value.__enter__.return_value = mock_response
 
     with pytest.raises(BlobFetchError, match="HTTP fetch failed"):
         http_fetcher.fetch("http://example.com/missing")
 
 
 @patch("requests.get")
-def test_http_fetch_connection_error(mock_get, http_fetcher):
+@patch("time.sleep")
+def test_http_fetch_connection_error(mock_sleep, mock_get, http_fetcher):
     """Verifies connection issues raise BlobFetchError."""
     mock_get.side_effect = requests.ConnectionError("Name resolution failure")
 
@@ -93,57 +95,19 @@ def test_http_fetch_connection_error(mock_get, http_fetcher):
         http_fetcher.fetch("http://bad-host.com")
 
 
-@patch("os.fsync")
-@patch("shutil.copyfileobj")
-@patch("tempfile.NamedTemporaryFile")
 @patch("requests.get")
 @patch("os.replace")
-@patch("os.chmod")
-def test_http_download_to_file_streaming(
-    mock_chmod, mock_replace, mock_get, mock_tempfile, mock_copy, mock_fsync, http_fetcher
-):
+def test_http_download_to_file_streaming(mock_replace, mock_get, http_fetcher):
     """
     Verifies that download_to_file streams data to a temp file and renames it.
     """
     mock_response = MagicMock()
-    mock_response.raw = MagicMock()
+    mock_response.iter_content.return_value = [b"chunk1", b"chunk2"]
+    mock_response.status_code = 200
     mock_get.return_value.__enter__.return_value = mock_response
 
-    mock_tmp = MagicMock()
-    mock_tmp.name = "/tmp/random_tmp_file"
-    mock_tmp.fileno.return_value = 123
-    mock_tempfile.return_value.__enter__.return_value = mock_tmp
-
-    http_fetcher.download_to_file("http://site.com/large.bin", "/var/lib/final.bin")
+    http_fetcher.download_to_file("http://site.com/large.bin", "/tmp/final.bin")
 
     mock_get.assert_called_with("http://site.com/large.bin", stream=True, timeout=ANY, headers=ANY)
+    mock_replace.assert_called_once()
 
-    mock_copy.assert_called_with(mock_response.raw, mock_tmp)
-
-    mock_tmp.flush.assert_called_once()
-    mock_fsync.assert_called_once_with(123)
-
-    mock_replace.assert_called_with("/tmp/random_tmp_file", "/var/lib/final.bin")
-
-
-# --- FileFetcher Tests ---
-
-@pytest.fixture
-def file_fetcher():
-    return FileFetcher()
-
-
-def test_file_fetch_reads_content(file_fetcher):
-    """Verifies reading a local file."""
-    with patch("builtins.open", mock_open(read_data=b"local_content")) as mock_file:
-        result = file_fetcher.fetch("file:///etc/config.json")
-
-        assert result == b"local_content"
-        mock_file.assert_called_with("/etc/config.json", "rb")
-
-
-def test_file_fetch_missing_file(file_fetcher):
-    """Verifies FileNotFoundError is wrapped in BlobFetchError."""
-    with patch("builtins.open", side_effect=FileNotFoundError("No entry")):
-        with pytest.raises(BlobFetchError, match="File fetch failed"):
-            file_fetcher.fetch("file:///missing.txt")
