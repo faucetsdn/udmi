@@ -15,6 +15,8 @@ if [ ! -f $site_path/cloud_iot_config.json ]; then
     false
 fi
 
+registry_id=$(jq -r .registry_id $site_path/cloud_iot_config.json)
+
 metadatas=`find ${site_path%/}/devices -name metadata.json`
 
 for metadata in $metadatas; do
@@ -28,6 +30,19 @@ for metadata in $metadatas; do
             echo $keyfile exists.
         else
             $ROOT_DIR/bin/keygen $auth_type $filepath
+        fi
+
+        password=""
+        if [ -f $filepath/rsa_private.pkcs8 ]; then
+            password=$(sha256sum $filepath/rsa_private.pkcs8 | cut -c1-8)
+        elif [ -f $filepath/ec_private.pkcs8 ]; then
+            password=$(sha256sum $filepath/ec_private.pkcs8 | cut -c1-8)
+        fi
+
+        if [ -n "$password" ]; then
+            device_id=$(basename $filepath)
+            username="/r/$registry_id/d/$device_id"
+            echo "{\"username\": \"$username\", \"password\": \"$password\"}" | jq . > $filepath/credentials.json
         fi
     fi
 done
