@@ -141,7 +141,10 @@ def test_nmap():
         })
     )
 
-    time.sleep(30)
+    for _ in range(90):
+      if len(messages) > 1:
+        break
+      time.sleep(1)
     
     print(len(messages))
     for message in messages:

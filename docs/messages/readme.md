@@ -12,6 +12,10 @@ scoping of the message or block:
 
 - [pointset](pointset.md) messages deal with data point telemetry (e.g. temperature reading)
 - [system](system.md) messages handle system events such as rebooting, config processing, firmware, etc...
+- [gateway](../specs/gateway.md) functionality for proxying device/MQTT connections.
+- [discovery](../specs/discovery.md) for discovering device and network capabilities.
+- `localnet` aspects of working with various local networks.
+- `blobset` handling update of device data blobs.
 
 ## Message Types
 
