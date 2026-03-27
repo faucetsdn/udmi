@@ -56,6 +56,8 @@ of interest (and values not relevant to any given application should be ignored)
 * [`gateway`](gateway.md): How devices are connected together in a logical structure to proxy information from
   legacy (non-UDMI) fieldbus protocols.
 * [`discovery`](discovery.md): Raw information from on-prem discovery about on-prem configuration and setup.
+* `localnet`: Aspects of working with various local networks.
+* `blobset`: Handling update of device data blobs.
 * `cloud`: How a device is represented or connects to cloud infrastructure (e.g. the authentication
   key type).
 * `update`: This is a synthetic _subFolder_ that is used for `state`/`config` _subType_ that means
