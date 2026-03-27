@@ -68,7 +68,7 @@ public class ConfigSequences extends SequenceBase {
   public void valid_serial_no() {
     ifNullSkipTest(serialNo, "No test serial number provided");
     ensureStateUpdate();
-    untilTrue("received serial number matches", () -> serialNo.equals(lastSerialNo));
+    waitUntil("received serial number matches", () -> serialNo.equals(lastSerialNo) ? null : "serial number mismatch");
   }
 
   @Test(timeout = TWO_MINUTES_MS)
@@ -113,13 +113,13 @@ public class ConfigSequences extends SequenceBase {
     // Solution is to keep checking for the reply, and only occasionally send out a query.
 
     AtomicReference<Instant> lastQuerySent = new AtomicReference<>(Instant.ofEpochSecond(0));
-    untilTrue("config acked", () -> {
+    waitUntil("config acked", () -> {
       if (lastQuerySent.get().isBefore(Instant.now().minus(CONFIG_QUERY_INTERVAL))) {
         debug("Sending device config acked device query...");
         queryState();
         lastQuerySent.set(Instant.now());
       }
-      return configAcked;
+      return configAcked ? null : "config not yet acked";
     });
   }
 
@@ -198,25 +198,25 @@ public class ConfigSequences extends SequenceBase {
   @Summary("Check that the device correctly handles an extra out-of-schema field")
   public void extra_config() {
     deviceConfig.system.min_loglevel = Level.DEBUG.value();
-    untilTrue("last_config not null", () -> deviceState.system.last_config != null);
-    untilTrue("system operational", () -> deviceState.system.operation.operational);
+    waitUntil("last_config not null", () -> deviceState.system.last_config != null ? null : "last_config is null");
+    waitUntil("system operational", () -> deviceState.system.operation.operational ? null : "system not operational");
     checkThatHasNoInterestingStatus();
     final Date prevConfig = deviceState.system.last_config;
     setExtraField(THAT_PLACE_IN_ARUBA);
     untilLogged(SYSTEM_CONFIG_RECEIVE, SYSTEM_CONFIG_RECEIVE_LEVEL);
     waitUntil("last_config updated", () -> deviceState.system.last_config.equals(prevConfig)
         ? format("last_config still matches previous %s", isoConvert(prevConfig)) : null);
-    untilTrue("system operational", () -> deviceState.system.operation.operational);
+    waitUntil("system operational", () -> deviceState.system.operation.operational ? null : "system not operational");
     checkThatHasNoInterestingStatus();
     untilLogged(SYSTEM_CONFIG_PARSE, SYSTEM_CONFIG_PARSE_LEVEL);
     untilLogged(SYSTEM_CONFIG_APPLY, SYSTEM_CONFIG_APPLY_LEVEL);
     final Date updatedConfig = deviceState.system.last_config;
     setExtraField(null);
     untilLogged(SYSTEM_CONFIG_RECEIVE, SYSTEM_CONFIG_RECEIVE_LEVEL);
-    untilTrue("last_config updated again",
-        () -> !deviceState.system.last_config.equals(updatedConfig)
+    waitUntil("last_config updated again",
+        () -> !deviceState.system.last_config.equals(updatedConfig) ? null : "last_config not updated again"
     );
-    untilTrue("system operational", () -> deviceState.system.operation.operational);
+    waitUntil("system operational", () -> deviceState.system.operation.operational ? null : "system not operational");
     untilLogged(SYSTEM_CONFIG_PARSE, SYSTEM_CONFIG_PARSE_LEVEL);
     untilLogged(SYSTEM_CONFIG_APPLY, SYSTEM_CONFIG_APPLY_LEVEL);
   }

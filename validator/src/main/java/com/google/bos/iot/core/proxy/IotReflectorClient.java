@@ -419,9 +419,9 @@ public class IotReflectorClient implements MessagePublisher {
       if (!shouldConsiderReply) {
         return;
       } else if (!matchingSession) {
-        info(
+        System.err.println(
             format("Received UDMI reflector other session %s != %s", transactionId, sessionPrefix));
-        throw new IllegalStateException("There can (should) be only one instance on a channel");
+        return;
       } else if (!matchingTxnId) {
         debug(format("Ignoring unexpected reply from this session %s != %s", transactionId,
             expectedTxnId));
@@ -572,7 +572,7 @@ public class IotReflectorClient implements MessagePublisher {
       publisher.activate();
 
       System.err.println("Starting initial UDMI setup process");
-      retries = updateVersion == null ? 1 : UPDATE_RETRIES;
+      retries = UPDATE_RETRIES;
       while (pubLatches.get(publisher).getCount() > 0) {
         setReflectorState();
         initializedStateSent.countDown();

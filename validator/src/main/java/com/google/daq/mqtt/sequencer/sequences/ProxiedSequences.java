@@ -42,9 +42,9 @@ public class ProxiedSequences extends PointsetBase {
     final FamilyLocalnetModel savedTarget = deepCopy(gatewayConfig.target);
     ifNullThen(gatewayConfig.target, () -> gatewayConfig.target = new FamilyLocalnetModel());
     gatewayConfig.target.family = getRandomCode("family");
-    untilTrue("gateway status has target family error", this::hasGatewayStatusError);
+    waitUntil("gateway status has target family error", () -> hasGatewayStatusError() ? null : "no gateway status error");
     gatewayConfig.target.family = describe("original family", savedTarget.family);
-    untilFalse("gateway status has no error", this::hasGatewayStatusDirty);
+    waitUntil("gateway status has no error", () -> !hasGatewayStatusDirty() ? null : "gateway status is still dirty");
   }
 
   @Feature(stage = FeatureStage.PREVIEW, bucket = Bucket.GATEWAY)
@@ -56,9 +56,9 @@ public class ProxiedSequences extends PointsetBase {
     final FamilyLocalnetModel savedTarget = deepCopy(gatewayConfig.target);
     ifNullThen(gatewayConfig.target, () -> gatewayConfig.target = new FamilyLocalnetModel());
     gatewayConfig.target.addr = getRandomCode("addr");
-    untilTrue("gateway status has target addr error", this::hasGatewayStatusError);
+    waitUntil("gateway status has target addr error", () -> hasGatewayStatusError() ? null : "no gateway status error");
     gatewayConfig.target.addr = describe("original addr", savedTarget.addr);
-    untilFalse("gateway status has no error", this::hasGatewayStatusDirty);
+    waitUntil("gateway status has no error", () -> !hasGatewayStatusDirty() ? null : "gateway status is still dirty");
   }
 
   @Feature(stage = FeatureStage.PREVIEW, bucket = Bucket.GATEWAY)
@@ -70,9 +70,9 @@ public class ProxiedSequences extends PointsetBase {
     PointPointsetConfig pointPointsetConfig = deviceConfig.pointset.points.get(targetPoint);
     String savedRef = pointPointsetConfig.ref;
     pointPointsetConfig.ref = getRandomCode("ref");
-    untilTrue("point status has target error", this::hasPointStatusError);
+    waitUntil("point status has target error", () -> hasPointStatusError() ? null : "no point status error");
     pointPointsetConfig.ref = describe("original ref", savedRef);
-    untilFalse("no more pointset error", this::hasPointStatusDirty);
+    waitUntil("no more pointset error", () -> !hasPointStatusDirty() ? null : "point status is still dirty");
   }
 
   private void cleanStatusCheck(String targetPoint) {

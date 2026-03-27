@@ -121,17 +121,17 @@ public class PointsetSequences extends PointsetBase {
     deviceConfig.pointset.points.put(EXTRANEOUS_POINT, new PointPointsetConfig());
 
     try {
-      untilTrue("pointset state contains extraneous point error",
+      waitUntil("pointset state contains extraneous point error",
           () -> ifNotNullGet(deviceState.pointset.points.get(EXTRANEOUS_POINT),
               state -> state.status.category.equals(POINTSET_POINT_INVALID)
-                  && state.status.level.equals(POINTSET_POINT_INVALID_VALUE)));
+                  && state.status.level.equals(POINTSET_POINT_INVALID_VALUE)) ? null : "extraneous point error not found");
       untilPointsetSanity();
     } finally {
       deviceConfig.pointset.points.remove(EXTRANEOUS_POINT);
     }
 
-    untilTrue("pointset state removes extraneous point error",
-        () -> !deviceState.pointset.points.containsKey(EXTRANEOUS_POINT));
+    waitUntil("pointset state removes extraneous point error",
+        () -> !deviceState.pointset.points.containsKey(EXTRANEOUS_POINT) ? null : "extraneous point error still present");
 
     untilPointsetSanity();
   }
@@ -152,15 +152,15 @@ public class PointsetSequences extends PointsetBase {
     PointPointsetConfig removed = requireNonNull(deviceConfig.pointset.points.remove(name));
 
     try {
-      untilFalse("pointset state does not contain removed point",
-          () -> deviceState.pointset.points.containsKey(name));
+      waitUntil("pointset state does not contain removed point",
+          () -> !deviceState.pointset.points.containsKey(name) ? null : "removed point still present");
       untilPointsetSanity();
     } finally {
       deviceConfig.pointset.points.put(name, removed);
     }
 
-    untilTrue("pointset state contains restored point",
-        () -> deviceState.pointset.points.containsKey(name));
+    waitUntil("pointset state contains restored point",
+        () -> deviceState.pointset.points.containsKey(name) ? null : "restored point not found");
 
     untilPointsetSanity();
   }
@@ -175,8 +175,8 @@ public class PointsetSequences extends PointsetBase {
   public void pointset_publish() {
     ifNullSkipTest(deviceConfig.pointset, "no pointset found in config");
     deviceConfig.pointset.sample_rate_sec = 10;
-    untilTrue("receive a pointset event",
-        () -> (countReceivedEvents(PointsetEvents.class) > 1));
+    waitUntil("receive a pointset event",
+        () -> (countReceivedEvents(PointsetEvents.class) > 1) ? null : "no pointset event received");
   }
 
   /**
@@ -242,8 +242,8 @@ public class PointsetSequences extends PointsetBase {
     deviceConfig.pointset.sample_rate_sec = sampleRange.sampleRate;
 
     popReceivedEvents(PointsetEvents.class);
-    untilTrue(format("receive at least %d pointset events", messagesToSample),
-        () -> (countReceivedEvents(PointsetEvents.class) > messagesToSample)
+    waitUntil(format("receive at least %d pointset events", messagesToSample),
+        () -> (countReceivedEvents(PointsetEvents.class) > messagesToSample) ? null : "not enough pointset events received"
     );
 
     List<PointsetEvents> receivedEvents = popReceivedEvents(PointsetEvents.class);

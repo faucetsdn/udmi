@@ -125,16 +125,16 @@ public class DiscoverySequences extends SequenceBase {
   private DiscoveryEvents runEnumeration(Enumerations depths) {
     deviceConfig.discovery = ofNullable(deviceConfig.discovery).orElseGet(DiscoveryConfig::new);
     deviceConfig.discovery.enumerations = depths;
-    untilTrue("enumeration not active", () -> deviceState.discovery.generation == null);
+    waitUntil("enumeration not active", () -> deviceState.discovery.generation == null ? null : "generation is not null");
 
     Date startTime = SemanticDate.describe("generation start time", cleanDate());
     deviceConfig.discovery.generation = startTime;
     info("Starting empty enumeration at " + isoConvert(startTime));
-    untilTrue("matching enumeration generation",
-        () -> deviceState.discovery.generation.equals(startTime));
+    waitUntil("matching enumeration generation",
+        () -> deviceState.discovery.generation.equals(startTime) ? null : "generation does not match start time");
 
     deviceConfig.discovery.generation = null;
-    untilTrue("cleared enumeration generation", () -> deviceState.discovery.generation == null);
+    waitUntil("cleared enumeration generation", () -> deviceState.discovery.generation == null ? null : "generation not cleared");
 
     List<DiscoveryEvents> allEvents = popReceivedEvents(DiscoveryEvents.class);
     // Filter for enumeration events, since there will sometimes be lingering scan events.
@@ -583,7 +583,7 @@ public class DiscoverySequences extends SequenceBase {
     scanGeneration = cleanDate().toInstant();
     configureScan(scanGeneration, SCAN_START_DELAY, PLEASE_ENUMERATE, null, null);
     Instant endTime = Instant.now().plusSeconds(SCAN_START_DELAY.getSeconds() * SCAN_ITERATIONS);
-    untilUntrue("scan iterations", () -> Instant.now().isBefore(endTime));
+    waitUntil("scan iterations completed", () -> !Instant.now().isBefore(endTime) ? null : "scan still iterating");
     Instant finishTime = deviceState.discovery.families.get(scanFamily).generation.toInstant();
     checkThat("scan did not terminate prematurely",
         metaFamilies.stream().noneMatch(scanStopped(Date.from(finishTime))));
@@ -599,14 +599,14 @@ public class DiscoverySequences extends SequenceBase {
     initializeFamilies();
     deviceConfig.discovery = new DiscoveryConfig();
     deviceConfig.discovery.families = new HashMap<>();
-    untilTrue("discovery families defined", () -> deviceState.discovery.families != null);
+    waitUntil("discovery families defined", () -> deviceState.discovery.families != null ? null : "families not yet defined");
     Map<String, FamilyDiscoveryConfig> configFamilies = deviceConfig.discovery.families;
     Map<String, FamilyDiscoveryState> stateFamilies = deviceState.discovery.families;
     waitUntil("discovery family keys match", () -> joinOrNull("mismatch: ",
         symmetricDifference(configFamilies.keySet(), stateFamilies.keySet())
     ));
-    untilTrue("no scans active",
-        () -> stateFamilies.keySet().stream().noneMatch(scanActive()));
+    waitUntil("no scans active",
+        () -> stateFamilies.keySet().stream().noneMatch(scanActive()) ? null : "scans are still active");
   }
 
   private void initializeFamilies() {

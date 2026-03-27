@@ -862,7 +862,7 @@ public class SequenceBase {
     queryState();
 
     ifTrueThen(deviceSupportsState(),
-        () -> untilTrue("initial device state", () -> deviceState != null));
+        () -> waitUntil("initial device state", () -> deviceState != null ? null : "device state is null"));
     checkThatHasNoInterestingStatus();
 
     // Do this late in the sequence to make sure any state is cleared out from previous test.
@@ -1856,23 +1856,6 @@ public class SequenceBase {
     return ELAPSED_TIME_PREFIX + (System.currentTimeMillis() - startTestTimeMs) / 1000 + "s";
   }
 
-  protected void untilTrue(String description, Supplier<Boolean> evaluator) {
-    untilTrue(description, evaluator, null);
-  }
-
-  protected void untilTrue(String description, Supplier<Boolean> evaluator,
-      Supplier<String> detail) {
-    untilLoop(description, () -> !catchToFalse(evaluator), detail);
-  }
-
-  protected void untilFalse(String description, Supplier<Boolean> evaluator) {
-    untilLoop(description, () -> catchToTrue(evaluator));
-  }
-
-  protected void untilUntrue(String description, Supplier<Boolean> evaluator) {
-    untilLoop(description, () -> catchToFalse(evaluator));
-  }
-
   private static void startMessageSucker(MessagePublisher publisher) {
     executorService.submit(() -> messageSucker(publisher));
   }
@@ -2583,7 +2566,7 @@ public class SequenceBase {
   protected void ensureStateUpdate() {
     updateConfig("ensure state update", true);
     withRecordSequence(false,
-        () -> untilTrue("received at least one state update", this::receivedAtLeastOneState));
+        () -> waitUntil("received at least one state update", () -> receivedAtLeastOneState() ? null : "no state update received"));
   }
 
   protected void forceConfigUpdate(String reason) {

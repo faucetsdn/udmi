@@ -19,14 +19,14 @@ bin/registrar $site_path $project_spec -x -d
 
 echo Make sure changes from previous runs are not still there.
 device_metadata=$site_path/devices/AHU-22/metadata.json
-jq '.localnet.families.vendor.addr = "0x65"' $device_metadata | sponge $device_metadata
+jq '.localnet.families.vendor.addr = "0x65"' $device_metadata > ${device_metadata}.tmp && mv ${device_metadata}.tmp $device_metadata
 
 echo "Munge the model to have just the gateway (no proxied devices)"
 metadata=$site_path/devices/GAT-123/metadata.json
-jq '.gateway.proxy_ids = []' $metadata | sponge $metadata
+jq '.gateway.proxy_ids = []' $metadata > ${metadata}.tmp && mv ${metadata}.tmp $metadata
 proxied=$(fgrep -l gateway_id $site_path/devices/*/metadata.json)
 for proxy in $proxied; do
-  jq '.gateway.gateway_id = null' $proxy | sponge $proxy
+  jq '.gateway.gateway_id = null' $proxy > ${proxy}.tmp && mv ${proxy}.tmp $proxy
 done
 
 bin/registrar $site_path $project_spec GAT-123
@@ -36,12 +36,19 @@ bin/registrar $site_path $project_spec GAT-123
 entries=$(wc -l < $site_path/out/registration_summary.csv)
 [[ $entries == 2 ]] || fail Unexpected registered entries, found $entries
 
+function cleanup {
+    echo "Cleaning up background pubber process..."
+    kill $(jobs -p) 2>/dev/null || true
+}
+trap cleanup EXIT
+
 echo Launching bg pubber for testing
 pubber_bg GAT-123
 
 echo Enable the gateway to auto-provision
 bin/mapper GAT-123 provision
 
+sleep 5
 echo Kick off a discovery run for the gateway
 bin/mapper GAT-123 discover vendor
 
@@ -68,11 +75,12 @@ addr=$(jq -r .addr $site_path/extras/discovered_vendor-20231/cloud_metadata/udmi
 
 echo "Changing the address for AHU-22 device to 0x68"
 device_metadata=$site_path/devices/AHU-22/metadata.json
-jq '.localnet.families.vendor.addr = "0x68"' $device_metadata | sponge $device_metadata
+jq '.localnet.families.vendor.addr = "0x68"' $device_metadata > ${device_metadata}.tmp && mv ${device_metadata}.tmp $device_metadata
 
 extra_device_metadata=$site_path/extras/discovered_vendor-28179023/cloud_metadata/udmi_discovered_with.json
-jq '.refs.new_ref = {"point":"new_point","units":"new_units"}' $extra_device_metadata | sponge $extra_device_metadata
+jq '.refs.new_ref = {"point":"new_point","units":"new_units"}' $extra_device_metadata > ${extra_device_metadata}.tmp && mv ${extra_device_metadata}.tmp $extra_device_metadata
 
+sleep 5
 echo "Starting the mapping process for the extra devices"
 bin/mapper GAT-123 map vendor
 
@@ -84,7 +92,7 @@ addr=$(jq -r .localnet.families.vendor.addr $site_path/devices/UNK-1/metadata.js
 
 echo "Reverting the address for AHU-22 device back"
 device_metadata=$site_path/devices/AHU-22/metadata.json
-jq '.localnet.families.vendor.addr = "0x65"' $device_metadata | sponge $device_metadata
+jq '.localnet.families.vendor.addr = "0x65"' $device_metadata > ${device_metadata}.tmp && mv ${device_metadata}.tmp $device_metadata
 
 
 if [[ -d $site_path/devices/UNK-1 ]]; then
@@ -108,6 +116,7 @@ fi
 first_generation=`jq -r .generation $site_path/extras/discovered_vendor-20231/cloud_metadata/udmi_discovered_with.json`
 echo First discovered generation is $first_generation
 
+sleep 5
 echo Kick off a second discovery scan to validate updates
 bin/mapper GAT-123 discover
 

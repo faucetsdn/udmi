@@ -106,8 +106,8 @@ public class BlobsetSequences extends SequenceBase {
 
   private void untilClearedRedirect() {
     deviceConfig.blobset.blobs.remove(IOT_BLOB_KEY);
-    untilTrue("endpoint config blobset state not defined",
-        () -> deviceState.blobset == null || deviceState.blobset.blobs.get(IOT_BLOB_KEY) == null);
+    waitUntil("endpoint config blobset state not defined",
+        () -> (deviceState.blobset == null || deviceState.blobset.blobs.get(IOT_BLOB_KEY) == null) ? null : "blobset state still defined");
   }
 
   private void untilSuccessfulRedirect(BlobPhase blobPhase) {
@@ -120,14 +120,14 @@ public class BlobsetSequences extends SequenceBase {
       mirrorToOtherConfig();
     }
     String prefix = ifTrueGet(expectFailure, "not ", "");
-    untilTrue(format("blobset phase is %s and stateStatus is %snull", blobPhase, prefix), () -> {
+    waitUntil(format("blobset phase is %s and stateStatus is %snull", blobPhase, prefix), () -> {
       BlobBlobsetState blobBlobsetState = deviceState.blobset.blobs.get(IOT_BLOB_KEY);
       BlobBlobsetConfig blobBlobsetConfig = deviceConfig.blobset.blobs.get(IOT_BLOB_KEY);
       // Successful reconnect sends a state message with empty Entry, error will have status.
       boolean statusError = blobBlobsetState.status != null;
-      return blobPhase.equals(blobBlobsetState.phase)
+      return (blobPhase.equals(blobBlobsetState.phase)
           && blobBlobsetConfig.generation.equals(blobBlobsetState.generation)
-          && statusError == expectFailure;
+          && statusError == expectFailure) ? null : "blobset phase or status does not match expected";
     });
 
     // This case is tracking the finalization of the redirect, so clear out the non-used one.
@@ -137,13 +137,13 @@ public class BlobsetSequences extends SequenceBase {
   }
 
   private void untilErrorReported() {
-    untilTrue("blobset entry config status is error", () -> {
+    waitUntil("blobset entry config status is error", () -> {
       BlobBlobsetState blobBlobsetState = deviceState.blobset.blobs.get(IOT_BLOB_KEY);
       BlobBlobsetConfig blobBlobsetConfig = deviceConfig.blobset.blobs.get(IOT_BLOB_KEY);
-      return blobBlobsetConfig.generation.equals(blobBlobsetState.generation)
+      return (blobBlobsetConfig.generation.equals(blobBlobsetState.generation)
           && blobBlobsetState.phase.equals(BlobPhase.FINAL)
           && blobBlobsetState.status.category.equals(BLOBSET_BLOB_APPLY)
-          && blobBlobsetState.status.level == Level.ERROR.value();
+          && blobBlobsetState.status.level == Level.ERROR.value()) ? null : "error status not reported";
     });
   }
 
@@ -222,15 +222,15 @@ public class BlobsetSequences extends SequenceBase {
   @Test(timeout = TWO_MINUTES_MS)
   public void endpoint_connection_bad_hash() {
     setDeviceConfigEndpointBlob(getAlternateEndpointHostname(), registryId, true);
-    untilTrue("blobset status is ERROR", () -> {
+    waitUntil("blobset status is ERROR", () -> {
       BlobBlobsetState blobBlobsetState = deviceState.blobset.blobs.get(IOT_BLOB_KEY);
       BlobBlobsetConfig blobBlobsetConfig = deviceConfig.blobset.blobs.get(IOT_BLOB_KEY);
       // Successful reconnect sends a state message with empty Entry.
       Entry blobStateStatus = blobBlobsetState.status;
-      return BlobPhase.FINAL.equals(blobBlobsetState.phase)
+      return (BlobPhase.FINAL.equals(blobBlobsetState.phase)
           && blobBlobsetConfig.generation.equals(blobBlobsetState.generation)
           && blobStateStatus.category.equals(BLOBSET_BLOB_APPLY)
-          && blobStateStatus.level == Level.ERROR.value();
+          && blobStateStatus.level == Level.ERROR.value()) ? null : "error status not reported";
     });
   }
 
@@ -344,16 +344,16 @@ public class BlobsetSequences extends SequenceBase {
 
     // Prepare for the restart.
     final Date dateZero = new Date(0);
-    untilTrue("last_start is not zero",
-        () -> deviceState.system.operation.last_start.after(dateZero));
+    waitUntil("last_start is not zero",
+        () -> deviceState.system.operation.last_start.after(dateZero) ? null : "last_start is still zero");
 
     final Integer initialCount = deviceState.system.operation.restart_count;
     checkThat("initial count is greater than 0", () -> initialCount > 0);
 
     deviceConfig.system.operation.mode = SystemMode.ACTIVE;
 
-    untilTrue("system mode is ACTIVE",
-        () -> deviceState.system.operation.mode.equals(SystemMode.ACTIVE));
+    waitUntil("system mode is ACTIVE",
+        () -> deviceState.system.operation.mode.equals(SystemMode.ACTIVE) ? null : "mode is not ACTIVE");
 
     final Date last_config = deviceState.system.last_config;
     final Date last_start = deviceConfig.system.operation.last_start;
@@ -362,29 +362,29 @@ public class BlobsetSequences extends SequenceBase {
     deviceConfig.system.operation.mode = SystemMode.RESTART;
 
     // Wait for the device to go through the correct states as it restarts.
-    untilTrue("system mode is INITIAL",
-        () -> deviceState.system.operation.mode.equals(SystemMode.INITIAL));
+    waitUntil("system mode is INITIAL",
+        () -> deviceState.system.operation.mode.equals(SystemMode.INITIAL) ? null : "mode is not INITIAL");
 
     checkThat("restart count increased by one",
         () -> deviceState.system.operation.restart_count == initialCount + 1);
 
     deviceConfig.system.operation.mode = SystemMode.ACTIVE;
 
-    untilTrue("system mode is ACTIVE",
-        () -> deviceState.system.operation.mode.equals(SystemMode.ACTIVE));
+    waitUntil("system mode is ACTIVE",
+        () -> deviceState.system.operation.mode.equals(SystemMode.ACTIVE) ? null : "mode is not ACTIVE");
 
     // Capture error from last_start unexpectedly changing due to restart condition.
     try {
-      untilTrue("last_config is newer than previous last_config before abort",
-          () -> deviceState.system.last_config.after(last_config));
+      waitUntil("last_config is newer than previous last_config before abort",
+          () -> deviceState.system.last_config.after(last_config) ? null : "last_config not updated");
     } catch (AbortMessageLoop e) {
       info("Squelching aborted message loop: " + e.getMessage());
     }
 
-    untilTrue("last_config is newer than previous last_config after abort",
-        () -> deviceState.system.last_config.after(last_config));
+    waitUntil("last_config is newer than previous last_config after abort",
+        () -> deviceState.system.last_config.after(last_config) ? null : "last_config not updated");
 
-    untilTrue("last_start is newer than previous last_start",
-        () -> deviceConfig.system.operation.last_start.after(last_start));
+    waitUntil("last_start is newer than previous last_start",
+        () -> deviceConfig.system.operation.last_start.after(last_start) ? null : "last_start not updated");
   }
 }

@@ -76,8 +76,8 @@ public class SystemSequences extends SequenceBase {
   public void too_much_state() {
     Instant end = Instant.now().plus(STATE_COLLECT_TIME);
     long seconds = STATE_COLLECT_TIME.getSeconds();
-    untilTrue(format("system accumulating state events for %ds", seconds),
-        () -> end.isBefore(Instant.now()));
+    waitUntil(format("system accumulating state events for %ds", seconds),
+        () -> end.isBefore(Instant.now()) ? null : "waiting for timeout");
     int numStateUpdates = getNumStateUpdates();
     checkThat(format("No more than %d state updates in %ds", STATE_LIMIT_THRESHOLD, seconds),
         () -> numStateUpdates <= STATE_LIMIT_THRESHOLD);
