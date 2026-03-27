@@ -1,7 +1,9 @@
 # Flaky Tests Summary
 
-Based on the execution of the sequencer test suite, the following flaky tests were identified:
+When executing the sequencer tests locally 10 times to verify flaky behavior, an ongoing issue prevents tests from completing successfully.
 
-* **`system_last_update`**: This test passed 10 times but required 11 attempts (`11/11` reported in the output), indicating an intermittent failure/flakiness.
+## Findings
 
-All other evaluated tests completed their runs successfully without any flaky behavior (e.g., `10/10` pass rate). Note that `bin/test_sites` was explicitly ignored per instructions.
+*   `bin/test_sequencer` continuously aborts with an exit code 1 and logs "Pubber startup failed" due to a `Connection error` or "Config sync timeout expired. Investigate UDMI cloud functions install."
+*   Because the tests are failing at the connection/setup phase before tests run completely and pass/fail properly, it's impossible to gather a reliable pass rate across 10 iterations locally right now to firmly pinpoint which test is actually flaky.
+*   The meta-test script simulating GitHub Actions CI setup runs (`setup_base`, `clone_model`, `registrar`, `start_local`, `test_etcd`, `test_mosquitto`, `test_regclean`, `test_runlocal`, `test_sequencer`) has been added to `jules/run_seq_flaky.sh` so the user can pull down the branch to debug why it may be failing despite matching the CI workflow logic.
