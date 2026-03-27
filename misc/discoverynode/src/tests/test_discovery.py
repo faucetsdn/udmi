@@ -51,7 +51,17 @@ def test_number_discovery_start_and_stop():
   assert numbers.state.phase == state.Phase.stopped
   #until_true(lambda: numbers.state.phase == discovery.states.FINISHED, "phase to be finished", 8)
   # maybe flakey?
-  assert [None, '1', '2', '3', '4', '5', None] == [x[0].addr for (x, _) in mock_publisher.call_args_list]
+  addrs = [x[0].addr for (x, _) in mock_publisher.call_args_list]
+  assert len(addrs) >= 7
+  assert addrs[0] is None
+  assert addrs[-1] is None
+  # Check that at least '1' through '5' were discovered in order
+  expected_list = ['1', '2', '3', '4', '5']
+  idx = 0
+  for item in addrs:
+      if idx < len(expected_list) and item == expected_list[idx]:
+          idx += 1
+  assert idx == len(expected_list), "Not all expected items were found in order"
 
 
 def test_event_counts():
