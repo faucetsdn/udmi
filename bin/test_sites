@@ -35,6 +35,7 @@ function redact_files {
         sed -E -i \
             -e 's-oading .*udmi/tests/-REDACTED/-' \
             -e 's-^    .*udmi/tests/-    REDACTED/-' \
+            -e 's-^      File not found: /app/tests/-    REDACTED/-' \
             $file
     done
 }
