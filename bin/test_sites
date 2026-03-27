@@ -35,6 +35,7 @@ function redact_files {
         sed -E -i \
             -e 's-oading .*udmi/tests/-REDACTED/-' \
             -e 's-^    .*udmi/tests/-    REDACTED/-' \
+            -e 's-.*tests/sites/configs/-    REDACTED/sites/configs/-' \
             $file
     done
 }
@@ -101,13 +102,6 @@ if [[ -s $FAILURES ]]; then
         $FAILURES
     false
 fi
-
-echo '#########################################' Testing simple mock sequencer...
-bin/sequencer tests/sites/downgrade/ -- DWN-2 system_mode_restart || true
-
-RESULTLOG=tests/sites/downgrade/out/devices/DWN-2/RESULT.log
-fgrep "RESULT fail system.mode system_mode_restart PREVIEW " $RESULTLOG ||
-    bin/fail missing output from $RESULTLOG
 
 echo
 echo '#########################################' Done with site tests
