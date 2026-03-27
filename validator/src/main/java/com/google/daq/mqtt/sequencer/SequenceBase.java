@@ -1586,7 +1586,7 @@ public class SequenceBase {
   }
 
   protected void waitUntil(String description, Supplier<String> evaluator) {
-    waitUntil(description, DEFAULT_WAIT_TIME, evaluator);
+    waitUntil(description, DEFAULT_LOOP_TIMEOUT, evaluator);
   }
 
   protected void waitUntil(String description, Duration maxWait, Supplier<String> evaluator) {
