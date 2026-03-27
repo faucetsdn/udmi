@@ -141,7 +141,10 @@ def test_nmap():
         })
     )
 
-    time.sleep(30)
+    for _ in range(60):
+        if len(messages) >= 2:
+            break
+        time.sleep(1)
     
     print(len(messages))
     for message in messages:
@@ -151,5 +154,6 @@ def test_nmap():
 
     # verify that nmap discovery completed
     #1 because 0 is the publish marker
+    assert len(messages) >= 2, "Discovery message not received"
     assert messages[1].refs["1256"]["adjunct"]["product"] == "Postfix smtpd"
 
