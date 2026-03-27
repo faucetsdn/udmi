@@ -642,7 +642,7 @@ public class IotReflectorClient implements MessagePublisher {
 
   @Override
   public SetupUdmiConfig getVersionInformation() {
-    return requireNonNull(udmiInfo, "udmi version information not available");
+    return udmiInfo != null ? udmiInfo : new SetupUdmiConfig();
   }
 
   public String getBridgeHost() {

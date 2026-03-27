@@ -35,6 +35,7 @@ function redact_files {
         sed -E -i \
             -e 's-oading .*udmi/tests/-REDACTED/-' \
             -e 's-^    .*udmi/tests/-    REDACTED/-' \
+            -e 's-.*tests/sites/configs/-    REDACTED/sites/configs/-' \
             $file
     done
 }
