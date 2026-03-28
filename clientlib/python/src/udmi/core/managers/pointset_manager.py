@@ -378,7 +378,8 @@ class PointsetManager(BaseManager): # pylint: disable=too-many-instance-attribut
                         # to manage hardware actuation and determine the resulting value_state.
                         pass
 
-                if point.value_state in (ValueState.applied, ValueState.updating) and set_value_expiry:
+                if point.value_state in (ValueState.applied,
+                                         ValueState.updating) and set_value_expiry:
                     delay = set_value_expiry - time.time()
                     if delay > 0:
                         if point_name in self._writeback_timers:
