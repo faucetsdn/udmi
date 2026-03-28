@@ -97,6 +97,7 @@ class PointsetManager(BaseManager):
         self._writeback_handler: Optional[WritebackHandler] = None
         self._telemetry_wake_event: Optional[threading.Event] = None
         self._poll_callback: Optional[PollCallback] = None
+        self._writeback_timers: Dict[str, threading.Timer] = {}
 
         LOGGER.info("PointsetManager initialized.")
 
@@ -211,6 +212,9 @@ class PointsetManager(BaseManager):
         Stops the telemetry loop and persists current state.
         """
         self._persist_state()
+        for timer in self._writeback_timers.values():
+            timer.cancel()
+        self._writeback_timers.clear()
         super().stop()
         LOGGER.info("PointsetManager stopped.")
 
@@ -240,6 +244,22 @@ class PointsetManager(BaseManager):
         new_point_configs = config.pointset.points or {}
         self._active_points = set(new_point_configs.keys())
 
+        config_timestamp_str = config.timestamp
+        config_timestamp = None
+        if config_timestamp_str:
+            try:
+                config_timestamp = datetime.fromisoformat(config_timestamp_str.replace("Z", "+00:00")).timestamp()
+            except ValueError:
+                pass
+
+        set_value_expiry_str = config.pointset.set_value_expiry
+        set_value_expiry = None
+        if set_value_expiry_str:
+            try:
+                set_value_expiry = datetime.fromisoformat(set_value_expiry_str.replace("Z", "+00:00")).timestamp()
+            except ValueError:
+                pass
+
         incoming_etag = config.pointset.state_etag
         etag_mismatch = False
         if incoming_etag and self._state_etag and incoming_etag != self._state_etag:
@@ -257,9 +277,29 @@ class PointsetManager(BaseManager):
 
         for point_name, point in self._all_points.items():
             point_config = new_point_configs.get(point_name)
-            point.set_config(point_config)
+
+            invalid_expiry = False
+            is_expired = False
+            if point_config and point_config.set_value is not None:
+                if set_value_expiry is None or (config_timestamp is not None and set_value_expiry <= config_timestamp):
+                    invalid_expiry = True
+                elif set_value_expiry < time.time():
+                    is_expired = True
+
+            try:
+                point.set_config(point_config, invalid_expiry=invalid_expiry, is_expired=is_expired)
+            except TypeError:
+                point.set_config(point_config)
 
             if point_config and point_config.set_value is not None:
+                if invalid_expiry or is_expired:
+                    if invalid_expiry:
+                        self.trigger_state_update()
+                    if point_name in self._writeback_timers:
+                        self._writeback_timers[point_name].cancel()
+                        del self._writeback_timers[point_name]
+                    continue
+
                 if etag_mismatch:
                     point.value_state = ValueState.invalid
                     point.status = Entry(
@@ -289,6 +329,39 @@ class PointsetManager(BaseManager):
                             point.value_state = ValueState.failure
                             point.status = Entry(message=str(e), level=500)
 
+                if point.value_state == ValueState.applied and set_value_expiry:
+                    delay = set_value_expiry - time.time()
+                    if delay > 0:
+                        if point_name in self._writeback_timers:
+                            self._writeback_timers[point_name].cancel()
+                        
+                        timer = threading.Timer(delay, self._handle_writeback_expiration, args=[point_name])
+                        self._writeback_timers[point_name] = timer
+                        timer.start()
+
+    def _handle_writeback_expiration(self, point_name: str) -> None:
+        """
+        Callback when a point's set_value_expiry is reached.
+        """
+        if point_name not in self._all_points:
+            return
+
+        point = self._all_points[point_name]
+        try:
+            if hasattr(point, "clear_writeback"):
+                point.clear_writeback()
+            elif hasattr(point, "set_config"):
+                point.set_config(PointPointsetConfig())
+
+            if point_name in self._writeback_timers:
+                del self._writeback_timers[point_name]
+
+            self._last_set_values.pop(point_name, None)
+            self.trigger_state_update()
+            LOGGER.info("Writeback timer expired for point: %s", point_name)
+        except Exception as e:
+            LOGGER.error("Error expiring writeback for point %s: %s", point_name, e)
+
     def handle_command(self, command_name: str, payload: dict) -> None:
         """
         Handles commands directed at the pointset (currently none).
@@ -301,7 +374,8 @@ class PointsetManager(BaseManager):
         # Ensure deterministic JSON serialization by sorting keys
         state_str = json.dumps(points_state_dict, sort_keys=True,
                                separators=(',', ':'))
-        return hashlib.sha256(state_str.encode('utf-8')).hexdigest()
+        full_hash = hashlib.sha256(state_str.encode('utf-8')).hexdigest()
+        return full_hash[:32]
 
     def _load_persisted_state(self) -> None:
         """Loads the last known point values from persistence."""

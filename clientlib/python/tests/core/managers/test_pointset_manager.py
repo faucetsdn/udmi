@@ -116,16 +116,16 @@ def test_point_set_model_syncs_ref():
 def test_initialization(manager):
     """Test default initialization values."""
     assert manager._sample_rate_sec == 10
-    assert len(manager._points) == 0
+    assert len(manager._all_points) == 0
 
 
 def test_add_point_and_set_value(manager):
     """Test the API for adding points and setting values."""
     manager.set_point_value("pressure", 101.3)
 
-    assert "pressure" in manager._points
-    manager._points["pressure"].update_data()
-    assert manager._points["pressure"].get_data().present_value == 101.3
+    assert "pressure" in manager._all_points
+    manager._all_points["pressure"].update_data()
+    assert manager._all_points["pressure"].get_data().present_value == 101.3
 
 
 def test_handle_config_updates_sample_rate(manager):
@@ -152,35 +152,36 @@ def test_handle_config_adds_points(manager):
     )
     manager.handle_config(config)
 
-    assert "room_temp" in manager._points
-    assert manager._points["room_temp"].get_state().units == "C"
-    assert "humidity" in manager._points
-    assert manager._points["humidity"].get_state().units == "%"
+    assert "room_temp" in manager._all_points
+    assert manager._all_points["room_temp"].get_state().units == "C"
+    assert "humidity" in manager._all_points
+    assert manager._all_points["humidity"].get_state().units == "%"
 
 
 def test_handle_config_updates_state_etag(manager):
-    """Test that state_etag is captured from config."""
+    """Test that state_etag is NOT blindly captured from config."""
+    manager._state_etag = "original"
     config = Config(
         pointset=PointsetConfig(state_etag="abcdef123")
     )
     manager.handle_config(config)
 
-    assert manager._state_etag == "abcdef123"
+    assert manager._state_etag == "original"
 
 
 def test_update_state_populates_state_block(manager):
     """Test that update_state populates the state object correctly."""
     manager.add_point("temp")
-    manager._points["temp"].set_config(PointPointsetConfig(units="C"))
+    manager._all_points["temp"].set_config(PointPointsetConfig(units="C"))
     manager._state_etag = "etag_value"
-    manager._configured_points = {"temp"}
+    manager._active_points = {"temp"}
 
     state = State()
     manager.update_state(state)
 
     assert state.pointset is not None
     assert isinstance(state.pointset, PointsetState)
-    assert state.pointset.state_etag == "etag_value"
+    assert state.pointset.state_etag == manager._state_etag
     assert "temp" in state.pointset.points
     assert state.pointset.points["temp"].units == "C"
 
@@ -194,7 +195,7 @@ def test_publish_telemetry_sends_events(manager, mock_dispatcher):
 
     manager.set_point_value("temp", 22.0)
     manager.set_point_value("pressure", 1000)
-    manager._configured_points = {"temp", "pressure"}
+    manager._active_points = {"temp", "pressure"}
 
     manager.publish_telemetry()
 
@@ -218,7 +219,7 @@ def test_publish_telemetry_ignores_points_without_values(manager,
 
     manager.set_point_value("valid_point", 10)
     manager.add_point("empty_point")
-    manager._configured_points = {"valid_point", "empty_point"}
+    manager._active_points = {"valid_point", "empty_point"}
 
     manager.publish_telemetry()
 
@@ -294,7 +295,7 @@ def test_publish_telemetry_invokes_poll_callback(manager, mock_dispatcher):
         return {"polled_point": 123}
 
     manager.set_poll_callback(mock_poll)
-    manager._configured_points = {"polled_point"}
+    manager._active_points = {"polled_point"}
 
     manager.publish_telemetry()
 
@@ -316,7 +317,7 @@ def test_handle_config_writeback_returns_valuestate(manager):
     manager.set_writeback_handler(mock_handler)
 
     manager.add_point("setpoint")
-    manager._points["setpoint"]._writable = True
+    manager._all_points["setpoint"]._writable = True
 
     config = Config(
         pointset=PointsetConfig(
@@ -326,8 +327,8 @@ def test_handle_config_writeback_returns_valuestate(manager):
 
     manager.handle_config(config)
 
-    assert manager._points["setpoint"].get_data().present_value == 22.5
-    assert manager._points["setpoint"].value_state == ValueState.overridden
+    assert manager._all_points["setpoint"].get_data().present_value == 22.5
+    assert manager._all_points["setpoint"].value_state == ValueState.overridden
 
 
 def test_handle_config_writeback_returns_result(manager):
@@ -343,7 +344,7 @@ def test_handle_config_writeback_returns_result(manager):
     manager.set_writeback_handler(mock_handler)
 
     manager.add_point("setpoint")
-    manager._points["setpoint"]._writable = True
+    manager._all_points["setpoint"]._writable = True
 
     config = Config(
         pointset=PointsetConfig(
@@ -353,7 +354,7 @@ def test_handle_config_writeback_returns_result(manager):
 
     manager.handle_config(config)
 
-    point = manager._points["setpoint"]
+    point = manager._all_points["setpoint"]
     assert point.get_data().present_value == 22.5
     assert point.value_state == ValueState.invalid
     assert point.status == custom_entry
@@ -370,7 +371,7 @@ def test_handle_config_writeback_exception_sets_failure(manager):
     manager.set_writeback_handler(mock_handler)
 
     manager.add_point("setpoint")
-    manager._points["setpoint"]._writable = True
+    manager._all_points["setpoint"]._writable = True
 
     config = Config(
         pointset=PointsetConfig(
@@ -380,7 +381,7 @@ def test_handle_config_writeback_exception_sets_failure(manager):
 
     manager.handle_config(config)
 
-    point = manager._points["setpoint"]
+    point = manager._all_points["setpoint"]
     assert point.get_data().present_value == 22.5
     assert point.value_state == ValueState.failure
     assert point.status is not None

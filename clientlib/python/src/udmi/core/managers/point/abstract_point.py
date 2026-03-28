@@ -43,7 +43,7 @@ class AbstractPoint(abc.ABC):
         """
 
     @abc.abstractmethod
-    def set_config(self, config: PointPointsetConfig) -> None:
+    def set_config(self, config: PointPointsetConfig, **kwargs: 'Any') -> None:
         """
         Sets the state of the point.
         """

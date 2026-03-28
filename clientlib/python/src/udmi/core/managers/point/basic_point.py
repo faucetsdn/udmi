@@ -94,14 +94,26 @@ class BasicPoint(AbstractPoint):
             self._ref = model.ref
         self._dirty = True
 
-    def set_config(self, config: PointPointsetConfig) -> None:
+    def clear_writeback(self) -> None:
+        """Clears the writeback state and reverts to base state."""
+        self._written = False
+        self._state.value_state = None
+        self._state.status = None
+        self._expiry_time = None
+        self.update_data()
+        self._dirty = True
+
+    def set_config(self, config: PointPointsetConfig, **kwargs: 'Any') -> None:
         """
         Set the configuration for this point, nominally to indicate writing a value.
         """
         previous_value_state = self._state.value_state
         previous_status = copy.deepcopy(self._state.status)
 
-        self._update_state_config(config)
+        invalid_expiry = kwargs.get('invalid_expiry', False)
+        is_expired = kwargs.get('is_expired', False)
+
+        self._update_state_config(config, invalid_expiry, is_expired)
 
         state_changed = (self._state.value_state != previous_value_state)
         status_changed = (self._state.status != previous_status)
@@ -110,7 +122,9 @@ class BasicPoint(AbstractPoint):
             self._dirty = True
 
     def _update_state_config(self,
-        config: Optional[PointPointsetConfig]) -> None:
+        config: Optional[PointPointsetConfig],
+        invalid_expiry: bool = False,
+        is_expired: bool = False) -> None:
         """
         Update the state of this point based off of a new config.
         """
@@ -131,9 +145,19 @@ class BasicPoint(AbstractPoint):
 
         # 2. Check if set_value is present (Release/Null check)
         if config is None or config.set_value is None:
-            self._written = False
-            self._state.value_state = None
-            self.update_data()
+            self.clear_writeback()
+            return
+
+        if invalid_expiry:
+            self.clear_writeback()
+            self._state.status = self._create_entry(
+                Category.POINTSET_POINT_INVALID, "Invalid or missing set_value_expiry"
+            )
+            self._state.value_state = ValueState.invalid
+            return
+
+        if is_expired:
+            self.clear_writeback()
             return
 
         # 3. Validate Value
