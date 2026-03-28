@@ -14,4 +14,5 @@ from udmi.core.managers.discovery_manager import DiscoveryManager
 from udmi.core.managers.gateway_manager import GatewayManager
 from udmi.core.managers.localnet_manager import LocalnetManager
 from udmi.core.managers.pointset_manager import PointsetManager
+from udmi.core.managers.pointset_manager import WritebackResult
 from udmi.core.managers.system_manager import SystemManager
