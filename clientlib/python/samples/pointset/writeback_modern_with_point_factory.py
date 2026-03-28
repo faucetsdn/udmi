@@ -40,7 +40,6 @@ class ActuatingPoint(BasicPoint):
     """
     A custom Point that handles its own underlying hardware writebacks.
 
-    Role & Responsibilities:
     Replaces the legacy global callback by encapsulating the actuation 
     (hardware interaction) logic securely inside the point's set_value implementation.
     """

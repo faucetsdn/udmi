@@ -74,6 +74,8 @@ class PointsetManager(BaseManager):
       point updates inside its publish_telemetry method.
     """
     PERSISTENCE_KEY = "pointset_state"
+    PERSISTENCE_BUFFER_KEY = "pointset_telemetry_buffer"
+    MAX_OFFLINE_BUFFER_SIZE = 1000
 
     @property
     def model_field_name(self) -> str:
@@ -107,6 +109,8 @@ class PointsetManager(BaseManager):
         self._poll_callback: Optional[PollCallback] = None
         self._writeback_timers: Dict[str, threading.Timer] = {}
         self._bulk_provider: Optional[BulkPointProvider] = None
+
+        self._offline_buffer: list[dict] = []
 
         LOGGER.info("PointsetManager initialized.")
 
@@ -231,6 +235,7 @@ class PointsetManager(BaseManager):
         """
         LOGGER.info("Starting PointsetManager telemetry loop...")
         self._load_persisted_state()
+        self._load_persisted_buffer()
         self._telemetry_wake_event = self.start_periodic_task(
             interval_getter=lambda: self._sample_rate_sec,
             task=self.publish_telemetry,
@@ -502,6 +507,55 @@ class PointsetManager(BaseManager):
         except Exception as e:  # pylint: disable=broad-exception-caught
             LOGGER.error("Failed to persist pointset state: %s", e)
 
+    def _buffer_event(self, event: PointsetEvents) -> None:
+        """Appends the event to the offline buffer and persists it."""
+        self._offline_buffer.append(event.to_dict())
+
+        if len(self._offline_buffer) > self.MAX_OFFLINE_BUFFER_SIZE:
+            self._offline_buffer = self._offline_buffer[-self.MAX_OFFLINE_BUFFER_SIZE:]
+
+        self._persist_buffer()
+        LOGGER.info("Device offline. Buffered telemetry event. Buffer size: %s", len(self._offline_buffer))
+
+    def _flush_buffer(self) -> None:
+        """Publishes all buffered events and clears the buffer."""
+        if not self._offline_buffer:
+            return
+
+        try:
+            LOGGER.info("Connection resumed. Flushing %s buffered telemetry events...", len(self._offline_buffer))
+            for event_dict in self._offline_buffer:
+                event = PointsetEvents.from_dict(event_dict)
+                self.publish_event(event, "pointset")
+                time.sleep(0.01)
+
+            self._offline_buffer.clear()
+            self._persist_buffer()
+        except Exception as e:
+            LOGGER.error("Failed to flush telemetry buffer: %s", e)
+
+    def _persist_buffer(self) -> None:
+        """Saves the offline buffer to persistence."""
+        if not self._device or not self._device.persistence:
+            return
+        try:
+            self._device.persistence.set(self.PERSISTENCE_BUFFER_KEY, self._offline_buffer)
+        except Exception as e:
+            LOGGER.error("Failed to persist telemetry buffer: %s", e)
+
+    def _load_persisted_buffer(self) -> None:
+        """Loads the offline telemetry buffer from persistence."""
+        if not self._device or not self._device.persistence:
+            return
+        try:
+            saved_buffer = self._device.persistence.get(self.PERSISTENCE_BUFFER_KEY, [])
+            if isinstance(saved_buffer, list):
+                self._offline_buffer = saved_buffer
+                if self._offline_buffer:
+                    LOGGER.info("Restored offline telemetry buffer with %s events.", len(self._offline_buffer))
+        except Exception as e:
+            LOGGER.error("Failed to load telemetry buffer: %s", e)
+
     def publish_telemetry(self) -> None:
         """
         Generates and publishes a PointsetEvents message.
@@ -585,13 +639,18 @@ class PointsetManager(BaseManager):
                 points=points_map,
                 partial_update=True if is_partial else None
             )
-            self.publish_event(event, "pointset")
-            LOGGER.debug(
-                "Published telemetry for %s points (Partial: %s, Forced Full: %s).",
-                len(points_map),
-                is_partial,
-                force_full_update
-            )
+
+            if not self.is_connected:
+                self._buffer_event(event)
+            else:
+                self._flush_buffer()
+                self.publish_event(event, "pointset")
+                LOGGER.debug(
+                    "Published telemetry for %s points (Partial: %s, Forced Full: %s).",
+                    len(points_map),
+                    is_partial,
+                    force_full_update
+                )
 
             self._last_publish_time = now
             if force_full_update:

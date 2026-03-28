@@ -548,3 +548,76 @@ def test_handle_config_invalid_expiry_handling(manager):
 def test_handle_command_passthrough(manager):
     """Verifies that handle_command safely processes without failing."""
     manager.handle_command("some_command", {"payload": "data"})
+
+
+def test_offline_buffering(manager, mock_dispatcher):
+    """Verifies that telemetry is buffered when disconnected and flushed when connected."""
+    mock_device = MagicMock()
+    mock_persistence = MagicMock()
+    mock_device.persistence = mock_persistence
+    manager.set_device_context(device=mock_device, dispatcher=mock_dispatcher)
+
+    manager.add_point("temp")
+    manager.set_point_value("temp", 22.0)
+    manager._active_points = {"temp"}
+
+    # Simulate disconnected
+    mock_dispatcher.is_connected.return_value = False
+    manager.publish_telemetry()
+    
+    mock_dispatcher.publish_event.assert_not_called()
+    assert len(manager._offline_buffer) == 1
+    mock_persistence.set.assert_called_with(PointsetManager.PERSISTENCE_BUFFER_KEY, manager._offline_buffer)
+
+    # Change value and publish again
+    manager.set_point_value("temp", 25.0)
+    manager.publish_telemetry()
+
+    mock_dispatcher.publish_event.assert_not_called()
+    assert len(manager._offline_buffer) == 2
+
+    # Simulate connected
+    mock_dispatcher.is_connected.return_value = True
+    manager.set_point_value("temp", 27.0)
+    manager.publish_telemetry()
+
+    # Flush 2 items + publish the new 1
+    assert mock_dispatcher.publish_event.call_count == 3
+    assert len(manager._offline_buffer) == 0
+    mock_persistence.set.assert_called_with(PointsetManager.PERSISTENCE_BUFFER_KEY, [])
+
+def test_offline_buffer_capacity(manager, mock_dispatcher):
+    """Verifies that the offline buffer limits the number of queued events."""
+    mock_device = MagicMock()
+    mock_device.persistence = MagicMock()
+    manager.set_device_context(device=mock_device, dispatcher=mock_dispatcher)
+
+    manager.add_point("temp")
+    manager._active_points = {"temp"}
+    
+    # Simulate disconnected
+    mock_dispatcher.is_connected.return_value = False
+    
+    # Lower max size for test
+    original_max = manager.MAX_OFFLINE_BUFFER_SIZE
+    manager.MAX_OFFLINE_BUFFER_SIZE = 5
+
+    for i in range(10):
+        manager.set_point_value("temp", float(i))
+        manager.publish_telemetry()
+
+    assert len(manager._offline_buffer) == 5
+    
+    manager.MAX_OFFLINE_BUFFER_SIZE = original_max
+
+def test_load_persisted_buffer(manager, mock_dispatcher):
+    """Verifies that the offline buffer is loaded from persistence correctly."""
+    mock_device = MagicMock()
+    mock_device.persistence = MagicMock()
+    mock_device.persistence.get.return_value = [{"points": {"temp": {"present_value": 11.0}}}]
+    manager.set_device_context(device=mock_device, dispatcher=mock_dispatcher)
+
+    manager._load_persisted_buffer()
+
+    assert len(manager._offline_buffer) == 1
+    assert manager._offline_buffer[0]["points"]["temp"]["present_value"] == 11.0
