@@ -1,10 +1,12 @@
 """Basic point definition."""
 import abc
 import copy
+import threading
 import time
 from datetime import datetime
 from datetime import timezone
 from typing import Any
+from typing import Callable
 from typing import Optional
 
 from udmi.core.managers.point.abstract_point import AbstractPoint
@@ -141,8 +143,9 @@ class BasicPoint(AbstractPoint): # pylint: disable=too-many-instance-attributes
 
         invalid_expiry = kwargs.get('invalid_expiry', False)
         is_expired = kwargs.get('is_expired', False)
+        on_state_change = kwargs.get('on_state_change')
 
-        self._update_state_config(config, invalid_expiry, is_expired)
+        self._update_state_config(config, invalid_expiry, is_expired, on_state_change)
 
         state_changed = self._state.value_state != previous_value_state
         status_changed = self._state.status != previous_status
@@ -153,13 +156,15 @@ class BasicPoint(AbstractPoint): # pylint: disable=too-many-instance-attributes
     def _update_state_config(self,
         config: Optional[PointPointsetConfig],
         invalid_expiry: bool = False,
-        is_expired: bool = False) -> None:
+        is_expired: bool = False,
+        on_state_change: Optional[Callable] = None) -> None:
         # pylint: disable=too-many-return-statements
         """
         Update the state of this point based off of a new config.
         The core writeback state machine logic. Validates ref matching, expiry timestamps,
-        writeability, and delegates to the hardware validation logic before applying
-        the state (applied, invalid, or failure) and bubbling up Entries.
+        writeability, and delegates to the hardware validation logic. Executes hardware
+        actuation asynchronously, immediately transitioning into `updating` state, and
+        bubbles up Entries once `applied` or `failure` state is reached.
         """
         self._state.status = None
 
@@ -218,16 +223,25 @@ class BasicPoint(AbstractPoint): # pylint: disable=too-many-instance-attributes
             return
 
         # 5. Apply Value
-        try:
-            result = self.set_value(config.set_value)
-            self._data.present_value = result
-            self._state.value_state = ValueState.applied
-            self._written = True
-        except Exception as ex:  # pylint: disable=broad-exception-caught
-            self._state.status = self._create_entry(
-                Category.POINTSET_POINT_FAILURE, str(ex)
-            )
-            self._state.value_state = ValueState.failure
+        def execute_writeback(val: Any) -> None:
+            try:
+                result = self.set_value(val)
+                self._data.present_value = result
+                self.value_state = ValueState.applied
+                self._written = True
+            except Exception as ex:  # pylint: disable=broad-exception-caught
+                self.status = self._create_entry(
+                    Category.POINTSET_POINT_FAILURE, str(ex)
+                )
+                self.value_state = ValueState.failure
+            finally:
+                if on_state_change:
+                    on_state_change()
+
+        self._state.value_state = ValueState.updating
+        thread = threading.Thread(target=execute_writeback, args=(config.set_value,))
+        thread.daemon = True
+        thread.start()
 
     def _create_entry(self, category: Category, message: str) -> Entry:
         """Helper to create a status Entry object."""

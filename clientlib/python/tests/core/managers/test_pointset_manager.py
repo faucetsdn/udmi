@@ -466,8 +466,52 @@ def test_native_writeback_path_used_when_no_global_handler(manager):
     manager.handle_config(config)
     
     point = manager._all_points["setpoint"]
+    
+    # Wait for the native writeback thread to complete
+    timeout = 1.0
+    start_time = time.time()
+    while point.value_state != ValueState.applied and time.time() - start_time < timeout:
+        time.sleep(0.01)
+        
     assert point.get_data().present_value == 22.5
     assert point.value_state == ValueState.applied
+
+def test_native_writeback_asynchronous_execution(manager):
+    """Verifies that point writebacks utilize the updating state for long hardware actuations."""
+    manager.add_point("slow_setpoint")
+    point = manager._all_points["slow_setpoint"]
+    point._writable = True
+    
+    # Mock a long-running hardware actuation
+    original_set_value = point.set_value
+    def slow_set_value(val):
+        time.sleep(0.1)
+        return original_set_value(val)
+        
+    point.set_value = slow_set_value
+    
+    config = Config(
+        timestamp="2030-01-01T00:00:00Z",
+        pointset=PointsetConfig(
+            set_value_expiry="2030-01-01T01:00:00Z",
+            points={"slow_setpoint": PointPointsetConfig(set_value=42.0)}
+        )
+    )
+    
+    manager.handle_config(config)
+    
+    # State should immediately be 'updating' upon synchronous return
+    assert point.value_state == ValueState.updating
+    assert point.get_data().present_value != 42.0
+    
+    # Wait for completion
+    timeout = 1.0
+    start_time = time.time()
+    while point.value_state != ValueState.applied and time.time() - start_time < timeout:
+        time.sleep(0.01)
+        
+    assert point.value_state == ValueState.applied
+    assert point.get_data().present_value == 42.0
 
 def test_persistence_logic(manager, mock_dispatcher):
     """Verifies that _persist_state and _load_persisted_state interact with device persistence correctly."""

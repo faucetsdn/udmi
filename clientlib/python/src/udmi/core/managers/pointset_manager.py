@@ -331,7 +331,8 @@ class PointsetManager(BaseManager): # pylint: disable=too-many-instance-attribut
 
             try:
                 point.set_config(point_config, invalid_expiry=invalid_expiry,
-                                 is_expired=is_expired)
+                                 is_expired=is_expired,
+                                 on_state_change=self.trigger_state_update)
             except TypeError:
                 point.set_config(point_config)
 
@@ -377,7 +378,7 @@ class PointsetManager(BaseManager): # pylint: disable=too-many-instance-attribut
                         # to manage hardware actuation and determine the resulting value_state.
                         pass
 
-                if point.value_state == ValueState.applied and set_value_expiry:
+                if point.value_state in (ValueState.applied, ValueState.updating) and set_value_expiry:
                     delay = set_value_expiry - time.time()
                     if delay > 0:
                         if point_name in self._writeback_timers:
