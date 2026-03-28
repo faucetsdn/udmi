@@ -1,3 +1,4 @@
+"""Virtual point definition."""
 from typing import Any
 from typing import Optional
 
@@ -21,7 +22,9 @@ class Point(BasicPoint):
     def __init__(self, name: str, model: Optional[PointPointsetModel] = None):
         super().__init__(name, model)
         # Seed with baseline_value from model if present
-        self._present_value: Any = model.baseline_value if (model and model.baseline_value is not None) else None
+        self._present_value: Any = (
+            model.baseline_value if (model and model.baseline_value is not None) else None
+        )
 
     def get_value(self) -> Any:
         """
@@ -57,4 +60,3 @@ class Point(BasicPoint):
 
     def _populate_enumeration(self, point: RefDiscovery) -> None:
         """Concrete implementation doing nothing by default."""
-        pass

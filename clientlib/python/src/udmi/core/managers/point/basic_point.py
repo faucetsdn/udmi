@@ -1,5 +1,7 @@
+"""Basic point definition."""
 import abc
 import copy
+import time
 from datetime import datetime
 from datetime import timezone
 from typing import Any
@@ -17,7 +19,7 @@ from udmi.schema import RefDiscovery
 
 DEFAULT_HEARTBEAT_SEC = 600
 
-class BasicPoint(AbstractPoint):
+class BasicPoint(AbstractPoint): # pylint: disable=too-many-instance-attributes
     """
     Abstract representation of a basic data point.
 
@@ -72,19 +74,23 @@ class BasicPoint(AbstractPoint):
 
     @property
     def value_state(self):
+        """Gets value state."""
         return self._state.value_state
 
     @value_state.setter
     def value_state(self, value):
+        """Sets value state."""
         self._state.value_state = value
         self._dirty = True
 
     @property
     def status(self):
+        """Gets status."""
         return self._state.status
 
     @status.setter
     def status(self, value):
+        """Sets status."""
         self._state.status = value
         self._dirty = True
 
@@ -138,8 +144,8 @@ class BasicPoint(AbstractPoint):
 
         self._update_state_config(config, invalid_expiry, is_expired)
 
-        state_changed = (self._state.value_state != previous_value_state)
-        status_changed = (self._state.status != previous_status)
+        state_changed = self._state.value_state != previous_value_state
+        status_changed = self._state.status != previous_status
 
         if state_changed or status_changed:
             self._dirty = True
@@ -148,6 +154,7 @@ class BasicPoint(AbstractPoint):
         config: Optional[PointPointsetConfig],
         invalid_expiry: bool = False,
         is_expired: bool = False) -> None:
+        # pylint: disable=too-many-return-statements
         """
         Update the state of this point based off of a new config.
         The core writeback state machine logic. Validates ref matching, expiry timestamps,
@@ -195,7 +202,7 @@ class BasicPoint(AbstractPoint):
                 )
                 self._state.value_state = ValueState.invalid
                 return
-        except Exception as ex:
+        except Exception as ex:  # pylint: disable=broad-exception-caught
             self._state.status = self._create_entry(
                 Category.POINTSET_POINT_FAILURE, str(ex)
             )
@@ -216,7 +223,7 @@ class BasicPoint(AbstractPoint):
             self._data.present_value = result
             self._state.value_state = ValueState.applied
             self._written = True
-        except Exception as ex:
+        except Exception as ex:  # pylint: disable=broad-exception-caught
             self._state.status = self._create_entry(
                 Category.POINTSET_POINT_FAILURE, str(ex)
             )
@@ -285,7 +292,6 @@ class BasicPoint(AbstractPoint):
         if self._data.present_value is None:
             return False
 
-        import time
         now = time.time()
 
         if self._last_reported_value is None:
@@ -322,6 +328,5 @@ class BasicPoint(AbstractPoint):
         Updates the reporting state after a successful publish.
         Caches the last reported value and timestamp to reset COV and Heartbeat state machines.
         """
-        import time
         self._last_reported_value = self._data.present_value
         self._last_reported_time = time.time()

@@ -57,7 +57,7 @@ WritebackHandler = Callable[
 PollCallback = Callable[[], Dict[str, Any]]
 
 
-class PointsetManager(BaseManager):
+class PointsetManager(BaseManager): # pylint: disable=too-many-instance-attributes
     """
     Manages the 'pointset' block.
     Acts as the central orchestrator for device telemetry. It dynamically provisions points
@@ -67,7 +67,8 @@ class PointsetManager(BaseManager):
     - Point Lifecycle: Dynamically instantiates new points based on config and manages 
       their lifecycles (active vs inactive points).
     - Writeback Timers: Spawns threading.Timer instances per-point for the 'set_value_expiry'
-      directive. Transitions points back to base state and triggers State regeneration upon expiration.
+      directive. Transitions points back to base state and triggers State
+      regeneration upon expiration.
     - State Etag Tracking: Calculates and tracks a deterministic state_etag (SHA-256) of all 
       managed points to prevent stale writebacks and ensure UI synchronicity.
     - Polling Pipeline: Interleaves Pointset callbacks, BulkPointProvider reads, and individual 
@@ -254,6 +255,7 @@ class PointsetManager(BaseManager):
         LOGGER.info("PointsetManager stopped.")
 
     def handle_config(self, config: Config) -> None:
+        # pylint: disable=too-many-locals,too-many-branches,too-many-statements,too-many-nested-blocks
         """
         Handles 'pointset' block of config.
         The central pointset state-machine driver for config updates. It updates 
@@ -371,7 +373,7 @@ class PointsetManager(BaseManager):
                             point.value_state = ValueState.failure
                             point.status = Entry(message=str(e), level=500)
                     else:
-                        # Rely entirely on the point's native set_config/set_value 
+                        # Rely entirely on the point's native set_config/set_value
                         # to manage hardware actuation and determine the resulting value_state.
                         pass
 
@@ -408,7 +410,7 @@ class PointsetManager(BaseManager):
             self._last_set_values.pop(point_name, None)
             self.trigger_state_update()
             LOGGER.info("Writeback timer expired for point: %s", point_name)
-        except Exception as e:
+        except Exception as e:  # pylint: disable=broad-exception-caught
             LOGGER.error("Error expiring writeback for point %s: %s",
                          point_name, e)
 
@@ -515,7 +517,8 @@ class PointsetManager(BaseManager):
             self._offline_buffer = self._offline_buffer[-self.MAX_OFFLINE_BUFFER_SIZE:]
 
         self._persist_buffer()
-        LOGGER.info("Device offline. Buffered telemetry event. Buffer size: %s", len(self._offline_buffer))
+        LOGGER.info("Device offline. Buffered telemetry event. Buffer size: %s",
+                    len(self._offline_buffer))
 
     def _flush_buffer(self) -> None:
         """Publishes all buffered events and clears the buffer."""
@@ -523,7 +526,8 @@ class PointsetManager(BaseManager):
             return
 
         try:
-            LOGGER.info("Connection resumed. Flushing %s buffered telemetry events...", len(self._offline_buffer))
+            LOGGER.info("Connection resumed. Flushing %s buffered telemetry events...",
+                        len(self._offline_buffer))
             for event_dict in self._offline_buffer:
                 event = PointsetEvents.from_dict(event_dict)
                 self.publish_event(event, "pointset")
@@ -531,7 +535,7 @@ class PointsetManager(BaseManager):
 
             self._offline_buffer.clear()
             self._persist_buffer()
-        except Exception as e:
+        except Exception as e:  # pylint: disable=broad-exception-caught
             LOGGER.error("Failed to flush telemetry buffer: %s", e)
 
     def _persist_buffer(self) -> None:
@@ -540,7 +544,7 @@ class PointsetManager(BaseManager):
             return
         try:
             self._device.persistence.set(self.PERSISTENCE_BUFFER_KEY, self._offline_buffer)
-        except Exception as e:
+        except Exception as e:  # pylint: disable=broad-exception-caught
             LOGGER.error("Failed to persist telemetry buffer: %s", e)
 
     def _load_persisted_buffer(self) -> None:
@@ -552,11 +556,13 @@ class PointsetManager(BaseManager):
             if isinstance(saved_buffer, list):
                 self._offline_buffer = saved_buffer
                 if self._offline_buffer:
-                    LOGGER.info("Restored offline telemetry buffer with %s events.", len(self._offline_buffer))
-        except Exception as e:
+                    LOGGER.info("Restored offline telemetry buffer with %s events.",
+                                len(self._offline_buffer))
+        except Exception as e:  # pylint: disable=broad-exception-caught
             LOGGER.error("Failed to load telemetry buffer: %s", e)
 
     def publish_telemetry(self) -> None:
+        # pylint: disable=too-many-branches,too-many-statements
         """
         Generates and publishes a PointsetEvents message.
         Runs the periodic telemetry loop. It first updates points via Bulk Providers or Poll 
@@ -570,7 +576,9 @@ class PointsetManager(BaseManager):
 
         if self._poll_callback and self._bulk_provider:
             LOGGER.warning(
-                "Both _bulk_provider and _poll_callback are set, prioritizing _bulk_provider, but also executing _poll_callback")
+                "Both _bulk_provider and _poll_callback are set, "
+                "prioritizing _bulk_provider, but also executing _poll_callback"
+            )
 
         if self._poll_callback:
             try:
@@ -594,7 +602,7 @@ class PointsetManager(BaseManager):
                 else:
                     LOGGER.warning("BulkProvider returned non-dict type: %s",
                                    type(new_values))
-            except Exception as e:
+            except Exception as e:  # pylint: disable=broad-exception-caught
                 LOGGER.error("Error in BulkPointProvider.read_points(): %s", e)
 
         if not self._all_points:
@@ -655,5 +663,5 @@ class PointsetManager(BaseManager):
             self._last_publish_time = now
             if force_full_update:
                 self._last_full_publish_time = now
-        except Exception as e:
+        except Exception as e:  # pylint: disable=broad-exception-caught
             LOGGER.error("Failed to publish telemetry: %s", e)

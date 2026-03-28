@@ -4,7 +4,7 @@ Provides the BulkPointProvider interface.
 from abc import ABC, abstractmethod
 from typing import Any, Dict
 
-class BulkPointProvider(ABC):
+class BulkPointProvider(ABC): # pylint: disable=too-few-public-methods
     """
     Interface for providing bulk telemetry reads to the PointsetManager.
     This interface allows for batch reading of hardware points (e.g., Modbus, BACnet) at
@@ -22,4 +22,3 @@ class BulkPointProvider(ABC):
         Returns:
             Dict[str, Any]: A mapping of point names to their present values.
         """
-        pass

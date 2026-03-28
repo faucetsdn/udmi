@@ -1,3 +1,4 @@
+"""Abstract point definition."""
 import abc
 from typing import Any
 
@@ -28,13 +29,15 @@ class AbstractPoint(abc.ABC):
     @abc.abstractmethod
     def get_data(self) -> PointPointsetEvents:
         """
-        Provides the compiled telemetry data payload for this point to be included in PointsetEvents.
+        Provides the compiled telemetry data payload for this point to be included
+        in PointsetEvents.
         """
 
     @abc.abstractmethod
     def update_data(self) -> None:
         """
-        Instructs the point to perform any necessary IO or state checks to refresh its telemetry data.
+        Instructs the point to perform any necessary IO or state checks to refresh
+        its telemetry data.
         """
 
     @abc.abstractmethod
