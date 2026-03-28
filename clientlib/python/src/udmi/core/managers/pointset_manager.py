@@ -9,6 +9,8 @@ import json
 import logging
 import threading
 import time
+import warnings
+from dataclasses import dataclass
 from datetime import datetime
 from datetime import timezone
 from typing import Any
@@ -17,24 +19,20 @@ from typing import Dict
 from typing import Mapping
 from typing import Optional
 from typing import Union
-from dataclasses import dataclass
 
 from udmi.constants import UDMI_VERSION
 from udmi.core.managers.base_manager import BaseManager
+from udmi.core.managers.point.abstract_point import AbstractPoint
+from udmi.core.managers.point.bulk_provider import BulkPointProvider
+from udmi.core.managers.point.virtual_point import Point
 from udmi.schema import Config
 from udmi.schema import Entry
 from udmi.schema import Metadata
 from udmi.schema import PointPointsetConfig
-from udmi.schema import PointPointsetEvents
-from udmi.schema import PointPointsetModel
-from udmi.schema import PointPointsetState
 from udmi.schema import PointsetEvents
 from udmi.schema import PointsetState
 from udmi.schema import State
 from udmi.schema import ValueState
-
-from udmi.core.managers.point.abstract_point import AbstractPoint
-from udmi.core.managers.point.virtual_point import Point
 
 LOGGER = logging.getLogger(__name__)
 
@@ -62,8 +60,18 @@ PollCallback = Callable[[], Dict[str, Any]]
 class PointsetManager(BaseManager):
     """
     Manages the 'pointset' block.
-    Handles configuration of points, reporting of point states, and
-    periodic publishing of telemetry events based on global rate OR per-point COV.
+    Acts as the central orchestrator for device telemetry. It dynamically provisions points
+    from configuration, parses sample rates, oversees background telemetry generation loops,
+    and handles point writebacks (including validation, staleness, and expiry).
+
+    - Point Lifecycle: Dynamically instantiates new points based on config and manages 
+      their lifecycles (active vs inactive points).
+    - Writeback Timers: Spawns threading.Timer instances per-point for the 'set_value_expiry'
+      directive. Transitions points back to base state and triggers State regeneration upon expiration.
+    - State Etag Tracking: Calculates and tracks a deterministic state_etag (SHA-256) of all 
+      managed points to prevent stale writebacks and ensure UI synchronicity.
+    - Polling Pipeline: Interleaves Pointset callbacks, BulkPointProvider reads, and individual 
+      point updates inside its publish_telemetry method.
     """
     PERSISTENCE_KEY = "pointset_state"
 
@@ -98,6 +106,7 @@ class PointsetManager(BaseManager):
         self._telemetry_wake_event: Optional[threading.Event] = None
         self._poll_callback: Optional[PollCallback] = None
         self._writeback_timers: Dict[str, threading.Timer] = {}
+        self._bulk_provider: Optional[BulkPointProvider] = None
 
         LOGGER.info("PointsetManager initialized.")
 
@@ -118,9 +127,8 @@ class PointsetManager(BaseManager):
     def set_model(self, model: Metadata) -> None:
         """
         Applies the Pointset Metadata (Model) to the manager.
-
-        This iterates through the metadata model and initializes points
-        defined therein.
+        Iterates through the static metadata model during startup to initialize
+        points and apply static properties (like units).
 
         Args:
             model: The device metadata object.
@@ -144,6 +152,12 @@ class PointsetManager(BaseManager):
         Args:
             handler: A callable taking (point_name, value).
         """
+        message = (
+            "set_writeback_handler is deprecated and will be removed in v2.0.0. "
+            "Please subclass BasicPoint or AbstractPoint and use point_factory instead."
+        )
+        LOGGER.warning(message)
+        warnings.warn(message, DeprecationWarning, stacklevel=2)
         self._writeback_handler = handler
 
     def set_poll_callback(self, callback: PollCallback) -> None:
@@ -156,8 +170,24 @@ class PointsetManager(BaseManager):
         Args:
             callback: A callable returning a dict of {point_name: value}.
         """
+        message = (
+            "set_poll_callback is deprecated and will be removed in v2.0.0. "
+            "Please migrate to the BulkPointProvider interface."
+        )
+        LOGGER.warning(message)
+        warnings.warn(message, DeprecationWarning, stacklevel=2)
         self._poll_callback = callback
         LOGGER.info("Registered telemetry poll callback.")
+
+    def register_bulk_provider(self, provider: BulkPointProvider) -> None:
+        """
+        Registers a bulk provider that supplies hardware reads for points.
+
+        Args:
+            provider: An instance of BulkPointProvider.
+        """
+        self._bulk_provider = provider
+        LOGGER.info("Registered bulk telemetry provider.")
 
     def add_point(self, name: str) -> None:
         """
@@ -221,7 +251,10 @@ class PointsetManager(BaseManager):
     def handle_config(self, config: Config) -> None:
         """
         Handles 'pointset' block of config.
-        Updates sample rates and dynamic point configurations.
+        The central pointset state-machine driver for config updates. It updates 
+        global sample rates, provisions new points dynamically, handles writeback 
+        validations (etag checks, expiry evaluation), and synchronizes individual 
+        point states with cloud commands.
 
         Args:
             config: The full device configuration.
@@ -248,7 +281,8 @@ class PointsetManager(BaseManager):
         config_timestamp = None
         if config_timestamp_str:
             try:
-                config_timestamp = datetime.fromisoformat(config_timestamp_str.replace("Z", "+00:00")).timestamp()
+                config_timestamp = datetime.fromisoformat(
+                    config_timestamp_str.replace("Z", "+00:00")).timestamp()
             except ValueError:
                 pass
 
@@ -256,7 +290,8 @@ class PointsetManager(BaseManager):
         set_value_expiry = None
         if set_value_expiry_str:
             try:
-                set_value_expiry = datetime.fromisoformat(set_value_expiry_str.replace("Z", "+00:00")).timestamp()
+                set_value_expiry = datetime.fromisoformat(
+                    set_value_expiry_str.replace("Z", "+00:00")).timestamp()
             except ValueError:
                 pass
 
@@ -281,13 +316,15 @@ class PointsetManager(BaseManager):
             invalid_expiry = False
             is_expired = False
             if point_config and point_config.set_value is not None:
-                if set_value_expiry is None or (config_timestamp is not None and set_value_expiry <= config_timestamp):
+                if set_value_expiry is None or (
+                    config_timestamp is not None and set_value_expiry <= config_timestamp):
                     invalid_expiry = True
                 elif set_value_expiry < time.time():
                     is_expired = True
 
             try:
-                point.set_config(point_config, invalid_expiry=invalid_expiry, is_expired=is_expired)
+                point.set_config(point_config, invalid_expiry=invalid_expiry,
+                                 is_expired=is_expired)
             except TypeError:
                 point.set_config(point_config)
 
@@ -328,14 +365,21 @@ class PointsetManager(BaseManager):
                                 point_name, e)
                             point.value_state = ValueState.failure
                             point.status = Entry(message=str(e), level=500)
+                    else:
+                        # Rely entirely on the point's native set_config/set_value 
+                        # to manage hardware actuation and determine the resulting value_state.
+                        pass
 
                 if point.value_state == ValueState.applied and set_value_expiry:
                     delay = set_value_expiry - time.time()
                     if delay > 0:
                         if point_name in self._writeback_timers:
                             self._writeback_timers[point_name].cancel()
-                        
-                        timer = threading.Timer(delay, self._handle_writeback_expiration, args=[point_name])
+
+                        timer = threading.Timer(delay,
+                                                self._handle_writeback_expiration,
+                                                args=[point_name])
+                        timer.daemon = True
                         self._writeback_timers[point_name] = timer
                         timer.start()
 
@@ -360,7 +404,8 @@ class PointsetManager(BaseManager):
             self.trigger_state_update()
             LOGGER.info("Writeback timer expired for point: %s", point_name)
         except Exception as e:
-            LOGGER.error("Error expiring writeback for point %s: %s", point_name, e)
+            LOGGER.error("Error expiring writeback for point %s: %s",
+                         point_name, e)
 
     def handle_command(self, command_name: str, payload: dict) -> None:
         """
@@ -405,6 +450,8 @@ class PointsetManager(BaseManager):
     def update_state(self, state: State) -> None:
         """
         Populates state.pointset with status of all managed points.
+        Aggregates point-level states and compiles them into the device's main State.
+        Checks for dirty flags and recalculates the state_etag if changes occurred.
 
         Args:
             state: The state object to update.
@@ -457,13 +504,20 @@ class PointsetManager(BaseManager):
 
     def publish_telemetry(self) -> None:
         """
-        Generates and publishes a PointsetEvents message containing
-        only the points that are 'due' for reporting.
+        Generates and publishes a PointsetEvents message.
+        Runs the periodic telemetry loop. It first updates points via Bulk Providers or Poll 
+        Callbacks. Then, it evaluates every active point to see if it should_report() 
+        based on COV or heartbeats, and crafts the final payload (including partial updates).
         """
         now = time.time()
         if self._sample_limit_sec is not None:
             if (now - self._last_publish_time) < self._sample_limit_sec:
                 return
+
+        if self._poll_callback and self._bulk_provider:
+            LOGGER.warning(
+                "Both _bulk_provider and _poll_callback are set, prioritizing _bulk_provider, but also executing _poll_callback")
+
         if self._poll_callback:
             try:
                 new_values = self._poll_callback()
@@ -477,6 +531,18 @@ class PointsetManager(BaseManager):
                 LOGGER.error("Error in telemetry poll callback: %s", e,
                              exc_info=True)
 
+        if self._bulk_provider:
+            try:
+                new_values = self._bulk_provider.read_points()
+                if isinstance(new_values, dict):
+                    for point_name, value in new_values.items():
+                        self.set_point_value(point_name, value)
+                else:
+                    LOGGER.warning("BulkProvider returned non-dict type: %s",
+                                   type(new_values))
+            except Exception as e:
+                LOGGER.error("Error in BulkPointProvider.read_points(): %s", e)
+
         if not self._all_points:
             return
 
@@ -487,7 +553,7 @@ class PointsetManager(BaseManager):
         ]
 
         force_full_update = (
-                                now - self._last_full_publish_time) >= self._sample_rate_sec
+            (now - self._last_full_publish_time) >= self._sample_rate_sec)
 
         for name in valid_active_points:
             point = self._all_points[name]

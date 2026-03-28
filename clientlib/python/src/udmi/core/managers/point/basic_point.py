@@ -20,6 +20,17 @@ DEFAULT_HEARTBEAT_SEC = 600
 class BasicPoint(AbstractPoint):
     """
     Abstract representation of a basic data point.
+
+    Provides the foundational boilerplate logic for a point, including state management,
+    dirty flag handling, validation, and Change of Value (COV) calculations. Developers
+    subclass this to implement hardware-specific get_value and set_value mechanics.
+
+    State Machine Details:
+    - Writable values move through states: None -> applied, invalid, or failure based on config.
+    - Dirty State: The _dirty flag is set when config, value_state, or status changes,
+      triggering the PointsetManager to regenerate the global device state and state_etag.
+    - Reporting State: Tracks _last_reported_value and _last_reported_time to accurately
+      execute COV and periodic heartbeat reporting logic.
     """
 
     def __init__(self, name: str, model: Optional[PointPointsetModel] = None):
@@ -80,12 +91,18 @@ class BasicPoint(AbstractPoint):
     def update_data(self) -> None:
         """
         Updates the telemetry data from the implementation source.
+        Calls the abstract get_value method to refresh the point's data payload,
+        unless a writeback is currently active (in which case it retains the written value).
         """
         if not self._written:
             self._data.present_value = self.get_value()
 
     def set_model(self, model: PointPointsetModel) -> None:
-        """Applies static definition from Metadata."""
+        """
+        Applies static definition from Metadata.
+        Initializes point properties (like units or ref overrides) during device startup
+        and flags the point as dirty so the State is regenerated.
+        """
         if not model:
             return
         if model.units:
@@ -95,7 +112,11 @@ class BasicPoint(AbstractPoint):
         self._dirty = True
 
     def clear_writeback(self) -> None:
-        """Clears the writeback state and reverts to base state."""
+        """
+        Clears the writeback state and reverts to base state.
+        Handles the expiration of a set_value_expiry timer by wiping the overriden value
+        state and forcing an immediate re-read from the underlying hardware.
+        """
         self._written = False
         self._state.value_state = None
         self._state.status = None
@@ -106,6 +127,8 @@ class BasicPoint(AbstractPoint):
     def set_config(self, config: PointPointsetConfig, **kwargs: 'Any') -> None:
         """
         Set the configuration for this point, nominally to indicate writing a value.
+        Entrypoint for the PointsetManager to push config updates or writebacks down to the point.
+        Checks if the payload changed and manages the _dirty flag.
         """
         previous_value_state = self._state.value_state
         previous_status = copy.deepcopy(self._state.status)
@@ -127,6 +150,9 @@ class BasicPoint(AbstractPoint):
         is_expired: bool = False) -> None:
         """
         Update the state of this point based off of a new config.
+        The core writeback state machine logic. Validates ref matching, expiry timestamps,
+        writeability, and delegates to the hardware validation logic before applying
+        the state (applied, invalid, or failure) and bubbling up Entries.
         """
         self._state.status = None
 
@@ -208,27 +234,35 @@ class BasicPoint(AbstractPoint):
 
     @abc.abstractmethod
     def get_value(self) -> Any:
-        """Return the current reading from the source."""
-        pass
+        """
+        Return the current reading from the source.
+        Abstract method where subclasses implement their read operations (IO, GPIO, Modbus, etc).
+        """
 
     @abc.abstractmethod
     def set_value(self, value: Any) -> Any:
-        """Write the value to the source and return the applied value."""
-        pass
+        """
+        Write the value to the source and return the applied value.
+        Abstract method where subclasses implement their hardware actuation logic.
+        Should return the value that was actually confirmed by the hardware.
+        """
 
     @abc.abstractmethod
     def validate_value(self, value: Any) -> bool:
-        """Check if the value is valid for this point."""
-        pass
+        """
+        Check if the value is valid for this point.
+        Abstract hook for subclasses to reject writebacks (e.g., bounds checking) before
+        an attempt to write to hardware is made.
+        """
 
     @abc.abstractmethod
     def _populate_enumeration(self, point: RefDiscovery) -> None:
         """Hook for subclasses to populate extra enumeration fields."""
-        pass
 
     def enumerate(self) -> RefDiscovery:
         """
         Returns discovery information for this point.
+        Aggregates subclass-specific data with base properties to compile the Discovery payload.
         """
         point = RefDiscovery()
         point.description = f"{self.__class__.__name__} {self.get_name()}"
@@ -244,6 +278,9 @@ class BasicPoint(AbstractPoint):
         """
         Determines if this point needs to be reported based on Change of Value (COV)
         and Heartbeat logic.
+        Compares the current present_value against the _last_reported_value to invoke COV
+        reporting, otherwise falls back to evaluating the _last_reported_time against the 
+        heartbeat interval.
         """
         if self._data.present_value is None:
             return False
@@ -283,6 +320,7 @@ class BasicPoint(AbstractPoint):
     def mark_reported(self) -> None:
         """
         Updates the reporting state after a successful publish.
+        Caches the last reported value and timestamp to reset COV and Heartbeat state machines.
         """
         import time
         self._last_reported_value = self._data.present_value

@@ -40,6 +40,9 @@ LOGGER = logging.getLogger("CustomPointSample")
 class SineWavePoint(BasicPoint):
     """
     A custom Point that generates a sine wave reading natively.
+    Demonstrates encapsulation of data acquisition at the individual point level. 
+    By overriding `get_value()`, the point itself becomes responsible for its own 
+    state calculation without relying on external loops or global callbacks.
     """
     def __init__(self, name: str, model: Optional[PointPointsetModel] = None):
         super().__init__(name, model)
@@ -49,7 +52,7 @@ class SineWavePoint(BasicPoint):
     def get_value(self) -> Any:
         # Simulate a sine wave over time
         elapsed = time.time() - self._start_time
-        val = 20.0 + 5.0 * math.sin(elapsed / 10.0)  # Period: ~62.8s, Range: 15-25
+        val = 20.0 + 5.0 * math.sin(elapsed / 10.0)
         return round(val, 2)
 
     def set_value(self, value: Any) -> Any:
@@ -63,6 +66,9 @@ class SineWavePoint(BasicPoint):
 def sine_wave_factory(name: str, model: Optional[PointPointsetModel] = None):
     """
     Factory creating SineWavePoint for all points.
+    Acts as the Dependency Injection provider for the PointsetManager. When the 
+    manager receives a configuration to manage a new point, it uses this factory 
+    to instantiate the custom user-defined Point class instead of the default.
     """
     return SineWavePoint(name, model)
 

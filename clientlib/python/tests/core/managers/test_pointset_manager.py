@@ -7,6 +7,7 @@ This module tests the `PointsetManager` and its helper `Point` class in isolatio
 from unittest.mock import MagicMock
 from unittest.mock import patch
 import time
+import warnings
 
 import pytest
 from udmi.schema import Config
@@ -22,6 +23,7 @@ from udmi.core.managers.point.virtual_point import Point
 from src.udmi.core.managers.pointset_manager import PointsetManager
 from src.udmi.core.managers.pointset_manager import WritebackResult
 from src.udmi.core.messaging import AbstractMessageDispatcher
+from udmi.core.managers.point.bulk_provider import BulkPointProvider
 
 
 # pylint: disable=redefined-outer-name,protected-access
@@ -213,7 +215,8 @@ def test_publish_telemetry_sends_events(manager, mock_dispatcher):
 def test_publish_telemetry_ignores_points_without_values(manager,
     mock_dispatcher):
     """
-    Test that points with no value (None) are excluded from the event.
+    Test that points with no value (None) are excluded from the event 
+    when not doing a full update (force_full_update=False).
     """
     manager.set_device_context(device=None, dispatcher=mock_dispatcher)
 
@@ -221,6 +224,8 @@ def test_publish_telemetry_ignores_points_without_values(manager,
     manager.add_point("empty_point")
     manager._active_points = {"valid_point", "empty_point"}
 
+    import time
+    manager._last_full_publish_time = time.time()
     manager.publish_telemetry()
 
     call_args = mock_dispatcher.publish_event.call_args
@@ -272,7 +277,9 @@ def test_handle_config_triggers_writeback_handler(manager):
     manager.set_writeback_handler(mock_handler)
 
     config = Config(
+        timestamp="2030-01-01T00:00:00Z",
         pointset=PointsetConfig(
+            set_value_expiry="2030-01-01T01:00:00Z",
             points={
                 "setpoint": PointPointsetConfig(set_value=22.5)
             }
@@ -320,7 +327,9 @@ def test_handle_config_writeback_returns_valuestate(manager):
     manager._all_points["setpoint"]._writable = True
 
     config = Config(
+        timestamp="2030-01-01T00:00:00Z",
         pointset=PointsetConfig(
+            set_value_expiry="2030-01-01T01:00:00Z",
             points={"setpoint": PointPointsetConfig(set_value=22.5)}
         )
     )
@@ -347,7 +356,9 @@ def test_handle_config_writeback_returns_result(manager):
     manager._all_points["setpoint"]._writable = True
 
     config = Config(
+        timestamp="2030-01-01T00:00:00Z",
         pointset=PointsetConfig(
+            set_value_expiry="2030-01-01T01:00:00Z",
             points={"setpoint": PointPointsetConfig(set_value=22.5)}
         )
     )
@@ -374,7 +385,9 @@ def test_handle_config_writeback_exception_sets_failure(manager):
     manager._all_points["setpoint"]._writable = True
 
     config = Config(
+        timestamp="2030-01-01T00:00:00Z",
         pointset=PointsetConfig(
+            set_value_expiry="2030-01-01T01:00:00Z",
             points={"setpoint": PointPointsetConfig(set_value=22.5)}
         )
     )
@@ -387,3 +400,151 @@ def test_handle_config_writeback_exception_sets_failure(manager):
     assert point.status is not None
     assert point.status.level == 500
     assert "Hardware communication failed" in point.status.message
+
+
+def test_set_writeback_handler_emits_deprecation_warning(manager):
+    """Verifies that calling set_writeback_handler triggers a DeprecationWarning."""
+    with warnings.catch_warnings(record=True) as w:
+        warnings.simplefilter("always")
+        manager.set_writeback_handler(lambda n, v: None)
+        assert len(w) == 1
+        assert issubclass(w[-1].category, DeprecationWarning)
+        assert "set_writeback_handler is deprecated" in str(w[-1].message)
+
+
+def test_set_poll_callback_emits_deprecation_warning(manager):
+    """Verifies that calling set_poll_callback triggers a DeprecationWarning."""
+    with warnings.catch_warnings(record=True) as w:
+        warnings.simplefilter("always")
+        manager.set_poll_callback(lambda: {})
+        assert len(w) == 1
+        assert issubclass(w[-1].category, DeprecationWarning)
+        assert "set_poll_callback is deprecated" in str(w[-1].message)
+
+
+class MockBulkProvider(BulkPointProvider):
+    def read_points(self):
+        return {"temp": 22.0}
+
+
+def test_bulk_provider_updates_points(manager, mock_dispatcher):
+    """Verifies that an initialized bulk provider populates values before publishing."""
+    manager.set_device_context(device=None, dispatcher=mock_dispatcher)
+    
+    provider = MockBulkProvider()
+    manager.register_bulk_provider(provider)
+    
+    manager.add_point("temp")
+    manager._active_points = {"temp"}
+
+    # No point value set originally
+    manager.publish_telemetry()
+    
+    # Assert dispatcher published with the value from the provider
+    call_args = mock_dispatcher.publish_event.call_args
+    payload = call_args[0][1]
+    
+    assert "temp" in payload.points
+    assert payload.points["temp"].present_value == 22.0
+
+
+def test_native_writeback_path_used_when_no_global_handler(manager):
+    """Verifies point internally processes set_value when no global handler exists."""
+    assert manager._writeback_handler is None
+    
+    manager.add_point("setpoint")
+    manager._all_points["setpoint"]._writable = True
+    
+    config = Config(
+        timestamp="2030-01-01T00:00:00Z",
+        pointset=PointsetConfig(
+            set_value_expiry="2030-01-01T01:00:00Z",
+            points={"setpoint": PointPointsetConfig(set_value=22.5)}
+        )
+    )
+    
+    manager.handle_config(config)
+    
+    point = manager._all_points["setpoint"]
+    assert point.get_data().present_value == 22.5
+    assert point.value_state == ValueState.applied
+
+def test_persistence_logic(manager, mock_dispatcher):
+    """Verifies that _persist_state and _load_persisted_state interact with device persistence correctly."""
+    mock_device = MagicMock()
+    mock_persistence = MagicMock()
+    mock_device.persistence = mock_persistence
+    manager.set_device_context(device=mock_device, dispatcher=mock_dispatcher)
+
+    manager.add_point("persisted_point")
+    manager.set_point_value("persisted_point", 55.5)
+    manager._all_points["persisted_point"].update_data()
+
+    manager._persist_state()
+    mock_persistence.set.assert_called_once()
+    
+    saved_data = mock_persistence.set.call_args[0][1]
+    assert "persisted_point" in saved_data
+    assert saved_data["persisted_point"]["present_value"] == 55.5
+
+    mock_persistence.get.return_value = {"persisted_point": {"present_value": 77.7}}
+    manager._load_persisted_state()
+    
+    manager._all_points["persisted_point"].update_data()
+    assert manager._all_points["persisted_point"].get_data().present_value == 77.7
+
+def test_handle_writeback_expiration(manager):
+    """Verifies that writeback expiration clears the state."""
+    manager.add_point("expiring_point")
+    point = manager._all_points["expiring_point"]
+    
+    point._written = True
+    point.value_state = ValueState.applied
+    manager._last_set_values["expiring_point"] = 100
+    manager._writeback_timers["expiring_point"] = MagicMock()
+    
+    manager._handle_writeback_expiration("expiring_point")
+    
+    assert point.value_state is None
+    assert "expiring_point" not in manager._last_set_values
+    assert "expiring_point" not in manager._writeback_timers
+
+def test_generate_state_etag(manager):
+    """Verifies state_etag generation is deterministic."""
+    dict1 = {"pointA": {"value_state": "applied"}, "pointB": {"value_state": "invalid"}}
+    dict2 = {"pointB": {"value_state": "invalid"}, "pointA": {"value_state": "applied"}}
+    
+    etag1 = manager._generate_state_etag(dict1)
+    etag2 = manager._generate_state_etag(dict2)
+    
+    assert etag1 == etag2
+    assert len(etag1) == 32
+
+def test_publish_telemetry_catches_point_exceptions(manager, mock_dispatcher):
+    """Verifies telemetry loop handles individual point failures gracefully."""
+    manager.set_device_context(device=None, dispatcher=mock_dispatcher)
+    manager.add_point("robust_point")
+    manager._active_points = {"robust_point"}
+    
+    point = manager._all_points["robust_point"]
+    point.update_data = MagicMock(side_effect=Exception("Test Error"))
+    
+    manager.publish_telemetry()
+
+def test_handle_config_invalid_expiry_handling(manager):
+    """Verifies that an invalid set_value_expiry transitions point to invalid."""
+    manager.add_point("setpoint")
+    manager._all_points["setpoint"]._writable = True
+    config = Config(
+        timestamp="2030-01-01T00:00:00Z",
+        pointset=PointsetConfig(
+            set_value_expiry="2020-01-01T00:00:00Z",
+            points={"setpoint": PointPointsetConfig(set_value=123)}
+        )
+    )
+    manager.handle_config(config)
+    assert manager._all_points["setpoint"].value_state == ValueState.invalid
+
+def test_handle_command_passthrough(manager):
+    """Verifies that handle_command safely processes without failing."""
+    manager.handle_command("some_command", {"payload": "data"})
