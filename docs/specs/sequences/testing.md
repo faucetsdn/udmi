@@ -43,10 +43,7 @@ This will append your new test to the documentation.
 
 This golden file contains the expected outputs for all tests. You must manually add your test's expected output or regenerate it by running the sequencer locally and verifying the output.
 
-When manually adding an entry to `etc/sequencer.out`, **ensure the contents are sorted correctly** so they match the generated `out/sequencer.out` during testing. Use the following command to sort the file:
-```bash
-LC_ALL=C sort -k 3,4 -o etc/sequencer.out etc/sequencer.out
-```
+When manually adding an entry to `etc/sequencer.out`, **ensure the contents are placed in the correct location** so they match the generated `out/sequencer.out` during testing. The order must exactly match the output of the tests (note: a simple `sort` command may not correctly place entries like `system.mode`).
 
 Example of a test entry:
 ```text
