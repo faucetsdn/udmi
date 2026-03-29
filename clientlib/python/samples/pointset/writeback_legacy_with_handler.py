@@ -49,6 +49,9 @@ LOGGER = logging.getLogger("WritebackSample")
 def on_writeback(point_name: str, value: Any):
     """
     Callback triggered when the Cloud sends a 'set_value' in the configuration.
+    Acts as the single global actuator function (Legacy approach). It is responsible 
+    for parsing the writeback command, commanding the physical hardware, simulating 
+    feedback, and returning the resulting ValueState or an explicit WritebackResult.
 
     This callback can return:
       - None / ValueState.applied -> Mark update as success (applied)
@@ -105,9 +108,11 @@ if __name__ == "__main__":
         pointset_manager = device.get_manager(PointsetManager)
 
         # ---------------------------------------------------------------------
-        # CRITICAL STEP: Register the Writeback Handler
-        # Without this, the library updates its internal state to match the config,
-        # but your physical device remains unchanged.
+        # DEPRECATED: Register the global Writeback Handler
+        # ---------------------------------------------------------------------
+        # This is the legacy approach for point actuation. It is recommended to
+        # use the point_factory pattern and subclass AbstractPoint instead.
+        # See custom_point_factory.py for the modern approach.
         # ---------------------------------------------------------------------
         pointset_manager.set_writeback_handler(on_writeback)
         LOGGER.info("Writeback handler registered.")

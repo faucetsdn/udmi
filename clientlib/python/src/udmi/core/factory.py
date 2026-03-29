@@ -60,13 +60,15 @@ def get_default_managers(**kwargs) -> List[BaseManager]:
         **kwargs:
             system_state (SystemState): Initial system state for SystemManager.
             sample_rate_sec (int): Sample rate for PointsetManager.
+            point_factory (Callable): Custom point factory for PointsetManager.
     """
     system_state = kwargs.get('system_state')
     sample_rate_sec = kwargs.get('sample_rate_sec', DEFAULT_SAMPLE_RATE_SEC)
+    point_factory = kwargs.get('point_factory')
 
     return [
         SystemManager(system_state=system_state),
-        PointsetManager(sample_rate_sec=sample_rate_sec),
+        PointsetManager(sample_rate_sec=sample_rate_sec, point_factory=point_factory),
         LocalnetManager(),
         GatewayManager(),
         DiscoveryManager()
