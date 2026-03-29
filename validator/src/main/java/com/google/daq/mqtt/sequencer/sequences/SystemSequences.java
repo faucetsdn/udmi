@@ -83,6 +83,14 @@ public class SystemSequences extends SequenceBase {
         () -> numStateUpdates <= STATE_LIMIT_THRESHOLD);
     // TODO: Check that the state timestamp is close to current time.
   }
+
+  @Test(timeout = TWO_MINUTES_MS)
+  @Feature(stage = STABLE, bucket = SYSTEM)
+  @Summary("Trivial test to check testing infrastructure")
+  public void trivial_test() {
+    checkThat("this is a trivial test", () -> true);
+  }
+
 }
 
 

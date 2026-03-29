@@ -8,7 +8,7 @@ set -eu
 set -o pipefail
 
 # Force consistent sort order and other processing things
-export LC_ALL=en_US.UTF-8
+export LC_ALL=C
 
 function search {
     egrep -q "$1" $2 || fail Could not find in $2: $1

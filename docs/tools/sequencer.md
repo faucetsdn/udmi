@@ -9,6 +9,10 @@ validates that the composition of sequential messages is compliant with the UDMI
 
 A [guide is given for using sequencer for complete device testing.](../guides/device_testing.md)
 
+# Adding Sequencer Tests
+
+A [guide for adding tests and ensuring they pass Continuous Integration (CI).](../specs/sequences/HOW_TO_TEST.md)
+
 # Sequencer Setup
 
 1.  Ensure you have a suitable MQTT broker setup.
