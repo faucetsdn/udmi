@@ -52,7 +52,7 @@ pyasn1==0.6.3
 pyasn1-modules==0.2.8
 pycparser==2.22
 Pygments==2.18.0
-PyJWT==2.9.0
+PyJWT==2.12.0
 pylint==4.0.5
 pyparsing==3.0.7
 pytest==8.3.2
