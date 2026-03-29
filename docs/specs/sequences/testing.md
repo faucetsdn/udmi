@@ -28,10 +28,15 @@ Just adding the test is not sufficient. You need to update the expected outputs 
 
 ### A. Update `docs/specs/sequences/generated.md`
 
-This file documents all the tests. To update it, run:
+This file documents all the tests. You must first generate sequence output logs by running the test:
+```bash
+bin/test_sequencer full $TARGET_PROJECT
+```
+To update the generated markdown, run:
 ```bash
 bin/gencode_seq
 ```
+*Note: regenerating the document locally can be tricky because it requires logs for all sequences to be generated. You can also manually insert the changes or rely on GitHub PR test results.*
 This will append your new test to the documentation.
 
 ### B. Update `etc/sequencer.out`
