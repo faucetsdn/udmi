@@ -155,5 +155,5 @@ def test_nmap():
     # verify that nmap discovery completed
     #1 because 0 is the publish marker
     assert len(messages) >= 2, "Discovery message not received"
-    assert messages[1].refs["1256"]["adjunct"]["product"] == "Postfix smtpd"
+    assert messages[1].refs["22"]["adjunct"]["product"] == "OpenSSH"
 

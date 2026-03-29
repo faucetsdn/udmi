@@ -1,6 +1,6 @@
 BAC0==23.7.3
 bacpypes==0.18.7
-cffi==1.16.0
+cffi==2.0.0
 colorama==0.4.6
 cryptography==46.0.5
 et-xmlfile==1.1.0
