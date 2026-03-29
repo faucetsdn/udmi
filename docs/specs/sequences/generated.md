@@ -68,6 +68,7 @@ Some caveats:
 * [state_software](#state_software-stable): Check that a device publishes correct software information in state messages
 * [system_last_update](#system_last_update-stable): Check that last_update state is correctly set in response to a config update.
 * [system_mode_restart](#system_mode_restart-preview): Restart and connect to same endpoint and expect it returns.
+* [trivial_test](#trivial_test-stable)
 * [valid_serial_no](#valid_serial_no-stable)
 
 ## bad_point_ref (PREVIEW)
@@ -661,6 +662,9 @@ Restart and connect to same endpoint and expect it returns.
 1. Wait for last_start is newer than previous last_start
 
 Test passed.
+## trivial_test (STABLE)
+
+1. Trivial test to check testing infrastructure
 
 ## valid_serial_no (STABLE)
 
