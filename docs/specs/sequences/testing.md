@@ -28,20 +28,22 @@ Just adding the test is not sufficient. You need to update the expected outputs 
 
 ### A. Update `docs/specs/sequences/generated.md`
 
-This file documents all the tests. To update it, run:
+This file documents all the tests. You must first generate sequence output logs by running the test:
+```bash
+bin/test_sequencer full $TARGET_PROJECT
+```
+To update the generated markdown, run:
 ```bash
 bin/gencode_seq
 ```
+*Note: regenerating the document locally can be tricky because it requires logs for all sequences to be generated. You can also manually insert the changes or rely on GitHub PR test results.*
 This will append your new test to the documentation.
 
 ### B. Update `etc/sequencer.out`
 
 This golden file contains the expected outputs for all tests. You must manually add your test's expected output or regenerate it by running the sequencer locally and verifying the output.
 
-When manually adding an entry to `etc/sequencer.out`, **ensure the contents are sorted correctly** so they match the generated `out/sequencer.out` during testing. Use the following command to sort the file:
-```bash
-LC_ALL=C sort -k 3,4 -o etc/sequencer.out etc/sequencer.out
-```
+When manually adding an entry to `etc/sequencer.out`, **ensure the contents are placed in the correct location** so they match the generated `out/sequencer.out` during testing. The order must exactly match the output of the tests (note: a simple `sort` command may not correctly place entries like `system.mode`).
 
 Example of a test entry:
 ```text

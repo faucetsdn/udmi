@@ -70,6 +70,13 @@ public class SystemSequences extends SequenceBase {
         () -> actualSoftware.entrySet().equals(expectedSoftware.entrySet()));
   }
 
+  @Test(timeout = TWO_MINUTES_MS)
+  @Feature(stage = ALPHA, bucket = SYSTEM)
+  @Summary("Trivial test to check testing infrastructure")
+  public void trivial_test() {
+    checkThat("this is a trivial test", () -> true);
+  }
+
   @Test(timeout = THREE_MINUTES_MS)
   @Feature(stage = ALPHA, bucket = SYSTEM)
   @Summary("Check that state messages aren't spuriously reported too frequently")
