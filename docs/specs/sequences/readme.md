@@ -14,3 +14,7 @@ More explanatory detail for some of the key functional specifications:
 - [Discovery](discovery.md): Flow for on-prem network and point discovery.
 - [Endpoint Reconfiguration](endpoint_reconfiguration.md): Ability to reconfigure endpoint (e.g. MQTT) from the cloud
 - [Writeback](writeback.md): Ability to control on-prem resources from the cloud.
+
+## Test Development
+
+- [How To Add Tests](HOW_TO_TEST.md): A guide on creating a new sequencer test and correctly updating the golden files so that it passes CI checking.
