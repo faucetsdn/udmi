@@ -1,73 +1,73 @@
 1 device_config_acked
-0 pointset_request_extraneous
-0 pointset_remove_point
-0 pointset_remove_point
-0 too_much_state
-0 enumerate_features
-0 valid_serial_no RESULT pass schemas device_state_stable STABLE 10/10 Schema validation passed
--1 valid_serial_no RESULT pass schemas events_system_stable STABLE 10/10 Schema validation passed
+1 pointset_request_extraneous
+1 pointset_remove_point
+1 pointset_remove_point
+1 too_much_state
+1 enumerate_features
+1 valid_serial_no RESULT pass schemas device_state_stable STABLE 10/10 Schema validation passed
+0 valid_serial_no RESULT pass schemas events_system_stable STABLE 10/10 Schema validation passed
 0 valid_serial_no RESULT pass schemas state_update_stable STABLE 10/10 Schema validation passed
 1 valid_serial_no RESULT pass schemas device_state_stable STABLE 10/10 Schema validation passed
--1 valid_serial_no RESULT pass schemas state_update_stable STABLE 10/10 Schema validation passed
+0 valid_serial_no RESULT pass schemas state_update_stable STABLE 10/10 Schema validation passed
 1 valid_serial_no RESULT pass schemas device_state_stable STABLE 10/10 Schema validation passed
--1 valid_serial_no RESULT pass schemas events_system_stable STABLE 10/10 Schema validation passed
+0 valid_serial_no RESULT pass schemas events_system_stable STABLE 10/10 Schema validation passed
 0 valid_serial_no RESULT pass schemas state_update_stable STABLE 10/10 Schema validation passed
 1 writeback_success
-0 writeback_success
-0 writeback_success
-0 writeback_operation
-0 writeback_operation
-0 pointset_publish_interval
-0 system_min_loglevel
-0 system_mode_restart
-0 pointset_publish
-0 broken_config RESULT fail schemas device_state_stable STABLE 10/10 Schema violations found
--1 broken_config RESULT pass schemas events_system_stable STABLE 10/10 Schema validation passed
+1 writeback_success
+1 writeback_success
+1 writeback_operation
+1 writeback_operation
+1 pointset_publish_interval
+1 system_min_loglevel
+1 system_mode_restart
+1 pointset_publish
+1 broken_config RESULT fail schemas device_state_stable STABLE 10/10 Schema violations found
+0 broken_config RESULT pass schemas events_system_stable STABLE 10/10 Schema validation passed
 0 broken_config RESULT pass schemas state_update_stable STABLE 10/10 Schema validation passed
 1 broken_config RESULT pass schemas device_state_stable STABLE 10/10 Schema validation passed
--1 broken_config RESULT pass schemas events_system_stable STABLE 10/10 Schema validation passed
+0 broken_config RESULT pass schemas events_system_stable STABLE 10/10 Schema validation passed
 0 broken_config RESULT pass schemas state_update_stable STABLE 10/10 Schema validation passed
 1 broken_config
-0 broken_config RESULT pass schemas device_state_stable STABLE 10/10 Schema validation passed
--1 broken_config RESULT pass schemas events_system_stable STABLE 10/10 Schema validation passed
+1 broken_config RESULT pass schemas device_state_stable STABLE 10/10 Schema validation passed
+0 broken_config RESULT pass schemas events_system_stable STABLE 10/10 Schema validation passed
 0 broken_config RESULT pass schemas state_update_stable STABLE 10/10 Schema validation passed
 1 broken_config RESULT pass schemas device_state_stable STABLE 10/10 Schema validation passed
--1 broken_config RESULT pass schemas events_system_stable STABLE 10/10 Schema validation passed
+0 broken_config RESULT pass schemas events_system_stable STABLE 10/10 Schema validation passed
 0 broken_config RESULT pass schemas state_update_stable STABLE 10/10 Schema validation passed
 1 broken_config RESULT pass schemas device_state_stable STABLE 10/10 Schema validation passed
--1 broken_config RESULT pass schemas events_system_stable STABLE 10/10 Schema validation passed
+0 broken_config RESULT pass schemas events_system_stable STABLE 10/10 Schema validation passed
 0 broken_config RESULT pass schemas state_update_stable STABLE 10/10 Schema validation passed
 1 broken_config RESULT fail schemas events_system_stable STABLE 10/10 Schema violations found
--1 broken_config RESULT fail schemas state_update_stable STABLE 10/10 Schema violations found
+0 broken_config RESULT fail schemas state_update_stable STABLE 10/10 Schema violations found
 0 broken_config RESULT pass schemas device_state_stable STABLE 10/10 Schema validation passed
 1 system_last_update RESULT fail schemas state_update_stable STABLE 10/10 Schema violations found
--1 system_last_update RESULT pass schemas device_state_stable STABLE 10/10 Schema validation passed
+0 system_last_update RESULT pass schemas device_state_stable STABLE 10/10 Schema validation passed
 0 system_last_update RESULT pass schemas events_system_stable STABLE 10/10 Schema validation passed
 1 system_last_update RESULT fail schemas device_state_stable STABLE 10/10 Schema violations found
--1 system_last_update RESULT pass schemas events_system_stable STABLE 10/10 Schema validation passed
+0 system_last_update RESULT pass schemas events_system_stable STABLE 10/10 Schema validation passed
 0 system_last_update RESULT pass schemas state_update_stable STABLE 10/10 Schema validation passed
 1 system_last_update RESULT fail schemas events_system_stable STABLE 10/10 Schema violations found
--1 system_last_update RESULT fail schemas state_update_stable STABLE 10/10 Schema violations found
+0 system_last_update RESULT fail schemas state_update_stable STABLE 10/10 Schema violations found
 0 system_last_update RESULT pass schemas device_state_stable STABLE 10/10 Schema validation passed
 1 state_make_model
-3 valid_serial_no
--3 system_last_update
-0 system_min_loglevel RESULT fail schemas device_state_alpha ALPHA 10/10 Schema violations found
--1 system_min_loglevel RESULT pass schemas events_system_alpha ALPHA 10/10 Schema validation passed
+4 valid_serial_no
+1 system_last_update
+1 system_min_loglevel RESULT fail schemas device_state_alpha ALPHA 10/10 Schema violations found
+0 system_min_loglevel RESULT pass schemas events_system_alpha ALPHA 10/10 Schema validation passed
 0 system_min_loglevel RESULT pass schemas state_update_alpha ALPHA 10/10 Schema validation passed
 1 system_min_loglevel RESULT pass schemas device_state_alpha ALPHA 10/10 Schema validation passed
--1 system_min_loglevel RESULT pass schemas events_system_alpha ALPHA 10/10 Schema validation passed
+0 system_min_loglevel RESULT pass schemas events_system_alpha ALPHA 10/10 Schema validation passed
 4 gateway_proxy_events
--3 gateway_proxy_events
-0 gateway_proxy_state
-0 gateway_proxy_state
-0 scan_single_future
-0 scan_periodic_now_enumerate
-3 gateway_proxy_events
--3 gateway_proxy_events
-0 gateway_proxy_state
-3 device_config_acked
--3 bad_target_family
-0 bad_target_address
-0 bad_point_ref
-3 bad_point_ref
+1 gateway_proxy_events
+1 gateway_proxy_state
+1 gateway_proxy_state
+1 scan_single_future
+1 scan_periodic_now_enumerate
+4 gateway_proxy_events
+1 gateway_proxy_events
+1 gateway_proxy_state
+4 device_config_acked
+1 bad_target_family
+1 bad_target_address
+1 bad_point_ref
+4 bad_point_ref
