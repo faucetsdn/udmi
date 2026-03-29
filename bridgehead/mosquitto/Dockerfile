@@ -10,4 +10,3 @@ COPY mosquitto_startup.sh /usr/local/bin/
 RUN chmod +x /usr/local/bin/mosquitto_startup.sh
 
 CMD ["/usr/local/bin/mosquitto_startup.sh"]
-

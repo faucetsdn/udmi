@@ -1,13 +1,20 @@
 """
-Defines the interface and concrete implementations for fetching blobs
-from various sources (Data URIs, HTTP/HTTPS).
+Defines the interface and concrete implementations for fetching blobs.
+
+This module provides a strategy pattern for retrieving binary data from
+various sources (Data URIs, HTTP/HTTPS, local filesystem).
 """
 
 import abc
 import base64
 import logging
+import shutil
+from urllib.parse import urlparse
 
 import requests
+
+from udmi.core.utils.file_ops import atomic_write
+from udmi.core.utils.file_ops import atomic_file_context
 
 LOGGER = logging.getLogger(__name__)
 
@@ -22,8 +29,6 @@ class AbstractBlobFetcher(abc.ABC):
     """
     Abstract interface for fetching blob data from a URL.
     """
-
-    # pylint: disable=too-few-public-methods
 
     @abc.abstractmethod
     def fetch(self, url: str) -> bytes:
@@ -40,21 +45,29 @@ class AbstractBlobFetcher(abc.ABC):
             BlobFetchError: If the content cannot be retrieved.
         """
 
+    def download_to_file(self, url: str, dest_path: str) -> None:
+        """
+        Downloads content to a specific file path.
+
+        This default implementation fetches all bytes into memory and then
+        atomically writes them to disk. Subclasses should override this
+        if streaming is possible to avoid high memory usage.
+        """
+        try:
+            data = self.fetch(url)
+            atomic_write(dest_path, data)
+        except Exception as e:
+            if not isinstance(e, BlobFetchError):
+                raise BlobFetchError(f"Download failed: {e}") from e
+            raise
+
 
 class DataUriFetcher(AbstractBlobFetcher):
     """
     Fetcher implementation for handling 'data:' URIs (base64 encoded).
     """
 
-    # pylint: disable=too-few-public-methods
-
     def fetch(self, url: str) -> bytes:
-        """
-        Parses and decodes a base64 data URI.
-
-        Args:
-            url: The data URI string (e.g., 'data:text/plain;base64,...').
-        """
         try:
             if "," not in url:
                 raise ValueError("Invalid data URI format")
@@ -71,25 +84,59 @@ class HttpFetcher(AbstractBlobFetcher):
     Fetcher implementation for handling standard HTTP/HTTPS URLs.
     """
 
-    # pylint: disable=too-few-public-methods
-
     def __init__(self, timeout_sec: int = 30):
-        """
-        Initializes the HTTP fetcher.
-
-        Args:
-            timeout_sec: The request timeout in seconds.
-        """
         self.timeout = timeout_sec
 
     def fetch(self, url: str) -> bytes:
-        """
-        Performs an HTTP GET request to retrieve the content.
-        """
         try:
             LOGGER.info("Fetching blob via HTTP: %s", url)
-            response = requests.get(url, timeout=self.timeout)
+            headers = {'User-Agent': 'udmi-python-device/1.0'}
+            response = requests.get(url, timeout=(10, self.timeout),
+                                    headers=headers)
             response.raise_for_status()
             return response.content
         except requests.RequestException as e:
             raise BlobFetchError(f"HTTP fetch failed: {e}") from e
+
+    def download_to_file(self, url: str, dest_path: str) -> None:
+        """
+        Streams content to a temporary file and atomically renames it to dest.
+        """
+        try:
+            LOGGER.info("Streaming blob to file: %s", url)
+            headers = {'User-Agent': 'udmi-python-device/1.0'}
+
+            with requests.get(url, stream=True, timeout=(10, self.timeout),
+                              headers=headers) as r:
+                r.raise_for_status()
+
+                with atomic_file_context(dest_path) as tmp_file:
+                    shutil.copyfileobj(r.raw, tmp_file)
+
+        except Exception as e:
+            raise BlobFetchError(f"HTTP stream failed: {e}") from e
+
+
+class FileFetcher(AbstractBlobFetcher):
+    """
+    Fetcher for local file:// URLs.
+    """
+
+    def _parse_path(self, url: str) -> str:
+        parsed = urlparse(url)
+        return parsed.path
+
+    def fetch(self, url: str) -> bytes:
+        path = self._parse_path(url)
+        try:
+            with open(path, "rb") as f:
+                return f.read()
+        except Exception as e:
+            raise BlobFetchError(f"File fetch failed: {e}") from e
+
+    def download_to_file(self, url: str, dest_path: str) -> None:
+        src_path = self._parse_path(url)
+        try:
+            shutil.copy2(src_path, dest_path)
+        except Exception as e:
+            raise BlobFetchError(f"File copy failed: {e}") from e

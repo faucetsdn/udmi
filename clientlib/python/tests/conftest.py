@@ -1,7 +1,7 @@
 """
 Pytest fixtures for testing the MQTT messaging client.
 """
-
+import sys
 from unittest.mock import MagicMock
 from unittest.mock import patch
 
@@ -62,6 +62,7 @@ def mock_endpoint_config():
         port=8883
     )
 
+
 @pytest.fixture
 def mock_jwt_endpoint_config():
     """A mock EndpointConfiguration object."""
@@ -91,3 +92,7 @@ def mock_basic_auth_endpoint_config():
             )
         )
     )
+
+
+def _system_lifecycle(exit_code: int) -> None:
+    sys.exit(exit_code)

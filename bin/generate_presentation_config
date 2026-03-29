@@ -44,7 +44,8 @@ def get_root_schemas(file_path):
       if not roots or not isinstance(roots, list):
         raise ValueError('JSON block must contain a "roots" array.')
 
-      print(f'Found root schemas: {", ".join(roots)}')
+      joined_roots = ', '.join(roots)
+      print(f'Found root schemas: {joined_roots}')
       return roots
   except FileNotFoundError:
     print(f'Error: {file_path} not found.')

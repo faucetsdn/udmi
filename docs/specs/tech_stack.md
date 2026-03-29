@@ -44,3 +44,10 @@ gcloud pubsub topics publish target \
 
 The reason for the redirection of any data through a PubSub topic is so that the Cloud IoT registry, if necessary,
 can be housed in a different cloud project from the backend applications.
+
+### Internal Control Channels vs Device Topics
+
+When running a local broker setup or utilizing the UDMI Server (UDMIS) infrastructure, you may observe two distinct but related MQTT configuration topics. It is important to distinguish between communication bound for the edge device, and communication intended for internal backend orchestration.
+
+*   **`{topic_prefix}/config`:** This is the standard, actual device configuration topic (Downlink). The physical or simulated IoT device subscribes to this topic. Once a configuration update is finalized, it is published here. The device receives the payload, parses it according to the schema, and updates its operational behavior.
+*   **`{topic_prefix}/c/control/config/update`:** This is an internal control channel used by the UDMIS microservices. The `/c/` designator indicates a send channel, specifically for `control` flow. This topic is completely hidden from the edge device. When an operator or an automated service (such as a sequencer test) initiates a configuration change, the update is first sent to this internal channel. The UDMIS backend services intercept this message, validate and process the update, and subsequently publish the final, resolved configuration out to the actual device `config` topic.

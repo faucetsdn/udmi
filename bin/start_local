@@ -31,7 +31,7 @@ if [[ -d var/ && ! -d etc/ ]]; then
 fi
 
 cd $UDMI_ROOT
-UDMIS_LOG=/tmp/udmis.log
+UDMIS_LOG=out/udmis.log
 mkdir -p out
 # Do sudo now to prefetch incase it's needed later...
 echo Starting local services at $(sudo date -u -Is) | tee $UDMIS_LOG

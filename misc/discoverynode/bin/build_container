@@ -8,7 +8,7 @@ SRCPATH=$(realpath $ROOT_DIR/../src)
 
 IMAGE_REF=$1
 VERSION_REF=$(date +%y%m%d)-$(git rev-list --count --since="today 00:00:00" HEAD)
-echo $VERSION_REF > $SRCPATH/udmi/installed_version.txt
+echo -n $VERSION_REF > $SRCPATH/udmi/installed_version.txt
 
 
 cd $SRCPATH
