@@ -158,7 +158,7 @@ public class BambiSiteModel {
     if (allDeviceData != null) {
       for (Map<String, String> deviceData : allDeviceData) {
         String deviceId = deviceData.getOrDefault(DEVICE_ID, null);
-        if (deviceId != null) {
+        if (isNotEmpty(deviceId)) {
           deviceMap.putIfAbsent(deviceId, new LinkedHashMap<>());
           for (Entry<String, String> cell : deviceData.entrySet()) {
             deviceMap.get(deviceId)

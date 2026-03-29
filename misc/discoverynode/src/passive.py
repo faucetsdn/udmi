@@ -7,6 +7,8 @@ import udmi.schema.util
 import sys
 import logging
 import datetime
+import json
+import argparse
 
 state = mock.MagicMock()
 
@@ -17,7 +19,11 @@ stderr = logging.StreamHandler(sys.stderr)
 stderr.setLevel(logging.WARNING)
 logging.root.setLevel(logging.INFO)
 
-a = udmi.discovery.passive.PassiveNetworkDiscovery(state, print)
+parser = argparse.ArgumentParser(description="subnet cidr")
+parser.add_argument("subnet_filter", help="subnet_filter", type=str)
+args = parser.parse_args()
+
+a = udmi.discovery.passive.PassiveNetworkDiscovery(state, lambda x: print(x.to_json()), subnet_filter = args.subnet_filter)
 a.controller(
   {
     "discovery": {

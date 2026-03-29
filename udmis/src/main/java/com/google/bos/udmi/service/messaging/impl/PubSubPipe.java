@@ -37,6 +37,8 @@ import com.google.pubsub.v1.PubsubMessage;
 import com.google.udmi.util.Common;
 import io.grpc.ManagedChannel;
 import io.grpc.ManagedChannelBuilder;
+import java.time.Duration;
+import java.time.Instant;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -140,7 +142,7 @@ public class PubSubPipe extends MessageBase implements MessageReceiver {
     }
     throttleQueue();
     try {
-      publisherQueueSize.incrementAndGet();
+      int currentQueueSize = publisherQueueSize.incrementAndGet();
       Envelope envelope = ofNullable(bundle.envelope).orElse(new Envelope());
       Map<String, String> stringMap = toMap(envelope).entrySet().stream()
           .collect(Collectors.toMap(Entry::getKey, entry -> (String) entry.getValue()));
@@ -149,14 +151,25 @@ public class PubSubPipe extends MessageBase implements MessageReceiver {
           .setData(ByteString.copyFromUtf8(stringify(bundle.message)))
           .build();
       randomlyFail();
+
+      debug(
+          format("Preparing to publish PubSub message for %s/%s. Current internal queue size: %d",
+          envelope.deviceRegistryId, envelope.deviceId, currentQueueSize));
+
+      long publishStartTime = System.currentTimeMillis();
+      long sleepTime = publishDelaySec * MS_PER_SEC;
       ApiFuture<String> publish = publisher.publish(message);
-      Thread.sleep(publishDelaySec * MS_PER_SEC);
+      Thread.sleep(sleepTime);
       String publishedId = publish.get();
+      long gcpAckLatencyMs = (System.currentTimeMillis() - publishStartTime) - sleepTime;
+
       String publishedTransactionId = PS_TXN_PREFIX + publishedId;
       debug(format("Published PubSub %s/%s to %s as %s/%s %s -> %s",
           stringMap.get(SUBTYPE_PROPERTY_KEY), stringMap.get(SUBFOLDER_PROPERTY_KEY),
           topicId, envelope.deviceRegistryId, envelope.deviceId, envelope.transactionId,
           publishedTransactionId));
+      debug(format("PubSub Message %s published with GCP Ack Latency %dms",
+          publishedTransactionId, gcpAckLatencyMs));
     } catch (Exception e) {
       throw new RuntimeException("While publishing bundle to " + publisher.getTopicNameString(), e);
     } finally {
@@ -197,8 +210,18 @@ public class PubSubPipe extends MessageBase implements MessageReceiver {
   public void receiveMessage(PubsubMessage message, AckReplyConsumer reply) {
     // Ack first to prevent a recurring loop of processing a faulty message.
     reply.ack();
-    Map<String, String> attributesMap = new HashMap<>(message.getAttributesMap());
     String messageId = message.getMessageId();
+
+    String messageTransactionId = PS_TXN_PREFIX + messageId;
+    Instant publishTime = Instant.ofEpochSecond(
+        message.getPublishTime().getSeconds(),
+        message.getPublishTime().getNanos()
+    );
+    long latencyMs = Duration.between(publishTime, Instant.now()).toMillis();
+    debug(format("PubSub message %s received. Processing latency from publish time %s: %dms",
+        messageTransactionId, publishTime, latencyMs));
+
+    Map<String, String> attributesMap = new HashMap<>(message.getAttributesMap());
     attributesMap.computeIfAbsent("publishTime",
         key -> isoConvert(ofEpochSecond(message.getPublishTime().getSeconds())));
     attributesMap.computeIfAbsent(Common.TRANSACTION_KEY, key -> PS_TXN_PREFIX + messageId);

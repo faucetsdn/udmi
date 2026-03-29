@@ -3,21 +3,6 @@ Unit tests for the `MqttMessagingClient` class.
 
 This module tests the `MqttMessagingClient` in isolation by mocking the
 underlying `paho.mqtt.client` library.
-
-Key behaviors verified:
-- Initialization: Ensures `__init__` correctly instantiates and configures
-  the Paho client with the correct client_id and internal callbacks.
--TLS Logic: Verifies the `_should_enable_tls` logic correctly
-  infers whether TLS should be enabled based on port, certs, and flags.
-- Auth Logic: Confirms the correct auth method is chosen, prioritizing
-  mTLS (client certs) over the `AuthProvider` (username/password).
-- Topic Formatting:
-    - `publish`: Ensures the simple channel ('state') is correctly
-      expanded to the full MQTT topic.
-    - `_on_message`: Ensures the full MQTT topic is correctly parsed
-      back into a simple channel.
-- Subscriptions: Verifies `_on_connect` subscribes to all registered
-  channels with the correctly formatted full MQTT topics.
 """
 
 from unittest.mock import MagicMock
@@ -25,8 +10,8 @@ from unittest.mock import call
 
 import pytest
 
-from src.udmi.core.auth.auth_provider import AuthProvider
-from src.udmi.core.messaging.mqtt_messaging_client import MqttMessagingClient
+from udmi.core.auth import AuthProvider
+from udmi.core.messaging.mqtt_messaging_client import MqttMessagingClient
 from udmi.core.messaging.mqtt_messaging_client import TlsConfig
 from udmi.schema import EndpointConfiguration
 
@@ -129,13 +114,13 @@ def test_auth_configuration_priority(mock_paho_client_instance,
     base_endpoint_config, mock_auth_provider):
     """
     test_auth_configuration_priority
-    Test 1 (mTLS): cert_file and key_file present, provider is ignored.
+    Test 1 (Pure mTLS): cert_file/key_file present, auth_provider is None.
     Test 2 (Provider): Only provider is present.
     """
-    # Test 1: mTLS
+    # Test 1: Pure mTLS (No Auth Provider)
     client_mtls = MqttMessagingClient(
         endpoint_config=base_endpoint_config,
-        auth_provider=mock_auth_provider,
+        auth_provider=None,  # Pass None to ensure pure mTLS behavior
         tls_config=TlsConfig(cert_file="client.crt",  # mTLS certs
                              key_file="client.key")
     )
@@ -196,6 +181,7 @@ def test_on_message_topic_parsing(mqtt_client):
     mqtt_client._on_message(None, None, mock_msg)
 
     mock_callback.assert_called_once_with(
+        "d",
         "commands/reboot",
         '{"delay": 10}'
     )
@@ -214,10 +200,22 @@ def test_on_connect_subscribes_to_channels(mqtt_client,
     mqtt_client._on_connect(mock_paho_client_instance, None, None, 0)
 
     expected_calls = [
-        call("/devices/d/config", 1),
-        call("/devices/d/commands/#", 1)
+        call("/devices/d/config", qos=1),
+        call("/devices/d/commands/#", qos=1)
     ]
     mock_paho_client_instance.subscribe.assert_has_calls(
         expected_calls,
         any_order=True
     )
+
+
+def test_on_disconnect_calls_callback(mqtt_client):
+    """
+    Verify that the registered on_disconnect handler is called.
+    """
+    mock_disconnect_handler = MagicMock()
+    mqtt_client.set_on_disconnect_handler(mock_disconnect_handler)
+
+    mqtt_client._on_disconnect(None, None, 5)
+
+    mock_disconnect_handler.assert_called_once_with(5)

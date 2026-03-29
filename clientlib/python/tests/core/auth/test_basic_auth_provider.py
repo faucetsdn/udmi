@@ -33,3 +33,17 @@ def test_needs_refresh():
     refresh_needed = provider.needs_refresh()
 
     assert refresh_needed is False
+
+
+def test_repr_masks_password():
+    """
+    Verifies that the __repr__ method masks the password for security.
+    This ensures credentials don't leak into logs if the object is printed.
+    """
+    provider = BasicAuthProvider(username="my_user", password="super_secret_password")
+
+    repr_str = repr(provider)
+
+    assert "my_user" in repr_str
+    assert "super_secret_password" not in repr_str
+    assert "***" in repr_str

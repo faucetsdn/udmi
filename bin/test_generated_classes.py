@@ -7,6 +7,7 @@ import importlib
 import inspect
 import pkgutil
 from typing import get_origin, get_args, Union
+from types import NoneType
 
 import pytest
 from dataclasses import is_dataclass
@@ -41,8 +42,8 @@ def generate_mock_data(dataclass_type):
     origin = get_origin(field_type)
     if origin is Union:
       args = get_args(field_type)
-      if len(args) == 2 and type(None) in args:
-        field_type = next(arg for arg in args if arg is not type(None))
+      if len(args) == 2 and NoneType in args:
+        field_type = next(arg for arg in args if arg is not NoneType)
         origin = get_origin(field_type)
 
     if origin in (list, dict):
