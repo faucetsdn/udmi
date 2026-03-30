@@ -75,6 +75,8 @@ can be done automatically by a device itself (e.g. on a predefined interval). De
 on device capabilities and system configuration, the scanning process may also
 trigger discovered device enumeration.
 
+For details on how the `generation` field operates during different scan types, see the [Discovery Generation](discovery/generation.md) documentation.
+
 ## Enumeration
 
 _Enumeration_ is the process for listing  _all_ the parameters available from a device
