@@ -167,7 +167,8 @@ class LocalDevice implements SiteDevice {
           ADJUNCT_DIR,
           EXPECTED_DIR,
           CONFIG_DIR,
-          OUT_DIR);
+          OUT_DIR,
+          "OVERVIEW.md");
   private static final Set<String> OUT_FILES = ImmutableSet.of(
       GENERATED_CONFIG_JSON, DEVICE_ERRORS_MAP, NORMALIZED_JSON, EXCEPTION_LOG_FILE);
   private static final Set<String> ALL_KEY_FILES =
