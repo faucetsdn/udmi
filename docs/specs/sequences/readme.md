@@ -5,6 +5,7 @@
 Sequences are defined device behavior which are formulated from a series of events or communication messages.
 They can be tested using the [`sequencer` tool](../../tools/sequencer.md). The
 [generated steps](generated.md) for each test detail exactly what the tool actually checks.
+See the [Testing](testing.md) guide for information on adding new sequencer tests.
 
 ## Functional Sequences
 
