@@ -37,9 +37,9 @@ RESULT skip system extra_config STABLE 0/0 State testing disabled
 RESULT skip system family_ether_addr PREVIEW 0/0 State testing disabled
 RESULT skip system family_ipv4_addr PREVIEW 0/0 State testing disabled
 RESULT skip system family_ipv6_addr PREVIEW 0/0 State testing disabled
-RESULT skip system.mode system_mode_restart PREVIEW 0/0 State testing disabled
 RESULT skip system state_make_model STABLE 0/0 State testing disabled
 RESULT skip system state_software STABLE 0/0 State testing disabled
 RESULT skip system system_last_update STABLE 0/0 State testing disabled
 CPBLTY skip system system_last_update.subblocks ALPHA 0/0 Never executed
 RESULT skip system valid_serial_no STABLE 0/0 State testing disabled
+RESULT skip system.mode system_mode_restart PREVIEW 0/0 State testing disabled
