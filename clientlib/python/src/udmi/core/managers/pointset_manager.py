@@ -421,12 +421,28 @@ class PointsetManager(BaseManager): # pylint: disable=too-many-instance-attribut
         Handles commands directed at the pointset (currently none).
         """
 
-    def _generate_state_etag(self, points_state_dict: dict) -> str:
+    def _generate_state_etag(self, points_state_map: dict) -> str:
         """
         Generates a unique SHA-256 hash representing the current pointset state.
+        Includes 'units', 'value_state', and 'set_value'.
         """
+        etag_dict_map = {}
+        for point_name, point_state in points_state_map.items():
+            point_state_dict = point_state.to_dict() if hasattr(point_state, 'to_dict') else point_state
+            etag_point_dict = {}
+            if "units" in point_state_dict and point_state_dict["units"] is not None:
+                etag_point_dict["units"] = point_state_dict["units"]
+            if "value_state" in point_state_dict and point_state_dict["value_state"] is not None:
+                etag_point_dict["value_state"] = point_state_dict["value_state"]
+            
+            set_val = self._last_set_values.get(point_name)
+            if set_val is not None:
+                etag_point_dict["set_value"] = set_val
+                
+            etag_dict_map[point_name] = etag_point_dict
+
         # Ensure deterministic JSON serialization by sorting keys
-        state_str = json.dumps(points_state_dict, sort_keys=True,
+        state_str = json.dumps(etag_dict_map, sort_keys=True,
                                separators=(',', ':'))
         full_hash = hashlib.sha256(state_str.encode('utf-8')).hexdigest()
         return full_hash[:32]
@@ -482,8 +498,7 @@ class PointsetManager(BaseManager): # pylint: disable=too-many-instance-attribut
                 points_state_map[name] = point.get_state()
 
         if is_state_dirty or self._state_etag is None:
-            dict_map = {k: v.to_dict() for k, v in points_state_map.items()}
-            self._state_etag = self._generate_state_etag(dict_map)
+            self._state_etag = self._generate_state_etag(points_state_map)
             LOGGER.debug("Pointset state changed. Recalculated state_etag: %s",
                          self._state_etag)
 
