@@ -200,6 +200,15 @@ public class Registrar {
   private String currentRunTimestamp;
   private String lastRunTimestamp;
   private boolean optimizeRun;
+  private final Map<ModelOperation, AtomicInteger> operationCounts = new ConcurrentHashMap<>();
+
+  private void recordOperation(ModelOperation op, int count) {
+    operationCounts.computeIfAbsent(op, k -> new AtomicInteger()).addAndGet(count);
+  }
+
+  private void recordOperation(ModelOperation op) {
+    recordOperation(op, 1);
+  }
 
   /**
    * Main entry point for registrar.
@@ -525,6 +534,11 @@ public class Registrar {
     errorSummary.forEach((key, value) -> System.err.println(
         "  Device " + key + ": " + getErrorSummaryDetail(value)));
     System.err.println("Out of " + workingDevices.size() + " total.");
+    if (!operationCounts.isEmpty()) {
+      System.err.println("Operations:");
+      operationCounts.forEach((op, count) -> System.err.println(
+          "  " + op + ": " + count.get()));
+    }
     // WARNING! entries inserted into `errorSummary` ABOVE this comment must have a map value ^^^^^^
     errorSummary.put(CLOUD_VERSION_KEY, getCloudVersionInfo());
     errorSummary.put(TIMESTAMP_KEY, currentRunTimestamp);
@@ -876,6 +890,7 @@ public class Registrar {
       } else {
         cloudIotManager.deleteDevice(deviceId, unbindIds);
       }
+      recordOperation(ModelOperation.DELETE);
     } catch (DeviceGatewayBoundException boundException) {
       CloudModel cloudModel = boundException.getCloudModel();
       if (cloudModel.resource_type == Resource_type.GATEWAY) {
@@ -929,6 +944,7 @@ public class Registrar {
           } else {
             cloudIotManager.bindDevices(limitedSet, gatewayId, false);
           }
+          recordOperation(ModelOperation.UNBIND, limitedSet.size());
           toUnbind.removeAll(limitedSet);
         }
       }
@@ -1034,7 +1050,6 @@ public class Registrar {
   private boolean updateCloudIoT(LocalDevice localDevice) {
     String localName = localDevice.getDeviceId();
     fetchDevice(localName, false);
-    CloudDeviceSettings localDeviceSettings = localDevice.getSettings();
     if (preDeleteDevice(localName)) {
       System.err.println("Deleting to incite recreation " + localName);
       if (dryRun) {
@@ -1042,11 +1057,19 @@ public class Registrar {
       } else {
         cloudIotManager.deleteDevice(localName, null);
       }
+      recordOperation(ModelOperation.DELETE);
     }
+
+    ModelOperation registerOp = cloudIotManager.getRegisteredDevice(localName) == null
+        ? ModelOperation.CREATE : ModelOperation.UPDATE;
+
     if (dryRun) {
       System.err.println("Dry run: would register device " + localName);
-      return true;
+      recordOperation(registerOp);
+      return registerOp == ModelOperation.CREATE;
     }
+    recordOperation(registerOp);
+    CloudDeviceSettings localDeviceSettings = localDevice.getSettings();
     return cloudIotManager.registerDevice(localName, localDeviceSettings);
   }
 
@@ -1113,6 +1136,7 @@ public class Registrar {
         } else {
           cloudIotManager.blockDevice(extraName, true);
         }
+        recordOperation(ModelOperation.BLOCK);
         cloudModel.blocked = true;
       }
       cloudModel.operation = ifTrueGet(cloudModel.blocked, ModelOperation.BLOCK,
@@ -1256,6 +1280,7 @@ public class Registrar {
             } else {
               cloudIotManager.bindDevices(toBind, gatewayId, true);
             }
+            recordOperation(ModelOperation.BIND, toBind.size());
           } catch (Exception e) {
             proxiedDevices.forEach(localDevice ->
                 localDevice.captureError(ExceptionCategory.binding, e));
@@ -1561,6 +1586,7 @@ public class Registrar {
           } else {
             cloudIotManager.updateRegistry(getSiteMetadata(), ModelOperation.PREVIEW);
           }
+          recordOperation(ModelOperation.PREVIEW);
         });
   }
 
@@ -1573,6 +1599,7 @@ public class Registrar {
             cloudIotManager.updateDevice(device.getDeviceId(), device.getSettings(),
                 ModelOperation.PREVIEW);
           }
+          recordOperation(ModelOperation.PREVIEW);
         });
   }
 
