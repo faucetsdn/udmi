@@ -651,9 +651,19 @@ class LocalDevice implements SiteDevice {
     ErrorTree errorTree = getErrorTree();
     File errorsFile = new File(outDir, DEVICE_ERRORS_MAP);
     if (errorTree != null) {
-      try (PrintStream printStream = new PrintStream(Files.newOutputStream(errorsFile.toPath()))) {
-        System.err.println("Updating errors " + errorsFile);
-        errorTree.write(printStream);
+      try {
+        java.io.ByteArrayOutputStream baos = new java.io.ByteArrayOutputStream();
+        try (PrintStream printStream = new PrintStream(baos)) {
+          errorTree.write(printStream);
+        }
+        byte[] newContent = baos.toByteArray();
+        byte[] oldContent = errorsFile.exists() ? Files.readAllBytes(errorsFile.toPath()) : null;
+        if (!java.util.Arrays.equals(newContent, oldContent)) {
+          System.err.println("Updating errors " + errorsFile);
+          try (java.io.OutputStream outputStream = Files.newOutputStream(errorsFile.toPath())) {
+            outputStream.write(newContent);
+          }
+        }
       } catch (Exception e) {
         throw new RuntimeException("While writing " + errorsFile.getAbsolutePath(), e);
       }
