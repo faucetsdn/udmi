@@ -61,11 +61,13 @@ class _LoopConfig:
 @dataclass
 class _LoopState:
     """Holds the dynamic state of the device's main loop."""
+    # pylint: disable=too-many-instance-attributes
     stop_event: Event = field(default_factory=Event)
     reset_event: Event = field(default_factory=Event)
     config_received_event: Event = field(default_factory=Event)
 
     state_dirty: bool = False
+    is_ready: bool = False
     last_state_publish_time: float = 0.0
     last_auth_check: float = 0.0
     consecutive_failures: int = 0  # Track auth failures
@@ -76,6 +78,7 @@ ConnectionFactory = Callable[
     AbstractMessageDispatcher
 ]
 RedirectionHandler = Callable[[EndpointConfiguration], None]
+ConnectionHandler = Callable[[EndpointConfiguration], None]
 
 
 class Device:
@@ -135,7 +138,13 @@ class Device:
         self.config: Config = Config()
         self._state_lock = threading.RLock()
         self._redirection_handler: Optional[RedirectionHandler] = None
+        self._connection_handler: Optional[ConnectionHandler] = None
         LOGGER.info("Device initialized with %s managers.", len(self.managers))
+
+    @property
+    def is_ready(self) -> bool:
+        """Returns True if the device is fully connected and ready."""
+        return self._loop_state.is_ready
 
     def _init_model(self, model: Metadata) -> None:
         for manager in self.managers:
@@ -152,6 +161,17 @@ class Device:
         """
         self._redirection_handler = handler
         LOGGER.info("Registered endpoint redirection handler.")
+
+    def register_connection_handler(self, handler: ConnectionHandler) -> None:
+        """
+        Registers a callback that is invoked when the device successfully
+        connects to an endpoint.
+
+        Args:
+            handler: A function accepting the active EndpointConfiguration.
+        """
+        self._connection_handler = handler
+        LOGGER.info("Registered connection handler.")
 
     def wire_up_dispatcher(self, dispatcher: AbstractMessageDispatcher) -> None:
         """
@@ -183,6 +203,21 @@ class Device:
         """
         LOGGER.info("Connection successful. Resetting failure counter.")
         self._loop_state.consecutive_failures = 0
+        self._loop_state.is_ready = True
+
+        try:
+            LOGGER.info("Saving current endpoint as backup.")
+            self.persistence.save_backup_endpoint(self.current_endpoint)
+        except Exception as e: # pylint: disable=broad-exception-caught
+            LOGGER.warning("Failed to save backup endpoint: %s", e)
+
+        if self._connection_handler:
+            try:
+                LOGGER.info("Invoking connection handler...")
+                self._connection_handler(self.current_endpoint)
+            except Exception as e: # pylint: disable=broad-exception-caught
+                LOGGER.error("Error in connection handler: %s", e)
+
         self._publish_state()
 
     def on_disconnect(self, rc: int) -> None:
@@ -191,6 +226,7 @@ class Device:
         Args:
               rc: The reason code for the disconnection.
         """
+        self._loop_state.is_ready = False
         if rc != 0:
             self._loop_state.consecutive_failures += 1
             LOGGER.warning(
@@ -488,7 +524,7 @@ class Device:
                 except (AttributeError, TypeError, KeyError, ValueError) as e:
                     LOGGER.error("Error in %s.update_state: %s",
                                  manager.__class__.__name__, e)
-            self.dispatcher.publish_state(self.state)
+            self.dispatcher.publish_state(self.state, wait=force)
             self._loop_state.last_state_publish_time = time.time()
             self._loop_state.state_dirty = False
             LOGGER.debug("State message published.")

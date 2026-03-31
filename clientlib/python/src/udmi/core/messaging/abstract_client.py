@@ -37,7 +37,7 @@ class AbstractMessagingClient(ABC):
 
     @abstractmethod
     def publish(self, channel: str, payload: str,
-        device_id: Optional[str] = None) -> None:
+        device_id: Optional[str] = None, wait: bool = False) -> None:
         """
         Publishes a raw string payload to a generic channel.
 
@@ -46,6 +46,7 @@ class AbstractMessagingClient(ABC):
             payload: The raw string data to send.
             device_id: (Optional) The device ID to publish on behalf of.
                        If None, uses the primary device ID.
+            wait: (Optional) If True, blocks until the message is published.
         """
 
     @abstractmethod
@@ -111,4 +112,13 @@ class AbstractMessagingClient(ABC):
         Args:
             handler: A callable that accepts (rc: int), where 'rc' is
                      the reason code for the disconnection.
+        """
+
+    @abstractmethod
+    def is_connected(self) -> bool:
+        """
+        Returns the current connection status of the client.
+
+        Returns:
+            True if connected to the broker, False otherwise.
         """

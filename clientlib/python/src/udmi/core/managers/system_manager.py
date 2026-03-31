@@ -166,11 +166,18 @@ class SystemManager(BaseManager):
         """
         # Map UDMI levels (100-500) to Python levels (10-50)
         python_level = max(10, min_loglevel // 10)
-        current_level = logging.getLogger().getEffectiveLevel()
+        root_logger = logging.getLogger()
+        root_logger.setLevel(python_level)
 
-        if python_level != current_level:
-            LOGGER.info("Updating log level from %s to %s", current_level, python_level)
-            logging.getLogger().setLevel(python_level)
+        for handler in root_logger.handlers:
+            handler.setLevel(python_level)
+
+        # Also update any UDMIMqttLogHandler attached to other loggers
+        for logger_obj in logging.Logger.manager.loggerDict.values():
+            if isinstance(logger_obj, logging.Logger):
+                for h in logger_obj.handlers:
+                    if h.__class__.__name__ == 'UDMIMqttLogHandler':
+                        h.setLevel(python_level)
 
     def _update_metrics_rate(self, new_rate: int) -> None:
         """
@@ -325,6 +332,13 @@ class SystemManager(BaseManager):
             post_process: Optional function to run after successful processing.
             expects_file: If True, 'process' receives a file path instead of bytes.
         """
+        if blob_key.startswith('_'):
+            LOGGER.warning(
+                "Blob key '%s' cannot be registered; leading underscores "
+                "are reserved for system keys.", blob_key
+            )
+            return
+
         self._blob_handlers[blob_key] = BlobPipelineHandlers(
             process=process,
             post_process=post_process,

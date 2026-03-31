@@ -111,11 +111,11 @@ class MessageDispatcher(AbstractMessageDispatcher):
                          device_id, channel, e, exc_info=True)
 
     def publish_state(self, state: DataModel,
-        device_id: Optional[str] = None) -> None:
+        device_id: Optional[str] = None, wait: bool = False) -> None:
         LOGGER.debug("Publishing 'state' message...")
         try:
             payload = state.to_json()
-            self._client.publish("state", payload, device_id)
+            self._client.publish("state", payload, device_id, wait=wait)
         except Exception as e: # pylint: disable=broad-exception-caught
             LOGGER.error("Failed to publish state: %s", e)
 
@@ -127,6 +127,9 @@ class MessageDispatcher(AbstractMessageDispatcher):
             self._client.publish(channel, payload, device_id)
         except Exception as e: # pylint: disable=broad-exception-caught
             LOGGER.error("Failed to publish event %s: %s", channel, e)
+
+    def is_connected(self) -> bool:
+        return self._client.is_connected()
 
     # --- Lifecycle Methods ---
 

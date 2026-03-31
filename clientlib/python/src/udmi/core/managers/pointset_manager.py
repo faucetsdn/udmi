@@ -15,6 +15,8 @@ from typing import Callable
 from typing import Dict
 from typing import Mapping
 from typing import Optional
+from typing import Union
+from dataclasses import dataclass
 
 from udmi.constants import UDMI_VERSION
 from udmi.core.managers.base_manager import BaseManager
@@ -28,14 +30,24 @@ from udmi.schema import PointPointsetState
 from udmi.schema import PointsetEvents
 from udmi.schema import PointsetState
 from udmi.schema import State
+from udmi.schema import ValueState
 
 LOGGER = logging.getLogger(__name__)
 
 DEFAULT_SAMPLE_RATE_SEC = 10
 DEFAULT_HEARTBEAT_SEC = 600
 
-# Callback signature: function(point_name, value)
-WritebackHandler = Callable[[str, Any], None]
+@dataclass
+class WritebackResult:
+    """
+    Result of a point writeback operation.
+    """
+    value_state: ValueState
+    status: Optional[Entry] = None
+
+
+# Callback signature: function(point_name, value) -> Optional[ValueState | WritebackResult]
+WritebackHandler = Callable[[str, Any], Union[None, ValueState, WritebackResult]]
 
 # Poll Callback now returns a dictionary of {point_name: value}
 PollCallback = Callable[[], Dict[str, Any]]
@@ -58,6 +70,7 @@ class Point:
             name: The unique identifier for this point (e.g., 'temp_sensor_1').
         """
         self.name = name
+        self.ref = None
         self.present_value: Any = None
         self.units: Optional[str] = None
         self.status: Optional[Entry] = None
@@ -82,6 +95,8 @@ class Point:
         """
         if model.units:
             self.units = model.units
+        if model.ref:
+            self.ref = model.ref
 
     def set_present_value(self, value: Any) -> None:
         """
@@ -122,7 +137,7 @@ class Point:
                 self.set_value = config.set_value
                 dirty = True
 
-            self.value_state = "applied"
+            self.value_state = ValueState.applied
 
         return dirty
 
@@ -192,7 +207,7 @@ class Point:
         if should_report_cov:
             return True
 
-        heartbeat_interval = max(DEFAULT_HEARTBEAT_SEC, sample_rate_sec)
+        heartbeat_interval = sample_rate_sec if sample_rate_sec > 0 else DEFAULT_HEARTBEAT_SEC
         if (now - self.last_reported_time) >= heartbeat_interval:
             return True
 
@@ -374,10 +389,18 @@ class PointsetManager(BaseManager):
 
             if is_writeback and self._writeback_handler is not None:
                 try:
-                    self._writeback_handler(point_name, point.set_value)
+                    result = self._writeback_handler(point_name, point.set_value)
+                    if isinstance(result, ValueState):
+                        point.value_state = result
+                    elif isinstance(result, WritebackResult):
+                        point.value_state = result.value_state
+                        if result.status:
+                            point.status = result.status
                 except Exception as e: # pylint: disable=broad-exception-caught
                     LOGGER.error("Error in writeback handler for %s: %s",
                                  point_name, e)
+                    point.value_state = ValueState.failure
+                    point.status = Entry(message=str(e), level=500)
 
     def handle_command(self, command_name: str, payload: dict) -> None:
         """
