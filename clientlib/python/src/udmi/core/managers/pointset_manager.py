@@ -428,17 +428,21 @@ class PointsetManager(BaseManager): # pylint: disable=too-many-instance-attribut
         """
         etag_dict_map = {}
         for point_name, point_state in points_state_map.items():
-            point_state_dict = point_state.to_dict() if hasattr(point_state, 'to_dict') else point_state
+            point_state_dict = (point_state.to_dict() if hasattr(point_state,
+                                                                 'to_dict')
+                                else point_state)
             etag_point_dict = {}
-            if "units" in point_state_dict and point_state_dict["units"] is not None:
+            if ("units" in point_state_dict and
+                point_state_dict["units"] is not None):
                 etag_point_dict["units"] = point_state_dict["units"]
-            if "value_state" in point_state_dict and point_state_dict["value_state"] is not None:
+            if ("value_state" in point_state_dict and
+                point_state_dict["value_state"] is not None):
                 etag_point_dict["value_state"] = point_state_dict["value_state"]
-            
+
             set_val = self._last_set_values.get(point_name)
             if set_val is not None:
                 etag_point_dict["set_value"] = set_val
-                
+
             etag_dict_map[point_name] = etag_point_dict
 
         # Ensure deterministic JSON serialization by sorting keys
