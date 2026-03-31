@@ -428,9 +428,10 @@ class PointsetManager(BaseManager): # pylint: disable=too-many-instance-attribut
         """
         etag_dict_map = {}
         for point_name, point_state in points_state_map.items():
-            point_state_dict = (point_state.to_dict() if hasattr(point_state,
-                                                                 'to_dict')
-                                else point_state)
+            point_state_dict = (
+                point_state.to_dict() if hasattr(point_state, 'to_dict')
+                else point_state
+            )
             etag_point_dict = {}
             if ("units" in point_state_dict and
                 point_state_dict["units"] is not None):
