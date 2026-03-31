@@ -660,6 +660,13 @@ class LocalDevice implements SiteDevice {
         byte[] oldContent = errorsFile.exists() ? Files.readAllBytes(errorsFile.toPath()) : null;
         if (!java.util.Arrays.equals(newContent, oldContent)) {
           System.err.println("Updating errors " + errorsFile);
+          System.err.println("=== NEW CONTENT ===");
+          System.err.println(new String(newContent, java.nio.charset.StandardCharsets.UTF_8));
+          System.err.println("=== OLD CONTENT ===");
+          String oldStr = oldContent != null
+              ? new String(oldContent, java.nio.charset.StandardCharsets.UTF_8) : "null";
+          System.err.println(oldStr);
+          System.err.println("===================");
           try (java.io.OutputStream outputStream = Files.newOutputStream(errorsFile.toPath())) {
             outputStream.write(newContent);
           }
