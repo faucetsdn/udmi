@@ -162,8 +162,8 @@ public class Registrar {
   private final CommandLineProcessor commandLineProcessor = new CommandLineProcessor(this,
       usageForms);
   private final AtomicInteger updatedDevices = new AtomicInteger();
-  private final Map<Credential, String> usedCredentials = new ConcurrentHashMap<>();
   private final Map<String, ExternalProcessor> processors = new ConcurrentHashMap<>();
+  private Map<Credential, Set<String>> credentialDevices;
   private CloudIotManager cloudIotManager;
   private File schemaBase;
   private PubSubPusher updatePusher;
@@ -1410,10 +1410,13 @@ public class Registrar {
     CloudDeviceSettings settings = localDevice.getSettings();
     String deviceName = localDevice.getDeviceId();
     for (Credential credential : settings.credentials) {
-      String previous = usedCredentials.put(credential, deviceName);
-      if (previous != null) {
-        throw new RuntimeException(format(
-            "Duplicate credentials found for %s & %s", previous, deviceName));
+      Set<String> duplicates = credentialDevices.get(credential);
+      if (duplicates != null && duplicates.size() > 1) {
+        String primaryDevice = duplicates.iterator().next();
+        if (!deviceName.equals(primaryDevice)) {
+          throw new RuntimeException(format(
+              "Duplicate credentials found with %s", primaryDevice));
+        }
       }
     }
   }
@@ -1439,6 +1442,16 @@ public class Registrar {
     allWorking(this::previewModel, "previewing model", ExceptionCategory.updating);
     allWorking(LocalDevice::validateExpectedFiles, "validating expected", ExceptionCategory.files);
     allWorking(LocalDevice::validateSamples, "validate samples", ExceptionCategory.samples);
+
+    credentialDevices = new HashMap<>();
+    workingDevices.values().forEach(device -> {
+      if (device.isDirect()) {
+        for (Credential cred : device.getSettings().credentials) {
+          credentialDevices.computeIfAbsent(cred, k -> new TreeSet<>()).add(device.getDeviceId());
+        }
+      }
+    });
+
     allWorking(this::validateKeys, "validating keys", ExceptionCategory.credentials);
     allWorking(this::processExternals, "process externals", ExceptionCategory.externals);
   }
