@@ -1412,8 +1412,7 @@ public class Registrar {
     for (Credential credential : settings.credentials) {
       String previous = usedCredentials.put(credential, deviceName);
       if (previous != null) {
-        throw new RuntimeException(format(
-            "Duplicate credentials found for %s & %s", previous, deviceName));
+        throw new RuntimeException("Duplicate credentials found");
       }
     }
   }
