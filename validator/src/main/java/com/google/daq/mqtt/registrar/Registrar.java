@@ -1412,10 +1412,11 @@ public class Registrar {
     for (Credential credential : settings.credentials) {
       Set<String> duplicates = credentialDevices.get(credential);
       if (duplicates != null && duplicates.size() > 1) {
-        Set<String> others = new TreeSet<>(duplicates);
-        others.remove(deviceName);
-        throw new RuntimeException(format(
-            "Duplicate credentials found with %s", CSV_JOINER.join(others)));
+        String primaryDevice = duplicates.iterator().next();
+        if (!deviceName.equals(primaryDevice)) {
+          throw new RuntimeException(format(
+              "Duplicate credentials found with %s", primaryDevice));
+        }
       }
     }
   }
