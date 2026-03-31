@@ -448,6 +448,26 @@ def test_bulk_provider_updates_points(manager, mock_dispatcher):
     assert payload.points["temp"].present_value == 22.0
 
 
+def test_initialization_with_bulk_provider(mock_dispatcher):
+    """Verifies that PointsetManager can be initialized with a bulk provider."""
+    provider = MockBulkProvider()
+    manager = PointsetManager(bulk_provider=provider)
+    manager.set_device_context(device=None, dispatcher=mock_dispatcher)
+    
+    manager.add_point("temp")
+    manager._active_points = {"temp"}
+
+    # No point value set originally
+    manager.publish_telemetry()
+    
+    # Assert dispatcher published with the value from the provider
+    call_args = mock_dispatcher.publish_event.call_args
+    payload = call_args[0][1]
+    
+    assert "temp" in payload.points
+    assert payload.points["temp"].present_value == 22.0
+
+
 def test_native_writeback_path_used_when_no_global_handler(manager):
     """Verifies point internally processes set_value when no global handler exists."""
     assert manager._writeback_handler is None

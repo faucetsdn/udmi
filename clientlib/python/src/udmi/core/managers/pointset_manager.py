@@ -83,13 +83,15 @@ class PointsetManager(BaseManager): # pylint: disable=too-many-instance-attribut
         return "pointset"
 
     def __init__(self, sample_rate_sec: int = DEFAULT_SAMPLE_RATE_SEC,
-        point_factory: Optional[Callable] = None):
+        point_factory: Optional[Callable] = None,
+        bulk_provider: Optional[BulkPointProvider] = None):
         """
         Initializes the PointsetManager.
 
         Args:
             sample_rate_sec: The default interval between telemetry checks.
             point_factory: Optional factory to create points. Defaults to Point.
+            bulk_provider: Optional provider for bulk telemetry reads.
         """
         super().__init__()
         self._point_factory = point_factory or Point
@@ -109,7 +111,7 @@ class PointsetManager(BaseManager): # pylint: disable=too-many-instance-attribut
         self._telemetry_wake_event: Optional[threading.Event] = None
         self._poll_callback: Optional[PollCallback] = None
         self._writeback_timers: Dict[str, threading.Timer] = {}
-        self._bulk_provider: Optional[BulkPointProvider] = None
+        self._bulk_provider: Optional[BulkPointProvider] = bulk_provider
 
         self._offline_buffer: list[dict] = []
 
@@ -164,6 +166,7 @@ class PointsetManager(BaseManager): # pylint: disable=too-many-instance-attribut
         LOGGER.warning(message)
         warnings.warn(message, DeprecationWarning, stacklevel=2)
         self._writeback_handler = handler
+        LOGGER.info("Registered writeback handler.")
 
     def set_poll_callback(self, callback: PollCallback) -> None:
         """

@@ -74,13 +74,12 @@ if __name__ == "__main__":
             )
         )
 
-        managers = get_default_managers()
+        # Initialize the provider and pass it to the default managers factory
+        modbus_hw = MockModbusProvider()
+        managers = get_default_managers(points_bulk_provider=modbus_hw)
+        
         device = create_device(endpoint, managers)
         pointset_manager = device.get_manager(PointsetManager)
-
-        # Register the provider
-        modbus_hw = MockModbusProvider()
-        pointset_manager.register_bulk_provider(modbus_hw)
 
         # For the sake of the sample, we add the points explicitly.
         # Normally these would be provisioned via cloud `config.pointset`.
