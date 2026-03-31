@@ -1066,7 +1066,7 @@ public class Registrar {
     if (dryRun) {
       System.err.println("Dry run: would register device " + localName);
       recordOperation(registerOp);
-      return true;
+      return registerOp == ModelOperation.CREATE;
     }
     recordOperation(registerOp);
     CloudDeviceSettings localDeviceSettings = localDevice.getSettings();
