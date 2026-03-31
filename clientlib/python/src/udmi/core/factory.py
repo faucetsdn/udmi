@@ -70,7 +70,8 @@ def get_default_managers(**kwargs) -> List[BaseManager]:
 
     return [
         SystemManager(system_state=system_state),
-        PointsetManager(sample_rate_sec=sample_rate_sec, point_factory=point_factory, 
+        PointsetManager(sample_rate_sec=sample_rate_sec,
+                        point_factory=point_factory,
                         bulk_provider=points_bulk_provider),
         LocalnetManager(),
         GatewayManager(),
