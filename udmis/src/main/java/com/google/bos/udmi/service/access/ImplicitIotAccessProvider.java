@@ -205,6 +205,10 @@ public class ImplicitIotAccessProvider extends IotAccessBase {
   }
 
   private void sendConfigUpdate(String registryId, String deviceId, String config) {
+    if (reflect == null) {
+      warn("Reflect component not available for config update %s/%s", registryId, deviceId);
+      return;
+    }
     Envelope envelope = new Envelope();
     envelope.deviceRegistryId = registryId;
     envelope.deviceId = deviceId;
@@ -243,7 +247,7 @@ public class ImplicitIotAccessProvider extends IotAccessBase {
     Map<String, String> map = toDeviceMap(cloudModel, null);
     DataRef props = mungeDevice(registryId, deviceId, map);
     Set<String> keepKeys = ImmutableSet.of(CREATED_AT_PROPERTY, NUM_ID_PROPERTY,
-        CONFIG_VER_KEY, LAST_CONFIG_KEY, LAST_STATE_KEY, LAST_CONFIG_ACKED);
+        CONFIG_VER_KEY, LAST_CONFIG_KEY, LAST_STATE_KEY, LAST_CONFIG_ACKED, BOUND_TO_KEY);
     props.entries().keySet().stream()
         .filter(key -> !map.containsKey(key) && !keepKeys.contains(key))
         .forEach(props::delete);
@@ -252,7 +256,7 @@ public class ImplicitIotAccessProvider extends IotAccessBase {
   @Override
   public void activate() {
     database = UdmiServicePod.getComponent(IMPLICIT_DATABASE_COMPONENT);
-    reflect = UdmiServicePod.getComponent(ReflectProcessor.class);
+    reflect = UdmiServicePod.maybeGetComponent(ReflectProcessor.class);
     super.activate();
   }
 
@@ -390,6 +394,11 @@ public class ImplicitIotAccessProvider extends IotAccessBase {
 
   @Override
   public void sendCommandBase(Envelope baseEnvelope, SubFolder folder, String message) {
+    if (reflect == null) {
+      warn("Reflect component not available for command to %s/%s",
+          baseEnvelope.deviceRegistryId, baseEnvelope.deviceId);
+      return;
+    }
     Envelope envelope = deepCopy(baseEnvelope);
     envelope.subFolder = folder;
     envelope.subType = SubType.COMMANDS;
