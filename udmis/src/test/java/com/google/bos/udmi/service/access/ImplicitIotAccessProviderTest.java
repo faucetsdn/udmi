@@ -26,6 +26,9 @@ import udmi.schema.Credential;
 import udmi.schema.Credential.Key_format;
 import udmi.schema.IotAccess;
 
+/**
+ * Unit tests for ImplicitIotAccessProvider.
+ */
 public class ImplicitIotAccessProviderTest extends MessageTestCore {
 
   private final IotDataProvider mockDatabase = mock(IotDataProvider.class);
@@ -33,13 +36,17 @@ public class ImplicitIotAccessProviderTest extends MessageTestCore {
   private final ReflectProcessor mockReflect = mock(ReflectProcessor.class);
   private final ConnectionBroker mockBroker = mock(ConnectionBroker.class);
 
+  /**
+   * Setup for tests.
+   */
   @BeforeEach
   public void setUp() {
     UdmiServicePod.resetForTest();
     UdmiServicePod.putComponent("database", () -> mockDatabase);
     UdmiServicePod.putComponent("reflect", () -> mockReflect);
     when(mockDatabase.ref()).thenReturn(mockDataRef);
-    when(mockBroker.addEventListener(anyString(), any())).thenReturn(CompletableFuture.completedFuture(null));
+    when(mockBroker.addEventListener(anyString(), any()))
+        .thenReturn(CompletableFuture.completedFuture(null));
   }
 
   private ImplicitIotAccessProvider getProvider() {
@@ -64,7 +71,6 @@ public class ImplicitIotAccessProviderTest extends MessageTestCore {
 
   @Test
   public void testPasswordCredentialBehavior() {
-    ImplicitIotAccessProvider provider = getProvider();
     CloudModel model = new CloudModel();
     model.operation = ModelOperation.CREATE;
     Credential credential = new Credential();
@@ -72,15 +78,16 @@ public class ImplicitIotAccessProviderTest extends MessageTestCore {
     credential.key_data = "test-password";
     model.credentials = ImmutableList.of(credential);
 
+    ImplicitIotAccessProvider provider = getProvider();
     provider.modelDevice(TEST_REGISTRY, TEST_DEVICE, model, null);
 
     // Requirement: password should NOT be stored in the database
-    assertNull(mockDataRef.registry(TEST_REGISTRY).device(TEST_DEVICE).get("auth_pass"), "Password should not be stored");
+    String authPass = mockDataRef.registry(TEST_REGISTRY).device(TEST_DEVICE).get("auth_pass");
+    assertNull(authPass, "Password should not be stored");
   }
 
   @Test
-  public void testRS256CredentialBehavior() {
-    ImplicitIotAccessProvider provider = getProvider();
+  public void testRs256CredentialBehavior() {
     CloudModel model = new CloudModel();
     model.operation = ModelOperation.CREATE;
     Credential credential = new Credential();
@@ -88,19 +95,20 @@ public class ImplicitIotAccessProviderTest extends MessageTestCore {
     credential.key_data = "test-key-data";
     model.credentials = ImmutableList.of(credential);
 
+    ImplicitIotAccessProvider provider = getProvider();
     provider.modelDevice(TEST_REGISTRY, TEST_DEVICE, model, null);
 
     // Requirement: RS_256 should be stored in auth_key
     // In our mock, property keys are prepended with ':' to simulate EtcdDataProvider behavior
-    assertEquals("test-key-data", mockDataRef.registry(TEST_REGISTRY).device(TEST_DEVICE).get("auth_key"), "RS_256 key should be stored as auth_key");
+    String authKey = mockDataRef.registry(TEST_REGISTRY).device(TEST_DEVICE).get("auth_key");
+    assertEquals("test-key-data", authKey, "RS256 key should be stored as auth_key");
 
     // Explicitly check the internal mock data for the colon separator
-    assertEquals("test-key-data", ((TestDataRef)mockDataRef).getRawData().get(":auth_key"));
+    assertEquals("test-key-data", ((TestDataRef) mockDataRef).getRawData().get(":auth_key"));
   }
 
   @Test
   public void testMultipleCredentials() {
-    ImplicitIotAccessProvider provider = getProvider();
     CloudModel model = new CloudModel();
     model.operation = ModelOperation.CREATE;
 
@@ -114,17 +122,17 @@ public class ImplicitIotAccessProviderTest extends MessageTestCore {
 
     model.credentials = ImmutableList.of(passCred, keyCred);
 
+    ImplicitIotAccessProvider provider = getProvider();
     provider.modelDevice(TEST_REGISTRY, TEST_DEVICE, model, null);
 
     // Requirement: auth_key should be stored, auth_pass should NOT
-    assertEquals("test-key-data", mockDataRef.registry(TEST_REGISTRY).device(TEST_DEVICE).get("auth_key"));
+    assertEquals("test-key-data",
+        mockDataRef.registry(TEST_REGISTRY).device(TEST_DEVICE).get("auth_key"));
     assertNull(mockDataRef.registry(TEST_REGISTRY).device(TEST_DEVICE).get("auth_pass"));
   }
 
   @Test
   public void testExistingPasswordIsRemoved() {
-    ImplicitIotAccessProvider provider = getProvider();
-
     // Simulate pre-existing password in database
     DataRef deviceRef = mockDataRef.registry(TEST_REGISTRY).device(TEST_DEVICE);
     deviceRef.put("auth_pass", "old-password");
@@ -138,6 +146,7 @@ public class ImplicitIotAccessProviderTest extends MessageTestCore {
     credential.key_data = "test-key-data";
     model.credentials = ImmutableList.of(credential);
 
+    ImplicitIotAccessProvider provider = getProvider();
     provider.modelDevice(TEST_REGISTRY, TEST_DEVICE, model, null);
 
     // Requirement: old password should be gone, new key should be there

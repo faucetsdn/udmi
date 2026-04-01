@@ -9,7 +9,6 @@ import static com.google.udmi.util.GeneralUtils.deepCopy;
 import static com.google.udmi.util.GeneralUtils.friendlyStackTrace;
 import static com.google.udmi.util.GeneralUtils.ifNotNullGet;
 import static com.google.udmi.util.GeneralUtils.ifNotNullThen;
-import static com.google.udmi.util.GeneralUtils.ifNotTrueThen;
 import static com.google.udmi.util.GeneralUtils.ifNullThen;
 import static com.google.udmi.util.GeneralUtils.isNullOrNotEmpty;
 import static com.google.udmi.util.GeneralUtils.requireNull;
@@ -53,7 +52,6 @@ import java.util.stream.Collectors;
 import udmi.schema.CloudModel;
 import udmi.schema.CloudModel.ModelOperation;
 import udmi.schema.CloudModel.Resource_type;
-import udmi.schema.Credential;
 import udmi.schema.Credential.Key_format;
 import udmi.schema.Envelope;
 import udmi.schema.Envelope.SubFolder;
@@ -182,7 +180,13 @@ public class ImplicitIotAccessProvider extends IotAccessBase {
     DataRef properties = registryDeviceRef(registryId, deviceId);
 
     if (map.containsKey(AUTH_PASSWORD_PROPERTY)) {
-      broker.authorize(clientId(registryId, deviceId), map.remove(AUTH_PASSWORD_PROPERTY));
+      String clientId = clientId(registryId, deviceId);
+      String password = map.remove(AUTH_PASSWORD_PROPERTY);
+      try {
+        broker.authorize(clientId, password);
+      } catch (Exception e) {
+        warn("Failed to authorize client %s: %s", clientId, friendlyStackTrace(e));
+      }
     }
     properties.delete(AUTH_PASSWORD_PROPERTY);
 
@@ -237,7 +241,12 @@ public class ImplicitIotAccessProvider extends IotAccessBase {
   private void updateDevice(String registryId, String deviceId, CloudModel cloudModel) {
     touchDeviceEntry(registryId, deviceId);
     Map<String, String> map = toDeviceMap(cloudModel, null);
-    mungeDevice(registryId, deviceId, map);
+    DataRef props = mungeDevice(registryId, deviceId, map);
+    Set<String> keepKeys = ImmutableSet.of(CREATED_AT_PROPERTY, NUM_ID_PROPERTY,
+        CONFIG_VER_KEY, LAST_CONFIG_KEY, LAST_STATE_KEY, LAST_CONFIG_ACKED);
+    props.entries().keySet().stream()
+        .filter(key -> !map.containsKey(key) && !keepKeys.contains(key))
+        .forEach(props::delete);
   }
 
   @Override
