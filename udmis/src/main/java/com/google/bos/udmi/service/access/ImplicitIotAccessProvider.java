@@ -80,12 +80,13 @@ public class ImplicitIotAccessProvider extends IotAccessBase {
   private static final String CLIENT_ID_FORMAT = "/r/%s/d/%s";
   private static final String CLIENT_PREFIX = "/r";
   private static final String AUTH_PASSWORD_PROPERTY = "auth_pass";
+  private static final String AUTH_KEY_PROPERTY = "auth_key";
   private static final String LAST_CONFIG_ACKED = "last_config_ack";
   private static final String CONFIG_SUFFIX = "/config";
   private static final String METADATA_STR_KEY = "metadata_str";
   private static final String RESOURCE_TYPE_PROPERTY = "resource_type";
   private final boolean enabled;
-  private final ConnectionBroker broker = new MosquittoBroker(this);
+  private final ConnectionBroker broker = getBroker();
   private final Future<Void> connLogger;
   private IotDataProvider database;
   private ReflectProcessor reflect;
@@ -98,6 +99,10 @@ public class ImplicitIotAccessProvider extends IotAccessBase {
     super(iotAccess);
     enabled = isNullOrNotEmpty(options.get(ENABLED_KEY));
     connLogger = broker.addEventListener(CLIENT_PREFIX, this::brokerHandler);
+  }
+
+  ConnectionBroker getBroker() {
+    return new MosquittoBroker(this);
   }
 
   /**
@@ -175,12 +180,15 @@ public class ImplicitIotAccessProvider extends IotAccessBase {
 
   private DataRef mungeDevice(String registryId, String deviceId, Map<String, String> map) {
     DataRef properties = registryDeviceRef(registryId, deviceId);
+
+    if (map.containsKey(AUTH_PASSWORD_PROPERTY)) {
+      broker.authorize(clientId(registryId, deviceId), map.remove(AUTH_PASSWORD_PROPERTY));
+    }
+    properties.delete(AUTH_PASSWORD_PROPERTY);
+
     map.forEach((key, value) ->
         ifNotNullThen(value, v -> properties.put(key, value), () -> properties.delete(key)));
 
-    if (map.containsKey(AUTH_PASSWORD_PROPERTY)) {
-      broker.authorize(clientId(registryId, deviceId), map.get(AUTH_PASSWORD_PROPERTY));
-    }
     return properties;
   }
 
@@ -210,12 +218,12 @@ public class ImplicitIotAccessProvider extends IotAccessBase {
     properties.put(METADATA_STR_KEY, stringifyTerse(cloudModel.metadata));
     properties.put(BLOCKED_PROPERTY, booleanString(cloudModel.blocked));
     ifNotNullThen(cloudModel.num_id, id -> properties.put(NUM_ID_PROPERTY, id));
-    ifNotNullThen(cloudModel.credentials, creds -> ifNotTrueThen(creds.isEmpty(), () -> {
-      checkState(creds.size() == 1, "only one credential supported");
-      Credential cred = creds.get(0);
-      checkState(cred.key_format == Key_format.PASSWORD,
-          "key type not supported: " + cred.key_format);
-      properties.put(AUTH_PASSWORD_PROPERTY, cred.key_data);
+    ifNotNullThen(cloudModel.credentials, creds -> creds.forEach(cred -> {
+      if (cred.key_format == Key_format.PASSWORD) {
+        properties.put(AUTH_PASSWORD_PROPERTY, cred.key_data);
+      } else if (!properties.containsKey(AUTH_KEY_PROPERTY)) {
+        properties.put(AUTH_KEY_PROPERTY, cred.key_data);
+      }
     }));
     return properties;
   }
