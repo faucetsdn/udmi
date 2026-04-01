@@ -270,17 +270,11 @@ public class IotReflectorClient implements MessagePublisher {
   }
 
   private String getReflectorTopic() {
-    return switch (iotProvider) {
-      case MQTT -> SubType.REFLECT.toString();
-      default -> STATE_TOPIC;
-    };
+    return STATE_TOPIC;
   }
 
   private String getPublishTopic() {
-    return switch (iotProvider) {
-      case MQTT -> SubType.REFLECT.toString();
-      default -> UDMI_TOPIC;
-    };
+    return UDMI_TOPIC;
   }
 
   @Override
