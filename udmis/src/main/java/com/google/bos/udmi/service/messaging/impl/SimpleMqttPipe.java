@@ -278,18 +278,20 @@ public class SimpleMqttPipe extends MessageBase {
       info("No recv_id defined, not subscribing for component " + endpoint.name);
       return;
     }
-    String subscribeTopic = format(SUB_BASE_FORMAT, recvId);
     try {
       synchronized (mqttClient) {
         boolean connected = mqttClient.isConnected();
         trace("Subscribing %s, active=%s connected=%s", clientId, isActive(), connected);
         if (isActive() && connected) {
-          mqttClient.subscribe(subscribeTopic);
-          info("Subscribed %s to topic %s", clientId, subscribeTopic);
+          for (String part : recvId.split(",")) {
+            String subscribeTopic = part.startsWith("/") ? part : format(SUB_BASE_FORMAT, part);
+            mqttClient.subscribe(subscribeTopic);
+            info("Subscribed %s to topic %s", clientId, subscribeTopic);
+          }
         }
       }
     } catch (Exception e) {
-      throw new RuntimeException("While subscribing to mqtt topic: " + subscribeTopic, e);
+      throw new RuntimeException("While subscribing to mqtt topics: " + recvId, e);
     }
   }
 
