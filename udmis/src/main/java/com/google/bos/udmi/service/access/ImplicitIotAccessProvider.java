@@ -26,6 +26,9 @@ import static udmi.schema.CloudModel.ModelOperation.READ;
 import static udmi.schema.CloudModel.Resource_type.DIRECT;
 import static udmi.schema.CloudModel.Resource_type.GATEWAY;
 
+import static com.google.udmi.util.MetadataMapKeys.KEY_ALGORITHM_KEY;
+import static com.google.udmi.util.MetadataMapKeys.KEY_BYTES_KEY;
+
 import com.google.bos.udmi.service.core.ReflectProcessor;
 import com.google.bos.udmi.service.pod.UdmiServicePod;
 import com.google.bos.udmi.service.support.ConnectionBroker;
@@ -34,6 +37,7 @@ import com.google.bos.udmi.service.support.ConnectionBroker.Direction;
 import com.google.bos.udmi.service.support.DataRef;
 import com.google.bos.udmi.service.support.IotDataProvider;
 import com.google.bos.udmi.service.support.MosquittoBroker;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.udmi.util.GeneralUtils;
@@ -80,6 +84,8 @@ public class ImplicitIotAccessProvider extends IotAccessBase {
   private static final String CLIENT_ID_FORMAT = "/r/%s/d/%s";
   private static final String CLIENT_PREFIX = "/r";
   private static final String AUTH_PASSWORD_PROPERTY = "auth_pass";
+  private static final String AUTH_KEY_PROPERTY = "auth_key";
+  private static final String AUTH_FORMAT_PROPERTY = "auth_fmt";
   private static final String LAST_CONFIG_ACKED = "last_config_ack";
   private static final String CONFIG_SUFFIX = "/config";
   private static final String METADATA_STR_KEY = "metadata_str";
@@ -210,13 +216,26 @@ public class ImplicitIotAccessProvider extends IotAccessBase {
     properties.put(METADATA_STR_KEY, stringifyTerse(cloudModel.metadata));
     properties.put(BLOCKED_PROPERTY, booleanString(cloudModel.blocked));
     ifNotNullThen(cloudModel.num_id, id -> properties.put(NUM_ID_PROPERTY, id));
-    ifNotNullThen(cloudModel.credentials, creds -> ifNotTrueThen(creds.isEmpty(), () -> {
-      checkState(creds.size() == 1, "only one credential supported");
-      Credential cred = creds.get(0);
-      checkState(cred.key_format == Key_format.PASSWORD,
-          "key type not supported: " + cred.key_format);
-      properties.put(AUTH_PASSWORD_PROPERTY, cred.key_data);
-    }));
+    ifNotNullThen(
+        cloudModel.credentials,
+        creds ->
+            creds.forEach(
+                cred -> {
+                  if (cred.key_format == Key_format.PASSWORD) {
+                    properties.put(AUTH_PASSWORD_PROPERTY, cred.key_data);
+                  } else {
+                    properties.put(AUTH_KEY_PROPERTY, cred.key_data);
+                    properties.put(AUTH_FORMAT_PROPERTY, cred.key_format.value());
+                  }
+                }));
+
+    if (!properties.containsKey(AUTH_KEY_PROPERTY) && cloudModel.metadata != null) {
+      ifNotNullThen(
+          cloudModel.metadata.get(KEY_BYTES_KEY), key -> properties.put(AUTH_KEY_PROPERTY, key));
+      ifNotNullThen(
+          cloudModel.metadata.get(KEY_ALGORITHM_KEY),
+          fmt -> properties.put(AUTH_FORMAT_PROPERTY, fmt));
+    }
     return properties;
   }
 
@@ -262,8 +281,37 @@ public class ImplicitIotAccessProvider extends IotAccessBase {
       return null;
     }
     CloudModel cloudModel = requireNonNull(JsonUtil.convertTo(CloudModel.class, properties));
+
     cloudModel.metadata = ifNotNullGet(cloudModel.metadata_str, JsonUtil::toStringMapStr);
     cloudModel.metadata_str = null;
+
+    String authPass = properties.get(AUTH_PASSWORD_PROPERTY);
+    String authKey = properties.get(AUTH_KEY_PROPERTY);
+    String authFormat = properties.get(AUTH_FORMAT_PROPERTY);
+
+    List<Credential> credentials = new java.util.ArrayList<>();
+    if (authPass != null) {
+      Credential credential = new Credential();
+      credential.key_data = authPass;
+      credential.key_format = Key_format.PASSWORD;
+      credentials.add(credential);
+    }
+
+    if (authKey == null && cloudModel.metadata != null) {
+      authKey = cloudModel.metadata.get(KEY_BYTES_KEY);
+      authFormat = cloudModel.metadata.get(KEY_ALGORITHM_KEY);
+    }
+
+    if (authKey != null) {
+      Credential credential = new Credential();
+      credential.key_data = authKey;
+      credential.key_format = Key_format.fromValue(authFormat);
+      credentials.add(credential);
+    }
+
+    if (!credentials.isEmpty()) {
+      cloudModel.credentials = ImmutableList.copyOf(credentials);
+    }
 
     cloudModel.gateway = new GatewayModel();
     cloudModel.gateway.proxy_ids =
