@@ -1,4 +1,5 @@
 """Virtual point definition."""
+import warnings
 from typing import Any
 from typing import Optional
 
@@ -60,3 +61,78 @@ class Point(BasicPoint):
 
     def _populate_enumeration(self, point: RefDiscovery) -> None:
         """Concrete implementation doing nothing by default."""
+
+    # =========================================================================
+    # BACKWARD COMPATIBILITY LAYER
+    # =========================================================================
+
+    @property
+    def present_value(self):
+        """
+        Get the point's present value.
+        """
+        warnings.warn(
+            "Direct access to 'present_value' is deprecated in v2.0.0. "
+            "Use 'get_data().present_value'.",
+            DeprecationWarning, stacklevel=2
+        )
+        return self.get_data().present_value
+
+    @present_value.setter
+    def present_value(self, value):
+        """
+        Set the point's present value.
+        """
+        warnings.warn(
+            "Direct setting of 'present_value' is deprecated. "
+            "Use 'set_present_value(value)'.",
+            DeprecationWarning, stacklevel=2
+        )
+        self.set_present_value(value)
+
+    @property
+    def units(self):
+        """
+        Get the point's units.
+        """
+        warnings.warn(
+            "Direct access to 'units' is deprecated. "
+            "Use 'get_state().units'.",
+            DeprecationWarning, stacklevel=2
+        )
+        return self.get_state().units
+
+    @units.setter
+    def units(self, value):
+        """
+        Set the point's units.
+        """
+        warnings.warn(
+            "Direct setting of 'units' is deprecated. "
+            "Update metadata models instead.",
+            DeprecationWarning, stacklevel=2
+        )
+        self._state.units = value
+        self._dirty = True
+
+    def get_event(self):
+        """
+        Provides the compiled telemetry data payload for this point to be included
+        in PointsetEvents.
+        """
+        warnings.warn(
+            "'get_event()' is deprecated. Use 'get_data()'.",
+            DeprecationWarning, stacklevel=2
+        )
+        return self.get_data()
+
+    def update_config(self, config) -> bool:
+        """
+        Update the configuration for this point and return true if state changed.
+        """
+        warnings.warn(
+            "'update_config()' is deprecated. Use 'set_config()'.",
+            DeprecationWarning, stacklevel=2
+        )
+        self.set_config(config)
+        return self.is_dirty()

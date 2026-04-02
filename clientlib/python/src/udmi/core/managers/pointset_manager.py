@@ -131,6 +131,16 @@ class PointsetManager(BaseManager): # pylint: disable=too-many-instance-attribut
         """Returns a read-only mapping of all points."""
         return self._all_points
 
+    @property
+    def _points(self):
+        warnings.warn(
+            "Accessing the private '_points' attribute is deprecated. "
+            "Use the public '.points' property to get active points, "
+            "or '.all_points' to get all provisioned points.",
+            DeprecationWarning, stacklevel=2
+        )
+        return self.points
+
     def set_model(self, model: Metadata) -> None:
         """
         Applies the Pointset Metadata (Model) to the manager.
