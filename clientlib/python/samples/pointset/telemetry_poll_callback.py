@@ -47,9 +47,10 @@ LOGGER = logging.getLogger(__name__)
 def my_sensor_poll() -> Dict[str, Any]:
     """
     Called by the PointsetManager background thread.
-
-    This function should perform the actual hardware reads (e.g. I2C, Modbus).
-    It must return a dictionary of {point_name: value}.
+    Provides a Just-in-Time (Pull) mechanism for data acquisition. Instead of 
+    running a separate DAQ loop, the user delegates the polling rhythm to the 
+    PointsetManager. This function must perform synchronous hardware reads and 
+    return a dictionary of {point_name: value}.
     """
     # Simulate reading hardware registers
     temp = round(random.uniform(20.0, 25.0), 2)
