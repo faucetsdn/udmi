@@ -94,7 +94,7 @@ public class IotReflectorClient implements MessagePublisher {
   private static final String EVENTS_TYPE = "events";
   private static final String MOCK_DEVICE_NUM_ID = "123456789101112";
   private static final String UDMI_TOPIC = "events/" + SubFolder.UDMI;
-  private static final long CONFIG_TIMEOUT_SEC = 5;
+  private static final long CONFIG_TIMEOUT_SEC = 30;
   private static final int UPDATE_RETRIES = 6;
   private static final Collection<String> COPY_IDS = ImmutableSet.of(DEVICE_ID_KEY, GATEWAY_ID_KEY,
       SUBTYPE_PROPERTY_KEY, SUBFOLDER_PROPERTY_KEY, TRANSACTION_KEY, PUBLISH_TIME_KEY);
@@ -386,6 +386,9 @@ public class IotReflectorClient implements MessagePublisher {
 
   private void processUdmiEvent(Map<String, Object> message) {
     UdmiEvents events = convertTo(UdmiEvents.class, message);
+    if (events == null || events.logentries == null) {
+      return;
+    }
     ifNotTrueThen(events.logentries.isEmpty(), this::updateLastProgressEvent);
     events.logentries.forEach(
         entry -> System.err.printf("%s %s%n", isoConvert(entry.timestamp), entry.message));
