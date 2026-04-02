@@ -46,9 +46,6 @@ LOGGER = logging.getLogger("TelemetrySample")
 def update_sensors_loop(pointset_manager):
     """
     Simulates a loop that reads hardware sensors and updates the PointsetManager.
-    Represents an independent Data Acquisition (DAQ) thread. It is completely decoupled 
-    from the network telemetry reporting cycle. Its sole job is to keep the PointsetManager's 
-    internal cache fresh with the latest hardware readings.
     """
     LOGGER.info("Starting sensor simulation loop (Interval: 2s)...")
 

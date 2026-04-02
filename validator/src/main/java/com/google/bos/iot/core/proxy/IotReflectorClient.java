@@ -94,7 +94,7 @@ public class IotReflectorClient implements MessagePublisher {
   private static final String EVENTS_TYPE = "events";
   private static final String MOCK_DEVICE_NUM_ID = "123456789101112";
   private static final String UDMI_TOPIC = "events/" + SubFolder.UDMI;
-  private static final long CONFIG_TIMEOUT_SEC = 5;
+  private static final long CONFIG_TIMEOUT_SEC = 60;
   private static final int UPDATE_RETRIES = 6;
   private static final Collection<String> COPY_IDS = ImmutableSet.of(DEVICE_ID_KEY, GATEWAY_ID_KEY,
       SUBTYPE_PROPERTY_KEY, SUBFOLDER_PROPERTY_KEY, TRANSACTION_KEY, PUBLISH_TIME_KEY);
@@ -284,6 +284,7 @@ public class IotReflectorClient implements MessagePublisher {
 
   private void messageHandler(String topic, String payload) {
     receiveStats.update();
+    payload = ofNullable(payload).map(String::trim).orElse("");
     if (payload.length() == 0) {
       return;
     }
@@ -391,7 +392,8 @@ public class IotReflectorClient implements MessagePublisher {
     }
     ifNotTrueThen(events.logentries.isEmpty(), this::updateLastProgressEvent);
     events.logentries.forEach(
-        entry -> System.err.printf("%s %s%n", isoConvert(entry.timestamp), entry.message));
+        entry -> System.err.printf("%s %s%n", isoConvert(ofNullable(entry.timestamp).orElse(null)),
+            entry.message));
   }
 
   private synchronized void ensureCloudSync(Map<String, Object> message) {
@@ -404,8 +406,16 @@ public class IotReflectorClient implements MessagePublisher {
       UdmiConfig reflectorConfig = convertTo(UdmiConfig.class,
           ofNullable(message.get(SubFolder.UDMI.value())).orElse(message));
 
+      if (reflectorConfig == null || reflectorConfig.reply == null
+          || reflectorConfig.reply.msg_source == null) {
+        return;
+      }
+
       boolean shouldConsiderReply = reflectorConfig.reply.msg_source.equals(userName);
       String transactionId = reflectorConfig.reply.transaction_id;
+      if (transactionId == null) {
+        return;
+      }
       boolean matchingTxnId = transactionId.equals(expectedTxnId);
       boolean matchingSession = transactionId.startsWith(sessionPrefix);
 
@@ -498,7 +508,8 @@ public class IotReflectorClient implements MessagePublisher {
   }
 
   private Envelope parseMessageTopic(String topic) {
-    List<String> parts = new ArrayList<>(Arrays.asList(topic.substring(1).split("/")));
+    String stripped = topic.startsWith("/") ? topic.substring(1) : topic;
+    List<String> parts = new ArrayList<>(Arrays.asList(stripped.split("/")));
     String leader = parts.remove(0);
     if ("devices".equals(leader)) {
       // Next field is registry, not device, since the reflector device id is the site registry.
@@ -524,15 +535,24 @@ public class IotReflectorClient implements MessagePublisher {
     Envelope envelope = new Envelope();
     envelope.deviceRegistryId = registryId;
 
+    if (parts.get(0).equals("c")) {
+      parts.remove(0); // consume 'c'
+      envelope.source = parts.remove(0); // consume source
+    }
+
     String[] bits1 = parts.remove(0).split(SOURCE_SEPARATOR_REGEX);
     checkState(parts.isEmpty() || bits1.length == 1, "Malformed topic: " + topic);
     envelope.subType = SubType.fromValue(bits1[0]);
     if (parts.isEmpty()) {
-      envelope.source = bits1.length > 1 ? bits1[1] : null;
+      if (envelope.source == null) {
+        envelope.source = bits1.length > 1 ? bits1[1] : null;
+      }
     } else {
       String[] bits2 = parts.remove(0).split(SOURCE_SEPARATOR_REGEX);
       envelope.subFolder = SubFolder.fromValue(bits2[0]);
-      envelope.source = bits2.length > 1 ? bits2[1] : null;
+      if (envelope.source == null) {
+        envelope.source = bits2.length > 1 ? bits2[1] : null;
+      }
     }
     checkState(parts.isEmpty());
 
