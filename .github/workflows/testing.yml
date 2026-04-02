@@ -249,8 +249,8 @@ jobs:
         run: |
           bin/start_local sites/udmi_site_model //mqtt/localhost
           bin/pull_messages //mqtt/localhost > out/message_capture.log 2>&1 &
-      - name: bin/test_etcd_prerun
-        run: bin/test_etcd_prerun
+      - name: bin/test_etcd
+        run: bin/test_etcd
       - name: bin/test_mosquitto
         run: bin/test_mosquitto
       - name: bin/test_regclean
@@ -261,8 +261,6 @@ jobs:
         run: bin/test_sequencer local full //mqtt/localhost $(< etc/local_tests.txt)
       - name: bin/test_udmis
         run: bin/test_udmis
-      - name: bin/test_etcd_postrun
-        run: bin/test_etcd_postrun
       - name: mosquitto debug
         if: ${{ !cancelled() }}
         run: |
