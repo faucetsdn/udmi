@@ -1314,6 +1314,32 @@
         "41489"
       ]
     },
+    "alarmset.exclude_units_from_config": {
+      "display": "show",
+      "style": "bold",
+      "section": "alarmset",
+      "type": "boolean"
+    },
+    "alarmset.exclude_alarms_from_config": {
+      "display": "show",
+      "style": "bold",
+      "section": "alarmset",
+      "type": "boolean"
+    },
+    "alarmset.sample_limit_sec": {
+      "display": "show",
+      "style": "bold",
+      "section": "alarmset",
+      "type": "integer",
+      "description": "Minimum time between sample updates for the device (including complete and COV updates). Updates more frequent than this should be coalesced into one update."
+    },
+    "alarmset.sample_rate_sec": {
+      "display": "show",
+      "style": "bold",
+      "section": "alarmset",
+      "type": "integer",
+      "description": "Maximum time between samples for the device to send out a complete update. It can send out updates more frequently than this. Default to 600."
+    },
     "pointset.exclude_units_from_config": {
       "display": "show",
       "style": "bold",
