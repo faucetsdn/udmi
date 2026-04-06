@@ -71,6 +71,12 @@
     "features": {
       "$ref": "file:model_features.json#"
     },
+    "alarmset": {
+      "$ref": "file:model_alarmset.json#",
+      "$presentation": {
+        "section": "alarmset"
+      }
+    },
     "pointset": {
       "$ref": "file:model_pointset.json#",
       "$presentation": {

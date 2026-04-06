@@ -9,6 +9,7 @@ from typing import Dict, Optional
 from ._base import DataModel
 from .common import Operation
 from .events_discovery import DiscoveryEvents
+from .model_alarmset import AlarmsetModel
 from .model_cloud import CloudModel
 from .model_discovery import DiscoveryModel
 from .model_externals import ExternalsModel
@@ -40,6 +41,7 @@ class Metadata(DataModel):
     localnet: Optional[LocalnetModel] = None
     testing: Optional[TestingModel] = None
     features: Optional[TestingModel_1] = None
+    alarmset: Optional[AlarmsetModel] = None
     pointset: Optional[PointsetModel] = None
     structure: Optional[Dict[str, DiscoveryEvents]] = None
     policy: Optional[PolicyModel] = None

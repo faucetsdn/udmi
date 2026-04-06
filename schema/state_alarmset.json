@@ -1,0 +1,47 @@
+{
+  "$udmi_version": "1.5.2",
+  "title": "Alarmset State",
+  "description": "A set of alarms reporting telemetry data.",
+  "type": "object",
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "additionalProperties": false,
+  "properties": {
+    "timestamp": {
+      "description": "Not included in messages published by devices. Part of message subblocks within cloud pipeline. RFC 3339 Timestamp the payload was generated",
+      "type": "string",
+      "format": "date-time",
+      "examples": ["2019-01-17T14:02:29.364Z"]
+    },
+    "version": {
+      "description": "Version of the UDMI schema, not included in messages published by devices",
+      "type": "string"
+    },
+    "state_etag": {
+      "description": "An identifier which uniquely represents the state, and used by a device avoid race conditions where the incoming config is based off an obsolete state. [Additional information on implementation](../docs/specs/sequences/writeback.md)",
+      "type": "string",
+      "maxLength": 32
+    },
+    "status": {
+      "description": "Optional status information about alarmset",
+      "$ref": "file:entry.json"
+    },
+    "alarms": {
+      "description": "Collection of alarm names, defining the representative alarm set for this device.",
+      "additionalProperties": false,
+      "existingJavaType": "java.util.HashMap<String, AlarmAlarmsetState>",
+      "patternProperties": {
+        "^[a-z][a-z0-9]*(_[a-z0-9]+)*$": {
+          "description": "Object representation for for a single alarm",
+          "$ref": "file:state_alarmset_alarm.json#"
+        }
+      }
+    },
+    "upgraded_from": {
+      "description": "Original version of schema pre-upgrade",
+      "type": "string"
+    }
+  },
+  "required": [
+    "alarms"
+  ]
+}
