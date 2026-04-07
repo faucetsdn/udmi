@@ -52,7 +52,7 @@
           "modbus": {
             "adjunct.paths": {
               "serial_port": { "style": "bold" },
-              "bit_rate": { "style": "bold" },
+              "baud_rate": { "style": "bold" },
               "data_bits": { "style": "bold" },
               "stop_bits": { "style": "bold" },
               "parity": { "style": "bold" },
@@ -62,7 +62,7 @@
           "mbus": {
             "adjunct.paths": {
               "serial_port": { "style": "bold" },
-              "bit_rate": { "style": "bold" },
+              "baud_rate": { "style": "bold" },
               "secondary_addr": { "style": "bold" }
             }
           },
