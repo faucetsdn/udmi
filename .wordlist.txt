@@ -16,6 +16,7 @@ BACnet
 bacnet
 BAMBI
 bambi
+bcd
 blobset
 BMS
 BOS
@@ -103,6 +104,7 @@ MacOS
 macos
 md
 microservices
+Mod10k
 modbus
 MQTT
 mydomain
@@ -141,6 +143,7 @@ reconciler
 repo
 RPC
 RSA
+RTU
 runDev
 runtime
 Schemas
@@ -161,6 +164,7 @@ subflows
 subFolder
 subType
 subTypes
+swapped
 systemd
 terraform
 terraformed
@@ -185,8 +189,10 @@ UNK
 unprocessable
 unwriteable
 uplink
+URI
 url
 validator
+varchar
 writeable
 Writeback
 writeback
