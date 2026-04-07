@@ -17,6 +17,12 @@
           "$ref": "file:model_testing_target.json#"
         }
       }
+    },
+    "ota_targets": {
+      "type": "array",
+      "items": {
+        "$ref": "file:model_testing_ota.json#"
+      }
     }
   }
 }

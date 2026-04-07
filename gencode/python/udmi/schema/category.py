@@ -89,8 +89,26 @@ class Category(Enum):
     # Fetching a blob update
     BLOBSET_BLOB_FETCH = ("blobset.blob.fetch", Level.DEBUG)
 
+    # Successfully fetched a blob
+    BLOBSET_BLOB_FETCH_SUCCESS = ("blobset.blob.fetch.success", Level.DEBUG)
+
+    # Blob fetch failed
+    BLOBSET_BLOB_FETCH_FAILURE = ("blobset.blob.fetch.failure", Level.ERROR)
+
+    # Error parsing blob
+    BLOBSET_BLOB_VERIFY_PARSE = ("blobset.blob.verify.parse", Level.ERROR)
+
+    # Blob hash mismatch
+    BLOBSET_BLOB_VERIFY_HASH = ("blobset.blob.verify.hash", Level.ERROR)
+
+    # Hardware or dependency mismatch
+    BLOBSET_BLOB_VERIFY_COMPATIBILITY = ("blobset.blob.verify.compatibility", Level.ERROR)
+
     # Applying a blob update
     BLOBSET_BLOB_APPLY = ("blobset.blob.apply", Level.NOTICE)
+
+    # Aborting/Cancelling a blob update
+    BLOBSET_BLOB_ABORT = ("blobset.blob.abort", Level.NOTICE)
 
     # Receiving/processing a message for validation.
     VALIDATION_DEVICE_RECEIVE = ("validation.device.receive", Level.DEBUG)

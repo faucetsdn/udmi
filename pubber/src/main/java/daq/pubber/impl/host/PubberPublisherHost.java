@@ -27,6 +27,8 @@ import daq.pubber.impl.PubberManager;
 import daq.pubber.impl.manager.PubberDeviceManager;
 import java.io.File;
 import java.io.PrintStream;
+import java.util.function.Consumer;
+import org.apache.commons.io.FileUtils;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CountDownLatch;
@@ -38,6 +40,11 @@ import java.util.concurrent.locks.ReentrantLock;
 import udmi.lib.base.MqttDevice;
 import udmi.lib.client.host.PublisherHost;
 import udmi.lib.client.manager.DeviceManager;
+import java.util.HashMap;
+import udmi.schema.BlobBlobsetState;
+import udmi.schema.BlobBlobsetConfig.BlobPhase;
+import udmi.schema.BlobsetState;
+import udmi.schema.Category;
 import udmi.schema.DevicePersistent;
 import udmi.schema.EndpointConfiguration;
 import udmi.schema.Metadata;
@@ -112,9 +119,102 @@ public class PubberPublisherHost extends PubberManager implements PublisherHost 
         config.deviceId, config.serialNo, config.macAddr,
         config.gatewayId, optionsString(config.options)));
 
+    initModuleForOtaUpdates();
     markStateDirty();
   }
 
+  private void initModuleForOtaUpdates() {
+    try {
+      File repoDir = new File(SOFTWARE_MODULE_DIR);
+      if (repoDir.exists()) {
+        FileUtils.deleteDirectory(repoDir);
+      }
+
+      // Fallback logic to find the source .git directory depending on where tests are run
+      File srcGit = new File(".git");
+      if (!srcGit.exists()) {
+        srcGit = new File("../.git"); 
+      }
+
+      if (srcGit.exists()) {
+        File srcDir = srcGit.getParentFile() != null ? srcGit.getParentFile() : new File(".");
+        info(format("Cloning repo from %s to %s", srcDir.getAbsolutePath(), repoDir.getAbsolutePath()));
+        runCommandInDir(srcDir, "git", "clone", ".", repoDir.getAbsolutePath());
+        info("Isolated repo initialized.");
+      } else {
+        warn("Source .git directory not found, cannot initialize isolated repo.");
+      }
+    } catch (Exception e) {
+      error("While initializing isolated repo", e);
+    }
+  }
+
+  private Consumer<String> getBlobHandler(String blobKey) {
+    return Map.<String, Consumer<String>>of(
+        SOFTWARE_MODULE_KEY, this::handleOtaUpdate
+    ).get(blobKey);
+  }
+
+  @Override
+  public boolean isSupportedBlob(String blobKey) {
+    return getBlobHandler(blobKey) != null;
+  }
+
+  @Override
+  public void handleBlob(String blobKey, String payload) {
+    getBlobHandler(blobKey).accept(payload);
+  }
+
+  @Override
+  public void postHandleBlob(String blobKey) {
+    if (SOFTWARE_MODULE_KEY.equals(blobKey)) {
+      notice("Post-processing Git OTA update. Restarting...");
+      getDeviceManager().systemLifecycle(Operation.SystemMode.RESTART);
+    }
+  }
+
+  private void handleOtaUpdate(String payload) {
+    // Note: The payload is assumed to be the commit hash directly.
+    // In a real UDMI scenario, this would be the content of a downloaded file.
+    String commitHash = payload.trim();
+    info(format("Triggering Git OTA update to commit %s", commitHash));
+
+    logEvent(Category.BLOBSET_BLOB_APPLY,"Applying Git OTA update to commit " + commitHash);
+
+    File repoDir = new File(SOFTWARE_MODULE_DIR);
+    if (!repoDir.exists()) {
+      throw new RuntimeException("Isolated repo directory not found");
+    }
+
+    try {
+      runCommandInDir(repoDir, "git", "fetch");
+      runCommandInDir(repoDir, "git", "checkout", commitHash);
+      notice("Git OTA update completed successfully.");
+    } catch (Exception e) {
+      throw new RuntimeException("Git operation failed", e);
+    }
+  }
+
+  private void runCommandInDir(File dir, String... command) throws Exception {
+    ProcessBuilder pb = new ProcessBuilder(command);
+    pb.directory(dir);
+    pb.redirectErrorStream(true);
+    Process p = pb.start();
+    
+    try (java.io.BufferedReader reader = new java.io.BufferedReader(
+        new java.io.InputStreamReader(p.getInputStream()))) {
+      String line;
+      while ((line = reader.readLine()) != null) {
+        // Use logger instead of System.out to avoid cluttering console
+        debug("Git: " + line);
+      }
+    }
+    
+    int exitCode = p.waitFor();
+    if (exitCode != 0) {
+      throw new RuntimeException(format("Command failed with exit code %d", exitCode));
+    }
+  }
   @Override
   public void initializePersistentStore() {
     checkState(persistentData == null, "Persistent data already loaded");
@@ -131,6 +231,21 @@ public class PubberPublisherHost extends PubberManager implements PublisherHost 
     }
 
     persistentData.restart_count = requireNonNullElse(persistentData.restart_count, 0) + 1;
+
+    if (persistentData.applied_blobs != null) {
+      if (getDeviceState().blobset == null) {
+        getDeviceState().blobset = new BlobsetState();
+        getDeviceState().blobset.blobs = new HashMap<>();
+      }
+      persistentData.applied_blobs.forEach((key, gen) -> {
+        BlobBlobsetState bs = new BlobBlobsetState();
+        bs.phase = BlobPhase.FINAL;
+        bs.generation = java.util.Date.from(java.time.Instant.parse(gen));
+        getDeviceState().blobset.blobs.put(key, bs);
+      });
+    } else {
+      persistentData.applied_blobs = new HashMap<>();
+    }
 
     // If the persistentData contains endpoint configuration, prioritize using that.
     // Otherwise, use the endpoint configuration that came from the Pubber config file on start.

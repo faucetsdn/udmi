@@ -40,6 +40,7 @@ import java.lang.reflect.Field;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Base64;
 import java.util.Date;
 import java.util.HashMap;
@@ -63,8 +64,10 @@ import udmi.lib.client.manager.SystemManager;
 import udmi.lib.intf.FamilyProvider;
 import udmi.lib.intf.ManagerHost;
 import udmi.schema.BlobBlobsetConfig;
+import udmi.schema.BlobBlobsetConfig.BlobPhase;
 import udmi.schema.BlobBlobsetState;
 import udmi.schema.BlobsetConfig;
+import udmi.schema.BlobsetConfig.SystemBlobsets;
 import udmi.schema.BlobsetState;
 import udmi.schema.Category;
 import udmi.schema.Config;
@@ -159,6 +162,102 @@ public interface PublisherHost extends ManagerHost {
       endpointConfiguration.error = e.toString();
       return stringify(endpointConfiguration);
     }
+  }
+
+  /**
+   * Processes all blobs in the configuration, skipping system blobs.
+   */
+  default void processBlobConfig() {
+    if (getDeviceConfig().blobset == null || getDeviceConfig().blobset.blobs == null) {
+      return;
+    }
+    for (String blobKey : getDeviceConfig().blobset.blobs.keySet()) {
+      if (Arrays.stream(SystemBlobsets.values()).anyMatch(e -> e.value().equals(blobKey))) {
+        continue;
+      }
+      if (!isSupportedBlob(blobKey)) {
+        warn("Skipping unknown blob key: " + blobKey);
+        continue;
+      }
+      processBlobConfig(blobKey);
+    }
+  }
+
+  /**
+   * Checks if the application supports the given blob key.
+   */
+  default boolean isSupportedBlob(String blobKey) {
+    return false;
+  }
+
+  /**
+   * Processes the blob config for a given blob key and handles state transitions.
+   */
+  default void processBlobConfig(String blobKey) {
+    if (getDeviceConfig().blobset == null || getDeviceConfig().blobset.blobs == null) {
+      return;
+    }
+
+    BlobBlobsetConfig config = getDeviceConfig().blobset.blobs.get(blobKey);
+    if (config == null) {
+      return;
+    }
+    BlobBlobsetState state = ensureBlobsetState(blobKey);
+    if (config.generation != null && config.generation.equals(state.generation)
+        && BlobPhase.FINAL.equals(state.phase)) {
+      return;
+    }
+
+    logEvent(Category.BLOBSET_BLOB_RECEIVE, "Received blob update config for " + blobKey);
+    try {
+      // Transition to APPLY
+      state.phase = BlobPhase.APPLY;
+      state.generation = config.generation;
+      publishSynchronousState();
+
+      logEvent(Category.BLOBSET_BLOB_FETCH, "Fetching blob data for " + blobKey);
+      String payload = extractConfigBlob(blobKey);
+      if (payload == null) {
+        warn(format("Blob %s not ready for extraction", blobKey));
+        return;
+      }
+      logEvent(Category.BLOBSET_BLOB_FETCH_SUCCESS, "Successfully fetched blob data for " + blobKey);
+
+      // Apply application-specific logic
+      handleBlob(blobKey, payload);
+
+      // Transition to FINAL
+      state.phase = BlobPhase.FINAL;
+      state.status = null;
+      notice(format("Blob %s successfully applied", blobKey));
+      publishSynchronousState();
+
+      // Persist applied blob before actions like a restart
+      persistAppliedBlob(blobKey, isoConvert(config.generation));
+
+      postHandleBlob(blobKey);
+    } catch (Exception e) {
+      state.phase = BlobPhase.FINAL;
+      state.status = exceptionStatus(e, Category.BLOBSET_BLOB_APPLY);
+      error(format("Failed to apply blob %s", blobKey), e);
+
+      String category = Category.BLOBSET_BLOB_FETCH_FAILURE;
+      if (e.getMessage() != null && e.getMessage().contains("hash mismatch")) {
+        category = Category.BLOBSET_BLOB_VERIFY_HASH;
+      }
+      logEvent(category, "For blob key " + blobKey + ":\n", e);
+    } finally {
+      publishAsynchronousState();
+    }
+  }
+
+  /**
+   * Handles application-specific blob processing.
+   */
+  void handleBlob(String blobKey, String payload);
+
+  default void postHandleBlob(String blobKey) {
+    // Default no-op
   }
 
   default boolean isConnected() {
@@ -517,6 +616,7 @@ public interface PublisherHost extends ManagerHost {
         info(format("%s received config %s", getTimestamp(), isoConvert(configMsg.timestamp)));
         getDeviceManager().updateConfig(configMsg);
         extractEndpointBlobConfig();
+        processBlobConfig();
       } else {
         info(format("%s defaulting empty config", getTimestamp()));
       }
@@ -769,12 +869,19 @@ public interface PublisherHost extends ManagerHost {
   /**
    * Ensures the {@code blobset} and its {@code blobs} map are initialized in the device state.
    */
-  default BlobBlobsetState ensureBlobsetState(BlobsetConfig.SystemBlobsets iotEndpointConfig) {
+  default BlobBlobsetState ensureBlobsetState(String blobKey) {
     getDeviceState().blobset = ofNullable(getDeviceState().blobset).orElseGet(BlobsetState::new);
     getDeviceState().blobset.blobs = ofNullable(getDeviceState().blobset.blobs)
             .orElseGet(HashMap::new);
-    return getDeviceState().blobset.blobs.computeIfAbsent(iotEndpointConfig.value(),
+    return getDeviceState().blobset.blobs.computeIfAbsent(blobKey,
             key -> new BlobBlobsetState());
+  }
+
+  /**
+   * Ensures the {@code blobset} and its {@code blobs} map are initialized in the device state.
+   */
+  default BlobBlobsetState ensureBlobsetState(BlobsetConfig.SystemBlobsets iotEndpointConfig) {
+    return ensureBlobsetState(iotEndpointConfig.value());
   }
 
   private String getClientId(String forRegistry) {
@@ -784,6 +891,21 @@ public interface PublisherHost extends ManagerHost {
 
   default void publishLogMessage(Entry logEntry, String targetId) {
     getDeviceManager().publishLogMessage(logEntry, targetId);
+  }
+
+  /**
+   * Logs an event with a specific category and level.
+   */
+  default void logEvent(String category, String message, Throwable e) {
+    Entry entry = entryFromException(category, e);
+    if (message != null) {
+      entry.message = message + entry.message;
+    }
+    publishLogMessage(entry, getDeviceId());
+  }
+
+  default void logEvent(String category, String message) {
+    logEvent(category, message, null);
   }
 
   /**
@@ -1051,6 +1173,15 @@ public interface PublisherHost extends ManagerHost {
   default void persistEndpoint(EndpointConfiguration endpoint) {
     notice("Persisting connection endpoint");
     getPersistentData().endpoint = endpoint;
+    writePersistentStore();
+  }
+
+  /**
+   * Persist active generation for a blob.
+   */
+  default void persistAppliedBlob(String blobKey, String generation) {
+    notice("Persisting generation " + generation + " for blob key " + blobKey);
+    getPersistentData().applied_blobs.put(blobKey, generation);
     writePersistentStore();
   }
 

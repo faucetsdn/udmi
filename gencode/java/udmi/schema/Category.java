@@ -171,11 +171,47 @@ public class Category {
     public static final int BLOBSET_BLOB_FETCH_VALUE = DEBUG.value();
     static { LEVEL.put(BLOBSET_BLOB_FETCH, DEBUG); }
 
+    // Successfully fetched a blob
+    public static final String BLOBSET_BLOB_FETCH_SUCCESS = "blobset.blob.fetch.success";
+    public static final Level BLOBSET_BLOB_FETCH_SUCCESS_LEVEL = DEBUG;
+    public static final int BLOBSET_BLOB_FETCH_SUCCESS_VALUE = DEBUG.value();
+    static { LEVEL.put(BLOBSET_BLOB_FETCH_SUCCESS, DEBUG); }
+
+    // Blob fetch failed
+    public static final String BLOBSET_BLOB_FETCH_FAILURE = "blobset.blob.fetch.failure";
+    public static final Level BLOBSET_BLOB_FETCH_FAILURE_LEVEL = ERROR;
+    public static final int BLOBSET_BLOB_FETCH_FAILURE_VALUE = ERROR.value();
+    static { LEVEL.put(BLOBSET_BLOB_FETCH_FAILURE, ERROR); }
+
+    // Error parsing blob
+    public static final String BLOBSET_BLOB_VERIFY_PARSE = "blobset.blob.verify.parse";
+    public static final Level BLOBSET_BLOB_VERIFY_PARSE_LEVEL = ERROR;
+    public static final int BLOBSET_BLOB_VERIFY_PARSE_VALUE = ERROR.value();
+    static { LEVEL.put(BLOBSET_BLOB_VERIFY_PARSE, ERROR); }
+
+    // Blob hash mismatch
+    public static final String BLOBSET_BLOB_VERIFY_HASH = "blobset.blob.verify.hash";
+    public static final Level BLOBSET_BLOB_VERIFY_HASH_LEVEL = ERROR;
+    public static final int BLOBSET_BLOB_VERIFY_HASH_VALUE = ERROR.value();
+    static { LEVEL.put(BLOBSET_BLOB_VERIFY_HASH, ERROR); }
+
+    // Hardware or dependency mismatch
+    public static final String BLOBSET_BLOB_VERIFY_COMPATIBILITY = "blobset.blob.verify.compatibility";
+    public static final Level BLOBSET_BLOB_VERIFY_COMPATIBILITY_LEVEL = ERROR;
+    public static final int BLOBSET_BLOB_VERIFY_COMPATIBILITY_VALUE = ERROR.value();
+    static { LEVEL.put(BLOBSET_BLOB_VERIFY_COMPATIBILITY, ERROR); }
+
     // Applying a blob update
     public static final String BLOBSET_BLOB_APPLY = "blobset.blob.apply";
     public static final Level BLOBSET_BLOB_APPLY_LEVEL = NOTICE;
     public static final int BLOBSET_BLOB_APPLY_VALUE = NOTICE.value();
     static { LEVEL.put(BLOBSET_BLOB_APPLY, NOTICE); }
+
+    // Aborting/Cancelling a blob update
+    public static final String BLOBSET_BLOB_ABORT = "blobset.blob.abort";
+    public static final Level BLOBSET_BLOB_ABORT_LEVEL = NOTICE;
+    public static final int BLOBSET_BLOB_ABORT_VALUE = NOTICE.value();
+    static { LEVEL.put(BLOBSET_BLOB_ABORT, NOTICE); }
 
     // Receiving/processing a message for validation.
     public static final String VALIDATION_DEVICE_RECEIVE = "validation.device.receive";

@@ -1,0 +1,30 @@
+{
+  "$udmi_version": "1.5.2",
+  "title": "Ota Testing Model",
+  "type": "object",
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "additionalProperties": false,
+  "properties": {
+    "blob_key": {
+      "description": "Blob key for the payload",
+      "type": "string"
+    },
+    "url": {
+      "description": "URL for OTA update",
+      "type": "string"
+    },
+    "sha256": {
+      "description": "SHA256 hash of the payload",
+      "type": "string"
+    },
+    "version": {
+      "description": "Expected software version",
+      "type": "string"
+    },
+    "test_type": {
+      "description": "Type of test to run for this payload. 'happy' expects successful application and version update. 'bad_hash' expects error state due to hash mismatch.",
+      "type": "string",
+      "enum": ["happy", "bad_hash"]
+    }
+  }
+}

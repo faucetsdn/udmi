@@ -319,11 +319,45 @@ jobs:
           name: udmi-support_${{ github.run_id }}-r
           path: '*_udmi-support_*.tgz'
 
+  ota:
+    name: OTA Updates
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    env:
+      UDMI_ALT_REGISTRY: ZZ-REDIRECT-NA
+      TARGET_PROJECT: //mqtt/localhost
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '21'
+      - name: base setup
+        run: bin/run_tests install_dependencies
+      - name: local setup
+        run: bin/start_local sites/udmi_site_model $TARGET_PROJECT
+      - name: regclean
+        run: bin/test_regclean $TARGET_PROJECT
+      - name: bin/test_ota_updates
+        run: bin/test_ota_updates $TARGET_PROJECT
+      - name: pubber.log
+        if: ${{ !cancelled() }}
+        run: more out/pubber.log* | cat
+      - name: support bundle
+        if: ${{ !cancelled() }}
+        run: UDMI_REGISTRY_SUFFIX=_ota bin/support ${{ github.repository_owner }}_${{ github.job }}_
+      - uses: actions/upload-artifact@v4
+        if: ${{ !cancelled() }}
+        with:
+          if-no-files-found: error
+          name: udmi-support_${{ github.run_id }}-ota
+          path: '*_udmi-support_*.tgz'
+
   posttest:
     name: Post-test Summarization
     runs-on: ubuntu-24.04
     timeout-minutes: 5
-    needs: [ baseline, sequencer, endpoint, runlocal ]
+    needs: [ baseline, sequencer, endpoint, runlocal, ota ]
     if: ${{ !cancelled() && vars.TARGET_PROJECT != '' }}
     env:
       TARGET_PROJECT: ${{ vars.TARGET_PROJECT }}
