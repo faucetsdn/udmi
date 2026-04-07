@@ -27,8 +27,7 @@ import daq.pubber.impl.PubberManager;
 import daq.pubber.impl.manager.PubberDeviceManager;
 import java.io.File;
 import java.io.PrintStream;
-import java.util.function.Consumer;
-import org.apache.commons.io.FileUtils;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CountDownLatch;
@@ -37,12 +36,13 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
+import java.util.function.Consumer;
+import org.apache.commons.io.FileUtils;
 import udmi.lib.base.MqttDevice;
 import udmi.lib.client.host.PublisherHost;
 import udmi.lib.client.manager.DeviceManager;
-import java.util.HashMap;
-import udmi.schema.BlobBlobsetState;
 import udmi.schema.BlobBlobsetConfig.BlobPhase;
+import udmi.schema.BlobBlobsetState;
 import udmi.schema.BlobsetState;
 import udmi.schema.Category;
 import udmi.schema.DevicePersistent;
@@ -138,7 +138,8 @@ public class PubberPublisherHost extends PubberManager implements PublisherHost 
 
       if (srcGit.exists()) {
         File srcDir = srcGit.getParentFile() != null ? srcGit.getParentFile() : new File(".");
-        info(format("Cloning repo from %s to %s", srcDir.getAbsolutePath(), repoDir.getAbsolutePath()));
+        info(format("Cloning repo from %s to %s", srcDir.getAbsolutePath(),
+            repoDir.getAbsolutePath()));
         runCommandInDir(srcDir, "git", "clone", ".", repoDir.getAbsolutePath());
         info("Isolated repo initialized.");
       } else {
@@ -179,7 +180,7 @@ public class PubberPublisherHost extends PubberManager implements PublisherHost 
     String commitHash = payload.trim();
     info(format("Triggering Git OTA update to commit %s", commitHash));
 
-    logEvent(Category.BLOBSET_BLOB_APPLY,"Applying Git OTA update to commit " + commitHash);
+    logEvent(Category.BLOBSET_BLOB_APPLY, "Applying Git OTA update to commit " + commitHash);
 
     File repoDir = new File(SOFTWARE_MODULE_DIR);
     if (!repoDir.exists()) {
@@ -215,6 +216,7 @@ public class PubberPublisherHost extends PubberManager implements PublisherHost 
       throw new RuntimeException(format("Command failed with exit code %d", exitCode));
     }
   }
+
   @Override
   public void initializePersistentStore() {
     checkState(persistentData == null, "Persistent data already loaded");

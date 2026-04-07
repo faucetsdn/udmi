@@ -207,7 +207,7 @@ public class Category {
     public static final int BLOBSET_BLOB_APPLY_VALUE = NOTICE.value();
     static { LEVEL.put(BLOBSET_BLOB_APPLY, NOTICE); }
 
-    // Aborting/Cancelling a blob update
+    // Aborting/Canceling a blob update
     public static final String BLOBSET_BLOB_ABORT = "blobset.blob.abort";
     public static final Level BLOBSET_BLOB_ABORT_LEVEL = NOTICE;
     public static final int BLOBSET_BLOB_ABORT_VALUE = NOTICE.value();

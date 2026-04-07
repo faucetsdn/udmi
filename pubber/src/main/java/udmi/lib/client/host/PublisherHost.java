@@ -184,13 +184,6 @@ public interface PublisherHost extends ManagerHost {
   }
 
   /**
-   * Checks if the application supports the given blob key.
-   */
-  default boolean isSupportedBlob(String blobKey) {
-    return false;
-  }
-
-  /**
    * Processes the blob config for a given blob key and handles state transitions.
    */
   default void processBlobConfig(String blobKey) {
@@ -221,7 +214,8 @@ public interface PublisherHost extends ManagerHost {
         warn(format("Blob %s not ready for extraction", blobKey));
         return;
       }
-      logEvent(Category.BLOBSET_BLOB_FETCH_SUCCESS, "Successfully fetched blob data for " + blobKey);
+      logEvent(Category.BLOBSET_BLOB_FETCH_SUCCESS,
+          "Successfully fetched blob data for " + blobKey);
 
       // Apply application-specific logic
       handleBlob(blobKey, payload);
@@ -249,6 +243,13 @@ public interface PublisherHost extends ManagerHost {
     } finally {
       publishAsynchronousState();
     }
+  }
+
+  /**
+   * Checks if the application supports the given blob key.
+   */
+  default boolean isSupportedBlob(String blobKey) {
+    return false;
   }
 
   /**
