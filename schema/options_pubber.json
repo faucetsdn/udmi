@@ -127,6 +127,10 @@
     },
     "softwareFirmwareValue": {
       "type": "string"
+    },
+    "otaFailFetch": {
+      "type": "boolean",
+      "description": "If true, pubber will simulate a network failure during OTA fetch."
     }
   }
 }

@@ -20,11 +20,6 @@
     "version": {
       "description": "Expected software version",
       "type": "string"
-    },
-    "test_type": {
-      "description": "Type of test to run for this payload. 'happy' expects successful application and version update. 'bad_hash' expects error state due to hash mismatch.",
-      "type": "string",
-      "enum": ["happy", "bad_hash"]
     }
   }
 }

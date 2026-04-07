@@ -2,7 +2,6 @@
 package udmi.schema;
 
 import java.util.HashMap;
-import java.util.List;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
@@ -27,7 +26,7 @@ public class TestingModel {
     @JsonProperty("targets")
     public HashMap<String, TargetTestingModel> targets;
     @JsonProperty("ota_targets")
-    public List<OtaTestingModel> ota_targets;
+    public HashMap<String, OtaTestingModel> ota_targets;
 
     @Override
     public int hashCode() {

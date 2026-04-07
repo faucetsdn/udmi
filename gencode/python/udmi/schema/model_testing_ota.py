@@ -4,19 +4,9 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from enum import Enum
 from typing import Optional
 
 from ._base import DataModel
-
-
-class TestType(Enum):
-    """
-    Type of test to run for this payload. 'happy' expects successful application and version update. 'bad_hash' expects error state due to hash mismatch.
-    """
-
-    happy = 'happy'
-    bad_hash = 'bad_hash'
 
 
 @dataclass
@@ -25,4 +15,3 @@ class OtaTestingModel(DataModel):
     url: Optional[str] = None
     sha256: Optional[str] = None
     version: Optional[str] = None
-    test_type: Optional[TestType] = None

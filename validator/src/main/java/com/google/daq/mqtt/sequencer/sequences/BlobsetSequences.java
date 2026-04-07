@@ -17,7 +17,11 @@ import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertTrue;
 import static udmi.schema.Bucket.ENDPOINT_CONFIG;
 import static udmi.schema.Bucket.SYSTEM_MODE;
+import static udmi.schema.Bucket.SYSTEM_SOFTWARE_UPDATES;
 import static udmi.schema.Category.BLOBSET_BLOB_APPLY;
+import static udmi.schema.Category.BLOBSET_BLOB_FETCH;
+import static udmi.schema.Category.BLOBSET_BLOB_FETCH_SUCCESS;
+import static udmi.schema.Category.BLOBSET_BLOB_VERIFY_HASH;
 import static udmi.schema.FeatureDiscovery.FeatureStage.PREVIEW;
 
 import com.google.daq.mqtt.sequencer.Feature;
@@ -41,6 +45,8 @@ import udmi.schema.BlobBlobsetConfig.BlobPhase;
 import udmi.schema.BlobBlobsetState;
 import udmi.schema.BlobsetConfig;
 import udmi.schema.BlobsetConfig.SystemBlobsets;
+import udmi.schema.Category;
+import udmi.schema.OtaTestingModel;
 import udmi.schema.EndpointConfiguration;
 import udmi.schema.EndpointConfiguration.Protocol;
 import udmi.schema.EndpointConfiguration.Transport;
@@ -387,4 +393,94 @@ public class BlobsetSequences extends SequenceBase {
     untilTrue("last_start is newer than previous last_start",
         () -> deviceConfig.system.operation.last_start.after(last_start));
   }
+
+  private String generateSoftwareConfigDataUrl(String payload) {
+    return format(DATA_URL_FORMAT, JSON_MIME_TYPE, encodeBase64(payload));
+  }
+
+  private void setDeviceConfigSoftwareBlob(String blob_key, String url, String sha256) {
+    BlobBlobsetConfig config = new BlobBlobsetConfig();
+    config.url = SemanticValue.describe("software data", url);
+    config.phase = BlobPhase.FINAL;
+    config.generation = SemanticDate.describe("blob generation", new Date());
+    config.sha256 = SemanticValue.describe("blob data hash", sha256);
+
+    BlobsetConfig blobset = new BlobsetConfig();
+    blobset.blobs = new HashMap<>();
+    blobset.blobs.put(blob_key, config);
+    deviceConfig.blobset = blobset;
+  }
+
+  private void runHappyPathOta(OtaTestingModel otaConfig) {
+    String blobKey = otaConfig.blob_key;
+    String url = otaConfig.url;
+    String sha256 = otaConfig.sha256;
+    String version = otaConfig.version;
+
+    info(format("Testing OTA update for blob key %s, version %s", blobKey, version));
+
+    setDeviceConfigSoftwareBlob(blobKey, url, sha256);
+    updateConfig("trigger ota update for " + blobKey);
+
+    // Wait for phase: APPLY
+    untilTrue(blobKey + " phase is APPLY", () -> {
+      BlobBlobsetState blobBlobsetState = deviceState.blobset.blobs.get(blobKey);
+      return blobBlobsetState != null && BlobPhase.APPLY.equals(blobBlobsetState.phase);
+    });
+
+    // Wait for log message
+    waitForLog(BLOBSET_BLOB_APPLY, Level.NOTICE); 
+
+    // Wait for phase: FINAL and status null
+    untilTrue(blobKey + " phase is FINAL and status is null", () -> {
+      BlobBlobsetState blobBlobsetState = deviceState.blobset.blobs.get(blobKey);
+      return blobBlobsetState != null && BlobPhase.FINAL.equals(blobBlobsetState.phase) && blobBlobsetState.status == null;
+    });
+
+    // Validate system.software
+    checkThat(blobKey + " software version reflects update", () -> {
+      String softwareVersion = deviceState.system.software.get(blobKey);
+      return version.equals(softwareVersion);
+    });
+  }
+
+  private OtaTestingModel getOtaTarget(String targetType) {
+    ifTrueSkipTest(deviceMetadata.testing == null || deviceMetadata.testing.ota_targets == null,
+        "No OTA targets defined in metadata");
+    OtaTestingModel target = deviceMetadata.testing.ota_targets.get(targetType);
+    ifNullSkipTest(target, "No OTA target defined for type '" + targetType + "'");
+    return target;
+  }
+
+  @Test(timeout = TWO_MINUTES_MS)
+  @Feature(stage = PREVIEW, bucket = SYSTEM_SOFTWARE_UPDATES)
+  public void ota_happy_path() {
+    OtaTestingModel target = getOtaTarget("happy");
+    runHappyPathOta(target);
+  }
+
+  @Test(timeout = TWO_MINUTES_MS)
+  @Feature(stage = PREVIEW, bucket = SYSTEM_SOFTWARE_UPDATES)
+  public void ota_fetch_failure() {
+    OtaTestingModel target = getOtaTarget("fail_fetch");
+
+    setDeviceConfigSoftwareBlob(target.blob_key, target.url, target.sha256);
+    updateConfig("trigger ota update for " + target.blob_key);
+
+    untilTrue(target.blob_key + " phase is APPLY", () -> {
+      BlobBlobsetState blobBlobsetState = deviceState.blobset.blobs.get(target.blob_key);
+      return blobBlobsetState != null && BlobPhase.APPLY.equals(blobBlobsetState.phase);
+    });
+
+    waitForLog(Category.BLOBSET_BLOB_FETCH_FAILURE, Level.ERROR);
+
+    untilTrue(target.blob_key + " phase is FINAL and status is not null", () -> {
+      BlobBlobsetState blobBlobsetState = deviceState.blobset.blobs.get(target.blob_key);
+      return blobBlobsetState != null 
+          && BlobPhase.FINAL.equals(blobBlobsetState.phase) 
+          && blobBlobsetState.status != null
+          && blobBlobsetState.status.level >= Level.ERROR.value();
+    });
+  }
+
 }

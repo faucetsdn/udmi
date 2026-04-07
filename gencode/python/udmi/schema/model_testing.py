@@ -4,7 +4,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Dict, List, Optional
+from typing import Dict, Optional
 
 from ._base import DataModel
 from .model_testing_ota import OtaTestingModel
@@ -19,4 +19,4 @@ class TestingModel(DataModel):
 
     nostate: Optional[bool] = None
     targets: Optional[Dict[str, TargetTestingModel]] = None
-    ota_targets: Optional[List[OtaTestingModel]] = None
+    ota_targets: Optional[Dict[str, OtaTestingModel]] = None
