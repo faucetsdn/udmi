@@ -27,3 +27,14 @@ c773b86d-b0c0-46fc-bd3f-d726fadd5f1e:
         values:
           degrees_celsius: degC
   type: HVAC/VAV_SD_CSP
+547a33c5-0ce4-4dfb-9924-5169a3475c89:
+  code: VAV-3
+  cloud_device_id: '2541901344105618'
+  translation:
+    supply_air_flowrate_sensor:
+      present_value: points.supply_air_flowrate_sensor.present_value
+      units:
+        key: pointset.points.supply_air_flowrate_sensor.units
+        values:
+          liters_per_second: L/s
+  type: HVAC/VAV_SD_DSP

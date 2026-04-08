@@ -51,11 +51,14 @@ def extract_dbo_config(site_model_dir: Path) -> dict:
             if "ref" in point_info:
                 pt_dbo["present_value"] = point_info["ref"]
             if "units" in point_info:
+                u_map = {
+                    "degC": "degrees_celsius",
+                    "L/s": "liters_per_second"
+                }
                 pt_dbo["units"] = {
                     "key": f"pointset.points.{point_name}.units",
                     "values": {
-                        # A basic reverse map for common units in this example
-                        "degrees_celsius" if point_info["units"] == "degC" else point_info["units"]: point_info["units"]
+                        u_map.get(point_info["units"], point_info["units"]): point_info["units"]
                     }
                 }
             if "states" in point_info:
