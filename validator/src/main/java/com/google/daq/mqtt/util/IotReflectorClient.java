@@ -22,6 +22,7 @@ import static udmi.schema.CloudModel.ModelOperation.BOUND;
 import static udmi.schema.CloudModel.ModelOperation.DELETE;
 import static udmi.schema.CloudModel.ModelOperation.READ;
 import static udmi.schema.CloudModel.ModelOperation.UNBIND;
+import static udmi.schema.CloudModel.Resource_type.REGISTRY;
 
 import com.google.common.base.Preconditions;
 import com.google.daq.mqtt.util.MessagePublisher.QuerySpeed;
@@ -119,6 +120,7 @@ public class IotReflectorClient implements IotProvider {
   @Override
   public void updateRegistry(CloudModel registry) {
     registry.operation = ofNullable(registry.operation).orElse(ModelOperation.UPDATE);
+    registry.resource_type = REGISTRY;
     cloudModelTransaction(null, CLOUD_MODEL_TOPIC, registry);
   }
 
