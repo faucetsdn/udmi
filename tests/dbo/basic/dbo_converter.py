@@ -13,7 +13,7 @@ def extract_dbo_config(site_model_dir: Path) -> dict:
 
     devices_dir = site_model_dir / "devices"
 
-    for device_dir in devices_dir.iterdir():
+    for device_dir in sorted(devices_dir.iterdir()):
         if not device_dir.is_dir():
             continue
 
@@ -40,22 +40,35 @@ def extract_dbo_config(site_model_dir: Path) -> dict:
         if "cloud" in metadata and "num_id" in metadata["cloud"]:
             device_entry["cloud_device_id"] = str(metadata["cloud"]["num_id"])
 
-        if "connections" in dbo_external:
-            device_entry["connections"] = dbo_external["connections"]
+        if "connections" in metadata and metadata["connections"]:
+            device_entry["connections"] = metadata["connections"]
 
-        # extract point translation
+        # extract point translation from core UDMI pointset constructs
         pointset = metadata.get("pointset", {}).get("points", {})
         translations = {}
         for point_name, point_info in pointset.items():
-            pt_dbo = point_info.get("externals", {}).get("dbo")
+            pt_dbo = {}
+            if "ref" in point_info:
+                pt_dbo["present_value"] = point_info["ref"]
+            if "units" in point_info:
+                pt_dbo["units"] = {
+                    "key": f"pointset.points.{point_name}.units",
+                    "values": {
+                        # A basic reverse map for common units in this example
+                        "degrees_celsius" if point_info["units"] == "degC" else point_info["units"]: point_info["units"]
+                    }
+                }
+            if "states" in point_info:
+                pt_dbo["states"] = point_info["states"]
+
             if pt_dbo:
                 translations[point_name] = pt_dbo
 
         if translations:
             device_entry["translation"] = translations
 
-        if "links" in dbo_external:
-            device_entry["links"] = dbo_external["links"]
+        if "links" in metadata and metadata["links"]:
+            device_entry["links"] = metadata["links"]
 
         if "type" in dbo_external:
             device_entry["type"] = dbo_external["type"]

@@ -4,7 +4,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Dict, Optional
+from typing import Any, Dict, List, Optional, Union
 
 from ._base import DataModel
 from .common import Operation
@@ -20,6 +20,7 @@ from .model_pointset import PointsetModel
 from .model_policy import PolicyModel
 from .model_system import SystemModel
 from .model_testing import TestingModel
+from .virtual_links import VirtualEquipmentLinks
 
 
 @dataclass
@@ -36,6 +37,8 @@ class Metadata(DataModel):
     cloud: Optional[CloudModel] = None
     system: Optional[SystemModel] = None
     externals: Optional[ExternalsModel] = None
+    connections: Optional[Dict[str, Union[str, List[Any]]]] = None
+    links: Optional[VirtualEquipmentLinks] = None
     gateway: Optional[GatewayModel] = None
     discovery: Optional[DiscoveryModel] = None
     localnet: Optional[LocalnetModel] = None

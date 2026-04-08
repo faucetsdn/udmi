@@ -7,32 +7,24 @@
   "cloud": {
     "num_id": "2541901344105616"
   },
+  "connections": {},
+  "links": {
+    "547a33c5-0ce4-4dfb-9924-5169a3475c89": {
+      "supply_air_flowrate_sensor": "supply_air_flowrate_sensor_1"
+    }
+  },
   "externals": {
     "dbo": {
       "ext_id": "c773b86d-b0c0-46fc-bd3f-d726fadd5f1e",
       "type": "HVAC/VAV_SD_DSP",
-      "label": "VAV-1",
-      "links": {
-        "547a33c5-0ce4-4dfb-9924-5169a3475c89": {
-          "supply_air_flowrate_sensor": "supply_air_flowrate_sensor_1"
-        }
-      }
+      "label": "VAV-1"
     }
   },
   "pointset": {
     "points": {
       "zone_air_temperature_sensor": {
-        "externals": {
-          "dbo": {
-            "present_value": "points.zone_air_temperature_sensor.present_value",
-            "units": {
-              "key": "pointset.points.zone_air_temperature_sensor.units",
-              "values": {
-                "degrees_celsius": "degC"
-              }
-            }
-          }
-        }
+        "ref": "points.zone_air_temperature_sensor.present_value",
+        "units": "degC"
       }
     }
   }

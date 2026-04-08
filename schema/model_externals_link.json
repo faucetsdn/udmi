@@ -22,19 +22,6 @@
     "label": {
       "description": "Descriptive label for this entity",
       "type": "string"
-    },
-    "connections": {
-      "description": "Entity connections, keyed by guid",
-      "type": "object",
-      "existingJavaType": "java.util.Map<String, Object>",
-      "patternProperties": {
-        "^[-0-9a-z]+$": {
-          "type": [ "string", "array" ]
-        }
-      }
-    },
-    "links": {
-      "$ref": "file:virtual_links.json"
     }
   }
 }

@@ -33,10 +33,10 @@ import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
     "unchanged_limit_sec",
     "cov_increment",
     "ref",
+    "states",
     "adjunct",
     "tags",
-    "structure",
-    "externals"
+    "structure"
 })
 public class PointPointsetModel {
 
@@ -124,6 +124,13 @@ public class PointPointsetModel {
     @JsonProperty("ref")
     @JsonPropertyDescription("Mapping for the point to an internal resource (e.g. BACnet object reference)")
     public java.lang.String ref;
+    /**
+     * Mapping of string states to their values
+     *
+     */
+    @JsonProperty("states")
+    @JsonPropertyDescription("Mapping of string states to their values")
+    public Map<String, String> states;
     @JsonProperty("adjunct")
     public Map<String, String> adjunct;
     /**
@@ -141,13 +148,6 @@ public class PointPointsetModel {
     @JsonProperty("structure")
     @JsonPropertyDescription("Collection of family point information")
     public Map<String, RefDiscovery> structure;
-    /**
-     * Information specific to how the point links with external models
-     *
-     */
-    @JsonProperty("externals")
-    @JsonPropertyDescription("Information specific to how the point links with external models")
-    public Map<String, BuildingTranslation> externals;
 
     @Override
     public int hashCode() {
@@ -160,12 +160,12 @@ public class PointPointsetModel {
         result = ((result* 31)+((this.baseline_tolerance == null)? 0 :this.baseline_tolerance.hashCode()));
         result = ((result* 31)+((this.structure == null)? 0 :this.structure.hashCode()));
         result = ((result* 31)+((this.writable == null)? 0 :this.writable.hashCode()));
+        result = ((result* 31)+((this.states == null)? 0 :this.states.hashCode()));
         result = ((result* 31)+((this.tags == null)? 0 :this.tags.hashCode()));
         result = ((result* 31)+((this.ref == null)? 0 :this.ref.hashCode()));
         result = ((result* 31)+((this.baseline_value == null)? 0 :this.baseline_value.hashCode()));
         result = ((result* 31)+((this.range_max == null)? 0 :this.range_max.hashCode()));
         result = ((result* 31)+((this.unchanged_limit_sec == null)? 0 :this.unchanged_limit_sec.hashCode()));
-        result = ((result* 31)+((this.externals == null)? 0 :this.externals.hashCode()));
         result = ((result* 31)+((this.adjunct == null)? 0 :this.adjunct.hashCode()));
         result = ((result* 31)+((this.cov_increment == null)? 0 :this.cov_increment.hashCode()));
         return result;
@@ -180,7 +180,7 @@ public class PointPointsetModel {
             return false;
         }
         PointPointsetModel rhs = ((PointPointsetModel) other);
-        return (((((((((((((((((this.baseline_state == rhs.baseline_state)||((this.baseline_state!= null)&&this.baseline_state.equals(rhs.baseline_state)))&&((this.range_min == rhs.range_min)||((this.range_min!= null)&&this.range_min.equals(rhs.range_min))))&&((this.description == rhs.description)||((this.description!= null)&&this.description.equals(rhs.description))))&&((this.units == rhs.units)||((this.units!= null)&&this.units.equals(rhs.units))))&&((this.type == rhs.type)||((this.type!= null)&&this.type.equals(rhs.type))))&&((this.baseline_tolerance == rhs.baseline_tolerance)||((this.baseline_tolerance!= null)&&this.baseline_tolerance.equals(rhs.baseline_tolerance))))&&((this.structure == rhs.structure)||((this.structure!= null)&&this.structure.equals(rhs.structure))))&&((this.writable == rhs.writable)||((this.writable!= null)&&this.writable.equals(rhs.writable))))&&((this.tags == rhs.tags)||((this.tags!= null)&&this.tags.equals(rhs.tags))))&&((this.ref == rhs.ref)||((this.ref!= null)&&this.ref.equals(rhs.ref))))&&((this.baseline_value == rhs.baseline_value)||((this.baseline_value!= null)&&this.baseline_value.equals(rhs.baseline_value))))&&((this.range_max == rhs.range_max)||((this.range_max!= null)&&this.range_max.equals(rhs.range_max))))&&((this.unchanged_limit_sec == rhs.unchanged_limit_sec)||((this.unchanged_limit_sec!= null)&&this.unchanged_limit_sec.equals(rhs.unchanged_limit_sec))))&&((this.externals == rhs.externals)||((this.externals!= null)&&this.externals.equals(rhs.externals))))&&((this.adjunct == rhs.adjunct)||((this.adjunct!= null)&&this.adjunct.equals(rhs.adjunct))))&&((this.cov_increment == rhs.cov_increment)||((this.cov_increment!= null)&&this.cov_increment.equals(rhs.cov_increment))));
+        return (((((((((((((((((this.baseline_state == rhs.baseline_state)||((this.baseline_state!= null)&&this.baseline_state.equals(rhs.baseline_state)))&&((this.range_min == rhs.range_min)||((this.range_min!= null)&&this.range_min.equals(rhs.range_min))))&&((this.description == rhs.description)||((this.description!= null)&&this.description.equals(rhs.description))))&&((this.units == rhs.units)||((this.units!= null)&&this.units.equals(rhs.units))))&&((this.type == rhs.type)||((this.type!= null)&&this.type.equals(rhs.type))))&&((this.baseline_tolerance == rhs.baseline_tolerance)||((this.baseline_tolerance!= null)&&this.baseline_tolerance.equals(rhs.baseline_tolerance))))&&((this.structure == rhs.structure)||((this.structure!= null)&&this.structure.equals(rhs.structure))))&&((this.writable == rhs.writable)||((this.writable!= null)&&this.writable.equals(rhs.writable))))&&((this.states == rhs.states)||((this.states!= null)&&this.states.equals(rhs.states))))&&((this.tags == rhs.tags)||((this.tags!= null)&&this.tags.equals(rhs.tags))))&&((this.ref == rhs.ref)||((this.ref!= null)&&this.ref.equals(rhs.ref))))&&((this.baseline_value == rhs.baseline_value)||((this.baseline_value!= null)&&this.baseline_value.equals(rhs.baseline_value))))&&((this.range_max == rhs.range_max)||((this.range_max!= null)&&this.range_max.equals(rhs.range_max))))&&((this.unchanged_limit_sec == rhs.unchanged_limit_sec)||((this.unchanged_limit_sec!= null)&&this.unchanged_limit_sec.equals(rhs.unchanged_limit_sec))))&&((this.adjunct == rhs.adjunct)||((this.adjunct!= null)&&this.adjunct.equals(rhs.adjunct))))&&((this.cov_increment == rhs.cov_increment)||((this.cov_increment!= null)&&this.cov_increment.equals(rhs.cov_increment))));
     }
 
 
