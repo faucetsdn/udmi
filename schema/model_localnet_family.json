@@ -42,6 +42,12 @@
       "description": "The family designator, used only when the entry is not keyed in a family map",
       "type": "string",
       "examples": ["ipv4", "bacnet"]
+    },
+    "subsystem": {
+      "description": "The subsystem within the gateway device to use for this network",
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9]*(_[a-z0-9]+)*$",
+      "examples": ["modbus_1", "bacnet_1"]
     }
   }
 }

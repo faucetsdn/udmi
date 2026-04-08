@@ -21,3 +21,4 @@ class FamilyLocalnetModel(DataModel):
     shadow_id: Optional[str] = None
     parent_id: Optional[str] = None
     family: Optional[str] = None
+    subsystem: Optional[str] = None

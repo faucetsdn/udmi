@@ -16,7 +16,8 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
-    "families"
+    "families",
+    "subsystems"
 })
 public class LocalnetConfig {
 
@@ -27,11 +28,19 @@ public class LocalnetConfig {
     @JsonProperty("families")
     @JsonPropertyDescription("Address family config for reporting.")
     public HashMap<String, FamilyLocalnetConfig> families;
+    /**
+     * Subsystem address family config for reporting.
+     *
+     */
+    @JsonProperty("subsystems")
+    @JsonPropertyDescription("Subsystem address family config for reporting.")
+    public HashMap<String, FamilyLocalnetConfig> subsystems;
 
     @Override
     public int hashCode() {
         int result = 1;
         result = ((result* 31)+((this.families == null)? 0 :this.families.hashCode()));
+        result = ((result* 31)+((this.subsystems == null)? 0 :this.subsystems.hashCode()));
         return result;
     }
 
@@ -44,7 +53,7 @@ public class LocalnetConfig {
             return false;
         }
         LocalnetConfig rhs = ((LocalnetConfig) other);
-        return ((this.families == rhs.families)||((this.families!= null)&&this.families.equals(rhs.families)));
+        return (((this.families == rhs.families)||((this.families!= null)&&this.families.equals(rhs.families)))&&((this.subsystems == rhs.subsystems)||((this.subsystems!= null)&&this.subsystems.equals(rhs.subsystems))));
     }
 
 }

@@ -15,7 +15,8 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
     "addr",
-    "status"
+    "status",
+    "subsystem"
 })
 public class FamilyLocalnetState {
 
@@ -29,11 +30,14 @@ public class FamilyLocalnetState {
      */
     @JsonProperty("status")
     public Entry status;
+    @JsonProperty("subsystem")
+    public String subsystem;
 
     @Override
     public int hashCode() {
         int result = 1;
         result = ((result* 31)+((this.addr == null)? 0 :this.addr.hashCode()));
+        result = ((result* 31)+((this.subsystem == null)? 0 :this.subsystem.hashCode()));
         result = ((result* 31)+((this.status == null)? 0 :this.status.hashCode()));
         return result;
     }
@@ -47,7 +51,7 @@ public class FamilyLocalnetState {
             return false;
         }
         FamilyLocalnetState rhs = ((FamilyLocalnetState) other);
-        return (((this.addr == rhs.addr)||((this.addr!= null)&&this.addr.equals(rhs.addr)))&&((this.status == rhs.status)||((this.status!= null)&&this.status.equals(rhs.status))));
+        return ((((this.addr == rhs.addr)||((this.addr!= null)&&this.addr.equals(rhs.addr)))&&((this.subsystem == rhs.subsystem)||((this.subsystem!= null)&&this.subsystem.equals(rhs.subsystem))))&&((this.status == rhs.status)||((this.status!= null)&&this.status.equals(rhs.status))));
     }
 
 }

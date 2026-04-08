@@ -1,0 +1,31 @@
+{
+  "system": {
+    "hardware": {
+      "make": "BOS",
+      "model": "gateway"
+    },
+    "software": {
+      "firmware": "v1"
+    }
+  },
+  "localnet": {
+    "families": {
+      "ipv4": {
+        "addr": "192.168.2.1"
+      }
+    },
+    "subsystems": {
+      "modbus_1": {
+        "family": "modbus"
+      },
+      "bacnet_1": {
+        "family": "bacnet"
+      }
+    }
+  },
+  "cloud": {
+    "auth_type": "RS256"
+  },
+  "version": "1.5.2",
+  "timestamp": "2020-05-01T13:39:07Z"
+}

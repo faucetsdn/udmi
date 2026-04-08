@@ -1,0 +1,24 @@
+{
+  "system": {
+    "hardware": {
+      "make": "BOS",
+      "model": "device"
+    },
+    "software": {
+      "firmware": "v1"
+    }
+  },
+  "localnet": {
+    "families": {
+      "modbus": {
+        "subsystem": "modbus_1",
+        "addr": "1"
+      }
+    }
+  },
+  "cloud": {
+    "auth_type": "RS256"
+  },
+  "version": "1.5.2",
+  "timestamp": "2020-05-01T13:39:07Z"
+}

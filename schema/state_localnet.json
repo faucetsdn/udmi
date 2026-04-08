@@ -19,6 +19,15 @@
       "additionalProperties": false,
       "existingJavaType": "java.util.HashMap<String, FamilyLocalnetState>",
       "patternProperties": {
+        "^[a-z][a-z0-9]*(_[a-z0-9]+)*$": {
+          "$ref": "file:state_localnet_family.json"
+        }
+      }
+    },
+    "subsystems": {
+      "additionalProperties": false,
+      "existingJavaType": "java.util.HashMap<String, FamilyLocalnetState>",
+      "patternProperties": {
         "^_?[a-z][a-z0-9]*(_[a-z0-9]+)*$": {
           "$ref": "file:state_localnet_family.json"
         }
