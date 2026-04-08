@@ -18,7 +18,9 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
     "ext_id",
     "type",
     "etag",
-    "label"
+    "label",
+    "connections",
+    "links"
 })
 public class LinkExternalsModel {
 
@@ -50,14 +52,32 @@ public class LinkExternalsModel {
     @JsonProperty("label")
     @JsonPropertyDescription("Descriptive label for this entity")
     public String label;
+    /**
+     * Entity connections, keyed by guid
+     *
+     */
+    @JsonProperty("connections")
+    @JsonPropertyDescription("Entity connections, keyed by guid")
+    public Connections connections;
+    /**
+     * Virtual Equipment Links
+     * <p>
+     * Virtual equipment mapping, keyed by guid
+     *
+     */
+    @JsonProperty("links")
+    @JsonPropertyDescription("Virtual equipment mapping, keyed by guid")
+    public VirtualEquipmentLinks links;
 
     @Override
     public int hashCode() {
         int result = 1;
         result = ((result* 31)+((this.etag == null)? 0 :this.etag.hashCode()));
+        result = ((result* 31)+((this.links == null)? 0 :this.links.hashCode()));
         result = ((result* 31)+((this.ext_id == null)? 0 :this.ext_id.hashCode()));
         result = ((result* 31)+((this.label == null)? 0 :this.label.hashCode()));
         result = ((result* 31)+((this.type == null)? 0 :this.type.hashCode()));
+        result = ((result* 31)+((this.connections == null)? 0 :this.connections.hashCode()));
         return result;
     }
 
@@ -70,7 +90,7 @@ public class LinkExternalsModel {
             return false;
         }
         LinkExternalsModel rhs = ((LinkExternalsModel) other);
-        return (((((this.etag == rhs.etag)||((this.etag!= null)&&this.etag.equals(rhs.etag)))&&((this.ext_id == rhs.ext_id)||((this.ext_id!= null)&&this.ext_id.equals(rhs.ext_id))))&&((this.label == rhs.label)||((this.label!= null)&&this.label.equals(rhs.label))))&&((this.type == rhs.type)||((this.type!= null)&&this.type.equals(rhs.type))));
+        return (((((((this.etag == rhs.etag)||((this.etag!= null)&&this.etag.equals(rhs.etag)))&&((this.links == rhs.links)||((this.links!= null)&&this.links.equals(rhs.links))))&&((this.ext_id == rhs.ext_id)||((this.ext_id!= null)&&this.ext_id.equals(rhs.ext_id))))&&((this.label == rhs.label)||((this.label!= null)&&this.label.equals(rhs.label))))&&((this.type == rhs.type)||((this.type!= null)&&this.type.equals(rhs.type))))&&((this.connections == rhs.connections)||((this.connections!= null)&&this.connections.equals(rhs.connections))));
     }
 
 }

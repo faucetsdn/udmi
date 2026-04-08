@@ -4,9 +4,10 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Optional
+from typing import Any, Dict, List, Optional, Union
 
 from ._base import DataModel
+from .virtual_links import VirtualEquipmentLinks
 
 
 @dataclass
@@ -19,3 +20,5 @@ class LinkExternalsModel(DataModel):
     type: Optional[str] = None
     etag: Optional[str] = None
     label: Optional[str] = None
+    connections: Optional[Dict[str, Union[str, List[Any]]]] = None
+    links: Optional[VirtualEquipmentLinks] = None
