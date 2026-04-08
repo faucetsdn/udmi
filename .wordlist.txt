@@ -149,6 +149,7 @@ schemas
 SDK
 setpoint
 sha
+sha256
 sharding
 src
 Stackdriver
