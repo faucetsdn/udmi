@@ -1,0 +1,299 @@
+TIMESTAMP DEBUG   device.log             Git: Note: switching to 'v2'.
+TIMESTAMP DEBUG   device.log             Git: 
+TIMESTAMP DEBUG   device.log             Git: You are in 'detached HEAD' state. You can look around, make experimental
+TIMESTAMP DEBUG   device.log             Git: changes and commit them, and you can discard any commits you make in this
+TIMESTAMP DEBUG   device.log             Git: state without impacting any branches by switching back to a branch.
+TIMESTAMP DEBUG   device.log             Git: 
+TIMESTAMP DEBUG   device.log             Git: If you want to create a new branch to retain commits you create, you may
+TIMESTAMP DEBUG   device.log             Git: do so (now or later) by using -c with the switch command. Example:
+TIMESTAMP DEBUG   device.log             Git: 
+TIMESTAMP DEBUG   device.log             Git:   git switch -c <new-branch-name>
+TIMESTAMP DEBUG   device.log             Git: 
+TIMESTAMP DEBUG   device.log             Git: Or undo this operation with:
+TIMESTAMP DEBUG   device.log             Git: 
+TIMESTAMP DEBUG   device.log             Git:   git switch -
+TIMESTAMP DEBUG   device.log             Git: 
+TIMESTAMP DEBUG   device.log             Git: Turn off this advice by setting config variable advice.detachedHead to false
+TIMESTAMP DEBUG   device.log             Git: 
+TIMESTAMP DEBUG   device.log             Git: HEAD is now at a55c275 v2
+TIMESTAMP NOTICE  device.log             Git OTA update completed successfully.
+TIMESTAMP NOTICE  device.log             Blob pubber_module successfully applied
+TIMESTAMP
+TIMESTAMP DEBUG   device.log             State update AHU-1 (ota_happy_path)
+TIMESTAMP for blob key pubber_module
+TIMESTAMP WARNING device.log             Updating persistent store:
+{
+  "endpoint" : {
+    "protocol" : "mqtt",
+    "transport" : "ssl",
+    "hostname" : "localhost",
+    "client_id" : "/r/ZZ-TRI-FECTA/d/AHU-1",
+    "topic_prefix" : "/r/ZZ-TRI-FECTA/d/AHU-1",
+    "gatewayId" : "AHU-1",
+    "deviceId" : "AHU-1",
+    "keyBytes" : "MIIEvQIBADANBgkqhkiG9w0BAQEFAASCBKcwggSjAgEAAoIBAQC+lpjWPAlZrfJDLkMqiYupiO5N5R6RLU5JnFUWvlFyWCxYkFOmH7szJ+n10JWlgJHpqbjJxFZrKn0OqaFI/qr0HhUhQONX88G4u+qt8vleFVlTIw1yDVaV6F92xlYvMblfmAZ8auLsuq+ZgjPd4fPLGRRXm3SxGG5kWTnBPY+sPsxa2MAh8QmYDp1nmj8mLHdsXjAyy8UEr1cNEeJtxLuj/eHD/UUAEv4GDDgvjUK2vNEtgqaZFO+whPyNe5S6m2x/7nxv0DWRZaxXQAgqNonvd+H6JHxMF7kUNzwzBKCOCimFhcFUKDOUg6RfuDAiIBhBZtY4VT2W3MgyCnsmx1G/AgMBAAECggEBAIMnCTfsCpcvD5bRgCEGlBhvhWYPNHC9F7GqJhfHki64pJOxhg68qUrzvZmOF1zT1BVS2TnnpXyLuZFchAPCVIw3I11F1OzSbk4c6ssXeCkZUeXXKkqBCUORrBgFNou1kRZKfLQjrdMwSOS/Z8fZ1LW/pXMAJFY2NMlTaV4kafkh8R4Q0GuWPgJDgbG2JfyGpeDZ7tUIyKP8TFB8USW3Iroetdtsc5yLF1wPVpMxy87ZEUKsTl3zK5CHcBlLHnVhDSCFOlHLknrSUEF7AVmKeRAlq+aDzAaxhAHbM7h9pVLT3HoZJbIhqqFBNvAze9AD3u08833miD11i4gS31J6wxkCgYEA7VR7uyiNMKp5k/7uwAzLZllyGI7X93CBLtVP+YkPEfE5b+LcWpLS1aS0pU+/Mjsuk6wooKcQZ3anFeSe9NbJLvpCGaWA27btfBj99Hhj9qJ5lrK3Z7rhWQwVdMrBGEDNwcOg0NY73DK8Ze1La/7NGX36RyeiQLiLvI2mbtdWbEUCgYEAzZTLxkx7rGwVYWLbsNrJnjb8SII+DV2oqGXYo9+1BNk3gXAKpC5rk7tCC5L+1gSKC3autwN5qtwGR4R/X8LDwcdwKnaVaz5gFJD0w+vKfSAOBemOotrTmg3HXhyeNVO6jNvMP40cd5t5X7yYk5ij4luo/zzILsIj4N9lC32swDMCgYA0EEmIeE/o8izzq4RiuyvPyyV9f7CfBp5AUOlXe5rDu+B2zBS9BeKcnaJHdaQi99qy6JyNCblOiTgEVIAOhCPkW2Au0iDfklSs2aq0e8iqLWBxD8muRs/ywfTfBy+vC2BX9nuL9MNy/epYjeLy0RXbVsiV3Xr5qcJ13bk6LaE25QKBgAUJrmyvlyBEjcmTKJsO4X31Dv2f43FkaCuoQ0TQyJjT0d5kJn6bfJtkLVwnQANynQdm4yUs+qBLQAQkpRJtrWpkPsVrnoHAR455duYOMyoZzP4sGQi4oBLYX5hYzy+zW5D0Ge88wAPWVYUZFAwZ43o6kMuga69ppoNuNgWwELmtAoGAA0U57xnbYK4Qk1LpKVCluBQ662rfKxWWpeKTmGRFN0C1loBpCHdoQzphetFPXRF6480csTydyVwPJTTaZI+vW8rmKu8D1oWoBgkC4Hmr0+TP9hfttOp6oiMRrdVmPJEG8sGjwjXOzfOpvZ7CLDLzzzReK69QcOq08vvOaYuTmiA=",
+    "algorithm" : "RS256",
+    "auth_provider" : {
+      "basic" : {
+        "username" : "/r/ZZ-TRI-FECTA/d/AHU-1",
+        "password" : "38269d11"
+      }
+    }
+  },
+  "restart_count" : 1,
+  "applied_blobs" : {
+    "pubber_module" : "TIMESTAMP"
+  }
+}
+TIMESTAMP NOTICE  device.log             Post-processing Git OTA update. Restarting...
+TIMESTAMP
+TIMESTAMP WARNING device.log             State update delay 1998ms
+TIMESTAMP INFO    device.log             Configured with auth_type RS256
+TIMESTAMP INFO    device.log             Using addresses from default interface: ens4 for family: ipv4
+TIMESTAMP INFO    device.log             Family ipv4 address is 172.17.35.172
+TIMESTAMP INFO    device.log             Using addresses from default interface: ens4 for family: ether
+TIMESTAMP INFO    device.log             Family ether address is 42:01:ac:11:23:ac
+TIMESTAMP INFO    device.log             Initializing from persistent store /usr/local/google/home/heykhyati/Projects/udmi_clone/udmi/sites/udmi_site_model/out/devices/AHU-1/persistent_data.json
+TIMESTAMP INFO    device.log             Loading endpoint from persistent data
+TIMESTAMP WARNING device.log             Updating persistent store:
+{
+  "endpoint" : {
+    "protocol" : "mqtt",
+    "transport" : "ssl",
+    "hostname" : "localhost",
+    "client_id" : "/r/ZZ-TRI-FECTA/d/AHU-1",
+    "topic_prefix" : "/r/ZZ-TRI-FECTA/d/AHU-1",
+    "gatewayId" : "AHU-1",
+    "deviceId" : "AHU-1",
+    "keyBytes" : "MIIEvQIBADANBgkqhkiG9w0BAQEFAASCBKcwggSjAgEAAoIBAQC+lpjWPAlZrfJDLkMqiYupiO5N5R6RLU5JnFUWvlFyWCxYkFOmH7szJ+n10JWlgJHpqbjJxFZrKn0OqaFI/qr0HhUhQONX88G4u+qt8vleFVlTIw1yDVaV6F92xlYvMblfmAZ8auLsuq+ZgjPd4fPLGRRXm3SxGG5kWTnBPY+sPsxa2MAh8QmYDp1nmj8mLHdsXjAyy8UEr1cNEeJtxLuj/eHD/UUAEv4GDDgvjUK2vNEtgqaZFO+whPyNe5S6m2x/7nxv0DWRZaxXQAgqNonvd+H6JHxMF7kUNzwzBKCOCimFhcFUKDOUg6RfuDAiIBhBZtY4VT2W3MgyCnsmx1G/AgMBAAECggEBAIMnCTfsCpcvD5bRgCEGlBhvhWYPNHC9F7GqJhfHki64pJOxhg68qUrzvZmOF1zT1BVS2TnnpXyLuZFchAPCVIw3I11F1OzSbk4c6ssXeCkZUeXXKkqBCUORrBgFNou1kRZKfLQjrdMwSOS/Z8fZ1LW/pXMAJFY2NMlTaV4kafkh8R4Q0GuWPgJDgbG2JfyGpeDZ7tUIyKP8TFB8USW3Iroetdtsc5yLF1wPVpMxy87ZEUKsTl3zK5CHcBlLHnVhDSCFOlHLknrSUEF7AVmKeRAlq+aDzAaxhAHbM7h9pVLT3HoZJbIhqqFBNvAze9AD3u08833miD11i4gS31J6wxkCgYEA7VR7uyiNMKp5k/7uwAzLZllyGI7X93CBLtVP+YkPEfE5b+LcWpLS1aS0pU+/Mjsuk6wooKcQZ3anFeSe9NbJLvpCGaWA27btfBj99Hhj9qJ5lrK3Z7rhWQwVdMrBGEDNwcOg0NY73DK8Ze1La/7NGX36RyeiQLiLvI2mbtdWbEUCgYEAzZTLxkx7rGwVYWLbsNrJnjb8SII+DV2oqGXYo9+1BNk3gXAKpC5rk7tCC5L+1gSKC3autwN5qtwGR4R/X8LDwcdwKnaVaz5gFJD0w+vKfSAOBemOotrTmg3HXhyeNVO6jNvMP40cd5t5X7yYk5ij4luo/zzILsIj4N9lC32swDMCgYA0EEmIeE/o8izzq4RiuyvPyyV9f7CfBp5AUOlXe5rDu+B2zBS9BeKcnaJHdaQi99qy6JyNCblOiTgEVIAOhCPkW2Au0iDfklSs2aq0e8iqLWBxD8muRs/ywfTfBy+vC2BX9nuL9MNy/epYjeLy0RXbVsiV3Xr5qcJ13bk6LaE25QKBgAUJrmyvlyBEjcmTKJsO4X31Dv2f43FkaCuoQ0TQyJjT0d5kJn6bfJtkLVwnQANynQdm4yUs+qBLQAQkpRJtrWpkPsVrnoHAR455duYOMyoZzP4sGQi4oBLYX5hYzy+zW5D0Ge88wAPWVYUZFAwZ43o6kMuga69ppoNuNgWwELmtAoGAA0U57xnbYK4Qk1LpKVCluBQ662rfKxWWpeKTmGRFN0C1loBpCHdoQzphetFPXRF6480csTydyVwPJTTaZI+vW8rmKu8D1oWoBgkC4Hmr0+TP9hfttOp6oiMRrdVmPJEG8sGjwjXOzfOpvZ7CLDLzzzReK69QcOq08vvOaYuTmiA=",
+    "algorithm" : "RS256",
+    "auth_provider" : {
+      "basic" : {
+        "username" : "/r/ZZ-TRI-FECTA/d/AHU-1",
+        "password" : "38269d11"
+      }
+    }
+  },
+  "restart_count" : 2,
+  "applied_blobs" : {
+    "pubber_module" : "TIMESTAMP"
+  }
+}
+TIMESTAMP INFO    device.log             Starting pubber AHU-1, serial sequencer-2876, mac null, gateway null, options 
+TIMESTAMP INFO    device.log             Initializing dummy module in /usr/local/google/home/heykhyati/Projects/udmi_clone/udmi/out/pubber_module_repo
+TIMESTAMP INFO    device.log             Isolated repo initialized.
+TIMESTAMP WARNING device.log             Starting connection 1775639691183 with 0
+TIMESTAMP INFO    device.log             Loading device key bytes from /usr/local/google/home/heykhyati/Projects/udmi_clone/udmi/sites/udmi_site_model/devices/AHU-1/rsa_private.pkcs8
+TIMESTAMP INFO    device.log             CA cert file: /usr/local/google/home/heykhyati/Projects/udmi_clone/udmi/sites/udmi_site_model/reflector/ca.crt
+TIMESTAMP INFO    device.log             Device cert file: /usr/local/google/home/heykhyati/Projects/udmi_clone/udmi/sites/udmi_site_model/devices/AHU-1/rsa_private.crt
+TIMESTAMP INFO    device.log             Private key file: /usr/local/google/home/heykhyati/Projects/udmi_clone/udmi/sites/udmi_site_model/devices/AHU-1/rsa_private.pem
+TIMESTAMP INFO    device.log             Password sha256 6b5344e1
+TIMESTAMP WARNING device.log             Creating new config latch for AHU-1
+TIMESTAMP
+TIMESTAMP WARNING device.log             Dropping state update until config received...
+TIMESTAMP
+TIMESTAMP WARNING device.log             Dropping state update until config received...
+TIMESTAMP INFO    device.log             Device AHU-1 config handler
+TIMESTAMP
+TIMESTAMP WARNING device.log             Dropping state update until config received...
+TIMESTAMP WARNING device.log             Received config for config latch AHU-1
+TIMESTAMP WARNING device.log             Starting AHU-1 PubberPublisherHost sender with delay 10s
+TIMESTAMP
+TIMESTAMP WARNING device.log             Starting AHU-1 PubberSystemManager sender with delay 10s
+TIMESTAMP INFO    device.log             Connection complete.
+TIMESTAMP WARNING device.log             Starting AHU-1 PubberPointsetManager sender with delay 300s
+TIMESTAMP WARNING device.log             Start waiting 10s for config latch for AHU-1
+TIMESTAMP DEBUG   device.log             Restoring unknown point filter_alarm_pressure_status
+TIMESTAMP WARNING device.log             Ending connection 1775639691183 with 1
+TIMESTAMP DEBUG   device.log             Restoring unknown point filter_differential_pressure_setpoint
+TIMESTAMP DEBUG   device.log             Restoring unknown point filter_differential_pressure_sensor
+TIMESTAMP DEBUG   device.log             value of noWriteback: false
+TIMESTAMP DEBUG   device.log             Applying slow writeback for point filter_alarm_pressure_status with 10s delay
+TIMESTAMP DEBUG   device.log             value of noWriteback: false
+TIMESTAMP DEBUG   device.log             Applying slow writeback for point filter_differential_pressure_setpoint with 10s delay
+TIMESTAMP DEBUG   device.log             value of noWriteback: false
+TIMESTAMP DEBUG   device.log             Applying slow writeback for point filter_differential_pressure_sensor with 10s delay
+TIMESTAMP NOTICE  system.config.apply    success
+TIMESTAMP DEBUG   device.log             State update defer -1775639690098ms
+TIMESTAMP
+TIMESTAMP DEBUG   device.log             State update AHU-1 (ota_happy_path)
+TIMESTAMP DEBUG   system.config.receive  success
+TIMESTAMP DEBUG   device.log             State update defer 1872ms
+TIMESTAMP DEBUG   system.config.parse    success
+TIMESTAMP INFO    device.log             Device AHU-1 config handler
+TIMESTAMP DEBUG   device.log             State update defer 1871ms
+TIMESTAMP DEBUG   device.log             Config update AHU-1 (ota_happy_path)
+TIMESTAMP
+TIMESTAMP DEBUG   device.log             value of noWriteback: false
+TIMESTAMP DEBUG   device.log             value of noWriteback: false
+TIMESTAMP DEBUG   device.log             value of noWriteback: false
+TIMESTAMP NOTICE  system.config.apply    success
+TIMESTAMP DEBUG   device.log             State update defer 1865ms
+TIMESTAMP DEBUG   device.log             State update defer 1864ms
+TIMESTAMP DEBUG   device.log             State update defer 1863ms
+TIMESTAMP DEBUG   device.log             State update defer 1863ms
+TIMESTAMP DEBUG   device.log             State update defer -1ms
+TIMESTAMP
+TIMESTAMP DEBUG   device.log             State update AHU-1 (ota_happy_path)
+TIMESTAMP DEBUG   system.config.receive  success
+TIMESTAMP DEBUG   system.config.parse    success
+TIMESTAMP DEBUG   device.log             State update defer 27ms
+TIMESTAMP INFO    device.log             Device AHU-1 config handler
+TIMESTAMP DEBUG   device.log             State update defer 26ms
+TIMESTAMP DEBUG   device.log             Config update AHU-1 (ota_happy_path)
+TIMESTAMP
+TIMESTAMP DEBUG   device.log             value of noWriteback: false
+TIMESTAMP DEBUG   device.log             value of noWriteback: false
+TIMESTAMP DEBUG   device.log             value of noWriteback: false
+TIMESTAMP NOTICE  system.config.apply    success
+TIMESTAMP DEBUG   device.log             State update defer 23ms
+TIMESTAMP DEBUG   device.log             State update defer 22ms
+TIMESTAMP DEBUG   device.log             State update defer 0ms
+TIMESTAMP
+TIMESTAMP DEBUG   device.log             State update AHU-1 (ota_fetch_failure)
+TIMESTAMP DEBUG   system.config.receive  success
+TIMESTAMP DEBUG   system.config.parse    success
+TIMESTAMP DEBUG   device.log             State update defer 1873ms
+TIMESTAMP DEBUG   device.log             State update defer 1872ms
+TIMESTAMP DEBUG   device.log             Config update AHU-1 (ota_fetch_failure)
+TIMESTAMP
+TIMESTAMP DEBUG   device.log             value of noWriteback: false
+TIMESTAMP DEBUG   device.log             value of noWriteback: false
+TIMESTAMP DEBUG   device.log             value of noWriteback: false
+TIMESTAMP NOTICE  system.config.apply    success
+TIMESTAMP DEBUG   device.log             State update defer 1870ms
+TIMESTAMP DEBUG   device.log             State update defer 1869ms
+TIMESTAMP DEBUG   device.log             State update defer 1081ms
+TIMESTAMP INFO    device.log             sending AHU-1 message #0 with 3 points
+TIMESTAMP DEBUG   device.log             State update defer 0ms
+TIMESTAMP
+TIMESTAMP DEBUG   device.log             State update AHU-1 (ota_fetch_failure)
+TIMESTAMP DEBUG   system.config.receive  success
+TIMESTAMP DEBUG   device.log             State update defer 943ms
+TIMESTAMP DEBUG   system.config.parse    success
+TIMESTAMP INFO    device.log             Device AHU-1 config handler
+TIMESTAMP DEBUG   device.log             State update defer 942ms
+TIMESTAMP DEBUG   device.log             Config update AHU-1 (ota_fetch_failure)
+TIMESTAMP
+TIMESTAMP DEBUG   device.log             value of noWriteback: false
+TIMESTAMP DEBUG   device.log             value of noWriteback: false
+TIMESTAMP DEBUG   device.log             value of noWriteback: false
+TIMESTAMP NOTICE  system.config.apply    success
+TIMESTAMP DEBUG   device.log             State update defer 937ms
+TIMESTAMP DEBUG   device.log             State update defer 936ms
+TIMESTAMP DEBUG   device.log             State update defer 936ms
+TIMESTAMP DEBUG   device.log             State update defer 0ms
+TIMESTAMP
+TIMESTAMP DEBUG   device.log             State update AHU-1 (ota_fetch_failure)
+TIMESTAMP INFO    device.log             Completing delayed writeback for filter_alarm_pressure_status
+TIMESTAMP DEBUG   device.log             setting value state as null
+TIMESTAMP INFO    device.log             Completing delayed writeback for filter_differential_pressure_setpoint
+TIMESTAMP DEBUG   device.log             setting value state as 98
+TIMESTAMP INFO    device.log             Completing delayed writeback for filter_differential_pressure_sensor
+TIMESTAMP DEBUG   device.log             setting value state as null
+TIMESTAMP DEBUG   system.config.receive  success
+TIMESTAMP DEBUG   device.log             State update defer -1101ms
+TIMESTAMP DEBUG   system.config.parse    success
+TIMESTAMP
+TIMESTAMP INFO    device.log             Device AHU-1 config handler
+TIMESTAMP DEBUG   device.log             State update AHU-1 (ota_fetch_failure)
+TIMESTAMP DEBUG   device.log             Config update AHU-1 (ota_fetch_failure)
+TIMESTAMP
+TIMESTAMP DEBUG   device.log             value of noWriteback: false
+TIMESTAMP DEBUG   device.log             value of noWriteback: false
+TIMESTAMP DEBUG   device.log             value of noWriteback: false
+TIMESTAMP NOTICE  system.config.apply    success
+TIMESTAMP DEBUG   device.log             State update defer 1998ms
+TIMESTAMP DEBUG   device.log             State update defer 1998ms
+TIMESTAMP DEBUG   device.log             State update defer -1ms
+TIMESTAMP
+TIMESTAMP DEBUG   device.log             State update AHU-1 (ota_fetch_failure)
+TIMESTAMP DEBUG   system.config.receive  success
+TIMESTAMP DEBUG   device.log             State update defer -1313ms
+TIMESTAMP DEBUG   system.config.parse    success
+TIMESTAMP
+TIMESTAMP DEBUG   device.log             State update AHU-1 (ota_fetch_failure)
+TIMESTAMP DEBUG   device.log             State update defer 2000ms
+TIMESTAMP
+TIMESTAMP DEBUG   device.log             value of noWriteback: false
+TIMESTAMP DEBUG   device.log             value of noWriteback: false
+TIMESTAMP DEBUG   device.log             value of noWriteback: false
+TIMESTAMP DEBUG   device.log             State update defer 1995ms
+TIMESTAMP NOTICE  system.config.apply    success
+TIMESTAMP DEBUG   device.log             State update defer 1994ms
+TIMESTAMP DEBUG   system.config.receive  success
+TIMESTAMP DEBUG   system.config.parse    success
+TIMESTAMP DEBUG   device.log             State update defer 1748ms
+TIMESTAMP DEBUG   device.log             State update defer 1747ms
+TIMESTAMP DEBUG   device.log             Config update AHU-1 (ota_fetch_failure)
+TIMESTAMP
+TIMESTAMP DEBUG   device.log             value of noWriteback: false
+TIMESTAMP DEBUG   device.log             value of noWriteback: false
+TIMESTAMP DEBUG   device.log             value of noWriteback: false
+TIMESTAMP NOTICE  system.config.apply    success
+TIMESTAMP DEBUG   device.log             State update defer 1745ms
+TIMESTAMP DEBUG   device.log             State update defer 1744ms
+TIMESTAMP DEBUG   device.log             State update defer 1743ms
+TIMESTAMP DEBUG   system.config.receive  success
+TIMESTAMP DEBUG   device.log             State update defer 860ms
+TIMESTAMP DEBUG   system.config.parse    success
+TIMESTAMP INFO    device.log             Device AHU-1 config handler
+TIMESTAMP DEBUG   device.log             Config update AHU-1 (ota_fetch_failure)
+TIMESTAMP
+TIMESTAMP DEBUG   device.log             value of noWriteback: false
+TIMESTAMP DEBUG   device.log             value of noWriteback: false
+TIMESTAMP DEBUG   device.log             value of noWriteback: false
+TIMESTAMP NOTICE  system.config.apply    success
+TIMESTAMP DEBUG   device.log             State update defer 857ms
+TIMESTAMP DEBUG   device.log             State update defer 856ms
+TIMESTAMP DEBUG   system.config.receive  success
+TIMESTAMP DEBUG   device.log             State update defer 639ms
+TIMESTAMP DEBUG   system.config.parse    success
+TIMESTAMP INFO    device.log             Device AHU-1 config handler
+TIMESTAMP DEBUG   device.log             Config update AHU-1 (ota_fetch_failure)
+TIMESTAMP
+TIMESTAMP DEBUG   device.log             value of noWriteback: false
+TIMESTAMP DEBUG   device.log             value of noWriteback: false
+TIMESTAMP DEBUG   device.log             value of noWriteback: false
+TIMESTAMP DEBUG   device.log             State update defer 636ms
+TIMESTAMP NOTICE  system.config.apply    success
+TIMESTAMP DEBUG   device.log             State update defer 635ms
+TIMESTAMP DEBUG   device.log             State update defer 0ms
+TIMESTAMP
+TIMESTAMP DEBUG   device.log             State update AHU-1 (ota_fetch_failure)
+TIMESTAMP DEBUG   system.config.receive  success
+TIMESTAMP DEBUG   device.log             State update defer 1481ms
+TIMESTAMP DEBUG   system.config.parse    success
+TIMESTAMP INFO    device.log             Device AHU-1 config handler
+TIMESTAMP DEBUG   device.log             Config update AHU-1 (ota_fetch_failure)
+TIMESTAMP
+TIMESTAMP DEBUG   device.log             value of noWriteback: false
+TIMESTAMP DEBUG   device.log             value of noWriteback: false
+TIMESTAMP DEBUG   device.log             value of noWriteback: false
+TIMESTAMP DEBUG   blobset.blob.apply     Received blob update config for pubber_module
+TIMESTAMP
+TIMESTAMP WARNING device.log             State update delay 1476ms
+TIMESTAMP DEBUG   device.log             State update AHU-1 (ota_fetch_failure)
+TIMESTAMP DEBUG   blobset.blob.apply     Fetching blob data for pubber_module
+TIMESTAMP DEBUG   blobset.blob.apply     Successfully fetched blob data for pubber_module
+TIMESTAMP INFO    device.log             Triggering Git OTA update to commit {
+  "error" : "java.lang.RuntimeException: URL encoding not supported: https://invalid.url/missing.bin"
+}
+TIMESTAMP NOTICE  blobset.blob.apply     Applying Git OTA update to commit {
+  "error" : "java.lang.RuntimeException: URL encoding not supported: https://invalid.url/missing.bin"
+}
+TIMESTAMP INFO    device.log             Simulating OTA update delay...
+TIMESTAMP DEBUG   device.log             Git: error: pathspec '{
+TIMESTAMP DEBUG   device.log             Git:   "error" : "java.lang.RuntimeException: URL encoding not supported: https://invalid.url/missing.bin"
+TIMESTAMP DEBUG   device.log             Git: }' did not match any file(s) known to git
+TIMESTAMP ERROR   device.log             Failed to apply blob pubber_module: Git operation failed
+TIMESTAMP ERROR   blobset.blob.fetch.failure Git operation failed
+TIMESTAMP DEBUG   device.log             State update defer -18029ms
+TIMESTAMP
+TIMESTAMP DEBUG   device.log             State update AHU-1 (ota_fetch_failure)
+TIMESTAMP NOTICE  system.config.apply    success
+TIMESTAMP DEBUG   device.log             State update defer 2000ms
+TIMESTAMP DEBUG   device.log             State update defer -1ms
+TIMESTAMP
+TIMESTAMP DEBUG   device.log             State update AHU-1 (ota_fetch_failure)
+TIMESTAMP NOTICE  validation.feature.sequence Sequence complete

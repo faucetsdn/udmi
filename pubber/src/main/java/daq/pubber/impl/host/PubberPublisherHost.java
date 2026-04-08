@@ -125,26 +125,31 @@ public class PubberPublisherHost extends PubberManager implements PublisherHost 
 
   private void initModuleForOtaUpdates() {
     try {
-      File repoDir = new File(SOFTWARE_MODULE_DIR);
-      if (repoDir.exists()) {
-        FileUtils.deleteDirectory(repoDir);
+      File srcDir = new File(SOFTWARE_MODULE_DIR);
+      if (srcDir.exists()) {
+        FileUtils.deleteDirectory(srcDir);
       }
 
-      // Fallback logic to find the source .git directory depending on where tests are run
-      File srcGit = new File(".git");
-      if (!srcGit.exists()) {
-        srcGit = new File("../.git"); 
+      if (!srcDir.mkdirs()) {
+        throw new RuntimeException("Failed to create source directory");
       }
 
-      if (srcGit.exists()) {
-        File srcDir = srcGit.getParentFile() != null ? srcGit.getParentFile() : new File(".");
-        info(format("Cloning repo from %s to %s", srcDir.getAbsolutePath(),
-            repoDir.getAbsolutePath()));
-        runCommandInDir(srcDir, "git", "clone", ".", repoDir.getAbsolutePath());
-        info("Isolated repo initialized.");
-      } else {
-        warn("Source .git directory not found, cannot initialize isolated repo.");
-      }
+      info(format("Initializing dummy module in %s", srcDir.getAbsolutePath()));
+      runCommandInDir(srcDir, "git", "init");
+      runCommandInDir(srcDir, "git", "config", "user.name", "Pubber");
+      runCommandInDir(srcDir, "git", "config", "user.email", "pubber@udmi.io");
+
+      File versionFile = new File(srcDir, "version.txt");
+      FileUtils.writeStringToFile(versionFile, "v1", "UTF-8");
+      runCommandInDir(srcDir, "git", "add", ".");
+      runCommandInDir(srcDir, "git", "commit", "-m", "v1");
+      runCommandInDir(srcDir, "git", "tag", "v1");
+
+      FileUtils.writeStringToFile(versionFile, "v2", "UTF-8");
+      runCommandInDir(srcDir, "git", "add", ".");
+      runCommandInDir(srcDir, "git", "commit", "-m", "v2");
+      runCommandInDir(srcDir, "git", "tag", "v2");
+      info("Isolated repo initialized.");
     } catch (Exception e) {
       error("While initializing isolated repo", e);
     }
@@ -164,6 +169,7 @@ public class PubberPublisherHost extends PubberManager implements PublisherHost 
   @Override
   public String extractConfigBlob(String blobKey) {
     if (Boolean.TRUE.equals(getOptions().otaFailFetch)) {
+      safeSleep(60000); // Give test time to see APPLY phase
       throw new RuntimeException("Simulated network failure during fetch");
     }
     return PublisherHost.super.extractConfigBlob(blobKey);
@@ -184,7 +190,7 @@ public class PubberPublisherHost extends PubberManager implements PublisherHost 
 
   private void handleOtaUpdate(String payload) {
     // Note: The payload is assumed to be the commit hash directly.
-    // In a real UDMI scenario, this would be the content of a downloaded file.
+    // In a real scenario, this would be the content of a downloaded file.
     String commitHash = payload.trim();
     info(format("Triggering Git OTA update to commit %s", commitHash));
 
@@ -196,6 +202,8 @@ public class PubberPublisherHost extends PubberManager implements PublisherHost 
     }
 
     try {
+      info("Simulating OTA update delay...");
+      safeSleep(20000);
       runCommandInDir(repoDir, "git", "fetch");
       runCommandInDir(repoDir, "git", "checkout", commitHash);
       notice("Git OTA update completed successfully.");

@@ -108,6 +108,17 @@ public class PubberSystemManager extends PubberManager implements SystemManager 
       if (!repoDir.exists()) {
         return "unknown";
       }
+      
+      File versionFile = new File(repoDir, "version.txt");
+      if (versionFile.exists()) {
+        try (BufferedReader reader = new BufferedReader(new java.io.FileReader(versionFile))) {
+          String line = reader.readLine();
+          if (line != null) {
+            return line.trim();
+          }
+        }
+      }
+      
       ProcessBuilder pb = new ProcessBuilder("git", "rev-parse", "HEAD");
       pb.directory(repoDir);
       Process p = pb.start();

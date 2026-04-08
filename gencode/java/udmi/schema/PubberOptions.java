@@ -160,11 +160,11 @@ public class PubberOptions {
     @JsonProperty("softwareFirmwareValue")
     public String softwareFirmwareValue;
     /**
-     * If true, the pubber will simulate a network failure during OTA fetch.
+     * If true, pubber will simulate a network failure during OTA fetch.
      * 
      */
     @JsonProperty("otaFailFetch")
-    @JsonPropertyDescription("If true, the pubber will simulate a network failure during OTA fetch.")
+    @JsonPropertyDescription("If true, pubber will simulate a network failure during OTA fetch.")
     public Boolean otaFailFetch;
 
     @Override

@@ -56,6 +56,8 @@ Some caveats:
 * [family_ipv6_addr](#family_ipv6_addr-preview): Test skipped: No ipv6 address defined in metadata
 * [gateway_proxy_events](#gateway_proxy_events-beta): Check that a gateway proxies pointset events for indicated devices Test skipped: Not a gateway
 * [gateway_proxy_state](#gateway_proxy_state-preview): Check that a gateway proxies state updates for indicated devices Test skipped: Not a gateway
+* [ota_fetch_failure](#ota_fetch_failure-preview)
+* [ota_happy_path](#ota_happy_path-preview)
 * [pointset_publish](#pointset_publish-stable): Check that a device publishes pointset events
 * [pointset_publish_interval](#pointset_publish_interval-stable): Check handling of sample_rate_sec and sample_limit_sec
 * [pointset_remove_point](#pointset_remove_point-stable): Check that pointset state does not report an unconfigured point
@@ -444,6 +446,27 @@ Check that a gateway proxies state updates for indicated devices
 
 
 Test skipped: Not a gateway
+
+## ota_fetch_failure (PREVIEW)
+
+1. Update config trigger ota update for pubber_module
+    * Add `blobset` = { "blobs": { "pubber_module": { "phase": `final`, "generation": `blob generation`, "sha256": `blob data hash`, "url": `software data` } } }
+1. Wait for pubber_module phase is APPLY
+1. Wait until system logs level `ERROR` category `blobset.blob.fetch.failure`
+1. Wait for pubber_module phase is FINAL and status is not null
+
+Test passed.
+
+## ota_happy_path (PREVIEW)
+
+1. Update config trigger ota update for pubber_module
+    * Add `blobset` = { "blobs": { "pubber_module": { "phase": `final`, "generation": `blob generation`, "sha256": `blob data hash`, "url": `software data` } } }
+1. Wait for pubber_module phase is APPLY
+1. Wait until system logs level `NOTICE` category `blobset.blob.apply`
+1. Wait for pubber_module phase is FINAL and status is null
+1. Check that pubber_module software version reflects update
+
+Test passed.
 
 ## pointset_publish (STABLE)
 

@@ -1,0 +1,184 @@
+TIMESTAMP INFO    device.log             Configured with auth_type RS256
+TIMESTAMP INFO    device.log             Using addresses from default interface: ens4 for family: ipv4
+TIMESTAMP INFO    device.log             Family ipv4 address is 172.17.35.172
+TIMESTAMP INFO    device.log             Using addresses from default interface: ens4 for family: ether
+TIMESTAMP INFO    device.log             Family ether address is 42:01:ac:11:23:ac
+TIMESTAMP INFO    device.log             Resetting persistent store /usr/local/google/home/heykhyati/Projects/udmi_clone/udmi/sites/udmi_site_model/out/devices/AHU-1/persistent_data.json
+TIMESTAMP INFO    device.log             Loading endpoint into persistent data from configuration
+TIMESTAMP WARNING device.log             Updating persistent store:
+{
+  "endpoint" : {
+    "protocol" : "mqtt",
+    "transport" : "ssl",
+    "hostname" : "localhost",
+    "client_id" : "/r/ZZ-TRI-FECTA/d/AHU-1",
+    "topic_prefix" : "/r/ZZ-TRI-FECTA/d/AHU-1",
+    "auth_provider" : {
+      "basic" : {
+        "username" : "/r/ZZ-TRI-FECTA/d/AHU-1",
+        "password" : "38269d11"
+      }
+    }
+  },
+  "restart_count" : 1,
+  "applied_blobs" : { }
+}
+TIMESTAMP INFO    device.log             Starting pubber AHU-1, serial sequencer-2876, mac null, gateway null, options noPersist
+TIMESTAMP INFO    device.log             Initializing dummy module in /usr/local/google/home/heykhyati/Projects/udmi_clone/udmi/out/pubber_module_repo
+TIMESTAMP INFO    device.log             Isolated repo initialized.
+TIMESTAMP WARNING device.log             Starting connection 1775639636791 with 0
+TIMESTAMP INFO    device.log             Loading device key bytes from /usr/local/google/home/heykhyati/Projects/udmi_clone/udmi/sites/udmi_site_model/devices/AHU-1/rsa_private.pkcs8
+TIMESTAMP INFO    device.log             CA cert file: /usr/local/google/home/heykhyati/Projects/udmi_clone/udmi/sites/udmi_site_model/reflector/ca.crt
+TIMESTAMP INFO    device.log             Device cert file: /usr/local/google/home/heykhyati/Projects/udmi_clone/udmi/sites/udmi_site_model/devices/AHU-1/rsa_private.crt
+TIMESTAMP INFO    device.log             Private key file: /usr/local/google/home/heykhyati/Projects/udmi_clone/udmi/sites/udmi_site_model/devices/AHU-1/rsa_private.pem
+TIMESTAMP INFO    device.log             Password sha256 6b5344e1
+TIMESTAMP WARNING device.log             Creating new config latch for AHU-1
+TIMESTAMP
+TIMESTAMP WARNING device.log             Dropping state update until config received...
+TIMESTAMP
+TIMESTAMP WARNING device.log             Dropping state update until config received...
+TIMESTAMP INFO    device.log             Device AHU-1 config handler
+TIMESTAMP
+TIMESTAMP WARNING device.log             Dropping state update until config received...
+TIMESTAMP WARNING device.log             Received config for config latch AHU-1
+TIMESTAMP WARNING device.log             Starting AHU-1 PubberPublisherHost sender with delay 10s
+TIMESTAMP
+TIMESTAMP WARNING device.log             Starting AHU-1 PubberPointsetManager sender with delay 300s
+TIMESTAMP WARNING device.log             Start waiting 10s for config latch for AHU-1
+TIMESTAMP WARNING device.log             Ending connection 1775639636791 with 1
+TIMESTAMP NOTICE  system.config.apply    success
+TIMESTAMP NOTICE  system.config.apply    success
+TIMESTAMP DEBUG   device.log             value of noWriteback: false
+TIMESTAMP DEBUG   device.log             value of noWriteback: false
+TIMESTAMP DEBUG   device.log             value of noWriteback: false
+TIMESTAMP NOTICE  system.config.apply    success
+TIMESTAMP DEBUG   device.log             State update defer 1997ms
+TIMESTAMP DEBUG   device.log             State update defer 1996ms
+TIMESTAMP DEBUG   device.log             State update defer 1995ms
+TIMESTAMP DEBUG   device.log             State update defer 1995ms
+TIMESTAMP DEBUG   system.config.receive  success
+TIMESTAMP DEBUG   system.config.parse    success
+TIMESTAMP DEBUG   device.log             State update defer 1893ms
+TIMESTAMP INFO    device.log             Device AHU-1 config handler
+TIMESTAMP DEBUG   device.log             Config update AHU-1 (ota_happy_path)
+TIMESTAMP
+TIMESTAMP DEBUG   device.log             value of noWriteback: false
+TIMESTAMP DEBUG   device.log             value of noWriteback: false
+TIMESTAMP DEBUG   device.log             value of noWriteback: false
+TIMESTAMP NOTICE  system.config.apply    success
+TIMESTAMP DEBUG   device.log             State update defer 1887ms
+TIMESTAMP DEBUG   device.log             State update defer 1887ms
+TIMESTAMP DEBUG   device.log             State update defer 0ms
+TIMESTAMP
+TIMESTAMP DEBUG   device.log             State update AHU-1 (ota_happy_path)
+TIMESTAMP DEBUG   system.config.receive  success
+TIMESTAMP DEBUG   system.config.parse    success
+TIMESTAMP DEBUG   device.log             State update defer -406ms
+TIMESTAMP
+TIMESTAMP INFO    device.log             Device AHU-1 config handler
+TIMESTAMP DEBUG   device.log             State update AHU-1 (ota_happy_path)
+TIMESTAMP DEBUG   device.log             Config update AHU-1 (ota_happy_path)
+TIMESTAMP
+TIMESTAMP DEBUG   device.log             value of noWriteback: false
+TIMESTAMP DEBUG   device.log             value of noWriteback: false
+TIMESTAMP DEBUG   device.log             value of noWriteback: false
+TIMESTAMP NOTICE  system.config.apply    success
+TIMESTAMP DEBUG   device.log             State update defer 1998ms
+TIMESTAMP DEBUG   device.log             State update defer 1997ms
+TIMESTAMP DEBUG   device.log             State update defer 1996ms
+TIMESTAMP DEBUG   device.log             State update defer 1996ms
+TIMESTAMP DEBUG   device.log             State update defer 0ms
+TIMESTAMP
+TIMESTAMP DEBUG   device.log             State update AHU-1 (ota_happy_path)
+TIMESTAMP DEBUG   system.config.receive  success
+TIMESTAMP DEBUG   system.config.parse    success
+TIMESTAMP DEBUG   device.log             State update defer -1056ms
+TIMESTAMP INFO    device.log             Device AHU-1 config handler
+TIMESTAMP DEBUG   device.log             State update AHU-1 (ota_happy_path)
+TIMESTAMP DEBUG   device.log             Config update AHU-1 (ota_happy_path)
+TIMESTAMP
+TIMESTAMP DEBUG   device.log             value of noWriteback: false
+TIMESTAMP DEBUG   device.log             value of noWriteback: false
+TIMESTAMP DEBUG   device.log             value of noWriteback: false
+TIMESTAMP NOTICE  system.config.apply    success
+TIMESTAMP DEBUG   device.log             State update defer 1998ms
+TIMESTAMP DEBUG   device.log             State update defer -1ms
+TIMESTAMP
+TIMESTAMP DEBUG   device.log             State update AHU-1 (ota_happy_path)
+TIMESTAMP DEBUG   system.config.receive  success
+TIMESTAMP DEBUG   system.config.parse    success
+TIMESTAMP DEBUG   device.log             State update defer -1299ms
+TIMESTAMP INFO    device.log             Device AHU-1 config handler
+TIMESTAMP DEBUG   device.log             State update AHU-1 (ota_happy_path)
+TIMESTAMP DEBUG   device.log             Config update AHU-1 (ota_happy_path)
+TIMESTAMP
+TIMESTAMP DEBUG   device.log             value of noWriteback: false
+TIMESTAMP DEBUG   device.log             value of noWriteback: false
+TIMESTAMP DEBUG   device.log             value of noWriteback: false
+TIMESTAMP NOTICE  system.config.apply    success
+TIMESTAMP DEBUG   device.log             State update defer 1998ms
+TIMESTAMP DEBUG   device.log             State update defer 1997ms
+TIMESTAMP DEBUG   device.log             State update defer 1997ms
+TIMESTAMP DEBUG   system.config.receive  success
+TIMESTAMP DEBUG   system.config.parse    success
+TIMESTAMP DEBUG   device.log             State update defer 1769ms
+TIMESTAMP INFO    device.log             Device AHU-1 config handler
+TIMESTAMP DEBUG   device.log             Config update AHU-1 (ota_happy_path)
+TIMESTAMP
+TIMESTAMP DEBUG   device.log             value of noWriteback: false
+TIMESTAMP DEBUG   device.log             value of noWriteback: false
+TIMESTAMP DEBUG   device.log             value of noWriteback: false
+TIMESTAMP NOTICE  system.config.apply    success
+TIMESTAMP DEBUG   device.log             State update defer 1764ms
+TIMESTAMP DEBUG   device.log             State update defer 1763ms
+TIMESTAMP DEBUG   system.config.receive  success
+TIMESTAMP DEBUG   system.config.parse    success
+TIMESTAMP DEBUG   device.log             State update defer 866ms
+TIMESTAMP INFO    device.log             Device AHU-1 config handler
+TIMESTAMP DEBUG   device.log             Config update AHU-1 (ota_happy_path)
+TIMESTAMP
+TIMESTAMP DEBUG   device.log             value of noWriteback: false
+TIMESTAMP DEBUG   device.log             value of noWriteback: false
+TIMESTAMP DEBUG   device.log             value of noWriteback: false
+TIMESTAMP NOTICE  system.config.apply    success
+TIMESTAMP DEBUG   device.log             State update defer 863ms
+TIMESTAMP DEBUG   device.log             State update defer 862ms
+TIMESTAMP DEBUG   device.log             State update defer 861ms
+TIMESTAMP DEBUG   device.log             State update defer 861ms
+TIMESTAMP DEBUG   system.config.receive  success
+TIMESTAMP DEBUG   system.config.parse    success
+TIMESTAMP DEBUG   device.log             State update defer 663ms
+TIMESTAMP DEBUG   device.log             State update defer 662ms
+TIMESTAMP DEBUG   device.log             Config update AHU-1 (ota_happy_path)
+TIMESTAMP
+TIMESTAMP DEBUG   device.log             value of noWriteback: false
+TIMESTAMP DEBUG   device.log             value of noWriteback: false
+TIMESTAMP DEBUG   device.log             value of noWriteback: false
+TIMESTAMP NOTICE  system.config.apply    success
+TIMESTAMP DEBUG   device.log             State update defer 659ms
+TIMESTAMP DEBUG   device.log             State update defer 659ms
+TIMESTAMP DEBUG   device.log             State update defer 658ms
+TIMESTAMP DEBUG   device.log             State update defer 658ms
+TIMESTAMP DEBUG   device.log             State update defer 0ms
+TIMESTAMP
+TIMESTAMP DEBUG   device.log             State update AHU-1 (ota_happy_path)
+TIMESTAMP DEBUG   system.config.receive  success
+TIMESTAMP DEBUG   device.log             State update defer 1498ms
+TIMESTAMP DEBUG   system.config.parse    success
+TIMESTAMP INFO    device.log             Device AHU-1 config handler
+TIMESTAMP DEBUG   device.log             State update defer 1496ms
+TIMESTAMP DEBUG   device.log             Config update AHU-1 (ota_happy_path)
+TIMESTAMP
+TIMESTAMP DEBUG   device.log             value of noWriteback: false
+TIMESTAMP DEBUG   device.log             value of noWriteback: false
+TIMESTAMP DEBUG   device.log             value of noWriteback: false
+TIMESTAMP DEBUG   blobset.blob.apply     Received blob update config for pubber_module
+TIMESTAMP
+TIMESTAMP WARNING device.log             State update delay 1491ms
+TIMESTAMP DEBUG   device.log             State update AHU-1 (ota_happy_path)
+TIMESTAMP DEBUG   blobset.blob.apply     Fetching blob data for pubber_module
+TIMESTAMP DEBUG   blobset.blob.apply     Successfully fetched blob data for pubber_module
+TIMESTAMP INFO    device.log             Triggering Git OTA update to commit v2
+TIMESTAMP NOTICE  blobset.blob.apply     Applying Git OTA update to commit v2
+TIMESTAMP INFO    device.log             Simulating OTA update delay...
+TIMESTAMP NOTICE  validation.feature.sequence Sequence complete

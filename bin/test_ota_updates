@@ -24,8 +24,11 @@ site_path=sites/udmi_site_model
 device_id=AHU-1
 serial_no=sequencer-$RANDOM
 
-# Get an existing commit hash from the source repo
-target_commit=$(git rev-parse HEAD~1)
+# Use tag v2 for OTA
+target_commit="v2"
+
+# create out directory if it doesn't exist
+mkdir -p out/
 
 # Clean up previous runs
 rm -f out/pubber.log.*
@@ -96,6 +99,9 @@ if grep -q "Triggering Git OTA update to commit $target_commit" $pubber_log; the
 else
     fail "OTA trigger NOT detected."
 fi
+
+# Wait for update to complete and state to propagate
+sleep 20
 
 if grep -q "Git OTA update completed successfully" $pubber_log; then
     log "OTA success detected."

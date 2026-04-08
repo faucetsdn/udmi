@@ -1,0 +1,10 @@
+{
+  "blobs" : {
+    "pubber_module" : {
+      "phase" : "final",
+      "url" : "@@@software data###https://invalid.url/missing.bin",
+      "sha256" : "@@@blob data hash###0000000000000000000000000000000000000000000000000000000000000000",
+      "generation" : "TIMESTAMP"
+    }
+  }
+}

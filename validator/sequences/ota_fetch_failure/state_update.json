@@ -1,0 +1,76 @@
+{
+  "blobset" : {
+    "blobs" : {
+      "pubber_module" : {
+        "phase" : "final",
+        "status" : {
+          "message" : "Git operation failed",
+          "detail" : "java.lang.RuntimeException: Git operation failed\n\tat daq.pubber.impl.host.PubberPublisherHost.handleOtaUpdate(PubberPublisherHost.java:211)\n\tat daq.pubber.impl.host.PubberPublisherHost.handleBlob(PubberPublisherHost.java:180)\n\tat udmi.lib.client.host.PublisherHost.processBlobConfig(PublisherHost.java:221)\n\tat udmi.lib.client.host.PublisherHost.processBlobConfig(PublisherHost.java:182)\n\tat udmi.lib.client.host.PublisherHost.processConfigUpdate(PublisherHost.java:620)\n\tat udmi.lib.client.host.PublisherHost.configHandler(PublisherHost.java:565)\n\tat udmi.lib.base.MqttPublisher$MqttCallbackHandler.messageArrivedCore(MqttPublisher.java:789)\n\tat udmi.lib.base.MqttPublisher$MqttCallbackHandler.messageArrived(MqttPublisher.java:754)\n\tat org.eclipse.paho.client.mqttv3.internal.CommsCallback.deliverMessage(CommsCallback.java:519)\n\tat org.eclipse.paho.client.mqttv3.internal.CommsCallback.handleMessage(CommsCallback.java:417)\n\tat org.eclipse.paho.client.mqttv3.internal.CommsCallback.run(CommsCallback.java:214)\n\tat java.base/java.lang.Thread.run(Thread.java:1583)\nCaused by: java.lang.RuntimeException: Command failed with exit code 1\n\tat daq.pubber.impl.host.PubberPublisherHost.runCommandInDir(PubberPublisherHost.java:232)\n\tat daq.pubber.impl.host.PubberPublisherHost.handleOtaUpdate(PubberPublisherHost.java:208)\n\t... 11 more\n",
+          "category" : "blobset.blob.apply",
+          "timestamp" : "TIMESTAMP",
+          "level" : 500
+        },
+        "generation" : "TIMESTAMP"
+      }
+    }
+  },
+  "discovery" : {
+    "families" : { }
+  },
+  "localnet" : {
+    "families" : {
+      "ether" : {
+        "addr" : "42:01:ac:11:23:ac"
+      },
+      "ipv4" : {
+        "addr" : "172.17.35.172"
+      },
+      "vendor" : {
+        "addr" : "28179023"
+      },
+      "bacnet" : {
+        "addr" : "27312"
+      }
+    }
+  },
+  "pointset" : {
+    "points" : {
+      "filter_alarm_pressure_status" : {
+        "units" : "No-units"
+      },
+      "filter_differential_pressure_setpoint" : {
+        "units" : "Bars",
+        "value_state" : "applied"
+      },
+      "filter_differential_pressure_sensor" : {
+        "units" : "Degrees-Celsius"
+      }
+    }
+  },
+  "system" : {
+    "last_config" : "TIMESTAMP",
+    "operation" : {
+      "operational" : true,
+      "last_start" : "TIMESTAMP",
+      "restart_count" : 2,
+      "mode" : "initial"
+    },
+    "serial_no" : "sequencer-2876",
+    "hardware" : {
+      "make" : "BOS",
+      "model" : "pubber"
+    },
+    "software" : {
+      "firmware" : "v1",
+      "pubber_module" : "v2"
+    },
+    "status" : {
+      "message" : "success",
+      "category" : "system.config.apply",
+      "timestamp" : "TIMESTAMP",
+      "level" : 300
+    }
+  },
+  "timestamp" : "TIMESTAMP",
+  "version" : "1.5.3"
+}

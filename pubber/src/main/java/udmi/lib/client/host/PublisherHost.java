@@ -898,9 +898,15 @@ public interface PublisherHost extends ManagerHost {
    * Logs an event with a specific category and level.
    */
   default void logEvent(String category, String message, Throwable e) {
-    Entry entry = entryFromException(category, e);
-    if (message != null) {
-      entry.message = message + entry.message;
+    Entry entry;
+    if (e != null) {
+      entry = entryFromException(category, e);
+    } else {
+      entry = new Entry();
+      entry.category = Category.BLOBSET_BLOB_APPLY;
+      entry.timestamp = new Date();
+      entry.message = message;
+      entry.level = Category.LEVEL.getOrDefault(category, Level.INFO).value();
     }
     publishLogMessage(entry, getDeviceId());
   }
