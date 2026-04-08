@@ -64,6 +64,7 @@ from .model_externals import *
 from .model_externals_link import *
 from .model_features import *
 from .model_gateway import *
+from .model_links import *
 from .model_localnet import *
 from .model_localnet_family import *
 from .model_pointset import *
@@ -105,4 +106,3 @@ from .state_validation_capability import *
 from .state_validation_feature import *
 from .state_validation_schema import *
 from .state_validation_sequence import *
-from .virtual_links import *

@@ -8,15 +8,14 @@
     "num_id": "2541901344105616"
   },
   "links": {
-    "547a33c5-0ce4-4dfb-9924-5169a3475c89": {
+    "VAV-3": {
       "supply_air_flowrate_sensor": "supply_air_flowrate_sensor_1"
     }
   },
   "externals": {
     "dbo": {
       "ext_id": "c773b86d-b0c0-46fc-bd3f-d726fadd5f1e",
-      "type": "HVAC/VAV_SD_DSP",
-      "label": "VAV-1"
+      "type": "HVAC/VAV_SD_DSP"
     }
   },
   "pointset": {

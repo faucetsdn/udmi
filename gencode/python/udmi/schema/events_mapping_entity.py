@@ -9,7 +9,7 @@ from typing import Dict, List, Optional
 
 from ._base import DataModel
 from .equipment_translation import BuildingConfig
-from .virtual_links import VirtualEquipmentLinks
+from .model_links import VirtualEquipmentLinks
 
 
 class Connections(Enum):

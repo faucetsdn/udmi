@@ -15,13 +15,13 @@ from .model_discovery import DiscoveryModel
 from .model_externals import ExternalsModel
 from .model_features import TestingModel as TestingModel_1
 from .model_gateway import GatewayModel
+from .model_links import VirtualEquipmentLinks
 from .model_localnet import LocalnetModel
 from .model_pointset import PointsetModel
 from .model_policy import PolicyModel
 from .model_relationships import EntityRelationships
 from .model_system import SystemModel
 from .model_testing import TestingModel
-from .virtual_links import VirtualEquipmentLinks
 
 
 @dataclass

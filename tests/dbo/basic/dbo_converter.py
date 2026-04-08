@@ -13,6 +13,10 @@ def extract_dbo_config(site_model_dir: Path) -> dict:
 
     devices_dir = site_model_dir / "devices"
 
+    device_id_to_guid = {}
+    metadata_map = {}
+
+    # Pass 1: Build the mapping of device ID -> GUID
     for device_dir in sorted(devices_dir.iterdir()):
         if not device_dir.is_dir():
             continue
@@ -32,16 +36,31 @@ def extract_dbo_config(site_model_dir: Path) -> dict:
         if not guid:
             continue
 
+        device_id = device_dir.name
+        device_id_to_guid[device_id] = guid
+        metadata_map[device_id] = metadata
+
+    # Pass 2: Build the resulting config
+    for device_id, metadata in metadata_map.items():
+        guid = device_id_to_guid[device_id]
+        dbo_external = metadata.get("externals", {}).get("dbo", {})
+
         device_entry = {}
 
         if "label" in dbo_external:
             device_entry["code"] = dbo_external["label"]
+        else:
+            device_entry["code"] = device_id
 
         if "cloud" in metadata and "num_id" in metadata["cloud"]:
             device_entry["cloud_device_id"] = str(metadata["cloud"]["num_id"])
 
         if "relationships" in metadata and metadata["relationships"]:
-            device_entry["connections"] = metadata["relationships"]
+            # Map UDMI device IDs to GUIDs
+            device_entry["connections"] = {
+                device_id_to_guid.get(k, k): v
+                for k, v in metadata["relationships"].items()
+            }
 
         # extract point translation from core UDMI pointset constructs
         pointset = metadata.get("pointset", {}).get("points", {})
@@ -61,8 +80,6 @@ def extract_dbo_config(site_model_dir: Path) -> dict:
                         u_map.get(point_info["units"], point_info["units"]): point_info["units"]
                     }
                 }
-            if "states" in point_info:
-                pt_dbo["states"] = point_info["states"]
 
             if pt_dbo:
                 translations[point_name] = pt_dbo
@@ -71,7 +88,10 @@ def extract_dbo_config(site_model_dir: Path) -> dict:
             device_entry["translation"] = translations
 
         if "links" in metadata and metadata["links"]:
-            device_entry["links"] = metadata["links"]
+            device_entry["links"] = {
+                device_id_to_guid.get(k, k): v
+                for k, v in metadata["links"].items()
+            }
 
         if "type" in dbo_external:
             device_entry["type"] = dbo_external["type"]

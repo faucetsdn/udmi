@@ -54,7 +54,6 @@ class PointPointsetModel(DataModel):
     unchanged_limit_sec: Optional[int] = None
     cov_increment: Optional[float] = None
     ref: Optional[str] = None
-    states: Optional[Dict[str, str]] = None
     adjunct: Optional[Dict[str, str]] = None
     tags: Optional[List[Tag]] = None
     structure: Optional[Dict[str, RefDiscovery]] = None

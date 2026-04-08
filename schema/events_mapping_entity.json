@@ -34,7 +34,7 @@
       }]
     },
     "links": {
-      "$ref": "file:virtual_links.json"
+      "$ref": "file:model_links.json#"
     },
     "translation": {
       "$ref": "file:equipment_translation.json"

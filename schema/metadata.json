@@ -54,7 +54,7 @@
       "$ref": "file:model_relationships.json#"
     },
     "links": {
-      "$ref": "file:virtual_links.json"
+      "$ref": "file:model_links.json#"
     },
     "gateway": {
       "$ref": "file:model_gateway.json#",

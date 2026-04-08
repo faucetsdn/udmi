@@ -66,16 +66,6 @@
       "type": "string",
       "examples": ["AI3", "400070"]
     },
-    "states": {
-      "description": "Mapping of string states to their values",
-      "type": "object",
-      "existingJavaType": "java.util.Map<String, String>",
-      "patternProperties": {
-        "^[a-zA-Z0-9_]+$": {
-          "type": "string"
-        }
-      }
-    },
     "adjunct": {
       "type": "object",
       "existingJavaType": "java.util.Map<String, String>",
