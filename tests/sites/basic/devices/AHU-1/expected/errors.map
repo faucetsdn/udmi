@@ -1,4 +1,6 @@
 Exceptions for AHU-1
+  List of 1 exceptions
+    Unrecognized localnet protocol family modbus_1
   Should not proxy direct device AHU-1
   While loading credentials for local device AHU-1
     Found 0 credentials

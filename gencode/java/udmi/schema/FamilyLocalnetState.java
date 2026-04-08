@@ -3,6 +3,7 @@ package udmi.schema;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 
 
@@ -15,7 +16,8 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
     "addr",
-    "status"
+    "status",
+    "family"
 })
 public class FamilyLocalnetState {
 
@@ -29,11 +31,19 @@ public class FamilyLocalnetState {
      */
     @JsonProperty("status")
     public Entry status;
+    /**
+     * The family designator, used only when the entry is not keyed in a family map
+     *
+     */
+    @JsonProperty("family")
+    @JsonPropertyDescription("The family designator, used only when the entry is not keyed in a family map")
+    public String family;
 
     @Override
     public int hashCode() {
         int result = 1;
         result = ((result* 31)+((this.addr == null)? 0 :this.addr.hashCode()));
+        result = ((result* 31)+((this.family == null)? 0 :this.family.hashCode()));
         result = ((result* 31)+((this.status == null)? 0 :this.status.hashCode()));
         return result;
     }
@@ -47,7 +57,7 @@ public class FamilyLocalnetState {
             return false;
         }
         FamilyLocalnetState rhs = ((FamilyLocalnetState) other);
-        return (((this.addr == rhs.addr)||((this.addr!= null)&&this.addr.equals(rhs.addr)))&&((this.status == rhs.status)||((this.status!= null)&&this.status.equals(rhs.status))));
+        return ((((this.addr == rhs.addr)||((this.addr!= null)&&this.addr.equals(rhs.addr)))&&((this.family == rhs.family)||((this.family!= null)&&this.family.equals(rhs.family))))&&((this.status == rhs.status)||((this.status!= null)&&this.status.equals(rhs.status))));
     }
 
 }

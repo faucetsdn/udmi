@@ -18,7 +18,8 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 @JsonPropertyOrder({
     "generation",
     "scan_interval_sec",
-    "scan_duration_sec"
+    "scan_duration_sec",
+    "family"
 })
 public class FamilyDiscoveryModel {
 
@@ -43,12 +44,20 @@ public class FamilyDiscoveryModel {
     @JsonProperty("scan_duration_sec")
     @JsonPropertyDescription("Scan duration, in seconds")
     public Integer scan_duration_sec;
+    /**
+     * The family designator, used only when the entry is not keyed in a family map
+     *
+     */
+    @JsonProperty("family")
+    @JsonPropertyDescription("The family designator, used only when the entry is not keyed in a family map")
+    public String family;
 
     @Override
     public int hashCode() {
         int result = 1;
         result = ((result* 31)+((this.generation == null)? 0 :this.generation.hashCode()));
         result = ((result* 31)+((this.scan_interval_sec == null)? 0 :this.scan_interval_sec.hashCode()));
+        result = ((result* 31)+((this.family == null)? 0 :this.family.hashCode()));
         result = ((result* 31)+((this.scan_duration_sec == null)? 0 :this.scan_duration_sec.hashCode()));
         return result;
     }
@@ -62,7 +71,7 @@ public class FamilyDiscoveryModel {
             return false;
         }
         FamilyDiscoveryModel rhs = ((FamilyDiscoveryModel) other);
-        return ((((this.generation == rhs.generation)||((this.generation!= null)&&this.generation.equals(rhs.generation)))&&((this.scan_interval_sec == rhs.scan_interval_sec)||((this.scan_interval_sec!= null)&&this.scan_interval_sec.equals(rhs.scan_interval_sec))))&&((this.scan_duration_sec == rhs.scan_duration_sec)||((this.scan_duration_sec!= null)&&this.scan_duration_sec.equals(rhs.scan_duration_sec))));
+        return (((((this.generation == rhs.generation)||((this.generation!= null)&&this.generation.equals(rhs.generation)))&&((this.scan_interval_sec == rhs.scan_interval_sec)||((this.scan_interval_sec!= null)&&this.scan_interval_sec.equals(rhs.scan_interval_sec))))&&((this.family == rhs.family)||((this.family!= null)&&this.family.equals(rhs.family))))&&((this.scan_duration_sec == rhs.scan_duration_sec)||((this.scan_duration_sec!= null)&&this.scan_duration_sec.equals(rhs.scan_duration_sec))));
     }
 
 }

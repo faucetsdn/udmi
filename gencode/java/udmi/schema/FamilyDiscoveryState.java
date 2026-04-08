@@ -24,7 +24,8 @@ import com.fasterxml.jackson.annotation.JsonValue;
     "phase",
     "active_count",
     "passive_count",
-    "status"
+    "status",
+    "family"
 })
 public class FamilyDiscoveryState {
 
@@ -64,6 +65,13 @@ public class FamilyDiscoveryState {
      */
     @JsonProperty("status")
     public Entry status;
+    /**
+     * The family designator, used only when the entry is not keyed in a family map
+     *
+     */
+    @JsonProperty("family")
+    @JsonPropertyDescription("The family designator, used only when the entry is not keyed in a family map")
+    public String family;
 
     @Override
     public int hashCode() {
@@ -71,6 +79,7 @@ public class FamilyDiscoveryState {
         result = ((result* 31)+((this.generation == null)? 0 :this.generation.hashCode()));
         result = ((result* 31)+((this.phase == null)? 0 :this.phase.hashCode()));
         result = ((result* 31)+((this.active_count == null)? 0 :this.active_count.hashCode()));
+        result = ((result* 31)+((this.family == null)? 0 :this.family.hashCode()));
         result = ((result* 31)+((this.passive_count == null)? 0 :this.passive_count.hashCode()));
         result = ((result* 31)+((this.status == null)? 0 :this.status.hashCode()));
         return result;
@@ -85,7 +94,7 @@ public class FamilyDiscoveryState {
             return false;
         }
         FamilyDiscoveryState rhs = ((FamilyDiscoveryState) other);
-        return ((((((this.generation == rhs.generation)||((this.generation!= null)&&this.generation.equals(rhs.generation)))&&((this.phase == rhs.phase)||((this.phase!= null)&&this.phase.equals(rhs.phase))))&&((this.active_count == rhs.active_count)||((this.active_count!= null)&&this.active_count.equals(rhs.active_count))))&&((this.passive_count == rhs.passive_count)||((this.passive_count!= null)&&this.passive_count.equals(rhs.passive_count))))&&((this.status == rhs.status)||((this.status!= null)&&this.status.equals(rhs.status))));
+        return (((((((this.generation == rhs.generation)||((this.generation!= null)&&this.generation.equals(rhs.generation)))&&((this.phase == rhs.phase)||((this.phase!= null)&&this.phase.equals(rhs.phase))))&&((this.active_count == rhs.active_count)||((this.active_count!= null)&&this.active_count.equals(rhs.active_count))))&&((this.family == rhs.family)||((this.family!= null)&&this.family.equals(rhs.family))))&&((this.passive_count == rhs.passive_count)||((this.passive_count!= null)&&this.passive_count.equals(rhs.passive_count))))&&((this.status == rhs.status)||((this.status!= null)&&this.status.equals(rhs.status))));
     }
 
 

@@ -23,3 +23,4 @@ class FamilyDiscoveryConfig(DataModel):
     networks: Optional[List[str]] = None
     passive_sec: Optional[int] = None
     depth: Optional[Depth] = None
+    family: Optional[str] = None

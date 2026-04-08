@@ -17,3 +17,4 @@ class FamilyDiscovery(DataModel):
 
     addr: Optional[str] = None
     ref: Optional[str] = None
+    family: Optional[str] = None

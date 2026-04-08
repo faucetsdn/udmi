@@ -36,7 +36,7 @@
       "additionalProperties": false,
       "existingJavaType": "java.util.HashMap<String, FamilyLocalnetModel>",
       "patternProperties": {
-        "^[a-z0-9-]+$": {
+        "^[a-z][a-z0-9]*(_[a-z0-9]+)*$": {
           "$ref": "file:model_localnet_family.json"
         }
       },

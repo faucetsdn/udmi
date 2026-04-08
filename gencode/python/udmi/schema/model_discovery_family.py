@@ -14,3 +14,4 @@ class FamilyDiscoveryModel(DataModel):
     generation: Optional[str] = None
     scan_interval_sec: Optional[int] = None
     scan_duration_sec: Optional[int] = None
+    family: Optional[str] = None

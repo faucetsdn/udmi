@@ -32,6 +32,11 @@
     "status": {
       "description": "Status information about the discovery operation",
       "$ref": "file:entry.json"
+    },
+    "family": {
+      "description": "The family designator, used only when the entry is not keyed in a family map",
+      "type": "string",
+      "examples": ["ipv4", "bacnet"]
     }
   }
 }

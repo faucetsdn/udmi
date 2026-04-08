@@ -16,7 +16,8 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
     "addr",
-    "ref"
+    "ref",
+    "family"
 })
 public class FamilyDiscovery {
 
@@ -34,11 +35,19 @@ public class FamilyDiscovery {
     @JsonProperty("ref")
     @JsonPropertyDescription("Point reference in the namespace of the given family")
     public String ref;
+    /**
+     * The family designator, used only when the entry is not keyed in a family map
+     *
+     */
+    @JsonProperty("family")
+    @JsonPropertyDescription("The family designator, used only when the entry is not keyed in a family map")
+    public String family;
 
     @Override
     public int hashCode() {
         int result = 1;
         result = ((result* 31)+((this.addr == null)? 0 :this.addr.hashCode()));
+        result = ((result* 31)+((this.family == null)? 0 :this.family.hashCode()));
         result = ((result* 31)+((this.ref == null)? 0 :this.ref.hashCode()));
         return result;
     }
@@ -52,7 +61,7 @@ public class FamilyDiscovery {
             return false;
         }
         FamilyDiscovery rhs = ((FamilyDiscovery) other);
-        return (((this.addr == rhs.addr)||((this.addr!= null)&&this.addr.equals(rhs.addr)))&&((this.ref == rhs.ref)||((this.ref!= null)&&this.ref.equals(rhs.ref))));
+        return ((((this.addr == rhs.addr)||((this.addr!= null)&&this.addr.equals(rhs.addr)))&&((this.family == rhs.family)||((this.family!= null)&&this.family.equals(rhs.family))))&&((this.ref == rhs.ref)||((this.ref!= null)&&this.ref.equals(rhs.ref))));
     }
 
 }

@@ -68,6 +68,10 @@
       },
       "vendor": {
         "addr": "28179023"
+      },
+      "modbus_1": {
+        "family": "modbus",
+        "addr": "19234"
       }
     }
   },

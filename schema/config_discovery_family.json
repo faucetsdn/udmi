@@ -43,6 +43,11 @@
     "depth": {
       "description": "Indicates implicit enumeration of discovered devices",
       "$ref": "file:common.json#/definitions/depth"
+    },
+    "family": {
+      "description": "The family designator, used only when the entry is not keyed in a family map",
+      "type": "string",
+      "examples": ["ipv4", "bacnet"]
     }
   }
 }

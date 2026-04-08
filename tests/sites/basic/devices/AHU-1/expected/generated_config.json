@@ -13,6 +13,7 @@
       "bacnet": {},
       "ether": {},
       "ipv4": {},
+      "modbus_1": {},
       "vendor": {}
     }
   },

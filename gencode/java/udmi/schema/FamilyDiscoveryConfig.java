@@ -23,7 +23,8 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
     "addrs",
     "networks",
     "passive_sec",
-    "depth"
+    "depth",
+    "family"
 })
 public class FamilyDiscoveryConfig {
 
@@ -61,6 +62,13 @@ public class FamilyDiscoveryConfig {
     public Integer passive_sec;
     @JsonProperty("depth")
     public udmi.schema.Enumerations.Depth depth;
+    /**
+     * The family designator, used only when the entry is not keyed in a family map
+     *
+     */
+    @JsonProperty("family")
+    @JsonPropertyDescription("The family designator, used only when the entry is not keyed in a family map")
+    public String family;
 
     @Override
     public int hashCode() {
@@ -72,6 +80,7 @@ public class FamilyDiscoveryConfig {
         result = ((result* 31)+((this.scan_duration_sec == null)? 0 :this.scan_duration_sec.hashCode()));
         result = ((result* 31)+((this.addrs == null)? 0 :this.addrs.hashCode()));
         result = ((result* 31)+((this.networks == null)? 0 :this.networks.hashCode()));
+        result = ((result* 31)+((this.family == null)? 0 :this.family.hashCode()));
         return result;
     }
 
@@ -84,7 +93,7 @@ public class FamilyDiscoveryConfig {
             return false;
         }
         FamilyDiscoveryConfig rhs = ((FamilyDiscoveryConfig) other);
-        return ((((((((this.generation == rhs.generation)||((this.generation!= null)&&this.generation.equals(rhs.generation)))&&((this.scan_interval_sec == rhs.scan_interval_sec)||((this.scan_interval_sec!= null)&&this.scan_interval_sec.equals(rhs.scan_interval_sec))))&&((this.depth == rhs.depth)||((this.depth!= null)&&this.depth.equals(rhs.depth))))&&((this.passive_sec == rhs.passive_sec)||((this.passive_sec!= null)&&this.passive_sec.equals(rhs.passive_sec))))&&((this.scan_duration_sec == rhs.scan_duration_sec)||((this.scan_duration_sec!= null)&&this.scan_duration_sec.equals(rhs.scan_duration_sec))))&&((this.addrs == rhs.addrs)||((this.addrs!= null)&&this.addrs.equals(rhs.addrs))))&&((this.networks == rhs.networks)||((this.networks!= null)&&this.networks.equals(rhs.networks))));
+        return (((((((((this.generation == rhs.generation)||((this.generation!= null)&&this.generation.equals(rhs.generation)))&&((this.scan_interval_sec == rhs.scan_interval_sec)||((this.scan_interval_sec!= null)&&this.scan_interval_sec.equals(rhs.scan_interval_sec))))&&((this.depth == rhs.depth)||((this.depth!= null)&&this.depth.equals(rhs.depth))))&&((this.passive_sec == rhs.passive_sec)||((this.passive_sec!= null)&&this.passive_sec.equals(rhs.passive_sec))))&&((this.scan_duration_sec == rhs.scan_duration_sec)||((this.scan_duration_sec!= null)&&this.scan_duration_sec.equals(rhs.scan_duration_sec))))&&((this.addrs == rhs.addrs)||((this.addrs!= null)&&this.addrs.equals(rhs.addrs))))&&((this.networks == rhs.networks)||((this.networks!= null)&&this.networks.equals(rhs.networks))))&&((this.family == rhs.family)||((this.family!= null)&&this.family.equals(rhs.family))));
     }
 
 }
