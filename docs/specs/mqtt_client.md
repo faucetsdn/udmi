@@ -12,4 +12,4 @@ connection attempts indefinitely.
 
 When using password-based MQTT authentication:
 * The `username` is formatted as `/r/<registry_id>/d/<device_id>` (e.g., `/r/ZZ-TRI-FECTA/d/AHU-1`).
-* The `password` is the first 8 characters of the sha256sum of the private pkcs8 file.
+* The `password` is the first 8 characters of the sha256 hash of the private pkcs8 file.
