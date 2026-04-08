@@ -166,14 +166,7 @@ public class PubberPublisherHost extends PubberManager implements PublisherHost 
     return getBlobHandler(blobKey) != null;
   }
 
-  @Override
-  public String extractConfigBlob(String blobKey) {
-    if (Boolean.TRUE.equals(getOptions().otaFailFetch)) {
-      safeSleep(60000); // Give test time to see APPLY phase
-      throw new RuntimeException("Simulated network failure during fetch");
-    }
-    return PublisherHost.super.extractConfigBlob(blobKey);
-  }
+
 
   @Override
   public void handleBlob(String blobKey, String payload) {

@@ -27,7 +27,6 @@ TEST system_last_update extraField=fnooz
 TEST system_last_update dupeState
 TEST system_last_update badLevel
 TEST state_make_model badState
-TEST ota_fetch_failure otaFailFetch
 
 # Test with various device metadata.json options
 WITH AHU-1 noState

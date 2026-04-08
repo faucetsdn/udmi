@@ -55,4 +55,3 @@ class PubberOptions(DataModel):
     fastWrite: Optional[bool] = None
     delayWrite: Optional[bool] = None
     softwareFirmwareValue: Optional[str] = None
-    otaFailFetch: Optional[bool] = None
