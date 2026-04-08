@@ -50,15 +50,8 @@
     "externals": {
       "$ref": "file:model_externals.json#"
     },
-    "connections": {
-      "description": "Entity connections to other devices, keyed by connection type",
-      "type": "object",
-      "existingJavaType": "java.util.Map<String, Object>",
-      "patternProperties": {
-        "^[-0-9a-z]+$": {
-          "type": [ "string", "array" ]
-        }
-      }
+    "relationships": {
+      "$ref": "file:model_relationships.json#"
     },
     "links": {
       "$ref": "file:virtual_links.json"

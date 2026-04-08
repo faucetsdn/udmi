@@ -7,10 +7,9 @@
   "cloud": {
     "num_id": "2541901344105617"
   },
-  "connections": {
+  "relationships": {
     "c773b86d-b0c0-46fc-bd3f-d726fadd5f1e": "FEEDS"
   },
-  "links": {},
   "externals": {
     "dbo": {
       "ext_id": "4931e096-dea5-4b81-86ad-234c6d07b978",

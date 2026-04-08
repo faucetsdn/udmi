@@ -26,7 +26,7 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
     "cloud",
     "system",
     "externals",
-    "connections",
+    "relationships",
     "links",
     "gateway",
     "discovery",
@@ -107,12 +107,14 @@ public class Metadata {
     @JsonPropertyDescription("Information specific to how the device links with external models")
     public Map<String, LinkExternalsModel> externals;
     /**
-     * Entity connections to other devices, keyed by connection type
+     * Entity Relationships
+     * <p>
+     * Entity relationships to other devices, keyed by relationship type
      *
      */
-    @JsonProperty("connections")
-    @JsonPropertyDescription("Entity connections to other devices, keyed by connection type")
-    public Map<String, Object> connections;
+    @JsonProperty("relationships")
+    @JsonPropertyDescription("Entity relationships to other devices, keyed by relationship type")
+    public Map<String, Object> relationships;
     /**
      * Virtual Equipment Links
      * <p>
@@ -204,6 +206,7 @@ public class Metadata {
         result = ((result* 31)+((this.version == null)? 0 :this.version.hashCode()));
         result = ((result* 31)+((this.structure == null)? 0 :this.structure.hashCode()));
         result = ((result* 31)+((this.cloud == null)? 0 :this.cloud.hashCode()));
+        result = ((result* 31)+((this.relationships == null)? 0 :this.relationships.hashCode()));
         result = ((result* 31)+((this.features == null)? 0 :this.features.hashCode()));
         result = ((result* 31)+((this.system == null)? 0 :this.system.hashCode()));
         result = ((result* 31)+((this.discovery == null)? 0 :this.discovery.hashCode()));
@@ -213,7 +216,6 @@ public class Metadata {
         result = ((result* 31)+((this.externals == null)? 0 :this.externals.hashCode()));
         result = ((result* 31)+((this.operation == null)? 0 :this.operation.hashCode()));
         result = ((result* 31)+((this.hash == null)? 0 :this.hash.hashCode()));
-        result = ((result* 31)+((this.connections == null)? 0 :this.connections.hashCode()));
         result = ((result* 31)+((this.gateway == null)? 0 :this.gateway.hashCode()));
         result = ((result* 31)+((this.localnet == null)? 0 :this.localnet.hashCode()));
         result = ((result* 31)+((this.timestamp == null)? 0 :this.timestamp.hashCode()));
@@ -230,7 +232,7 @@ public class Metadata {
             return false;
         }
         Metadata rhs = ((Metadata) other);
-        return ((((((((((((((((((((this.alarmset == rhs.alarmset)||((this.alarmset!= null)&&this.alarmset.equals(rhs.alarmset)))&&((this.testing == rhs.testing)||((this.testing!= null)&&this.testing.equals(rhs.testing))))&&((this.version == rhs.version)||((this.version!= null)&&this.version.equals(rhs.version))))&&((this.structure == rhs.structure)||((this.structure!= null)&&this.structure.equals(rhs.structure))))&&((this.cloud == rhs.cloud)||((this.cloud!= null)&&this.cloud.equals(rhs.cloud))))&&((this.features == rhs.features)||((this.features!= null)&&this.features.equals(rhs.features))))&&((this.system == rhs.system)||((this.system!= null)&&this.system.equals(rhs.system))))&&((this.discovery == rhs.discovery)||((this.discovery!= null)&&this.discovery.equals(rhs.discovery))))&&((this.upgraded_from == rhs.upgraded_from)||((this.upgraded_from!= null)&&this.upgraded_from.equals(rhs.upgraded_from))))&&((this.links == rhs.links)||((this.links!= null)&&this.links.equals(rhs.links))))&&((this.pointset == rhs.pointset)||((this.pointset!= null)&&this.pointset.equals(rhs.pointset))))&&((this.externals == rhs.externals)||((this.externals!= null)&&this.externals.equals(rhs.externals))))&&((this.operation == rhs.operation)||((this.operation!= null)&&this.operation.equals(rhs.operation))))&&((this.hash == rhs.hash)||((this.hash!= null)&&this.hash.equals(rhs.hash))))&&((this.connections == rhs.connections)||((this.connections!= null)&&this.connections.equals(rhs.connections))))&&((this.gateway == rhs.gateway)||((this.gateway!= null)&&this.gateway.equals(rhs.gateway))))&&((this.localnet == rhs.localnet)||((this.localnet!= null)&&this.localnet.equals(rhs.localnet))))&&((this.timestamp == rhs.timestamp)||((this.timestamp!= null)&&this.timestamp.equals(rhs.timestamp))))&&((this.policy == rhs.policy)||((this.policy!= null)&&this.policy.equals(rhs.policy))));
+        return ((((((((((((((((((((this.alarmset == rhs.alarmset)||((this.alarmset!= null)&&this.alarmset.equals(rhs.alarmset)))&&((this.testing == rhs.testing)||((this.testing!= null)&&this.testing.equals(rhs.testing))))&&((this.version == rhs.version)||((this.version!= null)&&this.version.equals(rhs.version))))&&((this.structure == rhs.structure)||((this.structure!= null)&&this.structure.equals(rhs.structure))))&&((this.cloud == rhs.cloud)||((this.cloud!= null)&&this.cloud.equals(rhs.cloud))))&&((this.relationships == rhs.relationships)||((this.relationships!= null)&&this.relationships.equals(rhs.relationships))))&&((this.features == rhs.features)||((this.features!= null)&&this.features.equals(rhs.features))))&&((this.system == rhs.system)||((this.system!= null)&&this.system.equals(rhs.system))))&&((this.discovery == rhs.discovery)||((this.discovery!= null)&&this.discovery.equals(rhs.discovery))))&&((this.upgraded_from == rhs.upgraded_from)||((this.upgraded_from!= null)&&this.upgraded_from.equals(rhs.upgraded_from))))&&((this.links == rhs.links)||((this.links!= null)&&this.links.equals(rhs.links))))&&((this.pointset == rhs.pointset)||((this.pointset!= null)&&this.pointset.equals(rhs.pointset))))&&((this.externals == rhs.externals)||((this.externals!= null)&&this.externals.equals(rhs.externals))))&&((this.operation == rhs.operation)||((this.operation!= null)&&this.operation.equals(rhs.operation))))&&((this.hash == rhs.hash)||((this.hash!= null)&&this.hash.equals(rhs.hash))))&&((this.gateway == rhs.gateway)||((this.gateway!= null)&&this.gateway.equals(rhs.gateway))))&&((this.localnet == rhs.localnet)||((this.localnet!= null)&&this.localnet.equals(rhs.localnet))))&&((this.timestamp == rhs.timestamp)||((this.timestamp!= null)&&this.timestamp.equals(rhs.timestamp))))&&((this.policy == rhs.policy)||((this.policy!= null)&&this.policy.equals(rhs.policy))));
     }
 
 }

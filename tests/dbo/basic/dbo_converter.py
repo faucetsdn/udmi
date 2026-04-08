@@ -40,8 +40,8 @@ def extract_dbo_config(site_model_dir: Path) -> dict:
         if "cloud" in metadata and "num_id" in metadata["cloud"]:
             device_entry["cloud_device_id"] = str(metadata["cloud"]["num_id"])
 
-        if "connections" in metadata and metadata["connections"]:
-            device_entry["connections"] = metadata["connections"]
+        if "relationships" in metadata and metadata["relationships"]:
+            device_entry["connections"] = metadata["relationships"]
 
         # extract point translation from core UDMI pointset constructs
         pointset = metadata.get("pointset", {}).get("points", {})
