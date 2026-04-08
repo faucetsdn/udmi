@@ -1,4 +1,4 @@
-cryptography==46.0.5
+cryptography==46.0.7
 aiosqlite==0.22.1
 BAC0==23.7.3
 bacpypes==0.18.7
