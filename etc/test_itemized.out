@@ -39,8 +39,8 @@
 0 RESULT pass system broken_config STABLE 8/10 Sequence complete
 1 CPBLTY pass system system_last_update.subblocks ALPHA 1/1 Capability supported
 0 RESULT pass system system_last_update STABLE 11/11 Sequence complete
-1 CPBLTY pass system system_last_update.subblocks ALPHA 1/1 Capability supported
-0 RESULT pass system system_last_update STABLE 11/11 Sequence complete
+1 CPBLTY fail system system_last_update.subblocks ALPHA 0/1 Failed waiting until (subblocks) state update complete: config/state subblock mismatch: pointset, localnet, discovery
+0 RESULT pass system system_last_update STABLE 10/11 Sequence complete
 1 CPBLTY pass system system_last_update.subblocks ALPHA 1/1 Capability supported
 0 RESULT pass system system_last_update STABLE 11/11 Sequence complete
 1 RESULT fail system state_make_model STABLE 0/10 Failed check that make and model in state matches make in metadata
