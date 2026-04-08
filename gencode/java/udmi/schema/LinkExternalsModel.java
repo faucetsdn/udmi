@@ -1,6 +1,7 @@
 
 package udmi.schema;
 
+import java.util.Map;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyDescription;
@@ -30,35 +31,35 @@ public class LinkExternalsModel {
      */
     @JsonProperty("ext_id")
     @JsonPropertyDescription("Id of this device in the external model namespace")
-    public String ext_id;
+    public java.lang.String ext_id;
     /**
      * Type of this device in the external model namespace
      * 
      */
     @JsonProperty("type")
     @JsonPropertyDescription("Type of this device in the external model namespace")
-    public String type;
+    public java.lang.String type;
     /**
      * Etag for referencing this external entity
      * 
      */
     @JsonProperty("etag")
     @JsonPropertyDescription("Etag for referencing this external entity")
-    public String etag;
+    public java.lang.String etag;
     /**
      * Descriptive label for this entity
      * 
      */
     @JsonProperty("label")
     @JsonPropertyDescription("Descriptive label for this entity")
-    public String label;
+    public java.lang.String label;
     /**
      * Entity connections, keyed by guid
      *
      */
     @JsonProperty("connections")
     @JsonPropertyDescription("Entity connections, keyed by guid")
-    public Connections connections;
+    public Map<String, Object> connections;
     /**
      * Virtual Equipment Links
      * <p>
@@ -82,7 +83,7 @@ public class LinkExternalsModel {
     }
 
     @Override
-    public boolean equals(Object other) {
+    public boolean equals(java.lang.Object other) {
         if (other == this) {
             return true;
         }
