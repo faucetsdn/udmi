@@ -14,4 +14,3 @@ from .entry import Entry
 class FamilyLocalnetState(DataModel):
     addr: Optional[str] = None
     status: Optional[Entry] = None
-    subsystem: Optional[str] = None
