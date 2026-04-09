@@ -104,6 +104,7 @@ macos
 md
 microservices
 modbus
+Mosquitto
 MQTT
 mydomain
 namespace
