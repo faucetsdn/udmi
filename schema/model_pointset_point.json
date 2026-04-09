@@ -94,6 +94,9 @@
           "$ref": "file:discovery_ref.json#"
         }
       }
+    },
+    "links": {
+      "$ref": "file:model_pointset_point_links.json#"
     }
   }
 }

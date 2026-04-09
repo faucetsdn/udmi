@@ -7,11 +7,6 @@
   "cloud": {
     "num_id": "2541901344105616"
   },
-  "links": {
-    "VAV-3": {
-      "supply_air_flowrate_sensor_1": "supply_air_flowrate_sensor"
-    }
-  },
   "externals": {
     "dbo": {
       "ext_id": "c773b86d-b0c0-46fc-bd3f-d726fadd5f1e",
@@ -23,6 +18,11 @@
       "zone_air_temperature_sensor": {
         "ref": "points.zone_air_temperature_sensor.present_value",
         "units": "degC"
+      },
+      "supply_air_flowrate_sensor_1": {
+        "links": {
+          "VAV-3": "supply_air_flowrate_sensor"
+        }
       }
     }
   }

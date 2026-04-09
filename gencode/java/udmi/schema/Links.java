@@ -6,8 +6,6 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 
 
 /**
- * Virtual Equipment Links
- * <p>
  * Virtual equipment mapping, keyed by guid
  * 
  */
@@ -15,7 +13,7 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 @JsonPropertyOrder({
 
 })
-public class VirtualEquipmentLinks {
+public class Links {
 
 
     @Override
@@ -29,10 +27,10 @@ public class VirtualEquipmentLinks {
         if (other == this) {
             return true;
         }
-        if ((other instanceof VirtualEquipmentLinks) == false) {
+        if ((other instanceof Links) == false) {
             return false;
         }
-        VirtualEquipmentLinks rhs = ((VirtualEquipmentLinks) other);
+        Links rhs = ((Links) other);
         return true;
     }
 

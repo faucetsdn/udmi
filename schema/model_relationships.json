@@ -6,7 +6,7 @@
   "$schema": "http://json-schema.org/draft-07/schema#",
   "existingJavaType": "java.util.Map<String, Object>",
   "patternProperties": {
-    "^[-0-9a-z]+$": {
+    "^[-0-9a-zA-Z]+$": {
       "type": [ "string", "array" ]
     }
   }

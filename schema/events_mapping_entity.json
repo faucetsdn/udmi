@@ -34,7 +34,18 @@
       }]
     },
     "links": {
-      "$ref": "file:model_links.json#"
+      "type": "object",
+      "description": "Virtual equipment mapping, keyed by guid",
+      "patternProperties": {
+        "^[-0-9a-zA-Z$]+$": {
+          "type": "object",
+          "patternProperties": {
+            "^[a-z_]+$": {
+              "type": "string"
+            }
+          }
+        }
+      }
     },
     "translation": {
       "$ref": "file:equipment_translation.json"

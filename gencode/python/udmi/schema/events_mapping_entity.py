@@ -9,7 +9,6 @@ from typing import Dict, List, Optional
 
 from ._base import DataModel
 from .equipment_translation import BuildingConfig
-from .model_links import VirtualEquipmentLinks
 
 
 class Connections(Enum):
@@ -22,6 +21,6 @@ class MappingEventEntity(DataModel):
     type: Optional[str] = None
     cloud_device_id: Optional[str] = None
     connections: Optional[Dict[str, Connections]] = None
-    links: Optional[VirtualEquipmentLinks] = None
+    links: Optional[Dict[str, Dict[str, str]]] = None
     translation: Optional[BuildingConfig] = None
     missing_telemetry_fields: Optional[List[str]] = None

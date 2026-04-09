@@ -15,7 +15,6 @@ from .model_discovery import DiscoveryModel
 from .model_externals import ExternalsModel
 from .model_features import TestingModel as TestingModel_1
 from .model_gateway import GatewayModel
-from .model_links import VirtualEquipmentLinks
 from .model_localnet import LocalnetModel
 from .model_pointset import PointsetModel
 from .model_policy import PolicyModel
@@ -39,7 +38,6 @@ class Metadata(DataModel):
     system: Optional[SystemModel] = None
     externals: Optional[ExternalsModel] = None
     relationships: Optional[EntityRelationships] = None
-    links: Optional[VirtualEquipmentLinks] = None
     gateway: Optional[GatewayModel] = None
     discovery: Optional[DiscoveryModel] = None
     localnet: Optional[LocalnetModel] = None

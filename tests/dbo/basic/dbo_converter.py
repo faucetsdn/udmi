@@ -62,9 +62,10 @@ def extract_dbo_config(site_model_dir: Path) -> dict:
                 for k, v in metadata["relationships"].items()
             }
 
-        # extract point translation from core UDMI pointset constructs
+        # extract point translation and links from core UDMI pointset constructs
         pointset = metadata.get("pointset", {}).get("points", {})
         translations = {}
+        links_dbo = {}
         for point_name, point_info in pointset.items():
             pt_dbo = {}
             if "ref" in point_info:
@@ -84,16 +85,19 @@ def extract_dbo_config(site_model_dir: Path) -> dict:
             if pt_dbo:
                 translations[point_name] = pt_dbo
 
+            if "links" in point_info:
+                for remote_device_id, remote_pt in point_info["links"].items():
+                    remote_guid = device_id_to_guid.get(remote_device_id, remote_device_id)
+                    if remote_guid not in links_dbo:
+                        links_dbo[remote_guid] = {}
+                    # DBO links are remote_point: local_point
+                    links_dbo[remote_guid][remote_pt] = point_name
+
         if translations:
             device_entry["translation"] = translations
 
-        if "links" in metadata and metadata["links"]:
-            # UDMI links are local_point: remote_point
-            # DBO links are remote_point: local_point
-            device_entry["links"] = {
-                device_id_to_guid.get(k, k): {remote_pt: local_pt for local_pt, remote_pt in v.items()}
-                for k, v in metadata["links"].items()
-            }
+        if links_dbo:
+            device_entry["links"] = links_dbo
 
         if "type" in dbo_external:
             device_entry["type"] = dbo_external["type"]
