@@ -8,7 +8,11 @@
     "num_id": "2541901344105617"
   },
   "relationships": {
-    "VAV-1": "FEEDS"
+    "VAV-1": {
+      "feed": {
+        "type": "FEEDS"
+      }
+    }
   },
   "externals": {
     "dbo": {

@@ -7,7 +7,7 @@
   "existingJavaType": "java.util.Map<String, Object>",
   "patternProperties": {
     "^[-0-9a-zA-Z]+$": {
-      "type": [ "string", "object" ],
+      "type": "object",
       "patternProperties": {
         "^[-0-9a-zA-Z_]+$": {
           "type": "object",
