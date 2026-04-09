@@ -43,7 +43,7 @@
       "type": "string",
       "examples": ["ipv4", "bacnet"]
     },
-    "subsystem": {
+    "subsystem_id": {
       "description": "The subsystem within the gateway device to use for this network",
       "type": "string",
       "pattern": "^[a-z][a-z0-9]*(_[a-z0-9]+)*$",
