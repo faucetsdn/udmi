@@ -9,7 +9,7 @@
   },
   "links": {
     "VAV-3": {
-      "supply_air_flowrate_sensor": "supply_air_flowrate_sensor_1"
+      "supply_air_flowrate_sensor_1": "supply_air_flowrate_sensor"
     }
   },
   "externals": {

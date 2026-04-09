@@ -88,8 +88,10 @@ def extract_dbo_config(site_model_dir: Path) -> dict:
             device_entry["translation"] = translations
 
         if "links" in metadata and metadata["links"]:
+            # UDMI links are local_point: remote_point
+            # DBO links are remote_point: local_point
             device_entry["links"] = {
-                device_id_to_guid.get(k, k): v
+                device_id_to_guid.get(k, k): {remote_pt: local_pt for local_pt, remote_pt in v.items()}
                 for k, v in metadata["links"].items()
             }
 

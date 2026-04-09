@@ -8,7 +8,7 @@
   "patternProperties": {
     "^[-0-9a-zA-Z$]+$": {
       "type": "object",
-      "description": "A map from target device field to source device field",
+      "description": "A map from local point name to linked (remote) point name",
       "patternProperties": {
         "^[a-z_]+$": {
           "type": "string",
@@ -18,7 +18,7 @@
       "examples": [
         {
           "compressor_run_status": "compressor_run_status",
-          "discharge_air_cooling_temperature_setpoint": "discharge_air_cooling_temperature_setpoint_1"
+          "discharge_air_cooling_temperature_setpoint_1": "discharge_air_cooling_temperature_setpoint"
         }
       ]
     }
