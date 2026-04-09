@@ -3,8 +3,16 @@
 
 from __future__ import annotations
 
-from typing import Any, Dict, List, Optional, Union
+from dataclasses import dataclass
+from typing import Dict, List, Optional
 
 from ._base import DataModel
 
-EntityRelationships = Optional[Dict[str, Union[str, List[Any]]]]
+
+@dataclass
+class EntityRelationships1(DataModel):
+    type: Optional[str] = None
+    tags: Optional[List[str]] = None
+
+
+EntityRelationships = Optional[Dict[str, Dict[str, EntityRelationships1]]]

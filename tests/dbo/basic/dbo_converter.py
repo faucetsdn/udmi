@@ -57,10 +57,33 @@ def extract_dbo_config(site_model_dir: Path) -> dict:
 
         if "relationships" in metadata and metadata["relationships"]:
             # Map UDMI device IDs to GUIDs
-            device_entry["connections"] = {
-                device_id_to_guid.get(k, k): v
-                for k, v in metadata["relationships"].items()
-            }
+            connections = {}
+            for target_id, relation in metadata["relationships"].items():
+                target_guid = device_id_to_guid.get(target_id, target_id)
+                if isinstance(relation, str):
+                    connections[target_guid] = relation
+                elif isinstance(relation, dict):
+                    # For complex relationships, extract them into a list format
+                    # or keep them as a map depending on DBO requirements.
+                    # Assuming DBO wants an array of connection objects if multiple
+                    conn_list = []
+                    for rel_name, rel_info in relation.items():
+                        # We just extract the 'type' for a simple list mapping,
+                        # or could include 'tags' if needed by DBO.
+                        # We will construct a minimal valid representation.
+                        conn_obj = rel_info.copy()
+                        # If DBO just expects array of types: (but normally connections is target: type)
+                        # We will emit a list of dictionaries if it's complex.
+                        conn_list.append(conn_obj)
+
+                    # If it's just one type without tags, flatten it.
+                    # Otherwise put the list.
+                    if len(conn_list) == 1 and list(conn_list[0].keys()) == ["type"]:
+                        connections[target_guid] = conn_list[0]["type"]
+                    else:
+                        connections[target_guid] = conn_list
+
+            device_entry["connections"] = connections
 
         # extract point translation and links from core UDMI pointset constructs
         pointset = metadata.get("pointset", {}).get("points", {})

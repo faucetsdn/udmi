@@ -108,11 +108,11 @@ public class Metadata {
     /**
      * Entity Relationships
      * <p>
-     * Entity relationships to other devices, keyed by relationship type
+     * Entity relationships to other devices, keyed by target device ID
      *
      */
     @JsonProperty("relationships")
-    @JsonPropertyDescription("Entity relationships to other devices, keyed by relationship type")
+    @JsonPropertyDescription("Entity relationships to other devices, keyed by target device ID")
     public Map<String, Object> relationships;
     /**
      * Gateway Model
