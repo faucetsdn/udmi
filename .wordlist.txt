@@ -104,6 +104,7 @@ macos
 md
 microservices
 modbus
+Mosquitto
 MQTT
 mydomain
 namespace
@@ -118,7 +119,6 @@ OSS
 pagent
 parameterization
 parsers
-pkcs
 pointname
 pointset
 postfix
@@ -149,7 +149,6 @@ schemas
 SDK
 setpoint
 sha
-sha256
 sharding
 src
 Stackdriver

@@ -10,6 +10,4 @@ connection attempts indefinitely.
 
 ## Authentication
 
-When using password-based MQTT authentication:
-* The `username` is formatted as `/r/<registry_id>/d/<device_id>` (e.g., `/r/ZZ-TRI-FECTA/d/AHU-1`).
-* The `password` is the first 8 characters of the sha256 hash of the private pkcs8 file.
+When using client certificates for authentication (which is the current typical configuration), password-based authentication is not used. In these cases, the `username` may still be passed as `/r/<registry_id>/d/<device_id>` depending on the backend, but the MQTT broker (e.g., Mosquitto) does not validate passwords.
