@@ -16,10 +16,12 @@
     },
     "subsystems": {
       "modbus_1": {
-        "family": "modbus"
+        "family": "modbus",
+        "addr": "COM1"
       },
       "bacnet_1": {
-        "family": "bacnet"
+        "family": "bacnet",
+        "addr": "19233"
       }
     }
   },
