@@ -10,17 +10,17 @@
       "type": "object",
       "patternProperties": {
         "^[-0-9a-zA-Z_]+$": {
-          "type": "object",
-          "properties": {
-            "type": {
-              "type": "string"
-            },
-            "tags": {
-              "type": "array",
-              "items": { "type": "string" }
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "tags": {
+                "type": "array",
+                "items": { "type": "string" },
+                "examples": [["primary"]]
+              }
             }
-          },
-          "required": ["type"]
+          }
         }
       }
     }

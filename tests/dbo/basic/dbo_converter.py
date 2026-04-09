@@ -62,9 +62,11 @@ def extract_dbo_config(site_model_dir: Path) -> dict:
                 target_guid = device_id_to_guid.get(target_id, target_id)
                 if isinstance(relation, dict):
                     conn_list = []
-                    for rel_name, rel_info in relation.items():
-                        conn_obj = rel_info.copy()
-                        conn_list.append(conn_obj)
+                    for rel_type, rel_instances in relation.items():
+                        for inst in rel_instances:
+                            conn_obj = inst.copy()
+                            conn_obj["type"] = rel_type
+                            conn_list.append(conn_obj)
 
                     # If it's just one type without tags, flatten it.
                     if len(conn_list) == 1 and list(conn_list[0].keys()) == ["type"]:

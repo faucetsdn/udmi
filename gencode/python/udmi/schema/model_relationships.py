@@ -10,9 +10,8 @@ from ._base import DataModel
 
 
 @dataclass
-class EntityRelationships1(DataModel):
-    type: Optional[str] = None
+class EntityRelationship(DataModel):
     tags: Optional[List[str]] = None
 
 
-EntityRelationships = Optional[Dict[str, Dict[str, EntityRelationships1]]]
+EntityRelationships = Optional[Dict[str, Dict[str, List[EntityRelationship]]]]

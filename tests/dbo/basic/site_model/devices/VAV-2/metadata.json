@@ -9,9 +9,7 @@
   },
   "relationships": {
     "VAV-1": {
-      "feed": {
-        "type": "FEEDS"
-      }
+      "FEEDS": [{}]
     }
   },
   "externals": {
