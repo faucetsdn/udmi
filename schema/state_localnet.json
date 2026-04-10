@@ -24,7 +24,7 @@
         }
       }
     },
-    "subnets": {
+    "networks": {
       "additionalProperties": false,
       "existingJavaType": "java.util.HashMap<String, FamilyLocalnetState>",
       "patternProperties": {

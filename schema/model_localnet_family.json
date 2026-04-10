@@ -43,8 +43,8 @@
       "type": "string",
       "examples": ["ipv4", "bacnet"]
     },
-    "subnet_id": {
-      "description": "The subnet within the gateway device to use for this network",
+    "network_id": {
+      "description": "The network within the gateway device to use for this network",
       "type": "string",
       "pattern": "^[a-z][a-z0-9]*(_[a-z0-9]+)*$",
       "examples": ["modbus_1", "bacnet_1"]

@@ -17,7 +17,7 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
     "families",
-    "subnets"
+    "networks"
 })
 public class LocalnetConfig {
 
@@ -29,18 +29,18 @@ public class LocalnetConfig {
     @JsonPropertyDescription("Address family config for reporting.")
     public HashMap<String, FamilyLocalnetConfig> families;
     /**
-     * Subnet address family config for reporting.
+     * Network address family config for reporting.
      *
      */
-    @JsonProperty("subnets")
-    @JsonPropertyDescription("Subnet address family config for reporting.")
-    public HashMap<String, FamilyLocalnetConfig> subnets;
+    @JsonProperty("networks")
+    @JsonPropertyDescription("Network address family config for reporting.")
+    public HashMap<String, FamilyLocalnetConfig> networks;
 
     @Override
     public int hashCode() {
         int result = 1;
         result = ((result* 31)+((this.families == null)? 0 :this.families.hashCode()));
-        result = ((result* 31)+((this.subnets == null)? 0 :this.subnets.hashCode()));
+        result = ((result* 31)+((this.networks == null)? 0 :this.networks.hashCode()));
         return result;
     }
 
@@ -53,7 +53,7 @@ public class LocalnetConfig {
             return false;
         }
         LocalnetConfig rhs = ((LocalnetConfig) other);
-        return (((this.families == rhs.families)||((this.families!= null)&&this.families.equals(rhs.families)))&&((this.subnets == rhs.subnets)||((this.subnets!= null)&&this.subnets.equals(rhs.subnets))));
+        return (((this.families == rhs.families)||((this.families!= null)&&this.families.equals(rhs.families)))&&((this.networks == rhs.networks)||((this.networks!= null)&&this.networks.equals(rhs.networks))));
     }
 
 }

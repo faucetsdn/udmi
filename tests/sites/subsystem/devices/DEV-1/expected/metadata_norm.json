@@ -3,7 +3,7 @@
     "gateway_id": "GW-1",
     "target": {
       "family": "modbus",
-      "subnet_id": "modbus_1"
+      "network_id": "modbus_1"
     }
   },
   "localnet": {

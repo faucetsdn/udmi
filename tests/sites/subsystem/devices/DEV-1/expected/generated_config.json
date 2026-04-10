@@ -3,7 +3,7 @@
     "target": {
       "addr": "1",
       "family": "modbus",
-      "subnet_id": "modbus_1"
+      "network_id": "modbus_1"
     }
   },
   "localnet": {

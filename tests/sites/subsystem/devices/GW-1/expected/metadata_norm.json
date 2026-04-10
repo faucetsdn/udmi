@@ -8,7 +8,7 @@
         "addr": "192.168.2.1"
       }
     },
-    "subnets": {
+    "networks": {
       "bacnet_1": {
         "addr": "19233",
         "family": "bacnet"

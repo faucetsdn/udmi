@@ -16,8 +16,8 @@
         }
       }
     },
-    "subnets": {
-      "description": "Subnet address family config for reporting.",
+    "networks": {
+      "description": "Network address family config for reporting.",
       "existingJavaType": "java.util.HashMap<String, FamilyLocalnetConfig>",
       "additionalProperties": false,
       "patternProperties": {
