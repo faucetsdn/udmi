@@ -1,0 +1,38 @@
+{
+  "$udmi_version": "1.5.2",
+  "title": "Alarm Alarmset Config",
+  "type": "object",
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "additionalProperties": false,
+  "properties": {
+    "ref": {
+      "type": "string",
+      "description": "Mapping for the alarm to an internal resource (e.g. BACnet object reference)",
+      "examples": ["AI1106"]
+    },
+    "units": {
+      "description": "If specified, indicates the units the device should report the data in.",
+      "type": "string"
+    },
+    "set_value": {
+      "description": "Used for cloud writeback functionality, this field specifies the value for a given alarm in the device's current units. If the value is numeric, then the type must be integer or number.  If the value is an integer, it should be represented as type integer",
+       "oneOf": [
+	 { "type": "string" },
+         { "type": "boolean" },
+	 { "type": "number" }
+       ],
+      "examples": [22.4]
+    },
+    "stop_time": {
+      "description": "RFC 3339 timestamp for the specified alarm write easing to stop",
+      "type": "string",
+      "format": "date-time",
+      "examples": ["2019-01-17T14:02:29.364Z"]
+    },
+    "cov_increment": {
+      "type": "number",
+      "description": "The CoV (change of value) increment, which when set, enables CoV on the alarm and defines the minimum change in present value of the respective alarm before an update is published",
+      "minimum": 0
+    }
+  }
+}

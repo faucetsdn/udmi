@@ -1,6 +1,8 @@
 acked
 addr
 AHU
+Alarmset
+alarmset
 anagement
 api
 APIs
@@ -12,10 +14,12 @@ backend
 backoff
 BACnet
 bacnet
+BACnetEngineeringUnits
 BAMBI
 bambi
 blobset
 BMS
+boolean
 BOS
 breakpoint
 buildingsiot
@@ -25,8 +29,10 @@ ClearBlade
 CLI
 CloudRun
 CoAP
+cognisant
 comms
 config
+contextualise
 coreutils
 CoV
 cron
@@ -46,14 +52,17 @@ downlink
 enablement
 encoding
 encodings
+enum
 env
 envs
 etag
 etags
 ETHMAC
 ethmac
+ETL
 evice
 faucetsdn
+FCU
 fieldbus
 gcloud
 GCP
@@ -90,6 +99,7 @@ JUnit
 JVM
 JWT
 keygen
+KNX
 kube
 kubectl
 Kubernetes
@@ -97,6 +107,7 @@ localhost
 localnet
 logentry
 loglevel
+LWT
 MacOS
 macos
 md
@@ -112,6 +123,7 @@ nterface
 OIDC
 Onboarding
 onboarding
+OPC
 OSS
 pagent
 parameterization
@@ -133,6 +145,7 @@ pubber
 PubSub
 pubsub
 QoS
+QUDT
 Readme
 Reconciler
 reconciler
@@ -144,11 +157,15 @@ runtime
 Schemas
 schemas
 SDK
+Serialisation
+serialise
+serialised
 setpoint
 sha
 sharding
 src
 Stackdriver
+standardised
 stateStatus
 subblock
 subblocks
@@ -169,6 +186,7 @@ transactional
 transpile
 transpiles
 txt
+UCUM
 UDMI
 udmi
 UDMI's
@@ -180,6 +198,7 @@ unconfigured
 underspecified
 uniqs
 UNK
+unopinionated
 unprocessable
 unwriteable
 uplink
