@@ -23,11 +23,17 @@ for metadata in $metadatas; do
         echo $metadata missing .cloud.auth_type
     else
         filepath=${metadata%/metadata.json}
-        keyfile=`ls $filepath/*_public.pem` 2>/dev/null || true
+        keyfile=`ls $filepath/*_public.pem 2>/dev/null` || true
         if [ -n "$keyfile" ]; then
             echo $keyfile exists.
         else
             $ROOT_DIR/bin/keygen $auth_type $filepath
+        fi
+        crtfile=`ls $filepath/*_private.crt 2>/dev/null` || true
+        if [ -n "$crtfile" ]; then
+            echo $crtfile exists.
+        else
+            $ROOT_DIR/bin/keygen CERT $filepath || true
         fi
     fi
 done
