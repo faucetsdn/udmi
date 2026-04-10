@@ -9,7 +9,6 @@ from typing import Any, Dict, List, Optional
 
 from ._base import DataModel
 from .discovery_ref import RefDiscovery
-from .model_pointset_point_links import PointsetPointLinks
 
 
 class Type(Enum):
@@ -58,4 +57,4 @@ class PointPointsetModel(DataModel):
     adjunct: Optional[Dict[str, str]] = None
     tags: Optional[List[Tag]] = None
     structure: Optional[Dict[str, RefDiscovery]] = None
-    links: Optional[PointsetPointLinks] = None
+    link: Optional[str] = None

@@ -95,8 +95,11 @@
         }
       }
     },
-    "links": {
-      "$ref": "file:model_pointset_point_links.json#"
+    "link": {
+      "type": "string",
+      "description": "Virtual equipment mapping linking this local point to a remote point in another device",
+      "pattern": "^[-0-9a-zA-Z$]+:[a-z0-9_]+$",
+      "examples": ["VAV-3:supply_air_flowrate_sensor"]
     }
   }
 }

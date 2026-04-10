@@ -68,7 +68,6 @@ from .model_localnet import *
 from .model_localnet_family import *
 from .model_pointset import *
 from .model_pointset_point import *
-from .model_pointset_point_links import *
 from .model_policy import *
 from .model_relationships import *
 from .model_system import *

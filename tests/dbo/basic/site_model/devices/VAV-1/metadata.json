@@ -20,9 +20,7 @@
         "units": "degC"
       },
       "supply_air_flowrate_sensor_1": {
-        "links": {
-          "VAV-3": "supply_air_flowrate_sensor"
-        }
+        "link": "VAV-3:supply_air_flowrate_sensor"
       }
     }
   }
