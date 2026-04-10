@@ -13,7 +13,7 @@
   },
   "flows": {
     "reflect": {
-      "recv_id": "reflect",
+      "recv_id": "reflect,/r/UDMI-REFLECT/d/+/state,/r/UDMI-REFLECT/d/+/events/#",
       "send_id": "c/control"
     },
     "target": {

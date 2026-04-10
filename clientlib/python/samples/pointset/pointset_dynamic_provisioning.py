@@ -50,9 +50,6 @@ LOGGER = logging.getLogger("DynamicProvSample")
 def report_managed_points(manager: PointsetManager):
     """
     Periodically logs the inventory of points the device is tracking.
-    A diagnostic loop serving to prove that the PointsetManager is successfully 
-    allocating and managing new point abstractions dynamically based purely on the 
-    arrival of cloud configuration payloads.
     """
     last_set = set()
 
