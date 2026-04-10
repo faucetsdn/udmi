@@ -12,7 +12,7 @@ c773b86d-b0c0-46fc-bd3f-d726fadd5f1e:
           degrees_celsius: degC
   links:
     547a33c5-0ce4-4dfb-9924-5169a3475c89:
-      supply_air_flowrate_sensor: supply_air_flowrate_sensor_1
+      supply_air_flowrate_sensor_1: supply_air_flowrate_sensor
   type: HVAC/VAV_SD_DSP
 4931e096-dea5-4b81-86ad-234c6d07b978:
   code: VAV-2

@@ -104,8 +104,8 @@ def extract_dbo_config(site_model_dir: Path) -> dict:
                     remote_guid = device_id_to_guid.get(remote_device_id, remote_device_id)
                     if remote_guid not in links_dbo:
                         links_dbo[remote_guid] = {}
-                    # DBO links are remote_point: local_point
-                    links_dbo[remote_guid][remote_pt] = point_name
+                    # DBO links are local_point: remote_point
+                    links_dbo[remote_guid][point_name] = remote_pt
 
         if translations:
             device_entry["translation"] = translations
