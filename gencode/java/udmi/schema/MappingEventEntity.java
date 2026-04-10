@@ -56,14 +56,12 @@ public class MappingEventEntity {
     @JsonPropertyDescription("Entity connections, keyed by guid")
     public Connections connections;
     /**
-     * Virtual Equipment Links
-     * <p>
      * Virtual equipment mapping, keyed by guid
      * 
      */
     @JsonProperty("links")
     @JsonPropertyDescription("Virtual equipment mapping, keyed by guid")
-    public VirtualEquipmentLinks links;
+    public Links links;
     /**
      * Building Config
      * <p>

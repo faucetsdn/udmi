@@ -18,6 +18,7 @@ from .model_gateway import GatewayModel
 from .model_localnet import LocalnetModel
 from .model_pointset import PointsetModel
 from .model_policy import PolicyModel
+from .model_relationships import EntityRelationships
 from .model_system import SystemModel
 from .model_testing import TestingModel
 
@@ -36,6 +37,7 @@ class Metadata(DataModel):
     cloud: Optional[CloudModel] = None
     system: Optional[SystemModel] = None
     externals: Optional[ExternalsModel] = None
+    relationships: Optional[EntityRelationships] = None
     gateway: Optional[GatewayModel] = None
     discovery: Optional[DiscoveryModel] = None
     localnet: Optional[LocalnetModel] = None

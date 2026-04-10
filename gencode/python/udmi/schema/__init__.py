@@ -69,6 +69,7 @@ from .model_localnet_family import *
 from .model_pointset import *
 from .model_pointset_point import *
 from .model_policy import *
+from .model_relationships import *
 from .model_system import *
 from .model_system_hardware import *
 from .model_testing import *
@@ -104,4 +105,3 @@ from .state_validation_capability import *
 from .state_validation_feature import *
 from .state_validation_schema import *
 from .state_validation_sequence import *
-from .virtual_links import *

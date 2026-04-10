@@ -1,0 +1,27 @@
+{
+  "timestamp": "2024-01-01T00:00:00Z",
+  "version": "1.5.3",
+  "system": {
+    "site": "UK-LON-ABC"
+  },
+  "cloud": {
+    "num_id": "2541901344105616"
+  },
+  "externals": {
+    "dbo": {
+      "ext_id": "c773b86d-b0c0-46fc-bd3f-d726fadd5f1e",
+      "type": "HVAC/VAV_SD_DSP"
+    }
+  },
+  "pointset": {
+    "points": {
+      "zone_air_temperature_sensor": {
+        "ref": "points.zone_air_temperature_sensor.present_value",
+        "units": "degC"
+      },
+      "supply_air_flowrate_sensor_1": {
+        "link": "VAV-3:supply_air_flowrate_sensor"
+      }
+    }
+  }
+}

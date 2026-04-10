@@ -57,3 +57,4 @@ class PointPointsetModel(DataModel):
     adjunct: Optional[Dict[str, str]] = None
     tags: Optional[List[Tag]] = None
     structure: Optional[Dict[str, RefDiscovery]] = None
+    link: Optional[str] = None
