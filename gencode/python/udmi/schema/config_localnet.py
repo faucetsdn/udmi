@@ -17,4 +17,4 @@ class LocalnetConfig(DataModel):
     """
 
     families: Optional[Dict[str, FamilyLocalnetConfig]] = None
-    subsystems: Optional[Dict[str, FamilyLocalnetConfig]] = None
+    subnets: Optional[Dict[str, FamilyLocalnetConfig]] = None

@@ -18,7 +18,7 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 @JsonPropertyOrder({
     "parent",
     "families",
-    "subsystems"
+    "subnets"
 })
 public class LocalnetModel {
 
@@ -36,15 +36,15 @@ public class LocalnetModel {
      */
     @JsonProperty("families")
     public HashMap<String, FamilyLocalnetModel> families;
-    @JsonProperty("subsystems")
-    public HashMap<String, FamilyLocalnetModel> subsystems;
+    @JsonProperty("subnets")
+    public HashMap<String, FamilyLocalnetModel> subnets;
 
     @Override
     public int hashCode() {
         int result = 1;
         result = ((result* 31)+((this.families == null)? 0 :this.families.hashCode()));
         result = ((result* 31)+((this.parent == null)? 0 :this.parent.hashCode()));
-        result = ((result* 31)+((this.subsystems == null)? 0 :this.subsystems.hashCode()));
+        result = ((result* 31)+((this.subnets == null)? 0 :this.subnets.hashCode()));
         return result;
     }
 
@@ -57,7 +57,7 @@ public class LocalnetModel {
             return false;
         }
         LocalnetModel rhs = ((LocalnetModel) other);
-        return ((((this.families == rhs.families)||((this.families!= null)&&this.families.equals(rhs.families)))&&((this.parent == rhs.parent)||((this.parent!= null)&&this.parent.equals(rhs.parent))))&&((this.subsystems == rhs.subsystems)||((this.subsystems!= null)&&this.subsystems.equals(rhs.subsystems))));
+        return ((((this.families == rhs.families)||((this.families!= null)&&this.families.equals(rhs.families)))&&((this.parent == rhs.parent)||((this.parent!= null)&&this.parent.equals(rhs.parent))))&&((this.subnets == rhs.subnets)||((this.subnets!= null)&&this.subnets.equals(rhs.subnets))));
     }
 
 }

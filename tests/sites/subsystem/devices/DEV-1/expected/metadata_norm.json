@@ -1,0 +1,28 @@
+{
+  "gateway": {
+    "gateway_id": "GW-1",
+    "target": {
+      "family": "modbus",
+      "subnet_id": "modbus_1"
+    }
+  },
+  "localnet": {
+    "families": {
+      "modbus": {
+        "addr": "1"
+      }
+    }
+  },
+  "system": {
+    "hardware": {
+      "make": "BOS",
+      "model": "device"
+    },
+    "min_loglevel": 300,
+    "software": {
+      "firmware": "v1"
+    }
+  },
+  "timestamp": "2020-05-01T13:39:07Z",
+  "version": "1.5.2"
+}
