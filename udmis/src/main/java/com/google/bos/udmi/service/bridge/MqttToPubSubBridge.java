@@ -6,8 +6,8 @@ import com.google.api.core.ApiFuture;
 import com.google.cloud.pubsub.v1.Publisher;
 import com.google.common.base.Splitter;
 import com.google.protobuf.ByteString;
-import com.google.pubsub.v1.PubsubMessage;
 import com.google.pubsub.v1.ProjectTopicName;
+import com.google.pubsub.v1.PubsubMessage;
 import java.io.BufferedReader;
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -71,6 +71,11 @@ public final class MqttToPubSubBridge {
   private static final Pattern TOPIC_PATTERN = Pattern.compile("/r/([^/]+)/d/([^/]+)/?(.*)");
   private static final Logger logger = LoggerFactory.getLogger(MqttToPubSubBridge.class);
 
+  /**
+   * Main entry point for the bridge.
+   *
+   * @param args Command line arguments.
+   */
   public static void main(String[] args) {
     CommandLine commandLine;
     try {
@@ -85,7 +90,8 @@ public final class MqttToPubSubBridge {
     }
 
     String mqttBrokerUrl = commandLine.getOptionValue("mqtt_broker_url", "tcp://localhost:1883");
-    String mqttSubscriptionTopic = commandLine.getOptionValue("mqtt_subscription_topic", "/r/+/d/#");
+    String mqttSubscriptionTopic =
+        commandLine.getOptionValue("mqtt_subscription_topic", "/r/+/d/#");
     String gcpProjectId = commandLine.getOptionValue("gcp_project_id");
     String pubsubTopicId = commandLine.getOptionValue("pubsub_topic_id");
     boolean mqttTls = commandLine.hasOption("mqtt_tls");
@@ -197,7 +203,16 @@ public final class MqttToPubSubBridge {
     return commandLine;
   }
 
-  public static void setupBridge(IMqttClient mqttClient, Publisher publisher, String mqttSubscriptionTopic) throws MqttException {
+  /**
+   * Sets up the bridge between MQTT and Pub/Sub.
+   *
+   * @param mqttClient            The MQTT client.
+   * @param publisher             The Pub/Sub publisher.
+   * @param mqttSubscriptionTopic The MQTT topic to subscribe to.
+   * @throws MqttException If an MQTT error occurs.
+   */
+  public static void setupBridge(IMqttClient mqttClient, Publisher publisher,
+      String mqttSubscriptionTopic) throws MqttException {
     mqttClient.setCallback(
         new MqttCallback() {
           @Override
@@ -225,10 +240,6 @@ public final class MqttToPubSubBridge {
               }
 
               // Prepare Pub/Sub message
-              ByteString data = ByteString.copyFrom(payload);
-              PubsubMessage.Builder pubsubMessageBuilder =
-                  PubsubMessage.newBuilder().setData(data);
-
               Map<String, String> attributes = new HashMap<>();
               attributes.put("mqttTopic", topic);
               attributes.put("deviceId", deviceId);
@@ -240,6 +251,10 @@ public final class MqttToPubSubBridge {
                   attributes.put("subFolder", parts.get(1));
                 }
               }
+
+              ByteString data = ByteString.copyFrom(payload);
+              PubsubMessage.Builder pubsubMessageBuilder =
+                  PubsubMessage.newBuilder().setData(data);
 
               PubsubMessage pubsubMessage =
                   pubsubMessageBuilder.putAllAttributes(attributes).build();
@@ -263,7 +278,7 @@ public final class MqttToPubSubBridge {
           }
 
           @Override
-          public void deliveryComplete(IMqttDeliveryToken iMqttDeliveryToken) {}
+          public void deliveryComplete(IMqttDeliveryToken token) {}
         });
 
     logger.info("Subscribing to MQTT topic: {}", mqttSubscriptionTopic);

@@ -24,7 +24,7 @@ class MqttToPubSubBridgeTest {
     Publisher mockPublisher = mock(Publisher.class);
     String testTopic = "/r/my-registry/d/my-device/events";
     String payloadStr = "Hello World";
-    MqttMessage mqttMessage = new MqttMessage(payloadStr.getBytes());
+    final MqttMessage mqttMessage = new MqttMessage(payloadStr.getBytes());
 
     // Mock publisher to return a future
     when(mockPublisher.publish(any(PubsubMessage.class)))
@@ -45,7 +45,8 @@ class MqttToPubSubBridgeTest {
     callback.messageArrived(testTopic, mqttMessage);
 
     // Verify Pub/Sub publish
-    ArgumentCaptor<PubsubMessage> pubsubMessageCaptor = ArgumentCaptor.forClass(PubsubMessage.class);
+    ArgumentCaptor<PubsubMessage> pubsubMessageCaptor =
+        ArgumentCaptor.forClass(PubsubMessage.class);
     verify(mockPublisher).publish(pubsubMessageCaptor.capture());
 
     PubsubMessage pubsubMessage = pubsubMessageCaptor.getValue();
@@ -63,7 +64,7 @@ class MqttToPubSubBridgeTest {
     Publisher mockPublisher = mock(Publisher.class);
     String testTopic = "/r/my-registry/d/my-device/events/subfolder_name";
     String payloadStr = "Hello World";
-    MqttMessage mqttMessage = new MqttMessage(payloadStr.getBytes());
+    final MqttMessage mqttMessage = new MqttMessage(payloadStr.getBytes());
 
     when(mockPublisher.publish(any(PubsubMessage.class)))
         .thenReturn(ApiFutures.immediateFuture("msg-123"));
@@ -76,7 +77,8 @@ class MqttToPubSubBridgeTest {
 
     callback.messageArrived(testTopic, mqttMessage);
 
-    ArgumentCaptor<PubsubMessage> pubsubMessageCaptor = ArgumentCaptor.forClass(PubsubMessage.class);
+    ArgumentCaptor<PubsubMessage> pubsubMessageCaptor =
+        ArgumentCaptor.forClass(PubsubMessage.class);
     verify(mockPublisher).publish(pubsubMessageCaptor.capture());
 
     PubsubMessage pubsubMessage = pubsubMessageCaptor.getValue();
@@ -93,7 +95,7 @@ class MqttToPubSubBridgeTest {
     Publisher mockPublisher = mock(Publisher.class);
     String testTopic = "invalid/topic/structure";
     String payloadStr = "Hello World";
-    MqttMessage mqttMessage = new MqttMessage(payloadStr.getBytes());
+    final MqttMessage mqttMessage = new MqttMessage(payloadStr.getBytes());
 
     when(mockPublisher.publish(any(PubsubMessage.class)))
         .thenReturn(ApiFutures.immediateFuture("msg-123"));
@@ -106,7 +108,8 @@ class MqttToPubSubBridgeTest {
 
     callback.messageArrived(testTopic, mqttMessage);
 
-    ArgumentCaptor<PubsubMessage> pubsubMessageCaptor = ArgumentCaptor.forClass(PubsubMessage.class);
+    ArgumentCaptor<PubsubMessage> pubsubMessageCaptor =
+        ArgumentCaptor.forClass(PubsubMessage.class);
     verify(mockPublisher).publish(pubsubMessageCaptor.capture());
 
     PubsubMessage pubsubMessage = pubsubMessageCaptor.getValue();

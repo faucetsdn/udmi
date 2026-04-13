@@ -44,4 +44,4 @@ To run the bridge in this open-source setup, you can use the `shadowJar` task to
 ## Verification
 
 You can verify that messages are flowing by checking the Pub/Sub subscription in the GCP console:
-https://pantheon.corp.google.com/cloudpubsub/subscription/detail/<subscription-id>?project=<project-id>&tab=messages
+c
