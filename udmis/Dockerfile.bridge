@@ -1,0 +1,22 @@
+# Stage 1: Build the application
+FROM eclipse-temurin:21-jdk AS build
+
+WORKDIR /app
+
+# Copy the whole repo as udmis depends on common and gencode
+COPY . /app
+
+# Build the shadow jar for udmis
+WORKDIR /app/udmis
+RUN ./gradlew shadowJar
+
+# Stage 2: Run the application
+FROM gcr.io/distroless/java21-debian12
+
+WORKDIR /app
+
+# Copy the fat jar from stage 1
+COPY --from=build /app/udmis/build/libs/udmis-1.0-SNAPSHOT-all.jar /app/bridge.jar
+
+# Run the specific class
+ENTRYPOINT ["java", "-cp", "/app/bridge.jar", "com.google.bos.udmi.service.bridge.MqttToPubSubBridge"]
