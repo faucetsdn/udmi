@@ -58,6 +58,9 @@ import org.slf4j.LoggerFactory;
 import udmi.lib.base.GatewayError;
 import udmi.lib.base.MqttDevice;
 import udmi.lib.base.MqttPublisher;
+import udmi.lib.base.UdmiException.BlobDependencyMismatchException;
+import udmi.lib.base.UdmiException.BlobIncompatibleException;
+import udmi.lib.base.UdmiException.HashMismatchException;
 import udmi.lib.client.manager.DeviceManager;
 import udmi.lib.client.manager.PointsetManager;
 import udmi.lib.client.manager.SystemManager;
@@ -122,6 +125,11 @@ public interface PublisherHost extends ManagerHost {
       "events/gateway", "{ \"testing\": \"This is prematurely terminated",
       "events/mapping", "{ NOT VALID JSON!");
   List<String> INVALID_KEYS = new ArrayList<>(INVALID_REPLACEMENTS.keySet());
+  Map<Class<? extends Exception>, String> BLOB_ERROR_CATEGORIES = ImmutableMap.of(
+      HashMismatchException.class, Category.BLOBSET_BLOB_VERIFY_HASH,
+      BlobIncompatibleException.class, Category.BLOBSET_BLOB_VERIFY_INCOMPATIBLE,
+      BlobDependencyMismatchException.class, Category.BLOBSET_BLOB_VERIFY_DEPENDENCY
+  );
   String CORRUPT_STATE_MESSAGE = "!&*@(!*&@!";
 
   /**
@@ -134,7 +142,7 @@ public interface PublisherHost extends ManagerHost {
     byte[] dataBytes = Base64.getDecoder().decode(url.substring(DATA_URL_JSON_BASE64.length()));
     String dataSha256 = GeneralUtils.sha256(dataBytes);
     if (!dataSha256.equals(sha256)) {
-      throw new RuntimeException("Blob data hash mismatch");
+      throw new HashMismatchException("Blob data hash mismatch");
     }
     return new String(dataBytes);
   }
@@ -142,122 +150,121 @@ public interface PublisherHost extends ManagerHost {
   Config getDeviceConfig();
 
   /**
+   * Returns the configured blobs or an empty map if no blobs are configured.
+   */
+  default HashMap<String, BlobBlobsetConfig> getBlobs() {
+    return catchToElse(() -> getDeviceConfig().blobset.blobs, new HashMap<>());
+  }
+
+  default BlobBlobsetConfig getConfigBlob(String blobName) {
+    return getBlobs().get(blobName);
+  }
+  /**
    * Extracts the configuration blob with the specified name, if it exists and is in the final
    * phase.
    */
-  default String extractConfigBlob(String blobName) {
+  default String extractConfigBlob(String blobName) throws Exception {
     // TODO: Refactor to get any blob meta parameters.
-    try {
-      HashMap<String, BlobBlobsetConfig> blobs = catchToNull(() -> getDeviceConfig().blobset.blobs);
-      if (blobs == null) {
-        return null;
+    BlobBlobsetConfig blobBlobsetConfig = getConfigBlob(blobName);
+    if (blobBlobsetConfig != null && FINAL.equals(blobBlobsetConfig.phase)) {
+      return acquireBlobData(blobBlobsetConfig.url, blobBlobsetConfig.sha256);
+    }
+    return null;
+  }
+
+
+  /**
+   * Processes all blobs in the configuration, skipping system blobs (e.g. _iot_endpoint_config).
+   */
+  default void processBlobset() {
+    for (String blobName : getBlobs().keySet()) {
+      if (Arrays.stream(SystemBlobsets.values()).anyMatch(e -> e.value().equals(blobName))) {
+        continue;
       }
-      BlobBlobsetConfig blobBlobsetConfig = blobs.get(blobName);
-      if (blobBlobsetConfig != null && FINAL.equals(blobBlobsetConfig.phase)) {
-        return acquireBlobData(blobBlobsetConfig.url, blobBlobsetConfig.sha256);
+      if (!isSupportedBlob(blobName)) {
+        warn("Skipping unknown blob key: " + blobName);
+        continue;
       }
-      return null;
-    } catch (Exception e) {
-      EndpointConfiguration endpointConfiguration = new EndpointConfiguration();
-      endpointConfiguration.error = e.toString();
-      return stringify(endpointConfiguration);
+      processBlob(blobName);
     }
   }
 
   /**
-   * Processes all blobs in the configuration, skipping system blobs.
+   * Processes the blob config for a given blob name and handles state transitions.
    */
-  default void processBlobConfig() {
-    if (getDeviceConfig().blobset == null || getDeviceConfig().blobset.blobs == null) {
-      return;
-    }
-    for (String blobKey : getDeviceConfig().blobset.blobs.keySet()) {
-      if (Arrays.stream(SystemBlobsets.values()).anyMatch(e -> e.value().equals(blobKey))) {
-        continue;
-      }
-      if (!isSupportedBlob(blobKey)) {
-        warn("Skipping unknown blob key: " + blobKey);
-        continue;
-      }
-      processBlobConfig(blobKey);
-    }
-  }
-
-  /**
-   * Processes the blob config for a given blob key and handles state transitions.
-   */
-  default void processBlobConfig(String blobKey) {
-    if (getDeviceConfig().blobset == null || getDeviceConfig().blobset.blobs == null) {
-      return;
-    }
-
-    BlobBlobsetConfig config = getDeviceConfig().blobset.blobs.get(blobKey);
+  default void processBlob(String blobName) {
+    BlobBlobsetConfig config = getConfigBlob(blobName);
     if (config == null) {
       return;
     }
-    BlobBlobsetState state = ensureBlobsetState(blobKey);
+    BlobBlobsetState state = ensureBlobsetState(blobName);
     if (config.generation != null && config.generation.equals(state.generation)
         && BlobPhase.FINAL.equals(state.phase)) {
       return;
     }
-
-    logEvent(Category.BLOBSET_BLOB_RECEIVE, "Received blob update config for " + blobKey);
+    logEvent(Category.BLOBSET_BLOB_RECEIVE, "Received blob update config for " + blobName);
     try {
-      // Transition to APPLY
       state.phase = BlobPhase.APPLY;
       state.generation = config.generation;
       publishSynchronousState();
 
-      logEvent(Category.BLOBSET_BLOB_FETCH, "Fetching blob data for " + blobKey);
-      String payload = extractConfigBlob(blobKey);
+      logEvent(Category.BLOBSET_BLOB_FETCH, "Fetching blob data for " + blobName);
+      String payload = extractConfigBlob(blobName);
       if (payload == null) {
-        warn(format("Blob %s not ready for extraction", blobKey));
+        warn(format("Blob %s not ready for extraction", blobName));
         return;
       }
       logEvent(Category.BLOBSET_BLOB_FETCH_SUCCESS,
-          "Successfully fetched blob data for " + blobKey);
+          "Successfully fetched blob data for " + blobName);
 
-      // Apply application-specific logic
-      handleBlob(blobKey, payload);
-
-      // Transition to FINAL
-      state.phase = BlobPhase.FINAL;
-      state.status = null;
-      notice(format("Blob %s successfully applied", blobKey));
-      publishSynchronousState();
-
-      // Persist applied blob before actions like a restart
-      persistAppliedBlob(blobKey, isoConvert(config.generation));
-
-      postHandleBlob(blobKey);
+      applyBlobPayload(blobName, config, state, payload);
     } catch (Exception e) {
       state.phase = BlobPhase.FINAL;
       state.status = exceptionStatus(e, Category.BLOBSET_BLOB_APPLY);
-      error(format("Failed to apply blob %s", blobKey), e);
+      error(format("Failed to apply blob %s", blobName), e);
 
-      String category = Category.BLOBSET_BLOB_FETCH_FAILURE;
-      if (e.getMessage() != null && e.getMessage().contains("hash mismatch")) {
-        category = Category.BLOBSET_BLOB_VERIFY_HASH;
-      }
-      logEvent(category, "For blob key " + blobKey + ":\n", e);
+      String category = BLOB_ERROR_CATEGORIES.getOrDefault(
+        e.getClass(), Category.BLOBSET_BLOB_FETCH_FAILURE);
+      logEvent(category, "For blob key " + blobName + ":\n", e);
     } finally {
       publishAsynchronousState();
     }
   }
 
   /**
+   * Applies the payload for the given blob, setting the proper state transitions and persisting.
+   */
+  default void applyBlobPayload(String blobName, BlobBlobsetConfig config,
+      BlobBlobsetState state, String payload) {
+    logEvent(Category.BLOBSET_BLOB_APPLY, "Applying OTA update...");
+    installBlobPayload(blobName, payload);
+
+    state.phase = BlobPhase.FINAL;
+    state.status = null;
+    notice(format("Blob %s successfully applied", blobName));
+    publishSynchronousState();
+
+    persistAppliedBlob(blobName, isoConvert(config.generation));
+
+    activateBlob(blobName);
+  }
+
+  /**
    * Checks if the application supports the given blob key.
    */
-  default boolean isSupportedBlob(String blobKey) {
+  default boolean isSupportedBlob(String blobName) {
     return false;
   }
 
   /**
    * Handles application-specific blob processing.
    */
-  void handleBlob(String blobKey, String payload);
+  void installBlobPayload(String blobName, String payload);
 
-  default void postHandleBlob(String blobKey) {
+  /**
+   * Apply blob with actions such as restarts.
+   */
+  default void activateBlob(String blobName) {
     // Default no-op
   }
 
@@ -617,7 +624,7 @@ public interface PublisherHost extends ManagerHost {
         info(format("%s received config %s", getTimestamp(), isoConvert(configMsg.timestamp)));
         getDeviceManager().updateConfig(configMsg);
         extractEndpointBlobConfig();
-        processBlobConfig();
+        processBlobset();
       } else {
         info(format("%s defaulting empty config", getTimestamp()));
       }
@@ -737,17 +744,21 @@ public interface PublisherHost extends ManagerHost {
     try {
       String iotConfig = extractConfigBlob(IOT_ENDPOINT_CONFIG.value());
       setExtractedEndpoint(fromJsonString(iotConfig, EndpointConfiguration.class));
-      if (getExtractedEndpoint() != null) {
-        if (getDeviceConfig().blobset.blobs.containsKey(IOT_ENDPOINT_CONFIG.value())) {
-          BlobBlobsetConfig config = getDeviceConfig()
-                  .blobset.blobs.get(IOT_ENDPOINT_CONFIG.value());
-          getExtractedEndpoint().generation = config.generation;
-        }
-      }
     } catch (Exception e) {
-      throw new RuntimeException("While extracting endpoint blob config", e);
+      EndpointConfiguration errorConfig = new EndpointConfiguration();
+      errorConfig.error = e.toString();
+      setExtractedEndpoint(errorConfig);
+    }
+
+    if (getExtractedEndpoint() != null) {
+      if (getDeviceConfig().blobset.blobs.containsKey(IOT_ENDPOINT_CONFIG.value())) {
+        BlobBlobsetConfig config = getDeviceConfig()
+                .blobset.blobs.get(IOT_ENDPOINT_CONFIG.value());
+        getExtractedEndpoint().generation = config.generation;
+      }
     }
     return getExtractedEndpoint();
+
   }
 
   EndpointConfiguration getExtractedEndpoint();

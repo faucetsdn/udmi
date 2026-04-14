@@ -37,14 +37,12 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.function.Consumer;
-import org.apache.commons.io.FileUtils;
 import udmi.lib.base.MqttDevice;
 import udmi.lib.client.host.PublisherHost;
 import udmi.lib.client.manager.DeviceManager;
 import udmi.schema.BlobBlobsetConfig.BlobPhase;
 import udmi.schema.BlobBlobsetState;
 import udmi.schema.BlobsetState;
-import udmi.schema.Category;
 import udmi.schema.DevicePersistent;
 import udmi.schema.EndpointConfiguration;
 import udmi.schema.Metadata;
@@ -60,6 +58,7 @@ public class PubberPublisherHost extends PubberManager implements PublisherHost 
 
   private PubberDeviceManager deviceManager;
   private SiteModel siteModel;
+  private MockGitModuleEmulator moduleEmulator;
 
   /**
    * Start an instance from a configuration file.
@@ -124,107 +123,40 @@ public class PubberPublisherHost extends PubberManager implements PublisherHost 
   }
 
   private void initModuleForOtaUpdates() {
-    try {
-      File srcDir = new File(SOFTWARE_MODULE_DIR);
-      if (srcDir.exists()) {
-        FileUtils.deleteDirectory(srcDir);
-      }
-
-      if (!srcDir.mkdirs()) {
-        throw new RuntimeException("Failed to create source directory");
-      }
-
-      info(format("Initializing dummy module in %s", srcDir.getAbsolutePath()));
-      runCommandInDir(srcDir, "git", "init");
-      runCommandInDir(srcDir, "git", "config", "user.name", "Pubber");
-      runCommandInDir(srcDir, "git", "config", "user.email", "pubber@udmi.io");
-
-      File versionFile = new File(srcDir, "version.txt");
-      FileUtils.writeStringToFile(versionFile, "v1", "UTF-8");
-      runCommandInDir(srcDir, "git", "add", ".");
-      runCommandInDir(srcDir, "git", "commit", "-m", "v1");
-      runCommandInDir(srcDir, "git", "tag", "v1");
-
-      FileUtils.writeStringToFile(versionFile, "v2", "UTF-8");
-      runCommandInDir(srcDir, "git", "add", ".");
-      runCommandInDir(srcDir, "git", "commit", "-m", "v2");
-      runCommandInDir(srcDir, "git", "tag", "v2");
-      info("Isolated repo initialized.");
-    } catch (Exception e) {
-      error("While initializing isolated repo", e);
-    }
+    String dynamicDir = "out/pubber_module_repo_" + config.serialNo;
+    moduleEmulator = new MockGitModuleEmulator(dynamicDir, config.options,
+        this::info, this::notice, this::error);
+    moduleEmulator.initModuleForOtaUpdates();
   }
 
-  private Consumer<String> getBlobHandler(String blobKey) {
+  private Consumer<String> getBlobHandler(String blobName) {
     return Map.<String, Consumer<String>>of(
         SOFTWARE_MODULE_KEY, this::handleOtaUpdate
-    ).get(blobKey);
+    ).get(blobName);
   }
 
   @Override
-  public boolean isSupportedBlob(String blobKey) {
-    return getBlobHandler(blobKey) != null;
-  }
-
-
-
-  @Override
-  public void handleBlob(String blobKey, String payload) {
-    getBlobHandler(blobKey).accept(payload);
+  public boolean isSupportedBlob(String blobName) {
+    return getBlobHandler(blobName) != null;
   }
 
   @Override
-  public void postHandleBlob(String blobKey) {
-    if (SOFTWARE_MODULE_KEY.equals(blobKey)) {
+  public void installBlobPayload(String blobName, String payload) {
+    getBlobHandler(blobName).accept(payload);
+  }
+
+  @Override
+  public void activateBlob(String blobName) {
+    if (SOFTWARE_MODULE_KEY.equals(blobName)) {
       notice("Post-processing Git OTA update. Restarting...");
       getDeviceManager().systemLifecycle(Operation.SystemMode.RESTART);
     }
   }
 
   private void handleOtaUpdate(String payload) {
-    // Note: The payload is assumed to be the commit hash directly.
-    // In a real scenario, this would be the content of a downloaded file.
-    String commitHash = payload.trim();
-    info(format("Triggering Git OTA update to commit %s", commitHash));
-
-    logEvent(Category.BLOBSET_BLOB_APPLY, "Applying Git OTA update to commit " + commitHash);
-
-    File repoDir = new File(SOFTWARE_MODULE_DIR);
-    if (!repoDir.exists()) {
-      throw new RuntimeException("Isolated repo directory not found");
-    }
-
-    try {
-      info("Simulating OTA update delay...");
-      safeSleep(20000);
-      runCommandInDir(repoDir, "git", "fetch");
-      runCommandInDir(repoDir, "git", "checkout", commitHash);
-      notice("Git OTA update completed successfully.");
-    } catch (Exception e) {
-      throw new RuntimeException("Git operation failed", e);
-    }
+    moduleEmulator.handleOtaUpdate(payload);
   }
 
-  private void runCommandInDir(File dir, String... command) throws Exception {
-    ProcessBuilder pb = new ProcessBuilder(command);
-    pb.directory(dir);
-    pb.redirectErrorStream(true);
-    Process p = pb.start();
-    
-    try (java.io.BufferedReader reader = new java.io.BufferedReader(
-        new java.io.InputStreamReader(p.getInputStream()))) {
-      String line;
-      while ((line = reader.readLine()) != null) {
-        // Use logger instead of System.out to avoid cluttering console
-        debug("Git: " + line);
-      }
-    }
-    
-    int exitCode = p.waitFor();
-    if (exitCode != 0) {
-      throw new RuntimeException(format("Command failed with exit code %d", exitCode));
-    }
-  }
 
   @Override
   public void initializePersistentStore() {

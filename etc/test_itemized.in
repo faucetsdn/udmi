@@ -27,6 +27,8 @@ TEST system_last_update extraField=fnooz
 TEST system_last_update dupeState
 TEST system_last_update badLevel
 TEST state_make_model badState
+TEST ota_hardware_mismatch hardwareIncompatible
+TEST ota_software_mismatch softwareDependencyMismatch
 
 # Test with various device metadata.json options
 WITH AHU-1 noState

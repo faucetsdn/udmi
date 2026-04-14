@@ -101,8 +101,11 @@ class Category(Enum):
     # Blob hash mismatch
     BLOBSET_BLOB_VERIFY_HASH = ("blobset.blob.verify.hash", Level.ERROR)
 
-    # Hardware or dependency mismatch
-    BLOBSET_BLOB_VERIFY_COMPATIBILITY = ("blobset.blob.verify.compatibility", Level.ERROR)
+    # Blob is incompatible with the device
+    BLOBSET_BLOB_VERIFY_INCOMPATIBLE = ("blobset.blob.verify.incompatible", Level.ERROR)
+
+    # Expected software dependencies not found
+    BLOBSET_BLOB_VERIFY_DEPENDENCY = ("blobset.blob.verify.dependency", Level.ERROR)
 
     # Applying a blob update
     BLOBSET_BLOB_APPLY = ("blobset.blob.apply", Level.NOTICE)

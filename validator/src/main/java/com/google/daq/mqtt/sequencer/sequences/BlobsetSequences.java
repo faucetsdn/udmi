@@ -411,38 +411,48 @@ public class BlobsetSequences extends SequenceBase {
     deviceConfig.blobset = blobset;
   }
 
-  private void runHappyPathOta(OtaTestingModel otaConfig) {
-    String blobKey = otaConfig.blob_key;
-    String url = otaConfig.url;
-    String sha256 = otaConfig.sha256;
-    String version = otaConfig.version;
+  private void runOtaTest(OtaTestingModel target, boolean expectSuccess, String expectedCategory, Level expectedLevel) {
+    String blobKey = target.blob_key;
+    String url = target.url;
+    String sha256 = target.sha256;
+    String version = target.version;
 
     info(format("Testing OTA update for blob key %s, version %s", blobKey, version));
 
     setDeviceConfigSoftwareBlob(blobKey, url, sha256);
     updateConfig("trigger ota update for " + blobKey);
 
-    // Wait for phase: APPLY
-    untilTrue(blobKey + " phase is APPLY", () -> {
+    // Relaxed intermediate check for fast updates: wait for APPLY or FINAL
+    untilTrue(blobKey + " phase transitions", () -> {
       BlobBlobsetState blobBlobsetState = deviceState.blobset.blobs.get(blobKey);
-      return blobBlobsetState != null && BlobPhase.APPLY.equals(blobBlobsetState.phase);
+      return blobBlobsetState != null && 
+          (BlobPhase.APPLY.equals(blobBlobsetState.phase) || BlobPhase.FINAL.equals(blobBlobsetState.phase));
     });
 
-    // Wait for log message
-    waitForLog(BLOBSET_BLOB_APPLY, Level.NOTICE); 
+    if (expectedCategory != null) {
+      waitForLog(expectedCategory, expectedLevel);
+    }
 
-    // Wait for phase: FINAL and status null
-    untilTrue(blobKey + " phase is FINAL and status is null", () -> {
+    untilTrue(blobKey + " phase is FINAL", () -> {
       BlobBlobsetState blobBlobsetState = deviceState.blobset.blobs.get(blobKey);
-      return blobBlobsetState != null && BlobPhase.FINAL.equals(blobBlobsetState.phase) && blobBlobsetState.status == null;
+      if (blobBlobsetState == null || !BlobPhase.FINAL.equals(blobBlobsetState.phase)) {
+        return false;
+      }
+      if (expectSuccess) {
+        return blobBlobsetState.status == null;
+      } else {
+        return blobBlobsetState.status != null && blobBlobsetState.status.level >= Level.ERROR.value();
+      }
     });
 
-    // Validate system.software
-    checkThat(blobKey + " software version reflects update", () -> {
-      String softwareVersion = deviceState.system.software.get(blobKey);
-      return version.equals(softwareVersion);
-    });
+    if (expectSuccess) {
+      checkThat(blobKey + " software version reflects update", () -> {
+        String softwareVersion = deviceState.system.software.get(blobKey);
+        return version.equals(softwareVersion);
+      });
+    }
   }
+
 
   private OtaTestingModel getOtaTarget(String targetType) {
     ifTrueSkipTest(deviceMetadata.testing == null || deviceMetadata.testing.ota_targets == null,
@@ -454,33 +464,49 @@ public class BlobsetSequences extends SequenceBase {
 
   @Test(timeout = TWO_MINUTES_MS)
   @Feature(stage = PREVIEW, bucket = SYSTEM_SOFTWARE_UPDATES)
-  public void ota_happy_path() {
+  public void ota_update_success() {
     OtaTestingModel target = getOtaTarget("happy");
-    runHappyPathOta(target);
+    runOtaTest(target, true, BLOBSET_BLOB_APPLY, Level.NOTICE);
   }
+
 
   @Test(timeout = TWO_MINUTES_MS)
   @Feature(stage = PREVIEW, bucket = SYSTEM_SOFTWARE_UPDATES)
   public void ota_fetch_failure() {
     OtaTestingModel target = getOtaTarget("fail_fetch");
-
-    setDeviceConfigSoftwareBlob(target.blob_key, target.url, target.sha256);
-    updateConfig("trigger ota update for " + target.blob_key);
-
-    untilTrue(target.blob_key + " phase is APPLY", () -> {
-      BlobBlobsetState blobBlobsetState = deviceState.blobset.blobs.get(target.blob_key);
-      return blobBlobsetState != null && BlobPhase.APPLY.equals(blobBlobsetState.phase);
-    });
-
-    waitForLog(Category.BLOBSET_BLOB_FETCH_FAILURE, Level.ERROR);
-
-    untilTrue(target.blob_key + " phase is FINAL and status is not null", () -> {
-      BlobBlobsetState blobBlobsetState = deviceState.blobset.blobs.get(target.blob_key);
-      return blobBlobsetState != null 
-          && BlobPhase.FINAL.equals(blobBlobsetState.phase) 
-          && blobBlobsetState.status != null
-          && blobBlobsetState.status.level >= Level.ERROR.value();
-    });
+    runOtaTest(target, false, Category.BLOBSET_BLOB_FETCH_FAILURE, Level.ERROR);
   }
 
+
+  @Test(timeout = TWO_MINUTES_MS)
+  @Feature(stage = PREVIEW, bucket = SYSTEM_SOFTWARE_UPDATES)
+  public void ota_hash_mismatch() {
+    OtaTestingModel target = getOtaTarget("fail_hash");
+    runOtaTest(target, false, BLOBSET_BLOB_VERIFY_HASH, Level.ERROR);
+  }
+
+
+  @Test(timeout = TWO_MINUTES_MS)
+  @Feature(stage = PREVIEW, bucket = SYSTEM_SOFTWARE_UPDATES)
+  public void ota_parse_failure() {
+    OtaTestingModel target = getOtaTarget("fail_parse");
+    runOtaTest(target, false, Category.BLOBSET_BLOB_VERIFY_PARSE, Level.ERROR);
+  }
+
+
+  @Test(timeout = TWO_MINUTES_MS)
+  @Feature(stage = PREVIEW, bucket = SYSTEM_SOFTWARE_UPDATES)
+  public void ota_hardware_mismatch() {
+    OtaTestingModel target = getOtaTarget("happy");
+    runOtaTest(target, false, Category.BLOBSET_BLOB_VERIFY_COMPATIBILITY, Level.ERROR);
+  }
+
+
+  @Test(timeout = TWO_MINUTES_MS)
+  @Feature(stage = PREVIEW, bucket = SYSTEM_SOFTWARE_UPDATES)
+  public void ota_software_mismatch() {
+    OtaTestingModel target = getOtaTarget("happy");
+    runOtaTest(target, false, Category.BLOBSET_BLOB_VERIFY_DEPENDENCY, Level.ERROR);
+  }
 }
+

@@ -195,11 +195,17 @@ public class Category {
     public static final int BLOBSET_BLOB_VERIFY_HASH_VALUE = ERROR.value();
     static { LEVEL.put(BLOBSET_BLOB_VERIFY_HASH, ERROR); }
 
-    // Hardware or dependency mismatch
-    public static final String BLOBSET_BLOB_VERIFY_COMPATIBILITY = "blobset.blob.verify.compatibility";
-    public static final Level BLOBSET_BLOB_VERIFY_COMPATIBILITY_LEVEL = ERROR;
-    public static final int BLOBSET_BLOB_VERIFY_COMPATIBILITY_VALUE = ERROR.value();
-    static { LEVEL.put(BLOBSET_BLOB_VERIFY_COMPATIBILITY, ERROR); }
+    // Blob is incompatible with the device
+    public static final String BLOBSET_BLOB_VERIFY_INCOMPATIBLE = "blobset.blob.verify.incompatible";
+    public static final Level BLOBSET_BLOB_VERIFY_INCOMPATIBLE_LEVEL = ERROR;
+    public static final int BLOBSET_BLOB_VERIFY_INCOMPATIBLE_VALUE = ERROR.value();
+    static { LEVEL.put(BLOBSET_BLOB_VERIFY_INCOMPATIBLE, ERROR); }
+
+    // Expected software dependencies not found
+    public static final String BLOBSET_BLOB_VERIFY_DEPENDENCY = "blobset.blob.verify.dependency";
+    public static final Level BLOBSET_BLOB_VERIFY_DEPENDENCY_LEVEL = ERROR;
+    public static final int BLOBSET_BLOB_VERIFY_DEPENDENCY_VALUE = ERROR.value();
+    static { LEVEL.put(BLOBSET_BLOB_VERIFY_DEPENDENCY, ERROR); }
 
     // Applying a blob update
     public static final String BLOBSET_BLOB_APPLY = "blobset.blob.apply";
