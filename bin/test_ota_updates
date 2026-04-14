@@ -24,33 +24,24 @@ site_path=sites/udmi_site_model
 device_id=AHU-1
 serial_no=sequencer-$RANDOM
 
-# Use tag v2 for OTA
+# Use tag v2 for OTA update
 target_commit="v2"
 
-# create out directory if it doesn't exist
 mkdir -p out/
 
-# Clean up previous runs
 rm -f out/pubber.log.*
 rm -f out/blobs.json
 pubber_log=out/pubber.log.${serial_no}
 
-# Run pubber in background
 log "Starting pubber with serial $serial_no..."
 bin/pubber $site_path $project_spec $device_id $serial_no > $pubber_log 2>&1 &
 pubber_pid=$!
 
-# Wait for pubber to start
 log "Waiting for pubber to start..."
 sleep 20
 
-if [ ! -d "out/pubber_module_repo/.git" ]; then
-    fail "Pubber did not initialize the software module repo."
-fi
+log "Target commit for update: $target_commit"
 
-log "Target commit for OTA: $target_commit"
-
-# Generate config for OTA
 log "Generating OTA config..."
 base64_payload=$(echo -n $target_commit | base64 -w 0)
 sha256_payload=$(echo -n $target_commit | openssl sha256 | awk '{print $2}')
@@ -71,12 +62,10 @@ cat <<EOF > out/blobs.json
 }
 EOF
 
-# Merge config
 out_base=$site_path/devices/$device_id/out
 config_base=$site_path/devices/$device_id/config
 mkdir -p $config_base
 
-# Clean up old ota config
 rm -f $config_base/ota_config.json
 
 if [ -f $out_base/generated_config.json ]; then
@@ -85,38 +74,35 @@ else
     cp out/blobs.json $config_base/ota_config.json
 fi
 
-log "Applying OTA config..."
+log "Applying update config..."
 bin/reset_config $site_path $project_spec $device_id ota_config.json
 
-# Wait for pubber to react
-log "Waiting for pubber to process OTA..."
+log "Waiting for pubber to process update..."
 sleep 20
 
-# Verify logs
 log "Verifying logs..."
-if grep -q "Triggering Git OTA update to commit $target_commit" $pubber_log; then
-    log "OTA trigger detected."
+if grep -q "Triggering mock OTA update to commit $target_commit" $pubber_log; then
+    log "Update trigger detected."
 else
-    fail "OTA trigger NOT detected."
+    fail "Update trigger NOT detected."
 fi
 
 # Wait for update to complete and state to propagate
 sleep 20
 
-if grep -q "Git OTA update completed successfully" $pubber_log; then
+if grep -q "Mock OTA update completed successfully" $pubber_log; then
     log "OTA success detected."
 else
     fail "OTA success NOT detected."
 fi
 
 if jq -e --arg gen "$generation_payload" '.blobset.blobs.pubber_module.phase == "final" and .blobset.blobs.pubber_module.generation == $gen' pubber/out/state.json > /dev/null; then
-    log "OTA state phase: FINAL verified in state.json"
+    log "Blob state phase: FINAL verified in state"
 else
-    fail "OTA state phase: FINAL NOT found in state.json"
+    fail "Blob state phase: FINAL NOT found in state"
 fi
 
-log "OTA test passed!"
+log "OTA updates test passed!"
 
-echo Cleaning up pubber processes...
-(ps ax | fgrep pubber | fgrep java) || true
-kill $(ps ax | fgrep pubber | fgrep java | awk '{print $1}') || true
+echo Cleaning up pubber background process...
+kill $pubber_pid

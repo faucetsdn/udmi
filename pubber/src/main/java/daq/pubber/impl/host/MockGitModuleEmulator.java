@@ -111,7 +111,7 @@ public class MockGitModuleEmulator {
       infoLogger.accept("Simulating OTA update delay...");
       safeSleep(2000);
       git.checkout().setName(commitHash).call();
-      noticeLogger.accept("JGit OTA update completed successfully.");
+      noticeLogger.accept("Mock OTA update completed successfully.");
     } catch (Exception e) {
       throw new RuntimeException("JGit checkout operation failed", e);
     }
