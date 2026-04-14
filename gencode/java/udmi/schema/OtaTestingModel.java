@@ -15,7 +15,7 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
-    "blob_key",
+    "blob_name",
     "url",
     "sha256",
     "version"
@@ -23,12 +23,12 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 public class OtaTestingModel {
 
     /**
-     * Blob key for the payload
+     * Blob name for the payload
      * 
      */
-    @JsonProperty("blob_key")
-    @JsonPropertyDescription("Blob key for the payload")
-    public String blob_key;
+    @JsonProperty("blob_name")
+    @JsonPropertyDescription("Blob name for the payload")
+    public String blob_name;
     /**
      * URL for OTA update
      * 
@@ -54,7 +54,7 @@ public class OtaTestingModel {
     @Override
     public int hashCode() {
         int result = 1;
-        result = ((result* 31)+((this.blob_key == null)? 0 :this.blob_key.hashCode()));
+        result = ((result* 31)+((this.blob_name == null)? 0 :this.blob_name.hashCode()));
         result = ((result* 31)+((this.sha256 == null)? 0 :this.sha256 .hashCode()));
         result = ((result* 31)+((this.version == null)? 0 :this.version.hashCode()));
         result = ((result* 31)+((this.url == null)? 0 :this.url.hashCode()));
@@ -70,7 +70,7 @@ public class OtaTestingModel {
             return false;
         }
         OtaTestingModel rhs = ((OtaTestingModel) other);
-        return (((((this.blob_key == rhs.blob_key)||((this.blob_key!= null)&&this.blob_key.equals(rhs.blob_key)))&&((this.sha256 == rhs.sha256)||((this.sha256 != null)&&this.sha256 .equals(rhs.sha256))))&&((this.version == rhs.version)||((this.version!= null)&&this.version.equals(rhs.version))))&&((this.url == rhs.url)||((this.url!= null)&&this.url.equals(rhs.url))));
+        return (((((this.blob_name == rhs.blob_name)||((this.blob_name!= null)&&this.blob_name.equals(rhs.blob_name)))&&((this.sha256 == rhs.sha256)||((this.sha256 != null)&&this.sha256 .equals(rhs.sha256))))&&((this.version == rhs.version)||((this.version!= null)&&this.version.equals(rhs.version))))&&((this.url == rhs.url)||((this.url!= null)&&this.url.equals(rhs.url))));
     }
 
 }

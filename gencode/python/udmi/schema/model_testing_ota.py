@@ -11,7 +11,7 @@ from ._base import DataModel
 
 @dataclass
 class OtaTestingModel(DataModel):
-    blob_key: Optional[str] = None
+    blob_name: Optional[str] = None
     url: Optional[str] = None
     sha256: Optional[str] = None
     version: Optional[str] = None

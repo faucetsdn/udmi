@@ -19,8 +19,6 @@ import static udmi.schema.Bucket.ENDPOINT_CONFIG;
 import static udmi.schema.Bucket.SYSTEM_MODE;
 import static udmi.schema.Bucket.SYSTEM_SOFTWARE_UPDATES;
 import static udmi.schema.Category.BLOBSET_BLOB_APPLY;
-import static udmi.schema.Category.BLOBSET_BLOB_FETCH;
-import static udmi.schema.Category.BLOBSET_BLOB_FETCH_SUCCESS;
 import static udmi.schema.Category.BLOBSET_BLOB_VERIFY_HASH;
 import static udmi.schema.FeatureDiscovery.FeatureStage.PREVIEW;
 
@@ -46,7 +44,6 @@ import udmi.schema.BlobBlobsetState;
 import udmi.schema.BlobsetConfig;
 import udmi.schema.BlobsetConfig.SystemBlobsets;
 import udmi.schema.Category;
-import udmi.schema.OtaTestingModel;
 import udmi.schema.EndpointConfiguration;
 import udmi.schema.EndpointConfiguration.Protocol;
 import udmi.schema.EndpointConfiguration.Transport;
@@ -55,6 +52,7 @@ import udmi.schema.Envelope.SubFolder;
 import udmi.schema.IotAccess.IotProvider;
 import udmi.schema.Level;
 import udmi.schema.Operation.SystemMode;
+import udmi.schema.OtaTestingModel;
 
 
 /**
@@ -398,7 +396,7 @@ public class BlobsetSequences extends SequenceBase {
     return format(DATA_URL_FORMAT, JSON_MIME_TYPE, encodeBase64(payload));
   }
 
-  private void setDeviceConfigSoftwareBlob(String blob_key, String url, String sha256) {
+  private void setDeviceConfigSoftwareBlob(String blobName, String url, String sha256) {
     BlobBlobsetConfig config = new BlobBlobsetConfig();
     config.url = SemanticValue.describe("software data", url);
     config.phase = BlobPhase.FINAL;
@@ -407,47 +405,49 @@ public class BlobsetSequences extends SequenceBase {
 
     BlobsetConfig blobset = new BlobsetConfig();
     blobset.blobs = new HashMap<>();
-    blobset.blobs.put(blob_key, config);
+    blobset.blobs.put(blobName, config);
     deviceConfig.blobset = blobset;
   }
 
-  private void runOtaTest(OtaTestingModel target, boolean expectSuccess, String expectedCategory, Level expectedLevel) {
-    String blobKey = target.blob_key;
+  private void runOtaTest(OtaTestingModel target, boolean expectSuccess, String expectedCategory,
+      Level expectedLevel) {
+    String blobName = target.blob_name;
     String url = target.url;
     String sha256 = target.sha256;
     String version = target.version;
 
-    info(format("Testing OTA update for blob key %s, version %s", blobKey, version));
+    info(format("Testing OTA update for blob key %s, version %s", blobName, version));
 
-    setDeviceConfigSoftwareBlob(blobKey, url, sha256);
-    updateConfig("trigger ota update for " + blobKey);
+    setDeviceConfigSoftwareBlob(blobName, url, sha256);
+    updateConfig("trigger ota update for " + blobName);
 
     // Relaxed intermediate check for fast updates: wait for APPLY or FINAL
-    untilTrue(blobKey + " phase transitions", () -> {
-      BlobBlobsetState blobBlobsetState = deviceState.blobset.blobs.get(blobKey);
-      return blobBlobsetState != null && 
-          (BlobPhase.APPLY.equals(blobBlobsetState.phase) || BlobPhase.FINAL.equals(blobBlobsetState.phase));
+    untilTrue(blobName + " phase transitions", () -> {
+      BlobBlobsetState blobBlobsetState = deviceState.blobset.blobs.get(blobName);
+      return blobBlobsetState != null && (BlobPhase.APPLY.equals(blobBlobsetState.phase)
+          || BlobPhase.FINAL.equals(blobBlobsetState.phase));
     });
 
     if (expectedCategory != null) {
       waitForLog(expectedCategory, expectedLevel);
     }
 
-    untilTrue(blobKey + " phase is FINAL", () -> {
-      BlobBlobsetState blobBlobsetState = deviceState.blobset.blobs.get(blobKey);
+    untilTrue(blobName + " phase is FINAL", () -> {
+      BlobBlobsetState blobBlobsetState = deviceState.blobset.blobs.get(blobName);
       if (blobBlobsetState == null || !BlobPhase.FINAL.equals(blobBlobsetState.phase)) {
         return false;
       }
       if (expectSuccess) {
         return blobBlobsetState.status == null;
       } else {
-        return blobBlobsetState.status != null && blobBlobsetState.status.level >= Level.ERROR.value();
+        return blobBlobsetState.status != null
+            && blobBlobsetState.status.level >= Level.ERROR.value();
       }
     });
 
     if (expectSuccess) {
-      checkThat(blobKey + " software version reflects update", () -> {
-        String softwareVersion = deviceState.system.software.get(blobKey);
+      checkThat(blobName + " software version reflects update", () -> {
+        String softwareVersion = deviceState.system.software.get(blobName);
         return version.equals(softwareVersion);
       });
     }
@@ -498,7 +498,7 @@ public class BlobsetSequences extends SequenceBase {
   @Feature(stage = PREVIEW, bucket = SYSTEM_SOFTWARE_UPDATES)
   public void ota_hardware_mismatch() {
     OtaTestingModel target = getOtaTarget("happy");
-    runOtaTest(target, false, Category.BLOBSET_BLOB_VERIFY_COMPATIBILITY, Level.ERROR);
+    runOtaTest(target, false, Category.BLOBSET_BLOB_VERIFY_INCOMPATIBLE, Level.ERROR);
   }
 
 

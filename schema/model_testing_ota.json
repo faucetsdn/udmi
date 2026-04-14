@@ -5,8 +5,8 @@
   "$schema": "http://json-schema.org/draft-04/schema#",
   "additionalProperties": false,
   "properties": {
-    "blob_key": {
-      "description": "Blob key for the payload",
+    "blob_name": {
+      "description": "Blob name for the payload",
       "type": "string"
     },
     "url": {
