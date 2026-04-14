@@ -18,12 +18,12 @@
         }
       }
     },
-    "ota_targets": {
+    "blob_update_targets": {
       "additionalProperties": false,
-      "existingJavaType": "java.util.HashMap<String, OtaTestingModel>",
+      "existingJavaType": "java.util.HashMap<String, BlobUpdateTestingModel>",
       "patternProperties": {
         "^[a-z][a-z0-9]*(_[a-z0-9]+)*$": {
-          "$ref": "file:model_testing_ota.json#"
+          "$ref": "file:model_testing_update.json#"
         }
       }
     }

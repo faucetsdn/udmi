@@ -41,6 +41,7 @@ import udmi.schema.Basic;
 import udmi.schema.BlobBlobsetConfig;
 import udmi.schema.BlobBlobsetConfig.BlobPhase;
 import udmi.schema.BlobBlobsetState;
+import udmi.schema.BlobUpdateTestingModel;
 import udmi.schema.BlobsetConfig;
 import udmi.schema.BlobsetConfig.SystemBlobsets;
 import udmi.schema.Category;
@@ -52,7 +53,6 @@ import udmi.schema.Envelope.SubFolder;
 import udmi.schema.IotAccess.IotProvider;
 import udmi.schema.Level;
 import udmi.schema.Operation.SystemMode;
-import udmi.schema.OtaTestingModel;
 
 
 /**
@@ -392,10 +392,6 @@ public class BlobsetSequences extends SequenceBase {
         () -> deviceConfig.system.operation.last_start.after(last_start));
   }
 
-  private String generateSoftwareConfigDataUrl(String payload) {
-    return format(DATA_URL_FORMAT, JSON_MIME_TYPE, encodeBase64(payload));
-  }
-
   private void setDeviceConfigSoftwareBlob(String blobName, String url, String sha256) {
     BlobBlobsetConfig config = new BlobBlobsetConfig();
     config.url = SemanticValue.describe("software data", url);
@@ -409,8 +405,8 @@ public class BlobsetSequences extends SequenceBase {
     deviceConfig.blobset = blobset;
   }
 
-  private void runOtaTest(OtaTestingModel target, boolean expectSuccess, String expectedCategory,
-      Level expectedLevel) {
+  private void runOtaTest(BlobUpdateTestingModel target, boolean expectSuccess,
+      String expectedCategory, Level expectedLevel) {
     String blobName = target.blob_name;
     String url = target.url;
     String sha256 = target.sha256;
@@ -454,59 +450,59 @@ public class BlobsetSequences extends SequenceBase {
   }
 
 
-  private OtaTestingModel getOtaTarget(String targetType) {
-    ifTrueSkipTest(deviceMetadata.testing == null || deviceMetadata.testing.ota_targets == null,
-        "No OTA targets defined in metadata");
-    OtaTestingModel target = deviceMetadata.testing.ota_targets.get(targetType);
-    ifNullSkipTest(target, "No OTA target defined for type '" + targetType + "'");
+  private BlobUpdateTestingModel getUpdateTarget(String targetType) {
+    ifTrueSkipTest(
+        deviceMetadata.testing == null || deviceMetadata.testing.blob_update_targets == null,
+        "No blob update targets defined in metadata");
+    BlobUpdateTestingModel target = deviceMetadata.testing.blob_update_targets.get(targetType);
+    ifNullSkipTest(target, "No blob update target defined for type '" + targetType + "'");
     return target;
   }
 
   @Test(timeout = TWO_MINUTES_MS)
   @Feature(stage = PREVIEW, bucket = SYSTEM_SOFTWARE_UPDATES)
-  public void ota_update_success() {
-    OtaTestingModel target = getOtaTarget("happy");
-    runOtaTest(target, true, BLOBSET_BLOB_APPLY, Level.NOTICE);
+  public void blob_update_success() {
+    runOtaTest(getUpdateTarget("happy"), true, BLOBSET_BLOB_APPLY, Level.NOTICE);
   }
 
 
   @Test(timeout = TWO_MINUTES_MS)
   @Feature(stage = PREVIEW, bucket = SYSTEM_SOFTWARE_UPDATES)
   public void ota_fetch_failure() {
-    OtaTestingModel target = getOtaTarget("fail_fetch");
-    runOtaTest(target, false, Category.BLOBSET_BLOB_FETCH_FAILURE, Level.ERROR);
+    runOtaTest(getUpdateTarget("fail_fetch"), false, Category.BLOBSET_BLOB_FETCH_FAILURE,
+        Level.ERROR);
   }
 
 
   @Test(timeout = TWO_MINUTES_MS)
   @Feature(stage = PREVIEW, bucket = SYSTEM_SOFTWARE_UPDATES)
   public void ota_hash_mismatch() {
-    OtaTestingModel target = getOtaTarget("fail_hash");
-    runOtaTest(target, false, BLOBSET_BLOB_VERIFY_HASH, Level.ERROR);
+    runOtaTest(getUpdateTarget("fail_hash"), false, BLOBSET_BLOB_VERIFY_HASH, Level.ERROR);
   }
 
 
   @Test(timeout = TWO_MINUTES_MS)
   @Feature(stage = PREVIEW, bucket = SYSTEM_SOFTWARE_UPDATES)
   public void ota_parse_failure() {
-    OtaTestingModel target = getOtaTarget("fail_parse");
-    runOtaTest(target, false, Category.BLOBSET_BLOB_VERIFY_PARSE, Level.ERROR);
+    runOtaTest(getUpdateTarget("fail_parse"), false, Category.BLOBSET_BLOB_VERIFY_PARSE,
+        Level.ERROR);
   }
 
 
   @Test(timeout = TWO_MINUTES_MS)
   @Feature(stage = PREVIEW, bucket = SYSTEM_SOFTWARE_UPDATES)
   public void ota_hardware_mismatch() {
-    OtaTestingModel target = getOtaTarget("happy");
-    runOtaTest(target, false, Category.BLOBSET_BLOB_VERIFY_INCOMPATIBLE, Level.ERROR);
+    runOtaTest(getUpdateTarget("happy"), false, Category.BLOBSET_BLOB_VERIFY_INCOMPATIBLE,
+        Level.ERROR);
   }
 
 
   @Test(timeout = TWO_MINUTES_MS)
   @Feature(stage = PREVIEW, bucket = SYSTEM_SOFTWARE_UPDATES)
   public void ota_software_mismatch() {
-    OtaTestingModel target = getOtaTarget("happy");
-    runOtaTest(target, false, Category.BLOBSET_BLOB_VERIFY_DEPENDENCY, Level.ERROR);
+    runOtaTest(getUpdateTarget("happy"), false, Category.BLOBSET_BLOB_VERIFY_DEPENDENCY,
+        Level.ERROR);
   }
+
 }
 

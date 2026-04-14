@@ -8,7 +8,7 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 
 
 /**
- * Ota Testing Model
+ * Blob Update Testing Model
  * <p>
  * 
  * 
@@ -20,7 +20,7 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
     "sha256",
     "version"
 })
-public class OtaTestingModel {
+public class BlobUpdateTestingModel {
 
     /**
      * Blob name for the payload
@@ -66,10 +66,10 @@ public class OtaTestingModel {
         if (other == this) {
             return true;
         }
-        if ((other instanceof OtaTestingModel) == false) {
+        if ((other instanceof BlobUpdateTestingModel) == false) {
             return false;
         }
-        OtaTestingModel rhs = ((OtaTestingModel) other);
+        BlobUpdateTestingModel rhs = ((BlobUpdateTestingModel) other);
         return (((((this.blob_name == rhs.blob_name)||((this.blob_name!= null)&&this.blob_name.equals(rhs.blob_name)))&&((this.sha256 == rhs.sha256)||((this.sha256 != null)&&this.sha256 .equals(rhs.sha256))))&&((this.version == rhs.version)||((this.version!= null)&&this.version.equals(rhs.version))))&&((this.url == rhs.url)||((this.url!= null)&&this.url.equals(rhs.url))));
     }
 

@@ -7,8 +7,8 @@ from dataclasses import dataclass
 from typing import Dict, Optional
 
 from ._base import DataModel
-from .model_testing_ota import OtaTestingModel
 from .model_testing_target import TargetTestingModel
+from .model_testing_update import BlobUpdateTestingModel
 
 
 @dataclass
@@ -19,4 +19,4 @@ class TestingModel(DataModel):
 
     nostate: Optional[bool] = None
     targets: Optional[Dict[str, TargetTestingModel]] = None
-    ota_targets: Optional[Dict[str, OtaTestingModel]] = None
+    blob_update_targets: Optional[Dict[str, BlobUpdateTestingModel]] = None
