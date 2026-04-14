@@ -10,7 +10,7 @@ paho-mqtt==2.1.0
 pluggy==1.6.0
 pygments==2.20.0
 pyjwt==2.11.0
-pytest==9.0.2
+pytest==9.0.3
 python-dotenv==1.2.1
 pytz==2025.2
 scapy==2.7.0
