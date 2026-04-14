@@ -1,17 +1,19 @@
 package daq.pubber.impl.host;
 
+import static com.google.udmi.util.GeneralUtils.isTrue;
+import static com.google.udmi.util.JsonUtil.safeSleep;
+import static java.lang.String.format;
+
 import java.io.File;
 import java.util.function.Consumer;
 import org.apache.commons.io.FileUtils;
-
-import static java.lang.String.format;
-import static com.google.udmi.util.JsonUtil.safeSleep;
-import static com.google.udmi.util.GeneralUtils.isTrue;
-
 import udmi.lib.base.UdmiException.BlobDependencyMismatchException;
 import udmi.lib.base.UdmiException.BlobIncompatibleException;
 import udmi.schema.PubberOptions;
 
+/**
+ * Mock emulator for Git modules used in OTA updates.
+ */
 public class MockGitModuleEmulator {
 
 
@@ -22,6 +24,15 @@ public class MockGitModuleEmulator {
   private final PubberOptions options;
   private boolean inMemoryFallback = false;
 
+  /**
+   * Creates a new instance of MockGitModuleEmulator.
+   *
+   * @param softwareModuleDir The directory for the software module.
+   * @param options           The pubber options.
+   * @param infoLogger        Logger for info messages.
+   * @param noticeLogger      Logger for notice messages.
+   * @param errorLogger       Logger for error messages.
+   */
   public MockGitModuleEmulator(String softwareModuleDir, PubberOptions options,
       Consumer<String> infoLogger, Consumer<String> noticeLogger, Consumer<String> errorLogger) {
     this.repoDir = new File(softwareModuleDir);
@@ -31,6 +42,9 @@ public class MockGitModuleEmulator {
     this.errorLogger = errorLogger;
   }
 
+  /**
+   * Initializes the module for OTA updates.
+   */
   public void initModuleForOtaUpdates() {
     try {
       if (repoDir.exists()) {
@@ -67,6 +81,11 @@ public class MockGitModuleEmulator {
     }
   }
 
+  /**
+   * Handles an OTA update with the given payload.
+   *
+   * @param payload The update payload (e.g., commit hash).
+   */
   public void handleOtaUpdate(String payload) {
     if (isTrue(options.hardwareIncompatible)) {
       safeSleep(2000);

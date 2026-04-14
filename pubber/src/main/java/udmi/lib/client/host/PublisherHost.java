@@ -160,6 +160,7 @@ public interface PublisherHost extends ManagerHost {
   default BlobBlobsetConfig getConfigBlob(String blobName) {
     return getBlobs().get(blobName);
   }
+
   /**
    * Extracts the configuration blob with the specified name, if it exists and is in the final
    * phase.
@@ -224,8 +225,8 @@ public interface PublisherHost extends ManagerHost {
       state.status = exceptionStatus(e, Category.BLOBSET_BLOB_APPLY);
       error(format("Failed to apply blob %s", blobName), e);
 
-      String category = BLOB_ERROR_CATEGORIES.getOrDefault(
-        e.getClass(), Category.BLOBSET_BLOB_FETCH_FAILURE);
+      String category = BLOB_ERROR_CATEGORIES.getOrDefault(e.getClass(),
+          Category.BLOBSET_BLOB_FETCH_FAILURE);
       logEvent(category, "For blob key " + blobName + ":\n", e);
     } finally {
       publishAsynchronousState();
