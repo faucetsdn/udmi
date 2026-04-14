@@ -122,16 +122,27 @@ public class PubberPublisherHost extends PubberManager implements PublisherHost 
     markStateDirty();
   }
 
+  private void updateModuleVersionInState() {
+    if (moduleEmulator != null) {
+      if (getDeviceState().system.software == null) {
+        getDeviceState().system.software = new HashMap<>();
+      }
+      getDeviceState().system.software.put(SOFTWARE_MODULE_KEY, moduleEmulator.getModuleVersion());
+      markStateDirty();
+    }
+  }
+
   private void initModuleForOtaUpdates() {
     String dynamicDir = "out/pubber_module_repo_" + config.serialNo;
     moduleEmulator = new MockGitModuleEmulator(dynamicDir, config.options,
         this::info, this::notice, this::error);
-    moduleEmulator.initModuleForOtaUpdates();
+    moduleEmulator.initialize();
+    updateModuleVersionInState();
   }
 
   private Consumer<String> getBlobHandler(String blobName) {
     return Map.<String, Consumer<String>>of(
-        SOFTWARE_MODULE_KEY, this::handleOtaUpdate
+        SOFTWARE_MODULE_KEY, this::updateModule
     ).get(blobName);
   }
 
@@ -153,8 +164,9 @@ public class PubberPublisherHost extends PubberManager implements PublisherHost 
     }
   }
 
-  private void handleOtaUpdate(String payload) {
-    moduleEmulator.handleOtaUpdate(payload);
+  private void updateModule(String payload) {
+    moduleEmulator.updateTo(payload);
+    updateModuleVersionInState();
   }
 
 

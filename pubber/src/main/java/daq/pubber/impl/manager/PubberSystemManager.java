@@ -4,9 +4,6 @@ import static com.google.udmi.util.GeneralUtils.ifNullThen;
 import static java.lang.String.format;
 
 import daq.pubber.impl.PubberManager;
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -96,41 +93,20 @@ public class PubberSystemManager extends PubberManager implements SystemManager 
       ExtraSystemState state = getSystemState();
       ifNullThen(state.hardware.make, () -> state.hardware.make = "bos");
       ifNullThen(state.hardware.model, () -> state.hardware.model = "pubber");
-      ifNullThen(state.software, () -> state.software = new HashMap<>());
-      state.software.putIfAbsent(DEFAULT_SOFTWARE_KEY, "v1");
-      state.software.put(SOFTWARE_MODULE_KEY, getGitCommitHash());
+      ifNullThen(state.software, () -> {
+        state.software = new HashMap<>();
+        state.software.put(DEFAULT_SOFTWARE_KEY, "v1");
+      });
     }
   }
 
-  private String getGitCommitHash() {
-    try {
-      File repoDir = new File(SOFTWARE_MODULE_DIR);
-      if (!repoDir.exists()) {
-        return "unknown";
-      }
-      
-      File versionFile = new File(repoDir, "version.txt");
-      if (versionFile.exists()) {
-        try (BufferedReader reader = new BufferedReader(new java.io.FileReader(versionFile))) {
-          String line = reader.readLine();
-          if (line != null) {
-            return line.trim();
-          }
-        }
-      }
-      
-      ProcessBuilder pb = new ProcessBuilder("git", "rev-parse", "HEAD");
-      pb.directory(repoDir);
-      Process p = pb.start();
-      try (BufferedReader reader = new BufferedReader(new InputStreamReader(p.getInputStream()))) {
-        String line = reader.readLine();
-        if (line != null) {
-          return line.trim();
-        }
-      }
-    } catch (Exception e) {
-      // Ignore or log
-    }
-    return "unknown";
+  /**
+   * Updates the software version for a specific module in the system state.
+   */
+  public void updateSoftwareModuleVersion(String moduleKey, String version) {
+    ExtraSystemState state = getSystemState();
+    ifNullThen(state.software, () -> state.software = new HashMap<>());
+    state.software.put(moduleKey, version);
   }
+
 }

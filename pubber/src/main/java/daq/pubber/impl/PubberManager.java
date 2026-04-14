@@ -28,7 +28,6 @@ public class PubberManager extends ManagerBase {
   protected static final String PERSISTENT_STORE_FILE = "persistent_data.json";
   protected static final String PERSISTENT_TMP_FORMAT = "/tmp/pubber_%s_" + PERSISTENT_STORE_FILE;
   protected static final String SOFTWARE_MODULE_KEY = "pubber_module";
-  protected static final String SOFTWARE_MODULE_DIR = "out/pubber_module_repo";
 
   protected final PubberConfiguration config;
   protected final PubberOptions options;

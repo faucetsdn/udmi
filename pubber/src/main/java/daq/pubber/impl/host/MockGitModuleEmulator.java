@@ -7,6 +7,9 @@ import static java.lang.String.format;
 import java.io.File;
 import java.util.function.Consumer;
 import org.apache.commons.io.FileUtils;
+import org.eclipse.jgit.api.Git;
+import org.eclipse.jgit.lib.ObjectId;
+import org.eclipse.jgit.lib.Repository;
 import udmi.lib.base.UdmiException.BlobDependencyMismatchException;
 import udmi.lib.base.UdmiException.BlobIncompatibleException;
 import udmi.schema.PubberOptions;
@@ -15,7 +18,6 @@ import udmi.schema.PubberOptions;
  * Mock emulator for Git modules used in OTA updates.
  */
 public class MockGitModuleEmulator {
-
 
   private final File repoDir;
   private final Consumer<String> infoLogger;
@@ -45,7 +47,7 @@ public class MockGitModuleEmulator {
   /**
    * Initializes the module for OTA updates.
    */
-  public void initModuleForOtaUpdates() {
+  public void initialize() {
     try {
       if (repoDir.exists()) {
         FileUtils.deleteDirectory(repoDir);
@@ -54,26 +56,25 @@ public class MockGitModuleEmulator {
         throw new RuntimeException("Failed to create source directory");
       }
 
-      infoLogger.accept(format("Initializing mock module in %s", repoDir.getAbsolutePath()));
-      try {
-        runCommandInDir(repoDir, "git", "init");
-        runCommandInDir(repoDir, "git", "config", "user.name", "Pubber");
-        runCommandInDir(repoDir, "git", "config", "user.email", "pubber@udmi.io");
+      infoLogger.accept(format("Initializing mock JGit module in %s", repoDir.getAbsolutePath()));
 
+      try (Git git = Git.init().setDirectory(repoDir).call()) {
+        // Create v1
         File versionFile = new File(repoDir, "version.txt");
         FileUtils.writeStringToFile(versionFile, "v1", "UTF-8");
-        runCommandInDir(repoDir, "git", "add", ".");
-        runCommandInDir(repoDir, "git", "commit", "-m", "v1");
-        runCommandInDir(repoDir, "git", "tag", "v1");
+        git.add().addFilepattern(".").call();
+        git.commit().setMessage("v1").setAuthor("Pubber", "pubber@udmi.io").call();
+        git.tag().setName("v1").call();
 
+        // Create v2
         FileUtils.writeStringToFile(versionFile, "v2", "UTF-8");
-        runCommandInDir(repoDir, "git", "add", ".");
-        runCommandInDir(repoDir, "git", "commit", "-m", "v2");
-        runCommandInDir(repoDir, "git", "tag", "v2");
-        infoLogger.accept("Isolated repo initialized successfully.");
+        git.add().addFilepattern(".").call();
+        git.commit().setMessage("v2").setAuthor("Pubber", "pubber@udmi.io").call();
+        git.tag().setName("v2").call();
+
+        infoLogger.accept("Isolated JGit repo initialized successfully.");
       } catch (Exception e) {
-        infoLogger.accept(
-            "Git execution failed on host. Falling back to abstract in-memory logic.");
+        infoLogger.accept("JGit execution failed. Falling back to abstract in-memory logic.");
         inMemoryFallback = true;
       }
     } catch (Exception e) {
@@ -86,48 +87,51 @@ public class MockGitModuleEmulator {
    *
    * @param payload The update payload (e.g., commit hash).
    */
-  public void handleOtaUpdate(String payload) {
+  public void updateTo(String payload) {
     if (isTrue(options.hardwareIncompatible)) {
       safeSleep(2000);
-      throw new BlobIncompatibleException("Hardware incompatible static failure intentions");
+      throw new BlobIncompatibleException("Hardware incompatible");
     }
     if (isTrue(options.softwareDependencyMismatch)) {
       safeSleep(2000);
-      throw new BlobDependencyMismatchException(
-          "Software dependencies temporal temporal prerequisite intentions");
+      throw new BlobDependencyMismatchException("Software dependencies mismatch");
     }
+
     String commitHash = payload.trim();
     infoLogger.accept(format("Triggering mock OTA update to commit %s", commitHash));
 
     if (inMemoryFallback) {
       infoLogger.accept("Simulating OTA update delay in-memory...");
       safeSleep(2000);
-      noticeLogger.accept("Mock Git OTA update completed abstractly.");
+      noticeLogger.accept("Mock OTA update completed abstractly.");
       return;
     }
 
-    if (!repoDir.exists()) {
-      throw new RuntimeException("Isolated repo directory not found");
-    }
-
-    try {
+    try (Git git = Git.open(repoDir)) {
       infoLogger.accept("Simulating OTA update delay...");
       safeSleep(2000);
-      runCommandInDir(repoDir, "git", "checkout", commitHash);
-      noticeLogger.accept("Git OTA update completed successfully.");
+      git.checkout().setName(commitHash).call();
+      noticeLogger.accept("JGit OTA update completed successfully.");
     } catch (Exception e) {
-      throw new RuntimeException("Git operation failed", e);
+      throw new RuntimeException("JGit checkout operation failed", e);
     }
   }
 
-  private void runCommandInDir(File dir, String... command) throws Exception {
-    ProcessBuilder pb = new ProcessBuilder(command);
-    pb.directory(dir);
-    pb.redirectErrorStream(true);
-    Process p = pb.start();
-    int exitCode = p.waitFor();
-    if (exitCode != 0) {
-      throw new RuntimeException(format("Command failed with exit code %d", exitCode));
+  /**
+   * Retrieves the current commit hash (or fallback state) of the managed module.
+   */
+  public String getModuleVersion() {
+    if (inMemoryFallback || !repoDir.exists()) {
+      return "unknown";
+    }
+
+    try (Git git = Git.open(repoDir)) {
+      Repository repository = git.getRepository();
+      ObjectId head = repository.resolve("HEAD");
+      return head != null ? head.getName() : "unknown";
+    } catch (Exception e) {
+      errorLogger.accept("Failed to resolve module version via JGit: " + e.getMessage());
+      return "unknown";
     }
   }
 }
