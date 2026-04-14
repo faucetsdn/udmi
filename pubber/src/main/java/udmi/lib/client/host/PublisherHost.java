@@ -1,6 +1,7 @@
 package udmi.lib.client.host;
 
 import static com.google.common.base.Preconditions.checkState;
+import static com.google.udmi.util.GeneralUtils.catchToElse;
 import static com.google.udmi.util.GeneralUtils.catchToNull;
 import static com.google.udmi.util.GeneralUtils.deepCopy;
 import static com.google.udmi.util.GeneralUtils.fromJsonString;
