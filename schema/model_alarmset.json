@@ -1,0 +1,66 @@
+{
+  "$udmi_version": "1.5.2",
+  "title": "Alarmset Model",
+  "description": "Alarmset representing the abstract system expectation for what the device should be doing, and how it should be configured and operated. This block specifies the expected alarms that a device holds",
+  "type": "object",
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$defaultPresentation": "alarmset",
+  "additionalProperties": false,
+  "properties": {
+    "alarms": {
+      "description": "Information about a specific alarm name of the device.",
+      "additionalProperties": false,
+      "maxProperties": 150,
+      "existingJavaType": "java.util.HashMap<String, AlarmAlarmsetModel>",
+      "patternProperties": {
+        "^[a-z][a-z0-9]*(_[a-z0-9]+)*$": {
+          "$ref": "file:model_alarmset_alarm.json#"
+        }
+      },
+      "$presentation": {
+        "presentationProperties": {
+          "alarms_template_name": {
+            "$ref": "file:model_alarmset_alarm.json#"
+          }
+        }
+      }
+    },
+    "exclude_units_from_config": {
+      "type": "boolean",
+      "$presentation": {
+        "display": "show",
+        "style": "bold"
+      }
+    },
+    "exclude_alarms_from_config": {
+      "type": "boolean",
+      "$presentation": {
+        "display": "show",
+        "style": "bold"
+      }
+    },
+    "sample_limit_sec": {
+      "description": "Minimum time between sample updates for the device (including complete and COV updates). Updates more frequent than this should be coalesced into one update.",
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 86400,
+      "$presentation": {
+        "display": "show",
+        "style": "bold"
+      }
+    },
+    "sample_rate_sec": {
+      "description": "Maximum time between samples for the device to send out a complete update. It can send out updates more frequently than this. Default to 600.",
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 86400,
+      "$presentation": {
+        "display": "show",
+        "style": "bold"
+      }
+    }
+  },
+  "required": [
+    "alarms"
+  ]
+}

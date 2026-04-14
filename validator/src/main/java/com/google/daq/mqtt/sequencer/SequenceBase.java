@@ -2455,6 +2455,7 @@ public class SequenceBase {
     }
     addToParity(parity, "system", deviceConfig.system, deviceState.system);
     addToParity(parity, "pointset", deviceConfig.pointset, deviceState.pointset);
+    addToParity(parity, "alarmset", deviceConfig.alarmset, deviceState.alarmset);
     addToParity(parity, "gateway", deviceConfig.gateway, deviceState.gateway);
     addToParity(parity, "localnet", deviceConfig.localnet, deviceState.localnet);
     addToParity(parity, "discovery", deviceConfig.discovery, deviceState.discovery);

@@ -40,6 +40,9 @@
     "blobset": {
       "$ref": "file:config_blobset.json#"
     },
+    "alarmset": {
+      "$ref": "file:config_alarmset.json#"
+    },
     "pointset": {
       "$ref": "file:config_pointset.json#"
     }
