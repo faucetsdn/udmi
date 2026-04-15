@@ -66,7 +66,6 @@ could be used with a **WARNING** level for a warning case during normal operatio
       * _incompatible_: (**ERROR**) Blob is incompatible with the device
       * _dependency_: (**ERROR**) Expected software dependencies not found
     * _apply_: (**NOTICE**) Applying a blob update
-    * _abort_: (**NOTICE**) Aborting/Canceling a blob update
 * _validation_: Handling validation pipeline messages
   * _device_: Conditions specific to processing a given device message.
     * _receive_: (**DEBUG**) Receiving/processing a message for validation.
