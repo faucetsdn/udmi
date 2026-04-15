@@ -436,8 +436,8 @@ public class BlobsetSequences extends SequenceBase {
         return version.equals(softwareVersion);
       });
     } else {
-      checkThat(blobName + " state indicates error", () -> 
-        blobBlobsetState.status != null && blobBlobsetState.status.level >= Level.ERROR.value());
+      checkThat(blobName + " state indicates error", () ->
+          blobBlobsetState.status != null && blobBlobsetState.status.level >= Level.ERROR.value());
     }
   }
 

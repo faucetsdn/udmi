@@ -37,7 +37,6 @@
     { "pattern": "^blobset\\.blob\\.verify\\.incompatible$" },
     { "pattern": "^blobset\\.blob\\.verify\\.dependency$" },
     { "pattern": "^blobset\\.blob\\.apply$" },
-    { "pattern": "^blobset\\.blob\\.abort$" },
     { "pattern": "^validation\\.device\\.receive$" },
     { "pattern": "^validation\\.device\\.schema$" },
     { "pattern": "^validation\\.device\\.content$" },

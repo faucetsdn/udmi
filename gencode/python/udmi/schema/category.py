@@ -110,9 +110,6 @@ class Category(Enum):
     # Applying a blob update
     BLOBSET_BLOB_APPLY = ("blobset.blob.apply", Level.NOTICE)
 
-    # Aborting/Canceling a blob update
-    BLOBSET_BLOB_ABORT = ("blobset.blob.abort", Level.NOTICE)
-
     # Receiving/processing a message for validation.
     VALIDATION_DEVICE_RECEIVE = ("validation.device.receive", Level.DEBUG)
 

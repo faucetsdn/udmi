@@ -61,8 +61,8 @@ import udmi.lib.base.MqttDevice;
 import udmi.lib.base.MqttPublisher;
 import udmi.lib.base.UdmiException.BlobDependencyMismatchException;
 import udmi.lib.base.UdmiException.BlobIncompatibleException;
-import udmi.lib.base.UdmiException.HashMismatchException;
 import udmi.lib.base.UdmiException.BlobParseException;
+import udmi.lib.base.UdmiException.HashMismatchException;
 import udmi.lib.client.manager.DeviceManager;
 import udmi.lib.client.manager.PointsetManager;
 import udmi.lib.client.manager.SystemManager;
@@ -128,10 +128,10 @@ public interface PublisherHost extends ManagerHost {
       "events/mapping", "{ NOT VALID JSON!");
   List<String> INVALID_KEYS = new ArrayList<>(INVALID_REPLACEMENTS.keySet());
   Map<Class<? extends Exception>, String> BLOB_ERROR_CATEGORIES = ImmutableMap.of(
-    BlobParseException.class, Category.BLOBSET_BLOB_VERIFY_PARSE,
-    HashMismatchException.class, Category.BLOBSET_BLOB_VERIFY_HASH,
-    BlobIncompatibleException.class, Category.BLOBSET_BLOB_VERIFY_INCOMPATIBLE,
-    BlobDependencyMismatchException.class, Category.BLOBSET_BLOB_VERIFY_DEPENDENCY
+      BlobParseException.class, Category.BLOBSET_BLOB_VERIFY_PARSE,
+      HashMismatchException.class, Category.BLOBSET_BLOB_VERIFY_HASH,
+      BlobIncompatibleException.class, Category.BLOBSET_BLOB_VERIFY_INCOMPATIBLE,
+      BlobDependencyMismatchException.class, Category.BLOBSET_BLOB_VERIFY_DEPENDENCY
   );
   String CORRUPT_STATE_MESSAGE = "!&*@(!*&@!";
 
@@ -200,7 +200,7 @@ public interface PublisherHost extends ManagerHost {
         continue;
       }
       if (!isSupportedBlob(blobName)) {
-        warn("Skipping unknown blob key: " + blobName);
+        warn("Skipping unknown blob name: " + blobName);
         continue;
       }
       processBlob(blobName);
@@ -243,7 +243,7 @@ public interface PublisherHost extends ManagerHost {
 
       String category = BLOB_ERROR_CATEGORIES.getOrDefault(e.getClass(),
           Category.BLOBSET_BLOB_FETCH_FAILURE);
-      logEvent(category, "For blob key " + blobName + ":\n", e);
+      logEvent(category, "For blob name " + blobName + ":\n", e);
     } finally {
       publishAsynchronousState();
     }
@@ -270,7 +270,7 @@ public interface PublisherHost extends ManagerHost {
   }
 
   /**
-   * Checks if the application supports the given blob key.
+   * Checks if the application supports the given blob name.
    */
   default boolean isSupportedBlob(String blobName) {
     return false;
@@ -901,11 +901,11 @@ public interface PublisherHost extends ManagerHost {
   /**
    * Ensures the {@code blobset} and its {@code blobs} map are initialized in the device state.
    */
-  default BlobBlobsetState ensureBlobsetState(String blobKey) {
+  default BlobBlobsetState ensureBlobsetState(String blobName) {
     getDeviceState().blobset = ofNullable(getDeviceState().blobset).orElseGet(BlobsetState::new);
     getDeviceState().blobset.blobs = ofNullable(getDeviceState().blobset.blobs)
             .orElseGet(HashMap::new);
-    return getDeviceState().blobset.blobs.computeIfAbsent(blobKey,
+    return getDeviceState().blobset.blobs.computeIfAbsent(blobName,
             key -> new BlobBlobsetState());
   }
 
@@ -1218,9 +1218,9 @@ public interface PublisherHost extends ManagerHost {
   /**
    * Persist active generation for a blob.
    */
-  default void persistAppliedBlob(String blobKey, String generation) {
-    notice("Persisting generation " + generation + " for blob key " + blobKey);
-    getPersistentData().applied_blobs.put(blobKey, generation);
+  default void persistAppliedBlob(String blobName, String generation) {
+    notice("Persisting generation " + generation + " for blob name " + blobName);
+    getPersistentData().applied_blobs.put(blobName, generation);
     writePersistentStore();
   }
 
