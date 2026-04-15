@@ -1,0 +1,69 @@
+{
+  "blobset" : {
+    "blobs" : {
+      "pubber_module" : {
+        "phase" : "final",
+        "generation" : "TIMESTAMP"
+      }
+    }
+  },
+  "discovery" : {
+    "families" : { }
+  },
+  "localnet" : {
+    "families" : {
+      "ether" : {
+        "addr" : "42:01:ac:11:23:ac"
+      },
+      "ipv4" : {
+        "addr" : "172.17.35.172"
+      },
+      "vendor" : {
+        "addr" : "28179023"
+      },
+      "bacnet" : {
+        "addr" : "27312"
+      }
+    }
+  },
+  "pointset" : {
+    "points" : {
+      "filter_alarm_pressure_status" : {
+        "units" : "No-units"
+      },
+      "filter_differential_pressure_setpoint" : {
+        "units" : "Bars",
+        "value_state" : "applied"
+      },
+      "filter_differential_pressure_sensor" : {
+        "units" : "Degrees-Celsius"
+      }
+    }
+  },
+  "system" : {
+    "last_config" : "TIMESTAMP",
+    "operation" : {
+      "operational" : true,
+      "last_start" : "TIMESTAMP",
+      "restart_count" : 1,
+      "mode" : "initial"
+    },
+    "serial_no" : "sequencer-30900",
+    "hardware" : {
+      "make" : "BOS",
+      "model" : "pubber"
+    },
+    "software" : {
+      "firmware" : "v1",
+      "pubber_module" : "v2"
+    },
+    "status" : {
+      "message" : "success",
+      "category" : "system.config.parse",
+      "timestamp" : "TIMESTAMP",
+      "level" : 100
+    }
+  },
+  "timestamp" : "TIMESTAMP",
+  "version" : "1.5.3"
+}

@@ -1,0 +1,17 @@
+{
+  "blobs" : {
+    "pubber_module" : {
+      "phase" : "final",
+      "status" : {
+        "message" : "Failed to decode base64 payload",
+        "detail" : "udmi.lib.base.UdmiException$BlobParseException: Failed to decode base64 payload\n\tat udmi.lib.client.host.PublisherHost.acquireBlobData(PublisherHost.java:149)\n\tat udmi.lib.client.host.PublisherHost.extractConfigBlob(PublisherHost.java:188)\n\tat udmi.lib.client.host.PublisherHost.processBlob(PublisherHost.java:230)\n\tat udmi.lib.client.host.PublisherHost.processBlobset(PublisherHost.java:206)\n\tat udmi.lib.client.host.PublisherHost.processConfigUpdate(PublisherHost.java:647)\n\tat udmi.lib.client.host.PublisherHost.configHandler(PublisherHost.java:592)\n\tat udmi.lib.base.MqttPublisher$MqttCallbackHandler.messageArrivedCore(MqttPublisher.java:789)\n\tat udmi.lib.base.MqttPublisher$MqttCallbackHandler.messageArrived(MqttPublisher.java:754)\n\tat org.eclipse.paho.client.mqttv3.internal.CommsCallback.deliverMessage(CommsCallback.java:519)\n\tat org.eclipse.paho.client.mqttv3.internal.CommsCallback.handleMessage(CommsCallback.java:417)\n\tat org.eclipse.paho.client.mqttv3.internal.CommsCallback.run(CommsCallback.java:214)\n\tat java.base/java.lang.Thread.run(Thread.java:1583)\n",
+        "category" : "blobset.blob.apply",
+        "timestamp" : "TIMESTAMP",
+        "level" : 500
+      },
+      "generation" : "TIMESTAMP"
+    }
+  },
+  "timestamp" : "TIMESTAMP",
+  "version" : "1.5.3"
+}
