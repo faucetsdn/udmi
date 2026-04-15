@@ -6,6 +6,16 @@ package udmi.lib.base;
 public class UdmiException {
 
   /**
+   * Exception thrown when a blob cannot be parsed.
+   */
+  public static class BlobParseException extends RuntimeException {
+    public BlobParseException(String message) {
+      super(message);
+    }
+  }
+
+
+  /**
    * Exception thrown when there is a hash mismatch.
    */
   public static class HashMismatchException extends RuntimeException {

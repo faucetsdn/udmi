@@ -62,6 +62,7 @@ import udmi.lib.base.MqttPublisher;
 import udmi.lib.base.UdmiException.BlobDependencyMismatchException;
 import udmi.lib.base.UdmiException.BlobIncompatibleException;
 import udmi.lib.base.UdmiException.HashMismatchException;
+import udmi.lib.base.UdmiException.BlobParseException;
 import udmi.lib.client.manager.DeviceManager;
 import udmi.lib.client.manager.PointsetManager;
 import udmi.lib.client.manager.SystemManager;
@@ -127,9 +128,10 @@ public interface PublisherHost extends ManagerHost {
       "events/mapping", "{ NOT VALID JSON!");
   List<String> INVALID_KEYS = new ArrayList<>(INVALID_REPLACEMENTS.keySet());
   Map<Class<? extends Exception>, String> BLOB_ERROR_CATEGORIES = ImmutableMap.of(
-      HashMismatchException.class, Category.BLOBSET_BLOB_VERIFY_HASH,
-      BlobIncompatibleException.class, Category.BLOBSET_BLOB_VERIFY_INCOMPATIBLE,
-      BlobDependencyMismatchException.class, Category.BLOBSET_BLOB_VERIFY_DEPENDENCY
+    BlobParseException.class, Category.BLOBSET_BLOB_VERIFY_PARSE,
+    HashMismatchException.class, Category.BLOBSET_BLOB_VERIFY_HASH,
+    BlobIncompatibleException.class, Category.BLOBSET_BLOB_VERIFY_INCOMPATIBLE,
+    BlobDependencyMismatchException.class, Category.BLOBSET_BLOB_VERIFY_DEPENDENCY
   );
   String CORRUPT_STATE_MESSAGE = "!&*@(!*&@!";
 
@@ -140,12 +142,26 @@ public interface PublisherHost extends ManagerHost {
     if (!url.startsWith(DATA_URL_JSON_BASE64)) {
       throw new RuntimeException(format("URL encoding not supported: %s", url));
     }
-    byte[] dataBytes = Base64.getDecoder().decode(url.substring(DATA_URL_JSON_BASE64.length()));
+    byte[] dataBytes;
+    try {
+      dataBytes = Base64.getDecoder().decode(url.substring(DATA_URL_JSON_BASE64.length()));
+    } catch (IllegalArgumentException e) {
+      throw new BlobParseException("Failed to decode base64 payload");
+    }
+    
     String dataSha256 = GeneralUtils.sha256(dataBytes);
     if (!dataSha256.equals(sha256)) {
       throw new HashMismatchException("Blob data hash mismatch");
     }
-    return new String(dataBytes);
+    
+    String decoded = new String(dataBytes);
+    try {
+      parseJson(decoded);
+    } catch (Exception e) {
+      throw new BlobParseException("Failed to parse blob payload as JSON");
+    }
+    
+    return decoded;
   }
 
   Config getDeviceConfig();
@@ -238,7 +254,7 @@ public interface PublisherHost extends ManagerHost {
    */
   default void applyBlobPayload(String blobName, BlobBlobsetConfig config,
       BlobBlobsetState state, String payload) {
-    logEvent(Category.BLOBSET_BLOB_APPLY, "Applying OTA update...");
+    logEvent(Category.BLOBSET_BLOB_APPLY, "Applying blob update...");
     installBlobPayload(blobName, payload);
 
     state.phase = BlobPhase.FINAL;
@@ -248,6 +264,8 @@ public interface PublisherHost extends ManagerHost {
 
     persistAppliedBlob(blobName, isoConvert(config.generation));
 
+    // Explicitly flush logs before operations like restart!
+    getDeviceManager().getSystemManager().sendSystemEvent();
     activateBlob(blobName);
   }
 
@@ -916,11 +934,12 @@ public interface PublisherHost extends ManagerHost {
       entry = entryFromException(category, e);
     } else {
       entry = new Entry();
-      entry.category = Category.BLOBSET_BLOB_APPLY;
+      entry.category = category;
       entry.timestamp = new Date();
       entry.message = message;
       entry.level = Category.LEVEL.getOrDefault(category, Level.INFO).value();
     }
+    getDeviceManager().localLog(entry);
     publishLogMessage(entry, getDeviceId());
   }
 

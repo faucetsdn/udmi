@@ -128,7 +128,7 @@ public class MockGitModuleEmulator {
     try (Git git = Git.open(repoDir)) {
       Repository repository = git.getRepository();
       ObjectId head = repository.resolve("HEAD");
-      return head != null ? head.getName() : "unknown";
+      return head != null ? git.describe().setTarget(head).call() : "unknown";
     } catch (Exception e) {
       errorLogger.accept("Failed to resolve module version via JGit: " + e.getMessage());
       return "unknown";
