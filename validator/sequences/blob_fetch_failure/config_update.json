@@ -1,0 +1,55 @@
+{
+  "timestamp" : "TIMESTAMP",
+  "version" : "@@@cloud udmi version###git-a9aa0b81-dirty",
+  "system" : {
+    "min_loglevel" : 100,
+    "metrics_rate_sec" : 10,
+    "operation" : {
+      "last_start" : "TIMESTAMP"
+    },
+    "testing" : {
+      "sequence_name" : "blob_fetch_failure"
+    }
+  },
+  "discovery" : {
+    "families" : {
+      "vendor" : { },
+      "bacnet" : { }
+    }
+  },
+  "localnet" : {
+    "families" : {
+      "ether" : { },
+      "ipv4" : { },
+      "vendor" : { },
+      "bacnet" : { }
+    }
+  },
+  "blobset" : {
+    "blobs" : {
+      "pubber_module" : {
+        "phase" : "final",
+        "url" : "@@@software data###http://localhost:1/bogus",
+        "sha256" : "@@@blob data hash###0000000000000000000000000000000000000000000000000000000000000000",
+        "generation" : "TIMESTAMP"
+      }
+    }
+  },
+  "pointset" : {
+    "sample_rate_sec" : 300,
+    "points" : {
+      "filter_differential_pressure_setpoint" : {
+        "units" : "Bars",
+        "set_value" : 98
+      },
+      "filter_alarm_pressure_status" : {
+        "ref" : "BV11.present_value",
+        "units" : "No-units"
+      },
+      "filter_differential_pressure_sensor" : {
+        "ref" : "AV12.present_value",
+        "units" : "Degrees-Celsius"
+      }
+    }
+  }
+}

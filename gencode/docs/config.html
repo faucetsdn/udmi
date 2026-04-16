@@ -2622,12 +2622,12 @@
 </span>
 
      <span class="badge badge-info no-additional">No Additional Properties</span>
+        
 
+        
+        
 
-
-
-
-
+        
 <div class="accordion" id="accordionalarmset_timestamp">
     <div class="card">
         <div class="card-header" id="headingalarmset_timestamp">
@@ -2659,10 +2659,10 @@
     <a href="#alarmset_timestamp" onclick="anchorLink('alarmset_timestamp')">timestamp</a></div><span class="badge badge-dark value-type">Type: string</span><span class="badge badge-info value-type">Format: date-time</span><br/>
 <span class="description"><p>RFC 3339 UTC timestamp the configuration was generated</p>
 </span>
+        
 
-
-
-
+        
+        
 
         <br/>
 <div class="badge badge-secondary">Example:</div>
@@ -2704,12 +2704,12 @@
     <a href="#alarmset_version" onclick="anchorLink('alarmset_version')">version</a></div><span class="badge badge-dark value-type">Type: string</span><br/>
 <span class="description"><p>Version of the UDMI schema</p>
 </span>
+        
 
+        
+        
 
-
-
-
-
+        
             </div>
         </div>
     </div>
@@ -2745,12 +2745,12 @@
     <a href="#alarmset_state_etag" onclick="anchorLink('alarmset_state_etag')">state_etag</a></div><span class="badge badge-dark value-type">Type: string</span><br/>
 <span class="description"><p>The <code>state_etag</code> of the last <em>state</em> message sent by the device. <a href="../../docs/specs/sequences/writeback.md">Writeback documentation</a></p>
 </span>
+        
 
-
-
+        
         <p><span class="badge badge-light restriction max-length-restriction" id="alarmset_state_etag_maxLength">Must be at most <code>32</code> characters long</span></p>
 
-
+        
             </div>
         </div>
     </div>
@@ -2786,12 +2786,12 @@
     <a href="#alarmset_set_value_expiry" onclick="anchorLink('alarmset_set_value_expiry')">set_value_expiry</a></div><span class="badge badge-dark value-type">Type: string</span><span class="badge badge-info value-type">Format: date-time</span><br/>
 <span class="description"><p>An expiry for the the device to revert to baseline (no set value). <a href="../../docs/specs/sequences/writeback.md">Writeback documentation</a></p>
 </span>
+        
 
+        
+        
 
-
-
-
-
+        
             </div>
         </div>
     </div>
@@ -2827,12 +2827,12 @@
     <a href="#alarmset_sample_limit_sec" onclick="anchorLink('alarmset_sample_limit_sec')">sample_limit_sec</a></div><span class="badge badge-dark value-type">Type: integer</span><br/>
 <span class="description"><p>Minimum time between sample updates for the device (including complete and COV updates). Updates more frequent than this should be coalesced into one update.</p>
 </span>
+        
 
-
-
+        
         <p><span class="badge badge-light restriction numeric-restriction" id="alarmset_sample_limit_sec_number">Value must be greater or equal to <code>0</code> and lesser or equal to <code>86400</code></span></p>
 
-
+        
             </div>
         </div>
     </div>
@@ -2868,12 +2868,12 @@
     <a href="#alarmset_sample_rate_sec" onclick="anchorLink('alarmset_sample_rate_sec')">sample_rate_sec</a></div><span class="badge badge-dark value-type">Type: integer</span> <span class="badge badge-success default-value">Default: 300</span><br/>
 <span class="description"><p>Maximum time between samples for the device to send out a complete update. It can send out updates more frequently than this. Default to 300.</p>
 </span>
+        
 
-
-
+        
         <p><span class="badge badge-light restriction numeric-restriction" id="alarmset_sample_rate_sec_number">Value must be greater or equal to <code>1</code> and lesser or equal to <code>86400</code></span></p>
 
-
+        
             </div>
         </div>
     </div>
@@ -2909,12 +2909,12 @@
     <a href="#alarmset_alarms" onclick="anchorLink('alarmset_alarms')">alarms</a></div><span class="badge badge-dark value-type">Type: object</span><br/>
 <span class="description"><p>The alarms defined in this dictionary is the authoritative source indicating the representative alarms for the device (in both <code>telemetry</code> and <code>state</code> messages). <a href="../../docs/messages/alarmset.md">Alarmset doumentation</a></p>
 </span> <span class="badge badge-info no-additional">No Additional Properties</span>
+        
 
+        
+        
 
-
-
-
-
+        
 <div class="accordion" id="accordionalarmset_alarms_pattern1">
     <div class="card">
         <div class="card-header" id="headingalarmset_alarms_pattern1">
@@ -2959,12 +2959,12 @@
 
 
      <span class="badge badge-info no-additional">No Additional Properties</span>
+        
 
+        
+        
 
-
-
-
-
+        
 <div class="accordion" id="accordionalarmset_alarms_pattern1_ref">
     <div class="card">
         <div class="card-header" id="headingalarmset_alarms_pattern1_ref">
@@ -3010,10 +3010,10 @@
     <a href="#alarmset_alarms_pattern1_ref" onclick="anchorLink('alarmset_alarms_pattern1_ref')">ref</a></div><span class="badge badge-dark value-type">Type: string</span><br/>
 <span class="description"><p>Mapping for the alarm to an internal resource (e.g. BACnet object reference)</p>
 </span>
+        
 
-
-
-
+        
+        
 
         <br/>
 <div class="badge badge-secondary">Example:</div>
@@ -3069,12 +3069,12 @@
     <a href="#alarmset_alarms_pattern1_units" onclick="anchorLink('alarmset_alarms_pattern1_units')">units</a></div><span class="badge badge-dark value-type">Type: string</span><br/>
 <span class="description"><p>If specified, indicates the units the device should report the data in.</p>
 </span>
+        
 
+        
+        
 
-
-
-
-
+        
             </div>
         </div>
     </div>
@@ -3143,7 +3143,7 @@
         </li></ul>
 <div class="tab-content card"><div class="tab-pane fade card-body active show"
              id="tab-pane_alarmset_alarms_pattern1_set_value_oneOf_i0" role="tabpanel">
-
+            
 
     <div class="breadcrumbs">root
         <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
@@ -3189,15 +3189,15 @@
         </svg>
     <a href="#alarmset_alarms_pattern1_set_value_oneOf_i0" onclick="anchorLink('alarmset_alarms_pattern1_set_value_oneOf_i0')">item 0</a></div><span class="badge badge-dark value-type">Type: string</span><br/>
 
+        
 
+        
+        
 
-
-
-
-
+        
         </div><div class="tab-pane fade card-body "
              id="tab-pane_alarmset_alarms_pattern1_set_value_oneOf_i1" role="tabpanel">
-
+            
 
     <div class="breadcrumbs">root
         <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
@@ -3243,15 +3243,15 @@
         </svg>
     <a href="#alarmset_alarms_pattern1_set_value_oneOf_i1" onclick="anchorLink('alarmset_alarms_pattern1_set_value_oneOf_i1')">item 1</a></div><span class="badge badge-dark value-type">Type: boolean</span><br/>
 
+        
 
+        
+        
 
-
-
-
-
+        
         </div><div class="tab-pane fade card-body "
              id="tab-pane_alarmset_alarms_pattern1_set_value_oneOf_i2" role="tabpanel">
-
+            
 
     <div class="breadcrumbs">root
         <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
@@ -3297,17 +3297,17 @@
         </svg>
     <a href="#alarmset_alarms_pattern1_set_value_oneOf_i2" onclick="anchorLink('alarmset_alarms_pattern1_set_value_oneOf_i2')">item 2</a></div><span class="badge badge-dark value-type">Type: number</span><br/>
 
+        
 
+        
+        
 
-
-
-
-
+        
         </div></div></div>
+        
 
-
-
-
+        
+        
 
         <br/>
 <div class="badge badge-secondary">Example:</div>
@@ -3363,10 +3363,10 @@
     <a href="#alarmset_alarms_pattern1_stop_time" onclick="anchorLink('alarmset_alarms_pattern1_stop_time')">stop_time</a></div><span class="badge badge-dark value-type">Type: string</span><span class="badge badge-info value-type">Format: date-time</span><br/>
 <span class="description"><p>RFC 3339 timestamp for the specified alarm write easing to stop</p>
 </span>
+        
 
-
-
-
+        
+        
 
         <br/>
 <div class="badge badge-secondary">Example:</div>
@@ -3422,12 +3422,12 @@
     <a href="#alarmset_alarms_pattern1_cov_increment" onclick="anchorLink('alarmset_alarms_pattern1_cov_increment')">cov_increment</a></div><span class="badge badge-dark value-type">Type: number</span><br/>
 <span class="description"><p>The CoV (change of value) increment, which when set, enables CoV on the alarm and defines the minimum change in present value of the respective alarm before an update is published</p>
 </span>
+        
 
-
-
+        
         <p><span class="badge badge-light restriction numeric-restriction" id="alarmset_alarms_pattern1_cov_increment_number">Value must be greater or equal to <code>0</code></span></p>
 
-
+        
             </div>
         </div>
     </div>

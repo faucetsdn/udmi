@@ -58,6 +58,13 @@ could be used with a **WARNING** level for a warning case during normal operatio
   * _blob_: Conditions specific to an individual blob
     * _receive_: (**DEBUG**) About receiving a blob update
     * _fetch_: (**DEBUG**) Fetching a blob update
+      * _success_: (**DEBUG**) Successfully fetched a blob
+      * _failure_: (**ERROR**) Blob fetch failed
+    * _verify_: Verifying a blob
+      * _parse_: (**ERROR**) Error parsing blob
+      * _hash_: (**ERROR**) Blob hash mismatch
+      * _incompatible_: (**ERROR**) Blob is incompatible with the device
+      * _dependency_: (**ERROR**) Expected software dependencies not found
     * _apply_: (**NOTICE**) Applying a blob update
 * _validation_: Handling validation pipeline messages
   * _device_: Conditions specific to processing a given device message.

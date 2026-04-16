@@ -99,4 +99,14 @@ public class PubberSystemManager extends PubberManager implements SystemManager 
       });
     }
   }
+
+  /**
+   * Updates the software version for a specific module in the system state.
+   */
+  public void updateSoftwareModuleVersion(String moduleKey, String version) {
+    ExtraSystemState state = getSystemState();
+    ifNullThen(state.software, () -> state.software = new HashMap<>());
+    state.software.put(moduleKey, version);
+  }
+
 }

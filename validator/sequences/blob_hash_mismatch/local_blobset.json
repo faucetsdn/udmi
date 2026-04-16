@@ -1,0 +1,10 @@
+{
+  "blobs" : {
+    "pubber_module" : {
+      "phase" : "final",
+      "url" : "@@@software data###data:application/json;base64,djI=",
+      "sha256" : "@@@blob data hash###0000000000000000000000000000000000000000000000000000000000000000",
+      "generation" : "TIMESTAMP"
+    }
+  }
+}

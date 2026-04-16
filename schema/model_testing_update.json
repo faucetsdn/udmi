@@ -1,0 +1,25 @@
+{
+  "$udmi_version": "1.5.2",
+  "title": "Blob Update Testing Model",
+  "type": "object",
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "additionalProperties": false,
+  "properties": {
+    "blob_name": {
+      "description": "Blob name for the payload",
+      "type": "string"
+    },
+    "url": {
+      "description": "URL for OTA update",
+      "type": "string"
+    },
+    "sha256": {
+      "description": "SHA256 hash of the payload",
+      "type": "string"
+    },
+    "version": {
+      "description": "Expected software version",
+      "type": "string"
+    }
+  }
+}

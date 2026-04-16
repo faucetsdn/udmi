@@ -34,6 +34,12 @@ Some caveats:
 * [bad_point_ref](#bad_point_ref-preview): Error handling for badly formed gateway point ref Test skipped: Not a proxied device
 * [bad_target_address](#bad_target_address-preview): Error handling for badly formed gateway target address Test skipped: Not a proxied device
 * [bad_target_family](#bad_target_family-preview): Error handling for badly formed gateway target family Test skipped: Not a proxied device
+* [blob_dependency_mismatch](#blob_dependency_mismatch-preview)
+* [blob_fetch_failure](#blob_fetch_failure-preview)
+* [blob_hash_mismatch](#blob_hash_mismatch-preview)
+* [blob_incompatible](#blob_incompatible-preview)
+* [blob_parse_failure](#blob_parse_failure-preview)
+* [blob_update_success](#blob_update_success-preview)
 * [broken_config](#broken_config-stable): Check that the device correctly handles a broken (non-json) config message.
 * [config_logging](#config_logging-stable): Check that the device publishes minimum required log entries when receiving config
 * [device_config_acked](#device_config_acked-stable): Check that the device MQTT-acknowledges a sent config.
@@ -90,6 +96,73 @@ Error handling for badly formed gateway target family
 
 
 Test skipped: Not a proxied device
+
+## blob_dependency_mismatch (PREVIEW)
+
+1. Update config trigger blob update for pubber_module
+    * Add `blobset` = { "blobs": { "pubber_module": { "phase": `final`, "generation": `blob generation`, "sha256": `blob data hash`, "url": `software data` } } }
+1. Wait for pubber_module phase transitions
+1. Wait for pubber_module phase is FINAL
+1. Wait until system logs level `NOTICE` category `blobset.blob.apply`
+1. Check that pubber_module software version reflects update
+
+Test passed.
+
+## blob_fetch_failure (PREVIEW)
+
+1. Update config trigger blob update for pubber_module
+    * Add `blobset` = { "blobs": { "pubber_module": { "phase": `final`, "generation": `blob generation`, "sha256": `blob data hash`, "url": `software data` } } }
+1. Wait for pubber_module phase transitions
+1. Wait for pubber_module phase is FINAL
+1. Wait until system logs level `ERROR` category `blobset.blob.fetch.failure`
+1. Check that pubber_module state indicates error
+
+Test passed.
+
+## blob_hash_mismatch (PREVIEW)
+
+1. Update config trigger blob update for pubber_module
+    * Add `blobset` = { "blobs": { "pubber_module": { "phase": `final`, "generation": `blob generation`, "sha256": `blob data hash`, "url": `software data` } } }
+1. Wait for pubber_module phase transitions
+1. Wait for pubber_module phase is FINAL
+1. Wait until system logs level `ERROR` category `blobset.blob.verify.hash`
+1. Check that pubber_module state indicates error
+
+Test passed.
+
+## blob_incompatible (PREVIEW)
+
+1. Update config trigger blob update for pubber_module
+    * Add `blobset` = { "blobs": { "pubber_module": { "phase": `final`, "generation": `blob generation`, "sha256": `blob data hash`, "url": `software data` } } }
+1. Wait for pubber_module phase transitions
+1. Wait for pubber_module phase is FINAL
+1. Wait until system logs level `NOTICE` category `blobset.blob.apply`
+1. Check that pubber_module software version reflects update
+
+Test passed.
+
+## blob_parse_failure (PREVIEW)
+
+1. Update config trigger blob update for pubber_module
+    * Add `blobset` = { "blobs": { "pubber_module": { "phase": `final`, "generation": `blob generation`, "sha256": `blob data hash`, "url": `software data` } } }
+1. Wait for pubber_module phase transitions
+1. Wait for pubber_module phase is FINAL
+1. Wait until system logs level `ERROR` category `blobset.blob.verify.parse`
+1. Check that pubber_module state indicates error
+
+Test passed.
+
+## blob_update_success (PREVIEW)
+
+1. Update config trigger blob update for pubber_module
+    * Add `blobset` = { "blobs": { "pubber_module": { "phase": `final`, "generation": `blob generation`, "sha256": `blob data hash`, "url": `software data` } } }
+1. Wait for pubber_module phase transitions
+1. Wait for pubber_module phase is FINAL
+1. Wait until system logs level `NOTICE` category `blobset.blob.apply`
+1. Check that pubber_module state is success
+1. Check that pubber_module software version reflects update
+
+Test passed.
 
 ## broken_config (STABLE)
 

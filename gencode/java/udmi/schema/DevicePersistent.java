@@ -1,6 +1,7 @@
 
 package udmi.schema;
 
+import java.util.HashMap;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyDescription;
@@ -16,7 +17,8 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
     "endpoint",
-    "restart_count"
+    "restart_count",
+    "applied_blobs"
 })
 public class DevicePersistent {
 
@@ -31,12 +33,15 @@ public class DevicePersistent {
     public EndpointConfiguration endpoint;
     @JsonProperty("restart_count")
     public Integer restart_count;
+    @JsonProperty("applied_blobs")
+    public HashMap<String, String> applied_blobs;
 
     @Override
     public int hashCode() {
         int result = 1;
         result = ((result* 31)+((this.endpoint == null)? 0 :this.endpoint.hashCode()));
         result = ((result* 31)+((this.restart_count == null)? 0 :this.restart_count.hashCode()));
+        result = ((result* 31)+((this.applied_blobs == null)? 0 :this.applied_blobs.hashCode()));
         return result;
     }
 
@@ -49,7 +54,7 @@ public class DevicePersistent {
             return false;
         }
         DevicePersistent rhs = ((DevicePersistent) other);
-        return (((this.endpoint == rhs.endpoint)||((this.endpoint!= null)&&this.endpoint.equals(rhs.endpoint)))&&((this.restart_count == rhs.restart_count)||((this.restart_count!= null)&&this.restart_count.equals(rhs.restart_count))));
+        return ((((this.endpoint == rhs.endpoint)||((this.endpoint!= null)&&this.endpoint.equals(rhs.endpoint)))&&((this.restart_count == rhs.restart_count)||((this.restart_count!= null)&&this.restart_count.equals(rhs.restart_count))))&&((this.applied_blobs == rhs.applied_blobs)||((this.applied_blobs!= null)&&this.applied_blobs.equals(rhs.applied_blobs))));
     }
 
 }

@@ -1,6 +1,7 @@
 package udmi.lib.client.host;
 
 import static com.google.common.base.Preconditions.checkState;
+import static com.google.udmi.util.GeneralUtils.catchToElse;
 import static com.google.udmi.util.GeneralUtils.catchToNull;
 import static com.google.udmi.util.GeneralUtils.deepCopy;
 import static com.google.udmi.util.GeneralUtils.fromJsonString;
@@ -40,6 +41,7 @@ import java.lang.reflect.Field;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Base64;
 import java.util.Date;
 import java.util.HashMap;
@@ -57,14 +59,20 @@ import org.slf4j.LoggerFactory;
 import udmi.lib.base.GatewayError;
 import udmi.lib.base.MqttDevice;
 import udmi.lib.base.MqttPublisher;
+import udmi.lib.base.UdmiException.BlobDependencyMismatchException;
+import udmi.lib.base.UdmiException.BlobIncompatibleException;
+import udmi.lib.base.UdmiException.BlobParseException;
+import udmi.lib.base.UdmiException.HashMismatchException;
 import udmi.lib.client.manager.DeviceManager;
 import udmi.lib.client.manager.PointsetManager;
 import udmi.lib.client.manager.SystemManager;
 import udmi.lib.intf.FamilyProvider;
 import udmi.lib.intf.ManagerHost;
 import udmi.schema.BlobBlobsetConfig;
+import udmi.schema.BlobBlobsetConfig.BlobPhase;
 import udmi.schema.BlobBlobsetState;
 import udmi.schema.BlobsetConfig;
+import udmi.schema.BlobsetConfig.SystemBlobsets;
 import udmi.schema.BlobsetState;
 import udmi.schema.Category;
 import udmi.schema.Config;
@@ -119,6 +127,12 @@ public interface PublisherHost extends ManagerHost {
       "events/gateway", "{ \"testing\": \"This is prematurely terminated",
       "events/mapping", "{ NOT VALID JSON!");
   List<String> INVALID_KEYS = new ArrayList<>(INVALID_REPLACEMENTS.keySet());
+  Map<Class<? extends Exception>, String> BLOB_ERROR_CATEGORIES = ImmutableMap.of(
+      BlobParseException.class, Category.BLOBSET_BLOB_VERIFY_PARSE,
+      HashMismatchException.class, Category.BLOBSET_BLOB_VERIFY_HASH,
+      BlobIncompatibleException.class, Category.BLOBSET_BLOB_VERIFY_INCOMPATIBLE,
+      BlobDependencyMismatchException.class, Category.BLOBSET_BLOB_VERIFY_DEPENDENCY
+  );
   String CORRUPT_STATE_MESSAGE = "!&*@(!*&@!";
 
   /**
@@ -128,37 +142,150 @@ public interface PublisherHost extends ManagerHost {
     if (!url.startsWith(DATA_URL_JSON_BASE64)) {
       throw new RuntimeException(format("URL encoding not supported: %s", url));
     }
-    byte[] dataBytes = Base64.getDecoder().decode(url.substring(DATA_URL_JSON_BASE64.length()));
+    byte[] dataBytes;
+    try {
+      dataBytes = Base64.getDecoder().decode(url.substring(DATA_URL_JSON_BASE64.length()));
+    } catch (IllegalArgumentException e) {
+      throw new BlobParseException("Failed to decode base64 payload");
+    }
+    
     String dataSha256 = GeneralUtils.sha256(dataBytes);
     if (!dataSha256.equals(sha256)) {
-      throw new RuntimeException("Blob data hash mismatch");
+      throw new HashMismatchException("Blob data hash mismatch");
     }
-    return new String(dataBytes);
+    
+    String decoded = new String(dataBytes);
+    try {
+      parseJson(decoded);
+    } catch (Exception e) {
+      throw new BlobParseException("Failed to parse blob payload as JSON");
+    }
+    
+    return decoded;
   }
 
   Config getDeviceConfig();
 
   /**
+   * Returns the configured blobs or an empty map if no blobs are configured.
+   */
+  default HashMap<String, BlobBlobsetConfig> getBlobs() {
+    return catchToElse(() -> getDeviceConfig().blobset.blobs, new HashMap<>());
+  }
+
+  default BlobBlobsetConfig getConfigBlob(String blobName) {
+    return getBlobs().get(blobName);
+  }
+
+  /**
    * Extracts the configuration blob with the specified name, if it exists and is in the final
    * phase.
    */
-  default String extractConfigBlob(String blobName) {
+  default String extractConfigBlob(String blobName) throws Exception {
     // TODO: Refactor to get any blob meta parameters.
-    try {
-      HashMap<String, BlobBlobsetConfig> blobs = catchToNull(() -> getDeviceConfig().blobset.blobs);
-      if (blobs == null) {
-        return null;
-      }
-      BlobBlobsetConfig blobBlobsetConfig = blobs.get(blobName);
-      if (blobBlobsetConfig != null && FINAL.equals(blobBlobsetConfig.phase)) {
-        return acquireBlobData(blobBlobsetConfig.url, blobBlobsetConfig.sha256);
-      }
-      return null;
-    } catch (Exception e) {
-      EndpointConfiguration endpointConfiguration = new EndpointConfiguration();
-      endpointConfiguration.error = e.toString();
-      return stringify(endpointConfiguration);
+    BlobBlobsetConfig blobBlobsetConfig = getConfigBlob(blobName);
+    if (blobBlobsetConfig != null && FINAL.equals(blobBlobsetConfig.phase)) {
+      return acquireBlobData(blobBlobsetConfig.url, blobBlobsetConfig.sha256);
     }
+    return null;
+  }
+
+
+  /**
+   * Processes all blobs in the configuration, skipping system blobs (e.g. _iot_endpoint_config).
+   */
+  default void processBlobset() {
+    for (String blobName : getBlobs().keySet()) {
+      if (Arrays.stream(SystemBlobsets.values()).anyMatch(e -> e.value().equals(blobName))) {
+        continue;
+      }
+      if (!isSupportedBlob(blobName)) {
+        warn("Skipping unknown blob name: " + blobName);
+        continue;
+      }
+      processBlob(blobName);
+    }
+  }
+
+  /**
+   * Processes the blob config for a given blob name and handles state transitions.
+   */
+  default void processBlob(String blobName) {
+    BlobBlobsetConfig config = getConfigBlob(blobName);
+    if (config == null) {
+      return;
+    }
+    BlobBlobsetState state = ensureBlobsetState(blobName);
+    if (config.generation != null && config.generation.equals(state.generation)
+        && BlobPhase.FINAL.equals(state.phase)) {
+      return;
+    }
+    logEvent(Category.BLOBSET_BLOB_RECEIVE, "Received blob update config for " + blobName);
+    try {
+      state.phase = BlobPhase.APPLY;
+      state.generation = config.generation;
+      publishSynchronousState();
+
+      logEvent(Category.BLOBSET_BLOB_FETCH, "Fetching blob data for " + blobName);
+      String payload = extractConfigBlob(blobName);
+      if (payload == null) {
+        warn(format("Blob %s not ready for extraction", blobName));
+        return;
+      }
+      logEvent(Category.BLOBSET_BLOB_FETCH_SUCCESS,
+          "Successfully fetched blob data for " + blobName);
+
+      applyBlobPayload(blobName, config, state, payload);
+    } catch (Exception e) {
+      state.phase = BlobPhase.FINAL;
+      state.status = exceptionStatus(e, Category.BLOBSET_BLOB_APPLY);
+      error(format("Failed to apply blob %s", blobName), e);
+
+      String category = BLOB_ERROR_CATEGORIES.getOrDefault(e.getClass(),
+          Category.BLOBSET_BLOB_FETCH_FAILURE);
+      logEvent(category, "For blob name " + blobName + ":\n", e);
+    } finally {
+      publishAsynchronousState();
+    }
+  }
+
+  /**
+   * Applies the payload for the given blob, setting the proper state transitions and persisting.
+   */
+  default void applyBlobPayload(String blobName, BlobBlobsetConfig config,
+      BlobBlobsetState state, String payload) {
+    logEvent(Category.BLOBSET_BLOB_APPLY, "Applying blob update...");
+    installBlobPayload(blobName, payload);
+
+    state.phase = BlobPhase.FINAL;
+    state.status = null;
+    notice(format("Blob %s successfully applied", blobName));
+    publishSynchronousState();
+
+    persistAppliedBlob(blobName, isoConvert(config.generation));
+
+    // Explicitly flush logs before operations like restart!
+    getDeviceManager().getSystemManager().sendSystemEvent();
+    activateBlob(blobName);
+  }
+
+  /**
+   * Checks if the application supports the given blob name.
+   */
+  default boolean isSupportedBlob(String blobName) {
+    return false;
+  }
+
+  /**
+   * Handles application-specific blob processing.
+   */
+  void installBlobPayload(String blobName, String payload);
+
+  /**
+   * Apply blob with actions such as restarts.
+   */
+  default void activateBlob(String blobName) {
+    // Default no-op
   }
 
   default boolean isConnected() {
@@ -517,6 +644,7 @@ public interface PublisherHost extends ManagerHost {
         info(format("%s received config %s", getTimestamp(), isoConvert(configMsg.timestamp)));
         getDeviceManager().updateConfig(configMsg);
         extractEndpointBlobConfig();
+        processBlobset();
       } else {
         info(format("%s defaulting empty config", getTimestamp()));
       }
@@ -636,17 +764,21 @@ public interface PublisherHost extends ManagerHost {
     try {
       String iotConfig = extractConfigBlob(IOT_ENDPOINT_CONFIG.value());
       setExtractedEndpoint(fromJsonString(iotConfig, EndpointConfiguration.class));
-      if (getExtractedEndpoint() != null) {
-        if (getDeviceConfig().blobset.blobs.containsKey(IOT_ENDPOINT_CONFIG.value())) {
-          BlobBlobsetConfig config = getDeviceConfig()
-                  .blobset.blobs.get(IOT_ENDPOINT_CONFIG.value());
-          getExtractedEndpoint().generation = config.generation;
-        }
-      }
     } catch (Exception e) {
-      throw new RuntimeException("While extracting endpoint blob config", e);
+      EndpointConfiguration errorConfig = new EndpointConfiguration();
+      errorConfig.error = e.toString();
+      setExtractedEndpoint(errorConfig);
+    }
+
+    if (getExtractedEndpoint() != null) {
+      if (getDeviceConfig().blobset.blobs.containsKey(IOT_ENDPOINT_CONFIG.value())) {
+        BlobBlobsetConfig config = getDeviceConfig()
+                .blobset.blobs.get(IOT_ENDPOINT_CONFIG.value());
+        getExtractedEndpoint().generation = config.generation;
+      }
     }
     return getExtractedEndpoint();
+
   }
 
   EndpointConfiguration getExtractedEndpoint();
@@ -769,12 +901,19 @@ public interface PublisherHost extends ManagerHost {
   /**
    * Ensures the {@code blobset} and its {@code blobs} map are initialized in the device state.
    */
-  default BlobBlobsetState ensureBlobsetState(BlobsetConfig.SystemBlobsets iotEndpointConfig) {
+  default BlobBlobsetState ensureBlobsetState(String blobName) {
     getDeviceState().blobset = ofNullable(getDeviceState().blobset).orElseGet(BlobsetState::new);
     getDeviceState().blobset.blobs = ofNullable(getDeviceState().blobset.blobs)
             .orElseGet(HashMap::new);
-    return getDeviceState().blobset.blobs.computeIfAbsent(iotEndpointConfig.value(),
+    return getDeviceState().blobset.blobs.computeIfAbsent(blobName,
             key -> new BlobBlobsetState());
+  }
+
+  /**
+   * Ensures the {@code blobset} and its {@code blobs} map are initialized in the device state.
+   */
+  default BlobBlobsetState ensureBlobsetState(BlobsetConfig.SystemBlobsets iotEndpointConfig) {
+    return ensureBlobsetState(iotEndpointConfig.value());
   }
 
   private String getClientId(String forRegistry) {
@@ -784,6 +923,28 @@ public interface PublisherHost extends ManagerHost {
 
   default void publishLogMessage(Entry logEntry, String targetId) {
     getDeviceManager().publishLogMessage(logEntry, targetId);
+  }
+
+  /**
+   * Logs an event with a specific category and level.
+   */
+  default void logEvent(String category, String message, Throwable e) {
+    Entry entry;
+    if (e != null) {
+      entry = entryFromException(category, e);
+    } else {
+      entry = new Entry();
+      entry.category = category;
+      entry.timestamp = new Date();
+      entry.message = message;
+      entry.level = Category.LEVEL.getOrDefault(category, Level.INFO).value();
+    }
+    getDeviceManager().localLog(entry);
+    publishLogMessage(entry, getDeviceId());
+  }
+
+  default void logEvent(String category, String message) {
+    logEvent(category, message, null);
   }
 
   /**
@@ -1051,6 +1212,15 @@ public interface PublisherHost extends ManagerHost {
   default void persistEndpoint(EndpointConfiguration endpoint) {
     notice("Persisting connection endpoint");
     getPersistentData().endpoint = endpoint;
+    writePersistentStore();
+  }
+
+  /**
+   * Persist active generation for a blob.
+   */
+  default void persistAppliedBlob(String blobName, String generation) {
+    notice("Persisting generation " + generation + " for blob name " + blobName);
+    getPersistentData().applied_blobs.put(blobName, generation);
     writePersistentStore();
   }
 

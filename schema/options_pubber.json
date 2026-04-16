@@ -127,6 +127,14 @@
     },
     "softwareFirmwareValue": {
       "type": "string"
+    },
+    "hardwareIncompatible": {
+      "type": "boolean",
+      "description": "If true, the pubber will simulate a physical hardware mismatch during OTA update."
+    },
+    "softwareDependencyMismatch": {
+      "type": "boolean",
+      "description": "If true, the pubber will simulate a temporal software dependency mismatch during OTA update."
     }
   }
 }

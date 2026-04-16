@@ -20,4 +20,6 @@ These are used to label individual line-item tests.
 * _pointset_: Pointset and telemetry capabilities
 * _system_: Basic system operations
   * _mode_: System mode
+  * _software_: System software
+    * _updates_: Over the air software updates
 * _writeback_: Writeback related operations

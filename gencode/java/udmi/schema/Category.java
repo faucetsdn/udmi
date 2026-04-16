@@ -171,6 +171,42 @@ public class Category {
     public static final int BLOBSET_BLOB_FETCH_VALUE = DEBUG.value();
     static { LEVEL.put(BLOBSET_BLOB_FETCH, DEBUG); }
 
+    // Successfully fetched a blob
+    public static final String BLOBSET_BLOB_FETCH_SUCCESS = "blobset.blob.fetch.success";
+    public static final Level BLOBSET_BLOB_FETCH_SUCCESS_LEVEL = DEBUG;
+    public static final int BLOBSET_BLOB_FETCH_SUCCESS_VALUE = DEBUG.value();
+    static { LEVEL.put(BLOBSET_BLOB_FETCH_SUCCESS, DEBUG); }
+
+    // Blob fetch failed
+    public static final String BLOBSET_BLOB_FETCH_FAILURE = "blobset.blob.fetch.failure";
+    public static final Level BLOBSET_BLOB_FETCH_FAILURE_LEVEL = ERROR;
+    public static final int BLOBSET_BLOB_FETCH_FAILURE_VALUE = ERROR.value();
+    static { LEVEL.put(BLOBSET_BLOB_FETCH_FAILURE, ERROR); }
+
+    // Error parsing blob
+    public static final String BLOBSET_BLOB_VERIFY_PARSE = "blobset.blob.verify.parse";
+    public static final Level BLOBSET_BLOB_VERIFY_PARSE_LEVEL = ERROR;
+    public static final int BLOBSET_BLOB_VERIFY_PARSE_VALUE = ERROR.value();
+    static { LEVEL.put(BLOBSET_BLOB_VERIFY_PARSE, ERROR); }
+
+    // Blob hash mismatch
+    public static final String BLOBSET_BLOB_VERIFY_HASH = "blobset.blob.verify.hash";
+    public static final Level BLOBSET_BLOB_VERIFY_HASH_LEVEL = ERROR;
+    public static final int BLOBSET_BLOB_VERIFY_HASH_VALUE = ERROR.value();
+    static { LEVEL.put(BLOBSET_BLOB_VERIFY_HASH, ERROR); }
+
+    // Blob is incompatible with the device
+    public static final String BLOBSET_BLOB_VERIFY_INCOMPATIBLE = "blobset.blob.verify.incompatible";
+    public static final Level BLOBSET_BLOB_VERIFY_INCOMPATIBLE_LEVEL = ERROR;
+    public static final int BLOBSET_BLOB_VERIFY_INCOMPATIBLE_VALUE = ERROR.value();
+    static { LEVEL.put(BLOBSET_BLOB_VERIFY_INCOMPATIBLE, ERROR); }
+
+    // Expected software dependencies not found
+    public static final String BLOBSET_BLOB_VERIFY_DEPENDENCY = "blobset.blob.verify.dependency";
+    public static final Level BLOBSET_BLOB_VERIFY_DEPENDENCY_LEVEL = ERROR;
+    public static final int BLOBSET_BLOB_VERIFY_DEPENDENCY_VALUE = ERROR.value();
+    static { LEVEL.put(BLOBSET_BLOB_VERIFY_DEPENDENCY, ERROR); }
+
     // Applying a blob update
     public static final String BLOBSET_BLOB_APPLY = "blobset.blob.apply";
     public static final Level BLOBSET_BLOB_APPLY_LEVEL = NOTICE;

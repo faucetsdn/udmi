@@ -1,0 +1,10 @@
+{
+  "blobs" : {
+    "pubber_module" : {
+      "phase" : "final",
+      "url" : "@@@software data###http://localhost:1/bogus",
+      "sha256" : "@@@blob data hash###0000000000000000000000000000000000000000000000000000000000000000",
+      "generation" : "TIMESTAMP"
+    }
+  }
+}

@@ -1,0 +1,212 @@
+TIMESTAMP INFO    device.log             Configured with auth_type RS256
+TIMESTAMP INFO    device.log             Using addresses from default interface: ens4 for family: ipv4
+TIMESTAMP INFO    device.log             Family ipv4 address is 172.17.35.172
+TIMESTAMP INFO    device.log             Using addresses from default interface: ens4 for family: ether
+TIMESTAMP INFO    device.log             Family ether address is 42:01:ac:11:23:ac
+TIMESTAMP INFO    device.log             Resetting persistent store /usr/local/google/home/heykhyati/Projects/udmi_clone/udmi/sites/udmi_site_model/out/devices/AHU-1/persistent_data.json
+TIMESTAMP INFO    device.log             Loading endpoint into persistent data from configuration
+TIMESTAMP WARNING device.log             Updating persistent store:
+{
+  "endpoint" : {
+    "protocol" : "mqtt",
+    "transport" : "ssl",
+    "hostname" : "localhost",
+    "client_id" : "/r/ZZ-TRI-FECTA/d/AHU-1",
+    "topic_prefix" : "/r/ZZ-TRI-FECTA/d/AHU-1",
+    "auth_provider" : {
+      "basic" : {
+        "username" : "/r/ZZ-TRI-FECTA/d/AHU-1",
+        "password" : "38269d11"
+      }
+    }
+  },
+  "restart_count" : 1,
+  "applied_blobs" : { }
+}
+TIMESTAMP INFO    device.log             Starting pubber AHU-1, serial sequencer-13238, mac null, gateway null, options noPersist
+TIMESTAMP INFO    device.log             Initializing mock JGit module in /usr/local/google/home/heykhyati/Projects/udmi_clone/udmi/out/pubber_module_repo_sequencer-13238
+TIMESTAMP INFO    device.log             Isolated JGit repo initialized successfully.
+TIMESTAMP WARNING device.log             Starting connection 1776256753183 with 0
+TIMESTAMP INFO    device.log             Loading device key bytes from /usr/local/google/home/heykhyati/Projects/udmi_clone/udmi/sites/udmi_site_model/devices/AHU-1/rsa_private.pkcs8
+TIMESTAMP INFO    device.log             CA cert file: /usr/local/google/home/heykhyati/Projects/udmi_clone/udmi/sites/udmi_site_model/reflector/ca.crt
+TIMESTAMP INFO    device.log             Device cert file: /usr/local/google/home/heykhyati/Projects/udmi_clone/udmi/sites/udmi_site_model/devices/AHU-1/rsa_private.crt
+TIMESTAMP INFO    device.log             Private key file: /usr/local/google/home/heykhyati/Projects/udmi_clone/udmi/sites/udmi_site_model/devices/AHU-1/rsa_private.pem
+TIMESTAMP INFO    device.log             Password sha256 6b5344e1
+TIMESTAMP WARNING device.log             Creating new config latch for AHU-1
+TIMESTAMP
+TIMESTAMP WARNING device.log             Dropping state update until config received...
+TIMESTAMP
+TIMESTAMP WARNING device.log             Dropping state update until config received...
+TIMESTAMP INFO    device.log             Device AHU-1 config handler
+TIMESTAMP
+TIMESTAMP WARNING device.log             Dropping state update until config received...
+TIMESTAMP INFO    device.log             Connection complete.
+TIMESTAMP WARNING device.log             Received config for config latch AHU-1
+TIMESTAMP WARNING device.log             Starting AHU-1 PubberPublisherHost sender with delay 10s
+TIMESTAMP WARNING device.log             Start waiting 10s for config latch for AHU-1
+TIMESTAMP WARNING device.log             Ending connection 1776256753183 with 1
+TIMESTAMP
+TIMESTAMP WARNING device.log             Starting AHU-1 PubberSystemManager sender with delay 10s
+TIMESTAMP WARNING device.log             Starting AHU-1 PubberPointsetManager sender with delay 300s
+TIMESTAMP NOTICE  system.config.apply    success
+TIMESTAMP NOTICE  system.config.apply    success
+TIMESTAMP DEBUG   device.log             value of noWriteback: false
+TIMESTAMP DEBUG   device.log             value of noWriteback: false
+TIMESTAMP DEBUG   device.log             value of noWriteback: false
+TIMESTAMP DEBUG   device.log             State update defer 1995ms
+TIMESTAMP NOTICE  system.config.apply    success
+TIMESTAMP DEBUG   device.log             State update defer 1994ms
+TIMESTAMP DEBUG   device.log             State update defer 1993ms
+TIMESTAMP DEBUG   device.log             State update defer 1992ms
+TIMESTAMP DEBUG   system.config.receive  success
+TIMESTAMP DEBUG   device.log             State update defer 1842ms
+TIMESTAMP DEBUG   system.config.parse    success
+TIMESTAMP INFO    device.log             Device AHU-1 config handler
+TIMESTAMP DEBUG   device.log             State update defer 1842ms
+TIMESTAMP DEBUG   device.log             Config update AHU-1 (blob_incompatible)
+TIMESTAMP
+TIMESTAMP DEBUG   device.log             value of noWriteback: false
+TIMESTAMP DEBUG   device.log             value of noWriteback: false
+TIMESTAMP DEBUG   device.log             value of noWriteback: false
+TIMESTAMP NOTICE  system.config.apply    success
+TIMESTAMP DEBUG   device.log             State update defer 1838ms
+TIMESTAMP DEBUG   device.log             State update defer 1837ms
+TIMESTAMP DEBUG   device.log             State update defer 1837ms
+TIMESTAMP DEBUG   device.log             State update defer 1837ms
+TIMESTAMP DEBUG   device.log             State update defer 0ms
+TIMESTAMP
+TIMESTAMP DEBUG   device.log             State update AHU-1 (blob_incompatible)
+TIMESTAMP DEBUG   system.config.receive  success
+TIMESTAMP DEBUG   device.log             State update defer -482ms
+TIMESTAMP DEBUG   system.config.parse    success
+TIMESTAMP
+TIMESTAMP DEBUG   device.log             State update AHU-1 (blob_incompatible)
+TIMESTAMP DEBUG   device.log             Config update AHU-1 (blob_incompatible)
+TIMESTAMP
+TIMESTAMP DEBUG   device.log             value of noWriteback: false
+TIMESTAMP DEBUG   device.log             value of noWriteback: false
+TIMESTAMP DEBUG   device.log             value of noWriteback: false
+TIMESTAMP NOTICE  system.config.apply    success
+TIMESTAMP DEBUG   device.log             State update defer 1996ms
+TIMESTAMP DEBUG   device.log             State update defer 0ms
+TIMESTAMP
+TIMESTAMP DEBUG   device.log             State update AHU-1 (blob_incompatible)
+TIMESTAMP DEBUG   system.config.receive  success
+TIMESTAMP DEBUG   system.config.parse    success
+TIMESTAMP DEBUG   device.log             State update defer -1056ms
+TIMESTAMP INFO    device.log             Device AHU-1 config handler
+TIMESTAMP
+TIMESTAMP DEBUG   device.log             Config update AHU-1 (blob_incompatible)
+TIMESTAMP DEBUG   device.log             State update AHU-1 (blob_incompatible)
+TIMESTAMP
+TIMESTAMP DEBUG   device.log             value of noWriteback: false
+TIMESTAMP DEBUG   device.log             value of noWriteback: false
+TIMESTAMP DEBUG   device.log             value of noWriteback: false
+TIMESTAMP NOTICE  system.config.apply    success
+TIMESTAMP DEBUG   device.log             State update defer 1995ms
+TIMESTAMP DEBUG   device.log             State update defer 1994ms
+TIMESTAMP DEBUG   device.log             State update defer 0ms
+TIMESTAMP
+TIMESTAMP DEBUG   device.log             State update AHU-1 (blob_incompatible)
+TIMESTAMP DEBUG   system.config.receive  success
+TIMESTAMP DEBUG   system.config.parse    success
+TIMESTAMP DEBUG   device.log             State update defer -1407ms
+TIMESTAMP INFO    device.log             Device AHU-1 config handler
+TIMESTAMP DEBUG   device.log             State update AHU-1 (blob_incompatible)
+TIMESTAMP DEBUG   device.log             Config update AHU-1 (blob_incompatible)
+TIMESTAMP
+TIMESTAMP DEBUG   device.log             value of noWriteback: false
+TIMESTAMP DEBUG   device.log             value of noWriteback: false
+TIMESTAMP DEBUG   device.log             value of noWriteback: false
+TIMESTAMP NOTICE  system.config.apply    success
+TIMESTAMP DEBUG   device.log             State update defer 1994ms
+TIMESTAMP DEBUG   device.log             State update defer 1993ms
+TIMESTAMP DEBUG   device.log             State update defer 1992ms
+TIMESTAMP DEBUG   device.log             State update defer 1992ms
+TIMESTAMP DEBUG   system.config.receive  success
+TIMESTAMP DEBUG   system.config.parse    success
+TIMESTAMP DEBUG   device.log             State update defer 1710ms
+TIMESTAMP INFO    device.log             Device AHU-1 config handler
+TIMESTAMP DEBUG   device.log             State update defer 1709ms
+TIMESTAMP DEBUG   device.log             Config update AHU-1 (blob_incompatible)
+TIMESTAMP
+TIMESTAMP DEBUG   device.log             value of noWriteback: false
+TIMESTAMP DEBUG   device.log             value of noWriteback: false
+TIMESTAMP DEBUG   device.log             value of noWriteback: false
+TIMESTAMP NOTICE  system.config.apply    success
+TIMESTAMP DEBUG   device.log             State update defer 1704ms
+TIMESTAMP DEBUG   system.config.receive  success
+TIMESTAMP DEBUG   system.config.parse    success
+TIMESTAMP DEBUG   device.log             State update defer 798ms
+TIMESTAMP INFO    device.log             Device AHU-1 config handler
+TIMESTAMP DEBUG   device.log             State update defer 797ms
+TIMESTAMP DEBUG   device.log             Config update AHU-1 (blob_incompatible)
+TIMESTAMP
+TIMESTAMP DEBUG   device.log             value of noWriteback: false
+TIMESTAMP DEBUG   device.log             value of noWriteback: false
+TIMESTAMP DEBUG   device.log             value of noWriteback: false
+TIMESTAMP NOTICE  system.config.apply    success
+TIMESTAMP DEBUG   device.log             State update defer 793ms
+TIMESTAMP DEBUG   system.config.receive  success
+TIMESTAMP DEBUG   device.log             State update defer 560ms
+TIMESTAMP DEBUG   system.config.parse    success
+TIMESTAMP INFO    device.log             Device AHU-1 config handler
+TIMESTAMP DEBUG   device.log             Config update AHU-1 (blob_incompatible)
+TIMESTAMP
+TIMESTAMP DEBUG   device.log             value of noWriteback: false
+TIMESTAMP DEBUG   device.log             value of noWriteback: false
+TIMESTAMP DEBUG   device.log             value of noWriteback: false
+TIMESTAMP NOTICE  system.config.apply    success
+TIMESTAMP DEBUG   device.log             State update defer 554ms
+TIMESTAMP DEBUG   device.log             State update defer 0ms
+TIMESTAMP
+TIMESTAMP DEBUG   device.log             State update AHU-1 (blob_incompatible)
+TIMESTAMP DEBUG   system.config.receive  success
+TIMESTAMP DEBUG   device.log             State update defer 1426ms
+TIMESTAMP DEBUG   system.config.parse    success
+TIMESTAMP INFO    device.log             Device AHU-1 config handler
+TIMESTAMP DEBUG   device.log             State update defer 1425ms
+TIMESTAMP DEBUG   device.log             Config update AHU-1 (blob_incompatible)
+TIMESTAMP
+TIMESTAMP DEBUG   device.log             value of noWriteback: false
+TIMESTAMP DEBUG   device.log             value of noWriteback: false
+TIMESTAMP DEBUG   device.log             value of noWriteback: false
+TIMESTAMP DEBUG   blobset.blob.receive   Received blob update config for pubber_module
+TIMESTAMP
+TIMESTAMP WARNING device.log             State update delay 1417ms
+TIMESTAMP DEBUG   device.log             State update AHU-1 (blob_incompatible)
+TIMESTAMP DEBUG   blobset.blob.fetch     Fetching blob data for pubber_module
+TIMESTAMP DEBUG   blobset.blob.fetch.success Successfully fetched blob data for pubber_module
+TIMESTAMP NOTICE  blobset.blob.apply     Applying blob update...
+TIMESTAMP INFO    device.log             Triggering mock OTA update to commit v2
+TIMESTAMP INFO    device.log             Simulating OTA update delay...
+TIMESTAMP NOTICE  device.log             Mock OTA update completed successfully.
+TIMESTAMP NOTICE  device.log             Blob pubber_module successfully applied
+TIMESTAMP
+TIMESTAMP DEBUG   device.log             State update AHU-1 (blob_incompatible)
+TIMESTAMP for blob name pubber_module
+TIMESTAMP WARNING device.log             Updating persistent store:
+{
+  "endpoint" : {
+    "protocol" : "mqtt",
+    "transport" : "ssl",
+    "hostname" : "localhost",
+    "client_id" : "/r/ZZ-TRI-FECTA/d/AHU-1",
+    "topic_prefix" : "/r/ZZ-TRI-FECTA/d/AHU-1",
+    "gatewayId" : "AHU-1",
+    "deviceId" : "AHU-1",
+    "keyBytes" : "MIIEvQIBADANBgkqhkiG9w0BAQEFAASCBKcwggSjAgEAAoIBAQC+lpjWPAlZrfJDLkMqiYupiO5N5R6RLU5JnFUWvlFyWCxYkFOmH7szJ+n10JWlgJHpqbjJxFZrKn0OqaFI/qr0HhUhQONX88G4u+qt8vleFVlTIw1yDVaV6F92xlYvMblfmAZ8auLsuq+ZgjPd4fPLGRRXm3SxGG5kWTnBPY+sPsxa2MAh8QmYDp1nmj8mLHdsXjAyy8UEr1cNEeJtxLuj/eHD/UUAEv4GDDgvjUK2vNEtgqaZFO+whPyNe5S6m2x/7nxv0DWRZaxXQAgqNonvd+H6JHxMF7kUNzwzBKCOCimFhcFUKDOUg6RfuDAiIBhBZtY4VT2W3MgyCnsmx1G/AgMBAAECggEBAIMnCTfsCpcvD5bRgCEGlBhvhWYPNHC9F7GqJhfHki64pJOxhg68qUrzvZmOF1zT1BVS2TnnpXyLuZFchAPCVIw3I11F1OzSbk4c6ssXeCkZUeXXKkqBCUORrBgFNou1kRZKfLQjrdMwSOS/Z8fZ1LW/pXMAJFY2NMlTaV4kafkh8R4Q0GuWPgJDgbG2JfyGpeDZ7tUIyKP8TFB8USW3Iroetdtsc5yLF1wPVpMxy87ZEUKsTl3zK5CHcBlLHnVhDSCFOlHLknrSUEF7AVmKeRAlq+aDzAaxhAHbM7h9pVLT3HoZJbIhqqFBNvAze9AD3u08833miD11i4gS31J6wxkCgYEA7VR7uyiNMKp5k/7uwAzLZllyGI7X93CBLtVP+YkPEfE5b+LcWpLS1aS0pU+/Mjsuk6wooKcQZ3anFeSe9NbJLvpCGaWA27btfBj99Hhj9qJ5lrK3Z7rhWQwVdMrBGEDNwcOg0NY73DK8Ze1La/7NGX36RyeiQLiLvI2mbtdWbEUCgYEAzZTLxkx7rGwVYWLbsNrJnjb8SII+DV2oqGXYo9+1BNk3gXAKpC5rk7tCC5L+1gSKC3autwN5qtwGR4R/X8LDwcdwKnaVaz5gFJD0w+vKfSAOBemOotrTmg3HXhyeNVO6jNvMP40cd5t5X7yYk5ij4luo/zzILsIj4N9lC32swDMCgYA0EEmIeE/o8izzq4RiuyvPyyV9f7CfBp5AUOlXe5rDu+B2zBS9BeKcnaJHdaQi99qy6JyNCblOiTgEVIAOhCPkW2Au0iDfklSs2aq0e8iqLWBxD8muRs/ywfTfBy+vC2BX9nuL9MNy/epYjeLy0RXbVsiV3Xr5qcJ13bk6LaE25QKBgAUJrmyvlyBEjcmTKJsO4X31Dv2f43FkaCuoQ0TQyJjT0d5kJn6bfJtkLVwnQANynQdm4yUs+qBLQAQkpRJtrWpkPsVrnoHAR455duYOMyoZzP4sGQi4oBLYX5hYzy+zW5D0Ge88wAPWVYUZFAwZ43o6kMuga69ppoNuNgWwELmtAoGAA0U57xnbYK4Qk1LpKVCluBQ662rfKxWWpeKTmGRFN0C1loBpCHdoQzphetFPXRF6480csTydyVwPJTTaZI+vW8rmKu8D1oWoBgkC4Hmr0+TP9hfttOp6oiMRrdVmPJEG8sGjwjXOzfOpvZ7CLDLzzzReK69QcOq08vvOaYuTmiA=",
+    "algorithm" : "RS256",
+    "auth_provider" : {
+      "basic" : {
+        "username" : "/r/ZZ-TRI-FECTA/d/AHU-1",
+        "password" : "38269d11"
+      }
+    }
+  },
+  "restart_count" : 1,
+  "applied_blobs" : {
+    "pubber_module" : "TIMESTAMP"
+  }
+}
+TIMESTAMP NOTICE  validation.feature.sequence Sequence complete

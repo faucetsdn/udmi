@@ -17,7 +17,13 @@ import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertTrue;
 import static udmi.schema.Bucket.ENDPOINT_CONFIG;
 import static udmi.schema.Bucket.SYSTEM_MODE;
+import static udmi.schema.Bucket.SYSTEM_SOFTWARE_UPDATES;
 import static udmi.schema.Category.BLOBSET_BLOB_APPLY;
+import static udmi.schema.Category.BLOBSET_BLOB_FETCH_FAILURE;
+import static udmi.schema.Category.BLOBSET_BLOB_VERIFY_DEPENDENCY;
+import static udmi.schema.Category.BLOBSET_BLOB_VERIFY_HASH;
+import static udmi.schema.Category.BLOBSET_BLOB_VERIFY_INCOMPATIBLE;
+import static udmi.schema.Category.BLOBSET_BLOB_VERIFY_PARSE;
 import static udmi.schema.FeatureDiscovery.FeatureStage.PREVIEW;
 
 import com.google.daq.mqtt.sequencer.Feature;
@@ -39,6 +45,7 @@ import udmi.schema.Basic;
 import udmi.schema.BlobBlobsetConfig;
 import udmi.schema.BlobBlobsetConfig.BlobPhase;
 import udmi.schema.BlobBlobsetState;
+import udmi.schema.BlobUpdateTestingModel;
 import udmi.schema.BlobsetConfig;
 import udmi.schema.BlobsetConfig.SystemBlobsets;
 import udmi.schema.EndpointConfiguration;
@@ -387,4 +394,132 @@ public class BlobsetSequences extends SequenceBase {
     untilTrue("last_start is newer than previous last_start",
         () -> deviceConfig.system.operation.last_start.after(last_start));
   }
+
+  private String triggerBlobUpdate(BlobUpdateTestingModel target) {
+    String blobName = target.blob_name;
+    String url = target.url;
+    String sha256 = target.sha256;
+
+    setDeviceConfigSoftwareBlob(blobName, url, sha256);
+    updateConfig("trigger blob update for " + blobName);
+
+    untilTrue(blobName + " phase transitions", () -> {
+      BlobBlobsetState blobBlobsetState = deviceState.blobset.blobs.get(blobName);
+      return blobBlobsetState != null && (BlobPhase.APPLY.equals(blobBlobsetState.phase)
+          || BlobPhase.FINAL.equals(blobBlobsetState.phase));
+    });
+
+    untilTrue(blobName + " phase is FINAL", () -> {
+      BlobBlobsetState blobBlobsetState = deviceState.blobset.blobs.get(blobName);
+      return blobBlobsetState != null && BlobPhase.FINAL.equals(blobBlobsetState.phase);
+    });
+    
+    return blobName;
+  }
+
+  private void runBlobUpdateTest(BlobUpdateTestingModel target, boolean expectSuccessfulUpdate,
+      String expectedCategory, Level expectedLevel) {
+    String version = target.version;
+    info(format("Testing blob update for blob key %s, version %s", target.blob_name, version));
+
+    String blobName = triggerBlobUpdate(target);
+
+    if (expectedCategory != null) {
+      waitForLog(expectedCategory, expectedLevel);
+    }
+
+    BlobBlobsetState blobBlobsetState = deviceState.blobset.blobs.get(blobName);
+    if (expectSuccessfulUpdate) {
+      checkThat(blobName + " state is success", () -> blobBlobsetState.status == null);
+      checkThat(blobName + " software version reflects update", () -> {
+        String softwareVersion = deviceState.system.software.get(blobName);
+        return version.equals(softwareVersion);
+      });
+    } else {
+      checkThat(blobName + " state indicates error", () ->
+          blobBlobsetState.status != null && blobBlobsetState.status.level >= Level.ERROR.value());
+    }
+  }
+
+  private void runAdaptiveBlobUpdateTest(BlobUpdateTestingModel target,
+      String expectedFailureCategory) {
+    String version = target.version;
+    info(format("Testing adaptive blob update for blob key %s", target.blob_name));
+
+    String blobName = triggerBlobUpdate(target);
+
+    BlobBlobsetState finalState = deviceState.blobset.blobs.get(blobName);
+    if (finalState.status == null) {
+      waitForLog(BLOBSET_BLOB_APPLY, Level.NOTICE);
+      checkThat(blobName + " software version reflects update", () -> {
+        String softwareVersion = deviceState.system.software.get(blobName);
+        return version.equals(softwareVersion);
+      });
+    } else {
+      waitForLog(expectedFailureCategory, Level.ERROR);
+      checkThat(blobName + " state indicates error",
+          () -> finalState.status.level >= Level.ERROR.value());
+    }
+  }
+
+  private void setDeviceConfigSoftwareBlob(String blobName, String url, String sha256) {
+    BlobBlobsetConfig config = new BlobBlobsetConfig();
+    config.url = SemanticValue.describe("software data", url);
+    config.phase = BlobPhase.FINAL;
+    config.generation = SemanticDate.describe("blob generation", new Date());
+    config.sha256 = SemanticValue.describe("blob data hash", sha256);
+
+    BlobsetConfig blobset = new BlobsetConfig();
+    blobset.blobs = new HashMap<>();
+    blobset.blobs.put(blobName, config);
+    deviceConfig.blobset = blobset;
+  }
+
+  private BlobUpdateTestingModel getUpdateTarget(String targetType) {
+    ifTrueSkipTest(
+        deviceMetadata.testing == null || deviceMetadata.testing.blob_update_targets == null,
+        "No blob update targets defined in metadata");
+    BlobUpdateTestingModel target = deviceMetadata.testing.blob_update_targets.get(targetType);
+    ifNullSkipTest(target, "No blob update target defined for type '" + targetType + "'");
+    return target;
+  }
+
+  @Test(timeout = TWO_MINUTES_MS)
+  @Feature(stage = PREVIEW, bucket = SYSTEM_SOFTWARE_UPDATES)
+  public void blob_update_success() {
+    runBlobUpdateTest(getUpdateTarget("success"), true, BLOBSET_BLOB_APPLY, Level.NOTICE);
+  }
+
+  @Test(timeout = TWO_MINUTES_MS)
+  @Feature(stage = PREVIEW, bucket = SYSTEM_SOFTWARE_UPDATES)
+  public void blob_fetch_failure() {
+    runBlobUpdateTest(getUpdateTarget("fail_fetch"), false, BLOBSET_BLOB_FETCH_FAILURE,
+        Level.ERROR);
+  }
+
+  @Test(timeout = TWO_MINUTES_MS)
+  @Feature(stage = PREVIEW, bucket = SYSTEM_SOFTWARE_UPDATES)
+  public void blob_parse_failure() {
+    runBlobUpdateTest(getUpdateTarget("fail_parse"), false, BLOBSET_BLOB_VERIFY_PARSE, Level.ERROR);
+  }
+
+  @Test(timeout = TWO_MINUTES_MS)
+  @Feature(stage = PREVIEW, bucket = SYSTEM_SOFTWARE_UPDATES)
+  public void blob_hash_mismatch() {
+    runBlobUpdateTest(getUpdateTarget("fail_hash"), false, BLOBSET_BLOB_VERIFY_HASH, Level.ERROR);
+  }
+
+  @Test(timeout = TWO_MINUTES_MS)
+  @Feature(stage = PREVIEW, bucket = SYSTEM_SOFTWARE_UPDATES)
+  public void blob_incompatible() {
+    runAdaptiveBlobUpdateTest(getUpdateTarget("success"), BLOBSET_BLOB_VERIFY_INCOMPATIBLE);
+  }
+
+  @Test(timeout = TWO_MINUTES_MS)
+  @Feature(stage = PREVIEW, bucket = SYSTEM_SOFTWARE_UPDATES)
+  public void blob_dependency_mismatch() {
+    runAdaptiveBlobUpdateTest(getUpdateTarget("success"), BLOBSET_BLOB_VERIFY_DEPENDENCY);
+  }
+
 }
+

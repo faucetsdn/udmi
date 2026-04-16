@@ -16,7 +16,8 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
     "nostate",
-    "targets"
+    "targets",
+    "blob_update_targets"
 })
 public class TestingModel {
 
@@ -24,10 +25,13 @@ public class TestingModel {
     public Boolean nostate;
     @JsonProperty("targets")
     public HashMap<String, TargetTestingModel> targets;
+    @JsonProperty("blob_update_targets")
+    public HashMap<String, BlobUpdateTestingModel> blob_update_targets;
 
     @Override
     public int hashCode() {
         int result = 1;
+        result = ((result* 31)+((this.blob_update_targets == null)? 0 :this.blob_update_targets.hashCode()));
         result = ((result* 31)+((this.targets == null)? 0 :this.targets.hashCode()));
         result = ((result* 31)+((this.nostate == null)? 0 :this.nostate.hashCode()));
         return result;
@@ -42,7 +46,7 @@ public class TestingModel {
             return false;
         }
         TestingModel rhs = ((TestingModel) other);
-        return (((this.targets == rhs.targets)||((this.targets!= null)&&this.targets.equals(rhs.targets)))&&((this.nostate == rhs.nostate)||((this.nostate!= null)&&this.nostate.equals(rhs.nostate))));
+        return ((((this.blob_update_targets == rhs.blob_update_targets)||((this.blob_update_targets!= null)&&this.blob_update_targets.equals(rhs.blob_update_targets)))&&((this.targets == rhs.targets)||((this.targets!= null)&&this.targets.equals(rhs.targets))))&&((this.nostate == rhs.nostate)||((this.nostate!= null)&&this.nostate.equals(rhs.nostate))));
     }
 
 }

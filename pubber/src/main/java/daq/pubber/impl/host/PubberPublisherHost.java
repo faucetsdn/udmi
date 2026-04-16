@@ -27,6 +27,7 @@ import daq.pubber.impl.PubberManager;
 import daq.pubber.impl.manager.PubberDeviceManager;
 import java.io.File;
 import java.io.PrintStream;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CountDownLatch;
@@ -35,9 +36,13 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
+import java.util.function.Consumer;
 import udmi.lib.base.MqttDevice;
 import udmi.lib.client.host.PublisherHost;
 import udmi.lib.client.manager.DeviceManager;
+import udmi.schema.BlobBlobsetConfig.BlobPhase;
+import udmi.schema.BlobBlobsetState;
+import udmi.schema.BlobsetState;
 import udmi.schema.DevicePersistent;
 import udmi.schema.EndpointConfiguration;
 import udmi.schema.Metadata;
@@ -53,6 +58,7 @@ public class PubberPublisherHost extends PubberManager implements PublisherHost 
 
   private PubberDeviceManager deviceManager;
   private SiteModel siteModel;
+  private MockGitModuleEmulator moduleEmulator;
 
   /**
    * Start an instance from a configuration file.
@@ -112,8 +118,57 @@ public class PubberPublisherHost extends PubberManager implements PublisherHost 
         config.deviceId, config.serialNo, config.macAddr,
         config.gatewayId, optionsString(config.options)));
 
+    initModuleForOtaUpdates();
     markStateDirty();
   }
+
+  private void updateModuleVersionInState() {
+    if (moduleEmulator != null) {
+      if (getDeviceState().system.software == null) {
+        getDeviceState().system.software = new HashMap<>();
+      }
+      getDeviceState().system.software.put(SOFTWARE_MODULE_KEY, moduleEmulator.getModuleVersion());
+      markStateDirty();
+    }
+  }
+
+  private void initModuleForOtaUpdates() {
+    String dynamicDir = "out/pubber_module_repo_" + config.serialNo;
+    moduleEmulator = new MockGitModuleEmulator(dynamicDir, config.options,
+        this::info, this::notice, this::error);
+    moduleEmulator.initialize();
+    updateModuleVersionInState();
+  }
+
+  private Consumer<String> getBlobHandler(String blobName) {
+    return Map.<String, Consumer<String>>of(
+        SOFTWARE_MODULE_KEY, this::updateModule
+    ).get(blobName);
+  }
+
+  @Override
+  public boolean isSupportedBlob(String blobName) {
+    return getBlobHandler(blobName) != null;
+  }
+
+  @Override
+  public void installBlobPayload(String blobName, String payload) {
+    getBlobHandler(blobName).accept(payload);
+  }
+
+  @Override
+  public void activateBlob(String blobName) {
+    if (SOFTWARE_MODULE_KEY.equals(blobName)) {
+      notice("Post-processing Git OTA update. Restarting...");
+      getDeviceManager().systemLifecycle(Operation.SystemMode.RESTART);
+    }
+  }
+
+  private void updateModule(String payload) {
+    moduleEmulator.updateTo(payload);
+    updateModuleVersionInState();
+  }
+
 
   @Override
   public void initializePersistentStore() {
@@ -131,6 +186,21 @@ public class PubberPublisherHost extends PubberManager implements PublisherHost 
     }
 
     persistentData.restart_count = requireNonNullElse(persistentData.restart_count, 0) + 1;
+
+    if (persistentData.applied_blobs != null) {
+      if (getDeviceState().blobset == null) {
+        getDeviceState().blobset = new BlobsetState();
+        getDeviceState().blobset.blobs = new HashMap<>();
+      }
+      persistentData.applied_blobs.forEach((key, gen) -> {
+        BlobBlobsetState bs = new BlobBlobsetState();
+        bs.phase = BlobPhase.FINAL;
+        bs.generation = java.util.Date.from(java.time.Instant.parse(gen));
+        getDeviceState().blobset.blobs.put(key, bs);
+      });
+    } else {
+      persistentData.applied_blobs = new HashMap<>();
+    }
 
     // If the persistentData contains endpoint configuration, prioritize using that.
     // Otherwise, use the endpoint configuration that came from the Pubber config file on start.
