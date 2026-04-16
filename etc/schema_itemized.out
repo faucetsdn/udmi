@@ -50,6 +50,8 @@
 0 system_last_update RESULT fail schemas state_update_stable STABLE 10/10 Schema violations found
 0 system_last_update RESULT pass schemas device_state_stable STABLE 10/10 Schema validation passed
 1 state_make_model
+1 blob_incompatible
+1 blob_dependency_mismatch
 4 valid_serial_no
 1 system_last_update
 1 system_min_loglevel RESULT fail schemas device_state_alpha ALPHA 10/10 Schema violations found

@@ -65,3 +65,5 @@
 1 RESULT pass gateway bad_target_address PREVIEW 10/10 Sequence complete
 1 RESULT pass gateway bad_point_ref PREVIEW 10/10 Sequence complete
 4 RESULT skip gateway bad_point_ref PREVIEW 0/0 No testing target defined for 'tweaked_ref'
+30 RESULT pass system.software.updates blob_incompatible PREVIEW 10/10 Sequence complete
+31 RESULT pass system.software.updates blob_dependency_mismatch PREVIEW 10/10 Sequence complete
