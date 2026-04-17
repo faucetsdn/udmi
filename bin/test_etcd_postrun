@@ -8,6 +8,7 @@ source etc/shell_common.sh
 
 # Print everything for debug
 udmis/bin/etcdctl get --prefix ""
+more sites/udmi_site_model/devices/AHU-1/* | cat
 
 echo "Verifying key in etcd..."
 GOT_KEY=$(udmis/bin/etcdctl get /r/ZZ-TRI-FECTA/d/AHU-1:auth_key --print-value-only)
