@@ -15,7 +15,7 @@ WANT_KEY=$(cat sites/udmi_site_model/devices/AHU-1/rsa_public.pem)
 if [[ "$WANT_KEY" == "$GOT_KEY" ]]; then
     echo "SUCCESS: Public key correctly found in etcd at /r/TEST_REG/d/DEV-1:auth_key"
 else
-    echo "FAILURE: Public key NOT found or incorrect in etcd. GOT: '$GOT_KEY'" WANT '$WANT_KEY'"
+    echo "FAILURE: Public key NOT found or incorrect in etcd. GOT: '$GOT_KEY' WANT '$WANT_KEY'"
     exit 1
 fi
 
