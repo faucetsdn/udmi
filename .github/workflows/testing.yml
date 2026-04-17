@@ -15,7 +15,7 @@ concurrency:
 
 env:
   # Opt out of Node 20 deprecation warning temporarily
-  ACTIONS_ALLOW_USE_UNSECURE_NODE_VERSION: true
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
 
 jobs:
   unit:
