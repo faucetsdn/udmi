@@ -11,6 +11,7 @@
 - [Messages](../messages/)
 - [Connection Models](connecting.md)
 - [IoT Gateway](gateway.md)
+- [Modbus](modbus.md)
 - [MQTT Client](mqtt_client.md)
 - [Point Mapping](point_mapping.md)
 - [Sequences](sequences/) (device-to-cloud API)

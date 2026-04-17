@@ -248,7 +248,7 @@ public class SequenceBase {
   private static final ObjectDiffEngine SENT_CONFIG_DIFFERNATOR = new ObjectDiffEngine();
   private static final ObjectDiffEngine RECV_CONFIG_DIFFERNATOR = new ObjectDiffEngine();
   private static final ObjectDiffEngine RECV_STATE_DIFFERNATOR = new ObjectDiffEngine();
-  private static final Set<String> configTransactions = new ConcurrentSkipListSet<>();
+  private final Set<String> configTransactions = new ConcurrentSkipListSet<>();
   private static final AtomicReference<String> stateTransaction = new AtomicReference<>();
   private static final Duration MINIMUM_TEST_TIME = Duration.ofSeconds(15);
   private static final Date RESET_LAST_START = new Date(73642);
@@ -2455,6 +2455,7 @@ public class SequenceBase {
     }
     addToParity(parity, "system", deviceConfig.system, deviceState.system);
     addToParity(parity, "pointset", deviceConfig.pointset, deviceState.pointset);
+    addToParity(parity, "alarmset", deviceConfig.alarmset, deviceState.alarmset);
     addToParity(parity, "gateway", deviceConfig.gateway, deviceState.gateway);
     addToParity(parity, "localnet", deviceConfig.localnet, deviceState.localnet);
     addToParity(parity, "discovery", deviceConfig.discovery, deviceState.discovery);

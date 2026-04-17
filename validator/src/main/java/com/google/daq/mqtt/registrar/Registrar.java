@@ -162,8 +162,8 @@ public class Registrar {
   private final CommandLineProcessor commandLineProcessor = new CommandLineProcessor(this,
       usageForms);
   private final AtomicInteger updatedDevices = new AtomicInteger();
-  private final Map<Credential, String> usedCredentials = new ConcurrentHashMap<>();
   private final Map<String, ExternalProcessor> processors = new ConcurrentHashMap<>();
+  private Map<Credential, Set<String>> credentialDevices;
   private CloudIotManager cloudIotManager;
   private File schemaBase;
   private PubSubPusher updatePusher;
@@ -174,6 +174,7 @@ public class Registrar {
   private Set<String> extraDevices;
   private String projectId;
   private boolean updateCloudIoT;
+  private boolean dryRun;
   private Duration idleLimit;
   private Metadata siteDefaults;
   private Map<String, CloudModel> cloudModels;
@@ -199,6 +200,15 @@ public class Registrar {
   private String currentRunTimestamp;
   private String lastRunTimestamp;
   private boolean optimizeRun;
+  private final Map<ModelOperation, AtomicInteger> operationCounts = new ConcurrentHashMap<>();
+
+  private void recordOperation(ModelOperation op, int count) {
+    operationCounts.computeIfAbsent(op, k -> new AtomicInteger()).addAndGet(count);
+  }
+
+  private void recordOperation(ModelOperation op) {
+    recordOperation(op, 1);
+  }
 
   /**
    * Main entry point for registrar.
@@ -293,6 +303,12 @@ public class Registrar {
   private void setQueryOnly() {
     this.queryOnly = true;
     this.updateCloudIoT = false;
+  }
+
+  @CommandLineOption(short_form = "-j", description = "Dry run (just check): log what would "
+      + "happen without making changes")
+  private void setDryRun() {
+    this.dryRun = true;
   }
 
   @CommandLineOption(short_form = "-b", description = "Block unknown devices")
@@ -518,6 +534,11 @@ public class Registrar {
     errorSummary.forEach((key, value) -> System.err.println(
         "  Device " + key + ": " + getErrorSummaryDetail(value)));
     System.err.println("Out of " + workingDevices.size() + " total.");
+    if (!operationCounts.isEmpty()) {
+      System.err.println("Operations:");
+      operationCounts.forEach((op, count) -> System.err.println(
+          "  " + op + ": " + count.get()));
+    }
     // WARNING! entries inserted into `errorSummary` ABOVE this comment must have a map value ^^^^^^
     errorSummary.put(CLOUD_VERSION_KEY, getCloudVersionInfo());
     errorSummary.put(TIMESTAMP_KEY, currentRunTimestamp);
@@ -864,20 +885,33 @@ public class Registrar {
     try {
       Set<String> unbindIds = catchToNull(
           () -> new HashSet<>(workingDevices.get(deviceId).getMetadata().gateway.proxy_ids));
-      cloudIotManager.deleteDevice(deviceId, unbindIds);
+      if (dryRun) {
+        System.err.println("Dry run: would delete device " + deviceId);
+      } else {
+        cloudIotManager.deleteDevice(deviceId, unbindIds);
+      }
+      recordOperation(ModelOperation.DELETE);
     } catch (DeviceGatewayBoundException boundException) {
       CloudModel cloudModel = boundException.getCloudModel();
       if (cloudModel.resource_type == Resource_type.GATEWAY) {
         Set<String> proxyIds = new HashSet<>(cloudModel.gateway.proxy_ids);
         System.err.printf("Retrying delete %s with bound devices: %s%n", deviceId,
             setOrSize(proxyIds));
-        cloudIotManager.deleteDevice(deviceId, proxyIds);
+        if (dryRun) {
+          System.err.println("Dry run: would delete device " + deviceId);
+        } else {
+          cloudIotManager.deleteDevice(deviceId, proxyIds);
+        }
       } else if (cloudModel.resource_type == Resource_type.DIRECT) {
         Set<String> gatewayIds = ImmutableSet.of(cloudModel.gateway.gateway_id);
         System.err.printf("Unbinding %s from bound gateways: %s%n", deviceId, gatewayIds);
         unbindDevicesFromGateways(allDevices, gatewayIds);
         System.err.printf("Retrying delete %s%n", deviceId);
-        cloudIotManager.deleteDevice(deviceId, null);
+        if (dryRun) {
+          System.err.println("Dry run: would delete device " + deviceId);
+        } else {
+          cloudIotManager.deleteDevice(deviceId, null);
+        }
       } else {
         throw new RuntimeException("Unknown cloud model resource type", boundException);
       }
@@ -904,7 +938,13 @@ public class Registrar {
           Set<String> limitedSet = limitSetSize(toUnbind, UNBIND_SET_SIZE);
           ifTrueThen(multiple, () -> System.err.printf("Unbinding subset from %s: %s%n", gatewayId,
               setOrSize(limitedSet)));
-          cloudIotManager.bindDevices(limitedSet, gatewayId, false);
+          if (dryRun) {
+            System.err.printf("Dry run: would unbind %s from %s%n", setOrSize(limitedSet),
+                gatewayId);
+          } else {
+            cloudIotManager.bindDevices(limitedSet, gatewayId, false);
+          }
+          recordOperation(ModelOperation.UNBIND, limitedSet.size());
           toUnbind.removeAll(limitedSet);
         }
       }
@@ -1010,11 +1050,26 @@ public class Registrar {
   private boolean updateCloudIoT(LocalDevice localDevice) {
     String localName = localDevice.getDeviceId();
     fetchDevice(localName, false);
-    CloudDeviceSettings localDeviceSettings = localDevice.getSettings();
     if (preDeleteDevice(localName)) {
       System.err.println("Deleting to incite recreation " + localName);
-      cloudIotManager.deleteDevice(localName, null);
+      if (dryRun) {
+        System.err.println("Dry run: would delete device " + localName);
+      } else {
+        cloudIotManager.deleteDevice(localName, null);
+      }
+      recordOperation(ModelOperation.DELETE);
     }
+
+    ModelOperation registerOp = cloudIotManager.getRegisteredDevice(localName) == null
+        ? ModelOperation.CREATE : ModelOperation.UPDATE;
+
+    if (dryRun) {
+      System.err.println("Dry run: would register device " + localName);
+      recordOperation(registerOp);
+      return registerOp == ModelOperation.CREATE;
+    }
+    recordOperation(registerOp);
+    CloudDeviceSettings localDeviceSettings = localDevice.getSettings();
     return cloudIotManager.registerDevice(localName, localDeviceSettings);
   }
 
@@ -1076,7 +1131,12 @@ public class Registrar {
     try {
       if (blockUnknown && !isBlocked) {
         System.err.println("Blocking device " + extraName);
-        cloudIotManager.blockDevice(extraName, true);
+        if (dryRun) {
+          System.err.println("Dry run: would block device " + extraName);
+        } else {
+          cloudIotManager.blockDevice(extraName, true);
+        }
+        recordOperation(ModelOperation.BLOCK);
         cloudModel.blocked = true;
       }
       cloudModel.operation = ifTrueGet(cloudModel.blocked, ModelOperation.BLOCK,
@@ -1215,7 +1275,12 @@ public class Registrar {
             int count = bindingCount.incrementAndGet();
             System.err.printf("Binding %s to %s (%d/%d)%n", setOrSize(toBind), gatewayId, count,
                 gatewayBindings.size());
-            cloudIotManager.bindDevices(toBind, gatewayId, true);
+            if (dryRun) {
+              System.err.printf("Dry run: would bind %s to %s%n", setOrSize(toBind), gatewayId);
+            } else {
+              cloudIotManager.bindDevices(toBind, gatewayId, true);
+            }
+            recordOperation(ModelOperation.BIND, toBind.size());
           } catch (Exception e) {
             proxiedDevices.forEach(localDevice ->
                 localDevice.captureError(ExceptionCategory.binding, e));
@@ -1410,10 +1475,13 @@ public class Registrar {
     CloudDeviceSettings settings = localDevice.getSettings();
     String deviceName = localDevice.getDeviceId();
     for (Credential credential : settings.credentials) {
-      String previous = usedCredentials.put(credential, deviceName);
-      if (previous != null) {
-        throw new RuntimeException(format(
-            "Duplicate credentials found for %s & %s", previous, deviceName));
+      Set<String> duplicates = credentialDevices.get(credential);
+      if (duplicates != null && duplicates.size() > 1) {
+        String primaryDevice = duplicates.iterator().next();
+        if (!deviceName.equals(primaryDevice)) {
+          throw new RuntimeException(format(
+              "Duplicate credentials found with %s", primaryDevice));
+        }
       }
     }
   }
@@ -1439,6 +1507,16 @@ public class Registrar {
     allWorking(this::previewModel, "previewing model", ExceptionCategory.updating);
     allWorking(LocalDevice::validateExpectedFiles, "validating expected", ExceptionCategory.files);
     allWorking(LocalDevice::validateSamples, "validate samples", ExceptionCategory.samples);
+
+    credentialDevices = new HashMap<>();
+    workingDevices.values().forEach(device -> {
+      if (device.isDirect()) {
+        for (Credential cred : device.getSettings().credentials) {
+          credentialDevices.computeIfAbsent(cred, k -> new TreeSet<>()).add(device.getDeviceId());
+        }
+      }
+    });
+
     allWorking(this::validateKeys, "validating keys", ExceptionCategory.credentials);
     allWorking(this::processExternals, "process externals", ExceptionCategory.externals);
   }
@@ -1502,13 +1580,27 @@ public class Registrar {
 
   private void previewModelRegistry() {
     ifTrueThen(metadataModelOut,
-        () -> cloudIotManager.updateRegistry(getSiteMetadata(), ModelOperation.PREVIEW));
+        () -> {
+          if (dryRun) {
+            System.err.println("Dry run: would update registry (PREVIEW)");
+          } else {
+            cloudIotManager.updateRegistry(getSiteMetadata(), ModelOperation.PREVIEW);
+          }
+          recordOperation(ModelOperation.PREVIEW);
+        });
   }
 
   private void previewModel(LocalDevice device) {
     ifTrueThen(metadataModelOut,
-        () -> cloudIotManager.updateDevice(device.getDeviceId(), device.getSettings(),
-            ModelOperation.PREVIEW));
+        () -> {
+          if (dryRun) {
+            System.err.println("Dry run: would update device (PREVIEW)");
+          } else {
+            cloudIotManager.updateDevice(device.getDeviceId(), device.getSettings(),
+                ModelOperation.PREVIEW);
+          }
+          recordOperation(ModelOperation.PREVIEW);
+        });
   }
 
   private void initializeDevices(Map<String, LocalDevice> localDevices) {

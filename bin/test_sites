@@ -36,6 +36,8 @@ function redact_files {
             -e 's-oading .*udmi/tests/-REDACTED/-' \
             -e 's-^    .*udmi/tests/-    REDACTED/-' \
             -e 's-.*tests/sites/configs/-    REDACTED/sites/configs/-' \
+            -e 's-^      File not found: /app/tests/sites/-    REDACTED/sites/-' \
+            -e 's-^      File not found: .*udmi/tests/-    REDACTED/-' \
             $file
     done
 }
