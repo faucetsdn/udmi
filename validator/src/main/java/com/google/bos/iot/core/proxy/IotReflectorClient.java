@@ -19,10 +19,10 @@ import static com.google.udmi.util.Common.UNKNOWN_UDMI_VERSION;
 import static com.google.udmi.util.Common.VERSION_KEY;
 import static com.google.udmi.util.Common.getNamespacePrefix;
 import static com.google.udmi.util.GeneralUtils.decodeBase64;
-import static com.google.udmi.util.GeneralUtils.friendlyStackTrace;
 import static com.google.udmi.util.GeneralUtils.getTimestamp;
 import static com.google.udmi.util.GeneralUtils.ifNotNullGet;
 import static com.google.udmi.util.GeneralUtils.ifNotNullThen;
+import static com.google.udmi.util.GeneralUtils.ifNotTrueThen;
 import static com.google.udmi.util.GeneralUtils.ifTrueThen;
 import static com.google.udmi.util.GeneralUtils.isTrue;
 import static com.google.udmi.util.JsonUtil.asMap;
@@ -94,8 +94,8 @@ public class IotReflectorClient implements MessagePublisher {
   private static final String EVENTS_TYPE = "events";
   private static final String MOCK_DEVICE_NUM_ID = "123456789101112";
   private static final String UDMI_TOPIC = "events/" + SubFolder.UDMI;
-  private static final long CONFIG_TIMEOUT_SEC = 120;
-  private static final int UPDATE_RETRIES = 10;
+  private static final long CONFIG_TIMEOUT_SEC = 5;
+  private static final int UPDATE_RETRIES = 6;
   private static final Collection<String> COPY_IDS = ImmutableSet.of(DEVICE_ID_KEY, GATEWAY_ID_KEY,
       SUBTYPE_PROPERTY_KEY, SUBFOLDER_PROPERTY_KEY, TRANSACTION_KEY, PUBLISH_TIME_KEY);
   public static final String TRANSACTION_ID_PREFIX = "RC:";
@@ -270,11 +270,17 @@ public class IotReflectorClient implements MessagePublisher {
   }
 
   private String getReflectorTopic() {
-    return STATE_TOPIC;
+    return switch (iotProvider) {
+      case MQTT -> SubType.REFLECT.toString();
+      default -> STATE_TOPIC;
+    };
   }
 
   private String getPublishTopic() {
-    return UDMI_TOPIC;
+    return switch (iotProvider) {
+      case MQTT -> SubType.REFLECT.toString();
+      default -> UDMI_TOPIC;
+    };
   }
 
   @Override
@@ -302,7 +308,7 @@ public class IotReflectorClient implements MessagePublisher {
       }
       ifNotNullThen(envelope.source, source -> messageMap.put(SOURCE_KEY, source),
           () -> messageMap.remove(SOURCE_KEY));
-      if (SubType.CONFIG == envelope.subType || SubType.REFLECT == envelope.subType) {
+      if (SubType.CONFIG == envelope.subType) {
         ensureCloudSync(messageMap);
       } else if (SubType.COMMANDS == envelope.subType) {
         handleEncapsulatedMessage(envelope, messageMap);
@@ -385,14 +391,8 @@ public class IotReflectorClient implements MessagePublisher {
   }
 
   private void processUdmiEvent(Map<String, Object> message) {
-    if (message == null) {
-      return;
-    }
     UdmiEvents events = convertTo(UdmiEvents.class, message);
-    if (events == null || events.logentries == null || events.logentries.isEmpty()) {
-      return;
-    }
-    updateLastProgressEvent();
+    ifNotTrueThen(events.logentries.isEmpty(), this::updateLastProgressEvent);
     events.logentries.forEach(
         entry -> System.err.printf("%s %s%n", isoConvert(entry.timestamp), entry.message));
   }
@@ -501,73 +501,45 @@ public class IotReflectorClient implements MessagePublisher {
   }
 
   private Envelope parseMessageTopic(String topic) {
-    try {
-      List<String> parts = new ArrayList<>(Arrays.asList(topic.split("/")));
-      parts.removeIf(String::isEmpty);
-      if (parts.isEmpty()) {
+    List<String> parts = new ArrayList<>(Arrays.asList(topic.substring(1).split("/")));
+    String leader = parts.remove(0);
+    if ("devices".equals(leader)) {
+      // Next field is registry, not device, since the reflector device id is the site registry.
+      String deviceId = parts.remove(0);
+      if (!registryId.equals(deviceId)) {
         return null;
       }
-
-      Envelope envelope = new Envelope();
-      envelope.deviceRegistryId = registryId;
-
-      if (parts.get(0).equals("c")) {
-        parts.remove(0); // Remove "c" designator
-        envelope.source = parts.remove(0); // Remove channel (source) designator
-      }
-
-      if (parts.isEmpty()) {
+    } else if ("r".equals(leader)) {
+      // Next field is registry, not device, since the reflector device id is the site registry.
+      String parsedReg = parts.remove(0);
+      checkState(UDMI_REFLECT.equals(parsedReg),
+          format("registry id %s does not match expected %s", parsedReg, UDMI_REFLECT));
+      String devSep = parts.remove(0);
+      checkState("d".equals(devSep), format("unexpected dev separator %s", devSep));
+      String deviceId = parts.remove(0);
+      if (!registryId.equals(deviceId)) {
         return null;
       }
-
-      String leader = parts.remove(0);
-      if ("devices".equals(leader)) {
-        // Next field is registry, not device, since the reflector device id is the site registry.
-        String deviceId = parts.remove(0);
-        if (!registryId.equals(deviceId)) {
-          return null;
-        }
-      } else if ("r".equals(leader)) {
-        // Next field is registry, not device, since the reflector device id is the site registry.
-        String parsedReg = parts.remove(0);
-        if (!UDMI_REFLECT.equals(parsedReg)) {
-          return null;
-        }
-        String devSep = parts.remove(0);
-        if (!"d".equals(devSep)) {
-          return null;
-        }
-        String deviceId = parts.remove(0);
-        if (!registryId.equals(deviceId)) {
-          return null;
-        }
-      } else {
-        return null;
-      }
-
-      if (parts.isEmpty()) {
-        return null;
-      }
-
-      String[] bits1 = parts.remove(0).split(SOURCE_SEPARATOR_REGEX);
-      envelope.subType = SubType.fromValue(bits1[0]);
-      if (parts.isEmpty()) {
-        if (envelope.source == null) {
-          envelope.source = bits1.length > 1 ? bits1[1] : null;
-        }
-      } else {
-        String[] bits2 = parts.remove(0).split(SOURCE_SEPARATOR_REGEX);
-        envelope.subFolder = SubFolder.fromValue(bits2[0]);
-        if (envelope.source == null) {
-          envelope.source = bits2.length > 1 ? bits2[1] : null;
-        }
-      }
-
-      return envelope;
-    } catch (Exception e) {
-      debug("Error parsing topic " + topic + ": " + friendlyStackTrace(e));
-      return null;
+    } else {
+      throw new RuntimeException("Unknown topic string " + topic);
     }
+
+    Envelope envelope = new Envelope();
+    envelope.deviceRegistryId = registryId;
+
+    String[] bits1 = parts.remove(0).split(SOURCE_SEPARATOR_REGEX);
+    checkState(parts.isEmpty() || bits1.length == 1, "Malformed topic: " + topic);
+    envelope.subType = SubType.fromValue(bits1[0]);
+    if (parts.isEmpty()) {
+      envelope.source = bits1.length > 1 ? bits1[1] : null;
+    } else {
+      String[] bits2 = parts.remove(0).split(SOURCE_SEPARATOR_REGEX);
+      envelope.subFolder = SubFolder.fromValue(bits2[0]);
+      envelope.source = bits2.length > 1 ? bits2[1] : null;
+    }
+    checkState(parts.isEmpty());
+
+    return envelope;
   }
 
   protected void errorHandler(Throwable throwable) {
