@@ -454,3 +454,24 @@ jobs:
         run: |
           cd clientlib/python
           poetry run pylint src
+
+  bridgehead:
+    name: Bridgehead Integration Test
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '21'
+      - name: Run Bridgehead Test
+        run: |
+          bash bridgehead/tests/test_bridgehead.sh
+      - name: Upload logs on failure
+        if: ${{ failure() }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: bridgehead-logs
+          path: bridgehead/var/log/
+
