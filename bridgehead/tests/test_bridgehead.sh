@@ -31,6 +31,9 @@ GRAFANA_USER=grafana
 GRAFANA_PASSWORD=$(openssl rand -hex 16)
 EOF
 
+echo "Building Pubber from source..."
+../pubber/bin/build
+
 echo "Starting services with docker-compose..."
 docker compose up -d --build
 
@@ -86,8 +89,8 @@ echo "Pubber started with PID $PUBBER_PID"
 # Wait a bit for pubber to connect and send some messages
 sleep 10
 
-echo "Running discovery script..."
-docker exec validator /root/discovery.sh
+echo "Running discovery script with GAT-123..."
+docker exec validator /root/discovery.sh GAT-123
 
 echo "Running registrar to check results..."
 docker exec validator bin/registrar site_model/ //mqtt/mosquitto > registrar_output.txt
