@@ -465,6 +465,8 @@ jobs:
         with:
           distribution: 'temurin'
           java-version: '21'
+      - name: Setup Base
+        run: bin/setup_base
       - name: Run Bridgehead Test
         run: |
           bash bridgehead/tests/test_bridgehead.sh
