@@ -182,6 +182,7 @@ subType
 subTypes
 swapped
 systemd
+TCP
 terraform
 terraformed
 testability
