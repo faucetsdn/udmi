@@ -10,15 +10,10 @@ import static java.lang.String.format;
  */
 public class ModbusFamilyProvider implements FamilyProvider {
 
-  // RTU format:
-  // modbus://[modbus_id]/[range]/[data_type]/[offset]/[bit|length] (or similarly 6 parts as in bambi test)
-  private static final Pattern MODBUS_RTU_PATTERN = Pattern.compile("^modbus://[^/]+/[^/]+(?:/[^/]+){1,4}$");
-
-  // New TCP format:
-  // modbus://[network@]<host>[:port]/<unitid>/<function>/<address>[/<quantity>][?interpretation]
-  private static final Pattern MODBUS_TCP_PATTERN = Pattern.compile(
-      "^modbus://(?:(?<network>[^@/]+)@)?(?<host>[^\\[\\]:/@]+|\\[[^\\]]+\\])(?::(?<port>\\d+))?" +
-      "/(?<unitid>\\d+)/(?<function>\\d+)/(?<address>\\d+)(?:/(?<quantity>\\d+))?(?:\\?(?<interpretation>[^/]+))?$");
+  // Unified format:
+  // modbus://[network]/<unitid>/<range>/<address>[/<quantity>][?interpretation]
+  private static final Pattern UNIFIED_MODBUS_PATTERN = Pattern.compile(
+      "^modbus://(?<network>[^/@:]+)/(?<unitid>\\d+)/(?<range>[^/]+)/(?<address>\\d+)(?:/(?<quantity>\\d+))?(?:\\?(?<interpretation>[^/]+))?$");
 
   @Override
   public String familyKey() {
@@ -28,24 +23,17 @@ public class ModbusFamilyProvider implements FamilyProvider {
   @Override
   public void validateUrl(String url) {
     checkState(url.startsWith("modbus://"), format("modbus url %s does not match expected pattern", url));
-    String path = url.substring("modbus://".length());
 
-    Matcher tcpMatcher = MODBUS_TCP_PATTERN.matcher(url);
-    Matcher rtuMatcher = MODBUS_RTU_PATTERN.matcher(url);
+    Matcher unifiedMatcher = UNIFIED_MODBUS_PATTERN.matcher(url);
 
-    if (tcpMatcher.matches()) {
-      String portStr = tcpMatcher.group("port");
-      if (portStr != null) {
-        int port = Integer.parseInt(portStr);
-        checkState(port >= 0 && port <= FamilyProvider.MAX_PORT_VALUE,
-            format("modbus ref port %s exceeds maximum %d", portStr, MAX_PORT_VALUE));
-      }
+    if (unifiedMatcher.matches()) {
+      // Valid unified format
     } else {
-      // Must not match TCP, check if it matches RTU pattern
-      // To disallow some TCP-like bad ones like "modbus://host:502/1/3", we enforce RTU format logic.
-      // RTU usually starts with a numeric id, not host:port.
-      checkState(rtuMatcher.matches() && !path.contains(":") && !path.contains("@") && !path.contains("?"),
-          format("modbus url %s does not match expected pattern", url));
+      String path = url.substring("modbus://".length());
+      String[] parts = path.split("/");
+      checkState(parts.length >= 4 && parts.length <= 6, format("modbus legacy url %s does not match expected parts count", url));
+      // Check invalid characters that signify a malformed unified format instead of legacy
+      checkState(!path.contains("?") && !path.contains("@") && !path.contains(":"), format("modbus legacy url %s contains invalid characters", url));
     }
   }
 
