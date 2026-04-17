@@ -19,7 +19,8 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 @JsonPropertyOrder({
     "timestamp",
     "version",
-    "families"
+    "families",
+    "networks"
 })
 public class LocalnetState {
 
@@ -44,11 +45,14 @@ public class LocalnetState {
      */
     @JsonProperty("families")
     public HashMap<String, FamilyLocalnetState> families;
+    @JsonProperty("networks")
+    public HashMap<String, FamilyLocalnetState> networks;
 
     @Override
     public int hashCode() {
         int result = 1;
         result = ((result* 31)+((this.families == null)? 0 :this.families.hashCode()));
+        result = ((result* 31)+((this.networks == null)? 0 :this.networks.hashCode()));
         result = ((result* 31)+((this.version == null)? 0 :this.version.hashCode()));
         result = ((result* 31)+((this.timestamp == null)? 0 :this.timestamp.hashCode()));
         return result;
@@ -63,7 +67,7 @@ public class LocalnetState {
             return false;
         }
         LocalnetState rhs = ((LocalnetState) other);
-        return ((((this.families == rhs.families)||((this.families!= null)&&this.families.equals(rhs.families)))&&((this.version == rhs.version)||((this.version!= null)&&this.version.equals(rhs.version))))&&((this.timestamp == rhs.timestamp)||((this.timestamp!= null)&&this.timestamp.equals(rhs.timestamp))));
+        return (((((this.families == rhs.families)||((this.families!= null)&&this.families.equals(rhs.families)))&&((this.networks == rhs.networks)||((this.networks!= null)&&this.networks.equals(rhs.networks))))&&((this.version == rhs.version)||((this.version!= null)&&this.version.equals(rhs.version))))&&((this.timestamp == rhs.timestamp)||((this.timestamp!= null)&&this.timestamp.equals(rhs.timestamp))));
     }
 
 }

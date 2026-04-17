@@ -27,7 +27,8 @@ public interface FamilyProvider {
       Ipv4FamilyProvider.class,
       Ipv6FamilyProvider.class,
       BacnetFamilyProvider.class,
-      FqdnFamilyProvider.class
+      FqdnFamilyProvider.class,
+      ModbusFamilyProvider.class
   );
 
   /**
