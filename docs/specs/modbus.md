@@ -85,8 +85,14 @@ Modbus device information is stored in the Proxied device configuration under `m
 * Modbus ID
 * Identifier for the serial bus
 
-Modbus point information is stored in the point's `ref` field, in a URI format:
+Modbus point information is stored in the point's `ref` field, in a URI format.
+
+For Modbus RTU:
 
 **`modbus://[modbus_id]/[range]/[data_type]/[offset]/[bit|length]`**
 
-For Modbus, the final parameter (`bit` or `length`) is only required if the `data_type` provided requires the additional parameter. The `binary` `data_type` requires the `bit` parameter. The `char` and `varchar` `data_type` require the `length` property.
+For Modbus TCP:
+
+**`modbus://[network@]<host>[:port]/<unitid>/<function>/<address>[/<quantity>][?interpretation]`**
+
+For Modbus RTU, the final parameter (`bit` or `length`) is only required if the `data_type` provided requires the additional parameter. The `binary` `data_type` requires the `bit` parameter. The `char` and `varchar` `data_type` require the `length` property.

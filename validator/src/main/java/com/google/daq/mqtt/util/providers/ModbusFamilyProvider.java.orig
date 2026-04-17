@@ -37,7 +37,7 @@ public class ModbusFamilyProvider implements FamilyProvider {
       String portStr = tcpMatcher.group("port");
       if (portStr != null) {
         int port = Integer.parseInt(portStr);
-        checkState(port >= 0 && port <= FamilyProvider.MAX_PORT_VALUE,
+        checkState(port >= 0 && port <= MAX_PORT_VALUE,
             format("modbus ref port %s exceeds maximum %d", portStr, MAX_PORT_VALUE));
       }
     } else {
