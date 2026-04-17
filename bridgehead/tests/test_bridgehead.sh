@@ -6,10 +6,8 @@ cd $(dirname $0)/..
 echo "Cloning default site model..."
 # Remove existing udmi_site_model if it exists to avoid conflicts
 sudo rm -rf udmi_site_model
-sudo rm -rf site
 
-git clone https://github.com/faucetsdn/udmi_site_model.git site
-ln -s site udmi_site_model
+git clone https://github.com/faucetsdn/udmi_site_model.git udmi_site_model
 
 # Backup existing .env if it exists
 if [ -f .env ]; then
@@ -32,16 +30,21 @@ GRAFANA_PASSWORD=$(openssl rand -hex 16)
 EOF
 
 echo "Building Pubber from source..."
+# Build pubber before starting services or running it, to avoid delays in test
 ../pubber/bin/build
 
 echo "Starting services with docker-compose..."
 docker compose up -d --build
 
+# Fix permissions for files created by Docker in the mounted volume
+echo "Fixing permissions for udmi_site_model..."
+sudo chmod -R a+rw udmi_site_model
+
 # Function to clean up on exit
 function cleanup {
     echo "Cleaning up..."
     docker compose down
-    sudo rm -rf site udmi_site_model
+    sudo rm -rf udmi_site_model
     
     # Restore .env if backup exists
     if [ -f .env.bak ]; then
@@ -54,9 +57,6 @@ function cleanup {
 trap cleanup EXIT
 
 echo "Waiting for services to be healthy..."
-# Poll for UDMIS readiness. We can check logs for "Started UDMIS"
-# For now, using a simple sleep as a fallback, but polling is better.
-# Let's try to poll for 60 seconds.
 for i in {1..60}; do
     if docker logs udmis 2>&1 | grep -q "Started UDMIS"; then
         echo "UDMIS is ready."
@@ -78,10 +78,9 @@ echo "Running registrar initial setup..."
 docker exec validator bin/registrar site_model/ //mqtt/mosquitto -x -d
 docker exec validator bin/registrar site_model/ //mqtt/mosquitto GAT-123
 
-echo "Starting Pubber from source..."
-# bin/pubber handles building if needed
-# Run in background
-../bin/pubber site //mqtt/localhost GAT-123 852649 &
+echo "Starting Pubber..."
+# Run in background, it should be already built
+../bin/pubber udmi_site_model //mqtt/localhost GAT-123 852649 &
 PUBBER_PID=$!
 
 echo "Pubber started with PID $PUBBER_PID"
@@ -100,15 +99,6 @@ kill $PUBBER_PID || true
 
 echo "Verifying output..."
 cat registrar_output.txt
-
-# Expected summary:
-# Summary:
-#   Device envelope: 1
-#   Device extra: 6
-#   Device proxy: 2
-#   Device status: 4
-#   Device validation: 1
-# Out of 4 total.
 
 failed=0
 grep -q "Device envelope: 1" registrar_output.txt || failed=1
