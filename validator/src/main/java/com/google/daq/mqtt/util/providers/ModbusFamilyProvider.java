@@ -10,10 +10,15 @@ import static java.lang.String.format;
  */
 public class ModbusFamilyProvider implements FamilyProvider {
 
+  // Legacy RTU format:
+  // modbus://[modbus_id]/[range]/[data_type]/[offset]/[bit|length] (or similarly 6 parts as in bambi test)
+  private static final Pattern LEGACY_MODBUS_RTU_PATTERN = Pattern.compile("^modbus://[^/]+/[^/]+(?:/[^/]+){1,4}$");
+
   // Unified format:
-  // modbus://[network]/<unitid>/<range>/<address>[/<quantity>][?interpretation]
+  // modbus://[network@]host[:port]/<unitid>/<range>/<address>[/<quantity>][?interpretation]
   private static final Pattern UNIFIED_MODBUS_PATTERN = Pattern.compile(
-      "^modbus://(?<network>[^/@:]+)/(?<unitid>\\d+)/(?<range>[^/]+)/(?<address>\\d+)(?:/(?<quantity>\\d+))?(?:\\?(?<interpretation>[^/]+))?$");
+      "^modbus://(?:(?<network>[^@/]+)@)?(?<host>[^\\[\\]:/@]+|\\[[^\\]]+\\])(?::(?<port>\\d+))?" +
+      "/(?<unitid>\\d+)/(?<range>[^/]+)/(?<address>\\d+)(?:/(?<quantity>\\d+))?(?:\\?(?<interpretation>[^/]+))?$");
 
   @Override
   public String familyKey() {
@@ -27,7 +32,12 @@ public class ModbusFamilyProvider implements FamilyProvider {
     Matcher unifiedMatcher = UNIFIED_MODBUS_PATTERN.matcher(url);
 
     if (unifiedMatcher.matches()) {
-      // Valid unified format
+      String portStr = unifiedMatcher.group("port");
+      if (portStr != null) {
+        int port = Integer.parseInt(portStr);
+        checkState(port >= 0 && port <= FamilyProvider.MAX_PORT_VALUE,
+            format("modbus ref port %s exceeds maximum %d", portStr, FamilyProvider.MAX_PORT_VALUE));
+      }
     } else {
       String path = url.substring("modbus://".length());
       String[] parts = path.split("/");

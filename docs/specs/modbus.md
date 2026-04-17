@@ -89,7 +89,7 @@ Modbus point information is stored in the point's `ref` field, in a URI format.
 
 The unified format for both Modbus RTU and TCP:
 
-**`modbus://[network]/<unitid>/<range>/<address>[/<quantity>][?interpretation]`**
+**`modbus://[network@]host[:port]/<unitid>/<range>/<address>[/<quantity>][?interpretation]`**
 
 For backward compatibility, the following legacy Modbus RTU format is also supported:
 

@@ -14,31 +14,28 @@ import org.junit.Test;
 public class ModbusFamilyProviderTest {
 
   public static final Set<String> GOOD_REFERENCES = ImmutableSet.of(
-      "modbus://network/1/holding_register/40001",
-      "modbus://network/1/holding_register/40001/10",
-      "modbus://network/1/holding_register/40001/10?int16",
-      "modbus://network/1/holding_register/40001?int16",
+      "modbus://host/1/holding_register/40001",
+      "modbus://network@host/1/holding_register/40001",
+      "modbus://network@host:502/1/holding_register/40001/10",
+      "modbus://network@host/1/holding_register/40001/10?int16",
+      "modbus://host:502/1/holding_register/40001?int16",
+      "modbus://[2001:db8::1]:502/1/holding_register/40001",
       "modbus://1/i64/1/2/1/0", // misc/bambi/metadata.json (legacy RTU)
       "modbus://1/holding_register/2_byte_signed/0" // docs/specs/modbus.md (legacy RTU)
   );
 
   public static final Set<String> BAD_REFERENCES = ImmutableSet.of(
-      "modbus://network/1/holding_register", // missing address
-      "modbus://network/1/holding_register/40001/10/extra/part", // too many parts
-      "modbus://network@host:502/1/holding_register/40001", // no port/host/network@ allowed anymore
-      "bacnet://network/1/holding_register/40001" // wrong family
+      "modbus://network@host/1/holding_register", // missing address
+      "modbus://network@host/1/holding_register/40001/10/extra", // too many parts
+      "modbus://host:65536/1/holding_register/40001", // bad port
+      "modbus://@host/1/holding_register/40001", // empty network
+      "bacnet://network@host/1/holding_register/40001" // wrong family
   );
 
   ModbusFamilyProvider provider = new ModbusFamilyProvider();
 
   private String validateUrl(String ref) {
-    String error = catchToMessage(() -> provider.validateUrl(ref));
-    if (error == null) {
-      System.out.println("VALIDATION PASSED FOR " + ref);
-    } else {
-      System.out.println("VALIDATION FAILED FOR " + ref + ": " + error);
-    }
-    return error;
+    return catchToMessage(() -> provider.validateUrl(ref));
   }
 
   @Test
