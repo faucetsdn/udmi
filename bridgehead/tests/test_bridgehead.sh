@@ -9,6 +9,9 @@ sudo rm -rf udmi_site_model
 
 git clone https://github.com/faucetsdn/udmi_site_model.git udmi_site_model
 
+mkdir -p udmi_site_model/out
+chmod a+rwx udmi_site_model/out
+
 # Backup existing .env if it exists
 if [ -f .env ]; then
     echo "Backing up existing .env"
@@ -16,33 +19,38 @@ if [ -f .env ]; then
 fi
 
 echo "Generating .env file..."
+HOST_IP=$(sudo hostname -I | awk '{print $1}')
 cat <<EOF > .env
-HOST_IP=127.0.0.1
-AUTH_USER=admin
-AUTH_PASS=$(openssl rand -hex 16)
-SERV_USER=service
-SERV_PASS=$(openssl rand -hex 16)
+HOST_IP=$HOST_IP
+AUTH_USER=scrumptious
+AUTH_PASS=aardvark
+SERV_USER=rocket
+SERV_PASS=monkey
 INFLUXDB_TOKEN=$(openssl rand -hex 32)
-INFLUX_USER=influx
-INFLUX_PASSWORD=$(openssl rand -hex 16)
-GRAFANA_USER=grafana
-GRAFANA_PASSWORD=$(openssl rand -hex 16)
+INFLUX_USER=bridgehead
+INFLUX_PASSWORD=password
+GRAFANA_USER=bridgehead
+GRAFANA_PASSWORD=password
 EOF
 
-echo "Building Pubber from source..."
-# Build pubber before starting services or running it, to avoid delays in test
-../pubber/bin/build
+echo "Building Pubber container from source..."
+# Run from workspace root to make bin/container work correctly
+(cd .. && bin/container pubber build --no-check)
 
 echo "Starting services with docker-compose..."
 docker compose up -d --build
 
-# Fix permissions for files created by Docker in the mounted volume
-echo "Fixing permissions for udmi_site_model..."
-sudo chmod -R a+rw udmi_site_model
-
 # Function to clean up on exit
 function cleanup {
     echo "Cleaning up..."
+    echo "Dumping UDMIS logs:"
+    docker logs udmis || true
+    echo "Dumping Validator logs:"
+    docker logs validator || true
+    
+    echo "Stopping Pubber container..."
+    docker stop pubber || true
+    echo "Stopping docker-compose services..."
     docker compose down
     sudo rm -rf udmi_site_model
     
@@ -58,7 +66,7 @@ trap cleanup EXIT
 
 echo "Waiting for services to be healthy..."
 for i in {1..60}; do
-    if docker logs udmis 2>&1 | grep -q "Started UDMIS"; then
+    if docker logs udmis 2>&1 | grep -q "udmis running in the background"; then
         echo "UDMIS is ready."
         break
     fi
@@ -66,9 +74,10 @@ for i in {1..60}; do
     sleep 2
 done
 
-# Also check if validator is running
-if ! docker ps | grep -q validator; then
-    echo "Validator container is not running!"
+if ! docker logs udmis 2>&1 | grep -q "udmis running in the background"; then
+    echo "UDMIS failed to become ready in time!"
+    echo "Dumping UDMIS logs:"
+    docker logs udmis || true
     exit 1
 fi
 
@@ -78,12 +87,12 @@ echo "Running registrar initial setup..."
 docker exec validator bin/registrar site_model/ //mqtt/mosquitto -x -d
 docker exec validator bin/registrar site_model/ //mqtt/mosquitto GAT-123
 
-echo "Starting Pubber..."
-# Run in background, it should be already built
-../bin/pubber udmi_site_model //mqtt/localhost GAT-123 852649 &
-PUBBER_PID=$!
+echo "Starting Pubber container in udminet network..."
+# Use the locally built 'pubber' image and connect to 'udminet'
+docker run -d --rm --name pubber --network udminet -v $(realpath udmi_site_model):/root/site_model pubber /bin/bash -c "tail -f /dev/null"
 
-echo "Pubber started with PID $PUBBER_PID"
+echo "Running Pubber inside container..."
+docker exec -d pubber /bin/bash -c "bin/pubber site_model/ //mqtt/mosquitto GAT-123 852649"
 
 # Wait a bit for pubber to connect and send some messages
 sleep 10
@@ -93,9 +102,6 @@ docker exec validator /root/discovery.sh GAT-123
 
 echo "Running registrar to check results..."
 docker exec validator bin/registrar site_model/ //mqtt/mosquitto > registrar_output.txt
-
-echo "Stopping Pubber..."
-kill $PUBBER_PID || true
 
 echo "Verifying output..."
 cat registrar_output.txt
