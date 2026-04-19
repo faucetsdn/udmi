@@ -50,6 +50,9 @@
     "externals": {
       "$ref": "file:model_externals.json#"
     },
+    "relationships": {
+      "$ref": "file:model_relationships.json#"
+    },
     "gateway": {
       "$ref": "file:model_gateway.json#",
       "$presentation": {

@@ -15,6 +15,16 @@
           "$ref": "file:config_localnet_family.json"
         }
       }
+    },
+    "networks": {
+      "description": "Network address family config for reporting.",
+      "existingJavaType": "java.util.HashMap<String, FamilyLocalnetConfig>",
+      "additionalProperties": false,
+      "patternProperties": {
+        "^[a-z][a-z0-9]*(_[a-z0-9]+)*$": {
+          "$ref": "file:config_localnet_family.json"
+        }
+      }
     }
   }
 }

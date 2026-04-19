@@ -71,3 +71,6 @@ clientlib/python/*/rsa_private.crt
 clientlib/python/*/rsa_private.pem
 clientlib/python/*/.udmi_persistence.json
 wordlist.dic
+
+# Test output directories
+tests/dbo/basic/test_site_model/
