@@ -479,5 +479,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: bridgehead-logs
-          path: bridgehead/var/log/
+          path: |
+            bridgehead/var/mosquitto/log/
+            bridgehead/var/tmp/udmis.log
 

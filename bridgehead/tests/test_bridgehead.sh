@@ -44,8 +44,8 @@ function cleanup {
     echo "Dumping Validator logs:"
     docker logs validator || true
     
-    echo "Stopping Pubber container..."
-    docker stop pubber || true
+    # echo "Stopping Pubber container..."
+    # docker stop pubber || true
     echo "Stopping docker-compose services..."
     docker compose down
     sudo rm -rf udmi_site_model
