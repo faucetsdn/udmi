@@ -1200,7 +1200,7 @@
       "section": "localnet",
       "type": "string"
     },
-    "localnet.families.modbus.adjunct.bit_rate": {
+    "localnet.families.modbus.adjunct.baud_rate": {
       "style": "bold",
       "display": "show",
       "section": "localnet",
@@ -1247,7 +1247,7 @@
       "section": "localnet",
       "type": "string"
     },
-    "localnet.families.mbus.adjunct.bit_rate": {
+    "localnet.families.mbus.adjunct.baud_rate": {
       "style": "bold",
       "display": "show",
       "section": "localnet",

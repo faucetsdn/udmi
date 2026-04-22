@@ -28,3 +28,4 @@ class LocalnetModel(DataModel):
 
     parent: Optional[Parent] = None
     families: Optional[Dict[str, FamilyLocalnetModel]] = None
+    networks: Optional[Dict[str, FamilyLocalnetModel]] = None

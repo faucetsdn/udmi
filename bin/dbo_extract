@@ -1,0 +1,11 @@
+#!/bin/bash
+
+DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )"
+ROOT_DIR="$( cd "$DIR/.." &> /dev/null && pwd )"
+
+# Activate the venv created by bin/setup_base
+if [ -f "$ROOT_DIR/venv/bin/activate" ]; then
+    source "$ROOT_DIR/venv/bin/activate"
+fi
+
+python3 "$ROOT_DIR/bin/dbo_extract.py" "$1" "$2"
