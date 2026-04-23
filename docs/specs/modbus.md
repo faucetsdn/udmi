@@ -2,7 +2,7 @@
 
 # Modbus Specification
 
-UDMI supports reading Modbus pointsets by specifying them via a `modbus://` URL schema.
+UDMI supports reading Modbus points by specifying them via a `modbus://` URL schema.
 
 ## URI Schema
 
@@ -49,7 +49,11 @@ The `host` maps to a named network in the device's `model_localnet.json` (under 
 
 ### Network Example
 
-Example of a serial-bus RTU network specification as part of a `metadata.json` (or `model_localnet.json`) file:
+An corresponding Modbus URI for a RTU point would look like:
+
+`modbus://modbus_rtu_1/1/3/40001/1?type=INT16&border=MSB`
+
+With the serial-bus RTU network specification as part of a `metadata.json` file:
 
 ```json
 {
@@ -70,7 +74,3 @@ Example of a serial-bus RTU network specification as part of a `metadata.json` (
   }
 }
 ```
-
-A corresponding Modbus URI for a point on this network would look like:
-
-`modbus://modbus_rtu_1/1/3/40001/1?type=INT16&border=MSB`
