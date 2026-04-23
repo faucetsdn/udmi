@@ -52,6 +52,7 @@ downlink
 enablement
 encoding
 encodings
+endian
 enum
 env
 envs
@@ -107,6 +108,7 @@ localhost
 localnet
 logentry
 loglevel
+lsb
 LWT
 MacOS
 macos
@@ -114,6 +116,7 @@ md
 microservices
 modbus
 MQTT
+msb
 mydomain
 namespace
 niversal
@@ -130,6 +133,7 @@ parameterization
 parsers
 pointname
 pointset
+pointsets
 postfix
 Prem
 prem
@@ -152,6 +156,7 @@ reconciler
 repo
 RPC
 RSA
+rtu
 runDev
 runtime
 Schemas
@@ -177,6 +182,7 @@ subFolder
 subType
 subTypes
 systemd
+tcp
 terraform
 terraformed
 testability
@@ -194,6 +200,7 @@ UDMIF
 udmif
 UDMIS
 UI
+uint
 unconfigured
 underspecified
 uniqs
@@ -203,6 +210,7 @@ unopinionated
 unprocessable
 unwriteable
 uplink
+uri
 url
 validator
 writeable
