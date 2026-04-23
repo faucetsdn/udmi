@@ -13,7 +13,8 @@ import java.util.regex.Pattern;
  */
 public class ModbusFamilyProvider implements FamilyProvider {
 
-  // URL format: modbus://<host>[:port]/<unitid>/<function>/<address>[/<quantity>][?interpretation_parameters]
+  // URL format:
+  //   modbus://<host>[:port]/<unitid>/<function>/<address>[/<quantity>][?params]
   // Note: the `split("/", 4)` in `FamilyProvider` splits the URL into:
   // parts[0]: modbus:
   // parts[1]: (empty string)
@@ -24,7 +25,8 @@ public class ModbusFamilyProvider implements FamilyProvider {
   private static final Pattern MODBUS_ADDR = Pattern.compile("^([a-zA-Z0-9.-]+)(?::\\d+)?$");
 
   // Point (parts[3]): <unitid>/<function>/<address>[/<quantity>][?interpretation_parameters]
-  private static final Pattern MODBUS_POINT = Pattern.compile("^(\\d+)/(\\d+)/(\\d+)(?:/(\\d+))?(?:\\?(.*))?$");
+  private static final Pattern MODBUS_POINT =
+      Pattern.compile("^(\\d+)/(\\d+)/(\\d+)(?:/(\\d+))?(?:\\?(.*))?$");
 
   @Override
   public String familyKey() {

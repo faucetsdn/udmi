@@ -11,6 +11,9 @@ import java.util.List;
 import java.util.Set;
 import org.junit.Test;
 
+/**
+ * Simple tests for the modbus family provider.
+ */
 public class ModbusFamilyProviderTest {
 
   public static final Set<String> GOOD_REFERENCES = ImmutableSet.of(
@@ -18,6 +21,7 @@ public class ModbusFamilyProviderTest {
       "modbus://192.168.1.1:502/1/3/40001/10",
       "modbus://192.168.1.1/1/3/40001/10?type=INT16&byte_order=Big-Endian",
       "modbus://my-host.com/2/4/30001?foo=bar",
+      "modbus://networkname/2/4/3001",
       "modbus://10.0.0.1/1/3/40001/2?multiplier=0.1"
   );
 
