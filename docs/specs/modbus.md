@@ -96,3 +96,5 @@ For backward compatibility, the following legacy Modbus RTU format is also suppo
 **`modbus://[modbus_id]/[range]/[data_type]/[offset]/[bit|length]`**
 
 For legacy Modbus RTU, the final parameter (`bit` or `length`) is only required if the `data_type` provided requires the additional parameter. The `binary` `data_type` requires the `bit` parameter. The `char` and `varchar` `data_type` require the `length` property.
+
+The `interpretation` query parameter corresponds to the concrete, URL-parsable single-word values specified in the **Data Type Values** table (e.g., `2_byte_unsigned_swapped`).

@@ -10,6 +10,10 @@ import static java.lang.String.format;
  */
 public class ModbusFamilyProvider implements FamilyProvider {
 
+  // Legacy RTU format:
+  // modbus://[modbus_id]/[range]/[data_type]/[offset]/[bit|length] (or similarly 6 parts as in bambi test)
+  private static final Pattern LEGACY_MODBUS_RTU_PATTERN = Pattern.compile("^modbus://[^/]+/[^/]+(?:/[^/]+){1,4}$");
+
   // Unified format:
   // modbus://[network@]host[:port]/<unitid>/<range>/<address>[/<quantity>][?interpretation]
   private static final Pattern UNIFIED_MODBUS_PATTERN = Pattern.compile(

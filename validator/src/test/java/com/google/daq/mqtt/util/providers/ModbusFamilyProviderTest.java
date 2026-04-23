@@ -17,8 +17,8 @@ public class ModbusFamilyProviderTest {
       "modbus://host/1/holding_register/40001",
       "modbus://network@host/1/holding_register/40001",
       "modbus://network@host:502/1/holding_register/40001/10",
-      "modbus://network@host/1/holding_register/40001/10?int16",
-      "modbus://host:502/1/holding_register/40001?int16",
+      "modbus://network@host/1/holding_register/40001/10?2_byte_signed_swapped",
+      "modbus://host:502/1/holding_register/40001?binary",
       "modbus://[2001:db8::1]:502/1/holding_register/40001",
       "modbus://1/i64/1/2/1/0", // misc/bambi/metadata.json (legacy RTU)
       "modbus://1/holding_register/2_byte_signed/0" // docs/specs/modbus.md (legacy RTU)
@@ -29,7 +29,8 @@ public class ModbusFamilyProviderTest {
       "modbus://network@host/1/holding_register/40001/10/extra", // too many parts
       "modbus://host:65536/1/holding_register/40001", // bad port
       "modbus://@host/1/holding_register/40001", // empty network
-      "bacnet://network@host/1/holding_register/40001" // wrong family
+      "bacnet://network@host/1/holding_register/40001", // wrong family
+      "modbus://host:502/1/holding_register/40001?2_byte signed" // invalid multi-word interpretation
   );
 
   ModbusFamilyProvider provider = new ModbusFamilyProvider();
