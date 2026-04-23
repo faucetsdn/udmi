@@ -13,15 +13,15 @@ import java.util.regex.Pattern;
  */
 public class ModbusFamilyProvider implements FamilyProvider {
 
-  // URL format: modbus://[network@]<host>[:port]/<unitid>/<function>/<address>[/<quantity>][?interpretation_parameters]
+  // URL format: modbus://<host>[:port]/<unitid>/<function>/<address>[/<quantity>][?interpretation_parameters]
   // Note: the `split("/", 4)` in `FamilyProvider` splits the URL into:
   // parts[0]: modbus:
   // parts[1]: (empty string)
-  // parts[2]: [network@]<host>[:port]
+  // parts[2]: <host>[:port]
   // parts[3]: <unitid>/<function>/<address>[/<quantity>][?interpretation_parameters]
 
-  // Address (parts[2]): [network@]<host>
-  private static final Pattern MODBUS_ADDR = Pattern.compile("^(?:([a-zA-Z0-9_-]+)@)?([a-zA-Z0-9.-]+)(?::\\d+)?$");
+  // Address (parts[2]): <host>[:port]
+  private static final Pattern MODBUS_ADDR = Pattern.compile("^([a-zA-Z0-9.-]+)(?::\\d+)?$");
 
   // Point (parts[3]): <unitid>/<function>/<address>[/<quantity>][?interpretation_parameters]
   private static final Pattern MODBUS_POINT = Pattern.compile("^(\\d+)/(\\d+)/(\\d+)(?:/(\\d+))?(?:\\?(.*))?$");
