@@ -17,7 +17,7 @@ UDMI supports reading Modbus points by specifying them via a `modbus://` URL sch
 *   **`quantity`**: (Optional) The number of registers to fetch.
 *   **`interpretation`**: (Optional) Query string properties that are necessary to properly interpret data fetched from a register.
 
-## Function Codes
+### Function Codes
 
 *   **`1`**: Read Coils
 *   **`2`**: Read Discrete Inputs
@@ -28,7 +28,7 @@ UDMI supports reading Modbus points by specifying them via a `modbus://` URL sch
 *   **`15`**: Write Multiple Coils
 *   **`16`**: Write Multiple Registers
 
-## Interpretation Parameters
+### Interpretation Parameters
 
 Parameters passed in the query string define how to interpret the fetched register data:
 
@@ -37,7 +37,7 @@ Parameters passed in the query string define how to interpret the fetched regist
 *   **`worder`**: i.e., `HWF` (`High-Word First`) or `LWF` (`Low-Word First`) (for 32-bit values).
 *   **`scale`**: i.e., `1.0`, `0.01`, `100.0` (scale factor).
 
-## Network Parameters
+### Network Parameters
 
 The `host` maps to a named network in the device's `model_localnet.json` (under the `networks` field). Each named network can define the following parameters for communication:
 
@@ -47,13 +47,17 @@ The `host` maps to a named network in the device's `model_localnet.json` (under 
 *   **`data bits`**: For serial `RTU`.
 *   **`stop bits`**: For serial `RTU`.
 
-### Network Example
+## Examples
 
-An corresponding Modbus URI for a `RTU` point would look like:
+The metadata values in the examples below map to the following complete Modbus URIs:
 
-`modbus://modbus_rtu_1/1/3/40001/1?type=INT16&border=MSB`
+*   **Network RTU Point**: `modbus://modbus_rtu_1/1/3/40001/1?type=INT16&border=MSB`
+*   **`fan_status`**: `modbus://modbus_rtu_1/2/1/101?type=BOOLEAN`
+*   **`filter_differential_pressure`**: `modbus://modbus_rtu_1/2/4/30005?type=UINT32&worder=LWF&scale=0.01`
 
-With the serial-bus `RTU` network specification as part of a `metadata.json` file:
+### Network Configuration Example
+
+The serial-bus `RTU` network specification as part of a gateway `metadata.json` file:
 
 ```json
 {
@@ -74,3 +78,32 @@ With the serial-bus `RTU` network specification as part of a `metadata.json` fil
   }
 }
 ```
+
+### Proxy Device Example
+
+For a proxied Modbus device, the `gateway` block in the `metadata.json` specifies the target device ID (Unit ID), while the `pointset` block defines the individual points and their register mappings.
+
+```json
+{
+  "gateway": {
+    "target": {
+      "family": "modbus",
+      "addr": "2",
+      "network_id": "modbus_rtu_1"
+    }
+  },
+  "pointset": {
+    "points": {
+      "fan_status": {
+        "ref": "1/101?type=BOOLEAN"
+      },
+      "filter_differential_pressure": {
+        "units": "Pascals",
+        "ref": "4/30005?type=UINT32&worder=LWF&scale=0.01"
+      }
+    }
+  }
+}
+```
+
+
