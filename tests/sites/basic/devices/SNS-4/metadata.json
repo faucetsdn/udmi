@@ -7,6 +7,13 @@
       },
       "split_threshold": {
         "units": "Imperial-gallons-per-minute"
+      },
+      "fan_status": {
+        "ref": "1/101?type=BOOLEAN"
+      },
+      "filter_differential_pressure": {
+        "units": "Pascals",
+        "ref": "4/30005?type=UINT32&worder=LWF&scale=0.01"
       }
     }
   },
@@ -39,7 +46,12 @@
     }
   },
   "gateway": {
-    "gateway_id": "GAT-123"
+    "gateway_id": "GAT-123",
+    "target": {
+      "family": "modbus",
+      "addr": "2",
+      "network_id": "modbus_rtu_1"
+    }
   },
   "version": "1.5.2",
   "timestamp": "2020-05-01T13:39:07Z"

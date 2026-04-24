@@ -217,6 +217,7 @@ unwriteable
 uplink
 uri
 URI
+URIs
 url
 validator
 varchar

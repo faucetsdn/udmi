@@ -27,6 +27,19 @@
       "vendor": {
         "addr": "20231"
       }
+    },
+    "networks": {
+      "modbus_rtu_1": {
+        "family": "modbus",
+        "adjunct": {
+          "protocol": "RTU",
+          "baud": 9600,
+          "parity": "none",
+          "data_bits": 8,
+          "stop_bits": 1,
+          "device": "COM1"
+        }
+      }
     }
   },
   "cloud": {
