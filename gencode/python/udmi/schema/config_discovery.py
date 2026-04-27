@@ -32,3 +32,4 @@ class DiscoveryConfig(DataModel):
     generation: Optional[str] = None
     enumerations: Optional[Enumerations] = None
     families: Optional[Dict[str, FamilyDiscoveryConfig]] = None
+    alarms: Optional[bool] = None

@@ -1,5 +1,6 @@
 from ._base import *
 from .access_iot import *
+from .alarm_ack import *
 from .ancillary_properties import *
 from .bucket import *
 from .building_config_entity import *
@@ -33,6 +34,7 @@ from .configuration_pod_bridge import *
 from .configuration_pubber import *
 from .data_template import *
 from .dimension import *
+from .discovery_alarm_ref import *
 from .discovery_family import *
 from .discovery_feature import *
 from .discovery_ref import *

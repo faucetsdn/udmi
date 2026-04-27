@@ -1,7 +1,6 @@
 
 package udmi.schema;
 
-import java.util.Date;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyDescription;
@@ -11,63 +10,27 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 /**
  * Alarm Alarmset Config
  * <p>
- *
- *
+ * 
+ * 
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
-    "ref",
-    "units",
-    "set_value",
-    "stop_time",
-    "cov_increment"
+    "ref"
 })
 public class AlarmAlarmsetConfig {
 
     /**
-     * Mapping for the alarm to an internal resource (e.g. BACnet object reference)
-     *
+     * Mapping for the alarm to its internal counterpart
+     * 
      */
     @JsonProperty("ref")
-    @JsonPropertyDescription("Mapping for the alarm to an internal resource (e.g. BACnet object reference)")
+    @JsonPropertyDescription("Mapping for the alarm to its internal counterpart")
     public String ref;
-    /**
-     * If specified, indicates the units the device should report the data in.
-     *
-     */
-    @JsonProperty("units")
-    @JsonPropertyDescription("If specified, indicates the units the device should report the data in.")
-    public String units;
-    /**
-     * Used for cloud writeback functionality, this field specifies the value for a given alarm in the device's current units. If the value is numeric, then the type must be integer or number.  If the value is an integer, it should be represented as type integer
-     *
-     */
-    @JsonProperty("set_value")
-    @JsonPropertyDescription("Used for cloud writeback functionality, this field specifies the value for a given alarm in the device's current units. If the value is numeric, then the type must be integer or number.  If the value is an integer, it should be represented as type integer")
-    public Object set_value;
-    /**
-     * RFC 3339 timestamp for the specified alarm write easing to stop
-     *
-     */
-    @JsonProperty("stop_time")
-    @JsonPropertyDescription("RFC 3339 timestamp for the specified alarm write easing to stop")
-    public Date stop_time;
-    /**
-     * The CoV (change of value) increment, which when set, enables CoV on the alarm and defines the minimum change in present value of the respective alarm before an update is published
-     *
-     */
-    @JsonProperty("cov_increment")
-    @JsonPropertyDescription("The CoV (change of value) increment, which when set, enables CoV on the alarm and defines the minimum change in present value of the respective alarm before an update is published")
-    public Double cov_increment;
 
     @Override
     public int hashCode() {
         int result = 1;
         result = ((result* 31)+((this.ref == null)? 0 :this.ref.hashCode()));
-        result = ((result* 31)+((this.units == null)? 0 :this.units.hashCode()));
-        result = ((result* 31)+((this.stop_time == null)? 0 :this.stop_time.hashCode()));
-        result = ((result* 31)+((this.set_value == null)? 0 :this.set_value.hashCode()));
-        result = ((result* 31)+((this.cov_increment == null)? 0 :this.cov_increment.hashCode()));
         return result;
     }
 
@@ -80,7 +43,7 @@ public class AlarmAlarmsetConfig {
             return false;
         }
         AlarmAlarmsetConfig rhs = ((AlarmAlarmsetConfig) other);
-        return ((((((this.ref == rhs.ref)||((this.ref!= null)&&this.ref.equals(rhs.ref)))&&((this.units == rhs.units)||((this.units!= null)&&this.units.equals(rhs.units))))&&((this.stop_time == rhs.stop_time)||((this.stop_time!= null)&&this.stop_time.equals(rhs.stop_time))))&&((this.set_value == rhs.set_value)||((this.set_value!= null)&&this.set_value.equals(rhs.set_value))))&&((this.cov_increment == rhs.cov_increment)||((this.cov_increment!= null)&&this.cov_increment.equals(rhs.cov_increment))));
+        return ((this.ref == rhs.ref)||((this.ref!= null)&&this.ref.equals(rhs.ref)));
     }
 
 }

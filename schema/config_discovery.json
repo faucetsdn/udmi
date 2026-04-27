@@ -39,6 +39,10 @@
           "$ref": "file:config_discovery_family.json"
         }
       }
+    },
+    "alarms": {
+      "description": "Indicates whether or not to discover alarms.",
+      "type": "boolean"
     }
   }
 }

@@ -4,9 +4,10 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Optional, Union
+from typing import Optional
 
 from ._base import DataModel
+from .alarm_ack import AlarmAcknowledgement
 
 
 @dataclass
@@ -15,4 +16,8 @@ class AlarmAlarmsetEvents(DataModel):
     Object representation for for a single alarm
     """
 
-    present_value: Optional[Union[str, bool, float]] = None
+    activate_time: Optional[str] = None
+    activate_ack: Optional[AlarmAcknowledgement] = None
+    active: Optional[bool] = None
+    return_to_normal_time: Optional[str] = None
+    return_to_normal_ack: Optional[AlarmAcknowledgement] = None

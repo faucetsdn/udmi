@@ -19,7 +19,8 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 @JsonPropertyOrder({
     "generation",
     "enumerations",
-    "families"
+    "families",
+    "alarms"
 })
 public class DiscoveryConfig {
 
@@ -44,13 +45,21 @@ public class DiscoveryConfig {
     @JsonProperty("families")
     @JsonPropertyDescription("Address family configs for discovery scans.")
     public Map<String, FamilyDiscoveryConfig> families;
+    /**
+     * Indicates whether or not to discover alarms.
+     * 
+     */
+    @JsonProperty("alarms")
+    @JsonPropertyDescription("Indicates whether or not to discover alarms.")
+    public Boolean alarms;
 
     @Override
     public int hashCode() {
         int result = 1;
         result = ((result* 31)+((this.generation == null)? 0 :this.generation.hashCode()));
-        result = ((result* 31)+((this.families == null)? 0 :this.families.hashCode()));
         result = ((result* 31)+((this.enumerations == null)? 0 :this.enumerations.hashCode()));
+        result = ((result* 31)+((this.families == null)? 0 :this.families.hashCode()));
+        result = ((result* 31)+((this.alarms == null)? 0 :this.alarms.hashCode()));
         return result;
     }
 
@@ -63,7 +72,7 @@ public class DiscoveryConfig {
             return false;
         }
         DiscoveryConfig rhs = ((DiscoveryConfig) other);
-        return ((((this.generation == rhs.generation)||((this.generation!= null)&&this.generation.equals(rhs.generation)))&&((this.families == rhs.families)||((this.families!= null)&&this.families.equals(rhs.families))))&&((this.enumerations == rhs.enumerations)||((this.enumerations!= null)&&this.enumerations.equals(rhs.enumerations))));
+        return (((((this.generation == rhs.generation)||((this.generation!= null)&&this.generation.equals(rhs.generation)))&&((this.enumerations == rhs.enumerations)||((this.enumerations!= null)&&this.enumerations.equals(rhs.enumerations))))&&((this.families == rhs.families)||((this.families!= null)&&this.families.equals(rhs.families))))&&((this.alarms == rhs.alarms)||((this.alarms!= null)&&this.alarms.equals(rhs.alarms))));
     }
 
 }

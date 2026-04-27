@@ -4,24 +4,10 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from enum import Enum
 from typing import Optional
 
 from ._base import DataModel
 from .entry import Entry
-
-
-class ValueState(Enum):
-    """
-    State of the individual alarm
-    """
-
-    initializing = 'initializing'
-    applied = 'applied'
-    updating = 'updating'
-    overridden = 'overridden'
-    invalid = 'invalid'
-    failure = 'failure'
 
 
 @dataclass
@@ -30,6 +16,4 @@ class AlarmAlarmsetState(DataModel):
     Object representation for for a single alarm
     """
 
-    units: Optional[str] = None
-    value_state: Optional[ValueState] = None
     status: Optional[Entry] = None

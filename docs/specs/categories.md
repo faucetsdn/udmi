@@ -35,6 +35,9 @@ could be used with a **WARNING** level for a warning case during normal operatio
     * _overridden_: (**WARNING**) The reported value has been overridden locally
     * _failure_: (**ERROR**) The system failed to read/write the point
     * _invalid_: (**ERROR**) A `config` parameter for the point is invalid in some way
+* _alarmset_: Handling alarm configuration
+  * _alarm_: Conditions specific to an individual alarm
+    * _invalid_: (**ERROR**) A `config` parameter for the alarm is invalid in some way
 * _localnet_: Aspects of working with various local networks
   * _network_: (**INFO**) Aspects of a specific network
     * _connect_: (**NOTICE**) Connected status of the device on 

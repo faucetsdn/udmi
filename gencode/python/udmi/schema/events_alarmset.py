@@ -13,11 +13,10 @@ from .events_alarmset_alarm import AlarmAlarmsetEvents
 @dataclass
 class AlarmsetEvents(DataModel):
     """
-    A set of alarms reporting telemetry data. [Alarmset Events Documentation](../docs/messages/alarmset.md#telemetry)
+    A set of alarm events.
     """
 
     timestamp: Optional[str] = None
     version: Optional[str] = None
     upgraded_from: Optional[str] = None
-    partial_update: Optional[bool] = None
     alarms: Optional[Dict[str, AlarmAlarmsetEvents]] = None

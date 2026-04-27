@@ -17,7 +17,4 @@ class AlarmsetModel(DataModel):
     """
 
     alarms: Optional[Dict[str, AlarmAlarmsetModel]] = None
-    exclude_units_from_config: Optional[bool] = None
     exclude_alarms_from_config: Optional[bool] = None
-    sample_limit_sec: Optional[int] = None
-    sample_rate_sec: Optional[int] = None

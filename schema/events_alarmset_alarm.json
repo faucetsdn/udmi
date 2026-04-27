@@ -6,17 +6,31 @@
   "$schema": "http://json-schema.org/draft-07/schema#",
   "additionalProperties": false,
   "properties": {
-    "present_value": {
-      "description": "The specific alarm data reading.  If the value is numeric, then the type must be integer or number.  If the value is an integer, it should be represented as type integer",
-       "oneOf": [
-	 { "type": "string" },
-         { "type": "boolean" },
-	 { "type": "number" }
-       ],
-      "examples": [24.1, "running", 4]
+    "activate_time": {
+      "description": "Timestamp of when the alarm became active.",
+      "type": "string",
+      "format": "date-time"
+    },
+    "activate_ack": {
+      "description": "Acknowledgement of the alarm activation.",
+      "$ref": "file:alarm_ack.json"
+    },
+    "active": {
+      "description": "Indicates whether or not the alarm conditions are currently active.",
+      "type": "boolean"
+    },
+    "return_to_normal_time": {
+      "description": "Timestamp of when the alarm conditions returned to normal.",
+      "type": "string",
+      "format": "date-time"
+    },
+    "return_to_normal_ack": {
+      "description": "Acknowledgement of the alarm returning to normal.",
+      "$ref": "file:alarm_ack.json"
     }
   },
   "required": [
-    "present_value"
+    "activate_time",
+    "active"
   ]
 }

@@ -1,11 +1,20 @@
 {
   "$udmi_version": "1.5.2",
-  "title": "Alarm Alarmset Model",
-  "description": "Information about a specific alarm name of the device.",
+  "title": "Alarm Ref Discovery",
+  "description": "Object representation for for a single alarm reference discovery",
   "type": "object",
   "$schema": "http://json-schema.org/draft-07/schema#",
   "additionalProperties": false,
   "properties": {
+    "alarm": {
+      "description": "Alarm descriptor for this alarm",
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9]*(_[a-z0-9]+)*$"
+    },
+    "name": {
+      "description": "Friendly name for the reference, if known",
+      "type": "string"
+    },
     "description": {
       "description": "Detailed description of this alarm",
       "type": "string"
@@ -29,20 +38,6 @@
     "return_requires_ack": {
       "description": "Indicates whether or not returning to normal requries acknowledgement.",
       "type": "boolean"
-    },
-    "ref": {
-      "description": "Mapping for the alarm to its internal counterpart",
-      "type": "string"
-    },
-    "structure": {
-      "description": "Collection of alarm information",
-      "additionalProperties": false,
-      "existingJavaType": "java.util.Map<String, AlarmRefDiscovery>",
-      "patternProperties": {
-        "^[-_.:/a-zA-Z0-9]+$": {
-          "$ref": "file:discovery_alarm_ref.json#"
-        }
-      }
     }
   }
 }

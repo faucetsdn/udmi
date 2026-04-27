@@ -7,7 +7,7 @@
 
 ## Messages
 * [**config**](config.html) - The config block controls a device's intended behavior. [Config Documentation](../../docs/messages/config.md)
-* [**events_alarmset**](events_alarmset.html) - A set of alarms reporting telemetry data. [Alarmset Events Documentation](../../docs/messages/alarmset.md#telemetry)
+* [**events_alarmset**](events_alarmset.html) - A set of alarm events.
 * [**events_discovery**](events_discovery.html) - [Discovery result](../../docs/specs/discovery.md) with implicit discovery
 * [**events_pointset**](events_pointset.html) - A set of points reporting telemetry data. [Pointset Events Documentation](../../docs/messages/pointset.md#telemetry)
 * [**events_system**](events_system.html) - Used for system events such as logging. [System Event Documentation](../../docs/messages/system.md#event)
