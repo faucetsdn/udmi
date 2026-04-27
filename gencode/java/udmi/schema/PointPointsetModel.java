@@ -143,7 +143,7 @@ public class PointPointsetModel {
     public Map<String, RefDiscovery> structure;
     /**
      * Virtual equipment mapping linking this local point to a remote point in another device
-     *
+     * 
      */
     @JsonProperty("link")
     @JsonPropertyDescription("Virtual equipment mapping linking this local point to a remote point in another device")

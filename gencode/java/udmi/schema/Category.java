@@ -105,6 +105,12 @@ public class Category {
     public static final int POINTSET_POINT_INVALID_VALUE = ERROR.value();
     static { LEVEL.put(POINTSET_POINT_INVALID, ERROR); }
 
+    // A `config` parameter for the alarm is invalid in some way
+    public static final String ALARMSET_ALARM_INVALID = "alarmset.alarm.invalid";
+    public static final Level ALARMSET_ALARM_INVALID_LEVEL = ERROR;
+    public static final int ALARMSET_ALARM_INVALID_VALUE = ERROR.value();
+    static { LEVEL.put(ALARMSET_ALARM_INVALID, ERROR); }
+
     // Aspects of a specific network
     public static final String LOCALNET_NETWORK = "localnet.network";
     public static final Level LOCALNET_NETWORK_LEVEL = INFO;

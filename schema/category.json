@@ -19,6 +19,7 @@
     { "pattern": "^pointset\\.point\\.overridden$" },
     { "pattern": "^pointset\\.point\\.failure$" },
     { "pattern": "^pointset\\.point\\.invalid$" },
+    { "pattern": "^alarmset\\.alarm\\.invalid$" },
     { "pattern": "^localnet\\.network$" },
     { "pattern": "^localnet\\.network\\.connect$" },
     { "pattern": "^gateway\\.setup\\.attach$" },

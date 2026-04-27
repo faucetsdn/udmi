@@ -8,10 +8,12 @@ from typing import Any, Dict, Optional
 
 from ._base import DataModel
 from .ancillary_properties import AncillaryProperties
+from .discovery_alarm_ref import AlarmRefDiscovery
 from .discovery_family import FamilyDiscovery
 from .discovery_feature import FeatureDiscovery
 from .discovery_ref import RefDiscovery
 from .entry import Entry
+from .model_alarmset_alarm import AlarmAlarmsetModel
 from .model_cloud import CloudModel
 from .model_pointset_point import PointPointsetModel
 from .state_system_hardware import StateSystemHardware
@@ -45,6 +47,8 @@ class DiscoveryEvents(DataModel):
     devices: Optional[Dict[str, CloudModel]] = None
     points: Optional[Dict[str, PointPointsetModel]] = None
     refs: Optional[Dict[str, RefDiscovery]] = None
+    alarms: Optional[Dict[str, AlarmAlarmsetModel]] = None
+    alarm_refs: Optional[Dict[str, AlarmRefDiscovery]] = None
     features: Optional[Dict[str, FeatureDiscovery]] = None
     cloud_model: Optional[CloudModel] = None
     system: Optional[System] = None

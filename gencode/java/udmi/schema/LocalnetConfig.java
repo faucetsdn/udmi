@@ -30,7 +30,7 @@ public class LocalnetConfig {
     public HashMap<String, FamilyLocalnetConfig> families;
     /**
      * Network address family config for reporting.
-     *
+     * 
      */
     @JsonProperty("networks")
     @JsonPropertyDescription("Network address family config for reporting.")

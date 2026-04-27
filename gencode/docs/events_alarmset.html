@@ -11,8 +11,8 @@
     <script src="https://use.fontawesome.com/facf9fa52c.js"></script>
     <script src="schema_doc.min.js"></script>
     <meta charset="utf-8"/>
-
-
+        
+    
     <title>Alarmset Events</title>
 <script src="schema_extras.js" ></script></head>
     <body onload="anchorOnLoad();removedHostedMDExtensions();" id="root"><nav> <ol class="breadcrumb bg-white" style="padding: 0"> <li class="breadcrumb-item"><a href="../../">UDMI</a></li> <li class="breadcrumb-item"><a href="../">Schema</a></li> <li class="breadcrumb-item"><a href="./">Schema Viewer</a></li> </ol> </nav> <div class="text-right">
@@ -21,14 +21,14 @@
         </div>
 
     <div class="breadcrumbs"></div> <h1>Alarmset Events</h1><span class="badge badge-dark value-type">Type: object</span><br/>
-<span class="description"><p>A set of alarms reporting telemetry data. <a href="../../docs/messages/alarmset.md#telemetry">Alarmset Events Documentation</a></p>
+<span class="description"><p>A set of alarm events.</p>
 </span> <span class="badge badge-info no-additional">No Additional Properties</span>
+        
 
+        
+        
 
-
-
-
-
+        
 <div class="accordion" id="accordiontimestamp">
     <div class="card">
         <div class="card-header" id="headingtimestamp">
@@ -51,12 +51,12 @@
             />
         </svg>
     <a href="#timestamp" onclick="anchorLink('timestamp')">timestamp</a></div><span class="badge badge-dark value-type">Type: string</span><span class="badge badge-info value-type">Format: date-time</span><br/>
-<span class="description"><p>RFC 3339 UTC timestamp the telemetry event was generated</p>
+<span class="description"><p>RFC 3339 UTC timestamp the alarm event was generated</p>
 </span>
+        
 
-
-
-
+        
+        
 
         <br/>
 <div class="badge badge-secondary">Example:</div>
@@ -91,12 +91,12 @@
     <a href="#version" onclick="anchorLink('version')">version</a></div><span class="badge badge-dark value-type">Type: string</span><br/>
 <span class="description"><p>Version of the UDMI schema</p>
 </span>
+        
 
+        
+        
 
-
-
-
-
+        
             </div>
         </div>
     </div>
@@ -125,46 +125,12 @@
     <a href="#upgraded_from" onclick="anchorLink('upgraded_from')">upgraded_from</a></div><span class="badge badge-dark value-type">Type: string</span><br/>
 <span class="description"><p>Original version of schema pre-upgrade</p>
 </span>
+        
 
+        
+        
 
-
-
-
-
-            </div>
-        </div>
-    </div>
-</div>
-<div class="accordion" id="accordionpartial_update">
-    <div class="card">
-        <div class="card-header" id="headingpartial_update">
-            <h2 class="mb-0">
-                <button class="btn btn-link property-name-button" type="button" data-toggle="collapse" data-target="#partial_update"
-                        aria-expanded="" aria-controls="partial_update" onclick="setAnchor('#partial_update')"><span class="property-name">partial_update</span></button>
-            </h2>
-        </div>
-
-        <div id="partial_update"
-             class="collapse property-definition-div" aria-labelledby="headingpartial_update"
-             data-parent="#accordionpartial_update">
-            <div class="card-body pl-5">
-
-    <div class="breadcrumbs">root
-        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
-            <path
-                fill-rule="evenodd"
-                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
-            />
-        </svg>
-    <a href="#partial_update" onclick="anchorLink('partial_update')">partial_update</a></div><span class="badge badge-dark value-type">Type: boolean</span><br/>
-<span class="description"><p>Indicates if this is a partial update (only some alarms may be included)</p>
-</span>
-
-
-
-
-
-
+        
             </div>
         </div>
     </div>
@@ -193,12 +159,12 @@
     <a href="#alarms" onclick="anchorLink('alarms')">alarms</a></div><span class="badge badge-dark value-type">Type: object</span><br/>
 <span class="description"><p>Collection of alarm names, defining the representative alarm set for this device.</p>
 </span> <span class="badge badge-info no-additional">No Additional Properties</span>
+        
 
+        
+        
 
-
-
-
-
+        
 <div class="accordion" id="accordionalarms_pattern1">
     <div class="card">
         <div class="card-header" id="headingalarms_pattern1">
@@ -237,24 +203,24 @@
 </span>
 
      <span class="badge badge-info no-additional">No Additional Properties</span>
+        
 
+        
+        
 
-
-
-
-
-<div class="accordion" id="accordionalarms_pattern1_present_value">
+        
+<div class="accordion" id="accordionalarms_pattern1_activate_time">
     <div class="card">
-        <div class="card-header" id="headingalarms_pattern1_present_value">
+        <div class="card-header" id="headingalarms_pattern1_activate_time">
             <h2 class="mb-0">
-                <button class="btn btn-link property-name-button" type="button" data-toggle="collapse" data-target="#alarms_pattern1_present_value"
-                        aria-expanded="" aria-controls="alarms_pattern1_present_value" onclick="setAnchor('#alarms_pattern1_present_value')"><span class="property-name">present_value</span> <span class="badge badge-warning required-property">Required</span></button>
+                <button class="btn btn-link property-name-button" type="button" data-toggle="collapse" data-target="#alarms_pattern1_activate_time"
+                        aria-expanded="" aria-controls="alarms_pattern1_activate_time" onclick="setAnchor('#alarms_pattern1_activate_time')"><span class="property-name">activate_time</span> <span class="badge badge-warning required-property">Required</span></button>
             </h2>
         </div>
 
-        <div id="alarms_pattern1_present_value"
-             class="collapse property-definition-div" aria-labelledby="headingalarms_pattern1_present_value"
-             data-parent="#accordionalarms_pattern1_present_value">
+        <div id="alarms_pattern1_activate_time"
+             class="collapse property-definition-div" aria-labelledby="headingalarms_pattern1_activate_time"
+             data-parent="#accordionalarms_pattern1_activate_time">
             <div class="card-body pl-5">
 
     <div class="breadcrumbs">root
@@ -278,76 +244,32 @@
                 d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
             />
         </svg>
-    <a href="#alarms_pattern1_present_value" onclick="anchorLink('alarms_pattern1_present_value')">present_value</a></div><br/>
-<span class="description"><p>The specific alarm data reading.  If the value is numeric, then the type must be integer or number.  If the value is an integer, it should be represented as type integer</p>
-</span><div class="one-of-value" id="alarms_pattern1_present_value_oneOf"><h2 class="handle">
-  <label>One of</label>
-</h2><ul class="nav nav-tabs" id="tabsalarms_pattern1_present_value_oneOf_oneOf" role="tablist"><li class="nav-item">
-            <a class="nav-link active oneOf-option"
-               id="alarms_pattern1_present_value_oneOf_i0" data-toggle="tab" href="#tab-pane_alarms_pattern1_present_value_oneOf_i0" role="tab"
-               onclick="setAnchor('#alarms_pattern1_present_value_oneOf_i0')"
-            >Option 1</a>
-        </li><li class="nav-item">
-            <a class="nav-link oneOf-option"
-               id="alarms_pattern1_present_value_oneOf_i1" data-toggle="tab" href="#tab-pane_alarms_pattern1_present_value_oneOf_i1" role="tab"
-               onclick="setAnchor('#alarms_pattern1_present_value_oneOf_i1')"
-            >Option 2</a>
-        </li><li class="nav-item">
-            <a class="nav-link oneOf-option"
-               id="alarms_pattern1_present_value_oneOf_i2" data-toggle="tab" href="#tab-pane_alarms_pattern1_present_value_oneOf_i2" role="tab"
-               onclick="setAnchor('#alarms_pattern1_present_value_oneOf_i2')"
-            >Option 3</a>
-        </li></ul>
-<div class="tab-content card"><div class="tab-pane fade card-body active show"
-             id="tab-pane_alarms_pattern1_present_value_oneOf_i0" role="tabpanel">
+    <a href="#alarms_pattern1_activate_time" onclick="anchorLink('alarms_pattern1_activate_time')">activate_time</a></div><span class="badge badge-dark value-type">Type: string</span><span class="badge badge-info value-type">Format: date-time</span><br/>
+<span class="description"><p>Timestamp of when the alarm became active.</p>
+</span>
+        
 
+        
+        
 
-    <div class="breadcrumbs">root
-        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
-            <path
-                fill-rule="evenodd"
-                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
-            />
-        </svg>
-    <a href="#alarms" onclick="anchorLink('alarms')">alarms</a>
-        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
-            <path
-                fill-rule="evenodd"
-                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
-            />
-        </svg>
-    <a href="#alarms_pattern1" onclick="anchorLink('alarms_pattern1')">Alarm Alarmset Events</a>
-        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
-            <path
-                fill-rule="evenodd"
-                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
-            />
-        </svg>
-    <a href="#alarms_pattern1_present_value" onclick="anchorLink('alarms_pattern1_present_value')">present_value</a>
-        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
-            <path
-                fill-rule="evenodd"
-                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
-            />
-        </svg>
-    <a href="#alarms_pattern1_present_value_oneOf" onclick="anchorLink('alarms_pattern1_present_value_oneOf')">oneOf</a>
-        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
-            <path
-                fill-rule="evenodd"
-                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
-            />
-        </svg>
-    <a href="#alarms_pattern1_present_value_oneOf_i0" onclick="anchorLink('alarms_pattern1_present_value_oneOf_i0')">item 0</a></div><span class="badge badge-dark value-type">Type: string</span><br/>
+        
+            </div>
+        </div>
+    </div>
+</div>
+<div class="accordion" id="accordionalarms_pattern1_activate_ack">
+    <div class="card">
+        <div class="card-header" id="headingalarms_pattern1_activate_ack">
+            <h2 class="mb-0">
+                <button class="btn btn-link property-name-button" type="button" data-toggle="collapse" data-target="#alarms_pattern1_activate_ack"
+                        aria-expanded="" aria-controls="alarms_pattern1_activate_ack" onclick="setAnchor('#alarms_pattern1_activate_ack')"><span class="property-name">activate_ack</span></button>
+            </h2>
+        </div>
 
-
-
-
-
-
-
-        </div><div class="tab-pane fade card-body "
-             id="tab-pane_alarms_pattern1_present_value_oneOf_i1" role="tabpanel">
-
+        <div id="alarms_pattern1_activate_ack"
+             class="collapse property-definition-div" aria-labelledby="headingalarms_pattern1_activate_ack"
+             data-parent="#accordionalarms_pattern1_activate_ack">
+            <div class="card-body pl-5">
 
     <div class="breadcrumbs">root
         <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
@@ -370,31 +292,30 @@
                 d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
             />
         </svg>
-    <a href="#alarms_pattern1_present_value" onclick="anchorLink('alarms_pattern1_present_value')">present_value</a>
-        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
-            <path
-                fill-rule="evenodd"
-                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
-            />
-        </svg>
-    <a href="#alarms_pattern1_present_value_oneOf" onclick="anchorLink('alarms_pattern1_present_value_oneOf')">oneOf</a>
-        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
-            <path
-                fill-rule="evenodd"
-                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
-            />
-        </svg>
-    <a href="#alarms_pattern1_present_value_oneOf_i1" onclick="anchorLink('alarms_pattern1_present_value_oneOf_i1')">item 1</a></div><span class="badge badge-dark value-type">Type: boolean</span><br/>
+    <a href="#alarms_pattern1_activate_ack" onclick="anchorLink('alarms_pattern1_activate_ack')">activate_ack</a></div><h4>Alarm Acknowledgement</h4><span class="badge badge-dark value-type">Type: object</span><br/>
+<span class="description"><p>Acknowledgement of the alarm activation.</p>
+</span>
 
+     <span class="badge badge-info no-additional">No Additional Properties</span>
+        
 
+        
+        
 
+        
+<div class="accordion" id="accordionalarms_pattern1_activate_ack_timestamp">
+    <div class="card">
+        <div class="card-header" id="headingalarms_pattern1_activate_ack_timestamp">
+            <h2 class="mb-0">
+                <button class="btn btn-link property-name-button" type="button" data-toggle="collapse" data-target="#alarms_pattern1_activate_ack_timestamp"
+                        aria-expanded="" aria-controls="alarms_pattern1_activate_ack_timestamp" onclick="setAnchor('#alarms_pattern1_activate_ack_timestamp')"><span class="property-name">timestamp</span> <span class="badge badge-warning required-property">Required</span></button>
+            </h2>
+        </div>
 
-
-
-
-        </div><div class="tab-pane fade card-body "
-             id="tab-pane_alarms_pattern1_present_value_oneOf_i2" role="tabpanel">
-
+        <div id="alarms_pattern1_activate_ack_timestamp"
+             class="collapse property-definition-div" aria-labelledby="headingalarms_pattern1_activate_ack_timestamp"
+             data-parent="#accordionalarms_pattern1_activate_ack_timestamp">
+            <div class="card-body pl-5">
 
     <div class="breadcrumbs">root
         <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
@@ -417,42 +338,446 @@
                 d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
             />
         </svg>
-    <a href="#alarms_pattern1_present_value" onclick="anchorLink('alarms_pattern1_present_value')">present_value</a>
+    <a href="#alarms_pattern1_activate_ack" onclick="anchorLink('alarms_pattern1_activate_ack')">activate_ack</a>
         <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
             <path
                 fill-rule="evenodd"
                 d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
             />
         </svg>
-    <a href="#alarms_pattern1_present_value_oneOf" onclick="anchorLink('alarms_pattern1_present_value_oneOf')">oneOf</a>
+    <a href="#alarms_pattern1_activate_ack_timestamp" onclick="anchorLink('alarms_pattern1_activate_ack_timestamp')">timestamp</a></div><span class="badge badge-dark value-type">Type: string</span><span class="badge badge-info value-type">Format: date-time</span><br/>
+<span class="description"><p>Timestamp of when the alarm was acknowledged.</p>
+</span>
+        
+
+        
+        
+
+        
+            </div>
+        </div>
+    </div>
+</div>
+<div class="accordion" id="accordionalarms_pattern1_activate_ack_user">
+    <div class="card">
+        <div class="card-header" id="headingalarms_pattern1_activate_ack_user">
+            <h2 class="mb-0">
+                <button class="btn btn-link property-name-button" type="button" data-toggle="collapse" data-target="#alarms_pattern1_activate_ack_user"
+                        aria-expanded="" aria-controls="alarms_pattern1_activate_ack_user" onclick="setAnchor('#alarms_pattern1_activate_ack_user')"><span class="property-name">user</span></button>
+            </h2>
+        </div>
+
+        <div id="alarms_pattern1_activate_ack_user"
+             class="collapse property-definition-div" aria-labelledby="headingalarms_pattern1_activate_ack_user"
+             data-parent="#accordionalarms_pattern1_activate_ack_user">
+            <div class="card-body pl-5">
+
+    <div class="breadcrumbs">root
         <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
             <path
                 fill-rule="evenodd"
                 d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
             />
         </svg>
-    <a href="#alarms_pattern1_present_value_oneOf_i2" onclick="anchorLink('alarms_pattern1_present_value_oneOf_i2')">item 2</a></div><span class="badge badge-dark value-type">Type: number</span><br/>
+    <a href="#alarms" onclick="anchorLink('alarms')">alarms</a>
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#alarms_pattern1" onclick="anchorLink('alarms_pattern1')">Alarm Alarmset Events</a>
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#alarms_pattern1_activate_ack" onclick="anchorLink('alarms_pattern1_activate_ack')">activate_ack</a>
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#alarms_pattern1_activate_ack_user" onclick="anchorLink('alarms_pattern1_activate_ack_user')">user</a></div><span class="badge badge-dark value-type">Type: string</span><br/>
+<span class="description"><p>Name of the user who acknowledged this alarm.</p>
+</span>
+        
 
+        
+        
 
+        
+            </div>
+        </div>
+    </div>
+</div>
+<div class="accordion" id="accordionalarms_pattern1_activate_ack_comment">
+    <div class="card">
+        <div class="card-header" id="headingalarms_pattern1_activate_ack_comment">
+            <h2 class="mb-0">
+                <button class="btn btn-link property-name-button" type="button" data-toggle="collapse" data-target="#alarms_pattern1_activate_ack_comment"
+                        aria-expanded="" aria-controls="alarms_pattern1_activate_ack_comment" onclick="setAnchor('#alarms_pattern1_activate_ack_comment')"><span class="property-name">comment</span></button>
+            </h2>
+        </div>
 
+        <div id="alarms_pattern1_activate_ack_comment"
+             class="collapse property-definition-div" aria-labelledby="headingalarms_pattern1_activate_ack_comment"
+             data-parent="#accordionalarms_pattern1_activate_ack_comment">
+            <div class="card-body pl-5">
 
+    <div class="breadcrumbs">root
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#alarms" onclick="anchorLink('alarms')">alarms</a>
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#alarms_pattern1" onclick="anchorLink('alarms_pattern1')">Alarm Alarmset Events</a>
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#alarms_pattern1_activate_ack" onclick="anchorLink('alarms_pattern1_activate_ack')">activate_ack</a>
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#alarms_pattern1_activate_ack_comment" onclick="anchorLink('alarms_pattern1_activate_ack_comment')">comment</a></div><span class="badge badge-dark value-type">Type: string</span><br/>
+<span class="description"><p>Comment left by the user when acknowledging this alarm.</p>
+</span>
+        
 
+        
+        
 
+        
+            </div>
+        </div>
+    </div>
+</div>
+            </div>
+        </div>
+    </div>
+</div>
+<div class="accordion" id="accordionalarms_pattern1_active">
+    <div class="card">
+        <div class="card-header" id="headingalarms_pattern1_active">
+            <h2 class="mb-0">
+                <button class="btn btn-link property-name-button" type="button" data-toggle="collapse" data-target="#alarms_pattern1_active"
+                        aria-expanded="" aria-controls="alarms_pattern1_active" onclick="setAnchor('#alarms_pattern1_active')"><span class="property-name">active</span> <span class="badge badge-warning required-property">Required</span></button>
+            </h2>
+        </div>
 
-        </div></div></div>
+        <div id="alarms_pattern1_active"
+             class="collapse property-definition-div" aria-labelledby="headingalarms_pattern1_active"
+             data-parent="#accordionalarms_pattern1_active">
+            <div class="card-body pl-5">
 
+    <div class="breadcrumbs">root
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#alarms" onclick="anchorLink('alarms')">alarms</a>
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#alarms_pattern1" onclick="anchorLink('alarms_pattern1')">Alarm Alarmset Events</a>
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#alarms_pattern1_active" onclick="anchorLink('alarms_pattern1_active')">active</a></div><span class="badge badge-dark value-type">Type: boolean</span><br/>
+<span class="description"><p>Indicates whether or not the alarm conditions are currently active.</p>
+</span>
+        
 
+        
+        
 
+        
+            </div>
+        </div>
+    </div>
+</div>
+<div class="accordion" id="accordionalarms_pattern1_return_to_normal_time">
+    <div class="card">
+        <div class="card-header" id="headingalarms_pattern1_return_to_normal_time">
+            <h2 class="mb-0">
+                <button class="btn btn-link property-name-button" type="button" data-toggle="collapse" data-target="#alarms_pattern1_return_to_normal_time"
+                        aria-expanded="" aria-controls="alarms_pattern1_return_to_normal_time" onclick="setAnchor('#alarms_pattern1_return_to_normal_time')"><span class="property-name">return_to_normal_time</span></button>
+            </h2>
+        </div>
 
+        <div id="alarms_pattern1_return_to_normal_time"
+             class="collapse property-definition-div" aria-labelledby="headingalarms_pattern1_return_to_normal_time"
+             data-parent="#accordionalarms_pattern1_return_to_normal_time">
+            <div class="card-body pl-5">
 
-        <br/>
-<div class="badge badge-secondary">Examples:</div>
-<br/><div id="alarms_pattern1_present_value_ex1" class="jumbotron examples"><div class="highlight"><pre><span></span><span class="mf">24.1</span>
-</pre></div>
-</div><div id="alarms_pattern1_present_value_ex2" class="jumbotron examples"><div class="highlight"><pre><span></span><span class="s2">&quot;running&quot;</span>
-</pre></div>
-</div><div id="alarms_pattern1_present_value_ex3" class="jumbotron examples"><div class="highlight"><pre><span></span><span class="mf">4</span>
-</pre></div>
+    <div class="breadcrumbs">root
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#alarms" onclick="anchorLink('alarms')">alarms</a>
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#alarms_pattern1" onclick="anchorLink('alarms_pattern1')">Alarm Alarmset Events</a>
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#alarms_pattern1_return_to_normal_time" onclick="anchorLink('alarms_pattern1_return_to_normal_time')">return_to_normal_time</a></div><span class="badge badge-dark value-type">Type: string</span><span class="badge badge-info value-type">Format: date-time</span><br/>
+<span class="description"><p>Timestamp of when the alarm conditions returned to normal.</p>
+</span>
+        
+
+        
+        
+
+        
+            </div>
+        </div>
+    </div>
+</div>
+<div class="accordion" id="accordionalarms_pattern1_return_to_normal_ack">
+    <div class="card">
+        <div class="card-header" id="headingalarms_pattern1_return_to_normal_ack">
+            <h2 class="mb-0">
+                <button class="btn btn-link property-name-button" type="button" data-toggle="collapse" data-target="#alarms_pattern1_return_to_normal_ack"
+                        aria-expanded="" aria-controls="alarms_pattern1_return_to_normal_ack" onclick="setAnchor('#alarms_pattern1_return_to_normal_ack')"><span class="property-name">return_to_normal_ack</span></button>
+            </h2>
+        </div>
+
+        <div id="alarms_pattern1_return_to_normal_ack"
+             class="collapse property-definition-div" aria-labelledby="headingalarms_pattern1_return_to_normal_ack"
+             data-parent="#accordionalarms_pattern1_return_to_normal_ack">
+            <div class="card-body pl-5">
+
+    <div class="breadcrumbs">root
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#alarms" onclick="anchorLink('alarms')">alarms</a>
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#alarms_pattern1" onclick="anchorLink('alarms_pattern1')">Alarm Alarmset Events</a>
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#alarms_pattern1_return_to_normal_ack" onclick="anchorLink('alarms_pattern1_return_to_normal_ack')">return_to_normal_ack</a></div><h4>Alarm Acknowledgement</h4><span class="badge badge-dark value-type">Type: object</span><br/>
+<span class="description"><p>Acknowledgement of the alarm returning to normal.</p>
+</span>
+
+     <span class="badge badge-info no-additional">No Additional Properties</span>
+        
+
+        
+        
+
+        
+<div class="accordion" id="accordionalarms_pattern1_return_to_normal_ack_timestamp">
+    <div class="card">
+        <div class="card-header" id="headingalarms_pattern1_return_to_normal_ack_timestamp">
+            <h2 class="mb-0">
+                <button class="btn btn-link property-name-button" type="button" data-toggle="collapse" data-target="#alarms_pattern1_return_to_normal_ack_timestamp"
+                        aria-expanded="" aria-controls="alarms_pattern1_return_to_normal_ack_timestamp" onclick="setAnchor('#alarms_pattern1_return_to_normal_ack_timestamp')"><span class="property-name">timestamp</span> <span class="badge badge-warning required-property">Required</span></button>
+            </h2>
+        </div>
+
+        <div id="alarms_pattern1_return_to_normal_ack_timestamp"
+             class="collapse property-definition-div" aria-labelledby="headingalarms_pattern1_return_to_normal_ack_timestamp"
+             data-parent="#accordionalarms_pattern1_return_to_normal_ack_timestamp">
+            <div class="card-body pl-5">
+
+    <div class="breadcrumbs">root
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#alarms" onclick="anchorLink('alarms')">alarms</a>
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#alarms_pattern1" onclick="anchorLink('alarms_pattern1')">Alarm Alarmset Events</a>
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#alarms_pattern1_return_to_normal_ack" onclick="anchorLink('alarms_pattern1_return_to_normal_ack')">return_to_normal_ack</a>
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#alarms_pattern1_return_to_normal_ack_timestamp" onclick="anchorLink('alarms_pattern1_return_to_normal_ack_timestamp')">timestamp</a></div><span class="badge badge-dark value-type">Type: string</span><span class="badge badge-info value-type">Format: date-time</span><br/>
+<span class="description"><p>Timestamp of when the alarm was acknowledged.</p>
+</span>
+        
+
+        
+        
+
+        
+            </div>
+        </div>
+    </div>
+</div>
+<div class="accordion" id="accordionalarms_pattern1_return_to_normal_ack_user">
+    <div class="card">
+        <div class="card-header" id="headingalarms_pattern1_return_to_normal_ack_user">
+            <h2 class="mb-0">
+                <button class="btn btn-link property-name-button" type="button" data-toggle="collapse" data-target="#alarms_pattern1_return_to_normal_ack_user"
+                        aria-expanded="" aria-controls="alarms_pattern1_return_to_normal_ack_user" onclick="setAnchor('#alarms_pattern1_return_to_normal_ack_user')"><span class="property-name">user</span></button>
+            </h2>
+        </div>
+
+        <div id="alarms_pattern1_return_to_normal_ack_user"
+             class="collapse property-definition-div" aria-labelledby="headingalarms_pattern1_return_to_normal_ack_user"
+             data-parent="#accordionalarms_pattern1_return_to_normal_ack_user">
+            <div class="card-body pl-5">
+
+    <div class="breadcrumbs">root
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#alarms" onclick="anchorLink('alarms')">alarms</a>
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#alarms_pattern1" onclick="anchorLink('alarms_pattern1')">Alarm Alarmset Events</a>
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#alarms_pattern1_return_to_normal_ack" onclick="anchorLink('alarms_pattern1_return_to_normal_ack')">return_to_normal_ack</a>
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#alarms_pattern1_return_to_normal_ack_user" onclick="anchorLink('alarms_pattern1_return_to_normal_ack_user')">user</a></div><span class="badge badge-dark value-type">Type: string</span><br/>
+<span class="description"><p>Name of the user who acknowledged this alarm.</p>
+</span>
+        
+
+        
+        
+
+        
+            </div>
+        </div>
+    </div>
+</div>
+<div class="accordion" id="accordionalarms_pattern1_return_to_normal_ack_comment">
+    <div class="card">
+        <div class="card-header" id="headingalarms_pattern1_return_to_normal_ack_comment">
+            <h2 class="mb-0">
+                <button class="btn btn-link property-name-button" type="button" data-toggle="collapse" data-target="#alarms_pattern1_return_to_normal_ack_comment"
+                        aria-expanded="" aria-controls="alarms_pattern1_return_to_normal_ack_comment" onclick="setAnchor('#alarms_pattern1_return_to_normal_ack_comment')"><span class="property-name">comment</span></button>
+            </h2>
+        </div>
+
+        <div id="alarms_pattern1_return_to_normal_ack_comment"
+             class="collapse property-definition-div" aria-labelledby="headingalarms_pattern1_return_to_normal_ack_comment"
+             data-parent="#accordionalarms_pattern1_return_to_normal_ack_comment">
+            <div class="card-body pl-5">
+
+    <div class="breadcrumbs">root
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#alarms" onclick="anchorLink('alarms')">alarms</a>
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#alarms_pattern1" onclick="anchorLink('alarms_pattern1')">Alarm Alarmset Events</a>
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#alarms_pattern1_return_to_normal_ack" onclick="anchorLink('alarms_pattern1_return_to_normal_ack')">return_to_normal_ack</a>
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#alarms_pattern1_return_to_normal_ack_comment" onclick="anchorLink('alarms_pattern1_return_to_normal_ack_comment')">comment</a></div><span class="badge badge-dark value-type">Type: string</span><br/>
+<span class="description"><p>Comment left by the user when acknowledging this alarm.</p>
+</span>
+        
+
+        
+        
+
+        
+            </div>
+        </div>
+    </div>
 </div>
             </div>
         </div>

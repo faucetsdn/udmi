@@ -94,6 +94,26 @@
         }
       }
     },
+    "alarms": {
+      "description": "Information about a specific alarm name of the device.",
+      "additionalProperties": false,
+      "existingJavaType": "java.util.Map<String, AlarmAlarmsetModel>",
+      "patternProperties": {
+        "^[a-z][a-z0-9]*(_[a-z0-9]+)*$": {
+          "$ref": "file:model_alarmset_alarm.json#"
+        }
+      }
+    },
+    "alarm_refs": {
+      "description": "Collection of alarm references",
+      "additionalProperties": false,
+      "existingJavaType": "java.util.Map<String, AlarmRefDiscovery>",
+      "patternProperties": {
+        "^[-_.:/a-zA-Z0-9]+$": {
+          "$ref": "file:discovery_alarm_ref.json#"
+        }
+      }
+    },
     "features": {
       "description": "Discovery of features supported by this device.",
       "additionalProperties": false,

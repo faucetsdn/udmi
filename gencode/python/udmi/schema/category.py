@@ -56,6 +56,9 @@ class Category(Enum):
     # A `config` parameter for the point is invalid in some way
     POINTSET_POINT_INVALID = ("pointset.point.invalid", Level.ERROR)
 
+    # A `config` parameter for the alarm is invalid in some way
+    ALARMSET_ALARM_INVALID = ("alarmset.alarm.invalid", Level.ERROR)
+
     # Aspects of a specific network
     LOCALNET_NETWORK = ("localnet.network", Level.INFO)
 

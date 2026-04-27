@@ -6,21 +6,6 @@
   "$schema": "http://json-schema.org/draft-07/schema#",
   "additionalProperties": false,
   "properties": {
-    "units": {
-      "description": "If specified, indicates a programmed alarm unit. If empty, means unspecified or matches configured alarm.",
-      "type": "string"
-    },
-    "value_state": {
-      "description": "State of the individual alarm",
-      "enum": [
-        "initializing",
-        "applied",
-        "updating",
-        "overridden",
-        "invalid",
-        "failure"
-      ]
-    },
     "status": {
       "description": "Optional status information about this alarm, subject to log severity level",
       "$ref": "file:entry.json"
