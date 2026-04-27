@@ -16,11 +16,23 @@
     }
   },
   "gateway": {
-    "gateway_id": "GAT-123"
+    "gateway_id": "GAT-123",
+    "target": {
+      "addr": "2",
+      "family": "modbus",
+      "network_id": "modbus_rtu_1"
+    }
   },
   "pointset": {
     "exclude_points_from_config": true,
     "points": {
+      "fan_status": {
+        "ref": "1/101?type=BOOLEAN"
+      },
+      "filter_differential_pressure": {
+        "ref": "4/30005?type=UINT32&worder=LWF&scale=0.01",
+        "units": "Pascals"
+      },
       "split_threshold": {
         "units": "Imperial-gallons-per-minute"
       },
