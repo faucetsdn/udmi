@@ -26,6 +26,7 @@ public class MosquittoBroker extends ContainerBase implements ConnectionBroker {
   private static final String UDMI_ROOT = System.getenv("UDMI_ROOT");
   private static final String MOSQUCTL_CLIENT_FMT = UDMI_ROOT + "/bin/mosquctl_client %s %s";
   private static final String MOSQUCTL_LOG_FMT = UDMI_ROOT + "/bin/mosquctl_log %s";
+  private static final String MOSQUCTL_GATEWAY_FMT = UDMI_ROOT + "/bin/mosquctl_gateway %s %s %s";
   private static final long EXEC_TIMEOUT_SEC = 10;
   private static final String REVOKE_PASSWORD = "--";
   private static final Pattern LOG_MATCHER =
@@ -60,8 +61,7 @@ public class MosquittoBroker extends ContainerBase implements ConnectionBroker {
     thread.start();
   }
 
-  private void mosquctlClient(String clientId, String clientPass) {
-    String cmd = format(MOSQUCTL_CLIENT_FMT, clientId, clientPass);
+  private void executeCommand(String cmd) {
     synchronized (MosquittoBroker.class) {
       try {
         info("Executing command %s", cmd);
@@ -75,6 +75,10 @@ public class MosquittoBroker extends ContainerBase implements ConnectionBroker {
         throw new RuntimeException("While executing " + cmd, e);
       }
     }
+  }
+
+  private void mosquctlClient(String clientId, String clientPass) {
+    executeCommand(format(MOSQUCTL_CLIENT_FMT, clientId, clientPass));
   }
 
   private void mosquctlLog(String clientPrefix, Consumer<BrokerEvent> eventConsumer) {
@@ -147,5 +151,15 @@ public class MosquittoBroker extends ContainerBase implements ConnectionBroker {
   @Override
   public void authorize(String clientId, String password) {
     mosquctlClient(clientId, ofNullable(password).orElse(REVOKE_PASSWORD));
+  }
+
+  @Override
+  public void bindGateway(String gatewayId, String deviceId) {
+    executeCommand(format(MOSQUCTL_GATEWAY_FMT, "bind", gatewayId, deviceId));
+  }
+
+  @Override
+  public void unbindGateway(String gatewayId, String deviceId) {
+    executeCommand(format(MOSQUCTL_GATEWAY_FMT, "unbind", gatewayId, deviceId));
   }
 }

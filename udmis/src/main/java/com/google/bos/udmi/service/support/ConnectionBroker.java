@@ -13,6 +13,10 @@ public interface ConnectionBroker {
 
   Future<Void> addEventListener(String clientPrefix, Consumer<BrokerEvent> eventConsumer);
 
+  void bindGateway(String gatewayId, String deviceId);
+
+  void unbindGateway(String gatewayId, String deviceId);
+
   /**
    * Simple event for connection broker happenings.
    */

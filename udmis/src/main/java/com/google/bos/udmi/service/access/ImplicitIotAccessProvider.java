@@ -109,8 +109,18 @@ public class ImplicitIotAccessProvider extends IotAccessBase {
 
   private void bindDevicesToGateway(String registryId, String gatewayId, CloudModel cloudModel) {
     Set<String> deviceIds = ImmutableSet.copyOf(cloudModel.gateway.proxy_ids);
-    deviceIds.forEach(deviceId ->
-        registryDeviceRef(registryId, deviceId).put(BOUND_TO_KEY, gatewayId));
+    deviceIds.forEach(deviceId -> {
+      registryDeviceRef(registryId, deviceId).put(BOUND_TO_KEY, gatewayId);
+      broker.bindGateway(clientId(registryId, gatewayId), clientId(registryId, deviceId));
+    });
+  }
+
+  private void unbindDevicesFromGateway(String registryId, String gatewayId, CloudModel cloudModel) {
+    Set<String> deviceIds = ImmutableSet.copyOf(cloudModel.gateway.proxy_ids);
+    deviceIds.forEach(deviceId -> {
+      registryDeviceRef(registryId, deviceId).delete(BOUND_TO_KEY);
+      broker.unbindGateway(clientId(registryId, gatewayId), clientId(registryId, deviceId));
+    });
   }
 
   private void blockDevice(String registryId, String deviceId, CloudModel cloudModel) {
@@ -158,9 +168,14 @@ public class ImplicitIotAccessProvider extends IotAccessBase {
 
   private void deleteDevice(String registryId, String deviceId, CloudModel cloudModel) {
     DataRef properties = registryDeviceRef(registryId, deviceId);
+    String gatewayId = properties.get(BOUND_TO_KEY);
     properties.entries().keySet().forEach(properties::delete);
     registryDevicesRef(registryId).delete(deviceId);
     broker.authorize(clientId(registryId, deviceId), null);
+
+    if (gatewayId != null) {
+      broker.unbindGateway(clientId(registryId, gatewayId), clientId(registryId, deviceId));
+    }
   }
 
   private CloudModel getReply(String registryId, String deviceId, CloudModel request,
@@ -339,6 +354,7 @@ public class ImplicitIotAccessProvider extends IotAccessBase {
         case DELETE -> deleteDevice(registryId, deviceId, cloudModel);
         case MODIFY -> modifyDevice(registryId, deviceId, cloudModel);
         case BIND -> bindDevicesToGateway(registryId, deviceId, cloudModel);
+        case UNBIND -> unbindDevicesFromGateway(registryId, deviceId, cloudModel);
         case BLOCK -> blockDevice(registryId, deviceId, cloudModel);
         default -> throw new RuntimeException("Unknown device operation " + operation);
       }
