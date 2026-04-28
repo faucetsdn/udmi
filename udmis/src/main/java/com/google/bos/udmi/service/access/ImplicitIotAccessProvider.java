@@ -115,7 +115,8 @@ public class ImplicitIotAccessProvider extends IotAccessBase {
     });
   }
 
-  private void unbindDevicesFromGateway(String registryId, String gatewayId, CloudModel cloudModel) {
+  private void unbindDevicesFromGateway(String registryId, String gatewayId,
+      CloudModel cloudModel) {
     Set<String> deviceIds = ImmutableSet.copyOf(cloudModel.gateway.proxy_ids);
     deviceIds.forEach(deviceId -> {
       registryDeviceRef(registryId, deviceId).delete(BOUND_TO_KEY);
@@ -168,10 +169,10 @@ public class ImplicitIotAccessProvider extends IotAccessBase {
 
   private void deleteDevice(String registryId, String deviceId, CloudModel cloudModel) {
     DataRef properties = registryDeviceRef(registryId, deviceId);
-    String gatewayId = properties.get(BOUND_TO_KEY);
     properties.entries().keySet().forEach(properties::delete);
     registryDevicesRef(registryId).delete(deviceId);
     broker.authorize(clientId(registryId, deviceId), null);
+    String gatewayId = properties.get(BOUND_TO_KEY);
 
     if (gatewayId != null) {
       broker.unbindGateway(clientId(registryId, gatewayId), clientId(registryId, deviceId));
