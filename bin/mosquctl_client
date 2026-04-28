@@ -33,4 +33,7 @@ if [[ $client_pass != "--" ]]; then
     $MOSQUITTO_CTRL addRoleACL $role_name subscribePattern "$client_id/errors" allow
     $MOSQUITTO_CTRL addRoleACL $role_name publishClientSend "$client_id/events" allow
     $MOSQUITTO_CTRL addRoleACL $role_name publishClientSend "$client_id/state" allow
+    echo "Device $client_id registered correctly."
+else
+    echo "Device $client_id deleted correctly."
 fi

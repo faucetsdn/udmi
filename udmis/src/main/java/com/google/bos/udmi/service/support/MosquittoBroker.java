@@ -160,6 +160,7 @@ public class MosquittoBroker extends ContainerBase implements ConnectionBroker {
 
   @Override
   public void unbindGateway(String gatewayId, String deviceId) {
+    info("Unbind device Id: %s from gateway Id: %s :%s", deviceId, gatewayId);
     executeCommand(format(MOSQUCTL_GATEWAY_FMT, "unbind", gatewayId, deviceId));
   }
 }
