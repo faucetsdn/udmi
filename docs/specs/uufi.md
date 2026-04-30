@@ -34,7 +34,8 @@ For local testing or on-premise deployments, a standard MQTT broker (like Mosqui
 *   **Topic Prefix:** `/uufi/r/{registryId}/d/{deviceId}` where `registryId` is the Managed Registry.
 *   **Authentication:** Username/Password or mTLS (certificate-based).
 
-### Handshake Protocol
+## 3. Handshake Protocol
+
 Upon connection, the Client must perform a handshake to synchronize with the System.
 
 1.  **State Declaration:** The Client publishes a UDMI `state` message to the UUFI topic. This message must include a `udmi` subfolder with a `setup` block (see `state_udmi.json`).
@@ -46,7 +47,7 @@ Upon connection, the Client must perform a handshake to synchronize with the Sys
 
 The Client is considered **Active** only after receiving a matching configuration reply.
 
-## 3. Message Encapsulation
+## 4. Message Encapsulation
 
 All messages exchanged via UUFI are wrapped in a **UUFI Envelope**.
 
@@ -89,7 +90,7 @@ Since MQTT 3.1.1 does not support separate attributes, the envelope fields are i
 }
 ```
 
-## 4. Operational Commands
+## 5. Operational Commands
 
 UUFI supports direct operations on the Cloud Model by setting specific attributes.
 
@@ -101,7 +102,7 @@ UUFI supports direct operations on the Cloud Model by setting specific attribute
 - Set `subFolder: cloud` and `subType: model`.
 - **Payload:** A `CloudModel` object specifying the `operation` (e.g., `CREATE`, `UPDATE`, `DELETE`, `BIND`, `UNBIND`).
 
-## 5. Mapping UDMI to UUFI Envelopes
+## 6. Mapping UDMI to UUFI Envelopes
 
 | UDMI Operation | Envelope `subType` | Envelope `subFolder` | Direction |
 | :--- | :--- | :--- | :--- |
