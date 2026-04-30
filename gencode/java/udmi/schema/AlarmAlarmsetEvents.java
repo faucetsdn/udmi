@@ -11,7 +11,7 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
  * Alarm Alarmset Events
  * <p>
  * Object representation for for a single alarm
- *
+ * 
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
@@ -22,7 +22,7 @@ public class AlarmAlarmsetEvents {
     /**
      * The specific alarm data reading.  If the value is numeric, then the type must be integer or number.  If the value is an integer, it should be represented as type integer
      * (Required)
-     *
+     * 
      */
     @JsonProperty("present_value")
     @JsonPropertyDescription("The specific alarm data reading.  If the value is numeric, then the type must be integer or number.  If the value is an integer, it should be represented as type integer")

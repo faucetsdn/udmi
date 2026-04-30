@@ -17,7 +17,7 @@ import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
  * Alarm Alarmset Model
  * <p>
  * Information about a specific alarm name of the device.
- *
+ * 
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
@@ -41,84 +41,84 @@ public class AlarmAlarmsetModel {
 
     /**
      * Expected unit configuration for the alarm
-     *
+     * 
      */
     @JsonProperty("units")
     @JsonPropertyDescription("Expected unit configuration for the alarm")
     public java.lang.String units;
     /**
      * Expected data type for the alarm
-     *
+     * 
      */
     @JsonProperty("type")
     @JsonPropertyDescription("Expected data type for the alarm")
     public AlarmAlarmsetModel.Type type;
     /**
      * Detailed description of this alarm
-     *
+     * 
      */
     @JsonProperty("description")
     @JsonPropertyDescription("Detailed description of this alarm")
     public java.lang.String description;
     /**
      * Indicates if this alarm is writable (else read-only)
-     *
+     * 
      */
     @JsonProperty("writable")
     @JsonPropertyDescription("Indicates if this alarm is writable (else read-only)")
     public Boolean writable;
     /**
      * Represents the expected baseline value of the alarm
-     *
+     * 
      */
     @JsonProperty("baseline_value")
     @JsonPropertyDescription("Represents the expected baseline value of the alarm")
     public Object baseline_value;
     /**
      * Maximum deviation from `baseline_value`
-     *
+     * 
      */
     @JsonProperty("baseline_tolerance")
     @JsonPropertyDescription("Maximum deviation from `baseline_value`")
     public Double baseline_tolerance;
     /**
      * Expected state when `baseline_value` is set as the `set_value` for this alarm the config message
-     *
+     * 
      */
     @JsonProperty("baseline_state")
     @JsonPropertyDescription("Expected state when `baseline_value` is set as the `set_value` for this alarm the config message")
     public AlarmAlarmsetModel.Baseline_state baseline_state;
     /**
      * Represents the lower bound of the error threshold for a alarm
-     *
+     * 
      */
     @JsonProperty("range_min")
     @JsonPropertyDescription("Represents the lower bound of the error threshold for a alarm")
     public Double range_min;
     /**
      * Represents the upper bound of the error threshold for a alarm
-     *
+     * 
      */
     @JsonProperty("range_max")
     @JsonPropertyDescription("Represents the upper bound of the error threshold for a alarm")
     public Double range_max;
     /**
      * Represents the limit in seconds that a alarm can be unchanged for
-     *
+     * 
      */
     @JsonProperty("unchanged_limit_sec")
     @JsonPropertyDescription("Represents the limit in seconds that a alarm can be unchanged for")
     public Integer unchanged_limit_sec;
     /**
      * Triggering threshold for partial cov update publishing
-     *
+     * 
      */
     @JsonProperty("cov_increment")
     @JsonPropertyDescription("Triggering threshold for partial cov update publishing")
     public Double cov_increment;
     /**
      * Mapping for the alarm to an internal resource (e.g. BACnet object reference)
-     *
+     * 
      */
     @JsonProperty("ref")
     @JsonPropertyDescription("Mapping for the alarm to an internal resource (e.g. BACnet object reference)")
@@ -127,7 +127,7 @@ public class AlarmAlarmsetModel {
     public Map<String, String> adjunct;
     /**
      * Tags assosciated with the alarm
-     *
+     * 
      */
     @JsonProperty("tags")
     @JsonDeserialize(as = java.util.LinkedHashSet.class)
@@ -135,7 +135,7 @@ public class AlarmAlarmsetModel {
     public Set<Object> tags;
     /**
      * Collection of family alarm information
-     *
+     * 
      */
     @JsonProperty("structure")
     @JsonPropertyDescription("Collection of family alarm information")
@@ -177,7 +177,7 @@ public class AlarmAlarmsetModel {
 
     /**
      * Expected state when `baseline_value` is set as the `set_value` for this alarm the config message
-     *
+     * 
      */
     public enum Baseline_state {
 
@@ -224,7 +224,7 @@ public class AlarmAlarmsetModel {
 
     /**
      * Expected data type for the alarm
-     *
+     * 
      */
     public enum Type {
 

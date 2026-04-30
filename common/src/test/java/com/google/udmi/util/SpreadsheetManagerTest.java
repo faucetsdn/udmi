@@ -348,6 +348,30 @@ public class SpreadsheetManagerTest {
   }
 
   @Test
+  public void writeToRange_Batched() throws IOException {
+    List<List<Object>> values = new java.util.ArrayList<>();
+    for (int i = 0; i < 25000; i++) {
+      values.add(List.of("data" + i));
+    }
+
+    spreadsheetManager.writeToRange(TEST_SHEET_NAME, values);
+
+    // Verify first batch used update
+    verify(mockSpreadsheetValues).update(eq(TEST_SPREADSHEET_ID), eq(TEST_SHEET_NAME + "!A1"),
+        valueRangeCaptor.capture());
+
+    // Verify subsequent batches used append
+    verify(mockSpreadsheetValues, Mockito.times(2)).append(eq(TEST_SPREADSHEET_ID),
+        eq(TEST_SHEET_NAME + "!A:A"), valueRangeCaptor.capture());
+
+    List<ValueRange> capturedValueRanges = valueRangeCaptor.getAllValues();
+    assertEquals(3, capturedValueRanges.size());
+    assertEquals(10000, capturedValueRanges.get(0).getValues().size());
+    assertEquals(10000, capturedValueRanges.get(1).getValues().size());
+    assertEquals(5000, capturedValueRanges.get(2).getValues().size());
+  }
+
+  @Test
   public void getSheetRecords_DataFound() throws IOException {
     List<List<Object>> expectedValues = List.of(List.of("r1c1", "r1c2"), List.of("r2c1", "r2c2"));
     ValueRange mockResponse = new ValueRange().setValues(expectedValues);

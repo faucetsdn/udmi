@@ -13,7 +13,7 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
  * Alarmset State
  * <p>
  * A set of alarms reporting telemetry data.
- *
+ * 
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
@@ -28,21 +28,21 @@ public class AlarmsetState {
 
     /**
      * Not included in messages published by devices. Part of message subblocks within cloud pipeline. RFC 3339 Timestamp the payload was generated
-     *
+     * 
      */
     @JsonProperty("timestamp")
     @JsonPropertyDescription("Not included in messages published by devices. Part of message subblocks within cloud pipeline. RFC 3339 Timestamp the payload was generated")
     public Date timestamp;
     /**
      * Version of the UDMI schema, not included in messages published by devices
-     *
+     * 
      */
     @JsonProperty("version")
     @JsonPropertyDescription("Version of the UDMI schema, not included in messages published by devices")
     public java.lang.String version;
     /**
      * An identifier which uniquely represents the state, and used by a device avoid race conditions where the incoming config is based off an obsolete state. [Additional information on implementation](../docs/specs/sequences/writeback.md)
-     *
+     * 
      */
     @JsonProperty("state_etag")
     @JsonPropertyDescription("An identifier which uniquely represents the state, and used by a device avoid race conditions where the incoming config is based off an obsolete state. [Additional information on implementation](../docs/specs/sequences/writeback.md)")
@@ -50,22 +50,22 @@ public class AlarmsetState {
     /**
      * Entry
      * <p>
-     *
-     *
+     * 
+     * 
      */
     @JsonProperty("status")
     public Entry status;
     /**
      * Collection of alarm names, defining the representative alarm set for this device.
      * (Required)
-     *
+     * 
      */
     @JsonProperty("alarms")
     @JsonPropertyDescription("Collection of alarm names, defining the representative alarm set for this device.")
     public HashMap<String, AlarmAlarmsetState> alarms;
     /**
      * Original version of schema pre-upgrade
-     *
+     * 
      */
     @JsonProperty("upgraded_from")
     @JsonPropertyDescription("Original version of schema pre-upgrade")
