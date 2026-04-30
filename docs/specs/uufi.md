@@ -2,42 +2,45 @@
 
 # Unified UDMI Functional Interface (UUFI)
 
-The **Unified UDMI Functional Interface (UUFI)** is a specification for external applications to integrate with a UDMI-managed system. It formalizes the communication channel between an external application (the **Client**) and the UDMI cloud infrastructure (the **System**) using a standardized PubSub mechanism.
+The **Unified UDMI Functional Interface (UUFI)** is a specification for external applications to integrate with a UDMI-managed system. It formalizes the communication channel between an external application (the **Client**) and the UDMI cloud infrastructure (the **System**) using a standardized messaging mechanism.
 
-UUFI provides a "clean room" interface for programmatic control of UDMI operations, including device management, telemetry consumption, and command injection, all while adhering to the standard UDMI schemas.
+UUFI provides a "clean room" interface for programmatic control of UDMI operations, including device management, telemetry consumption, and command injection, all while adhering to the standard UDMI schemas. It supports both **GCP PubSub** and **MQTT** as transport layers.
 
 ## 1. Architecture Overview
 
-UUFI utilizes a **PubSub** transport where the Client interacts with the System via dedicated topics and subscriptions. This connection acts as a gateway for all UDMI messages.
+UUFI utilizes a messaging transport where the Client interacts with the System via dedicated topics and subscriptions. This connection acts as a gateway for all UDMI messages.
 
 *   **Managed Registry:** The actual IoT registry containing physical or virtual devices being managed.
-*   **System Interface:** The set of PubSub topics provided by the UDMI Cloud Functions to handle UUFI traffic.
+*   **System Interface:** The set of topics provided by the UDMI infrastructure to handle UUFI traffic.
 
 ### Message Flow
-- **Publish (into UDMI):** The Client publishes a UDMI message to the `udmi_reflect` topic. The message is wrapped in a UUFI Envelope.
-- **Receive (from UDMI):** The System delivers messages from managed devices to the Client via a subscription to the `udmi_reply` topic. Messages are encapsulated in a UUFI Envelope.
+- **Publish (into UDMI):** The Client publishes a UDMI message to the **UUFI** topic. The message is wrapped in a UUFI Envelope.
+- **Receive (from UDMI):** The System delivers messages from managed devices to the Client via a **UUFI** reply channel. Messages are encapsulated in a UUFI Envelope.
 
 ## 2. Connectivity and Authentication
 
+### 2.1. PubSub Transport
 The Client must have access to the GCP project where the UDMI system is deployed.
 
-### Connection Parameters
-- **Project ID:** The GCP project ID.
-- **Publish Topic:** `udmi_reflect` (or a namespace-prefixed version like `prefix-udmi_reflect`).
-- **Receive Subscription:** A subscription to the `udmi_reply` topic (e.g., `prefix-udmi_reply-user_id`).
+*   **Project ID:** The GCP project ID.
+*   **Publish Topic:** `udmi_uufi` (or a namespace-prefixed version like `prefix-udmi_uufi`).
+*   **Receive Subscription:** A subscription to the `udmi_uufi` topic (e.g., `prefix-udmi_uufi-user_id`).
+*   **Authentication:** Standard **GCP IAM**.
 
-### Authentication
-Authentication is handled via standard **GCP IAM**. The Client must have a service account or user identity with the following permissions:
-- `pubsub.publisher` on the `udmi_reflect` topic.
-- `pubsub.subscriber` on the `udmi_reply` subscription.
+### 2.2. MQTT Transport (Local Mosquitto)
+For local testing or on-premise deployments, a standard MQTT broker (like Mosquitto) can be used.
+
+*   **Broker URL:** Typically `tcp://localhost:1883` or `ssl://localhost:8883`.
+*   **Topic Prefix:** `/uufi/r/{registryId}/d/{deviceId}` where `registryId` is the Managed Registry.
+*   **Authentication:** Username/Password or mTLS (certificate-based).
 
 ### Handshake Protocol
 Upon connection, the Client must perform a handshake to synchronize with the System.
 
-1.  **State Declaration:** The Client publishes a UDMI `state` message to the `udmi_reflect` topic. This message must include a `udmi` subfolder with a `setup` block (see `state_udmi.json`).
+1.  **State Declaration:** The Client publishes a UDMI `state` message to the UUFI topic. This message must include a `udmi` subfolder with a `setup` block (see `state_udmi.json`).
     -   `functions_ver`: The version of the UDMI functions the Client expects.
     -   `transaction_id`: A unique ID for the handshake transaction.
-2.  **Configuration Confirmation:** The System responds via the `udmi_reply` subscription by updating the Client's `config`. This message includes a `udmi` subfolder (see `config_udmi.json`) containing:
+2.  **Configuration Confirmation:** The System responds via the reply channel by updating the Client's `config`. This message includes a `udmi` subfolder (see `config_udmi.json`) containing:
     -   `setup`: System version information (min/max supported function versions).
     -   `reply`: A copy of the Client's setup block to confirm receipt.
 
@@ -45,11 +48,11 @@ The Client is considered **Active** only after receiving a matching configuratio
 
 ## 3. Message Encapsulation
 
-All messages exchanged via UUFI are wrapped in a **UUFI Envelope**. In PubSub, the envelope fields are typically mapped to **PubSub Attributes**, while the UDMI message body is the **PubSub Data**.
+All messages exchanged via UUFI are wrapped in a **UUFI Envelope**.
 
-### Envelope Attributes
-The following attributes must be present in every PubSub message:
-- `projectId`: The GCP project ID.
+### Envelope Fields
+The following fields must be present in every message:
+- `projectId`: The project identifier.
 - `deviceRegistryId`: The `registry_id` of the Managed Registry.
 - `deviceId`: The target or source device ID in the Managed Registry (e.g., `BLD-1`, `_validator`).
 - `subFolder`: The UDMI subfolder (e.g., `pointset`, `system`, `validation`).
@@ -58,19 +61,33 @@ The following attributes must be present in every PubSub message:
 - `publishTime`: RFC 3339 timestamp of when the message was wrapped.
 - `source`: An identifier for the Client (e.g., `-user_id`).
 
-### Publishing a Message (into UDMI)
-To send a message to a managed device:
-1.  Construct the UDMI message (e.g., a `config` object).
-2.  Prepare a PubSub message:
-    - Set the **Attributes** according to the Envelope schema.
-    - Set the **Data** to the JSON-encoded UDMI message.
-3.  Publish to the `udmi_reflect` topic.
+### Transport Mapping
 
-### Receiving a Message (from UDMI)
-When a message arrives from a managed device:
-1.  Receive a PubSub message from the `udmi_reply` subscription.
-2.  Extract the **Attributes** to identify the source device, subfolder, and type.
-3.  The **Data** is the original UDMI message from the device.
+| Transport | Envelope Location | Payload Location |
+| :--- | :--- | :--- |
+| **PubSub** | Message Attributes | Message Data (JSON) |
+| **MQTT** | Topic Structure & Payload | Payload `payload` field |
+
+#### MQTT Topic Structure
+For the MQTT transport, the envelope fields are encoded in the topic path:
+`/uufi/r/{registryId}/d/{deviceId}/{subType}/{subFolder}`
+
+#### MQTT Message Wrap
+Since MQTT 3.1.1 does not support separate attributes, the envelope fields are included in the JSON payload alongside the actual UDMI message:
+
+```json
+{
+  "deviceRegistryId": "my-managed-registry",
+  "deviceId": "BLD-1",
+  "subFolder": "pointset",
+  "subType": "config",
+  "payload": {
+    "points": {
+      "room_temperature": { "set_value": 22.5 }
+    }
+  }
+}
+```
 
 ## 4. Operational Commands
 
@@ -224,6 +241,60 @@ Receiving the current `room_temperature` reading from device `BLD-1`.
   "points": {
     "room_temperature": {
       "present_value": 22.1
+    }
+  }
+}
+```
+
+### 7.3. MQTT Examples
+The following examples demonstrate the same operations using the MQTT transport.
+
+#### Example: Handshake State (Publish)
+**Topic:** `/uufi/r/my-managed-registry/d/my-managed-registry/state/udmi`
+
+**Payload (JSON):**
+```json
+{
+  "deviceRegistryId": "my-managed-registry",
+  "deviceId": "my-managed-registry",
+  "subFolder": "udmi",
+  "subType": "state",
+  "transactionId": "UUFI:sess123:001",
+  "payload": {
+    "version": "1.5.2",
+    "timestamp": "2026-04-29T10:00:00Z",
+    "udmi": {
+      "setup": {
+        "functions_ver": 9,
+        "transaction_id": "UUFI:sess123:001",
+        "msg_source": "-my-user-id",
+        "user": "my-user-id"
+      }
+    }
+  }
+}
+```
+
+#### Example: Pointset Config (Publish)
+Updating device `BLD-1`.
+
+**Topic:** `/uufi/r/my-managed-registry/d/BLD-1/config/pointset`
+
+**Payload (JSON):**
+```json
+{
+  "deviceRegistryId": "my-managed-registry",
+  "deviceId": "BLD-1",
+  "subFolder": "pointset",
+  "subType": "config",
+  "transactionId": "UUFI:sess123:002",
+  "payload": {
+    "version": "1.5.2",
+    "timestamp": "2026-04-29T10:05:00Z",
+    "points": {
+      "room_temperature": {
+        "set_value": 22.5
+      }
     }
   }
 }
