@@ -16,7 +16,6 @@ concurrency:
 env:
   # Opt out of Node 20 deprecation warning temporarily
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
-  ACTIONS_ALLOW_USE_UNSECURE_NODE_VERSION: true
 
 jobs:
   unit:
@@ -28,11 +27,11 @@ jobs:
         with:
           distribution: 'temurin'
           java-version: '21'
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@v6
         with:
           python-version: '3.13'
       - name: Checkout source
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
       - name: start and test local servers
         run: |
           bin/setup_base
@@ -67,7 +66,7 @@ jobs:
     runs-on: ubuntu-24.04
     timeout-minutes: 2
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
       - name: Check Spelling
         uses: rojopolis/spellcheck-github-actions@0.35.0
         with:
@@ -82,7 +81,7 @@ jobs:
     env:
       TARGET_PROJECT: ${{ vars.TARGET_PROJECT }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
       - uses: actions/setup-java@v4
         with:
           distribution: 'temurin'
@@ -133,7 +132,7 @@ jobs:
       TARGET_PROJECT: ${{ vars.TARGET_PROJECT }}
       UDMI_ALT_REGISTRY: ZZ-REDIRECT-NA
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
       - uses: actions/setup-java@v4
         with:
           distribution: 'temurin'
@@ -188,7 +187,7 @@ jobs:
       MATRIX_SHARD_COUNT: 10
       MATRIX_SHARD_INDEX: ${{ matrix.shard }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
       - uses: actions/setup-java@v4
         with:
           distribution: 'temurin'
@@ -240,7 +239,7 @@ jobs:
     runs-on: ubuntu-24.04
     timeout-minutes: 20
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
       - uses: actions/setup-java@v4
         with:
           distribution: 'temurin'
@@ -295,7 +294,7 @@ jobs:
       UDMI_ALT_REGISTRY: ZZ-REDIRECT-NA
       TARGET_PROJECT: //mqtt/localhost
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
       - uses: actions/setup-java@v4
         with:
           distribution: 'temurin'
@@ -334,8 +333,8 @@ jobs:
       TARGET_PROJECT: ${{ vars.TARGET_PROJECT }}
       UDMI_ALT_REGISTRY: ZZ-REDIRECT-NA
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - uses: actions/checkout@v6
+      - uses: actions/setup-python@v6
         with:
           python-version: '3.13'
       - name: Base setup
@@ -370,7 +369,7 @@ jobs:
     runs-on: ubuntu-24.04
     timeout-minutes: 15
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
         with:
           fetch-depth: 0
           fetch-tags: true
@@ -430,9 +429,9 @@ jobs:
         python-version: [ "3.9", "3.10", "3.11", "3.12", "3.13" ]
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
       - name: Set up Python ${{ matrix.python-version }}
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v6
         with:
           python-version: ${{ matrix.python-version }}
       - name: Install Poetry
@@ -441,7 +440,7 @@ jobs:
           poetry config virtualenvs.in-project true
       - name: Cache poetry venv
         id: cache-deps
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: .venv
           key: ${{ runner.os }}-${{ matrix.python-version }}-venv-${{ hashFiles('poetry.lock') }}
