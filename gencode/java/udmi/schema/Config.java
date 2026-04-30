@@ -100,7 +100,7 @@ public class Config {
      * Alarmset Config
      * <p>
      * [Alarmset Config Documentation](../docs/messages/alarmset.md#config)
-     *
+     * 
      */
     @JsonProperty("alarmset")
     @JsonPropertyDescription("[Alarmset Config Documentation](../docs/messages/alarmset.md#config)")

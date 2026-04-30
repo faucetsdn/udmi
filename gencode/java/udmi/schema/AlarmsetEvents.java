@@ -13,7 +13,7 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
  * Alarmset Events
  * <p>
  * A set of alarms reporting telemetry data. [Alarmset Events Documentation](../docs/messages/alarmset.md#telemetry)
- *
+ * 
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
@@ -28,7 +28,7 @@ public class AlarmsetEvents {
     /**
      * RFC 3339 UTC timestamp the telemetry event was generated
      * (Required)
-     *
+     * 
      */
     @JsonProperty("timestamp")
     @JsonPropertyDescription("RFC 3339 UTC timestamp the telemetry event was generated")
@@ -36,21 +36,21 @@ public class AlarmsetEvents {
     /**
      * Version of the UDMI schema
      * (Required)
-     *
+     * 
      */
     @JsonProperty("version")
     @JsonPropertyDescription("Version of the UDMI schema")
     public java.lang.String version;
     /**
      * Original version of schema pre-upgrade
-     *
+     * 
      */
     @JsonProperty("upgraded_from")
     @JsonPropertyDescription("Original version of schema pre-upgrade")
     public java.lang.String upgraded_from;
     /**
      * Indicates if this is a partial update (only some alarms may be included)
-     *
+     * 
      */
     @JsonProperty("partial_update")
     @JsonPropertyDescription("Indicates if this is a partial update (only some alarms may be included)")
@@ -58,7 +58,7 @@ public class AlarmsetEvents {
     /**
      * Collection of alarm names, defining the representative alarm set for this device.
      * (Required)
-     *
+     * 
      */
     @JsonProperty("alarms")
     @JsonPropertyDescription("Collection of alarm names, defining the representative alarm set for this device.")

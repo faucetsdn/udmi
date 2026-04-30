@@ -12,7 +12,7 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
  * Alarmset Model
  * <p>
  * Alarmset representing the abstract system expectation for what the device should be doing, and how it should be configured and operated. This block specifies the expected alarms that a device holds
- *
+ * 
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
@@ -27,7 +27,7 @@ public class AlarmsetModel {
     /**
      * Information about a specific alarm name of the device.
      * (Required)
-     *
+     * 
      */
     @JsonProperty("alarms")
     @JsonPropertyDescription("Information about a specific alarm name of the device.")
@@ -38,14 +38,14 @@ public class AlarmsetModel {
     public Boolean exclude_alarms_from_config;
     /**
      * Minimum time between sample updates for the device (including complete and COV updates). Updates more frequent than this should be coalesced into one update.
-     *
+     * 
      */
     @JsonProperty("sample_limit_sec")
     @JsonPropertyDescription("Minimum time between sample updates for the device (including complete and COV updates). Updates more frequent than this should be coalesced into one update.")
     public Integer sample_limit_sec;
     /**
      * Maximum time between samples for the device to send out a complete update. It can send out updates more frequently than this. Default to 600.
-     *
+     * 
      */
     @JsonProperty("sample_rate_sec")
     @JsonPropertyDescription("Maximum time between samples for the device to send out a complete update. It can send out updates more frequently than this. Default to 600.")

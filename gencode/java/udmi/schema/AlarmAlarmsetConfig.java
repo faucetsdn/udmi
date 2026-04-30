@@ -11,8 +11,8 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 /**
  * Alarm Alarmset Config
  * <p>
- *
- *
+ * 
+ * 
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
@@ -26,35 +26,35 @@ public class AlarmAlarmsetConfig {
 
     /**
      * Mapping for the alarm to an internal resource (e.g. BACnet object reference)
-     *
+     * 
      */
     @JsonProperty("ref")
     @JsonPropertyDescription("Mapping for the alarm to an internal resource (e.g. BACnet object reference)")
     public String ref;
     /**
      * If specified, indicates the units the device should report the data in.
-     *
+     * 
      */
     @JsonProperty("units")
     @JsonPropertyDescription("If specified, indicates the units the device should report the data in.")
     public String units;
     /**
      * Used for cloud writeback functionality, this field specifies the value for a given alarm in the device's current units. If the value is numeric, then the type must be integer or number.  If the value is an integer, it should be represented as type integer
-     *
+     * 
      */
     @JsonProperty("set_value")
     @JsonPropertyDescription("Used for cloud writeback functionality, this field specifies the value for a given alarm in the device's current units. If the value is numeric, then the type must be integer or number.  If the value is an integer, it should be represented as type integer")
     public Object set_value;
     /**
      * RFC 3339 timestamp for the specified alarm write easing to stop
-     *
+     * 
      */
     @JsonProperty("stop_time")
     @JsonPropertyDescription("RFC 3339 timestamp for the specified alarm write easing to stop")
     public Date stop_time;
     /**
      * The CoV (change of value) increment, which when set, enables CoV on the alarm and defines the minimum change in present value of the respective alarm before an update is published
-     *
+     * 
      */
     @JsonProperty("cov_increment")
     @JsonPropertyDescription("The CoV (change of value) increment, which when set, enables CoV on the alarm and defines the minimum change in present value of the respective alarm before an update is published")

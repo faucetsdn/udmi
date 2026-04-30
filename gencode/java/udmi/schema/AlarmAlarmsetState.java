@@ -15,7 +15,7 @@ import com.fasterxml.jackson.annotation.JsonValue;
  * Alarm Alarmset State
  * <p>
  * Object representation for for a single alarm
- *
+ * 
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
@@ -27,14 +27,14 @@ public class AlarmAlarmsetState {
 
     /**
      * If specified, indicates a programmed alarm unit. If empty, means unspecified or matches configured alarm.
-     *
+     * 
      */
     @JsonProperty("units")
     @JsonPropertyDescription("If specified, indicates a programmed alarm unit. If empty, means unspecified or matches configured alarm.")
     public String units;
     /**
      * State of the individual alarm
-     *
+     * 
      */
     @JsonProperty("value_state")
     @JsonPropertyDescription("State of the individual alarm")
@@ -42,8 +42,8 @@ public class AlarmAlarmsetState {
     /**
      * Entry
      * <p>
-     *
-     *
+     * 
+     * 
      */
     @JsonProperty("status")
     public Entry status;
@@ -72,7 +72,7 @@ public class AlarmAlarmsetState {
 
     /**
      * State of the individual alarm
-     *
+     * 
      */
     public enum Value_state {
 
