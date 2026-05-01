@@ -45,14 +45,23 @@ Upon connection, the Client must perform a handshake to synchronize with the Sys
     -   `setup`: System version information (min/max supported function versions).
     -   `reply`: A copy of the Client's setup block to confirm receipt.
 
-The Client is considered **Active** only after receiving a matching configuration reply.
+The Client is considered **Active** only after receiving a configuration reply where the `transaction_id` inside the `udmi.reply` block matches the `transaction_id` sent in the original `state` message.
+
+### Handshake Addressing
+Because the initial handshake is generic and occurs before the Client is associated with a specific registry or device, a distinct addressing scheme is used:
+
+- **PubSub:** The `deviceRegistryId` and `deviceId` message attributes MUST be empty strings (`""`).
+- **MQTT:** The topic MUST use the prefix `/uufi/c/{source}/` where `{source}` is the Client's unique identifier. The resulting topic structure is `/uufi/c/{source}/{subType}/{subFolder}`.
+
+### Timeouts and Retries
+Clients SHOULD implement a handshake timeout (default 30s). If no matching configuration reply is received within this window, the Client SHOULD retry the handshake with an exponential backoff, utilizing a new `transaction_id` for each attempt.
 
 ## 4. Message Encapsulation
 
 All messages exchanged via UUFI are wrapped in a **UUFI Envelope**.
 
 ### Envelope Fields
-The following fields must be present in every message:
+The following fields are available in the envelope to provide context for the message. Their presence depends on the transport and specific operation (they are not globally mandatory):
 - `projectId`: The project identifier.
 - `deviceRegistryId`: The `registry_id` of the Managed Registry.
 - `deviceId`: The target or source device ID in the Managed Registry (e.g., `BLD-1`, `_validator`).
@@ -60,7 +69,7 @@ The following fields must be present in every message:
 - `subType`: The UDMI message type (e.g., `events`, `state`, `config`, `commands`).
 - `transactionId`: A unique string used to track requests and responses.
 - `publishTime`: RFC 3339 timestamp of when the message was wrapped.
-- `source`: An identifier for the Client (e.g., `-user_id`).
+- `source`: An identifier for the Client's session/context (distinct from the identity used in the UDMI payload).
 
 ### Transport Mapping
 
@@ -74,14 +83,11 @@ For the MQTT transport, the envelope fields are encoded in the topic path:
 `/uufi/r/{registryId}/d/{deviceId}/{subType}/{subFolder}`
 
 #### MQTT Message Wrap
-Since MQTT 3.1.1 does not support separate attributes, the envelope fields are included in the JSON payload alongside the actual UDMI message:
+Since MQTT 3.1.1 does not support separate attributes, the envelope fields are included in the JSON payload alongside the actual UDMI message. **Crucially, the JSON payload MUST NOT include fields that are already encoded in the MQTT topic structure.**
 
 ```json
 {
-  "deviceRegistryId": "my-managed-registry",
-  "deviceId": "BLD-1",
-  "subFolder": "pointset",
-  "subType": "config",
+  "transactionId": "UUFI:sess123:002",
   "payload": {
     "points": {
       "room_temperature": { "set_value": 22.5 }
@@ -93,6 +99,13 @@ Since MQTT 3.1.1 does not support separate attributes, the envelope fields are i
 ## 5. Operational Commands
 
 UUFI supports direct operations on the Cloud Model by setting specific attributes.
+
+### Cloud Model Schema
+The `CloudModel` object used in these operations contains:
+- `operation`: The action to perform (`READ`, `CREATE`, `UPDATE`, `DELETE`, `BIND`, `UNBIND`).
+- `registryId`: (Optional) The target registry if different from the envelope.
+- `deviceId`: (Optional) The target device if different from the envelope.
+- `detail`: (Optional) Additional parameters specific to the operation.
 
 ### Cloud Model Queries
 - Set `subFolder: cloud` and `subType: query`.
@@ -121,14 +134,14 @@ The following examples demonstrate how to format PubSub messages for common UUFI
 The handshake synchronizes the Client and the System upon connection.
 
 #### Step 1: Publish Handshake State
-The Client initiates the session.
+The Client initiates the session using generic addressing.
 
 **PubSub Attributes:**
 ```json
 {
   "projectId": "my-gcp-project",
-  "deviceRegistryId": "my-managed-registry",
-  "deviceId": "my-managed-registry",
+  "deviceRegistryId": "",
+  "deviceId": "",
   "subFolder": "udmi",
   "subType": "state",
   "transactionId": "UUFI:sess123:001",
@@ -159,8 +172,8 @@ The System confirms the session is active.
 ```json
 {
   "projectId": "my-gcp-project",
-  "deviceRegistryId": "my-managed-registry",
-  "deviceId": "my-managed-registry",
+  "deviceRegistryId": "",
+  "deviceId": "",
   "subFolder": "udmi",
   "subType": "config",
   "transactionId": "UUFI:sess123:001"
@@ -186,6 +199,7 @@ The System confirms the session is active.
   }
 }
 ```
+
 
 ### 7.2. Pointset Exchange
 Interaction with a device's points (e.g., sensors and setpoints).
@@ -248,18 +262,16 @@ Receiving the current `room_temperature` reading from device `BLD-1`.
 ```
 
 ### 7.3. MQTT Examples
-The following examples demonstrate the same operations using the MQTT transport.
+The following examples demonstrate the same operations using the MQTT transport, following the rule that topic-encoded fields are omitted from the payload.
 
 #### Example: Handshake State (Publish)
-**Topic:** `/uufi/r/my-managed-registry/d/my-managed-registry/state/udmi`
+Using generic addressing for the initial handshake.
+
+**Topic:** `/uufi/c/-my-user-id/state/udmi`
 
 **Payload (JSON):**
 ```json
 {
-  "deviceRegistryId": "my-managed-registry",
-  "deviceId": "my-managed-registry",
-  "subFolder": "udmi",
-  "subType": "state",
   "transactionId": "UUFI:sess123:001",
   "payload": {
     "version": "1.5.2",
@@ -284,10 +296,6 @@ Updating device `BLD-1`.
 **Payload (JSON):**
 ```json
 {
-  "deviceRegistryId": "my-managed-registry",
-  "deviceId": "BLD-1",
-  "subFolder": "pointset",
-  "subType": "config",
   "transactionId": "UUFI:sess123:002",
   "payload": {
     "version": "1.5.2",
@@ -300,3 +308,14 @@ Updating device `BLD-1`.
   }
 }
 ```
+
+## 8. Reliability and Error Handling
+
+### MQTT Quality of Service
+To ensure reliable delivery of state and configuration messages, all MQTT communications SHOULD use **QoS 1** (At Least Once).
+
+### Error Reporting
+When the System encounters an error processing a UUFI message, it will respond via the reply channel using the `error` subFolder. The payload will include:
+- `category`: A string describing the error type (e.g., `auth`, `validation`, `not_found`).
+- `message`: A human-readable description of the error.
+- `transactionId`: The ID of the message that caused the error (if available).
