@@ -265,9 +265,11 @@ public class SequenceRunner {
         SubFolder kind = getTargetFacetKind(target);
         SequenceBase.activePrimary = getTargetPrimary(target);
         Set<String> targetFacets = getTargetFacets(kind);
-        for (String targetFacet : targetFacets) {
-          SequenceBase.activeFacet = ifNotNullGet(kind, f -> new SimpleEntry<>(f, targetFacet));
-          runCount += runOneTarget(request);
+        if (targetFacets != null) {
+          for (String targetFacet : targetFacets) {
+            SequenceBase.activeFacet = ifNotNullGet(kind, f -> new SimpleEntry<>(f, targetFacet));
+            runCount += runOneTarget(request);
+          }
         }
       }
     }

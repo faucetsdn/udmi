@@ -505,8 +505,12 @@ public class SequenceBase {
     validationState.timestamp = cleanDate();
     JsonUtil.writeFile(validationState, getSequencerStateFile());
     String validationString = stringify(validationState);
-    ifNotNullThen(client,
-        () -> client.publish(getDeviceId(), VALIDATION_STATE_TOPIC, validationString));
+    try {
+      ifNotNullThen(client,
+          () -> client.publish(getDeviceId(), VALIDATION_STATE_TOPIC, validationString));
+    } catch (Exception e) {
+      System.err.println("Error publishing validation state: " + Common.getExceptionMessage(e));
+    }
   }
 
   static File getSequencerStateFile() {
