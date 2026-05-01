@@ -44,6 +44,9 @@ public abstract class IotAccessBase extends ContainerBase implements IotAccessPr
   protected static final String EMPTY_JSON = "{}";
   private static final long REGISTRY_COMMAND_BACKOFF_SEC = 60;
   private static final Map<Entry<String, String>, Instant> BACKOFF_MAP = new ConcurrentHashMap<>();
+  private static final Map<Entry<String, String>, Instant> ACTIVE_CONNECTIONS =
+      new ConcurrentHashMap<>();
+  private static final Duration ACTIVE_THRESHOLD = Duration.ofMinutes(30);
   private static final long CONFIG_UPDATE_BACKOFF_MS = 1000;
   private static final int CONFIG_UPDATE_MAX_RETRIES = 10;
   private static final Duration REGISTRY_REFRESH = Duration.ofMinutes(10);
@@ -197,8 +200,15 @@ public abstract class IotAccessBase extends ContainerBase implements IotAccessPr
     }
   }
 
+  /**
+   * Return the set of currently active connections.
+   */
   public Set<Entry<String, String>> getActiveConnections() {
-    return BACKOFF_MAP.keySet();
+    Instant cutoff = Instant.now().minus(ACTIVE_THRESHOLD);
+    return ACTIVE_CONNECTIONS.entrySet().stream()
+        .filter(entry -> entry.getValue().isAfter(cutoff))
+        .map(Entry::getKey)
+        .collect(Collectors.toSet());
   }
 
   /**
@@ -307,6 +317,7 @@ public abstract class IotAccessBase extends ContainerBase implements IotAccessPr
 
   public void setProviderAffinity(String registryId, String deviceId, String providerId) {
     registryBackoffClear(registryId, deviceId);
+    ACTIVE_CONNECTIONS.put(getBackoffKey(registryId, deviceId), Instant.now());
   }
 
   /**
