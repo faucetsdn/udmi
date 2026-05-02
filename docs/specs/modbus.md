@@ -33,10 +33,10 @@ UDMI supports reading Modbus points by specifying them via a `modbus://` URL sch
 Parameters passed in the query string define how to interpret the fetched register data:
 
 *   **`border`**: i.e., `MSB` (`Big-Endian`) or `LSB` (`Little-Endian`).
-*   **`type`**: i.e., `INT16`, `UINT32`, `FLOAT32`, `BOOLEAN`, `ASCII`.
+*   **`type`**: e.g., `INT16`, `UINT32`, `FLOAT32`, `BOOLEAN`, `ASCII`.
 *   **`worder`**: i.e., `HWF` (`High-Word First`) or `LWF` (`Low-Word First`) (for 32-bit values).
-*   **`scale`**: i.e., `1.0`, `0.01`, `100.0` (scale factor).
-*   **`bit`**: Integer bit index.
+*   **`scale`**: e.g., `1.0`, `0.01`, `100.0` (scale factor).
+*   **`bit`**: e.g., `2` (Integer bit index).
 
 ### Network Parameters
 
