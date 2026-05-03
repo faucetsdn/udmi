@@ -1,0 +1,45 @@
+#!/bin/bash -e
+
+UDMI_ROOT=$(dirname $0)/..
+source $UDMI_ROOT/etc/shell_common.sh
+source $UDMI_ROOT/etc/mosquitto_ctrl.sh
+
+if [[ $# != 3 ]]; then
+    echo Usage: $0 action gateway_id device_id
+    echo Actions: bind, unbind
+    false
+fi
+
+action=$1
+gateway_id=$2
+device_id=$3
+
+role_name="role_${gateway_id//\//_}"
+
+if [[ $action == "bind" ]]; then
+    echo Binding $device_id to gateway $gateway_id
+    # Create role if not exists (ignore error if exists)
+    $MOSQUITTO_CTRL createRole $role_name || true
+    # Add role to gateway client (ignore error if already added)
+    $MOSQUITTO_CTRL addClientRole $gateway_id $role_name || true
+    
+    # Add ACLs
+    $MOSQUITTO_CTRL addRoleACL $role_name subscribePattern "$device_id/config" allow
+    $MOSQUITTO_CTRL addRoleACL $role_name subscribePattern "$device_id/commands" allow
+    $MOSQUITTO_CTRL addRoleACL $role_name subscribePattern "$device_id/errors" allow
+    $MOSQUITTO_CTRL addRoleACL $role_name publishClientSend "$device_id/events" allow
+    $MOSQUITTO_CTRL addRoleACL $role_name publishClientSend "$device_id/state" allow
+    echo "Binding successful for $device_id to gateway $gateway_id"
+elif [[ $action == "unbind" ]]; then
+    echo Unbinding $device_id from gateway $gateway_id
+    # Remove ACLs
+    $MOSQUITTO_CTRL removeRoleACL $role_name subscribePattern "$device_id/config" || true
+    $MOSQUITTO_CTRL removeRoleACL $role_name subscribePattern "$device_id/commands" || true
+    $MOSQUITTO_CTRL removeRoleACL $role_name subscribePattern "$device_id/errors" || true
+    $MOSQUITTO_CTRL removeRoleACL $role_name publishClientSend "$device_id/events" || true
+    $MOSQUITTO_CTRL removeRoleACL $role_name publishClientSend "$device_id/state" || true
+    echo "Unbinding successful for $device_id from gateway $gateway_id"
+else
+    echo Unknown action: $action
+    false
+fi

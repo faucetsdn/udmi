@@ -17,9 +17,23 @@ shift 2
 source $UDMI_ROOT/etc/mosquitto_ctrl.sh
 
 client_user=$client_id
+role_name="role_${client_id//\//_}"
 
 $MOSQUITTO_CTRL deleteClient $client_user || true
+$MOSQUITTO_CTRL deleteRole $role_name || true
+
 if [[ $client_pass != "--" ]]; then
     $MOSQUITTO_CTRL createClient $client_user -p $client_pass -c $client_id
-    $MOSQUITTO_CTRL addClientRole $client_user device
+    
+    $MOSQUITTO_CTRL createRole $role_name
+    $MOSQUITTO_CTRL addClientRole $client_user $role_name
+    
+    $MOSQUITTO_CTRL addRoleACL $role_name subscribePattern "$client_id/config" allow
+    $MOSQUITTO_CTRL addRoleACL $role_name subscribePattern "$client_id/commands" allow
+    $MOSQUITTO_CTRL addRoleACL $role_name subscribePattern "$client_id/errors" allow
+    $MOSQUITTO_CTRL addRoleACL $role_name publishClientSend "$client_id/events" allow
+    $MOSQUITTO_CTRL addRoleACL $role_name publishClientSend "$client_id/state" allow
+    echo "Device $client_id registered correctly."
+else
+    echo "Device $client_id deleted correctly."
 fi
