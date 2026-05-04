@@ -32,7 +32,7 @@ public class ModbusFamilyProviderTest {
       "modbus://10.0.0.1/1/3/40001/1?type=UINT32&worder=HWF&border=LSB&scale=10&offset=5"
   );
 
-  public static final Set<String> BAD_REFERENCES = ImmutableSet.of(
+    public static final Set<String> BAD_REFERENCES = ImmutableSet.of(
       "modbus://network@192.168.1.1:502/1/3/40001",
       "modbus://192.168.1.1:502/1/3",
       "modbus://192.168.1.1:502/1/3/40001/10/extra",
@@ -42,6 +42,12 @@ public class ModbusFamilyProviderTest {
       "modbus://192.168.1.1:502/1/7/40001", // Invalid function code 7
       "modbus://192.168.1.1:502/1/3/40001?foo=bar", // Invalid parameter foo
       "modbus://192.168.1.1:502/1/3/40001?byte_order=MSB", // Old parameter name
+      "modbus://10.0.0.1/1/3/40001/1?type=BADTYPE",
+      "modbus://10.0.0.1/1/3/40001/1?border=BADBORDER",
+      "modbus://10.0.0.1/1/3/40001/1?worder=BADWORDER",
+      "modbus://10.0.0.1/1/3/40001/1?scale=abc",
+      "modbus://10.0.0.1/1/3/40001/1?offset=xyz",
+      "modbus://10.0.0.1/1/3/40001/1?type", // Missing value
       "bacnet://192.168.1.1/1/3/40001"
   );
 
