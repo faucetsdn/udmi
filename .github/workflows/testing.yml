@@ -13,9 +13,6 @@ concurrency:
   group: ci-${{ github.repository }}
   cancel-in-progress: true
 
-env:
-  # Opt out of Node 20 deprecation warning temporarily
-  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
 
 jobs:
   unit:
@@ -23,7 +20,7 @@ jobs:
     runs-on: ubuntu-24.04
     timeout-minutes: 15
     steps:
-      - uses: actions/setup-java@v4
+      - uses: actions/setup-java@v5
         with:
           distribution: 'temurin'
           java-version: '21'
@@ -82,7 +79,7 @@ jobs:
       TARGET_PROJECT: ${{ vars.TARGET_PROJECT }}
     steps:
       - uses: actions/checkout@v6
-      - uses: actions/setup-java@v4
+      - uses: actions/setup-java@v5
         with:
           distribution: 'temurin'
           java-version: '21'
@@ -115,7 +112,7 @@ jobs:
       - name: support bundle
         if: ${{ !cancelled() }}
         run: bin/support ${{ github.repository_owner }}_${{ github.job }}_
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v5
         if: ${{ !cancelled() }}
         with:
           if-no-files-found: error
@@ -133,7 +130,7 @@ jobs:
       UDMI_ALT_REGISTRY: ZZ-REDIRECT-NA
     steps:
       - uses: actions/checkout@v6
-      - uses: actions/setup-java@v4
+      - uses: actions/setup-java@v5
         with:
           distribution: 'temurin'
           java-version: '21'
@@ -164,7 +161,7 @@ jobs:
       - name: support bundle
         if: ${{ !cancelled() }}
         run: UDMI_REGISTRY_SUFFIX=_b bin/support ${{ github.repository_owner }}_${{ github.job }}_
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v5
         if: ${{ !cancelled() }}
         with:
           if-no-files-found: error
@@ -188,7 +185,7 @@ jobs:
       MATRIX_SHARD_INDEX: ${{ matrix.shard }}
     steps:
       - uses: actions/checkout@v6
-      - uses: actions/setup-java@v4
+      - uses: actions/setup-java@v5
         with:
           distribution: 'temurin'
           java-version: '21'
@@ -227,7 +224,7 @@ jobs:
         run: |
           bin/support ${{ github.repository_owner }}_${{ github.job }}_
           tar -tzvf *udmi-support*.tgz
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v5
         if: ${{ !cancelled() }}
         with:
           if-no-files-found: error
@@ -240,7 +237,7 @@ jobs:
     timeout-minutes: 20
     steps:
       - uses: actions/checkout@v6
-      - uses: actions/setup-java@v4
+      - uses: actions/setup-java@v5
         with:
           distribution: 'temurin'
           java-version: '21'
@@ -279,7 +276,7 @@ jobs:
       - name: support bundle
         if: ${{ !cancelled() }}
         run: bin/support ${{ github.repository_owner }}_${{ github.job }}_
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v5
         if: ${{ !cancelled() }}
         with:
           if-no-files-found: error
@@ -295,7 +292,7 @@ jobs:
       TARGET_PROJECT: //mqtt/localhost
     steps:
       - uses: actions/checkout@v6
-      - uses: actions/setup-java@v4
+      - uses: actions/setup-java@v5
         with:
           distribution: 'temurin'
           java-version: '21'
@@ -316,7 +313,7 @@ jobs:
       - name: support bundle
         if: ${{ !cancelled() }}
         run: UDMI_REGISTRY_SUFFIX=_r bin/support ${{ github.repository_owner }}_${{ github.job }}_
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v5
         if: ${{ !cancelled() }}
         with:
           if-no-files-found: error
@@ -346,7 +343,7 @@ jobs:
           pattern: udmi-support_${{ github.run_id }}-*
           merge-multiple: true
       - name: Upload merged support package
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           if-no-files-found: error
           name: udmi-support_${{ github.run_id }}
@@ -373,7 +370,7 @@ jobs:
         with:
           fetch-depth: 0
           fetch-tags: true
-      - uses: actions/setup-java@v4
+      - uses: actions/setup-java@v5
         with:
           distribution: 'temurin'
           java-version: '21'
