@@ -112,7 +112,7 @@ jobs:
       - name: support bundle
         if: ${{ !cancelled() }}
         run: bin/support ${{ github.repository_owner }}_${{ github.job }}_
-      - uses: actions/upload-artifact@v5
+      - uses: actions/upload-artifact@v7
         if: ${{ !cancelled() }}
         with:
           if-no-files-found: error
@@ -161,7 +161,7 @@ jobs:
       - name: support bundle
         if: ${{ !cancelled() }}
         run: UDMI_REGISTRY_SUFFIX=_b bin/support ${{ github.repository_owner }}_${{ github.job }}_
-      - uses: actions/upload-artifact@v5
+      - uses: actions/upload-artifact@v7
         if: ${{ !cancelled() }}
         with:
           if-no-files-found: error
@@ -224,7 +224,7 @@ jobs:
         run: |
           bin/support ${{ github.repository_owner }}_${{ github.job }}_
           tar -tzvf *udmi-support*.tgz
-      - uses: actions/upload-artifact@v5
+      - uses: actions/upload-artifact@v7
         if: ${{ !cancelled() }}
         with:
           if-no-files-found: error
@@ -276,7 +276,7 @@ jobs:
       - name: support bundle
         if: ${{ !cancelled() }}
         run: bin/support ${{ github.repository_owner }}_${{ github.job }}_
-      - uses: actions/upload-artifact@v5
+      - uses: actions/upload-artifact@v7
         if: ${{ !cancelled() }}
         with:
           if-no-files-found: error
@@ -313,7 +313,7 @@ jobs:
       - name: support bundle
         if: ${{ !cancelled() }}
         run: UDMI_REGISTRY_SUFFIX=_r bin/support ${{ github.repository_owner }}_${{ github.job }}_
-      - uses: actions/upload-artifact@v5
+      - uses: actions/upload-artifact@v7
         if: ${{ !cancelled() }}
         with:
           if-no-files-found: error
@@ -343,7 +343,7 @@ jobs:
           pattern: udmi-support_${{ github.run_id }}-*
           merge-multiple: true
       - name: Upload merged support package
-        uses: actions/upload-artifact@v5
+        uses: actions/upload-artifact@v7
         with:
           if-no-files-found: error
           name: udmi-support_${{ github.run_id }}
