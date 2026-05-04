@@ -37,6 +37,11 @@ public class ModbusFamilyProvider implements FamilyProvider {
   private static final Set<String> ALLOWED_PARAMS =
       ImmutableSet.of("border", "type", "worder", "scale", "offset");
 
+  private static final Set<String> ALLOWED_BORDERS = ImmutableSet.of("MSB", "LSB");
+  private static final Set<String> ALLOWED_WORDERS = ImmutableSet.of("HWF", "LWF");
+  private static final Set<String> ALLOWED_TYPES =
+      ImmutableSet.of("INT16", "INT32", "INT64", "UINT16", "UINT32", "UINT64", "FLOAT32", "FLOAT64", "BOOLEAN", "ASCII");
+
   @Override
   public String familyKey() {
     return MODBUS;
@@ -66,9 +71,39 @@ public class ModbusFamilyProvider implements FamilyProvider {
     String query = matcher.group(5);
     if (query != null) {
       Arrays.stream(query.split("&")).forEach(param -> {
-        String key = param.split("=")[0];
+        String[] parts = param.split("=");
+        String key = parts[0];
         if (!ALLOWED_PARAMS.contains(key)) {
           throw new RuntimeException(format("invalid modbus interpretation parameter %s", key));
+        }
+        if (parts.length < 2) {
+          throw new RuntimeException(format("missing value for modbus interpretation parameter %s", key));
+        }
+        String value = parts[1];
+        switch (key) {
+          case "border":
+            if (!ALLOWED_BORDERS.contains(value)) {
+              throw new RuntimeException(format("invalid modbus border value %s", value));
+            }
+            break;
+          case "worder":
+            if (!ALLOWED_WORDERS.contains(value)) {
+              throw new RuntimeException(format("invalid modbus worder value %s", value));
+            }
+            break;
+          case "type":
+            if (!ALLOWED_TYPES.contains(value)) {
+              throw new RuntimeException(format("invalid modbus type value %s", value));
+            }
+            break;
+          case "scale":
+          case "offset":
+            try {
+              Double.parseDouble(value);
+            } catch (NumberFormatException e) {
+              throw new RuntimeException(format("invalid modbus %s value %s", key, value));
+            }
+            break;
         }
       });
     }
