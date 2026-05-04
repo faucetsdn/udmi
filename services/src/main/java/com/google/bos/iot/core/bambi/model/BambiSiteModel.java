@@ -176,8 +176,6 @@ public class BambiSiteModel {
       if (isNotEmpty(templateName)) {
         pointsTemplates.putIfAbsent(templateName, new ArrayList<>());
         pointsTemplates.get(templateName).add(row);
-      } else {
-        throw new RuntimeException("Template name must not be empty!");
       }
     }
 
@@ -190,10 +188,20 @@ public class BambiSiteModel {
         for (Map<String, String> pointRow : pointsTemplates.getOrDefault(templateName,
             new ArrayList<>())) {
           String pointName = pointRow.get(POINT_NAME);
+          boolean allValsEmpty = true;
+
           for (Entry<String, String> cell : pointRow.entrySet()) {
             String header = cell.getKey();
             String val = cell.getValue();
+            if (!header.equals(POINT_NAME) && !header.equals(POINTS_TEMPLATE_NAME)
+                && !val.isEmpty()) {
+              allValsEmpty = false;
+            }
             pointsetRow.put(BambiSheetTab.POINTS.getName() + "." + pointName + "." + header, val);
+          }
+
+          if (allValsEmpty) {
+            pointsetRow.put(BambiSheetTab.POINTS.getName() + "." + pointName, "{}");
           }
         }
       }
