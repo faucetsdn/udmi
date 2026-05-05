@@ -337,7 +337,7 @@ def test_sequencer(new_site_model, docker_devices, discovery_node):
 
   print("sequencer output")
   print(result.stdout.decode("utf8"))
-  # assert "RESULT pass discovery.scan scan_single_future" in str(result.stdout), "result is pass (note this test can be flakey)"
+  assert "RESULT pass discovery.scan scan_single_future" in str(result.stdout), "result is pass (note this test can be flakey)"
 
 
 @pytest.fixture
