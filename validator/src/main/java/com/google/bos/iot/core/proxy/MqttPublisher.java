@@ -437,6 +437,7 @@ public class MqttPublisher implements MessagePublisher {
 
   @Override
   public synchronized void close() {
+    shutdown = true;
     try {
       LOG.debug(format("Shutting down executor %x", publisherExecutor.hashCode()));
       ifNotNullThen(tickler, () -> tickler.cancel(false));
@@ -591,12 +592,12 @@ public class MqttPublisher implements MessagePublisher {
   }
 
   private void disconnectMqtt() throws MqttException {
-    long quiesceTimeout = TOKEN_EXPIRATION.toMillis() / 8;
+    long quiesceTimeoutMs = 5000;
     try {
-      mqttClient.disconnect(quiesceTimeout);
+      mqttClient.disconnect(quiesceTimeoutMs);
     } catch (Exception e) {
       LOG.error("Graceful disconnect failed, forcing disconnect: " + e.getMessage());
-      mqttClient.disconnectForcibly(quiesceTimeout);
+      mqttClient.disconnectForcibly(quiesceTimeoutMs);
     }
   }
 

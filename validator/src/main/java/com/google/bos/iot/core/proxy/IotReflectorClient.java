@@ -546,7 +546,9 @@ public class IotReflectorClient implements MessagePublisher {
     receiveStats.update();
     System.err.printf("Received mqtt client error: %s at %s%n",
         throwable.getMessage(), getTimestamp());
-    close();
+    if (active) {
+      close();
+    }
   }
 
   @Override

@@ -53,7 +53,7 @@ public class ControlProcessor extends ProcessorBase {
       message.payload = encodeBase64(stringify(config));
       message.subType = SubType.CONFIG;
       message.subFolder = SubFolder.UDMI;
-      iotAccess.getActiveConnections().forEach(entry -> {
+      iotAccess.getActiveConnections().parallelStream().forEach(entry -> {
         debug("Propagate UdmiConfig to " + entry);
         iotAccess.sendCommand(makeEntryEnvelope(entry), SubFolder.UDMI, stringify(message));
       });
