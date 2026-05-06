@@ -457,7 +457,7 @@ jobs:
           poetry run pylint src
 
   bridgehead:
-    name: Bridgehead Integration Test
+    name: Bridgehead Test
     runs-on: ubuntu-24.04
     timeout-minutes: 20
     steps:
