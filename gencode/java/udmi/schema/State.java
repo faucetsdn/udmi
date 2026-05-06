@@ -100,7 +100,7 @@ public class State {
      * Alarmset State
      * <p>
      * A set of alarms reporting telemetry data.
-     *
+     * 
      */
     @JsonProperty("alarmset")
     @JsonPropertyDescription("A set of alarms reporting telemetry data.")

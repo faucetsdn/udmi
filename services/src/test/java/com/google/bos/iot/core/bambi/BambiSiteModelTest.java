@@ -5,7 +5,6 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 
 import com.google.bos.iot.core.bambi.model.BambiSheetTab;
@@ -353,7 +352,7 @@ public class BambiSiteModelTest {
 
 
   @Test
-  public void mergePointsWithPointset_pointsRowWithEmptyTemplateName_throwsException() {
+  public void mergePointsWithPointset_pointsRowWithEmptyTemplateName_skipsRow() {
     List<List<Object>> pointsetSheet = createTableListFromArrays(
         new Object[]{BambiSiteModel.DEVICE_ID, BambiSiteModel.POINTS_TEMPLATE_NAME},
         new Object[]{"dev1", "tpl1"}
@@ -362,15 +361,18 @@ public class BambiSiteModelTest {
         new Object[]{BambiSiteModel.POINTS_TEMPLATE_NAME, BambiSiteModel.POINT_NAME},
         new Object[]{"", "P1"} // Empty String as template name
     );
-    try {
-      new BambiSiteModel(
-          emptySheet(), emptySheet(), headerOnlySheet("h"), headerOnlySheet("h"),
-          headerOnlySheet("h"), headerOnlySheet("h"), pointsetSheet,
-          pointsSheetStringNullTemplateName
-      );
-      fail("Expected RuntimeException");
-    } catch (RuntimeException e) {
-      assertTrue(e.getMessage().contains("Template name must not be empty!"));
+
+    BambiSiteModel model = new BambiSiteModel(
+        emptySheet(), emptySheet(), headerOnlySheet("h"), headerOnlySheet("h"),
+        headerOnlySheet("h"), headerOnlySheet("h"), pointsetSheet,
+        pointsSheetStringNullTemplateName
+    );
+
+    Map<String, String> dev1Meta = model.getDeviceMetadata("dev1");
+    assertNotNull(dev1Meta);
+    // Verify that point P1 is not present because the row was skipped
+    for (String key : dev1Meta.keySet()) {
+      assertFalse("Point P1 should not be present", key.contains(".points.P1."));
     }
   }
 

@@ -122,6 +122,8 @@ MQTT
 msb
 mydomain
 namespace
+namespacing
+namespaces
 niversal
 nmap
 npm
@@ -130,6 +132,8 @@ OIDC
 Onboarding
 onboarding
 OPC
+optionality
+Optionality
 OSS
 pagent
 parameterization
