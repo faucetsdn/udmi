@@ -172,13 +172,40 @@ public class SpreadsheetManager {
    * @throws IOException If an error occurs while communicating with the Google Sheets API.
    */
   public void writeToRange(String range, List<List<Object>> values) throws IOException {
+    if (!range.contains("!")) {
+      writeToTabInBatches(range, values);
+    } else {
+      writeToSpecificRange(range, values);
+    }
+  }
+
+  private void writeToTabInBatches(String tabName, List<List<Object>> values) throws IOException {
+    int batchSize = 10000;
+    
+    // First batch using update to ensure it starts at A1
+    int end = Math.min(batchSize, values.size());
+    List<List<Object>> firstBatch = values.subList(0, end);
+    writeToSpecificRange(tabName + "!A1", firstBatch);
+    
+    // Subsequent batches using append to automatically expand grid
+    for (int i = batchSize; i < values.size(); i += batchSize) {
+      int nextEnd = Math.min(i + batchSize, values.size());
+      List<List<Object>> batch = values.subList(i, nextEnd);
+      
+      appendToSheet(tabName, batch);
+      LOGGER.info("appended batch of {} rows to tab: {}", batch.size(), tabName);
+    }
+
+    LOGGER.info("successfully wrote {} rows to tab: {}", values.size(), tabName);
+  }
+  private void writeToSpecificRange(String range, List<List<Object>> values) throws IOException {
     ValueRange body = new ValueRange().setValues(values);
     try {
       sheetsService.spreadsheets().values()
           .update(spreadSheetId, range, body)
           .setValueInputOption("RAW")
           .execute();
-      LOGGER.info("successfully wrote {} rows to range: {}", values.size(), range);
+      LOGGER.info("wrote {} rows to range: {}", values.size(), range);
     } catch (IOException e) {
       throw new IOException("Failed to write data to range: " + range, e);
     }
