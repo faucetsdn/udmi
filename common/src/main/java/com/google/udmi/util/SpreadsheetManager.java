@@ -182,15 +182,18 @@ public class SpreadsheetManager {
   private void writeToTabInBatches(String tabName, List<List<Object>> values) throws IOException {
     int batchSize = 10000;
 
+
     // First batch using update to ensure it starts at A1
     int end = Math.min(batchSize, values.size());
     List<List<Object>> firstBatch = values.subList(0, end);
     writeToSpecificRange(tabName + "!A1", firstBatch);
 
+
     // Subsequent batches using append to automatically expand grid
     for (int i = batchSize; i < values.size(); i += batchSize) {
       int nextEnd = Math.min(i + batchSize, values.size());
       List<List<Object>> batch = values.subList(i, nextEnd);
+
 
       appendToSheet(tabName, batch);
       LOGGER.info("appended batch of {} rows to tab: {}", batch.size(), tabName);
