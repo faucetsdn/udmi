@@ -129,7 +129,7 @@ sudo docker exec validator /root/discovery.sh GAT-123
 echo "Step 4: Discovery script executed."
 
 # 5. Run registrar to check results
-run_with_retry sudo docker exec validator bin/registrar site_model/ //mqtt/mosquitto
+run_with_retry sudo docker exec validator bin/registrar site_model/ //mqtt/mosquitto > registrar_output.txt
 echo "Step 5: Ran Registrar to check results."
 
 echo "Verifying output..."
