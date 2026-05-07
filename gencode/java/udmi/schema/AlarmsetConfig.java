@@ -13,7 +13,7 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
  * Alarmset Config
  * <p>
  * [Alarmset Config Documentation](../docs/messages/alarmset.md#config)
- *
+ * 
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
@@ -29,49 +29,49 @@ public class AlarmsetConfig {
 
     /**
      * RFC 3339 UTC timestamp the configuration was generated
-     *
+     * 
      */
     @JsonProperty("timestamp")
     @JsonPropertyDescription("RFC 3339 UTC timestamp the configuration was generated")
     public Date timestamp;
     /**
      * Version of the UDMI schema
-     *
+     * 
      */
     @JsonProperty("version")
     @JsonPropertyDescription("Version of the UDMI schema")
     public java.lang.String version;
     /**
      * The `state_etag` of the last _state_ message sent by the device. [Writeback documentation](../docs/specs/sequences/writeback.md)
-     *
+     * 
      */
     @JsonProperty("state_etag")
     @JsonPropertyDescription("The `state_etag` of the last _state_ message sent by the device. [Writeback documentation](../docs/specs/sequences/writeback.md)")
     public java.lang.String state_etag;
     /**
      * An expiry for the the device to revert to baseline (no set value). [Writeback documentation](../docs/specs/sequences/writeback.md)
-     *
+     * 
      */
     @JsonProperty("set_value_expiry")
     @JsonPropertyDescription("An expiry for the the device to revert to baseline (no set value). [Writeback documentation](../docs/specs/sequences/writeback.md)")
     public Date set_value_expiry;
     /**
      * Minimum time between sample updates for the device (including complete and COV updates). Updates more frequent than this should be coalesced into one update.
-     *
+     * 
      */
     @JsonProperty("sample_limit_sec")
     @JsonPropertyDescription("Minimum time between sample updates for the device (including complete and COV updates). Updates more frequent than this should be coalesced into one update.")
     public Integer sample_limit_sec;
     /**
      * Maximum time between samples for the device to send out a complete update. It can send out updates more frequently than this. Default to 300.
-     *
+     * 
      */
     @JsonProperty("sample_rate_sec")
     @JsonPropertyDescription("Maximum time between samples for the device to send out a complete update. It can send out updates more frequently than this. Default to 300.")
     public Integer sample_rate_sec = 300;
     /**
      * The alarms defined in this dictionary is the authoritative source indicating the representative alarms for the device (in both `telemetry` and `state` messages). [Alarmset doumentation](../docs/messages/alarmset.md)
-     *
+     * 
      */
     @JsonProperty("alarms")
     @JsonPropertyDescription("The alarms defined in this dictionary is the authoritative source indicating the representative alarms for the device (in both `telemetry` and `state` messages). [Alarmset doumentation](../docs/messages/alarmset.md)")
