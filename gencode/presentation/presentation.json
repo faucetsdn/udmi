@@ -768,6 +768,12 @@
       "section": "cloud",
       "type": "string"
     },
+    "cloud.password": {
+      "display": "show",
+      "style": "bold",
+      "section": "cloud",
+      "type": "string"
+    },
     "cloud.updated_time": {
       "display": "show",
       "style": "bold",
