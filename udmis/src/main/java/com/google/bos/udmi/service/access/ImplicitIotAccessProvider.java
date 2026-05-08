@@ -214,7 +214,8 @@ public class ImplicitIotAccessProvider extends IotAccessBase {
         keyBytes -> properties.put(AUTH_KEY_PROPERTY, keyBytes));
     properties.put(BLOCKED_PROPERTY, booleanString(cloudModel.blocked));
     ifNotNullThen(cloudModel.num_id, id -> properties.put(NUM_ID_PROPERTY, id));
-    ifNotNullThen(cloudModel.auth_type, authType -> properties.put(AUTH_TYPE_PROPERTY, authType.value()));
+    ifNotNullThen(cloudModel.auth_type,
+        authType -> properties.put(AUTH_TYPE_PROPERTY, authType.value()));
     ifNotNullThen(cloudModel.credentials, creds -> ifNotTrueThen(creds.isEmpty(), () -> {
       checkState(creds.size() == 1, "only one credential supported");
       Credential cred = creds.get(0);
