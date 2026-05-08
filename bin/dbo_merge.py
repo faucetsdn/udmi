@@ -91,7 +91,7 @@ def merge_dbo_config(yaml_file: Path, site_model_dir: Path):
           target_code = guid_to_code.get(target_guid, target_guid)
           for local_pt, remote_pt in link_map.items():
             pt_udmi = points.setdefault(local_pt, {})
-            pt_udmi["link"] = f"{target_code}:{remote_pt}"
+            pt_udmi["expr"] = f"{target_code}:{remote_pt}"
 
     with open(metadata_path, "w", encoding="utf-8") as f:
       json.dump(metadata, f, indent=2)

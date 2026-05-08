@@ -103,8 +103,8 @@ def extract_dbo_config(site_model_dir: Path) -> dict:
       if pt_dbo:
         translations[point_name] = pt_dbo
 
-      if "link" in point_info:
-        link_val = point_info["link"]
+      if "expr" in point_info:
+        link_val = point_info["expr"]
         if ":" in link_val:
           remote_device_id, remote_pt = link_val.split(":", 1)
           remote_guid = device_id_to_guid.get(
