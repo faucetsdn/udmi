@@ -182,7 +182,7 @@ class DiscoveryController(abc.ABC):
       logging.info("Started... %s", type(self).__name__)
 
   def _stop(self):
-    logging.debug("Stopping discovery for %s", type(self).__name__)
+    logging.info("Stopping discovery for %s", type(self).__name__)
     if self.internal_state not in [states.STARTING, states.STARTED]:
       logging.debug("Not stopping because state was %s", self.internal_state)
       return
@@ -204,14 +204,14 @@ class DiscoveryController(abc.ABC):
       family=self.family,
       event_no=event_no
     )
-    logging.info("publishing discovery marker for %s #%d", self.family, event_no)
+    logging.debug("publishing discovery marker for %s #%d", self.family, event_no)
     self.publisher(event)
 
   def publish(self, event: udmi.schema.discovery_event.DiscoveryEvent):
     """ Publishes the provided Discovery Event, setting event counts."""
     event_number = self._event_counter_increment_and_get()
     event.event_no = event_number
-    logging.info("publishing discovery for %s:%s #%d", event.family, event.addr, event_number)
+    logging.debug("publishing discovery for %s:%s #%d", event.family, event.addr, event_number)
     self.publisher(event)
 
   def _validate_config(config: udmi.schema.config.DiscoveryFamily):
