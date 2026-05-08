@@ -74,9 +74,9 @@ jobs:
     name: Automapping capability
     runs-on: ubuntu-24.04
     timeout-minutes: 10
-    if: ${{ vars.TARGET_PROJECT != '' && !cancelled() }}
+    if: ${{ !cancelled() }}
     env:
-      TARGET_PROJECT: ${{ vars.TARGET_PROJECT }}
+      TARGET_PROJECT: ${{ vars.TARGET_PROJECT || '//mqtt/localhost' }}
     steps:
       - uses: actions/checkout@v6
       - uses: actions/setup-java@v5
@@ -124,9 +124,8 @@ jobs:
     runs-on: ubuntu-24.04
     timeout-minutes: 20
     needs: automapping
-    if: vars.TARGET_PROJECT != ''
     env:
-      TARGET_PROJECT: ${{ vars.TARGET_PROJECT }}
+      TARGET_PROJECT: ${{ vars.TARGET_PROJECT || '//mqtt/localhost' }}
       UDMI_ALT_REGISTRY: ZZ-REDIRECT-NA
     steps:
       - uses: actions/checkout@v6
@@ -176,9 +175,8 @@ jobs:
       fail-fast: false
       matrix:
         shard: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
-    if: vars.TARGET_PROJECT != ''
     env:
-      TARGET_PROJECT: ${{ vars.TARGET_PROJECT }}
+      TARGET_PROJECT: ${{ vars.TARGET_PROJECT || '//mqtt/localhost' }}
       UDMI_ALT_REGISTRY: ZZ-REDIRECT-NA
       UDMI_REGISTRY_SUFFIX: _${{ matrix.shard }}
       MATRIX_SHARD_COUNT: 10
@@ -325,9 +323,9 @@ jobs:
     runs-on: ubuntu-24.04
     timeout-minutes: 5
     needs: [ baseline, sequencer, endpoint, runlocal ]
-    if: ${{ !cancelled() && vars.TARGET_PROJECT != '' }}
+    if: ${{ !cancelled() }}
     env:
-      TARGET_PROJECT: ${{ vars.TARGET_PROJECT }}
+      TARGET_PROJECT: ${{ vars.TARGET_PROJECT || '//mqtt/localhost' }}
       UDMI_ALT_REGISTRY: ZZ-REDIRECT-NA
     steps:
       - uses: actions/checkout@v6
