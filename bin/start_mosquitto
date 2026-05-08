@@ -34,13 +34,19 @@ if [[ ! -f $UDMI_FILE ]]; then
     [[ $(whoami) == root ]] && echo user root >> $UDMI_FILE
 fi
 
+# Ensure the mosquitto group can write to the config directory (required for atomic configuration saves)
+sudo chgrp $GROUP $ETC_DIR || true
+sudo chmod 775 $ETC_DIR || true
+
 if [[ ! -f $DYN_FILE ]]; then
     echo Creating new $DYN_FILE
     echo Configuring MQTT user: $AUTH_USER
     sudo mosquitto_ctrl dynsec init $DYN_FILE $AUTH_USER $AUTH_PASS
-    [[ $(whoami) != root ]] && sudo chgrp $GROUP $DYN_FILE
-    sudo chmod 0660 $DYN_FILE
 fi
+
+# Ensure the dynamic security file is owned by the mosquitto group and is group-writable (restricted to owner and group only)
+sudo chgrp $GROUP $DYN_FILE || true
+sudo chmod 0660 $DYN_FILE || true
 
 if [[ ! -f $PASS_FILE ]]; then
     echo Creating $PASS_FILE
