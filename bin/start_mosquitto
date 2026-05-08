@@ -51,10 +51,12 @@ sudo chmod 0660 $DYN_FILE || true
 if [[ ! -f $PASS_FILE ]]; then
     echo Creating $PASS_FILE
     sudo touch $PASS_FILE
-    sudo chmod 0640 $PASS_FILE
-    [[ $(whoami) != root ]] && sudo chgrp $GROUP $PASS_FILE
     sudo mosquitto_passwd -b ${PASS_FILE} ${AUTH_USER} ${AUTH_PASS}
 fi
+
+# Ensure the passwd file is owned by the mosquitto user and is strictly private (0600)
+sudo chown mosquitto:mosquitto $PASS_FILE || true
+sudo chmod 0600 $PASS_FILE || true
 
 if [[ -n $(which systemctl) ]]; then
     sudo systemctl restart mosquitto
