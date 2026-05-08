@@ -1,0 +1,43 @@
+CONFIG_METADATA:
+  operation: INITIALIZE
+c773b86d-b0c0-46fc-bd3f-d726fadd5f1e:
+  code: VAV-1
+  cloud_device_id: '2541901344105616'
+  translation:
+    zone_air_temperature_sensor:
+      present_value: points.zone_air_temperature_sensor.present_value
+      units:
+        key: pointset.points.zone_air_temperature_sensor.units
+        values:
+          degrees_celsius: degC
+  links:
+    547a33c5-0ce4-4dfb-9924-5169a3475c89:
+      supply_air_flowrate_sensor_1: supply_air_flowrate_sensor
+  type: HVAC/VAV_SD_DSP
+4931e096-dea5-4b81-86ad-234c6d07b978:
+  code: VAV-2
+  cloud_device_id: '2541901344105617'
+  connections:
+    c773b86d-b0c0-46fc-bd3f-d726fadd5f1e:
+    - tags:
+      - primary
+      type: FEEDS
+  translation:
+    zone_air_temperature_sensor:
+      present_value: points.zone_air_temperature_sensor.present_value
+      units:
+        key: pointset.points.zone_air_temperature_sensor.units
+        values:
+          degrees_celsius: degC
+  type: HVAC/VAV_SD_CSP
+547a33c5-0ce4-4dfb-9924-5169a3475c89:
+  code: VAV-3
+  cloud_device_id: '2541901344105618'
+  translation:
+    supply_air_flowrate_sensor:
+      present_value: points.supply_air_flowrate_sensor.present_value
+      units:
+        key: pointset.points.supply_air_flowrate_sensor.units
+        values:
+          liters_per_second: L/s
+  type: HVAC/VAV_SD_DSP

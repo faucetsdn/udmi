@@ -1,0 +1,7 @@
+{
+  "externals": {
+    "dbo": {
+      "description": "External building_config structure"
+    }
+  }
+}

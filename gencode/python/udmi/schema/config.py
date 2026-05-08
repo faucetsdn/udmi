@@ -7,6 +7,7 @@ from dataclasses import dataclass
 from typing import Optional
 
 from ._base import DataModel
+from .config_alarmset import AlarmsetConfig
 from .config_blobset import BlobsetConfig
 from .config_discovery import DiscoveryConfig
 from .config_gateway import GatewayConfig
@@ -29,4 +30,5 @@ class Config(DataModel):
     discovery: Optional[DiscoveryConfig] = None
     localnet: Optional[LocalnetConfig] = None
     blobset: Optional[BlobsetConfig] = None
+    alarmset: Optional[AlarmsetConfig] = None
     pointset: Optional[PointsetConfig] = None

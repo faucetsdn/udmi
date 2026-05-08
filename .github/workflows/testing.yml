@@ -13,21 +13,22 @@ concurrency:
   group: ci-${{ github.repository }}
   cancel-in-progress: true
 
+
 jobs:
   unit:
     name: Unit Tests
     runs-on: ubuntu-24.04
     timeout-minutes: 15
     steps:
-      - uses: actions/setup-java@v4
+      - uses: actions/setup-java@v5
         with:
           distribution: 'temurin'
           java-version: '21'
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@v6
         with:
           python-version: '3.13'
       - name: Checkout source
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
       - name: start and test local servers
         run: |
           bin/setup_base
@@ -62,7 +63,7 @@ jobs:
     runs-on: ubuntu-24.04
     timeout-minutes: 2
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
       - name: Check Spelling
         uses: rojopolis/spellcheck-github-actions@0.35.0
         with:
@@ -73,12 +74,12 @@ jobs:
     name: Automapping capability
     runs-on: ubuntu-24.04
     timeout-minutes: 10
-    if: ${{ vars.TARGET_PROJECT != '' && !cancelled() }}
+    if: ${{ !cancelled() }}
     env:
-      TARGET_PROJECT: ${{ vars.TARGET_PROJECT }}
+      TARGET_PROJECT: ${{ vars.TARGET_PROJECT || '//mqtt/localhost' }}
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-java@v4
+      - uses: actions/checkout@v6
+      - uses: actions/setup-java@v5
         with:
           distribution: 'temurin'
           java-version: '21'
@@ -111,7 +112,7 @@ jobs:
       - name: support bundle
         if: ${{ !cancelled() }}
         run: bin/support ${{ github.repository_owner }}_${{ github.job }}_
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         if: ${{ !cancelled() }}
         with:
           if-no-files-found: error
@@ -123,13 +124,12 @@ jobs:
     runs-on: ubuntu-24.04
     timeout-minutes: 20
     needs: automapping
-    if: vars.TARGET_PROJECT != ''
     env:
-      TARGET_PROJECT: ${{ vars.TARGET_PROJECT }}
+      TARGET_PROJECT: ${{ vars.TARGET_PROJECT || '//mqtt/localhost' }}
       UDMI_ALT_REGISTRY: ZZ-REDIRECT-NA
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-java@v4
+      - uses: actions/checkout@v6
+      - uses: actions/setup-java@v5
         with:
           distribution: 'temurin'
           java-version: '21'
@@ -160,7 +160,7 @@ jobs:
       - name: support bundle
         if: ${{ !cancelled() }}
         run: UDMI_REGISTRY_SUFFIX=_b bin/support ${{ github.repository_owner }}_${{ github.job }}_
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         if: ${{ !cancelled() }}
         with:
           if-no-files-found: error
@@ -175,16 +175,15 @@ jobs:
       fail-fast: false
       matrix:
         shard: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
-    if: vars.TARGET_PROJECT != ''
     env:
-      TARGET_PROJECT: ${{ vars.TARGET_PROJECT }}
+      TARGET_PROJECT: ${{ vars.TARGET_PROJECT || '//mqtt/localhost' }}
       UDMI_ALT_REGISTRY: ZZ-REDIRECT-NA
       UDMI_REGISTRY_SUFFIX: _${{ matrix.shard }}
       MATRIX_SHARD_COUNT: 10
       MATRIX_SHARD_INDEX: ${{ matrix.shard }}
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-java@v4
+      - uses: actions/checkout@v6
+      - uses: actions/setup-java@v5
         with:
           distribution: 'temurin'
           java-version: '21'
@@ -223,7 +222,7 @@ jobs:
         run: |
           bin/support ${{ github.repository_owner }}_${{ github.job }}_
           tar -tzvf *udmi-support*.tgz
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         if: ${{ !cancelled() }}
         with:
           if-no-files-found: error
@@ -235,8 +234,8 @@ jobs:
     runs-on: ubuntu-24.04
     timeout-minutes: 20
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-java@v4
+      - uses: actions/checkout@v6
+      - uses: actions/setup-java@v5
         with:
           distribution: 'temurin'
           java-version: '21'
@@ -277,7 +276,7 @@ jobs:
       - name: support bundle
         if: ${{ !cancelled() }}
         run: bin/support ${{ github.repository_owner }}_${{ github.job }}_
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         if: ${{ !cancelled() }}
         with:
           if-no-files-found: error
@@ -292,8 +291,8 @@ jobs:
       UDMI_ALT_REGISTRY: ZZ-REDIRECT-NA
       TARGET_PROJECT: //mqtt/localhost
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-java@v4
+      - uses: actions/checkout@v6
+      - uses: actions/setup-java@v5
         with:
           distribution: 'temurin'
           java-version: '21'
@@ -314,7 +313,7 @@ jobs:
       - name: support bundle
         if: ${{ !cancelled() }}
         run: UDMI_REGISTRY_SUFFIX=_r bin/support ${{ github.repository_owner }}_${{ github.job }}_
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         if: ${{ !cancelled() }}
         with:
           if-no-files-found: error
@@ -326,25 +325,25 @@ jobs:
     runs-on: ubuntu-24.04
     timeout-minutes: 5
     needs: [ baseline, sequencer, endpoint, runlocal ]
-    if: ${{ !cancelled() && vars.TARGET_PROJECT != '' }}
+    if: ${{ !cancelled() }}
     env:
-      TARGET_PROJECT: ${{ vars.TARGET_PROJECT }}
+      TARGET_PROJECT: ${{ vars.TARGET_PROJECT || '//mqtt/localhost' }}
       UDMI_ALT_REGISTRY: ZZ-REDIRECT-NA
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - uses: actions/checkout@v6
+      - uses: actions/setup-python@v6
         with:
           python-version: '3.13'
       - name: Base setup
         run: bin/setup_base
       - name: Download all sharded support packages
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v8
         with:
           path: udmi-support_${{ github.run_id }}
           pattern: udmi-support_${{ github.run_id }}-*
           merge-multiple: true
       - name: Upload merged support package
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           if-no-files-found: error
           name: udmi-support_${{ github.run_id }}
@@ -367,11 +366,11 @@ jobs:
     runs-on: ubuntu-24.04
     timeout-minutes: 15
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
         with:
           fetch-depth: 0
           fetch-tags: true
-      - uses: actions/setup-java@v4
+      - uses: actions/setup-java@v5
         with:
           distribution: 'temurin'
           java-version: '21'
@@ -427,9 +426,9 @@ jobs:
         python-version: [ "3.9", "3.10", "3.11", "3.12", "3.13" ]
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
       - name: Set up Python ${{ matrix.python-version }}
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v6
         with:
           python-version: ${{ matrix.python-version }}
       - name: Install Poetry
@@ -438,7 +437,7 @@ jobs:
           poetry config virtualenvs.in-project true
       - name: Cache poetry venv
         id: cache-deps
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: .venv
           key: ${{ runner.os }}-${{ matrix.python-version }}-venv-${{ hashFiles('poetry.lock') }}
@@ -456,3 +455,28 @@ jobs:
         run: |
           cd clientlib/python
           poetry run pylint src
+
+  bridgehead:
+    name: Bridgehead Test
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '21'
+      - name: Setup Base
+        run: bin/setup_base
+      - name: Run Bridgehead Test
+        run: |
+          bridgehead/tests/test_bridgehead
+      - name: Upload logs
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: bridgehead-logs
+          path: |
+            bridgehead/var/mosquitto/log/
+            bridgehead/var/tmp/udmis.log
+

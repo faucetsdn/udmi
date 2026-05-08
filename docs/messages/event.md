@@ -4,6 +4,7 @@
 
 Events can be one of:
 - [Pointset (telemetry)](pointset.md#telemetry) ([_🧬schema_](../../gencode/docs/events_pointset.html))
+- [Alarmset (telemetry)](alarmset.md#telemetry) ([_🧬schema_](../../gencode/docs/events_alarmset.html))
 - [System (logging, etc)](system.md#event) ([_🧬schema_](../../gencode/docs/events_system.html))
 - [Discovery](../specs/discovery.md) ([_🧬schema_](../../gencode/docs/events_discovery.html))
 

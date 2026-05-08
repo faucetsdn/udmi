@@ -7,6 +7,7 @@ from dataclasses import dataclass
 from typing import Optional
 
 from ._base import DataModel
+from .state_alarmset import AlarmsetState
 from .state_blobset import BlobsetState
 from .state_discovery import DiscoveryState
 from .state_gateway import GatewayState
@@ -29,4 +30,5 @@ class State(DataModel):
     discovery: Optional[DiscoveryState] = None
     localnet: Optional[LocalnetState] = None
     blobset: Optional[BlobsetState] = None
+    alarmset: Optional[AlarmsetState] = None
     pointset: Optional[PointsetState] = None

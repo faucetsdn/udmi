@@ -7,6 +7,7 @@ This guide provides instructions for deploying the core UDMI services bundle. Th
 - validator service (includes registrar tool)
 - InfluxDB timeseries database
 - Grafana visualisation tool
+- Graphical UI
 
 *Note: docker logs display file paths as seen inside the container. These are internal paths and do not match your local machine's file system. Files with local access exist via volume mapping; check your docker-compose.yml for the corresponding host path. Example: The common container path /root/site_model/ exists locally under bridgehead/udmi_site_model*
 
@@ -18,15 +19,18 @@ This guide provides instructions for deploying the core UDMI services bundle. Th
 
 3. **Get default site model:** In you terminal, run `sudo git clone https://github.com/faucetsdn/udmi_site_model.git`.
 
-4. **Edit compose file:** Open the docker-compose.yml file in your chosen editor.
-    1. **Add Host IP:** Locate the line `HOST_IP: <YOUR_IP>` inside the **mosquitto** service block. Replace `<YOUR_IP>` with your hosts ip address. You can find this by running `sudo hostname -I`. This is required in order to allow connections to the broker externally from the docker compose environment. 
-    2. **Update InfluxDB Credentials:** Under the **influxdb** service, in environment variables, set the values of `DOCKER_INFLUXDB_INIT_USERNAME`, `DOCKER_INFLUXDB_INIT_PASSWORD` and `DOCKER_INFLUXDB_INIT_ADMIN_TOKEN`. For `DOCKER_INFLUXDB_INIT_ADMIN_TOKEN`, run `openssl rand -hex 32`. *Note: The password for influx must be between 8-72 characters.*
-    3. **Update Grafana credentials:** Under the **grafana** service, set the values of `GF_SECURITY_ADMIN_USER` and `GF_SECURITY_ADMIN_USER`. Update the value of `INFLUXDB_TOKEN` with the token generated in step 2.
-    4. **Update udmis credentials:** Under the **udmis** service, set the value of `INFLUXDB_TOKEN` with the token generated in step 2.
-
+4. **Edit Environment Variables:** Open the `.env` file in your chosen editor.
+   1. AUTH_USER & AUTH_PASS: This client is configured to allow you to administer the dynamic security plugin only. It does not have access to publish messages to normal topics.
+   2. SERV_USER & SERV_PASS: Service User.
+   3. HOST_IP: This is required in order to allow connections to the broker externally from the docker compose environment. You can get your host ip address using: `sudo hostname -I`.
+   4. INFLUXDB_TOKEN: You can generate a random token using: `openssl rand -hex 32`.
+   5. INFLUX_USER & INFLUX_PASSWORD: Credentials for accessing InfluxDB.
+   6. GRAFANA_USER & GRAFANA_PASSWORD: Credentials for accessing Grafana.
+   
 5. **Deploy the service:** Execute the following command to build the custom images (if needed) and start the containers in detached mode.
     * **First time/after changes:** Run `sudo docker compose up -d --build`
     * **Standard run:** Run `sudo docker compose up -d`
+    
     
 6. **Confirm all containers are running:** Run `sudo docker ps` in the terminal, you should see the following containers in any order:
    - validator
@@ -44,7 +48,7 @@ The UDMI tools should only be run after the udmis service has completed setup. Y
 
 The following commands should be run in the same directory as the Docker Compose (`bridgehead/`).
 
-In your terminal, execute `sudo docker exec validator bin/registrar site_model/ //mqtt/mosquitto`. To confirm a successful execution, take a look at the [sample registrar output](sample_outputs/registrar_output.md)
+In your terminal, execute `sudo docker exec validator bin/registrar site_model/ //mqtt/mosquitto`. To confirm a successful execution, look at the [sample registrar output](sample_outputs/registrar_output.md)
 
 ### Pubber
 
@@ -77,14 +81,11 @@ You can stop the pubber container by running `sudo docker stop pubber`
 
 To run the validator service in the background, execute `sudo docker exec -d validator bin/validator site_model/ //mqtt/mosquitto`
 
-### Discovery
-
-In the following example we are passing GAT-123 as the discovery node ip to discovery.sh.
+## Discovery
 
 Run the following commands to complete a discovery sequence: 
 
 *Note: Make sure to update <YOUR_HOST_IP> with the ip we set in the compose file.*
-
 ```
 sudo docker exec validator /bin/bash -c "bin/registrar site_model/ //mqtt/mosquitto -x -d && bin/registrar site_model/ //mqtt/mosquitto GAT-123"
 
@@ -92,7 +93,7 @@ sudo docker run -d --rm --name pubber -v $(realpath udmi_site_model):/root/site_
 
 sudo docker exec -d pubber /bin/bash -c "bin/pubber site_model/ //mqtt/<YOUR_HOST_IP> GAT-123 852649" 
 
-sudo docker exec validator /root/discovery.sh GAT-123
+sudo docker exec validator /root/discovery.sh
 
 sudo docker exec validator bin/registrar site_model/ //mqtt/mosquitto
 
@@ -112,21 +113,35 @@ Out of 4 total.
 
 ## Diagnostics
 
+### UI
+
+Access the web-based Management UI by navigating to: `http://localhost:8080/bridgeheadManager/`.
+
+The UI allows you to:
+
+#### 1. Monitor
+- View MQTT broker status (including real-time connection counts).
+- Check if the validator service is currently running.
+- See last time the registrar tool was run.
+- View the validation status of devices.
+- View the registration status of devices.
+
+#### 2. Interact
+ - Start/restart the validator Service
+ - Execute the registrar tool
+ - Edit device metadata
+
 ### InfluxDB
 
 1. **Access:** Navigate to the InfluxDB endpoint at `http://localhost:8086`.
-2. **Login:** Use the credentials specified in the Docker Compose file.
-3. **Query:** Go to the Data Explorer (left panel). Locate the home bucket at the bottom to begin querying data.
-
-Although InfluxDB is available and accessible, there should be no need to directly interact with it.
+2. **Login:** Use the credentials specified in the `.env` file.
+3. **Query:** Go to the Data Explorer (left panel). Locate the bridgehead bucket at the bottom to begin querying data.
 
 ### Grafana 
 
 1. **Access:** Navigate to the Grafana endpoint at `http://localhost:3000`.
-2. **Login:** Use the credentials specified in the Docker Compose file.
-3. **View Dashboard:**  Select Dashboards from the left-hand menu. The pre-configured `bridgehead` dashboard includes a basic overview of the running services.
-
-Note about the default dashboard: The MQTT graphs only display data that falls within the currently selected time range. For instance, if the connection count has been stable for the last hour, but the dashboard time range is set to the last five minutes, the graphs will remain empty. To see the history, simply expand the grafana time range to include the last time activity was recorded.
+2. **Login:** Use the credentials specified in the `.env` file.
+3. **View Dashboard:** Select Dashboards from the left-hand menu. The pre-configured `bridgehead` dashboard includes a basic overview of the running services.
 
 #### Alerts
 
@@ -170,6 +185,7 @@ The following instructions will setup an alert in Grafana for when a container g
 
 Use the same method to setup any number of alerts, you can find useful information here: https://grafana.com/docs/grafana/latest/alerting/
     
+
 ## Shutting down the docker environment
 
 To gracefully stop and remove the container, run: `sudo docker compose down`

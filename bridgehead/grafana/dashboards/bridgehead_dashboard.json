@@ -618,7 +618,7 @@
             "type": "influxdb",
             "uid": "P951FEA4DE68E13C5"
           },
-          "query": "from(bucket: \"home\")\r\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\r\n  |> filter(fn: (r) => r[\"_measurement\"] == \"file\")\r\n  |> filter(fn: (r) => r[\"_field\"] == \"registrar_run_timestamp\")\r\n  |> last()\r\n  |> group(columns:[])\r\n  |> keep(columns:[\"_value\"])",
+          "query": "from(bucket: \"home\")\r\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\r\n  |> filter(fn: (r) => r[\"_measurement\"] == \"registrar_summary\")\r\n  |> filter(fn: (r) => r[\"_field\"] == \"registrar_run_timestamp\")\r\n  |> last()\r\n  |> group(columns:[])\r\n  |> keep(columns:[\"_value\"])",
           "refId": "A"
         }
       ],

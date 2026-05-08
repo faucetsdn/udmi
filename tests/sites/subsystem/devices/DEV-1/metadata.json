@@ -1,0 +1,27 @@
+{
+  "system": {
+    "hardware": {
+      "make": "BOS",
+      "model": "device"
+    },
+    "software": {
+      "firmware": "v1"
+    }
+  },
+  "gateway": {
+    "gateway_id": "GW-1",
+    "target": {
+      "family": "modbus",
+      "network_id": "modbus_1"
+    }
+  },
+  "localnet": {
+    "families": {
+      "modbus": {
+        "addr": "1"
+      }
+    }
+  },
+  "version": "1.5.2",
+  "timestamp": "2020-05-01T13:39:07Z"
+}

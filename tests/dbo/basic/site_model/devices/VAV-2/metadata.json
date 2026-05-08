@@ -1,0 +1,29 @@
+{
+  "timestamp": "2024-01-01T00:00:00Z",
+  "version": "1.5.3",
+  "system": {
+    "site": "UK-LON-ABC"
+  },
+  "cloud": {
+    "num_id": "2541901344105617"
+  },
+  "relationships": {
+    "VAV-1": {
+      "FEEDS": [{"tags": ["primary"]}]
+    }
+  },
+  "externals": {
+    "dbo": {
+      "ext_id": "4931e096-dea5-4b81-86ad-234c6d07b978",
+      "type": "HVAC/VAV_SD_CSP"
+    }
+  },
+  "pointset": {
+    "points": {
+      "zone_air_temperature_sensor": {
+        "ref": "points.zone_air_temperature_sensor.present_value",
+        "units": "degC"
+      }
+    }
+  }
+}

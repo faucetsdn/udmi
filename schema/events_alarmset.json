@@ -1,0 +1,44 @@
+{
+  "$udmi_version": "1.5.2",
+  "title": "Alarmset Events",
+  "description": "A set of alarms reporting telemetry data. [Alarmset Events Documentation](../docs/messages/alarmset.md#telemetry)",
+  "$section": "Messages",
+  "type": "object",
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "additionalProperties": false,
+  "properties": {
+    "timestamp": {
+      "description": "RFC 3339 UTC timestamp the telemetry event was generated",
+      "type": "string",
+      "format": "date-time",
+      "examples": ["2019-01-17T14:02:29.364Z"]
+    },
+    "version": {
+      "description": "Version of the UDMI schema",
+      "type": "string"
+    },
+    "upgraded_from": {
+      "description": "Original version of schema pre-upgrade",
+      "type": "string"
+    },
+    "partial_update": {
+      "description": "Indicates if this is a partial update (only some alarms may be included)",
+      "type": "boolean"
+    },
+    "alarms": {
+      "description": "Collection of alarm names, defining the representative alarm set for this device.",
+      "additionalProperties": false,
+      "existingJavaType": "java.util.HashMap<String, AlarmAlarmsetEvents>",
+      "patternProperties": {
+        "^[a-z][a-z0-9]*(_[a-z0-9]+)*$": {
+          "$ref": "file:events_alarmset_alarm.json#"
+        }
+      }
+    }
+  },
+  "required": [
+    "timestamp",
+    "version",
+    "alarms"
+  ]
+}

@@ -14,7 +14,11 @@ services:
     networks:
       - udminet
     environment:
-      HOST_IP: <YOUR_IP>
+      - HOST_IP=${HOST_IP}
+      - AUTH_USER=${AUTH_USER}
+      - AUTH_PASS=${AUTH_PASS}
+      - SERV_USER=${SERV_USER}
+      - SERV_PASS=${SERV_PASS}
 
   etcd:
     image: quay.io/coreos/etcd:v3.5.13
@@ -30,7 +34,8 @@ services:
 
   udmis:
     build:
-      context: ./udmis
+      context: .
+      dockerfile: udmis/Dockerfile
     container_name: udmis
     volumes:
       - ./udmi_site_model:/root/site_model
@@ -39,24 +44,31 @@ services:
       - ./var/mosquitto/log:/var/log/mosquitto
       - ./var/mosquitto/certs:/etc/mosquitto/certs
       - /var/run/docker.sock:/var/run/docker.sock:ro
+      - ./var/sshKeys:/root/.ssh
     depends_on:
       etcd:
         condition: service_started
       mosquitto:
         condition: service_started
     restart: always
+    ports:
+      - "8080:8080"
     networks:
       - udminet
     environment:
+      - AUTH_USER=${AUTH_USER}
+      - AUTH_PASS=${AUTH_PASS}
+      - SERV_USER=${SERV_USER}
+      - SERV_PASS=${SERV_PASS}
       - ETCD_CLUSTER=etcd
       - MQTT_HOST=mosquitto
       - MQTT_PORT=8883
-      - INFLUXDB_TOKEN=
+      - INFLUXDB_TOKEN=${INFLUXDB_TOKEN}
       - INFLUXDB_ORG=bridgehead
       - INFLUXDB_BUCKET=home
 
   validator:
-    build: 
+    build:
       context: ./validator
     container_name: validator
     volumes:
@@ -64,13 +76,14 @@ services:
       - ./var/mosquitto/log:/var/log/mosquitto
       - ./var/mosquitto/certs:/etc/mosquitto/certs
       - ./var/tmp:/usr/local/bin/udmis
+      - ./var/sshKeys:/tmp/ssh_public_key
     depends_on:
       udmis:
         condition: service_started
     restart: always
     networks:
       - udminet
-
+      
   influxdb:
     container_name: influxdb
     image: influxdb:2
@@ -82,11 +95,11 @@ services:
       - ./var/mosquitto/certs:/etc/mosquitto/certs
     environment:
       - DOCKER_INFLUXDB_INIT_MODE=setup
-      - DOCKER_INFLUXDB_INIT_USERNAME=bridgehead
-      - DOCKER_INFLUXDB_INIT_PASSWORD=password
+      - DOCKER_INFLUXDB_INIT_USERNAME=${INFLUX_USER}
+      - DOCKER_INFLUXDB_INIT_PASSWORD=${INFLUX_PASSWORD}
       - DOCKER_INFLUXDB_INIT_BUCKET=home
       - DOCKER_INFLUXDB_INIT_ORG=bridgehead
-      - DOCKER_INFLUXDB_INIT_ADMIN_TOKEN=
+      - DOCKER_INFLUXDB_INIT_ADMIN_TOKEN=${INFLUXDB_TOKEN}
     restart: always
     ports:
       - "8086:8086"
@@ -104,15 +117,15 @@ services:
     environment:
       - INFLUXDB_ORGANISATION=bridgehead
       - INFLUXDB_BUCKET=home
-      - INFLUXDB_TOKEN=
-      - GF_SECURITY_ADMIN_USER=bridgehead
-      - GF_SECURITY_ADMIN_PASSWORD=password
+      - INFLUXDB_TOKEN=${INFLUXDB_TOKEN}
+      - GF_SECURITY_ADMIN_USER=${GRAFANA_USER}
+      - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_PASSWORD}
     restart: always
     ports:
       - "3000:3000"
     networks:
       - udminet
-  
+
 networks:
   udminet:
     name: udminet

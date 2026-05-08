@@ -4,6 +4,14 @@ ACTIVATION_STRING="UdmiServicePod Finished activation of container components"
 MAX_ATTEMPTS=9 
 SLEEP_SECONDS=10
 
+# Start sshd
+ssh-keygen -A
+mkdir -p /root/.ssh
+cat /tmp/ssh_public_key/id_ed25519.pub >> /root/.ssh/authorized_keys
+sed -i 's/#\?PermitRootLogin prohibit-password/PermitRootLogin yes/g' /etc/ssh/sshd_config 
+sed -i 's/#\?PasswordAuthentication yes/PasswordAuthentication yes/g' /etc/ssh/sshd_config
+/usr/sbin/sshd -D &
+
 echo waiting for udmis...
 sleep $SLEEP_SECONDS
 

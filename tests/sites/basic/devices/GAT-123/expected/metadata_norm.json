@@ -15,6 +15,19 @@
       "vendor": {
         "addr": "20231"
       }
+    },
+    "networks": {
+      "modbus_rtu_1": {
+        "adjunct": {
+          "baud": "9600",
+          "data_bits": "8",
+          "device": "COM1",
+          "parity": "none",
+          "protocol": "RTU",
+          "stop_bits": "1"
+        },
+        "family": "modbus"
+      }
     }
   },
   "pointset": {

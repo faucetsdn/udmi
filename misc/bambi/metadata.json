@@ -83,7 +83,7 @@
                 "addr": "100",
                 "adjunct": {
                     "serial_port": "/dev/USB0|COM1:",
-                    "bit_rate": 9600,
+                    "baud_rate": "9600",
                     "data_bits": "5|6|7|8",
                     "stop_bits": "1|1.5|2",
                     "parity": "none|odd|even|mark|space",
@@ -94,7 +94,7 @@
                 "addr": "10",
                 "adjunct": {
                     "serial_port": "/dev/USB0|COM1:",
-                    "bit_rate": 2400,
+                    "baud_rate": "2400",
                     "secondary_addr": "181129145F1D0102"
                 }
             },

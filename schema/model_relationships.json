@@ -1,0 +1,28 @@
+{
+  "$udmi_version": "1.5.3",
+  "title": "Entity Relationships",
+  "description": "Entity relationships to other devices, keyed by target device ID",
+  "type": "object",
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "existingJavaType": "java.util.Map<String, Object>",
+  "patternProperties": {
+    "^[-0-9a-zA-Z]+$": {
+      "type": "object",
+      "patternProperties": {
+        "^[-0-9a-zA-Z_]+$": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "tags": {
+                "type": "array",
+                "items": { "type": "string" },
+                "examples": [["primary"]]
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}
