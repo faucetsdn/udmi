@@ -49,8 +49,8 @@ public class GatewayModel {
     @Override
     public int hashCode() {
         int result = 1;
-        result = ((result* 31)+((this.proxy_ids == null)? 0 :this.proxy_ids.hashCode()));
         result = ((result* 31)+((this.gateway_id == null)? 0 :this.gateway_id.hashCode()));
+        result = ((result* 31)+((this.proxy_ids == null)? 0 :this.proxy_ids.hashCode()));
         result = ((result* 31)+((this.target == null)? 0 :this.target.hashCode()));
         return result;
     }
@@ -64,7 +64,7 @@ public class GatewayModel {
             return false;
         }
         GatewayModel rhs = ((GatewayModel) other);
-        return ((((this.proxy_ids == rhs.proxy_ids)||((this.proxy_ids!= null)&&this.proxy_ids.equals(rhs.proxy_ids)))&&((this.gateway_id == rhs.gateway_id)||((this.gateway_id!= null)&&this.gateway_id.equals(rhs.gateway_id))))&&((this.target == rhs.target)||((this.target!= null)&&this.target.equals(rhs.target))));
+        return ((((this.gateway_id == rhs.gateway_id)||((this.gateway_id!= null)&&this.gateway_id.equals(rhs.gateway_id)))&&((this.proxy_ids == rhs.proxy_ids)||((this.proxy_ids!= null)&&this.proxy_ids.equals(rhs.proxy_ids))))&&((this.target == rhs.target)||((this.target!= null)&&this.target.equals(rhs.target))));
     }
 
 }
