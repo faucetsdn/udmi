@@ -121,6 +121,7 @@ import udmi.schema.Credential;
 import udmi.schema.Envelope.SubFolder;
 import udmi.schema.ExecutionConfiguration;
 import udmi.schema.GatewayModel;
+import udmi.schema.IotAccess.IotProvider;
 import udmi.schema.LinkExternalsModel;
 import udmi.schema.Metadata;
 import udmi.schema.SetupUdmiConfig;
@@ -1278,7 +1279,10 @@ public class Registrar {
             if (dryRun) {
               System.err.printf("Dry run: would bind %s to %s%n", setOrSize(toBind), gatewayId);
             } else {
-              cloudIotManager.bindDevices(toBind, gatewayId, true);
+              boolean isLocal =
+                  cloudIotManager.executionConfiguration.iot_provider == IotProvider.MQTT
+                  || cloudIotManager.executionConfiguration.iot_provider == IotProvider.IMPLICIT;
+              cloudIotManager.bindDevices(isLocal ? proxyIds : toBind, gatewayId, true);
             }
             recordOperation(ModelOperation.BIND, toBind.size());
           } catch (Exception e) {
