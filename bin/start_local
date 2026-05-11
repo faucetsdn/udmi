@@ -81,9 +81,16 @@ for device_dir in $site_model/devices/*; do
     if [[ -d "$device_dir" ]]; then
         device_id=$(basename "$device_dir")
         
-        # Extract password from the private key as done by the tests
+        # Extract password from the private key (supports both RSA and EC keys)
+        key_file=""
         if [[ -f "$device_dir/rsa_private.pkcs8" ]]; then
-            hash_pass=$(sha256sum < "$device_dir/rsa_private.pkcs8")
+            key_file="$device_dir/rsa_private.pkcs8"
+        elif [[ -f "$device_dir/ec_private.pkcs8" ]]; then
+            key_file="$device_dir/ec_private.pkcs8"
+        fi
+
+        if [[ -n "$key_file" ]]; then
+            hash_pass=$(sha256sum < "$key_file")
             dev_pass=${hash_pass:0:8}
             client_id="/r/$registry_id/d/$device_id"
             
