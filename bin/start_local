@@ -75,7 +75,6 @@ fi
 # Global access to logs for connection tracking by UDMIS.
 sudo chmod a+r /var/log/mosquitto/mosquitto.log
 
-
 echo Starting udmis proper... | tee -a $UDMIS_LOG
 bin/start_udmis
 
