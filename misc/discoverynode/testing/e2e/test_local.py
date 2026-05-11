@@ -412,14 +412,6 @@ def new_site_model():
 
     run(f"bin/keygen RS256 {gateway_path}")
     run(f"bin/keygen CERT/localhost {gateway_path}")
-    
-    # Register the gateway dynamically in Mosquitto
-    dev_id = f"/r/{name}/d/{discovery_node_id}"
-    cmd = f"sha256sum < {gateway_path}/rsa_private.pkcs8"
-    hash_pass = subprocess.check_output(cmd, shell=True).decode("utf-8").split()[0]
-    dev_pass = hash_pass[:8]
-    print(f"Registering gateway {dev_id} with password {dev_pass}")
-    run(f"bin/mosquctl_client {dev_id} {dev_pass}")
     ##############################
 
     for i in devices:

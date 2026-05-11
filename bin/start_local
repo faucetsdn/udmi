@@ -75,30 +75,6 @@ fi
 # Global access to logs for connection tracking by UDMIS.
 sudo chmod a+r /var/log/mosquitto/mosquitto.log
 
-# Register all devices found in the site model so they can authenticate and use their ACLs
-echo "Registering site model devices..." | tee -a $UDMIS_LOG
-for device_dir in $site_model/devices/*; do
-    if [[ -d "$device_dir" ]]; then
-        device_id=$(basename "$device_dir")
-        
-        # Extract password from the private key (supports both RSA and EC keys)
-        key_file=""
-        if [[ -f "$device_dir/rsa_private.pkcs8" ]]; then
-            key_file="$device_dir/rsa_private.pkcs8"
-        elif [[ -f "$device_dir/ec_private.pkcs8" ]]; then
-            key_file="$device_dir/ec_private.pkcs8"
-        fi
-
-        if [[ -n "$key_file" ]]; then
-            hash_pass=$(sha256sum < "$key_file")
-            dev_pass=${hash_pass:0:8}
-            client_id="/r/$registry_id/d/$device_id"
-            
-            echo "Registering device $client_id..." | tee -a $UDMIS_LOG
-            bin/mosquctl_client "$client_id" "$dev_pass"
-        fi
-    fi
-done
 
 echo Starting udmis proper... | tee -a $UDMIS_LOG
 bin/start_udmis
