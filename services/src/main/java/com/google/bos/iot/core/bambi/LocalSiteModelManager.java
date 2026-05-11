@@ -13,7 +13,7 @@ import static com.google.udmi.util.JsonUtil.flattenNestedMap;
 import static com.google.udmi.util.JsonUtil.isoConvert;
 import static com.google.udmi.util.JsonUtil.nestFlattenedJson;
 import static com.google.udmi.util.JsonUtil.writeFormattedFile;
-import static udmi.util.SchemaVersion.VERSION_1_5_2;
+import static udmi.util.SchemaVersion.VERSION_1_5_3;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import java.io.File;
@@ -216,7 +216,7 @@ public class LocalSiteModelManager {
       updateTimestamp(originalData, true);
     }
     if (!originalData.containsKey(VERSION_KEY)) {
-      originalData.put(VERSION_KEY, VERSION_1_5_2.key());
+      originalData.put(VERSION_KEY, VERSION_1_5_3.key());
     }
     // Merge all data including any renamed points
     Map<String, String> mergedData = merge(originalData, receivedUpdate, true);
