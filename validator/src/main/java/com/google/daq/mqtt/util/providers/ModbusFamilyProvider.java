@@ -35,7 +35,7 @@ public class ModbusFamilyProvider implements FamilyProvider {
       ImmutableSet.of("1", "2", "3", "4", "5", "6", "15", "16");
 
   private static final Set<String> ALLOWED_PARAMS =
-      ImmutableSet.of("border", "type", "worder", "scale");
+      ImmutableSet.of("border", "type", "worder", "scale", "bit");
 
   @Override
   public String familyKey() {
