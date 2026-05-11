@@ -22,6 +22,10 @@ mkdir -p $OUT_DIR
 echo Copying cached config files to $OUT_DIR/
 cp $CONFIG_FILES $OUT_DIR/ || true
 
+echo Copying mosquitto logs to $OUT_DIR/
+sudo cp /var/log/mosquitto/mosquitto.log $OUT_DIR/ || true
+sudo chown $USER $OUT_DIR/mosquitto.log || true
+
 site_model=
 config_files=$(ls -t $OUT_DIR/*_config.json) || true
 for config in $config_files; do
