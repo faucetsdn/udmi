@@ -765,8 +765,7 @@ public class MqttPublisher implements Publisher {
       Consumer<Object> handler = handlers.get(handlerKey);
       Class<Object> type = handlersType.get(handlerKey);
       if (handler == null) {
-        error(format("Missing handler %s", handlerKey), deviceId, messageType, "receive",
-            new RuntimeException(format("No registered handler for topic %s", topic)));
+        warn(format("Missing handler %s for topic %s", handlerKey, topic));
         handlersType.put(handlerKey, Object.class);
         handlers.put(handlerKey, this::ignoringHandler);
         return;

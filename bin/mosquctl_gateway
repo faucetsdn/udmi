@@ -29,6 +29,7 @@ if [[ $action == "bind" ]]; then
     $MOSQUITTO_CTRL addRoleACL $role_name subscribePattern "$device_id/errors" allow
     $MOSQUITTO_CTRL addRoleACL $role_name publishClientSend "$device_id/events/#" allow
     $MOSQUITTO_CTRL addRoleACL $role_name publishClientSend "$device_id/state" allow
+    $MOSQUITTO_CTRL addRoleACL $role_name publishClientSend "$device_id/attach" allow
     echo "Binding successful for $device_id to gateway $gateway_id"
 elif [[ $action == "unbind" ]]; then
     echo Unbinding $device_id from gateway $gateway_id
@@ -38,6 +39,7 @@ elif [[ $action == "unbind" ]]; then
     $MOSQUITTO_CTRL removeRoleACL $role_name subscribePattern "$device_id/errors" || true
     $MOSQUITTO_CTRL removeRoleACL $role_name publishClientSend "$device_id/events/#" || true
     $MOSQUITTO_CTRL removeRoleACL $role_name publishClientSend "$device_id/state" || true
+    $MOSQUITTO_CTRL removeRoleACL $role_name publishClientSend "$device_id/attach" || true
     echo "Unbinding successful for $device_id from gateway $gateway_id"
 else
     echo Unknown action: $action
