@@ -13,6 +13,10 @@ public interface ConnectionBroker {
 
   Future<Void> addEventListener(String clientPrefix, Consumer<BrokerEvent> eventConsumer);
 
+  void publish(String topic, String payload, boolean retain);
+
+  boolean isPublishEnabled();
+
   /**
    * Simple event for connection broker happenings.
    */

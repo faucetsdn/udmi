@@ -76,6 +76,10 @@ public class ImplicitIotAccessProvider extends IotAccessBase {
 
   private static final String CONFIG_VER_KEY = "config_ver";
   private static final String USE_PASSWORD_KEY = "use_password";
+  private static final String BROKER_USER_KEY = "broker_user";
+  private static final String BROKER_PASS_KEY = "broker_pass";
+  private static final String BROKER_HOST_KEY = "broker_host";
+  private static final String BROKER_PORT_KEY = "broker_port";
   private static final String LAST_CONFIG_KEY = "last_config";
   private static final String LAST_STATE_KEY = "last_state";
   private static final String DEVICES_ACTIVE = "active";
@@ -96,7 +100,7 @@ public class ImplicitIotAccessProvider extends IotAccessBase {
   private static final String RESOURCE_TYPE_PROPERTY = "resource_type";
   private final boolean enabled;
   private final String usePassword;
-  private final ConnectionBroker broker = new MosquittoBroker(this);
+  private final ConnectionBroker broker;
   private final Future<Void> connLogger;
   private IotDataProvider database;
   private ReflectProcessor reflect;
@@ -109,6 +113,14 @@ public class ImplicitIotAccessProvider extends IotAccessBase {
     super(iotAccess);
     enabled = isNullOrNotEmpty(options.get(ENABLED_KEY));
     usePassword = options.get(USE_PASSWORD_KEY);
+
+    String brokerUser = options.get(BROKER_USER_KEY);
+    String brokerPass = options.get(BROKER_PASS_KEY);
+    String brokerHost = options.get(BROKER_HOST_KEY);
+    String brokerPort = options.get(BROKER_PORT_KEY);
+
+    broker = new MosquittoBroker(this, brokerHost, brokerPort, brokerUser, brokerPass);
+
     connLogger = broker.addEventListener(CLIENT_PREFIX, this::brokerHandler);
   }
 
@@ -205,12 +217,10 @@ public class ImplicitIotAccessProvider extends IotAccessBase {
   }
 
   private void sendConfigUpdate(String registryId, String deviceId, String config) {
-    Envelope envelope = new Envelope();
-    envelope.deviceRegistryId = registryId;
-    envelope.deviceId = deviceId;
-    envelope.subType = SubType.CONFIG;
-    envelope.source = IotProvider.IMPLICIT.value();
-    reflect.getDispatcher().withEnvelope(envelope).publish(rawString(config));
+    if (broker.isPublishEnabled()) {
+      String topic = format("/r/%s/d/%s/config", registryId, deviceId);
+      broker.publish(topic, config, true);
+    }
   }
 
   private Map<String, String> toDeviceMap(CloudModel cloudModel, String createdAt) {

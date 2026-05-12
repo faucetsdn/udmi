@@ -17,6 +17,10 @@ import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import org.eclipse.paho.client.mqttv3.MqttClient;
+import org.eclipse.paho.client.mqttv3.MqttConnectOptions;
+import org.eclipse.paho.client.mqttv3.MqttMessage;
+import org.eclipse.paho.client.mqttv3.persist.MemoryPersistence;
 
 /**
  * Provider that links directly to a mosquitto broker.
@@ -34,9 +38,24 @@ public class MosquittoBroker extends ContainerBase implements ConnectionBroker {
       Pattern.compile("\\(([d01,qr ]+), m([0-9]+), '(\\S+)', .*\\)");
   private static final Pattern PUBACK_MATCHER = Pattern.compile("\\((m|Mid: )([0-9]+), \\S+\\)");
   private final ContainerBase container;
+  private final String brokerHost;
+  private final String brokerPort;
+  private final String brokerUser;
+  private final String brokerPass;
+  private MqttClient mqttClient;
+  private final String clientId =
+      format("mosquitto-helper-%08x", (long) (Math.random() * 0x100000000L));
 
-  public MosquittoBroker(ContainerBase container) {
+  /**
+   * Create a new instance of the broker helper.
+   */
+  public MosquittoBroker(ContainerBase container, String host, String port, String user,
+      String pass) {
     this.container = container;
+    this.brokerHost = ofNullable(host).orElse("localhost");
+    this.brokerPort = ofNullable(port).orElse("8883");
+    this.brokerUser = user;
+    this.brokerPass = pass;
   }
 
   private void consumeLogs(String clientPrefix, Consumer<BrokerEvent> eventConsumer) {
@@ -147,5 +166,64 @@ public class MosquittoBroker extends ContainerBase implements ConnectionBroker {
   @Override
   public void authorize(String clientId, String password) {
     mosquctlClient(clientId, ofNullable(password).orElse(REVOKE_PASSWORD));
+  }
+
+  @Override
+  public boolean isPublishEnabled() {
+    return brokerUser != null && brokerPass != null;
+  }
+
+  @Override
+  public void activate() {
+    super.activate();
+    if (brokerUser != null && brokerPass != null) {
+      connectMqttClient();
+    }
+  }
+
+  @Override
+  public void shutdown() {
+    ifNotNullThen(mqttClient, client -> {
+      try {
+        client.disconnect();
+        client.close();
+      } catch (Exception e) {
+        warn("Error shutting down MQTT client: " + e.getMessage());
+      }
+    });
+    super.shutdown();
+  }
+
+  @Override
+  public void publish(String topic, String payload, boolean retain) {
+    checkState(mqttClient != null && mqttClient.isConnected(), "MQTT client not connected");
+    try {
+      MqttMessage message = new MqttMessage();
+      message.setPayload(payload.getBytes());
+      message.setQos(1);
+      message.setRetained(retain);
+      mqttClient.publish(topic, message);
+      debug("Published to %s: %s", topic, payload);
+    } catch (Exception e) {
+      throw new RuntimeException("While publishing to MQTT topic " + topic, e);
+    }
+  }
+
+  private void connectMqttClient() {
+    String scheme = "1883".equals(brokerPort) ? "tcp" : "ssl";
+    String brokerUrl = format("%s://%s:%s", scheme, brokerHost, brokerPort);
+    info("Connecting persistent MQTT client to " + brokerUrl);
+    try {
+      mqttClient = new MqttClient(brokerUrl, clientId, new MemoryPersistence());
+      MqttConnectOptions options = new MqttConnectOptions();
+      options.setUserName(brokerUser);
+      options.setPassword(brokerPass.toCharArray());
+      options.setCleanSession(true);
+      options.setAutomaticReconnect(true);
+      mqttClient.connect(options);
+      info("Connected persistent MQTT client");
+    } catch (Exception e) {
+      throw new RuntimeException("Failed to connect persistent MQTT client to " + brokerUrl, e);
+    }
   }
 }
