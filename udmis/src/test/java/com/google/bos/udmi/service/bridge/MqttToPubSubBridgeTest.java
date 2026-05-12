@@ -14,6 +14,8 @@ import org.eclipse.paho.client.mqttv3.IMqttClient;
 import org.eclipse.paho.client.mqttv3.MqttCallback;
 import org.eclipse.paho.client.mqttv3.MqttMessage;
 import org.junit.jupiter.api.Test;
+import com.google.bos.udmi.service.support.DataRef;
+import com.google.bos.udmi.service.support.EtcdDataProvider;
 import org.mockito.ArgumentCaptor;
 
 class MqttToPubSubBridgeTest {
@@ -31,7 +33,7 @@ class MqttToPubSubBridgeTest {
         .thenReturn(ApiFutures.immediateFuture("msg-123"));
 
     // Call setupBridge
-    MqttToPubSubBridge.setupBridge(mockMqttClient, mockPublisher, testTopic);
+    MqttToPubSubBridge.setupBridge(mockMqttClient, mockPublisher, testTopic, null);
 
     // Verify subscription
     verify(mockMqttClient).subscribe(testTopic);
@@ -69,7 +71,7 @@ class MqttToPubSubBridgeTest {
     when(mockPublisher.publish(any(PubsubMessage.class)))
         .thenReturn(ApiFutures.immediateFuture("msg-123"));
 
-    MqttToPubSubBridge.setupBridge(mockMqttClient, mockPublisher, testTopic);
+    MqttToPubSubBridge.setupBridge(mockMqttClient, mockPublisher, testTopic, null);
 
     ArgumentCaptor<MqttCallback> callbackCaptor = ArgumentCaptor.forClass(MqttCallback.class);
     verify(mockMqttClient).setCallback(callbackCaptor.capture());
@@ -100,7 +102,7 @@ class MqttToPubSubBridgeTest {
     when(mockPublisher.publish(any(PubsubMessage.class)))
         .thenReturn(ApiFutures.immediateFuture("msg-123"));
 
-    MqttToPubSubBridge.setupBridge(mockMqttClient, mockPublisher, testTopic);
+    MqttToPubSubBridge.setupBridge(mockMqttClient, mockPublisher, testTopic, null);
 
     ArgumentCaptor<MqttCallback> callbackCaptor = ArgumentCaptor.forClass(MqttCallback.class);
     verify(mockMqttClient).setCallback(callbackCaptor.capture());
@@ -117,5 +119,117 @@ class MqttToPubSubBridgeTest {
     assertEquals(testTopic, attributes.get("mqttTopic"));
     assertEquals("unknown", attributes.get("deviceId"));
     assertEquals("unknown", attributes.get("deviceRegistryId"));
+  }
+
+  @Test
+  void testSetupBridgeWithEtcd() throws Exception {
+    IMqttClient mockMqttClient = mock(IMqttClient.class);
+    Publisher mockPublisher = mock(Publisher.class);
+    EtcdDataProvider mockEtcdProvider = mock(EtcdDataProvider.class);
+    DataRef mockDataRef = mock(DataRef.class);
+
+    String testTopic = "/r/my-registry/d/my-device/events";
+    String payloadStr = "Hello World";
+    final MqttMessage mqttMessage = new MqttMessage(payloadStr.getBytes());
+
+    when(mockPublisher.publish(any(PubsubMessage.class)))
+        .thenReturn(ApiFutures.immediateFuture("msg-123"));
+
+    // Mock etcd provider to return a numId
+    when(mockEtcdProvider.ref()).thenReturn(mockDataRef);
+    when(mockDataRef.registry("my-registry")).thenReturn(mockDataRef);
+    when(mockDataRef.device("my-device")).thenReturn(mockDataRef);
+    when(mockDataRef.get("num_id")).thenReturn("123456");
+
+    MqttToPubSubBridge.setupBridge(mockMqttClient, mockPublisher, testTopic, mockEtcdProvider);
+
+    ArgumentCaptor<MqttCallback> callbackCaptor = ArgumentCaptor.forClass(MqttCallback.class);
+    verify(mockMqttClient).setCallback(callbackCaptor.capture());
+    MqttCallback callback = callbackCaptor.getValue();
+
+    callback.messageArrived(testTopic, mqttMessage);
+
+    ArgumentCaptor<PubsubMessage> pubsubMessageCaptor =
+        ArgumentCaptor.forClass(PubsubMessage.class);
+    verify(mockPublisher).publish(pubsubMessageCaptor.capture());
+
+    PubsubMessage pubsubMessage = pubsubMessageCaptor.getValue();
+    Map<String, String> attributes = pubsubMessage.getAttributesMap();
+    assertEquals("123456", attributes.get("deviceNumId"));
+  }
+
+  @Test
+  void testSetupBridgeWithEtcdNullResult() throws Exception {
+    IMqttClient mockMqttClient = mock(IMqttClient.class);
+    Publisher mockPublisher = mock(Publisher.class);
+    EtcdDataProvider mockEtcdProvider = mock(EtcdDataProvider.class);
+    DataRef mockDataRef = mock(DataRef.class);
+
+    String testTopic = "/r/my-registry/d/my-device/events";
+    String payloadStr = "Hello World";
+    final MqttMessage mqttMessage = new MqttMessage(payloadStr.getBytes());
+
+    when(mockPublisher.publish(any(PubsubMessage.class)))
+        .thenReturn(ApiFutures.immediateFuture("msg-123"));
+
+    // Mock etcd provider to return null for numId
+    when(mockEtcdProvider.ref()).thenReturn(mockDataRef);
+    when(mockDataRef.registry("my-registry")).thenReturn(mockDataRef);
+    when(mockDataRef.device("my-device")).thenReturn(mockDataRef);
+    when(mockDataRef.get("num_id")).thenReturn(null);
+
+    MqttToPubSubBridge.setupBridge(mockMqttClient, mockPublisher, testTopic, mockEtcdProvider);
+
+    ArgumentCaptor<MqttCallback> callbackCaptor = ArgumentCaptor.forClass(MqttCallback.class);
+    verify(mockMqttClient).setCallback(callbackCaptor.capture());
+    MqttCallback callback = callbackCaptor.getValue();
+
+    callback.messageArrived(testTopic, mqttMessage);
+
+    ArgumentCaptor<PubsubMessage> pubsubMessageCaptor =
+        ArgumentCaptor.forClass(PubsubMessage.class);
+    verify(mockPublisher).publish(pubsubMessageCaptor.capture());
+
+    PubsubMessage pubsubMessage = pubsubMessageCaptor.getValue();
+    Map<String, String> attributes = pubsubMessage.getAttributesMap();
+    org.junit.jupiter.api.Assertions.assertFalse(attributes.containsKey("deviceNumId"));
+  }
+
+  @Test
+  void testSetupBridgeWithEtcdFailure() throws Exception {
+    IMqttClient mockMqttClient = mock(IMqttClient.class);
+    Publisher mockPublisher = mock(Publisher.class);
+    EtcdDataProvider mockEtcdProvider = mock(EtcdDataProvider.class);
+    DataRef mockDataRef = mock(DataRef.class);
+
+    String testTopic = "/r/my-registry/d/my-device/events";
+    String payloadStr = "Hello World";
+    final MqttMessage mqttMessage = new MqttMessage(payloadStr.getBytes());
+
+    when(mockPublisher.publish(any(PubsubMessage.class)))
+        .thenReturn(ApiFutures.immediateFuture("msg-123"));
+
+    // Mock etcd provider to throw exception
+    when(mockEtcdProvider.ref()).thenReturn(mockDataRef);
+    when(mockDataRef.registry("my-registry")).thenReturn(mockDataRef);
+    when(mockDataRef.device("my-device")).thenReturn(mockDataRef);
+    when(mockDataRef.get("num_id")).thenThrow(new RuntimeException("etcd error"));
+
+    MqttToPubSubBridge.setupBridge(mockMqttClient, mockPublisher, testTopic, mockEtcdProvider);
+
+    ArgumentCaptor<MqttCallback> callbackCaptor = ArgumentCaptor.forClass(MqttCallback.class);
+    verify(mockMqttClient).setCallback(callbackCaptor.capture());
+    MqttCallback callback = callbackCaptor.getValue();
+
+    // This should not throw exception and message should still be published
+    callback.messageArrived(testTopic, mqttMessage);
+
+    ArgumentCaptor<PubsubMessage> pubsubMessageCaptor =
+        ArgumentCaptor.forClass(PubsubMessage.class);
+    verify(mockPublisher).publish(pubsubMessageCaptor.capture());
+
+    PubsubMessage pubsubMessage = pubsubMessageCaptor.getValue();
+    Map<String, String> attributes = pubsubMessage.getAttributesMap();
+    org.junit.jupiter.api.Assertions.assertFalse(attributes.containsKey("deviceNumId"));
   }
 }
