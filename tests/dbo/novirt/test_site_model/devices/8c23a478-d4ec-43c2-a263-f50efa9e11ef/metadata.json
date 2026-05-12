@@ -1,0 +1,20 @@
+{
+  "timestamp": "2026-05-12T23:24:19Z",
+  "version": "1.5.3",
+  "system": {},
+  "externals": {
+    "dbo": {
+      "ext_id": "8c23a478-d4ec-43c2-a263-f50efa9e11ef",
+      "label": "hal9000-color",
+      "type": "INFO_TECH/PRNTR",
+      "etag": "5ddf8177"
+    }
+  },
+  "relationships": {
+    "276251a4-86de-40dc-89b3-2e0d6958030e": {
+      "CONTAINS": [
+        {}
+      ]
+    }
+  }
+}

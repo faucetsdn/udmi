@@ -1,0 +1,20 @@
+{
+  "timestamp": "2026-05-12T23:24:19Z",
+  "version": "1.5.3",
+  "system": {},
+  "externals": {
+    "dbo": {
+      "ext_id": "e88b5fee-f037-487d-86bf-d5a584b1addf",
+      "label": "plex-plotter",
+      "type": "INFO_TECH/PRNTR",
+      "etag": "515d102c"
+    }
+  },
+  "relationships": {
+    "bb751535-a674-40ef-80ee-0aa14de3a7b6": {
+      "CONTAINS": [
+        {}
+      ]
+    }
+  }
+}

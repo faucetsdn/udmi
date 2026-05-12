@@ -10,7 +10,7 @@ def extract_dbo_config(site_model_dir: Path) -> dict:
 
   # We will assume a static CONFIG_METADATA for this basic example
   building_config["CONFIG_METADATA"] = {
-      "operation": "INITIALIZE"
+      "operation": "EXPORT"
   }
 
   devices_dir = site_model_dir / "devices"
@@ -66,15 +66,13 @@ def extract_dbo_config(site_model_dir: Path) -> dict:
           conn_list = []
           for rel_type, rel_instances in relation.items():
             for inst in rel_instances:
-              conn_obj = inst.copy()
-              conn_obj["type"] = rel_type
-              conn_list.append(conn_obj)
-
-          # If it's just one type without tags, flatten it.
-          if len(conn_list) == 1 and list(conn_list[0].keys()) == ["type"]:
-            connections[target_guid] = conn_list[0]["type"]
-          else:
-            connections[target_guid] = conn_list
+              if not inst:
+                conn_list.append(rel_type)
+              else:
+                conn_obj = inst.copy()
+                conn_obj["type"] = rel_type
+                conn_list.append(conn_obj)
+          connections[target_guid] = conn_list
 
       device_entry["connections"] = connections
 
@@ -83,25 +81,28 @@ def extract_dbo_config(site_model_dir: Path) -> dict:
     translations = {}
     links_dbo = {}
     for point_name, point_info in pointset.items():
-      pt_dbo = {}
-      if "ref" in point_info:
-        pt_dbo["present_value"] = point_info["ref"]
-      if "units" in point_info:
-        u_map = {
-            "degC": "degrees_celsius",
-            "L/s": "liters_per_second"
-        }
-        pt_dbo["units"] = {
-            "key": f"pointset.points.{point_name}.units",
-            "values": {
-                u_map.get(
-                    point_info["units"],
-                    point_info["units"]): point_info["units"]
-            }
-        }
+      if "translation" in point_info:
+        translations[point_name] = point_info["translation"]
+      else:
+        pt_dbo = {}
+        if "ref" in point_info:
+          pt_dbo["present_value"] = point_info["ref"]
+        if "units" in point_info:
+          u_map = {
+              "degC": "degrees_celsius",
+              "L/s": "liters_per_second"
+          }
+          pt_dbo["units"] = {
+              "key": f"pointset.points.{point_name}.units",
+              "values": {
+                  u_map.get(
+                      point_info["units"],
+                      point_info["units"]): point_info["units"]
+              }
+          }
 
-      if pt_dbo:
-        translations[point_name] = pt_dbo
+        if pt_dbo:
+          translations[point_name] = pt_dbo
 
       if "expr" in point_info:
         link_val = point_info["expr"]
@@ -119,6 +120,12 @@ def extract_dbo_config(site_model_dir: Path) -> dict:
 
     if links_dbo:
       device_entry["links"] = links_dbo
+
+    if "etag" in dbo_external:
+      device_entry["etag"] = dbo_external["etag"]
+
+    if "system" in metadata and "name" in metadata["system"]:
+      device_entry["display_name"] = metadata["system"]["name"]
 
     if "type" in dbo_external:
       device_entry["type"] = dbo_external["type"]
@@ -140,6 +147,6 @@ if __name__ == "__main__":
   with open(out_yaml, "w", encoding="utf-8") as f_out:
     # Avoid aliases in YAML output to match standard formatting
     yaml.Dumper.ignore_aliases = lambda *args: True
-    yaml.dump(config_result, f_out, sort_keys=False, default_flow_style=False)
+    yaml.dump(config_result, f_out, sort_keys=True, default_flow_style=False)
 
   print(f"Extracted building config to {out_yaml}")

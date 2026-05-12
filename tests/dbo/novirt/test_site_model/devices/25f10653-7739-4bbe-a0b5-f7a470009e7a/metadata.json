@@ -1,0 +1,66 @@
+{
+  "timestamp": "2026-05-12T23:24:19Z",
+  "version": "1.5.3",
+  "system": {},
+  "externals": {
+    "dbo": {
+      "ext_id": "25f10653-7739-4bbe-a0b5-f7a470009e7a",
+      "label": "utility-GM-2_Gas_Cafe",
+      "type": "METERS/GM_STANDARD",
+      "etag": "f9af5c2e"
+    }
+  },
+  "cloud": {
+    "num_id": "258374911360267"
+  },
+  "relationships": {
+    "6cf23efd-19bd-4564-9360-ed0033f3f18c": {
+      "CONTAINS": [
+        {}
+      ]
+    }
+  },
+  "pointset": {
+    "points": {
+      "gas_flowrate_sensor": {
+        "ref": "points.gas_flowrate_sensor.present_value",
+        "units": "cubic-feet-per-hour",
+        "translation": {
+          "present_value": "points.gas_flowrate_sensor.present_value",
+          "units": {
+            "key": "pointset.points.gas_flowrate_sensor.unit",
+            "values": {
+              "cubic_feet_per_hour": "cubic-feet-per-hour"
+            }
+          }
+        }
+      },
+      "gas_temperature_sensor": {
+        "ref": "points.gas_temperature_sensor.present_value",
+        "units": "degrees-fahrenheit",
+        "translation": {
+          "present_value": "points.gas_temperature_sensor.present_value",
+          "units": {
+            "key": "pointset.points.gas_temperature_sensor.unit",
+            "values": {
+              "degrees_fahrenheit": "degrees-fahrenheit"
+            }
+          }
+        }
+      },
+      "gas_volume_accumulator": {
+        "ref": "points.gas_volume_accumulator.present_value",
+        "units": "cubic-feet",
+        "translation": {
+          "present_value": "points.gas_volume_accumulator.present_value",
+          "units": {
+            "key": "pointset.points.gas_volume_accumulator.unit",
+            "values": {
+              "cubic_feet": "cubic-feet"
+            }
+          }
+        }
+      }
+    }
+  }
+}

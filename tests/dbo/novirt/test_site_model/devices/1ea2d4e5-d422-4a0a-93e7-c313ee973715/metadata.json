@@ -1,0 +1,144 @@
+{
+  "timestamp": "2026-05-12T23:24:19Z",
+  "version": "1.5.3",
+  "system": {
+    "name": "EF S8A"
+  },
+  "externals": {
+    "dbo": {
+      "ext_id": "1ea2d4e5-d422-4a0a-93e7-c313ee973715",
+      "label": "EF S8A, S8B, & S8C Shop / San Antonio",
+      "type": "HVAC/FAN_VSC_EPC_EDM",
+      "etag": "8347e1e1"
+    }
+  },
+  "cloud": {
+    "num_id": "211596737032899"
+  },
+  "relationships": {
+    "6cf23efd-19bd-4564-9360-ed0033f3f18c": {
+      "CONTAINS": [
+        {}
+      ]
+    }
+  },
+  "pointset": {
+    "points": {
+      "exhaust_air_damper_command": {
+        "ref": "points.exhaust_air_damper_command.present_value",
+        "translation": {
+          "present_value": "points.exhaust_air_damper_command.present_value",
+          "states": {
+            "CLOSED": "0.0",
+            "OPEN": "1.0"
+          }
+        }
+      },
+      "exhaust_air_damper_status": {
+        "translation": "MISSING"
+      },
+      "exhaust_air_static_pressure_sensor": {
+        "ref": "points.exhaust_air_static_pressure_sensor.present_value",
+        "units": "inches-of-water",
+        "translation": {
+          "present_value": "points.exhaust_air_static_pressure_sensor.present_value",
+          "units": {
+            "key": "pointset.points.exhaust_air_static_pressure_sensor.unit",
+            "values": {
+              "inches_of_water": "inches-of-water"
+            }
+          }
+        }
+      },
+      "exhaust_air_static_pressure_setpoint": {
+        "ref": "points.exhaust_air_static_pressure_setpoint.present_value",
+        "units": "inches-of-water",
+        "translation": {
+          "present_value": "points.exhaust_air_static_pressure_setpoint.present_value",
+          "units": {
+            "key": "pointset.points.exhaust_air_static_pressure_setpoint.unit",
+            "values": {
+              "inches_of_water": "inches-of-water"
+            }
+          }
+        }
+      },
+      "failed_alarm": {
+        "ref": "points.failed_alarm.present_value",
+        "translation": {
+          "present_value": "points.failed_alarm.present_value",
+          "states": {
+            "ACTIVE": "1.0",
+            "INACTIVE": "0.0"
+          }
+        }
+      },
+      "high_exhaust_air_static_pressure_alarm": {
+        "ref": "points.high_exhaust_air_static_pressure_alarm.present_value",
+        "translation": {
+          "present_value": "points.high_exhaust_air_static_pressure_alarm.present_value",
+          "states": {
+            "ACTIVE": "1.0",
+            "INACTIVE": "0.0"
+          }
+        }
+      },
+      "low_exhaust_air_static_pressure_alarm": {
+        "ref": "points.low_exhaust_air_static_pressure_alarm.present_value",
+        "translation": {
+          "present_value": "points.low_exhaust_air_static_pressure_alarm.present_value",
+          "states": {
+            "ACTIVE": "1.0",
+            "INACTIVE": "0.0"
+          }
+        }
+      },
+      "run_command": {
+        "ref": "points.run_command.present_value",
+        "translation": {
+          "present_value": "points.run_command.present_value",
+          "states": {
+            "OFF": "0.0",
+            "ON": "1.0"
+          }
+        }
+      },
+      "run_status": {
+        "ref": "points.run_status.present_value",
+        "translation": {
+          "present_value": "points.run_status.present_value",
+          "states": {
+            "OFF": "0.0",
+            "ON": "1.0"
+          }
+        }
+      },
+      "speed_frequency_sensor": {
+        "ref": "points.speed_frequency_sensor.present_value",
+        "units": "hertz",
+        "translation": {
+          "present_value": "points.speed_frequency_sensor.present_value",
+          "units": {
+            "key": "pointset.points.speed_frequency_sensor.unit",
+            "values": {
+              "hertz": "hertz"
+            }
+          }
+        }
+      },
+      "speed_percentage_command": {
+        "ref": "points.speed_percentage_command.present_value",
+        "units": "percent",
+        "translation": {
+          "present_value": "points.speed_percentage_command.present_value",
+          "units": {
+            "key": "pointset.points.speed_percentage_command.unit",
+            "values": {
+              "percent": "percent"
+            }
+          }
+        }
+      }
+    }
+  }
+}

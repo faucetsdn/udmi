@@ -1,0 +1,94 @@
+{
+  "timestamp": "2026-05-12T23:24:19Z",
+  "version": "1.5.3",
+  "system": {
+    "name": "OA M"
+  },
+  "externals": {
+    "dbo": {
+      "ext_id": "f69ba342-0c18-4c7f-a76e-aaefa0df42a7",
+      "label": "OA Conditions - Bldg Broadcast",
+      "type": "HVAC/WEATHER_OA",
+      "etag": "9ce7e615"
+    }
+  },
+  "cloud": {
+    "num_id": "107321003065287"
+  },
+  "relationships": {
+    "6cf23efd-19bd-4564-9360-ed0033f3f18c": {
+      "CONTAINS": [
+        {}
+      ]
+    }
+  },
+  "pointset": {
+    "points": {
+      "outside_air_dewpoint_temperature_sensor": {
+        "ref": "points.outside_air_dewpoint_temperature_sensor.present_value",
+        "units": "degrees-fahrenheit",
+        "translation": {
+          "present_value": "points.outside_air_dewpoint_temperature_sensor.present_value",
+          "units": {
+            "key": "pointset.points.outside_air_dewpoint_temperature_sensor.unit",
+            "values": {
+              "degrees_fahrenheit": "degrees-fahrenheit"
+            }
+          }
+        }
+      },
+      "outside_air_relative_humidity_sensor": {
+        "ref": "points.outside_air_relative_humidity_sensor.present_value",
+        "units": "percent-relative-humidity",
+        "translation": {
+          "present_value": "points.outside_air_relative_humidity_sensor.present_value",
+          "units": {
+            "key": "pointset.points.outside_air_relative_humidity_sensor.unit",
+            "values": {
+              "percent_relative_humidity": "percent-relative-humidity"
+            }
+          }
+        }
+      },
+      "outside_air_specificenthalpy_sensor": {
+        "ref": "points.outside_air_specificenthalpy_sensor.present_value",
+        "units": "btus-per-pound-dry-air",
+        "translation": {
+          "present_value": "points.outside_air_specificenthalpy_sensor.present_value",
+          "units": {
+            "key": "pointset.points.outside_air_specificenthalpy_sensor.unit",
+            "values": {
+              "btus_per_pound_dry_air": "btus-per-pound-dry-air"
+            }
+          }
+        }
+      },
+      "outside_air_temperature_sensor": {
+        "ref": "points.outside_air_temperature_sensor.present_value",
+        "units": "degrees-fahrenheit",
+        "translation": {
+          "present_value": "points.outside_air_temperature_sensor.present_value",
+          "units": {
+            "key": "pointset.points.outside_air_temperature_sensor.unit",
+            "values": {
+              "degrees_fahrenheit": "degrees-fahrenheit"
+            }
+          }
+        }
+      },
+      "outside_air_wetbulb_temperature_sensor": {
+        "ref": "points.outside_air_wetbulb_temperature_sensor.present_value",
+        "units": "degrees-fahrenheit",
+        "translation": {
+          "present_value": "points.outside_air_wetbulb_temperature_sensor.present_value",
+          "units": {
+            "key": "pointset.points.outside_air_wetbulb_temperature_sensor.unit",
+            "values": {
+              "degrees_fahrenheit": "degrees-fahrenheit"
+            }
+          }
+        }
+      }
+    }
+  }
+}

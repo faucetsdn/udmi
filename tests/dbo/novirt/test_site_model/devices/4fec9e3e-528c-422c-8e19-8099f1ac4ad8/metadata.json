@@ -1,0 +1,203 @@
+{
+  "timestamp": "2026-05-12T23:24:19Z",
+  "version": "1.5.3",
+  "system": {
+    "name": "HX M3"
+  },
+  "externals": {
+    "dbo": {
+      "ext_id": "4fec9e3e-528c-422c-8e19-8099f1ac4ad8",
+      "label": "Process Cooling Water PCW-30",
+      "type": "HVAC/HX_CHWDT_PRWDT_CHWDPM_PWDPM_CHWRWISOVPM",
+      "etag": "ba6bd6d1"
+    }
+  },
+  "cloud": {
+    "num_id": "148959137721285"
+  },
+  "relationships": {
+    "6cf23efd-19bd-4564-9360-ed0033f3f18c": {
+      "CONTAINS": [
+        {}
+      ]
+    }
+  },
+  "pointset": {
+    "points": {
+      "chilled_return_water_isolation_valve_percentage_command": {
+        "ref": "points.chilled_return_water_isolation_valve_percentage_command.present_value",
+        "units": "percent",
+        "translation": {
+          "present_value": "points.chilled_return_water_isolation_valve_percentage_command.present_value",
+          "units": {
+            "key": "pointset.points.chilled_return_water_isolation_valve_percentage_command.unit",
+            "values": {
+              "percent": "percent"
+            }
+          }
+        }
+      },
+      "chilled_return_water_isolation_valve_percentage_sensor": {
+        "ref": "points.chilled_return_water_isolation_valve_percentage_sensor.present_value",
+        "units": "percent",
+        "translation": {
+          "present_value": "points.chilled_return_water_isolation_valve_percentage_sensor.present_value",
+          "units": {
+            "key": "pointset.points.chilled_return_water_isolation_valve_percentage_sensor.unit",
+            "values": {
+              "percent": "percent"
+            }
+          }
+        }
+      },
+      "chilled_return_water_temperature_sensor": {
+        "ref": "points.chilled_return_water_temperature_sensor.present_value",
+        "units": "degrees-fahrenheit",
+        "translation": {
+          "present_value": "points.chilled_return_water_temperature_sensor.present_value",
+          "units": {
+            "key": "pointset.points.chilled_return_water_temperature_sensor.unit",
+            "values": {
+              "degrees_fahrenheit": "degrees-fahrenheit"
+            }
+          }
+        }
+      },
+      "chilled_supply_water_temperature_sensor": {
+        "ref": "points.chilled_supply_water_temperature_sensor.present_value",
+        "units": "degrees-fahrenheit",
+        "translation": {
+          "present_value": "points.chilled_supply_water_temperature_sensor.present_value",
+          "units": {
+            "key": "pointset.points.chilled_supply_water_temperature_sensor.unit",
+            "values": {
+              "degrees_fahrenheit": "degrees-fahrenheit"
+            }
+          }
+        }
+      },
+      "chilled_water_differential_pressure_sensor": {
+        "ref": "points.chilled_water_differential_pressure_sensor.present_value",
+        "units": "pounds-force-per-square-inch",
+        "translation": {
+          "present_value": "points.chilled_water_differential_pressure_sensor.present_value",
+          "units": {
+            "key": "pointset.points.chilled_water_differential_pressure_sensor.unit",
+            "values": {
+              "pounds_force_per_square_inch": "pounds-force-per-square-inch"
+            }
+          }
+        }
+      },
+      "failed_chilled_return_water_isolation_valve_alarm": {
+        "ref": "points.failed_chilled_return_water_isolation_valve_alarm.present_value",
+        "translation": {
+          "present_value": "points.failed_chilled_return_water_isolation_valve_alarm.present_value",
+          "states": {
+            "ACTIVE": "1.0",
+            "INACTIVE": "0.0"
+          }
+        }
+      },
+      "failed_chilled_return_water_temperature_alarm": {
+        "ref": "points.failed_chilled_return_water_temperature_alarm.present_value",
+        "translation": {
+          "present_value": "points.failed_chilled_return_water_temperature_alarm.present_value",
+          "states": {
+            "ACTIVE": "1.0",
+            "INACTIVE": "0.0"
+          }
+        }
+      },
+      "failed_chilled_supply_water_temperature_alarm": {
+        "ref": "points.failed_chilled_supply_water_temperature_alarm.present_value",
+        "translation": {
+          "present_value": "points.failed_chilled_supply_water_temperature_alarm.present_value",
+          "states": {
+            "ACTIVE": "1.0",
+            "INACTIVE": "0.0"
+          }
+        }
+      },
+      "failed_chilled_water_differential_pressure_alarm": {
+        "ref": "points.failed_chilled_water_differential_pressure_alarm.present_value",
+        "translation": {
+          "present_value": "points.failed_chilled_water_differential_pressure_alarm.present_value",
+          "states": {
+            "ACTIVE": "1.0",
+            "INACTIVE": "0.0"
+          }
+        }
+      },
+      "failed_process_return_water_temperature_alarm": {
+        "ref": "points.failed_process_return_water_temperature_alarm.present_value",
+        "translation": {
+          "present_value": "points.failed_process_return_water_temperature_alarm.present_value",
+          "states": {
+            "ACTIVE": "1.0",
+            "INACTIVE": "0.0"
+          }
+        }
+      },
+      "failed_process_water_differential_pressure_alarm": {
+        "ref": "points.failed_process_water_differential_pressure_alarm.present_value",
+        "translation": {
+          "present_value": "points.failed_process_water_differential_pressure_alarm.present_value",
+          "states": {
+            "ACTIVE": "1.0",
+            "INACTIVE": "0.0"
+          }
+        }
+      },
+      "high_chilled_water_differential_pressure_alarm": {
+        "ref": "points.high_chilled_water_differential_pressure_alarm.present_value",
+        "translation": {
+          "present_value": "points.high_chilled_water_differential_pressure_alarm.present_value",
+          "states": {
+            "ACTIVE": "1.0",
+            "INACTIVE": "0.0"
+          }
+        }
+      },
+      "high_process_water_differential_pressure_alarm": {
+        "ref": "points.high_process_water_differential_pressure_alarm.present_value",
+        "translation": {
+          "present_value": "points.high_process_water_differential_pressure_alarm.present_value",
+          "states": {
+            "ACTIVE": "1.0",
+            "INACTIVE": "0.0"
+          }
+        }
+      },
+      "process_return_water_temperature_sensor": {
+        "ref": "points.process_return_water_temperature_sensor.present_value",
+        "units": "degrees-fahrenheit",
+        "translation": {
+          "present_value": "points.process_return_water_temperature_sensor.present_value",
+          "units": {
+            "key": "pointset.points.process_return_water_temperature_sensor.unit",
+            "values": {
+              "degrees_fahrenheit": "degrees-fahrenheit"
+            }
+          }
+        }
+      },
+      "process_supply_water_temperature_sensor": {
+        "translation": "MISSING"
+      },
+      "process_water_differential_pressure_sensor": {
+        "ref": "points.process_water_differential_pressure_sensor.present_value",
+        "units": "pounds-force-per-square-inch",
+        "translation": {
+          "present_value": "points.process_water_differential_pressure_sensor.present_value",
+          "units": {
+            "key": "pointset.points.process_water_differential_pressure_sensor.unit",
+            "values": {
+              "pounds_force_per_square_inch": "pounds-force-per-square-inch"
+            }
+          }
+        }
+      }
+    }
+  }
+}

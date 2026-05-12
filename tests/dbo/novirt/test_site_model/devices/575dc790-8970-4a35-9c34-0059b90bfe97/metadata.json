@@ -1,0 +1,55 @@
+{
+  "timestamp": "2026-05-12T23:24:19Z",
+  "version": "1.5.3",
+  "system": {
+    "name": "DWST M"
+  },
+  "externals": {
+    "dbo": {
+      "ext_id": "575dc790-8970-4a35-9c34-0059b90bfe97",
+      "label": "Domestic Hot Water",
+      "type": "HVAC/DWST_SWTC",
+      "etag": "d4fb61b6"
+    }
+  },
+  "cloud": {
+    "num_id": "92401307606346"
+  },
+  "relationships": {
+    "6cf23efd-19bd-4564-9360-ed0033f3f18c": {
+      "CONTAINS": [
+        {}
+      ]
+    }
+  },
+  "pointset": {
+    "points": {
+      "run_command": {
+        "ref": "points.run_command.present_value",
+        "translation": {
+          "present_value": "points.run_command.present_value",
+          "states": {
+            "OFF": "0.0",
+            "ON": "1.0"
+          }
+        }
+      },
+      "supply_water_temperature_sensor": {
+        "ref": "points.supply_water_temperature_sensor.present_value",
+        "units": "degrees-fahrenheit",
+        "translation": {
+          "present_value": "points.supply_water_temperature_sensor.present_value",
+          "units": {
+            "key": "pointset.points.supply_water_temperature_sensor.unit",
+            "values": {
+              "degrees_fahrenheit": "degrees-fahrenheit"
+            }
+          }
+        }
+      },
+      "supply_water_temperature_setpoint": {
+        "translation": "MISSING"
+      }
+    }
+  }
+}

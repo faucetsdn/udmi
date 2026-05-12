@@ -1,0 +1,20 @@
+{
+  "timestamp": "2026-05-12T23:24:19Z",
+  "version": "1.5.3",
+  "system": {},
+  "externals": {
+    "dbo": {
+      "ext_id": "42637f66-1d73-4065-8ab3-6ac7b6f9d17e",
+      "label": "lidar-color",
+      "type": "INFO_TECH/PRNTR",
+      "etag": "1eff2c98"
+    }
+  },
+  "relationships": {
+    "276251a4-86de-40dc-89b3-2e0d6958030e": {
+      "CONTAINS": [
+        {}
+      ]
+    }
+  }
+}

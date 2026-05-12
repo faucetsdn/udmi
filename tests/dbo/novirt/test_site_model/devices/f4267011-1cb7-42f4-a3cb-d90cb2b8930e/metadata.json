@@ -1,0 +1,42 @@
+{
+  "timestamp": "2026-05-12T23:24:19Z",
+  "version": "1.5.3",
+  "system": {
+    "name": "utility-Water_HVAC"
+  },
+  "externals": {
+    "dbo": {
+      "ext_id": "f4267011-1cb7-42f4-a3cb-d90cb2b8930e",
+      "label": "utility-Water_HVAC",
+      "type": "METERS/WM_STANDARD",
+      "etag": "0b33705e"
+    }
+  },
+  "cloud": {
+    "num_id": "47807509123784"
+  },
+  "relationships": {
+    "6cf23efd-19bd-4564-9360-ed0033f3f18c": {
+      "CONTAINS": [
+        {}
+      ]
+    }
+  },
+  "pointset": {
+    "points": {
+      "water_volume_accumulator": {
+        "ref": "points.water_volume_accumulator.present_value",
+        "units": "us-gallons",
+        "translation": {
+          "present_value": "points.water_volume_accumulator.present_value",
+          "units": {
+            "key": "pointset.points.water_volume_accumulator.units",
+            "values": {
+              "us_gallons": "us-gallons"
+            }
+          }
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,23 @@
+{
+  "timestamp": "2026-05-12T23:24:19Z",
+  "version": "1.5.3",
+  "system": {},
+  "externals": {
+    "dbo": {
+      "ext_id": "426c645f-3a00-44af-8ba2-b4de8d126f8b",
+      "label": "TF S-7 Electrical Rm 23104",
+      "type": "UNTYPED/TYPELESS",
+      "etag": "cabb92bb"
+    }
+  },
+  "cloud": {
+    "num_id": "2771050777691386"
+  },
+  "relationships": {
+    "6cf23efd-19bd-4564-9360-ed0033f3f18c": {
+      "CONTAINS": [
+        {}
+      ]
+    }
+  }
+}

@@ -1,0 +1,470 @@
+{
+  "timestamp": "2026-05-12T23:24:19Z",
+  "version": "1.5.3",
+  "system": {
+    "name": "CH S1"
+  },
+  "externals": {
+    "dbo": {
+      "ext_id": "42092f23-5791-4624-b9ea-d793c60bd617",
+      "label": "Chiller #1 Integration / San Antonio, Chiller Plant / San Antonio",
+      "type": "HVAC/CH_SS_CSWTC_CHDX2SC_CHWRWISOVPM_CWSWISOVPM_RCKTM2X",
+      "etag": "a71571d4"
+    }
+  },
+  "cloud": {
+    "num_id": "268142978453504"
+  },
+  "relationships": {
+    "6cf23efd-19bd-4564-9360-ed0033f3f18c": {
+      "CONTAINS": [
+        {}
+      ]
+    }
+  },
+  "pointset": {
+    "points": {
+      "chilled_return_water_isolation_valve_percentage_command": {
+        "ref": "points.chilled_return_water_isolation_valve_percentage_command.present_value",
+        "units": "percent",
+        "translation": {
+          "present_value": "points.chilled_return_water_isolation_valve_percentage_command.present_value",
+          "units": {
+            "key": "pointset.points.chilled_return_water_isolation_valve_percentage_command.unit",
+            "values": {
+              "percent": "percent"
+            }
+          }
+        }
+      },
+      "chilled_return_water_isolation_valve_percentage_sensor": {
+        "ref": "points.chilled_return_water_isolation_valve_percentage_sensor.present_value",
+        "units": "percent",
+        "translation": {
+          "present_value": "points.chilled_return_water_isolation_valve_percentage_sensor.present_value",
+          "units": {
+            "key": "pointset.points.chilled_return_water_isolation_valve_percentage_sensor.unit",
+            "values": {
+              "percent": "percent"
+            }
+          }
+        }
+      },
+      "chilled_return_water_temperature_sensor": {
+        "ref": "points.chilled_return_water_temperature_sensor.present_value",
+        "units": "degrees-fahrenheit",
+        "translation": {
+          "present_value": "points.chilled_return_water_temperature_sensor.present_value",
+          "units": {
+            "key": "pointset.points.chilled_return_water_temperature_sensor.unit",
+            "values": {
+              "degrees_fahrenheit": "degrees-fahrenheit"
+            }
+          }
+        }
+      },
+      "chilled_supply_water_temperature_sensor": {
+        "ref": "points.chilled_supply_water_temperature_sensor.present_value",
+        "units": "degrees-fahrenheit",
+        "translation": {
+          "present_value": "points.chilled_supply_water_temperature_sensor.present_value",
+          "units": {
+            "key": "pointset.points.chilled_supply_water_temperature_sensor.unit",
+            "values": {
+              "degrees_fahrenheit": "degrees-fahrenheit"
+            }
+          }
+        }
+      },
+      "chilled_supply_water_temperature_setpoint": {
+        "ref": "points.chilled_supply_water_temperature_setpoint.present_value",
+        "units": "degrees-fahrenheit",
+        "translation": {
+          "present_value": "points.chilled_supply_water_temperature_setpoint.present_value",
+          "units": {
+            "key": "pointset.points.chilled_supply_water_temperature_setpoint.unit",
+            "values": {
+              "degrees_fahrenheit": "degrees-fahrenheit"
+            }
+          }
+        }
+      },
+      "compressor_current_sensor_1": {
+        "ref": "points.compressor_current_sensor_1.present_value",
+        "units": "amperes",
+        "translation": {
+          "present_value": "points.compressor_current_sensor_1.present_value",
+          "units": {
+            "key": "pointset.points.compressor_current_sensor_1.unit",
+            "values": {
+              "amperes": "amperes"
+            }
+          }
+        }
+      },
+      "compressor_current_sensor_2": {
+        "ref": "points.compressor_current_sensor_2.present_value",
+        "units": "amperes",
+        "translation": {
+          "present_value": "points.compressor_current_sensor_2.present_value",
+          "units": {
+            "key": "pointset.points.compressor_current_sensor_2.unit",
+            "values": {
+              "amperes": "amperes"
+            }
+          }
+        }
+      },
+      "compressor_rotationalvelocity_sensor_1": {
+        "ref": "points.compressor_rotationalvelocity_sensor_1.present_value",
+        "units": "revolutions-per-minute",
+        "translation": {
+          "present_value": "points.compressor_rotationalvelocity_sensor_1.present_value",
+          "units": {
+            "key": "pointset.points.compressor_rotationalvelocity_sensor_1.unit",
+            "values": {
+              "revolutions_per_minute": "revolutions-per-minute"
+            }
+          }
+        }
+      },
+      "compressor_rotationalvelocity_sensor_2": {
+        "ref": "points.compressor_rotationalvelocity_sensor_2.present_value",
+        "units": "revolutions-per-minute",
+        "translation": {
+          "present_value": "points.compressor_rotationalvelocity_sensor_2.present_value",
+          "units": {
+            "key": "pointset.points.compressor_rotationalvelocity_sensor_2.unit",
+            "values": {
+              "revolutions_per_minute": "revolutions-per-minute"
+            }
+          }
+        }
+      },
+      "compressor_run_command_1": {
+        "translation": "MISSING"
+      },
+      "compressor_run_command_2": {
+        "translation": "MISSING"
+      },
+      "compressor_run_status_1": {
+        "ref": "points.compressor_run_status_1.present_value",
+        "translation": {
+          "present_value": "points.compressor_run_status_1.present_value",
+          "states": {
+            "OFF": [
+              "2.0",
+              "3.0",
+              "6.0"
+            ],
+            "ON": [
+              "10.0",
+              "11.0",
+              "12.0",
+              "13.0",
+              "14.0",
+              "15.0",
+              "16.0",
+              "17.0",
+              "18.0",
+              "19.0",
+              "20.0",
+              "4.0",
+              "5.0",
+              "7.0",
+              "8.0",
+              "9.0"
+            ],
+            "UNKNOWN": "1.0"
+          }
+        }
+      },
+      "compressor_run_status_2": {
+        "ref": "points.compressor_run_status_2.present_value",
+        "translation": {
+          "present_value": "points.compressor_run_status_2.present_value",
+          "states": {
+            "OFF": [
+              "2.0",
+              "3.0",
+              "6.0"
+            ],
+            "ON": [
+              "10.0",
+              "11.0",
+              "12.0",
+              "13.0",
+              "14.0",
+              "15.0",
+              "16.0",
+              "17.0",
+              "18.0",
+              "19.0",
+              "20.0",
+              "4.0",
+              "5.0",
+              "7.0",
+              "8.0",
+              "9.0"
+            ],
+            "UNKNOWN": "1.0"
+          }
+        }
+      },
+      "compressor_speed_percentage_sensor_1": {
+        "translation": "MISSING"
+      },
+      "compressor_speed_percentage_sensor_2": {
+        "translation": "MISSING"
+      },
+      "condensing_return_water_temperature_sensor": {
+        "ref": "points.condensing_return_water_temperature_sensor.present_value",
+        "units": "degrees-fahrenheit",
+        "translation": {
+          "present_value": "points.condensing_return_water_temperature_sensor.present_value",
+          "units": {
+            "key": "pointset.points.condensing_return_water_temperature_sensor.unit",
+            "values": {
+              "degrees_fahrenheit": "degrees-fahrenheit"
+            }
+          }
+        }
+      },
+      "condensing_supply_water_isolation_valve_percentage_command": {
+        "ref": "points.condensing_supply_water_isolation_valve_percentage_command.present_value",
+        "units": "percent",
+        "translation": {
+          "present_value": "points.condensing_supply_water_isolation_valve_percentage_command.present_value",
+          "units": {
+            "key": "pointset.points.condensing_supply_water_isolation_valve_percentage_command.unit",
+            "values": {
+              "percent": "percent"
+            }
+          }
+        }
+      },
+      "condensing_supply_water_isolation_valve_percentage_sensor": {
+        "ref": "points.condensing_supply_water_isolation_valve_percentage_sensor.present_value",
+        "units": "percent",
+        "translation": {
+          "present_value": "points.condensing_supply_water_isolation_valve_percentage_sensor.present_value",
+          "units": {
+            "key": "pointset.points.condensing_supply_water_isolation_valve_percentage_sensor.unit",
+            "values": {
+              "percent": "percent"
+            }
+          }
+        }
+      },
+      "condensing_supply_water_temperature_sensor": {
+        "ref": "points.condensing_supply_water_temperature_sensor.present_value",
+        "units": "degrees-fahrenheit",
+        "translation": {
+          "present_value": "points.condensing_supply_water_temperature_sensor.present_value",
+          "units": {
+            "key": "pointset.points.condensing_supply_water_temperature_sensor.unit",
+            "values": {
+              "degrees_fahrenheit": "degrees-fahrenheit"
+            }
+          }
+        }
+      },
+      "condensing_supply_water_temperature_setpoint": {
+        "ref": "points.condensing_supply_water_temperature_setpoint.present_value",
+        "units": "degrees-fahrenheit",
+        "translation": {
+          "present_value": "points.condensing_supply_water_temperature_setpoint.present_value",
+          "units": {
+            "key": "pointset.points.condensing_supply_water_temperature_setpoint.unit",
+            "values": {
+              "degrees_fahrenheit": "degrees-fahrenheit"
+            }
+          }
+        }
+      },
+      "cooling_percentage_command": {
+        "ref": "points.cooling_percentage_command.present_value",
+        "units": "percent",
+        "translation": {
+          "present_value": "points.cooling_percentage_command.present_value",
+          "units": {
+            "key": "pointset.points.cooling_percentage_command.unit",
+            "values": {
+              "percent": "percent"
+            }
+          }
+        }
+      },
+      "failed_alarm": {
+        "ref": "points.failed_alarm.present_value",
+        "translation": {
+          "present_value": "points.failed_alarm.present_value",
+          "states": {
+            "ACTIVE": "1.0",
+            "INACTIVE": "0.0"
+          }
+        }
+      },
+      "refrigerant_discharge_pressure_sensor_1": {
+        "ref": "points.refrigerant_discharge_pressure_sensor_1.present_value",
+        "units": "pounds-force-per-square-inch",
+        "translation": {
+          "present_value": "points.refrigerant_discharge_pressure_sensor_1.present_value",
+          "units": {
+            "key": "pointset.points.refrigerant_discharge_pressure_sensor_1.unit",
+            "values": {
+              "pounds_force_per_square_inch": "pounds-force-per-square-inch"
+            }
+          }
+        }
+      },
+      "refrigerant_discharge_pressure_sensor_2": {
+        "ref": "points.refrigerant_discharge_pressure_sensor_2.present_value",
+        "units": "pounds-force-per-square-inch",
+        "translation": {
+          "present_value": "points.refrigerant_discharge_pressure_sensor_2.present_value",
+          "units": {
+            "key": "pointset.points.refrigerant_discharge_pressure_sensor_2.unit",
+            "values": {
+              "pounds_force_per_square_inch": "pounds-force-per-square-inch"
+            }
+          }
+        }
+      },
+      "refrigerant_discharge_temperature_sensor_1": {
+        "ref": "points.refrigerant_discharge_temperature_sensor_1.present_value",
+        "units": "degrees-fahrenheit",
+        "translation": {
+          "present_value": "points.refrigerant_discharge_temperature_sensor_1.present_value",
+          "units": {
+            "key": "pointset.points.refrigerant_discharge_temperature_sensor_1.unit",
+            "values": {
+              "degrees_fahrenheit": "degrees-fahrenheit"
+            }
+          }
+        }
+      },
+      "refrigerant_discharge_temperature_sensor_2": {
+        "ref": "points.refrigerant_discharge_temperature_sensor_2.present_value",
+        "units": "degrees-fahrenheit",
+        "translation": {
+          "present_value": "points.refrigerant_discharge_temperature_sensor_2.present_value",
+          "units": {
+            "key": "pointset.points.refrigerant_discharge_temperature_sensor_2.unit",
+            "values": {
+              "degrees_fahrenheit": "degrees-fahrenheit"
+            }
+          }
+        }
+      },
+      "refrigerant_liquid_pressure_sensor_1": {
+        "translation": "MISSING"
+      },
+      "refrigerant_liquid_pressure_sensor_2": {
+        "translation": "MISSING"
+      },
+      "refrigerant_liquid_saturation_temperature_sensor_1": {
+        "translation": "MISSING"
+      },
+      "refrigerant_liquid_saturation_temperature_sensor_2": {
+        "translation": "MISSING"
+      },
+      "refrigerant_liquid_temperature_sensor_1": {
+        "translation": "MISSING"
+      },
+      "refrigerant_liquid_temperature_sensor_2": {
+        "translation": "MISSING"
+      },
+      "refrigerant_subcooling_temperature_sensor_1": {
+        "translation": "MISSING"
+      },
+      "refrigerant_subcooling_temperature_sensor_2": {
+        "translation": "MISSING"
+      },
+      "refrigerant_suction_pressure_sensor_1": {
+        "ref": "points.refrigerant_suction_pressure_sensor_1.present_value",
+        "units": "pounds-force-per-square-inch",
+        "translation": {
+          "present_value": "points.refrigerant_suction_pressure_sensor_1.present_value",
+          "units": {
+            "key": "pointset.points.refrigerant_suction_pressure_sensor_1.unit",
+            "values": {
+              "pounds_force_per_square_inch": "pounds-force-per-square-inch"
+            }
+          }
+        }
+      },
+      "refrigerant_suction_pressure_sensor_2": {
+        "ref": "points.refrigerant_suction_pressure_sensor_2.present_value",
+        "units": "pounds-force-per-square-inch",
+        "translation": {
+          "present_value": "points.refrigerant_suction_pressure_sensor_2.present_value",
+          "units": {
+            "key": "pointset.points.refrigerant_suction_pressure_sensor_2.unit",
+            "values": {
+              "pounds_force_per_square_inch": "pounds-force-per-square-inch"
+            }
+          }
+        }
+      },
+      "refrigerant_suction_saturation_temperature_sensor_1": {
+        "translation": "MISSING"
+      },
+      "refrigerant_suction_saturation_temperature_sensor_2": {
+        "translation": "MISSING"
+      },
+      "refrigerant_suction_superheat_temperature_sensor_1": {
+        "translation": "MISSING"
+      },
+      "refrigerant_suction_superheat_temperature_sensor_2": {
+        "translation": "MISSING"
+      },
+      "refrigerant_suction_temperature_sensor_1": {
+        "ref": "points.refrigerant_suction_temperature_sensor_1.present_value",
+        "units": "degrees-fahrenheit",
+        "translation": {
+          "present_value": "points.refrigerant_suction_temperature_sensor_1.present_value",
+          "units": {
+            "key": "pointset.points.refrigerant_suction_temperature_sensor_1.unit",
+            "values": {
+              "degrees_fahrenheit": "degrees-fahrenheit"
+            }
+          }
+        }
+      },
+      "refrigerant_suction_temperature_sensor_2": {
+        "ref": "points.refrigerant_suction_temperature_sensor_2.present_value",
+        "units": "degrees-fahrenheit",
+        "translation": {
+          "present_value": "points.refrigerant_suction_temperature_sensor_2.present_value",
+          "units": {
+            "key": "pointset.points.refrigerant_suction_temperature_sensor_2.unit",
+            "values": {
+              "degrees_fahrenheit": "degrees-fahrenheit"
+            }
+          }
+        }
+      },
+      "run_command": {
+        "ref": "points.run_command.present_value",
+        "translation": {
+          "present_value": "points.run_command.present_value",
+          "states": {
+            "OFF": "0.0",
+            "ON": "1.0"
+          }
+        }
+      },
+      "run_status": {
+        "ref": "points.run_status.present_value",
+        "translation": {
+          "present_value": "points.run_status.present_value",
+          "states": {
+            "OFF": "0.0",
+            "ON": "1.0"
+          }
+        }
+      }
+    }
+  }
+}

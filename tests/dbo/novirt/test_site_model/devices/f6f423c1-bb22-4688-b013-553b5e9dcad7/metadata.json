@@ -1,0 +1,23 @@
+{
+  "timestamp": "2026-05-12T23:24:19Z",
+  "version": "1.5.3",
+  "system": {},
+  "externals": {
+    "dbo": {
+      "ext_id": "f6f423c1-bb22-4688-b013-553b5e9dcad7",
+      "label": "KNSX",
+      "type": "UNTYPED/TYPELESS",
+      "etag": "7012d283"
+    }
+  },
+  "cloud": {
+    "num_id": "2775313932103394"
+  },
+  "relationships": {
+    "6cf23efd-19bd-4564-9360-ed0033f3f18c": {
+      "CONTAINS": [
+        {}
+      ]
+    }
+  }
+}

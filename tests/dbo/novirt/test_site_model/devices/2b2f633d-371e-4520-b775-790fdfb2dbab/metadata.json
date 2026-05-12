@@ -1,0 +1,111 @@
+{
+  "timestamp": "2026-05-12T23:24:19Z",
+  "version": "1.5.3",
+  "system": {
+    "name": "CHW SYSTEM S4"
+  },
+  "externals": {
+    "dbo": {
+      "ext_id": "2b2f633d-371e-4520-b775-790fdfb2dbab",
+      "label": "Air Cooled Chiller S-4 / San Antonio",
+      "type": "HVAC/CHWS_SWTC_WFRM",
+      "etag": "56b0282d"
+    }
+  },
+  "cloud": {
+    "num_id": "241386217731106"
+  },
+  "relationships": {
+    "6cf23efd-19bd-4564-9360-ed0033f3f18c": {
+      "CONTAINS": [
+        {}
+      ]
+    }
+  },
+  "pointset": {
+    "points": {
+      "flowrate_sensor": {
+        "ref": "points.flowrate_sensor.present_value",
+        "units": "us-gallons-per-minute",
+        "translation": {
+          "present_value": "points.flowrate_sensor.present_value",
+          "units": {
+            "key": "pointset.points.flowrate_sensor.unit",
+            "values": {
+              "us_gallons_per_minute": "us-gallons-per-minute"
+            }
+          }
+        }
+      },
+      "high_supply_water_temperature_alarm": {
+        "ref": "points.high_supply_water_temperature_alarm.present_value",
+        "translation": {
+          "present_value": "points.high_supply_water_temperature_alarm.present_value",
+          "states": {
+            "ACTIVE": "1.0",
+            "INACTIVE": "0.0"
+          }
+        }
+      },
+      "low_supply_water_temperature_alarm": {
+        "ref": "points.low_supply_water_temperature_alarm.present_value",
+        "translation": {
+          "present_value": "points.low_supply_water_temperature_alarm.present_value",
+          "states": {
+            "ACTIVE": "1.0",
+            "INACTIVE": "0.0"
+          }
+        }
+      },
+      "return_water_temperature_sensor": {
+        "ref": "points.return_water_temperature_sensor.present_value",
+        "units": "degrees-fahrenheit",
+        "translation": {
+          "present_value": "points.return_water_temperature_sensor.present_value",
+          "units": {
+            "key": "pointset.points.return_water_temperature_sensor.unit",
+            "values": {
+              "degrees_fahrenheit": "degrees-fahrenheit"
+            }
+          }
+        }
+      },
+      "run_command": {
+        "ref": "points.run_command.present_value",
+        "translation": {
+          "present_value": "points.run_command.present_value",
+          "states": {
+            "OFF": "0.0",
+            "ON": "1.0"
+          }
+        }
+      },
+      "supply_water_temperature_sensor": {
+        "ref": "points.supply_water_temperature_sensor.present_value",
+        "units": "degrees-fahrenheit",
+        "translation": {
+          "present_value": "points.supply_water_temperature_sensor.present_value",
+          "units": {
+            "key": "pointset.points.supply_water_temperature_sensor.unit",
+            "values": {
+              "degrees_fahrenheit": "degrees-fahrenheit"
+            }
+          }
+        }
+      },
+      "supply_water_temperature_setpoint": {
+        "ref": "points.supply_water_temperature_setpoint.present_value",
+        "units": "degrees-fahrenheit",
+        "translation": {
+          "present_value": "points.supply_water_temperature_setpoint.present_value",
+          "units": {
+            "key": "pointset.points.supply_water_temperature_setpoint.unit",
+            "values": {
+              "degrees_fahrenheit": "degrees-fahrenheit"
+            }
+          }
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,183 @@
+{
+  "timestamp": "2026-05-12T23:24:19Z",
+  "version": "1.5.3",
+  "system": {
+    "name": "EF S4B"
+  },
+  "externals": {
+    "dbo": {
+      "ext_id": "99fd3274-700b-4f31-9064-af3c69341cf1",
+      "label": "EF 4A, 4B, 4C Lab Exhaust / San Antonio, EF S4B VFD Integration / San Antonio",
+      "type": "HVAC/FAN_SS_VSC_EPC",
+      "etag": "985ffcd3"
+    }
+  },
+  "cloud": {
+    "num_id": "58222516537926"
+  },
+  "relationships": {
+    "6cf23efd-19bd-4564-9360-ed0033f3f18c": {
+      "CONTAINS": [
+        {}
+      ]
+    }
+  },
+  "pointset": {
+    "points": {
+      "current_sensor": {
+        "ref": "points.current_sensor.present_value",
+        "units": "amperes",
+        "translation": {
+          "present_value": "points.current_sensor.present_value",
+          "units": {
+            "key": "pointset.points.current_sensor.unit",
+            "values": {
+              "amperes": "amperes"
+            }
+          }
+        }
+      },
+      "exhaust_air_static_pressure_sensor": {
+        "ref": "points.exhaust_air_static_pressure_sensor.present_value",
+        "units": "inches-of-water",
+        "translation": {
+          "present_value": "points.exhaust_air_static_pressure_sensor.present_value",
+          "units": {
+            "key": "pointset.points.exhaust_air_static_pressure_sensor.unit",
+            "values": {
+              "inches_of_water": "inches-of-water"
+            }
+          }
+        }
+      },
+      "exhaust_air_static_pressure_setpoint": {
+        "ref": "points.exhaust_air_static_pressure_setpoint.present_value",
+        "units": "inches-of-water",
+        "translation": {
+          "present_value": "points.exhaust_air_static_pressure_setpoint.present_value",
+          "units": {
+            "key": "pointset.points.exhaust_air_static_pressure_setpoint.unit",
+            "values": {
+              "inches_of_water": "inches-of-water"
+            }
+          }
+        }
+      },
+      "failed_alarm": {
+        "ref": "points.failed_alarm.present_value",
+        "translation": {
+          "present_value": "points.failed_alarm.present_value",
+          "states": {
+            "ACTIVE": "1.0",
+            "INACTIVE": "0.0"
+          }
+        }
+      },
+      "high_exhaust_air_static_pressure_alarm": {
+        "ref": "points.high_exhaust_air_static_pressure_alarm.present_value",
+        "translation": {
+          "present_value": "points.high_exhaust_air_static_pressure_alarm.present_value",
+          "states": {
+            "ACTIVE": "1.0",
+            "INACTIVE": "0.0"
+          }
+        }
+      },
+      "low_exhaust_air_static_pressure_alarm": {
+        "ref": "points.low_exhaust_air_static_pressure_alarm.present_value",
+        "translation": {
+          "present_value": "points.low_exhaust_air_static_pressure_alarm.present_value",
+          "states": {
+            "ACTIVE": "1.0",
+            "INACTIVE": "0.0"
+          }
+        }
+      },
+      "power_sensor": {
+        "ref": "points.power_sensor.present_value",
+        "units": "kilowatts",
+        "translation": {
+          "present_value": "points.power_sensor.present_value",
+          "units": {
+            "key": "pointset.points.power_sensor.unit",
+            "values": {
+              "kilowatts": "kilowatts"
+            }
+          }
+        }
+      },
+      "run_command": {
+        "ref": "points.run_command.present_value",
+        "translation": {
+          "present_value": "points.run_command.present_value",
+          "states": {
+            "OFF": "0.0",
+            "ON": "1.0"
+          }
+        }
+      },
+      "run_status": {
+        "ref": "points.run_status.present_value",
+        "translation": {
+          "present_value": "points.run_status.present_value",
+          "states": {
+            "OFF": "0.0",
+            "ON": "1.0"
+          }
+        }
+      },
+      "speed_frequency_sensor": {
+        "ref": "points.speed_frequency_sensor.present_value",
+        "units": "hertz",
+        "translation": {
+          "present_value": "points.speed_frequency_sensor.present_value",
+          "units": {
+            "key": "pointset.points.speed_frequency_sensor.unit",
+            "values": {
+              "hertz": "hertz"
+            }
+          }
+        }
+      },
+      "speed_percentage_command": {
+        "ref": "points.speed_percentage_command.present_value",
+        "units": "percent",
+        "translation": {
+          "present_value": "points.speed_percentage_command.present_value",
+          "units": {
+            "key": "pointset.points.speed_percentage_command.unit",
+            "values": {
+              "percent": "percent"
+            }
+          }
+        }
+      },
+      "torque_sensor": {
+        "ref": "points.torque_sensor.present_value",
+        "units": "newton-meters",
+        "translation": {
+          "present_value": "points.torque_sensor.present_value",
+          "units": {
+            "key": "pointset.points.torque_sensor.unit",
+            "values": {
+              "newton_meters": "newton-meters"
+            }
+          }
+        }
+      },
+      "voltage_sensor": {
+        "ref": "points.voltage_sensor.present_value",
+        "units": "volts",
+        "translation": {
+          "present_value": "points.voltage_sensor.present_value",
+          "units": {
+            "key": "pointset.points.voltage_sensor.unit",
+            "values": {
+              "volts": "volts"
+            }
+          }
+        }
+      }
+    }
+  }
+}

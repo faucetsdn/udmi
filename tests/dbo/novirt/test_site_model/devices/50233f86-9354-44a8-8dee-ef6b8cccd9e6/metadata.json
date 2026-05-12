@@ -1,0 +1,23 @@
+{
+  "timestamp": "2026-05-12T23:24:19Z",
+  "version": "1.5.3",
+  "system": {},
+  "externals": {
+    "dbo": {
+      "ext_id": "50233f86-9354-44a8-8dee-ef6b8cccd9e6",
+      "label": "Boiler Plant Mayfield / 100 Mayfield",
+      "type": "UNTYPED/TYPELESS",
+      "etag": "178035d8"
+    }
+  },
+  "cloud": {
+    "num_id": "2723098762803808"
+  },
+  "relationships": {
+    "6cf23efd-19bd-4564-9360-ed0033f3f18c": {
+      "CONTAINS": [
+        {}
+      ]
+    }
+  }
+}

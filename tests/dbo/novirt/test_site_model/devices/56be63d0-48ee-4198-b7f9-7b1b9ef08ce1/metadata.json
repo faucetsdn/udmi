@@ -1,0 +1,23 @@
+{
+  "timestamp": "2026-05-12T23:24:19Z",
+  "version": "1.5.3",
+  "system": {},
+  "externals": {
+    "dbo": {
+      "ext_id": "56be63d0-48ee-4198-b7f9-7b1b9ef08ce1",
+      "label": "TF S-10 Electrical Rm 31373",
+      "type": "UNTYPED/TYPELESS",
+      "etag": "87e39e8d"
+    }
+  },
+  "cloud": {
+    "num_id": "2571357826905200"
+  },
+  "relationships": {
+    "6cf23efd-19bd-4564-9360-ed0033f3f18c": {
+      "CONTAINS": [
+        {}
+      ]
+    }
+  }
+}

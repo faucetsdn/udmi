@@ -1,0 +1,59 @@
+{
+  "timestamp": "2026-05-12T23:24:19Z",
+  "version": "1.5.3",
+  "system": {
+    "name": "EF M2"
+  },
+  "externals": {
+    "dbo": {
+      "ext_id": "1cd5cb2c-cc82-47be-93a5-a02080658e66",
+      "label": "EF - M2",
+      "type": "HVAC/FAN_SS",
+      "etag": "05a6fce8"
+    }
+  },
+  "cloud": {
+    "num_id": "96567154249011"
+  },
+  "relationships": {
+    "6cf23efd-19bd-4564-9360-ed0033f3f18c": {
+      "CONTAINS": [
+        {}
+      ]
+    }
+  },
+  "pointset": {
+    "points": {
+      "failed_alarm": {
+        "ref": "points.failed_alarm.present_value",
+        "translation": {
+          "present_value": "points.failed_alarm.present_value",
+          "states": {
+            "ACTIVE": "1.0",
+            "INACTIVE": "0.0"
+          }
+        }
+      },
+      "run_command": {
+        "ref": "points.run_command.present_value",
+        "translation": {
+          "present_value": "points.run_command.present_value",
+          "states": {
+            "OFF": "0.0",
+            "ON": "1.0"
+          }
+        }
+      },
+      "run_status": {
+        "ref": "points.run_status.present_value",
+        "translation": {
+          "present_value": "points.run_status.present_value",
+          "states": {
+            "OFF": "0.0",
+            "ON": "1.0"
+          }
+        }
+      }
+    }
+  }
+}

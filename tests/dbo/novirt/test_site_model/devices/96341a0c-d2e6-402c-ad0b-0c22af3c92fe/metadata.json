@@ -1,0 +1,68 @@
+{
+  "timestamp": "2026-05-12T23:24:19Z",
+  "version": "1.5.3",
+  "system": {
+    "name": "WALK-IN COOLER RAG6ZM"
+  },
+  "externals": {
+    "dbo": {
+      "ext_id": "96341a0c-d2e6-402c-ad0b-0c22af3c92fe",
+      "label": "Google Walk-In Cooler Monitor",
+      "type": "HVAC/CRREF_CREFC",
+      "etag": "bdbf28e0"
+    }
+  },
+  "cloud": {
+    "num_id": "128582678288798"
+  },
+  "relationships": {
+    "6cf23efd-19bd-4564-9360-ed0033f3f18c": {
+      "CONTAINS": [
+        {}
+      ]
+    }
+  },
+  "pointset": {
+    "points": {
+      "defrost_temperature_sensor": {
+        "translation": "MISSING"
+      },
+      "low_zone_air_temperature_alarm": {
+        "ref": "points.low_zone_air_temperature_alarm.present_value",
+        "translation": {
+          "present_value": "points.low_zone_air_temperature_alarm.present_value",
+          "states": {
+            "ACTIVE": "1.0",
+            "INACTIVE": "0.0"
+          }
+        }
+      },
+      "zone_air_temperature_sensor": {
+        "ref": "points.zone_air_temperature_sensor.present_value",
+        "units": "degrees-fahrenheit",
+        "translation": {
+          "present_value": "points.zone_air_temperature_sensor.present_value",
+          "units": {
+            "key": "pointset.points.zone_air_temperature_sensor.unit",
+            "values": {
+              "degrees_fahrenheit": "degrees-fahrenheit"
+            }
+          }
+        }
+      },
+      "zone_air_temperature_setpoint": {
+        "ref": "points.zone_air_temperature_setpoint.present_value",
+        "units": "degrees-fahrenheit",
+        "translation": {
+          "present_value": "points.zone_air_temperature_setpoint.present_value",
+          "units": {
+            "key": "pointset.points.zone_air_temperature_setpoint.unit",
+            "values": {
+              "degrees_fahrenheit": "degrees-fahrenheit"
+            }
+          }
+        }
+      }
+    }
+  }
+}

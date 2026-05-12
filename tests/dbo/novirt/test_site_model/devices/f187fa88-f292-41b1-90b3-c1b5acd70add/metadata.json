@@ -1,0 +1,13 @@
+{
+  "timestamp": "2026-05-12T23:24:19Z",
+  "version": "1.5.3",
+  "system": {},
+  "externals": {
+    "dbo": {
+      "ext_id": "f187fa88-f292-41b1-90b3-c1b5acd70add",
+      "label": "US-MTV-RLS1-1-X101",
+      "type": "FACILITIES/ROOM",
+      "etag": "136d34d5"
+    }
+  }
+}

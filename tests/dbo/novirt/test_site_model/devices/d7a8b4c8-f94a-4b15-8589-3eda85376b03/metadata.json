@@ -1,0 +1,23 @@
+{
+  "timestamp": "2026-05-12T23:24:19Z",
+  "version": "1.5.3",
+  "system": {},
+  "externals": {
+    "dbo": {
+      "ext_id": "d7a8b4c8-f94a-4b15-8589-3eda85376b03",
+      "label": "TF S-16 Shaft Room 33SE",
+      "type": "UNTYPED/TYPELESS",
+      "etag": "ec29abb3"
+    }
+  },
+  "cloud": {
+    "num_id": "2799515939945937"
+  },
+  "relationships": {
+    "6cf23efd-19bd-4564-9360-ed0033f3f18c": {
+      "CONTAINS": [
+        {}
+      ]
+    }
+  }
+}

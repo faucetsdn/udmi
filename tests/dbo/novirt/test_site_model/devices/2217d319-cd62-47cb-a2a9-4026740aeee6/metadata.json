@@ -1,0 +1,23 @@
+{
+  "timestamp": "2026-05-12T23:24:19Z",
+  "version": "1.5.3",
+  "system": {},
+  "externals": {
+    "dbo": {
+      "ext_id": "2217d319-cd62-47cb-a2a9-4026740aeee6",
+      "label": "TF M-11 Elevator Closet Rm 11967",
+      "type": "UNTYPED/TYPELESS",
+      "etag": "6712baea"
+    }
+  },
+  "cloud": {
+    "num_id": "2806248352783664"
+  },
+  "relationships": {
+    "6cf23efd-19bd-4564-9360-ed0033f3f18c": {
+      "CONTAINS": [
+        {}
+      ]
+    }
+  }
+}

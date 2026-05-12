@@ -1,0 +1,23 @@
+{
+  "timestamp": "2026-05-12T23:24:19Z",
+  "version": "1.5.3",
+  "system": {},
+  "externals": {
+    "dbo": {
+      "ext_id": "4ec77ea1-ac74-4dd6-bf3c-a87b200a8d69",
+      "label": "ArcticCool_01",
+      "type": "UNTYPED/TYPELESS",
+      "etag": "58a94ffb"
+    }
+  },
+  "cloud": {
+    "num_id": "2587188085024613"
+  },
+  "relationships": {
+    "6cf23efd-19bd-4564-9360-ed0033f3f18c": {
+      "CONTAINS": [
+        {}
+      ]
+    }
+  }
+}

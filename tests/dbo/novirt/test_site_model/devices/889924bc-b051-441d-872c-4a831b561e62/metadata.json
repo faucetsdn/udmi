@@ -1,0 +1,23 @@
+{
+  "timestamp": "2026-05-12T23:24:19Z",
+  "version": "1.5.3",
+  "system": {},
+  "externals": {
+    "dbo": {
+      "ext_id": "889924bc-b051-441d-872c-4a831b561e62",
+      "label": "FC S-6",
+      "type": "UNTYPED/TYPELESS",
+      "etag": "91cbf712"
+    }
+  },
+  "cloud": {
+    "num_id": "2659389840003826"
+  },
+  "relationships": {
+    "6cf23efd-19bd-4564-9360-ed0033f3f18c": {
+      "CONTAINS": [
+        {}
+      ]
+    }
+  }
+}

@@ -1,0 +1,23 @@
+{
+  "timestamp": "2026-05-12T23:24:18Z",
+  "version": "1.5.3",
+  "system": {},
+  "externals": {
+    "dbo": {
+      "ext_id": "0c16b68a-6dfe-4ddb-86bc-58e0b6935904",
+      "label": "Air Cooled Chiller S-4 / San Antonio",
+      "type": "UNTYPED/TYPELESS",
+      "etag": "b9899478"
+    }
+  },
+  "cloud": {
+    "num_id": "2627583070721155"
+  },
+  "relationships": {
+    "6cf23efd-19bd-4564-9360-ed0033f3f18c": {
+      "CONTAINS": [
+        {}
+      ]
+    }
+  }
+}

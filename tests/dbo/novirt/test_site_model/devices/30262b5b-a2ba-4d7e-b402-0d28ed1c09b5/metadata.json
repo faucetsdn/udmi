@@ -1,0 +1,23 @@
+{
+  "timestamp": "2026-05-12T23:24:19Z",
+  "version": "1.5.3",
+  "system": {},
+  "externals": {
+    "dbo": {
+      "ext_id": "30262b5b-a2ba-4d7e-b402-0d28ed1c09b5",
+      "label": "power-meter-Plugs_BL2A",
+      "type": "UNTYPED/TYPELESS",
+      "etag": "21b1d9bd"
+    }
+  },
+  "cloud": {
+    "num_id": "2677789415179839"
+  },
+  "relationships": {
+    "6cf23efd-19bd-4564-9360-ed0033f3f18c": {
+      "CONTAINS": [
+        {}
+      ]
+    }
+  }
+}

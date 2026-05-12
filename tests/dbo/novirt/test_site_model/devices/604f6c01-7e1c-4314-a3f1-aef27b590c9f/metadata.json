@@ -1,0 +1,98 @@
+{
+  "timestamp": "2026-05-12T23:24:19Z",
+  "version": "1.5.3",
+  "system": {
+    "name": "PCH S2"
+  },
+  "externals": {
+    "dbo": {
+      "ext_id": "604f6c01-7e1c-4314-a3f1-aef27b590c9f",
+      "label": "Process Chilled Water / San Antonio",
+      "type": "HVAC/CH_SS_SGTC_GRISOVM_CWSISOVM",
+      "etag": "dd52cbce"
+    }
+  },
+  "cloud": {
+    "num_id": "128447617474685"
+  },
+  "relationships": {
+    "6cf23efd-19bd-4564-9360-ed0033f3f18c": {
+      "CONTAINS": [
+        {}
+      ]
+    }
+  },
+  "pointset": {
+    "points": {
+      "condensing_supply_water_isolation_valve_command": {
+        "ref": "points.condensing_supply_water_isolation_valve_command.present_value",
+        "translation": {
+          "present_value": "points.condensing_supply_water_isolation_valve_command.present_value",
+          "states": {
+            "CLOSED": "0.0",
+            "OPEN": "1.0"
+          }
+        }
+      },
+      "condensing_supply_water_isolation_valve_status": {
+        "ref": "points.condensing_supply_water_isolation_valve_status.present_value",
+        "translation": {
+          "present_value": "points.condensing_supply_water_isolation_valve_status.present_value",
+          "states": {
+            "CLOSED": "0.0",
+            "OPEN": "1.0"
+          }
+        }
+      },
+      "return_glycol_isolation_valve_command": {
+        "ref": "points.return_glycol_isolation_valve_command.present_value",
+        "translation": {
+          "present_value": "points.return_glycol_isolation_valve_command.present_value",
+          "states": {
+            "CLOSED": "0.0",
+            "OPEN": "1.0"
+          }
+        }
+      },
+      "return_glycol_isolation_valve_status": {
+        "ref": "points.return_glycol_isolation_valve_status.present_value",
+        "translation": {
+          "present_value": "points.return_glycol_isolation_valve_status.present_value",
+          "states": {
+            "CLOSED": "0.0",
+            "OPEN": "1.0"
+          }
+        }
+      },
+      "run_command": {
+        "ref": "points.run_command.present_value",
+        "translation": {
+          "present_value": "points.run_command.present_value",
+          "states": {
+            "OFF": "0.0",
+            "ON": "1.0"
+          }
+        }
+      },
+      "run_status": {
+        "translation": "MISSING"
+      },
+      "supply_glycol_temperature_sensor": {
+        "ref": "points.supply_glycol_temperature_sensor.present_value",
+        "units": "degrees-fahrenheit",
+        "translation": {
+          "present_value": "points.supply_glycol_temperature_sensor.present_value",
+          "units": {
+            "key": "pointset.points.supply_glycol_temperature_sensor.unit",
+            "values": {
+              "degrees_fahrenheit": "degrees-fahrenheit"
+            }
+          }
+        }
+      },
+      "supply_glycol_temperature_setpoint": {
+        "translation": "MISSING"
+      }
+    }
+  }
+}

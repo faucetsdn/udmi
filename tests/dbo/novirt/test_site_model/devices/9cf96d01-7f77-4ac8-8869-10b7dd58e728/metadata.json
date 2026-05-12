@@ -1,0 +1,23 @@
+{
+  "timestamp": "2026-05-12T23:24:19Z",
+  "version": "1.5.3",
+  "system": {},
+  "externals": {
+    "dbo": {
+      "ext_id": "9cf96d01-7f77-4ac8-8869-10b7dd58e728",
+      "label": "AC M-3A / M-3B (IDF)",
+      "type": "UNTYPED/TYPELESS",
+      "etag": "e02165b2"
+    }
+  },
+  "cloud": {
+    "num_id": "2793928523887420"
+  },
+  "relationships": {
+    "6cf23efd-19bd-4564-9360-ed0033f3f18c": {
+      "CONTAINS": [
+        {}
+      ]
+    }
+  }
+}

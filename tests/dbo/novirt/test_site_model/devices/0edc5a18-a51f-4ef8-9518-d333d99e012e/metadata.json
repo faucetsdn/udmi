@@ -1,0 +1,23 @@
+{
+  "timestamp": "2026-05-12T23:24:18Z",
+  "version": "1.5.3",
+  "system": {},
+  "externals": {
+    "dbo": {
+      "ext_id": "0edc5a18-a51f-4ef8-9518-d333d99e012e",
+      "label": "power-meter-Lab_BH2G",
+      "type": "UNTYPED/TYPELESS",
+      "etag": "366fb234"
+    }
+  },
+  "cloud": {
+    "num_id": "2744279793997665"
+  },
+  "relationships": {
+    "6cf23efd-19bd-4564-9360-ed0033f3f18c": {
+      "CONTAINS": [
+        {}
+      ]
+    }
+  }
+}

@@ -1,0 +1,20 @@
+{
+  "timestamp": "2026-05-12T23:24:19Z",
+  "version": "1.5.3",
+  "system": {},
+  "externals": {
+    "dbo": {
+      "ext_id": "9eca58ef-f439-4868-a68c-d58e1683a6dc",
+      "label": "ppxrefs",
+      "type": "INFO_TECH/PRNTR",
+      "etag": "cc4c90c1"
+    }
+  },
+  "relationships": {
+    "2184ff7e-76d0-4961-aca5-f3f78c24deea": {
+      "CONTAINS": [
+        {}
+      ]
+    }
+  }
+}

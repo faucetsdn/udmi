@@ -1,0 +1,23 @@
+{
+  "timestamp": "2026-05-12T23:24:19Z",
+  "version": "1.5.3",
+  "system": {},
+  "externals": {
+    "dbo": {
+      "ext_id": "81654852-0883-4f32-9a20-38310a221086",
+      "label": "power-meter-Misc_Elevator05",
+      "type": "UNTYPED/TYPELESS",
+      "etag": "62f41a6f"
+    }
+  },
+  "cloud": {
+    "num_id": "2740154665717044"
+  },
+  "relationships": {
+    "6cf23efd-19bd-4564-9360-ed0033f3f18c": {
+      "CONTAINS": [
+        {}
+      ]
+    }
+  }
+}

@@ -28,7 +28,7 @@ def merge_dbo_config(yaml_file: Path, site_model_dir: Path):
       continue
 
     code = entity.get("code", guid)
-    device_dir = devices_dir / code
+    device_dir = devices_dir / guid
     device_dir.mkdir(parents=True, exist_ok=True)
 
     metadata_path = device_dir / "metadata.json"
@@ -42,12 +42,20 @@ def merge_dbo_config(yaml_file: Path, site_model_dir: Path):
           "version": "1.5.3",
       }
 
+    # System
+    system = metadata.setdefault("system", {})
+    if "display_name" in entity:
+      system["name"] = entity["display_name"]
+
     # Externals
     externals = metadata.setdefault("externals", {})
     dbo = externals.setdefault("dbo", {})
     dbo["ext_id"] = guid
+    dbo["label"] = entity.get("code", guid)
     if "type" in entity:
       dbo["type"] = entity["type"]
+    if "etag" in entity:
+      dbo["etag"] = entity["etag"]
 
     # Cloud
     if "cloud_device_id" in entity:
@@ -58,17 +66,20 @@ def merge_dbo_config(yaml_file: Path, site_model_dir: Path):
     if "connections" in entity:
       relationships = metadata.setdefault("relationships", {})
       for target_guid, rel_data in entity["connections"].items():
-        target_code = guid_to_code.get(target_guid, target_guid)
+        target_code = target_guid
 
         if isinstance(rel_data, str):
           relationships[target_code] = {rel_data: [{}]}
         elif isinstance(rel_data, list):
           rel_dict = {}
           for item in rel_data:
-            item_copy = item.copy()
-            if "type" in item_copy:
-              rel_type = item_copy.pop("type")
-              rel_dict.setdefault(rel_type, []).append(item_copy)
+            if isinstance(item, str):
+              rel_dict.setdefault(item, []).append({})
+            elif isinstance(item, dict):
+              item_copy = item.copy()
+              if "type" in item_copy:
+                rel_type = item_copy.pop("type")
+                rel_dict.setdefault(rel_type, []).append(item_copy)
           relationships[target_code] = rel_dict
 
     # Pointset Translation and Links
@@ -85,6 +96,7 @@ def merge_dbo_config(yaml_file: Path, site_model_dir: Path):
             # Extract the first value from the values dictionary
             udmi_unit = list(pt_dbo["units"]["values"].values())[0]
             pt_udmi["units"] = udmi_unit
+          pt_udmi["translation"] = pt_dbo
 
       if "links" in entity:
         for target_guid, link_map in entity["links"].items():

@@ -100,6 +100,9 @@
       "description": "Virtual equipment mapping linking this local point to a remote point in another device",
       "pattern": "^[-0-9a-zA-Z$]+:[a-z0-9_]+$",
       "examples": ["VAV-3:supply_air_flowrate_sensor"]
+    },
+    "translation": {
+      "$ref": "file:building_translation.json#"
     }
   }
 }

@@ -1,0 +1,23 @@
+{
+  "timestamp": "2026-05-12T23:24:19Z",
+  "version": "1.5.3",
+  "system": {},
+  "externals": {
+    "dbo": {
+      "ext_id": "3e5f5e46-15a3-4fe1-acdf-5111739cdb75",
+      "label": "VAVRH S1-1-36 CO2",
+      "type": "UNTYPED/TYPELESS",
+      "etag": "4f7d7908"
+    }
+  },
+  "cloud": {
+    "num_id": "2741150437081853"
+  },
+  "relationships": {
+    "6cf23efd-19bd-4564-9360-ed0033f3f18c": {
+      "CONTAINS": [
+        {}
+      ]
+    }
+  }
+}

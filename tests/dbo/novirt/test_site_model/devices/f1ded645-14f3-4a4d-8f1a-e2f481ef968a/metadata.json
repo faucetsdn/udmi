@@ -1,0 +1,23 @@
+{
+  "timestamp": "2026-05-12T23:24:19Z",
+  "version": "1.5.3",
+  "system": {},
+  "externals": {
+    "dbo": {
+      "ext_id": "f1ded645-14f3-4a4d-8f1a-e2f481ef968a",
+      "label": "IDF Rm 22656 - VAVCO M2-2-173 & FC M-2 DX",
+      "type": "UNTYPED/TYPELESS",
+      "etag": "b4d9e993"
+    }
+  },
+  "cloud": {
+    "num_id": "2595929672599441"
+  },
+  "relationships": {
+    "6cf23efd-19bd-4564-9360-ed0033f3f18c": {
+      "CONTAINS": [
+        {}
+      ]
+    }
+  }
+}

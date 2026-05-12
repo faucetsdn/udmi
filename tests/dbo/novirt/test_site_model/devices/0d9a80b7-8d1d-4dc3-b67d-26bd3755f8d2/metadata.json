@@ -1,0 +1,98 @@
+{
+  "timestamp": "2026-05-12T23:24:18Z",
+  "version": "1.5.3",
+  "system": {
+    "name": "PCHWP M1B"
+  },
+  "externals": {
+    "dbo": {
+      "ext_id": "0d9a80b7-8d1d-4dc3-b67d-26bd3755f8d2",
+      "label": "Process Chilled Water / 100 Mayfield",
+      "type": "HVAC/PMP_SS_VSC",
+      "etag": "856e1d3a"
+    }
+  },
+  "cloud": {
+    "num_id": "29890487620988"
+  },
+  "relationships": {
+    "6cf23efd-19bd-4564-9360-ed0033f3f18c": {
+      "CONTAINS": [
+        {}
+      ]
+    }
+  },
+  "pointset": {
+    "points": {
+      "current_sensor": {
+        "ref": "points.current_sensor.present_value",
+        "units": "amperes",
+        "translation": {
+          "present_value": "points.current_sensor.present_value",
+          "units": {
+            "key": "pointset.points.current_sensor.unit",
+            "values": {
+              "amperes": "amperes"
+            }
+          }
+        }
+      },
+      "failed_alarm": {
+        "ref": "points.failed_alarm.present_value",
+        "translation": {
+          "present_value": "points.failed_alarm.present_value",
+          "states": {
+            "ACTIVE": "1.0",
+            "INACTIVE": "0.0"
+          }
+        }
+      },
+      "run_command": {
+        "ref": "points.run_command.present_value",
+        "translation": {
+          "present_value": "points.run_command.present_value",
+          "states": {
+            "OFF": "0.0",
+            "ON": "1.0"
+          }
+        }
+      },
+      "run_status": {
+        "ref": "points.run_status.present_value",
+        "translation": {
+          "present_value": "points.run_status.present_value",
+          "states": {
+            "OFF": "0.0",
+            "ON": "1.0"
+          }
+        }
+      },
+      "speed_frequency_sensor": {
+        "ref": "points.speed_frequency_sensor.present_value",
+        "units": "hertz",
+        "translation": {
+          "present_value": "points.speed_frequency_sensor.present_value",
+          "units": {
+            "key": "pointset.points.speed_frequency_sensor.unit",
+            "values": {
+              "hertz": "hertz"
+            }
+          }
+        }
+      },
+      "speed_percentage_command": {
+        "ref": "points.speed_percentage_command.present_value",
+        "units": "percent",
+        "translation": {
+          "present_value": "points.speed_percentage_command.present_value",
+          "units": {
+            "key": "pointset.points.speed_percentage_command.unit",
+            "values": {
+              "percent": "percent"
+            }
+          }
+        }
+      }
+    }
+  }
+}

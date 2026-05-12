@@ -1,0 +1,148 @@
+{
+  "timestamp": "2026-05-12T23:24:19Z",
+  "version": "1.5.3",
+  "system": {
+    "name": "TF S-16"
+  },
+  "externals": {
+    "dbo": {
+      "ext_id": "2c38ae09-d4f6-4e16-ad41-f5d237bf76f1",
+      "label": "TF S-16 Shaft Room 33SE",
+      "type": "HVAC/FAN_SS_DSP",
+      "etag": "fd67772d"
+    }
+  },
+  "cloud": {
+    "num_id": "142050809321416"
+  },
+  "relationships": {
+    "6cf23efd-19bd-4564-9360-ed0033f3f18c": {
+      "CONTAINS": [
+        {}
+      ]
+    }
+  },
+  "pointset": {
+    "points": {
+      "failed_alarm": {
+        "ref": "points.failed_alarm.present_value",
+        "translation": {
+          "present_value": "points.failed_alarm.present_value",
+          "states": {
+            "ACTIVE": "1.0",
+            "INACTIVE": "0.0"
+          }
+        }
+      },
+      "failed_zone_air_temperature_alarm": {
+        "ref": "points.failed_zone_air_temperature_alarm.present_value",
+        "translation": {
+          "present_value": "points.failed_zone_air_temperature_alarm.present_value",
+          "states": {
+            "ACTIVE": "1.0",
+            "INACTIVE": "0.0"
+          }
+        }
+      },
+      "high_zone_air_temperature_alarm": {
+        "ref": "points.high_zone_air_temperature_alarm.present_value",
+        "translation": {
+          "present_value": "points.high_zone_air_temperature_alarm.present_value",
+          "states": {
+            "ACTIVE": "1.0",
+            "INACTIVE": "0.0"
+          }
+        }
+      },
+      "low_zone_air_temperature_alarm": {
+        "ref": "points.low_zone_air_temperature_alarm.present_value",
+        "translation": {
+          "present_value": "points.low_zone_air_temperature_alarm.present_value",
+          "states": {
+            "ACTIVE": "1.0",
+            "INACTIVE": "0.0"
+          }
+        }
+      },
+      "run_command": {
+        "ref": "points.run_command.present_value",
+        "translation": {
+          "present_value": "points.run_command.present_value",
+          "states": {
+            "OFF": "0.0",
+            "ON": "1.0"
+          }
+        }
+      },
+      "run_status": {
+        "ref": "points.run_status.present_value",
+        "translation": {
+          "present_value": "points.run_status.present_value",
+          "states": {
+            "OFF": "0.0",
+            "ON": "1.0"
+          }
+        }
+      },
+      "schedule_run_command": {
+        "ref": "points.schedule_run_command.present_value",
+        "translation": {
+          "present_value": "points.schedule_run_command.present_value",
+          "states": {
+            "OFF": "0.0",
+            "ON": "1.0"
+          }
+        }
+      },
+      "user_occupancy_override_status": {
+        "ref": "points.user_occupancy_override_status.present_value",
+        "translation": {
+          "present_value": "points.user_occupancy_override_status.present_value",
+          "states": {
+            "DISABLED": "0.0",
+            "ENABLED": "1.0"
+          }
+        }
+      },
+      "zone_air_cooling_temperature_setpoint": {
+        "ref": "points.zone_air_cooling_temperature_setpoint.present_value",
+        "units": "degrees-fahrenheit",
+        "translation": {
+          "present_value": "points.zone_air_cooling_temperature_setpoint.present_value",
+          "units": {
+            "key": "pointset.points.zone_air_cooling_temperature_setpoint.unit",
+            "values": {
+              "degrees_fahrenheit": "degrees-fahrenheit"
+            }
+          }
+        }
+      },
+      "zone_air_heating_temperature_setpoint": {
+        "ref": "points.zone_air_heating_temperature_setpoint.present_value",
+        "units": "degrees-fahrenheit",
+        "translation": {
+          "present_value": "points.zone_air_heating_temperature_setpoint.present_value",
+          "units": {
+            "key": "pointset.points.zone_air_heating_temperature_setpoint.unit",
+            "values": {
+              "degrees_fahrenheit": "degrees-fahrenheit"
+            }
+          }
+        }
+      },
+      "zone_air_temperature_sensor": {
+        "ref": "points.zone_air_temperature_sensor.present_value",
+        "units": "degrees-fahrenheit",
+        "translation": {
+          "present_value": "points.zone_air_temperature_sensor.present_value",
+          "units": {
+            "key": "pointset.points.zone_air_temperature_sensor.unit",
+            "values": {
+              "degrees_fahrenheit": "degrees-fahrenheit"
+            }
+          }
+        }
+      }
+    }
+  }
+}

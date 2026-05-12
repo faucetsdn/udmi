@@ -1,0 +1,23 @@
+{
+  "timestamp": "2026-05-12T23:24:19Z",
+  "version": "1.5.3",
+  "system": {},
+  "externals": {
+    "dbo": {
+      "ext_id": "392bf92e-67ee-4b82-b032-09162667cb6a",
+      "label": "Fitness Area Ceiling Fans",
+      "type": "UNTYPED/TYPELESS",
+      "etag": "c8d4ac6f"
+    }
+  },
+  "cloud": {
+    "num_id": "2678510022046842"
+  },
+  "relationships": {
+    "6cf23efd-19bd-4564-9360-ed0033f3f18c": {
+      "CONTAINS": [
+        {}
+      ]
+    }
+  }
+}

@@ -1,0 +1,23 @@
+{
+  "timestamp": "2026-05-12T23:24:18Z",
+  "version": "1.5.3",
+  "system": {},
+  "externals": {
+    "dbo": {
+      "ext_id": "167a104b-10e3-4fae-8874-cf4f4ed612e4",
+      "label": "power-meter-MSB-C_vm",
+      "type": "UNTYPED/TYPELESS",
+      "etag": "ad902f10"
+    }
+  },
+  "cloud": {
+    "num_id": "2572910823742854"
+  },
+  "relationships": {
+    "6cf23efd-19bd-4564-9360-ed0033f3f18c": {
+      "CONTAINS": [
+        {}
+      ]
+    }
+  }
+}

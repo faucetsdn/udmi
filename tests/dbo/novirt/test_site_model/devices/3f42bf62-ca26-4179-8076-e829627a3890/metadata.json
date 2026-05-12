@@ -1,0 +1,20 @@
+{
+  "timestamp": "2026-05-12T23:24:19Z",
+  "version": "1.5.3",
+  "system": {},
+  "externals": {
+    "dbo": {
+      "ext_id": "3f42bf62-ca26-4179-8076-e829627a3890",
+      "label": "mes-test-tc",
+      "type": "INFO_TECH/PRNTR",
+      "etag": "0756c515"
+    }
+  },
+  "relationships": {
+    "bb751535-a674-40ef-80ee-0aa14de3a7b6": {
+      "CONTAINS": [
+        {}
+      ]
+    }
+  }
+}

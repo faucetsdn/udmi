@@ -1,0 +1,23 @@
+{
+  "timestamp": "2026-05-12T23:24:19Z",
+  "version": "1.5.3",
+  "system": {},
+  "externals": {
+    "dbo": {
+      "ext_id": "f7eb1b3b-1dbf-4d88-9d00-4a707883bfcc",
+      "label": "utility-Gas_Cafe",
+      "type": "UNTYPED/TYPELESS",
+      "etag": "8f0c71de"
+    }
+  },
+  "cloud": {
+    "num_id": "2597873000737585"
+  },
+  "relationships": {
+    "6cf23efd-19bd-4564-9360-ed0033f3f18c": {
+      "CONTAINS": [
+        {}
+      ]
+    }
+  }
+}

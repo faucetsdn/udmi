@@ -1,0 +1,23 @@
+{
+  "timestamp": "2026-05-12T23:24:19Z",
+  "version": "1.5.3",
+  "system": {},
+  "externals": {
+    "dbo": {
+      "ext_id": "2c74b37b-a720-4b0c-8065-4dd51e907670",
+      "label": "power-meter-Lighting_BH2B",
+      "type": "UNTYPED/TYPELESS",
+      "etag": "5cfc47d6"
+    }
+  },
+  "cloud": {
+    "num_id": "2766397953530445"
+  },
+  "relationships": {
+    "6cf23efd-19bd-4564-9360-ed0033f3f18c": {
+      "CONTAINS": [
+        {}
+      ]
+    }
+  }
+}

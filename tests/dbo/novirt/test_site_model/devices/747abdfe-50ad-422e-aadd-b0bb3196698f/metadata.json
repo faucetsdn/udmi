@@ -1,0 +1,319 @@
+{
+  "timestamp": "2026-05-12T23:24:19Z",
+  "version": "1.5.3",
+  "system": {
+    "name": "AC M3A"
+  },
+  "externals": {
+    "dbo": {
+      "ext_id": "747abdfe-50ad-422e-aadd-b0bb3196698f",
+      "label": "AC M-3A / M-3B (IDF)",
+      "type": "HVAC/AHU_DFSS_DSP_DXZC_ECONZ",
+      "etag": "4668def0"
+    }
+  },
+  "cloud": {
+    "num_id": "92451765007812"
+  },
+  "relationships": {
+    "6cf23efd-19bd-4564-9360-ed0033f3f18c": {
+      "CONTAINS": [
+        {}
+      ]
+    }
+  },
+  "pointset": {
+    "points": {
+      "compressor_run_command": {
+        "ref": "points.compressor_run_command.present_value",
+        "translation": {
+          "present_value": "points.compressor_run_command.present_value",
+          "states": {
+            "OFF": "0.0",
+            "ON": "1.0"
+          }
+        }
+      },
+      "compressor_run_status": {
+        "translation": "MISSING"
+      },
+      "discharge_air_temperature_sensor": {
+        "ref": "points.discharge_air_temperature_sensor.present_value",
+        "units": "degrees-fahrenheit",
+        "translation": {
+          "present_value": "points.discharge_air_temperature_sensor.present_value",
+          "units": {
+            "key": "pointset.points.discharge_air_temperature_sensor.unit",
+            "values": {
+              "degrees_fahrenheit": "degrees-fahrenheit"
+            }
+          }
+        }
+      },
+      "discharge_fan_run_command": {
+        "ref": "points.discharge_fan_run_command.present_value",
+        "translation": {
+          "present_value": "points.discharge_fan_run_command.present_value",
+          "states": {
+            "OFF": "0.0",
+            "ON": "1.0"
+          }
+        }
+      },
+      "discharge_fan_run_status": {
+        "ref": "points.discharge_fan_run_status.present_value",
+        "translation": {
+          "present_value": "points.discharge_fan_run_status.present_value",
+          "states": {
+            "OFF": "0.0",
+            "ON": "1.0"
+          }
+        }
+      },
+      "economizer_mode": {
+        "ref": "points.economizer_mode.present_value",
+        "translation": {
+          "present_value": "points.economizer_mode.present_value",
+          "states": {
+            "OFF": "0.0",
+            "ON": "1.0"
+          }
+        }
+      },
+      "failed_discharge_fan_alarm": {
+        "ref": "points.failed_discharge_fan_alarm.present_value",
+        "translation": {
+          "present_value": "points.failed_discharge_fan_alarm.present_value",
+          "states": {
+            "ACTIVE": "1.0",
+            "INACTIVE": "0.0"
+          }
+        }
+      },
+      "failed_zone_air_relative_humidity_alarm": {
+        "ref": "points.failed_zone_air_relative_humidity_alarm.present_value",
+        "translation": {
+          "present_value": "points.failed_zone_air_relative_humidity_alarm.present_value",
+          "states": {
+            "ACTIVE": "1.0",
+            "INACTIVE": "0.0"
+          }
+        }
+      },
+      "failed_zone_air_temperature_alarm": {
+        "ref": "points.failed_zone_air_temperature_alarm.present_value",
+        "translation": {
+          "present_value": "points.failed_zone_air_temperature_alarm.present_value",
+          "states": {
+            "ACTIVE": "1.0",
+            "INACTIVE": "0.0"
+          }
+        }
+      },
+      "high_discharge_air_temperature_alarm": {
+        "ref": "points.high_discharge_air_temperature_alarm.present_value",
+        "translation": {
+          "present_value": "points.high_discharge_air_temperature_alarm.present_value",
+          "states": {
+            "ACTIVE": "1.0",
+            "INACTIVE": "0.0"
+          }
+        }
+      },
+      "high_return_air_temperature_alarm": {
+        "ref": "points.high_return_air_temperature_alarm.present_value",
+        "translation": {
+          "present_value": "points.high_return_air_temperature_alarm.present_value",
+          "states": {
+            "ACTIVE": "1.0",
+            "INACTIVE": "0.0"
+          }
+        }
+      },
+      "high_zone_air_relative_humidity_alarm": {
+        "ref": "points.high_zone_air_relative_humidity_alarm.present_value",
+        "translation": {
+          "present_value": "points.high_zone_air_relative_humidity_alarm.present_value",
+          "states": {
+            "ACTIVE": "1.0",
+            "INACTIVE": "0.0"
+          }
+        }
+      },
+      "high_zone_air_temperature_alarm": {
+        "ref": "points.high_zone_air_temperature_alarm.present_value",
+        "translation": {
+          "present_value": "points.high_zone_air_temperature_alarm.present_value",
+          "states": {
+            "ACTIVE": "1.0",
+            "INACTIVE": "0.0"
+          }
+        }
+      },
+      "low_discharge_air_temperature_alarm": {
+        "ref": "points.low_discharge_air_temperature_alarm.present_value",
+        "translation": {
+          "present_value": "points.low_discharge_air_temperature_alarm.present_value",
+          "states": {
+            "ACTIVE": "1.0",
+            "INACTIVE": "0.0"
+          }
+        }
+      },
+      "low_limit_outside_air_damper_percentage_command": {
+        "ref": "points.low_limit_outside_air_damper_percentage_command.present_value",
+        "units": "percent",
+        "translation": {
+          "present_value": "points.low_limit_outside_air_damper_percentage_command.present_value",
+          "units": {
+            "key": "pointset.points.low_limit_outside_air_damper_percentage_command.unit",
+            "values": {
+              "percent": "percent"
+            }
+          }
+        }
+      },
+      "low_return_air_temperature_alarm": {
+        "ref": "points.low_return_air_temperature_alarm.present_value",
+        "translation": {
+          "present_value": "points.low_return_air_temperature_alarm.present_value",
+          "states": {
+            "ACTIVE": "1.0",
+            "INACTIVE": "0.0"
+          }
+        }
+      },
+      "low_zone_air_relative_humidity_alarm": {
+        "ref": "points.low_zone_air_relative_humidity_alarm.present_value",
+        "translation": {
+          "present_value": "points.low_zone_air_relative_humidity_alarm.present_value",
+          "states": {
+            "ACTIVE": "1.0",
+            "INACTIVE": "0.0"
+          }
+        }
+      },
+      "low_zone_air_temperature_alarm": {
+        "ref": "points.low_zone_air_temperature_alarm.present_value",
+        "translation": {
+          "present_value": "points.low_zone_air_temperature_alarm.present_value",
+          "states": {
+            "ACTIVE": "1.0",
+            "INACTIVE": "0.0"
+          }
+        }
+      },
+      "outside_air_damper_percentage_command": {
+        "ref": "points.outside_air_damper_percentage_command.present_value",
+        "units": "percent",
+        "translation": {
+          "present_value": "points.outside_air_damper_percentage_command.present_value",
+          "units": {
+            "key": "pointset.points.outside_air_damper_percentage_command.unit",
+            "values": {
+              "percent": "percent"
+            }
+          }
+        }
+      },
+      "outside_air_temperature_sensor": {
+        "ref": "points.outside_air_temperature_sensor.present_value",
+        "units": "degrees-fahrenheit",
+        "translation": {
+          "present_value": "points.outside_air_temperature_sensor.present_value",
+          "units": {
+            "key": "pointset.points.outside_air_temperature_sensor.unit",
+            "values": {
+              "degrees_fahrenheit": "degrees-fahrenheit"
+            }
+          }
+        }
+      },
+      "return_air_temperature_sensor": {
+        "ref": "points.return_air_temperature_sensor.present_value",
+        "units": "degrees-fahrenheit",
+        "translation": {
+          "present_value": "points.return_air_temperature_sensor.present_value",
+          "units": {
+            "key": "pointset.points.return_air_temperature_sensor.unit",
+            "values": {
+              "degrees_fahrenheit": "degrees-fahrenheit"
+            }
+          }
+        }
+      },
+      "schedule_run_command": {
+        "ref": "points.schedule_run_command.present_value",
+        "translation": {
+          "present_value": "points.schedule_run_command.present_value",
+          "states": {
+            "OFF": "0.0",
+            "ON": "1.0"
+          }
+        }
+      },
+      "user_occupancy_override_status": {
+        "ref": "points.user_occupancy_override_status.present_value",
+        "translation": {
+          "present_value": "points.user_occupancy_override_status.present_value",
+          "states": {
+            "DISABLED": "0.0",
+            "ENABLED": "1.0"
+          }
+        }
+      },
+      "zone_air_cooling_temperature_setpoint": {
+        "ref": "points.zone_air_cooling_temperature_setpoint.present_value",
+        "units": "degrees-fahrenheit",
+        "translation": {
+          "present_value": "points.zone_air_cooling_temperature_setpoint.present_value",
+          "units": {
+            "key": "pointset.points.zone_air_cooling_temperature_setpoint.unit",
+            "values": {
+              "degrees_fahrenheit": "degrees-fahrenheit"
+            }
+          }
+        }
+      },
+      "zone_air_heating_temperature_setpoint": {
+        "ref": "points.zone_air_heating_temperature_setpoint.present_value",
+        "units": "degrees-fahrenheit",
+        "translation": {
+          "present_value": "points.zone_air_heating_temperature_setpoint.present_value",
+          "units": {
+            "key": "pointset.points.zone_air_heating_temperature_setpoint.unit",
+            "values": {
+              "degrees_fahrenheit": "degrees-fahrenheit"
+            }
+          }
+        }
+      },
+      "zone_air_relative_humidity_sensor": {
+        "ref": "points.zone_air_relative_humidity_sensor.present_value",
+        "units": "percent-relative-humidity",
+        "translation": {
+          "present_value": "points.zone_air_relative_humidity_sensor.present_value",
+          "units": {
+            "key": "pointset.points.zone_air_relative_humidity_sensor.unit",
+            "values": {
+              "percent_relative_humidity": "percent-relative-humidity"
+            }
+          }
+        }
+      },
+      "zone_air_temperature_sensor": {
+        "ref": "points.zone_air_temperature_sensor.present_value",
+        "units": "degrees-fahrenheit",
+        "translation": {
+          "present_value": "points.zone_air_temperature_sensor.present_value",
+          "units": {
+            "key": "pointset.points.zone_air_temperature_sensor.unit",
+            "values": {
+              "degrees_fahrenheit": "degrees-fahrenheit"
+            }
+          }
+        }
+      }
+    }
+  }
+}

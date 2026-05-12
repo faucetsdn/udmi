@@ -1,0 +1,288 @@
+{
+  "timestamp": "2026-05-12T23:24:18Z",
+  "version": "1.5.3",
+  "system": {
+    "name": "VAVRH S1-1-36 CO2"
+  },
+  "externals": {
+    "dbo": {
+      "ext_id": "05c227db-b611-4bc2-b4d3-65ce8229a00d",
+      "label": "VAVRH S1-1-36 CO2",
+      "type": "HVAC/VAV_SD_DSP_HWDC_CO2M",
+      "etag": "bbcdb53a"
+    }
+  },
+  "cloud": {
+    "num_id": "107431118455890"
+  },
+  "relationships": {
+    "6cf23efd-19bd-4564-9360-ed0033f3f18c": {
+      "CONTAINS": [
+        {}
+      ]
+    }
+  },
+  "pointset": {
+    "points": {
+      "cooling_request_count": {
+        "ref": "points.cooling_request_count.present_value",
+        "units": "no-units",
+        "translation": {
+          "present_value": "points.cooling_request_count.present_value",
+          "units": {
+            "key": "pointset.points.cooling_request_count.unit",
+            "values": {
+              "no_units": "no-units"
+            }
+          }
+        }
+      },
+      "discharge_air_temperature_sensor": {
+        "ref": "points.discharge_air_temperature_sensor.present_value",
+        "units": "degrees-fahrenheit",
+        "translation": {
+          "present_value": "points.discharge_air_temperature_sensor.present_value",
+          "units": {
+            "key": "pointset.points.discharge_air_temperature_sensor.unit",
+            "values": {
+              "degrees_fahrenheit": "degrees-fahrenheit"
+            }
+          }
+        }
+      },
+      "discharge_air_temperature_setpoint": {
+        "translation": "MISSING"
+      },
+      "failed_zone_air_co2_concentration_alarm": {
+        "ref": "points.failed_zone_air_co2_concentration_alarm.present_value",
+        "translation": {
+          "present_value": "points.failed_zone_air_co2_concentration_alarm.present_value",
+          "states": {
+            "ACTIVE": "1.0",
+            "INACTIVE": "0.0"
+          }
+        }
+      },
+      "failed_zone_air_temperature_alarm": {
+        "ref": "points.failed_zone_air_temperature_alarm.present_value",
+        "translation": {
+          "present_value": "points.failed_zone_air_temperature_alarm.present_value",
+          "states": {
+            "ACTIVE": "1.0",
+            "INACTIVE": "0.0"
+          }
+        }
+      },
+      "heating_request_count": {
+        "ref": "points.heating_request_count.present_value",
+        "units": "no-units",
+        "translation": {
+          "present_value": "points.heating_request_count.present_value",
+          "units": {
+            "key": "pointset.points.heating_request_count.unit",
+            "values": {
+              "no_units": "no-units"
+            }
+          }
+        }
+      },
+      "heating_water_valve_percentage_command": {
+        "ref": "points.heating_water_valve_percentage_command.present_value",
+        "units": "percent",
+        "translation": {
+          "present_value": "points.heating_water_valve_percentage_command.present_value",
+          "units": {
+            "key": "pointset.points.heating_water_valve_percentage_command.unit",
+            "values": {
+              "percent": "percent"
+            }
+          }
+        }
+      },
+      "high_supply_air_flowrate_alarm": {
+        "ref": "points.high_supply_air_flowrate_alarm.present_value",
+        "translation": {
+          "present_value": "points.high_supply_air_flowrate_alarm.present_value",
+          "states": {
+            "ACTIVE": "1.0",
+            "INACTIVE": "0.0"
+          }
+        }
+      },
+      "high_zone_air_co2_concentration_alarm": {
+        "ref": "points.high_zone_air_co2_concentration_alarm.present_value",
+        "translation": {
+          "present_value": "points.high_zone_air_co2_concentration_alarm.present_value",
+          "states": {
+            "ACTIVE": "1.0",
+            "INACTIVE": "0.0"
+          }
+        }
+      },
+      "high_zone_air_temperature_alarm": {
+        "ref": "points.high_zone_air_temperature_alarm.present_value",
+        "translation": {
+          "present_value": "points.high_zone_air_temperature_alarm.present_value",
+          "states": {
+            "ACTIVE": "1.0",
+            "INACTIVE": "0.0"
+          }
+        }
+      },
+      "low_supply_air_flowrate_alarm": {
+        "ref": "points.low_supply_air_flowrate_alarm.present_value",
+        "translation": {
+          "present_value": "points.low_supply_air_flowrate_alarm.present_value",
+          "states": {
+            "ACTIVE": "1.0",
+            "INACTIVE": "0.0"
+          }
+        }
+      },
+      "low_zone_air_temperature_alarm": {
+        "ref": "points.low_zone_air_temperature_alarm.present_value",
+        "translation": {
+          "present_value": "points.low_zone_air_temperature_alarm.present_value",
+          "states": {
+            "ACTIVE": "1.0",
+            "INACTIVE": "0.0"
+          }
+        }
+      },
+      "pressurization_request_count": {
+        "ref": "points.pressurization_request_count.present_value",
+        "units": "no-units",
+        "translation": {
+          "present_value": "points.pressurization_request_count.present_value",
+          "units": {
+            "key": "pointset.points.pressurization_request_count.unit",
+            "values": {
+              "no_units": "no-units"
+            }
+          }
+        }
+      },
+      "schedule_run_command": {
+        "ref": "points.schedule_run_command.present_value",
+        "translation": {
+          "present_value": "points.schedule_run_command.present_value",
+          "states": {
+            "OFF": "0.0",
+            "ON": "1.0"
+          }
+        }
+      },
+      "supply_air_damper_percentage_command": {
+        "ref": "points.supply_air_damper_percentage_command.present_value",
+        "units": "percent",
+        "translation": {
+          "present_value": "points.supply_air_damper_percentage_command.present_value",
+          "units": {
+            "key": "pointset.points.supply_air_damper_percentage_command.unit",
+            "values": {
+              "percent": "percent"
+            }
+          }
+        }
+      },
+      "supply_air_flowrate_sensor": {
+        "ref": "points.supply_air_flowrate_sensor.present_value",
+        "units": "cubic-feet-per-minute",
+        "translation": {
+          "present_value": "points.supply_air_flowrate_sensor.present_value",
+          "units": {
+            "key": "pointset.points.supply_air_flowrate_sensor.unit",
+            "values": {
+              "cubic_feet_per_minute": "cubic-feet-per-minute"
+            }
+          }
+        }
+      },
+      "supply_air_flowrate_setpoint": {
+        "ref": "points.supply_air_flowrate_setpoint.present_value",
+        "units": "cubic-feet-per-minute",
+        "translation": {
+          "present_value": "points.supply_air_flowrate_setpoint.present_value",
+          "units": {
+            "key": "pointset.points.supply_air_flowrate_setpoint.unit",
+            "values": {
+              "cubic_feet_per_minute": "cubic-feet-per-minute"
+            }
+          }
+        }
+      },
+      "user_occupancy_override_status": {
+        "ref": "points.user_occupancy_override_status.present_value",
+        "translation": {
+          "present_value": "points.user_occupancy_override_status.present_value",
+          "states": {
+            "DISABLED": "0.0",
+            "ENABLED": "1.0"
+          }
+        }
+      },
+      "warmup_run_command": {
+        "ref": "points.warmup_run_command.present_value",
+        "translation": {
+          "present_value": "points.warmup_run_command.present_value",
+          "states": {
+            "OFF": "0.0",
+            "ON": "1.0"
+          }
+        }
+      },
+      "zone_air_co2_concentration_sensor": {
+        "ref": "points.zone_air_co2_concentration_sensor.present_value",
+        "units": "parts-per-million",
+        "translation": {
+          "present_value": "points.zone_air_co2_concentration_sensor.present_value",
+          "units": {
+            "key": "pointset.points.zone_air_co2_concentration_sensor.unit",
+            "values": {
+              "parts_per_million": "parts-per-million"
+            }
+          }
+        }
+      },
+      "zone_air_cooling_temperature_setpoint": {
+        "ref": "points.zone_air_cooling_temperature_setpoint.present_value",
+        "units": "degrees-fahrenheit",
+        "translation": {
+          "present_value": "points.zone_air_cooling_temperature_setpoint.present_value",
+          "units": {
+            "key": "pointset.points.zone_air_cooling_temperature_setpoint.unit",
+            "values": {
+              "degrees_fahrenheit": "degrees-fahrenheit"
+            }
+          }
+        }
+      },
+      "zone_air_heating_temperature_setpoint": {
+        "ref": "points.zone_air_heating_temperature_setpoint.present_value",
+        "units": "degrees-fahrenheit",
+        "translation": {
+          "present_value": "points.zone_air_heating_temperature_setpoint.present_value",
+          "units": {
+            "key": "pointset.points.zone_air_heating_temperature_setpoint.unit",
+            "values": {
+              "degrees_fahrenheit": "degrees-fahrenheit"
+            }
+          }
+        }
+      },
+      "zone_air_temperature_sensor": {
+        "ref": "points.zone_air_temperature_sensor.present_value",
+        "units": "degrees-fahrenheit",
+        "translation": {
+          "present_value": "points.zone_air_temperature_sensor.present_value",
+          "units": {
+            "key": "pointset.points.zone_air_temperature_sensor.unit",
+            "values": {
+              "degrees_fahrenheit": "degrees-fahrenheit"
+            }
+          }
+        }
+      }
+    }
+  }
+}

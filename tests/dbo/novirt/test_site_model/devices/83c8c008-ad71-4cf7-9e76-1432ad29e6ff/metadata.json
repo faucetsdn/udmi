@@ -1,0 +1,257 @@
+{
+  "timestamp": "2026-05-12T23:24:19Z",
+  "version": "1.5.3",
+  "system": {
+    "name": "PCW SYSTEM M10"
+  },
+  "externals": {
+    "dbo": {
+      "ext_id": "83c8c008-ad71-4cf7-9e76-1432ad29e6ff",
+      "label": "Process Cooling Water PCW-10",
+      "type": "HVAC/CHWS_SWTC_WDPC_SWPC_WFRM_FDPM3X_UVFDPM_PLWVERC",
+      "etag": "7bc6bdb9"
+    }
+  },
+  "cloud": {
+    "num_id": "86644936999456"
+  },
+  "relationships": {
+    "6cf23efd-19bd-4564-9360-ed0033f3f18c": {
+      "CONTAINS": [
+        {}
+      ]
+    }
+  },
+  "pointset": {
+    "points": {
+      "differential_pressure_sensor": {
+        "ref": "points.differential_pressure_sensor.present_value",
+        "units": "pounds-force-per-square-inch",
+        "translation": {
+          "present_value": "points.differential_pressure_sensor.present_value",
+          "units": {
+            "key": "pointset.points.differential_pressure_sensor.unit",
+            "values": {
+              "pounds_force_per_square_inch": "pounds-force-per-square-inch"
+            }
+          }
+        }
+      },
+      "differential_pressure_setpoint": {
+        "ref": "points.differential_pressure_setpoint.present_value",
+        "units": "pounds-force-per-square-inch",
+        "translation": {
+          "present_value": "points.differential_pressure_setpoint.present_value",
+          "units": {
+            "key": "pointset.points.differential_pressure_setpoint.unit",
+            "values": {
+              "pounds_force_per_square_inch": "pounds-force-per-square-inch"
+            }
+          }
+        }
+      },
+      "filter_differential_pressure_sensor_1": {
+        "ref": "points.filter_differential_pressure_sensor_1.present_value",
+        "units": "inches-of-water",
+        "translation": {
+          "present_value": "points.filter_differential_pressure_sensor_1.present_value",
+          "units": {
+            "key": "pointset.points.filter_differential_pressure_sensor_1.unit",
+            "values": {
+              "inches_of_water": "inches-of-water"
+            }
+          }
+        }
+      },
+      "filter_differential_pressure_sensor_2": {
+        "ref": "points.filter_differential_pressure_sensor_2.present_value",
+        "units": "inches-of-water",
+        "translation": {
+          "present_value": "points.filter_differential_pressure_sensor_2.present_value",
+          "units": {
+            "key": "pointset.points.filter_differential_pressure_sensor_2.unit",
+            "values": {
+              "inches_of_water": "inches-of-water"
+            }
+          }
+        }
+      },
+      "filter_differential_pressure_sensor_3": {
+        "ref": "points.filter_differential_pressure_sensor_3.present_value",
+        "units": "inches-of-water",
+        "translation": {
+          "present_value": "points.filter_differential_pressure_sensor_3.present_value",
+          "units": {
+            "key": "pointset.points.filter_differential_pressure_sensor_3.unit",
+            "values": {
+              "inches_of_water": "inches-of-water"
+            }
+          }
+        }
+      },
+      "flowrate_sensor": {
+        "ref": "points.flowrate_sensor.present_value",
+        "units": "us-gallons-per-minute",
+        "translation": {
+          "present_value": "points.flowrate_sensor.present_value",
+          "units": {
+            "key": "pointset.points.flowrate_sensor.unit",
+            "values": {
+              "us_gallons_per_minute": "us-gallons-per-minute"
+            }
+          }
+        }
+      },
+      "high_supply_water_temperature_alarm": {
+        "ref": "points.high_supply_water_temperature_alarm.present_value",
+        "translation": {
+          "present_value": "points.high_supply_water_temperature_alarm.present_value",
+          "states": {
+            "ACTIVE": "1.0",
+            "INACTIVE": "0.0"
+          }
+        }
+      },
+      "low_supply_water_temperature_alarm": {
+        "ref": "points.low_supply_water_temperature_alarm.present_value",
+        "translation": {
+          "present_value": "points.low_supply_water_temperature_alarm.present_value",
+          "states": {
+            "ACTIVE": "1.0",
+            "INACTIVE": "0.0"
+          }
+        }
+      },
+      "polished_water_electricconductivity_sensor": {
+        "ref": "points.polished_water_electricconductivity_sensor.present_value",
+        "units": "microsiemens-per-centimeter",
+        "translation": {
+          "present_value": "points.polished_water_electricconductivity_sensor.present_value",
+          "units": {
+            "key": "pointset.points.polished_water_electricconductivity_sensor.unit",
+            "values": {
+              "microsiemens_per_centimeter": "microsiemens-per-centimeter"
+            }
+          }
+        }
+      },
+      "polished_water_electricconductivity_setpoint": {
+        "ref": "points.polished_water_electricconductivity_setpoint.present_value",
+        "units": "microsiemens-per-centimeter",
+        "translation": {
+          "present_value": "points.polished_water_electricconductivity_setpoint.present_value",
+          "units": {
+            "key": "pointset.points.polished_water_electricconductivity_setpoint.unit",
+            "values": {
+              "microsiemens_per_centimeter": "microsiemens-per-centimeter"
+            }
+          }
+        }
+      },
+      "polished_water_electricresistivity_sensor": {
+        "ref": "points.polished_water_electricresistivity_sensor.present_value",
+        "units": "kiloohm-centimeters",
+        "translation": {
+          "present_value": "points.polished_water_electricresistivity_sensor.present_value",
+          "units": {
+            "key": "pointset.points.polished_water_electricresistivity_sensor.unit",
+            "values": {
+              "kiloohm_centimeters": "kiloohm-centimeters"
+            }
+          }
+        }
+      },
+      "polished_water_electricresistivity_setpoint": {
+        "ref": "points.polished_water_electricresistivity_setpoint.present_value",
+        "units": "kiloohm-centimeters",
+        "translation": {
+          "present_value": "points.polished_water_electricresistivity_setpoint.present_value",
+          "units": {
+            "key": "pointset.points.polished_water_electricresistivity_setpoint.unit",
+            "values": {
+              "kiloohm_centimeters": "kiloohm-centimeters"
+            }
+          }
+        }
+      },
+      "polished_water_isolation_valve_command": {
+        "ref": "points.polished_water_isolation_valve_command.present_value",
+        "translation": {
+          "present_value": "points.polished_water_isolation_valve_command.present_value",
+          "states": {
+            "CLOSED": "0.0",
+            "OPEN": "1.0"
+          }
+        }
+      },
+      "return_water_temperature_sensor": {
+        "ref": "points.return_water_temperature_sensor.present_value",
+        "units": "degrees-fahrenheit",
+        "translation": {
+          "present_value": "points.return_water_temperature_sensor.present_value",
+          "units": {
+            "key": "pointset.points.return_water_temperature_sensor.unit",
+            "values": {
+              "degrees_fahrenheit": "degrees-fahrenheit"
+            }
+          }
+        }
+      },
+      "supply_water_pressure_sensor": {
+        "ref": "points.supply_water_pressure_sensor.present_value",
+        "units": "pounds-force-per-square-inch",
+        "translation": {
+          "present_value": "points.supply_water_pressure_sensor.present_value",
+          "units": {
+            "key": "pointset.points.supply_water_pressure_sensor.unit",
+            "values": {
+              "pounds_force_per_square_inch": "pounds-force-per-square-inch"
+            }
+          }
+        }
+      },
+      "supply_water_pressure_setpoint": {
+        "translation": "MISSING"
+      },
+      "supply_water_temperature_sensor": {
+        "ref": "points.supply_water_temperature_sensor.present_value",
+        "units": "degrees-fahrenheit",
+        "translation": {
+          "present_value": "points.supply_water_temperature_sensor.present_value",
+          "units": {
+            "key": "pointset.points.supply_water_temperature_sensor.unit",
+            "values": {
+              "degrees_fahrenheit": "degrees-fahrenheit"
+            }
+          }
+        }
+      },
+      "supply_water_temperature_setpoint": {
+        "ref": "points.supply_water_temperature_setpoint.present_value",
+        "units": "degrees-fahrenheit",
+        "translation": {
+          "present_value": "points.supply_water_temperature_setpoint.present_value",
+          "units": {
+            "key": "pointset.points.supply_water_temperature_setpoint.unit",
+            "values": {
+              "degrees_fahrenheit": "degrees-fahrenheit"
+            }
+          }
+        }
+      },
+      "ultraviolet_filter_differential_pressure_sensor": {
+        "ref": "points.ultraviolet_filter_differential_pressure_sensor.present_value",
+        "units": "inches-of-water",
+        "translation": {
+          "present_value": "points.ultraviolet_filter_differential_pressure_sensor.present_value",
+          "units": {
+            "key": "pointset.points.ultraviolet_filter_differential_pressure_sensor.unit",
+            "values": {
+              "inches_of_water": "inches-of-water"
+            }
+          }
+        }
+      }
+    }
+  }
+}

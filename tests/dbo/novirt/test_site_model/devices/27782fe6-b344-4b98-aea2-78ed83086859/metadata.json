@@ -1,0 +1,88 @@
+{
+  "timestamp": "2026-05-12T23:24:19Z",
+  "version": "1.5.3",
+  "system": {
+    "name": "MAU M8"
+  },
+  "externals": {
+    "dbo": {
+      "ext_id": "27782fe6-b344-4b98-aea2-78ed83086859",
+      "label": "MAU-8 / Marketplace Cafe Area 11510M & Storage Rm.1151F&G & Elect. Rm.11510E",
+      "type": "HVAC/FAN_VSC_DFM",
+      "etag": "2fa122ef"
+    }
+  },
+  "cloud": {
+    "num_id": "269380335263966"
+  },
+  "relationships": {
+    "6cf23efd-19bd-4564-9360-ed0033f3f18c": {
+      "CONTAINS": [
+        {}
+      ]
+    }
+  },
+  "pointset": {
+    "points": {
+      "discharge_air_flowrate_sensor": {
+        "ref": "points.discharge_air_flowrate_sensor.present_value",
+        "units": "cubic-feet-per-minute",
+        "translation": {
+          "present_value": "points.discharge_air_flowrate_sensor.present_value",
+          "units": {
+            "key": "pointset.points.discharge_air_flowrate_sensor.unit",
+            "values": {
+              "cubic_feet_per_minute": "cubic-feet-per-minute"
+            }
+          }
+        }
+      },
+      "run_command": {
+        "ref": "points.run_command.present_value",
+        "translation": {
+          "present_value": "points.run_command.present_value",
+          "states": {
+            "OFF": "0.0",
+            "ON": "1.0"
+          }
+        }
+      },
+      "run_status": {
+        "ref": "points.run_status.present_value",
+        "translation": {
+          "present_value": "points.run_status.present_value",
+          "states": {
+            "OFF": "0.0",
+            "ON": "1.0"
+          }
+        }
+      },
+      "speed_frequency_sensor": {
+        "ref": "points.speed_frequency_sensor.present_value",
+        "units": "hertz",
+        "translation": {
+          "present_value": "points.speed_frequency_sensor.present_value",
+          "units": {
+            "key": "pointset.points.speed_frequency_sensor.unit",
+            "values": {
+              "hertz": "hertz"
+            }
+          }
+        }
+      },
+      "speed_percentage_command": {
+        "ref": "points.speed_percentage_command.present_value",
+        "units": "percent",
+        "translation": {
+          "present_value": "points.speed_percentage_command.present_value",
+          "units": {
+            "key": "pointset.points.speed_percentage_command.unit",
+            "values": {
+              "percent": "percent"
+            }
+          }
+        }
+      }
+    }
+  }
+}
