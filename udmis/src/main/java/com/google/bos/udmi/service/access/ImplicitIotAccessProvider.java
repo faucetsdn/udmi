@@ -64,10 +64,19 @@ import udmi.schema.IotAccess.IotProvider;
 
 /**
  * Iot Access Provider that uses internal components.
+ *
+ * <p>Supported options:
+ * <ul>
+ * <li><code>force_password</code>: If true, sets the password for all devices to "unused".
+ * This is used when authentication is handled by an external proxy, and Mosquitto
+ * still needs to enforce ACLs based on username.</li>
+ * </ul>
  */
 public class ImplicitIotAccessProvider extends IotAccessBase {
 
+  public static final String UNUSED_PASSWORD = "unused";
   private static final String CONFIG_VER_KEY = "config_ver";
+  private static final String FORCE_PASSWORD_KEY = "force_password";
   private static final String LAST_CONFIG_KEY = "last_config";
   private static final String LAST_STATE_KEY = "last_state";
   private static final String DEVICES_ACTIVE = "active";
@@ -87,6 +96,7 @@ public class ImplicitIotAccessProvider extends IotAccessBase {
   private static final String METADATA_STR_KEY = "metadata_str";
   private static final String RESOURCE_TYPE_PROPERTY = "resource_type";
   private final boolean enabled;
+  private final boolean forcePassword;
   private final ConnectionBroker broker = new MosquittoBroker(this);
   private final Future<Void> connLogger;
   private IotDataProvider database;
@@ -99,6 +109,7 @@ public class ImplicitIotAccessProvider extends IotAccessBase {
   public ImplicitIotAccessProvider(IotAccess iotAccess) {
     super(iotAccess);
     enabled = isNullOrNotEmpty(options.get(ENABLED_KEY));
+    forcePassword = Boolean.parseBoolean(options.get(FORCE_PASSWORD_KEY));
     connLogger = broker.addEventListener(CLIENT_PREFIX, this::brokerHandler);
   }
 
@@ -224,9 +235,13 @@ public class ImplicitIotAccessProvider extends IotAccessBase {
       properties.put(AUTH_KEY_PROPERTY, cred.key_data);
       properties.put(AUTH_TYPE_PROPERTY, cred.key_format.value());
     }));
-    ifNotNullThen(cloudModel.password, password -> {
-      properties.put(AUTH_PASSWORD_PROPERTY, password);
-    });
+    if (forcePassword) {
+      properties.put(AUTH_PASSWORD_PROPERTY, UNUSED_PASSWORD);
+    } else {
+      ifNotNullThen(cloudModel.password, password -> {
+        properties.put(AUTH_PASSWORD_PROPERTY, password);
+      });
+    }
     return properties;
   }
 
