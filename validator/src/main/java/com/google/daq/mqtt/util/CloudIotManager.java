@@ -229,17 +229,16 @@ public class CloudIotManager {
   }
 
   private void coerceCredentialsToPassword(String deviceId, CloudDeviceSettings settings) {
-    // TODO: Make this less ugly/hacky. Ick.
-    settings.credentials.forEach(credential -> {
+    if (settings.credentials != null && !settings.credentials.isEmpty()) {
+      Credential credential = settings.credentials.get(0);
       try {
         String prefix = getCredentialPrefix(credential.key_format);
-        credential.key_format = Key_format.PASSWORD;
         File privateKey = new File(siteModel, format(PRIVATE_KEY_BYTES_FMT, deviceId, prefix));
-        credential.key_data = makePassword(readAllBytes(privateKey.toPath()));
+        settings.password = makePassword(readAllBytes(privateKey.toPath()));
       } catch (Exception e) {
-        throw new RuntimeException("While coercing credential for " + deviceId, e);
+        throw new RuntimeException("While generating password for " + deviceId, e);
       }
-    });
+    }
   }
 
   private String getCredentialPrefix(Key_format keyFormat) {
@@ -290,6 +289,7 @@ public class CloudIotManager {
     CloudModel cloudModel = new CloudModel();
     cloudModel.resource_type = gatewayIfTrue(settings.proxyDevices != null);
     cloudModel.credentials = getCredentials(settings);
+    cloudModel.password = settings.password;
     cloudModel.metadata = metadataMap;
     cloudModel.num_id = settings.deviceNumId;
     cloudModel.blocked = settings.blocked;

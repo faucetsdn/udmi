@@ -80,6 +80,8 @@ public class ImplicitIotAccessProvider extends IotAccessBase {
   private static final String CLIENT_ID_FORMAT = "/r/%s/d/%s";
   private static final String CLIENT_PREFIX = "/r";
   private static final String AUTH_PASSWORD_PROPERTY = "auth_pass";
+  private static final String AUTH_KEY_PROPERTY = "auth_key";
+  private static final String AUTH_TYPE_PROPERTY = "auth_type";
   private static final String LAST_CONFIG_ACKED = "last_config_ack";
   private static final String CONFIG_SUFFIX = "/config";
   private static final String METADATA_STR_KEY = "metadata_str";
@@ -224,15 +226,23 @@ public class ImplicitIotAccessProvider extends IotAccessBase {
         ofNullable(cloudModel.resource_type).orElse(DIRECT).toString());
     requireNull(cloudModel.metadata_str, "unexpected metadata_str content");
     properties.put(METADATA_STR_KEY, stringifyTerse(cloudModel.metadata));
+    ifNotNullThen(ifNotNullGet(cloudModel.metadata, metadata -> metadata.get("key_bytes")),
+        keyBytes -> properties.put(AUTH_KEY_PROPERTY, keyBytes));
     properties.put(BLOCKED_PROPERTY, booleanString(cloudModel.blocked));
     ifNotNullThen(cloudModel.num_id, id -> properties.put(NUM_ID_PROPERTY, id));
+    ifNotNullThen(cloudModel.auth_type,
+        authType -> properties.put(AUTH_TYPE_PROPERTY, authType.value()));
     ifNotNullThen(cloudModel.credentials, creds -> ifNotTrueThen(creds.isEmpty(), () -> {
       checkState(creds.size() == 1, "only one credential supported");
       Credential cred = creds.get(0);
-      checkState(cred.key_format == Key_format.PASSWORD,
-          "key type not supported: " + cred.key_format);
-      properties.put(AUTH_PASSWORD_PROPERTY, cred.key_data);
+      checkState(cred.key_format != Key_format.PASSWORD,
+          "key type PASSWORD should be in the password field, not credentials");
+      properties.put(AUTH_KEY_PROPERTY, cred.key_data);
+      properties.put(AUTH_TYPE_PROPERTY, cred.key_format.value());
     }));
+    ifNotNullThen(cloudModel.password, password -> {
+      properties.put(AUTH_PASSWORD_PROPERTY, password);
+    });
     return properties;
   }
 
@@ -280,6 +290,23 @@ public class ImplicitIotAccessProvider extends IotAccessBase {
     CloudModel cloudModel = requireNonNull(JsonUtil.convertTo(CloudModel.class, properties));
     cloudModel.metadata = ifNotNullGet(cloudModel.metadata_str, JsonUtil::toStringMapStr);
     cloudModel.metadata_str = null;
+
+    String authType = properties.get(AUTH_TYPE_PROPERTY);
+    if (authType != null) {
+      cloudModel.auth_type = CloudModel.Auth_type.fromValue(authType);
+    }
+
+    String authKey = properties.get(AUTH_KEY_PROPERTY);
+    if (authKey != null) {
+      Credential credential = new Credential();
+      credential.key_data = authKey;
+      if (cloudModel.auth_type != null) {
+        credential.key_format = Key_format.fromValue(cloudModel.auth_type.value());
+      }
+      cloudModel.credentials = List.of(credential);
+    }
+
+    cloudModel.password = properties.get(AUTH_PASSWORD_PROPERTY);
 
     cloudModel.gateway = new GatewayModel();
     cloudModel.gateway.proxy_ids =
