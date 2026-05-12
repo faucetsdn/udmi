@@ -34,21 +34,29 @@ if [[ ! -f $UDMI_FILE ]]; then
     [[ $(whoami) == root ]] && echo user root >> $UDMI_FILE
 fi
 
+# Ensure the mosquitto group can write to the config directory (required for atomic configuration saves)
+sudo chgrp $GROUP $ETC_DIR || true
+sudo chmod 775 $ETC_DIR || true
+
 if [[ ! -f $DYN_FILE ]]; then
     echo Creating new $DYN_FILE
     echo Configuring MQTT user: $AUTH_USER
     sudo mosquitto_ctrl dynsec init $DYN_FILE $AUTH_USER $AUTH_PASS
-    [[ $(whoami) != root ]] && sudo chgrp $GROUP $DYN_FILE
-    sudo chmod 0660 $DYN_FILE
 fi
+
+# Ensure the dynamic security file is owned by the mosquitto group and is group-writable (restricted to owner and group only)
+sudo chgrp $GROUP $DYN_FILE || true
+sudo chmod 0660 $DYN_FILE || true
 
 if [[ ! -f $PASS_FILE ]]; then
     echo Creating $PASS_FILE
     sudo touch $PASS_FILE
-    sudo chmod 0640 $PASS_FILE
-    [[ $(whoami) != root ]] && sudo chgrp $GROUP $PASS_FILE
     sudo mosquitto_passwd -b ${PASS_FILE} ${AUTH_USER} ${AUTH_PASS}
 fi
+
+# Ensure the passwd file is owned by the mosquitto user and is strictly private (0600)
+sudo chown mosquitto:mosquitto $PASS_FILE || true
+sudo chmod 0600 $PASS_FILE || true
 
 if [[ -n $(which systemctl) ]]; then
     sudo systemctl restart mosquitto
@@ -62,9 +70,6 @@ else
     echo Completed mosquitto startup.
 fi
 
-$MOSQUITTO_CTRL createRole device
-$MOSQUITTO_CTRL addRoleACL device subscribePattern '/r/+/d/+/#' allow
-$MOSQUITTO_CTRL addRoleACL device publishClientSend '/r/+/d/+/#' allow
 $MOSQUITTO_CTRL createRole service
 $MOSQUITTO_CTRL addRoleACL service subscribePattern '/r/+/d/+/#' allow
 $MOSQUITTO_CTRL addRoleACL service publishClientSend '/r/+/d/+/#' allow

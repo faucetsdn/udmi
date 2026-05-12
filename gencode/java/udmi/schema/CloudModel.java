@@ -31,6 +31,7 @@ import com.fasterxml.jackson.annotation.JsonValue;
     "config",
     "blocked",
     "detail",
+    "password",
     "credentials",
     "updated_time",
     "last_event_time",
@@ -110,6 +111,8 @@ public class CloudModel {
     public Boolean blocked;
     @JsonProperty("detail")
     public java.lang.String detail;
+    @JsonProperty("password")
+    public java.lang.String password;
     @JsonProperty("credentials")
     public List<Credential> credentials;
     @JsonProperty("updated_time")
@@ -166,6 +169,7 @@ public class CloudModel {
         result = ((result* 31)+((this.resource_type == null)? 0 :this.resource_type.hashCode()));
         result = ((result* 31)+((this.num_id == null)? 0 :this.num_id.hashCode()));
         result = ((result* 31)+((this.version == null)? 0 :this.version.hashCode()));
+        result = ((result* 31)+((this.password == null)? 0 :this.password.hashCode()));
         result = ((result* 31)+((this.blocked == null)? 0 :this.blocked.hashCode()));
         result = ((result* 31)+((this.last_error_time == null)? 0 :this.last_error_time.hashCode()));
         result = ((result* 31)+((this.metadata_str == null)? 0 :this.metadata_str.hashCode()));
@@ -188,7 +192,7 @@ public class CloudModel {
             return false;
         }
         CloudModel rhs = ((CloudModel) other);
-        return (((((((((((((((((((((((this.updated_time == rhs.updated_time)||((this.updated_time!= null)&&this.updated_time.equals(rhs.updated_time)))&&((this.auth_type == rhs.auth_type)||((this.auth_type!= null)&&this.auth_type.equals(rhs.auth_type))))&&((this.device_key == rhs.device_key)||((this.device_key!= null)&&this.device_key.equals(rhs.device_key))))&&((this.metadata == rhs.metadata)||((this.metadata!= null)&&this.metadata.equals(rhs.metadata))))&&((this.last_event_time == rhs.last_event_time)||((this.last_event_time!= null)&&this.last_event_time.equals(rhs.last_event_time))))&&((this.last_config_time == rhs.last_config_time)||((this.last_config_time!= null)&&this.last_config_time.equals(rhs.last_config_time))))&&((this.credentials == rhs.credentials)||((this.credentials!= null)&&this.credentials.equals(rhs.credentials))))&&((this.last_state_time == rhs.last_state_time)||((this.last_state_time!= null)&&this.last_state_time.equals(rhs.last_state_time))))&&((this.functions_ver == rhs.functions_ver)||((this.functions_ver!= null)&&this.functions_ver.equals(rhs.functions_ver))))&&((this.resource_type == rhs.resource_type)||((this.resource_type!= null)&&this.resource_type.equals(rhs.resource_type))))&&((this.num_id == rhs.num_id)||((this.num_id!= null)&&this.num_id.equals(rhs.num_id))))&&((this.version == rhs.version)||((this.version!= null)&&this.version.equals(rhs.version))))&&((this.blocked == rhs.blocked)||((this.blocked!= null)&&this.blocked.equals(rhs.blocked))))&&((this.last_error_time == rhs.last_error_time)||((this.last_error_time!= null)&&this.last_error_time.equals(rhs.last_error_time))))&&((this.metadata_str == rhs.metadata_str)||((this.metadata_str!= null)&&this.metadata_str.equals(rhs.metadata_str))))&&((this.detail == rhs.detail)||((this.detail!= null)&&this.detail.equals(rhs.detail))))&&((this.device_ids == rhs.device_ids)||((this.device_ids!= null)&&this.device_ids.equals(rhs.device_ids))))&&((this.config == rhs.config)||((this.config!= null)&&this.config.equals(rhs.config))))&&((this.last_config_ack == rhs.last_config_ack)||((this.last_config_ack!= null)&&this.last_config_ack.equals(rhs.last_config_ack))))&&((this.operation == rhs.operation)||((this.operation!= null)&&this.operation.equals(rhs.operation))))&&((this.gateway == rhs.gateway)||((this.gateway!= null)&&this.gateway.equals(rhs.gateway))))&&((this.timestamp == rhs.timestamp)||((this.timestamp!= null)&&this.timestamp.equals(rhs.timestamp))));
+        return ((((((((((((((((((((((((this.updated_time == rhs.updated_time)||((this.updated_time!= null)&&this.updated_time.equals(rhs.updated_time)))&&((this.auth_type == rhs.auth_type)||((this.auth_type!= null)&&this.auth_type.equals(rhs.auth_type))))&&((this.device_key == rhs.device_key)||((this.device_key!= null)&&this.device_key.equals(rhs.device_key))))&&((this.metadata == rhs.metadata)||((this.metadata!= null)&&this.metadata.equals(rhs.metadata))))&&((this.last_event_time == rhs.last_event_time)||((this.last_event_time!= null)&&this.last_event_time.equals(rhs.last_event_time))))&&((this.last_config_time == rhs.last_config_time)||((this.last_config_time!= null)&&this.last_config_time.equals(rhs.last_config_time))))&&((this.credentials == rhs.credentials)||((this.credentials!= null)&&this.credentials.equals(rhs.credentials))))&&((this.last_state_time == rhs.last_state_time)||((this.last_state_time!= null)&&this.last_state_time.equals(rhs.last_state_time))))&&((this.functions_ver == rhs.functions_ver)||((this.functions_ver!= null)&&this.functions_ver.equals(rhs.functions_ver))))&&((this.resource_type == rhs.resource_type)||((this.resource_type!= null)&&this.resource_type.equals(rhs.resource_type))))&&((this.num_id == rhs.num_id)||((this.num_id!= null)&&this.num_id.equals(rhs.num_id))))&&((this.version == rhs.version)||((this.version!= null)&&this.version.equals(rhs.version))))&&((this.password == rhs.password)||((this.password!= null)&&this.password.equals(rhs.password))))&&((this.blocked == rhs.blocked)||((this.blocked!= null)&&this.blocked.equals(rhs.blocked))))&&((this.last_error_time == rhs.last_error_time)||((this.last_error_time!= null)&&this.last_error_time.equals(rhs.last_error_time))))&&((this.metadata_str == rhs.metadata_str)||((this.metadata_str!= null)&&this.metadata_str.equals(rhs.metadata_str))))&&((this.detail == rhs.detail)||((this.detail!= null)&&this.detail.equals(rhs.detail))))&&((this.device_ids == rhs.device_ids)||((this.device_ids!= null)&&this.device_ids.equals(rhs.device_ids))))&&((this.config == rhs.config)||((this.config!= null)&&this.config.equals(rhs.config))))&&((this.last_config_ack == rhs.last_config_ack)||((this.last_config_ack!= null)&&this.last_config_ack.equals(rhs.last_config_ack))))&&((this.operation == rhs.operation)||((this.operation!= null)&&this.operation.equals(rhs.operation))))&&((this.gateway == rhs.gateway)||((this.gateway!= null)&&this.gateway.equals(rhs.gateway))))&&((this.timestamp == rhs.timestamp)||((this.timestamp!= null)&&this.timestamp.equals(rhs.timestamp))));
     }
 
 

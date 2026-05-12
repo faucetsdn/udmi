@@ -82,6 +82,13 @@
         "style": "bold"
       }
     },
+    "password": {
+      "type": "string",
+      "$presentation": {
+        "display": "show",
+        "style": "bold"
+      }
+    },
     "credentials": {
       "type": "array",
       "items": {

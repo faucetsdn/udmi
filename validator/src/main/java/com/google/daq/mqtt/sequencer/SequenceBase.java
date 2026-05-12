@@ -301,7 +301,12 @@ public class SequenceBase {
   private static SequenceBase activeInstance;
   private static final int MESSAGE_QUEUE_SIZE = 32;
   private static final Deque<MessageBundle> messageQueue = new ArrayDeque<>(MESSAGE_QUEUE_SIZE);
-  private static final ExecutorService executorService = Executors.newFixedThreadPool(4);
+  private static final ExecutorService executorService = Executors.newFixedThreadPool(4,
+      runnable -> {
+        Thread thread = Executors.defaultThreadFactory().newThread(runnable);
+        thread.setDaemon(true);
+        return thread;
+      });
   private static boolean enableAllTargets = true;
   private static boolean useAlternateClient;
   private static boolean skipConfigSync;
