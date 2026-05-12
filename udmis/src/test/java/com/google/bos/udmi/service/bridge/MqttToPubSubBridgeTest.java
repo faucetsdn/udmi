@@ -7,6 +7,8 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import com.google.api.core.ApiFutures;
+import com.google.bos.udmi.service.support.DataRef;
+import com.google.bos.udmi.service.support.EtcdDataProvider;
 import com.google.cloud.pubsub.v1.Publisher;
 import com.google.pubsub.v1.PubsubMessage;
 import java.util.Map;
@@ -14,8 +16,6 @@ import org.eclipse.paho.client.mqttv3.IMqttClient;
 import org.eclipse.paho.client.mqttv3.MqttCallback;
 import org.eclipse.paho.client.mqttv3.MqttMessage;
 import org.junit.jupiter.api.Test;
-import com.google.bos.udmi.service.support.DataRef;
-import com.google.bos.udmi.service.support.EtcdDataProvider;
 import org.mockito.ArgumentCaptor;
 
 class MqttToPubSubBridgeTest {
@@ -123,13 +123,13 @@ class MqttToPubSubBridgeTest {
 
   @Test
   void testSetupBridgeWithEtcd() throws Exception {
-    IMqttClient mockMqttClient = mock(IMqttClient.class);
-    Publisher mockPublisher = mock(Publisher.class);
-    EtcdDataProvider mockEtcdProvider = mock(EtcdDataProvider.class);
-    DataRef mockDataRef = mock(DataRef.class);
+    final IMqttClient mockMqttClient = mock(IMqttClient.class);
+    final Publisher mockPublisher = mock(Publisher.class);
+    final EtcdDataProvider mockEtcdProvider = mock(EtcdDataProvider.class);
+    final DataRef mockDataRef = mock(DataRef.class);
 
-    String testTopic = "/r/my-registry/d/my-device/events";
-    String payloadStr = "Hello World";
+    final String testTopic = "/r/my-registry/d/my-device/events";
+    final String payloadStr = "Hello World";
     final MqttMessage mqttMessage = new MqttMessage(payloadStr.getBytes());
 
     when(mockPublisher.publish(any(PubsubMessage.class)))
@@ -160,13 +160,13 @@ class MqttToPubSubBridgeTest {
 
   @Test
   void testSetupBridgeWithEtcdNullResult() throws Exception {
-    IMqttClient mockMqttClient = mock(IMqttClient.class);
-    Publisher mockPublisher = mock(Publisher.class);
-    EtcdDataProvider mockEtcdProvider = mock(EtcdDataProvider.class);
-    DataRef mockDataRef = mock(DataRef.class);
+    final IMqttClient mockMqttClient = mock(IMqttClient.class);
+    final Publisher mockPublisher = mock(Publisher.class);
+    final EtcdDataProvider mockEtcdProvider = mock(EtcdDataProvider.class);
+    final DataRef mockDataRef = mock(DataRef.class);
 
-    String testTopic = "/r/my-registry/d/my-device/events";
-    String payloadStr = "Hello World";
+    final String testTopic = "/r/my-registry/d/my-device/events";
+    final String payloadStr = "Hello World";
     final MqttMessage mqttMessage = new MqttMessage(payloadStr.getBytes());
 
     when(mockPublisher.publish(any(PubsubMessage.class)))
@@ -197,13 +197,13 @@ class MqttToPubSubBridgeTest {
 
   @Test
   void testSetupBridgeWithEtcdFailure() throws Exception {
-    IMqttClient mockMqttClient = mock(IMqttClient.class);
-    Publisher mockPublisher = mock(Publisher.class);
-    EtcdDataProvider mockEtcdProvider = mock(EtcdDataProvider.class);
-    DataRef mockDataRef = mock(DataRef.class);
+    final IMqttClient mockMqttClient = mock(IMqttClient.class);
+    final Publisher mockPublisher = mock(Publisher.class);
+    final EtcdDataProvider mockEtcdProvider = mock(EtcdDataProvider.class);
+    final DataRef mockDataRef = mock(DataRef.class);
 
-    String testTopic = "/r/my-registry/d/my-device/events";
-    String payloadStr = "Hello World";
+    final String testTopic = "/r/my-registry/d/my-device/events";
+    final String payloadStr = "Hello World";
     final MqttMessage mqttMessage = new MqttMessage(payloadStr.getBytes());
 
     when(mockPublisher.publish(any(PubsubMessage.class)))

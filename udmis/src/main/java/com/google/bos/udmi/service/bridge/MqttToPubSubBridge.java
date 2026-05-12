@@ -3,6 +3,7 @@ package com.google.bos.udmi.service.bridge;
 import static com.google.common.util.concurrent.MoreExecutors.directExecutor;
 
 import com.google.api.core.ApiFuture;
+import com.google.bos.udmi.service.support.EtcdDataProvider;
 import com.google.cloud.pubsub.v1.Publisher;
 import com.google.common.base.Splitter;
 import com.google.protobuf.ByteString;
@@ -59,12 +60,11 @@ import org.eclipse.paho.client.mqttv3.MqttClient;
 import org.eclipse.paho.client.mqttv3.MqttConnectOptions;
 import org.eclipse.paho.client.mqttv3.MqttException;
 import org.eclipse.paho.client.mqttv3.MqttMessage;
-import com.google.bos.udmi.service.support.EtcdDataProvider;
 import org.eclipse.paho.client.mqttv3.persist.MemoryPersistence;
 import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import udmi.schema.IotAccess;
 import udmi.schema.IotAccess.IotProvider;
-import org.slf4j.LoggerFactory;
 
 /**
  * A bridge that subscribes to an MQTT topic and publishes messages to a Google Cloud Pub/Sub topic.
@@ -270,9 +270,14 @@ public final class MqttToPubSubBridge {
               attributes.put("deviceId", deviceId);
               attributes.put("deviceRegistryId", registryId);
 
-              if (etcdProvider != null && !"unknown".equals(registryId) && !"unknown".equals(deviceId)) {
+              if (etcdProvider != null
+                  && !"unknown".equals(registryId)
+                  && !"unknown".equals(deviceId)) {
                 try {
-                  String numId = etcdProvider.ref().registry(registryId).device(deviceId).get("num_id");
+                  String numId = etcdProvider.ref()
+                      .registry(registryId)
+                      .device(deviceId)
+                      .get("num_id");
                   if (numId != null) {
                     attributes.put("deviceNumId", numId);
                     logger.info("Found numId {} for device {}/{}", numId, registryId, deviceId);
@@ -280,7 +285,8 @@ public final class MqttToPubSubBridge {
                     logger.warn("numId not found in etcd for device {}/{}", registryId, deviceId);
                   }
                 } catch (Exception e) {
-                  logger.warn("Error reading numId from etcd for device {}/{}", registryId, deviceId, e);
+                  logger.warn("Error reading numId from etcd for device {}/{}",
+                      registryId, deviceId, e);
                 }
               }
 
