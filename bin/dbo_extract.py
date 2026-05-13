@@ -8,10 +8,7 @@ def extract_dbo_config(site_model_dir: Path) -> dict:
   """Extracts DBO configurations to a dict."""
   building_config = {}
 
-  # We will assume a static CONFIG_METADATA for this basic example
-  building_config["CONFIG_METADATA"] = {
-      "operation": "INITIALIZE"
-  }
+
 
   devices_dir = site_model_dir / "devices"
 
@@ -63,16 +60,10 @@ def extract_dbo_config(site_model_dir: Path) -> dict:
       for target_id, relation in metadata["relationships"].items():
         target_guid = device_id_to_guid.get(target_id, target_id)
         if isinstance(relation, dict):
-          conn_list = []
-          for rel_type, rel_instances in relation.items():
-            for inst in rel_instances:
-              if not inst:
-                conn_list.append(rel_type)
-              else:
-                conn_obj = inst.copy()
-                conn_obj["type"] = rel_type
-                conn_list.append(conn_obj)
-          connections[target_guid] = conn_list
+          if relation:
+             # Match string enum format expected by schema
+             rel_type = list(relation.keys())[0]
+             connections[target_guid] = rel_type
 
       device_entry["connections"] = connections
 

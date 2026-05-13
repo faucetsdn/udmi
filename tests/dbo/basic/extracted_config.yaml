@@ -2,10 +2,7 @@
   cloud_device_id: '2541901344105617'
   code: VAV-2
   connections:
-    c773b86d-b0c0-46fc-bd3f-d726fadd5f1e:
-    - tags:
-      - primary
-      type: FEEDS
+    c773b86d-b0c0-46fc-bd3f-d726fadd5f1e: FEEDS
   translation:
     zone_air_temperature_sensor:
       present_value: points.zone_air_temperature_sensor.present_value
@@ -25,8 +22,6 @@
         values:
           liters_per_second: L/s
   type: HVAC/VAV_SD_DSP
-CONFIG_METADATA:
-  operation: INITIALIZE
 c773b86d-b0c0-46fc-bd3f-d726fadd5f1e:
   cloud_device_id: '2541901344105616'
   code: VAV-1
