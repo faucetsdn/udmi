@@ -255,7 +255,10 @@ public class ImplicitIotAccessProvider extends IotAccessBase {
   }
 
   private void publishMqtt(String topic, String payload, boolean retain) {
-    checkState(mqttClient != null && mqttClient.isConnected(), "MQTT client not connected");
+    if (mqttClient == null || !mqttClient.isConnected()) {
+      warn("MQTT client not connected, unable to publish to " + topic);
+      return;
+    }
     try {
       MqttMessage message = new MqttMessage();
       message.setPayload(payload.getBytes());
@@ -264,7 +267,7 @@ public class ImplicitIotAccessProvider extends IotAccessBase {
       mqttClient.publish(topic, message);
       debug("Published to %s: %s", topic, payload);
     } catch (Exception e) {
-      throw new RuntimeException("While publishing to MQTT topic " + topic, e);
+      error("While publishing to MQTT topic " + topic + ": " + friendlyStackTrace(e));
     }
   }
 
@@ -335,7 +338,7 @@ public class ImplicitIotAccessProvider extends IotAccessBase {
       mqttClient.connect(options);
       info("Connected persistent MQTT client");
     } catch (Exception e) {
-      throw new RuntimeException("Failed to connect persistent MQTT client to " + brokerUrl, e);
+      error("Failed to connect persistent MQTT client to " + brokerUrl + ": " + friendlyStackTrace(e));
     }
   }
 

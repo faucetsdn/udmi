@@ -45,7 +45,7 @@
     },
     "implicit": {
       "provider": "implicit",
-      "options": "enabled=${ETCD_CLUSTER}"
+      "options": "enabled=${ETCD_CLUSTER},broker_user=rocket,broker_pass=monkey"
     }
   }
 }
