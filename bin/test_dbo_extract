@@ -1,0 +1,25 @@
+#!/bin/bash
+
+DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )"
+ROOT_DIR="$( cd "$DIR/.." &> /dev/null && pwd )"
+
+# Activate the venv created by bin/setup_base
+if [ -f "$ROOT_DIR/venv/bin/activate" ]; then
+    source "$ROOT_DIR/venv/bin/activate"
+fi
+
+TEST_DIR=$1
+GOLD_FILE="$TEST_DIR/building_config.yaml"
+
+if [ -f "$GOLD_FILE" ]; then
+    OUTPUT_FILE="$TEST_DIR/extracted_config.yaml"
+    python3 "$ROOT_DIR/bin/dbo_extract.py" "$TEST_DIR" "$OUTPUT_FILE"
+    if diff "$GOLD_FILE" "$OUTPUT_FILE"; then
+        echo "Test passed: $TEST_DIR"
+    else
+        echo "Test failed: $TEST_DIR"
+        exit 1
+    fi
+else
+    python3 "$ROOT_DIR/bin/dbo_extract.py" "$1" "$2"
+fi

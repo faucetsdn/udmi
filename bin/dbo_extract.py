@@ -10,7 +10,7 @@ def extract_dbo_config(site_model_dir: Path) -> dict:
 
   # We will assume a static CONFIG_METADATA for this basic example
   building_config["CONFIG_METADATA"] = {
-      "operation": "EXPORT"
+      "operation": "INITIALIZE"
   }
 
   devices_dir = site_model_dir / "devices"
@@ -140,6 +140,8 @@ if __name__ == "__main__":
     sys.exit(1)
 
   site_dir = Path(sys.argv[1])
+  if (site_dir / "site_model").is_dir():
+    site_dir = site_dir / "site_model"
   out_yaml = Path(sys.argv[2])
 
   config_result = extract_dbo_config(site_dir)
