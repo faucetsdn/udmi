@@ -130,7 +130,7 @@ public class ImplicitIotAccessProvider extends IotAccessBase {
     usePassword = options.get(USE_PASSWORD_KEY);
 
     if (iotAccess.endpoint != null) {
-      endpointConfig = iotAccess.endpoint;
+      endpointConfig = deepCopy(iotAccess.endpoint);
       brokerUser = endpointConfig.auth_provider != null
           && endpointConfig.auth_provider.basic != null
           ? endpointConfig.auth_provider.basic.username : null;
@@ -262,6 +262,8 @@ public class ImplicitIotAccessProvider extends IotAccessBase {
   private void sendConfigUpdate(String registryId, String deviceId, String config) {
     if (isPublishEnabled()) {
       publishMqtt(registryId, deviceId, config);
+    } else {
+      debug("Skipping MQTT config publish for %s/%s because broker credentials are not configured", registryId, deviceId);
     }
   }
 
