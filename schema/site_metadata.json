@@ -34,6 +34,14 @@
         "style": "bold"
       }
     },
+    "region": {
+      "description": "Region for the site",
+      "type": "string",
+      "$presentation": {
+        "display": "show",
+        "style": "bold"
+      }
+    },
     "name": {
       "description": "Name of the site or building",
       "type": "string",

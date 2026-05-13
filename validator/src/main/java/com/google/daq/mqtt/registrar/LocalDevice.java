@@ -19,6 +19,7 @@ import static com.google.udmi.util.GeneralUtils.deepCopy;
 import static com.google.udmi.util.GeneralUtils.ifNotNullGet;
 import static com.google.udmi.util.GeneralUtils.ifNotNullThen;
 import static com.google.udmi.util.GeneralUtils.ifNotTrueThen;
+import static com.google.udmi.util.GeneralUtils.ifNullThen;
 import static com.google.udmi.util.GeneralUtils.ifTrueThen;
 import static com.google.udmi.util.GeneralUtils.isTrue;
 import static com.google.udmi.util.GeneralUtils.writeString;
@@ -94,8 +95,11 @@ import udmi.schema.Envelope;
 import udmi.schema.Envelope.SubFolder;
 import udmi.schema.Envelope.SubType;
 import udmi.schema.GatewayModel;
+import udmi.schema.Location;
 import udmi.schema.Metadata;
 import udmi.schema.PointPointsetModel;
+import udmi.schema.SiteMetadata;
+import udmi.schema.SystemModel;
 
 
 class LocalDevice implements SiteDevice {
@@ -852,9 +856,15 @@ class LocalDevice implements SiteDevice {
     return new LocalDevice(siteModel, newId, schemas, generation, deviceKind);
   }
 
-  public void preprocessMetadata() {
+  public void preprocessMetadata(SiteMetadata siteMetadata) {
     ifTrueWarn(catchToNull(() -> metadata.cloud.config.static_file) != null,
         "Disallowed cloud.config.static_file defined");
+
+    ifNotNullThen(siteMetadata.region, region -> {
+      ifNullThen(metadata.system, () -> metadata.system = new SystemModel());
+      ifNullThen(metadata.system.location, () -> metadata.system.location = new Location());
+      ifNullThen(metadata.system.location.region, () -> metadata.system.location.region = region);
+    });
   }
 
   private void ifTrueWarn(boolean condition, String message) {
