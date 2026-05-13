@@ -16,9 +16,6 @@ public interface ConnectionBroker {
   void bindGateway(String gatewayId, String deviceId);
 
   void unbindGateway(String gatewayId, String deviceId);
-  void publish(String topic, String payload, boolean retain);
-
-  boolean isPublishEnabled();
 
   /**
    * Simple event for connection broker happenings.

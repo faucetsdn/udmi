@@ -26,6 +26,10 @@ import static udmi.schema.CloudModel.ModelOperation.READ;
 import static udmi.schema.CloudModel.Resource_type.DIRECT;
 import static udmi.schema.CloudModel.Resource_type.GATEWAY;
 
+import org.eclipse.paho.client.mqttv3.MqttClient;
+import org.eclipse.paho.client.mqttv3.MqttConnectOptions;
+import org.eclipse.paho.client.mqttv3.MqttMessage;
+import org.eclipse.paho.client.mqttv3.persist.MemoryPersistence;
 import com.google.bos.udmi.service.core.ReflectProcessor;
 import com.google.bos.udmi.service.pod.UdmiServicePod;
 import com.google.bos.udmi.service.support.ConnectionBroker;
@@ -105,6 +109,13 @@ public class ImplicitIotAccessProvider extends IotAccessBase {
   private IotDataProvider database;
   private ReflectProcessor reflect;
   private final Map<String, Integer> configPublished = new ConcurrentHashMap<>();
+  private final String brokerHost;
+  private final String brokerPort;
+  private final String brokerUser;
+  private final String brokerPass;
+  private MqttClient mqttClient;
+  private final String clientId =
+      format("implicit-access-%08x", (long) (Math.random() * 0x100000000L));
 
   /**
    * Create an access provider with implicit internal resources.
@@ -114,12 +125,12 @@ public class ImplicitIotAccessProvider extends IotAccessBase {
     enabled = isNullOrNotEmpty(options.get(ENABLED_KEY));
     usePassword = options.get(USE_PASSWORD_KEY);
 
-    String brokerUser = options.get(BROKER_USER_KEY);
-    String brokerPass = options.get(BROKER_PASS_KEY);
-    String brokerHost = options.get(BROKER_HOST_KEY);
-    String brokerPort = options.get(BROKER_PORT_KEY);
+    brokerUser = options.get(BROKER_USER_KEY);
+    brokerPass = options.get(BROKER_PASS_KEY);
+    brokerHost = ofNullable(options.get(BROKER_HOST_KEY)).orElse("localhost");
+    brokerPort = ofNullable(options.get(BROKER_PORT_KEY)).orElse("8883");
 
-    broker = new MosquittoBroker(this, brokerHost, brokerPort, brokerUser, brokerPass);
+    broker = new MosquittoBroker(this);
 
     connLogger = broker.addEventListener(CLIENT_PREFIX, this::brokerHandler);
   }
@@ -233,9 +244,27 @@ public class ImplicitIotAccessProvider extends IotAccessBase {
   }
 
   private void sendConfigUpdate(String registryId, String deviceId, String config) {
-    if (broker.isPublishEnabled()) {
+    if (isPublishEnabled()) {
       String topic = format("/r/%s/d/%s/config", registryId, deviceId);
-      broker.publish(topic, config, true);
+      publishMqtt(topic, config, true);
+    }
+  }
+
+  private boolean isPublishEnabled() {
+    return brokerUser != null && brokerPass != null;
+  }
+
+  private void publishMqtt(String topic, String payload, boolean retain) {
+    checkState(mqttClient != null && mqttClient.isConnected(), "MQTT client not connected");
+    try {
+      MqttMessage message = new MqttMessage();
+      message.setPayload(payload.getBytes());
+      message.setQos(1);
+      message.setRetained(retain);
+      mqttClient.publish(topic, message);
+      debug("Published to %s: %s", topic, payload);
+    } catch (Exception e) {
+      throw new RuntimeException("While publishing to MQTT topic " + topic, e);
     }
   }
 
@@ -287,6 +316,27 @@ public class ImplicitIotAccessProvider extends IotAccessBase {
     database = UdmiServicePod.getComponent(IMPLICIT_DATABASE_COMPONENT);
     reflect = UdmiServicePod.getComponent(ReflectProcessor.class);
     super.activate();
+    if (isPublishEnabled()) {
+      connectMqttClient();
+    }
+  }
+
+  private void connectMqttClient() {
+    String scheme = "1883".equals(brokerPort) ? "tcp" : "ssl";
+    String brokerUrl = format("%s://%s:%s", scheme, brokerHost, brokerPort);
+    info("Connecting persistent MQTT client to " + brokerUrl);
+    try {
+      mqttClient = new MqttClient(brokerUrl, clientId, new MemoryPersistence());
+      MqttConnectOptions options = new MqttConnectOptions();
+      options.setUserName(brokerUser);
+      options.setPassword(brokerPass.toCharArray());
+      options.setCleanSession(true);
+      options.setAutomaticReconnect(true);
+      mqttClient.connect(options);
+      info("Connected persistent MQTT client");
+    } catch (Exception e) {
+      throw new RuntimeException("Failed to connect persistent MQTT client to " + brokerUrl, e);
+    }
   }
 
   @Override
@@ -450,6 +500,14 @@ public class ImplicitIotAccessProvider extends IotAccessBase {
 
   @Override
   public void shutdown() {
+    ifNotNullThen(mqttClient, client -> {
+      try {
+        client.disconnect();
+        client.close();
+      } catch (Exception e) {
+        warn("Error shutting down MQTT client: " + e.getMessage());
+      }
+    });
     connLogger.cancel(true);
     super.shutdown();
   }
