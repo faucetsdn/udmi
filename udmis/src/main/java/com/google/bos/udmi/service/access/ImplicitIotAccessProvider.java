@@ -26,10 +26,13 @@ import static udmi.schema.CloudModel.ModelOperation.READ;
 import static udmi.schema.CloudModel.Resource_type.DIRECT;
 import static udmi.schema.CloudModel.Resource_type.GATEWAY;
 
-import org.eclipse.paho.client.mqttv3.MqttClient;
-import org.eclipse.paho.client.mqttv3.MqttConnectOptions;
-import org.eclipse.paho.client.mqttv3.MqttMessage;
-import org.eclipse.paho.client.mqttv3.persist.MemoryPersistence;
+import com.google.bos.udmi.service.messaging.impl.SimpleMqttPipe;
+import com.google.bos.udmi.service.messaging.impl.MessageBase.Bundle;
+import com.google.bos.udmi.service.messaging.MessageDispatcher;
+import udmi.schema.EndpointConfiguration;
+import udmi.schema.EndpointConfiguration.Transport;
+import udmi.schema.Auth_provider;
+import udmi.schema.Basic;
 import com.google.bos.udmi.service.core.ReflectProcessor;
 import com.google.bos.udmi.service.pod.UdmiServicePod;
 import com.google.bos.udmi.service.support.ConnectionBroker;
@@ -113,7 +116,8 @@ public class ImplicitIotAccessProvider extends IotAccessBase {
   private final String brokerPort;
   private final String brokerUser;
   private final String brokerPass;
-  private MqttClient mqttClient;
+  private EndpointConfiguration endpointConfig;
+  private SimpleMqttPipe mqttPipe;
   private final String clientId =
       format("implicit-access-%08x", (long) (Math.random() * 0x100000000L));
 
@@ -122,13 +126,22 @@ public class ImplicitIotAccessProvider extends IotAccessBase {
    */
   public ImplicitIotAccessProvider(IotAccess iotAccess) {
     super(iotAccess);
+    
     enabled = isNullOrNotEmpty(options.get(ENABLED_KEY));
     usePassword = options.get(USE_PASSWORD_KEY);
 
-    brokerUser = options.get(BROKER_USER_KEY);
-    brokerPass = options.get(BROKER_PASS_KEY);
-    brokerHost = ofNullable(options.get(BROKER_HOST_KEY)).orElse("localhost");
-    brokerPort = ofNullable(options.get(BROKER_PORT_KEY)).orElse("8883");
+    if (iotAccess.endpoint != null) {
+      endpointConfig = iotAccess.endpoint;
+      brokerUser = endpointConfig.auth_provider != null && endpointConfig.auth_provider.basic != null ? endpointConfig.auth_provider.basic.username : null;
+      brokerPass = endpointConfig.auth_provider != null && endpointConfig.auth_provider.basic != null ? endpointConfig.auth_provider.basic.password : null;
+      brokerHost = ofNullable(endpointConfig.hostname).orElse("localhost");
+      brokerPort = ofNullable(endpointConfig.port).map(Object::toString).orElse("8883");
+    } else {
+      brokerUser = options.get(BROKER_USER_KEY);
+      brokerPass = options.get(BROKER_PASS_KEY);
+      brokerHost = ofNullable(options.get(BROKER_HOST_KEY)).orElse("localhost");
+      brokerPort = ofNullable(options.get(BROKER_PORT_KEY)).orElse("8883");
+    }
 
     broker = new MosquittoBroker(this);
 
@@ -245,8 +258,7 @@ public class ImplicitIotAccessProvider extends IotAccessBase {
 
   private void sendConfigUpdate(String registryId, String deviceId, String config) {
     if (isPublishEnabled()) {
-      String topic = format("/r/%s/d/%s/config", registryId, deviceId);
-      publishMqtt(topic, config, true);
+      publishMqtt(registryId, deviceId, config);
     }
   }
 
@@ -254,20 +266,23 @@ public class ImplicitIotAccessProvider extends IotAccessBase {
     return brokerUser != null && brokerPass != null;
   }
 
-  private void publishMqtt(String topic, String payload, boolean retain) {
-    if (mqttClient == null || !mqttClient.isConnected()) {
-      warn("MQTT client not connected, unable to publish to " + topic);
+  private void publishMqtt(String registryId, String deviceId, String payload) {
+    if (mqttPipe == null) {
+      warn("MQTT pipe not initialized, unable to publish config");
       return;
     }
     try {
-      MqttMessage message = new MqttMessage();
-      message.setPayload(payload.getBytes());
-      message.setQos(1);
-      message.setRetained(retain);
-      mqttClient.publish(topic, message);
-      debug("Published to %s: %s", topic, payload);
+      Envelope envelope = new Envelope();
+      envelope.deviceRegistryId = registryId;
+      envelope.deviceId = deviceId;
+      envelope.subType = SubType.CONFIG;
+      envelope.source = IotProvider.IMPLICIT.value();
+
+      Bundle bundle = new Bundle(envelope, MessageDispatcher.rawString(payload));
+      mqttPipe.publish(bundle);
+      debug("Published config to pipe for %s/%s", registryId, deviceId);
     } catch (Exception e) {
-      error("While publishing to MQTT topic " + topic + ": " + friendlyStackTrace(e));
+      error("While publishing to MQTT pipe for " + registryId + "/" + deviceId + ": " + friendlyStackTrace(e));
     }
   }
 
@@ -325,20 +340,27 @@ public class ImplicitIotAccessProvider extends IotAccessBase {
   }
 
   private void connectMqttClient() {
-    String scheme = "1883".equals(brokerPort) ? "tcp" : "ssl";
-    String brokerUrl = format("%s://%s:%s", scheme, brokerHost, brokerPort);
-    info("Connecting persistent MQTT client to " + brokerUrl);
+    info("Initializing SimpleMqttPipe for ImplicitIotAccessProvider");
     try {
-      mqttClient = new MqttClient(brokerUrl, clientId, new MemoryPersistence());
-      MqttConnectOptions options = new MqttConnectOptions();
-      options.setUserName(brokerUser);
-      options.setPassword(brokerPass.toCharArray());
-      options.setCleanSession(true);
-      options.setAutomaticReconnect(true);
-      mqttClient.connect(options);
-      info("Connected persistent MQTT client");
+      if (endpointConfig == null) {
+        endpointConfig = new EndpointConfiguration();
+        endpointConfig.hostname = brokerHost;
+        endpointConfig.port = Integer.parseInt(brokerPort);
+        endpointConfig.transport = "1883".equals(brokerPort) ? Transport.TCP : Transport.SSL;
+        endpointConfig.client_id = clientId;
+        
+        if (isPublishEnabled()) {
+          endpointConfig.auth_provider = new Auth_provider();
+          endpointConfig.auth_provider.basic = new Basic();
+          endpointConfig.auth_provider.basic.username = brokerUser;
+          endpointConfig.auth_provider.basic.password = brokerPass;
+        }
+      }
+
+      mqttPipe = new SimpleMqttPipe(endpointConfig);
+      info("Initialized SimpleMqttPipe");
     } catch (Exception e) {
-      error("Failed to connect persistent MQTT client to " + brokerUrl + ": " + friendlyStackTrace(e));
+      error("Failed to initialize SimpleMqttPipe: " + friendlyStackTrace(e));
     }
   }
 
@@ -503,12 +525,11 @@ public class ImplicitIotAccessProvider extends IotAccessBase {
 
   @Override
   public void shutdown() {
-    ifNotNullThen(mqttClient, client -> {
+    ifNotNullThen(mqttPipe, pipe -> {
       try {
-        client.disconnect();
-        client.close();
+        pipe.shutdown();
       } catch (Exception e) {
-        warn("Error shutting down MQTT client: " + e.getMessage());
+        warn("Error shutting down MQTT pipe: " + e.getMessage());
       }
     });
     connLogger.cancel(true);
