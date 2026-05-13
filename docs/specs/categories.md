@@ -55,10 +55,22 @@ could be used with a **WARNING** level for a warning case during normal operatio
   * _device_: Relating to a specific individual device
     * _apply_: (**INFO**) Stage of applying a device mapping
 * _blobset_: Handling update of device data blobs
-  * _blob_: Conditions specific to an individual blob
+  * _blob_: (**INFO**) Conditions specific to an individual blob
+    * _update_: (**INFO**) Processing a blob update
     * _receive_: (**DEBUG**) About receiving a blob update
     * _fetch_: (**DEBUG**) Fetching a blob update
+      * _oversize_: (**ERROR**) Insufficient storage to download or unpack blob
+      * _failure_: (**ERROR**) Blob fetch failed
+    * _parse_: (**DEBUG**) Parsing and verifying a blob
+      * _corrupt_: (**ERROR**) Data integrity check failed
+      * _invalid_: (**ERROR**) The data is invalid in some way
+      * _incompatible_: (**ERROR**) Blob is incompatible with the device for some reason
     * _apply_: (**NOTICE**) Applying a blob update
+      * _failure_: (**ERROR**) Failed to install or execute
+      * _dependency_: (**ERROR**) Dependencies required to apply are missing
+      * _restart_: (**NOTICE**) Restart required to take effect
+    * _abort_: (**NOTICE**) Blob update process was canceled or aborted
+    * _rollback_: (**NOTICE**) Reverting to previous blob version
 * _validation_: Handling validation pipeline messages
   * _device_: Conditions specific to processing a given device message.
     * _receive_: (**DEBUG**) Receiving/processing a message for validation.

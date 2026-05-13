@@ -20,6 +20,7 @@ bambi
 BCD
 bcd
 blobset
+blobsets
 BMS
 boolean
 BOS
@@ -38,6 +39,8 @@ contextualise
 coreutils
 CoV
 cron
+cryptographic
+cryptographically
 datapoint
 DBO
 DBP
@@ -87,6 +90,7 @@ hostname
 http
 https
 IAM
+idempotency
 idToken
 integrations
 invoker
@@ -106,6 +110,7 @@ KNX
 kube
 kubectl
 Kubernetes
+lifecycle
 localhost
 localnet
 logentry
@@ -128,6 +133,7 @@ niversal
 nmap
 npm
 nterface
+observability
 OIDC
 Onboarding
 onboarding
@@ -135,6 +141,7 @@ OPC
 optionality
 Optionality
 OSS
+oversized
 pagent
 parameterization
 parsers
@@ -212,6 +219,7 @@ UI
 uint
 unconfigured
 underspecified
+unencoded
 uniqs
 unitid
 UNK

@@ -1,0 +1,55 @@
+{
+  "timestamp" : "TIMESTAMP",
+  "version" : "@@@cloud udmi version###git-442a51d8-dirty",
+  "system" : {
+    "min_loglevel" : 100,
+    "metrics_rate_sec" : 10,
+    "operation" : {
+      "last_start" : "TIMESTAMP"
+    },
+    "testing" : {
+      "sequence_name" : "blob_update_incompatible"
+    }
+  },
+  "discovery" : {
+    "families" : {
+      "vendor" : { },
+      "bacnet" : { }
+    }
+  },
+  "localnet" : {
+    "families" : {
+      "ether" : { },
+      "ipv4" : { },
+      "vendor" : { },
+      "bacnet" : { }
+    }
+  },
+  "blobset" : {
+    "blobs" : {
+      "pubber_module" : {
+        "phase" : "final",
+        "url" : "@@@software data###data:application/json;base64,eyJ0cmlnZ2VyIjoiaW5jb21wYXRpYmxlIn0=",
+        "sha256" : "@@@blob data hash###9b9f95fb7a37147bfd7cf3e4e6a0979f040455a8e2994f6431f7ad0838419188",
+        "generation" : "TIMESTAMP"
+      }
+    }
+  },
+  "pointset" : {
+    "sample_rate_sec" : 300,
+    "points" : {
+      "filter_differential_pressure_setpoint" : {
+        "units" : "Bars",
+        "set_value" : 98
+      },
+      "filter_alarm_pressure_status" : {
+        "ref" : "BV11.present_value",
+        "units" : "No-units"
+      },
+      "filter_differential_pressure_sensor" : {
+        "ref" : "AV12.present_value",
+        "units" : "Degrees-Celsius"
+      }
+    }
+  }
+}

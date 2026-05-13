@@ -60,6 +60,7 @@ import static org.junit.Assert.assertTrue;
 import static org.junit.Assume.assumeTrue;
 import static udmi.schema.Bucket.SYSTEM;
 import static udmi.schema.Bucket.UNKNOWN_DEFAULT;
+import static udmi.schema.Category.LEVEL;
 import static udmi.schema.Category.VALIDATION_FEATURE_CAPABILITY;
 import static udmi.schema.Category.VALIDATION_FEATURE_SCHEMA;
 import static udmi.schema.Category.VALIDATION_FEATURE_SEQUENCE;
@@ -1661,6 +1662,12 @@ public class SequenceBase {
   }
 
   protected void waitForLog(String category, Level exactLevel) {
+    waitUntil(format("system logs level `%s` category `%s`", exactLevel.name(), category),
+        LOG_WAIT_TIME, () -> checkLogged(category, exactLevel));
+  }
+
+  protected void waitForLog(String category) {
+    Level exactLevel = LEVEL.getOrDefault(category, Level.INFO);
     waitUntil(format("system logs level `%s` category `%s`", exactLevel.name(), category),
         LOG_WAIT_TIME, () -> checkLogged(category, exactLevel));
   }

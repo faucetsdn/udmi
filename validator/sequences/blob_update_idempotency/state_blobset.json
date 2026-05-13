@@ -1,0 +1,10 @@
+{
+  "blobs" : {
+    "pubber_module" : {
+      "phase" : "final",
+      "generation" : "TIMESTAMP"
+    }
+  },
+  "timestamp" : "TIMESTAMP",
+  "version" : "1.5.3"
+}

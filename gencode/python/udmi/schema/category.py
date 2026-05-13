@@ -83,14 +83,53 @@ class Category(Enum):
     # Stage of applying a device mapping
     MAPPING_DEVICE_APPLY = ("mapping.device.apply", Level.INFO)
 
+    # Conditions specific to an individual blob
+    BLOBSET_BLOB = ("blobset.blob", Level.INFO)
+
+    # Processing a blob update
+    BLOBSET_BLOB_UPDATE = ("blobset.blob.update", Level.INFO)
+
     # About receiving a blob update
     BLOBSET_BLOB_RECEIVE = ("blobset.blob.receive", Level.DEBUG)
 
     # Fetching a blob update
     BLOBSET_BLOB_FETCH = ("blobset.blob.fetch", Level.DEBUG)
 
+    # Insufficient storage to download or unpack blob
+    BLOBSET_BLOB_FETCH_OVERSIZE = ("blobset.blob.fetch.oversize", Level.ERROR)
+
+    # Blob fetch failed
+    BLOBSET_BLOB_FETCH_FAILURE = ("blobset.blob.fetch.failure", Level.ERROR)
+
+    # Parsing and verifying a blob
+    BLOBSET_BLOB_PARSE = ("blobset.blob.parse", Level.DEBUG)
+
+    # Data integrity check failed
+    BLOBSET_BLOB_PARSE_CORRUPT = ("blobset.blob.parse.corrupt", Level.ERROR)
+
+    # The data is invalid in some way
+    BLOBSET_BLOB_PARSE_INVALID = ("blobset.blob.parse.invalid", Level.ERROR)
+
+    # Blob is incompatible with the device for some reason
+    BLOBSET_BLOB_PARSE_INCOMPATIBLE = ("blobset.blob.parse.incompatible", Level.ERROR)
+
     # Applying a blob update
     BLOBSET_BLOB_APPLY = ("blobset.blob.apply", Level.NOTICE)
+
+    # Failed to install or execute
+    BLOBSET_BLOB_APPLY_FAILURE = ("blobset.blob.apply.failure", Level.ERROR)
+
+    # Dependencies required to apply are missing
+    BLOBSET_BLOB_APPLY_DEPENDENCY = ("blobset.blob.apply.dependency", Level.ERROR)
+
+    # Restart required to take effect
+    BLOBSET_BLOB_APPLY_RESTART = ("blobset.blob.apply.restart", Level.NOTICE)
+
+    # Blob update process was canceled or aborted
+    BLOBSET_BLOB_ABORT = ("blobset.blob.abort", Level.NOTICE)
+
+    # Reverting to previous blob version
+    BLOBSET_BLOB_ROLLBACK = ("blobset.blob.rollback", Level.NOTICE)
 
     # Receiving/processing a message for validation.
     VALIDATION_DEVICE_RECEIVE = ("validation.device.receive", Level.DEBUG)

@@ -44,6 +44,12 @@ public enum Bucket {
   // System mode
   SYSTEM_MODE("system.mode"),
 
+  // System software
+  SYSTEM_SOFTWARE("system.software"),
+
+  // Over the air software updates
+  SYSTEM_SOFTWARE_UPDATES("system.software.updates"),
+
   // Writeback related operations
   WRITEBACK("writeback"),
 

@@ -17,7 +17,15 @@ import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertTrue;
 import static udmi.schema.Bucket.ENDPOINT_CONFIG;
 import static udmi.schema.Bucket.SYSTEM_MODE;
+import static udmi.schema.Bucket.SYSTEM_SOFTWARE_UPDATES;
 import static udmi.schema.Category.BLOBSET_BLOB_APPLY;
+import static udmi.schema.Category.BLOBSET_BLOB_FETCH;
+import static udmi.schema.Category.BLOBSET_BLOB_FETCH_FAILURE;
+import static udmi.schema.Category.BLOBSET_BLOB_FETCH_OVERSIZE;
+import static udmi.schema.Category.BLOBSET_BLOB_PARSE_CORRUPT;
+import static udmi.schema.Category.BLOBSET_BLOB_PARSE_INCOMPATIBLE;
+import static udmi.schema.Category.BLOBSET_BLOB_PARSE_INVALID;
+import static udmi.schema.Category.BLOBSET_BLOB_RECEIVE;
 import static udmi.schema.FeatureDiscovery.FeatureStage.PREVIEW;
 
 import com.google.daq.mqtt.sequencer.Feature;
@@ -39,6 +47,7 @@ import udmi.schema.Basic;
 import udmi.schema.BlobBlobsetConfig;
 import udmi.schema.BlobBlobsetConfig.BlobPhase;
 import udmi.schema.BlobBlobsetState;
+import udmi.schema.BlobUpdateTestingModel;
 import udmi.schema.BlobsetConfig;
 import udmi.schema.BlobsetConfig.SystemBlobsets;
 import udmi.schema.EndpointConfiguration;
@@ -50,11 +59,9 @@ import udmi.schema.IotAccess.IotProvider;
 import udmi.schema.Level;
 import udmi.schema.Operation.SystemMode;
 
-
 /**
  * Validation tests for instances that involve blobset config messages.
  */
-
 public class BlobsetSequences extends SequenceBase {
 
   public static final String JSON_MIME_TYPE = "application/json";
@@ -387,4 +394,157 @@ public class BlobsetSequences extends SequenceBase {
     untilTrue("last_start is newer than previous last_start",
         () -> deviceConfig.system.operation.last_start.after(last_start));
   }
+
+  private BlobUpdateTestingModel getUpdateTarget(String targetType) {
+    ifTrueSkipTest(
+        deviceMetadata.testing == null || deviceMetadata.testing.blob_update_targets == null,
+        "No blob update targets defined in metadata");
+    BlobUpdateTestingModel target = deviceMetadata.testing.blob_update_targets.get(targetType);
+    ifNullSkipTest(target, "No blob update target defined for type '" + targetType + "'");
+    return target;
+  }
+
+  private void setDeviceConfigSoftwareBlob(String blobName, String url, String sha256) {
+    BlobBlobsetConfig config = new BlobBlobsetConfig();
+    config.url = SemanticValue.describe("software data", url);
+    config.phase = BlobPhase.FINAL;
+    config.generation = SemanticDate.describe("blob generation", new Date());
+    config.sha256 = SemanticValue.describe("blob data hash", sha256);
+
+    BlobsetConfig blobset = new BlobsetConfig();
+    blobset.blobs = new HashMap<>();
+    blobset.blobs.put(blobName, config);
+    deviceConfig.blobset = blobset;
+  }
+
+  private String executeBlobUpdate(BlobUpdateTestingModel target) {
+    String blobName = target.blob_name;
+    String url = target.url;
+    String sha256 = target.sha256;
+
+    setDeviceConfigSoftwareBlob(blobName, url, sha256);
+    updateConfig("trigger blob update for " + blobName);
+
+    untilTrue(blobName + " phase transitions", () -> {
+      BlobBlobsetState blobBlobsetState = deviceState.blobset.blobs.get(blobName);
+      return blobBlobsetState != null && (BlobPhase.APPLY.equals(blobBlobsetState.phase)
+          || BlobPhase.FINAL.equals(blobBlobsetState.phase));
+    });
+
+    untilTrue(blobName + " phase is FINAL", () -> {
+      BlobBlobsetState blobBlobsetState = deviceState.blobset.blobs.get(blobName);
+      return blobBlobsetState != null && BlobPhase.FINAL.equals(blobBlobsetState.phase);
+    });
+
+    return blobName;
+  }
+
+  private void verifyBlobUpdateSequence(BlobUpdateTestingModel target, boolean expectSuccess,
+      String... expectedLogs) {
+    info(format("Testing blob update for blob key %s, version %s", target.blob_name,
+        target.version));
+
+    String blobName = executeBlobUpdate(target);
+
+    for (String logCategory : expectedLogs) {
+      waitForLog(logCategory);
+    }
+
+    BlobBlobsetState blobBlobsetState = deviceState.blobset.blobs.get(blobName);
+
+    if (expectSuccess) {
+      checkThat(blobName + " state is success", () -> blobBlobsetState.status == null);
+      checkThat(blobName + " software version reflects update", () -> {
+        String softwareVersion = deviceState.system.software.get(blobName);
+        return target.version.equals(softwareVersion);
+      });
+    } else {
+      checkThat(blobName + " state indicates error", () ->
+          blobBlobsetState.status != null && blobBlobsetState.status.level >= Level.ERROR.value());
+    }
+  }
+
+  private void verifyBlobUpdateSequence(String targetType, boolean expectSuccess,
+      String... expectedLogs) {
+    verifyBlobUpdateSequence(getUpdateTarget(targetType), expectSuccess, expectedLogs);
+  }
+
+  @Test(timeout = TWO_MINUTES_MS)
+  @Feature(stage = PREVIEW, bucket = SYSTEM_SOFTWARE_UPDATES)
+  @Summary("Validates a successful blob update where the device fetches, applies, "
+      + "and reports the new version.")
+  public void blob_update_success() {
+    verifyBlobUpdateSequence("success", true,
+        BLOBSET_BLOB_RECEIVE, BLOBSET_BLOB_FETCH, BLOBSET_BLOB_APPLY);
+  }
+
+  @Test(timeout = TWO_MINUTES_MS)
+  @Feature(stage = PREVIEW, bucket = SYSTEM_SOFTWARE_UPDATES)
+  @Summary("Validates tamper protection by providing a valid URL but an incorrect SHA-256 hash.")
+  public void blob_update_invalid_hash() {
+    verifyBlobUpdateSequence("fail_hash", false,
+        BLOBSET_BLOB_RECEIVE, BLOBSET_BLOB_FETCH, BLOBSET_BLOB_PARSE_CORRUPT);
+  }
+
+  @Test(timeout = TWO_MINUTES_MS)
+  @Feature(stage = PREVIEW, bucket = SYSTEM_SOFTWARE_UPDATES)
+  @Summary("Validates network resilience by providing an unreachable or 404 URL.")
+  public void blob_update_unreachable_url() {
+    verifyBlobUpdateSequence("fail_fetch", false,
+        BLOBSET_BLOB_RECEIVE, BLOBSET_BLOB_FETCH, BLOBSET_BLOB_FETCH_FAILURE);
+  }
+
+  @Test(timeout = TWO_MINUTES_MS)
+  @Feature(stage = PREVIEW, bucket = SYSTEM_SOFTWARE_UPDATES)
+  @Summary("Validates format and signature checking by providing a dummy payload.")
+  public void blob_update_invalid_payload() {
+    verifyBlobUpdateSequence("fail_parse", false,
+        BLOBSET_BLOB_RECEIVE, BLOBSET_BLOB_FETCH, BLOBSET_BLOB_PARSE_INVALID);
+  }
+
+  @Test(timeout = TWO_MINUTES_MS)
+  @Feature(stage = PREVIEW, bucket = SYSTEM_SOFTWARE_UPDATES)
+  @Summary("Validates reporting of incompatibility for a blob update.")
+  public void blob_update_incompatible() {
+    verifyBlobUpdateSequence("fail_incompatible", false,
+        BLOBSET_BLOB_RECEIVE, BLOBSET_BLOB_FETCH, BLOBSET_BLOB_PARSE_INCOMPATIBLE);
+  }
+
+  @Test(timeout = TWO_MINUTES_MS)
+  @Feature(stage = PREVIEW, bucket = SYSTEM_SOFTWARE_UPDATES)
+  @Summary("Validates reporting of an oversized payload fetch failure.")
+  public void blob_update_oversize() {
+    verifyBlobUpdateSequence("fail_oversize", false,
+        BLOBSET_BLOB_RECEIVE, BLOBSET_BLOB_FETCH, BLOBSET_BLOB_FETCH_OVERSIZE);
+  }
+
+
+  @Test(timeout = TWO_MINUTES_MS)
+  @Feature(stage = PREVIEW, bucket = SYSTEM_SOFTWARE_UPDATES)
+  @Summary("Validates that a previously applied blob config is not reapplied.")
+  public void blob_update_idempotency() {
+    // Standard successful update
+    verifyBlobUpdateSequence("success", true,
+        BLOBSET_BLOB_RECEIVE,
+        BLOBSET_BLOB_FETCH,
+        BLOBSET_BLOB_APPLY
+    );
+
+    // Resend the exact same config
+    BlobUpdateTestingModel target = getUpdateTarget("success");
+    updateConfig("trigger redundant update to check for idempotency");
+
+    sleepFor("waiting for device to process update", Duration.ofSeconds(10));
+
+    untilTrue(target.blob_name + " phase is FINAL", () -> {
+      BlobBlobsetState blobState = deviceState.blobset.blobs.get(target.blob_name);
+      return blobState != null && BlobPhase.FINAL.equals(blobState.phase);
+    });
+
+    // No new lifecycle logs should have been emitted
+    checkWasNotLogged(BLOBSET_BLOB_RECEIVE, Level.DEBUG);
+    checkWasNotLogged(BLOBSET_BLOB_FETCH, Level.DEBUG);
+    checkWasNotLogged(BLOBSET_BLOB_APPLY, Level.INFO);
+  }
+
 }

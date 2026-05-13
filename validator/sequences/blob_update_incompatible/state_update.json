@@ -1,0 +1,76 @@
+{
+  "blobset" : {
+    "blobs" : {
+      "pubber_module" : {
+        "phase" : "final",
+        "status" : {
+          "message" : "Simulated incompatibility for pubber_module",
+          "detail" : "udmi.lib.base.UdmiException$BlobIncompatibleException: Simulated incompatibility for pubber_module\n\tat daq.pubber.impl.blob.PubberBlobLifecycleHandler.stagePubberModuleUpdate(PubberBlobLifecycleHandler.java:136)\n\tat daq.pubber.impl.blob.PubberBlobLifecycleHandler.stageBlob(PubberBlobLifecycleHandler.java:92)\n\tat udmi.lib.client.host.PublisherHost.orchestrateTwoPhaseDeployment(PublisherHost.java:389)\n\tat udmi.lib.client.host.PublisherHost.lambda$evaluateAndDeployBlob$3(PublisherHost.java:358)\n\tat java.base/java.util.concurrent.CompletableFuture$AsyncRun.run(CompletableFuture.java:1804)\n\tat java.base/java.util.concurrent.CompletableFuture$AsyncRun.exec(CompletableFuture.java:1796)\n\tat java.base/java.util.concurrent.ForkJoinTask.doExec(ForkJoinTask.java:387)\n\tat java.base/java.util.concurrent.ForkJoinPool$WorkQueue.topLevelExec(ForkJoinPool.java:1312)\n\tat java.base/java.util.concurrent.ForkJoinPool.scan(ForkJoinPool.java:1843)\n\tat java.base/java.util.concurrent.ForkJoinPool.runWorker(ForkJoinPool.java:1808)\n\tat java.base/java.util.concurrent.ForkJoinWorkerThread.run(ForkJoinWorkerThread.java:188)\n",
+          "category" : "blobset.blob.apply",
+          "timestamp" : "TIMESTAMP",
+          "level" : 500
+        },
+        "generation" : "TIMESTAMP"
+      }
+    }
+  },
+  "discovery" : {
+    "families" : { }
+  },
+  "localnet" : {
+    "families" : {
+      "ether" : {
+        "addr" : "42:01:ac:11:23:ac"
+      },
+      "ipv4" : {
+        "addr" : "172.17.35.172"
+      },
+      "vendor" : {
+        "addr" : "28179023"
+      },
+      "bacnet" : {
+        "addr" : "27312"
+      }
+    }
+  },
+  "pointset" : {
+    "points" : {
+      "filter_alarm_pressure_status" : {
+        "units" : "No-units"
+      },
+      "filter_differential_pressure_setpoint" : {
+        "units" : "Bars",
+        "value_state" : "applied"
+      },
+      "filter_differential_pressure_sensor" : {
+        "units" : "Degrees-Celsius"
+      }
+    }
+  },
+  "system" : {
+    "last_config" : "TIMESTAMP",
+    "operation" : {
+      "operational" : true,
+      "last_start" : "TIMESTAMP",
+      "restart_count" : 1,
+      "mode" : "initial"
+    },
+    "serial_no" : "sequencer-25060",
+    "hardware" : {
+      "make" : "BOS",
+      "model" : "pubber"
+    },
+    "software" : {
+      "firmware" : "v1",
+      "pubber_module" : "v1"
+    },
+    "status" : {
+      "message" : "success",
+      "category" : "system.config.apply",
+      "timestamp" : "TIMESTAMP",
+      "level" : 300
+    }
+  },
+  "timestamp" : "TIMESTAMP",
+  "version" : "1.5.3"
+}
