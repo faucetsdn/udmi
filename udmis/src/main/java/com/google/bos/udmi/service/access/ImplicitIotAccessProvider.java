@@ -263,7 +263,8 @@ public class ImplicitIotAccessProvider extends IotAccessBase {
     if (isPublishEnabled()) {
       publishMqtt(registryId, deviceId, config);
     } else {
-      debug("Skipping MQTT config publish for %s/%s because broker credentials are not configured", registryId, deviceId);
+      debug("Skipping MQTT config publish for %s/%s because broker "
+          + "credentials are not configured", registryId, deviceId);
     }
   }
 
