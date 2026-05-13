@@ -26,25 +26,6 @@ import static udmi.schema.CloudModel.ModelOperation.READ;
 import static udmi.schema.CloudModel.Resource_type.DIRECT;
 import static udmi.schema.CloudModel.Resource_type.GATEWAY;
 
-import com.google.bos.udmi.service.messaging.impl.SimpleMqttPipe;
-import com.google.bos.udmi.service.messaging.impl.MessageBase.Bundle;
-import com.google.bos.udmi.service.messaging.MessageDispatcher;
-import udmi.schema.EndpointConfiguration;
-import udmi.schema.EndpointConfiguration.Transport;
-import udmi.schema.Auth_provider;
-import udmi.schema.Basic;
-import com.google.bos.udmi.service.core.ReflectProcessor;
-import com.google.bos.udmi.service.pod.UdmiServicePod;
-import com.google.bos.udmi.service.support.ConnectionBroker;
-import com.google.bos.udmi.service.support.ConnectionBroker.BrokerEvent;
-import com.google.bos.udmi.service.support.ConnectionBroker.Direction;
-import com.google.bos.udmi.service.support.DataRef;
-import com.google.bos.udmi.service.support.IotDataProvider;
-import com.google.bos.udmi.service.support.MosquittoBroker;
-import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ImmutableSet;
-import com.google.udmi.util.GeneralUtils;
-import com.google.udmi.util.JsonUtil;
 import java.util.AbstractMap.SimpleEntry;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -57,6 +38,27 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Future;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
+
+import com.google.bos.udmi.service.messaging.impl.SimpleMqttPipe;
+import com.google.bos.udmi.service.messaging.impl.MessageBase.Bundle;
+import com.google.bos.udmi.service.messaging.MessageDispatcher;
+import com.google.bos.udmi.service.core.ReflectProcessor;
+import com.google.bos.udmi.service.pod.UdmiServicePod;
+import com.google.bos.udmi.service.support.ConnectionBroker;
+import com.google.bos.udmi.service.support.ConnectionBroker.BrokerEvent;
+import com.google.bos.udmi.service.support.ConnectionBroker.Direction;
+import com.google.bos.udmi.service.support.DataRef;
+import com.google.bos.udmi.service.support.IotDataProvider;
+import com.google.bos.udmi.service.support.MosquittoBroker;
+import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
+import com.google.udmi.util.GeneralUtils;
+import com.google.udmi.util.JsonUtil;
+
+import udmi.schema.EndpointConfiguration;
+import udmi.schema.EndpointConfiguration.Transport;
+import udmi.schema.Auth_provider;
+import udmi.schema.Basic;
 import udmi.schema.CloudModel;
 import udmi.schema.CloudModel.ModelOperation;
 import udmi.schema.CloudModel.Resource_type;
@@ -132,8 +134,12 @@ public class ImplicitIotAccessProvider extends IotAccessBase {
 
     if (iotAccess.endpoint != null) {
       endpointConfig = iotAccess.endpoint;
-      brokerUser = endpointConfig.auth_provider != null && endpointConfig.auth_provider.basic != null ? endpointConfig.auth_provider.basic.username : null;
-      brokerPass = endpointConfig.auth_provider != null && endpointConfig.auth_provider.basic != null ? endpointConfig.auth_provider.basic.password : null;
+      brokerUser = endpointConfig.auth_provider != null
+          && endpointConfig.auth_provider.basic != null
+          ? endpointConfig.auth_provider.basic.username : null;
+      brokerPass = endpointConfig.auth_provider != null
+          && endpointConfig.auth_provider.basic != null
+          ? endpointConfig.auth_provider.basic.password : null;
       brokerHost = ofNullable(endpointConfig.hostname).orElse("localhost");
       brokerPort = ofNullable(endpointConfig.port).map(Object::toString).orElse("8883");
     } else {
@@ -282,7 +288,8 @@ public class ImplicitIotAccessProvider extends IotAccessBase {
       mqttPipe.publish(bundle);
       debug("Published config to pipe for %s/%s", registryId, deviceId);
     } catch (Exception e) {
-      error("While publishing to MQTT pipe for " + registryId + "/" + deviceId + ": " + friendlyStackTrace(e));
+      error("While publishing to MQTT pipe for " + registryId + "/" + deviceId
+          + ": " + friendlyStackTrace(e));
     }
   }
 
@@ -355,6 +362,10 @@ public class ImplicitIotAccessProvider extends IotAccessBase {
           endpointConfig.auth_provider.basic.username = brokerUser;
           endpointConfig.auth_provider.basic.password = brokerPass;
         }
+      }
+
+      if (endpointConfig.send_id == null) {
+        endpointConfig.send_id = "implicit";
       }
 
       mqttPipe = new SimpleMqttPipe(endpointConfig);
