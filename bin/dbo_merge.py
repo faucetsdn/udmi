@@ -4,9 +4,16 @@ import json
 import os
 import sys
 import csv
+import re
 from datetime import datetime, timezone
 from pathlib import Path
 import yaml
+
+def sanitize_id(id_str: str) -> str:
+  """Sanitizes a string for use as a UDMI device_id."""
+  # Replace non-alphanumeric with underscores, strip leading/trailing underscores
+  s = re.sub(r'[^a-z0-9_-]+', '_', id_str.lower())
+  return s.strip('_')
 
 def load_csv_map(site_model_dir: Path):
   """Loads device_num_id -> device_id map from discovery.csv if it exists."""
@@ -39,7 +46,7 @@ def merge_dbo_config(yaml_file: Path, site_model_dir: Path):
   guid_to_id = {}
   used_ids = set()
   
-  # Priority 1: CSV-mapped devices
+  # Priority 1: CSV-mapped devices (don't sanitize these, assume they are authoritative)
   for guid, entity in config.items():
     if guid == "CONFIG_METADATA": continue
     cloud_id = str(entity.get("cloud_device_id", ""))
@@ -48,12 +55,16 @@ def merge_dbo_config(yaml_file: Path, site_model_dir: Path):
       guid_to_id[guid] = dev_id
       used_ids.add(dev_id)
 
-  # Priority 2: Code (with collision handling)
+  # Priority 2: Code (with sanitization and collision handling)
   for guid, entity in config.items():
     if guid == "CONFIG_METADATA" or guid in guid_to_id: continue
     
-    # Use code if available, otherwise GUID (as a last resort device_id)
-    base_id = entity.get("code", guid)
+    code = entity.get("code")
+    if code:
+        base_id = sanitize_id(code)
+    else:
+        base_id = guid # GUIDs are already safe-ish but we'll see
+        
     dev_id = base_id
     counter = 2
     while dev_id in used_ids:

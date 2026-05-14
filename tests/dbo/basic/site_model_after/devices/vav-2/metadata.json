@@ -13,7 +13,7 @@
     "num_id": "2541901344105617"
   },
   "relationships": {
-    "VAV-1": {
+    "vav-1": {
       "FEEDS": [
         {}
       ]
