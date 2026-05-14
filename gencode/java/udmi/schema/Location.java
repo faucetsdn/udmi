@@ -14,6 +14,7 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
     "site",
+    "region",
     "panel",
     "section",
     "room",
@@ -32,6 +33,13 @@ public class Location {
     @JsonProperty("site")
     @JsonPropertyDescription("The site name according to the site model in which the device is installed in")
     public String site;
+    /**
+     * The region according to the site model in which the device is installed in
+     *
+     */
+    @JsonProperty("region")
+    @JsonPropertyDescription("The region according to the site model in which the device is installed in")
+    public String region;
     /**
      * The reference of the panel where the device is installed in
      * 
@@ -70,6 +78,7 @@ public class Location {
         result = ((result* 31)+((this.coordinates == null)? 0 :this.coordinates.hashCode()));
         result = ((result* 31)+((this.section == null)? 0 :this.section.hashCode()));
         result = ((result* 31)+((this.position == null)? 0 :this.position.hashCode()));
+        result = ((result* 31)+((this.region == null)? 0 :this.region.hashCode()));
         result = ((result* 31)+((this.panel == null)? 0 :this.panel.hashCode()));
         result = ((result* 31)+((this.floor == null)? 0 :this.floor.hashCode()));
         result = ((result* 31)+((this.room == null)? 0 :this.room.hashCode()));
@@ -85,7 +94,7 @@ public class Location {
             return false;
         }
         Location rhs = ((Location) other);
-        return (((((((((this.site == rhs.site)||((this.site!= null)&&this.site.equals(rhs.site)))&&((this.floor_seq == rhs.floor_seq)||((this.floor_seq!= null)&&this.floor_seq.equals(rhs.floor_seq))))&&((this.coordinates == rhs.coordinates)||((this.coordinates!= null)&&this.coordinates.equals(rhs.coordinates))))&&((this.section == rhs.section)||((this.section!= null)&&this.section.equals(rhs.section))))&&((this.position == rhs.position)||((this.position!= null)&&this.position.equals(rhs.position))))&&((this.panel == rhs.panel)||((this.panel!= null)&&this.panel.equals(rhs.panel))))&&((this.floor == rhs.floor)||((this.floor!= null)&&this.floor.equals(rhs.floor))))&&((this.room == rhs.room)||((this.room!= null)&&this.room.equals(rhs.room))));
+        return ((((((((((this.site == rhs.site)||((this.site!= null)&&this.site.equals(rhs.site)))&&((this.floor_seq == rhs.floor_seq)||((this.floor_seq!= null)&&this.floor_seq.equals(rhs.floor_seq))))&&((this.coordinates == rhs.coordinates)||((this.coordinates!= null)&&this.coordinates.equals(rhs.coordinates))))&&((this.section == rhs.section)||((this.section!= null)&&this.section.equals(rhs.section))))&&((this.position == rhs.position)||((this.position!= null)&&this.position.equals(rhs.position))))&&((this.region == rhs.region)||((this.region!= null)&&this.region.equals(rhs.region))))&&((this.panel == rhs.panel)||((this.panel!= null)&&this.panel.equals(rhs.panel))))&&((this.floor == rhs.floor)||((this.floor!= null)&&this.floor.equals(rhs.floor))))&&((this.room == rhs.room)||((this.room!= null)&&this.room.equals(rhs.room))));
     }
 
 }
