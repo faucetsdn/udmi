@@ -42,13 +42,13 @@ def merge_dbo_config(yaml_file: Path, site_model_dir: Path):
 
   csv_map = load_csv_map(site_model_dir)
 
-  # First pass: map every GUID to a unique device_id
+  # First pass: map every GUID with a cloud_device_id to a unique device_id
   guid_to_id = {}
   used_ids = set()
   
   # Priority 1: CSV-mapped devices (don't sanitize these, assume they are authoritative)
   for guid, entity in config.items():
-    if guid == "CONFIG_METADATA": continue
+    if guid == "CONFIG_METADATA" or "cloud_device_id" not in entity: continue
     cloud_id = str(entity.get("cloud_device_id", ""))
     if cloud_id in csv_map:
       dev_id = csv_map[cloud_id]
@@ -57,7 +57,7 @@ def merge_dbo_config(yaml_file: Path, site_model_dir: Path):
 
   # Priority 2: Code (with sanitization and collision handling)
   for guid, entity in config.items():
-    if guid == "CONFIG_METADATA" or guid in guid_to_id: continue
+    if guid == "CONFIG_METADATA" or guid in guid_to_id or "cloud_device_id" not in entity: continue
     
     code = entity.get("code")
     if code:
@@ -74,9 +74,15 @@ def merge_dbo_config(yaml_file: Path, site_model_dir: Path):
     guid_to_id[guid] = dev_id
     used_ids.add(dev_id)
 
+  ancillary = {}
+
   # Second pass: merge data
   for guid, entity in config.items():
     if guid == "CONFIG_METADATA":
+      continue
+
+    if "cloud_device_id" not in entity:
+      ancillary[guid] = entity
       continue
 
     device_id = guid_to_id[guid]
@@ -162,6 +168,12 @@ def merge_dbo_config(yaml_file: Path, site_model_dir: Path):
 
     with open(metadata_path, "w", encoding="utf-8") as f:
       json.dump(metadata, f, indent=2)
+      f.write("\n")
+
+  if ancillary:
+    ancillary_path = site_model_dir / "ancillary.json"
+    with open(ancillary_path, "w", encoding="utf-8") as f:
+      json.dump(ancillary, f, indent=2)
       f.write("\n")
 
 if __name__ == "__main__":

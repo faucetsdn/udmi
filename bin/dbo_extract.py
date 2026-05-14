@@ -7,10 +7,15 @@ import yaml
 def extract_dbo_config(site_model_dir: Path) -> dict:
   """Extracts DBO configurations to a dict."""
   building_config = {}
+  
+  ancillary_path = site_model_dir / "ancillary.json"
+  if ancillary_path.exists():
+    with open(ancillary_path, "r", encoding="utf-8") as f:
+      building_config = json.load(f)
 
   devices_dir = site_model_dir / "devices"
   if not devices_dir.is_dir():
-      return {}
+      return building_config
 
   device_id_to_guid = {}
   metadata_map = {}
