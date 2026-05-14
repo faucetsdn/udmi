@@ -1,0 +1,23 @@
+{
+  "timestamp": "2026-01-01T00:00:00Z",
+  "version": "1.5.3",
+  "system": {},
+  "externals": {
+    "dbo": {
+      "ext_id": "889924bc-b051-441d-872c-4a831b561e62",
+      "type": "UNTYPED/TYPELESS",
+      "etag": "91cbf712",
+      "label": "FC S-6"
+    }
+  },
+  "cloud": {
+    "num_id": "2659389840003826"
+  },
+  "relationships": {
+    "us-mtv-rls1": {
+      "CONTAINS": [
+        {}
+      ]
+    }
+  }
+}

@@ -1,0 +1,23 @@
+{
+  "timestamp": "2026-01-01T00:00:00Z",
+  "version": "1.5.3",
+  "system": {},
+  "externals": {
+    "dbo": {
+      "ext_id": "45971ee6-43ca-4c83-ab31-c4ffec3184e8",
+      "type": "UNTYPED/TYPELESS",
+      "etag": "76b9ed6d",
+      "label": "TF M-2 Machine Rm 12688"
+    }
+  },
+  "cloud": {
+    "num_id": "2653703490806812"
+  },
+  "relationships": {
+    "us-mtv-rls1": {
+      "CONTAINS": [
+        {}
+      ]
+    }
+  }
+}

@@ -1,0 +1,23 @@
+{
+  "timestamp": "2026-01-01T00:00:00Z",
+  "version": "1.5.3",
+  "system": {},
+  "externals": {
+    "dbo": {
+      "ext_id": "a7b49a34-f420-4375-aafb-a884f8ec0d33",
+      "type": "UNTYPED/TYPELESS",
+      "etag": "ad0f53d3",
+      "label": "TF S-5 Electrical Rm 21116"
+    }
+  },
+  "cloud": {
+    "num_id": "2650128564479257"
+  },
+  "relationships": {
+    "us-mtv-rls1": {
+      "CONTAINS": [
+        {}
+      ]
+    }
+  }
+}

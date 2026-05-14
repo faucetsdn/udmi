@@ -1,0 +1,23 @@
+{
+  "timestamp": "2026-01-01T00:00:00Z",
+  "version": "1.5.3",
+  "system": {},
+  "externals": {
+    "dbo": {
+      "ext_id": "1f9b9373-ad27-48da-98e1-85b87d2ee3c1",
+      "type": "UNTYPED/TYPELESS",
+      "etag": "f315a6d1",
+      "label": "power-meter-Lab_BL2E"
+    }
+  },
+  "cloud": {
+    "num_id": "2708632399496044"
+  },
+  "relationships": {
+    "us-mtv-rls1": {
+      "CONTAINS": [
+        {}
+      ]
+    }
+  }
+}

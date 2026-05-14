@@ -1,0 +1,20 @@
+{
+  "timestamp": "2026-01-01T00:00:00Z",
+  "version": "1.5.3",
+  "system": {},
+  "externals": {
+    "dbo": {
+      "ext_id": "98ec0270-9496-464a-b779-54dfe2be33eb",
+      "type": "INFO_TECH/PRNTR",
+      "etag": "b42b445c",
+      "label": "cmf-color"
+    }
+  },
+  "relationships": {
+    "us-mtv-rls1-2": {
+      "CONTAINS": [
+        {}
+      ]
+    }
+  }
+}

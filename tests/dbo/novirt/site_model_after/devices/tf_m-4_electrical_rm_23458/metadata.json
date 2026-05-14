@@ -1,0 +1,23 @@
+{
+  "timestamp": "2026-01-01T00:00:00Z",
+  "version": "1.5.3",
+  "system": {},
+  "externals": {
+    "dbo": {
+      "ext_id": "98b405a5-0830-4eec-b1da-20c0bcc15f81",
+      "type": "UNTYPED/TYPELESS",
+      "etag": "39c4c9a9",
+      "label": "TF M-4 Electrical Rm 23458"
+    }
+  },
+  "cloud": {
+    "num_id": "2684967242865555"
+  },
+  "relationships": {
+    "us-mtv-rls1": {
+      "CONTAINS": [
+        {}
+      ]
+    }
+  }
+}

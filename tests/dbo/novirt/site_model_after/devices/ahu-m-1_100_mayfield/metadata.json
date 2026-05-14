@@ -1,0 +1,23 @@
+{
+  "timestamp": "2026-01-01T00:00:00Z",
+  "version": "1.5.3",
+  "system": {},
+  "externals": {
+    "dbo": {
+      "ext_id": "e170ad9c-637f-497d-8472-9f00cc2fe772",
+      "type": "UNTYPED/TYPELESS",
+      "etag": "d033691c",
+      "label": "AHU-M-1 / 100 Mayfield"
+    }
+  },
+  "cloud": {
+    "num_id": "2707578237933157"
+  },
+  "relationships": {
+    "us-mtv-rls1": {
+      "CONTAINS": [
+        {}
+      ]
+    }
+  }
+}

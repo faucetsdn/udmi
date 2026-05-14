@@ -1,0 +1,25 @@
+{
+  "timestamp": "2026-01-01T00:00:00Z",
+  "version": "1.5.3",
+  "system": {},
+  "externals": {
+    "dbo": {
+      "ext_id": "1fad2f95-5f51-491c-89ae-ab8f1e0c3c65",
+      "type": "FACILITIES/ROOM",
+      "etag": "8b3b8b7d",
+      "label": "US-MTV-RLS1-3-32171"
+    }
+  },
+  "relationships": {
+    "us-mtv-rls1": {
+      "CONTAINS": [
+        {}
+      ]
+    },
+    "us-mtv-rls1-3": {
+      "CONTAINS": [
+        {}
+      ]
+    }
+  }
+}

@@ -1,0 +1,20 @@
+{
+  "timestamp": "2026-01-01T00:00:00Z",
+  "version": "1.5.3",
+  "system": {},
+  "externals": {
+    "dbo": {
+      "ext_id": "006d60c3-a251-481c-9587-e4ece57660df",
+      "type": "INFO_TECH/PRNTR",
+      "etag": "93386429",
+      "label": "ppchauffeur"
+    }
+  },
+  "relationships": {
+    "us-mtv-rls1-3": {
+      "CONTAINS": [
+        {}
+      ]
+    }
+  }
+}

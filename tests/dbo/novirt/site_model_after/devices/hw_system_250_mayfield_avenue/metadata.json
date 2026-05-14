@@ -1,0 +1,23 @@
+{
+  "timestamp": "2026-01-01T00:00:00Z",
+  "version": "1.5.3",
+  "system": {},
+  "externals": {
+    "dbo": {
+      "ext_id": "ff51b324-493e-4446-99bb-c113084bbe9e",
+      "type": "UNTYPED/TYPELESS",
+      "etag": "deb6214f",
+      "label": "HW System / 250 Mayfield Avenue"
+    }
+  },
+  "cloud": {
+    "num_id": "2571484101972432"
+  },
+  "relationships": {
+    "us-mtv-rls1": {
+      "CONTAINS": [
+        {}
+      ]
+    }
+  }
+}

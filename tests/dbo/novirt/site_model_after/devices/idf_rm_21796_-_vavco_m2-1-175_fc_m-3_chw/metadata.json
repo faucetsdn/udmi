@@ -1,0 +1,23 @@
+{
+  "timestamp": "2026-01-01T00:00:00Z",
+  "version": "1.5.3",
+  "system": {},
+  "externals": {
+    "dbo": {
+      "ext_id": "944efbad-d96f-455a-b556-27f0efc2eee9",
+      "type": "UNTYPED/TYPELESS",
+      "etag": "afdd5c6b",
+      "label": "IDF Rm 21796 - VAVCO M2-1-175 & FC M-3 CHW"
+    }
+  },
+  "cloud": {
+    "num_id": "2649221491869967"
+  },
+  "relationships": {
+    "us-mtv-rls1": {
+      "CONTAINS": [
+        {}
+      ]
+    }
+  }
+}

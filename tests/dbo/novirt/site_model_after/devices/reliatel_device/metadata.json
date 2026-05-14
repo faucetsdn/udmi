@@ -1,0 +1,23 @@
+{
+  "timestamp": "2026-01-01T00:00:00Z",
+  "version": "1.5.3",
+  "system": {},
+  "externals": {
+    "dbo": {
+      "ext_id": "ffba816d-7211-4d54-bd24-be81e0ea7b79",
+      "type": "UNTYPED/TYPELESS",
+      "etag": "8b682053",
+      "label": "ReliaTel Device"
+    }
+  },
+  "cloud": {
+    "num_id": "2750349401372265"
+  },
+  "relationships": {
+    "us-mtv-rls1": {
+      "CONTAINS": [
+        {}
+      ]
+    }
+  }
+}

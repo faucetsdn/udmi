@@ -1,0 +1,23 @@
+{
+  "timestamp": "2026-01-01T00:00:00Z",
+  "version": "1.5.3",
+  "system": {},
+  "externals": {
+    "dbo": {
+      "ext_id": "2a4f6ba2-e613-4de2-8506-3fabc0fcfd3c",
+      "type": "UNTYPED/TYPELESS",
+      "etag": "04b43e45",
+      "label": "VAV CO 1-1-48"
+    }
+  },
+  "cloud": {
+    "num_id": "2809098326490634"
+  },
+  "relationships": {
+    "us-mtv-rls1": {
+      "CONTAINS": [
+        {}
+      ]
+    }
+  }
+}

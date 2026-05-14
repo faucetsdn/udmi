@@ -1,0 +1,23 @@
+{
+  "timestamp": "2026-01-01T00:00:00Z",
+  "version": "1.5.3",
+  "system": {},
+  "externals": {
+    "dbo": {
+      "ext_id": "d6460f7f-65bf-4b6d-b5bd-7ce43210408a",
+      "type": "UNTYPED/TYPELESS",
+      "etag": "1b2a2cfa",
+      "label": "Boiler Plant / San Antonio"
+    }
+  },
+  "cloud": {
+    "num_id": "2756297176827371"
+  },
+  "relationships": {
+    "us-mtv-rls1": {
+      "CONTAINS": [
+        {}
+      ]
+    }
+  }
+}

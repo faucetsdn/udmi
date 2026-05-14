@@ -1,0 +1,20 @@
+{
+  "timestamp": "2026-01-01T00:00:00Z",
+  "version": "1.5.3",
+  "system": {},
+  "externals": {
+    "dbo": {
+      "ext_id": "e88b5fee-f037-487d-86bf-d5a584b1addf",
+      "type": "INFO_TECH/PRNTR",
+      "etag": "515d102c",
+      "label": "plex-plotter"
+    }
+  },
+  "relationships": {
+    "us-mtv-rls1-3": {
+      "CONTAINS": [
+        {}
+      ]
+    }
+  }
+}

@@ -1,0 +1,23 @@
+{
+  "timestamp": "2026-01-01T00:00:00Z",
+  "version": "1.5.3",
+  "system": {},
+  "externals": {
+    "dbo": {
+      "ext_id": "917f98e0-dda1-4d50-83a3-9d4300f887ac",
+      "type": "UNTYPED/TYPELESS",
+      "etag": "037a4f62",
+      "label": "TF M-6 Elevator Closet Rm 21936"
+    }
+  },
+  "cloud": {
+    "num_id": "2573998423076534"
+  },
+  "relationships": {
+    "us-mtv-rls1": {
+      "CONTAINS": [
+        {}
+      ]
+    }
+  }
+}

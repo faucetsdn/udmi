@@ -1,0 +1,23 @@
+{
+  "timestamp": "2026-01-01T00:00:00Z",
+  "version": "1.5.3",
+  "system": {},
+  "externals": {
+    "dbo": {
+      "ext_id": "f2cb2f65-a3bb-49b7-b77d-61b4bbae0280",
+      "type": "UNTYPED/TYPELESS",
+      "etag": "d5b18505",
+      "label": "TF S-13 Electrical Rm 33231"
+    }
+  },
+  "cloud": {
+    "num_id": "2613784660228004"
+  },
+  "relationships": {
+    "us-mtv-rls1": {
+      "CONTAINS": [
+        {}
+      ]
+    }
+  }
+}

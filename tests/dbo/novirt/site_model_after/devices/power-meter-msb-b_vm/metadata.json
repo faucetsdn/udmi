@@ -1,0 +1,23 @@
+{
+  "timestamp": "2026-01-01T00:00:00Z",
+  "version": "1.5.3",
+  "system": {},
+  "externals": {
+    "dbo": {
+      "ext_id": "b50d1c71-3a36-4281-ac2d-6d4152ca9c15",
+      "type": "UNTYPED/TYPELESS",
+      "etag": "a1122cb1",
+      "label": "power-meter-MSB-B_vm"
+    }
+  },
+  "cloud": {
+    "num_id": "2692806311056168"
+  },
+  "relationships": {
+    "us-mtv-rls1": {
+      "CONTAINS": [
+        {}
+      ]
+    }
+  }
+}

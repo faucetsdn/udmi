@@ -1,0 +1,20 @@
+{
+  "timestamp": "2026-01-01T00:00:00Z",
+  "version": "1.5.3",
+  "system": {},
+  "externals": {
+    "dbo": {
+      "ext_id": "ff542433-4fb8-4e3c-824d-16a78986513b",
+      "type": "INFO_TECH/PRNTR",
+      "etag": "a1a80f4b",
+      "label": "johnnyfive-color"
+    }
+  },
+  "relationships": {
+    "us-mtv-rls1-1": {
+      "CONTAINS": [
+        {}
+      ]
+    }
+  }
+}

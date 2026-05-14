@@ -1,0 +1,20 @@
+{
+  "timestamp": "2026-01-01T00:00:00Z",
+  "version": "1.5.3",
+  "system": {},
+  "externals": {
+    "dbo": {
+      "ext_id": "8647ab0c-dcb0-4e2c-8b9f-e30ca68769b0",
+      "type": "INFO_TECH/PRNTR",
+      "etag": "1ee370f0",
+      "label": "mf-lab-barcodeprint3"
+    }
+  },
+  "relationships": {
+    "us-mtv-rls1-2": {
+      "CONTAINS": [
+        {}
+      ]
+    }
+  }
+}

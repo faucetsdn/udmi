@@ -1,0 +1,23 @@
+{
+  "timestamp": "2026-01-01T00:00:00Z",
+  "version": "1.5.3",
+  "system": {},
+  "externals": {
+    "dbo": {
+      "ext_id": "db7fce51-d6c1-4b67-8dfb-5604880891c8",
+      "type": "UNTYPED/TYPELESS",
+      "etag": "313b90da",
+      "label": "FC S-16 (Loading Dock)"
+    }
+  },
+  "cloud": {
+    "num_id": "2633288050285305"
+  },
+  "relationships": {
+    "us-mtv-rls1": {
+      "CONTAINS": [
+        {}
+      ]
+    }
+  }
+}

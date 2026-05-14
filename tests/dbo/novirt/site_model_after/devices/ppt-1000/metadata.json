@@ -1,0 +1,20 @@
+{
+  "timestamp": "2026-01-01T00:00:00Z",
+  "version": "1.5.3",
+  "system": {},
+  "externals": {
+    "dbo": {
+      "ext_id": "0344e012-5438-4812-bff8-2ef7d8aecc25",
+      "type": "INFO_TECH/PRNTR",
+      "etag": "bad71a69",
+      "label": "ppt-1000"
+    }
+  },
+  "relationships": {
+    "us-mtv-rls1-1": {
+      "CONTAINS": [
+        {}
+      ]
+    }
+  }
+}

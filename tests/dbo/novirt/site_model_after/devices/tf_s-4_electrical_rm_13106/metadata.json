@@ -1,0 +1,23 @@
+{
+  "timestamp": "2026-01-01T00:00:00Z",
+  "version": "1.5.3",
+  "system": {},
+  "externals": {
+    "dbo": {
+      "ext_id": "cad9666b-8384-476f-b7c0-58b3a220854d",
+      "type": "UNTYPED/TYPELESS",
+      "etag": "4f0641c5",
+      "label": "TF S-4 Electrical Rm 13106"
+    }
+  },
+  "cloud": {
+    "num_id": "2607174145949272"
+  },
+  "relationships": {
+    "us-mtv-rls1": {
+      "CONTAINS": [
+        {}
+      ]
+    }
+  }
+}

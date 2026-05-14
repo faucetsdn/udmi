@@ -1,0 +1,23 @@
+{
+  "timestamp": "2026-01-01T00:00:00Z",
+  "version": "1.5.3",
+  "system": {},
+  "externals": {
+    "dbo": {
+      "ext_id": "94b4c97f-bf03-4379-b97e-e32add0eceed",
+      "type": "UNTYPED/TYPELESS",
+      "etag": "81884214",
+      "label": "VAV RH 1-1-46 CO2"
+    }
+  },
+  "cloud": {
+    "num_id": "2670539340444964"
+  },
+  "relationships": {
+    "us-mtv-rls1": {
+      "CONTAINS": [
+        {}
+      ]
+    }
+  }
+}

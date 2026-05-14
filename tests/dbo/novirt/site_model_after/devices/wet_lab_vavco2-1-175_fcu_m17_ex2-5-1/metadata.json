@@ -1,0 +1,23 @@
+{
+  "timestamp": "2026-01-01T00:00:00Z",
+  "version": "1.5.3",
+  "system": {},
+  "externals": {
+    "dbo": {
+      "ext_id": "08e185d0-10c7-4fb7-a17b-24f113549a6e",
+      "type": "UNTYPED/TYPELESS",
+      "etag": "9b7d4794",
+      "label": "Wet Lab VAVCO2-1-175 / FCU M17 / EX2-5-1"
+    }
+  },
+  "cloud": {
+    "num_id": "2571805641992207"
+  },
+  "relationships": {
+    "us-mtv-rls1": {
+      "CONTAINS": [
+        {}
+      ]
+    }
+  }
+}
