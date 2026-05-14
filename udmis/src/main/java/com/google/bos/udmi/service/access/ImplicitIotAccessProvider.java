@@ -140,13 +140,26 @@ public class ImplicitIotAccessProvider extends IotAccessBase {
       brokerHost = ofNullable(endpointConfig.hostname).orElse("localhost");
       brokerPort = ofNullable(endpointConfig.port).map(Object::toString).orElse("8883");
     } else {
+      endpointConfig = new EndpointConfiguration();
       brokerUser = options.get(BROKER_USER_KEY);
       brokerPass = options.get(BROKER_PASS_KEY);
       brokerHost = ofNullable(options.get(BROKER_HOST_KEY)).orElse("localhost");
       brokerPort = ofNullable(options.get(BROKER_PORT_KEY)).orElse("8883");
+
+      endpointConfig.hostname = brokerHost;
+      endpointConfig.port = Integer.parseInt(brokerPort);
+      endpointConfig.transport = "1883".equals(brokerPort) ? Transport.TCP : Transport.SSL;
+      endpointConfig.client_id = clientId;
+
+      if (isPublishEnabled()) {
+        endpointConfig.auth_provider = new Auth_provider();
+        endpointConfig.auth_provider.basic = new Basic();
+        endpointConfig.auth_provider.basic.username = brokerUser;
+        endpointConfig.auth_provider.basic.password = brokerPass;
+      }
     }
 
-    broker = new MosquittoBroker(this);
+    broker = new MosquittoBroker(this, endpointConfig);
 
     connLogger = broker.addEventListener(CLIENT_PREFIX, this::brokerHandler);
   }
@@ -349,20 +362,7 @@ public class ImplicitIotAccessProvider extends IotAccessBase {
   private void connectMqttClient() {
     info("Initializing SimpleMqttPipe for ImplicitIotAccessProvider");
     try {
-      if (endpointConfig == null) {
-        endpointConfig = new EndpointConfiguration();
-        endpointConfig.hostname = brokerHost;
-        endpointConfig.port = Integer.parseInt(brokerPort);
-        endpointConfig.transport = "1883".equals(brokerPort) ? Transport.TCP : Transport.SSL;
-        endpointConfig.client_id = clientId;
-        
-        if (isPublishEnabled()) {
-          endpointConfig.auth_provider = new Auth_provider();
-          endpointConfig.auth_provider.basic = new Basic();
-          endpointConfig.auth_provider.basic.username = brokerUser;
-          endpointConfig.auth_provider.basic.password = brokerPass;
-        }
-      }
+
 
       if (endpointConfig.send_id == null) {
         endpointConfig.send_id = "implicit";
