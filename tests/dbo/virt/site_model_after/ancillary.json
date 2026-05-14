@@ -1,0 +1,101 @@
+{
+  "009773d7-67ba-4a1f-b773-ae87063ecee2": {
+    "code": "US-MTV-40-1-135A",
+    "connections": {
+      "0a84a996-1120-4178-91ca-e118500d5463": [
+        "CONTAINS"
+      ],
+      "12dac17e-dda6-41bb-a757-e81fcf701482": [
+        "CONTAINS"
+      ]
+    },
+    "etag": "432e5fc7",
+    "type": "FACILITIES/ROOM"
+  },
+  "05ed8d20-bbdb-4d69-a968-1075d110d025": {
+    "code": "onboarding-mtv12",
+    "connections": {
+      "0a84a996-1120-4178-91ca-e118500d5463": [
+        "CONTAINS"
+      ]
+    },
+    "etag": "a2a08521",
+    "type": "INFO_TECH/PRNTR"
+  },
+  "0a84a996-1120-4178-91ca-e118500d5463": {
+    "code": "US-MTV-40-1",
+    "etag": "b7bdb7f6",
+    "type": "FACILITIES/FLOOR"
+  },
+  "107959bc-29f3-464a-848f-9e5985d45a5a": {
+    "code": "US-MTV-40:FCU:CRAC 1 UPS",
+    "connections": {
+      "12dac17e-dda6-41bb-a757-e81fcf701482": [
+        "CONTAINS"
+      ],
+      "14986412-1310-42cc-9db1-47dc6378b6e0": [
+        "CONTAINS"
+      ]
+    },
+    "display_name": "CRAC 1 UPS",
+    "etag": "b57032e9",
+    "links": {
+      "11e21f30-bc86-46bd-819d-4b48180113ee": {
+        "compressor_run_status": "compressor_run_status_2",
+        "compressor_speed_percentage_command": "compressor_speed_percentage_command_2",
+        "zone_air_temperature_sensor": "zone_air_temperature_sensor_2",
+        "zone_air_temperature_setpoint": "zone_air_temperature_setpoint_2"
+      }
+    },
+    "type": "HVAC/FCU_DFSS_ZTC_ZHDHC_DXZTC"
+  },
+  "12dac17e-dda6-41bb-a757-e81fcf701482": {
+    "code": "US-MTV-40",
+    "etag": "ba1b7e06",
+    "type": "FACILITIES/BUILDING"
+  },
+  "14986412-1310-42cc-9db1-47dc6378b6e0": {
+    "code": "US-MTV-40-G-G40D",
+    "etag": "090b3cb7",
+    "type": "FACILITIES/ROOM"
+  },
+  "16e05f4d-e36b-4a2f-959e-6055906da39e": {
+    "code": "US-MTV-40:AHU:AC 5",
+    "connections": {
+      "12dac17e-dda6-41bb-a757-e81fcf701482": [
+        "CONTAINS"
+      ]
+    },
+    "display_name": "AC 5",
+    "etag": "721789d9",
+    "links": {
+      "5e589b73-1eff-4644-a8bb-529a8ca8b141": {
+        "supply_air_temperature_sensor": "supply_air_temperature_sensor",
+        "supply_air_temperature_setpoint": "supply_air_temperature_setpoint"
+      }
+    },
+    "type": "HVAC/AHU_BSPC_DX4SC_ECONM_EFSS_EFVSC_SFSS_SFVSC_SSPC"
+  },
+  "acb48500-fde1-4ef5-ab57-c3aa7ee8d8ad": {
+    "code": "US-MTV-40:FCU:CRAC 2",
+    "connections": {
+      "12dac17e-dda6-41bb-a757-e81fcf701482": [
+        "CONTAINS"
+      ],
+      "14986412-1310-42cc-9db1-47dc6378b6e0": [
+        "CONTAINS"
+      ]
+    },
+    "display_name": "CRAC 2",
+    "etag": "5393ce13",
+    "links": {
+      "11e21f30-bc86-46bd-819d-4b48180113ee": {
+        "compressor_run_status": "compressor_run_status_1",
+        "compressor_speed_percentage_command": "compressor_speed_percentage_command_1",
+        "zone_air_temperature_sensor": "zone_air_temperature_sensor_1",
+        "zone_air_temperature_setpoint": "zone_air_temperature_setpoint_1"
+      }
+    },
+    "type": "HVAC/FCU_DFSS_ZTC_ZHDHC_DXZTC"
+  }
+}
