@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """Script to merge a DBO config into a UDMI site model."""
 import json
+import os
 import sys
 from datetime import datetime, timezone
 from pathlib import Path
@@ -28,7 +29,7 @@ def merge_dbo_config(yaml_file: Path, site_model_dir: Path):
       continue
 
     code = entity.get("code", guid)
-    device_dir = devices_dir / guid
+    device_dir = devices_dir / code
     device_dir.mkdir(parents=True, exist_ok=True)
 
     metadata_path = device_dir / "metadata.json"
@@ -36,7 +37,7 @@ def merge_dbo_config(yaml_file: Path, site_model_dir: Path):
       with open(metadata_path, "r", encoding="utf-8") as f:
         metadata = json.load(f)
     else:
-      timestamp = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+      timestamp = os.environ.get("UDMI_TEST_TIMESTAMP", datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"))
       metadata = {
           "timestamp": timestamp,
           "version": "1.5.3",
@@ -51,7 +52,6 @@ def merge_dbo_config(yaml_file: Path, site_model_dir: Path):
     externals = metadata.setdefault("externals", {})
     dbo = externals.setdefault("dbo", {})
     dbo["ext_id"] = guid
-    dbo["label"] = entity.get("code", guid)
     if "type" in entity:
       dbo["type"] = entity["type"]
     if "etag" in entity:
@@ -66,7 +66,7 @@ def merge_dbo_config(yaml_file: Path, site_model_dir: Path):
     if "connections" in entity:
       relationships = metadata.setdefault("relationships", {})
       for target_guid, rel_data in entity["connections"].items():
-        target_code = target_guid
+        target_code = guid_to_code.get(target_guid, target_guid)
 
         if isinstance(rel_data, str):
           relationships[target_code] = {rel_data: [{}]}
@@ -91,12 +91,13 @@ def merge_dbo_config(yaml_file: Path, site_model_dir: Path):
         for pt_name, pt_dbo in entity["translation"].items():
           pt_udmi = points.setdefault(pt_name, {})
           if "present_value" in pt_dbo:
-            pt_udmi["ref"] = pt_dbo["present_value"]
+            pv = pt_dbo["present_value"]
+            if pv != "present_value" and pv != f"points.{pt_name}.present_value":
+              pt_udmi["ref"] = pv
           if "units" in pt_dbo and "values" in pt_dbo["units"]:
             # Extract the first value from the values dictionary
             udmi_unit = list(pt_dbo["units"]["values"].values())[0]
             pt_udmi["units"] = udmi_unit
-          pt_udmi["translation"] = pt_dbo
 
       if "links" in entity:
         for target_guid, link_map in entity["links"].items():

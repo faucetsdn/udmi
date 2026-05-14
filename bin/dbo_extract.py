@@ -46,10 +46,7 @@ def extract_dbo_config(site_model_dir: Path) -> dict:
 
     device_entry = {}
 
-    if "label" in dbo_external:
-      device_entry["code"] = dbo_external["label"]
-    else:
-      device_entry["code"] = device_id
+    device_entry["code"] = device_id
 
     if "cloud" in metadata and "num_id" in metadata["cloud"]:
       device_entry["cloud_device_id"] = str(metadata["cloud"]["num_id"])
@@ -72,28 +69,25 @@ def extract_dbo_config(site_model_dir: Path) -> dict:
     translations = {}
     links_dbo = {}
     for point_name, point_info in pointset.items():
-      if "translation" in point_info:
-        translations[point_name] = point_info["translation"]
-      else:
-        pt_dbo = {}
-        if "ref" in point_info:
-          pt_dbo["present_value"] = point_info["ref"]
-        if "units" in point_info:
-          u_map = {
-              "degC": "degrees_celsius",
-              "L/s": "liters_per_second"
-          }
-          pt_dbo["units"] = {
-              "key": f"pointset.points.{point_name}.units",
-              "values": {
-                  u_map.get(
-                      point_info["units"],
-                      point_info["units"]): point_info["units"]
-              }
-          }
+      pt_dbo = {}
+      if "ref" in point_info or "units" in point_info:
+        pt_dbo["present_value"] = point_info.get("ref", f"points.{point_name}.present_value")
+      if "units" in point_info:
+        u_map = {
+            "degC": "degrees_celsius",
+            "L/s": "liters_per_second"
+        }
+        pt_dbo["units"] = {
+            "key": f"pointset.points.{point_name}.units",
+            "values": {
+                u_map.get(
+                    point_info["units"],
+                    point_info["units"]): point_info["units"]
+            }
+        }
 
-        if pt_dbo:
-          translations[point_name] = pt_dbo
+      if pt_dbo:
+        translations[point_name] = pt_dbo
 
       if "expr" in point_info:
         link_val = point_info["expr"]

@@ -1,0 +1,16 @@
+{
+  "timestamp": "2026-01-01T00:00:00Z",
+  "version": "1.5.3",
+  "system": {},
+  "cloud": {
+    "num_id": "2541901344105616"
+  },
+  "pointset": {
+    "points": {
+      "zone_air_temperature_sensor": {
+        "units": "degC"
+      },
+      "supply_air_flowrate_sensor_1": {}
+    }
+  }
+}

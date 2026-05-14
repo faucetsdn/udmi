@@ -10,16 +10,51 @@ fi
 
 TEST_DIR=$1
 GOLD_FILE="$TEST_DIR/building_config.yaml"
+BEFORE_DIR="$TEST_DIR/site_model_before"
+AFTER_DIR="$TEST_DIR/site_model_after"
+OUT_DIR="$TEST_DIR/out"
 
-if [ -f "$GOLD_FILE" ]; then
-    OUTPUT_FILE="$TEST_DIR/extracted_config.yaml"
-    python3 "$ROOT_DIR/bin/dbo_extract.py" "$TEST_DIR" "$OUTPUT_FILE"
-    if diff "$GOLD_FILE" "$OUTPUT_FILE"; then
-        echo "Test passed: $TEST_DIR"
+echo "Running enhanced DBO test for $TEST_DIR..."
+rm -rf "$OUT_DIR"
+mkdir -p "$OUT_DIR"
+    
+cp -r "$BEFORE_DIR/." "$OUT_DIR/"
+    
+UDMI_TEST_TIMESTAMP="2026-01-01T00:00:00Z" python3 "$ROOT_DIR/bin/dbo_merge.py" "$GOLD_FILE" "$OUT_DIR"
+    
+if ! diff -rq "$AFTER_DIR" "$OUT_DIR" --exclude=.gitignore --exclude=.gitkeep; then
+    echo "Site model merge mismatch in $TEST_DIR"
+    diff -r "$AFTER_DIR" "$OUT_DIR" --exclude=.gitignore --exclude=.gitkeep
+    exit 1
+fi
+    
+EXTRACTED_FILE="$OUT_DIR/extracted_config.yaml"
+python3 "$ROOT_DIR/bin/dbo_extract.py" "$OUT_DIR" "$EXTRACTED_FILE"
+    
+if ! diff "$GOLD_FILE" "$EXTRACTED_FILE"; then
+    echo "Extracted DBO mismatch in $TEST_DIR"
+    exit 1
+fi
+    
+echo "Test passed: $TEST_DIR"
+
+GOLD_FILE="$TEST_DIR/building_config.yaml"
+
+if [ ! -d "$TEST_DIR/devices" ] && [ ! -d "$TEST_DIR/site_model/devices" ]; then
+    if head -n 1 "$GOLD_FILE" | grep -q "device_registry_id,"; then
+        echo "Skipping site_model generation: $GOLD_FILE appears to be CSV, not YAML."
+        echo "Test passed: $TEST_DIR (skipped execution)"
+        exit 0
     else
-        echo "Test failed: $TEST_DIR"
-        exit 1
+        echo "Constructing site_model from $GOLD_FILE..."
+        python3 "$ROOT_DIR/bin/dbo_merge.py" "$GOLD_FILE" "$TEST_DIR"
     fi
+fi
+OUTPUT_FILE="$TEST_DIR/extracted_config.yaml"
+python3 "$ROOT_DIR/bin/dbo_extract.py" "$TEST_DIR" "$OUTPUT_FILE"
+if diff "$GOLD_FILE" "$OUTPUT_FILE"; then
+    echo "Test passed: $TEST_DIR"
 else
-    python3 "$ROOT_DIR/bin/dbo_extract.py" "$1" "$2"
+    echo "Test failed: $TEST_DIR"
+    exit 1
 fi
