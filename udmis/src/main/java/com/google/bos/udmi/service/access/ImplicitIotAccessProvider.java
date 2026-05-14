@@ -76,11 +76,13 @@ import udmi.schema.IotAccess.IotProvider;
  * <li><code>use_password</code>: Sets the password for all devices to the specified value.
  * This is used when authentication is handled by an external proxy, and Mosquitto
  * still needs to enforce ACLs based on username.</li>
+ * <li><code>disable_logging</code>: If set to true, disables tailing the mosquitto log file.</li>
  * </ul>
  */
 public class ImplicitIotAccessProvider extends IotAccessBase {
 
   private static final String CONFIG_VER_KEY = "config_ver";
+  private static final String DISABLE_LOGGING_KEY = "disable_logging";
   private static final String USE_PASSWORD_KEY = "use_password";
   private static final String BROKER_USER_KEY = "broker_user";
   private static final String BROKER_PASS_KEY = "broker_pass";
@@ -159,7 +161,8 @@ public class ImplicitIotAccessProvider extends IotAccessBase {
       }
     }
 
-    broker = new MosquittoBroker(this, endpointConfig);
+    boolean disableLogging = TRUE_OPTION.equals(options.get(DISABLE_LOGGING_KEY));
+    broker = new MosquittoBroker(this, endpointConfig, disableLogging);
 
     connLogger = broker.addEventListener(CLIENT_PREFIX, this::brokerHandler);
   }

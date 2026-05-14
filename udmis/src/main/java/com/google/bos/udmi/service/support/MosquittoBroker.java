@@ -8,6 +8,7 @@ import static java.util.Optional.ofNullable;
 
 import com.google.bos.udmi.service.pod.ContainerBase;
 import java.io.BufferedReader;
+import java.io.File;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -31,6 +32,7 @@ public class MosquittoBroker extends ContainerBase implements ConnectionBroker {
 
   private static final long EXEC_TIMEOUT_SEC = 10;
   private static final String REVOKE_PASSWORD = "--";
+  private static final String MOSQUITTO_LOG_PATH = "/var/log/mosquitto/mosquitto.log";
   private static final Pattern LOG_MATCHER =
       Pattern.compile("([0-9]+): (\\S+) (\\S+) (\\S+) (\\S+) (.*)");
   private static final Pattern PUBLISH_MATCHER =
@@ -38,11 +40,31 @@ public class MosquittoBroker extends ContainerBase implements ConnectionBroker {
   private static final Pattern PUBACK_MATCHER = Pattern.compile("\\((m|Mid: )([0-9]+), \\S+\\)");
   private final ContainerBase container;
   private final EndpointConfiguration endpointConfig;
+  private final boolean disableLogging;
   private Process tailProcess;
 
+  /**
+   * Create a new broker connection provider.
+   */
   public MosquittoBroker(ContainerBase container, EndpointConfiguration endpointConfig) {
+    this(container, endpointConfig, false);
+  }
+
+  /**
+   * Create a new broker connection provider with logging controls.
+   */
+  public MosquittoBroker(ContainerBase container, EndpointConfiguration endpointConfig,
+      boolean disableLogging) {
     this.container = container;
     this.endpointConfig = endpointConfig;
+    this.disableLogging = disableLogging;
+    if (!disableLogging) {
+      File logFile = new File(MOSQUITTO_LOG_PATH);
+      if (!logFile.canRead()) {
+        throw new RuntimeException(
+            "Mosquitto log file is not readable: " + logFile.getAbsolutePath());
+      }
+    }
   }
 
   private List<String> buildCommandPrefix() {
@@ -225,10 +247,14 @@ public class MosquittoBroker extends ContainerBase implements ConnectionBroker {
   }
 
   private void mosquctlLog(String clientPrefix, Consumer<BrokerEvent> eventConsumer) {
+    if (disableLogging) {
+      info("Mosquitto logging disabled, skipping log consumer for prefix %s", clientPrefix);
+      return;
+    }
     synchronized (MosquittoBroker.class) {
       try {
         info("Starting log consumer for prefix %s", clientPrefix);
-        ProcessBuilder pb = new ProcessBuilder("tail", "-f", "/var/log/mosquitto/mosquitto.log");
+        ProcessBuilder pb = new ProcessBuilder("tail", "-f", MOSQUITTO_LOG_PATH);
         if (tailProcess != null) {
           tailProcess.destroy();
         }
