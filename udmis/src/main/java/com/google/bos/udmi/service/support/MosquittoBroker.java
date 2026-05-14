@@ -38,6 +38,7 @@ public class MosquittoBroker extends ContainerBase implements ConnectionBroker {
   private static final Pattern PUBACK_MATCHER = Pattern.compile("\\((m|Mid: )([0-9]+), \\S+\\)");
   private final ContainerBase container;
   private final EndpointConfiguration endpointConfig;
+  private Process tailProcess;
 
   public MosquittoBroker(ContainerBase container, EndpointConfiguration endpointConfig) {
     this.container = container;
@@ -110,10 +111,21 @@ public class MosquittoBroker extends ContainerBase implements ConnectionBroker {
       try {
         info("Executing command %s", String.join(" ", cmd));
         ProcessBuilder pb = new ProcessBuilder(cmd);
+        pb.redirectErrorStream(true); // Merge stderr into stdout
         Process exec = pb.start();
-        exec.waitFor(EXEC_TIMEOUT_SEC, TimeUnit.SECONDS);
-        exec.errorReader().lines().forEach(container::info);
-        exec.inputReader().lines().forEach(container::info);
+
+        // Read output asynchronously to prevent buffer locks
+        CompletableFuture<Void> outputHandler = CompletableFuture.runAsync(() ->
+            exec.inputReader().lines().forEach(container::info)
+        );
+
+        // Enforce timeout
+        if (!exec.waitFor(EXEC_TIMEOUT_SEC, TimeUnit.SECONDS)) {
+          exec.destroyForcibly();
+          throw new RuntimeException("Command timed out: " + String.join(" ", cmd));
+        }
+
+        outputHandler.join();
         int exitValue = exec.exitValue();
         checkState(exitValue == 0, "exit return code " + exitValue);
       } catch (Exception e) {
@@ -217,7 +229,11 @@ public class MosquittoBroker extends ContainerBase implements ConnectionBroker {
       try {
         info("Starting log consumer for prefix %s", clientPrefix);
         ProcessBuilder pb = new ProcessBuilder("tail", "-f", "/var/log/mosquitto/mosquitto.log");
-        Process exec = pb.start();
+        if (tailProcess != null) {
+          tailProcess.destroy();
+        }
+        tailProcess = pb.start();
+        Process exec = tailProcess;
         consumeStream(exec.errorReader(), line -> warn("log error: " + line));
         consumeStream(exec.inputReader(), line -> {
           BrokerEvent event = parseLogLine(line);
@@ -329,5 +345,13 @@ public class MosquittoBroker extends ContainerBase implements ConnectionBroker {
     } catch (Exception e) {
       warn("Ignore error removing role ACL: " + e.getMessage());
     }
+  }
+
+  @Override
+  public void shutdown() {
+    if (tailProcess != null) {
+      tailProcess.destroy();
+    }
+    super.shutdown();
   }
 }

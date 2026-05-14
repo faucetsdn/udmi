@@ -554,6 +554,7 @@ public class ImplicitIotAccessProvider extends IotAccessBase {
       }
     });
     connLogger.cancel(true);
+    broker.shutdown();
     super.shutdown();
   }
 

@@ -17,6 +17,8 @@ public interface ConnectionBroker {
 
   void unbindGateway(String gatewayId, String deviceId);
 
+  void shutdown();
+
   /**
    * Simple event for connection broker happenings.
    */
