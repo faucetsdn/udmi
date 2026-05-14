@@ -4,8 +4,6 @@ import static com.google.common.base.Preconditions.checkState;
 import static com.google.udmi.util.GeneralUtils.catchToElse;
 import static com.google.udmi.util.GeneralUtils.catchToNull;
 import static com.google.udmi.util.GeneralUtils.friendlyStackTrace;
-import static com.google.udmi.util.GeneralUtils.ifNotNullThen;
-import static java.lang.String.format;
 import static java.util.Optional.ofNullable;
 
 import com.google.bos.udmi.service.pod.ContainerBase;
@@ -22,13 +20,11 @@ import java.util.regex.Pattern;
 import udmi.schema.EndpointConfiguration;
 
 /**
- * NOTE: The topic structure used in ACLs in this file is hardcoded to use the deviceId
+ * Provider that links directly to a mosquitto broker.
+ *
+ * <p>NOTE: The topic structure used in ACLs in this file is hardcoded to use the deviceId
  * directly (e.g., deviceId/config, deviceId/commands, etc.) instead of using properties
  * from the endpoint configuration.
- */
-
-/**
- * Provider that links directly to a mosquitto broker.
  */
 public class MosquittoBroker extends ContainerBase implements ConnectionBroker {
 

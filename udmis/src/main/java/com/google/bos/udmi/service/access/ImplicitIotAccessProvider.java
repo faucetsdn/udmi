@@ -371,7 +371,8 @@ public class ImplicitIotAccessProvider extends IotAccessBase {
       mqttPipe = new SimpleMqttPipe(endpointConfig);
       info("Initialized SimpleMqttPipe");
     } catch (Exception e) {
-      error("Failed to initialize SimpleMqttPipe connecting to broker %s:%s: %s", brokerHost, brokerPort, friendlyStackTrace(e));
+      error("Failed to initialize SimpleMqttPipe connecting to broker %s:%s: %s",
+          brokerHost, brokerPort, friendlyStackTrace(e));
     }
   }
 
@@ -498,7 +499,8 @@ public class ImplicitIotAccessProvider extends IotAccessBase {
       }
       return getReply(registryId, deviceId, cloudModel, deleteNumId);
     } catch (Exception e) {
-      error("Error during modelDevice %s for %s/%s: %s", operation, registryId, deviceId, friendlyStackTrace(e));
+      error("Error during modelDevice %s for %s/%s: %s",
+          operation, registryId, deviceId, friendlyStackTrace(e));
       throw new RuntimeException(format("While %sing %s/%s", operation, registryId, deviceId), e);
     }
   }
@@ -535,8 +537,10 @@ public class ImplicitIotAccessProvider extends IotAccessBase {
       envelope.source = IotProvider.IMPLICIT.value();
       reflect.getDispatcher().withEnvelope(envelope).publish(asMap(message));
     } catch (Exception e) {
-      error("Failed to send command for %s/%s: %s", baseEnvelope.deviceRegistryId, baseEnvelope.deviceId, friendlyStackTrace(e));
-      throw new RuntimeException("While sending command for " + baseEnvelope.deviceRegistryId + "/" + baseEnvelope.deviceId, e);
+      error("Failed to send command for %s/%s: %s",
+          baseEnvelope.deviceRegistryId, baseEnvelope.deviceId, friendlyStackTrace(e));
+      throw new RuntimeException("While sending command for "
+          + baseEnvelope.deviceRegistryId + "/" + baseEnvelope.deviceId, e);
     }
   }
 
