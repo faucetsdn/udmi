@@ -56,8 +56,8 @@
         "key_file": "/etc/mosquitto/certs/rsa_private.pem",
         "auth_provider": {
           "basic": {
-            "username": "rocket",
-            "password": "monkey"
+            "username": "scrumptious",
+            "password": "aardvark"
           }
         }
       }
