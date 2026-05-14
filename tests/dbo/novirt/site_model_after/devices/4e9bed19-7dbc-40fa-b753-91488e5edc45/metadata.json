@@ -1,0 +1,23 @@
+{
+  "timestamp": "2026-01-01T00:00:00Z",
+  "version": "1.5.3",
+  "system": {},
+  "externals": {
+    "dbo": {
+      "ext_id": "4e9bed19-7dbc-40fa-b753-91488e5edc45",
+      "type": "UNTYPED/TYPELESS",
+      "etag": "a7d0d16d",
+      "label": "Outside Air Conditions"
+    }
+  },
+  "cloud": {
+    "num_id": "2611745981900042"
+  },
+  "relationships": {
+    "6cf23efd-19bd-4564-9360-ed0033f3f18c": {
+      "CONTAINS": [
+        {}
+      ]
+    }
+  }
+}

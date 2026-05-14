@@ -1,0 +1,23 @@
+{
+  "timestamp": "2026-01-01T00:00:00Z",
+  "version": "1.5.3",
+  "system": {},
+  "externals": {
+    "dbo": {
+      "ext_id": "473626db-61c9-4020-8f6c-e20453217cab",
+      "type": "UNTYPED/TYPELESS",
+      "etag": "39d94419",
+      "label": "power-meter-Plugs_AL2C"
+    }
+  },
+  "cloud": {
+    "num_id": "2672057619424394"
+  },
+  "relationships": {
+    "6cf23efd-19bd-4564-9360-ed0033f3f18c": {
+      "CONTAINS": [
+        {}
+      ]
+    }
+  }
+}

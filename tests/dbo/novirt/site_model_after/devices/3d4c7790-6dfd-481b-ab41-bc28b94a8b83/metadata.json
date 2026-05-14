@@ -1,0 +1,23 @@
+{
+  "timestamp": "2026-01-01T00:00:00Z",
+  "version": "1.5.3",
+  "system": {},
+  "externals": {
+    "dbo": {
+      "ext_id": "3d4c7790-6dfd-481b-ab41-bc28b94a8b83",
+      "type": "UNTYPED/TYPELESS",
+      "etag": "25898be4",
+      "label": "Boiler #1 Integration / San Antonio"
+    }
+  },
+  "cloud": {
+    "num_id": "2712302671342330"
+  },
+  "relationships": {
+    "6cf23efd-19bd-4564-9360-ed0033f3f18c": {
+      "CONTAINS": [
+        {}
+      ]
+    }
+  }
+}

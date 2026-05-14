@@ -1,0 +1,23 @@
+{
+  "timestamp": "2026-01-01T00:00:00Z",
+  "version": "1.5.3",
+  "system": {},
+  "externals": {
+    "dbo": {
+      "ext_id": "e4221c94-14b8-4414-bfec-0a8f1b8dcbc3",
+      "type": "UNTYPED/TYPELESS",
+      "etag": "fa4bdaa9",
+      "label": "IDF Rm 32228 - VAVCO S3-1-43 & FC S-4 DX"
+    }
+  },
+  "cloud": {
+    "num_id": "2756226142902298"
+  },
+  "relationships": {
+    "6cf23efd-19bd-4564-9360-ed0033f3f18c": {
+      "CONTAINS": [
+        {}
+      ]
+    }
+  }
+}

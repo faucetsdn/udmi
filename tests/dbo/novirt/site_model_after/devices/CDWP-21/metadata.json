@@ -1,0 +1,47 @@
+{
+  "timestamp": "2026-01-01T00:00:00Z",
+  "version": "1.5.3",
+  "system": {
+    "name": "CWP M2"
+  },
+  "pointset": {
+    "points": {
+      "failed_alarm": {
+        "value_map": {
+          "ACTIVE": "1.0",
+          "INACTIVE": "0.0"
+        }
+      },
+      "run_command": {
+        "value_map": {
+          "OFF": "0.0",
+          "ON": "1.0"
+        }
+      },
+      "run_status": {
+        "value_map": {
+          "OFF": "0.0",
+          "ON": "1.0"
+        }
+      }
+    }
+  },
+  "externals": {
+    "dbo": {
+      "ext_id": "1e139ef8-16b1-46cf-8f65-6c7f20fb7d49",
+      "type": "HVAC/PMP_SS",
+      "etag": "ca5757bd",
+      "label": "Chiller Plant / 100 Mayfield"
+    }
+  },
+  "cloud": {
+    "num_id": "271982986943150"
+  },
+  "relationships": {
+    "6cf23efd-19bd-4564-9360-ed0033f3f18c": {
+      "CONTAINS": [
+        {}
+      ]
+    }
+  }
+}

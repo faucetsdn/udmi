@@ -1,0 +1,32 @@
+{
+  "timestamp": "2026-01-01T00:00:00Z",
+  "version": "1.5.3",
+  "system": {
+    "name": "utility-Water_Main_B"
+  },
+  "pointset": {
+    "points": {
+      "water_volume_accumulator": {
+        "units": "us-gallons"
+      }
+    }
+  },
+  "externals": {
+    "dbo": {
+      "ext_id": "21504789-8f10-48ba-abd0-46fb5e9084e4",
+      "type": "METERS/WM_STANDARD",
+      "etag": "45eaa786",
+      "label": "utility-Water_Main_B"
+    }
+  },
+  "cloud": {
+    "num_id": "125087604967590"
+  },
+  "relationships": {
+    "6cf23efd-19bd-4564-9360-ed0033f3f18c": {
+      "CONTAINS": [
+        {}
+      ]
+    }
+  }
+}

@@ -1,0 +1,16 @@
+{
+  "timestamp": "2026-01-01T00:00:00Z",
+  "version": "1.5.3",
+  "system": {
+    "name": "EVAV S1-4-13"
+  },
+  "pointset": {
+    "points": {
+      "exhaust_air_damper_percentage_command": {},
+      "exhaust_air_flowrate_sensor": {},
+      "exhaust_air_flowrate_setpoint": {},
+      "pressurization_request_count": {},
+      "schedule_run_command": {}
+    }
+  }
+}

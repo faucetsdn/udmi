@@ -1,0 +1,36 @@
+{
+  "timestamp": "2026-01-01T00:00:00Z",
+  "version": "1.5.3",
+  "pointset": {
+    "points": {
+      "gas_flowrate_sensor": {
+        "units": "cubic-feet-per-hour"
+      },
+      "gas_temperature_sensor": {
+        "units": "degrees-fahrenheit"
+      },
+      "gas_volume_accumulator": {
+        "units": "cubic-feet"
+      }
+    }
+  },
+  "system": {},
+  "externals": {
+    "dbo": {
+      "ext_id": "88b6b68b-2b10-4dfc-9f2f-e855d00d33b5",
+      "type": "METERS/GM_STANDARD",
+      "etag": "86e0ffb0",
+      "label": "utility-GM-3_Gas_Main"
+    }
+  },
+  "cloud": {
+    "num_id": "30222013932672"
+  },
+  "relationships": {
+    "6cf23efd-19bd-4564-9360-ed0033f3f18c": {
+      "CONTAINS": [
+        {}
+      ]
+    }
+  }
+}

@@ -1,0 +1,47 @@
+{
+  "timestamp": "2026-01-01T00:00:00Z",
+  "version": "1.5.3",
+  "system": {
+    "name": "EVAV M2-4-11"
+  },
+  "pointset": {
+    "points": {
+      "exhaust_air_damper_percentage_command": {
+        "units": "percent"
+      },
+      "exhaust_air_flowrate_sensor": {
+        "units": "cubic-feet-per-minute"
+      },
+      "exhaust_air_flowrate_setpoint": {
+        "units": "cubic-feet-per-minute"
+      },
+      "pressurization_request_count": {
+        "units": "no-units"
+      },
+      "schedule_run_command": {
+        "value_map": {
+          "OFF": "0.0",
+          "ON": "1.0"
+        }
+      }
+    }
+  },
+  "externals": {
+    "dbo": {
+      "ext_id": "eb850d6d-8ee4-48ea-9d0d-df294c5770d7",
+      "type": "HVAC/VAV_ED",
+      "etag": "ba5a58f0",
+      "label": "VAVRH M2-1-136 & EX M2-4-8 & EX M2-4-11 / LensCrafters Lab Rm. 23786"
+    }
+  },
+  "cloud": {
+    "num_id": "202509693617346"
+  },
+  "relationships": {
+    "6cf23efd-19bd-4564-9360-ed0033f3f18c": {
+      "CONTAINS": [
+        {}
+      ]
+    }
+  }
+}

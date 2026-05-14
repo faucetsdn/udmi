@@ -1,0 +1,92 @@
+{
+  "timestamp": "2026-01-01T00:00:00Z",
+  "version": "1.5.3",
+  "system": {
+    "name": "TF S-1"
+  },
+  "pointset": {
+    "points": {
+      "failed_alarm": {
+        "value_map": {
+          "ACTIVE": "1.0",
+          "INACTIVE": "0.0"
+        }
+      },
+      "failed_zone_air_temperature_alarm": {
+        "value_map": {
+          "ACTIVE": "1.0",
+          "INACTIVE": "0.0"
+        }
+      },
+      "high_zone_air_temperature_alarm": {
+        "value_map": {
+          "ACTIVE": "1.0",
+          "INACTIVE": "0.0"
+        }
+      },
+      "local_override_alarm": {
+        "value_map": {
+          "ACTIVE": "1.0",
+          "INACTIVE": "0.0"
+        }
+      },
+      "low_zone_air_temperature_alarm": {
+        "value_map": {
+          "ACTIVE": "1.0",
+          "INACTIVE": "0.0"
+        }
+      },
+      "run_command": {
+        "value_map": {
+          "OFF": "0.0",
+          "ON": "1.0"
+        }
+      },
+      "run_status": {
+        "value_map": {
+          "OFF": "0.0",
+          "ON": "1.0"
+        }
+      },
+      "schedule_run_command": {
+        "value_map": {
+          "OFF": "0.0",
+          "ON": "1.0"
+        }
+      },
+      "user_occupancy_override_status": {
+        "value_map": {
+          "DISABLED": "0.0",
+          "ENABLED": "1.0"
+        }
+      },
+      "zone_air_cooling_temperature_setpoint": {
+        "units": "degrees-fahrenheit"
+      },
+      "zone_air_heating_temperature_setpoint": {
+        "units": "degrees-fahrenheit"
+      },
+      "zone_air_temperature_sensor": {
+        "units": "degrees-fahrenheit"
+      }
+    }
+  },
+  "externals": {
+    "dbo": {
+      "ext_id": "ba1de45d-4336-4def-b5bf-08b88192e946",
+      "type": "HVAC/FAN_SS_DSP",
+      "etag": "7fc8302e",
+      "label": "TF S-1 Electrical Rm 31349"
+    }
+  },
+  "cloud": {
+    "num_id": "108367274246035"
+  },
+  "relationships": {
+    "6cf23efd-19bd-4564-9360-ed0033f3f18c": {
+      "CONTAINS": [
+        {}
+      ]
+    }
+  }
+}

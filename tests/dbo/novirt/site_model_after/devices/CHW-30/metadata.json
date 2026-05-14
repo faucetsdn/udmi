@@ -1,0 +1,132 @@
+{
+  "timestamp": "2026-01-01T00:00:00Z",
+  "version": "1.5.3",
+  "system": {
+    "name": "PCW SYSTEM M30"
+  },
+  "pointset": {
+    "points": {
+      "bypass_valve_percentage_command": {},
+      "bypass_valve_status": {
+        "value_map": {
+          "CLOSED": "0.0",
+          "OPEN": "1.0"
+        }
+      },
+      "differential_pressure_sensor": {
+        "units": "pounds-force-per-square-inch"
+      },
+      "failed_polished_water_electricresistivity_alarm": {
+        "value_map": {
+          "ACTIVE": "1.0",
+          "INACTIVE": "0.0"
+        }
+      },
+      "failed_polished_water_flowrate_alarm": {
+        "value_map": {
+          "ACTIVE": "1.0",
+          "INACTIVE": "0.0"
+        }
+      },
+      "failed_polished_water_isolation_valve_alarm": {
+        "value_map": {
+          "ACTIVE": "1.0",
+          "INACTIVE": "0.0"
+        }
+      },
+      "failed_return_water_temperature_alarm": {
+        "value_map": {
+          "ACTIVE": "1.0",
+          "INACTIVE": "0.0"
+        }
+      },
+      "filter_differential_pressure_sensor_1": {
+        "units": "inches-of-water"
+      },
+      "filter_differential_pressure_sensor_2": {
+        "units": "inches-of-water"
+      },
+      "filter_differential_pressure_sensor_3": {
+        "units": "inches-of-water"
+      },
+      "flowrate_sensor": {
+        "units": "us-gallons-per-minute"
+      },
+      "high_supply_water_temperature_alarm": {
+        "value_map": {
+          "ACTIVE": "1.0",
+          "INACTIVE": "0.0"
+        }
+      },
+      "low_limit_differential_pressure_setpoint": {
+        "units": "pounds-force-per-square-inch"
+      },
+      "low_supply_water_temperature_alarm": {
+        "value_map": {
+          "ACTIVE": "1.0",
+          "INACTIVE": "0.0"
+        }
+      },
+      "polished_water_electricconductivity_sensor": {
+        "units": "microsiemens-per-centimeter"
+      },
+      "polished_water_electricconductivity_setpoint": {
+        "units": "microsiemens-per-centimeter"
+      },
+      "polished_water_electricresistivity_sensor": {
+        "units": "kiloohm-centimeters"
+      },
+      "polished_water_electricresistivity_setpoint": {
+        "units": "kiloohm-centimeters"
+      },
+      "polished_water_isolation_valve_command": {
+        "value_map": {
+          "CLOSED": "0.0",
+          "OPEN": "1.0"
+        }
+      },
+      "polished_water_isolation_valve_status": {
+        "value_map": {
+          "CLOSED": "0.0",
+          "OPEN": "1.0"
+        }
+      },
+      "return_water_temperature_sensor": {
+        "units": "degrees-fahrenheit"
+      },
+      "supply_water_pressure_sensor": {
+        "units": "pounds-force-per-square-inch"
+      },
+      "supply_water_pressure_setpoint": {
+        "units": "pounds-force-per-square-inch"
+      },
+      "supply_water_temperature_sensor": {
+        "units": "degrees-fahrenheit"
+      },
+      "supply_water_temperature_setpoint": {
+        "units": "degrees-fahrenheit"
+      },
+      "ultraviolet_filter_differential_pressure_sensor": {
+        "units": "inches-of-water"
+      }
+    }
+  },
+  "externals": {
+    "dbo": {
+      "ext_id": "60bfd07b-1870-40b5-92c2-42f102d95f8c",
+      "type": "HVAC/CDWS_SWTC_SWPC_MWDPC_WFRM_FDPM3X_UVFDPM_PLWVERC",
+      "etag": "cd8f9e35",
+      "label": "PCW-30 Bypass Valve, Process Cooling Water PCW-30"
+    }
+  },
+  "cloud": {
+    "num_id": "114330289042527"
+  },
+  "relationships": {
+    "6cf23efd-19bd-4564-9360-ed0033f3f18c": {
+      "CONTAINS": [
+        {}
+      ]
+    }
+  }
+}

@@ -1,0 +1,27 @@
+{
+  "timestamp": "2026-01-01T00:00:00Z",
+  "version": "1.5.3",
+  "system": {
+    "name": "FC M-23"
+  },
+  "pointset": {
+    "points": {
+      "chilled_water_valve_percentage_command": {},
+      "cooling_request_count": {},
+      "discharge_air_temperature_sensor": {},
+      "discharge_fan_run_command": {},
+      "discharge_fan_run_status": {},
+      "failed_discharge_fan_alarm": {},
+      "high_discharge_air_temperature_alarm": {},
+      "high_zone_air_temperature_alarm": {},
+      "low_discharge_air_temperature_alarm": {},
+      "low_zone_air_temperature_alarm": {},
+      "return_air_temperature_sensor": {},
+      "schedule_run_command": {},
+      "user_occupancy_override_status": {},
+      "zone_air_cooling_temperature_setpoint": {},
+      "zone_air_heating_temperature_setpoint": {},
+      "zone_air_temperature_sensor": {}
+    }
+  }
+}

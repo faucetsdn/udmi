@@ -1,0 +1,69 @@
+{
+  "timestamp": "2026-01-01T00:00:00Z",
+  "version": "1.5.3",
+  "system": {
+    "name": "EF M7"
+  },
+  "pointset": {
+    "points": {
+      "current_sensor": {
+        "units": "amperes"
+      },
+      "energy_accumulator": {
+        "units": "kilowatt-hours"
+      },
+      "failed_alarm": {
+        "value_map": {
+          "ACTIVE": "1.0",
+          "INACTIVE": "0.0"
+        }
+      },
+      "local_override_alarm": {
+        "value_map": {
+          "ACTIVE": "1.0",
+          "INACTIVE": "0.0"
+        }
+      },
+      "power_sensor": {
+        "units": "kilowatts"
+      },
+      "run_command": {
+        "value_map": {
+          "OFF": "0.0",
+          "ON": "1.0"
+        }
+      },
+      "run_status": {
+        "value_map": {
+          "OFF": "0.0",
+          "ON": "1.0"
+        }
+      },
+      "speed_percentage_command": {},
+      "torque_sensor": {
+        "units": "newton-meters"
+      },
+      "voltage_sensor": {
+        "units": "volts"
+      }
+    }
+  },
+  "externals": {
+    "dbo": {
+      "ext_id": "0e993863-33ce-4115-8421-0ae1f1de630c",
+      "type": "HVAC/FAN_SS_VSC",
+      "etag": "476cea7e",
+      "label": "EF - 7 Pizza oven Exhaust fan, EF M7 VFD Interface"
+    }
+  },
+  "cloud": {
+    "num_id": "246910377520204"
+  },
+  "relationships": {
+    "6cf23efd-19bd-4564-9360-ed0033f3f18c": {
+      "CONTAINS": [
+        {}
+      ]
+    }
+  }
+}

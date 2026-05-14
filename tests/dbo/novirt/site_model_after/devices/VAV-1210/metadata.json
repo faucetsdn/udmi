@@ -1,0 +1,104 @@
+{
+  "timestamp": "2026-01-01T00:00:00Z",
+  "version": "1.5.3",
+  "system": {
+    "name": "VAVCO M1-2-10"
+  },
+  "pointset": {
+    "points": {
+      "cooling_request_count": {
+        "units": "no-units"
+      },
+      "failed_zone_air_temperature_alarm": {
+        "value_map": {
+          "ACTIVE": "1.0",
+          "INACTIVE": "0.0"
+        }
+      },
+      "heating_request_count": {
+        "units": "no-units"
+      },
+      "high_supply_air_flowrate_alarm": {
+        "value_map": {
+          "ACTIVE": "1.0",
+          "INACTIVE": "0.0"
+        }
+      },
+      "high_zone_air_temperature_alarm": {
+        "value_map": {
+          "ACTIVE": "1.0",
+          "INACTIVE": "0.0"
+        }
+      },
+      "low_supply_air_flowrate_alarm": {
+        "value_map": {
+          "ACTIVE": "1.0",
+          "INACTIVE": "0.0"
+        }
+      },
+      "low_zone_air_temperature_alarm": {
+        "value_map": {
+          "ACTIVE": "1.0",
+          "INACTIVE": "0.0"
+        }
+      },
+      "pressurization_request_count": {
+        "units": "no-units"
+      },
+      "schedule_run_command": {
+        "value_map": {
+          "OFF": "0.0",
+          "ON": "1.0"
+        }
+      },
+      "supply_air_damper_percentage_command": {
+        "units": "percent"
+      },
+      "supply_air_flowrate_sensor": {
+        "units": "cubic-feet-per-minute"
+      },
+      "supply_air_flowrate_setpoint": {
+        "units": "cubic-feet-per-minute"
+      },
+      "user_occupancy_override_status": {
+        "value_map": {
+          "DISABLED": "0.0",
+          "ENABLED": "1.0"
+        }
+      },
+      "warmup_run_command": {
+        "value_map": {
+          "OFF": "0.0",
+          "ON": "1.0"
+        }
+      },
+      "zone_air_cooling_temperature_setpoint": {
+        "units": "degrees-fahrenheit"
+      },
+      "zone_air_heating_temperature_setpoint": {
+        "units": "degrees-fahrenheit"
+      },
+      "zone_air_temperature_sensor": {
+        "units": "degrees-fahrenheit"
+      }
+    }
+  },
+  "externals": {
+    "dbo": {
+      "ext_id": "2a4a0acb-a58a-493e-921d-1200ed6a9352",
+      "type": "HVAC/VAV_SD_DSP",
+      "etag": "3bc0667b",
+      "label": "VAVCO M1-2-10  / Garage Bench Lab Rm. 11646"
+    }
+  },
+  "cloud": {
+    "num_id": "31568890825748"
+  },
+  "relationships": {
+    "6cf23efd-19bd-4564-9360-ed0033f3f18c": {
+      "CONTAINS": [
+        {}
+      ]
+    }
+  }
+}

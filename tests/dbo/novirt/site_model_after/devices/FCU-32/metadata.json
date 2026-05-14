@@ -1,0 +1,99 @@
+{
+  "timestamp": "2026-01-01T00:00:00Z",
+  "version": "1.5.3",
+  "system": {
+    "name": "FC S-3"
+  },
+  "pointset": {
+    "points": {
+      "chilled_water_valve_percentage_command": {
+        "units": "percent"
+      },
+      "cooling_request_count": {
+        "units": "no-units"
+      },
+      "discharge_air_temperature_sensor": {
+        "units": "degrees-fahrenheit"
+      },
+      "discharge_air_temperature_setpoint": {
+        "units": "degrees-fahrenheit"
+      },
+      "discharge_fan_run_command": {},
+      "discharge_fan_run_status": {
+        "value_map": {
+          "OFF": "0.0",
+          "ON": "1.0"
+        }
+      },
+      "discharge_fan_speed_percentage_command": {
+        "units": "percent"
+      },
+      "failed_discharge_fan_alarm": {
+        "value_map": {
+          "ACTIVE": "1.0",
+          "INACTIVE": "0.0"
+        }
+      },
+      "failed_zone_air_temperature_alarm": {
+        "value_map": {
+          "ACTIVE": "1.0",
+          "INACTIVE": "0.0"
+        }
+      },
+      "heating_request_count": {
+        "units": "no-units"
+      },
+      "high_zone_air_temperature_alarm": {
+        "value_map": {
+          "ACTIVE": "1.0",
+          "INACTIVE": "0.0"
+        }
+      },
+      "low_zone_air_temperature_alarm": {
+        "value_map": {
+          "ACTIVE": "1.0",
+          "INACTIVE": "0.0"
+        }
+      },
+      "schedule_run_command": {
+        "value_map": {
+          "OFF": "0.0",
+          "ON": "1.0"
+        }
+      },
+      "user_occupancy_override_status": {
+        "value_map": {
+          "DISABLED": "0.0",
+          "ENABLED": "1.0"
+        }
+      },
+      "zone_air_cooling_temperature_setpoint": {
+        "units": "degrees-fahrenheit"
+      },
+      "zone_air_heating_temperature_setpoint": {
+        "units": "degrees-fahrenheit"
+      },
+      "zone_air_temperature_sensor": {
+        "units": "degrees-fahrenheit"
+      }
+    }
+  },
+  "externals": {
+    "dbo": {
+      "ext_id": "2719c753-4567-4619-aac0-3aefdbcd2399",
+      "type": "HVAC/FCU_DFSS_DFVSC_DSP_CHWDC",
+      "etag": "2a1635dd",
+      "label": "IDF Rm 31224 - VAVCO S3-1-127 & FC S-3 CHW"
+    }
+  },
+  "cloud": {
+    "num_id": "124260683875372"
+  },
+  "relationships": {
+    "6cf23efd-19bd-4564-9360-ed0033f3f18c": {
+      "CONTAINS": [
+        {}
+      ]
+    }
+  }
+}

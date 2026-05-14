@@ -1,0 +1,23 @@
+{
+  "timestamp": "2026-01-01T00:00:00Z",
+  "version": "1.5.3",
+  "system": {},
+  "externals": {
+    "dbo": {
+      "ext_id": "b391c21e-adea-4886-8972-4055bab35a0f",
+      "type": "UNTYPED/TYPELESS",
+      "etag": "c9ddd3a7",
+      "label": "TF S-8 Electrical Rm 31116"
+    }
+  },
+  "cloud": {
+    "num_id": "2756542296893214"
+  },
+  "relationships": {
+    "6cf23efd-19bd-4564-9360-ed0033f3f18c": {
+      "CONTAINS": [
+        {}
+      ]
+    }
+  }
+}

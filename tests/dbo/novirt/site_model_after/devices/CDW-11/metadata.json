@@ -1,0 +1,77 @@
+{
+  "timestamp": "2026-01-01T00:00:00Z",
+  "version": "1.5.3",
+  "system": {
+    "name": "CDW SYSTEM M"
+  },
+  "pointset": {
+    "points": {
+      "blowdown_water_flowrate_sensor": {
+        "units": "us-gallons-per-minute"
+      },
+      "bypass_valve_percentage_command": {
+        "units": "percent"
+      },
+      "high_return_water_temperature_alarm": {
+        "value_map": {
+          "ACTIVE": "1.0",
+          "INACTIVE": "0.0"
+        }
+      },
+      "high_supply_water_temperature_alarm": {
+        "value_map": {
+          "ACTIVE": "1.0",
+          "INACTIVE": "0.0"
+        }
+      },
+      "low_return_water_temperature_alarm": {
+        "value_map": {
+          "ACTIVE": "1.0",
+          "INACTIVE": "0.0"
+        }
+      },
+      "low_supply_water_temperature_alarm": {
+        "value_map": {
+          "ACTIVE": "1.0",
+          "INACTIVE": "0.0"
+        }
+      },
+      "makeup_water_flowrate_sensor": {
+        "units": "us-gallons-per-minute"
+      },
+      "return_water_temperature_sensor": {
+        "units": "degrees-fahrenheit"
+      },
+      "return_water_temperature_setpoint": {
+        "units": "degrees-fahrenheit"
+      },
+      "run_command": {
+        "value_map": {
+          "OFF": "0.0",
+          "ON": "1.0"
+        }
+      },
+      "supply_water_temperature_sensor": {
+        "units": "degrees-fahrenheit"
+      }
+    }
+  },
+  "externals": {
+    "dbo": {
+      "ext_id": "ae216a1d-7d9b-47ba-a4c1-aed0fae83883",
+      "type": "HVAC/CDWS_RWTC_BWFRM_BYPVPM_MWFRM",
+      "etag": "97f85365",
+      "label": "CW Blowdown Water Meter / 100 Mayfield, CW Make-Up Water Meter / 100 Mayfield, Chiller Plant / 100 Mayfield, Mayfield Condenser Bypass"
+    }
+  },
+  "cloud": {
+    "num_id": "83271376216522"
+  },
+  "relationships": {
+    "6cf23efd-19bd-4564-9360-ed0033f3f18c": {
+      "CONTAINS": [
+        {}
+      ]
+    }
+  }
+}

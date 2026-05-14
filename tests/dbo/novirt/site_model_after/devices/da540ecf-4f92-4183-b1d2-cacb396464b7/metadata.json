@@ -1,0 +1,23 @@
+{
+  "timestamp": "2026-01-01T00:00:00Z",
+  "version": "1.5.3",
+  "system": {},
+  "externals": {
+    "dbo": {
+      "ext_id": "da540ecf-4f92-4183-b1d2-cacb396464b7",
+      "type": "UNTYPED/TYPELESS",
+      "etag": "e5c9ca46",
+      "label": "EF S8A, S8B, & S8C Shop / San Antonio"
+    }
+  },
+  "cloud": {
+    "num_id": "2552891424385849"
+  },
+  "relationships": {
+    "6cf23efd-19bd-4564-9360-ed0033f3f18c": {
+      "CONTAINS": [
+        {}
+      ]
+    }
+  }
+}

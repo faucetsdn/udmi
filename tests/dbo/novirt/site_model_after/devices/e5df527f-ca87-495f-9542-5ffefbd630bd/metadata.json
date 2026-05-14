@@ -1,0 +1,23 @@
+{
+  "timestamp": "2026-01-01T00:00:00Z",
+  "version": "1.5.3",
+  "system": {},
+  "externals": {
+    "dbo": {
+      "ext_id": "e5df527f-ca87-495f-9542-5ffefbd630bd",
+      "type": "UNTYPED/TYPELESS",
+      "etag": "4af24a16",
+      "label": "IDF Rm 22921 - VAVCO M2-1-176 & FC M-4 CHW"
+    }
+  },
+  "cloud": {
+    "num_id": "2694750125323201"
+  },
+  "relationships": {
+    "6cf23efd-19bd-4564-9360-ed0033f3f18c": {
+      "CONTAINS": [
+        {}
+      ]
+    }
+  }
+}

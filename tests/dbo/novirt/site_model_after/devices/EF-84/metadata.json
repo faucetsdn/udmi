@@ -1,0 +1,78 @@
+{
+  "timestamp": "2026-01-01T00:00:00Z",
+  "version": "1.5.3",
+  "system": {
+    "name": "EF S8C"
+  },
+  "pointset": {
+    "points": {
+      "exhaust_air_damper_command": {
+        "value_map": {
+          "CLOSED": "0.0",
+          "OPEN": "1.0"
+        }
+      },
+      "exhaust_air_damper_status": {},
+      "exhaust_air_static_pressure_sensor": {
+        "units": "inches-of-water"
+      },
+      "exhaust_air_static_pressure_setpoint": {
+        "units": "inches-of-water"
+      },
+      "failed_alarm": {
+        "value_map": {
+          "ACTIVE": "1.0",
+          "INACTIVE": "0.0"
+        }
+      },
+      "high_exhaust_air_static_pressure_alarm": {
+        "value_map": {
+          "ACTIVE": "1.0",
+          "INACTIVE": "0.0"
+        }
+      },
+      "low_exhaust_air_static_pressure_alarm": {
+        "value_map": {
+          "ACTIVE": "1.0",
+          "INACTIVE": "0.0"
+        }
+      },
+      "run_command": {
+        "value_map": {
+          "OFF": "0.0",
+          "ON": "1.0"
+        }
+      },
+      "run_status": {
+        "value_map": {
+          "OFF": "0.0",
+          "ON": "1.0"
+        }
+      },
+      "speed_frequency_sensor": {
+        "units": "hertz"
+      },
+      "speed_percentage_command": {
+        "units": "percent"
+      }
+    }
+  },
+  "externals": {
+    "dbo": {
+      "ext_id": "0e7adc28-a5f0-47b5-afd2-bc58006d7dae",
+      "type": "HVAC/FAN_VSC_EPC_EDM",
+      "etag": "fef8b7a1",
+      "label": "EF S8A, S8B, & S8C Shop / San Antonio"
+    }
+  },
+  "cloud": {
+    "num_id": "166510922378055"
+  },
+  "relationships": {
+    "6cf23efd-19bd-4564-9360-ed0033f3f18c": {
+      "CONTAINS": [
+        {}
+      ]
+    }
+  }
+}

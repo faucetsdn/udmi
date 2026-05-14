@@ -1,0 +1,68 @@
+{
+  "timestamp": "2026-01-01T00:00:00Z",
+  "version": "1.5.3",
+  "system": {
+    "name": "CHWP S4B"
+  },
+  "pointset": {
+    "points": {
+      "current_sensor": {
+        "units": "amperes"
+      },
+      "energy_accumulator": {
+        "units": "kilowatt-hours"
+      },
+      "failed_alarm": {
+        "value_map": {
+          "ACTIVE": "1.0",
+          "INACTIVE": "0.0"
+        }
+      },
+      "power_sensor": {
+        "units": "kilowatts"
+      },
+      "run_command": {
+        "value_map": {
+          "OFF": "0.0",
+          "ON": "1.0"
+        }
+      },
+      "run_status": {
+        "value_map": {
+          "OFF": "0.0",
+          "ON": "1.0"
+        }
+      },
+      "speed_frequency_sensor": {
+        "units": "hertz"
+      },
+      "speed_percentage_command": {
+        "units": "percent"
+      },
+      "torque_sensor": {
+        "units": "newton-meters"
+      },
+      "voltage_sensor": {
+        "units": "volts"
+      }
+    }
+  },
+  "externals": {
+    "dbo": {
+      "ext_id": "053779fe-3f85-4646-8504-554bdb577e92",
+      "type": "HVAC/PMP_SS_VSC",
+      "etag": "5e4773e9",
+      "label": "Air Cooled Chiller S-4 / San Antonio, CHWP S-4B (Chiller 4) VFD Integration / San Antonio"
+    }
+  },
+  "cloud": {
+    "num_id": "122993513385358"
+  },
+  "relationships": {
+    "6cf23efd-19bd-4564-9360-ed0033f3f18c": {
+      "CONTAINS": [
+        {}
+      ]
+    }
+  }
+}

@@ -1,0 +1,24 @@
+{
+  "timestamp": "2026-01-01T00:00:00Z",
+  "version": "1.5.3",
+  "system": {
+    "name": "BLR M1"
+  },
+  "pointset": {
+    "points": {
+      "circulation_pump_run_command": {},
+      "circulation_pump_run_status": {},
+      "failed_alarm": {},
+      "heating_percentage_command": {},
+      "high_supply_water_temperature_alarm": {},
+      "low_supply_water_temperature_alarm": {},
+      "return_water_isolation_valve_command": {},
+      "return_water_isolation_valve_status": {},
+      "return_water_temperature_sensor": {},
+      "run_command": {},
+      "run_status": {},
+      "supply_water_temperature_sensor": {},
+      "supply_water_temperature_setpoint": {}
+    }
+  }
+}

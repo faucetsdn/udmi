@@ -1,0 +1,92 @@
+{
+  "timestamp": "2026-01-01T00:00:00Z",
+  "version": "1.5.3",
+  "system": {
+    "name": "TF S-11"
+  },
+  "pointset": {
+    "points": {
+      "failed_alarm": {
+        "value_map": {
+          "ACTIVE": "1.0",
+          "INACTIVE": "0.0"
+        }
+      },
+      "failed_zone_air_temperature_alarm": {
+        "value_map": {
+          "ACTIVE": "1.0",
+          "INACTIVE": "0.0"
+        }
+      },
+      "high_zone_air_temperature_alarm": {
+        "value_map": {
+          "ACTIVE": "1.0",
+          "INACTIVE": "0.0"
+        }
+      },
+      "local_override_alarm": {
+        "value_map": {
+          "ACTIVE": "1.0",
+          "INACTIVE": "0.0"
+        }
+      },
+      "low_zone_air_temperature_alarm": {
+        "value_map": {
+          "ACTIVE": "1.0",
+          "INACTIVE": "0.0"
+        }
+      },
+      "run_command": {
+        "value_map": {
+          "OFF": "0.0",
+          "ON": "1.0"
+        }
+      },
+      "run_status": {
+        "value_map": {
+          "OFF": "0.0",
+          "ON": "1.0"
+        }
+      },
+      "schedule_run_command": {
+        "value_map": {
+          "OFF": "0.0",
+          "ON": "1.0"
+        }
+      },
+      "user_occupancy_override_status": {
+        "value_map": {
+          "DISABLED": "0.0",
+          "ENABLED": "1.0"
+        }
+      },
+      "zone_air_cooling_temperature_setpoint": {
+        "units": "degrees-fahrenheit"
+      },
+      "zone_air_heating_temperature_setpoint": {
+        "units": "degrees-fahrenheit"
+      },
+      "zone_air_temperature_sensor": {
+        "units": "degrees-fahrenheit"
+      }
+    }
+  },
+  "externals": {
+    "dbo": {
+      "ext_id": "026203a0-976f-4581-8f0f-b608186f37ad",
+      "type": "HVAC/FAN_SS_DSP",
+      "etag": "0bd8592f",
+      "label": "TF S-11 Elevator Closet Rm 31345"
+    }
+  },
+  "cloud": {
+    "num_id": "6145222943537"
+  },
+  "relationships": {
+    "6cf23efd-19bd-4564-9360-ed0033f3f18c": {
+      "CONTAINS": [
+        {}
+      ]
+    }
+  }
+}

@@ -1,0 +1,44 @@
+{
+  "timestamp": "2026-01-01T00:00:00Z",
+  "version": "1.5.3",
+  "system": {
+    "name": "OA M"
+  },
+  "pointset": {
+    "points": {
+      "outside_air_dewpoint_temperature_sensor": {
+        "units": "degrees-fahrenheit"
+      },
+      "outside_air_relative_humidity_sensor": {
+        "units": "percent-relative-humidity"
+      },
+      "outside_air_specificenthalpy_sensor": {
+        "units": "btus-per-pound-dry-air"
+      },
+      "outside_air_temperature_sensor": {
+        "units": "degrees-fahrenheit"
+      },
+      "outside_air_wetbulb_temperature_sensor": {
+        "units": "degrees-fahrenheit"
+      }
+    }
+  },
+  "externals": {
+    "dbo": {
+      "ext_id": "f69ba342-0c18-4c7f-a76e-aaefa0df42a7",
+      "type": "HVAC/WEATHER_OA",
+      "etag": "9ce7e615",
+      "label": "OA Conditions - Bldg Broadcast"
+    }
+  },
+  "cloud": {
+    "num_id": "107321003065287"
+  },
+  "relationships": {
+    "6cf23efd-19bd-4564-9360-ed0033f3f18c": {
+      "CONTAINS": [
+        {}
+      ]
+    }
+  }
+}

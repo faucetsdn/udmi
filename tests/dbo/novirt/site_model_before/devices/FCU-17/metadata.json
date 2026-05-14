@@ -1,0 +1,40 @@
+{
+  "timestamp": "2026-01-01T00:00:00Z",
+  "version": "1.5.3",
+  "system": {
+    "name": "FC M-17"
+  },
+  "pointset": {
+    "points": {
+      "chilled_water_valve_percentage_command": {},
+      "cooling_request_count": {},
+      "dehumidification_run_command": {},
+      "discharge_air_temperature_sensor": {},
+      "discharge_air_temperature_setpoint": {},
+      "discharge_fan_current_sensor": {},
+      "discharge_fan_run_command": {},
+      "discharge_fan_run_status": {},
+      "discharge_fan_speed_percentage_command": {},
+      "failed_discharge_fan_alarm": {},
+      "failed_humidifier_alarm_1": {},
+      "failed_humidifier_alarm_2": {},
+      "failed_zone_air_temperature_alarm": {},
+      "heating_request_count": {},
+      "heating_water_valve_percentage_command": {},
+      "high_zone_air_temperature_alarm": {},
+      "humidification_run_command_1": {},
+      "humidification_run_command_2": {},
+      "humidification_run_status_1": {},
+      "humidification_run_status_2": {},
+      "low_zone_air_temperature_alarm": {},
+      "schedule_run_command": {},
+      "user_occupancy_override_status": {},
+      "zone_air_cooling_temperature_setpoint": {},
+      "zone_air_dehumidification_relative_humidity_setpoint": {},
+      "zone_air_heating_temperature_setpoint": {},
+      "zone_air_humidification_relative_humidity_setpoint": {},
+      "zone_air_relative_humidity_sensor": {},
+      "zone_air_temperature_sensor": {}
+    }
+  }
+}

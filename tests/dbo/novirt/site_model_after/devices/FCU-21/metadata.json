@@ -1,0 +1,102 @@
+{
+  "timestamp": "2026-01-01T00:00:00Z",
+  "version": "1.5.3",
+  "system": {
+    "name": "FC M-21"
+  },
+  "pointset": {
+    "points": {
+      "chilled_water_valve_percentage_command": {
+        "units": "percent"
+      },
+      "cooling_request_count": {
+        "units": "no-units"
+      },
+      "discharge_air_temperature_sensor": {
+        "units": "degrees-fahrenheit"
+      },
+      "discharge_fan_run_command": {
+        "value_map": {
+          "OFF": "0.0",
+          "ON": "1.0"
+        }
+      },
+      "discharge_fan_run_status": {
+        "value_map": {
+          "OFF": "0.0",
+          "ON": "1.0"
+        }
+      },
+      "failed_discharge_fan_alarm": {
+        "value_map": {
+          "ACTIVE": "1.0",
+          "INACTIVE": "0.0"
+        }
+      },
+      "high_discharge_air_temperature_alarm": {
+        "value_map": {
+          "ACTIVE": "1.0",
+          "INACTIVE": "0.0"
+        }
+      },
+      "high_zone_air_temperature_alarm": {
+        "value_map": {
+          "ACTIVE": "1.0",
+          "INACTIVE": "0.0"
+        }
+      },
+      "low_discharge_air_temperature_alarm": {
+        "value_map": {
+          "ACTIVE": "1.0",
+          "INACTIVE": "0.0"
+        }
+      },
+      "low_zone_air_temperature_alarm": {
+        "value_map": {
+          "ACTIVE": "1.0",
+          "INACTIVE": "0.0"
+        }
+      },
+      "return_air_temperature_sensor": {
+        "units": "degrees-fahrenheit"
+      },
+      "schedule_run_command": {
+        "value_map": {
+          "OFF": "0.0",
+          "ON": "1.0"
+        }
+      },
+      "user_occupancy_override_status": {
+        "value_map": {
+          "DISABLED": "0.0",
+          "ENABLED": "1.0"
+        }
+      },
+      "zone_air_cooling_temperature_setpoint": {
+        "units": "degrees-fahrenheit"
+      },
+      "zone_air_heating_temperature_setpoint": {
+        "units": "degrees-fahrenheit"
+      },
+      "zone_air_temperature_sensor": {}
+    }
+  },
+  "externals": {
+    "dbo": {
+      "ext_id": "e6b0c63d-ff66-4b0d-9a0c-54cc0981c081",
+      "type": "HVAC/FCU_DFSS_DSP_CHWZC",
+      "etag": "eb3ba2c8",
+      "label": "FC M-21"
+    }
+  },
+  "cloud": {
+    "num_id": "170641539835788"
+  },
+  "relationships": {
+    "6cf23efd-19bd-4564-9360-ed0033f3f18c": {
+      "CONTAINS": [
+        {}
+      ]
+    }
+  }
+}

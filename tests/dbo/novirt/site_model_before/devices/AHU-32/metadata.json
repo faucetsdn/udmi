@@ -1,0 +1,38 @@
+{
+  "timestamp": "2026-01-01T00:00:00Z",
+  "version": "1.5.3",
+  "system": {
+    "name": "AC M3B"
+  },
+  "pointset": {
+    "points": {
+      "compressor_run_command": {},
+      "compressor_run_status": {},
+      "discharge_air_temperature_sensor": {},
+      "discharge_fan_run_command": {},
+      "discharge_fan_run_status": {},
+      "economizer_mode": {},
+      "failed_discharge_fan_alarm": {},
+      "failed_zone_air_relative_humidity_alarm": {},
+      "failed_zone_air_temperature_alarm": {},
+      "high_discharge_air_temperature_alarm": {},
+      "high_return_air_temperature_alarm": {},
+      "high_zone_air_relative_humidity_alarm": {},
+      "high_zone_air_temperature_alarm": {},
+      "low_discharge_air_temperature_alarm": {},
+      "low_limit_outside_air_damper_percentage_command": {},
+      "low_return_air_temperature_alarm": {},
+      "low_zone_air_relative_humidity_alarm": {},
+      "low_zone_air_temperature_alarm": {},
+      "outside_air_damper_percentage_command": {},
+      "outside_air_temperature_sensor": {},
+      "return_air_temperature_sensor": {},
+      "schedule_run_command": {},
+      "user_occupancy_override_status": {},
+      "zone_air_cooling_temperature_setpoint": {},
+      "zone_air_heating_temperature_setpoint": {},
+      "zone_air_relative_humidity_sensor": {},
+      "zone_air_temperature_sensor": {}
+    }
+  }
+}

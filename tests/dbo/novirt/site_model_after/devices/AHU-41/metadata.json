@@ -1,0 +1,173 @@
+{
+  "timestamp": "2026-01-01T00:00:00Z",
+  "version": "1.5.3",
+  "system": {
+    "name": "AHU M4A"
+  },
+  "pointset": {
+    "points": {
+      "chilled_water_valve_percentage_command": {
+        "units": "percent"
+      },
+      "cooling_request_count": {
+        "units": "no-units"
+      },
+      "discharge_air_temperature_sensor": {
+        "units": "degrees-fahrenheit"
+      },
+      "discharge_air_temperature_setpoint": {
+        "units": "degrees-fahrenheit"
+      },
+      "discharge_fan_current_sensor": {
+        "units": "amperes"
+      },
+      "discharge_fan_power_sensor": {
+        "units": "kilowatts"
+      },
+      "discharge_fan_run_command": {
+        "value_map": {
+          "OFF": "0.0",
+          "ON": "1.0"
+        }
+      },
+      "discharge_fan_run_status": {
+        "value_map": {
+          "OFF": "0.0",
+          "ON": "1.0"
+        }
+      },
+      "discharge_fan_speed_frequency_sensor": {
+        "units": "hertz"
+      },
+      "discharge_fan_speed_percentage_command": {
+        "units": "percent"
+      },
+      "discharge_fan_torque_sensor": {
+        "units": "newton-meters"
+      },
+      "discharge_fan_voltage_sensor": {
+        "units": "volts"
+      },
+      "economizer_mode": {
+        "value_map": {
+          "OFF": "0.0",
+          "ON": "1.0"
+        }
+      },
+      "failed_discharge_fan_alarm": {
+        "value_map": {
+          "ACTIVE": "1.0",
+          "INACTIVE": "0.0"
+        }
+      },
+      "failed_zone_air_temperature_alarm": {
+        "value_map": {
+          "ACTIVE": "1.0",
+          "INACTIVE": "0.0"
+        }
+      },
+      "filter_differential_pressure_sensor_1": {
+        "units": "inches-of-water"
+      },
+      "filter_differential_pressure_sensor_2": {
+        "units": "inches-of-water"
+      },
+      "high_discharge_air_temperature_alarm": {
+        "value_map": {
+          "ACTIVE": "1.0",
+          "INACTIVE": "0.0"
+        }
+      },
+      "high_mixed_air_temperature_alarm": {
+        "value_map": {
+          "ACTIVE": "1.0",
+          "INACTIVE": "0.0"
+        }
+      },
+      "high_return_air_temperature_alarm": {
+        "value_map": {
+          "ACTIVE": "1.0",
+          "INACTIVE": "0.0"
+        }
+      },
+      "high_zone_air_temperature_alarm": {
+        "value_map": {
+          "ACTIVE": "1.0",
+          "INACTIVE": "0.0"
+        }
+      },
+      "low_discharge_air_temperature_alarm": {
+        "value_map": {
+          "ACTIVE": "1.0",
+          "INACTIVE": "0.0"
+        }
+      },
+      "low_limit_outside_air_damper_percentage_command": {
+        "units": "percent"
+      },
+      "low_mixed_air_temperature_alarm": {
+        "value_map": {
+          "ACTIVE": "1.0",
+          "INACTIVE": "0.0"
+        }
+      },
+      "low_return_air_temperature_alarm": {
+        "value_map": {
+          "ACTIVE": "1.0",
+          "INACTIVE": "0.0"
+        }
+      },
+      "low_zone_air_temperature_alarm": {
+        "value_map": {
+          "ACTIVE": "1.0",
+          "INACTIVE": "0.0"
+        }
+      },
+      "mixed_air_temperature_sensor": {
+        "units": "degrees-fahrenheit"
+      },
+      "outside_air_damper_percentage_command": {
+        "units": "percent"
+      },
+      "outside_air_temperature_sensor": {
+        "units": "degrees-fahrenheit"
+      },
+      "return_air_damper_percentage_command": {
+        "units": "percent"
+      },
+      "schedule_run_command": {
+        "value_map": {
+          "OFF": "0.0",
+          "ON": "1.0"
+        }
+      },
+      "zone_air_cooling_temperature_setpoint": {
+        "units": "degrees-fahrenheit"
+      },
+      "zone_air_heating_temperature_setpoint": {
+        "units": "degrees-fahrenheit"
+      },
+      "zone_air_temperature_sensor": {
+        "units": "degrees-fahrenheit"
+      }
+    }
+  },
+  "externals": {
+    "dbo": {
+      "ext_id": "7ffaee19-669e-46f9-997b-f716788ef7d4",
+      "type": "HVAC/AHU_DSP_DFVSC_CHWDC_ECONZ_FDPM2X",
+      "etag": "fe9f5199",
+      "label": "AHU M4A S1 VFD Interface, AHU's M-4A & M-4B / 100 Mayfield"
+    }
+  },
+  "cloud": {
+    "num_id": "144841779644791"
+  },
+  "relationships": {
+    "6cf23efd-19bd-4564-9360-ed0033f3f18c": {
+      "CONTAINS": [
+        {}
+      ]
+    }
+  }
+}

@@ -1,0 +1,23 @@
+{
+  "timestamp": "2026-01-01T00:00:00Z",
+  "version": "1.5.3",
+  "system": {},
+  "externals": {
+    "dbo": {
+      "ext_id": "e7a04443-d70a-481c-aaab-99c4b2392563",
+      "type": "UNTYPED/TYPELESS",
+      "etag": "59c96de8",
+      "label": "power-meter-Lighting_AH2C"
+    }
+  },
+  "cloud": {
+    "num_id": "2555137427890121"
+  },
+  "relationships": {
+    "6cf23efd-19bd-4564-9360-ed0033f3f18c": {
+      "CONTAINS": [
+        {}
+      ]
+    }
+  }
+}

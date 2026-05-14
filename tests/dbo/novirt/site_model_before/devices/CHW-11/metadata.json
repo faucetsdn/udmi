@@ -1,0 +1,30 @@
+{
+  "timestamp": "2026-01-01T00:00:00Z",
+  "version": "1.5.3",
+  "system": {
+    "name": "CHW SYSTEM M"
+  },
+  "pointset": {
+    "points": {
+      "bypass_valve_percentage_command": {},
+      "cooling_performanceratio_sensor": {},
+      "cooling_thermal_power_sensor": {},
+      "differential_pressure_sensor": {},
+      "differential_pressure_setpoint": {},
+      "flowrate_sensor": {},
+      "high_flowrate_alarm": {},
+      "high_return_water_temperature_alarm": {},
+      "high_supply_water_temperature_alarm": {},
+      "low_differential_pressure_alarm": {},
+      "low_flowrate_alarm": {},
+      "low_return_water_temperature_alarm": {},
+      "low_supply_water_temperature_alarm": {},
+      "min_flowrate_setpoint": {},
+      "return_water_temperature_sensor": {},
+      "run_command": {},
+      "run_status": {},
+      "supply_water_temperature_sensor": {},
+      "supply_water_temperature_setpoint": {}
+    }
+  }
+}

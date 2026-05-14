@@ -1,0 +1,20 @@
+{
+  "timestamp": "2026-01-01T00:00:00Z",
+  "version": "1.5.3",
+  "system": {},
+  "externals": {
+    "dbo": {
+      "ext_id": "83907b28-ab61-448a-9115-1881e44fae2e",
+      "type": "INFO_TECH/PRNTR",
+      "etag": "09938f3b",
+      "label": "mes-loon-inventory-printer1"
+    }
+  },
+  "relationships": {
+    "276251a4-86de-40dc-89b3-2e0d6958030e": {
+      "CONTAINS": [
+        {}
+      ]
+    }
+  }
+}

@@ -1,0 +1,68 @@
+{
+  "timestamp": "2026-01-01T00:00:00Z",
+  "version": "1.5.3",
+  "system": {
+    "name": "CHWP S2"
+  },
+  "pointset": {
+    "points": {
+      "current_sensor": {
+        "units": "amperes"
+      },
+      "energy_accumulator": {
+        "units": "kilowatt-hours"
+      },
+      "failed_alarm": {
+        "value_map": {
+          "ACTIVE": "1.0",
+          "INACTIVE": "0.0"
+        }
+      },
+      "power_sensor": {
+        "units": "kilowatts"
+      },
+      "run_command": {
+        "value_map": {
+          "OFF": "0.0",
+          "ON": "1.0"
+        }
+      },
+      "run_status": {
+        "value_map": {
+          "OFF": "0.0",
+          "ON": "1.0"
+        }
+      },
+      "speed_frequency_sensor": {
+        "units": "hertz"
+      },
+      "speed_percentage_command": {
+        "units": "percent"
+      },
+      "torque_sensor": {
+        "units": "newton-meters"
+      },
+      "voltage_sensor": {
+        "units": "volts"
+      }
+    }
+  },
+  "externals": {
+    "dbo": {
+      "ext_id": "f51c23ac-38b5-4f02-b6e1-37939d26545f",
+      "type": "HVAC/PMP_SS_VSC",
+      "etag": "493230d1",
+      "label": "CHWP S2 VFD Integration / San Antonio, Chiller Plant / San Antonio"
+    }
+  },
+  "cloud": {
+    "num_id": "39153904139572"
+  },
+  "relationships": {
+    "6cf23efd-19bd-4564-9360-ed0033f3f18c": {
+      "CONTAINS": [
+        {}
+      ]
+    }
+  }
+}

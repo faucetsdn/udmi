@@ -1,0 +1,110 @@
+{
+  "timestamp": "2026-01-01T00:00:00Z",
+  "version": "1.5.3",
+  "system": {
+    "name": "MAU M1"
+  },
+  "pointset": {
+    "points": {
+      "discharge_air_cooling_temperature_setpoint": {
+        "units": "degrees-fahrenheit"
+      },
+      "discharge_air_flowrate_sensor": {
+        "units": "cubic-feet-per-minute"
+      },
+      "discharge_air_temperature_sensor": {
+        "units": "degrees-fahrenheit"
+      },
+      "discharge_fan_current_sensor": {
+        "units": "amperes"
+      },
+      "discharge_fan_power_sensor": {
+        "units": "kilowatts"
+      },
+      "discharge_fan_run_command": {
+        "value_map": {
+          "OFF": "0.0",
+          "ON": "1.0"
+        }
+      },
+      "discharge_fan_run_status": {
+        "value_map": {
+          "OFF": "0.0",
+          "ON": "1.0"
+        }
+      },
+      "discharge_fan_speed_frequency_sensor": {
+        "units": "hertz"
+      },
+      "discharge_fan_speed_percentage_command": {
+        "units": "percent"
+      },
+      "discharge_fan_speed_percentage_sensor": {
+        "units": "percent"
+      },
+      "discharge_fan_torque_sensor": {
+        "units": "newton-meters"
+      },
+      "discharge_fan_voltage_sensor": {
+        "units": "volts"
+      },
+      "evaporative_cooler_run_command": {
+        "value_map": {
+          "OFF": "0.0",
+          "ON": "1.0"
+        }
+      },
+      "failed_discharge_air_temperature_alarm": {
+        "value_map": {
+          "ACTIVE": "1.0",
+          "INACTIVE": "0.0"
+        }
+      },
+      "failed_discharge_fan_alarm": {
+        "value_map": {
+          "ACTIVE": "1.0",
+          "INACTIVE": "0.0"
+        }
+      },
+      "failed_outside_air_temperature_alarm": {
+        "value_map": {
+          "ACTIVE": "1.0",
+          "INACTIVE": "0.0"
+        }
+      },
+      "high_discharge_air_temperature_alarm": {
+        "value_map": {
+          "ACTIVE": "1.0",
+          "INACTIVE": "0.0"
+        }
+      },
+      "outside_air_temperature_sensor": {
+        "units": "degrees-fahrenheit"
+      },
+      "schedule_run_command": {
+        "value_map": {
+          "OFF": "0.0",
+          "ON": "1.0"
+        }
+      }
+    }
+  },
+  "externals": {
+    "dbo": {
+      "ext_id": "4635f50a-94e7-439c-8263-a1f029977e9f",
+      "type": "HVAC/MAU_DFVSC_ECCDC_OA",
+      "etag": "3dea42cd",
+      "label": "MAU-1 & KEF-1 / 100 Mayfield, MAU-1 VFD Interface"
+    }
+  },
+  "cloud": {
+    "num_id": "118074227921778"
+  },
+  "relationships": {
+    "6cf23efd-19bd-4564-9360-ed0033f3f18c": {
+      "CONTAINS": [
+        {}
+      ]
+    }
+  }
+}

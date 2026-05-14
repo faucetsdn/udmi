@@ -1,0 +1,20 @@
+{
+  "timestamp": "2026-01-01T00:00:00Z",
+  "version": "1.5.3",
+  "system": {},
+  "externals": {
+    "dbo": {
+      "ext_id": "35634d81-fcc0-46b1-9271-a86b9f2508f2",
+      "type": "INFO_TECH/PRNTR",
+      "etag": "5bb87b44",
+      "label": "proxylabels"
+    }
+  },
+  "relationships": {
+    "2184ff7e-76d0-4961-aca5-f3f78c24deea": {
+      "CONTAINS": [
+        {}
+      ]
+    }
+  }
+}

@@ -1,0 +1,20 @@
+{
+  "timestamp": "2026-01-01T00:00:00Z",
+  "version": "1.5.3",
+  "system": {},
+  "externals": {
+    "dbo": {
+      "ext_id": "e1049188-a9ff-4ad2-8b02-0bc84e7bf1e7",
+      "type": "INFO_TECH/PRNTR",
+      "etag": "ade84bfb",
+      "label": "glados-color"
+    }
+  },
+  "relationships": {
+    "276251a4-86de-40dc-89b3-2e0d6958030e": {
+      "CONTAINS": [
+        {}
+      ]
+    }
+  }
+}

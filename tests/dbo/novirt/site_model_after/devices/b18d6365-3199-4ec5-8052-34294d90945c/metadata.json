@@ -1,0 +1,23 @@
+{
+  "timestamp": "2026-01-01T00:00:00Z",
+  "version": "1.5.3",
+  "system": {},
+  "externals": {
+    "dbo": {
+      "ext_id": "b18d6365-3199-4ec5-8052-34294d90945c",
+      "type": "UNTYPED/TYPELESS",
+      "etag": "2abea788",
+      "label": "EF S-2 Restroom"
+    }
+  },
+  "cloud": {
+    "num_id": "2727668195444079"
+  },
+  "relationships": {
+    "6cf23efd-19bd-4564-9360-ed0033f3f18c": {
+      "CONTAINS": [
+        {}
+      ]
+    }
+  }
+}

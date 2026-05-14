@@ -1,0 +1,53 @@
+{
+  "timestamp": "2026-01-01T00:00:00Z",
+  "version": "1.5.3",
+  "system": {
+    "name": "KEF M1"
+  },
+  "pointset": {
+    "points": {
+      "run_command": {
+        "value_map": {
+          "OFF": "0.0",
+          "ON": "1.0"
+        }
+      },
+      "run_status": {
+        "value_map": {
+          "OFF": "0.0",
+          "ON": "1.0"
+        }
+      },
+      "schedule_run_command": {
+        "value_map": {
+          "OFF": "0.0",
+          "ON": "1.0"
+        }
+      },
+      "speed_frequency_sensor": {
+        "units": "hertz"
+      },
+      "speed_percentage_command": {
+        "units": "percent"
+      }
+    }
+  },
+  "externals": {
+    "dbo": {
+      "ext_id": "4a4ba2c7-1f75-4aa7-8787-7f34dcfcb9c0",
+      "type": "HVAC/FAN_SS_VSC",
+      "etag": "a1cedba4",
+      "label": "KEF-1 Kitchen Grease Exhaust, MAU-1 & KEF-1 / 100 Mayfield"
+    }
+  },
+  "cloud": {
+    "num_id": "134102552851224"
+  },
+  "relationships": {
+    "6cf23efd-19bd-4564-9360-ed0033f3f18c": {
+      "CONTAINS": [
+        {}
+      ]
+    }
+  }
+}

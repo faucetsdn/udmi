@@ -1,0 +1,23 @@
+{
+  "timestamp": "2026-01-01T00:00:00Z",
+  "version": "1.5.3",
+  "system": {},
+  "externals": {
+    "dbo": {
+      "ext_id": "e6c89674-d1b8-4470-bad3-307c35deaf15",
+      "type": "UNTYPED/TYPELESS",
+      "etag": "17cd9396",
+      "label": "Fitness Area Garage Door North"
+    }
+  },
+  "cloud": {
+    "num_id": "2658823700024492"
+  },
+  "relationships": {
+    "6cf23efd-19bd-4564-9360-ed0033f3f18c": {
+      "CONTAINS": [
+        {}
+      ]
+    }
+  }
+}

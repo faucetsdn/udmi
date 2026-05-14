@@ -1,0 +1,77 @@
+{
+  "timestamp": "2026-01-01T00:00:00Z",
+  "version": "1.5.3",
+  "system": {
+    "name": "EF M4B"
+  },
+  "pointset": {
+    "points": {
+      "current_sensor": {
+        "units": "amperes"
+      },
+      "exhaust_air_static_pressure_sensor": {
+        "units": "inches-of-water"
+      },
+      "exhaust_air_static_pressure_setpoint": {
+        "units": "inches-of-water"
+      },
+      "high_exhaust_air_static_pressure_alarm": {
+        "value_map": {
+          "ACTIVE": "1.0",
+          "INACTIVE": "0.0"
+        }
+      },
+      "low_exhaust_air_static_pressure_alarm": {
+        "value_map": {
+          "ACTIVE": "1.0",
+          "INACTIVE": "0.0"
+        }
+      },
+      "power_sensor": {
+        "units": "kilowatts"
+      },
+      "run_command": {
+        "value_map": {
+          "OFF": "0.0",
+          "ON": "1.0"
+        }
+      },
+      "run_status": {
+        "value_map": {
+          "OFF": "0.0",
+          "ON": "1.0"
+        }
+      },
+      "speed_frequency_sensor": {
+        "units": "hertz"
+      },
+      "speed_percentage_command": {
+        "units": "percent"
+      },
+      "torque_sensor": {
+        "units": "newton-meters"
+      },
+      "voltage_sensor": {
+        "units": "volts"
+      }
+    }
+  },
+  "externals": {
+    "dbo": {
+      "ext_id": "2d372722-d246-4280-a27c-95c60181654b",
+      "type": "HVAC/FAN_SS_VSC_EPC",
+      "etag": "91ce76d4",
+      "label": "EF - 4A / 4B / 100 Mayfield, EF M4B VFD Interface"
+    }
+  },
+  "cloud": {
+    "num_id": "261493970315767"
+  },
+  "relationships": {
+    "6cf23efd-19bd-4564-9360-ed0033f3f18c": {
+      "CONTAINS": [
+        {}
+      ]
+    }
+  }
+}

@@ -1,0 +1,59 @@
+{
+  "timestamp": "2026-01-01T00:00:00Z",
+  "version": "1.5.3",
+  "system": {
+    "name": "PCH M1A"
+  },
+  "pointset": {
+    "points": {
+      "condensing_supply_water_isolation_valve_command": {},
+      "condensing_supply_water_isolation_valve_status": {},
+      "failed_condensing_supply_water_isolation_valve_alarm": {
+        "value_map": {
+          "ACTIVE": "1.0",
+          "INACTIVE": "0.0"
+        }
+      },
+      "failed_process_return_water_isolation_valve_alarm": {
+        "value_map": {
+          "ACTIVE": "1.0",
+          "INACTIVE": "0.0"
+        }
+      },
+      "process_return_water_isolation_valve_command": {},
+      "process_return_water_isolation_valve_status": {},
+      "process_return_water_temperature_sensor": {
+        "units": "degrees-fahrenheit"
+      },
+      "process_supply_water_temperature_sensor": {
+        "units": "degrees-fahrenheit"
+      },
+      "process_supply_water_temperature_setpoint": {},
+      "run_command": {
+        "value_map": {
+          "OFF": "0.0",
+          "ON": "1.0"
+        }
+      },
+      "run_status": {}
+    }
+  },
+  "externals": {
+    "dbo": {
+      "ext_id": "0d5cbf13-b6af-4259-bbc3-4037785993e1",
+      "type": "HVAC/CH_SS_PSWTC_PRWISOVM_CWSISOVM",
+      "etag": "1d6f83e6",
+      "label": "Process Chilled Water / 100 Mayfield"
+    }
+  },
+  "cloud": {
+    "num_id": "90997986128893"
+  },
+  "relationships": {
+    "6cf23efd-19bd-4564-9360-ed0033f3f18c": {
+      "CONTAINS": [
+        {}
+      ]
+    }
+  }
+}

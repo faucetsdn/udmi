@@ -1,0 +1,27 @@
+{
+  "timestamp": "2026-01-01T00:00:00Z",
+  "version": "1.5.3",
+  "system": {
+    "name": "CT M1"
+  },
+  "pointset": {
+    "points": {
+      "current_sensor": {},
+      "drain_water_valve_command": {},
+      "failed_alarm": {},
+      "failed_return_water_isolation_valve_alarm": {},
+      "failed_supply_water_isolation_valve_alarm": {},
+      "power_sensor": {},
+      "return_water_isolation_valve_command": {},
+      "return_water_isolation_valve_status": {},
+      "return_water_temperature_sensor": {},
+      "return_water_temperature_setpoint": {},
+      "run_command": {},
+      "run_status": {},
+      "speed_percentage_command": {},
+      "supply_water_isolation_valve_command": {},
+      "supply_water_isolation_valve_status": {},
+      "torque_sensor": {}
+    }
+  }
+}

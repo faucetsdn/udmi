@@ -1,0 +1,23 @@
+{
+  "timestamp": "2026-01-01T00:00:00Z",
+  "version": "1.5.3",
+  "system": {},
+  "externals": {
+    "dbo": {
+      "ext_id": "ec716edd-ec40-4fa1-8dd3-63a5e8bf8aac",
+      "type": "UNTYPED/TYPELESS",
+      "etag": "6d0514c2",
+      "label": "IDF Rm 22228 - VAVCO S2-2-76 & FC S-2 CHW"
+    }
+  },
+  "cloud": {
+    "num_id": "2699973377679615"
+  },
+  "relationships": {
+    "6cf23efd-19bd-4564-9360-ed0033f3f18c": {
+      "CONTAINS": [
+        {}
+      ]
+    }
+  }
+}

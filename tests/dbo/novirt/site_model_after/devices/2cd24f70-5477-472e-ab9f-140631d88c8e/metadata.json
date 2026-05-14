@@ -1,0 +1,23 @@
+{
+  "timestamp": "2026-01-01T00:00:00Z",
+  "version": "1.5.3",
+  "system": {},
+  "externals": {
+    "dbo": {
+      "ext_id": "2cd24f70-5477-472e-ab9f-140631d88c8e",
+      "type": "UNTYPED/TYPELESS",
+      "etag": "fa1f1434",
+      "label": "EF - 4A / 4B / 100 Mayfield"
+    }
+  },
+  "cloud": {
+    "num_id": "2558097968797677"
+  },
+  "relationships": {
+    "6cf23efd-19bd-4564-9360-ed0033f3f18c": {
+      "CONTAINS": [
+        {}
+      ]
+    }
+  }
+}

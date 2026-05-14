@@ -1,0 +1,53 @@
+{
+  "timestamp": "2026-01-01T00:00:00Z",
+  "version": "1.5.3",
+  "system": {
+    "name": "HWP M2"
+  },
+  "pointset": {
+    "points": {
+      "failed_alarm": {
+        "value_map": {
+          "ACTIVE": "1.0",
+          "INACTIVE": "0.0"
+        }
+      },
+      "run_command": {
+        "value_map": {
+          "OFF": "0.0",
+          "ON": "1.0"
+        }
+      },
+      "run_status": {
+        "value_map": {
+          "OFF": "0.0",
+          "ON": "1.0"
+        }
+      },
+      "speed_frequency_sensor": {
+        "units": "hertz"
+      },
+      "speed_percentage_command": {
+        "units": "percent"
+      }
+    }
+  },
+  "externals": {
+    "dbo": {
+      "ext_id": "da266624-eb5b-47c9-8b66-eb919a18aa67",
+      "type": "HVAC/PMP_SS_VSC",
+      "etag": "4e3a970c",
+      "label": "Boiler Plant Mayfield / 100 Mayfield"
+    }
+  },
+  "cloud": {
+    "num_id": "122022121110287"
+  },
+  "relationships": {
+    "6cf23efd-19bd-4564-9360-ed0033f3f18c": {
+      "CONTAINS": [
+        {}
+      ]
+    }
+  }
+}

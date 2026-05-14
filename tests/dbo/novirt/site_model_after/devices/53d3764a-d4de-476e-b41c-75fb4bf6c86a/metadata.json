@@ -1,0 +1,20 @@
+{
+  "timestamp": "2026-01-01T00:00:00Z",
+  "version": "1.5.3",
+  "system": {},
+  "externals": {
+    "dbo": {
+      "ext_id": "53d3764a-d4de-476e-b41c-75fb4bf6c86a",
+      "type": "INFO_TECH/PRNTR",
+      "etag": "4e1d152a",
+      "label": "pprailscafe"
+    }
+  },
+  "relationships": {
+    "2184ff7e-76d0-4961-aca5-f3f78c24deea": {
+      "CONTAINS": [
+        {}
+      ]
+    }
+  }
+}

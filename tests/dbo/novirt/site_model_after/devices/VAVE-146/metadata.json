@@ -1,0 +1,60 @@
+{
+  "timestamp": "2026-01-01T00:00:00Z",
+  "version": "1.5.3",
+  "system": {
+    "name": "EVAV S1-4-6"
+  },
+  "pointset": {
+    "points": {
+      "exhaust_air_damper_percentage_command": {
+        "units": "percent"
+      },
+      "exhaust_air_flowrate_sensor": {
+        "units": "cubic-feet-per-minute"
+      },
+      "exhaust_air_flowrate_setpoint": {
+        "units": "cubic-feet-per-minute"
+      },
+      "low_exhaust_air_flowrate_alarm": {
+        "value_map": {
+          "ACTIVE": "1.0",
+          "INACTIVE": "0.0"
+        }
+      },
+      "pressurization_request_count": {
+        "units": "no-units"
+      },
+      "run_command": {
+        "value_map": {
+          "OFF": "0.0",
+          "ON": "1.0"
+        }
+      },
+      "zone_air_cooling_temperature_setpoint": {
+        "units": "degrees-fahrenheit"
+      },
+      "zone_air_heating_temperature_setpoint": {
+        "units": "degrees-fahrenheit"
+      },
+      "zone_air_temperature_sensor": {}
+    }
+  },
+  "externals": {
+    "dbo": {
+      "ext_id": "b9922f20-36df-48cb-b364-368e37b850e6",
+      "type": "HVAC/VAV_DSP_ED",
+      "etag": "6ff304e5",
+      "label": "EX S-1-4-6"
+    }
+  },
+  "cloud": {
+    "num_id": "250416488246154"
+  },
+  "relationships": {
+    "6cf23efd-19bd-4564-9360-ed0033f3f18c": {
+      "CONTAINS": [
+        {}
+      ]
+    }
+  }
+}

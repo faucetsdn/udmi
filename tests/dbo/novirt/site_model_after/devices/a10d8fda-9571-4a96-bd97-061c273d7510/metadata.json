@@ -1,0 +1,23 @@
+{
+  "timestamp": "2026-01-01T00:00:00Z",
+  "version": "1.5.3",
+  "system": {},
+  "externals": {
+    "dbo": {
+      "ext_id": "a10d8fda-9571-4a96-bd97-061c273d7510",
+      "type": "UNTYPED/TYPELESS",
+      "etag": "7fae2e99",
+      "label": "TF M-3 MPOE Rm 12689"
+    }
+  },
+  "cloud": {
+    "num_id": "2748254540648371"
+  },
+  "relationships": {
+    "6cf23efd-19bd-4564-9360-ed0033f3f18c": {
+      "CONTAINS": [
+        {}
+      ]
+    }
+  }
+}

@@ -1,0 +1,23 @@
+{
+  "timestamp": "2026-01-01T00:00:00Z",
+  "version": "1.5.3",
+  "system": {},
+  "externals": {
+    "dbo": {
+      "ext_id": "6a79fc74-e400-4b9d-82b9-03f92fdbed2d",
+      "type": "UNTYPED/TYPELESS",
+      "etag": "6d565629",
+      "label": "TF S-9 Elevator Closet Rm 31118"
+    }
+  },
+  "cloud": {
+    "num_id": "2683380088501744"
+  },
+  "relationships": {
+    "6cf23efd-19bd-4564-9360-ed0033f3f18c": {
+      "CONTAINS": [
+        {}
+      ]
+    }
+  }
+}

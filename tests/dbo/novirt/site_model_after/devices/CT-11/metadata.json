@@ -1,0 +1,107 @@
+{
+  "timestamp": "2026-01-01T00:00:00Z",
+  "version": "1.5.3",
+  "system": {
+    "name": "CT M1"
+  },
+  "pointset": {
+    "points": {
+      "current_sensor": {
+        "units": "amperes"
+      },
+      "drain_water_valve_command": {
+        "value_map": {
+          "CLOSED": "0.0",
+          "OPEN": "1.0"
+        }
+      },
+      "failed_alarm": {
+        "value_map": {
+          "ACTIVE": "1.0",
+          "INACTIVE": "0.0"
+        }
+      },
+      "failed_return_water_isolation_valve_alarm": {
+        "value_map": {
+          "ACTIVE": "1.0",
+          "INACTIVE": "0.0"
+        }
+      },
+      "failed_supply_water_isolation_valve_alarm": {
+        "value_map": {
+          "ACTIVE": "1.0",
+          "INACTIVE": "0.0"
+        }
+      },
+      "power_sensor": {
+        "units": "kilowatts"
+      },
+      "return_water_isolation_valve_command": {
+        "value_map": {
+          "CLOSED": "0.0",
+          "OPEN": "1.0"
+        }
+      },
+      "return_water_isolation_valve_status": {
+        "value_map": {
+          "CLOSED": "0.0",
+          "OPEN": "1.0"
+        }
+      },
+      "return_water_temperature_sensor": {
+        "units": "degrees-fahrenheit"
+      },
+      "return_water_temperature_setpoint": {
+        "units": "degrees-fahrenheit"
+      },
+      "run_command": {
+        "value_map": {
+          "OFF": "0.0",
+          "ON": "1.0"
+        }
+      },
+      "run_status": {
+        "value_map": {
+          "OFF": "0.0",
+          "ON": "1.0"
+        }
+      },
+      "speed_percentage_command": {
+        "units": "percent"
+      },
+      "supply_water_isolation_valve_command": {
+        "value_map": {
+          "CLOSED": "0.0",
+          "OPEN": "1.0"
+        }
+      },
+      "supply_water_isolation_valve_status": {
+        "value_map": {
+          "CLOSED": "0.0",
+          "OPEN": "1.0"
+        }
+      },
+      "torque_sensor": {
+        "units": "newton-meters"
+      }
+    }
+  },
+  "externals": {
+    "dbo": {
+      "ext_id": "3d08c977-d0df-41e5-a6b4-f171c066b479",
+      "type": "HVAC/CT_VSC_RWTC_SWISOVM_RWISOVM_DWVC",
+      "etag": "4d1267eb",
+      "label": "CT M1 VFD Interface, Chiller Plant / 100 Mayfield"
+    }
+  },
+  "cloud": {
+    "num_id": "187370835888301"
+  },
+  "relationships": {
+    "6cf23efd-19bd-4564-9360-ed0033f3f18c": {
+      "CONTAINS": [
+        {}
+      ]
+    }
+  }
+}

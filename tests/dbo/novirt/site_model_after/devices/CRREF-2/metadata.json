@@ -1,0 +1,42 @@
+{
+  "timestamp": "2026-01-01T00:00:00Z",
+  "version": "1.5.3",
+  "system": {
+    "name": "WALK-IN COOLER RAZKN7"
+  },
+  "pointset": {
+    "points": {
+      "defrost_temperature_sensor": {},
+      "low_zone_air_temperature_alarm": {
+        "value_map": {
+          "ACTIVE": "1.0",
+          "INACTIVE": "0.0"
+        }
+      },
+      "zone_air_temperature_sensor": {
+        "units": "degrees-fahrenheit"
+      },
+      "zone_air_temperature_setpoint": {
+        "units": "degrees-fahrenheit"
+      }
+    }
+  },
+  "externals": {
+    "dbo": {
+      "ext_id": "ba14c3d8-4d87-4e85-8023-1c211b42438e",
+      "type": "HVAC/CRREF_CREFC",
+      "etag": "360fd14f",
+      "label": "Google Walk-In Cooler Monitoring"
+    }
+  },
+  "cloud": {
+    "num_id": "169574859565521"
+  },
+  "relationships": {
+    "6cf23efd-19bd-4564-9360-ed0033f3f18c": {
+      "CONTAINS": [
+        {}
+      ]
+    }
+  }
+}

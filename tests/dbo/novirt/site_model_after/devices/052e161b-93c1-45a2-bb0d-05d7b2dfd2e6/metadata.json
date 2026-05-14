@@ -1,0 +1,23 @@
+{
+  "timestamp": "2026-01-01T00:00:00Z",
+  "version": "1.5.3",
+  "system": {},
+  "externals": {
+    "dbo": {
+      "ext_id": "052e161b-93c1-45a2-bb0d-05d7b2dfd2e6",
+      "type": "UNTYPED/TYPELESS",
+      "etag": "8c4bbf81",
+      "label": "Chiller #4 Integration / San Antonio"
+    }
+  },
+  "cloud": {
+    "num_id": "2710415103611751"
+  },
+  "relationships": {
+    "6cf23efd-19bd-4564-9360-ed0033f3f18c": {
+      "CONTAINS": [
+        {}
+      ]
+    }
+  }
+}

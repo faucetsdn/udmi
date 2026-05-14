@@ -1,0 +1,23 @@
+{
+  "timestamp": "2026-01-01T00:00:00Z",
+  "version": "1.5.3",
+  "system": {},
+  "externals": {
+    "dbo": {
+      "ext_id": "c6a160a5-5e68-48d4-bc3b-b7ea5660db1d",
+      "type": "UNTYPED/TYPELESS",
+      "etag": "15172e21",
+      "label": "power-meter-MAIN_Meter_Campus"
+    }
+  },
+  "cloud": {
+    "num_id": "2597906016846416"
+  },
+  "relationships": {
+    "6cf23efd-19bd-4564-9360-ed0033f3f18c": {
+      "CONTAINS": [
+        {}
+      ]
+    }
+  }
+}

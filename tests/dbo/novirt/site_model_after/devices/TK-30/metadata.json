@@ -1,0 +1,60 @@
+{
+  "timestamp": "2026-01-01T00:00:00Z",
+  "version": "1.5.3",
+  "system": {
+    "name": "TK M30"
+  },
+  "pointset": {
+    "points": {
+      "failed_makeup_water_flowrate_alarm": {
+        "value_map": {
+          "ACTIVE": "1.0",
+          "INACTIVE": "0.0"
+        }
+      },
+      "failed_return_water_isolation_valve_alarm": {
+        "value_map": {
+          "ACTIVE": "1.0",
+          "INACTIVE": "0.0"
+        }
+      },
+      "level_status": {},
+      "makeup_water_flowrate_sensor": {
+        "units": "us-gallons-per-minute"
+      },
+      "percentage_sensor": {
+        "units": "percent"
+      },
+      "return_water_isolation_valve_command": {
+        "value_map": {
+          "CLOSED": "0.0",
+          "OPEN": "1.0"
+        }
+      },
+      "return_water_isolation_valve_status": {
+        "value_map": {
+          "CLOSED": "0.0",
+          "OPEN": "1.0"
+        }
+      }
+    }
+  },
+  "externals": {
+    "dbo": {
+      "ext_id": "3f007b06-5007-4601-957c-03cb8d3a9dad",
+      "type": "HVAC/TK_LM_RWISOVM_MWFRM",
+      "etag": "d33ab57b",
+      "label": "Process Cooling Water PCW-30"
+    }
+  },
+  "cloud": {
+    "num_id": "122568003779380"
+  },
+  "relationships": {
+    "6cf23efd-19bd-4564-9360-ed0033f3f18c": {
+      "CONTAINS": [
+        {}
+      ]
+    }
+  }
+}

@@ -1,0 +1,47 @@
+{
+  "timestamp": "2026-01-01T00:00:00Z",
+  "version": "1.5.3",
+  "system": {
+    "name": "EVAV S1-4-4"
+  },
+  "pointset": {
+    "points": {
+      "exhaust_air_damper_percentage_command": {
+        "units": "percent"
+      },
+      "exhaust_air_flowrate_sensor": {
+        "units": "cubic-feet-per-minute"
+      },
+      "exhaust_air_flowrate_setpoint": {
+        "units": "cubic-feet-per-minute"
+      },
+      "pressurization_request_count": {
+        "units": "no-units"
+      },
+      "schedule_run_command": {
+        "value_map": {
+          "OFF": "0.0",
+          "ON": "1.0"
+        }
+      }
+    }
+  },
+  "externals": {
+    "dbo": {
+      "ext_id": "8eac4d9c-95d4-4ded-92dc-4dde6b311cc4",
+      "type": "HVAC/VAV_ED",
+      "etag": "d90ec32a",
+      "label": "FC S-10 / 11 & EX S1-4-4"
+    }
+  },
+  "cloud": {
+    "num_id": "262299854044472"
+  },
+  "relationships": {
+    "6cf23efd-19bd-4564-9360-ed0033f3f18c": {
+      "CONTAINS": [
+        {}
+      ]
+    }
+  }
+}

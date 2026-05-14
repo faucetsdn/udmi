@@ -1,0 +1,23 @@
+{
+  "timestamp": "2026-01-01T00:00:00Z",
+  "version": "1.5.3",
+  "system": {},
+  "externals": {
+    "dbo": {
+      "ext_id": "730bd6af-3e07-47da-b45d-29a9c56182e3",
+      "type": "UNTYPED/TYPELESS",
+      "etag": "4430d746",
+      "label": "device3000109"
+    }
+  },
+  "cloud": {
+    "num_id": "2538396710043749"
+  },
+  "relationships": {
+    "6cf23efd-19bd-4564-9360-ed0033f3f18c": {
+      "CONTAINS": [
+        {}
+      ]
+    }
+  }
+}

@@ -1,0 +1,23 @@
+{
+  "timestamp": "2026-01-01T00:00:00Z",
+  "version": "1.5.3",
+  "system": {},
+  "externals": {
+    "dbo": {
+      "ext_id": "f5f307ab-a9da-42a6-8ec9-be40111123e2",
+      "type": "UNTYPED/TYPELESS",
+      "etag": "8a3f71c2",
+      "label": "VAVRH M2-2-106 CO2"
+    }
+  },
+  "cloud": {
+    "num_id": "2619696202224379"
+  },
+  "relationships": {
+    "6cf23efd-19bd-4564-9360-ed0033f3f18c": {
+      "CONTAINS": [
+        {}
+      ]
+    }
+  }
+}

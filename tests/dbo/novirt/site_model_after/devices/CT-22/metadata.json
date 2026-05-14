@@ -1,0 +1,122 @@
+{
+  "timestamp": "2026-01-01T00:00:00Z",
+  "version": "1.5.3",
+  "system": {
+    "name": "CT S2"
+  },
+  "pointset": {
+    "points": {
+      "current_sensor": {
+        "units": "amperes"
+      },
+      "drain_water_valve_command": {
+        "value_map": {
+          "CLOSED": "0.0",
+          "OPEN": "1.0"
+        }
+      },
+      "failed_alarm": {
+        "value_map": {
+          "ACTIVE": "1.0",
+          "INACTIVE": "0.0"
+        }
+      },
+      "failed_return_water_isolation_valve_alarm": {
+        "value_map": {
+          "ACTIVE": "1.0",
+          "INACTIVE": "0.0"
+        }
+      },
+      "failed_supply_water_isolation_valve_alarm": {
+        "value_map": {
+          "ACTIVE": "1.0",
+          "INACTIVE": "0.0"
+        }
+      },
+      "high_supply_water_temperature_alarm": {
+        "value_map": {
+          "ACTIVE": "1.0",
+          "INACTIVE": "0.0"
+        }
+      },
+      "low_supply_water_temperature_alarm": {
+        "value_map": {
+          "ACTIVE": "1.0",
+          "INACTIVE": "0.0"
+        }
+      },
+      "power_sensor": {
+        "units": "kilowatts"
+      },
+      "return_water_isolation_valve_command": {
+        "value_map": {
+          "CLOSED": "0.0",
+          "OPEN": "1.0"
+        }
+      },
+      "return_water_isolation_valve_status": {
+        "value_map": {
+          "CLOSED": "0.0",
+          "OPEN": "1.0"
+        }
+      },
+      "return_water_temperature_sensor": {
+        "units": "degrees-fahrenheit"
+      },
+      "run_command": {
+        "value_map": {
+          "OFF": "0.0",
+          "ON": "1.0"
+        }
+      },
+      "run_status": {
+        "value_map": {
+          "OFF": "0.0",
+          "ON": "1.0"
+        }
+      },
+      "speed_percentage_command": {
+        "units": "percent"
+      },
+      "supply_water_isolation_valve_command": {
+        "value_map": {
+          "CLOSED": "0.0",
+          "OPEN": "1.0"
+        }
+      },
+      "supply_water_isolation_valve_status": {
+        "value_map": {
+          "CLOSED": "0.0",
+          "OPEN": "1.0"
+        }
+      },
+      "supply_water_temperature_sensor": {
+        "units": "degrees-fahrenheit"
+      },
+      "supply_water_temperature_setpoint": {
+        "units": "degrees-fahrenheit"
+      },
+      "torque_sensor": {
+        "units": "newton-meters"
+      }
+    }
+  },
+  "externals": {
+    "dbo": {
+      "ext_id": "fb467959-e80b-4435-a44d-4ea2a2846ecd",
+      "type": "HVAC/CT_VSC_SWTC_SWISOVM_RWISOVM_DWVC",
+      "etag": "1a9589df",
+      "label": "CT S2 VFD Integration / San Antonio, Chiller Plant / San Antonio"
+    }
+  },
+  "cloud": {
+    "num_id": "194412315625759"
+  },
+  "relationships": {
+    "6cf23efd-19bd-4564-9360-ed0033f3f18c": {
+      "CONTAINS": [
+        {}
+      ]
+    }
+  }
+}

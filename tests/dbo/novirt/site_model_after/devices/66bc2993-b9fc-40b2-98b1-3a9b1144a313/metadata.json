@@ -1,0 +1,23 @@
+{
+  "timestamp": "2026-01-01T00:00:00Z",
+  "version": "1.5.3",
+  "system": {},
+  "externals": {
+    "dbo": {
+      "ext_id": "66bc2993-b9fc-40b2-98b1-3a9b1144a313",
+      "type": "UNTYPED/TYPELESS",
+      "etag": "c09f29d6",
+      "label": "Chiller Plant / San Antonio"
+    }
+  },
+  "cloud": {
+    "num_id": "2809058243803327"
+  },
+  "relationships": {
+    "6cf23efd-19bd-4564-9360-ed0033f3f18c": {
+      "CONTAINS": [
+        {}
+      ]
+    }
+  }
+}

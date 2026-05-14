@@ -1,0 +1,20 @@
+{
+  "timestamp": "2026-01-01T00:00:00Z",
+  "version": "1.5.3",
+  "system": {},
+  "externals": {
+    "dbo": {
+      "ext_id": "46debfc1-5574-4262-bbe4-4b5ec4f0e6bf",
+      "type": "INFO_TECH/PRNTR",
+      "etag": "b50df9e4",
+      "label": "freysa"
+    }
+  },
+  "relationships": {
+    "276251a4-86de-40dc-89b3-2e0d6958030e": {
+      "CONTAINS": [
+        {}
+      ]
+    }
+  }
+}

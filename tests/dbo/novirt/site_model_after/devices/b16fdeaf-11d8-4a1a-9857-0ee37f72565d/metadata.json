@@ -1,0 +1,23 @@
+{
+  "timestamp": "2026-01-01T00:00:00Z",
+  "version": "1.5.3",
+  "system": {},
+  "externals": {
+    "dbo": {
+      "ext_id": "b16fdeaf-11d8-4a1a-9857-0ee37f72565d",
+      "type": "UNTYPED/TYPELESS",
+      "etag": "9af42ef5",
+      "label": "TF M-9 Electrical Rm 211"
+    }
+  },
+  "cloud": {
+    "num_id": "2695869596226980"
+  },
+  "relationships": {
+    "6cf23efd-19bd-4564-9360-ed0033f3f18c": {
+      "CONTAINS": [
+        {}
+      ]
+    }
+  }
+}

@@ -1,0 +1,126 @@
+{
+  "timestamp": "2026-01-01T00:00:00Z",
+  "version": "1.5.3",
+  "system": {
+    "name": "VAVRH M2-2-80 CO2"
+  },
+  "pointset": {
+    "points": {
+      "cooling_request_count": {
+        "units": "no-units"
+      },
+      "discharge_air_temperature_sensor": {
+        "units": "degrees-fahrenheit"
+      },
+      "discharge_air_temperature_setpoint": {},
+      "failed_zone_air_co2_concentration_alarm": {
+        "value_map": {
+          "ACTIVE": "1.0",
+          "INACTIVE": "0.0"
+        }
+      },
+      "failed_zone_air_temperature_alarm": {
+        "value_map": {
+          "ACTIVE": "1.0",
+          "INACTIVE": "0.0"
+        }
+      },
+      "heating_request_count": {
+        "units": "no-units"
+      },
+      "heating_water_valve_percentage_command": {
+        "units": "percent"
+      },
+      "high_supply_air_flowrate_alarm": {
+        "value_map": {
+          "ACTIVE": "1.0",
+          "INACTIVE": "0.0"
+        }
+      },
+      "high_zone_air_co2_concentration_alarm": {
+        "value_map": {
+          "ACTIVE": "1.0",
+          "INACTIVE": "0.0"
+        }
+      },
+      "high_zone_air_temperature_alarm": {
+        "value_map": {
+          "ACTIVE": "1.0",
+          "INACTIVE": "0.0"
+        }
+      },
+      "low_supply_air_flowrate_alarm": {
+        "value_map": {
+          "ACTIVE": "1.0",
+          "INACTIVE": "0.0"
+        }
+      },
+      "low_zone_air_temperature_alarm": {
+        "value_map": {
+          "ACTIVE": "1.0",
+          "INACTIVE": "0.0"
+        }
+      },
+      "pressurization_request_count": {
+        "units": "no-units"
+      },
+      "schedule_run_command": {
+        "value_map": {
+          "OFF": "0.0",
+          "ON": "1.0"
+        }
+      },
+      "supply_air_damper_percentage_command": {
+        "units": "percent"
+      },
+      "supply_air_flowrate_sensor": {
+        "units": "cubic-feet-per-minute"
+      },
+      "supply_air_flowrate_setpoint": {
+        "units": "cubic-feet-per-minute"
+      },
+      "user_occupancy_override_status": {
+        "value_map": {
+          "DISABLED": "0.0",
+          "ENABLED": "1.0"
+        }
+      },
+      "warmup_run_command": {
+        "value_map": {
+          "OFF": "0.0",
+          "ON": "1.0"
+        }
+      },
+      "zone_air_co2_concentration_sensor": {
+        "units": "parts-per-million"
+      },
+      "zone_air_cooling_temperature_setpoint": {
+        "units": "degrees-fahrenheit"
+      },
+      "zone_air_heating_temperature_setpoint": {
+        "units": "degrees-fahrenheit"
+      },
+      "zone_air_temperature_sensor": {
+        "units": "degrees-fahrenheit"
+      }
+    }
+  },
+  "externals": {
+    "dbo": {
+      "ext_id": "cf4ac015-2f82-40f2-864d-e77fc608b730",
+      "type": "HVAC/VAV_SD_DSP_HWDC_CO2M",
+      "etag": "5c489a88",
+      "label": "VAVRH M2-2-80 CO2 / Norby Conf. Rm. 22917"
+    }
+  },
+  "cloud": {
+    "num_id": "10152298853597"
+  },
+  "relationships": {
+    "6cf23efd-19bd-4564-9360-ed0033f3f18c": {
+      "CONTAINS": [
+        {}
+      ]
+    }
+  }
+}

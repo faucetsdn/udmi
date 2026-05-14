@@ -1,0 +1,140 @@
+{
+  "timestamp": "2026-01-01T00:00:00Z",
+  "version": "1.5.3",
+  "system": {
+    "name": "CH M2"
+  },
+  "pointset": {
+    "points": {
+      "chilled_return_water_temperature_sensor": {
+        "units": "degrees-fahrenheit"
+      },
+      "chilled_supply_water_isolation_valve_percentage_command": {
+        "units": "percent"
+      },
+      "chilled_supply_water_isolation_valve_percentage_sensor": {
+        "units": "percent"
+      },
+      "chilled_supply_water_temperature_sensor": {
+        "units": "degrees-fahrenheit"
+      },
+      "chilled_supply_water_temperature_setpoint": {
+        "units": "degrees-fahrenheit"
+      },
+      "compressor_current_sensor": {
+        "units": "amperes"
+      },
+      "compressor_power_sensor": {
+        "units": "kilowatts"
+      },
+      "compressor_run_command": {},
+      "compressor_run_status": {},
+      "compressor_voltage_sensor": {
+        "units": "volts"
+      },
+      "condensing_return_water_temperature_sensor": {
+        "units": "degrees-fahrenheit"
+      },
+      "condensing_supply_water_isolation_valve_percentage_command": {
+        "units": "percent"
+      },
+      "condensing_supply_water_isolation_valve_percentage_sensor": {
+        "units": "percent"
+      },
+      "condensing_supply_water_temperature_sensor": {
+        "units": "degrees-fahrenheit"
+      },
+      "cooling_percentage_command": {
+        "units": "percent"
+      },
+      "cooling_performanceratio_sensor": {
+        "units": "kilowatts-per-tons-of-refrigeration"
+      },
+      "failed_alarm": {
+        "value_map": {
+          "ACTIVE": "1.0",
+          "INACTIVE": "0.0"
+        }
+      },
+      "high_chilled_supply_water_temperature_alarm": {
+        "value_map": {
+          "ACTIVE": "1.0",
+          "INACTIVE": "0.0"
+        }
+      },
+      "inlet_guidevane_percentage_sensor": {
+        "units": "percent"
+      },
+      "low_chilled_supply_water_temperature_alarm": {
+        "value_map": {
+          "ACTIVE": "1.0",
+          "INACTIVE": "0.0"
+        }
+      },
+      "oil_pressure_sensor": {
+        "units": "pounds-force-per-square-inch"
+      },
+      "oil_temperature_sensor": {
+        "units": "degrees-fahrenheit"
+      },
+      "power_sensor": {
+        "units": "kilowatts"
+      },
+      "powerfactor_sensor": {
+        "units": "no-units"
+      },
+      "refrigerant_condenser_pressure_sensor": {
+        "units": "pounds-force-per-square-inch"
+      },
+      "refrigerant_condenser_saturation_temperature_sensor": {
+        "units": "degrees-fahrenheit"
+      },
+      "refrigerant_discharge_temperature_sensor": {
+        "units": "degrees-fahrenheit"
+      },
+      "refrigerant_evaporator_pressure_sensor": {
+        "units": "pounds-force-per-square-inch"
+      },
+      "refrigerant_evaporator_saturation_temperature_sensor": {
+        "units": "degrees-fahrenheit"
+      },
+      "refrigerant_suction_temperature_sensor": {
+        "units": "degrees-fahrenheit"
+      },
+      "rotationalvelocity_sensor": {
+        "units": "revolutions-per-minute"
+      },
+      "run_command": {
+        "value_map": {
+          "OFF": "0.0",
+          "ON": "1.0"
+        }
+      },
+      "run_status": {
+        "value_map": {
+          "OFF": "0.0",
+          "ON": "1.0"
+        }
+      },
+      "speed_percentage_command": {}
+    }
+  },
+  "externals": {
+    "dbo": {
+      "ext_id": "6abb0e5a-9896-48c5-964e-d7b0d3028a43",
+      "type": "HVAC/CH_VSC_CHWDT_CWDT_CHDXSC_CHWSWISOVPM_CWSWISOVPM_REFPM_REFSM_OTPM_IGM",
+      "etag": "7a249e42",
+      "label": "Chiller M-2 Integration / 100 Mayfield, Chiller Plant / 100 Mayfield"
+    }
+  },
+  "cloud": {
+    "num_id": "67473470731500"
+  },
+  "relationships": {
+    "6cf23efd-19bd-4564-9360-ed0033f3f18c": {
+      "CONTAINS": [
+        {}
+      ]
+    }
+  }
+}

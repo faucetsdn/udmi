@@ -1,0 +1,23 @@
+{
+  "timestamp": "2026-01-01T00:00:00Z",
+  "version": "1.5.3",
+  "system": {},
+  "externals": {
+    "dbo": {
+      "ext_id": "85c11305-b554-4dde-8a73-dbc92320ed9d",
+      "type": "UNTYPED/TYPELESS",
+      "etag": "e04de9f9",
+      "label": "MTIIChillerUC3001"
+    }
+  },
+  "cloud": {
+    "num_id": "2647238576387886"
+  },
+  "relationships": {
+    "6cf23efd-19bd-4564-9360-ed0033f3f18c": {
+      "CONTAINS": [
+        {}
+      ]
+    }
+  }
+}

@@ -1,0 +1,53 @@
+{
+  "timestamp": "2026-01-01T00:00:00Z",
+  "version": "1.5.3",
+  "system": {
+    "name": "EVAV M2-4-12"
+  },
+  "pointset": {
+    "points": {
+      "exhaust_air_damper_percentage_command": {
+        "units": "percent"
+      },
+      "exhaust_air_flowrate_sensor": {
+        "units": "cubic-feet-per-minute"
+      },
+      "exhaust_air_flowrate_setpoint": {
+        "units": "cubic-feet-per-minute"
+      },
+      "low_exhaust_air_flowrate_alarm": {
+        "value_map": {
+          "ACTIVE": "1.0",
+          "INACTIVE": "0.0"
+        }
+      },
+      "pressurization_request_count": {
+        "units": "no-units"
+      },
+      "schedule_run_command": {
+        "value_map": {
+          "OFF": "0.0",
+          "ON": "1.0"
+        }
+      }
+    }
+  },
+  "externals": {
+    "dbo": {
+      "ext_id": "5157ea4b-95af-404f-bb5c-566c785fcb23",
+      "type": "HVAC/VAV_ED",
+      "etag": "4a8a5c20",
+      "label": "EX M-2-4-12 / Security Rm."
+    }
+  },
+  "cloud": {
+    "num_id": "104524413791110"
+  },
+  "relationships": {
+    "6cf23efd-19bd-4564-9360-ed0033f3f18c": {
+      "CONTAINS": [
+        {}
+      ]
+    }
+  }
+}

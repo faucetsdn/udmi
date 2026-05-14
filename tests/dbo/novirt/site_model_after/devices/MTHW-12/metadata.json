@@ -1,0 +1,116 @@
+{
+  "timestamp": "2026-01-01T00:00:00Z",
+  "version": "1.5.3",
+  "system": {
+    "name": "HW SYSTEM S"
+  },
+  "pointset": {
+    "points": {
+      "bypass_valve_percentage_command": {
+        "units": "percent"
+      },
+      "differential_pressure_sensor": {
+        "units": "pounds-force-per-square-inch"
+      },
+      "differential_pressure_setpoint": {
+        "units": "pounds-force-per-square-inch"
+      },
+      "flowrate_sensor": {
+        "units": "us-gallons-per-minute"
+      },
+      "heating_request_count": {
+        "units": "no-units"
+      },
+      "high_differential_pressure_alarm": {
+        "value_map": {
+          "ACTIVE": "1.0",
+          "INACTIVE": "0.0"
+        }
+      },
+      "high_flowrate_alarm": {
+        "value_map": {
+          "ACTIVE": "1.0",
+          "INACTIVE": "0.0"
+        }
+      },
+      "high_return_water_temperature_alarm": {
+        "value_map": {
+          "ACTIVE": "1.0",
+          "INACTIVE": "0.0"
+        }
+      },
+      "high_supply_water_temperature_alarm": {
+        "value_map": {
+          "ACTIVE": "1.0",
+          "INACTIVE": "0.0"
+        }
+      },
+      "low_differential_pressure_alarm": {
+        "value_map": {
+          "ACTIVE": "1.0",
+          "INACTIVE": "0.0"
+        }
+      },
+      "low_flowrate_alarm": {
+        "value_map": {
+          "ACTIVE": "1.0",
+          "INACTIVE": "0.0"
+        }
+      },
+      "low_return_water_temperature_alarm": {
+        "value_map": {
+          "ACTIVE": "1.0",
+          "INACTIVE": "0.0"
+        }
+      },
+      "low_supply_water_temperature_alarm": {
+        "value_map": {
+          "ACTIVE": "1.0",
+          "INACTIVE": "0.0"
+        }
+      },
+      "min_flowrate_setpoint": {
+        "units": "us-gallons-per-minute"
+      },
+      "return_water_temperature_sensor": {
+        "units": "degrees-fahrenheit"
+      },
+      "run_command": {
+        "value_map": {
+          "OFF": "0.0",
+          "ON": "1.0"
+        }
+      },
+      "run_status": {
+        "value_map": {
+          "OFF": "0.0",
+          "ON": "1.0"
+        }
+      },
+      "supply_water_temperature_sensor": {
+        "units": "degrees-fahrenheit"
+      },
+      "supply_water_temperature_setpoint": {
+        "units": "degrees-fahrenheit"
+      }
+    }
+  },
+  "externals": {
+    "dbo": {
+      "ext_id": "b9ee447c-48a9-4e8e-b7c2-7be880a00579",
+      "type": "HVAC/HWS_SWTC_WDPC_WFRM_MINFC",
+      "etag": "b6d81ee5",
+      "label": "Boiler Plant / San Antonio"
+    }
+  },
+  "cloud": {
+    "num_id": "15512210947437"
+  },
+  "relationships": {
+    "6cf23efd-19bd-4564-9360-ed0033f3f18c": {
+      "CONTAINS": [
+        {}
+      ]
+    }
+  }
+}

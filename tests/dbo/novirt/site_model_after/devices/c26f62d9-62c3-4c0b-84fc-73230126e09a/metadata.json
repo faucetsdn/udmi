@@ -1,0 +1,23 @@
+{
+  "timestamp": "2026-01-01T00:00:00Z",
+  "version": "1.5.3",
+  "system": {},
+  "externals": {
+    "dbo": {
+      "ext_id": "c26f62d9-62c3-4c0b-84fc-73230126e09a",
+      "type": "UNTYPED/TYPELESS",
+      "etag": "45ed06ad",
+      "label": "VAV CO 1-2-25 & AC-3 IDF"
+    }
+  },
+  "cloud": {
+    "num_id": "2562572792699632"
+  },
+  "relationships": {
+    "6cf23efd-19bd-4564-9360-ed0033f3f18c": {
+      "CONTAINS": [
+        {}
+      ]
+    }
+  }
+}

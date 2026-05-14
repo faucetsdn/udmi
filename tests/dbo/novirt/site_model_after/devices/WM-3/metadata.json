@@ -1,0 +1,32 @@
+{
+  "timestamp": "2026-01-01T00:00:00Z",
+  "version": "1.5.3",
+  "system": {
+    "name": "utility-Water_Cafe_B"
+  },
+  "pointset": {
+    "points": {
+      "water_volume_accumulator": {
+        "units": "us-gallons"
+      }
+    }
+  },
+  "externals": {
+    "dbo": {
+      "ext_id": "d0e87594-9d2b-42ea-8bd6-6df19627cf52",
+      "type": "METERS/WM_STANDARD",
+      "etag": "8125908d",
+      "label": "utility-Water_Cafe_B"
+    }
+  },
+  "cloud": {
+    "num_id": "157338350692624"
+  },
+  "relationships": {
+    "6cf23efd-19bd-4564-9360-ed0033f3f18c": {
+      "CONTAINS": [
+        {}
+      ]
+    }
+  }
+}

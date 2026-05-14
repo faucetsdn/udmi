@@ -1,0 +1,68 @@
+{
+  "timestamp": "2026-01-01T00:00:00Z",
+  "version": "1.5.3",
+  "system": {
+    "name": "CHWP M1"
+  },
+  "pointset": {
+    "points": {
+      "current_sensor": {
+        "units": "amperes"
+      },
+      "energy_accumulator": {
+        "units": "kilowatt-hours"
+      },
+      "failed_alarm": {
+        "value_map": {
+          "ACTIVE": "1.0",
+          "INACTIVE": "0.0"
+        }
+      },
+      "power_sensor": {
+        "units": "kilowatts"
+      },
+      "run_command": {
+        "value_map": {
+          "OFF": "0.0",
+          "ON": "1.0"
+        }
+      },
+      "run_status": {
+        "value_map": {
+          "OFF": "0.0",
+          "ON": "1.0"
+        }
+      },
+      "speed_frequency_sensor": {
+        "units": "hertz"
+      },
+      "speed_percentage_command": {
+        "units": "percent"
+      },
+      "torque_sensor": {
+        "units": "newton-meters"
+      },
+      "voltage_sensor": {
+        "units": "volts"
+      }
+    }
+  },
+  "externals": {
+    "dbo": {
+      "ext_id": "ebfdb5c7-da0f-4a77-93b5-6bfd89c314da",
+      "type": "HVAC/PMP_SS_VSC",
+      "etag": "fae64bbe",
+      "label": "CHWP M1 VFD Interface, Chiller Plant / 100 Mayfield"
+    }
+  },
+  "cloud": {
+    "num_id": "228724496120089"
+  },
+  "relationships": {
+    "6cf23efd-19bd-4564-9360-ed0033f3f18c": {
+      "CONTAINS": [
+        {}
+      ]
+    }
+  }
+}

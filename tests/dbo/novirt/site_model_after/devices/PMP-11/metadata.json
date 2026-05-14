@@ -1,0 +1,47 @@
+{
+  "timestamp": "2026-01-01T00:00:00Z",
+  "version": "1.5.3",
+  "system": {
+    "name": "BASIN PUMP M"
+  },
+  "pointset": {
+    "points": {
+      "failed_alarm": {
+        "value_map": {
+          "ACTIVE": "1.0",
+          "INACTIVE": "0.0"
+        }
+      },
+      "run_command": {
+        "value_map": {
+          "OFF": "0.0",
+          "ON": "1.0"
+        }
+      },
+      "run_status": {
+        "value_map": {
+          "OFF": "0.0",
+          "ON": "1.0"
+        }
+      }
+    }
+  },
+  "externals": {
+    "dbo": {
+      "ext_id": "4a25663b-6dc7-402f-a4c4-38b05fa75389",
+      "type": "HVAC/PMP_SS",
+      "etag": "d41e4380",
+      "label": "Chiller Plant / 100 Mayfield"
+    }
+  },
+  "cloud": {
+    "num_id": "101938587702577"
+  },
+  "relationships": {
+    "6cf23efd-19bd-4564-9360-ed0033f3f18c": {
+      "CONTAINS": [
+        {}
+      ]
+    }
+  }
+}

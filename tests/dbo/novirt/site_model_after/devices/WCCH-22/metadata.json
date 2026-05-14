@@ -1,0 +1,132 @@
+{
+  "timestamp": "2026-01-01T00:00:00Z",
+  "version": "1.5.3",
+  "system": {
+    "name": "CH S2"
+  },
+  "pointset": {
+    "points": {
+      "chilled_return_water_isolation_valve_percentage_command": {
+        "units": "percent"
+      },
+      "chilled_return_water_isolation_valve_percentage_sensor": {
+        "units": "percent"
+      },
+      "chilled_return_water_temperature_sensor": {
+        "units": "degrees-fahrenheit"
+      },
+      "chilled_supply_water_temperature_sensor": {
+        "units": "degrees-fahrenheit"
+      },
+      "chilled_supply_water_temperature_setpoint": {
+        "units": "degrees-fahrenheit"
+      },
+      "compressor_power_sensor": {
+        "units": "kilowatts"
+      },
+      "compressor_run_command": {
+        "value_map": {
+          "OFF": "0.0",
+          "ON": "1.0"
+        }
+      },
+      "compressor_run_status": {},
+      "compressor_speed_percentage_command": {
+        "units": "percent"
+      },
+      "compressor_speed_percentage_sensor": {
+        "units": "percent"
+      },
+      "condensing_return_water_temperature_sensor": {
+        "units": "degrees-fahrenheit"
+      },
+      "condensing_supply_water_isolation_valve_percentage_command": {
+        "units": "percent"
+      },
+      "condensing_supply_water_isolation_valve_percentage_sensor": {
+        "units": "percent"
+      },
+      "condensing_supply_water_temperature_sensor": {
+        "units": "degrees-fahrenheit"
+      },
+      "failed_alarm": {
+        "value_map": {
+          "ACTIVE": "1.0",
+          "INACTIVE": "0.0"
+        }
+      },
+      "high_chilled_supply_water_temperature_alarm": {
+        "value_map": {
+          "ACTIVE": "1.0",
+          "INACTIVE": "0.0"
+        }
+      },
+      "inlet_guidevane_percentage_sensor": {
+        "units": "percent"
+      },
+      "low_chilled_supply_water_temperature_alarm": {
+        "value_map": {
+          "ACTIVE": "1.0",
+          "INACTIVE": "0.0"
+        }
+      },
+      "oil_pressure_sensor": {
+        "units": "pounds-force-per-square-inch"
+      },
+      "oil_temperature_sensor": {
+        "units": "degrees-fahrenheit"
+      },
+      "refrigerant_condenser_pressure_sensor": {
+        "units": "pounds-force-per-square-inch"
+      },
+      "refrigerant_evaporator_pressure_sensor": {
+        "units": "pounds-force-per-square-inch"
+      },
+      "run_command": {
+        "value_map": {
+          "OFF": "0.0",
+          "ON": "1.0"
+        }
+      },
+      "run_status": {
+        "value_map": {
+          "OFF": [
+            "1.0",
+            "10.0",
+            "2.0"
+          ],
+          "ON": [
+            "3.0",
+            "4.0",
+            "5.0",
+            "6.0",
+            "7.0"
+          ],
+          "UNKNOWN": [
+            "11.0",
+            "8.0",
+            "9.0"
+          ]
+        }
+      }
+    }
+  },
+  "externals": {
+    "dbo": {
+      "ext_id": "7bbfeeb8-0e09-481b-970c-329dc30b3046",
+      "type": "HVAC/CH_SS_CWDT_CHDXSC_CHWRWISOVPM_CWSWISOVPM_REFPM_OTPM_IGM",
+      "etag": "49a2eff9",
+      "label": "Chiller #2 Integration / San Antonio, Chiller Plant / San Antonio"
+    }
+  },
+  "cloud": {
+    "num_id": "38548871277107"
+  },
+  "relationships": {
+    "6cf23efd-19bd-4564-9360-ed0033f3f18c": {
+      "CONTAINS": [
+        {}
+      ]
+    }
+  }
+}

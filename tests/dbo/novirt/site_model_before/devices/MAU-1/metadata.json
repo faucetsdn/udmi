@@ -1,0 +1,30 @@
+{
+  "timestamp": "2026-01-01T00:00:00Z",
+  "version": "1.5.3",
+  "system": {
+    "name": "MAU M1"
+  },
+  "pointset": {
+    "points": {
+      "discharge_air_cooling_temperature_setpoint": {},
+      "discharge_air_flowrate_sensor": {},
+      "discharge_air_temperature_sensor": {},
+      "discharge_fan_current_sensor": {},
+      "discharge_fan_power_sensor": {},
+      "discharge_fan_run_command": {},
+      "discharge_fan_run_status": {},
+      "discharge_fan_speed_frequency_sensor": {},
+      "discharge_fan_speed_percentage_command": {},
+      "discharge_fan_speed_percentage_sensor": {},
+      "discharge_fan_torque_sensor": {},
+      "discharge_fan_voltage_sensor": {},
+      "evaporative_cooler_run_command": {},
+      "failed_discharge_air_temperature_alarm": {},
+      "failed_discharge_fan_alarm": {},
+      "failed_outside_air_temperature_alarm": {},
+      "high_discharge_air_temperature_alarm": {},
+      "outside_air_temperature_sensor": {},
+      "schedule_run_command": {}
+    }
+  }
+}

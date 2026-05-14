@@ -1,0 +1,23 @@
+{
+  "timestamp": "2026-01-01T00:00:00Z",
+  "version": "1.5.3",
+  "system": {},
+  "externals": {
+    "dbo": {
+      "ext_id": "15fb86d0-cde1-4dc0-becf-084ff8d0186f",
+      "type": "UNTYPED/TYPELESS",
+      "etag": "467e11f2",
+      "label": "FC M-20"
+    }
+  },
+  "cloud": {
+    "num_id": "2586646217724875"
+  },
+  "relationships": {
+    "6cf23efd-19bd-4564-9360-ed0033f3f18c": {
+      "CONTAINS": [
+        {}
+      ]
+    }
+  }
+}

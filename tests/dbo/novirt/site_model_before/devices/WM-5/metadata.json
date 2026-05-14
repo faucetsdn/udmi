@@ -1,0 +1,12 @@
+{
+  "timestamp": "2026-01-01T00:00:00Z",
+  "version": "1.5.3",
+  "system": {
+    "name": "utility-Water_HVAC_B"
+  },
+  "pointset": {
+    "points": {
+      "water_volume_accumulator": {}
+    }
+  }
+}

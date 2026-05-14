@@ -1,0 +1,27 @@
+{
+  "timestamp": "2026-01-01T00:00:00Z",
+  "version": "1.5.3",
+  "system": {
+    "name": "FC S-1"
+  },
+  "pointset": {
+    "points": {
+      "compressor_run_command": {},
+      "compressor_run_status": {},
+      "cooling_request_count": {},
+      "discharge_air_temperature_sensor": {},
+      "discharge_fan_run_command": {},
+      "discharge_fan_run_status": {},
+      "failed_discharge_fan_alarm": {},
+      "failed_zone_air_temperature_alarm": {},
+      "heating_request_count": {},
+      "high_zone_air_temperature_alarm": {},
+      "low_zone_air_temperature_alarm": {},
+      "schedule_run_command": {},
+      "user_occupancy_override_status": {},
+      "zone_air_cooling_temperature_setpoint": {},
+      "zone_air_heating_temperature_setpoint": {},
+      "zone_air_temperature_sensor": {}
+    }
+  }
+}

@@ -1,0 +1,85 @@
+{
+  "timestamp": "2026-01-01T00:00:00Z",
+  "version": "1.5.3",
+  "system": {
+    "name": "BLR S1"
+  },
+  "pointset": {
+    "points": {
+      "circulation_pump_run_command": {
+        "value_map": {
+          "OFF": "0.0",
+          "ON": "1.0"
+        }
+      },
+      "circulation_pump_run_status": {
+        "value_map": {
+          "OFF": "0.0",
+          "ON": "1.0"
+        }
+      },
+      "failed_alarm": {
+        "value_map": {
+          "ACTIVE": "1.0",
+          "INACTIVE": "0.0"
+        }
+      },
+      "heating_percentage_command": {
+        "units": "percent"
+      },
+      "high_supply_water_temperature_alarm": {
+        "value_map": {
+          "ACTIVE": "1.0",
+          "INACTIVE": "0.0"
+        }
+      },
+      "low_supply_water_temperature_alarm": {
+        "value_map": {
+          "ACTIVE": "1.0",
+          "INACTIVE": "0.0"
+        }
+      },
+      "return_water_isolation_valve_command": {
+        "value_map": {
+          "CLOSED": "0.0",
+          "OPEN": "1.0"
+        }
+      },
+      "return_water_isolation_valve_status": {},
+      "return_water_temperature_sensor": {
+        "units": "degrees-fahrenheit"
+      },
+      "run_command": {
+        "value_map": {
+          "OFF": "0.0",
+          "ON": "1.0"
+        }
+      },
+      "run_status": {},
+      "supply_water_temperature_sensor": {
+        "units": "degrees-fahrenheit"
+      },
+      "supply_water_temperature_setpoint": {
+        "units": "degrees-fahrenheit"
+      }
+    }
+  },
+  "externals": {
+    "dbo": {
+      "ext_id": "43668598-5456-409f-b831-68af0710f74d",
+      "type": "HVAC/BLR_SS_SWTC_CPC_RWISOVM",
+      "etag": "5aa2f9b7",
+      "label": "Boiler #1 Integration / San Antonio, Boiler Plant / San Antonio"
+    }
+  },
+  "cloud": {
+    "num_id": "73231200087540"
+  },
+  "relationships": {
+    "6cf23efd-19bd-4564-9360-ed0033f3f18c": {
+      "CONTAINS": [
+        {}
+      ]
+    }
+  }
+}

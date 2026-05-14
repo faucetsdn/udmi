@@ -1,0 +1,23 @@
+{
+  "timestamp": "2026-01-01T00:00:00Z",
+  "version": "1.5.3",
+  "system": {},
+  "externals": {
+    "dbo": {
+      "ext_id": "2a11e120-8d70-459b-862c-3e7087bd8eb2",
+      "type": "UNTYPED/TYPELESS",
+      "etag": "a1d87d01",
+      "label": "VAVCO S2-1-17"
+    }
+  },
+  "cloud": {
+    "num_id": "2718815043143321"
+  },
+  "relationships": {
+    "6cf23efd-19bd-4564-9360-ed0033f3f18c": {
+      "CONTAINS": [
+        {}
+      ]
+    }
+  }
+}

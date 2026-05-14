@@ -1,0 +1,22 @@
+{
+  "timestamp": "2026-01-01T00:00:00Z",
+  "version": "1.5.3",
+  "system": {
+    "name": "PCH M1A"
+  },
+  "pointset": {
+    "points": {
+      "condensing_supply_water_isolation_valve_command": {},
+      "condensing_supply_water_isolation_valve_status": {},
+      "failed_condensing_supply_water_isolation_valve_alarm": {},
+      "failed_process_return_water_isolation_valve_alarm": {},
+      "process_return_water_isolation_valve_command": {},
+      "process_return_water_isolation_valve_status": {},
+      "process_return_water_temperature_sensor": {},
+      "process_supply_water_temperature_sensor": {},
+      "process_supply_water_temperature_setpoint": {},
+      "run_command": {},
+      "run_status": {}
+    }
+  }
+}

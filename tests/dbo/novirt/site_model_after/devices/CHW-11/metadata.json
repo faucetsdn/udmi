@@ -1,0 +1,113 @@
+{
+  "timestamp": "2026-01-01T00:00:00Z",
+  "version": "1.5.3",
+  "system": {
+    "name": "CHW SYSTEM M"
+  },
+  "pointset": {
+    "points": {
+      "bypass_valve_percentage_command": {
+        "units": "percent"
+      },
+      "cooling_performanceratio_sensor": {
+        "units": "kilowatts-per-tons-of-refrigeration"
+      },
+      "cooling_thermal_power_sensor": {
+        "units": "btus-per-hour"
+      },
+      "differential_pressure_sensor": {
+        "units": "pounds-force-per-square-inch"
+      },
+      "differential_pressure_setpoint": {
+        "units": "pounds-force-per-square-inch"
+      },
+      "flowrate_sensor": {
+        "units": "us-gallons-per-minute"
+      },
+      "high_flowrate_alarm": {
+        "value_map": {
+          "ACTIVE": "1.0",
+          "INACTIVE": "0.0"
+        }
+      },
+      "high_return_water_temperature_alarm": {
+        "value_map": {
+          "ACTIVE": "1.0",
+          "INACTIVE": "0.0"
+        }
+      },
+      "high_supply_water_temperature_alarm": {
+        "value_map": {
+          "ACTIVE": "1.0",
+          "INACTIVE": "0.0"
+        }
+      },
+      "low_differential_pressure_alarm": {
+        "value_map": {
+          "ACTIVE": "1.0",
+          "INACTIVE": "0.0"
+        }
+      },
+      "low_flowrate_alarm": {
+        "value_map": {
+          "ACTIVE": "1.0",
+          "INACTIVE": "0.0"
+        }
+      },
+      "low_return_water_temperature_alarm": {
+        "value_map": {
+          "ACTIVE": "1.0",
+          "INACTIVE": "0.0"
+        }
+      },
+      "low_supply_water_temperature_alarm": {
+        "value_map": {
+          "ACTIVE": "1.0",
+          "INACTIVE": "0.0"
+        }
+      },
+      "min_flowrate_setpoint": {
+        "units": "us-gallons-per-minute"
+      },
+      "return_water_temperature_sensor": {
+        "units": "degrees-fahrenheit"
+      },
+      "run_command": {
+        "value_map": {
+          "OFF": "0.0",
+          "ON": "1.0"
+        }
+      },
+      "run_status": {
+        "value_map": {
+          "OFF": "0.0",
+          "ON": "1.0"
+        }
+      },
+      "supply_water_temperature_sensor": {
+        "units": "degrees-fahrenheit"
+      },
+      "supply_water_temperature_setpoint": {
+        "units": "degrees-fahrenheit"
+      }
+    }
+  },
+  "externals": {
+    "dbo": {
+      "ext_id": "c1c43024-0028-48ae-a9fa-fe8a6654f4f9",
+      "type": "HVAC/CHWS_SWTC_WDPC_CLPM_MINFC",
+      "etag": "0bd60c41",
+      "label": "Chiller Plant / 100 Mayfield"
+    }
+  },
+  "cloud": {
+    "num_id": "238991514972613"
+  },
+  "relationships": {
+    "6cf23efd-19bd-4564-9360-ed0033f3f18c": {
+      "CONTAINS": [
+        {}
+      ]
+    }
+  }
+}

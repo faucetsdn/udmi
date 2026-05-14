@@ -1,0 +1,15 @@
+{
+  "timestamp": "2026-01-01T00:00:00Z",
+  "version": "1.5.3",
+  "system": {
+    "name": "KEF M2"
+  },
+  "pointset": {
+    "points": {
+      "dishwasher_run_status": {},
+      "failed_alarm": {},
+      "run_command": {},
+      "run_status": {}
+    }
+  }
+}

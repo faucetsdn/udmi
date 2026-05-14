@@ -1,0 +1,49 @@
+{
+  "timestamp": "2026-01-01T00:00:00Z",
+  "version": "1.5.3",
+  "system": {
+    "name": "TK M10"
+  },
+  "pointset": {
+    "points": {
+      "failed_makeup_water_flowrate_alarm": {
+        "value_map": {
+          "ACTIVE": "1.0",
+          "INACTIVE": "0.0"
+        }
+      },
+      "level_status": {},
+      "makeup_water_flowrate_sensor": {
+        "units": "us-gallons-per-minute"
+      },
+      "percentage_sensor": {
+        "units": "percent"
+      },
+      "return_water_isolation_valve_command": {
+        "value_map": {
+          "CLOSED": "0.0",
+          "OPEN": "1.0"
+        }
+      },
+      "return_water_isolation_valve_status": {}
+    }
+  },
+  "externals": {
+    "dbo": {
+      "ext_id": "e1c137db-fa20-4336-8676-2d119a252631",
+      "type": "HVAC/TK_LM_RWISOVM_MWFRM",
+      "etag": "b4263265",
+      "label": "Process Cooling Water PCW-10"
+    }
+  },
+  "cloud": {
+    "num_id": "141015470028222"
+  },
+  "relationships": {
+    "6cf23efd-19bd-4564-9360-ed0033f3f18c": {
+      "CONTAINS": [
+        {}
+      ]
+    }
+  }
+}

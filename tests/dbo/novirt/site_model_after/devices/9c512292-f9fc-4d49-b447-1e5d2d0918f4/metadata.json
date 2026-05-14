@@ -1,0 +1,20 @@
+{
+  "timestamp": "2026-01-01T00:00:00Z",
+  "version": "1.5.3",
+  "system": {},
+  "externals": {
+    "dbo": {
+      "ext_id": "9c512292-f9fc-4d49-b447-1e5d2d0918f4",
+      "type": "INFO_TECH/PRNTR",
+      "etag": "9a2a5f8c",
+      "label": "ppxmoonshots"
+    }
+  },
+  "relationships": {
+    "bb751535-a674-40ef-80ee-0aa14de3a7b6": {
+      "CONTAINS": [
+        {}
+      ]
+    }
+  }
+}

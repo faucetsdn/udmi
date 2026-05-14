@@ -1,0 +1,23 @@
+{
+  "timestamp": "2026-01-01T00:00:00Z",
+  "version": "1.5.3",
+  "system": {},
+  "externals": {
+    "dbo": {
+      "ext_id": "68e2d031-004a-422e-8276-3af3ae69080c",
+      "type": "UNTYPED/TYPELESS",
+      "etag": "f1634fce",
+      "label": "TF S-1 Electrical Rm 31349"
+    }
+  },
+  "cloud": {
+    "num_id": "2702560139553464"
+  },
+  "relationships": {
+    "6cf23efd-19bd-4564-9360-ed0033f3f18c": {
+      "CONTAINS": [
+        {}
+      ]
+    }
+  }
+}

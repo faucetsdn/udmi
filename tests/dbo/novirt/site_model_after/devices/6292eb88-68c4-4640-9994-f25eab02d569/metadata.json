@@ -1,0 +1,23 @@
+{
+  "timestamp": "2026-01-01T00:00:00Z",
+  "version": "1.5.3",
+  "system": {},
+  "externals": {
+    "dbo": {
+      "ext_id": "6292eb88-68c4-4640-9994-f25eab02d569",
+      "type": "UNTYPED/TYPELESS",
+      "etag": "d0bc03de",
+      "label": "AHU's M-4A & M-4B / 100 Mayfield"
+    }
+  },
+  "cloud": {
+    "num_id": "2616834828948291"
+  },
+  "relationships": {
+    "6cf23efd-19bd-4564-9360-ed0033f3f18c": {
+      "CONTAINS": [
+        {}
+      ]
+    }
+  }
+}

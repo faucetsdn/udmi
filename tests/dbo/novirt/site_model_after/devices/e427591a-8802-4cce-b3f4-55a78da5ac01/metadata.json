@@ -1,0 +1,20 @@
+{
+  "timestamp": "2026-01-01T00:00:00Z",
+  "version": "1.5.3",
+  "system": {},
+  "externals": {
+    "dbo": {
+      "ext_id": "e427591a-8802-4cce-b3f4-55a78da5ac01",
+      "type": "INFO_TECH/PRNTR",
+      "etag": "13ffc416",
+      "label": "ppgioman"
+    }
+  },
+  "relationships": {
+    "bb751535-a674-40ef-80ee-0aa14de3a7b6": {
+      "CONTAINS": [
+        {}
+      ]
+    }
+  }
+}

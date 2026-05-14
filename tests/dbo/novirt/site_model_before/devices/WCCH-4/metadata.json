@@ -1,0 +1,19 @@
+{
+  "timestamp": "2026-01-01T00:00:00Z",
+  "version": "1.5.3",
+  "system": {
+    "name": "PCH S2"
+  },
+  "pointset": {
+    "points": {
+      "condensing_supply_water_isolation_valve_command": {},
+      "condensing_supply_water_isolation_valve_status": {},
+      "return_glycol_isolation_valve_command": {},
+      "return_glycol_isolation_valve_status": {},
+      "run_command": {},
+      "run_status": {},
+      "supply_glycol_temperature_sensor": {},
+      "supply_glycol_temperature_setpoint": {}
+    }
+  }
+}

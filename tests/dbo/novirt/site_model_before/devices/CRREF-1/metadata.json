@@ -1,0 +1,15 @@
+{
+  "timestamp": "2026-01-01T00:00:00Z",
+  "version": "1.5.3",
+  "system": {
+    "name": "WALK-IN COOLER RAG6ZM"
+  },
+  "pointset": {
+    "points": {
+      "defrost_temperature_sensor": {},
+      "low_zone_air_temperature_alarm": {},
+      "zone_air_temperature_sensor": {},
+      "zone_air_temperature_setpoint": {}
+    }
+  }
+}

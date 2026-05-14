@@ -1,0 +1,30 @@
+{
+  "timestamp": "2026-01-01T00:00:00Z",
+  "version": "1.5.3",
+  "system": {
+    "name": "PCW SYSTEM M10"
+  },
+  "pointset": {
+    "points": {
+      "differential_pressure_sensor": {},
+      "differential_pressure_setpoint": {},
+      "filter_differential_pressure_sensor_1": {},
+      "filter_differential_pressure_sensor_2": {},
+      "filter_differential_pressure_sensor_3": {},
+      "flowrate_sensor": {},
+      "high_supply_water_temperature_alarm": {},
+      "low_supply_water_temperature_alarm": {},
+      "polished_water_electricconductivity_sensor": {},
+      "polished_water_electricconductivity_setpoint": {},
+      "polished_water_electricresistivity_sensor": {},
+      "polished_water_electricresistivity_setpoint": {},
+      "polished_water_isolation_valve_command": {},
+      "return_water_temperature_sensor": {},
+      "supply_water_pressure_sensor": {},
+      "supply_water_pressure_setpoint": {},
+      "supply_water_temperature_sensor": {},
+      "supply_water_temperature_setpoint": {},
+      "ultraviolet_filter_differential_pressure_sensor": {}
+    }
+  }
+}

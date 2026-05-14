@@ -1,0 +1,53 @@
+{
+  "timestamp": "2026-01-01T00:00:00Z",
+  "version": "1.5.3",
+  "system": {
+    "name": "KEF M2"
+  },
+  "pointset": {
+    "points": {
+      "dishwasher_run_status": {
+        "value_map": {
+          "OFF": "0.0",
+          "ON": "1.0"
+        }
+      },
+      "failed_alarm": {
+        "value_map": {
+          "ACTIVE": "1.0",
+          "INACTIVE": "0.0"
+        }
+      },
+      "run_command": {
+        "value_map": {
+          "OFF": "0.0",
+          "ON": "1.0"
+        }
+      },
+      "run_status": {
+        "value_map": {
+          "OFF": "0.0",
+          "ON": "1.0"
+        }
+      }
+    }
+  },
+  "externals": {
+    "dbo": {
+      "ext_id": "3f0d599f-d130-4912-8226-d8e07a831bc3",
+      "type": "HVAC/FAN_SS_DWI",
+      "etag": "9f71a7f5",
+      "label": "KEF-2 Dishwasher Exhaust"
+    }
+  },
+  "cloud": {
+    "num_id": "237047730075666"
+  },
+  "relationships": {
+    "6cf23efd-19bd-4564-9360-ed0033f3f18c": {
+      "CONTAINS": [
+        {}
+      ]
+    }
+  }
+}

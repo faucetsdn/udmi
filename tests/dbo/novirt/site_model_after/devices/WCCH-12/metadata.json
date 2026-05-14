@@ -1,0 +1,188 @@
+{
+  "timestamp": "2026-01-01T00:00:00Z",
+  "version": "1.5.3",
+  "system": {
+    "name": "CH S1"
+  },
+  "pointset": {
+    "points": {
+      "chilled_return_water_isolation_valve_percentage_command": {
+        "units": "percent"
+      },
+      "chilled_return_water_isolation_valve_percentage_sensor": {
+        "units": "percent"
+      },
+      "chilled_return_water_temperature_sensor": {
+        "units": "degrees-fahrenheit"
+      },
+      "chilled_supply_water_temperature_sensor": {
+        "units": "degrees-fahrenheit"
+      },
+      "chilled_supply_water_temperature_setpoint": {
+        "units": "degrees-fahrenheit"
+      },
+      "compressor_current_sensor_1": {
+        "units": "amperes"
+      },
+      "compressor_current_sensor_2": {
+        "units": "amperes"
+      },
+      "compressor_rotationalvelocity_sensor_1": {
+        "units": "revolutions-per-minute"
+      },
+      "compressor_rotationalvelocity_sensor_2": {
+        "units": "revolutions-per-minute"
+      },
+      "compressor_run_command_1": {},
+      "compressor_run_command_2": {},
+      "compressor_run_status_1": {
+        "value_map": {
+          "OFF": [
+            "2.0",
+            "3.0",
+            "6.0"
+          ],
+          "ON": [
+            "10.0",
+            "11.0",
+            "12.0",
+            "13.0",
+            "14.0",
+            "15.0",
+            "16.0",
+            "17.0",
+            "18.0",
+            "19.0",
+            "20.0",
+            "4.0",
+            "5.0",
+            "7.0",
+            "8.0",
+            "9.0"
+          ],
+          "UNKNOWN": "1.0"
+        }
+      },
+      "compressor_run_status_2": {
+        "value_map": {
+          "OFF": [
+            "2.0",
+            "3.0",
+            "6.0"
+          ],
+          "ON": [
+            "10.0",
+            "11.0",
+            "12.0",
+            "13.0",
+            "14.0",
+            "15.0",
+            "16.0",
+            "17.0",
+            "18.0",
+            "19.0",
+            "20.0",
+            "4.0",
+            "5.0",
+            "7.0",
+            "8.0",
+            "9.0"
+          ],
+          "UNKNOWN": "1.0"
+        }
+      },
+      "compressor_speed_percentage_sensor_1": {},
+      "compressor_speed_percentage_sensor_2": {},
+      "condensing_return_water_temperature_sensor": {
+        "units": "degrees-fahrenheit"
+      },
+      "condensing_supply_water_isolation_valve_percentage_command": {
+        "units": "percent"
+      },
+      "condensing_supply_water_isolation_valve_percentage_sensor": {
+        "units": "percent"
+      },
+      "condensing_supply_water_temperature_sensor": {
+        "units": "degrees-fahrenheit"
+      },
+      "condensing_supply_water_temperature_setpoint": {
+        "units": "degrees-fahrenheit"
+      },
+      "cooling_percentage_command": {
+        "units": "percent"
+      },
+      "failed_alarm": {
+        "value_map": {
+          "ACTIVE": "1.0",
+          "INACTIVE": "0.0"
+        }
+      },
+      "refrigerant_discharge_pressure_sensor_1": {
+        "units": "pounds-force-per-square-inch"
+      },
+      "refrigerant_discharge_pressure_sensor_2": {
+        "units": "pounds-force-per-square-inch"
+      },
+      "refrigerant_discharge_temperature_sensor_1": {
+        "units": "degrees-fahrenheit"
+      },
+      "refrigerant_discharge_temperature_sensor_2": {
+        "units": "degrees-fahrenheit"
+      },
+      "refrigerant_liquid_pressure_sensor_1": {},
+      "refrigerant_liquid_pressure_sensor_2": {},
+      "refrigerant_liquid_saturation_temperature_sensor_1": {},
+      "refrigerant_liquid_saturation_temperature_sensor_2": {},
+      "refrigerant_liquid_temperature_sensor_1": {},
+      "refrigerant_liquid_temperature_sensor_2": {},
+      "refrigerant_subcooling_temperature_sensor_1": {},
+      "refrigerant_subcooling_temperature_sensor_2": {},
+      "refrigerant_suction_pressure_sensor_1": {
+        "units": "pounds-force-per-square-inch"
+      },
+      "refrigerant_suction_pressure_sensor_2": {
+        "units": "pounds-force-per-square-inch"
+      },
+      "refrigerant_suction_saturation_temperature_sensor_1": {},
+      "refrigerant_suction_saturation_temperature_sensor_2": {},
+      "refrigerant_suction_superheat_temperature_sensor_1": {},
+      "refrigerant_suction_superheat_temperature_sensor_2": {},
+      "refrigerant_suction_temperature_sensor_1": {
+        "units": "degrees-fahrenheit"
+      },
+      "refrigerant_suction_temperature_sensor_2": {
+        "units": "degrees-fahrenheit"
+      },
+      "run_command": {
+        "value_map": {
+          "OFF": "0.0",
+          "ON": "1.0"
+        }
+      },
+      "run_status": {
+        "value_map": {
+          "OFF": "0.0",
+          "ON": "1.0"
+        }
+      }
+    }
+  },
+  "externals": {
+    "dbo": {
+      "ext_id": "42092f23-5791-4624-b9ea-d793c60bd617",
+      "type": "HVAC/CH_SS_CSWTC_CHDX2SC_CHWRWISOVPM_CWSWISOVPM_RCKTM2X",
+      "etag": "a71571d4",
+      "label": "Chiller #1 Integration / San Antonio, Chiller Plant / San Antonio"
+    }
+  },
+  "cloud": {
+    "num_id": "268142978453504"
+  },
+  "relationships": {
+    "6cf23efd-19bd-4564-9360-ed0033f3f18c": {
+      "CONTAINS": [
+        {}
+      ]
+    }
+  }
+}
