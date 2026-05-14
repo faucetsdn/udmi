@@ -224,6 +224,30 @@
         }
       }
     },
+    "ca_file": {
+      "description": "Full path to the CA certificate file",
+      "type": "string",
+      "$presentation": {
+        "display": "show",
+        "style": "bold"
+      }
+    },
+    "cert_file": {
+      "description": "Full path to the client certificate file",
+      "type": "string",
+      "$presentation": {
+        "display": "show",
+        "style": "bold"
+      }
+    },
+    "key_file": {
+      "description": "Full path to the client private key file",
+      "type": "string",
+      "$presentation": {
+        "display": "show",
+        "style": "bold"
+      }
+    },
     "generation": {
       "description": "The timestamp of the endpoint generation",
       "type": "string",

@@ -71,6 +71,19 @@ public class MosquittoBroker extends ContainerBase implements ConnectionBroker {
       }
     }
     
+    if (endpointConfig.ca_file != null) {
+      cmd.add("--cafile");
+      cmd.add(endpointConfig.ca_file);
+    }
+    if (endpointConfig.cert_file != null) {
+      cmd.add("--cert");
+      cmd.add(endpointConfig.cert_file);
+    }
+    if (endpointConfig.key_file != null) {
+      cmd.add("--key");
+      cmd.add(endpointConfig.key_file);
+    }
+    
     cmd.add("dynsec");
     return cmd;
   }

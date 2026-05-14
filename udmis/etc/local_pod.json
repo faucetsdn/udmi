@@ -51,6 +51,9 @@
         "transport": "ssl",
         "hostname": "localhost",
         "port": 8883,
+        "ca_file": "/etc/mosquitto/certs/ca.crt",
+        "cert_file": "/etc/mosquitto/certs/rsa_private.crt",
+        "key_file": "/etc/mosquitto/certs/rsa_private.pem",
         "auth_provider": {
           "basic": {
             "username": "rocket",

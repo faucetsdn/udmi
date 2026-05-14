@@ -440,6 +440,27 @@
       "section": "cloud_iot_config",
       "type": "string"
     },
+    "reflector_endpoint.ca_file": {
+      "display": "show",
+      "style": "bold",
+      "section": "cloud_iot_config",
+      "type": "string",
+      "description": "Full path to the CA certificate file"
+    },
+    "reflector_endpoint.cert_file": {
+      "display": "show",
+      "style": "bold",
+      "section": "cloud_iot_config",
+      "type": "string",
+      "description": "Full path to the client certificate file"
+    },
+    "reflector_endpoint.key_file": {
+      "display": "show",
+      "style": "bold",
+      "section": "cloud_iot_config",
+      "type": "string",
+      "description": "Full path to the client private key file"
+    },
     "reflector_endpoint.generation": {
       "display": "show",
       "style": "bold",
@@ -591,6 +612,27 @@
       "style": "bold",
       "section": "cloud_iot_config",
       "type": "string"
+    },
+    "device_endpoint.ca_file": {
+      "display": "show",
+      "style": "bold",
+      "section": "cloud_iot_config",
+      "type": "string",
+      "description": "Full path to the CA certificate file"
+    },
+    "device_endpoint.cert_file": {
+      "display": "show",
+      "style": "bold",
+      "section": "cloud_iot_config",
+      "type": "string",
+      "description": "Full path to the client certificate file"
+    },
+    "device_endpoint.key_file": {
+      "display": "show",
+      "style": "bold",
+      "section": "cloud_iot_config",
+      "type": "string",
+      "description": "Full path to the client private key file"
     },
     "device_endpoint.generation": {
       "display": "show",
