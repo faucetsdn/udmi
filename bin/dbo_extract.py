@@ -8,9 +8,9 @@ def extract_dbo_config(site_model_dir: Path) -> dict:
   """Extracts DBO configurations to a dict."""
   building_config = {}
 
-
-
   devices_dir = site_model_dir / "devices"
+  if not devices_dir.is_dir():
+      return {}
 
   device_id_to_guid = {}
   metadata_map = {}
@@ -46,7 +46,7 @@ def extract_dbo_config(site_model_dir: Path) -> dict:
 
     device_entry = {}
 
-    device_entry["code"] = device_id
+    device_entry["code"] = dbo_external.get("label", device_id)
 
     if "cloud" in metadata and "num_id" in metadata["cloud"]:
       device_entry["cloud_device_id"] = str(metadata["cloud"]["num_id"])
@@ -69,32 +69,33 @@ def extract_dbo_config(site_model_dir: Path) -> dict:
     translations = {}
     links_dbo = {}
     for point_name, point_info in pointset.items():
+      # Reconstruct DBO translation from standard UDMI fields
       pt_dbo = {}
-      if "ref" in point_info or "units" in point_info:
-        pt_dbo["present_value"] = point_info.get("ref", f"points.{point_name}.present_value")
+      pt_dbo["present_value"] = point_info.get("ref", f"points.{point_name}.present_value")
+      
       if "units" in point_info:
-        u_map = {
-            "degC": "degrees_celsius",
-            "L/s": "liters_per_second"
-        }
-        pt_dbo["units"] = {
-            "key": f"pointset.points.{point_name}.units",
-            "values": {
-                u_map.get(
-                    point_info["units"],
-                    point_info["units"]): point_info["units"]
-            }
-        }
+          u_map = {
+              "degC": "degrees_celsius",
+              "L/s": "liters_per_second"
+          }
+          pt_dbo["units"] = {
+              "key": f"pointset.points.{point_name}.units",
+              "values": {
+                  u_map.get(point_info["units"], point_info["units"]): point_info["units"]
+              }
+          }
+      
+      if "value_map" in point_info:
+          pt_dbo["states"] = point_info["value_map"]
 
-      if pt_dbo:
-        translations[point_name] = pt_dbo
+      if len(pt_dbo) > 1 or pt_dbo["present_value"] != f"points.{point_name}.present_value":
+          translations[point_name] = pt_dbo
 
       if "expr" in point_info:
         link_val = point_info["expr"]
         if ":" in link_val:
           remote_device_id, remote_pt = link_val.split(":", 1)
-          remote_guid = device_id_to_guid.get(
-              remote_device_id, remote_device_id)
+          remote_guid = device_id_to_guid.get(remote_device_id, remote_device_id)
           if remote_guid not in links_dbo:
             links_dbo[remote_guid] = {}
           # DBO links are local_point: remote_point

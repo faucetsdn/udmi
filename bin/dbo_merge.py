@@ -3,9 +3,27 @@
 import json
 import os
 import sys
+import csv
 from datetime import datetime, timezone
 from pathlib import Path
 import yaml
+
+def load_csv_map(site_model_dir: Path):
+  """Loads device_num_id -> device_id map from discovery.csv if it exists."""
+  csv_map = {}
+  csv_path = site_model_dir / "discovery.csv"
+  if not csv_path.exists():
+    csv_path = site_model_dir.parent / "discovery.csv"
+  
+  if csv_path.exists():
+    with open(csv_path, "r", encoding="utf-8") as f:
+      reader = csv.DictReader(f)
+      for row in reader:
+        num_id = row.get("device_num_id")
+        dev_id = row.get("device_id")
+        if num_id and dev_id:
+          csv_map[num_id] = dev_id
+  return csv_map
 
 def merge_dbo_config(yaml_file: Path, site_model_dir: Path):
   """Merges a DBO config file into the given UDMI site model."""
@@ -15,21 +33,43 @@ def merge_dbo_config(yaml_file: Path, site_model_dir: Path):
   devices_dir = site_model_dir / "devices"
   devices_dir.mkdir(parents=True, exist_ok=True)
 
-  # First pass: map guids to device codes
-  guid_to_code = {}
+  csv_map = load_csv_map(site_model_dir)
+
+  # First pass: map every GUID to a unique device_id
+  guid_to_id = {}
+  used_ids = set()
+  
+  # Priority 1: CSV-mapped devices
   for guid, entity in config.items():
-    if guid == "CONFIG_METADATA":
-      continue
-    code = entity.get("code", guid)
-    guid_to_code[guid] = code
+    if guid == "CONFIG_METADATA": continue
+    cloud_id = str(entity.get("cloud_device_id", ""))
+    if cloud_id in csv_map:
+      dev_id = csv_map[cloud_id]
+      guid_to_id[guid] = dev_id
+      used_ids.add(dev_id)
+
+  # Priority 2: Code (with collision handling)
+  for guid, entity in config.items():
+    if guid == "CONFIG_METADATA" or guid in guid_to_id: continue
+    
+    # Use code if available, otherwise GUID (as a last resort device_id)
+    base_id = entity.get("code", guid)
+    dev_id = base_id
+    counter = 2
+    while dev_id in used_ids:
+      dev_id = f"{base_id}_{counter}"
+      counter += 1
+    
+    guid_to_id[guid] = dev_id
+    used_ids.add(dev_id)
 
   # Second pass: merge data
   for guid, entity in config.items():
     if guid == "CONFIG_METADATA":
       continue
 
-    code = entity.get("code", guid)
-    device_dir = devices_dir / code
+    device_id = guid_to_id[guid]
+    device_dir = devices_dir / device_id
     device_dir.mkdir(parents=True, exist_ok=True)
 
     metadata_path = device_dir / "metadata.json"
@@ -56,6 +96,8 @@ def merge_dbo_config(yaml_file: Path, site_model_dir: Path):
       dbo["type"] = entity["type"]
     if "etag" in entity:
       dbo["etag"] = entity["etag"]
+    if "code" in entity:
+      dbo["label"] = entity["code"]
 
     # Cloud
     if "cloud_device_id" in entity:
@@ -66,10 +108,10 @@ def merge_dbo_config(yaml_file: Path, site_model_dir: Path):
     if "connections" in entity:
       relationships = metadata.setdefault("relationships", {})
       for target_guid, rel_data in entity["connections"].items():
-        target_code = guid_to_code.get(target_guid, target_guid)
+        target_id = guid_to_id.get(target_guid, target_guid)
 
         if isinstance(rel_data, str):
-          relationships[target_code] = {rel_data: [{}]}
+          relationships[target_id] = {rel_data: [{}]}
         elif isinstance(rel_data, list):
           rel_dict = {}
           for item in rel_data:
@@ -80,7 +122,7 @@ def merge_dbo_config(yaml_file: Path, site_model_dir: Path):
               if "type" in item_copy:
                 rel_type = item_copy.pop("type")
                 rel_dict.setdefault(rel_type, []).append(item_copy)
-          relationships[target_code] = rel_dict
+          relationships[target_id] = rel_dict
 
     # Pointset Translation and Links
     if "translation" in entity or "links" in entity:
@@ -95,16 +137,17 @@ def merge_dbo_config(yaml_file: Path, site_model_dir: Path):
             if pv != "present_value" and pv != f"points.{pt_name}.present_value":
               pt_udmi["ref"] = pv
           if "units" in pt_dbo and "values" in pt_dbo["units"]:
-            # Extract the first value from the values dictionary
             udmi_unit = list(pt_dbo["units"]["values"].values())[0]
             pt_udmi["units"] = udmi_unit
+          if "states" in pt_dbo:
+            pt_udmi["value_map"] = pt_dbo["states"]
 
       if "links" in entity:
         for target_guid, link_map in entity["links"].items():
-          target_code = guid_to_code.get(target_guid, target_guid)
+          target_id = guid_to_id.get(target_guid, target_guid)
           for local_pt, remote_pt in link_map.items():
             pt_udmi = points.setdefault(local_pt, {})
-            pt_udmi["expr"] = f"{target_code}:{remote_pt}"
+            pt_udmi["expr"] = f"{target_id}:{remote_pt}"
 
     with open(metadata_path, "w", encoding="utf-8") as f:
       json.dump(metadata, f, indent=2)
