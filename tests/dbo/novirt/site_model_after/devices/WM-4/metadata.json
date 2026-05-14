@@ -4,13 +4,6 @@
   "system": {
     "name": "utility-Water_Main_B"
   },
-  "pointset": {
-    "points": {
-      "water_volume_accumulator": {
-        "units": "us-gallons"
-      }
-    }
-  },
   "externals": {
     "dbo": {
       "ext_id": "21504789-8f10-48ba-abd0-46fb5e9084e4",
@@ -23,10 +16,17 @@
     "num_id": "125087604967590"
   },
   "relationships": {
-    "us-mtv-rls1": {
+    "6cf23efd-19bd-4564-9360-ed0033f3f18c": {
       "CONTAINS": [
         {}
       ]
+    }
+  },
+  "pointset": {
+    "points": {
+      "water_volume_accumulator": {
+        "units": "us-gallons"
+      }
     }
   }
 }

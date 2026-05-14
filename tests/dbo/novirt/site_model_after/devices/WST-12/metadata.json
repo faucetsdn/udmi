@@ -4,19 +4,6 @@
   "system": {
     "name": "OA S"
   },
-  "pointset": {
-    "points": {
-      "outside_air_relative_humidity_sensor": {
-        "units": "percent-relative-humidity"
-      },
-      "outside_air_specificenthalpy_sensor": {
-        "units": "btus-per-pound-dry-air"
-      },
-      "outside_air_temperature_sensor": {
-        "units": "degrees-fahrenheit"
-      }
-    }
-  },
   "externals": {
     "dbo": {
       "ext_id": "4ee6c847-345d-435e-a427-c1e94e3bb1d6",
@@ -29,10 +16,20 @@
     "num_id": "265832580665175"
   },
   "relationships": {
-    "us-mtv-rls1": {
+    "6cf23efd-19bd-4564-9360-ed0033f3f18c": {
       "CONTAINS": [
         {}
       ]
+    }
+  },
+  "pointset": {
+    "points": {
+      "outside_air_relative_humidity_sensor": {
+        "units": "percent-relative-humidity"
+      },
+      "outside_air_specificenthalpy_sensor": {
+        "units": "btus-per-pound-dry-air"
+      }
     }
   }
 }

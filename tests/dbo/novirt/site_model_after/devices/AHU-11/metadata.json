@@ -4,6 +4,24 @@
   "system": {
     "name": "AHU M1"
   },
+  "externals": {
+    "dbo": {
+      "ext_id": "d212c227-4cb9-4a18-842c-8e2748274acf",
+      "type": "HVAC/AHU_SFVSC2X_EFVSC_CHWSC_ECON2X_BSPC_SSPC_FDPM",
+      "etag": "6134ce0c",
+      "label": "AHU M1 RF1 VFD Interface, AHU M1 SF1 VFD Interface, AHU M1 SF2 VFD Interface, AHU-M-1 / 100 Mayfield"
+    }
+  },
+  "cloud": {
+    "num_id": "210628044959834"
+  },
+  "relationships": {
+    "6cf23efd-19bd-4564-9360-ed0033f3f18c": {
+      "CONTAINS": [
+        {}
+      ]
+    }
+  },
   "pointset": {
     "points": {
       "building_air_static_pressure_sensor": {
@@ -30,33 +48,6 @@
       "exhaust_fan_current_sensor": {
         "units": "amperes"
       },
-      "exhaust_fan_power_sensor": {
-        "units": "kilowatts"
-      },
-      "exhaust_fan_run_command": {
-        "value_map": {
-          "OFF": "0.0",
-          "ON": "1.0"
-        }
-      },
-      "exhaust_fan_run_status": {
-        "value_map": {
-          "OFF": "0.0",
-          "ON": "1.0"
-        }
-      },
-      "exhaust_fan_speed_frequency_sensor": {
-        "units": "hertz"
-      },
-      "exhaust_fan_speed_percentage_command": {
-        "units": "percent"
-      },
-      "exhaust_fan_torque_sensor": {
-        "units": "newton-meters"
-      },
-      "exhaust_fan_voltage_sensor": {
-        "units": "volts"
-      },
       "failed_exhaust_fan_alarm": {
         "value_map": {
           "ACTIVE": "1.0",
@@ -69,189 +60,9 @@
           "INACTIVE": "0.0"
         }
       },
-      "failed_supply_fan_alarm_2": {
-        "value_map": {
-          "ACTIVE": "1.0",
-          "INACTIVE": "0.0"
-        }
-      },
-      "filter_differential_pressure_sensor": {
-        "units": "inches-of-water"
-      },
-      "high_building_air_static_pressure_alarm": {
-        "value_map": {
-          "ACTIVE": "1.0",
-          "INACTIVE": "0.0"
-        }
-      },
-      "high_mixed_air_temperature_alarm": {
-        "value_map": {
-          "ACTIVE": "1.0",
-          "INACTIVE": "0.0"
-        }
-      },
-      "high_return_air_temperature_alarm": {
-        "value_map": {
-          "ACTIVE": "1.0",
-          "INACTIVE": "0.0"
-        }
-      },
-      "high_supply_air_static_pressure_alarm": {
-        "value_map": {
-          "ACTIVE": "1.0",
-          "INACTIVE": "0.0"
-        }
-      },
-      "high_supply_air_temperature_alarm": {
-        "value_map": {
-          "ACTIVE": "1.0",
-          "INACTIVE": "0.0"
-        }
-      },
-      "low_building_air_static_pressure_alarm": {
-        "value_map": {
-          "ACTIVE": "1.0",
-          "INACTIVE": "0.0"
-        }
-      },
-      "low_mixed_air_temperature_alarm": {
-        "value_map": {
-          "ACTIVE": "1.0",
-          "INACTIVE": "0.0"
-        }
-      },
-      "low_return_air_temperature_alarm": {
-        "value_map": {
-          "ACTIVE": "1.0",
-          "INACTIVE": "0.0"
-        }
-      },
-      "low_supply_air_static_pressure_alarm": {
-        "value_map": {
-          "ACTIVE": "1.0",
-          "INACTIVE": "0.0"
-        }
-      },
-      "low_supply_air_temperature_alarm": {
-        "value_map": {
-          "ACTIVE": "1.0",
-          "INACTIVE": "0.0"
-        }
-      },
-      "mixed_air_temperature_sensor": {
-        "units": "degrees-fahrenheit"
-      },
-      "outside_air_damper_percentage_command_1": {
-        "units": "percent"
-      },
-      "outside_air_damper_percentage_command_2": {
-        "units": "percent"
-      },
-      "outside_air_temperature_sensor": {
-        "units": "degrees-fahrenheit"
-      },
-      "pressurization_request_count": {
-        "units": "no-units"
-      },
-      "return_air_damper_percentage_command": {
-        "units": "percent"
-      },
-      "return_air_temperature_sensor": {
-        "units": "degrees-fahrenheit"
-      },
-      "supply_air_flowrate_sensor": {
-        "units": "cubic-feet-per-minute"
-      },
-      "supply_air_static_pressure_sensor": {
-        "units": "inches-of-water"
-      },
       "supply_air_static_pressure_setpoint": {
         "units": "inches-of-water"
-      },
-      "supply_air_temperature_sensor": {
-        "units": "degrees-fahrenheit"
-      },
-      "supply_air_temperature_setpoint": {
-        "units": "degrees-fahrenheit"
-      },
-      "supply_fan_current_sensor_1": {
-        "units": "amperes"
-      },
-      "supply_fan_current_sensor_2": {
-        "units": "amperes"
-      },
-      "supply_fan_power_sensor_1": {
-        "units": "kilowatts"
-      },
-      "supply_fan_power_sensor_2": {
-        "units": "kilowatts"
-      },
-      "supply_fan_run_command_1": {
-        "value_map": {
-          "OFF": "0.0",
-          "ON": "1.0"
-        }
-      },
-      "supply_fan_run_command_2": {
-        "value_map": {
-          "OFF": "0.0",
-          "ON": "1.0"
-        }
-      },
-      "supply_fan_run_status_1": {
-        "value_map": {
-          "OFF": "0.0",
-          "ON": "1.0"
-        }
-      },
-      "supply_fan_run_status_2": {
-        "value_map": {
-          "OFF": "0.0",
-          "ON": "1.0"
-        }
-      },
-      "supply_fan_speed_frequency_sensor_1": {
-        "units": "hertz"
-      },
-      "supply_fan_speed_frequency_sensor_2": {
-        "units": "hertz"
-      },
-      "supply_fan_speed_percentage_command_1": {
-        "units": "percent"
-      },
-      "supply_fan_speed_percentage_command_2": {
-        "units": "percent"
-      },
-      "supply_fan_torque_sensor_1": {
-        "units": "newton-meters"
-      },
-      "supply_fan_torque_sensor_2": {
-        "units": "newton-meters"
-      },
-      "supply_fan_voltage_sensor_1": {
-        "units": "volts"
-      },
-      "supply_fan_voltage_sensor_2": {
-        "units": "volts"
       }
-    }
-  },
-  "externals": {
-    "dbo": {
-      "ext_id": "d212c227-4cb9-4a18-842c-8e2748274acf",
-      "type": "HVAC/AHU_SFVSC2X_EFVSC_CHWSC_ECON2X_BSPC_SSPC_FDPM",
-      "etag": "6134ce0c",
-      "label": "AHU M1 RF1 VFD Interface, AHU M1 SF1 VFD Interface, AHU M1 SF2 VFD Interface, AHU-M-1 / 100 Mayfield"
-    }
-  },
-  "cloud": {
-    "num_id": "210628044959834"
-  },
-  "relationships": {
-    "us-mtv-rls1": {
-      "CONTAINS": [
-        {}
-      ]
     }
   }
 }

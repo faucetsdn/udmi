@@ -1,19 +1,6 @@
 {
   "timestamp": "2026-01-01T00:00:00Z",
   "version": "1.5.3",
-  "pointset": {
-    "points": {
-      "gas_flowrate_sensor": {
-        "units": "cubic-feet-per-hour"
-      },
-      "gas_temperature_sensor": {
-        "units": "degrees-fahrenheit"
-      },
-      "gas_volume_accumulator": {
-        "units": "cubic-feet"
-      }
-    }
-  },
   "system": {},
   "externals": {
     "dbo": {
@@ -27,10 +14,23 @@
     "num_id": "258374911360267"
   },
   "relationships": {
-    "us-mtv-rls1": {
+    "6cf23efd-19bd-4564-9360-ed0033f3f18c": {
       "CONTAINS": [
         {}
       ]
+    }
+  },
+  "pointset": {
+    "points": {
+      "gas_flowrate_sensor": {
+        "units": "cubic-feet-per-hour"
+      },
+      "gas_temperature_sensor": {
+        "units": "degrees-fahrenheit"
+      },
+      "gas_volume_accumulator": {
+        "units": "cubic-feet"
+      }
     }
   }
 }

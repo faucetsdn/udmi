@@ -4,6 +4,24 @@
   "system": {
     "name": "TF S-11"
   },
+  "externals": {
+    "dbo": {
+      "ext_id": "026203a0-976f-4581-8f0f-b608186f37ad",
+      "type": "HVAC/FAN_SS_DSP",
+      "etag": "0bd8592f",
+      "label": "TF S-11 Elevator Closet Rm 31345"
+    }
+  },
+  "cloud": {
+    "num_id": "6145222943537"
+  },
+  "relationships": {
+    "6cf23efd-19bd-4564-9360-ed0033f3f18c": {
+      "CONTAINS": [
+        {}
+      ]
+    }
+  },
   "pointset": {
     "points": {
       "failed_alarm": {
@@ -13,24 +31,6 @@
         }
       },
       "failed_zone_air_temperature_alarm": {
-        "value_map": {
-          "ACTIVE": "1.0",
-          "INACTIVE": "0.0"
-        }
-      },
-      "high_zone_air_temperature_alarm": {
-        "value_map": {
-          "ACTIVE": "1.0",
-          "INACTIVE": "0.0"
-        }
-      },
-      "local_override_alarm": {
-        "value_map": {
-          "ACTIVE": "1.0",
-          "INACTIVE": "0.0"
-        }
-      },
-      "low_zone_air_temperature_alarm": {
         "value_map": {
           "ACTIVE": "1.0",
           "INACTIVE": "0.0"
@@ -69,24 +69,6 @@
       "zone_air_temperature_sensor": {
         "units": "degrees-fahrenheit"
       }
-    }
-  },
-  "externals": {
-    "dbo": {
-      "ext_id": "026203a0-976f-4581-8f0f-b608186f37ad",
-      "type": "HVAC/FAN_SS_DSP",
-      "etag": "0bd8592f",
-      "label": "TF S-11 Elevator Closet Rm 31345"
-    }
-  },
-  "cloud": {
-    "num_id": "6145222943537"
-  },
-  "relationships": {
-    "us-mtv-rls1": {
-      "CONTAINS": [
-        {}
-      ]
     }
   }
 }
