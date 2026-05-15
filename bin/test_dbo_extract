@@ -8,60 +8,75 @@ if [ -f "$ROOT_DIR/venv/bin/activate" ]; then
     source "$ROOT_DIR/venv/bin/activate"
 fi
 
-TEST_DIR=$1
-if [ -z "$TEST_DIR" ]; then
-    echo "Usage: $0 <test_dir>"
-    exit 1
+function run_test {
+    TEST_DIR=$1
+
+    GOLD_FILE="$TEST_DIR/building_config.yaml"
+    if [ ! -f "$GOLD_FILE" ]; then
+        echo "Gold file not found: $GOLD_FILE"
+        return 1
+    fi
+
+    if head -n 1 "$GOLD_FILE" | grep -q "device_registry_id,"; then
+        echo "Skipping site_model generation: $GOLD_FILE appears to be CSV, not YAML."
+        echo "Test passed: $TEST_DIR (skipped execution)"
+        return 0
+    fi
+
+    BEFORE_DIR="$TEST_DIR/site_model_before"
+    AFTER_DIR="$TEST_DIR/site_model_after"
+    OUT_DIR="$TEST_DIR/out"
+
+    if [ ! -d "$BEFORE_DIR" ] || [ ! -d "$AFTER_DIR" ]; then
+        echo "Required directories missing: $BEFORE_DIR or $AFTER_DIR"
+        return 1
+    fi
+
+    echo "Running DBO merge test for $TEST_DIR..."
+    rm -rf "$OUT_DIR"
+    mkdir -p "$OUT_DIR"
+
+    if [ -d "$BEFORE_DIR/devices" ]; then
+        cp -r "$BEFORE_DIR/devices" "$OUT_DIR/"
+    fi
+
+    export UDMI_TEST_TIMESTAMP="2026-01-01T00:00:00Z"
+    python3 "$ROOT_DIR/bin/dbo_merge.py" "$GOLD_FILE" "$OUT_DIR"
+
+    # Compare merged output with expected site model
+    if ! diff -rq "$AFTER_DIR" "$OUT_DIR" --exclude=.gitignore --exclude=.gitkeep; then
+        echo "Site model merge mismatch in $TEST_DIR"
+        diff -r "$AFTER_DIR" "$OUT_DIR" --exclude=.gitignore --exclude=.gitkeep
+        return 1
+    fi
+
+    # General test: extract from merged output and compare with GOLD_FILE
+    OUTPUT_FILE="$OUT_DIR/extracted_config.yaml"
+    echo "Running extraction test for $TEST_DIR..."
+
+    python3 "$ROOT_DIR/bin/dbo_extract.py" "$OUT_DIR" "$OUTPUT_FILE"
+
+    if diff "$GOLD_FILE" "$OUTPUT_FILE"; then
+        echo "Test passed: $TEST_DIR"
+        return 0
+    else
+        echo "Test failed: $TEST_DIR"
+        return 1
+    fi
+}
+
+SITES=("$@")
+if [ ${#SITES[@]} -eq 0 ]; then
+    SITES=($ROOT_DIR/tests/dbo/*)
 fi
 
-GOLD_FILE="$TEST_DIR/building_config.yaml"
-if [ ! -f "$GOLD_FILE" ]; then
-    echo "Gold file not found: $GOLD_FILE"
-    exit 1
-fi
+RET=0
+for SITE in "${SITES[@]}"; do
+    if [ -d "$SITE" ]; then
+        run_test "$SITE" || RET=1
+    else
+        echo "Skipping non-directory: $SITE"
+    fi
+done
 
-if head -n 1 "$GOLD_FILE" | grep -q "device_registry_id,"; then
-    echo "Skipping site_model generation: $GOLD_FILE appears to be CSV, not YAML."
-    echo "Test passed: $TEST_DIR (skipped execution)"
-    exit 0
-fi
-
-BEFORE_DIR="$TEST_DIR/site_model_before"
-AFTER_DIR="$TEST_DIR/site_model_after"
-OUT_DIR="$TEST_DIR/out"
-
-if [ ! -d "$BEFORE_DIR" ] || [ ! -d "$AFTER_DIR" ]; then
-    echo "Required directories missing: $BEFORE_DIR or $AFTER_DIR"
-    exit 1
-fi
-
-echo "Running DBO merge test for $TEST_DIR..."
-rm -rf "$OUT_DIR"
-mkdir -p "$OUT_DIR"
-
-if [ -d "$BEFORE_DIR/devices" ]; then
-    cp -r "$BEFORE_DIR/devices" "$OUT_DIR/"
-fi
-
-export UDMI_TEST_TIMESTAMP="2026-01-01T00:00:00Z"
-python3 "$ROOT_DIR/bin/dbo_merge.py" "$GOLD_FILE" "$OUT_DIR"
-
-# Compare merged output with expected site model
-if ! diff -rq "$AFTER_DIR" "$OUT_DIR" --exclude=.gitignore --exclude=.gitkeep; then
-    echo "Site model merge mismatch in $TEST_DIR"
-    diff -r "$AFTER_DIR" "$OUT_DIR" --exclude=.gitignore --exclude=.gitkeep
-    exit 1
-fi
-
-# General test: extract from merged output and compare with GOLD_FILE
-OUTPUT_FILE="$OUT_DIR/extracted_config.yaml"
-echo "Running extraction test for $TEST_DIR..."
-
-python3 "$ROOT_DIR/bin/dbo_extract.py" "$OUT_DIR" "$OUTPUT_FILE"
-
-if diff "$GOLD_FILE" "$OUTPUT_FILE"; then
-    echo "Test passed: $TEST_DIR"
-else
-    echo "Test failed: $TEST_DIR"
-    exit 1
-fi
+exit $RET
