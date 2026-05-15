@@ -18,6 +18,9 @@
     },
     "options": {
       "type": "string"
+    },
+    "endpoint": {
+      "$ref": "file:configuration_endpoint.json"
     }
   }
 }
