@@ -1,0 +1,35 @@
+{
+  "timestamp": "2026-01-01T00:00:00Z",
+  "version": "1.5.3",
+  "system": {
+    "name": "power-meter-MatrixRoom"
+  },
+  "externals": {
+    "dbo": {
+      "ext_id": "01148e74-91fd-4688-b357-ab6326e8ae49",
+      "type": "METERS/EM_PWM_AVCM_PLPM_PVCM",
+      "etag": "593e556e",
+      "label": "power-meter-MatrixRoom"
+    }
+  },
+  "cloud": {
+    "num_id": "110284116715833"
+  },
+  "relationships": {
+    "us-mtv-40": {
+      "CONTAINS": [
+        {}
+      ]
+    }
+  },
+  "pointset": {
+    "points": {
+      "apparent_power_sensor": {
+        "units": "kilo-volt-amperes"
+      },
+      "energy_accumulator": {
+        "units": "kilowatt-hours"
+      }
+    }
+  }
+}

@@ -1,0 +1,29 @@
+{
+  "timestamp": "2026-01-01T00:00:00Z",
+  "version": "1.5.3",
+  "system": {},
+  "externals": {
+    "dbo": {
+      "ext_id": "4931e096-dea5-4b81-86ad-234c6d07b978",
+      "type": "HVAC/VAV_SD_CSP",
+      "label": "VAV-2"
+    }
+  },
+  "cloud": {
+    "num_id": "2541901344105617"
+  },
+  "relationships": {
+    "vav-1": {
+      "FEEDS": [
+        {}
+      ]
+    }
+  },
+  "pointset": {
+    "points": {
+      "zone_air_temperature_sensor": {
+        "units": "degC"
+      }
+    }
+  }
+}

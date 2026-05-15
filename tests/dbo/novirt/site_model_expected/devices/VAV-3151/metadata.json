@@ -1,0 +1,68 @@
+{
+  "timestamp": "2026-01-01T00:00:00Z",
+  "version": "1.5.3",
+  "system": {
+    "name": "VAVRH S3-1-51 CO2"
+  },
+  "externals": {
+    "dbo": {
+      "ext_id": "03dc4244-6d0c-4530-a612-6adef00024f7",
+      "type": "HVAC/VAV_SD_DSP_HWDC_CO2M",
+      "etag": "f6c5771a",
+      "label": "VAVRH S3-1-51 CO2"
+    }
+  },
+  "cloud": {
+    "num_id": "123657302037775"
+  },
+  "relationships": {
+    "us-mtv-rls1": {
+      "CONTAINS": [
+        {}
+      ]
+    }
+  },
+  "pointset": {
+    "points": {
+      "cooling_request_count": {
+        "units": "no-units"
+      },
+      "discharge_air_temperature_sensor": {
+        "units": "degrees-fahrenheit"
+      },
+      "failed_zone_air_co2_concentration_alarm": {
+        "value_map": {
+          "ACTIVE": "1.0",
+          "INACTIVE": "0.0"
+        }
+      },
+      "failed_zone_air_temperature_alarm": {
+        "value_map": {
+          "ACTIVE": "1.0",
+          "INACTIVE": "0.0"
+        }
+      },
+      "heating_request_count": {
+        "units": "no-units"
+      },
+      "heating_water_valve_percentage_command": {
+        "units": "percent"
+      },
+      "schedule_run_command": {
+        "value_map": {
+          "OFF": "0.0",
+          "ON": "1.0"
+        }
+      },
+      "supply_air_flowrate_sensor": {
+        "units": "cubic-feet-per-minute"
+      },
+      "supply_air_flowrate_setpoint": {
+        "units": "cubic-feet-per-minute"
+      },
+      "zone_air_cooling_temperature_setpoint": {
+        "units": "degrees-fahrenheit"
+      }
+    }
+  }
+}

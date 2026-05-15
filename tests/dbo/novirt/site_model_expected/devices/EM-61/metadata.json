@@ -1,0 +1,36 @@
+{
+  "timestamp": "2026-01-01T00:00:00Z",
+  "version": "1.5.3",
+  "system": {},
+  "externals": {
+    "dbo": {
+      "ext_id": "00623524-7855-48b4-93ca-581332384a24",
+      "type": "METERS/EM_PWM_AVCM_PLPM_PVCM",
+      "etag": "57ebb320",
+      "label": "power-meter-EM-61_Lighting_BH2A"
+    }
+  },
+  "cloud": {
+    "num_id": "91885844754870"
+  },
+  "relationships": {
+    "us-mtv-rls1": {
+      "CONTAINS": [
+        {}
+      ]
+    }
+  },
+  "pointset": {
+    "points": {
+      "apparent_power_sensor": {
+        "units": "kilo-volt-amperes"
+      },
+      "average_inter_line_voltage_sensor": {
+        "units": "volts"
+      },
+      "energy_accumulator": {
+        "units": "kilowatt-hours"
+      }
+    }
+  }
+}

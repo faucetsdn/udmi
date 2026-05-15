@@ -1,0 +1,57 @@
+{
+  "timestamp": "2026-01-01T00:00:00Z",
+  "version": "1.5.3",
+  "system": {},
+  "externals": {
+    "dbo": {
+      "ext_id": "11e21f30-bc86-46bd-819d-4b48180113ee",
+      "type": "GATEWAYS/PASSTHROUGH",
+      "etag": "24393d8a",
+      "label": "Liebert CRAC 1 / UPS"
+    }
+  },
+  "cloud": {
+    "num_id": "66214312817216"
+  },
+  "relationships": {
+    "us-mtv-40": {
+      "CONTAINS": [
+        {}
+      ]
+    }
+  },
+  "pointset": {
+    "points": {
+      "compressor_run_status_1": {
+        "value_map": {
+          "OFF": "0.0",
+          "ON": "1.0"
+        }
+      },
+      "compressor_run_status_2": {
+        "value_map": {
+          "OFF": "0.0",
+          "ON": "1.0"
+        }
+      },
+      "compressor_speed_percentage_command_1": {
+        "units": "percent"
+      },
+      "compressor_speed_percentage_command_2": {
+        "units": "percent"
+      },
+      "zone_air_temperature_sensor_1": {
+        "units": "degrees-fahrenheit"
+      },
+      "zone_air_temperature_sensor_2": {
+        "units": "degrees-fahrenheit"
+      },
+      "zone_air_temperature_setpoint_1": {
+        "units": "degrees-fahrenheit"
+      },
+      "zone_air_temperature_setpoint_2": {
+        "units": "degrees-fahrenheit"
+      }
+    }
+  }
+}
