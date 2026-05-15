@@ -55,26 +55,26 @@ Handshake is **Client-initiated**. The **System MUST NOT initiate a handshake** 
 
 ### Step 1: State Declaration
 The Client publishes a UDMI `state` message to `/uufi/c/state/udmi`.
-- **Payload:** Must include `udmi.setup` (see Appendix A.2).
+- **Payload:** Must include `setup` (see Appendix A.1.1).
 - **Addressing:** Registry-less topic. `source` in envelope contains Client identity.
 
 ### Step 2: Configuration Confirmation
 The System publishes a UDMI `config` message to `/uufi/c/config/udmi`.
-- **Payload:** Must include `udmi.setup` and `udmi.reply` (see Appendix A.3).
+- **Payload:** Must include `setup` and `reply`.
 - **Addressing:** Envelope `principal` MUST match Client's identity. For handshake replies, the System MUST use the `principal` or `source` from the received state message to ensure the reply reaches the correct client. If the received message has a `principal`, it SHOULD be used; otherwise, the `source` SHOULD be used as a fallback.
 
 **Retries:** The Client SHOULD periodically republish the Step 1 state message (e.g., every 5 seconds) if a valid Step 2 confirmation has not been received, until the 60-second timeout.
 
-**Activation:** The Client is **Active** when `udmi.reply.transaction_id` matches the original `state.udmi.setup.transaction_id`.
+**Activation:** The Client is **Active** when `reply.transaction_id` matches the original `state.setup.transaction_id`.
 
 ### Registry ID Discovery
 - **Default:** `default`
-- **Discovery:** The System MAY provide a `deviceRegistryId` in the `config.udmi` handshake reply to the Client. To ensure interoperability, the `deviceRegistryId` SHOULD be placed within the `udmi.setup` block of the payload. The Client SHOULD use this `deviceRegistryId` for all subsequent registry-scoped topics. The System MUST NOT expect to discover its own `deviceRegistryId` from Client-initiated handshakes. (Note: Use `deviceRegistryId` camelCase exactly as specified; case-insensitive or snake_case matching is NOT guaranteed).
+- **Discovery:** The System MAY provide a `deviceRegistryId` in the `config.udmi` handshake reply to the Client. To ensure interoperability, the `deviceRegistryId` SHOULD be placed within the `setup` block of the payload. The Client SHOULD use this `deviceRegistryId` for all subsequent registry-scoped topics. The System MUST NOT expect to discover its own `deviceRegistryId` from Client-initiated handshakes. (Note: Use `deviceRegistryId` camelCase exactly as specified; case-insensitive or snake_case matching is NOT guaranteed).
 - **Responsiveness:** MQTT message callback handlers MUST NOT perform long-running or blocking operations (e.g., `time.sleep()`). Any simulated work or heavy processing MUST be offloaded to a separate thread to maintain system-wide responsiveness and avoid buffer overflows or message loss in high-concurrency environments.
 
 ### 3.1 Interoperability Reminders
 - **Metadata Persistence:** System components MUST ingest and cache `make` and `model` information from all available sources (registration, cloud updates, and state reports). Device simulators SHOULD include these fields in every state report to ensure consistency.
-- **Update Config Keys:** Implementations MUST use `version` and `url` keys in the `update` subfolder config payloads. Avoid legacy keys like `target_version` or `bundle_url`.
+- **Blobset Config Keys:** Implementations MUST use standard UDMI keys in the `blobset` subfolder config payloads.
 - **Topic Slashes:** All UUFI topics MUST start with a leading slash `/`. The `prefix` (if any) is the first segment after the slash.
 - **Handshake Robustness:** Clients SHOULD periodically republish their handshake state until a valid reply is received. Systems SHOULD reflect the Client's `principal` in the handshake reply.
 - **Window:** 60 seconds.
@@ -124,8 +124,8 @@ The `UPDATE` operation for the `cloud` subfolder is a partial merge at the devic
 | Model Query | `query` | `cloud` | Publish |
 | Model Update | `model` | `cloud` | Publish |
 | Model Reply | `config` | `cloud` | Receive |
-| Update Config | `config` | `update` | Publish |
-| Update State | `state` | `update` | Receive |
+| Blobset Config | `config` | `blobset` | Publish |
+| Blobset State | `state` | `blobset` | Receive |
 
 ## 7. Reliability
 
@@ -140,10 +140,12 @@ The `UPDATE` operation for the `cloud` subfolder is a partial merge at the devic
 
 ### 8.1. Payload Structure
 - **Nesting:** The `payload` object contains the fields of the UDMI message corresponding to the `subFolder` and `subType`.
-- **Subsystem Nesting:** For `update` config and state payloads, data MUST be nested within a subsystem-id key (e.g., `system`) to support multi-subsystem devices. Implementations MUST handle both nested and unnested (flat) payloads for backward compatibility and robust interoperability.
+- **Subsystem Nesting:** For `blobset` config and state payloads, data MUST be nested within a subsystem-id key (e.g., `system`) to support multi-subsystem devices. Implementations MUST handle both nested and unnested (flat) payloads for backward compatibility and robust interoperability.
+
 - **Mandatory Fields:** `timestamp` and `version` MUST be at the root of the `payload` object.
-- **Metadata:** The `make` and `model` fields are mandatory for all `update` subfolder payloads (state and config) within the subsystem nesting. These fields are essential for the System to locate the correct blob in the repository and MUST be included in every subsystem entry subject to reconciliation.
-- **Update Config URL:** The `url` field in an `update` config payload MUST be a valid URI. Implementations MUST support the `file://` scheme for local file references. When a `file://` URI is provided, the recipient MUST strip the scheme and any leading slashes as appropriate for the local operating system to resolve the absolute or relative path.
+- **Metadata:** The `make` and `model` fields are mandatory for all `blobset` subfolder payloads (state and config) within the subsystem nesting. These fields are essential for the System to locate the correct blob in the repository and MUST be included in every subsystem entry subject to reconciliation.
+- **Blobset Config URL:** The `url` field in a `blobset` config payload MUST be a valid URI. Implementations MUST support the `file://` scheme for local file references. When a `file://` URI is provided, the recipient MUST strip the scheme and any leading slashes as appropriate for the local operating system to resolve the absolute or relative path.
+
 
 ### 8.2. Timestamp Format
 - **Format:** RFC 3339 minimal precision (e.g., `2026-05-01T22:32:17Z`).
@@ -163,7 +165,7 @@ The `UPDATE` operation for the `cloud` subfolder is a partial merge at the devic
 
 # Appendix A: Schemas and Examples
 
-This appendix contains the formal JSON schemas and message examples for the UUFI protocol.
+This appendix references the formal JSON schemas and provides message examples for the UUFI protocol. The **UDMI Schema Repository** is the authoritative source for all message structures.
 
 ## A.1. Examples
 
@@ -185,12 +187,10 @@ This appendix contains the formal JSON schemas and message examples for the UUFI
 {
   "version": "1.5.2",
   "timestamp": "2026-04-29T10:00:00Z",
-  "udmi": {
-    "setup": {
-      "functions_ver": 9,
-      "transaction_id": "UUFI:sess123:001",
-      "msg_source": "client-id"
-    }
+  "setup": {
+    "functions_ver": 9,
+    "transaction_id": "UUFI:sess123:001",
+    "msg_source": "client-id"
   }
 }
 ```
@@ -214,9 +214,9 @@ This appendix contains the formal JSON schemas and message examples for the UUFI
 }
 ```
 
-### A.1.3. Update Config (MQTT)
+### A.1.3. Blobset Config (MQTT)
 
-**Topic:** `/uufi/r/reg-1/d/dev-1/c/config/update`
+**Topic:** `/uufi/r/reg-1/d/dev-1/c/config/blobset`
 
 **Payload:**
 ```json
@@ -226,205 +226,29 @@ This appendix contains the formal JSON schemas and message examples for the UUFI
   "payload": {
     "version": "1.5.2",
     "timestamp": "2026-04-29T10:10:00Z",
-    "update": {
-      "system": {
-        "version": "2.1.0",
-        "url": "file:///path/to/bundle.bin",
-        "sha256": "abcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890",
-        "make": "Acme",
-        "model": "Rocket-100"
+    "blobset": {
+      "blobs": {
+        "system": {
+          "phase": "apply",
+          "url": "file:///path/to/bundle.bin",
+          "sha256": "abcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890",
+          "generation": "2026-04-29T10:10:00Z"
+        }
       }
     }
   }
 }
 ```
 
-## A.2. UUFI Message Envelope Schema
-```json
-{
-  "$schema": "http://json-schema.org/draft-07/schema#",
-  "title": "UufiEnvelope",
-  "type": "object",
-  "properties": {
-    "projectId": { "type": "string", "description": "GCP Project ID" },
-    "deviceRegistryId": { "type": "string", "description": "Managed Registry ID (MUST NOT be used in MQTT)" },
-    "deviceId": { "type": "string", "description": "Target/Source Device ID (MUST NOT be used in MQTT)" },
-    "subFolder": { "type": "string", "description": "UDMI subFolder" },
-    "subType": { "type": "string", "description": "UDMI subType" },
-    "transactionId": { "type": "string", "description": "Tracking identifier" },
-    "publishTime": { "type": "string", "format": "date-time", "description": "Envelope wrapping timestamp" },
-    "source": { "type": "string", "description": "Client session identifier" },
-    "principal": { "type": "string", "description": "Session owner identity" },
-    "payload": {
-      "type": "object",
-      "description": "UDMI message container",
-      "properties": {
-        "timestamp": { "type": "string", "format": "date-time", "description": "UDMI message generation time" },
-        "version": { "type": "string", "description": "UDMI schema version" }
-      },
-      "required": ["timestamp", "version"]
-    }
-  },
-  "required": ["payload"]
-}
-```
+## A.2. Authoritative Schemas
 
-## A.3. Handshake Schemas
+UUFI implementations MUST adhere to the following schemas from the UDMI repository:
 
-### A.3.1. Handshake State Payload
-```json
-{
-  "$schema": "http://json-schema.org/draft-07/schema#",
-  "title": "HandshakeStatePayload",
-  "type": "object",
-  "properties": {
-    "version": { "type": "string" },
-    "timestamp": { "type": "string", "format": "date-time" },
-    "udmi": {
-      "type": "object",
-      "properties": {
-        "setup": {
-          "type": "object",
-          "properties": {
-            "functions_ver": { "type": "integer", "description": "Expected UDMI functions version" },
-            "transaction_id": { "type": "string", "description": "Handshake transaction ID" },
-            "msg_source": { "type": "string", "description": "Originating client ID" },
-            "user": { "type": "string", "description": "Authenticated user ID" }
-          },
-          "required": ["functions_ver", "transaction_id"]
-        }
-      },
-      "required": ["setup"]
-    }
-  },
-  "required": ["version", "timestamp", "udmi"]
-}
-```
-
-### A.3.2. Handshake Config Payload
-```json
-{
-  "$schema": "http://json-schema.org/draft-07/schema#",
-  "title": "HandshakeConfigPayload",
-  "type": "object",
-  "properties": {
-    "version": { "type": "string" },
-    "timestamp": { "type": "string", "format": "date-time" },
-    "udmi": {
-      "type": "object",
-      "properties": {
-        "setup": {
-          "type": "object",
-          "properties": {
-            "functions_min": { "type": "integer", "description": "Minimum supported functions version" },
-            "functions_max": { "type": "integer", "description": "Maximum supported functions version" },
-            "udmi_version": { "type": "string", "description": "System UDMI version" }
-          }
-        },
-        "reply": {
-          "type": "object",
-          "properties": {
-            "functions_ver": { "type": "integer", "description": "Reflected functions version" },
-            "transaction_id": { "type": "string", "description": "Reflected transaction ID" },
-            "msg_source": { "type": "string", "description": "Reflected client ID" }
-          },
-          "required": ["transaction_id"]
-        }
-      },
-      "required": ["setup", "reply"]
-    }
-  },
-  "required": ["version", "timestamp", "udmi"]
-}
-```
-
-## A.4. Cloud Model Payload Schema
-```json
-{
-  "$schema": "http://json-schema.org/draft-07/schema#",
-  "title": "CloudModelPayload",
-  "type": "object",
-  "properties": {
-    "version": { "type": "string" },
-    "timestamp": { "type": "string", "format": "date-time" },
-    "cloud": {
-      "type": "object",
-      "properties": {
-        "operation": {
-          "type": "string",
-          "enum": ["READ", "CREATE", "UPDATE", "DELETE", "BIND", "UNBIND"],
-          "description": "Model operation type"
-        },
-        "registries": {
-          "type": "object",
-          "description": "Map of registry_id to device configurations",
-          "patternProperties": {
-            "^[a-zA-Z0-9_-]+$": {
-              "type": "object",
-              "properties": {
-                "devices": {
-                  "type": "object",
-                  "patternProperties": {
-                    "^[a-zA-Z0-9_-]+$": {
-                      "type": "object",
-                      "description": "Map of subsystem_id to subsystem state",
-                      "patternProperties": {
-                        "^[a-zA-Z0-9_-]+$": {
-                          "type": "object",
-                          "description": "Device subsystem state",
-                          "properties": {
-                            "target_version": { "type": "string" },
-                            "current_version": { "type": "string" },
-                            "status": { "type": "string" },
-                            "lkg_version": { "type": "string" },
-                            "make": { "type": "string", "description": "Device manufacturer" },
-                            "model": { "type": "string", "description": "Device model" }
-                          }
-
-                        }
-                      }
-                    }
-                  }
-                }
-              }
-            }
-          }
-        },
-        "detail": { "type": "object", "description": "Operation-specific parameters" }
-      },
-      "required": ["operation", "registries"]
-    }
-  },
-  "required": ["version", "timestamp", "cloud"]
-}
-```
-
-## A.5. Update Config Payload Schema
-```json
-{
-  "$schema": "http://json-schema.org/draft-07/schema#",
-  "title": "UpdateConfigPayload",
-  "type": "object",
-  "properties": {
-    "version": { "type": "string" },
-    "timestamp": { "type": "string", "format": "date-time" },
-    "update": {
-      "type": "object",
-      "patternProperties": {
-        "^[a-zA-Z0-9_-]+$": {
-          "type": "object",
-          "properties": {
-            "version": { "type": "string", "description": "Target version for the subsystem" },
-            "url": { "type": "string", "description": "Location of the update blob" },
-            "sha256": { "type": "string", "description": "Hex-encoded SHA-256 hash of the blob" },
-            "make": { "type": "string" },
-            "model": { "type": "string" }
-          },
-          "required": ["version", "url", "sha256", "make", "model"]
-        }
-      }
-    }
-  },
-  "required": ["version", "timestamp", "update"]
-}
-```
+| UUFI Component | Authoritative UDMI Schema |
+| :--- | :--- |
+| **Message Envelope** | `envelope.json` |
+| **Handshake State** | `state_udmi.json` |
+| **Handshake Config** | `config_udmi.json` |
+| **Cloud Model** | `model_cloud.json` |
+| **Blobset Config** | `config_blobset.json` |
+| **Blobset State** | `state_blobset.json` |
