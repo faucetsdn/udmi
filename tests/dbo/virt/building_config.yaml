@@ -63,10 +63,10 @@
           percent: percent
   type: HVAC/VAV_SD_DSP_HWDC
 05ed8d20-bbdb-4d69-a968-1075d110d025:
+  cloud_device_id: '379681902947616'
   code: onboarding-mtv12
   connections:
-    0a84a996-1120-4178-91ca-e118500d5463:
-    - CONTAINS
+    0a84a996-1120-4178-91ca-e118500d5463: CONTAINS
   etag: a2a08521
   type: INFO_TECH/PRNTR
 0a84a996-1120-4178-91ca-e118500d5463:
@@ -74,12 +74,11 @@
   etag: b7bdb7f6
   type: FACILITIES/FLOOR
 107959bc-29f3-464a-848f-9e5985d45a5a:
+  cloud_device_id: '270504150275150'
   code: US-MTV-40:FCU:CRAC 1 UPS
   connections:
-    12dac17e-dda6-41bb-a757-e81fcf701482:
-    - CONTAINS
-    14986412-1310-42cc-9db1-47dc6378b6e0:
-    - CONTAINS
+    12dac17e-dda6-41bb-a757-e81fcf701482: CONTAINS
+    14986412-1310-42cc-9db1-47dc6378b6e0: CONTAINS
   display_name: CRAC 1 UPS
   etag: b57032e9
   links:
@@ -151,25 +150,12 @@
   code: US-MTV-40-G-G40D
   etag: 090b3cb7
   type: FACILITIES/ROOM
-16e05f4d-e36b-4a2f-959e-6055906da39e:
-  code: US-MTV-40:AHU:AC 5
-  connections:
-    12dac17e-dda6-41bb-a757-e81fcf701482:
-    - CONTAINS
-  display_name: AC 5
-  etag: 721789d9
-  links:
-    5e589b73-1eff-4644-a8bb-529a8ca8b141:
-      supply_air_temperature_sensor: supply_air_temperature_sensor
-      supply_air_temperature_setpoint: supply_air_temperature_setpoint
-  type: HVAC/AHU_BSPC_DX4SC_ECONM_EFSS_EFVSC_SFSS_SFVSC_SSPC
 acb48500-fde1-4ef5-ab57-c3aa7ee8d8ad:
+  cloud_device_id: '215427101056132'
   code: US-MTV-40:FCU:CRAC 2
   connections:
-    12dac17e-dda6-41bb-a757-e81fcf701482:
-    - CONTAINS
-    14986412-1310-42cc-9db1-47dc6378b6e0:
-    - CONTAINS
+    12dac17e-dda6-41bb-a757-e81fcf701482: CONTAINS
+    14986412-1310-42cc-9db1-47dc6378b6e0: CONTAINS
   display_name: CRAC 2
   etag: 5393ce13
   links:

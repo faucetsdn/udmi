@@ -1,0 +1,46 @@
+{
+  "timestamp": "2026-01-01T00:00:00Z",
+  "version": "1.5.3",
+  "system": {
+    "name": "CRAC 2"
+  },
+  "externals": {
+    "dbo": {
+      "ext_id": "acb48500-fde1-4ef5-ab57-c3aa7ee8d8ad",
+      "type": "HVAC/FCU_DFSS_ZTC_ZHDHC_DXZTC",
+      "etag": "5393ce13",
+      "label": "US-MTV-40:FCU:CRAC 2"
+    }
+  },
+  "cloud": {
+    "num_id": "215427101056132"
+  },
+  "relationships": {
+    "us-mtv-40": {
+      "CONTAINS": [
+        {}
+      ]
+    },
+    "us-mtv-40-g-g40d": {
+      "CONTAINS": [
+        {}
+      ]
+    }
+  },
+  "pointset": {
+    "points": {
+      "compressor_run_status": {
+        "expr": "DDC-9:compressor_run_status_1"
+      },
+      "compressor_speed_percentage_command": {
+        "expr": "DDC-9:compressor_speed_percentage_command_1"
+      },
+      "zone_air_temperature_sensor": {
+        "expr": "DDC-9:zone_air_temperature_sensor_1"
+      },
+      "zone_air_temperature_setpoint": {
+        "expr": "DDC-9:zone_air_temperature_setpoint_1"
+      }
+    }
+  }
+}

@@ -32,6 +32,7 @@
           kilowatt-hours: kilowatt-hours
   type: METERS/EM_PWM_AVCM_PLPM_PVCM
 006d60c3-a251-481c-9587-e4ece57660df:
+  cloud_device_id: '779184318534883'
   code: ppchauffeur
   etag: '93386429'
   type: INFO_TECH/PRNTR

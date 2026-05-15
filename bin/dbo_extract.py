@@ -3,6 +3,13 @@ import json
 import sys
 from pathlib import Path
 import yaml
+import re
+
+def sanitize_id(id_str: str) -> str:
+  """Sanitizes a string for use as a UDMI device_id."""
+  # Replace non-alphanumeric with underscores, strip leading/trailing underscores
+  s = re.sub(r'[^a-z0-9_-]+', '_', id_str.lower())
+  return s.strip('_')
 
 def extract_dbo_config(site_model_dir: Path) -> dict:
   """Extracts DBO configurations to a dict."""
@@ -13,11 +20,28 @@ def extract_dbo_config(site_model_dir: Path) -> dict:
     with open(ancillary_path, "r", encoding="utf-8") as f:
       building_config = json.load(f)
 
+  device_id_to_guid = {}
+
+  # Build mapping for FACILITIES from ancillary data
+  used_ids = set()
+  # Sort keys to ensure deterministic collision handling if any
+  for guid in sorted(building_config.keys()):
+    if guid == "CONFIG_METADATA": continue
+    entity = building_config[guid]
+    code = entity.get("code")
+    base_id = sanitize_id(code) if code else guid
+    dev_id = base_id
+    counter = 2
+    while dev_id in used_ids:
+      dev_id = f"{base_id}_{counter}"
+      counter += 1
+    device_id_to_guid[dev_id] = guid
+    used_ids.add(dev_id)
+
   devices_dir = site_model_dir / "devices"
   if not devices_dir.is_dir():
       return building_config
 
-  device_id_to_guid = {}
   metadata_map = {}
 
   # Pass 1: Build the mapping of device ID -> GUID

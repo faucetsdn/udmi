@@ -42,13 +42,13 @@ def merge_dbo_config(yaml_file: Path, site_model_dir: Path):
 
   csv_map = load_csv_map(site_model_dir)
 
-  # First pass: map every GUID with a cloud_device_id to a unique device_id
+  # First pass: map every GUID to a unique ID
   guid_to_id = {}
   used_ids = set()
   
   # Priority 1: CSV-mapped devices (don't sanitize these, assume they are authoritative)
   for guid, entity in config.items():
-    if guid == "CONFIG_METADATA" or "cloud_device_id" not in entity: continue
+    if guid == "CONFIG_METADATA": continue
     cloud_id = str(entity.get("cloud_device_id", ""))
     if cloud_id in csv_map:
       dev_id = csv_map[cloud_id]
@@ -56,14 +56,15 @@ def merge_dbo_config(yaml_file: Path, site_model_dir: Path):
       used_ids.add(dev_id)
 
   # Priority 2: Code (with sanitization and collision handling)
+  # This now applies to ALL entities including FACILITIES
   for guid, entity in config.items():
-    if guid == "CONFIG_METADATA" or guid in guid_to_id or "cloud_device_id" not in entity: continue
+    if guid == "CONFIG_METADATA" or guid in guid_to_id: continue
     
     code = entity.get("code")
     if code:
         base_id = sanitize_id(code)
     else:
-        base_id = guid # GUIDs are already safe-ish but we'll see
+        base_id = guid
         
     dev_id = base_id
     counter = 2
@@ -81,7 +82,8 @@ def merge_dbo_config(yaml_file: Path, site_model_dir: Path):
     if guid == "CONFIG_METADATA":
       continue
 
-    if "cloud_device_id" not in entity:
+    etype = entity.get("type", "")
+    if etype.startswith("FACILITIES/"):
       ancillary[guid] = entity
       continue
 
