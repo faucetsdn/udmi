@@ -56,6 +56,8 @@ public class SimpleMqttPipe extends MessageBase {
   private static final String BROKER_URL_FORMAT = "%s://%s:%s";
   private static final long RECONNECT_SEC = 10;
   private static final int DEFAULT_PORT = 8883;
+  private static final String LEGACY_TOPIC_PREFIX = "/devices/";
+  private static final String IMPLICIT_TOPIC_PREFIX = "/r/";
   private static final Envelope EXCEPTION_ENVELOPE = makeExceptionEnvelope();
   private static final String SUB_BASE_FORMAT = "/r/+/d/+/%s";
   private static final String SSL_SECRETS_DIR = System.getenv("SSL_SECRETS_DIR");
@@ -120,35 +122,65 @@ public class SimpleMqttPipe extends MessageBase {
     return envelope;
   }
 
-  static Map<String, String> parseEnvelopeTopic(String topic) {
+  public static boolean isLegacyTopic(String topic) {
+    return topic != null && topic.startsWith(LEGACY_TOPIC_PREFIX);
+  }
+
+  private static Map<String, String> parseLegacyTopic(String topic) {
+    String cleanTopic = topic.startsWith("/") ? topic.substring(1) : topic;
+    String[] parts = cleanTopic.split("/");
+    Envelope envelope = new Envelope();
+    if (parts.length >= 2) {
+      envelope.deviceId = nullAsNull(parts[1]);
+    }
+    if (parts.length >= 3) {
+      envelope.subType = convertSubType(parts[2]);
+    }
+    if (parts.length >= 4) {
+      envelope.subFolder = convertSubFolder(parts[3]);
+    }
+    return toStringMap(envelope);
+  }
+
+  private static Map<String, String> parseImplicitTopic(String topic) {
+    // 0/1/2       /3/4     /5   [/6     [/7      ]]
+    //  /r/REGISTRY/d/DEVICE/TYPE[/FOLDER[/GATEWAY]]
+    String[] parts = topic.split("/", 12);
+    if (parts.length < 6 || parts.length > 10) {
+      throw new RuntimeException("Unexpected topic length: " + topic);
+    }
+    Envelope envelope = new Envelope();
+    checkState(Strings.isNullOrEmpty(parts[0]), "non-empty prefix");
+    checkState("r".equals(parts[1]), "expected registries");
+    envelope.deviceRegistryId = nullAsNull(parts[2]);
+    checkState("d".equals(parts[3]), "expected devices");
+    envelope.deviceId = nullAsNull(parts[4]);
+    int base = parts[5].equals(SEND_CHANNEL_DESIGNATOR) ? 2 : 0;
+    if (base > 0) {
+      envelope.source = parts[6];
+    }
+    envelope.subType = convertSubType(parts[base + 5]);
+    if (parts.length > base + 6) {
+      envelope.subFolder = convertSubFolder(parts[base + 6]);
+    }
+    if (parts.length > base + 7) {
+      envelope.gatewayId = nullAsNull(parts[base + 7]);
+    }
+    if (parts.length > base + 8) {
+      throw new RuntimeException("Unrecognized extra topic arguments: " + parts[base + 8]);
+    }
+    return toStringMap(envelope);
+  }
+
+  public static Map<String, String> parseEnvelopeTopic(String topic) {
     try {
-      // 0/1/2       /3/4     /5   [/6     [/7      ]]
-      //  /r/REGISTRY/d/DEVICE/TYPE[/FOLDER[/GATEWAY]]
-      String[] parts = topic.split("/", 12);
-      if (parts.length < 6 || parts.length > 10) {
-        throw new RuntimeException("Unexpected topic length: " + topic);
+      if (isLegacyTopic(topic)) {
+        return parseLegacyTopic(topic);
+      } else if (topic != null && topic.startsWith(IMPLICIT_TOPIC_PREFIX)) {
+        return parseImplicitTopic(topic);
+      } else {
+        throw new IllegalArgumentException("Unrecognized topic structure: " + topic);
       }
-      Envelope envelope = new Envelope();
-      checkState(Strings.isNullOrEmpty(parts[0]), "non-empty prefix");
-      checkState("r".equals(parts[1]), "expected registries");
-      envelope.deviceRegistryId = nullAsNull(parts[2]);
-      checkState("d".equals(parts[3]), "expected devices");
-      envelope.deviceId = nullAsNull(parts[4]);
-      int base = parts[5].equals(SEND_CHANNEL_DESIGNATOR) ? 2 : 0;
-      if (base > 0) {
-        envelope.source = parts[6];
-      }
-      envelope.subType = convertSubType(parts[base + 5]);
-      if (parts.length > base + 6) {
-        envelope.subFolder = convertSubFolder(parts[base + 6]);
-      }
-      if (parts.length > base + 7) {
-        envelope.gatewayId = nullAsNull(parts[base + 7]);
-      }
-      if (parts.length > base + 8) {
-        throw new RuntimeException("Unrecognized extra topic arguments: " + parts[base + 8]);
-      }
-      return toStringMap(envelope);
     } catch (Exception e) {
       throw new RuntimeException("While parsing envelope topic " + topic, e);
     }

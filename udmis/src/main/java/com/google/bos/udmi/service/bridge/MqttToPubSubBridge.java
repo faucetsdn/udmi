@@ -3,8 +3,8 @@ package com.google.bos.udmi.service.bridge;
 import static com.google.common.util.concurrent.MoreExecutors.directExecutor;
 
 import com.google.api.core.ApiFuture;
+import com.google.bos.udmi.service.messaging.impl.SimpleMqttPipe;
 import com.google.cloud.pubsub.v1.Publisher;
-import com.google.common.base.Splitter;
 import com.google.protobuf.ByteString;
 import com.google.pubsub.v1.ProjectTopicName;
 import com.google.pubsub.v1.PubsubMessage;
@@ -25,8 +25,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ExecutionException;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 import javax.net.ssl.KeyManagerFactory;
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.SSLSocketFactory;
@@ -68,7 +66,6 @@ import org.slf4j.LoggerFactory;
  */
 public final class MqttToPubSubBridge {
 
-  private static final Pattern TOPIC_PATTERN = Pattern.compile("/r/([^/]+)/d/([^/]+)/?(.*)");
   private static final Logger logger = LoggerFactory.getLogger(MqttToPubSubBridge.class);
 
   /**
@@ -227,30 +224,16 @@ public final class MqttToPubSubBridge {
               logger.info(
                   "MQTT Message Received - Topic: {}, Payload Length: {}", topic, payload.length);
 
-              Matcher matcher = TOPIC_PATTERN.matcher(topic);
-              String registryId = "unknown";
-              String deviceId = "unknown";
-              String topicSuffix = "";
-              if (matcher.matches()) {
-                registryId = matcher.group(1);
-                deviceId = matcher.group(2);
-                topicSuffix = matcher.group(3);
-              } else {
-                logger.warn("Could not parse registry/device from topic: {}", topic);
+              Map<String, String> attributes;
+              try {
+                attributes = new HashMap<>(SimpleMqttPipe.parseEnvelopeTopic(topic));
+              } catch (Exception e) {
+                logger.warn("Could not parse envelope from topic: {}", topic, e);
+                attributes = new HashMap<>();
               }
-
-              // Prepare Pub/Sub message
-              Map<String, String> attributes = new HashMap<>();
               attributes.put("mqttTopic", topic);
-              attributes.put("deviceId", deviceId);
-              attributes.put("deviceRegistryId", registryId);
-
-              if (topicSuffix != null && topicSuffix.startsWith("events/")) {
-                List<String> parts = Splitter.on('/').splitToList(topicSuffix);
-                if (parts.size() >= 2) {
-                  attributes.put("subFolder", parts.get(1));
-                }
-              }
+              attributes.putIfAbsent("deviceId", "unknown");
+              attributes.putIfAbsent("deviceRegistryId", "unknown");
 
               ByteString data = ByteString.copyFrom(payload);
               PubsubMessage.Builder pubsubMessageBuilder =
