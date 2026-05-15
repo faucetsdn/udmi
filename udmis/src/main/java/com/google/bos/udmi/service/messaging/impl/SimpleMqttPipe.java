@@ -127,27 +127,34 @@ public class SimpleMqttPipe extends MessageBase {
   }
 
   private static Map<String, String> parseLegacyTopic(String topic) {
+    if (topic == null) {
+      throw new IllegalArgumentException("Topic cannot be null");
+    }
     String cleanTopic = topic.startsWith("/") ? topic.substring(1) : topic;
     String[] parts = cleanTopic.split("/");
     Envelope envelope = new Envelope();
-    if (parts.length >= 2) {
+    if (parts.length >= 2 && !parts[1].isEmpty()) {
       envelope.deviceId = nullAsNull(parts[1]);
     }
-    if (parts.length >= 3) {
+    if (parts.length >= 3 && !parts[2].isEmpty()) {
       envelope.subType = convertSubType(parts[2]);
     }
-    if (parts.length >= 4) {
+    if (parts.length >= 4 && !parts[3].isEmpty()) {
+      // TODO: technically the subfolder is the remainder including all slashes until the end.
       envelope.subFolder = convertSubFolder(parts[3]);
     }
     return toStringMap(envelope);
   }
 
   private static Map<String, String> parseImplicitTopic(String topic) {
+    if (topic == null) {
+      throw new IllegalArgumentException("Topic cannot be null");
+    }
     // 0/1/2       /3/4     /5   [/6     [/7      ]]
     //  /r/REGISTRY/d/DEVICE/TYPE[/FOLDER[/GATEWAY]]
     String[] parts = topic.split("/", 12);
     if (parts.length < 6 || parts.length > 10) {
-      throw new RuntimeException("Unexpected topic length: " + topic);
+      throw new IllegalArgumentException("Unexpected topic length: " + topic);
     }
     Envelope envelope = new Envelope();
     checkState(Strings.isNullOrEmpty(parts[0]), "non-empty prefix");
@@ -156,22 +163,31 @@ public class SimpleMqttPipe extends MessageBase {
     checkState("d".equals(parts[3]), "expected devices");
     envelope.deviceId = nullAsNull(parts[4]);
     int base = parts[5].equals(SEND_CHANNEL_DESIGNATOR) ? 2 : 0;
+    if (parts.length < base + 6) {
+      throw new IllegalArgumentException("Unexpected topic length for implicit topic: " + topic);
+    }
     if (base > 0) {
       envelope.source = parts[6];
     }
     envelope.subType = convertSubType(parts[base + 5]);
-    if (parts.length > base + 6) {
+    if (parts.length > base + 6 && !parts[base + 6].isEmpty()) {
       envelope.subFolder = convertSubFolder(parts[base + 6]);
     }
-    if (parts.length > base + 7) {
+    if (parts.length > base + 7 && !parts[base + 7].isEmpty()) {
       envelope.gatewayId = nullAsNull(parts[base + 7]);
     }
     if (parts.length > base + 8) {
-      throw new RuntimeException("Unrecognized extra topic arguments: " + parts[base + 8]);
+      throw new IllegalArgumentException("Unrecognized extra topic arguments: " + parts[base + 8]);
     }
     return toStringMap(envelope);
   }
 
+  /**
+   * Parse an MQTT envelope topic (either legacy or implicit format) into attributes map.
+   *
+   * @param topic The MQTT topic string
+   * @return Map of envelope attributes
+   */
   public static Map<String, String> parseEnvelopeTopic(String topic) {
     try {
       if (isLegacyTopic(topic)) {

@@ -33,7 +33,7 @@ public class MosquittoBroker extends ContainerBase implements ConnectionBroker {
 
   private static final long EXEC_TIMEOUT_SEC = 10;
   private static final String REVOKE_PASSWORD = "--";
-  private static final String MOSQUITTO_LOG_PATH = "/var/log/mosquitto/mosquitto.log";
+  private static final String DEFAULT_MOSQUITTO_LOG_PATH = "/var/log/mosquitto/mosquitto.log";
   private static final String DEFAULT_CA_FILE = "/etc/mosquitto/certs/ca.crt";
   private static final String DEFAULT_CERT_FILE = "/etc/mosquitto/certs/rsa_private.crt";
   private static final String DEFAULT_KEY_FILE = "/etc/mosquitto/certs/rsa_private.pem";
@@ -45,6 +45,7 @@ public class MosquittoBroker extends ContainerBase implements ConnectionBroker {
   private final ContainerBase container;
   private final EndpointConfiguration endpointConfig;
   private final boolean disableLogging;
+  private final Object tailLock = new Object();
   private Process tailProcess;
 
   /**
@@ -63,7 +64,7 @@ public class MosquittoBroker extends ContainerBase implements ConnectionBroker {
     this.endpointConfig = endpointConfig;
     this.disableLogging = disableLogging;
     if (!disableLogging) {
-      File logFile = new File(MOSQUITTO_LOG_PATH);
+      File logFile = new File(getMosquittoLogPath());
       if (!logFile.canRead()) {
         throw new RuntimeException(
             "Mosquitto log file is not readable: " + logFile.getAbsolutePath());
@@ -71,9 +72,17 @@ public class MosquittoBroker extends ContainerBase implements ConnectionBroker {
     }
   }
 
+  private String getMosquittoLogPath() {
+    return ofNullable(System.getenv("MOSQUITTO_LOG_PATH")).orElse(DEFAULT_MOSQUITTO_LOG_PATH);
+  }
+
+  private String getMosquittoCtrlPath() {
+    return ofNullable(System.getenv("MOSQUITTO_CTRL_PATH")).orElse("mosquitto_ctrl");
+  }
+
   private List<String> buildCommandPrefix() {
     List<String> cmd = new ArrayList<>();
-    cmd.add("mosquitto_ctrl");
+    cmd.add(getMosquittoCtrlPath());
     
     if (endpointConfig.hostname != null) {
       cmd.add("-h");
@@ -100,11 +109,14 @@ public class MosquittoBroker extends ContainerBase implements ConnectionBroker {
 
     if (useSsl) {
       cmd.add("--cafile");
-      cmd.add(ofNullable(endpointConfig.ca_file).orElse(DEFAULT_CA_FILE));
+      cmd.add(ofNullable(endpointConfig.ca_file).orElseGet(() ->
+          ofNullable(System.getenv("MOSQUITTO_CA_FILE")).orElse(DEFAULT_CA_FILE)));
       cmd.add("--cert");
-      cmd.add(ofNullable(endpointConfig.cert_file).orElse(DEFAULT_CERT_FILE));
+      cmd.add(ofNullable(endpointConfig.cert_file).orElseGet(() ->
+          ofNullable(System.getenv("MOSQUITTO_CERT_FILE")).orElse(DEFAULT_CERT_FILE)));
       cmd.add("--key");
-      cmd.add(ofNullable(endpointConfig.key_file).orElse(DEFAULT_KEY_FILE));
+      cmd.add(ofNullable(endpointConfig.key_file).orElseGet(() ->
+          ofNullable(System.getenv("MOSQUITTO_KEY_FILE")).orElse(DEFAULT_KEY_FILE)));
       cmd.add("--insecure");
     }
     
@@ -149,10 +161,15 @@ public class MosquittoBroker extends ContainerBase implements ConnectionBroker {
         // Enforce timeout
         if (!exec.waitFor(EXEC_TIMEOUT_SEC, TimeUnit.SECONDS)) {
           exec.destroyForcibly();
+          outputHandler.cancel(true);
           throw new RuntimeException("Command timed out: " + String.join(" ", cmd));
         }
 
-        outputHandler.join();
+        try {
+          outputHandler.join();
+        } catch (Exception e) {
+          warn("Output handler interrupted or cancelled: " + e.getMessage());
+        }
         int exitValue = exec.exitValue();
         checkState(exitValue == 0, "exit return code " + exitValue);
       } catch (Exception e) {
@@ -176,7 +193,11 @@ public class MosquittoBroker extends ContainerBase implements ConnectionBroker {
         warn("Client likely exists, updating password for %s: %s", clientUser, e.getMessage());
         setClientPassword(clientUser, clientPass);
       }
-      createRole(roleName);
+      try {
+        createRole(roleName);
+      } catch (Exception e) {
+        warn("Ignore error creating role: " + e.getMessage());
+      }
       addClientRole(clientUser, roleName);
 
       addRoleAcl(roleName, "subscribePattern", clientId + "/config", "allow");
@@ -194,11 +215,7 @@ public class MosquittoBroker extends ContainerBase implements ConnectionBroker {
     cmd.add("setClientPassword");
     cmd.add(clientUser);
     cmd.add(clientPass);
-    try {
-      executeCommand(cmd);
-    } catch (Exception e) {
-      warn("Ignore error setting client password: " + e.getMessage());
-    }
+    executeCommand(cmd);
   }
 
   private void addRoleAcl(String roleName, String type, String pattern, String allow) {
@@ -208,11 +225,7 @@ public class MosquittoBroker extends ContainerBase implements ConnectionBroker {
     cmd.add(type);
     cmd.add(pattern);
     cmd.add(allow);
-    try {
-      executeCommand(cmd);
-    } catch (Exception e) {
-      warn("Ignore error adding role ACL: " + e.getMessage());
-    }
+    executeCommand(cmd);
   }
 
   private void deleteClient(String clientUser) {
@@ -252,11 +265,7 @@ public class MosquittoBroker extends ContainerBase implements ConnectionBroker {
     List<String> cmd = new ArrayList<>(buildCommandPrefix());
     cmd.add("createRole");
     cmd.add(roleName);
-    try {
-      executeCommand(cmd);
-    } catch (Exception e) {
-      warn("Ignore error creating role: " + e.getMessage());
-    }
+    executeCommand(cmd);
   }
 
   private void addClientRole(String clientUser, String roleName) {
@@ -264,11 +273,7 @@ public class MosquittoBroker extends ContainerBase implements ConnectionBroker {
     cmd.add("addClientRole");
     cmd.add(clientUser);
     cmd.add(roleName);
-    try {
-      executeCommand(cmd);
-    } catch (Exception e) {
-      warn("Ignore error adding client role: " + e.getMessage());
-    }
+    executeCommand(cmd);
   }
 
   private void mosquctlLog(String clientPrefix, Consumer<BrokerEvent> eventConsumer) {
@@ -276,10 +281,10 @@ public class MosquittoBroker extends ContainerBase implements ConnectionBroker {
       info("Mosquitto logging disabled, skipping log consumer for prefix %s", clientPrefix);
       return;
     }
-    synchronized (MosquittoBroker.class) {
+    synchronized (tailLock) {
       try {
         info("Starting log consumer for prefix %s", clientPrefix);
-        ProcessBuilder pb = new ProcessBuilder("tail", "-f", MOSQUITTO_LOG_PATH);
+        ProcessBuilder pb = new ProcessBuilder("tail", "-f", getMosquittoLogPath());
         if (tailProcess != null) {
           tailProcess.destroy();
         }
@@ -360,7 +365,11 @@ public class MosquittoBroker extends ContainerBase implements ConnectionBroker {
   public void bindGateway(String gatewayId, String deviceId) {
     String roleName = "role_" + gatewayId.replace("/", "_");
 
-    createRole(roleName);
+    try {
+      createRole(roleName);
+    } catch (Exception e) {
+      warn("Ignore error creating role: " + e.getMessage());
+    }
     addClientRole(gatewayId, roleName);
 
     // add ACLs
@@ -400,8 +409,11 @@ public class MosquittoBroker extends ContainerBase implements ConnectionBroker {
 
   @Override
   public void shutdown() {
-    if (tailProcess != null) {
-      tailProcess.destroy();
+    synchronized (tailLock) {
+      if (tailProcess != null) {
+        tailProcess.destroy();
+        tailProcess = null;
+      }
     }
     super.shutdown();
   }
