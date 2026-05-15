@@ -3,6 +3,7 @@ package com.google.bos.udmi.service.bridge;
 import static com.google.common.util.concurrent.MoreExecutors.directExecutor;
 
 import com.google.api.core.ApiFuture;
+import com.google.bos.udmi.service.support.EtcdDataProvider;
 import com.google.cloud.pubsub.v1.Publisher;
 import com.google.common.base.Splitter;
 import com.google.protobuf.ByteString;
@@ -62,6 +63,8 @@ import org.eclipse.paho.client.mqttv3.MqttMessage;
 import org.eclipse.paho.client.mqttv3.persist.MemoryPersistence;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import udmi.schema.IotAccess;
+import udmi.schema.IotAccess.IotProvider;
 
 /**
  * A bridge that subscribes to an MQTT topic and publishes messages to a Google Cloud Pub/Sub topic.
@@ -100,6 +103,8 @@ public final class MqttToPubSubBridge {
     String mqttPassword = commandLine.getOptionValue("mqtt_password");
     String mqttClientCertPath = commandLine.getOptionValue("mqtt_client_cert_path");
     String mqttClientKeyPath = commandLine.getOptionValue("mqtt_client_key_path");
+    String etcdTarget = commandLine.getOptionValue("etcd_target");
+    String etcdOptions = commandLine.getOptionValue("etcd_options");
 
     if (gcpProjectId == null || pubsubTopicId == null) {
       logger.error("gcp_project_id and pubsub_topic_id are required.");
@@ -108,8 +113,18 @@ public final class MqttToPubSubBridge {
 
     Publisher publisher = null;
     IMqttClient mqttClient = null;
+    EtcdDataProvider etcdProvider = null;
 
     try {
+      if (etcdTarget != null) {
+        IotAccess iotAccess = new IotAccess();
+        iotAccess.provider = IotProvider.ETCD;
+        iotAccess.project_id = etcdTarget;
+        iotAccess.options = etcdOptions;
+        etcdProvider = new EtcdDataProvider(iotAccess);
+        logger.info("EtcdDataProvider initialized for target: {}", etcdTarget);
+      }
+
       // Initialize Pub/Sub Publisher
       ProjectTopicName topicName = ProjectTopicName.of(gcpProjectId, pubsubTopicId);
       publisher = Publisher.newBuilder(topicName).build();
@@ -138,7 +153,7 @@ public final class MqttToPubSubBridge {
       logger.info("Connected to MQTT broker.");
 
       // Set up MQTT Message Callback
-      setupBridge(mqttClient, publisher, mqttSubscriptionTopic);
+      setupBridge(mqttClient, publisher, mqttSubscriptionTopic, etcdProvider);
 
       // Keep the application running
       while (true) {
@@ -158,6 +173,14 @@ public final class MqttToPubSubBridge {
       logger.error("An unexpected error occurred", e);
     } finally {
       // Shutdown
+      if (etcdProvider != null) {
+        try {
+          etcdProvider.shutdown();
+          logger.info("EtcdDataProvider shut down.");
+        } catch (Exception e) {
+          logger.warn("Error shutting down EtcdDataProvider", e);
+        }
+      }
       if (mqttClient != null && mqttClient.isConnected()) {
         try {
           mqttClient.disconnect();
@@ -189,6 +212,8 @@ public final class MqttToPubSubBridge {
     options.addOption(null, "mqtt_password", true, "MQTT password for authentication.");
     options.addOption(null, "mqtt_client_cert_path", true, "Path to client certificate for TLS.");
     options.addOption(null, "mqtt_client_key_path", true, "Path to client private key for TLS.");
+    options.addOption(null, "etcd_target", true, "etcd endpoint URL.");
+    options.addOption(null, "etcd_options", true, "etcd provider options (comma-separated).");
     options.addOption("h", "help", false, "Print usage info.");
 
     CommandLineParser parser = new DefaultParser();
@@ -212,7 +237,7 @@ public final class MqttToPubSubBridge {
    * @throws MqttException If an MQTT error occurs.
    */
   public static void setupBridge(IMqttClient mqttClient, Publisher publisher,
-      String mqttSubscriptionTopic) throws MqttException {
+      String mqttSubscriptionTopic, EtcdDataProvider etcdProvider) throws MqttException {
     mqttClient.setCallback(
         new MqttCallback() {
           @Override
@@ -244,6 +269,26 @@ public final class MqttToPubSubBridge {
               attributes.put("mqttTopic", topic);
               attributes.put("deviceId", deviceId);
               attributes.put("deviceRegistryId", registryId);
+
+              if (etcdProvider != null
+                  && !"unknown".equals(registryId)
+                  && !"unknown".equals(deviceId)) {
+                try {
+                  String numId = etcdProvider.ref()
+                      .registry(registryId)
+                      .device(deviceId)
+                      .get("num_id");
+                  if (numId != null) {
+                    attributes.put("deviceNumId", numId);
+                    logger.info("Found numId {} for device {}/{}", numId, registryId, deviceId);
+                  } else {
+                    logger.warn("numId not found in etcd for device {}/{}", registryId, deviceId);
+                  }
+                } catch (Exception e) {
+                  logger.warn("Error reading numId from etcd for device {}/{}",
+                      registryId, deviceId, e);
+                }
+              }
 
               if (topicSuffix != null && topicSuffix.startsWith("events/")) {
                 List<String> parts = Splitter.on('/').splitToList(topicSuffix);
