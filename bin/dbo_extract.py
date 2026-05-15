@@ -8,7 +8,7 @@ import re
 def sanitize_id(id_str: str) -> str:
   """Sanitizes a string for use as a UDMI device_id."""
   # Replace non-alphanumeric with underscores, strip leading/trailing underscores
-  s = re.sub(r'[^a-z0-9_-]+', '_', id_str.lower())
+  s = re.sub(r'[^a-zA-Z0-9_-]+', '_', id_str)
   return s.strip('_')
 
 def extract_dbo_config(site_model_dir: Path) -> dict:
