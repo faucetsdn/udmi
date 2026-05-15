@@ -36,8 +36,8 @@ Format: `scheme://[user@]host[:port][/path]`
 
 #### MQTT (`mqtt://`)
 - **Host/Port:** Standard network mapping.
-- **Topic Structure:** `[/{prefix}]/uufi/[r/{registryId}/[d/{deviceId}/]]c/{subType}/{subFolder}`
-  - The `prefix` is the optional path component of the connection string, representing one or more path segments. Implementations MUST strip any leading or trailing slashes from the path component before using it as a `prefix`.
+- **Topic Structure:** `[/{prefix}]/uufi/[r/{deviceRegistryId}/[d/{deviceId}/]]c/{subType}/{subFolder}`
+  - The `prefix` is the optional path component of the connection string, representing one or more path segments. Implementations MUST strip any leading or trailing slashes from the path component before using it as a `prefix`. In UDMI environments, the `prefix` often corresponds to the `UDMI_PREFIX` environment variable, which isolates multiple UDMI installations on the same messaging backbone.
 - **Prefix Isolation:** The `prefix` MUST be used to isolate different environments sharing the same broker. If provided, it MUST be the leading part of the topic path (e.g. matching all segments of the path provided in the connection string). Implementations MUST support multi-segment prefixes and MUST NOT omit the prefix if provided in the connection string. All active subscriptions (including those for traffic observation) MUST be scoped to the provided prefix to ensure environmental isolation. Prefix enforcement MUST be strict: implementations MUST NOT publish to or subscribe from topics outside their designated prefix tree. To avoid collisions when multiple clients share the same broker, implementations MUST use unique MQTT Client IDs, for example by incorporating the prefix, a random nonce, or a combination of both.
 - **Project Identity:** For the MQTT transport, the `projectId` field in the envelope SHOULD be treated as a general environment or project identifier. All components within a single UUFI session MUST use a consistent `projectId` (default: `vibrant`) to avoid ambiguity in message processing.
 - **Cloud Model Service:**
@@ -69,7 +69,7 @@ The System publishes a UDMI `config` message to `/uufi/c/config/udmi`.
 
 ### Registry ID Discovery
 - **Default:** `default`
-- **Discovery:** The System (Orchestrator) MAY provide a `registryId` in the `config.udmi` handshake reply to the Client. To ensure interoperability, the `registryId` SHOULD be placed within the `udmi.setup` block of the payload. The Client SHOULD use this `registryId` for all subsequent registry-scoped topics. The System MUST NOT expect to discover its own `registryId` from Client-initiated handshakes. (Note: Use `registryId` camelCase exactly as specified; case-insensitive or snake_case matching is NOT guaranteed).
+- **Discovery:** The System (Orchestrator) MAY provide a `deviceRegistryId` in the `config.udmi` handshake reply to the Client. To ensure interoperability, the `deviceRegistryId` SHOULD be placed within the `udmi.setup` block of the payload. The Client SHOULD use this `deviceRegistryId` for all subsequent registry-scoped topics. The System MUST NOT expect to discover its own `deviceRegistryId` from Client-initiated handshakes. (Note: Use `deviceRegistryId` camelCase exactly as specified; case-insensitive or snake_case matching is NOT guaranteed).
 - **Responsiveness:** MQTT message callback handlers MUST NOT perform long-running or blocking operations (e.g., `time.sleep()`). Any simulated work or heavy processing MUST be offloaded to a separate thread to maintain system-wide responsiveness and avoid buffer overflows or message loss in high-concurrency environments.
 
 ### 3.1 Interoperability Reminders
@@ -142,7 +142,7 @@ The `UPDATE` operation for the `cloud` subfolder is a partial merge at the devic
 - **Nesting:** The `payload` object MUST contain exactly one top-level key matching the `subFolder` name.
 - **Subsystem Nesting:** For `update` config and state payloads, data MUST be nested within a subsystem-id key (e.g., `main`) to support multi-subsystem devices. Implementations MUST handle both nested and unnested (flat) payloads for backward compatibility and robust interoperability.
 - **Mandatory Fields:** `timestamp` and `version` MUST be at the root of the `payload` object.
-- **Metadata:** The `make` and `model` fields are mandatory for all `update` subfolder payloads (state and config) within the subsystem nesting. These fields are essential for the Butler (System) to locate the correct blob in the repository (Section 9.1) and MUST be included in every subsystem entry subject to reconciliation.
+- **Metadata:** The `make` and `model` fields are mandatory for all `update` subfolder payloads (state and config) within the subsystem nesting. These fields are essential for the System to locate the correct blob in the repository (Section 9.1) and MUST be included in every subsystem entry subject to reconciliation.
 - **Update Config URL:** The `url` field in an `update` config payload MUST be a valid URI. Implementations MUST support the `file://` scheme for local file references. When a `file://` URI is provided, the recipient MUST strip the scheme and any leading slashes as appropriate for the local operating system to resolve the absolute or relative path.
 
 ### 8.2. Timestamp Format
@@ -173,13 +173,13 @@ Each version directory MUST contain:
 
 ### 9.2. Model Repository
 The cloud model, when stored as a local JSON file, MUST follow the full schema defined in Appendix A.4, including the top-level `cloud` wrapper and the 3-level nesting within it (Registries -> Devices -> Subsystems).
-- **Persistence:** The System (Butler) MUST update the local model file (if configured via `BUTLER_MODEL_FILE`) whenever the cloud model state changes (e.g., upon successful device update or model update command). Implementations SHOULD handle legacy formats (e.g. without the `cloud` wrapper) gracefully during migration but MUST write the compliant format.
+- **Persistence:** The System MUST update the local model file whenever the cloud model state changes (e.g., upon successful device update or model update command). Implementations SHOULD handle legacy formats (e.g. without the `cloud` wrapper) gracefully during migration but MUST write the compliant format.
 
 ### 9.3. Orchestrator Behavior
 - **LKG Management:** The Orchestrator is the primary authority for the `lkg_version` in the cloud model and SHOULD NOT trust a device-reported `lkg_version` if it conflicts with a previously validated state. Upon receiving a device report indicating a successful update (status `success` or `quiescent`) where the `current_version` differs from the known model state, the Orchestrator MUST update the cloud model's `current_version` along with the `lkg_version`. This promotion ensures that the newly validated version is established as the Last Known Good state for future rollbacks. Device simulators SHOULD similarly update their internal `lkg_version` to match the `current_version` upon successful application of an update.
 - **Model Update Robustness:** Relying solely on the transient `success` state is discouraged; any terminal state reporting the new version SHOULD trigger a model synchronization.
 - **Metadata Ingestion:** Orchestrators MUST ingest and cache `make` and `model` information from all available sources, including initial registration, cloud model updates, and device state reports. Failure to maintain accurate metadata for a known device is a protocol robustness violation. System components MUST NOT reject or skip operations (such as reconciliation) solely because metadata is set to the standard fallback value.
-- **CLI Tool Robustness:** All CLI tools MUST handle optional arguments gracefully. For `bin/register` and `bin/trigger`, the `registry_id` should default to the `BUTLER_REGISTRY_ID` environment variable or `"default"`. Tools MUST NOT fail if extra/unknown arguments are provided. To ensure robust argument parsing across different implementation environments, all tools MUST support the `--conn_spec` flag for explicitly passing the connection specification. Tools that modify the local model repository MUST also publish a corresponding `model/cloud` message to the MQTT transport to ensure active components remain synchronized. These published messages MUST have the `operation` field set to `UPDATE` to trigger synchronization in active System components.
+- **CLI Tool Robustness:** All CLI tools MUST handle optional arguments gracefully. Tools MUST NOT fail if extra/unknown arguments are provided. To ensure robust argument parsing across different implementation environments, all tools MUST support the `--conn_spec` flag for explicitly passing the connection specification. Tools that modify the local model repository MUST also publish a corresponding `model/cloud` message to the MQTT transport to ensure active components remain synchronized. These published messages MUST have the `operation` field set to `UPDATE` to trigger synchronization in active System components.
 - **Identity Differentiators:** Implementations SHOULD NOT detect or reject identities with multiple components (e.g., `user.toolname`) as "manual differentiators" if they are part of a standardized naming scheme for tool identification. When performing identity or principal matching, implementations MUST account for these differentiators (e.g., by matching the prefix before the first dot).
 
 ## 10. Standard Tooling CLI Interface
@@ -192,33 +192,19 @@ To support interoperability testing and shared orchestration scripts, the follow
 
 ### 10.2. bin/register
 - **Usage:** `bin/register [registry_id] <device_id> [make] [model]`
-- **Behavior:** Registers a device in the local model. If only one argument is provided, it MUST be treated as the `device_id`, with `registry_id` defaulting to `BUTLER_REGISTRY_ID` or `"default"`.
+- **Behavior:** Registers a device in the local model. If only one argument is provided, it MUST be treated as the `device_id`.
 
 ### 10.3. bin/mocket
 - **Usage:** `bin/mocket <conn_spec> <registry_id> <device_id>`
 - **Behavior:** Starts a mock device client that responds to UUFI handshakes and update configurations.
 
-### 10.4. bin/butler
-- **Usage:** `bin/butler <conn_spec>`
-- **Behavior:** Starts the system orchestrator (Butler).
-
-### 10.5. bin/verifier
+### 10.4. bin/verifier
 - **Usage:** `bin/verifier <conn_spec>`
 - **Behavior:** Starts the independent verification tool.
 
-### 10.6. bin/trigger
+### 10.5. bin/trigger
 - **Usage:** `bin/trigger [registry_id] <device_id> <version> <blob_path>`
 - **Behavior:** Initiates an update process. Similar to `register`, it MUST support optional `registry_id`.
-
-## 11. Standard Configuration Environment Variables
-
-To ensure interoperability between tools from different implementations (e.g., an Orchestrator from Impl A reading a model file created by a Register tool from Impl B), the following environment variables are standardized. All implementations MUST respect these variables if they support the corresponding functionality.
-
-- **`BUTLER_CONN_SPEC`**: The default connection specification URL (e.g., `mqtt://localhost:1883`).
-- **`BUTLER_MODEL_FILE`**: The path to the local JSON file representing the cloud model (default: `testing/model.json`).
-- **`BUTLER_BLOBS_DIR`**: The base directory for the blob repository (default: `testing/blobs`).
-- **`BUTLER_TIMEOUT`**: The timeout in seconds for the orchestrator to wait for a device to progress from the `pending` state before triggering a rollback (default: `60`).
-- **`BUTLER_REGISTRY_ID`**: The default registry ID to use when not specified (default: `default`).
 
 ---
 
@@ -293,7 +279,6 @@ This appendix contains the formal JSON schemas and message examples for the UUFI
     "publishTime": { "type": "string", "format": "date-time", "description": "Envelope wrapping timestamp" },
     "source": { "type": "string", "description": "Client session identifier" },
     "principal": { "type": "string", "description": "Session owner identity" },
-    "nonce": { "type": "string", "description": "Unique message instance ID (8-digit hex)" },
     "payload": {
       "type": "object",
       "description": "UDMI message container",
