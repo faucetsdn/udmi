@@ -19,6 +19,7 @@ import java.util.function.Consumer;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import udmi.schema.EndpointConfiguration;
+import udmi.schema.EndpointConfiguration.Transport;
 
 /**
  * Provider that links directly to a mosquitto broker.
@@ -33,6 +34,9 @@ public class MosquittoBroker extends ContainerBase implements ConnectionBroker {
   private static final long EXEC_TIMEOUT_SEC = 10;
   private static final String REVOKE_PASSWORD = "--";
   private static final String MOSQUITTO_LOG_PATH = "/var/log/mosquitto/mosquitto.log";
+  private static final String DEFAULT_CA_FILE = "/etc/mosquitto/certs/ca.crt";
+  private static final String DEFAULT_CERT_FILE = "/etc/mosquitto/certs/rsa_private.crt";
+  private static final String DEFAULT_KEY_FILE = "/etc/mosquitto/certs/rsa_private.pem";
   private static final Pattern LOG_MATCHER =
       Pattern.compile("([0-9]+): (\\S+) (\\S+) (\\S+) (\\S+) (.*)");
   private static final Pattern PUBLISH_MATCHER =
@@ -90,17 +94,18 @@ public class MosquittoBroker extends ContainerBase implements ConnectionBroker {
       }
     }
     
-    if (endpointConfig.ca_file != null) {
+    boolean useSsl = endpointConfig.transport == Transport.SSL
+        || (endpointConfig.port != null && endpointConfig.port == 8883)
+        || endpointConfig.ca_file != null;
+
+    if (useSsl) {
       cmd.add("--cafile");
-      cmd.add(endpointConfig.ca_file);
-    }
-    if (endpointConfig.cert_file != null) {
+      cmd.add(ofNullable(endpointConfig.ca_file).orElse(DEFAULT_CA_FILE));
       cmd.add("--cert");
-      cmd.add(endpointConfig.cert_file);
-    }
-    if (endpointConfig.key_file != null) {
+      cmd.add(ofNullable(endpointConfig.cert_file).orElse(DEFAULT_CERT_FILE));
       cmd.add("--key");
-      cmd.add(endpointConfig.key_file);
+      cmd.add(ofNullable(endpointConfig.key_file).orElse(DEFAULT_KEY_FILE));
+      cmd.add("--insecure");
     }
     
     cmd.add("dynsec");
@@ -160,11 +165,17 @@ public class MosquittoBroker extends ContainerBase implements ConnectionBroker {
     String clientUser = clientId;
     String roleName = "role_" + clientId.replace("/", "_");
 
-    deleteClient(clientUser);
-    deleteRole(roleName);
-
-    if (!"--".equals(clientPass)) {
-      createClient(clientUser, clientPass, clientId);
+    if ("--".equals(clientPass)) {
+      deleteClient(clientUser);
+      deleteRole(roleName);
+      info("Device %s deleted correctly.", clientId);
+    } else {
+      try {
+        createClient(clientUser, clientPass, clientId);
+      } catch (Exception e) {
+        warn("Client likely exists, updating password for %s: %s", clientUser, e.getMessage());
+        setClientPassword(clientUser, clientPass);
+      }
       createRole(roleName);
       addClientRole(clientUser, roleName);
 
@@ -175,8 +186,18 @@ public class MosquittoBroker extends ContainerBase implements ConnectionBroker {
       addRoleAcl(roleName, "publishClientSend", clientId + "/state", "allow");
       
       info("Device %s registered correctly.", clientId);
-    } else {
-      info("Device %s deleted correctly.", clientId);
+    }
+  }
+
+  private void setClientPassword(String clientUser, String clientPass) {
+    List<String> cmd = new ArrayList<>(buildCommandPrefix());
+    cmd.add("setClientPassword");
+    cmd.add(clientUser);
+    cmd.add(clientPass);
+    try {
+      executeCommand(cmd);
+    } catch (Exception e) {
+      warn("Ignore error setting client password: " + e.getMessage());
     }
   }
 
@@ -187,7 +208,11 @@ public class MosquittoBroker extends ContainerBase implements ConnectionBroker {
     cmd.add(type);
     cmd.add(pattern);
     cmd.add(allow);
-    executeCommand(cmd);
+    try {
+      executeCommand(cmd);
+    } catch (Exception e) {
+      warn("Ignore error adding role ACL: " + e.getMessage());
+    }
   }
 
   private void deleteClient(String clientUser) {
