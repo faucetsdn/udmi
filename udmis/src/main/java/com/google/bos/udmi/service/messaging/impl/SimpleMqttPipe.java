@@ -60,7 +60,6 @@ public class SimpleMqttPipe extends MessageBase {
   private static final String IMPLICIT_TOPIC_PREFIX = "/r/";
   private static final Envelope EXCEPTION_ENVELOPE = makeExceptionEnvelope();
   private static final String SUB_BASE_FORMAT = "/r/+/d/+/%s";
-  private static final String SSL_SECRETS_DIR = System.getenv("SSL_SECRETS_DIR");
   private static final String DEFAULT_NAMESPACE = "default";
   private static final long CONNECT_TIMEOUT_SEC = 10;
   private final String autoId = format("mqtt-%08x", (long) (Math.random() * 0x100000000L));
@@ -91,10 +90,18 @@ public class SimpleMqttPipe extends MessageBase {
         (publishMessages && sendId.startsWith(SEND_CHANNEL_PREFIX)) ? ("/" + sendId) : "";
 
     clientId = ofNullable(config.client_id).orElse(autoId);
-    File secretsDir = ifTrueGet(isNotEmpty(SSL_SECRETS_DIR), () -> new File(SSL_SECRETS_DIR));
-    certManager = ifNotNullGet(secretsDir,
-        secrets -> new CertManager(new File(secrets, CertManager.CA_CERT_FILE), secrets,
-            endpoint.transport, endpoint.auth_provider.basic.password, this::info));
+    boolean useSsl = Transport.SSL.equals(endpoint.transport)
+        || (endpoint.port != null && endpoint.port == 8883);
+    if (useSsl) {
+      checkState(isNotEmpty(endpoint.ca_file), "Missing required ca_file in endpoint configuration for SSL connection");
+      checkState(isNotEmpty(endpoint.cert_file), "Missing required cert_file in endpoint configuration for SSL connection");
+      checkState(isNotEmpty(endpoint.key_file), "Missing required key_file in endpoint configuration for SSL connection");
+      String pass = ifNotNullGet(endpoint.auth_provider, p -> ifNotNullGet(p.basic, b -> b.password));
+      certManager = new CertManager(new File(endpoint.ca_file), new File(endpoint.cert_file),
+          new File(endpoint.key_file), endpoint.transport, pass, this::info);
+    } else {
+      certManager = null;
+    }
     mqttClient = createMqttClient();
     tryConnect(false);
     scheduledFuture = Executors.newSingleThreadScheduledExecutor().scheduleWithFixedDelay(

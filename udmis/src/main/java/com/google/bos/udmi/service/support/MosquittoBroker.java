@@ -34,9 +34,6 @@ public class MosquittoBroker extends ContainerBase implements ConnectionBroker {
   private static final long EXEC_TIMEOUT_SEC = 10;
   private static final String REVOKE_PASSWORD = "--";
   private static final String DEFAULT_MOSQUITTO_LOG_PATH = "/var/log/mosquitto/mosquitto.log";
-  private static final String DEFAULT_CA_FILE = "/etc/mosquitto/certs/ca.crt";
-  private static final String DEFAULT_CERT_FILE = "/etc/mosquitto/certs/rsa_private.crt";
-  private static final String DEFAULT_KEY_FILE = "/etc/mosquitto/certs/rsa_private.pem";
   private static final Pattern LOG_MATCHER =
       Pattern.compile("([0-9]+): (\\S+) (\\S+) (\\S+) (\\S+) (.*)");
   private static final Pattern PUBLISH_MATCHER =
@@ -108,15 +105,18 @@ public class MosquittoBroker extends ContainerBase implements ConnectionBroker {
         || endpointConfig.ca_file != null;
 
     if (useSsl) {
+      checkState(endpointConfig.ca_file != null && !endpointConfig.ca_file.isEmpty(),
+          "Missing required ca_file in endpoint configuration for SSL connection");
+      checkState(endpointConfig.cert_file != null && !endpointConfig.cert_file.isEmpty(),
+          "Missing required cert_file in endpoint configuration for SSL connection");
+      checkState(endpointConfig.key_file != null && !endpointConfig.key_file.isEmpty(),
+          "Missing required key_file in endpoint configuration for SSL connection");
       cmd.add("--cafile");
-      cmd.add(ofNullable(endpointConfig.ca_file).orElseGet(() ->
-          ofNullable(System.getenv("MOSQUITTO_CA_FILE")).orElse(DEFAULT_CA_FILE)));
+      cmd.add(endpointConfig.ca_file);
       cmd.add("--cert");
-      cmd.add(ofNullable(endpointConfig.cert_file).orElseGet(() ->
-          ofNullable(System.getenv("MOSQUITTO_CERT_FILE")).orElse(DEFAULT_CERT_FILE)));
+      cmd.add(endpointConfig.cert_file);
       cmd.add("--key");
-      cmd.add(ofNullable(endpointConfig.key_file).orElseGet(() ->
-          ofNullable(System.getenv("MOSQUITTO_KEY_FILE")).orElse(DEFAULT_KEY_FILE)));
+      cmd.add(endpointConfig.key_file);
       cmd.add("--insecure");
     }
     

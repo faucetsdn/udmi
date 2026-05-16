@@ -4,6 +4,9 @@
     "protocol": "mqtt",
     "transport": "ssl",
     "hostname": "localhost",
+    "ca_file": "/etc/mosquitto/certs/ca.crt",
+    "cert_file": "/etc/mosquitto/certs/rsa_private.crt",
+    "key_file": "/etc/mosquitto/certs/rsa_private.pem",
     "auth_provider": {
       "basic": {
         "username": "rocket",
