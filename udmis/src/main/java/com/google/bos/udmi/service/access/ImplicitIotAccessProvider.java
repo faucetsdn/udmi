@@ -242,7 +242,9 @@ public class ImplicitIotAccessProvider extends IotAccessBase {
     String gatewayId = properties.get(BOUND_TO_KEY);
     properties.entries().keySet().forEach(properties::delete);
     registryDevicesRef(registryId).delete(deviceId);
-    broker.authorize(clientId(registryId, deviceId), null);
+    if (gatewayId == null) {
+      broker.authorize(clientId(registryId, deviceId), null);
+    }
 
     if (gatewayId != null) {
       gatewayBoundRef(registryId, gatewayId).delete(deviceId);
@@ -274,8 +276,9 @@ public class ImplicitIotAccessProvider extends IotAccessBase {
     if (map.containsKey(AUTH_PASSWORD_PROPERTY)) {
       boolean isAuthorized = properties.get(AUTH_KEY_PROPERTY) != null
           || properties.get(AUTH_TYPE_PROPERTY) != null;
-      String password = isAuthorized ? map.get(AUTH_PASSWORD_PROPERTY) : null;
-      broker.authorize(clientId(registryId, deviceId), password);
+      if (isAuthorized) {
+        broker.authorize(clientId(registryId, deviceId), map.get(AUTH_PASSWORD_PROPERTY));
+      }
     }
     return properties;
   }
