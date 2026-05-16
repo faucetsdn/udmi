@@ -262,8 +262,14 @@ public class ImplicitIotAccessProvider extends IotAccessBase {
 
   private DataRef mungeDevice(String registryId, String deviceId, Map<String, String> map) {
     DataRef properties = registryDeviceRef(registryId, deviceId);
-    map.forEach((key, value) ->
-        ifNotNullThen(value, v -> properties.put(key, value), () -> properties.delete(key)));
+    Map<String, String> puts = map.entrySet().stream()
+        .filter(e -> e.getValue() != null)
+        .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
+    Set<String> deletes = map.entrySet().stream()
+        .filter(e -> e.getValue() == null)
+        .map(Map.Entry::getKey)
+        .collect(Collectors.toSet());
+    properties.update(puts, deletes);
 
     if (map.containsKey(AUTH_PASSWORD_PROPERTY)) {
       boolean isAuthorized = properties.get(AUTH_KEY_PROPERTY) != null
