@@ -178,6 +178,7 @@ public class ImplicitIotAccessProvider extends IotAccessBase {
     Set<String> deviceIds = ImmutableSet.copyOf(cloudModel.gateway.proxy_ids);
     deviceIds.forEach(deviceId -> {
       registryDeviceRef(registryId, deviceId).put(BOUND_TO_KEY, gatewayId);
+      gatewayBoundRef(registryId, gatewayId).put(deviceId, "bound");
       broker.bindGateway(clientId(registryId, gatewayId), clientId(registryId, deviceId));
     });
   }
@@ -187,6 +188,7 @@ public class ImplicitIotAccessProvider extends IotAccessBase {
     Set<String> deviceIds = ImmutableSet.copyOf(cloudModel.gateway.proxy_ids);
     deviceIds.forEach(deviceId -> {
       registryDeviceRef(registryId, deviceId).delete(BOUND_TO_KEY);
+      gatewayBoundRef(registryId, gatewayId).delete(deviceId);
       broker.unbindGateway(clientId(registryId, gatewayId), clientId(registryId, deviceId));
     });
   }
@@ -236,12 +238,13 @@ public class ImplicitIotAccessProvider extends IotAccessBase {
 
   private void deleteDevice(String registryId, String deviceId, CloudModel cloudModel) {
     DataRef properties = registryDeviceRef(registryId, deviceId);
+    String gatewayId = properties.get(BOUND_TO_KEY);
     properties.entries().keySet().forEach(properties::delete);
     registryDevicesRef(registryId).delete(deviceId);
     broker.authorize(clientId(registryId, deviceId), null);
-    String gatewayId = properties.get(BOUND_TO_KEY);
 
     if (gatewayId != null) {
+      gatewayBoundRef(registryId, gatewayId).delete(deviceId);
       broker.unbindGateway(clientId(registryId, gatewayId), clientId(registryId, deviceId));
     }
   }
@@ -273,6 +276,10 @@ public class ImplicitIotAccessProvider extends IotAccessBase {
 
   private DataRef registryDevicesRef(String registryId) {
     return database.ref().registry(registryId).collection(DEVICES_ACTIVE);
+  }
+
+  private DataRef gatewayBoundRef(String registryId, String gatewayId) {
+    return database.ref().registry(registryId).device(gatewayId).collection("bound_devices");
   }
 
   private void sendConfigUpdate(String registryId, String deviceId, String config) {
@@ -396,7 +403,6 @@ public class ImplicitIotAccessProvider extends IotAccessBase {
 
   @Override
   public CloudModel fetchDevice(String registryId, String deviceId) {
-    touchDeviceEntry(registryId, deviceId);
     Map<String, String> properties = registryDeviceRef(registryId, deviceId).entries();
     if (properties == null) {
       return null;
@@ -422,9 +428,11 @@ public class ImplicitIotAccessProvider extends IotAccessBase {
 
     cloudModel.password = properties.get(AUTH_PASSWORD_PROPERTY);
 
-    cloudModel.gateway = new GatewayModel();
-    cloudModel.gateway.proxy_ids =
-        listBoundDevices(registryId, deviceId).keySet().stream().toList();
+    if (GATEWAY.toString().equals(properties.get(RESOURCE_TYPE_PROPERTY))) {
+      cloudModel.gateway = new GatewayModel();
+      cloudModel.gateway.proxy_ids =
+          listBoundDevices(registryId, deviceId).keySet().stream().toList();
+    }
     cloudModel.operation = READ;
     return cloudModel;
   }
@@ -469,7 +477,7 @@ public class ImplicitIotAccessProvider extends IotAccessBase {
   }
 
   private Map<String, CloudModel> listBoundDevices(String registryId, String gatewayId) {
-    Set<String> deviceIds = registryDevicesRef(registryId).entries().keySet();
+    Set<String> deviceIds = gatewayBoundRef(registryId, gatewayId).entries().keySet();
     Map<String, CloudModel> devices = deviceIds.stream().filter(deviceId -> {
       String boundTo = registryDeviceRef(registryId, deviceId).get(BOUND_TO_KEY);
       return gatewayId.equals(boundTo);
