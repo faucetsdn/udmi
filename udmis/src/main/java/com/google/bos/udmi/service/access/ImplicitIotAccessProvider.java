@@ -266,7 +266,10 @@ public class ImplicitIotAccessProvider extends IotAccessBase {
         ifNotNullThen(value, v -> properties.put(key, value), () -> properties.delete(key)));
 
     if (map.containsKey(AUTH_PASSWORD_PROPERTY)) {
-      broker.authorize(clientId(registryId, deviceId), map.get(AUTH_PASSWORD_PROPERTY));
+      boolean isAuthorized = properties.get(AUTH_KEY_PROPERTY) != null
+          || properties.get(AUTH_TYPE_PROPERTY) != null;
+      String password = isAuthorized ? map.get(AUTH_PASSWORD_PROPERTY) : null;
+      broker.authorize(clientId(registryId, deviceId), password);
     }
     return properties;
   }
