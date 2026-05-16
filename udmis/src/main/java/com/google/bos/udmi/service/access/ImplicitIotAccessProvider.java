@@ -106,6 +106,7 @@ public class ImplicitIotAccessProvider extends IotAccessBase {
   private static final String CONFIG_SUFFIX = "/config";
   private static final String METADATA_STR_KEY = "metadata_str";
   private static final String RESOURCE_TYPE_PROPERTY = "resource_type";
+  private static final int DEVICE_FETCH_BATCH_SIZE = 100;
   private final boolean enabled;
   private final String usePassword;
   private final ConnectionBroker broker;
@@ -468,11 +469,42 @@ public class ImplicitIotAccessProvider extends IotAccessBase {
   @Override
   public CloudModel listDevices(String registryId, Consumer<String> progress) {
     Map<String, String> entries = registryDevicesRef(registryId).entries();
-    ifNotNullThen(progress, p -> p.accept(format("Fetched %d devices.", entries.size())));
+    List<String> deviceIds = entries.keySet().stream().toList();
+    int total = deviceIds.size();
+    ifNotNullThen(progress, p -> p.accept(format("Fetching %d devices...", total)));
+    Map<String, CloudModel> deviceIdsMap = new ConcurrentHashMap<>();
+    for (int i = 0; i < total; i += DEVICE_FETCH_BATCH_SIZE) {
+      List<String> batch = deviceIds.subList(i, Math.min(i + DEVICE_FETCH_BATCH_SIZE, total));
+      batch.parallelStream().forEach(id -> {
+        CloudModel partial = fetchDevicePartial(registryId, id);
+        if (partial != null) {
+          deviceIdsMap.put(id, partial);
+        }
+      });
+      int currentCount = Math.min(i + DEVICE_FETCH_BATCH_SIZE, total);
+      ifNotNullThen(progress, p -> p.accept(format("Fetched %d devices...", currentCount)));
+    }
     CloudModel cloudModel = new CloudModel();
-    cloudModel.device_ids = entries.keySet().stream().collect(
-        Collectors.toMap(id -> id, id -> fetchDevice(registryId, id)));
+    cloudModel.device_ids = deviceIdsMap;
     cloudModel.operation = READ;
+    return cloudModel;
+  }
+
+  private CloudModel fetchDevicePartial(String registryId, String deviceId) {
+    Map<String, String> properties = registryDeviceRef(registryId, deviceId).entries();
+    if (properties == null) {
+      return null;
+    }
+    CloudModel cloudModel = new CloudModel();
+    cloudModel.num_id = properties.get(NUM_ID_PROPERTY);
+    String authType = properties.get(AUTH_TYPE_PROPERTY);
+    if (authType != null) {
+      cloudModel.auth_type = CloudModel.Auth_type.fromValue(authType);
+    }
+    cloudModel.resource_type = ofNullable(properties.get(RESOURCE_TYPE_PROPERTY))
+        .map(Resource_type::fromValue).orElse(DIRECT);
+    cloudModel.blocked = "true".equals(properties.get(BLOCKED_PROPERTY)) ? true : null;
+    cloudModel.updated_time = JsonUtil.getDate(properties.get(CREATED_AT_PROPERTY));
     return cloudModel;
   }
 
