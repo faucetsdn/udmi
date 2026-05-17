@@ -146,35 +146,33 @@ public class MosquittoBroker extends ContainerBase implements ConnectionBroker {
   }
 
   private void executeCommand(List<String> cmd) {
-    synchronized (MosquittoBroker.class) {
-      try {
-        info("Executing command %s", String.join(" ", cmd));
-        ProcessBuilder pb = new ProcessBuilder(cmd);
-        pb.redirectErrorStream(true); // Merge stderr into stdout
-        Process exec = pb.start();
+    try {
+      info("Executing command %s", String.join(" ", cmd));
+      ProcessBuilder pb = new ProcessBuilder(cmd);
+      pb.redirectErrorStream(true); // Merge stderr into stdout
+      Process exec = pb.start();
 
-        // Read output asynchronously to prevent buffer locks
-        CompletableFuture<Void> outputHandler = CompletableFuture.runAsync(() ->
-            exec.inputReader().lines().forEach(container::info)
-        );
+      // Read output asynchronously to prevent buffer locks
+      CompletableFuture<Void> outputHandler = CompletableFuture.runAsync(() ->
+          exec.inputReader().lines().forEach(container::info)
+      );
 
-        // Enforce timeout
-        if (!exec.waitFor(EXEC_TIMEOUT_SEC, TimeUnit.SECONDS)) {
-          exec.destroyForcibly();
-          outputHandler.cancel(true);
-          throw new RuntimeException("Command timed out: " + String.join(" ", cmd));
-        }
-
-        try {
-          outputHandler.join();
-        } catch (Exception e) {
-          warn("Output handler interrupted or cancelled: " + e.getMessage());
-        }
-        int exitValue = exec.exitValue();
-        checkState(exitValue == 0, "exit return code " + exitValue);
-      } catch (Exception e) {
-        throw new RuntimeException("While executing " + String.join(" ", cmd), e);
+      // Enforce timeout
+      if (!exec.waitFor(EXEC_TIMEOUT_SEC, TimeUnit.SECONDS)) {
+        exec.destroyForcibly();
+        outputHandler.cancel(true);
+        throw new RuntimeException("Command timed out: " + String.join(" ", cmd));
       }
+
+      try {
+        outputHandler.join();
+      } catch (Exception e) {
+        warn("Output handler interrupted or cancelled: " + e.getMessage());
+      }
+      int exitValue = exec.exitValue();
+      checkState(exitValue == 0, "exit return code " + exitValue);
+    } catch (Exception e) {
+      throw new RuntimeException("While executing " + String.join(" ", cmd), e);
     }
   }
 

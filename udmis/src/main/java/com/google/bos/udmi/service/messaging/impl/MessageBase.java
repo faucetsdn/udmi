@@ -62,7 +62,7 @@ import udmi.schema.UdmiConfig;
 public abstract class MessageBase extends ContainerBase implements MessagePipe {
 
   public static final String INVALID_ENVELOPE_KEY = "invalid";
-  public static final int EXECUTION_THREADS = 32;
+  public static final int EXECUTION_THREADS = 100;
   public static final String ERROR_MESSAGE_MARKER = "error-mark";
   public static final String PUBLISH_STATS = "publish";
   public static final String RECEIVE_STATS = "receive";
@@ -73,7 +73,7 @@ public abstract class MessageBase extends ContainerBase implements MessagePipe {
   private static final Set<Object> HANDLED_QUEUES = new HashSet<>();
   private static final long DEFAULT_POLL_TIME_SEC = 1;
   private static final long AWAIT_TERMINATION_SEC = 10;
-  private static final int DEFAULT_CAPACITY = 1000;
+  private static final int DEFAULT_CAPACITY = 2000;
   protected final int queueCapacity;
   protected final long publishDelaySec;
   private final ExecutorService executor = Executors.newFixedThreadPool(EXECUTION_THREADS);
