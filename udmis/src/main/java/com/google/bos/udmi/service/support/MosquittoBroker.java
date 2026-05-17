@@ -4,40 +4,124 @@ import static com.google.common.base.Preconditions.checkState;
 import static com.google.udmi.util.GeneralUtils.catchToElse;
 import static com.google.udmi.util.GeneralUtils.catchToNull;
 import static com.google.udmi.util.GeneralUtils.friendlyStackTrace;
-import static com.google.udmi.util.GeneralUtils.ifNotNullThen;
-import static java.lang.String.format;
 import static java.util.Optional.ofNullable;
 
 import com.google.bos.udmi.service.pod.ContainerBase;
 import java.io.BufferedReader;
+import java.io.File;
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import udmi.schema.EndpointConfiguration;
+import udmi.schema.EndpointConfiguration.Transport;
 
 /**
  * Provider that links directly to a mosquitto broker.
+ *
+ * <p>NOTE: The topic structure used in ACLs in this file is hardcoded to use the deviceId
+ * directly (e.g., deviceId/config, deviceId/commands, etc.) instead of using properties
+ * from the endpoint configuration.
  */
 public class MosquittoBroker extends ContainerBase implements ConnectionBroker {
 
-  private static final String UDMI_ROOT = System.getenv("UDMI_ROOT");
-  private static final String MOSQUCTL_CLIENT_FMT = UDMI_ROOT + "/bin/mosquctl_client %s %s";
-  private static final String MOSQUCTL_LOG_FMT = UDMI_ROOT + "/bin/mosquctl_log %s";
-  private static final String MOSQUCTL_GATEWAY_FMT = UDMI_ROOT + "/bin/mosquctl_gateway %s %s %s";
+
   private static final long EXEC_TIMEOUT_SEC = 10;
   private static final String REVOKE_PASSWORD = "--";
+  private static final String DEFAULT_MOSQUITTO_LOG_PATH = "/var/log/mosquitto/mosquitto.log";
   private static final Pattern LOG_MATCHER =
       Pattern.compile("([0-9]+): (\\S+) (\\S+) (\\S+) (\\S+) (.*)");
   private static final Pattern PUBLISH_MATCHER =
       Pattern.compile("\\(([d01,qr ]+), m([0-9]+), '(\\S+)', .*\\)");
   private static final Pattern PUBACK_MATCHER = Pattern.compile("\\((m|Mid: )([0-9]+), \\S+\\)");
   private final ContainerBase container;
+  private final EndpointConfiguration endpointConfig;
+  private final boolean disableLogging;
+  private final Object tailLock = new Object();
+  private Process tailProcess;
 
-  public MosquittoBroker(ContainerBase container) {
+  /**
+   * Create a new broker connection provider.
+   */
+  public MosquittoBroker(ContainerBase container, EndpointConfiguration endpointConfig) {
+    this(container, endpointConfig, false);
+  }
+
+  /**
+   * Create a new broker connection provider with logging controls.
+   */
+  public MosquittoBroker(ContainerBase container, EndpointConfiguration endpointConfig,
+      boolean disableLogging) {
     this.container = container;
+    this.endpointConfig = endpointConfig;
+    this.disableLogging = disableLogging;
+    if (!disableLogging) {
+      File logFile = new File(getMosquittoLogPath());
+      if (!logFile.canRead()) {
+        throw new RuntimeException(
+            "Mosquitto log file is not readable: " + logFile.getAbsolutePath());
+      }
+    }
+  }
+
+  private String getMosquittoLogPath() {
+    return ofNullable(System.getenv("MOSQUITTO_LOG_PATH")).orElse(DEFAULT_MOSQUITTO_LOG_PATH);
+  }
+
+  private String getMosquittoCtrlPath() {
+    return ofNullable(System.getenv("MOSQUITTO_CTRL_PATH")).orElse("mosquitto_ctrl");
+  }
+
+  private List<String> buildCommandPrefix() {
+    List<String> cmd = new ArrayList<>();
+    cmd.add(getMosquittoCtrlPath());
+    
+    if (endpointConfig.hostname != null) {
+      cmd.add("-h");
+      cmd.add(endpointConfig.hostname);
+    }
+    if (endpointConfig.port != null) {
+      cmd.add("-p");
+      cmd.add(endpointConfig.port.toString());
+    }
+    if (endpointConfig.auth_provider != null && endpointConfig.auth_provider.basic != null) {
+      if (endpointConfig.auth_provider.basic.username != null) {
+        cmd.add("-u");
+        cmd.add(endpointConfig.auth_provider.basic.username);
+      }
+      if (endpointConfig.auth_provider.basic.password != null) {
+        cmd.add("-P");
+        cmd.add(endpointConfig.auth_provider.basic.password);
+      }
+    }
+    
+    boolean useSsl = endpointConfig.transport == Transport.SSL
+        || (endpointConfig.port != null && endpointConfig.port == 8883)
+        || endpointConfig.ca_file != null;
+
+    if (useSsl) {
+      checkState(endpointConfig.ca_file != null && !endpointConfig.ca_file.isEmpty(),
+          "Missing required ca_file in endpoint configuration for SSL connection");
+      checkState(endpointConfig.cert_file != null && !endpointConfig.cert_file.isEmpty(),
+          "Missing required cert_file in endpoint configuration for SSL connection");
+      checkState(endpointConfig.key_file != null && !endpointConfig.key_file.isEmpty(),
+          "Missing required key_file in endpoint configuration for SSL connection");
+      cmd.add("--cafile");
+      cmd.add(endpointConfig.ca_file);
+      cmd.add("--cert");
+      cmd.add(endpointConfig.cert_file);
+      cmd.add("--key");
+      cmd.add(endpointConfig.key_file);
+      cmd.add("--insecure");
+    }
+    
+    cmd.add("dynsec");
+    return cmd;
   }
 
   private void consumeLogs(String clientPrefix, Consumer<BrokerEvent> eventConsumer) {
@@ -61,38 +145,160 @@ public class MosquittoBroker extends ContainerBase implements ConnectionBroker {
     thread.start();
   }
 
-  private void executeCommand(String cmd) {
-    synchronized (MosquittoBroker.class) {
-      try {
-        info("Executing command %s", cmd);
-        Process exec = Runtime.getRuntime().exec(cmd);
-        exec.waitFor(EXEC_TIMEOUT_SEC, TimeUnit.SECONDS);
-        exec.errorReader().lines().forEach(container::info);
-        exec.inputReader().lines().forEach(container::info);
-        int exitValue = exec.exitValue();
-        checkState(exitValue == 0, "exit return code " + exitValue);
-      } catch (Exception e) {
-        throw new RuntimeException("While executing " + cmd, e);
+  private void executeCommand(List<String> cmd) {
+    try {
+      info("Executing command %s", String.join(" ", cmd));
+      ProcessBuilder pb = new ProcessBuilder(cmd);
+      pb.redirectErrorStream(true); // Merge stderr into stdout
+      Process exec = pb.start();
+
+      // Read output asynchronously to prevent buffer locks
+      CompletableFuture<Void> outputHandler = CompletableFuture.runAsync(() ->
+          exec.inputReader().lines().forEach(container::info)
+      );
+
+      // Enforce timeout
+      if (!exec.waitFor(EXEC_TIMEOUT_SEC, TimeUnit.SECONDS)) {
+        exec.destroyForcibly();
+        outputHandler.cancel(true);
+        throw new RuntimeException("Command timed out: " + String.join(" ", cmd));
       }
+
+      try {
+        outputHandler.join();
+      } catch (Exception e) {
+        warn("Output handler interrupted or cancelled: " + e.getMessage());
+      }
+      int exitValue = exec.exitValue();
+      checkState(exitValue == 0, "exit return code " + exitValue);
+    } catch (Exception e) {
+      throw new RuntimeException("While executing " + String.join(" ", cmd), e);
     }
   }
 
   private void mosquctlClient(String clientId, String clientPass) {
-    executeCommand(format(MOSQUCTL_CLIENT_FMT, clientId, clientPass));
+    String clientUser = clientId;
+    String roleName = "role_" + clientId.replace("/", "_");
+
+    if ("--".equals(clientPass)) {
+      deleteClient(clientUser);
+      deleteRole(roleName);
+      info("Device %s deleted correctly.", clientId);
+    } else {
+      try {
+        createClient(clientUser, clientPass, clientId);
+      } catch (Exception e) {
+        warn("Client likely exists, updating password for %s: %s", clientUser, e.getMessage());
+        setClientPassword(clientUser, clientPass);
+      }
+      try {
+        createRole(roleName);
+      } catch (Exception e) {
+        warn("Ignore error creating role: " + e.getMessage());
+      }
+      addClientRole(clientUser, roleName);
+
+      addRoleAcl(roleName, "subscribePattern", clientId + "/config", "allow");
+      addRoleAcl(roleName, "subscribePattern", clientId + "/commands", "allow");
+      addRoleAcl(roleName, "subscribePattern", clientId + "/errors", "allow");
+      addRoleAcl(roleName, "publishClientSend", clientId + "/events/#", "allow");
+      addRoleAcl(roleName, "publishClientSend", clientId + "/state", "allow");
+      
+      info("Device %s registered correctly.", clientId);
+    }
+  }
+
+  private void setClientPassword(String clientUser, String clientPass) {
+    List<String> cmd = new ArrayList<>(buildCommandPrefix());
+    cmd.add("setClientPassword");
+    cmd.add(clientUser);
+    cmd.add(clientPass);
+    executeCommand(cmd);
+  }
+
+  private void addRoleAcl(String roleName, String type, String pattern, String allow) {
+    List<String> cmd = new ArrayList<>(buildCommandPrefix());
+    cmd.add("addRoleACL");
+    cmd.add(roleName);
+    cmd.add(type);
+    cmd.add(pattern);
+    cmd.add(allow);
+    executeCommand(cmd);
+  }
+
+  private void deleteClient(String clientUser) {
+    List<String> cmd = new ArrayList<>(buildCommandPrefix());
+    cmd.add("deleteClient");
+    cmd.add(clientUser);
+    try {
+      executeCommand(cmd);
+    } catch (Exception e) {
+      warn("Ignore error deleting client: " + e.getMessage());
+    }
+  }
+
+  private void deleteRole(String roleName) {
+    List<String> cmd = new ArrayList<>(buildCommandPrefix());
+    cmd.add("deleteRole");
+    cmd.add(roleName);
+    try {
+      executeCommand(cmd);
+    } catch (Exception e) {
+      warn("Ignore error deleting role: " + e.getMessage());
+    }
+  }
+
+  private void createClient(String clientUser, String clientPass, String clientId) {
+    List<String> cmd = new ArrayList<>(buildCommandPrefix());
+    cmd.add("createClient");
+    cmd.add(clientUser);
+    cmd.add("-p");
+    cmd.add(clientPass);
+    cmd.add("-c");
+    cmd.add(clientId);
+    executeCommand(cmd);
+  }
+
+  private void createRole(String roleName) {
+    List<String> cmd = new ArrayList<>(buildCommandPrefix());
+    cmd.add("createRole");
+    cmd.add(roleName);
+    executeCommand(cmd);
+  }
+
+  private void addClientRole(String clientUser, String roleName) {
+    List<String> cmd = new ArrayList<>(buildCommandPrefix());
+    cmd.add("addClientRole");
+    cmd.add(clientUser);
+    cmd.add(roleName);
+    executeCommand(cmd);
   }
 
   private void mosquctlLog(String clientPrefix, Consumer<BrokerEvent> eventConsumer) {
-    String cmd = format(MOSQUCTL_LOG_FMT, clientPrefix);
-    synchronized (MosquittoBroker.class) {
+    if (disableLogging) {
+      info("Mosquitto logging disabled, skipping log consumer for prefix %s", clientPrefix);
+      return;
+    }
+    synchronized (tailLock) {
       try {
-        info("Starting log consumer %s", cmd);
-        Process exec = Runtime.getRuntime().exec(cmd);
+        info("Starting log consumer for prefix %s", clientPrefix);
+        ProcessBuilder pb = new ProcessBuilder("tail", "-f", getMosquittoLogPath());
+        if (tailProcess != null) {
+          tailProcess.destroy();
+        }
+        tailProcess = pb.start();
+        Process exec = tailProcess;
         consumeStream(exec.errorReader(), line -> warn("log error: " + line));
-        consumeStream(exec.inputReader(), line -> ifNotNullThen(parseLogLine(line), eventConsumer));
+        consumeStream(exec.inputReader(), line -> {
+          BrokerEvent event = parseLogLine(line);
+          if (event != null && event.clientId != null && event.clientId.startsWith(clientPrefix)) {
+            eventConsumer.accept(event);
+          }
+        });
       } catch (Exception e) {
-        throw new RuntimeException("While executing " + cmd, e);
+        throw new RuntimeException("While starting log consumer", e);
       } finally {
-        info("Completed log consumer");
+        info("Completed log consumer setup");
       }
     }
   }
@@ -155,12 +361,51 @@ public class MosquittoBroker extends ContainerBase implements ConnectionBroker {
 
   @Override
   public void bindGateway(String gatewayId, String deviceId) {
-    executeCommand(format(MOSQUCTL_GATEWAY_FMT, "bind", gatewayId, deviceId));
+    String roleName = "role_" + gatewayId.replace("/", "_");
+
+    // add ACLs
+    addRoleAcl(roleName, "subscribePattern", deviceId + "/config", "allow");
+    addRoleAcl(roleName, "subscribePattern", deviceId + "/commands", "allow");
+    addRoleAcl(roleName, "subscribePattern", deviceId + "/errors", "allow");
+    addRoleAcl(roleName, "publishClientSend", deviceId + "/events/#", "allow");
+    addRoleAcl(roleName, "publishClientSend", deviceId + "/state", "allow");
+    addRoleAcl(roleName, "publishClientSend", deviceId + "/attach", "allow");
   }
 
   @Override
   public void unbindGateway(String gatewayId, String deviceId) {
-    info("Unbind device Id: %s from gateway Id: %s :%s", deviceId, gatewayId);
-    executeCommand(format(MOSQUCTL_GATEWAY_FMT, "unbind", gatewayId, deviceId));
+    info("Unbind device Id: %s from gateway Id: %s", deviceId, gatewayId);
+    String roleName = "role_" + gatewayId.replace("/", "_");
+
+    removeRoleAcl(roleName, "subscribePattern", deviceId + "/config");
+    removeRoleAcl(roleName, "subscribePattern", deviceId + "/commands");
+    removeRoleAcl(roleName, "subscribePattern", deviceId + "/errors");
+    removeRoleAcl(roleName, "publishClientSend", deviceId + "/events/#");
+    removeRoleAcl(roleName, "publishClientSend", deviceId + "/state");
+    removeRoleAcl(roleName, "publishClientSend", deviceId + "/attach");
+  }
+
+  private void removeRoleAcl(String roleName, String type, String pattern) {
+    List<String> cmd = new ArrayList<>(buildCommandPrefix());
+    cmd.add("removeRoleACL");
+    cmd.add(roleName);
+    cmd.add(type);
+    cmd.add(pattern);
+    try {
+      executeCommand(cmd);
+    } catch (Exception e) {
+      warn("Ignore error removing role ACL: " + e.getMessage());
+    }
+  }
+
+  @Override
+  public void shutdown() {
+    synchronized (tailLock) {
+      if (tailProcess != null) {
+        tailProcess.destroy();
+        tailProcess = null;
+      }
+    }
+    super.shutdown();
   }
 }

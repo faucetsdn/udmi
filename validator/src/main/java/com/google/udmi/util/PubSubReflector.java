@@ -351,19 +351,17 @@ public class PubSubReflector implements MessagePublisher {
         String topic = format("/devices/%s/%s%s", attributes.get(DEVICE_ID_KEY),
             attributes.get(CATEGORY_PROPERTY_KEY), suffix);
         String messageSource = attributes.remove(SOURCE_KEY);
-        if (messageSource == null) {
-          return;
-        }
-
-        Object dstSource = messageBundle.message.remove(SOURCE_KEY);
-        String[] source = messageSource.split(SOURCE_SEPARATOR_REGEX, 3);
-        if (source.length == 1) {
-          attributes.put(SOURCE_KEY, source[0]);
-        } else if (source.length == 2 && source[0].isEmpty()) {
-          topic += messageSource;
-          ifNotNullThen(dstSource, () -> messageBundle.message.put(SOURCE_KEY, source[1]));
-        } else {
-          System.err.println("Discarding message with malformed source: " + messageSource);
+        if (messageSource != null) {
+          Object dstSource = messageBundle.message.remove(SOURCE_KEY);
+          String[] source = messageSource.split(SOURCE_SEPARATOR_REGEX, 3);
+          if (source.length == 1) {
+            attributes.put(SOURCE_KEY, source[0]);
+          } else if (source.length == 2 && source[0].isEmpty()) {
+            topic += messageSource;
+            ifNotNullThen(dstSource, () -> messageBundle.message.put(SOURCE_KEY, source[1]));
+          } else {
+            System.err.println("Discarding message with malformed source: " + messageSource);
+          }
         }
         ofNullable(messageHandlers.get(deviceRegistryId)).orElse(defaultMessageHandler)
             .accept(topic, stringify(messageBundle.message));

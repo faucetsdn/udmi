@@ -1293,7 +1293,7 @@ public class Registrar {
       });
 
       System.err.printf("Waiting for device binding...%n");
-      dynamicTerminate();
+      dynamicTerminate(gatewayBindings.size());
 
       Duration between = Duration.between(start, Instant.now());
       double seconds = between.getSeconds() + between.getNano() / 1e9;

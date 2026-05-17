@@ -50,6 +50,7 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Future;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 import udmi.schema.Auth_provider;
@@ -76,11 +77,13 @@ import udmi.schema.IotAccess.IotProvider;
  * <li><code>use_password</code>: Sets the password for all devices to the specified value.
  * This is used when authentication is handled by an external proxy, and Mosquitto
  * still needs to enforce ACLs based on username.</li>
+ * <li><code>disable_logging</code>: If set to true, disables tailing the mosquitto log file.</li>
  * </ul>
  */
 public class ImplicitIotAccessProvider extends IotAccessBase {
 
   private static final String CONFIG_VER_KEY = "config_ver";
+  private static final String DISABLE_LOGGING_KEY = "disable_logging";
   private static final String USE_PASSWORD_KEY = "use_password";
   private static final String BROKER_USER_KEY = "broker_user";
   private static final String BROKER_PASS_KEY = "broker_pass";
@@ -104,6 +107,7 @@ public class ImplicitIotAccessProvider extends IotAccessBase {
   private static final String CONFIG_SUFFIX = "/config";
   private static final String METADATA_STR_KEY = "metadata_str";
   private static final String RESOURCE_TYPE_PROPERTY = "resource_type";
+  private static final int DEVICE_FETCH_BATCH_SIZE = 100;
   private final boolean enabled;
   private final String usePassword;
   private final ConnectionBroker broker;
@@ -140,13 +144,27 @@ public class ImplicitIotAccessProvider extends IotAccessBase {
       brokerHost = ofNullable(endpointConfig.hostname).orElse("localhost");
       brokerPort = ofNullable(endpointConfig.port).map(Object::toString).orElse("8883");
     } else {
+      endpointConfig = new EndpointConfiguration();
       brokerUser = options.get(BROKER_USER_KEY);
       brokerPass = options.get(BROKER_PASS_KEY);
       brokerHost = ofNullable(options.get(BROKER_HOST_KEY)).orElse("localhost");
       brokerPort = ofNullable(options.get(BROKER_PORT_KEY)).orElse("8883");
+
+      endpointConfig.hostname = brokerHost;
+      endpointConfig.port = Integer.parseInt(brokerPort);
+      endpointConfig.transport = "1883".equals(brokerPort) ? Transport.TCP : Transport.SSL;
+      endpointConfig.client_id = clientId;
+
+      if (isPublishEnabled()) {
+        endpointConfig.auth_provider = new Auth_provider();
+        endpointConfig.auth_provider.basic = new Basic();
+        endpointConfig.auth_provider.basic.username = brokerUser;
+        endpointConfig.auth_provider.basic.password = brokerPass;
+      }
     }
 
-    broker = new MosquittoBroker(this);
+    boolean disableLogging = TRUE_OPTION.equals(options.get(DISABLE_LOGGING_KEY));
+    broker = new MosquittoBroker(this, endpointConfig, disableLogging);
 
     connLogger = broker.addEventListener(CLIENT_PREFIX, this::brokerHandler);
   }
@@ -158,19 +176,33 @@ public class ImplicitIotAccessProvider extends IotAccessBase {
     return String.valueOf(Math.abs(Objects.hash(registryId, deviceId)));
   }
 
-  private void bindDevicesToGateway(String registryId, String gatewayId, CloudModel cloudModel) {
+  private void bindDevicesToGateway(String registryId, String gatewayId, CloudModel cloudModel, Consumer<String> progress) {
     Set<String> deviceIds = ImmutableSet.copyOf(cloudModel.gateway.proxy_ids);
+    AtomicInteger count = new AtomicInteger();
+    int total = deviceIds.size();
     deviceIds.forEach(deviceId -> {
+      int current = count.incrementAndGet();
+      if (current % 50 == 0 && progress != null) {
+        progress.accept(format("Binding %d/%d devices to %s...", current, total, gatewayId));
+      }
       registryDeviceRef(registryId, deviceId).put(BOUND_TO_KEY, gatewayId);
+      gatewayBoundRef(registryId, gatewayId).put(deviceId, "bound");
       broker.bindGateway(clientId(registryId, gatewayId), clientId(registryId, deviceId));
     });
   }
 
   private void unbindDevicesFromGateway(String registryId, String gatewayId,
-      CloudModel cloudModel) {
+      CloudModel cloudModel, Consumer<String> progress) {
     Set<String> deviceIds = ImmutableSet.copyOf(cloudModel.gateway.proxy_ids);
+    AtomicInteger count = new AtomicInteger();
+    int total = deviceIds.size();
     deviceIds.forEach(deviceId -> {
+      int current = count.incrementAndGet();
+      if (current % 50 == 0 && progress != null) {
+        progress.accept(format("Unbinding %d/%d devices from %s...", current, total, gatewayId));
+      }
       registryDeviceRef(registryId, deviceId).delete(BOUND_TO_KEY);
+      gatewayBoundRef(registryId, gatewayId).delete(deviceId);
       broker.unbindGateway(clientId(registryId, gatewayId), clientId(registryId, deviceId));
     });
   }
@@ -220,12 +252,15 @@ public class ImplicitIotAccessProvider extends IotAccessBase {
 
   private void deleteDevice(String registryId, String deviceId, CloudModel cloudModel) {
     DataRef properties = registryDeviceRef(registryId, deviceId);
+    String gatewayId = properties.get(BOUND_TO_KEY);
     properties.entries().keySet().forEach(properties::delete);
     registryDevicesRef(registryId).delete(deviceId);
-    broker.authorize(clientId(registryId, deviceId), null);
-    String gatewayId = properties.get(BOUND_TO_KEY);
+    if (gatewayId == null) {
+      broker.authorize(clientId(registryId, deviceId), null);
+    }
 
     if (gatewayId != null) {
+      gatewayBoundRef(registryId, gatewayId).delete(deviceId);
       broker.unbindGateway(clientId(registryId, gatewayId), clientId(registryId, deviceId));
     }
   }
@@ -242,11 +277,21 @@ public class ImplicitIotAccessProvider extends IotAccessBase {
 
   private DataRef mungeDevice(String registryId, String deviceId, Map<String, String> map) {
     DataRef properties = registryDeviceRef(registryId, deviceId);
-    map.forEach((key, value) ->
-        ifNotNullThen(value, v -> properties.put(key, value), () -> properties.delete(key)));
+    Map<String, String> puts = map.entrySet().stream()
+        .filter(e -> e.getValue() != null)
+        .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
+    Set<String> deletes = map.entrySet().stream()
+        .filter(e -> e.getValue() == null)
+        .map(Map.Entry::getKey)
+        .collect(Collectors.toSet());
+    properties.update(puts, deletes);
 
     if (map.containsKey(AUTH_PASSWORD_PROPERTY)) {
-      broker.authorize(clientId(registryId, deviceId), map.get(AUTH_PASSWORD_PROPERTY));
+      boolean isAuthorized = properties.get(AUTH_KEY_PROPERTY) != null
+          || properties.get(AUTH_TYPE_PROPERTY) != null;
+      if (isAuthorized) {
+        broker.authorize(clientId(registryId, deviceId), map.get(AUTH_PASSWORD_PROPERTY));
+      }
     }
     return properties;
   }
@@ -257,6 +302,10 @@ public class ImplicitIotAccessProvider extends IotAccessBase {
 
   private DataRef registryDevicesRef(String registryId) {
     return database.ref().registry(registryId).collection(DEVICES_ACTIVE);
+  }
+
+  private DataRef gatewayBoundRef(String registryId, String gatewayId) {
+    return database.ref().registry(registryId).device(gatewayId).collection("bound_devices");
   }
 
   private void sendConfigUpdate(String registryId, String deviceId, String config) {
@@ -349,20 +398,7 @@ public class ImplicitIotAccessProvider extends IotAccessBase {
   private void connectMqttClient() {
     info("Initializing SimpleMqttPipe for ImplicitIotAccessProvider");
     try {
-      if (endpointConfig == null) {
-        endpointConfig = new EndpointConfiguration();
-        endpointConfig.hostname = brokerHost;
-        endpointConfig.port = Integer.parseInt(brokerPort);
-        endpointConfig.transport = "1883".equals(brokerPort) ? Transport.TCP : Transport.SSL;
-        endpointConfig.client_id = clientId;
-        
-        if (isPublishEnabled()) {
-          endpointConfig.auth_provider = new Auth_provider();
-          endpointConfig.auth_provider.basic = new Basic();
-          endpointConfig.auth_provider.basic.username = brokerUser;
-          endpointConfig.auth_provider.basic.password = brokerPass;
-        }
-      }
+
 
       if (endpointConfig.send_id == null) {
         endpointConfig.send_id = "implicit";
@@ -371,7 +407,8 @@ public class ImplicitIotAccessProvider extends IotAccessBase {
       mqttPipe = new SimpleMqttPipe(endpointConfig);
       info("Initialized SimpleMqttPipe");
     } catch (Exception e) {
-      error("Failed to initialize SimpleMqttPipe: " + friendlyStackTrace(e));
+      error("Failed to initialize SimpleMqttPipe connecting to broker %s:%s: %s",
+          brokerHost, brokerPort, friendlyStackTrace(e));
     }
   }
 
@@ -392,7 +429,6 @@ public class ImplicitIotAccessProvider extends IotAccessBase {
 
   @Override
   public CloudModel fetchDevice(String registryId, String deviceId) {
-    touchDeviceEntry(registryId, deviceId);
     Map<String, String> properties = registryDeviceRef(registryId, deviceId).entries();
     if (properties == null) {
       return null;
@@ -418,9 +454,11 @@ public class ImplicitIotAccessProvider extends IotAccessBase {
 
     cloudModel.password = properties.get(AUTH_PASSWORD_PROPERTY);
 
-    cloudModel.gateway = new GatewayModel();
-    cloudModel.gateway.proxy_ids =
-        listBoundDevices(registryId, deviceId).keySet().stream().toList();
+    if (GATEWAY.toString().equals(properties.get(RESOURCE_TYPE_PROPERTY))) {
+      cloudModel.gateway = new GatewayModel();
+      cloudModel.gateway.proxy_ids =
+          listBoundDevices(registryId, deviceId).keySet().stream().toList();
+    }
     cloudModel.operation = READ;
     return cloudModel;
   }
@@ -456,16 +494,47 @@ public class ImplicitIotAccessProvider extends IotAccessBase {
   @Override
   public CloudModel listDevices(String registryId, Consumer<String> progress) {
     Map<String, String> entries = registryDevicesRef(registryId).entries();
-    ifNotNullThen(progress, p -> p.accept(format("Fetched %d devices.", entries.size())));
+    List<String> deviceIds = entries.keySet().stream().toList();
+    int total = deviceIds.size();
+    ifNotNullThen(progress, p -> p.accept(format("Fetching %d devices...", total)));
+    Map<String, CloudModel> deviceIdsMap = new ConcurrentHashMap<>();
+    for (int i = 0; i < total; i += DEVICE_FETCH_BATCH_SIZE) {
+      List<String> batch = deviceIds.subList(i, Math.min(i + DEVICE_FETCH_BATCH_SIZE, total));
+      batch.parallelStream().forEach(id -> {
+        CloudModel partial = fetchDevicePartial(registryId, id);
+        if (partial != null) {
+          deviceIdsMap.put(id, partial);
+        }
+      });
+      int currentCount = Math.min(i + DEVICE_FETCH_BATCH_SIZE, total);
+      ifNotNullThen(progress, p -> p.accept(format("Fetched %d devices...", currentCount)));
+    }
     CloudModel cloudModel = new CloudModel();
-    cloudModel.device_ids = entries.keySet().stream().collect(
-        Collectors.toMap(id -> id, id -> fetchDevice(registryId, id)));
+    cloudModel.device_ids = deviceIdsMap;
     cloudModel.operation = READ;
     return cloudModel;
   }
 
+  private CloudModel fetchDevicePartial(String registryId, String deviceId) {
+    Map<String, String> properties = registryDeviceRef(registryId, deviceId).entries();
+    if (properties == null) {
+      return null;
+    }
+    CloudModel cloudModel = new CloudModel();
+    cloudModel.num_id = properties.get(NUM_ID_PROPERTY);
+    String authType = properties.get(AUTH_TYPE_PROPERTY);
+    if (authType != null) {
+      cloudModel.auth_type = CloudModel.Auth_type.fromValue(authType);
+    }
+    cloudModel.resource_type = ofNullable(properties.get(RESOURCE_TYPE_PROPERTY))
+        .map(Resource_type::fromValue).orElse(DIRECT);
+    cloudModel.blocked = "true".equals(properties.get(BLOCKED_PROPERTY)) ? true : null;
+    cloudModel.updated_time = JsonUtil.getDate(properties.get(CREATED_AT_PROPERTY));
+    return cloudModel;
+  }
+
   private Map<String, CloudModel> listBoundDevices(String registryId, String gatewayId) {
-    Set<String> deviceIds = registryDevicesRef(registryId).entries().keySet();
+    Set<String> deviceIds = gatewayBoundRef(registryId, gatewayId).entries().keySet();
     Map<String, CloudModel> devices = deviceIds.stream().filter(deviceId -> {
       String boundTo = registryDeviceRef(registryId, deviceId).get(BOUND_TO_KEY);
       return gatewayId.equals(boundTo);
@@ -491,13 +560,15 @@ public class ImplicitIotAccessProvider extends IotAccessBase {
         case UPDATE -> updateDevice(registryId, deviceId, cloudModel);
         case DELETE -> deleteDevice(registryId, deviceId, cloudModel);
         case MODIFY -> modifyDevice(registryId, deviceId, cloudModel);
-        case BIND -> bindDevicesToGateway(registryId, deviceId, cloudModel);
-        case UNBIND -> unbindDevicesFromGateway(registryId, deviceId, cloudModel);
+        case BIND -> bindDevicesToGateway(registryId, deviceId, cloudModel, progress);
+        case UNBIND -> unbindDevicesFromGateway(registryId, deviceId, cloudModel, progress);
         case BLOCK -> blockDevice(registryId, deviceId, cloudModel);
         default -> throw new RuntimeException("Unknown device operation " + operation);
       }
       return getReply(registryId, deviceId, cloudModel, deleteNumId);
     } catch (Exception e) {
+      error("Error during modelDevice %s for %s/%s: %s",
+          operation, registryId, deviceId, friendlyStackTrace(e));
       throw new RuntimeException(format("While %sing %s/%s", operation, registryId, deviceId), e);
     }
   }
@@ -527,11 +598,18 @@ public class ImplicitIotAccessProvider extends IotAccessBase {
 
   @Override
   public void sendCommandBase(Envelope baseEnvelope, SubFolder folder, String message) {
-    Envelope envelope = deepCopy(baseEnvelope);
-    envelope.subFolder = folder;
-    envelope.subType = SubType.COMMANDS;
-    envelope.source = IotProvider.IMPLICIT.value();
-    reflect.getDispatcher().withEnvelope(envelope).publish(asMap(message));
+    try {
+      Envelope envelope = deepCopy(baseEnvelope);
+      envelope.subFolder = folder;
+      envelope.subType = SubType.COMMANDS;
+      envelope.source = IotProvider.IMPLICIT.value();
+      reflect.getDispatcher().withEnvelope(envelope).publish(asMap(message));
+    } catch (Exception e) {
+      error("Failed to send command for %s/%s: %s",
+          baseEnvelope.deviceRegistryId, baseEnvelope.deviceId, friendlyStackTrace(e));
+      throw new RuntimeException("While sending command for "
+          + baseEnvelope.deviceRegistryId + "/" + baseEnvelope.deviceId, e);
+    }
   }
 
   @Override
@@ -544,6 +622,7 @@ public class ImplicitIotAccessProvider extends IotAccessBase {
       }
     });
     connLogger.cancel(true);
+    broker.shutdown();
     super.shutdown();
   }
 

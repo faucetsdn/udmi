@@ -56,9 +56,10 @@ public class SimpleMqttPipe extends MessageBase {
   private static final String BROKER_URL_FORMAT = "%s://%s:%s";
   private static final long RECONNECT_SEC = 10;
   private static final int DEFAULT_PORT = 8883;
+  private static final String LEGACY_TOPIC_PREFIX = "/devices/";
+  private static final String IMPLICIT_TOPIC_PREFIX = "/r/";
   private static final Envelope EXCEPTION_ENVELOPE = makeExceptionEnvelope();
   private static final String SUB_BASE_FORMAT = "/r/+/d/+/%s";
-  private static final String SSL_SECRETS_DIR = System.getenv("SSL_SECRETS_DIR");
   private static final String DEFAULT_NAMESPACE = "default";
   private static final long CONNECT_TIMEOUT_SEC = 10;
   private final String autoId = format("mqtt-%08x", (long) (Math.random() * 0x100000000L));
@@ -89,10 +90,18 @@ public class SimpleMqttPipe extends MessageBase {
         (publishMessages && sendId.startsWith(SEND_CHANNEL_PREFIX)) ? ("/" + sendId) : "";
 
     clientId = ofNullable(config.client_id).orElse(autoId);
-    File secretsDir = ifTrueGet(isNotEmpty(SSL_SECRETS_DIR), () -> new File(SSL_SECRETS_DIR));
-    certManager = ifNotNullGet(secretsDir,
-        secrets -> new CertManager(new File(secrets, CertManager.CA_CERT_FILE), secrets,
-            endpoint.transport, endpoint.auth_provider.basic.password, this::info));
+    boolean useSsl = Transport.SSL.equals(endpoint.transport)
+        || (endpoint.port != null && endpoint.port == 8883);
+    if (useSsl) {
+      checkState(isNotEmpty(endpoint.ca_file), "Missing required ca_file in endpoint configuration for SSL connection");
+      checkState(isNotEmpty(endpoint.cert_file), "Missing required cert_file in endpoint configuration for SSL connection");
+      checkState(isNotEmpty(endpoint.key_file), "Missing required key_file in endpoint configuration for SSL connection");
+      String pass = ifNotNullGet(endpoint.auth_provider, p -> ifNotNullGet(p.basic, b -> b.password));
+      certManager = new CertManager(new File(endpoint.ca_file), new File(endpoint.cert_file),
+          new File(endpoint.key_file), endpoint.transport, pass, this::info);
+    } else {
+      certManager = null;
+    }
     mqttClient = createMqttClient();
     tryConnect(false);
     scheduledFuture = Executors.newSingleThreadScheduledExecutor().scheduleWithFixedDelay(
@@ -120,35 +129,81 @@ public class SimpleMqttPipe extends MessageBase {
     return envelope;
   }
 
-  static Map<String, String> parseEnvelopeTopic(String topic) {
+  public static boolean isLegacyTopic(String topic) {
+    return topic != null && topic.startsWith(LEGACY_TOPIC_PREFIX);
+  }
+
+  private static Map<String, String> parseLegacyTopic(String topic) {
+    if (topic == null) {
+      throw new IllegalArgumentException("Topic cannot be null");
+    }
+    String cleanTopic = topic.startsWith("/") ? topic.substring(1) : topic;
+    String[] parts = cleanTopic.split("/");
+    Envelope envelope = new Envelope();
+    if (parts.length >= 2 && !parts[1].isEmpty()) {
+      envelope.deviceId = nullAsNull(parts[1]);
+    }
+    if (parts.length >= 3 && !parts[2].isEmpty()) {
+      envelope.subType = convertSubType(parts[2]);
+    }
+    if (parts.length >= 4 && !parts[3].isEmpty()) {
+      // TODO: technically the subfolder is the remainder including all slashes until the end.
+      envelope.subFolder = convertSubFolder(parts[3]);
+    }
+    return toStringMap(envelope);
+  }
+
+  private static Map<String, String> parseImplicitTopic(String topic) {
+    if (topic == null) {
+      throw new IllegalArgumentException("Topic cannot be null");
+    }
+    // 0/1/2       /3/4     /5   [/6     [/7      ]]
+    //  /r/REGISTRY/d/DEVICE/TYPE[/FOLDER[/GATEWAY]]
+    String[] parts = topic.split("/", 12);
+    if (parts.length < 6 || parts.length > 10) {
+      throw new IllegalArgumentException("Unexpected topic length: " + topic);
+    }
+    Envelope envelope = new Envelope();
+    checkState(Strings.isNullOrEmpty(parts[0]), "non-empty prefix");
+    checkState("r".equals(parts[1]), "expected registries");
+    envelope.deviceRegistryId = nullAsNull(parts[2]);
+    checkState("d".equals(parts[3]), "expected devices");
+    envelope.deviceId = nullAsNull(parts[4]);
+    int base = parts[5].equals(SEND_CHANNEL_DESIGNATOR) ? 2 : 0;
+    if (parts.length < base + 6) {
+      throw new IllegalArgumentException("Unexpected topic length for implicit topic: " + topic);
+    }
+    if (base > 0) {
+      envelope.source = parts[6];
+    }
+    envelope.subType = convertSubType(parts[base + 5]);
+    if (parts.length > base + 6 && !parts[base + 6].isEmpty()) {
+      envelope.subFolder = convertSubFolder(parts[base + 6]);
+    }
+    if (parts.length > base + 7 && !parts[base + 7].isEmpty()) {
+      envelope.gatewayId = nullAsNull(parts[base + 7]);
+    }
+    if (parts.length > base + 8) {
+      throw new IllegalArgumentException("Unrecognized extra topic arguments: " + parts[base + 8]);
+    }
+    return toStringMap(envelope);
+  }
+
+  /**
+   * Parse an MQTT envelope topic (either legacy or implicit format) into attributes map.
+   *
+   * @param topic The MQTT topic string
+   * @return Map of envelope attributes
+   */
+  public static Map<String, String> parseEnvelopeTopic(String topic) {
     try {
-      // 0/1/2       /3/4     /5   [/6     [/7      ]]
-      //  /r/REGISTRY/d/DEVICE/TYPE[/FOLDER[/GATEWAY]]
-      String[] parts = topic.split("/", 12);
-      if (parts.length < 6 || parts.length > 10) {
-        throw new RuntimeException("Unexpected topic length: " + topic);
+      if (isLegacyTopic(topic)) {
+        return parseLegacyTopic(topic);
+      } else if (topic != null && topic.startsWith(IMPLICIT_TOPIC_PREFIX)) {
+        return parseImplicitTopic(topic);
+      } else {
+        throw new IllegalArgumentException("Unrecognized topic structure: " + topic);
       }
-      Envelope envelope = new Envelope();
-      checkState(Strings.isNullOrEmpty(parts[0]), "non-empty prefix");
-      checkState("r".equals(parts[1]), "expected registries");
-      envelope.deviceRegistryId = nullAsNull(parts[2]);
-      checkState("d".equals(parts[3]), "expected devices");
-      envelope.deviceId = nullAsNull(parts[4]);
-      int base = parts[5].equals(SEND_CHANNEL_DESIGNATOR) ? 2 : 0;
-      if (base > 0) {
-        envelope.source = parts[6];
-      }
-      envelope.subType = convertSubType(parts[base + 5]);
-      if (parts.length > base + 6) {
-        envelope.subFolder = convertSubFolder(parts[base + 6]);
-      }
-      if (parts.length > base + 7) {
-        envelope.gatewayId = nullAsNull(parts[base + 7]);
-      }
-      if (parts.length > base + 8) {
-        throw new RuntimeException("Unrecognized extra topic arguments: " + parts[base + 8]);
-      }
-      return toStringMap(envelope);
     } catch (Exception e) {
       throw new RuntimeException("While parsing envelope topic " + topic, e);
     }
