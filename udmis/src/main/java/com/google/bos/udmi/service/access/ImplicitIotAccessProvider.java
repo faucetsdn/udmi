@@ -50,6 +50,7 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Future;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 import udmi.schema.Auth_provider;
@@ -175,9 +176,15 @@ public class ImplicitIotAccessProvider extends IotAccessBase {
     return String.valueOf(Math.abs(Objects.hash(registryId, deviceId)));
   }
 
-  private void bindDevicesToGateway(String registryId, String gatewayId, CloudModel cloudModel) {
+  private void bindDevicesToGateway(String registryId, String gatewayId, CloudModel cloudModel, Consumer<String> progress) {
     Set<String> deviceIds = ImmutableSet.copyOf(cloudModel.gateway.proxy_ids);
+    AtomicInteger count = new AtomicInteger();
+    int total = deviceIds.size();
     deviceIds.forEach(deviceId -> {
+      int current = count.incrementAndGet();
+      if (current % 50 == 0 && progress != null) {
+        progress.accept(format("Binding %d/%d devices to %s...", current, total, gatewayId));
+      }
       registryDeviceRef(registryId, deviceId).put(BOUND_TO_KEY, gatewayId);
       gatewayBoundRef(registryId, gatewayId).put(deviceId, "bound");
       broker.bindGateway(clientId(registryId, gatewayId), clientId(registryId, deviceId));
@@ -185,9 +192,15 @@ public class ImplicitIotAccessProvider extends IotAccessBase {
   }
 
   private void unbindDevicesFromGateway(String registryId, String gatewayId,
-      CloudModel cloudModel) {
+      CloudModel cloudModel, Consumer<String> progress) {
     Set<String> deviceIds = ImmutableSet.copyOf(cloudModel.gateway.proxy_ids);
+    AtomicInteger count = new AtomicInteger();
+    int total = deviceIds.size();
     deviceIds.forEach(deviceId -> {
+      int current = count.incrementAndGet();
+      if (current % 50 == 0 && progress != null) {
+        progress.accept(format("Unbinding %d/%d devices from %s...", current, total, gatewayId));
+      }
       registryDeviceRef(registryId, deviceId).delete(BOUND_TO_KEY);
       gatewayBoundRef(registryId, gatewayId).delete(deviceId);
       broker.unbindGateway(clientId(registryId, gatewayId), clientId(registryId, deviceId));
@@ -547,8 +560,8 @@ public class ImplicitIotAccessProvider extends IotAccessBase {
         case UPDATE -> updateDevice(registryId, deviceId, cloudModel);
         case DELETE -> deleteDevice(registryId, deviceId, cloudModel);
         case MODIFY -> modifyDevice(registryId, deviceId, cloudModel);
-        case BIND -> bindDevicesToGateway(registryId, deviceId, cloudModel);
-        case UNBIND -> unbindDevicesFromGateway(registryId, deviceId, cloudModel);
+        case BIND -> bindDevicesToGateway(registryId, deviceId, cloudModel, progress);
+        case UNBIND -> unbindDevicesFromGateway(registryId, deviceId, cloudModel, progress);
         case BLOCK -> blockDevice(registryId, deviceId, cloudModel);
         default -> throw new RuntimeException("Unknown device operation " + operation);
       }

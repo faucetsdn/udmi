@@ -365,13 +365,6 @@ public class MosquittoBroker extends ContainerBase implements ConnectionBroker {
   public void bindGateway(String gatewayId, String deviceId) {
     String roleName = "role_" + gatewayId.replace("/", "_");
 
-    try {
-      createRole(roleName);
-    } catch (Exception e) {
-      warn("Ignore error creating role: " + e.getMessage());
-    }
-    addClientRole(gatewayId, roleName);
-
     // add ACLs
     addRoleAcl(roleName, "subscribePattern", deviceId + "/config", "allow");
     addRoleAcl(roleName, "subscribePattern", deviceId + "/commands", "allow");
