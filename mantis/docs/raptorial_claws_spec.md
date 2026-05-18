@@ -66,8 +66,10 @@ In the UDMI test suite, some failure scenarios are part of the expected test des
   `out/mantis/test_bundles/<target_clean>_%Y%m%d_%H%M%S/`
 - **Persistent Logging (Tee Stream)**:
   All print statements and console logs are mirrored live to `hunter.log` inside the timestamped directory using a custom Python unbuffered dual-output stream (`Tee`).
-- **Background Daemon Mode (`--background`)**:
-  To safeguard against terminal window closure or SSH disconnections during long-running 30-40 minute CI jobs, the launcher wrapper supports running in the background using `nohup` and unbuffered redirects (`python3 -u`). It prints the background PID and tail instructions, allowing developers to safely disconnect.
+- **Default Background Mode (Safe Daemon)**:
+  To safeguard against terminal window closure or SSH disconnections during long-running 30-40 minute CI jobs, **the launcher wrapper runs in the background by default** using `nohup` and unbuffered redirects (`python3 -u`). It prints the background PID and tail instructions, allowing developers to safely disconnect.
+- **Verbose Mode (`--verbose`)**:
+  Disables default backgrounding, executing the Python hunter in the foreground interactive terminal, showing the live dispatch triggers and polling status logs.
 
 ### 4.2. Raptorial Claws Tracker (`measure`) Specifications
 - **Input Loading**: Can run a local execution loop OR load sharded zip/tgz bundles from a folder specified by `--bundles-dir`.
@@ -85,5 +87,7 @@ During engineering, the automated standalone components were successfully verifi
    - Command `mantis/bin/hunter --help` and `mantis/bin/measure --help` both execute cleanly, verifying imports, file structures, and standard library arguments.
 2. **Environment Validation Check**:
    - Running `mantis/bin/hunter` without `GITHUB_TOKEN` exits gracefully with an explicit exit code 1 and diagnostic instructions.
-3. **Background Mode Verification**:
-   - Running `GITHUB_TOKEN=dummy_token mantis/bin/hunter --background` creates the output folder, launches in the background, prints the PID and log tail details, and outputs execution exceptions live to `hunter.log`.
+3. **Default Background Mode Verification**:
+   - Running `GITHUB_TOKEN=dummy_token mantis/bin/hunter` creates the output folder, launches in the background by default, prints the PID and log tail details, and outputs execution exceptions live to `hunter.log`.
+4. **Foreground Verbose Mode Verification**:
+   - Running `GITHUB_TOKEN=dummy_token mantis/bin/hunter --verbose` runs cleanly in the foreground terminal, displaying error diagnostics instantly without detaching.

@@ -1,8 +1,9 @@
 #!/bin/bash -e
 #
 # Launcher wrapper for Project Mantis GitHub Hunter.
-# Supports standard foreground execution as well as background daemon execution
-# using --background option to protect against window closure.
+# By default, triggers workflow runs and polls them in the background (safeguarding
+# against terminal closure). Use the --verbose option to run in the foreground and
+# monitor live logs directly in your terminal.
 #
 
 # Resolve parent directory structure
@@ -26,15 +27,20 @@ else
 fi
 
 # 3. Parse arguments to detect background execution, target, and output-dir
-background=
+background=y
 target="//mqtt/localhost"
 output_dir=
 
 args_to_pass=()
 while [[ $# -gt 0 ]]; do
     case "$1" in
-        --background)
-            background=y
+        -h|--help)
+            background=
+            args_to_pass+=("$1")
+            shift
+            ;;
+        --verbose)
+            background=
             shift
             ;;
         --target)

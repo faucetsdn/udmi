@@ -164,6 +164,7 @@ def main():
     parser.add_argument("--target", default="//mqtt/localhost", help="Target project spec to pass to the CI run (default: //mqtt/localhost)")
     parser.add_argument("--iterations", type=int, default=10, help="Number of parallel runs to trigger (default: 10)")
     parser.add_argument("--output-dir", help="Directory to save downloaded bundles (default: out/mantis/test_bundles/<target>_<timestamp>/)")
+    parser.add_argument("--verbose", action="store_true", help="Monitor live logs directly in your terminal foreground (configured via wrapper)")
     
     args = parser.parse_args()
 

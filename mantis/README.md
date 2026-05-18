@@ -4,7 +4,7 @@
 
 Mantis is structured into independent, highly modular components following the Unix philosophy:
 
-1. **GitHub Hunter (`hunter`)**: An automated utility to trigger parallel workflow dispatches on GitHub CI, poll their status live, and download the resulting consolidated support packages.
+1. **GitHub Hunter (`hunter`)**: An automated utility to trigger parallel workflow dispatches on GitHub CI, poll their status live, and download the resulting consolidated support packages. **Runs in the background by default** to safeguard against window closures.
 2. **Raptorial Claws (`measure`)**: A stability and flakiness metric calculator that parses test runs (either direct local runs or sharded CI packages inside an imported test bundles folder) and generates comparative MD reports.
 3. **AI Triage Agent (Upcoming)**: An advanced agentic debugger to root-cause failed executions by correlating event transactions across distributed components.
 
@@ -40,7 +40,19 @@ mantis/bin/hunter \
   [--target <target_project>] \
   [--iterations <num>] \
   [--output-dir <path>] \
-  [--background]
+  [--verbose]
+```
+
+### Default Backgrounding Behavior:
+Since these runs take 30-40 minutes, `hunter` runs in the **background by default** using `nohup` with unbuffered logs redirected to `hunter.log` inside the bundle directory. This protects your job against terminal window closures or SSH disconnections.
+It prints:
+- The background Process ID (**PID**).
+- The **Log File** path where execution results are stored.
+- The **Bundle Directory** where results will be saved.
+
+To monitor the background job live, run:
+```bash
+tail -f out/mantis/test_bundles/mqtt_localhost_<timestamp>/hunter.log
 ```
 
 ### Options:
@@ -48,7 +60,7 @@ mantis/bin/hunter \
 - `--iterations`: Number of parallel workflows to run on GitHub (default: `10`).
 - `--output-dir`: Custom folder to save downloaded bundles. If not specified, a unique, non-overlapping timestamped directory is automatically generated:  
   `out/mantis/test_bundles/<target_clean>_%Y%m%d_%H%M%S/`
-- `--background`: Launches the hunter in the background using `nohup` with unbuffered logs redirected to `hunter.log` inside the bundle directory. Use this option to safely close your terminal window or prevent SSH disconnections during 30-40 minute runs.
+- `--verbose`: Disables backgrounding and runs the execution interactively in your terminal foreground, displaying progress bars live.
 
 ---
 
@@ -82,24 +94,12 @@ mantis/bin/measure \
 
 To run a 10-iteration flakiness measurement on GitHub Actions:
 
-### Foreground (Interactive Console)
+### Background Mode (Default - Safe Against Disconnections)
 ```bash
-# Step 1: Set token
 export GITHUB_TOKEN="ghp_yourSecureTokenHere"
 
-# Step 2: Trigger, poll, and download
+# Launches in the background immediately
 mantis/bin/hunter --iterations 10
-
-# Step 3: Measure flakiness of the downloaded timestamped bundles
-mantis/bin/measure --target //mqtt/localhost --phase before --bundles-dir out/mantis/test_bundles/mqtt_localhost_20260518_144405/
-```
-
-### Background (Safe Against Disconnections)
-```bash
-export GITHUB_TOKEN="ghp_yourSecureTokenHere"
-
-# Launch in the background
-mantis/bin/hunter --iterations 10 --background
 ```
 Mantis will print:
 ```
@@ -113,6 +113,17 @@ Mantis will print:
 You can safely close this terminal window or lose connection.
 To monitor the progress live, run:
   tail -f out/mantis/test_bundles/mqtt_localhost_20260518_150252/hunter.log
+```
+
+Once completed, tail the log or check `hunter.log` inside the folder to see the `measure` instructions!
+
+### Foreground Mode (Verbose Console)
+```bash
+# Trigger, poll, and download live in your terminal
+mantis/bin/hunter --iterations 10 --verbose
+
+# Measure flakiness of the downloaded timestamped bundles
+mantis/bin/measure --target //mqtt/localhost --phase before --bundles-dir out/mantis/test_bundles/mqtt_localhost_20260518_144405/
 ```
 
 *Refer to the detailed [Mantis Raptorial Claws Spec](file:///usr/local/google/home/heykhyati/Projects/udmi_clone/udmi/mantis/docs/raptorial_claws_spec.md) for complete architectural and normalization details.*
