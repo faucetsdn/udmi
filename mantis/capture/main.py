@@ -29,6 +29,19 @@ class Tee:
         self.stream.flush()
         self.file.flush()
 
+class SafeRedirectHandler(urllib.request.HTTPRedirectHandler):
+    """Redirection handler that strips the Authorization header when redirecting to third-party domains."""
+    def redirect_request(self, req, fp, code, msg, headers, newurl):
+        new_req = super().redirect_request(req, fp, code, msg, headers, newurl)
+        # Resolve hosts
+        original_host = req.host
+        new_host = new_req.host
+        if original_host != new_host:
+            # Remove Authorization header to prevent AWS S3 401 signature exceptions
+            if "Authorization" in new_req.headers:
+                del new_req.headers["Authorization"]
+        return new_req
+
 def run_command(args, cwd=UDMI_ROOT):
     """Helper to execute shell commands and handle failures cleanly."""
     print(f"Executing: {' '.join(args)}")
@@ -172,11 +185,13 @@ class GitHubClient:
         return None, None
 
     def download_artifact(self, download_path, save_filepath):
-        """Downloads the artifact zip directly to disk."""
+        """Downloads the artifact zip directly to disk, stripping authorization headers on redirects."""
         url = f"{self.base_url}{download_path}"
         req = urllib.request.Request(url, headers=self.headers)
         try:
-            with urllib.request.urlopen(req) as response:
+            # Configure safe redirect handler opener to prevent authentication failures from AWS S3
+            opener = urllib.request.build_opener(SafeRedirectHandler())
+            with opener.open(req) as response:
                 with open(save_filepath, 'wb') as f:
                     f.write(response.read())
             return True
