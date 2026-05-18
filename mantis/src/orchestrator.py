@@ -51,7 +51,7 @@ def main():
     parser.add_argument("--phase", choices=["before", "after"], default="before", help="Exercise phase: before or after stabilization")
     parser.add_argument("--suite", choices=["sequencer", "itemized", "both"], default="both", help="Test suite to run (default: both)")
     parser.add_argument("--tests", help="Comma-separated list of specific sequencer tests to run (e.g. valid_serial_no,pointset_publish)")
-    parser.add_argument("--github-dir", help="Path to folder with downloaded sharded GitHub Actions run support packages (zips or tgzs)")
+    parser.add_argument("--bundles-dir", help="Path to folder containing sharded test bundles (zips or tgzs)")
     parser.add_argument("--output-dir", default="out/mantis", help="Output directory for reports (default: out/mantis)")
 
     args = parser.parse_args()
@@ -70,19 +70,19 @@ def main():
     run_analyses = []
 
     # ==========================================
-    # MODE A: IMPORT GITHUB ARTIFACTS
+    # MODE A: IMPORT SHARDED TEST BUNDLES
     # ==========================================
-    if args.github_dir:
-        github_path = os.path.abspath(args.github_dir)
-        print(f"=== Running in GITHUB ACTIONS ARTIFACTS IMPORT mode ===")
-        print(f"Scanning directory: {github_path}")
+    if args.bundles_dir:
+        bundles_path = os.path.abspath(args.bundles_dir)
+        print(f"=== Running in SHARDED TEST BUNDLES IMPORT mode ===")
+        print(f"Scanning directory: {bundles_path}")
         
         # Support both zip (directly from download-artifact) and tgz (inside zip, or individually)
-        artifacts = sorted(glob.glob(os.path.join(github_path, "*udmi-support_*")) + 
-                           glob.glob(os.path.join(github_path, "*_udmi-support_*.tgz")))
+        artifacts = sorted(glob.glob(os.path.join(bundles_path, "*udmi-support_*")) + 
+                           glob.glob(os.path.join(bundles_path, "*_udmi-support_*.tgz")))
         
         if not artifacts:
-            print(f"Error: No udmi-support artifacts found in {github_path}", file=sys.stderr)
+            print(f"Error: No udmi-support artifacts found in {bundles_path}", file=sys.stderr)
             sys.exit(1)
 
         print(f"Found {len(artifacts)} run packages to evaluate.")

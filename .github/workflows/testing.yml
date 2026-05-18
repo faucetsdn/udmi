@@ -5,6 +5,12 @@ on:
     branches:
       - '**'
   workflow_dispatch:
+    inputs:
+      target_project:
+        description: 'Target project spec'
+        required: false
+        default: '//mqtt/localhost'
+        type: string
   pull_request:
   schedule:
     - cron: '0 13 * * *'
@@ -76,7 +82,7 @@ jobs:
     timeout-minutes: 10
     if: ${{ !cancelled() }}
     env:
-      TARGET_PROJECT: ${{ vars.TARGET_PROJECT || '//mqtt/localhost' }}
+      TARGET_PROJECT: ${{ github.event.inputs.target_project || vars.TARGET_PROJECT || '//mqtt/localhost' }}
     steps:
       - uses: actions/checkout@v6
       - uses: actions/setup-java@v5
@@ -125,7 +131,7 @@ jobs:
     timeout-minutes: 20
     needs: automapping
     env:
-      TARGET_PROJECT: ${{ vars.TARGET_PROJECT || '//mqtt/localhost' }}
+      TARGET_PROJECT: ${{ github.event.inputs.target_project || vars.TARGET_PROJECT || '//mqtt/localhost' }}
       UDMI_ALT_REGISTRY: ZZ-REDIRECT-NA
     steps:
       - uses: actions/checkout@v6
@@ -176,7 +182,7 @@ jobs:
       matrix:
         shard: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
     env:
-      TARGET_PROJECT: ${{ vars.TARGET_PROJECT || '//mqtt/localhost' }}
+      TARGET_PROJECT: ${{ github.event.inputs.target_project || vars.TARGET_PROJECT || '//mqtt/localhost' }}
       UDMI_ALT_REGISTRY: ZZ-REDIRECT-NA
       UDMI_REGISTRY_SUFFIX: _${{ matrix.shard }}
       MATRIX_SHARD_COUNT: 10
@@ -289,7 +295,7 @@ jobs:
     timeout-minutes: 15
     env:
       UDMI_ALT_REGISTRY: ZZ-REDIRECT-NA
-      TARGET_PROJECT: //mqtt/localhost
+      TARGET_PROJECT: ${{ github.event.inputs.target_project || '//mqtt/localhost' }}
     steps:
       - uses: actions/checkout@v6
       - uses: actions/setup-java@v5
@@ -327,7 +333,7 @@ jobs:
     needs: [ baseline, sequencer, endpoint, runlocal ]
     if: ${{ !cancelled() }}
     env:
-      TARGET_PROJECT: ${{ vars.TARGET_PROJECT || '//mqtt/localhost' }}
+      TARGET_PROJECT: ${{ github.event.inputs.target_project || vars.TARGET_PROJECT || '//mqtt/localhost' }}
       UDMI_ALT_REGISTRY: ZZ-REDIRECT-NA
     steps:
       - uses: actions/checkout@v6

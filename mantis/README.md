@@ -2,10 +2,11 @@
 
 > **Mantis** is a ruthless, highly efficient predator of bugs—specifically designed to hunt down, capture, triage, and eliminate issues in the UDMI codebase.
 
-Rather than just a single tool, **Mantis** is a comprehensive developer ecosystem consisting of two powerful components:
+Mantis is structured into independent, highly modular components following the Unix philosophy:
 
-1. **Raptorial Claws (Stability & Flakiness Measurement)**: Grasps and analyzes test suite outputs over multiple runs (locally or from sharded CI artifacts) to establish exact pass/fail rates, highlighting flaky or unstable behavior.
-2. **AI Triage Agent (Upcoming)**: An advanced agentic debugger that consumes logs, correlates events across components, identifies root causes, and recommends fixes for failed runs.
+1. **GitHub Hunter (`hunter`)**: An automated utility to trigger parallel workflow dispatches on GitHub CI, poll their status live, and download the resulting consolidated support packages.
+2. **Raptorial Claws (`measure`)**: A stability and flakiness metric calculator that parses test runs (either direct local runs or sharded CI packages inside an imported test bundles folder) and generates comparative MD reports.
+3. **AI Triage Agent (Upcoming)**: An advanced agentic debugger to root-cause failed executions by correlating event transactions across distributed components.
 
 ---
 
@@ -15,28 +16,43 @@ Rather than just a single tool, **Mantis** is a comprehensive developer ecosyste
 mantis/
 ├── README.md                 # Project Mantis Overview & Ecosystem
 ├── docs/
-│   └── raptorial_claws_spec.md  # Technical Spec for Stability Tracker
+│   └── raptorial_claws_spec.md  # Technical Spec for Claws of Stability
 ├── bin/
+│   ├── hunter                # Standalone GitHub Runner launcher
 │   └── measure               # Executable launcher for Raptorial Claws
 └── src/
-    ├── orchestrator.py       # Controls loops, local execution, & CI imports
-    ├── analyzer.py           # Normalizes logs, parses outcomes, matches golden baseline
-    └── reporter.py           # Formats Markdown reports and before/after deltas
+    ├── github_hunter.py      # Trigger, poll, and download CI test bundles
+    ├── orchestrator.py       # Handles loops, local execution, & bundle imports
+    ├── analyzer.py           # Parses outputs under strict normalizations
+    └── reporter.py           # Formats Markdown tables & comparative deltas
 ```
 
 ---
 
-## Component 1: Raptorial Claws 🦗🔍
+## 1. GitHub Hunter (`hunter`) 🦗⚡
 
-The **Raptorial Claws** tracker allows developers to capture baseline flakiness and measure stabilization improvements.
+Triggers parallel runs on GitHub CI, monitors progress, and downloads completed test archives automatically.
 
-### Intended vs. Actual Failures
-In UDMI, some test cases are explicitly designed to fail (e.g. testing error validation). These are **intended failures** and are marked as `fail` in the golden files.
-An **actual failure** is any unexpected outcome deviating from the baseline (measured under strict ISO timestamp normalization).
+```bash
+export GITHUB_TOKEN="your_github_personal_access_token"
 
-### CLI Usage
+mantis/bin/hunter \
+  [--target <target_project>] \
+  [--iterations <num>] \
+  [--output-dir <path>]
+```
 
-Run the tracker launcher from the repo root:
+### Options:
+- `--target`: The target project specification passed as manual dispatch input (default: `//mqtt/localhost`).
+- `--iterations`: Number of parallel workflows to run on GitHub (default: `10`).
+- `--output-dir`: Custom folder to save downloaded bundles. If not specified, a unique, non-overlapping timestamped directory is automatically generated:  
+  `out/mantis/test_bundles/<target_clean>_%Y%m%d_%H%M%S/`
+
+---
+
+## 2. Raptorial Claws Tracker (`measure`) 🦗🔍
+
+Calculates stability indices and compares flakiness before and after code modifications.
 
 ```bash
 mantis/bin/measure \
@@ -45,19 +61,35 @@ mantis/bin/measure \
   [--phase <before|after>] \
   [--suite <sequencer|itemized|both>] \
   [--tests <test_list>] \
-  [--github-dir <path>] \
+  [--bundles-dir <path>] \
   [--output-dir <path>]
 ```
 
-*Refer to the detailed [Mantis Raptorial Claws Spec](file:///usr/local/google/home/heykhyati/Projects/udmi_clone/udmi/mantis/docs/raptorial_claws_spec.md) for complete engineering details.*
+### Options:
+- `--target`: Target project string (e.g. `//mqtt/localhost`). **Required**.
+- `--iterations`: Number of local loops to execute (default: `10`). Ignored if `--bundles-dir` is specified.
+- `--phase`: Stabilization exercise stage (`before` or `after`). Default: `before`.
+- `--suite`: Test suites to evaluate: `sequencer`, `itemized`, or `both` (default: `both`).
+- `--tests`: Comma-separated list of specific sequencer tests to execute locally (e.g. `valid_serial_no`).
+- `--bundles-dir`: Folder containing the sharded zip/tgz bundles (downloaded by the hunter).
+- `--output-dir`: Output folder for raw runs and final reports (default: `out/mantis`).
 
 ---
 
-## Component 2: AI Triage Agent (Vision) 🤖🛠️
+## 3. Complete Automated CI Capture Workflow
 
-Failed stability checks captured by the **Raptorial Claws** will feed directly into the **AI Triage Agent**. 
-The triage agent will:
-- Automatically read raw output logs (`out/pubber.log`, `out/udmis.log`, `out/sequencer.log`) from any failed iteration.
-- Use advanced event-correlation heuristics (like base session transaction IDs `RC:XXXXXX`) to trace failures across distributed Pubber and UDMIS processes.
-- Pinpoint the exact step where the failure occurred and identify the root cause (e.g., race condition, unexpected config sync delay).
-- Propose or automatically implement corrective code changes.
+To run a 10-iteration flakiness measurement on GitHub Actions:
+
+```bash
+# Step 1: Set token
+export GITHUB_TOKEN="ghp_yourSecureTokenHere"
+
+# Step 2: Automate CI dispatch, status polling, and downloading
+mantis/bin/hunter --iterations 10
+
+# Step 3: Measure flakiness of the downloaded timestamped bundles
+# (Mantis Hunter prints the exact command for you upon completion!)
+mantis/bin/measure --target //mqtt/localhost --phase before --bundles-dir out/mantis/test_bundles/mqtt_localhost_20260518_144405/
+```
+
+*Refer to the detailed [Mantis Raptorial Claws Spec](file:///usr/local/google/home/heykhyati/Projects/udmi_clone/udmi/mantis/docs/raptorial_claws_spec.md) for complete architectural and normalization details.*
