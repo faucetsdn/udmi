@@ -4,9 +4,9 @@
 
 Mantis is structured into independent, highly modular components following the Unix philosophy:
 
-1. **GitHub Hunter (`hunter`)**: An automated utility to trigger parallel workflow dispatches on GitHub CI, poll their status live, and download the resulting consolidated support packages. **Runs in the background by default** to safeguard against window closures.
+1. **GitHub Hunter (`hunter`)**: An automated utility to trigger parallel workflow dispatches on GitHub CI, poll their status live, and download the resulting consolidated support packages.
 2. **Raptorial Claws (`measure`)**: A stability and flakiness metric calculator that parses test runs (either direct local runs or sharded CI packages inside an imported test bundles folder) and generates comparative MD reports.
-3. **AI Triage Agent (Upcoming)**: An advanced agentic debugger to root-cause failed executions by correlating event transactions across distributed components.
+3. **Oculus of Triage (`triage`)**: An AI-powered diagnostic triage agent that correlates distributed logs, analyzes failures against past successful reference runs, and isolates breakpoints with precise evidence.
 
 ---
 
@@ -16,15 +16,18 @@ Mantis is structured into independent, highly modular components following the U
 mantis/
 ├── README.md                 # Project Mantis Overview & Ecosystem
 ├── docs/
-│   └── raptorial_claws_spec.md  # Technical Spec for Claws of Stability
+│   ├── raptorial_claws_spec.md  # Technical Spec for Claws of Stability (Tracker)
+│   └── oculus_spec.md        # Technical Spec for Oculus of Triage (AI Diagnostic)
 ├── bin/
 │   ├── hunter                # Standalone GitHub Runner launcher
-│   └── measure               # Executable launcher for Raptorial Claws
+│   ├── measure               # Executable launcher for Raptorial Claws
+│   └── triage                # Executable launcher for Oculus (AI Diagnostic)
 └── src/
     ├── github_hunter.py      # Trigger, poll, and download CI test bundles
     ├── orchestrator.py       # Handles loops, local execution, & bundle imports
     ├── analyzer.py           # Parses outputs under strict normalizations
-    └── reporter.py           # Formats Markdown tables & comparative deltas
+    ├── reporter.py           # Formats Markdown reports and before/after deltas
+    └── triage.py             # Correlates logs and triggers Gemini diagnostics
 ```
 
 ---
@@ -43,24 +46,7 @@ mantis/bin/hunter \
   [--verbose]
 ```
 
-### Default Backgrounding Behavior:
-Since these runs take 30-40 minutes, `hunter` runs in the **background by default** using `nohup` with unbuffered logs redirected to `hunter.log` inside the bundle directory. This protects your job against terminal window closures or SSH disconnections.
-It prints:
-- The background Process ID (**PID**).
-- The **Log File** path where execution results are stored.
-- The **Bundle Directory** where results will be saved.
-
-To monitor the background job live, run:
-```bash
-tail -f out/mantis/test_bundles/mqtt_localhost_<timestamp>/hunter.log
-```
-
-### Options:
-- `--target`: The target project specification passed as manual dispatch input (default: `//mqtt/localhost`).
-- `--iterations`: Number of parallel workflows to run on GitHub (default: `10`).
-- `--output-dir`: Custom folder to save downloaded bundles. If not specified, a unique, non-overlapping timestamped directory is automatically generated:  
-  `out/mantis/test_bundles/<target_clean>_%Y%m%d_%H%M%S/`
-- `--verbose`: Disables backgrounding and runs the execution interactively in your terminal foreground, displaying progress bars live.
+*Refer to the detailed [Mantis Raptorial Claws Spec](file:///usr/local/google/home/heykhyati/Projects/udmi_clone/udmi/mantis/docs/raptorial_claws_spec.md) for complete usage details.*
 
 ---
 
@@ -79,51 +65,25 @@ mantis/bin/measure \
   [--output-dir <path>]
 ```
 
-### Options:
-- `--target`: Target project string (e.g. `//mqtt/localhost`). **Required**.
-- `--iterations`: Number of local loops to execute (default: `10`). Ignored if `--bundles-dir` is specified.
-- `--phase`: Stabilization exercise stage (`before` or `after`). Default: `before`.
-- `--suite`: Test suites to evaluate: `sequencer`, `itemized`, or `both` (default: `both`).
-- `--tests`: Comma-separated list of specific sequencer tests to execute locally (e.g. `valid_serial_no`).
-- `--bundles-dir`: Folder containing the sharded zip/tgz bundles (downloaded by the hunter).
-- `--output-dir`: Output folder for raw runs and final reports (default: `out/mantis`).
+*Refer to the detailed [Mantis Raptorial Claws Spec](file:///usr/local/google/home/heykhyati/Projects/udmi_clone/udmi/mantis/docs/raptorial_claws_spec.md) for complete measurement details.*
 
 ---
 
-## 3. Complete Automated CI Capture Workflow
+## 3. Oculus of Triage (`triage`) 🦗👁️
 
-To run a 10-iteration flakiness measurement on GitHub Actions:
+When a test failure is detected, **Oculus** automatically correlates sharded and global log streams using Session Base Transaction IDs (`RC:XXXXXX`) and execution timestamps to pinpoint exactly where the UDMI configuration-state loop was broken.
 
-### Background Mode (Default - Safe Against Disconnections)
 ```bash
-export GITHUB_TOKEN="ghp_yourSecureTokenHere"
+export GEMINI_API_KEY="your_gemini_api_key"
 
-# Launches in the background immediately
-mantis/bin/hunter --iterations 10
-```
-Mantis will print:
-```
-=============================================================
-🦗 Mantis GitHub Hunter is launching in the BACKGROUND!
-=============================================================
-  PID       : 123456
-  Log File  : out/mantis/test_bundles/mqtt_localhost_20260518_150252/hunter.log
-  Bundle Dir: out/mantis/test_bundles/mqtt_localhost_20260518_150252
-=============================================================
-You can safely close this terminal window or lose connection.
-To monitor the progress live, run:
-  tail -f out/mantis/test_bundles/mqtt_localhost_20260518_150252/hunter.log
+mantis/bin/triage \
+  --run-dir <path_to_iteration_backup> \
+  --test <test_name>
 ```
 
-Once completed, tail the log or check `hunter.log` inside the folder to see the `measure` instructions!
+### Key Diagnostics Answered:
+- **Did the Device (Pubber) work as expected?** (Verifies config reception, slow writebacks, state publications).
+- **Did the Sequencer work as expected?** (Verifies validation timings, asserts, and waits).
+- **Did the Backend (UDMIS) work as expected?** (Verifies reflect processing and routing envelopes).
 
-### Foreground Mode (Verbose Console)
-```bash
-# Trigger, poll, and download live in your terminal
-mantis/bin/hunter --iterations 10 --verbose
-
-# Measure flakiness of the downloaded timestamped bundles
-mantis/bin/measure --target //mqtt/localhost --phase before --bundles-dir out/mantis/test_bundles/mqtt_localhost_20260518_144405/
-```
-
-*Refer to the detailed [Mantis Raptorial Claws Spec](file:///usr/local/google/home/heykhyati/Projects/udmi_clone/udmi/mantis/docs/raptorial_claws_spec.md) for complete architectural and normalization details.*
+*Refer to the detailed [Mantis Oculus Spec](file:///usr/local/google/home/heykhyati/Projects/udmi_clone/udmi/mantis/docs/oculus_spec.md) for complete prompt design, correlation heuristics, and CI reporting integrations.*
