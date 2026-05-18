@@ -22,6 +22,7 @@ graph TD
         Hunter[hunter CLI] -->|1. POST dispatch requests| GitHubAPI[GitHub REST API]
         GitHubAPI -->|2. Poll run states| Hunter
         Hunter -->|3. GET artifact zips| BundlesDir[out/mantis/test_bundles/target_timestamp/]
+        Hunter -.->|Persistent Dual Stream| LogFile[hunter.log]
     end
 
     subgraph Component B: Claws of Stability
@@ -63,6 +64,10 @@ In the UDMI test suite, some failure scenarios are part of the expected test des
 - **Live Polling Console**: Displays real-time counts of Queued, In-Progress, Successful, Failed, and Cancelled runs.
 - **Timestamped Defaults**: If `--output-dir` is not specified, it automatically generates a unique, non-overlapping timestamped directory:  
   `out/mantis/test_bundles/<target_clean>_%Y%m%d_%H%M%S/`
+- **Persistent Logging (Tee Stream)**:
+  All print statements and console logs are mirrored live to `hunter.log` inside the timestamped directory using a custom Python unbuffered dual-output stream (`Tee`).
+- **Background Daemon Mode (`--background`)**:
+  To safeguard against terminal window closure or SSH disconnections during long-running 30-40 minute CI jobs, the launcher wrapper supports running in the background using `nohup` and unbuffered redirects (`python3 -u`). It prints the background PID and tail instructions, allowing developers to safely disconnect.
 
 ### 4.2. Raptorial Claws Tracker (`measure`) Specifications
 - **Input Loading**: Can run a local execution loop OR load sharded zip/tgz bundles from a folder specified by `--bundles-dir`.
@@ -80,5 +85,5 @@ During engineering, the automated standalone components were successfully verifi
    - Command `mantis/bin/hunter --help` and `mantis/bin/measure --help` both execute cleanly, verifying imports, file structures, and standard library arguments.
 2. **Environment Validation Check**:
    - Running `mantis/bin/hunter` without `GITHUB_TOKEN` exits gracefully with an explicit exit code 1 and diagnostic instructions.
-3. **Target Overrides in Workflow**:
-   - `.github/workflows/testing.yml` was updated and validated to support `target_project` manual dispatch inputs seamlessly across all jobs.
+3. **Background Mode Verification**:
+   - Running `GITHUB_TOKEN=dummy_token mantis/bin/hunter --background` creates the output folder, launches in the background, prints the PID and log tail details, and outputs execution exceptions live to `hunter.log`.

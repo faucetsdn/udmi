@@ -13,6 +13,21 @@ from datetime import datetime
 MANTIS_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 UDMI_ROOT = os.path.dirname(MANTIS_DIR)
 
+class Tee:
+    """Dual-output stream to print to stdout/stderr and write persistently to a log file."""
+    def __init__(self, original_stream, filepath):
+        self.stream = original_stream
+        self.file = open(filepath, 'a', encoding='utf-8')
+
+    def write(self, data):
+        self.stream.write(data)
+        self.file.write(data)
+        self.file.flush()
+
+    def flush(self):
+        self.stream.flush()
+        self.file.flush()
+
 def discover_git_details():
     """Discovers the git owner and repository name from git remote."""
     try:
@@ -177,6 +192,10 @@ def main():
         output_dir = os.path.abspath(args.output_dir)
 
     os.makedirs(output_dir, exist_ok=True)
+
+    log_filepath = os.path.join(output_dir, "hunter.log")
+    sys.stdout = Tee(sys.stdout, log_filepath)
+    sys.stderr = Tee(sys.stderr, log_filepath)
 
     print(f"=============================================================")
     print(f"🦗 Mantis GitHub Hunter: Tracking Bugs on CI")

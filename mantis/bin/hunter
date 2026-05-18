@@ -1,8 +1,8 @@
 #!/bin/bash -e
 #
 # Launcher wrapper for Project Mantis GitHub Hunter.
-# Automatically activates the virtualenv and executes
-# the Python GitHub automation client.
+# Supports standard foreground execution as well as background daemon execution
+# using --background option to protect against window closure.
 #
 
 # Resolve parent directory structure
@@ -25,5 +25,71 @@ else
     exit 1
 fi
 
-# 3. Call Python client forwarding all arguments
-python3 $MANTIS_DIR/src/github_hunter.py "$@"
+# 3. Parse arguments to detect background execution, target, and output-dir
+background=
+target="//mqtt/localhost"
+output_dir=
+
+args_to_pass=()
+while [[ $# -gt 0 ]]; do
+    case "$1" in
+        --background)
+            background=y
+            shift
+            ;;
+        --target)
+            target="$2"
+            args_to_pass+=("$1" "$2")
+            shift 2
+            ;;
+        --output-dir)
+            output_dir="$2"
+            args_to_pass+=("$1" "$2")
+            shift 2
+            ;;
+        *)
+            args_to_pass+=("$1")
+            shift 1
+            ;;
+    esac
+done
+
+# 4. Resolve the output directory and log path upfront
+if [[ -z $output_dir ]]; then
+    # Clean target string for safe directory names
+    clean_target=$(echo "$target" | sed -e 's/\//_/g' -e 's/+//g' -e 's/^_*//' -e 's/_*$//')
+    timestamp=$(date +%Y%m%d_%H%M%S)
+    output_dir="out/mantis/test_bundles/${clean_target}_${timestamp}"
+    abs_output_dir=$(realpath -m "$UDMI_ROOT/$output_dir")
+    # Append the resolved directory to pass-through args
+    args_to_pass+=("--output-dir" "$abs_output_dir")
+else
+    abs_output_dir=$(realpath -m "$output_dir")
+fi
+
+log_file="$abs_output_dir/hunter.log"
+
+# 5. Execute in background or foreground
+if [[ -n $background ]]; then
+    mkdir -p "$abs_output_dir"
+    
+    echo "============================================================="
+    echo "🦗 Mantis GitHub Hunter is launching in the BACKGROUND!"
+    echo "============================================================="
+    
+    # Launch in the background using nohup
+    nohup python3 -u $MANTIS_DIR/src/github_hunter.py "${args_to_pass[@]}" > "$log_file" 2>&1 &
+    bg_pid=$!
+    
+    echo "  PID       : $bg_pid"
+    echo "  Log File  : $log_file"
+    echo "  Bundle Dir: $abs_output_dir"
+    echo "============================================================="
+    echo "You can safely close this terminal window or lose connection."
+    echo "To monitor the progress live, run:"
+    echo "  tail -f $log_file"
+    echo
+else
+    # Run standard foreground execution
+    python3 -u $MANTIS_DIR/src/github_hunter.py "${args_to_pass[@]}"
+fi

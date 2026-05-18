@@ -39,7 +39,8 @@ export GITHUB_TOKEN="your_github_personal_access_token"
 mantis/bin/hunter \
   [--target <target_project>] \
   [--iterations <num>] \
-  [--output-dir <path>]
+  [--output-dir <path>] \
+  [--background]
 ```
 
 ### Options:
@@ -47,6 +48,7 @@ mantis/bin/hunter \
 - `--iterations`: Number of parallel workflows to run on GitHub (default: `10`).
 - `--output-dir`: Custom folder to save downloaded bundles. If not specified, a unique, non-overlapping timestamped directory is automatically generated:  
   `out/mantis/test_bundles/<target_clean>_%Y%m%d_%H%M%S/`
+- `--background`: Launches the hunter in the background using `nohup` with unbuffered logs redirected to `hunter.log` inside the bundle directory. Use this option to safely close your terminal window or prevent SSH disconnections during 30-40 minute runs.
 
 ---
 
@@ -80,16 +82,37 @@ mantis/bin/measure \
 
 To run a 10-iteration flakiness measurement on GitHub Actions:
 
+### Foreground (Interactive Console)
 ```bash
 # Step 1: Set token
 export GITHUB_TOKEN="ghp_yourSecureTokenHere"
 
-# Step 2: Automate CI dispatch, status polling, and downloading
+# Step 2: Trigger, poll, and download
 mantis/bin/hunter --iterations 10
 
 # Step 3: Measure flakiness of the downloaded timestamped bundles
-# (Mantis Hunter prints the exact command for you upon completion!)
 mantis/bin/measure --target //mqtt/localhost --phase before --bundles-dir out/mantis/test_bundles/mqtt_localhost_20260518_144405/
+```
+
+### Background (Safe Against Disconnections)
+```bash
+export GITHUB_TOKEN="ghp_yourSecureTokenHere"
+
+# Launch in the background
+mantis/bin/hunter --iterations 10 --background
+```
+Mantis will print:
+```
+=============================================================
+🦗 Mantis GitHub Hunter is launching in the BACKGROUND!
+=============================================================
+  PID       : 123456
+  Log File  : out/mantis/test_bundles/mqtt_localhost_20260518_150252/hunter.log
+  Bundle Dir: out/mantis/test_bundles/mqtt_localhost_20260518_150252
+=============================================================
+You can safely close this terminal window or lose connection.
+To monitor the progress live, run:
+  tail -f out/mantis/test_bundles/mqtt_localhost_20260518_150252/hunter.log
 ```
 
 *Refer to the detailed [Mantis Raptorial Claws Spec](file:///usr/local/google/home/heykhyati/Projects/udmi_clone/udmi/mantis/docs/raptorial_claws_spec.md) for complete architectural and normalization details.*
