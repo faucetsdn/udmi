@@ -10,16 +10,17 @@
     "restart_count" : 1,
     "mode" : "initial"
   },
-  "serial_no" : "sequencer-16115",
+  "serial_no" : "sequencer-20447",
   "software" : {
     "firmware" : "v1",
     "pubber_module" : "v1"
   },
   "status" : {
-    "message" : "Received blob update config for pubber_module",
-    "category" : "blobset.blob.receive",
+    "message" : "Simulated payload too big",
+    "detail" : "udmi.lib.base.UdmiException: Simulated payload too big;",
+    "category" : "blobset.blob.fetch",
     "timestamp" : "TIMESTAMP",
-    "level" : 100
+    "level" : 500
   },
   "timestamp" : "TIMESTAMP",
   "version" : "1.5.3"

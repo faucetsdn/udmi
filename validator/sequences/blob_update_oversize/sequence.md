@@ -9,7 +9,7 @@ Validates reporting of an oversized payload fetch failure.
 1. Wait for pubber_module phase is FINAL
 1. Wait until system logs level `DEBUG` category `blobset.blob.receive`
 1. Wait until system logs level `DEBUG` category `blobset.blob.fetch`
-1. Wait until system logs level `ERROR` category `blobset.blob.fetch.oversize`
+1. Wait until system logs level `ERROR` category `blobset.blob.fetch`
 1. Check that pubber_module state indicates error
 
 Test passed.

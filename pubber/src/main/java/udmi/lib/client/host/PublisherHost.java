@@ -63,13 +63,7 @@ import org.slf4j.LoggerFactory;
 import udmi.lib.base.GatewayError;
 import udmi.lib.base.MqttDevice;
 import udmi.lib.base.MqttPublisher;
-import udmi.lib.base.UdmiException.BlobAbortException;
-import udmi.lib.base.UdmiException.BlobApplyFailureException;
-import udmi.lib.base.UdmiException.BlobIncompatibleException;
-import udmi.lib.base.UdmiException.BlobParseException;
-import udmi.lib.base.UdmiException.BlobRollbackException;
-import udmi.lib.base.UdmiException.HashMismatchException;
-import udmi.lib.base.UdmiException.PayloadTooBigException;
+import udmi.lib.base.UdmiException;
 import udmi.lib.blob.intf.BlobLifecycleHandler;
 import udmi.lib.client.manager.DeviceManager;
 import udmi.lib.client.manager.PointsetManager;
@@ -135,15 +129,7 @@ public interface PublisherHost extends ManagerHost {
       "events/gateway", "{ \"testing\": \"This is prematurely terminated",
       "events/mapping", "{ NOT VALID JSON!");
   List<String> INVALID_KEYS = new ArrayList<>(INVALID_REPLACEMENTS.keySet());
-  Map<Class<? extends Exception>, String> BLOB_ERROR_CATEGORIES = Map.of(
-      PayloadTooBigException.class, Category.BLOBSET_BLOB_FETCH_OVERSIZE,
-      BlobParseException.class, Category.BLOBSET_BLOB_PARSE_INVALID,
-      HashMismatchException.class, Category.BLOBSET_BLOB_PARSE_CORRUPT,
-      BlobIncompatibleException.class, Category.BLOBSET_BLOB_PARSE_INCOMPATIBLE,
-      BlobApplyFailureException.class, Category.BLOBSET_BLOB_APPLY_FAILURE,
-      BlobAbortException.class, Category.BLOBSET_BLOB_ABORT,
-      BlobRollbackException.class, Category.BLOBSET_BLOB_ROLLBACK
-  );
+
   String CORRUPT_STATE_MESSAGE = "!&*@(!*&@!";
 
   Config getDeviceConfig();
@@ -387,8 +373,9 @@ public interface PublisherHost extends ManagerHost {
           state.status = exceptionStatus(e, Category.BLOBSET_BLOB_APPLY);
         });
 
-        String category = BLOB_ERROR_CATEGORIES.getOrDefault(e.getClass(),
-            Category.BLOBSET_BLOB_FETCH_FAILURE);
+        String category = e instanceof UdmiException
+            ? ((UdmiException) e).getCategory()
+            : Category.BLOBSET_BLOB_FETCH;
         logEvent(category, "For blob name " + blobName + ":\n", e);
 
         publishAsynchronousState();

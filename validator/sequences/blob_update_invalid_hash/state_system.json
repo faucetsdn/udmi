@@ -10,16 +10,17 @@
     "restart_count" : 1,
     "mode" : "initial"
   },
-  "serial_no" : "sequencer-26353",
+  "serial_no" : "sequencer-23385",
   "software" : {
     "firmware" : "v1",
     "pubber_module" : "v1"
   },
   "status" : {
-    "message" : "Received blob update config for pubber_module",
-    "category" : "blobset.blob.receive",
+    "message" : "Blob data hash mismatch",
+    "detail" : "udmi.lib.base.UdmiException: Blob data hash mismatch;",
+    "category" : "blobset.blob.parse",
     "timestamp" : "TIMESTAMP",
-    "level" : 100
+    "level" : 500
   },
   "timestamp" : "TIMESTAMP",
   "version" : "1.5.3"

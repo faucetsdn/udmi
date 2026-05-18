@@ -1,7 +1,14 @@
 {
   "blobs" : {
     "pubber_module" : {
-      "phase" : "apply",
+      "phase" : "final",
+      "status" : {
+        "message" : "Simulated payload too big",
+        "detail" : "udmi.lib.base.UdmiException: Simulated payload too big\n\tat daq.pubber.impl.blob.PubberBlobLifecycleHandler.fetchBlobData(PubberBlobLifecycleHandler.java:77)\n\tat udmi.lib.client.host.PublisherHost.fetchVerifiedBlob(PublisherHost.java:328)\n\tat udmi.lib.client.host.PublisherHost.lambda$evaluateAndDeployBlob$3(PublisherHost.java:362)\n\tat java.base/java.util.concurrent.CompletableFuture$AsyncRun.run(CompletableFuture.java:1804)\n\tat java.base/java.util.concurrent.CompletableFuture$AsyncRun.exec(CompletableFuture.java:1796)\n\tat java.base/java.util.concurrent.ForkJoinTask.doExec(ForkJoinTask.java:387)\n\tat java.base/java.util.concurrent.ForkJoinPool$WorkQueue.topLevelExec(ForkJoinPool.java:1312)\n\tat java.base/java.util.concurrent.ForkJoinPool.scan(ForkJoinPool.java:1843)\n\tat java.base/java.util.concurrent.ForkJoinPool.runWorker(ForkJoinPool.java:1808)\n\tat java.base/java.util.concurrent.ForkJoinWorkerThread.run(ForkJoinWorkerThread.java:188)\n",
+        "category" : "blobset.blob.apply",
+        "timestamp" : "TIMESTAMP",
+        "level" : 500
+      },
       "generation" : "TIMESTAMP"
     }
   },

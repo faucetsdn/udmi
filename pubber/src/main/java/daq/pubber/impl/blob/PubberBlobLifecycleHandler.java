@@ -1,15 +1,15 @@
 package daq.pubber.impl.blob;
 
 import static com.google.udmi.util.JsonUtil.asMap;
-import static udmi.schema.Category.BLOBSET_BLOB_APPLY_RESTART;
+import static udmi.schema.Category.BLOBSET_BLOB_APPLY;
+import static udmi.schema.Category.BLOBSET_BLOB_FETCH;
+import static udmi.schema.Category.BLOBSET_BLOB_PARSE;
 
 import java.util.HashMap;
 import java.util.Map;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
-import udmi.lib.base.UdmiException.BlobIncompatibleException;
-import udmi.lib.base.UdmiException.BlobParseException;
-import udmi.lib.base.UdmiException.PayloadTooBigException;
+import udmi.lib.base.UdmiException;
 import udmi.lib.blob.intf.BlobLifecycleHandler;
 import udmi.lib.client.host.PublisherHost;
 import udmi.schema.Operation.SystemMode;
@@ -74,7 +74,7 @@ public class PubberBlobLifecycleHandler implements BlobLifecycleHandler {
   @Override
   public byte[] fetchBlobData(String url) {
     if (url != null && url.contains("mock_oversize")) {
-      throw new PayloadTooBigException("Simulated payload too big");
+      throw new UdmiException(BLOBSET_BLOB_FETCH, "Simulated payload too big");
     }
     return BlobLifecycleHandler.super.fetchBlobData(url);
   }
@@ -130,10 +130,10 @@ public class PubberBlobLifecycleHandler implements BlobLifecycleHandler {
     try {
       payloadMap = asMap(payload);
     } catch (Exception e) {
-      throw new BlobParseException("Failed to parse blob payload for " + blobName);
+      throw new UdmiException(BLOBSET_BLOB_PARSE, "Failed to parse blob payload for " + blobName);
     }
     if ("incompatible".equals(payloadMap.get("trigger"))) {
-      throw new BlobIncompatibleException("Simulated incompatibility for " + blobName);
+      throw new UdmiException(BLOBSET_BLOB_PARSE, "Simulated incompatibility for " + blobName);
     }
     moduleEmulator.updateTo(payloadMap);
     updateModuleVersionInState();
@@ -143,7 +143,7 @@ public class PubberBlobLifecycleHandler implements BlobLifecycleHandler {
    * Finalizes the software module update by triggering a system restart.
    */
   private void activatePubberModuleUpdate(String blobName) {
-    host.logEvent(BLOBSET_BLOB_APPLY_RESTART, "Restart required for " + blobName);
+    host.logEvent(BLOBSET_BLOB_APPLY, "Restart required for " + blobName);
     host.notice("Post-processing Git OTA update. Restarting...");
     host.getDeviceManager().systemLifecycle(SystemMode.RESTART);
   }

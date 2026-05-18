@@ -9,7 +9,7 @@ Validates reporting of incompatibility for a blob update.
 1. Wait for pubber_module phase is FINAL
 1. Wait until system logs level `DEBUG` category `blobset.blob.receive`
 1. Wait until system logs level `DEBUG` category `blobset.blob.fetch`
-1. Wait until system logs level `ERROR` category `blobset.blob.parse.incompatible`
+1. Wait until system logs level `ERROR` category `blobset.blob.parse`
 1. Check that pubber_module state indicates error
 
 Test passed.

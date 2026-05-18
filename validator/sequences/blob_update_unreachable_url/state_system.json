@@ -10,16 +10,17 @@
     "restart_count" : 1,
     "mode" : "initial"
   },
-  "serial_no" : "sequencer-12221",
+  "serial_no" : "sequencer-17735",
   "software" : {
     "firmware" : "v1",
     "pubber_module" : "v1"
   },
   "status" : {
-    "message" : "Received blob update config for pubber_module",
-    "category" : "blobset.blob.receive",
+    "message" : "No fetcher registered for scheme: http",
+    "detail" : "java.lang.IllegalArgumentException: No fetcher registered for scheme: http;",
+    "category" : "blobset.blob.fetch",
     "timestamp" : "TIMESTAMP",
-    "level" : 100
+    "level" : 500
   },
   "timestamp" : "TIMESTAMP",
   "version" : "1.5.3"

@@ -4,8 +4,9 @@ import static java.lang.String.format;
 import static udmi.lib.client.host.PublisherHost.DATA_URL_JSON_BASE64;
 
 import java.util.Base64;
-import udmi.lib.base.UdmiException.BlobParseException;
+import udmi.lib.base.UdmiException;
 import udmi.lib.blob.intf.BlobFetcher;
+import udmi.schema.Category;
 
 
 /**
@@ -21,7 +22,7 @@ public class DataUriFetcher implements BlobFetcher {
     try {
       return Base64.getDecoder().decode(url.substring(DATA_URL_JSON_BASE64.length()));
     } catch (IllegalArgumentException e) {
-      throw new BlobParseException("Failed to decode base64 payload");
+      throw new UdmiException(Category.BLOBSET_BLOB_PARSE, "Failed to decode base64 payload");
     }
   }
 }

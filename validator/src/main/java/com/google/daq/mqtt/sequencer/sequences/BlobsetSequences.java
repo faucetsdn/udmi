@@ -1,6 +1,7 @@
 package com.google.daq.mqtt.sequencer.sequences;
 
 import static com.google.common.base.Strings.isNullOrEmpty;
+import static com.google.daq.mqtt.sequencer.sequences.BlobsetSequences.ExpectedLog.expectLog;
 import static com.google.daq.mqtt.util.TimePeriodConstants.THREE_MINUTES_MS;
 import static com.google.daq.mqtt.util.TimePeriodConstants.TWO_MINUTES_MS;
 import static com.google.udmi.util.GeneralUtils.encodeBase64;
@@ -20,11 +21,7 @@ import static udmi.schema.Bucket.SYSTEM_MODE;
 import static udmi.schema.Bucket.SYSTEM_SOFTWARE_UPDATES;
 import static udmi.schema.Category.BLOBSET_BLOB_APPLY;
 import static udmi.schema.Category.BLOBSET_BLOB_FETCH;
-import static udmi.schema.Category.BLOBSET_BLOB_FETCH_FAILURE;
-import static udmi.schema.Category.BLOBSET_BLOB_FETCH_OVERSIZE;
-import static udmi.schema.Category.BLOBSET_BLOB_PARSE_CORRUPT;
-import static udmi.schema.Category.BLOBSET_BLOB_PARSE_INCOMPATIBLE;
-import static udmi.schema.Category.BLOBSET_BLOB_PARSE_INVALID;
+import static udmi.schema.Category.BLOBSET_BLOB_PARSE;
 import static udmi.schema.Category.BLOBSET_BLOB_RECEIVE;
 import static udmi.schema.FeatureDiscovery.FeatureStage.PREVIEW;
 
@@ -40,6 +37,7 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import org.junit.Before;
 import org.junit.Test;
 import udmi.schema.Auth_provider;
@@ -63,6 +61,8 @@ import udmi.schema.Operation.SystemMode;
  * Validation tests for instances that involve blobset config messages.
  */
 public class BlobsetSequences extends SequenceBase {
+
+
 
   public static final String JSON_MIME_TYPE = "application/json";
   public static final String DATA_URL_FORMAT = "data:%s;base64,%s";
@@ -439,15 +439,32 @@ public class BlobsetSequences extends SequenceBase {
     return blobName;
   }
 
+  /**
+   * Expected log category with (optional) level.
+   */
+  public record ExpectedLog(String category, Optional<Level> level) {
+
+    public static ExpectedLog expectLog(String category) {
+      return new ExpectedLog(category, Optional.empty());
+    }
+
+    public static ExpectedLog expectLog(String category, Level level) {
+      return new ExpectedLog(category, Optional.of(level));
+    }
+  }
+
   private void verifyBlobUpdateSequence(BlobUpdateTestingModel target, boolean expectSuccess,
-      String... expectedLogs) {
+      ExpectedLog... expectedLogs) {
     info(format("Testing blob update for blob key %s, version %s", target.blob_name,
         target.version));
 
     String blobName = executeBlobUpdate(target);
 
-    for (String logCategory : expectedLogs) {
-      waitForLog(logCategory);
+    for (ExpectedLog expectation : expectedLogs) {
+      expectation.level().ifPresentOrElse(
+          level -> waitForLog(expectation.category(), level),
+          ()  -> waitForLog(expectation.category())
+      );
     }
 
     BlobBlobsetState blobBlobsetState = deviceState.blobset.blobs.get(blobName);
@@ -465,7 +482,7 @@ public class BlobsetSequences extends SequenceBase {
   }
 
   private void verifyBlobUpdateSequence(String targetType, boolean expectSuccess,
-      String... expectedLogs) {
+      ExpectedLog... expectedLogs) {
     verifyBlobUpdateSequence(getUpdateTarget(targetType), expectSuccess, expectedLogs);
   }
 
@@ -475,7 +492,9 @@ public class BlobsetSequences extends SequenceBase {
       + "and reports the new version.")
   public void blob_update_success() {
     verifyBlobUpdateSequence("success", true,
-        BLOBSET_BLOB_RECEIVE, BLOBSET_BLOB_FETCH, BLOBSET_BLOB_APPLY);
+        expectLog(BLOBSET_BLOB_RECEIVE),
+        expectLog(BLOBSET_BLOB_FETCH),
+        expectLog(BLOBSET_BLOB_APPLY));
   }
 
   @Test(timeout = TWO_MINUTES_MS)
@@ -483,7 +502,9 @@ public class BlobsetSequences extends SequenceBase {
   @Summary("Validates tamper protection by providing a valid URL but an incorrect SHA-256 hash.")
   public void blob_update_invalid_hash() {
     verifyBlobUpdateSequence("fail_hash", false,
-        BLOBSET_BLOB_RECEIVE, BLOBSET_BLOB_FETCH, BLOBSET_BLOB_PARSE_CORRUPT);
+        expectLog(BLOBSET_BLOB_RECEIVE),
+        expectLog(BLOBSET_BLOB_FETCH),
+        expectLog(BLOBSET_BLOB_PARSE, Level.ERROR));
   }
 
   @Test(timeout = TWO_MINUTES_MS)
@@ -491,7 +512,9 @@ public class BlobsetSequences extends SequenceBase {
   @Summary("Validates network resilience by providing an unreachable or 404 URL.")
   public void blob_update_unreachable_url() {
     verifyBlobUpdateSequence("fail_fetch", false,
-        BLOBSET_BLOB_RECEIVE, BLOBSET_BLOB_FETCH, BLOBSET_BLOB_FETCH_FAILURE);
+        expectLog(BLOBSET_BLOB_RECEIVE),
+        expectLog(BLOBSET_BLOB_FETCH),
+        expectLog(BLOBSET_BLOB_FETCH, Level.ERROR));
   }
 
   @Test(timeout = TWO_MINUTES_MS)
@@ -499,7 +522,9 @@ public class BlobsetSequences extends SequenceBase {
   @Summary("Validates format and signature checking by providing a dummy payload.")
   public void blob_update_invalid_payload() {
     verifyBlobUpdateSequence("fail_parse", false,
-        BLOBSET_BLOB_RECEIVE, BLOBSET_BLOB_FETCH, BLOBSET_BLOB_PARSE_INVALID);
+        expectLog(BLOBSET_BLOB_RECEIVE),
+        expectLog(BLOBSET_BLOB_FETCH),
+        expectLog(BLOBSET_BLOB_PARSE, Level.ERROR));
   }
 
   @Test(timeout = TWO_MINUTES_MS)
@@ -507,7 +532,9 @@ public class BlobsetSequences extends SequenceBase {
   @Summary("Validates reporting of incompatibility for a blob update.")
   public void blob_update_incompatible() {
     verifyBlobUpdateSequence("fail_incompatible", false,
-        BLOBSET_BLOB_RECEIVE, BLOBSET_BLOB_FETCH, BLOBSET_BLOB_PARSE_INCOMPATIBLE);
+        expectLog(BLOBSET_BLOB_RECEIVE),
+        expectLog(BLOBSET_BLOB_FETCH),
+        expectLog(BLOBSET_BLOB_PARSE, Level.ERROR));
   }
 
   @Test(timeout = TWO_MINUTES_MS)
@@ -515,7 +542,9 @@ public class BlobsetSequences extends SequenceBase {
   @Summary("Validates reporting of an oversized payload fetch failure.")
   public void blob_update_oversize() {
     verifyBlobUpdateSequence("fail_oversize", false,
-        BLOBSET_BLOB_RECEIVE, BLOBSET_BLOB_FETCH, BLOBSET_BLOB_FETCH_OVERSIZE);
+        expectLog(BLOBSET_BLOB_RECEIVE),
+        expectLog(BLOBSET_BLOB_FETCH),
+        expectLog(BLOBSET_BLOB_FETCH, Level.ERROR));
   }
 
 
@@ -525,9 +554,9 @@ public class BlobsetSequences extends SequenceBase {
   public void blob_update_idempotency() {
     // Standard successful update
     verifyBlobUpdateSequence("success", true,
-        BLOBSET_BLOB_RECEIVE,
-        BLOBSET_BLOB_FETCH,
-        BLOBSET_BLOB_APPLY
+        expectLog(BLOBSET_BLOB_RECEIVE),
+        expectLog(BLOBSET_BLOB_FETCH),
+        expectLog(BLOBSET_BLOB_APPLY)
     );
 
     // Resend the exact same config

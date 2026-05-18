@@ -1668,8 +1668,7 @@ public class SequenceBase {
 
   protected void waitForLog(String category) {
     Level exactLevel = LEVEL.getOrDefault(category, Level.INFO);
-    waitUntil(format("system logs level `%s` category `%s`", exactLevel.name(), category),
-        LOG_WAIT_TIME, () -> checkLogged(category, exactLevel));
+    waitForLog(category, exactLevel);
   }
 
   protected void untilLogged(String category, Level exactLevel) {

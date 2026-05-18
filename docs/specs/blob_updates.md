@@ -72,17 +72,9 @@ Granular observability relies on consistent telemetry. When tracking the lifecyc
 | :--- | :--- | :--- |
 | **`blobset.blob.update`** | `INFO` | Information: General category for processing a blob update. |
 | **`blobset.blob.receive`** | `DEBUG` | Emitted when a new or updated blob configuration block is received. |
-| **`blobset.blob.fetch`** | `DEBUG` | Emitted when starting a network fetch or reading inline data payload. |
-| **`blobset.blob.fetch.oversize`** | `ERROR` | Terminal failure: Insufficient local storage or memory to download or unpack the blob. |
-| **`blobset.blob.fetch.failure`** | `ERROR` | Terminal failure: Resource unreachable, network connection timed out, or HTTP 404 returned. |
-| **`blobset.blob.parse`** | `DEBUG` | Emitted when beginning the verification, checksum calculation, or format parsing. |
-| **`blobset.blob.parse.corrupt`** | `ERROR` | Terminal failure: The computed SHA-256 hash of the downloaded resource does not match the expected `sha256` parameter. |
-| **`blobset.blob.parse.invalid`** | `ERROR` | Terminal failure: The format or structure of the payload is invalid or structurally malformed. |
-| **`blobset.blob.parse.incompatible`**| `ERROR` | Terminal failure: The content is valid but target version/architecture is incompatible with this hardware model. |
-| **`blobset.blob.apply`** | `NOTICE`| Emitted when applying or executing the validated update block. |
-| **`blobset.blob.apply.failure`** | `ERROR` | Terminal failure: Unexpected execution exception or internal installer error during setup. |
-| **`blobset.blob.apply.dependency`**| `ERROR` | Terminal failure: Required hardware or software prerequisites are missing. |
-| **`blobset.blob.apply.restart`** | `NOTICE`| Information: The blob was written successfully, but a device reboot/restart is required to take effect. |
+| **`blobset.blob.fetch`** | `DEBUG`/`ERROR` | Emitted when starting a network fetch or reading inline payload, or when fetching fails (oversize/unreachable URL). |
+| **`blobset.blob.parse`** | `DEBUG`/`ERROR` | Emitted when beginning the verification/checksum check, or when verification/parsing fails (corrupt/invalid/incompatible). |
+| **`blobset.blob.apply`** | `NOTICE`/`ERROR`| Emitted when applying or executing the update block, or when application fails (dependency/installer failure), or when a restart is required. |
 | **`blobset.blob.abort`** | `NOTICE`| Information: The active download or update process was canceled by the cloud or aborted locally. |
 | **`blobset.blob.rollback`** | `NOTICE`| Information: A problem was detected post-apply, and the device is rolling back to the previous version. |
 
@@ -136,7 +128,7 @@ Granular observability relies on consistent telemetry. When tracking the lifecyc
         "generation": "2026-05-04T12:30:00.000Z",
         "status": {
           "level": 500,
-          "category": "blobset.blob.parse.corrupt",
+          "category": "blobset.blob.parse",
           "message": "Downloaded payload SHA-256 hash mismatch",
           "timestamp": "2026-05-04T13:00:07.000Z"
         }

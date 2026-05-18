@@ -128,7 +128,7 @@ Validates reporting of incompatibility for a blob update.
 1. Wait for pubber_module phase is FINAL
 1. Wait until system logs level `DEBUG` category `blobset.blob.receive`
 1. Wait until system logs level `DEBUG` category `blobset.blob.fetch`
-1. Wait until system logs level `ERROR` category `blobset.blob.parse.incompatible`
+1. Wait until system logs level `ERROR` category `blobset.blob.parse`
 1. Check that pubber_module state indicates error
 
 Test passed.
@@ -143,7 +143,7 @@ Validates tamper protection by providing a valid URL but an incorrect SHA-256 ha
 1. Wait for pubber_module phase is FINAL
 1. Wait until system logs level `DEBUG` category `blobset.blob.receive`
 1. Wait until system logs level `DEBUG` category `blobset.blob.fetch`
-1. Wait until system logs level `ERROR` category `blobset.blob.parse.corrupt`
+1. Wait until system logs level `ERROR` category `blobset.blob.parse`
 1. Check that pubber_module state indicates error
 
 Test passed.
@@ -158,7 +158,7 @@ Validates format and signature checking by providing a dummy payload.
 1. Wait for pubber_module phase is FINAL
 1. Wait until system logs level `DEBUG` category `blobset.blob.receive`
 1. Wait until system logs level `DEBUG` category `blobset.blob.fetch`
-1. Wait until system logs level `ERROR` category `blobset.blob.parse.invalid`
+1. Wait until system logs level `ERROR` category `blobset.blob.parse`
 1. Check that pubber_module state indicates error
 
 Test passed.
@@ -173,7 +173,7 @@ Validates reporting of an oversized payload fetch failure.
 1. Wait for pubber_module phase is FINAL
 1. Wait until system logs level `DEBUG` category `blobset.blob.receive`
 1. Wait until system logs level `DEBUG` category `blobset.blob.fetch`
-1. Wait until system logs level `ERROR` category `blobset.blob.fetch.oversize`
+1. Wait until system logs level `ERROR` category `blobset.blob.fetch`
 1. Check that pubber_module state indicates error
 
 Test passed.
@@ -204,7 +204,7 @@ Validates network resilience by providing an unreachable or 404 URL.
 1. Wait for pubber_module phase is FINAL
 1. Wait until system logs level `DEBUG` category `blobset.blob.receive`
 1. Wait until system logs level `DEBUG` category `blobset.blob.fetch`
-1. Wait until system logs level `ERROR` category `blobset.blob.fetch.failure`
+1. Wait until system logs level `ERROR` category `blobset.blob.fetch`
 1. Check that pubber_module state indicates error
 
 Test passed.

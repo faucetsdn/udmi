@@ -3,7 +3,8 @@ package udmi.lib.blob.intf;
 import static com.google.udmi.util.GeneralUtils.sha256;
 import static udmi.lib.blob.BlobFetcherRegistry.getFetcher;
 
-import udmi.lib.base.UdmiException.HashMismatchException;
+import udmi.lib.base.UdmiException;
+import udmi.schema.Category;
 
 /**
  * Defines the lifecycle and handling of BLOB updates on a device.
@@ -30,12 +31,12 @@ public interface BlobLifecycleHandler {
    *
    * @param dataBytes      The downloaded blob data.
    * @param expectedSha256 The expected SHA-256 hash string.
-   * @throws HashMismatchException if the calculated hash does not match the expected hash.
+   * @throws UdmiException if the calculated hash does not match the expected hash.
    */
   default void verifyBlobIntegrity(byte[] dataBytes, String expectedSha256) {
     String dataSha256 = sha256(dataBytes);
     if (!dataSha256.equals(expectedSha256)) {
-      throw new HashMismatchException("Blob data hash mismatch");
+      throw new UdmiException(Category.BLOBSET_BLOB_PARSE, "Blob data hash mismatch");
     }
   }
 

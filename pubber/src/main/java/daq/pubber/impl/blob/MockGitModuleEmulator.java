@@ -3,6 +3,10 @@ package daq.pubber.impl.blob;
 import static com.google.udmi.util.JsonUtil.safeSleep;
 import static java.lang.String.format;
 import static java.nio.charset.StandardCharsets.UTF_8;
+import static udmi.schema.Category.BLOBSET_BLOB_ABORT;
+import static udmi.schema.Category.BLOBSET_BLOB_APPLY;
+import static udmi.schema.Category.BLOBSET_BLOB_PARSE;
+import static udmi.schema.Category.BLOBSET_BLOB_ROLLBACK;
 
 import java.io.File;
 import java.io.IOException;
@@ -12,10 +16,7 @@ import java.util.function.Consumer;
 import org.apache.commons.io.FileUtils;
 import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.lib.ObjectId;
-import udmi.lib.base.UdmiException.BlobAbortException;
-import udmi.lib.base.UdmiException.BlobApplyFailureException;
-import udmi.lib.base.UdmiException.BlobIncompatibleException;
-import udmi.lib.base.UdmiException.BlobRollbackException;
+import udmi.lib.base.UdmiException;
 
 /**
  * Mock emulator for Git modules used in OTA updates.
@@ -110,7 +111,7 @@ public class MockGitModuleEmulator {
   public void updateTo(Map<String, Object> payloadMap) {
     String version = Optional.ofNullable((String) payloadMap.get(VERSION_KEY))
         .map(String::trim)
-        .orElseThrow(() -> new BlobIncompatibleException("Missing version in payload"));
+        .orElseThrow(() -> new UdmiException(BLOBSET_BLOB_PARSE, "Missing version in payload"));
 
     handleSimulatedBehaviors((String) payloadMap.get(SIMULATE_KEY));
 
@@ -126,7 +127,7 @@ public class MockGitModuleEmulator {
       git.checkout().setName(version).call();
       noticeLogger.accept("Mock module update completed successfully.");
     } catch (Exception e) {
-      throw new BlobApplyFailureException(
+      throw new UdmiException(BLOBSET_BLOB_APPLY,
           "JGit checkout failed for version: " + version + e.getMessage());
     }
   }
@@ -138,10 +139,12 @@ public class MockGitModuleEmulator {
 
     safeSleep(SIMULATED_DELAY_MS);
     switch (behavior.toLowerCase()) {
-      case "incompatible" -> throw new BlobIncompatibleException("Hardware incompatible");
-      case "apply_failure" -> throw new BlobApplyFailureException("Simulated apply failure");
-      case "abort" -> throw new BlobAbortException("Simulated abort");
-      case "rollback" -> throw new BlobRollbackException("Simulated rollback");
+      case "incompatible" ->
+          throw new UdmiException(BLOBSET_BLOB_PARSE, "Received incompatible blob");
+      case "apply_failure" ->
+          throw new UdmiException(BLOBSET_BLOB_APPLY, "Simulated apply failure");
+      case "abort" -> throw new UdmiException(BLOBSET_BLOB_ABORT, "Simulated abort");
+      case "rollback" -> throw new UdmiException(BLOBSET_BLOB_ROLLBACK, "Simulated rollback");
       default -> infoLogger.accept("No simulated error for behavior: " + behavior);
     }
   }
