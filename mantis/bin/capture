@@ -1,0 +1,98 @@
+#!/bin/bash -e
+#
+# Launcher wrapper for Project Mantis Capture Component (Stage 1).
+# Automatically activates the virtualenv and executes
+# the Python Capture module.
+#
+
+# Resolve parent directory structure
+MANTIS_BIN=$(dirname $0)
+MANTIS_DIR=$(realpath $MANTIS_BIN/..)
+UDMI_ROOT=$(realpath $MANTIS_DIR/..)
+
+cd $UDMI_ROOT
+
+# 1. Guarantee execution permissions
+chmod +x $MANTIS_DIR/bin/capture 2>/dev/null || true
+chmod +x $MANTIS_DIR/capture/main.py 2>/dev/null || true
+
+# 2. Resolve execution in background or foreground
+background=""
+args_to_pass=()
+
+while [[ $# -gt 0 ]]; do
+    case $1 in
+        --verbose)
+            args_to_pass+=("$1")
+            shift
+            ;;
+        --local)
+            args_to_pass+=("$1")
+            shift
+            ;;
+        *)
+            args_to_pass+=("$1")
+            shift
+            ;;
+    esac
+done
+
+# On CI dispatch runs (non-local), default to background mode to prevent starvation
+# unless --verbose is specified.
+if [[ ! " ${args_to_pass[*]} " =~ " --local " ]] && [[ ! " ${args_to_pass[*]} " =~ " --verbose " ]]; then
+    background="true"
+fi
+
+# Discover or resolve target timestamp output directory
+# (to ensure we print the correct log file location to the background caller)
+target_spec="//mqtt/localhost"
+# Extract target from args if specified
+for i in "${!args_to_pass[@]}"; do
+    if [[ ${args_to_pass[$i]} == "--target" ]]; then
+        target_spec=${args_to_pass[$((i+1))]}
+    fi
+done
+
+clean_target=$(echo "$target_spec" | sed 's/\//_/g' | sed 's/+//g' | sed 's/^_//' | sed 's/_$//')
+timestamp=$(date +"%Y%m%d_%H%M%S")
+abs_output_dir="$UDMI_ROOT/out/mantis/test_bundles/${clean_target}_$timestamp"
+log_file="$abs_output_dir/capture.log"
+
+# Pass resolved output directory to Python if not explicitly passed by user
+if [[ ! " ${args_to_pass[*]} " =~ " --output-dir " ]]; then
+    args_to_pass+=("--output-dir" "$abs_output_dir")
+fi
+
+# 3. Activate virtualenv
+if [[ -f venv/bin/activate ]]; then
+    source venv/bin/activate
+else
+    echo "Error: Project virtual environment not found at '$UDMI_ROOT/venv'." >&2
+    echo "Please run 'bin/setup_base' first to initialize dependencies." >&2
+    exit 1
+fi
+
+# 4. Execute in background or foreground
+if [[ -n $background ]]; then
+    mkdir -p "$abs_output_dir"
+    
+    echo "============================================================="
+    echo "🦗 Mantis Capture is launching in the BACKGROUND!"
+    echo "============================================================="
+    
+    # Launch in the background using nohup
+    nohup python3 -u -m mantis.capture.main "${args_to_pass[@]}" > "$log_file" 2>&1 &
+    bg_pid=$!
+    
+    echo "  PID       : $bg_pid"
+    echo "  Log File  : $log_file"
+    echo "  Bundle Dir: $abs_output_dir"
+    echo "============================================================="
+    echo "You can safely close this terminal window or lose connection."
+    echo "To monitor the progress live, run:"
+    echo "  tail -f $log_file"
+    echo
+else
+    # Run standard foreground execution
+    python3 -u -m mantis.capture.main "${args_to_pass[@]}"
+fi

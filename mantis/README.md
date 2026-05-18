@@ -2,11 +2,11 @@
 
 > **Mantis** is a ruthless, highly efficient predator of bugs—specifically designed to hunt down, capture, triage, and eliminate issues in the UDMI codebase.
 
-Mantis is structured into independent, highly modular components following the Unix philosophy:
+Mantis is structured into independent, highly modular package submodules following the Unix philosophy. Their folder names are **alphabetically and chronologically arranged** to naturally communicate the execution stages:
 
-1. **GitHub Hunter (`hunter`)**: An automated utility to trigger parallel workflow dispatches on GitHub CI, poll their status live, and download the resulting consolidated support packages.
-2. **Raptorial Claws (`measure`)**: A stability and flakiness metric calculator that parses test runs (either direct local runs or sharded CI packages inside an imported test bundles folder) and generates comparative MD reports.
-3. **Oculus of Triage (`triage`)**: An AI-powered diagnostic triage agent that correlates distributed logs, analyzes failures against past successful reference runs, and isolates breakpoints with precise evidence.
+1. **`capture` (Stage 1)** 🦗⚡: Triggers parallel workflow dispatches on GitHub Actions, or executes local isolated test loops in the sandbox, packaging raw consolidated results into standardized support packages.
+2. **`grasp` (Stage 2)** 🦗🔍: A pure log and metric analyzer that ingests captured support packages, compares raw results against Golden Baselines, and computes overall stabilization reports.
+3. **`inspect` (Stage 3)** 🦗👁️: An AI-powered diagnostic triage agent that correlating distributed log streams, mines git log histories, and searches codebases to isolate failing breakpoints.
 
 ---
 
@@ -16,74 +16,86 @@ Mantis is structured into independent, highly modular components following the U
 mantis/
 ├── README.md                 # Project Mantis Overview & Ecosystem
 ├── docs/
-│   ├── raptorial_claws_spec.md  # Technical Spec for Claws of Stability (Tracker)
-│   └── oculus_spec.md        # Technical Spec for Oculus of Triage (AI Diagnostic)
-├── bin/
-│   ├── hunter                # Standalone GitHub Runner launcher
-│   ├── measure               # Executable launcher for Raptorial Claws
-│   └── triage                # Executable launcher for Oculus (AI Diagnostic)
-└── src/
-    ├── github_hunter.py      # Trigger, poll, and download CI test bundles
-    ├── orchestrator.py       # Handles loops, local execution, & bundle imports
-    ├── analyzer.py           # Parses outputs under strict normalizations
-    ├── reporter.py           # Formats Markdown reports and before/after deltas
-    └── triage.py             # Correlates logs and triggers Gemini diagnostics
+│   ├── grasp_spec.md         # Spec for grasp (Pure Log & Metric Analyzer)
+│   └── inspect_spec.md       # Spec for inspect (AI Triage Agent)
+├── bin/                      # Executable Bash wrappers
+│   ├── capture               # Launches mantis.capture
+│   ├── grasp                 # Launches mantis.grasp
+│   └── inspect               # Launches mantis.inspect
+├── capture/                  # Submodule 1: Trigger & Run Loop (Stage 1)
+│   ├── __init__.py
+│   ├── README.md
+│   └── main.py               # Triggers runs (Local loop or GitHub CI) & bundles outputs
+├── grasp/                    # Submodule 2: Grasp Metric Analyzer (Stage 2)
+│   ├── __init__.py
+│   ├── README.md
+│   ├── main.py               # Pure log aggregator & consolidated metrics
+│   ├── analyzer.py           # Parses results under normalizations
+│   └── reporter.py           # Formats Markdown reports and comparative deltas
+└── inspect/                  # Submodule 3: Inspect AI Triage Agent (Stage 3)
+    ├── __init__.py
+    ├── README.md
+    ├── main.py               # Triage coordinator & context aggregator
+    ├── agent.py              # AI harness and Gemini API client (google.genai)
+    └── tools.py              # Exposes grep_codebase & git_read_operations to the agent
 ```
 
 ---
 
-## 1. GitHub Hunter (`hunter`) 🦗⚡
+## 1. Capture Component (`capture`) 🦗⚡
 
-Triggers parallel runs on GitHub CI, monitors progress, and downloads completed test archives automatically.
+Triggers parallel runs on GitHub CI or executes local sandbox loops, packaging raw outputs into standard zip bundles.
 
 ```bash
+# GitHub CI trigger (concurrency-safe default: 3 iterations, runs in background)
 export GITHUB_TOKEN="your_github_personal_access_token"
+mantis/bin/capture --target //mqtt/localhost
 
-mantis/bin/hunter \
-  [--target <target_project>] \
-  [--iterations <num>] \
-  [--output-dir <path>] \
-  [--verbose]
+# Local Sandbox loops trigger (default: 10 iterations)
+mantis/bin/capture --local --target //mqtt/localhost
 ```
 
-*Refer to the detailed [Mantis Raptorial Claws Spec](file:///usr/local/google/home/heykhyati/Projects/udmi_clone/udmi/mantis/docs/raptorial_claws_spec.md) for complete usage details.*
+### Options:
+- `--target`: Target project spec (default: `//mqtt/localhost`).
+- `--local`: Switch from GitHub dispatches to **Local sandbox loop runs**.
+- `--iterations`: Number of parallel CI runs (default: `3`) or local loop iterations (default: `10`).
+- `--verbose`: Runs execution in the foreground, displaying polling progress live.
+- `--suite`: Test suites to execute locally: `sequencer`, `itemized`, or `both` (default: `both`).
+- `--tests`: Selective sequencer tests to run locally (e.g. `valid_serial_no`).
+- `--output-dir`: Custom folder to save downloaded bundles.
 
 ---
 
-## 2. Raptorial Claws Tracker (`measure`) 🦗🔍
+## 2. Grasp Component (`grasp`) 🦗🔍
 
-Calculates stability indices and compares flakiness before and after code modifications.
+Pure log and metric analyzer calculating stability indices and comparative deltas.
 
 ```bash
-mantis/bin/measure \
+mantis/bin/grasp \
   --target <target_project> \
-  [--iterations <num>] \
-  [--phase <before|after>] \
-  [--suite <sequencer|itemized|both>] \
-  [--tests <test_list>] \
-  [--bundles-dir <path>] \
-  [--output-dir <path>]
+  --phase <before|after> \
+  --bundles-dir <path_to_captured_bundles>
 ```
 
-*Refer to the detailed [Mantis Raptorial Claws Spec](file:///usr/local/google/home/heykhyati/Projects/udmi_clone/udmi/mantis/docs/raptorial_claws_spec.md) for complete measurement details.*
+### Options:
+- `--bundles-dir`: Folder containing captured zip/tgz bundles. **Required**.
+- `--target`: Target project string (default: `//mqtt/localhost`).
+- `--phase`: Stabilization exercise stage (`before` or `after`). Default: `before`.
+- `--output-dir`: Output folder for raw runs and final reports (default: `out/mantis`).
 
 ---
 
-## 3. Oculus of Triage (`triage`) 🦗👁️
+## 3. Inspect Component (`inspect`) 🦗👁️
 
-When a test failure is detected, **Oculus** automatically correlates sharded and global log streams using Session Base Transaction IDs (`RC:XXXXXX`) and execution timestamps to pinpoint exactly where the UDMI configuration-state loop was broken.
+ AI-powered diagnostic triage agent correlating streams using execution timebounds and registered tools.
 
 ```bash
 export GEMINI_API_KEY="your_gemini_api_key"
 
-mantis/bin/triage \
+mantis/bin/inspect \
+  --target <target_project> \
   --run-dir <path_to_iteration_backup> \
   --test <test_name>
 ```
 
-### Key Diagnostics Answered:
-- **Did the Device (Pubber) work as expected?** (Verifies config reception, slow writebacks, state publications).
-- **Did the Sequencer work as expected?** (Verifies validation timings, asserts, and waits).
-- **Did the Backend (UDMIS) work as expected?** (Verifies reflect processing and routing envelopes).
-
-*Refer to the detailed [Mantis Oculus Spec](file:///usr/local/google/home/heykhyati/Projects/udmi_clone/udmi/mantis/docs/oculus_spec.md) for complete prompt design, correlation heuristics, and CI reporting integrations.*
+*Refer to the detailed [Mantis Inspect Spec](file:///usr/local/google/home/heykhyati/Projects/udmi_clone/udmi/mantis/docs/inspect_spec.md) for complete details.*
