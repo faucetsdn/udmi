@@ -10,7 +10,7 @@ on:
     - cron: '0 13 * * *'
 
 concurrency:
-  group: ci-${{ github.repository }}
+  group: ci-${{ github.repository }}-${{ github.ref }}-${{ github.event_name == 'workflow_dispatch' && github.run_id || 'standard' }}
   cancel-in-progress: true
 
 
