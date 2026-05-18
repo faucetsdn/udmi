@@ -251,14 +251,14 @@ def main():
 
         # 1. Validate local mosquitto broker
         if "localhost" in args.target:
-            print("Checking local broker port 1883...")
+            print("Checking local broker port 8883...")
             import socket
             sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
             sock.settimeout(1)
-            result = sock.connect_ex(('127.0.0.1', 1883))
+            result = sock.connect_ex(('127.0.0.1', 8883))
             sock.close()
             if result != 0:
-                print("\n⚠️ Warning: Local mosquitto port 1883 is not open.")
+                print("\n⚠️ Warning: Local mosquitto port 8883 is not open.")
                 print("Please run local services first before starting the local loop:")
                 print(f"  bin/start_local sites/udmi_site_model {args.target}\n", file=sys.stderr)
                 sys.exit(1)
