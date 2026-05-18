@@ -1,7 +1,6 @@
 package com.google.bos.udmi.service.access;
 
 import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.ArgumentMatchers.isNull;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
@@ -111,10 +110,11 @@ class ImplicitIotAccessProviderTest {
     }
 
     private String getKeyPath(String key) {
-      return (registryId != null ? "r/" + registryId : "") +
-             (deviceId != null ? "/d/" + deviceId : "") +
-             (collection != null ? "/c/" + collection : "") +
-             ":" + key;
+      return (registryId != null ? "r/" + registryId : "")
+          + (deviceId != null ? "/d/" + deviceId : "")
+          + (collection != null ? "/c/" + collection : "")
+          + ":"
+          + key;
     }
 
     @Override

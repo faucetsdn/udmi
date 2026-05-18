@@ -16,14 +16,14 @@ import io.etcd.jetcd.KeyValue;
 import io.etcd.jetcd.Lock;
 import io.etcd.jetcd.cluster.Member;
 import io.etcd.jetcd.kv.GetResponse;
-import io.etcd.jetcd.options.GetOption;
 import io.etcd.jetcd.op.Op;
 import io.etcd.jetcd.options.DeleteOption;
+import io.etcd.jetcd.options.GetOption;
 import io.etcd.jetcd.options.PutOption;
 import java.net.URI;
-import java.util.ArrayList;
 import java.time.Duration;
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -294,7 +294,8 @@ public class EtcdDataProvider extends ContainerBase implements IotDataProvider {
           });
         }
         if (!ops.isEmpty()) {
-          kvClient.txn().Then(ops.toArray(new Op[0])).commit().get(QUERY_TIMEOUT_SEC, TimeUnit.SECONDS);
+          kvClient.txn().Then(ops.toArray(new Op[0])).commit()
+              .get(QUERY_TIMEOUT_SEC, TimeUnit.SECONDS);
         }
       } catch (Exception e) {
         throw new RuntimeException("While executing batch update on " + getKeyPath(""), e);

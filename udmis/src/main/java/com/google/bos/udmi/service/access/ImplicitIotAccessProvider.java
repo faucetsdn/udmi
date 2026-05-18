@@ -176,7 +176,8 @@ public class ImplicitIotAccessProvider extends IotAccessBase {
     return String.valueOf(Math.abs(Objects.hash(registryId, deviceId)));
   }
 
-  private void bindDevicesToGateway(String registryId, String gatewayId, CloudModel cloudModel, Consumer<String> progress) {
+  private void bindDevicesToGateway(
+      String registryId, String gatewayId, CloudModel cloudModel, Consumer<String> progress) {
     Set<String> deviceIds = ImmutableSet.copyOf(cloudModel.gateway.proxy_ids);
     AtomicInteger count = new AtomicInteger();
     int total = deviceIds.size();
