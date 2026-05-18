@@ -43,6 +43,12 @@ if [[ ! " ${args_to_pass[*]} " =~ " --local " ]] && [[ ! " ${args_to_pass[*]} " 
     background="true"
 fi
 
+# If help argument (-h or --help) is passed, always bypass backgrounding and run in foreground
+if [[ " ${args_to_pass[*]} " =~ " -h " ]] || [[ " ${args_to_pass[*]} " =~ " --help " ]]; then
+    background=""
+fi
+
+
 # Discover or resolve target timestamp output directory
 # (to ensure we print the correct log file location to the background caller)
 target_spec="//mqtt/localhost"
