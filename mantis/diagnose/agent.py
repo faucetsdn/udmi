@@ -64,7 +64,25 @@ def run_triage_analysis(prompt_payload: str) -> str:
             config=config
         )
         
-        return response.text
+        if response.text:
+            return response.text
+            
+        # Fallback if tool recursion limit was hit or response.text is None
+        parts_desc = []
+        if response.candidates and response.candidates[0].content:
+            for part in response.candidates[0].content.parts:
+                if part.function_call:
+                    parts_desc.append(f"Function Call: {part.function_call.name}({part.function_call.args})")
+                if part.text:
+                    parts_desc.append(part.text)
+                    
+        fallback_text = (
+            "⚠️ INSUFFICIENT DATA TO TRACE ROOT CAUSE\n\n"
+            "The Gemini diagnostic agent completed its tool execution but did not return a final text analysis.\n"
+            "This typically indicates the model reached the maximum tool-calling loop limit (10 turns) while recursively searching codebase or git logs.\n\n"
+            "**Last Executed Model Actions:**\n" + "\n".join(f"- {p}" for p in parts_desc)
+        )
+        return fallback_text
     except Exception as e:
         print(f"Error communicating with Gemini API: {e}", file=sys.stderr)
         raise e
