@@ -23,7 +23,7 @@ grpc-google-iam-v1==0.13.1
 grpcio==1.67.0
 grpcio-status==1.67.0
 httplib2==0.20.4
-idna==3.7
+idna==3.15
 importlib_metadata==8.4.0
 iniconfig==2.0.0
 isort==5.11.3
