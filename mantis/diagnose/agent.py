@@ -51,7 +51,6 @@ def run_triage_analysis(prompt_payload: str) -> str:
         
         # 4. Configure content generations config
         config = types.GenerateContentConfig(
-            model="gemini-2.5-pro",
             tools=tools_list,
             temperature=0.1,  # Low temperature for deterministic, highly logical logs analysis
             system_instruction=system_instruction
@@ -60,7 +59,7 @@ def run_triage_analysis(prompt_payload: str) -> str:
         print("Invoking Gemini model for diagnostics... (This may take a few moments to search codebase/git logs)")
         # 5. Models generation content (resolves dynamic tool calling automatically)
         response = client.models.generate_content(
-            model="gemini-2.5-pro",
+            model="gemini-3.1-flash-lite",
             contents=prompt_payload,
             config=config
         )

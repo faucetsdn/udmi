@@ -131,16 +131,17 @@ class RunAnalyzer:
         """
         analysis = {}
         
-        # Track occurrence count of each test case key in this run
-        occurrences = defaultdict(int)
+        # Track occurrence count of each test case key separately for each suite
+        seq_occurrences = defaultdict(int)
+        item_occurrences = defaultdict(int)
 
         # 1. Analyze standard sequencer results
         if sequencer_out_path and os.path.exists(sequencer_out_path):
             run_results = self.parse_results_file(sequencer_out_path, is_itemized=False)
             for res in run_results:
                 key = res.key()
-                idx = occurrences[key]
-                occurrences[key] += 1
+                idx = seq_occurrences[key]
+                seq_occurrences[key] += 1
                 
                 expected = self.sequencer_baseline.get_expected_result(key, idx)
                 matched = False
@@ -170,8 +171,8 @@ class RunAnalyzer:
             run_results = self.parse_results_file(itemized_out_path, is_itemized=True)
             for res in run_results:
                 key = res.key()
-                idx = occurrences[key]
-                occurrences[key] += 1
+                idx = item_occurrences[key]
+                item_occurrences[key] += 1
                 
                 expected = self.itemized_baseline.get_expected_result(key, idx)
                 matched = False
