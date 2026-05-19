@@ -42,18 +42,23 @@ def run_triage_analysis(prompt_payload: str) -> str:
             "1. You will be provided with log segments and metadata detailing available sources.\n"
             "2. You must attempt to discover the sequence of events leading to the failure.\n"
             "3. Use your grep_codebase and read_file_lines tools to dynamically retrieve relevant codebase context (Java sequence files, UDMIS processors, Pubber emulators).\n"
-            "4. Use git_read_operations on the site model repo (e.g., 'sites/udmi_site_model') to query git log / show to extract past successful run logs for the same test.\n"
-            "5. Use git_read_operations on the main repo to identify code regressions between the last successful commit and the current failure.\n"
+            "4. DO NOT use git_read_operations to search for past successful runs in the site model repo. Sibling logs of a successful golden reference run are already loaded and provided directly in the prompt payload under '## Reference Successful Run Details'. Focus entirely on comparing the failed and successful log traces side-by-side to locate differences.\n"
+            "5. Use git_read_operations on the main repo ONLY if you suspect a recent codebase commit introduced a regression, to query recent logs/diffs.\n"
             "6. CRITICAL SUFFICIENCY RULE: If the available logs, git history, and code logic are insufficient to isolate the breakpoint, "
             "you MUST return a summary starting with the exact header '⚠️ INSUFFICIENT DATA TO TRACE ROOT CAUSE' in your Breakpoint Summary. "
-            "Do not speculate or make up hypothetical failures. List exactly what logs are missing and recommend how the developer can enable them on the next run."
+            "Do not speculate or make up hypothetical failures. List exactly what logs are missing and recommend how the developer can enable them on the next run.\n"
+            "7. DIFFERENTIAL ANALYSIS: You MUST compare the failed log traces side-by-side to the successful reference log traces to locate differences and pinpoint exactly where they diverged.\n"
+            "8. PREFER LOCAL FILES: Always use the `read_file_lines` tool to read site model files (like `sites/udmi_site_model/devices/AHU-1/metadata.json`) directly from the local disk. Do NOT use `git_read_operations` to read these files unless you specifically need to view past committed history or diffs."
         )
         
         # 4. Configure content generations config
         config = types.GenerateContentConfig(
             tools=tools_list,
             temperature=0.1,  # Low temperature for deterministic, highly logical logs analysis
-            system_instruction=system_instruction
+            system_instruction=system_instruction,
+            automaticFunctionCalling=types.AutomaticFunctionCallingConfig(
+                maximumRemoteCalls=25
+            )
         )
         
         print("Invoking Gemini model for diagnostics... (This may take a few moments to search codebase/git logs)")

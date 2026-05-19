@@ -31,26 +31,47 @@ def parse_timestamp(ts_str):
     return None
 
 def extract_timebounds_from_log(seq_log_path):
-    """Scans a sequence log to find starting and ending timestamps."""
+    """Scans a sequence log to find starting and ending timestamps, falling back to first/last lines if needed."""
     start_ts, end_ts = None, None
+    first_ts, last_ts = None, None
     if not os.path.exists(seq_log_path):
         return None, None
         
-    # Example notice line: 2026-05-18T14:15:05Z NOTICE Starting test valid_serial_no
+    # Matches any timestamp at start of line
+    ts_pattern = re.compile(r'^([\d\-T:Z]+)\s+')
+    # Precise starting/ending patterns
     start_pattern = re.compile(r'^([\d\-T:Z]+)\s+NOTICE\s+Starting\s+test')
-    end_pattern = re.compile(r'^([\d\-T:Z]+)\s+NOTICE\s+Ending\s+test')
+    end_pattern = re.compile(r'^([\d\-T:Z]+)\s+(NOTICE\s+Ending\s+test|ERROR\s+terminating\s+test|RESULT\s+fail|RESULT\s+pass)')
     
     try:
         with open(seq_log_path, 'r', encoding='utf-8', errors='replace') as f:
             for line in f:
+                # Track any timestamp on the line
+                ts_match = ts_pattern.match(line)
+                if ts_match:
+                    ts = parse_timestamp(ts_match.group(1))
+                    if ts:
+                        if not first_ts:
+                            first_ts = ts
+                        last_ts = ts
+                        
+                # Track start test
                 sm = start_pattern.match(line)
                 if sm:
                     start_ts = parse_timestamp(sm.group(1))
+                    
+                # Track end/terminating test
                 em = end_pattern.match(line)
                 if em:
                     end_ts = parse_timestamp(em.group(1))
     except Exception as e:
         print(f"Warning: failed to extract timestamps from {seq_log_path}: {e}", file=sys.stderr)
+        
+    # Fallbacks
+    if not start_ts:
+        start_ts = first_ts
+    if not end_ts:
+        end_ts = last_ts
         
     return start_ts, end_ts
 
@@ -78,6 +99,28 @@ def slice_log_by_timebounds(filepath, start_dt, end_dt, padding_seconds=5):
         print(f"Warning: failed to slice log {filepath}: {e}", file=sys.stderr)
         
     return sliced_entries
+
+def read_filtered_sequence_log(filepath, max_chars=150000):
+    """Reads a sequence log, filtering out noisy TRACE level lines and suppressed exceptions to save context and API quota."""
+    if not os.path.exists(filepath):
+        return ""
+    try:
+        filtered_lines = []
+        curr_chars = 0
+        with open(filepath, 'r', encoding='utf-8', errors='replace') as f:
+            for line in f:
+                # Exclude high-noise logs
+                if " TRACE " in line or "Suppressing exception" in line or "ending stack trace:" in line or "Stack trace::" in line:
+                    continue
+                line_len = len(line)
+                if curr_chars + line_len > max_chars:
+                    break
+                filtered_lines.append(line)
+                curr_chars += line_len
+        return "".join(filtered_lines)
+    except Exception as e:
+        print(f"Warning: failed to read filtered log {filepath}: {e}", file=sys.stderr)
+        return ""
 
 def get_device_id(site_dir):
     """Discovers the device under test by scanning the site out/devices folder."""
@@ -114,6 +157,44 @@ def scan_failures_from_out(filepath):
     except Exception as e:
         print(f"Warning: failed to scan failures from {filepath}: {e}", file=sys.stderr)
     return failures
+
+def find_successful_run_for_test(parent_dir, test_id):
+    """Scans sibling run directories to find one where test_id passed."""
+    if not os.path.isdir(parent_dir):
+        return None
+        
+    for rdir in sorted(os.listdir(parent_dir)):
+        full_rdir = os.path.join(parent_dir, rdir)
+        if not os.path.isdir(full_rdir) or not rdir.startswith("run_"):
+            continue
+            
+        # Check sequencer.out
+        seq_out = os.path.join(full_rdir, "sequencer.out")
+        if os.path.exists(seq_out):
+            failures = scan_failures_from_out(seq_out)
+            # Check if it ran and passed (i.e. not in failures and present in output)
+            if not any(fail['test_name'] == test_id for fail in failures):
+                try:
+                    with open(seq_out, 'r') as f:
+                        for line in f:
+                            if test_id in line and "RESULT pass" in line:
+                                return full_rdir
+                except Exception:
+                    pass
+                            
+        # Check test_itemized.out
+        item_out = os.path.join(full_rdir, "test_itemized.out")
+        if os.path.exists(item_out):
+            failures = scan_failures_from_out(item_out)
+            if not any(fail['test_name'] == test_id for fail in failures):
+                try:
+                    with open(item_out, 'r') as f:
+                        for line in f:
+                            if test_id in line and "RESULT pass" in line:
+                                return full_rdir
+                except Exception:
+                    pass
+    return None
 
 def main():
     parser = argparse.ArgumentParser(
@@ -199,15 +280,29 @@ def main():
             print("Warning: Could not extract starting/ending timestamps from sequence log. Slicing bypassed.")
 
         # Load local sequence logs
-        local_seq_log_content = ""
-        if os.path.exists(local_seq_log):
-            with open(local_seq_log, 'r', encoding='utf-8', errors='replace') as fl:
-                local_seq_log_content = fl.read()[:10000]  # Limit size
+        local_seq_log_content = read_filtered_sequence_log(local_seq_log)
 
         local_seq_md_content = ""
         if os.path.exists(local_seq_md):
             with open(local_seq_md, 'r', encoding='utf-8', errors='replace') as fm:
-                local_seq_md_content = fm.read()[:10000]
+                local_seq_md_content = fm.read()[:100000] # Markdown is already concise, read up to 100KB
+
+        # Discover reference successful execution for differential triage
+        success_run_dir = find_successful_run_for_test(os.path.dirname(run_dir), test_id)
+        success_seq_log_content = ""
+        success_seq_md_content = ""
+        
+        if success_run_dir:
+            success_seq_log = os.path.join(success_run_dir, f"out/devices/{device_id}/tests/{test_id}/sequence.log")
+            success_seq_md = os.path.join(success_run_dir, f"out/devices/{device_id}/tests/{test_id}/sequence.md")
+            
+            success_seq_log_content = read_filtered_sequence_log(success_seq_log)
+            if os.path.exists(success_seq_md):
+                try:
+                    with open(success_seq_md, 'r', encoding='utf-8', errors='replace') as fsm:
+                        success_seq_md_content = fsm.read()[:100000]
+                except Exception:
+                    pass
 
         # 5. Compile prompt payload
         payload = []
@@ -243,6 +338,18 @@ def main():
             payload.append("`[Physical Device / Black-Box Device Mode: No emulator logs available]`")
         else:
             payload.append("`[No correlated Pubber logs found in test time window]`")
+            
+        payload.append(f"\n## Reference Successful Run Details (Differential Triage Baseline)")
+        if success_run_dir:
+            payload.append(f"Found successful execution of this test in sibling: `{os.path.basename(success_run_dir)}`")
+            if success_seq_md_content:
+                payload.append(f"### Reference Successful log.md")
+                payload.append(f"```markdown\n{success_seq_md_content}\n```")
+            if success_seq_log_content:
+                payload.append(f"### Reference Successful log.log")
+                payload.append(f"```text\n{success_seq_log_content}\n```")
+        else:
+            payload.append("`[No successful reference runs found in sibling directories]`")
             
         prompt_payload = "\n".join(payload)
         

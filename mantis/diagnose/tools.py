@@ -22,7 +22,7 @@ def grep_codebase(pattern: str) -> str:
     """
     print(f"[Inspect Tool] grep_codebase called with pattern: '{pattern}'")
     
-    search_dirs = ["validator", "udmis", "pubber"]
+    search_dirs = ["validator/src", "udmis/src", "pubber/src", "common/src", "gencode", "schema"]
     results = []
     
     for sdir in search_dirs:
@@ -30,8 +30,16 @@ def grep_codebase(pattern: str) -> str:
         if not os.path.exists(full_sdir):
             continue
         try:
-            # Use standard grep recursively with line numbers, ignoring binary files
-            cmd = ["grep", "-rnI", "--max-count=50", pattern, sdir]
+            # Use standard grep recursively with line numbers, ignoring binary files, out and build dirs
+            cmd = [
+                "grep", 
+                "-rnI", 
+                "--max-count=50", 
+                "--exclude-dir=out", 
+                "--exclude-dir=build", 
+                pattern, 
+                sdir
+            ]
             out = subprocess.check_output(cmd, cwd=UDMI_ROOT, text=True)
             if out.strip():
                 results.append(out.strip())
