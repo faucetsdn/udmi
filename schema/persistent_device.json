@@ -9,6 +9,10 @@
     },
     "restart_count": {
       "type": "integer"
+    },
+    "applied_blobs": {
+      "type": "object",
+      "existingJavaType": "java.util.HashMap<String, String>"
     }
   }
 }
