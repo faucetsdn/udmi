@@ -1,0 +1,1032 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mantis - Automated Triage & Stability Evaluation</title>
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500&family=Inter:wght@300;400;500;600&family=Outfit:wght@400;600;700;800&display=swap" rel="stylesheet">
+  
+  <style>
+    :root {
+      --bg-light: #f8fafc;
+      --bg-card: #ffffff;
+      --border-color: #e2e8f0;
+      --border-hover: #cbd5e1;
+      --accent-green: #16a34a;
+      --accent-green-dark: #15803d;
+      --accent-green-light: #dcfce7;
+      --accent-teal: #0d9488;
+      --accent-teal-dark: #0f766e;
+      --accent-teal-light: #ccfbf1;
+      --text-primary: #0f172a;
+      --text-muted: #475569;
+      --text-highlight: #1e293b;
+      --font-outfit: 'Outfit', sans-serif;
+      --font-inter: 'Inter', sans-serif;
+      --font-mono: 'Fira Code', monospace;
+      --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.05), 0 1px 2px rgba(0, 0, 0, 0.02);
+      --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
+      --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.05), 0 4px 6px -2px rgba(0, 0, 0, 0.02);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      background-color: var(--bg-light);
+      background-image: 
+        radial-gradient(circle at 10% 20%, rgba(220, 252, 231, 0.3) 0%, transparent 40%),
+        radial-gradient(circle at 90% 80%, rgba(204, 251, 241, 0.3) 0%, transparent 40%);
+      color: var(--text-primary);
+      font-family: var(--font-inter);
+      line-height: 1.6;
+      overflow-x: hidden;
+      padding: 0;
+    }
+
+    /* Header styling */
+    header {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 4rem 2rem 2.5rem;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+      position: relative;
+    }
+
+    .brand-container {
+      display: flex;
+      align-items: center;
+      gap: 1.5rem;
+      margin-bottom: 1rem;
+      animation: fadeInDown 0.6s ease-out;
+    }
+
+    .logo {
+      width: 80px;
+      height: 80px;
+      object-fit: contain;
+      animation: float 6s ease-in-out infinite;
+    }
+
+    h1 {
+      font-family: var(--font-outfit);
+      font-size: 3rem;
+      font-weight: 800;
+      letter-spacing: -0.03em;
+      color: var(--text-highlight);
+      background: linear-gradient(135deg, var(--text-highlight) 40%, var(--accent-teal-dark));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .subtitle {
+      font-family: var(--font-outfit);
+      font-size: 1.2rem;
+      color: var(--accent-teal-dark);
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      margin-bottom: 1rem;
+    }
+
+    .tagline {
+      max-width: 750px;
+      font-size: 1.1rem;
+      color: var(--text-muted);
+      margin-bottom: 1.5rem;
+    }
+
+    /* Navigation & Breadcrumbs */
+    .nav-breadcrumbs {
+      width: 100%;
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 1.5rem 2rem 0;
+      display: flex;
+      gap: 0.5rem;
+      font-family: var(--font-outfit);
+      font-size: 0.9rem;
+      color: var(--text-muted);
+    }
+
+    .nav-breadcrumbs a {
+      color: var(--text-muted);
+      text-decoration: none;
+      transition: color 0.3s;
+    }
+
+    .nav-breadcrumbs a:hover {
+      color: var(--accent-green-dark);
+    }
+
+    .nav-breadcrumbs span {
+      color: var(--accent-teal-dark);
+    }
+
+    /* Main Layout */
+    main {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 0 2rem 5rem;
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 3.5rem;
+    }
+
+    /* Grid layout for 2-column overview section */
+    .overview-grid {
+      display: grid;
+      grid-template-columns: 1.2fr 0.8fr;
+      gap: 2rem;
+      align-items: stretch;
+    }
+
+    @media (max-width: 900px) {
+      .overview-grid {
+        grid-template-columns: 1fr;
+      }
+      h1 {
+        font-size: 2.3rem;
+      }
+    }
+
+    /* Clean Card styles */
+    .card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      padding: 2.5rem;
+      transition: all 0.3s ease;
+      box-shadow: var(--shadow-md);
+    }
+
+    .card:hover {
+      transform: translateY(-3px);
+      border-color: var(--border-hover);
+      box-shadow: var(--shadow-lg);
+    }
+
+    .card-title {
+      font-family: var(--font-outfit);
+      font-size: 1.6rem;
+      font-weight: 700;
+      color: var(--text-highlight);
+      margin-bottom: 1.2rem;
+      display: flex;
+      align-items: center;
+      gap: 0.8rem;
+    }
+
+    .card-title svg {
+      color: var(--accent-green-dark);
+    }
+
+    .card-content p {
+      margin-bottom: 1.2rem;
+      color: var(--text-muted);
+    }
+
+    .card-content ul {
+      list-style: none;
+      margin-left: 0.5rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .card-content li {
+      position: relative;
+      padding-left: 1.8rem;
+      margin-bottom: 0.8rem;
+      color: var(--text-muted);
+    }
+
+    .card-content li::before {
+      content: '✓';
+      position: absolute;
+      left: 0;
+      color: var(--accent-green-dark);
+      font-weight: bold;
+    }
+
+    /* Persona Callout Box */
+    .persona-box {
+      background: var(--accent-teal-light);
+      border-left: 4px solid var(--accent-teal-dark);
+      padding: 1.5rem;
+      border-radius: 0 8px 8px 0;
+      margin-top: 1.5rem;
+    }
+
+    .persona-header {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      font-family: var(--font-outfit);
+      font-weight: 700;
+      font-size: 1.1rem;
+      color: var(--accent-teal-dark);
+      margin-bottom: 0.5rem;
+    }
+
+    .persona-text {
+      font-style: italic;
+      color: var(--text-primary);
+      line-height: 1.6;
+    }
+
+    /* Interactive Timeline Section */
+    .timeline-section {
+      margin-top: 1rem;
+    }
+
+    .timeline-nav {
+      display: flex;
+      justify-content: space-between;
+      background: rgba(241, 245, 249, 0.8);
+      border: 1px solid var(--border-color);
+      border-radius: 30px;
+      padding: 0.4rem;
+      margin-bottom: 1.5rem;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .timeline-btn {
+      flex: 1;
+      background: none;
+      border: none;
+      color: var(--text-muted);
+      font-family: var(--font-outfit);
+      font-size: 1rem;
+      font-weight: 600;
+      padding: 0.7rem 1.2rem;
+      cursor: pointer;
+      border-radius: 25px;
+      transition: all 0.3s ease;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.6rem;
+      z-index: 2;
+    }
+
+    .timeline-btn.active {
+      color: #ffffff;
+      background: linear-gradient(135deg, var(--accent-green-dark), var(--accent-teal-dark));
+      box-shadow: var(--shadow-sm);
+    }
+
+    .timeline-btn:not(.active):hover {
+      color: var(--accent-teal-dark);
+      background: rgba(255, 255, 255, 0.5);
+    }
+
+    .timeline-content-box {
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      padding: 2.2rem;
+      min-height: 230px;
+      display: none;
+      box-shadow: var(--shadow-md);
+      animation: fadeInUp 0.4s ease-out forwards;
+    }
+
+    .timeline-content-box.active {
+      display: block;
+    }
+
+    .timeline-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid var(--border-color);
+      padding-bottom: 1rem;
+      margin-bottom: 1.2rem;
+    }
+
+    .timeline-step-num {
+      font-family: var(--font-outfit);
+      font-size: 0.85rem;
+      color: var(--accent-green-dark);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      background: var(--accent-green-light);
+      padding: 0.25rem 0.75rem;
+      border-radius: 20px;
+      border: 1px solid rgba(22, 163, 74, 0.3);
+    }
+
+    .timeline-step-title {
+      font-family: var(--font-outfit);
+      font-size: 1.4rem;
+      font-weight: 700;
+      color: var(--text-highlight);
+    }
+
+    .timeline-details {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 2rem;
+    }
+
+    @media (max-width: 768px) {
+      .timeline-nav {
+        flex-direction: column;
+        border-radius: 12px;
+      }
+      .timeline-btn {
+        border-radius: 6px;
+      }
+      .timeline-details {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .timeline-io {
+      display: flex;
+      flex-direction: column;
+      gap: 0.8rem;
+    }
+
+    .io-tag {
+      font-size: 0.8rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--accent-teal-dark);
+      margin-bottom: 0.1rem;
+    }
+
+    .io-val {
+      background: #0f172a;
+      border: 1px solid rgba(255, 255, 255, 0.05);
+      border-radius: 6px;
+      padding: 0.7rem 1rem;
+      font-family: var(--font-mono);
+      font-size: 0.85rem;
+      color: #38bdf8;
+    }
+
+    /* Interactive Terminal Simulator Section */
+    .terminal-section {
+      margin-top: 1rem;
+    }
+
+    .terminal-window {
+      background: #0f172a;
+      border: 1px solid var(--border-hover);
+      border-radius: 8px;
+      box-shadow: var(--shadow-lg);
+      overflow: hidden;
+      font-family: var(--font-mono);
+      font-size: 0.85rem;
+      height: 430px;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .terminal-bar {
+      background: #1e293b;
+      padding: 0.6rem 1.2rem;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .terminal-buttons {
+      display: flex;
+      gap: 0.4rem;
+    }
+
+    .t-btn {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+    }
+
+    .t-btn.close { background: #ef4444; }
+    .t-btn.minimize { background: #f59e0b; }
+    .t-btn.maximize { background: #10b981; }
+
+    .terminal-title {
+      color: #94a3b8;
+      font-size: 0.75rem;
+      letter-spacing: 0.05em;
+    }
+
+    .terminal-body {
+      padding: 1.2rem;
+      overflow-y: auto;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 0.4rem;
+      scroll-behavior: smooth;
+    }
+
+    .terminal-line {
+      line-height: 1.5;
+      white-space: pre-wrap;
+    }
+
+    .cmd-prompt {
+      color: #4ade80;
+      margin-right: 0.5rem;
+    }
+
+    .cmd-input {
+      color: #ffffff;
+    }
+
+    .terminal-log {
+      color: #e2e8f0;
+    }
+
+    .terminal-success {
+      color: #2dd4bf;
+    }
+
+    .terminal-info {
+      color: #94a3b8;
+    }
+
+    .terminal-warning {
+      color: #fbbf24;
+    }
+
+    .terminal-header-block {
+      color: #4ade80;
+      font-weight: 600;
+      border-left: 3px solid #4ade80;
+      padding-left: 0.5rem;
+      margin: 0.4rem 0;
+    }
+
+    .terminal-action-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: #1e293b;
+      padding: 0.8rem 1.2rem;
+      border-top: 1px solid rgba(255, 255, 255, 0.05);
+    }
+
+    .action-instruction {
+      color: #cbd5e1;
+      font-size: 0.85rem;
+    }
+
+    .run-btn {
+      background: linear-gradient(135deg, var(--accent-green), var(--accent-teal));
+      color: #ffffff;
+      border: none;
+      font-family: var(--font-outfit);
+      font-size: 0.9rem;
+      font-weight: 700;
+      padding: 0.6rem 1.5rem;
+      border-radius: 20px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+    }
+
+    .run-btn:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 4px 12px rgba(22, 163, 74, 0.2);
+    }
+
+    .run-btn:active {
+      transform: translateY(0);
+    }
+
+    .run-btn:disabled {
+      background: rgba(255, 255, 255, 0.08);
+      color: #64748b;
+      box-shadow: none;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    /* CLI Reference Section */
+    .cli-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 1.5rem;
+    }
+
+    .code-box {
+      background: #0f172a;
+      border: 1px solid #334155;
+      border-radius: 6px;
+      padding: 1rem;
+      font-family: var(--font-mono);
+      font-size: 0.85rem;
+      color: #38bdf8;
+      margin-bottom: 1.2rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .copy-btn {
+      background: rgba(255, 255, 255, 0.08);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      color: #cbd5e1;
+      font-family: var(--font-outfit);
+      font-size: 0.75rem;
+      font-weight: 600;
+      padding: 0.25rem 0.5rem;
+      border-radius: 4px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .copy-btn:hover {
+      color: #4ade80;
+      background: rgba(74, 222, 128, 0.08);
+      border-color: #4ade80;
+    }
+
+    /* Footer styling */
+    footer {
+      border-top: 1px solid var(--border-color);
+      padding: 2.5rem 2rem;
+      text-align: center;
+      font-family: var(--font-outfit);
+      font-size: 0.85rem;
+      color: var(--text-muted);
+    }
+
+    footer a {
+      color: var(--accent-teal-dark);
+      text-decoration: none;
+      transition: color 0.2s;
+    }
+
+    footer a:hover {
+      color: var(--accent-green-dark);
+    }
+
+    /* Custom scrollbar styling */
+    ::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+
+    ::-webkit-scrollbar-track {
+      background: var(--bg-light);
+    }
+
+    ::-webkit-scrollbar-thumb {
+      background: #cbd5e1;
+      border-radius: 3px;
+    }
+
+    ::-webkit-scrollbar-thumb:hover {
+      background: #94a3b8;
+    }
+
+    /* Animations */
+    @keyframes float {
+      0% { transform: translateY(0px); }
+      50% { transform: translateY(-5px); }
+      100% { transform: translateY(0px); }
+    }
+
+    @keyframes fadeInDown {
+      from {
+        opacity: 0;
+        transform: translateY(-10px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    @keyframes fadeInUp {
+      from {
+        opacity: 0;
+        transform: translateY(10px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    /* Pulse blinker for active terminal prompt */
+    .blinking-cursor {
+      animation: blink 1s step-end infinite;
+      color: #4ade80;
+    }
+
+    @keyframes blink {
+      from, to { opacity: 1; }
+      50% { opacity: 0; }
+    }
+  </style>
+</head>
+<body>
+
+  <nav class="nav-breadcrumbs">
+    <a href="../../">UDMI</a> &gt; <a href="../">Docs</a> &gt; <a href="readme.md">Tools</a> &gt; <span>Mantis</span>
+  </nav>
+
+  <header>
+    <div class="brand-container">
+      <img src="img/mantis-logo.png" alt="Mantis Logo" class="logo">
+      <h1>Mantis</h1>
+    </div>
+    <p class="subtitle">Automated Triage & Stability Evaluation</p>
+    <p class="tagline">
+      An automated diagnostics framework designed to consolidate support bundles, evaluate test stability, and perform differential triage for UDMI sequencer test executions.
+    </p>
+  </header>
+
+  <main>
+
+    <!-- Overview Grid Section -->
+    <section class="overview-grid">
+      
+      <!-- Why it is required -->
+      <div class="card">
+        <h2 class="card-title">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+          Simplifying Log Triage
+        </h2>
+        <div class="card-content">
+          <p>
+            Testing UDMI sequences produces complex outputs distributed across several layers: the <strong>Sequencer</strong> validator, <strong>Pubber</strong> client simulator, <strong>MQTT broker</strong>, and cloud-side <strong>UDMIS infrastructure</strong>.
+          </p>
+          <p>
+            Analyzing a test failure or flaky behavioral variance manually is time-consuming:
+          </p>
+          <ul>
+            <li><strong>Varying Time Triggers</strong>: Simple diffs are not effective because timestamps, sequence ID hashes, and runtime thread names vary on every execution.</li>
+            <li><strong>High Concurrency Noise</strong>: Sifting through hundreds of lines of logs is necessary to locate a single timing offset or configuration mismatch.</li>
+            <li><strong>Flakiness Isolation</strong>: It can be challenging to distinguish random execution flakes from consistent code regressions.</li>
+          </ul>
+          <p>
+            <strong>Mantis</strong> addresses this by automating the collection of run statistics, identifying flakiness distribution, and using differential matching algorithms to isolate failures.
+          </p>
+        </div>
+      </div>
+
+      <!-- Persona Box / Method Box -->
+      <div class="card" style="display: flex; flex-direction: column; justify-content: space-between;">
+        <div>
+          <h2 class="card-title" style="color: var(--accent-teal-dark);">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg>
+            Analysis Approach
+          </h2>
+          <div class="card-content">
+            <p>
+              Mantis handles test diagnosis by focusing strictly on high-signal behavioral diffs:
+            </p>
+            <div class="persona-box">
+              <div class="persona-header">
+                <span>📋 Systematic Diagnostics</span>
+              </div>
+              <p class="persona-text">
+                "Rather than checking static outputs, I map exact test execution time boundaries, locate successful sibling reference runs, filter out transaction noise, and link differences directly back to the source code files to show where execution diverged."
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </section>
+
+    <!-- How it Works: Timeline Section -->
+    <section class="timeline-section">
+      <h2 class="card-title" style="margin-bottom: 1.5rem;">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+        The Mantis Workflow
+      </h2>
+
+      <div class="timeline-nav">
+        <button class="timeline-btn active" onclick="switchTimeline('collect')">
+          <span>1. Collect</span>
+        </button>
+        <button class="timeline-btn" onclick="switchTimeline('evaluate')">
+          <span>2. Evaluate</span>
+        </button>
+        <button class="timeline-btn" onclick="switchTimeline('diagnose')">
+          <span>3. Diagnose</span>
+        </button>
+      </div>
+
+      <!-- Timeline 1: Collect -->
+      <div id="tl-collect" class="timeline-content-box active">
+        <div class="timeline-header">
+          <span class="timeline-step-title">Support Bundle Aggregation</span>
+          <span class="timeline-step-num">Phase One</span>
+        </div>
+        <div class="timeline-details">
+          <div>
+            <p style="margin-bottom: 1rem;">
+              Mantis begins by aggregating run information. It pulls complete support bundles from local environments or CI test systems.
+            </p>
+            <p style="color: var(--text-muted);">
+              These bundles consolidate sequence execution stats, console logs, and configuration files, ensuring all diagnostic context is preserved.
+            </p>
+          </div>
+          <div class="timeline-io">
+            <div>
+              <div class="io-tag">CLI Command</div>
+              <div class="io-val">bin/collect_stats 3 mantis</div>
+            </div>
+            <div>
+              <div class="io-tag">Output Directory</div>
+              <div class="io-val">mantis/out/test_bundles/</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Timeline 2: Evaluate -->
+      <div id="tl-evaluate" class="timeline-content-box">
+        <div class="timeline-header">
+          <span class="timeline-step-title">Suite Stability Evaluation</span>
+          <span class="timeline-step-num">Phase Two</span>
+        </div>
+        <div class="timeline-details">
+          <div>
+            <p style="margin-bottom: 1rem;">
+              The stability evaluator calculates run metrics across all collected bundles to identify failure patterns.
+            </p>
+            <p style="color: var(--text-muted);">
+              By evaluating failure rates and comparing logs against reference runs, it flags which tests are consistently failing versus which are flaky.
+            </p>
+          </div>
+          <div class="timeline-io">
+            <div>
+              <div class="io-tag">CLI Command</div>
+              <div class="io-val">bin/evaluate_stability</div>
+            </div>
+            <div>
+              <div class="io-tag">Output Summary</div>
+              <div class="io-val">mantis/out/stability_report.md</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Timeline 3: Diagnose -->
+      <div id="tl-diagnose" class="timeline-content-box">
+        <div class="timeline-header">
+          <span class="timeline-step-title">Differential Triage</span>
+          <span class="timeline-step-num">Phase Three</span>
+        </div>
+        <div class="timeline-details">
+          <div>
+            <p style="margin-bottom: 1rem;">
+              The core triage component performs targeted analysis on a failing test.
+            </p>
+            <p style="color: var(--text-muted);">
+              It automatically discovers successful sibling runs of the same test, extracts strict time boundaries, strips variable execution hashes, and pinpoints the exact step where the failure occurred.
+            </p>
+          </div>
+          <div class="timeline-io">
+            <div>
+              <div class="io-tag">CLI Command</div>
+              <div class="io-val">bin/diagnose system_mode_restart</div>
+            </div>
+            <div>
+              <div class="io-tag">Output Report</div>
+              <div class="io-val">triage_analysis.md (inside test folder)</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </section>
+
+    <!-- Interactive CLI Terminal Section -->
+    <section class="terminal-section">
+      <h2 class="card-title" style="margin-bottom: 1.5rem;">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="4 17 10 11 4 5"/><line x1="12" y1="19" x2="20" y2="19"/></svg>
+        CLI Simulator
+      </h2>
+
+      <div class="terminal-window">
+        <div class="terminal-bar">
+          <div class="terminal-buttons">
+            <span class="t-btn close"></span>
+            <span class="t-btn minimize"></span>
+            <span class="t-btn maximize"></span>
+          </div>
+          <div class="terminal-title">mantis_triage_sandbox - bash - 80x24</div>
+          <div></div>
+        </div>
+        
+        <div id="terminal-body" class="terminal-body">
+          <div class="terminal-line"><span class="cmd-prompt">udmi-user@mantis-hub:~$</span><span class="cmd-input">bin/diagnose system_mode_restart</span></div>
+          <div class="terminal-line terminal-info">Ready to run triage simulation. Click the button below to execute.</div>
+          <div id="terminal-end" class="terminal-line"><span class="blinking-cursor">_</span></div>
+        </div>
+
+        <div class="terminal-action-bar">
+          <span class="action-instruction">Click to simulate a Mantis triage run on `system_mode_restart`:</span>
+          <button id="run-terminal-btn" class="run-btn" onclick="runTerminalSimulation()">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+            Run Triage
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- Usage Guide / CLI Commands Reference -->
+    <section class="card">
+      <h2 class="card-title" style="color: var(--accent-teal-dark);">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+        CLI Reference
+      </h2>
+      <div class="card-content">
+        <p>
+          Mantis processes are executed locally via shell scripts. Use these core commands in your workflow:
+        </p>
+
+        <div class="cli-grid" style="margin-top: 1.5rem;">
+          
+          <div>
+            <h3 style="font-family: var(--font-outfit); margin-bottom: 0.4rem; color: var(--text-highlight); font-size: 1.1rem;">1. stats collector</h3>
+            <p style="font-size: 0.9rem; color: var(--text-muted); margin-bottom: 0.8rem;">
+              Collects test run bundles. Specify the run count and the branch.
+            </p>
+            <div class="code-box">
+              <span>bin/collect_stats 3 mantis</span>
+              <button class="copy-btn" onclick="copyText(this, 'bin/collect_stats 3 mantis')">Copy</button>
+            </div>
+          </div>
+
+          <div>
+            <h3 style="font-family: var(--font-outfit); margin-bottom: 0.4rem; color: var(--text-highlight); font-size: 1.1rem;">2. stability evaluator</h3>
+            <p style="font-size: 0.9rem; color: var(--text-muted); margin-bottom: 0.8rem;">
+              Analyzes all collected bundles to build stability models and flag flaky tests.
+            </p>
+            <div class="code-box">
+              <span>bin/evaluate_stability</span>
+              <button class="copy-btn" onclick="copyText(this, 'bin/evaluate_stability')">Copy</button>
+            </div>
+          </div>
+
+          <div>
+            <h3 style="font-family: var(--font-outfit); margin-bottom: 0.4rem; color: var(--text-highlight); font-size: 1.1rem;">3. differential diagnose</h3>
+            <p style="font-size: 0.9rem; color: var(--text-muted); margin-bottom: 0.8rem;">
+              Runs differential analysis on a targeted test to produce a localized triage report.
+            </p>
+            <div class="code-box">
+              <span>bin/diagnose system_mode_restart</span>
+              <button class="copy-btn" onclick="copyText(this, 'bin/diagnose system_mode_restart')">Copy</button>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <footer>
+    <p>&copy; 2026 UDMI Project. Developed by <a href="#">Antigravity Team</a>.</p>
+  </footer>
+
+  <!-- Javascript logic for Interactivity -->
+  <script>
+    // Timeline Switcher
+    function switchTimeline(phase) {
+      // deactivate current active nav
+      document.querySelectorAll('.timeline-btn').forEach(btn => btn.classList.remove('active'));
+      document.querySelectorAll('.timeline-content-box').forEach(box => box.classList.remove('active'));
+
+      // activate new ones
+      const activeBtn = Array.from(document.querySelectorAll('.timeline-btn')).find(btn => btn.getAttribute('onclick').includes(phase));
+      if (activeBtn) activeBtn.classList.add('active');
+
+      const activeBox = document.getElementById('tl-' + phase);
+      if (activeBox) activeBox.classList.add('active');
+    }
+
+    // Copy to clipboard helper
+    function copyText(button, text) {
+      navigator.clipboard.writeText(text).then(() => {
+        const original = button.innerText;
+        button.innerText = 'Copied!';
+        button.style.color = '#4ade80';
+        button.style.borderColor = '#4ade80';
+        setTimeout(() => {
+          button.innerText = original;
+          button.style.color = '';
+          button.style.borderColor = '';
+        }, 1500);
+      });
+    }
+
+    // Terminal Simulation Script
+    const simulatedLogs = [
+      { type: 'log', text: '[INFO] Initializing Mantis Diagnostics on test: [system_mode_restart]...' },
+      { type: 'log', text: '[INFO] Locating test bundles at: mantis/out/test_bundles/_mqtt_localhost...' },
+      { type: 'success', text: '[SUCCESS] Found 3 execution runs (2 failed, 1 succeeded)' },
+      { type: 'log', text: '[INFO] Target failure run identified: run_1' },
+      { type: 'log', text: '[INFO] Sibling baseline run identified: run_2 (succeeded)' },
+      { type: 'header', text: 'Step 1: Timebound Extraction' },
+      { type: 'log', text: '[INFO] Analyzing sequencer log triggers...' },
+      { type: 'success', text: '  └─ Execution Start: 2026-05-19T01:17:29Z' },
+      { type: 'success', text: '  └─ Execution Stop:  2026-05-19T01:18:20Z' },
+      { type: 'log', text: '[INFO] Slicing log windows using timebounds (+ 5s padding)...' },
+      { type: 'header', text: 'Step 2: Site Model Resolution' },
+      { type: 'log', text: '[INFO] Validating site model definition...' },
+      { type: 'warning', text: '[WARN] site_model/metadata.json missing from local run bundle.' },
+      { type: 'log', text: '[INFO] Applying fallback search in workspace: /sites/udmi_site_model' },
+      { type: 'success', text: '[SUCCESS] Site model matched successfully.' },
+      { type: 'header', text: 'Step 3: Differential Log Correlation' },
+      { type: 'log', text: '[INFO] Correlating pubber logs with sequencer state validations...' },
+      { type: 'log', text: '[INFO] Filtering transaction hashes and thread names...' },
+      { type: 'warning', text: '  └─ Identified execution divergence at [01:17:40Z]:' },
+      { type: 'log', text: '     [Run 1 - FAILED] System restart command timed out waiting for pubber reset' },
+      { type: 'log', text: '     [Run 2 - PASSED] Received system.mode restart update from pubber' },
+      { type: 'header', text: 'Step 4: Codebase Integration' },
+      { type: 'log', text: '[INFO] Scanning codebase for sequence definitions...' },
+      { type: 'success', text: '  └─ Sequence spec: docs/specs/sequences/system_mode_restart.md' },
+      { type: 'success', text: '  └─ Code source: BlobsetSequences.java [Line 338]' },
+      { type: 'header', text: 'Triage Summary Report Generated' },
+      { type: 'success', text: '---------------------------------------------------------------------' },
+      { type: 'success', text: 'Triage Diagnostic: COMPLETE' },
+      { type: 'success', text: 'Result: system_mode_restart failed in run_1 due to system mode' },
+      { type: 'success', text: 'restart timeout. Pubber did not state-transition within the validation window.' },
+      { type: 'success', text: 'Resolution: Check pubber mode transitions under mock flags.' },
+      { type: 'success', text: 'Triage Report written to: mantis/out/diagnose/mqtt_localhost/udmi_site_model/AHU-1/system_mode_restart/triage_analysis.md' },
+      { type: 'success', text: '---------------------------------------------------------------------' }
+    ];
+
+    let simRunning = false;
+
+    function runTerminalSimulation() {
+      if (simRunning) return;
+      simRunning = true;
+
+      const runBtn = document.getElementById('run-terminal-btn');
+      runBtn.disabled = true;
+      runBtn.innerText = 'Simulating...';
+
+      const termBody = document.getElementById('terminal-body');
+      const termEnd = document.getElementById('terminal-end');
+      
+      // Clear previous simulated lines (keep only initial prompt)
+      while (termBody.children.length > 2) {
+        termBody.removeChild(termBody.children[1]);
+      }
+
+      let index = 0;
+
+      function printNextLine() {
+        if (index >= simulatedLogs.length) {
+          simRunning = false;
+          runBtn.disabled = false;
+          runBtn.innerHTML = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"/></svg> Run Triage`;
+          return;
+        }
+
+        const logData = simulatedLogs[index];
+        const lineDiv = document.createElement('div');
+        lineDiv.className = 'terminal-line';
+
+        if (logData.type === 'success') {
+          lineDiv.className += ' terminal-success';
+        } else if (logData.type === 'info') {
+          lineDiv.className += ' terminal-info';
+        } else if (logData.type === 'warning') {
+          lineDiv.className += ' terminal-warning';
+        } else if (logData.type === 'header') {
+          lineDiv.className += ' terminal-header-block';
+        } else {
+          lineDiv.className += ' terminal-log';
+        }
+
+        lineDiv.innerText = logData.text;
+        termBody.insertBefore(lineDiv, termEnd);
+        termBody.scrollTop = termBody.scrollHeight;
+
+        index++;
+        setTimeout(printNextLine, 120 + Math.random() * 80);
+      }
+
+      setTimeout(printNextLine, 300);
+    }
+  </script>
+</body>
+</html>
