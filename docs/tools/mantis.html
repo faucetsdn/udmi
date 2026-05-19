@@ -41,8 +41,8 @@
     body {
       background-color: var(--bg-light);
       background-image: 
-        radial-gradient(circle at 10% 20%, rgba(220, 252, 231, 0.3) 0%, transparent 40%),
-        radial-gradient(circle at 90% 80%, rgba(204, 251, 241, 0.3) 0%, transparent 40%);
+        radial-gradient(circle at 10% 20%, rgba(220, 252, 231, 0.2) 0%, transparent 40%),
+        radial-gradient(circle at 90% 80%, rgba(204, 251, 241, 0.2) 0%, transparent 40%);
       color: var(--text-primary);
       font-family: var(--font-inter);
       line-height: 1.6;
@@ -50,112 +50,175 @@
       padding: 0;
     }
 
-    /* Header styling */
-    header {
-      max-width: 1200px;
+    /* Main Layout Container */
+    .app-container {
+      max-width: 1300px;
       margin: 0 auto;
-      padding: 4rem 2rem 2.5rem;
+      display: grid;
+      grid-template-columns: 280px 1fr;
+      gap: 2.5rem;
+      padding: 2.5rem 2rem;
+    }
+
+    /* Sidebar styling */
+    aside.sidebar {
+      position: sticky;
+      top: 2.5rem;
+      height: calc(100vh - 5rem);
       display: flex;
       flex-direction: column;
       align-items: center;
       text-align: center;
-      position: relative;
+      padding: 2.2rem 1.8rem;
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      box-shadow: var(--shadow-md);
     }
 
-    .brand-container {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 1rem;
-      margin-bottom: 1.5rem;
-      animation: fadeInDown 0.6s ease-out;
-    }
-
-    .logo {
-      width: 160px;
-      height: 160px;
+    .sidebar-logo {
+      width: 120px;
+      height: 120px;
       object-fit: contain;
+      margin-bottom: 0.8rem;
     }
 
-    h1 {
+    .sidebar-title {
       font-family: var(--font-outfit);
-      font-size: 3rem;
+      font-size: 2rem;
       font-weight: 800;
       letter-spacing: -0.03em;
       color: var(--text-highlight);
-      background: linear-gradient(135deg, var(--text-highlight) 40%, var(--accent-teal-dark));
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
+      margin-bottom: 0.2rem;
     }
 
-    .subtitle {
+    .sidebar-subtitle {
       font-family: var(--font-outfit);
-      font-size: 1.2rem;
+      font-size: 0.85rem;
       color: var(--accent-teal-dark);
       font-weight: 600;
       text-transform: uppercase;
-      letter-spacing: 0.1em;
-      margin-bottom: 1rem;
+      letter-spacing: 0.05em;
+      line-height: 1.3;
+      margin-bottom: 2rem;
     }
 
-    .tagline {
-      max-width: 750px;
-      font-size: 1.1rem;
-      color: var(--text-muted);
-      margin-bottom: 1.5rem;
-    }
-
-    /* Navigation & Breadcrumbs */
-    .nav-breadcrumbs {
+    /* Navigation inside Sidebar */
+    .sidebar-nav {
       width: 100%;
-      max-width: 1200px;
-      margin: 0 auto;
-      padding: 1.5rem 2rem 0;
       display: flex;
-      gap: 0.5rem;
-      font-family: var(--font-outfit);
-      font-size: 0.9rem;
-      color: var(--text-muted);
+      flex-direction: column;
+      gap: 0.4rem;
+      text-align: left;
     }
 
-    .nav-breadcrumbs a {
+    .nav-link {
+      display: block;
+      padding: 0.6rem 1rem;
       color: var(--text-muted);
       text-decoration: none;
-      transition: color 0.3s;
+      font-family: var(--font-outfit);
+      font-weight: 600;
+      font-size: 0.95rem;
+      border-radius: 6px;
+      transition: all 0.2s ease;
     }
 
-    .nav-breadcrumbs a:hover {
+    .nav-link:hover {
+      color: var(--accent-teal-dark);
+      background: rgba(241, 245, 249, 0.8);
+    }
+
+    .nav-link.active {
+      color: #ffffff;
+      background: linear-gradient(135deg, var(--accent-green-dark), var(--accent-teal-dark));
+      box-shadow: var(--shadow-sm);
+    }
+
+    .sidebar-breadcrumbs {
+      margin-top: auto;
+      font-family: var(--font-outfit);
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      border-top: 1px solid var(--border-color);
+      width: 100%;
+      padding-top: 1.2rem;
+    }
+
+    .sidebar-breadcrumbs a {
+      color: var(--text-muted);
+      text-decoration: none;
+      transition: color 0.2s;
+    }
+
+    .sidebar-breadcrumbs a:hover {
       color: var(--accent-green-dark);
     }
 
-    .nav-breadcrumbs span {
-      color: var(--accent-teal-dark);
+    /* Main Content Column */
+    main.main-content {
+      display: flex;
+      flex-direction: column;
+      gap: 3rem;
     }
 
-    /* Main Layout */
-    main {
-      max-width: 1200px;
-      margin: 0 auto;
-      padding: 0 2rem 5rem;
-      display: grid;
-      grid-template-columns: 1fr;
-      gap: 3.5rem;
+    /* Tagline Container at top of main */
+    .tagline-container {
+      background: linear-gradient(135deg, rgba(255, 255, 255, 0.8), rgba(241, 245, 249, 0.4));
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      padding: 2rem;
+      box-shadow: var(--shadow-sm);
+    }
+
+    .tagline {
+      font-size: 1.15rem;
+      color: var(--text-muted);
+      line-height: 1.65;
+    }
+
+    /* Responsive breakdown for mobile/tablets */
+    @media (max-width: 950px) {
+      .app-container {
+        grid-template-columns: 1fr;
+        gap: 2rem;
+        padding: 1.5rem 1rem;
+      }
+
+      aside.sidebar {
+        position: static;
+        height: auto;
+        padding: 2rem;
+      }
+
+      .sidebar-nav {
+        flex-direction: row;
+        flex-wrap: wrap;
+        justify-content: center;
+        gap: 0.5rem;
+      }
+
+      .nav-link {
+        padding: 0.5rem 0.8rem;
+        font-size: 0.85rem;
+      }
+
+      .sidebar-breadcrumbs {
+        margin-top: 1.5rem;
+      }
     }
 
     /* Grid layout for 2-column overview section */
     .overview-grid {
       display: grid;
-      grid-template-columns: 1.2fr 0.8fr;
+      grid-template-columns: 1.25fr 0.75fr;
       gap: 2rem;
       align-items: stretch;
     }
 
-    @media (max-width: 900px) {
+    @media (max-width: 800px) {
       .overview-grid {
         grid-template-columns: 1fr;
-      }
-      h1 {
-        font-size: 2.3rem;
       }
     }
 
@@ -244,7 +307,7 @@
 
     /* Interactive Timeline Section */
     .timeline-section {
-      margin-top: 1rem;
+      margin-top: 0.5rem;
     }
 
     .timeline-nav {
@@ -378,7 +441,7 @@
 
     /* Interactive Terminal Simulator Section */
     .terminal-section {
-      margin-top: 1rem;
+      margin-top: 0.5rem;
     }
 
     .terminal-window {
@@ -522,7 +585,7 @@
     /* CLI Reference Section */
     .cli-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
       gap: 1.5rem;
     }
 
@@ -599,12 +662,6 @@
     }
 
     /* Animations */
-    @keyframes float {
-      0% { transform: translateY(0px); }
-      50% { transform: translateY(-5px); }
-      100% { transform: translateY(0px); }
-    }
-
     @keyframes fadeInDown {
       from {
         opacity: 0;
@@ -641,272 +698,295 @@
 </head>
 <body>
 
-  <nav class="nav-breadcrumbs">
-    <a href="../../">UDMI</a> &gt; <a href="../">Docs</a> &gt; <a href="readme.md">Tools</a> &gt; <span>Mantis</span>
-  </nav>
-
-  <header>
-    <div class="brand-container">
-      <img src="img/mantis-logo.png" alt="Mantis Logo" class="logo">
-      <h1>Mantis</h1>
-    </div>
-    <p class="subtitle">Automated Triage & Stability Evaluation</p>
-    <p class="tagline">
-      An automated diagnostics framework designed to consolidate support bundles, evaluate test stability, and perform differential triage for UDMI sequencer test executions.
-    </p>
-  </header>
-
-  <main>
-
-    <!-- Overview Grid Section -->
-    <section class="overview-grid">
+  <div class="app-container">
+    
+    <!-- Sidebar Column -->
+    <aside class="sidebar">
+      <img src="img/mantis-logo.png" alt="Mantis Logo" class="sidebar-logo">
+      <h1 class="sidebar-title">Mantis</h1>
+      <p class="sidebar-subtitle">Automated Triage & Stability Evaluation</p>
       
-      <!-- Why it is required -->
-      <div class="card">
-        <h2 class="card-title">
-          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
-          Simplifying Log Triage
-        </h2>
-        <div class="card-content">
-          <p>
-            Testing UDMI sequences produces complex outputs distributed across several layers: the <strong>Sequencer</strong> validator, <strong>Pubber</strong> client simulator, <strong>MQTT broker</strong>, and cloud-side <strong>UDMIS infrastructure</strong>.
-          </p>
-          <p>
-            Analyzing a test failure or flaky behavioral variance manually is time-consuming:
-          </p>
-          <ul>
-            <li><strong>Varying Time Triggers</strong>: Simple diffs are not effective because timestamps, sequence ID hashes, and runtime thread names vary on every execution.</li>
-            <li><strong>High Concurrency Noise</strong>: Sifting through hundreds of lines of logs is necessary to locate a single timing offset or configuration mismatch.</li>
-            <li><strong>Flakiness Isolation</strong>: It can be challenging to distinguish random execution flakes from consistent code regressions.</li>
-          </ul>
-          <p>
-            <strong>Mantis</strong> addresses this by automating the collection of run statistics, identifying flakiness distribution, and using differential matching algorithms to isolate failures.
-          </p>
-        </div>
+      <nav class="sidebar-nav">
+        <a href="#overview" class="nav-link active" onclick="activateNavLink(this)">Overview</a>
+        <a href="#workflow" class="nav-link" onclick="activateNavLink(this)">Workflow</a>
+        <a href="#sandbox" class="nav-link" onclick="activateNavLink(this)">CLI Simulator</a>
+        <a href="#reference" class="nav-link" onclick="activateNavLink(this)">CLI Reference</a>
+      </nav>
+      
+      <div class="sidebar-breadcrumbs">
+        <a href="../../">UDMI</a> &gt; <a href="../">Docs</a> &gt; <a href="readme.md">Tools</a>
+      </div>
+    </aside>
+
+    <!-- Main Content Column -->
+    <main class="main-content">
+      
+      <!-- Tagline Container -->
+      <div id="overview" class="tagline-container">
+        <p class="tagline">
+          Mantis is an automated diagnostic utility designed to consolidate run support bundles, evaluate test stability trends, and perform differential failure log analysis across the UDMI software stack.
+        </p>
       </div>
 
-      <!-- Persona Box / Method Box -->
-      <div class="card" style="display: flex; flex-direction: column; justify-content: space-between;">
-        <div>
-          <h2 class="card-title" style="color: var(--accent-teal-dark);">
-            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg>
-            Analysis Approach
+      <!-- Overview Grid Section -->
+      <section class="overview-grid">
+        
+        <!-- Why it is required -->
+        <div class="card">
+          <h2 class="card-title">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+            Simplifying Log Triage
           </h2>
           <div class="card-content">
             <p>
-              Mantis handles test diagnosis by focusing strictly on high-signal behavioral diffs:
+              Testing UDMI sequences produces complex outputs distributed across several layers: the <strong>Sequencer</strong> validator, <strong>Pubber</strong> client simulator, <strong>MQTT broker</strong>, and cloud-side <strong>UDMIS infrastructure</strong>.
             </p>
-            <div class="persona-box">
-              <div class="persona-header">
-                <span>📋 Systematic Diagnostics</span>
-              </div>
-              <p class="persona-text">
-                "Rather than checking static outputs, I map exact test execution time boundaries, locate successful sibling reference runs, filter out transaction noise, and link differences directly back to the source code files to show where execution diverged."
+            <p>
+              Analyzing a test failure or flaky behavioral variance manually is time-consuming:
+            </p>
+            <ul>
+              <li><strong>Varying Time Triggers</strong>: Simple diffs are not effective because timestamps, sequence ID hashes, and runtime thread names vary on every execution.</li>
+              <li><strong>High Concurrency Noise</strong>: Sifting through hundreds of lines of logs is necessary to locate a single timing offset or configuration mismatch.</li>
+              <li><strong>Flakiness Isolation</strong>: It can be challenging to distinguish random execution flakes from consistent code regressions.</li>
+            </ul>
+            <p>
+              <strong>Mantis</strong> addresses this by automating the collection of run statistics, identifying flakiness distribution, and using differential matching algorithms to isolate failures.
+            </p>
+          </div>
+        </div>
+
+        <!-- Persona Box / Method Box -->
+        <div class="card" style="display: flex; flex-direction: column; justify-content: space-between;">
+          <div>
+            <h2 class="card-title" style="color: var(--accent-teal-dark);">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg>
+              Analysis Approach
+            </h2>
+            <div class="card-content">
+              <p>
+                Mantis handles test diagnosis by focusing strictly on high-signal behavioral diffs:
               </p>
+              <div class="persona-box">
+                <div class="persona-header">
+                  <span>📋 Systematic Diagnostics</span>
+                </div>
+                <p class="persona-text">
+                  "Rather than checking static outputs, I map exact test execution time boundaries, locate successful sibling reference runs, filter out transaction noise, and link differences directly back to the source code files to show where execution diverged."
+                </p>
+              </div>
             </div>
           </div>
         </div>
-      </div>
 
-    </section>
+      </section>
 
-    <!-- How it Works: Timeline Section -->
-    <section class="timeline-section">
-      <h2 class="card-title" style="margin-bottom: 1.5rem;">
-        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-        The Mantis Workflow
-      </h2>
+      <!-- How it Works: Timeline Section -->
+      <section id="workflow" class="timeline-section">
+        <h2 class="card-title" style="margin-bottom: 1.5rem;">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+          The Mantis Workflow
+        </h2>
 
-      <div class="timeline-nav">
-        <button class="timeline-btn active" onclick="switchTimeline('collect')">
-          <span>1. Collect</span>
-        </button>
-        <button class="timeline-btn" onclick="switchTimeline('evaluate')">
-          <span>2. Evaluate</span>
-        </button>
-        <button class="timeline-btn" onclick="switchTimeline('diagnose')">
-          <span>3. Diagnose</span>
-        </button>
-      </div>
-
-      <!-- Timeline 1: Collect -->
-      <div id="tl-collect" class="timeline-content-box active">
-        <div class="timeline-header">
-          <span class="timeline-step-title">Support Bundle Aggregation</span>
-          <span class="timeline-step-num">Phase One</span>
-        </div>
-        <div class="timeline-details">
-          <div>
-            <p style="margin-bottom: 1rem;">
-              Mantis begins by aggregating run information. It pulls complete support bundles from local environments or CI test systems.
-            </p>
-            <p style="color: var(--text-muted);">
-              These bundles consolidate sequence execution stats, console logs, and configuration files, ensuring all diagnostic context is preserved.
-            </p>
-          </div>
-          <div class="timeline-io">
-            <div>
-              <div class="io-tag">CLI Command</div>
-              <div class="io-val">bin/collect_stats 3 mantis</div>
-            </div>
-            <div>
-              <div class="io-tag">Output Directory</div>
-              <div class="io-val">mantis/out/test_bundles/</div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Timeline 2: Evaluate -->
-      <div id="tl-evaluate" class="timeline-content-box">
-        <div class="timeline-header">
-          <span class="timeline-step-title">Suite Stability Evaluation</span>
-          <span class="timeline-step-num">Phase Two</span>
-        </div>
-        <div class="timeline-details">
-          <div>
-            <p style="margin-bottom: 1rem;">
-              The stability evaluator calculates run metrics across all collected bundles to identify failure patterns.
-            </p>
-            <p style="color: var(--text-muted);">
-              By evaluating failure rates and comparing logs against reference runs, it flags which tests are consistently failing versus which are flaky.
-            </p>
-          </div>
-          <div class="timeline-io">
-            <div>
-              <div class="io-tag">CLI Command</div>
-              <div class="io-val">bin/evaluate_stability</div>
-            </div>
-            <div>
-              <div class="io-tag">Output Summary</div>
-              <div class="io-val">mantis/out/stability_report.md</div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Timeline 3: Diagnose -->
-      <div id="tl-diagnose" class="timeline-content-box">
-        <div class="timeline-header">
-          <span class="timeline-step-title">Differential Triage</span>
-          <span class="timeline-step-num">Phase Three</span>
-        </div>
-        <div class="timeline-details">
-          <div>
-            <p style="margin-bottom: 1rem;">
-              The core triage component performs targeted analysis on a failing test.
-            </p>
-            <p style="color: var(--text-muted);">
-              It automatically discovers successful sibling runs of the same test, extracts strict time boundaries, strips variable execution hashes, and pinpoints the exact step where the failure occurred.
-            </p>
-          </div>
-          <div class="timeline-io">
-            <div>
-              <div class="io-tag">CLI Command</div>
-              <div class="io-val">bin/diagnose system_mode_restart</div>
-            </div>
-            <div>
-              <div class="io-tag">Output Report</div>
-              <div class="io-val">triage_analysis.md (inside test folder)</div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-    </section>
-
-    <!-- Interactive CLI Terminal Section -->
-    <section class="terminal-section">
-      <h2 class="card-title" style="margin-bottom: 1.5rem;">
-        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="4 17 10 11 4 5"/><line x1="12" y1="19" x2="20" y2="19"/></svg>
-        CLI Simulator
-      </h2>
-
-      <div class="terminal-window">
-        <div class="terminal-bar">
-          <div class="terminal-buttons">
-            <span class="t-btn close"></span>
-            <span class="t-btn minimize"></span>
-            <span class="t-btn maximize"></span>
-          </div>
-          <div class="terminal-title">mantis_triage_sandbox - bash - 80x24</div>
-          <div></div>
-        </div>
-        
-        <div id="terminal-body" class="terminal-body">
-          <div class="terminal-line"><span class="cmd-prompt">udmi-user@mantis-hub:~$</span><span class="cmd-input">bin/diagnose system_mode_restart</span></div>
-          <div class="terminal-line terminal-info">Ready to run triage simulation. Click the button below to execute.</div>
-          <div id="terminal-end" class="terminal-line"><span class="blinking-cursor">_</span></div>
-        </div>
-
-        <div class="terminal-action-bar">
-          <span class="action-instruction">Click to simulate a Mantis triage run on `system_mode_restart`:</span>
-          <button id="run-terminal-btn" class="run-btn" onclick="runTerminalSimulation()">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"/></svg>
-            Run Triage
+        <div class="timeline-nav">
+          <button class="timeline-btn active" onclick="switchTimeline('collect')">
+            <span>1. Collect</span>
+          </button>
+          <button class="timeline-btn" onclick="switchTimeline('evaluate')">
+            <span>2. Evaluate</span>
+          </button>
+          <button class="timeline-btn" onclick="switchTimeline('diagnose')">
+            <span>3. Diagnose</span>
           </button>
         </div>
-      </div>
-    </section>
 
-    <!-- Usage Guide / CLI Commands Reference -->
-    <section class="card">
-      <h2 class="card-title" style="color: var(--accent-teal-dark);">
-        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
-        CLI Reference
-      </h2>
-      <div class="card-content">
-        <p>
-          Mantis processes are executed locally via shell scripts. Use these core commands in your workflow:
-        </p>
-
-        <div class="cli-grid" style="margin-top: 1.5rem;">
-          
-          <div>
-            <h3 style="font-family: var(--font-outfit); margin-bottom: 0.4rem; color: var(--text-highlight); font-size: 1.1rem;">1. stats collector</h3>
-            <p style="font-size: 0.9rem; color: var(--text-muted); margin-bottom: 0.8rem;">
-              Collects test run bundles. Specify the run count and the branch.
-            </p>
-            <div class="code-box">
-              <span>bin/collect_stats 3 mantis</span>
-              <button class="copy-btn" onclick="copyText(this, 'bin/collect_stats 3 mantis')">Copy</button>
+        <!-- Timeline 1: Collect -->
+        <div id="tl-collect" class="timeline-content-box active">
+          <div class="timeline-header">
+            <span class="timeline-step-title">Support Bundle Aggregation</span>
+            <span class="timeline-step-num">Phase One</span>
+          </div>
+          <div class="timeline-details">
+            <div>
+              <p style="margin-bottom: 1rem;">
+                Mantis begins by aggregating run information. It pulls complete support bundles from local environments or CI test systems.
+              </p>
+              <p style="color: var(--text-muted);">
+                These bundles consolidate sequence execution stats, console logs, and configuration files, ensuring all diagnostic context is preserved.
+              </p>
+            </div>
+            <div class="timeline-io">
+              <div>
+                <div class="io-tag">CLI Command</div>
+                <div class="io-val">bin/collect_stats 3 mantis</div>
+              </div>
+              <div>
+                <div class="io-tag">Output Directory</div>
+                <div class="io-val">mantis/out/test_bundles/</div>
+              </div>
             </div>
           </div>
-
-          <div>
-            <h3 style="font-family: var(--font-outfit); margin-bottom: 0.4rem; color: var(--text-highlight); font-size: 1.1rem;">2. stability evaluator</h3>
-            <p style="font-size: 0.9rem; color: var(--text-muted); margin-bottom: 0.8rem;">
-              Analyzes all collected bundles to build stability models and flag flaky tests.
-            </p>
-            <div class="code-box">
-              <span>bin/evaluate_stability</span>
-              <button class="copy-btn" onclick="copyText(this, 'bin/evaluate_stability')">Copy</button>
-            </div>
-          </div>
-
-          <div>
-            <h3 style="font-family: var(--font-outfit); margin-bottom: 0.4rem; color: var(--text-highlight); font-size: 1.1rem;">3. differential diagnose</h3>
-            <p style="font-size: 0.9rem; color: var(--text-muted); margin-bottom: 0.8rem;">
-              Runs differential analysis on a targeted test to produce a localized triage report.
-            </p>
-            <div class="code-box">
-              <span>bin/diagnose system_mode_restart</span>
-              <button class="copy-btn" onclick="copyText(this, 'bin/diagnose system_mode_restart')">Copy</button>
-            </div>
-          </div>
-
         </div>
-      </div>
-    </section>
 
-  </main>
+        <!-- Timeline 2: Evaluate -->
+        <div id="tl-evaluate" class="timeline-content-box">
+          <div class="timeline-header">
+            <span class="timeline-step-title">Suite Stability Evaluation</span>
+            <span class="timeline-step-num">Phase Two</span>
+          </div>
+          <div class="timeline-details">
+            <div>
+              <p style="margin-bottom: 1rem;">
+                The stability evaluator calculates run metrics across all collected bundles to identify failure patterns.
+              </p>
+              <p style="color: var(--text-muted);">
+                By evaluating failure rates and comparing logs against reference runs, it flags which tests are consistently failing versus which are flaky.
+              </p>
+            </div>
+            <div class="timeline-io">
+              <div>
+                <div class="io-tag">CLI Command</div>
+                <div class="io-val">bin/evaluate_stability</div>
+              </div>
+              <div>
+                <div class="io-tag">Output Summary</div>
+                <div class="io-val">mantis/out/stability_report.md</div>
+              </div>
+            </div>
+          </div>
+        </div>
 
-  <footer>
-    <p>&copy; 2026 UDMI Project. Developed by <a href="#">Antigravity Team</a>.</p>
-  </footer>
+        <!-- Timeline 3: Diagnose -->
+        <div id="tl-diagnose" class="timeline-content-box">
+          <div class="timeline-header">
+            <span class="timeline-step-title">Differential Triage</span>
+            <span class="timeline-step-num">Phase Three</span>
+          </div>
+          <div class="timeline-details">
+            <div>
+              <p style="margin-bottom: 1rem;">
+                The core triage component performs targeted analysis on a failing test.
+              </p>
+              <p style="color: var(--text-muted);">
+                It automatically discovers successful sibling runs of the same test, extracts strict time boundaries, strips variable execution hashes, and pinpoints the exact step where the failure occurred.
+              </p>
+            </div>
+            <div class="timeline-io">
+              <div>
+                <div class="io-tag">CLI Command</div>
+                <div class="io-val">bin/diagnose system_mode_restart</div>
+              </div>
+              <div>
+                <div class="io-tag">Output Report</div>
+                <div class="io-val">triage_analysis.md (inside test folder)</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </section>
+
+      <!-- Interactive CLI Terminal Section -->
+      <section id="sandbox" class="terminal-section">
+        <h2 class="card-title" style="margin-bottom: 1.5rem;">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="4 17 10 11 4 5"/><line x1="12" y1="19" x2="20" y2="19"/></svg>
+          CLI Simulator
+        </h2>
+
+        <div class="terminal-window">
+          <div class="terminal-bar">
+            <div class="terminal-buttons">
+              <span class="t-btn close"></span>
+              <span class="t-btn minimize"></span>
+              <span class="t-btn maximize"></span>
+            </div>
+            <div class="terminal-title">mantis_triage_sandbox - bash - 80x24</div>
+            <div></div>
+          </div>
+          
+          <div id="terminal-body" class="terminal-body">
+            <div class="terminal-line"><span class="cmd-prompt">udmi-user@mantis-hub:~$</span><span class="cmd-input">bin/diagnose system_mode_restart</span></div>
+            <div class="terminal-line terminal-info">Ready to run triage simulation. Click the button below to execute.</div>
+            <div id="terminal-end" class="terminal-line"><span class="blinking-cursor">_</span></div>
+          </div>
+
+          <div class="terminal-action-bar">
+            <span class="action-instruction">Click to simulate a Mantis triage run on `system_mode_restart`:</span>
+            <button id="run-terminal-btn" class="run-btn" onclick="runTerminalSimulation()">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+              Run Triage
+            </button>
+          </div>
+        </div>
+      </section>
+
+      <!-- Usage Guide / CLI Commands Reference -->
+      <section id="reference" class="card">
+        <h2 class="card-title" style="color: var(--accent-teal-dark);">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+          CLI Reference
+        </h2>
+        <div class="card-content">
+          <p>
+            Mantis processes are executed locally via shell scripts. Use these core commands in your workflow:
+          </p>
+
+          <div class="cli-grid" style="margin-top: 1.5rem;">
+            
+            <div>
+              <h3 style="font-family: var(--font-outfit); margin-bottom: 0.4rem; color: var(--text-highlight); font-size: 1.1rem;">1. stats collector</h3>
+              <p style="font-size: 0.9rem; color: var(--text-muted); margin-bottom: 0.8rem;">
+                Collects test run bundles. Specify the run count and the branch.
+              </p>
+              <div class="code-box">
+                <span>bin/collect_stats 3 mantis</span>
+                <button class="copy-btn" onclick="copyText(this, 'bin/collect_stats 3 mantis')">Copy</button>
+              </div>
+            </div>
+
+            <div>
+              <h3 style="font-family: var(--font-outfit); margin-bottom: 0.4rem; color: var(--text-highlight); font-size: 1.1rem;">2. stability evaluator</h3>
+              <p style="font-size: 0.9rem; color: var(--text-muted); margin-bottom: 0.8rem;">
+                Analyzes all collected bundles to build stability models and flag flaky tests.
+              </p>
+              <div class="code-box">
+                <span>bin/evaluate_stability</span>
+                <button class="copy-btn" onclick="copyText(this, 'bin/evaluate_stability')">Copy</button>
+              </div>
+            </div>
+
+            <div>
+              <h3 style="font-family: var(--font-outfit); margin-bottom: 0.4rem; color: var(--text-highlight); font-size: 1.1rem;">3. differential diagnose</h3>
+              <p style="font-size: 0.9rem; color: var(--text-muted); margin-bottom: 0.8rem;">
+                Runs differential analysis on a targeted test to produce a localized triage report.
+              </p>
+              <div class="code-box">
+                <span>bin/diagnose system_mode_restart</span>
+                <button class="copy-btn" onclick="copyText(this, 'bin/diagnose system_mode_restart')">Copy</button>
+              </div>
+            </div>
+
+          </div>
+        </div>
+      </section>
+
+      <footer>
+        <p>&copy; 2026 UDMI Project. Developed by <a href="#">Antigravity Team</a>.</p>
+      </footer>
+
+    </main>
+
+  </div>
 
   <!-- Javascript logic for Interactivity -->
   <script>
+    // Sidebar active link indicator switcher
+    function activateNavLink(selectedLink) {
+      document.querySelectorAll('.nav-link').forEach(link => {
+        link.classList.remove('active');
+      });
+      selectedLink.classList.add('active');
+    }
+
     // Timeline Switcher
     function switchTimeline(phase) {
       // deactivate current active nav
