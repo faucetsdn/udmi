@@ -114,6 +114,32 @@ def main():
                             pass
                 print(f"Consolidated device sequence logs saved to: {backup_out}")
 
+        # 2.2. Copy global UDMIS and Pubber logs to make the run backup fully diagnostic-ready
+        # Search in both core workspace 'out/' and any sharded 'out_*/' folders
+        global_log_dirs = [os.path.join(UDMI_ROOT, "out")] + glob.glob(os.path.join(UDMI_ROOT, "out_*"))
+        for gld in global_log_dirs:
+            if os.path.isdir(gld):
+                suffix = os.path.basename(gld).replace("out", "").strip("_")
+                # If suffix is empty (core 'out'), copy directly as pubber.log / udmis.log
+                # Otherwise, append the suffix to avoid collisions in sharded runs (e.g., udmis_0.log)
+                dest_udmis = "udmis.log" if not suffix else f"udmis_{suffix}.log"
+                dest_pubber = "pubber.log" if not suffix else f"pubber_{suffix}.log"
+                
+                src_udmis = os.path.join(gld, "udmis.log")
+                src_pubber = os.path.join(gld, "pubber.log")
+                
+                if os.path.exists(src_udmis):
+                    shutil.copy(src_udmis, os.path.join(run_backup_dir, dest_udmis))
+                if os.path.exists(src_pubber):
+                    shutil.copy(src_pubber, os.path.join(run_backup_dir, dest_pubber))
+                    
+                # Also copy standard fallback if it's a sharded run to let standard diagnose read it directly
+                if suffix and suffix.isdigit() and int(suffix) == i - 1:
+                    if os.path.exists(src_udmis):
+                        shutil.copy(src_udmis, os.path.join(run_backup_dir, "udmis.log"))
+                    if os.path.exists(src_pubber):
+                        shutil.copy(src_pubber, os.path.join(run_backup_dir, "pubber.log"))
+
         # 3. Parse and analyze outputs
         analysis = analyzer.analyze_run(
             sequencer_out_path=seq_out if os.path.exists(seq_out) else None,
