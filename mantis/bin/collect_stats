@@ -1,8 +1,8 @@
 #!/bin/bash -e
 #
-# Launcher wrapper for Project Mantis Capture Component (Stage 1).
+# Launcher wrapper for Project Mantis Statistics Collector Component (Stage 1).
 # Automatically activates the virtualenv and executes
-# the Python Capture module.
+# the Python collect_stats module.
 #
 
 # Resolve parent directory structure
@@ -13,8 +13,8 @@ UDMI_ROOT=$(realpath $MANTIS_DIR/..)
 cd $UDMI_ROOT
 
 # 1. Guarantee execution permissions
-chmod +x $MANTIS_DIR/bin/capture 2>/dev/null || true
-chmod +x $MANTIS_DIR/capture/main.py 2>/dev/null || true
+chmod +x $MANTIS_DIR/bin/collect_stats 2>/dev/null || true
+chmod +x $MANTIS_DIR/collect_stats/main.py 2>/dev/null || true
 
 # 2. Resolve execution in background or foreground
 background=""
@@ -37,9 +37,9 @@ while [[ $# -gt 0 ]]; do
     esac
 done
 
-# On CI dispatch runs (non-local), default to background mode to prevent starvation
+# Default to background execution to prevent terminal blocking
 # unless --verbose is specified.
-if [[ ! " ${args_to_pass[*]} " =~ " --local " ]] && [[ ! " ${args_to_pass[*]} " =~ " --verbose " ]]; then
+if [[ ! " ${args_to_pass[*]} " =~ " --verbose " ]]; then
     background="true"
 fi
 
@@ -47,7 +47,6 @@ fi
 if [[ " ${args_to_pass[*]} " =~ " -h " ]] || [[ " ${args_to_pass[*]} " =~ " --help " ]]; then
     background=""
 fi
-
 
 # Discover or resolve target timestamp output directory
 # (to ensure we print the correct log file location to the background caller)
@@ -61,7 +60,7 @@ done
 
 clean_target=$(echo "$target_spec" | sed 's/\//_/g' | sed 's/+//g' | sed 's/^_//' | sed 's/_$//')
 timestamp=$(date +"%Y%m%d_%H%M%S")
-abs_output_dir="$UDMI_ROOT/out/mantis/test_bundles/${clean_target}_$timestamp"
+abs_output_dir="$MANTIS_DIR/out/test_bundles/${clean_target}_$timestamp"
 log_file="$abs_output_dir/capture.log"
 
 # Pass resolved output directory to Python if not explicitly passed by user
@@ -83,11 +82,11 @@ if [[ -n $background ]]; then
     mkdir -p "$abs_output_dir"
     
     echo "============================================================="
-    echo "🦗 Mantis Capture is launching in the BACKGROUND!"
+    echo "🦗 Mantis Collector is launching in the BACKGROUND!"
     echo "============================================================="
     
     # Launch in the background using nohup
-    nohup python3 -u -m mantis.capture.main "${args_to_pass[@]}" > "$log_file" 2>&1 &
+    nohup python3 -u -m mantis.collect_stats.main "${args_to_pass[@]}" > "$log_file" 2>&1 &
     bg_pid=$!
     
     echo "  PID       : $bg_pid"
@@ -100,5 +99,5 @@ if [[ -n $background ]]; then
     echo
 else
     # Run standard foreground execution
-    python3 -u -m mantis.capture.main "${args_to_pass[@]}"
+    python3 -u -m mantis.collect_stats.main "${args_to_pass[@]}"
 fi

@@ -117,12 +117,12 @@ def scan_failures_from_out(filepath):
 
 def main():
     parser = argparse.ArgumentParser(
-        description="Mantis Inspect - AI-Powered Diagnostic Triage Agent"
+        description="Mantis Triage Agent (Diagnose) - AI-Powered Diagnostics"
     )
     parser.add_argument("--target", required=True, help="Target project (e.g. //mqtt/localhost)")
-    parser.add_argument("--run-dir", required=True, help="Directory containing the iteration run backups (e.g., out/mantis/before_mqtt/run_1/)")
-    parser.add_argument("--site-dir", default="sites/udmi_site_model", help="Path to site model folder (default: sites/udmi_site_model)")
-    parser.add_argument("--test", help="Specific test case to triage (runs automated sweep of all failures if omitted)")
+    parser.add_argument("--run-dir", required=True, help="Directory containing iteration run backups")
+    parser.add_argument("--site-dir", default="sites/udmi_site_model", help="Path to site model folder")
+    parser.add_argument("--test", help="Specific test case to triage (sweeps all failures if omitted)")
     
     args = parser.parse_args()
     
@@ -171,11 +171,8 @@ def main():
         test_id = f['test_name']
         print(f"\n--- Triaging Failure {idx} of {len(failed_tests)}: {test_id} ---")
         
-        # Local sequence log paths
-        # 1. In run_dir backup folder directly
-        # 2. Consolidated under site devices output folder
-        local_seq_log = os.path.join(UDMI_ROOT, args.site_dir, f"out/devices/{device_id}/tests/{test_id}/sequence.log")
-        local_seq_md = os.path.join(UDMI_ROOT, args.site_dir, f"out/devices/{device_id}/tests/{test_id}/sequence.md")
+        local_seq_log = os.path.join(run_dir, f"out/devices/{device_id}/tests/{test_id}/sequence.log")
+        local_seq_md = os.path.join(run_dir, f"out/devices/{device_id}/tests/{test_id}/sequence.md")
         
         # 3. Compile available context catalog
         catalog = {
@@ -243,7 +240,7 @@ def main():
         if sliced_pubber:
             payload.append(f"```text\n" + "\n".join(sliced_pubber) + "\n```")
         elif not catalog['Global_Pubber_Log']:
-            payload.append("`[Physical Device / Black-Box Device Mode: No local emulator logs available]`")
+            payload.append("`[Physical Device / Black-Box Device Mode: No emulator logs available]`")
         else:
             payload.append("`[No correlated Pubber logs found in test time window]`")
             
@@ -256,8 +253,8 @@ def main():
         except Exception as e:
             analysis_text = f"⚠️ Error executing Gemini AI diagnostics for {test_id}: {e}"
 
-        # 7. Save localized report
-        nested_out_dir = os.path.join(UDMI_ROOT, "out/mantis", clean_target, site_id, device_id, test_id)
+        # 7. Save localized report under self-contained mantis/out/diagnose/
+        nested_out_dir = os.path.join(MANTIS_DIR, "out", "diagnose", clean_target, site_id, device_id, test_id)
         os.makedirs(nested_out_dir, exist_ok=True)
         
         report_filepath = os.path.join(nested_out_dir, "triage_analysis.md")
@@ -276,23 +273,26 @@ def main():
         elif insufficient:
             breakpoint_summary = "⚠️ INSUFFICIENT DATA TO TRACE ROOT CAUSE"
             
+        # Triage summary links are relative to the summary report file
         triage_summaries.append({
             'test_id': test_id,
             'category': f['category'],
             'suite': f['suite'],
             'breakpoint': breakpoint_summary,
             'insufficient': insufficient,
-            'report_link': f"./{clean_target}/{site_id}/{device_id}/{test_id}/triage_analysis.md"
+            'report_link': f"./{device_id}/{test_id}/triage_analysis.md"
         })
 
-    # 8. Compile consolidated mantis_triage_report.md
-    print("\nCompiling root Mantis Triage Summary Report...")
-    root_report_path = os.path.join(UDMI_ROOT, "out/mantis/mantis_triage_report.md")
+    # 8. Compile consolidated triage_summary_report.md inside sites output directory
+    print("\nCompiling site-specific Triage Summary Report...")
+    root_report_path = os.path.join(MANTIS_DIR, "out", "diagnose", clean_target, site_id, "triage_summary_report.md")
+    os.makedirs(os.path.dirname(root_report_path), exist_ok=True)
     
     sum_md = []
-    sum_md.append("# Project Mantis: AI Diagnostic Triage Summary Report 🦗👁️")
+    sum_md.append("# Mantis AI Diagnostics: Triage Summary Report 🦗👁️")
     sum_md.append(f"**Target Project**: `{args.target}`  ")
-    sum_md.append(f"**Triage executed at**: `{datetime.now().strftime('%Y-%m-%d %H:%M:%S Local')}`  ")
+    sum_md.append(f"**Site ID**: `{site_id}`  ")
+    sum_md.append(f"**Triage executed at**: `{datetime.now().strftime('%Y-%m-%d %H:%M:%S UTC')}`  ")
     sum_md.append("\n---")
     
     # Dashboard
@@ -321,7 +321,6 @@ def main():
     
     clusters = {}
     for s in triage_summaries:
-        # Simple signature group key
         sig = "Unknown failure signature"
         if "timed out" in s['breakpoint'].lower() or "timeout" in s['breakpoint'].lower():
             sig = "Sync Wait Timeout (Component latency / missing acknowledgments)"
@@ -353,8 +352,8 @@ def main():
     with open(root_report_path, 'w', encoding='utf-8') as fs:
         fs.write("\n".join(sum_md))
         
-    print(f"Consolidated root summary report generated: {root_report_path}\n")
-    print("Mantis Inspect diagnostic triage run completed successfully. Bug predation complete!")
+    print(f"Consolidated triage summary report generated: {root_report_path}\n")
+    print("Mantis Triage diagnostic run completed successfully.")
 
 if __name__ == "__main__":
     main()

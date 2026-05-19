@@ -1,8 +1,8 @@
 #!/bin/bash -e
 #
-# Launcher wrapper for Project Mantis Grasp Tracker.
+# Launcher wrapper for Project Mantis AI Diagnostics / Triage Component (Stage 3).
 # Automatically activates the virtualenv and executes
-# the Python Grasp module.
+# the Python diagnose module.
 #
 
 # Resolve parent directory structure
@@ -13,8 +13,8 @@ UDMI_ROOT=$(realpath $MANTIS_DIR/..)
 cd $UDMI_ROOT
 
 # 1. Guarantee execution permissions
-chmod +x $MANTIS_DIR/bin/grasp 2>/dev/null || true
-chmod +x $MANTIS_DIR/grasp/main.py 2>/dev/null || true
+chmod +x $MANTIS_DIR/bin/diagnose 2>/dev/null || true
+chmod +x $MANTIS_DIR/diagnose/main.py 2>/dev/null || true
 
 # 2. Activate virtualenv
 if [[ -f venv/bin/activate ]]; then
@@ -26,4 +26,4 @@ else
 fi
 
 # 3. Call Python module forwarding all arguments
-python3 -m mantis.grasp.main "$@"
+python3 -m mantis.diagnose.main "$@"

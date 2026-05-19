@@ -5,7 +5,8 @@ import os
 import re
 import sys
 import time
-import zipfile
+import glob
+import shutil
 import urllib.request
 import urllib.error
 from datetime import datetime
@@ -43,11 +44,37 @@ class SafeRedirectHandler(urllib.request.HTTPRedirectHandler):
         return new_req
 
 def run_command(args, cwd=UDMI_ROOT):
-    """Helper to execute shell commands and handle failures cleanly."""
+    """Helper to execute shell commands, capture output, and print/mirror in real-time."""
+    # Resolve the executable relative to cwd if it is a relative path and exists there
+    executable = args[0]
+    if not os.path.isabs(executable):
+        abs_executable = os.path.join(cwd, executable)
+        if os.path.exists(abs_executable):
+            args = [abs_executable] + args[1:]
+            
     print(f"Executing: {' '.join(args)}")
     import subprocess
-    result = subprocess.run(args, cwd=cwd, stdout=sys.stdout, stderr=sys.stderr)
-    return result.returncode
+    try:
+        # Merge stderr into stdout so they are captured in order
+        process = subprocess.Popen(
+            args,
+            cwd=cwd,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.STDOUT,
+            text=True,
+            bufsize=1
+        )
+        
+        # Read stdout line-by-line in real-time and write to sys.stdout (which calls Tee.write)
+        for line in iter(process.stdout.readline, ""):
+            sys.stdout.write(line)
+            
+        process.stdout.close()
+        returncode = process.wait()
+        return returncode
+    except Exception as e:
+        print(f"Error executing command {' '.join(args)}: {e}", file=sys.stderr)
+        return 1
 
 def clean_pubber_processes():
     """Kill any lingering pubber Java processes to guarantee environment isolation."""
@@ -109,7 +136,7 @@ class GitHubClient:
             "Accept": "application/vnd.github+json",
             "Authorization": f"Bearer {token}",
             "X-GitHub-Api-Version": "2022-11-28",
-            "User-Agent": "Mantis-Capture/1.0"
+            "User-Agent": "Mantis-Collector/1.0"
         }
 
     def _request(self, method, path, data=None):
@@ -170,6 +197,16 @@ class GitHubClient:
         # Return whatever we resolved
         return sorted(new_runs)
 
+    def get_completed_runs(self, branch, limit=10):
+        """Fetches already executed completed workflow runs on a specific branch."""
+        path = f"/repos/{self.owner}/{self.repo}/actions/runs?event=workflow_dispatch&branch={branch}&status=completed&per_page={limit}"
+        res = self._request("GET", path)
+        runs = []
+        if res and res.get("workflow_runs"):
+            for run in res["workflow_runs"]:
+                runs.append(run["id"])
+        return runs
+
     def get_run_details(self, run_id):
         path = f"/repos/{self.owner}/{self.repo}/actions/runs/{run_id}"
         return self._request("GET", path)
@@ -201,34 +238,41 @@ class GitHubClient:
 
 def main():
     parser = argparse.ArgumentParser(
-        description="Mantis Capture - Automated Triggering and Bundling of GitHub CI or Local Test Sweeps"
+        description="Mantis Statistics Collector (collect_stats) - Automated capture of test loops locally or from GitHub CI"
     )
     # Common Arguments
     parser.add_argument("--target", default="//mqtt/localhost", help="Target project specification (default: //mqtt/localhost)")
-    parser.add_argument("--iterations", type=int, help="Number of loops locally (default: 10) or parallel dispatches on GitHub (default: 3)")
-    parser.add_argument("--output-dir", help="Directory to save resulting zip bundles")
-    parser.add_argument("--verbose", action="store_true", help="Monitor live logs directly in your terminal foreground (configured via wrapper)")
+    parser.add_argument("--iterations", type=int, help="Number of local loops (default: 10) or parallel dispatches on GitHub (default: 3)")
+    parser.add_argument("--output-dir", help="Directory to save resulting bundles (default: mantis/out/test_bundles/)")
+    parser.add_argument("--verbose", action="store_true", help="Monitor logs foreground (wrapper verbose option)")
     
     # Local-Specific Arguments
     parser.add_argument("--local", action="store_true", help="Execute loops locally in the sandbox instead of triggering GitHub CI")
     parser.add_argument("--suite", choices=["sequencer", "itemized", "both"], default="both", help="Test suite to run locally (default: both)")
     parser.add_argument("--tests", help="Comma-separated list of selective sequencer tests to run locally (e.g. valid_serial_no)")
+    
+    # GitHub Search Arguments
+    parser.add_argument("--github-search", action="store_true", help="Search and download completed past CI workflow runs instead of dispatching new ones")
+    parser.add_argument("--branch", help="GitHub branch to search (default: active branch)")
+    parser.add_argument("--limit", type=int, default=10, help="Maximum number of historical bundles to search and retrieve (default: 10)")
 
     args = parser.parse_args()
 
-    # Resolve output directory
+    # Resolve output directory under self-contained mantis/out/test_bundles/
     clean_target = args.target.replace("/", "_").replace("+", "_").strip("_")
     if not args.output_dir:
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-        output_dir = os.path.join(UDMI_ROOT, "out/mantis/test_bundles", f"{clean_target}_{timestamp}")
+        output_dir = os.path.join(MANTIS_DIR, "out", "test_bundles", f"{clean_target}_{timestamp}")
     else:
         output_dir = os.path.abspath(args.output_dir)
 
     os.makedirs(output_dir, exist_ok=True)
 
     log_filepath = os.path.join(output_dir, "capture.log")
-    sys.stdout = Tee(sys.stdout, log_filepath)
-    sys.stderr = Tee(sys.stderr, log_filepath)
+    # Only use Tee in interactive terminal mode to avoid file writing conflicts in background redirections
+    if sys.stdout.isatty():
+        sys.stdout = Tee(sys.stdout, log_filepath)
+        sys.stderr = Tee(sys.stderr, log_filepath)
 
     # =============================================================
     # TARGET EXECUTION MODULE
@@ -241,7 +285,7 @@ def main():
         iterations = args.iterations if args.iterations is not None else 10
         
         print(f"=============================================================")
-        print(f"🚀 Mantis Local Capture: Triggering Local Execution Loops")
+        print(f"🚀 Mantis Local Collector: Triggering Local Execution Loops")
         print(f"=============================================================")
         print(f"Target      : {args.target}")
         print(f"Iterations  : {iterations}")
@@ -270,9 +314,6 @@ def main():
 
         specific_tests = args.tests.split(",") if args.tests else []
 
-        seq_out = os.path.join(UDMI_ROOT, "out/sequencer.out")
-        item_out = os.path.join(UDMI_ROOT, "out/test_itemized.out")
-
         # 3. Loop execution
         for i in range(1, iterations + 1):
             print(f"\n=============================================================")
@@ -291,127 +332,149 @@ def main():
                 print("\n--- Executing Itemized Suite ---")
                 run_command(["bin/test_itemized", args.target])
 
-            # 4. ZIP raw results into standard udmi-support_run_{idx}.zip
-            zip_filename = f"udmi-support_run_{i}.zip"
-            zip_filepath = os.path.join(output_dir, zip_filename)
+            # 4. Pack raw outcomes and test logs into standard udmi-support_run_{idx}.tgz tarball using core bin/support
+            tgz_filename = f"udmi-support_run_{i}.tgz"
+            tgz_filepath = os.path.join(output_dir, tgz_filename)
             
-            print(f"\nPackaging iteration {i} outcomes into support archive {zip_filename}...")
-            with zipfile.ZipFile(zip_filepath, 'w', zipfile.ZIP_DEFLATED) as zip_file:
-                if os.path.exists(seq_out):
-                    zip_file.write(seq_out, arcname="sequencer.out")
-                if os.path.exists(item_out):
-                    zip_file.write(item_out, arcname="test_itemized.out")
+            for old_support in glob.glob(os.path.join(UDMI_ROOT, "*udmi-support*.tgz")):
+                try: os.remove(old_support)
+                except Exception: pass
             
-            print(f"Saved local support package: {zip_filepath}")
+            print(f"\nPackaging iteration {i} outcomes using core bin/support script...")
+            support_rc = run_command(["bin/support"])
+            if support_rc == 0:
+                support_archives = glob.glob(os.path.join(UDMI_ROOT, "*udmi-support*.tgz"))
+                if support_archives:
+                    latest_archive = max(support_archives, key=os.path.getmtime)
+                    try:
+                        shutil.move(latest_archive, tgz_filepath)
+                        print(f"Successfully packaged and saved core support archive: {tgz_filepath}")
+                    except Exception as e:
+                        print(f"Error moving support archive: {e}", file=sys.stderr)
             clean_pubber_processes()
 
         print(f"\n=============================================================")
-        print(f"🦗 Mantis Local Capture completed successfully!")
-        print(f"Consolidated zip packages saved to: {output_dir}")
+        print(f"🦗 Mantis Local Collector completed successfully!")
+        print(f"Consolidated tgz packages saved to: {output_dir}")
         print(f"=============================================================")
-        print(f"\nTo measure flakiness / stability, execute:")
-        print(f"  mantis/bin/grasp --target {args.target} --phase before --bundles-dir {output_dir}\n")
+        print(f"\nTo evaluate stability metrics, execute:")
+        print(f"  mantis/bin/evaluate_stability --target {args.target} --phase before --bundles-dir {output_dir}\n")
 
     # ----------------------------------------
-    # MODE 2: GITHUB ACTIONS CI DISPATCH
+    # MODE 2: GITHUB ACTIONS ACTIONS RETRIEVAL
     # ----------------------------------------
     else:
-        iterations = args.iterations if args.iterations is not None else 3
-        
         # Get GitHub Token
         token = os.getenv("GITHUB_TOKEN")
         if not token:
             print("Error: The environment variable 'GITHUB_TOKEN' is not set.", file=sys.stderr)
-            print("Please set your GitHub Personal Access Token (PAT) before executing the hunter.", file=sys.stderr)
+            print("Please set your GitHub Personal Access Token (PAT) before executing.", file=sys.stderr)
             print("Example: export GITHUB_TOKEN=\"your_pat_here\"", file=sys.stderr)
             sys.exit(1)
 
         # Discover Git details
         owner, repo = discover_git_details()
-        branch = discover_branch()
+        branch = args.branch if args.branch else discover_branch()
 
         if not owner or not repo:
             print("Error: Could not discover GitHub repository details.", file=sys.stderr)
             sys.exit(1)
 
-        print(f"=============================================================")
-        print(f"🦗 Mantis GitHub Capture: Tracking Bugs on CI")
-        print(f"=============================================================")
-        print(f"Repo Target : {owner}/{repo} (branch: {branch})")
-        print(f"CI Target   : {args.target}")
-        print(f"Iterations  : {iterations}")
-        print(f"Output Folder: {output_dir}")
-        print(f"=============================================================")
-
         client = GitHubClient(owner=owner, repo=repo, token=token)
+        new_run_ids = []
 
-        # Step 1: Baseline run
-        print("Locating the latest baseline run ID on GitHub...")
-        anchor_id = client.get_latest_run_id(branch)
-        print(f"Baseline anchor run ID: {anchor_id}")
-
-        # Step 2: Dispatches
-        print(f"\nTriggering {iterations} parallel workflow dispatch requests...")
-        for idx in range(1, iterations + 1):
-            try:
-                client.trigger_workflow(branch, args.target)
-                print(f"  -> Triggered run dispatch {idx} of {iterations}")
-                time.sleep(1.5)
-            except Exception:
-                print(f"Failed to trigger run dispatch {idx}, aborting.", file=sys.stderr)
-                sys.exit(1)
-
-        # Step 3: Resolve IDs
-        print("\nResolving newly created workflow run IDs...")
-        new_run_ids = client.get_new_runs(branch, anchor_id, iterations)
-        
-        if len(new_run_ids) < iterations:
-            print(f"Warning: Only resolved {len(new_run_ids)} out of {iterations} runs. Polling remainder.", file=sys.stderr)
-        else:
-            print(f"Successfully resolved run IDs: {', '.join(map(str, new_run_ids))}")
-
-        # Step 4: Polling loop
-        print("\nActive polling starting. Waiting for CI executions to finish...")
-        completed_runs = set()
-        downloaded_runs = set()
-
-        while len(completed_runs) < len(new_run_ids):
-            queued_count = 0
-            in_progress_count = 0
-            success_count = 0
-            failed_count = 0
-            cancelled_count = 0
-
-            for run_id in new_run_ids:
-                try:
-                    details = client.get_run_details(run_id)
-                    status = details.get("status")
-                    conclusion = details.get("conclusion")
-
-                    if status == "completed":
-                        completed_runs.add(run_id)
-                        if conclusion == "success":
-                            success_count += 1
-                        elif conclusion == "failure":
-                            failed_count += 1
-                        else:
-                            cancelled_count += 1
-                    elif status == "in_progress":
-                        in_progress_count += 1
-                    else:
-                        queued_count += 1
-                except Exception:
-                    queued_count += 1
-
-            print(f"  [{datetime.now().strftime('%H:%M:%S')}] Queued: {queued_count} | In-Progress: {in_progress_count} | Success: {success_count} | Failed: {failed_count} | Cancelled: {cancelled_count}", end="\r")
+        # SUB-MODE A: SEARCH PAST COMPLETED RUNS
+        if args.github_search:
+            print(f"=============================================================")
+            print(f"🦗 Mantis GitHub Run Searcher: Pulling Past CI Runs")
+            print(f"=============================================================")
+            print(f"Repo Target : {owner}/{repo} (branch: {branch})")
+            print(f"Search Limit: {args.limit} completely executed runs")
+            print(f"Output Folder: {output_dir}")
+            print(f"=============================================================")
             
-            if len(completed_runs) == len(new_run_ids):
-                print()
-                break
-            time.sleep(25)
+            print(f"Searching for the latest completed workflow runs on branch '{branch}'...")
+            new_run_ids = client.get_completed_runs(branch=branch, limit=args.limit)
+            
+            if not new_run_ids:
+                print(f"Error: No completed workflow runs discovered on branch '{branch}'.", file=sys.stderr)
+                sys.exit(1)
+                
+            print(f"Discovered {len(new_run_ids)} completely executed runs: {', '.join(map(str, new_run_ids))}")
+
+        # SUB-MODE B: DISPATCH & POLL NEW WORKFLOW RUNS
+        else:
+            iterations = args.iterations if args.iterations is not None else 3
+            print(f"=============================================================")
+            print(f"🦗 Mantis GitHub Collector: Tracking Bugs on CI")
+            print(f"=============================================================")
+            print(f"Repo Target : {owner}/{repo} (branch: {branch})")
+            print(f"CI Target   : {args.target}")
+            print(f"Iterations  : {iterations}")
+            print(f"Output Folder: {output_dir}")
+            print(f"=============================================================")
+
+            # Step 1: Baseline run
+            print("Locating the latest baseline run ID on GitHub...")
+            anchor_id = client.get_latest_run_id(branch)
+            print(f"Baseline anchor run ID: {anchor_id}")
+
+            # Step 2: Dispatches
+            print(f"\nTriggering {iterations} parallel workflow dispatch requests...")
+            for idx in range(1, iterations + 1):
+                try:
+                    client.trigger_workflow(branch, args.target)
+                    print(f"  -> Triggered run dispatch {idx} of {iterations}")
+                    time.sleep(1.5)
+                except Exception:
+                    print(f"Failed to trigger run dispatch {idx}, aborting.", file=sys.stderr)
+                    sys.exit(1)
+
+            # Step 3: Resolve IDs
+            print("\nResolving newly created workflow run IDs...")
+            new_run_ids = client.get_new_runs(branch, anchor_id, iterations)
+            
+            if len(new_run_ids) < iterations:
+                print(f"Warning: Only resolved {len(new_run_ids)} out of {iterations} runs. Polling remainder.", file=sys.stderr)
+            else:
+                print(f"Successfully resolved run IDs: {', '.join(map(str, new_run_ids))}")
+
+            # Step 4: Polling loop
+            print("\nActive polling starting. Waiting for CI executions to finish...")
+            completed_runs = set()
+            while len(completed_runs) < len(new_run_ids):
+                queued_count = 0
+                in_progress_count = 0
+                success_count = 0
+                failed_count = 0
+                cancelled_count = 0
+
+                for run_id in new_run_ids:
+                    try:
+                        details = client.get_run_details(run_id)
+                        status = details.get("status")
+                        conclusion = details.get("conclusion")
+
+                        if status == "completed":
+                            completed_runs.add(run_id)
+                            if conclusion == "success": success_count += 1
+                            elif conclusion == "failure": failed_count += 1
+                            else: cancelled_count += 1
+                        elif status == "in_progress": in_progress_count += 1
+                        else: queued_count += 1
+                    except Exception:
+                        queued_count += 1
+
+                print(f"  [{datetime.now().strftime('%H:%M:%S')}] Queued: {queued_count} | In-Progress: {in_progress_count} | Success: {success_count} | Failed: {failed_count} | Cancelled: {cancelled_count}", end="\r")
+                
+                if len(completed_runs) == len(new_run_ids):
+                    print()
+                    break
+                time.sleep(25)
 
         # Step 5: Download artifacts
         print("\nCI runs completed. Commencing artifact retrieval...")
+        downloaded_runs = set()
         for run_id in sorted(new_run_ids):
             print(f"Checking support package for Run {run_id}...")
             art_id = None
@@ -430,16 +493,16 @@ def main():
                 if ok:
                     downloaded_runs.add(run_id)
             else:
-                print(f"  ⚠️ Warning: No support artifact found or expired for Completed Run {run_id}.", file=sys.stderr)
+                print(f"  ⚠️ Warning: No support artifact found for Completed Run {run_id}.", file=sys.stderr)
 
         # Summary
         print(f"\n=============================================================")
-        print(f"🦗 GitHub Capture completed successfully!")
+        print(f"🦗 GitHub Collector completed successfully!")
         print(f"Successfully downloaded: {len(downloaded_runs)} / {len(new_run_ids)} bundles.")
         print(f"Location: {output_dir}")
         print(f"=============================================================")
-        print(f"\nTo measure stability / flakiness of these runs, execute:")
-        print(f"  mantis/bin/grasp --target {args.target} --phase before --bundles-dir {output_dir}\n")
+        print(f"\nTo evaluate stability metrics, execute:")
+        print(f"  mantis/bin/evaluate_stability --target {args.target} --phase before --bundles-dir {output_dir}\n")
 
 if __name__ == "__main__":
     main()

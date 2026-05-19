@@ -1,14 +1,14 @@
-# 🦗 Claws of Stability: Mantis Grasp Technical Spec
+# 🦗 Claws of Stability: Mantis Evaluate Stability Technical Spec
 
-This document serves as the technical specification and engineering source of truth for **Mantis Grasp** (the pure metric and stability analyzer of Project Mantis).
+This document serves as the technical specification and engineering source of truth for **Mantis Evaluate Stability** (the pure metric and stability analyzer of Project Mantis, Stage 2).
 
 ---
 
 ## 1. Goal & Overview
 
-Following strict **Single Responsibility Design (SRD)**, **Mantis Grasp** is decoupled from test execution, environment startup, MOSQUITTO port checks, validator compilations, loop counts, and process cleanups. 
+Following strict **Single Responsibility Design (SRD)**, **Mantis Evaluate Stability** is decoupled from test execution, environment startup, broker checks, validator compilations, and active sandbox runs. 
 
-All environment triggers and run executions (both on GitHub CI and local developer sandboxes) are delegated entirely to the **Capture** component. Grasp's sole responsibility is to ingest captured support packages, normalize result outputs, aggregate flakiness metrics, and output MD reports.
+All environment triggers and run executions (both on GitHub CI and local developer sandboxes) are delegated entirely to the **Statistics Collector** (`collect_stats`) component. The Stability Evaluator's sole responsibility is to ingest captured support packages, normalize result outputs, aggregate flakiness metrics, and output Markdown and comparative stability reports under `mantis/out/`.
 
 ---
 
@@ -16,14 +16,14 @@ All environment triggers and run executions (both on GitHub CI and local develop
 
 ```mermaid
 graph TD
-    subgraph Component A: GitHub & Local Capture (Execution Engine)
-        Capture[capture CLI] -->|Local execution or CI trigger| Exec[Run test loops & clean processes]
-        Exec -->|Zip raw outcomes| BundlesDir[out/mantis/test_bundles/target_timestamp/]
+    subgraph Component A: Statistics Collector (Execution Engine)
+        Collector[collect_stats CLI] -->|Local execution or CI trigger/search| Exec[Run test loops & gather packages]
+        Exec -->|Save bundles| BundlesDir[mantis/out/test_bundles/target_timestamp/]
     end
 
-    subgraph Component B: Grasp Metric Analyzer (Pure Analysis)
-        Grasp[grasp CLI] -->|1. Read zip/tgz bundles| BundlesDir
-        Grasp -->|2. Extract & Consolidate| Support[bin/support_process]
+    subgraph Component B: Stability Evaluator (Pure Analysis)
+        Evaluator[evaluate_stability CLI] -->|1. Read zip/tgz bundles| BundlesDir
+        Evaluator -->|2. Extract & Consolidate| Support[bin/support_process]
         Support -->|3. Read sequencer.out & test_itemized.out| Analyzer[Log Analyzer]
         Analyzer -->|4. Normalize & Match Golden| Aggregator[Metrics Aggregator]
         Aggregator -->|5. Serialize metrics.json| Reporter[Report Generator]
@@ -40,7 +40,7 @@ In the UDMI test suite, some failure scenarios are part of the expected test des
 
 - **Normalizations**:
   Before doing any comparison, Mantis applies regex-based normalizations:
-  - Replaces variable ISO timestamps (`202[-0-9T:]+Z`) with `'TIMESTAMP'`.
+  - Replaces variable ISO timestamps (`202[-0-9T:]+Z` and variations) with `'TIMESTAMP'`.
   - Redacts variable error details in pipeline errors (`Pipeline type event error: While processing message .*`) keeping only the prefix and `REDACTED`.
 - **Sequential Occurrence-Based Matching**:
   Because the same test case can run multiple times under different parameters, Mantis keeps track of the occurrence index of each test. The $n$-th occurrence of a test in a run is compared exactly to the $n$-th occurrence of that test in the golden baseline.
@@ -52,13 +52,13 @@ In the UDMI test suite, some failure scenarios are part of the expected test des
 
 ## 4. Submodule Directory Structure & Naming
 
-The Grasp component is implemented under the `mantis/grasp/` submodule:
+The Stability Evaluator component is implemented under the `mantis/evaluate_stability/` submodule:
 
 ```
-mantis/grasp/
+mantis/evaluate_stability/
 ├── __init__.py
-├── main.py               # Pure log aggregator & consolidated metric orchestrator
-├── analyzer.py           # Parses test output results & matches baseline
+├── main.py               # Stability evaluator coordinator & orchestrator
+├── analyzer.py           # Parses test output results & matches baselines
 └── reporter.py           # Computes metrics & renders Markdown reports
 ```
 
@@ -66,8 +66,8 @@ mantis/grasp/
 
 ## 5. Implementation Specifications
 
-### 5.1. CLI Wrapper (`bin/grasp`)
-Launches the module: `python3 -m mantis.grasp.main "$@"`
+### 5.1. CLI Wrapper (`mantis/bin/evaluate_stability`)
+Launches the module: `python3 -m mantis.evaluate_stability.main "$@"`
 
 ### 5.2. Input Arguments
 | Argument | Type | Default | Description |
@@ -75,13 +75,13 @@ Launches the module: `python3 -m mantis.grasp.main "$@"`
 | `--bundles-dir` | `string` | **Required** | Path to folder containing sharded/local test bundles (zips/tgz). |
 | `--target` | `string` | `//mqtt/localhost` | The target project specification under test. |
 | `--phase` | `"before"` or `"after"` | `"before"` | Exercise stage (used for reports). |
-| `--output-dir` | `string` | `out/mantis` | Folder where all reports are saved. |
+| `--output-dir` | `string` | `mantis/out/` | Folder where all reports and metrics are saved. |
 
 ---
 
 ## 6. Verification & Smoke Test Details
 
 1. **Argument Parsing Help Check**:
-   - Command `mantis/bin/grasp --help` executes cleanly, verifying imports, argument types, and required fields.
+   - Command `mantis/bin/evaluate_stability --help` executes cleanly, verifying imports, argument types, and required fields.
 2. **Decoupled Integration Test**:
-   - Verify that Grasp accurately reads a directory of mock bundles, consolidates their contents, and outputs `flakiness_report_<phase>_<target>.md` without requiring local environments.
+   - Verify that Evaluator accurately reads a directory of mock bundles, consolidates their contents, and outputs `flakiness_report_<phase>_<target>.md` without requiring local environments.

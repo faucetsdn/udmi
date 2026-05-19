@@ -1,8 +1,8 @@
 #!/bin/bash -e
 #
-# Launcher wrapper for Project Mantis Inspect Component (Stage 3).
+# Launcher wrapper for Project Mantis Stability Evaluator Component (Stage 2).
 # Automatically activates the virtualenv and executes
-# the Python Inspect module.
+# the Python evaluate_stability module.
 #
 
 # Resolve parent directory structure
@@ -13,8 +13,8 @@ UDMI_ROOT=$(realpath $MANTIS_DIR/..)
 cd $UDMI_ROOT
 
 # 1. Guarantee execution permissions
-chmod +x $MANTIS_DIR/bin/inspect 2>/dev/null || true
-chmod +x $MANTIS_DIR/inspect/main.py 2>/dev/null || true
+chmod +x $MANTIS_DIR/bin/evaluate_stability 2>/dev/null || true
+chmod +x $MANTIS_DIR/evaluate_stability/main.py 2>/dev/null || true
 
 # 2. Activate virtualenv
 if [[ -f venv/bin/activate ]]; then
@@ -26,4 +26,4 @@ else
 fi
 
 # 3. Call Python module forwarding all arguments
-python3 -m mantis.inspect.main "$@"
+python3 -m mantis.evaluate_stability.main "$@"

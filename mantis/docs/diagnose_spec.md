@@ -1,32 +1,32 @@
-# 🦗 Oculus of Triage: Mantis Inspect Technical Spec
+# 🦗 Oculus of Triage: Mantis Diagnose Technical Spec
 
-This document serves as the technical specification and engineering source of truth for **Mantis Inspect** (the AI-powered diagnostic triage agent of Project Mantis).
+This document serves as the technical specification and engineering source of truth for **Mantis Diagnose** (the AI-powered diagnostic triage agent of Project Mantis, Stage 3).
 
 ---
 
 ## 1. Goal & Overview
 
-When **Mantis Grasp** aggregates flakiness metrics and detects actual test failures, **Mantis Inspect** is called to diagnose the issue.
+When **Mantis Evaluate Stability** aggregates flakiness metrics and detects actual test failures, **Mantis Diagnose** is called to diagnose the issue.
 
 It operates as a tool-equipped AI agent that dynamically discovers context and analyzes execution traces to answer three core questions:
 1. **Did the Device work as expected?**
 2. **Did the Sequencer work as expected?**
 3. **Did the Backend (UDMIS) work as expected?**
 
-Inspect is built to be completely **log-agnostic** and **highly adaptive**—automatically discovering whatever data streams are available at hand and using git history to perform best-effort diagnostics.
+Diagnose is built to be completely **log-agnostic** and **highly adaptive**—automatically discovering whatever data streams are available at hand, slicing them cleanly, and using git history to perform best-effort diagnostics.
 
 ---
 
 ## 2. Dynamic Log-Agnostic Correlation Engine
 
-Inspect does not rely on rigid, pre-defined log combinations or expect the user to select a specific diagnostic mode. Any of the log sources (Sequencer, UDMIS, Pubber, or historical logs) might be present or completely absent depending on the target platform and logging configurations.
+Diagnose does not rely on rigid, pre-defined log combinations or expect the developer to select a specific diagnostic mode. Any of the log sources (Sequencer, UDMIS, Pubber, or historical logs) might be present or completely absent depending on the target platform and logging configurations.
 
 ### 2.1. Available Context Discovery
-Before starting any analysis, Inspect automatically scans the execution backup directory and compiles a live **Available Context Catalog** (logs present vs. missing). It passes this catalog directly to the Gemini model, instructing the AI:
+Before starting any analysis, Diagnose automatically scans the execution backup directory and compiles a live **Available Context Catalog** (logs present vs. missing). It passes this catalog directly to the Gemini model, instructing the AI:
 > *"Analyze this failure. Here is the exact set of logs currently available for this run, alongside the logs retrieved from past successful runs. Reconstruct the execution timeline using whatever combination of streams is present, perform a best-effort triage, and isolate the breakpoint with evidence."*
 
 ### 2.2. Padded Timebound-Primary Correlation
-Rather than strictly filtering by transaction IDs, Inspect uses **padded execution timebounds** as the primary log slicer:
+Rather than strictly filtering by transaction IDs, Diagnose uses **padded execution timebounds** as the primary log slicer:
 - Finds the starting and ending timestamps of the test case from the sequencer log.
 - Adds a slack padding (default: $-5$ seconds before start, $+5$ seconds after end).
 - Slices all global log entries (`pubber.log`, `udmis.log`) within this window.
@@ -36,17 +36,17 @@ Rather than strictly filtering by transaction IDs, Inspect uses **padded executi
 
 ## 3. Submodule Directory Structure & Naming
 
-The Inspect component is implemented under its own dedicated submodule folder `mantis/inspect/`:
+The Diagnose component is implemented under its own dedicated submodule folder `mantis/diagnose/`:
 
 ```
-mantis/inspect/
+mantis/diagnose/
 ├── __init__.py
 ├── main.py               # Triage coordinator & context aggregator
 ├── agent.py              # AI agent harness & Gemini API client
 └── tools.py              # Dynamic tool belt (grep, read lines, git operations)
 ```
 
-- **`main.py`**: Orchestrates the execution flow, maps folder trees, and outputs report documents.
+- **`main.py`**: Orchestrates the execution flow, maps folder trees, and outputs report documents under `mantis/out/diagnose/`.
 - **`agent.py`**: Manages standard `google.genai` SDK sessions and queries `gemini-2.5-pro` utilizing registered Tools.
 - **`tools.py`**: Defines Python execution methods exposed directly to Gemini.
 
@@ -54,7 +54,7 @@ mantis/inspect/
 
 ## 4. Agentic Codebase & Git Discovery (Tools)
 
-Inspect is provided with a "Tool Belt" of Python-based functions that it can call dynamically during its diagnostic analysis loop:
+Diagnose is provided with a "Tool Belt" of Python-based functions that it can call dynamically during its diagnostic analysis loop:
 
 ### 4.1. Tool Belt APIs (defined in `tools.py`):
 1. **`grep_codebase(pattern)`**:
@@ -66,18 +66,18 @@ Inspect is provided with a "Tool Belt" of Python-based functions that it can cal
    - **Security Guardrail**: The Python harness rejects any unsafe git subcommands (such as `checkout`, `reset`, `commit`, `push`, `clean`) instantly to prevent repository corruption.
 
 ### 4.2. Dynamic Git History Mining:
-Inspect leverages the `git_read_operations` tool to perform high-value diagnostics:
-- **Successful Run Retrieval**: Since UDMI sequencer output files are checked in for every run in the site model repository, Inspect runs `git log` and `git show` on the failed test's `sequence.log` file to fetch its exact log contents during the **last successful execution**.
-- **Code Regression Identification**: Inspect compares git logs of the main `udmi` repository between the commit of the previous successful run and the current failure, pinpointing the exact code diffs/commits that might have introduced the regression.
+Diagnose leverages the `git_read_operations` tool to perform high-value diagnostics:
+- **Successful Run Retrieval**: Since UDMI sequencer output files are checked in for every run in the site model repository, Diagnose runs `git log` and `git show` on the failed test's `sequence.log` file to fetch its exact log contents during the **last successful execution**.
+- **Code Regression Identification**: Diagnose compares git logs of the main `udmi` repository between the commit of the previous successful run and the current failure, pinpointing the exact code diffs/commits that might have introduced the regression.
 
 ---
 
 ## 5. Information Sufficiency Guardrails
 
-Inspect is designed to be highly reliable and will **never speculate or hallucinate** when logs are severely limited. 
+Diagnose is designed to be highly reliable and will **never speculate or hallucinate** when logs are severely limited. 
 
-- **The Sufficiency Rule**: If the available logs, git context, and code checks are insufficient to definitively isolate the failure breakpoint, Inspect must explicitly declare `INSUFFICIENT_INFO`.
-- **Report Requirements**: In this scenario, Inspect will:
+- **The Sufficiency Rule**: If the available logs, git context, and code checks are insufficient to definitively isolate the failure breakpoint, Diagnose must explicitly declare `INSUFFICIENT_INFO`.
+- **Report Requirements**: In this scenario, Diagnose will:
   1. Declare that the root cause cannot be identified with the current data.
   2. List the exact missing logs or parameters required (e.g., "Missing UDMIS reflection logs").
   3. Propose step-by-step diagnostic next steps for the developer (e.g., "Please set UDMIS logging to VERBOSE and execute the test again to capture config reflection traces.").
@@ -87,14 +87,14 @@ Inspect is designed to be highly reliable and will **never speculate or hallucin
 ## 6. Structured Output Specifications
 
 ### 6.1. Standardized Nested Directory Tree
-Inspect saves localized reports in a standardized folder hierarchy:
-`out/mantis/<project_id>/<site_id>/<device_id>/<test_id>/triage_analysis.md`
+Diagnose saves localized reports under the self-contained `mantis/out/` hierarchy:
+`mantis/out/diagnose/<project_id>/<site_id>/<device_id>/<test_id>/triage_analysis.md`
 
 ### 6.2. Structured Diagnostic Report (`triage_analysis.md`)
 Every localized report must conform to the following structured markdown format:
 
 ```markdown
-# Mantis Inspect Diagnostic Analysis — <test_id>
+# Mantis Diagnose Diagnostic Analysis — <test_id>
 
 ## 1. Metadata
 - **Project ID**: `<project_id>`
@@ -133,17 +133,18 @@ Every localized report must conform to the following structured markdown format:
 
 ---
 
-## 7. Consolidated Summary Report (`mantis_triage_report.md`)
+## 7. Site Triage Summary Report (`triage_summary_report.md`)
 
-The root summary report compiled at `out/mantis/mantis_triage_report.md` delivers high-level engineering value:
+The consolidated summary report compiled at `mantis/out/diagnose/<project_id>/<site_id>/triage_summary_report.md` delivers site-level engineering value:
 
 - **Triage Dashboard**: Overall metrics (Total Checked, Total Failed, Success Rates, Failure Clusters).
-- **Failure Clustering**: Group identical failure profiles together:
+- **Relative Links:** Provides hyperlinked references using relative paths (e.g., `./<device_id>/<test_id>/triage_analysis.md`) for secure local viewing.
+- **Failure Clustering**: Groups identical failure profiles together:
   ```markdown
   ### ⚠️ Cluster 1: Config Ack Timeout (Affecting 4 Tests)
   - **Root Cause**: Pubber Emulator delayed config acknowledgments exceeding sequencer wait limits.
   - **Affected Tests**:
-    - `valid_serial_no` ([View Details](./mqtt_localhost/udmi_site_model/AHU-1/valid_serial_no/triage_analysis.md))
-    - `pointset_publish` ([View Details](./mqtt_localhost/udmi_site_model/AHU-1/pointset_publish/triage_analysis.md))
+    - `valid_serial_no` ([View Details](./AHU-1/valid_serial_no/triage_analysis.md))
+    - `pointset_publish` ([View Details](./AHU-1/pointset_publish/triage_analysis.md))
   ```
 - **CI/CD PR Warning Block**: A highly optimized markdown summary designed to be posted directly as a PR comment, highlighting newly introduced regressions versus known flaky tests.

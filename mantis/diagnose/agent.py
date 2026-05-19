@@ -24,7 +24,7 @@ def run_triage_analysis(prompt_payload: str) -> str:
         print("Example: export GEMINI_API_KEY=\"AIzaSy...\"", file=sys.stderr)
         sys.exit(1)
 
-    print("Initializing Gemini Triage Agent (Mantis Inspect)...")
+    print("Initializing Gemini Triage Agent (Mantis Diagnose)...")
     try:
         # 1. Initialize client (standard google.genai SDK)
         client = genai.Client()
@@ -34,7 +34,7 @@ def run_triage_analysis(prompt_payload: str) -> str:
         
         # 3. Define system guidelines
         system_instruction = (
-            "You are Mantis Inspect, a ruthless, highly analytical AI diagnostic triage agent "
+            "You are Mantis Diagnose, a ruthless, highly analytical AI diagnostic triage agent "
             "designed to investigate failed test runs in the UDMI codebase. "
             "Your goal is to inspect execution traces, code context, and Git history to "
             "determine why a test failed and isolate the breakpoint with exact evidence.\n\n"
