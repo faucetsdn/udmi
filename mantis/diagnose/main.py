@@ -17,10 +17,17 @@ def parse_timestamp(ts_str):
         return None
     # Strip brackets or whitespace if any
     ts_str = ts_str.strip("[] ")
-    formats = ["%Y-%m-%dT%H:%M:%SZ", "%Y-%m-%d %H:%M:%S", "%H:%M:%S"]
+    formats = [
+        "%Y-%m-%dT%H:%M:%S.%fZ",
+        "%Y-%m-%dT%H:%M:%SZ",
+        "%Y-%m-%d %H:%M:%S.%f",
+        "%Y-%m-%d %H:%M:%S",
+        "%H:%M:%S.%f",
+        "%H:%M:%S"
+    ]
     for fmt in formats:
         try:
-            if fmt == "%H:%M:%S":
+            if fmt in ["%H:%M:%S", "%H:%M:%S.%f"]:
                 # Assume today's date
                 today = datetime.utcnow().date()
                 t = datetime.strptime(ts_str, fmt).time()
@@ -38,10 +45,10 @@ def extract_timebounds_from_log(seq_log_path):
         return None, None
         
     # Matches any timestamp at start of line
-    ts_pattern = re.compile(r'^([\d\-T:Z]+)\s+')
+    ts_pattern = re.compile(r'^([\d\-T:Z\.,]+)\s+')
     # Precise starting/ending patterns
-    start_pattern = re.compile(r'^([\d\-T:Z]+)\s+NOTICE\s+Starting\s+test')
-    end_pattern = re.compile(r'^([\d\-T:Z]+)\s+(NOTICE\s+Ending\s+test|ERROR\s+terminating\s+test|RESULT\s+fail|RESULT\s+pass)')
+    start_pattern = re.compile(r'^([\d\-T:Z\.,]+)\s+NOTICE\s+Starting\s+test')
+    end_pattern = re.compile(r'^([\d\-T:Z\.,]+)\s+(NOTICE\s+Ending\s+test|ERROR\s+terminating\s+test|RESULT\s+fail|RESULT\s+pass)')
     
     try:
         with open(seq_log_path, 'r', encoding='utf-8', errors='replace') as f:
@@ -85,7 +92,7 @@ def slice_log_by_timebounds(filepath, start_dt, end_dt, padding_seconds=5):
     padded_end = end_dt + timedelta(seconds=padding_seconds)
     
     # Regex to match ISO timestamps at the start of lines
-    ts_pattern = re.compile(r'^([\d\-T:Z]+)\s+')
+    ts_pattern = re.compile(r'^([\d\-T:Z\.,]+)\s+')
     
     try:
         with open(filepath, 'r', encoding='utf-8', errors='replace') as f:

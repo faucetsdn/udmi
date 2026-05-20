@@ -100,19 +100,48 @@ def main():
         if os.path.exists(backup_out):
             shutil.rmtree(backup_out)
             
-        site_model_dir = os.path.join(UDMI_ROOT, "sites/udmi_site_model")
-        if os.path.exists(site_model_dir):
-            out_dirs = glob.glob(os.path.join(site_model_dir, "out*"))
-            if out_dirs:
-                os.makedirs(backup_out, exist_ok=True)
-                for od in sorted(out_dirs):
-                    if os.path.isdir(od):
-                        try:
-                            # If it is exactly "out" or another out* folder, merge/copy it into backup_out
-                            shutil.copytree(od, backup_out, dirs_exist_ok=True)
-                        except Exception as e:
-                            pass
-                print(f"Consolidated device sequence logs saved to: {backup_out}")
+        # 1. Consolidate and merge all active sharded directories for this run package
+        sharded_site_dirs = glob.glob(os.path.join(UDMI_ROOT, "sites", "udmi_site_model_*"))
+        
+        copied_sharded = False
+        
+        if sharded_site_dirs:
+            os.makedirs(backup_out, exist_ok=True)
+            for ssd in sorted(sharded_site_dirs):
+                # Check both out-seq and out folders in the shard
+                shard_out_seq = os.path.join(ssd, "out-seq")
+                shard_out = os.path.join(ssd, "out")
+                
+                if os.path.exists(shard_out_seq):
+                    try:
+                        shutil.copytree(shard_out_seq, backup_out, dirs_exist_ok=True)
+                        copied_sharded = True
+                    except Exception as e:
+                        pass
+                elif os.path.exists(shard_out):
+                    try:
+                        shutil.copytree(shard_out, backup_out, dirs_exist_ok=True)
+                        copied_sharded = True
+                    except Exception as e:
+                        pass
+            if copied_sharded:
+                print(f"Consolidated sharded sequence logs from active shards into: {backup_out}")
+                
+        # 2. Fallback to default sites/udmi_site_model consolidation if no active sharded directory was found
+        if not copied_sharded:
+            site_model_dir = os.path.join(UDMI_ROOT, "sites/udmi_site_model")
+            if os.path.exists(site_model_dir):
+                out_dirs = glob.glob(os.path.join(site_model_dir, "out*"))
+                if out_dirs:
+                    os.makedirs(backup_out, exist_ok=True)
+                    for od in sorted(out_dirs):
+                        if os.path.isdir(od):
+                            try:
+                                # If it is exactly "out" or another out* folder, merge/copy it into backup_out
+                                shutil.copytree(od, backup_out, dirs_exist_ok=True)
+                            except Exception as e:
+                                pass
+                    print(f"Consolidated device sequence logs saved to: {backup_out}")
 
         # 2.2. Copy global UDMIS and Pubber logs to make the run backup fully diagnostic-ready
         # Search in both core workspace 'out/' and any sharded 'out_*/' folders

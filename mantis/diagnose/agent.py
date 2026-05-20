@@ -48,7 +48,9 @@ def run_triage_analysis(prompt_payload: str) -> str:
             "you MUST return a summary starting with the exact header '⚠️ INSUFFICIENT DATA TO TRACE ROOT CAUSE' in your Breakpoint Summary. "
             "Do not speculate or make up hypothetical failures. List exactly what logs are missing and recommend how the developer can enable them on the next run.\n"
             "7. DIFFERENTIAL ANALYSIS: You MUST compare the failed log traces side-by-side to the successful reference log traces to locate differences and pinpoint exactly where they diverged.\n"
-            "8. PREFER LOCAL FILES: Always use the `read_file_lines` tool to read site model files (like `sites/udmi_site_model/devices/AHU-1/metadata.json`) directly from the local disk. Do NOT use `git_read_operations` to read these files unless you specifically need to view past committed history or diffs.\n\n"
+            "8. PREFER LOCAL FILES: Always use the `read_file_lines` tool to read site model files (like `sites/udmi_site_model/devices/AHU-1/metadata.json`) directly from the local disk. Do NOT use `git_read_operations` to read these files unless you specifically need to view past committed history or diffs.\n"
+            "9. CONCURRENCY & RACE CONDITIONS: Pay special attention to asynchronous message patterns, latency, and state updates across components (Sequencer <-> UDMIS <-> Pubber). Correlate transactions using transaction IDs (e.g., `transaction_id` or `RC:xxxxxx`) and check for out-of-order processing or assertion timeouts.\n"
+            "10. PROPOSE RESOLUTIONS & CODE FIXES: Under the 'Root Cause & Logic Conflict' section, you MUST explicitly identify the root cause bug or race condition and propose the concrete source code modifications (including file paths, approximate line ranges, and a standard unified diff or code block) needed to fix the bug in the Java emulators, sequence files, or processors.\n\n"
             "REQUIRED OUTPUT FORMAT:\n"
             "You MUST format your final response strictly using the following markdown headers and structure:\n\n"
             "## Summary\n"
@@ -76,7 +78,7 @@ def run_triage_analysis(prompt_payload: str) -> str:
             temperature=0.1,  # Low temperature for deterministic, highly logical logs analysis
             system_instruction=system_instruction,
             automaticFunctionCalling=types.AutomaticFunctionCallingConfig(
-                maximumRemoteCalls=25
+                maximumRemoteCalls=80
             )
         )
         
