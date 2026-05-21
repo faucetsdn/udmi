@@ -30,6 +30,7 @@ import udmi.schema.PointsetConfig;
 import udmi.schema.PointsetEvents;
 import udmi.schema.PointsetModel;
 import udmi.schema.PointsetState;
+import udmi.util.ThreadSafeHashMap;
 
 /**
  * Pointset client.
@@ -254,8 +255,8 @@ public interface PointsetManager extends ManagerLog {
     // Known that pointset config exists, so ensure that a pointset state also exists.
     ifNullThen(getPointsetState(), () -> {
       setPointsetState(new PointsetState());
-      getPointsetState().points = new HashMap<>();
-      getPointsetEvent().points = new HashMap<>();
+      getPointsetState().points = new ThreadSafeHashMap<>();
+      getPointsetEvent().points = new ThreadSafeHashMap<>();
     });
 
     // Update each internally managed point with its specific pointset config (if any).
