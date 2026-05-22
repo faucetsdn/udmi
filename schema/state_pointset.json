@@ -28,7 +28,7 @@
     "points": {
       "description": "Collection of point names, defining the representative point set for this device.",
       "additionalProperties": false,
-      "existingJavaType": "java.util.HashMap<String, PointPointsetState>",
+      "existingJavaType": "java.util.Map<String, PointPointsetState>",
       "patternProperties": {
         "^[a-z][a-z0-9]*(_[a-z0-9]+)*$": {
           "description": "Object representation for for a single point",
