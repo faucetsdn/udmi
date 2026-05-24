@@ -3,12 +3,17 @@ package com.google.bos.udmi.service.bridge;
 import static com.google.common.util.concurrent.MoreExecutors.directExecutor;
 
 import com.google.api.core.ApiFuture;
+import com.google.api.gax.core.NoCredentialsProvider;
+import com.google.api.gax.grpc.GrpcTransportChannel;
+import com.google.api.gax.rpc.FixedTransportChannelProvider;
 import com.google.bos.udmi.service.support.EtcdDataProvider;
 import com.google.cloud.pubsub.v1.Publisher;
 import com.google.common.base.Splitter;
 import com.google.protobuf.ByteString;
 import com.google.pubsub.v1.ProjectTopicName;
 import com.google.pubsub.v1.PubsubMessage;
+import io.grpc.ManagedChannel;
+import io.grpc.ManagedChannelBuilder;
 import java.io.BufferedReader;
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -127,7 +132,19 @@ public final class MqttToPubSubBridge {
 
       // Initialize Pub/Sub Publisher
       ProjectTopicName topicName = ProjectTopicName.of(gcpProjectId, pubsubTopicId);
-      publisher = Publisher.newBuilder(topicName).build();
+      Publisher.Builder publisherBuilder = Publisher.newBuilder(topicName);
+      String emulatorHost = System.getenv("PUBSUB_EMULATOR_HOST");
+      if (emulatorHost != null && !emulatorHost.isEmpty()) {
+        int lastIndex = emulatorHost.lastIndexOf(":");
+        String useHost = lastIndex < 0 ? emulatorHost
+            : String.format("localhost:%s", emulatorHost.substring(lastIndex + 1));
+        ManagedChannel channel = ManagedChannelBuilder.forTarget(useHost).usePlaintext().build();
+        publisherBuilder.setChannelProvider(
+            FixedTransportChannelProvider.create(GrpcTransportChannel.create(channel)));
+        publisherBuilder.setCredentialsProvider(NoCredentialsProvider.create());
+        logger.info("Routing Pub/Sub Publisher to emulator host: {}", useHost);
+      }
+      publisher = publisherBuilder.build();
       logger.info("Pub/Sub Publisher initialized for topic: {}", topicName);
 
       // Initialize MQTT Client
