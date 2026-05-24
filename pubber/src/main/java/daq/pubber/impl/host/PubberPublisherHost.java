@@ -24,9 +24,11 @@ import com.google.udmi.util.CertManager;
 import com.google.udmi.util.SiteModel;
 import daq.pubber.impl.PubberFeatures;
 import daq.pubber.impl.PubberManager;
+import daq.pubber.impl.blob.PubberBlobLifecycleHandler;
 import daq.pubber.impl.manager.PubberDeviceManager;
 import java.io.File;
 import java.io.PrintStream;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CountDownLatch;
@@ -36,8 +38,12 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 import udmi.lib.base.MqttDevice;
+import udmi.lib.blob.intf.BlobLifecycleHandler;
 import udmi.lib.client.host.PublisherHost;
 import udmi.lib.client.manager.DeviceManager;
+import udmi.schema.BlobBlobsetConfig.BlobPhase;
+import udmi.schema.BlobBlobsetState;
+import udmi.schema.BlobsetState;
 import udmi.schema.DevicePersistent;
 import udmi.schema.EndpointConfiguration;
 import udmi.schema.Metadata;
@@ -53,6 +59,7 @@ public class PubberPublisherHost extends PubberManager implements PublisherHost 
 
   private PubberDeviceManager deviceManager;
   private SiteModel siteModel;
+  private BlobLifecycleHandler blobLifecycleHandler;
 
   /**
    * Start an instance from a configuration file.
@@ -80,7 +87,7 @@ public class PubberPublisherHost extends PubberManager implements PublisherHost 
   @Override
   public void initialize() {
     EndpointConfiguration.Protocol protocol = requireNonNullElse(
-            ifNotNullGet(config.endpoint, endpoint -> endpoint.protocol), MQTT);
+        ifNotNullGet(config.endpoint, endpoint -> endpoint.protocol), MQTT);
     checkArgument(MQTT.equals(protocol), "Protocol mismatch");
     PublisherHost.super.initialize();
   }
@@ -112,7 +119,13 @@ public class PubberPublisherHost extends PubberManager implements PublisherHost 
         config.deviceId, config.serialNo, config.macAddr,
         config.gatewayId, optionsString(config.options)));
 
+    this.blobLifecycleHandler = new PubberBlobLifecycleHandler(this, config.serialNo);
     markStateDirty();
+  }
+
+  @Override
+  public BlobLifecycleHandler getBlobLifecycleHandler() {
+    return blobLifecycleHandler;
   }
 
   @Override
@@ -131,6 +144,21 @@ public class PubberPublisherHost extends PubberManager implements PublisherHost 
     }
 
     persistentData.restart_count = requireNonNullElse(persistentData.restart_count, 0) + 1;
+
+    if (persistentData.applied_blobs != null) {
+      if (getDeviceState().blobset == null) {
+        getDeviceState().blobset = new BlobsetState();
+        getDeviceState().blobset.blobs = new HashMap<>();
+      }
+      persistentData.applied_blobs.forEach((key, gen) -> {
+        BlobBlobsetState bs = new BlobBlobsetState();
+        bs.phase = BlobPhase.FINAL;
+        bs.generation = java.util.Date.from(java.time.Instant.parse(gen));
+        getDeviceState().blobset.blobs.put(key, bs);
+      });
+    } else {
+      persistentData.applied_blobs = new HashMap<>();
+    }
 
     // If the persistentData contains endpoint configuration, prioritize using that.
     // Otherwise, use the endpoint configuration that came from the Pubber config file on start.
@@ -235,7 +263,7 @@ public class PubberPublisherHost extends PubberManager implements PublisherHost 
     debug(format("Extracted device password from %s", siteModel.getDeviceKeyFile(config.deviceId)));
     String targetDeviceId = getTargetDeviceId(siteModel, config.deviceId);
     CertManager certManager = new CertManager(new File(siteModel.getReflectorDir(), "ca.crt"),
-            siteModel.getDeviceDir(targetDeviceId), endpoint.transport, keyPassword, this::info);
+        siteModel.getDeviceDir(targetDeviceId), endpoint.transport, keyPassword, this::info);
     deviceTarget = new MqttDevice(endpoint, this::publisherException, certManager, isMsTimestamp());
     publishDirtyState();
   }

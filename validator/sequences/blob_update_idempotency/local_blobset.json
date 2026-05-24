@@ -1,0 +1,10 @@
+{
+  "blobs" : {
+    "pubber_module" : {
+      "phase" : "final",
+      "url" : "@@@software data###data:application/json;base64,eyJ2ZXJzaW9uIjoidjIifQ==",
+      "sha256" : "@@@blob data hash###0923c04472e891c960e0339a6c2ffaa1228be79ee8da8171380cc4b4a66e7c37",
+      "generation" : "TIMESTAMP"
+    }
+  }
+}
