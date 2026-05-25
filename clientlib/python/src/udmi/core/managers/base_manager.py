@@ -10,16 +10,21 @@ import abc
 import logging
 import threading
 import time
+import warnings
+from datetime import datetime, timezone
 from typing import Any
 from typing import Callable
 from typing import List
 from typing import Optional
 from typing import TYPE_CHECKING
 
+from udmi.constants import UDMI_VERSION
 from udmi.schema import Config
 from udmi.schema import DataModel
-from udmi.schema import Metadata
 from udmi.schema import State
+from udmi.schema import Entry
+from udmi.schema import SystemEvents
+from udmi.schema import Category
 
 if TYPE_CHECKING:
     # To avoid circular import error
@@ -76,10 +81,17 @@ class BaseManager(abc.ABC):
         """Checks if the device is connected and ready."""
         return self._device is not None and self._device.is_ready
 
-    def set_model(self, model: Metadata) -> None:
+    def set_model(self, model: Any) -> None:
         """
         Extracts the manager-specific metadata from the global Metadata object.
+        @deprecated: Metadata integration on device is deprecated.
         """
+        warnings.warn(
+            "set_model and Metadata integration on device is deprecated and "
+            "will be removed in v2.0.0. Please configure managers directly.",
+            DeprecationWarning,
+            stacklevel=2
+        )
         field = self.model_field_name
         if field:
             self.model = getattr(model, field, None)
@@ -101,6 +113,28 @@ class BaseManager(abc.ABC):
 
         self._dispatcher.publish_event(f"events/{subfolder}", event_model,
                                        device_id)
+
+    def _emit_log(self, category: Category, message: str, level: Optional[int] = None) -> None:
+        """Helper to publish structured UDMI log entries with category enum."""
+        try:
+            log_level = level if level is not None else category.level
+            log_entry = Entry(
+                category=category.value,
+                level=log_level,
+                message=message,
+                timestamp=datetime.now(timezone.utc).isoformat()
+            )
+            event = SystemEvents(
+                timestamp=datetime.now(timezone.utc).isoformat(),
+                version=UDMI_VERSION,
+                logentries=[log_entry]
+            )
+            self.publish_event(event, "system")
+            # Also log locally
+            python_level = max(10, log_level // 10)
+            LOGGER.log(python_level, "[%s] %s", category.value, message)
+        except Exception as e:  # pylint: disable=broad-exception-caught
+            LOGGER.error("Failed to publish structured log entry: %s", e)
 
     def trigger_state_update(self, immediate: bool = False) -> None:
         """

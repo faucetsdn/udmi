@@ -9,6 +9,7 @@ import datetime
 import logging
 import threading
 import time
+import warnings
 from dataclasses import dataclass
 from dataclasses import field
 from threading import Event
@@ -32,7 +33,6 @@ from udmi.core.persistence.file_backend import FilePersistenceBackend
 from udmi.core.utils.file_ops import mask_secrets
 from udmi.schema import Config
 from udmi.schema import EndpointConfiguration
-from udmi.schema import Metadata
 from udmi.schema import State
 from udmi.schema import SystemState
 
@@ -101,7 +101,7 @@ class Device:
                  connection_factory: Optional[ConnectionFactory] = None,
                  persistence_manager: Optional[DevicePersistence] = None,
                  credential_manager: Optional[CredentialManager] = None,
-                 initial_model: Optional[Metadata] = None
+                 initial_model: Optional[Any] = None
                  ):
         """
         Initializes the Device.
@@ -112,6 +112,12 @@ class Device:
         LOGGER.info("Initializing device...")
         self.managers = managers
         if initial_model is not None:
+            warnings.warn(
+                "Passing 'initial_model' to Device is deprecated and will be removed in v2.0.0. "
+                "Please configure point properties directly inside managers.",
+                DeprecationWarning,
+                stacklevel=2
+            )
             self._init_model(initial_model)
         self.connection_factory = connection_factory
         if persistence_manager:
@@ -146,7 +152,7 @@ class Device:
         """Returns True if the device is fully connected and ready."""
         return self._loop_state.is_ready
 
-    def _init_model(self, model: Metadata) -> None:
+    def _init_model(self, model: Any) -> None:
         for manager in self.managers:
             if hasattr(manager, 'set_model'):
                 manager.set_model(model)
@@ -401,54 +407,53 @@ class Device:
         """
         LOGGER.info("Starting device run loop...")
 
-        while True:
-            try:
-                just_connected = False
-                self._loop_state.config_received_event.clear()
-                if not self.dispatcher:
-                    self._initialize_connection_robustly()
-                    just_connected = True
+        try:
+            while True:
+                try:
+                    just_connected = False
+                    self._loop_state.config_received_event.clear()
+                    if not self.dispatcher:
+                        self._initialize_connection_robustly()
+                        just_connected = True
 
-                LOGGER.info(
-                    "Waiting for initial configuration (Timeout: %ss)...",
-                    CONFIG_SYNC_TIMEOUT_SEC)
+                    LOGGER.info(
+                        "Waiting for initial configuration (Timeout: %ss)...",
+                        CONFIG_SYNC_TIMEOUT_SEC)
 
-                config_arrived = self._loop_state.config_received_event.wait(
-                    timeout=CONFIG_SYNC_TIMEOUT_SEC
-                )
-                if self._loop_state.stop_event.is_set():
-                    LOGGER.info("Stop event received during config wait.")
+                    config_arrived = self._loop_state.config_received_event.wait(
+                        timeout=CONFIG_SYNC_TIMEOUT_SEC
+                    )
+                    if self._loop_state.stop_event.is_set():
+                        LOGGER.info("Stop event received during config wait.")
+                        break
+                    if config_arrived:
+                        LOGGER.info("Initial config received. Proceeding.")
+                    else:
+                        LOGGER.warning(
+                            "Config Sync Timeout! Proceeding with default state.")
+
+                    self._run_internal(skip_connect=just_connected)
                     break
-                if config_arrived:
-                    LOGGER.info("Initial config received. Proceeding.")
-                else:
+                except ConnectionResetException:
                     LOGGER.warning(
-                        "Config Sync Timeout! Proceeding with default state.")
+                        "Connection Reset requested. Re-initializing network stack...")
+                    self._loop_state.reset_event.clear()
+                    self._loop_state.consecutive_failures = 0
 
-                self._run_internal(skip_connect=just_connected)
-                break
-            except ConnectionResetException:
-                LOGGER.warning(
-                    "Connection Reset requested. Re-initializing network stack...")
-                self._loop_state.reset_event.clear()
-                self._loop_state.consecutive_failures = 0
-
-                if self.dispatcher:
-                    try:
-                        self.dispatcher.close()
-                    except Exception as e:  # pylint:disable=broad-exception-caught
-                        LOGGER.warning("Error closing dispatcher: %s", e)
-                    self.dispatcher = None
-                continue
-            except KeyboardInterrupt:
-                LOGGER.info("Keyboard interrupt.")
-                break
-            except Exception as e:  # pylint:disable=broad-exception-caught
-                LOGGER.critical("Unexpected crash in run loop: %s", e,
-                                exc_info=True)
-                break
-            finally:
-                self.stop()
+                    if self.dispatcher:
+                        try:
+                            self.dispatcher.close()
+                        except Exception as e:  # pylint:disable=broad-exception-caught
+                            LOGGER.warning("Error closing dispatcher: %s", e)
+                        self.dispatcher = None
+                    continue
+        except KeyboardInterrupt:
+            LOGGER.info("Keyboard interrupt.")
+        except Exception as e:  # pylint:disable=broad-exception-caught
+            LOGGER.critical("Unexpected crash in run loop: %s", e,
+                            exc_info=True)
+        finally:
+            self.stop()
 
     def _initialize_connection_robustly(self) -> None:
         """

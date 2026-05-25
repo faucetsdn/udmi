@@ -23,7 +23,7 @@ except ImportError:
     psutil = None
 
 from udmi.constants import UDMI_VERSION
-from udmi.core.blob import get_verified_blob_file
+from udmi.core.blob import get_verified_blob_file, BlobValidationError, BlobParseError
 from udmi.core.blob.handlers import BlobPipelineHandlers
 from udmi.core.blob.handlers import PostProcessHandler
 from udmi.core.blob.handlers import ProcessHandler
@@ -32,6 +32,7 @@ from udmi.schema import BlobBlobsetConfig
 from udmi.schema import BlobBlobsetState
 from udmi.schema import BlobsetConfig
 from udmi.schema import BlobsetState
+from udmi.schema import Category
 from udmi.schema import Config
 from udmi.schema import Entry
 from udmi.schema import Metadata
@@ -351,7 +352,22 @@ class SystemManager(BaseManager):
         Iterates through blobset config and triggers updates for new generations.
         """
         if not blobset.blobs:
+            if self._blob_states:
+                LOGGER.info("Blobset configurations cleared. Wiping blob states.")
+                self._blob_states.clear()
+                self.trigger_state_update()
             return
+
+        # Clean up states of blobs that are no longer configured
+        removed_keys = [
+            key for key in self._blob_states
+            if key not in blobset.blobs
+        ]
+        if removed_keys:
+            for key in removed_keys:
+                LOGGER.info("Blob '%s' removed from configuration. Clearing state.", key)
+                self._blob_states.pop(key, None)
+            self.trigger_state_update()
 
         for key, blob_config in blobset.blobs.items():
             if key not in self._blob_handlers:
@@ -363,6 +379,10 @@ class SystemManager(BaseManager):
 
             LOGGER.info("New generation detected for blob '%s': %s",
                         key, blob_config.generation)
+            self._emit_log(
+                Category.BLOBSET_BLOB_RECEIVE,
+                f"New generation detected for blob '{key}': {blob_config.generation}"
+            )
             self._apply_blob(key, blob_config)
 
     def _apply_blob(self, key: str, config: BlobBlobsetConfig) -> None:
@@ -395,6 +415,10 @@ class SystemManager(BaseManager):
 
         try:
             LOGGER.info("Streaming blob '%s' to %s...", key, tmp_path)
+            self._emit_log(
+                Category.BLOBSET_BLOB_FETCH,
+                f"Fetching blob '{key}' from {config.url}..."
+            )
             get_verified_blob_file(config, tmp_path)
 
             handler = self._blob_handlers[key]
@@ -410,6 +434,10 @@ class SystemManager(BaseManager):
             process_output = handler.process(key, payload)
 
             LOGGER.info("Blob '%s' applied successfully.", key)
+            self._emit_log(
+                Category.BLOBSET_BLOB_APPLY,
+                f"Blob '{key}' applied successfully."
+            )
             self._applied_blob_generations[key] = config.generation
             self._update_blob_state(key, Phase.final, config.generation)
             self.trigger_state_update(immediate=True)
@@ -421,9 +449,26 @@ class SystemManager(BaseManager):
             if handler.post_process:
                 handler.post_process(key, process_output)
 
+        except (BlobValidationError, BlobParseError) as e:
+            LOGGER.error("Failed to verify/parse blob '%s': %s", key, e)
+            error_msg = str(e)
+            self._emit_log(
+                Category.BLOBSET_BLOB_PARSE,
+                f"Failed to parse/verify blob '{key}': {error_msg}",
+                level=500
+            )
+            self._update_blob_state(key, Phase.final, config.generation, error_msg)
+            self.trigger_state_update()
+
         except Exception as e:  # pylint:disable=broad-exception-caught
-            LOGGER.error("Failed to apply blob '%s': %s", key, e)
-            self._update_blob_state(key, Phase.final, config.generation, str(e))
+            LOGGER.error("Failed to fetch/apply blob '%s': %s", key, e)
+            error_msg = str(e)
+            self._emit_log(
+                Category.BLOBSET_BLOB_FETCH,
+                f"Failed to fetch blob '{key}': {error_msg}",
+                level=500
+            )
+            self._update_blob_state(key, Phase.final, config.generation, error_msg)
             self.trigger_state_update()
 
         finally:

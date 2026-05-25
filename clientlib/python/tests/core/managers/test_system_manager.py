@@ -391,3 +391,31 @@ def test_key_rotation_handles_failure(system_manager):
     assert system_manager._system_state.status.level == 500
     assert "Backup Failed" in system_manager._system_state.status.message
     mock_device.request_connection_reset.assert_not_called()
+
+def test_blobset_config_removal_clears_state(system_manager, mock_dispatcher):
+    """
+    Verifies that when a blob config is removed from the config payload,
+    its corresponding state is cleared and removed from reporting.
+    """
+    mock_device = MagicMock()
+    system_manager.set_device_context(device=mock_device, dispatcher=mock_dispatcher)
+    
+    # 1. Setup pre-existing blob states
+    from udmi.schema.common import Phase
+    system_manager._blob_states["firmware"] = MagicMock(phase=Phase.final)
+    system_manager._applied_blob_generations["firmware"] = "gen1"
+    
+    system_manager._blob_states["config_endpoint"] = MagicMock(phase=Phase.final)
+    system_manager._applied_blob_generations["config_endpoint"] = "gen1"
+    
+    # 2. Receive new config payload missing "firmware" but containing "config_endpoint"
+    endpoint_config = BlobBlobsetConfig(generation="gen1", url="http://endpoint")
+    config = Config(blobset=BlobsetConfig(blobs={"config_endpoint": endpoint_config}))
+    
+    system_manager.handle_config(config)
+    
+    # 3. "firmware" state should be cleared; but generation must remain in persistence cache
+    assert "firmware" not in system_manager._blob_states
+    assert system_manager._applied_blob_generations["firmware"] == "gen1"
+    assert "config_endpoint" in system_manager._blob_states
+    mock_device.trigger_state_update.assert_called()

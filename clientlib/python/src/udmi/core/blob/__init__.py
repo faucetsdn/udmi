@@ -19,6 +19,14 @@ from udmi.schema import BlobBlobsetConfig
 from udmi.schema import BlobsetConfig
 from udmi.schema import DataModel
 
+class BlobValidationError(ValueError):
+    """Raised when SHA256 hash verification fails (Integrity error)."""
+
+
+class BlobParseError(ValueError):
+    """Raised when parsing/decoding the blob payload fails."""
+
+
 T = TypeVar("T", bound=DataModel)
 LOGGER = logging.getLogger(__name__)
 
@@ -48,7 +56,7 @@ def get_verified_blob_bytes(blob_config: BlobBlobsetConfig) -> bytes:
 
     sha256_actual = hashlib.sha256(data_bytes).hexdigest()
     if sha256_actual.lower() != sha256_expected.lower():
-        raise ValueError(
+        raise BlobValidationError(
             f"Blob hash mismatch for {url}! "
             f"Expected {sha256_expected}, got {sha256_actual}"
         )
@@ -85,7 +93,7 @@ def get_verified_blob_file(blob_config: BlobBlobsetConfig,
         sha256_actual = _calculate_file_hash(dest_path)
 
         if sha256_actual.lower() != sha256_expected.lower():
-            raise ValueError(
+            raise BlobValidationError(
                 f"Blob hash mismatch! Expected {sha256_expected}, "
                 f"got {sha256_actual}"
             )
@@ -141,4 +149,4 @@ def parse_blob_as_object(
         return object_type.from_dict(obj_dict), blob_config.generation
 
     except (json.JSONDecodeError, UnicodeDecodeError) as e:
-        raise ValueError(f"Failed to parse blob JSON: {e}") from e
+        raise BlobParseError(f"Failed to parse blob JSON: {e}") from e

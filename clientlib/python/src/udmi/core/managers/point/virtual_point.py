@@ -4,7 +4,6 @@ from typing import Any
 from typing import Optional
 
 from udmi.core.managers.point.basic_point import BasicPoint
-from udmi.schema import PointPointsetModel
 from udmi.schema import RefDiscovery
 
 
@@ -20,12 +19,20 @@ class Point(BasicPoint):
     - Writebacks instantly apply to the in-memory value without hardware IO operations.
     """
 
-    def __init__(self, name: str, model: Optional[PointPointsetModel] = None):
-        super().__init__(name, model)
-        # Seed with baseline_value from model if present
-        self._present_value: Any = (
-            model.baseline_value if (model and model.baseline_value is not None) else None
-        )
+    # pylint: disable=too-many-arguments
+    def __init__(self,
+                 name: str,
+                 model: Optional[Any] = None,
+                 *,
+                 writable: Optional[bool] = None,
+                 ref: Optional[str] = None,
+                 units: Optional[str] = None,
+                 baseline_value: Optional[Any] = None):
+        super().__init__(name, model=model, writable=writable, ref=ref, units=units)
+        if model is not None:
+            self._present_value = getattr(model, 'baseline_value', None)
+        else:
+            self._present_value = baseline_value
 
     def get_value(self) -> Any:
         """

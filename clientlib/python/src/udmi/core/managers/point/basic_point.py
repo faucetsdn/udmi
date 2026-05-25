@@ -37,24 +37,36 @@ class BasicPoint(AbstractPoint): # pylint: disable=too-many-instance-attributes
       execute COV and periodic heartbeat reporting logic.
     """
 
-    def __init__(self, name: str, model: Optional[PointPointsetModel] = None):
+    # pylint: disable=too-many-arguments,too-many-positional-arguments
+    def __init__(self,
+                 name: str,
+                 model: Optional[Any] = None,
+                 writable: Optional[bool] = None,
+                 ref: Optional[str] = None,
+                 units: Optional[str] = None):
         self._name = name
         self._data = PointPointsetEvents()
         self._state = PointPointsetState()
 
-        self._writable = model.writable if (model and model.writable) else False
-        self._ref = model.ref if model else None
-
-        if model and model.units:
-            self._state.units = model.units
+        if model is not None:
+            self._writable = bool(getattr(model, 'writable', False))
+            self._ref = getattr(model, 'ref', None)
+            units_val = getattr(model, 'units', None)
+            if units_val:
+                self._state.units = units_val
+            self._model = model
+        else:
+            self._writable = writable if writable is not None else False
+            self._ref = ref
+            if units:
+                self._state.units = units
+            self._model = None
 
         self._written = False
         self._dirty = True
+        self._last_set_value = None
 
         self._expiry_time: Optional[float] = None
-
-        # Store full model for subclass extensibility
-        self._model = model
 
         # COV and Heartbeat
         self._cov_increment: Optional[float] = None
@@ -126,6 +138,7 @@ class BasicPoint(AbstractPoint): # pylint: disable=too-many-instance-attributes
         state and forcing an immediate re-read from the underlying hardware.
         """
         self._written = False
+        self._last_set_value = None
         self._state.value_state = None
         self._state.status = None
         self._expiry_time = None
@@ -153,12 +166,12 @@ class BasicPoint(AbstractPoint): # pylint: disable=too-many-instance-attributes
         if state_changed or status_changed:
             self._dirty = True
 
+    # pylint: disable=too-many-return-statements,too-many-branches,too-many-statements
     def _update_state_config(self,
         config: Optional[PointPointsetConfig],
         invalid_expiry: bool = False,
         is_expired: bool = False,
         on_state_change: Optional[Callable] = None) -> None:
-        # pylint: disable=too-many-return-statements
         """
         Update the state of this point based off of a new config.
         The core writeback state machine logic. Validates ref matching, expiry timestamps,
@@ -175,16 +188,27 @@ class BasicPoint(AbstractPoint): # pylint: disable=too-many-instance-attributes
                 self._state.units = config.units
 
         # 1. Validate Ref
-        if config is not None and config.ref != self._ref:
-            self._state.status = self._create_entry(
-                Category.POINTSET_POINT_FAILURE, "Invalid point ref"
-            )
-            return
+        if config is not None and config.ref is not None:
+            if self._ref is None:
+                self._ref = config.ref
+            elif config.ref != self._ref:
+                self._state.status = self._create_entry(
+                    Category.POINTSET_POINT_FAILURE, "Invalid point ref"
+                )
+                return
 
         # 2. Check if set_value is present (Release/Null check)
         if config is None or config.set_value is None:
             self.clear_writeback()
             return
+
+        is_failed_or_invalid = self._state.value_state in (
+            ValueState.failure, ValueState.invalid
+        )
+        if self._last_set_value == config.set_value and not is_failed_or_invalid:
+            return
+
+        self._last_set_value = config.set_value
 
         if invalid_expiry:
             self.clear_writeback()
@@ -226,8 +250,17 @@ class BasicPoint(AbstractPoint): # pylint: disable=too-many-instance-attributes
         def execute_writeback(val: Any) -> None:
             try:
                 result = self.set_value(val)
-                self._data.present_value = result
-                self.value_state = ValueState.applied
+                if isinstance(result, ValueState):
+                    self._data.present_value = val
+                    self.value_state = result
+                elif result is not None and hasattr(result, 'value_state'):
+                    self._data.present_value = val
+                    self.value_state = result.value_state
+                    if getattr(result, 'status', None):
+                        self.status = result.status
+                else:
+                    self._data.present_value = result if result is not None else val
+                    self.value_state = ValueState.applied
                 self._written = True
             except Exception as ex:  # pylint: disable=broad-exception-caught
                 self.status = self._create_entry(
