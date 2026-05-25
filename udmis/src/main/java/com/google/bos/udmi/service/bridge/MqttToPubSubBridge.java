@@ -121,31 +121,10 @@ public final class MqttToPubSubBridge {
     EtcdDataProvider etcdProvider = null;
 
     try {
-      if (etcdTarget != null) {
-        IotAccess iotAccess = new IotAccess();
-        iotAccess.provider = IotProvider.ETCD;
-        iotAccess.project_id = etcdTarget;
-        iotAccess.options = etcdOptions;
-        etcdProvider = new EtcdDataProvider(iotAccess);
-        logger.info("EtcdDataProvider initialized for target: {}", etcdTarget);
-      }
+      etcdProvider = createEtcdProvider(etcdTarget, etcdOptions);
+      publisher = createPublisher(gcpProjectId, pubsubTopicId);
 
-      // Initialize Pub/Sub Publisher
-      ProjectTopicName topicName = ProjectTopicName.of(gcpProjectId, pubsubTopicId);
-      Publisher.Builder publisherBuilder = Publisher.newBuilder(topicName);
-      String emulatorHost = System.getenv("PUBSUB_EMULATOR_HOST");
-      if (emulatorHost != null && !emulatorHost.isEmpty()) {
-        int lastIndex = emulatorHost.lastIndexOf(":");
-        String useHost = lastIndex < 0 ? emulatorHost
-            : String.format("localhost:%s", emulatorHost.substring(lastIndex + 1));
-        ManagedChannel channel = ManagedChannelBuilder.forTarget(useHost).usePlaintext().build();
-        publisherBuilder.setChannelProvider(
-            FixedTransportChannelProvider.create(GrpcTransportChannel.create(channel)));
-        publisherBuilder.setCredentialsProvider(NoCredentialsProvider.create());
-        logger.info("Routing Pub/Sub Publisher to emulator host: {}", useHost);
-      }
-      publisher = publisherBuilder.build();
-      logger.info("Pub/Sub Publisher initialized for topic: {}", topicName);
+      // Initialize MQTT Client
 
       // Initialize MQTT Client
       mqttClient =
@@ -287,24 +266,9 @@ public final class MqttToPubSubBridge {
               attributes.put("deviceId", deviceId);
               attributes.put("deviceRegistryId", registryId);
 
-              if (etcdProvider != null
-                  && !"unknown".equals(registryId)
-                  && !"unknown".equals(deviceId)) {
-                try {
-                  String numId = etcdProvider.ref()
-                      .registry(registryId)
-                      .device(deviceId)
-                      .get("num_id");
-                  if (numId != null) {
-                    attributes.put("deviceNumId", numId);
-                    logger.info("Found numId {} for device {}/{}", numId, registryId, deviceId);
-                  } else {
-                    logger.warn("numId not found in etcd for device {}/{}", registryId, deviceId);
-                  }
-                } catch (Exception e) {
-                  logger.warn("Error reading numId from etcd for device {}/{}",
-                      registryId, deviceId, e);
-                }
+              String numId = getDeviceNumId(etcdProvider, registryId, deviceId);
+              if (numId != null) {
+                attributes.put("deviceNumId", numId);
               }
 
               if (topicSuffix != null && topicSuffix.startsWith("events/")) {
@@ -436,6 +400,64 @@ public final class MqttToPubSubBridge {
     // Create the key pair container
     return new PEMKeyPair(
         new SubjectPublicKeyInfo(algId, rsaPublicKey), new PrivateKeyInfo(algId, rsaPrivateKey));
+  }
+
+  private static EtcdDataProvider createEtcdProvider(String target, String options) {
+    if (target == null) {
+      return null;
+    }
+    IotAccess iotAccess = new IotAccess();
+    iotAccess.provider = IotProvider.ETCD;
+    iotAccess.project_id = target;
+    iotAccess.options = options;
+    EtcdDataProvider provider = new EtcdDataProvider(iotAccess);
+    logger.info("EtcdDataProvider initialized for target: {}", target);
+    return provider;
+  }
+
+  private static Publisher createPublisher(String projectId, String topicId) {
+    ProjectTopicName topicName = ProjectTopicName.of(projectId, topicId);
+    Publisher.Builder publisherBuilder = Publisher.newBuilder(topicName);
+    String emulatorHost = System.getenv("PUBSUB_EMULATOR_HOST");
+    if (emulatorHost != null && !emulatorHost.isEmpty()) {
+      int lastIndex = emulatorHost.lastIndexOf(":");
+      String useHost = lastIndex < 0 ? emulatorHost
+          : String.format("localhost:%s", emulatorHost.substring(lastIndex + 1));
+      ManagedChannel channel = ManagedChannelBuilder.forTarget(useHost).usePlaintext().build();
+      publisherBuilder.setChannelProvider(
+          FixedTransportChannelProvider.create(GrpcTransportChannel.create(channel)));
+      publisherBuilder.setCredentialsProvider(NoCredentialsProvider.create());
+      logger.info("Routing Pub/Sub Publisher to emulator host: {}", useHost);
+    }
+    try {
+      Publisher publisher = publisherBuilder.build();
+      logger.info("Pub/Sub Publisher initialized for topic: {}", topicName);
+      return publisher;
+    } catch (IOException e) {
+      throw new RuntimeException("Failed to build Pub/Sub Publisher", e);
+    }
+  }
+
+  private static String getDeviceNumId(EtcdDataProvider etcdProvider, String registryId,
+      String deviceId) {
+    if (etcdProvider == null || "unknown".equals(registryId) || "unknown".equals(deviceId)) {
+      return null;
+    }
+    try {
+      String numId = etcdProvider.ref()
+          .registry(registryId)
+          .device(deviceId)
+          .get("num_id");
+      if (numId != null) {
+        logger.info("Found numId {} in etcd for device {}/{}", numId, registryId, deviceId);
+      } else {
+        logger.warn("numId not found in etcd for device {}/{}", registryId, deviceId);
+      }
+      return numId;
+    } catch (Exception e) {
+      logger.warn("Error reading numId from etcd for device {}/{}", registryId, deviceId, e);
+      return null;
+    }
   }
 
   private MqttToPubSubBridge() {}
