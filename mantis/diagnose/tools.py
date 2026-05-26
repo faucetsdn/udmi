@@ -22,7 +22,7 @@ def grep_codebase(pattern: str) -> str:
     """
     print(f"[Inspect Tool] grep_codebase called with pattern: '{pattern}'")
     
-    search_dirs = ["validator/src", "udmis/src", "pubber/src", "common/src", "gencode", "schema"]
+    search_dirs = ["validator/src", "udmis/src", "pubber/src", "common/src"]
     results = []
     
     for sdir in search_dirs:

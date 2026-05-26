@@ -117,7 +117,7 @@ def read_filtered_sequence_log(filepath, max_chars=150000):
         with open(filepath, 'r', encoding='utf-8', errors='replace') as f:
             for line in f:
                 # Exclude high-noise logs
-                if " TRACE " in line or "Suppressing exception" in line or "ending stack trace:" in line or "Stack trace::" in line:
+                if " TRACE " in line:
                     continue
                 line_len = len(line)
                 if curr_chars + line_len > max_chars:
@@ -128,6 +128,31 @@ def read_filtered_sequence_log(filepath, max_chars=150000):
     except Exception as e:
         print(f"Warning: failed to read filtered log {filepath}: {e}", file=sys.stderr)
         return ""
+
+def load_skills_context():
+    """Loads all SKILL.md files from the diagnose/skills directory into a formatted context string."""
+    skills_dir = os.path.join(MANTIS_DIR, "diagnose", "skills")
+    if not os.path.exists(skills_dir):
+        return ""
+    
+    skills_content = []
+    skills_content.append("\n## Skill Library Context (Reference Guidelines)")
+    skills_content.append("Use the following guidelines and procedural instructions to shape your analysis strategy. You must follow them strictly and do not query codebase/git repeatedly for these rules:")
+    
+    for skill_folder in sorted(os.listdir(skills_dir)):
+        skill_path = os.path.join(skills_dir, skill_folder, "SKILL.md")
+        if os.path.isfile(skill_path):
+            try:
+                with open(skill_path, 'r', encoding='utf-8') as f:
+                    content = f.read()
+                    # Exclude metadata frontmatter if present to save context tokens
+                    content_clean = re.sub(r'^---.*?---', '', content, flags=re.DOTALL).strip()
+                    skills_content.append(f"\n### Skill: {skill_folder}\n{content_clean}")
+            except Exception as e:
+                print(f"Warning: Failed to read skill file at {skill_path}: {e}", file=sys.stderr)
+                
+    return "\n".join(skills_content)
+
 
 def get_device_id(site_dir):
     """Discovers the device under test by scanning the site out/devices folder."""
@@ -418,25 +443,57 @@ def main():
         
         device_id = discover_device_id(run_dir, test_id)
         
+        # 3. Load triage metadata registry to resolve sharded logs accurately
+        triage_metadata = {}
+        metadata_path = os.path.join(run_dir, "triage_metadata.json")
+        if os.path.exists(metadata_path):
+            try:
+                with open(metadata_path, 'r', encoding='utf-8') as fm:
+                    triage_metadata = json.load(fm)
+            except Exception:
+                pass
+                
+        test_meta = triage_metadata.get(test_id, {})
+        
+        # Initialize default paths
         devices_path = os.path.join(run_dir, "out", "devices")
         if not os.path.exists(devices_path):
             devices_path = os.path.join(run_dir, "devices")
             
         local_seq_log = os.path.join(devices_path, f"{device_id}/tests/{test_id}/sequence.log")
         local_seq_md = os.path.join(devices_path, f"{device_id}/tests/{test_id}/sequence.md")
-        
-        # Global log sources
         pubber_log_path = os.path.join(run_dir, "pubber.log")
         udmis_log_path = os.path.join(run_dir, "udmis.log")
-        
-        # 3. Compile available context catalog
+        shard_suffix = ""
+
+        if isinstance(test_meta, dict) and "sequence_log" in test_meta:
+            # Rich metadata resolution pointing to the exact sharded directories under run_dir
+            shard_suffix = test_meta.get("shard", "")
+            local_seq_log = os.path.join(run_dir, test_meta["sequence_log"])
+            local_seq_md = os.path.join(run_dir, test_meta["sequence_md"]) if test_meta.get("sequence_md") else ""
+            
+            pubber_log_path = os.path.join(run_dir, test_meta.get("pubber_log", "pubber.log"))
+            udmis_log_path = os.path.join(run_dir, test_meta.get("udmis_log", "udmis.log"))
+            print(f"Successfully resolved sharded logs for test '{test_id}' -> Shard Suffix: {shard_suffix}")
+        else:
+            # Legacy fallback
+            shard_suffix = test_meta if isinstance(test_meta, str) else ""
+            if shard_suffix:
+                pubber_log_path = os.path.join(run_dir, f"pubber_{shard_suffix}.log")
+                udmis_log_path = os.path.join(run_dir, f"udmis_{shard_suffix}.log")
+            if not os.path.exists(pubber_log_path):
+                pubber_log_path = os.path.join(run_dir, "pubber.log")
+            if not os.path.exists(udmis_log_path):
+                udmis_log_path = os.path.join(run_dir, "udmis.log")
+            
         catalog = {
             'Sequencer_Summary': os.path.exists(os.path.join(run_dir, "sequencer.out")),
             'Itemized_Summary': os.path.exists(os.path.join(run_dir, "test_itemized.out")),
             'Local_Sequence_Log': os.path.exists(local_seq_log),
             'Local_Sequence_Markdown': os.path.exists(local_seq_md),
             'Global_Pubber_Log': os.path.exists(pubber_log_path),
-            'Global_UDMIS_Log': os.path.exists(udmis_log_path)
+            'Global_UDMIS_Log': os.path.exists(udmis_log_path),
+            'Sharded_Logs_Active': bool(shard_suffix)
         }
         
         print(f"Available Context Catalog: {', '.join(k for k, v in catalog.items() if v)}")
@@ -481,10 +538,18 @@ def main():
         # 5. Compile prompt payload
         payload = []
         payload.append(f"## Metadata Context")
+        # Determine run environment dynamically
+        run_env = "Cloud Run" if "localhost" not in clean_target else "Local Run"
+        
         payload.append(f"- **Project ID**: {clean_target}")
         payload.append(f"- **Site ID**: {site_id}")
         payload.append(f"- **Device ID**: {device_id}")
         payload.append(f"- **Test ID**: {test_id}")
+        payload.append(f"- **Run Environment**: {run_env}")
+        payload.append(f"- **Triage Trigger Source**: Support Package Archive")
+        payload.append(f"- **Active Sequence Log**: {test_meta.get('sequence_log') if isinstance(test_meta, dict) and 'sequence_log' in test_meta else os.path.basename(local_seq_log)}")
+        payload.append(f"- **Active UDMIS Log**: {test_meta.get('udmis_log') if isinstance(test_meta, dict) and 'udmis_log' in test_meta else os.path.basename(udmis_log_path)}")
+        payload.append(f"- **Active Pubber Log**: {test_meta.get('pubber_log') if isinstance(test_meta, dict) and 'pubber_log' in test_meta else os.path.basename(pubber_log_path)}")
         payload.append(f"- **Current Available Context Catalog**: {json.dumps(catalog, indent=2)}")
         
         payload.append(f"\n## Local Sequencer log.md (Test Execution Details)")
@@ -535,7 +600,7 @@ def main():
             "   - **Evidence**: Check if Sequencer log reports receiving `CGW-501/config/update as PS:xxxxxx` (updating expected to 2026) FIRST, followed by receiving `CGW-501/config/update as RC:xxxxxx` (regressing expected to 1970) SECOND. If this ordering is observed, isolate the root cause specifically as a Sequencer-side out-of-order regression race and propose the temporal guard rail fix in `SequenceBase.java` to prevent regressing last_start backward."
         )
         
-        prompt_payload = "\n".join(payload)
+        prompt_payload = "\n".join(payload) + "\n" + load_skills_context()
         
         # 6. Run AI Diagnostic Agent
         analysis_text = ""
@@ -558,7 +623,7 @@ def main():
         breakpoint_summary = "Triage complete. Review details."
         insufficient = "⚠️ INSUFFICIENT DATA TO TRACE ROOT CAUSE" in analysis_text
         
-        bm = re.search(r'(?:## Breakpoint Summary|## 2\. Breakpoint Summary|## 1\. Executive Defect Summary|## Executive Defect Summary|## 1\. Root Cause Summary)\s*\n*>\s*(.*)', analysis_text)
+        bm = re.search(r'(?:## Breakpoint Summary|## \d\.\s*Breakpoint Summary|## \d\.\s*Executive Defect Summary|## Executive Defect Summary|## \d\.\s*Root Cause Summary|## Root Cause Summary)\s*\n*>\s*(.*)', analysis_text)
         if bm:
             breakpoint_summary = bm.group(1).strip()
         elif insufficient:

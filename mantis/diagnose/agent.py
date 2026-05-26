@@ -1,5 +1,6 @@
 # mantis.inspect package submodule - AI Agent Harness
 import os
+import re
 import sys
 import time
 import asyncio
@@ -34,23 +35,240 @@ async def initialize_skills_registry(skills_dir: Path) -> str:
     catalog = await registry.get_skills_catalog()
     return catalog
 
+def execute_agent_loop(client, system_instruction: str, history: list, tools_list: list, required_headers: list = None) -> str:
+    """Shared helper to execute the manual tool calling loop with pacing, retries, and strict guardrails."""
+    config = types.GenerateContentConfig(
+        tools=tools_list,
+        temperature=0.1,  # Low temperature for deterministic analysis
+        system_instruction=system_instruction,
+        automatic_function_calling=types.AutomaticFunctionCallingConfig(disable=True)
+    )
+    
+    loop_count = 0
+    max_loops = 50
+    response = None
+    
+    while loop_count < max_loops:
+        max_retries = 5
+        base_wait = 4  # seconds
+        
+        for attempt in range(max_retries):
+            try:
+                response = client.models.generate_content(
+                    model="gemini-3.1-pro-preview",
+                    contents=history,
+                    config=config
+                )
+                break  # Success!
+            except Exception as e:
+                err_str = str(e)
+                if "429" in err_str or "RESOURCE_EXHAUSTED" in err_str:
+                    wait_time = base_wait * (2 ** attempt)
+                    print(f"⚠️ Rate limit hit (429). Retrying in {wait_time} seconds (Attempt {attempt + 1}/{max_retries})...")
+                    time.sleep(wait_time)
+                    if attempt == max_retries - 1:
+                        raise
+                else:
+                    raise e
+                    
+        if response.candidates and response.candidates[0].content:
+            model_content = response.candidates[0].content
+            model_content.role = "model"
+            history.append(model_content)
+            for part in model_content.parts:
+                if part.text:
+                    print(f"\n [Agent Thought]:\n{part.text.strip()}\n")
+                    
+        function_calls = response.function_calls
+        if not function_calls:
+            text_content = response.text or ""
+            if required_headers:
+                if any(hdr in text_content for hdr in required_headers):
+                    break
+                else:
+                    print(" [Mantis Guardrail] Intercepted incomplete response. Prompting model to continue.")
+                    history.append(
+                        types.Content(
+                            role="user",
+                            parts=[types.Part.from_text(
+                                text=f"System Reminder: Your response is incomplete. You must output using the required markdown headers: {', '.join(required_headers)}."
+                            )]
+                        )
+                    )
+                    loop_count += 1
+                    continue
+            else:
+                break
+                
+        tool_parts = []
+        for fc in function_calls:
+            tool_name = fc.name
+            tool_args = fc.args
+            result = ""
+            try:
+                if tool_name == "grep_codebase":
+                    result = grep_codebase(**tool_args)
+                elif tool_name == "read_file_lines":
+                    result = read_file_lines(**tool_args)
+                elif tool_name == "git_read_operations":
+                    result = git_read_operations(**tool_args)
+                else:
+                    result = f"Error: Unknown tool '{tool_name}'"
+            except Exception as e:
+                result = f"Error executing tool {tool_name}: {e}"
+                
+            print(f"   └─ Tool execution complete ({len(result)} characters returned)")
+            tool_parts.append(
+                types.Part.from_function_response(
+                    name=tool_name,
+                    response={"result": result}
+                )
+            )
+            
+        history.append(
+            types.Content(
+                role="user",
+                parts=tool_parts
+            )
+        )
+        loop_count += 1
+        print("Pacing API requests to prevent errors...")
+        time.sleep(4)
+        
+    if response and response.text:
+        return response.text
+    return ""
+
+def run_timeline_generation(client, prompt_payload: str, catalog: str) -> str:
+    """PHASE 1: Constructs only the objective chronological event timeline without speculation or assessments."""
+    print("\n--- PHASE 1: Generating Chronological Event Timeline ---")
+    
+    system_instruction = (
+        "You are Mantis Timeline Harvester, a highly precise log extraction agent "
+        "designed to map chronological traces in the UDMI codebase.\n\n"
+        "Your SOLE purpose is to construct a complete, exhaustive chronological timeline of events "
+        "from the provided logs. You are strictly FORBIDDEN from analyzing, speculating, diagnosing, "
+        "assessing component behavior, or proposing fixes. Your output must consist ONLY of the markdown header "
+        "'## 1. Detailed Timeline of Events' followed by a clean, chronological markdown table.\n\n"
+        "CRITICAL CONTEXT FILTER: You must focus EXCLUSIVELY on the logs of the active run under triage "
+        "(provided in '## Local Sequencer log' and matching global logs). Do NOT confuse these timestamps/events "
+        "with any successful reference runs.\n\n"
+        "You MUST assemble the timeline strictly adhering to this sequence:\n"
+        "1. First capture the timestamp when the test started (e.g., notice 'Starting test...').\n"
+        "2. Iteratively for each action taken by the Sequencer:\n"
+        "   - Capture the timestamp for the action taken by the Sequencer (e.g. sending a config with transaction ID RC:xxxxxx).\n"
+        "   - Capture if the corresponding transaction reached UDMIS and the exact logs showing where UDMIS processed this transaction. If the transaction failed to reach UDMIS or was not processed, explicitly note that UDMIS processing is missing.\n"
+        "   - Capture the reaction by Pubber/Device (e.g. config received, applying config, publishing updated state/system log).\n"
+        "   - Identify if the response was successfully received by the Sequencer, or note any issues/timeouts seen during the synchronization wait loop.\n"
+        "3. Lastly, capture the timestamp when the test stopped/failed (e.g. notice 'Ending test...' or timeout error).\n\n"
+        "Format of Table:\n"
+        "| Timestamp (UTC) | Source | Log Message / Event | Significance |\n"
+        "| :--- | :--- | :--- | :--- |\n"
+        "| [HH:MM:SS] | [Component] | `Log Message Snippet` | [Relevance/Significance explanation] |\n\n"
+        "Ensure the timeline table is completely filled out using facts exclusively from the active log payload. "
+        "Do not jump into early analysis."
+    )
+    
+    # Strip Reference Successful Run Details to prevent context confusion in Phase 1
+    clean_payload = prompt_payload
+    if "## Reference Successful Run Details" in prompt_payload:
+        clean_payload = prompt_payload.split("## Reference Successful Run Details")[0]
+        
+    # Combine metadata/logs with the skill catalogs
+    full_payload = clean_payload + "\n\n## Skill Library Context\n" + catalog
+    
+    history = [
+        types.Content(
+            role="user",
+            parts=[types.Part.from_text(text=full_payload)]
+        )
+    ]
+    
+    # Timeline Harvester only needs log/file reading tools to extract details
+    tools_list = [read_file_lines]
+    required_headers = ["## 1. Detailed Timeline of Events"]
+    
+    timeline_out = execute_agent_loop(client, system_instruction, history, tools_list, required_headers)
+    return timeline_out
+
+def run_defect_analysis(client, prompt_payload: str, catalog: str, timeline_content: str) -> str:
+    """PHASE 2: Performs root-cause differential analysis and codebase research on top of the pre-established timeline."""
+    print("\n--- PHASE 2: Running Defect Root Cause Analysis & Codebase Triage ---")
+    
+    system_instruction = (
+        "You are Mantis Defect Triage Analyst, a senior analytical AI debugger designed to "
+        "perform root cause analysis of failed staging runs in the UDMI codebase.\n\n"
+        "Your task is to read the provided logs, available code context, and the pre-established "
+        "chronological events timeline, perform differential analysis against the provided golden reference "
+        "successful runs, search the codebase for logic bugs, and compile the final triage report.\n\n"
+        "Guidelines:\n"
+        "1. DO NOT re-generate, modify, or speculate on the timeline. You MUST insert the pre-established timeline "
+        "content verbatim under Section 1 ('## 1. Detailed Timeline of Events').\n"
+        "2. STRICT SCHEMA AND ENUM SEARCH BAN: You are FORBIDDEN from searching for or reading schema definitions (e.g., under 'schema/') or basic schema enum files (such as 'Category.java', 'Level.java', 'Entry.java', 'Category.json' etc.) in the codebase. Assume all schemas, enums, and standard types are completely correct. Do not query them.\n"
+        "3. HIGH EFFICIENCY CODEBASE SEARCHES: Do NOT run duplicate, small, or repetitive tool calls. When you search the codebase, request a generous contiguous line block (e.g. 100-250 lines at once) using 'read_file_lines' to capture full methods and context in a single call.\n"
+        "4. SINGLE-RUN TRIAGE RULE (BAN ON GIT SEARCH): If only a single run is under triage (i.e. '## Reference Successful Run Details' is marked as '[No successful reference runs found in sibling directories]'), you are strictly FORBIDDEN from calling 'git_read_operations'. Git regression or history analysis is completely meaningless without a successful baseline run to compare against. Focus your investigation entirely on the local sequence logs, UDMIS logs, and codebase grep instead.\n"
+        "5. DIFFERENTIAL ANALYSIS (SCREEN OUT FALSE POSITIVES): You MUST do a side-by-side chronological comparison of all log messages, warnings, exceptions, and stack traces against the provided golden reference successful run details. If any log entry is present in BOTH the failed run and the successful reference run, it is a harmless trace event by design. You are strictly FORBIDDEN from attributing the failure to any log entry common to both runs! Pinpoint exactly where the failed run diverged from the successful run.\n"
+        "6. PREFER LOCAL FILES: Always use the `read_file_lines` tool to read site model files directly from the local disk. Do NOT use `git_read_operations` to read these files unless you specifically need to view past committed history or diffs. When git search is banned by Rule 4, you are forbidden from calling 'git_read_operations' under any circumstances.\n"
+        "7. PROPOSE RESOLUTIONS & CODE FIXES: You MUST explicitly identify the root cause bug or race condition and propose the concrete source code modifications (including file paths, approximate line ranges, and a standard unified diff or code block) needed to fix the bug in the Java emulators, sequence files, or processors.\n"
+        "8. BEST-EFFORT TRIAGE AND SUFFICIENCY: Follow the guardrails in 'best-effort-triage'. Only if the remaining logs and codebase are mathematically insufficient to isolate the root-cause bug or race condition after referencing the timeline, may you output the '⚠️ INSUFFICIENT DATA TO TRACE ROOT CAUSE' header, but this MUST only appear in the Proposed Code Fix section (Section 4). You are FORBIDDEN from using this header in the timeline or assessment sections.\n\n"
+        "REQUIRED OUTPUT FORMAT:\n"
+        "You MUST format your final response strictly using the following markdown headers, structures, and sections in this exact order:\n\n"
+        "# UDMI Sequencer <Run Environment> Triage Analysis: <Device ID> <Test ID> Failure\n\n"
+        "Provide a single-sentence introductory explanation of the document (e.g., 'This document presents a comprehensive root cause analysis of the <Test ID> test failure for device <Device ID> during <Run Environment> validation.'). Dynamically substitute the '<Run Environment>' placeholder using the actual 'Run Environment' value from your '## Metadata Context' (e.g., use 'Staging / Cloud Run' or 'Local / Mock Run').\n\n"
+        "---\n\n"
+        "## 1. Detailed Timeline of Events\n"
+        "[INSERT THE PRE-ESTABLISHED TIMELINE CONTENT VERBATIM HERE]\n\n"
+        "---\n\n"
+        "## 2. Executive Defect Summary\n"
+        "> [Provide a concise, single-line summary starting with a blockquote '>' identifying the primary component failure and exact error, e.g. 'Sequencer assertion timed out during config sync: last_start not synced in config' or 'EM-1 failed to satisfy pointset state update specifications'. This exact line is parsed by the triage consolidation engine.]\n\n"
+        "[Provide a structured, detailed summary (3-4 bullets or paragraphs) detailing exactly how the Sequencer, UDMIS, and Device/Gateway interacted, using transaction IDs (RC:xxxxxx) and timestamps to pinpoint the defect.]\n\n"
+        "---\n\n"
+        "## 3. Component Assessment\n"
+        "- **Did the device work as expected?** [Yes/No/Partial + concise 1-2 sentence justification based on log evidence]\n"
+        "- **Did sequencer work as expected?** [Yes/No/Partial + concise 1-2 sentence justification based on log evidence]\n"
+        "- **Did udmis work as expected?** [Yes/No/Partial + concise 1-2 sentence justification based on log evidence]\n\n"
+        "---\n\n"
+        "## 4. Proposed Code Fix (or Technical Concurrency RCA)\n"
+        "Identify the root cause bug or race condition and propose the concrete source code modifications (including exact file paths, approximate line ranges, and a standard unified diff or code block) needed to fix the bug in the Java emulators, sequence files, or processors.\n\n"
+        "If the available logs, git history, and code logic are insufficient to isolate the breakpoint, you MUST output the header '⚠️ INSUFFICIENT DATA TO TRACE ROOT CAUSE' under this section and list exactly what log streams/configurations are missing."
+    )
+    
+    # Pass the timeline directly to the defect analysis payload as instructions
+    analyst_payload = (
+        f"{prompt_payload}\n\n"
+        f"## Pre-Established Chronological Timeline of Events\n"
+        f"Use the verbatim chronological timeline below for Section 1 of your report. "
+        f"Do not modify it:\n\n"
+        f"{timeline_content}\n\n"
+        f"## Skill Library Context\n"
+        f"{catalog}"
+    )
+    
+    history = [
+        types.Content(
+            role="user",
+            parts=[types.Part.from_text(text=analyst_payload)]
+        )
+    ]
+    
+    # Analyst needs codebase search & git tools for deep code diagnostics
+    tools_list = [grep_codebase, read_file_lines, git_read_operations]
+    required_headers = ["## 2. Executive Defect Summary", "## 3. Component Assessment", "## 4. Proposed Code Fix"]
+    
+    report_out = execute_agent_loop(client, system_instruction, history, tools_list, required_headers)
+    return report_out
+
 def run_triage_analysis(prompt_payload: str) -> str:
     """
-    Instantiates a Google GenAI session, binds codebase & git tools,
-    and executes an automated diagnostic triage using gemini-2.5-pro.
-    
-    Args:
-        prompt_payload: A highly structured string containing the failed run logs,
-                        available context catalog, and reference timelines.
-                        
-    Returns:
-        The standard markdown diagnostic analysis text from Gemini.
+    Instantiates a Google GenAI session, boots the skills registry,
+    and runs the two-stage Triage pipeline:
+    1. Phase 1: Establishes the objective timeline of events, writing it to raw_timeline.md.
+    2. Phase 2: Analyzes the timeline, searches codebase, and compiles the final defect report.
     """
     token = os.getenv("GEMINI_API_KEY")
     if not token:
         print("Error: The environment variable 'GEMINI_API_KEY' is not set.", file=sys.stderr)
         print("Please set your Gemini API Key before executing the triage agent.", file=sys.stderr)
-        print("Example: export GEMINI_API_KEY=\"AIzaSy...\"", file=sys.stderr)
         sys.exit(1)
 
     # Resolve and load formal Agent Skills SDK catalog
@@ -63,175 +281,40 @@ def run_triage_analysis(prompt_payload: str) -> str:
 
     print("Initializing Gemini Triage Agent (Mantis Diagnose)...")
     try:
-        # 1. Initialize client (standard google.genai SDK)
+        # 1. Initialize client
         client = genai.Client()
         
-        # 2. Compile tool belt
-        tools_list = [grep_codebase, read_file_lines, git_read_operations]
+        # 2. PHASE 1: Generate Timeline
+        timeline_content = run_timeline_generation(client, prompt_payload, catalog)
         
-        # 3. Define system guidelines
-        system_instruction = (
-            "You are Mantis Diagnose, a highly analytical AI diagnostic triage agent "
-            "designed to investigate failed test runs in the UDMI codebase. "
-            "Your goal is to inspect execution traces, code context, and Git history to "
-            "determine why a test failed and isolate the breakpoint with exact evidence.\n\n"
-            "MANDATORY FIRST STEP - CONSULT YOUR SKILL LIBRARY:\n"
-            "Before doing any codebase research or log analysis, you MUST read the detailed instructions "
-            "for the relevant skills from your Skill Library using the 'read_file_lines' tool. "
-            "The skills in your registered Skill Library are:\n"
-            f"{catalog}\n\n"
-            "Guidelines:\n"
-            "1. You MUST follow the sequential investigation steps in 'mantis/diagnose/skills/progressive-triage-flow/SKILL.md' (Intent ➔ Active Run Correlation ➔ Sibling Comparison ➔ Git Regression ➔ Code Fix).\n"
-            "2. Always use the guidelines in 'mantis/diagnose/skills/log-sources/SKILL.md' and 'mantis/diagnose/skills/log-correlation/SKILL.md' to reconstruct the timeline and trace asynchronous transactions across component boundaries.\n"
-            "3. DO NOT use git_read_operations to search for past successful runs in the site model repo. Sibling logs of a successful golden reference run are already loaded and provided directly in the prompt payload under '## Reference Successful Run Details'. Focus entirely on comparing the failed and successful log traces side-by-side to locate differences.\n"
-            "4. Run codebase searches using your grep_codebase tool and read file details with read_file_lines, following the investigation practices in 'mantis/diagnose/skills/evidence-gathering/SKILL.md'. HIGH EFFICIENCY RULE: Always request a large, generous contiguous range of lines (e.g. 100-250 lines at once) when reading files to capture full methods and surrounding context, avoiding multiple small, repetitive, or redundant tool executions.\n"
-            "5. Use git_read_operations on the main repo ONLY if you suspect a recent codebase commit introduced a regression, to query recent logs/diffs.\n"
-            "6. DIFFERENTIAL ANALYSIS: You MUST compare the failed log traces side-by-side to the successful reference log traces to locate differences and pinpoint exactly where they diverged.\n"
-            "7. PREFER LOCAL FILES: Always use the `read_file_lines` tool to read site model files directly from the local disk. Do NOT use `git_read_operations` to read these files unless you specifically need to view past committed history or diffs.\n"
-            "8. CRITICAL SUFFICIENCY RULE: Follow the guardrails in 'mantis/diagnose/skills/best-effort-triage/SKILL.md'. If the available logs, git history, and code logic are insufficient to isolate the breakpoint, you MUST return a summary starting with the exact header '⚠️ INSUFFICIENT DATA TO TRACE ROOT CAUSE' in your Breakpoint Summary blockquote and Proposed Code Fix section. Do not speculate or make up hypothetical failures.\n"
-            "9. PROPOSE RESOLUTIONS & CODE FIXES: You MUST explicitly identify the root cause bug or race condition and propose the concrete source code modifications (including file paths, approximate line ranges, and a standard unified diff or code block) needed to fix the bug in the Java emulators, sequence files, or processors.\n\n"
-            "REQUIRED OUTPUT FORMAT:\n"
-            "You MUST format your final response strictly using the following markdown headers, structures, and sections:\n\n"
-            "# UDMI Sequencer Staging Run Triage Analysis: <Device ID> <Test ID> Failure\n\n"
-            "Provide a single-sentence introductory explanation of the document (e.g., 'This document presents a comprehensive root cause analysis of the <Test ID> test failure for device <Device ID> during...').\n\n"
-            "---\n\n"
-            "## 1. Executive Defect Summary\n"
-            "> [Provide a concise, single-line summary starting with a blockquote '>' identifying the primary component failure and exact error, e.g. 'Sequencer assertion timed out during config sync: last_start not synced in config' or 'EM-1 failed to satisfy pointset state update specifications'. This exact line is parsed by the triage consolidation engine.]\n\n"
-            "[Provide a structured, detailed summary (3-4 bullets or paragraphs) detailing exactly how the Sequencer, UDMIS, and Device/Gateway interacted, using transaction IDs (RC:xxxxxx) and timestamps to pinpoint the defect.]\n\n"
-            "---\n\n"
-            "## 2. Component Assessment\n"
-            "- **Did the device work as expected?** [Yes/No/Partial + concise 1-2 sentence justification based on log evidence]\n"
-            "- **Did sequencer work as expected?** [Yes/No/Partial + concise 1-2 sentence justification based on log evidence]\n"
-            "- **Did udmis work as expected?** [Yes/No/Partial + concise 1-2 sentence justification based on log evidence]\n\n"
-            "---\n\n"
-            "## 3. Detailed Timeline of Events\n"
-            "Construct a clean chronological markdown table aligning all correlated logs (Sequencer, UDMIS, Gateway, Pubber/Device) to show precisely when and why the runs diverged. Format:\n\n"
-            "| Timestamp (UTC) | Source | Log Message / Event | Significance |\n"
-            "| :--- | :--- | :--- | :--- |\n"
-            "| [HH:MM:SS] | [Component] | `Log Message Snippet` | [Relevance/Significance explanation] |\n\n"
-            "---\n\n"
-            "## 4. Proposed Code Fix (or Technical Concurrency RCA)\n"
-            "Identify the root cause bug or race condition and propose the concrete source code modifications (including exact file paths, approximate line ranges, and a standard unified diff or code block) needed to fix the bug in the Java emulators, sequence files, or processors.\n\n"
-            "If the available logs, git history, and code logic are insufficient to isolate the breakpoint, you MUST output the header '⚠️ INSUFFICIENT DATA TO TRACE ROOT CAUSE' under this section and list exactly what log streams/configurations are missing."
-        )
-        
-        # 4. Configure content generations config (without automaticFunctionCalling)
-        config = types.GenerateContentConfig(
-            tools=tools_list,
-            temperature=0.1,  # Low temperature for deterministic, highly logical logs analysis
-            system_instruction=system_instruction,
-            automatic_function_calling=types.AutomaticFunctionCallingConfig(disable=True)
-        )
-        
-        print("Invoking Gemini model for diagnostics... (Live agent decisions will display below)")
-        
-        # 5. Manage conversation history manually for absolute turn interception control
-        history = [
-            types.Content(
-                role="user",
-                parts=[types.Part.from_text(text=prompt_payload)]
-            )
-        ]
-        
-        loop_count = 0
-        max_loops = 50
-        
-        while loop_count < max_loops:
-            # Generate content with current history list under exponential backoff retry guard
-            max_retries = 5
-            base_wait = 4  # seconds
-            response = None
+        # Dynamically resolve target output directory to save raw timeline
+        try:
+            project_id_match = re.search(r'- \*\*Project ID\*\*: (.*)', prompt_payload)
+            site_id_match = re.search(r'- \*\*Site ID\*\*: (.*)', prompt_payload)
+            device_id_match = re.search(r'- \*\*Device ID\*\*: (.*)', prompt_payload)
+            test_id_match = re.search(r'- \*\*Test ID\*\*: (.*)', prompt_payload)
             
-            for attempt in range(max_retries):
-                try:
-                    response = client.models.generate_content(
-                        model="gemini-3.1-pro-preview",
-                        contents=history,
-                        config=config
-                    )
-                    break  # Success! Break out of the retry loop
-                except Exception as e:
-                    err_str = str(e)
-                    if "429" in err_str or "RESOURCE_EXHAUSTED" in err_str:
-                        wait_time = base_wait * (2 ** attempt)  # 4s, 8s, 16s, 32s, 64s
-                        print(f"⚠️ Rate limit hit (429). Retrying in {wait_time} seconds (Attempt {attempt + 1}/{max_retries})...")
-                        time.sleep(wait_time)
-                        if attempt == max_retries - 1:
-                            raise  # Give up if we've retried too many times
-                    else:
-                        raise e  # Re-raise if it's not a rate limit error
+            if project_id_match and site_id_match and device_id_match and test_id_match:
+                project_id = project_id_match.group(1).strip()
+                site_id = site_id_match.group(1).strip()
+                device_id = device_id_match.group(1).strip()
+                test_id = test_id_match.group(1).strip()
+                
+                mantis_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+                nested_out_dir = os.path.join(mantis_dir, "out", "diagnose", project_id, site_id, device_id, test_id)
+                os.makedirs(nested_out_dir, exist_ok=True)
+                
+                raw_timeline_path = os.path.join(nested_out_dir, "raw_timeline.md")
+                with open(raw_timeline_path, 'w', encoding='utf-8') as f:
+                    f.write(timeline_content)
+                print(f"Raw chronological timeline successfully saved: {raw_timeline_path}")
+        except Exception as err:
+            print(f"Warning: Could not write raw timeline file: {err}", file=sys.stderr)
             
-            # Record model content response to history
-            if response.candidates and response.candidates[0].content:
-                model_content = response.candidates[0].content
-                model_content.role = "model"
-                history.append(model_content)
-                # Safely display intermediate reasoning without triggering the .text warning
-                for part in model_content.parts:
-                    if part.text:
-                        print(f"\n [Agent Thought]:\n{part.text.strip()}\n")
-                
-            # Check if the model requested function calls
-            function_calls = response.function_calls
-            if not function_calls:
-                break
-                
-            tool_parts = []
-            for fc in function_calls:
-                tool_name = fc.name
-                tool_args = fc.args
-                
-                # Print the decision to the terminal logs live!
-                print(f" [Agent Decision]: Calling tool '{tool_name}' with arguments: {tool_args}")
-                
-                # Execute the tool
-                result = ""
-                try:
-                    if tool_name == "grep_codebase":
-                        result = grep_codebase(**tool_args)
-                    elif tool_name == "read_file_lines":
-                        result = read_file_lines(**tool_args)
-                    elif tool_name == "git_read_operations":
-                        result = git_read_operations(**tool_args)
-                    else:
-                        result = f"Error: Unknown tool '{tool_name}'"
-                except Exception as e:
-                    result = f"Error executing tool {tool_name}: {e}"
-                    
-                print(f"   └─ Tool execution complete ({len(result)} characters returned)")
-                
-                # Format part response
-                tool_parts.append(
-                    types.Part.from_function_response(
-                        name=tool_name,
-                        response={"result": result}
-                    )
-                )
-                
-            # Add tool responses as the next user turn in history to continue the chain
-            history.append(
-                types.Content(
-                    role="user",
-                    parts=tool_parts
-                )
-            )
-            loop_count += 1
-            
-            # THROTTLE: Sleep for 4 seconds between turns to respect rate limits
-            print("⏳ Pacing API requests to prevent 429 errors...")
-            time.sleep(4)
-            
-        # Check if final response has text
-        if response.text:
-            return response.text
-            
-        # Fallback if response.text is None
-        fallback_text = (
-            "⚠️ INSUFFICIENT DATA TO TRACE ROOT CAUSE\n\n"
-            "The Gemini diagnostic agent completed its tool execution but did not return a final text analysis.\n"
-            "This typically indicates the model reached the maximum tool-calling loop limit (50 turns) while recursively searching codebase or git logs."
-        )
-        return fallback_text
+        # 3. PHASE 2: Triage & Defect Analysis
+        final_report = run_defect_analysis(client, prompt_payload, catalog, timeline_content)
+        return final_report
+        
     except Exception as e:
         print(f"Error communicating with Gemini API: {e}", file=sys.stderr)
         raise e

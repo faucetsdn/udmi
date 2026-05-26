@@ -81,7 +81,19 @@ index abc1234..def5678 100644
 
 ## 4. Formatting Chronological Event Timelines
 
-When presenting log evidence to a developer, organize the correlated events in a clean chronological table. This table must map:
+When presenting log evidence to a developer, organize the correlated events in a clean chronological table. 
+
+### Timeline Assembly Protocol
+To ensure absolute completeness, you must build the table strictly using the following sequence:
+1. **Test Start:** First capture the timestamp when the test case execution was initialized.
+2. **Iteratively trace each Sequencer transaction:**
+   * **Action:** Capture the timestamp of any action taken by the Sequencer (e.g. publishing a config with `RC:xxxxxx.xxxxxxxx`).
+   * **UDMIS Reception:** Trace if the corresponding transaction reached the UDMIS routing pod and print the log showing where UDMIS processed it. If UDMIS logs do not record processing this transaction ID, explicitly capture UDMIS processing as missing.
+   * **Pubber Reaction (If applicable):** Trace if Pubber received the transaction and how it acted (e.g. connection status, applying config, publishing updated state echo).
+   * **Result/Response:** Trace if the state/telemetry packet or echo was successfully received back by the Sequencer, or identify any issues/timeouts observed.
+3. **Test Stop:** Capture the final timestamp when the test stopped and failed (e.g. notice `Ending test...` or sync timeout).
+
+The table must map:
 1.  **Timestamp (UTC):** Accurate to the millisecond level if available.
 2.  **Source:** The specific component (Sequencer, UDMIS, Mosquitto, or Pubber).
 3.  **Log Message / Event:** The precise log snippet, sanitized of irrelevant noise.

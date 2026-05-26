@@ -37,11 +37,11 @@ When log sources are incomplete, do not give up immediately. Follow these steps 
 If the local logs, git history, and code logic are **insufficient** to isolate the exact breakpoint (e.g., the sequence log abruptly stops with no explanation, or global logs for UDMIS are missing during a dynamic routing error), you **must** trigger the Insufficient Data guardrail.
 
 ### 1. The String Trigger
-You MUST start the **Breakpoint Summary blockquote** or the **Proposed Code Fix section** with this exact header:
+You MUST output the **Proposed Code Fix section** (Section 4) starting with this exact header:
 ```
 ⚠️ INSUFFICIENT DATA TO TRACE ROOT CAUSE
 ```
-This exact string is parsed by triage engines to trigger alerts, and signals to the user that more telemetry must be collected.
+You are strictly forbidden from using this header in the Timeline or Assessment sections, as those sections must still present a best-effort analysis of the available logs. This exact string is parsed by triage engines to trigger alerts, and signals to the user that more telemetry must be collected.
 
 ### 2. Formulating the "Insufficient Data" Report
 When this guardrail is triggered, your report must cover:
