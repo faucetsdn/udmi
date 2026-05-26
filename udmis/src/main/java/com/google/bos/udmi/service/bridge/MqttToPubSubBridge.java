@@ -60,7 +60,7 @@ import org.bouncycastle.openssl.jcajce.JcaPEMKeyConverter;
 import org.bouncycastle.openssl.jcajce.JcePEMDecryptorProviderBuilder;
 import org.eclipse.paho.client.mqttv3.IMqttClient;
 import org.eclipse.paho.client.mqttv3.IMqttDeliveryToken;
-import org.eclipse.paho.client.mqttv3.MqttCallback;
+import org.eclipse.paho.client.mqttv3.MqttCallbackExtended;
 import org.eclipse.paho.client.mqttv3.MqttClient;
 import org.eclipse.paho.client.mqttv3.MqttConnectOptions;
 import org.eclipse.paho.client.mqttv3.MqttException;
@@ -131,6 +131,7 @@ public final class MqttToPubSubBridge {
           new MqttClient(mqttBrokerUrl, MqttClient.generateClientId(), new MemoryPersistence());
       MqttConnectOptions connOpts = new MqttConnectOptions();
       connOpts.setCleanSession(true);
+      connOpts.setAutomaticReconnect(true);
 
       if (mqttUsername != null && !mqttUsername.isEmpty()) {
         connOpts.setUserName(mqttUsername);
@@ -235,7 +236,23 @@ public final class MqttToPubSubBridge {
   public static void setupBridge(IMqttClient mqttClient, Publisher publisher,
       String mqttSubscriptionTopic, EtcdDataProvider etcdProvider) throws MqttException {
     mqttClient.setCallback(
-        new MqttCallback() {
+        new MqttCallbackExtended() {
+          @Override
+          public void connectComplete(boolean reconnect, String serverUri) {
+            if (reconnect) {
+              logger.info("MQTT automatically reconnected to broker: {}", serverUri);
+              try {
+                mqttClient.subscribe(mqttSubscriptionTopic);
+                logger.info("Successfully re-subscribed to topic: {}", mqttSubscriptionTopic);
+              } catch (MqttException e) {
+                logger.error("Failed to re-subscribe to topic {} after auto-reconnect",
+                    mqttSubscriptionTopic, e);
+              }
+            } else {
+              logger.info("Initial MQTT connection established to broker: {}", serverUri);
+            }
+          }
+
           @Override
           public void connectionLost(Throwable cause) {
             logger.warn("MQTT connection lost", cause);

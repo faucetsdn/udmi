@@ -14,6 +14,7 @@ import com.google.pubsub.v1.PubsubMessage;
 import java.util.Map;
 import org.eclipse.paho.client.mqttv3.IMqttClient;
 import org.eclipse.paho.client.mqttv3.MqttCallback;
+import org.eclipse.paho.client.mqttv3.MqttCallbackExtended;
 import org.eclipse.paho.client.mqttv3.MqttMessage;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
@@ -231,5 +232,36 @@ class MqttToPubSubBridgeTest {
     PubsubMessage pubsubMessage = pubsubMessageCaptor.getValue();
     Map<String, String> attributes = pubsubMessage.getAttributesMap();
     org.junit.jupiter.api.Assertions.assertFalse(attributes.containsKey("deviceNumId"));
+  }
+
+  @Test
+  void testSetupBridgeAutoReconnect() throws Exception {
+    final IMqttClient mockMqttClient = mock(IMqttClient.class);
+    final Publisher mockPublisher = mock(Publisher.class);
+    final String testTopic = "/r/my-registry/d/my-device/events";
+
+    MqttToPubSubBridge.setupBridge(mockMqttClient, mockPublisher, testTopic, null);
+
+    // Verify initial subscription
+    verify(mockMqttClient).subscribe(testTopic);
+
+    ArgumentCaptor<MqttCallback> callbackCaptor = ArgumentCaptor.forClass(MqttCallback.class);
+    verify(mockMqttClient).setCallback(callbackCaptor.capture());
+    
+    // Verify callback implements MqttCallbackExtended
+    org.junit.jupiter.api.Assertions.assertTrue(
+        callbackCaptor.getValue() instanceof MqttCallbackExtended);
+    
+    MqttCallbackExtended callback = (MqttCallbackExtended) callbackCaptor.getValue();
+
+    // Simulate initial connection completed (reconnect = false)
+    callback.connectComplete(false, "tcp://localhost:1883");
+    // Verify subscribe NOT called again
+    org.mockito.Mockito.verifyNoMoreInteractions(mockMqttClient);
+
+    // Simulate automatic reconnection completed (reconnect = true)
+    callback.connectComplete(true, "tcp://localhost:1883");
+    // Verify re-subscribed
+    verify(mockMqttClient, org.mockito.Mockito.times(2)).subscribe(testTopic);
   }
 }
