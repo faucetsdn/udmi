@@ -13,7 +13,6 @@ import com.google.cloud.pubsub.v1.Publisher;
 import com.google.pubsub.v1.PubsubMessage;
 import java.util.Map;
 import org.eclipse.paho.client.mqttv3.IMqttClient;
-import org.eclipse.paho.client.mqttv3.MqttCallback;
 import org.eclipse.paho.client.mqttv3.MqttCallbackExtended;
 import org.eclipse.paho.client.mqttv3.MqttMessage;
 import org.junit.jupiter.api.Test;
@@ -40,9 +39,10 @@ class MqttToPubSubBridgeTest {
     verify(mockMqttClient).subscribe(testTopic);
 
     // Capture callback
-    ArgumentCaptor<MqttCallback> callbackCaptor = ArgumentCaptor.forClass(MqttCallback.class);
+    ArgumentCaptor<MqttCallbackExtended> callbackCaptor =
+        ArgumentCaptor.forClass(MqttCallbackExtended.class);
     verify(mockMqttClient).setCallback(callbackCaptor.capture());
-    MqttCallback callback = callbackCaptor.getValue();
+    MqttCallbackExtended callback = callbackCaptor.getValue();
 
     // Simulate message arrival
     callback.messageArrived(testTopic, mqttMessage);
@@ -74,9 +74,10 @@ class MqttToPubSubBridgeTest {
 
     MqttToPubSubBridge.setupBridge(mockMqttClient, mockPublisher, testTopic, null);
 
-    ArgumentCaptor<MqttCallback> callbackCaptor = ArgumentCaptor.forClass(MqttCallback.class);
+    ArgumentCaptor<MqttCallbackExtended> callbackCaptor =
+        ArgumentCaptor.forClass(MqttCallbackExtended.class);
     verify(mockMqttClient).setCallback(callbackCaptor.capture());
-    MqttCallback callback = callbackCaptor.getValue();
+    MqttCallbackExtended callback = callbackCaptor.getValue();
 
     callback.messageArrived(testTopic, mqttMessage);
 
@@ -105,9 +106,10 @@ class MqttToPubSubBridgeTest {
 
     MqttToPubSubBridge.setupBridge(mockMqttClient, mockPublisher, testTopic, null);
 
-    ArgumentCaptor<MqttCallback> callbackCaptor = ArgumentCaptor.forClass(MqttCallback.class);
+    ArgumentCaptor<MqttCallbackExtended> callbackCaptor =
+        ArgumentCaptor.forClass(MqttCallbackExtended.class);
     verify(mockMqttClient).setCallback(callbackCaptor.capture());
-    MqttCallback callback = callbackCaptor.getValue();
+    MqttCallbackExtended callback = callbackCaptor.getValue();
 
     callback.messageArrived(testTopic, mqttMessage);
 
@@ -144,9 +146,10 @@ class MqttToPubSubBridgeTest {
 
     MqttToPubSubBridge.setupBridge(mockMqttClient, mockPublisher, testTopic, mockEtcdProvider);
 
-    ArgumentCaptor<MqttCallback> callbackCaptor = ArgumentCaptor.forClass(MqttCallback.class);
+    ArgumentCaptor<MqttCallbackExtended> callbackCaptor =
+        ArgumentCaptor.forClass(MqttCallbackExtended.class);
     verify(mockMqttClient).setCallback(callbackCaptor.capture());
-    MqttCallback callback = callbackCaptor.getValue();
+    MqttCallbackExtended callback = callbackCaptor.getValue();
 
     callback.messageArrived(testTopic, mqttMessage);
 
@@ -181,9 +184,10 @@ class MqttToPubSubBridgeTest {
 
     MqttToPubSubBridge.setupBridge(mockMqttClient, mockPublisher, testTopic, mockEtcdProvider);
 
-    ArgumentCaptor<MqttCallback> callbackCaptor = ArgumentCaptor.forClass(MqttCallback.class);
+    ArgumentCaptor<MqttCallbackExtended> callbackCaptor =
+        ArgumentCaptor.forClass(MqttCallbackExtended.class);
     verify(mockMqttClient).setCallback(callbackCaptor.capture());
-    MqttCallback callback = callbackCaptor.getValue();
+    MqttCallbackExtended callback = callbackCaptor.getValue();
 
     callback.messageArrived(testTopic, mqttMessage);
 
@@ -218,9 +222,10 @@ class MqttToPubSubBridgeTest {
 
     MqttToPubSubBridge.setupBridge(mockMqttClient, mockPublisher, testTopic, mockEtcdProvider);
 
-    ArgumentCaptor<MqttCallback> callbackCaptor = ArgumentCaptor.forClass(MqttCallback.class);
+    ArgumentCaptor<MqttCallbackExtended> callbackCaptor =
+        ArgumentCaptor.forClass(MqttCallbackExtended.class);
     verify(mockMqttClient).setCallback(callbackCaptor.capture());
-    MqttCallback callback = callbackCaptor.getValue();
+    MqttCallbackExtended callback = callbackCaptor.getValue();
 
     // This should not throw exception and message should still be published
     callback.messageArrived(testTopic, mqttMessage);
@@ -245,14 +250,10 @@ class MqttToPubSubBridgeTest {
     // Verify initial subscription
     verify(mockMqttClient).subscribe(testTopic);
 
-    ArgumentCaptor<MqttCallback> callbackCaptor = ArgumentCaptor.forClass(MqttCallback.class);
+    ArgumentCaptor<MqttCallbackExtended> callbackCaptor =
+        ArgumentCaptor.forClass(MqttCallbackExtended.class);
     verify(mockMqttClient).setCallback(callbackCaptor.capture());
-    
-    // Verify callback implements MqttCallbackExtended
-    org.junit.jupiter.api.Assertions.assertTrue(
-        callbackCaptor.getValue() instanceof MqttCallbackExtended);
-    
-    MqttCallbackExtended callback = (MqttCallbackExtended) callbackCaptor.getValue();
+    MqttCallbackExtended callback = callbackCaptor.getValue();
 
     // Simulate initial connection completed (reconnect = false)
     callback.connectComplete(false, "tcp://localhost:1883");
