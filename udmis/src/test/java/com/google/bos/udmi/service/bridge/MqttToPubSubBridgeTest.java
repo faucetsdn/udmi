@@ -264,4 +264,5 @@ class MqttToPubSubBridgeTest {
     // Verify re-subscribed
     verify(mockMqttClient, org.mockito.Mockito.times(2)).subscribe(testTopic);
   }
+
 }
