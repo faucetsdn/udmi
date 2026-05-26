@@ -188,19 +188,11 @@ def run_triage_analysis(prompt_payload: str) -> str:
                 result = ""
                 try:
                     if tool_name == "grep_codebase":
-                        result = grep_codebase(pattern=tool_args.get("pattern"))
+                        result = grep_codebase(**tool_args)
                     elif tool_name == "read_file_lines":
-                        result = read_file_lines(
-                            filepath=tool_args.get("filepath"),
-                            start_line=int(tool_args.get("start_line")),
-                            end_line=int(tool_args.get("end_line"))
-                        )
+                        result = read_file_lines(**tool_args)
                     elif tool_name == "git_read_operations":
-                        result = git_read_operations(
-                            repo_path=tool_args.get("repo_path"),
-                            command=tool_args.get("command"),
-                            args=tool_args.get("args")
-                        )
+                        result = git_read_operations(**tool_args)
                     else:
                         result = f"Error: Unknown tool '{tool_name}'"
                 except Exception as e:

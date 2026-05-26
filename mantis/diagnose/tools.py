@@ -53,20 +53,9 @@ def grep_codebase(pattern: str) -> str:
         return f"No matches found for pattern: '{pattern}' in codebase."
     return "\n".join(results)[:10000]  # Limit size to protect context window
 
-def read_file_lines(filepath: str, start_line: int, end_line: int) -> str:
-    """
-    Reads a specific range of lines from a workspace file.
-    
-    Args:
-        filepath: Path of the file relative to the repository root (e.g. 'validator/src/main/...').
-        start_line: The 1-indexed starting line number (inclusive).
-        end_line: The 1-indexed ending line number (inclusive).
-        
-    Returns:
-        A string containing the requested file lines.
-    """
-    print(f"[Inspect Tool] read_file_lines called for '{filepath}' (lines {start_line}-{end_line})")
-    
+def _read_single_file_helper(filepath: str, start_line: int, end_line: int) -> str:
+    if not filepath:
+        return "Error: Missing filepath parameter."
     # Protect against arbitrary system access (must be within UDMI_ROOT)
     full_path = os.path.abspath(os.path.join(UDMI_ROOT, filepath))
     if not full_path.startswith(UDMI_ROOT):
@@ -97,6 +86,40 @@ def read_file_lines(filepath: str, start_line: int, end_line: int) -> str:
         return "\n".join(lines)
     except Exception as e:
         return f"Error reading file '{filepath}': {e}"
+
+def read_file_lines(filepath: str = None, start_line: int = 1, end_line: int = 100, files_to_read: list[dict] = None) -> str:
+    """
+    Reads specific line ranges from one or more files in the workspace.
+    You can read a single file using 'filepath', 'start_line', and 'end_line', OR
+    you can read multiple files in a single call by passing a list of dicts to 'files_to_read'.
+    
+    Args:
+        filepath: Contiguous read path relative to repo root (e.g., 'validator/src/main/...').
+        start_line: The 1-indexed starting line number (inclusive).
+        end_line: The 1-indexed ending line number (inclusive).
+        files_to_read: Optional list of dicts, each containing: 'filepath' (str),
+                       'start_line' (int), and 'end_line' (int) to perform batch reads in a single turn.
+                       
+    Returns:
+        A combined text string representing all requested file lines.
+    """
+    if files_to_read:
+        print(f"[Inspect Tool] read_file_lines batch called for {len(files_to_read)} files.")
+        outputs = []
+        for idx, item in enumerate(files_to_read, start=1):
+            f_path = item.get("filepath")
+            s_line = int(item.get("start_line", 1))
+            e_line = int(item.get("end_line", 100))
+            
+            content = _read_single_file_helper(f_path, s_line, e_line)
+            outputs.append(f"--- File {idx}: '{f_path}' (Lines {s_line}-{e_line}) ---\n{content}\n")
+        return "\n".join(outputs)[:25000]  # Protect context window size limit
+        
+    if filepath:
+        print(f"[Inspect Tool] read_file_lines called for '{filepath}' (lines {start_line}-{end_line})")
+        return _read_single_file_helper(filepath, start_line, end_line)
+        
+    return "Error: No filepath or files_to_read parameter was supplied."
 
 def git_read_operations(repo_path: str, command: str, args: list[str] = None) -> str:
     """
