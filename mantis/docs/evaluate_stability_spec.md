@@ -70,12 +70,15 @@ mantis/evaluate_stability/
 Launches the module: `python3 -m mantis.evaluate_stability.main "$@"`
 
 ### 5.2. Input Arguments
-| Argument | Type | Default | Description |
-| :--- | :--- | :--- | :--- |
-| `--bundles-dir` | `string` | **Required** | Path to folder containing sharded/local test bundles (zips/tgz). |
-| `--target` | `string` | `//mqtt/localhost` | The target project specification under test. |
-| `--phase` | `"before"` or `"after"` | `"before"` | Exercise stage (used for reports). |
-| `--output-dir` | `string` | `mantis/out/` | Folder where all reports and metrics are saved. |
+| Argument | Short Flag | Type | Default | Description |
+| :--- | :--- | :--- | :--- | :--- |
+| `--bundles-dir` | `-i` | `string` | **Required** | Path to folder containing sharded/local test bundles (zips/tgz) or run subdirs. |
+| `--compare` | `-c` | `list[str]` | `None` | Additional bundle directories to evaluate and compare chronologically. |
+| `--target` | `-t` | `string` | `None` | Target project specification under test (auto-detected if omitted). |
+
+### 5.3. Output & Comparative Reporting
+- **Single Run**: Outputs metrics JSON and `flakiness_report_{clean_target}_{timestamp}.md` under `mantis/out/`.
+- **Multiple Runs (Comparison)**: If `--compare` is provided, Mantis evaluates all checkpoints, resolves their run/creation timestamps chronologically, and outputs a comprehensive chronological comparative evolution report (`stability_comparison_{clean_target}.md`) showing overall progress and test case stabilization deltas (e.g., `🏆 Stabilized!`, `📈 Improved`, `🚨 Regressed`).
 
 ---
 
@@ -83,5 +86,5 @@ Launches the module: `python3 -m mantis.evaluate_stability.main "$@"`
 
 1. **Argument Parsing Help Check**:
    - Command `mantis/bin/evaluate_stability --help` executes cleanly, verifying imports, argument types, and required fields.
-2. **Decoupled Integration Test**:
-   - Verify that Evaluator accurately reads a directory of mock bundles, consolidates their contents, and outputs `flakiness_report_<phase>_<target>.md` without requiring local environments.
+2. **Chronological Comparative Evaluation**:
+   - Verify that running `mantis/bin/evaluate_stability -i <dir_1> -c <dir_2>` successfully orders datasets, analyzes results, and renders the complete chronological comparison matrix.

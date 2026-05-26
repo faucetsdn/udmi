@@ -1,3 +1,5 @@
+agentskills-core==0.2.3
+agentskills-fs==0.2.3
 astroid==4.0.4
 avro==1.12.1
 cachetools==5.0.0
@@ -13,11 +15,12 @@ exceptiongroup==1.2.2
 execnet==2.1.1
 google-api-core==2.20.0
 google-api-python-client==2.37.0
-google-auth==2.14.1
+google-auth==2.53.0
 google-auth-httplib2==0.1.0
 google-auth-oauthlib==0.4.6
 google-cloud-pubsub==2.25.2
 google-cloud-trace==1.13.5
+google-genai==2.4.0
 googleapis-common-protos==1.65.0
 grpc-google-iam-v1==0.13.1
 grpcio==1.67.0
@@ -67,7 +70,7 @@ six==1.16.0
 tomli==2.0.1
 tomlkit==0.11.6
 typing-inspect==0.7.1
-typing_extensions==4.0.1
+typing_extensions==4.15.0
 uritemplate==4.1.1
 urllib3==2.6.3
 wheel==0.46.3

@@ -4,7 +4,7 @@ import json
 import os
 import re
 import sys
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from .agent import run_triage_analysis
 
 # Resolve root directory
@@ -28,8 +28,8 @@ def parse_timestamp(ts_str):
     for fmt in formats:
         try:
             if fmt in ["%H:%M:%S", "%H:%M:%S.%f"]:
-                # Assume today's date
-                today = datetime.utcnow().date()
+                # Assume today's date in UTC
+                today = datetime.now(timezone.utc).date()
                 t = datetime.strptime(ts_str, fmt).time()
                 return datetime.combine(today, t)
             return datetime.strptime(ts_str, fmt)
@@ -203,64 +203,225 @@ def find_successful_run_for_test(parent_dir, test_id):
                     pass
     return None
 
+import glob
+
+def auto_detect_metadata(bundles_dir_path):
+    """Auto-detects target and site directory from the bundles directory path."""
+    base = os.path.basename(os.path.normpath(bundles_dir_path))
+    
+    # Strip trailing timestamp or run markers if any
+    clean_name = re.sub(r'_\d{8}_\d{6}$', '', base)
+    clean_name = re.sub(r'^run_\d+$', '', clean_name)
+    clean_name = re.sub(r'^(before|after)_', '', clean_name, flags=re.IGNORECASE)
+    
+    if not clean_name:
+        # If bundles_dir is just "run_1", let's check its parent directory!
+        parent_path = os.path.dirname(os.path.normpath(bundles_dir_path))
+        parent_base = os.path.basename(parent_path)
+        clean_name = re.sub(r'_\d{8}_\d{6}$', '', parent_base)
+        clean_name = re.sub(r'^(before|after)_', '', clean_name, flags=re.IGNORECASE)
+        
+    # Reconstruct target spec
+    parts = clean_name.split("_", 1)
+    if len(parts) == 2:
+        target = f"//{parts[0]}/{parts[1]}"
+    else:
+        target = f"//{clean_name}" if clean_name else "//mqtt/localhost"
+        
+    # Discover site_dir
+    first_word = parts[0] if parts else "mqtt"
+    site_dir = f"sites/{first_word}"
+    if not os.path.exists(os.path.join(UDMI_ROOT, site_dir)):
+        site_dir = "sites/udmi_site_model"
+        
+    return target, site_dir
+
+def discover_device_id(run_dir, test_id=None):
+    """Discovers the device under test from the run directory."""
+    devices_dir = os.path.join(run_dir, "out", "devices")
+    if not os.path.exists(devices_dir):
+        return "AHU-1"
+        
+    if test_id:
+        for dev in os.listdir(devices_dir):
+            dev_path = os.path.join(devices_dir, dev)
+            if os.path.isdir(dev_path):
+                test_path = os.path.join(dev_path, "tests", test_id)
+                if os.path.exists(test_path):
+                    return dev
+                    
+    dirs = [d for d in os.listdir(devices_dir) if os.path.isdir(os.path.join(devices_dir, d))]
+    if dirs:
+        return dirs[0]
+    return "AHU-1"
+
+def scan_failures_from_metrics(clean_target, output_dir=None):
+    """Scans metrics JSON files in output_dir matching the target to find mismatched test failures."""
+    if not output_dir:
+        output_dir = os.path.join(MANTIS_DIR, "out")
+        
+    # Find the absolute latest metrics file for this target
+    pattern = os.path.join(output_dir, f"metrics_{clean_target}_*.json")
+    metric_files = glob.glob(pattern)
+    
+    failures = []
+    if not metric_files:
+        return failures
+        
+    latest_file = max(metric_files, key=os.path.getmtime)
+    print(f"Discovered metrics baseline: {os.path.basename(latest_file)}")
+    
+    try:
+        with open(latest_file, 'r') as f:
+            metrics = json.load(f)
+        for ukey, val in metrics.items():
+            # If fail_count > 0, the actual outcome mismatched the expected golden baseline!
+            if val.get('fail_count', 0) > 0:
+                failures.append({
+                    'test_name': val['test_name'],
+                    'category': val['category'],
+                    'suite': val['test_suite']
+                })
+    except Exception as e:
+        print(f"Warning: Failed to load or parse metrics file {latest_file}: {e}", file=sys.stderr)
+        
+    return failures
+
 def main():
     parser = argparse.ArgumentParser(
         description="Mantis Triage Agent (Diagnose) - AI-Powered Diagnostics"
     )
-    parser.add_argument("--target", required=True, help="Target project (e.g. //mqtt/localhost)")
-    parser.add_argument("--run-dir", required=True, help="Directory containing iteration run backups")
-    parser.add_argument("--site-dir", default="sites/udmi_site_model", help="Path to site model folder")
-    parser.add_argument("--test", help="Specific test case to triage (sweeps all failures if omitted)")
+    parser.add_argument("--bundles-dir", "-i", dest="bundles_dir", help="Input bundles directory containing run backups (single or multi-run)")
+    parser.add_argument("--run-dir", help=argparse.SUPPRESS)  # Hidden legacy alias for compatibility
+    parser.add_argument("--test", "-t", help="Specific test case to triage (sweeps all failures if omitted)")
+    parser.add_argument("--target", help="Target project (default: auto-detected from bundles-dir)")
+    parser.add_argument("--site-dir", help="Path to site model folder (default: auto-detected)")
     
     args = parser.parse_args()
     
-    run_dir = os.path.abspath(args.run_dir)
-    if not os.path.exists(run_dir):
-        print(f"Error: Iteration run directory '{args.run_dir}' does not exist.", file=sys.stderr)
+    bundles_dir_arg = args.bundles_dir if args.bundles_dir is not None else args.run_dir
+    if not bundles_dir_arg:
+        parser.print_help()
         sys.exit(1)
         
-    # 1. Identify failed tests (Automated Triage Sweep)
-    failed_tests = []
-    if args.test:
-        failed_tests.append({'test_name': args.test, 'category': 'unknown', 'suite': 'both'})
-    else:
-        print("No specific test provided. Running automated sweep scan for failures...")
-        failed_tests.extend(scan_failures_from_out(os.path.join(run_dir, "sequencer.out")))
-        failed_tests.extend(scan_failures_from_out(os.path.join(run_dir, "test_itemized.out")))
+    bundles_path = os.path.abspath(bundles_dir_arg)
+    if not os.path.exists(bundles_path):
+        print(f"Error: Specified bundles directory '{bundles_dir_arg}' does not exist.", file=sys.stderr)
+        sys.exit(1)
         
-        # Remove duplicates
-        seen = set()
-        unique_failures = []
-        for f in failed_tests:
-            if f['test_name'] not in seen:
-                seen.add(f['test_name'])
-                unique_failures.append(f)
-        failed_tests = unique_failures
-
-    if not failed_tests:
-        print("🎉 No failing test cases detected in run outputs. Diagnostics complete!")
+    # Auto-detect target and site-dir if omitted
+    detected_target, detected_site_dir = auto_detect_metadata(bundles_path)
+    target = args.target if args.target is not None else detected_target
+    site_dir = args.site_dir if args.site_dir is not None else detected_site_dir
+    
+    clean_target = target.replace("/", "_").replace("+", "_").strip("_")
+    site_id = os.path.basename(site_dir)
+    
+    # Determine if we have a single run or multi-run folder structure
+    run_subdirs = sorted(glob.glob(os.path.join(bundles_path, "run_*")))
+    
+    # List of (run_dir_path, failed_test_dict)
+    runs_to_triage = []
+    
+    if run_subdirs:
+        print(f"Multi-run directory mode: scanning {len(run_subdirs)} runs for failures...")
+        unique_failed_tests = {}
+        
+        # 1. Try to read actual regressions from stability metrics first!
+        metrics_failures = []
+        if not args.test:
+            metrics_failures = scan_failures_from_metrics(clean_target)
+            
+        if metrics_failures:
+            print(f"Found {len(metrics_failures)} regression failures from stability metrics.")
+            for f in metrics_failures:
+                test_id = f['test_name']
+                # Locate the first run directory where this test case actually produced a raw failure
+                for run_subdir in run_subdirs:
+                    failures = []
+                    failures.extend(scan_failures_from_out(os.path.join(run_subdir, "sequencer.out")))
+                    failures.extend(scan_failures_from_out(os.path.join(run_subdir, "test_itemized.out")))
+                    if any(x['test_name'] == test_id for x in failures):
+                        unique_failed_tests[test_id] = {
+                            'failure': f,
+                            'run_dir': run_subdir
+                        }
+                        break
+        else:
+            # Fallback to standard raw failures sweep across all run outs
+            for run_subdir in run_subdirs:
+                failures = []
+                failures.extend(scan_failures_from_out(os.path.join(run_subdir, "sequencer.out")))
+                failures.extend(scan_failures_from_out(os.path.join(run_subdir, "test_itemized.out")))
+                
+                for f in failures:
+                    test_id = f['test_name']
+                    if args.test and test_id != args.test:
+                        continue
+                    if test_id not in unique_failed_tests:
+                        unique_failed_tests[test_id] = {
+                            'failure': f,
+                            'run_dir': run_subdir
+                        }
+                        
+        if args.test and args.test not in unique_failed_tests:
+            # If specific test forced but not swept, triage in run_1
+            unique_failed_tests[args.test] = {
+                'failure': {'test_name': args.test, 'category': 'unknown', 'suite': 'both'},
+                'run_dir': run_subdirs[0]
+            }
+            
+        for test_id, info in unique_failed_tests.items():
+            runs_to_triage.append((info['run_dir'], info['failure']))
+            
+    else:
+        print("Single run directory mode active.")
+        failures = []
+        if args.test:
+            failures.append({'test_name': args.test, 'category': 'unknown', 'suite': 'both'})
+        else:
+            # 1. Try metrics first
+            metrics_failures = scan_failures_from_metrics(clean_target)
+            if metrics_failures:
+                print(f"Found {len(metrics_failures)} regression failures from stability metrics.")
+                failures.extend(metrics_failures)
+            else:
+                # Fallback to raw sweep
+                failures.extend(scan_failures_from_out(os.path.join(bundles_path, "sequencer.out")))
+                failures.extend(scan_failures_from_out(os.path.join(bundles_path, "test_itemized.out")))
+                
+                seen = set()
+                unique_failures = []
+                for f in failures:
+                    if f['test_name'] not in seen:
+                        seen.add(f['test_name'])
+                        unique_failures.append(f)
+                failures = unique_failures
+                
+        for f in failures:
+            runs_to_triage.append((bundles_path, f))
+            
+    if not runs_to_triage:
+        print("🎉 No regression or failing test cases detected in run outputs. Diagnostics complete!")
         sys.exit(0)
         
-    print(f"Found {len(failed_tests)} failed test cases to triage: {', '.join(f['test_name'] for f in failed_tests)}")
-
-    # Resolve target output folder structure
-    clean_target = args.target.replace("/", "_").replace("+", "_").strip("_")
-    site_id = os.path.basename(args.site_dir)
-    device_id = get_device_id(args.site_dir)
-    
-    # Global log sources
-    pubber_log_path = os.path.join(run_dir, "pubber.log")
-    udmis_log_path = os.path.join(run_dir, "udmis.log")
+    print(f"Found {len(runs_to_triage)} test case failures to triage: {', '.join(item[1]['test_name'] for item in runs_to_triage)}")
     
     triage_summaries = []
-
+    
     # 2. Triage each failure
-    for idx, f in enumerate(failed_tests, start=1):
+    for idx, (run_dir, f) in enumerate(runs_to_triage, start=1):
         test_id = f['test_name']
-        print(f"\n--- Triaging Failure {idx} of {len(failed_tests)}: {test_id} ---")
+        print(f"\n--- Triaging Failure {idx} of {len(runs_to_triage)}: {test_id} (in {os.path.basename(run_dir)}) ---")
+        
+        device_id = discover_device_id(run_dir, test_id)
         
         local_seq_log = os.path.join(run_dir, f"out/devices/{device_id}/tests/{test_id}/sequence.log")
         local_seq_md = os.path.join(run_dir, f"out/devices/{device_id}/tests/{test_id}/sequence.md")
+        
+        # Global log sources
+        pubber_log_path = os.path.join(run_dir, "pubber.log")
+        udmis_log_path = os.path.join(run_dir, "udmis.log")
         
         # 3. Compile available context catalog
         catalog = {
@@ -285,15 +446,15 @@ def main():
             sliced_udmis = slice_log_by_timebounds(udmis_log_path, start_dt, end_dt)
         else:
             print("Warning: Could not extract starting/ending timestamps from sequence log. Slicing bypassed.")
-
+            
         # Load local sequence logs
         local_seq_log_content = read_filtered_sequence_log(local_seq_log)
-
+        
         local_seq_md_content = ""
         if os.path.exists(local_seq_md):
             with open(local_seq_md, 'r', encoding='utf-8', errors='replace') as fm:
-                local_seq_md_content = fm.read()[:100000] # Markdown is already concise, read up to 100KB
-
+                local_seq_md_content = fm.read()[:100000]
+                
         # Discover reference successful execution for differential triage
         success_run_dir = find_successful_run_for_test(os.path.dirname(run_dir), test_id)
         success_seq_log_content = ""
@@ -310,7 +471,7 @@ def main():
                         success_seq_md_content = fsm.read()[:100000]
                 except Exception:
                     pass
-
+                    
         # 5. Compile prompt payload
         payload = []
         payload.append(f"## Metadata Context")
@@ -325,19 +486,19 @@ def main():
             payload.append(f"```markdown\n{local_seq_md_content}\n```")
         else:
             payload.append("`[Not Available]`")
-
+            
         payload.append(f"\n## Local Sequencer log.log (Raw Console)")
         if local_seq_log_content:
             payload.append(f"```text\n{local_seq_log_content}\n```")
         else:
             payload.append("`[Not Available]`")
-
+            
         payload.append(f"\n## Padded Correlated Global UDMIS Logs")
         if sliced_udmis:
             payload.append(f"```text\n" + "\n".join(sliced_udmis) + "\n```")
         else:
             payload.append("`[No correlated UDMIS logs found in test time window]`")
-
+            
         payload.append(f"\n## Padded Correlated Global Pubber Logs")
         if sliced_pubber:
             payload.append(f"```text\n" + "\n".join(sliced_pubber) + "\n```")
@@ -358,6 +519,16 @@ def main():
         else:
             payload.append("`[No successful reference runs found in sibling directories]`")
             
+        payload.append(f"\n## 💡 Reference Trace Pattern Guide for Asynchronous Race Conditions")
+        payload.append(
+            "Pay close attention to this known architectural pattern in UDMI runs:\n"
+            "1. **Out-of-Order Pub/Sub Regression Race**:\n"
+            "   - **Scenario**: Sequencer sets expected `last_start` to `1970-01-01T00:01:13Z` via pre-test reset `RC:xxxxxx.00000004`.\n"
+            "   - **UDMIS Action**: Processes reset (version 2405, setting last_start=1970) and publishes it at `T1`. Later, UDMIS receives device state (real boot time 2026), auto-munges/synchronizes config (version 2406, setting last_start=2026) and publishes it at `T2`.\n"
+            "   - **Pub/Sub Race**: Deliveries arrive out-of-order at the Sequencer. Sequencer processes `T2` (2026) first, setting local expected `last_start` to 2026. Then, it processes the older `T1` (1970) second, reverting its local expected `last_start` back to 1970. This causes a synchronization check mismatch (reported state is 2026, but sequencer regressed expected to 1970) leading to timeout.\n"
+            "   - **Evidence**: Check if Sequencer log reports receiving `CGW-501/config/update as PS:xxxxxx` (updating expected to 2026) FIRST, followed by receiving `CGW-501/config/update as RC:xxxxxx` (regressing expected to 1970) SECOND. If this ordering is observed, isolate the root cause specifically as a Sequencer-side out-of-order regression race and propose the temporal guard rail fix in `SequenceBase.java` to prevent regressing last_start backward."
+        )
+        
         prompt_payload = "\n".join(payload)
         
         # 6. Run AI Diagnostic Agent
@@ -366,7 +537,7 @@ def main():
             analysis_text = run_triage_analysis(prompt_payload)
         except Exception as e:
             analysis_text = f"⚠️ Error executing Gemini AI diagnostics for {test_id}: {e}"
-
+            
         # 7. Save localized report under self-contained mantis/out/diagnose/
         nested_out_dir = os.path.join(MANTIS_DIR, "out", "diagnose", clean_target, site_id, device_id, test_id)
         os.makedirs(nested_out_dir, exist_ok=True)
@@ -377,17 +548,16 @@ def main():
             
         print(f"Diagnostic report successfully saved: {report_filepath}")
         
-        # Extract high-level breakpoint for summary report
+        # Extract breakpoint summary
         breakpoint_summary = "Triage complete. Review details."
         insufficient = "⚠️ INSUFFICIENT DATA TO TRACE ROOT CAUSE" in analysis_text
         
-        bm = re.search(r'## 2\. Breakpoint Summary\s*\n*>\s*(.*)', analysis_text)
+        bm = re.search(r'(?:## Breakpoint Summary|## 2\. Breakpoint Summary|## 1\. Executive Defect Summary|## Executive Defect Summary|## 1\. Root Cause Summary)\s*\n*>\s*(.*)', analysis_text)
         if bm:
             breakpoint_summary = bm.group(1).strip()
         elif insufficient:
             breakpoint_summary = "⚠️ INSUFFICIENT DATA TO TRACE ROOT CAUSE"
             
-        # Triage summary links are relative to the summary report file
         triage_summaries.append({
             'test_id': test_id,
             'category': f['category'],
@@ -396,21 +566,20 @@ def main():
             'insufficient': insufficient,
             'report_link': f"./{device_id}/{test_id}/triage_analysis.md"
         })
-
-    # 8. Compile consolidated triage_summary_report.md inside sites output directory
+        
+    # 8. Compile consolidated triage_summary_report.md
     print("\nCompiling site-specific Triage Summary Report...")
     root_report_path = os.path.join(MANTIS_DIR, "out", "diagnose", clean_target, site_id, "triage_summary_report.md")
     os.makedirs(os.path.dirname(root_report_path), exist_ok=True)
     
     sum_md = []
     sum_md.append("# Mantis AI Diagnostics: Triage Summary Report 🦗👁️")
-    sum_md.append(f"**Target Project**: `{args.target}`  ")
+    sum_md.append(f"**Target Project**: `{target}`  ")
     sum_md.append(f"**Site ID**: `{site_id}`  ")
-    sum_md.append(f"**Triage executed at**: `{datetime.now().strftime('%Y-%m-%d %H:%M:%S UTC')}`  ")
+    sum_md.append(f"**Triage executed at**: `{datetime.now(timezone.utc).strftime('%Y-%m-%d %H:%M:%S UTC')}`  ")
     sum_md.append("\n---")
     
-    # Dashboard
-    total_checked = len(failed_tests)
+    total_checked = len(runs_to_triage)
     insufficient_count = len([s for s in triage_summaries if s['insufficient']])
     diagnosed_count = total_checked - insufficient_count
     
@@ -420,7 +589,6 @@ def main():
     sum_md.append(f"- **Insufficient Information (Guardrail Triggered)**: `{insufficient_count}`")
     sum_md.append("\n---")
     
-    # Failure Breakdown Table
     sum_md.append("## 📋 Failed Test Diagnostics Breakdown")
     sum_md.append("| Test Case | Suite | Category | Breakpoint & Root Cause Isolation Summary | Link to Analysis |")
     sum_md.append("| :--- | :--- | :--- | :--- | :--- |")
@@ -429,7 +597,6 @@ def main():
         
     sum_md.append("\n---")
     
-    # Dynamic Failure Clustering
     sum_md.append("## ⚠️ Failure Signature Clustering")
     sum_md.append("> The following failures share similar root cause signatures or breakpoint profiles. Address them together!")
     
@@ -454,7 +621,6 @@ def main():
             
     sum_md.append("\n---")
     
-    # PR Comments Block
     sum_md.append("## 🤖 GitHub Actions Pull Request Alert Block")
     sum_md.append("```markdown")
     sum_md.append(f"### 🦗 Mantis AI Debugger isolated {total_checked} regressions in this test run:")

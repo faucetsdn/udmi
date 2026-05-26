@@ -36,18 +36,25 @@ Rather than strictly filtering by transaction IDs, Diagnose uses **padded execut
 
 ## 3. Submodule Directory Structure & Naming
 
-The Diagnose component is implemented under its own dedicated submodule folder `mantis/diagnose/`:
+The Triage/Diagnose component is implemented under its dedicated submodule folder `mantis/diagnose/`:
 
 ```
 mantis/diagnose/
 ├── __init__.py
 ├── main.py               # Triage coordinator & context aggregator
-├── agent.py              # AI agent harness & Gemini API client
-└── tools.py              # Dynamic tool belt (grep, read lines, git operations)
+├── agent.py              # AI agent harness, SkillRegistry & Gemini API client
+├── tools.py              # Dynamic tool belt (grep, read lines, git operations)
+└── skills/               # Conforming folders containing SKILL.md files
+    ├── progressive-triage-flow/SKILL.md
+    ├── component-guide/SKILL.md
+    ├── log-sources/SKILL.md
+    ├── log-correlation/SKILL.md
+    ├── evidence-gathering/SKILL.md
+    └── best-effort-triage/SKILL.md
 ```
 
 - **`main.py`**: Orchestrates the execution flow, maps folder trees, and outputs report documents under `mantis/out/diagnose/`.
-- **`agent.py`**: Manages standard `google.genai` SDK sessions and queries `gemini-2.5-pro` utilizing registered Tools.
+- **`agent.py`**: Manages standard `google.genai` SDK sessions, batch-registers the skills folder via the official **Agent Skills SDK** (`agentskills-core` and `agentskills-fs`), and queries the GenAI model with dynamic progressive disclosure.
 - **`tools.py`**: Defines Python execution methods exposed directly to Gemini.
 
 ---
@@ -72,15 +79,27 @@ Diagnose leverages the `git_read_operations` tool to perform high-value diagnost
 
 ---
 
-## 5. Information Sufficiency Guardrails
+## 5. Zero-Configuration CLI & Scoping
 
-Diagnose is designed to be highly reliable and will **never speculate or hallucinate** when logs are severely limited. 
+Diagnose utilizes a zero-configuration CLI entrypoint, completely eliminating manual target, site model, and device ID parameters.
 
-- **The Sufficiency Rule**: If the available logs, git context, and code checks are insufficient to definitively isolate the failure breakpoint, Diagnose must explicitly declare `INSUFFICIENT_INFO`.
-- **Report Requirements**: In this scenario, Diagnose will:
-  1. Declare that the root cause cannot be identified with the current data.
-  2. List the exact missing logs or parameters required (e.g., "Missing UDMIS reflection logs").
-  3. Propose step-by-step diagnostic next steps for the developer (e.g., "Please set UDMIS logging to VERBOSE and execute the test again to capture config reflection traces.").
+### 5.1. CLI Wrapper (`mantis/bin/diagnose`)
+Launches the module: `python3 -m mantis.diagnose.main "$@"`
+
+### 5.2. Input Arguments
+| Argument | Short Flag | Type | Default | Description |
+| :--- | :--- | :--- | :--- | :--- |
+| `--bundles-dir` | `-i` | `string` | **Required** | Path to bundles directory containing run backups (single or multi-run). |
+| `--test` | `-t` | `string` | `None` | Specific test case to triage (sweeps all failures if omitted). |
+| `--target` | `None` | `string` | `None` | Target project (auto-detected from bundles-dir if omitted). |
+| `--site-dir` | `None` | `string` | `None` | Path to site model folder (auto-detected if omitted). |
+
+### 5.3. Under-The-Hood Auto-Discovery
+- **Target**: Parsed directly from the bundles directory name (e.g., `staging_UK-LON-GLAB` ➔ `//staging/UK-LON-GLAB`).
+- **Site Model**: Auto-matched to directories under `sites/` (e.g. `sites/staging` for target prefix `staging`, defaulting to `sites/udmi_site_model`).
+- **Device ID**: Discovered dynamically by scanning the extracted `out/devices/` folder inside the run.
+- **Smart Failure Scoping**:
+  Before running diagnostics, the tool attempts to read the stability metrics JSON generated in Step 1. If it finds the file, it **ONLY triages test cases that actually mismatched their baseline expected outcome** (true regressions/flakiness), preventing redundant triage runs on expected negative test case failures (e.g. intentional broken config fails). If the metrics file is absent, it falls back to a raw `RESULT fail` sweep across sequencer outputs.
 
 ---
 
@@ -90,45 +109,43 @@ Diagnose is designed to be highly reliable and will **never speculate or halluci
 Diagnose saves localized reports under the self-contained `mantis/out/` hierarchy:
 `mantis/out/diagnose/<project_id>/<site_id>/<device_id>/<test_id>/triage_analysis.md`
 
-### 6.2. Structured Diagnostic Report (`triage_analysis.md`)
+### 6.2. Structured Premium Diagnostic Report (`triage_analysis.md`)
 Every localized report must conform to the following structured markdown format:
 
 ```markdown
-# Mantis Diagnose Diagnostic Analysis — <test_id>
+# UDMI Sequencer Staging Run Triage Analysis: <device_id> <test_id> Failure
 
-## 1. Metadata
-- **Project ID**: `<project_id>`
-- **Site ID**: `<site_id>`
-- **Device ID**: `<device_id>`
-- **Test ID**: `<test_id>`
-- **Available Context Catalog**:
-  - Current Run Logs Present: `[e.g. Sequencer=True, UDMIS=True, Pubber=False]`
-  - Historical Logs Present: `[e.g. Sequencer=True, UDMIS=False, Pubber=True]`
-- **Base Session Transaction ID**: `<RC:XXXXXX | None>`
+This document presents a comprehensive root cause analysis of the `<test_id>` test failure for device **<device_id>**...
 
-## 2. Breakpoint Summary
-> Highlight exactly which step in the UDMI Config-State loop failed, which component caused it, and the exact time of the failure.
-> If information was insufficient, display a high-visibility "⚠️ INSUFFICIENT DATA TO TRACE ROOT CAUSE" warning instead.
+---
 
-## 3. Time-Aligned Sequence of Events
-| Timestamp | Component | Event / Log Message | Transaction ID | Source File / Line |
-| :--- | :--- | :--- | :---: | :--- |
-| 14:15:05Z | Sequencer | `NOTICE Starting test valid_serial_no` | `RC:df8a27` | `SequenceBase.java:145` |
-| 14:15:06Z | UDMIS | `ReflectProcessor Processing reflection...` | `RC:df8a27.00000001` | `ReflectProcessor.java:34` |
+## 1. Executive Defect Summary
+> [Provide a concise, single-line summary starting with a blockquote '>' identifying the primary component failure and exact error, e.g. 'Sequencer assertion timed out during config sync: last_start not synced in config'. This blockquote is automatically parsed by the triage engine.]
 
-## 4. Successful vs Failed Run Divergence
-> If successful reference runs are found in git history:
-> Detail the exact event/log index where the current failing run diverged from the successful history.
+[Provide a structured, detailed summary (3-4 bullets or paragraphs) detailing exactly how the Sequencer, UDMIS, and Device/Gateway interacted, using transaction IDs (RC:xxxxxx) and timestamps to pinpoint the defect.]
 
-## 5. Code Regression Analysis
-> List the commits or code diff changes made between the last successful run and the current failure that are relevant to the breakpoint component.
+---
 
-## 6. Root Cause & Evidence Isolation
-> Present concrete evidence (traceback, log exceptions, code logic mismatches) proving the root cause of the failure.
-> If insufficient info, specify the exact missing data and how the developer can enable/capture it.
+## 2. Component Assessment
+- **Did the device work as expected?** [Yes/No/Partial + concise 1-2 sentence justification based on log evidence]
+- **Did sequencer work as expected?** [Yes/No/Partial + concise 1-2 sentence justification based on log evidence]
+- **Did udmis work as expected?** [Yes/No/Partial + concise 1-2 sentence justification based on log evidence]
 
-## 7. Actionable Fix Recommendations
-> Detailed step-by-step code or configuration adjustments to resolve the issue.
+---
+
+## 3. Detailed Timeline of Events
+Construct a clean chronological markdown table aligning all correlated logs (Sequencer, UDMIS, Gateway, Pubber/Device) to show precisely when and why the runs diverged. Format:
+
+| Timestamp (UTC) | Source | Log Message / Event | Significance |
+| :--- | :--- | :--- | :--- |
+| [HH:MM:SS] | [Component] | `Log Message Snippet` | [Relevance/Significance explanation] |
+
+---
+
+## 4. Proposed Code Fix (or Technical Concurrency RCA)
+Identify the root cause bug or race condition and propose the concrete source code modifications (including exact file paths, approximate line ranges, and a standard unified diff or code block) needed to fix the bug in the Java emulators, sequence files, or processors.
+
+If the available logs, git history, and code logic are insufficient to isolate the breakpoint, you MUST output the header '⚠️ INSUFFICIENT DATA TO TRACE ROOT CAUSE' under this section and list exactly what log streams/configurations are missing.
 ```
 
 ---

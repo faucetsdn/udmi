@@ -4,17 +4,16 @@ import os
 from datetime import datetime
 
 class MantisReporter:
-    def __init__(self, target, phase, output_dir):
+    def __init__(self, target, output_dir):
         self.target = target
-        self.phase = phase
         self.output_dir = output_dir
         os.makedirs(output_dir, exist_ok=True)
 
     def get_clean_target(self):
         return self.target.replace("/", "_").replace("+", "_").strip("_")
 
-    def generate_report_markdown(self, aggregates):
-        """Generates the standard phase report."""
+    def generate_report_markdown(self, aggregates, timestamp, run_dir_name):
+        """Generates the standard flakiness report for a single bundles directory."""
         total_tests = len(aggregates)
         flaky_tests = [t for t in aggregates.values() if t['flaky']]
         failed_tests = [t for t in aggregates.values() if t['pass_rate'] == 0]
@@ -23,12 +22,11 @@ class MantisReporter:
         # Overall stability percentage (average of all test case pass rates)
         avg_stability = sum(t['pass_rate'] for t in aggregates.values()) / total_tests if total_tests > 0 else 0.0
 
-        timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S UTC")
-
         md = []
-        md.append(f"# Mantis Stability & Flakiness Report — Phase `{self.phase.upper()}`")
+        md.append(f"# Mantis Stability & Flakiness Report")
         md.append(f"**Target System**: `{self.target}`  ")
-        md.append(f"**Generated At**: `{timestamp}`  ")
+        md.append(f"**Source Bundle Directory**: `{run_dir_name}`  ")
+        md.append(f"**Evaluation Time**: `{timestamp.strftime('%Y-%m-%d %H:%M:%S UTC')}`  ")
         md.append(f"**Total Test Runs Evaluated**: `{next(iter(aggregates.values()))['total_runs'] if aggregates else 0}`")
         md.append("\n---")
         
@@ -43,13 +41,11 @@ class MantisReporter:
         
         md.append("\n---")
 
-        # Flaky tests details
         if flaky_tests:
             md.append("## ⚠️ Detected Flaky Tests (Prioritized Hunt List)")
             md.append("> These tests show unstable behavior and fail randomly. Focus your stabilization efforts here!")
             md.append("\n| Test Suite | Category | Test Case | Expected Outcome | Pass Rate | Raw (Pass / Fail / Skip) |")
             md.append("| :--- | :--- | :--- | :--- | :--- | :--- |")
-            # Sort flaky tests by lowest pass rate (most flaky/unstable first)
             for t in sorted(flaky_tests, key=lambda x: x['pass_rate']):
                 md.append(f"| `{t['test_suite']}` | `{t['category']}` | `{t['test_name']}` | `{t['expected_outcome']}` | **{t['pass_rate']}%** | {t['raw_pass']} / {t['raw_fail']} / {t['raw_skip']} |")
         else:
@@ -58,7 +54,6 @@ class MantisReporter:
 
         md.append("\n---")
 
-        # Consistently failing tests details
         if failed_tests:
             md.append("## ❌ Consistently Failing Tests")
             md.append("> These tests failed to match their expected outcome in 100% of the runs.")
@@ -68,7 +63,6 @@ class MantisReporter:
                 md.append(f"| `{t['test_suite']}` | `{t['category']}` | `{t['test_name']}` | `{t['expected_outcome']}` | **{t['pass_rate']}%** | {t['raw_pass']} / {t['raw_fail']} / {t['raw_skip']} |")
             md.append("\n---")
 
-        # Full details table
         md.append("## 📋 Complete Test Case Results")
         md.append("| Test Suite | Category | Test Case | Occurrence | Expected Outcome | Pass Rate | Status |")
         md.append("| :--- | :--- | :--- | :---: | :---: | :--- | :--- |")
@@ -79,127 +73,212 @@ class MantisReporter:
 
         return "\n".join(md)
 
-    def generate_comparison_markdown(self, before_aggregates, after_aggregates):
-        """Generates a high-impact comparison report comparing BEFORE and AFTER phases."""
-        timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S UTC")
+    def generate_iterative_comparison_markdown(self, datasets):
+        """Generates a multi-run chronological comparative report.
+        
+        datasets is a list of dicts:
+        [
+           {
+             'name': 'before_mqtt_localhost',
+             'timestamp': datetime_obj,
+             'aggregates': aggregates_dict
+           },
+           ...
+        ]
+        sorted chronologically.
+        """
+        # Ensure sorted chronologically
+        datasets = sorted(datasets, key=lambda x: x['timestamp'])
         
         md = []
-        md.append(f"# Mantis Stabilization Comparison Report 🦗🎯")
+        md.append(f"# Mantis Multi-Checkpoint Stability Evolution Report 🦗📈")
         md.append(f"**Target System**: `{self.target}`  ")
-        md.append(f"**Comparison Generated At**: `{timestamp}`  ")
+        md.append(f"**Comparison Generated At**: `{datetime.now().strftime('%Y-%m-%d %H:%M:%S UTC')}`  ")
         md.append("\n---")
         
-        md.append("## 📊 Stabilization Summary")
+        md.append("## 📊 Stabilization Timeline Summary")
         
-        before_stability = sum(t['pass_rate'] for t in before_aggregates.values()) / len(before_aggregates) if before_aggregates else 0.0
-        after_stability = sum(t['pass_rate'] for t in after_aggregates.values()) / len(after_aggregates) if after_aggregates else 0.0
-        net_delta = after_stability - before_stability
+        # Headers
+        header_cols = ["Metric"]
+        sep_cols = [":---"]
+        for d in datasets:
+            display_name = f"{d['name']} ({d['timestamp'].strftime('%m/%d %H:%M')})"
+            header_cols.append(display_name)
+            sep_cols.append(":---:")
+        header_cols.append("Total Progress Delta")
+        sep_cols.append(":---:")
         
-        md.append("| Metric | Before Phase | After Phase | Net Delta |")
-        md.append("| :--- | :---: | :---: | :---: |")
-        md.append(f"| **Overall System Stability** | {before_stability:.2f}% | {after_stability:.2f}% | **{'+' if net_delta >= 0 else ''}{net_delta:.2f}%** |")
-        md.append(f"| **Flaky Test Cases** | `{len([t for t in before_aggregates.values() if t['flaky']])}` | `{len([t for t in after_aggregates.values() if t['flaky']])}` | `{len([t for t in after_aggregates.values() if t['flaky']]) - len([t for t in before_aggregates.values() if t['flaky']]):+}` |")
-        md.append(f"| **Perfectly Stable Test Cases** | `{len([t for t in before_aggregates.values() if t['pass_rate'] == 100])}` | `{len([t for t in after_aggregates.values() if t['pass_rate'] == 100])}` | `{len([t for t in after_aggregates.values() if t['pass_rate'] == 100]) - len([t for t in before_aggregates.values() if t['pass_rate'] == 100]):+}` |")
+        md.append("| " + " | ".join(header_cols) + " |")
+        md.append("| " + " | ".join(sep_cols) + " |")
         
-        md.append("\n---")
+        # Calculate overall score for each checkpoint
+        stability_scores = []
+        flaky_counts = []
+        stable_counts = []
         
-        md.append("## 🎯 Individual Test Case Evolution")
-        md.append("| Test Suite | Category | Test Case | Occurrence | Before Pass Rate | After Pass Rate | Delta | Stabilization Status |")
-        md.append("| :--- | :--- | :--- | :---: | :---: | :---: | :---: | :--- |")
-
-        # Gather all keys from both runs
-        all_keys = set(before_aggregates.keys()).union(after_aggregates.keys())
-
-        newly_stabilized_count = 0
-        improved_count = 0
-        regressed_count = 0
-        stable_count = 0
-
-        for key in sorted(all_keys):
-            before_t = before_aggregates.get(key)
-            after_t = after_aggregates.get(key)
-
-            test_suite = (after_t or before_t)['test_suite']
-            category = (after_t or before_t)['category']
-            test_name = (after_t or before_t)['test_name']
-            occurrence = (after_t or before_t)['occurrence']
-
-            before_pr = before_t['pass_rate'] if before_t else None
-            after_pr = after_t['pass_rate'] if after_t else None
-
-            if before_pr is None:
-                delta_str = "New"
-                status = "🟢 New Test (100% Stable)" if after_pr == 100 else "🟡 New Test (Flaky)"
-            elif after_pr is None:
-                delta_str = "Removed"
-                status = "⚪ Test Removed"
+        for d in datasets:
+            agg = d['aggregates']
+            total = len(agg)
+            if total > 0:
+                score = sum(t['pass_rate'] for t in agg.values()) / total
+                flaky = len([t for t in agg.values() if t['flaky']])
+                stable = len([t for t in agg.values() if t['pass_rate'] == 100])
             else:
-                delta = after_pr - before_pr
-                delta_str = f"{'+' if delta >= 0 else ''}{delta:.1f}%"
+                score, flaky, stable = 0.0, 0, 0
+            
+            stability_scores.append(score)
+            flaky_counts.append(flaky)
+            stable_counts.append(stable)
+            
+        # Score Row
+        score_row = ["**Overall System Stability**"]
+        for s in stability_scores:
+            score_row.append(f"{s:.2f}%")
+        net_score_delta = stability_scores[-1] - stability_scores[0]
+        score_row.append(f"**{net_score_delta:+.2f}%**")
+        md.append("| " + " | ".join(score_row) + " |")
+        
+        # Flaky Row
+        flaky_row = ["**Flaky Test Cases**"]
+        for f in flaky_counts:
+            flaky_row.append(f"`{f}`")
+        net_flaky_delta = flaky_counts[-1] - flaky_counts[0]
+        flaky_row.append(f"`{net_flaky_delta:+}`")
+        md.append("| " + " | ".join(flaky_row) + " |")
+        
+        # Stable Row
+        stable_row = ["**Perfectly Stable Test Cases**"]
+        for s in stable_counts:
+            stable_row.append(f"`{s}`")
+        net_stable_delta = stable_counts[-1] - stable_counts[0]
+        stable_row.append(f"`{net_stable_delta:+}`")
+        md.append("| " + " | ".join(stable_row) + " |")
+        
+        md.append("\n---")
+        
+        md.append("## 🎯 Test Case Evolution Tracking")
+        
+        # Get union of all test case keys across all checkpoints
+        all_keys = set()
+        for d in datasets:
+            all_keys.update(d['aggregates'].keys())
+            
+        # Table headers for test evolution
+        test_headers = ["Test Case", "Expected"]
+        test_seps = [":---", ":---:"]
+        for d in datasets:
+            test_headers.append(d['name'])
+            test_seps.append(":---:")
+        test_headers.extend(["Net Delta", "Stabilization Status"])
+        test_seps.extend([":---:", ":---"])
+        
+        md.append("| " + " | ".join(test_headers) + " |")
+        md.append("| " + " | ".join(test_seps) + " |")
+        
+        newly_stabilized = 0
+        improved = 0
+        regressed = 0
+        stable = 0
+        
+        for key in sorted(all_keys):
+            # Extract test info
+            first_val = None
+            last_val = None
+            
+            # Traverse chronologically to find first and last presence
+            for d in datasets:
+                if key in d['aggregates']:
+                    if first_val is None:
+                        first_val = d['aggregates'][key]
+                    last_val = d['aggregates'][key]
+            
+            test_suite = (last_val or first_val)['test_suite']
+            category = (last_val or first_val)['category']
+            test_name = (last_val or first_val)['test_name']
+            expected = (last_val or first_val)['expected_outcome']
+            
+            row_cols = [f"`{test_suite}/{category}/{test_name}`", f"`{expected}`"]
+            
+            pass_rates = []
+            for d in datasets:
+                if key in d['aggregates']:
+                    pass_rates.append(d['aggregates'][key]['pass_rate'])
+                else:
+                    pass_rates.append(None)
+                    
+            for pr in pass_rates:
+                if pr is None:
+                    row_cols.append("-")
+                else:
+                    row_cols.append(f"{pr}%")
+                    
+            # Calculate progress delta between first non-None and last non-None pass rate
+            valid_prs = [pr for pr in pass_rates if pr is not None]
+            if len(valid_prs) >= 2:
+                delta = valid_prs[-1] - valid_prs[0]
+                delta_str = f"{delta:+.1f}%"
                 
-                if before_pr < 100 and after_pr == 100:
+                first_pr = valid_prs[0]
+                last_pr = valid_prs[-1]
+                
+                if first_pr < 100 and last_pr == 100:
                     status = "🏆 **Stabilized!**"
-                    newly_stabilized_count += 1
-                elif before_pr < after_pr:
+                    newly_stabilized += 1
+                elif first_pr < last_pr:
                     status = "📈 Improved"
-                    improved_count += 1
-                elif before_pr > after_pr:
+                    improved += 1
+                elif first_pr > last_pr:
                     status = "🚨 **Regressed!**"
-                    regressed_count += 1
-                elif before_pr == 100:
+                    regressed += 1
+                elif first_pr == 100:
                     status = "🟢 Stable"
-                    stable_count += 1
+                    stable += 1
                 else:
                     status = "🟡 Unstable"
-
-            before_pr_str = f"{before_pr}%" if before_pr is not None else "-"
-            after_pr_str = f"{after_pr}%" if after_pr is not None else "-"
-
-            md.append(f"| `{test_suite}` | `{category}` | `{test_name}` | `{occurrence}` | {before_pr_str} | {after_pr_str} | **{delta_str}** | {status} |")
-
+            else:
+                delta_str = "-"
+                status = "⚪ New/Removed"
+                
+            row_cols.extend([f"**{delta_str}**", status])
+            md.append("| " + " | ".join(row_cols) + " |")
+            
         md.append("\n---")
-        
         md.append("### Stabilization Achievements Checklist")
-        md.append(f"- `[x]` Overall system stability change: **{'+' if net_delta >= 0 else ''}{net_delta:.2f}%**")
-        md.append(f"- `[x]` Newly stabilized test cases: **{newly_stabilized_count}**")
-        md.append(f"- `[x]` Improved test cases: **{improved_count}**")
-        md.append(f"- `[x]` Regressed test cases: **{regressed_count}**")
-
+        md.append(f"- `[x]` Overall stability change (First ➔ Last Checkpoint): **{net_score_delta:+.2f}%**")
+        md.append(f"- `[x]` Newly stabilized test cases: **{newly_stabilized}**")
+        md.append(f"- `[x]` Improved test cases: **{improved}**")
+        md.append(f"- `[x]` Regressed test cases: **{regressed}**")
+        
         return "\n".join(md)
 
-    def save_report(self, aggregates):
-        """Saves both the metrics JSON and the Markdown report."""
+    def save_single_report(self, aggregates, timestamp, run_dir_name):
+        """Saves the single run flakiness report."""
         clean_target = self.get_clean_target()
         
-        # 1. Save aggregated metrics to JSON (used for comparison later)
-        metrics_filename = f"metrics_{clean_target}_{self.phase}.json"
+        # 1. Save aggregated metrics to JSON
+        metrics_filename = f"metrics_{clean_target}_{timestamp.strftime('%Y%m%d_%H%M%S')}.json"
         metrics_filepath = os.path.join(self.output_dir, metrics_filename)
         with open(metrics_filepath, 'w') as f:
             json.dump(aggregates, f, indent=2)
-        print(f"Saved serialized metrics to: {metrics_filepath}")
-
-        # 2. Save markdown report
-        report_filename = f"flakiness_report_{self.phase}_{clean_target}.md"
+        print(f"Saved metrics JSON to: {metrics_filepath}")
+        
+        # 2. Save report markdown
+        report_filename = f"flakiness_report_{clean_target}_{timestamp.strftime('%Y%m%d_%H%M%S')}.md"
         report_filepath = os.path.join(self.output_dir, report_filename)
-        report_md = self.generate_report_markdown(aggregates)
+        report_md = self.generate_report_markdown(aggregates, timestamp, run_dir_name)
         with open(report_filepath, 'w') as f:
             f.write(report_md)
-        print(f"Generated stability report: {report_filepath}")
+        print(f"Generated flakiness report: {report_filepath}")
+        return metrics_filepath
 
-        # 3. Check for 'before' metrics to auto-generate comparison report
-        if self.phase == 'after':
-            before_filename = f"metrics_{clean_target}_before.json"
-            before_filepath = os.path.join(self.output_dir, before_filename)
-            if os.path.exists(before_filepath):
-                print(f"Found previous 'before' phase metrics. Generating comparative report...")
-                with open(before_filepath, 'r') as f:
-                    before_aggregates = json.load(f)
-                
-                comp_md = self.generate_comparison_markdown(before_aggregates, aggregates)
-                comp_filename = f"stability_comparison_{clean_target}.md"
-                comp_filepath = os.path.join(self.output_dir, comp_filename)
-                with open(comp_filepath, 'w') as f:
-                    f.write(comp_md)
-                print(f"Generated comparative stability report: {comp_filepath}")
-            else:
-                print(f"Info: Previous 'before' metrics not found at {before_filepath}. Skipped generating comparison report.")
+    def save_comparison_report(self, datasets):
+        """Saves the multi-run chronological comparison report."""
+        clean_target = self.get_clean_target()
+        
+        comp_filename = f"stability_comparison_{clean_target}.md"
+        comp_filepath = os.path.join(self.output_dir, comp_filename)
+        
+        comp_md = self.generate_iterative_comparison_markdown(datasets)
+        with open(comp_filepath, 'w') as f:
+            f.write(comp_md)
+        print(f"\nGenerated comprehensive stability comparison report: {comp_filepath}")

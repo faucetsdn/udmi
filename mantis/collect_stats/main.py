@@ -241,30 +241,36 @@ def main():
         description="Mantis Statistics Collector (collect_stats) - Automated capture of test loops locally or from GitHub CI"
     )
     # Common Arguments
-    parser.add_argument("--target", default="//mqtt/localhost", help="Target project specification (default: //mqtt/localhost)")
-    parser.add_argument("--iterations", type=int, help="Number of local loops (default: 10) or parallel dispatches on GitHub (default: 3)")
-    parser.add_argument("--output-dir", help="Directory to save resulting bundles (default: mantis/out/test_bundles/)")
+    parser.add_argument("--target", "-t", default="//mqtt/localhost", help="Target project specification (default: //mqtt/localhost)")
+    parser.add_argument("--runs", "-n", type=int, default=3, help="Number of local loops or parallel dispatches on GitHub (default: 3)")
+    parser.add_argument("--iterations", type=int, help=argparse.SUPPRESS)  # Hidden legacy alias for compatibility
+    parser.add_argument("--mode", "-m", choices=["local", "ci", "ci_search"], default="local", help="Execution mode: local sandbox, ci (dispatch new workflow runs), or ci_search (retrieve past completed runs). (default: local)")
+    parser.add_argument("--branch", "-b", help="GitHub branch to target or search (default: active branch)")
     parser.add_argument("--verbose", action="store_true", help="Monitor logs foreground (wrapper verbose option)")
     
     # Local-Specific Arguments
-    parser.add_argument("--local", action="store_true", help="Execute loops locally in the sandbox instead of triggering GitHub CI")
     parser.add_argument("--suite", choices=["sequencer", "itemized", "both"], default="both", help="Test suite to run locally (default: both)")
     parser.add_argument("--tests", help="Comma-separated list of selective sequencer tests to run locally (e.g. valid_serial_no)")
     
     # GitHub Search Arguments
-    parser.add_argument("--github-search", action="store_true", help="Search and download completed past CI workflow runs instead of dispatching new ones")
-    parser.add_argument("--branch", help="GitHub branch to search (default: active branch)")
-    parser.add_argument("--limit", type=int, default=10, help="Maximum number of historical bundles to search and retrieve (default: 10)")
+    parser.add_argument("--limit", type=int, default=10, help="Maximum number of historical bundles to search and retrieve in ci_search mode (default: 10)")
+
+    # If no arguments are passed, print help and exit
+    if len(sys.argv) == 1:
+        parser.print_help()
+        sys.exit(1)
 
     args = parser.parse_args()
 
+    # Resolve runs count supporting legacy iterations flag
+    runs = args.runs
+    if args.iterations is not None:
+        runs = args.iterations
+
     # Resolve output directory under self-contained mantis/out/test_bundles/
     clean_target = args.target.replace("/", "_").replace("+", "_").strip("_")
-    if not args.output_dir:
-        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-        output_dir = os.path.join(MANTIS_DIR, "out", "test_bundles", f"{clean_target}_{timestamp}")
-    else:
-        output_dir = os.path.abspath(args.output_dir)
+    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+    output_dir = os.path.join(MANTIS_DIR, "out", "test_bundles", f"{clean_target}_{timestamp}")
 
     os.makedirs(output_dir, exist_ok=True)
 
@@ -281,8 +287,8 @@ def main():
     # ----------------------------------------
     # MODE 1: LOCAL SANDBOX EXECUTION
     # ----------------------------------------
-    if args.local:
-        iterations = args.iterations if args.iterations is not None else 10
+    if args.mode == "local":
+        iterations = runs
         
         print(f"=============================================================")
         print(f"🚀 Mantis Local Collector: Triggering Local Execution Loops")
@@ -384,7 +390,7 @@ def main():
         new_run_ids = []
 
         # SUB-MODE A: SEARCH PAST COMPLETED RUNS
-        if args.github_search:
+        if args.mode == "ci_search":
             print(f"=============================================================")
             print(f"🦗 Mantis GitHub Run Searcher: Pulling Past CI Runs")
             print(f"=============================================================")
@@ -404,7 +410,7 @@ def main():
 
         # SUB-MODE B: DISPATCH & POLL NEW WORKFLOW RUNS
         else:
-            iterations = args.iterations if args.iterations is not None else 3
+            iterations = runs
             print(f"=============================================================")
             print(f"🦗 Mantis GitHub Collector: Tracking Bugs on CI")
             print(f"=============================================================")
