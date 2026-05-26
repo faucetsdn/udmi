@@ -51,6 +51,46 @@ def get_directory_timestamp(dir_path):
     # Fallback to directory modification time
     return datetime.fromtimestamp(os.path.getmtime(dir_path))
 
+def smart_copy_sequence_logs(src_dir, dest_dir):
+    """Recursively copies sequence logs from src_dir to dest_dir, preserving failed/longer runs if collisions occur."""
+    if not os.path.exists(src_dir):
+        return
+    os.makedirs(dest_dir, exist_ok=True)
+    
+    for root, dirs, files in os.walk(src_dir):
+        rel_path = os.path.relpath(root, src_dir)
+        dest_root = os.path.abspath(os.path.join(dest_dir, rel_path))
+        
+        for d in dirs:
+            os.makedirs(os.path.join(dest_root, d), exist_ok=True)
+            
+        for f in files:
+            src_file = os.path.join(root, f)
+            dest_file = os.path.join(dest_root, f)
+            
+            if os.path.exists(dest_file) and f == "sequence.log":
+                try:
+                    with open(src_file, 'r', encoding='utf-8', errors='replace') as sf:
+                        src_content = sf.read()
+                    with open(dest_file, 'r', encoding='utf-8', errors='replace') as df:
+                        dest_content = df.read()
+                        
+                    src_has_fail = "RESULT fail" in src_content or "ERROR" in src_content
+                    dest_has_fail = "RESULT fail" in dest_content or "ERROR" in dest_content
+                    
+                    if src_has_fail and not dest_has_fail:
+                        shutil.copy2(src_file, dest_file)
+                    elif not src_has_fail and dest_has_fail:
+                        continue
+                    elif len(src_content) > len(dest_content):
+                        shutil.copy2(src_file, dest_file)
+                except Exception:
+                    try: shutil.copy2(src_file, dest_file)
+                    except Exception: pass
+            else:
+                try: shutil.copy2(src_file, dest_file)
+                except Exception: pass
+
 def evaluate_single_directory(bundles_path, target, output_dir, analyzer):
     """Unpacks, processes, aggregates, and evaluates stability for a single directory."""
     print(f"\n=============================================================")
@@ -115,18 +155,12 @@ def evaluate_single_directory(bundles_path, target, output_dir, analyzer):
             if sharded_site_dirs:
                 os.makedirs(backup_out, exist_ok=True)
                 for ssd in sorted(sharded_site_dirs):
-                    shard_out_seq = os.path.join(ssd, "out-seq")
-                    shard_out = os.path.join(ssd, "out")
-                    if os.path.exists(shard_out_seq):
-                        try:
-                            shutil.copytree(shard_out_seq, backup_out, dirs_exist_ok=True)
+                    # Glob all out* directories inside this sharded directory (e.g. out, out-seq, out-24)
+                    shard_out_dirs = glob.glob(os.path.join(ssd, "out*"))
+                    for od in shard_out_dirs:
+                        if os.path.isdir(od):
+                            smart_copy_sequence_logs(od, backup_out)
                             copied_sharded = True
-                        except Exception: pass
-                    elif os.path.exists(shard_out):
-                        try:
-                            shutil.copytree(shard_out, backup_out, dirs_exist_ok=True)
-                            copied_sharded = True
-                        except Exception: pass
                         
             if not copied_sharded:
                 site_model_dir = os.path.join(UDMI_ROOT, "sites/udmi_site_model")
@@ -136,8 +170,8 @@ def evaluate_single_directory(bundles_path, target, output_dir, analyzer):
                         os.makedirs(backup_out, exist_ok=True)
                         for od in sorted(out_dirs):
                             if os.path.isdir(od):
-                                try: shutil.copytree(od, backup_out, dirs_exist_ok=True)
-                                except Exception: pass
+                                smart_copy_sequence_logs(od, backup_out)
+                                copied_sharded = True
 
             # Copy global UDMIS and Pubber logs
             global_log_dirs = [os.path.join(UDMI_ROOT, "out")] + glob.glob(os.path.join(UDMI_ROOT, "out_*"))

@@ -240,6 +240,8 @@ def discover_device_id(run_dir, test_id=None):
     """Discovers the device under test from the run directory."""
     devices_dir = os.path.join(run_dir, "out", "devices")
     if not os.path.exists(devices_dir):
+        devices_dir = os.path.join(run_dir, "devices")
+    if not os.path.exists(devices_dir):
         return "AHU-1"
         
     if test_id:
@@ -416,8 +418,12 @@ def main():
         
         device_id = discover_device_id(run_dir, test_id)
         
-        local_seq_log = os.path.join(run_dir, f"out/devices/{device_id}/tests/{test_id}/sequence.log")
-        local_seq_md = os.path.join(run_dir, f"out/devices/{device_id}/tests/{test_id}/sequence.md")
+        devices_path = os.path.join(run_dir, "out", "devices")
+        if not os.path.exists(devices_path):
+            devices_path = os.path.join(run_dir, "devices")
+            
+        local_seq_log = os.path.join(devices_path, f"{device_id}/tests/{test_id}/sequence.log")
+        local_seq_md = os.path.join(devices_path, f"{device_id}/tests/{test_id}/sequence.md")
         
         # Global log sources
         pubber_log_path = os.path.join(run_dir, "pubber.log")
