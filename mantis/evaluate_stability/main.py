@@ -14,100 +14,163 @@ MANTIS_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 UDMI_ROOT = os.path.dirname(MANTIS_DIR)
 
 # Import from local package
-from .analyzer import RunAnalyzer
+from .analyzer import RunAnalyzer, TestResult
 from .reporter import MantisReporter
 
-def find_failing_shard_for_test(test_name, suite):
-    """Scans all sharded out folders to find which shard actually executed and failed the test."""
-    sharded_out_dirs = glob.glob(os.path.join(UDMI_ROOT, "out_*"))
-    for sod in sorted(sharded_out_dirs):
-        suffix = os.path.basename(sod).replace("out_", "")
-        
-        file_name = "test_itemized.out" if suite == 'itemized' else "sequencer.out.combined"
-        out_path = os.path.join(sod, file_name)
-        
-        if os.path.exists(out_path):
-            with open(out_path, 'r') as f:
-                for line in f:
-                    if test_name in line:
-                        tokens = line.split()
-                        if tokens and tokens[0].isdigit():
-                            tokens = tokens[1:]
-                        if len(tokens) > 1 and tokens[0] in ["RESULT", "CPBLTY"] and tokens[1] == "fail":
-                            return suffix
-                            
-    # Fallback to first shard that executed the test
-    for sod in sorted(sharded_out_dirs):
-        suffix = os.path.basename(sod).replace("out_", "")
-        file_name = "test_itemized.out" if suite == 'itemized' else "sequencer.out.combined"
-        out_path = os.path.join(sod, file_name)
-        if os.path.exists(out_path):
-            with open(out_path, 'r') as f:
-                for line in f:
-                    if test_name in line:
-                        return suffix
-                        
-    return ""
+def discover_active_site_name(UDMI_ROOT):
+    """Helper to dynamically discover the active site model folder name under sites/."""
+    try:
+        sites_dir = os.path.join(UDMI_ROOT, "sites")
+        if os.path.exists(sites_dir):
+            dirs = [d for d in os.listdir(sites_dir) if d != "udmi_site_model" and os.path.isdir(os.path.join(sites_dir, d))]
+            if dirs:
+                return dirs[0]
+    except Exception:
+        pass
+    return "udmi_site_model"
 
-def resolve_triage_logs_for_test(test_name, suite, shard_suffix):
-    """Resolves the exact sharded log files (sequence_log, pubber_log, udmis_log) for a test case."""
-    shard_out = f"out_{shard_suffix}"
-    shard_site = f"sites/udmi_site_model_{shard_suffix}"
-    
-    seq_log = ""
-    pubber_log = ""
-    udmis_log = ""
-    
-    # 1. Resolve udmis log
-    for name in ["udmis.log.combined", "udmis.log", "registrar.log"]:
-        path = os.path.join(shard_out, name)
-        if os.path.exists(os.path.join(UDMI_ROOT, path)):
-            udmis_log = path
-            break
-            
-    if suite == 'itemized':
-        # Find prefix index token from test_itemized.out (e.g. 24)
-        itemized_out_path = os.path.join(UDMI_ROOT, shard_out, "test_itemized.out")
-        prefix = ""
-        if os.path.exists(itemized_out_path):
-            with open(itemized_out_path, 'r') as f:
-                for line in f:
-                    tokens = line.split()
-                    if tokens and tokens[0].isdigit():
-                        # Standard: <prefix> RESULT <outcome> <category> <test_name> ...
-                        if len(tokens) > 4 and tokens[4] == test_name:
-                            prefix = tokens[0]
-                            break
-                            
-        if prefix:
-            path_seq = os.path.join(shard_out, f"sequencer.log-{prefix}")
-            if os.path.exists(os.path.join(UDMI_ROOT, path_seq)):
-                seq_log = path_seq
-            path_pub = os.path.join(shard_out, f"pubber.log-{prefix}")
-            if os.path.exists(os.path.join(UDMI_ROOT, path_pub)):
-                pubber_log = path_pub
-                
-    if not seq_log:
-        # Fallback for sequencer tests or if prefix resolver fails: find sequence.log under sites/udmi_site_model_<shard>/out-seq/devices/<device>/tests/<test_name>/sequence.log
-        device_id = "AHU-1"
-        site_path = os.path.join(UDMI_ROOT, shard_site)
-        dev_glob = glob.glob(os.path.join(site_path, "out*/devices/*"))
-        if dev_glob:
-            device_id = os.path.basename(dev_glob[0])
-            
-        seq_glob = glob.glob(os.path.join(site_path, f"out*/devices/{device_id}/tests/{test_name}/sequence.log"))
-        if seq_glob:
-            seq_log = os.path.relpath(seq_glob[0], UDMI_ROOT)
-            
-    if not pubber_log:
-        # Fallback for pubber log (global shard pubber log)
+def resolve_sharded_itemized_logs(test_name, occurrence_idx, UDMI_ROOT, device_id=None):
+    """Reads the consolidated test_itemized.out, extracts the prefix token for the failed occurrence,
+    and resolves the exact sharded log files. Automatically falls back to singular non-sharded resolution."""
+    itemized_out = os.path.join(UDMI_ROOT, "out/test_itemized.out")
+    if not os.path.exists(itemized_out):
+        return "", "", ""
+        
+    prefix = ""
+    curr_idx = 0
+    with open(itemized_out, 'r') as f:
+        for line in f:
+            tokens = line.split()
+            if tokens and tokens[0].isdigit():
+                # Prefix format: e.g. 24
+                # Line format: <prefix> RESULT <outcome> <category> <test_name> ...
+                if len(tokens) > 4 and tokens[4] == test_name:
+                    if curr_idx == occurrence_idx:
+                        prefix = tokens[0]
+                        break
+                    curr_idx += 1
+                    
+    # If no sharded directories exist (single run mode) or prefix resolution failed
+    sharded_out_dirs = glob.glob(os.path.join(UDMI_ROOT, "out_*"))
+    dev_pattern = device_id if device_id else "*"
+    if not sharded_out_dirs or not prefix:
+        # Single-run fallback: resolve logs directly from global out/ and sites/<active_site_name>/
+        active_site = discover_active_site_name(UDMI_ROOT)
+        site_path = os.path.join(UDMI_ROOT, "sites", active_site)
+        
+        # Search recursively across all device folders for the sequence log without needing upfront device ID discovery
+        seq_glob = glob.glob(os.path.join(site_path, f"**/devices/{dev_pattern}/tests/{test_name}/sequence*.log"), recursive=True)
+        seq_log = os.path.relpath(seq_glob[0], UDMI_ROOT) if seq_glob else ""
+        
+        pub_log = ""
         for name in ["pubber.log.combined", "pubber.log"]:
-            path = os.path.join(shard_out, name)
-            if os.path.exists(os.path.join(UDMI_ROOT, path)):
-                pubber_log = path
+            p = os.path.join(UDMI_ROOT, "out", name)
+            if os.path.exists(p):
+                pub_log = os.path.relpath(p, UDMI_ROOT)
                 break
                 
-    return seq_log, pubber_log, udmis_log
+        udm_log = ""
+        for name in ["udmis.log.combined", "udmis.log"]:
+            p = os.path.join(UDMI_ROOT, "out", name)
+            if os.path.exists(p):
+                udm_log = os.path.relpath(p, UDMI_ROOT)
+                break
+                
+        return seq_log, pub_log, udm_log
+        
+    # Sharded resolution
+    for sod in sorted(sharded_out_dirs):
+        suffix = os.path.basename(sod).replace("out_", "")
+        path_seq = os.path.join(sod, f"sequencer.log-{prefix}")
+        if os.path.exists(os.path.join(UDMI_ROOT, path_seq)):
+            active_site = discover_active_site_name(UDMI_ROOT)
+            shard_site = f"sites/udmi_site_model_{suffix}"
+            if not os.path.exists(os.path.join(UDMI_ROOT, shard_site)):
+                shard_site = f"sites/{active_site}_{suffix}"
+            if not os.path.exists(os.path.join(UDMI_ROOT, shard_site)):
+                shard_site = f"sites/{active_site}"
+                
+            site_path = os.path.join(UDMI_ROOT, shard_site)
+            # Search recursively across all device folders for sequence log
+            seq_glob = glob.glob(os.path.join(site_path, f"**/devices/{dev_pattern}/tests/{test_name}/sequence*.log"), recursive=True)
+            site_seq_log = ""
+            if seq_glob:
+                site_seq_log = os.path.relpath(seq_glob[0], UDMI_ROOT)
+                
+            pub_log = os.path.join(sod, f"pubber.log-{prefix}")
+            if not os.path.exists(os.path.join(UDMI_ROOT, pub_log)):
+                pub_log = os.path.join(sod, "pubber.log")
+                
+            udm_log = ""
+            for name in ["udmis.log.combined", "udmis.log"]:
+                p = os.path.join(sod, name)
+                if os.path.exists(os.path.join(UDMI_ROOT, p)):
+                    udm_log = p
+                    break
+                    
+            resolved_seq = site_seq_log if site_seq_log else os.path.relpath(path_seq, UDMI_ROOT)
+            return resolved_seq, os.path.relpath(pub_log, UDMI_ROOT) if os.path.exists(os.path.join(UDMI_ROOT, pub_log)) else "", os.path.relpath(udm_log, UDMI_ROOT) if udm_log else ""
+            
+    return "", "", ""
+
+def resolve_sharded_sequencer_logs(test_name, UDMI_ROOT, device_id=None):
+    """Finds which sites/udmi_site_model_<shard> contains the sequence.log that failed for normal sequencer tests."""
+    sharded_site_dirs = glob.glob(os.path.join(UDMI_ROOT, "sites", "udmi_site_model_*"))
+    active_site = discover_active_site_name(UDMI_ROOT)
+    dev_pattern = device_id if device_id else "*"
+    
+    if not sharded_site_dirs:
+        # Single-run fallback: resolve directly from global sites/<active_site>/
+        site_path = os.path.join(UDMI_ROOT, "sites", active_site)
+        seq_glob = glob.glob(os.path.join(site_path, f"**/devices/{dev_pattern}/tests/{test_name}/sequence*.log"), recursive=True)
+        seq_log = os.path.relpath(seq_glob[0], UDMI_ROOT) if seq_glob else ""
+        
+        pub_log = ""
+        for name in ["pubber.log.combined", "pubber.log"]:
+            p = os.path.join(UDMI_ROOT, "out", name)
+            if os.path.exists(p):
+                pub_log = os.path.relpath(p, UDMI_ROOT)
+                break
+                
+        udm_log = ""
+        for name in ["udmis.log.combined", "udmis.log"]:
+            p = os.path.join(UDMI_ROOT, "out", name)
+            if os.path.exists(p):
+                udm_log = os.path.relpath(p, UDMI_ROOT)
+                break
+                
+        return seq_log, pub_log, udm_log
+        
+    # Sharded resolution
+    for ssd in sorted(sharded_site_dirs):
+        suffix = os.path.basename(ssd).replace("udmi_site_model_", "")
+        seq_glob = glob.glob(os.path.join(ssd, f"**/devices/{dev_pattern}/tests/{test_name}/sequence*.log"), recursive=True)
+        if seq_glob:
+            seq_log = seq_glob[0]
+            try:
+                with open(seq_log, 'r', encoding='utf-8', errors='replace') as f:
+                    content = f.read()
+                if "RESULT fail" in content or "Failed waiting" in content:
+                    shard_out = f"out_{suffix}"
+                    pub_log = ""
+                    for name in ["pubber.log.combined", "pubber.log"]:
+                        p = os.path.join(UDMI_ROOT, shard_out, name)
+                        if os.path.exists(p):
+                            pub_log = os.path.relpath(p, UDMI_ROOT)
+                            break
+                            
+                    udm_log = ""
+                    for name in ["udmis.log.combined", "udmis.log"]:
+                        p = os.path.join(UDMI_ROOT, shard_out, name)
+                        if os.path.exists(p):
+                            udm_log = os.path.relpath(p, UDMI_ROOT)
+                            break
+                            
+                    return os.path.relpath(seq_log, UDMI_ROOT), pub_log, udm_log
+            except Exception:
+                pass
+                
+    return "", "", ""
 
 
 def run_command(args, cwd=UDMI_ROOT):
@@ -283,67 +346,104 @@ def evaluate_single_directory(bundles_path, target, output_dir, analyzer):
                 except Exception as err:
                     print(f"Warning: failed to copy sharded out folder {sod}: {err}", file=sys.stderr)
                     
-            # 3. Copy global out/ and sites/udmi_site_model/
-            src_global_site = os.path.join(UDMI_ROOT, "sites/udmi_site_model")
+            # 3. Copy global out/ and discovered active site model folder
+            active_site_name = discover_active_site_name(UDMI_ROOT)
+            src_global_site = os.path.join(UDMI_ROOT, "sites", active_site_name)
             if os.path.exists(src_global_site):
                 try:
-                    shutil.copytree(src_global_site, os.path.join(run_backup_dir, "sites/udmi_site_model"), dirs_exist_ok=True)
+                    shutil.copytree(src_global_site, os.path.join(run_backup_dir, "sites", active_site_name), dirs_exist_ok=True)
                 except Exception:
                     pass
-                    
             src_global_out = os.path.join(UDMI_ROOT, "out")
             if os.path.exists(src_global_out):
                 try:
                     shutil.copytree(src_global_out, os.path.join(run_backup_dir, "out"), dirs_exist_ok=True)
                 except Exception:
                     pass
-
-            # Parse and analyze outputs first to discover failed tests
-            analysis = analyzer.analyze_run(
-                sequencer_out_path=seq_out if os.path.exists(seq_out) else None,
-                itemized_out_path=item_out if os.path.exists(item_out) else None
-            )
+            print("Compiling and analyzing results directly from device sequence logs...")
+            active_site = discover_active_site_name(UDMI_ROOT)
+            site_run_path = os.path.join(run_backup_dir, "sites", active_site)
+            print(f"Debug active_site: {active_site}")
+            print(f"Debug site_run_path: {site_run_path} (exists: {os.path.exists(site_run_path)})")
             
-            # Resolve device ID dynamically
-            device_id = "AHU-1"
-            for ssd in sorted(sharded_site_dirs):
-                dev_glob = glob.glob(os.path.join(ssd, "out*/devices/*"))
-                if dev_glob:
-                    device_id = os.path.basename(dev_glob[0])
-                    break
+            raw_results = []
+            log_files = glob.glob(os.path.join(site_run_path, "**/sequence*.log"), recursive=True)
+            print(f"Debug log_files count: {len(log_files)}")
+            
+            for lf in log_files:
+                try:
+                    # Dynamically resolve device_id from filepath
+                    device_id = "AHU-1"
+                    parts = lf.split("devices/")
+                    if len(parts) > 1:
+                        device_id = parts[1].split("/")[0]
+                        
+                    with open(lf, 'r', encoding='utf-8', errors='replace') as f:
+                        lines = f.readlines()
+                        # Search last 5 lines backwards to locate the RESULT/CPBLTY assertion outcome
+                        for line in reversed(lines[-5:]):
+                            if "RESULT" in line or "CPBLTY" in line:
+                                m = re.search(r'(RESULT|CPBLTY)\s+.*', line)
+                                if m:
+                                    # Detect suite type dynamically by checking golden expected baseline maps
+                                    tokens = m.group(0).split()
+                                    if tokens and tokens[0].isdigit():
+                                        tokens = tokens[1:]
+                                    test_name = tokens[3] if len(tokens) > 3 else ""
+                                    
+                                    is_itemized = test_name in analyzer.itemized_baseline.expected
+                                    res = TestResult(m.group(0), device_id=device_id, is_itemized=is_itemized)
+                                    raw_results.append(res)
+                                    break
+                except Exception as err:
+                    print(f"Warning: failed to parse log {lf}: {err}", file=sys.stderr)
                     
+            # Separate results by suite to map against their respective baseline occurrences
+            item_results = [r for r in raw_results if r.test_name in analyzer.itemized_baseline.expected]
+            seq_results = [r for r in raw_results if r.test_name not in analyzer.itemized_baseline.expected]
+            print(f"Debug raw_results count: {len(raw_results)}")
+            print(f"Debug item_results count: {len(item_results)}")
+            print(f"Debug seq_results count: {len(seq_results)}")
+            
+            analysis = {}
+            analysis.update(analyzer.analyze_results(seq_results, test_suite='sequencer'))
+            analysis.update(analyzer.analyze_results(item_results, test_suite='itemized'))
+            print(f"Debug analysis count: {len(analysis)}")
+            
             # 4. Map failed test cases to their exact sharded log sources
             if analysis:
                 for ukey, val in analysis.items():
                     if val['outcome'] == 'fail':
                         test_name = val['test_name']
                         suite_type = val['test_suite']
+                        occurrence_idx = val['occurrence']
                         
-                        suffix = find_failing_shard_for_test(test_name, suite_type)
-                        if suffix:
-                            seq_log, pub_log, udm_log = resolve_triage_logs_for_test(test_name, suite_type, suffix)
-                            if seq_log:
-                                # Construct rich metadata pointing to precise sharded log paths
-                                triage_metadata[test_name] = {
-                                    "sequence_log": seq_log,
-                                    "sequence_md": seq_log.replace(".log", ".md") if "out-seq" in seq_log else "",
-                                    "udmis_log": udm_log,
-                                    "pubber_log": pub_log
-                                }
-                                print(f"Successfully resolved and sharded logs for test '{test_name}':")
-                                print(f"  ├─ sequence_log: {seq_log}")
-                                print(f"  ├─ pubber_log: {pub_log}")
-                                print(f"  └─ udmis_log: {udm_log}")
+                        device_id = val.get('device_id', '')
+                        seq_log, pub_log, udm_log = "", "", ""
+                        if suite_type == 'itemized':
+                            seq_log, pub_log, udm_log = resolve_sharded_itemized_logs(test_name, occurrence_idx, UDMI_ROOT, device_id=device_id)
+                        else:
+                            seq_log, pub_log, udm_log = resolve_sharded_sequencer_logs(test_name, UDMI_ROOT, device_id=device_id)
+                            
+                        if seq_log:
+                            if test_name not in triage_metadata:
+                                triage_metadata[test_name] = []
+                                
+                            triage_metadata[test_name].append({
+                                "sequence_log": seq_log,
+                                "sequence_md": seq_log.replace(".log", ".md") if os.path.exists(os.path.join(UDMI_ROOT, seq_log.replace(".log", ".md"))) else "",
+                                "udmis_log": udm_log,
+                                "pubber_log": pub_log
+                            })
+                            print(f"Successfully resolved and sharded logs for test '{test_name}' (occurrence index {occurrence_idx}):")
+                            print(f"  ├─ sequence_log: {seq_log}")
+                            print(f"  ├─ pubber_log: {pub_log}")
+                            print(f"  └─ udmis_log: {udm_log}")
 
             triage_metadata_path = os.path.join(run_backup_dir, "triage_metadata.json")
             with open(triage_metadata_path, 'w', encoding='utf-8') as fm:
                 json.dump(triage_metadata, fm, indent=2)
-
-            # Parse and analyze outputs
-            analysis = analyzer.analyze_run(
-                sequencer_out_path=seq_out if os.path.exists(seq_out) else None,
-                itemized_out_path=item_out if os.path.exists(item_out) else None
-            )
+                
             if analysis:
                 run_analyses.append(analysis)
                 

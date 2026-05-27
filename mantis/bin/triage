@@ -13,6 +13,7 @@ cd $UDMI_ROOT
 
 # Initialize defaults
 TEST_CASE=""
+DEVICE_ID=""
 BUNDLE_PATH=""
 
 # Parse arguments
@@ -20,6 +21,10 @@ while [[ $# -gt 0 ]]; do
     case $1 in
         -t|--test)
             TEST_CASE="$2"
+            shift 2
+            ;;
+        -d|--device)
+            DEVICE_ID="$2"
             shift 2
             ;;
         *)
@@ -37,7 +42,7 @@ done
 # Check required positional argument
 if [[ -z $BUNDLE_PATH ]]; then
     echo "Error: No bundle path or directory supplied." >&2
-    echo "Usage: bin/triage <bundle_zip_tgz_or_directory> [-t|--test <test_case_name>]" >&2
+    echo "Usage: bin/triage <bundle_zip_tgz_or_directory> [-t|--test <test_case_name>] [-d|--device <device_id>]" >&2
     exit 1
 fi
 
@@ -69,12 +74,15 @@ else
     clean_name="${filename%.*}"
     clean_name="${clean_name%.tar}" # strip double extensions like .tar.gz
     
-    timestamp=$(date +"%Y%m%d_%H%M%S")
-    TARGET_DIR="$MANTIS_DIR/out/test_bundles/${clean_name}_$timestamp"
+    TARGET_DIR="$MANTIS_DIR/out/test_bundles/${clean_name}"
     
-    echo "Creating workspace directory: $TARGET_DIR"
-    mkdir -p "$TARGET_DIR"
-    cp "$INPUT_PATH" "$TARGET_DIR/"
+    if [[ ! -d $TARGET_DIR ]]; then
+        echo "Creating workspace directory: $TARGET_DIR"
+        mkdir -p "$TARGET_DIR"
+        cp "$INPUT_PATH" "$TARGET_DIR/"
+    else
+        echo "Using cached workspace directory: $TARGET_DIR"
+    fi
 fi
 
 # Guarantee execution permissions on components
@@ -96,6 +104,9 @@ echo "============================================================="
 diagnose_args=("-i" "$TARGET_DIR")
 if [[ -n $TEST_CASE ]]; then
     diagnose_args+=("-t" "$TEST_CASE")
+fi
+if [[ -n $DEVICE_ID ]]; then
+    diagnose_args+=("-d" "$DEVICE_ID")
 fi
 
 python3 -m mantis.diagnose.main "${diagnose_args[@]}"

@@ -5,6 +5,25 @@
 # the Python diagnose module.
 #
 
+GREEN='\033[0;32m'
+LIGHT_GREEN='\033[1;32m'
+NC='\033[0m' # No Color
+
+# Print the startup banner
+echo -e "${LIGHT_GREEN}"
+cat << "EOF"
+  __  __             _   _     
+ |  \/  | __ _ _ __ | |_(_)___ 
+ | |\/| |/ _` | '_ \| __| / __|
+ | |  | | (_| | | | | |_| \__ \
+ |_|  |_|\__,_|_| |_|\__|_|___/
+                               
+EOF
+echo -e "${GREEN}  v1.0.0 | Predator of bugs${NC}\n"
+
+# Your CLI tool logic starts here
+echo "Initializing mantis..."
+
 # Resolve parent directory structure
 MANTIS_BIN=$(dirname $0)
 MANTIS_DIR=$(realpath $MANTIS_BIN/..)

@@ -108,7 +108,7 @@ def slice_log_by_timebounds(filepath, start_dt, end_dt, padding_seconds=5):
     return sliced_entries
 
 def read_filtered_sequence_log(filepath, max_chars=150000):
-    """Reads a sequence log, filtering out noisy TRACE level lines and suppressed exceptions to save context and API quota."""
+    """Reads a sequence log, filtering out noisy TRACE level lines to save context and API quota."""
     if not os.path.exists(filepath):
         return ""
     try:
@@ -315,145 +315,175 @@ def scan_failures_from_metrics(clean_target, output_dir=None):
     return failures
 
 def main():
+    clean_target = ""
     parser = argparse.ArgumentParser(
         description="Mantis Triage Agent (Diagnose) - AI-Powered Diagnostics"
     )
     parser.add_argument("--bundles-dir", "-i", dest="bundles_dir", help="Input bundles directory containing run backups (single or multi-run)")
     parser.add_argument("--run-dir", help=argparse.SUPPRESS)  # Hidden legacy alias for compatibility
-    parser.add_argument("--test", "-t", help="Specific test case to triage (sweeps all failures if omitted)")
+    parser.add_argument("--test", "-t", nargs="+", help="Specific test case(s) to triage (sweeps all failures if omitted)")
+    parser.add_argument("--device", "-d", nargs="+", help="Specific device ID(s) to triage")
+    parser.add_argument("--sequence-log", "-sl", help="Direct path to sequencer test log file (sequence.log / sequencer.log)")
+    parser.add_argument("--device-log", "-dl", help="Direct path to device/pubber log file")
+    parser.add_argument("--udmis-log", "-ul", help="Direct path to UDMIS log file")
+    parser.add_argument("--success-log", "-scl", help="Direct path to previous successful sequencer log file")
     parser.add_argument("--target", help="Target project (default: auto-detected from bundles-dir)")
     parser.add_argument("--site-dir", help="Path to site model folder (default: auto-detected)")
     
     args = parser.parse_args()
     
     bundles_dir_arg = args.bundles_dir if args.bundles_dir is not None else args.run_dir
-    if not bundles_dir_arg:
+    if not args.sequence_log and not bundles_dir_arg:
         parser.print_help()
         sys.exit(1)
         
-    bundles_path = os.path.abspath(bundles_dir_arg)
-    if not os.path.exists(bundles_path):
-        print(f"Error: Specified bundles directory '{bundles_dir_arg}' does not exist.", file=sys.stderr)
-        sys.exit(1)
+    if args.sequence_log:
+        print(f"Direct log diagnostic mode active. Ingesting direct log sources...")
+        local_seq_log = os.path.abspath(args.sequence_log)
+        local_seq_md = local_seq_log.replace(".log", ".md") if os.path.exists(local_seq_log.replace(".log", ".md")) else ""
+        pubber_log_path = os.path.abspath(args.device_log) if args.device_log else ""
+        udmis_log_path = os.path.abspath(args.udmis_log) if args.udmis_log else ""
+        success_seq_log = os.path.abspath(args.success_log) if args.success_log else ""
         
-    # Auto-detect target and site-dir if omitted
-    detected_target, detected_site_dir = auto_detect_metadata(bundles_path)
-    target = args.target if args.target is not None else detected_target
-    site_dir = args.site_dir if args.site_dir is not None else detected_site_dir
-    
-    clean_target = target.replace("/", "_").replace("+", "_").strip("_")
-    site_id = os.path.basename(site_dir)
-    
-    # Determine if we have a single run or multi-run folder structure
-    run_subdirs = sorted(glob.glob(os.path.join(bundles_path, "run_*")))
-    
-    # List of (run_dir_path, failed_test_dict)
-    runs_to_triage = []
-    
-    if run_subdirs:
-        print(f"Multi-run directory mode: scanning {len(run_subdirs)} runs for failures...")
-        unique_failed_tests = {}
-        
-        # 1. Try to read actual regressions from stability metrics first!
-        metrics_failures = []
-        if not args.test:
-            metrics_failures = scan_failures_from_metrics(clean_target)
+        # Resolve test name dynamically
+        test_id = args.test[0] if args.test else ""
+        if not test_id:
+            m = re.search(r'tests/([^/]+)/', local_seq_log)
+            test_id = m.group(1) if m else "unknown_test"
             
-        if metrics_failures:
-            print(f"Found {len(metrics_failures)} regression failures from stability metrics.")
-            for f in metrics_failures:
-                test_id = f['test_name']
-                # Locate the first run directory where this test case actually produced a raw failure
-                for run_subdir in run_subdirs:
-                    failures = []
-                    failures.extend(scan_failures_from_out(os.path.join(run_subdir, "sequencer.out")))
-                    failures.extend(scan_failures_from_out(os.path.join(run_subdir, "test_itemized.out")))
-                    if any(x['test_name'] == test_id for x in failures):
-                        unique_failed_tests[test_id] = {
-                            'failure': f,
-                            'run_dir': run_subdir
-                        }
-                        break
-        else:
-            # Fallback to standard raw failures sweep across all run outs
-            for run_subdir in run_subdirs:
-                failures = []
-                failures.extend(scan_failures_from_out(os.path.join(run_subdir, "sequencer.out")))
-                failures.extend(scan_failures_from_out(os.path.join(run_subdir, "test_itemized.out")))
-                
-                for f in failures:
-                    test_id = f['test_name']
-                    if args.test and test_id != args.test:
-                        continue
-                    if test_id not in unique_failed_tests:
-                        unique_failed_tests[test_id] = {
-                            'failure': f,
-                            'run_dir': run_subdir
-                        }
-                        
-        if args.test and args.test not in unique_failed_tests:
-            # If specific test forced but not swept, triage in run_1
-            unique_failed_tests[args.test] = {
-                'failure': {'test_name': args.test, 'category': 'unknown', 'suite': 'both'},
-                'run_dir': run_subdirs[0]
+        # Resolve site_id and clean_target dynamically from filepath
+        site_id = "bos-platform-staging"
+        m = re.search(r'sites/([^/]+)/', local_seq_log)
+        if m:
+            site_id = m.group(1)
+        clean_target = site_id
+        target = clean_target
+            
+        runs_to_triage = [(
+            os.path.dirname(local_seq_log),
+            {'test_name': test_id, 'category': 'unknown', 'suite': 'both'},
+            {
+                'sequence_log': local_seq_log,
+                'sequence_md': local_seq_md,
+                'pubber_log': pubber_log_path,
+                'udmis_log': udmis_log_path,
+                'success_log': success_seq_log
             }
-            
-        for test_id, info in unique_failed_tests.items():
-            runs_to_triage.append((info['run_dir'], info['failure']))
-            
+        )]
     else:
-        print("Single run directory mode active.")
-        failures = []
-        if args.test:
-            failures.append({'test_name': args.test, 'category': 'unknown', 'suite': 'both'})
+        bundles_path = os.path.abspath(bundles_dir_arg)
+        if not os.path.exists(bundles_path):
+            print(f"Error: Specified bundles directory '{bundles_dir_arg}' does not exist.", file=sys.stderr)
+            sys.exit(1)
+            
+        # Auto-detect target and site-dir if omitted
+        detected_target, detected_site_dir = auto_detect_metadata(bundles_path)
+        target = args.target if args.target is not None else detected_target
+        site_dir = args.site_dir if args.site_dir is not None else detected_site_dir
+        
+        clean_target = target.replace("/", "_").replace("+", "_").strip("_")
+        site_id = os.path.basename(site_dir)
+        
+        # Determine if we have a single run or multi-run folder structure
+        run_subdirs = sorted(glob.glob(os.path.join(bundles_path, "run_*")))
+        
+        # Compile list of sharded failure occurrences to triage
+        runs_to_triage = []
+        all_raw_runs = []
+        
+        if run_subdirs:
+            print(f"Multi-run directory mode: scanning {len(run_subdirs)} runs for failures...")
+            for rsd in run_subdirs:
+                run_failures = scan_failures_from_metrics(clean_target, output_dir=rsd)
+                if not run_failures:
+                    run_failures = scan_failures_from_metrics(clean_target, output_dir=os.path.join(rsd, "out"))
+                for f in run_failures:
+                    all_raw_runs.append((rsd, f))
         else:
-            # 1. Try metrics first
+            print("Single run directory mode: scanning for failures...")
+            failures = []
+            clean_target = target.replace("/", "_").replace("+", "_").strip("_")
             metrics_failures = scan_failures_from_metrics(clean_target)
+            
             if metrics_failures:
-                print(f"Found {len(metrics_failures)} regression failures from stability metrics.")
                 failures.extend(metrics_failures)
             else:
-                # Fallback to raw sweep
                 failures.extend(scan_failures_from_out(os.path.join(bundles_path, "sequencer.out")))
                 failures.extend(scan_failures_from_out(os.path.join(bundles_path, "test_itemized.out")))
                 
-                seen = set()
-                unique_failures = []
-                for f in failures:
-                    if f['test_name'] not in seen:
-                        seen.add(f['test_name'])
-                        unique_failures.append(f)
-                failures = unique_failures
+            seen = set()
+            unique_failures = []
+            for f in failures:
+                if f['test_name'] not in seen:
+                    seen.add(f['test_name'])
+                    unique_failures.append(f)
+            for f in unique_failures:
+                all_raw_runs.append((bundles_path, f))
                 
-        for f in failures:
-            runs_to_triage.append((bundles_path, f))
-            
+        # If specific test(s) requested by CLI, filter them
+        if args.test:
+            all_raw_runs = [x for x in all_raw_runs if x[1]['test_name'] in args.test]
+            if not all_raw_runs:
+                for t in args.test:
+                    all_raw_runs.append((run_subdirs[0] if run_subdirs else bundles_path, {'test_name': t, 'category': 'unknown', 'suite': 'both'}))
+                    
+        # Resolve sharded occurrences using triage_metadata.json lists
+        for run_subdir, f in all_raw_runs:
+            test_id = f['test_name']
+            triage_metadata = {}
+            metadata_path = os.path.join(run_subdir, "triage_metadata.json")
+            if os.path.exists(metadata_path):
+                try:
+                    with open(metadata_path, 'r', encoding='utf-8') as fm:
+                        triage_metadata = json.load(fm)
+                except Exception:
+                    pass
+                    
+            test_meta_list = triage_metadata.get(test_id, [])
+            if isinstance(test_meta_list, list) and len(test_meta_list) > 0:
+                for meta in test_meta_list:
+                    runs_to_triage.append((run_subdir, f, meta))
+            else:
+                if isinstance(test_meta_list, dict) and "sequence_log" in test_meta_list:
+                    runs_to_triage.append((run_subdir, f, test_meta_list))
+                else:
+                    runs_to_triage.append((run_subdir, f, None))
+                    
+        # If specific device(s) requested by CLI, filter the compiled runs
+        if args.device:
+            filtered = []
+            for run_subdir, f, meta in runs_to_triage:
+                dev_id = ""
+                if meta and "sequence_log" in meta:
+                    parts = meta["sequence_log"].split("devices/")
+                    if len(parts) > 1:
+                        dev_id = parts[1].split("/")[0]
+                if not dev_id:
+                    dev_id = discover_device_id(run_subdir, f['test_name'])
+                    
+                if dev_id in args.device:
+                    filtered.append((run_subdir, f, meta))
+            runs_to_triage = filtered
+
     if not runs_to_triage:
         print("🎉 No regression or failing test cases detected in run outputs. Diagnostics complete!")
         sys.exit(0)
         
-    print(f"Found {len(runs_to_triage)} test case failures to triage: {', '.join(item[1]['test_name'] for item in runs_to_triage)}")
+    # Printable list of unique failures
+    failure_names = []
+    for item in runs_to_triage:
+        log_name = os.path.basename(item[2].get('sequence_log')) if (item[2] and item[2].get('sequence_log')) else 'Legacy'
+        failure_names.append(f"{item[1]['test_name']} ({log_name})")
+    print(f"Found {len(runs_to_triage)} sharded test case failure occurrences to triage: {', '.join(failure_names)}")
     
     triage_summaries = []
     
     # 2. Triage each failure
-    for idx, (run_dir, f) in enumerate(runs_to_triage, start=1):
+    for idx, (run_dir, f, test_meta) in enumerate(runs_to_triage, start=1):
         test_id = f['test_name']
         print(f"\n--- Triaging Failure {idx} of {len(runs_to_triage)}: {test_id} (in {os.path.basename(run_dir)}) ---")
         
         device_id = discover_device_id(run_dir, test_id)
-        
-        # 3. Load triage metadata registry to resolve sharded logs accurately
-        triage_metadata = {}
-        metadata_path = os.path.join(run_dir, "triage_metadata.json")
-        if os.path.exists(metadata_path):
-            try:
-                with open(metadata_path, 'r', encoding='utf-8') as fm:
-                    triage_metadata = json.load(fm)
-            except Exception:
-                pass
-                
-        test_meta = triage_metadata.get(test_id, {})
         
         # Initialize default paths
         devices_path = os.path.join(run_dir, "out", "devices")
@@ -468,12 +498,18 @@ def main():
 
         if isinstance(test_meta, dict) and "sequence_log" in test_meta:
             # Rich metadata resolution pointing to the exact sharded directories under run_dir
-            shard_suffix = test_meta.get("shard", "")
             local_seq_log = os.path.join(run_dir, test_meta["sequence_log"])
             local_seq_md = os.path.join(run_dir, test_meta["sequence_md"]) if test_meta.get("sequence_md") else ""
+            pub_meta = test_meta.get("pubber_log", "pubber.log")
+            pubber_log_path = os.path.join(run_dir, pub_meta) if pub_meta else ""
             
-            pubber_log_path = os.path.join(run_dir, test_meta.get("pubber_log", "pubber.log"))
-            udmis_log_path = os.path.join(run_dir, test_meta.get("udmis_log", "udmis.log"))
+            udm_meta = test_meta.get("udmis_log", "udmis.log")
+            udmis_log_path = os.path.join(run_dir, udm_meta) if udm_meta else ""
+            
+            # Try to resolve shard suffix from sequence log path (e.g. sites/udmi_site_model_5/... -> suffix is 5)
+            # Or out_5/sequencer.log-24 -> suffix is 5
+            m = re.search(r'(?:site_model_|out_)(\d+)[/_]', test_meta["sequence_log"])
+            shard_suffix = m.group(1) if m else ""
             print(f"Successfully resolved sharded logs for test '{test_id}' -> Shard Suffix: {shard_suffix}")
         else:
             # Legacy fallback
@@ -519,21 +555,30 @@ def main():
                 local_seq_md_content = fm.read()[:100000]
                 
         # Discover reference successful execution for differential triage
-        success_run_dir = find_successful_run_for_test(os.path.dirname(run_dir), test_id)
+        success_seq_log = test_meta.get("success_log", "") if isinstance(test_meta, dict) else ""
+        success_seq_md = success_seq_log.replace(".log", ".md") if (success_seq_log and os.path.exists(success_seq_log.replace(".log", ".md"))) else ""
+        
+        if not success_seq_log:
+            success_run_dir = find_successful_run_for_test(os.path.dirname(run_dir), test_id)
+            if success_run_dir:
+                success_seq_log = os.path.join(success_run_dir, f"out/devices/{device_id}/tests/{test_id}/sequence*.log")
+                # Resolve glob for sharded matching
+                s_glob = glob.glob(success_seq_log)
+                success_seq_log = s_glob[0] if s_glob else ""
+                success_seq_md = success_seq_log.replace(".log", ".md") if (success_seq_log and os.path.exists(success_seq_log.replace(".log", ".md"))) else ""
+                
         success_seq_log_content = ""
         success_seq_md_content = ""
         
-        if success_run_dir:
-            success_seq_log = os.path.join(success_run_dir, f"out/devices/{device_id}/tests/{test_id}/sequence.log")
-            success_seq_md = os.path.join(success_run_dir, f"out/devices/{device_id}/tests/{test_id}/sequence.md")
-            
+        if success_seq_log and os.path.exists(success_seq_log):
             success_seq_log_content = read_filtered_sequence_log(success_seq_log)
-            if os.path.exists(success_seq_md):
-                try:
-                    with open(success_seq_md, 'r', encoding='utf-8', errors='replace') as fsm:
-                        success_seq_md_content = fsm.read()[:100000]
-                except Exception:
-                    pass
+            
+        if success_seq_md and os.path.exists(success_seq_md):
+            try:
+                with open(success_seq_md, 'r', encoding='utf-8', errors='replace') as fsm:
+                    success_seq_md_content = fsm.read()[:100000]
+            except Exception:
+                pass
                     
         # 5. Compile prompt payload
         payload = []

@@ -5,8 +5,8 @@
 Mantis is structured into independent, highly modular package submodules following the Unix philosophy. Their folder names are **alphabetically arranged** to naturally communicate the execution stages:
 
 1. **`collect_stats` (Stage 1)** 🦗⚡: Triggers new workflow dispatches on GitHub Actions, pulls historical completed runs from a branch, or executes local sandbox loops, packaging outcomes into standard support packages.
-2. **`diagnose` (Stage 3)** 🦗👁️: An AI-powered diagnostic triage agent that correlating distributed log streams, mines git log histories, and searches codebases to isolate failing breakpoints.
-3. **`evaluate_stability` (Stage 2)** 🦗🔍: A pure log and metric analyzer that ingests captured support packages, compares raw results against Golden Baselines, and computes overall stabilization reports.
+2. **`evaluate_stability` (Stage 2)** 🦗🔍: A pure log and metric analyzer that ingests captured support packages, compares raw results against Golden Baselines, and computes overall stabilization reports.
+3. **`diagnose` (Stage 3)** 🦗👁️: An AI-powered diagnostic triage agent that correlating distributed log streams, mines git log histories, and searches codebases to isolate failing breakpoints.
 
 ---
 

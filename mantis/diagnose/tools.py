@@ -7,6 +7,11 @@ import sys
 MANTIS_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 UDMI_ROOT = os.path.dirname(MANTIS_DIR)
 
+# ANSI Terminal Font Color Constants
+COLOR_RESET = "\033[0m"
+COLOR_BLUE = "\033[34m"     # Inspect Tool (Blue)
+COLOR_BOLD = "\033[1m"
+
 # Allowed read-only git subcommands
 ALLOWED_GIT_COMMANDS = {"log", "show", "diff", "status", "branch"}
 
@@ -20,7 +25,7 @@ def grep_codebase(pattern: str) -> str:
     Returns:
         A string containing matched lines with their file paths and line numbers.
     """
-    print(f"[Inspect Tool] grep_codebase called with pattern: '{pattern}'")
+    print(f"{COLOR_BLUE}{COLOR_BOLD}[Inspect Tool]:{COLOR_RESET}\n{COLOR_BLUE}grep_codebase called with pattern: '{pattern}'{COLOR_RESET}")
     
     search_dirs = ["validator/src", "udmis/src", "pubber/src", "common/src"]
     results = []
@@ -73,7 +78,7 @@ def _read_single_file_helper(filepath: str, start_line: int, end_line: int) -> s
     max_lines = 300
     if (end_line - start_line + 1) > max_lines:
         end_line = start_line + max_lines - 1
-        print(f"[Inspect Tool] Warning: Truncating read request to max limit of {max_lines} lines.")
+        print(f"{COLOR_BLUE}{COLOR_BOLD}[Inspect Tool]:{COLOR_RESET}\n{COLOR_BLUE}Warning: Truncating read request to max limit of {max_lines} lines.{COLOR_RESET}")
 
     try:
         lines = []
@@ -104,7 +109,7 @@ def read_file_lines(filepath: str = None, start_line: int = 1, end_line: int = 1
         A combined text string representing all requested file lines.
     """
     if files_to_read:
-        print(f"[Inspect Tool] read_file_lines batch called for {len(files_to_read)} files.")
+        print(f"{COLOR_BLUE}{COLOR_BOLD}[Inspect Tool]:{COLOR_RESET}\n{COLOR_BLUE}read_file_lines batch called for {len(files_to_read)} files.{COLOR_RESET}")
         outputs = []
         for idx, item in enumerate(files_to_read, start=1):
             f_path = item.get("filepath")
@@ -116,7 +121,7 @@ def read_file_lines(filepath: str = None, start_line: int = 1, end_line: int = 1
         return "\n".join(outputs)[:25000]  # Protect context window size limit
         
     if filepath:
-        print(f"[Inspect Tool] read_file_lines called for '{filepath}' (lines {start_line}-{end_line})")
+        print(f"{COLOR_BLUE}{COLOR_BOLD}[Inspect Tool]:{COLOR_RESET}\n{COLOR_BLUE}read_file_lines called for '{filepath}' (lines {start_line}-{end_line}){COLOR_RESET}")
         return _read_single_file_helper(filepath, start_line, end_line)
         
     return "Error: No filepath or files_to_read parameter was supplied."
@@ -133,7 +138,7 @@ def git_read_operations(repo_path: str, command: str, args: list[str] = None) ->
     Returns:
         A string containing the standard output or error of the git command execution.
     """
-    print(f"[Inspect Tool] git_read_operations called inside '{repo_path}': git {command} {args or []}")
+    print(f"{COLOR_BLUE}{COLOR_BOLD}[Inspect Tool]:{COLOR_RESET}\n{COLOR_BLUE}git_read_operations called inside '{repo_path}': git {command} {args or []}{COLOR_RESET}")
     
     # Resolve target repo path
     full_repo_path = os.path.abspath(os.path.join(UDMI_ROOT, repo_path))

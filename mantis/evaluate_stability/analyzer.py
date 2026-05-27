@@ -16,8 +16,9 @@ def normalize_text(text):
     return text
 
 class TestResult:
-    def __init__(self, raw_line, is_itemized=False):
+    def __init__(self, raw_line, device_id=None, is_itemized=False):
         self.raw_line = raw_line.strip()
+        self.device_id = device_id if device_id else ""
         line = self.raw_line
         if not line:
             raise ValueError("Empty line")
@@ -41,6 +42,9 @@ class TestResult:
 
     def key(self):
         return (self.type, self.category, self.test_name)
+
+    def device_key(self):
+        return (self.device_id, self.type, self.category, self.test_name)
 
     def matches(self, other):
         """Compares this parsed result to another (e.g. golden baseline) under normalization."""
@@ -116,86 +120,63 @@ class RunAnalyzer:
                     continue
         return results
 
+    def analyze_results(self, run_results, test_suite='sequencer'):
+        """Analyzes a list of parsed TestResult objects against the Golden Baseline.
+        Groups outcomes dynamically by device_id if present."""
+        analysis = {}
+        
+        # Track occurrences grouped by key to maintain standard golden baseline occurrence index resolution!
+        occurrences = defaultdict(int)
+        
+        for res in run_results:
+            key = res.key()
+            idx = occurrences[key]
+            occurrences[key] += 1
+            
+            baseline = self.itemized_baseline if test_suite == 'itemized' else self.sequencer_baseline
+            expected = baseline.get_expected_result(key, idx)
+            
+            matched = False
+            if expected:
+                matched = res.matches(expected)
+            else:
+                matched = (res.outcome == 'pass')
+                
+            device_prefix = f"{res.device_id}:" if res.device_id else ""
+            unique_key = f"{device_prefix}{test_suite}:{key[0]}:{key[1]}:{key[2]}:{idx}"
+            
+            analysis[unique_key] = {
+                'device_id': res.device_id,
+                'test_suite': test_suite,
+                'type': res.type,
+                'category': res.category,
+                'test_name': res.test_name,
+                'occurrence': idx,
+                'outcome': 'pass' if matched else 'fail',
+                'raw_outcome': res.outcome,
+                'raw_reason': res.reason,
+                'expected_outcome': expected.outcome if expected else 'pass',
+                'expected_reason': expected.reason if expected else '',
+                'matched': matched
+            }
+            
+        return analysis
+
     def analyze_run(self, sequencer_out_path=None, itemized_out_path=None):
         """
         Analyzes a single run (iteration)'s results.
-        Returns a dictionary mapping test_key -> dict with outcome details:
-        {
-           'outcome': 'pass' | 'fail' (actual status vs golden status),
-           'raw_outcome': str,       # pass/fail/skip
-           'raw_reason': str,
-           'expected_outcome': str,
-           'expected_reason': str,
-           'matched': bool
-         }
+        Delegates to analyze_results for clean, list-based analysis.
         """
         analysis = {}
         
-        # Track occurrence count of each test case key separately for each suite
-        seq_occurrences = defaultdict(int)
-        item_occurrences = defaultdict(int)
-
-        # 1. Analyze standard sequencer results
         if sequencer_out_path and os.path.exists(sequencer_out_path):
-            run_results = self.parse_results_file(sequencer_out_path, is_itemized=False)
-            for res in run_results:
-                key = res.key()
-                idx = seq_occurrences[key]
-                seq_occurrences[key] += 1
-                
-                expected = self.sequencer_baseline.get_expected_result(key, idx)
-                matched = False
-                if expected:
-                    matched = res.matches(expected)
-                else:
-                    # If not in baseline, standard rules: pass = matched/successful
-                    matched = (res.outcome == 'pass')
-
-                unique_key = f"sequencer:{key[0]}:{key[1]}:{key[2]}:{idx}"
-                analysis[unique_key] = {
-                    'test_suite': 'sequencer',
-                    'type': res.type,
-                    'category': res.category,
-                    'test_name': res.test_name,
-                    'occurrence': idx,
-                    'outcome': 'pass' if matched else 'fail',
-                    'raw_outcome': res.outcome,
-                    'raw_reason': res.reason,
-                    'expected_outcome': expected.outcome if expected else 'pass',
-                    'expected_reason': expected.reason if expected else '',
-                    'matched': matched
-                }
-
-        # 2. Analyze itemized results
+            results = self.parse_results_file(sequencer_out_path, is_itemized=False)
+            analysis.update(self.analyze_results(results, test_suite='sequencer'))
+            
         if itemized_out_path and os.path.exists(itemized_out_path):
-            run_results = self.parse_results_file(itemized_out_path, is_itemized=True)
-            for res in run_results:
-                key = res.key()
-                idx = item_occurrences[key]
-                item_occurrences[key] += 1
-                
-                expected = self.itemized_baseline.get_expected_result(key, idx)
-                matched = False
-                if expected:
-                    matched = res.matches(expected)
-                else:
-                    matched = (res.outcome == 'pass')
-
-                unique_key = f"itemized:{key[0]}:{key[1]}:{key[2]}:{idx}"
-                analysis[unique_key] = {
-                    'test_suite': 'itemized',
-                    'type': res.type,
-                    'category': res.category,
-                    'test_name': res.test_name,
-                    'occurrence': idx,
-                    'outcome': 'pass' if matched else 'fail',
-                    'raw_outcome': res.outcome,
-                    'raw_reason': res.reason,
-                    'expected_outcome': expected.outcome if expected else 'pass',
-                    'expected_reason': expected.reason if expected else '',
-                    'matched': matched
-                }
-
+            results = self.parse_results_file(itemized_out_path, is_itemized=True)
+            analysis.update(self.analyze_results(results, test_suite='itemized'))
+            
         return analysis
 
     def aggregate_runs(self, runs_analyses):
@@ -263,6 +244,7 @@ class RunAnalyzer:
             flaky = (0 < pass_rate < 100)
 
             aggregates[ukey] = {
+                'device_id': first_val.get('device_id', ''),
                 'test_suite': first_val['test_suite'],
                 'type': first_val['type'],
                 'category': first_val['category'],
