@@ -747,7 +747,13 @@ public class SequenceBase {
    * @param use last start value to use
    */
   public void setLastStart(Date use) {
-    boolean changed = !stringify(deviceConfig.system.operation.last_start).equals(stringify(use));
+    Date current = deviceConfig.system.operation.last_start;
+    if (current != null && use != null && use.before(current)) {
+      debug(format("Ignoring regression of last_start from %s to %s", isoConvert(current),
+          isoConvert(use)));
+      return;
+    }
+    boolean changed = !stringify(current).equals(stringify(use));
     debug("Set last_start changed " + changed + ", last_start " + isoConvert(use));
     deviceConfig.system.operation.last_start = use;
   }

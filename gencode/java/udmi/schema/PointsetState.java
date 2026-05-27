@@ -2,7 +2,7 @@
 package udmi.schema;
 
 import java.util.Date;
-import java.util.HashMap;
+import java.util.Map;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyDescription;
@@ -62,7 +62,7 @@ public class PointsetState {
      */
     @JsonProperty("points")
     @JsonPropertyDescription("Collection of point names, defining the representative point set for this device.")
-    public HashMap<String, PointPointsetState> points;
+    public Map<String, PointPointsetState> points;
     /**
      * Original version of schema pre-upgrade
      * 
