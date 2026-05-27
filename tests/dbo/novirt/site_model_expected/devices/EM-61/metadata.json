@@ -23,7 +23,7 @@
   "pointset": {
     "points": {
       "apparent_power_sensor": {
-        "units": "kilo-volt-amperes",
+        "units": "kilovolt_amperes",
         "translation": {
           "units": {
             "values": {
