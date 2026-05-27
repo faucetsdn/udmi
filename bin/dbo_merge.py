@@ -160,6 +160,32 @@ def merge_dbo_config(yaml_file: Path, site_model_dir: Path):
             pt_udmi["units"] = udmi_unit
           if "states" in pt_dbo:
             pt_udmi["value_map"] = pt_dbo["states"]
+          
+          # Clean up pt_dbo before storing to avoid redundancy
+          clean_pt_dbo = pt_dbo.copy()
+          if clean_pt_dbo.get("present_value") == f"points.{pt_name}.present_value":
+            del clean_pt_dbo["present_value"]
+          
+          if "units" in clean_pt_dbo:
+            u = clean_pt_dbo["units"].copy()
+            if u.get("key") == f"pointset.points.{pt_name}.units":
+              del u["key"]
+            if "values" in u:
+              # Only keep non-identity mappings
+              u["values"] = {k: v for k, v in u["values"].items() if k != v}
+              if not u["values"]:
+                del u["values"]
+            if not u:
+              del clean_pt_dbo["units"]
+            else:
+              clean_pt_dbo["units"] = u
+
+          # States are already in value_map, so they are redundant here
+          if "states" in clean_pt_dbo:
+            del clean_pt_dbo["states"]
+
+          if clean_pt_dbo:
+            pt_udmi["translation"] = clean_pt_dbo
 
       if "links" in entity:
         for target_guid, link_map in entity["links"].items():

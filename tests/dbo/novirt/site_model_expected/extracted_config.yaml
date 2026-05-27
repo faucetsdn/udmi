@@ -17,7 +17,7 @@
       units:
         key: pointset.points.apparent_power_sensor.units
         values:
-          kilo-volt-amperes: kilo-volt-amperes
+          kilovolt_amperes: kilo-volt-amperes
     average_inter_line_voltage_sensor:
       present_value: points.average_inter_line_voltage_sensor.present_value
       units:
@@ -113,7 +113,7 @@
       units:
         key: pointset.points.cooling_request_count.units
         values:
-          no-units: no-units
+          no_units: no-units
     discharge_air_temperature_sensor:
       present_value: points.discharge_air_temperature_sensor.present_value
       units:

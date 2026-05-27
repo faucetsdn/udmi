@@ -25,7 +25,14 @@
   "pointset": {
     "points": {
       "cooling_request_count": {
-        "units": "no-units"
+        "units": "no-units",
+        "translation": {
+          "units": {
+            "values": {
+              "no_units": "no-units"
+            }
+          }
+        }
       },
       "discharge_air_temperature_sensor": {
         "units": "degrees-fahrenheit"

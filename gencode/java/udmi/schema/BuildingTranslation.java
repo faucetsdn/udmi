@@ -29,9 +29,9 @@ public class BuildingTranslation {
     @JsonPropertyDescription("dotted path to present_value field")
     public String present_value;
     @JsonProperty("units")
-    public Object units;
+    public Units units;
     @JsonProperty("states")
-    public Object states;
+    public States states;
 
     @Override
     public int hashCode() {

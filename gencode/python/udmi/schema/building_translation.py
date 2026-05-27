@@ -4,9 +4,15 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Any, Optional
+from typing import Dict, Optional
 
 from ._base import DataModel
+
+
+@dataclass
+class Units(DataModel):
+    key: Optional[str] = None
+    values: Optional[Dict[str, str]] = None
 
 
 @dataclass
@@ -16,5 +22,5 @@ class BuildingTranslation(DataModel):
     """
 
     present_value: Optional[str] = None
-    units: Optional[Any] = None
-    states: Optional[Any] = None
+    units: Optional[Units] = None
+    states: Optional[Dict[str, str]] = None
