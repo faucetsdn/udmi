@@ -25,7 +25,7 @@
   "pointset": {
     "points": {
       "cooling_request_count": {
-        "units": "no-units",
+        "units": "no_units",
         "translation": {
           "units": {
             "values": {

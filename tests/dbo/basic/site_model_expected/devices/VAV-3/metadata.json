@@ -15,7 +15,7 @@
   "pointset": {
     "points": {
       "supply_air_flowrate_sensor": {
-        "units": "L/s",
+        "units": "liters_per_second",
         "translation": {
           "units": {
             "values": {

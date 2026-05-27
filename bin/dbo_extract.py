@@ -120,7 +120,7 @@ def extract_dbo_config(site_model_dir: Path) -> dict:
           # if it was stripped (though usually it's one-to-one).
           # For now, ensure the UDMI unit is represented.
           udmi_unit = point_info["units"]
-          if udmi_unit not in u["values"].values():
+          if udmi_unit not in u["values"]:
             u["values"][udmi_unit] = udmi_unit
         pt_dbo["units"] = u
 

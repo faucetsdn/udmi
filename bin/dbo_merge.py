@@ -156,7 +156,7 @@ def merge_dbo_config(yaml_file: Path, site_model_dir: Path):
             if pv != "present_value" and pv != f"points.{pt_name}.present_value":
               pt_udmi["ref"] = pv
           if "units" in pt_dbo and "values" in pt_dbo["units"]:
-            udmi_unit = list(pt_dbo["units"]["values"].values())[0]
+            udmi_unit = list(pt_dbo["units"]["values"].keys())[0]
             pt_udmi["units"] = udmi_unit
           if "states" in pt_dbo:
             pt_udmi["value_map"] = pt_dbo["states"]
