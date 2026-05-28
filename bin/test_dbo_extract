@@ -40,13 +40,13 @@ function run_test {
     fi
 
     export UDMI_TEST_TIMESTAMP="2026-01-01T00:00:00Z"
-    python3 "$ROOT_DIR/bin/dbo_merge.py" "$GOLD_FILE" "$AFTER_DIR"
+    "$ROOT_DIR/bin/dbo_merge" "$GOLD_FILE" "$AFTER_DIR"
 
     # General test: extract from merged output and compare with GOLD_FILE
     OUTPUT_FILE="$AFTER_DIR/extracted_config.yaml"
     echo "Running extraction test for $TEST_DIR..."
 
-    python3 "$ROOT_DIR/bin/dbo_extract.py" "$AFTER_DIR" "$OUTPUT_FILE"
+    "$ROOT_DIR/bin/dbo_extract" "$AFTER_DIR" "$OUTPUT_FILE"
 
     if ! diff "$GOLD_FILE" "$OUTPUT_FILE"; then
         echo "Extraction mismatch for $TEST_DIR"

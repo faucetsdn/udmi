@@ -1,3 +1,5 @@
+#!/usr/bin/env python3
+
 """Script to extract a DBO config from a UDMI site model."""
 import json
 import sys
@@ -171,7 +173,7 @@ def extract_dbo_config(site_model_dir: Path) -> dict:
 
 if __name__ == "__main__":
   if len(sys.argv) != 3:
-    print("Usage: python dbo_converter.py <site_model_dir> <output_yaml>")
+    print(f"Usage: {sys.argv[0]} <site_model_dir> <output_yaml>")
     sys.exit(1)
 
   site_dir = Path(sys.argv[1])
