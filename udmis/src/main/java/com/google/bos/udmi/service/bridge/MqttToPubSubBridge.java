@@ -8,6 +8,7 @@ import com.google.api.gax.grpc.GrpcTransportChannel;
 import com.google.api.gax.rpc.FixedTransportChannelProvider;
 import com.google.bos.udmi.service.support.EtcdDataProvider;
 import com.google.cloud.pubsub.v1.Publisher;
+import com.google.common.base.Splitter;
 import com.google.protobuf.ByteString;
 import com.google.pubsub.v1.ProjectTopicName;
 import com.google.pubsub.v1.PubsubMessage;
@@ -27,8 +28,11 @@ import java.security.cert.CertificateException;
 import java.security.cert.CertificateFactory;
 import java.security.cert.X509Certificate;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ExecutionException;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import javax.net.ssl.KeyManagerFactory;
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.SSLSocketFactory;
@@ -72,6 +76,7 @@ import udmi.schema.IotAccess.IotProvider;
  */
 public final class MqttToPubSubBridge {
 
+  private static final Pattern TOPIC_PATTERN = Pattern.compile("/r/([^/]+)/d/([^/]+)/?(.*)");
   private static final Logger logger = LoggerFactory.getLogger(MqttToPubSubBridge.class);
 
   /**
@@ -260,13 +265,20 @@ public final class MqttToPubSubBridge {
               logger.info(
                   "MQTT Message Received - Topic: {}, Payload Length: {}", topic, payload.length);
 
-              Map<String, String> attributes;
-              try {
-                attributes = new HashMap<>(SimpleMqttPipe.parseEnvelopeTopic(topic));
-              } catch (Exception e) {
-                logger.warn("Could not parse envelope from topic: {}", topic, e);
-                attributes = new HashMap<>();
+              Matcher matcher = TOPIC_PATTERN.matcher(topic);
+              String registryId = "unknown";
+              String deviceId = "unknown";
+              String topicSuffix = "";
+              if (matcher.matches()) {
+                registryId = matcher.group(1);
+                deviceId = matcher.group(2);
+                topicSuffix = matcher.group(3);
+              } else {
+                logger.warn("Could not parse registry/device from topic: {}", topic);
               }
+
+              // Prepare Pub/Sub message
+              Map<String, String> attributes = new HashMap<>();
               attributes.put("mqttTopic", topic);
               attributes.put("deviceId", deviceId);
               attributes.put("deviceRegistryId", registryId);
