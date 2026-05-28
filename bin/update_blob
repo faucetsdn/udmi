@@ -1,0 +1,131 @@
+#!/bin/bash -e
+
+ROOT=$(realpath $(dirname $0)/..)
+
+sha256=""
+generation=""
+help=false
+positional_args=()
+
+while [[ $# -gt 0 ]]; do
+    case $1 in
+        --sha256)
+            sha256="$2"
+            shift 2
+            ;;
+        --generation)
+            generation="$2"
+            shift 2
+            ;;
+        -h|--help)
+            help=true
+            shift
+            ;;
+        *)
+            positional_args+=("$1")
+            shift
+            ;;
+    esac
+done
+
+if [[ ${#positional_args[@]} -lt 5 || "$help" == "true" ]]; then
+    echo "Usage: $0 [OPTIONS] SITE_DIR PROJECT_ID DEVICE_ID BLOB_NAME PAYLOAD_OR_URL"
+    echo ""
+    echo "Trigger a generic blob update to a target device by updating its configuration."
+    echo ""
+    echo "Positional Arguments:"
+    echo "  SITE_DIR        Path to the site model directory"
+    echo "  PROJECT_ID      GCP Project ID or execution spec"
+    echo "  DEVICE_ID       Target device ID"
+    echo "  BLOB_NAME       Name of the blob block (e.g., pubber_module, firmware)"
+    echo "  PAYLOAD_OR_URL  Path to local file, direct string payload, or remote URL"
+    echo ""
+    echo "Options:"
+    echo "  --sha256 <hash>          Expected SHA256 hash (required for remote URLs, auto-computed otherwise)"
+    echo "  --generation <timestamp> UTC ISO timestamp (defaults to current time)"
+    false
+fi
+
+site_dir=$(realpath "${positional_args[0]}")
+project_id="${positional_args[1]}"
+device_id="${positional_args[2]}"
+blob_name="${positional_args[3]}"
+payload_or_url="${positional_args[4]}"
+phase="final"
+
+if [[ -z $generation ]]; then
+    generation=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
+fi
+
+if [[ -f $payload_or_url ]]; then
+    echo "Detected local file payload: $payload_or_url"
+    mime_type=$(file -b --mime-type "$payload_or_url" 2>/dev/null || echo "application/octet-stream")
+    base64_payload=$(base64 -w 0 "$payload_or_url")
+    url="data:${mime_type};base64,${base64_payload}"
+    if [[ -z $sha256 ]]; then
+        sha256=$(openssl sha256 < "$payload_or_url" | awk '{print $NF}')
+    fi
+elif [[ "$payload_or_url" =~ ^(http://|https://|data:) ]]; then
+    echo "Detected URL payload: $payload_or_url"
+    url="$payload_or_url"
+    if [[ -z $sha256 ]]; then
+        echo "Error: SHA256 must be provided when supplying a remote URL."
+        false
+    fi
+else
+    echo "Detected direct string payload."
+    if [[ "$payload_or_url" =~ ^\{ ]]; then
+        mime_type="application/json"
+    else
+        mime_type="text/plain"
+    fi
+    base64_payload=$(echo -n "$payload_or_url" | base64 -w 0)
+    url="data:${mime_type};base64,${base64_payload}"
+    if [[ -z $sha256 ]]; then
+        sha256=$(echo -n "$payload_or_url" | openssl sha256 | awk '{print $NF}')
+    fi
+fi
+
+echo "Target Blob Name: $blob_name"
+echo "Phase: $phase"
+echo "Generation: $generation"
+echo "SHA256: $sha256"
+
+out_base="$site_dir/devices/$device_id/out"
+config_base="$site_dir/devices/$device_id/config"
+mkdir -p "$config_base"
+
+blob_json=$(jq -n \
+    --arg blob_name "$blob_name" \
+    --arg phase "$phase" \
+    --arg url "$url" \
+    --arg sha256 "$sha256" \
+    --arg generation "$generation" \
+    '{
+       "blobset": {
+         "blobs": {
+           ($blob_name): {
+             "phase": $phase,
+             "url": $url,
+             "sha256": $sha256,
+             "generation": $generation
+           }
+         }
+       }
+     }')
+
+target_config="$config_base/blob_update_config.json"
+rm -f "$target_config"
+
+if [[ -f "$out_base/generated_config.json" ]]; then
+    echo "Merging blob configuration with existing $out_base/generated_config.json..."
+    jq -s '.[0] * .[1]' "$out_base/generated_config.json" <(echo "$blob_json") > "$target_config"
+else
+    echo "Creating new configuration with blob block..."
+    echo "$blob_json" > "$target_config"
+fi
+
+echo "Applying update config using bin/reset_config..."
+"$ROOT/bin/reset_config" "$site_dir" "$project_id" "$device_id" "blob_update_config.json"
+
+echo "Blob update successfully triggered for device $device_id!"

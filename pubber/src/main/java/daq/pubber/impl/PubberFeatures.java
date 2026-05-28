@@ -13,6 +13,7 @@ import static udmi.schema.Bucket.ENUMERATION_POINTSET;
 import static udmi.schema.Bucket.POINTSET;
 import static udmi.schema.Bucket.SYSTEM;
 import static udmi.schema.Bucket.SYSTEM_MODE;
+import static udmi.schema.Bucket.SYSTEM_SOFTWARE_UPDATES;
 import static udmi.schema.Bucket.UNKNOWN_DEFAULT;
 import static udmi.schema.FeatureDiscovery.FeatureStage.BETA;
 import static udmi.schema.FeatureDiscovery.FeatureStage.PREVIEW;
@@ -46,6 +47,7 @@ public abstract class PubberFeatures {
     add(ENUMERATION_POINTSET, PREVIEW);
     add(ENDPOINT_CONFIG, BETA);
     add(DISCOVERY_SCAN, PREVIEW);
+    add(SYSTEM_SOFTWARE_UPDATES, PREVIEW);
   }
 
   private static void add(Bucket featureBucket, FeatureStage stage) {
