@@ -190,6 +190,7 @@ public class Registrar {
   private boolean metadataModelOut;
   private int createRegistries = -1;
   private int runnerThreads = 5;
+  private int bindingThreads = -1;
   private ExecutorService executor;
   private List<Future<?>> executing = new ArrayList<>();
   private SiteModel siteModel;
@@ -333,6 +334,16 @@ public class Registrar {
       description = "Set number of runner threads")
   private void setRunnerThreads(String argValue) {
     runnerThreads = Integer.parseInt(argValue);
+  }
+
+  @CommandLineOption(short_form = "-N", arg_name = "threads",
+      description = "Set number of binding threads")
+  private void setBindingThreads(String argValue) {
+    bindingThreads = Integer.parseInt(argValue);
+  }
+
+  private int getBindingThreads() {
+    return bindingThreads > 0 ? bindingThreads : runnerThreads;
   }
 
   @CommandLineOption(short_form = "-d", description = "Delete (known) devices")
@@ -1289,11 +1300,11 @@ public class Registrar {
             proxiedDevices.forEach(localDevice ->
                 localDevice.captureError(ExceptionCategory.binding, e));
           }
-        });
+        }, getBindingThreads());
       });
 
       System.err.printf("Waiting for device binding...%n");
-      dynamicTerminate(gatewayBindings.size());
+      dynamicTerminate(gatewayBindings.size(), getBindingThreads());
 
       Duration between = Duration.between(start, Instant.now());
       double seconds = between.getSeconds() + between.getNano() / 1e9;
@@ -1323,13 +1334,13 @@ public class Registrar {
     }
   }
 
-  private synchronized void dynamicTerminate(int expected) {
+  private synchronized void dynamicTerminate(int expected, int threads) {
     try {
       if (executor == null) {
         return;
       }
       executor.shutdown();
-      int timeout = (int) (ceil(expected / (double) runnerThreads) * EACH_ITEM_TIMEOUT_SEC) + 1;
+      int timeout = (int) (ceil(expected / (double) threads) * EACH_ITEM_TIMEOUT_SEC) + 1;
       System.err.printf("Waiting %ds for %d tasks to complete...%n", timeout, expected);
       if (!executor.awaitTermination(timeout, TimeUnit.SECONDS)) {
         throw new RuntimeException("Incomplete executor termination after " + timeout + "s");
@@ -1342,10 +1353,18 @@ public class Registrar {
     }
   }
 
-  private synchronized void parallelExecute(Runnable runnable) {
-    ifNullThen(executor, () -> executor = Executors.newFixedThreadPool(runnerThreads));
+  private synchronized void dynamicTerminate(int expected) {
+    dynamicTerminate(expected, runnerThreads);
+  }
+
+  private synchronized void parallelExecute(Runnable runnable, int threads) {
+    ifNullThen(executor, () -> executor = Executors.newFixedThreadPool(threads));
     ifNullThen(executing, () -> executing = new ArrayList<>());
     executing.add(executor.submit(runnable));
+  }
+
+  private synchronized void parallelExecute(Runnable runnable) {
+    parallelExecute(runnable, runnerThreads);
   }
 
   private Set<Entry<String, String>> getBindings(Set<String> deviceSet, LocalDevice localDevice) {
