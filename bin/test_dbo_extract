@@ -25,6 +25,7 @@ function run_test {
 
     BEFORE_DIR="$TEST_DIR/site_model_before"
     AFTER_DIR="$TEST_DIR/site_model_after"
+    OUTPUT_FILE="$TEST_DIR/extracted_config.yaml"
 
     if [ ! -d "$BEFORE_DIR" ]; then
         echo "Required directory missing: $BEFORE_DIR"
@@ -33,6 +34,7 @@ function run_test {
 
     echo "Running DBO merge test for $TEST_DIR..."
     rm -rf "$AFTER_DIR"
+    rm -f "$OUTPUT_FILE"
     mkdir -p "$AFTER_DIR"
 
     if [ -d "$BEFORE_DIR/devices" ]; then
@@ -43,7 +45,6 @@ function run_test {
     "$ROOT_DIR/bin/dbo_merge" "$GOLD_FILE" "$AFTER_DIR"
 
     # General test: extract from merged output and compare with GOLD_FILE
-    OUTPUT_FILE="$AFTER_DIR/extracted_config.yaml"
     echo "Running extraction test for $TEST_DIR..."
 
     "$ROOT_DIR/bin/dbo_extract" "$AFTER_DIR" "$OUTPUT_FILE"
