@@ -145,6 +145,11 @@ public class MosquittoDynamicSecurityService implements MqttCallback {
    */
   public CompletableFuture<Void> enqueueCommand(CommandRequest req) {
     if (commandQueue.size() >= MAX_QUEUE_SIZE) {
+      // TODO: Throwing QueueFullException synchronously here can abort the batch response
+      // processing loop (e.g., during fallback enqueues). Complete exceptionally instead.
+      // This can cause corrupted state - e.g. a device will have 5 of 6 ACL's to permit communication added
+      // But will not get marked as "not bound"
+      // Probaly need some retry logic, maybe with recall logic too.
       throw new QueueFullException("Dynamic security queue is full. Size: " + commandQueue.size());
     }
     commandQueue.offer(req);
