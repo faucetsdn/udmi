@@ -1,5 +1,8 @@
 package com.google.bos.udmi.service.access;
 
+import static java.util.concurrent.CompletableFuture.completedFuture;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
@@ -54,12 +57,9 @@ class ImplicitIotAccessProviderTest {
     provider.activate();
 
     mockBroker = mock(ConnectionBroker.class);
-    when(mockBroker.authorize(org.mockito.ArgumentMatchers.anyString(), org.mockito.ArgumentMatchers.any()))
-        .thenReturn(java.util.concurrent.CompletableFuture.completedFuture(null));
-    when(mockBroker.bindGateway(org.mockito.ArgumentMatchers.anyString(), org.mockito.ArgumentMatchers.anyString()))
-        .thenReturn(java.util.concurrent.CompletableFuture.completedFuture(null));
-    when(mockBroker.unbindGateway(org.mockito.ArgumentMatchers.anyString(), org.mockito.ArgumentMatchers.anyString()))
-        .thenReturn(java.util.concurrent.CompletableFuture.completedFuture(null));
+    when(mockBroker.authorize(anyString(), any())).thenReturn(completedFuture(null));
+    when(mockBroker.bindGateway(anyString(), anyString())).thenReturn(completedFuture(null));
+    when(mockBroker.unbindGateway(anyString(), anyString())).thenReturn(completedFuture(null));
 
     Field brokerField = ImplicitIotAccessProvider.class.getDeclaredField("broker");
     brokerField.setAccessible(true);

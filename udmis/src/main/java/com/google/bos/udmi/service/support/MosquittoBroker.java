@@ -10,10 +10,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.bos.udmi.service.pod.ContainerBase;
 import java.io.BufferedReader;
 import java.io.File;
-import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Future;
@@ -129,11 +127,16 @@ public class MosquittoBroker extends ContainerBase implements ConnectionBroker {
 
       return CompletableFuture.allOf(clientFuture, roleFuture).thenCompose(v -> {
         CompletableFuture<Void> r1 = addClientRole(clientUser, roleName);
-        CompletableFuture<Void> a1 = addRoleAcl(roleName, "subscribePattern", clientId + "/config", true);
-        CompletableFuture<Void> a2 = addRoleAcl(roleName, "subscribePattern", clientId + "/commands", true);
-        CompletableFuture<Void> a3 = addRoleAcl(roleName, "subscribePattern", clientId + "/errors", true);
-        CompletableFuture<Void> a4 = addRoleAcl(roleName, "publishClientSend", clientId + "/events/#", true);
-        CompletableFuture<Void> a5 = addRoleAcl(roleName, "publishClientSend", clientId + "/state", true);
+        CompletableFuture<Void> a1 =
+            addRoleAcl(roleName, "subscribePattern", clientId + "/config", true);
+        CompletableFuture<Void> a2 =
+            addRoleAcl(roleName, "subscribePattern", clientId + "/commands", true);
+        CompletableFuture<Void> a3 =
+            addRoleAcl(roleName, "subscribePattern", clientId + "/errors", true);
+        CompletableFuture<Void> a4 =
+            addRoleAcl(roleName, "publishClientSend", clientId + "/events/#", true);
+        CompletableFuture<Void> a5 =
+            addRoleAcl(roleName, "publishClientSend", clientId + "/state", true);
         return CompletableFuture.allOf(r1, a1, a2, a3, a4, a5);
       }).thenRun(() -> info("Device %s registered correctly.", clientId));
     }
@@ -147,7 +150,8 @@ public class MosquittoBroker extends ContainerBase implements ConnectionBroker {
     return enqueueCommand("setClientPassword", cmd, clientUser, clientPass, null, false);
   }
 
-  private CompletableFuture<Void> addRoleAcl(String roleName, String type, String pattern, boolean allow) {
+  private CompletableFuture<Void> addRoleAcl(
+      String roleName, String type, String pattern, boolean allow) {
     Map<String, Object> cmd = new HashMap<>();
     cmd.put("command", "addRoleACL");
     cmd.put("rolename", roleName);
@@ -171,7 +175,8 @@ public class MosquittoBroker extends ContainerBase implements ConnectionBroker {
     return enqueueCommand("deleteRole", cmd, null, null, null, false);
   }
 
-  private CompletableFuture<Void> createClient(String clientUser, String clientPass, String clientId) {
+  private CompletableFuture<Void> createClient(
+      String clientUser, String clientPass, String clientId) {
     Map<String, Object> cmd = new HashMap<>();
     cmd.put("command", "createClient");
     cmd.put("username", clientUser);

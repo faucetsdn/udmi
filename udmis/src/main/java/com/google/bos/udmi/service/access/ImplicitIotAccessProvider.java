@@ -41,6 +41,7 @@ import com.google.common.collect.ImmutableSet;
 import com.google.udmi.util.GeneralUtils;
 import com.google.udmi.util.JsonUtil;
 import java.util.AbstractMap.SimpleEntry;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
@@ -48,7 +49,6 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Objects;
 import java.util.Set;
-import java.util.ArrayList;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Future;
@@ -191,7 +191,9 @@ public class ImplicitIotAccessProvider extends IotAccessBase {
       }
       registryDeviceRef(registryId, deviceId).put(BOUND_TO_KEY, gatewayId);
       gatewayBoundRef(registryId, gatewayId).put(deviceId, "bound");
-      futures.add(broker.bindGateway(clientId(registryId, gatewayId), clientId(registryId, deviceId)));
+      futures.add(broker.bindGateway(
+          clientId(registryId, gatewayId),
+          clientId(registryId, deviceId)));
     });
     CompletableFuture.allOf(futures.toArray(new CompletableFuture[0])).join();
   }
@@ -209,7 +211,9 @@ public class ImplicitIotAccessProvider extends IotAccessBase {
       }
       registryDeviceRef(registryId, deviceId).delete(BOUND_TO_KEY);
       gatewayBoundRef(registryId, gatewayId).delete(deviceId);
-      futures.add(broker.unbindGateway(clientId(registryId, gatewayId), clientId(registryId, deviceId)));
+      futures.add(broker.unbindGateway(
+          clientId(registryId, gatewayId),
+          clientId(registryId, deviceId)));
     });
     CompletableFuture.allOf(futures.toArray(new CompletableFuture[0])).join();
   }

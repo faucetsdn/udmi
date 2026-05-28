@@ -1,10 +1,9 @@
 package com.google.bos.udmi.service.support;
 
 import java.util.Date;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Future;
 import java.util.function.Consumer;
-
-import java.util.concurrent.CompletableFuture;
 
 /**
  * Interface for interaction with auth control over broker connections.

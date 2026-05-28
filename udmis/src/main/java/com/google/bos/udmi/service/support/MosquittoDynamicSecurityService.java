@@ -1,7 +1,6 @@
 package com.google.bos.udmi.service.support;
 
 import static com.google.common.base.Preconditions.checkState;
-import static com.google.udmi.util.GeneralUtils.friendlyStackTrace;
 import static com.google.udmi.util.GeneralUtils.ifNotNullGet;
 import static com.google.udmi.util.GeneralUtils.isNotEmpty;
 
@@ -23,8 +22,6 @@ import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
-import javax.net.SocketFactory;
-import javax.net.ssl.SSLSocketFactory;
 import org.eclipse.paho.mqttv5.client.IMqttToken;
 import org.eclipse.paho.mqttv5.client.MqttCallback;
 import org.eclipse.paho.mqttv5.client.MqttClient;
@@ -56,7 +53,8 @@ public class MosquittoDynamicSecurityService implements MqttCallback {
   private static final String RESPONSE_TOPIC = "$CONTROL/dynamic-security/v1/response";
 
   private final EndpointConfiguration endpoint;
-  private final BlockingQueue<CommandRequest> commandQueue = new LinkedBlockingQueue<>(MAX_QUEUE_SIZE);
+  private final BlockingQueue<CommandRequest> commandQueue =
+      new LinkedBlockingQueue<>(MAX_QUEUE_SIZE);
   private final MqttClient mqttClient;
   private final ExecutorService executor = Executors.newSingleThreadExecutor();
   private final ScheduledExecutorService scheduler = Executors.newSingleThreadScheduledExecutor();
@@ -192,7 +190,9 @@ public class MosquittoDynamicSecurityService implements MqttCallback {
     List<CommandRequest> batch = new ArrayList<>();
     long totalBytes = 0;
 
-    while (batch.size() < BATCH_SIZE_LIMIT && totalBytes < BATCH_BYTES_LIMIT && !commandQueue.isEmpty()) {
+    while (batch.size() < BATCH_SIZE_LIMIT
+        && totalBytes < BATCH_BYTES_LIMIT
+        && !commandQueue.isEmpty()) {
       CommandRequest req = commandQueue.peek();
       if (req == null) {
         break;
@@ -279,7 +279,8 @@ public class MosquittoDynamicSecurityService implements MqttCallback {
   private void processResponses(List<CommandRequest> batch, byte[] responsePayload) {
     try {
       Map<String, Object> responseMap = objectMapper.readValue(responsePayload, Map.class);
-      List<Map<String, Object>> responsesList = (List<Map<String, Object>>) responseMap.get("responses");
+      List<Map<String, Object>> responsesList =
+          (List<Map<String, Object>>) responseMap.get("responses");
 
       if (responsesList == null || responsesList.size() != batch.size()) {
         throw new RuntimeException("Batch response mismatch or broker error: "
@@ -298,7 +299,10 @@ public class MosquittoDynamicSecurityService implements MqttCallback {
         } else if (isBenignError(req.commandName, error)) {
           log.debug("Handling benign broker error for command {}: {}", req.commandName, error);
           req.future.complete(null);
-        } else if ("createClient".equals(req.commandName) && error != null && error.contains("exists") && req.isFallbackSupported) {
+        } else if ("createClient".equals(req.commandName)
+            && error != null
+            && error.contains("exists")
+            && req.isFallbackSupported) {
           log.info("Client already exists. Triggering modifyClient fallback for {}", req.username);
           triggerFallback(req);
         } else {
@@ -400,8 +404,8 @@ public class MosquittoDynamicSecurityService implements MqttCallback {
   }
 
   @Override
-  public void connectComplete(boolean reconnect, String serverURI) {
-    log.info("MQTT connect completed. Reconnect: {}, URI: {}", reconnect, serverURI);
+  public void connectComplete(boolean reconnect, String serverUri) {
+    log.info("MQTT connect completed. Reconnect: {}, URI: {}", reconnect, serverUri);
     if (reconnect) {
       try {
         mqttClient.subscribe(RESPONSE_TOPIC, 1);
@@ -434,8 +438,9 @@ public class MosquittoDynamicSecurityService implements MqttCallback {
     /**
      * Constructor.
      */
-    public CommandRequest(String commandName, byte[] serializedPayload, CompletableFuture<Void> future,
-        String username, String password, String clientId, boolean isFallbackSupported) {
+    public CommandRequest(String commandName, byte[] serializedPayload,
+        CompletableFuture<Void> future, String username, String password,
+        String clientId, boolean isFallbackSupported) {
       this.commandName = commandName;
       this.serializedPayload = serializedPayload;
       this.future = future;
