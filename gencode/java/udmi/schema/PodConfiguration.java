@@ -46,7 +46,7 @@ public class PodConfiguration {
      */
     @JsonProperty("flow_defaults")
     @JsonPropertyDescription("Parameters to define a message endpoint")
-    public EndpointConfiguration flow_defaults;
+    public udmi.schema.EndpointConfiguration flow_defaults;
     @JsonProperty("crons")
     public HashMap<String, EndpointConfiguration> crons;
     @JsonProperty("flows")

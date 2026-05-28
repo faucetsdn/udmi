@@ -50,7 +50,7 @@ UDMIS_DIR=udmis
 
 
 jq --arg u "$SERV_USER" --arg p "$SERV_PASS" --arg host_var "$MQTT_HOST" \
-'.flow_defaults.auth_provider.basic.username = $u | .flow_defaults.auth_provider.basic.password = $p | .flow_defaults.hostname=$host_var' \
+'.flow_defaults.auth_provider.basic.username = $u | .flow_defaults.auth_provider.basic.password = $p | .flow_defaults.hostname=$host_var | .iot_access.implicit.endpoint.hostname=$host_var' \
 /root/var/local_pod.json > /root/var/local_pod.tmp && mv /root/var/local_pod.tmp /root/var/local_pod.json
 
 $UDMIS_DIR/bin/run /root/var/local_pod.json >> $LOGFILE 2>&1 &

@@ -8,6 +8,7 @@ from typing import Optional
 
 from ._base import DataModel
 from .common import IotProvider
+from .configuration_endpoint import EndpointConfiguration
 
 
 @dataclass
@@ -17,3 +18,4 @@ class IotAccess(DataModel):
     project_id: Optional[str] = None
     profile_sec: Optional[int] = None
     options: Optional[str] = None
+    endpoint: Optional[EndpointConfiguration] = None
