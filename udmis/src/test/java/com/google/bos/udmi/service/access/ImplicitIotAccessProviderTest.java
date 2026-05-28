@@ -54,6 +54,13 @@ class ImplicitIotAccessProviderTest {
     provider.activate();
 
     mockBroker = mock(ConnectionBroker.class);
+    when(mockBroker.authorize(org.mockito.ArgumentMatchers.anyString(), org.mockito.ArgumentMatchers.any()))
+        .thenReturn(java.util.concurrent.CompletableFuture.completedFuture(null));
+    when(mockBroker.bindGateway(org.mockito.ArgumentMatchers.anyString(), org.mockito.ArgumentMatchers.anyString()))
+        .thenReturn(java.util.concurrent.CompletableFuture.completedFuture(null));
+    when(mockBroker.unbindGateway(org.mockito.ArgumentMatchers.anyString(), org.mockito.ArgumentMatchers.anyString()))
+        .thenReturn(java.util.concurrent.CompletableFuture.completedFuture(null));
+
     Field brokerField = ImplicitIotAccessProvider.class.getDeclaredField("broker");
     brokerField.setAccessible(true);
     brokerField.set(provider, mockBroker);

@@ -48,6 +48,8 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Objects;
 import java.util.Set;
+import java.util.ArrayList;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Future;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -181,6 +183,7 @@ public class ImplicitIotAccessProvider extends IotAccessBase {
     Set<String> deviceIds = ImmutableSet.copyOf(cloudModel.gateway.proxy_ids);
     AtomicInteger count = new AtomicInteger();
     int total = deviceIds.size();
+    List<CompletableFuture<Void>> futures = new ArrayList<>();
     deviceIds.forEach(deviceId -> {
       int current = count.incrementAndGet();
       if (current % 50 == 0 && progress != null) {
@@ -188,8 +191,9 @@ public class ImplicitIotAccessProvider extends IotAccessBase {
       }
       registryDeviceRef(registryId, deviceId).put(BOUND_TO_KEY, gatewayId);
       gatewayBoundRef(registryId, gatewayId).put(deviceId, "bound");
-      broker.bindGateway(clientId(registryId, gatewayId), clientId(registryId, deviceId));
+      futures.add(broker.bindGateway(clientId(registryId, gatewayId), clientId(registryId, deviceId)));
     });
+    CompletableFuture.allOf(futures.toArray(new CompletableFuture[0])).join();
   }
 
   private void unbindDevicesFromGateway(String registryId, String gatewayId,
@@ -197,6 +201,7 @@ public class ImplicitIotAccessProvider extends IotAccessBase {
     Set<String> deviceIds = ImmutableSet.copyOf(cloudModel.gateway.proxy_ids);
     AtomicInteger count = new AtomicInteger();
     int total = deviceIds.size();
+    List<CompletableFuture<Void>> futures = new ArrayList<>();
     deviceIds.forEach(deviceId -> {
       int current = count.incrementAndGet();
       if (current % 50 == 0 && progress != null) {
@@ -204,12 +209,13 @@ public class ImplicitIotAccessProvider extends IotAccessBase {
       }
       registryDeviceRef(registryId, deviceId).delete(BOUND_TO_KEY);
       gatewayBoundRef(registryId, gatewayId).delete(deviceId);
-      broker.unbindGateway(clientId(registryId, gatewayId), clientId(registryId, deviceId));
+      futures.add(broker.unbindGateway(clientId(registryId, gatewayId), clientId(registryId, deviceId)));
     });
+    CompletableFuture.allOf(futures.toArray(new CompletableFuture[0])).join();
   }
 
   private void blockDevice(String registryId, String deviceId, CloudModel cloudModel) {
-    broker.authorize(clientId(registryId, deviceId), null);
+    broker.authorize(clientId(registryId, deviceId), null).join();
     registryDeviceRef(registryId, deviceId).put(BLOCKED_PROPERTY, booleanString(true));
   }
 
@@ -256,13 +262,21 @@ public class ImplicitIotAccessProvider extends IotAccessBase {
     String gatewayId = properties.get(BOUND_TO_KEY);
     properties.entries().keySet().forEach(properties::delete);
     registryDevicesRef(registryId).delete(deviceId);
+    CompletableFuture<Void> f1 = null;
     if (gatewayId == null) {
-      broker.authorize(clientId(registryId, deviceId), null);
+      f1 = broker.authorize(clientId(registryId, deviceId), null);
     }
 
+    CompletableFuture<Void> f2 = null;
     if (gatewayId != null) {
       gatewayBoundRef(registryId, gatewayId).delete(deviceId);
-      broker.unbindGateway(clientId(registryId, gatewayId), clientId(registryId, deviceId));
+      f2 = broker.unbindGateway(clientId(registryId, gatewayId), clientId(registryId, deviceId));
+    }
+    if (f1 != null) {
+      f1.join();
+    }
+    if (f2 != null) {
+      f2.join();
     }
   }
 
@@ -291,7 +305,7 @@ public class ImplicitIotAccessProvider extends IotAccessBase {
       boolean isAuthorized = properties.get(AUTH_KEY_PROPERTY) != null
           || properties.get(AUTH_TYPE_PROPERTY) != null;
       if (isAuthorized) {
-        broker.authorize(clientId(registryId, deviceId), map.get(AUTH_PASSWORD_PROPERTY));
+        broker.authorize(clientId(registryId, deviceId), map.get(AUTH_PASSWORD_PROPERTY)).join();
       }
     }
     return properties;

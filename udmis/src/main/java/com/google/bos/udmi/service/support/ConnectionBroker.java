@@ -4,18 +4,20 @@ import java.util.Date;
 import java.util.concurrent.Future;
 import java.util.function.Consumer;
 
+import java.util.concurrent.CompletableFuture;
+
 /**
  * Interface for interaction with auth control over broker connections.
  */
 public interface ConnectionBroker {
 
-  void authorize(String clientId, String password);
+  CompletableFuture<Void> authorize(String clientId, String password);
 
   Future<Void> addEventListener(String clientPrefix, Consumer<BrokerEvent> eventConsumer);
 
-  void bindGateway(String gatewayId, String deviceId);
+  CompletableFuture<Void> bindGateway(String gatewayId, String deviceId);
 
-  void unbindGateway(String gatewayId, String deviceId);
+  CompletableFuture<Void> unbindGateway(String gatewayId, String deviceId);
 
   void shutdown();
 

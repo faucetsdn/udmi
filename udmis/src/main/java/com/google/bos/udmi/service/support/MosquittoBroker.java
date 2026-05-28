@@ -6,32 +6,28 @@ import static com.google.udmi.util.GeneralUtils.catchToNull;
 import static com.google.udmi.util.GeneralUtils.friendlyStackTrace;
 import static java.util.Optional.ofNullable;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.bos.udmi.service.pod.ContainerBase;
 import java.io.BufferedReader;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Future;
-import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import udmi.schema.EndpointConfiguration;
-import udmi.schema.EndpointConfiguration.Transport;
 
 /**
- * Provider that links directly to a mosquitto broker.
- *
- * <p>NOTE: The topic structure used in ACLs in this file is hardcoded to use the deviceId
- * directly (e.g., deviceId/config, deviceId/commands, etc.) instead of using properties
- * from the endpoint configuration.
+ * Provider that links directly to a mosquitto broker using the native
+ * Mosquitto Dynamic Security plugin JSON API over MQTT.
  */
 public class MosquittoBroker extends ContainerBase implements ConnectionBroker {
 
-
-  private static final long EXEC_TIMEOUT_SEC = 10;
   private static final String REVOKE_PASSWORD = "--";
   private static final String DEFAULT_MOSQUITTO_LOG_PATH = "/var/log/mosquitto/mosquitto.log";
   private static final Pattern LOG_MATCHER =
@@ -44,6 +40,9 @@ public class MosquittoBroker extends ContainerBase implements ConnectionBroker {
   private final boolean disableLogging;
   private final Object tailLock = new Object();
   private Process tailProcess;
+
+  private MosquittoDynamicSecurityService dynSecService;
+  private final ObjectMapper objectMapper = new ObjectMapper();
 
   /**
    * Create a new broker connection provider.
@@ -73,57 +72,6 @@ public class MosquittoBroker extends ContainerBase implements ConnectionBroker {
     return ofNullable(System.getenv("MOSQUITTO_LOG_PATH")).orElse(DEFAULT_MOSQUITTO_LOG_PATH);
   }
 
-  private String getMosquittoCtrlPath() {
-    return ofNullable(System.getenv("MOSQUITTO_CTRL_PATH")).orElse("mosquitto_ctrl");
-  }
-
-  private List<String> buildCommandPrefix() {
-    List<String> cmd = new ArrayList<>();
-    cmd.add(getMosquittoCtrlPath());
-    
-    if (endpointConfig.hostname != null) {
-      cmd.add("-h");
-      cmd.add(endpointConfig.hostname);
-    }
-    if (endpointConfig.port != null) {
-      cmd.add("-p");
-      cmd.add(endpointConfig.port.toString());
-    }
-    if (endpointConfig.auth_provider != null && endpointConfig.auth_provider.basic != null) {
-      if (endpointConfig.auth_provider.basic.username != null) {
-        cmd.add("-u");
-        cmd.add(endpointConfig.auth_provider.basic.username);
-      }
-      if (endpointConfig.auth_provider.basic.password != null) {
-        cmd.add("-P");
-        cmd.add(endpointConfig.auth_provider.basic.password);
-      }
-    }
-    
-    boolean useSsl = endpointConfig.transport == Transport.SSL
-        || (endpointConfig.port != null && endpointConfig.port == 8883)
-        || endpointConfig.ca_file != null;
-
-    if (useSsl) {
-      checkState(endpointConfig.ca_file != null && !endpointConfig.ca_file.isEmpty(),
-          "Missing required ca_file in endpoint configuration for SSL connection");
-      checkState(endpointConfig.cert_file != null && !endpointConfig.cert_file.isEmpty(),
-          "Missing required cert_file in endpoint configuration for SSL connection");
-      checkState(endpointConfig.key_file != null && !endpointConfig.key_file.isEmpty(),
-          "Missing required key_file in endpoint configuration for SSL connection");
-      cmd.add("--cafile");
-      cmd.add(endpointConfig.ca_file);
-      cmd.add("--cert");
-      cmd.add(endpointConfig.cert_file);
-      cmd.add("--key");
-      cmd.add(endpointConfig.key_file);
-      cmd.add("--insecure");
-    }
-    
-    cmd.add("dynsec");
-    return cmd;
-  }
-
   private void consumeLogs(String clientPrefix, Consumer<BrokerEvent> eventConsumer) {
     info("Starting log consumer for " + clientPrefix);
     mosquctlLog(clientPrefix, eventConsumer);
@@ -145,133 +93,108 @@ public class MosquittoBroker extends ContainerBase implements ConnectionBroker {
     thread.start();
   }
 
-  private void executeCommand(List<String> cmd) {
+  private synchronized MosquittoDynamicSecurityService getDynSecService() {
+    if (dynSecService == null) {
+      dynSecService = new MosquittoDynamicSecurityService(endpointConfig);
+    }
+    return dynSecService;
+  }
+
+  private CompletableFuture<Void> enqueueCommand(String commandName, Map<String, Object> cmd,
+      String username, String password, String clientId, boolean isFallbackSupported) {
     try {
-      info("Executing command %s", String.join(" ", cmd));
-      ProcessBuilder pb = new ProcessBuilder(cmd);
-      pb.redirectErrorStream(true); // Merge stderr into stdout
-      Process exec = pb.start();
-
-      // Read output asynchronously to prevent buffer locks
-      CompletableFuture<Void> outputHandler = CompletableFuture.runAsync(() ->
-          exec.inputReader().lines().forEach(container::info)
-      );
-
-      // Enforce timeout
-      if (!exec.waitFor(EXEC_TIMEOUT_SEC, TimeUnit.SECONDS)) {
-        exec.destroyForcibly();
-        outputHandler.cancel(true);
-        throw new RuntimeException("Command timed out: " + String.join(" ", cmd));
-      }
-
-      try {
-        outputHandler.join();
-      } catch (Exception e) {
-        warn("Output handler interrupted or cancelled: " + e.getMessage());
-      }
-      int exitValue = exec.exitValue();
-      checkState(exitValue == 0, "exit return code " + exitValue);
+      byte[] bytes = objectMapper.writeValueAsBytes(cmd);
+      CompletableFuture<Void> future = new CompletableFuture<>();
+      return getDynSecService().enqueueCommand(new MosquittoDynamicSecurityService.CommandRequest(
+          commandName, bytes, future, username, password, clientId, isFallbackSupported));
     } catch (Exception e) {
-      throw new RuntimeException("While executing " + String.join(" ", cmd), e);
+      CompletableFuture<Void> future = new CompletableFuture<>();
+      future.completeExceptionally(e);
+      return future;
     }
   }
 
-  private void mosquctlClient(String clientId, String clientPass) {
+  private CompletableFuture<Void> mosquctlClient(String clientId, String clientPass) {
     String clientUser = clientId;
     String roleName = "role_" + clientId.replace("/", "_");
 
     if ("--".equals(clientPass)) {
-      deleteClient(clientUser);
-      deleteRole(roleName);
-      info("Device %s deleted correctly.", clientId);
+      CompletableFuture<Void> f1 = deleteClient(clientUser);
+      CompletableFuture<Void> f2 = deleteRole(roleName);
+      return CompletableFuture.allOf(f1, f2)
+          .thenRun(() -> info("Device %s deleted correctly.", clientId));
     } else {
-      try {
-        createClient(clientUser, clientPass, clientId);
-      } catch (Exception e) {
-        warn("Client likely exists, updating password for %s: %s", clientUser, e.getMessage());
-        setClientPassword(clientUser, clientPass);
-      }
-      try {
-        createRole(roleName);
-      } catch (Exception e) {
-        warn("Ignore error creating role: " + e.getMessage());
-      }
-      addClientRole(clientUser, roleName);
+      CompletableFuture<Void> clientFuture = createClient(clientUser, clientPass, clientId);
+      CompletableFuture<Void> roleFuture = createRole(roleName);
 
-      addRoleAcl(roleName, "subscribePattern", clientId + "/config", "allow");
-      addRoleAcl(roleName, "subscribePattern", clientId + "/commands", "allow");
-      addRoleAcl(roleName, "subscribePattern", clientId + "/errors", "allow");
-      addRoleAcl(roleName, "publishClientSend", clientId + "/events/#", "allow");
-      addRoleAcl(roleName, "publishClientSend", clientId + "/state", "allow");
-      
-      info("Device %s registered correctly.", clientId);
+      return CompletableFuture.allOf(clientFuture, roleFuture).thenCompose(v -> {
+        CompletableFuture<Void> r1 = addClientRole(clientUser, roleName);
+        CompletableFuture<Void> a1 = addRoleAcl(roleName, "subscribePattern", clientId + "/config", true);
+        CompletableFuture<Void> a2 = addRoleAcl(roleName, "subscribePattern", clientId + "/commands", true);
+        CompletableFuture<Void> a3 = addRoleAcl(roleName, "subscribePattern", clientId + "/errors", true);
+        CompletableFuture<Void> a4 = addRoleAcl(roleName, "publishClientSend", clientId + "/events/#", true);
+        CompletableFuture<Void> a5 = addRoleAcl(roleName, "publishClientSend", clientId + "/state", true);
+        return CompletableFuture.allOf(r1, a1, a2, a3, a4, a5);
+      }).thenRun(() -> info("Device %s registered correctly.", clientId));
     }
   }
 
-  private void setClientPassword(String clientUser, String clientPass) {
-    List<String> cmd = new ArrayList<>(buildCommandPrefix());
-    cmd.add("setClientPassword");
-    cmd.add(clientUser);
-    cmd.add(clientPass);
-    executeCommand(cmd);
+  private CompletableFuture<Void> setClientPassword(String clientUser, String clientPass) {
+    Map<String, Object> cmd = new HashMap<>();
+    cmd.put("command", "setClientPassword");
+    cmd.put("username", clientUser);
+    cmd.put("password", clientPass);
+    return enqueueCommand("setClientPassword", cmd, clientUser, clientPass, null, false);
   }
 
-  private void addRoleAcl(String roleName, String type, String pattern, String allow) {
-    List<String> cmd = new ArrayList<>(buildCommandPrefix());
-    cmd.add("addRoleACL");
-    cmd.add(roleName);
-    cmd.add(type);
-    cmd.add(pattern);
-    cmd.add(allow);
-    executeCommand(cmd);
+  private CompletableFuture<Void> addRoleAcl(String roleName, String type, String pattern, boolean allow) {
+    Map<String, Object> cmd = new HashMap<>();
+    cmd.put("command", "addRoleACL");
+    cmd.put("rolename", roleName);
+    cmd.put("acltype", type);
+    cmd.put("topic", pattern);
+    cmd.put("allow", allow);
+    return enqueueCommand("addRoleACL", cmd, null, null, null, false);
   }
 
-  private void deleteClient(String clientUser) {
-    List<String> cmd = new ArrayList<>(buildCommandPrefix());
-    cmd.add("deleteClient");
-    cmd.add(clientUser);
-    try {
-      executeCommand(cmd);
-    } catch (Exception e) {
-      warn("Ignore error deleting client: " + e.getMessage());
+  private CompletableFuture<Void> deleteClient(String clientUser) {
+    Map<String, Object> cmd = new HashMap<>();
+    cmd.put("command", "deleteClient");
+    cmd.put("username", clientUser);
+    return enqueueCommand("deleteClient", cmd, clientUser, null, null, false);
+  }
+
+  private CompletableFuture<Void> deleteRole(String roleName) {
+    Map<String, Object> cmd = new HashMap<>();
+    cmd.put("command", "deleteRole");
+    cmd.put("rolename", roleName);
+    return enqueueCommand("deleteRole", cmd, null, null, null, false);
+  }
+
+  private CompletableFuture<Void> createClient(String clientUser, String clientPass, String clientId) {
+    Map<String, Object> cmd = new HashMap<>();
+    cmd.put("command", "createClient");
+    cmd.put("username", clientUser);
+    cmd.put("password", clientPass);
+    if (clientId != null) {
+      cmd.put("clientid", clientId);
     }
+    return enqueueCommand("createClient", cmd, clientUser, clientPass, clientId, true);
   }
 
-  private void deleteRole(String roleName) {
-    List<String> cmd = new ArrayList<>(buildCommandPrefix());
-    cmd.add("deleteRole");
-    cmd.add(roleName);
-    try {
-      executeCommand(cmd);
-    } catch (Exception e) {
-      warn("Ignore error deleting role: " + e.getMessage());
-    }
+  private CompletableFuture<Void> createRole(String roleName) {
+    Map<String, Object> cmd = new HashMap<>();
+    cmd.put("command", "createRole");
+    cmd.put("rolename", roleName);
+    return enqueueCommand("createRole", cmd, null, null, null, false);
   }
 
-  private void createClient(String clientUser, String clientPass, String clientId) {
-    List<String> cmd = new ArrayList<>(buildCommandPrefix());
-    cmd.add("createClient");
-    cmd.add(clientUser);
-    cmd.add("-p");
-    cmd.add(clientPass);
-    cmd.add("-c");
-    cmd.add(clientId);
-    executeCommand(cmd);
-  }
-
-  private void createRole(String roleName) {
-    List<String> cmd = new ArrayList<>(buildCommandPrefix());
-    cmd.add("createRole");
-    cmd.add(roleName);
-    executeCommand(cmd);
-  }
-
-  private void addClientRole(String clientUser, String roleName) {
-    List<String> cmd = new ArrayList<>(buildCommandPrefix());
-    cmd.add("addClientRole");
-    cmd.add(clientUser);
-    cmd.add(roleName);
-    executeCommand(cmd);
+  private CompletableFuture<Void> addClientRole(String clientUser, String roleName) {
+    Map<String, Object> cmd = new HashMap<>();
+    cmd.put("command", "addClientRole");
+    cmd.put("username", clientUser);
+    cmd.put("rolename", roleName);
+    return enqueueCommand("addClientRole", cmd, clientUser, null, null, false);
   }
 
   private void mosquctlLog(String clientPrefix, Consumer<BrokerEvent> eventConsumer) {
@@ -355,47 +278,47 @@ public class MosquittoBroker extends ContainerBase implements ConnectionBroker {
   }
 
   @Override
-  public void authorize(String clientId, String password) {
-    mosquctlClient(clientId, ofNullable(password).orElse(REVOKE_PASSWORD));
+  public CompletableFuture<Void> authorize(String clientId, String password) {
+    return mosquctlClient(clientId, ofNullable(password).orElse(REVOKE_PASSWORD));
   }
 
   @Override
-  public void bindGateway(String gatewayId, String deviceId) {
+  public CompletableFuture<Void> bindGateway(String gatewayId, String deviceId) {
     String roleName = "role_" + gatewayId.replace("/", "_");
 
     // add ACLs
-    addRoleAcl(roleName, "subscribePattern", deviceId + "/config", "allow");
-    addRoleAcl(roleName, "subscribePattern", deviceId + "/commands", "allow");
-    addRoleAcl(roleName, "subscribePattern", deviceId + "/errors", "allow");
-    addRoleAcl(roleName, "publishClientSend", deviceId + "/events/#", "allow");
-    addRoleAcl(roleName, "publishClientSend", deviceId + "/state", "allow");
-    addRoleAcl(roleName, "publishClientSend", deviceId + "/attach", "allow");
+    return CompletableFuture.allOf(
+        addRoleAcl(roleName, "subscribePattern", deviceId + "/config", true),
+        addRoleAcl(roleName, "subscribePattern", deviceId + "/commands", true),
+        addRoleAcl(roleName, "subscribePattern", deviceId + "/errors", true),
+        addRoleAcl(roleName, "publishClientSend", deviceId + "/events/#", true),
+        addRoleAcl(roleName, "publishClientSend", deviceId + "/state", true),
+        addRoleAcl(roleName, "publishClientSend", deviceId + "/attach", true)
+    );
   }
 
   @Override
-  public void unbindGateway(String gatewayId, String deviceId) {
+  public CompletableFuture<Void> unbindGateway(String gatewayId, String deviceId) {
     info("Unbind device Id: %s from gateway Id: %s", deviceId, gatewayId);
     String roleName = "role_" + gatewayId.replace("/", "_");
 
-    removeRoleAcl(roleName, "subscribePattern", deviceId + "/config");
-    removeRoleAcl(roleName, "subscribePattern", deviceId + "/commands");
-    removeRoleAcl(roleName, "subscribePattern", deviceId + "/errors");
-    removeRoleAcl(roleName, "publishClientSend", deviceId + "/events/#");
-    removeRoleAcl(roleName, "publishClientSend", deviceId + "/state");
-    removeRoleAcl(roleName, "publishClientSend", deviceId + "/attach");
+    return CompletableFuture.allOf(
+        removeRoleAcl(roleName, "subscribePattern", deviceId + "/config"),
+        removeRoleAcl(roleName, "subscribePattern", deviceId + "/commands"),
+        removeRoleAcl(roleName, "subscribePattern", deviceId + "/errors"),
+        removeRoleAcl(roleName, "publishClientSend", deviceId + "/events/#"),
+        removeRoleAcl(roleName, "publishClientSend", deviceId + "/state"),
+        removeRoleAcl(roleName, "publishClientSend", deviceId + "/attach")
+    );
   }
 
-  private void removeRoleAcl(String roleName, String type, String pattern) {
-    List<String> cmd = new ArrayList<>(buildCommandPrefix());
-    cmd.add("removeRoleACL");
-    cmd.add(roleName);
-    cmd.add(type);
-    cmd.add(pattern);
-    try {
-      executeCommand(cmd);
-    } catch (Exception e) {
-      warn("Ignore error removing role ACL: " + e.getMessage());
-    }
+  private CompletableFuture<Void> removeRoleAcl(String roleName, String type, String pattern) {
+    Map<String, Object> cmd = new HashMap<>();
+    cmd.put("command", "removeRoleACL");
+    cmd.put("rolename", roleName);
+    cmd.put("acltype", type);
+    cmd.put("topic", pattern);
+    return enqueueCommand("removeRoleACL", cmd, null, null, null, false);
   }
 
   @Override
@@ -404,6 +327,11 @@ public class MosquittoBroker extends ContainerBase implements ConnectionBroker {
       if (tailProcess != null) {
         tailProcess.destroy();
         tailProcess = null;
+      }
+    }
+    synchronized (this) {
+      if (dynSecService != null) {
+        dynSecService.shutdown();
       }
     }
     super.shutdown();
