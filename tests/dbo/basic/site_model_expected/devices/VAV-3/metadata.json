@@ -19,7 +19,7 @@
         "units_as": "L/s"
       },
       "fan_status": {
-        "value_map": {
+        "translations": {
           "0.0": "OFF",
           "1.0": "ON"
         }

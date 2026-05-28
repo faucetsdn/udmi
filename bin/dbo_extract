@@ -127,13 +127,17 @@ def extract_dbo_config(site_model_dir: Path) -> dict:
             u["values"][standard_unit] = raw_unit
         pt_dbo["units"] = u
 
-      if "states" not in pt_dbo and "value_map" in point_info:
-        pt_dbo["states"] = {v: k for k, v in point_info["value_map"].items()}
-      elif "states" in pt_dbo and "value_map" in point_info:
-        # Merge back any states that were stripped as identities
-        for k, v in point_info["value_map"].items():
-          if k not in pt_dbo["states"].values():
-            pt_dbo["states"][v] = k
+      if "states" not in pt_dbo:
+        translations_map = point_info.get("translations", point_info.get("value_map"))
+        if translations_map:
+          pt_dbo["states"] = {v: k for k, v in translations_map.items()}
+      elif "states" in pt_dbo:
+        translations_map = point_info.get("translations", point_info.get("value_map"))
+        if translations_map:
+          # Merge back any states that were stripped as identities
+          for k, v in translations_map.items():
+            if k not in pt_dbo["states"].values():
+              pt_dbo["states"][v] = k
         pt_dbo["states"] = {v: k for k, v in pt_dbo["states"].items()}
       elif "states" in pt_dbo:
         pt_dbo["states"] = {v: k for k, v in pt_dbo["states"].items()}

@@ -23,13 +23,13 @@
   "pointset": {
     "points": {
       "compressor_run_status_1": {
-        "value_map": {
+        "translations": {
           "0.0": "OFF",
           "1.0": "ON"
         }
       },
       "compressor_run_status_2": {
-        "value_map": {
+        "translations": {
           "0.0": "OFF",
           "1.0": "ON"
         }

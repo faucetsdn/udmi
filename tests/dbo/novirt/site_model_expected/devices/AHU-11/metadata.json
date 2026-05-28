@@ -37,7 +37,7 @@
         "units": "no-units"
       },
       "economizer_mode": {
-        "value_map": {
+        "translations": {
           "0.0": "OFF",
           "1.0": "ON"
         }
@@ -49,13 +49,13 @@
         "units": "amperes"
       },
       "failed_exhaust_fan_alarm": {
-        "value_map": {
+        "translations": {
           "1.0": "ACTIVE",
           "0.0": "INACTIVE"
         }
       },
       "failed_supply_fan_alarm_1": {
-        "value_map": {
+        "translations": {
           "1.0": "ACTIVE",
           "0.0": "INACTIVE"
         }

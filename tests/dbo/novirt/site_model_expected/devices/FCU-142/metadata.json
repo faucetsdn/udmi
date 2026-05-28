@@ -37,13 +37,13 @@
         "units": "amperes"
       },
       "discharge_fan_run_command": {
-        "value_map": {
+        "translations": {
           "0.0": "OFF",
           "1.0": "ON"
         }
       },
       "discharge_fan_run_status": {
-        "value_map": {
+        "translations": {
           "0.0": "OFF",
           "1.0": "ON"
         }
@@ -52,13 +52,13 @@
         "units": "percent"
       },
       "failed_discharge_fan_alarm": {
-        "value_map": {
+        "translations": {
           "1.0": "ACTIVE",
           "0.0": "INACTIVE"
         }
       },
       "failed_humidifier_alarm": {
-        "value_map": {
+        "translations": {
           "1.0": "ACTIVE",
           "0.0": "INACTIVE"
         }
