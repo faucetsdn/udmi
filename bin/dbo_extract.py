@@ -120,17 +120,22 @@ def extract_dbo_config(site_model_dir: Path) -> dict:
           # if it was stripped (though usually it's one-to-one).
           # For now, ensure the UDMI unit is represented.
           udmi_unit = point_info["units"]
-          if udmi_unit not in u["values"]:
+          if udmi_unit not in u["values"].values():
             u["values"][udmi_unit] = udmi_unit
+        if "values" in u:
+          u["values"] = {v: k for k, v in u["values"].items()}
         pt_dbo["units"] = u
 
       if "states" not in pt_dbo and "value_map" in point_info:
-        pt_dbo["states"] = point_info["value_map"]
+        pt_dbo["states"] = {v: k for k, v in point_info["value_map"].items()}
       elif "states" in pt_dbo and "value_map" in point_info:
         # Merge back any states that were stripped as identities
         for k, v in point_info["value_map"].items():
-          if k not in pt_dbo["states"]:
-            pt_dbo["states"][k] = v
+          if k not in pt_dbo["states"].values():
+            pt_dbo["states"][v] = k
+        pt_dbo["states"] = {v: k for k, v in pt_dbo["states"].items()}
+      elif "states" in pt_dbo:
+        pt_dbo["states"] = {v: k for k, v in pt_dbo["states"].items()}
 
       if len(pt_dbo) > 1 or pt_dbo.get("present_value") != f"points.{point_name}.present_value":
         translations[point_name] = pt_dbo

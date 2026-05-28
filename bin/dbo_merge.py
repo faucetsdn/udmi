@@ -159,7 +159,7 @@ def merge_dbo_config(yaml_file: Path, site_model_dir: Path):
             udmi_unit = list(pt_dbo["units"]["values"].keys())[0]
             pt_udmi["units"] = udmi_unit
           if "states" in pt_dbo:
-            pt_udmi["value_map"] = pt_dbo["states"]
+            pt_udmi["value_map"] = {v: k for k, v in pt_dbo["states"].items()}
           
           # Clean up pt_dbo before storing to avoid redundancy
           clean_pt_dbo = pt_dbo.copy()
@@ -172,7 +172,7 @@ def merge_dbo_config(yaml_file: Path, site_model_dir: Path):
               del u["key"]
             if "values" in u:
               # Only keep non-identity mappings
-              u["values"] = {k: v for k, v in u["values"].items() if k != v}
+              u["values"] = {v: k for k, v in u["values"].items() if k != v}
               if not u["values"]:
                 del u["values"]
             if not u:

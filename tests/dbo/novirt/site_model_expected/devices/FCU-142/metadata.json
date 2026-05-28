@@ -38,14 +38,14 @@
       },
       "discharge_fan_run_command": {
         "value_map": {
-          "OFF": "0.0",
-          "ON": "1.0"
+          "0.0": "OFF",
+          "1.0": "ON"
         }
       },
       "discharge_fan_run_status": {
         "value_map": {
-          "OFF": "0.0",
-          "ON": "1.0"
+          "0.0": "OFF",
+          "1.0": "ON"
         }
       },
       "discharge_fan_speed_percentage_command": {
@@ -53,14 +53,14 @@
       },
       "failed_discharge_fan_alarm": {
         "value_map": {
-          "ACTIVE": "1.0",
-          "INACTIVE": "0.0"
+          "1.0": "ACTIVE",
+          "0.0": "INACTIVE"
         }
       },
       "failed_humidifier_alarm": {
         "value_map": {
-          "ACTIVE": "1.0",
-          "INACTIVE": "0.0"
+          "1.0": "ACTIVE",
+          "0.0": "INACTIVE"
         }
       },
       "zone_air_cooling_temperature_setpoint": {

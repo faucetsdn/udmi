@@ -35,14 +35,14 @@
       },
       "failed_chilled_return_water_isolation_valve_alarm": {
         "value_map": {
-          "ACTIVE": "1.0",
-          "INACTIVE": "0.0"
+          "1.0": "ACTIVE",
+          "0.0": "INACTIVE"
         }
       },
       "failed_chilled_return_water_temperature_alarm": {
         "value_map": {
-          "ACTIVE": "1.0",
-          "INACTIVE": "0.0"
+          "1.0": "ACTIVE",
+          "0.0": "INACTIVE"
         }
       }
     }

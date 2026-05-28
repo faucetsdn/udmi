@@ -24,14 +24,14 @@
     "points": {
       "compressor_run_status_1": {
         "value_map": {
-          "OFF": "0.0",
-          "ON": "1.0"
+          "0.0": "OFF",
+          "1.0": "ON"
         }
       },
       "compressor_run_status_2": {
         "value_map": {
-          "OFF": "0.0",
-          "ON": "1.0"
+          "0.0": "OFF",
+          "1.0": "ON"
         }
       },
       "compressor_speed_percentage_command_1": {

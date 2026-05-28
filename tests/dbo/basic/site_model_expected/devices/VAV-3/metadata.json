@@ -19,7 +19,7 @@
         "translation": {
           "units": {
             "values": {
-              "liters_per_second": "L/s"
+              "L/s": "liters_per_second"
             }
           }
         }

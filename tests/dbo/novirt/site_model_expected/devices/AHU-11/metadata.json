@@ -38,8 +38,8 @@
       },
       "economizer_mode": {
         "value_map": {
-          "OFF": "0.0",
-          "ON": "1.0"
+          "0.0": "OFF",
+          "1.0": "ON"
         }
       },
       "exhaust_air_damper_percentage_command": {
@@ -50,14 +50,14 @@
       },
       "failed_exhaust_fan_alarm": {
         "value_map": {
-          "ACTIVE": "1.0",
-          "INACTIVE": "0.0"
+          "1.0": "ACTIVE",
+          "0.0": "INACTIVE"
         }
       },
       "failed_supply_fan_alarm_1": {
         "value_map": {
-          "ACTIVE": "1.0",
-          "INACTIVE": "0.0"
+          "1.0": "ACTIVE",
+          "0.0": "INACTIVE"
         }
       },
       "supply_air_static_pressure_setpoint": {
