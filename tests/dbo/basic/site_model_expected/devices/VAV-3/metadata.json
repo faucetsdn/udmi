@@ -17,6 +17,12 @@
       "supply_air_flowrate_sensor": {
         "units": "liters_per_second",
         "units_as": "L/s"
+      },
+      "fan_status": {
+        "value_map": {
+          "0.0": "OFF",
+          "1.0": "ON"
+        }
       }
     }
   }
