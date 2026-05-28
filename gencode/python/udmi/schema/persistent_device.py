@@ -4,7 +4,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Optional
+from typing import Any, Dict, Optional
 
 from ._base import DataModel
 from .configuration_endpoint import EndpointConfiguration
@@ -18,3 +18,4 @@ class DevicePersistent(DataModel):
 
     endpoint: Optional[EndpointConfiguration] = None
     restart_count: Optional[int] = None
+    applied_blobs: Optional[Dict[str, Any]] = None

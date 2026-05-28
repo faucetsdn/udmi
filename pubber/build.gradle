@@ -125,6 +125,7 @@ dependencies {
     implementation 'org.jetbrains:annotations:20.1.0'
     implementation 'ch.qos.logback:logback-classic:1.5.6'
     implementation 'uk.org.lidalia:sysout-over-slf4j:1.0.2'
+    implementation 'org.eclipse.jgit:org.eclipse.jgit:6.9.0.202403050737-r'
 
     testImplementation group: 'junit', name: 'junit', version: '4.13.2'
     testImplementation 'org.mockito:mockito-core:5.3.1'

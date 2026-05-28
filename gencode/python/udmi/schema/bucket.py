@@ -46,6 +46,12 @@ class Bucket(DataModel):
   # System mode
   SYSTEM_MODE: ClassVar[str] = "system.mode"
 
+  # System software
+  SYSTEM_SOFTWARE: ClassVar[str] = "system.software"
+
+  # Over the air software updates
+  SYSTEM_SOFTWARE_UPDATES: ClassVar[str] = "system.software.updates"
+
   # Writeback related operations
   WRITEBACK: ClassVar[str] = "writeback"
 
@@ -65,6 +71,8 @@ class Bucket(DataModel):
     POINTSET,
     SYSTEM,
     SYSTEM_MODE,
+    SYSTEM_SOFTWARE,
+    SYSTEM_SOFTWARE_UPDATES,
     WRITEBACK,
     UNKNOWN_DEFAULT
   }

@@ -74,6 +74,7 @@ from .model_system import *
 from .model_system_hardware import *
 from .model_testing import *
 from .model_testing_target import *
+from .model_testing_update import *
 from .monitoring import *
 from .monitoring_metric import *
 from .options_pubber import *
