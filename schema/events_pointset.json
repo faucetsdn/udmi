@@ -28,7 +28,7 @@
     "points": {
       "description": "Collection of point names, defining the representative point set for this device.",
       "additionalProperties": false,
-      "existingJavaType": "java.util.HashMap<String, PointPointsetEvents>",
+      "existingJavaType": "java.util.Map<String, PointPointsetEvents>",
       "patternProperties": {
         "^[a-z][a-z0-9]*(_[a-z0-9]+)*$": {
           "$ref": "file:events_pointset_point.json#"

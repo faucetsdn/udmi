@@ -6,6 +6,7 @@ import static com.google.udmi.util.JsonUtil.stringify;
 
 import com.google.bos.udmi.service.pod.UdmiServicePod;
 import java.util.Map.Entry;
+import java.util.Set;
 import udmi.schema.CloudQuery;
 import udmi.schema.EndpointConfiguration;
 import udmi.schema.Envelope;
@@ -53,10 +54,17 @@ public class ControlProcessor extends ProcessorBase {
       message.payload = encodeBase64(stringify(config));
       message.subType = SubType.CONFIG;
       message.subFolder = SubFolder.UDMI;
-      iotAccess.getActiveConnections().forEach(entry -> {
+      Set<Entry<String, String>> connections = iotAccess.getActiveConnections();
+      info("Propagating UdmiConfig to %d active connections", connections.size());
+      long startTime = System.currentTimeMillis();
+
+      connections.forEach(entry -> {
         debug("Propagate UdmiConfig to " + entry);
         iotAccess.sendCommand(makeEntryEnvelope(entry), SubFolder.UDMI, stringify(message));
       });
+
+      long duration = System.currentTimeMillis() - startTime;
+      info("Propagated UdmiConfig to %d connections took %d ms", connections.size(), duration);
     }
   }
 

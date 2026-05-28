@@ -1,6 +1,5 @@
 package com.google.bos.udmi.service.access;
 
-import static com.google.bos.udmi.service.messaging.MessageDispatcher.rawString;
 import static com.google.common.base.Preconditions.checkState;
 import static com.google.udmi.util.Common.DEFAULT_REGION;
 import static com.google.udmi.util.GeneralUtils.CSV_JOINER;
@@ -27,6 +26,9 @@ import static udmi.schema.CloudModel.Resource_type.DIRECT;
 import static udmi.schema.CloudModel.Resource_type.GATEWAY;
 
 import com.google.bos.udmi.service.core.ReflectProcessor;
+import com.google.bos.udmi.service.messaging.MessageDispatcher;
+import com.google.bos.udmi.service.messaging.impl.MessageBase.Bundle;
+import com.google.bos.udmi.service.messaging.impl.SimpleMqttPipe;
 import com.google.bos.udmi.service.pod.UdmiServicePod;
 import com.google.bos.udmi.service.support.ConnectionBroker;
 import com.google.bos.udmi.service.support.ConnectionBroker.BrokerEvent;
@@ -50,11 +52,15 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Future;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
+import udmi.schema.Auth_provider;
+import udmi.schema.Basic;
 import udmi.schema.CloudModel;
 import udmi.schema.CloudModel.ModelOperation;
 import udmi.schema.CloudModel.Resource_type;
 import udmi.schema.Credential;
 import udmi.schema.Credential.Key_format;
+import udmi.schema.EndpointConfiguration;
+import udmi.schema.EndpointConfiguration.Transport;
 import udmi.schema.Envelope;
 import udmi.schema.Envelope.SubFolder;
 import udmi.schema.Envelope.SubType;
@@ -64,10 +70,22 @@ import udmi.schema.IotAccess.IotProvider;
 
 /**
  * Iot Access Provider that uses internal components.
+ *
+ * <p>Supported options:
+ * <ul>
+ * <li><code>use_password</code>: Sets the password for all devices to the specified value.
+ * This is used when authentication is handled by an external proxy, and Mosquitto
+ * still needs to enforce ACLs based on username.</li>
+ * </ul>
  */
 public class ImplicitIotAccessProvider extends IotAccessBase {
 
   private static final String CONFIG_VER_KEY = "config_ver";
+  private static final String USE_PASSWORD_KEY = "use_password";
+  private static final String BROKER_USER_KEY = "broker_user";
+  private static final String BROKER_PASS_KEY = "broker_pass";
+  private static final String BROKER_HOST_KEY = "broker_host";
+  private static final String BROKER_PORT_KEY = "broker_port";
   private static final String LAST_CONFIG_KEY = "last_config";
   private static final String LAST_STATE_KEY = "last_state";
   private static final String DEVICES_ACTIVE = "active";
@@ -80,23 +98,56 @@ public class ImplicitIotAccessProvider extends IotAccessBase {
   private static final String CLIENT_ID_FORMAT = "/r/%s/d/%s";
   private static final String CLIENT_PREFIX = "/r";
   private static final String AUTH_PASSWORD_PROPERTY = "auth_pass";
+  private static final String AUTH_KEY_PROPERTY = "auth_key";
+  private static final String AUTH_TYPE_PROPERTY = "auth_type";
   private static final String LAST_CONFIG_ACKED = "last_config_ack";
   private static final String CONFIG_SUFFIX = "/config";
   private static final String METADATA_STR_KEY = "metadata_str";
   private static final String RESOURCE_TYPE_PROPERTY = "resource_type";
   private final boolean enabled;
-  private final ConnectionBroker broker = new MosquittoBroker(this);
+  private final String usePassword;
+  private final ConnectionBroker broker;
   private final Future<Void> connLogger;
   private IotDataProvider database;
   private ReflectProcessor reflect;
   private final Map<String, Integer> configPublished = new ConcurrentHashMap<>();
+  private final String brokerHost;
+  private final String brokerPort;
+  private final String brokerUser;
+  private final String brokerPass;
+  private EndpointConfiguration endpointConfig;
+  private SimpleMqttPipe mqttPipe;
+  private final String clientId =
+      format("implicit-access-%08x", (long) (Math.random() * 0x100000000L));
 
   /**
    * Create an access provider with implicit internal resources.
    */
   public ImplicitIotAccessProvider(IotAccess iotAccess) {
     super(iotAccess);
+    
     enabled = isNullOrNotEmpty(options.get(ENABLED_KEY));
+    usePassword = options.get(USE_PASSWORD_KEY);
+
+    if (iotAccess.endpoint != null) {
+      endpointConfig = deepCopy(iotAccess.endpoint);
+      brokerUser = endpointConfig.auth_provider != null
+          && endpointConfig.auth_provider.basic != null
+          ? endpointConfig.auth_provider.basic.username : null;
+      brokerPass = endpointConfig.auth_provider != null
+          && endpointConfig.auth_provider.basic != null
+          ? endpointConfig.auth_provider.basic.password : null;
+      brokerHost = ofNullable(endpointConfig.hostname).orElse("localhost");
+      brokerPort = ofNullable(endpointConfig.port).map(Object::toString).orElse("8883");
+    } else {
+      brokerUser = options.get(BROKER_USER_KEY);
+      brokerPass = options.get(BROKER_PASS_KEY);
+      brokerHost = ofNullable(options.get(BROKER_HOST_KEY)).orElse("localhost");
+      brokerPort = ofNullable(options.get(BROKER_PORT_KEY)).orElse("8883");
+    }
+
+    broker = new MosquittoBroker(this);
+
     connLogger = broker.addEventListener(CLIENT_PREFIX, this::brokerHandler);
   }
 
@@ -209,12 +260,37 @@ public class ImplicitIotAccessProvider extends IotAccessBase {
   }
 
   private void sendConfigUpdate(String registryId, String deviceId, String config) {
-    Envelope envelope = new Envelope();
-    envelope.deviceRegistryId = registryId;
-    envelope.deviceId = deviceId;
-    envelope.subType = SubType.CONFIG;
-    envelope.source = IotProvider.IMPLICIT.value();
-    reflect.getDispatcher().withEnvelope(envelope).publish(rawString(config));
+    if (isPublishEnabled()) {
+      publishMqtt(registryId, deviceId, config);
+    } else {
+      debug("Skipping MQTT config publish for %s/%s because broker "
+          + "credentials are not configured", registryId, deviceId);
+    }
+  }
+
+  private boolean isPublishEnabled() {
+    return brokerUser != null && brokerPass != null;
+  }
+
+  private void publishMqtt(String registryId, String deviceId, String payload) {
+    if (mqttPipe == null) {
+      warn("MQTT pipe not initialized, unable to publish config");
+      return;
+    }
+    try {
+      Envelope envelope = new Envelope();
+      envelope.deviceRegistryId = registryId;
+      envelope.deviceId = deviceId;
+      envelope.subType = SubType.CONFIG;
+      envelope.source = IotProvider.IMPLICIT.value();
+
+      Bundle bundle = new Bundle(envelope, MessageDispatcher.rawString(payload));
+      mqttPipe.publish(bundle);
+      debug("Published config to pipe for %s/%s", registryId, deviceId);
+    } catch (Exception e) {
+      error("While publishing to MQTT pipe for " + registryId + "/" + deviceId
+          + ": " + friendlyStackTrace(e));
+    }
   }
 
   private Map<String, String> toDeviceMap(CloudModel cloudModel, String createdAt) {
@@ -224,15 +300,27 @@ public class ImplicitIotAccessProvider extends IotAccessBase {
         ofNullable(cloudModel.resource_type).orElse(DIRECT).toString());
     requireNull(cloudModel.metadata_str, "unexpected metadata_str content");
     properties.put(METADATA_STR_KEY, stringifyTerse(cloudModel.metadata));
+    ifNotNullThen(ifNotNullGet(cloudModel.metadata, metadata -> metadata.get("key_bytes")),
+        keyBytes -> properties.put(AUTH_KEY_PROPERTY, keyBytes));
     properties.put(BLOCKED_PROPERTY, booleanString(cloudModel.blocked));
     ifNotNullThen(cloudModel.num_id, id -> properties.put(NUM_ID_PROPERTY, id));
+    ifNotNullThen(cloudModel.auth_type,
+        authType -> properties.put(AUTH_TYPE_PROPERTY, authType.value()));
     ifNotNullThen(cloudModel.credentials, creds -> ifNotTrueThen(creds.isEmpty(), () -> {
       checkState(creds.size() == 1, "only one credential supported");
       Credential cred = creds.get(0);
-      checkState(cred.key_format == Key_format.PASSWORD,
-          "key type not supported: " + cred.key_format);
-      properties.put(AUTH_PASSWORD_PROPERTY, cred.key_data);
+      checkState(cred.key_format != Key_format.PASSWORD,
+          "key type PASSWORD should be in the password field, not credentials");
+      properties.put(AUTH_KEY_PROPERTY, cred.key_data);
+      properties.put(AUTH_TYPE_PROPERTY, cred.key_format.value());
     }));
+    if (usePassword != null) {
+      properties.put(AUTH_PASSWORD_PROPERTY, usePassword);
+    } else {
+      ifNotNullThen(cloudModel.password, password -> {
+        properties.put(AUTH_PASSWORD_PROPERTY, password);
+      });
+    }
     return properties;
   }
 
@@ -253,6 +341,38 @@ public class ImplicitIotAccessProvider extends IotAccessBase {
     database = UdmiServicePod.getComponent(IMPLICIT_DATABASE_COMPONENT);
     reflect = UdmiServicePod.getComponent(ReflectProcessor.class);
     super.activate();
+    if (isPublishEnabled()) {
+      connectMqttClient();
+    }
+  }
+
+  private void connectMqttClient() {
+    info("Initializing SimpleMqttPipe for ImplicitIotAccessProvider");
+    try {
+      if (endpointConfig == null) {
+        endpointConfig = new EndpointConfiguration();
+        endpointConfig.hostname = brokerHost;
+        endpointConfig.port = Integer.parseInt(brokerPort);
+        endpointConfig.transport = "1883".equals(brokerPort) ? Transport.TCP : Transport.SSL;
+        endpointConfig.client_id = clientId;
+        
+        if (isPublishEnabled()) {
+          endpointConfig.auth_provider = new Auth_provider();
+          endpointConfig.auth_provider.basic = new Basic();
+          endpointConfig.auth_provider.basic.username = brokerUser;
+          endpointConfig.auth_provider.basic.password = brokerPass;
+        }
+      }
+
+      if (endpointConfig.send_id == null) {
+        endpointConfig.send_id = "implicit";
+      }
+
+      mqttPipe = new SimpleMqttPipe(endpointConfig);
+      info("Initialized SimpleMqttPipe");
+    } catch (Exception e) {
+      error("Failed to initialize SimpleMqttPipe: " + friendlyStackTrace(e));
+    }
   }
 
   @Override
@@ -280,6 +400,23 @@ public class ImplicitIotAccessProvider extends IotAccessBase {
     CloudModel cloudModel = requireNonNull(JsonUtil.convertTo(CloudModel.class, properties));
     cloudModel.metadata = ifNotNullGet(cloudModel.metadata_str, JsonUtil::toStringMapStr);
     cloudModel.metadata_str = null;
+
+    String authType = properties.get(AUTH_TYPE_PROPERTY);
+    if (authType != null) {
+      cloudModel.auth_type = CloudModel.Auth_type.fromValue(authType);
+    }
+
+    String authKey = properties.get(AUTH_KEY_PROPERTY);
+    if (authKey != null) {
+      Credential credential = new Credential();
+      credential.key_data = authKey;
+      if (cloudModel.auth_type != null) {
+        credential.key_format = Key_format.fromValue(cloudModel.auth_type.value());
+      }
+      cloudModel.credentials = List.of(credential);
+    }
+
+    cloudModel.password = properties.get(AUTH_PASSWORD_PROPERTY);
 
     cloudModel.gateway = new GatewayModel();
     cloudModel.gateway.proxy_ids =
@@ -399,6 +536,13 @@ public class ImplicitIotAccessProvider extends IotAccessBase {
 
   @Override
   public void shutdown() {
+    ifNotNullThen(mqttPipe, pipe -> {
+      try {
+        pipe.shutdown();
+      } catch (Exception e) {
+        warn("Error shutting down MQTT pipe: " + e.getMessage());
+      }
+    });
     connLogger.cancel(true);
     super.shutdown();
   }

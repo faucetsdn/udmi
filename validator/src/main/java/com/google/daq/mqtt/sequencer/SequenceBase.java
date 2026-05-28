@@ -60,6 +60,7 @@ import static org.junit.Assert.assertTrue;
 import static org.junit.Assume.assumeTrue;
 import static udmi.schema.Bucket.SYSTEM;
 import static udmi.schema.Bucket.UNKNOWN_DEFAULT;
+import static udmi.schema.Category.LEVEL;
 import static udmi.schema.Category.VALIDATION_FEATURE_CAPABILITY;
 import static udmi.schema.Category.VALIDATION_FEATURE_SCHEMA;
 import static udmi.schema.Category.VALIDATION_FEATURE_SEQUENCE;
@@ -301,7 +302,12 @@ public class SequenceBase {
   private static SequenceBase activeInstance;
   private static final int MESSAGE_QUEUE_SIZE = 32;
   private static final Deque<MessageBundle> messageQueue = new ArrayDeque<>(MESSAGE_QUEUE_SIZE);
-  private static final ExecutorService executorService = Executors.newFixedThreadPool(4);
+  private static final ExecutorService executorService = Executors.newFixedThreadPool(4,
+      runnable -> {
+        Thread thread = Executors.defaultThreadFactory().newThread(runnable);
+        thread.setDaemon(true);
+        return thread;
+      });
   private static boolean enableAllTargets = true;
   private static boolean useAlternateClient;
   private static boolean skipConfigSync;
@@ -741,7 +747,13 @@ public class SequenceBase {
    * @param use last start value to use
    */
   public void setLastStart(Date use) {
-    boolean changed = !stringify(deviceConfig.system.operation.last_start).equals(stringify(use));
+    Date current = deviceConfig.system.operation.last_start;
+    if (current != null && use != null && use.before(current)) {
+      debug(format("Ignoring regression of last_start from %s to %s", isoConvert(current),
+          isoConvert(use)));
+      return;
+    }
+    boolean changed = !stringify(current).equals(stringify(use));
     debug("Set last_start changed " + changed + ", last_start " + isoConvert(use));
     deviceConfig.system.operation.last_start = use;
   }
@@ -1658,6 +1670,11 @@ public class SequenceBase {
   protected void waitForLog(String category, Level exactLevel) {
     waitUntil(format("system logs level `%s` category `%s`", exactLevel.name(), category),
         LOG_WAIT_TIME, () -> checkLogged(category, exactLevel));
+  }
+
+  protected void waitForLog(String category) {
+    Level exactLevel = LEVEL.getOrDefault(category, Level.INFO);
+    waitForLog(category, exactLevel);
   }
 
   protected void untilLogged(String category, Level exactLevel) {

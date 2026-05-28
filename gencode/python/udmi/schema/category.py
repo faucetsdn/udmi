@@ -83,14 +83,29 @@ class Category(Enum):
     # Stage of applying a device mapping
     MAPPING_DEVICE_APPLY = ("mapping.device.apply", Level.INFO)
 
+    # Conditions specific to an individual blob
+    BLOBSET_BLOB = ("blobset.blob", Level.INFO)
+
+    # Processing a blob update
+    BLOBSET_BLOB_UPDATE = ("blobset.blob.update", Level.INFO)
+
     # About receiving a blob update
     BLOBSET_BLOB_RECEIVE = ("blobset.blob.receive", Level.DEBUG)
 
     # Fetching a blob update
     BLOBSET_BLOB_FETCH = ("blobset.blob.fetch", Level.DEBUG)
 
+    # Parsing and verifying a blob
+    BLOBSET_BLOB_PARSE = ("blobset.blob.parse", Level.DEBUG)
+
     # Applying a blob update
     BLOBSET_BLOB_APPLY = ("blobset.blob.apply", Level.NOTICE)
+
+    # Blob update process was canceled or aborted
+    BLOBSET_BLOB_ABORT = ("blobset.blob.abort", Level.NOTICE)
+
+    # Reverting to previous blob version
+    BLOBSET_BLOB_ROLLBACK = ("blobset.blob.rollback", Level.NOTICE)
 
     # Receiving/processing a message for validation.
     VALIDATION_DEVICE_RECEIVE = ("validation.device.receive", Level.DEBUG)
