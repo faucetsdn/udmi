@@ -108,7 +108,7 @@ def extract_dbo_config(site_model_dir: Path) -> dict:
       
       if "units" not in pt_dbo and "units" in point_info:
         standard_unit = point_info["units"]
-        raw_unit = point_info.get("units_as", standard_unit)
+        raw_unit = point_info.get("units_reported", point_info.get("units_as", standard_unit))
         pt_dbo["units"] = {
           "key": f"pointset.points.{point_name}.units",
           "values": {standard_unit: raw_unit}
@@ -118,7 +118,7 @@ def extract_dbo_config(site_model_dir: Path) -> dict:
         # Derive key from point name if it was stripped
         u["key"] = f"pointset.points.{point_name}.units"
         standard_unit = point_info.get("units")
-        raw_unit = point_info.get("units_as", standard_unit)
+        raw_unit = point_info.get("units_reported", point_info.get("units_as", standard_unit))
         if "values" not in u and standard_unit:
           u["values"] = {standard_unit: raw_unit}
         elif "values" in u and standard_unit:

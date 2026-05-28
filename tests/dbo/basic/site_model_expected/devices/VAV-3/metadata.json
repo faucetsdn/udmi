@@ -16,7 +16,7 @@
     "points": {
       "supply_air_flowrate_sensor": {
         "units": "liters_per_second",
-        "units_as": "L/s"
+        "units_reported": "L/s"
       },
       "fan_status": {
         "translations": {

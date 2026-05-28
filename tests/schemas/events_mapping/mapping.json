@@ -32,7 +32,7 @@
           "units": {
             "key": "pointset.points.temp_1.units"
           },
-          "units_as": "degC"
+          "units_reported": "degC"
         },
         "supply_air_isolation_damper_command": {
           "present_value": "points.damper_1.present_value",
@@ -61,7 +61,7 @@
           "units": {
             "key": "data.analog-input_4.present-value"
           },
-          "units_as": "degrees-fahrenheit"
+          "units_reported": "degrees-fahrenheit"
         }
       },
       "missing_telemetry_fields": [

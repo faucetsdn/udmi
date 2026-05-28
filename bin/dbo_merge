@@ -160,7 +160,7 @@ def merge_dbo_config(yaml_file: Path, site_model_dir: Path):
             pt_udmi["units"] = udmi_unit
             raw_unit = pt_dbo["units"]["values"][udmi_unit]
             if raw_unit != udmi_unit:
-              pt_udmi["units_as"] = raw_unit
+              pt_udmi["units_reported"] = raw_unit
           if "states" in pt_dbo:
             pt_udmi["translations"] = {v: k for k, v in pt_dbo["states"].items()}
           

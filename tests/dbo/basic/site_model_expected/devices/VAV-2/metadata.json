@@ -23,7 +23,7 @@
     "points": {
       "zone_air_temperature_sensor": {
         "units": "degrees_celsius",
-        "units_as": "degC"
+        "units_reported": "degC"
       }
     }
   }

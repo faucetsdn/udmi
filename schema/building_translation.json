@@ -16,7 +16,7 @@
         "key": { "type": "string" }
       }
     },
-    "units_as": {
+    "units_reported": {
       "description": "Actual input unit that is sent from the device",
       "type": "string"
     },
