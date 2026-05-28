@@ -41,14 +41,14 @@
       },
       "failed_alarm": {
         "value_map": {
-          "ACTIVE": "1.0",
-          "INACTIVE": "0.0"
+          "1.0": "ACTIVE",
+          "0.0": "INACTIVE"
         }
       },
       "run_status": {
         "value_map": {
-          "OFF": "0.0",
-          "ON": "1.0"
+          "0.0": "OFF",
+          "1.0": "ON"
         }
       }
     }

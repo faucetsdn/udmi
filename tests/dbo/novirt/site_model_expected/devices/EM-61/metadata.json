@@ -27,7 +27,7 @@
         "translation": {
           "units": {
             "values": {
-              "kilovolt_amperes": "kilo-volt-amperes"
+              "kilo-volt-amperes": "kilovolt_amperes"
             }
           }
         }

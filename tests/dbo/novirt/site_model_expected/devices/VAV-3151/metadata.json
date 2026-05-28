@@ -29,7 +29,7 @@
         "translation": {
           "units": {
             "values": {
-              "no_units": "no-units"
+              "no-units": "no_units"
             }
           }
         }
@@ -39,14 +39,14 @@
       },
       "failed_zone_air_co2_concentration_alarm": {
         "value_map": {
-          "ACTIVE": "1.0",
-          "INACTIVE": "0.0"
+          "1.0": "ACTIVE",
+          "0.0": "INACTIVE"
         }
       },
       "failed_zone_air_temperature_alarm": {
         "value_map": {
-          "ACTIVE": "1.0",
-          "INACTIVE": "0.0"
+          "1.0": "ACTIVE",
+          "0.0": "INACTIVE"
         }
       },
       "heating_request_count": {
@@ -57,8 +57,8 @@
       },
       "schedule_run_command": {
         "value_map": {
-          "OFF": "0.0",
-          "ON": "1.0"
+          "0.0": "OFF",
+          "1.0": "ON"
         }
       },
       "supply_air_flowrate_sensor": {

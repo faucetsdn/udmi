@@ -19,7 +19,7 @@
         "translation": {
           "units": {
             "values": {
-              "degrees_celsius": "degC"
+              "degC": "degrees_celsius"
             }
           }
         }
