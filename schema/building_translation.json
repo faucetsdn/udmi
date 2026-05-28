@@ -13,12 +13,12 @@
     "units": {
       "type": "object",
       "properties": {
-        "key": { "type": "string" },
-        "values": {
-          "type": "object",
-          "additionalProperties": { "type": "string" }
-        }
+        "key": { "type": "string" }
       }
+    },
+    "units_as": {
+      "description": "Actual input unit that is sent from the device",
+      "type": "string"
     },
     "states": {
       "type": "object",

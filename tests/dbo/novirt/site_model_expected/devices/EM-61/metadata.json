@@ -24,13 +24,7 @@
     "points": {
       "apparent_power_sensor": {
         "units": "kilovolt_amperes",
-        "translation": {
-          "units": {
-            "values": {
-              "kilo-volt-amperes": "kilovolt_amperes"
-            }
-          }
-        }
+        "units_as": "kilo-volt-amperes"
       },
       "average_inter_line_voltage_sensor": {
         "units": "volts"

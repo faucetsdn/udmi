@@ -16,13 +16,7 @@
     "points": {
       "zone_air_temperature_sensor": {
         "units": "degrees_celsius",
-        "translation": {
-          "units": {
-            "values": {
-              "degC": "degrees_celsius"
-            }
-          }
-        }
+        "units_as": "degC"
       },
       "supply_air_flowrate_sensor_1": {
         "expr": "VAV-3:supply_air_flowrate_sensor"

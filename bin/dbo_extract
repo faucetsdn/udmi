@@ -107,25 +107,24 @@ def extract_dbo_config(site_model_dir: Path) -> dict:
         pt_dbo["present_value"] = point_info.get("ref", f"points.{point_name}.present_value")
       
       if "units" not in pt_dbo and "units" in point_info:
+        standard_unit = point_info["units"]
+        raw_unit = point_info.get("units_as", standard_unit)
         pt_dbo["units"] = {
           "key": f"pointset.points.{point_name}.units",
-          "values": {point_info["units"]: point_info["units"]}
+          "values": {standard_unit: raw_unit}
         }
       elif "units" in pt_dbo:
         u = pt_dbo["units"].copy()
         # Derive key from point name if it was stripped
         u["key"] = f"pointset.points.{point_name}.units"
-        if "values" not in u and "units" in point_info:
-          u["values"] = {point_info["units"]: point_info["units"]}
-        elif "values" in u and "units" in point_info:
-          # If there are already mappings, we might need to add the identity one back 
-          # if it was stripped (though usually it's one-to-one).
-          # For now, ensure the UDMI unit is represented.
-          udmi_unit = point_info["units"]
-          if udmi_unit not in u["values"].values():
-            u["values"][udmi_unit] = udmi_unit
-        if "values" in u:
-          u["values"] = {v: k for k, v in u["values"].items()}
+        standard_unit = point_info.get("units")
+        raw_unit = point_info.get("units_as", standard_unit)
+        if "values" not in u and standard_unit:
+          u["values"] = {standard_unit: raw_unit}
+        elif "values" in u and standard_unit:
+          # If there are already mappings, ensure the standard one is represented.
+          if standard_unit not in u["values"]:
+            u["values"][standard_unit] = raw_unit
         pt_dbo["units"] = u
 
       if "states" not in pt_dbo and "value_map" in point_info:

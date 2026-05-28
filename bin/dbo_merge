@@ -158,6 +158,9 @@ def merge_dbo_config(yaml_file: Path, site_model_dir: Path):
           if "units" in pt_dbo and "values" in pt_dbo["units"]:
             udmi_unit = list(pt_dbo["units"]["values"].keys())[0]
             pt_udmi["units"] = udmi_unit
+            raw_unit = pt_dbo["units"]["values"][udmi_unit]
+            if raw_unit != udmi_unit:
+              pt_udmi["units_as"] = raw_unit
           if "states" in pt_dbo:
             pt_udmi["value_map"] = {v: k for k, v in pt_dbo["states"].items()}
           
@@ -171,10 +174,7 @@ def merge_dbo_config(yaml_file: Path, site_model_dir: Path):
             if u.get("key") == f"pointset.points.{pt_name}.units":
               del u["key"]
             if "values" in u:
-              # Only keep non-identity mappings
-              u["values"] = {v: k for k, v in u["values"].items() if k != v}
-              if not u["values"]:
-                del u["values"]
+              del u["values"]
             if not u:
               del clean_pt_dbo["units"]
             else:

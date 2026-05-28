@@ -10,6 +10,10 @@
       "description": "Expected unit configuration for the point",
       "type": "string"
     },
+    "units_as": {
+      "description": "Actual input unit that is sent from the device",
+      "type": "string"
+    },
     "type": {
       "description": "Expected data type for the point",
       "enum": ["string", "boolean", "number"]
