@@ -34,4 +34,3 @@
 - [Message Walk](message_walk.md)
 - [Tech Stack](tech_stack.md)
 - [Proxy](proxy.md)
-- [UUFI (External Interface)](uufi.md)
