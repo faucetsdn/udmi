@@ -1,0 +1,43 @@
+#!/bin/bash -e
+
+# UUFI Observation Tool
+# This script acts as a passive observer on the UUFI topic tree.
+# It can be used to monitor traffic between clients and the system for debugging.
+
+UDMI_ROOT=$(dirname $0)/..
+cd ${UDMI_ROOT}
+source etc/shell_common.sh
+
+HOST=${1:-localhost}
+PORT=${2:-8883}
+USER=${3:-rocket}
+PASS=${4:-monkey}
+CLIENT_ID="uufi-observer-$(date +%s)"
+SITE_MODEL=${5:-sites/uufi_site_model}
+CA_CERT="$SITE_MODEL/reflector/ca.crt"
+
+echo "Waiting for non-empty CA certificate $CA_CERT..."
+TIMEOUT=60
+while [[ (! -f $CA_CERT || ! -s $CA_CERT) && $TIMEOUT -gt 0 ]]; do
+    sleep 1
+    TIMEOUT=$((TIMEOUT - 1))
+done
+
+if [[ ! -s $CA_CERT ]]; then
+    echo "Valid CA certificate $CA_CERT not found. Ensure UUFI environment is running (bin/start_uufi)."
+    exit 1
+fi
+
+# Connection parameters for mosquitto_sub
+MQTT_ARGS="-h $HOST -p $PORT -u $USER -P $PASS --cafile $CA_CERT --cert $SITE_MODEL/reflector/rsa_private.crt --key $SITE_MODEL/reflector/rsa_private.pem -i $CLIENT_ID --insecure"
+
+echo "UUFI Observer starting against $HOST:$PORT..."
+echo "Subscribing to /uufi/#"
+echo "----------------------------------------"
+
+# Use mosquitto_sub with format option and pretty-print JSON if jq is available
+if command -v jq >/dev/null 2>&1; then
+    mosquitto_sub $MQTT_ARGS -t "/uufi/#" -F '{"topic":"%t","payload":%p}' | jq .
+else
+    mosquitto_sub $MQTT_ARGS -t "/uufi/#" -v
+fi

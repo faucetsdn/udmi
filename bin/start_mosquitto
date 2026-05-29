@@ -73,6 +73,12 @@ fi
 $MOSQUITTO_CTRL createRole service
 $MOSQUITTO_CTRL addRoleACL service subscribePattern '/r/+/d/+/#' allow
 $MOSQUITTO_CTRL addRoleACL service publishClientSend '/r/+/d/+/#' allow
+$MOSQUITTO_CTRL addRoleACL service subscribePattern '/uufi/#' allow
+$MOSQUITTO_CTRL addRoleACL service publishClientSend '/uufi/#' allow
+
+$MOSQUITTO_CTRL createRole uufi
+$MOSQUITTO_CTRL addRoleACL uufi subscribePattern '/uufi/#' allow
+$MOSQUITTO_CTRL addRoleACL uufi publishClientSend '/uufi/#' allow
 
 clients=$($MOSQUITTO_CTRL listClients)
 if [[ $clients =~ ${AUTH_USER} ]]; then

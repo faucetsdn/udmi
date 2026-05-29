@@ -122,13 +122,34 @@ public class SimpleMqttPipe extends MessageBase {
 
   static Map<String, String> parseEnvelopeTopic(String topic) {
     try {
-      // 0/1/2       /3/4     /5   [/6     [/7      ]]
-      //  /r/REGISTRY/d/DEVICE/TYPE[/FOLDER[/GATEWAY]]
       String[] parts = topic.split("/", 12);
-      if (parts.length < 6 || parts.length > 10) {
+      if (parts.length < 3) {
         throw new RuntimeException("Unexpected topic length: " + topic);
       }
+
+      int start = Strings.isNullOrEmpty(parts[0]) ? 1 : 0;
       Envelope envelope = new Envelope();
+
+      if ("uufi".equals(parts[start])) {
+        // UUFI topic: [/namespace]/uufi/[r/REG/d/DEV/]c/TYPE/FOLDER
+        int base = start + 1;
+        if ("r".equals(parts[base])) {
+          envelope.deviceRegistryId = nullAsNull(parts[base + 1]);
+          checkState("d".equals(parts[base + 2]), "expected devices");
+          envelope.deviceId = nullAsNull(parts[base + 3]);
+          base += 4;
+        }
+        checkState("c".equals(parts[base]), "expected commands");
+        envelope.subType = convertSubType(parts[base + 1]);
+        envelope.subFolder = convertSubFolder(parts[base + 2]);
+        envelope.rawFolder = "uufi";
+        return toStringMap(envelope);
+      }
+
+      // Legacy topic: /r/REGISTRY/d/DEVICE/TYPE[/FOLDER[/GATEWAY]]
+      if (parts.length < 6 || parts.length > 10) {
+        throw new RuntimeException("Unexpected legacy topic length: " + topic);
+      }
       checkState(Strings.isNullOrEmpty(parts[0]), "non-empty prefix");
       checkState("r".equals(parts[1]), "expected registries");
       envelope.deviceRegistryId = nullAsNull(parts[2]);
@@ -144,9 +165,6 @@ public class SimpleMqttPipe extends MessageBase {
       }
       if (parts.length > base + 7) {
         envelope.gatewayId = nullAsNull(parts[base + 7]);
-      }
-      if (parts.length > base + 8) {
-        throw new RuntimeException("Unrecognized extra topic arguments: " + parts[base + 8]);
       }
       return toStringMap(envelope);
     } catch (Exception e) {

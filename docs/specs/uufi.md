@@ -163,6 +163,73 @@ The `UPDATE` operation for the `cloud` subfolder is a partial merge at the devic
 
 ---
 
+# 9. Test and Development
+
+The UDMI repository provides a local development environment to facilitate the implementation and testing of UUFI Clients and Systems.
+
+## 9.1. Local Mock Environment
+
+The `bin/start_uufi` script initializes a spec-compliant UUFI backend using a local MQTT broker. This environment is ideal for developing new clients without requiring a full cloud deployment.
+
+### Starting the Environment
+```bash
+bin/start_uufi
+```
+
+This script performs the following actions:
+1.  **MQTT Broker:** Starts a local Mosquitto broker on port 8883 with SSL enabled.
+2.  **Site Model:** Generates a mock site model in `sites/uufi_site_model` with the necessary credentials.
+3.  **UDMIS:** Starts the `udmis` service with the `UufiProcessor` enabled.
+
+**Connection Details:**
+- **Scheme:** `mqtt://`
+- **Host:** `localhost`
+- **Port:** `8883`
+- **Username:** `rocket`
+- **Password:** `monkey`
+- **CA Certificate:** `sites/uufi_site_model/reflector/ca.crt`
+
+## 9.2. Automated Integration Testing
+
+The `bin/test_uufi` script acts as a mock UUFI client to validate that a running service is WAI (Working As Intended). It is used to ensure the `udmis` implementation remains spec-compliant.
+
+### Running the Test
+With `bin/start_uufi` already running in the background or another terminal:
+```bash
+bin/test_uufi
+```
+
+The test script validates:
+1.  **Environment Readiness:** Waits for the local CA certificate to be generated.
+2.  **Handshake Protocol:** Executes Step 1 (State) and verifies the Step 2 (Config) reply.
+3.  **Transaction Tracking:** Ensures the `transaction_id` is correctly reflected by the system.
+4.  **Message Unwrapping:** Injects a UUFI-wrapped message to verify system ingestion.
+
+## 9.3. Passive Observation
+
+The `bin/observe_uufi` tool provides a passive, real-time view of all traffic on the UUFI topic tree. This is essential for diagnosing communication issues and verifying message formats without interfering with the client or system.
+
+### Starting the Observer
+```bash
+bin/observe_uufi
+```
+
+The observer will:
+1.  **Subscribe:** Connects to the local MQTT broker and subscribes to `/uufi/#`.
+2.  **Display:** Outputs every message received, including the topic and a pretty-printed JSON payload (if `jq` is installed).
+3.  **Trace:** Allows developers to see the exact sequence of the handshake and subsequent message flows.
+
+## 9.4. Client Development Workflow
+
+When developing a new external client, it is recommended to use the local mock environment as your primary backend:
+
+1.  **Initialization:** Run `bin/start_uufi`.
+2.  **CA Certificate:** Configure your client to trust the generated `sites/udmi_site_model/reflector/ca.crt`.
+3.  **Handshake:** Implement the Step 1 State Declaration. Your client is considered "Active" once it receives a matching Step 2 Config.
+4.  **Debugging:** Monitor the `udmis` logs in `out/udmis.log` to see how your messages are being processed and routed.
+
+---
+
 # Appendix A: Schemas and Examples
 
 This appendix references the formal JSON schemas and provides message examples for the UUFI protocol. The **UDMI Schema Repository** is the authoritative source for all message structures.

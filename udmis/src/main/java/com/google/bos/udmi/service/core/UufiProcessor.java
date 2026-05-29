@@ -27,6 +27,7 @@ public class UufiProcessor extends ProcessorBase {
 
   public UufiProcessor(EndpointConfiguration config) {
     super(config);
+    info("UUFI Processor initialized");
   }
 
   @Override
