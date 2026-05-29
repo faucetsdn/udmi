@@ -251,6 +251,19 @@ public class SimpleMqttPipe extends MessageBase {
   }
 
   private String makeTopic(Envelope envelope) {
+    if ("uufi".equals(envelope.rawFolder)) {
+      String topic = isNotEmpty(namespace) && !"default".equals(namespace) ? "/" + namespace : "";
+      topic += "/uufi";
+      if (envelope.deviceRegistryId != null) {
+        topic += "/r/" + envelope.deviceRegistryId;
+        if (envelope.deviceId != null) {
+          topic += "/d/" + envelope.deviceId;
+        }
+      }
+      topic += "/c/" + envelope.subType + "/" + envelope.subFolder;
+      return topic;
+    }
+
     String topic = "";
     if (envelope.gatewayId != null) {
       topic = "/" + envelope.gatewayId + topic;
@@ -278,7 +291,7 @@ public class SimpleMqttPipe extends MessageBase {
       info("No recv_id defined, not subscribing for component " + endpoint.name);
       return;
     }
-    String subscribeTopic = format(SUB_BASE_FORMAT, recvId);
+    String subscribeTopic = recvId.startsWith("/") ? recvId : format(SUB_BASE_FORMAT, recvId);
     try {
       synchronized (mqttClient) {
         boolean connected = mqttClient.isConnected();

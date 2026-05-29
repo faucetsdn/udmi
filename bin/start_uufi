@@ -1,0 +1,55 @@
+#!/bin/bash -e
+
+# Start a local UUFI development environment.
+# This script sets up a local MQTT broker and starts UDMIS with the UUFI processor enabled.
+
+UDMI_ROOT=$(dirname $0)/..
+source $UDMI_ROOT/etc/shell_common.sh
+
+export UDMI_ROOT
+export UDMIS_CONFIG=etc/uufi_pod.json
+
+# Use a default site model for local testing if not provided
+SITE_MODEL=${1:-sites/udmi_site_model}
+PROJECT_ID=${2:-vibrant}
+
+echo "Starting UUFI development environment..."
+echo "Site Model: $SITE_MODEL"
+echo "Project ID: $PROJECT_ID"
+
+# 1. Start local MQTT and basic services
+# We use bin/start_local but point it to a mock config if needed.
+# For UUFI testing, we just need a working broker and UDMIS.
+
+if [[ ! -d $SITE_MODEL ]]; then
+    echo "Creating basic site model for UUFI testing..."
+    mkdir -p $SITE_MODEL/reflector
+    cat <<EOF > $SITE_MODEL/cloud_iot_config.json
+{
+  "project_id": "$PROJECT_ID",
+  "registry_id": "uufi-registry",
+  "iot_provider": "mqtt"
+}
+EOF
+fi
+
+# Start the local environment (MQTT, etcd, etc.)
+# We pass 'block' so it keeps running, or run it in background if preferred.
+# For a 'dev' script, it's often better to run and then provide the connection string.
+
+bin/start_local $SITE_MODEL mqtt/$PROJECT_ID &
+LOCAL_PID=$!
+
+trap "kill $LOCAL_PID; exit" INT TERM EXIT
+
+echo ""
+echo "UUFI Service is starting up."
+echo "Connection String: mqtt://rocket:monkey@localhost:8883"
+echo "Topic Prefix: (none)"
+echo ""
+echo "You can now run your UUFI client against this endpoint."
+echo "Press Ctrl+C to shut down the environment."
+
+# Wait for UDMIS to be ready (optional check)
+# tail -f out/udmis.log
+wait $LOCAL_PID

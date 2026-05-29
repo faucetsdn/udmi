@@ -1,0 +1,10 @@
+{
+  "include": "local_pod.json",
+  "flows": {
+    "uufi": {
+      "recv_id": "uufi/#",
+      "send_id": "uufi",
+      "enabled": "yes"
+    }
+  }
+}
