@@ -469,8 +469,11 @@ public class SequenceBase {
   @VisibleForTesting
   static void resetState() {
     System.err.println("Resetting SequenceBase state for testing");
+    ifNotNullThen(client, MessagePublisher::close);
+    ifNotNullThen(altClient, IotReflectorClient::close);
     exeConfig = null;
     client = null;
+    altClient = null;
     validationState = null;
   }
 
@@ -2800,7 +2803,6 @@ public class SequenceBase {
         ifNotNullThen(validationState,
             state -> state.cloud_version = client.getVersionInformation());
 
-        ifNotNullThen(altClient, IotReflectorClient::activate);
         checkState(reflector().isActive(), "Reflector is not currently active");
 
         activeInstance = SequenceBase.this;
