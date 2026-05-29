@@ -283,6 +283,38 @@ jobs:
           name: udmi-support_${{ github.run_id }}-l
           path: '*_udmi-support_*.tgz'
 
+  uufi:
+    name: UUFI Integration
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-java@v5
+        with:
+          distribution: 'temurin'
+          java-version: '21'
+      - name: base setup
+        run: |
+          bin/setup_base
+          bin/clone_model
+      - name: start uufi
+        run: |
+          bin/start_uufi &
+      - name: test uufi
+        run: bin/test_uufi
+      - name: udmis log
+        if: ${{ !cancelled() }}
+        run: cat out/udmis.log
+      - name: support bundle
+        if: ${{ !cancelled() }}
+        run: bin/support ${{ github.repository_owner }}_${{ github.job }}_
+      - uses: actions/upload-artifact@v7
+        if: ${{ !cancelled() }}
+        with:
+          if-no-files-found: error
+          name: udmi-support_${{ github.run_id }}-u
+          path: '*_udmi-support_*.tgz'
+
   endpoint:
     name: Endpoint Redirection
     runs-on: ubuntu-24.04
@@ -359,7 +391,7 @@ jobs:
     name: Post-test Summarization
     runs-on: ubuntu-24.04
     timeout-minutes: 5
-    needs: [ baseline, sequencer, endpoint, runlocal, blobupdates ]
+    needs: [ baseline, sequencer, endpoint, runlocal, blobupdates, uufi ]
     if: ${{ !cancelled() }}
     env:
       TARGET_PROJECT: ${{ vars.TARGET_PROJECT || '//mqtt/localhost' }}
