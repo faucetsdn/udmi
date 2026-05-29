@@ -9,14 +9,15 @@ import re
 
 def sanitize_id(id_str: str) -> str:
   """Sanitizes a string for use as a UDMI device_id."""
-  # Replace non-alphanumeric with underscores, strip leading/trailing underscores
-  s = re.sub(r'[^a-zA-Z0-9_-]+', '_', id_str)
-  return s.strip('_')
+  # Replace non-alphanumeric with underscores, strip leading/trailing
+  # underscores.
+  s = re.sub(r"[^a-zA-Z0-9_-]+", "_", id_str)
+  return s.strip("_")
 
 def extract_dbo_config(site_model_dir: Path) -> dict:
   """Extracts DBO configurations to a dict."""
   building_config = {}
-  
+
   ancillary_path = site_model_dir / "ancillary.json"
   if ancillary_path.exists():
     with open(ancillary_path, "r", encoding="utf-8") as f:
@@ -42,7 +43,7 @@ def extract_dbo_config(site_model_dir: Path) -> dict:
 
   devices_dir = site_model_dir / "devices"
   if not devices_dir.is_dir():
-      return building_config
+    return building_config
 
   metadata_map = {}
 
@@ -89,9 +90,9 @@ def extract_dbo_config(site_model_dir: Path) -> dict:
         target_guid = device_id_to_guid.get(target_id, target_id)
         if isinstance(relation, dict):
           if relation:
-             # Match string enum format expected by schema
-             rel_type = list(relation.keys())[0]
-             connections[target_guid] = rel_type
+            # Match string enum format expected by schema
+            rel_type = list(relation.keys())[0]
+            connections[target_guid] = rel_type
 
       device_entry["connections"] = connections
 
@@ -102,13 +103,15 @@ def extract_dbo_config(site_model_dir: Path) -> dict:
     for point_name, point_info in pointset.items():
       # Reconstruct DBO translation from standard UDMI fields or use stored one
       pt_dbo = point_info.get("translation", {}).copy()
-      
+
       if "present_value" not in pt_dbo:
-        pt_dbo["present_value"] = point_info.get("ref", f"points.{point_name}.present_value")
-      
+        pt_dbo["present_value"] = point_info.get(
+            "ref", f"points.{point_name}.present_value")
+
       if "units" not in pt_dbo and "units" in point_info:
         standard_unit = point_info["units"]
-        raw_unit = point_info.get("units_reported", point_info.get("units_as", standard_unit))
+        raw_unit = point_info.get(
+            "units_reported", point_info.get("units_as", standard_unit))
         pt_dbo["units"] = {
           "key": f"pointset.points.{point_name}.units",
           "values": {standard_unit: raw_unit}
@@ -118,21 +121,26 @@ def extract_dbo_config(site_model_dir: Path) -> dict:
         # Derive key from point name if it was stripped
         u["key"] = f"pointset.points.{point_name}.units"
         standard_unit = point_info.get("units")
-        raw_unit = point_info.get("units_reported", point_info.get("units_as", standard_unit))
+        raw_unit = point_info.get(
+            "units_reported", point_info.get("units_as", standard_unit))
         if "values" not in u and standard_unit:
           u["values"] = {standard_unit: raw_unit}
         elif "values" in u and standard_unit:
-          # If there are already mappings, ensure the standard one is represented.
+          # If there are already mappings, ensure standard one is represented.
           if standard_unit not in u["values"]:
             u["values"][standard_unit] = raw_unit
         pt_dbo["units"] = u
 
       if "states" not in pt_dbo:
-        states_map = point_info.get("values", point_info.get("translations", point_info.get("value_map")))
+        states_map = point_info.get(
+            "values", point_info.get(
+                "translations", point_info.get("value_map")))
         if states_map:
           pt_dbo["states"] = {v: k for k, v in states_map.items()}
       elif "states" in pt_dbo:
-        states_map = point_info.get("values", point_info.get("translations", point_info.get("value_map")))
+        states_map = point_info.get(
+            "values", point_info.get(
+                "translations", point_info.get("value_map")))
         if states_map:
           # Merge back any values that were stripped as identities
           for k, v in states_map.items():
@@ -142,14 +150,16 @@ def extract_dbo_config(site_model_dir: Path) -> dict:
       elif "states" in pt_dbo:
         pt_dbo["states"] = {v: k for k, v in pt_dbo["states"].items()}
 
-      if len(pt_dbo) > 1 or pt_dbo.get("present_value") != f"points.{point_name}.present_value":
+      if (len(pt_dbo) > 1 or
+          pt_dbo.get("present_value") != f"points.{point_name}.present_value"):
         translations[point_name] = pt_dbo
 
       if "expr" in point_info:
         link_val = point_info["expr"]
         if ":" in link_val:
           remote_device_id, remote_pt = link_val.split(":", 1)
-          remote_guid = device_id_to_guid.get(remote_device_id, remote_device_id)
+          remote_guid = device_id_to_guid.get(
+              remote_device_id, remote_device_id)
           if remote_guid not in links_dbo:
             links_dbo[remote_guid] = {}
           # DBO links are local_point: remote_point

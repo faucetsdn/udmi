@@ -21,8 +21,7 @@
       "type": "string"
     },
     "states": {
-      "type": "object",
-      "additionalProperties": { "type": "string" }
+      "type": "object"
     }
   }
 }
