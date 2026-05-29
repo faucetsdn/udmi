@@ -429,11 +429,13 @@ jobs:
           echo Built local UDMIS
       - name: Start UDMIS container
         run: |
+          mkdir -p out
           docker run -d --rm --net udminet --name udmis -p 8883:8883 \
             -v $PWD/site_model:/root/site_model \
             -v $PWD/var/tmp:/tmp \
             -v $PWD/var/etcd:/root/udmi/var/etcd \
             -v $PWD/var/mosquitto:/etc/mosquitto \
+            -v $PWD/out:/root/udmi/out \
             udmis udmi/bin/start_local block site_model/cloud_iot_config.json
           for count in `seq 0 60`; do
             echo Waiting for UDMIS startup $((30 - count))
