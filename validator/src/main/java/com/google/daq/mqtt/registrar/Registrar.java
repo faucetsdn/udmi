@@ -1184,8 +1184,8 @@ public class Registrar {
       ifNotTrueThen(augmentedModel.equals(loadFile(CloudModel.class, modelFile)), () -> {
         System.err.println("Writing extra device model to " + devPath);
         writeFile(augmentedModel, modelFile);
-        updateExtraMetadata(extraName, extraDir);
       });
+      updateExtraMetadata(extraName, extraDir);
     } catch (Exception e) {
       throw new RuntimeException("Writing extra device data " + extraDir.getAbsolutePath(), e);
     }
