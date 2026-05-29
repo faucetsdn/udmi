@@ -177,25 +177,25 @@ public class EndpointConfiguration {
     @JsonProperty("auth_provider")
     public Auth_provider auth_provider;
     /**
-     * Full path to the CA certificate file
+     * Path to the CA certificate file
      * 
      */
     @JsonProperty("ca_file")
-    @JsonPropertyDescription("Full path to the CA certificate file")
+    @JsonPropertyDescription("Path to the CA certificate file")
     public String ca_file;
     /**
-     * Full path to the client certificate file
+     * Path to the client certificate file
      * 
      */
     @JsonProperty("cert_file")
-    @JsonPropertyDescription("Full path to the client certificate file")
+    @JsonPropertyDescription("Path to the client certificate file")
     public String cert_file;
     /**
-     * Full path to the client private key file
+     * Path to the client private key file
      * 
      */
     @JsonProperty("key_file")
-    @JsonPropertyDescription("Full path to the client private key file")
+    @JsonPropertyDescription("Path to the client private key file")
     public String key_file;
     /**
      * The timestamp of the endpoint generation
