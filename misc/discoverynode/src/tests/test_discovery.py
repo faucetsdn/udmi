@@ -51,7 +51,13 @@ def test_number_discovery_start_and_stop():
   assert numbers.state.phase == state.Phase.stopped
   #until_true(lambda: numbers.state.phase == discovery.states.FINISHED, "phase to be finished", 8)
   # maybe flakey?
-  assert [None, '1', '2', '3', '4', '5', None] == [x[0].addr for (x, _) in mock_publisher.call_args_list]
+  # Check if all events generated during the period (which could be more or less than 5 depending on scheduling)
+  # are published, surrounded by start and stop markers (addr=None)
+  addrs = [x[0].addr for (x, _) in mock_publisher.call_args_list]
+  assert addrs[0] is None
+  assert addrs[-1] is None
+  # The items in between should be sequential integers as strings starting from '1'
+  assert addrs[1:-1] == [str(i) for i in range(1, len(addrs) - 1)]
 
 
 def test_event_counts():
