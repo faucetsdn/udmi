@@ -1,9 +1,7 @@
 package com.google.bos.udmi.service.core;
 
 import static com.google.udmi.util.GeneralUtils.decodeBase64;
-import static com.google.udmi.util.GeneralUtils.encodeBase64;
 import static com.google.udmi.util.JsonUtil.convertTo;
-import static com.google.udmi.util.JsonUtil.stringify;
 import static com.google.udmi.util.JsonUtil.toMap;
 import static com.google.udmi.util.JsonUtil.toObject;
 
@@ -54,11 +52,11 @@ public class UufiProcessor extends ProcessorBase {
              debug("Ignoring loopback of UUFI handshake reply");
              return;
           }
-          handleUufiMessage(envelope, messageMap);
+          handleUufiInbound(envelope, messageMap);
         }
       } else {
         // Message from Internal Bus (System) - wrap and send to MQTT
-        forwardToClients(envelope, message);
+        handleUufiOutbound(envelope, message);
       }
     } catch (Exception e) {
       error("Error processing UUFI message: " + e.getMessage());
@@ -66,8 +64,6 @@ public class UufiProcessor extends ProcessorBase {
   }
 
   private boolean isHandshake(Envelope envelope, Object message) {
-    // UUFI handshake Step 1: Client publishes state to /uufi/c/state/udmi
-    // Handshake state is NOT wrapped in a payload key.
     return envelope.subType == SubType.STATE && envelope.subFolder == SubFolder.UDMI;
   }
 
@@ -88,14 +84,13 @@ public class UufiProcessor extends ProcessorBase {
 
     info("Sending UUFI handshake reply to %s (txn: %s)", source, transactionId);
 
-    // Handshake reply MUST be wrapped for MQTT transport
     Map<String, Object> wrappedConfig = toMap(replyEnvelope);
     wrappedConfig.put(PAYLOAD_KEY, config);
     
     publish(replyEnvelope, wrappedConfig);
   }
 
-  private void handleUufiMessage(Envelope envelope, Map<String, Object> messageMap) {
+  private void handleUufiInbound(Envelope envelope, Map<String, Object> messageMap) {
     Map<String, Object> mutableMap = toMap(messageMap);
     Object payloadRaw = mutableMap.remove(PAYLOAD_KEY);
     Object innerPayload = (payloadRaw instanceof String) 
@@ -104,19 +99,16 @@ public class UufiProcessor extends ProcessorBase {
     
     Envelope innerEnvelope = convertTo(Envelope.class, mutableMap);
     innerEnvelope.payload = null; 
+    innerEnvelope.gatewayId = null; // Remove the uufi marker for internal bus
     
-    debug("Forwarding UUFI message %s/%s from %s", 
+    debug("Forwarding UUFI message %s/%s from %s to internal bus", 
         innerEnvelope.subType, innerEnvelope.subFolder, envelope.source);
     
-    // Publish it to the internal bus so other processors can see it.
     publish(innerEnvelope, innerPayload);
   }
 
-  private void forwardToClients(Envelope envelope, Object message) {
-    // This is a message from the system (e.g. telemetry, state update)
-    // that should be forwarded to UUFI clients.
-    
-    // Wrap it in a UUFI envelope
+  private void handleUufiOutbound(Envelope envelope, Object message) {
+    // Wrap system message for UUFI clients
     Map<String, Object> uufiMessage = toMap(envelope);
     uufiMessage.put(PAYLOAD_KEY, message);
     
@@ -125,7 +117,7 @@ public class UufiProcessor extends ProcessorBase {
     uufiEnvelope.subFolder = envelope.subFolder;
     uufiEnvelope.deviceRegistryId = envelope.deviceRegistryId;
     uufiEnvelope.deviceId = envelope.deviceId;
-    uufiEnvelope.gatewayId = "uufi"; // Indicator for UUFI wrapping
+    uufiEnvelope.gatewayId = "uufi"; 
     
     debug("Forwarding system message %s/%s to UUFI clients", 
         envelope.subType, envelope.subFolder);

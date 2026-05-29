@@ -297,14 +297,14 @@ jobs:
         run: |
           bin/setup_base
           bin/clone_model
-      - name: start uufi
-        run: |
-          bin/start_uufi &
       - name: test uufi
         run: bin/test_uufi
       - name: udmis log
         if: ${{ !cancelled() }}
-        run: cat out/udmis.log
+        run: cat out/udmis.log || true
+      - name: pubber log
+        if: ${{ !cancelled() }}
+        run: cat out/pubber.log || true
       - name: support bundle
         if: ${{ !cancelled() }}
         run: bin/support ${{ github.repository_owner }}_${{ github.job }}_

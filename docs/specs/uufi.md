@@ -191,19 +191,23 @@ This script performs the following actions:
 
 ## 9.2. Automated Integration Testing
 
-The `bin/test_uufi` script acts as a mock UUFI client to validate that a running service is WAI (Working As Intended). It is used to ensure the `udmis` implementation remains spec-compliant.
+The `bin/test_uufi` tool performs a full end-to-end verification of the UUFI interface, including interaction with a real UDMI device (using Pubber). It handles system initialization, DUT lifecycle, and bidirectional message validation.
 
-### Running the Test
-With `bin/start_uufi` already running in the background or another terminal:
+### Running the Verification
 ```bash
 bin/test_uufi
 ```
 
-The test script validates:
-1.  **Environment Readiness:** Waits for the local CA certificate to be generated.
-2.  **Handshake Protocol:** Executes Step 1 (State) and verifies the Step 2 (Config) reply.
-3.  **Transaction Tracking:** Ensures the `transaction_id` is correctly reflected by the system.
-4.  **Message Unwrapping:** Injects a UUFI-wrapped message to verify system ingestion.
+The comprehensive test validates:
+1.  **System Initialization:** Starts the UUFI backend and configures local MQTT security.
+2.  **DUT Lifecycle:** Registers and launches a **Pubber** instance as the Device Under Test (DUT).
+3.  **UUFI Handshake:** Performs the initial handshake between the test client and the system.
+4.  **Bidirectional Exchange:** 
+    - Sends a UUFI-wrapped configuration update to the DUT.
+    - Verifies that UDMIS correctly routes the update to the device.
+    - Captures the subsequent state update from the DUT as it flows back through UUFI.
+
+For modular testing against an already running environment, the low-level `bin/uufi_test_client` script can be used directly to execute the client-side handshake and exchange logic.
 
 ## 9.3. Passive Observation
 
@@ -224,7 +228,7 @@ The observer will:
 When developing a new external client, it is recommended to use the local mock environment as your primary backend:
 
 1.  **Initialization:** Run `bin/start_uufi`.
-2.  **CA Certificate:** Configure your client to trust the generated `sites/udmi_site_model/reflector/ca.crt`.
+2.  **CA Certificate:** Configure your client to trust the generated `sites/uufi_site_model/reflector/ca.crt`.
 3.  **Handshake:** Implement the Step 1 State Declaration. Your client is considered "Active" once it receives a matching Step 2 Config.
 4.  **Debugging:** Monitor the `udmis` logs in `out/udmis.log` to see how your messages are being processed and routed.
 
