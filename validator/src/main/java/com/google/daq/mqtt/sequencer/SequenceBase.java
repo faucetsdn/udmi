@@ -400,6 +400,7 @@ public class SequenceBase {
     registryId = SiteModel.getRegistryActual(exeConfig);
 
     deviceMetadata = readDeviceMetadata();
+    skipConfigSync = isTraceLogLevel() || !deviceSupportsState();
 
     serialNo = ofNullable(exeConfig.serial_no)
         .orElseGet(() -> GeneralUtils.catchToNull(() -> deviceMetadata.system.serial_no));
@@ -886,7 +887,9 @@ public class SequenceBase {
     resetCapturedMessages();
     validationResults.clear();
 
-    waitForConfigSync();
+    if (deviceSupportsState()) {
+      waitForConfigSync();
+    }
 
     doPartialUpdates = true;
     recordSequence = true;
@@ -948,7 +951,9 @@ public class SequenceBase {
       resetRequired = false;
     });
 
-    waitForConfigSync();
+    if (deviceSupportsState()) {
+      waitForConfigSync();
+    }
 
     // If last config isn't reported by the device, then add in a fixed delay to
     // give it time to handle to the last sent config before proceeding. Otherwise, it would
