@@ -25,19 +25,19 @@
   "pointset": {
     "points": {
       "circulation_pump_run_command": {
-        "translations": {
+        "states": {
           "0.0": "OFF",
           "1.0": "ON"
         }
       },
       "circulation_pump_run_status": {
-        "translations": {
+        "states": {
           "0.0": "OFF",
           "1.0": "ON"
         }
       },
       "failed_alarm": {
-        "translations": {
+        "states": {
           "1.0": "ACTIVE",
           "0.0": "INACTIVE"
         }
@@ -46,7 +46,7 @@
         "units": "percent"
       },
       "high_supply_water_temperature_alarm": {
-        "translations": {
+        "states": {
           "1.0": "ACTIVE",
           "0.0": "INACTIVE"
         }

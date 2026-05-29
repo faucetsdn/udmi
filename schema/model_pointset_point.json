@@ -105,7 +105,7 @@
       "pattern": "^[-0-9a-zA-Z$]+:[a-z0-9_]+$",
       "examples": ["VAV-3:supply_air_flowrate_sensor"]
     },
-    "translations": {
+    "states": {
       "type": "object",
       "description": "State value mapping for this point (e.g. 0.0: OFF)",
       "additionalProperties": { "type": "string" }

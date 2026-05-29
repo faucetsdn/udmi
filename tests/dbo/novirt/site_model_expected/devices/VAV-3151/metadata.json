@@ -32,13 +32,13 @@
         "units": "degrees-fahrenheit"
       },
       "failed_zone_air_co2_concentration_alarm": {
-        "translations": {
+        "states": {
           "1.0": "ACTIVE",
           "0.0": "INACTIVE"
         }
       },
       "failed_zone_air_temperature_alarm": {
-        "translations": {
+        "states": {
           "1.0": "ACTIVE",
           "0.0": "INACTIVE"
         }
@@ -50,7 +50,7 @@
         "units": "percent"
       },
       "schedule_run_command": {
-        "translations": {
+        "states": {
           "0.0": "OFF",
           "1.0": "ON"
         }

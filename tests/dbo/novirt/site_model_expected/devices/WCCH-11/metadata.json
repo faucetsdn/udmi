@@ -40,13 +40,13 @@
         "units": "percent"
       },
       "failed_alarm": {
-        "translations": {
+        "states": {
           "1.0": "ACTIVE",
           "0.0": "INACTIVE"
         }
       },
       "run_status": {
-        "translations": {
+        "states": {
           "0.0": "OFF",
           "1.0": "ON"
         }
