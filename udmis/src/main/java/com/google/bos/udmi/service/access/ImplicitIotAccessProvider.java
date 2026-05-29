@@ -95,6 +95,7 @@ public class ImplicitIotAccessProvider extends IotAccessBase {
   private static final String LAST_STATE_KEY = "last_state";
   private static final String DEVICES_ACTIVE = "active";
   private static final String BOUND_TO_KEY = "bound_to";
+  private static final String BIND_STATUS_KEY = "bind_status";
   private static final String BLOCKED_PROPERTY = "blocked";
   private static final String CREATED_AT_PROPERTY = "created_at";
   private static final String REGISTRIES_KEY = "registries";
@@ -189,11 +190,21 @@ public class ImplicitIotAccessProvider extends IotAccessBase {
       if (current % 50 == 0 && progress != null) {
         progress.accept(format("Binding %d/%d devices to %s...", current, total, gatewayId));
       }
-      registryDeviceRef(registryId, deviceId).put(BOUND_TO_KEY, gatewayId);
-      gatewayBoundRef(registryId, gatewayId).put(deviceId, "bound");
-      futures.add(broker.bindGateway(
+      CompletableFuture<Void> bindFuture = broker.bindGateway(
           clientId(registryId, gatewayId),
-          clientId(registryId, deviceId)));
+          clientId(registryId, deviceId));
+      CompletableFuture<Void> chainedFuture = bindFuture.whenComplete((result, ex) -> {
+        if (ex == null) {
+          registryDeviceRef(registryId, deviceId).put(BOUND_TO_KEY, gatewayId);
+          registryDeviceRef(registryId, deviceId).put(BIND_STATUS_KEY, "bound");
+          gatewayBoundRef(registryId, gatewayId).put(deviceId, "bound");
+        } else {
+          registryDeviceRef(registryId, deviceId).put(BOUND_TO_KEY, gatewayId);
+          registryDeviceRef(registryId, deviceId).put(BIND_STATUS_KEY, "corrupt");
+          gatewayBoundRef(registryId, gatewayId).put(deviceId, "corrupt");
+        }
+      });
+      futures.add(chainedFuture);
     });
     CompletableFuture.allOf(futures.toArray(new CompletableFuture[0])).join();
   }
@@ -210,6 +221,7 @@ public class ImplicitIotAccessProvider extends IotAccessBase {
         progress.accept(format("Unbinding %d/%d devices from %s...", current, total, gatewayId));
       }
       registryDeviceRef(registryId, deviceId).delete(BOUND_TO_KEY);
+      registryDeviceRef(registryId, deviceId).delete(BIND_STATUS_KEY);
       gatewayBoundRef(registryId, gatewayId).delete(deviceId);
       futures.add(broker.unbindGateway(
           clientId(registryId, gatewayId),
@@ -555,8 +567,10 @@ public class ImplicitIotAccessProvider extends IotAccessBase {
   private Map<String, CloudModel> listBoundDevices(String registryId, String gatewayId) {
     Set<String> deviceIds = gatewayBoundRef(registryId, gatewayId).entries().keySet();
     Map<String, CloudModel> devices = deviceIds.stream().filter(deviceId -> {
-      String boundTo = registryDeviceRef(registryId, deviceId).get(BOUND_TO_KEY);
-      return gatewayId.equals(boundTo);
+      DataRef deviceRef = registryDeviceRef(registryId, deviceId);
+      String boundTo = deviceRef.get(BOUND_TO_KEY);
+      String bindStatus = deviceRef.get(BIND_STATUS_KEY);
+      return gatewayId.equals(boundTo) && "bound".equals(bindStatus);
     }).collect(Collectors.toMap(id -> id, id -> fetchDevice(registryId, id)));
     List<CloudModel> gateways = devices.values().stream()
         .filter(model -> GATEWAY.equals(model.resource_type)).toList();
