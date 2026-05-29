@@ -370,7 +370,7 @@ public class SequenceBase {
   static String activePrimary;
   private Date configStateStart;
   protected boolean pretendStateUpdated;
-  private Boolean stateSupported;
+  private static Boolean stateSupported;
   private Instant lastConfigApplied = getNowInstant();
   private Map<String, AtomicInteger> msgIndex = new HashMap<>();
   private Map<String, String> lastBase = new HashMap<>();
@@ -400,6 +400,7 @@ public class SequenceBase {
     registryId = SiteModel.getRegistryActual(exeConfig);
 
     deviceMetadata = readDeviceMetadata();
+    skipConfigSync = isTraceLogLevel() || !deviceSupportsState();
 
     serialNo = ofNullable(exeConfig.serial_no)
         .orElseGet(() -> GeneralUtils.catchToNull(() -> deviceMetadata.system.serial_no));
@@ -469,9 +470,13 @@ public class SequenceBase {
   @VisibleForTesting
   static void resetState() {
     System.err.println("Resetting SequenceBase state for testing");
+    ifNotNullThen(client, MessagePublisher::close);
+    ifNotNullThen(altClient, IotReflectorClient::close);
     exeConfig = null;
     client = null;
+    altClient = null;
     validationState = null;
+    stateSupported = null;
   }
 
   private static Metadata readDeviceMetadata() {
@@ -883,7 +888,9 @@ public class SequenceBase {
     resetCapturedMessages();
     validationResults.clear();
 
-    waitForConfigSync();
+    if (deviceSupportsState()) {
+      waitForConfigSync();
+    }
 
     doPartialUpdates = true;
     recordSequence = true;
@@ -901,9 +908,10 @@ public class SequenceBase {
     deviceConfig.blobset = null;
   }
 
-  private boolean deviceSupportsState() {
+  private static boolean deviceSupportsState() {
     ifNullThen(stateSupported,
-        () -> stateSupported = !isTrue(catchToNull(() -> deviceMetadata.testing.nostate)));
+        () -> stateSupported =
+            !isTrue(GeneralUtils.catchToNull(() -> deviceMetadata.testing.nostate)));
     return stateSupported;
   }
 
@@ -945,7 +953,9 @@ public class SequenceBase {
       resetRequired = false;
     });
 
-    waitForConfigSync();
+    if (deviceSupportsState()) {
+      waitForConfigSync();
+    }
 
     // If last config isn't reported by the device, then add in a fixed delay to
     // give it time to handle to the last sent config before proceeding. Otherwise, it would
@@ -2800,7 +2810,6 @@ public class SequenceBase {
         ifNotNullThen(validationState,
             state -> state.cloud_version = client.getVersionInformation());
 
-        ifNotNullThen(altClient, IotReflectorClient::activate);
         checkState(reflector().isActive(), "Reflector is not currently active");
 
         activeInstance = SequenceBase.this;
