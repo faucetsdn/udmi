@@ -46,18 +46,17 @@ def test_number_discovery_start_and_stop():
   numbers = udmi.discovery.numbers.NumberDiscovery(mock_state, mock_publisher)
   numbers._start()
   assert numbers.state.phase == state.Phase.active
-  time.sleep(5)
+
+  # Wait until exactly 6 events are published (start marker + 5 numbers)
+  # or timeout after 10 seconds to avoid hanging tests.
+  for _ in range(100):
+      if mock_publisher.call_count == 6:
+          break
+      time.sleep(0.1)
+
   numbers._stop()
   assert numbers.state.phase == state.Phase.stopped
-  #until_true(lambda: numbers.state.phase == discovery.states.FINISHED, "phase to be finished", 8)
-  # maybe flakey?
-  # Check if all events generated during the period (which could be more or less than 5 depending on scheduling)
-  # are published, surrounded by start and stop markers (addr=None)
-  addrs = [x[0].addr for (x, _) in mock_publisher.call_args_list]
-  assert addrs[0] is None
-  assert addrs[-1] is None
-  # The items in between should be sequential integers as strings starting from '1'
-  assert addrs[1:-1] == [str(i) for i in range(1, len(addrs) - 1)]
+  assert [None, '1', '2', '3', '4', '5', None] == [x[0].addr for (x, _) in mock_publisher.call_args_list]
 
 
 def test_event_counts():
@@ -65,7 +64,14 @@ def test_event_counts():
   mock_publisher = mock.MagicMock()
   numbers = udmi.discovery.numbers.NumberDiscovery(mock_state, mock_publisher)
   numbers._start()
-  time.sleep(5)
+
+  # Wait until exactly 6 events are published (start marker + 5 numbers)
+  # before stopping, ensuring exactly 7 events total.
+  for _ in range(100):
+      if mock_publisher.call_count == 6:
+          break
+      time.sleep(0.1)
+
   numbers._stop()
   # Because of "negative" start and end markers
   assert mock_publisher.call_count == 7
