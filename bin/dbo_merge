@@ -162,7 +162,7 @@ def merge_dbo_config(yaml_file: Path, site_model_dir: Path):
             if raw_unit != udmi_unit:
               pt_udmi["units_reported"] = raw_unit
           if "states" in pt_dbo:
-            pt_udmi["states"] = {v: k for k, v in pt_dbo["states"].items()}
+            pt_udmi["values"] = {v: k for k, v in pt_dbo["states"].items()}
           
           # Clean up pt_dbo before storing to avoid redundancy
           clean_pt_dbo = pt_dbo.copy()
@@ -180,7 +180,7 @@ def merge_dbo_config(yaml_file: Path, site_model_dir: Path):
             else:
               clean_pt_dbo["units"] = u
 
-          # States are already in the UDMI states field, so they are redundant here
+          # States are already in the UDMI values field, so they are redundant here
           if "states" in clean_pt_dbo:
             del clean_pt_dbo["states"]
 

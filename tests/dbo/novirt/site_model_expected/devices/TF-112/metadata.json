@@ -25,37 +25,37 @@
   "pointset": {
     "points": {
       "failed_alarm": {
-        "states": {
+        "values": {
           "1.0": "ACTIVE",
           "0.0": "INACTIVE"
         }
       },
       "failed_zone_air_temperature_alarm": {
-        "states": {
+        "values": {
           "1.0": "ACTIVE",
           "0.0": "INACTIVE"
         }
       },
       "run_command": {
-        "states": {
+        "values": {
           "0.0": "OFF",
           "1.0": "ON"
         }
       },
       "run_status": {
-        "states": {
+        "values": {
           "0.0": "OFF",
           "1.0": "ON"
         }
       },
       "schedule_run_command": {
-        "states": {
+        "values": {
           "0.0": "OFF",
           "1.0": "ON"
         }
       },
       "user_occupancy_override_status": {
-        "states": {
+        "values": {
           "0.0": "DISABLED",
           "1.0": "ENABLED"
         }

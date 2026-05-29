@@ -19,7 +19,7 @@
         "units_reported": "L/s"
       },
       "fan_status": {
-        "states": {
+        "values": {
           "0.0": "OFF",
           "1.0": "ON"
         }

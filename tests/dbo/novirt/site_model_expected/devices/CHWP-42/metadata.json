@@ -31,7 +31,7 @@
         "units": "kilowatt-hours"
       },
       "failed_alarm": {
-        "states": {
+        "values": {
           "1.0": "ACTIVE",
           "0.0": "INACTIVE"
         }
@@ -40,13 +40,13 @@
         "units": "kilowatts"
       },
       "run_command": {
-        "states": {
+        "values": {
           "0.0": "OFF",
           "1.0": "ON"
         }
       },
       "run_status": {
-        "states": {
+        "values": {
           "0.0": "OFF",
           "1.0": "ON"
         }
