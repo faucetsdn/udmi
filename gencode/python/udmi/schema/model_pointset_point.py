@@ -44,6 +44,7 @@ class PointPointsetModel(DataModel):
     """
 
     units: Optional[str] = None
+    units_reported: Optional[str] = None
     type: Optional[Type] = None
     description: Optional[str] = None
     writable: Optional[bool] = None
@@ -59,4 +60,5 @@ class PointPointsetModel(DataModel):
     tags: Optional[List[Tag]] = None
     structure: Optional[Dict[str, RefDiscovery]] = None
     expr: Optional[str] = None
+    values: Optional[Dict[str, str]] = None
     translation: Optional[BuildingTranslation] = None

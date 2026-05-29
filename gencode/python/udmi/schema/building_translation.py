@@ -12,7 +12,6 @@ from ._base import DataModel
 @dataclass
 class Units(DataModel):
     key: Optional[str] = None
-    values: Optional[Dict[str, str]] = None
 
 
 @dataclass
@@ -23,4 +22,5 @@ class BuildingTranslation(DataModel):
 
     present_value: Optional[str] = None
     units: Optional[Units] = None
+    units_reported: Optional[str] = None
     states: Optional[Dict[str, str]] = None

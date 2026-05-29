@@ -17,6 +17,7 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 @JsonPropertyOrder({
     "present_value",
     "units",
+    "units_reported",
     "states"
 })
 public class BuildingTranslation {
@@ -30,14 +31,22 @@ public class BuildingTranslation {
     public String present_value;
     @JsonProperty("units")
     public Units units;
+    /**
+     * Actual input unit that is sent from the device
+     * 
+     */
+    @JsonProperty("units_reported")
+    @JsonPropertyDescription("Actual input unit that is sent from the device")
+    public String units_reported;
     @JsonProperty("states")
     public States states;
 
     @Override
     public int hashCode() {
         int result = 1;
-        result = ((result* 31)+((this.present_value == null)? 0 :this.present_value.hashCode()));
         result = ((result* 31)+((this.units == null)? 0 :this.units.hashCode()));
+        result = ((result* 31)+((this.units_reported == null)? 0 :this.units_reported.hashCode()));
+        result = ((result* 31)+((this.present_value == null)? 0 :this.present_value.hashCode()));
         result = ((result* 31)+((this.states == null)? 0 :this.states.hashCode()));
         return result;
     }
@@ -51,7 +60,7 @@ public class BuildingTranslation {
             return false;
         }
         BuildingTranslation rhs = ((BuildingTranslation) other);
-        return ((((this.present_value == rhs.present_value)||((this.present_value!= null)&&this.present_value.equals(rhs.present_value)))&&((this.units == rhs.units)||((this.units!= null)&&this.units.equals(rhs.units))))&&((this.states == rhs.states)||((this.states!= null)&&this.states.equals(rhs.states))));
+        return (((((this.units == rhs.units)||((this.units!= null)&&this.units.equals(rhs.units)))&&((this.units_reported == rhs.units_reported)||((this.units_reported!= null)&&this.units_reported.equals(rhs.units_reported))))&&((this.present_value == rhs.present_value)||((this.present_value!= null)&&this.present_value.equals(rhs.present_value))))&&((this.states == rhs.states)||((this.states!= null)&&this.states.equals(rhs.states))));
     }
 
 }

@@ -7,21 +7,17 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
-    "key",
-    "values"
+    "key"
 })
 public class Units {
 
     @JsonProperty("key")
     public String key;
-    @JsonProperty("values")
-    public Values values;
 
     @Override
     public int hashCode() {
         int result = 1;
         result = ((result* 31)+((this.key == null)? 0 :this.key.hashCode()));
-        result = ((result* 31)+((this.values == null)? 0 :this.values.hashCode()));
         return result;
     }
 
@@ -34,7 +30,7 @@ public class Units {
             return false;
         }
         Units rhs = ((Units) other);
-        return (((this.key == rhs.key)||((this.key!= null)&&this.key.equals(rhs.key)))&&((this.values == rhs.values)||((this.values!= null)&&this.values.equals(rhs.values))));
+        return ((this.key == rhs.key)||((this.key!= null)&&this.key.equals(rhs.key)));
     }
 
 }
