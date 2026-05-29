@@ -109,7 +109,7 @@ public class Metadata {
      * Entity Relationships
      * <p>
      * Entity relationships to other devices, keyed by target device ID
-     *
+     * 
      */
     @JsonProperty("relationships")
     @JsonPropertyDescription("Entity relationships to other devices, keyed by target device ID")
@@ -163,7 +163,7 @@ public class Metadata {
      * Alarmset Model
      * <p>
      * Alarmset representing the abstract system expectation for what the device should be doing, and how it should be configured and operated. This block specifies the expected alarms that a device holds
-     *
+     * 
      */
     @JsonProperty("alarmset")
     @JsonPropertyDescription("Alarmset representing the abstract system expectation for what the device should be doing, and how it should be configured and operated. This block specifies the expected alarms that a device holds")

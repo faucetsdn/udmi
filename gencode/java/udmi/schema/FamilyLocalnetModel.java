@@ -65,7 +65,7 @@ public class FamilyLocalnetModel {
     public java.lang.String family;
     /**
      * The network within the gateway device to use for this network
-     *
+     * 
      */
     @JsonProperty("network_id")
     @JsonPropertyDescription("The network within the gateway device to use for this network")

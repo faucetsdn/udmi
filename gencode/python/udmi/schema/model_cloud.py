@@ -70,6 +70,7 @@ class CloudModel(DataModel):
     config: Optional[ConfigCloudModel] = None
     blocked: Optional[bool] = None
     detail: Optional[str] = None
+    password: Optional[str] = None
     credentials: Optional[List[Credential]] = None
     updated_time: Optional[str] = None
     last_event_time: Optional[str] = None

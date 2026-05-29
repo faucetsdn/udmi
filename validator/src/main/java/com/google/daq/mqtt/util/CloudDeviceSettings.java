@@ -9,6 +9,7 @@ import udmi.schema.Credential;
 public class CloudDeviceSettings {
 
   public List<Credential> credentials;
+  public String password;
   public String metadata;
   public String deviceNumId;
   public List<String> proxyDevices;

@@ -1,92 +1,109 @@
 [**UDMI**](../../) / [**Docs**](../) / [**Specs**](./) / [Modbus](#)
 
-# Modbus RTU Specification
+# Modbus Specification
 
-Before implementing automatic data source and point creation for Modbus RTU, the UDMI specification must define the required information. This document outlines the Modbus integration for UDMI, ensuring it is industry compliant while addressing UDMI's unique mapping and topology needs.
+UDMI supports reading Modbus points by specifying them via a `modbus://` URL schema.
 
-## Serial Bus Information
+## URI Schema
 
-* Minimum required communication settings (per serial bus):
-  * `baud_rate`
-  * `data_bits`
-  * `stop_bits`
-  * `parity`
-* Multiple devices can share the same serial bus.
-* An IoT Gateway device can have multiple serial bus connections.
-  * The communication settings are not unique identifiers. Multiple connections can have the same serial communication settings.
-  * The Modbus ID is only unique within the scope of a single serial bus. Multiple proxied devices can have the same Modbus ID.
+`modbus://<host>[:port]/<unitid>/<function>/<address>[/<quantity>][?interpretation]`
 
-## Proxied Modbus Device Information
+*   **`host`**: The host name or IP address of the Modbus endpoint.
+    *   If the `host` maps to a named network, as indicated in the `networks` field in the `gateway` model, then the parameters there define the effective parameters to use.
+*   **`port`**: (Optional) The TCP port.
+*   **`unitid`**: The Slave ID (Unit Identifier).
+*   **`function`**: The Function Code (see [Function Codes](#function-codes)).
+*   **`address`**: The starting register address.
+*   **`quantity`**: (Optional) The number of registers to fetch.
+*   **`interpretation`**: (Optional) Query string properties that are necessary to properly interpret data fetched from a register.
 
-* Modbus ID
-* Connected to which serial bus
+### Function Codes
 
-## Modbus Point Information
+*   **`1`**: Read Coils
+*   **`2`**: Read Discrete Inputs
+*   **`3`**: Read Holding Registers
+*   **`4`**: Read Input Registers
+*   **`5`**: Write Single Coil
+*   **`6`**: Write Single Register
+*   **`15`**: Write Multiple Coils
+*   **`16`**: Write Multiple Registers
 
-* Minimum required information:
-  * `range`
-  * `data_type`
-  * `offset`
-  * `bit` (for some `data_type` values)
-  * `length` (for some `data_type` values)
+### Interpretation Parameters
 
-### Range Values
+Parameters passed in the query string define how to interpret the fetched register data:
 
-| Value |
-| ----- |
-| **coil_status** |
-| **input_status** |
-| **input_register** |
-| **holding_register** |
+*   **`border`**: i.e., `MSB` (`Big-Endian`) or `LSB` (`Little-Endian`).
+*   **`type`**: i.e., `INT16`, `UINT32`, `BOOLEAN`, `ASCII`.
+*   **`worder`**: i.e., `HWF` (`High-Word First`) or `LWF` (`Low-Word First`) (for 32-bit values).
+*   **`scale`**: i.e., `1.0`, `0.01`, `100.0` (scale factor).
 
-### Data Type Values
+### Network Parameters
 
-| Value | Description |
-| ----- | ----- |
-| **binary** | Binary |
-| **2_byte_unsigned** | 2 byte unsigned integer |
-| **2_byte_unsigned_swapped** | 2 byte unsigned integer swapped |
-| **2_byte_signed** | 2 byte signed integer |
-| **2_byte_signed_swapped** | 2 byte signed integer swapped |
-| **2_byte_bcd** | 2 byte BCD |
-| **1_byte_lower** | 1 byte lower |
-| **1_byte_upper** | 1 byte upper |
-| **4_byte_unsigned** | 4 byte unsigned integer |
-| **4_byte_signed** | 4 byte signed integer |
-| **4_byte_unsigned_swapped** | 4 byte unsigned integer swapped |
-| **4_byte_signed_swapped** | 4 byte signed integer swapped |
-| **4_byte_unsigned_swapped_swapped** | 4 byte unsigned integer swapped bytes and words |
-| **4_byte_signed_swapped_swapped** | 4 byte signed integer swapped bytes and words |
-| **4_byte_float** | 4 byte float |
-| **4_byte_float_swapped** | 4 byte float swapped |
-| **4_byte_bcd** | 4 byte BCD |
-| **4_byte_bcd_swapped** | 4 byte BCD swapped |
-| **4_byte_mod10k** | 4 byte Mod10k |
-| **4_byte_mod10k_swapped** | 4 byte Mod10k swapped |
-| **6_byte_mod10k** | 6 byte Mod10k |
-| **6_byte_mod10k_swapped** | 6 byte Mod10k swapped |
-| **8_byte_mod10k** | 8 byte Mod10k |
-| **8_byte_mod10k_swapped** | 8 byte Mod10k swapped |
-| **8_byte_unsigned** | 8 byte unsigned integer |
-| **8_byte_signed** | 8 byte signed integer |
-| **8_byte_unsigned_swapped** | 8 byte unsigned integer swapped |
-| **8_byte_signed_swapped** | 8 byte signed integer swapped |
-| **8_byte_float** | 8 byte float |
-| **8_byte_float_swapped** | 8 byte float swapped |
-| **char** | Fixed length string |
-| **varchar** | Variable length string |
+The `host` maps to a named network in the device's `model_localnet.json` (under the `networks` field). Each named network can define the following parameters for communication:
 
-## Implementation Details
+*   **`baud`**: The baud rate.
+*   **`protocol`**: i.e., `RTU`, `TCP`.
+*   **`parity`**: For serial `RTU`.
+*   **`data bits`**: For serial `RTU`.
+*   **`stop bits`**: For serial `RTU`.
 
-Serial bus information is stored in the IoT Gateway configuration under `metadata:localnet:families`:
-* Includes an identifier for each serial bus that can be referenced by the Proxied Device.
+## Examples
 
-Modbus device information is stored in the Proxied device configuration under `metadata:localnet:families`:
-* Modbus ID
-* Identifier for the serial bus
+The metadata values in the examples below map to the following complete Modbus URIs:
 
-Modbus point information is stored in the point's `ref` field, in a URI format:
+*   **Network RTU Point**: `modbus://modbus_rtu_1/1/3/40001/1?type=INT16&border=MSB`
+*   **`fan_status`**: `modbus://modbus_rtu_1/2/1/101?type=BOOLEAN`
+*   **`filter_differential_pressure`**: `modbus://modbus_rtu_1/2/4/30005?type=UINT32&worder=LWF&scale=0.01`
 
-**`modbus://[modbus_id]/[range]/[data_type]/[offset]/[bit|length]`**
+### Network Configuration Example
 
-For Modbus, the final parameter (`bit` or `length`) is only required if the `data_type` provided requires the additional parameter. The `binary` `data_type` requires the `bit` parameter. The `char` and `varchar` `data_type` require the `length` property.
+The serial-bus `RTU` network specification as part of a gateway `metadata.json` file:
+
+```json
+{
+  "localnet": {
+    "networks": {
+      "modbus_rtu_1": {
+        "family": "modbus",
+        "adjunct": {
+          "protocol": "RTU",
+          "baud": 9600,
+          "parity": "none",
+          "data_bits": 8,
+          "stop_bits": 1,
+          "device": "COM1"
+        }
+      }
+    }
+  }
+}
+```
+
+### Proxy Device Example
+
+For a proxied Modbus device, the `gateway` block in the `metadata.json` specifies the target device ID (Unit ID), while the `pointset` block defines the individual points and their register mappings.
+
+```json
+{
+  "gateway": {
+    "target": {
+      "family": "modbus",
+      "addr": "2",
+      "network_id": "modbus_rtu_1"
+    }
+  },
+  "pointset": {
+    "points": {
+      "fan_status": {
+        "ref": "1/101?type=BOOLEAN"
+      },
+      "filter_differential_pressure": {
+        "units": "Pascals",
+        "ref": "4/30005?type=UINT32&worder=LWF&scale=0.01"
+      }
+    }
+  }
+}
+```
+
+

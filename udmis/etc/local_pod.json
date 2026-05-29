@@ -45,7 +45,19 @@
     },
     "implicit": {
       "provider": "implicit",
-      "options": "enabled=${ETCD_CLUSTER}"
+      "options": "enabled=${ETCD_CLUSTER}",
+      "endpoint": {
+        "protocol": "mqtt",
+        "transport": "ssl",
+        "hostname": "localhost",
+        "port": 8883,
+        "auth_provider": {
+          "basic": {
+            "username": "rocket",
+            "password": "monkey"
+          }
+        }
+      }
     }
   }
 }
