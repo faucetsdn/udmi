@@ -62,7 +62,9 @@ import udmi.schema.UdmiConfig;
 public abstract class MessageBase extends ContainerBase implements MessagePipe {
 
   public static final String INVALID_ENVELOPE_KEY = "invalid";
-  public static final int EXECUTION_THREADS = 100;
+  // TODO: Not every message loop needs the same thread count
+  // Ones on the registrar path may potentially need more.
+  public static final int EXECUTION_THREADS = 20;
   public static final String ERROR_MESSAGE_MARKER = "error-mark";
   public static final String PUBLISH_STATS = "publish";
   public static final String RECEIVE_STATS = "receive";
