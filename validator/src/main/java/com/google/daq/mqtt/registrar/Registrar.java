@@ -1290,6 +1290,7 @@ public class Registrar {
             if (dryRun) {
               System.err.printf("Dry run: would bind %s to %s%n", setOrSize(toBind), gatewayId);
             } else {
+              // TODO: Put a proper fix and not depend on specific fixes for testing.
               boolean isLocal =
                   cloudIotManager.executionConfiguration.iot_provider == IotProvider.MQTT
                   || cloudIotManager.executionConfiguration.iot_provider == IotProvider.IMPLICIT;
