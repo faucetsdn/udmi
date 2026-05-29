@@ -910,7 +910,7 @@ public class SequenceBase {
 
   private static boolean deviceSupportsState() {
     ifNullThen(stateSupported,
-        () -> stateSupported = !isTrue(catchToNull(() -> deviceMetadata.testing.nostate)));
+        () -> stateSupported = !isTrue(GeneralUtils.catchToNull(() -> deviceMetadata.testing.nostate)));
     return stateSupported;
   }
 
