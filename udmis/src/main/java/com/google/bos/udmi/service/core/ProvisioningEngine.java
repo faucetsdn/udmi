@@ -20,6 +20,8 @@ import static udmi.schema.CloudModel.ModelOperation.BIND;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
+import udmi.schema.GatewayModel;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
@@ -52,6 +54,8 @@ public class ProvisioningEngine extends ProcessorBase {
     model.operation = BIND;
     model.device_ids = new HashMap<>();
     model.device_ids.put(proxyId, new CloudModel());
+    model.gateway = new GatewayModel();
+    model.gateway.proxy_ids = List.of(proxyId);
     iotAccess.modelDevice(registryId, gatewayId, model, null);
   }
 
