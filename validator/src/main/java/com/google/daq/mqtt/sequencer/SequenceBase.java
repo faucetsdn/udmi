@@ -370,7 +370,7 @@ public class SequenceBase {
   static String activePrimary;
   private Date configStateStart;
   protected boolean pretendStateUpdated;
-  private Boolean stateSupported;
+  private static Boolean stateSupported;
   private Instant lastConfigApplied = getNowInstant();
   private Map<String, AtomicInteger> msgIndex = new HashMap<>();
   private Map<String, String> lastBase = new HashMap<>();
@@ -476,6 +476,7 @@ public class SequenceBase {
     client = null;
     altClient = null;
     validationState = null;
+    stateSupported = null;
   }
 
   private static Metadata readDeviceMetadata() {
@@ -907,7 +908,7 @@ public class SequenceBase {
     deviceConfig.blobset = null;
   }
 
-  private boolean deviceSupportsState() {
+  private static boolean deviceSupportsState() {
     ifNullThen(stateSupported,
         () -> stateSupported = !isTrue(catchToNull(() -> deviceMetadata.testing.nostate)));
     return stateSupported;
