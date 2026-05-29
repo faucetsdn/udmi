@@ -456,7 +456,9 @@ jobs:
           sudo -E bash -c 'PATH=$SAVE_PATH misc/discoverynode/testing/e2e/test_local site_model'
       - name: udmis log
         if: ${{ !cancelled() }}
-        run: cat out/udmis.log
+        run: |
+          docker logs udmis
+          more out/udmis.log
   udmilp:
     name: Python Library Tests
     runs-on: ubuntu-24.04
