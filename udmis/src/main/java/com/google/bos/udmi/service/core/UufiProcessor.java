@@ -10,6 +10,7 @@ import static com.google.udmi.util.JsonUtil.toObject;
 import com.google.bos.udmi.service.messaging.MessageContinuation;
 import com.google.bos.udmi.service.pod.UdmiServicePod;
 import java.util.Map;
+import java.util.Optional;
 import udmi.schema.EndpointConfiguration;
 import udmi.schema.Envelope;
 import udmi.schema.Envelope.SubFolder;
@@ -36,14 +37,27 @@ public class UufiProcessor extends ProcessorBase {
     Envelope envelope = continuation.getEnvelope();
     Map<String, Object> messageMap = toMap(message);
 
+    boolean isUufi = "uufi".equals(envelope.gatewayId);
+
+    debug("Received UUFI message: type=%s, folder=%s, gateway=%s, source=%s, isUufi=%s",
+        envelope.subType, envelope.subFolder, envelope.gatewayId, envelope.source, isUufi);
+
     try {
-      if (isHandshake(envelope, message)) {
-        handleHandshake(envelope, convertTo(UdmiState.class, message));
-      } else if (messageMap.containsKey(PAYLOAD_KEY)) {
-        handleUufiMessage(envelope, messageMap);
+      if (isUufi) {
+        // Message from MQTT (Client or Loopback)
+        if (isHandshake(envelope, message)) {
+          handleHandshake(envelope, convertTo(UdmiState.class, message));
+        } else if (messageMap.containsKey(PAYLOAD_KEY)) {
+          // Wrapped message from MQTT. 
+          // If it's a config/udmi, it's likely a loopback of our own handshake reply.
+          if (envelope.subType == SubType.CONFIG && envelope.subFolder == SubFolder.UDMI) {
+             debug("Ignoring loopback of UUFI handshake reply");
+             return;
+          }
+          handleUufiMessage(envelope, messageMap);
+        }
       } else {
-        // If it's not a UUFI-wrapped message, it might be a raw UDMI message 
-        // from the internal system that we need to wrap and send to clients.
+        // Message from Internal Bus (System) - wrap and send to MQTT
         forwardToClients(envelope, message);
       }
     } catch (Exception e) {
@@ -53,25 +67,32 @@ public class UufiProcessor extends ProcessorBase {
 
   private boolean isHandshake(Envelope envelope, Object message) {
     // UUFI handshake Step 1: Client publishes state to /uufi/c/state/udmi
+    // Handshake state is NOT wrapped in a payload key.
     return envelope.subType == SubType.STATE && envelope.subFolder == SubFolder.UDMI;
   }
 
   private void handleHandshake(Envelope envelope, UdmiState state) {
-    debug("Received UUFI handshake from " + envelope.source);
+    String source = Optional.ofNullable(state.setup).map(setup -> setup.msg_source).orElse(envelope.source);
+    String transactionId = Optional.ofNullable(state.setup).map(setup -> setup.transaction_id).orElse(envelope.transactionId);
+    
+    debug("Received UUFI handshake from %s (txn: %s)", source, transactionId);
     
     UdmiConfig config = UdmiServicePod.getUdmiConfig(state);
     
     Envelope replyEnvelope = new Envelope();
     replyEnvelope.subType = SubType.CONFIG;
     replyEnvelope.subFolder = SubFolder.UDMI;
-    replyEnvelope.principal = envelope.source;
-    replyEnvelope.transactionId = envelope.transactionId;
-    
-    // Mark this as a UUFI response so the pipe knows how to handle it
-    replyEnvelope.rawFolder = "uufi"; 
+    replyEnvelope.principal = source;
+    replyEnvelope.transactionId = transactionId;
+    replyEnvelope.gatewayId = "uufi"; 
 
-    debug("Sending UUFI handshake reply to " + envelope.source);
-    publish(replyEnvelope, config);
+    info("Sending UUFI handshake reply to %s (txn: %s)", source, transactionId);
+
+    // Handshake reply MUST be wrapped for MQTT transport
+    Map<String, Object> wrappedConfig = toMap(replyEnvelope);
+    wrappedConfig.put(PAYLOAD_KEY, config);
+    
+    publish(replyEnvelope, wrappedConfig);
   }
 
   private void handleUufiMessage(Envelope envelope, Map<String, Object> messageMap) {
@@ -104,7 +125,7 @@ public class UufiProcessor extends ProcessorBase {
     uufiEnvelope.subFolder = envelope.subFolder;
     uufiEnvelope.deviceRegistryId = envelope.deviceRegistryId;
     uufiEnvelope.deviceId = envelope.deviceId;
-    uufiEnvelope.rawFolder = "uufi"; // Indicator for UUFI wrapping
+    uufiEnvelope.gatewayId = "uufi"; // Indicator for UUFI wrapping
     
     debug("Forwarding system message %s/%s to UUFI clients", 
         envelope.subType, envelope.subFolder);

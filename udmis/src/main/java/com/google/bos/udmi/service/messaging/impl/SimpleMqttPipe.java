@@ -142,7 +142,7 @@ public class SimpleMqttPipe extends MessageBase {
         checkState("c".equals(parts[base]), "expected commands");
         envelope.subType = convertSubType(parts[base + 1]);
         envelope.subFolder = convertSubFolder(parts[base + 2]);
-        envelope.rawFolder = "uufi";
+        envelope.gatewayId = "uufi";
         return toStringMap(envelope);
       }
 
@@ -269,7 +269,7 @@ public class SimpleMqttPipe extends MessageBase {
   }
 
   private String makeTopic(Envelope envelope) {
-    if ("uufi".equals(envelope.rawFolder)) {
+    if ("uufi".equals(envelope.gatewayId)) {
       String topic = isNotEmpty(namespace) && !"default".equals(namespace) ? "/" + namespace : "";
       topic += "/uufi";
       if (envelope.deviceRegistryId != null) {

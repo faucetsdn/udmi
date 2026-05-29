@@ -36,37 +36,51 @@ MQTT_ARGS="-h $HOST -p $PORT -u $USER -P $PASS --cafile $CA_CERT --cert $SITE_MO
 
 
 # 1. Start a background subscriber to capture the handshake reply
+# We use -F to ensure single-line JSON for robust parsing
 REPLY_FILE=$(mktemp)
-mosquitto_sub $MQTT_ARGS -t "/uufi/c/config/udmi" -C 1 > "$REPLY_FILE" &
+mosquitto_sub $MQTT_ARGS -t "/uufi/c/config/udmi" -F "%p" | while read -r line; do
+    echo "$line" > "$REPLY_FILE"
+    REPLY_TXN=$(jq -r .payload.reply.transaction_id < "$REPLY_FILE" 2>/dev/null)
+    if [[ "$REPLY_TXN" == "$TXN_ID" ]]; then
+        # Signal success to the parent process and exit the subscriber loop
+        kill -USR1 $$ 2>/dev/null || true
+        exit 0
+    fi
+done &
 SUB_PID=$!
+
+# Use USR1 signal to know when we got the right handshake
+GOT_HANDSHAKE=0
+trap "GOT_HANDSHAKE=1" USR1
 
 # Give the subscriber a moment to connect
 sleep 2
 
 # 2. Publish the Step 1 Handshake State message
-echo "Sending UUFI handshake Step 1 (State Declaration)..."
+echo "Sending UUFI handshake Step 1 (State Declaration)... (txn: $TXN_ID)"
 HANDSHAKE_STATE="{\"version\":\"1.5.2\",\"timestamp\":\"$(date -u +%Y-%m-%dT%H:%M:%SZ)\",\"setup\":{\"functions_ver\":9,\"transaction_id\":\"$TXN_ID\",\"msg_source\":\"$CLIENT_ID\"}}"
 
 mosquitto_pub $MQTT_ARGS -t "/uufi/c/state/udmi" -m "$HANDSHAKE_STATE"
 
 # 3. Wait for the Step 2 Handshake Config message
 echo "Waiting for UUFI handshake Step 2 (Config Confirmation)..."
-# Wait for the background subscriber to finish (it exits after 1 message)
-TIMEOUT=20
-while kill -0 $SUB_PID 2>/dev/null && [ $TIMEOUT -gt 0 ]; do
+TIMEOUT=30
+while [ $GOT_HANDSHAKE -eq 0 ] && [ $TIMEOUT -gt 0 ]; do
     sleep 1
     TIMEOUT=$((TIMEOUT - 1))
 done
 
-if kill -0 $SUB_PID 2>/dev/null; then
-    echo "Timed out waiting for handshake reply"
-    kill $SUB_PID || true
+if [ $GOT_HANDSHAKE -eq 0 ]; then
+    echo "Timed out waiting for handshake reply (txn: $TXN_ID)"
+    kill $SUB_PID 2>/dev/null || true
     exit 1
 fi
 
+kill $SUB_PID 2>/dev/null || true
+
 # 4. Validate the handshake reply
 echo "Validating handshake reply..."
-REPLY_TXN=$(jq -r .reply.transaction_id < "$REPLY_FILE")
+REPLY_TXN=$(jq -r .payload.reply.transaction_id < "$REPLY_FILE")
 
 if [[ "$REPLY_TXN" == "$TXN_ID" ]]; then
     echo "Handshake SUCCESS: Transaction ID matched ($TXN_ID)"
