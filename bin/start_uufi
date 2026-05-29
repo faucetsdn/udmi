@@ -104,7 +104,7 @@ if [[ -f $POD_READY ]]; then
     echo "Topic Prefix:      (none)"
     echo "################################################################"
     echo ""
-    echo "You can now run 'bin/test_uufi' or 'bin/observe_uufi' in another terminal."
+    echo "You can now run your own UUFI client, 'bin/uufi_test_client', or 'bin/observe_uufi' in another terminal."
 else
     echo "UDMIS failed to signal ready within 30 seconds. Check out/udmis.log for errors."
 fi
