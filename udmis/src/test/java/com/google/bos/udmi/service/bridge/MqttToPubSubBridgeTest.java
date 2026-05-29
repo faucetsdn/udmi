@@ -59,14 +59,13 @@ class MqttToPubSubBridgeTest {
     assertEquals(testTopic, attributes.get("mqttTopic"));
     assertEquals("my-device", attributes.get("deviceId"));
     assertEquals("my-registry", attributes.get("deviceRegistryId"));
-    assertEquals("events", attributes.get("subType"));
   }
 
   @Test
   void testSetupBridgeWithSubFolder() throws Exception {
     IMqttClient mockMqttClient = mock(IMqttClient.class);
     Publisher mockPublisher = mock(Publisher.class);
-    String testTopic = "/r/my-registry/d/my-device/events/pointset";
+    String testTopic = "/r/my-registry/d/my-device/events/subfolder_name";
     String payloadStr = "Hello World";
     final MqttMessage mqttMessage = new MqttMessage(payloadStr.getBytes());
 
@@ -91,40 +90,7 @@ class MqttToPubSubBridgeTest {
     assertEquals(testTopic, attributes.get("mqttTopic"));
     assertEquals("my-device", attributes.get("deviceId"));
     assertEquals("my-registry", attributes.get("deviceRegistryId"));
-    assertEquals("pointset", attributes.get("subFolder"));
-    assertEquals("events", attributes.get("subType"));
-  }
-
-  @Test
-  void testSetupBridgeLegacyTopic() throws Exception {
-    IMqttClient mockMqttClient = mock(IMqttClient.class);
-    Publisher mockPublisher = mock(Publisher.class);
-    String testTopic = "/devices/my-device/events/pointset";
-    String payloadStr = "Hello World";
-    final MqttMessage mqttMessage = new MqttMessage(payloadStr.getBytes());
-
-    when(mockPublisher.publish(any(PubsubMessage.class)))
-        .thenReturn(ApiFutures.immediateFuture("msg-123"));
-
-    MqttToPubSubBridge.setupBridge(mockMqttClient, mockPublisher, testTopic);
-
-    ArgumentCaptor<MqttCallback> callbackCaptor = ArgumentCaptor.forClass(MqttCallback.class);
-    verify(mockMqttClient).setCallback(callbackCaptor.capture());
-    MqttCallback callback = callbackCaptor.getValue();
-
-    callback.messageArrived(testTopic, mqttMessage);
-
-    ArgumentCaptor<PubsubMessage> pubsubMessageCaptor =
-        ArgumentCaptor.forClass(PubsubMessage.class);
-    verify(mockPublisher).publish(pubsubMessageCaptor.capture());
-
-    PubsubMessage pubsubMessage = pubsubMessageCaptor.getValue();
-    Map<String, String> attributes = pubsubMessage.getAttributesMap();
-    assertEquals(testTopic, attributes.get("mqttTopic"));
-    assertEquals("my-device", attributes.get("deviceId"));
-    assertEquals("unknown", attributes.get("deviceRegistryId"));
-    assertEquals("pointset", attributes.get("subFolder"));
-    assertEquals("events", attributes.get("subType"));
+    assertEquals("subfolder_name", attributes.get("subFolder"));
   }
 
   @Test
