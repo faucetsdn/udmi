@@ -112,7 +112,9 @@ public class ProvisioningEngine extends ProcessorBase {
           isoConvert(generation), shouldProvision(generation, cloudModel));
     }
     return ifTrueGet(shouldProvision(generation, cloudModel),
-        () -> new HashSet<>(cloudModel.gateway.proxy_ids));
+        () -> cloudModel.gateway == null || cloudModel.gateway.proxy_ids == null
+            ? new HashSet<>()
+            : new HashSet<>(cloudModel.gateway.proxy_ids));
   }
 
   private boolean shouldProvision(Date generation, CloudModel cloudModel) {
@@ -154,6 +156,10 @@ public class ProvisioningEngine extends ProcessorBase {
       Set<String> deviceIds = ifTrueGet(isGateway,
           refreshModelDevices(registryId, deviceId, generation, deviceModel),
           catchToNull(() -> iotAccess.listDevices(registryId, null).device_ids.keySet()));
+
+      if (deviceIds == null) {
+        deviceIds = new HashSet<>();
+      }
 
       boolean isUpdate = deviceIds.contains(expectedId);
       notice("Scan %s device %s/%s target %s", isUpdate ? "update" : "create", registryId, deviceId,
