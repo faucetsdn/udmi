@@ -18,6 +18,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
 import java.util.List;
+import org.junit.jupiter.api.AfterEach;
 import udmi.schema.EndpointConfiguration;
 import udmi.schema.EndpointConfiguration.Protocol;
 import udmi.schema.Envelope;
@@ -107,6 +108,12 @@ public abstract class ProcessorTestBase extends MessageTestBase {
 
     provider.shutdown();
     processor.shutdown();
+  }
+
+  @AfterEach
+  public void resetAfter() {
+    UdmiServicePod.resetForTest();
+    super.resetAfter();
   }
 
   private void activateReverseProcessor() {

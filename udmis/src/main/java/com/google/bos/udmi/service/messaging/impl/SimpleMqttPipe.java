@@ -147,7 +147,11 @@ public class SimpleMqttPipe extends MessageBase {
       }
 
       // Legacy topic: /r/REGISTRY/d/DEVICE/TYPE[/FOLDER[/GATEWAY]]
-      if (parts.length < 6 || parts.length > 10) {
+      if (parts.length < 6) {
+        throw new RuntimeException("Unexpected legacy topic length: " + topic);
+      }
+      int base = parts[5].equals(SEND_CHANNEL_DESIGNATOR) ? 2 : 0;
+      if (parts.length > base + 8) {
         throw new RuntimeException("Unexpected legacy topic length: " + topic);
       }
       checkState(Strings.isNullOrEmpty(parts[0]), "non-empty prefix");
@@ -155,7 +159,6 @@ public class SimpleMqttPipe extends MessageBase {
       envelope.deviceRegistryId = nullAsNull(parts[2]);
       checkState("d".equals(parts[3]), "expected devices");
       envelope.deviceId = nullAsNull(parts[4]);
-      int base = parts[5].equals(SEND_CHANNEL_DESIGNATOR) ? 2 : 0;
       if (base > 0) {
         envelope.source = parts[6];
       }

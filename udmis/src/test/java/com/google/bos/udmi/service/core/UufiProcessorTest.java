@@ -2,6 +2,7 @@ package com.google.bos.udmi.service.core;
 
 import static com.google.bos.udmi.service.core.ProcessorBase.FUNCTIONS_VERSION_MAX;
 import static com.google.bos.udmi.service.core.ProcessorBase.FUNCTIONS_VERSION_MIN;
+import static com.google.udmi.util.JsonUtil.convertTo;
 import static com.google.udmi.util.JsonUtil.toMap;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -54,12 +55,14 @@ public class UufiProcessorTest extends ProcessorTestBase {
     envelope.subFolder = SubFolder.UDMI;
     envelope.source = "test-client";
     envelope.transactionId = "test-txn";
+    envelope.gatewayId = "uufi";
 
     activeTestInstance(() -> getReverseDispatcher().publish(new Bundle(envelope, state)));
 
     // One message should be published back (the config)
     assertEquals(1, captured.size(), "captured message count");
-    UdmiConfig config = (UdmiConfig) captured.get(0);
+    Map<String, Object> capturedMap = (Map<String, Object>) captured.get(0);
+    UdmiConfig config = convertTo(UdmiConfig.class, capturedMap.get("payload"));
     
     assertEquals(FUNCTIONS_VERSION_MIN, config.setup.functions_min);
     assertEquals(FUNCTIONS_VERSION_MAX, config.setup.functions_max);
@@ -82,6 +85,7 @@ public class UufiProcessorTest extends ProcessorTestBase {
 
     Envelope transportEnvelope = new Envelope();
     transportEnvelope.source = "test-client";
+    transportEnvelope.gatewayId = "uufi";
 
     activeTestInstance(() -> getReverseDispatcher().publish(
         new Bundle(transportEnvelope, uufiWrapper)));
