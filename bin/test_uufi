@@ -1,13 +1,18 @@
-#!/bin/bash
+#!/bin/bash -e
 # Comprehensive UUFI Verification Script
 
+UDMI_ROOT=$(dirname $0)/..
+cd $UDMI_ROOT
+
 # 1. Cleanup
+echo "Cleaning up previous runs..."
 sudo pkill -f udmis || true
 sudo pkill -f pubber || true
 rm -rf sites/uufi_site_model
 rm -f out/udmis.log startup.log out/pubber.log
 
 # 2. Start Backend
+echo "Starting UUFI Backend..."
 bin/start_uufi > startup.log 2>&1 &
 START_PID=$!
 
@@ -20,15 +25,18 @@ done
 
 if ! grep -q "UUFI Service is READY" startup.log; then
     echo "ERROR: Service failed to start or signal READY."
+    tail -n 100 startup.log
     kill $START_PID || true
     exit 1
 fi
 
 # 3. Register and Start DUT
 echo "Registering and starting DUT (Pubber)..."
-mkdir -p sites/uufi_site_model/devices/uufi-dut
-(cd sites/uufi_site_model/devices/uufi-dut && /home/peringknife/udmi/bin/keygen RS256 .)
-cat <<EOF2 > sites/uufi_site_model/devices/uufi-dut/metadata.json
+DUT_DIR=sites/uufi_site_model/devices/uufi-dut
+mkdir -p $DUT_DIR
+(cd $DUT_DIR && ../../../../bin/keygen RS256 .)
+
+cat <<EOF2 > $DUT_DIR/metadata.json
 {
   "system": { "location": { "site": "uufi-site" } },
   "cloud": { "auth_type": "RS256" },
@@ -38,17 +46,23 @@ EOF2
 
 # Use simple client ID for pubber to avoid keygen/mosquitto issues
 CLIENT_ID="uufi-dut-client"
-bin/keygen CERT/vibrant sites/uufi_site_model/devices/uufi-dut/
+bin/keygen CERT/vibrant $DUT_DIR/
 
-KEY_FILE=sites/uufi_site_model/devices/uufi-dut/rsa_private.pkcs8
+KEY_FILE=$DUT_DIR/rsa_private.pkcs8
+if [[ ! -f $KEY_FILE ]]; then
+    echo "ERROR: Key file $KEY_FILE not found."
+    exit 1
+fi
+
 HASH_PASS=$(sha256sum < $KEY_FILE | awk '{print $1}')
 CLIENT_PASS=${HASH_PASS:0:8}
 
 # Use mosquitto_ctrl directly for custom registration
 source etc/mosquitto_ctrl.sh
+echo "Configuring MQTT client $CLIENT_ID..."
 $MOSQUITTO_CTRL deleteClient "$CLIENT_ID" || true
-$MOSQUITTO_CTRL createClient "$CLIENT_ID" -p "$CLIENT_PASS" || true
-$MOSQUITTO_CTRL addClientRole "$CLIENT_ID" service || true
+$MOSQUITTO_CTRL createClient "$CLIENT_ID" -p "$CLIENT_PASS"
+$MOSQUITTO_CTRL addClientRole "$CLIENT_ID" uufi
 
 PWD=$(pwd)
 cat <<JOF > /tmp/pubber_uufi_test.json
@@ -70,6 +84,7 @@ cat <<JOF > /tmp/pubber_uufi_test.json
 }
 JOF
 
+echo "Starting Pubber DUT..."
 java -jar pubber/build/libs/pubber-1.0-SNAPSHOT-all.jar /tmp/pubber_uufi_test.json > out/pubber.log 2>&1 &
 PUB_PID=$!
 
@@ -77,9 +92,11 @@ echo "Waiting for DUT to connect..."
 sleep 20
 
 # 4. Run Comprehensive Test
+echo "Starting UUFI Test Client..."
 bin/uufi_test_client
 TEST_EXIT=$?
 
 # 5. Cleanup
+echo "Cleaning up..."
 kill $START_PID $PUB_PID || true
 exit $TEST_EXIT
