@@ -2,7 +2,11 @@
   "timestamp": "2026-01-01T00:00:00Z",
   "version": "1.5.3",
   "system": {
-    "name": "CRAC 1 UPS"
+    "name": "CRAC 1 UPS",
+    "location": {
+      "site": "US-MTV-40",
+      "room": "US-MTV-40-G-G40D"
+    }
   },
   "externals": {
     "dbo": {
@@ -13,18 +17,6 @@
   },
   "cloud": {
     "num_id": "270504150275150"
-  },
-  "relationships": {
-    "US-MTV-40": {
-      "CONTAINS": [
-        {}
-      ]
-    },
-    "US-MTV-40-G-G40D": {
-      "CONTAINS": [
-        {}
-      ]
-    }
   },
   "pointset": {
     "points": {

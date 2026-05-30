@@ -2,7 +2,10 @@
   "timestamp": "2026-01-01T00:00:00Z",
   "version": "1.5.3",
   "system": {
-    "name": "power-meter-MatrixRoom"
+    "name": "power-meter-MatrixRoom",
+    "location": {
+      "site": "US-MTV-40"
+    }
   },
   "externals": {
     "dbo": {
@@ -13,13 +16,6 @@
   },
   "cloud": {
     "num_id": "110284116715833"
-  },
-  "relationships": {
-    "US-MTV-40": {
-      "CONTAINS": [
-        {}
-      ]
-    }
   },
   "pointset": {
     "points": {

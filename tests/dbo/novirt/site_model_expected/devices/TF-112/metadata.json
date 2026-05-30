@@ -2,7 +2,10 @@
   "timestamp": "2026-01-01T00:00:00Z",
   "version": "1.5.3",
   "system": {
-    "name": "TF S-11"
+    "name": "TF S-11",
+    "location": {
+      "site": "US-MTV-RLS1"
+    }
   },
   "externals": {
     "dbo": {
@@ -13,13 +16,6 @@
   },
   "cloud": {
     "num_id": "6145222943537"
-  },
-  "relationships": {
-    "US-MTV-RLS1": {
-      "CONTAINS": [
-        {}
-      ]
-    }
   },
   "pointset": {
     "points": {

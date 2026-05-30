@@ -2,7 +2,10 @@
   "timestamp": "2026-01-01T00:00:00Z",
   "version": "1.5.3",
   "system": {
-    "name": "VAVRH 2-4-3"
+    "name": "VAVRH 2-4-3",
+    "location": {
+      "site": "US-MTV-40"
+    }
   },
   "externals": {
     "dbo": {
@@ -13,13 +16,6 @@
   },
   "cloud": {
     "num_id": "134561687553915"
-  },
-  "relationships": {
-    "US-MTV-40": {
-      "CONTAINS": [
-        {}
-      ]
-    }
   },
   "pointset": {
     "points": {

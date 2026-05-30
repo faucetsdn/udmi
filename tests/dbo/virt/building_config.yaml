@@ -63,6 +63,7 @@
   code: onboarding-mtv12
   connections:
     0a84a996-1120-4178-91ca-e118500d5463: CONTAINS
+    12dac17e-dda6-41bb-a757-e81fcf701482: CONTAINS
   type: INFO_TECH/PRNTR
 0a84a996-1120-4178-91ca-e118500d5463:
   code: US-MTV-40-1

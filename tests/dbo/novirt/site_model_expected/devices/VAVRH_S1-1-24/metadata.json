@@ -1,7 +1,11 @@
 {
   "timestamp": "2026-01-01T00:00:00Z",
   "version": "1.5.3",
-  "system": {},
+  "system": {
+    "location": {
+      "site": "US-MTV-RLS1"
+    }
+  },
   "externals": {
     "dbo": {
       "ext_id": "01a69c02-167e-49d1-a351-2a5bb85ce3e7",
@@ -11,12 +15,5 @@
   },
   "cloud": {
     "num_id": "2621350607221668"
-  },
-  "relationships": {
-    "US-MTV-RLS1": {
-      "CONTAINS": [
-        {}
-      ]
-    }
   }
 }

@@ -18,14 +18,14 @@ def extract_dbo_config(site_model_dir: Path) -> dict:
   """Extracts DBO configurations to a dict."""
   building_config = {}
 
-  ancillary_path = site_model_dir / "ancillary.json"
-  if ancillary_path.exists():
-    with open(ancillary_path, "r", encoding="utf-8") as f:
+  facilities_path = site_model_dir / "externals" / "dbo" / "facilities.json"
+  if facilities_path.exists():
+    with open(facilities_path, "r", encoding="utf-8") as f:
       building_config = json.load(f)
 
   device_id_to_guid = {}
 
-  # Build mapping for FACILITIES from ancillary data
+  # Build mapping for FACILITIES from facilities data
   used_ids = set()
   # Sort keys to ensure deterministic collision handling if any
   for guid in sorted(building_config.keys()):
@@ -95,6 +95,19 @@ def extract_dbo_config(site_model_dir: Path) -> dict:
             connections[target_guid] = rel_type
 
       device_entry["connections"] = connections
+
+    if "system" in metadata and "location" in metadata["system"]:
+      loc = metadata["system"]["location"]
+      connections = device_entry.setdefault("connections", {})
+      if "site" in loc:
+        target_guid = device_id_to_guid.get(loc["site"], loc["site"])
+        connections[target_guid] = "CONTAINS"
+      if "floor" in loc:
+        target_guid = device_id_to_guid.get(loc["floor"], loc["floor"])
+        connections[target_guid] = "CONTAINS"
+      if "room" in loc:
+        target_guid = device_id_to_guid.get(loc["room"], loc["room"])
+        connections[target_guid] = "CONTAINS"
 
     # extract point translation and links from core UDMI pointset constructs
     pointset = metadata.get("pointset", {}).get("points", {})

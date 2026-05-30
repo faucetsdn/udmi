@@ -1,7 +1,13 @@
 {
   "timestamp": "2026-01-01T00:00:00Z",
   "version": "1.5.3",
-  "system": {},
+  "system": {
+    "location": {
+      "floor": "US-MTV-BASIC-1",
+      "room": "US-MTV-BASIC-1-R1",
+      "site": "US-MTV-BASIC"
+    }
+  },
   "externals": {
     "dbo": {
       "ext_id": "c773b86d-b0c0-46fc-bd3f-d726fadd5f1e",

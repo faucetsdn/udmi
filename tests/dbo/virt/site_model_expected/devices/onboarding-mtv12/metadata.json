@@ -1,7 +1,12 @@
 {
   "timestamp": "2026-01-01T00:00:00Z",
   "version": "1.5.3",
-  "system": {},
+  "system": {
+    "location": {
+      "floor": "US-MTV-40-1",
+      "site": "US-MTV-40"
+    }
+  },
   "externals": {
     "dbo": {
       "ext_id": "05ed8d20-bbdb-4d69-a968-1075d110d025",
@@ -11,12 +16,5 @@
   },
   "cloud": {
     "num_id": "379681902947616"
-  },
-  "relationships": {
-    "US-MTV-40-1": {
-      "CONTAINS": [
-        {}
-      ]
-    }
   }
 }

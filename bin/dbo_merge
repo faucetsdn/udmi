@@ -79,7 +79,7 @@ def merge_dbo_config(yaml_file: Path, site_model_dir: Path):
     guid_to_id[guid] = dev_id
     used_ids.add(dev_id)
 
-  ancillary = {}
+  facilities = {}
 
   # Second pass: merge data
   for guid, entity in config.items():
@@ -88,7 +88,7 @@ def merge_dbo_config(yaml_file: Path, site_model_dir: Path):
 
     etype = entity.get("type", "")
     if etype.startswith("FACILITIES/"):
-      ancillary[guid] = entity
+      facilities[guid] = entity
       continue
 
     device_id = guid_to_id[guid]
@@ -127,25 +127,68 @@ def merge_dbo_config(yaml_file: Path, site_model_dir: Path):
       cloud = metadata.setdefault("cloud", {})
       cloud["num_id"] = str(entity["cloud_device_id"])
 
-    # Relationships
+    # Relationships & Location
     if "connections" in entity:
-      relationships = metadata.setdefault("relationships", {})
+      rel_dict_final = {}
       for target_guid, rel_data in entity["connections"].items():
         target_id = guid_to_id.get(target_guid, target_guid)
+        target_entity = config.get(target_guid)
+        target_type = target_entity.get("type") if target_entity else None
+
+        if target_type == "FACILITIES/BUILDING":
+          metadata.setdefault("system", {}).setdefault("location", {})["site"] = target_id
+          continue
+        if target_type == "FACILITIES/FLOOR":
+          metadata.setdefault("system", {}).setdefault("location", {})["floor"] = target_id
+          continue
+        if target_type == "FACILITIES/ROOM":
+          metadata.setdefault("system", {}).setdefault("location", {})["room"] = target_id
+          continue
 
         if isinstance(rel_data, str):
-          relationships[target_id] = {rel_data: [{}]}
+          rel_dict_final[target_id] = {rel_data: [{}]}
         elif isinstance(rel_data, list):
-          rel_dict = {}
+          rel_entry = {}
           for item in rel_data:
             if isinstance(item, str):
-              rel_dict.setdefault(item, []).append({})
+              rel_entry.setdefault(item, []).append({})
             elif isinstance(item, dict):
               item_copy = item.copy()
               if "type" in item_copy:
                 rel_type = item_copy.pop("type")
-                rel_dict.setdefault(rel_type, []).append(item_copy)
-          relationships[target_id] = rel_dict
+                rel_entry.setdefault(rel_type, []).append(item_copy)
+          rel_dict_final[target_id] = rel_entry
+      
+      if rel_dict_final:
+        metadata["relationships"] = rel_dict_final
+
+    # Ensure system.location.site is set if location is present (required by schema)
+    # If not directly connected, try to find it via floor/room connections
+    if "system" in metadata and "location" in metadata["system"]:
+      loc = metadata["system"]["location"]
+      if "site" not in loc:
+        search_guids = []
+        if "room" in loc:
+          search_guids.append(next((g for g, i in guid_to_id.items() if i == loc["room"]), None))
+        if "floor" in loc:
+          search_guids.append(next((g for g, i in guid_to_id.items() if i == loc["floor"]), None))
+        
+        for guid in filter(None, search_guids):
+          f_entity = config.get(guid)
+          if f_entity and "connections" in f_entity:
+            for t_guid in f_entity["connections"]:
+              t_entity = config.get(t_guid)
+              if t_entity and t_entity.get("type") == "FACILITIES/BUILDING":
+                loc["site"] = guid_to_id.get(t_guid, t_guid)
+                break
+          if "site" in loc: break
+      
+      # Final fallback: pick the first building in the config
+      if "site" not in loc:
+        for guid, f_entity in config.items():
+           if f_entity and f_entity.get("type") == "FACILITIES/BUILDING":
+             loc["site"] = guid_to_id.get(guid, guid)
+             break
 
     # Pointset Translation and Links
     if "translation" in entity or "links" in entity:
@@ -203,10 +246,11 @@ def merge_dbo_config(yaml_file: Path, site_model_dir: Path):
       json.dump(metadata, f, indent=2)
       f.write("\n")
 
-  if ancillary:
-    ancillary_path = site_model_dir / "ancillary.json"
-    with open(ancillary_path, "w", encoding="utf-8") as f:
-      json.dump(ancillary, f, indent=2)
+  if facilities:
+    facilities_path = site_model_dir / "externals" / "dbo" / "facilities.json"
+    facilities_path.parent.mkdir(parents=True, exist_ok=True)
+    with open(facilities_path, "w", encoding="utf-8") as f:
+      json.dump(facilities, f, indent=2)
       f.write("\n")
 
 if __name__ == "__main__":
