@@ -49,8 +49,8 @@ public class UufiProcessor extends ProcessorBase {
           // Wrapped message from MQTT. 
           // If it's a config/udmi, it's likely a loopback of our own handshake reply.
           if (envelope.subType == SubType.CONFIG && envelope.subFolder == SubFolder.UDMI) {
-             debug("Ignoring loopback of UUFI handshake reply");
-             return;
+            debug("Ignoring loopback of UUFI handshake reply");
+            return;
           }
           handleUufiInbound(envelope, messageMap);
         }
@@ -68,12 +68,12 @@ public class UufiProcessor extends ProcessorBase {
   }
 
   private void handleHandshake(Envelope envelope, UdmiState state) {
-    String source = Optional.ofNullable(state.setup).map(setup -> setup.msg_source).orElse(envelope.source);
-    String transactionId = Optional.ofNullable(state.setup).map(setup -> setup.transaction_id).orElse(envelope.transactionId);
+    String source = Optional.ofNullable(state.setup).map(setup -> setup.msg_source)
+        .orElse(envelope.source);
+    String transactionId = Optional.ofNullable(state.setup).map(setup -> setup.transaction_id)
+        .orElse(envelope.transactionId);
     
     debug("Received UUFI handshake from %s (txn: %s)", source, transactionId);
-    
-    UdmiConfig config = UdmiServicePod.getUdmiConfig(state);
     
     Envelope replyEnvelope = new Envelope();
     replyEnvelope.subType = SubType.CONFIG;
@@ -85,6 +85,7 @@ public class UufiProcessor extends ProcessorBase {
     info("Sending UUFI handshake reply to %s (txn: %s)", source, transactionId);
 
     Map<String, Object> wrappedConfig = toMap(replyEnvelope);
+    UdmiConfig config = UdmiServicePod.getUdmiConfig(state);
     wrappedConfig.put(PAYLOAD_KEY, config);
     
     publish(replyEnvelope, wrappedConfig);
@@ -92,10 +93,7 @@ public class UufiProcessor extends ProcessorBase {
 
   private void handleUufiInbound(Envelope envelope, Map<String, Object> messageMap) {
     Map<String, Object> mutableMap = toMap(messageMap);
-    Object payloadRaw = mutableMap.remove(PAYLOAD_KEY);
-    Object innerPayload = (payloadRaw instanceof String) 
-        ? toObject(decodeBase64((String) payloadRaw)) 
-        : payloadRaw;
+    final Object payloadRaw = mutableMap.remove(PAYLOAD_KEY);
     
     Envelope innerEnvelope = convertTo(Envelope.class, mutableMap);
     innerEnvelope.payload = null; 
@@ -104,6 +102,9 @@ public class UufiProcessor extends ProcessorBase {
     debug("Forwarding UUFI message %s/%s from %s to internal bus", 
         innerEnvelope.subType, innerEnvelope.subFolder, envelope.source);
     
+    Object innerPayload = (payloadRaw instanceof String)
+        ? toObject(decodeBase64((String) payloadRaw))
+        : payloadRaw;
     publish(innerEnvelope, innerPayload);
   }
 

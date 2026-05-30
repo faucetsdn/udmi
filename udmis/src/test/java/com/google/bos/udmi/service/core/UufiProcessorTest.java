@@ -5,7 +5,6 @@ import static com.google.bos.udmi.service.core.ProcessorBase.FUNCTIONS_VERSION_M
 import static com.google.udmi.util.JsonUtil.toMap;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.google.bos.udmi.service.messaging.impl.MessageBase.Bundle;
 import com.google.bos.udmi.service.pod.ContainerBase;
@@ -30,6 +29,9 @@ public class UufiProcessorTest extends ProcessorTestBase {
     terminateAndWait();
   }
 
+  /**
+   * Initializes the test instance before each test.
+   */
   @BeforeEach
   public void initializeInstance() {
     writeVersionDeployFile();
@@ -81,7 +83,8 @@ public class UufiProcessorTest extends ProcessorTestBase {
     Envelope transportEnvelope = new Envelope();
     transportEnvelope.source = "test-client";
 
-    activeTestInstance(() -> getReverseDispatcher().publish(new Bundle(transportEnvelope, uufiWrapper)));
+    activeTestInstance(() -> getReverseDispatcher().publish(
+        new Bundle(transportEnvelope, uufiWrapper)));
 
     // The unwrapped message should be published to the internal bus
     assertEquals(1, captured.size(), "captured message count");
