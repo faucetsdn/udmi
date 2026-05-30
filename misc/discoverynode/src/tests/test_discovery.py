@@ -43,16 +43,13 @@ def make_timestamp(*,seconds_from_now = 0, seconds_from_epoch = None):
 def test_number_discovery_start_and_stop():
   mock_state = mock.MagicMock()
   mock_publisher = mock.MagicMock()
-  numbers = udmi.discovery.numbers.NumberDiscovery(mock_state, mock_publisher)
+  numbers = udmi.discovery.numbers.NumberDiscovery(mock_state, mock_publisher, range="1,2,3,4,5")
   numbers._start()
   assert numbers.state.phase == state.Phase.active
 
-  # Wait until exactly 6 events are published (start marker + 5 numbers)
-  # or timeout after 10 seconds to avoid hanging tests.
-  for _ in range(100):
-      if mock_publisher.call_count == 6:
-          break
-      time.sleep(0.1)
+  # Wait for the explicit sequence to finish processing
+  if numbers.task_thread:
+      numbers.task_thread.join(timeout=10)
 
   numbers._stop()
   assert numbers.state.phase == state.Phase.stopped
@@ -62,15 +59,12 @@ def test_number_discovery_start_and_stop():
 def test_event_counts():
   mock_state = udmi.schema.state.State()
   mock_publisher = mock.MagicMock()
-  numbers = udmi.discovery.numbers.NumberDiscovery(mock_state, mock_publisher)
+  numbers = udmi.discovery.numbers.NumberDiscovery(mock_state, mock_publisher, range="1,2,3,4,5")
   numbers._start()
 
-  # Wait until exactly 6 events are published (start marker + 5 numbers)
-  # before stopping, ensuring exactly 7 events total.
-  for _ in range(100):
-      if mock_publisher.call_count == 6:
-          break
-      time.sleep(0.1)
+  # Wait for the explicit sequence to finish processing
+  if numbers.task_thread:
+      numbers.task_thread.join(timeout=10)
 
   numbers._stop()
   # Because of "negative" start and end markers
