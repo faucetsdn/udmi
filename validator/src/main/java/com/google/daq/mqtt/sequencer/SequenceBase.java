@@ -1335,7 +1335,7 @@ public class SequenceBase {
   }
 
   private void assertConfigIsNotPending() {
-    if (!configTransactions.isEmpty()) {
+    if (!skipConfigSync && !configTransactions.isEmpty()) {
       throw new RuntimeException(
           "Unexpected pending config transactions: " + configTransactionsListString());
     }
