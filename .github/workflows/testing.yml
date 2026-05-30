@@ -301,12 +301,24 @@ jobs:
           bin/clone_model
       - name: test uufi
         run: bin/test_uufi
-      - name: udmis log
-        if: ${{ !cancelled() }}
-        run: cat out/udmis.log || true
-      - name: pubber log
-        if: ${{ !cancelled() }}
-        run: cat out/pubber.log || true
+      - name: Diagnostic Dump on Failure
+        if: ${{ failure() }}
+        run: |
+          set -x
+          echo "::: STARTUP LOG :::"
+          cat startup.log || echo "startup.log not found"
+          echo "::: UDMIS LOG :::"
+          cat out/udmis.log || echo "out/udmis.log not found"
+          echo "::: PUBBER LOG :::"
+          cat out/pubber.log || echo "out/pubber.log not found"
+          echo "::: PROCESS STATUS :::"
+          ps aux | grep -E "java|mosquitto|etcd"
+          echo "::: NETWORK STATUS :::"
+          sudo netstat -tulpn
+          echo "::: SITE MODEL :::"
+          ls -R sites/uufi_site_model || echo "site model not found"
+          echo "::: DISK SPACE :::"
+          df -h
       - name: support bundle
         if: ${{ !cancelled() }}
         run: bin/support ${{ github.repository_owner }}_${{ github.job }}_

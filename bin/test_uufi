@@ -18,17 +18,22 @@ START_PID=$!
 
 echo "Waiting for UUFI Service to signal READY..."
 TIMEOUT=120
-while ! grep -q "UUFI Service is READY" startup.log && [ $TIMEOUT -gt 0 ]; do
+POD_READY=/tmp/pod_ready.txt
+while [[ ! -f $POD_READY ]] && [ $TIMEOUT -gt 0 ]; do
     sleep 2
     TIMEOUT=$((TIMEOUT - 2))
 done
 
-if ! grep -q "UUFI Service is READY" startup.log; then
-    echo "ERROR: Service failed to start or signal READY."
-    tail -n 100 startup.log
+if [[ ! -f $POD_READY ]]; then
+    echo "ERROR: Service failed to signal READY via $POD_READY"
+    echo "::: STARTUP.LOG :::"
+    cat startup.log
+    echo "::: UDMIS.LOG :::"
+    cat out/udmis.log || true
     kill $START_PID || true
     exit 1
 fi
+echo "UUFI Service is READY"
 
 # 3. Register and Start DUT
 echo "Registering and starting DUT (Pubber)..."
