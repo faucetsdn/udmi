@@ -136,13 +136,16 @@ def merge_dbo_config(yaml_file: Path, site_model_dir: Path):
         target_type = target_entity.get("type") if target_entity else None
 
         if target_type == "FACILITIES/BUILDING":
-          metadata.setdefault("system", {}).setdefault("location", {})["site"] = target_id
+          loc = metadata.setdefault("system", {}).setdefault("location", {})
+          loc["site"] = target_id
           continue
         if target_type == "FACILITIES/FLOOR":
-          metadata.setdefault("system", {}).setdefault("location", {})["floor"] = target_id
+          loc = metadata.setdefault("system", {}).setdefault("location", {})
+          loc["floor"] = target_id
           continue
         if target_type == "FACILITIES/ROOM":
-          metadata.setdefault("system", {}).setdefault("location", {})["room"] = target_id
+          loc = metadata.setdefault("system", {}).setdefault("location", {})
+          loc["room"] = target_id
           continue
 
         if isinstance(rel_data, str):
@@ -158,21 +161,25 @@ def merge_dbo_config(yaml_file: Path, site_model_dir: Path):
                 rel_type = item_copy.pop("type")
                 rel_entry.setdefault(rel_type, []).append(item_copy)
           rel_dict_final[target_id] = rel_entry
-      
+
       if rel_dict_final:
         metadata["relationships"] = rel_dict_final
 
-    # Ensure system.location.site is set if location is present (required by schema)
+    # Ensure system.location.site is set if location is present
     # If not directly connected, try to find it via floor/room connections
     if "system" in metadata and "location" in metadata["system"]:
       loc = metadata["system"]["location"]
       if "site" not in loc:
         search_guids = []
         if "room" in loc:
-          search_guids.append(next((g for g, i in guid_to_id.items() if i == loc["room"]), None))
+          guid = next((g for g, i in guid_to_id.items() if i == loc["room"]),
+                      None)
+          search_guids.append(guid)
         if "floor" in loc:
-          search_guids.append(next((g for g, i in guid_to_id.items() if i == loc["floor"]), None))
-        
+          guid = next((g for g, i in guid_to_id.items() if i == loc["floor"]),
+                      None)
+          search_guids.append(guid)
+
         for guid in filter(None, search_guids):
           f_entity = config.get(guid)
           if f_entity and "connections" in f_entity:
@@ -181,14 +188,15 @@ def merge_dbo_config(yaml_file: Path, site_model_dir: Path):
               if t_entity and t_entity.get("type") == "FACILITIES/BUILDING":
                 loc["site"] = guid_to_id.get(t_guid, t_guid)
                 break
-          if "site" in loc: break
-      
+          if "site" in loc:
+            break
+
       # Final fallback: pick the first building in the config
       if "site" not in loc:
         for guid, f_entity in config.items():
-           if f_entity and f_entity.get("type") == "FACILITIES/BUILDING":
-             loc["site"] = guid_to_id.get(guid, guid)
-             break
+          if f_entity and f_entity.get("type") == "FACILITIES/BUILDING":
+            loc["site"] = guid_to_id.get(guid, guid)
+            break
 
     # Pointset Translation and Links
     if "translation" in entity or "links" in entity:
