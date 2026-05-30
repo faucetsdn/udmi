@@ -1409,7 +1409,8 @@ public class SequenceBase {
         recordRawMessage(simpleEnvelope(SubType.LOCAL, subBlock), data);
         sentConfig.put(subBlock, actualizedData);
         configTransactions.add(transactionId);
-        ifTrueThen(shouldGateConfigUpdate && !skipConfigSync, () -> waitForUpdateConfigSync(reason, waitForSync));
+        ifTrueThen(shouldGateConfigUpdate && !skipConfigSync,
+            () -> waitForUpdateConfigSync(reason, waitForSync));
       }
       return updated;
     } catch (Exception e) {
