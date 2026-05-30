@@ -3,14 +3,12 @@
   connections:
     2184ff7e-76d0-4961-aca5-f3f78c24deea: CONTAINS
     6cf23efd-19bd-4564-9360-ed0033f3f18c: CONTAINS
-  etag: 0e53f250
   type: FACILITIES/ROOM
 00623524-7855-48b4-93ca-581332384a24:
   cloud_device_id: '91885844754870'
   code: power-meter-EM-61_Lighting_BH2A
   connections:
     6cf23efd-19bd-4564-9360-ed0033f3f18c: CONTAINS
-  etag: 57ebb320
   translation:
     apparent_power_sensor:
       present_value: points.apparent_power_sensor.present_value
@@ -34,14 +32,12 @@
 006d60c3-a251-481c-9587-e4ece57660df:
   cloud_device_id: '779184318534883'
   code: ppchauffeur
-  etag: '93386429'
   type: INFO_TECH/PRNTR
 01a69c02-167e-49d1-a351-2a5bb85ce3e7:
   cloud_device_id: '2621350607221668'
   code: VAVRH S1-1-24
   connections:
     6cf23efd-19bd-4564-9360-ed0033f3f18c: CONTAINS
-  etag: e2bf2334
   type: UNTYPED/TYPELESS
 026203a0-976f-4581-8f0f-b608186f37ad:
   cloud_device_id: '6145222943537'
@@ -49,7 +45,6 @@
   connections:
     6cf23efd-19bd-4564-9360-ed0033f3f18c: CONTAINS
   display_name: TF S-11
-  etag: 0bd8592f
   translation:
     failed_alarm:
       present_value: points.failed_alarm.present_value
@@ -106,7 +101,6 @@
   connections:
     6cf23efd-19bd-4564-9360-ed0033f3f18c: CONTAINS
   display_name: VAVRH S3-1-51 CO2
-  etag: f6c5771a
   translation:
     cooling_request_count:
       present_value: points.cooling_request_count.present_value
@@ -173,7 +167,6 @@
   connections:
     6cf23efd-19bd-4564-9360-ed0033f3f18c: CONTAINS
   display_name: CHWP S4B
-  etag: 5e4773e9
   translation:
     current_sensor:
       present_value: points.current_sensor.present_value
@@ -222,7 +215,6 @@
   connections:
     6cf23efd-19bd-4564-9360-ed0033f3f18c: CONTAINS
   display_name: CH M1
-  etag: f390dbda
   translation:
     chilled_return_water_temperature_sensor:
       present_value: points.chilled_return_water_temperature_sensor.present_value
@@ -271,7 +263,6 @@
   connections:
     6cf23efd-19bd-4564-9360-ed0033f3f18c: CONTAINS
   display_name: HX M2
-  etag: fdf7ba6c
   translation:
     chilled_return_water_isolation_valve_percentage_command:
       present_value: points.chilled_return_water_isolation_valve_percentage_command.present_value
@@ -308,7 +299,6 @@
   connections:
     6cf23efd-19bd-4564-9360-ed0033f3f18c: CONTAINS
   display_name: utility-Water_Main_B
-  etag: 45eaa786
   translation:
     water_volume_accumulator:
       present_value: points.water_volume_accumulator.present_value
@@ -319,14 +309,12 @@
   type: METERS/WM_STANDARD
 2184ff7e-76d0-4961-aca5-f3f78c24deea:
   code: US-MTV-RLS1-1
-  etag: 7d21fc0d
   type: FACILITIES/FLOOR
 25f10653-7739-4bbe-a0b5-f7a470009e7a:
   cloud_device_id: '258374911360267'
   code: utility-GM-2_Gas_Cafe
   connections:
     6cf23efd-19bd-4564-9360-ed0033f3f18c: CONTAINS
-  etag: f9af5c2e
   translation:
     gas_flowrate_sensor:
       present_value: points.gas_flowrate_sensor.present_value
@@ -353,7 +341,6 @@
   connections:
     6cf23efd-19bd-4564-9360-ed0033f3f18c: CONTAINS
   display_name: BLR M1
-  etag: ff444555
   translation:
     circulation_pump_run_command:
       present_value: points.circulation_pump_run_command.present_value
@@ -406,7 +393,6 @@
   connections:
     6cf23efd-19bd-4564-9360-ed0033f3f18c: CONTAINS
   display_name: OA S
-  etag: 828a3bcf
   translation:
     outside_air_relative_humidity_sensor:
       present_value: points.outside_air_relative_humidity_sensor.present_value
@@ -423,7 +409,6 @@
   type: HVAC/WEATHER_OA
 6cf23efd-19bd-4564-9360-ed0033f3f18c:
   code: US-MTV-RLS1
-  etag: '45505368'
   type: FACILITIES/BUILDING
 d212c227-4cb9-4a18-842c-8e2748274acf:
   cloud_device_id: '210628044959834'
@@ -432,7 +417,6 @@ d212c227-4cb9-4a18-842c-8e2748274acf:
   connections:
     6cf23efd-19bd-4564-9360-ed0033f3f18c: CONTAINS
   display_name: AHU M1
-  etag: 6134ce0c
   translation:
     building_air_static_pressure_sensor:
       present_value: points.building_air_static_pressure_sensor.present_value
@@ -498,7 +482,6 @@ d26c31b5-b4f8-4678-8fc5-7ad08ff9a322:
   connections:
     6cf23efd-19bd-4564-9360-ed0033f3f18c: CONTAINS
   display_name: FC S-14
-  etag: 5d00ee16
   translation:
     cooling_request_count:
       present_value: points.cooling_request_count.present_value

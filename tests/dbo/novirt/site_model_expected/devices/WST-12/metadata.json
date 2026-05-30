@@ -8,7 +8,6 @@
     "dbo": {
       "ext_id": "4ee6c847-345d-435e-a427-c1e94e3bb1d6",
       "type": "HVAC/WEATHER_OA",
-      "etag": "828a3bcf",
       "label": "Outside Air Conditions"
     }
   },

@@ -6,7 +6,6 @@
     "dbo": {
       "ext_id": "11e21f30-bc86-46bd-819d-4b48180113ee",
       "type": "GATEWAYS/PASSTHROUGH",
-      "etag": "24393d8a",
       "label": "Liebert CRAC 1 / UPS"
     }
   },

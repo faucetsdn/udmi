@@ -5,14 +5,12 @@
     - CONTAINS
     12dac17e-dda6-41bb-a757-e81fcf701482:
     - CONTAINS
-  etag: 432e5fc7
   type: FACILITIES/ROOM
 0102e12d-b120-4fe2-b9be-2c73110fae50:
   cloud_device_id: '2654759764601422'
   code: device2720802
   connections:
     12dac17e-dda6-41bb-a757-e81fcf701482: CONTAINS
-  etag: 2559d15f
   type: UNTYPED/TYPELESS
 01148e74-91fd-4688-b357-ab6326e8ae49:
   cloud_device_id: '110284116715833'
@@ -20,7 +18,6 @@
   connections:
     12dac17e-dda6-41bb-a757-e81fcf701482: CONTAINS
   display_name: power-meter-MatrixRoom
-  etag: 593e556e
   translation:
     apparent_power_sensor:
       present_value: points.apparent_power_sensor.present_value
@@ -41,7 +38,6 @@
   connections:
     12dac17e-dda6-41bb-a757-e81fcf701482: CONTAINS
   display_name: VAVRH 2-4-3
-  etag: '57833961'
   translation:
     discharge_air_temperature_sensor:
       present_value: points.discharge_air_temperature_sensor.present_value
@@ -67,11 +63,9 @@
   code: onboarding-mtv12
   connections:
     0a84a996-1120-4178-91ca-e118500d5463: CONTAINS
-  etag: a2a08521
   type: INFO_TECH/PRNTR
 0a84a996-1120-4178-91ca-e118500d5463:
   code: US-MTV-40-1
-  etag: b7bdb7f6
   type: FACILITIES/FLOOR
 107959bc-29f3-464a-848f-9e5985d45a5a:
   cloud_device_id: '270504150275150'
@@ -80,7 +74,6 @@
     12dac17e-dda6-41bb-a757-e81fcf701482: CONTAINS
     14986412-1310-42cc-9db1-47dc6378b6e0: CONTAINS
   display_name: CRAC 1 UPS
-  etag: b57032e9
   links:
     11e21f30-bc86-46bd-819d-4b48180113ee:
       compressor_run_status: compressor_run_status_2
@@ -93,7 +86,6 @@
   code: Liebert CRAC 1 / UPS
   connections:
     12dac17e-dda6-41bb-a757-e81fcf701482: CONTAINS
-  etag: 24393d8a
   translation:
     compressor_run_status_1:
       present_value: points.compressor_run_status_1.present_value
@@ -144,11 +136,9 @@
   type: GATEWAYS/PASSTHROUGH
 12dac17e-dda6-41bb-a757-e81fcf701482:
   code: US-MTV-40
-  etag: ba1b7e06
   type: FACILITIES/BUILDING
 14986412-1310-42cc-9db1-47dc6378b6e0:
   code: US-MTV-40-G-G40D
-  etag: 090b3cb7
   type: FACILITIES/ROOM
 acb48500-fde1-4ef5-ab57-c3aa7ee8d8ad:
   cloud_device_id: '215427101056132'
@@ -157,7 +147,6 @@ acb48500-fde1-4ef5-ab57-c3aa7ee8d8ad:
     12dac17e-dda6-41bb-a757-e81fcf701482: CONTAINS
     14986412-1310-42cc-9db1-47dc6378b6e0: CONTAINS
   display_name: CRAC 2
-  etag: 5393ce13
   links:
     11e21f30-bc86-46bd-819d-4b48180113ee:
       compressor_run_status: compressor_run_status_1

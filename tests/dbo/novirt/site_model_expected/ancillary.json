@@ -5,17 +5,14 @@
       "2184ff7e-76d0-4961-aca5-f3f78c24deea": "CONTAINS",
       "6cf23efd-19bd-4564-9360-ed0033f3f18c": "CONTAINS"
     },
-    "etag": "0e53f250",
     "type": "FACILITIES/ROOM"
   },
   "2184ff7e-76d0-4961-aca5-f3f78c24deea": {
     "code": "US-MTV-RLS1-1",
-    "etag": "7d21fc0d",
     "type": "FACILITIES/FLOOR"
   },
   "6cf23efd-19bd-4564-9360-ed0033f3f18c": {
     "code": "US-MTV-RLS1",
-    "etag": "45505368",
     "type": "FACILITIES/BUILDING"
   }
 }

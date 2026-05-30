@@ -9,22 +9,18 @@
         "CONTAINS"
       ]
     },
-    "etag": "432e5fc7",
     "type": "FACILITIES/ROOM"
   },
   "0a84a996-1120-4178-91ca-e118500d5463": {
     "code": "US-MTV-40-1",
-    "etag": "b7bdb7f6",
     "type": "FACILITIES/FLOOR"
   },
   "12dac17e-dda6-41bb-a757-e81fcf701482": {
     "code": "US-MTV-40",
-    "etag": "ba1b7e06",
     "type": "FACILITIES/BUILDING"
   },
   "14986412-1310-42cc-9db1-47dc6378b6e0": {
     "code": "US-MTV-40-G-G40D",
-    "etag": "090b3cb7",
     "type": "FACILITIES/ROOM"
   }
 }

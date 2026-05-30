@@ -8,7 +8,6 @@
     "dbo": {
       "ext_id": "d212c227-4cb9-4a18-842c-8e2748274acf",
       "type": "HVAC/AHU_SFVSC2X_EFVSC_CHWSC_ECON2X_BSPC_SSPC_FDPM",
-      "etag": "6134ce0c",
       "label": "AHU M1 RF1 VFD Interface, AHU M1 SF1 VFD Interface, AHU M1 SF2 VFD Interface, AHU-M-1 / 100 Mayfield"
     }
   },

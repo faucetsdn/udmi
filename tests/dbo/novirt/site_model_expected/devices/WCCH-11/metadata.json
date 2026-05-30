@@ -8,7 +8,6 @@
     "dbo": {
       "ext_id": "08ec4c1b-7055-4366-a6fa-db56b2c5fa2b",
       "type": "HVAC/CH_VSC_CHWDT_CWDT_CHDXSC_CHWSWISOVPM_CWSWISOVPM_REFPM_REFSM_OTPM_IGM",
-      "etag": "f390dbda",
       "label": "Chiller M-1 Integration / 100 Mayfield, Chiller M-2 Integration / 100 Mayfield, Chiller Plant / 100 Mayfield"
     }
   },

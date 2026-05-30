@@ -171,8 +171,6 @@ def extract_dbo_config(site_model_dir: Path) -> dict:
     if links_dbo:
       device_entry["links"] = links_dbo
 
-    if "etag" in dbo_external:
-      device_entry["etag"] = dbo_external["etag"]
 
     if "system" in metadata and "name" in metadata["system"]:
       device_entry["display_name"] = metadata["system"]["name"]

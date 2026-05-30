@@ -119,8 +119,6 @@ def merge_dbo_config(yaml_file: Path, site_model_dir: Path):
     dbo["ext_id"] = guid
     if "type" in entity:
       dbo["type"] = entity["type"]
-    if "etag" in entity:
-      dbo["etag"] = entity["etag"]
     if "code" in entity:
       dbo["label"] = entity["code"]
 

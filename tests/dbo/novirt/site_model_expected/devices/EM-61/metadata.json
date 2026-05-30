@@ -6,7 +6,6 @@
     "dbo": {
       "ext_id": "00623524-7855-48b4-93ca-581332384a24",
       "type": "METERS/EM_PWM_AVCM_PLPM_PVCM",
-      "etag": "57ebb320",
       "label": "power-meter-EM-61_Lighting_BH2A"
     }
   },
