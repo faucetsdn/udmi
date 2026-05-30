@@ -342,7 +342,7 @@ public class SequenceBase {
   private int maxAllowedStatusLevel;
   private String extraField;
   private String updatedExtraField;
-  private Instant lastConfigIssued;
+  private Instant lastConfigIssued = Instant.ofEpochSecond(0);
   private boolean enforceSerial;
   private String testName;
   private String testSummary;
@@ -1380,6 +1380,11 @@ public class SequenceBase {
 
     ifTrueThen(configIsPending() && !skipConfigSync && !shouldGateConfigUpdate,
         () -> waitForUpdateConfigSync(reason, waitForState));
+
+    if (configIsPending() && skipConfigSync) {
+      lastConfigIssued = CleanDateFormat.clean(Instant.now());
+      debug(format("Update lastConfigIssued to %s (skipped config sync)", lastConfigIssued));
+    }
 
     assertConfigIsNotPending();
 
