@@ -1,0 +1,64 @@
+{
+  "event_no" : 5,
+  "last_config" : "TIMESTAMP",
+  "logentries" : [ {
+    "message" : "State update AHU-1 (blob_update_oversize)",
+    "detail" : "{\n  \"timestamp\" : \"TIMESTAMP\"\n      }\n    }\n  },\n  \"pointset\" : {\n    \"points\" : {\n      \"filter_alarm_pressure_status\" : {\n        \"units\" : \"No-units\"\n      },\n      \"filter_differential_pressure_setpoint\" : {\n        \"units\" : \"Bars\",\n        \"value_state\" : \"applied\"\n      },\n      \"filter_differential_pressure_sensor\" : {\n        \"units\" : \"Degrees-Celsius\"\n      }\n    }\n  }\n}",
+    "category" : "device.log",
+    "timestamp" : "TIMESTAMP",
+    "level" : 100
+  }, {
+    "message" : "success",
+    "category" : "system.config.apply",
+    "timestamp" : "TIMESTAMP",
+    "level" : 300
+  }, {
+    "message" : "Fetch blob data for pubber_module",
+    "category" : "blobset.blob.fetch",
+    "timestamp" : "TIMESTAMP",
+    "level" : 100
+  }, {
+    "message" : "State update defer 1996ms",
+    "category" : "device.log",
+    "timestamp" : "TIMESTAMP",
+    "level" : 100
+  }, {
+    "message" : "Failed to apply blob pubber_module: Simulated payload too big",
+    "category" : "device.log",
+    "timestamp" : "TIMESTAMP",
+    "level" : 500
+  }, {
+    "message" : "Simulated payload too big",
+    "detail" : "udmi.lib.base.UdmiException: Simulated payload too big;",
+    "category" : "blobset.blob.fetch",
+    "timestamp" : "TIMESTAMP",
+    "level" : 500
+  }, {
+    "message" : "State update defer 1990ms",
+    "category" : "device.log",
+    "timestamp" : "TIMESTAMP",
+    "level" : 100
+  }, {
+    "message" : "State update defer -1ms",
+    "category" : "device.log",
+    "timestamp" : "TIMESTAMP",
+    "level" : 100
+  }, {
+    "message" : "Update state TIMESTAMP",
+    "category" : "device.log",
+    "timestamp" : "TIMESTAMP",
+    "level" : 200
+  }, {
+    "message" : "State update AHU-1 (blob_update_oversize)",
+    "detail" : "{\n  \"timestamp\" : \"TIMESTAMP\"\n      }\n    }\n  },\n  \"pointset\" : {\n    \"points\" : {\n      \"filter_alarm_pressure_status\" : {\n        \"units\" : \"No-units\"\n      },\n      \"filter_differential_pressure_setpoint\" : {\n        \"units\" : \"Bars\",\n        \"value_state\" : \"applied\"\n      },\n      \"filter_differential_pressure_sensor\" : {\n        \"units\" : \"Degrees-Celsius\"\n      }\n    }\n  }\n}",
+    "category" : "device.log",
+    "timestamp" : "TIMESTAMP",
+    "level" : 100
+  } ],
+  "metrics" : {
+    "mem_total_mb" : 112.0,
+    "mem_free_mb" : 77.62545013427734
+  },
+  "timestamp" : "TIMESTAMP",
+  "version" : "1.5.3"
+}

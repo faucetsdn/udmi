@@ -159,6 +159,18 @@ public class Category {
     public static final int MAPPING_DEVICE_APPLY_VALUE = INFO.value();
     static { LEVEL.put(MAPPING_DEVICE_APPLY, INFO); }
 
+    // Conditions specific to an individual blob
+    public static final String BLOBSET_BLOB = "blobset.blob";
+    public static final Level BLOBSET_BLOB_LEVEL = INFO;
+    public static final int BLOBSET_BLOB_VALUE = INFO.value();
+    static { LEVEL.put(BLOBSET_BLOB, INFO); }
+
+    // Processing a blob update
+    public static final String BLOBSET_BLOB_UPDATE = "blobset.blob.update";
+    public static final Level BLOBSET_BLOB_UPDATE_LEVEL = INFO;
+    public static final int BLOBSET_BLOB_UPDATE_VALUE = INFO.value();
+    static { LEVEL.put(BLOBSET_BLOB_UPDATE, INFO); }
+
     // About receiving a blob update
     public static final String BLOBSET_BLOB_RECEIVE = "blobset.blob.receive";
     public static final Level BLOBSET_BLOB_RECEIVE_LEVEL = DEBUG;
@@ -171,11 +183,29 @@ public class Category {
     public static final int BLOBSET_BLOB_FETCH_VALUE = DEBUG.value();
     static { LEVEL.put(BLOBSET_BLOB_FETCH, DEBUG); }
 
+    // Parsing and verifying a blob
+    public static final String BLOBSET_BLOB_PARSE = "blobset.blob.parse";
+    public static final Level BLOBSET_BLOB_PARSE_LEVEL = DEBUG;
+    public static final int BLOBSET_BLOB_PARSE_VALUE = DEBUG.value();
+    static { LEVEL.put(BLOBSET_BLOB_PARSE, DEBUG); }
+
     // Applying a blob update
     public static final String BLOBSET_BLOB_APPLY = "blobset.blob.apply";
     public static final Level BLOBSET_BLOB_APPLY_LEVEL = NOTICE;
     public static final int BLOBSET_BLOB_APPLY_VALUE = NOTICE.value();
     static { LEVEL.put(BLOBSET_BLOB_APPLY, NOTICE); }
+
+    // Blob update process was canceled or aborted
+    public static final String BLOBSET_BLOB_ABORT = "blobset.blob.abort";
+    public static final Level BLOBSET_BLOB_ABORT_LEVEL = NOTICE;
+    public static final int BLOBSET_BLOB_ABORT_VALUE = NOTICE.value();
+    static { LEVEL.put(BLOBSET_BLOB_ABORT, NOTICE); }
+
+    // Reverting to previous blob version
+    public static final String BLOBSET_BLOB_ROLLBACK = "blobset.blob.rollback";
+    public static final Level BLOBSET_BLOB_ROLLBACK_LEVEL = NOTICE;
+    public static final int BLOBSET_BLOB_ROLLBACK_VALUE = NOTICE.value();
+    static { LEVEL.put(BLOBSET_BLOB_ROLLBACK, NOTICE); }
 
     // Receiving/processing a message for validation.
     public static final String VALIDATION_DEVICE_RECEIVE = "validation.device.receive";

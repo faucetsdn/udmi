@@ -100,5 +100,17 @@ class SimpleMqttPipeTest extends MessagePipeTestBase {
     assertEquals("g", channelState.get(GATEWAY_ID_KEY));
     assertEquals("control", channelState.get(SOURCE_KEY));
     assertEquals(6, channelState.keySet().size());
+
+    Map<String, String> legacyBasic = parseEnvelopeTopic("/devices/my-dev/events");
+    assertEquals("my-dev", legacyBasic.get(DEVICE_ID_KEY));
+    assertEquals("events", legacyBasic.get(SUBTYPE_PROPERTY_KEY));
+    assertNull(legacyBasic.get(SUBFOLDER_PROPERTY_KEY));
+    assertEquals(2, legacyBasic.keySet().size());
+
+    Map<String, String> legacyPointset = parseEnvelopeTopic("/devices/my-dev/events/pointset");
+    assertEquals("my-dev", legacyPointset.get(DEVICE_ID_KEY));
+    assertEquals("events", legacyPointset.get(SUBTYPE_PROPERTY_KEY));
+    assertEquals("pointset", legacyPointset.get(SUBFOLDER_PROPERTY_KEY));
+    assertEquals(3, legacyPointset.keySet().size());
   }
 }

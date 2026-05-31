@@ -556,6 +556,9 @@ public class IotReflectorClient implements MessagePublisher {
 
   @Override
   public void activate() {
+    if (active) {
+      return;
+    }
 
     try {
       // Some publishers are shared, while others are unique, so handle accordingly.
