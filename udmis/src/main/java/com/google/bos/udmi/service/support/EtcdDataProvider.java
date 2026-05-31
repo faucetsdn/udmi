@@ -16,10 +16,14 @@ import io.etcd.jetcd.KeyValue;
 import io.etcd.jetcd.Lock;
 import io.etcd.jetcd.cluster.Member;
 import io.etcd.jetcd.kv.GetResponse;
+import io.etcd.jetcd.op.Op;
+import io.etcd.jetcd.options.DeleteOption;
 import io.etcd.jetcd.options.GetOption;
+import io.etcd.jetcd.options.PutOption;
 import java.net.URI;
 import java.time.Duration;
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -269,6 +273,33 @@ public class EtcdDataProvider extends ContainerBase implements IotDataProvider {
 
     public void put(String key, String value) {
       putKey(getKeyPath(key), value);
+    }
+
+    @Override
+    public void update(Map<String, String> puts, Set<String> deletes) {
+      try {
+        List<Op> ops = new ArrayList<>();
+        if (puts != null) {
+          puts.forEach((key, value) -> {
+            if (value != null) {
+              ops.add(Op.put(bytes(getKeyPath(key)), bytes(value), PutOption.DEFAULT));
+            }
+          });
+        }
+        if (deletes != null) {
+          deletes.forEach(key -> {
+            if (key != null) {
+              ops.add(Op.delete(bytes(getKeyPath(key)), DeleteOption.DEFAULT));
+            }
+          });
+        }
+        if (!ops.isEmpty()) {
+          kvClient.txn().Then(ops.toArray(new Op[0])).commit()
+              .get(QUERY_TIMEOUT_SEC, TimeUnit.SECONDS);
+        }
+      } catch (Exception e) {
+        throw new RuntimeException("While executing batch update on " + getKeyPath(""), e);
+      }
     }
   }
 
