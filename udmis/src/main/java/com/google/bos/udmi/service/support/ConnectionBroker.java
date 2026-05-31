@@ -1,6 +1,7 @@
 package com.google.bos.udmi.service.support;
 
 import java.util.Date;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Future;
 import java.util.function.Consumer;
 
@@ -9,13 +10,15 @@ import java.util.function.Consumer;
  */
 public interface ConnectionBroker {
 
-  void authorize(String clientId, String password);
+  CompletableFuture<Void> authorize(String clientId, String password);
 
   Future<Void> addEventListener(String clientPrefix, Consumer<BrokerEvent> eventConsumer);
 
-  void bindGateway(String gatewayId, String deviceId);
+  CompletableFuture<Void> bindGateway(String gatewayId, String deviceId);
 
-  void unbindGateway(String gatewayId, String deviceId);
+  CompletableFuture<Void> unbindGateway(String gatewayId, String deviceId);
+
+  void shutdown();
 
   /**
    * Simple event for connection broker happenings.

@@ -59,6 +59,7 @@ class MqttToPubSubBridgeTest {
     assertEquals(testTopic, attributes.get("mqttTopic"));
     assertEquals("my-device", attributes.get("deviceId"));
     assertEquals("my-registry", attributes.get("deviceRegistryId"));
+    assertEquals("bridge", attributes.get("source"));
   }
 
   @Test
@@ -264,6 +265,38 @@ class MqttToPubSubBridgeTest {
     callback.connectComplete(true, "tcp://localhost:1883");
     // Verify re-subscribed
     verify(mockMqttClient, org.mockito.Mockito.times(2)).subscribe(testTopic);
+  }
+
+  @Test
+  void testSetupBridgeWithCustomSource() throws Exception {
+    IMqttClient mockMqttClient = mock(IMqttClient.class);
+    Publisher mockPublisher = mock(Publisher.class);
+    String testTopic = "/r/my-registry/d/my-device/events";
+    String payloadStr = "Hello World";
+    final MqttMessage mqttMessage = new MqttMessage(payloadStr.getBytes());
+
+    when(mockPublisher.publish(any(PubsubMessage.class)))
+        .thenReturn(ApiFutures.immediateFuture("msg-123"));
+
+    // Call 5-parameter setupBridge with custom source attribute
+    MqttToPubSubBridge.setupBridge(mockMqttClient, mockPublisher, testTopic, null, "custom-source");
+
+    verify(mockMqttClient).subscribe(testTopic);
+
+    ArgumentCaptor<MqttCallbackExtended> callbackCaptor =
+        ArgumentCaptor.forClass(MqttCallbackExtended.class);
+    verify(mockMqttClient).setCallback(callbackCaptor.capture());
+    MqttCallbackExtended callback = callbackCaptor.getValue();
+
+    callback.messageArrived(testTopic, mqttMessage);
+
+    ArgumentCaptor<PubsubMessage> pubsubMessageCaptor =
+        ArgumentCaptor.forClass(PubsubMessage.class);
+    verify(mockPublisher).publish(pubsubMessageCaptor.capture());
+
+    PubsubMessage pubsubMessage = pubsubMessageCaptor.getValue();
+    Map<String, String> attributes = pubsubMessage.getAttributesMap();
+    assertEquals("custom-source", attributes.get("source"));
   }
 
 }

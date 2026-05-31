@@ -70,6 +70,7 @@ case "$1" in
   registrar_tests)
     test_wrap bin/test_registrar
     test_wrap bin/test_sites
+    test_wrap bin/test_mockseq
     ;;
   all_tests)
     run_wrap install_dependencies
