@@ -311,6 +311,7 @@ public class SequenceBase {
   private static boolean enableAllTargets = true;
   private static boolean useAlternateClient;
   private static boolean skipConfigSync;
+  private static boolean shouldGateConfigUpdate;
   private static File baseOutputDir;
 
   static {
@@ -341,7 +342,7 @@ public class SequenceBase {
   private int maxAllowedStatusLevel;
   private String extraField;
   private String updatedExtraField;
-  private Instant lastConfigIssued;
+  private Instant lastConfigIssued = Instant.ofEpochSecond(0);
   private boolean enforceSerial;
   private String testName;
   private String testSummary;
@@ -370,7 +371,7 @@ public class SequenceBase {
   static String activePrimary;
   private Date configStateStart;
   protected boolean pretendStateUpdated;
-  private Boolean stateSupported;
+  private static Boolean stateSupported;
   private Instant lastConfigApplied = getNowInstant();
   private Map<String, AtomicInteger> msgIndex = new HashMap<>();
   private Map<String, String> lastBase = new HashMap<>();
@@ -389,7 +390,7 @@ public class SequenceBase {
       checkNotNull(exeConfig.udmi_version, "udmi_version not defined");
       logLevel = Level.valueOf(checkNotNull(exeConfig.log_level, "log_level not defined"))
           .value();
-      skipConfigSync = isTraceLogLevel();
+      shouldGateConfigUpdate = isTraceLogLevel();
       key_file = checkNotNull(exeConfig.key_file, "key_file not defined");
     } catch (Exception e) {
       e.printStackTrace();
@@ -400,6 +401,8 @@ public class SequenceBase {
     registryId = SiteModel.getRegistryActual(exeConfig);
 
     deviceMetadata = readDeviceMetadata();
+    skipConfigSync = !deviceSupportsState();
+    shouldGateConfigUpdate = isTraceLogLevel();
 
     serialNo = ofNullable(exeConfig.serial_no)
         .orElseGet(() -> GeneralUtils.catchToNull(() -> deviceMetadata.system.serial_no));
@@ -469,9 +472,13 @@ public class SequenceBase {
   @VisibleForTesting
   static void resetState() {
     System.err.println("Resetting SequenceBase state for testing");
+    ifNotNullThen(client, MessagePublisher::close);
+    ifNotNullThen(altClient, IotReflectorClient::close);
     exeConfig = null;
     client = null;
+    altClient = null;
     validationState = null;
+    stateSupported = null;
   }
 
   private static Metadata readDeviceMetadata() {
@@ -883,7 +890,9 @@ public class SequenceBase {
     resetCapturedMessages();
     validationResults.clear();
 
-    waitForConfigSync();
+    if (deviceSupportsState()) {
+      waitForConfigSync();
+    }
 
     doPartialUpdates = true;
     recordSequence = true;
@@ -901,9 +910,10 @@ public class SequenceBase {
     deviceConfig.blobset = null;
   }
 
-  private boolean deviceSupportsState() {
+  private static boolean deviceSupportsState() {
     ifNullThen(stateSupported,
-        () -> stateSupported = !isTrue(catchToNull(() -> deviceMetadata.testing.nostate)));
+        () -> stateSupported =
+            !isTrue(GeneralUtils.catchToNull(() -> deviceMetadata.testing.nostate)));
     return stateSupported;
   }
 
@@ -945,7 +955,9 @@ public class SequenceBase {
       resetRequired = false;
     });
 
-    waitForConfigSync();
+    if (deviceSupportsState()) {
+      waitForConfigSync();
+    }
 
     // If last config isn't reported by the device, then add in a fixed delay to
     // give it time to handle to the last sent config before proceeding. Otherwise, it would
@@ -1323,7 +1335,7 @@ public class SequenceBase {
   }
 
   private void assertConfigIsNotPending() {
-    if (!configTransactions.isEmpty()) {
+    if (!skipConfigSync && !configTransactions.isEmpty()) {
       throw new RuntimeException(
           "Unexpected pending config transactions: " + configTransactionsListString());
     }
@@ -1349,7 +1361,7 @@ public class SequenceBase {
 
     ensureStateConfigHoldoff();
 
-    ifTrueThen(!skipConfigSync, this::rateLimitConfig);
+    ifTrueThen(!skipConfigSync && !shouldGateConfigUpdate, this::rateLimitConfig);
 
     if (doPartialUpdates && !force) {
       updateConfig(reason, waitForState, SubFolder.SYSTEM, augmentConfig(deviceConfig.system));
@@ -1366,8 +1378,13 @@ public class SequenceBase {
       updateConfig(reason, waitForState, UPDATE, deviceConfig);
     }
 
-    ifTrueThen(configIsPending() && !skipConfigSync,
+    ifTrueThen(configIsPending() && !skipConfigSync && !shouldGateConfigUpdate,
         () -> waitForUpdateConfigSync(reason, waitForState));
+
+    if (configIsPending() && skipConfigSync) {
+      lastConfigIssued = CleanDateFormat.clean(Instant.now());
+      debug(format("Update lastConfigIssued to %s (skipped config sync)", lastConfigIssued));
+    }
 
     assertConfigIsNotPending();
 
@@ -1388,7 +1405,7 @@ public class SequenceBase {
       trace(format("Updated check %s_%s: %s", CONFIG_SUBTYPE, subBlock, updated));
       if (updated) {
         String topic = subBlock + "/config";
-        ifTrueThen(skipConfigSync, this::rateLimitConfig);
+        ifTrueThen(shouldGateConfigUpdate && !skipConfigSync, this::rateLimitConfig);
         final String transactionId =
             requireNonNull(reflector().publish(getDeviceId(), topic, actualizedData),
                 "no transactionId returned for publish");
@@ -1397,7 +1414,8 @@ public class SequenceBase {
         recordRawMessage(simpleEnvelope(SubType.LOCAL, subBlock), data);
         sentConfig.put(subBlock, actualizedData);
         configTransactions.add(transactionId);
-        ifTrueThen(skipConfigSync, () -> waitForUpdateConfigSync(reason, waitForSync));
+        ifTrueThen(shouldGateConfigUpdate && !skipConfigSync,
+            () -> waitForUpdateConfigSync(reason, waitForSync));
       }
       return updated;
     } catch (Exception e) {
@@ -2800,7 +2818,6 @@ public class SequenceBase {
         ifNotNullThen(validationState,
             state -> state.cloud_version = client.getVersionInformation());
 
-        ifNotNullThen(altClient, IotReflectorClient::activate);
         checkState(reflector().isActive(), "Reflector is not currently active");
 
         activeInstance = SequenceBase.this;

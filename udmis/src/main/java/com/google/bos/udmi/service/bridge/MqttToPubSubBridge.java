@@ -110,6 +110,7 @@ public final class MqttToPubSubBridge {
     String mqttClientKeyPath = commandLine.getOptionValue("mqtt_client_key_path");
     String etcdTarget = commandLine.getOptionValue("etcd_target");
     String etcdOptions = commandLine.getOptionValue("etcd_options");
+    String sourceAttribute = commandLine.getOptionValue("source_attribute", "bridge");
 
     if (gcpProjectId == null || pubsubTopicId == null) {
       logger.error("gcp_project_id and pubsub_topic_id are required.");
@@ -150,7 +151,7 @@ public final class MqttToPubSubBridge {
       logger.info("Connected to MQTT broker.");
 
       // Set up MQTT Message Callback
-      setupBridge(mqttClient, publisher, mqttSubscriptionTopic, etcdProvider);
+      setupBridge(mqttClient, publisher, mqttSubscriptionTopic, etcdProvider, sourceAttribute);
 
       // Keep the application running
       while (true) {
@@ -211,6 +212,7 @@ public final class MqttToPubSubBridge {
     options.addOption(null, "mqtt_client_key_path", true, "Path to client private key for TLS.");
     options.addOption(null, "etcd_target", true, "etcd endpoint URL.");
     options.addOption(null, "etcd_options", true, "etcd provider options (comma-separated).");
+    options.addOption(null, "source_attribute", true, "Value for the source attribute.");
     options.addOption("h", "help", false, "Print usage info.");
 
     CommandLineParser parser = new DefaultParser();
@@ -235,6 +237,21 @@ public final class MqttToPubSubBridge {
    */
   public static void setupBridge(IMqttClient mqttClient, Publisher publisher,
       String mqttSubscriptionTopic, EtcdDataProvider etcdProvider) throws MqttException {
+    setupBridge(mqttClient, publisher, mqttSubscriptionTopic, etcdProvider, "bridge");
+  }
+
+  /**
+   * Sets up the bridge between MQTT and Pub/Sub with a custom source attribute value.
+   *
+   * @param mqttClient            The MQTT client.
+   * @param publisher             The Pub/Sub publisher.
+   * @param mqttSubscriptionTopic The MQTT topic to subscribe to.
+   * @param sourceAttribute       The value of the source attribute.
+   * @throws MqttException If an MQTT error occurs.
+   */
+  public static void setupBridge(IMqttClient mqttClient, Publisher publisher,
+      String mqttSubscriptionTopic, EtcdDataProvider etcdProvider, String sourceAttribute)
+      throws MqttException {
     mqttClient.setCallback(
         new MqttCallbackExtended() {
           @Override
@@ -282,6 +299,9 @@ public final class MqttToPubSubBridge {
               attributes.put("mqttTopic", topic);
               attributes.put("deviceId", deviceId);
               attributes.put("deviceRegistryId", registryId);
+              if (sourceAttribute != null) {
+                attributes.put("source", sourceAttribute);
+              }
 
               String numId = getDeviceNumId(etcdProvider, registryId, deviceId);
               if (numId != null) {

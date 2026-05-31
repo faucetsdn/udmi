@@ -69,4 +69,7 @@ class EndpointConfiguration(DataModel):
     keyBytes: Optional[Any] = None
     algorithm: Optional[str] = None
     auth_provider: Optional[AuthProvider] = None
+    ca_file: Optional[str] = None
+    cert_file: Optional[str] = None
+    key_file: Optional[str] = None
     generation: Optional[str] = None

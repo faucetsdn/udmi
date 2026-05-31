@@ -181,6 +181,7 @@ def discovery_node():
         },
         "nmap": {"targets": ["127.0.0.1"], "interface": "eth0"},
         "bacnet": {"ip": "192.168.11.251"},
+        "log_level": "DEBUG",
     }
 
     with open(

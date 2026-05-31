@@ -166,4 +166,69 @@ public class ProvisioningEngineTest extends ProcessorTestBase {
 
     assertEquals(1, devices.size(), "size of device operation list");
   }
+
+  private void initializeProviderWithGateway(IotAccessBase provider, CloudModel gatewayModel) {
+    CloudModel registryModel = new CloudModel();
+    registryModel.device_ids = new HashMap<>();
+
+    CloudModel deviceModel = new CloudModel();
+    deviceModel.resource_type = Resource_type.DIRECT;
+    registryModel.device_ids.put(TEST_DEVICE, deviceModel);
+
+    registryModel.device_ids.put(TEST_GATEWAY, gatewayModel);
+    gatewayModel.resource_type = Resource_type.GATEWAY;
+    gatewayModel.metadata = getGatewayMetadata();
+
+    when(provider.getRegistries()).thenReturn(ImmutableSet.of(TEST_REGISTRY));
+    when(provider.listDevices(eq(TEST_REGISTRY), isNull())).thenReturn(registryModel);
+    when(provider.fetchDevice(eq(TEST_REGISTRY), any())).thenAnswer(query -> {
+      String deviceId = query.getArgument(1);
+      throw new RuntimeException("No such device " + deviceId);
+    });
+    when(provider.fetchDevice(eq(TEST_REGISTRY), eq(TEST_DEVICE))).thenReturn(deviceModel);
+    when(provider.fetchDevice(eq(TEST_REGISTRY), eq(TEST_GATEWAY))).thenReturn(gatewayModel);
+  }
+
+  @Test
+  public void discoveryEventGatewayNull() {
+    initializeTestInstance(ProvisioningEngine.class);
+    CloudModel gatewayModel = new CloudModel();
+    gatewayModel.gateway = null;
+    initializeProviderWithGateway(provider, gatewayModel);
+
+    getReverseDispatcher()
+        .withEnvelope(getScanEnvelope())
+        .publish(getDiscoveryScanEvent(TARGET_DEVICE));
+
+    terminateAndWait();
+
+    Entry<List<String>, List<CloudModel>> tuple = extractDeviceInfo(true);
+    List<String> devices = tuple.getKey();
+    List<CloudModel> models = tuple.getValue();
+
+    assertEquals(DISCOVERED_DEVICE, devices.get(0), "created device id");
+    assertEquals(ModelOperation.CREATE, models.get(0).operation, "operation mismatch");
+  }
+
+  @Test
+  public void discoveryEventProxyIdsNull() {
+    initializeTestInstance(ProvisioningEngine.class);
+    CloudModel gatewayModel = new CloudModel();
+    gatewayModel.gateway = new GatewayModel();
+    gatewayModel.gateway.proxy_ids = null;
+    initializeProviderWithGateway(provider, gatewayModel);
+
+    getReverseDispatcher()
+        .withEnvelope(getScanEnvelope())
+        .publish(getDiscoveryScanEvent(TARGET_DEVICE));
+
+    terminateAndWait();
+
+    Entry<List<String>, List<CloudModel>> tuple = extractDeviceInfo(true);
+    List<String> devices = tuple.getKey();
+    List<CloudModel> models = tuple.getValue();
+
+    assertEquals(DISCOVERED_DEVICE, devices.get(0), "created device id");
+    assertEquals(ModelOperation.CREATE, models.get(0).operation, "operation mismatch");
+  }
 }

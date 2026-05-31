@@ -75,6 +75,7 @@ $MOSQUITTO_CTRL addRoleACL service subscribePattern '/r/+/d/+/#' allow || true
 $MOSQUITTO_CTRL addRoleACL service publishClientSend '/r/+/d/+/#' allow || true
 $MOSQUITTO_CTRL addRoleACL service subscribePattern '/uufi/#' allow || true
 $MOSQUITTO_CTRL addRoleACL service publishClientSend '/uufi/#' allow || true
+$MOSQUITTO_CTRL addClientRole $AUTH_USER service || true
 
 $MOSQUITTO_CTRL createRole uufi || true
 $MOSQUITTO_CTRL addRoleACL uufi subscribePattern '/uufi/#' allow || true
