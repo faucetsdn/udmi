@@ -39,8 +39,9 @@ public class ModbusFamilyProvider implements FamilyProvider {
 
   private static final Set<String> ALLOWED_BORDERS = ImmutableSet.of("MSB", "LSB");
   private static final Set<String> ALLOWED_WORDERS = ImmutableSet.of("HWF", "LWF");
-  private static final Set<String> ALLOWED_TYPES =
-      ImmutableSet.of("INT16", "INT32", "INT64", "UINT16", "UINT32", "UINT64", "FLOAT32", "FLOAT64", "BOOLEAN", "ASCII");
+  private static final Set<String> ALLOWED_TYPES = ImmutableSet.of(
+      "INT16", "INT32", "INT64", "UINT16", "UINT32", "UINT64",
+      "FLOAT32", "FLOAT64", "BOOLEAN", "ASCII");
 
   @Override
   public String familyKey() {
@@ -77,7 +78,8 @@ public class ModbusFamilyProvider implements FamilyProvider {
           throw new RuntimeException(format("invalid modbus interpretation parameter %s", key));
         }
         if (parts.length < 2) {
-          throw new RuntimeException(format("missing value for modbus interpretation parameter %s", key));
+          throw new RuntimeException(
+              format("missing value for modbus interpretation parameter %s", key));
         }
         String value = parts[1];
         switch (key) {
@@ -104,6 +106,8 @@ public class ModbusFamilyProvider implements FamilyProvider {
               throw new RuntimeException(format("invalid modbus %s value %s", key, value));
             }
             break;
+          default:
+            throw new RuntimeException(format("unhandled modbus interpretation parameter %s", key));
         }
       });
     }
