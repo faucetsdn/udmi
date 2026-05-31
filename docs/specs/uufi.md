@@ -2,7 +2,7 @@
 
 # Unified UDMI Functional Interface (UUFI)
 
-The **Unified UDMI Functional Interface (UUFI)** defines a standardized messaging mechanism for external applications (the **Client**) to integrate with a UDMI-managed system (the **System**). This needs to be said: this provides a 'Unified Universal Device Managemeng Interface Functional Interface'. This
+The **Unified UDMI Functional Interface (UUFI)** defines a standardized messaging mechanism for external applications (the **Client**) to integrate with a UDMI-managed system (the **System**). This needs to be said: this provides a 'Unified Universal Device Management Interface Functional Interface'. This
 is essentially an application-side interface into UDMI in contrast to the on-prem device side interface... similar but slightly different.
 
 ## 1. Architecture
