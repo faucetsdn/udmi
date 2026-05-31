@@ -109,6 +109,38 @@ class ImplicitIotAccessProviderTest {
     verifyNoInteractions(mockBroker);
   }
 
+  @Test
+  void testBindDevicesToGatewayNew() {
+    store.put("r/test-reg/d/test-dev:num_id", "12345");
+    CloudModel cloudModel = new CloudModel();
+    cloudModel.operation = ModelOperation.BIND;
+    cloudModel.functions_ver = 1;
+    cloudModel.gateway = new udmi.schema.GatewayModel();
+    cloudModel.gateway.proxy_ids = List.of("proxy-device-2");
+
+    provider.modelDevice(TEST_REGISTRY, TEST_DEVICE, cloudModel, null);
+
+    verify(mockBroker).bindGateway(
+        eq("/r/test-reg/d/test-dev"),
+        eq("/r/test-reg/d/proxy-device-2"));
+  }
+
+  @Test
+  void testUnbindDevicesFromGatewayNew() {
+    store.put("r/test-reg/d/test-dev:num_id", "12345");
+    CloudModel cloudModel = new CloudModel();
+    cloudModel.operation = ModelOperation.UNBIND;
+    cloudModel.functions_ver = 1;
+    cloudModel.gateway = new udmi.schema.GatewayModel();
+    cloudModel.gateway.proxy_ids = List.of("proxy-device-4");
+
+    provider.modelDevice(TEST_REGISTRY, TEST_DEVICE, cloudModel, null);
+
+    verify(mockBroker).unbindGateway(
+        eq("/r/test-reg/d/test-dev"),
+        eq("/r/test-reg/d/proxy-device-4"));
+  }
+
   class FakeDataRef extends DataRef {
     private final Map<String, String> data;
 

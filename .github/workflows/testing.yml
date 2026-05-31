@@ -429,13 +429,15 @@ jobs:
           echo Built local UDMIS
       - name: Start UDMIS container
         run: |
+          mkdir -p out
           docker run -d --rm --net udminet --name udmis -p 8883:8883 \
             -v $PWD/site_model:/root/site_model \
             -v $PWD/var/tmp:/tmp \
             -v $PWD/var/etcd:/root/udmi/var/etcd \
             -v $PWD/var/mosquitto:/etc/mosquitto \
+            -v $PWD/out:/root/udmi/out \
             udmis udmi/bin/start_local block site_model/cloud_iot_config.json
-          for count in `seq 0 30`; do
+          for count in `seq 0 60`; do
             echo Waiting for UDMIS startup $((30 - count))
             [[ ! -f var/tmp/pod_ready.txt ]] || break
             (docker ps | fgrep -q udmis) || break
@@ -452,6 +454,11 @@ jobs:
         run: |
           export SAVE_PATH=$PATH
           sudo -E bash -c 'PATH=$SAVE_PATH misc/discoverynode/testing/e2e/test_local site_model'
+      - name: udmis log
+        if: ${{ !cancelled() }}
+        run: |
+          docker logs udmis
+          more out/udmis.log
   udmilp:
     name: Python Library Tests
     runs-on: ubuntu-24.04

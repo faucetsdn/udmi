@@ -270,7 +270,7 @@ class GlobalBacnetDiscovery(discovery.DiscoveryController):
           start = time.monotonic()
           event = self.discover_device(address, id)
           end = time.monotonic() 
-          logging.info(f"discovery for {device} in {end - start} seconds")
+          logging.debug("discovery for %s completed in %s seconds", device, str(end - start))
 
           self.publish(event)
           self.devices_published.add(device)
