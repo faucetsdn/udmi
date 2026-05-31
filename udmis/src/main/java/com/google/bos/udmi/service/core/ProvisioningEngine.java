@@ -20,6 +20,7 @@ import static udmi.schema.CloudModel.ModelOperation.BIND;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
@@ -31,6 +32,7 @@ import udmi.schema.CloudModel.Resource_type;
 import udmi.schema.DiscoveryEvents;
 import udmi.schema.EndpointConfiguration;
 import udmi.schema.Envelope;
+import udmi.schema.GatewayModel;
 
 /**
  * Simple agent to process discovery events and provisionally provisions the iot provider.
@@ -52,6 +54,8 @@ public class ProvisioningEngine extends ProcessorBase {
     model.operation = BIND;
     model.device_ids = new HashMap<>();
     model.device_ids.put(proxyId, new CloudModel());
+    model.gateway = new GatewayModel();
+    model.gateway.proxy_ids = List.of(proxyId);
     iotAccess.modelDevice(registryId, gatewayId, model, null);
   }
 
@@ -108,7 +112,9 @@ public class ProvisioningEngine extends ProcessorBase {
           isoConvert(generation), shouldProvision(generation, cloudModel));
     }
     return ifTrueGet(shouldProvision(generation, cloudModel),
-        () -> new HashSet<>(cloudModel.gateway.proxy_ids));
+        () -> cloudModel.gateway == null || cloudModel.gateway.proxy_ids == null
+            ? new HashSet<>()
+            : new HashSet<>(cloudModel.gateway.proxy_ids));
   }
 
   private boolean shouldProvision(Date generation, CloudModel cloudModel) {
@@ -150,6 +156,10 @@ public class ProvisioningEngine extends ProcessorBase {
       Set<String> deviceIds = ifTrueGet(isGateway,
           refreshModelDevices(registryId, deviceId, generation, deviceModel),
           catchToNull(() -> iotAccess.listDevices(registryId, null).device_ids.keySet()));
+
+      if (deviceIds == null) {
+        deviceIds = new HashSet<>();
+      }
 
       boolean isUpdate = deviceIds.contains(expectedId);
       notice("Scan %s device %s/%s target %s", isUpdate ? "update" : "create", registryId, deviceId,
