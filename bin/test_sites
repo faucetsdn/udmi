@@ -74,7 +74,7 @@ for subset in $subsets; do
     for device in $devices; do
         devicesout=$devicesdir/$device/out
         if [[ -d $devicesout ]]; then
-            find $devicesout -name \*.json | xargs -i bash -c "jq -S . {} | sponge {}"
+            find $devicesout -name \*.json | xargs -i bash -c "jq -e . {} >/dev/null 2>&1 && jq . {} | sponge {} || true"
             redact_files $devicesout/* $site_dir/registration_summary.json
             diffs=$(diff -rq $devicesout $devicesdir/$device/expected 2>&1) || true
             if [[ -n $diffs ]]; then
