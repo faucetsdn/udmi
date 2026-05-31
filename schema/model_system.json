@@ -79,6 +79,14 @@
             "style": "bold"
           }
         },
+        "region": {
+          "description": "The region according to the site model in which the device is installed in",
+          "type": "string",
+          "$presentation": {
+            "display": "show",
+            "style": "bold"
+          }
+        },
         "panel": {
           "description": "The reference of the panel where the device is installed in",
           "type": "string",

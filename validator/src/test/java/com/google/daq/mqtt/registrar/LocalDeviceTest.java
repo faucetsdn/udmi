@@ -16,6 +16,7 @@ import java.io.File;
 import java.util.Map;
 import org.junit.Test;
 import udmi.schema.Metadata;
+import udmi.schema.SiteMetadata;
 
 /**
  * Unit tests for LocalDevice.
@@ -55,5 +56,33 @@ public class LocalDeviceTest {
     rawMetadata.version = null;
     rawMetadata.gateway = null;
     return new LocalDevice(siteModel, DEVICE_ID, SCHEMAS, null, DeviceKind.SIMPLE);
+  }
+
+  @Test
+  public void preprocessMetadataRegion() {
+    LocalDevice localDevice = getTestInstance(EMPTY_DEFAULTS_SITE);
+    SiteMetadata siteMetadata = new SiteMetadata();
+    siteMetadata.region = "test-region";
+
+    assertNull("device region is initially null",
+        catchToNull(() -> localDevice.getMetadata().system.location.region));
+
+    localDevice.preprocessMetadata(siteMetadata);
+
+    assertEquals("device region is populated from site metadata",
+        "test-region", localDevice.getMetadata().system.location.region);
+  }
+
+  @Test
+  public void preprocessMetadataRegionExisting() {
+    LocalDevice localDevice = getTestInstance(EMPTY_DEFAULTS_SITE);
+    localDevice.getMetadata().system.location.region = "existing-region";
+    SiteMetadata siteMetadata = new SiteMetadata();
+    siteMetadata.region = "test-region";
+
+    localDevice.preprocessMetadata(siteMetadata);
+
+    assertEquals("existing device region is preserved",
+        "existing-region", localDevice.getMetadata().system.location.region);
   }
 }

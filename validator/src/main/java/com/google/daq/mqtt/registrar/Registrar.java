@@ -1481,9 +1481,10 @@ public class Registrar {
   }
 
   private void preprocessDeviceMetadata(Map<String, LocalDevice> workingDevices) {
+    SiteMetadata siteMetadata = getSiteMetadata();
     workingDevices.values().forEach(localDevice -> {
       try {
-        localDevice.preprocessMetadata();
+        localDevice.preprocessMetadata(siteMetadata);
       } catch (ValidationError error) {
         throw new RuntimeException("While preprocessing metadata", error);
       } catch (Exception e) {
