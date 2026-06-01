@@ -84,4 +84,15 @@ bin/start_udmis
 
 echo Done with local server setup.
 
+echo ""
+echo "################################################################"
+echo "UUFI Service is READY"
+echo "################################################################"
+echo "Connection String: mqtt://rocket:monkey@localhost:8883"
+echo "CA Certificate:    $site_model/reflector/ca.crt"
+echo "Client Cert:       $site_model/reflector/rsa_private.crt"
+echo "Client Key:        $site_model/reflector/rsa_private.pem"
+echo "################################################################"
+echo ""
+
 [[ -z $block ]] || (echo Blocking until termination. && tail -f /dev/null)

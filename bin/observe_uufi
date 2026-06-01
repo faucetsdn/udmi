@@ -13,7 +13,7 @@ PORT=${2:-8883}
 USER=${3:-rocket}
 PASS=${4:-monkey}
 CLIENT_ID="uufi-observer-$(date +%s)"
-SITE_MODEL=${5:-sites/uufi_site_model}
+SITE_MODEL=${5:-sites/udmi_site_model}
 CA_CERT="$SITE_MODEL/reflector/ca.crt"
 
 echo "Waiting for non-empty CA certificate $CA_CERT..."
@@ -24,7 +24,7 @@ while [[ (! -f $CA_CERT || ! -s $CA_CERT) && $TIMEOUT -gt 0 ]]; do
 done
 
 if [[ ! -s $CA_CERT ]]; then
-    echo "Valid CA certificate $CA_CERT not found. Ensure UUFI environment is running (bin/start_uufi)."
+    echo "Valid CA certificate $CA_CERT not found. Ensure local environment is running (bin/start_local)."
     exit 1
 fi
 

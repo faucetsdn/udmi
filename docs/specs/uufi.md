@@ -170,16 +170,16 @@ The UDMI repository provides a local development environment to facilitate the i
 
 ## 9.1. Local Mock Environment
 
-The `bin/start_uufi` script initializes a spec-compliant UUFI backend using a local MQTT broker. This environment is ideal for developing new clients without requiring a full cloud deployment.
+The `bin/start_local` script initializes a spec-compliant UUFI backend (as part of the standard local setup) using a local MQTT broker. This environment is ideal for developing new clients without requiring a full cloud deployment.
 
 ### Starting the Environment
 ```bash
-bin/start_uufi
+bin/start_local
 ```
 
 This script performs the following actions:
 1.  **MQTT Broker:** Starts a local Mosquitto broker on port 8883 with SSL enabled.
-2.  **Site Model:** Generates a mock site model in `sites/uufi_site_model` with the necessary credentials.
+2.  **Site Model:** Uses the provided site model (e.g., `sites/udmi_site_model`) and configures it for local MQTT use.
 3.  **UDMIS:** Starts the `udmis` service with the `UufiProcessor` enabled.
 
 **Connection Details:**
@@ -188,7 +188,7 @@ This script performs the following actions:
 - **Port:** `8883`
 - **Username:** `rocket`
 - **Password:** `monkey`
-- **CA Certificate:** `sites/uufi_site_model/reflector/ca.crt`
+- **CA Certificate:** `sites/udmi_site_model/reflector/ca.crt`
 
 ## 9.2. Automated Integration Testing
 
@@ -228,8 +228,8 @@ The observer will:
 
 When developing a new external client, it is recommended to use the local mock environment as your primary backend:
 
-1.  **Initialization:** Run `bin/start_uufi`.
-2.  **CA Certificate:** Configure your client to trust the generated `sites/uufi_site_model/reflector/ca.crt`.
+1.  **Initialization:** Run `bin/start_local`.
+2.  **CA Certificate:** Configure your client to trust the generated `sites/udmi_site_model/reflector/ca.crt`.
 3.  **Handshake:** Implement the Step 1 State Declaration. Your client is considered "Active" once it receives a matching Step 2 Config.
 4.  **Debugging:** Monitor the `udmis` logs in `out/udmis.log` to see how your messages are being processed and routed.
 
