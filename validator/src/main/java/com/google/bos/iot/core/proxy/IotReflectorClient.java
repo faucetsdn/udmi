@@ -580,11 +580,13 @@ public class IotReflectorClient implements MessagePublisher {
       while (pubLatches.get(publisher).getCount() > 0) {
         setReflectorState();
         initializedStateSent.countDown();
-        System.err.println("Sent reflector state, waiting for config reply (remaining retries: " + retries + ")...");
+        System.err.println(
+            "Sent reflector state, waiting for config reply (retries: " + retries + ")...");
         if (!pubLatches.get(publisher).await(CONFIG_TIMEOUT_SEC, TimeUnit.SECONDS)) {
           retries--;
           if (retries <= 0) {
-            System.err.println("Latching state for publisher " + publisher + ": " + pubLatches.get(publisher).getCount());
+            System.err.println("Latching state for publisher " + publisher + ": "
+                + pubLatches.get(publisher).getCount());
             throw new RuntimeException(
                 "Config sync timeout expired. Investigate UDMI cloud functions install.",
                 syncFailure);

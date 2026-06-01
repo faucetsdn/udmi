@@ -428,9 +428,9 @@ public class ReflectProcessor extends ProcessorBase {
     toolState.source = envelope.source;
 
     ifNotNullThen(distributor, d -> catchToElse(() -> {
-          info("Distributing tool state for %s/%s", registryId, deviceId);
-          d.publish(envelope, toolState, containerId);
-        },
+      info("Distributing tool state for %s/%s", registryId, deviceId);
+      d.publish(envelope, toolState, containerId);
+    },
         e -> error("Error handling update: %s %s", friendlyStackTrace(e), envelope.transactionId)));
     updateAwareness(envelope, toolState);
 

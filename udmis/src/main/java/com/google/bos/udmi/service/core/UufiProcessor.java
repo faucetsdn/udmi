@@ -72,7 +72,8 @@ public class UufiProcessor extends ProcessorBase {
           info("Processing UUFI inbound message %s/%s", envelope.subType, envelope.subFolder);
           handleUufiInbound(envelope, messageMap);
         } else {
-          info("Received UUFI message without payload key: %s/%s", envelope.subType, envelope.subFolder);
+          info("Received UUFI message without payload key: %s/%s",
+              envelope.subType, envelope.subFolder);
         }
       } else {
         // Message from Internal Bus (System) - wrap and send to MQTT
@@ -99,7 +100,8 @@ public class UufiProcessor extends ProcessorBase {
     Envelope replyEnvelope = new Envelope();
     replyEnvelope.subType = SubType.CONFIG;
     replyEnvelope.subFolder = SubFolder.UDMI;
-    replyEnvelope.principal = UdmiServicePod.INSTANCE_ID; // Set instance ID as principal for loop detection
+    // Set instance ID as principal for loop detection
+    replyEnvelope.principal = UdmiServicePod.INSTANCE_ID;
     replyEnvelope.transactionId = transactionId;
     replyEnvelope.gatewayId = "uufi"; 
 
@@ -129,7 +131,7 @@ public class UufiProcessor extends ProcessorBase {
 
     // Standard UDMI devices expect config on the base topic, not folder-specific sub-topics.
     if (innerEnvelope.subType == SubType.CONFIG) {
-        innerEnvelope.subFolder = null;
+      innerEnvelope.subFolder = null;
     }
 
     publish(innerEnvelope, innerPayload);

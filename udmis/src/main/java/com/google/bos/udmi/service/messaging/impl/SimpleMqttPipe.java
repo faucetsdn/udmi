@@ -8,11 +8,11 @@ import static com.google.udmi.util.GeneralUtils.catchToElse;
 import static com.google.udmi.util.GeneralUtils.friendlyStackTrace;
 import static com.google.udmi.util.GeneralUtils.ifNotNullGet;
 import static com.google.udmi.util.GeneralUtils.ifNotNullThen;
-import static com.google.udmi.util.GeneralUtils.stackTraceString;
 import static com.google.udmi.util.GeneralUtils.ifTrueGet;
 import static com.google.udmi.util.GeneralUtils.ifTrueThen;
 import static com.google.udmi.util.GeneralUtils.isNotEmpty;
 import static com.google.udmi.util.GeneralUtils.nullAsNull;
+import static com.google.udmi.util.GeneralUtils.stackTraceString;
 import static com.google.udmi.util.JsonUtil.isoConvert;
 import static com.google.udmi.util.JsonUtil.toStringMap;
 import static java.lang.String.format;
@@ -270,7 +270,8 @@ public class SimpleMqttPipe extends MessageBase {
   }
 
   private void captureMessage(String topic, String message, boolean incoming) {
-    try (PrintWriter out = new PrintWriter(new FileOutputStream(new File("out/udmis_messages.log"), true))) {
+    File captureFile = new File("out/udmis_messages.log");
+    try (PrintWriter out = new PrintWriter(new FileOutputStream(captureFile, true))) {
       String direction = incoming ? "<<<" : ">>>";
       out.printf("%s %s %s %s: %s%n", JsonUtil.currentIsoMs(), clientId, direction, topic, message);
     } catch (Exception e) {
