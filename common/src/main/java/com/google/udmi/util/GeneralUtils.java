@@ -14,9 +14,14 @@ import com.fasterxml.jackson.core.JsonParser.Feature;
 import com.fasterxml.jackson.core.PrettyPrinter;
 import com.fasterxml.jackson.core.util.DefaultPrettyPrinter;
 import com.fasterxml.jackson.databind.DeserializationFeature;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.MapperFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
+import com.fasterxml.jackson.databind.introspect.AnnotatedClass;
+import com.fasterxml.jackson.databind.introspect.JacksonAnnotationIntrospector;
 import com.fasterxml.jackson.databind.util.ISO8601DateFormat;
+import java.nio.charset.StandardCharsets;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Sets;
@@ -62,6 +67,14 @@ public class GeneralUtils {
   public static final Joiner NEWLINE_JOINER = Joiner.on("\n");
   private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper()
       .enable(SerializationFeature.INDENT_OUTPUT)
+      .enable(SerializationFeature.ORDER_MAP_ENTRIES_BY_KEYS)
+      .configure(MapperFeature.SORT_PROPERTIES_ALPHABETICALLY, true)
+      .setAnnotationIntrospector(new JacksonAnnotationIntrospector() {
+        @Override
+        public String[] findSerializationPropertyOrder(AnnotatedClass ac) {
+          return null;
+        }
+      })
       .setDateFormat(new ISO8601DateFormat())
       .disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES)
       .setSerializationInclusion(Include.NON_NULL);
@@ -270,12 +283,35 @@ public class GeneralUtils {
     return list.get(0);
   }
 
+  private static Object sortObject(Object object) {
+    if (object == null || object instanceof String || object instanceof Number || object instanceof Boolean || object instanceof Date) {
+      return object;
+    }
+    if (object instanceof JsonNode node) {
+      if (node.isObject()) {
+        return OBJECT_MAPPER.convertValue(node, TreeMap.class);
+      } else if (node.isArray()) {
+        return OBJECT_MAPPER.convertValue(node, List.class);
+      }
+      return node;
+    }
+    if (object instanceof Map || !(object instanceof List || object instanceof Collection)) {
+      try {
+        return OBJECT_MAPPER.convertValue(object, TreeMap.class);
+      } catch (Exception ignored) {
+        return object;
+      }
+    }
+    return object;
+  }
+
   public static Date toDate(Instant lastSeen) {
     return ifNotNullGet(lastSeen, Date::from);
   }
 
   private static String writeToPrettyString(Object data, OutputFormat indent) {
     try {
+      data = sortObject(data);
       ByteArrayOutputStream outputString = new ByteArrayOutputStream();
       OBJECT_MAPPER_STRICT.writeValue(getPrettyPrinterGenerator(outputString, indent), data);
       return outputString.toString();
@@ -669,6 +705,7 @@ public class GeneralUtils {
 
   public static void toJsonFile(File file, Object target) {
     try {
+      target = sortObject(target);
       OBJECT_MAPPER.writeValue(file, target);
     } catch (Exception e) {
       throw new RuntimeException("While writing target " + file.getAbsolutePath(), e);
@@ -680,6 +717,7 @@ public class GeneralUtils {
       if (object == null) {
         return null;
       }
+      object = sortObject(object);
       return OBJECT_MAPPER.writeValueAsString(object);
     } catch (Exception e) {
       throw new RuntimeException("While converting object to json", e);
@@ -693,7 +731,7 @@ public class GeneralUtils {
 
   public static void writeString(File file, String string) {
     try {
-      FileUtils.write(file, string, Charset.defaultCharset());
+      FileUtils.write(file, string, StandardCharsets.UTF_8);
     } catch (IOException e) {
       throw new RuntimeException("While writing output file " + file.getAbsolutePath(), e);
     }

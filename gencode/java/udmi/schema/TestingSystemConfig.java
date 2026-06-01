@@ -14,12 +14,6 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
  * 
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
-@JsonPropertyOrder({
-    "sequence_name",
-    "transaction_id",
-    "config_base",
-    "endpoint_type"
-})
 public class TestingSystemConfig {
 
     /**

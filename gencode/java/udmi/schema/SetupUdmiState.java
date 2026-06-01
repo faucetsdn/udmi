@@ -14,18 +14,6 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
  * 
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
-@JsonPropertyOrder({
-    "user",
-    "udmi_version",
-    "functions_ver",
-    "udmi_commit",
-    "udmi_ref",
-    "udmi_timever",
-    "msg_source",
-    "update_to",
-    "tool_name",
-    "transaction_id"
-})
 public class SetupUdmiState {
 
     /**

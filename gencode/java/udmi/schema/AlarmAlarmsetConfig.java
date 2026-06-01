@@ -15,13 +15,6 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
  * 
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
-@JsonPropertyOrder({
-    "ref",
-    "units",
-    "set_value",
-    "stop_time",
-    "cov_increment"
-})
 public class AlarmAlarmsetConfig {
 
     /**

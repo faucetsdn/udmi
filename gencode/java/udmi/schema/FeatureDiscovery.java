@@ -18,9 +18,6 @@ import com.fasterxml.jackson.annotation.JsonValue;
  * 
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
-@JsonPropertyOrder({
-    "stage"
-})
 public class FeatureDiscovery {
 
     /**

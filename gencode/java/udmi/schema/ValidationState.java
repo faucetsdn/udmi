@@ -16,19 +16,6 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
  * 
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
-@JsonPropertyOrder({
-    "timestamp",
-    "version",
-    "cloud_version",
-    "udmi_version",
-    "last_updated",
-    "start_time",
-    "status",
-    "features",
-    "schemas",
-    "summary",
-    "devices"
-})
 public class ValidationState {
 
     /**

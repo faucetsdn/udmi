@@ -13,11 +13,6 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
  * 
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
-@JsonPropertyOrder({
-    "code",
-    "etag",
-    "type"
-})
 public class BuildingConfigEntity {
 
     @JsonProperty("code")

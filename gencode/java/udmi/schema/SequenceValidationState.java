@@ -18,14 +18,6 @@ import com.fasterxml.jackson.annotation.JsonValue;
  * 
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
-@JsonPropertyOrder({
-    "summary",
-    "stage",
-    "capabilities",
-    "result",
-    "status",
-    "scoring"
-})
 public class SequenceValidationState {
 
     @JsonProperty("summary")

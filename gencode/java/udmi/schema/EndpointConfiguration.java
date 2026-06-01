@@ -19,35 +19,6 @@ import com.fasterxml.jackson.annotation.JsonValue;
  * 
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
-@JsonPropertyOrder({
-    "name",
-    "protocol",
-    "transport",
-    "hostname",
-    "payload",
-    "error",
-    "port",
-    "config_sync_sec",
-    "client_id",
-    "topic_prefix",
-    "recv_id",
-    "send_id",
-    "side_id",
-    "gatewayId",
-    "deviceId",
-    "enabled",
-    "noConfigAck",
-    "capacity",
-    "publish_delay_sec",
-    "periodic_sec",
-    "keyBytes",
-    "algorithm",
-    "auth_provider",
-    "ca_file",
-    "cert_file",
-    "key_file",
-    "generation"
-})
 public class EndpointConfiguration {
 
     /**

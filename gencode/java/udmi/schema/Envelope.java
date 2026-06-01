@@ -18,21 +18,6 @@ import com.fasterxml.jackson.annotation.JsonValue;
  * 
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
-@JsonPropertyOrder({
-    "deviceId",
-    "deviceNumId",
-    "deviceRegistryId",
-    "deviceRegistryLocation",
-    "projectId",
-    "payload",
-    "source",
-    "gatewayId",
-    "transactionId",
-    "publishTime",
-    "rawFolder",
-    "subFolder",
-    "subType"
-})
 public class Envelope {
 
     @JsonProperty("deviceId")

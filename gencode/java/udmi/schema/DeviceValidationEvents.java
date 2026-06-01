@@ -15,11 +15,6 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
  * 
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
-@JsonPropertyOrder({
-    "last_seen",
-    "oldest_mark",
-    "status"
-})
 public class DeviceValidationEvents {
 
     /**
