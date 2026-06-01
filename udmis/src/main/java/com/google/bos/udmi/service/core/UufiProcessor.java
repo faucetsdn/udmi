@@ -22,8 +22,6 @@ import udmi.schema.UdmiState;
 @ComponentName("uufi")
 public class UufiProcessor extends ProcessorBase {
 
-  public static final String PAYLOAD_KEY = "payload";
-
   public UufiProcessor(EndpointConfiguration config) {
     super(config);
     info("UUFI Processor initialized");

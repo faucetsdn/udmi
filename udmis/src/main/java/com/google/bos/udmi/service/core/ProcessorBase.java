@@ -1,7 +1,6 @@
 package com.google.bos.udmi.service.core;
 
 import static com.google.bos.udmi.service.access.IotAccessBase.MAX_CONFIG_LENGTH;
-import static com.google.bos.udmi.service.core.ReflectProcessor.PAYLOAD_KEY;
 import static com.google.bos.udmi.service.messaging.MessageDispatcher.messageHandlerFor;
 import static com.google.bos.udmi.service.pod.UdmiServicePod.UDMI_VERSION;
 import static com.google.common.base.Preconditions.checkState;
@@ -69,6 +68,7 @@ import udmi.schema.Envelope.SubType;
 public abstract class ProcessorBase extends ContainerBase implements SimpleHandler {
 
   public static final String IOT_ACCESS_COMPONENT = "iot-access";
+  public static final String PAYLOAD_KEY = "payload";
   private static final String RESET_CONFIG_VALUE = "reset_config";
   private static final String BREAK_CONFIG_VALUE = "break_json";
   private static final String EXTRA_FIELD_KEY = "extra_field";

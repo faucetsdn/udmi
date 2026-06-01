@@ -77,7 +77,6 @@ import udmi.schema.UdmiState;
 @ComponentName("reflect")
 public class ReflectProcessor extends ProcessorBase {
 
-  public static final String PAYLOAD_KEY = "payload";
   private static final Date START_TIME = new Date();
   private static final String LEGACY_METADATA_STRING = "{ }";
   private static final String REFLECTOR_TXN_PREFIX = "RC:";
