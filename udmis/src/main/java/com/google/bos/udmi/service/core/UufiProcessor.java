@@ -50,6 +50,16 @@ public class UufiProcessor extends ProcessorBase {
             debug("Ignoring loopback of UUFI handshake reply");
             return;
           }
+          debug("UUFI message keys: " + messageMap.keySet());
+          // Ignore loopbacks of system messages forwarded to MQTT
+          if (messageMap.containsKey("gatewayId")) {
+            String gatewayId = (String) messageMap.get("gatewayId");
+            debug("UUFI gatewayId: " + gatewayId + ", clientId: " + DistributorPipe.clientId);
+            if (gatewayId.startsWith(DistributorPipe.clientId)) {
+              debug("Ignoring loopback of system message");
+              return;
+            }
+          }
           handleUufiInbound(envelope, messageMap);
         }
       } else {
