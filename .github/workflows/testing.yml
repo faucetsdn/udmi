@@ -258,6 +258,8 @@ jobs:
         run: bin/test_runlocal
       - name: bin/test_sequencer
         run: bin/test_sequencer local full //mqtt/localhost $(< etc/local_tests.txt)
+      - name: bin/test_uufi
+        run: bin/test_uufi
       - name: bin/test_udmis
         run: bin/test_udmis
       - name: bin/test_etcd_postrun
@@ -281,52 +283,6 @@ jobs:
         with:
           if-no-files-found: error
           name: udmi-support_${{ github.run_id }}-l
-          path: '*_udmi-support_*.tgz'
-
-  uufi:
-    name: UUFI Integration
-    runs-on: ubuntu-24.04
-    timeout-minutes: 15
-    steps:
-      - uses: actions/checkout@v6
-        with:
-          fetch-depth: 0
-      - uses: actions/setup-java@v5
-        with:
-          distribution: 'temurin'
-          java-version: '21'
-      - name: base setup
-        run: |
-          bin/setup_base
-          bin/clone_model
-      - name: test uufi
-        run: bin/test_uufi
-      - name: Diagnostic Dump on Failure
-        if: ${{ failure() }}
-        run: |
-          set -x
-          echo "::: STARTUP LOG :::"
-          cat startup.log || echo "startup.log not found"
-          echo "::: UDMIS LOG :::"
-          cat out/udmis.log || echo "out/udmis.log not found"
-          echo "::: PUBBER LOG :::"
-          cat out/pubber.log || echo "out/pubber.log not found"
-          echo "::: PROCESS STATUS :::"
-          ps aux | grep -E "java|mosquitto|etcd"
-          echo "::: NETWORK STATUS :::"
-          sudo netstat -tulpn
-          echo "::: SITE MODEL :::"
-          ls -R sites/uufi_site_model || echo "site model not found"
-          echo "::: DISK SPACE :::"
-          df -h
-      - name: support bundle
-        if: ${{ !cancelled() }}
-        run: bin/support ${{ github.repository_owner }}_${{ github.job }}_
-      - uses: actions/upload-artifact@v7
-        if: ${{ !cancelled() }}
-        with:
-          if-no-files-found: error
-          name: udmi-support_${{ github.run_id }}-u
           path: '*_udmi-support_*.tgz'
 
   endpoint:
@@ -405,7 +361,7 @@ jobs:
     name: Post-test Summarization
     runs-on: ubuntu-24.04
     timeout-minutes: 5
-    needs: [ baseline, sequencer, endpoint, runlocal, blobupdates, uufi ]
+    needs: [ baseline, sequencer, endpoint, runlocal, blobupdates ]
     if: ${{ !cancelled() }}
     env:
       TARGET_PROJECT: ${{ vars.TARGET_PROJECT || '//mqtt/localhost' }}

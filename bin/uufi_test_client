@@ -12,10 +12,10 @@ PORT=${2:-8883}
 USER=${3:-rocket}
 PASS=${4:-monkey}
 CLIENT_ID="uufi-test-client"
-SITE_MODEL=${5:-sites/uufi_site_model}
+SITE_MODEL=${5:-sites/udmi_site_model}
 TXN_ID="TXN-$(date +%s)"
-DUT_ID="uufi-dut"
-REGISTRY_ID="uufi-registry"
+DUT_ID="AHU-1"
+REGISTRY_ID="ZZ-TRI-FECTA"
 
 CA_CERT="$SITE_MODEL/reflector/ca.crt"
 echo "Waiting for non-empty CA certificate $CA_CERT..."

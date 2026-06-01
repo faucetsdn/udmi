@@ -35,6 +35,9 @@
     },
     "distributor": {
       "enabled": "false"
+    },
+    "uufi": {
+      "recv_id": "/uufi/#"
     }
   },
   "crons": {

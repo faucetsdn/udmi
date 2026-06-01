@@ -65,6 +65,10 @@ $MOSQUITTO_CTRL deleteClient $SERV_USER
 $MOSQUITTO_CTRL createClient $SERV_USER -p $SERV_PASS # No client_id to allow multiple backend connections.
 $MOSQUITTO_CTRL addClientRole $SERV_USER service
 
+# Setup UUFI client security
+$MOSQUITTO_CTRL createClient rocket -p monkey || true
+$MOSQUITTO_CTRL addClientRole rocket uufi || true
+
 echo Starting initializing site $site_model | tee -a $UDMIS_LOG
 bin/mosquctl_site $site_model
 

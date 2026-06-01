@@ -1,107 +1,25 @@
 #!/bin/bash -e
-# Comprehensive UUFI Verification Script
+# UUFI Verification Script (assumes backend is already running)
 
 UDMI_ROOT=$(dirname $0)/..
 cd $UDMI_ROOT
+source etc/shell_common.sh
 
-# 1. Cleanup
-echo "Cleaning up previous runs..."
-sudo pkill -f udmis || true
-sudo pkill -f pubber || true
-rm -rf sites/uufi_site_model
-rm -f out/udmis.log startup.log out/pubber.log
+SITE_MODEL=${1:-sites/udmi_site_model}
+PROJECT_ID=${2:-//mqtt/localhost}
+DEVICE_ID=AHU-1
 
-# 2. Start Backend
-echo "Starting UUFI Backend..."
-bin/start_uufi > startup.log 2>&1 &
-START_PID=$!
+# 1. Start DUT
+echo "Starting DUT (Pubber) for UUFI test..."
+bin/start_dut $SITE_MODEL $PROJECT_ID $DEVICE_ID "uufi-serial"
 
-echo "Waiting for UUFI Service to signal READY..."
-TIMEOUT=120
-POD_READY=/tmp/pod_ready.txt
-while [[ ! -f $POD_READY ]] && [ $TIMEOUT -gt 0 ]; do
-    sleep 2
-    TIMEOUT=$((TIMEOUT - 2))
-done
+# Ensure cleanup on exit
+# We don't remove the device directory because it's part of the base site model
+trap "pkill -f pubber || true" EXIT
 
-if [[ ! -f $POD_READY ]]; then
-    echo "ERROR: Service failed to signal READY via $POD_READY"
-    echo "::: STARTUP.LOG :::"
-    cat startup.log
-    echo "::: UDMIS.LOG :::"
-    cat out/udmis.log || true
-    kill $START_PID || true
-    exit 1
-fi
-echo "UUFI Service is READY"
-
-# 3. Register and Start DUT
-echo "Registering and starting DUT (Pubber)..."
-DUT_DIR=sites/uufi_site_model/devices/uufi-dut
-mkdir -p $DUT_DIR
-(cd $DUT_DIR && ../../../../bin/keygen RS256 .)
-
-cat <<EOF2 > $DUT_DIR/metadata.json
-{
-  "system": { "location": { "site": "uufi-site" } },
-  "cloud": { "auth_type": "RS256" },
-  "pointset": { "points": { "test_point": { "units": "No-units" } } }
-}
-EOF2
-
-# Use simple client ID for pubber to avoid keygen/mosquitto issues
-CLIENT_ID="uufi-dut-client"
-bin/keygen CERT/vibrant $DUT_DIR/
-
-KEY_FILE=$DUT_DIR/rsa_private.pkcs8
-if [[ ! -f $KEY_FILE ]]; then
-    echo "ERROR: Key file $KEY_FILE not found."
-    exit 1
-fi
-
-HASH_PASS=$(sha256sum < $KEY_FILE | awk '{print $1}')
-CLIENT_PASS=${HASH_PASS:0:8}
-
-# Use mosquitto_ctrl directly for custom registration
-source etc/mosquitto_ctrl.sh
-echo "Configuring MQTT client $CLIENT_ID..."
-$MOSQUITTO_CTRL deleteClient "$CLIENT_ID" || true
-$MOSQUITTO_CTRL createClient "$CLIENT_ID" -p "$CLIENT_PASS"
-$MOSQUITTO_CTRL addClientRole "$CLIENT_ID" uufi
-
-PWD=$(pwd)
-cat <<JOF > /tmp/pubber_uufi_test.json
-{
-  "sitePath": "$PWD/sites/uufi_site_model",
-  "deviceId": "uufi-dut",
-  "registryId": "uufi-registry",
-  "iotProject": "vibrant",
-  "serialNo": "uufi-serial",
-  "endpoint": {
-    "protocol": "mqtt",
-    "transport": "ssl",
-    "client_id": "$CLIENT_ID",
-    "topic_prefix": "/r/uufi-registry/d/uufi-dut",
-    "auth_provider": { "basic": { "username": "$CLIENT_ID", "password": "$CLIENT_PASS" }},
-    "hostname": "localhost",
-    "port": 8883
-  }
-}
-JOF
-
-echo "Starting Pubber DUT..."
-java -jar pubber/build/libs/pubber-1.0-SNAPSHOT-all.jar /tmp/pubber_uufi_test.json > out/pubber.log 2>&1 &
-PUB_PID=$!
-
-echo "Waiting for DUT to connect..."
-sleep 20
-
-# 4. Run Comprehensive Test
+# 2. Run Comprehensive Test
 echo "Starting UUFI Test Client..."
-bin/uufi_test_client
+bin/uufi_test_client localhost 8883 rocket monkey $SITE_MODEL
 TEST_EXIT=$?
 
-# 5. Cleanup
-echo "Cleaning up..."
-kill $START_PID $PUB_PID || true
 exit $TEST_EXIT
