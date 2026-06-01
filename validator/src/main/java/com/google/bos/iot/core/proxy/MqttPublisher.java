@@ -430,6 +430,7 @@ public class MqttPublisher implements MessagePublisher {
 
   private void sendMessage(String mqttTopic, byte[] mqttMessage) throws Exception {
     LOG.debug(deviceId + " sending message to " + mqttTopic);
+    System.err.println("Reflector sending MQTT message to " + mqttTopic);
     try (AutoCloseable x = sendTime.newTimedSegment()) {
       mqttClient.publish(mqttTopic, mqttMessage, QOS_AT_LEAST_ONCE, MQTT_NO_RETAIN);
     }

@@ -68,6 +68,10 @@ $MOSQUITTO_CTRL addClientRole $SERV_USER service
 # Setup UUFI client security
 $MOSQUITTO_CTRL createClient rocket -p monkey || true
 $MOSQUITTO_CTRL addClientRole rocket uufi || true
+$MOSQUITTO_CTRL addClientRole rocket service || true
+
+# Setup device client security (for Pubber DUT)
+bin/mosquctl_device $site_model AHU-1
 
 echo Starting initializing site $site_model | tee -a $UDMIS_LOG
 bin/mosquctl_site $site_model

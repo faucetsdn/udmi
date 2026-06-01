@@ -8,6 +8,7 @@ import static com.google.udmi.util.GeneralUtils.catchToElse;
 import static com.google.udmi.util.GeneralUtils.friendlyStackTrace;
 import static com.google.udmi.util.GeneralUtils.ifNotNullGet;
 import static com.google.udmi.util.GeneralUtils.ifNotNullThen;
+import static com.google.udmi.util.GeneralUtils.stackTraceString;
 import static com.google.udmi.util.GeneralUtils.ifTrueGet;
 import static com.google.udmi.util.GeneralUtils.ifTrueThen;
 import static com.google.udmi.util.GeneralUtils.isNotEmpty;
@@ -20,7 +21,10 @@ import static java.util.Optional.ofNullable;
 import com.google.bos.udmi.service.messaging.MessagePipe;
 import com.google.common.base.Strings;
 import com.google.udmi.util.CertManager;
+import com.google.udmi.util.JsonUtil;
 import java.io.File;
+import java.io.FileOutputStream;
+import java.io.PrintWriter;
 import java.util.Map;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.Executors;
@@ -48,7 +52,7 @@ import udmi.schema.IotAccess.IotProvider;
  */
 public class SimpleMqttPipe extends MessageBase {
 
-  private static final int MAX_INFLIGHT = 10;
+  private static final int MAX_INFLIGHT = 100;
   private static final String IMPLICIT_CHANNEL = IotProvider.IMPLICIT.value();
   private static final String SEND_CHANNEL_DESIGNATOR = "c";
   private static final String SEND_CHANNEL_PREFIX = SEND_CHANNEL_DESIGNATOR + "/";
@@ -245,20 +249,32 @@ public class SimpleMqttPipe extends MessageBase {
   }
 
   @Override
-  protected void publishRaw(Bundle bundle) {
-    if (!publishMessages) {
+  public void publishRaw(Bundle bundle) {
+    if (endpoint.send_id == null && !"uufi".equals(bundle.envelope.gatewayId)) {
       trace("Dropping message because no send_id");
       return;
     }
     try {
       String topic = makeMqttTopic(bundle);
       MqttMessage message = makeMqttMessage(bundle);
+      String payload = new String(message.getPayload());
+      captureMessage(topic, payload, false);
+      debug("MQTT publish from %s to %s: %s", clientId, topic, payload);
       mqttClient.publish(topic, message);
       int tokens = mqttClient.getPendingDeliveryTokens().length;
       ifTrueThen(tokens > 2, () ->
           debug("Client has %d inFlight tokens, from %s", tokens, topic));
     } catch (Exception e) {
       throw new RuntimeException("While publishing to mqtt client " + clientId, e);
+    }
+  }
+
+  private void captureMessage(String topic, String message, boolean incoming) {
+    try (PrintWriter out = new PrintWriter(new FileOutputStream(new File("out/udmis_messages.log"), true))) {
+      String direction = incoming ? "<<<" : ">>>";
+      out.printf("%s %s %s %s: %s%n", JsonUtil.currentIsoMs(), clientId, direction, topic, message);
+    } catch (Exception e) {
+      // Ignore errors writing to capture log
     }
   }
 
@@ -280,11 +296,10 @@ public class SimpleMqttPipe extends MessageBase {
           options.setUserName(checkNotNull(basicAuth.username, "MQTT username not defined"));
           options.setPassword(
               checkNotNull(basicAuth.password, "MQTT password not defined").toCharArray());
-          debug("Set MQTT basic auth username/password as %s/%s", basicAuth.username,
-              basicAuth.password);
+          info("Set MQTT basic auth username as %s for client %s", basicAuth.username, clientId);
         });
 
-        debug("Attempting mqtt connection as %s", clientId);
+        info("Attempting mqtt connection for %s to %s", clientId, mqttClient.getServerURI());
         mqttClient.connect(options);
         info("Established mqtt connection as %s", clientId);
         subscribeToMessages();
@@ -441,13 +456,17 @@ public class SimpleMqttPipe extends MessageBase {
 
     @Override
     public void messageArrived(String topic, MqttMessage message) {
+      String payload = new String(message.getPayload());
+      captureMessage(topic, payload, true);
       try {
+        debug("MQTT message arrived on %s: %s", topic, payload);
         Map<String, String> envelopeMap = parseEnvelopeTopic(topic);
         envelopeMap.put(PUBLISH_TIME_KEY, isoConvert());
         envelopeMap.put(TRANSACTION_KEY, makeTransactionId());
-        receiveMessage(envelopeMap, new String(message.getPayload()));
+        receiveMessage(envelopeMap, payload);
       } catch (Exception e) {
         error("Exception receiving message on %s: %s", clientId, friendlyStackTrace(e));
+        debug("Full error details for %s: %s", topic, stackTraceString(e));
       }
     }
   }

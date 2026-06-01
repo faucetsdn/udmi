@@ -87,13 +87,15 @@ public class MessageDispatcherImpl extends ContainerBase implements MessageDispa
   private final String projectId;
   private final ThreadLocal<Envelope> threadEnvelope = new ThreadLocal<>();
 
-  /**
-   * Create a new instance of the message dispatcher.
-   */
   public MessageDispatcherImpl(EndpointConfiguration configuration) {
     super(configuration);
     messagePipe = MessagePipe.from(configuration);
+    if (messagePipe == null) {
+      error("MessagePipe.from returned null for component %s", configuration.name);
+    }
     projectId = variableSubstitution(configuration.hostname, "project_id/hostname not defined");
+    info("Initialized MessageDispatcherImpl for component %s with pipe %s", 
+        configuration.name, messagePipe);
   }
 
   @Nullable

@@ -96,6 +96,8 @@ public class ReflectProcessor extends ProcessorBase {
   protected void defaultHandler(Object message) {
     MessageContinuation continuation = getContinuation(message);
     Envelope reflect = continuation.getEnvelope();
+    info("ReflectProcessor received message for %s/%s, folder %s, type %s",
+        reflect.deviceRegistryId, reflect.deviceId, reflect.subFolder, reflect.subType);
     Map<String, Object> objectMap = toMap(message);
     try {
       boolean isCommand = objectMap.containsKey(PAYLOAD_KEY);
@@ -420,10 +422,15 @@ public class ReflectProcessor extends ProcessorBase {
     final String registryId = envelope.deviceRegistryId;
     final String deviceId = envelope.deviceId;
 
+    info("Processing reflector state for %s/%s", registryId, deviceId);
+
     // Ensure source is encoded in the distribution (not always send in some mechanisms).
     toolState.source = envelope.source;
 
-    ifNotNullThen(distributor, d -> catchToElse(() -> d.publish(envelope, toolState, containerId),
+    ifNotNullThen(distributor, d -> catchToElse(() -> {
+          info("Distributing tool state for %s/%s", registryId, deviceId);
+          d.publish(envelope, toolState, containerId);
+        },
         e -> error("Error handling update: %s %s", friendlyStackTrace(e), envelope.transactionId)));
     updateAwareness(envelope, toolState);
 
@@ -433,7 +440,7 @@ public class ReflectProcessor extends ProcessorBase {
     configMap.put(SubFolder.UDMI.value(), udmiConfig);
     configMap.put(TIMESTAMP_KEY, isoConvert());
     String contents = stringifyTerse(configMap);
-    debug("Setting reflector config %s %s: %s", registryId, deviceId, contents);
+    info("Setting reflector config %s %s: %s", registryId, deviceId, contents);
     iotAccess.modifyConfig(envelope, previous -> contents);
   }
 
@@ -468,8 +475,10 @@ public class ReflectProcessor extends ProcessorBase {
 
   @Override
   public void activate() {
+    info("Activating ReflectProcessor...");
     debug("Deployment configuration: " + stringifyTerse(UdmiServicePod.getDeployedConfig()));
     super.activate();
+    info("ReflectProcessor activated.");
   }
 
   void updateAwareness(Envelope envelope, UdmiState toolState) {

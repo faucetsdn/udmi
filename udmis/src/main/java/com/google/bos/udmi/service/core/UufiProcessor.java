@@ -1,6 +1,7 @@
 package com.google.bos.udmi.service.core;
 
 import static com.google.udmi.util.GeneralUtils.decodeBase64;
+import static com.google.udmi.util.GeneralUtils.friendlyStackTrace;
 import static com.google.udmi.util.JsonUtil.convertTo;
 import static com.google.udmi.util.JsonUtil.toMap;
 import static com.google.udmi.util.JsonUtil.toObject;
@@ -35,19 +36,27 @@ public class UufiProcessor extends ProcessorBase {
 
     boolean isUufi = "uufi".equals(envelope.gatewayId);
 
-    debug("Received UUFI message: type=%s, folder=%s, gateway=%s, source=%s, isUufi=%s",
+    info("Received UUFI message: type=%s, folder=%s, gateway=%s, source=%s, isUufi=%s",
         envelope.subType, envelope.subFolder, envelope.gatewayId, envelope.source, isUufi);
 
     try {
       if (isUufi) {
         // Message from MQTT (Client or Loopback)
         if (isHandshake(envelope, message)) {
+          info("Processing UUFI handshake request");
           handleHandshake(envelope, convertTo(UdmiState.class, message));
         } else if (messageMap.containsKey(PAYLOAD_KEY)) {
           // Wrapped message from MQTT. 
+          
+          // Loopback protection using instance ID
+          if (UdmiServicePod.INSTANCE_ID.equals(envelope.principal)) {
+            debug("Ignoring loopback of message from this instance: " + UdmiServicePod.INSTANCE_ID);
+            return;
+          }
+          
           // If it's a config/udmi, it's likely a loopback of our own handshake reply.
           if (envelope.subType == SubType.CONFIG && envelope.subFolder == SubFolder.UDMI) {
-            debug("Ignoring loopback of UUFI handshake reply");
+            info("Ignoring loopback of UUFI handshake reply");
             return;
           }
           debug("UUFI message keys: " + messageMap.keySet());
@@ -56,18 +65,22 @@ public class UufiProcessor extends ProcessorBase {
             String gatewayId = (String) messageMap.get("gatewayId");
             debug("UUFI gatewayId: " + gatewayId + ", clientId: " + DistributorPipe.clientId);
             if (gatewayId.startsWith(DistributorPipe.clientId)) {
-              debug("Ignoring loopback of system message");
+              info("Ignoring loopback of system message from gateway " + gatewayId);
               return;
             }
           }
+          info("Processing UUFI inbound message %s/%s", envelope.subType, envelope.subFolder);
           handleUufiInbound(envelope, messageMap);
+        } else {
+          info("Received UUFI message without payload key: %s/%s", envelope.subType, envelope.subFolder);
         }
       } else {
         // Message from Internal Bus (System) - wrap and send to MQTT
+        info("Processing UUFI outbound message %s/%s", envelope.subType, envelope.subFolder);
         handleUufiOutbound(envelope, message);
       }
     } catch (Exception e) {
-      error("Error processing UUFI message: " + e.getMessage());
+      error("Error processing UUFI message: " + friendlyStackTrace(e));
     }
   }
 
@@ -86,7 +99,7 @@ public class UufiProcessor extends ProcessorBase {
     Envelope replyEnvelope = new Envelope();
     replyEnvelope.subType = SubType.CONFIG;
     replyEnvelope.subFolder = SubFolder.UDMI;
-    replyEnvelope.principal = source;
+    replyEnvelope.principal = UdmiServicePod.INSTANCE_ID; // Set instance ID as principal for loop detection
     replyEnvelope.transactionId = transactionId;
     replyEnvelope.gatewayId = "uufi"; 
 
@@ -113,6 +126,12 @@ public class UufiProcessor extends ProcessorBase {
     Object innerPayload = (payloadRaw instanceof String)
         ? toObject(decodeBase64((String) payloadRaw))
         : payloadRaw;
+
+    // Standard UDMI devices expect config on the base topic, not folder-specific sub-topics.
+    if (innerEnvelope.subType == SubType.CONFIG) {
+        innerEnvelope.subFolder = null;
+    }
+
     publish(innerEnvelope, innerPayload);
   }
 
@@ -126,6 +145,7 @@ public class UufiProcessor extends ProcessorBase {
     uufiEnvelope.subFolder = envelope.subFolder;
     uufiEnvelope.deviceRegistryId = envelope.deviceRegistryId;
     uufiEnvelope.deviceId = envelope.deviceId;
+    uufiEnvelope.principal = UdmiServicePod.INSTANCE_ID; // Set instance ID
     uufiEnvelope.gatewayId = "uufi"; 
     
     debug("Forwarding system message %s/%s to UUFI clients", 

@@ -133,7 +133,8 @@ public abstract class ProcessorBase extends ContainerBase implements SimpleHandl
       reflectError(getExceptionSubType(), bundleException);
       return;
     }
-    Envelope envelope = getContinuation(e).getEnvelope();
+    MessageContinuation continuation = getContinuation(e);
+    Envelope envelope = continuation == null ? new Envelope() : continuation.getEnvelope();
     String message = Common.getExceptionMessage(e);
     String payload = friendlyStackTrace(e);
     error(format("Received message exception: %s", payload));
@@ -181,9 +182,11 @@ public abstract class ProcessorBase extends ContainerBase implements SimpleHandl
     // If the error comes from the reflect registry, then don't use the registry as the device,
     // so revert the default behavior (otherwise the message goes nowhere!).
     String registryId = errorMap.get(REGISTRY_ID_PROPERTY_KEY);
-    if (reflectRegistry.equals(registryId)) {
+    if (reflectRegistry != null && reflectRegistry.equals(registryId)) {
       errorMap.put(REGISTRY_ID_PROPERTY_KEY, errorMap.get(DEVICE_ID_KEY));
       errorMap.put(DEVICE_ID_KEY, null);
+    } else if (reflectRegistry == null) {
+      warn("reflectRegistry is null, cannot perform registry-level error reflection correctly");
     }
 
     errorMap.put(SUBTYPE_PROPERTY_KEY, ifNotNullGet(subType, SubType::value));
@@ -194,9 +197,10 @@ public abstract class ProcessorBase extends ContainerBase implements SimpleHandl
     errorMessage.version = UdmiServicePod.getDeployedConfig().udmi_version;
     errorMessage.timestamp = isoConvert();
     errorMap.put(PAYLOAD_KEY, encodeBase64(stringify(errorMessage)));
-    error(format("Reflecting error %s/%s for %s", errorMap.get(SUBTYPE_PROPERTY_KEY),
+    error(format("Reflecting error %s/%s for %s, txn %s", errorMap.get(SUBTYPE_PROPERTY_KEY),
         errorMap.get(SUBFOLDER_PROPERTY_KEY),
-        errorMap.get(DEVICE_ID_KEY)));
+        errorMap.get(DEVICE_ID_KEY),
+        bundle.attributesMap.get("transactionId")));
     reflectString(makeReflectEnvelope(registryId, null), stringify(errorMap));
   }
 

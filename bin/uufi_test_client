@@ -45,10 +45,12 @@ sleep 2
 
 echo "Sending UUFI handshake Step 1 (State Declaration)... (txn: $TXN_ID)"
 HANDSHAKE_STATE="{\"version\":\"1.5.2\",\"timestamp\":\"$(date -u +%Y-%m-%dT%H:%M:%SZ)\",\"setup\":{\"functions_ver\":9,\"transaction_id\":\"$TXN_ID\",\"msg_source\":\"$CLIENT_ID\"}}"
+echo "Handshake payload: $HANDSHAKE_STATE"
 mosquitto_pub $MQTT_ARGS -t "/uufi/c/state/udmi" -m "$HANDSHAKE_STATE"
 
 TIMEOUT=30
 while [ $GOT_HANDSHAKE -eq 0 ] && [ $TIMEOUT -gt 0 ]; do
+    echo "Waiting for handshake reply... ($TIMEOUT)"
     sleep 1
     TIMEOUT=$((TIMEOUT - 1))
 done
@@ -66,11 +68,14 @@ echo "Starting comprehensive exchange test..."
 STATE_REPLY_FILE=$(mktemp)
 # Subscribe to the UUFI state topic for the DUT
 # UDMIS will wrap incoming state and publish it here
-mosquitto_sub $MQTT_ARGS -t "/uufi/r/$REGISTRY_ID/d/$DUT_ID/c/state/pointset" -F "%p" | while read -r line; do
+echo "Subscribing to /uufi/r/$REGISTRY_ID/d/$DUT_ID/c/state/pointset..."
+mosquitto_sub $MQTT_ARGS -i "${CLIENT_ID}_sub" -t "/uufi/r/$REGISTRY_ID/d/$DUT_ID/c/state/pointset" -F "%p" | while read -r line; do
+    echo "Received UUFI state update: $line"
     echo "$line" > "$STATE_REPLY_FILE"
     # We look for the updated point value we're about to send in config
     POINT_VAL=$(jq -r .payload.points.test_point.present_value < "$STATE_REPLY_FILE" 2>/dev/null)
     if [[ "$POINT_VAL" == "42" ]]; then
+        echo "Found expected point value 42!"
         kill -USR2 $$ 2>/dev/null || true
         exit 0
     fi
@@ -85,11 +90,13 @@ echo "Sending UUFI-wrapped Config Update for $DUT_ID..."
 # A config update request through UUFI
 # UDMIS should unwrap this and update the actual device config
 NEW_CONFIG="{\"subType\":\"config\",\"subFolder\":\"pointset\",\"deviceId\":\"$DUT_ID\",\"deviceRegistryId\":\"$REGISTRY_ID\",\"payload\":{\"version\":\"1.5.2\",\"timestamp\":\"$(date -u +%Y-%m-%dT%H:%M:%SZ)\",\"points\":{\"test_point\":{\"set_value\":42}}}}"
-mosquitto_pub $MQTT_ARGS -t "/uufi/c/config/pointset" -m "$NEW_CONFIG"
+echo "Config update payload: $NEW_CONFIG"
+mosquitto_pub $MQTT_ARGS -i "${CLIENT_ID}_pub" -t "/uufi/c/config/pointset" -m "$NEW_CONFIG"
 
 echo "Waiting for State Update reply from $DUT_ID through UUFI..."
 TIMEOUT=60
 while [ $GOT_STATE -eq 0 ] && [ $TIMEOUT -gt 0 ]; do
+    echo "Waiting for state update... ($TIMEOUT)"
     sleep 1
     TIMEOUT=$((TIMEOUT - 1))
 done

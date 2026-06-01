@@ -54,6 +54,7 @@ public class UdmiServicePod extends ContainerBase {
   public static final String DEPLOY_FILE = "var/deployed_version.json";
   public static final String UDMI_VERSION = requireNonNull(getDeployedConfig().udmi_version);
   public static final int FATAL_ERROR_CODE = -1;
+  public static final String INSTANCE_ID = format("%08x", (long) (Math.random() * 0x100000000L));
   static final File READY_INDICATOR = new File("/tmp/pod_ready.txt");
   private static final Map<String, UdmiComponent> COMPONENT_MAP = new ConcurrentHashMap<>();
   private static final Set<Class<? extends ProcessorBase>> PROCESSOR_CLASSES = ImmutableSet.of(
@@ -142,10 +143,21 @@ public class UdmiServicePod extends ContainerBase {
       UdmiServicePod udmiServicePod = new UdmiServicePod(args);
       Runtime.getRuntime().addShutdownHook(new Thread(udmiServicePod::shutdown));
       udmiServicePod.activate();
+      udmiServicePod.block();
     } catch (Exception e) {
       System.err.println("Exception activating pod: " + friendlyStackTrace(e));
       e.printStackTrace();
       System.exit(FATAL_ERROR_CODE);
+    }
+  }
+
+  private void block() {
+    try {
+      while (true) {
+        Thread.sleep(1000);
+      }
+    } catch (InterruptedException e) {
+      notice("Pod main thread interrupted");
     }
   }
 
@@ -259,12 +271,10 @@ public class UdmiServicePod extends ContainerBase {
     return podConfiguration;
   }
 
-  /**
-   * Shutdown all processors and bridges in the pod.
-   */
   @Override
   public void shutdown() {
-    notice("Starting shutdown of container components");
+    notice("Starting shutdown of container components (triggered by " 
+        + Thread.currentThread().getName() + ")");
     forAllComponents(UdmiComponent::shutdown);
     notice("Finished shutdown of container components");
     super.shutdown();

@@ -290,6 +290,7 @@ public class IotReflectorClient implements MessagePublisher {
 
   private void messageHandler(String topic, String payload) {
     receiveStats.update();
+    debug("Reflector client received message on topic " + topic + ": " + payload);
     if (payload.length() == 0) {
       return;
     }
@@ -574,20 +575,23 @@ public class IotReflectorClient implements MessagePublisher {
 
       publisher.activate();
 
-      System.err.println("Starting initial UDMI setup process");
+      System.err.println("Starting initial UDMI setup process, waiting for config from UDMIS...");
       retries = updateVersion == null ? 1 : UPDATE_RETRIES;
       while (pubLatches.get(publisher).getCount() > 0) {
         setReflectorState();
         initializedStateSent.countDown();
+        System.err.println("Sent reflector state, waiting for config reply (remaining retries: " + retries + ")...");
         if (!pubLatches.get(publisher).await(CONFIG_TIMEOUT_SEC, TimeUnit.SECONDS)) {
           retries--;
           if (retries <= 0) {
+            System.err.println("Latching state for publisher " + publisher + ": " + pubLatches.get(publisher).getCount());
             throw new RuntimeException(
                 "Config sync timeout expired. Investigate UDMI cloud functions install.",
                 syncFailure);
           }
         }
       }
+      System.err.println("Initial UDMI setup process complete, config received.");
 
       tickExecutor.scheduleAtFixedRate(this::timerTick, RESYNC_INTERVAL_SEC,
           RESYNC_INTERVAL_SEC, TimeUnit.SECONDS);

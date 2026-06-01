@@ -37,7 +37,8 @@
       "enabled": "false"
     },
     "uufi": {
-      "recv_id": "/uufi/#"
+      "recv_id": "/uufi/#",
+      "send_id": "${UDMI_PREFIX}udmi_target"
     }
   },
   "crons": {
