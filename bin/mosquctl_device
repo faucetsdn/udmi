@@ -32,7 +32,7 @@ DEV_PASS=${hash_pass:0:8}
 DEV_USER=/r/$registry_id/d/$device_id
 DEV_ID=$DEV_USER
 
-echo Configuring device $device_id as $DEV_ID
+echo Configuring device $device_id as $DEV_ID with password $DEV_PASS
 
 $MOSQUITTO_CTRL deleteClient $DEV_USER || true
 $MOSQUITTO_CTRL createClient $DEV_USER -p $DEV_PASS -c $DEV_ID

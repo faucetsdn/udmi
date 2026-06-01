@@ -29,6 +29,9 @@ bin/reset_config $site_path $project_id $device_id
 # Clean out the persistant data store to ensure a clean state each time.
 rm -rf $site_path/out/devices/${device_id}/persistent_data.json
 
+# Delete existing certificate to force regeneration with current CA
+rm -f $site_path/devices/${device_id}/*.crt
+
 pubber/bin/build
 
 echo Writing pubber output to $PUBBER_LOG

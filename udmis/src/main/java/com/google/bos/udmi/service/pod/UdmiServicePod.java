@@ -29,12 +29,12 @@ import com.google.bos.udmi.service.core.UufiProcessor;
 import com.google.bos.udmi.service.support.IotDataProvider;
 import com.google.common.collect.ImmutableSet;
 import java.io.File;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
-import java.util.stream.Collectors;
 import org.jetbrains.annotations.NotNull;
 import udmi.schema.BridgePodConfiguration;
 import udmi.schema.EndpointConfiguration;
@@ -60,8 +60,14 @@ public class UdmiServicePod extends ContainerBase {
   private static final Set<Class<? extends ProcessorBase>> PROCESSOR_CLASSES = ImmutableSet.of(
       TargetProcessor.class, ReflectProcessor.class, StateProcessor.class, ControlProcessor.class,
       ProvisioningEngine.class, BitboxAdapter.class, DistributorPipe.class, UufiProcessor.class);
-  private static final Map<String, Class<? extends ProcessorBase>> PROCESSORS =
-      PROCESSOR_CLASSES.stream().collect(Collectors.toMap(ContainerBase::getName, clazz -> clazz));
+  private static final Map<String, Class<? extends ProcessorBase>> PROCESSORS = new HashMap<>();
+
+  static {
+    PROCESSOR_CLASSES.forEach(clazz -> PROCESSORS.put(ContainerBase.getName(clazz), clazz));
+    PROCESSORS.put("uufi_out", UufiProcessor.class);
+    PROCESSORS.put("uufi_state", UufiProcessor.class);
+    PROCESSORS.put("uufi_events", UufiProcessor.class);
+  }
 
   /**
    * Core pod to instantiate all the other components as necessary based on configuration.
