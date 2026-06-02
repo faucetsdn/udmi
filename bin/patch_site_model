@@ -1,0 +1,18 @@
+#!/bin/bash
+
+# This script patches the site model for consistency, working around issues
+# in the external site model repository.
+
+site_dir=${1:-sites/udmi_site_model}
+
+if [[ ! -d $site_dir ]]; then
+    echo "Site directory $site_dir not found, skipping patch."
+    exit 0
+fi
+
+# Patch AHU-1 metadata for consistency (site model has ZZ-TRI-FECTA-AHU)
+ahu1_metadata=$site_dir/devices/AHU-1/metadata.json
+if [[ -f $ahu1_metadata ]]; then
+    echo "Patching $ahu1_metadata for consistency..."
+    jq '.system.location.site = "ZZ-TRI-FECTA"' $ahu1_metadata | sponge $ahu1_metadata
+fi

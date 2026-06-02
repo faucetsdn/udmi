@@ -25,6 +25,7 @@ git checkout -q $MODEL_VER
 git log -n 1
 
 cd $ROOT_DIR
+bin/patch_site_model $SITE_DIR/$MODEL_DIR
 
 REL_SITE=$(realpath --relative-to=$PWD $SITE_DIR/$MODEL_DIR)
 [[ -e $MODEL_LINK ]] || ln -s $REL_SITE $MODEL_LINK

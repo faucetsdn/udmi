@@ -71,6 +71,7 @@ mkdir -p out $site_path/out
 
 echo Reset site_model...
 (cd $site_path; git checkout .)
+bin/patch_site_model $site_path
 
 if [[ -n ${UDMI_REGISTRY_SUFFIX:-} ]]; then
     echo Using registry suffix $UDMI_REGISTRY_SUFFIX
