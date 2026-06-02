@@ -1,0 +1,87 @@
+#!/bin/bash -e
+
+archive=$1
+shift || true
+
+# Force consistent sort order
+export LC_ALL=C
+
+sites_in=sites/udmi_site_model_*/
+sites_out=sites/udmi_site_model/out
+archive_dir=${archive%/}
+archive_dir=${archive_dir%.zip}
+archive_dir=${archive_dir%% *}
+archive_dir=${archive_dir##*/}
+
+rm -rf out_* $sites_in
+rm -f *udmi-support_*.tgz
+
+# Keep out/mantis/ safe by only deleting temporary outputs in out/
+mkdir -p out
+rm -f out/sequencer.out out/test_itemized.out out/schema.out out/schema_itemized.out out/*.combined 2>/dev/null || true
+rm -rf $sites_out
+mkdir -p $sites_out
+
+if [[ ${archive} =~ \.tgz$ ]]; then
+    tar -xzvf "$archive"
+    echo Extracted singular archive $archive
+elif [[ -f $archive ]]; then
+    rm -rf $archive_dir
+    echo Extracting archive to $archive_dir
+    unzip -o "$archive" -d $archive_dir
+    
+    ls -l $archive_dir/
+    echo Extracting test archives...
+    if ls $archive_dir/*sequencer*udmi-support_*.tgz &>/dev/null; then
+        ls $archive_dir/*sequencer*udmi-support_*.tgz | xargs -n 1 tar -xzf
+    else
+        ls $archive_dir/*udmi-support_*.tgz | xargs -n 1 tar -xzf
+    fi
+elif [[ -d $archive ]]; then
+    echo "Input is a directory. Extracting test archives from $archive..."
+    if ls "$archive"/*sequencer*udmi-support_*.tgz &>/dev/null; then
+        ls "$archive"/*sequencer*udmi-support_*.tgz | xargs -n 1 tar -xzf
+    else
+        ls "$archive"/*udmi-support_*.tgz | xargs -n 1 tar -xzf
+    fi
+else
+    echo Unknown archive file $archive
+    false
+fi
+
+echo Consolidating device tests...
+devices=$(ls -d $sites_in/out-seq/devices) || true
+if [[ -n $devices ]]; then
+    for devices_dir in $devices; do
+        rsync -ah $devices_dir/ $sites_out/devices/
+    done
+else
+    echo Nothing to consolidate.
+fi
+
+src_count=$(find $sites_in/out-seq -name sequence.md | wc -l)
+dst_count=$(find $sites_out -name sequence.md | wc -l)
+
+if [[ $src_count != $dst_count ]]; then
+    echo WARNING: Mismatch in src/dst count: $src_count != $dst_count
+fi
+
+echo Restored $dst_count test output files to $sites_out
+
+# Safely consolidate outputs if directories exist
+if ls out_*/sequencer.out.combined &>/dev/null; then
+    cat out_*/sequencer.out.combined | sort -k 3,4 > out/sequencer.out
+fi
+if ls out_*/schema.out.combined &>/dev/null; then
+    cat out_*/schema.out.combined | fgrep RESULT | sort -k 3,4 | uniq > out/schema.out
+fi
+if ls out_*/test_itemized.out &>/dev/null; then
+    cat out_*/test_itemized.out | sort > out/test_itemized.out
+fi
+if ls out_*/schema_itemized.out &>/dev/null; then
+    cat out_*/schema_itemized.out | sort | uniq > out/schema_itemized.out
+fi
+
+echo Restored combined schema.out files.
+
+echo Done with processing $archive_dir

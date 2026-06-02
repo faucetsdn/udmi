@@ -5,22 +5,6 @@
 # the Python diagnose module.
 #
 
-GREEN='\033[0;32m'
-LIGHT_GREEN='\033[1;32m'
-NC='\033[0m' # No Color
-
-# Print the startup banner
-echo -e "${LIGHT_GREEN}"
-cat << "EOF"
-  __  __             _   _     
- |  \/  | __ _ _ __ | |_(_)___ 
- | |\/| |/ _` | '_ \| __| / __|
- | |  | | (_| | | | | |_| \__ \
- |_|  |_|\__,_|_| |_|\__|_|___/
-                               
-EOF
-echo -e "${GREEN}  v1.0.0 | Predator of bugs${NC}\n"
-
 # Your CLI tool logic starts here
 echo "Initializing mantis..."
 
@@ -33,11 +17,12 @@ cd $UDMI_ROOT
 
 # 1. Guarantee execution permissions
 chmod +x $MANTIS_DIR/bin/diagnose 2>/dev/null || true
-chmod +x $MANTIS_DIR/diagnose/main.py 2>/dev/null || true
+chmod +x $MANTIS_DIR/src/triage/impl/main.py 2>/dev/null || true
 
 # 2. Activate virtualenv
 if [[ -f venv/bin/activate ]]; then
     source venv/bin/activate
+    export PYTHONPATH="$MANTIS_DIR/src:$PYTHONPATH"
 else
     echo "Error: Project virtual environment not found at '$UDMI_ROOT/venv'." >&2
     echo "Please run 'bin/setup_base' first to initialize dependencies." >&2
@@ -45,4 +30,4 @@ else
 fi
 
 # 3. Call Python module forwarding all arguments
-python3 -m mantis.diagnose.main "$@"
+python3 -m mantis.src.triage.impl.main "$@"

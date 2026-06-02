@@ -2,6 +2,5 @@
 <project version="4">
   <component name="VcsDirectoryMappings">
     <mapping directory="$PROJECT_DIR$/.." vcs="Git" />
-    <mapping directory="$PROJECT_DIR$/out/test_bundles/udmi-support_26408798985_20260526_120840/run_1/sites/udmi_site_model" vcs="Git" />
   </component>
 </project>

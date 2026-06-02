@@ -56,6 +56,7 @@ fi
 # Activate virtualenv
 if [[ -f venv/bin/activate ]]; then
     source venv/bin/activate
+    export PYTHONPATH="$MANTIS_DIR/src:$PYTHONPATH"
 else
     echo "Error: Project virtual environment not found at '$UDMI_ROOT/venv'." >&2
     echo "Please run 'bin/setup_base' first to initialize dependencies." >&2
@@ -79,7 +80,12 @@ else
     if [[ ! -d $TARGET_DIR ]]; then
         echo "Creating workspace directory: $TARGET_DIR"
         mkdir -p "$TARGET_DIR"
-        cp "$INPUT_PATH" "$TARGET_DIR/"
+        if [[ "$INPUT_PATH" =~ \.zip$ ]]; then
+            echo "Unzipping parent archive to workspace: $TARGET_DIR"
+            unzip -q -o "$INPUT_PATH" -d "$TARGET_DIR"
+        else
+            cp "$INPUT_PATH" "$TARGET_DIR/"
+        fi
     else
         echo "Using cached workspace directory: $TARGET_DIR"
     fi
@@ -94,14 +100,21 @@ echo
 echo "============================================================="
 echo "📈 STEP 1: Evaluating Stability & Metric Compilation..."
 echo "============================================================="
-python3 -m mantis.evaluate_stability.main -i "$TARGET_DIR"
+python3 -m mantis.src.util.eval_sequencer_stability.main -i "$TARGET_DIR"
 
 # 5. Run AI Diagnostic Failure Triage
 echo
 echo "============================================================="
 echo "🤖 STEP 2: Running AI Diagnostic Failure Triage..."
 echo "============================================================="
-diagnose_args=("-i" "$TARGET_DIR")
+if [[ -f "$TARGET_DIR/triage_manifest.json" ]]; then
+    echo "Manifest hand-off detected: loading failed/flaky tests from $TARGET_DIR/triage_manifest.json"
+    diagnose_args=("-m" "$TARGET_DIR/triage_manifest.json")
+else
+    echo "No manifest found. Falling back to scanning directory: $TARGET_DIR"
+    diagnose_args=("-i" "$TARGET_DIR")
+fi
+
 if [[ -n $TEST_CASE ]]; then
     diagnose_args+=("-t" "$TEST_CASE")
 fi
@@ -109,7 +122,7 @@ if [[ -n $DEVICE_ID ]]; then
     diagnose_args+=("-d" "$DEVICE_ID")
 fi
 
-python3 -m mantis.diagnose.main "${diagnose_args[@]}"
+python3 -m mantis.src.triage.impl.main "${diagnose_args[@]}"
 
 echo
 echo "============================================================="

@@ -13,7 +13,7 @@ cd $UDMI_ROOT
 
 # Guarantee execution permissions
 chmod +x $MANTIS_DIR/bin/collect_stats 2>/dev/null || true
-chmod +x $MANTIS_DIR/collect_stats/main.py 2>/dev/null || true
+chmod +x $MANTIS_DIR/src/util/collect_stats/main.py 2>/dev/null || true
 
 # If no arguments are passed, show usage and help
 if [[ $# -eq 0 ]]; then
@@ -33,4 +33,4 @@ else
 fi
 
 # Execute Python module forwarding all arguments directly in the foreground
-python3 -u -m mantis.collect_stats.main "$@"
+python3 -u -m mantis.src.util.collect_stats.main "$@"
