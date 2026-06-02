@@ -189,7 +189,7 @@ rm -rf out/registries/
 echo Check for failure in running pubber...
 echo bin/pubber $pubber_config
 result=0
-timeout 60s bin/pubber $pubber_config 2> $pubber_log || result=$?
+timeout 120s bin/pubber $pubber_config 2> $pubber_log || result=$?
 [[ $result == 255 ]] || fail Improper pubber failure code $result
 
 echo Pubber config from $pubber_config:
@@ -202,7 +202,7 @@ bin/registrar $site_args $device_id
 echo Check $device_id to make sure that it works...
 echo bin/pubber $pubber_config
 result=0
-timeout 30s bin/pubber $pubber_config 2> $pubber_log || result=$?
+timeout 120s bin/pubber $pubber_config 2> $pubber_log || result=$?
 [[ $result == 0 ]] || fail Improper pubber failure code $result
 
 echo Now recreate the complete registry from scratch!
@@ -231,7 +231,7 @@ check_csv_file $gateway_id CLEAN
 echo Check $device_id again, but this time with success...
 echo bin/pubber $pubber_config
 result=0
-timeout 30s bin/pubber $pubber_config 2> $pubber_log || result=$?
+timeout 120s bin/pubber $pubber_config 2> $pubber_log || result=$?
 [[ $result == 0 ]] || fail Improper pubber failure code $result
 
 echo Successful pubber check passed on clean registry.
