@@ -48,7 +48,7 @@ public class MosquittoDynamicSecurityService implements MqttCallback {
   private static final int MAX_QUEUE_SIZE = 10000;
   private static final int BATCH_SIZE_LIMIT = 1000;
   private static final long BATCH_BYTES_LIMIT = 10 * 1024 * 1024; // 10 MB
-  private static final long MIN_PUBLISH_INTERVAL_MS = 5000; // 5 seconds
+  private static final long MIN_PUBLISH_INTERVAL_MS = 500; // 0.5 seconds
   private static final String CONTROL_TOPIC = "$CONTROL/dynamic-security/v1";
   private static final String RESPONSE_TOPIC = "$CONTROL/dynamic-security/v1/response";
 
