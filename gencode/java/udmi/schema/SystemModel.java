@@ -17,22 +17,6 @@ import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
  * 
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
-@JsonPropertyOrder({
-    "name",
-    "description",
-    "device_version",
-    "zone",
-    "node_type",
-    "tags",
-    "location",
-    "serial_no",
-    "hardware",
-    "software",
-    "physical_tag",
-    "adjunct",
-    "min_loglevel",
-    "metrics_rate_sec"
-})
 public class SystemModel {
 
     /**

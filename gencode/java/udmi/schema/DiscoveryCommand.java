@@ -15,10 +15,6 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
  * 
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
-@JsonPropertyOrder({
-    "timestamp",
-    "version"
-})
 public class DiscoveryCommand {
 
     /**

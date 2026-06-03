@@ -16,13 +16,6 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
  * 
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
-@JsonPropertyOrder({
-    "timestamp",
-    "version",
-    "devices",
-    "extras_deletion_days",
-    "devices_deletion_days"
-})
 public class MappingConfig {
 
     /**

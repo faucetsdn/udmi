@@ -16,18 +16,6 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
  * 
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
-@JsonPropertyOrder({
-    "timestamp",
-    "version",
-    "last_config",
-    "operation",
-    "serial_no",
-    "hardware",
-    "software",
-    "params",
-    "status",
-    "upgraded_from"
-})
 public class SystemState {
 
     /**

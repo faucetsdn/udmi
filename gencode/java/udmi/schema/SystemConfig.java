@@ -14,12 +14,6 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
  * 
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
-@JsonPropertyOrder({
-    "min_loglevel",
-    "metrics_rate_sec",
-    "operation",
-    "testing"
-})
 public class SystemConfig {
 
     /**

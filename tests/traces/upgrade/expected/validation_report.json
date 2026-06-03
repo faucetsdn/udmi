@@ -1,66 +1,66 @@
 {
-  "timestamp" : "1999-10-20T01:02:03Z",
-  "version" : "1.5.2",
   "cloud_version" : {
     "deployed_by" : "Default implementation for class com.google.daq.mqtt.validator.MessageReadingClient"
-  },
-  REDACTED,
-  "start_time" : "1999-10-20T01:02:03Z",
-  "summary" : {
-    "correct_devices" : [ ],
-    "extra_devices" : [ "NON-1", "NON-2" ],
-    "missing_devices" : [ "GAT-123" ],
-    "error_devices" : [ "AHU-1", "AHU-22", "SNS-4" ]
   },
   "devices" : {
     "AHU-1" : {
       "last_seen" : "1999-10-20T01:02:03Z",
       "status" : {
-        "message" : "Multiple validation errors",
-        "detail" : "1 schema violations found; missing pointset subblock; 1 schema violations found",
         "category" : "validation.device.multiple",
-        "timestamp" : "1999-10-20T01:02:03Z",
-        "level" : 500
+        "detail" : "1 schema violations found; missing pointset subblock; 1 schema violations found",
+        "level" : 500,
+        "message" : "Multiple validation errors",
+        "timestamp" : "1999-10-20T01:02:03Z"
       }
     },
     "AHU-22" : {
       "last_seen" : "1999-10-20T01:02:03Z",
       "status" : {
-        "message" : "Multiple validation errors",
-        "detail" : "1 schema violations found; missing pointset subblock",
         "category" : "validation.device.multiple",
-        "timestamp" : "1999-10-20T01:02:03Z",
-        "level" : 500
+        "detail" : "1 schema violations found; missing pointset subblock",
+        "level" : 500,
+        "message" : "Multiple validation errors",
+        "timestamp" : "1999-10-20T01:02:03Z"
       }
     },
     "NON-1" : {
       "last_seen" : "1999-10-20T01:02:03Z",
       "status" : {
-        "message" : "1 schema violations found",
-        "detail" : "state_update: 1 schema violations found; /system: object has missing required properties ([\"serial_no\"])",
         "category" : "validation.device.extra",
-        "timestamp" : "1999-10-20T01:02:03Z",
-        "level" : 400
+        "detail" : "state_update: 1 schema violations found; /system: object has missing required properties ([\"serial_no\"])",
+        "level" : 400,
+        "message" : "1 schema violations found",
+        "timestamp" : "1999-10-20T01:02:03Z"
       }
     },
     "NON-2" : {
       "last_seen" : "1999-10-20T01:02:03Z",
       "status" : {
-        "message" : "Successful validation",
         "category" : "validation.device.extra",
-        "timestamp" : "1999-10-20T01:02:03Z",
-        "level" : 400
+        "level" : 400,
+        "message" : "Successful validation",
+        "timestamp" : "1999-10-20T01:02:03Z"
       }
     },
     "SNS-4" : {
       "last_seen" : "1999-10-20T01:02:03Z",
       "status" : {
-        "message" : "missing pointset subblock",
-        "detail" : "While validating pointset message at 1999-10-20T01:02:03Z",
         "category" : "validation.device.schema",
-        "timestamp" : "1999-10-20T01:02:03Z",
-        "level" : 500
+        "detail" : "While validating pointset message at 1999-10-20T01:02:03Z",
+        "level" : 500,
+        "message" : "missing pointset subblock",
+        "timestamp" : "1999-10-20T01:02:03Z"
       }
     }
-  }
+  },
+  "start_time" : "1999-10-20T01:02:03Z",
+  "summary" : {
+    "correct_devices" : [ ],
+    "error_devices" : [ "AHU-1", "AHU-22", "SNS-4" ],
+    "extra_devices" : [ "NON-1", "NON-2" ],
+    "missing_devices" : [ "GAT-123" ]
+  },
+  "timestamp" : "1999-10-20T01:02:03Z",
+  REDACTED,
+  "version" : "1.5.2"
 }

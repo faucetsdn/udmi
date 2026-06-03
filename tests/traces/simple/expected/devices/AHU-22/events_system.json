@@ -1,9 +1,9 @@
 {
   "logentries" : [ {
-    "message" : "1999-10-20T01:02:03Z sent message #70",
     "category" : "device.log_message",
-    "timestamp" : "1999-10-20T01:02:03Z",
-    "level" : 200
+    "level" : 200,
+    "message" : "1999-10-20T01:02:03Z sent message #70",
+    "timestamp" : "1999-10-20T01:02:03Z"
   } ],
   "timestamp" : "1999-10-20T01:02:03Z",
   "version" : "1.5.2"

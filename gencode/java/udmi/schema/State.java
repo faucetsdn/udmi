@@ -15,18 +15,6 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
  * 
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
-@JsonPropertyOrder({
-    "timestamp",
-    "version",
-    "upgraded_from",
-    "system",
-    "gateway",
-    "discovery",
-    "localnet",
-    "blobset",
-    "alarmset",
-    "pointset"
-})
 public class State {
 
     /**
