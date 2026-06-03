@@ -16,15 +16,6 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
  * 
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
-@JsonPropertyOrder({
-    "timestamp",
-    "version",
-    "state_etag",
-    "set_value_expiry",
-    "sample_limit_sec",
-    "sample_rate_sec",
-    "alarms"
-})
 public class AlarmsetConfig {
 
     /**

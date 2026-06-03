@@ -16,8 +16,11 @@ import com.fasterxml.jackson.core.util.DefaultIndenter;
 import com.fasterxml.jackson.core.util.DefaultPrettyPrinter;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.MapperFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
+import com.fasterxml.jackson.databind.introspect.AnnotatedClass;
+import com.fasterxml.jackson.databind.introspect.JacksonAnnotationIntrospector;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.google.gson.internal.bind.util.ISO8601Utils;
@@ -44,6 +47,14 @@ public abstract class JsonUtil {
   private static final ObjectMapper STRICT_MAPPER = new ObjectMapper()
       .enable(Feature.ALLOW_COMMENTS)
       .enable(SerializationFeature.INDENT_OUTPUT)
+      .enable(SerializationFeature.ORDER_MAP_ENTRIES_BY_KEYS)
+      .configure(MapperFeature.SORT_PROPERTIES_ALPHABETICALLY, true)
+      .setAnnotationIntrospector(new JacksonAnnotationIntrospector() {
+        @Override
+        public String[] findSerializationPropertyOrder(AnnotatedClass ac) {
+          return null;
+        }
+      })
       .disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS)
       .setDateFormat(new CleanDateFormat())
       .enable(JsonReadFeature.ALLOW_NON_NUMERIC_NUMBERS.mappedFeature())
@@ -502,6 +513,10 @@ public abstract class JsonUtil {
    */
   public static void writeFile(Object theThing, File file) {
     try {
+      if (theThing != null && !(theThing instanceof String || theThing instanceof Number
+          || theThing instanceof Boolean || theThing instanceof Date)) {
+        theThing = OBJECT_MAPPER.convertValue(theThing, TreeMap.class);
+      }
       OBJECT_MAPPER.writeValue(file, theThing);
     } catch (Exception e) {
       throw new RuntimeException("While writing " + file.getAbsolutePath(), e);
@@ -517,6 +532,10 @@ public abstract class JsonUtil {
    */
   public static void writeFileWithCustomIndentForArrays(Object theThing, File file) {
     try {
+      if (theThing != null && !(theThing instanceof String || theThing instanceof Number
+          || theThing instanceof Boolean || theThing instanceof Date)) {
+        theThing = OBJECT_MAPPER.convertValue(theThing, TreeMap.class);
+      }
       DefaultPrettyPrinter.Indenter indenter = new DefaultIndenter("  ", DefaultIndenter.SYS_LF);
       DefaultPrettyPrinter printer = new DefaultPrettyPrinter();
       printer.indentArraysWith(indenter);

@@ -2,14 +2,14 @@
   "monkey" : true,
   "partial_update" : true,
   "points" : {
+    "rocket_count" : {
+      "present_value" : "yes"
+    },
     "split_threshold" : {
       "present_value" : true
     },
     "triangulating_axis_y" : {
       "present_value" : 11
-    },
-    "rocket_count" : {
-      "present_value" : "yes"
     }
   },
   "timestamp" : "1999-10-20T01:02:03Z",

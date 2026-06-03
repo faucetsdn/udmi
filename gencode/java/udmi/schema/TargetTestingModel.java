@@ -14,10 +14,6 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
  * 
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
-@JsonPropertyOrder({
-    "target_point",
-    "target_value"
-})
 public class TargetTestingModel {
 
     /**

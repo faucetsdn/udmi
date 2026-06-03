@@ -12,16 +12,6 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
  * 
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
-@JsonPropertyOrder({
-    "site",
-    "panel",
-    "section",
-    "room",
-    "floor",
-    "floor_seq",
-    "position",
-    "coordinates"
-})
 public class Location {
 
     /**

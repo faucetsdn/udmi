@@ -16,13 +16,6 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
  * 
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
-@JsonPropertyOrder({
-    "timestamp",
-    "version",
-    "upgraded_from",
-    "partial_update",
-    "alarms"
-})
 public class AlarmsetEvents {
 
     /**

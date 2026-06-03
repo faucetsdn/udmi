@@ -16,15 +16,6 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
  * 
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
-@JsonPropertyOrder({
-    "timestamp",
-    "version",
-    "sub_folder",
-    "sub_type",
-    "status",
-    "pointset",
-    "errors"
-})
 public class ValidationEvents {
 
     /**

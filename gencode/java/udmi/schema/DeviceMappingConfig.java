@@ -15,12 +15,6 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
  * 
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
-@JsonPropertyOrder({
-    "guid",
-    "applied",
-    "requested",
-    "status"
-})
 public class DeviceMappingConfig {
 
     /**

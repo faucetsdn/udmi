@@ -16,24 +16,6 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
  * 
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
-@JsonPropertyOrder({
-    "timestamp",
-    "version",
-    "generation",
-    "status",
-    "family",
-    "addr",
-    "network",
-    "event_no",
-    "families",
-    "registries",
-    "devices",
-    "points",
-    "refs",
-    "features",
-    "cloud_model",
-    "system"
-})
 public class DiscoveryEvents {
 
     /**

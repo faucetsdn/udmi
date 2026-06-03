@@ -15,15 +15,6 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
  * 
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
-@JsonPropertyOrder({
-    "addr",
-    "network",
-    "adjunct",
-    "shadow_id",
-    "parent_id",
-    "family",
-    "network_id"
-})
 public class FamilyLocalnetModel {
 
     /**
