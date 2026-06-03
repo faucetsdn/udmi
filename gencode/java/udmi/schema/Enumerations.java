@@ -15,12 +15,6 @@ import com.fasterxml.jackson.annotation.JsonValue;
  * 
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
-@JsonPropertyOrder({
-    "families",
-    "devices",
-    "points",
-    "features"
-})
 public class Enumerations {
 
     @JsonProperty("families")

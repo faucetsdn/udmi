@@ -14,12 +14,6 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
  * 
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
-@JsonPropertyOrder({
-    "correct_devices",
-    "extra_devices",
-    "missing_devices",
-    "error_devices"
-})
 public class ValidationSummary {
 
     @JsonProperty("correct_devices")

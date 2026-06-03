@@ -15,13 +15,6 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
  * 
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
-@JsonPropertyOrder({
-    "message",
-    "detail",
-    "category",
-    "timestamp",
-    "level"
-})
 public class Entry {
 
     /**

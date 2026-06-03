@@ -22,7 +22,14 @@ public class ModbusFamilyProviderTest {
       "modbus://192.168.1.1/1/3/40001/10?type=INT16&border=MSB",
       "modbus://my-host.com/2/4/30001?type=UINT32&worder=LWF",
       "modbus://networkname/2/4/3001",
-      "modbus://10.0.0.1/1/3/40001/2?scale=0.1"
+      "modbus://10.0.0.1/1/3/40001/2?scale=0.1",
+      "modbus://10.0.0.1/1/3/40001/1?offset=1.5",
+      "modbus://10.0.0.1/1/3/40001/1?border=LSB",
+      "modbus://10.0.0.1/1/3/40001/1?type=BOOLEAN",
+      "modbus://10.0.0.1/1/3/40001/1?type=ASCII",
+      "modbus://10.0.0.1/1/3/40001/1?type=FLOAT32",
+      "modbus://10.0.0.1/1/3/40001/1?worder=HWF",
+      "modbus://10.0.0.1/1/3/40001/1?type=UINT32&worder=HWF&border=LSB&scale=10&offset=5"
   );
 
   public static final Set<String> BAD_REFERENCES = ImmutableSet.of(
@@ -35,6 +42,12 @@ public class ModbusFamilyProviderTest {
       "modbus://192.168.1.1:502/1/7/40001", // Invalid function code 7
       "modbus://192.168.1.1:502/1/3/40001?foo=bar", // Invalid parameter foo
       "modbus://192.168.1.1:502/1/3/40001?byte_order=MSB", // Old parameter name
+      "modbus://10.0.0.1/1/3/40001/1?type=BADTYPE",
+      "modbus://10.0.0.1/1/3/40001/1?border=BADBORDER",
+      "modbus://10.0.0.1/1/3/40001/1?worder=BADWORDER",
+      "modbus://10.0.0.1/1/3/40001/1?scale=abc",
+      "modbus://10.0.0.1/1/3/40001/1?offset=xyz",
+      "modbus://10.0.0.1/1/3/40001/1?type", // Missing value
       "bacnet://192.168.1.1/1/3/40001"
   );
 

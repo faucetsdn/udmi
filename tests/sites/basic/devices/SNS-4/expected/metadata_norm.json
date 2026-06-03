@@ -36,6 +36,9 @@
       "split_threshold": {
         "units": "Imperial-gallons-per-minute"
       },
+      "test_offset_point": {
+        "ref": "3/40001?type=INT16&scale=0.1&offset=100.5"
+      },
       "triangulating_axis": {
         "units": "Degrees-phase"
       }

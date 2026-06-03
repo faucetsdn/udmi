@@ -18,10 +18,6 @@ import com.fasterxml.jackson.annotation.JsonValue;
  * 
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
-@JsonPropertyOrder({
-    "blobsets",
-    "blobs"
-})
 public class BlobsetConfig {
 
     /**

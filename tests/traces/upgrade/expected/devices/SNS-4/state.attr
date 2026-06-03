@@ -1,10 +1,10 @@
 {
+  "deviceId" : "SNS-4",
   "deviceNumId" : "00000079057151",
+  "deviceRegistryId" : "ZZ-TRI-FECTA",
+  "msgSource" : "001_state_update.json",
+  "projectId" : "playback-project",
   "publishTime" : "2023-03-02T19:27:38.819Z",
   "subFolder" : "update",
-  "deviceRegistryId" : "ZZ-TRI-FECTA",
-  "subType" : "state",
-  "msgSource" : "001_state_update.json",
-  "deviceId" : "SNS-4",
-  "projectId" : "playback-project"
+  "subType" : "state"
 }

@@ -13,26 +13,26 @@
     }
   },
   "system" : {
-    "last_config" : "1999-10-20T01:02:03Z",
-    "operation" : {
-      "operational" : true,
-      "last_start" : "1999-10-20T01:02:03Z",
-      "restart_count" : 2,
-      "mode" : "initial"
-    },
-    "serial_no" : "sequencer-20462",
     "hardware" : {
       "make" : "BOS",
       "model" : "pubber"
     },
+    "last_config" : "1999-10-20T01:02:03Z",
+    "operation" : {
+      "last_start" : "1999-10-20T01:02:03Z",
+      "mode" : "initial",
+      "operational" : true,
+      "restart_count" : 2
+    },
+    "serial_no" : "sequencer-20462",
     "software" : {
       "firmware" : "v1"
     },
     "status" : {
-      "message" : "success",
       "category" : "system.config.apply",
-      "timestamp" : "1999-10-20T01:02:03Z",
-      "level" : 300
+      "level" : 300,
+      "message" : "success",
+      "timestamp" : "1999-10-20T01:02:03Z"
     }
   },
   "timestamp" : "2023-03-02T19:27:37.819Z",

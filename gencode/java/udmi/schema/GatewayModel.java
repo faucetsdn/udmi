@@ -15,11 +15,6 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
  * 
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
-@JsonPropertyOrder({
-    "gateway_id",
-    "target",
-    "proxy_ids"
-})
 public class GatewayModel {
 
     /**

@@ -15,12 +15,6 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
  * 
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
-@JsonPropertyOrder({
-    "timestamp",
-    "version",
-    "generation",
-    "depth"
-})
 public class CloudQuery {
 
     @JsonProperty("timestamp")

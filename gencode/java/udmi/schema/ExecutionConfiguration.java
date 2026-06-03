@@ -15,43 +15,6 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
  * 
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
-@JsonPropertyOrder({
-    "registry_id",
-    "cloud_region",
-    "site_name",
-    "update_topic",
-    "feed_name",
-    "reflect_region",
-    "site_model",
-    "src_file",
-    "registry_suffix",
-    "shard_count",
-    "shard_index",
-    "device_id",
-    "iot_provider",
-    "reflector_endpoint",
-    "device_endpoint",
-    "project_id",
-    "user_name",
-    "udmi_namespace",
-    "bridge_host",
-    "key_file",
-    "serial_no",
-    "log_level",
-    "min_stage",
-    "udmi_version",
-    "udmi_commit",
-    "udmi_ref",
-    "udmi_timever",
-    "enforce_version",
-    "udmi_root",
-    "update_to",
-    "alt_project",
-    "alt_registry",
-    "block_unknown",
-    "sequences",
-    "mapping_configuration"
-})
 public class ExecutionConfiguration {
 
     @JsonProperty("registry_id")

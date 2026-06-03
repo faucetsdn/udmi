@@ -7,11 +7,6 @@ import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
-@JsonPropertyOrder({
-    "lat",
-    "long",
-    "alt_m"
-})
 public class Coordinates {
 
     /**

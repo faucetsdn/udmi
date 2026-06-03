@@ -14,12 +14,6 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
  * 
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
-@JsonPropertyOrder({
-    "blob_name",
-    "url",
-    "sha256",
-    "version"
-})
 public class BlobUpdateTestingModel {
 
     /**
