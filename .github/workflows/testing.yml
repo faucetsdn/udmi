@@ -474,8 +474,12 @@ jobs:
       - name: udmis log
         if: ${{ !cancelled() }}
         run: |
-          docker logs udmis
-          more out/udmis.log
+          echo "=== out/udmis.log ==="
+          cat out/udmis.log || true
+          echo "=== out/etcd.log ==="
+          cat out/etcd.log || true
+          echo "=== docker logs ==="
+          docker logs udmis || true
   udmilp:
     name: Python Library Tests
     runs-on: ubuntu-24.04

@@ -20,6 +20,9 @@ DYN_FILE=$ETC_DIR/dynamic_security.json
 MOSQUITTO_LOG=/var/log/mosquitto/mosquitto.log
 
 sudo mkdir -p $(dirname $MOSQUITTO_LOG)
+sudo chown mosquitto:mosquitto $(dirname $MOSQUITTO_LOG) || true
+sudo mkdir -p /var/lib/mosquitto
+sudo chown -R mosquitto:mosquitto /var/lib/mosquitto || true
 
 if [[ ! -f $UDMI_FILE ]]; then
     echo Creating new $UDMI_FILE from template...
