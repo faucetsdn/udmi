@@ -7,6 +7,10 @@
 set -eu
 set -o pipefail
 
+if [[ $(id -u) == 0 ]]; then
+    sudo() { "$@"; }
+fi
+
 # Force consistent sort order and other processing things
 export LC_ALL=en_US.UTF-8
 

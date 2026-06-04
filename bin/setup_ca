@@ -4,6 +4,7 @@ UDMI_ROOT=$(dirname $0)/..
 source $UDMI_ROOT/etc/shell_common.sh
 
 CERT_DIR=/etc/mosquitto/certs/
+sudo mkdir -p $CERT_DIR
 sudo rm -f $CERT_DIR/*
 
 [[ $# != 2 ]] && fail $0 site_model hostname
