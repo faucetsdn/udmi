@@ -324,6 +324,7 @@ jobs:
     name: Blob Updates
     runs-on: ubuntu-24.04
     timeout-minutes: 15
+    needs: baseline
     env:
       TARGET_PROJECT: ${{ vars.TARGET_PROJECT || '//mqtt/localhost' }}
     steps:
@@ -347,7 +348,7 @@ jobs:
         run: more out/pubber.log* | cat
       - name: support bundle
         if: ${{ !cancelled() }}
-        run: UDMI_REGISTRY_SUFFIX=_blobupdates bin/support ${{ github.repository_owner }}_${{ github.job }}_
+        run: bin/support ${{ github.repository_owner }}_${{ github.job }}_
       - uses: actions/upload-artifact@v7
         if: ${{ !cancelled() }}
         with:
