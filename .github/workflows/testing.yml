@@ -348,7 +348,7 @@ jobs:
         run: more out/pubber.log* | cat
       - name: support bundle
         if: ${{ !cancelled() }}
-        run: bin/support ${{ github.repository_owner }}_${{ github.job }}_
+        run: UDMI_REGISTRY_SUFFIX=_blobupdates bin/support ${{ github.repository_owner }}_${{ github.job }}_
       - uses: actions/upload-artifact@v7
         if: ${{ !cancelled() }}
         with:
