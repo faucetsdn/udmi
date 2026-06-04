@@ -324,9 +324,9 @@ jobs:
     name: Blob Updates
     runs-on: ubuntu-24.04
     timeout-minutes: 15
-    needs: baseline
     env:
       TARGET_PROJECT: ${{ vars.TARGET_PROJECT || '//mqtt/localhost' }}
+      UDMI_REGISTRY_SUFFIX: _BU
     steps:
       - uses: actions/checkout@v6
         with:
