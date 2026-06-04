@@ -61,7 +61,7 @@ fi
 sudo chown mosquitto:mosquitto $PASS_FILE || true
 sudo chmod 0600 $PASS_FILE || true
 
-if [[ -n $(which systemctl) ]]; then
+if command -v systemctl >/dev/null 2>&1; then
     sudo systemctl restart mosquitto
 else
     # Raw mode for running (e.g.) in a docker container
