@@ -2,7 +2,8 @@
 
 ETCD_VER=v3.5.13
 DOWNLOAD_URL=https://storage.googleapis.com/etcd
-TARGET_DIR=/tmp/etcd
+SCRIPT_DIR=$(cd "$(dirname "$0")" && pwd)
+TARGET_DIR=${SCRIPT_DIR}/etcd_bin
 
 if [[ ! -d ${TARGET_DIR} ]]; then
    rm -f /tmp/etcd-${ETCD_VER}-linux-amd64.tar.gz
