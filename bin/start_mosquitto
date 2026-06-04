@@ -26,7 +26,10 @@ if [[ ! -f $UDMI_FILE ]]; then
     mkdir -p $(dirname $UDMI_FILE)
     sudo cp etc/mosquitto_udmi.conf $UDMI_FILE
     PLUGIN_FILE=/usr/lib/mosquitto_dynamic_security.so
-    [[ -f $PLUGIN_FILE ]] || PLUGIN_FILE=$(whereis -b mosquitto_dynamic_security.so | awk '{print $2}')
+    [[ -f $PLUGIN_FILE ]] || PLUGIN_FILE=/usr/lib/mosquitto/mosquitto_dynamic_security.so
+    [[ -f $PLUGIN_FILE ]] || PLUGIN_FILE=/usr/lib/x86_64-linux-gnu/mosquitto_dynamic_security.so
+    [[ -f $PLUGIN_FILE ]] || PLUGIN_FILE=$(find /usr -name mosquitto_dynamic_security.so 2>/dev/null | head -1)
+    [[ -n $PLUGIN_FILE ]] || fail "mosquitto_dynamic_security.so not found."
     ls -l "$PLUGIN_FILE"
     echo Configuring dynamic security plugin $PLUGIN_FILE
     sudo sed -i "s%plugin dynsec%plugin $PLUGIN_FILE%" $UDMI_FILE
