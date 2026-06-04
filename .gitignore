@@ -52,6 +52,7 @@ __pycache__/
 
 .vscode
 *.class
+*.war
 
 # Terraform authentication and template files.
 cloud/gcp/terraform.tfvars

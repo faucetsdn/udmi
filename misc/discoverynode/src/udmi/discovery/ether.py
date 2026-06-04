@@ -140,7 +140,8 @@ class EtherDiscovery(discovery.DiscoveryController):
   def nmap_stop_discovery(self):
     logging.info("stopping")
     self.cancel_threads.set()
-    self.nmap_thread.join()
+    if self.nmap_thread and self.nmap_thread.is_alive():
+      self.nmap_thread.join()
 
   @discovery.catch_exceptions_to_state
   @discovery.main_task

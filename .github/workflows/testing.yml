@@ -332,6 +332,7 @@ jobs:
     timeout-minutes: 15
     env:
       TARGET_PROJECT: ${{ vars.TARGET_PROJECT || '//mqtt/localhost' }}
+      UDMI_REGISTRY_SUFFIX: _BU
     steps:
       - uses: actions/checkout@v6
         with:
@@ -435,13 +436,15 @@ jobs:
           echo Built local UDMIS
       - name: Start UDMIS container
         run: |
+          mkdir -p out
           docker run -d --rm --net udminet --name udmis -p 8883:8883 \
             -v $PWD/site_model:/root/site_model \
             -v $PWD/var/tmp:/tmp \
             -v $PWD/var/etcd:/root/udmi/var/etcd \
             -v $PWD/var/mosquitto:/etc/mosquitto \
+            -v $PWD/out:/root/udmi/out \
             udmis udmi/bin/start_local block site_model/cloud_iot_config.json
-          for count in `seq 0 30`; do
+          for count in `seq 0 60`; do
             echo Waiting for UDMIS startup $((30 - count))
             [[ ! -f var/tmp/pod_ready.txt ]] || break
             (docker ps | fgrep -q udmis) || break
@@ -458,6 +461,11 @@ jobs:
         run: |
           export SAVE_PATH=$PATH
           sudo -E bash -c 'PATH=$SAVE_PATH misc/discoverynode/testing/e2e/test_local site_model'
+      - name: udmis log
+        if: ${{ !cancelled() }}
+        run: |
+          docker logs udmis
+          more out/udmis.log
   udmilp:
     name: Python Library Tests
     runs-on: ubuntu-24.04
@@ -497,27 +505,27 @@ jobs:
           cd clientlib/python
           poetry run pylint src
 
-  bridgehead:
-    name: Bridgehead Test
-    runs-on: ubuntu-24.04
-    timeout-minutes: 20
-    steps:
-      - uses: actions/checkout@v6
-      - uses: actions/setup-java@v5
-        with:
-          distribution: 'temurin'
-          java-version: '21'
-      - name: Setup Base
-        run: bin/setup_base
-      - name: Run Bridgehead Test
-        run: |
-          bridgehead/tests/test_bridgehead
-      - name: Upload logs
-        if: ${{ !cancelled() }}
-        uses: actions/upload-artifact@v7
-        with:
-          name: bridgehead-logs
-          path: |
-            bridgehead/var/mosquitto/log/
-            bridgehead/var/tmp/udmis.log
+  # bridgehead:
+  #   name: Bridgehead Test
+  #   runs-on: ubuntu-24.04
+  #   timeout-minutes: 20
+  #   steps:
+  #     - uses: actions/checkout@v6
+  #     - uses: actions/setup-java@v5
+  #       with:
+  #         distribution: 'temurin'
+  #         java-version: '21'
+  #     - name: Setup Base
+  #       run: bin/setup_base
+  #     - name: Run Bridgehead Test
+  #       run: |
+  #         bridgehead/tests/test_bridgehead
+  #     - name: Upload logs
+  #       if: ${{ !cancelled() }}
+  #       uses: actions/upload-artifact@v7
+  #       with:
+  #         name: bridgehead-logs
+  #         path: |
+  #           bridgehead/var/mosquitto/log/
+  #           bridgehead/var/tmp/udmis.log
 

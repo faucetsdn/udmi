@@ -18,11 +18,6 @@ import com.fasterxml.jackson.annotation.JsonValue;
  * 
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
-@JsonPropertyOrder({
-    "units",
-    "value_state",
-    "status"
-})
 public class PointPointsetState {
 
     /**

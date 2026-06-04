@@ -16,15 +16,6 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
  * 
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
-@JsonPropertyOrder({
-    "timestamp",
-    "version",
-    "upgraded_from",
-    "last_config",
-    "logentries",
-    "event_no",
-    "metrics"
-})
 public class SystemEvents {
 
     /**

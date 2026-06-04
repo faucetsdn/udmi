@@ -88,6 +88,26 @@ public class CertManager {
     }
   }
 
+  public CertManager(File caCrtFile, File crtFile, File keyFile, Transport transport,
+      String passString, Consumer<String> logging) {
+    this.caCrtFile = caCrtFile;
+    this.crtFile = crtFile;
+    this.keyFile = keyFile;
+    this.transport = transport;
+    this.caCertificate = null;
+    this.clientCertificate = null;
+    this.clientPrivateKey = null;
+
+    if (Transport.SSL.equals(transport)) {
+      this.password = passString == null ? new char[0] : passString.toCharArray();
+      logging.accept("CA cert file: " + caCrtFile);
+      logging.accept("Device cert file: " + crtFile);
+      logging.accept("Private key file: " + keyFile);
+    } else {
+      this.password = null;
+    }
+  }
+
   public CertManager(String caCertificate, String clientCertificate, String clientPrivateKey,
       Transport transport, String passString) {
     caCrtFile = null;

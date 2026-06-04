@@ -16,20 +16,6 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
  * 
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
-@JsonPropertyOrder({
-    "point",
-    "name",
-    "possible_values",
-    "units",
-    "ref",
-    "type",
-    "writable",
-    "description",
-    "status",
-    "ancillary",
-    "adjunct",
-    "structure"
-})
 public class RefDiscovery {
 
     /**

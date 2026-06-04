@@ -15,12 +15,6 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
  * 
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
-@JsonPropertyOrder({
-    "operational",
-    "last_start",
-    "restart_count",
-    "mode"
-})
 public class StateSystemOperation {
 
     /**

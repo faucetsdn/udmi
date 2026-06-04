@@ -47,22 +47,27 @@ def get_arguments():
 
 def main():
 
+  args = get_arguments()
+  config = local_config.read_config(args.config_file)
+
+  log_level_str = str(config.get("log_level", "INFO")).upper()
+  log_level = getattr(logging, log_level_str, None)
+  if not isinstance(log_level, int):
+    log_level = logging.INFO
+
   stdout = logging.StreamHandler(sys.stdout)
   stdout.addFilter(lambda log: log.levelno < logging.WARNING)
-  stdout.setLevel(logging.INFO)
+  stdout.setLevel(log_level)
   stderr = logging.StreamHandler(sys.stderr)
   stderr.setLevel(logging.WARNING)
   logging.basicConfig(
       format="%(asctime)s|%(levelname)s|%(module)s:%(funcName)s %(message)s",
       handlers=[stderr, stdout],
-      level=logging.INFO,
+      level=log_level,
   )
-  logging.root.setLevel(logging.INFO)
-
-  args = get_arguments()
+  logging.root.setLevel(log_level)
 
   logging.info("Loading config from %s", args.config_file)
-  config = local_config.read_config(args.config_file)
   logging.warning("Started with config: %s", config)
 
   # TODO: Should probably set this in the config with basic templating

@@ -1,9 +1,9 @@
 {
-  "deviceNumId" : "00000528111775",
-  "subFolder" : "system",
-  "deviceRegistryId" : "ZZ-TRI-FECTA",
-  "subType" : "state",
-  "msgSource" : "004_state_system.json",
   "deviceId" : "GAT-123",
-  "projectId" : "playback-project"
+  "deviceNumId" : "00000528111775",
+  "deviceRegistryId" : "ZZ-TRI-FECTA",
+  "msgSource" : "004_state_system.json",
+  "projectId" : "playback-project",
+  "subFolder" : "system",
+  "subType" : "state"
 }
