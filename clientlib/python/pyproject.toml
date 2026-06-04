@@ -29,3 +29,6 @@ packages = [
     { include = "udmi", from = "src" },
 ]
 
+[tool.pylint.main]
+ignore-paths = ["^src/udmi/schema/.*$"]
+
