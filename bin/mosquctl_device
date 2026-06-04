@@ -24,7 +24,10 @@ if [[ -f $site_path/devices/$device_id/rsa_private.pkcs8 ]]; then
 elif [[ -f $site_path/devices/$device_id/ec_private.pkcs8 ]]; then
     key_file=$site_path/devices/$device_id/ec_private.pkcs8
 else
-    fail "No private key found for device $device_id"
+    warn "No private key found for device $device_id, generating..."
+    mkdir -p $site_path/devices/$device_id
+    bin/keygen RS256 $site_path/devices/$device_id
+    key_file=$site_path/devices/$device_id/rsa_private.pkcs8
 fi
 
 hash_pass=$(sha256sum < $key_file)

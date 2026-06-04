@@ -14,6 +14,11 @@ target=$2
 
 cd $UDMI_ROOT
 
+mkdir -p $site_model/reflector
+if [[ ! -f $site_model/reflector/rsa_private.pem ]]; then
+    bin/keygen RS256 $site_model/reflector
+fi
+
 bin/keygen CA/$target $site_model/reflector
 bin/keygen CERT/$target $site_model/reflector
 
