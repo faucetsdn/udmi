@@ -35,7 +35,7 @@ if [[ -n $check ]]; then
     echo Checking gencode docs links...
     bin/gencode_docs_checklinks
 
-    files=`find gencode/ -type f | sort`
+    files=`find -L gencode/ -type f | sort`
     sha256sum $files > /tmp/gencode.hash
     echo Checking gencode hash: diff /tmp/gencode.hash .gencode_hash.txt
     diff /tmp/gencode.hash .gencode_hash.txt
@@ -50,7 +50,7 @@ if [[ -n $check ]]; then
     diff misc/bambi/presentation.gld.json gencode/presentation/presentation.json
 else
     echo Updating gencode hash...
-    files=`find gencode/ -type f | sort`
+    files=`find -L gencode/ -type f | sort`
     sha256sum $files > .gencode_hash.txt
 
     echo Updating presentation golden source
