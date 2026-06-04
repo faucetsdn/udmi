@@ -13,6 +13,8 @@ class StageConfig:
         self.system_instruction = data.get("system_instruction")
         self.headers = data.get("headers", [])
         self.tools = data.get("tools", [])
+        self.type = data.get("type", "")
+        self.target_stage = data.get("target_stage")
         
         model_val = data.get("model")
         if pipeline_config and model_val in pipeline_config:
@@ -21,7 +23,7 @@ class StageConfig:
             self.model = model_val
 
     def __repr__(self):
-        return f"StageConfig(name={self.name}, enabled={self.enabled}, model={self.model}, tools={self.tools})"
+        return f"StageConfig(name={self.name}, enabled={self.enabled}, model={self.model}, tools={self.tools}, type={self.type}, target_stage={self.target_stage})"
 
 
 class Playbook:
@@ -36,6 +38,22 @@ class Playbook:
         self.pipeline_config: Dict[str, Any] = {}
         self.stages: Dict[str, StageConfig] = {}
         self._raw_data: Dict[str, Any] = {}
+
+    @classmethod
+    def load_default(cls) -> "Playbook":
+        """Loads the default fallback playbook config from the package directory."""
+        default_path = Path(__file__).parent / "default_playbook.yaml"
+        playbook = cls(default_path)
+        playbook.reload()
+        return playbook
+
+    @classmethod
+    async def load_default_async(cls) -> "Playbook":
+        """Asynchronously loads the default fallback playbook config from the package directory."""
+        default_path = Path(__file__).parent / "default_playbook.yaml"
+        playbook = cls(default_path)
+        await playbook.reload_async()
+        return playbook
 
     @classmethod
     async def load_async(cls, filepath: Path) -> "Playbook":

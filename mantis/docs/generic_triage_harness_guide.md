@@ -18,11 +18,12 @@ The harness operates across four distinct layers to coordinate playbook configur
 graph TD
     subgraph "1. Application & Domain Layer"
         Playbook["Declarative Playbooks<br/>(playbook.yaml)"]
-        CustomTools["Custom Domain Tools<br/>(e.g. fetch_lakehouse_logs)"]
-        Runner["Triage Runner / CLI Orchestrator<br/>(UDMITriageRunner / agent.py)"]
+        CustomTools["Custom Domain Tools<br/>(e.g., fetch_lakehouse_logs)"]
+        Runner["Triage Runner / CLI Orchestrator<br/>(CustomTriageRunner)"]
     end
 
     subgraph "2. Core Harness Engine Layer"
+        Orchestrator["Session Orchestrator<br/>(run_triage_session_async)"]
         Pipeline["Pipeline Coordinator<br/>(TriagePipeline)"]
         Engine["Execution Orchestration<br/>(AsyncTriageEngine)"]
         Cache["Vectorized Semantic Cache<br/>(SemanticCache)"]
@@ -44,7 +45,8 @@ graph TD
     %% Connect layers
     Playbook -.->|Configures| Pipeline
     CustomTools -.->|Registers| Pipeline
-    Runner -->|Executes| Pipeline
+    Runner -->|Invokes| Orchestrator
+    Orchestrator -->|Instantiates & Runs| Pipeline
     
     Pipeline -->|Triggers Stages| Engine
     Pipeline -.->|Cache Lookup| Cache
@@ -245,42 +247,41 @@ def query_partition_schema(partition_path: str) -> str:
 
 ---
 
-### Step 3: Instantiate and Execute the Pipeline
-Import the harness modules and execute the dynamic pipeline sequentially:
+### Step 3: Instantiate and Execute the Session
+Import the session orchestrator, subclass `TriagePipeline` to register your custom tools, and run the triage session:
 
 ```python
 import asyncio
 from pathlib import Path
+from typing import Dict, Callable, Optional
 from google import genai
-from triage.harness.pipeline import TriagePipeline
-from triage.harness.engine import AsyncTriageEngine
-from triage.harness.tools import ToolBelt
+from triage.harness.pipeline import TriagePipeline, run_triage_session_async
+
+# 1. Subclass TriagePipeline to inject custom domain tools or deterministic hooks
+class FloeTriagePipeline(TriagePipeline):
+    async def run_dynamic_pipeline_async(
+        self,
+        target_id: str,
+        prompt_payload: str,
+        available_tools: Dict[str, Callable],
+        **kwargs
+    ) -> str:
+        # Register custom tools to the active available tools map
+        custom_tools = {
+            "fetch_lakehouse_logs": fetch_lakehouse_logs,
+            "check_catalog_status": check_catalog_status,
+            "query_partition_schema": query_partition_schema,
+        }
+        merged_tools = {**available_tools, **custom_tools}
+        return await super().run_dynamic_pipeline_async(
+            target_id=target_id,
+            prompt_payload=prompt_payload,
+            available_tools=merged_tools,
+            **kwargs
+        )
 
 async def run_lake_triage():
-    # 1. Initialize Google GenAI Client (expects GEMINI_API_KEY env variable)
-    client = genai.Client()
-
-    # 2. Initialize the core async engine
-    engine = AsyncTriageEngine(client=client)
-
-    # 3. Instantiate TriagePipeline from your playbook
-    playbook_path = Path("playbook.yaml")
-    pipeline = TriagePipeline.from_playbook(
-        client=client,
-        playbook_path=playbook_path,
-        engine=engine
-    )
-
-    # 4. Load pre-built Generic ToolBelt and merge with custom domain tools
-    tool_belt = ToolBelt(workspace_root="/path/to/floe/project")
-    all_tools = tool_belt.get_tools_map()
-    
-    # Add custom lake-specific tools to the map
-    all_tools["fetch_lakehouse_logs"] = fetch_lakehouse_logs
-    all_tools["check_catalog_status"] = check_catalog_status
-    all_tools["query_partition_schema"] = query_partition_schema
-
-    # 5. Setup input payload (details about the specific ingestion failure)
+    # 2. Setup input payload (details about the specific ingestion failure)
     prompt_payload = """
     ## Ingestion Failure Metadata
     - **Pipeline ID**: pl-ingest-orders-v2-94281
@@ -290,14 +291,17 @@ async def run_lake_triage():
     - **Failure Class**: SparkSchemaMismatchException
     """
 
-    # 6. Run the pipeline
     out_dir = Path("out/floe/pipelines/pl-ingest-orders-v2-94281/")
     
-    final_RCA_report = await pipeline.run_dynamic_pipeline_async(
-        target_id="pl-ingest-orders-v2-94281",
+    # 3. Execute the session using the generic session orchestrator
+    final_RCA_report = await run_triage_session_async(
         prompt_payload=prompt_payload,
-        available_tools=all_tools,
-        out_dir=str(out_dir)
+        target_id="pl-ingest-orders-v2-94281",
+        workspace_root="/path/to/floe/project",
+        playbook_path=Path("playbook.yaml"),
+        out_dir=str(out_dir),
+        pipeline_class=FloeTriagePipeline,
+        metadata={"pipeline_id": "pl-ingest-orders-v2-94281", "table": "orders_lakehouse"}
     )
 
     print(f"\n🎉 Diagnostics complete! Final RCA summary:\n{final_RCA_report}")
@@ -310,7 +314,7 @@ if __name__ == "__main__":
 
 ## 5. Intermediate Stage Outputs & Cache Layout
 
-When running `pipeline.run_dynamic_pipeline_async(..., out_dir=str(out_dir))`, the harness automatically handles saving stage reports and utilizing cache hits:
+When running `run_triage_session_async(..., out_dir=str(out_dir))`, the harness automatically handles saving stage reports and utilizing cache hits:
 
 ### 4.1. Output Folder Structure
 All stage-specific markdown files are created under your specified `out_dir` automatically, preserving intermediate outputs for audits:

@@ -60,7 +60,7 @@ mantis/src/triage/
 
 * **`harness/`**: The generic framework. Executes sequential playbook stages, handles tool calling loops, and manages the vectorized semantic caching.
 * **`impl/runner.py`**: Coordinates the parallel multi-job async diagnostics run. It resolves sharded run directories and matches failed execution shards against successful baseline shards.
-* **`impl/agent.py`**: Orchestrates GenAI API calls, executes playbook stages sequentially (e.g., Timeline, Intent, Analysis, Critique), and manages semantic caching.
+* **`impl/agent.py`**: Subclasses `TriagePipeline` to implement UDMI-specific deterministic stage bypass hooks (`run_timeline_deterministically` and `run_intent_deterministically`), and invokes the generic session orchestrator (`run_triage_session_async`).
 * **`impl/playbook.yaml`**: Declares the custom pipeline stages, model specifications, concurrency limits, and system instructions shaping the triage strategy.
 
 ---

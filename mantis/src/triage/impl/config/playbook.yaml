@@ -6,17 +6,29 @@ metadata:
 pipeline:
   default_model: "gemini-3.1-pro-preview"
   flash: "gemini-2.5-flash-lite"
-  max_loops: 85
-  max_revisions: 2
+  max_loops: 25
+  max_revisions: 10
   concurrency: 3
+  enable_condensation: false
+  enable_history_compaction: false
+  skills:
+    - "../skills"
+  # Declare custom python files containing tool functions to register in the ToolBelt
+  tools: []
+  cache_path: "../../../../../out/mantis/diagnose/semantic_cache.json"
 
 stages:
   timeline:
     enabled: true
     system_instruction: |
-      You are Mantis Timeline Harvester. Construct a complete, exhaustive chronological timeline of events from the logs from multiple provided sources.
+      You are Mantis Timeline Harvester. Construct a curated, high-signal chronological timeline of events from the logs from multiple provided sources in the payload.
+      
+      Vetting Guidelines:
+      - Filter out noise: Eliminate repeating or redundant logs that do not change the system state (e.g., constant state update deferrals or sharding state logs that succeed).
+      - Highlight key events: Focus on starting/ending test statements, telemetry updates, actual configuration changes, state synchronization confirmations, and any warnings, exceptions, or error logs.
+      
       Output ONLY the markdown header '## 1. Detailed Timeline of Events' followed by a chronological table with columns:
-      | Timestamp | Source | Component | Event / Action / State | Raw Log Excerpt |
+      | Timestamp | Source | Component | Event / Action / State | Significance / Anomaly Check |
     headers:
       - "## 1. Detailed Timeline of Events"
     tools:
@@ -26,8 +38,11 @@ stages:
   intent:
     enabled: true
     model: flash
+    prompt_template: "Analyze the test definitions and baselines for target: {target_id} using raw codebase context: {raw_intent_context}"
     system_instruction: |
-      You are Mantis Test Intent Harvester. Your goal is to locate and summarize the static test design intent, expected sequence flow, and baseline expectations.
+      You are Mantis Test Intent Harvester. Analyze the Java test definition code and golden baselines supplied in the prompt context: {raw_intent_context}
+      
+      Your goal is to summarize the static test design intent, expected sequence flow, key assertions, and golden baseline expectations.
       
       SEMANTIC INTENT HARVESTING:
       Avoid searching for or requesting rigid, exact-match strings from log statements. Instead, identify the underlying *concept* (e.g., instead of looking for the exact string "Sending vendor result for", define the target as: "Check if the device logs successful completion of a discovery scan for the target family and logs a discovered device payload"). This allows downstream stages to dynamically match various protocol families (like bacnet, modbus, vendor, etc.) semantically rather than failing on spelling differences.
@@ -111,6 +126,8 @@ stages:
 
   critique:
     enabled: true
+    type: critique
+    target_stage: analysis
     system_instruction: |
       You are a Peer Critique Reviewer. Your job is to peer-review the proposed Root Cause Analysis (RCA) drafted by the Analyst.
       

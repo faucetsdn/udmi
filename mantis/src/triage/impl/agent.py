@@ -4,19 +4,13 @@ import os
 import re
 import sys
 from pathlib import Path
-from typing import List, Optional
+from typing import List, Optional, Dict
 
 from google import genai
 
-from .tools import expand_log_window
-from .tools import git_read_operations
-from .tools import grep_codebase
-from .tools import grep_file
-from .tools import list_directory
-from .tools import read_file_lines
-from ..harness.pipeline import TriagePipeline
+
+from ..harness.pipeline import TriagePipeline, run_triage_session_async
 from ..harness.config.playbook import Playbook
-from ..harness.config.cache import SemanticCache
 from ..harness.ui import color_text, GREEN
 
 IMPL_DIR = os.path.dirname(os.path.abspath(__file__))  # src/triage/impl
@@ -203,26 +197,6 @@ def harvest_test_code_context(workspace_root: str, test_id: str, is_physical_dev
                     
     return "\n".join(code_context)
 
-# Tool maps for different diagnostic phases
-PHASE1_TOOLS = {
-    "read_file_lines": read_file_lines,
-    "grep_file": grep_file
-}
-
-PHASE1_5_TOOLS = {
-    "grep_codebase": grep_codebase,
-    "read_file_lines": read_file_lines,
-    "list_directory": list_directory
-}
-
-PHASE2_TOOLS = {
-    "list_directory": list_directory,
-    "grep_codebase": grep_codebase,
-    "read_file_lines": read_file_lines,
-    "git_read_operations": git_read_operations,
-    "grep_file": grep_file,
-    "expand_log_window": expand_log_window
-}
 
 
 class UDMITriagePipeline(TriagePipeline):
@@ -234,28 +208,21 @@ class UDMITriagePipeline(TriagePipeline):
     def __init__(
         self,
         client: genai.Client,
-        skills_dir: Path,
         concurrency_semaphore: asyncio.Semaphore = None,
         playbook: Optional[Playbook] = None
     ):
         super().__init__(
             client=client,
-            skills_dir=skills_dir,
             concurrency_semaphore=concurrency_semaphore,
             playbook=playbook
         )
 
-    def build_timeline_deterministically(self, prompt_payload: str) -> Optional[str]:
-        raw_logs = parse_merged_logs_from_payload(prompt_payload)
-        if raw_logs:
-            return build_deterministic_timeline(raw_logs)
-        return None
-
-    def harvest_intent_deterministically(self, target_id: str, prompt_payload: str) -> Optional[str]:
+    def run_intent_deterministically(self, target_id: str, prompt_payload: str) -> Optional[str]:
         ws_root = get_workspace_root()
         if ws_root:
             is_physical = "Global_Pubber_Log" not in prompt_payload or '"Global_Pubber_Log": false' in prompt_payload
-            return harvest_test_code_context(ws_root, target_id, is_physical_device=is_physical)
+            raw_context = harvest_test_code_context(ws_root, target_id, is_physical_device=is_physical)
+            self.context["raw_intent_context"] = raw_context
         return None
 
 
@@ -263,41 +230,13 @@ async def run_triage_analysis_async(
     prompt_payload: str,
     concurrency_semaphore: asyncio.Semaphore = None,
     out_dir: Optional[str] = None,
-    force: bool = False
+    force: bool = False,
+    oem: bool = False
 ) -> str:
     """
     Asynchronous entrypoint to run the UDMI triage pipeline.
-    Supports dynamic playbooks, vectorized semantic caching, and intelligent rate limits.
+    Uses the generic session orchestrator from the triage harness.
     """
-    use_vertex = os.getenv("MANTIS_USE_VERTEXAI", "").lower() in ("true", "1", "yes")
-    token = os.getenv("GEMINI_API_KEY")
-    if not token and not use_vertex:
-        print("Error: Neither GEMINI_API_KEY nor MANTIS_USE_VERTEXAI environment variables are set.", file=sys.stderr)
-        print("To use Vertex AI (Google Cloud enterprise quota with ADC), please 'export MANTIS_USE_VERTEXAI=true'.", file=sys.stderr)
-        sys.exit(1)
-
-    # Load the declarative playbook
-    impl_dir = Path(os.path.dirname(os.path.abspath(__file__)))
-    playbook_path = impl_dir / "config/playbook.yaml"
-
-    playbook = None
-    if playbook_path.exists():
-        try:
-            playbook = Playbook(playbook_path).load()
-            print(f"[Playbook] Loaded playbook '{playbook.metadata.get('name')}' successfully.")
-        except Exception as e:
-            print(f"Warning: Failed to load playbook: {e}", file=sys.stderr)
-
-    skills_dir = Path(os.path.dirname(os.path.abspath(__file__))) / "skills"
-    
-    if use_vertex:
-        project_id = os.getenv("GCP_PROJECT") or os.getenv("GCLOUD_PROJECT")
-        location = os.getenv("GCP_LOCATION", "us-central1")
-        print(f"[Vertex AI] Initializing enterprise GenAI Client (project: {project_id or 'Auto-detect'}, location: {location})...")
-        client = genai.Client(vertexai=True, project=project_id, location=location)
-    else:
-        client = genai.Client()
-
     # Extract metadata for caching and output folders
     meta = {"Project ID": "unknown", "Site ID": "unknown", "Device ID": "unknown", "Test ID": "unknown"}
     for key in meta.keys():
@@ -313,12 +252,6 @@ async def run_triage_analysis_async(
     base_out = out_dir if out_dir else os.path.join(MANTIS_DIR, "out")
     out_dir = os.path.join(base_out, "diagnose", project_id, site_id,
                            device_id, test_id)
-
-    # --- Vectorized Semantic Cache Lookup ---
-    cache_filepath = Path(MANTIS_DIR) / "out" / "diagnose" / "semantic_cache.json"
-    embed_model = "text-embedding-004" if use_vertex else "models/gemini-embedding-2"
-    cache = SemanticCache(client, cache_filepath, embedding_model=embed_model)
-    await cache.load_async()
 
     # Construct failure query text (Test ID + Raw log content)
     log_match = re.search(
@@ -337,77 +270,29 @@ async def run_triage_analysis_async(
         )
         log_content = md_match.group(1).strip() if md_match else ""
 
-    query_text = f"Test ID: {test_id}\nFailure logs:\n{log_content}"
+    query_text = f"Test ID: {test_id}\nFailure logs:\n{log_content}" if log_content else ""
 
-    # Only perform semantic lookup if we actually have failure log content to compare and not forced
-    if log_content and force:
-        print(f"[{test_id}] Cache bypass requested via --force flag. Skipping cache lookup.")
+    metadata = {k.lower().replace(" ", "_"): v for k, v in meta.items()}
 
-    if log_content and not force:
-        try:
-            print(f"[{test_id}] Querying semantic cache...")
-            cached_entry, score = await cache.lookup(query_text)
-            if cached_entry:
-                print(
-                    "🚀 " + color_text(f"[Cache Hit] Found highly similar flakiness cluster! (similarity: {score:.3f})", GREEN, bold=True) + "\n"
-                    "🚀 Delivering zero-shot triage report in milliseconds..."
-                )
-                # Save the cached report to the destination folder so it remains consistent
-                os.makedirs(out_dir, exist_ok=True)
-                report_filepath = os.path.join(out_dir, "triage_analysis.md")
-                with open(report_filepath, 'w', encoding='utf-8') as fr:
-                    fr.write(cached_entry["triage_report"])
+    # Load the declarative playbook
+    impl_dir = Path(os.path.dirname(os.path.abspath(__file__)))
+    playbook_file = "config/playbook_oem_integrator.yaml" if oem else "config/playbook.yaml"
+    playbook_path = impl_dir / playbook_file
 
-                return cached_entry["triage_report"]
-            else:
-                print(f"[{test_id}] Cache miss (best similarity score: {score:.3f}). Running GenAI pipeline...")
-        except Exception as e:
-            print(f"Warning: Semantic cache lookup failed: {e}", file=sys.stderr)
-    else:
-        print(f"[{test_id}] No failure log content found in payload. Skipping cache lookup.")
-
-    # Initialize pipeline with playbook if present
-    pipeline = UDMITriagePipeline(
-        client=client,
-        skills_dir=skills_dir,
-        concurrency_semaphore=concurrency_semaphore,
-        playbook=playbook
-    )
-    if playbook:
-        # Ensure engine uses playbook defined model
-        pipeline.engine.model_name = playbook.pipeline_config.get("default_model", pipeline.engine.model_name)
-
-    # Load ToolBelt to construct full tool map
-    from .tools import ToolBelt
-    tool_belt = ToolBelt(workspace_root=UDMI_ROOT, exclude_dirs=["bridgehead"], include_files=["*.java", "*.py", "*.yaml"])
-    available_tools = tool_belt.get_tools_map()
-
-    analysis_report = await pipeline.run_dynamic_pipeline_async(
-        target_id=test_id,
+    return await run_triage_session_async(
         prompt_payload=prompt_payload,
-        available_tools=available_tools,
-        out_dir=out_dir
+        target_id=test_id,
+        workspace_root=UDMI_ROOT,
+        playbook_path=playbook_path,
+        out_dir=out_dir,
+        cache_query=query_text,
+        metadata=metadata,
+        force=force,
+        concurrency_semaphore=concurrency_semaphore,
+        pipeline_class=UDMITriagePipeline,
+        exclude_dirs=["bridgehead"],
+        include_files=["*.java", "*.py", "*.yaml"]
     )
-
-    # --- Save successful diagnostic to cache ---
-    # Only cache if the report is successful (contains actual root cause and not the insufficient data warning)
-    if log_content and "⚠️ INSUFFICIENT DATA TO TRACE ROOT CAUSE" not in analysis_report:
-        try:
-            print(f"[{test_id}] Caching successful triage analysis...")
-            await cache.add(
-                failure_text=query_text,
-                triage_report=analysis_report,
-                metadata={
-                    "project_id": project_id,
-                    "site_id": site_id,
-                    "device_id": device_id,
-                    "test_id": test_id,
-                }
-            )
-        except Exception as e:
-            print(f"Warning: Failed to save triage analysis to cache: {e}", file=sys.stderr)
-
-    return analysis_report
 
 
 def run_triage_analysis(prompt_payload: str) -> str:

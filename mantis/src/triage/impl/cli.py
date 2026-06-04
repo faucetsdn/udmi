@@ -60,6 +60,10 @@ class UDMITriageCLI:
             "--force", "-f", action="store_true",
             help="Force execution by bypassing the semantic cache completely"
         )
+        self.parser.add_argument(
+            "--oem", action="store_true",
+            help="Use the oem_integrator playbook instead of the default playbook"
+        )
 
     def parse(self, args_list: List[str] = None) -> argparse.Namespace:
         """Parses command-line arguments into Namespace."""

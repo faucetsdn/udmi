@@ -9,6 +9,13 @@ pipeline:
   max_loops: 25
   max_revisions: 1
   concurrency: 3
+  enable_condensation: false
+  enable_history_compaction: true
+  skills:
+    - "../skills"
+  # Declare custom python files containing tool functions to register in the ToolBelt
+  tools: []
+  cache_path: "../../../../../out/mantis/diagnose/semantic_cache.json"
 
 stages:
   timeline:
@@ -93,12 +100,11 @@ stages:
 
   critique:
     enabled: true
-    model: pro_model
+    type: critique
+    target_stage: analysis
     system_instruction: |
       You are a Senior Compliance Peer Reviewer. Verify that:
       1. The Auditor's analysis does NOT suggest or contain any codebase patches, Java/Python code diffs, or reference internal code modifications (since this is a black-box hardware triage).
       2. The report has a clear distinction between OEM Telemetry Schema issues and MSI Network/Deployment issues.
       3. If the Auditor leaked any codebase git diffs or referenced internal source methods, output 'STATUS: REJECTED' and demand the removal of all white-box references.
       4. If compliant, output exactly: 'STATUS: APPROVED'
-    headers: []
-    tools: []

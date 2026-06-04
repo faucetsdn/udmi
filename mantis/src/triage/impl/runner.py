@@ -11,7 +11,6 @@ from triage.impl.resolver import UDMILogResolver, UDMIResultParser
 from triage.impl.reporter import UDMITriageReporter
 from triage.impl.agent import run_triage_analysis_async
 from triage.harness.context import parse_timestamp, slice_log_by_timebounds, merge_and_sort_logs, LogCondensationRule
-from triage.harness.ui import print_mantis_banner
 
 UDMI_CONDENSE_PATTERNS = [
     LogCondensationRule(
@@ -231,7 +230,8 @@ class UDMITriageRunner:
         target: str,
         site_id: str,
         clean_target: str,
-        force: bool = False
+        force: bool = False,
+        oem: bool = False
     ) -> dict:
         """Coordinating task to analyze a single test case failure in parallel."""
         test_id = f['test_name']
@@ -381,7 +381,7 @@ class UDMITriageRunner:
 
         analysis_text = ""
         try:
-            analysis_text = await run_triage_analysis_async(prompt_payload, semaphore, out_dir=self.out_dir, force=force)
+            analysis_text = await run_triage_analysis_async(prompt_payload, semaphore, out_dir=self.out_dir, force=force, oem=oem)
         except Exception as e:
             analysis_text = f"⚠️ Error executing Gemini AI diagnostics for {test_id}: {e}"
 
@@ -416,8 +416,6 @@ class UDMITriageRunner:
 
     async def run_triage(self, args: Any) -> None:
         """Orchestrates the parallel multi-job async diagnostics run."""
-        print_mantis_banner()
-
         # Determine active output directory dynamically
         if getattr(args, 'manifest', None):
             self.out_dir = os.path.dirname(os.path.abspath(args.manifest))
@@ -656,7 +654,8 @@ class UDMITriageRunner:
                     target=target,
                     site_id=site_id,
                     clean_target=clean_target,
-                    force=getattr(args, "force", False)
+                    force=getattr(args, "force", False),
+                    oem=getattr(args, "oem", False)
                 )
             )
 

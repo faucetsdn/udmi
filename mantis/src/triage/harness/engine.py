@@ -42,7 +42,9 @@ class AsyncTriageEngine:
         concurrency_semaphore: asyncio.Semaphore = None,
         max_loops: int = 15,
         base_wait_seconds: float = 4.0,
-        max_retries: int = 5
+        max_retries: int = 5,
+        enable_condensation: bool = True,
+        enable_history_compaction: bool = True
     ):
         self.client = client
         self.model_name = model_name
@@ -50,24 +52,26 @@ class AsyncTriageEngine:
         self.max_loops = max_loops
         self.base_wait_seconds = base_wait_seconds
         self.max_retries = max_retries
+        self.enable_condensation = enable_condensation
+        self.enable_history_compaction = enable_history_compaction
 
     async def _condense_tool_result(self, name: str, result: str) -> str:
         """Strategy 1: Structurally truncates and dynamically condenses large tool outputs via Gemini 2.5 Flash Lite."""
-        if len(result) <= 25000:
+        if not self.enable_condensation or len(result) <= 25000:
             return result
 
         print(color_text(f" └─ [Guardrail]: Condensing large output from tool '{name}' ({len(result)} characters)...", BLUE))
 
-        # 1. First, perform quick structural truncation if extremely large
-        lines = result.splitlines()
-        if len(lines) > 120:
-            truncated = "\n".join(lines[:50]) + \
-                        f"\n\n... [ {len(lines) - 100} lines of output structurally truncated by Mantis Engine to conserve tokens ] ...\n\n" + \
-                        "\n".join(lines[-50:])
-        else:
-            truncated = result
+        # [REMOVED/DISABLED] Structural truncation strategy:
+        # lines = result.splitlines()
+        # if len(lines) > 120:
+        #     truncated = "\n".join(lines[:50]) + \
+        #                 f"\n\n... [ {len(lines) - 100} lines of output structurally truncated by Mantis Engine to conserve tokens ] ...\n\n" + \
+        #                 "\n".join(lines[-50:])
+        # else:
+        #     truncated = result
 
-        # 2. Use super-cheap Gemini 2.5 Flash Lite to distill/summarize
+        # 1. Use super-cheap Gemini 2.5 Flash Lite to distill/summarize
         try:
             summary_prompt = (
                 f"You are a Triage Tool Output Condenser. The following is the raw output from executing the tool '{name}'. "
@@ -75,7 +79,7 @@ class AsyncTriageEngine:
                 f"method signatures, variable declarations, or failing log tracks relevant to diagnosing the system failure. "
                 f"Discard all imports, boilerplate, normal success pathways, or redundant data. "
                 f"Keep your output extremely dense, concise, and strictly technical. Omit all introductory/concluding filler.\n\n"
-                f"Raw Tool Output:\n{truncated}"
+                f"Raw Tool Output:\n{result}"
             )
             # Using standard flash-lite for safe, cheap, high-speed token distillation
             response = await self.client.aio.models.generate_content(
@@ -90,7 +94,7 @@ class AsyncTriageEngine:
         except Exception as e:
             print(f"Warning: Failed LLM-driven tool output condensation: {e}")
 
-        return truncated
+        return result
 
     async def _compact_history_if_bloated(self, history: List[Any]) -> None:
         """Strategy 2: Compacts active history to compile a Consolidated Progress Checkpoint and reset token context."""
@@ -271,12 +275,12 @@ class AsyncTriageEngine:
             history.append(types.Content(role="user", parts=tool_parts))
             loop_count += 1
 
-            if loop_count > 0 and loop_count % 5 == 0:
+            if self.enable_history_compaction and loop_count > 0 and loop_count % 5 == 0:
                 await self._compact_history_if_bloated(history)
 
             use_vertex = os.getenv("MANTIS_USE_VERTEXAI", "").lower() in ("true", "1", "yes")
-            pacing_delay = 0.5 if use_vertex else 3.0
-            await asyncio.sleep(pacing_delay)
+            if not use_vertex:
+                await asyncio.sleep(3.0)
 
         clean_break = False
         if response and not response.function_calls:

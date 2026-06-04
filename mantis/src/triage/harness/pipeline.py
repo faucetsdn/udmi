@@ -3,10 +3,7 @@ import os
 import re
 import sys
 from pathlib import Path
-from typing import Callable
-from typing import Dict
-from typing import List
-from typing import Optional
+from typing import Callable, Dict, List, Optional, Any, Type
 
 from agentskills_core import SkillRegistry
 from agentskills_fs import LocalFileSystemSkillProvider
@@ -15,7 +12,8 @@ from google.genai import types
 
 from .engine import AsyncTriageEngine, _get_response_text
 from .config.playbook import Playbook
-from .ui import print_green, print_magenta, color_text, GREEN
+from .config.cache import SemanticCache
+from .ui import print_green, print_magenta, color_text, GREEN, YELLOW, print_mantis_banner
 
 
 class TriagePipeline:
@@ -31,107 +29,46 @@ class TriagePipeline:
         client: genai.Client,
         engine: AsyncTriageEngine = None,
         skills_dir: Optional[Path] = None,
+        skills_dirs: Optional[List[Path]] = None,
+        custom_skills: Optional[List[Dict[str, str]]] = None,
         default_model: str = "gemini-3.1-pro-preview",
         concurrency_semaphore: Optional[asyncio.Semaphore] = None,
         playbook: Optional[Playbook] = None,
-
-        # Optional prompt & system instruction overrides
-        timeline_sys_inst: Optional[str] = None,
-        intent_sys_inst: Optional[str] = None,
-        defect_sys_inst: Optional[str] = None,
-        critic_sys_inst: Optional[str] = None,
-
-        timeline_headers: Optional[List[str]] = None,
-        intent_headers: Optional[List[str]] = None,
-        defect_headers: Optional[List[str]] = None,
         reference_run_marker: str = "## Reference Successful Run Details"
     ):
         self.client = client
-        self.playbook = playbook
         self.default_model = default_model
+
+        if not playbook:
+            from .config.playbook import Playbook
+            playbook = Playbook.load_default()
+        self.playbook = playbook
 
         # Extract from playbook if provided
         max_loops = 15
+        enable_condensation = True
+        enable_history_compaction = True
         if playbook:
             self.default_model = playbook.pipeline_config.get("default_model", default_model)
             max_loops = playbook.pipeline_config.get("max_loops", 15)
-
-            # Load stage configs from playbook if present
-            t_cfg = playbook.get_stage_config("timeline")
-            if t_cfg and t_cfg.enabled:
-                timeline_sys_inst = t_cfg.system_instruction or timeline_sys_inst
-                timeline_headers = t_cfg.headers or timeline_headers
-
-            i_cfg = playbook.get_stage_config("intent")
-            if i_cfg and i_cfg.enabled:
-                intent_sys_inst = i_cfg.system_instruction or intent_sys_inst
-                intent_headers = i_cfg.headers or intent_headers
-
-            a_cfg = playbook.get_stage_config("analysis")
-            if a_cfg and a_cfg.enabled:
-                defect_sys_inst = a_cfg.system_instruction or defect_sys_inst
-                defect_headers = a_cfg.headers or defect_headers
-
-            c_cfg = playbook.get_stage_config("critique")
-            if c_cfg and c_cfg.enabled:
-                critic_sys_inst = c_cfg.system_instruction or critic_sys_inst
+            enable_condensation = playbook.pipeline_config.get("enable_condensation", True)
+            enable_history_compaction = playbook.pipeline_config.get("enable_history_compaction", True)
 
         self.engine = engine or AsyncTriageEngine(
             client=client,
             model_name=self.default_model,
             concurrency_semaphore=concurrency_semaphore,
-            max_loops=max_loops
+            max_loops=max_loops,
+            enable_condensation=enable_condensation,
+            enable_history_compaction=enable_history_compaction
         )
-        self.skills_dir = skills_dir
+        if skills_dir:
+            self.skills_dirs = [skills_dir]
+        else:
+            self.skills_dirs = skills_dirs or []
+        self.custom_skills = custom_skills or []
         self.skills_catalog = ""
 
-        # Setup standard generic defaults for the instructions and headers
-        self.timeline_sys_inst = timeline_sys_inst or (
-            "You are a Systems Log Timeline Harvester. Construct a complete, exhaustive chronological timeline of events "
-            "from the provided logs. Output ONLY the markdown header '## 1. Detailed Timeline of Events' followed by a chronological table."
-        )
-        self.timeline_headers = timeline_headers or [
-            "## 1. Detailed Timeline of Events"]
-
-        self.intent_sys_inst = intent_sys_inst or (
-            "You are a System Design Intent Harvester. Your goal is to locate and summarize the expected behavior, static specifications, "
-            "or intent of the operation being triaged. Output using the structured format headers provided."
-        )
-        self.intent_headers = intent_headers or [
-            "## 1. Reference Specifications",
-            "## 2. Expected Flow / Baseline Behavior",
-            "## 3. Assertions & Timeouts"
-        ]
-
-        self.defect_sys_inst = defect_sys_inst or (
-            "You are a Senior Systems Triage Analyst and expert debugger.\n\n"
-            "Guidelines:\n"
-            "1. MERGE CONTEXT: Map system component behavior in your head based on the timeline and your codebase/configurations research.\n"
-            "2. DEEP CODEBASE TRACING: Use your codebase tools to search and read relevant source files or configurations to identify the root cause. Surface-level guesses are unacceptable.\n"
-            "3. ZOOM IN: Use log window tools to inspect raw log streams during critical transition states.\n"
-            "4. PROPOSE FIXES: Propose a concrete solution, system correction, or code modification as a unified diff block.\n\n"
-            "REQUIRED OUTPUT FORMAT:\n"
-            "# Systems Triage Analysis Report: <Analysis Target>\n\n"
-            "## 1. Executive Defect Summary\n> [Single line summary]\n[Detailed summary]\n\n"
-            "## 2. Component Assessment\n- [Briefly list each component and its operational status (Pass/Fail)]\n\n"
-            "## 3. Detailed Timeline of Events\n[Insert timeline of relevant events]\n\n"
-            "## 4. Root Cause Analysis\n[Insert root cause analysis]\n\n"
-            "## 5. Proposed Code Fix\n[Optional - Insert this section only if applicable]"
-        )
-        self.defect_headers = defect_headers or [
-            "## 1. Executive Defect Summary",
-            "## 2. Component Assessment",
-            "## 3. Detailed Timeline of Events",
-            "## 4. Root Cause Analysis"
-        ]
-
-        self.critic_sys_inst = critic_sys_inst or (
-            "You are a Peer Critique Reviewer. Your job is to peer-review the proposed Root Cause Analysis (RCA) drafted by the Analyst.\n"
-            "Compare the 'Draft Analysis' against the 'Timeline' and 'Design Intent'.\n"
-            "Look for logical fallacies, premature conclusions, ignoring timestamp anomalies, or incorrect assertions.\n\n"
-            "If the draft is logically sound and supported by evidence, output exactly: 'STATUS: APPROVED'\n"
-            "If the draft has flaws, output 'STATUS: REJECTED' followed by a detailed peer critique explaining what was missed."
-        )
         self.reference_run_marker = reference_run_marker
         self.executed_tool_signatures = set()
         self.context = {}
@@ -163,304 +100,113 @@ class TriagePipeline:
         # Default to self.default_model fallback
         return self.default_model
 
+    def register_custom_skill(self, name: str, content: str):
+        """Allows programmatic injection of a custom prompt guideline skill at runtime."""
+        if not self.custom_skills:
+            self.custom_skills = []
+        self.custom_skills.append({"name": name, "content": content})
+
     async def initialize_skills(self) -> str:
-        """Registers and compiles skills from the skills directory if present."""
-        if not self.skills_dir or not self.skills_dir.exists():
-            self.skills_catalog = ""
-            return ""
+        """Registers and compiles skills from configured directories and programmatic injections."""
+        registry = SkillRegistry()
+        skills_batch = []
 
-        try:
-            provider = LocalFileSystemSkillProvider(self.skills_dir)
-            registry = SkillRegistry()
+        # Resolve skills_dirs from constructor and Playbook configuration
+        all_skills_dirs = list(self.skills_dirs or [])
+        if self.playbook:
+            playbook_dirs = self.playbook.pipeline_config.get("skills", [])
+            playbook_parent = self.playbook.filepath.parent if (self.playbook and self.playbook.filepath) else None
+            for pdir in playbook_dirs:
+                p = Path(pdir)
+                if not p.is_absolute() and playbook_parent:
+                    p = (playbook_parent / p).resolve()
+                all_skills_dirs.append(p)
 
-            skills_batch = []
-            for skill_folder in sorted(os.listdir(self.skills_dir)):
-                skill_path = self.skills_dir / skill_folder / "SKILL.md"
-                if skill_path.is_file():
-                    skills_batch.append((skill_folder, provider))
+        for sdir in all_skills_dirs:
+            if not sdir.exists():
+                continue
+            try:
+                provider = LocalFileSystemSkillProvider(sdir)
+                for skill_folder in sorted(os.listdir(sdir)):
+                    skill_path = sdir / skill_folder / "SKILL.md"
+                    if skill_path.is_file():
+                        skills_batch.append((skill_folder, provider))
+            except Exception as e:
+                print(f"Warning: Failed to scan skills directory {sdir}: {e}", file=sys.stderr)
 
-            if skills_batch:
+        self.skills_catalog = ""
+        if skills_batch:
+            try:
                 await registry.register(skills_batch)
                 self.skills_catalog = await registry.get_skills_catalog()
-            else:
-                self.skills_catalog = ""
-        except Exception as e:
-            print(f"Warning: Failed to initialize skills registry: {e}",
-                  file=sys.stderr)
-            self.skills_catalog = ""
+            except Exception as e:
+                print(f"Warning: Failed to compile skills folders: {e}", file=sys.stderr)
+
+        # Append programmatically registered custom skills
+        if self.custom_skills:
+            catalog_parts = [self.skills_catalog] if self.skills_catalog else []
+            for skill in self.custom_skills:
+                name = skill.get("name")
+                content = skill.get("content")
+                if name and content:
+                    catalog_parts.append(f"\n### Skill: {name}\n{content.strip()}")
+            self.skills_catalog = "\n".join(catalog_parts).strip()
 
         return self.skills_catalog
 
     def get_skills_context_string(self) -> str:
         """Loads raw text of SKILL.md files for context matching."""
-        if not self.skills_dir or not self.skills_dir.exists():
-            return ""
+        all_skills_dirs = list(self.skills_dirs or [])
+        if self.playbook:
+            playbook_dirs = self.playbook.pipeline_config.get("skills", [])
+            playbook_parent = self.playbook.filepath.parent if (self.playbook and self.playbook.filepath) else None
+            for pdir in playbook_dirs:
+                p = Path(pdir)
+                if not p.is_absolute() and playbook_parent:
+                    p = (playbook_parent / p).resolve()
+                all_skills_dirs.append(p)
 
         skills_content = []
-        skills_content.append(
-            "\n## Skill Library Context (Reference Guidelines)")
-        skills_content.append(
-            "Use the following guidelines and procedural instructions to shape your analysis strategy. You must follow them strictly:")
+        if all_skills_dirs or self.custom_skills:
+            skills_content.append(
+                "\n## Skill Library Context (Reference Guidelines)")
+            skills_content.append(
+                "Use the following guidelines and procedural instructions to shape your analysis strategy. You must follow them strictly:")
 
-        for skill_folder in sorted(os.listdir(self.skills_dir)):
-            skill_path = self.skills_dir / skill_folder / "SKILL.md"
-            if skill_path.is_file():
-                try:
-                    with open(skill_path, 'r', encoding='utf-8') as f:
-                        content = f.read()
-                        content_clean = re.sub(r'^---.*?---', '', content,
-                                               flags=re.DOTALL).strip()
-                        skills_content.append(
-                            f"\n### Skill: {skill_folder}\n{content_clean}")
-                except Exception as e:
-                    print(
-                        f"Warning: Failed to read skill file at {skill_path}: {e}",
-                        file=sys.stderr)
+        for sdir in all_skills_dirs:
+            if not sdir.exists():
+                continue
+            for skill_folder in sorted(os.listdir(sdir)):
+                skill_path = sdir / skill_folder / "SKILL.md"
+                if skill_path.is_file():
+                    try:
+                        with open(skill_path, 'r', encoding='utf-8') as f:
+                            content = f.read()
+                            content_clean = re.sub(r'^---.*?---', '', content,
+                                                   flags=re.DOTALL).strip()
+                            skills_content.append(
+                                f"\n### Skill: {skill_folder}\n{content_clean}")
+                    except Exception as e:
+                        print(
+                            f"Warning: Failed to read skill file at {skill_path}: {e}",
+                            file=sys.stderr)
+
+        for skill in self.custom_skills:
+            name = skill.get("name")
+            content = skill.get("content")
+            if name and content:
+                content_clean = re.sub(r'^---.*?---', '', content, flags=re.DOTALL).strip()
+                skills_content.append(f"\n### Skill: {name}\n{content_clean}")
 
         return "\n".join(skills_content)
-
-    def build_timeline_deterministically(self, prompt_payload: str) -> Optional[str]:
-        """Subclasses can override this to build the timeline deterministically from logs without calling GenAI."""
-        return None
-
-    def harvest_intent_deterministically(self, target_id: str, prompt_payload: str) -> Optional[str]:
-        """Subclasses can override this to harvest static context/specifications deterministically without calling GenAI."""
-        return None
-
-    async def run_timeline_generation(self, prompt_payload: str,
-        tools_map: Dict[str, Callable]) -> str:
-        """PHASE 1: Constructs the objective chronological event timeline."""
-        print()
-        print_green("--- Generating Chronological Event Timeline ---", bold=True)
-
-        # Strip successful details to avoid bias in phase 1
-        clean_payload = prompt_payload
-        if self.reference_run_marker and self.reference_run_marker in prompt_payload:
-            clean_payload = prompt_payload.split(self.reference_run_marker)[0]
-        history = [types.Content(role="user", parts=[types.Part.from_text(
-            text=clean_payload + "\n\n" + self.skills_catalog
-        )])]
-
-        active_model = self._resolve_model_for_stage("timeline")
-        return await self.engine.execute_loop(
-            self.timeline_sys_inst, history, tools_map, self.timeline_headers, model_name=active_model, executed_tool_signatures=self.executed_tool_signatures)
-
-    async def run_intent_harvesting(self, target_id: str, prompt_payload: str,
-        tools_map: Dict[str, Callable]) -> str:
-        """PHASE 1.5: Harvesting Static Test/Task Design Intent and Specifications."""
-        print()
-        print_green("--- Harvesting Static Intent & Specifications ---", bold=True)
-        history = [types.Content(role="user", parts=[types.Part.from_text(
-            text=f"## Context\n{prompt_payload}\n\nTarget: {target_id}"
-        )])]
-
-        active_model = self._resolve_model_for_stage("intent")
-        return await self.engine.execute_loop(
-            self.intent_sys_inst, history, tools_map, self.intent_headers, model_name=active_model, executed_tool_signatures=self.executed_tool_signatures)
-
-    def _strip_raw_logs_from_payload(self, payload: str) -> str:
-        """Strips massive raw log contents from the payload to conserve tokens for the defect analyst."""
-        clean_payload = payload
-        header = "## Chronologically Merged Global Logs (Test Execution Context)"
-        if header in clean_payload:
-            parts = clean_payload.split(header, 1)
-            before = parts[0]
-            after = parts[1]
-            if "## " in after:
-                after = "\n## " + after.split("## ", 1)[1]
-            else:
-                after = ""
-            clean_payload = before + after
-        return clean_payload.strip()
-
-    async def run_defect_analysis(
-        self,
-        prompt_payload: str,
-        timeline: str,
-        intent: str,
-        tools_map: Dict[str, Callable],
-        critique_feedback: str = None
-    ) -> str:
-        """PHASE 2: Performs root-cause differential analysis and codebase/config research."""
-        iteration = " (REVISION PASS)" if critique_feedback else ""
-        print()
-        print_green(f"--- Running System Root Cause Analysis{iteration} ---", bold=True)
-
-        clean_payload = self._strip_raw_logs_from_payload(prompt_payload)
-        payload = f"{clean_payload}\n\n## Intent\n{intent}\n\n## Timeline\n{timeline}\n\n## Skills\n{self.skills_catalog}"
-        if critique_feedback:
-            payload += f"\n\n## CRITIQUE FEEDBACK FROM INTERNAL PEER REVIEW\n{critique_feedback}\n\nYou MUST address these flaws in your revised investigation and final report."
-
-        history = [types.Content(role="user",
-                                 parts=[types.Part.from_text(text=payload)])]
-
-        active_model = self._resolve_model_for_stage("analysis")
-        return await self.engine.execute_loop(
-            self.defect_sys_inst, history, tools_map, self.defect_headers, model_name=active_model, executed_tool_signatures=self.executed_tool_signatures)
-
-    async def run_hypothesis_critique(self, timeline: str, intent: str,
-        draft_analysis: str) -> str:
-        """PHASE 3: A separate critic agent peer-reviews the proposed analysis for logical flaws."""
-        print()
-        print_magenta("--- Peer-Reviewing Hypothesis ---", bold=True)
-
-        payload = f"## Test Intent\n{intent}\n\n## Known Timeline\n{timeline}\n\n## Draft Analysis to Review\n{draft_analysis}"
-        history = [types.Content(role="user",
-                                 parts=[types.Part.from_text(text=payload)])]
-
-        config = types.GenerateContentConfig(temperature=0.2,
-                                             system_instruction=self.critic_sys_inst)
-
-        response = await self.client.aio.models.generate_content(
-            model=self.engine.model_name,
-            contents=history,
-            config=config
-        )
-
-        verdict = _get_response_text(response) or "STATUS: APPROVED"
-        if "APPROVED" in verdict:
-            print_magenta("Critique Passed: The analysis is mathematically sound.")
-        else:
-            print_magenta("Critique Failed: Flaws detected. Returning to Analyst.")
-            print(verdict)
-
-        return verdict
-
-    async def run_pipeline_async(
-        self,
-        target_id: str,
-        prompt_payload: str,
-        phase1_tools: Optional[Dict[str, Callable]] = None,
-        phase1_5_tools: Optional[Dict[str, Callable]] = None,
-        phase2_tools: Optional[Dict[str, Callable]] = None,
-        out_dir: Optional[str] = None,
-        available_tools: Optional[Dict[str, Callable]] = None
-    ) -> str:
-        """
-        Orchestrates the complete multi-phase async triage flow, returning the final report text.
-        Supports sequential and dynamic playbook execution.
-        """
-        await self.initialize_skills()
-        skills_context = self.get_skills_context_string()
-        full_prompt_payload = prompt_payload + "\n" + skills_context
-
-        # Dynamic tool resolution from playbook
-        if self.playbook and available_tools:
-            phase1_tools = self.playbook.resolve_tools("timeline", available_tools)
-            phase1_5_tools = self.playbook.resolve_tools("intent", available_tools)
-            phase2_tools = self.playbook.resolve_tools("analysis", available_tools)
-        else:
-            phase1_tools = phase1_tools or {}
-            phase1_5_tools = phase1_5_tools or {}
-            phase2_tools = phase2_tools or {}
-
-        # Dynamic stage switches
-        timeline_enabled = self.playbook.is_stage_enabled("timeline") if self.playbook else True
-        intent_enabled = self.playbook.is_stage_enabled("intent") if self.playbook else True
-        critique_enabled = self.playbook.is_stage_enabled("critique") if self.playbook else True
-
-        # Step 1 & 2: Timeline and Intent Harvesting concurrently (Parallelized)
-        timeline_content = ""
-        intent_content = ""
-        timeline_task = None
-        intent_task = None
-
-        if timeline_enabled:
-            if out_dir and (Path(out_dir) / "raw_timeline.md").exists():
-                timeline_path = Path(out_dir) / "raw_timeline.md"
-                print("⚡ " + color_text(f"[Cache Hit] Loaded cached timeline from: {timeline_path}", GREEN, bold=True))
-                with open(timeline_path, 'r', encoding='utf-8') as f:
-                    timeline_content = f.read()
-
-            if not timeline_content:
-                async def get_timeline():
-                    content = self.build_timeline_deterministically(full_prompt_payload)
-                    if content:
-                        print("⚡ [Deterministic Hybrid] Built timeline from logs.")
-                        return content
-                    return await self.run_timeline_generation(full_prompt_payload, phase1_tools)
-                timeline_task = get_timeline()
-        else:
-            print("Stage 'timeline' is disabled in the playbook. Skipping timeline generation.")
-
-        if intent_enabled and target_id:
-            if out_dir and (Path(out_dir) / "test_intent.md").exists():
-                intent_path = Path(out_dir) / "test_intent.md"
-                print("⚡ " + color_text(f"[Cache Hit] Loaded cached test intent from: {intent_path}", GREEN, bold=True))
-                with open(intent_path, 'r', encoding='utf-8') as f:
-                    intent_content = f.read()
-
-            if not intent_content:
-                async def get_intent():
-                    content = self.harvest_intent_deterministically(target_id, full_prompt_payload)
-                    if content:
-                        print("⚡ [Deterministic Hybrid] Harvested test context and golden baselines.")
-                        return content
-                    return await self.run_intent_harvesting(target_id, full_prompt_payload, phase1_5_tools)
-                intent_task = get_intent()
-        else:
-            if not intent_enabled:
-                print("Stage 'intent' is disabled in the playbook. Skipping intent harvesting.")
-
-        # Execute tasks concurrently if they are defined
-        tasks = []
-        task_indices = {}
-        if timeline_task is not None:
-            task_indices["timeline"] = len(tasks)
-            tasks.append(timeline_task)
-        if intent_task is not None:
-            task_indices["intent"] = len(tasks)
-            tasks.append(intent_task)
-
-        if tasks:
-            print(f"⚡ [Parallel Triage] Spawning {len(tasks)} independent diagnostic tracks concurrently...")
-            results = await asyncio.gather(*tasks)
-            if "timeline" in task_indices:
-                timeline_content = results[task_indices["timeline"]]
-                if out_dir and timeline_content:
-                    os.makedirs(out_dir, exist_ok=True)
-                    with open(Path(out_dir) / "raw_timeline.md", 'w', encoding='utf-8') as f:
-                        f.write(timeline_content)
-            if "intent" in task_indices:
-                intent_content = results[task_indices["intent"]]
-                if out_dir and intent_content:
-                    os.makedirs(out_dir, exist_ok=True)
-                    with open(Path(out_dir) / "test_intent.md", 'w', encoding='utf-8') as f:
-                        f.write(intent_content)
-
-        # Step 3 & 4: Analysis with Critique Loop
-        draft_analysis = await self.run_defect_analysis(full_prompt_payload,
-                                                        timeline_content,
-                                                        intent_content,
-                                                        phase2_tools)
-        
-        if critique_enabled:
-            max_revisions = self.playbook.pipeline_config.get("max_revisions", 1) if self.playbook else 1
-            for rev_pass in range(1, max_revisions + 1):
-                critique = await self.run_hypothesis_critique(timeline_content,
-                                                              intent_content,
-                                                              draft_analysis)
-                if "APPROVED" in critique:
-                    break
-                
-                print(f"🔄 Critique Rejected. Initiating revision pass {rev_pass}/{max_revisions}...")
-                draft_analysis = await self.run_defect_analysis(
-                    full_prompt_payload,
-                    timeline_content,
-                    intent_content,
-                    phase2_tools,
-                    critique_feedback=critique
-                )
-        else:
-            print("Stage 'critique' is disabled in the playbook. Skipping critique loop.")
-
-        return draft_analysis
 
     async def run_generic_stage_async(
         self,
         stage_name: str,
         prompt_payload: str,
-        available_tools: Dict[str, Callable]
+        available_tools: Dict[str, Callable],
+        out_dir: Optional[str] = None,
+        force_cache_bypass: bool = False
     ) -> str:
         """Executes a single generic, dynamic stage configured from the Playbook."""
         stage_cfg = self.playbook.get_stage_config(stage_name) if self.playbook else None
@@ -468,6 +214,47 @@ class TriagePipeline:
             print(f"Stage '{stage_name}' is disabled or not configured in the playbook. Skipping.")
             return ""
 
+        # 1. Check for cached stage results in out_dir
+        if out_dir and not force_cache_bypass:
+            stage_filepath = Path(out_dir) / f"stage_{stage_name}.md"
+            legacy_map = {
+                "timeline": "raw_timeline.md",
+                "intent": "raw_test_intent.md"
+            }
+            target_file = stage_filepath
+            if stage_name in legacy_map:
+                legacy_file = Path(out_dir) / legacy_map[stage_name]
+                if legacy_file.exists():
+                    target_file = legacy_file
+
+            if target_file.exists():
+                print("⚡ " + color_text(f"[Cache Hit] Loaded cached {stage_name} from: {target_file}", GREEN, bold=True))
+                with open(target_file, 'r', encoding='utf-8') as f:
+                    content = f.read()
+                    self.context[stage_name] = content
+                    return content
+
+        # 2. Check for deterministic implementation hook
+        det_helper = getattr(self, f"run_{stage_name}_deterministically", None)
+        if det_helper:
+            try:
+                import inspect
+                sig = inspect.signature(det_helper)
+                kwargs = {}
+                if "prompt_payload" in sig.parameters:
+                    kwargs["prompt_payload"] = prompt_payload
+                if "target_id" in sig.parameters:
+                    kwargs["target_id"] = self.context.get("target_id")
+
+                det_result = det_helper(**kwargs)
+                if det_result:
+                    print("⚡ " + color_text(f"[Deterministic Hybrid] Built {stage_name} using deterministic helper.", GREEN, bold=True))
+                    self.context[stage_name] = det_result
+                    return det_result
+            except Exception as e:
+                print(f"Warning: Deterministic helper for '{stage_name}' failed: {e}", file=sys.stderr)
+
+        # 3. Fallback to GenAI stage execution
         print()
         print_green(f"--- Running Playbook Stage: {stage_name.capitalize()} ---", bold=True)
 
@@ -514,12 +301,52 @@ class TriagePipeline:
         target_id: str,
         prompt_payload: str,
         available_tools: Dict[str, Callable],
-        out_dir: Optional[str] = None
+        out_dir: Optional[str] = None,
+        cache_query: Optional[str] = None,
+        force_cache_bypass: bool = False,
+        metadata: Optional[Dict[str, Any]] = None
     ) -> str:
         """
         Dynamically executes all enabled stages defined in the Playbook in sequential order.
         Passes accumulated context between stages automatically.
         """
+        # Check semantic cache first if query is provided
+        cache = None
+        cache_filepath = None
+        if self.playbook and cache_query:
+            cpath = self.playbook.pipeline_config.get("cache_path")
+            if cpath:
+                cache_filepath = Path(cpath)
+                if not cache_filepath.is_absolute() and self.playbook.filepath:
+                    cache_filepath = (self.playbook.filepath.parent / cache_filepath).resolve()
+
+        if cache_filepath and cache_query:
+            try:
+                use_vertex = os.getenv("MANTIS_USE_VERTEXAI", "").lower() in ("true", "1", "yes")
+                embed_model = "text-embedding-004" if use_vertex else "models/gemini-embedding-2"
+                cache = SemanticCache(self.client, cache_filepath, embedding_model=embed_model)
+                await cache.load_async()
+
+                if not force_cache_bypass:
+                    print(f"[{target_id}] Querying semantic cache...")
+                    cached_entry, score = await cache.lookup(cache_query)
+                    if cached_entry:
+                        print("🚀 " + color_text(f"[Cache Hit] Found highly similar failure! (similarity: {score:.3f})", GREEN, bold=True))
+                        print("🚀 Delivering zero-shot triage report in milliseconds...")
+                        triage_report = cached_entry["triage_report"]
+                        if out_dir:
+                            os.makedirs(out_dir, exist_ok=True)
+                            report_filepath = os.path.join(out_dir, "triage_analysis.md")
+                            with open(report_filepath, 'w', encoding='utf-8') as fr:
+                                fr.write(triage_report)
+                        return triage_report
+                    else:
+                        print(f"[{target_id}] Cache miss (best similarity score: {score:.3f}). Running GenAI pipeline...")
+                else:
+                    print(f"[{target_id}] Cache bypass requested via --force flag. Skipping cache lookup.")
+            except Exception as e:
+                print(f"Warning: Semantic cache lookup failed: {e}", file=sys.stderr)
+
         await self.initialize_skills()
         skills_context = self.get_skills_context_string()
         full_payload = prompt_payload + "\n" + skills_context
@@ -529,15 +356,15 @@ class TriagePipeline:
         self.context["payload"] = prompt_payload
 
         last_result = ""
-        
-        if not self.playbook or not self.playbook.stages:
-            # Fallback to standard pipeline if no playbook or stages configured
-            return await self.run_pipeline_async(
-                target_id=target_id,
-                prompt_payload=prompt_payload,
-                available_tools=available_tools,
-                out_dir=out_dir
-            )
+
+        # Non-blocking lint check for critique stage presence
+        has_critique_stage = False
+        for name, stage_cfg in self.playbook.stages.items():
+            if stage_cfg.enabled and (stage_cfg.type == "critique" or name == "critique"):
+                has_critique_stage = True
+                break
+        if not has_critique_stage:
+            print("\n" + color_text("[Mantis Harness Warning]: Playbook is configured without a 'critique' stage. Skipping peer-review passes may lead to increased diagnostic hallucinations.", YELLOW, bold=True) + "\n")
 
         max_revisions = self.playbook.pipeline_config.get("max_revisions", 1) if self.playbook else 1
 
@@ -545,21 +372,26 @@ class TriagePipeline:
             if not stage_cfg.enabled:
                 continue
 
-            if stage_name == "critique":
+            is_critique = stage_cfg.type == "critique" or stage_name == "critique"
+
+            if is_critique:
+                target_stage = stage_cfg.target_stage or "analysis"
                 for rev_pass in range(1, max_revisions + 1):
                     critique_result = await self.run_generic_stage_async(
-                        stage_name="critique",
+                        stage_name=stage_name,
                         prompt_payload=full_payload,
-                        available_tools=available_tools
+                        available_tools=available_tools,
+                        out_dir=out_dir,
+                        force_cache_bypass=force_cache_bypass or (rev_pass > 1)
                     )
                     
                     if out_dir and critique_result:
                         os.makedirs(out_dir, exist_ok=True)
-                        stage_filepath = os.path.join(out_dir, f"stage_critique_pass_{rev_pass}.md")
+                        stage_filepath = os.path.join(out_dir, f"stage_{stage_name}_pass_{rev_pass}.md")
                         try:
                             with open(stage_filepath, "w", encoding="utf-8") as sf:
                                 sf.write(critique_result)
-                            with open(os.path.join(out_dir, "stage_critique.md"), "w", encoding="utf-8") as sf:
+                            with open(os.path.join(out_dir, f"stage_{stage_name}.md"), "w", encoding="utf-8") as sf:
                                 sf.write(critique_result)
                         except Exception as e:
                             print(f"Warning: Failed to save critique result: {e}")
@@ -577,17 +409,19 @@ class TriagePipeline:
                     self.context["critique_feedback"] = critique_result
 
                     revised_analysis = await self.run_generic_stage_async(
-                        stage_name="analysis",
+                        stage_name=target_stage,
                         prompt_payload=full_payload,
-                        available_tools=available_tools
+                        available_tools=available_tools,
+                        out_dir=out_dir,
+                        force_cache_bypass=True
                     )
                     
                     if out_dir and revised_analysis:
-                        stage_filepath = os.path.join(out_dir, f"stage_analysis_revised_{rev_pass}.md")
+                        stage_filepath = os.path.join(out_dir, f"stage_{target_stage}_revised_{rev_pass}.md")
                         try:
                             with open(stage_filepath, "w", encoding="utf-8") as sf:
                                 sf.write(revised_analysis)
-                            with open(os.path.join(out_dir, "stage_analysis.md"), "w", encoding="utf-8") as sf:
+                            with open(os.path.join(out_dir, f"stage_{target_stage}.md"), "w", encoding="utf-8") as sf:
                                 sf.write(revised_analysis)
                         except Exception as e:
                             print(f"Warning: Failed to save revised analysis: {e}")
@@ -597,11 +431,25 @@ class TriagePipeline:
                 last_result = await self.run_generic_stage_async(
                     stage_name=stage_name,
                     prompt_payload=full_payload,
-                    available_tools=available_tools
+                    available_tools=available_tools,
+                    out_dir=out_dir,
+                    force_cache_bypass=force_cache_bypass
                 )
                 
                 if out_dir and last_result:
                     os.makedirs(out_dir, exist_ok=True)
+                    # Also save legacy names for backward compatibility
+                    legacy_map = {
+                        "timeline": "raw_timeline.md",
+                        "intent": "raw_test_intent.md"
+                    }
+                    if stage_name in legacy_map:
+                        try:
+                            with open(os.path.join(out_dir, legacy_map[stage_name]), "w", encoding="utf-8") as sf:
+                                sf.write(last_result)
+                        except Exception:
+                            pass
+
                     stage_filepath = os.path.join(out_dir, f"stage_{stage_name}.md")
                     try:
                         with open(stage_filepath, "w", encoding="utf-8") as sf:
@@ -609,6 +457,123 @@ class TriagePipeline:
                     except Exception as e:
                         print(f"Warning: Failed to save stage result to {stage_filepath}: {e}")
 
-        if "analysis" in self.context:
-            return self.context["analysis"]
-        return last_result
+        # Returns analysis context if present (fallback), else last result
+        final_report = last_result
+        for name, stage_cfg in self.playbook.stages.items():
+            if stage_cfg.enabled and name == "analysis":
+                if "analysis" in self.context:
+                    final_report = self.context["analysis"]
+                    break
+            elif stage_cfg.enabled and stage_cfg.target_stage:
+                target = stage_cfg.target_stage
+                if target in self.context:
+                    final_report = self.context[target]
+                    break
+
+        if not final_report and "analysis" in self.context:
+            final_report = self.context["analysis"]
+
+        # Cache successful diagnostic
+        if cache and cache_query and "⚠️ INSUFFICIENT DATA TO TRACE ROOT CAUSE" not in final_report:
+            try:
+                print(f"[{target_id}] Caching successful triage analysis...")
+                await cache.add(
+                    failure_text=cache_query,
+                    triage_report=final_report,
+                    metadata=metadata or {}
+                )
+            except Exception as e:
+                print(f"Warning: Failed to save triage analysis to cache: {e}", file=sys.stderr)
+
+        return final_report
+
+
+async def run_triage_session_async(
+    prompt_payload: str,
+    target_id: str,
+    workspace_root: str,
+    playbook_path: Optional[Path] = None,
+    out_dir: Optional[str] = None,
+    cache_query: Optional[str] = None,
+    metadata: Optional[Dict[str, Any]] = None,
+    force: bool = False,
+    concurrency_semaphore: Optional[asyncio.Semaphore] = None,
+    pipeline_class: Type[TriagePipeline] = TriagePipeline,
+    
+    # ToolBelt config overrides
+    exclude_dirs: Optional[List[str]] = None,
+    include_files: Optional[List[str]] = None
+) -> str:
+    """Generic orchestrator to execute a dynamic diagnostic session with a playbook, tools, and GenAI client."""
+    print_mantis_banner()
+    use_vertex = os.getenv("MANTIS_USE_VERTEXAI", "").lower() in ("true", "1", "yes")
+    token = os.getenv("GEMINI_API_KEY")
+    if not token and not use_vertex:
+        print("Error: Neither GEMINI_API_KEY nor MANTIS_USE_VERTEXAI environment variables are set.", file=sys.stderr)
+        sys.exit(1)
+
+    if use_vertex:
+        project_id = os.getenv("GCP_PROJECT") or os.getenv("GCLOUD_PROJECT")
+        location = os.getenv("GCP_LOCATION", "global")
+        print(f"[Vertex AI] Initializing enterprise GenAI Client (project: {project_id or 'Auto-detect'}, location: {location})...")
+        client = genai.Client(vertexai=True, project=project_id, location=location)
+    else:
+        client = genai.Client()
+
+    # Load playbook
+    playbook = None
+    if playbook_path and Path(playbook_path).exists():
+        try:
+            playbook = Playbook(Path(playbook_path)).load()
+        except Exception as e:
+            print(f"Warning: Failed to load playbook from {playbook_path}: {e}", file=sys.stderr)
+
+    # Initialize the pipeline
+    pipeline = pipeline_class(
+        client=client,
+        concurrency_semaphore=concurrency_semaphore,
+        playbook=playbook
+    )
+
+    # Load ToolBelt to resolve tools
+    from .tools import ToolBelt
+    tool_belt = ToolBelt(
+        workspace_root=workspace_root,
+        exclude_dirs=exclude_dirs,
+        include_files=include_files
+    )
+    available_tools = tool_belt.get_tools_map()
+    
+    # Load custom tools from playbook
+    if playbook and playbook.pipeline_config:
+        custom_tools = playbook.pipeline_config.get("tools", [])
+        if custom_tools and playbook_path:
+            import importlib.util
+            import inspect
+            for tool_path_str in custom_tools:
+                tp_path = (Path(playbook_path).parent / tool_path_str).resolve()
+                if tp_path.exists():
+                    try:
+                        spec = importlib.util.spec_from_file_location(f"custom_tools_{tp_path.stem}", tp_path)
+                        custom_module = importlib.util.module_from_spec(spec)
+                        spec.loader.exec_module(custom_module)
+                        
+                        for name, func in inspect.getmembers(custom_module, inspect.isfunction):
+                            if not name.startswith("_"):
+                                available_tools[name] = func
+                        print(color_text(f"🔧 Loaded custom tools from {tp_path.name}", GREEN))
+                    except Exception as e:
+                        print(f"Warning: Failed to load custom tools from {tp_path}: {e}", file=sys.stderr)
+                else:
+                    print(f"Warning: Custom tool file not found: {tp_path}", file=sys.stderr)
+
+    # Run the dynamic pipeline
+    return await pipeline.run_dynamic_pipeline_async(
+        target_id=target_id,
+        prompt_payload=prompt_payload,
+        available_tools=available_tools,
+        out_dir=out_dir,
+        cache_query=cache_query,
+        force_cache_bypass=force,
+        metadata=metadata
+    )
