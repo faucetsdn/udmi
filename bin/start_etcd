@@ -1,28 +1,29 @@
 #!/bin/bash -e
 
 IMAGE=quay.io/coreos/etcd:v3.5.13
-BINDIR=""
-for path in \
-    "udmis/bin/etcd_bin" \
-    "bin/etcd_bin" \
-    "/root/bin/etcd_bin" \
-    "/root/udmi/bin/etcd_bin" \
-    "/tmp/etcd"; do
-    if [[ -f "$path/etcd" ]]; then
-        BINDIR="$path"
-        break
-    fi
-done
 
-if [[ -z $BINDIR ]]; then
-    BINDIR=/tmp/etcd
-fi
+function find_etcd {
+    for path in \
+        "udmis/bin/etcd_bin" \
+        "bin/etcd_bin" \
+        "/root/bin/etcd_bin" \
+        "/root/udmi/bin/etcd_bin" \
+        "/tmp/etcd"; do
+        if [[ -f "$path/etcd" ]]; then
+            echo "$path"
+            return 0
+        fi
+    done
+    return 1
+}
+
+BINDIR=$(find_etcd) || BINDIR=/tmp/etcd
 ETCD_LOG=out/etcd.log
 
 echo pwd: $(pwd)
 mkdir -p out
 
-old_pid=$(ps ax | fgrep $BINDIR/etcd | fgrep listen | awk '{print $1}') || true
+old_pid=$(ps ax | fgrep etcd | fgrep listen | awk '{print $1}') || true
 if [[ -n $old_pid ]]; then
     echo Killing existing etcd pid $old_pid...
     kill $old_pid
@@ -30,6 +31,7 @@ fi
 
 if [[ ! -f $BINDIR/etcd ]]; then
     udmis/bin/etcdctl version || ../bin/etcdctl version || $(dirname $0)/etcdctl version || true
+    BINDIR=$(find_etcd) || BINDIR=/tmp/etcd
 fi
 
 $BINDIR/etcd -version

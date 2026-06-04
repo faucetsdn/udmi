@@ -68,14 +68,10 @@ echo Starting mosquitto on server $project_target | tee -a $UDMIS_LOG
 bin/setup_ca $site_model $project_target
 bin/start_mosquitto
 
-$MOSQUITTO_CTRL deleteClient $SERV_USER
-$MOSQUITTO_CTRL createClient $SERV_USER -p $SERV_PASS # No client_id to allow multiple backend connections.
-$MOSQUITTO_CTRL addClientRole $SERV_USER service
-
-# Setup UUFI client security
-$MOSQUITTO_CTRL createClient rocket -p monkey || true
-$MOSQUITTO_CTRL addClientRole rocket uufi || true
-$MOSQUITTO_CTRL addClientRole rocket service || true
+$MOSQUITTO_CTRL deleteClient $SERV_USER || true
+$MOSQUITTO_CTRL createClient $SERV_USER -p $SERV_PASS || true # No client_id to allow multiple backend connections.
+$MOSQUITTO_CTRL addClientRole $SERV_USER service || true
+$MOSQUITTO_CTRL addClientRole $SERV_USER uufi || true
 
 # Setup device client security (for Pubber DUT)
 bin/mosquctl_device $site_model AHU-1
