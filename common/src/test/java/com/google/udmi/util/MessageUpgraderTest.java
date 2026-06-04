@@ -1,5 +1,6 @@
 package com.google.udmi.util;
 
+import static org.junit.Assert.assertEquals;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
@@ -36,9 +37,9 @@ public class MessageUpgraderTest {
     JsonNode upgraded = (JsonNode) upgrader.upgrade();
     
     JsonNode logentries = upgraded.get("logentries");
-    org.junit.Assert.assertEquals("localnet.network.disconnect", logentries.get(0).get("category").asText());
-    org.junit.Assert.assertEquals("localnet.network.connect", logentries.get(1).get("category").asText());
-    org.junit.Assert.assertEquals("system.auth.login", logentries.get(2).get("category").asText());
+    assertEquals("localnet.network.disconnect", logentries.get(0).get("category").asText());
+    assertEquals("localnet.network.connect", logentries.get(1).get("category").asText());
+    assertEquals("system.auth.login", logentries.get(2).get("category").asText());
   }
 
 }
