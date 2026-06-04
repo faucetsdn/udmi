@@ -16,15 +16,6 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
  * 
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
-@JsonPropertyOrder({
-    "code",
-    "type",
-    "cloud_device_id",
-    "connections",
-    "links",
-    "translation",
-    "missing_telemetry_fields"
-})
 public class MappingEventEntity {
 
     /**

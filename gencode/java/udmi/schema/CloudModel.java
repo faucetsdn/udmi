@@ -20,31 +20,6 @@ import com.fasterxml.jackson.annotation.JsonValue;
  * 
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
-@JsonPropertyOrder({
-    "timestamp",
-    "version",
-    "functions_ver",
-    "auth_type",
-    "device_key",
-    "resource_type",
-    "gateway",
-    "config",
-    "blocked",
-    "detail",
-    "password",
-    "credentials",
-    "updated_time",
-    "last_event_time",
-    "last_state_time",
-    "last_config_time",
-    "last_error_time",
-    "last_config_ack",
-    "num_id",
-    "operation",
-    "metadata",
-    "metadata_str",
-    "device_ids"
-})
 public class CloudModel {
 
     /**

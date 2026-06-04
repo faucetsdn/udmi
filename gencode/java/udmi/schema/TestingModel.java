@@ -14,11 +14,6 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
  * 
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
-@JsonPropertyOrder({
-    "nostate",
-    "targets",
-    "blob_update_targets"
-})
 public class TestingModel {
 
     @JsonProperty("nostate")

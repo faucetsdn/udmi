@@ -7,10 +7,6 @@ import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
-@JsonPropertyOrder({
-    "net_occupied_area",
-    "gross_internal_area"
-})
 public class Area {
 
     /**

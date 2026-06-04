@@ -113,7 +113,14 @@ outfiles=`find $site_path/out/devices -name \*.out | sort` || true
 [[ -n $outfiles ]] || fail No .out files found in $site_path/out/devices
 
 echo Pre-REDACTED output available in $VALIDATOR_OUT.raw
-more $outfiles > $VALIDATOR_OUT.raw
+rm -f $VALIDATOR_OUT.raw
+for outfile in $outfiles; do
+    echo "::::::::::::::" >> $VALIDATOR_OUT.raw
+    echo $outfile >> $VALIDATOR_OUT.raw
+    echo "::::::::::::::" >> $VALIDATOR_OUT.raw
+    jq -S . $outfile >> $VALIDATOR_OUT.raw
+done
+
 sed -E < $VALIDATOR_OUT.raw >> $VALIDATOR_OUT \
     -e 's/[0-9-]{10}T[0-9:.]+Z/REDACTED_TIMESTAMP/g' \
     -e 's/ [0-9]+s / REDACTED_DURATION /g' \

@@ -6,13 +6,6 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
-@JsonPropertyOrder({
-    "mem_total_mb",
-    "mem_free_mb",
-    "store_total_mb",
-    "store_free_mb",
-    "system_load"
-})
 public class Metrics {
 
     @JsonProperty("mem_total_mb")

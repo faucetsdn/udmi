@@ -15,16 +15,6 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
  * 
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
-@JsonPropertyOrder({
-    "include",
-    "base",
-    "flow_defaults",
-    "crons",
-    "flows",
-    "bridges",
-    "iot_access",
-    "iot_data"
-})
 public class PodConfiguration {
 
     @JsonProperty("include")

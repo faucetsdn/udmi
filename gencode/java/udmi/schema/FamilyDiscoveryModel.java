@@ -15,11 +15,6 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
  * 
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
-@JsonPropertyOrder({
-    "generation",
-    "scan_interval_sec",
-    "scan_duration_sec"
-})
 public class FamilyDiscoveryModel {
 
     /**

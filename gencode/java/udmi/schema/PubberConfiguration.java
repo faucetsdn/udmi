@@ -14,21 +14,6 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
  * 
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
-@JsonPropertyOrder({
-    "endpoint",
-    "iotProject",
-    "projectId",
-    "registryId",
-    "deviceId",
-    "gatewayId",
-    "sitePath",
-    "keyFile",
-    "algorithm",
-    "serialNo",
-    "macAddr",
-    "keyBytes",
-    "options"
-})
 public class PubberConfiguration {
 
     /**

@@ -12,10 +12,6 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
  * 
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
-@JsonPropertyOrder({
-    "target",
-    "family"
-})
 public class Parent {
 
     /**

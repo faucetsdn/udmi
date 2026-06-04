@@ -14,12 +14,6 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
  * 
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
-@JsonPropertyOrder({
-    "make",
-    "model",
-    "sku",
-    "rev"
-})
 public class StateSystemHardware {
 
     /**

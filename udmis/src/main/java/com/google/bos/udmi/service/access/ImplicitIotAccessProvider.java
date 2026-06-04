@@ -179,9 +179,15 @@ public class ImplicitIotAccessProvider extends IotAccessBase {
     return String.valueOf(Math.abs(Objects.hash(registryId, deviceId)));
   }
 
+  private Set<String> getDeviceIds(CloudModel cloudModel) {
+    return cloudModel.gateway != null && cloudModel.gateway.proxy_ids != null
+        ? ImmutableSet.copyOf(cloudModel.gateway.proxy_ids)
+        : ImmutableSet.of();
+  }
+
   private void bindDevicesToGateway(
       String registryId, String gatewayId, CloudModel cloudModel, Consumer<String> progress) {
-    Set<String> deviceIds = ImmutableSet.copyOf(cloudModel.gateway.proxy_ids);
+    Set<String> deviceIds = getDeviceIds(cloudModel);
     AtomicInteger count = new AtomicInteger();
     int total = deviceIds.size();
     List<CompletableFuture<Void>> futures = new ArrayList<>();
@@ -211,7 +217,7 @@ public class ImplicitIotAccessProvider extends IotAccessBase {
 
   private void unbindDevicesFromGateway(String registryId, String gatewayId,
       CloudModel cloudModel, Consumer<String> progress) {
-    Set<String> deviceIds = ImmutableSet.copyOf(cloudModel.gateway.proxy_ids);
+    Set<String> deviceIds = getDeviceIds(cloudModel);
     AtomicInteger count = new AtomicInteger();
     int total = deviceIds.size();
     List<CompletableFuture<Void>> futures = new ArrayList<>();

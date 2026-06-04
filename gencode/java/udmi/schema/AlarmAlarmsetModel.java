@@ -20,23 +20,6 @@ import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
  * 
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
-@JsonPropertyOrder({
-    "units",
-    "type",
-    "description",
-    "writable",
-    "baseline_value",
-    "baseline_tolerance",
-    "baseline_state",
-    "range_min",
-    "range_max",
-    "unchanged_limit_sec",
-    "cov_increment",
-    "ref",
-    "adjunct",
-    "tags",
-    "structure"
-})
 public class AlarmAlarmsetModel {
 
     /**

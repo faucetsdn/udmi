@@ -14,14 +14,6 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
  * 
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
-@JsonPropertyOrder({
-    "dashboard",
-    "docs",
-    "folder",
-    "image",
-    "repo",
-    "sheet"
-})
 public class SiteLinks {
 
     /**

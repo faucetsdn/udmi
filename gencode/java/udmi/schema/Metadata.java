@@ -17,26 +17,6 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
  * 
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
-@JsonPropertyOrder({
-    "timestamp",
-    "version",
-    "upgraded_from",
-    "hash",
-    "operation",
-    "cloud",
-    "system",
-    "externals",
-    "relationships",
-    "gateway",
-    "discovery",
-    "localnet",
-    "testing",
-    "features",
-    "alarmset",
-    "pointset",
-    "structure",
-    "policy"
-})
 public class Metadata {
 
     /**

@@ -15,19 +15,6 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
  * 
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
-@JsonPropertyOrder({
-    "hostname",
-    "functions_min",
-    "functions_max",
-    "udmi_version",
-    "udmi_commit",
-    "udmi_ref",
-    "udmi_timever",
-    "built_at",
-    "built_by",
-    "deployed_at",
-    "deployed_by"
-})
 public class SetupUdmiConfig {
 
     @JsonProperty("hostname")
