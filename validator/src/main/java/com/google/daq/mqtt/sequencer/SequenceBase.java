@@ -109,7 +109,6 @@ import java.io.PrintWriter;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.AbstractMap.SimpleEntry;
-import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
@@ -301,7 +300,8 @@ public class SequenceBase {
   private static MessagePublisher client;
   private static SequenceBase activeInstance;
   private static final int MESSAGE_QUEUE_SIZE = 32;
-  private static final Deque<MessageBundle> messageQueue = new ArrayDeque<>(MESSAGE_QUEUE_SIZE);
+  private static final Deque<MessageBundle> messageQueue = new LinkedBlockingDeque<>(
+      MESSAGE_QUEUE_SIZE);
   private static final ExecutorService executorService = Executors.newFixedThreadPool(4,
       runnable -> {
         Thread thread = Executors.defaultThreadFactory().newThread(runnable);
