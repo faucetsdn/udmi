@@ -13,6 +13,7 @@ dataclasses-json = "^0.6.7"
 psutil = "^7.1.3"
 requests = "^2.32.5"
 
+
 [build-system]
 requires = ["poetry-core>=2.0.0,<3.0.0"]
 build-backend = "poetry.core.masonry.api"
@@ -25,7 +26,6 @@ pylint = "^3.0.0"
 
 [tool.poetry]
 packages = [
-    { include = "udmi", from = "gencode/python" },
-    { include = "udmi", from = "clientlib/python/src" },
+    { include = "udmi", from = "src" },
 ]
 
