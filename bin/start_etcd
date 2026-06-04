@@ -6,6 +6,7 @@ function find_etcd {
     for path in \
         "udmis/bin/etcd_bin" \
         "bin/etcd_bin" \
+        "$(dirname $0)/etcd_bin" \
         "/root/bin/etcd_bin" \
         "/root/udmi/bin/etcd_bin" \
         "/tmp/etcd"; do
@@ -36,7 +37,7 @@ fi
 
 $BINDIR/etcd -version
 
-rm -rf var/etcd
+rm -rf var/etcd || true
 mkdir -p var/etcd
 
 nohup $BINDIR/etcd -listen-client-urls=http://0.0.0.0:2379 \
