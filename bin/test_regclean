@@ -180,6 +180,12 @@ echo Clean out the registry to make sure devices get removed...
 echo bin/registrar $site_args -d -x
 bin/registrar $site_args -d -x
 
+if [[ $iot_provider == "\"mqtt\"" ]]; then
+    echo "De-authorizing $device_id from mosquitto for clean test..."
+    source etc/mosquitto_ctrl.sh
+    $MOSQUITTO_CTRL deleteClient /r/$registry_prefix$registry_id$registry_suffix/d/$device_id || true
+fi
+
 echo Checking reported cloud version info
 jq .cloud_version.udmi_ref $output_file
 
