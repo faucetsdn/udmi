@@ -119,6 +119,7 @@ public class IotReflectorClient implements IotProvider {
   @Override
   public void updateRegistry(CloudModel registry) {
     registry.operation = ofNullable(registry.operation).orElse(ModelOperation.UPDATE);
+    registry.resource_type = CloudModel.Resource_type.REGISTRY;
     cloudModelTransaction(null, CLOUD_MODEL_TOPIC, registry);
   }
 

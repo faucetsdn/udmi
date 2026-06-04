@@ -48,10 +48,6 @@ LOGGER = logging.getLogger("CovSample")
 def simulate_fast_sensor(manager: PointsetManager):
     """
     Simulates a sensor reading that changes rapidly (every 1.0s).
-
-    Represents an independently running hardware thread or fast I/O loop. It blindly 
-    pushes raw data to the PointsetManager, illustrating that the manager itself takes 
-    on the responsibility of throttling and interpreting Change of Value (cov_increment).
     """
     val = 0.0
     LOGGER.info("Starting sensor simulation (1.0s interval)...")
