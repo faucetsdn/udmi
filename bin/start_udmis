@@ -24,7 +24,7 @@ bin/container udmis prep --no-check || true
 
 LOGFILE=out/udmis.log
 mkdir -p out
-date > $LOGFILE
+date >> $LOGFILE
 
 export ETCD_CLUSTER=127.0.0.1
 export SSL_SECRETS_DIR=/etc/mosquitto/certs
