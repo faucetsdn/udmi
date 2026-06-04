@@ -13,9 +13,15 @@ fi
 
 if [[ $# == 1 ]]; then
     site_config=$(realpath $1)
+    if [[ -d $site_config ]]; then
+        site_config=$site_config/cloud_iot_config.json
+    fi
     shift
 else
-    site_config=$(realpath $1)/cloud_iot_config.json
+    site_config=$(realpath $1)
+    if [[ -d $site_config ]]; then
+        site_config=$site_config/cloud_iot_config.json
+    fi
     project_spec=$2
     shift 2
 fi
