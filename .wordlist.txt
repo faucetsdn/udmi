@@ -124,6 +124,7 @@ LWT
 macos
 MacOS
 md
+middleware
 microservices
 Mod10k
 modbus
@@ -179,6 +180,7 @@ rtu
 RTU
 runDev
 runtime
+Sanitization
 schemas
 Schemas
 SDK
