@@ -211,7 +211,7 @@ public abstract class Common {
       String fullName = State.class.getPackageName() + "." + className;
       return Class.forName(fullName);
     } catch (Exception e) {
-      return null;
+      throw new IllegalStateException("Could not find class for " + schemaName);
     }
   }
 
