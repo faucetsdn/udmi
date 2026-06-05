@@ -231,8 +231,8 @@ public class MosquittoDynamicSecurityService implements MqttCallback {
       properties.setResponseTopic(RESPONSE_TOPIC);
       message.setProperties(properties);
 
-      log.debug("Publishing batch containing {} commands ({} bytes) to {}",
-          batch.size(), payload.length, CONTROL_TOPIC);
+      log.debug("Publishing batch containing {} commands ({} bytes) to {}: {}",
+          batch.size(), payload.length, CONTROL_TOPIC, new String(payload, StandardCharsets.UTF_8));
       mqttClient.publish(CONTROL_TOPIC, message);
     } catch (Exception e) {
       log.error("Failed to publish batch to Mosquitto broker", e);
@@ -283,6 +283,8 @@ public class MosquittoDynamicSecurityService implements MqttCallback {
   @SuppressWarnings("unchecked")
   private void processResponses(List<CommandRequest> batch, byte[] responsePayload) {
     try {
+      String responseString = new String(responsePayload, StandardCharsets.UTF_8);
+      log.debug("Received dynamic security broker response: {}", responseString);
       Map<String, Object> responseMap = objectMapper.readValue(responsePayload, Map.class);
       List<Map<String, Object>> responsesList =
           (List<Map<String, Object>>) responseMap.get("responses");
@@ -299,7 +301,7 @@ public class MosquittoDynamicSecurityService implements MqttCallback {
         Integer status = (Integer) resp.get("status");
         String error = (String) resp.get("error");
 
-        if (status == null || status == 0) {
+        if (error == null && (status == null || status == 0)) {
           req.future.complete(null);
         } else if (isBenignError(req.commandName, error)) {
           log.debug("Handling benign broker error for command {}: {}", req.commandName, error);
@@ -375,7 +377,8 @@ public class MosquittoDynamicSecurityService implements MqttCallback {
         || cleanError.equalsIgnoreCase("ACL not found")
         || cleanError.equalsIgnoreCase("Client not found")
         || cleanError.equalsIgnoreCase("Role not found")
-        || cleanError.equalsIgnoreCase("Group not found");
+        || cleanError.equalsIgnoreCase("Group not found")
+        || cleanError.equalsIgnoreCase("ACL with this topic already exists");
   }
 
   /**
