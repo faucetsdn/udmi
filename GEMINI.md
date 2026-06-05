@@ -1,19 +1,28 @@
 # UDMI Project Instructions
 
-## Bug Triage and Verification Workflow
+## Engineering Standards for Triage and Verification
 
-This project involves complex integrations between Python components (discovery node), Java services (UDMIS/Validator), and middleware (Mosquitto/etcd). To ensure bug fixes are effective and verified:
+To ensure technical integrity in this multi-component system (comprising Python, Java, and various middleware), all bug fixes must adhere to the following principles:
 
-### 1. Verification of Data Mapping
-When data passes between the Python discovery node and the Java UDMIS service via the `reflect` topic:
-- **Requirement**: You must verify that the `CloudModel` object in the UDMIS logs contains all expected fields (e.g., `num_id`, `password`).
-- **Failure Signature**: The presence of `CREATE iot device ..., false null` in UDMIS logs indicates a mapping failure or missing data in the reflector pipeline.
+### 1. Empirical Failure Reproduction
+- **Principle**: Do not rely on high-level test results (e.g., "Tests Passed") as the sole indicator of success.
+- **Mandate**: You must identify and reproduce the **internal technical signature** of the failure (e.g., specific log patterns, unexpected null fields, or erroneous state entries) as reported in the failing environment (CI logs, user reports).
+- **Verification**: A fix is only valid if you can demonstrate the specific removal or correction of this internal signature in a controlled run.
 
-### 2. Environment Sanitization
-Before running any E2E or Integration tests for verification:
-- **Requirement**: Strictly follow the cleanup steps in `testing.yml`.
-- **Action**: Manually clear Docker networks (`udminet`), volumes, and temporary files in `var/tmp` and `var/etcd` to ensure no stale credentials or configurations persist between runs.
+### 2. Negative Verification (Reversion Testing)
+- **Principle**: Ensure the fix is the direct cause of the resolution.
+- **Mandate**: Once a fix is verified as "passing," you must temporarily revert the change and re-run the reproduction case.
+- **Requirement**: If the system does not revert to the exact failure signature observed previously, the environment is likely contaminated or the root cause is not fully understood.
 
-### 3. Log Cross-Referencing
-- **Requirement**: Compare the sequence of events in `out/udmis.log` and `out/job-logs.txt` line-by-line.
-- **Action**: Any discrepancy in the order of operations (e.g., registration vs. connection attempts) must be investigated as a potential race condition or environmental bias.
+### 3. Log-Based Evidence of Transition
+- **Principle**: Provide transparent proof of behavioral change.
+- **Mandate**: Final verification summaries must include raw log snippets showing the **before-and-after state** of the system's internal logic. This transition is the only acceptable proof of a successful repair.
+
+### 4. Boundary Data Probing
+- **Principle**: Verify data integrity at the points of hand-off between languages or services.
+- **Mandate**: When issues involve data serialization or cross-service communication, you must probe the raw data at the boundary (e.g., inspecting raw MQTT payloads, database state, or using instrumentation logs) to confirm that mapping logic (like JSON-to-Object) is operating correctly.
+
+### 5. State Isolation and Sanitization
+- **Principle**: Prevent cross-contamination between test runs.
+- **Mandate**: Before performing final verification, you must ensure all persistent state (Docker volumes, cached credentials, database entries, and temporary files) is explicitly cleared.
+- **Warning**: Relying on standard cleanup scripts is often insufficient for persistent middleware state; manual verification of a "clean room" state is required for critical fixes.
