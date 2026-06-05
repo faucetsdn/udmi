@@ -378,7 +378,8 @@ public class MosquittoDynamicSecurityService implements MqttCallback {
         || cleanError.equalsIgnoreCase("Client not found")
         || cleanError.equalsIgnoreCase("Role not found")
         || cleanError.equalsIgnoreCase("Group not found")
-        || cleanError.equalsIgnoreCase("ACL with this topic already exists");
+        || cleanError.equalsIgnoreCase("ACL with this topic already exists")
+        || (command.equals("addClientRole") && cleanError.equalsIgnoreCase("Internal error"));
   }
 
   /**
