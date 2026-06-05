@@ -324,12 +324,14 @@ public class ImplicitIotAccessProvider extends IotAccessBase {
     properties.update(puts, deletes);
 
     if (map.containsKey(AUTH_PASSWORD_PROPERTY)) {
-      boolean isAuthorized = map.get(AUTH_KEY_PROPERTY) != null
-          || map.get(AUTH_TYPE_PROPERTY) != null
+      String password = map.get(AUTH_PASSWORD_PROPERTY);
+      boolean isDefaultPass = usePassword != null && usePassword.equals(password);
+      boolean hasAuthInfo = map.containsKey(AUTH_KEY_PROPERTY)
+          || map.containsKey(AUTH_TYPE_PROPERTY)
           || properties.get(AUTH_KEY_PROPERTY) != null
           || properties.get(AUTH_TYPE_PROPERTY) != null;
-      if (isAuthorized) {
-        broker.authorize(clientId(registryId, deviceId), map.get(AUTH_PASSWORD_PROPERTY)).join();
+      if (hasAuthInfo || !isDefaultPass) {
+        broker.authorize(clientId(registryId, deviceId), password).join();
       }
     }
     return properties;
@@ -402,12 +404,10 @@ public class ImplicitIotAccessProvider extends IotAccessBase {
       properties.put(AUTH_KEY_PROPERTY, cred.key_data);
       properties.put(AUTH_TYPE_PROPERTY, cred.key_format.value());
     }));
-    if (usePassword != null) {
+    if (cloudModel.password != null) {
+      properties.put(AUTH_PASSWORD_PROPERTY, cloudModel.password);
+    } else if (usePassword != null) {
       properties.put(AUTH_PASSWORD_PROPERTY, usePassword);
-    } else {
-      ifNotNullThen(cloudModel.password, password -> {
-        properties.put(AUTH_PASSWORD_PROPERTY, password);
-      });
     }
     return properties;
   }
