@@ -2,7 +2,6 @@ package com.google.daq.mqtt.validator;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.daq.mqtt.util.providers.FamilyProvider.constructUrl;
-import static java.util.Objects.requireNonNull;
 
 import com.google.daq.mqtt.util.providers.FamilyProvider;
 import java.util.Map;

@@ -65,6 +65,7 @@ cloud/gcp/.terraform*
 .python-version
 dist
 gencode/python/dist
+gencode/python/poetry.lock
 venv
 clientlib/python/.idea
 clientlib/python/rsa_private.crt
