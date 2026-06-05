@@ -14,7 +14,7 @@ To ensure technical integrity in this multi-component system (comprising Python,
 ### 2. Negative Verification (Reversion Testing)
 - **Principle**: Ensure the fix is the direct cause of the resolution.
 - **Mandate**: Once a fix is verified as "passing," you must temporarily revert the change and re-run the reproduction case.
-- **Requirement**: If the system does not revert to the exact failure signature observed previously, the environment is likely contaminated or the root cause is not fully understood.
+- **The Negative-Pass Hard Stop**: If the test **passes** after the fix is reverted, the environment is contaminated. You MUST NOT proceed. You must stop, declare a "Sanitization Failure" in a topic update, and backtrack until the failure is reproduced.
 
 ### 3. Log-Based Evidence of Transition
 - **Principle**: Provide transparent proof of behavioral change.
@@ -27,4 +27,5 @@ To ensure technical integrity in this multi-component system (comprising Python,
 ### 5. State Isolation and Sanitization
 - **Principle**: Prevent cross-contamination between test runs.
 - **Mandate**: Before performing final verification, you must ensure all persistent state (Docker volumes, cached credentials, database entries, and temporary files) is explicitly cleared.
-- **Warning**: Relying on standard cleanup scripts is often insufficient for persistent middleware state; manual verification of a "clean room" state is required for critical fixes.
+- **Proof of Failure**: Before any verification run, you must provide log evidence that the failure is **currently active** in the environment. A fix is only valid if applied to a demonstrably broken state.
+- **Warning**: If permissions (e.g., `sudo`) prevent full sanitization, the environment must be treated as "Untrusted" and verification cannot be considered conclusive.
