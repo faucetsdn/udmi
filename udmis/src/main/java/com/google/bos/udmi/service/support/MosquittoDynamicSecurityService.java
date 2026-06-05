@@ -46,7 +46,7 @@ public class MosquittoDynamicSecurityService implements MqttCallback {
   private static final Logger log = LoggerFactory.getLogger(MosquittoDynamicSecurityService.class);
 
   private static final int MAX_QUEUE_SIZE = 10000;
-  private static final int BATCH_SIZE_LIMIT = 1000;
+  private static final int BATCH_SIZE_LIMIT = 100;
   private static final long BATCH_BYTES_LIMIT = 10 * 1024 * 1024; // 10 MB
   private static final long MIN_PUBLISH_INTERVAL_MS = 500; // 0.5 seconds
   private static final String CONTROL_TOPIC = "$CONTROL/dynamic-security/v1";
@@ -311,7 +311,13 @@ public class MosquittoDynamicSecurityService implements MqttCallback {
             && error.contains("exists")
             && req.isFallbackSupported) {
           log.info("Client already exists. Triggering modifyClient fallback for {}", req.username);
-          triggerFallback(req);
+          triggerFallback(req, "modifyClient");
+        } else if ("modifyClient".equals(req.commandName)
+            && error != null
+            && error.contains("not found")
+            && req.isFallbackSupported) {
+          log.info("Client not found. Triggering createClient fallback for {}", req.username);
+          triggerFallback(req, "createClient");
         } else {
           req.future.completeExceptionally(new RuntimeException("Broker error: " + error));
         }
@@ -326,9 +332,9 @@ public class MosquittoDynamicSecurityService implements MqttCallback {
     }
   }
 
-  private void triggerFallback(CommandRequest originalReq) {
+  private void triggerFallback(CommandRequest originalReq, String fallbackCommand) {
     Map<String, Object> cmd = new HashMap<>();
-    cmd.put("command", "modifyClient");
+    cmd.put("command", fallbackCommand);
     cmd.put("username", originalReq.username);
     if (originalReq.password != null) {
       cmd.put("password", originalReq.password);
@@ -341,7 +347,7 @@ public class MosquittoDynamicSecurityService implements MqttCallback {
       byte[] bytes = objectMapper.writeValueAsBytes(cmd);
       CompletableFuture<Void> fallbackFuture = new CompletableFuture<>();
       CommandRequest fallbackReq = new CommandRequest(
-          "modifyClient",
+          fallbackCommand,
           bytes,
           fallbackFuture,
           originalReq.username,
@@ -378,8 +384,7 @@ public class MosquittoDynamicSecurityService implements MqttCallback {
         || cleanError.equalsIgnoreCase("Client not found")
         || cleanError.equalsIgnoreCase("Role not found")
         || cleanError.equalsIgnoreCase("Group not found")
-        || cleanError.equalsIgnoreCase("ACL with this topic already exists")
-        || (command.equals("addClientRole") && cleanError.equalsIgnoreCase("Internal error"));
+        || cleanError.equalsIgnoreCase("ACL with this topic already exists");
   }
 
   /**

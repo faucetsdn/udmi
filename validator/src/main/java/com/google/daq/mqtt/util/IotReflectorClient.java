@@ -6,6 +6,7 @@ import static com.google.udmi.util.Common.CONDENSER_STRING;
 import static com.google.udmi.util.Common.DETAIL_KEY;
 import static com.google.udmi.util.Common.ERROR_KEY;
 import static com.google.udmi.util.Common.EXCEPTION_KEY;
+import static com.google.udmi.util.Common.SUBFOLDER_PROPERTY_KEY;
 import static com.google.udmi.util.Common.TRANSACTION_KEY;
 import static com.google.udmi.util.GeneralUtils.friendlyStackTrace;
 import static com.google.udmi.util.GeneralUtils.ifNotNullGet;
@@ -277,6 +278,10 @@ public class IotReflectorClient implements IotProvider {
 
       try {
         String transactionId = messageBundle.attributes.get(TRANSACTION_KEY);
+        String subFolder = messageBundle.attributes.get(SUBFOLDER_PROPERTY_KEY);
+        if (SubFolder.UDMI.value().equals(subFolder)) {
+          continue;
+        }
         CompletableFuture<Map<String, Object>> future = ifNotNullGet(transactionId,
             futures::remove);
         ifNotNullThen(future, f -> f.complete(messageBundle.message));

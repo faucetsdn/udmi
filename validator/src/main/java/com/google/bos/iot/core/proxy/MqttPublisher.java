@@ -97,6 +97,7 @@ public class MqttPublisher implements MessagePublisher {
   private static final String CONFIG_TOPIC = "/config";
   private static final String ERROR_TOPIC = "/errors";
   private static final String COMMAND_TOPIC = "/commands/#";
+  private static final String REFLECT_TOPIC = "/reflect";
   private static final String MESSAGE_TOPIC_FMT = "/%s";
   private static final int QOS_AT_MOST_ONCE = 0;
   private static final int QOS_AT_LEAST_ONCE = 1;
@@ -543,6 +544,7 @@ public class MqttPublisher implements MessagePublisher {
       subscribeToConfig(deviceId);
       subscribeToErrors(deviceId);
       subscribeToCommands(deviceId);
+      clientSubscribe(REFLECT_TOPIC, QOS_AT_LEAST_ONCE);
       LOG.info(deviceId + " done with setup connection");
     } catch (Exception e) {
       throw new RuntimeException("While setting up new mqtt connection to " + deviceId, e);

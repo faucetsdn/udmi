@@ -311,8 +311,10 @@ public class IotReflectorClient implements MessagePublisher {
           () -> messageMap.remove(SOURCE_KEY));
       if (SubType.CONFIG == envelope.subType) {
         ensureCloudSync(messageMap);
-      } else if (SubType.COMMANDS == envelope.subType) {
+      } else if (SubType.COMMANDS == envelope.subType || SubType.REPLY == envelope.subType) {
         handleEncapsulatedMessage(envelope, messageMap);
+      } else if (SubType.REFLECT == envelope.subType) {
+        // Just ignore these for now, as they are likely loopback messages from the same client.
       } else {
         throw new RuntimeException("Unknown message category " + envelope.subType);
       }
@@ -547,7 +549,6 @@ public class IotReflectorClient implements MessagePublisher {
     receiveStats.update();
     System.err.printf("Received mqtt client error: %s at %s%n",
         throwable.getMessage(), getTimestamp());
-    close();
   }
 
   @Override
