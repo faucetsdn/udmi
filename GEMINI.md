@@ -29,3 +29,14 @@ To ensure technical integrity in this multi-component system (comprising Python,
 - **Mandate**: Before performing final verification, you must ensure all persistent state (Docker volumes, cached credentials, database entries, and temporary files) is explicitly cleared.
 - **Proof of Failure**: Before any verification run, you must provide log evidence that the failure is **currently active** in the environment. A fix is only valid if applied to a demonstrably broken state.
 - **Warning**: If permissions (e.g., `sudo`) prevent full sanitization, the environment must be treated as "Untrusted" and verification cannot be considered conclusive.
+
+### 6. Final Verification (Full Project Integrity)
+- **Scope**: You MUST verify project-wide integrity by running all functional and integration jobs defined in `.github/workflows/testing.yml`, **excluding** the sharded `sequencer` job (which is too extensive for standard validation).
+- **Mandatory Suites**: This includes, but is not limited to:
+  - `Unit`: `bin/run_tests all_tests` (Covers builds, schema, and registrar unit tests).
+  - `Automapping`: `bin/test_automapper`
+  - `Baseline`: `bin/test_special`, `bin/test_validator`, and `bin/test_sequencer nostate full`.
+  - `Runlocal`: `bin/test_runlocal`, `bin/test_uufi`, and `bin/test_udmis`.
+  - `Discovery`: `misc/discoverynode/testing/e2e/test_local`.
+  - `Endpoint` & `Blobupdates`: `bin/test_redirect` and `bin/test_blob_updates`.
+- **Authoritative Source**: Always audit `testing.yml` for the current set of `run:` commands. Do not assume local utility scripts (like `bin/run_tests`) represent the exhaustive test surface. Declaring a task "DONE" without verifying against these integration suites is a violation of engineering standards.

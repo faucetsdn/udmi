@@ -49,6 +49,7 @@ public class MosquittoDynamicSecurityService implements MqttCallback {
   private static final int BATCH_SIZE_LIMIT = 100;
   private static final long BATCH_BYTES_LIMIT = 10 * 1024 * 1024; // 10 MB
   private static final long MIN_PUBLISH_INTERVAL_MS = 500; // 0.5 seconds
+  private static final int MAX_RETRIES = 3;
   private static final String CONTROL_TOPIC = "$CONTROL/dynamic-security/v1";
   private static final String RESPONSE_TOPIC = "$CONTROL/dynamic-security/v1/response";
 
@@ -64,6 +65,36 @@ public class MosquittoDynamicSecurityService implements MqttCallback {
   private boolean batchInFlight = false;
   private List<CommandRequest> inFlightBatch = null;
   private ScheduledFuture<?> scheduledTask = null;
+
+  /**
+   * Models a command request in the dynamic security system queue.
+   */
+  public static class CommandRequest {
+
+    public final String commandName;
+    public final byte[] serializedPayload;
+    public final CompletableFuture<Void> future;
+    public final String username;
+    public final String password;
+    public final String clientId;
+    public final boolean isFallbackSupported;
+    public int retryCount = 0;
+
+    /**
+     * Constructor.
+     */
+    public CommandRequest(String commandName, byte[] serializedPayload,
+        CompletableFuture<Void> future, String username, String password,
+        String clientId, boolean isFallbackSupported) {
+      this.commandName = commandName;
+      this.serializedPayload = serializedPayload;
+      this.future = future;
+      this.username = username;
+      this.password = password;
+      this.clientId = clientId;
+      this.isFallbackSupported = isFallbackSupported;
+    }
+  }
 
   /**
    * Constructs and connects the Dynamic Security Service.
@@ -145,12 +176,9 @@ public class MosquittoDynamicSecurityService implements MqttCallback {
    */
   public CompletableFuture<Void> enqueueCommand(CommandRequest req) {
     if (commandQueue.size() >= MAX_QUEUE_SIZE) {
-      // TODO: Throwing QueueFullException synchronously here can abort the batch response
-      // processing loop (e.g., during fallback enqueues). Complete exceptionally instead.
-      // This can cause corrupted state - e.g. a device will have 5 of 6 ACL's to permit
-      // communication added but will not get marked as "not bound".
-      // Probably need some retry logic, maybe with recall logic too.
-      throw new QueueFullException("Dynamic security queue is full. Size: " + commandQueue.size());
+      req.future.completeExceptionally(
+          new QueueFullException("Dynamic security queue is full. Size: " + commandQueue.size()));
+      return req.future;
     }
     commandQueue.offer(req);
     triggerWorker();
@@ -318,6 +346,12 @@ public class MosquittoDynamicSecurityService implements MqttCallback {
             && req.isFallbackSupported) {
           log.info("Client not found. Triggering createClient fallback for {}", req.username);
           triggerFallback(req, "createClient");
+        } else if (error != null && error.contains("Internal error")
+            && req.retryCount < MAX_RETRIES) {
+          req.retryCount++;
+          log.info("Internal error from broker. Retrying command {} for {} (attempt {})",
+              req.commandName, req.username, req.retryCount);
+          enqueueCommand(req);
         } else {
           req.future.completeExceptionally(new RuntimeException("Broker error: " + error));
         }
@@ -435,33 +469,5 @@ public class MosquittoDynamicSecurityService implements MqttCallback {
 
   private static String format(String format, Object... args) {
     return String.format(format, args);
-  }
-
-  /**
-   * Models a command request in the dynamic security system queue.
-   */
-  public static class CommandRequest {
-    public final String commandName;
-    public final byte[] serializedPayload;
-    public final CompletableFuture<Void> future;
-    public final String username;
-    public final String password;
-    public final String clientId;
-    public final boolean isFallbackSupported;
-
-    /**
-     * Constructor.
-     */
-    public CommandRequest(String commandName, byte[] serializedPayload,
-        CompletableFuture<Void> future, String username, String password,
-        String clientId, boolean isFallbackSupported) {
-      this.commandName = commandName;
-      this.serializedPayload = serializedPayload;
-      this.future = future;
-      this.username = username;
-      this.password = password;
-      this.clientId = clientId;
-      this.isFallbackSupported = isFallbackSupported;
-    }
   }
 }
