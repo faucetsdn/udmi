@@ -1,31 +1,32 @@
 TIMESTAMP INFO    device.log             Configured with auth_type RS256
-TIMESTAMP INFO    device.log             Using addresses from default interface: ens4 for family: ether
-TIMESTAMP INFO    device.log             Family ether address is 42:01:ac:11:23:ac
 TIMESTAMP INFO    device.log             Using addresses from default interface: ens4 for family: ipv4
 TIMESTAMP INFO    device.log             Family ipv4 address is 172.17.35.172
+TIMESTAMP INFO    device.log             Using addresses from default interface: ens4 for family: ether
+TIMESTAMP INFO    device.log             Family ether address is 42:01:ac:11:23:ac
+TIMESTAMP INFO    device.log             Resetting persistent store /usr/local/google/home/heykhyati/Projects/udmi_clone/udmi/sites/udmi_site_model/out/devices/AHU-1/persistent_data.json
 TIMESTAMP INFO    device.log             Loading endpoint into persistent data from configuration
 TIMESTAMP WARNING device.log             Updating persistent store:
 {
+  "applied_blobs" : { },
   "endpoint" : {
-    "protocol" : "mqtt",
-    "transport" : "ssl",
-    "hostname" : "localhost",
-    "client_id" : "/r/ZZ-TRI-FECTA/d/AHU-1",
-    "topic_prefix" : "/r/ZZ-TRI-FECTA/d/AHU-1",
     "auth_provider" : {
       "basic" : {
-        "username" : "/r/ZZ-TRI-FECTA/d/AHU-1",
-        "password" : "38269d11"
+        "password" : "38269d11",
+        "username" : "/r/ZZ-TRI-FECTA/d/AHU-1"
       }
-    }
+    },
+    "client_id" : "/r/ZZ-TRI-FECTA/d/AHU-1",
+    "hostname" : "localhost",
+    "protocol" : "mqtt",
+    "topic_prefix" : "/r/ZZ-TRI-FECTA/d/AHU-1",
+    "transport" : "ssl"
   },
-  "restart_count" : 1,
-  "applied_blobs" : { }
+  "restart_count" : 1
 }
-TIMESTAMP INFO    device.log             Starting pubber AHU-1, serial sequencer-29169, mac null, gateway null, options noPersist
-TIMESTAMP INFO    device.log             Initializing mock JGit module in /usr/local/google/home/heykhyati/Projects/udmi_clone/udmi/out/pubber_module_repo_sequencer-29169
+TIMESTAMP INFO    device.log             Starting pubber AHU-1, serial sequencer-25720, mac null, gateway null, options noPersist
+TIMESTAMP INFO    device.log             Initializing mock JGit module in /usr/local/google/home/heykhyati/Projects/udmi_clone/udmi/out/pubber_module_repo_sequencer-25720
 TIMESTAMP INFO    device.log             Isolated JGit repo initialized successfully.
-TIMESTAMP WARNING device.log             Starting connection 1779102173227 with 0
+TIMESTAMP WARNING device.log             Starting connection 1780930315984 with 0
 TIMESTAMP INFO    device.log             Loading device key bytes from /usr/local/google/home/heykhyati/Projects/udmi_clone/udmi/sites/udmi_site_model/devices/AHU-1/rsa_private.pkcs8
 TIMESTAMP INFO    device.log             CA cert file: /usr/local/google/home/heykhyati/Projects/udmi_clone/udmi/sites/udmi_site_model/reflector/ca.crt
 TIMESTAMP INFO    device.log             Device cert file: /usr/local/google/home/heykhyati/Projects/udmi_clone/udmi/sites/udmi_site_model/devices/AHU-1/rsa_private.crt
@@ -36,122 +37,96 @@ TIMESTAMP
 TIMESTAMP WARNING device.log             Dropping state update until config received...
 TIMESTAMP
 TIMESTAMP WARNING device.log             Dropping state update until config received...
-TIMESTAMP INFO    device.log             Connection complete.
-TIMESTAMP INFO    device.log             Device AHU-1 config handler
 TIMESTAMP
 TIMESTAMP WARNING device.log             Dropping state update until config received...
-TIMESTAMP WARNING device.log             Start waiting 10s for config latch for AHU-1
 TIMESTAMP WARNING device.log             Received config for config latch AHU-1
 TIMESTAMP WARNING device.log             Starting AHU-1 PubberPublisherHost sender with delay 10s
-TIMESTAMP WARNING device.log             Ending connection 1779102173227 with 1
 TIMESTAMP
 TIMESTAMP WARNING device.log             Starting AHU-1 PubberSystemManager sender with delay 10s
 TIMESTAMP WARNING device.log             Starting AHU-1 PubberPointsetManager sender with delay 300s
+TIMESTAMP WARNING device.log             Start waiting 10s for config latch for AHU-1
 TIMESTAMP NOTICE  system.config.apply    success
 TIMESTAMP NOTICE  system.config.apply    success
-TIMESTAMP DEBUG   device.log             value of noWriteback: false
-TIMESTAMP DEBUG   device.log             value of noWriteback: false
-TIMESTAMP DEBUG   device.log             value of noWriteback: false
-TIMESTAMP NOTICE  system.config.apply    success
-TIMESTAMP DEBUG   device.log             State update defer 1995ms
-TIMESTAMP DEBUG   device.log             State update defer 1994ms
-TIMESTAMP DEBUG   device.log             State update defer 1993ms
-TIMESTAMP DEBUG   device.log             State update defer 1993ms
-TIMESTAMP DEBUG   device.log             State update defer 1991ms
-TIMESTAMP DEBUG   system.config.receive  success
-TIMESTAMP DEBUG   device.log             State update defer 1839ms
-TIMESTAMP DEBUG   system.config.parse    success
-TIMESTAMP DEBUG   device.log             State update defer 1838ms
-TIMESTAMP INFO    device.log             Device AHU-1 config handler
-TIMESTAMP DEBUG   device.log             Config update AHU-1 (blob_update_invalid_payload)
-TIMESTAMP
-TIMESTAMP DEBUG   device.log             value of noWriteback: false
-TIMESTAMP DEBUG   device.log             value of noWriteback: false
-TIMESTAMP DEBUG   device.log             value of noWriteback: false
-TIMESTAMP NOTICE  system.config.apply    success
-TIMESTAMP DEBUG   device.log             State update defer 1832ms
-TIMESTAMP DEBUG   device.log             State update defer 1831ms
-TIMESTAMP DEBUG   device.log             State update defer 0ms
-TIMESTAMP
-TIMESTAMP DEBUG   device.log             State update AHU-1 (blob_update_invalid_payload)
-TIMESTAMP DEBUG   system.config.receive  success
-TIMESTAMP DEBUG   system.config.parse    success
-TIMESTAMP DEBUG   device.log             State update defer 1312ms
-TIMESTAMP INFO    device.log             Device AHU-1 config handler
-TIMESTAMP DEBUG   device.log             State update defer 1310ms
-TIMESTAMP DEBUG   device.log             Config update AHU-1 (blob_update_invalid_payload)
-TIMESTAMP
-TIMESTAMP DEBUG   device.log             value of noWriteback: false
-TIMESTAMP DEBUG   device.log             value of noWriteback: false
-TIMESTAMP DEBUG   device.log             value of noWriteback: false
-TIMESTAMP NOTICE  system.config.apply    success
-TIMESTAMP DEBUG   device.log             State update defer 1294ms
-TIMESTAMP DEBUG   device.log             State update defer -1ms
-TIMESTAMP
-TIMESTAMP DEBUG   device.log             State update AHU-1 (blob_update_invalid_payload)
-TIMESTAMP DEBUG   system.config.receive  success
-TIMESTAMP DEBUG   system.config.parse    success
-TIMESTAMP DEBUG   device.log             State update defer -751ms
-TIMESTAMP INFO    device.log             Device AHU-1 config handler
-TIMESTAMP
-TIMESTAMP DEBUG   device.log             State update AHU-1 (blob_update_invalid_payload)
-TIMESTAMP
-TIMESTAMP DEBUG   device.log             value of noWriteback: false
-TIMESTAMP DEBUG   device.log             value of noWriteback: false
-TIMESTAMP DEBUG   device.log             value of noWriteback: false
-TIMESTAMP NOTICE  system.config.apply    success
-TIMESTAMP DEBUG   device.log             State update defer 1994ms
-TIMESTAMP DEBUG   device.log             State update defer 20ms
-TIMESTAMP DEBUG   device.log             State update defer -1ms
-TIMESTAMP
-TIMESTAMP DEBUG   device.log             State update AHU-1 (blob_update_invalid_payload)
-TIMESTAMP DEBUG   system.config.receive  success
-TIMESTAMP DEBUG   device.log             State update defer -1437ms
-TIMESTAMP DEBUG   system.config.parse    success
-TIMESTAMP
-TIMESTAMP INFO    device.log             Device AHU-1 config handler
-TIMESTAMP DEBUG   device.log             State update AHU-1 (blob_update_invalid_payload)
-TIMESTAMP DEBUG   device.log             Config update AHU-1 (blob_update_invalid_payload)
-TIMESTAMP
 TIMESTAMP DEBUG   device.log             value of noWriteback: false
 TIMESTAMP DEBUG   device.log             value of noWriteback: false
 TIMESTAMP DEBUG   device.log             value of noWriteback: false
 TIMESTAMP NOTICE  system.config.apply    success
 TIMESTAMP DEBUG   device.log             State update defer 1996ms
-TIMESTAMP DEBUG   device.log             State update defer 1995ms
-TIMESTAMP DEBUG   device.log             State update defer 1993ms
-TIMESTAMP DEBUG   device.log             State update defer 1993ms
 TIMESTAMP DEBUG   system.config.receive  success
 TIMESTAMP DEBUG   system.config.parse    success
-TIMESTAMP DEBUG   device.log             State update defer 1646ms
+TIMESTAMP DEBUG   device.log             State update defer 1876ms
 TIMESTAMP INFO    device.log             Device AHU-1 config handler
-TIMESTAMP DEBUG   device.log             State update defer 1645ms
 TIMESTAMP DEBUG   device.log             Config update AHU-1 (blob_update_invalid_payload)
 TIMESTAMP
 TIMESTAMP DEBUG   device.log             value of noWriteback: false
 TIMESTAMP DEBUG   device.log             value of noWriteback: false
 TIMESTAMP DEBUG   device.log             value of noWriteback: false
 TIMESTAMP NOTICE  system.config.apply    success
-TIMESTAMP DEBUG   device.log             State update defer 1641ms
-TIMESTAMP DEBUG   system.config.receive  success
-TIMESTAMP DEBUG   device.log             State update defer 559ms
-TIMESTAMP DEBUG   system.config.parse    success
-TIMESTAMP INFO    device.log             Device AHU-1 config handler
-TIMESTAMP DEBUG   device.log             State update defer 558ms
-TIMESTAMP DEBUG   device.log             Config update AHU-1 (blob_update_invalid_payload)
-TIMESTAMP
-TIMESTAMP DEBUG   device.log             value of noWriteback: false
-TIMESTAMP DEBUG   device.log             value of noWriteback: false
-TIMESTAMP DEBUG   device.log             value of noWriteback: false
-TIMESTAMP NOTICE  system.config.apply    success
-TIMESTAMP DEBUG   device.log             State update defer 552ms
+TIMESTAMP DEBUG   device.log             State update defer 1869ms
 TIMESTAMP DEBUG   device.log             State update defer 0ms
 TIMESTAMP
 TIMESTAMP DEBUG   device.log             State update AHU-1 (blob_update_invalid_payload)
 TIMESTAMP DEBUG   system.config.receive  success
-TIMESTAMP DEBUG   device.log             State update defer 1446ms
+TIMESTAMP DEBUG   device.log             State update defer -361ms
 TIMESTAMP DEBUG   system.config.parse    success
-TIMESTAMP DEBUG   device.log             State update defer 1445ms
+TIMESTAMP
+TIMESTAMP INFO    device.log             Device AHU-1 config handler
+TIMESTAMP DEBUG   device.log             State update AHU-1 (blob_update_invalid_payload)
+TIMESTAMP DEBUG   device.log             Config update AHU-1 (blob_update_invalid_payload)
+TIMESTAMP DEBUG   device.log             State update defer 2000ms
+TIMESTAMP
+TIMESTAMP DEBUG   device.log             value of noWriteback: false
+TIMESTAMP DEBUG   device.log             value of noWriteback: false
+TIMESTAMP DEBUG   device.log             value of noWriteback: false
+TIMESTAMP NOTICE  system.config.apply    success
+TIMESTAMP DEBUG   device.log             State update defer 1997ms
+TIMESTAMP DEBUG   device.log             State update defer 0ms
+TIMESTAMP
+TIMESTAMP DEBUG   device.log             State update AHU-1 (blob_update_invalid_payload)
+TIMESTAMP DEBUG   system.config.receive  success
+TIMESTAMP DEBUG   system.config.parse    success
+TIMESTAMP DEBUG   device.log             State update defer -1055ms
+TIMESTAMP
+TIMESTAMP DEBUG   device.log             State update AHU-1 (blob_update_invalid_payload)
+TIMESTAMP
+TIMESTAMP DEBUG   device.log             value of noWriteback: false
+TIMESTAMP DEBUG   device.log             value of noWriteback: false
+TIMESTAMP DEBUG   device.log             value of noWriteback: false
+TIMESTAMP NOTICE  system.config.apply    success
+TIMESTAMP DEBUG   device.log             State update defer 1997ms
+TIMESTAMP DEBUG   device.log             State update defer 0ms
+TIMESTAMP
+TIMESTAMP DEBUG   device.log             State update AHU-1 (blob_update_invalid_payload)
+TIMESTAMP DEBUG   system.config.receive  success
+TIMESTAMP DEBUG   device.log             State update defer -1425ms
+TIMESTAMP DEBUG   system.config.parse    success
+TIMESTAMP INFO    device.log             Device AHU-1 config handler
+TIMESTAMP DEBUG   device.log             State update AHU-1 (blob_update_invalid_payload)
+TIMESTAMP DEBUG   device.log             Config update AHU-1 (blob_update_invalid_payload)
+TIMESTAMP
+TIMESTAMP DEBUG   device.log             value of noWriteback: false
+TIMESTAMP DEBUG   device.log             value of noWriteback: false
+TIMESTAMP DEBUG   device.log             value of noWriteback: false
+TIMESTAMP NOTICE  system.config.apply    success
+TIMESTAMP DEBUG   device.log             State update defer 1998ms
+TIMESTAMP DEBUG   device.log             State update defer 1997ms
+TIMESTAMP DEBUG   device.log             State update defer 1996ms
+TIMESTAMP DEBUG   system.config.receive  success
+TIMESTAMP DEBUG   system.config.parse    success
+TIMESTAMP DEBUG   device.log             State update defer 735ms
+TIMESTAMP INFO    device.log             Device AHU-1 config handler
+TIMESTAMP DEBUG   device.log             State update defer 734ms
+TIMESTAMP DEBUG   device.log             Config update AHU-1 (blob_update_invalid_payload)
+TIMESTAMP
+TIMESTAMP DEBUG   device.log             value of noWriteback: false
+TIMESTAMP DEBUG   device.log             value of noWriteback: false
+TIMESTAMP DEBUG   device.log             value of noWriteback: false
+TIMESTAMP NOTICE  system.config.apply    success
+TIMESTAMP DEBUG   device.log             State update defer 730ms
+TIMESTAMP DEBUG   system.config.receive  success
+TIMESTAMP DEBUG   device.log             State update defer 558ms
+TIMESTAMP DEBUG   system.config.parse    success
+TIMESTAMP DEBUG   device.log             State update defer 557ms
 TIMESTAMP INFO    device.log             Device AHU-1 config handler
 TIMESTAMP DEBUG   device.log             Config update AHU-1 (blob_update_invalid_payload)
 TIMESTAMP
@@ -159,12 +134,26 @@ TIMESTAMP DEBUG   device.log             value of noWriteback: false
 TIMESTAMP DEBUG   device.log             value of noWriteback: false
 TIMESTAMP DEBUG   device.log             value of noWriteback: false
 TIMESTAMP NOTICE  system.config.apply    success
-TIMESTAMP DEBUG   device.log             State update defer 1441ms
+TIMESTAMP DEBUG   device.log             State update defer 551ms
+TIMESTAMP DEBUG   device.log             State update defer 0ms
+TIMESTAMP
+TIMESTAMP DEBUG   device.log             State update AHU-1 (blob_update_invalid_payload)
 TIMESTAMP DEBUG   system.config.receive  success
-TIMESTAMP DEBUG   device.log             State update defer 1353ms
+TIMESTAMP DEBUG   system.config.parse    success
+TIMESTAMP DEBUG   device.log             State update defer 1500ms
+TIMESTAMP INFO    device.log             Device AHU-1 config handler
+TIMESTAMP DEBUG   device.log             State update defer 1498ms
+TIMESTAMP DEBUG   device.log             Config update AHU-1 (blob_update_invalid_payload)
+TIMESTAMP
+TIMESTAMP DEBUG   device.log             value of noWriteback: false
+TIMESTAMP DEBUG   device.log             value of noWriteback: false
+TIMESTAMP DEBUG   device.log             value of noWriteback: false
+TIMESTAMP NOTICE  system.config.apply    success
+TIMESTAMP DEBUG   device.log             State update defer 1491ms
+TIMESTAMP DEBUG   system.config.receive  success
+TIMESTAMP DEBUG   device.log             State update defer 1390ms
 TIMESTAMP DEBUG   system.config.parse    success
 TIMESTAMP INFO    device.log             Device AHU-1 config handler
-TIMESTAMP DEBUG   device.log             State update defer 1351ms
 TIMESTAMP DEBUG   device.log             Config update AHU-1 (blob_update_invalid_payload)
 TIMESTAMP
 TIMESTAMP DEBUG   device.log             value of noWriteback: false
@@ -172,17 +161,16 @@ TIMESTAMP DEBUG   device.log             value of noWriteback: false
 TIMESTAMP DEBUG   device.log             value of noWriteback: false
 TIMESTAMP DEBUG   blobset.blob.receive   Received blob update config for pubber_module
 TIMESTAMP
-TIMESTAMP WARNING device.log             State update delay 1340ms
+TIMESTAMP WARNING device.log             State update delay 1375ms
 TIMESTAMP DEBUG   device.log             State update AHU-1 (blob_update_invalid_payload)
 TIMESTAMP NOTICE  system.config.apply    success
+TIMESTAMP DEBUG   device.log             State update defer 1998ms
 TIMESTAMP DEBUG   blobset.blob.fetch     Fetch blob data for pubber_module
 TIMESTAMP DEBUG   device.log             State update defer 1997ms
 TIMESTAMP NOTICE  blobset.blob.apply     Staging blob update...
-TIMESTAMP DEBUG   device.log             State update defer 1996ms
+TIMESTAMP DEBUG   device.log             State update defer 1995ms
 TIMESTAMP ERROR   device.log             Failed to apply blob pubber_module: Failed to parse blob payload for pubber_module
 TIMESTAMP ERROR   blobset.blob.parse     Failed to parse blob payload for pubber_module
-TIMESTAMP DEBUG   device.log             State update defer 1991ms
-TIMESTAMP DEBUG   device.log             State update defer 0ms
-TIMESTAMP
-TIMESTAMP DEBUG   device.log             State update AHU-1 (blob_update_invalid_payload)
+TIMESTAMP DEBUG   device.log             State update defer 1990ms
+TIMESTAMP DEBUG   device.log             State update defer 1743ms
 TIMESTAMP NOTICE  validation.feature.sequence Sequence complete
