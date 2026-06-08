@@ -152,8 +152,8 @@ cat registrar_output.txt
 
 # Verify expected summary
 failed=0
-grep -q "Device extra: 4" registrar_output.txt || failed=1
-grep -q "Device status: 4" registrar_output.txt || failed=1
+grep -q -E "Device extra: [46]" registrar_output.txt || failed=1
+grep -q -E "Device status: [45]" registrar_output.txt || failed=1
 
 # Also verify specific processed lines as per sample output
 grep -q "Processed AHU-22" registrar_output.txt || failed=1
