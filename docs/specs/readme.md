@@ -14,6 +14,7 @@
 - [Modbus](modbus.md)
 - [MQTT Client](mqtt_client.md)
 - [Point Mapping](point_mapping.md)
+- [Family Providers (URL Generation)](family_providers.md)
 - [Sequences](sequences/) (device-to-cloud API)
 - [Subblocks](subblocks.md) (core-to-apps API)
 - [Blob Updates](blob_updates.md)
