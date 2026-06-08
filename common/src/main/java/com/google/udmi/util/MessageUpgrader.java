@@ -289,6 +289,24 @@ public class MessageUpgrader {
     if (STATE_SCHEMA.equals(schemaName)) {
       upgradeTo_1_5_0_state();
     }
+    if (EVENTS_SYSTEM_SCHEMA.equals(schemaName)) {
+      upgradeTo_1_5_0_events_system();
+    }
+  }
+
+  private void upgradeTo_1_5_0_events_system() {
+    JsonNode logentries = message.get("logentries");
+    if (logentries != null && logentries.isArray()) {
+      for (JsonNode entry : logentries) {
+        if (entry.has("category")) {
+          String category = entry.get("category").asText();
+          if (category.startsWith("system.network")) {
+            String newCategory = category.replace("system.network", "localnet.network");
+            ((ObjectNode) entry).put("category", newCategory);
+          }
+        }
+      }
+    }
   }
 
   private void upgradeTo_1_5_0_state() {
