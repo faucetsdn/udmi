@@ -46,6 +46,7 @@ import com.google.daq.mqtt.util.CloudDeviceSettings;
 import com.google.daq.mqtt.util.CloudIotManager;
 import com.google.daq.mqtt.util.ConfigManager;
 import com.google.daq.mqtt.util.DeviceExceptionManager;
+import com.google.daq.mqtt.util.providers.FamilyProvider;
 import com.google.udmi.util.ErrorMap;
 import com.google.udmi.util.ErrorMap.ErrorMapException;
 import com.google.udmi.util.ExceptionMap;
@@ -239,7 +240,8 @@ class LocalDevice implements SiteDevice {
     }
 
     boolean isProxiedDevice = catchToFalse(() -> {
-      boolean explicit = catchToNull(() -> metadata.cloud.resource_type) == udmi.schema.CloudModel.Resource_type.PROXIED;
+      boolean explicit = catchToNull(() -> metadata.cloud.resource_type)
+          == udmi.schema.CloudModel.Resource_type.PROXIED;
       boolean implicit = catchToNull(() -> metadata.gateway.gateway_id) != null;
       return explicit || implicit;
     });
@@ -252,11 +254,11 @@ class LocalDevice implements SiteDevice {
     String defaultFamily = "vendor";
     String family = ofNullable(rawFamily).orElse(defaultFamily);
 
-    Map<String, com.google.daq.mqtt.util.providers.FamilyProvider> namedFamilies =
-        com.google.daq.mqtt.util.providers.FamilyProvider.NAMED_FAMILIES;
+    Map<String, FamilyProvider> namedFamilies = FamilyProvider.NAMED_FAMILIES;
 
     if (!namedFamilies.containsKey(family)) {
-      exceptionMap.put(ExceptionCategory.validation, new RuntimeException("gateway.target.family unknown: " + family));
+      exceptionMap.put(ExceptionCategory.validation,
+          new RuntimeException("gateway.target.family unknown: " + family));
       return;
     }
 
@@ -265,7 +267,8 @@ class LocalDevice implements SiteDevice {
 
     if (localAddr != null && gatewayAddr != null) {
       exceptionMap.put(ExceptionCategory.validation, new RuntimeException(
-          format("both gateway.target.addr and localnet.families.%s.addr should not be defined", family)));
+          format("both gateway.target.addr and localnet.families.%s.addr "
+              + "should not be defined", family)));
       return;
     }
 
@@ -286,7 +289,7 @@ class LocalDevice implements SiteDevice {
       if (pointRef.contains("://")) {
         fullUrl = pointRef;
       } else {
-        fullUrl = com.google.daq.mqtt.util.providers.FamilyProvider.constructUrl(family, deviceAddr, pointRef);
+        fullUrl = FamilyProvider.constructUrl(family, deviceAddr, pointRef);
       }
 
       pointModel.url = fullUrl;
@@ -312,7 +315,8 @@ class LocalDevice implements SiteDevice {
       if (validationErrors.size() == 1) {
         exceptionMap.put(ExceptionCategory.validation, validationErrors.get(0));
       } else {
-        exceptionMap.put(ExceptionCategory.validation, new com.google.udmi.util.ExceptionList(validationErrors));
+        exceptionMap.put(ExceptionCategory.validation,
+            new com.google.udmi.util.ExceptionList(validationErrors));
       }
     }
   }
