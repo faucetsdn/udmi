@@ -17,7 +17,7 @@ sleep $SLEEP_SECONDS
 
 for ((i=1; i<=$MAX_ATTEMPTS; i++)); do
     if [ -f "$LOG_FILE" ] && grep -q "$ACTIVATION_STRING" "$LOG_FILE"; then
-        bin/registrar site_model //mqtt/mosquitto
+        bin/registrar site_model //mqtt/mosquitto || true
         tail -f /dev/null
         exit 0
     fi
@@ -29,4 +29,4 @@ for ((i=1; i<=$MAX_ATTEMPTS; i++)); do
 done
 
 echo Unable to run registrar, udmis not started 
-exit 1
+tail -f /dev/null
