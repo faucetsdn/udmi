@@ -11,11 +11,11 @@ import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
 import com.google.bos.udmi.service.core.ReflectProcessor;
-import com.google.bos.udmi.service.support.QueueFullException;
 import com.google.bos.udmi.service.pod.UdmiServicePod;
 import com.google.bos.udmi.service.support.ConnectionBroker;
 import com.google.bos.udmi.service.support.DataRef;
 import com.google.bos.udmi.service.support.IotDataProvider;
+import com.google.bos.udmi.service.support.QueueFullException;
 import java.lang.reflect.Field;
 import java.util.HashMap;
 import java.util.List;
