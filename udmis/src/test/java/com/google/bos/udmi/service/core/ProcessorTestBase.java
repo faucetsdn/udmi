@@ -86,6 +86,7 @@ public abstract class ProcessorTestBase extends MessageTestBase {
     envelope.deviceRegistryId = REFLECT_REGISTRY;
     envelope.deviceId = TEST_REGISTRY;
     envelope.projectId = includeProject ? TEST_NAMESPACE : null;
+    envelope.principal = UdmiServicePod.INSTANCE_ID;
     return envelope;
   }
 

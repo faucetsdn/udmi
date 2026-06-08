@@ -46,10 +46,10 @@ public class MosquittoDynamicSecurityService implements MqttCallback {
   private static final Logger log = LoggerFactory.getLogger(MosquittoDynamicSecurityService.class);
 
   private static final int MAX_QUEUE_SIZE = 10000;
-  private static final int BATCH_SIZE_LIMIT = 100;
+  private static final int BATCH_SIZE_LIMIT = 20;
   private static final long BATCH_BYTES_LIMIT = 10 * 1024 * 1024; // 10 MB
-  private static final long MIN_PUBLISH_INTERVAL_MS = 500; // 0.5 seconds
-  private static final int MAX_RETRIES = 3;
+  private static final long MIN_PUBLISH_INTERVAL_MS = 2000; // 2 seconds
+  private static final int MAX_RETRIES = 20;
   private static final String CONTROL_TOPIC = "$CONTROL/dynamic-security/v1";
   private static final String RESPONSE_TOPIC = "$CONTROL/dynamic-security/v1/response";
 

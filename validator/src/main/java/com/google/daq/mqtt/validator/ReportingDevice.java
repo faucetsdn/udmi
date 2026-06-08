@@ -176,11 +176,9 @@ public class ReportingDevice implements ErrorCollector {
       Map<String, String> attributes) {
     if (metadata != null) {
       Class<?> targetClass = Common.classForSchema(schemaName);
-      if (targetClass != null) {
-        Object obj = convertTo(targetClass, message);
-        pointsetValidator.validateMessage(obj, attributes);
-        discoveryValidator.validateMessage(obj, attributes);
-      }
+      Object obj = convertTo(targetClass, message);
+      pointsetValidator.validateMessage(obj, attributes);
+      discoveryValidator.validateMessage(obj, attributes);
     }
   }
 

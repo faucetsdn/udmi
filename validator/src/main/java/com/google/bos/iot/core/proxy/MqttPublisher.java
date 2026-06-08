@@ -614,7 +614,8 @@ public class MqttPublisher implements MessagePublisher {
     }
     return switch (iotProvider) {
       case GBOS, CLEARBLADE -> format(LONG_ID_FMT, projectId, cloudRegion, registryId, deviceId);
-      case MQTT -> format(SHORT_ID_FMT, registryId, deviceId);
+      case MQTT -> format(SHORT_ID_FMT + "-%06x", registryId, deviceId,
+          (int) (Math.random() * 0x1000000L));
       default -> throw new RuntimeException("Provider not supported " + iotProvider);
     };
   }

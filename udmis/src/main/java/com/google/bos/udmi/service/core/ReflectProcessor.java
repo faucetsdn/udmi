@@ -96,9 +96,17 @@ public class ReflectProcessor extends ProcessorBase {
   protected void defaultHandler(Object message) {
     MessageContinuation continuation = getContinuation(message);
     Envelope reflect = continuation.getEnvelope();
+    Map<String, Object> objectMap = toMap(message);
+    String principal = ofNullable(reflect.principal).orElse((String) objectMap.get("principal"));
+
+    // Loopback protection using instance ID
+    if (UdmiServicePod.INSTANCE_ID.equals(principal)) {
+      debug("Ignoring loopback of message from this instance: " + UdmiServicePod.INSTANCE_ID);
+      return;
+    }
+
     info("ReflectProcessor received message for %s/%s, folder %s, type %s",
         reflect.deviceRegistryId, reflect.deviceId, reflect.subFolder, reflect.subType);
-    Map<String, Object> objectMap = toMap(message);
     try {
       boolean isCommand = objectMap.containsKey(PAYLOAD_KEY);
       if (reflect.subFolder == null && !isCommand) {
@@ -456,8 +464,9 @@ public class ReflectProcessor extends ProcessorBase {
     message.source = reflection.source;
 
     String deviceRegistry = reflection.deviceId;
-    iotAccess.sendCommand(makeReflectEnvelope(deviceRegistry, reflection.source), SubFolder.UDMI,
-        stringify(message));
+    iotAccess.sendCommand(
+        makeReflectEnvelope(deviceRegistry, reflection.source, reflection.principal),
+        SubFolder.UDMI, stringify(message));
   }
 
   private void updateProviderAffinity(Envelope envelope, String source) {

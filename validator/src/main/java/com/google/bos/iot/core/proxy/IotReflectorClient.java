@@ -309,6 +309,11 @@ public class IotReflectorClient implements MessagePublisher {
       }
       ifNotNullThen(envelope.source, source -> messageMap.put(SOURCE_KEY, source),
           () -> messageMap.remove(SOURCE_KEY));
+
+      if (sessionId.equals(envelope.principal)) {
+        return;
+      }
+
       if (SubType.CONFIG == envelope.subType) {
         ensureCloudSync(messageMap);
       } else if (SubType.COMMANDS == envelope.subType || SubType.REPLY == envelope.subType) {
@@ -638,6 +643,7 @@ public class IotReflectorClient implements MessagePublisher {
     String transactionId = getNextTransactionId();
     envelope.transactionId = transactionId;
     envelope.publishTime = new Date();
+    envelope.principal = sessionId;
     publishStats.update();
     publisher.publish(registryId, getPublishTopic(), stringify(envelope));
     return transactionId;

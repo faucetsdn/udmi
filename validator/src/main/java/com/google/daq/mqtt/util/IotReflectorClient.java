@@ -7,6 +7,7 @@ import static com.google.udmi.util.Common.DETAIL_KEY;
 import static com.google.udmi.util.Common.ERROR_KEY;
 import static com.google.udmi.util.Common.EXCEPTION_KEY;
 import static com.google.udmi.util.Common.SUBFOLDER_PROPERTY_KEY;
+import static com.google.udmi.util.Common.SUBTYPE_PROPERTY_KEY;
 import static com.google.udmi.util.Common.TRANSACTION_KEY;
 import static com.google.udmi.util.GeneralUtils.friendlyStackTrace;
 import static com.google.udmi.util.GeneralUtils.ifNotNullGet;
@@ -45,6 +46,7 @@ import udmi.schema.CloudModel;
 import udmi.schema.CloudModel.ModelOperation;
 import udmi.schema.Credential;
 import udmi.schema.Envelope.SubFolder;
+import udmi.schema.Envelope.SubType;
 import udmi.schema.ExecutionConfiguration;
 import udmi.schema.GatewayModel;
 import udmi.schema.SetupUdmiConfig;
@@ -279,7 +281,8 @@ public class IotReflectorClient implements IotProvider {
       try {
         String transactionId = messageBundle.attributes.get(TRANSACTION_KEY);
         String subFolder = messageBundle.attributes.get(SUBFOLDER_PROPERTY_KEY);
-        if (SubFolder.UDMI.value().equals(subFolder)) {
+        String subType = messageBundle.attributes.get(SUBTYPE_PROPERTY_KEY);
+        if (SubFolder.UDMI.value().equals(subFolder) && SubType.EVENTS.value().equals(subType)) {
           continue;
         }
         CompletableFuture<Map<String, Object>> future = ifNotNullGet(transactionId,
