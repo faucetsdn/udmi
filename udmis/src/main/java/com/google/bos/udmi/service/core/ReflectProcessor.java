@@ -8,6 +8,7 @@ import static com.google.udmi.util.Common.CONDENSER_STRING;
 import static com.google.udmi.util.Common.DETAIL_KEY;
 import static com.google.udmi.util.Common.DEVICE_ID_KEY;
 import static com.google.udmi.util.Common.ERROR_KEY;
+import static com.google.udmi.util.Common.SUBTYPE_PROPERTY_KEY;
 import static com.google.udmi.util.Common.TIMESTAMP_KEY;
 import static com.google.udmi.util.Common.TRANSACTION_KEY;
 import static com.google.udmi.util.GeneralUtils.catchToElse;
@@ -241,6 +242,8 @@ public class ReflectProcessor extends ProcessorBase {
     message.put(DETAIL_KEY, detailString);
     Envelope envelope = new Envelope();
     envelope.subFolder = SubFolder.ERROR;
+    envelope.subType = catchToNull(
+        () -> SubType.fromValue((String) objectMap.get(SUBTYPE_PROPERTY_KEY)));
     envelope.deviceId = (String) objectMap.get(DEVICE_ID_KEY);
     envelope.transactionId = transactionId;
     sendReflectCommand(reflection, envelope, message);
