@@ -37,8 +37,8 @@ fi
 
 $BINDIR/etcd -version
 
-rm -rf var/etcd
-mkdir -p var/etcd
+rm -rf var/etcd/member
+mkdir -p var/etcd/member
 
 nohup $BINDIR/etcd -listen-client-urls=http://0.0.0.0:2379 \
              -advertise-client-urls=http://127.0.0.1:2379 \
