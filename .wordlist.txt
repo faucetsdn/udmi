@@ -105,6 +105,7 @@ json
 JUnit
 JVM
 JWT
+JWTs
 keygen
 KNX
 kube
