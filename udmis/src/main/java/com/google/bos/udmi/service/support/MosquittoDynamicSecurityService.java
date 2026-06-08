@@ -22,6 +22,7 @@ import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Consumer;
 import org.eclipse.paho.mqttv5.client.IMqttToken;
 import org.eclipse.paho.mqttv5.client.MqttCallback;
 import org.eclipse.paho.mqttv5.client.MqttClient;
@@ -79,6 +80,7 @@ public class MosquittoDynamicSecurityService implements MqttCallback {
     public final String clientId;
     public final boolean isFallbackSupported;
     public int retryCount = 0;
+    public Consumer<Map<String, Object>> responseConsumer = null;
 
     /**
      * Constructor.
@@ -330,6 +332,13 @@ public class MosquittoDynamicSecurityService implements MqttCallback {
         String error = (String) resp.get("error");
 
         if (error == null && (status == null || status == 0)) {
+          if (req.responseConsumer != null) {
+            try {
+              req.responseConsumer.accept(resp);
+            } catch (Exception ex) {
+              log.error("Error in response consumer for command " + req.commandName, ex);
+            }
+          }
           req.future.complete(null);
         } else if (isBenignError(req.commandName, error)) {
           log.debug("Handling benign broker error for command {}: {}", req.commandName, error);
@@ -346,6 +355,11 @@ public class MosquittoDynamicSecurityService implements MqttCallback {
             && req.isFallbackSupported) {
           log.info("Client not found. Triggering createClient fallback for {}", req.username);
           triggerFallback(req, "createClient");
+        } else if ("addClientRole".equals(req.commandName)
+            && error != null
+            && error.contains("Internal error")) {
+          log.info("addClientRole failed with Internal error for {}. Querying current roles to verify...", req.username);
+          triggerAddRoleVerification(req);
         } else if (error != null && error.contains("Internal error")
             && req.retryCount < MAX_RETRIES) {
           req.retryCount++;
@@ -397,6 +411,73 @@ public class MosquittoDynamicSecurityService implements MqttCallback {
           originalReq.future.completeExceptionally(ex);
         } else {
           originalReq.future.complete(null);
+        }
+      });
+    } catch (Exception e) {
+      originalReq.future.completeExceptionally(e);
+    }
+  }
+
+  @SuppressWarnings("unchecked")
+  private void triggerAddRoleVerification(CommandRequest originalReq) {
+    Map<String, Object> queryCmd = new HashMap<>();
+    queryCmd.put("command", "getClient");
+    queryCmd.put("username", originalReq.username);
+
+    try {
+      String roleName;
+      try {
+        Map<String, Object> originalCmd = objectMapper.readValue(originalReq.serializedPayload, Map.class);
+        roleName = (String) originalCmd.get("rolename");
+      } catch (Exception e) {
+        originalReq.future.completeExceptionally(new RuntimeException("Failed to parse original command payload to find rolename", e));
+        return;
+      }
+
+      byte[] payload = objectMapper.writeValueAsBytes(queryCmd);
+      CompletableFuture<Void> queryFuture = new CompletableFuture<>();
+      CommandRequest queryReq = new CommandRequest(
+          "getClient",
+          payload,
+          queryFuture,
+          originalReq.username,
+          null,
+          null,
+          false
+      );
+
+      queryReq.responseConsumer = resp -> {
+        try {
+          List<Map<String, Object>> roles = (List<Map<String, Object>>) resp.get("roles");
+          boolean hasRole = false;
+          if (roles != null) {
+            for (Map<String, Object> roleMap : roles) {
+              String existingRole = (String) roleMap.get("rolename");
+              if (roleName.equals(existingRole)) {
+                hasRole = true;
+                break;
+              }
+            }
+          }
+          if (hasRole) {
+            log.info("Verification succeeded: Client {} already has role {}. Completing addClientRole as successful.", originalReq.username, roleName);
+            originalReq.future.complete(null);
+          } else {
+            log.warn("Verification failed: Client {} does not have role {}. Failing addClientRole with original Internal error.", originalReq.username, roleName);
+            originalReq.future.completeExceptionally(new RuntimeException("Broker error: Internal error"));
+          }
+        } catch (Exception e) {
+          log.error("Failed to parse verification query response", e);
+          originalReq.future.completeExceptionally(e);
+        }
+      };
+
+      enqueueCommand(queryReq);
+
+      queryFuture.whenComplete((v, ex) -> {
+        if (ex != null) {
+          log.error("Verification query getClient failed exceptionally", ex);
+          originalReq.future.completeExceptionally(new RuntimeException("Broker error: Internal error", ex));
         }
       });
     } catch (Exception e) {
