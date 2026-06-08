@@ -178,6 +178,10 @@ public class MosquittoDynamicSecurityService implements MqttCallback {
    */
   public CompletableFuture<Void> enqueueCommand(CommandRequest req) {
     if (commandQueue.size() >= MAX_QUEUE_SIZE) {
+      // Throwing QueueFullException synchronously here can abort the batch response
+      // processing loop (e.g., during fallback enqueues). We complete exceptionally instead.
+      // This allows callers (like ImplicitIotAccessProvider) to handle it in whenComplete
+      // and apply backpressure via safeSleep without crashing background workers.
       req.future.completeExceptionally(
           new QueueFullException("Dynamic security queue is full. Size: " + commandQueue.size()));
       return req.future;

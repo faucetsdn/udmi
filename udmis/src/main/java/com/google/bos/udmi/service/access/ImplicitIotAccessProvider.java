@@ -14,6 +14,7 @@ import static com.google.udmi.util.GeneralUtils.isNullOrNotEmpty;
 import static com.google.udmi.util.GeneralUtils.requireNull;
 import static com.google.udmi.util.JsonUtil.asMap;
 import static com.google.udmi.util.JsonUtil.isoConvert;
+import static com.google.udmi.util.JsonUtil.safeSleep;
 import static com.google.udmi.util.JsonUtil.stringify;
 import static com.google.udmi.util.JsonUtil.stringifyTerse;
 import static java.lang.String.format;
@@ -36,6 +37,7 @@ import com.google.bos.udmi.service.support.ConnectionBroker.Direction;
 import com.google.bos.udmi.service.support.DataRef;
 import com.google.bos.udmi.service.support.IotDataProvider;
 import com.google.bos.udmi.service.support.MosquittoBroker;
+import com.google.bos.udmi.service.support.QueueFullException;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.udmi.util.GeneralUtils;
@@ -54,6 +56,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Future;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
+import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import udmi.schema.Auth_provider;
 import udmi.schema.Basic;
@@ -111,6 +114,8 @@ public class ImplicitIotAccessProvider extends IotAccessBase {
   private static final String METADATA_STR_KEY = "metadata_str";
   private static final String RESOURCE_TYPE_PROPERTY = "resource_type";
   private static final int DEVICE_FETCH_BATCH_SIZE = 100;
+  private static final int MAX_QUEUE_RETRIES = 5;
+  private static final long QUEUE_RETRY_DELAY_MS = 1000;
   private final boolean enabled;
   private final String usePassword;
   private final ConnectionBroker broker;
@@ -196,9 +201,9 @@ public class ImplicitIotAccessProvider extends IotAccessBase {
       if (current % 50 == 0 && progress != null) {
         progress.accept(format("Binding %d/%d devices to %s...", current, total, gatewayId));
       }
-      CompletableFuture<Void> bindFuture = broker.bindGateway(
+      CompletableFuture<Void> bindFuture = withQueueRetry(() -> broker.bindGateway(
           clientId(registryId, gatewayId),
-          clientId(registryId, deviceId));
+          clientId(registryId, deviceId)));
       CompletableFuture<Void> chainedFuture = bindFuture.whenComplete((result, ex) -> {
         if (ex == null) {
           registryDeviceRef(registryId, deviceId).put(BOUND_TO_KEY, gatewayId);
@@ -229,15 +234,15 @@ public class ImplicitIotAccessProvider extends IotAccessBase {
       registryDeviceRef(registryId, deviceId).delete(BOUND_TO_KEY);
       registryDeviceRef(registryId, deviceId).delete(BIND_STATUS_KEY);
       gatewayBoundRef(registryId, gatewayId).delete(deviceId);
-      futures.add(broker.unbindGateway(
+      futures.add(withQueueRetry(() -> broker.unbindGateway(
           clientId(registryId, gatewayId),
-          clientId(registryId, deviceId)));
+          clientId(registryId, deviceId))));
     });
     CompletableFuture.allOf(futures.toArray(new CompletableFuture[0])).join();
   }
 
   private void blockDevice(String registryId, String deviceId, CloudModel cloudModel) {
-    broker.authorize(clientId(registryId, deviceId), null).join();
+    withQueueRetry(() -> broker.authorize(clientId(registryId, deviceId), null)).join();
     registryDeviceRef(registryId, deviceId).put(BLOCKED_PROPERTY, booleanString(true));
   }
 
@@ -286,13 +291,14 @@ public class ImplicitIotAccessProvider extends IotAccessBase {
     registryDevicesRef(registryId).delete(deviceId);
     CompletableFuture<Void> f1 = null;
     if (gatewayId == null) {
-      f1 = broker.authorize(clientId(registryId, deviceId), null);
+      f1 = withQueueRetry(() -> broker.authorize(clientId(registryId, deviceId), null));
     }
 
     CompletableFuture<Void> f2 = null;
     if (gatewayId != null) {
       gatewayBoundRef(registryId, gatewayId).delete(deviceId);
-      f2 = broker.unbindGateway(clientId(registryId, gatewayId), clientId(registryId, deviceId));
+      f2 = withQueueRetry(() -> broker.unbindGateway(clientId(registryId, gatewayId),
+          clientId(registryId, deviceId)));
     }
     if (f1 != null) {
       f1.join();
@@ -331,7 +337,7 @@ public class ImplicitIotAccessProvider extends IotAccessBase {
           || properties.get(AUTH_KEY_PROPERTY) != null
           || properties.get(AUTH_TYPE_PROPERTY) != null;
       if (hasAuthInfo || !isDefaultPass) {
-        broker.authorize(clientId(registryId, deviceId), password).join();
+        withQueueRetry(() -> broker.authorize(clientId(registryId, deviceId), password)).join();
       }
     }
     return properties;
@@ -422,6 +428,46 @@ public class ImplicitIotAccessProvider extends IotAccessBase {
     touchDeviceEntry(registryId, deviceId);
     Map<String, String> map = toDeviceMap(cloudModel, null);
     mungeDevice(registryId, deviceId, map);
+  }
+
+  private CompletableFuture<Void> withQueueRetry(Supplier<CompletableFuture<Void>> action) {
+    CompletableFuture<Void> result = new CompletableFuture<>();
+    withQueueRetryInternal(action, 0, result);
+    return result;
+  }
+
+  private void withQueueRetryInternal(Supplier<CompletableFuture<Void>> action, int retryCount,
+      CompletableFuture<Void> resultFuture) {
+    try {
+      action.get().whenComplete((res, ex) -> {
+        if (ex == null) {
+          resultFuture.complete(null);
+        } else {
+          Throwable cause = ex.getCause() != null ? ex.getCause() : ex;
+          if (cause instanceof QueueFullException && retryCount < MAX_QUEUE_RETRIES) {
+            long delay = QUEUE_RETRY_DELAY_MS * (long) Math.pow(2, retryCount);
+            warn("Queue full, retrying in %dms (retry %d/%d)...", delay, retryCount + 1,
+                MAX_QUEUE_RETRIES);
+            safeSleep(delay);
+            withQueueRetryInternal(action, retryCount + 1, resultFuture);
+          } else {
+            resultFuture.completeExceptionally(ex);
+          }
+        }
+      });
+    } catch (QueueFullException e) {
+      if (retryCount < MAX_QUEUE_RETRIES) {
+        long delay = QUEUE_RETRY_DELAY_MS * (long) Math.pow(2, retryCount);
+        warn("Queue full exception, retrying in %dms (retry %d/%d)...", delay, retryCount + 1,
+            MAX_QUEUE_RETRIES);
+        safeSleep(delay);
+        withQueueRetryInternal(action, retryCount + 1, resultFuture);
+      } else {
+        resultFuture.completeExceptionally(e);
+      }
+    } catch (Exception e) {
+      resultFuture.completeExceptionally(e);
+    }
   }
 
   @Override
@@ -583,7 +629,8 @@ public class ImplicitIotAccessProvider extends IotAccessBase {
     List<CloudModel> gateways = devices.values().stream()
         .filter(model -> GATEWAY.equals(model.resource_type)).toList();
     checkState(gateways.isEmpty(),
-        format("Gateways found in gateway lookup of %s: %s", gatewayId, CSV_JOINER.join(gateways)));
+        format("Gateways found in gateway lookup of %s: %s", gatewayId,
+            CSV_JOINER.join(gateways)));
     return devices;
   }
 
