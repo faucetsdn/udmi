@@ -113,43 +113,25 @@ Therefore, to use absolute, ref-only URLs, **the `gateway.target.family` must be
 
 ## Protocol-Specific Concrete Examples
 
-The URL syntax for different address families is defined by their respective `FamilyProvider` implementations.
+The URL syntax for different address families is defined by their respective `FamilyProvider` implementations. Please refer to protocol-specific documentation (such as [modbus.md](modbus.md)) for detailed, exhaustive specifications of their reference formats and parameters.
 
 ### 1. BACnet Family (`bacnet`)
-The `bacnet` family provider expects the device address to be a numeric BACnet Device Object Instance ID (up to `4194303`) and the point reference to follow the standard object type/instance formatting.
-
-**URL Scheme:** `bacnet://<device_id>/<object_type>:<object_instance>[#property]`
-
-* **`device_id`**: The BACnet Device Object Instance ID (e.g. `1234`).
-* **`object_type`**: The short-hand name for the object type (e.g., `AI` for Analog Input, `AV` for Analog Value, `BI` for Binary Input).
-* **`object_instance`**: The 0-based index of the object.
-* **`property`**: (Optional) The property to read/write (defaults to `#present_value` if omitted).
-
-#### Combined Example:
-* **Gateway Target Family**: `bacnet`
-* **Gateway Target Addr**: `1234`
-* **Point Ref**: `AV:100#present_value`
-* **Resulting URL**: `bacnet://1234/AV:100#present_value`
+An address family representing BACnet devices and objects.
+* **Combined Example:**
+  * **Gateway Target Family**: `bacnet`
+  * **Gateway Target Addr**: `1234`
+  * **Point Ref**: `AV:100#present_value`
+  * **Resulting URL**: `bacnet://1234/AV:100#present_value`
 
 ---
 
 ### 2. Modbus Family (`modbus`)
-The `modbus` family provider expects the device address to represent the host identifier (or named network defined under `localnet.networks`), and the point reference to pack register, function code, and interpretation details.
-
-**URL Scheme:** `modbus://<host_or_network>/<unit_id>/<function_code>/<register_address>[/<quantity>][?params]`
-
-* **`host_or_network`**: IP address, hostname, or named localnet network mapping (e.g. `modbus_rtu_1`).
-* **`unit_id`**: The Slave/Unit ID (typically `1` to `247`).
-* **`function_code`**: Modbus function code (e.g., `3` for Read Holding Registers, `4` for Read Input Registers).
-* **`register_address`**: The starting register address (e.g., `40001`).
-* **`quantity`**: (Optional) Number of registers to read.
-* **`params`**: Interpretation details such as `type` (e.g. `INT16`, `UINT32`), byte order (`border=MSB/LSB`), word order (`worder=HWF/LWF`), and arithmetic `scale`/`offset`.
-
-#### Combined Example:
-* **Gateway Target Family**: `modbus`
-* **Gateway Target Addr**: `modbus_rtu_1` (mapping to the serial/TCP network)
-* **Point Ref**: `2/3/40005?type=UINT32&worder=LWF&scale=0.01`
-* **Resulting URL**: `modbus://modbus_rtu_1/2/3/40005?type=UINT32&worder=LWF&scale=0.01`
+An address family representing Modbus registers.
+* **Combined Example:**
+  * **Gateway Target Family**: `modbus`
+  * **Gateway Target Addr**: `modbus_rtu_1`
+  * **Point Ref**: `2/3/40005?type=UINT32&worder=LWF&scale=0.01`
+  * **Resulting URL**: `modbus://modbus_rtu_1/2/3/40005?type=UINT32&worder=LWF&scale=0.01`
 
 ---
 
