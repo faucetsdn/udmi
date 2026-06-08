@@ -150,7 +150,8 @@ public class MosquittoDynamicSecurityService implements MqttCallback {
       // This allows callers (like ImplicitIotAccessProvider) to handle it in whenComplete
       // and apply backpressure via safeSleep without crashing background workers.
       CompletableFuture<Void> failedFuture = new CompletableFuture<>();
-      failedFuture.completeExceptionally(new QueueFullException("Dynamic security queue is full. Size: " + commandQueue.size()));
+      failedFuture.completeExceptionally(new QueueFullException(
+          "Dynamic security queue is full. Size: " + commandQueue.size()));
       return failedFuture;
     }
     commandQueue.offer(req);

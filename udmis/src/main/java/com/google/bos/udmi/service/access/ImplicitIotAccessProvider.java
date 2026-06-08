@@ -628,7 +628,8 @@ public class ImplicitIotAccessProvider extends IotAccessBase {
     List<CloudModel> gateways = devices.values().stream()
         .filter(model -> GATEWAY.equals(model.resource_type)).toList();
     checkState(gateways.isEmpty(),
-        format("Gateways found in gateway lookup of %s: %s", gatewayId, CSV_JOINER.join(gateways)));
+        format("Gateways found in gateway lookup of %s: %s", gatewayId,
+            CSV_JOINER.join(gateways)));
     return devices;
   }
 
