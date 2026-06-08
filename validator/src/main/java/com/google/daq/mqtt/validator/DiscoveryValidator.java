@@ -5,6 +5,7 @@ import static com.google.daq.mqtt.util.providers.FamilyProvider.constructUrl;
 
 import com.google.daq.mqtt.util.providers.FamilyProvider;
 import java.util.Map;
+import udmi.schema.Category;
 import udmi.schema.DiscoveryEvents;
 import udmi.schema.DiscoveryState;
 import udmi.schema.Metadata;
@@ -41,6 +42,8 @@ public class DiscoveryValidator {
    */
   public void validateMessage(DiscoveryEvents discoveryEvents) {
     if (discoveryEvents.family == null) {
+      errorCollector.addError(new RuntimeException("discovery family not defined"),
+          Category.VALIDATION_DEVICE_SCHEMA, "discovery family not defined");
       return;
     }
     String scanFamily = discoveryEvents.family;
