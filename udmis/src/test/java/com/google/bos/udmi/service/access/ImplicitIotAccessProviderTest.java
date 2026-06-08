@@ -5,11 +5,13 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
 import com.google.bos.udmi.service.core.ReflectProcessor;
+import com.google.bos.udmi.service.support.QueueFullException;
 import com.google.bos.udmi.service.pod.UdmiServicePod;
 import com.google.bos.udmi.service.support.ConnectionBroker;
 import com.google.bos.udmi.service.support.DataRef;
@@ -97,6 +99,22 @@ class ImplicitIotAccessProviderTest {
     provider.modelDevice(TEST_REGISTRY, TEST_DEVICE, cloudModel, null);
 
     verify(mockBroker).authorize(eq(CLIENT_ID), eq(TEST_PASSWORD));
+  }
+
+  @Test
+  void testAuthorizeWithQueueFullRetry() {
+    CloudModel cloudModel = new CloudModel();
+    cloudModel.operation = ModelOperation.CREATE;
+    cloudModel.auth_type = Auth_type.RS_256;
+
+    // Mock broker to throw QueueFullException then succeed
+    when(mockBroker.authorize(eq(CLIENT_ID), eq(TEST_PASSWORD)))
+        .thenThrow(new QueueFullException("Queue full"))
+        .thenReturn(completedFuture(null));
+
+    provider.modelDevice(TEST_REGISTRY, TEST_DEVICE, cloudModel, null);
+
+    verify(mockBroker, times(2)).authorize(eq(CLIENT_ID), eq(TEST_PASSWORD));
   }
 
   @Test
