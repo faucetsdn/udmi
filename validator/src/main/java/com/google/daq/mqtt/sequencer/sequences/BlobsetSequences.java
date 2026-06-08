@@ -560,7 +560,7 @@ public class BlobsetSequences extends SequenceBase {
     );
 
     // Resend the exact same config
-    BlobUpdateTestingModel target = getUpdateTarget("success");
+    final BlobUpdateTestingModel target = getUpdateTarget("success");
     updateConfig("trigger redundant update to check for idempotency");
 
     sleepFor("waiting for device to process update", Duration.ofSeconds(10));
