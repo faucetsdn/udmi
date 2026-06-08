@@ -824,8 +824,14 @@ public class Validator {
       try {
         device.validateRawMessage(schemaName, message, attributes);
       } catch (Exception e) {
-        outputLogger.error("Error validating contents: " + friendlyStackTrace(e));
-        device.addError(e, attributes, Category.VALIDATION_DEVICE_CONTENT);
+        if (e.getCause() instanceof ClassNotFoundException) {
+          outputLogger.info("Skipping raw content validation for %s: %s",
+              schemaName, getExceptionMessage(e));
+        } else {
+          outputLogger.error("Error validating contents for %s: %s",
+              schemaName, friendlyStackTrace(e));
+          device.addError(e, attributes, Category.VALIDATION_DEVICE_CONTENT);
+        }
       }
     } else {
       extraDevices.add(deviceId);
