@@ -37,7 +37,7 @@ fi
 
 $BINDIR/etcd -version
 
-rm -rf var/etcd || true
+rm -rf var/etcd
 mkdir -p var/etcd
 
 nohup $BINDIR/etcd -listen-client-urls=http://0.0.0.0:2379 \
