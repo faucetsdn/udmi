@@ -417,13 +417,20 @@ public class BlobsetSequences extends SequenceBase {
     deviceConfig.blobset = blobset;
   }
 
-  private String executeBlobUpdate(BlobUpdateTestingModel target) {
+  private String executeBlobUpdate(BlobUpdateTestingModel target, ExpectedLog... expectedLogs) {
     String blobName = target.blob_name;
     String url = target.url;
     String sha256 = target.sha256;
 
     setDeviceConfigSoftwareBlob(blobName, url, sha256);
     updateConfig("trigger blob update for " + blobName);
+
+    for (ExpectedLog expectation : expectedLogs) {
+      expectation.level().ifPresentOrElse(
+          level -> waitForLog(expectation.category(), level),
+          ()  -> waitForLog(expectation.category())
+      );
+    }
 
     untilTrue(blobName + " phase transitions", () -> {
       BlobBlobsetState blobBlobsetState = deviceState.blobset.blobs.get(blobName);
@@ -458,14 +465,7 @@ public class BlobsetSequences extends SequenceBase {
     info(format("Testing blob update for blob key %s, version %s", target.blob_name,
         target.version));
 
-    String blobName = executeBlobUpdate(target);
-
-    for (ExpectedLog expectation : expectedLogs) {
-      expectation.level().ifPresentOrElse(
-          level -> waitForLog(expectation.category(), level),
-          ()  -> waitForLog(expectation.category())
-      );
-    }
+    String blobName = executeBlobUpdate(target, expectedLogs);
 
     BlobBlobsetState blobBlobsetState = deviceState.blobset.blobs.get(blobName);
 
@@ -565,15 +565,15 @@ public class BlobsetSequences extends SequenceBase {
 
     sleepFor("waiting for device to process update", Duration.ofSeconds(10));
 
-    untilTrue(target.blob_name + " phase is FINAL", () -> {
-      BlobBlobsetState blobState = deviceState.blobset.blobs.get(target.blob_name);
-      return blobState != null && BlobPhase.FINAL.equals(blobState.phase);
-    });
-
     // No new lifecycle logs should have been emitted
     checkWasNotLogged(BLOBSET_BLOB_RECEIVE, Level.DEBUG);
     checkWasNotLogged(BLOBSET_BLOB_FETCH, Level.DEBUG);
     checkWasNotLogged(BLOBSET_BLOB_APPLY, Level.INFO);
+
+    untilTrue(target.blob_name + " phase is FINAL", () -> {
+      BlobBlobsetState blobState = deviceState.blobset.blobs.get(target.blob_name);
+      return blobState != null && BlobPhase.FINAL.equals(blobState.phase);
+    });
   }
 
 }
