@@ -30,13 +30,27 @@ To ensure technical integrity in this multi-component system (comprising Python,
 - **Proof of Failure**: Before any verification run, you must provide log evidence that the failure is **currently active** in the environment. A fix is only valid if applied to a demonstrably broken state.
 - **Warning**: If permissions (e.g., `sudo`) prevent full sanitization, the environment must be treated as "Untrusted" and verification cannot be considered conclusive.
 
-### 6. Final Verification (Full Project Integrity)
-- **Scope**: You MUST verify project-wide integrity by running all functional and integration jobs defined in `.github/workflows/testing.yml`, **excluding** the sharded `sequencer` job (which is too extensive for standard validation).
-- **Mandatory Suites**: This includes, but is not limited to:
-  - `Unit`: `bin/run_tests all_tests` (Covers builds, schema, and registrar unit tests).
-  - `Automapping`: `bin/test_automapper`
-  - `Baseline`: `bin/test_special`, `bin/test_validator`, and `bin/test_sequencer nostate full`.
-  - `Runlocal`: `bin/test_runlocal`, `bin/test_uufi`, and `bin/test_udmis`.
-  - `Discovery`: `misc/discoverynode/testing/e2e/test_local`.
-  - `Endpoint` & `Blobupdates`: `bin/test_redirect` and `bin/test_blob_updates`.
-- **Authoritative Source**: Always audit `testing.yml` for the current set of `run:` commands. Do not assume local utility scripts (like `bin/run_tests`) represent the exhaustive test surface. Declaring a task "DONE" without verifying against these integration suites is a violation of engineering standards.
+### 6. Staged Final Verification (Project-Wide Integrity)
+To prevent regressions in this reflectively-coupled system, verification MUST proceed in three distinct stages. You may only proceed to the next stage if the previous one passes completely.
+
+#### Stage 1: Structural & Logic Integrity (Fast/Unit)
+- **Goal**: Catch compilation errors, logic regressions, and basic contract violations.
+- **Mandate**: Run all core unit tests.
+- **Command**: `bin/run_tests code_tests` and `bin/run_tests registrar_tests`.
+
+#### Stage 2: Schema & Reflection Integrity (Static Integration)
+- **Goal**: Ensure reflective mapping (e.g., `classForSchema`) and schema validation are intact across all message types.
+- **Mandate**: Validate the schema-to-class mapping and generated code.
+- **Command**: `bin/run_tests schema_tests` (runs `bin/test_schema`).
+
+#### Stage 3: Functional Pipeline Integrity (Local Integration)
+- **Goal**: Verify the end-to-end message pipeline (Validator -> Sequencer -> UDMIS) handles both standard and "unknown" cases without reflective failures.
+- **Mandate**: Run the comprehensive local integration suite. This stage is non-negotiable for any change touching `common`, `gencode`, or message-processing logic.
+- **Commands**:
+  1. `bin/run_tests install_dependencies` (Ensure clean local environment)
+  2. `bin/start_local sites/udmi_site_model //mqtt/localhost` (Start local services)
+  3. `bin/test_validator //mqtt/localhost` (Telemetry validation)
+  4. `bin/test_sequencer nostate full //mqtt/localhost` (Exhaustive pipeline verification)
+  5. `bin/test_runlocal` (UDMIS component verification)
+
+**Authoritative Source**: If in doubt, audit `.github/workflows/testing.yml` for the current set of `run:` commands. Declaring a task "DONE" without completing all three stages is a violation of engineering standards.
