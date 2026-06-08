@@ -358,7 +358,8 @@ public class MosquittoDynamicSecurityService implements MqttCallback {
         } else if ("addClientRole".equals(req.commandName)
             && error != null
             && error.contains("Internal error")) {
-          log.info("addClientRole failed with Internal error for {}. Querying current roles to verify...", req.username);
+          log.info("addClientRole failed with Internal error for {}. "
+              + "Querying current roles to verify...", req.username);
           triggerAddRoleVerification(req);
         } else if (error != null && error.contains("Internal error")
             && req.retryCount < MAX_RETRIES) {
@@ -427,10 +428,12 @@ public class MosquittoDynamicSecurityService implements MqttCallback {
     try {
       String roleName;
       try {
-        Map<String, Object> originalCmd = objectMapper.readValue(originalReq.serializedPayload, Map.class);
+        Map<String, Object> originalCmd =
+            objectMapper.readValue(originalReq.serializedPayload, Map.class);
         roleName = (String) originalCmd.get("rolename");
       } catch (Exception e) {
-        originalReq.future.completeExceptionally(new RuntimeException("Failed to parse original command payload to find rolename", e));
+        originalReq.future.completeExceptionally(
+            new RuntimeException("Failed to parse original command payload to find rolename", e));
         return;
       }
 
@@ -448,7 +451,11 @@ public class MosquittoDynamicSecurityService implements MqttCallback {
 
       queryReq.responseConsumer = resp -> {
         try {
-          List<Map<String, Object>> roles = (List<Map<String, Object>>) resp.get("roles");
+          Map<String, Object> data = (Map<String, Object>) resp.get("data");
+          Map<String, Object> client =
+              data != null ? (Map<String, Object>) data.get("client") : null;
+          List<Map<String, Object>> roles =
+              client != null ? (List<Map<String, Object>>) client.get("roles") : null;
           boolean hasRole = false;
           if (roles != null) {
             for (Map<String, Object> roleMap : roles) {
@@ -460,11 +467,15 @@ public class MosquittoDynamicSecurityService implements MqttCallback {
             }
           }
           if (hasRole) {
-            log.info("Verification succeeded: Client {} already has role {}. Completing addClientRole as successful.", originalReq.username, roleName);
+            log.info("Verification succeeded: Client {} already has role {}. "
+                + "Completing addClientRole as successful.", originalReq.username, roleName);
             originalReq.future.complete(null);
           } else {
-            log.warn("Verification failed: Client {} does not have role {}. Failing addClientRole with original Internal error.", originalReq.username, roleName);
-            originalReq.future.completeExceptionally(new RuntimeException("Broker error: Internal error"));
+            log.warn("Verification failed: Client {} does not have role {}. "
+                + "Failing addClientRole with original Internal error.",
+                originalReq.username, roleName);
+            originalReq.future.completeExceptionally(
+                new RuntimeException("Broker error: Internal error"));
           }
         } catch (Exception e) {
           log.error("Failed to parse verification query response", e);
@@ -477,7 +488,8 @@ public class MosquittoDynamicSecurityService implements MqttCallback {
       queryFuture.whenComplete((v, ex) -> {
         if (ex != null) {
           log.error("Verification query getClient failed exceptionally", ex);
-          originalReq.future.completeExceptionally(new RuntimeException("Broker error: Internal error", ex));
+          originalReq.future.completeExceptionally(
+              new RuntimeException("Broker error: Internal error", ex));
         }
       });
     } catch (Exception e) {
