@@ -172,11 +172,12 @@ class GitHubClient:
         """Triggers the manual testing.yml workflow via dispatch."""
         path = f"/repos/{self.owner}/{self.repo}/actions/workflows/testing.yml/dispatches"
         payload = {
-            "ref": branch,
-            "inputs": {
+            "ref": branch
+        }
+        if target_project and target_project.lower() != "skip":
+            payload["inputs"] = {
                 "target_project": target_project
             }
-        }
         self._request("POST", path, payload)
 
     def get_new_runs(self, branch, anchor_run_id, expected_count):
@@ -248,7 +249,7 @@ def main():
     )
     # Common Arguments
     parser.add_argument("--target", "-t", default="//mqtt/localhost",
-                        help="Target project specification (default: //mqtt/localhost)")
+                        help="Target project specification. Use 'skip' to omit from CI. (default: //mqtt/localhost)")
     parser.add_argument("--runs", "-n", type=int, default=3,
                         help="Number of local sandbox loops, parallel CI dispatches, or completed historical runs to retrieve (default: 3)")
     parser.add_argument("--iterations", type=int,
