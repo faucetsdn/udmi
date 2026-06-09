@@ -195,7 +195,8 @@ public class DynamicIotAccessProvider extends IotAccessBase {
 
   @Override
   public CloudModel modelRegistry(String registryId, String deviceId, CloudModel cloudModel) {
-    return getRegistryProvider(registryId, deviceId).modelRegistry(registryId, deviceId, cloudModel);
+    return getRegistryProvider(registryId, deviceId)
+        .modelRegistry(registryId, deviceId, cloudModel);
   }
 
   @Override

@@ -208,6 +208,7 @@ public class MosquittoDynamicSecurityService implements MqttCallback {
    * Enqueues a command request to the service non-blockingly.
    */
   public CompletableFuture<Void> enqueueCommand(CommandRequest req) {
+    log.debug("Enqueuing dynamic security command: {}", req.commandName);
     if (!commandQueue.offer(req)) {
       req.future.completeExceptionally(new QueueFullException(
           "Dynamic security queue is full. Size: " + commandQueue.size()));
@@ -245,6 +246,8 @@ public class MosquittoDynamicSecurityService implements MqttCallback {
     if (batchInFlight || commandQueue.isEmpty()) {
       return;
     }
+    log.debug("Draining and publishing batch of dynamic security commands. Queue size: {}",
+        commandQueue.size());
     batchInFlight = true;
     if (scheduledTask != null) {
       scheduledTask.cancel(false);
@@ -293,6 +296,8 @@ public class MosquittoDynamicSecurityService implements MqttCallback {
       log.info("Publishing batch containing {} commands ({} bytes) to {}",
           batch.size(), payload.length, CONTROL_TOPIC);
       mqttClient.publish(CONTROL_TOPIC, message);
+      log.info("Successfully published batch containing {} commands to {}",
+          batch.size(), CONTROL_TOPIC);
 
       synchronized (this) {
         if (timeoutTask != null) {
