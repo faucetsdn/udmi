@@ -324,6 +324,8 @@ public class SimpleMqttPipe extends MessageBase {
     return format("/r/%s/d/%s%s%s", envelope.deviceRegistryId, envelope.deviceId, channel, topic);
   }
 
+  
+
   private String makeTransactionId() {
     return format("MP:%08x", (long) (Math.random() * 0x100000000L));
   }
