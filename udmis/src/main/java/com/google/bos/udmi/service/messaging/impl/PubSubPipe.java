@@ -16,6 +16,8 @@ import static java.util.Optional.ofNullable;
 
 import com.google.api.core.AbstractApiService;
 import com.google.api.core.ApiFuture;
+import com.google.api.core.ApiFutureCallback;
+import com.google.api.core.ApiFutures;
 import com.google.api.core.ApiService;
 import com.google.api.core.ApiService.Listener;
 import com.google.api.core.ApiService.State;
@@ -49,6 +51,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 import org.jetbrains.annotations.NotNull;
+import com.google.common.util.concurrent.MoreExecutors;
 import udmi.schema.EndpointConfiguration;
 import udmi.schema.Envelope;
 
@@ -159,22 +162,39 @@ public class PubSubPipe extends MessageBase implements MessageReceiver {
       long publishStartTime = System.currentTimeMillis();
       long sleepTime = publishDelaySec * MS_PER_SEC;
       ApiFuture<String> publish = publisher.publish(message);
-      Thread.sleep(sleepTime);
-      String publishedId = publish.get();
-      long gcpAckLatencyMs = (System.currentTimeMillis() - publishStartTime) - sleepTime;
 
-      String publishedTransactionId = PS_TXN_PREFIX + publishedId;
-      debug(format("Published PubSub %s/%s to %s as %s/%s %s -> %s",
-          stringMap.get(SUBTYPE_PROPERTY_KEY), stringMap.get(SUBFOLDER_PROPERTY_KEY),
-          topicId, envelope.deviceRegistryId, envelope.deviceId, envelope.transactionId,
-          publishedTransactionId));
-      debug(format("PubSub Message %s published with GCP Ack Latency %dms",
-          publishedTransactionId, gcpAckLatencyMs));
+      ApiFutures.addCallback(publish, new ApiFutureCallback<String>() {
+        @Override
+        public void onFailure(Throwable t) {
+          publisherQueueSize.decrementAndGet();
+          throttleQueue();
+          error(format("Failed to publish PubSub message for %s/%s: %s",
+              envelope.deviceRegistryId, envelope.deviceId, friendlyStackTrace(t)));
+        }
+
+        @Override
+        public void onSuccess(String result) {
+          publisherQueueSize.decrementAndGet();
+          throttleQueue();
+          long gcpAckLatencyMs = (System.currentTimeMillis() - publishStartTime) - sleepTime;
+
+          String publishedTransactionId = PS_TXN_PREFIX + result;
+          debug(format("Published PubSub %s/%s to %s as %s/%s %s -> %s",
+              stringMap.get(SUBTYPE_PROPERTY_KEY), stringMap.get(SUBFOLDER_PROPERTY_KEY),
+              topicId, envelope.deviceRegistryId, envelope.deviceId, envelope.transactionId,
+              publishedTransactionId));
+          debug(format("PubSub Message %s published with GCP Ack Latency %dms",
+              publishedTransactionId, gcpAckLatencyMs));
+        }
+      }, MoreExecutors.directExecutor());
+
+      if (sleepTime > 0) {
+        Thread.sleep(sleepTime);
+      }
     } catch (Exception e) {
-      throw new RuntimeException("While publishing bundle to " + publisher.getTopicNameString(), e);
-    } finally {
       publisherQueueSize.decrementAndGet();
       throttleQueue();
+      throw new RuntimeException("While publishing bundle to " + publisher.getTopicNameString(), e);
     }
   }
 
