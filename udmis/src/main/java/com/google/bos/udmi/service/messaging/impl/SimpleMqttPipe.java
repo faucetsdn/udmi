@@ -223,6 +223,17 @@ public class SimpleMqttPipe extends MessageBase {
       String topic = makeMqttTopic(bundle);
       MqttMessage message = makeMqttMessage(bundle);
       mqttClient.publish(topic, message);
+
+      if (bundle.envelope != null && bundle.envelope.deviceId != null) {
+        try {
+          String legacyTopic = makeLegacyTopic(bundle.envelope);
+          mqttClient.publish(legacyTopic, message);
+          debug("Also published to legacy topic: " + legacyTopic);
+        } catch (Exception e) {
+          warn("Failed to publish to legacy topic: " + friendlyStackTrace(e));
+        }
+      }
+
       int tokens = mqttClient.getPendingDeliveryTokens().length;
       ifTrueThen(tokens > 2, () ->
           debug("Client has %d inFlight tokens, from %s", tokens, topic));
@@ -322,6 +333,12 @@ public class SimpleMqttPipe extends MessageBase {
     }
     String channel = IMPLICIT_CHANNEL.equals(envelope.source) ? "" : sendTopicChannel;
     return format("/r/%s/d/%s%s%s", envelope.deviceRegistryId, envelope.deviceId, channel, topic);
+  }
+
+  private String makeLegacyTopic(Envelope envelope) {
+    String subTypeStr = envelope.subType != null ? envelope.subType.value() : "";
+    String subFolderStr = envelope.subFolder != null ? "/" + envelope.subFolder.value() : "";
+    return format("/devices/%s/%s%s", envelope.deviceId, subTypeStr, subFolderStr);
   }
 
   
