@@ -236,6 +236,8 @@ public class PubSubPipe extends MessageBase implements MessageReceiver {
       } else {
         fullSource = PUBSUB_SOURCE + SOURCE_SEPARATOR + source;
       }
+    } else {
+      fullSource = PUBSUB_SOURCE;
     }
     attributesMap.put(SOURCE_KEY, fullSource);
 
