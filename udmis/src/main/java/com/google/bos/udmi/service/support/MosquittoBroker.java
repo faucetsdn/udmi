@@ -111,6 +111,10 @@ public class MosquittoBroker extends ContainerBase implements ConnectionBroker {
     }
   }
 
+  private boolean isReflectRegistry(String id) {
+    return id != null && id.contains("/" + reflectRegistry + "/");
+  }
+
   private CompletableFuture<Void> mosquctlClient(String clientId, String clientPass) {
     String clientUser = clientId;
     String roleName = "role_" + clientId.replace("/", "_");
@@ -137,6 +141,11 @@ public class MosquittoBroker extends ContainerBase implements ConnectionBroker {
             addRoleAcl(roleName, "publishClientSend", clientId + "/events/#", true);
         CompletableFuture<Void> a5 =
             addRoleAcl(roleName, "publishClientSend", clientId + "/state", true);
+        if (isReflectRegistry(clientId)) {
+          CompletableFuture<Void> a6 =
+              addRoleAcl(roleName, "publishClientSend", clientId + "/reflect", true);
+          return CompletableFuture.allOf(r1, a1, a2, a3, a4, a5, a6);
+        }
         return CompletableFuture.allOf(r1, a1, a2, a3, a4, a5);
       }).thenRun(() -> info("Device %s registered correctly.", clientId));
     }
@@ -319,15 +328,19 @@ public class MosquittoBroker extends ContainerBase implements ConnectionBroker {
   public CompletableFuture<Void> bindGateway(String gatewayId, String deviceId) {
     String roleName = "role_" + gatewayId.replace("/", "_");
 
-    // add ACLs
-    return CompletableFuture.allOf(
-        addRoleAcl(roleName, "subscribePattern", deviceId + "/config", true),
-        addRoleAcl(roleName, "subscribePattern", deviceId + "/commands/#", true),
-        addRoleAcl(roleName, "subscribePattern", deviceId + "/errors", true),
-        addRoleAcl(roleName, "publishClientSend", deviceId + "/events/#", true),
-        addRoleAcl(roleName, "publishClientSend", deviceId + "/state", true),
-        addRoleAcl(roleName, "publishClientSend", deviceId + "/attach", true)
-    );
+    CompletableFuture<Void> a1 = addRoleAcl(roleName, "subscribePattern", deviceId + "/config", true);
+    CompletableFuture<Void> a2 = addRoleAcl(roleName, "subscribePattern", deviceId + "/commands/#", true);
+    CompletableFuture<Void> a3 = addRoleAcl(roleName, "subscribePattern", deviceId + "/errors", true);
+    CompletableFuture<Void> a4 = addRoleAcl(roleName, "publishClientSend", deviceId + "/events/#", true);
+    CompletableFuture<Void> a5 = addRoleAcl(roleName, "publishClientSend", deviceId + "/state", true);
+    CompletableFuture<Void> a6 = addRoleAcl(roleName, "publishClientSend", deviceId + "/attach", true);
+
+    if (isReflectRegistry(deviceId)) {
+      CompletableFuture<Void> a7 = addRoleAcl(roleName, "publishClientSend", deviceId + "/reflect", true);
+      return CompletableFuture.allOf(a1, a2, a3, a4, a5, a6, a7);
+    }
+
+    return CompletableFuture.allOf(a1, a2, a3, a4, a5, a6);
   }
 
   @Override
@@ -335,14 +348,19 @@ public class MosquittoBroker extends ContainerBase implements ConnectionBroker {
     info("Unbind device Id: %s from gateway Id: %s", deviceId, gatewayId);
     String roleName = "role_" + gatewayId.replace("/", "_");
 
-    return CompletableFuture.allOf(
-        removeRoleAcl(roleName, "subscribePattern", deviceId + "/config"),
-        removeRoleAcl(roleName, "subscribePattern", deviceId + "/commands/#"),
-        removeRoleAcl(roleName, "subscribePattern", deviceId + "/errors"),
-        removeRoleAcl(roleName, "publishClientSend", deviceId + "/events/#"),
-        removeRoleAcl(roleName, "publishClientSend", deviceId + "/state"),
-        removeRoleAcl(roleName, "publishClientSend", deviceId + "/attach")
-    );
+    CompletableFuture<Void> a1 = removeRoleAcl(roleName, "subscribePattern", deviceId + "/config");
+    CompletableFuture<Void> a2 = removeRoleAcl(roleName, "subscribePattern", deviceId + "/commands/#");
+    CompletableFuture<Void> a3 = removeRoleAcl(roleName, "subscribePattern", deviceId + "/errors");
+    CompletableFuture<Void> a4 = removeRoleAcl(roleName, "publishClientSend", deviceId + "/events/#");
+    CompletableFuture<Void> a5 = removeRoleAcl(roleName, "publishClientSend", deviceId + "/state");
+    CompletableFuture<Void> a6 = removeRoleAcl(roleName, "publishClientSend", deviceId + "/attach");
+
+    if (isReflectRegistry(deviceId)) {
+      CompletableFuture<Void> a7 = removeRoleAcl(roleName, "publishClientSend", deviceId + "/reflect");
+      return CompletableFuture.allOf(a1, a2, a3, a4, a5, a6, a7);
+    }
+
+    return CompletableFuture.allOf(a1, a2, a3, a4, a5, a6);
   }
 
   private CompletableFuture<Void> removeRoleAcl(String roleName, String type, String pattern) {
