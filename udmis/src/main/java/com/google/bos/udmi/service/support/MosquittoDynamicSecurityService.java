@@ -49,6 +49,7 @@ public class MosquittoDynamicSecurityService implements MqttCallback {
   private static final int BATCH_SIZE_LIMIT = 1000;
   private static final long BATCH_BYTES_LIMIT = 10 * 1024 * 1024; // 10 MB
   private static final long MIN_PUBLISH_INTERVAL_MS = 5000; // 5 seconds
+  private static final long BATCH_TIMEOUT_MS = 30000; // 30 seconds
   private static final String CONTROL_TOPIC = "$CONTROL/dynamic-security/v1";
   private static final String RESPONSE_TOPIC = "$CONTROL/dynamic-security/v1/response";
 
@@ -56,14 +57,15 @@ public class MosquittoDynamicSecurityService implements MqttCallback {
   private final BlockingQueue<CommandRequest> commandQueue =
       new LinkedBlockingQueue<>(MAX_QUEUE_SIZE);
   private final MqttClient mqttClient;
-  private final ExecutorService executor = Executors.newSingleThreadExecutor();
-  private final ScheduledExecutorService scheduler = Executors.newSingleThreadScheduledExecutor();
+  private final ExecutorService executor;
+  private final ScheduledExecutorService scheduler;
   private final ObjectMapper objectMapper = new ObjectMapper();
 
   private long lastPublishTime = 0;
   private boolean batchInFlight = false;
   private List<CommandRequest> inFlightBatch = null;
   private ScheduledFuture<?> scheduledTask = null;
+  private ScheduledFuture<?> timeoutTask = null;
 
   /**
    * Constructs and connects the Dynamic Security Service.
@@ -71,7 +73,19 @@ public class MosquittoDynamicSecurityService implements MqttCallback {
   public MosquittoDynamicSecurityService(EndpointConfiguration endpoint) {
     this.endpoint = endpoint;
     this.mqttClient = createMqttClient();
+    this.executor = Executors.newSingleThreadExecutor();
+    this.scheduler = Executors.newSingleThreadScheduledExecutor();
     connect();
+  }
+
+  // Visible for testing
+  MosquittoDynamicSecurityService(EndpointConfiguration endpoint, MqttClient mqttClient,
+      ExecutorService executor, ScheduledExecutorService scheduler) {
+    this.endpoint = endpoint;
+    this.mqttClient = mqttClient;
+    this.mqttClient.setCallback(this);
+    this.executor = executor;
+    this.scheduler = scheduler;
   }
 
   private MqttClient createMqttClient() {
@@ -145,14 +159,9 @@ public class MosquittoDynamicSecurityService implements MqttCallback {
    */
   public CompletableFuture<Void> enqueueCommand(CommandRequest req) {
     if (commandQueue.size() >= MAX_QUEUE_SIZE) {
-      // Throwing QueueFullException synchronously here can abort the batch response
-      // processing loop (e.g., during fallback enqueues). We complete exceptionally instead.
-      // This allows callers (like ImplicitIotAccessProvider) to handle it in whenComplete
-      // and apply backpressure via safeSleep without crashing background workers.
-      CompletableFuture<Void> failedFuture = new CompletableFuture<>();
-      failedFuture.completeExceptionally(new QueueFullException(
+      req.future.completeExceptionally(new QueueFullException(
           "Dynamic security queue is full. Size: " + commandQueue.size()));
-      return failedFuture;
+      return req.future;
     }
     commandQueue.offer(req);
     triggerWorker();
@@ -233,9 +242,20 @@ public class MosquittoDynamicSecurityService implements MqttCallback {
       properties.setResponseTopic(RESPONSE_TOPIC);
       message.setProperties(properties);
 
-      log.debug("Publishing batch containing {} commands ({} bytes) to {}",
-          batch.size(), payload.length, CONTROL_TOPIC);
+      log.info("Publishing batch containing {} commands ({} bytes) to {}",
+              batch.size(), payload.length, CONTROL_TOPIC);
       mqttClient.publish(CONTROL_TOPIC, message);
+
+      synchronized (this) {
+        if (timeoutTask != null) {
+          timeoutTask.cancel(false);
+        }
+        timeoutTask = scheduler.schedule(
+            () -> handleBatchTimeout(batch),
+            BATCH_TIMEOUT_MS,
+            TimeUnit.MILLISECONDS
+        );
+      }
     } catch (Exception e) {
       log.error("Failed to publish batch to Mosquitto broker", e);
       // Fail all futures in the batch exceptionally
@@ -243,6 +263,23 @@ public class MosquittoDynamicSecurityService implements MqttCallback {
       this.batchInFlight = false;
       for (CommandRequest req : batch) {
         req.future.completeExceptionally(e);
+      }
+      triggerWorker();
+    }
+  }
+
+  private synchronized void handleBatchTimeout(List<CommandRequest> batch) {
+    if (this.inFlightBatch == batch) {
+      log.warn("Batch of {} commands timed out waiting for broker response after {}ms",
+          batch.size(), BATCH_TIMEOUT_MS);
+      this.inFlightBatch = null;
+      this.batchInFlight = false;
+      this.timeoutTask = null;
+
+      java.util.concurrent.TimeoutException ex =
+          new java.util.concurrent.TimeoutException("Timeout waiting for broker response");
+      for (CommandRequest req : batch) {
+        req.future.completeExceptionally(ex);
       }
       triggerWorker();
     }
@@ -266,7 +303,7 @@ public class MosquittoDynamicSecurityService implements MqttCallback {
   }
 
   @Override
-  public void messageArrived(String topic, MqttMessage message) {
+  public synchronized void messageArrived(String topic, MqttMessage message) {
     if (!RESPONSE_TOPIC.equals(topic)) {
       return;
     }
@@ -274,6 +311,10 @@ public class MosquittoDynamicSecurityService implements MqttCallback {
     if (batchCopy == null) {
       log.warn("Received dynamic security response but no batch was in-flight");
       return;
+    }
+    if (timeoutTask != null) {
+      timeoutTask.cancel(false);
+      timeoutTask = null;
     }
     this.inFlightBatch = null;
     this.lastPublishTime = System.currentTimeMillis();
@@ -306,12 +347,6 @@ public class MosquittoDynamicSecurityService implements MqttCallback {
         } else if (isBenignError(req.commandName, error)) {
           log.debug("Handling benign broker error for command {}: {}", req.commandName, error);
           req.future.complete(null);
-        } else if ("createClient".equals(req.commandName)
-            && error != null
-            && error.contains("exists")
-            && req.isFallbackSupported) {
-          log.info("Client already exists. Triggering modifyClient fallback for {}", req.username);
-          triggerFallback(req);
         } else {
           req.future.completeExceptionally(new RuntimeException("Broker error: " + error));
         }
@@ -323,44 +358,6 @@ public class MosquittoDynamicSecurityService implements MqttCallback {
       }
     } finally {
       triggerWorker();
-    }
-  }
-
-  private void triggerFallback(CommandRequest originalReq) {
-    Map<String, Object> cmd = new HashMap<>();
-    cmd.put("command", "modifyClient");
-    cmd.put("username", originalReq.username);
-    if (originalReq.password != null) {
-      cmd.put("password", originalReq.password);
-    }
-    if (originalReq.clientId != null) {
-      cmd.put("clientid", originalReq.clientId);
-    }
-
-    try {
-      byte[] bytes = objectMapper.writeValueAsBytes(cmd);
-      CompletableFuture<Void> fallbackFuture = new CompletableFuture<>();
-      CommandRequest fallbackReq = new CommandRequest(
-          "modifyClient",
-          bytes,
-          fallbackFuture,
-          originalReq.username,
-          originalReq.password,
-          originalReq.clientId,
-          false
-      );
-
-      enqueueCommand(fallbackReq);
-
-      fallbackFuture.whenComplete((res, ex) -> {
-        if (ex != null) {
-          originalReq.future.completeExceptionally(ex);
-        } else {
-          originalReq.future.complete(null);
-        }
-      });
-    } catch (Exception e) {
-      originalReq.future.completeExceptionally(e);
     }
   }
 
@@ -385,8 +382,27 @@ public class MosquittoDynamicSecurityService implements MqttCallback {
    */
   public void shutdown() {
     try {
-      executor.shutdown();
-      scheduler.shutdown();
+      executor.shutdownNow();
+      scheduler.shutdownNow();
+
+      synchronized (this) {
+        if (timeoutTask != null) {
+          timeoutTask.cancel(true);
+          timeoutTask = null;
+        }
+        if (inFlightBatch != null) {
+          for (CommandRequest req : inFlightBatch) {
+            req.future.completeExceptionally(new RuntimeException("Service shutdown"));
+          }
+          inFlightBatch = null;
+        }
+        List<CommandRequest> pending = new ArrayList<>();
+        commandQueue.drainTo(pending);
+        for (CommandRequest req : pending) {
+          req.future.completeExceptionally(new RuntimeException("Service shutdown"));
+        }
+      }
+
       if (mqttClient.isConnected()) {
         mqttClient.disconnect();
       }
@@ -437,24 +453,15 @@ public class MosquittoDynamicSecurityService implements MqttCallback {
     public final String commandName;
     public final byte[] serializedPayload;
     public final CompletableFuture<Void> future;
-    public final String username;
-    public final String password;
-    public final String clientId;
-    public final boolean isFallbackSupported;
 
     /**
      * Constructor.
      */
     public CommandRequest(String commandName, byte[] serializedPayload,
-        CompletableFuture<Void> future, String username, String password,
-        String clientId, boolean isFallbackSupported) {
+        CompletableFuture<Void> future) {
       this.commandName = commandName;
       this.serializedPayload = serializedPayload;
       this.future = future;
-      this.username = username;
-      this.password = password;
-      this.clientId = clientId;
-      this.isFallbackSupported = isFallbackSupported;
     }
   }
 }
