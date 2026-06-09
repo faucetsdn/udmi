@@ -150,7 +150,8 @@ public class MosquittoDynamicSecurityService implements MqttCallback {
       // This can cause corrupted state - e.g. a device will have 5 of 6 ACL's to permit
       // communication added but will not get marked as "not bound".
       // Probably need some retry logic, maybe with recall logic too.
-      throw new QueueFullException("Dynamic security queue is full. Size: " + commandQueue.size());
+      throw new QueueFullException(
+          "Dynamic security queue is full. Size: " + commandQueue.size());
     }
     commandQueue.offer(req);
     triggerWorker();
