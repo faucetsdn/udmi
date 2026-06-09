@@ -3,6 +3,19 @@
 # Navigate to bridgehead directory
 cd $(dirname $(realpath $0))/..
 
+# Function to run a command with retries
+run_with_retry() {
+    local n=0
+    until [ "$n" -ge 3 ]
+    do
+       "$@" && return 0
+       n=$((n+1))
+       echo "Command failed, retrying [$n/3]..." >&2
+       sleep 15
+    done
+    return 1
+}
+
 echo "Cloning default site model..."
 # Remove existing udmi_site_model if it exists to avoid conflicts
 rm -rf udmi_site_model 2>/dev/null || docker run --rm -v $(pwd):/work alpine rm -rf /work/udmi_site_model
@@ -52,7 +65,7 @@ docker rm -f mosquitto etcd udmis validator influxdb grafana pubber 2>/dev/null 
 docker compose down -v --remove-orphans 2>/dev/null || true
 rm -rf var/mosquitto/data var/etcd 2>/dev/null || docker run --rm -v "$(pwd)":/work alpine rm -rf /work/var/mosquitto/data /work/var/etcd
 sleep 2
-docker compose up -d --build
+run_with_retry docker compose up -d --build
 
 # Function to clean up on exit
 cleanup() {
@@ -103,18 +116,6 @@ if ! docker logs udmis 2>&1 | grep -q "udmis running in the background"; then
     exit 1
 fi
 
-# Function to run a command with retries
-run_with_retry() {
-    local n=0
-    until [ "$n" -ge 3 ]
-    do
-       "$@" && return 0
-       n=$((n+1))
-       echo "Command failed, retrying [$n/3]..." >&2
-       sleep 15
-    done
-    return 1
-}
 
 echo "Executing discovery sequence..."
 sleep 5
