@@ -18,7 +18,7 @@ Every generated URL consists of three primary logical components:
 | Component | Description | Mapping to Metadata | Example |
 | :--- | :--- | :--- | :--- |
 | **`family`** | The protocol/address family. | `gateway.target.family` | `bacnet` or `modbus` |
-| **`device`** | The physical device address or host on that family. | `localnet.families.<family>.addr` OR `gateway.target.addr` | `1234` or `modbus_rtu_1` |
+| **`device`** | The physical device address or host on that family. | `gateway.target.addr` | `1234` or `modbus_rtu_1` |
 | **`point`** | The relative reference identifier of the data point. | `pointset.points.<point_name>.ref` | `AV:1` or `1/101?type=BOOLEAN` |
 
 ---
@@ -34,6 +34,8 @@ The local device address `device` can be defined in one of two places, but **not
 
 The effective device address is resolved as:
 `device_address = metadata.localnet.families.<family>.addr != null ? localnet.families.<family>.addr : gateway.target.addr`
+
+*   **Host Syntax Constraint:** For families like `modbus`, the effective device address (the `<host>` component of the URL) must either **start with an alphabetical character** (e.g., `modbus_rtu_1` or `my-host`), or be formatted as a **valid 4-part IPv4 address** (e.g., `192.168.1.1` — starting with a number and having 4 octets separated by dots). A purely numeric, non-IP value like `"2"` is invalid as a host.
 
 ### 2. URL Combination Logic
 For standard configurations, the system constructs the complete URL by concatenating the components:

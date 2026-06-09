@@ -25,7 +25,8 @@ public class ModbusFamilyProvider implements FamilyProvider {
   // parts[3]: <unitid>/<function>/<address>[/<quantity>][?interpretation]
 
   // Address (parts[2]): <host>[:port]
-  private static final Pattern MODBUS_ADDR = Pattern.compile("^([a-zA-Z0-9.-]+)(?::\\d+)?$");
+  private static final Pattern MODBUS_ADDR = Pattern.compile(
+      "^(([a-zA-Z][a-zA-Z0-9.-]*)|(?:\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}))(?::\\d+)?$");
 
   // Point (parts[3]): <unitid>/<function>/<address>[/<quantity>][?interpretation]
   private static final Pattern MODBUS_POINT =
@@ -52,7 +53,7 @@ public class ModbusFamilyProvider implements FamilyProvider {
   public void validateAddr(String scanAddr) {
     requireNonNull(scanAddr, "missing required modbus scan_addr");
     checkState(MODBUS_ADDR.matcher(scanAddr).matches(),
-        format("modbus scan_addr %s does not match expression %s", scanAddr, MODBUS_ADDR));
+        format("modbus host %s does not match expression %s", scanAddr, MODBUS_ADDR));
   }
 
   @Override
