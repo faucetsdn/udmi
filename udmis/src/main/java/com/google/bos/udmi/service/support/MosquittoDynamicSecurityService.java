@@ -38,8 +38,10 @@ import udmi.schema.EndpointConfiguration;
 import udmi.schema.EndpointConfiguration.Transport;
 
 /**
- * Thread-safe, non-blocking service to interact with Mosquitto Dynamic Security plugin
- * over its MQTT v5 JSON API. Employs enqueuing, throttling, batching, and automatic fallbacks.
+ * Thread-safe, non-blocking service to interact with Mosquitto Dynamic Security
+ * plugin
+ * over its MQTT v5 JSON API. Employs enqueuing, throttling, batching, and
+ * automatic fallbacks.
  */
 public class MosquittoDynamicSecurityService implements MqttCallback {
 
@@ -54,8 +56,7 @@ public class MosquittoDynamicSecurityService implements MqttCallback {
   private static final String RESPONSE_TOPIC = "$CONTROL/dynamic-security/v1/response";
 
   private final EndpointConfiguration endpoint;
-  private final BlockingQueue<CommandRequest> commandQueue =
-      new LinkedBlockingQueue<>(MAX_QUEUE_SIZE);
+  private final BlockingQueue<CommandRequest> commandQueue = new LinkedBlockingQueue<>(MAX_QUEUE_SIZE);
   private final MqttClient mqttClient;
   private final ExecutorService executor;
   private final ScheduledExecutorService scheduler;
@@ -130,8 +131,7 @@ public class MosquittoDynamicSecurityService implements MqttCallback {
             new File(endpoint.key_file),
             endpoint.transport,
             pass,
-            log::info
-        );
+            log::info);
         options.setSocketFactory(certManager.getSocketFactory());
       }
 
@@ -188,8 +188,7 @@ public class MosquittoDynamicSecurityService implements MqttCallback {
       scheduledTask = scheduler.schedule(
           () -> executor.submit(this::drainAndPublishBatch),
           delay,
-          TimeUnit.MILLISECONDS
-      );
+          TimeUnit.MILLISECONDS);
     }
   }
 
@@ -243,7 +242,7 @@ public class MosquittoDynamicSecurityService implements MqttCallback {
       message.setProperties(properties);
 
       log.info("Publishing batch containing {} commands ({} bytes) to {}",
-              batch.size(), payload.length, CONTROL_TOPIC);
+          batch.size(), payload.length, CONTROL_TOPIC);
       mqttClient.publish(CONTROL_TOPIC, message);
 
       synchronized (this) {
@@ -253,8 +252,7 @@ public class MosquittoDynamicSecurityService implements MqttCallback {
         timeoutTask = scheduler.schedule(
             () -> handleBatchTimeout(batch),
             BATCH_TIMEOUT_MS,
-            TimeUnit.MILLISECONDS
-        );
+            TimeUnit.MILLISECONDS);
       }
     } catch (Exception e) {
       log.error("Failed to publish batch to Mosquitto broker", e);
@@ -276,8 +274,8 @@ public class MosquittoDynamicSecurityService implements MqttCallback {
       this.batchInFlight = false;
       this.timeoutTask = null;
 
-      java.util.concurrent.TimeoutException ex =
-          new java.util.concurrent.TimeoutException("Timeout waiting for broker response");
+      java.util.concurrent.TimeoutException ex = new java.util.concurrent.TimeoutException(
+          "Timeout waiting for broker response");
       for (CommandRequest req : batch) {
         req.future.completeExceptionally(ex);
       }
@@ -327,8 +325,7 @@ public class MosquittoDynamicSecurityService implements MqttCallback {
   private void processResponses(List<CommandRequest> batch, byte[] responsePayload) {
     try {
       Map<String, Object> responseMap = objectMapper.readValue(responsePayload, Map.class);
-      List<Map<String, Object>> responsesList =
-          (List<Map<String, Object>>) responseMap.get("responses");
+      List<Map<String, Object>> responsesList = (List<Map<String, Object>>) responseMap.get("responses");
 
       if (responsesList == null || responsesList.size() != batch.size()) {
         throw new RuntimeException("Batch response mismatch or broker error: "
