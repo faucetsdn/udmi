@@ -121,7 +121,8 @@ public class MosquittoBroker extends ContainerBase implements ConnectionBroker {
       return CompletableFuture.allOf(f1, f2)
           .thenRun(() -> info("Device %s deleted correctly.", clientId));
     } else {
-      CompletableFuture<Void> clientFuture = createClientWithFallback(clientUser, clientPass, clientId);
+      CompletableFuture<Void> clientFuture =
+          createClientWithFallback(clientUser, clientPass, clientId);
       CompletableFuture<Void> roleFuture = createRole(roleName);
 
       return CompletableFuture.allOf(clientFuture, roleFuture).thenCompose(v -> {

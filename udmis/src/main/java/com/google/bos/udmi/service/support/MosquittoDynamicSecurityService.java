@@ -11,7 +11,6 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.BlockingQueue;
@@ -75,13 +74,10 @@ public class MosquittoDynamicSecurityService implements MqttCallback {
   private ScheduledFuture<?> timeoutTask = null;
 
   /**
-   * Constructs and connects the Dynamic Security Service.
-   */
-  /**
    * Factory function to create the command queue.
    */
   public static BlockingQueue<CommandRequest> createCommandQueue(int capacity) {
-    return new java.util.concurrent.LinkedBlockingQueue<>(capacity);
+    return new LinkedBlockingQueue<>(capacity);
   }
 
   /**
@@ -378,7 +374,8 @@ public class MosquittoDynamicSecurityService implements MqttCallback {
   private void processResponses(List<CommandRequest> batch, byte[] responsePayload) {
     try {
       Map<String, Object> responseMap = objectMapper.readValue(responsePayload, Map.class);
-      List<Map<String, Object>> responsesList = (List<Map<String, Object>>) responseMap.get("responses");
+      List<Map<String, Object>> responsesList =
+          (List<Map<String, Object>>) responseMap.get("responses");
 
       if (responsesList == null || responsesList.size() != batch.size()) {
         throw new RuntimeException("Batch response mismatch or broker error: "
