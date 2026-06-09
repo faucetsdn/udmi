@@ -236,6 +236,8 @@ public class PubSubPipe extends MessageBase implements MessageReceiver {
       } else {
         fullSource = PUBSUB_SOURCE + SOURCE_SEPARATOR + source;
       }
+    } else if (attributesMap.containsKey("mqttTopic")) {
+      fullSource = PUBSUB_SOURCE + SOURCE_SEPARATOR + "bridge";
     } else {
       fullSource = PUBSUB_SOURCE;
     }
