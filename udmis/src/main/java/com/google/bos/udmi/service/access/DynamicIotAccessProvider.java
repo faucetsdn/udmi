@@ -9,6 +9,7 @@ import static java.lang.String.format;
 import static java.util.Objects.requireNonNull;
 import static java.util.Optional.ofNullable;
 
+import com.google.bos.udmi.service.pod.ContainerBase;
 import com.google.udmi.util.Common;
 import java.util.Arrays;
 import java.util.Date;
@@ -49,6 +50,19 @@ public class DynamicIotAccessProvider extends IotAccessBase {
   }
 
   private String determineProvider(String registryId) {
+    // TODO: In the future, different registries might be governed by different backends
+    // using the same set of providers, so inheriting affinity from the reflector like
+    // this might need to be re-evaluated.
+    // For now, we assume the only active backend is Mosquitto (ImplicitIotAccessProvider),
+    // and inheriting the reflector's affinity is necessary to resolve the cold-start
+    // deadlock where the device hasn't sent a message yet but needs its config.
+    String reflectorKey = getProviderKey(ContainerBase.REFLECT_BASE, registryId);
+    String reflectorAffinity = registryProviders.get(reflectorKey);
+    if (reflectorAffinity != null) {
+      debug("Registry affinity mapping for %s inherited from reflector %s: %s",
+          registryId, reflectorKey, reflectorAffinity);
+      return reflectorAffinity;
+    }
     getProviders();
     TreeMap<String, String> sortedMap = getProviders().entrySet().stream()
         .filter(access -> access.getValue().isEnabled())
