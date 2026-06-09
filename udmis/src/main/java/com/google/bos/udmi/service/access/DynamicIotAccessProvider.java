@@ -175,16 +175,35 @@ public class DynamicIotAccessProvider extends IotAccessBase {
     getProviderFor(envelope).sendCommandBase(envelope, folder, message);
   }
 
+  /**
+   * Sets the provider affinity for a given registry and device.
+   *
+   * <p>If a client specifies a provider source (e.g., native PubSub source "pubsub/user"),
+   * we cache the parsed affinity (e.g., "pubsub") to ensure all subsequent downlink
+   * replies/commands are routed back through that same provider.
+   *
+   * <p>If the client does not specify a source (e.g., a proxied MQTT connection where the
+   * proxy does not propagate the source attribute, resulting in a null providerId), we
+   * explicitly clear the cached affinity. This prevents UDMIS from getting permanently
+   * stuck on a previous client's affinity (like a sticky "pubsub" mapping) and allows it
+   * to correctly fall back to the default configured provider for that registry (like
+   * "implicit" Mosquitto MQTT).
+   */
   @Override
   public void setProviderAffinity(String registryId, String deviceId, String providerId) {
+    String providerKey = getProviderKey(registryId, deviceId);
     if (providerId != null) {
       int index = providerId.indexOf(Common.SOURCE_SEPARATOR);
       String affinity = providerId.substring(0, index < 0 ? providerId.length() : index);
-      String providerKey = getProviderKey(registryId, deviceId);
       String previous = registryProviders.put(providerKey, affinity);
       if (!affinity.equals(previous)) {
         debug(format("Switched registry affinity for %s from %s -> %s", providerKey, previous,
             affinity));
+      }
+    } else {
+      String previous = registryProviders.remove(providerKey);
+      if (previous != null) {
+        debug(format("Cleared registry affinity for %s (was %s)", providerKey, previous));
       }
     }
     super.setProviderAffinity(registryId, deviceId, providerId);
