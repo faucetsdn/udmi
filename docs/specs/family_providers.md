@@ -131,9 +131,9 @@ An address family representing BACnet devices and objects.
 An address family representing Modbus registers.
 * **Combined Example:**
   * **Gateway Target Family**: `modbus`
-  * **Gateway Target Addr**: `modbus_rtu_1`
-  * **Point Ref**: `2/3/40005?type=UINT32&worder=LWF&scale=0.01`
-  * **Resulting URL**: `modbus://modbus_rtu_1/2/3/40005?type=UINT32&worder=LWF&scale=0.01`
+  * **Gateway Target Addr**: `2`
+  * **Point Ref**: `3/40005?type=UINT32&worder=LWF&scale=0.01&network=modbus_rtu_1`
+  * **Resulting URL**: `modbus://2/3/40005?type=UINT32&worder=LWF&scale=0.01&network=modbus_rtu_1`
 
 ---
 
@@ -186,7 +186,7 @@ In the example below, the device collects data from a BACnet device (`1234`) and
         "ref": "bacnet://1234/AI:1"
       },
       "fan_power": {
-        "ref": "modbus://modbus_rtu_1/2/3/40001/1?type=INT16"
+        "ref": "modbus://2/3/40001/1?type=INT16&network=modbus_rtu_1"
       }
     }
   }

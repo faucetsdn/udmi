@@ -17,26 +17,26 @@ import java.util.regex.Pattern;
 public class ModbusFamilyProvider implements FamilyProvider {
 
   // URL format:
-  //   modbus://<host>[:port]/<unitid>/<function>/<address>[/<quantity>][?params]
+  //   modbus://<unitid>/<function>/<address>[/<quantity>][?params]
   // Note: the `split("/", 4)` in `FamilyProvider` splits the URL into:
   // parts[0]: modbus:
   // parts[1]: (empty string)
-  // parts[2]: <host>[:port]
-  // parts[3]: <unitid>/<function>/<address>[/<quantity>][?interpretation]
+  // parts[2]: <unitid>
+  // parts[3]: <function>/<address>[/<quantity>][?interpretation]
 
-  // Address (parts[2]): <host>[:port]
-  private static final Pattern MODBUS_ADDR = Pattern.compile(
-      "^(([a-zA-Z][a-zA-Z0-9.-]*)|(?:\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}))(?::\\d+)?$");
+  // Address (parts[2]): <unitid>
+  private static final Pattern MODBUS_ADDR = Pattern.compile("0|[1-9][0-9]*");
+  private static final int MAX_ADDR_VALUE = 255;
 
-  // Point (parts[3]): <unitid>/<function>/<address>[/<quantity>][?interpretation]
+  // Point (parts[3]): <function>/<address>[/<quantity>][?interpretation]
   private static final Pattern MODBUS_POINT =
-      Pattern.compile("^(\\d+)/(\\d+)/(\\d+)(?:/(\\d+))?(?:\\?(.*))?$");
+      Pattern.compile("^(\\d+)/(\\d+)(?:/(\\d+))?(?:\\?(.*))?$");
 
   private static final Set<String> ALLOWED_FUNCTIONS =
       ImmutableSet.of("1", "2", "3", "4", "5", "6", "15", "16");
 
   private static final Set<String> ALLOWED_PARAMS =
-      ImmutableSet.of("border", "type", "worder", "scale", "offset");
+      ImmutableSet.of("border", "type", "worder", "scale", "offset", "network");
 
   private static final Set<String> ALLOWED_BORDERS = ImmutableSet.of("MSB", "LSB");
   private static final Set<String> ALLOWED_WORDERS = ImmutableSet.of("HWF", "LWF");
@@ -53,7 +53,9 @@ public class ModbusFamilyProvider implements FamilyProvider {
   public void validateAddr(String scanAddr) {
     requireNonNull(scanAddr, "missing required modbus scan_addr");
     checkState(MODBUS_ADDR.matcher(scanAddr).matches(),
-        format("modbus host %s does not match expression %s", scanAddr, MODBUS_ADDR));
+        format("modbus unitid %s does not match expression %s", scanAddr, MODBUS_ADDR));
+    checkState(Integer.parseInt(scanAddr) <= MAX_ADDR_VALUE,
+        format("modbus unitid %s exceeded maximum %d", scanAddr, MAX_ADDR_VALUE));
   }
 
   @Override
@@ -65,12 +67,12 @@ public class ModbusFamilyProvider implements FamilyProvider {
           format("protocol ref %s does not match expression %s", pointRef, MODBUS_POINT));
     }
 
-    String function = matcher.group(2);
+    String function = matcher.group(1);
     if (!ALLOWED_FUNCTIONS.contains(function)) {
       throw new RuntimeException(format("invalid modbus function code %s", function));
     }
 
-    String query = matcher.group(5);
+    String query = matcher.group(4);
     if (query != null) {
       Arrays.stream(query.split("&")).forEach(param -> {
         String[] parts = param.split("=");
@@ -105,6 +107,11 @@ public class ModbusFamilyProvider implements FamilyProvider {
               Double.parseDouble(value);
             } catch (NumberFormatException e) {
               throw new RuntimeException(format("invalid modbus %s value %s", key, value));
+            }
+            break;
+          case "network":
+            if (value.isEmpty()) {
+              throw new RuntimeException("empty modbus network parameter");
             }
             break;
           default:

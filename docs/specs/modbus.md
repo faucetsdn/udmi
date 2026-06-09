@@ -1,16 +1,15 @@
 [**UDMI**](../../) / [**Docs**](../) / [**Specs**](./) / [Modbus](#)
 
+THIS IS A PROVISIONAL SPEC THAT IS SUBJECT TO CHANGE.
+
 # Modbus Specification
 
 UDMI supports reading Modbus points by specifying them via a `modbus://` URL schema.
 
 ## URI Schema
 
-`modbus://<host>[:port]/<unitid>/<function>/<address>[/<quantity>][?interpretation]`
+`modbus://<unitid>/<function>/<address>[/<quantity>][?interpretation]`
 
-*   **`host`**: The host name or IP address of the Modbus endpoint.
-    *   If the `host` maps to a named network, as indicated in the `networks` field in the `gateway` model, then the parameters there define the effective parameters to use.
-*   **`port`**: (Optional) The TCP port.
 *   **`unitid`**: The Slave ID (Unit Identifier).
 *   **`function`**: The Function Code (see [Function Codes](#function-codes)).
 *   **`address`**: The starting register address.
@@ -37,10 +36,11 @@ Parameters passed in the query string define how to interpret the fetched regist
 *   **`worder`**: i.e., `HWF` (`High-Word First`) or `LWF` (`Low-Word First`) (for 32-bit values).
 *   **`scale`**: e.g., `1.0`, `0.01`, `100.0` (scale factor).
 *   **`offset`**: e.g., `0`, `0.5` (offset applied to value after scaling).
+*   **`network`**: e.g., `modbus_rtu_1` (named network from the `localnet.networks` map).
 
 ### Network Parameters
 
-The `host` maps to a named network in the device's `model_localnet.json` (under the `networks` field). Each named network can define the following parameters for communication:
+    The `host` maps to a named network in the device's `model_localnet.json` (under the `networks` field). Each named network can define the following parameters for communication:
 
 *   **`baud`**: The baud rate.
 *   **`protocol`**: i.e., `RTU`, `TCP`.
@@ -52,9 +52,9 @@ The `host` maps to a named network in the device's `model_localnet.json` (under 
 
 The metadata values in the examples below map to the following complete Modbus URIs:
 
-*   **Network RTU Point**: `modbus://modbus_rtu_1/1/3/40001/1?type=INT16&border=MSB`
-*   **`fan_status`**: `modbus://modbus_rtu_1/2/1/101?type=BOOLEAN`
-*   **`filter_differential_pressure`**: `modbus://modbus_rtu_1/2/4/30005?type=UINT32&worder=LWF&scale=0.01`
+*   **Network RTU Point**: `modbus://1/3/40001/1?type=INT16&border=MSB`
+*   **`fan_status`**: `modbus://2/1/101?type=BOOLEAN`
+*   **`filter_differential_pressure`**: `modbus://2/4/30005?type=UINT32&worder=LWF&scale=0.01`
 
 ### Network Configuration Example
 

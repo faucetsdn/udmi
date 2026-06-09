@@ -1,5 +1,7 @@
 [**UDMI**](../../) / [**Docs**](../) / [**Specs**](./) / [BACnet](#)
 
+THIS IS A PROVISIONAL SPEC THAT IS SUBJECT TO CHANGE.
+
 # BACnet Specification
 
 UDMI supports reading BACnet points by specifying them via a `bacnet://` URL schema.
