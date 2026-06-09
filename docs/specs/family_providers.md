@@ -115,7 +115,7 @@ Therefore, to use absolute, ref-only URLs, **the `gateway.target.family` must be
 
 ## Protocol-Specific Concrete Examples
 
-The URL syntax for different address families is defined by their respective `FamilyProvider` implementations. Please refer to protocol-specific documentation (such as [modbus.md](modbus.md)) for detailed, exhaustive specifications of their reference formats and parameters.
+The URL syntax for different address families is defined by their respective `FamilyProvider` implementations. Please refer to protocol-specific documentation (such as [bacnet.md](bacnet.md) and [modbus.md](modbus.md)) for detailed, exhaustive specifications of their reference formats and parameters.
 
 ### 1. BACnet Family (`bacnet`)
 An address family representing BACnet devices and objects.
