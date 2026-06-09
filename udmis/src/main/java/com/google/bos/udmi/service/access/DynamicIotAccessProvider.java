@@ -86,6 +86,26 @@ public class DynamicIotAccessProvider extends IotAccessBase {
         format("Could not determine provider for %s from %s", providerKey, entryKey));
   }
 
+  private IotAccessProvider getRegistryProvider(Envelope envelope) {
+    return getRegistryProvider(envelope.deviceRegistryId, envelope.deviceId);
+  }
+
+  private IotAccessProvider getRegistryProvider(String registryId, String deviceId) {
+    IotAccessProvider provider = getProviderFor(registryId, deviceId);
+    if (provider instanceof PubSubIotAccessProvider) {
+      IotAccessProvider fallback = getProviders().values().stream()
+          .filter(p -> !(p instanceof PubSubIotAccessProvider))
+          .findFirst()
+          .orElse(null);
+      if (fallback != null) {
+        debug("PubSub provider does not support registry operations, falling back to %s",
+            fallback.getClass().getSimpleName());
+        return fallback;
+      }
+    }
+    return provider;
+  }
+
   private Map<String, IotAccessProvider> getProviders() {
     if (!providers.isEmpty()) {
       return providers;
@@ -120,27 +140,27 @@ public class DynamicIotAccessProvider extends IotAccessBase {
 
   @Override
   public Entry<Long, String> fetchConfig(String registryId, String deviceId) {
-    return getProviderFor(registryId, deviceId).fetchConfig(registryId, deviceId);
+    return getRegistryProvider(registryId, deviceId).fetchConfig(registryId, deviceId);
   }
 
   @Override
   public CloudModel fetchDevice(String registryId, String deviceId) {
-    return getProviderFor(registryId, deviceId).fetchDevice(registryId, deviceId);
+    return getRegistryProvider(registryId, deviceId).fetchDevice(registryId, deviceId);
   }
 
   @Override
   public String fetchRegistryMetadata(String registryId, String metadataKey) {
-    return getProviderFor(registryId, null).fetchRegistryMetadata(registryId, metadataKey);
+    return getRegistryProvider(registryId, null).fetchRegistryMetadata(registryId, metadataKey);
   }
 
   @Override
   public String fetchState(String registryId, String deviceId) {
-    return getProviderFor(registryId, deviceId).fetchState(registryId, deviceId);
+    return getRegistryProvider(registryId, deviceId).fetchState(registryId, deviceId);
   }
 
   @Override
   public void saveState(String registryId, String deviceId, String stateBlob) {
-    getProviderFor(registryId, deviceId).saveState(registryId, deviceId, stateBlob);
+    getRegistryProvider(registryId, deviceId).saveState(registryId, deviceId, stateBlob);
   }
 
   @Override
@@ -161,7 +181,7 @@ public class DynamicIotAccessProvider extends IotAccessBase {
 
   @Override
   public CloudModel listDevices(String registryId, Consumer<String> progress) {
-    return getProviderFor(registryId, null).listDevices(registryId, progress);
+    return getRegistryProvider(registryId, null).listDevices(registryId, progress);
   }
 
   @Override
@@ -169,18 +189,18 @@ public class DynamicIotAccessProvider extends IotAccessBase {
       Consumer<String> progress) {
     debug("%s iot device %s/%s, %s %s", cloudModel.operation, registryId, deviceId,
         cloudModel.blocked, cloudModel.num_id);
-    return getProviderFor(registryId, deviceId).modelDevice(registryId, deviceId, cloudModel,
+    return getRegistryProvider(registryId, deviceId).modelDevice(registryId, deviceId, cloudModel,
         progress);
   }
 
   @Override
   public CloudModel modelRegistry(String registryId, String deviceId, CloudModel cloudModel) {
-    return getProviderFor(registryId, deviceId).modelRegistry(registryId, deviceId, cloudModel);
+    return getRegistryProvider(registryId, deviceId).modelRegistry(registryId, deviceId, cloudModel);
   }
 
   @Override
   public String modifyConfig(Envelope envelope, Function<Entry<Long, String>, String> munger) {
-    return getProviderFor(envelope).modifyConfig(envelope, munger);
+    return getRegistryProvider(envelope).modifyConfig(envelope, munger);
   }
 
   @Override
