@@ -3,6 +3,7 @@ package com.google.bos.udmi.service.messaging.impl;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
 import static com.google.udmi.util.Common.PUBLISH_TIME_KEY;
+import static com.google.udmi.util.Common.SOURCE_KEY;
 import static com.google.udmi.util.Common.TRANSACTION_KEY;
 import static com.google.udmi.util.GeneralUtils.catchToElse;
 import static com.google.udmi.util.GeneralUtils.friendlyStackTrace;
@@ -408,6 +409,7 @@ public class SimpleMqttPipe extends MessageBase {
         Map<String, String> envelopeMap = parseEnvelopeTopic(topic);
         envelopeMap.put(PUBLISH_TIME_KEY, isoConvert());
         envelopeMap.put(TRANSACTION_KEY, makeTransactionId());
+        envelopeMap.put(SOURCE_KEY, IMPLICIT_CHANNEL);
         receiveMessage(envelopeMap, new String(message.getPayload()));
       } catch (Exception e) {
         error("Exception receiving message on %s: %s", clientId, friendlyStackTrace(e));
