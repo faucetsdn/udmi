@@ -77,12 +77,16 @@ import udmi.schema.IotAccess.IotProvider;
 /**
  * Iot Access Provider that uses internal components.
  *
- * <p>Supported options:
+ * <p>
+ * Supported options:
  * <ul>
- * <li><code>use_password</code>: Sets the password for all devices to the specified value.
- * This is used when authentication is handled by an external proxy, and Mosquitto
+ * <li><code>use_password</code>: Sets the password for all devices to the
+ * specified value.
+ * This is used when authentication is handled by an external proxy, and
+ * Mosquitto
  * still needs to enforce ACLs based on username.</li>
- * <li><code>disable_logging</code>: If set to true, disables tailing the mosquitto log file.</li>
+ * <li><code>disable_logging</code>: If set to true, disables tailing the
+ * mosquitto log file.</li>
  * </ul>
  */
 public class ImplicitIotAccessProvider extends IotAccessBase {
@@ -129,15 +133,14 @@ public class ImplicitIotAccessProvider extends IotAccessBase {
   private final String brokerPass;
   private EndpointConfiguration endpointConfig;
   private SimpleMqttPipe mqttPipe;
-  private final String clientId =
-      format("implicit-access-%08x", (long) (Math.random() * 0x100000000L));
+  private final String clientId = format("implicit-access-%08x", (long) (Math.random() * 0x100000000L));
 
   /**
    * Create an access provider with implicit internal resources.
    */
   public ImplicitIotAccessProvider(IotAccess iotAccess) {
     super(iotAccess);
-    
+
     enabled = isNullOrNotEmpty(options.get(ENABLED_KEY));
     usePassword = options.get(USE_PASSWORD_KEY);
 
@@ -145,10 +148,12 @@ public class ImplicitIotAccessProvider extends IotAccessBase {
       endpointConfig = deepCopy(iotAccess.endpoint);
       brokerUser = endpointConfig.auth_provider != null
           && endpointConfig.auth_provider.basic != null
-          ? endpointConfig.auth_provider.basic.username : null;
+              ? endpointConfig.auth_provider.basic.username
+              : null;
       brokerPass = endpointConfig.auth_provider != null
           && endpointConfig.auth_provider.basic != null
-          ? endpointConfig.auth_provider.basic.password : null;
+              ? endpointConfig.auth_provider.basic.password
+              : null;
       brokerHost = ofNullable(endpointConfig.hostname).orElse("localhost");
       brokerPort = ofNullable(endpointConfig.port).map(Object::toString).orElse("8883");
     } else {
@@ -178,7 +183,8 @@ public class ImplicitIotAccessProvider extends IotAccessBase {
   }
 
   /**
-   * Create pseudo device numerical id that can be used for operation verification.
+   * Create pseudo device numerical id that can be used for operation
+   * verification.
    */
   public static String hashedDeviceId(String registryId, String deviceId) {
     return String.valueOf(Math.abs(Objects.hash(registryId, deviceId)));
@@ -310,8 +316,7 @@ public class ImplicitIotAccessProvider extends IotAccessBase {
 
   private CloudModel getReply(String registryId, String deviceId, CloudModel request,
       String deleteId) {
-    String numId =
-        deleteId != null ? deleteId : registryDeviceRef(registryId, deviceId).get(NUM_ID_PROPERTY);
+    String numId = deleteId != null ? deleteId : registryDeviceRef(registryId, deviceId).get(NUM_ID_PROPERTY);
     CloudModel reply = new CloudModel();
     reply.operation = requireNonNull(request.operation, "missing operation");
     reply.num_id = requireNonNull(numId, "missing num_id");
@@ -483,7 +488,6 @@ public class ImplicitIotAccessProvider extends IotAccessBase {
     info("Initializing SimpleMqttPipe for ImplicitIotAccessProvider");
     try {
 
-
       if (endpointConfig.send_id == null) {
         endpointConfig.send_id = "implicit";
       }
@@ -540,8 +544,7 @@ public class ImplicitIotAccessProvider extends IotAccessBase {
 
     if (GATEWAY.toString().equals(properties.get(RESOURCE_TYPE_PROPERTY))) {
       cloudModel.gateway = new GatewayModel();
-      cloudModel.gateway.proxy_ids =
-          listBoundDevices(registryId, deviceId).keySet().stream().toList();
+      cloudModel.gateway.proxy_ids = listBoundDevices(registryId, deviceId).keySet().stream().toList();
     }
     cloudModel.operation = READ;
     return cloudModel;
@@ -640,8 +643,7 @@ public class ImplicitIotAccessProvider extends IotAccessBase {
     Resource_type type = ofNullable(cloudModel.resource_type).orElse(Resource_type.DIRECT);
     checkState(type == DIRECT || type == GATEWAY, "unexpected resource type " + type);
     try {
-      String deleteNumId =
-          operation != DELETE ? null : registryDeviceRef(registryId, deviceId).get(NUM_ID_PROPERTY);
+      String deleteNumId = operation != DELETE ? null : registryDeviceRef(registryId, deviceId).get(NUM_ID_PROPERTY);
       switch (operation) {
         case CREATE -> createDevice(registryId, deviceId, cloudModel);
         case UPDATE -> updateDevice(registryId, deviceId, cloudModel);
@@ -685,6 +687,11 @@ public class ImplicitIotAccessProvider extends IotAccessBase {
 
   @Override
   public void sendCommandBase(Envelope baseEnvelope, SubFolder folder, String message) {
+    IotAccessProvider pubsubProvider = UdmiServicePod.maybeGetComponent("pubsub");
+    if (pubsubProvider != null) {
+      pubsubProvider.sendCommandBase(baseEnvelope, folder, message);
+      return;
+    }
     try {
       Envelope envelope = deepCopy(baseEnvelope);
       envelope.subFolder = folder;
