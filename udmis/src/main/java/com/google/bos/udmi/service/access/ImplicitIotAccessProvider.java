@@ -26,7 +26,7 @@ import static udmi.schema.CloudModel.ModelOperation.READ;
 import static udmi.schema.CloudModel.Resource_type.DIRECT;
 import static udmi.schema.CloudModel.Resource_type.GATEWAY;
 
-import com.google.bos.udmi.service.core.ReflectProcessor;
+
 import com.google.bos.udmi.service.messaging.MessageDispatcher;
 import com.google.bos.udmi.service.messaging.impl.MessageBase.Bundle;
 import com.google.bos.udmi.service.messaging.impl.SimpleMqttPipe;
@@ -125,7 +125,7 @@ public class ImplicitIotAccessProvider extends IotAccessBase {
   private final ConnectionBroker broker;
   private final Future<Void> connLogger;
   private IotDataProvider database;
-  private ReflectProcessor reflect;
+
   private final Map<String, Integer> configPublished = new ConcurrentHashMap<>();
   private final String brokerHost;
   private final String brokerPort;
@@ -477,7 +477,6 @@ public class ImplicitIotAccessProvider extends IotAccessBase {
   @Override
   public void activate() {
     database = UdmiServicePod.getComponent(IMPLICIT_DATABASE_COMPONENT);
-    reflect = UdmiServicePod.getComponent(ReflectProcessor.class);
     super.activate();
     if (isPublishEnabled()) {
       connectMqttClient();
@@ -687,9 +686,8 @@ public class ImplicitIotAccessProvider extends IotAccessBase {
 
   @Override
   public void sendCommandBase(Envelope baseEnvelope, SubFolder folder, String message) {
-    IotAccessProvider pubsubProvider = UdmiServicePod.maybeGetComponent("pubsub");
-    if (pubsubProvider != null) {
-      pubsubProvider.sendCommandBase(baseEnvelope, folder, message);
+    if (mqttPipe == null) {
+      warn("MQTT pipe not initialized, unable to send command");
       return;
     }
     try {
@@ -697,7 +695,10 @@ public class ImplicitIotAccessProvider extends IotAccessBase {
       envelope.subFolder = folder;
       envelope.subType = SubType.COMMANDS;
       envelope.source = IotProvider.IMPLICIT.value();
-      reflect.getDispatcher().withEnvelope(envelope).publish(asMap(message));
+
+      Bundle bundle = new Bundle(envelope, MessageDispatcher.rawString(message));
+      mqttPipe.publish(bundle);
+      debug("Published command to pipe for %s/%s", baseEnvelope.deviceRegistryId, baseEnvelope.deviceId);
     } catch (Exception e) {
       error("Failed to send command for %s/%s: %s",
           baseEnvelope.deviceRegistryId, baseEnvelope.deviceId, friendlyStackTrace(e));
