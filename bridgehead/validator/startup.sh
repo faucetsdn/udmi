@@ -17,7 +17,9 @@ sleep $SLEEP_SECONDS
 
 for ((i=1; i<=$MAX_ATTEMPTS; i++)); do
     if [ -f "$LOG_FILE" ] && grep -q "$ACTIVATION_STRING" "$LOG_FILE"; then
-        bin/registrar site_model //mqtt/mosquitto || true
+        if ! bin/registrar site_model //mqtt/mosquitto; then
+            echo "ERROR: Initial registrar execution failed!" >&2
+        fi
         tail -f /dev/null
         exit 0
     fi
