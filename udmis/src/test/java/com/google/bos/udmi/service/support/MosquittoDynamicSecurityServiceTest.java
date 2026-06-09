@@ -124,10 +124,12 @@ class MosquittoDynamicSecurityServiceTest {
   @Test
   void testEnqueueAndSuccessfulResponse() throws Exception {
     CompletableFuture<Void> future1 = new CompletableFuture<>();
-    CommandRequest req1 = new CommandRequest("createClient", "{\"cmd\":\"1\"}".getBytes(StandardCharsets.UTF_8), future1);
+    CommandRequest req1 = new CommandRequest(
+        "createClient", "{\"cmd\":\"1\"}".getBytes(StandardCharsets.UTF_8), future1);
 
     CompletableFuture<Void> future2 = new CompletableFuture<>();
-    CommandRequest req2 = new CommandRequest("createRole", "{\"cmd\":\"2\"}".getBytes(StandardCharsets.UTF_8), future2);
+    CommandRequest req2 = new CommandRequest(
+        "createRole", "{\"cmd\":\"2\"}".getBytes(StandardCharsets.UTF_8), future2);
 
     // Enqueue commands
     service.enqueueCommand(req1);
@@ -171,7 +173,8 @@ class MosquittoDynamicSecurityServiceTest {
   @Test
   void testBatchTimeoutAndRecovery() throws Exception {
     CompletableFuture<Void> future1 = new CompletableFuture<>();
-    CommandRequest req1 = new CommandRequest("createClient", "{\"cmd\":\"1\"}".getBytes(StandardCharsets.UTF_8), future1);
+    CommandRequest req1 = new CommandRequest(
+        "createClient", "{\"cmd\":\"1\"}".getBytes(StandardCharsets.UTF_8), future1);
 
     service.enqueueCommand(req1);
     runExecutorTasks(); // runs drainAndPublishBatch
@@ -197,7 +200,8 @@ class MosquittoDynamicSecurityServiceTest {
 
     // Verify queue is recovered and we can publish again
     CompletableFuture<Void> future2 = new CompletableFuture<>();
-    CommandRequest req2 = new CommandRequest("createRole", "{\"cmd\":\"2\"}".getBytes(StandardCharsets.UTF_8), future2);
+    CommandRequest req2 = new CommandRequest(
+        "createRole", "{\"cmd\":\"2\"}".getBytes(StandardCharsets.UTF_8), future2);
     service.enqueueCommand(req2);
 
     runExecutorTasks(); // runs drainAndPublishBatch
@@ -234,10 +238,12 @@ class MosquittoDynamicSecurityServiceTest {
   @Test
   void testShutdownClearsPendingAndInFlightFutures() throws Exception {
     CompletableFuture<Void> inFlightFuture = new CompletableFuture<>();
-    CommandRequest req1 = new CommandRequest("createClient", "{\"cmd\":\"1\"}".getBytes(StandardCharsets.UTF_8), inFlightFuture);
+    CommandRequest req1 = new CommandRequest(
+        "createClient", "{\"cmd\":\"1\"}".getBytes(StandardCharsets.UTF_8), inFlightFuture);
 
     CompletableFuture<Void> pendingFuture = new CompletableFuture<>();
-    CommandRequest req2 = new CommandRequest("createRole", "{\"cmd\":\"2\"}".getBytes(StandardCharsets.UTF_8), pendingFuture);
+    CommandRequest req2 = new CommandRequest(
+        "createRole", "{\"cmd\":\"2\"}".getBytes(StandardCharsets.UTF_8), pendingFuture);
 
     // Enqueue first command and let it go in-flight
     service.enqueueCommand(req1);
