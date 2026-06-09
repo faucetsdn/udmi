@@ -308,10 +308,17 @@ public final class MqttToPubSubBridge {
                 attributes.put("deviceNumId", numId);
               }
 
-              if (topicSuffix != null && topicSuffix.startsWith("events/")) {
-                List<String> parts = Splitter.on('/').splitToList(topicSuffix);
-                if (parts.size() >= 2) {
-                  attributes.put("subFolder", parts.get(1));
+              if (topicSuffix != null) {
+                if (topicSuffix.startsWith("events")) {
+                  attributes.put("subType", "events");
+                  List<String> parts = Splitter.on('/').splitToList(topicSuffix);
+                  if (parts.size() >= 2 && !parts.get(1).isEmpty()) {
+                    attributes.put("subFolder", parts.get(1));
+                  }
+                } else if (topicSuffix.startsWith("state")) {
+                  attributes.put("subType", "state");
+                } else if (topicSuffix.startsWith("reflect")) {
+                  attributes.put("subType", "reflect");
                 }
               }
 
