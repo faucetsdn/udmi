@@ -15,6 +15,7 @@ import com.google.bos.udmi.service.support.MosquittoDynamicSecurityService.Comma
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
@@ -85,7 +86,18 @@ class MosquittoDynamicSecurityServiceTest {
       return mockFuture;
     }).when(mockScheduler).schedule(any(Runnable.class), anyLong(), any(TimeUnit.class));
 
-    service = new MosquittoDynamicSecurityService(endpoint, mockMqttClient, mockExecutor, mockScheduler);
+    BlockingQueue<CommandRequest> queue = MosquittoDynamicSecurityService.createCommandQueue(100);
+    service = new MosquittoDynamicSecurityService(
+        endpoint,
+        mockMqttClient,
+        queue,
+        2, // batchSizeLimit
+        1024 * 1024, // batchBytesLimit
+        2000, // minPublishIntervalMs
+        30000, // batchTimeoutMs
+        mockExecutor,
+        mockScheduler
+    );
   }
 
   @AfterEach
@@ -194,21 +206,25 @@ class MosquittoDynamicSecurityServiceTest {
 
   @Test
   void testQueueFullException() {
-    // Fill the queue up to MAX_QUEUE_SIZE
-    for (int i = 0; i < 10000; i++) {
+    // Enqueue until the queue is full and we get an exceptionally completed future
+    CompletableFuture<Void> lastFuture = null;
+    int count = 0;
+    // Safety limit of 100,000 to prevent infinite loops in case of queue sizing issues
+    while (count < 100000) {
       CompletableFuture<Void> f = new CompletableFuture<>();
       CommandRequest req = new CommandRequest("test", new byte[0], f);
-      service.enqueueCommand(req);
+      CompletableFuture<Void> res = service.enqueueCommand(req);
+      if (res.isCompletedExceptionally()) {
+        lastFuture = res;
+        break;
+      }
+      count++;
     }
 
-    // Now enqueue one more, which should fail immediately
-    CompletableFuture<Void> failFuture = new CompletableFuture<>();
-    CommandRequest extraReq = new CommandRequest("test", new byte[0], failFuture);
-    service.enqueueCommand(extraReq);
-
-    assertTrue(failFuture.isCompletedExceptionally());
+    assertNotNull(lastFuture, "Queue did not fill up within 100,000 enqueues");
+    assertTrue(lastFuture.isCompletedExceptionally());
     try {
-      failFuture.get();
+      lastFuture.get();
       fail("Expected ExecutionException");
     } catch (Exception e) {
       assertTrue(e.getCause() instanceof QueueFullException);

@@ -47,20 +47,26 @@ public class MosquittoDynamicSecurityService implements MqttCallback {
 
   private static final Logger log = LoggerFactory.getLogger(MosquittoDynamicSecurityService.class);
 
-  private static final int MAX_QUEUE_SIZE = 20000;
-  private static final int BATCH_SIZE_LIMIT = 2000;
-  private static final long BATCH_BYTES_LIMIT = 10 * 1024 * 1024; // 10 MB
-  private static final long MIN_PUBLISH_INTERVAL_MS = 2000; // 2 seconds
-  private static final long BATCH_TIMEOUT_MS = 30000; // 30 seconds
+  public static final int DEFAULT_MAX_QUEUE_SIZE = 20000;
+  public static final int DEFAULT_BATCH_SIZE_LIMIT = 2000;
+  public static final long DEFAULT_BATCH_BYTES_LIMIT = 10 * 1024 * 1024; // 10 MB
+  public static final long DEFAULT_MIN_PUBLISH_INTERVAL_MS = 2000; // 2 seconds
+  public static final long DEFAULT_BATCH_TIMEOUT_MS = 30000; // 30 seconds
+
   private static final String CONTROL_TOPIC = "$CONTROL/dynamic-security/v1";
   private static final String RESPONSE_TOPIC = "$CONTROL/dynamic-security/v1/response";
 
   private final EndpointConfiguration endpoint;
-  private final BlockingQueue<CommandRequest> commandQueue = new LinkedBlockingQueue<>(MAX_QUEUE_SIZE);
+  private final BlockingQueue<CommandRequest> commandQueue;
   private final MqttClient mqttClient;
   private final ExecutorService executor;
   private final ScheduledExecutorService scheduler;
   private final ObjectMapper objectMapper = new ObjectMapper();
+
+  private final int batchSizeLimit;
+  private final long batchBytesLimit;
+  private final long minPublishIntervalMs;
+  private final long batchTimeoutMs;
 
   private long lastPublishTime = 0;
   private boolean batchInFlight = false;
@@ -71,8 +77,42 @@ public class MosquittoDynamicSecurityService implements MqttCallback {
   /**
    * Constructs and connects the Dynamic Security Service.
    */
+  /**
+   * Factory function to create the command queue.
+   */
+  public static BlockingQueue<CommandRequest> createCommandQueue(int capacity) {
+    return new java.util.concurrent.LinkedBlockingQueue<>(capacity);
+  }
+
+  /**
+   * Constructs and connects the Dynamic Security Service with default limits.
+   */
   public MosquittoDynamicSecurityService(EndpointConfiguration endpoint) {
+    this(endpoint,
+         createCommandQueue(DEFAULT_MAX_QUEUE_SIZE),
+         DEFAULT_BATCH_SIZE_LIMIT,
+         DEFAULT_BATCH_BYTES_LIMIT,
+         DEFAULT_MIN_PUBLISH_INTERVAL_MS,
+         DEFAULT_BATCH_TIMEOUT_MS);
+  }
+
+  /**
+   * Constructs and connects the Dynamic Security Service with custom limits.
+   */
+  public MosquittoDynamicSecurityService(
+      EndpointConfiguration endpoint,
+      BlockingQueue<CommandRequest> commandQueue,
+      int batchSizeLimit,
+      long batchBytesLimit,
+      long minPublishIntervalMs,
+      long batchTimeoutMs
+  ) {
     this.endpoint = endpoint;
+    this.commandQueue = commandQueue;
+    this.batchSizeLimit = batchSizeLimit;
+    this.batchBytesLimit = batchBytesLimit;
+    this.minPublishIntervalMs = minPublishIntervalMs;
+    this.batchTimeoutMs = batchTimeoutMs;
     this.mqttClient = createMqttClient();
     this.executor = Executors.newSingleThreadExecutor();
     this.scheduler = Executors.newSingleThreadScheduledExecutor();
@@ -80,11 +120,25 @@ public class MosquittoDynamicSecurityService implements MqttCallback {
   }
 
   // Visible for testing
-  MosquittoDynamicSecurityService(EndpointConfiguration endpoint, MqttClient mqttClient,
-      ExecutorService executor, ScheduledExecutorService scheduler) {
+  MosquittoDynamicSecurityService(
+      EndpointConfiguration endpoint,
+      MqttClient mqttClient,
+      BlockingQueue<CommandRequest> commandQueue,
+      int batchSizeLimit,
+      long batchBytesLimit,
+      long minPublishIntervalMs,
+      long batchTimeoutMs,
+      ExecutorService executor,
+      ScheduledExecutorService scheduler
+  ) {
     this.endpoint = endpoint;
     this.mqttClient = mqttClient;
     this.mqttClient.setCallback(this);
+    this.commandQueue = commandQueue;
+    this.batchSizeLimit = batchSizeLimit;
+    this.batchBytesLimit = batchBytesLimit;
+    this.minPublishIntervalMs = minPublishIntervalMs;
+    this.batchTimeoutMs = batchTimeoutMs;
     this.executor = executor;
     this.scheduler = scheduler;
   }
@@ -158,12 +212,11 @@ public class MosquittoDynamicSecurityService implements MqttCallback {
    * Enqueues a command request to the service non-blockingly.
    */
   public CompletableFuture<Void> enqueueCommand(CommandRequest req) {
-    if (commandQueue.size() >= MAX_QUEUE_SIZE) {
+    if (!commandQueue.offer(req)) {
       req.future.completeExceptionally(new QueueFullException(
           "Dynamic security queue is full. Size: " + commandQueue.size()));
       return req.future;
     }
-    commandQueue.offer(req);
     triggerWorker();
     return req.future;
   }
@@ -180,7 +233,7 @@ public class MosquittoDynamicSecurityService implements MqttCallback {
     }
     long now = System.currentTimeMillis();
     long timeSinceLastPublish = now - lastPublishTime;
-    long delay = MIN_PUBLISH_INTERVAL_MS - timeSinceLastPublish;
+    long delay = minPublishIntervalMs - timeSinceLastPublish;
 
     if (delay <= 0) {
       executor.submit(this::drainAndPublishBatch);
@@ -205,15 +258,15 @@ public class MosquittoDynamicSecurityService implements MqttCallback {
     List<CommandRequest> batch = new ArrayList<>();
     long totalBytes = 0;
 
-    while (batch.size() < BATCH_SIZE_LIMIT
-        && totalBytes < BATCH_BYTES_LIMIT
+    while (batch.size() < batchSizeLimit
+        && totalBytes < batchBytesLimit
         && !commandQueue.isEmpty()) {
       CommandRequest req = commandQueue.peek();
       if (req == null) {
         break;
       }
       long nextSize = req.serializedPayload.length + 1;
-      if (batch.size() > 0 && totalBytes + nextSize > BATCH_BYTES_LIMIT) {
+      if (batch.size() > 0 && totalBytes + nextSize > batchBytesLimit) {
         break;
       }
       commandQueue.poll();
@@ -251,7 +304,7 @@ public class MosquittoDynamicSecurityService implements MqttCallback {
         }
         timeoutTask = scheduler.schedule(
             () -> handleBatchTimeout(batch),
-            BATCH_TIMEOUT_MS,
+            batchTimeoutMs,
             TimeUnit.MILLISECONDS);
       }
     } catch (Exception e) {
@@ -269,7 +322,7 @@ public class MosquittoDynamicSecurityService implements MqttCallback {
   private synchronized void handleBatchTimeout(List<CommandRequest> batch) {
     if (this.inFlightBatch == batch) {
       log.warn("Batch of {} commands timed out waiting for broker response after {}ms",
-          batch.size(), BATCH_TIMEOUT_MS);
+          batch.size(), batchTimeoutMs);
       this.inFlightBatch = null;
       this.batchInFlight = false;
       this.timeoutTask = null;
