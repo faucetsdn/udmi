@@ -140,7 +140,7 @@ public class DynamicIotAccessProvider extends IotAccessBase {
 
   @Override
   public Entry<Long, String> fetchConfig(String registryId, String deviceId) {
-    return getRegistryProvider(registryId, deviceId).fetchConfig(registryId, deviceId);
+    return getProviderFor(registryId, deviceId).fetchConfig(registryId, deviceId);
   }
 
   @Override
@@ -200,7 +200,7 @@ public class DynamicIotAccessProvider extends IotAccessBase {
 
   @Override
   public String modifyConfig(Envelope envelope, Function<Entry<Long, String>, String> munger) {
-    return getRegistryProvider(envelope).modifyConfig(envelope, munger);
+    return getProviderFor(envelope).modifyConfig(envelope, munger);
   }
 
   @Override
