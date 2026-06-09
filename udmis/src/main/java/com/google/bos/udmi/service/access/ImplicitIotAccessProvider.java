@@ -292,6 +292,12 @@ public class ImplicitIotAccessProvider extends IotAccessBase {
 
   private void deleteDevice(String registryId, String deviceId, CloudModel cloudModel) {
     DataRef properties = registryDeviceRef(registryId, deviceId);
+
+    // If this device is a gateway, unbind all its bound devices first!
+    if (GATEWAY.toString().equals(properties.get(RESOURCE_TYPE_PROPERTY))) {
+      unbindGatewayDevices(registryId, deviceId);
+    }
+
     String gatewayId = properties.get(BOUND_TO_KEY);
     properties.entries().keySet().forEach(properties::delete);
     registryDevicesRef(registryId).delete(deviceId);
@@ -311,6 +317,28 @@ public class ImplicitIotAccessProvider extends IotAccessBase {
     }
     if (f2 != null) {
       f2.join();
+    }
+  }
+
+  private void unbindGatewayDevices(String registryId, String gatewayId) {
+    try {
+      Map<String, CloudModel> boundDevices = listBoundDevices(registryId, gatewayId);
+      info("Unbinding %d devices from gateway %s on gateway deletion", boundDevices.size(), gatewayId);
+      List<CompletableFuture<Void>> futures = new ArrayList<>();
+      boundDevices.keySet().forEach(deviceId -> {
+        // Clear database entries for the bound device
+        registryDeviceRef(registryId, deviceId).delete(BOUND_TO_KEY);
+        registryDeviceRef(registryId, deviceId).delete(BIND_STATUS_KEY);
+        gatewayBoundRef(registryId, gatewayId).delete(deviceId);
+
+        // Unbind in the broker
+        futures.add(withQueueRetry(() -> broker.unbindGateway(
+            clientId(registryId, gatewayId),
+            clientId(registryId, deviceId))));
+      });
+      CompletableFuture.allOf(futures.toArray(new CompletableFuture[0])).join();
+    } catch (Exception e) {
+      error("Error unbinding devices from gateway %s on deletion: %s", gatewayId, friendlyStackTrace(e));
     }
   }
 
