@@ -17,8 +17,19 @@ sleep $SLEEP_SECONDS
 
 for ((i=1; i<=$MAX_ATTEMPTS; i++)); do
     if [ -f "$LOG_FILE" ] && grep -q "$ACTIVATION_STRING" "$LOG_FILE"; then
-        if ! bin/registrar site_model //mqtt/mosquitto; then
-            echo "ERROR: Initial registrar execution failed!" >&2
+        echo "UDMIS active. Executing initial registrar pass..."
+        success=0
+        for ((r=1; r<=3; r++)); do
+            if bin/registrar site_model //mqtt/mosquitto; then
+                success=1
+                break
+            fi
+            echo "Registrar initial pass failed, retrying [$r/3] in 10s..."
+            sleep 10
+        done
+        if [ "$success" -eq 0 ]; then
+            echo "FATAL: Registrar failed all initial attempts. System indeterminate." >&2
+            exit 1
         fi
         tail -f /dev/null
         exit 0
