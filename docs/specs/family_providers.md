@@ -5,7 +5,7 @@
 UDMI abstracts various fieldbus protocols (such as BACnet, Modbus, IP, etc.) through its `FamilyProvider` interface. A `FamilyProvider` is responsible for translating local protocol-specific addressing and metadata into standardized, globally unique Uniform Resource Locators (URLs) and vice-versa. 
 
 These URLs provide a protocol-agnostic, structured path for identifying devices and data points:
-`<family>://<device>/<point>`
+`<family>://<addr>/<ref>`
 
 This document details how a complete `FamilyProvider` URL is generated and resolved based on a device's metadata specification and how validation constraints enforce these rules.
 
@@ -18,8 +18,8 @@ Every generated URL consists of three primary logical components:
 | Component | Description | Mapping to Metadata | Example |
 | :--- | :--- | :--- | :--- |
 | **`family`** | The protocol/address family. | `gateway.target.family` | `bacnet` or `modbus` |
-| **`device`** | The physical device address or host on that family. | `gateway.target.addr` | `1234` or `modbus_rtu_1` |
-| **`point`** | The relative reference identifier of the data point. | `pointset.points.<point_name>.ref` | `AV:1` or `1/101?type=BOOLEAN` |
+| **`addr`** | The physical device address or host on that family. | `gateway.target.addr` | `1234` or `modbus_rtu_1` |
+| **`ref`** | The relative reference identifier of the data point. | `pointset.points.<point_name>.ref` | `AV:1` or `1/101?type=BOOLEAN` |
 
 ---
 
@@ -152,15 +152,16 @@ In the example below, `point_a` resides on BACnet device `1234`, while `point_b`
 ```json
 {
   "gateway": {
-    "gateway_id": "LTGW-123"
+    "gateway_id": "LTGW-123",
+    "family": "bacnet"
   },
   "pointset": {
     "points": {
       "point_a": {
-        "ref": "bacnet://1234/AV:1"
+        "ref": "1234/AV:1"
       },
       "point_b": {
-        "ref": "bacnet://5678/AV:1"
+        "ref": "5678/AV:1"
       }
     }
   }

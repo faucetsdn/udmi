@@ -8,8 +8,9 @@ UDMI supports reading Modbus points by specifying them via a `modbus://` URL sch
 
 ## URI Schema
 
-`modbus://<unitid>/<function>/<address>[/<quantity>][?interpretation]`
+`modbus://<addr>/<unitid>/<function>/<address>[/<quantity>][?interpretation]`
 
+*   **`addr`**: e.g., `192.28.27.3` or `modbus_rtu_1` (named network from the `localnet.networks` map).
 *   **`unitid`**: The Slave ID (Unit Identifier).
 *   **`function`**: The Function Code (see [Function Codes](#function-codes)).
 *   **`address`**: The starting register address.
@@ -36,14 +37,16 @@ Parameters passed in the query string define how to interpret the fetched regist
 *   **`worder`**: i.e., `HWF` (`High-Word First`) or `LWF` (`Low-Word First`) (for 32-bit values).
 *   **`scale`**: e.g., `1.0`, `0.01`, `100.0` (scale factor).
 *   **`offset`**: e.g., `0`, `0.5` (offset applied to value after scaling).
-*   **`network`**: e.g., `modbus_rtu_1` (named network from the `localnet.networks` map).
 
 ### Network Parameters
 
-    The `host` maps to a named network in the device's `model_localnet.json` (under the `networks` field). Each named network can define the following parameters for communication:
+The `addr` field is either an IPv4 address, DNS hostname, or maps to a
+named network in the device's `model_localnet.json` (under the
+`networks` field). Each named network can define the following
+parameters for communication:
 
-*   **`baud`**: The baud rate.
 *   **`protocol`**: i.e., `RTU`, `TCP`.
+*   **`baud`**: The baud rate.
 *   **`parity`**: For serial `RTU`.
 *   **`data bits`**: For serial `RTU`.
 *   **`stop bits`**: For serial `RTU`.
@@ -52,9 +55,9 @@ Parameters passed in the query string define how to interpret the fetched regist
 
 The metadata values in the examples below map to the following complete Modbus URIs:
 
-*   **Network RTU Point**: `modbus://1/3/40001/1?type=INT16&border=MSB`
-*   **`fan_status`**: `modbus://2/1/101?type=BOOLEAN`
-*   **`filter_differential_pressure`**: `modbus://2/4/30005?type=UINT32&worder=LWF&scale=0.01`
+*   **Network RTU Point**: `modbus://192.483.4.1/1/3/40001/1?type=INT16&border=MSB`
+*   **`fan_status`**: `modbus://modbus_rtu_1/2/1/101?type=BOOLEAN`
+*   **`filter_differential_pressure`**: `modbus://localhost/2/4/30005?type=UINT32&worder=LWF&scale=0.01`
 
 ### Network Configuration Example
 
@@ -89,8 +92,7 @@ For a proxied Modbus device, the `gateway` block in the `metadata.json` specifie
   "gateway": {
     "target": {
       "family": "modbus",
-      "addr": "2",
-      "network_id": "modbus_rtu_1"
+      "addr": "modbus_rtu_1/2"
     }
   },
   "pointset": {
@@ -106,5 +108,3 @@ For a proxied Modbus device, the `gateway` block in the `metadata.json` specifie
   }
 }
 ```
-
-

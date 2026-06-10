@@ -17,26 +17,26 @@ import java.util.regex.Pattern;
 public class ModbusFamilyProvider implements FamilyProvider {
 
   // URL format:
-  //   modbus://<unitid>/<function>/<address>[/<quantity>][?params]
+  //   modbus://<addr>/<unitid>/<function>/<address>[/<quantity>][?params]
   // Note: the `split("/", 4)` in `FamilyProvider` splits the URL into:
   // parts[0]: modbus:
   // parts[1]: (empty string)
-  // parts[2]: <unitid>
-  // parts[3]: <function>/<address>[/<quantity>][?interpretation]
+  // parts[2]: <addr> (must start with alpha or be a valid IPv4 address)
+  // parts[3]: <unitid>/<function>/<address>[/<quantity>][?interpretation]
 
-  // Address (parts[2]): <unitid>
+  // Address: <unitid>
   private static final Pattern MODBUS_ADDR = Pattern.compile("0|[1-9][0-9]*");
   private static final int MAX_ADDR_VALUE = 255;
 
-  // Point (parts[3]): <function>/<address>[/<quantity>][?interpretation]
+  // Point (parts[3]): <unitid>/<function>/<address>[/<quantity>][?interpretation]
   private static final Pattern MODBUS_POINT =
-      Pattern.compile("^(\\d+)/(\\d+)(?:/(\\d+))?(?:\\?(.*))?$");
+      Pattern.compile("^(\\d+)/(\\d+)/(\\d+)(?:/(\\d+))?(?:\\?(.*))?$");
 
   private static final Set<String> ALLOWED_FUNCTIONS =
       ImmutableSet.of("1", "2", "3", "4", "5", "6", "15", "16");
 
   private static final Set<String> ALLOWED_PARAMS =
-      ImmutableSet.of("border", "type", "worder", "scale", "offset", "network");
+      ImmutableSet.of("border", "type", "worder", "scale", "offset");
 
   private static final Set<String> ALLOWED_BORDERS = ImmutableSet.of("MSB", "LSB");
   private static final Set<String> ALLOWED_WORDERS = ImmutableSet.of("HWF", "LWF");
@@ -49,13 +49,29 @@ public class ModbusFamilyProvider implements FamilyProvider {
     return MODBUS;
   }
 
+  private static final Pattern ALPHA_ADDR = Pattern.compile("^[a-zA-Z][a-zA-Z0-9_.-]*$");
+
+  private boolean startsWithAlpha(String addr) {
+    if (addr == null || addr.isEmpty()) {
+      return false;
+    }
+    return ALPHA_ADDR.matcher(addr).matches();
+  }
+
+  private boolean isValidIpv4(String addr) {
+    try {
+      return com.google.common.net.InetAddresses.isInetAddress(addr)
+          && com.google.common.net.InetAddresses.forString(addr) instanceof java.net.Inet4Address;
+    } catch (Exception e) {
+      return false;
+    }
+  }
+
   @Override
   public void validateAddr(String scanAddr) {
     requireNonNull(scanAddr, "missing required modbus scan_addr");
-    checkState(MODBUS_ADDR.matcher(scanAddr).matches(),
-        format("modbus unitid %s does not match expression %s", scanAddr, MODBUS_ADDR));
-    checkState(Integer.parseInt(scanAddr) <= MAX_ADDR_VALUE,
-        format("modbus unitid %s exceeded maximum %d", scanAddr, MAX_ADDR_VALUE));
+    checkState(startsWithAlpha(scanAddr) || isValidIpv4(scanAddr),
+        format("modbus addr %s is invalid; must start with an alphabetical character or be a valid IPv4 address", scanAddr));
   }
 
   @Override
@@ -67,12 +83,18 @@ public class ModbusFamilyProvider implements FamilyProvider {
           format("protocol ref %s does not match expression %s", pointRef, MODBUS_POINT));
     }
 
-    String function = matcher.group(1);
+    String unitId = matcher.group(1);
+    checkState(MODBUS_ADDR.matcher(unitId).matches(),
+        format("modbus unitid %s does not match expression %s", unitId, MODBUS_ADDR));
+    checkState(Integer.parseInt(unitId) <= MAX_ADDR_VALUE,
+        format("modbus unitid %s exceeded maximum %d", unitId, MAX_ADDR_VALUE));
+
+    String function = matcher.group(2);
     if (!ALLOWED_FUNCTIONS.contains(function)) {
       throw new RuntimeException(format("invalid modbus function code %s", function));
     }
 
-    String query = matcher.group(4);
+    String query = matcher.group(5);
     if (query != null) {
       Arrays.stream(query.split("&")).forEach(param -> {
         String[] parts = param.split("=");
@@ -107,11 +129,6 @@ public class ModbusFamilyProvider implements FamilyProvider {
               Double.parseDouble(value);
             } catch (NumberFormatException e) {
               throw new RuntimeException(format("invalid modbus %s value %s", key, value));
-            }
-            break;
-          case "network":
-            if (value.isEmpty()) {
-              throw new RuntimeException("empty modbus network parameter");
             }
             break;
           default:

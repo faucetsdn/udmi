@@ -1,0 +1,5 @@
+Exceptions for DEV-1
+  While converting device config
+    modbus addr 1 is invalid; must start with an alphabetical character or be a valid IPv4 address
+  1 schema violations found
+    /gateway/target: object instance has properties which are not allowed by the schema: ["network_id"]
