@@ -1,0 +1,114 @@
+#!/bin/bash -e
+
+# UUFI Test Client Logic
+# Performs: Handshake -> Config Update -> State Reply verification
+
+UDMI_ROOT=$(dirname $0)/..
+cd ${UDMI_ROOT}
+source etc/shell_common.sh
+
+HOST=${1:-localhost}
+PORT=${2:-8883}
+USER=${3:-rocket}
+PASS=${4:-monkey}
+CLIENT_ID="uufi-test-client"
+SITE_MODEL=${5:-sites/udmi_site_model}
+TXN_ID="TXN-$(date +%s)"
+DUT_ID="AHU-1"
+REGISTRY_ID="ZZ-TRI-FECTA"
+
+CA_CERT="$SITE_MODEL/reflector/ca.crt"
+echo "Waiting for non-empty CA certificate $CA_CERT..."
+TIMEOUT=60
+while [[ (! -f $CA_CERT || ! -s $CA_CERT) && $TIMEOUT -gt 0 ]]; do
+    sleep 1
+    TIMEOUT=$((TIMEOUT - 1))
+done
+
+MQTT_ARGS="-h $HOST -p $PORT -u $USER -P $PASS --cafile $CA_CERT --cert $SITE_MODEL/reflector/rsa_private.crt --key $SITE_MODEL/reflector/rsa_private.pem -i $CLIENT_ID --insecure"
+
+# 1. UUFI Handshake
+REPLY_FILE=$(mktemp)
+mosquitto_sub $MQTT_ARGS -t "/uufi/c/config/udmi" -F "%p" | while read -r line; do
+    echo "$line" > "$REPLY_FILE"
+    REPLY_TXN=$(jq -r .payload.reply.transaction_id < "$REPLY_FILE" 2>/dev/null)
+    if [[ "$REPLY_TXN" == "$TXN_ID" ]]; then
+        kill -USR1 $$ 2>/dev/null || true
+        exit 0
+    fi
+done &
+SUB_PID=$!
+
+GOT_HANDSHAKE=0
+trap "GOT_HANDSHAKE=1" USR1
+sleep 2
+
+echo "Sending UUFI handshake Step 1 (State Declaration)... (txn: $TXN_ID)"
+HANDSHAKE_STATE="{\"version\":\"1.5.2\",\"timestamp\":\"$(date -u +%Y-%m-%dT%H:%M:%SZ)\",\"setup\":{\"functions_ver\":9,\"transaction_id\":\"$TXN_ID\",\"msg_source\":\"$CLIENT_ID\"}}"
+echo "Handshake payload: $HANDSHAKE_STATE"
+mosquitto_pub $MQTT_ARGS -t "/uufi/c/state/udmi" -m "$HANDSHAKE_STATE"
+
+TIMEOUT=30
+while [ $GOT_HANDSHAKE -eq 0 ] && [ $TIMEOUT -gt 0 ]; do
+    echo "Waiting for handshake reply... ($TIMEOUT)"
+    sleep 1
+    TIMEOUT=$((TIMEOUT - 1))
+done
+
+if [ $GOT_HANDSHAKE -eq 0 ]; then
+    echo "Timed out waiting for handshake reply (txn: $TXN_ID)"
+    kill $SUB_PID 2>/dev/null || true
+    exit 1
+fi
+kill $SUB_PID 2>/dev/null || true
+echo "Handshake SUCCESS"
+
+# 2. Comprehensive Exchange (Config Update -> State Reply)
+echo "Starting comprehensive exchange test..."
+STATE_REPLY_FILE=$(mktemp)
+# Subscribe to the UUFI state topic for the DUT
+# UDMIS will wrap incoming state and publish it here
+echo "Subscribing to /uufi/r/$REGISTRY_ID/d/$DUT_ID/c/state/pointset..."
+mosquitto_sub $MQTT_ARGS -i "${CLIENT_ID}_sub" -t "/uufi/r/$REGISTRY_ID/d/$DUT_ID/c/state/pointset" -F "%p" | while read -r line; do
+    echo "Received UUFI state update: $line"
+    echo "$line" > "$STATE_REPLY_FILE"
+    # We look for the updated point value we're about to send in config
+    VALUE_STATE=$(jq -r .payload.points.filter_differential_pressure_setpoint.value_state < "$STATE_REPLY_FILE" 2>/dev/null)
+    if [[ "$VALUE_STATE" == "applied" ]]; then
+        echo "Found expected value_state applied!"
+        kill -USR2 $$ 2>/dev/null || true
+        exit 0
+    fi
+done &
+SUB_STATE_PID=$!
+
+GOT_STATE=0
+trap "GOT_STATE=1" USR2
+sleep 2
+
+echo "Sending UUFI-wrapped Config Update for $DUT_ID..."
+# A config update request through UUFI
+# UDMIS should unwrap this and update the actual device config
+NEW_CONFIG="{\"subType\":\"config\",\"subFolder\":\"pointset\",\"deviceId\":\"$DUT_ID\",\"deviceRegistryId\":\"$REGISTRY_ID\",\"payload\":{\"version\":\"1.5.2\",\"timestamp\":\"$(date -u +%Y-%m-%dT%H:%M:%SZ)\",\"points\":{\"filter_differential_pressure_setpoint\":{\"set_value\":42}}}}"
+echo "Config update payload: $NEW_CONFIG"
+mosquitto_pub $MQTT_ARGS -i "${CLIENT_ID}_pub" -t "/uufi/c/config/pointset" -m "$NEW_CONFIG"
+
+echo "Waiting for State Update reply from $DUT_ID through UUFI..."
+TIMEOUT=60
+while [ $GOT_STATE -eq 0 ] && [ $TIMEOUT -gt 0 ]; do
+    echo "Waiting for state update... ($TIMEOUT)"
+    sleep 1
+    TIMEOUT=$((TIMEOUT - 1))
+done
+
+if [ $GOT_STATE -eq 0 ]; then
+    echo "Timed out waiting for State Update reply"
+    kill $SUB_STATE_PID 2>/dev/null || true
+    exit 1
+fi
+
+kill $SUB_STATE_PID 2>/dev/null || true
+echo "Comprehensive Exchange SUCCESS: Received matching state update"
+
+echo "UUFI Comprehensive Integration Test PASSED"
+rm -f "$REPLY_FILE" "$STATE_REPLY_FILE"

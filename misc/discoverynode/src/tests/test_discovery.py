@@ -142,7 +142,7 @@ def test_generation_scheduling(seconds_from_now, scan_interval, threshold, expec
          mock.patch.object(discovery, 'MAX_THRESHOLD_GENERATION', new=threshold), \
          mock.patch('time.time', return_value=1000), \
          mock.patch('datetime.datetime', MockedDateTime):
-        logging.error(f"seconds from now: {seconds_from_now}")
+        logging.debug(f"seconds from now: {seconds_from_now}")
         generation_timestamp = make_timestamp(seconds_from_epoch=1000 + seconds_from_now) 
         config = {
             "discovery": {

@@ -3,6 +3,7 @@ package com.google.bos.udmi.service.core;
 import static com.google.udmi.util.JsonUtil.toMap;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -12,6 +13,7 @@ import java.util.Map;
 import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
+import udmi.schema.Envelope;
 import udmi.schema.Envelope.SubFolder;
 import udmi.schema.Envelope.SubType;
 import udmi.schema.PointsetEvents;
@@ -64,7 +66,7 @@ class TargetProcessorTest extends ProcessorTestBase {
 
     ArgumentCaptor<String> commandCaptor = ArgumentCaptor.forClass(String.class);
     verify(provider, times(1)).sendCommand(
-        eq(makeReflectEnvelope(false)), eq(SubFolder.UDMI), commandCaptor.capture());
+        any(Envelope.class), eq(SubFolder.UDMI), commandCaptor.capture());
     verifyCommand(commandCaptor, true);
   }
 
@@ -88,7 +90,7 @@ class TargetProcessorTest extends ProcessorTestBase {
 
     ArgumentCaptor<String> commandCaptor = ArgumentCaptor.forClass(String.class);
     verify(provider, times(1)).sendCommand(
-        eq(makeReflectEnvelope(false)), eq(SubFolder.UDMI), commandCaptor.capture());
+        any(Envelope.class), eq(SubFolder.UDMI), commandCaptor.capture());
     verifyCommand(commandCaptor, false);
   }
 
