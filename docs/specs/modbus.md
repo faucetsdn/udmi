@@ -43,14 +43,14 @@ Parameters passed in the query string define how to interpret the fetched regist
 The `addr` field is either an IPv4 address, DNS hostname, or maps to a
 named network in the device's `model_localnet.json` (under the
 `networks` field). Each named network can define the following
-parameters for communication:
+(optional) parameters for communication:
 
-*   **`protocol`**: i.e., `RTU`, `TCP`.
-*   **`dev`**: The port device identifier, e.g. `/dev/tty1`.
+*   **`protocol`**: i.e., `RTU` or `TCP`.
+*   **`device`**: The port device identifier, e.g. `/dev/tty1`.
 *   **`baud`**: The baud rate.
-*   **`parity`**: For serial `RTU`.
-*   **`data bits`**: For serial `RTU`.
-*   **`stop bits`**: For serial `RTU`.
+*   **`parity`**: Serial parity.
+*   **`data_bits`**: Number of serial data bits.
+*   **`stop_bits`**: Number of serial stop bits.
 
 ## Examples
 
