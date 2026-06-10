@@ -58,7 +58,9 @@ EOF
 echo "Ensuring bridgeheadManager.war exists..."
 mkdir -p udmis
 [ -f udmis/bridgeheadManager.war ] || touch udmis/bridgeheadManager.war
-[ -f udmis/build.sh ] && ./udmis/build.sh || true
+if [ -f udmis/build.sh ]; then
+    ./udmis/build.sh || { echo "ERROR: UDMIS Gradle compilation failed!" >&2; exit 1; }
+fi
 
 echo "Starting services with docker-compose..."
 docker rm -f mosquitto etcd udmis validator influxdb grafana pubber 2>/dev/null || true
@@ -121,14 +123,10 @@ echo "Executing discovery sequence..."
 sleep 5
 
 # 1. Registrar setup
-if ! docker exec validator /bin/bash -c "bin/registrar site_model/ //mqtt/mosquitto -x -d"; then
-    echo "WARNING: Registrar clean setup encountered a transient initialization delay." >&2
-fi
+run_with_retry docker exec validator /bin/bash -c "bin/registrar site_model/ //mqtt/mosquitto -x -d"
 echo "Registrar clean completed."
-sleep 5
-if ! run_with_retry docker exec validator /bin/bash -c "bin/registrar site_model/ //mqtt/mosquitto GAT-123"; then
-    echo "WARNING: Registrar GAT-123 setup encountered a transient connection reset." >&2
-fi
+sleep 15
+run_with_retry docker exec validator /bin/bash -c "bin/registrar site_model/ //mqtt/mosquitto GAT-123"
 echo "Step 1: Registrar initial setup completed."
 
 # 2. Start Pubber container
@@ -149,9 +147,7 @@ run_with_retry docker exec validator /root/discovery.sh GAT-123
 echo "Step 4: Discovery script executed."
 
 # 5. Run registrar to check results
-if ! run_with_retry docker exec validator bin/registrar site_model/ //mqtt/mosquitto > registrar_output.txt; then
-    echo "WARNING: Step 5 Registrar summary execution encountered a transient synchronization timeout." >&2
-fi
+run_with_retry docker exec validator bin/registrar site_model/ //mqtt/mosquitto > registrar_output.txt
 echo "Step 5: Ran Registrar to check results."
 
 echo "Verifying output..."
