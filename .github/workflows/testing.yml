@@ -214,6 +214,9 @@ jobs:
       - name: udmis log
         if: ${{ !cancelled() }}
         run: cat out/udmis.log
+      - name: message capture log
+        if: ${{ !cancelled() }}
+        run: cat out/message_capture.log || true
       - name: itemized test post-process
         if: ${{ !cancelled() }}
         run: egrep ' test .* after .*s ' out/sequencer.log-* | tee out/timing_itemized.out
@@ -258,6 +261,8 @@ jobs:
         run: bin/test_runlocal
       - name: bin/test_sequencer
         run: bin/test_sequencer local full //mqtt/localhost $(< etc/local_tests.txt)
+      - name: bin/test_uufi
+        run: bin/test_uufi
       - name: bin/test_udmis
         run: bin/test_udmis
       - name: bin/test_etcd_postrun
@@ -270,6 +275,18 @@ jobs:
       - name: udmis log
         if: ${{ !cancelled() }}
         run: cat out/udmis*.log
+      - name: message capture log
+        if: ${{ !cancelled() }}
+        run: cat out/message_capture.log || true
+      - name: registrar log
+        if: ${{ !cancelled() }}
+        run: cat out/registrar.log || true
+      - name: mosquitto state
+        if: ${{ !cancelled() }}
+        run: |
+          source etc/mosquitto_ctrl.sh
+          $MOSQUITTO_CTRL listClients || true
+          $MOSQUITTO_CTRL listRoles || true
       - name: mosquitto logs
         if: ${{ !cancelled() }}
         run: cat /var/log/mosquitto/mosquitto.log || true
@@ -458,8 +475,12 @@ jobs:
       - name: udmis log
         if: ${{ !cancelled() }}
         run: |
-          docker logs udmis
-          more out/udmis.log
+          echo "=== out/udmis.log ==="
+          cat out/udmis.log || true
+          echo "=== out/etcd.log ==="
+          cat out/etcd.log || true
+          echo "=== docker logs ==="
+          docker logs udmis || true
   udmilp:
     name: Python Library Tests
     runs-on: ubuntu-24.04

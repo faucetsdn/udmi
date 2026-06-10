@@ -148,8 +148,12 @@ public class ProvisioningEngine extends ProcessorBase {
         return;
       }
 
-      String family = requireNonNull(discoveryEvent.family, "missing family");
-      String addr = requireNonNull(discoveryEvent.addr, "missing addr");
+      if (discoveryEvent.addr == null || discoveryEvent.family == null) {
+        return;
+      }
+
+      String family = discoveryEvent.family;
+      String addr = discoveryEvent.addr;
       String expectedId = format(DISCOVERED_DEVICE_FORMAT, family, addr);
       boolean isGateway = isGateway(deviceModel);
 

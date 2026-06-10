@@ -27,6 +27,7 @@ credentials.json
 /udmis/var/
 /udmis/profile/
 /udmis/.idea/libraries/
+/udmis/bin/etcd_bin/
 /selfie/build/
 /pubber/build/
 /pubber/out/
@@ -64,6 +65,7 @@ cloud/gcp/.terraform*
 .python-version
 dist
 gencode/python/dist
+gencode/python/poetry.lock
 venv
 clientlib/python/.idea
 clientlib/python/rsa_private.crt

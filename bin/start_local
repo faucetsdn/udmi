@@ -13,9 +13,15 @@ fi
 
 if [[ $# == 1 ]]; then
     site_config=$(realpath $1)
+    if [[ -d $site_config ]]; then
+        site_config=$site_config/cloud_iot_config.json
+    fi
     shift
 else
-    site_config=$(realpath $1)/cloud_iot_config.json
+    site_config=$(realpath $1)
+    if [[ -d $site_config ]]; then
+        site_config=$site_config/cloud_iot_config.json
+    fi
     project_spec=$2
     shift 2
 fi
@@ -34,7 +40,8 @@ cd $UDMI_ROOT
 UDMIS_LOG=out/udmis.log
 mkdir -p out
 # Do sudo now to prefetch incase it's needed later...
-echo Starting local services at $(sudo date -u -Is) | tee $UDMIS_LOG
+sudo true
+echo Starting local services at $(date -u -Is) | tee $UDMIS_LOG
 
 iot_provider=$(jq -r .iot_provider $site_config)
 if [[ -n ${project_spec:-} ]]; then
@@ -52,32 +59,47 @@ fi
 registry_id=$(jq -r .registry_id $site_config)${UDMI_REGISTRY_SUFFIX:-}
 
 echo Starting etcd... | tee -a $UDMIS_LOG
-bin/start_etcd
+bin/start_etcd >> $UDMIS_LOG 2>&1
 
 source $UDMI_ROOT/etc/mosquitto_ctrl.sh
 mkdir -p $CERT_DIR
 
 echo Starting mosquitto on server $project_target | tee -a $UDMIS_LOG
-bin/setup_ca $site_model $project_target
-bin/start_mosquitto
+bin/setup_ca $site_model $project_target >> $UDMIS_LOG 2>&1
+bin/start_mosquitto >> $UDMIS_LOG 2>&1
 
-$MOSQUITTO_CTRL deleteClient $SERV_USER
-$MOSQUITTO_CTRL createClient $SERV_USER -p $SERV_PASS # No client_id to allow multiple backend connections.
-$MOSQUITTO_CTRL addClientRole $SERV_USER service
+$MOSQUITTO_CTRL deleteClient $SERV_USER >> $UDMIS_LOG 2>&1 || true
+$MOSQUITTO_CTRL createClient $SERV_USER -p $SERV_PASS >> $UDMIS_LOG 2>&1 || true # No client_id to allow multiple backend connections.
+$MOSQUITTO_CTRL addClientRole $SERV_USER service >> $UDMIS_LOG 2>&1 || true
+$MOSQUITTO_CTRL addClientRole $SERV_USER uufi >> $UDMIS_LOG 2>&1 || true
+
+# Setup device client security (for Pubber DUT)
+bin/mosquctl_device $site_model AHU-1 >> $UDMIS_LOG 2>&1
 
 echo Starting initializing site $site_model | tee -a $UDMIS_LOG
-bin/mosquctl_site $site_model
+bin/mosquctl_site $site_model >> $UDMIS_LOG 2>&1
 
 if [[ -n ${UDMI_ALT_REGISTRY:-} ]]; then
-    bin/mosquctl_site $site_model $UDMI_ALT_REGISTRY
+    bin/mosquctl_site $site_model $UDMI_ALT_REGISTRY >> $UDMIS_LOG 2>&1
 fi
 
 # Global access to logs for connection tracking by UDMIS.
 sudo chmod a+r /var/log/mosquitto/mosquitto.log
 
 echo Starting udmis proper... | tee -a $UDMIS_LOG
-bin/start_udmis
+bin/start_udmis >> $UDMIS_LOG 2>&1
 
 echo Done with local server setup.
+
+echo ""
+echo "################################################################"
+echo "UUFI Service is READY"
+echo "################################################################"
+echo "Connection String: mqtt://rocket:monkey@localhost:8883"
+echo "CA Certificate:    $site_model/reflector/ca.crt"
+echo "Client Cert:       $site_model/reflector/rsa_private.crt"
+echo "Client Key:        $site_model/reflector/rsa_private.pem"
+echo "################################################################"
+echo ""
 
 [[ -z $block ]] || (echo Blocking until termination. && tail -f /dev/null)
