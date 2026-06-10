@@ -35,6 +35,22 @@
     },
     "distributor": {
       "enabled": "false"
+    },
+    "uufi": {
+      "recv_id": "/uufi/#",
+      "send_id": "${UDMI_PREFIX}udmi_target"
+    },
+    "uufi_out": {
+      "recv_id": "reflect",
+      "send_id": "/uufi/#"
+    },
+    "uufi_state": {
+      "recv_id": "state/#",
+      "send_id": "/uufi/#"
+    },
+    "uufi_events": {
+      "recv_id": "events/#",
+      "send_id": "/uufi/#"
     }
   },
   "crons": {

@@ -31,7 +31,8 @@ fi
 CA_CRT=$CA_DIR/ca.crt
 CA_SRL=$CA_DIR/ca.srl
 CA_KEY=$CA_DIR/rsa_private.pem
-OPTS_509=/tmp/x509opts.txt
+OPTS_509=$(mktemp)
+trap "rm -f $OPTS_509" EXIT
 
 if [[ -n "$HOST_IP" ]]; then
     echo "subjectAltName=DNS:${TARGET_HOST}, IP:127.0.0.1, IP:${HOST_IP}, DNS:localhost" > $OPTS_509

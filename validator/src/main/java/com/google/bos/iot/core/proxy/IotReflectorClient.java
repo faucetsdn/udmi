@@ -290,6 +290,7 @@ public class IotReflectorClient implements MessagePublisher {
 
   private void messageHandler(String topic, String payload) {
     receiveStats.update();
+    debug("Reflector client received message on topic " + topic + ": " + payload);
     if (payload.length() == 0) {
       return;
     }
@@ -308,10 +309,17 @@ public class IotReflectorClient implements MessagePublisher {
       }
       ifNotNullThen(envelope.source, source -> messageMap.put(SOURCE_KEY, source),
           () -> messageMap.remove(SOURCE_KEY));
+
+      if (sessionId.equals(envelope.principal)) {
+        return;
+      }
+
       if (SubType.CONFIG == envelope.subType) {
         ensureCloudSync(messageMap);
-      } else if (SubType.COMMANDS == envelope.subType) {
+      } else if (SubType.COMMANDS == envelope.subType || SubType.REPLY == envelope.subType) {
         handleEncapsulatedMessage(envelope, messageMap);
+      } else if (SubType.REFLECT == envelope.subType) {
+        // Just ignore these for now, as they are likely loopback messages from the same client.
       } else {
         throw new RuntimeException("Unknown message category " + envelope.subType);
       }
@@ -546,7 +554,6 @@ public class IotReflectorClient implements MessagePublisher {
     receiveStats.update();
     System.err.printf("Received mqtt client error: %s at %s%n",
         throwable.getMessage(), getTimestamp());
-    close();
   }
 
   @Override
@@ -574,20 +581,25 @@ public class IotReflectorClient implements MessagePublisher {
 
       publisher.activate();
 
-      System.err.println("Starting initial UDMI setup process");
+      System.err.println("Starting initial UDMI setup process, waiting for config from UDMIS...");
       retries = updateVersion == null ? 1 : UPDATE_RETRIES;
       while (pubLatches.get(publisher).getCount() > 0) {
         setReflectorState();
         initializedStateSent.countDown();
+        System.err.println(
+            "Sent reflector state, waiting for config reply (retries: " + retries + ")...");
         if (!pubLatches.get(publisher).await(CONFIG_TIMEOUT_SEC, TimeUnit.SECONDS)) {
           retries--;
           if (retries <= 0) {
+            System.err.println("Latching state for publisher " + publisher + ": "
+                + pubLatches.get(publisher).getCount());
             throw new RuntimeException(
                 "Config sync timeout expired. Investigate UDMI cloud functions install.",
                 syncFailure);
           }
         }
       }
+      System.err.println("Initial UDMI setup process complete, config received.");
 
       tickExecutor.scheduleAtFixedRate(this::timerTick, RESYNC_INTERVAL_SEC,
           RESYNC_INTERVAL_SEC, TimeUnit.SECONDS);
@@ -631,6 +643,7 @@ public class IotReflectorClient implements MessagePublisher {
     String transactionId = getNextTransactionId();
     envelope.transactionId = transactionId;
     envelope.publishTime = new Date();
+    envelope.principal = sessionId;
     publishStats.update();
     publisher.publish(registryId, getPublishTopic(), stringify(envelope));
     return transactionId;

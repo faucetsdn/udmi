@@ -17,12 +17,13 @@ registry_id=${project_spec##*%}
 
 source $UDMI_ROOT/etc/mosquitto_ctrl.sh
 
-topic_filter="/r/${registry_id}/d/+/#"
+topic_filter_udmi="/r/${registry_id}/d/+/#"
+topic_filter_uufi="/uufi/#"
 OUT_BASE=$UDMI_ROOT/out/registries
 
-echo Starting mqtt message capture at $(date -u -Is) on topic $topic_filter, capture to $OUT_BASE
+echo Starting mqtt message capture at $(date -u -Is) on topics $topic_filter_udmi and $topic_filter_uufi, capture to $OUT_BASE
 
-sudo mosquitto_sub $SERVER_OPTS -R -F "%j" -t $topic_filter |
+sudo mosquitto_sub $SERVER_OPTS -R -F "%j" -t $topic_filter_udmi -t $topic_filter_uufi |
     while read -r mqtt_message; do
         echo $mqtt_message > $msg_file
         topic=$(jq -r .topic <<< "$mqtt_message")
