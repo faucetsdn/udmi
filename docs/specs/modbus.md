@@ -46,6 +46,7 @@ named network in the device's `model_localnet.json` (under the
 parameters for communication:
 
 *   **`protocol`**: i.e., `RTU`, `TCP`.
+*   **`dev`**: The port device identifier, e.g. `/dev/tty1`.
 *   **`baud`**: The baud rate.
 *   **`parity`**: For serial `RTU`.
 *   **`data bits`**: For serial `RTU`.
