@@ -4,6 +4,7 @@ UDMI_ROOT=$(dirname $0)/..
 source $UDMI_ROOT/etc/shell_common.sh
 
 CERT_DIR=/etc/mosquitto/certs/
+sudo mkdir -p $CERT_DIR
 sudo rm -f $CERT_DIR/*
 
 [[ $# != 2 ]] && fail $0 site_model hostname
@@ -12,6 +13,11 @@ site_model=$(realpath $1)
 target=$2
 
 cd $UDMI_ROOT
+
+mkdir -p $site_model/reflector
+if [[ ! -f $site_model/reflector/rsa_private.pem ]]; then
+    bin/keygen RS256 $site_model/reflector
+fi
 
 bin/keygen CA/$target $site_model/reflector
 bin/keygen CERT/$target $site_model/reflector

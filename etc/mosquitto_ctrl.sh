@@ -10,9 +10,11 @@ AUTH_PASS=aardvark
 CTRL_OPTS="-h ${MQTT_HOST:-localhost} -p ${MQTT_PORT:-8883} -u $AUTH_USER -P $AUTH_PASS --cafile $CA_CERT --cert $CERT_DIR/rsa_private.crt --key $CERT_DIR/rsa_private.pem"
 
 NEED_SUDO=
-md5sum $CERT_DIR/rsa_private.pem || NEED_SUDO=sudo
+md5sum $CERT_DIR/rsa_private.pem > /dev/null 2>&1 || NEED_SUDO=sudo
 
 MOSQUITTO_CTRL="$NEED_SUDO mosquitto_ctrl $CTRL_OPTS dynsec"
+MOSQUITTO_SUB="$NEED_SUDO mosquitto_sub"
+MOSQUITTO_PUB="$NEED_SUDO mosquitto_pub"
 
 if [[ -n ${registry_id:-} ]]; then
     SERV_USER=rocket

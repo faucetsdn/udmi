@@ -22,6 +22,7 @@ import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Consumer;
 import org.eclipse.paho.mqttv5.client.IMqttToken;
 import org.eclipse.paho.mqttv5.client.MqttCallback;
 import org.eclipse.paho.mqttv5.client.MqttClient;
@@ -46,9 +47,10 @@ public class MosquittoDynamicSecurityService implements MqttCallback {
   private static final Logger log = LoggerFactory.getLogger(MosquittoDynamicSecurityService.class);
 
   private static final int MAX_QUEUE_SIZE = 10000;
-  private static final int BATCH_SIZE_LIMIT = 1000;
+  private static final int BATCH_SIZE_LIMIT = 20;
   private static final long BATCH_BYTES_LIMIT = 10 * 1024 * 1024; // 10 MB
-  private static final long MIN_PUBLISH_INTERVAL_MS = 5000; // 5 seconds
+  private static final long MIN_PUBLISH_INTERVAL_MS = 2000; // 2 seconds
+  private static final int MAX_RETRIES = 20;
   private static final String CONTROL_TOPIC = "$CONTROL/dynamic-security/v1";
   private static final String RESPONSE_TOPIC = "$CONTROL/dynamic-security/v1/response";
 
@@ -64,6 +66,37 @@ public class MosquittoDynamicSecurityService implements MqttCallback {
   private boolean batchInFlight = false;
   private List<CommandRequest> inFlightBatch = null;
   private ScheduledFuture<?> scheduledTask = null;
+
+  /**
+   * Models a command request in the dynamic security system queue.
+   */
+  public static class CommandRequest {
+
+    public final String commandName;
+    public final byte[] serializedPayload;
+    public final CompletableFuture<Void> future;
+    public final String username;
+    public final String password;
+    public final String clientId;
+    public final boolean isFallbackSupported;
+    public int retryCount = 0;
+    public Consumer<Map<String, Object>> responseConsumer = null;
+
+    /**
+     * Constructor.
+     */
+    public CommandRequest(String commandName, byte[] serializedPayload,
+        CompletableFuture<Void> future, String username, String password,
+        String clientId, boolean isFallbackSupported) {
+      this.commandName = commandName;
+      this.serializedPayload = serializedPayload;
+      this.future = future;
+      this.username = username;
+      this.password = password;
+      this.clientId = clientId;
+      this.isFallbackSupported = isFallbackSupported;
+    }
+  }
 
   /**
    * Constructs and connects the Dynamic Security Service.
@@ -145,12 +178,13 @@ public class MosquittoDynamicSecurityService implements MqttCallback {
    */
   public CompletableFuture<Void> enqueueCommand(CommandRequest req) {
     if (commandQueue.size() >= MAX_QUEUE_SIZE) {
-      // TODO: Throwing QueueFullException synchronously here can abort the batch response
-      // processing loop (e.g., during fallback enqueues). Complete exceptionally instead.
-      // This can cause corrupted state - e.g. a device will have 5 of 6 ACL's to permit
-      // communication added but will not get marked as "not bound".
-      // Probably need some retry logic, maybe with recall logic too.
-      throw new QueueFullException("Dynamic security queue is full. Size: " + commandQueue.size());
+      // Throwing QueueFullException synchronously here can abort the batch response
+      // processing loop (e.g., during fallback enqueues). We complete exceptionally instead.
+      // This allows callers (like ImplicitIotAccessProvider) to handle it in whenComplete
+      // and apply backpressure via safeSleep without crashing background workers.
+      req.future.completeExceptionally(
+          new QueueFullException("Dynamic security queue is full. Size: " + commandQueue.size()));
+      return req.future;
     }
     commandQueue.offer(req);
     triggerWorker();
@@ -231,8 +265,8 @@ public class MosquittoDynamicSecurityService implements MqttCallback {
       properties.setResponseTopic(RESPONSE_TOPIC);
       message.setProperties(properties);
 
-      log.debug("Publishing batch containing {} commands ({} bytes) to {}",
-          batch.size(), payload.length, CONTROL_TOPIC);
+      log.debug("Publishing batch containing {} commands ({} bytes) to {}: {}",
+          batch.size(), payload.length, CONTROL_TOPIC, new String(payload, StandardCharsets.UTF_8));
       mqttClient.publish(CONTROL_TOPIC, message);
     } catch (Exception e) {
       log.error("Failed to publish batch to Mosquitto broker", e);
@@ -283,6 +317,8 @@ public class MosquittoDynamicSecurityService implements MqttCallback {
   @SuppressWarnings("unchecked")
   private void processResponses(List<CommandRequest> batch, byte[] responsePayload) {
     try {
+      String responseString = new String(responsePayload, StandardCharsets.UTF_8);
+      log.debug("Received dynamic security broker response: {}", responseString);
       Map<String, Object> responseMap = objectMapper.readValue(responsePayload, Map.class);
       List<Map<String, Object>> responsesList =
           (List<Map<String, Object>>) responseMap.get("responses");
@@ -299,7 +335,14 @@ public class MosquittoDynamicSecurityService implements MqttCallback {
         Integer status = (Integer) resp.get("status");
         String error = (String) resp.get("error");
 
-        if (status == null || status == 0) {
+        if (error == null && (status == null || status == 0)) {
+          if (req.responseConsumer != null) {
+            try {
+              req.responseConsumer.accept(resp);
+            } catch (Exception ex) {
+              log.error("Error in response consumer for command " + req.commandName, ex);
+            }
+          }
           req.future.complete(null);
         } else if (isBenignError(req.commandName, error)) {
           log.debug("Handling benign broker error for command {}: {}", req.commandName, error);
@@ -309,7 +352,25 @@ public class MosquittoDynamicSecurityService implements MqttCallback {
             && error.contains("exists")
             && req.isFallbackSupported) {
           log.info("Client already exists. Triggering modifyClient fallback for {}", req.username);
-          triggerFallback(req);
+          triggerFallback(req, "modifyClient");
+        } else if ("modifyClient".equals(req.commandName)
+            && error != null
+            && error.contains("not found")
+            && req.isFallbackSupported) {
+          log.info("Client not found. Triggering createClient fallback for {}", req.username);
+          triggerFallback(req, "createClient");
+        } else if ("addClientRole".equals(req.commandName)
+            && error != null
+            && error.contains("Internal error")) {
+          log.info("addClientRole failed with Internal error for {}. "
+              + "Querying current roles to verify...", req.username);
+          triggerAddRoleVerification(req);
+        } else if (error != null && error.contains("Internal error")
+            && req.retryCount < MAX_RETRIES) {
+          req.retryCount++;
+          log.info("Internal error from broker. Retrying command {} for {} (attempt {})",
+              req.commandName, req.username, req.retryCount);
+          enqueueCommand(req);
         } else {
           req.future.completeExceptionally(new RuntimeException("Broker error: " + error));
         }
@@ -324,9 +385,9 @@ public class MosquittoDynamicSecurityService implements MqttCallback {
     }
   }
 
-  private void triggerFallback(CommandRequest originalReq) {
+  private void triggerFallback(CommandRequest originalReq, String fallbackCommand) {
     Map<String, Object> cmd = new HashMap<>();
-    cmd.put("command", "modifyClient");
+    cmd.put("command", fallbackCommand);
     cmd.put("username", originalReq.username);
     if (originalReq.password != null) {
       cmd.put("password", originalReq.password);
@@ -339,7 +400,7 @@ public class MosquittoDynamicSecurityService implements MqttCallback {
       byte[] bytes = objectMapper.writeValueAsBytes(cmd);
       CompletableFuture<Void> fallbackFuture = new CompletableFuture<>();
       CommandRequest fallbackReq = new CommandRequest(
-          "modifyClient",
+          fallbackCommand,
           bytes,
           fallbackFuture,
           originalReq.username,
@@ -362,6 +423,84 @@ public class MosquittoDynamicSecurityService implements MqttCallback {
     }
   }
 
+  @SuppressWarnings("unchecked")
+  private void triggerAddRoleVerification(CommandRequest originalReq) {
+    Map<String, Object> queryCmd = new HashMap<>();
+    queryCmd.put("command", "getClient");
+    queryCmd.put("username", originalReq.username);
+
+    try {
+      String roleName;
+      try {
+        Map<String, Object> originalCmd =
+            objectMapper.readValue(originalReq.serializedPayload, Map.class);
+        roleName = (String) originalCmd.get("rolename");
+      } catch (Exception e) {
+        originalReq.future.completeExceptionally(
+            new RuntimeException("Failed to parse original command payload to find rolename", e));
+        return;
+      }
+
+      byte[] payload = objectMapper.writeValueAsBytes(queryCmd);
+      CompletableFuture<Void> queryFuture = new CompletableFuture<>();
+      CommandRequest queryReq = new CommandRequest(
+          "getClient",
+          payload,
+          queryFuture,
+          originalReq.username,
+          null,
+          null,
+          false
+      );
+
+      queryReq.responseConsumer = resp -> {
+        try {
+          Map<String, Object> data = (Map<String, Object>) resp.get("data");
+          Map<String, Object> client =
+              data != null ? (Map<String, Object>) data.get("client") : null;
+          List<Map<String, Object>> roles =
+              client != null ? (List<Map<String, Object>>) client.get("roles") : null;
+          boolean hasRole = false;
+          if (roles != null) {
+            for (Map<String, Object> roleMap : roles) {
+              String existingRole = (String) roleMap.get("rolename");
+              if (roleName.equals(existingRole)) {
+                hasRole = true;
+                break;
+              }
+            }
+          }
+          if (hasRole) {
+            log.info("Verification succeeded: Client {} already has role {}. "
+                + "Completing addClientRole as successful.", originalReq.username, roleName);
+            originalReq.future.complete(null);
+          } else {
+            log.warn("Verification failed: Client {} does not have role {}. "
+                + "Failing addClientRole with original Internal error.",
+                originalReq.username, roleName);
+            originalReq.future.completeExceptionally(
+                new RuntimeException("Broker error: Internal error"));
+          }
+        } catch (Exception e) {
+          log.error("Failed to parse verification query response", e);
+          originalReq.future.completeExceptionally(e);
+        }
+      };
+
+      enqueueCommand(queryReq);
+
+      queryFuture.whenComplete((v, ex) -> {
+        if (ex != null) {
+          log.error("Verification query getClient failed exceptionally", ex);
+          originalReq.future.completeExceptionally(
+              new RuntimeException("Broker error: Internal error", ex));
+        }
+      });
+    } catch (Exception e) {
+      originalReq.future.completeExceptionally(e);
+    }
+  }
+
   private boolean isBenignError(String command, String error) {
     if (error == null) {
       return false;
@@ -375,7 +514,8 @@ public class MosquittoDynamicSecurityService implements MqttCallback {
         || cleanError.equalsIgnoreCase("ACL not found")
         || cleanError.equalsIgnoreCase("Client not found")
         || cleanError.equalsIgnoreCase("Role not found")
-        || cleanError.equalsIgnoreCase("Group not found");
+        || cleanError.equalsIgnoreCase("Group not found")
+        || cleanError.equalsIgnoreCase("ACL with this topic already exists");
   }
 
   /**
@@ -426,33 +566,5 @@ public class MosquittoDynamicSecurityService implements MqttCallback {
 
   private static String format(String format, Object... args) {
     return String.format(format, args);
-  }
-
-  /**
-   * Models a command request in the dynamic security system queue.
-   */
-  public static class CommandRequest {
-    public final String commandName;
-    public final byte[] serializedPayload;
-    public final CompletableFuture<Void> future;
-    public final String username;
-    public final String password;
-    public final String clientId;
-    public final boolean isFallbackSupported;
-
-    /**
-     * Constructor.
-     */
-    public CommandRequest(String commandName, byte[] serializedPayload,
-        CompletableFuture<Void> future, String username, String password,
-        String clientId, boolean isFallbackSupported) {
-      this.commandName = commandName;
-      this.serializedPayload = serializedPayload;
-      this.future = future;
-      this.username = username;
-      this.password = password;
-      this.clientId = clientId;
-      this.isFallbackSupported = isFallbackSupported;
-    }
   }
 }

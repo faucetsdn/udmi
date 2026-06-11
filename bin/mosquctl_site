@@ -32,7 +32,7 @@ SERV_ID=$SERV_USER
 echo Configuring registry $SERV_ID
 
 $MOSQUITTO_CTRL deleteClient $SERV_USER
-$MOSQUITTO_CTRL createClient $SERV_USER -p $SERV_PASS -c $SERV_ID
+$MOSQUITTO_CTRL createClient $SERV_USER -p $SERV_PASS
 $MOSQUITTO_CTRL addClientRole $SERV_USER service
 
 echo Registered sites:

@@ -156,7 +156,8 @@ public interface PointsetManager extends ManagerLog {
   default void updatePoint(AbstractPoint point) {
     String pointName = point.getName();
 
-    if (!getPointsetState().points.containsKey(pointName)) {
+    if (getPointsetState() == null || getPointsetState().points == null 
+        || !getPointsetState().points.containsKey(pointName)) {
       return;
     }
 

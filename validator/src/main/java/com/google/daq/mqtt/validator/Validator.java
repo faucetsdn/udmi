@@ -824,7 +824,8 @@ public class Validator {
       try {
         device.validateRawMessage(schemaName, message, attributes);
       } catch (Exception e) {
-        outputLogger.error("Error validating contents: " + friendlyStackTrace(e));
+        outputLogger.error("Error validating contents for %s: %s",
+            schemaName, friendlyStackTrace(e));
         device.addError(e, attributes, Category.VALIDATION_DEVICE_CONTENT);
       }
     } else {

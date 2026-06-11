@@ -130,7 +130,7 @@ public class MosquittoBroker extends ContainerBase implements ConnectionBroker {
         CompletableFuture<Void> a1 =
             addRoleAcl(roleName, "subscribePattern", clientId + "/config", true);
         CompletableFuture<Void> a2 =
-            addRoleAcl(roleName, "subscribePattern", clientId + "/commands", true);
+            addRoleAcl(roleName, "subscribePattern", clientId + "/commands/#", true);
         CompletableFuture<Void> a3 =
             addRoleAcl(roleName, "subscribePattern", clientId + "/errors", true);
         CompletableFuture<Void> a4 =
@@ -294,7 +294,7 @@ public class MosquittoBroker extends ContainerBase implements ConnectionBroker {
     // add ACLs
     return CompletableFuture.allOf(
         addRoleAcl(roleName, "subscribePattern", deviceId + "/config", true),
-        addRoleAcl(roleName, "subscribePattern", deviceId + "/commands", true),
+        addRoleAcl(roleName, "subscribePattern", deviceId + "/commands/#", true),
         addRoleAcl(roleName, "subscribePattern", deviceId + "/errors", true),
         addRoleAcl(roleName, "publishClientSend", deviceId + "/events/#", true),
         addRoleAcl(roleName, "publishClientSend", deviceId + "/state", true),
@@ -309,7 +309,7 @@ public class MosquittoBroker extends ContainerBase implements ConnectionBroker {
 
     return CompletableFuture.allOf(
         removeRoleAcl(roleName, "subscribePattern", deviceId + "/config"),
-        removeRoleAcl(roleName, "subscribePattern", deviceId + "/commands"),
+        removeRoleAcl(roleName, "subscribePattern", deviceId + "/commands/#"),
         removeRoleAcl(roleName, "subscribePattern", deviceId + "/errors"),
         removeRoleAcl(roleName, "publishClientSend", deviceId + "/events/#"),
         removeRoleAcl(roleName, "publishClientSend", deviceId + "/state"),
