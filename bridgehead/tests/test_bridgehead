@@ -3,20 +3,6 @@
 # Navigate to bridgehead directory
 cd $(dirname $(realpath $0))/..
 
-# Function to run a command with retries
-run_with_retry() {
-    local n=0
-    until [ "$n" -ge 3 ]
-    do
-       "$@" && return 0
-       n=$((n+1))
-       echo "Command failed, retrying [$n/3]..." >&2
-       docker compose down -v --remove-orphans 2>/dev/null || true
-       sleep 15
-    done
-    return 1
-}
-
 echo "Cloning default site model..."
 # Remove existing udmi_site_model if it exists to avoid conflicts
 rm -rf udmi_site_model 2>/dev/null || docker run --rm -v $(pwd):/work alpine rm -rf /work/udmi_site_model
@@ -70,7 +56,7 @@ docker compose down -v --remove-orphans 2>/dev/null || true
 rm -rf var/mosquitto/data var/etcd 2>/dev/null || docker run --rm -v "$(pwd)":/work alpine rm -rf /work/var/mosquitto/data /work/var/etcd
 
 sleep 15
-run_with_retry docker compose up -d --build
+docker compose up -d --build
 
 # Function to clean up on exit
 cleanup() {
@@ -146,7 +132,7 @@ sleep 15
 echo "Wait for Pubber messages completed."
 
 # 4. Run discovery script
-run_with_retry docker exec validator /root/discovery.sh GAT-123
+docker exec validator /root/discovery.sh GAT-123
 echo "Step 4: Discovery script executed."
 
 # 5. Run registrar to check results
