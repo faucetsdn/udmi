@@ -75,7 +75,8 @@ Or defined under `localnet.networks` as a named BACnet network:
     "networks": {
       "bacnet_1": {
         "family": "bacnet",
-        "addr": "19233"
+        "addr": "19233",
+        "network": "9288"
       }
     }
   }
