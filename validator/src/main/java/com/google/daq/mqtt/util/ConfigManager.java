@@ -187,14 +187,24 @@ public class ConfigManager {
   private String getLocalnetAddr(String rawFamily) {
     String family = ofNullable(rawFamily).orElse(DEFAULT_FAMILY);
     String addr = catchToNull(() -> metadata.localnet.families.get(family).addr);
-    ifNotNullThen(addr, a -> NAMED_FAMILIES.get(family).validateAddr(a));
+    boolean isVendorRef = metadata.gateway != null
+        && metadata.gateway.target != null
+        && Boolean.TRUE.equals(metadata.gateway.target.vendor_ref);
+    if (!isVendorRef) {
+      ifNotNullThen(addr, a -> NAMED_FAMILIES.get(family).validateAddr(a));
+    }
     return addr;
   }
 
   private String getLocalnetNetwork(String rawFamily) {
     String family = ofNullable(rawFamily).orElse(DEFAULT_FAMILY);
     String addr = catchToNull(() -> metadata.localnet.families.get(family).network);
-    ifNotNullThen(addr, a -> NAMED_FAMILIES.get(family).validateNetwork(addr));
+    boolean isVendorRef = metadata.gateway != null
+        && metadata.gateway.target != null
+        && Boolean.TRUE.equals(metadata.gateway.target.vendor_ref);
+    if (!isVendorRef) {
+      ifNotNullThen(addr, a -> NAMED_FAMILIES.get(family).validateNetwork(addr));
+    }
     return addr;
   }
 
@@ -239,6 +249,9 @@ public class ConfigManager {
 
   private String pointConfigRef(PointPointsetModel model) {
     String pointRef = model.ref;
+    if (pointRef == null) {
+      return null;
+    }
     String rawFamily = catchToNull(() -> metadata.gateway.target.family);
     String family = ofNullable(rawFamily).orElse(DEFAULT_FAMILY);
 
@@ -253,12 +266,27 @@ public class ConfigManager {
     checkState(localAddr == null || gatewayAddr == null,
         format("both gateway.target.addr and localnet.families.%s.addr should not be defined",
             family));
-    try {
-      String fullRef = constructUrl(family, localAddr, pointRef);
-      NAMED_FAMILIES.get(family).validateUrl(fullRef);
-    } catch (Exception e) {
-      schemaViolationsMap.put(String.format("%s %s: %s", family, pointRef, getCurrentContext()),
-          wrapExceptionWithContext(e, false));
+    boolean isVendorRef = metadata.gateway != null
+        && metadata.gateway.target != null
+        && Boolean.TRUE.equals(metadata.gateway.target.vendor_ref);
+    if (!isVendorRef) {
+      try {
+        String fullRef = pointRef.contains("://") ? pointRef
+            : constructUrl(family, localAddr, pointRef);
+        String targetFamily = "vendor";
+        if (fullRef.contains("://")) {
+          targetFamily = fullRef.substring(0, fullRef.indexOf("://"));
+        }
+
+        if (NAMED_FAMILIES.containsKey(targetFamily)) {
+          NAMED_FAMILIES.get(targetFamily).validateUrl(fullRef);
+        } else {
+          throw new RuntimeException("Unknown protocol family in URL: " + targetFamily);
+        }
+      } catch (Exception e) {
+        schemaViolationsMap.put(String.format("%s %s: %s", family, pointRef, getCurrentContext()),
+            wrapExceptionWithContext(e, false));
+      }
     }
     return pointRef;
   }

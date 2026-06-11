@@ -257,12 +257,6 @@ class LocalDevice implements SiteDevice {
 
     Map<String, FamilyProvider> namedFamilies = FamilyProvider.NAMED_FAMILIES;
 
-    if (!namedFamilies.containsKey(family)) {
-      exceptionMap.put(ExceptionCategory.validation,
-          new RuntimeException("gateway.target.family unknown: " + family));
-      return;
-    }
-
     String localAddr = catchToNull(() -> metadata.localnet.families.get(family).addr);
     String gatewayAddr = catchToNull(() -> metadata.gateway.target.addr);
 
@@ -275,6 +269,10 @@ class LocalDevice implements SiteDevice {
 
     String deviceAddr = ofNullable(localAddr).orElse(gatewayAddr);
     List<Exception> validationErrors = new ArrayList<>();
+
+    boolean isVendorRef = metadata.gateway != null
+        && metadata.gateway.target != null
+        && Boolean.TRUE.equals(metadata.gateway.target.vendor_ref);
 
     for (Map.Entry<String, PointPointsetModel> entry : metadata.pointset.points.entrySet()) {
       PointPointsetModel pointModel = entry.getValue();
@@ -295,20 +293,22 @@ class LocalDevice implements SiteDevice {
 
       pointModel.url = fullUrl;
 
-      try {
-        String targetFamily = family;
-        if (pointRef.contains("://")) {
-          targetFamily = pointRef.substring(0, pointRef.indexOf("://"));
-        }
+      if (!isVendorRef) {
+        try {
+          String targetFamily = "vendor";
+          if (fullUrl.contains("://")) {
+            targetFamily = fullUrl.substring(0, fullUrl.indexOf("://"));
+          }
 
-        if (namedFamilies.containsKey(targetFamily)) {
-          namedFamilies.get(targetFamily).validateUrl(fullUrl);
-        } else {
-          throw new RuntimeException("Unknown protocol family in URL: " + targetFamily);
+          if (namedFamilies.containsKey(targetFamily)) {
+            namedFamilies.get(targetFamily).validateUrl(fullUrl);
+          } else {
+            throw new RuntimeException("Unknown protocol family in URL: " + targetFamily);
+          }
+        } catch (Exception e) {
+          validationErrors.add(new RuntimeException(
+              format("While validating URL for point %s: %s", entry.getKey(), e.getMessage()), e));
         }
-      } catch (Exception e) {
-        validationErrors.add(new RuntimeException(
-            format("While validating URL for point %s: %s", entry.getKey(), e.getMessage()), e));
       }
     }
 
@@ -420,7 +420,8 @@ class LocalDevice implements SiteDevice {
             metadataException.exception);
       }
       baseVersion = ofNullable(deviceMetadata.upgraded_from).orElse(deviceMetadata.version);
-      if (deviceMetadata != null && deviceMetadata.pointset != null && deviceMetadata.pointset.points != null) {
+      if (deviceMetadata != null && deviceMetadata.pointset != null
+          && deviceMetadata.pointset.points != null) {
         deviceMetadata.pointset.points.forEach((pointName, pointModel) -> {
           if (pointModel != null && pointModel.url != null) {
             pointsWithInputUrl.add(pointName);
@@ -428,8 +429,9 @@ class LocalDevice implements SiteDevice {
         });
       }
       if (!pointsWithInputUrl.isEmpty()) {
-        throw new ValidationError(format("Points %s have defined url field, which is only allowed in generated metadata_norm.json",
-            CSV_JOINER.join(pointsWithInputUrl)));
+        throw new ValidationError(format(
+            "Points %s have defined url field, which is only allowed in generated %s",
+            CSV_JOINER.join(pointsWithInputUrl), NORMALIZED_JSON));
       }
       return deviceMetadata;
     } catch (Exception exception) {

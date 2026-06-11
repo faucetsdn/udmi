@@ -35,7 +35,7 @@ public class MessageUpgraderTest {
 
     MessageUpgrader upgrader = new MessageUpgrader("events_system", message);
     JsonNode upgraded = (JsonNode) upgrader.upgrade();
-    
+
     JsonNode logentries = upgraded.get("logentries");
     assertEquals("localnet.network.disconnect", logentries.get(0).get("category").asText());
     assertEquals("localnet.network.connect", logentries.get(1).get("category").asText());

@@ -38,6 +38,10 @@
       "type": "string",
       "description": "The device id of the node's parent"
     },
+    "vendor_ref": {
+      "description": "If true, then the system should not try to validate the refs",
+      "type": "boolean"
+    },
     "family": {
       "description": "The family designator, used only when the entry is not keyed in a family map",
       "type": "string",
