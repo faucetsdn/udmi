@@ -123,6 +123,7 @@ public class ReflectProcessor extends ProcessorBase {
         }
 
         envelope.source = reflect.source;
+        updateProviderAffinity(reflect, reflect.source);
         reflect.transactionId = firstNonNull(envelope.transactionId, reflect.transactionId,
             ReflectProcessor::makeTransactionId);
         processReflection(reflect, envelope, payload);

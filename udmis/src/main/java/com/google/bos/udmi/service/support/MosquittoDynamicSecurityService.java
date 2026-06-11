@@ -376,7 +376,8 @@ public class MosquittoDynamicSecurityService implements MqttCallback {
     }
     long durationMs = System.currentTimeMillis() - batchPublishTime;
     String batchId = this.inFlightBatchId;
-    log.info("[Batch {}] Received dynamic security response for batch containing {} commands in {}ms",
+    log.info(
+        "[Batch {}] Received dynamic security response for batch containing {} commands in {}ms",
         batchId, batchCopy.size(), durationMs);
     this.inFlightBatch = null;
     this.inFlightBatchId = null;
@@ -387,7 +388,8 @@ public class MosquittoDynamicSecurityService implements MqttCallback {
   }
 
   @SuppressWarnings("unchecked")
-  private void processResponses(List<CommandRequest> batch, byte[] responsePayload, String batchId) {
+  private void processResponses(
+      List<CommandRequest> batch, byte[] responsePayload, String batchId) {
     try {
       Map<String, Object> responseMap = objectMapper.readValue(responsePayload, Map.class);
       List<Map<String, Object>> responsesList =
