@@ -315,14 +315,14 @@ public class ImplicitIotAccessProvider extends IotAccessBase {
           clientId(registryId, deviceId)));
     }
     if (f1 != null) {
-      debug("Waiting for broker credential revocation to complete for %s/%s...",
+      info("Waiting for broker credential revocation to complete for %s/%s...",
           registryId, deviceId);
       f1.join();
       info("Successfully revoked broker credentials/authorization for device %s/%s",
           registryId, deviceId);
     }
     if (f2 != null) {
-      debug("Waiting for broker unbind to complete for %s/%s...", registryId, deviceId);
+      info("Waiting for broker unbind to complete for %s/%s...", registryId, deviceId);
       f2.join();
       info("Successfully unbound device %s/%s from gateway %s in broker",
           registryId, deviceId, gatewayId);
@@ -342,13 +342,13 @@ public class ImplicitIotAccessProvider extends IotAccessBase {
         gatewayBoundRef(registryId, gatewayId).delete(deviceId);
 
         // Unbind in the broker
-        debug("Queueing unbind of device %s from gateway %s in broker...", deviceId, gatewayId);
+        info("Queueing unbind of device %s from gateway %s in broker...", deviceId, gatewayId);
         futures.add(withQueueRetry(() -> broker.unbindGateway(
             clientId(registryId, gatewayId),
             clientId(registryId, deviceId))));
       });
       if (!futures.isEmpty()) {
-        debug("Waiting for %d unbind operations to complete for gateway %s...",
+        info("Waiting for %d unbind operations to complete for gateway %s...",
             futures.size(), gatewayId);
         CompletableFuture.allOf(futures.toArray(new CompletableFuture[0])).join();
         info("Successfully unbound all %d devices from gateway %s on deletion",

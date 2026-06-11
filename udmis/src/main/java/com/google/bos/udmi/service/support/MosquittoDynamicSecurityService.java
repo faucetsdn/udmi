@@ -49,7 +49,7 @@ public class MosquittoDynamicSecurityService implements MqttCallback {
   public static final int DEFAULT_MAX_QUEUE_SIZE = 20000;
   public static final int DEFAULT_BATCH_SIZE_LIMIT = 2000;
   public static final long DEFAULT_BATCH_BYTES_LIMIT = 10 * 1024 * 1024; // 10 MB
-  public static final long DEFAULT_MIN_PUBLISH_INTERVAL_MS = 2000; // 2 seconds
+  public static final long DEFAULT_MIN_PUBLISH_INTERVAL_MS = 1000; // 1 second
   public static final long DEFAULT_BATCH_TIMEOUT_MS = 30000; // 30 seconds
 
   private static final String CONTROL_TOPIC = "$CONTROL/dynamic-security/v1";
@@ -68,6 +68,8 @@ public class MosquittoDynamicSecurityService implements MqttCallback {
   private final long batchTimeoutMs;
 
   private long lastPublishTime = 0;
+  private long batchPublishTime = 0;
+  private String inFlightBatchId = null;
   private boolean batchInFlight = false;
   private List<CommandRequest> inFlightBatch = null;
   private ScheduledFuture<?> scheduledTask = null;
@@ -208,7 +210,7 @@ public class MosquittoDynamicSecurityService implements MqttCallback {
    * Enqueues a command request to the service non-blockingly.
    */
   public CompletableFuture<Void> enqueueCommand(CommandRequest req) {
-    log.debug("Enqueuing dynamic security command: {}", req.commandName);
+    log.info("Enqueuing dynamic security command: {}", req.commandName);
     if (!commandQueue.offer(req)) {
       req.future.completeExceptionally(new QueueFullException(
           "Dynamic security queue is full. Size: " + commandQueue.size()));
@@ -293,11 +295,14 @@ public class MosquittoDynamicSecurityService implements MqttCallback {
       properties.setResponseTopic(RESPONSE_TOPIC);
       message.setProperties(properties);
 
-      log.info("Publishing batch containing {} commands ({} bytes) to {}",
-          batch.size(), payload.length, CONTROL_TOPIC);
+      String batchId = format("%06x", (int) (Math.random() * 0x1000000L));
+      this.inFlightBatchId = batchId;
+
+      log.info("[Batch {}] Publishing batch containing {} commands ({} bytes) to {}",
+          batchId, batch.size(), payload.length, CONTROL_TOPIC);
       mqttClient.publish(CONTROL_TOPIC, message);
-      log.info("Successfully published batch containing {} commands to {}",
-          batch.size(), CONTROL_TOPIC);
+      this.batchPublishTime = System.currentTimeMillis();
+      log.info("[Batch {}] Successfully published batch to {}", batchId, CONTROL_TOPIC);
 
       synchronized (this) {
         if (timeoutTask != null) {
@@ -322,9 +327,10 @@ public class MosquittoDynamicSecurityService implements MqttCallback {
 
   private synchronized void handleBatchTimeout(List<CommandRequest> batch) {
     if (this.inFlightBatch == batch) {
-      log.warn("Batch of {} commands timed out waiting for broker response after {}ms",
-          batch.size(), batchTimeoutMs);
+      log.warn("[Batch {}] Batch of {} commands timed out waiting for broker response after {}ms",
+          inFlightBatchId, batch.size(), batchTimeoutMs);
       this.inFlightBatch = null;
+      this.inFlightBatchId = null;
       this.batchInFlight = false;
       this.timeoutTask = null;
 
@@ -368,15 +374,20 @@ public class MosquittoDynamicSecurityService implements MqttCallback {
       timeoutTask.cancel(false);
       timeoutTask = null;
     }
+    long durationMs = System.currentTimeMillis() - batchPublishTime;
+    String batchId = this.inFlightBatchId;
+    log.info("[Batch {}] Received dynamic security response for batch containing {} commands in {}ms",
+        batchId, batchCopy.size(), durationMs);
     this.inFlightBatch = null;
+    this.inFlightBatchId = null;
     this.lastPublishTime = System.currentTimeMillis();
     this.batchInFlight = false;
 
-    executor.submit(() -> processResponses(batchCopy, message.getPayload()));
+    executor.submit(() -> processResponses(batchCopy, message.getPayload(), batchId));
   }
 
   @SuppressWarnings("unchecked")
-  private void processResponses(List<CommandRequest> batch, byte[] responsePayload) {
+  private void processResponses(List<CommandRequest> batch, byte[] responsePayload, String batchId) {
     try {
       Map<String, Object> responseMap = objectMapper.readValue(responsePayload, Map.class);
       List<Map<String, Object>> responsesList =
@@ -395,16 +406,21 @@ public class MosquittoDynamicSecurityService implements MqttCallback {
         String error = (String) resp.get("error");
 
         if (status == null || status == 0) {
+          log.info("[Batch {}] Dynamic security command {} completed successfully",
+              batchId, req.commandName);
           req.future.complete(null);
         } else if (isBenignError(req.commandName, error)) {
-          log.debug("Handling benign broker error for command {}: {}", req.commandName, error);
+          log.info("[Batch {}] Dynamic security command {} completed with benign broker error: {}",
+              batchId, req.commandName, error);
           req.future.complete(null);
         } else {
+          log.error("[Batch {}] Dynamic security command {} failed with broker error: {}",
+              batchId, req.commandName, error);
           req.future.completeExceptionally(new RuntimeException("Broker error: " + error));
         }
       }
     } catch (Exception e) {
-      log.error("Error processing batch responses", e);
+      log.error("[Batch " + batchId + "] Error processing batch responses", e);
       for (CommandRequest req : batch) {
         req.future.completeExceptionally(e);
       }
