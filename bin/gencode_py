@@ -33,11 +33,6 @@ rm -rf "$GEN_PYTHON_DIR"
 
 mkdir -p "$SCHEMA_OUTPUT_DIR"
 mkdir -p "$PYTHON_OUTPUT_DIR"
-mkdir -p "$ROOT_DIR/clientlib/python/src/udmi"
-
-# Ensure the symlink exists in the client library pointing to the generated code
-rm -rf "$ROOT_DIR/clientlib/python/src/udmi/schema"
-ln -s ../../../../gencode/python/udmi/schema "$ROOT_DIR/clientlib/python/src/udmi/schema"
 
 # Copy poetry configuration file
 cp "$ROOT_DIR/etc/pyschema.toml" "$GEN_PYTHON_DIR/pyproject.toml"
