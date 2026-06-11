@@ -26,10 +26,12 @@ functionalities like connectivity, telemetry, and message handling.
 
 ## Local Setup & Usage Examples
 
-To install and build the library locally use the build script.
+To install and build the library locally, use the provided `poe` build task. This will properly bundle the auto-generated schemas into the python package.
 
 ```shell
-${UDMI_ROOT}/clientlib/python/bin/build
+cd ${UDMI_ROOT}/clientlib/python
+poetry install
+poetry run poe build
 ```
 
 You can find a few samples demonstrating how to connect a device using different
