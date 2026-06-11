@@ -99,12 +99,11 @@ In this pattern, a shared device/gateway target definition provides the default 
 ### Pattern B: Ref-Only Style (Absolute / Self-Contained)
 In this pattern, each individual point defines its full, absolute URL directly within its `ref` field. 
 
-**CRITICAL VALIDATION RULE:** 
-If a concrete target family (e.g. `"bacnet"`) is specified in `gateway.target.family`, the validator will attempt to combine it with a device address and validate the combined string.
-* If a target address is defined, the combined URL becomes a nested string (e.g., `bacnet://1234/bacnet://5678/AV:1`), which fails the protocol-specific point regex validation (`BACNET_POINT`).
-* If no target address is defined, the combined URL contains `null` (e.g., `bacnet://null/bacnet://5678/AV:1`), which fails address validation (`validateAddr("null")`).
+Because the point references contain a protocol scheme (i.e., they contain `://`), they bypass the default fallback combination logic. Instead of prepending the default gateway target family and target address, the system preserves the absolute reference as the fully qualified URL.
 
-Therefore, to use absolute, ref-only URLs, **the `gateway.target.family` must be omitted or left empty** (which defaults to `"vendor"` and disables strict protocol-level checks). Each point is then responsible for specifying its family, address, and path explicitly in its `ref` field.
+Each absolute reference is validated under the concrete protocol family provider matching its prefix (e.g., `bacnet://` is strictly validated under the `bacnet` family provider, and `modbus://` is validated under the `modbus` family provider). Therefore, omitting the `gateway.target.family` does not prevent or bypass validation for absolute URLs; they are always validated against the protocol scheme specified in their `ref` field.
+
+> **Note:** Strict protocol validation for absolute URLs can be completely disabled by setting `"vendor_ref": true` under `gateway.target` in your metadata. When active, this flag tells the system to bypass all protocol-level validation checks.
 
 #### Example JSON Metadata (Ref-Only Style)
 ```json
@@ -125,8 +124,8 @@ Therefore, to use absolute, ref-only URLs, **the `gateway.target.family` must be
 }
 ```
 **Generated & Validated URLs:**
-* `fan_run_status`: `bacnet://1234/BI:1` (Validated under `"vendor"` as a generic reference with no restrictions)
-* `supply_air_temp`: `bacnet://1234/AV:2` (Validated under `"vendor"` as a generic reference with no restrictions)
+* `fan_run_status`: `bacnet://1234/BI:1` (Validated under `"bacnet"` due to the `bacnet://` prefix)
+* `supply_air_temp`: `bacnet://1234/AV:2` (Validated under `"bacnet"` due to the `bacnet://` prefix)
 
 ---
 
@@ -214,5 +213,5 @@ In the example below, the device collects data from a BACnet device (`1234`) and
 }
 ```
 **Generated & Validated URLs:**
-* `room_temperature`: `bacnet://1234/AI:1` (Validated under `"vendor"` as a generic reference with no restrictions)
-* `fan_power`: `modbus://2/3/40001/1?type=INT16&network=modbus_rtu_1` (Validated under `"vendor"` as a generic reference with no restrictions)
+* `room_temperature`: `bacnet://1234/AI:1` (Validated under `"bacnet"` due to the `bacnet://` prefix)
+* `fan_power`: `modbus://2/3/40001/1?type=INT16&network=modbus_rtu_1` (Validated under `"modbus"` due to the `modbus://` prefix)
