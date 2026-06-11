@@ -839,6 +839,7 @@ public class SequenceBase {
    */
   @Before
   public void setUp() {
+    System.err.println("<<<< Starting test " + testName);
     checkNotNull(activeInstance, "Active sequencer instance not setup, aborting");
 
     assumeTrue(format("Feature bucket %s not enabled", testBucket.key()),
@@ -1312,6 +1313,7 @@ public class SequenceBase {
    */
   @After
   public void tearDown() {
+    System.err.println(">>>> Finished test " + testName + " with result " + testResult);
     if (activeInstance == null) {
       return;
     }

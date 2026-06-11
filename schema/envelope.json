@@ -38,6 +38,9 @@
     "transactionId": {
       "type": "string"
     },
+    "principal": {
+      "type": "string"
+    },
     "publishTime": {
       "type": "string",
       "format": "date-time"

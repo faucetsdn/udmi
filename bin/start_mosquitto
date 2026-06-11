@@ -20,13 +20,19 @@ DYN_FILE=$ETC_DIR/dynamic_security.json
 MOSQUITTO_LOG=/var/log/mosquitto/mosquitto.log
 
 sudo mkdir -p $(dirname $MOSQUITTO_LOG)
+sudo chown mosquitto:mosquitto $(dirname $MOSQUITTO_LOG) || true
+sudo mkdir -p /var/lib/mosquitto
+sudo chown -R mosquitto:mosquitto /var/lib/mosquitto || true
 
 if [[ ! -f $UDMI_FILE ]]; then
     echo Creating new $UDMI_FILE from template...
     mkdir -p $(dirname $UDMI_FILE)
     sudo cp etc/mosquitto_udmi.conf $UDMI_FILE
     PLUGIN_FILE=/usr/lib/mosquitto_dynamic_security.so
-    [[ -f $PLUGIN_FILE ]] || PLUGIN_FILE=$(whereis -b mosquitto_dynamic_security.so | awk '{print $2}')
+    [[ -f $PLUGIN_FILE ]] || PLUGIN_FILE=/usr/lib/mosquitto/mosquitto_dynamic_security.so
+    [[ -f $PLUGIN_FILE ]] || PLUGIN_FILE=/usr/lib/x86_64-linux-gnu/mosquitto_dynamic_security.so
+    [[ -f $PLUGIN_FILE ]] || PLUGIN_FILE=$(find /usr -name mosquitto_dynamic_security.so 2>/dev/null | head -1)
+    [[ -n $PLUGIN_FILE ]] || fail "mosquitto_dynamic_security.so not found."
     ls -l "$PLUGIN_FILE"
     echo Configuring dynamic security plugin $PLUGIN_FILE
     sudo sed -i "s%plugin dynsec%plugin $PLUGIN_FILE%" $UDMI_FILE
@@ -58,7 +64,7 @@ fi
 sudo chown mosquitto:mosquitto $PASS_FILE || true
 sudo chmod 0600 $PASS_FILE || true
 
-if [[ -n $(which systemctl) ]]; then
+if command -v systemctl >/dev/null 2>&1; then
     sudo systemctl restart mosquitto
 else
     # Raw mode for running (e.g.) in a docker container
@@ -70,10 +76,16 @@ else
     echo Completed mosquitto startup.
 fi
 
-$MOSQUITTO_CTRL createRole service
-$MOSQUITTO_CTRL addRoleACL service subscribePattern '/r/+/d/+/#' allow
-$MOSQUITTO_CTRL addRoleACL service publishClientSend '/r/+/d/+/#' allow
-$MOSQUITTO_CTRL addClientRole $AUTH_USER service
+$MOSQUITTO_CTRL createRole service || true
+$MOSQUITTO_CTRL addRoleACL service subscribePattern '/r/+/d/+/#' allow || true
+$MOSQUITTO_CTRL addRoleACL service publishClientSend '/r/+/d/+/#' allow || true
+$MOSQUITTO_CTRL addRoleACL service subscribePattern '/uufi/#' allow || true
+$MOSQUITTO_CTRL addRoleACL service publishClientSend '/uufi/#' allow || true
+$MOSQUITTO_CTRL addClientRole $AUTH_USER service || true
+
+$MOSQUITTO_CTRL createRole uufi || true
+$MOSQUITTO_CTRL addRoleACL uufi subscribePattern '/uufi/#' allow || true
+$MOSQUITTO_CTRL addRoleACL uufi publishClientSend '/uufi/#' allow || true
 
 clients=$($MOSQUITTO_CTRL listClients)
 if [[ $clients =~ ${AUTH_USER} ]]; then

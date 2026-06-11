@@ -41,12 +41,12 @@ topic=/r/mqtt/d/test
 
 
 echo Subscribing to all topics in the background...
-mosquitto_sub $SERVER_OPTS -F "%t %p" -t '/r/+/d/+/#' > out/mosquitto.sub &
+$MOSQUITTO_SUB $SERVER_OPTS -F "%t %p" -t '/r/+/d/+/#' > out/mosquitto.sub &
 
 sleep 1
 
 echo Publishing test message
-mosquitto_pub $CLIENT_OPTS -t $topic -m "Hello Racket"
+$MOSQUITTO_PUB $CLIENT_OPTS -t $topic -m "Hello Racket"
 
 sleep 1
 
@@ -104,14 +104,14 @@ pubber/bin/build
 rm -rf sites/udmi_site_model/out/devices/$device_id/persistent_data.json
 
 echo Publishing config to /r/$registry_id/d/$device_id/config
-mosquitto_pub $CLIENT_OPTS -r -t /r/$registry_id/d/$device_id/config -f $DEV_CONF
+$MOSQUITTO_PUB $CLIENT_OPTS -r -t /r/$registry_id/d/$device_id/config -f $DEV_CONF
 
 echo Running pubber smoke check
 # TODO: Replace this with proper smoke check when backend is working.
 timeout 30s pubber/bin/run /tmp/pubber_config.json || true
 
 echo Publishing ending test message
-mosquitto_pub $CLIENT_OPTS -t $topic -m "Hello Rudolph"
+$MOSQUITTO_PUB $CLIENT_OPTS -t $topic -m "Hello Rudolph"
 
 echo "Waiting up to 20s for operational state message from pubber..."
 for i in {1..20}; do
