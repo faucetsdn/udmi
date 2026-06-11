@@ -171,23 +171,24 @@ In the example below, `point_a` resides on BACnet device `1234`, while `point_b`
 ```json
 {
   "gateway": {
-    "gateway_id": "LTGW-123"
+    "gateway_id": "LTGW-123",
+    "family": "bacnet"
   },
   "pointset": {
     "points": {
       "point_a": {
-        "ref": "bacnet://1234/AV:1"
+        "ref": "1234/AV:1"
       },
       "point_b": {
-        "ref": "bacnet://5678/AV:1"
+        "ref": "5678/AV:1"
       }
     }
   }
 }
 ```
 **Generated & Validated URLs:**
-* `point_a`: `bacnet://1234/AV:1` (Validated under `"vendor"` as a generic reference with no restrictions)
-* `point_b`: `bacnet://5678/AV:1` (Validated under `"vendor"` as a generic reference with no restrictions)
+* `point_a`: `bacnet://1234/AV:1`
+* `point_b`: `bacnet://5678/AV:1`
 
 ---
 
