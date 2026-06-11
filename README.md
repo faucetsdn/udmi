@@ -1,5 +1,7 @@
 [**UDMI**](#)
 
+![UDMI Logo](images/udmi_logo.png)
+
 # UDMI Overview
 
 The Universal Device Management Interface (UDMI) provides a high-level specification for the
