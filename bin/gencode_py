@@ -30,12 +30,14 @@ pip install "datamodel-code-generator==0.35.0" "dataclasses-json==0.6.7"
 # Clean up previous output directories
 rm -rf "$SCHEMA_OUTPUT_DIR"
 rm -rf "$GEN_PYTHON_DIR"
-rm -rf "$ROOT_DIR/clientlib/python/src/udmi/schema"
 
 mkdir -p "$SCHEMA_OUTPUT_DIR"
-mkdir -p "$GEN_PYTHON_DIR/udmi"
-mkdir -p "$ROOT_DIR/clientlib/python/src/udmi/schema"
-ln -s ../../../clientlib/python/src/udmi/schema "$GEN_PYTHON_DIR/udmi/schema"
+mkdir -p "$PYTHON_OUTPUT_DIR"
+mkdir -p "$ROOT_DIR/clientlib/python/src/udmi"
+
+# Ensure the symlink exists in the client library pointing to the generated code
+rm -rf "$ROOT_DIR/clientlib/python/src/udmi/schema"
+ln -s ../../../../gencode/python/udmi/schema "$ROOT_DIR/clientlib/python/src/udmi/schema"
 
 # Copy poetry configuration file
 cp "$ROOT_DIR/etc/pyschema.toml" "$GEN_PYTHON_DIR/pyproject.toml"
@@ -69,7 +71,7 @@ bin/gencode_py_categories
 bin/gencode_py_buckets
 
 # add import statements to udmi/schema/__init__.py
-find -L "$PYTHON_OUTPUT_DIR" -name "*.py" -not -name "__init__.py" -print0 | while IFS= read -r -d $'\0' file; do
+find "$PYTHON_OUTPUT_DIR" -name "*.py" -not -name "__init__.py" -print0 | while IFS= read -r -d $'\0' file; do
   module_name=$(basename "$file" .py)
   echo "from .$module_name import *"
 done | sort > "$PYTHON_OUTPUT_DIR"/__init__.py.tmp
@@ -78,7 +80,5 @@ mv "$PYTHON_OUTPUT_DIR"/__init__.py.tmp "$PYTHON_OUTPUT_DIR"/__init__.py
 echo "Generated python code in '$PYTHON_OUTPUT_DIR'"
 
 deactivate
-
-
 
 echo "Done with python gencode."
