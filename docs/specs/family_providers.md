@@ -42,9 +42,7 @@ For standard configurations, the system constructs the complete URL by concatena
 `full_url = family + "://" + device_address + "/" + point_ref`
 
 ### 3. Normalized URL Output (`url`)
-During normalization, the `registrar` tool compiles the fully resolved URL for each data point and writes it to the generated `metadata_norm.json` file inside the `pointset.points.<point_name>.url` field.
-
-If there is doubt about how the configuration resolves (including fallback behaviors or relative-to-absolute expansions), the generated `metadata_norm.json` file can be checked to see the exact URLs that were generated.
+During normalization, the `registrar` tool compiles the fully resolved URL for each data point and writes it to the generated `metadata_norm.json` file inside the `pointset.points.<point_name>.url` field. If there is doubt about how the configuration resolves (including fallback behaviors or relative-to-absolute expansions), the generated `metadata_norm.json` file can be checked to see the exact URLs that were generated.
 
 #### Example Generated Point Snippet
 ```json
