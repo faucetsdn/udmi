@@ -35,17 +35,36 @@ The local device address `device` can be defined in one of two places, but **not
 The effective device address is resolved as:
 `device_address = metadata.localnet.families.<family>.addr != null ? localnet.families.<family>.addr : gateway.target.addr`
 
-*   **Host Syntax Constraint:** For families like `modbus`, the effective device address (the `<host>` component of the URL) must either **start with an alphabetical character** (e.g., `modbus_rtu_1` or `my-host`), or be formatted as a **valid 4-part IPv4 address** (e.g., `192.168.1.1` — starting with a number and having 4 octets separated by dots). A purely numeric, non-IP value like `"2"` is invalid as a host.
+*   **Addr Syntax Constraint:** For families like `modbus`, the effective device address (the `<addr>` component of the URL) must either **start with an alphabetical character** (e.g., `modbus_rtu_1` or `my-host`), or be formatted as a **valid 4-part IPv4 address** (e.g., `192.168.1.1` — starting with a number and having 4 octets separated by dots). A purely numeric, non-IP value like `"2"` is invalid as a host.
 
 ### 2. URL Combination Logic
 For standard configurations, the system constructs the complete URL by concatenating the components:
 `full_url = family + "://" + device_address + "/" + point_ref`
 
+### 3. Normalized URL Output (`url`)
+During normalization, the `registrar` tool compiles the fully resolved URL for each data point and writes it to the generated `metadata_norm.json` file inside the `pointset.points.<point_name>.url` field.
+
+If there is doubt about how the configuration resolves (including fallback behaviors or relative-to-absolute expansions), the generated `metadata_norm.json` file can be checked to see the exact URLs that were generated.
+
+#### Example Generated Point Snippet
+```json
+{
+  "pointset": {
+    "points": {
+      "fan_run_status": {
+        "ref": "BI:1",
+        "url": "bacnet://1234/BI:1"
+      }
+    }
+  }
+}
+```
+
 ---
 
 ## Validation Constraints & Patterns
 
-Because the validator constructs the URL programmatically as `family + "://" + device_address + "/" + point_ref`, the structure of your metadata determines whether point references can be relative or absolute.
+Because the validator constructs the URL programmatically as `family + "://" + device_address + "/" + point_ref`, the structure of the metadata determines whether point references can be relative or absolute.
 
 ### Pattern A: Combined Style (Target + Relative Reference)
 In this pattern, a shared device/gateway target definition provides the default protocol family and target address for the device. The individual point definitions specify only their relative references. 
