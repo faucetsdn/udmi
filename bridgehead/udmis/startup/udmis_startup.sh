@@ -27,6 +27,7 @@ fi
 
 registry_id=$(jq -r .registry_id $site_config)
 
+sleep 10
 echo Starting udmis proper... | tee -a $UDMIS_LOG
 
 

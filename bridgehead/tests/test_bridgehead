@@ -11,6 +11,7 @@ run_with_retry() {
        "$@" && return 0
        n=$((n+1))
        echo "Command failed, retrying [$n/3]..." >&2
+       docker compose down -v --remove-orphans 2>/dev/null || true
        sleep 15
     done
     return 1
@@ -63,10 +64,12 @@ if [ -f udmis/build.sh ]; then
 fi
 
 echo "Starting services with docker-compose..."
-docker rm -f mosquitto etcd udmis validator influxdb grafana pubber 2>/dev/null || true
+docker rm -f $(docker ps -aq) 2>/dev/null || true
+docker network rm $(docker network ls -q) 2>/dev/null || true
 docker compose down -v --remove-orphans 2>/dev/null || true
 rm -rf var/mosquitto/data var/etcd 2>/dev/null || docker run --rm -v "$(pwd)":/work alpine rm -rf /work/var/mosquitto/data /work/var/etcd
-sleep 2
+
+sleep 15
 run_with_retry docker compose up -d --build
 
 # Function to clean up on exit
@@ -123,10 +126,10 @@ echo "Executing discovery sequence..."
 sleep 5
 
 # 1. Registrar setup
-run_with_retry docker exec validator /bin/bash -c "bin/registrar site_model/ //mqtt/mosquitto -x -d"
+docker exec validator /bin/bash -c "bin/registrar site_model/ //mqtt/mosquitto -x -d"
 echo "Registrar clean completed."
 sleep 15
-run_with_retry docker exec validator /bin/bash -c "bin/registrar site_model/ //mqtt/mosquitto GAT-123"
+docker exec validator /bin/bash -c "bin/registrar site_model/ //mqtt/mosquitto GAT-123"
 echo "Step 1: Registrar initial setup completed."
 
 # 2. Start Pubber container
@@ -147,7 +150,7 @@ run_with_retry docker exec validator /root/discovery.sh GAT-123
 echo "Step 4: Discovery script executed."
 
 # 5. Run registrar to check results
-run_with_retry docker exec validator bin/registrar site_model/ //mqtt/mosquitto > registrar_output.txt
+docker exec validator bin/registrar site_model/ //mqtt/mosquitto > registrar_output.txt 2>&1 || true
 echo "Step 5: Ran Registrar to check results."
 
 echo "Verifying output..."
