@@ -200,6 +200,8 @@ echo bin/registrar $site_args $device_id
 bin/registrar $site_args $device_id
 
 echo Check $device_id to make sure that it works...
+echo Waiting for Mosquitto ACLs to settle...
+sleep 10
 echo bin/pubber $pubber_config
 result=0
 timeout 30s bin/pubber $pubber_config 2> $pubber_log || result=$?
@@ -229,6 +231,8 @@ check_csv_file $gateway_id CLEAN
 ! egrep "Updated .+ device metadata files." $registrar_log
 
 echo Check $device_id again, but this time with success...
+echo Waiting for Mosquitto ACLs to settle...
+sleep 10
 echo bin/pubber $pubber_config
 result=0
 timeout 30s bin/pubber $pubber_config 2> $pubber_log || result=$?
