@@ -190,6 +190,7 @@ class LocalDevice implements SiteDevice {
   private final ExceptionMap exceptionMap;
   private final String generation;
   private final List<Credential> deviceCredentials = new ArrayList<>();
+  private final List<String> pointsWithInputUrl = new ArrayList<>();
   private ConfigManager config;
   private final DeviceExceptionManager exceptionManager;
   private final SiteModel siteModel;
@@ -419,6 +420,17 @@ class LocalDevice implements SiteDevice {
             metadataException.exception);
       }
       baseVersion = ofNullable(deviceMetadata.upgraded_from).orElse(deviceMetadata.version);
+      if (deviceMetadata != null && deviceMetadata.pointset != null && deviceMetadata.pointset.points != null) {
+        deviceMetadata.pointset.points.forEach((pointName, pointModel) -> {
+          if (pointModel != null && pointModel.url != null) {
+            pointsWithInputUrl.add(pointName);
+          }
+        });
+      }
+      if (!pointsWithInputUrl.isEmpty()) {
+        throw new ValidationError(format("Points %s have defined url field, which is only allowed in generated metadata_norm.json",
+            CSV_JOINER.join(pointsWithInputUrl)));
+      }
       return deviceMetadata;
     } catch (Exception exception) {
       exceptionMap.put(ExceptionCategory.loading, exception);
