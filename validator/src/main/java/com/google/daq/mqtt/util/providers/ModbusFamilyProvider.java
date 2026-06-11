@@ -71,7 +71,8 @@ public class ModbusFamilyProvider implements FamilyProvider {
   public void validateAddr(String scanAddr) {
     requireNonNull(scanAddr, "missing required modbus scan_addr");
     checkState(startsWithAlpha(scanAddr) || isValidIpv4(scanAddr),
-        format("modbus addr %s is invalid; must start with an alphabetical character or be a valid IPv4 address", scanAddr));
+        format("modbus addr %s is invalid; "
+            + "must start with an alphabetical character or be a valid IPv4 address", scanAddr));
   }
 
   @Override
@@ -142,5 +143,21 @@ public class ModbusFamilyProvider implements FamilyProvider {
   public void validateNetwork(String network) {
     // Network is part of the address string, so we don't expect it here
     FamilyProvider.super.validateNetwork(network);
+  }
+
+  private static final Set<String> ALLOWED_ADJUNCT_KEYS =
+      ImmutableSet.of("protocol", "device", "baud", "parity", "data_bits", "stop_bits");
+
+  @Override
+  public void validateModel(udmi.schema.FamilyLocalnetModel familyModel) {
+    if (familyModel.adjunct != null) {
+      for (String key : familyModel.adjunct.keySet()) {
+        if (!ALLOWED_ADJUNCT_KEYS.contains(key)) {
+          throw new RuntimeException(format(
+              "invalid modbus adjunct key '%s'; allowed keys are %s",
+              key, ALLOWED_ADJUNCT_KEYS));
+        }
+      }
+    }
   }
 }

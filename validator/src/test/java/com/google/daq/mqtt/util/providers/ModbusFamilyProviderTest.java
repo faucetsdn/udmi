@@ -82,4 +82,25 @@ public class ModbusFamilyProviderTest {
         .filter(GeneralUtils::isNotEmpty).toList();
     assertEquals("Not enough validation errors", BAD_REFERENCES.size(), badErrors.size());
   }
+
+  @Test
+  public void modbus_model_validation() {
+    udmi.schema.FamilyLocalnetModel goodModel = new udmi.schema.FamilyLocalnetModel();
+    goodModel.adjunct = new java.util.HashMap<>();
+    goodModel.adjunct.put("protocol", "RTU");
+    goodModel.adjunct.put("baud", "9600");
+    provider.validateModel(goodModel);
+
+    udmi.schema.FamilyLocalnetModel badModel = new udmi.schema.FamilyLocalnetModel();
+    badModel.adjunct = new java.util.HashMap<>();
+    badModel.adjunct.put("protocol", "RTU");
+    badModel.adjunct.put("invalid_key", "some_value");
+    try {
+      provider.validateModel(badModel);
+      org.junit.Assert.fail("Expected validation to fail for invalid adjunct key");
+    } catch (Exception e) {
+      assertTrue(e.getMessage().contains(
+          "invalid modbus adjunct key 'invalid_key'; allowed keys are "));
+    }
+  }
 }

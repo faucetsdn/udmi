@@ -1,5 +1,5 @@
 Exceptions for DEV-1
-  While converting device config
-    modbus addr 1 is invalid; must start with an alphabetical character or be a valid IPv4 address
-  1 schema violations found
-    /gateway/target: object instance has properties which are not allowed by the schema: ["network_id"]
+  While loading device metadata for DEV-1
+    While converting strict to udmi.schema.Metadata
+      While converting string/string to udmi.schema.Metadata
+        Unrecognized field "network_id" (class udmi.schema.FamilyLocalnetModel), not marked as ignorable (6 known properties: "parent_id", "addr", "family", "shadow_id", "network", "adjunct"]) at [Source: (String)"{ "gateway" : { "gateway_id" : "GW-1", "target" : { "family" : "modbus", "network_id" : "modbus_1" } }, "localnet" : { "families" : { "modbus" : { "addr" : "1" } } }, "system" : { "hardware" : { "make" : "BOS", "model" : "device" }, "software" : { "firmware" : "v1" } }, "timestamp" : "2020-05-01T13:39:07Z", "version" : "1.5.2" }"; line: 6, column: 23] (through reference chain: udmi.schema.Metadata["gateway"]->udmi.schema.GatewayModel["target"]->udmi.schema.FamilyLocalnetModel["network_id"])

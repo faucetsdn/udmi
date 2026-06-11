@@ -401,6 +401,14 @@ class LocalDevice implements SiteDevice {
       throw new ValidationError(format("Found point names not matching allowed pattern %s: %s",
           POINT_NAME_ALLOWABLE.pattern(), CSV_JOINER.join(pointNameErrors)));
     }
+    if (metadataObject != null && metadataObject.localnet != null
+        && metadataObject.localnet.families != null) {
+      metadataObject.localnet.families.forEach((family, familyModel) -> {
+        if (FamilyProvider.NAMED_FAMILIES.containsKey(family)) {
+          FamilyProvider.NAMED_FAMILIES.get(family).validateModel(familyModel);
+        }
+      });
+    }
   }
 
   private Metadata readMetadata() {
