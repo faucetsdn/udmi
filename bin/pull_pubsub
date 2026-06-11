@@ -73,8 +73,32 @@ while true; do
 
         timepath=$(echo ${timestamp%:*} | tr T: //) # Bucket messages by minute
         usetime=$(echo $timestamp | tr : x)  # Colon is not allowed on Windows!
-        out_base=out/registries/$registryId/devices/$deviceId/${timepath}/${usetime}_${subFolder}_${subType}
-        out_file=${out_base}.json
+
+        found=false
+        if [[ $usetime == *Z ]]; then
+            usetime_base=${usetime%Z}
+            for suffix_char in Z Y X W V U T S R Q P O N M L K J I H G F E D C B A; do
+                current_usetime="${usetime_base}${suffix_char}"
+                out_base=out/registries/$registryId/devices/$deviceId/${timepath}/${current_usetime}_${subFolder}_${subType}
+                out_file=${out_base}.json
+                if [[ ! -f $out_file ]]; then
+                    found=true
+                    break
+                fi
+            done
+        else
+            out_base=out/registries/$registryId/devices/$deviceId/${timepath}/${usetime}_${subFolder}_${subType}
+            out_file=${out_base}.json
+            if [[ ! -f $out_file ]]; then
+                found=true
+            fi
+        fi
+
+        if [[ $found == false ]]; then
+            echo "Filename conflict for $out_file (all suffixes Z-A already exist), would clobber."
+            false
+        fi
+
         echo $out_file
         mkdir -p $(dirname $out_file)
         echo $data | jq . > $out_file || echo $data > $out_file
