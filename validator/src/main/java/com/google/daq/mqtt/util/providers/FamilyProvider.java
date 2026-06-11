@@ -117,6 +117,10 @@ public interface FamilyProvider {
    * Validate a family localnet model.
    */
   default void validateModel(udmi.schema.FamilyLocalnetModel familyModel) {
-    // Default implementation does nothing
+    if (familyModel.adjunct != null && !familyModel.adjunct.isEmpty()) {
+      throw new IllegalArgumentException(String.format(
+          "Adjunct properties not allowed for family %s: %s",
+          familyKey(), familyModel.adjunct.keySet()));
+    }
   }
 }
