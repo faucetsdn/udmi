@@ -544,7 +544,9 @@ public class MqttPublisher implements MessagePublisher {
       subscribeToConfig(deviceId);
       subscribeToErrors(deviceId);
       subscribeToCommands(deviceId);
-      clientSubscribe(REFLECT_TOPIC, QOS_AT_LEAST_ONCE);
+      if (iotProvider == IotProvider.MQTT) {
+        clientSubscribe(REFLECT_TOPIC, QOS_AT_LEAST_ONCE);
+      }
       LOG.info(deviceId + " done with setup connection");
     } catch (Exception e) {
       throw new RuntimeException("While setting up new mqtt connection to " + deviceId, e);
