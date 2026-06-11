@@ -1,6 +1,6 @@
 [**UDMI**](#)
 
-![UDMI Logo](images/udmi_logo.png)
+![UDMI Logo](assets/udmi_logo.png)
 
 # UDMI Overview
 
