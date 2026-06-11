@@ -49,7 +49,7 @@ import udmi.schema.IotAccess.IotProvider;
  */
 public class SimpleMqttPipe extends MessageBase {
 
-  private static final int MAX_INFLIGHT = 10;
+  private static final int MAX_INFLIGHT = 1000;
   private static final String IMPLICIT_CHANNEL = IotProvider.IMPLICIT.value();
   private static final String SEND_CHANNEL_DESIGNATOR = "c";
   private static final String SEND_CHANNEL_PREFIX = SEND_CHANNEL_DESIGNATOR + "/";
