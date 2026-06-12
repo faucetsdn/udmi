@@ -3,9 +3,12 @@
 # Navigate to bridgehead directory
 cd $(dirname $(realpath $0))/..
 
+# Create var directories on host to ensure they are owned by host user, not root
+mkdir -p var/mosquitto/data var/mosquitto/log var/mosquitto/certs var/etcd var/tmp var/sshKeys var/influxdb-storage
+
 echo "Cloning default site model..."
 # Remove existing udmi_site_model if it exists to avoid conflicts
-rm -rf udmi_site_model 2>/dev/null || docker run --rm -v $(pwd):/work alpine rm -rf /work/udmi_site_model
+rm -rf udmi_site_model 2>/dev/null
 
 git clone https://github.com/faucetsdn/udmi_site_model.git udmi_site_model
 
@@ -53,7 +56,7 @@ echo "Starting services with docker-compose..."
 docker rm -f $(docker ps -aq) 2>/dev/null || true
 docker network rm $(docker network ls -q) 2>/dev/null || true
 docker compose down -v --remove-orphans 2>/dev/null || true
-rm -rf var/mosquitto/data var/etcd 2>/dev/null || docker run --rm -v "$(pwd)":/work alpine rm -rf /work/var/mosquitto/data /work/var/etcd
+rm -rf var/mosquitto/data var/etcd 2>/dev/null
 
 sleep 15
 docker compose up -d --build
@@ -76,9 +79,14 @@ cleanup() {
     
     echo "Stopping Pubber container..."
     docker stop pubber || true
+    echo "Fixing permissions..."
+    docker exec validator chown -R $(id -u):$(id -g) /root/site_model || true
+    docker exec udmis chown -R $(id -u):$(id -g) /root/udmi/var/etcd || true
+    docker exec mosquitto chown -R $(id -u):$(id -g) /mosquitto/data || true
+    
     echo "Stopping docker-compose services..."
     docker compose down
-    rm -rf udmi_site_model var/mosquitto/data var/etcd 2>/dev/null || docker run --rm -v "$(pwd)":/work alpine rm -rf /work/udmi_site_model /work/var/mosquitto/data /work/var/etcd
+    rm -rf udmi_site_model var/mosquitto/data var/etcd 2>/dev/null
     
     # Restore .env if backup exists
     if [ -f .env.bak ]; then
@@ -144,8 +152,8 @@ cat registrar_output.txt
 
 # Verify expected summary
 failed=0
-grep -q -E "Device extra: [46]" registrar_output.txt || failed=1
-grep -q -E "Device status: [45]" registrar_output.txt || failed=1
+grep -q "Device extra: 6" registrar_output.txt || failed=1
+grep -q "Device status: 5" registrar_output.txt || failed=1
 
 # Also verify specific processed lines as per sample output
 grep -q "Processed AHU-22" registrar_output.txt || failed=1
