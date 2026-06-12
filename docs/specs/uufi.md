@@ -268,7 +268,57 @@ This appendix references the formal JSON schemas and provides message examples f
 }
 ```
 
-### A.1.2. Pointset Config (MQTT)
+### A.1.2. Handshake (MQTT)
+
+**Topic:** `/uufi/c/state/udmi`
+
+**Payload:**
+```json
+{
+  "projectId": "vibrant",
+  "transactionId": "UUFI:sess123:001",
+  "publishTime": "2026-04-29T10:00:00Z",
+  "source": "client-id",
+  "principal": "client-id",
+  "payload": {
+    "version": "1.5.2",
+    "timestamp": "2026-04-29T10:00:00Z",
+    "setup": {
+      "functions_ver": 9,
+      "transaction_id": "UUFI:sess123:001",
+      "msg_source": "client-id"
+    }
+  }
+}
+```
+
+### A.1.3. Pointset Config (PubSub)
+
+**Attributes:**
+```json
+{
+  "subFolder": "pointset",
+  "subType": "config",
+  "transactionId": "UUFI:sess123:002",
+  "source": "client-id",
+  "principal": "client-id@",
+  "deviceRegistryId": "reg-1",
+  "deviceId": "dev-1"
+}
+```
+
+**Data:**
+```json
+{
+  "version": "1.5.2",
+  "timestamp": "2026-04-29T10:05:00Z",
+  "points": {
+    "temp": { "set_value": 22.5 }
+  }
+}
+```
+
+### A.1.4. Pointset Config (MQTT)
 
 **Topic:** `/uufi/r/reg-1/d/dev-1/c/config/pointset`
 
@@ -287,7 +337,40 @@ This appendix references the formal JSON schemas and provides message examples f
 }
 ```
 
-### A.1.3. Blobset Config (MQTT)
+### A.1.5. Blobset Config (PubSub)
+
+**Attributes:**
+```json
+{
+  "subFolder": "blobset",
+  "subType": "config",
+  "transactionId": "UUFI:sess123:003",
+  "source": "client-id",
+  "principal": "client-id@",
+  "deviceRegistryId": "reg-1",
+  "deviceId": "dev-1"
+}
+```
+
+**Data:**
+```json
+{
+  "version": "1.5.2",
+  "timestamp": "2026-04-29T10:10:00Z",
+  "blobset": {
+    "blobs": {
+      "system": {
+        "phase": "apply",
+        "url": "file:///path/to/bundle.bin",
+        "sha256": "abcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890",
+        "generation": "2026-04-29T10:10:00Z"
+      }
+    }
+  }
+}
+```
+
+### A.1.6. Blobset Config (MQTT)
 
 **Topic:** `/uufi/r/reg-1/d/dev-1/c/config/blobset`
 
