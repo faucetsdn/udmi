@@ -167,13 +167,13 @@ The `UPDATE` operation for the `cloud` subfolder is a partial merge at the devic
 
 # 9. Test and Development
 
-The UDMI repository provides a local development environment to facilitate the implementation and testing of UUFI Clients and Systems.
+The UDMI repository provides a modular, multi-tier local development and testing workflow to isolate infrastructure, devices, and client applications.
 
-## 9.1. Local Mock Environment
+## 9.1. Scope 1: Basic Local Setup (Infrastructure Only)
 
-The `bin/start_local` script initializes a spec-compliant UUFI backend (as part of the standard local setup) using a local MQTT broker. This environment is ideal for developing new clients without requiring a full cloud deployment.
+The first tier initializes a spec-compliant UUFI message broker and gateway processor. This establishes the bare-minimum messaging backbone without any active devices or tests, providing a clean black-box middleware layer for external applications.
 
-### Starting the Environment
+### Starting the Infrastructure
 ```bash
 bin/start_local
 ```
@@ -181,7 +181,7 @@ bin/start_local
 This script performs the following actions:
 1.  **MQTT Broker:** Starts a local Mosquitto broker on port 8883 with SSL enabled.
 2.  **Site Model:** Uses the provided site model (e.g., `sites/udmi_site_model`) and configures it for local MQTT use.
-3.  **UDMIS:** Starts the `udmis` service with the `UufiProcessor` enabled.
+3.  **UDMIS:** Starts the `udmis` service with the `UufiProcessor` enabled to act as the UUFI gateway.
 
 **Connection Details:**
 - **Scheme:** `mqtt://`
@@ -191,48 +191,58 @@ This script performs the following actions:
 - **Password:** `monkey`
 - **CA Certificate:** `sites/udmi_site_model/reflector/ca.crt`
 
-## 9.2. Automated Integration Testing
+---
 
-The `bin/test_uufi` tool performs a full end-to-end verification of the UUFI interface, including interaction with a real UDMI device (using Pubber). It handles system initialization, DUT lifecycle, and bidirectional message validation.
+## 9.2. Scope 2: Local Setup with Pubber DUT (Device Under Test)
 
-### Running the Verification
+The second tier builds on top of Scope 1 by registering and launching a simulated on-premise device under the UDMI schema framework. This provides an active device stream for testing, receiving configuration updates, and reporting back telemetry.
+
+### Registering and Launching the Device
+When running tests or manual sessions, the environment launches **Pubber** as the simulated Device Under Test (DUT). This client:
+1. Connects to the local MQTT broker as a device.
+2. Begins periodically publishing telemetry state (such as `pointset` events) on standard UDMI topics.
+3. Listens for configuration payloads routed through the UUFI system gateway.
+
+---
+
+## 9.3. Scope 3: Verification with the UUFI Test Client
+
+The third tier performs active end-to-end integration testing of the UUFI interface by introducing a low-level test client that exchanges messages with the Pubber DUT (from Scope 2) over the active infrastructure (from Scope 1).
+
+### Running Automated UUFI Pipeline Verification
+To verify the entire bidirectional pipeline (System Gateway -> Broker -> DUT -> Client), run:
 ```bash
 bin/test_uufi
 ```
 
-The comprehensive test validates:
-1.  **System Initialization:** Starts the UUFI backend and configures local MQTT security.
-2.  **DUT Lifecycle:** Registers and launches a **Pubber** instance as the Device Under Test (DUT).
-3.  **UUFI Handshake:** Performs the initial handshake between the test client and the system.
-4.  **Bidirectional Exchange:** 
-    - Sends a UUFI-wrapped configuration update to the DUT.
-    - Verifies that UDMIS correctly routes the update to the device.
-    - Captures the subsequent state update from the DUT as it flows back through UUFI.
+This command automatically orchestrates the following operations:
+1. **System Initialization:** Confirms that the Scope 1 local services are healthy.
+2. **DUT Lifecycle:** Registers and launches a **Pubber** device (Scope 2).
+3. **Handshake Phase:** Starts a low-level `uufi_test_client` which completes the standard Step 1 and Step 2 UUFI Handshake over the broker.
+4. **Bidirectional Exchange:** 
+   - Sends a UUFI-wrapped configuration update to the DUT.
+   - Verifies that the gateway correctly routes the update to the Pubber device.
+   - Captures the corresponding telemetry state returning from the Pubber device to confirm successful processing.
 
-For modular testing against an already running environment, the low-level `bin/uufi_test_client` script can be used directly to execute the client-side handshake and exchange logic.
+For modular, manual client-side testing against an already running environment, the standalone script can be run directly:
+```bash
+bin/uufi_test_client
+```
 
-## 9.3. Passive Observation
+---
 
-The `bin/observe_uufi` tool provides a passive, real-time view of all traffic on the UUFI topic tree. This is essential for diagnosing communication issues and verifying message formats without interfering with the client or system.
+## 9.4. Passive Observation and Trace Analysis
 
-### Starting the Observer
+The `bin/observe_uufi` tool is a utility that provides a passive, real-time view of all messaging traffic on the UUFI topic tree, without actively participating in handshakes or sending configurations.
+
+### Running the Observer
 ```bash
 bin/observe_uufi
 ```
 
 The observer will:
 1.  **Subscribe:** Connects to the local MQTT broker and subscribes to `/uufi/#`.
-2.  **Display:** Outputs every message received, including the topic and a pretty-printed JSON payload (if `jq` is installed).
-3.  **Trace:** Allows developers to see the exact sequence of the handshake and subsequent message flows.
-
-## 9.4. Client Development Workflow
-
-When developing a new external client, it is recommended to use the local mock environment as your primary backend:
-
-1.  **Initialization:** Run `bin/start_local`.
-2.  **CA Certificate:** Configure your client to trust the generated `sites/udmi_site_model/reflector/ca.crt`.
-3.  **Handshake:** Implement the Step 1 State Declaration. Your client is considered "Active" once it receives a matching Step 2 Config.
-4.  **Debugging:** Monitor the `udmis` logs in `out/udmis.log` to see how your messages are being processed and routed.
+2.  **Display:** Outputs every message received sequentially to `stdout` in a raw, unbuffered line-by-line format (`{topic}: {payload}`), making it ideal for checking message boundaries and verifying format compliance.
 
 ---
 
