@@ -31,7 +31,7 @@ ROOT_DIR = os.path.dirname(__file__)
 UDMI_DIR = str(Path(__file__).parents[4])
 
 SITE_PATH: Final = os.environ["DN_SITE_PATH"]
-error(SITE_PATH)
+info(SITE_PATH)
 TARGET: Final = "//mqtt/localhost"
 PROJECT_ID: Final = "localhost"
 
@@ -278,7 +278,7 @@ def test_discovered_devices_are_created(
       devices=range(0),
       devices_with_localnet_block=range(0),
       discovery_node_id="AHU-1",
-      discovery_node_is_gateway=False,
+      discovery_node_is_gateway=True,
       discovery_node_families=["bacnet"],
   )
 

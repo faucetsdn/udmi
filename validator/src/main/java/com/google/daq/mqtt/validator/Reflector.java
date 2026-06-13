@@ -134,9 +134,12 @@ public class Reflector {
       executionConfiguration.key_file = keyFile;
     }
     executionConfiguration.udmi_version = Common.getUdmiVersion();
+    System.err.println("Creating IotReflectorClient for " + executionConfiguration.registry_id);
     client = new IotReflectorClient(executionConfiguration, TOOLS_FUNCTIONS_VERSION,
         REFLECTOR_TOOL_NAME);
+    System.err.println("Activating IotReflectorClient...");
     client.activate();
+    System.err.println("IotReflectorClient activated.");
   }
 
   private List<String> parseArgs(List<String> argsList) {

@@ -97,6 +97,7 @@ public class MqttPublisher implements MessagePublisher {
   private static final String CONFIG_TOPIC = "/config";
   private static final String ERROR_TOPIC = "/errors";
   private static final String COMMAND_TOPIC = "/commands/#";
+  private static final String REFLECT_TOPIC = "/reflect";
   private static final String MESSAGE_TOPIC_FMT = "/%s";
   private static final int QOS_AT_MOST_ONCE = 0;
   private static final int QOS_AT_LEAST_ONCE = 1;
@@ -430,6 +431,7 @@ public class MqttPublisher implements MessagePublisher {
 
   private void sendMessage(String mqttTopic, byte[] mqttMessage) throws Exception {
     LOG.debug(deviceId + " sending message to " + mqttTopic);
+    System.err.println("Reflector sending MQTT message to " + mqttTopic);
     try (AutoCloseable x = sendTime.newTimedSegment()) {
       mqttClient.publish(mqttTopic, mqttMessage, QOS_AT_LEAST_ONCE, MQTT_NO_RETAIN);
     }
@@ -542,6 +544,9 @@ public class MqttPublisher implements MessagePublisher {
       subscribeToConfig(deviceId);
       subscribeToErrors(deviceId);
       subscribeToCommands(deviceId);
+      if (iotProvider == IotProvider.MQTT) {
+        clientSubscribe(REFLECT_TOPIC, QOS_AT_LEAST_ONCE);
+      }
       LOG.info(deviceId + " done with setup connection");
     } catch (Exception e) {
       throw new RuntimeException("While setting up new mqtt connection to " + deviceId, e);
@@ -611,7 +616,8 @@ public class MqttPublisher implements MessagePublisher {
     }
     return switch (iotProvider) {
       case GBOS, CLEARBLADE -> format(LONG_ID_FMT, projectId, cloudRegion, registryId, deviceId);
-      case MQTT -> format(SHORT_ID_FMT, registryId, deviceId);
+      case MQTT -> format(SHORT_ID_FMT + "-%06x", registryId, deviceId,
+          (int) (Math.random() * 0x1000000L));
       default -> throw new RuntimeException("Provider not supported " + iotProvider);
     };
   }

@@ -1,23 +1,46 @@
 #!/bin/bash -e
 
 IMAGE=quay.io/coreos/etcd:v3.5.13
-BINDIR=/tmp/etcd
+
+function find_etcd {
+    for path in \
+        "udmis/bin/etcd_bin" \
+        "bin/etcd_bin" \
+        "$(dirname $0)/etcd_bin" \
+        "/root/bin/etcd_bin" \
+        "/root/udmi/bin/etcd_bin" \
+        "/tmp/etcd"; do
+        if [[ -f "$path/etcd" ]]; then
+            echo "$path"
+            return 0
+        fi
+    done
+    return 1
+}
+
+BINDIR=$(find_etcd) || BINDIR=/tmp/etcd
 ETCD_LOG=out/etcd.log
 
 echo pwd: $(pwd)
 mkdir -p out
 
-old_pid=$(ps ax | fgrep /tmp/etcd/etcd | fgrep listen | awk '{print $1}') || true
+old_pid=$(ps ax | fgrep etcd | fgrep listen | awk '{print $1}') || true
 if [[ -n $old_pid ]]; then
     echo Killing existing etcd pid $old_pid...
     kill $old_pid
 fi
 
-udmis/bin/etcdctl version || ../bin/etcdctl version
+if [[ ! -f $BINDIR/etcd ]]; then
+    udmis/bin/etcdctl version || ../bin/etcdctl version || $(dirname $0)/etcdctl version || true
+    BINDIR=$(find_etcd) || BINDIR=/tmp/etcd
+fi
 
 $BINDIR/etcd -version
 
-$BINDIR/etcd -listen-client-urls=http://0.0.0.0:2379 \
+rm -rf var/etcd/member
+mkdir -p var/etcd/member
+
+nohup $BINDIR/etcd -listen-client-urls=http://0.0.0.0:2379 \
              -advertise-client-urls=http://127.0.0.1:2379 \
              --data-dir var/etcd \
              > $ETCD_LOG 2>&1 &
