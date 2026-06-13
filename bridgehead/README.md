@@ -15,24 +15,37 @@ This guide provides instructions for deploying the core UDMI services bundle. Th
 
 1. **Install docker engine:** Ensure Docker is installed and running on your system: `https://docs.docker.com/engine/install/`
 
-2. **Navigate to project directory:** Open your terminal and change the directory to the project root containing the `docker-compose.yml` file (`bridgehead/`).
+2. **Navigate to bridgehead directory:** Open your terminal and change the directory to the `bridgehead/` directory:
+    ```bash
+    cd bridgehead
+    ```
 
-3. **Get default site model:** In you terminal, run `sudo git clone https://github.com/faucetsdn/udmi_site_model.git`.
+3. **Get default site model:** In your terminal, run `git clone https://github.com/faucetsdn/udmi_site_model.git`.
 
 4. **Edit Environment Variables:** Open the `.env` file in your chosen editor.
    1. AUTH_USER & AUTH_PASS: This client is configured to allow you to administer the dynamic security plugin only. It does not have access to publish messages to normal topics.
    2. SERV_USER & SERV_PASS: Service User.
-   3. HOST_IP: This is required in order to allow connections to the broker externally from the docker compose environment. You can get your host ip address using: `sudo hostname -I`.
+   3. HOST_IP: This is required in order to allow connections to the broker externally from the docker compose environment. You can get your host ip address using: `hostname -I`.
    4. INFLUXDB_TOKEN: You can generate a random token using: `openssl rand -hex 32`.
    5. INFLUX_USER & INFLUX_PASSWORD: Credentials for accessing InfluxDB.
    6. GRAFANA_USER & GRAFANA_PASSWORD: Credentials for accessing Grafana.
    
-5. **Deploy the service:** Execute the following command to build the custom images (if needed) and start the containers in detached mode.
-    * **First time/after changes:** Run `sudo docker compose up -d --build`
-    * **Standard run:** Run `sudo docker compose up -d`
+5. **Build the Management UI (Required):** The Management UI WAR file (`bridgeheadManager.war`) must be built before deploying the services. Run the following commands:
+    ```bash
+    # Compile Java sources
+    mkdir -p udmis/UI/ManagementWebapp/webapp/WEB-INF/classes
+    javac -cp "udmis/UI/ManagementWebapp/webapp/WEB-INF/lib/*" -d udmis/UI/ManagementWebapp/webapp/WEB-INF/classes udmis/UI/ManagementWebapp/src/webapp/*.java udmis/UI/ManagementWebapp/src/webapp/mqtt/*.java
+
+    # Package into WAR
+    jar -cf udmis/bridgeheadManager.war -C udmis/UI/ManagementWebapp/webapp .
+    ```
+
+6. **Deploy the service:** Execute the following command to build the custom images (if needed) and start the containers in detached mode.
+    * **First time/after changes:** Run `docker compose up -d --build`
+    * **Standard run:** Run `docker compose up -d`
     
     
-6. **Confirm all containers are running:** Run `sudo docker ps` in the terminal, you should see the following containers in any order:
+7. **Confirm all containers are running:** Run `docker ps` in the terminal, you should see the following containers in any order:
    - validator
    - udmis
    - mosquitto
@@ -48,7 +61,7 @@ The UDMI tools should only be run after the udmis service has completed setup. Y
 
 The following commands should be run in the same directory as the Docker Compose (`bridgehead/`).
 
-In your terminal, execute `sudo docker exec validator bin/registrar site_model/ //mqtt/mosquitto`. To confirm a successful execution, look at the [sample registrar output](sample_outputs/registrar_output.md)
+In your terminal, execute `docker exec validator bin/registrar site_model/ //mqtt/mosquitto`. To confirm a successful execution, look at the [sample registrar output](sample_outputs/registrar_output.md)
 
 ### Pubber
 
@@ -61,25 +74,22 @@ Pubber requires access to the site model. There are 2 ways to get pubber setup w
 1. The quickest setup is to copy across the site model from the `bridgehead/` directory after setup as this will already have all the necessary keys. (alternatively, push the changes to your own repository and pull this on the external computer)
 
 2. Manually create the necessary keys:  *Note: these instructions are assuming you are using the default udmi_site_model*
-    - On your external computer, clone the udmi site model and udmi: `sudo git clone https://github.com/faucetsdn/udmi_site_model.git`, `sudo git clone https://github.com/faucetsdn/udmi.git`.
+    - On your external computer, clone the udmi site model and udmi: `git clone https://github.com/faucetsdn/udmi_site_model.git`, `git clone https://github.com/faucetsdn/udmi.git`.
     - Export your docker compose host ip (the same one we set in the docker compose): `export HOST_IP=<YOUR_HOST_IP>`
-    - Generate keys: `sudo udmi/bin/keygen CA/<YOUR_HOST_IP> udmi_site_model/reflector` and `sudo udmi/bin/keygen CERT/<YOUR_HOST_IP> udmi_site_model/reflector`.
+    - Generate keys: `udmi/bin/keygen CA/<YOUR_HOST_IP> udmi_site_model/reflector` and `udmi/bin/keygen CERT/<YOUR_HOST_IP> udmi_site_model/reflector`.
 
 #### Run tool
 
-Start pubber container: `sudo docker run -d --rm --name pubber -v $(realpath udmi_site_model):/root/site_model ghcr.io/faucetsdn/udmi:pubber-latest /bin/bash -c "tail -f /dev/null"`
+Start pubber container: `docker run -d --rm --name pubber -v $(realpath udmi_site_model):/root/site_model ghcr.io/faucetsdn/udmi:pubber-latest /bin/bash -c "tail -f /dev/null"`
 
-Run pubber: `sudo docker exec pubber bin/pubber site_model/ //mqtt/<YOUR_HOST_IP> AHU-1 123456`
+Run pubber: `docker exec pubber bin/pubber site_model/ //mqtt/<YOUR_HOST_IP> AHU-22 123456`
 
 Pubber is running successfully if there are no obvious error messages or retries. An **unsuccessful** run will retry multiple times, will see messages like `Attempt #10 failed`. 
 
 A successful run will not end on its own, you can press `Ctrl` + `C` on your keyboard to exit. 
 
-You can stop the pubber container by running `sudo docker stop pubber`
+You can stop the pubber container by running `docker stop pubber`
 
-### Validator
-
-To run the validator service in the background, execute `sudo docker exec -d validator bin/validator site_model/ //mqtt/mosquitto`
 
 ## Discovery
 
@@ -87,17 +97,17 @@ Run the following commands to complete a discovery sequence:
 
 *Note: Make sure to update <YOUR_HOST_IP> with the ip we set in the compose file.*
 ```
-sudo docker exec validator /bin/bash -c "bin/registrar site_model/ //mqtt/mosquitto -x -d && bin/registrar site_model/ //mqtt/mosquitto GAT-123"
+docker exec validator /bin/bash -c "bin/registrar site_model/ //mqtt/mosquitto -x -d && bin/registrar site_model/ //mqtt/mosquitto GAT-123"
 
-sudo docker run -d --rm --name pubber -v $(realpath udmi_site_model):/root/site_model ghcr.io/faucetsdn/udmi:pubber-latest /bin/bash -c "tail -f /dev/null"
+docker run -d --rm --name pubber -v $(realpath udmi_site_model):/root/site_model ghcr.io/faucetsdn/udmi:pubber-latest /bin/bash -c "tail -f /dev/null"
 
-sudo docker exec -d pubber /bin/bash -c "bin/pubber site_model/ //mqtt/<YOUR_HOST_IP> GAT-123 852649" 
+docker exec -d pubber /bin/bash -c "bin/pubber site_model/ //mqtt/<YOUR_HOST_IP> GAT-123 852649" 
 
-sudo docker exec validator /root/discovery.sh
+docker exec validator /root/discovery.sh GAT-123
 
-sudo docker exec validator bin/registrar site_model/ //mqtt/mosquitto
+docker exec validator bin/registrar site_model/ //mqtt/mosquitto
 
-sudo docker stop pubber
+docker stop pubber
 ```
 
 A successful run using the default udmi_site_model should produce the following on the final registry output:
@@ -109,6 +119,13 @@ Summary:
   Device status: 4
   Device validation: 1
 Out of 4 total.
+```
+
+## Validator
+
+To run the validator service in the background to validate telemetry in real-time, execute:
+```bash
+docker exec -d validator bin/validator site_model/ //mqtt/mosquitto
 ```
 
 ## Diagnostics
@@ -180,12 +197,12 @@ The following instructions will setup an alert in Grafana for when a container g
    
 3. **Edit default notification policy:** By default a notification won’t be sent for 5 min. Update this by going to `Alerting -> Notification policies` edit the default policy so that the Group interval is set to 30s, and update.
 
-4. **Test:** Go back to the bridgehead dashboard and confirm all containers are running. In your terminal, run `sudo docker stop validator`. Keep an eye on the validator container, it should go red and show an uptime of 0s. Navigate to `https://webhook.site`, you should have received a notification with the line `"title": "[FIRING:1] Container Down Alerts (validator)",` (This could take a minute or two).
-7. Run validator container again with `sudo docker start validator`
+4. **Test:** Go back to the bridgehead dashboard and confirm all containers are running. In your terminal, run `docker stop validator`. Keep an eye on the validator container, it should go red and show an uptime of 0s. Navigate to `https://webhook.site`, you should have received a notification with the line `"title": "[FIRING:1] Container Down Alerts (validator)",` (This could take a minute or two).
+7. Run validator container again with `docker start validator`
 
 Use the same method to setup any number of alerts, you can find useful information here: https://grafana.com/docs/grafana/latest/alerting/
     
 
 ## Shutting down the docker environment
 
-To gracefully stop and remove the container, run: `sudo docker compose down`
+To gracefully stop and remove the container, run: `docker compose down`
