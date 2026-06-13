@@ -1,0 +1,110 @@
+#!/usr/bin/env python3
+import sys
+import os
+import json
+import subprocess
+from urllib.parse import urlparse
+
+# Usage: bin/site_trigger <site_path> <device_id> <blob_id> <version> [conn_spec]
+
+if len(sys.argv) < 5:
+    print("Usage: bin/site_trigger <site_path> <device_id> <blob_id> <version> [conn_spec]", file=sys.stderr)
+    sys.exit(1)
+
+site_path = sys.argv[1]
+device_id = sys.argv[2]
+blob_id = sys.argv[3]
+version = sys.argv[4]
+conn_spec = sys.argv[5] if len(sys.argv) > 5 else "mqtt://localhost"
+
+# 1. Update the immutable site_model file on disk
+metadata_file = os.path.join(site_path, "devices", device_id, "metadata.json")
+if not os.path.exists(metadata_file):
+    print(f"Error: metadata.json not found at {metadata_file}", file=sys.stderr)
+    sys.exit(1)
+
+with open(metadata_file, "r") as f:
+    metadata = json.load(f)
+
+# Ensure 'system' and 'software' keys exist in metadata.json
+if "system" not in metadata:
+    metadata["system"] = {}
+if "software" not in metadata["system"]:
+    metadata["system"]["software"] = {}
+
+# Modify the expected version for the target blob_id
+metadata["system"]["software"][blob_id] = version
+
+# Write the modified metadata.json back to disk (atomic write)
+temp_file = metadata_file + ".tmp"
+with open(temp_file, "w") as f:
+    json.dump(metadata, f, indent=2)
+os.rename(temp_file, metadata_file)
+print(f"Successfully updated expected version of {blob_id} to '{version}' in {metadata_file}.")
+
+# 2. Trigger a model update message over UUFI
+# Extract site_id from the site_path directory name
+site_id = os.path.basename(os.path.abspath(site_path))
+
+# Parse connection spec
+url = urlparse(conn_spec)
+host = url.hostname or "localhost"
+port = url.port or 1883
+
+# Build model update payload
+payload = {
+    "projectId": "vibrant",
+    "transactionId": f"TXN-{os.urandom(4).hex()}",
+    "publishTime": "2026-06-12T16:00:00Z",
+    "source": "site_trigger",
+    "payload": {
+        "version": "1.5.2",
+        "timestamp": "2026-06-12T16:00:00Z",
+        "op": "UPDATE",
+        "detail": {
+            site_id: {
+                device_id: {
+                    blob_id: {
+                        "target_version": version
+                    }
+                }
+            }
+        }
+    }
+}
+
+# Publish the model/cloud message over the UUFI bus
+topic = "/uufi/c/model/cloud"
+if url.path and url.path != "/":
+    prefix = url.path.strip("/")
+    topic = f"/{prefix}/uufi/c/model/cloud"
+
+# Use mosquitto_pub to publish the message
+cmd = [
+    "mosquitto_pub",
+    "-h", host,
+    "-p", str(port),
+    "-t", topic,
+    "-m", json.dumps(payload)
+]
+
+# Add credentials if username/password are in conn_spec
+if url.username:
+    cmd.extend(["-u", url.username])
+if url.password:
+    cmd.extend(["-P", url.password])
+
+# Add CA cert if SSL is used (port 8883)
+if port == 8883:
+    ca_cert = os.path.join(site_path, "reflector", "ca.crt")
+    if os.path.exists(ca_cert):
+        cmd.extend(["--cafile", ca_cert])
+    cmd.extend(["--insecure"])
+
+print(f"Publishing model/cloud update to {topic}...")
+try:
+    subprocess.run(cmd, check=True)
+    print("Model update message triggered successfully.")
+except subprocess.CalledProcessError as e:
+    print(f"Error publishing model update: {e}", file=sys.stderr)
+    sys.exit(1)

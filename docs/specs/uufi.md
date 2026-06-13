@@ -45,6 +45,9 @@ Format: `scheme://[user@]host[:port][/path]`
   - **Discovery:** Clients publish a `query/cloud` message to `[/{prefix}]/uufi/c/query/cloud`.
   - **Response:** System publishes the model to `[/{prefix}]/uufi/c/config/cloud`.
   - **Structure:** Uses nested **Registries** (Section 5.1).
+- **State Query Service:**
+  - **Discovery:** Clients publish a `query/state` message to `[/{prefix}]/uufi/r/{deviceRegistryId}/d/{deviceId}/c/query/state`.
+  - **Response:** System (the gateway/processor caching the state) immediately replies by publishing the last known cached device State report on the device's state topic `[/{prefix}]/uufi/r/{deviceRegistryId}/d/{deviceId}/c/state/blobset` (or the corresponding state topic matching the query's subFolder).
 
 ## 3. Handshake Protocol
 
@@ -126,6 +129,7 @@ The `UPDATE` operation for the `cloud` subfolder is a partial merge at the devic
 | Model Query | `query` | `cloud` | Publish |
 | Model Update | `model` | `cloud` | Publish |
 | Model Reply | `config` | `cloud` | Receive |
+| State Query | `query` | `state` | Publish |
 | Blobset Config | `config` | `blobset` | Publish |
 | Blobset State | `state` | `blobset` | Receive |
 
@@ -243,6 +247,21 @@ bin/observe_uufi
 The observer will:
 1.  **Subscribe:** Connects to the local MQTT broker and subscribes to `/uufi/#`.
 2.  **Display:** Outputs every message received sequentially to `stdout` in a raw, unbuffered line-by-line format (`{topic}: {payload}`), making it ideal for checking message boundaries and verifying format compliance.
+
+---
+
+## 9.5. Interactive Site Model Database Update Emulation
+
+To emulate physical database mutations and trigger live model-update events, developers can use the `bin/site_trigger` utility. This allows verification of reactive system orchestrators (like Butler) sitting on top of the UUFI bus without modifying raw config files by hand.
+
+### Running the Site Model Trigger
+```bash
+bin/site_trigger <site_path> <device_id> <blob_id> <version> [conn_spec]
+```
+
+This tool:
+1.  **Mutates Site Model:** Locates the specified `metadata.json` file in the site directory (e.g., `<site_path>/devices/{device_id}/metadata.json`) and atomically updates its expected version tag (`system.software.<blob_id> = <version>`).
+2.  **Triggers Model Event:** Synthesizes and publishes a corresponding `model/cloud` Model Update message to `/uufi/c/model/cloud` on the broker, enabling reactive orchestrators to instantly sync.
 
 ---
 
