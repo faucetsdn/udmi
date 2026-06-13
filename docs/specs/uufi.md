@@ -256,7 +256,7 @@ To emulate physical database mutations and trigger live model-update events, dev
 
 ### Running the Site Model Trigger
 ```bash
-bin/site_trigger <site_path> <device_id> <blob_id> <version> [conn_spec]
+bin/site_trigger update <site_path> <device_id> <blob_id> <version> [conn_spec]
 ```
 
 This tool:
