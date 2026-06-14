@@ -623,7 +623,15 @@ public class MqttPublisher implements MessagePublisher {
   }
 
   private String getBrokerUrl() {
-    return format(BROKER_URL_FORMAT, getBrokerProtocol(), providerHostname, BRIDGE_PORT);
+    String host = providerHostname;
+    String envPort = System.getenv("MQTT_PORT");
+    String port = envPort != null ? envPort : BRIDGE_PORT;
+    if (host != null && host.contains(":")) {
+      int colonIndex = host.indexOf(":");
+      port = host.substring(colonIndex + 1);
+      host = host.substring(0, colonIndex);
+    }
+    return format(BROKER_URL_FORMAT, getBrokerProtocol(), host, port);
   }
 
   private String getBrokerProtocol() {

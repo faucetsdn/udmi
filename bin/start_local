@@ -40,7 +40,9 @@ cd $UDMI_ROOT
 UDMIS_LOG=out/udmis.log
 mkdir -p out
 # Do sudo now to prefetch incase it's needed later...
-sudo true
+if [[ ${UDMI_NO_SUDO:-false} != true ]]; then
+    sudo true
+fi
 echo Starting local services at $(date -u -Is) | tee $UDMIS_LOG
 
 iot_provider=$(jq -r .iot_provider $site_config)
@@ -48,6 +50,9 @@ if [[ -n ${project_spec:-} ]]; then
     project_target=${project_spec##*/}
     iot_provider=${project_spec%/*}
     iot_provider=${iot_provider#//}
+    if [[ $project_target == *:* ]]; then
+        project_target=${project_target%:*}
+    fi
 fi
 
 if [[ $iot_provider != mqtt ]]; then
@@ -56,6 +61,9 @@ if [[ $iot_provider != mqtt ]]; then
 fi
 
 [[ -n ${project_target:-} ]] || project_target=$(jq -r .project_id $site_config)
+if [[ $project_target == *:* ]]; then
+    project_target=${project_target%:*}
+fi
 registry_id=$(jq -r .registry_id $site_config)${UDMI_REGISTRY_SUFFIX:-}
 
 echo Starting etcd... | tee -a $UDMIS_LOG
@@ -84,7 +92,9 @@ if [[ -n ${UDMI_ALT_REGISTRY:-} ]]; then
 fi
 
 # Global access to logs for connection tracking by UDMIS.
-sudo chmod a+r /var/log/mosquitto/mosquitto.log
+if [[ ${UDMI_NO_SUDO:-false} != true ]]; then
+    sudo chmod a+r /var/log/mosquitto/mosquitto.log
+fi
 
 echo Starting udmis proper... | tee -a $UDMIS_LOG
 bin/start_udmis >> $UDMIS_LOG 2>&1
@@ -95,7 +105,7 @@ echo ""
 echo "################################################################"
 echo "UUFI Service is READY"
 echo "################################################################"
-echo "Connection String: mqtt://rocket:monkey@localhost:8883"
+echo "Connection String: mqtt://rocket:monkey@localhost:${MQTT_PORT:-8883}"
 echo "CA Certificate:    $site_model/reflector/ca.crt"
 echo "Client Cert:       $site_model/reflector/rsa_private.crt"
 echo "Client Key:        $site_model/reflector/rsa_private.pem"

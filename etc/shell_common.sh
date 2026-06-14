@@ -7,6 +7,20 @@
 set -eu
 set -o pipefail
 
+# Auto-detect isolated mode from any command-line arguments or variables matching localhost:<port>
+for arg in "${@:-}" "${TARGET_PROJECT:-}" "${project_spec:-}" "${project_id:-}"; do
+    if [[ -n $arg && $arg =~ localhost:([0-9]+) ]]; then
+        export MQTT_PORT="${BASH_REMATCH[1]}"
+        export ETCD_PORT=$((MQTT_PORT + 1))
+        export UDMI_NO_SUDO=true
+        break
+    fi
+done
+
+if [[ -n ${MQTT_PORT:-} && $MQTT_PORT != 8883 ]]; then
+    export UDMI_NO_SUDO=true
+fi
+
 if [[ $(id -u) == 0 ]]; then
     sudo() { "$@"; }
 fi

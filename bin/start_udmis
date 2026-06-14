@@ -2,15 +2,36 @@
 
 UDMI_ROOT=$(dirname $0)/..
 source $UDMI_ROOT/etc/shell_common.sh
+source $UDMI_ROOT/etc/mosquitto_ctrl.sh
 
-# Something to just trigger password entry early on in the process
-sudo touch /dev/null
+SUDO=sudo
+if [[ ${UDMI_NO_SUDO:-false} == true ]]; then
+    SUDO=""
+fi
 
-OLD_PID=$(ps ax | fgrep java | fgrep udmis | awk '{print $1}') || true
-if [[ -n $OLD_PID ]]; then
-    echo Killing old udmis process $OLD_PID
-    sudo kill $OLD_PID
-    sleep 2
+if [[ -n $SUDO ]]; then
+    # Something to just trigger password entry early on in the process
+    $SUDO touch /dev/null
+fi
+
+UDMIS_PID_FILE=var/udmis.pid
+if [[ -f $UDMIS_PID_FILE ]]; then
+    OLD_PID=$(cat $UDMIS_PID_FILE)
+    if ps -p $OLD_PID > /dev/null 2>&1; then
+        echo "Killing old udmis process $OLD_PID from local PID file..."
+        $SUDO kill $OLD_PID || true
+        sleep 2
+    fi
+else
+    # Fallback only if no local PID file and not in NO_SUDO mode
+    if [[ ${UDMI_NO_SUDO:-false} != true ]]; then
+        OLD_PID=$(ps ax | fgrep java | fgrep udmis | awk '{print $1}') || true
+        if [[ -n $OLD_PID ]]; then
+            echo "Killing old udmis process $OLD_PID..."
+            $SUDO kill $OLD_PID || true
+            sleep 2
+        fi
+    fi
 fi
 
 POD_READY=/tmp/pod_ready.txt
@@ -27,17 +48,39 @@ mkdir -p out
 date >> $LOGFILE
 
 export ETCD_CLUSTER=127.0.0.1
-export SSL_SECRETS_DIR=/etc/mosquitto/certs
+export SSL_SECRETS_DIR=$CERT_DIR
+if [[ ${UDMI_NO_SUDO:-false} == true ]]; then
+    export MOSQUITTO_LOG_PATH=$ETC_DIR/log/mosquitto.log
+else
+    export MOSQUITTO_LOG_PATH=/var/log/mosquitto/mosquitto.log
+fi
 
 UDMIS_DIR=udmis
 [[ -d $UDMIS_DIR ]] || UDMIS_DIR=..
 
-UDMIS_CONFIG=${UDMIS_CONFIG:-$UDMIS_DIR/etc/local_pod.json}
+# Default config preprocessing
+if [[ -z ${UDMIS_CONFIG:-} ]]; then
+    mkdir -p var
+    jq '.include = "../udmis/etc/prod_pod.json" |
+        .flow_defaults.ca_file = "'"$CERT_DIR/ca.crt"'" |
+        .flow_defaults.cert_file = "'"$CERT_DIR/rsa_private.crt"'" |
+        .flow_defaults.key_file = "'"$CERT_DIR/rsa_private.pem"'" |
+        .iot_access.implicit.project_id = "http://${ETCD_CLUSTER}:'"${ETCD_PORT:-2379}"'" |
+        .iot_access.implicit.endpoint.port = '"${MQTT_PORT:-8883}"' |
+        .iot_access.implicit.endpoint.ca_file = "'"$CERT_DIR/ca.crt"'" |
+        .iot_access.implicit.endpoint.cert_file = "'"$CERT_DIR/rsa_private.crt"'" |
+        .iot_access.implicit.endpoint.key_file = "'"$CERT_DIR/rsa_private.pem"'" |
+        .iot_data.database.project_id = "http://${ETCD_CLUSTER}:'"${ETCD_PORT:-2379}"'"' \
+        $UDMIS_DIR/etc/local_pod.json | sponge var/local_pod.json
+    UDMIS_CONFIG=var/local_pod.json
+fi
+
 echo Using UDMIS_CONFIG $UDMIS_CONFIG
 
 nohup $UDMIS_DIR/bin/run $UDMIS_CONFIG >> $LOGFILE 2>&1 &
 
 PID=$!
+echo $PID > $UDMIS_PID_FILE
 
 WAITING=30
 for i in `seq 1 $WAITING`; do

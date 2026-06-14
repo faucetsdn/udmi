@@ -26,10 +26,14 @@ CLNT_USER=kiwi
 CLNT_PASS=possum
 CLNT_ID=$registry_id/client
 
-sudo chmod a+r $CERT_DIR/rsa_private.* || true
+SUDO=sudo
+if [[ ${UDMI_NO_SUDO:-false} == true ]]; then
+    SUDO=""
+fi
+$SUDO chmod a+r $CERT_DIR/rsa_private.* || true
 bin/keygen CERT $CLIENT_DIR
 
-CLIENT_OPTS="-i $CLNT_ID -u $CLNT_USER -P $CLNT_PASS --cafile $CA_CERT --cert $CLIENT_DIR/rsa_private.crt --key $CLIENT_DIR/rsa_private.pem"
+CLIENT_OPTS="-h ${MQTT_HOST:-localhost} -p ${MQTT_PORT:-8883} -i $CLNT_ID -u $CLNT_USER -P $CLNT_PASS --cafile $CA_CERT --cert $CLIENT_DIR/rsa_private.crt --key $CLIENT_DIR/rsa_private.pem"
 
 $MOSQUITTO_CTRL deleteClient $CLNT_USER
 $MOSQUITTO_CTRL createClient $CLNT_USER -p $CLNT_PASS -c $CLNT_ID
@@ -79,7 +83,7 @@ cat <<EOF > /tmp/pubber_config.json
       "hostname": "127.0.0.1",
       "topic_prefix": "/r/$registry_id/d/$device_id",
       "config_sync_sec": -1,
-      "port": 8883,
+      "port": ${MQTT_PORT:-8883},
       "auth_provider": {
         "basic": {
           "username": "$dev_id",
@@ -150,5 +154,5 @@ expected_topic=/r/$registry_id/d/$device_id/state
 
 [[ $received_no != $serial_no ]] && fail Mismatched/missing serial no: $received_no != $serial_no
 
-echo export MQTT_TEST_BROKER=tcp://localhost:8883
+echo export MQTT_TEST_BROKER=tcp://localhost:${MQTT_PORT:-8883}
 echo Done with mosquitto pubber check.

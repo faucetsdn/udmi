@@ -22,12 +22,25 @@ BINDIR=$(find_etcd) || BINDIR=/tmp/etcd
 ETCD_LOG=out/etcd.log
 
 echo pwd: $(pwd)
-mkdir -p out
+mkdir -p out var/etcd
 
-old_pid=$(ps ax | fgrep etcd | fgrep listen | awk '{print $1}') || true
-if [[ -n $old_pid ]]; then
-    echo Killing existing etcd pid $old_pid...
-    kill $old_pid
+ETCD_PID_FILE=var/etcd/etcd.pid
+if [[ -f $ETCD_PID_FILE ]]; then
+    old_pid=$(cat $ETCD_PID_FILE)
+    if ps -p $old_pid > /dev/null 2>&1; then
+        echo Killing existing local etcd pid $old_pid...
+        kill $old_pid || true
+        sleep 1
+    fi
+else
+    # Fallback to global check only if not using UDMI_NO_SUDO
+    if [[ ${UDMI_NO_SUDO:-false} != true ]]; then
+        old_pid=$(ps ax | fgrep etcd | fgrep listen | awk '{print $1}') || true
+        if [[ -n $old_pid ]]; then
+            echo Killing existing etcd pid $old_pid...
+            kill $old_pid || true
+        fi
+    fi
 fi
 
 if [[ ! -f $BINDIR/etcd ]]; then
@@ -40,13 +53,14 @@ $BINDIR/etcd -version
 rm -rf var/etcd/member
 mkdir -p var/etcd/member
 
-nohup $BINDIR/etcd -listen-client-urls=http://0.0.0.0:2379 \
-             -advertise-client-urls=http://127.0.0.1:2379 \
+nohup $BINDIR/etcd -listen-client-urls=http://0.0.0.0:${ETCD_PORT:-2379} \
+             -advertise-client-urls=http://127.0.0.1:${ETCD_PORT:-2379} \
              --data-dir var/etcd \
              > $ETCD_LOG 2>&1 &
 ETCD_PID=$!
+echo $ETCD_PID > $ETCD_PID_FILE
 
-echo Waiting 10s for etcd to start, log in $ETCD_LOG
+echo Waiting 10s for etcd to start on port ${ETCD_PORT:-2379}, log in $ETCD_LOG
 sleep 10
 [[ -d /proc/$ETCD_PID ]] || (cat $ETCD_LOG && echo error starting etcd && false)
 
