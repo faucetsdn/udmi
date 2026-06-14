@@ -30,7 +30,9 @@ public class ModbusFamilyProviderTest {
       "modbus://modbus_rtu_1/1/3/40001/1?type=FLOAT32",
       "modbus://modbus_rtu_1/1/3/40001/1?worder=HWF",
       "modbus://modbus_rtu_1/1/3/40001/1?type=UINT32&worder=HWF&border=LSB&scale=10&offset=5",
-      "modbus://192.168.1.1:502/1/3/40001"
+      "modbus://192.168.1.1:502/1/3/40001",
+      "modbus://192.168.2.3:2833/1/3/40001",
+      "modbus://hostname:2741/1/3/40001"
   );
 
   public static final Set<String> BAD_REFERENCES = ImmutableSet.of(

@@ -8,9 +8,10 @@ UDMI supports reading Modbus points by specifying them via a `modbus://` URL sch
 
 ## URI Schema
 
-`modbus://<addr>/<unitid>/<function>/<address>[/<quantity>][?interpretation]`
+`modbus://<addr>[:port]/<unitid>/<function>/<address>[/<quantity>][?interpretation]`
 
 *   **`addr`**: e.g., `192.28.27.3` or `modbus_rtu_1` (named network from the `localnet.networks` map).
+*   **`port`**: (Optional) The TCP port, e.g. "192.168.2.3:2833" or "hostname:2741".
 *   **`unitid`**: The Slave ID (Unit Identifier).
 *   **`function`**: The Function Code (see [Function Codes](#function-codes)).
 *   **`address`**: The starting register address.
@@ -57,8 +58,10 @@ named network in the device's `model_localnet.json` (under the
 The metadata values in the examples below map to the following complete Modbus URIs:
 
 *   **Network RTU Point**: `modbus://192.483.4.1/1/3/40001/1?type=INT16&border=MSB`
+*   **Network TCP Point**: `modbus://192.168.2.3:2833/1/3/40001/1?type=INT16&border=MSB`
 *   **`fan_status`**: `modbus://modbus_rtu_1/2/1/101?type=BOOLEAN`
 *   **`filter_differential_pressure`**: `modbus://localhost/2/4/30005?type=UINT32&worder=LWF&scale=0.01`
+*   **Hostname TCP Point**: `modbus://hostname:2741/2/4/30005?type=UINT32&worder=LWF&scale=0.01`
 
 ### Network Configuration Example
 
