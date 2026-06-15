@@ -72,6 +72,7 @@ if [[ -z ${UDMIS_CONFIG:-} ]]; then
         .flow_defaults.ca_file = "'"$CERT_DIR/ca.crt"'" |
         .flow_defaults.cert_file = "'"$CERT_DIR/rsa_private.crt"'" |
         .flow_defaults.key_file = "'"$CERT_DIR/rsa_private.pem"'" |
+        .flow_defaults.port = '"${MQTT_PORT:-8883}"' |
         .iot_access.implicit.project_id = "http://${ETCD_CLUSTER}:'"${ETCD_PORT:-2379}"'" |
         .iot_access.implicit.endpoint.port = '"${MQTT_PORT:-8883}"' |
         .iot_access.implicit.endpoint.ca_file = "'"$CERT_DIR/ca.crt"'" |
