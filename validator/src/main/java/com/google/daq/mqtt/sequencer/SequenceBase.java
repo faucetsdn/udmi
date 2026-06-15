@@ -911,7 +911,7 @@ public class SequenceBase {
     deviceConfig.blobset = null;
   }
 
-  private static boolean deviceSupportsState() {
+  protected static boolean deviceSupportsState() {
     ifNullThen(stateSupported,
         () -> stateSupported =
             !isTrue(GeneralUtils.catchToNull(() -> deviceMetadata.testing.nostate)));
