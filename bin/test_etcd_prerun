@@ -1,3 +1,8 @@
-#/bin/bash -e
+#!/bin/bash -e
+
+ROOT=$(dirname $0)/..
+cd $ROOT
+
+source etc/shell_common.sh
 
 udmis/bin/etcdctl member list

@@ -23,7 +23,12 @@ OUT_BASE=$UDMI_ROOT/out/registries
 
 echo Starting mqtt message capture at $(date -u -Is) on topics $topic_filter_udmi and $topic_filter_uufi, capture to $OUT_BASE
 
-sudo mosquitto_sub $SERVER_OPTS -R -F "%j" -t $topic_filter_udmi -t $topic_filter_uufi |
+SUDO=sudo
+if [[ ${UDMI_NO_SUDO:-false} == true ]]; then
+    SUDO=""
+fi
+
+$SUDO mosquitto_sub $SERVER_OPTS -R -F "%j" -t $topic_filter_udmi -t $topic_filter_uufi |
     while read -r mqtt_message; do
         echo $mqtt_message > $msg_file
         topic=$(jq -r .topic <<< "$mqtt_message")
