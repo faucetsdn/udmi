@@ -17,15 +17,15 @@ $SUDO rm -f $CERT_DIR/*
 site_model=$(realpath $1)
 target=$2
 
-cd $UDMI_ROOT
+# cd $UDMI_ROOT
 
 mkdir -p $site_model/reflector
 if [[ ! -f $site_model/reflector/rsa_private.pem ]]; then
-    bin/keygen RS256 $site_model/reflector
+    $UDMI_ROOT/bin/keygen RS256 $site_model/reflector
 fi
 
-bin/keygen CA/$target $site_model/reflector
-bin/keygen CERT/$target $site_model/reflector
+$UDMI_ROOT/bin/keygen CA/$target $site_model/reflector
+$UDMI_ROOT/bin/keygen CERT/$target $site_model/reflector
 
 echo Importing server certs from $site_model...
 $SUDO cp $site_model/reflector/ca.* $CERT_DIR/

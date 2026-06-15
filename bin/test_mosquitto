@@ -1,7 +1,7 @@
 #!/bin/bash -eu
 
 UDMI_ROOT=$(dirname $0)/..
-cd $UDMI_ROOT
+# cd $UDMI_ROOT
 
 source $UDMI_ROOT/etc/shell_common.sh
 
@@ -31,7 +31,7 @@ if [[ ${UDMI_NO_SUDO:-false} == true ]]; then
     SUDO=""
 fi
 $SUDO chmod a+r $CERT_DIR/rsa_private.* || true
-bin/keygen CERT $CLIENT_DIR
+$UDMI_ROOT/bin/keygen CERT $CLIENT_DIR
 
 CLIENT_OPTS="-h ${MQTT_HOST:-localhost} -p ${MQTT_PORT:-8883} -i $CLNT_ID -u $CLNT_USER -P $CLNT_PASS --cafile $CA_CERT --cert $CLIENT_DIR/rsa_private.crt --key $CLIENT_DIR/rsa_private.pem"
 
@@ -74,7 +74,7 @@ $MOSQUITTO_CTRL addRoleACL $role_name publishClientSend "$dev_id/state" allow
 
 sleep 1
 
-cat <<EOF > /tmp/pubber_config.json
+cat <<EOF > out/pubber_config_test_mosquitto.json
 {
     "endpoint": {
       "protocol": "mqtt",
@@ -102,7 +102,7 @@ EOF
 
 kill $(pgrep -f 'java.*pubber-.*jar') || true
 
-pubber/bin/build
+$UDMI_ROOT/pubber/bin/build
 
 # Clean out the persistant data store to ensure a clean state each time.
 rm -rf sites/udmi_site_model/out/devices/$device_id/persistent_data.json
@@ -112,7 +112,7 @@ $MOSQUITTO_PUB $CLIENT_OPTS -r -t /r/$registry_id/d/$device_id/config -f $DEV_CO
 
 echo Running pubber smoke check
 # TODO: Replace this with proper smoke check when backend is working.
-timeout 30s pubber/bin/run /tmp/pubber_config.json || true
+timeout 30s $UDMI_ROOT/pubber/bin/run out/pubber_config_test_mosquitto.json || true
 
 echo Publishing ending test message
 $MOSQUITTO_PUB $CLIENT_OPTS -t $topic -m "Hello Rudolph"

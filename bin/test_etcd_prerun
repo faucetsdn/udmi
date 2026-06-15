@@ -1,8 +1,8 @@
 #!/bin/bash -e
 
 ROOT=$(dirname $0)/..
-cd $ROOT
+# cd $ROOT
 
-source etc/shell_common.sh
+source $ROOT/etc/shell_common.sh
 
-udmis/bin/etcdctl member list
+$ROOT/udmis/bin/etcdctl member list

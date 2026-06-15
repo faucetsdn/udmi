@@ -3,7 +3,8 @@
 UDMI_ROOT=$(realpath $(dirname $0)/..)
 source $UDMI_ROOT/etc/shell_common.sh
 
-ENDPOINT_TMP=/tmp/endpoint.json
+mkdir -p out
+ENDPOINT_TMP=out/endpoint.json
 
 function cleanup {
     if [[ -n ${PUB_PID:-} && -d /proc/$PUB_PID ]]; then
@@ -68,8 +69,8 @@ else
     registry_suffix=
 fi
 
-echo Cleaning output directory $UDMI_ROOT/pubber/out/$serial_no
-rm -rf $UDMI_ROOT/pubber/out/$serial_no
+echo Cleaning output directory pubber/out/$serial_no
+rm -rf pubber/out/$serial_no
 
 echo Building pubber...
 [[ ! -d $UDMI_ROOT/pubber/src ]] || $UDMI_ROOT/pubber/bin/build
@@ -181,7 +182,7 @@ else
     fi
 fi
 
-tmp_config=/tmp/pubber_config.json
+tmp_config=out/pubber_config.json
 if [[ -n ${site_model:-} ]]; then
     cat <<EOF > $tmp_config
 {

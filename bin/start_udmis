@@ -34,29 +34,29 @@ else
     fi
 fi
 
-POD_READY=/tmp/pod_ready.txt
+POD_READY=${UDMI_POD_READY:-var/pod_ready.txt}
+export UDMI_POD_READY=$(realpath $POD_READY)
 rm -f $POD_READY
 
 if [[ ${1:-} == stop ]]; then
     exit 0
 fi
 
-bin/container udmis prep --no-check || true
+$UDMI_ROOT/bin/container udmis prep --no-check || true
 
 LOGFILE=out/udmis.log
 mkdir -p out
 date >> $LOGFILE
 
 export ETCD_CLUSTER=127.0.0.1
-export SSL_SECRETS_DIR=$CERT_DIR
+export SSL_SECRETS_DIR=$(realpath $CERT_DIR)
 if [[ ${UDMI_NO_SUDO:-false} == true ]]; then
-    export MOSQUITTO_LOG_PATH=$ETC_DIR/log/mosquitto.log
+    export MOSQUITTO_LOG_PATH=$(realpath $ETC_DIR/log/mosquitto.log)
 else
     export MOSQUITTO_LOG_PATH=/var/log/mosquitto/mosquitto.log
 fi
 
-UDMIS_DIR=udmis
-[[ -d $UDMIS_DIR ]] || UDMIS_DIR=..
+UDMIS_DIR=$UDMI_ROOT/udmis
 
 # Default config preprocessing
 if [[ -z ${UDMIS_CONFIG:-} ]]; then
@@ -66,18 +66,19 @@ if [[ -z ${UDMIS_CONFIG:-} ]]; then
         INCLUDE_PATH=/root/var/prod_pod.json
     else
         SOURCE_POD_CONFIG=$UDMIS_DIR/etc/local_pod.json
-        INCLUDE_PATH="../udmis/etc/prod_pod.json"
+        INCLUDE_PATH="$UDMI_ROOT/udmis/etc/prod_pod.json"
     fi
+    ABS_CERT_DIR=$(realpath $CERT_DIR)
     jq '.include = "'"$INCLUDE_PATH"'" |
-        .flow_defaults.ca_file = "'"$CERT_DIR/ca.crt"'" |
-        .flow_defaults.cert_file = "'"$CERT_DIR/rsa_private.crt"'" |
-        .flow_defaults.key_file = "'"$CERT_DIR/rsa_private.pem"'" |
+        .flow_defaults.ca_file = "'"$ABS_CERT_DIR/ca.crt"'" |
+        .flow_defaults.cert_file = "'"$ABS_CERT_DIR/rsa_private.crt"'" |
+        .flow_defaults.key_file = "'"$ABS_CERT_DIR/rsa_private.pem"'" |
         .flow_defaults.port = '"${MQTT_PORT:-8883}"' |
         .iot_access.implicit.project_id = "http://${ETCD_CLUSTER}:'"${ETCD_PORT:-2379}"'" |
         .iot_access.implicit.endpoint.port = '"${MQTT_PORT:-8883}"' |
-        .iot_access.implicit.endpoint.ca_file = "'"$CERT_DIR/ca.crt"'" |
-        .iot_access.implicit.endpoint.cert_file = "'"$CERT_DIR/rsa_private.crt"'" |
-        .iot_access.implicit.endpoint.key_file = "'"$CERT_DIR/rsa_private.pem"'" |
+        .iot_access.implicit.endpoint.ca_file = "'"$ABS_CERT_DIR/ca.crt"'" |
+        .iot_access.implicit.endpoint.cert_file = "'"$ABS_CERT_DIR/rsa_private.crt"'" |
+        .iot_access.implicit.endpoint.key_file = "'"$ABS_CERT_DIR/rsa_private.pem"'" |
         .iot_data.database.project_id = "http://${ETCD_CLUSTER}:'"${ETCD_PORT:-2379}"'"' \
         $SOURCE_POD_CONFIG | sponge var/local_pod.json
     UDMIS_CONFIG=var/local_pod.json

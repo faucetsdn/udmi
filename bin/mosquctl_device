@@ -1,7 +1,7 @@
 #!/bin/bash -eu
 
 UDMI_ROOT=$(dirname $0)/..
-cd $UDMI_ROOT
+# cd $UDMI_ROOT
 
 source $UDMI_ROOT/etc/shell_common.sh
 
@@ -26,7 +26,7 @@ elif [[ -f $site_path/devices/$device_id/ec_private.pkcs8 ]]; then
 else
     warn "No private key found for device $device_id, generating..."
     mkdir -p $site_path/devices/$device_id
-    bin/keygen RS256 $site_path/devices/$device_id
+    $UDMI_ROOT/bin/keygen RS256 $site_path/devices/$device_id
     key_file=$site_path/devices/$device_id/rsa_private.pkcs8
 fi
 

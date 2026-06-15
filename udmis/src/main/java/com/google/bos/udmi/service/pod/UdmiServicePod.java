@@ -55,7 +55,10 @@ public class UdmiServicePod extends ContainerBase {
   public static final String UDMI_VERSION = requireNonNull(getDeployedConfig().udmi_version);
   public static final int FATAL_ERROR_CODE = -1;
   public static final String INSTANCE_ID = format("%08x", (long) (Math.random() * 0x100000000L));
-  static final File READY_INDICATOR = new File("/tmp/pod_ready.txt");
+  static final File READY_INDICATOR = new File(
+      System.getenv("UDMI_POD_READY") != null
+          ? System.getenv("UDMI_POD_READY")
+          : "/tmp/pod_ready.txt");
   private static final Map<String, UdmiComponent> COMPONENT_MAP = new ConcurrentHashMap<>();
   private static final Set<Class<? extends ProcessorBase>> PROCESSOR_CLASSES = ImmutableSet.of(
       TargetProcessor.class, ReflectProcessor.class, StateProcessor.class, ControlProcessor.class,

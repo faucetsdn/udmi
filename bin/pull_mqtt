@@ -1,7 +1,7 @@
 #!/bin/bash -e
 
 UDMI_ROOT=$(dirname $0)/..
-cd $UDMI_ROOT
+# cd $UDMI_ROOT
 
 source $UDMI_ROOT/etc/shell_common.sh
 
@@ -10,7 +10,8 @@ source $UDMI_ROOT/etc/shell_common.sh
 project_spec=$1
 shift
 
-msg_file=/tmp/message_captured.json
+mkdir -p out
+msg_file=out/message_captured.json
 
 registry_id=${project_spec##*%}
 [[ $registry_id != $project_spec ]] || registry_id=+
@@ -19,7 +20,7 @@ source $UDMI_ROOT/etc/mosquitto_ctrl.sh
 
 topic_filter_udmi="/r/${registry_id}/d/+/#"
 topic_filter_uufi="/uufi/#"
-OUT_BASE=$UDMI_ROOT/out/registries
+OUT_BASE=out/registries
 
 echo Starting mqtt message capture at $(date -u -Is) on topics $topic_filter_udmi and $topic_filter_uufi, capture to $OUT_BASE
 

@@ -1,9 +1,9 @@
 #!/bin/bash -e
 
 UDMI_ROOT=$(realpath $(dirname $0)/..)
-cd $UDMI_ROOT
+# cd $UDMI_ROOT
 
-source etc/shell_common.sh
+source $UDMI_ROOT/etc/shell_common.sh
 
 if [[ $# != 1 ]]; then
     echo Usage: $0 PROJECT_SPEC
@@ -41,23 +41,23 @@ rm -rf $site_path/out/devices
 jq 'del(.udmi_namespace)' $iot_config | sponge $iot_config
 
 # Run explicitly so that it's not done in the background when the program is launched.
-validator/bin/build
-pubber/bin/build
+$UDMI_ROOT/validator/bin/build
+$UDMI_ROOT/pubber/bin/build
 
 # Clear out some old cruft that might be left over from other tests...
 rm -rf $site_path/devices/XXX*
 
 # Have to reset pubber configs before running validator to avoid reflector registry conflict
 for device in AHU-1 AHU-22 GAT-123; do
-    echo bin/reset_config $site_path $project_spec $device
-    bin/reset_config $site_path $project_spec $device
+    echo $UDMI_ROOT/bin/reset_config $site_path $project_spec $device
+    $UDMI_ROOT/bin/reset_config $site_path $project_spec $device
 done
 
 touch $site_path/out/validator_start.nop
 
 echo Starting validator, output in $VALIDATOR_LOG, trace in $TRACE_DIR
 rm -rf $TRACE_DIR
-cmd="bin/validator $site_path $project_spec -d 10 -w $TRACE_DIR"
+cmd="$UDMI_ROOT/bin/validator $site_path $project_spec -d 10 -w $TRACE_DIR"
 echo $cmd
 $cmd > $VALIDATOR_LOG 2>&1 &
 vpid=$!

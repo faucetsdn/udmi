@@ -70,11 +70,11 @@ function pubber_bg {
 
     device_dir=$site_path/devices/$device_id
 
-    echo bin/keygen CERT $device_dir
-    bin/keygen CERT $device_dir || true
+    echo $UDMI_ROOT/bin/keygen CERT $device_dir
+    $UDMI_ROOT/bin/keygen CERT $device_dir || true
 
     echo Writing pubber output to $outfile, serial no $serial_no
-    cmd="bin/pubber $site_path $project_spec $device_id $serial_no $@"
+    cmd="$UDMI_ROOT/bin/pubber $site_path $project_spec $device_id $serial_no $@"
     echo $cmd
 
     date > $outfile

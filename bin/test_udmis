@@ -1,12 +1,12 @@
 #!/bin/bash -e
 
 ROOT=$(dirname $0)/..
-cd $ROOT
+# cd $ROOT
 
 echo Stopping any running udmis process...
-bin/start_udmis stop
+$ROOT/bin/start_udmis stop
 
-source etc/shell_common.sh
+source $ROOT/etc/shell_common.sh
 
 if [[ ${UDMI_NO_SUDO:-false} != true ]]; then
     echo Checking for properly configured mosquitto...
@@ -26,4 +26,4 @@ fi
 [[ ! -f out/pubsub.env ]] || source out/pubsub.env || true
 echo Using PubSub emulator at ${PUBSUB_EMULATOR_HOST:-localhost}
 
-udmis/bin/build check
+$ROOT/udmis/bin/build check

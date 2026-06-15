@@ -53,14 +53,20 @@ $BINDIR/etcd -version
 rm -rf var/etcd/member
 mkdir -p var/etcd/member
 
-nohup $BINDIR/etcd -listen-client-urls=http://0.0.0.0:${ETCD_PORT:-2379} \
-             -advertise-client-urls=http://127.0.0.1:${ETCD_PORT:-2379} \
+etcd_port=${ETCD_PORT:-2379}
+etcd_peer_port=$((etcd_port + 1000))
+
+nohup $BINDIR/etcd -listen-client-urls=http://0.0.0.0:${etcd_port} \
+             -advertise-client-urls=http://127.0.0.1:${etcd_port} \
+             -listen-peer-urls=http://127.0.0.1:${etcd_peer_port} \
+             -initial-advertise-peer-urls=http://127.0.0.1:${etcd_peer_port} \
+             -initial-cluster=default=http://127.0.0.1:${etcd_peer_port} \
              --data-dir var/etcd \
              > $ETCD_LOG 2>&1 &
 ETCD_PID=$!
 echo $ETCD_PID > $ETCD_PID_FILE
 
-echo Waiting 10s for etcd to start on port ${ETCD_PORT:-2379}, log in $ETCD_LOG
+echo Waiting 10s for etcd to start on port ${etcd_port}, log in $ETCD_LOG
 sleep 10
 [[ -d /proc/$ETCD_PID ]] || (cat $ETCD_LOG && echo error starting etcd && false)
 

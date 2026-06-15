@@ -5,7 +5,7 @@ if [[ -z ${UDMI_ROOT:-} ]]; then
 fi
 
 if [[ ${UDMI_NO_SUDO:-false} == true ]]; then
-    ETC_DIR=$UDMI_ROOT/var/mosquitto
+    ETC_DIR=var/mosquitto
     NEED_SUDO=""
 else
     ETC_DIR=/etc/mosquitto
