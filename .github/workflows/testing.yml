@@ -76,7 +76,7 @@ jobs:
     timeout-minutes: 10
     if: ${{ !cancelled() }}
     env:
-      TARGET_PROJECT: ${{ vars.TARGET_PROJECT || '//mqtt/localhost' }}
+      TARGET_PROJECT: ${{ vars.TARGET_PROJECT || '//mqtt/localhost:9001' }}
     steps:
       - uses: actions/checkout@v6
       - uses: actions/setup-java@v5
@@ -125,7 +125,7 @@ jobs:
     timeout-minutes: 20
     needs: automapping
     env:
-      TARGET_PROJECT: ${{ vars.TARGET_PROJECT || '//mqtt/localhost' }}
+      TARGET_PROJECT: ${{ vars.TARGET_PROJECT || '//mqtt/localhost:9001' }}
       UDMI_ALT_REGISTRY: ZZ-REDIRECT-NA
     steps:
       - uses: actions/checkout@v6
@@ -176,7 +176,7 @@ jobs:
       matrix:
         shard: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
     env:
-      TARGET_PROJECT: ${{ vars.TARGET_PROJECT || '//mqtt/localhost' }}
+      TARGET_PROJECT: ${{ vars.TARGET_PROJECT || '//mqtt/localhost:9001' }}
       UDMI_ALT_REGISTRY: ZZ-REDIRECT-NA
       UDMI_REGISTRY_SUFFIX: _${{ matrix.shard }}
       MATRIX_SHARD_COUNT: 10
@@ -249,18 +249,18 @@ jobs:
           bin/registrar sites/udmi_site_model
       - name: local setup
         run: |
-          bin/start_local sites/udmi_site_model //mqtt/localhost
-          bin/pull_messages //mqtt/localhost > out/message_capture.log 2>&1 &
+          bin/start_local sites/udmi_site_model //mqtt/localhost:9001
+          bin/pull_messages //mqtt/localhost:9001 > out/message_capture.log 2>&1 &
       - name: bin/test_etcd_prerun
         run: bin/test_etcd_prerun
       - name: bin/test_mosquitto
         run: bin/test_mosquitto
       - name: bin/test_regclean
-        run: bin/test_regclean //mqtt/localhost
+        run: bin/test_regclean //mqtt/localhost:9001
       - name: bin/test_runlocal
         run: bin/test_runlocal
       - name: bin/test_sequencer
-        run: bin/test_sequencer local full //mqtt/localhost $(< etc/local_tests.txt)
+        run: bin/test_sequencer local full //mqtt/localhost:9001 $(< etc/local_tests.txt)
       - name: bin/test_uufi
         run: bin/test_uufi
       - name: bin/test_udmis
@@ -306,7 +306,7 @@ jobs:
     timeout-minutes: 15
     env:
       UDMI_ALT_REGISTRY: ZZ-REDIRECT-NA
-      TARGET_PROJECT: //mqtt/localhost
+      TARGET_PROJECT: //mqtt/localhost:9001
     steps:
       - uses: actions/checkout@v6
       - uses: actions/setup-java@v5
@@ -342,7 +342,7 @@ jobs:
     runs-on: ubuntu-24.04
     timeout-minutes: 15
     env:
-      TARGET_PROJECT: ${{ vars.TARGET_PROJECT || '//mqtt/localhost' }}
+      TARGET_PROJECT: ${{ vars.TARGET_PROJECT || '//mqtt/localhost:9001' }}
       UDMI_REGISTRY_SUFFIX: _BU
     steps:
       - uses: actions/checkout@v6
@@ -380,7 +380,7 @@ jobs:
     needs: [ baseline, sequencer, endpoint, runlocal, blobupdates ]
     if: ${{ !cancelled() }}
     env:
-      TARGET_PROJECT: ${{ vars.TARGET_PROJECT || '//mqtt/localhost' }}
+      TARGET_PROJECT: ${{ vars.TARGET_PROJECT || '//mqtt/localhost:9001' }}
       UDMI_ALT_REGISTRY: ZZ-REDIRECT-NA
     steps:
       - uses: actions/checkout@v6
