@@ -160,6 +160,7 @@ prem
 Prem
 prepend
 prepended
+prepending
 programmatically
 provisioner
 proxied
@@ -215,6 +216,8 @@ terraformed
 testability
 TLS
 TODO
+topologies
+Topologies
 transactional
 transpile
 transpiles

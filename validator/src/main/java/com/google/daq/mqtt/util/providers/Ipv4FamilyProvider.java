@@ -43,4 +43,20 @@ public class Ipv4FamilyProvider implements FamilyProvider {
     checkState(prefix >= 0 && prefix <= MAX_PREFIX_LENGTH,
         format("ipv4 network prefix %s exceeds maximum %d", prefix, MAX_PREFIX_LENGTH));
   }
+
+  private static final java.util.Set<String> ALLOWED_ADJUNCT_KEYS =
+      com.google.common.collect.ImmutableSet.of("cidr", "bcast");
+
+  @Override
+  public void validateModel(udmi.schema.FamilyLocalnetModel familyModel) {
+    if (familyModel.adjunct != null) {
+      for (String key : familyModel.adjunct.keySet()) {
+        if (!ALLOWED_ADJUNCT_KEYS.contains(key)) {
+          throw new IllegalArgumentException(format(
+              "invalid ipv4 adjunct key '%s'; allowed keys are %s",
+              key, ALLOWED_ADJUNCT_KEYS));
+        }
+      }
+    }
+  }
 }

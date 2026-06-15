@@ -3,13 +3,22 @@
     "gateway_id": "GW-1",
     "target": {
       "family": "modbus",
-      "network_id": "modbus_1"
+      "network": "modbus_1",
+      "vendor_ref": true
     }
   },
   "localnet": {
     "families": {
       "modbus": {
         "addr": "1"
+      }
+    }
+  },
+  "pointset": {
+    "points": {
+      "temp": {
+        "ref": "40001",
+        "url": "modbus://1/40001"
       }
     }
   },

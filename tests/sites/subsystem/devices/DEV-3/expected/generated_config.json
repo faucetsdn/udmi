@@ -1,22 +1,21 @@
 {
   "gateway": {
     "target": {
-      "addr": "xxx",
-      "family": "vendor"
+      "addr": "1",
+      "family": "modbus",
+      "network": "modbus_1",
+      "vendor_ref": true
     }
   },
   "localnet": {
     "families": {
-      "bacnet": {},
-      "ipv4": {},
       "modbus": {}
     }
   },
   "pointset": {
     "points": {
-      "energy_sensor": {
-        "ref": "2983",
-        "units": "kwH"
+      "temp": {
+        "ref": "40001"
       }
     },
     "sample_rate_sec": 300

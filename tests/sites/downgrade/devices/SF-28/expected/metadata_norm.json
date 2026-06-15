@@ -20,51 +20,63 @@
     "points": {
       "discharge_air_temperature_sensor": {
         "ref": "AI1104.Present_Value",
-        "units": "degrees-celcius"
+        "units": "degrees-celcius",
+        "url": "vendor://monkey/AI1104.Present_Value"
       },
       "discharge_fan_fault_status": {
         "ref": "BI1103.Present_Value",
-        "units": "No-units"
+        "units": "No-units",
+        "url": "vendor://monkey/BI1103.Present_Value"
       },
       "discharge_fan_percentage_speed_command": {
         "ref": "AO1101.Present_Value",
-        "units": "percent"
+        "units": "percent",
+        "url": "vendor://monkey/AO1101.Present_Value"
       },
       "discharge_fan_percentage_speed_setpoint": {
         "ref": "AV101.Present_Value",
-        "units": "percent"
+        "units": "percent",
+        "url": "vendor://monkey/AV101.Present_Value"
       },
       "discharge_fan_run_status": {
         "ref": "BI1102.Present_Value",
-        "units": "No-units"
+        "units": "No-units",
+        "url": "vendor://monkey/BI1102.Present_Value"
       },
       "discharge_fan_static_pressure_status": {
         "ref": "BI1105.Present_Value",
-        "units": "No-units"
+        "units": "No-units",
+        "url": "vendor://monkey/BI1105.Present_Value"
       },
       "fire_alarm_status": {
         "ref": "BV1001.Present_Value",
-        "units": "No-units"
+        "units": "No-units",
+        "url": "vendor://monkey/BV1001.Present_Value"
       },
       "zone_air_co2_concentration_sensor": {
         "ref": "AI101004.Present_Value",
-        "units": "parts_per_million"
+        "units": "parts_per_million",
+        "url": "vendor://monkey/AI101004.Present_Value"
       },
       "zone_air_co2_concentration_setpoint": {
         "ref": "AV2.Present_Value",
-        "units": "parts_per_million"
+        "units": "parts_per_million",
+        "url": "vendor://monkey/AV2.Present_Value"
       },
       "zone_air_temperature_sensor": {
         "ref": "AI101001.Present_Value",
-        "units": "degrees-celcius"
+        "units": "degrees-celcius",
+        "url": "vendor://monkey/AI101001.Present_Value"
       },
       "zone_air_temperature_setpoint": {
         "ref": "AV101022.Present_Value",
-        "units": "degrees-celcius"
+        "units": "degrees-celcius",
+        "url": "vendor://monkey/AV101022.Present_Value"
       },
       "zone_occupancy_status": {
         "ref": "BV1003.Present_Value",
-        "units": "No-units"
+        "units": "No-units",
+        "url": "vendor://monkey/BV1003.Present_Value"
       }
     }
   },
