@@ -717,9 +717,9 @@
       
       <div style="text-align: left; width: 100%; font-family: var(--font-outfit); font-size: 0.75rem; text-transform: uppercase; color: var(--accent-teal-dark); letter-spacing: 0.05em; font-weight: 700; margin-bottom: 0.3rem; padding-left: 0.8rem;">Specifications</div>
       <nav class="sidebar-nav" style="gap: 0.2rem;">
-        <a href="../../mantis/docs/evaluate_stability_spec.md" class="nav-link" style="font-size: 0.85rem; font-weight: 500; padding: 0.4rem 0.8rem;">📊 Stability Spec</a>
-        <a href="../../mantis/docs/diagnose_spec.md" class="nav-link" style="font-size: 0.85rem; font-weight: 500; padding: 0.4rem 0.8rem;">🔬 Triage Spec</a>
-        <a href="../../mantis/README.md" class="nav-link" style="font-size: 0.85rem; font-weight: 500; padding: 0.4rem 0.8rem;">📄 Project Overview</a>
+        <a href="../../tools/mantis/docs/evaluate_stability_spec.md" class="nav-link" style="font-size: 0.85rem; font-weight: 500; padding: 0.4rem 0.8rem;">📊 Stability Spec</a>
+        <a href="../../tools/mantis/docs/diagnose_spec.md" class="nav-link" style="font-size: 0.85rem; font-weight: 500; padding: 0.4rem 0.8rem;">🔬 Triage Spec</a>
+        <a href="../../tools/mantis/README.md" class="nav-link" style="font-size: 0.85rem; font-weight: 500; padding: 0.4rem 0.8rem;">📄 Project Overview</a>
       </nav>
       
       <div class="sidebar-breadcrumbs">
@@ -830,7 +830,7 @@
               </div>
               <div>
                 <div class="io-tag">Output Directory</div>
-                <div class="io-val">mantis/out/test_bundles/</div>
+                 <div class="io-val">tools/mantis/out/test_bundles/</div>
               </div>
             </div>
           </div>
@@ -858,7 +858,7 @@
               </div>
               <div>
                 <div class="io-tag">Output Summary</div>
-                <div class="io-val">mantis/out/stability_report.md</div>
+                 <div class="io-val">tools/mantis/out/stability_report.md</div>
               </div>
             </div>
           </div>
@@ -1028,7 +1028,7 @@
     // Terminal Simulation Script
     const simulatedLogs = [
       { type: 'log', text: '[INFO] Initializing Mantis Diagnostics on test: [system_mode_restart]...' },
-      { type: 'log', text: '[INFO] Locating test bundles at: mantis/out/test_bundles/_mqtt_localhost...' },
+      { type: 'log', text: '[INFO] Locating test bundles at: tools/mantis/out/test_bundles/_mqtt_localhost...' },
       { type: 'success', text: '[SUCCESS] Found 3 execution runs (2 failed, 1 succeeded)' },
       { type: 'log', text: '[INFO] Target failure run identified: run_1' },
       { type: 'log', text: '[INFO] Sibling baseline run identified: run_2 (succeeded)' },
@@ -1058,7 +1058,7 @@
       { type: 'success', text: 'Result: system_mode_restart failed in run_1 due to system mode' },
       { type: 'success', text: 'restart timeout. Pubber did not state-transition within the validation window.' },
       { type: 'success', text: 'Resolution: Check pubber mode transitions under mock flags.' },
-      { type: 'success', text: 'Triage Report written to: mantis/out/diagnose/mqtt_localhost/udmi_site_model/AHU-1/system_mode_restart/triage_analysis.md' },
+      { type: 'success', text: 'Triage Report written to: tools/mantis/out/diagnose/mqtt_localhost/udmi_site_model/AHU-1/system_mode_restart/triage_analysis.md' },
       { type: 'success', text: '---------------------------------------------------------------------' }
     ];
 

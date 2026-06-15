@@ -1,0 +1,37 @@
+#!/bin/bash -e
+#
+# Launcher wrapper for Project Mantis Statistics Collector Component (Stage 1).
+# Automatically activates the virtualenv and executes the Python collect_stats module.
+#
+
+# Resolve parent directory structure
+MANTIS_BIN=$(dirname $0)
+MANTIS_DIR=$(realpath $MANTIS_BIN/..)
+UDMI_ROOT=$(realpath $MANTIS_DIR/../..)
+
+cd $UDMI_ROOT
+
+# Guarantee execution permissions
+chmod +x $MANTIS_DIR/bin/collect_stats 2>/dev/null || true
+chmod +x $MANTIS_DIR/src/util/collect_stats/main.py 2>/dev/null || true
+
+# If no arguments are passed, show usage and help
+if [[ $# -eq 0 ]]; then
+    echo "Error: No options supplied to collect_stats." >&2
+    echo "Usage: bin/collect_stats [OPTIONS]" >&2
+    echo "Run 'bin/collect_stats --help' to see all available options." >&2
+    exit 1
+fi
+
+# Activate virtualenv
+if [[ -f venv/bin/activate ]]; then
+    source venv/bin/activate
+    export PYTHONPATH="$UDMI_ROOT/tools:$PYTHONPATH"
+else
+    echo "Error: Project virtual environment not found at '$UDMI_ROOT/venv'." >&2
+    echo "Please run 'bin/setup_base' first to initialize dependencies." >&2
+    exit 1
+fi
+
+# Execute Python module forwarding all arguments directly in the foreground
+python3 -u -m mantis.src.util.collect_stats.main "$@"

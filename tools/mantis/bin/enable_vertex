@@ -1,0 +1,62 @@
+#!/bin/bash
+#
+# Script to enable Vertex AI for Mantis Unified Triage
+# Must be sourced: source mantis/bin/enable_vertex [gcp_project_id]
+#
+
+if [[ "$1" == "-h" || "$1" == "--help" ]]; then
+    echo "Script to enable Vertex AI for Mantis Unified Triage."
+    echo "Sets the necessary environment variables in your active shell session."
+    echo
+    echo "Usage:"
+    echo "  source mantis/bin/enable_vertex [gcp_project_id]"
+    echo "  . mantis/bin/enable_vertex [gcp_project_id]"
+    echo
+    echo "Arguments:"
+    echo "  gcp_project_id    Optional. The GCP project ID to use. If omitted, the script"
+    echo "                    will try to auto-detect the project currently active in gcloud."
+    echo
+    echo "Variables Set:"
+    echo "  MANTIS_USE_VERTEXAI = true"
+    echo "  GCP_PROJECT         = <project_id>"
+    echo "  GCLOUD_PROJECT      = <project_id>"
+    echo "  GCP_LOCATION        = global (unless already set)"
+    
+    if [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then
+        exit 0
+    else
+        return 0
+    fi
+fi
+
+if [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then
+    echo "Error: This script must be sourced to modify your environment variables." >&2
+    echo "Usage: source $0 [gcp_project_id]" >&2
+    exit 1
+fi
+
+PROJECT_ID="$1"
+
+if [[ -z $PROJECT_ID ]]; then
+    # Try to auto-detect from gcloud config
+    if command -v gcloud &> /dev/null; then
+        PROJECT_ID=$(gcloud config get-value project 2>/dev/null)
+    fi
+fi
+
+if [[ -z $PROJECT_ID ]]; then
+    echo "Error: GCP Project ID could not be auto-detected." >&2
+    echo "Please specify it as an argument: source mantis/bin/enable_vertex <project_id>" >&2
+    return 1
+fi
+
+export MANTIS_USE_VERTEXAI=true
+export GCP_PROJECT="$PROJECT_ID"
+export GCLOUD_PROJECT="$PROJECT_ID"
+export GCP_LOCATION="${GCP_LOCATION:-global}"
+
+echo "Vertex AI enabled for Mantis Unified Triage:"
+echo "   MANTIS_USE_VERTEXAI = $MANTIS_USE_VERTEXAI"
+echo "   GCP_PROJECT         = $GCP_PROJECT"
+echo "   GCLOUD_PROJECT      = $GCLOUD_PROJECT"
+echo "   GCP_LOCATION        = $GCP_LOCATION"

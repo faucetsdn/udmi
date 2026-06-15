@@ -37,7 +37,7 @@ credentials.json
 /services/out/
 /services/var/
 /services/.idea/libraries/
-/mantis/out/
+/tools/mantis/out/
 /sites/
 /sites
 /attributes.json
@@ -81,7 +81,9 @@ wordlist.dic
 tests/dbo/basic/test_site_model/
 
 # Mantis output and bundle directories
-/mantis/out/
-/mantis/test_bundles/
+/tools/mantis/.idea/
+/tools/mantis/out/
+/tools/mantis/test_bundles/
+/tools/mantis/src/mantis.egg-info
 
 
