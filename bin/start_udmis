@@ -61,7 +61,14 @@ UDMIS_DIR=udmis
 # Default config preprocessing
 if [[ -z ${UDMIS_CONFIG:-} ]]; then
     mkdir -p var
-    jq '.include = "../udmis/etc/prod_pod.json" |
+    if [[ -f /root/var/local_pod.json ]]; then
+        SOURCE_POD_CONFIG=/root/var/local_pod.json
+        INCLUDE_PATH=/root/var/prod_pod.json
+    else
+        SOURCE_POD_CONFIG=$UDMIS_DIR/etc/local_pod.json
+        INCLUDE_PATH="../udmis/etc/prod_pod.json"
+    fi
+    jq '.include = "'"$INCLUDE_PATH"'" |
         .flow_defaults.ca_file = "'"$CERT_DIR/ca.crt"'" |
         .flow_defaults.cert_file = "'"$CERT_DIR/rsa_private.crt"'" |
         .flow_defaults.key_file = "'"$CERT_DIR/rsa_private.pem"'" |
@@ -71,7 +78,7 @@ if [[ -z ${UDMIS_CONFIG:-} ]]; then
         .iot_access.implicit.endpoint.cert_file = "'"$CERT_DIR/rsa_private.crt"'" |
         .iot_access.implicit.endpoint.key_file = "'"$CERT_DIR/rsa_private.pem"'" |
         .iot_data.database.project_id = "http://${ETCD_CLUSTER}:'"${ETCD_PORT:-2379}"'"' \
-        $UDMIS_DIR/etc/local_pod.json | sponge var/local_pod.json
+        $SOURCE_POD_CONFIG | sponge var/local_pod.json
     UDMIS_CONFIG=var/local_pod.json
 fi
 
