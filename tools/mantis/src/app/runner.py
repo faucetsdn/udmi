@@ -639,7 +639,7 @@ class UDMITriageRunner:
                 else:
                     playbook_path = impl_dir / playbook_arg
         else:
-            playbook_path = impl_dir / "config/playbook_oem.yaml"
+            playbook_path = impl_dir / "../../config/playbook_oem.yaml"
         
         resolved_playbook = str(playbook_path)
         

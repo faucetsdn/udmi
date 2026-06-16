@@ -292,7 +292,7 @@ async def run_triage_analysis_async(
             else:
                 playbook_path = impl_dir / playbook
     else:
-        playbook_path = impl_dir / "config/playbook_oem.yaml"
+        playbook_path = impl_dir / "../../config/playbook_oem.yaml"
 
     ns = namespace
     if not ns:
