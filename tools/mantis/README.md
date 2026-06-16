@@ -4,7 +4,7 @@
 
 Mantis is structured into independent, highly modular execution submodules following the Unix philosophy. Their execution stages naturally form a complete test capture, stabilization evaluation, and AI triage loop:
 
-1. **`collect_stats` (Stage 1)**: Automated capture of test execution loops. Operates locally via sandboxed test runs, dispatches new parallel workflows on GitHub Actions, or downloads historical completed CI runs, packaging all metrics and console streams into sharded support bundles.
+1. **`collect_test_runs` (Stage 1)**: Automated capture of test execution loops. Operates locally via sandboxed test runs, dispatches new parallel workflows on GitHub Actions, or downloads historical completed CI runs, packaging all metrics and console streams into sharded support bundles.
 2. **`evaluate_stability` (Stage 2)**: A pure metrics and log analyzer that ingests sharded run folders, extracts results, correlates them against normalized golden baselines, identifies regressions versus expected test failures, and outputs stability reports alongside a target `triage_manifest.json`.
 3. **`diagnose` (Stage 3)**: An AI-powered diagnostic triage agent that ingests the manifest, correlates sharded execution logs using padded execution timebounds, crawls codebase repositories/git histories, executes progressive multi-stage playbook tasks, and generates rich defect triage reports.
 
@@ -32,14 +32,14 @@ mantis/
 │       ├── evaluate_stability_spec.md # Stage 2 Stability Specs
 │       └── telemetry_correlation_guide.md # Trace IDs log correlation rules
 ├── bin/                      # Executable Bash wrappers
-│   ├── collect_stats         # Launches Stage 1 (Statistics Collector)
+│   ├── collect_test_runs         # Launches Stage 1 (Test Run Collector)
 │   ├── evaluate_stability    # Launches Stage 2 (Stability Evaluator)
 │   └── diagnose              # Launches Stage 3 (AI Diagnostics Triage)
 │   └── support_process       # Helper utility for sharded runs extraction
 │   └── web_ui                # Web interface for visual dashboard
 └── src/                      # Source code
     ├── util/
-    │   ├── collect_stats/    # Submodule 1: Trigger & Run loop
+    │   ├── collect_test_runs/    # Submodule 1: Trigger & Run loop
     │   ├── eval_sequencer_stability/ # Submodule 2: Stability Evaluator
     │   └── logging.py        # Shared logging utilities (e.g. Tee)
     ├── engine/               # Submodule 3: Reusable Core Triage Engine (Generic SDK)
@@ -52,24 +52,24 @@ mantis/
 
 ```
 
-All execution outputs, raw bundles, reports, and persistent logs are kept modularly organized under the active execution directory (e.g. inside the test bundle folder under `out/mantis/test_bundles/`).
+All execution outputs, raw bundles, reports, and persistent logs are kept modularly organized under the active execution directory (e.g. inside the test bundle folder under `out/mantis/`).
 
 ---
 
-## 1. Statistics Collector (`collect_stats`)
+## 1. Test Run Collector (`collect_test_runs`)
 
 Runs test execution loops locally, dispatches parallel CI runs on GitHub Actions, or pulls completed historical runs from GitHub.
 
 ```bash
 # Local sandbox loop runs (default: 3 iterations)
-mantis/bin/collect_stats --mode local --target //mqtt/localhost --runs 5
+mantis/bin/collect_test_runs --mode local --target //mqtt/localhost --runs 5
 
 # Trigger new parallel GitHub Actions CI dispatches (runs in background)
 export GITHUB_TOKEN="your_github_personal_access_token"
-mantis/bin/collect_stats --mode ci --target //mqtt/localhost --runs 3
+mantis/bin/collect_test_runs --mode ci --target //mqtt/localhost --runs 3
 
 # Retrieve last 5 completed historical runs from GitHub CI
-mantis/bin/collect_stats --mode ci_search --branch main --runs 5 --target //mqtt/localhost
+mantis/bin/collect_test_runs --mode ci_search --branch main --runs 5 --target //mqtt/localhost
 ```
 
 ### Command Options:
@@ -89,7 +89,7 @@ Aggregates sharded runs from a bundles folder, matches outcomes against normaliz
 
 ```bash
 mantis/bin/evaluate_stability \
-  --bundles-dir out/mantis/test_bundles/ci_search_20260601_140735/ \
+  --bundles-dir out/mantis/ci_search_20260601_140735/ \
   --target //mqtt/localhost
 ```
 
@@ -122,10 +122,10 @@ export GCP_PROJECT="your-gcp-project-id" # Optional, auto-detected if omitted
 
 # --------------------------------------------------------------------
 # Run Manifest-driven active triage
-mantis/bin/diagnose -m out/mantis/test_bundles/ci_search_20260601_140735/triage_manifest.json
+mantis/bin/diagnose -m out/mantis/ci_search_20260601_140735/triage_manifest.json
 
 # Targeted single-test diagnostic sweep
-mantis/bin/diagnose -m out/mantis/test_bundles/ci_search_20260601_140735/triage_manifest.json -t system_min_loglevel
+mantis/bin/diagnose -m out/mantis/ci_search_20260601_140735/triage_manifest.json -t system_min_loglevel
 ```
 
 ### Command Options:

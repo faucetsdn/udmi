@@ -210,12 +210,14 @@ class UDMITriagePipeline(TriagePipeline):
         self,
         client: genai.Client,
         concurrency_semaphore: asyncio.Semaphore = None,
-        playbook: Optional[Playbook] = None
+        playbook: Optional[Playbook] = None,
+        **kwargs
     ):
         super().__init__(
             client=client,
             concurrency_semaphore=concurrency_semaphore,
-            playbook=playbook
+            playbook=playbook,
+            **kwargs
         )
 
     def run_intent_deterministically(self, target_id: str, prompt_payload: str) -> Optional[str]:
@@ -232,7 +234,7 @@ async def run_triage_analysis_async(
     concurrency_semaphore: asyncio.Semaphore = None,
     out_dir: Optional[str] = None,
     force: bool = False,
-    oem: bool = False,
+    playbook: Optional[str] = None,
     namespace: Optional[str] = None,
     fallback_namespaces: Optional[List[str]] = None
 ) -> str:
@@ -252,9 +254,10 @@ async def run_triage_analysis_async(
     device_id = meta["Device ID"]
     test_id = meta["Test ID"]
 
-    base_out = out_dir if out_dir else os.path.join(MANTIS_DIR, "out")
-    out_dir = os.path.join(base_out, "diagnose", project_id, site_id,
-                           device_id, test_id)
+    if not out_dir:
+        base_out = os.path.join(MANTIS_DIR, "out")
+        out_dir = os.path.join(base_out, "diagnose", project_id, site_id,
+                               device_id, test_id)
 
     # Construct failure query text (Test ID + Raw log content)
     log_match = re.search(
@@ -279,8 +282,17 @@ async def run_triage_analysis_async(
 
     # Load the declarative playbook
     impl_dir = Path(os.path.dirname(os.path.abspath(__file__)))
-    playbook_file = "config/playbook_oem_integrator.yaml" if oem else "config/playbook.yaml"
-    playbook_path = impl_dir / playbook_file
+    if playbook:
+        if os.path.isabs(playbook):
+            playbook_path = Path(playbook)
+        else:
+            cwd_path = Path.cwd() / playbook
+            if cwd_path.exists():
+                playbook_path = cwd_path
+            else:
+                playbook_path = impl_dir / playbook
+    else:
+        playbook_path = impl_dir / "config/playbook_oem.yaml"
 
     ns = namespace
     if not ns:

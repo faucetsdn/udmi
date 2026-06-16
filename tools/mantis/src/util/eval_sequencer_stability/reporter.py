@@ -50,7 +50,7 @@ class MantisReporter:
         md.append("\n---")
 
         if flaky_tests:
-            md.append("## ⚠️ Detected Flaky Tests (Prioritized Hunt List)")
+            md.append("## ⚠️ Detected Flaky Tests")
             md.append(
                 "> These tests show unstable behavior and fail randomly. Focus your stabilization efforts here!")
             md.append(

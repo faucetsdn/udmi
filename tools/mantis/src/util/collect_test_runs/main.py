@@ -91,15 +91,15 @@ def clean_pubber_processes():
               file=sys.stderr)
 
 
-def discover_git_details():
+def discover_git_details(remote_name="origin"):
     """Discovers the git owner and repository name from git remote."""
     try:
         import subprocess
         out = subprocess.check_output(["git", "remote", "-v"], cwd=UDMI_ROOT,
                                       text=True)
         for line in out.splitlines():
-            if line.startswith("origin") and "(fetch)" in line:
-                parts = line.split()
+            parts = line.split()
+            if len(parts) >= 2 and parts[0] == remote_name and "(fetch)" in line:
                 url = parts[1]
                 if "github.com" in url:
                     if url.startswith("git@"):
@@ -110,7 +110,7 @@ def discover_git_details():
                     owner, repo = path.split("/")
                     return owner.strip(), repo.strip()
     except Exception as e:
-        print(f"Warning: Failed to parse git details: {e}", file=sys.stderr)
+        print(f"Warning: Failed to parse git details for remote '{remote_name}': {e}", file=sys.stderr)
     return None, None
 
 
@@ -336,12 +336,19 @@ def run_local_sandbox(args, iterations, output_dir):
     print(f"=============================================================")
     print(f"\nTo evaluate stability metrics, execute:")
     print(
-        f"  mantis/bin/evaluate_stability --target {args.target} --bundles-dir {output_dir}\n")
+        f"  mantis/bin/evaluate_stability --test-runs {output_dir}\n")
 
 
 def run_github_ci_mode(args, runs, output_dir, token, owner, repo):
     """Executes the GitHub CI Actions dispatch and retrieval (Mode 2 & 3)."""
-    branch = args.branch if args.branch else discover_branch()
+    if not args.branch:
+        args.branch = os.popen("git rev-parse --abbrev-ref HEAD").read().strip()
+    
+    if args.remote == "origin":
+        # Check if the user omitted the remote and infer it from git config if possible
+        inferred_remote = os.popen(f"git config --get branch.{args.branch}.remote").read().strip()
+        if inferred_remote:
+            args.remote = inferred_remote
     client = GitHubClient(owner=owner, repo=repo, token=token)
     new_run_ids = []
 
@@ -352,20 +359,20 @@ def run_github_ci_mode(args, runs, output_dir, token, owner, repo):
         print(f"Mantis GitHub Run Searcher: Pulling Past CI Runs")
         print(
             f"=============================================================")
-        print(f"Repo Target : {owner}/{repo} (branch: {branch})")
+        print(f"Repo Target : {owner}/{repo} (branch: {args.branch})")
         print(f"Search Limit: {runs} completely executed runs")
         print(f"Output Folder: {output_dir}")
         print(
             f"=============================================================")
 
         print(
-            f"Searching for the latest completed workflow runs on branch '{branch}'...")
-        new_run_ids = client.get_completed_runs(branch=branch,
+            f"Searching for the latest completed workflow runs on branch '{args.branch}'...")
+        new_run_ids = client.get_completed_runs(branch=args.branch,
                                                 limit=runs)
 
         if not new_run_ids:
             print(
-                f"Error: No completed workflow runs discovered on branch '{branch}'.",
+                f"Error: No completed workflow runs discovered on branch '{args.branch}'.",
                 file=sys.stderr)
             sys.exit(1)
 
@@ -491,14 +498,14 @@ def run_github_ci_mode(args, runs, output_dir, token, owner, repo):
         f"Successfully downloaded: {len(downloaded_runs)} / {len(new_run_ids)} bundles.")
     print(f"Location: {output_dir}")
     print(f"=============================================================")
-    print(f"\nTo evaluate stability metrics, execute:")
+    print(f"\nTo evaluate stability metric and triage issues, execute:")
     print(
-        f"  mantis/bin/evaluate_stability --target {args.target} --bundles-dir {output_dir}\n")
+        f"  tools/mantis/bin/triage --test-runs {output_dir}\n")
 
 
 def main():
     parser = argparse.ArgumentParser(
-        description="Mantis Statistics Collector (collect_stats) - Automated capture of test loops locally or from GitHub CI"
+        description="Mantis Statistics Collector (collect_test_runs) - Automated capture of test loops locally or from GitHub CI"
     )
     # Common Arguments
     parser.add_argument("--target", "-t", default="//mqtt/localhost",
@@ -512,6 +519,8 @@ def main():
                         help="Execution mode: local sandbox, ci (dispatch new workflow runs), or ci_search (retrieve past completed runs). (default: local)")
     parser.add_argument("--branch", "-b",
                         help="GitHub branch to target or search (default: active branch)")
+    parser.add_argument("--remote", "-r", default="origin",
+                        help="Git remote name to use for GitHub API interactions (default: origin)")
     parser.add_argument("--verbose", action="store_true",
                         help="Monitor logs foreground (wrapper verbose option)")
 
@@ -542,19 +551,19 @@ def main():
     if args.iterations is not None:
         runs = args.iterations
 
-    # Resolve output directory under self-contained mantis/out/test_bundles/
+    # Resolve output directory under self-contained mantis/out/
     if args.mode == "ci_search":
         clean_target = "ci_search"
     else:
         clean_target = args.target.replace("/", "_").replace("+", "_").strip("_")
         
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-    output_dir = os.path.join(UDMI_OUT_MANTIS, "test_bundles",
+    output_dir = os.path.join(UDMI_OUT_MANTIS,
                               f"{clean_target}_{timestamp}")
 
     os.makedirs(output_dir, exist_ok=True)
 
-    log_filepath = os.path.join(output_dir, "collect_stats.log")
+    log_filepath = os.path.join(output_dir, "collect_test_runs.log")
     # Only use Tee in interactive terminal mode to avoid file writing conflicts in background redirections
     if sys.stdout.isatty():
         sys.stdout = Tee(sys.stdout, log_filepath)
@@ -576,7 +585,7 @@ def main():
             sys.exit(1)
 
         # Discover Git details
-        owner, repo = discover_git_details()
+        owner, repo = discover_git_details(args.remote)
 
         if not owner or not repo:
             print("Error: Could not discover GitHub repository details.",

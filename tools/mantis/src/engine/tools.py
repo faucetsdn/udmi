@@ -68,13 +68,16 @@ class ToolBelt:
             "lookup_symbol": self.lookup_symbol
         }
 
+    def _log_tool_call(self, msg: str):
+        print(color_text("[Inspect Tool]:", BLUE, bold=True) + "\n" +
+              color_text(msg, BLUE) + "\n")
+
     def list_directory(self, directory_path: str = ".") -> str:
         """
         Lists the contents of a specified directory within the workspace.
         Uses the ultra-fast in-memory directory tree cache, falling back to filesystem lookup if not found.
         """
-        print(color_text("[Inspect Tool]:", BLUE, bold=True) + "\n" +
-              color_text(f"list_directory called for path: '{directory_path}'", BLUE))
+        self._log_tool_call(f"list_directory called for path: '{directory_path}'")
 
         # Normalize directory path to lookup in cache
         norm_path = directory_path.strip("/").replace(os.path.sep, "/")
@@ -122,8 +125,7 @@ class ToolBelt:
         Searches the codebase for a specified string pattern or regex across configured search directories.
         Delegates search execution to the registered CodeSearchProvider.
         """
-        print(color_text("[Inspect Tool]:", BLUE, bold=True) + "\n" +
-              color_text(f"grep_codebase called with pattern: '{pattern}'", BLUE))
+        self._log_tool_call(f"grep_codebase called with pattern: '{pattern}'")
 
         return self.search_provider.grep_codebase(
             workspace_root=self.workspace_root,
@@ -154,8 +156,7 @@ class ToolBelt:
         max_lines = 2000
         if (end_line - start_line + 1) > max_lines:
             end_line = start_line + max_lines - 1
-            print(color_text("[Inspect Tool]:", BLUE, bold=True) + "\n" +
-                  color_text(f"Warning: Truncating read request to max limit of {max_lines} lines.", BLUE))
+            self._log_tool_call(f"Warning: Truncating read request to max limit of {max_lines} lines.")
 
         try:
             lines = []
@@ -182,8 +183,7 @@ class ToolBelt:
         you can read multiple files in a single call by passing a list of dicts to 'files_to_read'.
         """
         if files_to_read:
-            print(color_text("[Inspect Tool]:", BLUE, bold=True) + "\n" +
-                  color_text(f"read_file_lines batch called for {len(files_to_read)} files.", BLUE))
+            self._log_tool_call(f"read_file_lines batch called for {len(files_to_read)} files.")
             outputs = []
             for idx, item in enumerate(files_to_read, start=1):
                 f_path = item.get("filepath")
@@ -196,8 +196,7 @@ class ToolBelt:
             return "\n".join(outputs)[:80000]
 
         if filepath:
-            print(color_text("[Inspect Tool]:", BLUE, bold=True) + "\n" +
-                  color_text(f"read_file_lines called for '{filepath}' (lines {start_line}-{end_line})", BLUE))
+            self._log_tool_call(f"read_file_lines called for '{filepath}' (lines {start_line}-{end_line})")
             return self._read_single_file_helper(filepath, start_line, end_line)
 
         return "Error: No filepath or files_to_read parameter was supplied."
@@ -207,8 +206,7 @@ class ToolBelt:
         """
         Runs a safe, read-only git command inside the main repo or site model repo.
         """
-        print(color_text("[Inspect Tool]:", BLUE, bold=True) + "\n" +
-              color_text(f"git_read_operations called inside '{repo_path}': git {command} {args or []}", BLUE))
+        self._log_tool_call(f"git_read_operations called inside '{repo_path}': git {command} {args or []}")
 
         full_repo_path = os.path.abspath(
             os.path.join(self.workspace_root, repo_path))
@@ -246,8 +244,7 @@ class ToolBelt:
         """
         Searches for a specified pattern or transaction ID in a specific file under the workspace.
         """
-        print(color_text("[Inspect Tool]:", BLUE, bold=True) + "\n" +
-              color_text(f"grep_file called with pattern: '{pattern}' in file: '{filepath}'", BLUE))
+        self._log_tool_call(f"grep_file called with pattern: '{pattern}' in file: '{filepath}'")
 
         if not filepath:
             return "Error: Missing filepath parameter."
@@ -282,8 +279,7 @@ class ToolBelt:
         Extracts a precise time window of raw logs from a specified file.
         Use this when you suspect a temporal anomaly occurred around a specific time.
         """
-        print(color_text("[Inspect Tool]:", BLUE, bold=True) + "\n" +
-              color_text(f"expand_log_window called for '{filepath}' at {center_timestamp} (+/- {window_seconds}s)", BLUE))
+        self._log_tool_call(f"expand_log_window called for '{filepath}' at {center_timestamp} (+/- {window_seconds}s)")
 
         full_path = os.path.abspath(os.path.join(self.workspace_root, filepath))
         if not full_path.startswith(self.workspace_root):
@@ -337,8 +333,7 @@ class ToolBelt:
         Extracts the entire method definition for a specified method name from a Java or Python file.
         Eliminates sequential reading of method contents, returning the complete block in a single call.
         """
-        print(color_text("[Inspect Tool]:", BLUE, bold=True) + "\n" +
-              color_text(f"read_method_definition called for '{method_name}' in '{filepath}'", BLUE))
+        self._log_tool_call(f"read_method_definition called for '{method_name}' in '{filepath}'")
 
         if not filepath or not method_name:
             return "Error: Missing filepath or method_name parameter."
@@ -431,8 +426,7 @@ class ToolBelt:
         Args:
             symbol_name: The exact name of the class, interface, method, or function to find (e.g. 'SequenceBase' or 'waitUntil').
         """
-        print(color_text("[Inspect Tool]:", BLUE, bold=True) + "\n" +
-              color_text(f"lookup_symbol called for symbol: '{symbol_name}'", BLUE))
+        self._log_tool_call(f"lookup_symbol called for symbol: '{symbol_name}'")
 
         # Build declaration patterns:
         # - Java/Python classes/interfaces/enums: 'class SymbolName', 'interface SymbolName', etc.

@@ -57,10 +57,10 @@ class UDMILogResolver:
         test_name: str, 
         occurrence_idx: int, 
         device_id: Optional[str] = None
-    ) -> Tuple[str, str, str]:
+    ) -> Tuple[str, str, str, str, str]:
         """
         Locates exact sharded logs for a test case from itemized sequencer outputs.
-        Returns: (sequence_log_path, pubber_log_path, udmis_log_path) relative to self.udmi_root.
+        Returns: (sequence_log_path, pubber_log_path, udmis_log_path, resolved_device_id, pubber_opts) relative to self.udmi_root.
         """
         itemized_out = os.path.join(run_dir, "test_itemized.out")
         if not os.path.exists(itemized_out):
@@ -78,6 +78,28 @@ class UDMILogResolver:
                                 prefix = tokens[0]
                                 break
                             curr_idx += 1
+
+        resolved_device_id = device_id if device_id else "AHU-1"
+        pubber_opts = ""
+        if prefix:
+            prefix_int = int(prefix)
+            itemized_in = os.path.join(self.udmi_root, "etc/test_itemized.in")
+            if os.path.exists(itemized_in):
+                with open(itemized_in, 'r', encoding='utf-8') as f:
+                    lines = f.readlines()
+                current_device = "AHU-1"
+                for i, line in enumerate(lines, start=1):
+                    tokens = line.strip().split()
+                    if not tokens:
+                        continue
+                    if tokens[0] == "WITH":
+                        if len(tokens) > 1:
+                            current_device = tokens[1]
+                    if i == prefix_int:
+                        resolved_device_id = current_device
+                        if tokens[0] == "TEST" and len(tokens) > 2:
+                            pubber_opts = " ".join(tokens[2:])
+                        break
 
         sharded_out_dirs = glob.glob(os.path.join(run_dir, "out_*"))
         if not sharded_out_dirs:
@@ -116,7 +138,7 @@ class UDMILogResolver:
                 if udm_log:
                     break
 
-            return seq_log, pub_log, udm_log
+            return seq_log, pub_log, udm_log, resolved_device_id, pubber_opts
 
         # Sharded path resolution
         for sod in sorted(sharded_out_dirs):
@@ -153,10 +175,12 @@ class UDMILogResolver:
                 return (
                     resolved_seq, 
                     os.path.relpath(pub_log, self.udmi_root) if os.path.exists(pub_log) else "", 
-                    os.path.relpath(udm_log, self.udmi_root) if udm_log else ""
+                    os.path.relpath(udm_log, self.udmi_root) if udm_log else "",
+                    resolved_device_id,
+                    pubber_opts
                 )
 
-        return "", "", ""
+        return "", "", "", "", ""
 
     def resolve_sharded_sequencer_logs(
         self, 

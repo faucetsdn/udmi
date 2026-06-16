@@ -6,7 +6,6 @@ import re
 import subprocess
 from datetime import datetime, timedelta, timezone
 
-# Reuse timestamp parser from harness
 sys.path.append(os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "src"))
 from engine.context import parse_timestamp
 

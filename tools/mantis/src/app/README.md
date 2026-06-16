@@ -8,7 +8,7 @@ It is executed via the launcher:
 export GEMINI_API_KEY="your_gemini_api_key"
 
 # Run triage in Manifest Mode
-mantis/bin/diagnose -m out/mantis/test_bundles/<target_folder>/triage_manifest.json
+mantis/bin/diagnose -m out/mantis/<target_folder>/triage_manifest.json
 ```
 
 All diagnostic results, stage timeline outputs, and triage summary reports are saved directly under the active test bundle folder:

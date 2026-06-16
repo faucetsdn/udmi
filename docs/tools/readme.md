@@ -19,6 +19,7 @@ Many tools take a [project spec](project_spec.md) as the second argument.
 - [gcloud](gcloud.md) - various tips and tricks for working with gcloud on GCP
 - [bambi backend service](bambi_service.md) - a service to use Google Sheets as an interface to manage updates to the site model source repository 
 - [reconciler_service](reconciler_service.md) - a service to automatically open pull requests from proposal branches in the source repository
+- [mantis](mantis.md) - an automated diagnostic tool that triages UDMI test failures using AI
 
 ## Setup
 

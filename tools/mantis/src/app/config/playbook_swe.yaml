@@ -1,7 +1,7 @@
 metadata:
   name: "UDMI Default Sequencer Triage Playbook"
   description: "Declarative playbook for UDMI sequencer failures triage focusing on root cause flakiness and concise reporting."
-  version: "1.1.0"
+  version: "1.0.0"
 
 pipeline:
   default_model: "gemini-3.1-pro-preview"

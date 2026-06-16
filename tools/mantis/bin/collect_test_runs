@@ -1,7 +1,7 @@
 #!/bin/bash -e
 #
 # Launcher wrapper for Project Mantis Statistics Collector Component (Stage 1).
-# Automatically activates the virtualenv and executes the Python collect_stats module.
+# Automatically activates the virtualenv and executes the Python collect_test_runs module.
 #
 
 # Resolve parent directory structure
@@ -12,14 +12,14 @@ UDMI_ROOT=$(realpath $MANTIS_DIR/../..)
 cd $UDMI_ROOT
 
 # Guarantee execution permissions
-chmod +x $MANTIS_DIR/bin/collect_stats 2>/dev/null || true
-chmod +x $MANTIS_DIR/src/util/collect_stats/main.py 2>/dev/null || true
+chmod +x $MANTIS_DIR/bin/collect_test_runs 2>/dev/null || true
+chmod +x $MANTIS_DIR/src/util/collect_test_runs/main.py 2>/dev/null || true
 
 # If no arguments are passed, show usage and help
 if [[ $# -eq 0 ]]; then
-    echo "Error: No options supplied to collect_stats." >&2
-    echo "Usage: bin/collect_stats [OPTIONS]" >&2
-    echo "Run 'bin/collect_stats --help' to see all available options." >&2
+    echo "Error: No options supplied to collect_test_runs." >&2
+    echo "Usage: bin/collect_test_runs [OPTIONS]" >&2
+    echo "Run 'bin/collect_test_runs --help' to see all available options." >&2
     exit 1
 fi
 
@@ -34,4 +34,4 @@ else
 fi
 
 # Execute Python module forwarding all arguments directly in the foreground
-python3 -u -m mantis.src.util.collect_stats.main "$@"
+python3 -u -m mantis.src.util.collect_test_runs.main "$@"

@@ -8,7 +8,7 @@ It is executed via the launcher:
 
 ```bash
 mantis/bin/evaluate_stability \
-  --bundles-dir out/mantis/test_bundles/<target_folder>/ \
+  --bundles-dir out/mantis/<target_folder>/ \
   --target //mqtt/localhost
 ```
 

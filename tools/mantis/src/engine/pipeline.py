@@ -359,6 +359,9 @@ class TriagePipeline:
         Dynamically executes all enabled stages defined in the Playbook in sequential order.
         Passes accumulated context between stages automatically.
         """
+        import time
+        start_time = time.time()
+        
         # Check semantic cache first if query is provided
         cache = None
         cache_filepath = None
@@ -564,6 +567,9 @@ class TriagePipeline:
                 )
             except Exception as e:
                 print(f"Warning: Failed to save triage analysis to cache: {e}", file=sys.stderr)
+
+        elapsed_time = time.time() - start_time
+        print(f"[{target_id}] Total time taken for analysis: {elapsed_time:.2f} seconds")
 
         return final_report
 

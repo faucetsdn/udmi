@@ -30,10 +30,10 @@ class UDMITriageRunner:
     merging distributed logs, executing the async agent pipeline, and compiling consolidated summaries.
     """
 
-    def __init__(self, udmi_root: str, mantis_dir: str):
+    def __init__(self, udmi_root: str, mantis_dir: str, out_dir: Optional[str] = None):
         self.udmi_root = os.path.abspath(udmi_root)
         self.mantis_dir = os.path.abspath(mantis_dir)
-        self.out_dir = os.path.join(self.udmi_root, "out", "mantis")
+        self.out_dir = os.path.abspath(out_dir) if out_dir else os.path.join(self.udmi_root, "out", "mantis")
         self.resolver = UDMILogResolver(self.udmi_root)
         self.parser = UDMIResultParser()
 
@@ -232,13 +232,13 @@ class UDMITriageRunner:
         site_id: str,
         clean_target: str,
         force: bool = False,
-        oem: bool = False
+        playbook: Optional[str] = None
     ) -> dict:
         """Coordinating task to analyze a single test case failure in parallel."""
         test_id = f['test_name']
         print(f"\n[{test_id}] --- Triaging Failure {idx} of {total_count}: {test_id} (in {os.path.basename(run_dir)}) ---")
 
-        device_id = self.resolver.discover_device_id(run_dir, test_id)
+        device_id = f.get('device_id') if isinstance(f, dict) and f.get('device_id') else self.resolver.discover_device_id(run_dir, test_id)
 
         devices_path = os.path.join(run_dir, "out", "devices")
         if not os.path.exists(devices_path):
@@ -380,14 +380,26 @@ class UDMITriageRunner:
 
         prompt_payload = "\n".join(payload)
 
+        if isinstance(f, dict) and f.get('failure_id'):
+            test_folder_name = f['failure_id']
+        else:
+            occurrence_suffix = ""
+            if isinstance(f, dict) and f.get('occurrence_index'):
+                occurrence_suffix = f"_occ{f['occurrence_index']}"
+            elif isinstance(f, dict) and 'run_directory' in f:
+                run_base = os.path.basename(f['run_directory'])
+                if run_base.startswith('run_'):
+                    occurrence_suffix = f"_{run_base}"
+            test_folder_name = f"{test_id}{occurrence_suffix}"
+
+        nested_out_dir = os.path.join(self.out_dir, "diagnose", clean_target, site_id, device_id, test_folder_name)
+        os.makedirs(nested_out_dir, exist_ok=True)
+
         analysis_text = ""
         try:
-            analysis_text = await run_triage_analysis_async(prompt_payload, semaphore, out_dir=self.out_dir, force=force, oem=oem)
+            analysis_text = await run_triage_analysis_async(prompt_payload, semaphore, out_dir=nested_out_dir, force=force, playbook=playbook)
         except Exception as e:
             analysis_text = f"⚠️ Error executing Gemini AI diagnostics for {test_id}: {e}"
-
-        nested_out_dir = os.path.join(self.out_dir, "diagnose", clean_target, site_id, device_id, test_id)
-        os.makedirs(nested_out_dir, exist_ok=True)
 
         report_filepath = os.path.join(nested_out_dir, "triage_analysis.md")
         with open(report_filepath, 'w', encoding='utf-8') as fr:
@@ -399,20 +411,32 @@ class UDMITriageRunner:
         insufficient = "INSUFFICIENT DATA TO TRACE ROOT CAUSE" in analysis_text
 
         bm = re.search(
-            r'(?:## Breakpoint Summary|## \d\.\s*Breakpoint Summary|## \d\.\s*Executive Defect Summary|## Executive Defect Summary|## \d\.\s*Root Cause Summary|## Root Cause Summary)\s*\n*>\s*(.*)',
-            analysis_text)
+            r'(?:## 1\.\s*Mechanism of Failure|## Mechanism of Failure|## \d\.\s*Executive Defect Summary|## \d\.\s*Root Cause Summary|## Breakpoint Summary|## \d\.\s*Breakpoint Summary)\s*\n+(.*?)(?:\n\n|\n##|$)',
+            analysis_text, flags=re.DOTALL | re.IGNORECASE)
         if bm:
-            breakpoint_summary = bm.group(1).strip()
+            text = bm.group(1).strip()
+            text = text.lstrip(">").strip()
+            text = re.sub(r'^\s*[-*]\s*', '', text) # Remove leading bullet
+            text = text.replace('**', '')           # Remove bold
+            
+            if len(text) > 150:
+                sentences = text.split('. ')
+                if sentences:
+                    breakpoint_summary = sentences[0] + '.'
+                else:
+                    breakpoint_summary = text[:147] + '...'
+            else:
+                breakpoint_summary = text
         elif insufficient:
             breakpoint_summary = "INSUFFICIENT DATA TO TRACE ROOT CAUSE"
 
         return {
             'test_id': test_id,
-            'suite': f['suite'],
-            'category': f['category'],
+            'suite': f.get('suite', 'unknown'),
+            'category': f.get('category', 'unknown'),
             'breakpoint': breakpoint_summary,
             'insufficient': insufficient,
-            'report_link': f"./{device_id}/{test_id}/triage_analysis.md"
+            'report_link': f"./{device_id}/{test_folder_name}/triage_analysis.md"
         }
 
     async def run_triage(self, args: Any) -> None:
@@ -420,10 +444,8 @@ class UDMITriageRunner:
         # Determine active output directory dynamically
         if getattr(args, 'manifest', None):
             self.out_dir = os.path.dirname(os.path.abspath(args.manifest))
-        elif getattr(args, 'bundles_dir', None):
-            self.out_dir = os.path.abspath(args.bundles_dir)
-        elif getattr(args, 'run_dir', None):
-            self.out_dir = os.path.abspath(args.run_dir)
+        elif getattr(args, 'test_runs', None):
+            self.out_dir = os.path.abspath(args.test_runs)
         else:
             self.out_dir = os.path.join(self.udmi_root, "out", "mantis")
 
@@ -455,6 +477,7 @@ class UDMITriageRunner:
 
             runs_to_triage = []
             for fail_item in manifest_data.get('failures', []):
+                failure_id = fail_item.get('failure_id', '')
                 test_name = fail_item['test_name']
                 suite = fail_item['suite']
                 category = fail_item['category']
@@ -476,123 +499,91 @@ class UDMITriageRunner:
 
                 runs_to_triage.append((
                     run_dir,
-                    {'test_name': test_name, 'category': category, 'suite': suite, 'device_id': device_id},
+                    {'failure_id': failure_id, 'test_name': test_name, 'category': category, 'suite': suite, 'device_id': device_id},
                     t_meta
                 ))
 
             # Apply optional CLI filters
+            if getattr(args, 'id', None):
+                runs_to_triage = [x for x in runs_to_triage if x[1]['failure_id'] in args.id]
             if args.test:
                 runs_to_triage = [x for x in runs_to_triage if x[1]['test_name'] in args.test]
             if args.device:
                 runs_to_triage = [x for x in runs_to_triage if x[1]['device_id'] in args.device or x[2].get('sequence_log', '').split('devices/')[-1].split('/')[0] in args.device]
         
         else:
-            # 1. Configure logs/folders matching parameters
-            bundles_dir_arg = args.bundles_dir if args.bundles_dir is not None else args.run_dir
-            if not args.sequence_log and not bundles_dir_arg:
-                print("Error: Missing --bundles-dir or --sequence-log specifications.", file=sys.stderr)
+            # Multi-run bundles directory triage
+            test_runs_arg = getattr(args, 'test_runs', None)
+            if not test_runs_arg:
+                print("Error: Missing --test-runs or --manifest specifications.", file=sys.stderr)
                 sys.exit(1)
 
-            if args.sequence_log:
-                print("Direct log diagnostic mode active. Ingesting direct log sources...")
-                local_seq_log = os.path.abspath(args.sequence_log)
-                local_seq_md = local_seq_log.replace(".log", ".md") if os.path.exists(local_seq_log.replace(".log", ".md")) else ""
-                pubber_log_path = os.path.abspath(args.device_log) if args.device_log else ""
-                udmis_log_path = os.path.abspath(args.udmis_log) if args.udmis_log else ""
-                success_seq_log = os.path.abspath(args.success_log) if args.success_log else ""
+            bundles_path = os.path.abspath(test_runs_arg)
+            if not os.path.exists(bundles_path):
+                print(f"Error: Specified test-runs directory '{test_runs_arg}' does not exist.", file=sys.stderr)
+                sys.exit(1)
 
-                test_id = args.test[0] if args.test else ""
-                if not test_id:
-                    m = re.search(r'tests/([^/]+)/', local_seq_log)
-                    test_id = m.group(1) if m else "unknown_test"
+            target, site_dir = self.auto_detect_metadata(bundles_path)
 
-                site_id = "bos-platform-staging"
-                m = re.search(r'sites/([^/]+)/', local_seq_log)
-                if m:
-                    site_id = m.group(1)
-                clean_target = site_id
-                target = clean_target
+            clean_target = target.replace("/", "_").replace("+", "_").strip("_")
+            site_id = os.path.basename(site_dir)
 
-                runs_to_triage = [(
-                    os.path.dirname(local_seq_log),
-                    {'test_name': test_id, 'category': 'unknown', 'suite': 'both'},
-                    {
-                        'sequence_log': local_seq_log,
-                        'sequence_md': local_seq_md,
-                        'pubber_log': pubber_log_path,
-                        'udmis_log': udmis_log_path,
-                        'success_log': success_seq_log
-                    }
-                )]
+            run_subdirs = sorted(glob.glob(os.path.join(bundles_path, "run_*")))
+            runs_to_triage = []
+            all_raw_runs = []
+
+            if run_subdirs:
+                print(f"Multi-run directory mode: scanning {len(run_subdirs)} runs for failures...")
+                for rsd in run_subdirs:
+                    run_failures = self.scan_failures_from_metrics(clean_target, output_dir=rsd)
+                    if not run_failures:
+                        run_failures = self.scan_failures_from_metrics(clean_target, output_dir=os.path.join(rsd, "out"))
+                    for f in run_failures:
+                        all_raw_runs.append((rsd, f))
             else:
-                bundles_path = os.path.abspath(bundles_dir_arg)
-                if not os.path.exists(bundles_path):
-                    print(f"Error: Specified bundles directory '{bundles_dir_arg}' does not exist.", file=sys.stderr)
-                    sys.exit(1)
+                print("Single run directory mode: scanning for failures...")
+                failures = []
+                metrics_failures = self.scan_failures_from_metrics(clean_target)
 
-                detected_target, detected_site_dir = self.auto_detect_metadata(bundles_path)
-                target = args.target if args.target is not None else detected_target
-                site_dir = args.site_dir if args.site_dir is not None else detected_site_dir
-
-                clean_target = target.replace("/", "_").replace("+", "_").strip("_")
-                site_id = os.path.basename(site_dir)
-
-                run_subdirs = sorted(glob.glob(os.path.join(bundles_path, "run_*")))
-                runs_to_triage = []
-                all_raw_runs = []
-
-                if run_subdirs:
-                    print(f"Multi-run directory mode: scanning {len(run_subdirs)} runs for failures...")
-                    for rsd in run_subdirs:
-                        run_failures = self.scan_failures_from_metrics(clean_target, output_dir=rsd)
-                        if not run_failures:
-                            run_failures = self.scan_failures_from_metrics(clean_target, output_dir=os.path.join(rsd, "out"))
-                        for f in run_failures:
-                            all_raw_runs.append((rsd, f))
+                if metrics_failures:
+                    failures.extend(metrics_failures)
                 else:
-                    print("Single run directory mode: scanning for failures...")
-                    failures = []
-                    metrics_failures = self.scan_failures_from_metrics(clean_target)
+                    failures.extend(self.parser.parse_results_file(os.path.join(bundles_path, "sequencer.out"), is_itemized=False))
+                    failures.extend(self.parser.parse_results_file(os.path.join(bundles_path, "test_itemized.out"), is_itemized=True))
 
-                    if metrics_failures:
-                        failures.extend(metrics_failures)
-                    else:
-                        failures.extend(self.parser.parse_results_file(os.path.join(bundles_path, "sequencer.out"), is_itemized=False))
-                        failures.extend(self.parser.parse_results_file(os.path.join(bundles_path, "test_itemized.out"), is_itemized=True))
+                seen = set()
+                unique_failures = []
+                for f in failures:
+                    # Format fails uniformly
+                    fail_dict = f if isinstance(f, dict) else {
+                        'test_name': f.test_name,
+                        'category': f.category,
+                        'suite': f.suite
+                    }
+                    if fail_dict['test_name'] not in seen:
+                        seen.add(fail_dict['test_name'])
+                        unique_failures.append(fail_dict)
+                for f in unique_failures:
+                    all_raw_runs.append((bundles_path, f))
 
-                    seen = set()
-                    unique_failures = []
-                    for f in failures:
-                        # Format fails uniformly
-                        fail_dict = f if isinstance(f, dict) else {
-                            'test_name': f.test_name,
-                            'category': f.category,
-                            'suite': f.suite
-                        }
-                        if fail_dict['test_name'] not in seen:
-                            seen.add(fail_dict['test_name'])
-                            unique_failures.append(fail_dict)
-                    for f in unique_failures:
-                        all_raw_runs.append((bundles_path, f))
+            if args.test:
+                all_raw_runs = [x for x in all_raw_runs if x[1]['test_name'] in args.test]
+                if not all_raw_runs:
+                    for t in args.test:
+                        all_raw_runs.append(
+                            (run_subdirs[0] if run_subdirs else bundles_path,
+                             {'test_name': t, 'category': 'unknown', 'suite': 'both'})
+                        )
 
-                if args.test:
-                    all_raw_runs = [x for x in all_raw_runs if x[1]['test_name'] in args.test]
-                    if not all_raw_runs:
-                        for t in args.test:
-                            all_raw_runs.append(
-                                (run_subdirs[0] if run_subdirs else bundles_path,
-                                 {'test_name': t, 'category': 'unknown', 'suite': 'both'})
-                            )
-
-                for run_subdir, f in all_raw_runs:
-                    test_id = f['test_name']
-                    triage_metadata = {}
-                    metadata_path = os.path.join(run_subdir, "triage_metadata.json")
-                    if os.path.exists(metadata_path):
-                        try:
-                            with open(metadata_path, 'r', encoding='utf-8') as fm:
-                                triage_metadata = json.load(fm)
-                        except Exception:
+            for run_subdir, f in all_raw_runs:
+                test_id = f['test_name']
+                triage_metadata = {}
+                metadata_path = os.path.join(run_subdir, "triage_metadata.json")
+                if os.path.exists(metadata_path):
+                    try:
+                        with open(metadata_path, 'r', encoding='utf-8') as fm:
+                            triage_metadata = json.load(fm)
+                    except Exception:
                             pass
 
                     test_meta_list = triage_metadata.get(test_id, [])
@@ -621,7 +612,7 @@ class UDMITriageRunner:
                     runs_to_triage = filtered
 
         if not runs_to_triage:
-            print("🎉 No regression or failing test cases detected in run outputs. Diagnostics complete!")
+            print("No regression or failing test cases detected in run outputs. Diagnostics complete!")
             sys.exit(0)
 
         failure_names = []
@@ -631,8 +622,38 @@ class UDMITriageRunner:
             failure_names.append(f"{item[1]['test_name']} ({log_name})")
         print(f"Found {len(runs_to_triage)} sharded test case failure occurrences to triage: {', '.join(failure_names)}")
 
+        # Resolve Playbook to configure concurrency and failure classifiers
+        from engine.config.playbook import Playbook
+        from pathlib import Path
+
+        playbook_arg = getattr(args, "playbook", None)
+        impl_dir = Path(os.path.dirname(os.path.abspath(__file__)))
+        
+        if playbook_arg:
+            if os.path.isabs(playbook_arg):
+                playbook_path = Path(playbook_arg)
+            else:
+                cwd_path = Path.cwd() / playbook_arg
+                if cwd_path.exists():
+                    playbook_path = cwd_path
+                else:
+                    playbook_path = impl_dir / playbook_arg
+        else:
+            playbook_path = impl_dir / "config/playbook_oem.yaml"
+        
+        resolved_playbook = str(playbook_path)
+        
+        failure_classifiers = None
+        concurrency_limit = 3
+        if playbook_path.exists():
+            try:
+                playbook = Playbook(playbook_path).load()
+                failure_classifiers = playbook.pipeline_config.get("failure_classifiers")
+                concurrency_limit = playbook.pipeline_config.get("concurrency", 3)
+            except Exception as e:
+                print(f"Warning: Failed to load playbook from {playbook_path}: {e}", file=sys.stderr)
+
         # Setup parallel semaphore
-        concurrency_limit = args.concurrency
         print(f"Parallel processing initialized with concurrency limit: {concurrency_limit}")
         semaphore = asyncio.Semaphore(concurrency_limit)
 
@@ -656,28 +677,13 @@ class UDMITriageRunner:
                     site_id=site_id,
                     clean_target=clean_target,
                     force=getattr(args, "force", False),
-                    oem=getattr(args, "oem", False)
+                    playbook=resolved_playbook
                 )
             )
 
         triage_summaries = await asyncio.gather(*tasks)
 
-        # Resolve failure classifiers from Playbook config
-        from engine.config.playbook import Playbook
-        from pathlib import Path
 
-        oem = getattr(args, "oem", False)
-        impl_dir = Path(os.path.dirname(os.path.abspath(__file__)))
-        playbook_file = "config/playbook_oem_integrator.yaml" if oem else "config/playbook.yaml"
-        playbook_path = impl_dir / playbook_file
-        
-        failure_classifiers = None
-        if playbook_path.exists():
-            try:
-                playbook = Playbook(playbook_path).load()
-                failure_classifiers = playbook.pipeline_config.get("failure_classifiers")
-            except Exception as e:
-                print(f"Warning: Failed to load playbook from {playbook_path} for report classification: {e}", file=sys.stderr)
 
         # Generate report via UDMITriageReporter
         print("\nCompiling site-specific Triage Summary Report...")

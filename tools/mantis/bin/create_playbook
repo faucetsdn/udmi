@@ -1,0 +1,95 @@
+#!/usr/bin/env python3
+
+import os
+import sys
+import yaml
+
+def prompt(question, default=""):
+    if default:
+        ans = input(f"{question} [{default}]: ")
+        return ans if ans else default
+    else:
+        return input(f"{question}: ")
+
+def prompt_multiline(question, default=""):
+    print(f"{question} (Enter empty line to finish):")
+    lines = []
+    while True:
+        try:
+            line = input()
+            if not line.strip():
+                break
+            lines.append(line)
+        except EOFError:
+            break
+    if not lines and default:
+        return default
+    return "\n".join(lines)
+
+def prompt_yes_no(question, default="y"):
+    ans = prompt(question, default).lower()
+    return ans.startswith("y")
+
+def main():
+    print("=========================================")
+    print("       Mantis Playbook Generator         ")
+    print("=========================================")
+    print("This utility will help you generate a custom YAML playbook.")
+    print("Press Enter to accept defaults.\n")
+
+    # Locate default playbook
+    bin_dir = os.path.dirname(os.path.abspath(__file__))
+    default_playbook_path = os.path.join(bin_dir, "../src/engine/config/default_playbook.yaml")
+
+    if not os.path.exists(default_playbook_path):
+        print(f"Error: Could not find default playbook template at {default_playbook_path}")
+        sys.exit(1)
+
+    try:
+        with open(default_playbook_path, "r") as f:
+            playbook_data = yaml.safe_load(f)
+    except Exception as e:
+        print(f"Error parsing default playbook: {e}")
+        sys.exit(1)
+
+    # Metadata
+    playbook_data['metadata'] = playbook_data.get('metadata', {})
+    playbook_data['metadata']['name'] = prompt("Playbook Name", playbook_data['metadata'].get('name', 'Custom Playbook'))
+    playbook_data['metadata']['description'] = prompt("Description", playbook_data['metadata'].get('description', 'Custom behavior for Mantis triage.'))
+    playbook_data['metadata']['version'] = prompt("Version", "1.0.0")
+
+    # Pipeline
+    print("\n--- Pipeline Configuration ---")
+    playbook_data['pipeline'] = playbook_data.get('pipeline', {})
+    playbook_data['pipeline']['concurrency'] = int(prompt("Max parallel triage jobs (concurrency)", "3"))
+
+    # Stages
+    print("\n--- Stages Configuration ---")
+    print("Mantis executes stages sequentially. The 'analysis' stage does the heavy lifting.")
+    
+    stages = playbook_data.get('stages', {})
+    if 'analysis' in stages:
+        default_analysis_sys = stages['analysis'].get('system_instruction', '')
+        analysis_sys = prompt_multiline("Analysis Stage Custom System Instructions", default_analysis_sys)
+        stages['analysis']['system_instruction'] = analysis_sys + "\n"
+
+    enable_critique = prompt_yes_no("Enable Critique Peer-Review Stage? (y/n)", "y")
+    if 'critique' in stages:
+        stages['critique']['enabled'] = enable_critique
+    
+    out_file = prompt("\nSave playbook to file", "my_playbook.yaml")
+
+    try:
+        out_path = os.path.abspath(out_file)
+        with open(out_path, 'w') as f:
+            yaml.safe_dump(playbook_data, f, default_flow_style=False, sort_keys=False)
+        print("\n=========================================")
+        print(f"Playbook successfully generated: {out_path}")
+        print("To use this playbook, run:")
+        print(f"  bin/triage -i <test_runs> --playbook {out_file}")
+        print("=========================================\n")
+    except Exception as e:
+        print(f"Error saving playbook: {e}")
+
+if __name__ == "__main__":
+    main()
