@@ -1,0 +1,4 @@
+Exceptions for DDC-1
+  invalid modbus adjunct key 'bits'; allowed keys are [protocol, device, baud, parity, data_bits, stop_bits]
+  While converting device config
+    modbus addr 0 is invalid; must start with an alphabetical character or be a valid IPv4 address

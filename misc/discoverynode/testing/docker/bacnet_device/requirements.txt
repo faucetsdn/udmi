@@ -14,7 +14,7 @@ pd==0.0.4
 pluggy==1.5.0
 prometheus_client==0.20.0
 pycparser==2.22
-PyJWT==2.9.0
+PyJWT==2.13.0
 pyOpenSSL==26.0.0
 pytest==9.0.3
 python-dateutil==2.9.0.post0

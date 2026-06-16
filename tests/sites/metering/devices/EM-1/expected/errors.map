@@ -1,0 +1,3 @@
+Exceptions for EM-1
+  While converting device config
+    modbus addr 1 is invalid; must start with an alphabetical character or be a valid IPv4 address

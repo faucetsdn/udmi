@@ -19,95 +19,118 @@
     "points": {
       "cooling_water_valve_percentage_command": {
         "ref": "AO10.Present_Value",
-        "units": "percent"
+        "units": "percent",
+        "url": "vendor://monkey/AO10.Present_Value"
       },
       "cooling_water_valve_percentage_sensor": {
         "ref": "AI9.Present_Value",
-        "units": "percent"
+        "units": "percent",
+        "url": "vendor://monkey/AI9.Present_Value"
       },
       "exhaust_air_damper_command": {
         "ref": "BO2.Present_Value",
-        "units": "No-units"
+        "units": "No-units",
+        "url": "vendor://monkey/BO2.Present_Value"
       },
       "exhaust_air_static_pressure_sensor": {
         "ref": "AI6.Present_Value",
-        "units": "pascals"
+        "units": "pascals",
+        "url": "vendor://monkey/AI6.Present_Value"
       },
       "exhaust_fan_run_command": {
         "ref": "BO5.Present_Value",
-        "units": "No-units"
+        "units": "No-units",
+        "url": "vendor://monkey/BO5.Present_Value"
       },
       "exhaust_fan_speed_percentage_command": {
         "ref": "AO6.Present_Value",
-        "units": "percent"
+        "units": "percent",
+        "url": "vendor://monkey/AO6.Present_Value"
       },
       "exhaust_fan_speed_percentage_sensor": {
         "ref": "AI5.Present_Value",
-        "units": "percent"
+        "units": "percent",
+        "url": "vendor://monkey/AI5.Present_Value"
       },
       "exhaust_fan_speed_percentage_setpoint": {
         "ref": "AV3.Present_Value",
-        "units": "percent"
+        "units": "percent",
+        "url": "vendor://monkey/AV3.Present_Value"
       },
       "exhaust_filter_differential_pressure_sensor": {
         "ref": "AI4.Present_Value",
-        "units": "pascals"
+        "units": "pascals",
+        "url": "vendor://monkey/AI4.Present_Value"
       },
       "fire_alarm": {
         "ref": "BI3.Present_Value",
-        "units": "No-units"
+        "units": "No-units",
+        "url": "vendor://monkey/BI3.Present_Value"
       },
       "heating_water_valve_percentage_command": {
         "ref": "AO9.Present_Value",
-        "units": "percent"
+        "units": "percent",
+        "url": "vendor://monkey/AO9.Present_Value"
       },
       "heating_water_valve_percentage_sensor": {
         "ref": "AI10.Present_Value",
-        "units": "percent"
+        "units": "percent",
+        "url": "vendor://monkey/AI10.Present_Value"
       },
       "outside_air_temperature_sensor": {
         "ref": "AI17.Present_Value",
-        "units": "degrees-celcius"
+        "units": "degrees-celcius",
+        "url": "vendor://monkey/AI17.Present_Value"
       },
       "return_air_temperature_sensor": {
         "ref": "AI3.Present_Value",
-        "units": "degrees-celcius"
+        "units": "degrees-celcius",
+        "url": "vendor://monkey/AI3.Present_Value"
       },
       "supply_air_damper_command": {
         "ref": "BO1.Present_Value",
-        "units": "No-units"
+        "units": "No-units",
+        "url": "vendor://monkey/BO1.Present_Value"
       },
       "supply_air_static_pressure_sensor": {
         "ref": "AI3.Present_Value",
-        "units": "pascals"
+        "units": "pascals",
+        "url": "vendor://monkey/AI3.Present_Value"
       },
       "supply_air_temperature_sensor": {
         "ref": "AI12.Present_Value",
-        "units": "degrees-celcius"
+        "units": "degrees-celcius",
+        "url": "vendor://monkey/AI12.Present_Value"
       },
       "supply_air_temperature_setpoint": {
         "ref": "AI20.Present_Value",
-        "units": "degrees-celcius"
+        "units": "degrees-celcius",
+        "url": "vendor://monkey/AI20.Present_Value"
       },
       "supply_fan_run_command": {
         "ref": "BO3.Present_Value",
-        "units": "No-units"
+        "units": "No-units",
+        "url": "vendor://monkey/BO3.Present_Value"
       },
       "supply_fan_speed_percentage_command": {
         "ref": "AO4.Present_Value",
-        "units": "percent"
+        "units": "percent",
+        "url": "vendor://monkey/AO4.Present_Value"
       },
       "supply_fan_speed_percentage_sensor": {
         "ref": "AI2.Present_Value",
-        "units": "percent"
+        "units": "percent",
+        "url": "vendor://monkey/AI2.Present_Value"
       },
       "supply_fan_speed_percentage_setpoint": {
         "ref": "AV2.Present_Value",
-        "units": "percent"
+        "units": "percent",
+        "url": "vendor://monkey/AV2.Present_Value"
       },
       "supply_filter_differential_pressure_sensor": {
         "ref": "AI1.Present_Value",
-        "units": "pascals"
+        "units": "pascals",
+        "url": "vendor://monkey/AI1.Present_Value"
       }
     }
   },
