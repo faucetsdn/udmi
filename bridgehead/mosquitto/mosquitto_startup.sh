@@ -37,4 +37,16 @@ echo "Starting initializing site $site_model" | tee -a $UDMIS_LOG
 bin/mosquctl_site $site_model
 $MOSQUITTO_CTRL addClientRole $AUTH_USER service
 
-sleep infinity
+MOSQUITTO_PID=$(pgrep -x mosquitto)
+if [ -n "$MOSQUITTO_PID" ]; then
+    echo "Found mosquitto PID: $MOSQUITTO_PID. Monitoring..."
+    trap 'echo "Stopping mosquitto PID $MOSQUITTO_PID..."; kill -TERM "$MOSQUITTO_PID"; while kill -0 "$MOSQUITTO_PID" 2>/dev/null; do sleep 0.5; done; exit 0' SIGTERM SIGINT
+    
+    while kill -0 "$MOSQUITTO_PID" 2>/dev/null; do
+        sleep 1
+    done
+    echo "Mosquitto process disappeared."
+else
+    echo "Mosquitto PID not found!"
+    exit 1
+fi
