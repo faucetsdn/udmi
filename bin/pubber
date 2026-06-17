@@ -198,7 +198,9 @@ elif [[ $options_json != null ]]; then
     echo Inserting command line options into json file.
     jq ".options=$options_json" $config_file > $tmp_config
 else
-    [[ $config_file != $tmp_config ]] && cp $config_file $tmp_config
+    if [[ ! "$config_file" -ef "$tmp_config" ]]; then
+        cp "$config_file" "$tmp_config"
+    fi
 fi
 
 jq --slurpfile endpoint $ENDPOINT_TMP '.endpoint = $endpoint[0]' $tmp_config | sponge $tmp_config
