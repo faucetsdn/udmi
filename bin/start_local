@@ -81,11 +81,14 @@ $MOSQUITTO_CTRL createClient $SERV_USER -p $SERV_PASS >> $UDMIS_LOG 2>&1 || true
 $MOSQUITTO_CTRL addClientRole $SERV_USER service >> $UDMIS_LOG 2>&1 || true
 $MOSQUITTO_CTRL addClientRole $SERV_USER uufi >> $UDMIS_LOG 2>&1 || true
 
-# Setup device client security (for all devices in the site model)
+# Setup device client security (for all direct/gateway devices in the site model)
 for device_dir in $site_model/devices/*; do
     if [[ -d $device_dir ]]; then
         device_id=$(basename $device_dir)
-        $UDMI_ROOT/bin/mosquctl_device $site_model $device_id >> $UDMIS_LOG 2>&1
+        metadata_file=$device_dir/metadata.json
+        if [[ -f $metadata_file ]] && jq -e '.cloud.auth_type != null' $metadata_file >/dev/null 2>&1; then
+            $UDMI_ROOT/bin/mosquctl_device $site_model $device_id >> $UDMIS_LOG 2>&1
+        fi
     fi
 done
 

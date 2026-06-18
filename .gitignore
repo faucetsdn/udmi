@@ -49,8 +49,6 @@ __pycache__/
 /tests/sites/*/out/
 /tests/sites/*/devices/*/out/
 /tests/sites/basic/extras/
-/tests/sites/basic/devices/*/rsa_*.*
-/tests/sites/basic/reflector/
 /udmi_*.log
 
 .vscode
