@@ -70,6 +70,11 @@
       "type": "string",
       "examples": ["AI3", "400070"]
     },
+    "url": {
+      "description": "Complete resolved URL of this point as determined by the gateway and ref blocks",
+      "type": "string",
+      "examples": ["bacnet://1234/AV:1"]
+    },
     "adjunct": {
       "type": "object",
       "existingJavaType": "java.util.Map<String, String>",
