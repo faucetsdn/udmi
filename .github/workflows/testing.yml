@@ -473,6 +473,21 @@ jobs:
             docker ps -a || true
             echo "Docker logs for udmis:"
             docker logs udmis || true
+            echo "Empirically searching container for log files and ready signals..."
+            temp_img=$(docker commit udmis 2>/dev/null)
+            if [[ -n "$temp_img" ]]; then
+              docker run --rm "$temp_img" sh -c '
+                echo "=== Listing all log files and status files found inside the container ==="
+                find / -name "*.log" -o -name "*ready.txt" 2>/dev/null | grep -v "/proc" | grep -v "/sys" | while read -r filepath; do
+                  echo ""
+                  echo "--- CONTENT OF $filepath ---"
+                  cat "$filepath" 2>/dev/null || echo "[could not read file]"
+                done
+              ' || true
+              docker rmi "$temp_img" >/dev/null 2>&1 || true
+            else
+              echo "Could not commit container to inspect filesystem."
+            fi
             echo "=== END DIAGNOSTIC LOGS ==="
           fi
           ls -l var/tmp/pod_ready.txt 2>&1
