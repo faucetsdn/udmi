@@ -36,7 +36,7 @@ if [[ -d var/ && ! -d etc/ ]]; then
     ln -s var etc
 fi
 
-# cd $UDMI_ROOT
+cd "$UDMI_ROOT"
 UDMIS_LOG=out/udmis.log
 mkdir -p out
 # Do sudo now to prefetch incase it's needed later...
