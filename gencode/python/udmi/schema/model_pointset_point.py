@@ -8,6 +8,7 @@ from enum import Enum
 from typing import Any, Dict, List, Optional
 
 from ._base import DataModel
+from .building_translation import BuildingTranslation
 from .discovery_ref import RefDiscovery
 
 
@@ -43,6 +44,7 @@ class PointPointsetModel(DataModel):
     """
 
     units: Optional[str] = None
+    units_reported: Optional[str] = None
     type: Optional[Type] = None
     description: Optional[str] = None
     writable: Optional[bool] = None
@@ -58,4 +60,6 @@ class PointPointsetModel(DataModel):
     adjunct: Optional[Dict[str, str]] = None
     tags: Optional[List[Tag]] = None
     structure: Optional[Dict[str, RefDiscovery]] = None
-    link: Optional[str] = None
+    expr: Optional[str] = None
+    values: Optional[Dict[str, str]] = None
+    translation: Optional[BuildingTranslation] = None

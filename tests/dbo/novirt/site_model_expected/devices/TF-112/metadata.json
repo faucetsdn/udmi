@@ -1,0 +1,69 @@
+{
+  "timestamp": "2026-01-01T00:00:00Z",
+  "version": "1.5.3",
+  "system": {
+    "name": "TF S-11",
+    "location": {
+      "site": "US-MTV-RLS1"
+    }
+  },
+  "externals": {
+    "dbo": {
+      "ext_id": "026203a0-976f-4581-8f0f-b608186f37ad",
+      "type": "HVAC/FAN_SS_DSP",
+      "label": "TF S-11 Elevator Closet Rm 31345"
+    }
+  },
+  "cloud": {
+    "num_id": "6145222943537"
+  },
+  "pointset": {
+    "points": {
+      "failed_alarm": {
+        "values": {
+          "1.0": "ACTIVE",
+          "0.0": "INACTIVE"
+        }
+      },
+      "failed_zone_air_temperature_alarm": {
+        "values": {
+          "1.0": "ACTIVE",
+          "0.0": "INACTIVE"
+        }
+      },
+      "run_command": {
+        "values": {
+          "0.0": "OFF",
+          "1.0": "ON"
+        }
+      },
+      "run_status": {
+        "values": {
+          "0.0": "OFF",
+          "1.0": "ON"
+        }
+      },
+      "schedule_run_command": {
+        "values": {
+          "0.0": "OFF",
+          "1.0": "ON"
+        }
+      },
+      "user_occupancy_override_status": {
+        "values": {
+          "0.0": "DISABLED",
+          "1.0": "ENABLED"
+        }
+      },
+      "zone_air_cooling_temperature_setpoint": {
+        "units": "degrees-fahrenheit"
+      },
+      "zone_air_heating_temperature_setpoint": {
+        "units": "degrees-fahrenheit"
+      },
+      "zone_air_temperature_sensor": {
+        "units": "degrees-fahrenheit"
+      }
+    }
+  }
+}
