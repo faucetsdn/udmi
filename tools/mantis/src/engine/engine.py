@@ -111,7 +111,7 @@ class AsyncTriageEngine:
             )
             # Using standard flash-lite for safe, cheap, high-speed token distillation
             response = await self._call_generate_content_with_retry(
-                model="gemini-3.5-flash-lite",
+                model="gemini-3.1-flash-lite",
                 contents=summary_prompt,
                 config=types.GenerateContentConfig(temperature=0.1)
             )
@@ -147,7 +147,7 @@ class AsyncTriageEngine:
             temp_history.append(types.Content(role="user", parts=[types.Part.from_text(text=compaction_prompt)]))
 
             response = await self._call_generate_content_with_retry(
-                model="gemini-3.5-flash-lite",
+                model="gemini-3.1-flash-lite",
                 contents=temp_history,
                 config=types.GenerateContentConfig(temperature=0.1)
             )

@@ -107,7 +107,7 @@ stages:
 metadata:
   name: "Extension Playbook"
 pipeline:
-  default_model: "gemini-3.5-pro"
+  default_model: "gemini-3.1-pro-preview"
 extensions:
   crashing_extension:
     command: ["/bin/false"]  # executes binary returning non-zero exit code

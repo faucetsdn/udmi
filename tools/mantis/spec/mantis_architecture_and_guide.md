@@ -692,7 +692,7 @@ metadata:
   version: "1.0.0"
 
 pipeline:
-  default_model: "gemini-3.5-pro"
+  default_model: "gemini-3.1-pro-preview"
   max_loops: 8
   fail_open_timeout_seconds: 45
 
@@ -705,7 +705,7 @@ extensions:
 stages:
   timeline:
     enabled: true
-    model: "gemini-3.5-flash-lite"
+    model: "gemini-3.1-flash-lite"
     system_instruction: "Construct a chronological sequence from the raw logs."
     headers:
       - "## Chronological Sequence"
@@ -713,7 +713,7 @@ stages:
       - read_file_lines
   analysis:
     enabled: true
-    model: "gemini-3.5-pro"
+    model: "gemini-3.1-pro-preview"
     tools:
       - list_directory
       - grep_codebase
@@ -728,7 +728,7 @@ stages:
 ## 2. Parameter Definitions
 
 ### 2.1. `pipeline` Configuration Keys
-* **`default_model`** (*string*): The default Gemini model to route stages to if no stage-specific override model is set. (Must target `gemini-3.5-pro`, `gemini-3.5-flash`, or `gemini-3.5-flash-lite`).
+* **`default_model`** (*string*): The default Gemini model to route stages to if no stage-specific override model is set. (Must target `gemini-3.1-pro-preview`, `gemini-3.1-flash-lite`).
 * **`max_loops`** (*integer*): Safety execution boundary. The maximum number of iterative tool execution runs allowed in the analysis phase before terminating. (Prevents infinite loops).
 * **`fail_open_timeout_seconds`** (*integer*): Maximum time budget allowed for any external tool or model query before continuing with partial results.
 
@@ -745,7 +745,7 @@ stages:
 ### 2.3. `stages` Configuration Keys
 Each stage under `stages` maps to a specific GenAI execution step:
 * **`enabled`** (*boolean*): Set `false` to completely skip execution of this stage.
-* **`model`** (*string*, optional): Route this stage to a specific model (e.g., `gemini-3.5-flash-lite` for timelines, `gemini-3.5-pro` for deep analysis).
+* **`model`** (*string*, optional): Route this stage to a specific model (e.g., `gemini-3.1-flash-lite` for timelines, `gemini-3.1-pro-preview` for deep analysis).
 * **`system_instruction`** (*string*, optional): System-level prompt injected in the model context to enforce specific formatting or domain rules.
 * **`tools`** (*array*, optional): List of allowed codebase tools this stage is permitted to invoke. Unlisted tools are locked out (Security sandboxing).
 * **`type`** (*string*, optional): The stage evaluation type. If set to `"critique"`, the stage functions as a sanity checker.
@@ -1133,7 +1133,7 @@ metadata:
   name: "Adwords Triage Playbook"
 
 pipeline_config:
-  default_model: "gemini-3.5-pro"
+  default_model: "gemini-3.1-pro-preview"
   # Max request tokens allowed per minute across all active execution threads
   max_queries_per_minute: 15
   # Max loop turns per single stage (safety guardrail)
